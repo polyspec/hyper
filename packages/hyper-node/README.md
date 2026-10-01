@@ -57,7 +57,7 @@ app.bind('posts', () => new Posts('/srv/board/var/board.db'));
 | `frameAncestors` | The sources of `frame-ancestors`; the default is `'self'` (HY-45). |
 | `bodyLimit` | The largest request body in bytes; a larger body receives 413. The default is 8 MiB (HY-59). |
 | `formTypes` | The media types of the request bodies that actions and `/_hyper/keep` accept: `application/x-www-form-urlencoded` and `multipart/form-data`; another type receives 415. The default is `['application/x-www-form-urlencoded']` (HY-59). |
-| `onResponse` | Called once for every response with the request, the response and the elapsed milliseconds, also for the responses that hyper answers itself; the request is null only when `node:http` could not read the request line (HY-60). |
+| `onResponse` | Called once for every response with the request, the response, the elapsed milliseconds and the reply of the request, also for the responses that hyper answers itself; the request is null only when `node:http` could not read the request line, and the reply is empty when the server answered before routing (HY-60). |
 | `log` | Receives the log line of an unhandled error (HY-43); the default writes to the standard error. |
 
 `app.bind(key, factory)` registers an application service. A service is created once, on first use; `services.get(key)` of a key without a factory fails the request with 500.
@@ -69,7 +69,7 @@ Every loader and action receives one context object:
 | Field | Type | Meaning |
 |---|---|---|
 | `request` | `Request` | `method`, `path()`, `params()`, `param(name)`, `query()`, `rawQuery()`, `queryInt(name, fallback)`, `form()`, `formString(name)`, `flash(name)`, `cookie(name)`, `header(name)`, `csrfToken()`, `currentPath()`, `wantsJson()`, `isRegionRequest()`, `https` |
-| `reply` | `Reply` | `cookie(name, value, maxAge?)`, `removeCookie(name)`, `cacheControl(value)` (HY-52) |
+| `reply` | `Reply` | `cookie(name, value, maxAge?)`, `removeCookie(name)`, `cacheControl(value)` (HY-52); `note(name, value)` records a value for the response hook, which reads `notes()` (HY-60) |
 | `services` | `Services<S>` | `get(key)` returns the service that `app.bind` registered |
 
 A loader returns data: a plain object or a `Map` with string keys, synchronously or as a promise. Values are null, booleans, numbers and bigints within ±(2^53 − 1), strings, arrays, maps and plain objects (HY-44, HY-54). A plain object puts integer-like keys first, as JavaScript does; a `Map` keeps insertion order.

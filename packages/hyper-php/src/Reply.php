@@ -4,13 +4,40 @@ declare(strict_types=1);
 
 namespace Polyspec\Hyper;
 
-/** The cookies and the cache control that the loaders and actions of one request give its response (HY-52). */
+/**
+ * The cookies and the cache control that the loaders and actions of one request give its response (HY-52), and the
+ * notes that they give the response hook (HY-60).
+ */
 final class Reply
 {
     /** @var list<array{string, string, ?int}> name, value and Max-Age */
     private array $cookies = [];
 
     private ?string $cacheControl = null;
+
+    /** @var array<string, mixed> */
+    private array $notes = [];
+
+    /**
+     * Records a value of the request for the response hook; a later note of the same name replaces the value and
+     * keeps its position. The notes are not part of the response (HY-60).
+     */
+    public function note(string $name, mixed $value): self
+    {
+        $this->notes[$name] = $value;
+
+        return $this;
+    }
+
+    /**
+     * Returns the notes in the order of their first names.
+     *
+     * @return array<string, mixed>
+     */
+    public function notes(): array
+    {
+        return $this->notes;
+    }
 
     /** Adds a cookie; a name or value outside HY-52 fails. */
     public function cookie(string $name, string $value, ?int $maxAge = null): self

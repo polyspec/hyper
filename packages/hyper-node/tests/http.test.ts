@@ -12,14 +12,14 @@ let directory: string;
 let server: Server;
 let base: string;
 
-let reports: [string | null, number, number][];
+let reports: [string | null, number, number, number][];
 
 async function start(options: { https?: boolean; bodyLimit?: number } = {}): Promise<void> {
   reports = [];
   const app = await new Fixture().app({
     https: options.https ?? false,
     ...(options.bodyLimit === undefined ? {} : { bodyLimit: options.bodyLimit }),
-    onResponse: (request, response, elapsed) => reports.push([request === null ? null : `${request.method} ${request.path()}`, response.status, elapsed]),
+    onResponse: (request, response, elapsed, reply) => reports.push([request === null ? null : `${request.method} ${request.path()}`, response.status, elapsed, reply.notes().size]),
   });
   server = app.server(new FileSessions({ directory, name: 'PHPSESSID' }));
   await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
@@ -83,6 +83,8 @@ describe('App.server', () => {
     expect(reports[0]![2]).toBeGreaterThanOrEqual(0);
     expect((await raw(Buffer.from('\x01\r\n\r\n'))).startsWith('HTTP/1.1 400 ')).toBe(true);
     expect(reports[1]!.slice(0, 2)).toEqual([null, 400]);
+    // HY-60: a response that node:http does not give to the application has an empty reply.
+    expect(reports.map((report) => report[3])).toEqual([0, 0]);
   });
 
   it('answers a body larger than the limit of the application with 413 (HY-59)', async () => {

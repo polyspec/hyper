@@ -25,10 +25,13 @@ export function handlers(): Handlers<Services> {
     routes: {
       home: { load: ({ services }) => ({ name: `n${services.get('counter').count}` }) },
       add: {
-        post: ({ request, services }) => {
+        post: ({ request, reply, services }) => {
           const counter = services.get('counter');
           counter.actions++;
-          if (request.formString('name') === 'closed') throw new Forbidden();
+          if (request.formString('name') === 'closed') {
+            reply.note('refusal', 'action').note('kind', 'closed').note('refusal', 'closed');
+            throw new Forbidden();
+          }
           if (request.formString('name') === 'unreadable') throw new BadRequest();
           if (request.formString('name') === 'taken') return Result.page(409, { name: 'taken', error: 'conflict' });
           if (request.formString('name') === 'preview') return Result.page(200, { name: 'preview' });
@@ -57,12 +60,14 @@ export function handlers(): Handlers<Services> {
             case 'missing':
               throw new NotFound();
             case 'private':
+              reply.note('refusal', 'private');
               throw new Forbidden();
             case 'unreadable':
               throw new BadRequest();
             case 'moved':
               throw new Redirect(Result.redirect('/items/new').flash('note', 'moved'));
             case 'broken':
+              reply.note('stage', 'load');
               throw new Error('secret detail /srv/app.js');
             case 'huge':
               return { id: 9223372036854775807n };

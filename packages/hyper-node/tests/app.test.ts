@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createApplication, decodeResponse, renderParts, type Manifest, type TemplateIndex } from '@polyspec/hyper';
 import { parseJson, type Template } from '@polyspec/template/render';
-import { App, Request, Result, type Response } from '../src/index.js';
+import { App, Request, Result, type Reply, type Response } from '../src/index.js';
 import { cookie, Fixture, FIXTURES, handlers, json, JSON_REGION, TEMPLATES } from './support.js';
 
 let fixture: Fixture;
@@ -359,6 +359,24 @@ describe('App', () => {
     reports.length = 0;
     await (await fixture.app(options)).handle(Request.from({ method: 'GET', target: '/' }), fixture.session, performance.now() - 2000);
     expect(reports[0]![4]).toBeGreaterThanOrEqual(2000);
+  });
+
+  it('gives the hook the reply of the request with the notes of its loaders and actions (HY-60)', async () => {
+    const reports: [number, Record<string, unknown>][] = [];
+    const options = { onResponse: (_request: Request | null, response: Response, _elapsed: number, reply: Reply) => reports.push([response.status, Object.fromEntries(reply.notes())]) };
+    const token = await fixture.token();
+    const send = (method: string, target: string, body?: string) => fixture.handle({ method, target, body }, options);
+    const forbidden = await send('GET', '/items/private');
+    await send('POST', '/add', `_csrf=${token}&name=closed`);
+    await send('GET', '/items/broken');
+    await send('GET', '/items/member');
+    await send('GET', '/missing');
+    await send('GET', '/?q=%FF');
+    expect(reports).toEqual([
+      [403, { refusal: 'private' }], [403, { refusal: 'closed', kind: 'closed' }], [500, { stage: 'load' }], [200, {}], [404, {}], [400, {}],
+    ]);
+    expect(Object.keys((reports[1]![1]))).toEqual(['refusal', 'kind']);
+    expect(forbidden.headers).toEqual({ 'Content-Type': 'text/plain; charset=utf-8', 'Content-Security-Policy': "frame-ancestors 'self'" });
   });
 
   it('answers a bad request loader and action with 400 (HY-58)', async () => {
