@@ -39,11 +39,11 @@ final class RequestTest extends TestCase
         }
     }
 
-    /** HY-45: the session cookie options. */
+    /** HY-45, HY-52: the session cookie options; the session adds no caching header. */
     public function testSessionCookieOptions(): void
     {
         self::assertSame(
-            ['cookie_httponly' => true, 'cookie_samesite' => 'Lax', 'cookie_secure' => false, 'use_strict_mode' => true, 'use_only_cookies' => true],
+            ['cookie_httponly' => true, 'cookie_samesite' => 'Lax', 'cookie_secure' => false, 'use_strict_mode' => true, 'use_only_cookies' => true, 'cache_limiter' => ''],
             NativeSession::options(false),
         );
         self::assertTrue(NativeSession::options(true)['cookie_secure']);

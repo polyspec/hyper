@@ -227,10 +227,11 @@ final class App
             return $request->header('If-None-Match') === $tag ? new Response(304, $headers, '') : new Response(200, $headers, $body);
         }
 
-        $headers = ['Content-Type' => 'text/html; charset=utf-8', 'Vary' => $vary];
-        if ($status === 200 && $reply->cacheControlValue() !== null) {
-            $headers['Cache-Control'] = $reply->cacheControlValue();
-        }
+        $headers = [
+            'Content-Type' => 'text/html; charset=utf-8',
+            'Cache-Control' => $status === 200 ? ($reply->cacheControlValue() ?? 'no-store') : 'no-store',
+            'Vary' => $vary,
+        ];
 
         return new Response($status, $headers, $this->document($request, $route, $shared, $data, $templates, $kept));
     }
@@ -381,11 +382,15 @@ final class App
         return new Response(204, [], '');
     }
 
-    /** Answers the current PHP request with the PHP session and writes the response; errors go to the log only. */
+    /**
+     * Answers the current PHP request with the PHP session and writes the response; errors go to the log only.
+     * A response without a body receives no Content-Type from PHP (HY-52).
+     */
     public function run(): void
     {
         ini_set('display_errors', '0');
         ini_set('log_errors', '1');
+        ini_set('default_mimetype', '');
         $this->handle(Request::fromGlobals(), new NativeSession($this->https))->send();
     }
 }

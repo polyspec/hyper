@@ -26,14 +26,14 @@ final class NativeSession implements SessionStore
     }
 
     /**
-     * Returns the session options: an HttpOnly, SameSite=Lax cookie, Secure on HTTPS, and only
-     * identifiers that the server created (HY-45).
+     * Returns the session options: an HttpOnly, SameSite=Lax cookie, Secure on HTTPS, only identifiers that
+     * the server created (HY-45), and no caching headers, because the application sets Cache-Control (HY-52).
      *
-     * @return array{cookie_httponly: true, cookie_samesite: 'Lax', cookie_secure: bool, use_strict_mode: true, use_only_cookies: true}
+     * @return array{cookie_httponly: true, cookie_samesite: 'Lax', cookie_secure: bool, use_strict_mode: true, use_only_cookies: true, cache_limiter: ''}
      */
     public static function options(bool $https): array
     {
-        return ['cookie_httponly' => true, 'cookie_samesite' => 'Lax', 'cookie_secure' => $https, 'use_strict_mode' => true, 'use_only_cookies' => true];
+        return ['cookie_httponly' => true, 'cookie_samesite' => 'Lax', 'cookie_secure' => $https, 'use_strict_mode' => true, 'use_only_cookies' => true, 'cache_limiter' => ''];
     }
 
     public function get(string $key): mixed
