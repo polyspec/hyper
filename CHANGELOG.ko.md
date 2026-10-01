@@ -63,6 +63,7 @@
 
 ### 변경
 
+- template 저장소가 이제 generated PHP 프로그램에 namespace를 요구하고 모든 수를 값으로 검사한다. 서버 build는 generated 프로그램을 namespace `Polyspec\Hyper\Program`에 쓰며, ±(2^53 − 1) 밖의 수는 정수든 아니든 요청을 500으로 실패시키고 유지 값이 되지 않는다(HY-38, HY-44).
 - 매니페스트가 이미 가진 정보를 반복하던 속성 `hy-region`과 요청 헤더 `Hy-Region`을 제거한다. 페이지 영역이 아닌 `Hy-Region`을 가진 POST가 액션을 실행했고(앞서 규칙 HY-16으로 막았으며, 이 규칙도 제거한다), 영역 `id`는 있지만 속성이 없는 요소에는 htmx가 HTML 문서 전체를 넣었다. 이제 영역 요소는 `id`가 영역 이름인 요소다(HY-3, HY-36). 확장은 대상이 페이지 영역 요소일 때 JSON을 요청하고, 서버는 htmx가 보내는 `HX-Request`로 영역 요청을 알아본다(HY-15, HY-21). `make templates-check`는 레이아웃과 라우트 템플릿의 모든 영역 배치를 검사하며, 영역 배치에는 블록 인자가 없다.
 - HTTPS에서 유지 쿠키 이름은 `__Host-hy-keep`이다. 그래서 형제 서브도메인이 유지 값을 심을 수 없다(HY-39).
 - `make bench-browser`에서 Chromium `<thead>` 측정을 제거한다. 이 프로젝트가 아니라 브라우저 동작을 재는 코드였다.
