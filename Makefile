@@ -53,7 +53,7 @@ serve-demo: assets ## Serve SSR on :8080, CSR on :8081 and the comparison page o
 bench-server: ## Measure PHP request handling and rendering cost per row count without network
 	php scripts/bench-server.php --app $(BOARD) --iterations 300
 
-bench-browser: assets ## Measure first screens, navigation, hy-set load and memory in Chromium
+bench-browser: assets ## Measure first screens, navigation, hy-set phases and load, and memory in Chromium
 	node scripts/bench-browser.mjs --ssr 8085 --edge 8086 --api 8087 --runs 15
 
 bench: bench-server bench-browser ## Run both measurements; results are reports, not pass or fail checks
