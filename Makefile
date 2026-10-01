@@ -9,7 +9,7 @@ EXT := build/ext/release/libpolyspec_template.$(if $(filter Darwin,$(shell uname
 
 .DEFAULT_GOAL := help
 
-.PHONY: help install template template-check ext server server-fixtures node-server node-fixtures assets test-js test-node test-php lint templates-check test-scripts parity server-parity bundle-size e2e docs-check serve-demo bench-server bench-browser bench check
+.PHONY: help install template template-check ext server server-fixtures node-server node-fixtures assets test-js test-node test-php lint templates-check test-scripts parity server-parity bundle-size e2e docs-check serve-demo bench-server bench-server-smoke bench-browser bench check
 
 help: ## List the targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
@@ -94,6 +94,9 @@ bench-server: server ext ## Measure PHP request handling and rendering cost per 
 bench-browser: assets server ## Measure first screens, navigation, hy-set phases and load, and memory in Chromium
 	node scripts/bench-browser.mjs --ssr 8085 --edge 8086 --api 8087 --runs 15
 
+bench-server-smoke: assets server ## Run the PHP benchmark once per measurement so that a change that breaks it fails make check
+	php scripts/bench-server.php --app $(BOARD) --iterations 1 > /dev/null
+
 bench: bench-server bench-browser ## Run both measurements; results are reports, not pass or fail checks
 
-check: template-check docs-check lint templates-check test-scripts test-js test-node test-php parity server-parity bundle-size e2e ## Run every check
+check: template-check bench-server-smoke docs-check lint templates-check test-scripts test-js test-node test-php parity server-parity bundle-size e2e ## Run every check

@@ -34,6 +34,7 @@
 | `make e2e` | Runs the SSR, CSR, no-JavaScript and comparison flows in Chromium |
 | `make docs-check` | Checks document pairs, links and code blocks |
 | `make serve-demo` | Serves SSR, CSR and the comparison page (see [Deployment](deployment.md)) |
+| `make bench-server-smoke` | Runs the PHP benchmark once per measurement; `make check` includes it so that a change that breaks the benchmark fails |
 | `make bench` | Runs `make bench-server` and `make bench-browser`, which report server and browser performance (see [Benchmark](benchmark.md)); they are not part of `make check` |
 | `make check` | Runs every check above |
 
