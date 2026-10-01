@@ -49,6 +49,7 @@ make serve-demo
 ## Documents
 
 - [Region protocol](docs/spec/protocol.md) defines the manifest, routing, rendering and the request and response contract.
+- [Screen composition](docs/spec/composition.md) defines which mechanism a screen part uses: HTML and CSS, a block, or a region.
 - [Feature status](docs/features.md) records implementation and verification.
 - [Development](docs/operations/development.md) describes the checks and the asset build.
 - [Deployment](docs/operations/deployment.md) describes SSR and CSR deployment, including S3 and CloudFront.

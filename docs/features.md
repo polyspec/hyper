@@ -5,6 +5,7 @@
 | ID | Feature | Status | Evidence |
 |---|---|---|---|
 | protocol | Region protocol specification (HY-1 to HY-28) | implemented | [Protocol](spec/protocol.md) |
+| composition | Screen composition rules (HC-1 to HC-6) and the template check for HC-6 | implemented | [Composition](spec/composition.md), `make templates-check` |
 | manifest | Application manifest read by PHP and the browser | implemented | `make test-php`, `make test-js` |
 | router | PHP and browser routers with shared conformance cases | implemented | `make test-php`, `make test-js` |
 | hyper-js | Browser code: region and document rendering, htmx extension, client-side rendering | implemented | `make test-js`, `make e2e` |
