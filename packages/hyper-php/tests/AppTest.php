@@ -16,7 +16,7 @@ use Polyspec\Hyper\Tests\Support\Counter;
 
 final class AppTest extends TestCase
 {
-    private const JSON = ['Accept' => 'application/json', 'Hy-Region' => 'content'];
+    private const JSON = ['Accept' => 'application/json', 'HX-Request' => 'true'];
     // The server program of the fixtures, which `make test-php` builds (HY-48).
     private const PROGRAM = __DIR__ . '/build/server';
 
@@ -119,7 +119,7 @@ final class AppTest extends TestCase
         $data = '{"env":{"timezone":"+09:00"},"route":"home","params":{},"shared":{"title":"Home","csrf":"' . $token . '"},'
             . '"regions":{"side":{"count":0,"note":null},"content":{"name":"n0"}},"kept":{}}';
         self::assertSame(
-            "<title>Home - Site</title>\n<aside id=\"side\" hy-region><b>0</b>\n</aside>\n<main id=\"content\" hy-region><p>Home|n0</p>\n</main>\n"
+            "<title>Home - Site</title>\n<aside id=\"side\"><b>0</b>\n</aside>\n<main id=\"content\"><p>Home|n0</p>\n</main>\n"
             . "<script type=\"application/json\" id=\"hy-data\">{$data}</script>",
             $response->body,
         );
@@ -136,9 +136,9 @@ final class AppTest extends TestCase
         ], 'content', [], new \stdClass());
 
         self::assertStringContainsString('<title>' . $renderer->alone('title.tpl', $shared, []) . '</title>', $document);
-        self::assertStringContainsString('<aside id="side" hy-region>' . $renderer->alone('side.tpl', $shared, ['count' => 1, 'note' => 'x']) . '</aside>', $document);
+        self::assertStringContainsString('<aside id="side">' . $renderer->alone('side.tpl', $shared, ['count' => 1, 'note' => 'x']) . '</aside>', $document);
         self::assertSame("<p>region|n</p>\n", $renderer->alone('page.tpl', $shared, ['title' => 'region', 'name' => 'n']));
-        self::assertStringContainsString("<main id=\"content\" hy-region><p>region|n</p>\n</main>", $document);
+        self::assertStringContainsString("<main id=\"content\"><p>region|n</p>\n</main>", $document);
     }
 
     public function testDocumentEmbedsTheDocumentJson(): void
@@ -161,7 +161,7 @@ final class AppTest extends TestCase
         self::assertSame(['content', 'rows'], array_keys($region['regions']));
         self::assertSame(['side', 'content', 'rows'], array_keys($document['regions']));
         self::assertSame(['items' => ['a<', 'b0'], 'open' => false, 'mode' => 'a', 'view' => 'x', 'filter' => ['a' => 1], 'tags' => []], $region['regions']['rows']);
-        self::assertStringContainsString('<ul id="rows" hy-region><li>a&lt;</li><li>b0</li></ul>', $this->get('/list')->body);
+        self::assertStringContainsString('<ul id="rows"><li>a&lt;</li><li>b0</li></ul>', $this->get('/list')->body);
     }
 
     public function testPageRegionAlonePassesRouteRegionsAsDefinitions(): void
@@ -176,9 +176,9 @@ final class AppTest extends TestCase
             'content' => ['template' => 'list.tpl', 'data' => []],
         ], 'content', ['rows' => $rows], new \stdClass());
 
-        self::assertSame("<h1>T</h1><ul id=\"rows\" hy-region><li>x</li></ul>\n", $page);
-        self::assertStringContainsString('<main id="content" hy-region>' . $page . '</main>', $document);
-        self::assertStringContainsString('<ul id="rows" hy-region>' . $renderer->alone('rows.tpl', $shared, ['items' => ['x']]) . '</ul>', $document);
+        self::assertSame("<h1>T</h1><ul id=\"rows\"><li>x</li></ul>\n", $page);
+        self::assertStringContainsString('<main id="content">' . $page . '</main>', $document);
+        self::assertStringContainsString('<ul id="rows">' . $renderer->alone('rows.tpl', $shared, ['items' => ['x']]) . '</ul>', $document);
     }
 
     public function testRouteRegionLoaderMustBeDeclared(): void
@@ -269,16 +269,6 @@ final class AppTest extends TestCase
         }
     }
 
-    public function testRegionCheckPrecedesTheAction(): void
-    {
-        // HY-16
-        $token = $this->token();
-        $response = $this->post('/add', ['_csrf' => $token, 'name' => 'a'], ['Accept' => 'application/json', 'Hy-Region' => 'side']);
-
-        self::assertSame(400, $response->status);
-        self::assertSame(0, $this->counter->actions);
-    }
-
     public function testInvalidUtf8IsRejectedBeforeLoadersAndActions(): void
     {
         // HY-42
@@ -342,7 +332,7 @@ final class AppTest extends TestCase
     public function testEveryResponseLimitsFraming(): void
     {
         // HY-45
-        foreach ([$this->get('/'), $this->get('/missing'), $this->get('/items/broken'), $this->get('/', ['Accept' => 'application/json', 'Hy-Region' => 'side'])] as $response) {
+        foreach ([$this->get('/'), $this->get('/missing'), $this->get('/items/broken'), $this->get('/', self::JSON)] as $response) {
             self::assertSame("frame-ancestors 'self'", $response->headers['Content-Security-Policy'] ?? null);
         }
         $framed = App::open(__DIR__ . '/fixtures/app.json', self::PROGRAM, ['routes' => ['add' => ['post' => fn (): Result => Result::redirect('/')]]], 'Z', frameAncestors: "'self' https://admin.example");
@@ -401,10 +391,27 @@ final class AppTest extends TestCase
         self::assertSame(['count' => 0, 'note' => null], $other['regions']['side']);
     }
 
-    public function testRegionRequestForAnotherRegionFails(): void
+    public function testHtmxRequestIsARegionRequestAndOtherJsonIsADocumentRequest(): void
     {
-        // HY-16
-        self::assertSame(400, $this->get('/', ['Accept' => 'application/json', 'Hy-Region' => 'side'])->status);
+        // HY-15, HY-18: htmx sends HX-Request; a JSON request without it receives every region.
+        self::assertSame(['content'], array_keys(self::json($this->get('/', self::JSON))['regions']));
+        self::assertSame(['side', 'content'], array_keys(self::json($this->get('/', ['Accept' => 'application/json']))['regions']));
+        self::assertSame('Accept, HX-Request, HX-Current-URL', $this->get('/', self::JSON)->headers['Vary']);
+    }
+
+    public function testKeptCookieIsHostOnlyOnHttps(): void
+    {
+        // HY-39, HY-45: on HTTPS the server reads only __Host-hy-keep, which another host cannot set.
+        $https = App::open(__DIR__ . '/fixtures/app.json', self::PROGRAM, [
+            'routes' => [
+                'add' => ['post' => fn (): Result => Result::redirect('/')],
+                'list' => ['regions' => ['rows' => fn (): array => ['items' => [], 'mode' => 'a']]],
+            ],
+        ], 'Z', https: true);
+        $read = fn (array $cookies): array => self::json($https->handle(new Request('GET', '/list', self::JSON, cookies: $cookies), $this->session))['kept'];
+        self::assertSame(['rows' => ['mode' => 'b']], $read(['__Host-hy-keep' => '{"rows":{"mode":"b"}}']));
+        self::assertSame([], $read(['hy-keep' => '{"rows":{"mode":"b"}}']));
+        self::assertSame([], self::json($this->app()->handle(new Request('GET', '/list', self::JSON, cookies: ['__Host-hy-keep' => '{"rows":{"mode":"b"}}']), $this->session))['kept']);
     }
 
     public function testBasePathIsRemovedForRoutingAndAddedToRedirects(): void

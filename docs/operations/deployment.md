@@ -11,14 +11,14 @@ One application deploys in two forms. Both use the same manifest, templates, cli
 
 ## Server and CDN (recommended)
 
-The server tells the two kinds of requests apart by their headers (HY-15). A direct request (the address bar, a reload, a bookmark, a search crawler or a link preview bot) has no `Hy-Region` and receives the complete document. A request from htmx inside a page carries `Accept: application/json` and `Hy-Region` and receives JSON, which the browser renders. Search engines and link previews therefore always receive complete documents with their titles.
+The server tells the two kinds of requests apart by their headers (HY-15). A direct request (the address bar, a reload, a bookmark, a search crawler or a link preview bot) has no `HX-Request` and receives the complete document. A request from htmx inside a page carries `Accept: application/json` and `HX-Request` and receives JSON, which the browser renders. Search engines and link previews therefore always receive complete documents with their titles.
 
 | Path pattern | Origin | Behavior |
 |---|---|---|
 | `/assets/*` | S3 bucket with `public/assets` | `GET` and `HEAD`. The client script and the template files carry content hashes in their names: `Cache-Control: public, max-age=31536000, immutable`. |
-| default (`*`) | PHP server | All methods, no caching, forward the `Cookie` (the session cookie and `hy-keep`), `Accept`, `Hy-Region`, `HX-Request`, `HX-Current-URL` and `Content-Type` headers and the query string. |
+| default (`*`) | PHP server | All methods, no caching, forward the `Cookie` (the session cookie and `__Host-hy-keep`), `Accept`, `HX-Request`, `HX-Current-URL` and `Content-Type` headers and the query string. |
 
-PHP runs without a base path. Responses carry `Vary: Accept, Hy-Region, HX-Current-URL`.
+PHP runs without a base path. Responses carry `Vary: Accept, HX-Request, HX-Current-URL`.
 
 Deploy `build/server`, which `make server` writes, next to the PHP code; the application opens it with `App::open(program: ...)`. For the fastest rendering, build the native template extension with `make ext` for the PHP version of the server and load it with the `extension` setting of `php.ini`. Without the extension, PHP renders with the generated program in `build/server/program.php` (HY-48).
 

@@ -17,8 +17,8 @@ hyper는 애플리케이션 하나에서 template 언어 템플릿으로 두 가
 ```
 <title>{# title}</title>
 <body hx-boost:inherited="true" hx-target:inherited="#content" hx-swap:inherited="innerMorph">
-<aside id="left" hy-region>{# left}</aside>
-<main id="content" hy-region>{# content}</main>
+<aside id="left">{# left}</aside>
+<main id="content">{# content}</main>
 </body>
 ```
 

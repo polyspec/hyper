@@ -8,7 +8,7 @@ EXT := build/ext/release/libpolyspec_template.$(if $(filter Darwin,$(shell uname
 
 .DEFAULT_GOAL := help
 
-.PHONY: help install template ext server server-fixtures assets test-js test-php lint templates-check parity bundle-size e2e docs-check serve-demo bench-server bench-browser bench check
+.PHONY: help install template ext server server-fixtures assets test-js test-php lint templates-check test-scripts parity bundle-size e2e docs-check serve-demo bench-server bench-browser bench check
 
 help: ## List the targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
@@ -44,8 +44,11 @@ lint: ## Check PHP formatting
 	cd $(PHP_PACKAGE) && vendor/bin/pint --test
 	cd $(BOARD) && vendor/bin/pint --test app src public
 
-templates-check: ## Check that only the layout template carries hx- attributes (HC-6)
+templates-check: ## Check hx- attributes (HC-6) and region placements (HY-3, HY-30) of the board templates
 	node scripts/check-templates.mjs --app $(BOARD)
+
+test-scripts: ## Run the tests of the check scripts
+	node --test tests/scripts/
 
 parity: assets server ext ## Compare PHP documents (generated program and native extension) with browser renders of document and region JSON
 	node scripts/check-parity.mjs --app $(BOARD) --requests $(BOARD)/tests/parity/requests.json --port 8092
@@ -73,4 +76,4 @@ bench-browser: assets server ## Measure first screens, navigation, hy-set phases
 
 bench: bench-server bench-browser ## Run both measurements; results are reports, not pass or fail checks
 
-check: docs-check lint templates-check test-js test-php parity bundle-size e2e ## Run every check
+check: docs-check lint templates-check test-scripts test-js test-php parity bundle-size e2e ## Run every check

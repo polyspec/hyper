@@ -28,6 +28,7 @@ final class Request
         private readonly string $csrfToken = '',
         private readonly array $params = [],
         private readonly array $cookies = [],
+        public readonly bool $https = false,
     ) {
         $this->headers = array_change_key_case($headers, CASE_LOWER);
     }
@@ -35,7 +36,7 @@ final class Request
     /** Returns a copy that carries the flash values and the CSRF token of the session. */
     public function withSession(Flash $flash, string $csrfToken): self
     {
-        return new self($this->method, $this->path, $this->headers, $this->query, $this->form, $flash->values, $csrfToken, $this->params, $this->cookies);
+        return new self($this->method, $this->path, $this->headers, $this->query, $this->form, $flash->values, $csrfToken, $this->params, $this->cookies, $this->https);
     }
 
     /**
@@ -45,7 +46,7 @@ final class Request
      */
     public function withRoute(string $path, array $params): self
     {
-        return new self($this->method, $path, $this->headers, $this->query, $this->form, $this->flash, $this->csrfToken, $params, $this->cookies);
+        return new self($this->method, $path, $this->headers, $this->query, $this->form, $this->flash, $this->csrfToken, $params, $this->cookies, $this->https);
     }
 
     /**
@@ -108,10 +109,10 @@ final class Request
         return str_contains($this->header('Accept') ?? '', 'application/json');
     }
 
-    /** Returns the region named by the Hy-Region header, or null for a document request (HY-15). */
-    public function region(): ?string
+    /** Returns true for a region request: JSON from htmx, which sends HX-Request with every request (HY-15). */
+    public function isRegionRequest(): bool
     {
-        return $this->header('Hy-Region');
+        return $this->wantsJson() && $this->header('HX-Request') === 'true';
     }
 
     /** Returns the path of the page that sent the request, or null (HY-11). */
@@ -193,6 +194,7 @@ final class Request
             $_GET,
             $_POST,
             cookies: array_filter($_COOKIE, 'is_string'),
+            https: ($_SERVER['HTTPS'] ?? '') !== '' && ($_SERVER['HTTPS'] ?? '') !== 'off',
         );
     }
 }

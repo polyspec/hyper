@@ -1,4 +1,4 @@
 <title>{# title}</title>
-<aside id="side">{# side}</aside>
+<aside class="side">{# left}</aside>
 <main id="content">{# content}</main>
 {# data}

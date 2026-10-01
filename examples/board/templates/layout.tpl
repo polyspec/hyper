@@ -9,8 +9,8 @@
 </head>
 <body hx-boost:inherited="true" hx-target:inherited="#content" hx-swap:inherited="innerMorph">
 <div class="shell">
-<aside id="left" hy-region>{# left}</aside>
-<main id="content" hy-region>{# content}</main>
+<aside id="left">{# left}</aside>
+<main id="content">{# content}</main>
 </div>
 {# data}
 </body>
