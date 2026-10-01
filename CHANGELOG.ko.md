@@ -8,6 +8,7 @@
 
 - 라우트 경로가 나머지 매개변수 `{name*}`로 끝날 수 있다. 이 매개변수는 0개 이상의 남은 요청 segment에 맞고, decode하지 않은 요청 경로의 나머지를 담는다(HY-49). 두 라우터가 `conformance/rest.json`의 사례를 통과한다.
 - loader나 action은 `Redirect`로 요청을 멈춰 redirect 결과의 위치, flash 값, 바뀐 topic으로 303 응답을 하거나(HY-50), `Forbidden`으로 403 응답을 할 수 있다(HY-51).
+- loader와 action은 요청의 `Reply`를 받는다. `Reply`는 HY-45의 속성으로 cookie를 더하거나 지우고 페이지 응답의 `Cache-Control`을 정하며, 응답은 상태와 상관없이 그 cookie를 담는다(HY-52). JSON 페이지 응답은 strong `ETag`를 가지며, 같은 `If-None-Match`를 가진 요청은 304를 받는다(HY-53). `Set-Cookie`는 여러 값을 가질 수 있는 유일한 응답 header다.
 
 ### 수정
 
