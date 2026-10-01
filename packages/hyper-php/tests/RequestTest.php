@@ -52,10 +52,35 @@ final class RequestTest extends TestCase
     public function testInvalidUtf8KeysAreRejectedAtAnyDepth(): void
     {
         // HY-42
-        self::assertFalse((new Request('GET', '/', [], ['a' => ["\xFF" => ['x' => '1']]]))->validInput());
-        self::assertFalse((new Request('GET', '/', [], ["a\xFF" => ['x' => '1']]))->validInput());
-        self::assertFalse((new Request('POST', '/', [], [], ['a' => ['b' => ["\xC3" => 'v']]]))->validInput());
-        self::assertTrue((new Request('GET', '/', [], ['a' => ['b' => ['c' => 'd']]]))->validInput());
+        self::assertFalse((new Request('GET', '/', [], 'a[%FF][x]=1'))->validInput());
+        self::assertFalse((new Request('GET', '/', [], 'a%FF[x]=1'))->validInput());
+        self::assertFalse((new Request('POST', '/', [], '', ['a' => ['b' => ["\xC3" => 'v']]]))->validInput());
+        self::assertTrue((new Request('GET', '/', [], 'a[b][c]=d'))->validInput());
+    }
+
+    /** HY-56: every query value in order, without nesting, and the raw query of the request target. */
+    public function testQueryValuesAreReadInOrderWithoutNesting(): void
+    {
+        $server = $_SERVER;
+        $get = $_GET;
+        $_SERVER['REQUEST_URI'] = '/board?b=1&roles[]=a&roles%5B%5D=b&1=x&b=2&q=a+b#top';
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        $_GET = ['ignored' => '1'];
+        try {
+            $request = Request::fromGlobals();
+        } finally {
+            $_SERVER = $server;
+            $_GET = $get;
+        }
+        self::assertSame('b=1&roles[]=a&roles%5B%5D=b&1=x&b=2&q=a+b', $request->rawQuery());
+        $query = [];
+        foreach ($request->query() as $name => $values) {
+            $query[] = [$name, $values];
+        }
+        self::assertSame([['b', ['1', '2']], ['roles[]', ['a', 'b']], ['1', ['x']], ['q', ['a b']]], $query);
+        self::assertSame(2, $request->queryInt('b', 7));
+        self::assertSame('', (new Request('GET', '/'))->rawQuery());
+        self::assertSame([], (new Request('GET', '/'))->query()->names());
     }
 
     public function testCookiesAreNotChecked(): void

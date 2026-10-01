@@ -17,6 +17,7 @@ interface State {
   method: string;
   path: string;
   headers: Map<string, string>;
+  rawQuery: string;
   query: Fields;
   form: Fields;
   cookies: Map<string, string>;
@@ -36,8 +37,7 @@ export class Request {
     for (const [name, value] of Object.entries(init.headers ?? {})) {
       if (value !== undefined) headers.set(name.toLowerCase(), Array.isArray(value) ? value.join(', ') : value);
     }
-    const target = init.target.slice(0, firstOf(init.target, '#'));
-    const question = target.indexOf('?');
+    const rawQuery = Request.targetQuery(init.target);
     const body = init.body ?? new Uint8Array();
     const type = headers.get('content-type') ?? '';
     let form: Fields = { values: new Map(), valid: true };
@@ -51,7 +51,8 @@ export class Request {
       method: init.method.toUpperCase(),
       path: Request.targetPath(init.target),
       headers,
-      query: parseUrlEncoded(question < 0 ? '' : target.slice(question + 1)),
+      rawQuery,
+      query: parseUrlEncoded(rawQuery),
       form,
       cookies: parseCookies(headers.get('cookie') ?? ''),
       https: init.https ?? false,
@@ -68,6 +69,13 @@ export class Request {
     const authority = /^[A-Za-z][A-Za-z0-9+.-]*:\/\/[^/]*/.exec(path);
     if (authority !== null) path = path.slice(authority[0].length);
     return path === '' ? '/' : path;
+  }
+
+  // Returns the raw query of a request target: the target after its first `?` up to its first `#` (HY-56).
+  static targetQuery(target: string): string {
+    const before = target.slice(0, firstOf(target, '#'));
+    const question = before.indexOf('?');
+    return question < 0 ? '' : before.slice(question + 1);
   }
 
   get method(): string {
@@ -140,15 +148,26 @@ export class Request {
     return this.state.path;
   }
 
-  // Returns a query value as an integer, or the default when it is absent or not an integer.
+  // Returns the raw query of the request target, or the empty string (HY-56). Its characters are bytes, as
+  // node:http gives the request target.
+  rawQuery(): string {
+    return this.state.rawQuery;
+  }
+
+  // Returns every query value in order, without nesting (HY-56).
+  query(): ReadonlyMap<string, readonly string[]> {
+    return copy(this.state.query);
+  }
+
+  // Returns the last query value of a name as an integer, or the default when it is absent or not an integer.
   queryInt(name: string, fallback: number): number {
-    const value = this.state.query.values.get(name);
+    const value = this.state.query.values.get(name)?.at(-1);
     return value !== undefined && /^-?[0-9]{1,15}$/.test(value) ? Number(value) : fallback;
   }
 
-  // Returns a form value as a string; an absent value is the empty string.
+  // Returns the last form value of a name; an absent name gives the empty string.
   formString(name: string): string {
-    return this.state.form.values.get(name) ?? '';
+    return this.state.form.values.get(name)?.at(-1) ?? '';
   }
 
   // Returns a flash value stored by the previous action, or null.
@@ -160,6 +179,10 @@ export class Request {
   csrfToken(): string {
     return this.state.csrfToken;
   }
+}
+
+function copy(fields: Fields): Map<string, string[]> {
+  return new Map([...fields.values].map(([name, values]) => [name, [...values]]));
 }
 
 function firstOf(text: string, char: string): number {

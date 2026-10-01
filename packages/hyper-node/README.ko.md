@@ -65,7 +65,7 @@ app.bind('posts', () => new Posts('/srv/board/var/board.db'));
 
 | 필드 | 타입 | 뜻 |
 |---|---|---|
-| `request` | `Request` | `method`, `path()`, `params()`, `param(name)`, `queryInt(name, fallback)`, `formString(name)`, `flash(name)`, `cookie(name)`, `header(name)`, `csrfToken()`, `currentPath()`, `wantsJson()`, `isRegionRequest()`, `https` |
+| `request` | `Request` | `method`, `path()`, `params()`, `param(name)`, `query()`, `rawQuery()`, `queryInt(name, fallback)`, `formString(name)`, `flash(name)`, `cookie(name)`, `header(name)`, `csrfToken()`, `currentPath()`, `wantsJson()`, `isRegionRequest()`, `https` |
 | `reply` | `Reply` | `cookie(name, value, maxAge?)`, `removeCookie(name)`, `cacheControl(value)`(HY-52) |
 | `services` | `Services<S>` | `get(key)`는 `app.bind`가 등록한 service를 반환한다 |
 

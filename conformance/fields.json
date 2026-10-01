@@ -1,0 +1,21 @@
+{
+  "cases": [
+    { "label": "empty text", "text": "", "fields": [] },
+    { "label": "one value", "text": "page=2", "fields": [["page", ["2"]]] },
+    { "label": "repeated name keeps every value in order", "text": "a=1&b=2&a=3", "fields": [["a", ["1", "3"]], ["b", ["2"]]] },
+    { "label": "brackets are part of the name", "text": "roles%5B%5D=admin&roles[]=editor&a[b][c]=d", "fields": [["roles[]", ["admin", "editor"]], ["a[b][c]", ["d"]]] },
+    { "label": "names keep the order of their first occurrence", "text": "z=1&y=2&x=3&y=4", "fields": [["z", ["1"]], ["y", ["2", "4"]], ["x", ["3"]]] },
+    { "label": "decimal names stay names", "text": "1=a&0=b&1=c", "fields": [["1", ["a", "c"]], ["0", ["b"]]] },
+    { "label": "plus is a space and percent sequences are bytes", "text": "q=a+b%20c&t=%ED%95%9C+%EA%B8%80", "fields": [["q", ["a b c"]], ["t", ["한 글"]]] },
+    { "label": "a percent without two hexadecimal digits stays", "text": "p=100%&r=%zz%4", "fields": [["p", ["100%"]], ["r", ["%zz%4"]]] },
+    { "label": "a part without an equals sign has an empty value", "text": "flag&x=", "fields": [["flag", [""]], ["x", [""]]] },
+    { "label": "the first equals sign separates the name", "text": "e=a=b", "fields": [["e", ["a=b"]]] },
+    { "label": "empty parts are skipped", "text": "&a=1&&b=2&", "fields": [["a", ["1"]], ["b", ["2"]]] },
+    { "label": "an empty name is a name", "text": "=x&=y", "fields": [["", ["x", "y"]]] },
+    { "label": "raw UTF-8 bytes are read as they are", "text": "t=한", "fields": [["t", ["한"]]] },
+    { "label": "a semicolon does not separate", "text": "a=1;b=2", "fields": [["a", ["1;b=2"]]] },
+    { "label": "a value that is not UTF-8 fails", "text": "a=%E2%82", "fields": null },
+    { "label": "a name that is not UTF-8 fails", "text": "a%FF=1", "fields": null },
+    { "label": "a bracketed name that is not UTF-8 fails", "text": "a[%C3]=v", "fields": null }
+  ]
+}
