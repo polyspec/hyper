@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-// Measures the CPU time of the PHP server without network: App::handle per request kind, and the
+// Measures the CPU time of the PHP server without network, with the template program that PHP selects (HY-48): App::handle per request kind, and the
 // template, data model and JSON costs as the number of rows grows. It uses its own database file,
 // which it recreates on every run.
 //
@@ -35,7 +35,7 @@ for ($index = 1; $index <= 30; $index++) {
 
 $application = App::open(
     manifest: "{$app}/app/app.json",
-    templates: "{$app}/templates",
+    program: "{$app}/build/server",
     handlers: require "{$app}/app/handlers.php",
     timezone: '+09:00',
 );
@@ -94,7 +94,7 @@ foreach ($requests as $label => $request) {
     printf("| %s | %d | %.3f | %.3f | %.3f | %d |\n", $label, $status, $result['mean'], $result['p50'], $result['p95'], $result['bytes']);
 }
 
-$renderer = new Renderer("{$app}/templates", '+09:00');
+$renderer = Renderer::open("{$app}/build/server", '+09:00');
 $shared = ['title' => '게시판', 'csrf' => $token];
 echo "\n## Scaling with rows (board/rows.tpl)\n\n| Rows | render ms | Bind::value ms | json_encode ms | HTML bytes | JSON bytes |\n|---:|---:|---:|---:|---:|---:|\n";
 foreach ([10, 100, 1000] as $count) {
@@ -113,5 +113,5 @@ foreach ([10, 100, 1000] as $count) {
     $encode = measure(max(20, intdiv($iterations, 10)), fn (): int => strlen(JsonEncoder::encode($value)));
     printf("| %d | %.3f | %.3f | %.3f | %d | %d |\n", $count, $render['mean'], $bind['mean'], $encode['mean'], $render['bytes'], $encode['bytes']);
 }
-printf("\nPHP %s, %d iterations per request, %s\n", PHP_VERSION, $iterations, php_uname('s') . ' ' . php_uname('m'));
+printf("\nPHP %s, %s template program, %d iterations per request, %s\n", PHP_VERSION, $renderer->engine, $iterations, php_uname('s') . ' ' . php_uname('m'));
 @unlink($database);

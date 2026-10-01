@@ -17,6 +17,8 @@ use Polyspec\Hyper\Tests\Support\Counter;
 final class AppTest extends TestCase
 {
     private const JSON = ['Accept' => 'application/json', 'Hy-Region' => 'content'];
+    // The server program of the fixtures, which `make test-php` builds (HY-48).
+    private const PROGRAM = __DIR__ . '/build/server';
 
     private ArraySession $session;
     private Counter $counter;
@@ -32,7 +34,7 @@ final class AppTest extends TestCase
         $counter = $this->counter;
         $app = App::open(
             manifest: __DIR__ . '/fixtures/app.json',
-            templates: __DIR__ . '/fixtures/templates',
+            program: self::PROGRAM,
             handlers: [
                 'regions' => [
                     'side' => fn (Request $request, Counter $counter): array => [
@@ -126,12 +128,12 @@ final class AppTest extends TestCase
     public function testPartsRenderedAloneMatchTheDocument(): void
     {
         // HY-13
-        $renderer = new Renderer(__DIR__ . '/fixtures/templates', '+09:00');
+        $renderer = Renderer::open(self::PROGRAM, '+09:00');
         $shared = ['title' => 'T', 'name' => 'shared'];
         $document = $renderer->document('layout.tpl', 'title.tpl', $shared, [
             'side' => ['template' => 'side.tpl', 'data' => ['count' => 1, 'note' => 'x']],
             'content' => ['template' => 'page.tpl', 'data' => ['title' => 'region', 'name' => 'n']],
-        ], new \stdClass());
+        ], 'content', [], new \stdClass());
 
         self::assertStringContainsString('<title>' . $renderer->alone('title.tpl', $shared, []) . '</title>', $document);
         self::assertStringContainsString('<aside id="side" hy-region>' . $renderer->alone('side.tpl', $shared, ['count' => 1, 'note' => 'x']) . '</aside>', $document);
@@ -165,15 +167,14 @@ final class AppTest extends TestCase
     public function testPageRegionAlonePassesRouteRegionsAsDefinitions(): void
     {
         // HY-13, HY-30
-        $renderer = new Renderer(__DIR__ . '/fixtures/templates', 'Z');
+        $renderer = Renderer::open(self::PROGRAM, 'Z');
         $shared = ['title' => 'T'];
         $rows = ['template' => 'rows.tpl', 'data' => ['items' => ['x']]];
         $page = $renderer->alone('list.tpl', $shared, [], ['rows' => $rows]);
         $document = $renderer->document('layout.tpl', 'title.tpl', $shared, [
             'side' => ['template' => 'side.tpl', 'data' => ['count' => 1]],
             'content' => ['template' => 'list.tpl', 'data' => []],
-            'rows' => $rows,
-        ], new \stdClass());
+        ], 'content', ['rows' => $rows], new \stdClass());
 
         self::assertSame("<h1>T</h1><ul id=\"rows\" hy-region><li>x</li></ul>\n", $page);
         self::assertStringContainsString('<main id="content" hy-region>' . $page . '</main>', $document);
@@ -184,7 +185,7 @@ final class AppTest extends TestCase
     {
         // HY-30
         $this->expectException(\InvalidArgumentException::class);
-        App::open(__DIR__ . '/fixtures/app.json', __DIR__ . '/fixtures/templates', [
+        App::open(__DIR__ . '/fixtures/app.json', self::PROGRAM, [
             'routes' => ['add' => ['post' => fn (): Result => Result::redirect('/')], 'home' => ['regions' => ['rows' => fn (): array => []]]],
         ], 'Z');
     }
@@ -260,7 +261,7 @@ final class AppTest extends TestCase
         // HY-37, HY-40
         foreach (['keep-kind', 'keep-page', 'keep-reserved', 'uses-topic'] as $fixture) {
             try {
-                App::open(__DIR__ . "/fixtures/invalid/{$fixture}.json", __DIR__ . '/fixtures/templates', [], 'Z');
+                App::open(__DIR__ . "/fixtures/invalid/{$fixture}.json", self::PROGRAM, [], 'Z');
                 self::fail("{$fixture} was accepted");
             } catch (\InvalidArgumentException) {
                 self::addToAssertionCount(1);
@@ -344,7 +345,7 @@ final class AppTest extends TestCase
         foreach ([$this->get('/'), $this->get('/missing'), $this->get('/items/broken'), $this->get('/', ['Accept' => 'application/json', 'Hy-Region' => 'side'])] as $response) {
             self::assertSame("frame-ancestors 'self'", $response->headers['Content-Security-Policy'] ?? null);
         }
-        $framed = App::open(__DIR__ . '/fixtures/app.json', __DIR__ . '/fixtures/templates', ['routes' => ['add' => ['post' => fn (): Result => Result::redirect('/')]]], 'Z', frameAncestors: "'self' https://admin.example");
+        $framed = App::open(__DIR__ . '/fixtures/app.json', self::PROGRAM, ['routes' => ['add' => ['post' => fn (): Result => Result::redirect('/')]]], 'Z', frameAncestors: "'self' https://admin.example");
         self::assertSame("frame-ancestors 'self' https://admin.example", $framed->handle(new Request('GET', '/'), $this->session)->headers['Content-Security-Policy']);
     }
 
@@ -473,13 +474,13 @@ final class AppTest extends TestCase
     {
         // HY-2
         $this->expectException(\InvalidArgumentException::class);
-        App::open(__DIR__ . '/fixtures/app.json', __DIR__ . '/fixtures/templates', ['routes' => ['unknown' => []]], 'Z');
+        App::open(__DIR__ . '/fixtures/app.json', self::PROGRAM, ['routes' => ['unknown' => []]], 'Z');
     }
 
     public function testDeclaredPostRouteNeedsAnAction(): void
     {
         // HY-2
         $this->expectException(\InvalidArgumentException::class);
-        App::open(__DIR__ . '/fixtures/app.json', __DIR__ . '/fixtures/templates', [], 'Z');
+        App::open(__DIR__ . '/fixtures/app.json', self::PROGRAM, [], 'Z');
     }
 }

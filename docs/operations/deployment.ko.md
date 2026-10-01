@@ -24,6 +24,8 @@
 
 PHP는 기본 경로 없이 실행한다. 응답에는 `Vary: Accept, Hy-Region, HX-Current-URL`이 붙는다.
 
+`make server`가 만든 `build/server`를 PHP 코드와 함께 배포한다. 애플리케이션은 `App::open(program: ...)`으로 이 디렉터리를 연다. 가장 빠르게 렌더하려면 서버의 PHP 버전에 맞춰 `make ext`로 네이티브 템플릿 확장을 빌드하고, `php.ini`의 `extension` 설정으로 불러온다. 확장이 없으면 PHP는 `build/server/program.php`의 generated 프로그램으로 렌더한다(HY-48).
+
 ## 정적 셸
 
 `make assets`는 `examples/board/dist/csr/`를 만든다. 스타일시트와 클라이언트 스크립트를 인라인한 `index.html`과, 템플릿마다 파일 하나를 담은 `assets/templates/`다.

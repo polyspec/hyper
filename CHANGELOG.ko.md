@@ -50,6 +50,7 @@
 
 ### 변경
 
+- PHP 서버는 `make server`가 템플릿에서 컴파일한 프로그램으로 렌더한다. PHP가 네이티브 템플릿 확장을 불러왔으면 그 확장으로, 그렇지 않으면 generated PHP 프로그램으로 렌더한다(HY-48). PHP AST 인터프리터는 1,000행에 16 ms가 걸렸다. 같은 입력에서 generated 프로그램은 약 1.6배, 네이티브 확장은 약 9배 빨랐고 출력은 같았다. generated 프로그램은 정의마다 템플릿을 고정하므로, 서버는 모든 영역을 단독으로 렌더해 HTML 정의로 넘긴다. `make test-php`와 `make parity`는 두 프로그램으로 실행한다. `App::open`은 `templates:` 대신 `program:`을 받고, `TemplateLoader`를 제거했다.
 - JSON 응답은 유지 값을 영역 데이터와 따로 담는다(HY-17). `regions`는 로더 데이터를 담고, `kept`는 형태가 맞는 `server`와 `cookie` 값을 담는다. 서버는 문서를 렌더할 때 이 값을 적용하고, 브라우저는 자기 값과 함께 적용한다. 그래서 브라우저도 렌더를 깨는 유지 값을 빼고 영역을 렌더할 수 있다(HY-38).
 - 서버는 더 이상 쿠키의 UTF-8을 검사하지 않는다(HY-42). 쿠키가 만료될 때까지 모든 요청에 400으로 응답하는 대신, 잘못된 `hy-keep`은 무시하고 잘못된 세션 쿠키에는 새 세션을 시작한다.
 - 권장 배포는 서버 하나가 직접 요청에는 SSR로, htmx 요청에는 JSON으로 응답하는 방식이다. 정적 셸은 JSON만 제공하는 백엔드를 위한 것이다(`docs/operations/deployment.ko.md`).
@@ -101,6 +102,10 @@
 
 ### 검증
 
+- 2026-10-01, 컴파일된 템플릿 프로그램으로 바꾼 뒤(HY-48): `make check` 통과.
+  - `make test-php`: generated 프로그램으로 테스트 148개 통과, 네이티브 확장으로 148개 통과. 확장에서는 두 번째 generated 프로그램을 불러오는 테스트가 해당하지 않아 건너뛴다.
+  - `make parity`: 비교 단계 10개가 generated 프로그램과 네이티브 확장 모두에서 바이트 단위로 같았다.
+  - `make test-js` 테스트 139개, `make e2e` 테스트 12개, `make bundle-size` 통과
 - 2026-10-01, 호출 순서, 저장, 요청 검사의 수정 뒤, 환경: macOS, Node.js 26.8.1, PHP 8.5.10, Playwright 1.63.0의 Chromium. `make check` 통과.
   - `make test-js`: 유지 값 적합성 사례 31개를 포함한 테스트 139개와 타입 검사 통과
   - `make test-php`: 같은 유지 값 사례 31개를 포함한 테스트 145개 통과

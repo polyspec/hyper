@@ -20,6 +20,8 @@ The server tells the two kinds of requests apart by their headers (HY-15). A dir
 
 PHP runs without a base path. Responses carry `Vary: Accept, Hy-Region, HX-Current-URL`.
 
+Deploy `build/server`, which `make server` writes, next to the PHP code; the application opens it with `App::open(program: ...)`. For the fastest rendering, build the native template extension with `make ext` for the PHP version of the server and load it with the `extension` setting of `php.ini`. Without the extension, PHP renders with the generated program in `build/server/program.php` (HY-48).
+
 ## Static shell
 
 `make assets` writes `examples/board/dist/csr/`: `index.html` with the stylesheet and the client script inlined, and `assets/templates/` with one file per template.

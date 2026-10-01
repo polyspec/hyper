@@ -8,6 +8,7 @@
 - `pdo_sqlite`가 있는 PHP 8.2 이상
 - Composer 2
 - `../template`에 있는 template 저장소. `make template`이 그 TypeScript 패키지를 빌드하며, 브라우저 코드가 이 패키지를 가져온다.
+- 네이티브 템플릿 확장을 `make ext`로 빌드할 Rust(template 저장소가 고정한 버전)
 - Playwright용 Chromium: `npx playwright install chromium`
 
 ## 타깃
@@ -16,18 +17,30 @@
 |---|---|
 | `make install` | npm과 Composer 의존성을 설치한다 |
 | `make template` | TypeScript template 패키지를 빌드한다 |
+| `make ext` | template 저장소의 네이티브 템플릿 확장을 `build/ext`에 빌드한다(HY-48) |
+| `make server` | 게시판 서버 프로그램을 `examples/board/build/server`에 빌드한다(아래 참조) |
+| `make server-fixtures` | PHP 테스트 픽스처의 서버 프로그램을 빌드한다 |
 | `make assets` | 게시판 클라이언트 번들과 CSR 셸을 빌드한다(아래 참조) |
 | `make test-js` | 라우터 적합성 사례를 포함한 브라우저 코드 테스트와 타입 검사를 실행한다 |
-| `make test-php` | 라우터 적합성 사례를 포함한 서버 패키지 테스트를 실행한다 |
+| `make test-php` | 라우터 적합성 사례를 포함한 서버 패키지 테스트를 generated 프로그램으로 한 번, 네이티브 확장으로 한 번 실행한다 |
 | `make lint` | PHP 형식을 검사한다 |
 | `make templates-check` | 레이아웃 템플릿만 `hx-` 속성을 가지는지(HC-6), 레이아웃이 `{# title}`, `{# data}`, 모든 매니페스트 영역을 한 번씩 배치하는지(HY-3) 검사한다 |
-| `make parity` | PHP 문서와, 문서 JSON과 영역 JSON의 브라우저 렌더 결과를 비교한다 |
+| `make parity` | PHP 문서와, 문서 JSON과 영역 JSON의 브라우저 렌더 결과를 비교한다. generated 프로그램으로 한 번, 네이티브 확장으로 한 번 실행한다 |
 | `make bundle-size` | SSR 스크립트와 CSR 셸 크기를 출력하고 `config/bundle-size.json`의 gzip 상한을 적용한다 |
 | `make e2e` | SSR, CSR, JavaScript 없는 흐름, 비교 흐름을 Chromium에서 실행한다 |
 | `make docs-check` | 문서 쌍, 링크, 코드 블록을 검사한다 |
 | `make serve-demo` | SSR, CSR, 비교 페이지를 실행한다([배포](deployment.ko.md) 참조) |
 | `make bench` | 서버와 브라우저 성능을 보고하는 `make bench-server`와 `make bench-browser`를 실행한다([성능 측정](benchmark.ko.md) 참조). `make check`에는 포함하지 않는다 |
 | `make check` | 위의 모든 검사를 실행한다 |
+
+## 서버 빌드
+
+`scripts/build-server.mjs --manifest <app.json> --templates <directory> --output <directory> --template-dir <template repository>`는 서버 프로그램을 만든다(HY-48).
+
+1. `templates/`: 애플리케이션의 모든 템플릿과 예약 템플릿 `hyper/data.tpl`. 네이티브 확장이 이 파일을 읽는다.
+2. `program.php`: 같은 템플릿을 template 저장소의 컴파일러로 컴파일한 generated PHP 프로그램. 서버가 각 영역을 단독으로 렌더하므로, 모든 템플릿은 대상으로 렌더되고 모든 정의는 HTML이다.
+
+PHP가 `polyspec_template`을 불러왔으면 네이티브 확장으로, 그렇지 않으면 `program.php`로 렌더한다. 두 출력은 같은 원본에서 만들어지므로, 서버는 확장을 불러오는지 여부만으로 엔진을 바꿀 수 있다.
 
 ## 에셋 빌드
 

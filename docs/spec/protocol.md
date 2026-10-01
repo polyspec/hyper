@@ -46,6 +46,7 @@ This document defines the application manifest, routing, rendering, the requests
 - **HY-12** A document is the layout rendered with root data equal to the shared data and with the definitions `layout` (the layout template), `title` (the title template) and one definition per region, `{ "template": <template>, "data": <region data> }`. The page region template is the route template.
 - **HY-13** A region rendered alone uses the region template and the root data `merge(shared, region data)`, where a region data value replaces a shared value with the same name. The title rendered alone uses the title template and the shared data. These are the context data orders of a block (template runtime rule RT-26), so a part rendered alone produces the same bytes as the same part inside the document.
 - **HY-14** Server and browser render with the same environment. The server sends the time zone in every JSON response.
+- **HY-48** The PHP server renders with a program that the build compiles from the application templates: with the native template extension `polyspec_template` when PHP has loaded it, and otherwise with the generated PHP program of the same templates. The server renders the title, the embedded data and every region alone (HY-13) and passes them as `html` definitions to the layout and to the page region, which gives the bytes of HY-12. Both programs pass the same tests and `make parity`. A PHP process loads one generated program; loading a second one fails.
 
 ## Requests
 

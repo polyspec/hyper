@@ -6,6 +6,7 @@
 
 - Node.js 26.8.1 (`.node-version`), PHP 8.2 or later with `pdo_sqlite`, Composer 2.
 - The template repository at `../template`. `make template` builds its TypeScript package, which the browser code imports.
+- Rust (the version that the template repository pins) to build the native template extension with `make ext`.
 - Chromium for Playwright: `npx playwright install chromium`.
 
 ## Targets
@@ -14,18 +15,30 @@
 |---|---|
 | `make install` | Installs npm and Composer dependencies |
 | `make template` | Builds the TypeScript template package |
+| `make ext` | Builds the native template extension of the template repository into `build/ext` (HY-48) |
+| `make server` | Builds the board server program into `examples/board/build/server` (see below) |
+| `make server-fixtures` | Builds the server program of the PHP test fixtures |
 | `make assets` | Builds the board client bundle and the CSR shell (see below) |
 | `make test-js` | Runs the browser code tests, including the router conformance cases, and the type check |
-| `make test-php` | Runs the server package tests, including the router conformance cases |
+| `make test-php` | Runs the server package tests, including the router conformance cases, once with the generated program and once with the native extension |
 | `make lint` | Checks PHP formatting |
 | `make templates-check` | Checks that only the layout template carries `hx-` attributes (HC-6) and that the layout places `{# title}`, `{# data}` and every manifest region once (HY-3) |
-| `make parity` | Compares PHP documents with browser renders of document and region JSON |
+| `make parity` | Compares PHP documents with browser renders of document and region JSON, once with the generated program and once with the native extension |
 | `make bundle-size` | Prints the SSR script and CSR shell sizes and enforces the gzip limits in `config/bundle-size.json` |
 | `make e2e` | Runs the SSR, CSR, no-JavaScript and comparison flows in Chromium |
 | `make docs-check` | Checks document pairs, links and code blocks |
 | `make serve-demo` | Serves SSR, CSR and the comparison page (see [Deployment](deployment.md)) |
 | `make bench` | Runs `make bench-server` and `make bench-browser`, which report server and browser performance (see [Benchmark](benchmark.md)); they are not part of `make check` |
 | `make check` | Runs every check above |
+
+## Server build
+
+`scripts/build-server.mjs --manifest <app.json> --templates <directory> --output <directory> --template-dir <template repository>` writes the server program (HY-48):
+
+1. `templates/`: every template of the application and the reserved template `hyper/data.tpl`. The native extension reads these files.
+2. `program.php`: the generated PHP program of the same templates, compiled with the compiler of the template repository. Every template renders as a target, and every definition is HTML, because the server renders each region alone.
+
+PHP renders with the native extension when it has loaded `polyspec_template`, and otherwise with `program.php`. Both outputs are built from the same sources, so a server can switch by loading or not loading the extension.
 
 ## Asset build
 
