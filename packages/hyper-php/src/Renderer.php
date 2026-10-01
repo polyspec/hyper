@@ -14,9 +14,6 @@ final class Renderer
 {
     public const DATA_NAME = 'hyper/data.tpl';
 
-    /** The generated program file that this process loaded, if any (HY-48). */
-    private static ?string $loaded = null;
-
     private function __construct(private readonly object $program, public readonly string $engine, private readonly string $timezone)
     {
     }
@@ -24,22 +21,18 @@ final class Renderer
     /** Opens the program that `scripts/build-server.mjs` wrote to a directory. */
     public static function open(string $program, string $timezone): self
     {
-        if (!is_file("{$program}/program.php") || !is_dir("{$program}/templates")) {
+        if (!is_file("{$program}/program.php") || !is_file("{$program}/program.json") || !is_dir("{$program}/templates")) {
             throw new \InvalidArgumentException("{$program} is not a server program built by scripts/build-server.mjs");
         }
         if (extension_loaded('polyspec_template')) {
             return new self(new NativeEngine("{$program}/templates"), 'native', $timezone);
         }
-        $file = (string) realpath("{$program}/program.php");
-        if (self::$loaded !== null && self::$loaded !== $file) {
-            throw new \LogicException('a PHP process loads one generated program; ' . self::$loaded . " is loaded and {$file} differs");
-        }
-        if (self::$loaded === null) {
-            require $file;
-            self::$loaded = $file;
-        }
+        // The generated program is declared in the namespace that the build chose (HY-48).
+        $namespace = json_decode((string) file_get_contents("{$program}/program.json"), true, flags: JSON_THROW_ON_ERROR)['namespace'];
+        require_once "{$program}/program.php";
+        $class = "\\{$namespace}\\GeneratedProgram";
 
-        return new self(new \Polyspec\Hyper\Program\GeneratedProgram(), 'generated', $timezone);
+        return new self(new $class(), 'generated', $timezone);
     }
 
     /**

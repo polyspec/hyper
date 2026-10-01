@@ -69,6 +69,7 @@
 ### 변경
 
 - template 저장소가 이제 generated PHP 프로그램에 namespace를 요구하고 모든 수를 값으로 검사한다. 서버 build는 generated 프로그램을 namespace `Polyspec\Hyper\Program`에 쓰며, ±(2^53 − 1) 밖의 수는 정수든 아니든 요청을 500으로 실패시키고 유지 값이 되지 않는다(HY-38, HY-44).
+- 빌드는 이제 generated PHP 프로그램의 네임스페이스를 고정된 `Polyspec\Hyper\Program` 대신 애플리케이션에서 받고(`--php-namespace`, 게시판은 `Polyspec\Hyper\Examples\Board\Program`), `program.json`에 기록한다. 그래서 여러 애플리케이션의 프로그램을 한 PHP 프로세스에서 불러올 수 있으며, 프로세스가 generated 프로그램 하나만 불러온다는 규칙을 제거한다(HY-48). `make template`은 PHP template 패키지의 Composer 복사본도 다시 설치하며, 테스트, 에셋, 서버 빌드가 먼저 실행한다. 패키지 버전이 바뀌지 않으면 Composer가 오래된 복사본을 그대로 두었기 때문이다. `make check`는 `make template-check`로 시작하며, 복사본이 template 저장소와 다르면 실패한다.
 - 매니페스트가 이미 가진 정보를 반복하던 속성 `hy-region`과 요청 헤더 `Hy-Region`을 제거한다. 페이지 영역이 아닌 `Hy-Region`을 가진 POST가 액션을 실행했고(앞서 규칙 HY-16으로 막았으며, 이 규칙도 제거한다), 영역 `id`는 있지만 속성이 없는 요소에는 htmx가 HTML 문서 전체를 넣었다. 이제 영역 요소는 `id`가 영역 이름인 요소다(HY-3, HY-36). 확장은 대상이 페이지 영역 요소일 때 JSON을 요청하고, 서버는 htmx가 보내는 `HX-Request`로 영역 요청을 알아본다(HY-15, HY-21). `make templates-check`는 레이아웃과 라우트 템플릿의 모든 영역 배치를 검사하며, 영역 배치에는 블록 인자가 없다.
 - HTTPS에서 유지 쿠키 이름은 `__Host-hy-keep`이다. 그래서 형제 서브도메인이 유지 값을 심을 수 없다(HY-39).
 - `make bench-browser`에서 Chromium `<thead>` 측정을 제거한다. 이 프로젝트가 아니라 브라우저 동작을 재는 코드였다.
@@ -124,6 +125,7 @@
 
 ### 검증
 
+- 2026-10-01, 별도 server package를 이 저장소로 병합하고 네임스페이스를 변경한 뒤: `make check` 통과(종료 상태 0). template 복사본이 template 저장소와 같음, `make test-js` 테스트 165개, `make test-node` 테스트 248개, `make test-php`는 generated 프로그램으로 224개와 네이티브 확장으로 224개(해당하지 않는 1개는 건너뜀), 두 프로그램 모두로 `make parity`, `make server-parity` 응답 41개, `make bundle-size`(SSR 32,500 중 32,057, CSR 33,800 중 33,364 gzip 바이트), `make e2e` 테스트 12개
 - 2026-10-01, `hy-region`, `Hy-Region` 제거와 스왑, 유지 값, 리다이렉트, 세션의 수정 뒤: `make check` 통과. `make test-scripts` 테스트 2개, `make test-js` 테스트 145개, `make test-php`는 generated 프로그램으로 149개와 네이티브 확장으로 149개(해당하지 않는 테스트 1개는 건너뜀), 두 프로그램 모두로 `make parity`, `make bundle-size`, `make e2e` 테스트 12개
 - 2026-10-01, 컴파일된 템플릿 프로그램으로 바꾼 뒤(HY-48): `make check` 통과.
   - `make test-php`: generated 프로그램으로 테스트 148개 통과, 네이티브 확장으로 148개 통과. 확장에서는 두 번째 generated 프로그램을 불러오는 테스트가 해당하지 않아 건너뛴다.

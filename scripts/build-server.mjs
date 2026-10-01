@@ -2,18 +2,19 @@
 //   <output>/templates/   every template and the reserved template hyper/data.tpl, which the native
 //                         template extension reads
 //   <output>/program.php  the generated PHP program of the same templates, compiled with the compiler
-//                         of the template repository
+//                         of the template repository into the namespace --php-namespace
+//   <output>/program.json the namespace of the generated program
 //
 // Usage: node scripts/build-server.mjs --manifest examples/board/app/app.json --templates examples/board/templates
-//          --output examples/board/build/server --template-dir ../template
+//          --output examples/board/build/server --template-dir ../template --php-namespace 'Polyspec\Hyper\Examples\Board\Program'
 
 import { cpSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
 
-const { values } = parseArgs({ options: { manifest: { type: 'string' }, templates: { type: 'string' }, output: { type: 'string' }, 'template-dir': { type: 'string' } } });
-for (const name of ['manifest', 'templates', 'output', 'template-dir']) if (!values[name]) throw new Error(`--${name} is required`);
+const { values } = parseArgs({ options: { manifest: { type: 'string' }, templates: { type: 'string' }, output: { type: 'string' }, 'template-dir': { type: 'string' }, 'php-namespace': { type: 'string' } } });
+for (const name of ['manifest', 'templates', 'output', 'template-dir', 'php-namespace']) if (!values[name]) throw new Error(`--${name} is required`);
 const compilerDir = resolve(values['template-dir'], 'tools', 'compiler');
 const load = (file) => import(pathToFileURL(join(compilerDir, file)).href);
 const { compileAst } = await load('ast-artifact.mjs');
@@ -39,7 +40,8 @@ const types = deriveTypeManifest(parsed, {});
 writeFileSync(typesPath, JSON.stringify({ ...types, entry: manifest.layout, templates: Object.fromEntries([...parsed.keys()].map((name) => [name, {}])) }));
 const graph = join(output, 'graph');
 compileAst({ root: templates, output: graph, entry: manifest.layout, refresh: 'true', typeManifest: typesPath });
-writeFileSync(join(output, 'program.php'), compileSource(join(graph, 'manifest.json'), typesPath, 'php', { phpNamespace: 'Polyspec\\Hyper\\Program' }));
+writeFileSync(join(output, 'program.php'), compileSource(join(graph, 'manifest.json'), typesPath, 'php', { phpNamespace: values['php-namespace'] }));
+writeFileSync(join(output, 'program.json'), `${JSON.stringify({ namespace: values['php-namespace'] }, null, 2)}\n`);
 process.stdout.write(`server program: ${parsed.size} templates, ${join(values.output, 'program.php')}\n`);
 
 function listTemplates(root, prefix = '') {

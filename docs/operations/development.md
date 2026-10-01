@@ -14,7 +14,8 @@
 | Target | Action |
 |---|---|
 | `make install` | Installs npm and Composer dependencies |
-| `make template` | Builds the TypeScript template package |
+| `make template` | Builds the TypeScript template package and reinstalls the Composer copies of the PHP template package; tests, assets and server builds run it first |
+| `make template-check` | Fails when a Composer copy of the PHP template package differs from the template repository |
 | `make ext` | Builds the native template extension of the template repository into `build/ext` (HY-48) |
 | `make server` | Builds the board server program into `examples/board/build/server` (see below) |
 | `make server-fixtures` | Builds the server program of the PHP test fixtures |
@@ -38,10 +39,10 @@
 
 ## Server build
 
-`scripts/build-server.mjs --manifest <app.json> --templates <directory> --output <directory> --template-dir <template repository>` writes the server program (HY-48):
+`scripts/build-server.mjs --manifest <app.json> --templates <directory> --output <directory> --template-dir <template repository> --php-namespace <namespace>` writes the server program (HY-48):
 
 1. `templates/`: every template of the application and the reserved template `hyper/data.tpl`. The native extension reads these files.
-2. `program.php`: the generated PHP program of the same templates in the namespace `Polyspec\Hyper\Program`, compiled with the compiler of the template repository. Every template renders as a target, and every definition is HTML, because the server renders each region alone.
+2. `program.php`: the generated PHP program of the same templates, compiled with the compiler of the template repository into the given PHP namespace (`Polyspec\Hyper\Examples\Board\Program` for the board). `program.json` records the namespace, which the renderer reads. Every template renders as a target, and every definition is HTML, because the server renders each region alone.
 
 PHP renders with the native extension when it has loaded `polyspec_template`, and otherwise with `program.php`. Both outputs are built from the same sources, so a server can switch by loading or not loading the extension.
 
