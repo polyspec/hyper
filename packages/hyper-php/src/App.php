@@ -12,7 +12,7 @@ final class App
 
     /**
      * @param array<string, \Closure> $regionLoaders
-     * @param array<string, array{load?: \Closure, post?: \Closure}> $routeHandlers
+     * @param array<string, array{load?: \Closure, post?: \Closure, regions?: array<string, \Closure>}> $routeHandlers
      */
     private function __construct(
         private readonly Manifest $manifest,
@@ -30,7 +30,7 @@ final class App
     /**
      * Creates an application from its manifest, its templates and the handlers that load data and run actions.
      *
-     * @param array{shared?: \Closure, regions?: array<string, \Closure>, routes?: array<string, array{load?: \Closure, post?: \Closure}>} $handlers
+     * @param array{shared?: \Closure, regions?: array<string, \Closure>, routes?: array<string, array{load?: \Closure, post?: \Closure, regions?: array<string, \Closure>}>} $handlers
      */
     public static function open(string $manifest, string $templates, array $handlers, string $timezone, string $basePath = ''): self
     {
@@ -56,6 +56,12 @@ final class App
             }
             if (isset($handler['post']) !== $declared->routes[$name]['post']) {
                 throw new \InvalidArgumentException("route {$name} must have a POST action exactly when the manifest declares post");
+            }
+            $routeRegions = array_map(fn (Region $region): string => $region->name, $declared->routes[$name]['regions']);
+            foreach (array_keys($handler['regions'] ?? []) as $regionName) {
+                if (!in_array($regionName, $routeRegions, true)) {
+                    throw new \InvalidArgumentException("route {$name} has a loader for undeclared region {$regionName}");
+                }
             }
         }
         foreach ($declared->routes as $name => $route) {
@@ -116,8 +122,8 @@ final class App
     /**
      * Renders the route page as a document or as JSON.
      *
-     * @param array{name: string, path: string, title: string, template: string, post: bool} $route
-     * @param array{load?: \Closure, post?: \Closure} $handler
+     * @param array{name: string, path: string, title: string, template: string, post: bool, regions: list<Region>} $route
+     * @param array{load?: \Closure, post?: \Closure, regions?: array<string, \Closure>} $handler
      * @param array<string, mixed> $invalid
      */
     private function page(Request $request, array $route, array $handler, Flash $flash, int $status, array $invalid): Response
@@ -141,6 +147,11 @@ final class App
                 $loaded = isset($handler['load']) ? $this->container->call($handler['load'], $provided) : [];
                 $data[$selected->name] = [...$loaded, ...$invalid];
                 $templates[$selected->name] = $route['template'];
+                foreach ($route['regions'] as $routeRegion) {
+                    $loader = $handler['regions'][$routeRegion->name] ?? null;
+                    $data[$routeRegion->name] = $loader === null ? [] : $this->container->call($loader, $provided);
+                    $templates[$routeRegion->name] = (string) $routeRegion->template;
+                }
             } else {
                 $loader = $this->regionLoaders[$selected->name] ?? null;
                 $data[$selected->name] = $loader === null ? [] : $this->container->call($loader, $provided);
@@ -148,13 +159,14 @@ final class App
             }
         }
 
+        $response = JsonEncoder::value($this->timezone, $route['name'], $request->params(), $shared, $data);
         $vary = 'Accept, Hy-Region, HX-Current-URL';
         if ($json) {
             return new Response($status, [
                 'Content-Type' => 'application/json; charset=utf-8',
                 'Cache-Control' => 'no-store',
                 'Vary' => $vary,
-            ], JsonEncoder::encode($this->timezone, $route['name'], $request->params(), $shared, $data));
+            ], JsonEncoder::encode($response));
         }
 
         $regions = [];
@@ -165,7 +177,7 @@ final class App
         return new Response($status, [
             'Content-Type' => 'text/html; charset=utf-8',
             'Vary' => $vary,
-        ], $this->renderer->document($this->manifest->layout, $this->manifest->title, $shared, $regions));
+        ], $this->renderer->document($this->manifest->layout, $this->manifest->title, $shared, $regions, $response));
     }
 
     /** Answers the current PHP request with the PHP session and writes the response. */

@@ -7,7 +7,7 @@ hyper renders pages with template language templates in two modes from one appli
 - **SSR**: PHP routes the request and renders the document from the templates. After that, links and forms request JSON and the browser renders the changed regions.
 - **CSR**: one static file, `index.html`, is served for every path. The browser routes the path, requests JSON from PHP under `/api` and renders the whole document.
 
-Both modes read one manifest, `app.json` (layout, title, regions and routes), and render the same templates. The PHP router and the browser router pass the same conformance cases, and the browser renders the same bytes as PHP for every page of the example. htmx 4 performs navigation, form submission, swaps and history.
+Both modes read one manifest, `app.json` (layout, title, regions and routes), and render the same templates. The screen is a function of data: a part that changes in the browser is a route region, and `hy-set="notice.closed=true"` or `set('notice', 'notice.closed', true)` changes its data and renders it again without a request. Templates load per route. The PHP router and the browser router pass the same conformance cases, and the browser renders the same bytes as PHP for every page of the example. htmx 4 performs navigation, form submission, swaps and history.
 
 Templates use the template language without changes. A layout places regions with block tags:
 

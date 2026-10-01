@@ -1,19 +1,21 @@
-// Builds the browser outputs of an application directory from one client bundle (htmx, the hyper
-// browser code, the template render runtime, the manifest and the template ASTs):
-//   build/templates.ast.json      the template AST bundle that the client bundle imports
-//   public/assets/hyper-<hash>.js the client bundle for server-side rendering
-//   public/assets/manifest.json   the asset URLs that the server passes to the layout
-//   dist/csr/index.html           the static shell for client-side rendering, with the stylesheet
-//                                 and the client bundle inlined; it is the only file to deploy
+// Builds the browser outputs of an application directory:
+//   public/assets/templates/<name>.<hash>.json  one AST file per template, including hyper/data.tpl (HY-34)
+//   build/templates.index.json                  template name -> file URL and referenced templates
+//   public/assets/hyper-<hash>.js               the client bundle: htmx, the hyper browser code, the
+//                                                template render runtime, the manifest and the index
+//   public/assets/manifest.json                 the asset URLs that the server passes to the layout
+//   dist/csr/                                   the static deployment for client-side rendering:
+//                                                index.html with the stylesheet and the bundle inlined,
+//                                                and assets/templates/ with the template files
 //
 // Usage: node scripts/build-assets.mjs --app examples/board --api /api
 
 import { createHash } from 'node:crypto';
-import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 import { parseArgs } from 'node:util';
 import { build } from 'esbuild';
-import { parse } from '@polyspec/template';
+import { parse, resolvePath } from '@polyspec/template';
 
 const { values } = parseArgs({ options: { app: { type: 'string' }, api: { type: 'string' } } });
 if (!values.app || !values.api) throw new Error('--app and --api are required');
@@ -21,15 +23,27 @@ const app = values.app;
 const templatesDir = join(app, 'templates');
 const buildDir = join(app, 'build');
 const assetsDir = join(app, 'public', 'assets');
+const templateFilesDir = join(assetsDir, 'templates');
 const csrDir = join(app, 'dist', 'csr');
+const dataTemplate = JSON.parse(readFileSync(join('packages', 'hyper-js', 'src', 'data-template.json'), 'utf8'));
 
-const templates = {};
+const sources = { [dataTemplate.name]: dataTemplate.source };
 for (const file of listFiles(templatesDir).filter((name) => name.endsWith('.tpl')).sort()) {
-  const name = relative(templatesDir, file).split(sep).join('/');
-  templates[name] = parse(readFileSync(file), name);
+  sources[relative(templatesDir, file).split(sep).join('/')] = readFileSync(file, 'utf8');
+}
+
+rmSync(templateFilesDir, { recursive: true, force: true });
+mkdirSync(templateFilesDir, { recursive: true });
+const index = {};
+for (const [name, source] of Object.entries(sources)) {
+  const ast = parse(source, name);
+  const text = JSON.stringify(ast);
+  const file = `${name.replace(/\.tpl$/, '').replaceAll('/', '-')}.${sha256(text).slice(0, 12)}.json`;
+  writeFileSync(join(templateFilesDir, file), text);
+  index[name] = { url: `/assets/templates/${file}`, deps: references(ast, name) };
 }
 mkdirSync(buildDir, { recursive: true });
-writeFileSync(join(buildDir, 'templates.ast.json'), JSON.stringify(templates));
+writeFileSync(join(buildDir, 'templates.index.json'), `${JSON.stringify(index, null, 2)}\n`);
 
 const bundle = await build({
   entryPoints: [join(app, 'client', 'main.ts')],
@@ -68,11 +82,25 @@ const shell = [
   '',
 ].join('\n');
 rmSync(csrDir, { recursive: true, force: true });
-mkdirSync(csrDir, { recursive: true });
+mkdirSync(join(csrDir, 'assets'), { recursive: true });
 writeFileSync(join(csrDir, 'index.html'), shell);
+cpSync(templateFilesDir, join(csrDir, 'assets', 'templates'), { recursive: true });
 
-console.log(`templates ${Object.keys(templates).length}, ${hyperName}, dist/csr/index.html ${Buffer.byteLength(shell)} bytes`);
+console.log(`templates ${Object.keys(index).length}, ${hyperName}, dist/csr/index.html ${Buffer.byteLength(shell)} bytes`);
 console.log(`CSP for dist/csr/index.html: script-src 'sha256-${sha256(code, 'base64')}'; style-src 'sha256-${sha256(css, 'base64')}'`);
+
+// Returns the names of the templates that include and block tags of a template reference by path.
+function references(ast, name) {
+  const found = new Set();
+  const visit = (node) => {
+    if (Array.isArray(node)) return node.forEach(visit);
+    if (node === null || typeof node !== 'object') return;
+    if ((node.type === 'Include' || node.type === 'Block') && typeof node.path === 'string') found.add(resolvePath(name, node.path));
+    Object.values(node).forEach(visit);
+  };
+  visit(ast.body);
+  return [...found].sort();
+}
 
 function sha256(text, encoding = 'hex') {
   return createHash('sha256').update(text).digest(encoding);

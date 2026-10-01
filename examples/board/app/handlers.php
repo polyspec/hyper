@@ -10,6 +10,18 @@ use Polyspec\Hyper\Result;
 
 const POSTS_PER_PAGE = 10;
 
+/**
+ * Returns the requested page number limited to the existing pages, and the page count.
+ *
+ * @return array{int, int}
+ */
+function currentPage(Request $request, Posts $posts): array
+{
+    $pages = max(1, $posts->pageCount(POSTS_PER_PAGE));
+
+    return [min($pages, max(1, $request->queryInt('page', 1))), $pages];
+}
+
 // Loaders and actions of the regions and routes that app.json declares.
 return [
     'shared' => fn (Request $request, Assets $assets): array => [
@@ -27,16 +39,24 @@ return [
     'routes' => [
         'board.list' => [
             'load' => function (Request $request, Posts $posts): array {
-                $pages = max(1, $posts->pageCount(POSTS_PER_PAGE));
-                $page = min($pages, max(1, $request->queryInt('page', 1)));
+                [$page, $pages] = currentPage($request, $posts);
 
-                return [
-                    'posts' => $posts->page($page, POSTS_PER_PAGE),
-                    'page' => $page,
-                    'pages' => $pages,
-                    'highlight' => $request->flash('created'),
-                ];
+                return ['page' => $page, 'pages' => $pages];
             },
+            'regions' => [
+                'notice' => fn (): array => [
+                    'notice' => ['text' => '게시판 예제입니다. 정렬과 공지 닫기는 서버 요청 없이 처리됩니다.', 'closed' => false],
+                ],
+                'rows' => function (Request $request, Posts $posts): array {
+                    [$page] = currentPage($request, $posts);
+
+                    return [
+                        'posts' => $posts->page($page, POSTS_PER_PAGE),
+                        'sort' => '',
+                        'highlight' => $request->flash('created'),
+                    ];
+                },
+            ],
         ],
 
         'board.show' => [

@@ -17,15 +17,15 @@ This document defines the application manifest, routing, rendering, the requests
     { "name": "content", "page": true }
   ],
   "routes": [
-    { "name": "board.list", "path": "/board", "title": "Board", "template": "board/list.tpl" },
+    { "name": "board.list", "path": "/board", "title": "Board", "template": "board/list.tpl", "regions": [{ "name": "rows", "template": "board/rows.tpl" }] },
     { "name": "board.create", "path": "/board/create", "title": "Write", "template": "board/create.tpl", "post": true },
     { "name": "board.show", "path": "/board/{id}", "title": "Post", "template": "board/show.tpl" }
   ]
 }
 ```
 
-- **HY-2** `regions` and `routes` are ordered lists. Region names and route names are unique. A region name matches `[A-Za-z][A-Za-z0-9_-]*` and is neither `layout` nor `title`. Exactly one region has `"page": true` and no `template`; every other region has a `template` and a list of used topics. A route with `"post": true` accepts a `POST` action.
-- **HY-3** The layout renders the title definition inside `<title>` with `{# title}`, and each region with `{# name}` inside an element whose `id` is the region name and that carries the attribute `hy-region`, for example `<main id="content" hy-region>{# content}</main>`.
+- **HY-2** `regions` and `routes` are ordered lists. Region names and route names are unique. A region name matches `[A-Za-z][A-Za-z0-9_-]*` and is not `layout`, `title` or `data`. Exactly one region has `"page": true` and no `template`; every other region has a `template` and a list of used topics. A route with `"post": true` accepts a `POST` action.
+- **HY-3** The layout renders the title definition inside `<title>` with `{# title}`, the data definition with `{# data}` (HY-31), and each region with `{# name}` inside an element whose `id` is the region name and that carries the attribute `hy-region`, for example `<main id="content" hy-region>{# content}</main>`.
 
 ## Routing
 
@@ -76,7 +76,7 @@ This document defines the application manifest, routing, rendering, the requests
 
 - **HY-20** The browser code routes the response URL path (after removing the base path) with the manifest routes. The route name must equal `route` in the response; otherwise rendering fails. The page region template is the template of that route.
 - **HY-21** The htmx extension requests JSON only when the request target element carries `hy-region`. It converts a JSON region response into this HTML and gives it to htmx in place of the response text: `<title>` with the title rendered alone, then the page region rendered alone, then `<hx-partial hx-target="#<name>" hx-swap="innerMorph">` with each other region rendered alone. htmx then performs the swap, the title change and the history update. A response whose content type is not `application/json` passes unchanged.
-- **HY-22** In client-side rendering, a static shell declares the base path of the server with `<meta name="hyper-api" content="/api">`. The browser code requests the document JSON for the current path, renders the document (HY-12), replaces the title and the body with the rendered ones, and lets htmx process the new body. A current path that matches no route renders the body text `Not Found`.
+- **HY-22** In client-side rendering, a static shell declares the base path of the server with `<meta name="hyper-api" content="/api">`. The browser code requests the document JSON for the current path while it loads the templates of the route (HY-35), renders the document (HY-12), replaces the title and the body with the rendered ones, and lets htmx process the new body. A current path that matches no route renders the body text `Not Found`.
 - **HY-23** In client-side rendering, the extension prefixes same-origin request paths with the base path, removes the base path from history paths, and replaces htmx history restoration with HY-22 for the restored path.
 
 ## Actions
@@ -84,6 +84,23 @@ This document defines the application manifest, routing, rendering, the requests
 - **HY-24** An action request must contain the form field `_csrf` equal to the session token; otherwise the server responds with status 403 and runs no action.
 - **HY-25** An action that succeeds returns a redirect. The server responds with status 303 and `Location`, stores the flash values and the changed topics in the session, and removes them after the next request reads them. The browser follows the redirect with the same headers, and htmx records the final URL in history.
 - **HY-26** An action that rejects its input returns invalid data. The server responds with status 422 and renders the route page with the route data merged with the invalid data, as JSON for a JSON request and as a document otherwise.
+
+## Data
+
+- **HY-29** The output of a region is a function of its template, the shared data and the region data. The browser changes the page only by replacing region data and rendering it. Form controls hold the values that a user is entering; every other screen state, such as a sort order or an open panel, is region data.
+- **HY-30** A route may declare route regions, for example `"regions": [{ "name": "rows", "template": "board/rows.tpl" }]`. A part of a page that changes in the browser without a request is a route region. The route template places each route region with `{# name}` inside an element whose `id` is the region name and that carries `hy-region`. Region names are unique across the manifest regions and every route region. Each route region has its own loader. A document and the page region pass every route region as a definition `{ "template": <template>, "data": <data> }`, and every JSON response that contains the page region contains the route regions right after it.
+- **HY-31** The layout places `{# data}` once, before `</body>`. The definition `data` renders the reserved template `hyper/data.tpl`, whose source is exactly `<script type="application/json" id="hy-data">{= json(response) | raw}</script>`, with `response` equal to the document JSON value (HY-17 with every region, HY-18). The server and the browser render it the same way, so a document keeps the same bytes in both. A region request does not render it.
+
+## Browser data
+
+- **HY-32** The browser holds the data of the last response that it rendered: the environment, the route, the parameters, the shared data and the data of every region in the response. When the page loads, it reads the data from the element `#hy-data` and starts loading the templates of the route (HY-35). `render` (HY-33) replaces held region data.
+- **HY-33** The browser code provides `data(region)`, which returns the held data of a region; `render(region, data)`, which replaces the held data of a region; and `set(region, path, value)`, which replaces one value at a dotted path (map keys and list indexes) in the held data of a region. A path that the data does not contain fails. `render` and `set` then render the region alone (HY-13) and swap it into the region element with `innerMorph`. The page region uses the template of the held route and passes the held route regions as definitions. These operations send no request. There is no change tracking: the code that changes data asks for the rendering.
+- **HY-36** A template may give an element the attribute `hy-set="path=value; path=value"`, where each value is a JSON literal and each path follows HY-33. A click on the element, or on an element inside it, runs every assignment in the held data of the closest enclosing region and renders that region once. The template computes the assigned values, for example `hy-set="service.close.flag={? service.close.flag}0{:}1{/}"`. `hy-set` works only with JavaScript.
+
+## Template delivery
+
+- **HY-34** The asset build writes every template AST to its own file whose name contains a hash of its content, and an index that maps each template name to its file URL and to the names of the templates that its include and block tags reference by path. The index also contains `hyper/data.tpl`. The client bundle contains the index and no template.
+- **HY-35** Before rendering, the browser loads the templates that a route needs: the layout, the title, `hyper/data.tpl`, every non-page region template, the route template and every route region template, together with every template that they reference, transitively. For a region request the loading starts with the request and runs at the same time. When the response URL routes to another route, such as after a redirect, the browser loads the templates of that route before rendering. Loaded templates stay loaded until the page unloads.
 
 ## Errors
 

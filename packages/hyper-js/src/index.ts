@@ -1,14 +1,34 @@
 export { createEngine } from './engine.js';
-export { checkManifest, pageRegion, type Manifest, type RegionDeclaration, type RouteDeclaration } from './manifest.js';
-export { Router, stripBasePath, type RouteMatch } from './router.js';
-export { createApplication, renderDocument, renderParts, toHtml, type Application, type RenderedParts } from './response.js';
 export {
-  hyperExtension,
-  type ExtensionOptions,
-  type HistoryDetail,
+  checkManifest,
+  DATA_TEMPLATE_NAME,
+  DATA_TEMPLATE_SOURCE,
+  pageRegion,
+  type Manifest,
+  type RegionDeclaration,
+  type RouteDeclaration,
+  type RouteRegionDeclaration,
+} from './manifest.js';
+export { Router, stripBasePath, type RouteMatch } from './router.js';
+export { routeTemplates, TemplateStore, type TemplateFetcher, type TemplateIndex } from './templates.js';
+export {
+  createApplication,
+  decodeResponse,
+  regionTemplate,
+  renderDocument,
+  renderParts,
+  renderRegion,
+  toHtml,
+  type Application,
+  type DecodedResponse,
+  type RenderedParts,
+} from './response.js';
+export {
+  Hyper,
+  parseAssignments,
   type HookDetail,
+  type HtmxApi,
   type HyperExtension,
+  type HyperOptions,
   type RequestContext,
-  type RestoreDetail,
-} from './extension.js';
-export { mountDocument, renderLocation, type HtmxApi } from './client.js';
+} from './hyper.js';
