@@ -5,7 +5,7 @@ TEMPLATE_DIR := ../template
 
 .DEFAULT_GOAL := help
 
-.PHONY: help install template assets test-js test-php lint parity bundle-size e2e docs-check serve-demo check
+.PHONY: help install template assets test-js test-php lint templates-check parity bundle-size e2e docs-check serve-demo check
 
 help: ## List the targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
@@ -31,6 +31,9 @@ lint: ## Check PHP formatting
 	cd $(PHP_PACKAGE) && vendor/bin/pint --test
 	cd $(BOARD) && vendor/bin/pint --test app src public
 
+templates-check: ## Check that only the layout template carries hx- attributes (HC-6)
+	node scripts/check-templates.mjs --app $(BOARD)
+
 parity: assets ## Compare PHP documents with browser renders of document and region JSON
 	node scripts/check-parity.mjs --app $(BOARD) --requests $(BOARD)/tests/parity/requests.json --port 8092
 
@@ -47,4 +50,4 @@ docs-check: ## Check document pairs, links and code blocks
 serve-demo: assets ## Serve SSR on :8080, CSR on :8081 and the comparison page on :8081/compare
 	node scripts/serve-demo.mjs --db $(BOARD)/var/board.db --ssr 8080 --edge 8081 --api 8082
 
-check: docs-check lint test-js test-php parity bundle-size e2e ## Run every check
+check: docs-check lint templates-check test-js test-php parity bundle-size e2e ## Run every check

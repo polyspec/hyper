@@ -6,6 +6,7 @@
 
 ### 추가
 
+- 화면 구성 규칙(HC-1 ~ HC-6)을 `docs/spec/composition.ko.md`에 정의한다. 내용만 다른 부분은 HTML과 CSS로, 데이터를 받는 부분은 블록으로, 독립적으로 갱신되는 부분은 영역으로 만들고, `hx-*` 속성은 레이아웃에만 둔다. HC-6을 검사하는 `make templates-check`를 추가한다. 2026-10-01 검증: `make templates-check`는 게시판 템플릿 7개에서 통과했고, `hx-get` 속성을 추가한 페이지 템플릿에서 실패했다.
 - 영역 프로토콜(HY-1 ~ HY-28)을 `docs/spec/protocol.ko.md`에 정의한다. 애플리케이션 매니페스트, 라우팅, 렌더, 요청, JSON 응답, 브라우저 코드, 액션, 오류를 다룬다.
 - 게시판의 레이아웃, 제목, 영역, 라우트를 매니페스트 하나 `examples/board/app/app.json`에 선언한다. PHP와 브라우저가 이 파일을 읽는다.
 - PHP 라우터와 브라우저 라우터를 추가하고, 두 라우터가 함께 통과하는 라우터 사례 `conformance/routes.json`을 추가한다.
