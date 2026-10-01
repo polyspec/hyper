@@ -16,7 +16,8 @@
 | 타깃 | 동작 |
 |---|---|
 | `make install` | npm과 Composer 의존성을 설치한다 |
-| `make template` | TypeScript template 패키지를 빌드한다 |
+| `make template` | TypeScript template 패키지를 빌드하고, PHP template 패키지의 Composer 복사본을 다시 설치한다. 테스트, 에셋, 서버 빌드가 먼저 실행한다 |
+| `make template-check` | PHP template 패키지의 Composer 복사본이 template 저장소와 다르면 실패한다 |
 | `make ext` | template 저장소의 네이티브 템플릿 확장을 `build/ext`에 빌드한다(HY-48) |
 | `make server` | 게시판 서버 프로그램을 `examples/board/build/server`에 빌드한다(아래 참조) |
 | `make server-fixtures` | PHP 테스트 픽스처의 서버 프로그램을 빌드한다 |
@@ -40,10 +41,10 @@
 
 ## 서버 빌드
 
-`scripts/build-server.mjs --manifest <app.json> --templates <directory> --output <directory> --template-dir <template repository>`는 서버 프로그램을 만든다(HY-48).
+`scripts/build-server.mjs --manifest <app.json> --templates <directory> --output <directory> --template-dir <template repository> --php-namespace <namespace>`는 서버 프로그램을 만든다(HY-48).
 
 1. `templates/`: 애플리케이션의 모든 템플릿과 예약 템플릿 `hyper/data.tpl`. 네이티브 확장이 이 파일을 읽는다.
-2. `program.php`: 같은 템플릿을 template 저장소의 컴파일러로 컴파일한, namespace `Polyspec\Hyper\Program`의 generated PHP 프로그램. 서버가 각 영역을 단독으로 렌더하므로, 모든 템플릿은 대상으로 렌더되고 모든 정의는 HTML이다.
+2. `program.php`: 같은 템플릿을 template 저장소의 컴파일러로, 주어진 PHP 네임스페이스(게시판은 `Polyspec\Hyper\Examples\Board\Program`)에 컴파일한 generated PHP 프로그램. `program.json`은 그 네임스페이스를 기록하며, 렌더러가 이 파일을 읽는다. 서버가 각 영역을 단독으로 렌더하므로, 모든 템플릿은 대상으로 렌더되고 모든 정의는 HTML이다.
 
 PHP가 `polyspec_template`을 불러왔으면 네이티브 확장으로, 그렇지 않으면 `program.php`로 렌더한다. 두 출력은 같은 원본에서 만들어지므로, 서버는 확장을 불러오는지 여부만으로 엔진을 바꿀 수 있다.
 

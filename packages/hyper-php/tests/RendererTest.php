@@ -20,23 +20,18 @@ final class RendererTest extends TestCase
         self::assertSame("<b>3</b>\n", $renderer->alone('side.tpl', [], ['count' => 3]));
     }
 
-    public function testLoadsOneGeneratedProgramPerProcess(): void
+    public function testLoadsTheGeneratedProgramFromItsNamespace(): void
     {
+        // HY-48: the build compiles the generated program into the namespace that the application chooses.
         if (extension_loaded('polyspec_template')) {
             self::markTestSkipped('the native extension loads no generated program');
         }
-        Renderer::open(self::PROGRAM, 'Z');
-        $other = sys_get_temp_dir() . '/hyper-renderer-test-' . getmypid();
-        mkdir("{$other}/templates", 0o777, true);
-        copy(self::PROGRAM . '/program.php', "{$other}/program.php");
-        try {
-            $this->expectException(\LogicException::class);
-            Renderer::open($other, 'Z');
-        } finally {
-            unlink("{$other}/program.php");
-            rmdir("{$other}/templates");
-            rmdir($other);
-        }
+        $first = Renderer::open(self::PROGRAM, 'Z');
+        $second = Renderer::open(self::PROGRAM, 'Z');
+
+        self::assertTrue(class_exists('Polyspec\\Hyper\\Tests\\Program\\GeneratedProgram', false));
+        self::assertFalse(class_exists('GeneratedProgram', false));
+        self::assertSame($first->alone('side.tpl', [], ['count' => 1]), $second->alone('side.tpl', [], ['count' => 1]));
     }
 
     public function testRejectsADirectoryWithoutAProgram(): void
