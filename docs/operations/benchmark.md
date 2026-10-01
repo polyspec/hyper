@@ -6,16 +6,14 @@
 
 | Target | Script | Measures |
 |---|---|---|
-| `make bench-server` | `scripts/bench-server.php --app <directory> --iterations <n>` | `App::handle` per request kind without network, and the cost of `board/rows.tpl` rendering, `Bind::value` and `json_encode` for 10, 100 and 1,000 rows |
+| `make bench-server` | `scripts/bench-server.php --app <directory> --iterations <n>` | `App::handle` per request kind without network, and the cost of `board/rows.tpl` rendering, `Bind::value` and `json_encode` for 10, 100 and 1,000 rows; it runs once with the generated PHP program and once with the native template extension (HY-48) |
 | `make bench-browser` | `scripts/bench-browser.mjs --ssr <port> --edge <port> --api <port> --runs <n>` | First screens, region navigation, one `hy-set` change for 10, 100 and 1,000 rows (time, phases, main thread load and long tasks), memory over repeated navigation with the growth between two heap snapshots, template loading, and transferred bytes |
 
-Both scripts create their own database under `examples/board/var/` and remove it when they finish. `bench-browser` starts `scripts/serve-demo.mjs` on ports 8085 to 8087.
-
-> These results were measured on 2026-10-01 before the PHP server rendered with compiled programs (HY-48) and before kept values moved to `kept` (HY-17). They do not describe the current code; they will be replaced by a new measurement.
+Both scripts create their own database under `examples/board/var/` and remove it when they finish. `bench-browser` starts `scripts/serve-demo.mjs` on ports 8085 to 8087. `make check` runs `make bench-server-smoke`, which runs the PHP benchmark once per measurement, so a change that breaks it fails the check; the browser benchmark takes several minutes and is not part of `make check`, so a change can break it unnoticed until the next `make bench`.
 
 ## Method
 
-- **Server:** every request runs 20 times as warm-up and then the given number of times in one process with an in-memory session. The time is `hrtime` around `App::handle`. It includes routing, loaders on SQLite, rendering and encoding, and excludes network and PHP startup.
+- **Server:** the PHP process renders with the native extension when it has loaded it and otherwise with the generated program; the last line of each table names the program. Every request runs 20 times as warm-up and then the given number of times in one process with an in-memory session. The time is `hrtime` around `App::handle`. It includes routing, loaders on SQLite, rendering and encoding, and excludes network and PHP startup.
 - **First screen:** a `MutationObserver` added before the page loads records when the list heading `게시판` appears, measured from navigation start. Each run uses a new browser context, so nothing is cached.
 - **Region navigation:** the time from the click on the create link to the appearance of the heading `글쓰기`.
 - **`hy-set` change:** `window.hyper.set('rows', …)` from the call to the end of the swap. After every change the page renders one frame, as after a click. Two changes are measured:
@@ -34,89 +32,76 @@ Both scripts create their own database under `examples/board/var/` and remove it
 
 ## Results
 
-Measured on 2026-10-01 on an idle Apple M3 Pro with PHP 8.5.10, Chromium 153.0.8010.12 and Node 26.8.1. The database has 30 posts, and a list page shows 10.
+Measured on 2026-10-02 at commit "Check the manifest in the build and the servers, not in the browser", on an Apple M3 Pro with PHP 8.5.10, Chromium 153.0.8010.12 and Node 26.8.1. The machine was not idle: the load average was 7.8 to 8.5 during the run, so the means and p95 values are less reliable than the medians. The database has 30 posts, and a list page shows 10.
 
 ### Server
 
-| Request | Status | p50 ms | p95 ms | Bytes |
-|---|---:|---:|---:|---:|
-| `GET /board`, document HTML | 200 | 0.511 | 0.583 | 5,258 |
-| `GET /board`, document JSON | 200 | 0.070 | 0.086 | 1,581 |
-| `GET /board`, region JSON with `left` | 200 | 0.067 | 0.083 | 1,581 |
-| `GET /board/1`, document HTML | 200 | 0.220 | 0.280 | 1,916 |
-| `GET /board/1`, region JSON | 200 | 0.041 | 0.057 | 677 |
-| `POST /board/create`, 422 region JSON | 422 | 0.022 | 0.028 | 405 |
+| Request | Status | Generated p50 ms | Generated p95 ms | Native p50 ms | Native p95 ms | Bytes |
+|---|---:|---:|---:|---:|---:|---:|
+| `GET /board`, document HTML | 200 | 0.384 | 0.592 | 0.291 | 0.382 | 5,228 |
+| `GET /board`, document JSON | 200 | 0.084 | 0.102 | 0.084 | 0.114 | 1,591 |
+| `GET /board`, region JSON with `left` | 200 | 0.087 | 0.225 | 0.088 | 0.129 | 1,591 |
+| `GET /board/1`, document HTML | 200 | 0.165 | 0.272 | 0.182 | 0.256 | 1,896 |
+| `GET /board/1`, region JSON | 200 | 0.048 | 0.059 | 0.054 | 0.103 | 687 |
+| `POST /board/create`, 422 region JSON | 422 | 0.025 | 0.031 | 0.028 | 0.051 | 415 |
 
-| Rows | Render ms | `Bind::value` ms | `json_encode` ms | HTML bytes | JSON bytes |
-|---:|---:|---:|---:|---:|---:|
-| 10 | 0.192 | 0.017 | 0.002 | 1,920 | 1,119 |
-| 100 | 1.653 | 0.151 | 0.016 | 14,975 | 9,222 |
-| 1,000 | 16.705 | 1.449 | 0.150 | 149,980 | 92,925 |
+| Rows | Generated render ms | Native render ms | `Bind::value` ms | `json_encode` ms | HTML bytes | JSON bytes |
+|---:|---:|---:|---:|---:|---:|---:|
+| 10 | 0.112 | 0.048 | 0.025 | 0.002 | 1,920 | 1,129 |
+| 100 | 1.163 | 0.315 | 0.220 | 0.016 | 14,975 | 9,232 |
+| 1,000 | 12.778 | 3.648 | 2.276 | 0.168 | 149,980 | 92,935 |
+
+The `Bind::value` and `json_encode` columns are from the generated run; the native run measured 2.404 ms and 0.190 ms for 1,000 rows.
 
 ### Browser
 
 | Measurement | Median ms | p95 ms |
 |---|---:|---:|
-| SSR first screen of `/board` | 7.0 | 18.5 |
-| SSR region navigation to `/board/create` | 9.2 | 20.1 |
-| CSR first screen of `/board` | 17.6 | 28.3 |
-| CSR region navigation to `/board/create` | 9.8 | 16.3 |
-| `hy-set` change, 10 rows | 1.1 | 2.1 |
-| `hy-set` change, 100 rows | 2.8 | 3.8 |
-| `hy-set` change, 1,000 rows | 24.8 | 28.1 |
-| Template engine alone, 1,000 rows | 2.9 | 4.2 |
+| SSR first screen of `/board` | 6.7 | 23.2 |
+| SSR region navigation to `/board/create` | 7.8 | 13.4 |
+| CSR first screen of `/board` | 18.0 | 53.6 |
+| CSR region navigation to `/board/create` | 7.4 | 8.9 |
+| `hy-set` change, 10 rows | 0.8 | 2.9 |
+| `hy-set` change, 100 rows | 2.6 | 6.1 |
+| `hy-set` change, 1,000 rows | 26.8 | 34.0 |
+| Template engine alone, 1,000 rows | 3.3 | 4.7 |
 
 Phases of one `hy-set` change, in milliseconds:
 
 | Rows | Change | Total | hyper | template | parse | morph | settle | process | events |
 |---:|---|---:|---:|---:|---:|---:|---:|---:|---:|
-| 100 | `sort` | 2.81 | 0.13 | 0.39 | 0.51 | 1.38 | 0.01 | 0.35 | 0.03 |
-| 100 | `compact` | 2.35 | 0.11 | 0.35 | 0.51 | 1.02 | 0.01 | 0.33 | 0.01 |
-| 1,000 | `sort` | 24.92 | 0.33 | 2.81 | 2.99 | 15.46 | 0.04 | 3.21 | 0.08 |
-| 1,000 | `compact` | 22.29 | 0.22 | 3.07 | 2.83 | 13.24 | 0.01 | 2.81 | 0.11 |
+| 100 | `sort` | 2.51 | 0.09 | 0.39 | 0.43 | 1.21 | 0.01 | 0.34 | 0.03 |
+| 100 | `compact` | 2.35 | 0.09 | 0.37 | 0.46 | 1.05 | 0.01 | 0.35 | 0.03 |
+| 1,000 | `sort` | 27.13 | 0.31 | 3.33 | 3.09 | 16.38 | 0.00 | 3.83 | 0.19 |
+| 1,000 | `compact` | 23.41 | 0.27 | 3.40 | 2.86 | 13.84 | 0.03 | 2.91 | 0.10 |
 
 Main thread load of one `sort` change and its frame, in milliseconds:
 
 | Rows | Total | Script | Style | Layout | Paint | GC | Other | Longest task | Tasks over 50 ms | DOM nodes |
 |---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 10 | 1.96 | 1.04 | 0.07 | 0.00 | 0.23 | 0.10 | 0.53 | 2.6 | 0 | 355 |
-| 100 | 6.08 | 2.35 | 0.39 | 0.90 | 1.09 | 0.35 | 1.00 | 4.1 | 0 | 2,065 |
-| 1,000 | 42.87 | 19.87 | 3.48 | 9.30 | 3.14 | 1.51 | 5.57 | 31.0 | 0 | 19,165 |
+| 10 | 1.56 | 0.80 | 0.04 | 0.00 | 0.16 | 0.09 | 0.47 | 3.3 | 0 | 351 |
+| 100 | 5.91 | 2.40 | 0.38 | 0.82 | 1.05 | 0.28 | 0.98 | 6.2 | 0 | 2,061 |
+| 1,000 | 47.30 | 21.89 | 3.69 | 9.81 | 3.88 | 1.87 | 6.20 | 34.1 | 0 | 19,161 |
 
 Memory over repeated navigation:
 
 | Cycles | JS heap KB | DOM nodes | Event listeners | Documents |
 |---:|---:|---:|---:|---:|
-| 0 | 1,402 | 345 | 33 | 1 |
-| 50 | 2,346 | 346 | 34 | 1 |
-| 100 | 2,439 | 346 | 34 | 1 |
-| 150 | 2,505 | 346 | 34 | 1 |
-| 200 | 2,525 | 346 | 34 | 1 |
+| 0 | 1,406 | 341 | 33 | 1 |
+| 50 | 2,386 | 342 | 34 | 1 |
+| 100 | 2,453 | 342 | 34 | 1 |
+| 150 | 2,529 | 343 | 34 | 1 |
+| 200 | 2,550 | 342 | 34 | 1 |
 
-Objects that grew from cycle 100 to cycle 200:
+From cycle 100 to cycle 200 the heap snapshots show the same three kinds of growth as before: 400 `blink::NetworkResourcesData::ResourceData` objects of the DevTools network recording, compiled V8 code, and 200 `blink::MediaQuerySet` objects that the document's `StyleEngine` keeps for each inserted `<thead>`.
 
-| Objects | Count | Bytes | Retained by |
-|---|---:|---:|---|
-| `blink::NetworkResourcesData::ResourceData` | 400 | 115,200 | The network recording of the attached DevTools protocol session; four requests per cycle |
-| V8 code objects (`InstructionStream`, `TrustedByteArray`, `Code` and others) | | about 76,000 | Compiled code of the client bundle |
-| `blink::MediaQuerySet` with its `MediaQuery` and `MediaQueryFeatureExpNode` | 200 each | about 32,000 | `StyleEngine` of the document; one per navigation to `/board`, see below |
-
-
-CSR loads 7 template files for `/board`; the slowest took 3.3 ms from the local server. The `/board` document is 4,428 bytes (1,426 gzip), and its region JSON is 1,331 bytes (535 gzip).
+CSR loads 7 template files for `/board`; the slowest took 3.6 ms from the local server. The `/board` document is 4,398 bytes (1,428 gzip), and its region JSON is 1,341 bytes (541 gzip). The SSR script is 31,586 gzip bytes and the CSR shell 32,892 (`make bundle-size`).
 
 ## Findings
 
-- **Server:** a region JSON response costs about one seventh of a document, because the browser renders it.
-- **First screen:** SSR shows it about 2.5 times as fast as CSR, because CSR requests JSON and template files after the shell. This supports the recommended deployment.
-- **`hy-set` at 1,000 rows:** the change takes 22 to 25 ms of script.
-  - The htmx `innerMorph` swap takes 13 to 15 ms of it, also when the row order does not change. When one class of the table changes, the morph still compares all 1,000 rows in JavaScript.
-  - `htmx.process` takes another 3 ms, because htmx processes every child of the region after a morph, including unchanged ones.
-  - The template engine takes 3 ms and HTML parsing 3 ms.
-  - The frame after the change adds about 12 ms of style and layout. This is the browser cost of laying out the changed table.
-- **Long tasks:** one earlier run of 15 changes at 1,000 rows had one task of 137 ms. Its parts were not recorded, and no task over 50 ms appeared in 165 later changes. The cause is unknown; the measurement now prints the parts of every such task.
-- **Memory:**
-  - DOM nodes and event listeners stay constant over 200 cycles, so swapped regions leave no nodes or listeners behind.
-  - The JavaScript heap grows during the first 50 cycles, while templates are loaded and code is compiled.
-  - After that the growth consists of the DevTools network recording, compiled code, and the `MediaQuerySet` objects.
-  - Chromium 153 keeps one `MediaQuerySet` (about 160 bytes) for every `<thead>` element inserted into a document, until the document closes. It does so without htmx and without an attached DevTools session. The list template contains a `<thead>`, so every navigation to `/board` adds one. This growth comes from Chromium, not from the application, and it has no limit.
-- **PHP rendering:** PHP renders 1,000 rows about six times slower than the browser engine. This affects first documents.
+- **Server:** a region JSON response costs about a quarter of a document with the generated program and about a third with the native extension, because the browser renders it.
+- **PHP rendering:** for 1,000 rows the generated program renders in 12.8 ms and the native extension in 3.6 ms, about the speed of the browser engine (3.3 ms). The earlier PHP AST interpreter took 16.7 ms on an idle machine (2026-10-01); this comparison crosses machine loads and is only indicative.
+- **Data model check:** `Bind::value` (HY-44) takes 2.3 to 2.4 ms for 1,000 rows, two thirds of the native rendering time. The native extension binds the same values again when it renders, so the check may repeat work; it is a candidate for improvement, not measured further yet.
+- **First screen:** SSR shows it about 2.7 times as fast as CSR, because CSR requests JSON and template files after the shell.
+- **`hy-set` at 1,000 rows:** the change takes 23 to 27 ms of script. The htmx `innerMorph` swap takes 14 to 16 ms of it, `htmx.process` about 3 ms, the template engine and HTML parsing about 3 ms each, and hyper 0.3 ms. htmx is outside the scope of this project's changes. No task exceeded 50 ms in this run.
+- **Memory:** DOM nodes and event listeners stay constant over 200 cycles. The heap growth after the first 50 cycles consists of the DevTools network recording, compiled code and the `MediaQuerySet` objects that Chromium 153 keeps for inserted `<thead>` elements; it does not come from the application.

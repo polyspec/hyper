@@ -28,7 +28,8 @@ require "{$app}/vendor/autoload.php";
 
 $database = "{$app}/var/bench-server.db";
 @unlink($database);
-$posts = new Posts($database);
+// A fixed clock keeps the created_at values, and so the output sizes, the same in every run.
+$posts = new Posts($database, static fn (): int => 1790000000);
 for ($index = 1; $index <= 30; $index++) {
     $posts->create("게시글 {$index} <제목> & \"따옴표\"", "작성자 {$index}", str_repeat("본문 {$index}\n", 5));
 }
