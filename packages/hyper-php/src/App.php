@@ -6,7 +6,7 @@ namespace Polyspec\Hyper;
 
 use Polyspec\Template\Value\Bind;
 
-/** Answers requests with documents, JSON and action redirects (HY-8, HY-10 to HY-19, HY-24 to HY-27, HY-58). */
+/** Answers requests with documents, JSON and action redirects (HY-8, HY-10 to HY-19, HY-24 to HY-27, HY-58, HY-59). */
 final class App
 {
     private readonly Container $container;
@@ -25,6 +25,9 @@ final class App
         private readonly string $basePath,
         private readonly bool $https,
         private readonly string $frameAncestors,
+        private readonly int $bodyLimit,
+        /** @var list<string> */
+        private readonly array $formTypes,
         string $program,
     ) {
         $this->container = new Container();
@@ -35,7 +38,11 @@ final class App
      * Creates an application from its manifest, the server program that `scripts/build-server.mjs` built from
      * its templates (HY-48) and the handlers that load data and run actions.
      *
+     * The body limit is the largest request body in bytes, and the form types are the media types of the request
+     * bodies that actions and `/_hyper/keep` accept (HY-59).
+     *
      * @param array{shared?: \Closure, regions?: array<string, \Closure>, routes?: array<string, array{load?: \Closure, post?: \Closure, regions?: array<string, \Closure>}>} $handlers
+     * @param list<string> $formTypes `application/x-www-form-urlencoded` and `multipart/form-data`
      */
     public static function open(
         string $manifest,
@@ -45,7 +52,15 @@ final class App
         string $basePath = '',
         bool $https = false,
         string $frameAncestors = "'self'",
+        int $bodyLimit = 8 * 1024 * 1024,
+        array $formTypes = ['application/x-www-form-urlencoded'],
     ): self {
+        if ($bodyLimit < 1) {
+            throw new \InvalidArgumentException("body limit {$bodyLimit} is not a positive number of bytes");
+        }
+        if ($formTypes === [] || array_values(array_unique($formTypes)) !== $formTypes || array_diff($formTypes, ['application/x-www-form-urlencoded', 'multipart/form-data']) !== []) {
+            throw new \InvalidArgumentException('form types must be distinct values of application/x-www-form-urlencoded and multipart/form-data');
+        }
         if ($basePath !== '' && (!str_starts_with($basePath, '/') || str_ends_with($basePath, '/'))) {
             throw new \InvalidArgumentException("base path {$basePath} must start with / and must not end with /");
         }
@@ -79,7 +94,7 @@ final class App
             }
         }
 
-        return new self($declared, $handlers['shared'] ?? null, $regionLoaders, $routeHandlers, $timezone, $basePath, $https, $frameAncestors, $program);
+        return new self($declared, $handlers['shared'] ?? null, $regionLoaders, $routeHandlers, $timezone, $basePath, $https, $frameAncestors, $bodyLimit, array_values($formTypes), $program);
     }
 
     /** Registers the factory of an application service. */
@@ -103,6 +118,9 @@ final class App
 
     private function answer(Request $request, SessionStore $store): Response
     {
+        if ($request->bodySize() > $this->bodyLimit) {
+            return Response::text(413, 'Content Too Large');
+        }
         if (!$request->validInput()) {
             return Response::text(400, 'Bad Request');
         }
@@ -138,6 +156,9 @@ final class App
             }
             if ($request->method !== 'POST' || !isset($handler['post'])) {
                 return Response::text(405, 'Method Not Allowed');
+            }
+            if (!in_array($request->mediaType(), $this->formTypes, true)) {
+                return Response::text(415, 'Unsupported Media Type');
             }
             if (!hash_equals($request->csrfToken(), $request->formString('_csrf'))) {
                 return Response::text(403, 'Forbidden');
@@ -358,6 +379,9 @@ final class App
         if ($request->method !== 'POST') {
             return Response::text(405, 'Method Not Allowed');
         }
+        if (!in_array($request->mediaType(), $this->formTypes, true)) {
+            return Response::text(415, 'Unsupported Media Type');
+        }
         if (!hash_equals($session->csrfToken(), $request->formString('_csrf'))) {
             return Response::text(403, 'Forbidden');
         }
@@ -390,6 +414,15 @@ final class App
      */
     public function run(): void
     {
+        // HY-59: PHP drops a body larger than post_max_size, and gives the body of a multipart request to
+        // php://input only when enable_post_data_reading is off.
+        $postMaxSize = ini_parse_quantity((string) ini_get('post_max_size'));
+        if ($postMaxSize > 0 && $postMaxSize < $this->bodyLimit) {
+            throw new \LogicException("body limit {$this->bodyLimit} is larger than post_max_size {$postMaxSize}");
+        }
+        if (in_array('multipart/form-data', $this->formTypes, true) && filter_var(ini_get('enable_post_data_reading'), FILTER_VALIDATE_BOOL)) {
+            throw new \LogicException('multipart/form-data is accepted, so enable_post_data_reading must be off');
+        }
         ini_set('display_errors', '0');
         ini_set('log_errors', '1');
         ini_set('default_mimetype', '');

@@ -33,13 +33,14 @@ final class AppTest extends TestCase
         $this->counter = new Counter();
     }
 
-    private function app(string $basePath = ''): App
+    /** @param array<string, mixed> $options further named arguments of App::open */
+    private function app(string $basePath = '', array $options = []): App
     {
         $counter = $this->counter;
-        $app = App::open(
-            manifest: __DIR__ . '/fixtures/app.json',
-            program: self::PROGRAM,
-            handlers: [
+        $app = App::open(...[
+            'manifest' => __DIR__ . '/fixtures/app.json',
+            'program' => self::PROGRAM,
+            'handlers' => [
                 'regions' => [
                     'side' => fn (Request $request, Counter $counter): array => [
                         'count' => $counter->count,
@@ -107,9 +108,10 @@ final class AppTest extends TestCase
                     }],
                 ],
             ],
-            timezone: '+09:00',
-            basePath: $basePath,
-        );
+            'timezone' => '+09:00',
+            'basePath' => $basePath,
+            ...$options,
+        ]);
         $app->bind(Counter::class, fn (): Counter => $counter);
 
         return $app;
@@ -549,6 +551,56 @@ final class AppTest extends TestCase
         $action = $this->post('/add', ['_csrf' => $this->token(), 'name' => 'closed']);
         self::assertSame(403, $action->status);
         self::assertSame(0, $this->counter->count);
+    }
+
+    /** @param array<string, string> $headers */
+    private function send(string $method, string $path, array $headers, string $body, array $options): Response
+    {
+        return $this->app('', $options)->handle(new Request($method, $path, $headers, '', $body), $this->session);
+    }
+
+    public function testBodyLimitMediaTypeAndTokenAreCheckedInThisOrder(): void
+    {
+        // HY-59: 413 before 415 before the CSRF check of HY-24, and no action runs.
+        $token = $this->token();
+        $limit = ['bodyLimit' => 64];
+        $form = ['Content-Type' => 'application/x-www-form-urlencoded'];
+        $text = ['Content-Type' => 'text/plain'];
+        $large = '_csrf=wrong&name=' . str_repeat('a', 48);
+        self::assertSame(65, strlen($large));
+        $tooLarge = $this->send('POST', '/add', $text, $large, $limit);
+        self::assertSame(413, $tooLarge->status);
+        self::assertSame('Content Too Large', $tooLarge->body);
+        self::assertSame(413, $this->send('GET', '/', $text, $large, $limit)->status);
+        self::assertSame(413, $this->send('POST', '/_hyper/keep', $text, $large, $limit)->status);
+        // PHP leaves the body empty when it is larger than post_max_size; Content-Length still states its size.
+        self::assertSame(413, $this->send('POST', '/add', [...$form, 'Content-Length' => '65'], '', $limit)->status);
+        self::assertSame(415, $this->send('POST', '/add', $text, '_csrf=wrong&name=a', $limit)->status);
+        $unsupported = $this->send('POST', '/add', ['Content-Type' => 'multipart/form-data; boundary=x'], "--x\r\nContent-Disposition: form-data; name=\"_csrf\"\r\n\r\n{$token}\r\n--x--\r\n", []);
+        self::assertSame(415, $unsupported->status);
+        self::assertSame('Unsupported Media Type', $unsupported->body);
+        self::assertSame(415, $this->send('POST', '/_hyper/keep', [], '_csrf=wrong', [])->status);
+        self::assertSame(403, $this->send('POST', '/add', $form, '_csrf=wrong&name=' . str_repeat('a', 47), $limit)->status);
+        self::assertSame(0, $this->counter->actions);
+        self::assertSame(303, $this->send('POST', '/add', ['Content-Type' => 'Application/X-WWW-Form-Urlencoded; charset=UTF-8'], "_csrf={$token}&name=a", [])->status);
+    }
+
+    public function testAcceptedFormTypesAreAnOption(): void
+    {
+        // HY-59
+        $token = $this->token();
+        $types = ['formTypes' => ['application/x-www-form-urlencoded', 'multipart/form-data']];
+        $body = "--x\r\nContent-Disposition: form-data; name=\"_csrf\"\r\n\r\n{$token}\r\n--x\r\nContent-Disposition: form-data; name=\"name\"\r\n\r\na\r\n--x--\r\n";
+        self::assertSame(303, $this->send('POST', '/add', ['Content-Type' => 'multipart/form-data; boundary=x'], $body, $types)->status);
+        self::assertSame(415, $this->send('POST', '/add', ['Content-Type' => 'application/x-www-form-urlencoded'], "_csrf={$token}&name=a", ['formTypes' => ['multipart/form-data']])->status);
+        foreach ([['formTypes' => []], ['formTypes' => ['text/plain']], ['formTypes' => ['multipart/form-data', 'multipart/form-data']], ['bodyLimit' => 0]] as $options) {
+            try {
+                $this->app('', $options);
+                self::fail('accepted ' . json_encode($options));
+            } catch (\InvalidArgumentException) {
+                self::addToAssertionCount(1);
+            }
+        }
     }
 
     public function testBadRequestLoaderAndActionAnswerWith400(): void

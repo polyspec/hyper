@@ -141,9 +141,12 @@ if (failures > 0) {
 function client(base) {
   const state = { base, cookie: '', token: '' };
   state.send = async (step, headers, keepCookie) => {
-    const body = step.form === undefined ? undefined : new URLSearchParams({ _csrf: state.token, ...step.form });
+    // A step may add a field `pad` of that many bytes and send the form with another Content-Type (HY-59).
+    const fields = step.pad === undefined ? step.form : { ...step.form, pad: 'a'.repeat(step.pad) };
+    const body = fields === undefined ? undefined : new URLSearchParams({ _csrf: state.token, ...fields });
     const cookies = [state.cookie, keepCookie].filter((item) => item !== '').join('; ');
-    const response = await fetch(base + step.path, { method: step.method, headers: { ...headers, ...(cookies ? { Cookie: cookies } : {}) }, body, redirect: 'manual' });
+    const type = step.contentType === undefined ? {} : { 'Content-Type': step.contentType };
+    const response = await fetch(base + step.path, { method: step.method, headers: { ...headers, ...type, ...(cookies ? { Cookie: cookies } : {}) }, body, redirect: 'manual' });
     const session = response.headers.getSetCookie().find((item) => item.startsWith(`${SESSION_COOKIE}=`));
     if (session !== undefined) state.cookie = session.split(';')[0];
     const text = await response.text();

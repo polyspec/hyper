@@ -55,6 +55,8 @@ app.bind('posts', () => new Posts('/srv/board/var/board.db'));
 | `basePath` | A base path such as `/api` (HY-8); the default is none. |
 | `https` | Declares HTTPS, for example behind a TLS-terminating proxy; cookies are then `Secure` (HY-45). |
 | `frameAncestors` | The sources of `frame-ancestors`; the default is `'self'` (HY-45). |
+| `bodyLimit` | The largest request body in bytes; a larger body receives 413. The default is 8 MiB (HY-59). |
+| `formTypes` | The media types of the request bodies that actions and `/_hyper/keep` accept: `application/x-www-form-urlencoded` and `multipart/form-data`; another type receives 415. The default is `['application/x-www-form-urlencoded']` (HY-59). |
 | `log` | Receives the log line of an unhandled error (HY-43); the default writes to the standard error. |
 
 `app.bind(key, factory)` registers an application service. A service is created once, on first use; `services.get(key)` of a key without a factory fails the request with 500.
@@ -86,7 +88,7 @@ const sessions = new FileSessions({ directory: '/srv/board/var/sessions', name: 
 app.server(sessions, { files: '/srv/board/public' }).listen(8080, '127.0.0.1');
 ```
 
-`app.server(sessions, options)` returns a `node:http` server. `options.bodyLimit` is the largest request body (8 MiB by default; a larger body receives 413), and `options.files` is an absolute directory whose files are served for `GET` and `HEAD` requests that name them, as the PHP built-in server serves its document root. A request that `node:http` cannot parse, such as a request target with a byte outside ASCII, receives a plain 400 (HY-42).
+`app.server(sessions, options)` returns a `node:http` server. The server reads a request body up to the `bodyLimit` of the application (HY-59). `options.files` is an absolute directory whose files are served for `GET` and `HEAD` requests that name them, as the PHP built-in server serves its document root. A request that `node:http` cannot parse, such as a request target with a byte outside ASCII, receives a plain 400 (HY-42).
 
 `FileSessions({ directory, name, lifetime })` keeps each session in a file of an existing absolute directory that only this server process writes. `name` is the session cookie name and `lifetime` the seconds after the last request of a session until it ends (1440 by default, as PHP's `session.gc_maxlifetime`). The store accepts only identifiers that it created, starts a session only when a request reads or writes session data, and runs the requests of one session one after another (HY-45). `sessions.collect()` removes the files of ended sessions; a server calls it on a schedule of its choice.
 

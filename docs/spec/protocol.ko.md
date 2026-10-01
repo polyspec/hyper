@@ -246,7 +246,6 @@
   - 데이터 모델의 JavaScript 값은 null, boolean, ±(2^53 − 1) 안의 number나 bigint, string, 배열, 문자열 key의 `Map`, plain object다. UTF-8 형태가 없는 짝 없는 surrogate를 담은 문자열과 그 밖의 값은 HY-43으로 실패한다.
   - loader와 action은 요청, reply(HY-52), 애플리케이션이 key로 bind한 service를 담은 context 인자 하나를 받는다.
   - session store는 각 session을 한 디렉터리의 파일에 저장하며, 파일 이름은 store가 만든 64자리 16진수 식별자다. session cookie는 PHP session cookie와 같은 속성과 순서로 쓰고(`<name>=<id>; path=/; secure; HttpOnly; SameSite=Lax`, `secure`는 HY-45의 조건에서), 한 session의 요청은 차례로 실행한다.
-  - 한도(기본 8 MiB)보다 큰 요청 body는 상태 413을 받는다.
 
 - **HY-55** `make server-parity`는 `examples/board/tests/parity/requests.json`의 단계를 PHP 서버와 board Node 서버에 동시에 실행한다. 각 서버는 자기 빈 데이터베이스와 session을 쓰고, 게시글의 생성 시각(`BOARD_TIME`)은 같다. 단계의 모든 요청에서 HTML 문서, 문서 JSON, 영역 JSON 모두 두 응답의 상태, header, body가 같아야 한다. 비교 전에 session cookie의 session 식별자를 `<session>`으로, 각 session의 CSRF token을 header와 body에서 `<csrf>`로 바꾸고, body에 token이 들어 있으므로 `ETag` 값이 그 body의 tag인지(HY-53) 확인한 뒤 `<etag>`로 바꾼다. HTTP 서버 프로그램이 스스로 쓰는 header인 `Date`, `Connection`, `Keep-Alive`, `Content-Length`, `Transfer-Encoding`과 PHP 내장 서버의 `Host`, `X-Powered-By`는 비교하지 않는다. header는 이름과 값 쌍의 집합으로 비교하고, `Set-Cookie`는 값마다 비교한다. 같은 실행에서 PHP 서버에 대한 `make parity`의 브라우저 비교도 수행한다.
 
@@ -260,4 +259,10 @@
 - **HY-52** 요청의 모든 loader와 action은 그 요청의 reply를 받을 수 있다. reply는 이름이 `[a-z][a-z0-9_-]*`이고 `hy-`로 시작하지 않으며, 값이 `A-Z a-z 0-9 . _ ~ -` 문자이고, 선택적인 `Max-Age`를 가진 cookie를 더하거나, `Max-Age=0`으로 cookie를 지운다. 이런 cookie는 `Path=/`, `HttpOnly`, `SameSite=Lax`를 가지며 HY-45의 조건에서 `Secure`를 가진다. 다른 이름이나 값은 HY-43으로 실패한다. 페이지 응답은 `Cache-Control: no-store`를 가진다. reply는 상태 200인 페이지 응답의 `Cache-Control`을 정할 수 있으며 이 값은 `no-store`를 대신한다. 서버 세션은 응답에 자기 cookie만 더하고 caching header는 더하지 않는다. body가 없는 응답은 HY-53의 304를 빼고 `Content-Type`을 가지지 않는다. 요청의 응답은 페이지든, redirect든, HY-27, HY-50, HY-51의 실패든 그 reply의 cookie를 담는다.
 - **HY-53** 상태 200인 JSON 응답은 body의 SHA-256 digest 처음 32개 16진수로 만든 strong `ETag`를 가진다. `If-None-Match` header가 그 tag와 같은 `GET` 요청은 같은 header와 body 없이 상태 304를 받는다. action은 요청이 어떤 tag를 지정하든 실행된다.
 - **HY-58** loader나 action은 잘못된 요청으로 요청을 멈출 수 있다. 서버는 상태 400과 텍스트 `Bad Request`로 응답하고, 그 요청의 다른 loader나 action을 실행하지 않는다. action은 200, 409, 422 중 정한 상태와 데이터로 라우트 페이지를 반환할 수도 있다. 서버는 라우트 데이터에 그 데이터를 병합해 라우트 페이지를 JSON 요청에는 JSON으로, 그 밖의 요청에는 문서로 렌더하고 그 상태로 응답한다. 다른 상태는 HY-43으로 실패한다. HY-26은 상태 422인 페이지이고, 상태 200인 페이지는 HY-52와 HY-53을 따른다.
+- **HY-59** 애플리케이션은 body 한도, 즉 가장 큰 요청 body의 바이트 수(기본 8 MiB)와 폼 type, 즉 action과 `/_hyper/keep`이 받는 요청 body의 media type을 선언한다. 폼 type은 `application/x-www-form-urlencoded`와 `multipart/form-data` 중 하나나 둘이며, 기본값은 `application/x-www-form-urlencoded`다. 다른 한도나 폼 type은 애플리케이션을 열 때 실패한다. 서버는 요청을 다음 순서로 검사하며, 검사가 실패하면 어떤 loader나 action도 실행하지 않는다.
+  1. 한도보다 큰 body는 모든 요청에서 HY-42보다 먼저 텍스트 `Content Too Large`와 함께 상태 413을 받는다. body의 크기는 그 길이이며, `Content-Length`가 더 크면 그 값이다. PHP는 `post_max_size`보다 큰 body를 비워 두기 때문이다. Node 서버는 body가 한도를 넘으면 읽기를 멈춘다.
+  2. 라우팅과 HY-27 뒤에, action이나 `/_hyper/keep`으로 가는 `POST` 요청의 `Content-Type` media type이 매개변수를 빼고 대소문자 구분 없이 비교해 폼 type이 아니면 텍스트 `Unsupported Media Type`과 함께 상태 415를 받는다.
+  3. 그다음 HY-24의 CSRF 검사가 403으로 응답한다.
+
+  PHP의 `App::run`은 `post_max_size`가 한도보다 작거나, `multipart/form-data`가 폼 type인데 `enable_post_data_reading`이 켜져 있으면 응답하기 전에 실패한다(HY-57).
 - **HY-28** 브라우저 코드의 오류는 htmx 응답 훅에서 던져진다. htmx는 이를 `htmx:error` 이벤트로 보고하고 스왑하지 않는다.
