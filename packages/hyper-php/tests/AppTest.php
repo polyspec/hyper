@@ -89,6 +89,7 @@ final class AppTest extends TestCase
                             'moved' => throw new Redirect(Result::redirect('/items/new')->flash('note', 'moved')),
                             'broken' => throw new \RuntimeException('secret detail /srv/app.php'),
                             'huge' => ['id' => PHP_INT_MAX],
+                            'huge-float' => ['id' => 1e20],
                             'numeric' => ['5' => 'x', 'id' => 'n'],
                             default => ['id' => $request->param('id')],
                         };
@@ -322,6 +323,9 @@ final class AppTest extends TestCase
         // HY-44
         self::assertSame(500, $this->get('/items/huge')->status);
         self::assertSame(500, $this->get('/items/huge', self::JSON)->status);
+        // A float outside the range fails as well, because the data model checks numbers by value.
+        self::assertSame(500, $this->get('/items/huge-float')->status);
+        self::assertSame(500, $this->get('/items/huge-float', self::JSON)->status);
     }
 
     public function testNumericDataKeysKeepTheirNames(): void

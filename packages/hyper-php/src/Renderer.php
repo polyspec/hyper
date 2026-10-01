@@ -39,7 +39,7 @@ final class Renderer
             self::$loaded = $file;
         }
 
-        return new self(new \GeneratedProgram(), 'generated', $timezone);
+        return new self(new \Polyspec\Hyper\Program\GeneratedProgram(), 'generated', $timezone);
     }
 
     /**

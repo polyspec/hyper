@@ -39,7 +39,7 @@ const types = deriveTypeManifest(parsed, {});
 writeFileSync(typesPath, JSON.stringify({ ...types, entry: manifest.layout, templates: Object.fromEntries([...parsed.keys()].map((name) => [name, {}])) }));
 const graph = join(output, 'graph');
 compileAst({ root: templates, output: graph, entry: manifest.layout, refresh: 'true', typeManifest: typesPath });
-writeFileSync(join(output, 'program.php'), compileSource(join(graph, 'manifest.json'), typesPath, 'php'));
+writeFileSync(join(output, 'program.php'), compileSource(join(graph, 'manifest.json'), typesPath, 'php', { phpNamespace: 'Polyspec\\Hyper\\Program' }));
 process.stdout.write(`server program: ${parsed.size} templates, ${join(values.output, 'program.php')}\n`);
 
 function listTemplates(root, prefix = '') {

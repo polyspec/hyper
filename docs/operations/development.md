@@ -37,7 +37,7 @@
 `scripts/build-server.mjs --manifest <app.json> --templates <directory> --output <directory> --template-dir <template repository>` writes the server program (HY-48):
 
 1. `templates/`: every template of the application and the reserved template `hyper/data.tpl`. The native extension reads these files.
-2. `program.php`: the generated PHP program of the same templates, compiled with the compiler of the template repository. Every template renders as a target, and every definition is HTML, because the server renders each region alone.
+2. `program.php`: the generated PHP program of the same templates in the namespace `Polyspec\Hyper\Program`, compiled with the compiler of the template repository. Every template renders as a target, and every definition is HTML, because the server renders each region alone.
 
 PHP renders with the native extension when it has loaded `polyspec_template`, and otherwise with `program.php`. Both outputs are built from the same sources, so a server can switch by loading or not loading the extension.
 

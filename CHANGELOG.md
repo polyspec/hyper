@@ -52,6 +52,7 @@ The following defects of correctness and security are fixed. Each one has a test
 
 ### Changed
 
+- The template repository now requires a namespace for a generated PHP program and checks every number by value. The server build writes the generated program in the namespace `Polyspec\Hyper\Program`, and a number outside ±(2^53 − 1), integer or not, fails a request with 500 and is not a kept value (HY-38, HY-44).
 - Remove the attribute `hy-region` and the request header `Hy-Region`, which repeated what the manifest already says. A POST with a non-page `Hy-Region` ran its action (fixed earlier by the rule HY-16, now removed), and an element with a region `id` but without the attribute made htmx put a whole HTML document into the region. A region element is now the element whose `id` is the region name (HY-3, HY-36); the extension requests JSON when the target is the page region element, and the server recognizes a region request by `HX-Request`, which htmx sends (HY-15, HY-21). `make templates-check` checks every region placement of the layout and of the route templates, and region placements take no block arguments.
 - On HTTPS the kept cookie is `__Host-hy-keep`, so a sibling subdomain cannot set kept values (HY-39).
 - Remove the Chromium `<thead>` measurement from `make bench-browser`; it measured a browser behavior, not this project.
