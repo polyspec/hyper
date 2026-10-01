@@ -29,10 +29,10 @@ export async function writeTemplateFiles({ templates, output, urlPrefix }) {
   return index;
 }
 
-// Loads templateReferences from the hyper browser package (HY-34).
-async function loadPackage() {
+// Loads checkManifest and templateReferences from the hyper browser package (HY-2, HY-34).
+export async function loadPackage() {
   const result = await build({
-    stdin: { contents: "export { templateReferences } from '@polyspec/hyper';", resolveDir: join('packages', 'hyper-js'), sourcefile: 'build-entry.ts', loader: 'ts' },
+    stdin: { contents: "export { checkManifest, templateReferences } from '@polyspec/hyper';", resolveDir: join('packages', 'hyper-js'), sourcefile: 'build-entry.ts', loader: 'ts' },
     bundle: true,
     format: 'esm',
     platform: 'neutral',
