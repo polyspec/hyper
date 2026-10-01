@@ -6,6 +6,7 @@ import { extname, isAbsolute, join } from 'node:path';
 import type { TLSSocket } from 'node:tls';
 import type { App } from './app.js';
 import type { FileSessions } from './file-sessions.js';
+import { Reply } from './reply.js';
 import { Request } from './request.js';
 import { Response } from './response.js';
 
@@ -45,7 +46,7 @@ export function createServer<S extends object>(app: App<S>, sessions: FileSessio
       return;
     }
     const [status, reason] = error.code === 'HPE_HEADER_OVERFLOW' ? [431, 'Request Header Fields Too Large'] : [400, 'Bad Request'];
-    const response = app.report(requestLine(error.rawPacket), app.frame(Response.text(status, reason)), started);
+    const response = app.report(requestLine(error.rawPacket), app.frame(Response.text(status, reason)), started, new Reply());
     const headers = Object.entries(response.headers).map(([name, value]) => `${name}: ${String(value)}\r\n`).join('');
     socket.end(`HTTP/1.1 ${status} ${reason}\r\n${headers}Content-Length: ${Buffer.byteLength(reason)}\r\nConnection: close\r\n\r\n${reason}`);
   });
@@ -80,7 +81,7 @@ async function answer<S extends object>(app: App<S>, sessions: FileSessions, inc
     session = await sessions.open(request.cookie(sessions.name));
   } catch (error) {
     app.fail(error);
-    return app.report(request, app.frame(Response.text(500, 'Internal Server Error')), started);
+    return app.report(request, app.frame(Response.text(500, 'Internal Server Error')), started, new Reply());
   }
   let response: Response;
   try {

@@ -1,7 +1,21 @@
-// The cookies and the cache control that the loaders and actions of one request give its response (HY-52).
+// The cookies and the cache control that the loaders and actions of one request give its response (HY-52), and the
+// notes that they give the response hook (HY-60).
 export class Reply {
   private readonly cookies: [string, string, number | null][] = [];
   private cacheControlText: string | null = null;
+  private readonly noted = new Map<string, unknown>();
+
+  // Records a value of the request for the response hook; a later note of the same name replaces the value and keeps
+  // its position. The notes are not part of the response (HY-60).
+  note(name: string, value: unknown): this {
+    this.noted.set(name, value);
+    return this;
+  }
+
+  // Returns the notes in the order of their first names.
+  notes(): ReadonlyMap<string, unknown> {
+    return new Map(this.noted);
+  }
 
   // Adds a cookie; a name or value outside HY-52 fails.
   cookie(name: string, value: string, maxAge: number | null = null): this {

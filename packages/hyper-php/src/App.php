@@ -44,8 +44,9 @@ final class App
      *
      * @param array{shared?: \Closure, regions?: array<string, \Closure>, routes?: array<string, array{load?: \Closure, post?: \Closure, regions?: array<string, \Closure>}>} $handlers
      * @param list<string> $formTypes `application/x-www-form-urlencoded` and `multipart/form-data`
-     * @param ?\Closure(Request, Response, float): void $onResponse called once for every response with the request,
-     *     the response and the elapsed milliseconds (HY-60)
+     * @param ?\Closure(Request, Response, float, Reply): void $onResponse called once for every response with the
+     *     request, the response, the elapsed milliseconds and the reply of the request, which is empty when the
+     *     server answered before routing (HY-60)
      */
     public static function open(
         string $manifest,
@@ -115,8 +116,9 @@ final class App
     public function handle(Request $request, SessionStore $store, ?float $started = null): Response
     {
         $started ??= microtime(true);
+        $reply = new Reply();
         try {
-            $response = $this->answer($request, $store);
+            $response = $this->answer($request, $store, $reply);
         } catch (\Throwable $error) {
             error_log(sprintf('hyper: %s: %s in %s:%d', $error::class, $error->getMessage(), $error->getFile(), $error->getLine()));
             $response = Response::text(500, 'Internal Server Error');
@@ -124,13 +126,14 @@ final class App
 
         $response = $response->withHeader('Content-Security-Policy', "frame-ancestors {$this->frameAncestors}");
         if ($this->onResponse !== null) {
-            ($this->onResponse)($request, $response, (microtime(true) - $started) * 1000);
+            ($this->onResponse)($request, $response, (microtime(true) - $started) * 1000, $reply);
         }
 
         return $response;
     }
 
-    private function answer(Request $request, SessionStore $store): Response
+    /** Answers a request; the loaders and actions of a routed request receive `$reply` (HY-52, HY-60). */
+    private function answer(Request $request, SessionStore $store, Reply $reply): Response
     {
         if ($request->bodySize() > $this->bodyLimit) {
             return Response::text(413, 'Content Too Large');
@@ -151,7 +154,6 @@ final class App
         $session = new Session($store);
         $flash = $session->takeFlash();
         $request = $request->withRoute((string) $path, $match['params'])->withSession($flash, $session->csrfToken());
-        $reply = new Reply();
 
         return $this->routed($request, $route, $handler, $session, $flash, $reply)->withCookies($reply, $this->https || $request->https);
     }

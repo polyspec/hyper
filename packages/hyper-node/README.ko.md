@@ -57,7 +57,7 @@ app.bind('posts', () => new Posts('/srv/board/var/board.db'));
 | `frameAncestors` | `frame-ancestors`의 source. 기본값은 `'self'`다(HY-45). |
 | `bodyLimit` | 가장 큰 요청 body의 바이트 수. 더 큰 body는 413을 받는다. 기본값은 8 MiB다(HY-59). |
 | `formTypes` | action과 `/_hyper/keep`이 받는 요청 body의 media type. `application/x-www-form-urlencoded`와 `multipart/form-data`이며, 다른 type은 415를 받는다. 기본값은 `['application/x-www-form-urlencoded']`다(HY-59). |
-| `onResponse` | hyper가 스스로 응답하는 것을 포함해 모든 응답마다 요청, 응답, 경과 밀리초로 한 번 호출한다. 요청은 `node:http`가 request line을 읽지 못한 경우에만 null이다(HY-60). |
+| `onResponse` | hyper가 스스로 응답하는 것을 포함해 모든 응답마다 요청, 응답, 경과 밀리초, 요청의 reply로 한 번 호출한다. 요청은 `node:http`가 request line을 읽지 못한 경우에만 null이고, 서버가 라우팅 전에 응답했으면 reply는 비어 있다(HY-60). |
 | `log` | 처리하지 않은 오류의 log 줄을 받는다(HY-43). 기본값은 표준 오류에 쓴다. |
 
 `app.bind(key, factory)`는 애플리케이션 service를 등록한다. service는 처음 쓸 때 한 번 만든다. factory가 없는 key의 `services.get(key)`는 요청을 500으로 실패시킨다.
@@ -69,7 +69,7 @@ app.bind('posts', () => new Posts('/srv/board/var/board.db'));
 | 필드 | 타입 | 뜻 |
 |---|---|---|
 | `request` | `Request` | `method`, `path()`, `params()`, `param(name)`, `query()`, `rawQuery()`, `queryInt(name, fallback)`, `form()`, `formString(name)`, `flash(name)`, `cookie(name)`, `header(name)`, `csrfToken()`, `currentPath()`, `wantsJson()`, `isRegionRequest()`, `https` |
-| `reply` | `Reply` | `cookie(name, value, maxAge?)`, `removeCookie(name)`, `cacheControl(value)`(HY-52) |
+| `reply` | `Reply` | `cookie(name, value, maxAge?)`, `removeCookie(name)`, `cacheControl(value)`(HY-52). `note(name, value)`는 응답 hook을 위한 값을 기록하며, hook은 `notes()`로 읽는다(HY-60) |
 | `services` | `Services<S>` | `get(key)`는 `app.bind`가 등록한 service를 반환한다 |
 
 loader는 데이터를 반환한다. 문자열 key의 plain object나 `Map`이며, 바로 반환하거나 promise로 반환한다. 값은 null, boolean, ±(2^53 − 1) 안의 number와 bigint, string, 배열, map, plain object다(HY-44, HY-54). plain object는 JavaScript 규칙대로 정수 같은 key를 앞에 두고, `Map`은 넣은 순서를 지킨다.

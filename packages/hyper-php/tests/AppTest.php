@@ -49,9 +49,11 @@ final class AppTest extends TestCase
                 ],
                 'routes' => [
                     'home' => ['load' => fn (Counter $counter): array => ['name' => "n{$counter->count}"]],
-                    'add' => ['post' => function (Request $request, Counter $counter): Result {
+                    'add' => ['post' => function (Request $request, Reply $reply, Counter $counter): Result {
                         $counter->actions++;
                         if ($request->formString('name') === 'closed') {
+                            $reply->note('refusal', 'action')->note('kind', 'closed')->note('refusal', 'closed');
+
                             throw new Forbidden();
                         }
                         if ($request->formString('name') === 'unreadable') {
@@ -96,10 +98,18 @@ final class AppTest extends TestCase
                                 return ['id' => 'x'];
                             })(),
                             'missing' => throw new NotFound(),
-                            'private' => throw new Forbidden(),
+                            'private' => (function () use ($reply): array {
+                                $reply->note('refusal', 'private');
+
+                                throw new Forbidden();
+                            })(),
                             'unreadable' => throw new BadRequest(),
                             'moved' => throw new Redirect(Result::redirect('/items/new')->flash('note', 'moved')),
-                            'broken' => throw new \RuntimeException('secret detail /srv/app.php'),
+                            'broken' => (function () use ($reply): array {
+                                $reply->note('stage', 'load');
+
+                                throw new \RuntimeException('secret detail /srv/app.php');
+                            })(),
                             'huge' => ['id' => PHP_INT_MAX],
                             'huge-float' => ['id' => 1e20],
                             'numeric' => ['5' => 'x', 'id' => 'n'],
@@ -638,6 +648,29 @@ final class AppTest extends TestCase
         $reports = [];
         $this->app('', $options)->handle(new Request('GET', '/'), $this->session, microtime(true) - 2.0);
         self::assertGreaterThanOrEqual(2000.0, $reports[0][4]);
+    }
+
+    public function testTheHookReceivesTheReplyWithTheNotesOfTheLoadersAndActions(): void
+    {
+        // HY-60: the reply of the request, also after a stop or an error, and an empty reply before routing.
+        $reports = [];
+        $options = [
+            'onResponse' => function (Request $request, Response $response, float $elapsed, Reply $reply) use (&$reports): void {
+                $reports[] = [$response->status, $reply->notes()];
+            },
+        ];
+        $token = $this->token();
+        $form = ['Content-Type' => 'application/x-www-form-urlencoded'];
+        $forbidden = $this->send('GET', '/items/private', [], '', $options);
+        $this->send('POST', '/add', $form, "_csrf={$token}&name=closed", $options);
+        $this->send('GET', '/items/broken', [], '', $options);
+        $this->send('GET', '/items/member', [], '', $options);
+        $this->send('GET', '/missing', [], '', $options);
+        $this->app('', $options)->handle(new Request('GET', '/', [], 'q=%FF'), $this->session);
+        self::assertSame([
+            [403, ['refusal' => 'private']], [403, ['refusal' => 'closed', 'kind' => 'closed']], [500, ['stage' => 'load']], [200, []], [404, []], [400, []],
+        ], $reports);
+        self::assertSame(['Content-Type' => 'text/plain; charset=utf-8', 'Content-Security-Policy' => "frame-ancestors 'self'"], $forbidden->headers);
     }
 
     public function testBadRequestLoaderAndActionAnswerWith400(): void

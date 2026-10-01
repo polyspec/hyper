@@ -58,10 +58,11 @@ export interface AppOptions<S extends object> {
   // The media types of the request bodies that actions and /_hyper/keep accept: application/x-www-form-urlencoded
   // and multipart/form-data. The default is application/x-www-form-urlencoded (HY-59).
   formTypes?: string[];
-  // Called once for every response with the request, the response and the elapsed milliseconds, also for the
-  // responses that hyper answers itself (HY-60). The request is null only for a request whose request line node:http
-  // could not read.
-  onResponse?: (request: Request | null, response: Response, elapsed: number) => void;
+  // Called once for every response with the request, the response, the elapsed milliseconds and the reply of the
+  // request, also for the responses that hyper answers itself (HY-60). The request is null only for a request whose
+  // request line node:http could not read. The reply is the reply of the loaders and actions of the request, or an
+  // empty reply when the server answered before routing.
+  onResponse?: (request: Request | null, response: Response, elapsed: number, reply: Reply) => void;
   // Receives the log line of an unhandled error (HY-43); the default writes it to the standard error.
   log?: (message: string) => void;
 }
@@ -124,19 +125,21 @@ export class App<S extends object = Record<string, never>> {
   // framing (HY-45) and is reported with the milliseconds since `started`, a performance.now() value that defaults
   // to now (HY-60).
   async handle(request: Request, store: SessionStore, started = performance.now()): Promise<Response> {
+    const reply = new Reply();
     let response: Response;
     try {
-      response = await this.answer(request, store);
+      response = await this.answer(request, store, reply);
     } catch (error) {
       this.fail(error);
       response = Response.text(500, 'Internal Server Error');
     }
-    return this.report(request, this.frame(response), started);
+    return this.report(request, this.frame(response), started, reply);
   }
 
-  // Calls onResponse with a response and the milliseconds since `started`, and returns the response (HY-60).
-  report(request: Request | null, response: Response, started: number): Response {
-    this.onResponse?.(request, response, performance.now() - started);
+  // Calls onResponse with a response, the milliseconds since `started` and the reply of the request, and returns the
+  // response (HY-60).
+  report(request: Request | null, response: Response, started: number, reply: Reply): Response {
+    this.onResponse?.(request, response, performance.now() - started, reply);
     return response;
   }
 
@@ -150,7 +153,8 @@ export class App<S extends object = Record<string, never>> {
     this.log(`hyper: ${error instanceof Error ? (error.stack ?? `${error.name}: ${error.message}`) : String(error)}`);
   }
 
-  private async answer(request: Request, store: SessionStore): Promise<Response> {
+  // Answers a request; the loaders and actions of a routed request receive `reply` (HY-52, HY-60).
+  private async answer(request: Request, store: SessionStore, reply: Reply): Promise<Response> {
     if (request.bodySize() > this.bodyLimit) return Response.text(413, 'Content Too Large');
     if (!request.validInput()) return Response.text(400, 'Bad Request');
     const path = stripBasePath(request.path(), this.basePath);
@@ -162,7 +166,6 @@ export class App<S extends object = Record<string, never>> {
     const session = new Session(store);
     const flash = session.takeFlash();
     const routed = request.withRoute(path, match.params).withSession(flash, session.csrfToken());
-    const reply = new Reply();
     const response = await this.routed({ request: routed, route, handler, session, flash, reply, status: 200, invalid: {} });
     return response.withCookies(reply, this.https || request.https);
   }
