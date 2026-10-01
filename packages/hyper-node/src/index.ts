@@ -5,7 +5,7 @@ export { decodeJson, encodeJson, inDataModel, JsonDecodeError, OutsideNumber, ty
 export { Reply } from './reply.js';
 export { Request, type RequestInit } from './request.js';
 export { Response, type Headers } from './response.js';
-export { Forbidden, NotFound, Redirect, Result } from './result.js';
+export { BadRequest, Forbidden, NotFound, Redirect, Result } from './result.js';
 export { Services } from './services.js';
 export { MemorySessionStore, type Flash, type SessionStore } from './session.js';
 export { toValue, type Data } from './values.js';

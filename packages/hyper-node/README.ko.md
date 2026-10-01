@@ -75,8 +75,9 @@ action은 `Result`를 반환한다.
 
 - `Result.redirect(location)`은 `Location`과 함께 303으로 응답한다. 위치는 애플리케이션 경로다(HY-46). `.flash(name, value)`는 다음 요청에 값을 저장하고 `.changed(...topics)`는 바뀐 topic을 기록한다(HY-25).
 - `Result.invalid(data)`는 데이터를 페이지 데이터에 병합해 상태 422로 라우트 페이지를 렌더한다(HY-26).
+- `Result.page(status, data)`는 같은 방식으로 상태 200, 409, 422 중 하나로 라우트 페이지를 렌더한다(HY-58).
 
-loader나 action은 `new NotFound()`(404, HY-27), `new Redirect(Result.redirect(location))`(303, HY-50), `new Forbidden()`(403, HY-51)을 던져 요청을 멈춘다. 그 밖의 오류는 평문 500으로 응답하고 log에 쓴다(HY-43).
+loader나 action은 `new NotFound()`(404, HY-27), `new Redirect(Result.redirect(location))`(303, HY-50), `new Forbidden()`(403, HY-51), `new BadRequest()`(400, HY-58)를 던져 요청을 멈춘다. 그 밖의 오류는 평문 500으로 응답하고 log에 쓴다(HY-43).
 
 ## HTTP로 제공하기
 

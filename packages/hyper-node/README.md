@@ -75,8 +75,9 @@ An action returns a `Result`:
 
 - `Result.redirect(location)` answers 303 with `Location`; the location is an application path (HY-46). `.flash(name, value)` stores a value for the next request and `.changed(...topics)` records changed topics (HY-25).
 - `Result.invalid(data)` renders the route page with status 422 and the data merged into the page data (HY-26).
+- `Result.page(status, data)` renders the route page in the same way with the status 200, 409 or 422 (HY-58).
 
-A loader or an action stops the request by throwing `new NotFound()` (404, HY-27), `new Redirect(Result.redirect(location))` (303, HY-50) or `new Forbidden()` (403, HY-51). Any other error answers a plain 500 and is logged (HY-43).
+A loader or an action stops the request by throwing `new NotFound()` (404, HY-27), `new Redirect(Result.redirect(location))` (303, HY-50), `new Forbidden()` (403, HY-51) or `new BadRequest()` (400, HY-58). Any other error answers a plain 500 and is logged (HY-43).
 
 ## Serve over HTTP
 

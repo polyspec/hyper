@@ -7,6 +7,7 @@ namespace Polyspec\Hyper\Tests;
 use PHPUnit\Framework\TestCase;
 use Polyspec\Hyper\App;
 use Polyspec\Hyper\ArraySession;
+use Polyspec\Hyper\BadRequest;
 use Polyspec\Hyper\Forbidden;
 use Polyspec\Hyper\NotFound;
 use Polyspec\Hyper\Redirect;
@@ -52,6 +53,15 @@ final class AppTest extends TestCase
                         if ($request->formString('name') === 'closed') {
                             throw new Forbidden();
                         }
+                        if ($request->formString('name') === 'unreadable') {
+                            throw new BadRequest();
+                        }
+                        if ($request->formString('name') === 'taken') {
+                            return Result::page(409, ['name' => 'taken', 'error' => 'conflict']);
+                        }
+                        if ($request->formString('name') === 'preview') {
+                            return Result::page(200, ['name' => 'preview']);
+                        }
                         if ($request->formString('name') === '') {
                             return Result::invalid(['name' => '', 'error' => 'empty']);
                         }
@@ -86,6 +96,7 @@ final class AppTest extends TestCase
                             })(),
                             'missing' => throw new NotFound(),
                             'private' => throw new Forbidden(),
+                            'unreadable' => throw new BadRequest(),
                             'moved' => throw new Redirect(Result::redirect('/items/new')->flash('note', 'moved')),
                             'broken' => throw new \RuntimeException('secret detail /srv/app.php'),
                             'huge' => ['id' => PHP_INT_MAX],
@@ -538,6 +549,55 @@ final class AppTest extends TestCase
         $action = $this->post('/add', ['_csrf' => $this->token(), 'name' => 'closed']);
         self::assertSame(403, $action->status);
         self::assertSame(0, $this->counter->count);
+    }
+
+    public function testBadRequestLoaderAndActionAnswerWith400(): void
+    {
+        // HY-58
+        $page = $this->get('/items/unreadable', self::JSON);
+        self::assertSame(400, $page->status);
+        self::assertSame('Bad Request', $page->body);
+        self::assertSame('text/plain; charset=utf-8', $page->headers['Content-Type']);
+        $action = $this->post('/add', ['_csrf' => $this->token(), 'name' => 'unreadable']);
+        self::assertSame(400, $action->status);
+        self::assertSame(0, $this->counter->count);
+    }
+
+    public function testActionResultRendersThePageWithItsStatus(): void
+    {
+        // HY-58: an action result renders the page with 200, 409 or 422 and its data, as JSON or as a document.
+        $token = $this->token();
+        $conflict = $this->post('/add', ['_csrf' => $token, 'name' => 'taken'], self::JSON);
+        self::assertSame(409, $conflict->status);
+        self::assertSame(['name' => 'taken', 'error' => 'conflict'], self::json($conflict)['regions']['content']);
+        self::assertSame('no-store', $conflict->headers['Cache-Control']);
+        $document = $this->post('/add', ['_csrf' => $token, 'name' => 'taken']);
+        self::assertSame(409, $document->status);
+        self::assertStringContainsString('<p>Add|taken !conflict</p>', $document->body);
+
+        $preview = $this->post('/add', ['_csrf' => $token, 'name' => 'preview'], ['Accept' => 'application/json']);
+        self::assertSame(200, $preview->status);
+        self::assertSame('preview', self::json($preview)['regions']['content']['name']);
+        // HY-53: only a GET request receives 304; an action runs whatever tag the request names.
+        $again = $this->post('/add', ['_csrf' => $token, 'name' => 'preview'], ['Accept' => 'application/json', 'If-None-Match' => $preview->headers['ETag']]);
+        self::assertSame(200, $again->status);
+        self::assertSame($preview->body, $again->body);
+        self::assertSame(200, $this->post('/add', ['_csrf' => $token, 'name' => 'preview'])->status);
+        self::assertSame(0, $this->counter->count);
+    }
+
+    public function testActionResultStatusIs200Or409Or422(): void
+    {
+        // HY-58
+        self::assertSame(422, Result::invalid([])->status);
+        foreach ([201, 303, 400, 404, 500] as $status) {
+            try {
+                Result::page($status, []);
+                self::fail("status {$status} was accepted");
+            } catch (\InvalidArgumentException) {
+                self::addToAssertionCount(1);
+            }
+        }
     }
 
     public function testReplyCookiesAndCacheControlReachTheResponse(): void

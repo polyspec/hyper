@@ -6,7 +6,7 @@ namespace Polyspec\Hyper;
 
 use Polyspec\Template\Value\Bind;
 
-/** Answers requests with documents, JSON and action redirects (HY-8, HY-10 to HY-19, HY-24 to HY-27). */
+/** Answers requests with documents, JSON and action redirects (HY-8, HY-10 to HY-19, HY-24 to HY-27, HY-58). */
 final class App
 {
     private readonly Container $container;
@@ -150,13 +150,15 @@ final class App
                 return $this->redirect($session, $result);
             }
 
-            return $this->page($request, $route, $handler, $session, $flash, 422, $result->data, $reply);
+            return $this->page($request, $route, $handler, $session, $flash, $result->status, $result->data, $reply);
         } catch (NotFound) {
             return Response::text(404, 'Not Found');
         } catch (Redirect $redirect) {
             return $this->redirect($session, $redirect->result);
         } catch (Forbidden) {
             return Response::text(403, 'Forbidden');
+        } catch (BadRequest) {
+            return Response::text(400, 'Bad Request');
         }
     }
 
@@ -220,11 +222,11 @@ final class App
             if ($status !== 200) {
                 return new Response($status, $headers, $body);
             }
-            // HY-53: a strong tag of the body; a matching request receives 304 without a body.
+            // HY-53: a strong tag of the body; a matching GET request receives 304 without a body.
             $tag = '"' . substr(hash('sha256', $body), 0, 32) . '"';
             $headers['ETag'] = $tag;
 
-            return $request->header('If-None-Match') === $tag ? new Response(304, $headers, '') : new Response(200, $headers, $body);
+            return $request->method === 'GET' && $request->header('If-None-Match') === $tag ? new Response(304, $headers, '') : new Response(200, $headers, $body);
         }
 
         $headers = [

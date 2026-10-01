@@ -1,5 +1,5 @@
 // Answers requests with documents, JSON and action redirects (HY-8, HY-10 to HY-19, HY-24 to HY-27, HY-40 to
-// HY-46, HY-50 to HY-54).
+// HY-46, HY-50 to HY-54, HY-58).
 import { timingSafeEqual } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { isAbsolute, join } from 'node:path';
@@ -13,7 +13,7 @@ import { renderPage, type PageInput } from './page.js';
 import { Reply } from './reply.js';
 import type { Request } from './request.js';
 import { Response } from './response.js';
-import { Forbidden, NotFound, Redirect, Result } from './result.js';
+import { BadRequest, Forbidden, NotFound, Redirect, Result } from './result.js';
 import { Services } from './services.js';
 import { Session, type SessionStore } from './session.js';
 import type { Data } from './values.js';
@@ -151,11 +151,12 @@ export class App<S extends object = Record<string, never>> {
       const result = await handler.post({ request, reply, services: this.services });
       if (!(result instanceof Result)) throw new Error(`hyper: POST action of route ${input.route.name} did not return a Result`);
       if (result.isRedirect()) return this.redirect(session, result);
-      return await this.page({ ...input, status: 422, invalid: result.data });
+      return await this.page({ ...input, status: result.status, invalid: result.data });
     } catch (error) {
       if (error instanceof NotFound) return Response.text(404, 'Not Found');
       if (error instanceof Redirect) return this.redirect(session, error.result);
       if (error instanceof Forbidden) return Response.text(403, 'Forbidden');
+      if (error instanceof BadRequest) return Response.text(400, 'Bad Request');
       throw error;
     }
   }
