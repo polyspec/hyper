@@ -1,1 +1,1 @@
-{@ r = items}<li>{= r}</li>{/}
+{@ r = items}<li>{= r}</li>{/}{@ t = tags}{@ x = t}{= x}{/}{/}

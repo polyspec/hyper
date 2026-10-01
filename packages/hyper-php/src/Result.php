@@ -23,11 +23,24 @@ final class Result
     /** Returns a redirect to a path of this application (HY-46). */
     public static function redirect(string $location): self
     {
-        if (preg_match('#^/(?![/\\\\])[^\x{00}-\x{20}\x{7F}-\x{9F}\\\\]*$#Du', $location) !== 1) {
+        if (preg_match('#^/(?![/\\\\])[^\x{00}-\x{20}\x{7F}-\x{9F}\\\\]*$#Du', $location) !== 1 || self::hasDotSegment($location)) {
             throw new \InvalidArgumentException("redirect location {$location} is not an application path");
         }
 
         return new self($location, [], [], []);
+    }
+
+    /** Returns true when the path of a location has a `.` or `..` segment, also with a percent-encoded dot. */
+    private static function hasDotSegment(string $location): bool
+    {
+        $path = substr($location, 0, strcspn($location, '?#'));
+        foreach (explode('/', $path) as $segment) {
+            if (in_array(str_ireplace('%2e', '.', $segment), ['.', '..'], true)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

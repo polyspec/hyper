@@ -12,7 +12,7 @@ final class Kept
     public const KINDS = ['server', 'cookie', 'localStorage', 'sessionStorage'];
 
     /**
-     * Replaces values at kept paths when the path exists and the types match.
+     * Replaces values at kept paths when the path exists and the kept value conforms to its value.
      *
      * @param array<string, mixed> $data
      * @param list<array{0: string, 1: mixed}> $kept
@@ -22,15 +22,39 @@ final class Kept
     {
         foreach ($kept as [$path, $value]) {
             if (self::inDataModel($value)) {
-                $data = self::replace($data, explode('.', $path), $value);
+                $applied = false;
+                $data = self::replace($data, explode('.', $path), $value, $applied);
             }
         }
 
         return $data;
     }
 
+    /**
+     * Returns the kept values that conform to the data, by path (HY-17, HY-38).
+     *
+     * @param array<string, mixed> $data
+     * @param list<array{0: string, 1: mixed}> $kept
+     * @return array<string, mixed>
+     */
+    public static function select(array $data, array $kept): array
+    {
+        $selected = [];
+        foreach ($kept as [$path, $value]) {
+            $applied = false;
+            if (self::inDataModel($value)) {
+                $data = self::replace($data, explode('.', $path), $value, $applied);
+            }
+            if ($applied) {
+                $selected[$path] = $value;
+            }
+        }
+
+        return $selected;
+    }
+
     /** @param list<string> $keys */
-    private static function replace(mixed $container, array $keys, mixed $value): mixed
+    private static function replace(mixed $container, array $keys, mixed $value, bool &$applied): mixed
     {
         if ($container instanceof \stdClass) {
             $key = $keys[0];
@@ -40,11 +64,12 @@ final class Kept
             $copy = clone $container;
             $rest = array_slice($keys, 1);
             if ($rest === []) {
-                if (self::kind($copy->{$key}) === self::kind($value)) {
+                if (self::conforms($value, $copy->{$key})) {
                     $copy->{$key} = $value;
+                    $applied = true;
                 }
             } else {
-                $copy->{$key} = self::replace($copy->{$key}, $rest, $value);
+                $copy->{$key} = self::replace($copy->{$key}, $rest, $value, $applied);
             }
 
             return $copy;
@@ -66,13 +91,14 @@ final class Kept
             return $container;
         }
         if ($keys === []) {
-            if (self::kind($container[$index]) === self::kind($value)) {
+            if (self::conforms($value, $container[$index])) {
                 $container[$index] = $value;
+                $applied = true;
             }
 
             return $container;
         }
-        $container[$index] = self::replace($container[$index], $keys, $value);
+        $container[$index] = self::replace($container[$index], $keys, $value, $applied);
 
         return $container;
     }
@@ -87,6 +113,45 @@ final class Kept
         } catch (\Throwable) {
             return false;
         }
+    }
+
+    /**
+     * Returns true when a kept value has the shape of the data value (HY-38): the same type, the same
+     * keys of a map with conforming values, and list items that conform to the first data item. An
+     * empty map or list gives no shape.
+     */
+    private static function conforms(mixed $value, mixed $current): bool
+    {
+        $kind = self::kind($current);
+        if ($kind !== self::kind($value)) {
+            return false;
+        }
+        if ($kind === 'map') {
+            $data = $current instanceof \stdClass ? get_object_vars($current) : $current;
+            $kept = $value instanceof \stdClass ? get_object_vars($value) : $value;
+            if ($data === []) {
+                return true;
+            }
+            if (count($kept) !== count($data)) {
+                return false;
+            }
+            foreach ($data as $key => $item) {
+                if (!array_key_exists($key, $kept) || !self::conforms($kept[$key], $item)) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+        if ($kind === 'list' && $current !== []) {
+            foreach ($value as $item) {
+                if (!self::conforms($item, $current[0])) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
     /** Returns the value type of the data model: null, bool, number, string, list or map. */

@@ -1,6 +1,7 @@
 import { MapLoader, type Engine, type MapValue, type Value } from '@polyspec/template/render';
 import { createEngine } from './engine.js';
-import { checkManifest, DATA_TEMPLATE_NAME, pageRegion, type Manifest, type RouteDeclaration } from './manifest.js';
+import { applyKept } from './keep.js';
+import { checkManifest, DATA_TEMPLATE_NAME, keptPaths, pageRegion, type Manifest, type RouteDeclaration } from './manifest.js';
 import { Router } from './router.js';
 import { TemplateStore, type TemplateFetcher, type TemplateIndex } from './templates.js';
 
@@ -20,7 +21,14 @@ export interface DecodedResponse {
   params: MapValue;
   timezone: string;
   shared: MapValue;
+  // the loader data of every region in the response (HY-17)
+  loader: MapValue;
+  // the region data that renders: the loader data with kept values applied (HY-38)
   regions: MapValue;
+  // the regions whose data has kept values applied
+  kept: Set<string>;
+  // the regions whose kept values were removed because they broke rendering (HY-38)
+  dropped: Set<string>;
 }
 
 // The parts of a JSON response rendered alone (HY-13), in response order.
@@ -53,15 +61,58 @@ export function decodeResponse(app: Application, response: Value, path: string):
   if (match === null || match.name !== name) {
     throw new Error(`hyper: browser route ${JSON.stringify(match?.name ?? null)} for ${path} differs from server route ${JSON.stringify(name)}`);
   }
-  return {
+  const loader = requireMap(root.get('regions') ?? null, 'regions');
+  const decoded: DecodedResponse = {
     value: root,
     route: app.manifest.routes.find((item) => item.name === match.name)!,
     params: requireMap(root.get('params') ?? null, 'params'),
     timezone,
     shared: requireMap(root.get('shared') ?? null, 'shared'),
-    // A copy: browser kept values change these regions, never the server value (HY-31, HY-38).
-    regions: requireMap(copyValue(root.get('regions') ?? null), 'regions'),
+    loader,
+    // A copy: kept values change these regions, never the server value (HY-31, HY-38).
+    regions: requireMap(copyValue(loader), 'regions'),
+    kept: new Set(),
+    dropped: new Set(),
   };
+  // The server sends server and cookie values; the browser applies only those kinds from it (HY-17, HY-38).
+  for (const [name, values] of requireMap(root.get('kept') ?? null, 'kept')) {
+    const kinds = keptPaths(app.manifest, name);
+    const pairs = [...requireMap(values, `kept ${name}`)].filter(([path]) => kinds[path] === 'server' || kinds[path] === 'cookie');
+    applyRegionKept(decoded, name, pairs);
+  }
+  return decoded;
+}
+
+// Applies kept values to the data of one region of a decoded response and returns the applied paths (HY-38).
+export function applyRegionKept(decoded: DecodedResponse, name: string, pairs: readonly (readonly [string, Value])[]): string[] {
+  const data = decoded.regions.get(name);
+  if (!(data instanceof Map)) return [];
+  const applied = applyKept(data, pairs);
+  if (applied.length > 0) decoded.kept.add(name);
+  return applied;
+}
+
+// Runs a rendering of a decoded response. When it fails, every region whose rendering alone fails with its
+// kept values returns to its loader data, route regions first, and the rendering runs again (HY-38).
+function withKeptCheck<T>(app: Application, decoded: DecodedResponse, render: () => T): T {
+  try {
+    return render();
+  } catch (error) {
+    if (decoded.kept.size === 0) throw error;
+  }
+  const routeRegions = (decoded.route.regions ?? []).map((region) => region.name);
+  const others = [...decoded.regions.keys()].filter((name) => name !== app.page && !routeRegions.includes(name));
+  for (const name of [...routeRegions, ...others, app.page]) {
+    if (!decoded.kept.has(name)) continue;
+    try {
+      renderRegion(app, decoded.route, name, decoded.shared, decoded.regions, decoded.timezone);
+    } catch {
+      decoded.regions.set(name, copyValue(decoded.loader.get(name) ?? null));
+      decoded.kept.delete(name);
+      decoded.dropped.add(name);
+    }
+  }
+  return render();
 }
 
 // Returns a deep copy of a value whose maps and lists can be changed independently.
@@ -93,12 +144,15 @@ export function renderRegion(app: Application, route: RouteDeclaration, name: st
   return app.engine.render(regionTemplate(app, route, name), root, { define, env: { timezone } });
 }
 
-// Renders the title and every region of a decoded response alone (HY-13).
+// Renders the title and every region of a decoded response alone (HY-13, HY-38).
 export function renderParts(app: Application, decoded: DecodedResponse): RenderedParts {
-  const regions = new Map<string, string>();
-  for (const name of decoded.regions.keys()) {
-    regions.set(name, renderRegion(app, decoded.route, name, decoded.shared, decoded.regions, decoded.timezone));
-  }
+  const regions = withKeptCheck(app, decoded, () => {
+    const rendered = new Map<string, string>();
+    for (const name of decoded.regions.keys()) {
+      rendered.set(name, renderRegion(app, decoded.route, name, decoded.shared, decoded.regions, decoded.timezone));
+    }
+    return rendered;
+  });
   const title = app.engine.render(app.manifest.title, decoded.shared, { env: { timezone: decoded.timezone } });
   return { route: decoded.route, title, regions };
 }
@@ -116,19 +170,29 @@ export function toHtml(app: Application, decoded: DecodedResponse): string {
   return html;
 }
 
-// Renders the document of a decoded document response, including the embedded data (HY-12, HY-22, HY-31).
+// Renders the document of a decoded document response, including the embedded data, which carries the
+// loader data and the server kept values that were applied (HY-12, HY-22, HY-31, HY-38).
 export function renderDocument(app: Application, decoded: DecodedResponse): string {
-  const define: Record<string, { template: string; data: Value } | string> = {
-    layout: app.manifest.layout,
-    title: app.manifest.title,
-    data: { template: DATA_TEMPLATE_NAME, data: new Map([['response', decoded.value]]) },
-  };
-  for (const name of [...app.manifest.regions.map((region) => region.name), ...(decoded.route.regions ?? []).map((region) => region.name)]) {
-    const data = decoded.regions.get(name);
-    if (data === undefined) throw new Error(`hyper: document response has no region ${name}`);
-    define[name] = { template: regionTemplate(app, decoded.route, name), data };
+  const names = [...app.manifest.regions.map((region) => region.name), ...(decoded.route.regions ?? []).map((region) => region.name)];
+  for (const name of names) {
+    if (!decoded.regions.has(name)) throw new Error(`hyper: document response has no region ${name}`);
   }
-  return app.engine.render('layout', decoded.shared, { define, env: { timezone: decoded.timezone } });
+  return withKeptCheck(app, decoded, () => {
+    const define: Record<string, { template: string; data: Value } | string> = {
+      layout: app.manifest.layout,
+      title: app.manifest.title,
+      data: { template: DATA_TEMPLATE_NAME, data: new Map([['response', embedded(decoded)]]) },
+    };
+    for (const name of names) define[name] = { template: regionTemplate(app, decoded.route, name), data: decoded.regions.get(name)! };
+    return app.engine.render('layout', decoded.shared, { define, env: { timezone: decoded.timezone } });
+  });
+}
+
+// Returns the response value without the kept values of the regions that dropped them (HY-31, HY-38).
+function embedded(decoded: DecodedResponse): MapValue {
+  if (decoded.dropped.size === 0) return decoded.value;
+  const kept = requireMap(decoded.value.get('kept') ?? null, 'kept');
+  return new Map([...decoded.value, ['kept', new Map([...kept].filter(([name]) => !decoded.dropped.has(name)))]]);
 }
 
 export function requireMap(value: Value, label: string): MapValue {

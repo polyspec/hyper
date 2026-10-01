@@ -57,6 +57,7 @@ final class AppTest extends TestCase
                         'mode' => 'a',
                         'view' => 'x',
                         'filter' => ['a' => 1],
+                        'tags' => [],
                     ]]],
                     'item' => ['load' => function (Request $request): array {
                         return match ($request->param('id')) {
@@ -114,7 +115,7 @@ final class AppTest extends TestCase
         self::assertSame('text/html; charset=utf-8', $response->headers['Content-Type']);
         $token = (string) $this->session->get('_hyper_csrf');
         $data = '{"env":{"timezone":"+09:00"},"route":"home","params":{},"shared":{"title":"Home","csrf":"' . $token . '"},'
-            . '"regions":{"side":{"count":0,"note":null},"content":{"name":"n0"}}}';
+            . '"regions":{"side":{"count":0,"note":null},"content":{"name":"n0"}},"kept":{}}';
         self::assertSame(
             "<title>Home - Site</title>\n<aside id=\"side\" hy-region><b>0</b>\n</aside>\n<main id=\"content\" hy-region><p>Home|n0</p>\n</main>\n"
             . "<script type=\"application/json\" id=\"hy-data\">{$data}</script>",
@@ -157,7 +158,7 @@ final class AppTest extends TestCase
 
         self::assertSame(['content', 'rows'], array_keys($region['regions']));
         self::assertSame(['side', 'content', 'rows'], array_keys($document['regions']));
-        self::assertSame(['items' => ['a<', 'b0'], 'open' => false, 'mode' => 'a', 'view' => 'x', 'filter' => ['a' => 1]], $region['regions']['rows']);
+        self::assertSame(['items' => ['a<', 'b0'], 'open' => false, 'mode' => 'a', 'view' => 'x', 'filter' => ['a' => 1], 'tags' => []], $region['regions']['rows']);
         self::assertStringContainsString('<ul id="rows" hy-region><li>a&lt;</li><li>b0</li></ul>', $this->get('/list')->body);
     }
 
@@ -200,8 +201,12 @@ final class AppTest extends TestCase
         $token = $this->token();
         self::assertSame(204, $this->keep(['_csrf' => $token, 'region' => 'rows', 'path' => 'open', 'value' => 'true'])->status);
 
-        self::assertSame(true, self::json($this->get('/list', self::JSON))['regions']['rows']['open']);
-        self::assertStringContainsString('"rows":{"items":["a\\u003c","b0"],"open":true', $this->get('/list')->body);
+        $json = self::json($this->get('/list', self::JSON));
+        self::assertSame(false, $json['regions']['rows']['open']);
+        self::assertSame(['rows' => ['open' => true]], $json['kept']);
+        $document = $this->get('/list')->body;
+        self::assertStringContainsString('"rows":{"items":["a\\u003c","b0"],"open":false', $document);
+        self::assertStringContainsString('"kept":{"rows":{"open":true}}', $document);
     }
 
     public function testKeepEndpointRejectsInvalidRequests(): void
@@ -215,20 +220,39 @@ final class AppTest extends TestCase
         self::assertSame(400, $this->keep(['_csrf' => $token, 'region' => 'rows', 'path' => 'open', 'value' => 'tru'])->status);
         self::assertSame(405, $this->keep([], 'GET')->status);
         self::assertSame(false, self::json($this->get('/list', self::JSON))['regions']['rows']['open']);
+        self::assertSame([], self::json($this->get('/list', self::JSON))['kept']);
     }
 
-    public function testCookieKeptValueIsAppliedOnlyForCookiePathsOfTheSameType(): void
+    public function testCookieKeptValuesAreSentApartFromTheRegionData(): void
     {
-        // HY-37, HY-38
+        // HY-17, HY-37, HY-38: only conforming values of cookie paths are sent, in `kept`.
         $cookie = json_encode(['rows' => ['mode' => 'b', 'open' => true, 'view' => 'y'], 'side' => ['count' => 9]]);
         $request = new Request('GET', '/list', self::JSON, cookies: ['hy-keep' => $cookie]);
-        $rows = self::json($this->app()->handle($request, $this->session))['regions']['rows'];
-        self::assertSame(['items' => ['a<', 'b0'], 'open' => false, 'mode' => 'b', 'view' => 'x', 'filter' => ['a' => 1]], $rows);
+        $json = self::json($this->app()->handle($request, $this->session));
+        self::assertSame(['items' => ['a<', 'b0'], 'open' => false, 'mode' => 'a', 'view' => 'x', 'filter' => ['a' => 1], 'tags' => []], $json['regions']['rows']);
+        self::assertSame(['rows' => ['mode' => 'b']], $json['kept']);
 
-        $wrongType = new Request('GET', '/list', self::JSON, cookies: ['hy-keep' => '{"rows":{"mode":1}}']);
-        self::assertSame('a', self::json($this->app()->handle($wrongType, $this->session))['regions']['rows']['mode']);
-        $notJson = new Request('GET', '/list', self::JSON, cookies: ['hy-keep' => '{']);
-        self::assertSame('a', self::json($this->app()->handle($notJson, $this->session))['regions']['rows']['mode']);
+        foreach (['{"rows":{"mode":1}}', '{', '{"rows":{"filter":{"a":"s"}}}', '{"rows":{"filter":{"b":1}}}', '{"rows":{"filter":{}}}'] as $value) {
+            $ignored = new Request('GET', '/list', self::JSON, cookies: ['hy-keep' => $value]);
+            self::assertSame([], self::json($this->app()->handle($ignored, $this->session))['kept'], $value);
+        }
+        $conforming = new Request('GET', '/list', self::JSON, cookies: ['hy-keep' => '{"rows":{"filter":{"a":2}}}']);
+        self::assertSame(['rows' => ['filter' => ['a' => 2]]], self::json($this->app()->handle($conforming, $this->session))['kept']);
+    }
+
+    public function testRegionWhoseKeptValuesBreakRenderingRendersWithoutThem(): void
+    {
+        // HY-38: a conforming value can still fail in the template; the document drops the kept values
+        // of that region, and the embedded data no longer contains them.
+        $cookies = ['hy-keep' => '{"rows":{"mode":"b","tags":[1]}}'];
+        $document = $this->app()->handle(new Request('GET', '/list', cookies: $cookies), $this->session);
+        self::assertSame(200, $document->status);
+        self::assertStringContainsString('<li>a&lt;</li><li>b0</li>', $document->body);
+        self::assertStringContainsString('"kept":{}', $document->body);
+
+        // JSON is not rendered by the server, so it carries every conforming value for the browser to check.
+        $json = self::json($this->app()->handle(new Request('GET', '/list', self::JSON, cookies: $cookies), $this->session));
+        self::assertSame(['rows' => ['mode' => 'b', 'tags' => [1]]], $json['kept']);
     }
 
     public function testManifestRejectsInvalidKeep(): void
@@ -261,7 +285,9 @@ final class AppTest extends TestCase
         self::assertSame(400, $this->post('/add', ['_csrf' => $token, 'name' => "bad\xFF"])->status);
         self::assertSame(0, $this->counter->actions);
         self::assertSame(400, $this->app()->handle(new Request('GET', '/', [], ['q' => "\xC3"]), $this->session)->status);
-        self::assertSame(400, $this->app()->handle(new Request('GET', '/', [], [], [], cookies: ['hy-keep' => "\xFF"]), $this->session)->status);
+        self::assertSame(400, $this->app()->handle(new Request('GET', '/', [], ['a' => ["\xFF" => ['x' => '1']]]), $this->session)->status);
+        self::assertSame(200, $this->app()->handle(new Request('GET', '/', [], [], [], cookies: ['hy-keep' => "\xFF"]), $this->session)->status);
+        self::assertSame(200, $this->app()->handle(new Request('GET', '/', [], [], [], cookies: [session_name() => "\xFF"]), $this->session)->status);
         self::assertSame(200, $this->app()->handle(new Request('GET', '/', [], [], [], cookies: ['unrelated' => "\xFF"]), $this->session)->status);
         self::assertSame(400, $this->get('/', ['HX-Current-URL' => "http://x/\xFF"])->status);
         self::assertSame(400, $this->get("/items/\xFF")->status);
@@ -308,6 +334,7 @@ final class AppTest extends TestCase
             $response = $this->app()->handle(new Request('GET', '/list', self::JSON, cookies: ['hy-keep' => $cookie]), $this->session);
             self::assertSame(200, $response->status);
             self::assertStringContainsString('"filter":{"a":1}', $response->body);
+            self::assertStringContainsString('"kept":{}', $response->body);
         }
     }
 
@@ -321,11 +348,14 @@ final class AppTest extends TestCase
         self::assertSame("frame-ancestors 'self' https://admin.example", $framed->handle(new Request('GET', '/'), $this->session)->headers['Content-Security-Policy']);
     }
 
-    public function testKeptEmptyMapReplacesAMap(): void
+    public function testKeptEmptyMapIsAMap(): void
     {
-        // HY-38 with an empty map, which PHP arrays cannot tell from an empty list.
-        $request = new Request('GET', '/list', self::JSON, cookies: ['hy-keep' => '{"rows":{"filter":{}}}']);
-        self::assertStringContainsString('"filter":{}', $this->app()->handle($request, $this->session)->body);
+        // HY-38 with an empty map, which PHP arrays cannot tell from an empty list: an empty kept map does not
+        // replace a map with keys, and an empty list does not replace a map.
+        foreach (['{"rows":{"filter":{}}}', '{"rows":{"filter":[]}}'] as $cookie) {
+            $request = new Request('GET', '/list', self::JSON, cookies: ['hy-keep' => $cookie]);
+            self::assertStringContainsString('"kept":{}', $this->app()->handle($request, $this->session)->body);
+        }
     }
 
     public function testRegionRequestReturnsTheProtocolShape(): void
@@ -337,7 +367,7 @@ final class AppTest extends TestCase
         self::assertSame('application/json; charset=utf-8', $response->headers['Content-Type']);
         $token = (string) $this->session->get('_hyper_csrf');
         self::assertSame(
-            '{"env":{"timezone":"+09:00"},"route":"item","params":{"id":"a b"},"shared":{"title":"Item","csrf":"' . $token . '"},"regions":{"content":{"id":"a b"}}}',
+            '{"env":{"timezone":"+09:00"},"route":"item","params":{"id":"a b"},"shared":{"title":"Item","csrf":"' . $token . '"},"regions":{"content":{"id":"a b"}},"kept":{}}',
             $response->body,
         );
     }

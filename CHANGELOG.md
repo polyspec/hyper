@@ -27,16 +27,26 @@ The following defects of correctness and security are fixed. Each one has a test
   - The comparison page ran `javascript:` URLs from `?ssr=` and accepted messages from any origin. Frames sent their whole body, including the CSRF token, to any parent. Frames now send a SHA-256 of the body to the embedding origin only, and the page accepts only http(s) origins.
   - The edge server cached `index.html` for a year; only files under `/assets/` are cached now.
 - More defects of restorations, saves, request checks and failure marks are fixed with tests: a slow CSR restoration overwrote a later navigation (HY-23); a failed server save dropped its pending value, and a successful one could clear a later change (HY-39); one unrelated non-UTF-8 cookie blocked every page, so HY-42 now checks only `hy-keep` and the session cookie; `render`, `set` and `hy-set` changed held data before rendering and left failures unmarked (HY-47); kept values outside the data model caused lasting 500s and are now ignored or rejected (HY-38, HY-40); the request path of `?/x` and of absolute-form targets was wrong (HY-42); marks on regions outside the page region were not cleared, and cancelled requests were marked (HY-47); absolute and relative same-origin URLs were not prefixed (HY-23); redirect locations allowed C1 controls and invalid UTF-8 (HY-46); the session cookie could not be `Secure` behind a TLS-terminating CDN, and no response limited framing (HY-45). The example and the scripts start PHP with `display_errors=0`, because PHP prints startup warnings before the application runs (HY-43).
+- More defects of the changes from "Keep region data in the server session, a cookie or Web Storage" to "Fix defects of kept data, requests and failures" are fixed with tests:
+  - Two `set` calls at the same time lost one change. A change also stored the value of a response that arrived while it rendered, and swapped stale content over it. Calls now run in call order, and a change whose held data a response replaced ends without swapping, holding or storing (HY-33).
+  - Saves of one path could arrive out of order, and an older failed save marked a region whose latest value was saved. Saves of a path are now sent one at a time with the latest value, and only the save of the latest change marks the region (HY-39).
+  - A failure of `holdEmbedded` (template loading, rendering or unreadable embedded data) was not marked and rejected unhandled. It now marks the regions or the body and does not reject (HY-47).
+  - A request that htmx aborted on its timeout was not marked. It is now a network failure (HY-47).
+  - Kept maps and lists were checked only by their outer type, so a stored value with another inner shape caused 500 on every document. Kept values now conform to the shape of the data (HY-38). A conforming value that still breaks rendering makes its region render with its loader data (HY-38).
+  - Query and form names nested in arrays skipped the UTF-8 check (HY-42).
+  - Redirect locations accepted `.` and `..` segments, such as `/.//evil.example` (HY-46).
 - `make templates-check` also checks that the layout places `{# title}`, `{# data}` and every manifest region once (HY-3), and manifests reject invalid topic names.
 
 ### Changed
 
+- A JSON response carries kept values apart from the region data (HY-17). `regions` holds the loader data, and `kept` holds the conforming `server` and `cookie` values. The server applies them to render a document, and the browser applies them with its own values. The browser can therefore render a region without kept values that break it (HY-38).
+- The server no longer checks cookies for UTF-8 (HY-42). It ignores an invalid `hy-keep`, and starts a new session for an invalid session cookie, instead of answering 400 to every request until the cookie expires.
 - The recommended deployment serves direct requests with SSR and htmx requests with JSON from one server; the static shell is for backends that serve JSON only (`docs/operations/deployment.md`).
 
 ### Added
 
 - Measure performance with `make bench` (`docs/operations/benchmark.md`). `make bench-server` times `App::handle` per request kind and the rendering, data model and JSON costs for 10 to 1,000 rows. `make bench-browser` measures first screens, region navigation, one `hy-set` change by phase (hyper, template engine, parsing, htmx morph, `htmx.process`) with its main thread load and the parts of every task over 50 ms, memory over 200 navigation cycles with the objects that grew between two heap snapshots and their retainers, and the `blink::MediaQuerySet` objects that Chromium keeps for inserted `<thead>` elements. On 2026-10-01 a `hy-set` change of 1,000 rows took 22 to 25 ms, of which the htmx morph took 13 to 15 ms and the template engine 3 ms; DOM nodes and event listeners stayed constant over 200 cycles.
-- Keep region data across reloads (HY-37 to HY-41). A region declares kept paths with their storage: `server` (the server session, saved by a background request that rendering does not wait for), `cookie` (the `hy-keep` cookie written by the browser code), `localStorage` or `sessionStorage`. The server applies `server` and `cookie` values before it renders, so the first SSR document shows them; the browser applies `localStorage` and `sessionStorage` values before it renders a response, and after loading for a server document. A kept value replaces the loader value only at an existing path of the same type; `conformance/keep.json` holds the cases that PHP and JavaScript both pass. The shared data now always contains `csrf`.
+- Keep region data across reloads (HY-37 to HY-41). A region declares kept paths with their storage: `server` (the server session, saved by a background request that rendering does not wait for), `cookie` (the `hy-keep` cookie written by the browser code), `localStorage` or `sessionStorage`. The server applies `server` and `cookie` values before it renders, so the first SSR document shows them; the browser applies `localStorage` and `sessionStorage` values before it renders a response, and after loading for a server document. A kept value replaces the loader value only at an existing path whose value has the same shape (HY-38); `conformance/keep.json` holds the cases that PHP and JavaScript both pass. The shared data now always contains `csrf`.
 - Use all four kinds in the board example: closing the notice (`server`), sorting (`localStorage`), the compact list (`sessionStorage`) and large text on the post page (`cookie`).
 
 - Control the screen with data (HY-29 to HY-36). A route declares route regions that its template places with `{# name}`; each has its own loader. The layout embeds the document JSON with `{# data}` through the reserved template `hyper/data.tpl`, so the first SSR page holds its data. The browser code provides `data`, `render` and `set`, and an element with `hy-set="path=value"` changes the data of its region and renders the region again without a request. There is no change tracking.
@@ -54,6 +64,12 @@ The following defects of correctness and security are fixed. Each one has a test
 
 ### Verification
 
+- 2026-10-01, after the fixes of the call order, the saves and the request checks, macOS, Node.js 26.8.1, PHP 8.5.10, Chromium from Playwright 1.63.0: `make check` passed.
+  - `make test-js`: 139 tests, including 31 kept value conformance cases, and the type check passed.
+  - `make test-php`: 145 tests, including the same 31 kept value conformance cases, passed.
+  - `make parity`: the ten compare steps matched byte for byte, and the three 404 steps returned 404.
+  - `make bundle-size`: SSR script 31,043 gzip bytes (limit 31,400), CSR shell 32,345 gzip bytes (limit 32,600), largest template file 1,325 gzip bytes.
+  - `make e2e`: 12 tests passed.
 - 2026-10-01, macOS, Node.js 26.8.1, PHP 8.5.10, Chromium from Playwright 1.63.0: `make check` passed.
   - `make test-js`: 94 tests, including 51 router and 17 kept value conformance cases, and the type check passed.
   - `make test-php`: 90 tests, including the same 51 router and 17 kept value conformance cases, passed.

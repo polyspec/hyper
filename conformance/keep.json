@@ -13,16 +13,23 @@
     { "label": "through a scalar", "data": { "a": "text" }, "kept": [["a.b", 1]], "expected": { "a": "text" } },
     { "label": "null to null", "data": { "a": null }, "kept": [["a", null]], "expected": { "a": null } },
     { "label": "null to value", "data": { "a": null }, "kept": [["a", 1]], "expected": { "a": null } },
-    { "label": "map", "data": { "filter": { "a": 1 } }, "kept": [["filter", { "b": 2 }]], "expected": { "filter": { "b": 2 } } },
+    { "label": "map with other keys", "data": { "filter": { "a": 1 } }, "kept": [["filter", { "b": 2 }]], "expected": { "filter": { "a": 1 } } },
     { "label": "list", "data": { "tags": ["a"] }, "kept": [["tags", ["b", "c"]]], "expected": { "tags": ["b", "c"] } },
     { "label": "list to map", "data": { "tags": ["a"] }, "kept": [["tags", { "b": 1 }]], "expected": { "tags": ["a"] } },
-    { "label": "empty map replaces a map", "data": { "m": { "10": "a", "2": "b" } }, "kept": [["m", {}]], "expected": { "m": {} } },
+    { "label": "empty map does not replace a map with keys", "data": { "m": { "10": "a", "2": "b" } }, "kept": [["m", {}]], "expected": { "m": { "10": "a", "2": "b" } } },
     { "label": "map replaces an empty map", "data": { "m": {} }, "kept": [["m", { "a": 1 }]], "expected": { "m": { "a": 1 } } },
     { "label": "empty list replaces a list", "data": { "l": [1] }, "kept": [["l", []]], "expected": { "l": [] } },
     { "label": "empty map does not replace a list", "data": { "l": [1] }, "kept": [["l", {}]], "expected": { "l": [1] } },
     { "label": "empty list does not replace a map", "data": { "m": { "a": 1 } }, "kept": [["m", []]], "expected": { "m": { "a": 1 } } },
     { "label": "path through an empty map", "data": { "m": {} }, "kept": [["m.a", 1]], "expected": { "m": {} } },
     { "label": "numeric map keys keep their order", "data": { "m": { "10": 1, "2": 2 } }, "kept": [["m.2", 3]], "expected": { "m": { "10": 1, "2": 3 } } },
-    { "label": "in order", "data": { "a": 1, "b": "x" }, "kept": [["b", "y"], ["a", 2], ["b", "z"]], "expected": { "a": 2, "b": "z" } }
+    { "label": "in order", "data": { "a": 1, "b": "x" }, "kept": [["b", "y"], ["a", 2], ["b", "z"]], "expected": { "a": 2, "b": "z" } },
+    { "label": "map with the same keys", "data": { "filter": { "a": 1, "b": "x" } }, "kept": [["filter", { "a": 2, "b": "y" }]], "expected": { "filter": { "a": 2, "b": "y" } } },
+    { "label": "map with a nested value of another type", "data": { "filter": { "a": { "b": 1 } } }, "kept": [["filter", { "a": { "b": "s" } }]], "expected": { "filter": { "a": { "b": 1 } } } },
+    { "label": "map with a scalar in place of a map", "data": { "filter": { "a": { "b": 1 } } }, "kept": [["filter", { "a": "s" }]], "expected": { "filter": { "a": { "b": 1 } } } },
+    { "label": "list items conform to the first item", "data": { "items": [{ "open": false }] }, "kept": [["items", [{ "open": true }, { "open": false }]]], "expected": { "items": [{ "open": true }, { "open": false }] } },
+    { "label": "list item with a value of another type", "data": { "items": [{ "open": false }] }, "kept": [["items", [{ "open": true }, { "open": "x" }]]], "expected": { "items": [{ "open": false }] } },
+    { "label": "nested list of another type", "data": { "l": [[1]] }, "kept": [["l", [["a"]]]], "expected": { "l": [[1]] } },
+    { "label": "any list replaces an empty list", "data": { "l": [] }, "kept": [["l", [{ "x": 1 }]]], "expected": { "l": [{ "x": 1 }] } }
   ]
 }
