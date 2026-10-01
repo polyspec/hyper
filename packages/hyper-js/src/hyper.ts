@@ -103,8 +103,14 @@ export class Hyper {
   private readonly request: typeof fetch;
   private readonly page: DocumentAdapter;
   private readonly currentUrl: () => string;
+  readonly app: Application;
+  private readonly htmx: HtmxApi;
+  private readonly options: HyperOptions;
 
-  constructor(readonly app: Application, private readonly htmx: HtmxApi, private readonly options: HyperOptions) {
+  constructor(app: Application, htmx: HtmxApi, options: HyperOptions) {
+    this.app = app;
+    this.htmx = htmx;
+    this.options = options;
     this.element = options.element ?? ((id) => document.getElementById(id));
     this.request = options.fetch ?? ((input, init) => fetch(input, init));
     this.page = options.document ?? browserDocument(htmx);

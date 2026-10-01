@@ -87,12 +87,15 @@ export class FileSession implements SessionStore {
   private values: Map<string, unknown> | null = null;
   private id: string | null = null;
   private createdId = false;
+  private readonly sessions: FileSessions;
+  private readonly cookieId: string | null;
+  private readonly release: () => void;
 
-  constructor(
-    private readonly sessions: FileSessions,
-    private readonly cookieId: string | null,
-    private readonly release: () => void,
-  ) {}
+  constructor(sessions: FileSessions, cookieId: string | null, release: () => void) {
+    this.sessions = sessions;
+    this.cookieId = cookieId;
+    this.release = release;
+  }
 
   // True when the request read or wrote session data.
   get started(): boolean {

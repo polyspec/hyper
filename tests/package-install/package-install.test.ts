@@ -1,0 +1,61 @@
+// Runs the installed hyper packages under node without a bundler, as a package that depends on them does (HY-61).
+import assert from 'node:assert/strict';
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { test } from 'node:test';
+import { Router, stripBasePath } from '@polyspec/hyper';
+import { App, Forbidden, MemorySessionStore, Request, Result, type Handlers, type Reply, type Response } from '@polyspec/hyper-server';
+
+// The fixtures of the server tests: the manifest and the template files that `make node-fixtures` builds.
+const FIXTURES = fileURLToPath(new URL('../../packages/hyper-php/tests/fixtures/', import.meta.url));
+const BUILD = fileURLToPath(new URL('../../packages/hyper-node/tests/build/', import.meta.url));
+
+test('the installed packages are JavaScript with declarations', () => {
+  for (const name of ['@polyspec/hyper', '@polyspec/hyper-server']) {
+    const entry = import.meta.resolve(name);
+    assert.ok(entry.endsWith(`/tests/package-install/node_modules/${name}/dist/index.js`), entry);
+    const directory = fileURLToPath(new URL('..', entry));
+    const manifest = JSON.parse(readFileSync(join(directory, 'package.json'), 'utf8')) as { exports: unknown };
+    assert.deepEqual(manifest.exports, { '.': { types: './dist/index.d.ts', default: './dist/index.js' } });
+    assert.ok(existsSync(join(directory, 'dist', 'index.d.ts')));
+    assert.ok(!existsSync(join(directory, 'src')), `${name} contains its source`);
+  }
+});
+
+test('the browser package routes a path', () => {
+  const router = new Router([{ name: 'item', path: '/items/{id}' }]);
+  assert.deepEqual(router.match(stripBasePath('/api/items/7', '/api') ?? ''), { name: 'item', params: { id: '7' } });
+});
+
+test('the server package answers requests and reports the reply of each one', async () => {
+  const reports: [number, Record<string, unknown>][] = [];
+  const handlers: Handlers<Record<string, never>> = {
+    routes: {
+      add: { post: () => Result.redirect('/') },
+      item: {
+        load: ({ request, reply }) => {
+          reply.note('refusal', 'private');
+          if (request.param('id') === 'private') throw new Forbidden();
+          return { id: request.param('id') };
+        },
+      },
+    },
+  };
+  const app = await App.open({
+    manifest: `${FIXTURES}app.json`,
+    templates: { index: `${BUILD}templates.index.json`, root: BUILD },
+    handlers,
+    timezone: 'Z',
+    onResponse: (_request: Request | null, response: Response, _elapsed: number, reply: Reply) => {
+      reports.push([response.status, Object.fromEntries(reply.notes())]);
+    },
+  });
+  const store = new MemorySessionStore();
+  const page = await app.handle(Request.from({ method: 'GET', target: '/' }), store);
+  assert.equal(page.status, 200);
+  assert.equal(page.headers['Content-Type'], 'text/html; charset=utf-8');
+  assert.match(page.body, /<title>Home - Site<\/title>/);
+  assert.equal((await app.handle(Request.from({ method: 'GET', target: '/items/private' }), store)).status, 403);
+  assert.deepEqual(reports, [[200, {}], [403, { refusal: 'private' }]]);
+});

@@ -70,19 +70,39 @@ export interface AppOptions<S extends object> {
 export class App<S extends object = Record<string, never>> {
   readonly services = new Services<S>();
   private readonly routes: Map<string, RouteDeclaration>;
+  private readonly application: Application;
+  private readonly handlers: Handlers<S>;
+  readonly timezone: string;
+  readonly basePath: string;
+  readonly https: boolean;
+  readonly frameAncestors: string;
+  readonly bodyLimit: number;
+  private readonly formTypes: readonly string[];
+  private readonly onResponse: AppOptions<S>['onResponse'];
+  private readonly log: (message: string) => void;
 
   private constructor(
-    private readonly application: Application,
-    private readonly handlers: Handlers<S>,
-    readonly timezone: string,
-    readonly basePath: string,
-    readonly https: boolean,
-    readonly frameAncestors: string,
-    readonly bodyLimit: number,
-    private readonly formTypes: readonly string[],
-    private readonly onResponse: AppOptions<S>['onResponse'],
-    private readonly log: (message: string) => void,
+    application: Application,
+    handlers: Handlers<S>,
+    timezone: string,
+    basePath: string,
+    https: boolean,
+    frameAncestors: string,
+    bodyLimit: number,
+    formTypes: readonly string[],
+    onResponse: AppOptions<S>['onResponse'],
+    log: (message: string) => void,
   ) {
+    this.application = application;
+    this.handlers = handlers;
+    this.timezone = timezone;
+    this.basePath = basePath;
+    this.https = https;
+    this.frameAncestors = frameAncestors;
+    this.bodyLimit = bodyLimit;
+    this.formTypes = formTypes;
+    this.onResponse = onResponse;
+    this.log = log;
     this.routes = new Map(application.manifest.routes.map((route) => [route.name, route]));
   }
 
