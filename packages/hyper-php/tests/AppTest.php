@@ -603,6 +603,43 @@ final class AppTest extends TestCase
         }
     }
 
+    public function testEveryResponseIsReportedOnceWithTheRequestAndTheElapsedTime(): void
+    {
+        // HY-60: also the responses that hyper answers itself.
+        $reports = [];
+        $options = [
+            'bodyLimit' => 256,
+            'onResponse' => function (Request $request, Response $response, float $elapsed) use (&$reports): void {
+                $reports[] = [$request->method, $request->path(), $response->status, $response->headers['Content-Security-Policy'] ?? null, $elapsed];
+            },
+        ];
+        $token = $this->token();
+        $form = ['Content-Type' => 'application/x-www-form-urlencoded'];
+        $this->send('GET', '/api/', [], '', [...$options, 'basePath' => '/api']);
+        $this->send('GET', '/', [], '', $options);
+        $this->app('', $options)->handle(new Request('GET', '/', [], 'q=%FF'), $this->session);
+        $this->send('POST', '/add', $form, '_csrf=wrong', $options);
+        $this->send('GET', '/missing', [], '', $options);
+        $this->send('POST', '/', $form, '', $options);
+        $this->send('POST', '/add', $form, str_repeat('a', 257), $options);
+        $this->send('POST', '/add', ['Content-Type' => 'text/plain'], '', $options);
+        $this->send('GET', '/items/broken', [], '', $options);
+        $this->send('POST', '/add', $form, "_csrf={$token}&name=a", $options);
+        self::assertSame([
+            ['GET', '/api/', 200], ['GET', '/', 200], ['GET', '/', 400], ['POST', '/add', 403], ['GET', '/missing', 404],
+            ['POST', '/', 405], ['POST', '/add', 413], ['POST', '/add', 415], ['GET', '/items/broken', 500], ['POST', '/add', 303],
+        ], array_map(fn (array $report): array => array_slice($report, 0, 3), $reports));
+        foreach ($reports as $report) {
+            self::assertSame("frame-ancestors 'self'", $report[3]);
+            self::assertGreaterThanOrEqual(0.0, $report[4]);
+        }
+
+        // The elapsed time counts from the start that the caller gives, such as the start of the PHP request.
+        $reports = [];
+        $this->app('', $options)->handle(new Request('GET', '/'), $this->session, microtime(true) - 2.0);
+        self::assertGreaterThanOrEqual(2000.0, $reports[0][4]);
+    }
+
     public function testBadRequestLoaderAndActionAnswerWith400(): void
     {
         // HY-58

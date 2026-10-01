@@ -57,6 +57,7 @@ app.bind('posts', () => new Posts('/srv/board/var/board.db'));
 | `frameAncestors` | The sources of `frame-ancestors`; the default is `'self'` (HY-45). |
 | `bodyLimit` | The largest request body in bytes; a larger body receives 413. The default is 8 MiB (HY-59). |
 | `formTypes` | The media types of the request bodies that actions and `/_hyper/keep` accept: `application/x-www-form-urlencoded` and `multipart/form-data`; another type receives 415. The default is `['application/x-www-form-urlencoded']` (HY-59). |
+| `onResponse` | Called once for every response with the request, the response and the elapsed milliseconds, also for the responses that hyper answers itself; the request is null only when `node:http` could not read the request line (HY-60). |
 | `log` | Receives the log line of an unhandled error (HY-43); the default writes to the standard error. |
 
 `app.bind(key, factory)` registers an application service. A service is created once, on first use; `services.get(key)` of a key without a factory fails the request with 500.

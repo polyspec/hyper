@@ -57,6 +57,7 @@ app.bind('posts', () => new Posts('/srv/board/var/board.db'));
 | `frameAncestors` | `frame-ancestors`의 source. 기본값은 `'self'`다(HY-45). |
 | `bodyLimit` | 가장 큰 요청 body의 바이트 수. 더 큰 body는 413을 받는다. 기본값은 8 MiB다(HY-59). |
 | `formTypes` | action과 `/_hyper/keep`이 받는 요청 body의 media type. `application/x-www-form-urlencoded`와 `multipart/form-data`이며, 다른 type은 415를 받는다. 기본값은 `['application/x-www-form-urlencoded']`다(HY-59). |
+| `onResponse` | hyper가 스스로 응답하는 것을 포함해 모든 응답마다 요청, 응답, 경과 밀리초로 한 번 호출한다. 요청은 `node:http`가 request line을 읽지 못한 경우에만 null이다(HY-60). |
 | `log` | 처리하지 않은 오류의 log 줄을 받는다(HY-43). 기본값은 표준 오류에 쓴다. |
 
 `app.bind(key, factory)`는 애플리케이션 service를 등록한다. service는 처음 쓸 때 한 번 만든다. factory가 없는 key의 `services.get(key)`는 요청을 500으로 실패시킨다.
