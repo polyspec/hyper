@@ -9,6 +9,7 @@ final class Session
 {
     private const TOKEN = '_hyper_csrf';
     private const FLASH = '_hyper_flash';
+    private const KEEP = '_hyper_keep';
 
     public function __construct(private readonly SessionStore $store)
     {
@@ -36,6 +37,27 @@ final class Session
         }
 
         return new Flash($flash['values'] ?? [], $flash['changed'] ?? []);
+    }
+
+    /** Stores a kept value of a region (HY-39, HY-40). */
+    public function keep(string $region, string $path, mixed $value): void
+    {
+        $kept = $this->store->get(self::KEEP);
+        $kept = is_array($kept) ? $kept : [];
+        $kept[$region][$path] = $value;
+        $this->store->set(self::KEEP, $kept);
+    }
+
+    /**
+     * Returns the kept values of a region in storing order.
+     *
+     * @return array<string, mixed>
+     */
+    public function kept(string $region): array
+    {
+        $kept = $this->store->get(self::KEEP);
+
+        return is_array($kept) && is_array($kept[$region] ?? null) ? $kept[$region] : [];
     }
 
     /** Stores flash data for the next request. */

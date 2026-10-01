@@ -22,12 +22,22 @@ function currentPage(Request $request, Posts $posts): array
     return [min($pages, max(1, $request->queryInt('page', 1))), $pages];
 }
 
+/**
+ * Returns the post of the route parameter `id`, or reports a missing resource.
+ *
+ * @return array{id: int, title: string, author: string, body: string, created_at: int}
+ */
+function findPost(Request $request, Posts $posts): array
+{
+    $id = (string) $request->param('id');
+    $post = preg_match('/^[1-9]\d{0,15}$/D', $id) === 1 ? $posts->find((int) $id) : null;
+
+    return $post ?? throw new NotFound();
+}
+
 // Loaders and actions of the regions and routes that app.json declares.
 return [
-    'shared' => fn (Request $request, Assets $assets): array => [
-        'csrf' => $request->csrfToken(),
-        'assets' => $assets->urls(),
-    ],
+    'shared' => fn (Assets $assets): array => ['assets' => $assets->urls()],
 
     'regions' => [
         'left' => fn (Request $request, Posts $posts): array => [
@@ -53,6 +63,7 @@ return [
                     return [
                         'posts' => $posts->page($page, POSTS_PER_PAGE),
                         'sort' => '',
+                        'compact' => false,
                         'highlight' => $request->flash('created'),
                     ];
                 },
@@ -60,12 +71,10 @@ return [
         ],
 
         'board.show' => [
-            'load' => function (Request $request, Posts $posts): array {
-                $id = (string) $request->param('id');
-                $post = preg_match('/^[1-9]\d{0,15}$/D', $id) === 1 ? $posts->find((int) $id) : null;
-
-                return ['post' => $post ?? throw new NotFound()];
-            },
+            'load' => fn (Request $request, Posts $posts): array => ['post' => findPost($request, $posts)],
+            'regions' => [
+                'reader' => fn (Request $request, Posts $posts): array => ['post' => findPost($request, $posts), 'large' => false],
+            ],
         ],
 
         'board.create' => [

@@ -3,8 +3,9 @@
 <button type="button" class="chip{? sort == ''} current{/}" hy-set='sort=""'>최신순</button>
 <button type="button" class="chip{? sort == 'title'} current{/}" hy-set='sort="title"'>제목순</button>
 <button type="button" class="chip{? sort == 'author'} current{/}" hy-set='sort="author"'>작성자순</button>
+<button type="button" class="chip{? compact} current{/}" hy-set="compact={? compact}false{:}true{/}">좁게 보기</button>
 </div>
-<table class="board-table">
+<table class="board-table{? compact} compact{/}">
 <thead>
 <tr><th>번호</th><th>제목</th><th>작성자</th><th>작성일</th></tr>
 </thead>

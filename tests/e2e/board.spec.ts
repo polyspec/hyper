@@ -1,4 +1,4 @@
-import { expect, test, type Page, type Response } from '@playwright/test';
+import { expect, test, type BrowserContext, type Page, type Response } from '@playwright/test';
 import { ports } from '../../playwright.config.js';
 
 // The tests share one database and run in order: each test starts from the posts created before it.
@@ -89,14 +89,17 @@ test('CSR: a static shell renders every document from /api JSON', async ({ page 
 });
 
 // HY-33, HY-36: hy-set changes region data and renders the region with no data request. Template files
-// are static assets; the page starts loading them when it holds the data (HY-32, HY-35).
+// are static assets; the page starts loading them when it holds the data (HY-32, HY-35). Saving a
+// server kept value is a background request that rendering does not wait for (HY-39).
 async function dataFlow(page: Page, origin: string): Promise<void> {
   const errors = collectErrors(page);
   await page.goto(`${origin}/board`);
   await expect(page.locator('#rows tbody tr')).toHaveCount(2);
   await page.waitForLoadState('networkidle');
   const requests: string[] = [];
-  page.on('request', (request) => requests.push(request.url()));
+  page.on('request', (request) => {
+    if (!new URL(request.url()).pathname.endsWith('/_hyper/keep')) requests.push(request.url());
+  });
 
   await page.getByRole('button', { name: '제목순' }).click();
   await expect(page.locator('#rows .chip.current')).toHaveText('제목순');
@@ -120,6 +123,62 @@ test('SSR: the first page changes region data without a request', async ({ page 
 
 test('CSR: region data changes without a request', async ({ page }) => {
   await dataFlow(page, csr);
+});
+
+// HY-37 to HY-40: each kind keeps its value across a reload; sessionStorage stays in its tab.
+async function keepFlow(page: Page, context: BrowserContext, origin: string, dataPrefix: string): Promise<void> {
+  const errors = collectErrors(page);
+  await page.goto(`${origin}/board`);
+  await page.waitForLoadState('networkidle');
+
+  const saved = page.waitForResponse((response) => new URL(response.url()).pathname === `${dataPrefix}/_hyper/keep`);
+  await page.getByRole('button', { name: '닫기' }).click();
+  await expect(page.getByRole('button', { name: '공지 펼치기' })).toBeVisible();
+  expect((await saved).status()).toBe(204);
+  await page.getByRole('button', { name: '제목순' }).click();
+  await page.getByRole('button', { name: '좁게 보기' }).click();
+  await expect(page.locator('.board-table.compact')).toBeVisible();
+
+  await page.locator('#rows tbody a').first().click();
+  await expect(page).toHaveURL(new RegExp(`${origin}/board/\\d+$`));
+  await page.getByRole('button', { name: '큰 글자' }).click();
+  await expect(page.locator('.post-body.large')).toBeVisible();
+  const detail = page.url();
+
+  await page.reload();
+  await expect(page.locator('.post-body.large')).toBeVisible();
+  await page.goto(`${origin}/board`);
+  await expect(page.getByRole('button', { name: '공지 펼치기' })).toBeVisible();
+  await expect(page.locator('#rows .chip.current').first()).toHaveText('제목순');
+  await expect(page.locator('.board-table.compact')).toBeVisible();
+
+  // The server reads server and cookie values; localStorage and sessionStorage stay in the browser.
+  if (dataPrefix === '') {
+    const list = await (await page.request.get(`${origin}/board`)).text();
+    expect(list).toContain('공지 펼치기');
+    expect(list).not.toContain('board-table compact');
+    expect(await (await page.request.get(detail)).text()).toContain('post-body large');
+  } else {
+    const json = await (await page.request.get(`${origin}${dataPrefix}/board`, { headers: { Accept: 'application/json' } })).json();
+    expect(json.regions.notice.notice.closed).toBe(true);
+    expect(json.regions.rows.sort).toBe('');
+  }
+
+  const tab = await context.newPage();
+  await tab.goto(`${origin}/board`);
+  await expect(tab.getByRole('button', { name: '공지 펼치기' })).toBeVisible();
+  await expect(tab.locator('#rows .chip.current').first()).toHaveText('제목순');
+  await expect(tab.locator('.board-table.compact')).toHaveCount(0);
+  await tab.close();
+  expect(errors).toEqual([]);
+}
+
+test('SSR keeps values in the server session, a cookie, localStorage and sessionStorage', async ({ page, context }) => {
+  await keepFlow(page, context, ssr, '');
+});
+
+test('CSR keeps values in the server session, a cookie, localStorage and sessionStorage', async ({ page, context }) => {
+  await keepFlow(page, context, csr, '/api');
 });
 
 test('CSR loads only the templates that a route needs', async ({ page }) => {

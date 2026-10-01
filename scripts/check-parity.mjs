@@ -1,6 +1,6 @@
 // Proves that the browser code renders the same bytes as the PHP server (HY-12, HY-13, HY-20, HY-30, HY-31).
 // It starts the application with an empty database and runs the steps of a request file in one
-// session. For every compare step it requests:
+// session; a cookie step sets the hy-keep cookie of HY-39. For every compare step it requests:
 //   1. the HTML document, rendered by PHP,
 //   2. the document JSON, rendered by the browser code into a document,
 //   3. the region JSON, rendered by the browser code into a title and regions,
@@ -40,10 +40,12 @@ let failures = 0;
 try {
   await waitForServer();
   let cookie = '';
+  let keepCookie = '';
   let token = '';
   const send = async (step, headers) => {
     const body = step.form === undefined ? undefined : new URLSearchParams({ _csrf: token, ...step.form });
-    const response = await fetch(base + step.path, { method: step.method, headers: { ...headers, ...(cookie ? { Cookie: cookie } : {}) }, body, redirect: 'manual' });
+    const cookies = [cookie, keepCookie].filter((item) => item !== '').join('; ');
+    const response = await fetch(base + step.path, { method: step.method, headers: { ...headers, ...(cookies ? { Cookie: cookies } : {}) }, body, redirect: 'manual' });
     const setCookie = response.headers.get('set-cookie');
     if (setCookie) cookie = setCookie.split(';')[0];
     const text = await response.text();
@@ -56,6 +58,10 @@ try {
     const label = `${step.method} ${step.path}`;
     if (step.action === 'send') {
       await send(step, {});
+      continue;
+    }
+    if (step.action === 'cookie') {
+      keepCookie = `hy-keep=${encodeURIComponent(step.value)}`;
       continue;
     }
     if (step.action === 'status') {

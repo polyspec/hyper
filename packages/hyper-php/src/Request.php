@@ -16,6 +16,7 @@ final class Request
      * @param array<string, mixed> $form
      * @param array<string, mixed> $flash
      * @param array<string, string> $params
+     * @param array<string, string> $cookies
      */
     public function __construct(
         public readonly string $method,
@@ -26,6 +27,7 @@ final class Request
         private readonly array $flash = [],
         private readonly string $csrfToken = '',
         private readonly array $params = [],
+        private readonly array $cookies = [],
     ) {
         $this->headers = array_change_key_case($headers, CASE_LOWER);
     }
@@ -33,7 +35,7 @@ final class Request
     /** Returns a copy that carries the flash values and the CSRF token of the session. */
     public function withSession(Flash $flash, string $csrfToken): self
     {
-        return new self($this->method, $this->path, $this->headers, $this->query, $this->form, $flash->values, $csrfToken, $this->params);
+        return new self($this->method, $this->path, $this->headers, $this->query, $this->form, $flash->values, $csrfToken, $this->params, $this->cookies);
     }
 
     /**
@@ -43,7 +45,7 @@ final class Request
      */
     public function withRoute(string $path, array $params): self
     {
-        return new self($this->method, $path, $this->headers, $this->query, $this->form, $this->flash, $this->csrfToken, $params);
+        return new self($this->method, $path, $this->headers, $this->query, $this->form, $this->flash, $this->csrfToken, $params, $this->cookies);
     }
 
     /**
@@ -54,6 +56,12 @@ final class Request
     public function params(): array
     {
         return $this->params;
+    }
+
+    /** Returns a cookie value, or null. */
+    public function cookie(string $name): ?string
+    {
+        return $this->cookies[$name] ?? null;
     }
 
     /** Returns a route parameter, or null. */
@@ -146,6 +154,7 @@ final class Request
             $headers,
             $_GET,
             $_POST,
+            cookies: array_filter($_COOKIE, 'is_string'),
         );
     }
 }

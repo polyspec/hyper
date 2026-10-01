@@ -83,6 +83,9 @@ final class App
     public function handle(Request $request, SessionStore $store): Response
     {
         $path = Router::stripBasePath($request->path, $this->basePath);
+        if ($path === '/_hyper/keep') {
+            return $this->keep($request, new Session($store));
+        }
         $match = $path === null ? null : $this->manifest->router->match($path);
         if ($match === null) {
             return Response::text(404, 'Not Found');
@@ -95,7 +98,7 @@ final class App
 
         try {
             if ($request->method === 'GET') {
-                return $this->page($request, $route, $handler, $flash, 200, []);
+                return $this->page($request, $route, $handler, $session, $flash, 200, []);
             }
             if ($request->method !== 'POST' || !isset($handler['post'])) {
                 return Response::text(405, 'Method Not Allowed');
@@ -113,7 +116,7 @@ final class App
                 return new Response(303, ['Location' => $this->basePath . $result->location], '');
             }
 
-            return $this->page($request, $route, $handler, $flash, 422, $result->data);
+            return $this->page($request, $route, $handler, $session, $flash, 422, $result->data);
         } catch (NotFound) {
             return Response::text(404, 'Not Found');
         }
@@ -126,7 +129,7 @@ final class App
      * @param array{load?: \Closure, post?: \Closure, regions?: array<string, \Closure>} $handler
      * @param array<string, mixed> $invalid
      */
-    private function page(Request $request, array $route, array $handler, Flash $flash, int $status, array $invalid): Response
+    private function page(Request $request, array $route, array $handler, Session $session, Flash $flash, int $status, array $invalid): Response
     {
         $json = $request->wantsJson();
         $region = $json ? $request->region() : null;
@@ -134,7 +137,7 @@ final class App
             return Response::text(400, 'Bad Request');
         }
         $provided = [Request::class => $request];
-        $shared = ['title' => $route['title']];
+        $shared = ['title' => $route['title'], 'csrf' => $request->csrfToken()];
         if ($this->shared !== null) {
             $shared = [...$shared, ...$this->container->call($this->shared, $provided)];
         }
@@ -159,6 +162,27 @@ final class App
             }
         }
 
+        $cookie = json_decode($request->cookie('hy-keep') ?? '', true);
+        foreach ($data as $name => $regionData) {
+            $region = $this->manifest->region($name);
+            if ($region === null) {
+                continue;
+            }
+            $stored = $session->kept($name);
+            $kept = [];
+            foreach ($region->keep as $keptPath => $kind) {
+                $values = match ($kind) {
+                    'server' => $stored,
+                    'cookie' => is_array($cookie) && is_array($cookie[$name] ?? null) ? $cookie[$name] : [],
+                    default => [],
+                };
+                if (array_key_exists($keptPath, $values)) {
+                    $kept[] = [$keptPath, $values[$keptPath]];
+                }
+            }
+            $data[$name] = Kept::apply($regionData, $kept);
+        }
+
         $response = JsonEncoder::value($this->timezone, $route['name'], $request->params(), $shared, $data);
         $vary = 'Accept, Hy-Region, HX-Current-URL';
         if ($json) {
@@ -178,6 +202,31 @@ final class App
             'Content-Type' => 'text/html; charset=utf-8',
             'Vary' => $vary,
         ], $this->renderer->document($this->manifest->layout, $this->manifest->title, $shared, $regions, $response));
+    }
+
+    /** Stores a kept value of a `server` path in the session (HY-40). */
+    private function keep(Request $request, Session $session): Response
+    {
+        if ($request->method !== 'POST') {
+            return Response::text(405, 'Method Not Allowed');
+        }
+        if (!hash_equals($session->csrfToken(), $request->formString('_csrf'))) {
+            return Response::text(403, 'Forbidden');
+        }
+        $name = $request->formString('region');
+        $path = $request->formString('path');
+        $region = $this->manifest->region($name);
+        if ($region === null || ($region->keep[$path] ?? null) !== 'server') {
+            return Response::text(400, 'Bad Request');
+        }
+        try {
+            $value = json_decode($request->formString('value'), true, flags: JSON_THROW_ON_ERROR);
+        } catch (\JsonException) {
+            return Response::text(400, 'Bad Request');
+        }
+        $session->keep($name, $path, $value);
+
+        return new Response(204, [], '');
     }
 
     /** Answers the current PHP request with the PHP session and writes the response. */

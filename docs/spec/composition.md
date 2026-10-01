@@ -19,7 +19,7 @@ This document defines which mechanism a screen part uses. A part is chosen by wh
 - **HC-4** The layout is the only template that places manifest regions, the title and the data. A route template fills the page region and places only the route regions of its route.
 - **HC-5** Interactive behavior that HTML provides uses the HTML element: `<dialog>` for a modal, `<details>` for a disclosure, `<form>` for input. Navigation and form submission use plain `<a href>` and `<form method action>`.
 - **HC-6** Only the layout carries `hx-*` attributes. Page, block and region templates contain none; htmx applies to them through the inherited attributes of the layout (HY-3, HY-21). `make templates-check` fails when a template other than the layout contains an `hx-` attribute.
-- **HC-7** A part of a page that changes in the browser without a request is a route region (HY-30). Its screen state, such as a sort order or an open panel, is region data, and an element changes it with `hy-set` (HY-36) or code changes it with `set` (HY-33). Neither keeps state outside the region data.
+- **HC-7** A part of a page that changes in the browser without a request is a route region (HY-30). Its screen state, such as a sort order or an open panel, is region data, and an element changes it with `hy-set` (HY-36) or code changes it with `set` (HY-33). Neither keeps state outside the region data. A value that must survive a reload is a kept path (HY-37): `server` or `cookie` when the first SSR document must show it, `localStorage` or `sessionStorage` when it stays in the browser.
 
 ## Example
 

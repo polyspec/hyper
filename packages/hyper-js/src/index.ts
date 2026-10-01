@@ -3,12 +3,14 @@ export {
   checkManifest,
   DATA_TEMPLATE_NAME,
   DATA_TEMPLATE_SOURCE,
+  keptPaths,
   pageRegion,
   type Manifest,
   type RegionDeclaration,
   type RouteDeclaration,
   type RouteRegionDeclaration,
 } from './manifest.js';
+export { applyKept, browserStorage, KEEP_KINDS, valueToJson, type KeepKind, type KeepStorage } from './keep.js';
 export { Router, stripBasePath, type RouteMatch } from './router.js';
 export { routeTemplates, TemplateStore, type TemplateFetcher, type TemplateIndex } from './templates.js';
 export {

@@ -12,7 +12,7 @@ export const manifest: Manifest = {
     { name: 'home', path: '/', title: 'Home', template: 'page.tpl' },
     { name: 'item', path: '/items/{id}', title: 'Item', template: 'item.tpl' },
     { name: 'when', path: '/when', title: 'When', template: 'when.tpl' },
-    { name: 'list', path: '/list', title: 'List', template: 'list.tpl', regions: [{ name: 'rows', template: 'rows.tpl' }] },
+    { name: 'list', path: '/list', title: 'List', template: 'list.tpl', regions: [{ name: 'rows', template: 'rows.tpl', keep: { 'items.0.open': 'server', 'items.1.open': 'localStorage', flag: 'cookie', tab: 'sessionStorage' } }] },
   ],
 };
 

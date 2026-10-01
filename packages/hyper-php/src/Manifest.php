@@ -44,7 +44,7 @@ final class Manifest
             if ($isPage === is_string($template)) {
                 throw new \InvalidArgumentException("manifest region {$name} must have a template unless it is the page region");
             }
-            $regions[$name] = new Region($name, $isPage, $template, array_values($region['uses'] ?? []));
+            $regions[$name] = new Region($name, $isPage, $template, array_values($region['uses'] ?? []), $region['keep'] ?? []);
             if ($isPage) {
                 if ($page !== null) {
                     throw new \InvalidArgumentException('manifest declares more than one page region');
@@ -63,6 +63,9 @@ final class Manifest
             if ($name === '' || isset($routes[$name]) || !is_string($route['title'] ?? null) || !is_string($route['template'] ?? null)) {
                 throw new \InvalidArgumentException("manifest route {$name} is duplicated or incomplete");
             }
+            if (str_starts_with((string) ($route['path'] ?? ''), '/_hyper')) {
+                throw new \InvalidArgumentException("manifest route {$name} uses the reserved path /_hyper (HY-40)");
+            }
             $routeRegions = [];
             foreach ($route['regions'] ?? [] as $region) {
                 $regionName = (string) ($region['name'] ?? '');
@@ -70,7 +73,7 @@ final class Manifest
                     throw new \InvalidArgumentException("manifest route {$name} has an invalid or duplicated region {$regionName}");
                 }
                 $regionNames[$regionName] = true;
-                $routeRegions[] = new Region($regionName, false, $region['template'], []);
+                $routeRegions[] = new Region($regionName, false, $region['template'], [], $region['keep'] ?? []);
             }
             $routes[$name] = [
                 'name' => $name,
@@ -83,6 +86,25 @@ final class Manifest
         }
 
         return new self($data['layout'], $data['title'], array_values($regions), $page, $routes, new Router(array_values($routes)));
+    }
+
+    /** Returns the manifest region or the route region with a name, or null. */
+    public function region(string $name): ?Region
+    {
+        foreach ($this->regions as $region) {
+            if ($region->name === $name) {
+                return $region;
+            }
+        }
+        foreach ($this->routes as $route) {
+            foreach ($route['regions'] as $region) {
+                if ($region->name === $name) {
+                    return $region;
+                }
+            }
+        }
+
+        return null;
     }
 
     /** Returns true for an allowed region name (HY-2). */

@@ -38,7 +38,7 @@ This document defines the application manifest, routing, rendering, the requests
 
 ## Data and topics
 
-- **HY-10** Shared data is one map that the layout, the title and every region receive. It starts with `title`, the route title, followed by the values that the application adds, such as `csrf`.
+- **HY-10** Shared data is one map that the layout, the title and every region receive. It starts with `title`, the route title, and `csrf`, the session token of HY-24, followed by the values that the application adds.
 - **HY-11** Every non-page region declares the topics it uses. A topic names data that can change, such as `posts`. The topic `path` is built in: it changes when the request path differs from the path of the `HX-Current-URL` request header after removing the base path.
 
 ## Rendering
@@ -101,6 +101,22 @@ This document defines the application manifest, routing, rendering, the requests
 
 - **HY-34** The asset build writes every template AST to its own file whose name contains a hash of its content, and an index that maps each template name to its file URL and to the names of the templates that its include and block tags reference by path. The index also contains `hyper/data.tpl`. The client bundle contains the index and no template.
 - **HY-35** Before rendering, the browser loads the templates that a route needs: the layout, the title, `hyper/data.tpl`, every non-page region template, the route template and every route region template, together with every template that they reference, transitively. For a region request the loading starts with the request and runs at the same time. When the response URL routes to another route, such as after a redirect, the browser loads the templates of that route before rendering. Loaded templates stay loaded until the page unloads.
+
+## Kept data
+
+- **HY-37** A non-page region or a route region may declare kept paths, for example `"keep": { "notice.closed": "server", "sort": "localStorage" }`. A path follows HY-33. A kept value survives a reload in the storage named by its kind:
+
+| Kind | Storage | Request when the value changes | First SSR document |
+|---|---|---|---|
+| `server` | the server session | one background request that rendering does not wait for | contains the value |
+| `cookie` | the cookie `hy-keep`, written by the browser code; it cannot be `HttpOnly` | none | contains the value |
+| `localStorage` | the browser `localStorage` | none | contains the loader value; the browser renders the kept value after it loads |
+| `sessionStorage` | the browser `sessionStorage` of the tab | none | contains the loader value; the browser renders the kept value after it loads |
+
+- **HY-38** A kept value replaces the loader value at its path only when the loader data contains the path and both values have the same type (null, boolean, number, string, list or map). Any other kept value is ignored. The server applies `server` and `cookie` values to region data before it renders a document or encodes JSON. The browser applies `localStorage` and `sessionStorage` values to region data before it renders a JSON response; for a document rendered by the server, it applies them to the held data and renders every region whose data changed.
+- **HY-39** When `set` or `hy-set` changes a kept path, the browser renders the region first and then stores the value. For `server` it sends `POST <base path>/_hyper/keep` with the form fields `_csrf` (the held `shared.csrf`, HY-10), `region`, `path` and `value` (the JSON text of the value) and does not wait for the response. For `cookie` it writes `hy-keep` with `Path=/`, `SameSite=Lax`, `Max-Age` of one year and, on HTTPS, `Secure`. The cookie value is the URL-encoded JSON object `{ "<region>": { "<path>": <value> } }`.
+- **HY-40** The server answers `POST <base path>/_hyper/keep` with status 204 after it stores the value in the session, with status 403 when the CSRF token does not match, and with status 400 when the region does not declare the path as `server` or the value is not JSON. The path `/_hyper/keep` is reserved; a route path may not start with `/_hyper`.
+- **HY-41** `conformance/keep.json` holds region data, kept values and the expected data after HY-38. The PHP and JavaScript implementations both pass every case.
 
 ## Errors
 
