@@ -332,9 +332,9 @@ final class App
      */
     private function renderDocument(Request $request, array $route, array $shared, array $data, array $applied, array $templates, array $kept): string
     {
+        // HY-44: rendering binds every value of the regions and of the embedded response, so a value outside the
+        // data model fails the document there; JSON, which is not rendered, is checked before it is encoded.
         $response = JsonEncoder::value($this->timezone, $route['name'], $request->params(), $shared, $data, $kept);
-        // HY-44: every value must belong to the template data model, for JSON as for a document.
-        Bind::value($response);
         $routeRegionNames = array_map(fn (Region $region): string => $region->name, $route['regions']);
         $regions = [];
         $routeRegions = [];
