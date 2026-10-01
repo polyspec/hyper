@@ -25,29 +25,27 @@ final class App
         private readonly string $basePath,
         private readonly bool $https,
         private readonly string $frameAncestors,
-        string $templates,
+        string $program,
     ) {
         $this->container = new Container();
-        $this->renderer = new Renderer($templates, $timezone);
+        $this->renderer = Renderer::open($program, $timezone);
     }
 
     /**
-     * Creates an application from its manifest, its templates and the handlers that load data and run actions.
+     * Creates an application from its manifest, the server program that `scripts/build-server.mjs` built from
+     * its templates (HY-48) and the handlers that load data and run actions.
      *
      * @param array{shared?: \Closure, regions?: array<string, \Closure>, routes?: array<string, array{load?: \Closure, post?: \Closure, regions?: array<string, \Closure>}>} $handlers
      */
     public static function open(
         string $manifest,
-        string $templates,
+        string $program,
         array $handlers,
         string $timezone,
         string $basePath = '',
         bool $https = false,
         string $frameAncestors = "'self'",
     ): self {
-        if (!is_dir($templates)) {
-            throw new \InvalidArgumentException("template directory {$templates} does not exist");
-        }
         if ($basePath !== '' && (!str_starts_with($basePath, '/') || str_ends_with($basePath, '/'))) {
             throw new \InvalidArgumentException("base path {$basePath} must start with / and must not end with /");
         }
@@ -81,7 +79,7 @@ final class App
             }
         }
 
-        return new self($declared, $handlers['shared'] ?? null, $regionLoaders, $routeHandlers, $timezone, $basePath, $https, $frameAncestors, $templates);
+        return new self($declared, $handlers['shared'] ?? null, $regionLoaders, $routeHandlers, $timezone, $basePath, $https, $frameAncestors, $program);
     }
 
     /** Registers the factory of an application service. */
@@ -307,12 +305,19 @@ final class App
         $response = JsonEncoder::value($this->timezone, $route['name'], $request->params(), $shared, $data, $kept);
         // HY-44: every value must belong to the template data model, for JSON as for a document.
         Bind::value($response);
+        $routeRegionNames = array_map(fn (Region $region): string => $region->name, $route['regions']);
         $regions = [];
+        $routeRegions = [];
         foreach ($applied as $name => $regionData) {
-            $regions[$name] = ['template' => $templates[$name], 'data' => $regionData];
+            $region = ['template' => $templates[$name], 'data' => $regionData];
+            if (in_array($name, $routeRegionNames, true)) {
+                $routeRegions[$name] = $region;
+            } else {
+                $regions[$name] = $region;
+            }
         }
 
-        return $this->renderer->document($this->manifest->layout, $this->manifest->title, $shared, $regions, $response);
+        return $this->renderer->document($this->manifest->layout, $this->manifest->title, $shared, $regions, $this->manifest->page->name, $routeRegions, $response);
     }
 
     /** Stores a kept value of a `server` path in the session (HY-40). */

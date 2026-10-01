@@ -4,54 +4,95 @@ declare(strict_types=1);
 
 namespace Polyspec\Hyper;
 
-use Polyspec\Template\AstProgram;
-use Polyspec\Template\Engine;
+use Polyspec\Template\Native\Engine as NativeEngine;
 
-/** Renders documents and single regions with the template engine (HY-12, HY-13, HY-30, HY-31). */
+/**
+ * Renders documents and single regions with the compiled program of the application: the native template
+ * extension when PHP has loaded it, and otherwise the generated PHP program (HY-12, HY-13, HY-30, HY-31, HY-48).
+ */
 final class Renderer
 {
-    private readonly Engine $engine;
+    public const DATA_NAME = 'hyper/data.tpl';
 
-    public function __construct(string $templates, private readonly string $timezone)
+    /** The generated program file that this process loaded, if any (HY-48). */
+    private static ?string $loaded = null;
+
+    private function __construct(private readonly object $program, public readonly string $engine, private readonly string $timezone)
     {
-        $this->engine = new Engine(new AstProgram(new TemplateLoader($templates)));
     }
 
-    /**
-     * Renders the layout with the title, the data and one definition per region, including route regions.
-     *
-     * @param array<string, mixed> $shared
-     * @param array<string, array{template: string, data: array<string, mixed>}> $regions
-     * @param array<string, mixed>|\stdClass $response the document JSON value embedded by `{# data}`
-     */
-    public function document(string $layout, string $title, array $shared, array $regions, array|\stdClass $response): string
+    /** Opens the program that `scripts/build-server.mjs` wrote to a directory. */
+    public static function open(string $program, string $timezone): self
     {
-        $define = [
-            'layout' => $layout,
-            'title' => $title,
-            'data' => ['template' => TemplateLoader::DATA_NAME, 'data' => ['response' => $response]],
-        ];
-        foreach ($regions as $name => $region) {
-            $define[$name] = ['template' => $region['template'], 'data' => $region['data']];
+        if (!is_file("{$program}/program.php") || !is_dir("{$program}/templates")) {
+            throw new \InvalidArgumentException("{$program} is not a server program built by scripts/build-server.mjs");
+        }
+        if (extension_loaded('polyspec_template')) {
+            return new self(new NativeEngine("{$program}/templates"), 'native', $timezone);
+        }
+        $file = (string) realpath("{$program}/program.php");
+        if (self::$loaded !== null && self::$loaded !== $file) {
+            throw new \LogicException('a PHP process loads one generated program; ' . self::$loaded . " is loaded and {$file} differs");
+        }
+        if (self::$loaded === null) {
+            require $file;
+            self::$loaded = $file;
         }
 
-        return $this->engine->render('layout', $shared, ['define' => $define, 'env' => ['timezone' => $this->timezone]]);
+        return new self(new \GeneratedProgram(), 'generated', $timezone);
     }
 
     /**
-     * Renders one template alone with merge(shared, data) as root data; `$define` passes route regions to a page region.
+     * Renders the document: the layout with the title, the embedded data and every manifest region rendered
+     * alone as HTML definitions; the page region receives its route regions the same way.
+     *
+     * @param array<string, mixed> $shared
+     * @param array<string, array{template: string, data: array<string, mixed>}> $regions manifest regions
+     * @param array<string, array{template: string, data: array<string, mixed>}> $routeRegions route regions of the page region
+     * @param array<string, mixed>|\stdClass $response the document JSON value embedded by `{# data}`
+     */
+    public function document(string $layout, string $title, array $shared, array $regions, string $page, array $routeRegions, array|\stdClass $response): string
+    {
+        $define = [
+            'title' => ['html' => $this->render($title, $shared, [])],
+            'data' => ['html' => $this->render(self::DATA_NAME, ['response' => $response], [])],
+        ];
+        foreach ($regions as $name => $region) {
+            $define[$name] = ['html' => $this->alone($region['template'], $shared, $region['data'], $name === $page ? $routeRegions : [])];
+        }
+
+        return $this->render($layout, $shared, $define);
+    }
+
+    /**
+     * Renders one template alone with merge(shared, data) as root data; `$routeRegions` passes the route
+     * regions of a page region, each rendered alone, as HTML definitions.
      *
      * @param array<string, mixed> $shared
      * @param array<string, mixed> $data
-     * @param array<string, array{template: string, data: array<string, mixed>}> $define
+     * @param array<string, array{template: string, data: array<string, mixed>}> $routeRegions
      */
-    public function alone(string $template, array $shared, array $data, array $define = []): string
+    public function alone(string $template, array $shared, array $data, array $routeRegions = []): string
     {
-        $root = $shared;
-        foreach ($data as $name => $value) {
-            $root[$name] = $value;
+        $define = [];
+        foreach ($routeRegions as $name => $region) {
+            $define[$name] = ['html' => $this->alone($region['template'], $shared, $region['data'])];
         }
 
-        return $this->engine->render($template, $root, ['define' => $define, 'env' => ['timezone' => $this->timezone]]);
+        return $this->render($template, array_replace($shared, $data), $define);
+    }
+
+    /**
+     * @param array<string, mixed> $assign
+     * @param array<string, array{html: string}> $define
+     */
+    private function render(string $template, array $assign, array $define): string
+    {
+        $options = ['env' => ['timezone' => $this->timezone]];
+        if ($define !== []) {
+            $options['define'] = $define;
+        }
+
+        return $this->program->render($template, $assign, $options);
     }
 }

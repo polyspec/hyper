@@ -1,0 +1,53 @@
+// Builds the server outputs of an application from its manifest and templates (HY-48):
+//   <output>/templates/   every template and the reserved template hyper/data.tpl, which the native
+//                         template extension reads
+//   <output>/program.php  the generated PHP program of the same templates, compiled with the compiler
+//                         of the template repository
+//
+// Usage: node scripts/build-server.mjs --manifest examples/board/app/app.json --templates examples/board/templates
+//          --output examples/board/build/server --template-dir ../template
+
+import { cpSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
+import { parseArgs } from 'node:util';
+
+const { values } = parseArgs({ options: { manifest: { type: 'string' }, templates: { type: 'string' }, output: { type: 'string' }, 'template-dir': { type: 'string' } } });
+for (const name of ['manifest', 'templates', 'output', 'template-dir']) if (!values[name]) throw new Error(`--${name} is required`);
+const compilerDir = resolve(values['template-dir'], 'tools', 'compiler');
+const load = (file) => import(pathToFileURL(join(compilerDir, file)).href);
+const { compileAst } = await load('ast-artifact.mjs');
+const { compileSource } = await load('compiler.mjs');
+const { deriveTypeManifest } = await load('type-manifest.mjs');
+const { parse } = await import(pathToFileURL(resolve(values['template-dir'], 'packages', 'template-ts', 'dist', 'index.mjs')).href);
+
+const manifest = JSON.parse(readFileSync(values.manifest, 'utf8'));
+const dataTemplate = JSON.parse(readFileSync(join('packages', 'hyper-js', 'data-template.json'), 'utf8'));
+const output = resolve(values.output);
+const templates = join(output, 'templates');
+rmSync(output, { recursive: true, force: true });
+cpSync(values.templates, templates, { recursive: true });
+mkdirSync(dirname(join(templates, dataTemplate.name)), { recursive: true });
+writeFileSync(join(templates, dataTemplate.name), dataTemplate.source);
+
+// Every template renders as a target with merge(shared, data) as root data, and every definition is the
+// HTML of a region rendered alone, so no template takes template inputs (HY-12, HY-13, HY-30).
+const parsed = new Map();
+for (const name of listTemplates(templates)) parsed.set(name, parse(readFileSync(join(templates, name)), name));
+const typesPath = join(output, 'types.json');
+const types = deriveTypeManifest(parsed, {});
+writeFileSync(typesPath, JSON.stringify({ ...types, entry: manifest.layout, templates: Object.fromEntries([...parsed.keys()].map((name) => [name, {}])) }));
+const graph = join(output, 'graph');
+compileAst({ root: templates, output: graph, entry: manifest.layout, refresh: 'true', typeManifest: typesPath });
+writeFileSync(join(output, 'program.php'), compileSource(join(graph, 'manifest.json'), typesPath, 'php'));
+process.stdout.write(`server program: ${parsed.size} templates, ${join(values.output, 'program.php')}\n`);
+
+function listTemplates(root, prefix = '') {
+  const names = [];
+  for (const entry of readdirSync(join(root, prefix), { withFileTypes: true })) {
+    const name = prefix === '' ? entry.name : `${prefix}/${entry.name}`;
+    if (entry.isDirectory()) names.push(...listTemplates(root, name));
+    else if (entry.name.endsWith('.tpl')) names.push(name);
+  }
+  return names.sort();
+}

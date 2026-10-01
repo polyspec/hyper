@@ -39,6 +39,7 @@ The following defects of correctness and security are fixed. Each one has a test
 
 ### Changed
 
+- The PHP server renders with a program that `make server` compiles from the templates: the native template extension when PHP has loaded it, and otherwise the generated PHP program (HY-48). The PHP AST interpreter took 16 ms for 1,000 rows; on the same input the generated program was about 1.6 times and the native extension about 9 times as fast, with identical output. The server renders every region alone and passes HTML definitions, because a generated program fixes the template of each definition. `make test-php` and `make parity` run with both programs. `App::open` takes `program:` in place of `templates:`, and `TemplateLoader` is removed.
 - A JSON response carries kept values apart from the region data (HY-17). `regions` holds the loader data, and `kept` holds the conforming `server` and `cookie` values. The server applies them to render a document, and the browser applies them with its own values. The browser can therefore render a region without kept values that break it (HY-38).
 - The server no longer checks cookies for UTF-8 (HY-42). It ignores an invalid `hy-keep`, and starts a new session for an invalid session cookie, instead of answering 400 to every request until the cookie expires.
 - The recommended deployment serves direct requests with SSR and htmx requests with JSON from one server; the static shell is for backends that serve JSON only (`docs/operations/deployment.md`).
@@ -64,6 +65,10 @@ The following defects of correctness and security are fixed. Each one has a test
 
 ### Verification
 
+- 2026-10-01, after the change to compiled template programs (HY-48): `make check` passed.
+  - `make test-php`: 148 tests passed with the generated program, and 148 with the native extension, where the test of loading a second generated program does not apply and is skipped.
+  - `make parity`: the ten compare steps matched byte for byte with the generated program and with the native extension.
+  - `make test-js` 139 tests, `make e2e` 12 tests and `make bundle-size` passed.
 - 2026-10-01, after the fixes of the call order, the saves and the request checks, macOS, Node.js 26.8.1, PHP 8.5.10, Chromium from Playwright 1.63.0: `make check` passed.
   - `make test-js`: 139 tests, including 31 kept value conformance cases, and the type check passed.
   - `make test-php`: 145 tests, including the same 31 kept value conformance cases, passed.

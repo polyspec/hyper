@@ -23,7 +23,8 @@ $frameAncestors = getenv('BOARD_FRAME_ANCESTORS');
 
 $app = App::open(
     manifest: __DIR__ . '/../app/app.json',
-    templates: __DIR__ . '/../templates',
+    // `make server` builds the program; PHP renders with the native extension when it has loaded it (HY-48).
+    program: __DIR__ . '/../build/server',
     handlers: require __DIR__ . '/../app/handlers.php',
     timezone: '+09:00',
     basePath: is_string($basePath) ? $basePath : '',

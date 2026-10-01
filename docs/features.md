@@ -4,7 +4,7 @@
 
 | ID | Feature | Status | Evidence |
 |---|---|---|---|
-| protocol | Region protocol specification (HY-1 to HY-47) | implemented | [Protocol](spec/protocol.md) |
+| protocol | Region protocol specification (HY-1 to HY-48) | implemented | [Protocol](spec/protocol.md) |
 | composition | Screen composition rules (HC-1 to HC-7) and the template check for HC-6 | implemented | [Composition](spec/composition.md), `make templates-check` |
 | manifest | Application manifest read by PHP and the browser | implemented | `make test-php`, `make test-js` |
 | router | PHP and browser routers with shared conformance cases | implemented | `make test-php`, `make test-js` |
@@ -21,6 +21,7 @@
 | bundle-size | SSR script, CSR shell and template file size limits | implemented | `make bundle-size` |
 | request-boundary | UTF-8 checks, plain 500 errors, data model checks, hardened session cookie, redirect checks, failure marks (HY-42 to HY-47) | implemented | `make test-php`, `make test-js`, `make e2e` |
 | benchmark | Server and browser performance measurement: request cost, rendering per row count, first screens, `hy-set` main thread load and memory over navigation | implemented | `make bench`, [Benchmark](operations/benchmark.md) |
+| server-program | PHP rendering with the native template extension, or with the generated PHP program of the same templates (HY-48) | implemented | `make test-php`, `make parity` |
 | cdn-deployment | Server and CDN deployment (recommended) and static shell deployment | documented, not deployed | [Deployment](operations/deployment.md) |
 | other-servers | Server packages for languages other than PHP | not started | |
 | publication | Registry publication of the packages | not started | |

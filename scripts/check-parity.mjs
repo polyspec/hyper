@@ -9,13 +9,15 @@
 //
 // Usage: node scripts/check-parity.mjs --app examples/board --requests examples/board/tests/parity/requests.json --port 8092
 
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { readFileSync, rmSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { build } from 'esbuild';
 
-const { values } = parseArgs({ options: { app: { type: 'string' }, requests: { type: 'string' }, port: { type: 'string' } } });
+// --extension loads the native template extension into PHP, so the server renders with it instead of the
+// generated program (HY-48).
+const { values } = parseArgs({ options: { app: { type: 'string' }, requests: { type: 'string' }, port: { type: 'string' }, extension: { type: 'string' } } });
 if (!values.app || !values.requests || !values.port) throw new Error('--app, --requests and --port are required');
 const app = values.app;
 const base = `http://127.0.0.1:${values.port}`;
@@ -32,7 +34,12 @@ const application = browser.createApplication(
 await application.templates.ensure(Object.keys(index));
 
 rmSync(database, { force: true });
-const server = spawn('php', ['-d', 'display_errors=0', '-S', `127.0.0.1:${values.port}`, '-t', join(app, 'public')], {
+const extension = values.extension ? ['-d', `extension=${resolve(values.extension)}`] : [];
+// The renderer selects the native extension exactly when PHP has loaded it (RendererTest), so this proves the engine.
+const loaded = spawnSync('php', [...extension, '-r', "exit(extension_loaded('polyspec_template') ? 0 : 1);"]).status === 0;
+if (loaded !== Boolean(values.extension)) throw new Error(`PHP ${loaded ? 'loaded' : 'did not load'} the native template extension`);
+console.log(`template program: ${loaded ? 'native extension' : 'generated PHP'}`);
+const server = spawn('php', [...extension, '-d', 'display_errors=0', '-S', `127.0.0.1:${values.port}`, '-t', join(app, 'public')], {
   env: { ...process.env, BOARD_DB: database, BOARD_BASE_PATH: '' },
   stdio: 'ignore',
 });

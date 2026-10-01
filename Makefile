@@ -2,10 +2,13 @@ BOARD := examples/board
 PHP_PACKAGE := packages/hyper-php
 JS_PACKAGE := packages/hyper-js
 TEMPLATE_DIR := ../template
+FIXTURES := $(PHP_PACKAGE)/tests/fixtures
+# The native template extension, built from the template repository (HY-48).
+EXT := build/ext/release/libpolyspec_template.$(if $(filter Darwin,$(shell uname)),dylib,so)
 
 .DEFAULT_GOAL := help
 
-.PHONY: help install template assets test-js test-php lint templates-check parity bundle-size e2e docs-check serve-demo bench-server bench-browser bench check
+.PHONY: help install template ext server server-fixtures assets test-js test-php lint templates-check parity bundle-size e2e docs-check serve-demo bench-server bench-browser bench check
 
 help: ## List the targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
@@ -18,14 +21,24 @@ install: ## Install npm and Composer dependencies
 template: ## Build the TypeScript template package that the browser bundle imports
 	cd $(TEMPLATE_DIR) && npm run build -w @polyspec/template
 
+ext: ## Build the native template extension of the template repository into build/ext
+	cargo build --locked --release --manifest-path $(TEMPLATE_DIR)/packages/template-php-ext/Cargo.toml --target-dir build/ext
+
+server: ## Build the board server program: its templates and the generated PHP program (HY-48)
+	node scripts/build-server.mjs --manifest $(BOARD)/app/app.json --templates $(BOARD)/templates --output $(BOARD)/build/server --template-dir $(TEMPLATE_DIR)
+
+server-fixtures: ## Build the server program of the PHP test fixtures
+	node scripts/build-server.mjs --manifest $(FIXTURES)/app.json --templates $(FIXTURES)/templates --output $(PHP_PACKAGE)/tests/build/server --template-dir $(TEMPLATE_DIR)
+
 assets: ## Build the board client bundle (SSR) and the single-file static shell (CSR)
 	node scripts/build-assets.mjs --app $(BOARD) --api /api
 
 test-js: ## Run the browser code tests, including the router conformance cases, and the type check
 	cd $(JS_PACKAGE) && npx vitest run && npx tsc --noEmit -p tsconfig.json
 
-test-php: ## Run the server package tests, including the router conformance cases
+test-php: server-fixtures ext ## Run the server package tests with the generated program and with the native extension
 	cd $(PHP_PACKAGE) && vendor/bin/phpunit
+	cd $(PHP_PACKAGE) && php -d extension=$(abspath $(EXT)) vendor/bin/phpunit
 
 lint: ## Check PHP formatting
 	cd $(PHP_PACKAGE) && vendor/bin/pint --test
@@ -34,26 +47,28 @@ lint: ## Check PHP formatting
 templates-check: ## Check that only the layout template carries hx- attributes (HC-6)
 	node scripts/check-templates.mjs --app $(BOARD)
 
-parity: assets ## Compare PHP documents with browser renders of document and region JSON
+parity: assets server ext ## Compare PHP documents (generated program and native extension) with browser renders of document and region JSON
 	node scripts/check-parity.mjs --app $(BOARD) --requests $(BOARD)/tests/parity/requests.json --port 8092
+	node scripts/check-parity.mjs --app $(BOARD) --requests $(BOARD)/tests/parity/requests.json --port 8092 --extension $(EXT)
 
 bundle-size: assets ## Print the SSR script and CSR shell sizes and enforce the gzip limits
 	node scripts/check-bundle-size.mjs --app $(BOARD) --limits config/bundle-size.json
 
-e2e: assets ## Run the SSR, CSR, no-JavaScript and comparison flows in Chromium
+e2e: assets server ## Run the SSR, CSR, no-JavaScript and comparison flows in Chromium
 	rm -f $(BOARD)/var/e2e.db
 	npx playwright test
 
 docs-check: ## Check document pairs, links and code blocks
 	node scripts/check-documents.mjs
 
-serve-demo: assets ## Serve SSR on :8080, CSR on :8081 and the comparison page on :8081/compare
+serve-demo: assets server ## Serve SSR on :8080, CSR on :8081 and the comparison page on :8081/compare
 	node scripts/serve-demo.mjs --db $(BOARD)/var/board.db --ssr 8080 --edge 8081 --api 8082
 
-bench-server: ## Measure PHP request handling and rendering cost per row count without network
+bench-server: server ext ## Measure PHP request handling and rendering cost per row count, with the generated program and with the native extension
 	php scripts/bench-server.php --app $(BOARD) --iterations 300
+	php -d extension=$(abspath $(EXT)) scripts/bench-server.php --app $(BOARD) --iterations 300
 
-bench-browser: assets ## Measure first screens, navigation, hy-set phases and load, and memory in Chromium
+bench-browser: assets server ## Measure first screens, navigation, hy-set phases and load, and memory in Chromium
 	node scripts/bench-browser.mjs --ssr 8085 --edge 8086 --api 8087 --runs 15
 
 bench: bench-server bench-browser ## Run both measurements; results are reports, not pass or fail checks
