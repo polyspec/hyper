@@ -1,0 +1,4 @@
+{
+  "name": "hyper/data.tpl",
+  "source": "<script type=\"application/json\" id=\"hy-data\">{= json(response) | raw}</script>"
+}

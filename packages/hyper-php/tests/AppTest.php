@@ -52,6 +52,7 @@ final class AppTest extends TestCase
 
                         return Result::redirect('/')->flash('note', 'added')->changed('count');
                     }],
+                    'list' => ['regions' => ['rows' => fn (Counter $counter): array => ['items' => ['a<', "b{$counter->count}"]]]],
                     'item' => ['load' => function (Request $request): array {
                         if ($request->param('id') === 'missing') {
                             throw new NotFound();
@@ -104,8 +105,12 @@ final class AppTest extends TestCase
 
         self::assertSame(200, $response->status);
         self::assertSame('text/html; charset=utf-8', $response->headers['Content-Type']);
+        $token = (string) $this->session->get('_hyper_csrf');
+        $data = '{"env":{"timezone":"+09:00"},"route":"home","params":{},"shared":{"title":"Home","csrf":"' . $token . '"},'
+            . '"regions":{"side":{"count":0,"note":null},"content":{"name":"n0"}}}';
         self::assertSame(
-            "<title>Home - Site</title>\n<aside id=\"side\" hy-region><b>0</b>\n</aside>\n<main id=\"content\" hy-region><p>Home|n0</p>\n</main>\n",
+            "<title>Home - Site</title>\n<aside id=\"side\" hy-region><b>0</b>\n</aside>\n<main id=\"content\" hy-region><p>Home|n0</p>\n</main>\n"
+            . "<script type=\"application/json\" id=\"hy-data\">{$data}</script>",
             $response->body,
         );
     }
@@ -118,12 +123,62 @@ final class AppTest extends TestCase
         $document = $renderer->document('layout.tpl', 'title.tpl', $shared, [
             'side' => ['template' => 'side.tpl', 'data' => ['count' => 1, 'note' => 'x']],
             'content' => ['template' => 'page.tpl', 'data' => ['title' => 'region', 'name' => 'n']],
-        ]);
+        ], new \stdClass());
 
         self::assertStringContainsString('<title>' . $renderer->alone('title.tpl', $shared, []) . '</title>', $document);
         self::assertStringContainsString('<aside id="side" hy-region>' . $renderer->alone('side.tpl', $shared, ['count' => 1, 'note' => 'x']) . '</aside>', $document);
         self::assertSame("<p>region|n</p>\n", $renderer->alone('page.tpl', $shared, ['title' => 'region', 'name' => 'n']));
         self::assertStringContainsString("<main id=\"content\" hy-region><p>region|n</p>\n</main>", $document);
+    }
+
+    public function testDocumentEmbedsTheDocumentJson(): void
+    {
+        // HY-31: the embedded value equals the document JSON response of the same request.
+        $html = $this->get('/list')->body;
+        $json = $this->get('/list', ['Accept' => 'application/json'])->body;
+
+        self::assertSame(1, preg_match('#<script type="application/json" id="hy-data">(.*)</script>#', $html, $found));
+        self::assertSame(json_decode($json, true), json_decode($found[1], true));
+        self::assertStringContainsString('"a\\u003c"', $found[1]);
+    }
+
+    public function testRouteRegionsFollowThePageRegion(): void
+    {
+        // HY-30
+        $region = self::json($this->get('/list', self::JSON));
+        $document = self::json($this->get('/list', ['Accept' => 'application/json']));
+
+        self::assertSame(['content', 'rows'], array_keys($region['regions']));
+        self::assertSame(['side', 'content', 'rows'], array_keys($document['regions']));
+        self::assertSame(['items' => ['a<', 'b0']], $region['regions']['rows']);
+        self::assertStringContainsString('<ul id="rows" hy-region><li>a&lt;</li><li>b0</li></ul>', $this->get('/list')->body);
+    }
+
+    public function testPageRegionAlonePassesRouteRegionsAsDefinitions(): void
+    {
+        // HY-13, HY-30
+        $renderer = new Renderer(__DIR__ . '/fixtures/templates', 'Z');
+        $shared = ['title' => 'T'];
+        $rows = ['template' => 'rows.tpl', 'data' => ['items' => ['x']]];
+        $page = $renderer->alone('list.tpl', $shared, [], ['rows' => $rows]);
+        $document = $renderer->document('layout.tpl', 'title.tpl', $shared, [
+            'side' => ['template' => 'side.tpl', 'data' => ['count' => 1]],
+            'content' => ['template' => 'list.tpl', 'data' => []],
+            'rows' => $rows,
+        ], new \stdClass());
+
+        self::assertSame("<h1>T</h1><ul id=\"rows\" hy-region><li>x</li></ul>\n", $page);
+        self::assertStringContainsString('<main id="content" hy-region>' . $page . '</main>', $document);
+        self::assertStringContainsString('<ul id="rows" hy-region>' . $renderer->alone('rows.tpl', $shared, ['items' => ['x']]) . '</ul>', $document);
+    }
+
+    public function testRouteRegionLoaderMustBeDeclared(): void
+    {
+        // HY-30
+        $this->expectException(\InvalidArgumentException::class);
+        App::open(__DIR__ . '/fixtures/app.json', __DIR__ . '/fixtures/templates', [
+            'routes' => ['add' => ['post' => fn (): Result => Result::redirect('/')], 'home' => ['regions' => ['rows' => fn (): array => []]]],
+        ], 'Z');
     }
 
     public function testRegionRequestReturnsTheProtocolShape(): void

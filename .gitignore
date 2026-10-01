@@ -6,5 +6,6 @@ playwright-report/
 examples/board/build/
 examples/board/dist/
 examples/board/public/assets/hyper-*.js
+examples/board/public/assets/templates/
 examples/board/public/assets/manifest.json
 examples/board/var/*.db

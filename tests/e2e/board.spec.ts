@@ -88,6 +88,56 @@ test('CSR: a static shell renders every document from /api JSON', async ({ page 
   await boardFlow(page, csr, '/api', 'CSR 글', 2);
 });
 
+// HY-33, HY-36: hy-set changes region data and renders the region with no data request. Template files
+// are static assets; the page starts loading them when it holds the data (HY-32, HY-35).
+async function dataFlow(page: Page, origin: string): Promise<void> {
+  const errors = collectErrors(page);
+  await page.goto(`${origin}/board`);
+  await expect(page.locator('#rows tbody tr')).toHaveCount(2);
+  await page.waitForLoadState('networkidle');
+  const requests: string[] = [];
+  page.on('request', (request) => requests.push(request.url()));
+
+  await page.getByRole('button', { name: '제목순' }).click();
+  await expect(page.locator('#rows .chip.current')).toHaveText('제목순');
+  const titles = await page.locator('#rows tbody tr td:nth-child(2)').allTextContents();
+  expect(titles).toEqual([...titles].sort());
+  await page.getByRole('button', { name: '최신순' }).click();
+  await expect(page.locator('#rows .chip.current')).toHaveText('최신순');
+
+  await page.getByRole('button', { name: '닫기' }).click();
+  await expect(page.getByRole('button', { name: '공지 펼치기' })).toBeVisible();
+  await page.getByRole('button', { name: '공지 펼치기' }).click();
+  await expect(page.locator('#notice .notice p')).toContainText('서버 요청 없이');
+
+  expect(requests).toEqual([]);
+  expect(errors).toEqual([]);
+}
+
+test('SSR: the first page changes region data without a request', async ({ page }) => {
+  await dataFlow(page, ssr);
+});
+
+test('CSR: region data changes without a request', async ({ page }) => {
+  await dataFlow(page, csr);
+});
+
+test('CSR loads only the templates that a route needs', async ({ page }) => {
+  const templates: string[] = [];
+  page.on('request', (request) => {
+    const path = new URL(request.url()).pathname;
+    if (path.startsWith('/assets/templates/')) templates.push(path.replace(/^\/assets\/templates\/|\.[0-9a-f]+\.json$/g, ''));
+  });
+  await page.goto(`${csr}/board`);
+  await expect(page.locator('#content h1')).toHaveText('게시판');
+  expect(templates.sort()).toEqual(['board-list', 'board-notice', 'board-rows', 'hyper-data', 'layout', 'left', 'title']);
+
+  templates.length = 0;
+  await page.getByRole('link', { name: '글쓰기' }).click();
+  await expect(page.locator('#content h1')).toHaveText('글쓰기');
+  expect(templates).toEqual(['board-create']);
+});
+
 test('SSR works without JavaScript', async ({ browser }) => {
   const context = await browser.newContext({ javaScriptEnabled: false });
   const page = await context.newPage();

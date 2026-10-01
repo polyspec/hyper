@@ -1,4 +1,4 @@
-// Proves that the browser code renders the same bytes as the PHP server (HY-12, HY-13, HY-20).
+// Proves that the browser code renders the same bytes as the PHP server (HY-12, HY-13, HY-20, HY-30, HY-31).
 // It starts the application with an empty database and runs the steps of a request file in one
 // session. For every compare step it requests:
 //   1. the HTML document, rendered by PHP,
@@ -23,10 +23,13 @@ const database = resolve(app, 'var', 'parity.db');
 const { steps } = JSON.parse(readFileSync(values.requests, 'utf8'));
 
 const browser = await loadBrowserCode();
+const index = JSON.parse(readFileSync(join(app, 'build', 'templates.index.json'), 'utf8'));
 const application = browser.createApplication(
   JSON.parse(readFileSync(join(app, 'app', 'app.json'), 'utf8')),
-  JSON.parse(readFileSync(join(app, 'build', 'templates.ast.json'), 'utf8')),
+  index,
+  async (url) => JSON.parse(readFileSync(join(app, 'public', url), 'utf8')),
 );
+await application.templates.ensure(Object.keys(index));
 
 rmSync(database, { force: true });
 const server = spawn('php', ['-S', `127.0.0.1:${values.port}`, '-t', join(app, 'public')], {
@@ -72,10 +75,10 @@ try {
       fail(`${label}: statuses ${html.status}, ${documentJson.status}, ${regionJson.status}`);
     }
 
-    const rendered = browser.renderDocument(application, browser.parseJson(documentJson.text), path);
+    const rendered = browser.renderDocument(application, browser.decodeResponse(application, browser.parseJson(documentJson.text), path));
     if (rendered !== html.text) fail(`${label}: browser document differs\n--- browser\n${rendered}\n--- server\n${html.text}`);
 
-    const parts = browser.renderParts(application, browser.parseJson(regionJson.text), path);
+    const parts = browser.renderParts(application, browser.decodeResponse(application, browser.parseJson(regionJson.text), path));
     if (!html.text.includes(`<title>${parts.title}</title>`)) fail(`${label}: document does not contain the title ${parts.title}`);
     for (const [name, region] of parts.regions) {
       const tag = new RegExp(`<([a-z]+) id="${name}" hy-region>`).exec(html.text)?.[1];
@@ -102,7 +105,7 @@ function fail(message) {
 async function loadBrowserCode() {
   const result = await build({
     stdin: {
-      contents: "export { createApplication, renderDocument, renderParts } from '@polyspec/hyper'; export { parseJson } from '@polyspec/template/render';",
+      contents: "export { createApplication, decodeResponse, renderDocument, renderParts } from '@polyspec/hyper'; export { parseJson } from '@polyspec/template/render';",
       resolveDir: resolve('packages', 'hyper-js'),
       sourcefile: 'parity-entry.ts',
       loader: 'ts',

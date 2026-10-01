@@ -28,7 +28,7 @@ const children = [
   }),
   spawn(process.execPath, [
     'scripts/serve-edge.mjs',
-    '--shell', `${board}/dist/csr/index.html`,
+    '--root', `${board}/dist/csr`,
     '--compare', `${board}/compare.html`,
     '--port', values.edge,
     '--api-prefix', '/api',

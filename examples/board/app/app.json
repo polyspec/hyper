@@ -7,7 +7,13 @@
   ],
   "routes": [
     { "name": "home", "path": "/", "title": "홈", "template": "home.tpl" },
-    { "name": "board.list", "path": "/board", "title": "게시판", "template": "board/list.tpl" },
+    {
+      "name": "board.list", "path": "/board", "title": "게시판", "template": "board/list.tpl",
+      "regions": [
+        { "name": "notice", "template": "board/notice.tpl" },
+        { "name": "rows", "template": "board/rows.tpl" }
+      ]
+    },
     { "name": "board.create", "path": "/board/create", "title": "글쓰기", "template": "board/create.tpl", "post": true },
     { "name": "board.show", "path": "/board/{id}", "title": "게시글", "template": "board/show.tpl" }
   ]

@@ -12,5 +12,6 @@
 <aside id="left" hy-region>{# left}</aside>
 <main id="content" hy-region>{# content}</main>
 </div>
+{# data}
 </body>
 </html>

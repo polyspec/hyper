@@ -28,11 +28,12 @@
 
 ## Asset build
 
-`scripts/build-assets.mjs --app <directory> --api <base path>` bundles `client/main.ts` once. The bundle contains htmx, the hyper browser code, the template render runtime, `app/app.json` and every template AST. It writes:
+`scripts/build-assets.mjs --app <directory> --api <base path>` writes:
 
-1. `build/templates.ast.json`: every `.tpl` file under `templates/`, parsed into its AST and keyed by its name relative to `templates/`.
-2. `public/assets/hyper-<hash>.js` and `public/assets/manifest.json`: the SSR script and the URLs that the server passes to the layout.
-3. `dist/csr/index.html`: the CSR shell with `<meta name="hyper-api">`, the stylesheet and the bundle inlined. The build fails when the bundle contains `</script`, and it prints the Content Security Policy hashes of the inlined script and stylesheet.
+1. `public/assets/templates/<name>.<hash>.json`: one AST file per template under `templates/`, and one for the reserved template `hyper/data.tpl` (HY-34).
+2. `build/templates.index.json`: each template name with its file URL and the templates that its include and block tags reference by path.
+3. `public/assets/hyper-<hash>.js` and `public/assets/manifest.json`: the client bundle and the URLs that the server passes to the layout. The bundle contains htmx, the hyper browser code, the template render runtime, `app/app.json` and the index, and no template.
+4. `dist/csr/`: the CSR deployment. `index.html` contains `<meta name="hyper-api">`, the stylesheet and the bundle inlined; `assets/templates/` contains the template files. The build fails when the bundle contains `</script`, and it prints the Content Security Policy hashes of the inlined script and stylesheet.
 
 The build replaces earlier outputs, so repeated builds leave one file per output. The outputs are not committed.
 
@@ -41,16 +42,18 @@ The build replaces earlier outputs, so repeated builds leave one file per output
 | Behavior | Evidence |
 |---|---|
 | Routing | `conformance/routes.json` runs in `make test-php` and `make test-js`. During rendering, the browser also requires that its route equals the route that the server reported (HY-20). |
-| Document rendering | `make parity` requests every compare step as an HTML document, as document JSON and as region JSON in one session. The browser rendering of the document JSON must equal the PHP document byte for byte, and every part of the region JSON must appear in it. |
-| Behavior in a browser | `make e2e` runs the same flow on SSR and CSR, and the comparison page requires that the SSR body and the CSR body are equal after the first render and after navigation in both frames. |
+| Document rendering | `make parity` requests every compare step as an HTML document, as document JSON and as region JSON in one session. The browser rendering of the document JSON, including route regions and the embedded data (HY-30, HY-31), must equal the PHP document byte for byte, and every part of the region JSON must appear in it. |
+| Behavior in a browser | `make e2e` runs the same flows on SSR and CSR: navigation, actions, `hy-set` changes without a data request, loading only the templates of a route, and the comparison page that requires equal SSR and CSR bodies. |
 
 ## Measured sizes
 
-Measured on 2026-10-01 with `make bundle-size` (htmx 4.0.0, esbuild 0.28.2, seven board templates):
+Measured on 2026-10-01 with `make bundle-size` (htmx 4.0.0, esbuild 0.28.2, nine board templates and `hyper/data.tpl`):
 
 | Output | Raw bytes | gzip bytes | brotli bytes |
 |---|---:|---:|---:|
-| SSR script `hyper-<hash>.js` | 88,319 | 28,930 | 25,835 |
-| CSR shell `dist/csr/index.html` | 90,800 | 29,905 | 26,521 |
+| SSR script `hyper-<hash>.js` | 85,125 | 28,526 | 25,613 |
+| CSR shell `dist/csr/index.html` | 88,259 | 29,609 | 26,428 |
+| Largest template file (`board/rows.tpl`) | 4,730 | 1,167 | 950 |
+| All ten template files | | 5,039 | |
 
-The AST of a template is about twice the size of its source after compression, because every node records its source span. The template parser adds about 8 KB (gzip). Shipping ASTs therefore stays smaller than shipping sources with the parser until the template sources reach about 8 KB (gzip).
+A route loads only its own templates (HY-35), and a template file is cached by its hashed name. The AST of a template is about twice the size of its source after compression, because every node records its source span. `config/bundle-size.json` limits a template file to 4,096 gzip bytes, so a template that grows past it is split into blocks.

@@ -9,7 +9,7 @@ final class Manifest
 {
     /**
      * @param list<Region> $regions
-     * @param array<string, array{name: string, path: string, title: string, template: string, post: bool}> $routes
+     * @param array<string, array{name: string, path: string, title: string, template: string, post: bool, regions: list<Region>}> $routes
      */
     private function __construct(
         public readonly string $layout,
@@ -36,7 +36,7 @@ final class Manifest
         $page = null;
         foreach ($data['regions'] ?? [] as $region) {
             $name = (string) ($region['name'] ?? '');
-            if (preg_match('/^[A-Za-z][A-Za-z0-9_-]*$/D', $name) !== 1 || in_array($name, ['layout', 'title'], true) || isset($regions[$name])) {
+            if (!self::regionName($name) || isset($regions[$name])) {
                 throw new \InvalidArgumentException("manifest region name {$name} is not allowed");
             }
             $isPage = ($region['page'] ?? false) === true;
@@ -57,10 +57,20 @@ final class Manifest
         }
 
         $routes = [];
+        $regionNames = array_fill_keys(array_keys($regions), true);
         foreach ($data['routes'] ?? [] as $route) {
             $name = (string) ($route['name'] ?? '');
             if ($name === '' || isset($routes[$name]) || !is_string($route['title'] ?? null) || !is_string($route['template'] ?? null)) {
                 throw new \InvalidArgumentException("manifest route {$name} is duplicated or incomplete");
+            }
+            $routeRegions = [];
+            foreach ($route['regions'] ?? [] as $region) {
+                $regionName = (string) ($region['name'] ?? '');
+                if (!self::regionName($regionName) || isset($regionNames[$regionName]) || !is_string($region['template'] ?? null)) {
+                    throw new \InvalidArgumentException("manifest route {$name} has an invalid or duplicated region {$regionName}");
+                }
+                $regionNames[$regionName] = true;
+                $routeRegions[] = new Region($regionName, false, $region['template'], []);
             }
             $routes[$name] = [
                 'name' => $name,
@@ -68,9 +78,16 @@ final class Manifest
                 'title' => $route['title'],
                 'template' => $route['template'],
                 'post' => ($route['post'] ?? false) === true,
+                'regions' => $routeRegions,
             ];
         }
 
         return new self($data['layout'], $data['title'], array_values($regions), $page, $routes, new Router(array_values($routes)));
+    }
+
+    /** Returns true for an allowed region name (HY-2). */
+    private static function regionName(string $name): bool
+    {
+        return preg_match('/^[A-Za-z][A-Za-z0-9_-]*$/D', $name) === 1 && !in_array($name, ['layout', 'title', 'data'], true);
     }
 }
