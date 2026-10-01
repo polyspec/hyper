@@ -16,6 +16,7 @@
 
 ### Fixed
 
+- The bundle limits rise to 32,500 gzip bytes for the SSR script and 33,800 for the CSR shell. The template runtime, which checks every number of the data model, grows the SSR script to 32,057 and the CSR shell to 33,364 gzip bytes; the hyper code adds 79 of them.
 - The PHP session added `Expires`, `Pragma` and a second `Cache-Control` header to every response of a session, so a JSON response had two `Cache-Control` headers and a reply could not make a page cacheable. PHP also gave responses without a body, such as 303 and 204, the type `text/html`. The session now adds only its cookie, every page response has `Cache-Control: no-store` unless the reply sets it for status 200, and `App::run` turns off the default content type (HY-52). A comparison of complete response headers found these defects; `AppTest`, `RequestTest` and `RunTest` failed before the fix.
 - These defects of swaps, kept values, redirects and sessions are fixed with tests that failed before:
   - The fix of the call order (HY-33) ended a `set`, `render` or `hy-set` change on any response, even one that did not contain its region, after the swap had already changed the page. The page then showed a value that was neither held nor stored. A change now ends only when the data of its own region was replaced, before the swap; when that happens during the swap, the region renders again from held data (HY-33).
