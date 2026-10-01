@@ -58,6 +58,7 @@
   - 기본 경로 뒤에 `/`나 경로의 끝이 오지 않는 요청 경로는 결과가 없다.
   - `Location` 헤더는 기본 경로를 포함한다.
 - **HY-9** `conformance/routes.json`은 라우트, 요청 경로, 기대 결과를 담는다. PHP 라우터와 JavaScript 라우터는 모든 사례를 통과한다.
+- **HY-49** 라우트 경로의 마지막 segment는 나머지 매개변수 `{name*}`일 수 있다. `name`은 HY-4와 같고 경로의 다른 매개변수와 달라야 한다. 이 segment는 0개 이상의 남은 요청 segment에 놓이며, 그 segment가 모두 비어 있거나 HY-6으로 decode될 때 맞는다. 값은 decode하지 않은 요청 경로의 나머지로, `/` 뒤에 남은 segment를 `/`로 이은 것이며 남은 segment가 없으면 `/`다. `conformance/rest.json`은 라우트, 요청 경로, 기대 결과를 담는다. PHP 라우터와 JavaScript 라우터는 모든 사례를 통과한다.
 
 ## 데이터와 주제
 

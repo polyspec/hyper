@@ -1,11 +1,11 @@
-// Route matching (HY-4 to HY-8). The PHP router implements the same rules; both pass conformance/routes.json.
+// Route matching (HY-4 to HY-8, HY-49). The PHP router implements the same rules; both pass conformance/routes.json and conformance/rest.json.
 
 export interface RouteMatch {
   name: string;
   params: Record<string, string>;
 }
 
-type Segment = { literal: string } | { param: string };
+type Segment = { literal: string } | { param: string } | { rest: string };
 
 interface CompiledRoute {
   name: string;
@@ -14,6 +14,7 @@ interface CompiledRoute {
 
 const LITERAL = /^[A-Za-z0-9._~-]+$/;
 const PARAM = /^\{([A-Za-z_][A-Za-z0-9_]*)\}$/;
+const REST = /^\{([A-Za-z_][A-Za-z0-9_]*)\*\}$/;
 const decoder = new TextDecoder('utf-8', { fatal: true });
 
 export class Router {
@@ -47,16 +48,32 @@ function compilePath(path: string): Segment[] {
   if (!path.startsWith('/')) throw new Error(`route path ${JSON.stringify(path)} does not start with /`);
   if (path === '/') return [];
   const names = new Set<string>();
-  return path.slice(1).split('/').map((part) => {
+  const parts = path.slice(1).split('/');
+  return parts.map((part, index): Segment => {
     if (LITERAL.test(part)) return { literal: part };
     const param = PARAM.exec(part)?.[1];
-    if (param === undefined || names.has(param)) throw new Error(`route path ${JSON.stringify(path)} has an invalid segment ${JSON.stringify(part)}`);
-    names.add(param);
-    return { param };
+    if (param !== undefined && !names.has(param)) {
+      names.add(param);
+      return { param };
+    }
+    const rest = REST.exec(part)?.[1];
+    if (rest !== undefined && index === parts.length - 1 && !names.has(rest)) return { rest };
+    throw new Error(`route path ${JSON.stringify(path)} has an invalid segment ${JSON.stringify(part)}`);
   });
 }
 
 function matchSegments(segments: Segment[], parts: string[]): Record<string, string> | null {
+  const last = segments[segments.length - 1];
+  if (last !== undefined && 'rest' in last) {
+    const fixed = segments.slice(0, -1);
+    if (parts.length < fixed.length) return null;
+    const remaining = parts.slice(fixed.length);
+    if (remaining.some((part) => part !== '' && decodeSegment(part) === null)) return null;
+    const params = matchSegments(fixed, parts.slice(0, fixed.length));
+    if (params === null) return null;
+    params[last.rest] = `/${remaining.join('/')}`;
+    return params;
+  }
   if (segments.length !== parts.length) return null;
   const params: Record<string, string> = {};
   for (let index = 0; index < segments.length; index++) {
@@ -64,7 +81,7 @@ function matchSegments(segments: Segment[], parts: string[]): Record<string, str
     const part = parts[index]!;
     if ('literal' in segment) {
       if (segment.literal !== part) return null;
-    } else {
+    } else if ('param' in segment) {
       const value = part === '' ? null : decodeSegment(part);
       if (value === null) return null;
       params[segment.param] = value;

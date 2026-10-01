@@ -74,4 +74,44 @@ final class RouterTest extends TestCase
     {
         return $result === null ? null : json_encode(['name' => $result['name'], 'params' => (object) $result['params']], JSON_THROW_ON_ERROR);
     }
+
+    /** @return array<string, mixed> */
+    private static function rest(): array
+    {
+        return json_decode((string) file_get_contents(__DIR__ . '/../../../conformance/rest.json'), true, flags: JSON_THROW_ON_ERROR);
+    }
+
+    /** @return iterable<string, array{string, array{name: string, params: array<string, string>}|null}> */
+    public static function restCases(): iterable
+    {
+        foreach (self::rest()['cases'] as $case) {
+            yield json_encode($case['path']) => [$case['path'], $case['result']];
+        }
+    }
+
+    /** @return iterable<string, array{string}> */
+    public static function invalidRestPaths(): iterable
+    {
+        foreach (self::rest()['invalidPaths'] as $path) {
+            yield json_encode($path) => [$path];
+        }
+    }
+
+    /**
+     * HY-49: these are the same rest parameter cases that the JavaScript router passes.
+     *
+     * @param array{name: string, params: array<string, string>}|null $expected
+     */
+    #[DataProvider('restCases')]
+    public function testRoutesTheRestOfThePath(string $path, ?array $expected): void
+    {
+        self::assertSame(self::normalize($expected), self::normalize((new Router(self::rest()['routes']))->match($path)));
+    }
+
+    #[DataProvider('invalidRestPaths')]
+    public function testRejectsTheRestPath(string $path): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        new Router([['name' => 'invalid', 'path' => $path]]);
+    }
 }
