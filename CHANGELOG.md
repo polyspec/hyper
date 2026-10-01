@@ -7,6 +7,7 @@
 ### Added
 
 - A route path can end with a rest parameter `{name*}`, which matches zero or more remaining request segments and holds the rest of the request path without decoding (HY-49). Both routers pass the cases of `conformance/rest.json`.
+- A loader or an action can stop a request with `Redirect`, which answers 303 with the location, flash values and changed topics of a redirect result (HY-50), or with `Forbidden`, which answers 403 (HY-51).
 
 ### Fixed
 

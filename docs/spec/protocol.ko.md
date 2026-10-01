@@ -240,4 +240,6 @@
 - **HY-27** 상태 404와 405는 다음 경우에 응답한다.
   - 404: 라우트가 없는 경로, 또는 로더가 리소스 없음을 보고한 경우
   - 405: `GET`도 아니고 선언된 `POST`도 아닌 메서드
+- **HY-50** loader나 action은 redirect로 요청을 멈출 수 있다. HY-25의 결과의 redirect를 던지며, 이 결과는 application 경로(HY-46)를 지정하고 flash 값과 바뀐 topic을 담을 수 있다. 서버는 상태 303과 base path를 붙인 `Location`으로 응답하고, HY-25처럼 flash 값과 바뀐 topic을 저장하며, 아무것도 렌더하지 않는다.
+- **HY-51** loader나 action은 금지로 요청을 멈출 수 있다. 서버는 상태 403과 텍스트 `Forbidden`으로 응답하고, 그 요청의 다른 loader나 action을 실행하지 않는다.
 - **HY-28** 브라우저 코드의 오류는 htmx 응답 훅에서 던져진다. htmx는 이를 `htmx:error` 이벤트로 보고하고 스왑하지 않는다.
