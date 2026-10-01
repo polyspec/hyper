@@ -28,6 +28,7 @@
 | `make templates-check` | Checks that only the layout template carries `hx-` attributes (HC-6), that the layout places `{# title}` and `{# data}` once, and that every region of the layout and of each route template is placed once, directly inside an element whose `id` is the region name, without block arguments (HY-3, HY-30) |
 | `make test-scripts` | Runs the tests of the check scripts, such as the region placement check with a broken fixture application |
 | `make parity` | Compares PHP documents with browser renders of document and region JSON, once with the generated program and once with the native extension |
+| `make server-parity` | Runs the parity steps against the PHP server and the board Node server and compares the status, the headers and the body of every response, with the browser comparison of `make parity` (HY-55) |
 | `make bundle-size` | Prints the SSR script and CSR shell sizes and enforces the gzip limits in `config/bundle-size.json` |
 | `make e2e` | Runs the SSR, CSR, no-JavaScript and comparison flows in Chromium |
 | `make docs-check` | Checks document pairs, links and code blocks |
@@ -53,7 +54,7 @@ make node-server
 BOARD_DB=$PWD/examples/board/var/node.db BOARD_SESSIONS=$PWD/examples/board/var/sessions BOARD_PORT=8084 node examples/board/build/node/server.mjs
 ```
 
-`BOARD_SESSIONS` is an absolute session directory, and `BOARD_BASE_PATH`, `BOARD_HTTPS` and `BOARD_FRAME_ANCESTORS` have the meaning that they have for PHP. The Node server renders with the template files of `make assets` (HY-54).
+`BOARD_SESSIONS` is an absolute session directory, and `BOARD_BASE_PATH`, `BOARD_HTTPS` and `BOARD_FRAME_ANCESTORS` have the meaning that they have for PHP. `BOARD_TIME`, for both servers, fixes the creation time of new posts in Unix seconds, so that `make server-parity` compares the same posts. The Node server renders with the template files of `make assets` (HY-54).
 
 ## Asset build
 
@@ -66,7 +67,7 @@ BOARD_DB=$PWD/examples/board/var/node.db BOARD_SESSIONS=$PWD/examples/board/var/
 
 The build replaces earlier outputs, so repeated builds leave one file per output. The outputs are not committed.
 
-## Proof that PHP and the browser behave the same
+## Proof that PHP, Node.js and the browser behave the same
 
 | Behavior | Evidence |
 |---|---|
@@ -74,6 +75,7 @@ The build replaces earlier outputs, so repeated builds leave one file per output
 | JSON text | `conformance/json.json` runs in `make test-php` and `make test-node`: the Node server writes the bytes of PHP `json_encode` and reads kept values as PHP `json_decode` does (HY-54). |
 | Routing | `conformance/routes.json` runs in `make test-php` and `make test-js`. During rendering, the browser also requires that its route equals the route that the server reported (HY-20). |
 | Document rendering | `make parity` requests every compare step as an HTML document, as document JSON and as region JSON in one session. The browser rendering of the document JSON, including route regions, the embedded data and `server` and `cookie` kept values (HY-30, HY-31, HY-38), must equal the PHP document byte for byte, and every part of the region JSON must appear in it. |
+| Node server | `make server-parity` sends every request of the parity steps to the PHP server and the board Node server, each with its own database and session, and requires equal statuses, headers and bodies after it replaces the session identifier, the CSRF token and the `ETag` value with placeholders (HY-55). |
 | Behavior in a browser | `make e2e` runs the same flows on SSR and CSR: navigation, actions, `hy-set` changes without a data request, the four kept kinds across a reload and a new tab, loading only the templates of a route, and the comparison page that requires equal SSR and CSR bodies. |
 
 ## Measured sizes

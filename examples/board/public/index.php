@@ -18,6 +18,13 @@ if (!is_string($database) || $database === '') {
 }
 // Server-side rendering serves the application at the root; the data server of client-side rendering uses /api.
 $basePath = getenv('BOARD_BASE_PATH');
+// BOARD_TIME fixes the creation time of new posts in Unix seconds, so that two servers store the same posts
+// (`make server-parity`); without it a post has the current time.
+$time = getenv('BOARD_TIME');
+if (is_string($time) && $time !== '' && preg_match('/^[0-9]{1,15}$/D', $time) !== 1) {
+    throw new RuntimeException('BOARD_TIME must be Unix seconds');
+}
+$now = is_string($time) && $time !== '' ? fn (): int => (int) $time : fn (): int => time();
 // BOARD_HTTPS=1 declares HTTPS behind a TLS-terminating proxy; BOARD_FRAME_ANCESTORS sets frame-ancestors (HY-45).
 $frameAncestors = getenv('BOARD_FRAME_ANCESTORS');
 
@@ -31,6 +38,6 @@ $app = App::open(
     https: getenv('BOARD_HTTPS') === '1',
     frameAncestors: is_string($frameAncestors) && $frameAncestors !== '' ? $frameAncestors : "'self'",
 );
-$app->bind(Posts::class, fn (): Posts => new Posts($database));
+$app->bind(Posts::class, fn (): Posts => new Posts($database, $now));
 $app->bind(Assets::class, fn (): Assets => Assets::fromManifest(__DIR__ . '/assets/manifest.json'));
 $app->run();

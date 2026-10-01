@@ -2,7 +2,7 @@
 // this file into build/node/server.mjs.
 //
 // Environment: BOARD_DB (the SQLite database file), BOARD_SESSIONS (an absolute session directory), BOARD_PORT,
-// and as for PHP BOARD_BASE_PATH, BOARD_HTTPS=1 and BOARD_FRAME_ANCESTORS (HY-45).
+// and as for PHP BOARD_BASE_PATH, BOARD_HTTPS=1, BOARD_FRAME_ANCESTORS (HY-45) and BOARD_TIME.
 import { mkdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -32,7 +32,11 @@ const app = await App.open<Services>({
   https: process.env.BOARD_HTTPS === '1',
   frameAncestors: process.env.BOARD_FRAME_ANCESTORS || "'self'",
 });
-app.bind('posts', () => new Posts(database, () => Math.floor(Date.now() / 1000)));
+// BOARD_TIME fixes the creation time of new posts in Unix seconds, so that two servers store the same posts
+// (`make server-parity`); without it a post has the current time.
+const time = process.env.BOARD_TIME ?? '';
+if (time !== '' && !/^[0-9]{1,15}$/.test(time)) throw new Error('BOARD_TIME must be Unix seconds');
+app.bind('posts', () => new Posts(database, time === '' ? () => Math.floor(Date.now() / 1000) : () => Number(time)));
 app.bind('assets', () => {
   const urls = JSON.parse(readFileSync(join(board, 'public', 'assets', 'manifest.json'), 'utf8')) as Record<string, unknown>;
   if (typeof urls.css !== 'string' || typeof urls.hyper !== 'string') throw new Error('the asset manifest has no css or hyper URL; run make assets');

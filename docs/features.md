@@ -4,7 +4,7 @@
 
 | ID | Feature | Status | Evidence |
 |---|---|---|---|
-| protocol | Region protocol specification (HY-1 to HY-54) | implemented | [Protocol](spec/protocol.md) |
+| protocol | Region protocol specification (HY-1 to HY-55) | implemented | [Protocol](spec/protocol.md) |
 | composition | Screen composition rules (HC-1 to HC-7) and the template check for HC-6 | implemented | [Composition](spec/composition.md), `make templates-check` |
 | manifest | Application manifest read by PHP and the browser | implemented | `make test-php`, `make test-js` |
 | router | PHP and browser routers with shared conformance cases | implemented | `make test-php`, `make test-js` |
@@ -19,6 +19,7 @@
 | kept-data | Kept paths in the server session, a cookie, localStorage and sessionStorage (HY-37 to HY-41) | implemented | `make test-php`, `make test-js`, `make parity`, `make e2e` |
 | template-delivery | One file per template, loaded per route (HY-34, HY-35) | implemented | `make test-js`, `make e2e`, `make bundle-size` |
 | parity | Browser documents and regions equal PHP documents byte for byte | implemented | `make parity` |
+| server-parity | Node server responses equal PHP responses in status, headers and body for every parity step (HY-55) | implemented | `make server-parity` |
 | ssr | Server-side rendering with JSON navigation and a no-JavaScript fallback | implemented | `make e2e` |
 | csr | Client-side rendering from one static `index.html` and `/api` JSON | implemented | `make e2e` |
 | comparison | Comparison page with SSR and CSR frames | implemented | `make e2e` |
