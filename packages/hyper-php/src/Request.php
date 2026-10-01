@@ -13,10 +13,13 @@ final class Request
     /** The query values, or null when a name or a value is not UTF-8 (HY-42, HY-56). */
     private readonly ?Fields $queryFields;
 
+    /** The form values of the body, or null when a name or a value is not UTF-8 (HY-42, HY-57). */
+    private readonly ?Fields $formFields;
+
     /**
      * @param array<string, string> $headers header names in any case
      * @param string $query the raw query: the request target after its first `?` up to its first `#`
-     * @param array<string, mixed> $form
+     * @param string $body the request body, whose form values the request reads (HY-57)
      * @param array<string, mixed> $flash
      * @param array<string, string> $params
      * @param array<string, string> $cookies
@@ -26,7 +29,7 @@ final class Request
         public readonly string $path,
         array $headers = [],
         private readonly string $query = '',
-        private readonly array $form = [],
+        private readonly string $body = '',
         private readonly array $flash = [],
         private readonly string $csrfToken = '',
         private readonly array $params = [],
@@ -35,12 +38,13 @@ final class Request
     ) {
         $this->headers = array_change_key_case($headers, CASE_LOWER);
         $this->queryFields = Fields::parse($query);
+        $this->formFields = Fields::fromBody($this->header('Content-Type') ?? '', $body);
     }
 
     /** Returns a copy that carries the flash values and the CSRF token of the session. */
     public function withSession(Flash $flash, string $csrfToken): self
     {
-        return new self($this->method, $this->path, $this->headers, $this->query, $this->form, $flash->values, $csrfToken, $this->params, $this->cookies, $this->https);
+        return new self($this->method, $this->path, $this->headers, $this->query, $this->body, $flash->values, $csrfToken, $this->params, $this->cookies, $this->https);
     }
 
     /**
@@ -50,7 +54,7 @@ final class Request
      */
     public function withRoute(string $path, array $params): self
     {
-        return new self($this->method, $path, $this->headers, $this->query, $this->form, $this->flash, $this->csrfToken, $params, $this->cookies, $this->https);
+        return new self($this->method, $path, $this->headers, $this->query, $this->body, $this->flash, $this->csrfToken, $params, $this->cookies, $this->https);
     }
 
     /**
@@ -76,24 +80,12 @@ final class Request
     }
 
     /**
-     * Returns true when the path consists of printable ASCII characters, every query name and value and every form
-     * name and value at any depth and HX-Current-URL are valid UTF-8 (HY-42). Cookies are not checked; hyper ignores invalid ones.
+     * Returns true when the path consists of printable ASCII characters and every query and form name and value
+     * and HX-Current-URL are valid UTF-8 (HY-42). Cookies are not checked; hyper ignores invalid ones.
      */
     public function validInput(): bool
     {
-        return preg_match('/^[\x21-\x7E]*$/D', $this->path) === 1 && self::utf8($this->header('HX-Current-URL') ?? '') && $this->queryFields !== null && self::utf8Tree($this->form);
-    }
-
-    /** @param array<mixed> $values */
-    private static function utf8Tree(array $values): bool
-    {
-        foreach ($values as $key => $value) {
-            if (!self::utf8((string) $key) || (is_string($value) && !self::utf8($value)) || (is_array($value) && !self::utf8Tree($value))) {
-                return false;
-            }
-        }
-
-        return true;
+        return preg_match('/^[\x21-\x7E]*$/D', $this->path) === 1 && self::utf8($this->header('HX-Current-URL') ?? '') && $this->queryFields !== null && $this->formFields !== null;
     }
 
     private static function utf8(string $value): bool
@@ -160,12 +152,16 @@ final class Request
         return $default;
     }
 
-    /** Returns a form value as a string; an absent or non-string value is the empty string. */
+    /** Returns every form value of the body in order, without nesting (HY-57). */
+    public function form(): Fields
+    {
+        return $this->formFields ?? Fields::empty();
+    }
+
+    /** Returns the last form value of a name; an absent name gives the empty string. */
     public function formString(string $name): string
     {
-        $value = $this->form[$name] ?? '';
-
-        return is_string($value) ? $value : '';
+        return $this->form()->last($name) ?? '';
     }
 
     /** Returns a flash value stored by the previous action, or null. */
@@ -212,12 +208,20 @@ final class Request
                 $headers[str_replace('_', '-', substr($key, 5))] = $value;
             }
         }
+        // PHP gives these two request headers without the HTTP_ prefix.
+        foreach (['CONTENT_TYPE' => 'Content-Type', 'CONTENT_LENGTH' => 'Content-Length'] as $key => $name) {
+            if (is_string($_SERVER[$key] ?? null)) {
+                $headers[$name] = $_SERVER[$key];
+            }
+        }
         return new self(
             strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? 'GET')),
             self::targetPath((string) ($_SERVER['REQUEST_URI'] ?? '/')),
             $headers,
             self::targetQuery((string) ($_SERVER['REQUEST_URI'] ?? '/')),
-            $_POST,
+            // The raw body, not $_POST, which nests bracketed names. PHP gives the body of a multipart/form-data
+            // request here only when enable_post_data_reading is off.
+            (string) file_get_contents('php://input'),
             cookies: array_filter($_COOKIE, 'is_string'),
             https: ($_SERVER['HTTPS'] ?? '') !== '' && ($_SERVER['HTTPS'] ?? '') !== 'off',
         );

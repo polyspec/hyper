@@ -65,7 +65,7 @@ Every loader and action receives one context object:
 
 | Field | Type | Meaning |
 |---|---|---|
-| `request` | `Request` | `method`, `path()`, `params()`, `param(name)`, `query()`, `rawQuery()`, `queryInt(name, fallback)`, `formString(name)`, `flash(name)`, `cookie(name)`, `header(name)`, `csrfToken()`, `currentPath()`, `wantsJson()`, `isRegionRequest()`, `https` |
+| `request` | `Request` | `method`, `path()`, `params()`, `param(name)`, `query()`, `rawQuery()`, `queryInt(name, fallback)`, `form()`, `formString(name)`, `flash(name)`, `cookie(name)`, `header(name)`, `csrfToken()`, `currentPath()`, `wantsJson()`, `isRegionRequest()`, `https` |
 | `reply` | `Reply` | `cookie(name, value, maxAge?)`, `removeCookie(name)`, `cacheControl(value)` (HY-52) |
 | `services` | `Services<S>` | `get(key)` returns the service that `app.bind` registered |
 

@@ -52,6 +52,14 @@ export function parseUrlEncoded(text: string): Fields {
   return fields;
 }
 
+// Returns the fields of a request body: of an application/x-www-form-urlencoded body, or the text fields of a
+// multipart/form-data body; a body of another type has none (HY-57).
+export function formFields(type: string, body: Uint8Array): Fields {
+  if (/^application\/x-www-form-urlencoded\s*(;|$)/i.test(type)) return parseUrlEncoded(Buffer.from(body.buffer, body.byteOffset, body.byteLength).toString('latin1'));
+  const boundary = /^multipart\/form-data\s*;/i.test(type) ? /;\s*boundary=(?:"([^"]+)"|([^;\s]+))/i.exec(type) : null;
+  return boundary === null ? { values: new Map(), valid: true } : parseMultipart(body, (boundary[1] ?? boundary[2])!);
+}
+
 // Parses the text fields of a multipart/form-data body; file fields are not form values.
 export function parseMultipart(body: Uint8Array, boundary: string): Fields {
   const fields: Fields = { values: new Map(), valid: true };

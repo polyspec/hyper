@@ -62,6 +62,18 @@ describe('Request', () => {
     expect([...Request.from({ method: 'GET', target: '/?' }).query()]).toEqual([]);
   });
 
+  it('reads every form value of the body in order without nesting (HY-57)', () => {
+    const request = Request.from({
+      method: 'POST',
+      target: '/',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: Buffer.from('title=%ED%95%9C+%EA%B8%80&roles[]=a&empty&roles%5B%5D=b&x=1&x=2'),
+    });
+    expect([...request.form()]).toEqual([['title', ['한 글']], ['roles[]', ['a', 'b']], ['empty', ['']], ['x', ['1', '2']]]);
+    expect(request.formString('x')).toBe('2');
+    expect([...Request.from({ method: 'POST', target: '/', headers: { 'Content-Type': 'text/plain' }, body: Buffer.from('a=1') }).form()]).toEqual([]);
+  });
+
   it('reads the text fields of a multipart form and leaves out files', () => {
     const body = [
       '--XyZ', 'Content-Disposition: form-data; name="title"', '', '한 글', '--XyZ',

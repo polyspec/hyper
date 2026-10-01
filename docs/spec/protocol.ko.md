@@ -92,6 +92,7 @@
   영역 요청은 언제나 페이지 영역을 갱신한다(HY-18).
 
 - **HY-56** 요청의 원본 쿼리는 요청 대상에서 첫 `?` 뒤부터 첫 `#` 앞까지이며, `?`가 없으면 빈 텍스트다. 그 값은 중첩 없이 읽는다. 원본 쿼리를 모든 `&`에서 나누고 빈 부분은 건너뛴다. 부분의 이름은 첫 `=` 앞의 텍스트이고 값은 그 나머지이며, `=`가 없으면 값은 빈 텍스트다. 둘 다 `+`는 공백이고, 16진수 두 자리가 붙은 `%XX`는 그 바이트이며, 그 밖의 `%`는 그대로 둔다. `roles[]`나 `a[b]`처럼 괄호가 있는 이름은 쓴 그대로의 이름이고, 빈 이름도 이름이다. 쿼리 값은 각 이름을 처음 나온 순서대로 그 값들의 요청 순서 목록에 대응시키는 순서 있는 map이다. 유효한 UTF-8이 아닌 이름이나 값은 HY-42로 실패한다. `Request`는 원본 쿼리와 쿼리 값을 제공하고, `queryInt`는 이름의 마지막 값을 읽는다. `conformance/fields.json`은 텍스트와 그 값을 담으며, 두 서버는 모든 사례를 통과한다.
+- **HY-57** 요청의 폼 값은 원본 body에서 중첩 없이 읽으며, HY-56의 쿼리 값처럼 순서 있는 map이다. `application/x-www-form-urlencoded` body는 원본 쿼리처럼 읽는다. `multipart/form-data` body는 `Content-Disposition`이 `form-data`이고 `name` 매개변수가 있으며 `filename` 매개변수가 없는 part마다 값 하나를 준다. 이름은 그 매개변수이고 값은 part의 내용 그대로다. `filename`이 있는 part는 파일이며 폼 값이 아니다. 다른 type의 body에는 폼 값이 없다. 유효한 UTF-8이 아닌 이름이나 값은 HY-42로 실패한다. PHP 서버는 대괄호 이름을 중첩하는 `$_POST`가 아니라 `php://input`에서 body를 읽는다. PHP는 `enable_post_data_reading`이 꺼져 있을 때만 `multipart/form-data` 요청의 body를 준다. `Request`는 폼 값을 제공하고, `formString`은 이름의 마지막 값을 읽는다. `conformance/fields.json`은 urlencoded 사례와 multipart 사례를 담으며, 두 서버는 모든 사례를 통과한다.
 
 ## JSON 응답
 
@@ -226,7 +227,7 @@
 
 ## 요청 경계와 실패
 
-- **HY-42** 요청 경로는 요청 대상의 경로다. 요청 대상에서 첫 `?`나 `#` 앞까지이며, 절대 형식 대상(`http://host/path`)에서는 authority 뒤의 부분이다. 그 이상 디코딩하지 않는다. 경로는 RFC 9112가 요청 대상에 요구하는 대로 출력 가능한 ASCII 문자 `!`부터 `~`까지로만 이루어져야 하며, 모든 깊이의 쿼리와 폼의 이름과 값, `HX-Current-URL` 헤더는 유효한 UTF-8이어야 한다. 그렇지 않으면 서버는 어떤 로더나 액션도 실행하기 전에 상태 400으로 응답한다. 쿠키는 검사하지 않는다. 서버는 JSON 객체가 아닌 `hy-keep` 쿠키와 그 안의 맞지 않는 값(HY-38)을 무시하고, 자기가 만든 식별자가 아닌 세션 쿠키에는 새 세션을 시작한다(HY-45).
+- **HY-42** 요청 경로는 요청 대상의 경로다. 요청 대상에서 첫 `?`나 `#` 앞까지이며, 절대 형식 대상(`http://host/path`)에서는 authority 뒤의 부분이다. 그 이상 디코딩하지 않는다. 경로는 RFC 9112가 요청 대상에 요구하는 대로 출력 가능한 ASCII 문자 `!`부터 `~`까지로만 이루어져야 하며, 쿼리와 폼의 모든 이름과 값(HY-56, HY-57), `HX-Current-URL` 헤더는 유효한 UTF-8이어야 한다. 그렇지 않으면 서버는 어떤 로더나 액션도 실행하기 전에 상태 400으로 응답한다. 쿠키는 검사하지 않는다. 서버는 JSON 객체가 아닌 `hy-keep` 쿠키와 그 안의 맞지 않는 값(HY-38)을 무시하고, 자기가 만든 식별자가 아닌 세션 쿠키에는 새 세션을 시작한다(HY-45).
 - **HY-43** 애플리케이션이 처리하지 않은 예외는 상태 500과 텍스트 `Internal Server Error`를 만든다. 응답에는 예외 메시지, 파일 경로, 스택 트레이스가 없으며, 서버는 이를 자기 로그에 쓴다. PHP 설정 `display_errors`는 PHP가 요청을 시작하기 전에 꺼져 있어야 한다. PHP는 애플리케이션이 실행되기 전에 시작 경고(예: `max_input_vars`)를 출력하기 때문이다.
 - **HY-44** 공유 데이터와 영역 데이터는 template 데이터 모델의 값이다. ±(2^53 − 1) 밖의 수는 정수든 아니든, 문서든 JSON이든 HY-43으로 실패한다. 문서는 렌더가 그 값을 바인딩할 때 실패하고, 서버가 렌더하지 않는 JSON은 인코딩하기 전에 검사한다.
 - **HY-45** 서버 세션 쿠키는 `HttpOnly`, `SameSite=Lax`다. 요청이 HTTPS를 쓰거나, 애플리케이션이 HTTPS로 제공된다고 선언하면 `Secure`다. TLS를 끝내는 프록시 뒤의 서버는 반드시 이렇게 선언해야 한다. 서버는 자기가 만든 세션 식별자만 받아들이고, 요청이 세션 데이터를 읽거나 쓸 때만 세션을 시작한다. 라우팅 전에 거부한 요청(HY-42)과 경로가 어떤 라우트와도 맞지 않는 요청은 세션을 만들지 않는다. 모든 응답은 `Content-Security-Policy: frame-ancestors <sources>`를 가지며, sources는 애플리케이션이 정하고 기본값은 `'self'`다.
@@ -245,7 +246,7 @@
   - 데이터 모델의 JavaScript 값은 null, boolean, ±(2^53 − 1) 안의 number나 bigint, string, 배열, 문자열 key의 `Map`, plain object다. UTF-8 형태가 없는 짝 없는 surrogate를 담은 문자열과 그 밖의 값은 HY-43으로 실패한다.
   - loader와 action은 요청, reply(HY-52), 애플리케이션이 key로 bind한 service를 담은 context 인자 하나를 받는다.
   - session store는 각 session을 한 디렉터리의 파일에 저장하며, 파일 이름은 store가 만든 64자리 16진수 식별자다. session cookie는 PHP session cookie와 같은 속성과 순서로 쓰고(`<name>=<id>; path=/; secure; HttpOnly; SameSite=Lax`, `secure`는 HY-45의 조건에서), 한 session의 요청은 차례로 실행한다.
-  - 폼 필드는 `application/x-www-form-urlencoded` body와 `multipart/form-data` body의 텍스트 필드에서 읽고, `a[b]` 같은 대괄호 이름은 그대로 둔다. 한도(기본 8 MiB)보다 큰 요청 body는 상태 413을 받는다.
+  - 한도(기본 8 MiB)보다 큰 요청 body는 상태 413을 받는다.
 
 - **HY-55** `make server-parity`는 `examples/board/tests/parity/requests.json`의 단계를 PHP 서버와 board Node 서버에 동시에 실행한다. 각 서버는 자기 빈 데이터베이스와 session을 쓰고, 게시글의 생성 시각(`BOARD_TIME`)은 같다. 단계의 모든 요청에서 HTML 문서, 문서 JSON, 영역 JSON 모두 두 응답의 상태, header, body가 같아야 한다. 비교 전에 session cookie의 session 식별자를 `<session>`으로, 각 session의 CSRF token을 header와 body에서 `<csrf>`로 바꾸고, body에 token이 들어 있으므로 `ETag` 값이 그 body의 tag인지(HY-53) 확인한 뒤 `<etag>`로 바꾼다. HTTP 서버 프로그램이 스스로 쓰는 header인 `Date`, `Connection`, `Keep-Alive`, `Content-Length`, `Transfer-Encoding`과 PHP 내장 서버의 `Host`, `X-Powered-By`는 비교하지 않는다. header는 이름과 값 쌍의 집합으로 비교하고, `Set-Cookie`는 값마다 비교한다. 같은 실행에서 PHP 서버에 대한 `make parity`의 브라우저 비교도 수행한다.
 
