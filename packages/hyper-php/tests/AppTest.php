@@ -321,6 +321,17 @@ final class AppTest extends TestCase
         }
     }
 
+    public function testSharedNumberOutsideTheSafeRangeFailsForDocumentAndJson(): void
+    {
+        // HY-44: shared data is checked as region data is, by the rendering of a document and before JSON.
+        $app = App::open(__DIR__ . '/fixtures/app.json', self::PROGRAM, [
+            'shared' => fn (): array => ['big' => PHP_INT_MAX],
+            'routes' => ['add' => ['post' => fn (): Result => Result::redirect('/')]],
+        ], 'Z');
+        self::assertSame(500, $app->handle(new Request('GET', '/'), $this->session)->status);
+        self::assertSame(500, $app->handle(new Request('GET', '/', self::JSON), $this->session)->status);
+    }
+
     public function testIntegerOutsideTheSafeRangeFailsForDocumentAndJson(): void
     {
         // HY-44

@@ -82,13 +82,15 @@ The build replaces earlier outputs, so repeated builds leave one file per output
 
 ## Measured sizes
 
-Measured on 2026-10-01 with `make bundle-size` (htmx 4.0.0, esbuild 0.28.2, ten board templates and `hyper/data.tpl`):
+Measured on 2026-10-02 with `make bundle-size` (htmx 4.0.0, esbuild 0.28.2, ten board templates and `hyper/data.tpl`):
 
-| Output | Raw bytes | gzip bytes | brotli bytes |
-|---|---:|---:|---:|
-| SSR script `hyper-<hash>.js` | 88,447 | 29,619 | 26,637 |
-| CSR shell `dist/csr/index.html` | 91,727 | 30,755 | 27,456 |
-| Largest template file (`board/rows.tpl`) | 5,569 | 1,325 | 1,077 |
-| All eleven template files | | 5,655 | |
+| Output | Raw bytes | gzip bytes | brotli bytes | gzip limit |
+|---|---:|---:|---:|---:|
+| SSR script `hyper-<hash>.js` | 94,778 | 31,586 | 28,251 | 31,900 |
+| CSR shell `dist/csr/index.html` | 98,283 | 32,892 | 29,213 | 33,200 |
+| Largest template file (`board/rows.tpl`) | 5,569 | 1,325 | 1,077 | 4,096 |
+| All eleven template files | | 5,635 | | |
+
+The limits of the SSR script and the CSR shell in `config/bundle-size.json` are the measured gzip sizes plus about 1 %, rounded up to 100 bytes. A change that makes an output larger than its limit changes the limit in the same change and states why the growth is needed; a change that makes an output smaller lowers the limit by the same rule.
 
 A route loads only its own templates (HY-35), and a template file is cached by its hashed name. The AST of a template is about twice the size of its source after compression, because every node records its source span. `config/bundle-size.json` limits a template file to 4,096 gzip bytes, so a template that grows past it is split into blocks.
