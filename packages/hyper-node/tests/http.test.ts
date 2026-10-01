@@ -13,8 +13,8 @@ let server: Server;
 let base: string;
 
 async function start(options: { https?: boolean; bodyLimit?: number } = {}): Promise<void> {
-  const app = await new Fixture().app({ https: options.https ?? false });
-  server = app.server(new FileSessions({ directory, name: 'PHPSESSID' }), { bodyLimit: options.bodyLimit });
+  const app = await new Fixture().app({ https: options.https ?? false, ...(options.bodyLimit === undefined ? {} : { bodyLimit: options.bodyLimit }) });
+  server = app.server(new FileSessions({ directory, name: 'PHPSESSID' }));
   await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
   base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
 }
@@ -73,11 +73,16 @@ describe('App.server', () => {
     expect(response.endsWith('\r\n\r\nBad Request')).toBe(true);
   });
 
-  it('answers a body larger than the limit with 413', async () => {
+  it('answers a body larger than the limit of the application with 413 (HY-59)', async () => {
     await start({ bodyLimit: 10 });
     const response = await fetch(`${base}/add`, { method: 'POST', body: new URLSearchParams({ name: 'a'.repeat(20) }) });
     expect(response.status).toBe(413);
+    expect(await response.text()).toBe('Content Too Large');
     expect(response.headers.get('content-security-policy')).toBe("frame-ancestors 'self'");
+    // A body without Content-Length is counted while it is read.
+    const chunked = await raw(Buffer.from('POST /add HTTP/1.1\r\nHost: x\r\nConnection: close\r\nTransfer-Encoding: chunked\r\nContent-Type: text/plain\r\n\r\n8\r\n12345678\r\n8\r\n12345678\r\n0\r\n\r\n'));
+    expect(chunked.startsWith('HTTP/1.1 413 ')).toBe(true);
+    expect(readdirSync(directory)).toEqual([]);
   });
 
   it('sends no Content-Type without a body and one Cache-Control for a page (HY-52)', async () => {

@@ -55,6 +55,8 @@ app.bind('posts', () => new Posts('/srv/board/var/board.db'));
 | `basePath` | `/api` 같은 base path(HY-8). 기본값은 없음이다. |
 | `https` | TLS를 끝내는 프록시 뒤처럼 HTTPS를 선언한다. 이때 cookie는 `Secure`다(HY-45). |
 | `frameAncestors` | `frame-ancestors`의 source. 기본값은 `'self'`다(HY-45). |
+| `bodyLimit` | 가장 큰 요청 body의 바이트 수. 더 큰 body는 413을 받는다. 기본값은 8 MiB다(HY-59). |
+| `formTypes` | action과 `/_hyper/keep`이 받는 요청 body의 media type. `application/x-www-form-urlencoded`와 `multipart/form-data`이며, 다른 type은 415를 받는다. 기본값은 `['application/x-www-form-urlencoded']`다(HY-59). |
 | `log` | 처리하지 않은 오류의 log 줄을 받는다(HY-43). 기본값은 표준 오류에 쓴다. |
 
 `app.bind(key, factory)`는 애플리케이션 service를 등록한다. service는 처음 쓸 때 한 번 만든다. factory가 없는 key의 `services.get(key)`는 요청을 500으로 실패시킨다.
@@ -86,7 +88,7 @@ const sessions = new FileSessions({ directory: '/srv/board/var/sessions', name: 
 app.server(sessions, { files: '/srv/board/public' }).listen(8080, '127.0.0.1');
 ```
 
-`app.server(sessions, options)`는 `node:http` 서버를 반환한다. `options.bodyLimit`은 가장 큰 요청 body다(기본 8 MiB, 더 큰 body는 413을 받는다). `options.files`는 절대 디렉터리이며, PHP 내장 서버가 document root를 제공하듯 그 안의 파일을 지정한 `GET`과 `HEAD` 요청에 그 파일을 준다. ASCII 밖의 바이트가 있는 요청 대상처럼 `node:http`가 해석하지 못하는 요청은 평문 400을 받는다(HY-42).
+`app.server(sessions, options)`는 `node:http` 서버를 반환한다. 서버는 요청 body를 애플리케이션의 `bodyLimit`까지만 읽는다(HY-59). `options.files`는 절대 디렉터리이며, PHP 내장 서버가 document root를 제공하듯 그 안의 파일을 지정한 `GET`과 `HEAD` 요청에 그 파일을 준다. ASCII 밖의 바이트가 있는 요청 대상처럼 `node:http`가 해석하지 못하는 요청은 평문 400을 받는다(HY-42).
 
 `FileSessions({ directory, name, lifetime })`는 이 서버 process만 쓰는 기존 절대 디렉터리의 파일에 각 session을 저장한다. `name`은 session cookie 이름이고, `lifetime`은 session의 마지막 요청부터 session이 끝날 때까지의 초다(기본 1440, PHP `session.gc_maxlifetime`과 같다). store는 자기가 만든 식별자만 받아들이고, 요청이 session 데이터를 읽거나 쓸 때만 session을 시작하며, 한 session의 요청을 차례로 실행한다(HY-45). `sessions.collect()`는 끝난 session의 파일을 지운다. 서버는 원하는 주기로 이를 호출한다.
 

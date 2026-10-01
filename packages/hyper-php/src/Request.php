@@ -93,6 +93,25 @@ final class Request
         return preg_match('//u', $value) === 1;
     }
 
+    /**
+     * Returns the size of the body in bytes: its length, or the Content-Length header when that is larger, because
+     * PHP leaves the body empty when it is larger than post_max_size (HY-59).
+     */
+    public function bodySize(): int
+    {
+        $declared = $this->header('Content-Length') ?? '';
+
+        return max(strlen($this->body), preg_match('/^\d+$/D', $declared) === 1 ? (int) $declared : 0);
+    }
+
+    /** Returns the media type of the Content-Type header in lower case, without its parameters (HY-59). */
+    public function mediaType(): string
+    {
+        $type = $this->header('Content-Type') ?? '';
+
+        return strtolower(trim(substr($type, 0, strcspn($type, ';'))));
+    }
+
     /** Returns the value of a header, or null. */
     public function header(string $name): ?string
     {

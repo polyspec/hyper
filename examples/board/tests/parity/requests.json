@@ -15,6 +15,10 @@
     {"action": "compare", "method": "GET", "path": "/board/1", "currentPath": "/board"},
     {"action": "compare", "method": "GET", "path": "/board/create", "currentPath": "/board"},
     {"action": "compare", "method": "POST", "path": "/board/create", "currentPath": "/board", "form": {"title": "", "author": "", "body": "x"}},
+    {"action": "status", "method": "POST", "path": "/board/create", "form": {"_csrf": "wrong", "title": "t"}, "contentType": "text/plain", "pad": 8388608, "status": 413},
+    {"action": "status", "method": "POST", "path": "/board/create", "form": {"_csrf": "wrong", "title": "t"}, "contentType": "text/plain", "status": 415},
+    {"action": "status", "method": "POST", "path": "/_hyper/keep", "form": {"region": "notice", "path": "notice.closed", "value": "true"}, "contentType": "text/plain", "status": 415},
+    {"action": "status", "method": "POST", "path": "/board/create", "form": {"_csrf": "wrong", "title": "t"}, "status": 403},
     {"action": "status", "method": "GET", "path": "/board/999", "status": 404},
     {"action": "status", "method": "GET", "path": "/board/%ED%95%9C", "status": 404},
     {"action": "status", "method": "GET", "path": "/board/", "status": 404}

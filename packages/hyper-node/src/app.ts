@@ -1,5 +1,5 @@
 // Answers requests with documents, JSON and action redirects (HY-8, HY-10 to HY-19, HY-24 to HY-27, HY-40 to
-// HY-46, HY-50 to HY-54, HY-58).
+// HY-46, HY-50 to HY-54, HY-58, HY-59).
 import { timingSafeEqual } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { isAbsolute, join } from 'node:path';
@@ -53,6 +53,11 @@ export interface AppOptions<S extends object> {
   // Declares that the application is served over HTTPS, for example behind a TLS-terminating proxy (HY-45).
   https?: boolean;
   frameAncestors?: string;
+  // The largest request body in bytes; a larger body receives 413. The default is 8 MiB, PHP's post_max_size (HY-59).
+  bodyLimit?: number;
+  // The media types of the request bodies that actions and /_hyper/keep accept: application/x-www-form-urlencoded
+  // and multipart/form-data. The default is application/x-www-form-urlencoded (HY-59).
+  formTypes?: string[];
   // Receives the log line of an unhandled error (HY-43); the default writes it to the standard error.
   log?: (message: string) => void;
 }
@@ -68,6 +73,8 @@ export class App<S extends object = Record<string, never>> {
     readonly basePath: string,
     readonly https: boolean,
     readonly frameAncestors: string,
+    readonly bodyLimit: number,
+    private readonly formTypes: readonly string[],
     private readonly log: (message: string) => void,
   ) {
     this.routes = new Map(application.manifest.routes.map((route) => [route.name, route]));
@@ -80,6 +87,12 @@ export class App<S extends object = Record<string, never>> {
     if (basePath !== '' && (!basePath.startsWith('/') || basePath.endsWith('/'))) {
       throw new Error(`hyper: base path ${basePath} must start with / and must not end with /`);
     }
+    const bodyLimit = options.bodyLimit ?? 8 * 1024 * 1024;
+    if (!Number.isSafeInteger(bodyLimit) || bodyLimit < 1) throw new Error(`hyper: body limit ${bodyLimit} is not a positive number of bytes`);
+    const formTypes = options.formTypes ?? ['application/x-www-form-urlencoded'];
+    if (formTypes.length === 0 || new Set(formTypes).size !== formTypes.length || formTypes.some((type) => !FORM_TYPES.includes(type))) {
+      throw new Error('hyper: form types must be distinct values of application/x-www-form-urlencoded and multipart/form-data');
+    }
     for (const path of [options.manifest, options.templates.index, options.templates.root]) {
       if (!isAbsolute(path)) throw new Error(`hyper: ${path} is not an absolute path`);
     }
@@ -89,7 +102,7 @@ export class App<S extends object = Record<string, never>> {
     const application = createApplication(manifest, index, fetcher);
     checkHandlers(manifest, options.handlers);
     for (const route of manifest.routes) await application.templates.ensure(routeTemplates(manifest, route));
-    return new App(application, options.handlers, options.timezone, basePath, options.https ?? false, options.frameAncestors ?? "'self'", options.log ?? ((message) => process.stderr.write(`${message}\n`)));
+    return new App(application, options.handlers, options.timezone, basePath, options.https ?? false, options.frameAncestors ?? "'self'", bodyLimit, [...formTypes], options.log ?? ((message) => process.stderr.write(`${message}\n`)));
   }
 
   // Registers the factory of an application service.
@@ -126,6 +139,7 @@ export class App<S extends object = Record<string, never>> {
   }
 
   private async answer(request: Request, store: SessionStore): Promise<Response> {
+    if (request.bodySize() > this.bodyLimit) return Response.text(413, 'Content Too Large');
     if (!request.validInput()) return Response.text(400, 'Bad Request');
     const path = stripBasePath(request.path(), this.basePath);
     if (path === '/_hyper/keep') return this.keep(request, new Session(store));
@@ -147,6 +161,7 @@ export class App<S extends object = Record<string, never>> {
     try {
       if (request.method === 'GET') return await this.page(input);
       if (request.method !== 'POST' || handler.post === undefined) return Response.text(405, 'Method Not Allowed');
+      if (!this.formTypes.includes(request.mediaType())) return Response.text(415, 'Unsupported Media Type');
       if (!tokensEqual(request.csrfToken(), request.formString('_csrf'))) return Response.text(403, 'Forbidden');
       const result = await handler.post({ request, reply, services: this.services });
       if (!(result instanceof Result)) throw new Error(`hyper: POST action of route ${input.route.name} did not return a Result`);
@@ -174,6 +189,7 @@ export class App<S extends object = Record<string, never>> {
   // Stores a kept value of a `server` path in the session (HY-40).
   private keep(request: Request, session: Session): Response {
     if (request.method !== 'POST') return Response.text(405, 'Method Not Allowed');
+    if (!this.formTypes.includes(request.mediaType())) return Response.text(415, 'Unsupported Media Type');
     if (!tokensEqual(session.csrfToken(), request.formString('_csrf'))) return Response.text(403, 'Forbidden');
     const name = request.formString('region');
     const path = request.formString('path');
@@ -194,6 +210,8 @@ export class App<S extends object = Record<string, never>> {
     return new Response(204, {}, '');
   }
 }
+
+const FORM_TYPES = ['application/x-www-form-urlencoded', 'multipart/form-data'];
 
 // Compares two tokens in constant time for strings of the same length.
 function tokensEqual(known: string, given: string): boolean {

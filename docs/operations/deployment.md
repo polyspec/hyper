@@ -36,6 +36,7 @@ Every page path returns the same empty shell, so search crawlers that do not run
 ## Server settings
 
 - Set `display_errors=Off` in the PHP configuration (`php.ini`, PHP-FPM pool, or `php -d display_errors=0`). PHP writes startup warnings, such as an exceeded `max_input_vars`, before the application runs. An exception inside the application answers 500 without details and is logged (HY-43).
+- Set `post_max_size` to the body limit of the application or more (8 MiB, PHP's default `8M`, by default), and set `enable_post_data_reading=Off` when the application accepts `multipart/form-data`; `App::run` fails otherwise (HY-59).
 - The session cookie is `HttpOnly` and `SameSite=Lax`, and `Secure` on HTTPS (HY-45). Behind a CDN that terminates TLS, PHP receives plain HTTP: open the application with `https: true` (the example reads `BOARD_HTTPS=1`) so that the cookie stays `Secure`.
 - Every response carries `Content-Security-Policy: frame-ancestors 'self'` (HY-45). `App::open(frameAncestors: ...)` changes the sources; the example reads `BOARD_FRAME_ANCESTORS`. A static shell on S3 needs the same header from a CloudFront response headers policy, because `frame-ancestors` has no effect in a `<meta>` policy.
 

@@ -10,6 +10,9 @@ export interface RequestInit {
   target: string;
   headers?: Record<string, string | string[] | undefined>;
   body?: Uint8Array;
+  // The size of the body that the server received, when it stopped reading a body larger than the limit (HY-59);
+  // the default is the length of the body.
+  bodySize?: number;
   https?: boolean;
 }
 
@@ -17,6 +20,7 @@ interface State {
   method: string;
   path: string;
   headers: Map<string, string>;
+  bodySize: number;
   rawQuery: string;
   query: Fields;
   form: Fields;
@@ -38,11 +42,14 @@ export class Request {
       if (value !== undefined) headers.set(name.toLowerCase(), Array.isArray(value) ? value.join(', ') : value);
     }
     const rawQuery = Request.targetQuery(init.target);
-    const form = formFields(headers.get('content-type') ?? '', init.body ?? new Uint8Array());
+    const body = init.body ?? new Uint8Array();
+    const form = formFields(headers.get('content-type') ?? '', body);
+    const declared = headers.get('content-length') ?? '';
     return new Request({
       method: init.method.toUpperCase(),
       path: Request.targetPath(init.target),
       headers,
+      bodySize: Math.max(init.bodySize ?? body.byteLength, /^[0-9]+$/.test(declared) ? Number(declared) : 0),
       rawQuery,
       query: parseUrlEncoded(rawQuery),
       form,
@@ -108,6 +115,17 @@ export class Request {
   validInput(): boolean {
     const current = this.state.headers.get('hx-current-url');
     return /^[\x21-\x7e]*$/.test(this.state.path) && (current === undefined || utf8(bytesOf(current)) !== null) && this.state.query.valid && this.state.form.valid;
+  }
+
+  // Returns the size of the body in bytes: its length, or the Content-Length header when that is larger (HY-59).
+  bodySize(): number {
+    return this.state.bodySize;
+  }
+
+  // Returns the media type of the Content-Type header in lower case, without its parameters (HY-59).
+  mediaType(): string {
+    const type = this.header('Content-Type') ?? '';
+    return type.slice(0, firstOf(type, ';')).trim().toLowerCase();
   }
 
   // Returns the value of a header as text whose characters are its bytes, or null.

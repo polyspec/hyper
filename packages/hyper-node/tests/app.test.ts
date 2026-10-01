@@ -289,6 +289,42 @@ describe('App', () => {
     expect(fixture.counter.count).toBe(0);
   });
 
+  it('checks the body limit, the media type and the token in this order (HY-59)', async () => {
+    const token = await fixture.token();
+    const limit = { bodyLimit: 64 };
+    const form = { 'Content-Type': 'application/x-www-form-urlencoded' };
+    const text = { 'Content-Type': 'text/plain' };
+    const large = `_csrf=wrong&name=${'a'.repeat(48)}`;
+    expect(large.length).toBe(65);
+    const send = (method: string, target: string, headers: Record<string, string>, body: string, options: { bodyLimit?: number }) => fixture.handle({ method, target, headers, body }, options);
+    const tooLarge = await send('POST', '/add', text, large, limit);
+    expect(tooLarge.status).toBe(413);
+    expect(tooLarge.body).toBe('Content Too Large');
+    expect((await send('GET', '/', text, large, limit)).status).toBe(413);
+    expect((await send('POST', '/_hyper/keep', text, large, limit)).status).toBe(413);
+    expect((await send('POST', '/add', { ...form, 'Content-Length': '65' }, '', limit)).status).toBe(413);
+    expect((await send('POST', '/add', text, '_csrf=wrong&name=a', limit)).status).toBe(415);
+    const unsupported = await send('POST', '/add', { 'Content-Type': 'multipart/form-data; boundary=x' }, `--x\r\nContent-Disposition: form-data; name="_csrf"\r\n\r\n${token}\r\n--x--\r\n`, {});
+    expect(unsupported.status).toBe(415);
+    expect(unsupported.body).toBe('Unsupported Media Type');
+    expect((await send('POST', '/_hyper/keep', { 'Content-Type': '' }, '_csrf=wrong', {})).status).toBe(415);
+    expect((await send('POST', '/add', form, `_csrf=wrong&name=${'a'.repeat(47)}`, limit)).status).toBe(403);
+    expect(fixture.counter.actions).toBe(0);
+    expect((await send('POST', '/add', { 'Content-Type': 'Application/X-WWW-Form-Urlencoded; charset=UTF-8' }, `_csrf=${token}&name=a`, {})).status).toBe(303);
+  });
+
+  it('takes the accepted form types as an option (HY-59)', async () => {
+    const token = await fixture.token();
+    const body = `--x\r\nContent-Disposition: form-data; name="_csrf"\r\n\r\n${token}\r\n--x\r\nContent-Disposition: form-data; name="name"\r\n\r\na\r\n--x--\r\n`;
+    const multipart = { 'Content-Type': 'multipart/form-data; boundary=x' };
+    expect((await fixture.handle({ method: 'POST', target: '/add', headers: multipart, body }, { formTypes: ['application/x-www-form-urlencoded', 'multipart/form-data'] })).status).toBe(303);
+    expect((await fixture.post('/add', { _csrf: token, name: 'a' }, {}, '')).status).toBe(303);
+    expect((await fixture.handle({ method: 'POST', target: '/add', body: `_csrf=${token}&name=a` }, { formTypes: ['multipart/form-data'] })).status).toBe(415);
+    for (const options of [{ formTypes: [] }, { formTypes: ['text/plain'] }, { formTypes: ['multipart/form-data', 'multipart/form-data'] }, { bodyLimit: 0 }, { bodyLimit: 1.5 }]) {
+      await expect(fixture.app(options)).rejects.toThrow('hyper:');
+    }
+  });
+
   it('answers a bad request loader and action with 400 (HY-58)', async () => {
     const page = await fixture.get('/items/unreadable', JSON_REGION);
     expect(page.status).toBe(400);

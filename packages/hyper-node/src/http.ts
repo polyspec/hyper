@@ -10,8 +10,6 @@ import { Request } from './request.js';
 import { Response } from './response.js';
 
 export interface ServerOptions {
-  // The largest request body in bytes; a larger body receives 413. The default is 8 MiB, PHP's post_max_size.
-  bodyLimit?: number;
   // An absolute directory of public files. A GET or HEAD request whose path names a file in it receives the file,
   // as the PHP built-in server serves its document root; every other request goes to the application.
   files?: string;
@@ -30,11 +28,10 @@ const CONTENT_TYPES: Record<string, string> = {
 // Returns a server that answers every request with the application. A request whose start line or headers
 // node:http cannot parse, such as a request target with a byte outside ASCII (HY-42), receives a plain 400.
 export function createServer<S extends object>(app: App<S>, sessions: FileSessions, options: ServerOptions = {}): Server {
-  const limit = options.bodyLimit ?? 8 * 1024 * 1024;
   const files = options.files;
   if (files !== undefined && (!isAbsolute(files) || !statSync(files).isDirectory())) throw new Error(`hyper: ${files} is not an absolute directory`);
   const server = createHttpServer((incoming, outgoing) => {
-    serve(app, sessions, limit, files, incoming, outgoing).catch((error: unknown) => {
+    serve(app, sessions, files, incoming, outgoing).catch((error: unknown) => {
       app.fail(error);
       if (!outgoing.headersSent) write(outgoing, app.frame(Response.text(500, 'Internal Server Error')));
       else outgoing.destroy();
@@ -53,10 +50,10 @@ export function createServer<S extends object>(app: App<S>, sessions: FileSessio
   return server;
 }
 
-async function serve<S extends object>(app: App<S>, sessions: FileSessions, limit: number, files: string | undefined, incoming: IncomingMessage, outgoing: ServerResponse): Promise<void> {
+async function serve<S extends object>(app: App<S>, sessions: FileSessions, files: string | undefined, incoming: IncomingMessage, outgoing: ServerResponse): Promise<void> {
   const file = files === undefined ? null : publicFile(files, incoming);
   if (file === null) {
-    write(outgoing, await answer(app, sessions, limit, incoming));
+    write(outgoing, await answer(app, sessions, incoming));
     return;
   }
   outgoing.writeHead(200, { 'Content-Type': CONTENT_TYPES[extname(file)] ?? 'application/octet-stream', 'Content-Length': String(statSync(file).size) });
@@ -64,11 +61,11 @@ async function serve<S extends object>(app: App<S>, sessions: FileSessions, limi
   else createReadStream(file).pipe(outgoing);
 }
 
-async function answer<S extends object>(app: App<S>, sessions: FileSessions, limit: number, incoming: IncomingMessage): Promise<Response> {
-  const body = await readBody(incoming, limit);
-  if (body === null) return app.frame(Response.text(413, 'Content Too Large'));
+async function answer<S extends object>(app: App<S>, sessions: FileSessions, incoming: IncomingMessage): Promise<Response> {
+  // The application answers a body larger than its limit with 413 (HY-59); the server reads no more of it.
+  const { body, size } = await readBody(incoming, app.bodyLimit);
   const https = (incoming.socket as TLSSocket).encrypted === true;
-  const request = Request.from({ method: incoming.method ?? 'GET', target: incoming.url ?? '/', headers: incoming.headers, body, https });
+  const request = Request.from({ method: incoming.method ?? 'GET', target: incoming.url ?? '/', headers: incoming.headers, body, bodySize: size, https });
   const session = await sessions.open(request.cookie(sessions.name));
   let response: Response;
   try {
@@ -98,16 +95,16 @@ function publicFile(files: string, incoming: IncomingMessage): string | null {
   }
 }
 
-// Reads the request body, or returns null when it is larger than the limit; the rest of a larger body is read and
-// discarded, so that the response can be sent.
-function readBody(incoming: IncomingMessage, limit: number): Promise<Uint8Array | null> {
+// Reads the request body and its size. A body larger than the limit gives no bytes and the size read so far, or the
+// Content-Length; the rest of it is read and discarded, so that the response can be sent.
+function readBody(incoming: IncomingMessage, limit: number): Promise<{ body: Uint8Array; size: number }> {
   return new Promise((resolve, reject) => {
     const chunks: Buffer[] = [];
     let size = 0;
     const discard = (): void => {
       incoming.removeListener('data', collect);
       incoming.resume();
-      resolve(null);
+      resolve({ body: new Uint8Array(), size });
     };
     const collect = (chunk: Buffer): void => {
       size += chunk.length;
@@ -119,7 +116,7 @@ function readBody(incoming: IncomingMessage, limit: number): Promise<Uint8Array 
       return;
     }
     incoming.on('data', collect);
-    incoming.on('end', () => resolve(Buffer.concat(chunks)));
+    incoming.on('end', () => resolve({ body: Buffer.concat(chunks), size }));
     incoming.on('error', reject);
   });
 }
