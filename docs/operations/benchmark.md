@@ -51,7 +51,7 @@ Measured on 2026-10-02 at commit "Check the manifest in the build and the server
 | 100 | 1.163 | 0.315 | 0.220 | 0.016 | 14,975 | 9,232 |
 | 1,000 | 12.778 | 3.648 | 2.276 | 0.168 | 149,980 | 92,935 |
 
-The `Bind::value` and `json_encode` columns are from the generated run; the native run measured 2.404 ms and 0.190 ms for 1,000 rows.
+The `Bind::value` and `json_encode` columns are from the generated run; the native run measured 2.404 ms and 0.190 ms for 1,000 rows. Since commit "Lower the bundle limits and drop the repeated data model check of documents" the server runs `Bind::value` only for JSON responses, because rendering binds every value of a document (HY-44); the request table above was measured before that change. A run after it (load average 15) gave a document HTML p50 for `/board` of 0.357 ms generated and 0.247 ms native; with a different machine load and 10-row pages, where the check cost about 0.02 ms, the difference cannot be attributed to the change.
 
 ### Browser
 
@@ -101,7 +101,7 @@ CSR loads 7 template files for `/board`; the slowest took 3.6 ms from the local 
 
 - **Server:** a region JSON response costs about a quarter of a document with the generated program and about a third with the native extension, because the browser renders it.
 - **PHP rendering:** for 1,000 rows the generated program renders in 12.8 ms and the native extension in 3.6 ms, about the speed of the browser engine (3.3 ms). The earlier PHP AST interpreter took 16.7 ms on an idle machine (2026-10-01); this comparison crosses machine loads and is only indicative.
-- **Data model check:** `Bind::value` (HY-44) takes 2.3 to 2.4 ms for 1,000 rows, two thirds of the native rendering time. The native extension binds the same values again when it renders, so the check may repeat work; it is a candidate for improvement, not measured further yet.
+- **Data model check:** `Bind::value` (HY-44) takes 2.3 to 2.4 ms for 1,000 rows, two thirds of the native rendering time. Rendering binds the same values, so for documents the check repeated work; commit "Lower the bundle limits and drop the repeated data model check of documents" removed it from the document path and kept it for JSON.
 - **First screen:** SSR shows it about 2.7 times as fast as CSR, because CSR requests JSON and template files after the shell.
 - **`hy-set` at 1,000 rows:** the change takes 23 to 27 ms of script. The htmx `innerMorph` swap takes 14 to 16 ms of it, `htmx.process` about 3 ms, the template engine and HTML parsing about 3 ms each, and hyper 0.3 ms. htmx is outside the scope of this project's changes. No task exceeded 50 ms in this run.
 - **Memory:** DOM nodes and event listeners stay constant over 200 cycles. The heap growth after the first 50 cycles consists of the DevTools network recording, compiled code and the `MediaQuerySet` objects that Chromium 153 keeps for inserted `<thead>` elements; it does not come from the application.
