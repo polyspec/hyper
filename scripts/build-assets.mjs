@@ -14,7 +14,7 @@ import { cpSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } f
 import { join } from 'node:path';
 import { parseArgs } from 'node:util';
 import { build } from 'esbuild';
-import { sha256, writeTemplateFiles } from './template-files.mjs';
+import { loadPackage, sha256, writeTemplateFiles } from './template-files.mjs';
 
 const { values } = parseArgs({ options: { app: { type: 'string' }, api: { type: 'string' } } });
 if (!values.app || !values.api) throw new Error('--app and --api are required');
@@ -24,6 +24,8 @@ const buildDir = join(app, 'build');
 const assetsDir = join(app, 'public', 'assets');
 const templateFilesDir = join(assetsDir, 'templates');
 const csrDir = join(app, 'dist', 'csr');
+// The browser does not check the manifest that the bundle contains, so the build checks it before it writes anything (HY-2).
+(await loadPackage()).checkManifest(JSON.parse(readFileSync(join(app, 'app', 'app.json'), 'utf8')));
 const index = await writeTemplateFiles({ templates: templatesDir, output: templateFilesDir, urlPrefix: '/assets/templates' });
 mkdirSync(buildDir, { recursive: true });
 writeFileSync(join(buildDir, 'templates.index.json'), `${JSON.stringify(index, null, 2)}\n`);

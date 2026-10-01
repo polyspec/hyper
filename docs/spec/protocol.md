@@ -24,7 +24,7 @@ This document defines the application manifest, routing, rendering, the requests
 }
 ```
 
-- **HY-2** `regions` and `routes` are ordered lists. Region names and route names are unique. A region name matches `[A-Za-z][A-Za-z0-9_-]*` and is not `layout`, `title` or `data`. Exactly one region has `"page": true` and no `template`; every other region has a `template` and a list of used topics. A route with `"post": true` accepts a `POST` action.
+- **HY-2** `regions` and `routes` are ordered lists. Region names and route names are unique. A region name matches `[A-Za-z][A-Za-z0-9_-]*` and is not `layout`, `title` or `data`. Exactly one region has `"page": true` and no `template`; every other region has a `template` and a list of used topics. A route with `"post": true` accepts a `POST` action. A server checks its manifest against these rules when it starts, and the asset build checks the manifest before it writes the client bundle; the browser does not check the manifest of its bundle again.
 - **HY-3** The layout renders the title definition inside `<title>` with `{# title}`, the data definition with `{# data}` (HY-31), and each region with `{# name}` inside an element whose `id` is the region name, for example `<main id="content">{# content}</main>`. A region placement has no block arguments. The browser finds a region element by its `id`; no other marker exists.
 
 ## Routing

@@ -4,7 +4,7 @@ import { timingSafeEqual } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { isAbsolute, join } from 'node:path';
 import type { Server } from 'node:http';
-import { createApplication, keptPaths, routeTemplates, stripBasePath, type Application, type Manifest, type RouteDeclaration, type TemplateIndex } from '@polyspec/hyper';
+import { checkManifest, createApplication, keptPaths, routeTemplates, stripBasePath, type Application, type Manifest, type RouteDeclaration, type TemplateIndex } from '@polyspec/hyper';
 import type { Template } from '@polyspec/template/render';
 import type { FileSessions } from './file-sessions.js';
 import { createServer, type ServerOptions } from './http.js';
@@ -83,7 +83,7 @@ export class App<S extends object = Record<string, never>> {
     for (const path of [options.manifest, options.templates.index, options.templates.root]) {
       if (!isAbsolute(path)) throw new Error(`hyper: ${path} is not an absolute path`);
     }
-    const manifest = JSON.parse(readFileSync(options.manifest, 'utf8')) as Manifest;
+    const manifest = checkManifest(JSON.parse(readFileSync(options.manifest, 'utf8')) as Manifest);
     const index = JSON.parse(readFileSync(options.templates.index, 'utf8')) as TemplateIndex;
     const fetcher = async (url: string): Promise<Template> => JSON.parse(readFileSync(join(options.templates.root, url), 'utf8')) as Template;
     const application = createApplication(manifest, index, fetcher);
