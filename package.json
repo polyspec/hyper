@@ -1,0 +1,26 @@
+{
+  "name": "@polyspec/hyper-workspace",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Region protocol that renders template language regions in the browser with htmx",
+  "type": "module",
+  "workspaces": [
+    "packages/hyper-js"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=26"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "@types/node": "26.6.3",
+    "esbuild": "0.28.2",
+    "typescript": "7.0.2",
+    "vitest": "5.0.3"
+  },
+  "allowScripts": {
+    "esbuild@0.27.2": true,
+    "esbuild@0.28.2": true,
+    "fsevents@2.3.3": true
+  }
+}

@@ -1,0 +1,13 @@
+# Dependencies
+
+[한국어](dependencies.ko.md).
+
+Every dependency uses the latest stable release that supports the declared runtime range: Node.js 26 and PHP 8.2. An exact pin records its reason and the condition that removes it.
+
+| Dependency | Version | Kind | Reason | Removal condition |
+|---|---|---|---|---|
+| `htmx.org` | `4.0.0` exact | runtime, bundled into the client script | The region protocol uses htmx 4 hooks, request context fields and swap behavior that were verified against the 4.0.0 source. npm tags 4.0.0 as `next` and keeps 2.x as `latest`, so an unpinned range would select htmx 2. | npm tags an htmx 4 release as `latest`; then use a `^4` range and rerun `make check`. |
+| `@playwright/test`, `@types/node`, `esbuild`, `typescript`, `vitest` | exact | development | The workspace pins exact development tool versions so that `npm ci` installs the same tools. | Update to each latest stable release and rerun `make check`. |
+| `laravel/pint` | `^1.0`, resolves to 1.30.4 | development | Pint 1.31 and later require PHP 8.3; the Composer platform is PHP 8.2. | The supported PHP range starts at 8.3. |
+| `phpunit/phpunit` | `^11.5` | development | PHPUnit 12 and later require PHP 8.3. | The supported PHP range starts at 8.3. |
+| `@polyspec/template`, `polyspec/template` | local path | runtime | The template packages are used from `../template` because they are not published. Composer copies `polyspec/template` (`symlink: false`) because installing a linked package sets the executable bit on its `bin` file and modifies the template repository. After a change in the template PHP package, run `composer update polyspec/template` in both Composer projects. | The template packages are published to npm and Packagist. |

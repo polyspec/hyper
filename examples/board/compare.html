@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SSR / CSR 비교</title>
+<style>
+  body { margin: 0; font-family: system-ui, sans-serif; background: #f6f7f9; }
+  header { display: flex; gap: 16px; align-items: center; padding: 10px 16px; background: #1d2430; color: #fff; }
+  header form { display: flex; gap: 6px; }
+  header input { width: 220px; font: inherit; }
+  #status { padding: 2px 10px; border-radius: 10px; background: #888; }
+  #status.same { background: #1f8a4c; }
+  #status.different { background: #b42318; }
+  .frames { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 8px; height: calc(100vh - 60px); box-sizing: border-box; }
+  .frame { display: flex; flex-direction: column; min-height: 0; }
+  .frame h2 { margin: 0 0 4px; font-size: 14px; }
+  .frame small { color: #5b6573; font-weight: normal; }
+  iframe { flex: 1; width: 100%; border: 1px solid #d9dde3; background: #fff; }
+</style>
+</head>
+<body>
+<header>
+  <strong>SSR / CSR 비교</strong>
+  <form id="open">
+    <input name="path" value="/board" aria-label="경로">
+    <button>두 화면 열기</button>
+  </form>
+  <span id="status">대기</span>
+</header>
+<div class="frames">
+  <section class="frame">
+    <h2>SSR <small>PHP가 tpl을 조합한 HTML, 이후 JSON</small> <small id="ssr-path"></small></h2>
+    <iframe id="ssr" title="SSR"></iframe>
+  </section>
+  <section class="frame">
+    <h2>CSR <small>정적 index.html + /api JSON</small> <small id="csr-path"></small></h2>
+    <iframe id="csr" title="CSR"></iframe>
+  </section>
+</div>
+<script>
+  // The SSR origin is given as ?ssr=<origin>; the CSR page is served by the same origin as this page.
+  const ssrOrigin = new URLSearchParams(location.search).get('ssr');
+  const reports = { ssr: null, csr: null };
+  const status = document.getElementById('status');
+
+  function open(path) {
+    reports.ssr = reports.csr = null;
+    show();
+    document.getElementById('ssr').src = ssrOrigin + path;
+    document.getElementById('csr').src = location.origin + path;
+  }
+
+  function show() {
+    for (const mode of ['ssr', 'csr']) document.getElementById(`${mode}-path`).textContent = reports[mode]?.path ?? '';
+    status.className = '';
+    if (!reports.ssr || !reports.csr) {
+      status.textContent = '대기';
+    } else if (reports.ssr.path !== reports.csr.path) {
+      status.textContent = '경로 다름';
+    } else if (reports.ssr.body === reports.csr.body) {
+      status.textContent = 'body 일치';
+      status.className = 'same';
+    } else {
+      status.textContent = 'body 불일치';
+      status.className = 'different';
+    }
+  }
+
+  window.addEventListener('message', (event) => {
+    if (event.data?.type !== 'hyper-body') return;
+    reports[event.data.mode] = event.data;
+    show();
+  });
+  document.getElementById('open').addEventListener('submit', (event) => {
+    event.preventDefault();
+    open(new FormData(event.target).get('path'));
+  });
+  open('/board');
+</script>
+</body>
+</html>
