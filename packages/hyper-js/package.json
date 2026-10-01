@@ -1,0 +1,19 @@
+{
+  "name": "@polyspec/hyper",
+  "version": "0.0.1",
+  "description": "Browser extension for htmx that renders region JSON with template language templates",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sideEffects": false,
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@polyspec/template": "file:../../../template/packages/template-ts",
+    "htmx.org": "4.0.0"
+  }
+}

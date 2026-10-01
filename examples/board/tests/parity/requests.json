@@ -1,0 +1,18 @@
+{
+  "steps": [
+    { "action": "compare", "method": "GET", "path": "/", "currentPath": "/board" },
+    { "action": "compare", "method": "GET", "path": "/board", "currentPath": "/" },
+    { "action": "send", "method": "POST", "path": "/board/create", "form": { "title": "<첫> & \"글\"", "author": "김작가", "body": "첫 줄\n<둘째> 줄" } },
+    { "action": "send", "method": "POST", "path": "/board/create", "form": { "title": "두 번째 글", "author": "이작가", "body": "본문" } },
+    { "action": "send", "method": "GET", "path": "/" },
+    { "action": "compare", "method": "GET", "path": "/board", "currentPath": "/" },
+    { "action": "compare", "method": "GET", "path": "/board?page=1", "currentPath": "/board" },
+    { "action": "compare", "method": "GET", "path": "/board/1", "currentPath": "/board" },
+    { "action": "compare", "method": "GET", "path": "/board/2", "currentPath": "/board/1" },
+    { "action": "compare", "method": "GET", "path": "/board/create", "currentPath": "/board" },
+    { "action": "compare", "method": "POST", "path": "/board/create", "currentPath": "/board", "form": { "title": "", "author": "", "body": "x" } },
+    { "action": "status", "method": "GET", "path": "/board/999", "status": 404 },
+    { "action": "status", "method": "GET", "path": "/board/%ED%95%9C", "status": 404 },
+    { "action": "status", "method": "GET", "path": "/board/", "status": 404 }
+  ]
+}
