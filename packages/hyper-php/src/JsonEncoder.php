@@ -13,9 +13,10 @@ final class JsonEncoder
      * @param array<string, string> $params
      * @param array<string, mixed> $shared
      * @param array<string, array<string, mixed>> $regions region data by region name
+     * @param array<string, array<string, mixed>> $kept kept values by region name and path
      * @return array<string, mixed>
      */
-    public static function value(string $timezone, string $route, array $params, array $shared, array $regions): array
+    public static function value(string $timezone, string $route, array $params, array $shared, array $regions, array $kept = []): array
     {
         $encoded = [];
         foreach ($regions as $name => $data) {
@@ -28,6 +29,7 @@ final class JsonEncoder
             'params' => self::map($params),
             'shared' => self::map($shared),
             'regions' => self::map($encoded),
+            'kept' => self::map($kept),
         ];
     }
 

@@ -15,7 +15,7 @@ export const manifest: Manifest = {
     { name: 'home', path: '/', title: 'Home', template: 'page.tpl' },
     { name: 'item', path: '/items/{id}', title: 'Item', template: 'item.tpl' },
     { name: 'when', path: '/when', title: 'When', template: 'when.tpl' },
-    { name: 'list', path: '/list', title: 'List', template: 'list.tpl', regions: [{ name: 'rows', template: 'rows.tpl', keep: { 'items.0.open': 'server', 'items.1.open': 'localStorage', flag: 'cookie', tab: 'sessionStorage' } }] },
+    { name: 'list', path: '/list', title: 'List', template: 'list.tpl', regions: [{ name: 'rows', template: 'rows.tpl', keep: { 'items.0.open': 'server', 'items.1.open': 'localStorage', flag: 'cookie', tab: 'sessionStorage', tags: 'cookie', marks: 'localStorage' } }] },
   ],
 };
 
@@ -28,7 +28,8 @@ export const sources: Record<string, string> = {
   'part.tpl': '<u>part</u>',
   'when.tpl': '{= date(at, "Y-m-d H:i")}',
   'list.tpl': '<h1>{= heading}</h1><ul id="rows" hy-region>{# rows}</ul>',
-  'rows.tpl': '{@ r = items}<li{? r.open} class="open"{/}>{= r.name}</li>{/}',
+  // A loop over each item of tags and marks fails for an item that is not a list, a map or null.
+  'rows.tpl': '{@ r = items}<li{? r.open} class="open"{/}>{= r.name}</li>{/}{@ t = tags}{@ x = t}{= x}{/}{/}{@ t = marks}{@ x = t}{= x}{/}{/}',
   [DATA_TEMPLATE_NAME]: DATA_TEMPLATE_SOURCE,
 };
 
@@ -49,4 +50,12 @@ export async function loadedApplication(): Promise<Application> {
   const app = testApplication();
   await app.templates.ensure(Object.keys(sources));
   return app;
+}
+
+// Creates an application whose template fetcher always fails.
+export function testApplicationFailing(): Application {
+  const index: TemplateIndex = Object.fromEntries(Object.keys(sources).map((name) => [name, { url: `/t/${name}`, deps: deps[name] ?? [] }]));
+  return createApplication(manifest, index, async () => {
+    throw new Error('404');
+  });
 }

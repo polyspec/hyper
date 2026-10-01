@@ -14,7 +14,7 @@ final class ResultTest extends TestCase
     /** @return iterable<string, array{string}> */
     public static function rejected(): iterable
     {
-        foreach (['', 'board', '//evil.example', '/\\evil.example', "/\t/evil.example", "/ok\r\nX-Injected: 1", '/a b', "/a\x00", "/a\u{85}", "/a\xFF", '/a\\b'] as $location) {
+        foreach (['', 'board', '//evil.example', '/\\evil.example', "/\t/evil.example", "/ok\r\nX-Injected: 1", '/a b', "/a\x00", "/a\u{85}", "/a\xFF", '/a\\b', '/.//evil.example', '/a/..//evil.example', '/%2E//evil.example', '/a/%2e%2E/b', '/a/.', '/./b?x=1'] as $location) {
             yield bin2hex($location) => [$location];
         }
     }
@@ -30,5 +30,6 @@ final class ResultTest extends TestCase
     {
         self::assertSame('/board?page=2', Result::redirect('/board?page=2')->location);
         self::assertSame('/', Result::redirect('/')->location);
+        self::assertSame('/a.b/..c/.d?x=..', Result::redirect('/a.b/..c/.d?x=..')->location);
     }
 }

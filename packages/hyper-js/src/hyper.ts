@@ -1,24 +1,29 @@
 import { bind, parseJson, type ListValue, type MapValue, type Value } from '@polyspec/template/render';
-import { copyValue, decodeResponse, renderDocument, renderRegion, requireMap, toHtml, type Application, type DecodedResponse } from './response.js';
+import { applyRegionKept, copyValue, decodeResponse, renderDocument, renderRegion, requireMap, toHtml, type Application, type DecodedResponse } from './response.js';
 import { stripBasePath } from './router.js';
 import { routeTemplates } from './templates.js';
 import { keptPaths, type RouteDeclaration } from './manifest.js';
-import { applyKept, browserStorage, valueToJson, type KeepStorage } from './keep.js';
+import { browserStorage, valueToJson, type KeepStorage } from './keep.js';
 
 // The htmx operations that the browser code uses.
 export interface HtmxApi {
   process(element: Element): void;
   swap(ctx: { text: string; target: Element; swap: string; sourceElement: Element }): Promise<unknown>;
+  config: { defaultTimeout: number };
+  parseInterval(value: string): number;
 }
 
 // The part of an htmx 4 request context that the extension reads and writes.
 export interface RequestContext {
   target?: unknown;
-  request: { action: string; method?: string; headers: Record<string, string> };
+  request: { action: string; method?: string; headers: Record<string, string>; abort?: () => void; timeout?: string | number | null };
   response?: { raw?: { url: string }; status?: number; headers: { get(name: string): string | null } };
   text?: string;
   fetch?: (url: string, init: unknown) => Promise<Response>;
   hyperRegion?: string;
+  // when the region request was configured and when it was aborted (HY-47)
+  hyperStart?: number;
+  hyperAborted?: number;
 }
 
 export interface HookDetail {
@@ -45,11 +50,12 @@ export interface DocumentAdapter {
   fail(status: string): void;
 }
 
-// The data of the last rendered response (HY-32).
+// The data of the last rendered response (HY-32): the loader data and the region data that rendered.
 interface Held {
   route: RouteDeclaration;
   timezone: string;
   shared: MapValue;
+  loader: MapValue;
   regions: MapValue;
 }
 
@@ -75,10 +81,12 @@ export interface HyperOptions {
   currentUrl?: () => string;
 }
 
-// A server kept value whose saving has not completed, with the number of its change (HY-39).
+// A server kept value whose saving has not completed, with the number of its change and the number of
+// the change whose save is in flight (HY-39).
 interface Pending {
   value: Value;
   change: number;
+  sending: number | null;
 }
 
 // Holds region data and renders regions from it (HY-29 to HY-39, HY-47).
@@ -88,6 +96,8 @@ export class Hyper {
   // server kept values whose saving has not completed, by region and path (HY-38, HY-39)
   private readonly pending = new Map<string, Map<string, Pending>>();
   private changes = 0;
+  // the end of the last queued render, set or hy-set call (HY-33)
+  private queue: Promise<void> = Promise.resolve();
   private location = 0;
   private locationAbort: AbortController | null = null;
   private readonly element: (id: string) => Element | null;
@@ -105,26 +115,52 @@ export class Hyper {
   // Holds the data of a rendered response. A replacing hold drops every region of the earlier
   // response; otherwise only the regions of the earlier route are replaced (HY-32).
   hold(decoded: DecodedResponse, replace = false): void {
+    const loader: MapValue = new Map();
     const regions: MapValue = new Map();
     if (this.held !== null && !replace) {
       const dropped = new Set([this.app.page, ...(this.held.route.regions ?? []).map((region) => region.name)]);
       for (const [name, data] of this.held.regions) if (!dropped.has(name)) regions.set(name, data);
+      for (const [name, data] of this.held.loader) if (!dropped.has(name)) loader.set(name, data);
     }
     for (const [name, data] of decoded.regions) regions.set(name, data);
-    this.held = { route: decoded.route, timezone: decoded.timezone, shared: decoded.shared, regions };
+    for (const [name, data] of decoded.loader) loader.set(name, data);
+    this.held = { route: decoded.route, timezone: decoded.timezone, shared: decoded.shared, loader, regions };
   }
 
   // Holds the data that the server embedded in the document, replacing all held data, starts loading
-  // the templates of its route, and renders regions that browser kept values change (HY-31, HY-32, HY-38).
+  // the templates of its route, and renders regions that browser kept values change. A region that does
+  // not render with its kept values renders with its loader data. A failure marks the region, or the body
+  // when the embedded data cannot be read, and does not reject (HY-31, HY-32, HY-38, HY-47).
   async holdEmbedded(text: string, path: string): Promise<void> {
-    const decoded = decodeResponse(this.app, parseJson(text), path);
-    const changed = this.applyBrowserKept(decoded.regions);
+    let decoded: DecodedResponse;
+    try {
+      decoded = decodeResponse(this.app, parseJson(text), path);
+    } catch {
+      this.page.fail('0');
+      return;
+    }
+    const changed = this.applyBrowserKept(decoded);
     this.hold(decoded, true);
-    const held = this.held;
-    await this.app.templates.ensure(routeTemplates(this.app.manifest, decoded.route));
+    const held = this.held!;
+    try {
+      await this.app.templates.ensure(routeTemplates(this.app.manifest, decoded.route));
+    } catch {
+      if (this.held === held) for (const region of changed) markError(this.element(region), '0');
+      return;
+    }
     for (const region of changed) {
       if (this.held !== held) return;
-      await this.renderHeld(region);
+      try {
+        await this.renderHeld(region);
+      } catch {
+        if (this.held !== held) return;
+        held.regions.set(region, copyValue(held.loader.get(region) ?? null));
+        try {
+          await this.renderHeld(region);
+        } catch {
+          if (this.held === held) markError(this.element(region), '0');
+        }
+      }
     }
   }
 
@@ -157,27 +193,38 @@ export class Hyper {
     }, assignments.map((assignment) => assignment.path));
   }
 
+  // Queues a change; calls run one after another in call order (HY-33).
+  private change(region: string, update: (data: Value | undefined) => MapValue, paths: readonly string[]): Promise<void> {
+    const run = this.queue.then(() => this.applyChange(region, update, paths));
+    this.queue = run.catch(() => undefined);
+    return run;
+  }
+
   // Changes a copy of the held data of a region, renders the region with it, and only then holds it
-  // and stores the changed kept paths. A failure leaves held data unchanged and marks the region (HY-47).
-  private async change(region: string, update: (data: Value | undefined) => MapValue, paths: readonly string[]): Promise<void> {
+  // and stores the changed kept paths. A change whose held data a response replaced ends without
+  // swapping, holding or storing. A failure leaves held data unchanged and marks the region (HY-33, HY-47).
+  private async applyChange(region: string, update: (data: Value | undefined) => MapValue, paths: readonly string[]): Promise<void> {
     const held = this.requireHeld();
+    let next: MapValue;
     try {
       const current = held.regions.get(region);
-      const next = update(current === undefined ? undefined : copyValue(current));
+      next = update(current === undefined ? undefined : copyValue(current));
       const regions: MapValue = new Map(held.regions);
       regions.set(region, next);
       await this.app.templates.ensure(routeTemplates(this.app.manifest, held.route));
+      if (this.held !== held) return;
       const target = this.element(region);
       if (target === null) throw new Error(`hyper: region element #${region} does not exist`);
       const html = renderRegion(this.app, held.route, region, held.shared, regions, held.timezone);
       await this.htmx.swap({ text: html, target, swap: 'innerMorph', sourceElement: target });
+      if (this.held !== held) return;
       clearError(target);
       held.regions.set(region, next);
     } catch (error) {
-      markError(this.element(region), '0');
+      if (this.held === held) markError(this.element(region), '0');
       throw error;
     }
-    this.store(region, paths);
+    this.store(region, paths, next);
   }
 
   // Renders the document of a path in the browser. A later call cancels an earlier one that is
@@ -206,7 +253,7 @@ export class Hyper {
         return;
       }
       const decoded = decodeResponse(this.app, parseJson(text), url.pathname);
-      this.applyBrowserKept(decoded.regions);
+      this.applyBrowserKept(decoded);
       const html = renderDocument(this.app, decoded);
       this.hold(decoded, true);
       this.page.mount(html);
@@ -225,6 +272,7 @@ export class Hyper {
         ctx.request.headers['Accept'] = 'application/json';
         ctx.request.headers['Hy-Region'] = ctx.target.id;
         ctx.hyperRegion = ctx.target.id;
+        ctx.hyperStart = performance.now();
         if (basePath !== '') {
           const page = new URL(this.currentUrl());
           const url = new URL(ctx.request.action, page);
@@ -236,6 +284,12 @@ export class Hyper {
         // A region request is the latest navigation; a client-side restoration still loading is cancelled (HY-23).
         this.location++;
         this.locationAbort?.abort();
+        // htmx aborts through this function on its timeout and on cancellation; the time tells them apart (HY-47).
+        const abort = ctx.request.abort;
+        ctx.request.abort = () => {
+          ctx.hyperAborted ??= performance.now();
+          abort?.();
+        };
         const requested = this.routeOf(ctx.request.action);
         const loading = requested === null ? Promise.resolve() : this.app.templates.ensure(routeTemplates(this.app.manifest, requested));
         loading.catch(() => undefined);
@@ -256,7 +310,7 @@ export class Hyper {
         const path = stripBasePath(pathOf(url), basePath);
         if (path === null) throw new Error(`hyper: response URL ${url} is outside the base path ${basePath}`);
         const decoded = decodeResponse(this.app, parseJson(ctx.text), path);
-        this.applyBrowserKept(decoded.regions);
+        this.applyBrowserKept(decoded);
         ctx.text = toHtml(this.app, decoded);
         this.hold(decoded);
         clearError(ctx.target);
@@ -269,9 +323,10 @@ export class Hyper {
         if (embedded) void this.holdEmbedded(embedded, pathOf(ctx.request.action));
       },
       htmx_error: (_elt, detail) => {
-        if (detail.ctx?.hyperRegion === undefined) return;
-        if (detail.error instanceof Error && detail.error.name === 'AbortError') return;
-        markError(detail.ctx.target, '0');
+        const ctx = detail.ctx;
+        if (ctx?.hyperRegion === undefined) return;
+        if (detail.error instanceof Error && detail.error.name === 'AbortError' && !this.timedOut(ctx)) return;
+        markError(ctx.target, '0');
       },
       htmx_before_history_update: (_elt, { history }) => {
         if (basePath === '') return;
@@ -287,11 +342,17 @@ export class Hyper {
     };
   }
 
-  // Applies localStorage, sessionStorage and pending server values to region data and returns the
-  // regions that changed (HY-38).
-  private applyBrowserKept(regions: MapValue): string[] {
+  // Returns true when htmx aborted a region request after its timeout passed (HY-47).
+  private timedOut(ctx: RequestContext): boolean {
+    const timeout = ctx.request.timeout != null ? this.htmx.parseInterval(String(ctx.request.timeout)) : this.htmx.config.defaultTimeout;
+    return timeout > 0 && ctx.hyperStart !== undefined && ctx.hyperAborted !== undefined && ctx.hyperAborted - ctx.hyperStart >= timeout;
+  }
+
+  // Applies localStorage, sessionStorage and pending server values to the region data of a response,
+  // after its server kept values, and returns the regions that changed (HY-38).
+  private applyBrowserKept(decoded: DecodedResponse): string[] {
     const changed: string[] = [];
-    for (const [name, data] of regions) {
+    for (const name of decoded.regions.keys()) {
       const kept: [string, Value][] = [];
       for (const [path, kind] of Object.entries(keptPaths(this.app.manifest, name))) {
         if (kind === 'server') {
@@ -308,39 +369,47 @@ export class Hyper {
           continue;
         }
       }
-      if (data instanceof Map && applyKept(data, kept).length > 0) changed.push(name);
+      if (applyRegionKept(decoded, name, kept).length > 0) changed.push(name);
     }
     return changed;
   }
 
-  // Stores every kept path that equals a changed path, lies under it or contains it (HY-39).
-  private store(region: string, changed: readonly string[]): void {
-    const held = this.requireHeld();
+  // Stores every kept path that equals a changed path, lies under it or contains it, with the value in
+  // the committed region data (HY-39).
+  private store(region: string, changed: readonly string[], data: MapValue): void {
     for (const [path, kind] of Object.entries(keptPaths(this.app.manifest, region))) {
       if (!changed.some((item) => item === path || path.startsWith(`${item}.`) || item.startsWith(`${path}.`))) continue;
-      const value = valueAt(held.regions.get(region), path);
+      const value = valueAt(data, path);
       if (value === undefined) continue;
-      const json = valueToJson(value);
       if (kind !== 'server') {
-        this.storage().write(kind, region, path, json);
+        this.storage().write(kind, region, path, valueToJson(value));
         continue;
       }
       const values = this.pending.get(region) ?? new Map<string, Pending>();
-      const change = ++this.changes;
-      values.set(path, { value, change });
+      const sending = values.get(path)?.sending ?? null;
+      values.set(path, { value, change: ++this.changes, sending });
       this.pending.set(region, values);
-      const csrf = held.shared.get('csrf');
-      void this.storage()
-        .send(`${this.options.basePath}/_hyper/keep`, { _csrf: typeof csrf === 'string' ? csrf : '', region, path, value: json })
-        .then((saved) => {
-          // A failed save stays pending; a successful one clears only its own change (HY-39).
-          if (!saved) {
-            markError(this.element(region), '0');
-            return;
-          }
-          if (this.pending.get(region)?.get(path)?.change === change) this.pending.get(region)!.delete(path);
-        });
+      if (sending === null) this.save(region, path);
     }
+  }
+
+  // Sends the pending value of a server path. When the save settles and a later change exists, the latest
+  // value is sent next; otherwise a success clears the pending value and a failure marks the region (HY-39).
+  private save(region: string, path: string): void {
+    const pending = this.pending.get(region)!.get(path)!;
+    const change = pending.change;
+    pending.sending = change;
+    const csrf = this.held?.shared.get('csrf');
+    void this.storage()
+      .send(`${this.options.basePath}/_hyper/keep`, { _csrf: typeof csrf === 'string' ? csrf : '', region, path, value: valueToJson(pending.value) })
+      .then((saved) => {
+        const current = this.pending.get(region)?.get(path);
+        if (current === undefined) return;
+        current.sending = null;
+        if (current.change !== change) this.save(region, path);
+        else if (saved) this.pending.get(region)!.delete(path);
+        else markError(this.element(region), '0');
+      });
   }
 
   private storage(): KeepStorage {

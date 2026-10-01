@@ -5,8 +5,8 @@ import { loadedApplication } from './application.js';
 
 const app = await loadedApplication();
 
-function response(route: string, regions: string, shared = '{"title":"T","shared_only":"s"}', timezone = 'Z'): ReturnType<typeof parseJson> {
-  return parseJson(`{"env":{"timezone":"${timezone}"},"route":"${route}","params":{},"shared":${shared},"regions":${regions}}`);
+function response(route: string, regions: string, shared = '{"title":"T","shared_only":"s"}', timezone = 'Z', kept = '{}'): ReturnType<typeof parseJson> {
+  return parseJson(`{"env":{"timezone":"${timezone}"},"route":"${route}","params":{},"shared":${shared},"regions":${regions},"kept":${kept}}`);
 }
 
 describe('toHtml', () => {
@@ -47,7 +47,7 @@ describe('renderDocument', () => {
     expect(html).toBe(
       '<title>T - Site</title>\n<aside id="side" hy-region><b>2</b></aside>\n<main id="content" hy-region><h1>H</h1><ul id="rows" hy-region><li>&lt;a&gt;</li></ul></main>\n'
       + '<script type="application/json" id="hy-data">{"env":{"timezone":"Z"},"route":"list","params":{},"shared":{"title":"T","shared_only":"s"},'
-      + '"regions":{"side":{"count":2},"content":{"heading":"H"},"rows":{"items":[{"name":"\\u003ca\\u003e"}]}}}</script>',
+      + '"regions":{"side":{"count":2},"content":{"heading":"H"},"rows":{"items":[{"name":"\\u003ca\\u003e"}]}},"kept":{}}</script>',
     );
   });
 
@@ -59,5 +59,33 @@ describe('renderDocument', () => {
 
   it('fails when a region is missing', () => {
     expect(() => renderDocument(app, decodeResponse(app, response('home', '{"content":{"name":"n"}}'), '/'))).toThrow('no region side');
+  });
+});
+
+describe('kept values of a response', () => {
+  const regions = '{"side":{"count":2},"content":{"heading":"H"},"rows":{"items":[{"name":"a","open":false}],"flag":false,"tab":"a","tags":[]}}';
+
+  it('applies the server and cookie kept values and embeds the loader data with them (HY-17, HY-31, HY-38)', () => {
+    const decoded = decodeResponse(app, response('list', regions, undefined, undefined, '{"rows":{"items.0.open":true,"tab":"b"}}'), '/list');
+    expect((decoded.regions.get('rows') as Map<string, unknown>).get('tab')).toBe('a');
+    const html = renderDocument(app, decoded);
+    expect(html).toContain('<li class="open">a</li>');
+    expect(html).toContain('"rows":{"items":[{"name":"a","open":false}],"flag":false,"tab":"a","tags":[]}},"kept":{"rows":{"items.0.open":true,"tab":"b"}}}');
+  });
+
+  it('renders a region without its kept values when they break rendering (HY-38)', () => {
+    const kept = '{"rows":{"items.0.open":true,"tags":[1]}}';
+    const html = renderDocument(app, decodeResponse(app, response('list', regions, undefined, undefined, kept), '/list'));
+    expect(html).toContain('<ul id="rows" hy-region><li>a</li></ul>');
+    expect(html).toContain('"tags":[]}},"kept":{}}');
+
+    const decoded = decodeResponse(app, response('list', regions, undefined, undefined, kept), '/list');
+    expect(toHtml(app, decoded)).toContain('<ul id="rows" hy-region><li>a</li></ul>');
+    expect((decoded.regions.get('rows') as Map<string, unknown>).get('tags')).toEqual([]);
+  });
+
+  it('fails when a region does not render with its loader data either', () => {
+    const broken = '{"side":{"count":2},"content":{"heading":"H"},"rows":{"items":[],"tags":[1]}}';
+    expect(() => renderDocument(app, decodeResponse(app, response('list', broken, undefined, undefined, '{"rows":{"flag":true}}'), '/list'))).toThrow();
   });
 });

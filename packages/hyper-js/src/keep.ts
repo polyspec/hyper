@@ -4,7 +4,7 @@ import { parseJson, type MapValue, type Value } from '@polyspec/template/render'
 export type KeepKind = 'server' | 'cookie' | 'localStorage' | 'sessionStorage';
 export const KEEP_KINDS: readonly KeepKind[] = ['server', 'cookie', 'localStorage', 'sessionStorage'];
 
-// Replaces values at kept paths when the path exists and the types match (HY-38). The PHP
+// Replaces values at kept paths when the path exists and the kept value conforms to its value (HY-38). The PHP
 // implementation follows the same rules; both pass conformance/keep.json.
 export function applyKept(data: MapValue, kept: readonly (readonly [string, Value])[]): string[] {
   const applied: string[] = [];
@@ -14,7 +14,7 @@ export function applyKept(data: MapValue, kept: readonly (readonly [string, Valu
     for (const key of keys.slice(0, -1)) container = childOf(container, key);
     const last = keys[keys.length - 1]!;
     const current = childOf(container, last);
-    if (current === undefined || kindOf(current) !== kindOf(value)) continue;
+    if (current === undefined || !conforms(value, current)) continue;
     if (container instanceof Map) container.set(last, value);
     else (container as Value[])[Number(last)] = value;
     applied.push(path);
@@ -26,6 +26,27 @@ function childOf(container: Value | undefined, key: string): Value | undefined {
   if (container instanceof Map) return container.get(key);
   if (Array.isArray(container) && /^\d+$/.test(key)) return container[Number(key)];
   return undefined;
+}
+
+// Returns true when a kept value has the shape of the data value (HY-38): the same type, the same keys
+// of a map with conforming values, and list items that conform to the first data item. An empty map or
+// list gives no shape.
+export function conforms(value: Value, current: Value): boolean {
+  if (current instanceof Map) {
+    if (!(value instanceof Map)) return false;
+    if (current.size === 0) return true;
+    if (value.size !== current.size) return false;
+    for (const [key, item] of current) {
+      const kept = value.get(key);
+      if (kept === undefined || !conforms(kept, item)) return false;
+    }
+    return true;
+  }
+  if (Array.isArray(current)) {
+    if (!Array.isArray(value)) return false;
+    return current.length === 0 || value.every((item) => conforms(item, current[0]!));
+  }
+  return kindOf(value) === kindOf(current);
 }
 
 function kindOf(value: Value): string {

@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { applyKept, decodeResponse, Hyper, parseAssignments, renderDocument, valueToJson, type KeepStorage, type RequestContext } from '../src/index.js';
 import { parseJson } from '@polyspec/template';
-import { sources, testApplication } from './application.js';
+import { sources, testApplication, testApplicationFailing } from './application.js';
 
 interface Swap { region: string; text: string; swap: string }
 
@@ -53,7 +53,7 @@ function setup(basePath = '', fetched: string[] = [], storage = new FakeStorage(
   const swaps: Swap[] = [];
   const element = (id: string) => ({ id } as unknown as Element);
   const htmx = {
-    process: () => undefined,
+    process: () => undefined, config: { defaultTimeout: 60000 }, parseInterval: Number,
     swap: async (ctx: { text: string; target: Element; swap: string }) => {
       swaps.push({ region: (ctx.target as unknown as { id: string }).id, text: ctx.text, swap: ctx.swap });
     },
@@ -66,7 +66,7 @@ function region(id: string): { id: string; hasAttribute(name: string): boolean }
 }
 
 function context(action: string, target: unknown = region('content')): RequestContext {
-  return { target, request: { action, method: 'GET', headers: { Accept: 'text/html' } } };
+  return { target, request: { action, method: 'GET', headers: { Accept: 'text/html' }, abort: () => undefined } };
 }
 
 function jsonResponse(url: string, body: string): Response {
@@ -89,7 +89,7 @@ async function request(hyper: Hyper, action: string, responseUrl: string, body: 
   return ctx;
 }
 
-const listJson = '{"env":{"timezone":"Z"},"route":"list","params":{},"shared":{"title":"T","csrf":"token"},"regions":{"content":{"heading":"H"},"rows":{"items":[{"name":"a","open":true},{"name":"b","open":false}],"flag":false,"tab":"a"}}}';
+const listJson = '{"env":{"timezone":"Z"},"route":"list","params":{},"shared":{"title":"T","csrf":"token"},"regions":{"content":{"heading":"H"},"rows":{"items":[{"name":"a","open":true},{"name":"b","open":false}],"flag":false,"tab":"a"}},"kept":{}}';
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -97,7 +97,7 @@ describe('template delivery', () => {
   it('loads only the templates of the requested route (HY-35)', async () => {
     const fetched: string[] = [];
     const { hyper } = setup('', fetched);
-    await request(hyper, '/items/7', 'http://localhost/items/7', '{"env":{"timezone":"Z"},"route":"item","params":{"id":"7"},"shared":{"title":"T"},"regions":{"content":{"id":"7"}}}');
+    await request(hyper, '/items/7', 'http://localhost/items/7', '{"env":{"timezone":"Z"},"route":"item","params":{"id":"7"},"shared":{"title":"T"},"regions":{"content":{"id":"7"}},"kept":{}}');
     expect(fetched.sort()).toEqual(['/t/hyper/data.tpl', '/t/item.tpl', '/t/layout.tpl', '/t/part.tpl', '/t/side.tpl', '/t/title.tpl']);
   });
 
@@ -204,10 +204,10 @@ describe('kept data', () => {
 
 describe('held data, restorations and kept values', () => {
   it('replaces all held data from #hy-data after an SSR history restore (HY-32)', async () => {
-    const embedded = '{"env":{"timezone":"Z"},"route":"item","params":{"id":"7"},"shared":{"title":"T","csrf":"t"},"regions":{"side":{"count":1},"content":{"id":"7"}}}';
+    const embedded = '{"env":{"timezone":"Z"},"route":"item","params":{"id":"7"},"shared":{"title":"T","csrf":"t"},"regions":{"side":{"count":1},"content":{"id":"7"}},"kept":{}}';
     const swaps: Swap[] = [];
     const element = (id: string) => (id === 'hy-data' ? ({ textContent: embedded } as unknown as Element) : ({ id } as unknown as Element));
-    const htmx = { process: () => undefined, swap: async (ctx: { text: string; target: Element; swap: string }) => { swaps.push({ region: '', text: ctx.text, swap: ctx.swap }); } };
+    const htmx = { process: () => undefined, config: { defaultTimeout: 60000 }, parseInterval: Number, swap: async (ctx: { text: string; target: Element; swap: string }) => { swaps.push({ region: '', text: ctx.text, swap: ctx.swap }); } };
     const hyper = new Hyper(testApplication(), htmx, { basePath: '', element, storage: new FakeStorage() });
     await request(hyper, '/list', 'http://localhost/list', listJson);
     const ctx = context('/items/7', { id: '', hasAttribute: () => false });
@@ -238,10 +238,10 @@ describe('held data, restorations and kept values', () => {
     const page = new FakeDocument();
     const respond = (body: string) => new Promise<Response>((resolve) => releases.push(() => resolve(jsonResponse('', body))));
     const app = testApplication();
-    const hyper = new Hyper(app, { process: () => undefined, swap: async () => undefined }, {
+    const hyper = new Hyper(app, { process: () => undefined, config: { defaultTimeout: 60000 }, parseInterval: Number, swap: async () => undefined }, {
       basePath: '/api',
       storage: new FakeStorage(),
-      fetch: (input) => respond(String(input).includes('/list') ? listJson.replace('"heading":"H"', '"heading":"LIST"').replace('"regions":{', '"regions":{"side":{"count":1},') : '{"env":{"timezone":"Z"},"route":"item","params":{"id":"7"},"shared":{"title":"T","csrf":"t"},"regions":{"side":{"count":1},"content":{"id":"7"}}}'),
+      fetch: (input) => respond(String(input).includes('/list') ? listJson.replace('"heading":"H"', '"heading":"LIST"').replace('"regions":{', '"regions":{"side":{"count":1},') : '{"env":{"timezone":"Z"},"route":"item","params":{"id":"7"},"shared":{"title":"T","csrf":"t"},"regions":{"side":{"count":1},"content":{"id":"7"}},"kept":{}}'),
       document: page,
     });
     const first = hyper.renderLocation('/list');
@@ -331,7 +331,7 @@ describe('restorations, saves and failure marks', () => {
   it('cancels a pending client-side restoration when a region request starts (HY-23)', async () => {
     let release: () => void = () => undefined;
     const page = new FakeDocument();
-    const hyper = new Hyper(testApplication(), { process: () => undefined, swap: async () => undefined }, {
+    const hyper = new Hyper(testApplication(), { process: () => undefined, config: { defaultTimeout: 60000 }, parseInterval: Number, swap: async () => undefined }, {
       basePath: '/api',
       storage: new FakeStorage(),
       document: page,
@@ -366,7 +366,7 @@ describe('restorations, saves and failure marks', () => {
   it('leaves held data unchanged and marks the region when rendering fails (HY-47)', async () => {
     const target = regionElement('rows');
     const swaps: string[] = [];
-    const hyper = new Hyper(testApplication(), { process: () => undefined, swap: async (ctx) => { swaps.push(ctx.text); } }, {
+    const hyper = new Hyper(testApplication(), { process: () => undefined, config: { defaultTimeout: 60000 }, parseInterval: Number, swap: async (ctx) => { swaps.push(ctx.text); } }, {
       basePath: '',
       storage: new FakeStorage(),
       element: (id) => (id === 'rows' ? (target as unknown as Element) : ({ id } as unknown as Element)),
@@ -381,7 +381,7 @@ describe('restorations, saves and failure marks', () => {
   it('removes the mark from every region that a response renders (HY-47)', async () => {
     const side = regionElement('side');
     side.attributes.set('hy-error', '500');
-    const hyper = new Hyper(testApplication(), { process: () => undefined, swap: async () => undefined }, {
+    const hyper = new Hyper(testApplication(), { process: () => undefined, config: { defaultTimeout: 60000 }, parseInterval: Number, swap: async () => undefined }, {
       basePath: '',
       storage: new FakeStorage(),
       element: (id) => (id === 'side' ? (side as unknown as Element) : ({ id } as unknown as Element)),
@@ -391,13 +391,13 @@ describe('restorations, saves and failure marks', () => {
     const ctx = context('/');
     extension.htmx_config_request(null, { ctx });
     ctx.response = { raw: { url: 'http://localhost/' }, status: 200, headers: new Headers({ 'content-type': 'application/json' }) };
-    ctx.text = '{"env":{"timezone":"Z"},"route":"home","params":{},"shared":{"title":"T","csrf":"t"},"regions":{"content":{"name":"n"},"side":{"count":2}}}';
+    ctx.text = '{"env":{"timezone":"Z"},"route":"home","params":{},"shared":{"title":"T","csrf":"t"},"regions":{"content":{"name":"n"},"side":{"count":2}},"kept":{}}';
     extension.htmx_after_request(null, { ctx });
     expect(side.attributes.has('hy-error')).toBe(false);
   });
 
   it('prefixes absolute same-origin and relative region request URLs (HY-23)', () => {
-    const hyper = new Hyper(testApplication(), { process: () => undefined, swap: async () => undefined }, {
+    const hyper = new Hyper(testApplication(), { process: () => undefined, config: { defaultTimeout: 60000 }, parseInterval: Number, swap: async () => undefined }, {
       basePath: '/api',
       storage: new FakeStorage(),
       currentUrl: () => 'http://localhost:3000/list',
@@ -425,7 +425,7 @@ describe('restorations, saves and failure marks', () => {
 
   it('marks the body when client-side rendering of a document fails (HY-47)', async () => {
     const page = new FakeDocument();
-    const hyper = new Hyper(testApplication(), { process: () => undefined, swap: async () => undefined }, {
+    const hyper = new Hyper(testApplication(), { process: () => undefined, config: { defaultTimeout: 60000 }, parseInterval: Number, swap: async () => undefined }, {
       basePath: '/api',
       storage: new FakeStorage(),
       document: page,
@@ -433,6 +433,133 @@ describe('restorations, saves and failure marks', () => {
     });
     await hyper.renderLocation('/list');
     expect(page.mounted).toEqual(['fail:0']);
+  });
+});
+
+describe('concurrent changes, saves and timeouts', () => {
+  it('keeps both of two concurrent set calls (HY-33)', async () => {
+    const { hyper } = setup();
+    await request(hyper, '/list', 'http://localhost/list', listJson);
+    await Promise.all([hyper.set('rows', 'flag', true), hyper.set('rows', 'tab', 'b')]);
+    const rows = hyper.data('rows') as Map<string, unknown>;
+    expect(rows.get('flag')).toBe(true);
+    expect(rows.get('tab')).toBe('b');
+  });
+
+  it('ends a change without swapping, holding or storing when a response replaced the held data (HY-33)', async () => {
+    const storage = new FakeStorage();
+    const { hyper, swaps } = setup('', [], storage);
+    await request(hyper, '/list', 'http://localhost/list', listJson);
+    const ensure = hyper.app.templates.ensure.bind(hyper.app.templates);
+    let release: () => void = () => undefined;
+    hyper.app.templates.ensure = (names) => {
+      hyper.app.templates.ensure = ensure;
+      return new Promise((done) => { release = () => done(ensure(names)); });
+    };
+    const change = hyper.set('rows', 'items.0.open', false);
+    // The change starts after the queued calls before it, then waits for its templates.
+    await new Promise((done) => setTimeout(done, 0));
+    await request(hyper, '/list', 'http://localhost/list', listJson.replace('"tab":"a"', '"tab":"c"'));
+    release();
+    await change;
+    expect(swaps).toEqual([]);
+    expect(storage.sent).toEqual([]);
+    const rows = hyper.data('rows') as Map<string, unknown>;
+    expect(rows.get('tab')).toBe('c');
+    expect(((rows.get('items') as Map<string, unknown>[])[0]!).get('open')).toBe(true);
+  });
+
+  it('marks changed regions when embedded rendering cannot load its templates (HY-47)', async () => {
+    const rows = regionElement('rows');
+    const hyper = new Hyper(testApplicationFailing(), { process: () => undefined, config: { defaultTimeout: 60000 }, parseInterval: Number, swap: async () => undefined }, {
+      basePath: '',
+      storage: new FakeStorage({ 'localStorage:rows:items.1.open': 'true' }),
+      element: (id) => (id === 'rows' ? (rows as unknown as Element) : ({ id } as unknown as Element)),
+    });
+    await expect(hyper.holdEmbedded(listJson, '/list')).resolves.toBeUndefined();
+    expect(rows.attributes.get('hy-error')).toBe('0');
+  });
+
+  it('marks the body instead of rejecting when the embedded data cannot be read (HY-47)', async () => {
+    const page = new FakeDocument();
+    const hyper = new Hyper(testApplication(), { process: () => undefined, config: { defaultTimeout: 60000 }, parseInterval: Number, swap: async () => undefined }, {
+      basePath: '',
+      storage: new FakeStorage(),
+      document: page,
+    });
+    await expect(hyper.holdEmbedded('{"env":', '/list')).resolves.toBeUndefined();
+    await expect(hyper.holdEmbedded(listJson, '/items/7')).resolves.toBeUndefined();
+    expect(page.mounted).toEqual(['fail:0', 'fail:0']);
+  });
+
+  it('renders an embedded region without its kept values when they break rendering (HY-38)', async () => {
+    const rows = regionElement('rows');
+    const swaps: string[] = [];
+    const hyper = new Hyper(testApplication(), { process: () => undefined, config: { defaultTimeout: 60000 }, parseInterval: Number, swap: async (ctx) => { swaps.push(ctx.text); } }, {
+      basePath: '',
+      storage: new FakeStorage({ 'localStorage:rows:items.1.open': 'true', 'localStorage:rows:marks': '[1]' }),
+      element: (id) => (id === 'rows' ? (rows as unknown as Element) : ({ id } as unknown as Element)),
+    });
+    await hyper.holdEmbedded(listJson.replace('"tab":"a"', '"tab":"a","marks":[]'), '/list');
+    expect(swaps).toEqual(['<li class="open">a</li><li>b</li>']);
+    expect(rows.attributes.has('hy-error')).toBe(false);
+    expect((hyper.data('rows') as Map<string, unknown>).get('marks')).toEqual([]);
+  });
+
+  it('marks a region whose request timed out, and not one cancelled before (HY-47)', async () => {
+    const hyper = new Hyper(testApplication(), { process: () => undefined, config: { defaultTimeout: 5 }, parseInterval: Number, swap: async () => undefined }, { basePath: '', storage: new FakeStorage() });
+    const extension = hyper.extension();
+    const cancelled = regionElement('content');
+    const early = context('/', cancelled);
+    extension.htmx_config_request(null, { ctx: early });
+    extension.htmx_before_request(null, { ctx: early });
+    early.request.abort!();
+    extension.htmx_error(null, { ctx: early, error: new DOMException('aborted', 'AbortError') });
+    expect(cancelled.attributes.has('hy-error')).toBe(false);
+
+    const timedOut = regionElement('content');
+    const late = context('/', timedOut);
+    extension.htmx_config_request(null, { ctx: late });
+    extension.htmx_before_request(null, { ctx: late });
+    await new Promise((done) => setTimeout(done, 10));
+    late.request.abort!();
+    extension.htmx_error(null, { ctx: late, error: new DOMException('aborted', 'AbortError') });
+    expect(timedOut.attributes.get('hy-error')).toBe('0');
+  });
+
+  it('sends the next save of a path only after the previous one settles, with the latest value (HY-39)', async () => {
+    const storage = new FakeStorage();
+    const rows = regionElement('rows');
+    const hyper = new Hyper(testApplication(), { process: () => undefined, config: { defaultTimeout: 60000 }, parseInterval: Number, swap: async () => undefined }, {
+      basePath: '',
+      storage,
+      element: (id) => (id === 'rows' ? (rows as unknown as Element) : ({ id } as unknown as Element)),
+    });
+    await request(hyper, '/list', 'http://localhost/list', listJson);
+    await hyper.set('rows', 'items.0.open', false);
+    await hyper.set('rows', 'items.0.open', true);
+    await hyper.set('rows', 'items.0.open', false);
+    expect(storage.sent.map((item) => item.form.value)).toEqual(['false']);
+    // The first save fails, but a later change exists, so the region is not marked and the latest value is sent.
+    storage.saves[0]!(false);
+    await new Promise((done) => setTimeout(done, 0));
+    expect(rows.attributes.has('hy-error')).toBe(false);
+    expect(storage.sent.map((item) => item.form.value)).toEqual(['false', 'false']);
+    storage.saves[1]!(false);
+    await new Promise((done) => setTimeout(done, 0));
+    expect(rows.attributes.get('hy-error')).toBe('0');
+    expect(storage.sent).toHaveLength(2);
+  });
+
+  it('treats every same-origin action as an application path under a base path (HY-23)', () => {
+    const hyper = new Hyper(testApplication(), { process: () => undefined, config: { defaultTimeout: 60000 }, parseInterval: Number, swap: async () => undefined }, {
+      basePath: '/api',
+      storage: new FakeStorage(),
+      currentUrl: () => 'http://localhost/',
+    });
+    const ctx = context('/api/items/7');
+    hyper.extension().htmx_config_request(null, { ctx });
+    expect(ctx.request.action).toBe('/api/api/items/7');
   });
 });
 
@@ -492,8 +619,8 @@ describe('extension', () => {
 
     const page = new FakeDocument();
     const requested: string[] = [];
-    const itemJson = '{"env":{"timezone":"Z"},"route":"item","params":{"id":"7"},"shared":{"title":"T","csrf":"t"},"regions":{"side":{"count":1},"content":{"id":"7"}}}';
-    const restoring = new Hyper(testApplication(), { process: () => undefined, swap: async () => undefined }, {
+    const itemJson = '{"env":{"timezone":"Z"},"route":"item","params":{"id":"7"},"shared":{"title":"T","csrf":"t"},"regions":{"side":{"count":1},"content":{"id":"7"}},"kept":{}}';
+    const restoring = new Hyper(testApplication(), { process: () => undefined, config: { defaultTimeout: 60000 }, parseInterval: Number, swap: async () => undefined }, {
       basePath: '/api',
       storage: new FakeStorage(),
       document: page,

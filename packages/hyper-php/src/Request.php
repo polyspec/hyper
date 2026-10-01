@@ -70,30 +70,30 @@ final class Request
         return $this->params[$name] ?? null;
     }
 
-    /** Returns true when the path, the query and form values, the cookies that hyper reads and HX-Current-URL are valid UTF-8 (HY-42). */
+    /**
+     * Returns true when the path, every query and form name and value at any depth, and HX-Current-URL are
+     * valid UTF-8 (HY-42). Cookies are not checked; hyper ignores invalid ones.
+     */
     public function validUtf8(): bool
     {
-        $strings = [$this->path, $this->header('HX-Current-URL') ?? ''];
-        $query = $this->query;
-        $form = $this->form;
-        array_walk_recursive($query, function (mixed $value, mixed $key) use (&$strings): void {
-            $strings[] = (string) $key;
-            $strings[] = is_string($value) ? $value : '';
-        });
-        array_walk_recursive($form, function (mixed $value, mixed $key) use (&$strings): void {
-            $strings[] = (string) $key;
-            $strings[] = is_string($value) ? $value : '';
-        });
-        foreach (['hy-keep', session_name()] as $name) {
-            $strings[] = $this->cookies[$name] ?? '';
-        }
-        foreach ($strings as $string) {
-            if (preg_match('//u', $string) !== 1) {
+        return self::utf8($this->path) && self::utf8($this->header('HX-Current-URL') ?? '') && self::utf8Tree($this->query) && self::utf8Tree($this->form);
+    }
+
+    /** @param array<mixed> $values */
+    private static function utf8Tree(array $values): bool
+    {
+        foreach ($values as $key => $value) {
+            if (!self::utf8((string) $key) || (is_string($value) && !self::utf8($value)) || (is_array($value) && !self::utf8Tree($value))) {
                 return false;
             }
         }
 
         return true;
+    }
+
+    private static function utf8(string $value): bool
+    {
+        return preg_match('//u', $value) === 1;
     }
 
     /** Returns the value of a header, or null. */

@@ -160,8 +160,11 @@ async function keepFlow(page: Page, context: BrowserContext, origin: string, dat
     expect(await (await page.request.get(detail)).text()).toContain('post-body large');
   } else {
     const json = await (await page.request.get(`${origin}${dataPrefix}/board`, { headers: { Accept: 'application/json' } })).json();
-    expect(json.regions.notice.notice.closed).toBe(true);
+    // HY-17: regions hold the loader data, and kept holds the server and cookie values.
+    expect(json.regions.notice.notice.closed).toBe(false);
+    expect(json.kept.notice['notice.closed']).toBe(true);
     expect(json.regions.rows.sort).toBe('');
+    expect(json.kept.rows).toBeUndefined();
   }
 
   const tab = await context.newPage();

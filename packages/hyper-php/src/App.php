@@ -189,32 +189,13 @@ final class App
             }
         }
 
-        $cookie = json_decode($request->cookie('hy-keep') ?? '');
-        foreach ($data as $name => $regionData) {
-            $region = $this->manifest->region($name);
-            if ($region === null) {
-                continue;
-            }
-            $stored = $session->kept($name);
-            $kept = [];
-            foreach ($region->keep as $keptPath => $kind) {
-                $values = match ($kind) {
-                    'server' => $stored,
-                    'cookie' => $cookie instanceof \stdClass && ($cookie->{$name} ?? null) instanceof \stdClass ? get_object_vars($cookie->{$name}) : [],
-                    default => [],
-                };
-                if (array_key_exists($keptPath, $values)) {
-                    $kept[] = [$keptPath, $values[$keptPath]];
-                }
-            }
-            $data[$name] = Kept::apply($regionData, $kept);
-        }
-
-        $response = JsonEncoder::value($this->timezone, $route['name'], $request->params(), $shared, $data);
-        // HY-44: every value must belong to the template data model, for JSON as for a document.
-        Bind::value($response);
+        $kept = $this->kept($request, $session, $data);
         $vary = 'Accept, Hy-Region, HX-Current-URL';
         if ($json) {
+            $response = JsonEncoder::value($this->timezone, $route['name'], $request->params(), $shared, $data, $kept);
+            // HY-44: every value must belong to the template data model, for JSON as for a document.
+            Bind::value($response);
+
             return new Response($status, [
                 'Content-Type' => 'application/json; charset=utf-8',
                 'Cache-Control' => 'no-store',
@@ -222,15 +203,116 @@ final class App
             ], JsonEncoder::encode($response));
         }
 
-        $regions = [];
-        foreach ($data as $name => $regionData) {
-            $regions[$name] = ['template' => $templates[$name], 'data' => $regionData];
-        }
-
         return new Response($status, [
             'Content-Type' => 'text/html; charset=utf-8',
             'Vary' => $vary,
-        ], $this->renderer->document($this->manifest->layout, $this->manifest->title, $shared, $regions, $response));
+        ], $this->document($request, $route, $shared, $data, $templates, $kept));
+    }
+
+    /**
+     * Returns the conforming `server` and `cookie` kept values of the regions, by region and path (HY-17, HY-38).
+     *
+     * @param array<string, array<string, mixed>> $data
+     * @return array<string, array<string, mixed>>
+     */
+    private function kept(Request $request, Session $session, array $data): array
+    {
+        $cookie = json_decode($request->cookie('hy-keep') ?? '');
+        $kept = [];
+        foreach ($data as $name => $regionData) {
+            $region = $this->manifest->region($name);
+            if ($region === null) {
+                continue;
+            }
+            $stored = $session->kept($name);
+            $values = [];
+            foreach ($region->keep as $keptPath => $kind) {
+                $source = match ($kind) {
+                    'server' => $stored,
+                    'cookie' => $cookie instanceof \stdClass && ($cookie->{$name} ?? null) instanceof \stdClass ? get_object_vars($cookie->{$name}) : [],
+                    default => [],
+                };
+                if (array_key_exists($keptPath, $source)) {
+                    $values[] = [$keptPath, $source[$keptPath]];
+                }
+            }
+            $selected = Kept::select($regionData, $values);
+            if ($selected !== []) {
+                $kept[$name] = $selected;
+            }
+        }
+
+        return $kept;
+    }
+
+    /**
+     * Renders the document with the kept values applied. When that fails, every region whose rendering alone
+     * fails with its kept values renders with its loader data, route regions first, and its kept values leave
+     * the embedded data (HY-31, HY-38).
+     *
+     * @param array{name: string, path: string, title: string, template: string, post: bool, regions: list<Region>} $route
+     * @param array<string, mixed> $shared
+     * @param array<string, array<string, mixed>> $data
+     * @param array<string, string> $templates
+     * @param array<string, array<string, mixed>> $kept
+     */
+    private function document(Request $request, array $route, array $shared, array $data, array $templates, array $kept): string
+    {
+        $applied = [];
+        foreach ($data as $name => $regionData) {
+            $pairs = array_map(null, array_keys($kept[$name] ?? []), array_values($kept[$name] ?? []));
+            $applied[$name] = Kept::apply($regionData, $pairs);
+        }
+        try {
+            return $this->renderDocument($request, $route, $shared, $data, $applied, $templates, $kept);
+        } catch (\Throwable $error) {
+            if ($kept === []) {
+                throw $error;
+            }
+        }
+        $page = $this->manifest->page->name;
+        $routeRegions = array_map(fn (Region $region): string => $region->name, $route['regions']);
+        $others = array_values(array_diff(array_keys($data), [...$routeRegions, $page]));
+        foreach ([...$routeRegions, ...$others, $page] as $name) {
+            if (!isset($kept[$name])) {
+                continue;
+            }
+            try {
+                $define = [];
+                if ($name === $page) {
+                    foreach ($routeRegions as $routeRegion) {
+                        $define[$routeRegion] = ['template' => $templates[$routeRegion], 'data' => $applied[$routeRegion]];
+                    }
+                }
+                $this->renderer->alone($templates[$name], $shared, $applied[$name], $define);
+            } catch (\Throwable) {
+                $applied[$name] = $data[$name];
+                unset($kept[$name]);
+            }
+        }
+
+        return $this->renderDocument($request, $route, $shared, $data, $applied, $templates, $kept);
+    }
+
+    /**
+     * @param array{name: string, path: string, title: string, template: string, post: bool, regions: list<Region>} $route
+     * @param array<string, mixed> $shared
+     * @param array<string, array<string, mixed>> $data loader data, which the embedded data carries
+     * @param array<string, array<string, mixed>> $applied region data with kept values applied, which the regions render
+     * @param array<string, string> $templates
+     * @param array<string, array<string, mixed>> $kept
+     */
+    private function renderDocument(Request $request, array $route, array $shared, array $data, array $applied, array $templates, array $kept): string
+    {
+        $response = JsonEncoder::value($this->timezone, $route['name'], $request->params(), $shared, $data, $kept);
+        // HY-44: every value must belong to the template data model, for JSON as for a document.
+        Bind::value($response);
+        $regions = [];
+        foreach ($applied as $name => $regionData) {
+            $regions[$name] = ['template' => $templates[$name], 'data' => $regionData];
+        }
+
+        return $this->renderer->document($this->manifest->layout, $this->manifest->title, $shared, $regions, $response);
     }
 
     /** Stores a kept value of a `server` path in the session (HY-40). */
