@@ -7,6 +7,7 @@
 ### 추가
 
 - 라우트 경로가 나머지 매개변수 `{name*}`로 끝날 수 있다. 이 매개변수는 0개 이상의 남은 요청 segment에 맞고, decode하지 않은 요청 경로의 나머지를 담는다(HY-49). 두 라우터가 `conformance/rest.json`의 사례를 통과한다.
+- loader나 action은 `Redirect`로 요청을 멈춰 redirect 결과의 위치, flash 값, 바뀐 topic으로 303 응답을 하거나(HY-50), `Forbidden`으로 403 응답을 할 수 있다(HY-51).
 
 ### 수정
 

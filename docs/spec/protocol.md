@@ -147,4 +147,6 @@ This document defines the application manifest, routing, rendering, the requests
 ## Errors
 
 - **HY-27** A path without a route, or a loader that reports a missing resource, responds with status 404. A method other than `GET` or a declared `POST` responds with status 405.
+- **HY-50** A loader or an action may stop the request with a redirect: it throws the redirect of a result of HY-25, which names an application path (HY-46) and may carry flash values and changed topics. The server responds with status 303 and `Location` with the base path, stores the flash values and the changed topics as HY-25 does, and renders nothing.
+- **HY-51** A loader or an action may stop the request as forbidden. The server responds with status 403 and the text `Forbidden`, and runs no other loader or action of the request.
 - **HY-28** An error in the browser code is thrown from the htmx response hook. htmx reports it with the `htmx:error` event and does not swap.

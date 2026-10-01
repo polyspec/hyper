@@ -135,15 +135,25 @@ final class App
                 throw new \LogicException("POST action of route {$route['name']} did not return a Result");
             }
             if ($result->isRedirect()) {
-                $session->putFlash(new Flash($result->flash, $result->changed));
-
-                return new Response(303, ['Location' => $this->basePath . $result->location], '');
+                return $this->redirect($session, $result);
             }
 
             return $this->page($request, $route, $handler, $session, $flash, 422, $result->data);
         } catch (NotFound) {
             return Response::text(404, 'Not Found');
+        } catch (Redirect $redirect) {
+            return $this->redirect($session, $redirect->result);
+        } catch (Forbidden) {
+            return Response::text(403, 'Forbidden');
         }
+    }
+
+    /** Stores the flash values and changed topics of a redirect result and answers 303 (HY-25, HY-50). */
+    private function redirect(Session $session, Result $result): Response
+    {
+        $session->putFlash(new Flash($result->flash, $result->changed));
+
+        return new Response(303, ['Location' => $this->basePath . $result->location], '');
     }
 
     /**

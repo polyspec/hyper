@@ -7,7 +7,9 @@ namespace Polyspec\Hyper\Tests;
 use PHPUnit\Framework\TestCase;
 use Polyspec\Hyper\App;
 use Polyspec\Hyper\ArraySession;
+use Polyspec\Hyper\Forbidden;
 use Polyspec\Hyper\NotFound;
+use Polyspec\Hyper\Redirect;
 use Polyspec\Hyper\Renderer;
 use Polyspec\Hyper\Request;
 use Polyspec\Hyper\Response;
@@ -46,6 +48,9 @@ final class AppTest extends TestCase
                     'home' => ['load' => fn (Counter $counter): array => ['name' => "n{$counter->count}"]],
                     'add' => ['post' => function (Request $request, Counter $counter): Result {
                         $counter->actions++;
+                        if ($request->formString('name') === 'closed') {
+                            throw new Forbidden();
+                        }
                         if ($request->formString('name') === '') {
                             return Result::invalid(['name' => '', 'error' => 'empty']);
                         }
@@ -64,6 +69,8 @@ final class AppTest extends TestCase
                     'item' => ['load' => function (Request $request): array {
                         return match ($request->param('id')) {
                             'missing' => throw new NotFound(),
+                            'private' => throw new Forbidden(),
+                            'moved' => throw new Redirect(Result::redirect('/items/new')->flash('note', 'moved')),
                             'broken' => throw new \RuntimeException('secret detail /srv/app.php'),
                             'huge' => ['id' => PHP_INT_MAX],
                             'numeric' => ['5' => 'x', 'id' => 'n'],
@@ -475,6 +482,28 @@ final class AppTest extends TestCase
         self::assertSame(404, $this->get('/items/missing')->status);
         self::assertSame(405, $this->post('/', [])->status);
         self::assertSame(405, $this->app()->handle(new Request('DELETE', '/add'), $this->session)->status);
+    }
+
+    public function testLoaderRedirectAnswersWith303AndPassesFlash(): void
+    {
+        // HY-50
+        $response = $this->get('/items/moved', self::JSON);
+        self::assertSame(303, $response->status);
+        self::assertSame('/items/new', $response->headers['Location']);
+        self::assertSame('', $response->body);
+        self::assertSame('moved', self::json($this->get('/', ['Accept' => 'application/json']))['regions']['side']['note']);
+        self::assertSame('/api/items/new', $this->get('/api/items/moved', [], '/api')->headers['Location']);
+    }
+
+    public function testForbiddenLoaderAndActionAnswerWith403(): void
+    {
+        // HY-51
+        $page = $this->get('/items/private');
+        self::assertSame(403, $page->status);
+        self::assertSame('Forbidden', $page->body);
+        $action = $this->post('/add', ['_csrf' => $this->token(), 'name' => 'closed']);
+        self::assertSame(403, $action->status);
+        self::assertSame(0, $this->counter->count);
     }
 
     public function testHandlersMustMatchTheManifest(): void
