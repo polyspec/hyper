@@ -15,6 +15,66 @@ const { values } = parseArgs({ options: { ssr: { type: 'string' }, edge: { type:
 for (const name of ['ssr', 'edge', 'api', 'runs']) if (!values[name]) throw new Error(`--${name} is required`);
 const runs = Number(values.runs);
 const TRACE_CATEGORIES = ['toplevel', 'devtools.timeline', 'disabled-by-default-devtools.timeline', 'v8', 'blink.user_timing'];
+const PHASES = ['total', 'hyper', 'template', 'parse', 'morph', 'settle', 'process', 'events'];
+
+// Runs hy-set changes in the page with timers around the template engine, htmx.swap and htmx.process,
+// and around the htmx swap events, and returns the summed milliseconds of each phase:
+// hyper is the change outside rendering and swapping (data copy, hold, store), parse is from the swap
+// call to htmx:before:swap, morph is to htmx:before:settle, settle is to htmx:after:settle, process is
+// htmx.process of the new content, and events is the rest of the swap.
+async function attributeChange({ runs, path, values }) {
+  const { hyper, htmx } = window;
+  const engine = hyper.app.engine;
+  const sum = { total: 0, hyper: 0, template: 0, parse: 0, morph: 0, settle: 0, process: 0, events: 0 };
+  const at = {};
+  const listeners = ['htmx:before:swap', 'htmx:before:settle', 'htmx:after:settle'].map((name) => {
+    const listener = () => { at[name] ??= performance.now(); };
+    document.addEventListener(name, listener, true);
+    return [name, listener];
+  });
+  const render = engine.render;
+  engine.render = function (...args) {
+    const start = performance.now();
+    try { return render.apply(this, args); } finally { sum.template += performance.now() - start; }
+  };
+  const swap = htmx.swap;
+  htmx.swap = async function (...args) {
+    at.swap = performance.now();
+    try { return await swap.apply(this, args); } finally { at.swapped = performance.now(); }
+  };
+  const process = htmx.process;
+  let depth = 0;
+  let processStart = 0;
+  htmx.process = function (...args) {
+    if (depth++ === 0) processStart = performance.now();
+    try { return process.apply(this, args); } finally { if (--depth === 0) sum.process += performance.now() - processStart; }
+  };
+  try {
+    for (let run = 0; run < runs; run++) {
+      for (const key of Object.keys(at)) delete at[key];
+      const processBefore = sum.process;
+      const templateBefore = sum.template;
+      const start = performance.now();
+      await hyper.set('rows', path, values[run % 2]);
+      const total = performance.now() - start;
+      const swapTime = at.swapped - at.swap;
+      sum.total += total;
+      sum.hyper += total - swapTime - (sum.template - templateBefore);
+      sum.parse += at['htmx:before:swap'] - at.swap;
+      sum.morph += at['htmx:before:settle'] - at['htmx:before:swap'];
+      sum.settle += at['htmx:after:settle'] - at['htmx:before:settle'];
+      sum.events += at.swapped - at['htmx:after:settle'] - (sum.process - processBefore);
+      await new Promise((done) => requestAnimationFrame(() => setTimeout(done, 0)));
+    }
+  } finally {
+    engine.render = render;
+    delete htmx.swap;
+    delete htmx.process;
+    for (const [name, listener] of listeners) document.removeEventListener(name, listener, true);
+  }
+  return sum;
+}
+
 const KINDS = [
   ['style', /^(UpdateLayoutTree|RecalculateStyles|ParseAuthorStyleSheet)$/],
   ['layout', /^(Layout|UpdateLayout)$/],
@@ -80,6 +140,8 @@ try {
   await page.waitForFunction(() => window.hyper?.data('rows') !== undefined);
   await page.waitForLoadState('networkidle');
   const load = [];
+  const attribution = [];
+  const longTasks = [];
   for (const count of [10, 100, 1000]) {
     await page.evaluate(async (count) => {
       window.benchPosts = Array.from({ length: count }, (_, index) => ({ id: index + 1, title: `게시글 ${index} <제목>`, author: `작성자 ${index}`, created_at: 1790000000 + index }));
@@ -111,6 +173,11 @@ try {
       }
       return times;
     }, runs);
+    for (const [label, path, values] of [['sort (reorders every row)', 'sort', ['title', '']], ['compact (keeps the row order)', 'compact', [true, false]]]) {
+      const phases = await page.evaluate(attributeChange, { runs, path, values });
+      attribution.push(`| ${count} | ${label} | ${PHASES.map((name) => (phases[name] / runs).toFixed(2)).join(' | ')} |`);
+    }
+    longTasks.push(...trace.longTasks.map((task) => `| ${count} | ${task.duration.toFixed(1)} | ${task.parts.map(([name, ms]) => `${name} ${ms.toFixed(1)}`).join(', ')} |`));
     lines.push(row(`hy-set re-render of the rows region, ${count} rows (data change to DOM)`, set));
     lines.push(row(`template engine alone, board/rows.tpl, ${count} rows`, engine));
     const per = (name) => (trace[name] / runs).toFixed(2);
@@ -120,6 +187,7 @@ try {
   await context.close();
 
   const memory = await navigationMemory(browser, ssr, 200);
+  const sections = await sectionRetention(browser, ssr, 300);
   const csrContext = await browser.newContext();
   const csrPage = await csrContext.newPage();
   await csrPage.goto(`${csr}/board`);
@@ -142,8 +210,16 @@ try {
   console.log(sizes.join('\n'));
   console.log('\n## Main thread load of one hy-set (per change including its frame, Chromium trace, ms)\n\n| Rows | main thread ms | script | style | layout | paint | GC | other | longest task ms | tasks over 50 ms | DOM nodes after GC |\n|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|');
   console.log(load.join('\n'));
+  console.log(`\n## Where one hy-set change spends its time (per change, ms)\n\n| Rows | change | ${PHASES.join(' | ')} |\n|---:|---|${PHASES.map(() => '---:').join('|')}|`);
+  console.log(attribution.join('\n'));
+  console.log('\n## Tasks over 50 ms during hy-set changes, with their largest parts (self time, ms)\n\n| Rows | task ms | parts |\n|---:|---:|---|');
+  console.log(longTasks.length ? longTasks.join('\n') : '| - | - | none |');
   console.log('\n## Memory over repeated navigation (SSR, /board → /board/create → /board/<id> → /board, after forced GC)\n\n| Cycles | JS heap used KB | DOM nodes | event listeners | documents |\n|---:|---:|---:|---:|---:|');
-  console.log(memory.join('\n'));
+  console.log(memory.rows.join('\n'));
+  console.log(`\n## Heap growth from cycle ${memory.from} to cycle ${memory.to}, largest first\n\n| type: constructor or name | count | self bytes | first retainers of one instance |\n|---|---:|---:|---|`);
+  console.log(memory.growth.length ? memory.growth.join('\n') : '| none | 0 | 0 |');
+  console.log(`\n## Chromium: media query sets kept after inserting and removing a table section ${sections.times} times\n\n| Section | blink::MediaQuerySet before | after |\n|---|---:|---:|`);
+  console.log(sections.rows.join('\n'));
   console.log(`\n${runs} runs per measurement, Chromium ${browser.version()}, Node ${process.version}`);
 } finally {
   await browser?.close();
@@ -161,7 +237,8 @@ function mainThreadLoad(events) {
   const complete = events
     .filter((event) => event.pid === busiest.pid && event.tid === busiest.tid && event.ph === 'X' && typeof event.dur === 'number')
     .sort((a, b) => a.ts - b.ts || b.dur - a.dur);
-  const load = { total: 0, script: 0, style: 0, layout: 0, paint: 0, gc: 0, other: 0, longest: 0, long: 0 };
+  const load = { total: 0, script: 0, style: 0, layout: 0, paint: 0, gc: 0, other: 0, longest: 0, long: 0, longTasks: [] };
+  const long = [];
   const stack = [];
   for (const event of complete) {
     while (stack.length && stack.at(-1).ts + stack.at(-1).dur <= event.ts) stack.pop();
@@ -169,7 +246,10 @@ function mainThreadLoad(events) {
     else if (event.name === 'RunTask') {
       load.total += event.dur / 1000;
       load.longest = Math.max(load.longest, event.dur / 1000);
-      if (event.dur > 50000) load.long++;
+      if (event.dur > 50000) {
+        load.long++;
+        long.push(event);
+      }
     }
     event.children = 0;
     stack.push(event);
@@ -178,7 +258,91 @@ function mainThreadLoad(events) {
     const kind = KINDS.find(([, pattern]) => pattern.test(event.name))?.[0] ?? 'other';
     load[kind] += (event.dur - event.children) / 1000;
   }
+  for (const task of long) {
+    const parts = new Map();
+    for (const event of complete) {
+      if (event.ts < task.ts || event.ts >= task.ts + task.dur) continue;
+      parts.set(event.name, (parts.get(event.name) ?? 0) + (event.dur - event.children) / 1000);
+    }
+    load.longTasks.push({ duration: task.dur / 1000, parts: [...parts].sort((a, b) => b[1] - a[1]).slice(0, 6) });
+  }
   return load;
+}
+
+// Inserts and removes a table with a <thead> or a <tbody> section with innerHTML, without htmx, and
+// counts blink::MediaQuerySet before and after. Chromium 153 keeps one per inserted <thead> until the
+// document closes; this measurement shows whether a Chromium version still does.
+async function sectionRetention(browser, origin, times) {
+  const rows = [];
+  for (const section of ['thead', 'tbody']) {
+    const context = await browser.newContext();
+    const page = await context.newPage();
+    const cdp = await context.newCDPSession(page);
+    await page.goto(`${origin}/`);
+    await page.waitForLoadState('networkidle');
+    const key = 'native: blink::MediaQuerySet';
+    const before = (await heapCounts(cdp)).get(key)?.count ?? 0;
+    await page.evaluate(async ({ section, times }) => {
+      const box = document.createElement('div');
+      document.body.append(box);
+      for (let run = 0; run < times; run++) {
+        box.innerHTML = `<table><${section}><tr><td>a</td></tr></${section}></table>`;
+        await new Promise((done) => requestAnimationFrame(() => setTimeout(done, 0)));
+        box.innerHTML = '';
+      }
+      box.remove();
+    }, { section, times });
+    const after = (await heapCounts(cdp)).get(key)?.count ?? 0;
+    rows.push(`| <${section}> | ${before} | ${after} |`);
+    await context.close();
+  }
+  return { rows, times };
+}
+
+// Takes a heap snapshot after garbage collection and returns the count and self size of the nodes
+// grouped by type and constructor name.
+async function heapCounts(cdp) {
+  await cdp.send('HeapProfiler.enable');
+  await cdp.send('HeapProfiler.collectGarbage');
+  const chunks = [];
+  const collect = ({ chunk }) => chunks.push(chunk);
+  cdp.on('HeapProfiler.addHeapSnapshotChunk', collect);
+  await cdp.send('HeapProfiler.takeHeapSnapshot', { reportProgress: false });
+  cdp.off('HeapProfiler.addHeapSnapshotChunk', collect);
+  const snapshot = JSON.parse(chunks.join(''));
+  const fields = snapshot.snapshot.meta.node_fields;
+  const types = snapshot.snapshot.meta.node_types[0];
+  const [type, name, size] = ['type', 'name', 'self_size'].map((field) => fields.indexOf(field));
+  const counts = new Map();
+  const keyOf = (index) => `${types[snapshot.nodes[index + type]]}: ${snapshot.strings[snapshot.nodes[index + name]].slice(0, 60).replaceAll('|', '/').replaceAll('\n', ' ')}`;
+  // The first retainer chains (up to four steps) of one node of every key show what keeps it alive.
+  const edgeFields = snapshot.snapshot.meta.edge_fields;
+  const edgeCount = fields.indexOf('edge_count');
+  const toNode = edgeFields.indexOf('to_node');
+  const parents = new Map();
+  for (let index = 0, edge = 0; index < snapshot.nodes.length; index += fields.length) {
+    for (let count = snapshot.nodes[index + edgeCount]; count > 0; count--, edge += edgeFields.length) {
+      const child = snapshot.edges[edge + toNode];
+      if (!parents.has(child)) parents.set(child, index);
+    }
+  }
+  const retainers = new Map();
+  for (let index = 0; index < snapshot.nodes.length; index += fields.length) {
+    const key = keyOf(index);
+    if (retainers.has(key)) continue;
+    const chain = [];
+    for (let parent = parents.get(index), step = 0; parent !== undefined && step < 4; parent = parents.get(parent), step++) chain.push(keyOf(parent));
+    retainers.set(key, [chain.join(' ← ')]);
+  }
+  counts.retainers = retainers;
+  for (let index = 0; index < snapshot.nodes.length; index += fields.length) {
+    const key = keyOf(index);
+    const entry = counts.get(key) ?? { count: 0, size: 0 };
+    entry.count++;
+    entry.size += snapshot.nodes[index + size];
+    counts.set(key, entry);
+  }
+  return counts;
 }
 
 // Returns the Chromium Performance metrics by name. Durations are cumulative seconds.
@@ -200,7 +364,8 @@ async function navigationMemory(browser, origin, cycles) {
   await page.waitForLoadState('networkidle');
   const visit = async (selector) => {
     const before = await page.evaluate(() => location.pathname + document.querySelector('#content h1')?.textContent);
-    await page.click(selector);
+    // element.click() inside the page; page.click adds Playwright checks that allocate memory of their own.
+    await page.evaluate((selector) => document.querySelector(selector).click(), selector);
     await page.waitForFunction((before) => location.pathname + document.querySelector('#content h1')?.textContent !== before, before);
     await page.waitForLoadState('networkidle');
   };
@@ -210,15 +375,25 @@ async function navigationMemory(browser, origin, cycles) {
     return `| ${cycle} | ${(values.JSHeapUsedSize / 1024).toFixed(0)} | ${values.Nodes} | ${values.JSEventListeners} | ${values.Documents} |`;
   };
   const rows = [await sample(0)];
+  let middle = null;
   for (let cycle = 1; cycle <= cycles; cycle++) {
     await visit('#content a[href="/board/create"]');
     await visit('#left a[href="/board"]');
     await visit('#content td a');
     await visit('#left a[href="/board"]');
     if (cycle % 50 === 0) rows.push(await sample(cycle));
+    if (cycle === cycles / 2) middle = await heapCounts(cdp);
   }
+  const end = await heapCounts(cdp);
   await context.close();
-  return rows;
+  const retained = (key) => (end.retainers.get(key) ?? []).join('; ');
+  const growth = [...end]
+    .map(([key, value]) => ({ key, count: value.count - (middle.get(key)?.count ?? 0), size: value.size - (middle.get(key)?.size ?? 0) }))
+    .filter((item) => item.size > 0)
+    .sort((a, b) => b.size - a.size)
+    .slice(0, 12)
+    .map((item) => `| ${item.key} | ${item.count} | ${item.size} | ${retained(item.key)} |`);
+  return { rows, growth, from: cycles / 2, to: cycles };
 }
 
 async function waitFor(url) {

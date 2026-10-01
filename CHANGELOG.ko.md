@@ -46,7 +46,7 @@
 
 ### 추가
 
-- `make bench`로 성능을 측정한다(`docs/operations/benchmark.ko.md`). `make bench-server`는 요청 종류별 `App::handle` 시간과 10~1,000행의 렌더, 데이터 모델, JSON 비용을 잰다. `make bench-browser`는 SSR과 CSR 첫 화면, 영역 이동, 10~1,000행에서 `hy-set` 변경의 시간과 메인 스레드 부하(스크립트, 스타일, 레이아웃, 페인트, GC, 긴 작업), 200회 이동 중 메모리를 잰다. 2026-10-01 측정에서 100행 `hy-set` 변경은 2.6 ms, 1,000행은 25.5 ms였고 두 번의 실행에서 변경 30회 중 50 ms를 넘는 작업이 1회 있었으며, DOM 노드와 이벤트 리스너는 200회 동안 일정했다.
+- `make bench`로 성능을 측정한다(`docs/operations/benchmark.ko.md`). `make bench-server`는 요청 종류별 `App::handle` 시간과 10~1,000행의 렌더, 데이터 모델, JSON 비용을 잰다. `make bench-browser`는 첫 화면, 영역 이동, `hy-set` 변경 1회의 단계별 시간(hyper, 템플릿 엔진, 파싱, htmx morph, `htmx.process`)과 메인 스레드 부하, 50 ms를 넘는 작업의 구성, 200회 이동 중 메모리와 두 힙 스냅샷 사이에 늘어난 객체 및 그 리테이너, 넣었다 뺀 `<thead>`마다 Chromium이 보유하는 `blink::MediaQuerySet`을 잰다. 2026-10-01 측정에서 1,000행 `hy-set` 변경은 22~25 ms였고, 그중 htmx morph가 13~15 ms, 템플릿 엔진이 3 ms였다. DOM 노드와 이벤트 리스너는 200회 동안 일정했다.
 - 영역 데이터를 새로고침 후에도 유지한다(HY-37 ~ HY-41).
   - 영역은 유지 경로와 그 저장소를 선언한다.
     - `server`: 서버 세션. 렌더가 기다리지 않는 백그라운드 요청으로 저장한다.
