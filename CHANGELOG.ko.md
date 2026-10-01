@@ -16,6 +16,7 @@
 
 ### 수정
 
+- bundle 상한을 SSR 스크립트 32,500, CSR 셸 33,800 gzip 바이트로 올린다. 데이터 모델의 모든 숫자를 검사하는 템플릿 runtime이 SSR 스크립트를 32,057, CSR 셸을 33,364 gzip 바이트로 키운다. hyper 코드가 더한 것은 그중 79바이트다.
 - PHP session이 session의 모든 응답에 `Expires`, `Pragma`, 두 번째 `Cache-Control` header를 더했다. 그래서 JSON 응답에 `Cache-Control` header가 두 개 있었고, reply는 페이지를 cache 가능하게 만들 수 없었다. PHP는 303과 204처럼 body가 없는 응답에도 `text/html` type을 주었다. 이제 session은 자기 cookie만 더하고, 모든 페이지 응답은 reply가 상태 200에서 정하지 않으면 `Cache-Control: no-store`를 가지며, `App::run`은 기본 content type을 끈다(HY-52). 응답 header 전체를 비교해 이 결함을 찾았으며, `AppTest`, `RequestTest`, `RunTest`는 수정 전에 실패했다.
 - 스왑, 유지 값, 리다이렉트, 세션의 다음 결함을 수정 전에 실패하던 테스트와 함께 고쳤다.
   - 호출 순서의 수정(HY-33)은 `set`, `render`, `hy-set` 변경을 어떤 응답이 와도 끝냈다. 그 영역을 담지 않은 응답이어도, 스왑이 이미 화면을 바꾼 뒤여도 끝냈다. 그래서 화면에는 보관도 저장도 되지 않은 값이 남았다. 이제 변경은 자기 영역의 데이터가 스왑 전에 교체된 경우에만 끝나고, 스왑 중에 교체되면 보관 데이터로 영역을 다시 렌더한다(HY-33).
