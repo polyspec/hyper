@@ -541,6 +541,16 @@ final class AppTest extends TestCase
         self::assertArrayNotHasKey('Set-Cookie', $this->get('/items/plain')->headers);
     }
 
+    public function testPageResponsesAreNotStoredUnlessTheReplySetsCacheControl(): void
+    {
+        // HY-52: documents and JSON have no-store by default, and only a page with status 200 takes the reply value.
+        self::assertSame('no-store', $this->get('/items/plain')->headers['Cache-Control']);
+        self::assertSame('no-store', $this->get('/items/plain', self::JSON)->headers['Cache-Control']);
+        $token = $this->token();
+        self::assertSame('no-store', $this->post('/add', ['_csrf' => $token, 'name' => ''])->headers['Cache-Control']);
+        self::assertSame('public, max-age=60', $this->get('/items/member', self::JSON)->headers['Cache-Control']);
+    }
+
     public function testJsonResponsesHaveATagAndMatchingRequestsGet304(): void
     {
         // HY-53

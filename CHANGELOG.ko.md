@@ -12,6 +12,7 @@
 
 ### 수정
 
+- PHP session이 session의 모든 응답에 `Expires`, `Pragma`, 두 번째 `Cache-Control` header를 더했다. 그래서 JSON 응답에 `Cache-Control` header가 두 개 있었고, reply는 페이지를 cache 가능하게 만들 수 없었다. PHP는 303과 204처럼 body가 없는 응답에도 `text/html` type을 주었다. 이제 session은 자기 cookie만 더하고, 모든 페이지 응답은 reply가 상태 200에서 정하지 않으면 `Cache-Control: no-store`를 가지며, `App::run`은 기본 content type을 끈다(HY-52). 응답 header 전체를 비교해 이 결함을 찾았으며, `AppTest`, `RequestTest`, `RunTest`는 수정 전에 실패했다.
 - 스왑, 유지 값, 리다이렉트, 세션의 다음 결함을 수정 전에 실패하던 테스트와 함께 고쳤다.
   - 호출 순서의 수정(HY-33)은 `set`, `render`, `hy-set` 변경을 어떤 응답이 와도 끝냈다. 그 영역을 담지 않은 응답이어도, 스왑이 이미 화면을 바꾼 뒤여도 끝냈다. 그래서 화면에는 보관도 저장도 되지 않은 값이 남았다. 이제 변경은 자기 영역의 데이터가 스왑 전에 교체된 경우에만 끝나고, 스왑 중에 교체되면 보관 데이터로 영역을 다시 렌더한다(HY-33).
   - 브라우저가 라우트 영역을 템플릿 정의로 페이지 영역에 넘겨서, 라우트 영역이 영역 응답에서는 페이지 영역 데이터를 보고 문서에서는 보지 못했다. HY-48 이후 같은 URL의 PHP 문서와 htmx 이동 결과가 다를 수 있었다. 이제 서버와 브라우저 모두 라우트 영역을 단독으로 렌더해 HTML로 넘긴다(HY-12, HY-13). `make parity`는 이 경우를 검사하지 않았고, 이제 테스트가 검사한다.
