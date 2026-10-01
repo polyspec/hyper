@@ -1,10 +1,27 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { Hyper, parseAssignments, type RequestContext } from '../src/index.js';
+import { Hyper, parseAssignments, valueToJson, type KeepStorage, type RequestContext } from '../src/index.js';
+import { parseJson } from '@polyspec/template';
 import { testApplication } from './application.js';
 
 interface Swap { region: string; text: string; swap: string }
 
-function setup(basePath = '', fetched: string[] = []): { hyper: Hyper; swaps: Swap[] } {
+// A storage that records writes and requests and returns preset browser values.
+class FakeStorage implements KeepStorage {
+  readonly writes: string[] = [];
+  readonly sent: { url: string; form: Record<string, string> }[] = [];
+  constructor(readonly values: Record<string, string> = {}) {}
+  read(kind: string, region: string, path: string): string | null {
+    return this.values[`${kind}:${region}:${path}`] ?? null;
+  }
+  write(kind: string, region: string, path: string, json: string): void {
+    this.writes.push(`${kind}:${region}:${path}=${json}`);
+  }
+  send(url: string, form: Record<string, string>): void {
+    this.sent.push({ url, form });
+  }
+}
+
+function setup(basePath = '', fetched: string[] = [], storage = new FakeStorage()): { hyper: Hyper; swaps: Swap[] } {
   const swaps: Swap[] = [];
   const element = (id: string) => ({ id } as unknown as Element);
   const htmx = {
@@ -13,7 +30,7 @@ function setup(basePath = '', fetched: string[] = []): { hyper: Hyper; swaps: Sw
       swaps.push({ region: (ctx.target as unknown as { id: string }).id, text: ctx.text, swap: ctx.swap });
     },
   };
-  return { hyper: new Hyper(testApplication(fetched), htmx, { basePath, element }), swaps };
+  return { hyper: new Hyper(testApplication(fetched), htmx, { basePath, element, storage }), swaps };
 }
 
 function region(id: string): { id: string; hasAttribute(name: string): boolean } {
@@ -44,7 +61,7 @@ async function request(hyper: Hyper, action: string, responseUrl: string, body: 
   return ctx;
 }
 
-const listJson = '{"env":{"timezone":"Z"},"route":"list","params":{},"shared":{"title":"T"},"regions":{"content":{"heading":"H"},"rows":{"items":[{"name":"a","open":true},{"name":"b"}]}}}';
+const listJson = '{"env":{"timezone":"Z"},"route":"list","params":{},"shared":{"title":"T","csrf":"token"},"regions":{"content":{"heading":"H"},"rows":{"items":[{"name":"a","open":true},{"name":"b","open":false}],"flag":false,"tab":"a"}}}';
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -110,6 +127,49 @@ describe('held data', () => {
 
   it('fails when nothing is held', async () => {
     await expect(setup().hyper.set('rows', 'a', 1)).rejects.toThrow('no response data');
+  });
+});
+
+describe('kept data', () => {
+  it('stores a changed kept value after rendering, by kind (HY-39)', async () => {
+    const storage = new FakeStorage();
+    const { hyper, swaps } = setup('/api', [], storage);
+    await request(hyper, '/list', 'http://localhost/api/list', listJson);
+    await hyper.set('rows', 'items.0.open', false);
+    expect(swaps).toHaveLength(1);
+    expect(storage.sent).toEqual([{ url: '/api/_hyper/keep', form: { _csrf: 'token', region: 'rows', path: 'items.0.open', value: 'false' } }]);
+
+    const button = {
+      closest: () => ({ id: 'rows' }),
+      getAttribute: () => 'flag=true; tab="b"; items.1.open=true; items.1.name="c"',
+    } as unknown as Element;
+    await hyper.setFrom(button);
+    expect(storage.writes).toEqual(['cookie:rows:flag=true', 'sessionStorage:rows:tab="b"', 'localStorage:rows:items.1.open=true']);
+  });
+
+  it('applies browser kept values before rendering a response (HY-38)', async () => {
+    const storage = new FakeStorage({ 'localStorage:rows:items.1.open': 'true', 'sessionStorage:rows:tab': '1', 'cookie:rows:flag': 'true' });
+    const { hyper } = setup('', [], storage);
+    const ctx = await request(hyper, '/list', 'http://localhost/list', listJson);
+    expect(ctx.text).toBe('<title>T - Site</title><h1>H</h1><ul id="rows" hy-region><li class="open">a</li><li class="open">b</li></ul>');
+    const rows = hyper.data('rows') as Map<string, unknown>;
+    expect(rows.get('tab')).toBe('a');
+    expect(rows.get('flag')).toBe(false);
+  });
+
+  it('renders embedded regions again when browser kept values change them (HY-38)', async () => {
+    const storage = new FakeStorage({ 'localStorage:rows:items.1.open': 'true' });
+    const { hyper, swaps } = setup('', [], storage);
+    await hyper.holdEmbedded(listJson, '/list');
+    expect(swaps.map((swap) => swap.region)).toEqual(['rows']);
+
+    const unchanged = setup('', [], new FakeStorage());
+    await unchanged.hyper.holdEmbedded(listJson, '/list');
+    expect(unchanged.swaps).toEqual([]);
+  });
+
+  it('writes JSON with map keys in their order', () => {
+    expect(valueToJson(parseJson('{"2":1,"1":[true,null,"x"],"a":{"b":1.5}}'))).toBe('{"2":1,"1":[true,null,"x"],"a":{"b":1.5}}');
   });
 });
 

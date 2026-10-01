@@ -19,7 +19,7 @@ The same application deploys in two forms. Both use the same manifest, templates
 
 | Path pattern | Origin | Behavior |
 |---|---|---|
-| `/api/*` | PHP server | All methods, no caching, forward the `Cookie`, `Accept`, `Hy-Region`, `HX-Current-URL`, `HX-Request` and `Content-Type` headers and the query string. |
+| `/api/*` | PHP server | All methods, no caching, forward the `Cookie` (the session cookie and `hy-keep`), `Accept`, `Hy-Region`, `HX-Current-URL`, `HX-Request` and `Content-Type` headers and the query string. |
 | `/assets/*` | S3 bucket | `GET` and `HEAD`, cached by the object headers. |
 | default (`*`) | S3 bucket | `GET` and `HEAD`. A CloudFront Function on viewer request sets the URI to `/index.html`, so every page path receives the shell. |
 

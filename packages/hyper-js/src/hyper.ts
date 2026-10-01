@@ -2,7 +2,8 @@ import { bind, parseJson, type ListValue, type MapValue, type Value } from '@pol
 import { decodeResponse, renderDocument, renderRegion, requireMap, toHtml, type Application, type DecodedResponse } from './response.js';
 import { stripBasePath } from './router.js';
 import { routeTemplates } from './templates.js';
-import type { RouteDeclaration } from './manifest.js';
+import { keptPaths, type RouteDeclaration } from './manifest.js';
+import { applyKept, browserStorage, valueToJson, type KeepStorage } from './keep.js';
 
 // The htmx operations that the browser code uses.
 export interface HtmxApi {
@@ -47,11 +48,14 @@ export interface HyperOptions {
   element?: (id: string) => Element | null;
   // Performs requests for client-side rendering; the default is the global fetch.
   fetch?: typeof fetch;
+  // Stores kept values (HY-37); the default uses the browser document.
+  storage?: KeepStorage;
 }
 
 // Holds region data and renders regions from it (HY-29 to HY-35).
 export class Hyper {
   private held: Held | null = null;
+  private browserStorage: KeepStorage | null = null;
   private readonly element: (id: string) => Element | null;
   private readonly request: typeof fetch;
 
@@ -71,11 +75,14 @@ export class Hyper {
     this.held = { route: decoded.route, timezone: decoded.timezone, shared: decoded.shared, regions };
   }
 
-  // Holds the data that the server embedded in the document and starts loading the templates of its route (HY-31, HY-32, HY-35).
-  holdEmbedded(text: string, path: string): Promise<void> {
+  // Holds the data that the server embedded in the document and starts loading the templates of its route
+  // (HY-31, HY-32, HY-35). Regions whose data changes by browser kept values are rendered again (HY-38).
+  async holdEmbedded(text: string, path: string): Promise<void> {
     const decoded = decodeResponse(this.app, parseJson(text), path);
+    const changed = this.applyBrowserKept(decoded.regions);
     this.hold(decoded);
-    return this.app.templates.ensure(routeTemplates(this.app.manifest, decoded.route));
+    await this.app.templates.ensure(routeTemplates(this.app.manifest, decoded.route));
+    for (const region of changed) await this.renderHeld(region);
   }
 
   // Returns the held data of a region (HY-33).
@@ -86,8 +93,10 @@ export class Hyper {
   // Replaces the held data of a region and renders the region (HY-33).
   async render(region: string, data: unknown): Promise<void> {
     const held = this.requireHeld();
-    held.regions.set(region, requireMap(bind(data), `data of region ${region}`));
+    const value = requireMap(bind(data), `data of region ${region}`);
+    held.regions.set(region, value);
     await this.renderHeld(region);
+    this.store(region, Object.keys(keptPaths(this.app.manifest, region)));
   }
 
   // Sets one value in the held data of a region by a dotted path and renders the region (HY-33).
@@ -98,6 +107,7 @@ export class Hyper {
     for (const key of keys.slice(0, -1)) container = child(container, key, path);
     assign(container, keys[keys.length - 1]!, bind(value), path);
     await this.renderHeld(region);
+    this.store(region, [path]);
   }
 
   // Runs the assignments of a `hy-set` attribute in the region that contains the element (HY-36).
@@ -105,13 +115,15 @@ export class Hyper {
     const region = element.closest('[hy-region]')?.id;
     if (region === undefined || region === '') throw new Error('hyper: hy-set is outside a region');
     const held = this.requireHeld();
-    for (const { path, value } of parseAssignments(element.getAttribute('hy-set') ?? '')) {
+    const assignments = parseAssignments(element.getAttribute('hy-set') ?? '');
+    for (const { path, value } of assignments) {
       const keys = path.split('.');
       let container: Value | undefined = held.regions.get(region);
       for (const key of keys.slice(0, -1)) container = child(container, key, path);
       assign(container, keys[keys.length - 1]!, bind(value), path);
     }
     await this.renderHeld(region);
+    this.store(region, assignments.map((assignment) => assignment.path));
   }
 
   // Renders the document of a path in the browser and replaces the title and the body (HY-22, HY-35).
@@ -133,6 +145,7 @@ export class Hyper {
       return;
     }
     const decoded = decodeResponse(this.app, parseJson(text), url.pathname);
+    this.applyBrowserKept(decoded.regions);
     const parsed = new DOMParser().parseFromString(renderDocument(this.app, decoded), 'text/html');
     this.hold(decoded);
     document.title = parsed.title;
@@ -172,6 +185,7 @@ export class Hyper {
         const path = stripBasePath(pathOf(url), basePath);
         if (path === null) throw new Error(`hyper: response URL ${url} is outside the base path ${basePath}`);
         const decoded = decodeResponse(this.app, parseJson(ctx.text), path);
+        this.applyBrowserKept(decoded.regions);
         ctx.text = toHtml(this.app, decoded);
         this.hold(decoded);
       },
@@ -187,6 +201,49 @@ export class Hyper {
         return false;
       },
     };
+  }
+
+  // Applies localStorage and sessionStorage values to region data and returns the regions that changed (HY-38).
+  private applyBrowserKept(regions: MapValue): string[] {
+    const changed: string[] = [];
+    for (const [name, data] of regions) {
+      const kept: [string, Value][] = [];
+      for (const [path, kind] of Object.entries(keptPaths(this.app.manifest, name))) {
+        if (kind !== 'localStorage' && kind !== 'sessionStorage') continue;
+        const text = this.storage().read(kind, name, path);
+        if (text === null) continue;
+        try {
+          kept.push([path, parseJson(text)]);
+        } catch {
+          continue;
+        }
+      }
+      if (data instanceof Map && applyKept(data, kept).length > 0) changed.push(name);
+    }
+    return changed;
+  }
+
+  // Stores the values of the kept paths among the changed paths of a region (HY-39).
+  private store(region: string, paths: readonly string[]): void {
+    const held = this.requireHeld();
+    const keep = keptPaths(this.app.manifest, region);
+    for (const path of paths) {
+      const kind = keep[path];
+      if (kind === undefined) continue;
+      let value: Value | undefined = held.regions.get(region);
+      for (const key of path.split('.')) value = child(value, key, path);
+      const json = valueToJson(value as Value);
+      if (kind === 'server') {
+        const csrf = held.shared.get('csrf');
+        this.storage().send(`${this.options.basePath}/_hyper/keep`, { _csrf: typeof csrf === 'string' ? csrf : '', region, path, value: json });
+      } else {
+        this.storage().write(kind, region, path, json);
+      }
+    }
+  }
+
+  private storage(): KeepStorage {
+    return this.options.storage ?? (this.browserStorage ??= browserStorage());
   }
 
   private async renderHeld(region: string): Promise<void> {

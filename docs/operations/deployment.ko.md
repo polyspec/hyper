@@ -23,7 +23,7 @@
 
 | 경로 패턴 | 오리진 | 동작 |
 |---|---|---|
-| `/api/*` | PHP 서버 | 모든 메서드를 허용하고 캐시하지 않는다. `Cookie`, `Accept`, `Hy-Region`, `HX-Current-URL`, `HX-Request`, `Content-Type` 헤더와 쿼리 문자열을 전달한다. |
+| `/api/*` | PHP 서버 | 모든 메서드를 허용하고 캐시하지 않는다. `Cookie`(세션 쿠키와 `hy-keep`), `Accept`, `Hy-Region`, `HX-Current-URL`, `HX-Request`, `Content-Type` 헤더와 쿼리 문자열을 전달한다. |
 | `/assets/*` | S3 버킷 | `GET`과 `HEAD`. 객체 헤더에 따라 캐시한다. |
 | 기본값(`*`) | S3 버킷 | `GET`과 `HEAD`. 뷰어 요청 단계의 CloudFront Function이 URI를 `/index.html`로 바꾸므로, 모든 페이지 경로가 셸을 받는다. |
 
