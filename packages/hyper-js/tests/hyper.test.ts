@@ -9,7 +9,10 @@ interface Swap { region: string; text: string; swap: string }
 class FakeStorage implements KeepStorage {
   readonly writes: string[] = [];
   readonly sent: { url: string; form: Record<string, string> }[] = [];
-  constructor(readonly values: Record<string, string> = {}) {}
+  readonly values: Record<string, string>;
+  constructor(values: Record<string, string> = {}) {
+    this.values = values;
+  }
   read(kind: string, region: string, path: string): string | null {
     return this.values[`${kind}:${region}:${path}`] ?? null;
   }

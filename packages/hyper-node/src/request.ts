@@ -32,7 +32,11 @@ interface State {
 }
 
 export class Request {
-  private constructor(private readonly state: State) {}
+  private readonly state: State;
+
+  private constructor(state: State) {
+    this.state = state;
+  }
 
   // Creates a request from its HTTP parts. The form values are read from an application/x-www-form-urlencoded
   // body and from the text fields of a multipart/form-data body, without nesting (HY-57).

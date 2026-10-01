@@ -3,13 +3,19 @@ import { toValue, type Data, type Value } from './values.js';
 
 // The outcome of an action: a redirect (HY-25) or a page with a status (HY-26, HY-58).
 export class Result {
-  private constructor(
-    readonly location: string | null,
-    readonly status: number,
-    readonly data: Data,
-    readonly flashValues: ReadonlyMap<string, Value>,
-    readonly changedTopics: readonly string[],
-  ) {}
+  readonly location: string | null;
+  readonly status: number;
+  readonly data: Data;
+  readonly flashValues: ReadonlyMap<string, Value>;
+  readonly changedTopics: readonly string[];
+
+  private constructor(location: string | null, status: number, data: Data, flashValues: ReadonlyMap<string, Value>, changedTopics: readonly string[]) {
+    this.location = location;
+    this.status = status;
+    this.data = data;
+    this.flashValues = flashValues;
+    this.changedTopics = changedTopics;
+  }
 
   // Returns a redirect to a path of this application (HY-46).
   static redirect(location: string): Result {

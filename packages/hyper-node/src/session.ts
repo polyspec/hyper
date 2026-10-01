@@ -43,7 +43,11 @@ const KEEP = '_hyper_keep';
 
 // Owns the CSRF token, the flash data and the kept values of one session.
 export class Session {
-  constructor(private readonly store: SessionStore) {}
+  private readonly store: SessionStore;
+
+  constructor(store: SessionStore) {
+    this.store = store;
+  }
 
   // Returns the CSRF token and creates it on first use.
   csrfToken(): string {

@@ -52,7 +52,11 @@ export function encodeString(text: string): string {
 // A number of a JSON text that has no value in the data model: a number outside ±(2^53 − 1) or one that is not
 // finite (HY-38, HY-40).
 export class OutsideNumber {
-  constructor(readonly literal: string) {}
+  readonly literal: string;
+
+  constructor(literal: string) {
+    this.literal = literal;
+  }
 }
 
 export type DecodedValue = null | boolean | number | string | OutsideNumber | DecodedValue[] | Map<string, DecodedValue>;

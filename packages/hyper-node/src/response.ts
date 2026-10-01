@@ -5,11 +5,15 @@ export type Headers = Record<string, string | string[]>;
 
 // One HTTP response.
 export class Response {
-  constructor(
-    readonly status: number,
-    readonly headers: Headers,
-    readonly body: string,
-  ) {}
+  readonly status: number;
+  readonly headers: Headers;
+  readonly body: string;
+
+  constructor(status: number, headers: Headers, body: string) {
+    this.status = status;
+    this.headers = headers;
+    this.body = body;
+  }
 
   // Returns a copy with one more header.
   withHeader(name: string, value: string): Response {

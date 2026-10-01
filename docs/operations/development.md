@@ -17,6 +17,8 @@
 | `make template` | Builds the TypeScript template package and reinstalls the Composer copies of the PHP template package; tests, assets and server builds run it first |
 | `make template-check` | Fails when a Composer copy of the PHP template package differs from the template repository |
 | `make ext` | Builds the native template extension of the template repository into `build/ext` (HY-48) |
+| `make packages` | Builds the JavaScript modules and type declarations of `@polyspec/hyper` and `@polyspec/hyper-server` into their `dist` directories; the Node server tests, the asset and server builds and the fixture builds run it first, because they import the packages through their exports (HY-61) |
+| `make package-check` | Installs both packages into `tests/package-install` with `npm install --install-links`, type-checks its test against their declarations with `erasableSyntaxOnly` and runs it under `node` (HY-61) |
 | `make server` | Builds the board server program into `examples/board/build/server` (see below) |
 | `make server-fixtures` | Builds the server program of the PHP test fixtures |
 | `make node-fixtures` | Builds the template files of the PHP test fixtures for the Node server tests with `scripts/build-templates.mjs` |

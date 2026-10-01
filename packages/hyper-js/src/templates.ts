@@ -10,12 +10,15 @@ export type TemplateFetcher = (url: string) => Promise<Template>;
 // Loads templates on demand into the loader of the engine and keeps them (HY-35).
 export class TemplateStore {
   private readonly loading = new Map<string, Promise<void>>();
+  private readonly index: TemplateIndex;
+  private readonly fetcher: TemplateFetcher;
+  readonly loader: MapLoader;
 
-  constructor(
-    private readonly index: TemplateIndex,
-    private readonly fetcher: TemplateFetcher,
-    readonly loader: MapLoader,
-  ) {}
+  constructor(index: TemplateIndex, fetcher: TemplateFetcher, loader: MapLoader) {
+    this.index = index;
+    this.fetcher = fetcher;
+    this.loader = loader;
+  }
 
   // Returns the names and every template that they reference, transitively.
   closure(names: readonly string[]): string[] {

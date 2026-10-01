@@ -1,0 +1,17 @@
+{
+  "name": "@polyspec/hyper-package-install",
+  "version": "0.0.1",
+  "private": true,
+  "description": "A package that installs the hyper npm packages from their directories and runs them under node (HY-61)",
+  "type": "module",
+  "engines": {
+    "node": ">=26"
+  },
+  "scripts": {
+    "test": "node --test package-install.test.ts"
+  },
+  "dependencies": {
+    "@polyspec/hyper": "file:../../packages/hyper-js",
+    "@polyspec/hyper-server": "file:../../packages/hyper-node"
+  }
+}

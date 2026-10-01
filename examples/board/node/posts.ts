@@ -14,10 +14,12 @@ export interface Post extends PostRow {
 
 export class Posts {
   private readonly db: DatabaseSync;
+  private readonly now: () => number;
 
   // Opens the database file and creates the posts table when it does not exist. `now` returns the creation time
   // of a new post in Unix seconds.
-  constructor(file: string, private readonly now: () => number) {
+  constructor(file: string, now: () => number) {
+    this.now = now;
     this.db = new DatabaseSync(file);
     this.db.exec(`CREATE TABLE IF NOT EXISTS posts (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
