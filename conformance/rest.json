@@ -1,0 +1,107 @@
+{
+  "routes": [
+    {
+      "name": "home",
+      "path": "/"
+    },
+    {
+      "name": "files",
+      "path": "/files/{rest*}"
+    },
+    {
+      "name": "all",
+      "path": "/{rest*}"
+    }
+  ],
+  "cases": [
+    {
+      "path": "/",
+      "result": {
+        "name": "home",
+        "params": {}
+      }
+    },
+    {
+      "path": "/files",
+      "result": {
+        "name": "files",
+        "params": {
+          "rest": "/"
+        }
+      }
+    },
+    {
+      "path": "/files/a/b",
+      "result": {
+        "name": "files",
+        "params": {
+          "rest": "/a/b"
+        }
+      }
+    },
+    {
+      "path": "/files/a%2Fb/c",
+      "result": {
+        "name": "files",
+        "params": {
+          "rest": "/a%2Fb/c"
+        }
+      }
+    },
+    {
+      "path": "/files/%EA%B0%80",
+      "result": {
+        "name": "files",
+        "params": {
+          "rest": "/%EA%B0%80"
+        }
+      }
+    },
+    {
+      "path": "/files/a//b",
+      "result": {
+        "name": "files",
+        "params": {
+          "rest": "/a//b"
+        }
+      }
+    },
+    {
+      "path": "/files/",
+      "result": {
+        "name": "files",
+        "params": {
+          "rest": "/"
+        }
+      }
+    },
+    {
+      "path": "/news/2026/10",
+      "result": {
+        "name": "all",
+        "params": {
+          "rest": "/news/2026/10"
+        }
+      }
+    },
+    {
+      "path": "/files/%zz",
+      "result": null
+    },
+    {
+      "path": "/news/%FF",
+      "result": null
+    },
+    {
+      "path": "news",
+      "result": null
+    }
+  ],
+  "invalidPaths": [
+    "/{rest*}/x",
+    "/{rest*}/{more*}",
+    "/{id}/{id*}",
+    "/{*}",
+    "/{1rest*}"
+  ]
+}

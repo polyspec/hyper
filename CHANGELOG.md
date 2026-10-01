@@ -4,6 +4,10 @@
 
 ## Unreleased
 
+### Added
+
+- A route path can end with a rest parameter `{name*}`, which matches zero or more remaining request segments and holds the rest of the request path without decoding (HY-49). Both routers pass the cases of `conformance/rest.json`.
+
 ### Fixed
 
 - These defects of swaps, kept values, redirects and sessions are fixed with tests that failed before:

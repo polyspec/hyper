@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Polyspec\Hyper;
 
-/** Route matching (HY-4 to HY-8). The JavaScript router implements the same rules; both pass conformance/routes.json. */
+/** Route matching (HY-4 to HY-8, HY-49). The JavaScript router implements the same rules; both pass conformance/routes.json and conformance/rest.json. */
 final class Router
 {
-    /** @var list<array{name: string, segments: list<array{0: 'literal'|'param', 1: string}>}> */
+    /** @var list<array{name: string, segments: list<array{0: 'literal'|'param'|'rest', 1: string}>}> */
     private readonly array $routes;
 
     /**
@@ -58,7 +58,7 @@ final class Router
         return str_starts_with($path, $basePath . '/') ? substr($path, strlen($basePath)) : null;
     }
 
-    /** @return list<array{0: 'literal'|'param', 1: string}> */
+    /** @return list<array{0: 'literal'|'param'|'rest', 1: string}> */
     private static function compile(string $path): array
     {
         if (!str_starts_with($path, '/')) {
@@ -69,12 +69,15 @@ final class Router
         }
         $segments = [];
         $names = [];
-        foreach (explode('/', substr($path, 1)) as $part) {
+        $parts = explode('/', substr($path, 1));
+        foreach ($parts as $index => $part) {
             if (preg_match('/^[A-Za-z0-9._~-]+$/D', $part) === 1) {
                 $segments[] = ['literal', $part];
             } elseif (preg_match('/^\{([A-Za-z_][A-Za-z0-9_]*)\}$/D', $part, $found) === 1 && !isset($names[$found[1]])) {
                 $names[$found[1]] = true;
                 $segments[] = ['param', $found[1]];
+            } elseif ($index === count($parts) - 1 && preg_match('/^\{([A-Za-z_][A-Za-z0-9_]*)\*\}$/D', $part, $found) === 1 && !isset($names[$found[1]])) {
+                $segments[] = ['rest', $found[1]];
             } else {
                 throw new \InvalidArgumentException("route path {$path} has an invalid segment {$part}");
             }
@@ -84,12 +87,32 @@ final class Router
     }
 
     /**
-     * @param list<array{0: 'literal'|'param', 1: string}> $segments
+     * @param list<array{0: 'literal'|'param'|'rest', 1: string}> $segments
      * @param list<string> $parts
      * @return array<string, string>|null
      */
     private static function matchSegments(array $segments, array $parts): ?array
     {
+        $last = $segments === [] ? null : $segments[count($segments) - 1];
+        if ($last !== null && $last[0] === 'rest') {
+            $fixed = array_slice($segments, 0, -1);
+            if (count($parts) < count($fixed)) {
+                return null;
+            }
+            $remaining = array_slice($parts, count($fixed));
+            foreach ($remaining as $part) {
+                if ($part !== '' && self::decodeSegment($part) === null) {
+                    return null;
+                }
+            }
+            $params = self::matchSegments($fixed, array_slice($parts, 0, count($fixed)));
+            if ($params === null) {
+                return null;
+            }
+            $params[$last[1]] = '/' . implode('/', $remaining);
+
+            return $params;
+        }
         if (count($segments) !== count($parts)) {
             return null;
         }

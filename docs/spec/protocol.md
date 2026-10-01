@@ -35,6 +35,7 @@ This document defines the application manifest, routing, rendering, the requests
 - **HY-7** Routes are tried in manifest order, and the first route that matches is the result. A path that matches no route has no result.
 - **HY-8** An application may run under a base path such as `/api`. A request path is routed after removing the base path; a request path that does not start with the base path followed by `/` or the end of the path has no result. `Location` headers include the base path.
 - **HY-9** `conformance/routes.json` holds routes and request paths with their expected results. The PHP router and the JavaScript router both pass every case.
+- **HY-49** The last segment of a route path may be a rest parameter `{name*}`, with `name` as in HY-4 and different from the other parameters of the path. It stands at zero or more remaining request segments and matches when every one of them is empty or decodes by HY-6. Its value is the rest of the request path without decoding: `/` followed by the remaining segments joined with `/`, or `/` when none remains. `conformance/rest.json` holds routes and request paths with their expected results; the PHP router and the JavaScript router both pass every case.
 
 ## Data and topics
 

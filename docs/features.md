@@ -8,6 +8,7 @@
 | composition | Screen composition rules (HC-1 to HC-7) and the template check for HC-6 | implemented | [Composition](spec/composition.md), `make templates-check` |
 | manifest | Application manifest read by PHP and the browser | implemented | `make test-php`, `make test-js` |
 | router | PHP and browser routers with shared conformance cases | implemented | `make test-php`, `make test-js` |
+| rest-routes | Rest parameters `{name*}` at the end of route paths (HY-49) | implemented | `make test-php`, `make test-js` |
 | hyper-js | Browser code: region and document rendering, htmx extension, client-side rendering | implemented | `make test-js`, `make e2e` |
 | hyper-php | PHP server: routes, actions, CSRF, flash, changed topics, base path, documents and JSON | implemented | `make test-php` |
 | route-regions | Route regions inside a page with their own loaders (HY-30) | implemented | `make test-php`, `make parity` |

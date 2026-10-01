@@ -31,3 +31,22 @@ describe('Router conformance', () => {
     expect(() => new Router([{ name: 'invalid', path }])).toThrow();
   });
 });
+
+const rest = JSON.parse(readFileSync(new URL('../../../conformance/rest.json', import.meta.url), 'utf8')) as {
+  routes: { name: string; path: string }[];
+  cases: Case[];
+  invalidPaths: string[];
+};
+
+// HY-49: these are the same rest parameter cases that the PHP router passes.
+describe('Router rest parameters', () => {
+  const restRouter = new Router(rest.routes);
+
+  it.each(rest.cases)('routes $path', ({ path, result }) => {
+    expect(restRouter.match(path)).toEqual(result);
+  });
+
+  it.each(rest.invalidPaths)('rejects the route path %j', (path) => {
+    expect(() => new Router([{ name: 'invalid', path }])).toThrow();
+  });
+});
