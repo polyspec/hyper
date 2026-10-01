@@ -9,7 +9,7 @@ EXT := build/ext/release/libpolyspec_template.$(if $(filter Darwin,$(shell uname
 
 .DEFAULT_GOAL := help
 
-.PHONY: help install template ext server server-fixtures node-server node-fixtures assets test-js test-node test-php lint templates-check test-scripts parity bundle-size e2e docs-check serve-demo bench-server bench-browser bench check
+.PHONY: help install template ext server server-fixtures node-server node-fixtures assets test-js test-node test-php lint templates-check test-scripts parity server-parity bundle-size e2e docs-check serve-demo bench-server bench-browser bench check
 
 help: ## List the targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
@@ -65,6 +65,9 @@ parity: assets server ext ## Compare PHP documents (generated program and native
 	node scripts/check-parity.mjs --app $(BOARD) --requests $(BOARD)/tests/parity/requests.json --port 8092
 	node scripts/check-parity.mjs --app $(BOARD) --requests $(BOARD)/tests/parity/requests.json --port 8092 --extension $(EXT)
 
+server-parity: node-server server ## Compare the Node server responses with the PHP responses, with the browser comparison of parity (HY-55)
+	node scripts/check-parity.mjs --app $(BOARD) --requests $(BOARD)/tests/parity/requests.json --port 8094 --node-port 8096
+
 bundle-size: assets ## Print the SSR script and CSR shell sizes and enforce the gzip limits
 	node scripts/check-bundle-size.mjs --app $(BOARD) --limits config/bundle-size.json
 
@@ -87,4 +90,4 @@ bench-browser: assets server ## Measure first screens, navigation, hy-set phases
 
 bench: bench-server bench-browser ## Run both measurements; results are reports, not pass or fail checks
 
-check: docs-check lint templates-check test-scripts test-js test-node test-php parity bundle-size e2e ## Run every check
+check: docs-check lint templates-check test-scripts test-js test-node test-php parity server-parity bundle-size e2e ## Run every check

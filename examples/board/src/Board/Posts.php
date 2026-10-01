@@ -11,8 +11,11 @@ final class Posts
 {
     private readonly PDO $db;
 
-    /** Opens the database file and creates the posts table when it does not exist. */
-    public function __construct(string $file)
+    /**
+     * Opens the database file and creates the posts table when it does not exist. `$now` returns the creation time
+     * of a new post in Unix seconds.
+     */
+    public function __construct(string $file, private readonly \Closure $now)
     {
         $this->db = new PDO("sqlite:{$file}", options: [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
         $this->db->exec(
@@ -84,7 +87,7 @@ final class Posts
     public function create(string $title, string $author, string $body): int
     {
         $statement = $this->db->prepare('INSERT INTO posts (title, author, body, created_at) VALUES (?, ?, ?, ?)');
-        $statement->execute([$title, $author, $body, time()]);
+        $statement->execute([$title, $author, $body, ($this->now)()]);
 
         return (int) $this->db->lastInsertId();
     }

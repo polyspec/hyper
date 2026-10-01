@@ -245,6 +245,8 @@
   - session store는 각 session을 한 디렉터리의 파일에 저장하며, 파일 이름은 store가 만든 64자리 16진수 식별자다. session cookie는 PHP session cookie와 같은 속성과 순서로 쓰고(`<name>=<id>; path=/; secure; HttpOnly; SameSite=Lax`, `secure`는 HY-45의 조건에서), 한 session의 요청은 차례로 실행한다.
   - 폼 필드는 `application/x-www-form-urlencoded` body와 `multipart/form-data` body의 텍스트 필드에서 읽고, `a[b]` 같은 대괄호 이름은 그대로 둔다. 한도(기본 8 MiB)보다 큰 요청 body는 상태 413을 받는다.
 
+- **HY-55** `make server-parity`는 `examples/board/tests/parity/requests.json`의 단계를 PHP 서버와 board Node 서버에 동시에 실행한다. 각 서버는 자기 빈 데이터베이스와 session을 쓰고, 게시글의 생성 시각(`BOARD_TIME`)은 같다. 단계의 모든 요청에서 HTML 문서, 문서 JSON, 영역 JSON 모두 두 응답의 상태, header, body가 같아야 한다. 비교 전에 session cookie의 session 식별자를 `<session>`으로, 각 session의 CSRF token을 header와 body에서 `<csrf>`로 바꾸고, body에 token이 들어 있으므로 `ETag` 값이 그 body의 tag인지(HY-53) 확인한 뒤 `<etag>`로 바꾼다. HTTP 서버 프로그램이 스스로 쓰는 header인 `Date`, `Connection`, `Keep-Alive`, `Content-Length`, `Transfer-Encoding`과 PHP 내장 서버의 `Host`, `X-Powered-By`는 비교하지 않는다. header는 이름과 값 쌍의 집합으로 비교하고, `Set-Cookie`는 값마다 비교한다. 같은 실행에서 PHP 서버에 대한 `make parity`의 브라우저 비교도 수행한다.
+
 ## 오류
 
 - **HY-27** 상태 404와 405는 다음 경우에 응답한다.
