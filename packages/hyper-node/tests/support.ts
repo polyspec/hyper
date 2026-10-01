@@ -1,6 +1,6 @@
 // The fixture application of the PHP server tests, served by the Node server.
 import { fileURLToPath } from 'node:url';
-import { App, Forbidden, MemorySessionStore, NotFound, Redirect, Request, Result, type AppOptions, type Handlers, type Response } from '../src/index.js';
+import { App, BadRequest, Forbidden, MemorySessionStore, NotFound, Redirect, Request, Result, type AppOptions, type Handlers, type Response } from '../src/index.js';
 
 export const FIXTURES = fileURLToPath(new URL('../../hyper-php/tests/fixtures/', import.meta.url));
 // The template files of the fixtures, which `make test-node` builds with scripts/build-templates.mjs.
@@ -29,6 +29,9 @@ export function handlers(): Handlers<Services> {
           const counter = services.get('counter');
           counter.actions++;
           if (request.formString('name') === 'closed') throw new Forbidden();
+          if (request.formString('name') === 'unreadable') throw new BadRequest();
+          if (request.formString('name') === 'taken') return Result.page(409, { name: 'taken', error: 'conflict' });
+          if (request.formString('name') === 'preview') return Result.page(200, { name: 'preview' });
           if (request.formString('name') === '') return Result.invalid({ name: '', error: 'empty' });
           counter.count++;
           return Result.redirect('/').flash('note', 'added').changed('count');
@@ -55,6 +58,8 @@ export function handlers(): Handlers<Services> {
               throw new NotFound();
             case 'private':
               throw new Forbidden();
+            case 'unreadable':
+              throw new BadRequest();
             case 'moved':
               throw new Redirect(Result.redirect('/items/new').flash('note', 'moved'));
             case 'broken':

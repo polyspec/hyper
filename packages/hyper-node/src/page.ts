@@ -71,10 +71,10 @@ export async function renderPage<S extends object>(input: PageInput<S>, environm
     const body = encodeJson(value);
     const headers: Headers = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': cacheControl, Vary: VARY };
     if (status !== 200) return new Response(status, headers, body);
-    // HY-53: a strong tag of the body; a matching request receives 304 without a body.
+    // HY-53: a strong tag of the body; a matching GET request receives 304 without a body.
     const tag = `"${createHash('sha256').update(body).digest('hex').slice(0, 32)}"`;
     headers.ETag = tag;
-    return request.header('If-None-Match') === tag ? new Response(304, headers, '') : new Response(200, headers, body);
+    return request.method === 'GET' && request.header('If-None-Match') === tag ? new Response(304, headers, '') : new Response(200, headers, body);
   }
   const document = renderDocument(application, decodeResponse(application, value, request.path()));
   return new Response(status, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': cacheControl, Vary: VARY }, document);

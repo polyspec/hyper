@@ -289,6 +289,42 @@ describe('App', () => {
     expect(fixture.counter.count).toBe(0);
   });
 
+  it('answers a bad request loader and action with 400 (HY-58)', async () => {
+    const page = await fixture.get('/items/unreadable', JSON_REGION);
+    expect(page.status).toBe(400);
+    expect(page.body).toBe('Bad Request');
+    expect(page.headers['Content-Type']).toBe('text/plain; charset=utf-8');
+    const action = await fixture.post('/add', { _csrf: await fixture.token(), name: 'unreadable' });
+    expect(action.status).toBe(400);
+    expect(fixture.counter.count).toBe(0);
+  });
+
+  it('renders the page with the status of an action result (HY-58)', async () => {
+    const token = await fixture.token();
+    const conflict = await fixture.post('/add', { _csrf: token, name: 'taken' }, JSON_REGION);
+    expect(conflict.status).toBe(409);
+    expect(json(conflict).regions.content).toEqual({ name: 'taken', error: 'conflict' });
+    expect(conflict.headers['Cache-Control']).toBe('no-store');
+    const document = await fixture.post('/add', { _csrf: token, name: 'taken' });
+    expect(document.status).toBe(409);
+    expect(document.body).toContain('<p>Add|taken !conflict</p>');
+
+    const preview = await fixture.post('/add', { _csrf: token, name: 'preview' }, { Accept: 'application/json' });
+    expect(preview.status).toBe(200);
+    expect((json(preview).regions.content as Record<string, unknown>).name).toBe('preview');
+    // HY-53: only a GET request receives 304; an action runs whatever tag the request names.
+    const again = await fixture.post('/add', { _csrf: token, name: 'preview' }, { Accept: 'application/json', 'If-None-Match': preview.headers.ETag as string });
+    expect(again.status).toBe(200);
+    expect(again.body).toBe(preview.body);
+    expect((await fixture.post('/add', { _csrf: token, name: 'preview' })).status).toBe(200);
+    expect(fixture.counter.count).toBe(0);
+  });
+
+  it('accepts an action result status of 200, 409 or 422 only (HY-58)', () => {
+    expect(Result.invalid({}).status).toBe(422);
+    for (const status of [201, 303, 400, 404, 500]) expect(() => Result.page(status, {})).toThrow('status');
+  });
+
   it('puts the reply cookies and cache control into the response (HY-52)', async () => {
     const page = await fixture.get('/items/member');
     expect(page.status).toBe(200);

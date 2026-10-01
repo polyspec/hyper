@@ -6,6 +6,7 @@
 
 ### 추가
 
+- loader나 action은 `BadRequest`로 요청을 멈춰 텍스트 `Bad Request`와 함께 400으로 응답할 수 있고, action은 200, 409, 422 상태로 라우트 페이지를 렌더하는 `Result::page(status, data)`(Node에서는 `Result.page`)를 반환할 수 있다(HY-58). `Result::invalid(data)`는 422인 페이지다. 이제 `GET` 요청만 맞는 `If-None-Match`에 304를 받으므로, 200으로 페이지를 렌더하는 action은 언제나 실행된다(HY-53).
 - `Request`는 body의 모든 폼 값을 쿼리 값처럼 중첩 없이 순서대로 제공한다. `roles[]`는 모든 값을 가진 이름 `roles[]`로 남는다(HY-57). PHP는 대괄호 이름을 중첩하는 `$_POST`를 읽었고, Node 서버는 이름의 마지막 값만 남겼다. 이제 두 서버 모두 원본 body, 즉 `application/x-www-form-urlencoded` body나 `multipart/form-data` body의 텍스트 필드를 읽는다. PHP는 `enable_post_data_reading`이 꺼져 있을 때만 multipart body를 읽는다. `formString`은 이름의 마지막 값을 읽는다. 두 서버는 `conformance/fields.json`의 multipart 사례 4개를 통과한다.
 - `Request`는 모든 쿼리 값을 중첩 없이 순서대로, 각 이름을 그 값들에 대응시키는 순서 있는 map으로 제공하고, 요청 대상의 원본 쿼리도 제공한다(HY-56). PHP는 `a[]`와 `a[b]`를 중첩하고 반복된 이름의 값을 하나만 남기는 `$_GET`을 읽었으므로, 이제 두 서버 모두 원본 쿼리를 직접 parse한다. `queryInt`는 이름의 마지막 값을 읽는다. 두 서버는 `conformance/fields.json`의 사례 17개를 통과한다.
 - `make check`에 포함된 `make server-parity`는 parity 단계의 모든 요청을 PHP 서버와 board Node 서버에 보내고, session 식별자, CSRF token, `ETag` 값을 placeholder로 바꾼 뒤 상태, header, body가 같은지 확인한다(HY-55). 41개 응답이 같았다. `BOARD_TIME`은 두 board 서버에서 게시글의 생성 시각을 고정한다.
