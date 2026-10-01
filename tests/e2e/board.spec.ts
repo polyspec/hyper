@@ -197,6 +197,42 @@ test('CSR loads only the templates that a route needs', async ({ page }) => {
   expect(templates).toEqual(['board-create']);
 });
 
+test('SSR: after a history restore the list holds its own data (HY-32)', async ({ page }) => {
+  const errors = collectErrors(page);
+  await page.goto(`${ssr}/board`);
+  await page.locator('#rows tbody a').first().click();
+  await expect(page.locator('#reader')).toBeVisible();
+  await page.goBack();
+  await expect(page.locator('#rows')).toBeVisible();
+  await page.getByRole('button', { name: '제목순' }).click();
+  await expect(page.locator('#rows .chip.current').first()).toHaveText('제목순');
+  expect(errors).toEqual([]);
+});
+
+test('a failed region request keeps the page and marks the region (HY-47)', async ({ page }) => {
+  for (const origin of [ssr, csr]) {
+    await page.goto(`${origin}/board`);
+    await page.waitForLoadState('networkidle');
+    const failed = page.waitForResponse((response) => response.status() === 404);
+    await page.evaluate(() => (window as unknown as { htmx: { ajax(method: string, path: string, options: object): Promise<unknown> } }).htmx.ajax('GET', '/board/999', { target: '#content' }));
+    await failed;
+    await expect(page.locator('#content')).toHaveAttribute('hy-error', '404');
+    await expect(page.locator('#content h1')).toHaveText('게시판');
+    await expect(page).toHaveURL(`${origin}/board`);
+    await page.getByRole('link', { name: '글쓰기' }).click();
+    await expect(page.locator('#content h1')).toHaveText('글쓰기');
+    await expect(page.locator('#content')).not.toHaveAttribute('hy-error');
+  }
+});
+
+test('the comparison page accepts only an http origin', async ({ page }) => {
+  let dialogs = 0;
+  page.on('dialog', (dialog) => { dialogs++; void dialog.dismiss(); });
+  await page.goto(`${csr}/compare?ssr=${encodeURIComponent('javascript:alert(1)//')}`);
+  await expect(page.locator('#ssr')).toHaveAttribute('src', `${csr}/board`);
+  expect(dialogs).toBe(0);
+});
+
 test('SSR works without JavaScript', async ({ browser }) => {
   const context = await browser.newContext({ javaScriptEnabled: false });
   const page = await context.newPage();

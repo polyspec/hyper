@@ -16,6 +16,13 @@
     { "label": "map", "data": { "filter": { "a": 1 } }, "kept": [["filter", { "b": 2 }]], "expected": { "filter": { "b": 2 } } },
     { "label": "list", "data": { "tags": ["a"] }, "kept": [["tags", ["b", "c"]]], "expected": { "tags": ["b", "c"] } },
     { "label": "list to map", "data": { "tags": ["a"] }, "kept": [["tags", { "b": 1 }]], "expected": { "tags": ["a"] } },
+    { "label": "empty map replaces a map", "data": { "m": { "10": "a", "2": "b" } }, "kept": [["m", {}]], "expected": { "m": {} } },
+    { "label": "map replaces an empty map", "data": { "m": {} }, "kept": [["m", { "a": 1 }]], "expected": { "m": { "a": 1 } } },
+    { "label": "empty list replaces a list", "data": { "l": [1] }, "kept": [["l", []]], "expected": { "l": [] } },
+    { "label": "empty map does not replace a list", "data": { "l": [1] }, "kept": [["l", {}]], "expected": { "l": [1] } },
+    { "label": "empty list does not replace a map", "data": { "m": { "a": 1 } }, "kept": [["m", []]], "expected": { "m": { "a": 1 } } },
+    { "label": "path through an empty map", "data": { "m": {} }, "kept": [["m.a", 1]], "expected": { "m": {} } },
+    { "label": "numeric map keys keep their order", "data": { "m": { "10": 1, "2": 2 } }, "kept": [["m.2", 3]], "expected": { "m": { "10": 1, "2": 3 } } },
     { "label": "in order", "data": { "a": 1, "b": "x" }, "kept": [["b", "y"], ["a", 2], ["b", "z"]], "expected": { "a": 2, "b": "z" } }
   ]
 }

@@ -70,6 +70,32 @@ final class Request
         return $this->params[$name] ?? null;
     }
 
+    /** Returns true when the path, the query and form values, the cookies that hyper reads and HX-Current-URL are valid UTF-8 (HY-42). */
+    public function validUtf8(): bool
+    {
+        $strings = [$this->path, $this->header('HX-Current-URL') ?? ''];
+        $query = $this->query;
+        $form = $this->form;
+        array_walk_recursive($query, function (mixed $value, mixed $key) use (&$strings): void {
+            $strings[] = (string) $key;
+            $strings[] = is_string($value) ? $value : '';
+        });
+        array_walk_recursive($form, function (mixed $value, mixed $key) use (&$strings): void {
+            $strings[] = (string) $key;
+            $strings[] = is_string($value) ? $value : '';
+        });
+        foreach (['hy-keep', session_name()] as $name) {
+            $strings[] = $this->cookies[$name] ?? '';
+        }
+        foreach ($strings as $string) {
+            if (preg_match('//u', $string) !== 1) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     /** Returns the value of a header, or null. */
     public function header(string $name): ?string
     {
@@ -137,6 +163,20 @@ final class Request
         return $this->csrfToken;
     }
 
+    /**
+     * Returns the path of a request target: the target before `?` or `#`, after the authority of an
+     * absolute-form target, without decoding (HY-42).
+     */
+    public static function targetPath(string $target): string
+    {
+        $path = substr($target, 0, strcspn($target, '?#'));
+        if (preg_match('#^[A-Za-z][A-Za-z0-9+.-]*://[^/]*#', $path, $authority) === 1) {
+            $path = substr($path, strlen($authority[0]));
+        }
+
+        return $path === '' ? '/' : $path;
+    }
+
     /** Creates a request from the PHP request globals. */
     public static function fromGlobals(): self
     {
@@ -146,11 +186,9 @@ final class Request
                 $headers[str_replace('_', '-', substr($key, 5))] = $value;
             }
         }
-        $path = parse_url((string) ($_SERVER['REQUEST_URI'] ?? '/'), PHP_URL_PATH);
-
         return new self(
             strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? 'GET')),
-            is_string($path) && $path !== '' ? $path : '/',
+            self::targetPath((string) ($_SERVER['REQUEST_URI'] ?? '/')),
             $headers,
             $_GET,
             $_POST,

@@ -1,5 +1,5 @@
 import { bind, parseJson, type ListValue, type MapValue, type Value } from '@polyspec/template/render';
-import { decodeResponse, renderDocument, renderRegion, requireMap, toHtml, type Application, type DecodedResponse } from './response.js';
+import { copyValue, decodeResponse, renderDocument, renderRegion, requireMap, toHtml, type Application, type DecodedResponse } from './response.js';
 import { stripBasePath } from './router.js';
 import { routeTemplates } from './templates.js';
 import { keptPaths, type RouteDeclaration } from './manifest.js';
@@ -15,7 +15,7 @@ export interface HtmxApi {
 export interface RequestContext {
   target?: unknown;
   request: { action: string; method?: string; headers: Record<string, string> };
-  response?: { raw?: { url: string }; headers: { get(name: string): string | null } };
+  response?: { raw?: { url: string }; status?: number; headers: { get(name: string): string | null } };
   text?: string;
   fetch?: (url: string, init: unknown) => Promise<Response>;
   hyperRegion?: string;
@@ -28,9 +28,21 @@ export interface HookDetail {
 export interface HyperExtension {
   htmx_config_request(elt: unknown, detail: HookDetail): void;
   htmx_before_request(elt: unknown, detail: HookDetail): void;
-  htmx_after_request(elt: unknown, detail: HookDetail): void;
+  htmx_after_request(elt: unknown, detail: HookDetail): boolean | void;
+  htmx_after_swap(elt: unknown, detail: HookDetail): void;
+  htmx_error(elt: unknown, detail: { ctx?: RequestContext; error?: unknown }): void;
   htmx_before_history_update(elt: unknown, detail: { history: { type: string; path: string } }): void;
   htmx_before_history_restore(elt: unknown, detail: { path: string }): boolean;
+}
+
+// Mounts documents that client-side rendering produces.
+export interface DocumentAdapter {
+  // Replaces the title and the body with those of a rendered document and lets htmx process the body.
+  mount(html: string): void;
+  // Replaces the body with text, for a path without a route or a response that is not JSON.
+  text(text: string): void;
+  // Marks the body as failed when a document cannot be rendered (HY-47).
+  fail(status: string): void;
 }
 
 // The data of the last rendered response (HY-32).
@@ -41,33 +53,60 @@ interface Held {
   regions: MapValue;
 }
 
+interface RegionElement {
+  id: string;
+  hasAttribute(name: string): boolean;
+  setAttribute?(name: string, value: string): void;
+  removeAttribute?(name: string): void;
+}
+
 export interface HyperOptions {
   // The base path of the server for client-side rendering; empty for server-side rendering (HY-22, HY-23).
   basePath: string;
-  // Returns the element of a region; the default reads the document.
+  // Returns the element with an id; the default reads the document.
   element?: (id: string) => Element | null;
   // Performs requests for client-side rendering; the default is the global fetch.
   fetch?: typeof fetch;
   // Stores kept values (HY-37); the default uses the browser document.
   storage?: KeepStorage;
+  // Mounts client-side rendered documents; the default uses the browser document.
+  document?: DocumentAdapter;
+  // Returns the URL of the current page; the default reads the browser location.
+  currentUrl?: () => string;
 }
 
-// Holds region data and renders regions from it (HY-29 to HY-35).
+// A server kept value whose saving has not completed, with the number of its change (HY-39).
+interface Pending {
+  value: Value;
+  change: number;
+}
+
+// Holds region data and renders regions from it (HY-29 to HY-39, HY-47).
 export class Hyper {
   private held: Held | null = null;
   private browserStorage: KeepStorage | null = null;
+  // server kept values whose saving has not completed, by region and path (HY-38, HY-39)
+  private readonly pending = new Map<string, Map<string, Pending>>();
+  private changes = 0;
+  private location = 0;
+  private locationAbort: AbortController | null = null;
   private readonly element: (id: string) => Element | null;
   private readonly request: typeof fetch;
+  private readonly page: DocumentAdapter;
+  private readonly currentUrl: () => string;
 
   constructor(readonly app: Application, private readonly htmx: HtmxApi, private readonly options: HyperOptions) {
     this.element = options.element ?? ((id) => document.getElementById(id));
     this.request = options.fetch ?? ((input, init) => fetch(input, init));
+    this.page = options.document ?? browserDocument(htmx);
+    this.currentUrl = options.currentUrl ?? (() => window.location.href);
   }
 
-  // Holds the data of a rendered response; regions of an earlier route are replaced by the new route (HY-32).
-  hold(decoded: DecodedResponse): void {
+  // Holds the data of a rendered response. A replacing hold drops every region of the earlier
+  // response; otherwise only the regions of the earlier route are replaced (HY-32).
+  hold(decoded: DecodedResponse, replace = false): void {
     const regions: MapValue = new Map();
-    if (this.held !== null) {
+    if (this.held !== null && !replace) {
       const dropped = new Set([this.app.page, ...(this.held.route.regions ?? []).map((region) => region.name)]);
       for (const [name, data] of this.held.regions) if (!dropped.has(name)) regions.set(name, data);
     }
@@ -75,14 +114,18 @@ export class Hyper {
     this.held = { route: decoded.route, timezone: decoded.timezone, shared: decoded.shared, regions };
   }
 
-  // Holds the data that the server embedded in the document and starts loading the templates of its route
-  // (HY-31, HY-32, HY-35). Regions whose data changes by browser kept values are rendered again (HY-38).
+  // Holds the data that the server embedded in the document, replacing all held data, starts loading
+  // the templates of its route, and renders regions that browser kept values change (HY-31, HY-32, HY-38).
   async holdEmbedded(text: string, path: string): Promise<void> {
     const decoded = decodeResponse(this.app, parseJson(text), path);
     const changed = this.applyBrowserKept(decoded.regions);
-    this.hold(decoded);
+    this.hold(decoded, true);
+    const held = this.held;
     await this.app.templates.ensure(routeTemplates(this.app.manifest, decoded.route));
-    for (const region of changed) await this.renderHeld(region);
+    for (const region of changed) {
+      if (this.held !== held) return;
+      await this.renderHeld(region);
+    }
   }
 
   // Returns the held data of a region (HY-33).
@@ -92,68 +135,88 @@ export class Hyper {
 
   // Replaces the held data of a region and renders the region (HY-33).
   async render(region: string, data: unknown): Promise<void> {
-    const held = this.requireHeld();
-    const value = requireMap(bind(data), `data of region ${region}`);
-    held.regions.set(region, value);
-    await this.renderHeld(region);
-    this.store(region, Object.keys(keptPaths(this.app.manifest, region)));
+    await this.change(region, () => requireMap(bind(data), `data of region ${region}`), Object.keys(keptPaths(this.app.manifest, region)));
   }
 
   // Sets one value in the held data of a region by a dotted path and renders the region (HY-33).
   async set(region: string, path: string, value: unknown): Promise<void> {
-    const held = this.requireHeld();
-    const keys = path.split('.');
-    let container: Value | undefined = held.regions.get(region);
-    for (const key of keys.slice(0, -1)) container = child(container, key, path);
-    assign(container, keys[keys.length - 1]!, bind(value), path);
-    await this.renderHeld(region);
-    this.store(region, [path]);
+    await this.change(region, (data) => {
+      assignPath(data, path, bind(value));
+      return requireMap(data ?? null, `data of region ${region}`);
+    }, [path]);
   }
 
   // Runs the assignments of a `hy-set` attribute in the region that contains the element (HY-36).
   async setFrom(element: Element): Promise<void> {
     const region = element.closest('[hy-region]')?.id;
     if (region === undefined || region === '') throw new Error('hyper: hy-set is outside a region');
-    const held = this.requireHeld();
     const assignments = parseAssignments(element.getAttribute('hy-set') ?? '');
-    for (const { path, value } of assignments) {
-      const keys = path.split('.');
-      let container: Value | undefined = held.regions.get(region);
-      for (const key of keys.slice(0, -1)) container = child(container, key, path);
-      assign(container, keys[keys.length - 1]!, bind(value), path);
-    }
-    await this.renderHeld(region);
-    this.store(region, assignments.map((assignment) => assignment.path));
+    await this.change(region, (data) => {
+      for (const { path, value } of assignments) assignPath(data, path, bind(value));
+      return requireMap(data ?? null, `data of region ${region}`);
+    }, assignments.map((assignment) => assignment.path));
   }
 
-  // Renders the document of a path in the browser and replaces the title and the body (HY-22, HY-35).
+  // Changes a copy of the held data of a region, renders the region with it, and only then holds it
+  // and stores the changed kept paths. A failure leaves held data unchanged and marks the region (HY-47).
+  private async change(region: string, update: (data: Value | undefined) => MapValue, paths: readonly string[]): Promise<void> {
+    const held = this.requireHeld();
+    try {
+      const current = held.regions.get(region);
+      const next = update(current === undefined ? undefined : copyValue(current));
+      const regions: MapValue = new Map(held.regions);
+      regions.set(region, next);
+      await this.app.templates.ensure(routeTemplates(this.app.manifest, held.route));
+      const target = this.element(region);
+      if (target === null) throw new Error(`hyper: region element #${region} does not exist`);
+      const html = renderRegion(this.app, held.route, region, held.shared, regions, held.timezone);
+      await this.htmx.swap({ text: html, target, swap: 'innerMorph', sourceElement: target });
+      clearError(target);
+      held.regions.set(region, next);
+    } catch (error) {
+      markError(this.element(region), '0');
+      throw error;
+    }
+    this.store(region, paths);
+  }
+
+  // Renders the document of a path in the browser. A later call cancels an earlier one that is
+  // still loading, and only the latest is mounted (HY-22, HY-23, HY-35).
   async renderLocation(location: string): Promise<void> {
-    const url = new URL(location, window.location.origin);
+    const generation = ++this.location;
+    this.locationAbort?.abort();
+    const abort = new AbortController();
+    this.locationAbort = abort;
+    const url = new URL(location, 'http://hyper.invalid');
     const match = this.app.router.match(url.pathname);
     if (match === null) {
-      replaceBody(document.createTextNode('Not Found'));
+      this.page.text('Not Found');
       return;
     }
     const route = this.app.manifest.routes.find((item) => item.name === match.name)!;
-    const [response] = await Promise.all([
-      this.request(this.options.basePath + url.pathname + url.search, { headers: { Accept: 'application/json' }, credentials: 'same-origin' }),
-      this.app.templates.ensure(routeTemplates(this.app.manifest, route)),
-    ]);
-    const text = await response.text();
-    if (!(response.headers.get('content-type') ?? '').startsWith('application/json')) {
-      replaceBody(document.createTextNode(text));
-      return;
+    try {
+      const [response] = await Promise.all([
+        this.request(this.options.basePath + url.pathname + url.search, { headers: { Accept: 'application/json' }, credentials: 'same-origin', signal: abort.signal }),
+        this.app.templates.ensure(routeTemplates(this.app.manifest, route)),
+      ]);
+      const text = await response.text();
+      if (generation !== this.location) return;
+      if (!(response.headers.get('content-type') ?? '').startsWith('application/json')) {
+        this.page.text(text);
+        return;
+      }
+      const decoded = decodeResponse(this.app, parseJson(text), url.pathname);
+      this.applyBrowserKept(decoded.regions);
+      const html = renderDocument(this.app, decoded);
+      this.hold(decoded, true);
+      this.page.mount(html);
+    } catch {
+      if (abort.signal.aborted || generation !== this.location) return;
+      this.page.fail('0');
     }
-    const decoded = decodeResponse(this.app, parseJson(text), url.pathname);
-    this.applyBrowserKept(decoded.regions);
-    const parsed = new DOMParser().parseFromString(renderDocument(this.app, decoded), 'text/html');
-    this.hold(decoded);
-    document.title = parsed.title;
-    replaceBody(...Array.from(parsed.body.childNodes), parsed.body);
-    this.htmx.process(document.body);
   }
 
-  // Returns the htmx extension (HY-21, HY-23, HY-35).
+  // Returns the htmx extension (HY-21, HY-23, HY-32, HY-35, HY-47).
   extension(): HyperExtension {
     const basePath = this.options.basePath;
     return {
@@ -162,15 +225,20 @@ export class Hyper {
         ctx.request.headers['Accept'] = 'application/json';
         ctx.request.headers['Hy-Region'] = ctx.target.id;
         ctx.hyperRegion = ctx.target.id;
-        const action = ctx.request.action;
-        if (basePath !== '' && action.startsWith('/') && !action.startsWith('//') && stripBasePath(pathOf(action), basePath) === null) {
-          ctx.request.action = basePath + action;
+        if (basePath !== '') {
+          const page = new URL(this.currentUrl());
+          const url = new URL(ctx.request.action, page);
+          if (url.origin === page.origin) ctx.request.action = basePath + url.pathname + url.search;
         }
       },
       htmx_before_request: (_elt, { ctx }) => {
         if (ctx.hyperRegion === undefined) return;
+        // A region request is the latest navigation; a client-side restoration still loading is cancelled (HY-23).
+        this.location++;
+        this.locationAbort?.abort();
         const requested = this.routeOf(ctx.request.action);
         const loading = requested === null ? Promise.resolve() : this.app.templates.ensure(routeTemplates(this.app.manifest, requested));
+        loading.catch(() => undefined);
         ctx.fetch = async (url, init) => {
           const [response] = await Promise.all([fetch(url, init as RequestInit), loading]);
           const final = this.routeOf(response.url || url);
@@ -180,7 +248,10 @@ export class Hyper {
       },
       htmx_after_request: (_elt, { ctx }) => {
         if (ctx.hyperRegion === undefined || ctx.text === undefined) return;
-        if (!(ctx.response?.headers.get('content-type') ?? '').startsWith('application/json')) return;
+        if (!(ctx.response?.headers.get('content-type') ?? '').startsWith('application/json')) {
+          markError(ctx.target, String(ctx.response?.status ?? 0));
+          return false;
+        }
         const url = ctx.response?.raw?.url || ctx.request.action;
         const path = stripBasePath(pathOf(url), basePath);
         if (path === null) throw new Error(`hyper: response URL ${url} is outside the base path ${basePath}`);
@@ -188,6 +259,19 @@ export class Hyper {
         this.applyBrowserKept(decoded.regions);
         ctx.text = toHtml(this.app, decoded);
         this.hold(decoded);
+        clearError(ctx.target);
+        for (const name of decoded.regions.keys()) clearError(this.element(name));
+      },
+      htmx_after_swap: (_elt, { ctx }) => {
+        // Swaps of render and set have no request.
+        if (basePath !== '' || ctx.request?.headers?.['HX-History-Restore-Request'] !== 'true') return;
+        const embedded = this.element('hy-data')?.textContent;
+        if (embedded) void this.holdEmbedded(embedded, pathOf(ctx.request.action));
+      },
+      htmx_error: (_elt, detail) => {
+        if (detail.ctx?.hyperRegion === undefined) return;
+        if (detail.error instanceof Error && detail.error.name === 'AbortError') return;
+        markError(detail.ctx.target, '0');
       },
       htmx_before_history_update: (_elt, { history }) => {
         if (basePath === '') return;
@@ -203,12 +287,18 @@ export class Hyper {
     };
   }
 
-  // Applies localStorage and sessionStorage values to region data and returns the regions that changed (HY-38).
+  // Applies localStorage, sessionStorage and pending server values to region data and returns the
+  // regions that changed (HY-38).
   private applyBrowserKept(regions: MapValue): string[] {
     const changed: string[] = [];
     for (const [name, data] of regions) {
       const kept: [string, Value][] = [];
       for (const [path, kind] of Object.entries(keptPaths(this.app.manifest, name))) {
+        if (kind === 'server') {
+          const pending = this.pending.get(name)?.get(path);
+          if (pending !== undefined) kept.push([path, pending.value]);
+          continue;
+        }
         if (kind !== 'localStorage' && kind !== 'sessionStorage') continue;
         const text = this.storage().read(kind, name, path);
         if (text === null) continue;
@@ -223,22 +313,33 @@ export class Hyper {
     return changed;
   }
 
-  // Stores the values of the kept paths among the changed paths of a region (HY-39).
-  private store(region: string, paths: readonly string[]): void {
+  // Stores every kept path that equals a changed path, lies under it or contains it (HY-39).
+  private store(region: string, changed: readonly string[]): void {
     const held = this.requireHeld();
-    const keep = keptPaths(this.app.manifest, region);
-    for (const path of paths) {
-      const kind = keep[path];
-      if (kind === undefined) continue;
-      let value: Value | undefined = held.regions.get(region);
-      for (const key of path.split('.')) value = child(value, key, path);
-      const json = valueToJson(value as Value);
-      if (kind === 'server') {
-        const csrf = held.shared.get('csrf');
-        this.storage().send(`${this.options.basePath}/_hyper/keep`, { _csrf: typeof csrf === 'string' ? csrf : '', region, path, value: json });
-      } else {
+    for (const [path, kind] of Object.entries(keptPaths(this.app.manifest, region))) {
+      if (!changed.some((item) => item === path || path.startsWith(`${item}.`) || item.startsWith(`${path}.`))) continue;
+      const value = valueAt(held.regions.get(region), path);
+      if (value === undefined) continue;
+      const json = valueToJson(value);
+      if (kind !== 'server') {
         this.storage().write(kind, region, path, json);
+        continue;
       }
+      const values = this.pending.get(region) ?? new Map<string, Pending>();
+      const change = ++this.changes;
+      values.set(path, { value, change });
+      this.pending.set(region, values);
+      const csrf = held.shared.get('csrf');
+      void this.storage()
+        .send(`${this.options.basePath}/_hyper/keep`, { _csrf: typeof csrf === 'string' ? csrf : '', region, path, value: json })
+        .then((saved) => {
+          // A failed save stays pending; a successful one clears only its own change (HY-39).
+          if (!saved) {
+            markError(this.element(region), '0');
+            return;
+          }
+          if (this.pending.get(region)?.get(path)?.change === change) this.pending.get(region)!.delete(path);
+        });
     }
   }
 
@@ -253,6 +354,7 @@ export class Hyper {
     if (target === null) throw new Error(`hyper: region element #${region} does not exist`);
     const html = renderRegion(this.app, held.route, region, held.shared, held.regions, held.timezone);
     await this.htmx.swap({ text: html, target, swap: 'innerMorph', sourceElement: target });
+    clearError(target);
   }
 
   private requireHeld(): Held {
@@ -274,7 +376,11 @@ export function parseAssignments(text: string): { path: string; value: unknown }
   let quoted = false;
   for (let index = 0; index <= text.length; index++) {
     const character = text[index];
-    if (character === '"' && text[index - 1] !== '\\') quoted = !quoted;
+    if (quoted && character === '\\') {
+      index++;
+      continue;
+    }
+    if (character === '"') quoted = !quoted;
     if (index === text.length || (character === ';' && !quoted)) {
       const part = text.slice(start, index).trim();
       start = index + 1;
@@ -287,33 +393,61 @@ export function parseAssignments(text: string): { path: string; value: unknown }
   return assignments;
 }
 
-function child(container: Value | undefined, key: string, path: string): Value {
-  if (container instanceof Map) {
-    const value = container.get(key);
-    if (value !== undefined) return value;
-  } else if (Array.isArray(container) && /^\d+$/.test(key)) {
-    const value = (container as ListValue)[Number(key)];
-    if (value !== undefined) return value;
+// Replaces the value at an existing path; a missing map key or list index fails (HY-33).
+function assignPath(data: Value | undefined, path: string, value: Value): void {
+  const keys = path.split('.');
+  let container = data;
+  for (const key of keys.slice(0, -1)) {
+    container = childOf(container, key);
+    if (container === undefined) throw new Error(`hyper: ${path} does not exist in the region data`);
   }
-  throw new Error(`hyper: ${path} does not exist in the region data`);
+  const last = keys[keys.length - 1]!;
+  if (childOf(container, last) === undefined) throw new Error(`hyper: ${path} does not exist in the region data`);
+  if (container instanceof Map) container.set(last, value);
+  else (container as ListValue)[Number(last)] = value;
 }
 
-function assign(container: Value | undefined, key: string, value: Value, path: string): void {
-  if (container instanceof Map) {
-    container.set(key, value);
-  } else if (Array.isArray(container) && /^\d+$/.test(key) && Number(key) < container.length) {
-    (container as ListValue)[Number(key)] = value;
-  } else {
-    throw new Error(`hyper: ${path} cannot be set in the region data`);
-  }
+function valueAt(data: Value | undefined, path: string): Value | undefined {
+  let value = data;
+  for (const key of path.split('.')) value = childOf(value, key);
+  return value;
 }
 
-function replaceBody(...nodes: Node[]): void {
-  const source = nodes.at(-1) instanceof HTMLBodyElement ? (nodes.pop() as HTMLBodyElement) : null;
-  const body = document.createElement('body');
-  for (const attribute of Array.from(source?.attributes ?? [])) body.setAttribute(attribute.name, attribute.value);
-  body.append(...nodes);
-  document.body.replaceWith(body);
+function childOf(container: Value | undefined, key: string): Value | undefined {
+  if (container instanceof Map) return container.get(key);
+  if (Array.isArray(container) && /^\d+$/.test(key)) return (container as ListValue)[Number(key)];
+  return undefined;
+}
+
+// Marks a region element as failed with a status, or clears the mark (HY-47).
+function markError(target: unknown, status: string): void {
+  const element = target as RegionElement | null;
+  if (element !== null && typeof element === 'object' && typeof element.setAttribute === 'function') element.setAttribute('hy-error', status);
+}
+
+function clearError(target: unknown): void {
+  const element = target as RegionElement | null;
+  if (element !== null && typeof element === 'object' && typeof element.removeAttribute === 'function') element.removeAttribute('hy-error');
+}
+
+// The document adapter of a browser page.
+function browserDocument(htmx: HtmxApi): DocumentAdapter {
+  const replaceBody = (source: HTMLElement | null, nodes: Node[]): void => {
+    const body = document.createElement('body');
+    for (const attribute of Array.from(source?.attributes ?? [])) body.setAttribute(attribute.name, attribute.value);
+    body.append(...nodes);
+    document.body.replaceWith(body);
+  };
+  return {
+    mount: (html) => {
+      const parsed = new DOMParser().parseFromString(html, 'text/html');
+      document.title = parsed.title;
+      replaceBody(parsed.body, Array.from(parsed.body.childNodes));
+      htmx.process(document.body);
+    },
+    text: (text) => replaceBody(null, [document.createTextNode(text)]),
+    fail: (status) => document.body.setAttribute('hy-error', status),
+  };
 }
 
 function pathOf(url: string): string {
@@ -325,8 +459,8 @@ function splitQuery(path: string): [string, string] {
   return index < 0 ? [path, ''] : [path.slice(0, index), path.slice(index)];
 }
 
-function isRegion(target: unknown): target is { id: string } {
+function isRegion(target: unknown): target is RegionElement {
   if (typeof target !== 'object' || target === null) return false;
-  const element = target as { id?: unknown; hasAttribute?: (name: string) => boolean };
+  const element = target as Partial<RegionElement>;
   return typeof element.hasAttribute === 'function' && element.hasAttribute('hy-region') && typeof element.id === 'string' && element.id !== '';
 }

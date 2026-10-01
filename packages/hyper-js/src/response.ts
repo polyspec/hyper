@@ -59,8 +59,16 @@ export function decodeResponse(app: Application, response: Value, path: string):
     params: requireMap(root.get('params') ?? null, 'params'),
     timezone,
     shared: requireMap(root.get('shared') ?? null, 'shared'),
-    regions: requireMap(root.get('regions') ?? null, 'regions'),
+    // A copy: browser kept values change these regions, never the server value (HY-31, HY-38).
+    regions: requireMap(copyValue(root.get('regions') ?? null), 'regions'),
   };
+}
+
+// Returns a deep copy of a value whose maps and lists can be changed independently.
+export function copyValue(value: Value): Value {
+  if (value instanceof Map) return new Map([...value].map(([key, item]) => [key, copyValue(item)]));
+  if (Array.isArray(value)) return value.map(copyValue);
+  return value;
 }
 
 // Returns the template of a manifest region, the page region or a route region of a route.

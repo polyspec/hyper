@@ -76,3 +76,5 @@ body { margin: 0; }
 button.link { background: none; color: var(--accent); padding: 0; }
 .board-table.compact th, .board-table.compact td { padding: 4px 8px; font-size: 14px; }
 .post-body.large { font-size: 1.3rem; line-height: 1.7; }
+[hy-error] { outline: 2px solid var(--error); outline-offset: 4px; }
+[hy-error]::before { display: block; content: "요청을 처리하지 못했습니다. 다시 시도하세요."; color: var(--error); margin-bottom: 8px; }

@@ -15,7 +15,7 @@ import { cpSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } f
 import { join, relative, sep } from 'node:path';
 import { parseArgs } from 'node:util';
 import { build } from 'esbuild';
-import { parse, resolvePath } from '@polyspec/template';
+import { parse } from '@polyspec/template';
 
 const { values } = parseArgs({ options: { app: { type: 'string' }, api: { type: 'string' } } });
 if (!values.app || !values.api) throw new Error('--app and --api are required');
@@ -25,7 +25,8 @@ const buildDir = join(app, 'build');
 const assetsDir = join(app, 'public', 'assets');
 const templateFilesDir = join(assetsDir, 'templates');
 const csrDir = join(app, 'dist', 'csr');
-const dataTemplate = JSON.parse(readFileSync(join('packages', 'hyper-js', 'src', 'data-template.json'), 'utf8'));
+const dataTemplate = JSON.parse(readFileSync(join('packages', 'hyper-js', 'data-template.json'), 'utf8'));
+const { templateReferences } = await loadPackage();
 
 const sources = { [dataTemplate.name]: dataTemplate.source };
 for (const file of listFiles(templatesDir).filter((name) => name.endsWith('.tpl')).sort()) {
@@ -40,7 +41,7 @@ for (const [name, source] of Object.entries(sources)) {
   const text = JSON.stringify(ast);
   const file = `${name.replace(/\.tpl$/, '').replaceAll('/', '-')}.${sha256(text).slice(0, 12)}.json`;
   writeFileSync(join(templateFilesDir, file), text);
-  index[name] = { url: `/assets/templates/${file}`, deps: references(ast, name) };
+  index[name] = { url: `/assets/templates/${file}`, deps: templateReferences(ast, name) };
 }
 mkdirSync(buildDir, { recursive: true });
 writeFileSync(join(buildDir, 'templates.index.json'), `${JSON.stringify(index, null, 2)}\n`);
@@ -89,17 +90,17 @@ cpSync(templateFilesDir, join(csrDir, 'assets', 'templates'), { recursive: true 
 console.log(`templates ${Object.keys(index).length}, ${hyperName}, dist/csr/index.html ${Buffer.byteLength(shell)} bytes`);
 console.log(`CSP for dist/csr/index.html: script-src 'sha256-${sha256(code, 'base64')}'; style-src 'sha256-${sha256(css, 'base64')}'`);
 
-// Returns the names of the templates that include and block tags of a template reference by path.
-function references(ast, name) {
-  const found = new Set();
-  const visit = (node) => {
-    if (Array.isArray(node)) return node.forEach(visit);
-    if (node === null || typeof node !== 'object') return;
-    if ((node.type === 'Include' || node.type === 'Block') && typeof node.path === 'string') found.add(resolvePath(name, node.path));
-    Object.values(node).forEach(visit);
-  };
-  visit(ast.body);
-  return [...found].sort();
+// Loads templateReferences from the hyper browser package (HY-34).
+async function loadPackage() {
+  const result = await build({
+    stdin: { contents: "export { templateReferences } from '@polyspec/hyper';", resolveDir: join('packages', 'hyper-js'), sourcefile: 'build-entry.ts', loader: 'ts' },
+    bundle: true,
+    format: 'esm',
+    platform: 'neutral',
+    write: false,
+    logLevel: 'error',
+  });
+  return import(`data:text/javascript;base64,${Buffer.from(result.outputFiles[0].contents).toString('base64')}`);
 }
 
 function sha256(text, encoding = 'hex') {

@@ -18,11 +18,12 @@ const board = 'examples/board';
 const database = resolve(values.db);
 
 const children = [
-  spawn('php', ['-S', `127.0.0.1:${values.ssr}`, '-t', `${board}/public`], {
-    env: { ...process.env, BOARD_DB: database, BOARD_BASE_PATH: '' },
+  spawn('php', ['-d', 'display_errors=0', '-S', `127.0.0.1:${values.ssr}`, '-t', `${board}/public`], {
+    // The comparison page on the edge origin frames the SSR pages.
+    env: { ...process.env, BOARD_DB: database, BOARD_BASE_PATH: '', BOARD_FRAME_ANCESTORS: `'self' http://127.0.0.1:${values.edge}` },
     stdio: 'ignore',
   }),
-  spawn('php', ['-S', `127.0.0.1:${values.api}`, '-t', `${board}/public`], {
+  spawn('php', ['-d', 'display_errors=0', '-S', `127.0.0.1:${values.api}`, '-t', `${board}/public`], {
     env: { ...process.env, BOARD_DB: database, BOARD_BASE_PATH: '/api' },
     stdio: 'ignore',
   }),

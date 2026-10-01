@@ -1,5 +1,4 @@
 // The application manifest (HY-1, HY-2, HY-30).
-import dataTemplate from './data-template.json';
 import { KEEP_KINDS, type KeepKind } from './keep.js';
 
 export interface RegionDeclaration {
@@ -32,9 +31,9 @@ export interface Manifest {
   routes: RouteDeclaration[];
 }
 
-// The reserved template that embeds the document data (HY-31).
-export const DATA_TEMPLATE_NAME: string = dataTemplate.name;
-export const DATA_TEMPLATE_SOURCE: string = dataTemplate.source;
+// The reserved template that embeds the document data (HY-31). Its source is in data-template.json,
+// which the asset build reads; the client bundle carries only the name (HY-34).
+export const DATA_TEMPLATE_NAME = 'hyper/data.tpl';
 
 const REGION_NAME = /^[A-Za-z][A-Za-z0-9_-]*$/;
 const RESERVED = new Set(['layout', 'title', 'data']);
@@ -56,6 +55,9 @@ export function checkManifest(manifest: Manifest): Manifest {
   let pages = 0;
   for (const region of manifest.regions) {
     addRegion(region.name, region.keep, region.page === true);
+    for (const topic of region.uses ?? []) {
+      if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(topic)) throw new Error(`hyper: region ${region.name} uses an invalid topic ${JSON.stringify(topic)}`);
+    }
     if (region.page === true) {
       pages++;
       if (region.template !== undefined) throw new Error(`hyper: page region ${region.name} has a template`);

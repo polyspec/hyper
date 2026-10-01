@@ -5,7 +5,7 @@
 hyper renders pages with template language templates in two modes from one application:
 
 - **SSR**: PHP routes the request and renders the document from the templates. After that, links and forms request JSON and the browser renders the changed regions.
-- **CSR**: one static file, `index.html`, is served for every path. The browser routes the path, requests JSON from PHP under `/api` and renders the whole document.
+- **CSR**: one static file, `index.html`, is served for every path. The browser routes the path, requests JSON from PHP under `/api` and renders the whole document. This form is for backends that serve JSON only; the recommended deployment serves direct requests with SSR and htmx requests with JSON from one server (see [Deployment](docs/operations/deployment.md)).
 
 Both modes read one manifest, `app.json` (layout, title, regions and routes), and render the same templates. The screen is a function of data: a part that changes in the browser is a route region, and `hy-set="notice.closed=true"` or `set('notice', 'notice.closed', true)` changes its data and renders it again without a request. A region declares which data paths survive a reload and where they are kept: `server`, `cookie`, `localStorage` or `sessionStorage`. Templates load per route. The PHP router and the browser router pass the same conformance cases, and the browser renders the same bytes as PHP for every page of the example. htmx 4 performs navigation, form submission, swaps and history.
 

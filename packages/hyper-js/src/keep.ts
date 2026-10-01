@@ -47,7 +47,7 @@ export function valueToJson(value: Value): string {
 export interface KeepStorage {
   read(kind: 'localStorage' | 'sessionStorage', region: string, path: string): string | null;
   write(kind: Exclude<KeepKind, 'server'>, region: string, path: string, json: string): void;
-  send(url: string, form: Record<string, string>): void;
+  send(url: string, form: Record<string, string>): Promise<boolean>;
 }
 
 const COOKIE = 'hy-keep';
@@ -80,8 +80,8 @@ export function browserStorage(): KeepStorage {
       const secure = window.location.protocol === 'https:' ? '; Secure' : '';
       document.cookie = `${COOKIE}=${encodeURIComponent(valueToJson(all))}; Path=/; SameSite=Lax; Max-Age=${YEAR}${secure}`;
     },
-    send: (url, form) => {
-      void fetch(url, { method: 'POST', body: new URLSearchParams(form), credentials: 'same-origin', keepalive: true });
-    },
+    send: (url, form) =>
+      fetch(url, { method: 'POST', body: new URLSearchParams(form), credentials: 'same-origin', keepalive: true })
+        .then((response) => response.status === 204, () => false),
   };
 }
