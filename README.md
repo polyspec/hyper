@@ -27,8 +27,10 @@ Pages and regions contain no `hx-*` attributes. Links and forms are plain HTML a
 |---|---|---|
 | `packages/hyper-js` | `@polyspec/hyper` | Browser code: manifest, router, region and document rendering, htmx extension, client-side rendering |
 | `packages/hyper-php` | `polyspec/hyper` | Server: manifest, router, actions, region selection, documents and JSON |
+| `packages/hyper-node` | `@polyspec/hyper-server` | Node.js server with the rules of the PHP server; it renders documents with the browser code ([README](packages/hyper-node/README.md)) |
 | `examples/board` | | Board example: layout, left and content regions; list, detail, create, validation |
 | `conformance/routes.json` | | Router cases that both routers pass |
+| `conformance/json.json` | | JSON encoding and decoding cases that the PHP and the Node.js server pass |
 
 ## Start
 

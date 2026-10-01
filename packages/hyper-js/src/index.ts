@@ -13,6 +13,7 @@ export { applyKept, browserStorage, KEEP_KINDS, valueToJson, type KeepKind, type
 export { Router, stripBasePath, type RouteMatch } from './router.js';
 export { routeTemplates, templateReferences, TemplateStore, type TemplateFetcher, type TemplateIndex } from './templates.js';
 export {
+  copyValue,
   createApplication,
   decodeResponse,
   regionTemplate,

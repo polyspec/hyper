@@ -6,6 +6,9 @@
 
 ### 추가
 
+- Node.js 서버 package `@polyspec/hyper-server`(`packages/hyper-node`)가 PHP 서버의 규칙을 구현한다. base path를 쓰는 라우트, loader, CSRF를 검사하는 action, 결과와 멈춤, reply cookie와 cache control, JSON tag, flash 값과 바뀐 topic, 유지 값, 요청 검사, 평문 오류, 데이터 모델 검사, 파일 session이다. 문서는 브라우저 코드와 asset build의 템플릿 파일로 렌더하고, JSON은 PHP `json_encode`와 같은 바이트로 쓰며, 유지 값은 PHP `json_decode`처럼 decode한다(HY-54). loader와 action은 요청, reply, service를 담은 context 하나를 받는다. test는 같은 fixture로 PHP 서버 test의 사례를 실행하고, `conformance/json.json`에는 U+2028과 U+2029, float, 빈 map을 포함해 두 서버가 통과하는 JSON 사례가 있다. `make node-server`는 `node:sqlite`를 쓰는 board 예제의 Node 서버를 build하며, 이 서버는 PHP와 같은 문서를 렌더한다.
+- 요청 경로는 RFC 9112가 요청 대상에 요구하는 대로 출력 가능한 ASCII 문자로만 이루어져야 한다. 두 서버는 다른 경로에 400으로 응답한다(HY-42). `node:http`는 애플리케이션이 보기 전에 그런 대상을 거부하므로, PHP 서버도 이제 같은 규칙을 따른다.
+- 브라우저 코드의 manifest 검사는 PHP manifest reader처럼 layout과 title 템플릿, 모든 라우트와 라우트 영역의 title과 템플릿도 요구한다.
 - 라우트 경로가 나머지 매개변수 `{name*}`로 끝날 수 있다. 이 매개변수는 0개 이상의 남은 요청 segment에 맞고, decode하지 않은 요청 경로의 나머지를 담는다(HY-49). 두 라우터가 `conformance/rest.json`의 사례를 통과한다.
 - loader나 action은 `Redirect`로 요청을 멈춰 redirect 결과의 위치, flash 값, 바뀐 topic으로 303 응답을 하거나(HY-50), `Forbidden`으로 403 응답을 할 수 있다(HY-51).
 - loader와 action은 요청의 `Reply`를 받는다. `Reply`는 HY-45의 속성으로 cookie를 더하거나 지우고 페이지 응답의 `Cache-Control`을 정하며, 응답은 상태와 상관없이 그 cookie를 담는다(HY-52). JSON 페이지 응답은 strong `ETag`를 가지며, 같은 `If-None-Match`를 가진 요청은 304를 받는다(HY-53). `Set-Cookie`는 여러 값을 가질 수 있는 유일한 응답 header다.

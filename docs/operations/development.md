@@ -18,8 +18,11 @@
 | `make ext` | Builds the native template extension of the template repository into `build/ext` (HY-48) |
 | `make server` | Builds the board server program into `examples/board/build/server` (see below) |
 | `make server-fixtures` | Builds the server program of the PHP test fixtures |
+| `make node-fixtures` | Builds the template files of the PHP test fixtures for the Node server tests with `scripts/build-templates.mjs` |
+| `make node-server` | Type-checks and bundles the board Node server into `examples/board/build/node/server.mjs` (see below) |
 | `make assets` | Builds the board client bundle and the CSR shell (see below) |
 | `make test-js` | Runs the browser code tests, including the router conformance cases, and the type check |
+| `make test-node` | Runs the Node server tests: the cases of the PHP server tests against the same fixtures, the JSON cases of `conformance/json.json`, sessions, the HTTP server, and the type check |
 | `make test-php` | Runs the server package tests, including the router conformance cases, once with the generated program and once with the native extension |
 | `make lint` | Checks PHP formatting |
 | `make templates-check` | Checks that only the layout template carries `hx-` attributes (HC-6), that the layout places `{# title}` and `{# data}` once, and that every region of the layout and of each route template is placed once, directly inside an element whose `id` is the region name, without block arguments (HY-3, HY-30) |
@@ -41,6 +44,17 @@
 
 PHP renders with the native extension when it has loaded `polyspec_template`, and otherwise with `program.php`. Both outputs are built from the same sources, so a server can switch by loading or not loading the extension.
 
+## Node server
+
+`make node-server` bundles `examples/board/node/main.ts` with esbuild into `examples/board/build/node/server.mjs`. The board Node server serves the same application as `examples/board/public/index.php`, with `node:sqlite` for the posts, and serves the files of `examples/board/public`:
+
+```sh
+make node-server
+BOARD_DB=$PWD/examples/board/var/node.db BOARD_SESSIONS=$PWD/examples/board/var/sessions BOARD_PORT=8084 node examples/board/build/node/server.mjs
+```
+
+`BOARD_SESSIONS` is an absolute session directory, and `BOARD_BASE_PATH`, `BOARD_HTTPS` and `BOARD_FRAME_ANCESTORS` have the meaning that they have for PHP. The Node server renders with the template files of `make assets` (HY-54).
+
 ## Asset build
 
 `scripts/build-assets.mjs --app <directory> --api <base path>` writes:
@@ -57,6 +71,7 @@ The build replaces earlier outputs, so repeated builds leave one file per output
 | Behavior | Evidence |
 |---|---|
 | Kept values | `conformance/keep.json` runs in `make test-php` and `make test-js` (HY-38). |
+| JSON text | `conformance/json.json` runs in `make test-php` and `make test-node`: the Node server writes the bytes of PHP `json_encode` and reads kept values as PHP `json_decode` does (HY-54). |
 | Routing | `conformance/routes.json` runs in `make test-php` and `make test-js`. During rendering, the browser also requires that its route equals the route that the server reported (HY-20). |
 | Document rendering | `make parity` requests every compare step as an HTML document, as document JSON and as region JSON in one session. The browser rendering of the document JSON, including route regions, the embedded data and `server` and `cookie` kept values (HY-30, HY-31, HY-38), must equal the PHP document byte for byte, and every part of the region JSON must appear in it. |
 | Behavior in a browser | `make e2e` runs the same flows on SSR and CSR: navigation, actions, `hy-set` changes without a data request, the four kept kinds across a reload and a new tab, loading only the templates of a route, and the comparison page that requires equal SSR and CSR bodies. |

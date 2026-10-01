@@ -30,8 +30,10 @@ hyper는 애플리케이션 하나에서 template 언어 템플릿으로 두 가
 |---|---|---|
 | `packages/hyper-js` | `@polyspec/hyper` | 브라우저 코드. 매니페스트, 라우터, 영역과 문서 렌더, htmx 확장, 클라이언트 렌더 |
 | `packages/hyper-php` | `polyspec/hyper` | 서버. 매니페스트, 라우터, 액션, 영역 선택, 문서와 JSON |
+| `packages/hyper-node` | `@polyspec/hyper-server` | PHP 서버의 규칙을 갖춘 Node.js 서버. 문서를 브라우저 코드로 렌더한다([README](packages/hyper-node/README.ko.md)) |
 | `examples/board` | | 게시판 예제. 레이아웃, 레프트, 컨텐츠 영역. 목록, 상세, 글쓰기, 검증 |
 | `conformance/routes.json` | | 두 라우터가 함께 통과하는 라우터 사례 |
+| `conformance/json.json` | | PHP 서버와 Node.js 서버가 통과하는 JSON encode와 decode 사례 |
 
 ## 시작
 
