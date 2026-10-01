@@ -3,8 +3,8 @@
 <h1>게시판</h1>
 <a href="/board/create" class="button">글쓰기</a>
 </header>
-<div id="notice" hy-region>{# notice}</div>
-<div id="rows" hy-region>{# rows}</div>
+<div id="notice">{# notice}</div>
+<div id="rows">{# rows}</div>
 <nav class="pager">
 {@ n = range(1, pages)}
 <a href="/board?page={= n}"{? n == page} class="current"{/}>{= n}</a>

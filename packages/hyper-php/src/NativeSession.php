@@ -7,8 +7,12 @@ namespace Polyspec\Hyper;
 /** Stores session values in the PHP session. */
 final class NativeSession implements SessionStore
 {
-    /** Starts the PHP session when it is not active, with the cookie options of HY-45. */
-    public function __construct(bool $https)
+    /** Prepares the PHP session; it starts on the first read or write, so a request that never uses it creates no session (HY-45). */
+    public function __construct(private readonly bool $https)
+    {
+    }
+
+    private function start(): void
     {
         if (session_status() === PHP_SESSION_ACTIVE) {
             return;
@@ -18,7 +22,7 @@ final class NativeSession implements SessionStore
         if ($id !== null && (!is_string($id) || preg_match('/^[A-Za-z0-9,-]{22,256}$/D', $id) !== 1)) {
             unset($_COOKIE[$name]);
         }
-        session_start(self::options($https || (($_SERVER['HTTPS'] ?? '') !== '' && ($_SERVER['HTTPS'] ?? '') !== 'off')));
+        session_start(self::options($this->https || (($_SERVER['HTTPS'] ?? '') !== '' && ($_SERVER['HTTPS'] ?? '') !== 'off')));
     }
 
     /**
@@ -34,16 +38,20 @@ final class NativeSession implements SessionStore
 
     public function get(string $key): mixed
     {
+        $this->start();
+
         return $_SESSION[$key] ?? null;
     }
 
     public function set(string $key, mixed $value): void
     {
+        $this->start();
         $_SESSION[$key] = $value;
     }
 
     public function remove(string $key): void
     {
+        $this->start();
         unset($_SESSION[$key]);
     }
 }

@@ -187,7 +187,6 @@ try {
   await context.close();
 
   const memory = await navigationMemory(browser, ssr, 200);
-  const sections = await sectionRetention(browser, ssr, 300);
   const csrContext = await browser.newContext();
   const csrPage = await csrContext.newPage();
   await csrPage.goto(`${csr}/board`);
@@ -200,7 +199,7 @@ try {
   await csrContext.close();
 
   const sizes = [];
-  for (const [label, headers] of [['/board document HTML', {}], ['/board region JSON', { Accept: 'application/json', 'Hy-Region': 'content', 'HX-Current-URL': `${ssr}/` }]]) {
+  for (const [label, headers] of [['/board document HTML', {}], ['/board region JSON', { Accept: 'application/json', 'HX-Request': 'true', 'HX-Current-URL': `${ssr}/` }]]) {
     const body = Buffer.from(await (await fetch(`${ssr}/board`, { headers })).arrayBuffer());
     sizes.push(`| ${label} | ${body.length} | ${gzipSync(body, { level: 9 }).length} |`);
   }
@@ -218,8 +217,6 @@ try {
   console.log(memory.rows.join('\n'));
   console.log(`\n## Heap growth from cycle ${memory.from} to cycle ${memory.to}, largest first\n\n| type: constructor or name | count | self bytes | first retainers of one instance |\n|---|---:|---:|---|`);
   console.log(memory.growth.length ? memory.growth.join('\n') : '| none | 0 | 0 |');
-  console.log(`\n## Chromium: media query sets kept after inserting and removing a table section ${sections.times} times\n\n| Section | blink::MediaQuerySet before | after |\n|---|---:|---:|`);
-  console.log(sections.rows.join('\n'));
   console.log(`\n${runs} runs per measurement, Chromium ${browser.version()}, Node ${process.version}`);
 } finally {
   await browser?.close();
@@ -267,36 +264,6 @@ function mainThreadLoad(events) {
     load.longTasks.push({ duration: task.dur / 1000, parts: [...parts].sort((a, b) => b[1] - a[1]).slice(0, 6) });
   }
   return load;
-}
-
-// Inserts and removes a table with a <thead> or a <tbody> section with innerHTML, without htmx, and
-// counts blink::MediaQuerySet before and after. Chromium 153 keeps one per inserted <thead> until the
-// document closes; this measurement shows whether a Chromium version still does.
-async function sectionRetention(browser, origin, times) {
-  const rows = [];
-  for (const section of ['thead', 'tbody']) {
-    const context = await browser.newContext();
-    const page = await context.newPage();
-    const cdp = await context.newCDPSession(page);
-    await page.goto(`${origin}/`);
-    await page.waitForLoadState('networkidle');
-    const key = 'native: blink::MediaQuerySet';
-    const before = (await heapCounts(cdp)).get(key)?.count ?? 0;
-    await page.evaluate(async ({ section, times }) => {
-      const box = document.createElement('div');
-      document.body.append(box);
-      for (let run = 0; run < times; run++) {
-        box.innerHTML = `<table><${section}><tr><td>a</td></tr></${section}></table>`;
-        await new Promise((done) => requestAnimationFrame(() => setTimeout(done, 0)));
-        box.innerHTML = '';
-      }
-      box.remove();
-    }, { section, times });
-    const after = (await heapCounts(cdp)).get(key)?.count ?? 0;
-    rows.push(`| <${section}> | ${before} | ${after} |`);
-    await context.close();
-  }
-  return { rows, times };
 }
 
 // Takes a heap snapshot after garbage collection and returns the count and self size of the nodes

@@ -6,6 +6,12 @@
 
 ### Fixed
 
+- These defects of swaps, kept values, redirects and sessions are fixed with tests that failed before:
+  - The fix of the call order (HY-33) ended a `set`, `render` or `hy-set` change on any response, even one that did not contain its region, after the swap had already changed the page. The page then showed a value that was neither held nor stored. A change now ends only when the data of its own region was replaced, before the swap; when that happens during the swap, the region renders again from held data (HY-33).
+  - The browser passed route regions to the page region as template definitions, so a route region saw the page region data in region responses but not in documents; after HY-48 the PHP document and an htmx navigation to the same URL could differ. Server and browser now both render route regions alone and pass HTML (HY-12, HY-13). `make parity` did not cover this case; a test now does.
+  - Browser kept values were applied in declaration order instead of the order of HY-38 (browser storage, then pending server values).
+  - Client-side rendering decoded a document against the requested path instead of the URL after redirects (HY-22).
+  - Every request started a session and wrote a session file, including requests rejected before routing and paths without a route (HY-45).
 The following defects of correctness and security are fixed. Each one has a test that failed before the fix.
 
 - PHP server:
@@ -39,7 +45,10 @@ The following defects of correctness and security are fixed. Each one has a test
 
 ### Changed
 
-- The PHP server renders with a program that `make server` compiles from the templates: the native template extension when PHP has loaded it, and otherwise the generated PHP program (HY-48). The PHP AST interpreter took 16 ms for 1,000 rows; on the same input the generated program was about 1.6 times and the native extension about 9 times as fast, with identical output. The server renders every region alone and passes HTML definitions, because a generated program fixes the template of each definition. `make test-php` and `make parity` run with both programs. `App::open` takes `program:` in place of `templates:`, and `TemplateLoader` is removed.
+- Remove the attribute `hy-region` and the request header `Hy-Region`, which repeated what the manifest already says. A POST with a non-page `Hy-Region` ran its action (fixed earlier by the rule HY-16, now removed), and an element with a region `id` but without the attribute made htmx put a whole HTML document into the region. A region element is now the element whose `id` is the region name (HY-3, HY-36); the extension requests JSON when the target is the page region element, and the server recognizes a region request by `HX-Request`, which htmx sends (HY-15, HY-21). `make templates-check` checks every region placement of the layout and of the route templates, and region placements take no block arguments.
+- On HTTPS the kept cookie is `__Host-hy-keep`, so a sibling subdomain cannot set kept values (HY-39).
+- Remove the Chromium `<thead>` measurement from `make bench-browser`; it measured a browser behavior, not this project.
+- The PHP server renders with a program that `make server` compiles from the templates: the native template extension when PHP has loaded it, and otherwise the generated PHP program (HY-48). The PHP AST interpreter took 15.7 ms for 1,000 rows on an idle machine, and the generated program 9.6 ms on the same input, with identical output. The native extension was measured only on a heavily loaded machine, so its speed is not recorded here. The server renders every region alone and passes HTML definitions, because a generated program fixes the template of each definition. `make test-php` and `make parity` run with both programs. `App::open` takes `program:` in place of `templates:`, and `TemplateLoader` is removed.
 - A JSON response carries kept values apart from the region data (HY-17). `regions` holds the loader data, and `kept` holds the conforming `server` and `cookie` values. The server applies them to render a document, and the browser applies them with its own values. The browser can therefore render a region without kept values that break it (HY-38).
 - The server no longer checks cookies for UTF-8 (HY-42). It ignores an invalid `hy-keep`, and starts a new session for an invalid session cookie, instead of answering 400 to every request until the cookie expires.
 - The recommended deployment serves direct requests with SSR and htmx requests with JSON from one server; the static shell is for backends that serve JSON only (`docs/operations/deployment.md`).
@@ -65,6 +74,7 @@ The following defects of correctness and security are fixed. Each one has a test
 
 ### Verification
 
+- 2026-10-01, after the removal of `hy-region` and `Hy-Region` and the fixes of swaps, kept values, redirects and sessions: `make check` passed. `make test-scripts` 2 tests, `make test-js` 145 tests, `make test-php` 149 tests with the generated program and 149 with the native extension (one test does not apply and is skipped), `make parity` with both programs, `make bundle-size` and `make e2e` 12 tests.
 - 2026-10-01, after the change to compiled template programs (HY-48): `make check` passed.
   - `make test-php`: 148 tests passed with the generated program, and 148 with the native extension, where the test of loading a second generated program does not apply and is skipped.
   - `make parity`: the ten compare steps matched byte for byte with the generated program and with the native extension.

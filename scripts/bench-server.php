@@ -45,7 +45,7 @@ $session = new ArraySession();
 $application->handle(new Request('GET', '/board'), $session);
 $token = (string) $session->get('_hyper_csrf');
 $json = ['Accept' => 'application/json'];
-$region = ['Accept' => 'application/json', 'Hy-Region' => 'content', 'HX-Current-URL' => 'http://localhost/'];
+$region = ['Accept' => 'application/json', 'HX-Request' => 'true', 'HX-Current-URL' => 'http://localhost/'];
 
 /**
  * Runs a function repeatedly after a warm-up and returns the times in milliseconds.

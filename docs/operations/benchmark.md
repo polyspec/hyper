@@ -7,9 +7,11 @@
 | Target | Script | Measures |
 |---|---|---|
 | `make bench-server` | `scripts/bench-server.php --app <directory> --iterations <n>` | `App::handle` per request kind without network, and the cost of `board/rows.tpl` rendering, `Bind::value` and `json_encode` for 10, 100 and 1,000 rows |
-| `make bench-browser` | `scripts/bench-browser.mjs --ssr <port> --edge <port> --api <port> --runs <n>` | First screens, region navigation, one `hy-set` change for 10, 100 and 1,000 rows (time, phases, main thread load and long tasks), memory over repeated navigation with the growth between two heap snapshots, template loading, transferred bytes, and a Chromium table section measurement |
+| `make bench-browser` | `scripts/bench-browser.mjs --ssr <port> --edge <port> --api <port> --runs <n>` | First screens, region navigation, one `hy-set` change for 10, 100 and 1,000 rows (time, phases, main thread load and long tasks), memory over repeated navigation with the growth between two heap snapshots, template loading, and transferred bytes |
 
 Both scripts create their own database under `examples/board/var/` and remove it when they finish. `bench-browser` starts `scripts/serve-demo.mjs` on ports 8085 to 8087.
+
+> These results were measured on 2026-10-01 before the PHP server rendered with compiled programs (HY-48) and before kept values moved to `kept` (HY-17). They do not describe the current code; they will be replaced by a new measurement.
 
 ## Method
 
@@ -99,12 +101,6 @@ Objects that grew from cycle 100 to cycle 200:
 | V8 code objects (`InstructionStream`, `TrustedByteArray`, `Code` and others) | | about 76,000 | Compiled code of the client bundle |
 | `blink::MediaQuerySet` with its `MediaQuery` and `MediaQueryFeatureExpNode` | 200 each | about 32,000 | `StyleEngine` of the document; one per navigation to `/board`, see below |
 
-Chromium table section measurement:
-
-| Section inserted and removed 300 times | `blink::MediaQuerySet` before | After |
-|---|---:|---:|
-| `<thead>` | 2 | 302 |
-| `<tbody>` | 2 | 2 |
 
 CSR loads 7 template files for `/board`; the slowest took 3.3 ms from the local server. The `/board` document is 4,428 bytes (1,426 gzip), and its region JSON is 1,331 bytes (535 gzip).
 

@@ -83,7 +83,7 @@ try {
     const path = new URL(step.path, base).pathname;
     const html = await send(step, {});
     const documentJson = await send(step, { Accept: 'application/json' });
-    const regionJson = await send(step, { Accept: 'application/json', 'Hy-Region': 'content', 'HX-Current-URL': base + step.currentPath });
+    const regionJson = await send(step, { Accept: 'application/json', 'HX-Request': 'true', 'HX-Current-URL': base + step.currentPath });
     if (html.status !== documentJson.status || html.status !== regionJson.status) {
       fail(`${label}: statuses ${html.status}, ${documentJson.status}, ${regionJson.status}`);
     }
@@ -94,8 +94,8 @@ try {
     const parts = browser.renderParts(application, browser.decodeResponse(application, browser.parseJson(regionJson.text), path));
     if (!html.text.includes(`<title>${parts.title}</title>`)) fail(`${label}: document does not contain the title ${parts.title}`);
     for (const [name, region] of parts.regions) {
-      const tag = new RegExp(`<([a-z]+) id="${name}" hy-region>`).exec(html.text)?.[1];
-      if (tag === undefined || !html.text.includes(`<${tag} id="${name}" hy-region>${region}</${tag}>`)) {
+      const tag = new RegExp(`<([a-z]+) id="${name}">`).exec(html.text)?.[1];
+      if (tag === undefined || !html.text.includes(`<${tag} id="${name}">${region}</${tag}>`)) {
         fail(`${label}: region ${name} differs\n--- browser\n${region}\n--- server\n${html.text}`);
       }
     }

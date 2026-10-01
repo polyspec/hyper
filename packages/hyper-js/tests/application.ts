@@ -15,19 +15,23 @@ export const manifest: Manifest = {
     { name: 'home', path: '/', title: 'Home', template: 'page.tpl' },
     { name: 'item', path: '/items/{id}', title: 'Item', template: 'item.tpl' },
     { name: 'when', path: '/when', title: 'When', template: 'when.tpl' },
-    { name: 'list', path: '/list', title: 'List', template: 'list.tpl', regions: [{ name: 'rows', template: 'rows.tpl', keep: { 'items.0.open': 'server', 'items.1.open': 'localStorage', flag: 'cookie', tab: 'sessionStorage', tags: 'cookie', marks: 'localStorage' } }] },
+    { name: 'list', path: '/list', title: 'List', template: 'list.tpl', regions: [{ name: 'rows', template: 'rows.tpl', keep: { 'items.0.open': 'server', 'items.1.open': 'localStorage', flag: 'cookie', tab: 'sessionStorage', tags: 'cookie', marks: 'localStorage', filter: 'server', 'filter.a': 'localStorage' } }] },
+    { name: 'leak', path: '/leak', title: 'Leak', template: 'leak.tpl', regions: [{ name: 'inner', template: 'inner.tpl' }] },
   ],
 };
 
 export const sources: Record<string, string> = {
-  'layout.tpl': '<title>{# title}</title>\n<aside id="side" hy-region>{# side}</aside>\n<main id="content" hy-region>{# content}</main>\n{# data}\n',
+  'layout.tpl': '<title>{# title}</title>\n<aside id="side">{# side}</aside>\n<main id="content">{# content}</main>\n{# data}\n',
   'title.tpl': '{= title} - Site',
   'side.tpl': '<b>{= count}</b>',
   'page.tpl': '<p>{= title}|{= name}|{= shared_only}</p>',
   'item.tpl': '<i>{= id}</i>{+ part.tpl}',
   'part.tpl': '<u>part</u>',
   'when.tpl': '{= date(at, "Y-m-d H:i")}',
-  'list.tpl': '<h1>{= heading}</h1><ul id="rows" hy-region>{# rows}</ul>',
+  'list.tpl': '<h1>{= heading}</h1><ul id="rows">{# rows}</ul>',
+  // A route region that reads a name of the page region data, which it must not see (HY-13).
+  'leak.tpl': '<h1>{= heading}</h1><div id="inner">{# inner}</div>',
+  'inner.tpl': '[{= heading}]',
   // A loop over each item of tags and marks fails for an item that is not a list, a map or null.
   'rows.tpl': '{@ r = items}<li{? r.open} class="open"{/}>{= r.name}</li>{/}{@ t = tags}{@ x = t}{= x}{/}{/}{@ t = marks}{@ x = t}{= x}{/}{/}',
   [DATA_TEMPLATE_NAME]: DATA_TEMPLATE_SOURCE,

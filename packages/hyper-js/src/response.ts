@@ -131,15 +131,14 @@ export function regionTemplate(app: Application, route: RouteDeclaration, name: 
   return template;
 }
 
-// Renders one region alone with merge(shared, data) as root data; the page region receives the route regions as definitions (HY-13, HY-30).
+// Renders one region alone with merge(shared, data) as root data; the page region receives each route
+// region rendered alone as an HTML definition (HY-13, HY-30).
 export function renderRegion(app: Application, route: RouteDeclaration, name: string, shared: MapValue, regions: MapValue, timezone: string): string {
   const root: MapValue = new Map(shared);
   for (const [key, item] of requireMap(regions.get(name) ?? null, `region ${name}`)) root.set(key, item);
-  const define: Record<string, { template: string; data: Value }> = {};
+  const define: Record<string, { html: string }> = {};
   if (name === app.page) {
-    for (const region of route.regions ?? []) {
-      define[region.name] = { template: region.template, data: requireMap(regions.get(region.name) ?? null, `region ${region.name}`) };
-    }
+    for (const region of route.regions ?? []) define[region.name] = { html: renderRegion(app, route, region.name, shared, regions, timezone) };
   }
   return app.engine.render(regionTemplate(app, route, name), root, { define, env: { timezone } });
 }
@@ -178,13 +177,14 @@ export function renderDocument(app: Application, decoded: DecodedResponse): stri
     if (!decoded.regions.has(name)) throw new Error(`hyper: document response has no region ${name}`);
   }
   return withKeptCheck(app, decoded, () => {
-    const define: Record<string, { template: string; data: Value } | string> = {
-      layout: app.manifest.layout,
-      title: app.manifest.title,
-      data: { template: DATA_TEMPLATE_NAME, data: new Map([['response', embedded(decoded)]]) },
+    const env = { timezone: decoded.timezone };
+    // Every definition is HTML: the title, the embedded data and each manifest region rendered alone (HY-12).
+    const define: Record<string, { html: string }> = {
+      title: { html: app.engine.render(app.manifest.title, decoded.shared, { env }) },
+      data: { html: app.engine.render(DATA_TEMPLATE_NAME, new Map([['response', embedded(decoded)]]), { env }) },
     };
-    for (const name of names) define[name] = { template: regionTemplate(app, decoded.route, name), data: decoded.regions.get(name)! };
-    return app.engine.render('layout', decoded.shared, { define, env: { timezone: decoded.timezone } });
+    for (const region of app.manifest.regions) define[region.name] = { html: renderRegion(app, decoded.route, region.name, decoded.shared, decoded.regions, decoded.timezone) };
+    return app.engine.render(app.manifest.layout, decoded.shared, { define, env });
   });
 }
 

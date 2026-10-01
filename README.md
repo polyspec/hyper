@@ -14,8 +14,8 @@ Templates use the template language without changes. A layout places regions wit
 ```
 <title>{# title}</title>
 <body hx-boost:inherited="true" hx-target:inherited="#content" hx-swap:inherited="innerMorph">
-<aside id="left" hy-region>{# left}</aside>
-<main id="content" hy-region>{# content}</main>
+<aside id="left">{# left}</aside>
+<main id="content">{# content}</main>
 </body>
 ```
 

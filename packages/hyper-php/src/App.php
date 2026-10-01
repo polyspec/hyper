@@ -116,10 +116,6 @@ final class App
         }
         $route = $this->manifest->routes[$match['name']];
         $handler = $this->routeHandlers[$route['name']] ?? [];
-        $region = $request->wantsJson() ? $request->region() : null;
-        if ($region !== null && $region !== $this->manifest->page->name) {
-            return Response::text(400, 'Bad Request');
-        }
         $session = new Session($store);
         $flash = $session->takeFlash();
         $request = $request->withRoute((string) $path, $match['params'])->withSession($flash, $session->csrfToken());
@@ -160,7 +156,6 @@ final class App
     private function page(Request $request, array $route, array $handler, Session $session, Flash $flash, int $status, array $invalid): Response
     {
         $json = $request->wantsJson();
-        $region = $json ? $request->region() : null;
         $provided = [Request::class => $request];
         $shared = ['title' => $route['title'], 'csrf' => $request->csrfToken()];
         if ($this->shared !== null) {
@@ -170,7 +165,7 @@ final class App
         $changed = RegionPlanner::changedTopics($request, $flash, $this->basePath);
         $data = [];
         $templates = [];
-        foreach (RegionPlanner::select($this->manifest, !$json || $region === null, $changed) as $selected) {
+        foreach (RegionPlanner::select($this->manifest, !$request->isRegionRequest(), $changed) as $selected) {
             if ($selected->page) {
                 $loaded = isset($handler['load']) ? $this->container->call($handler['load'], $provided) : [];
                 $data[$selected->name] = array_replace($loaded, $invalid);
@@ -188,7 +183,7 @@ final class App
         }
 
         $kept = $this->kept($request, $session, $data);
-        $vary = 'Accept, Hy-Region, HX-Current-URL';
+        $vary = 'Accept, HX-Request, HX-Current-URL';
         if ($json) {
             $response = JsonEncoder::value($this->timezone, $route['name'], $request->params(), $shared, $data, $kept);
             // HY-44: every value must belong to the template data model, for JSON as for a document.
@@ -215,7 +210,8 @@ final class App
      */
     private function kept(Request $request, Session $session, array $data): array
     {
-        $cookie = json_decode($request->cookie('hy-keep') ?? '');
+        // On HTTPS only the host-only cookie counts, which another host cannot set (HY-39).
+        $cookie = json_decode($request->cookie($this->https || $request->https ? '__Host-hy-keep' : 'hy-keep') ?? '');
         $kept = [];
         foreach ($data as $name => $regionData) {
             $region = $this->manifest->region($name);

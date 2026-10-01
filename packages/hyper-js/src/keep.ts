@@ -71,26 +71,33 @@ export interface KeepStorage {
   send(url: string, form: Record<string, string>): Promise<boolean>;
 }
 
-const COOKIE = 'hy-keep';
 const YEAR = 365 * 24 * 60 * 60;
+
+// Returns the name of the kept cookie: on HTTPS the __Host- prefix makes browsers accept the cookie only
+// from this host with Secure and Path=/, so a sibling subdomain cannot set it (HY-39).
+export function keepCookieName(https: boolean): string {
+  return https ? '__Host-hy-keep' : 'hy-keep';
+}
 
 // The storage of a browser document: Web Storage, the hy-keep cookie and a background request.
 export function browserStorage(): KeepStorage {
   const store = (kind: 'localStorage' | 'sessionStorage'): Storage => (kind === 'localStorage' ? window.localStorage : window.sessionStorage);
+  const https = window.location.protocol === 'https:';
+  const cookie = keepCookieName(https);
   const readCookie = (): MapValue => {
-    const entry = document.cookie.split('; ').find((part) => part.startsWith(`${COOKIE}=`));
+    const entry = document.cookie.split('; ').find((part) => part.startsWith(`${cookie}=`));
     try {
-      const value = entry === undefined ? null : parseJson(decodeURIComponent(entry.slice(COOKIE.length + 1)));
+      const value = entry === undefined ? null : parseJson(decodeURIComponent(entry.slice(cookie.length + 1)));
       return value instanceof Map ? value : new Map();
     } catch {
       return new Map();
     }
   };
   return {
-    read: (kind, region, path) => store(kind).getItem(`${COOKIE}:${region}:${path}`),
+    read: (kind, region, path) => store(kind).getItem(`hy-keep:${region}:${path}`),
     write: (kind, region, path, json) => {
       if (kind !== 'cookie') {
-        store(kind).setItem(`${COOKIE}:${region}:${path}`, json);
+        store(kind).setItem(`hy-keep:${region}:${path}`, json);
         return;
       }
       const all = readCookie();
@@ -98,8 +105,7 @@ export function browserStorage(): KeepStorage {
       const regionValues: MapValue = values instanceof Map ? values : new Map();
       regionValues.set(path, parseJson(json));
       all.set(region, regionValues);
-      const secure = window.location.protocol === 'https:' ? '; Secure' : '';
-      document.cookie = `${COOKIE}=${encodeURIComponent(valueToJson(all))}; Path=/; SameSite=Lax; Max-Age=${YEAR}${secure}`;
+      document.cookie = `${cookie}=${encodeURIComponent(valueToJson(all))}; Path=/; SameSite=Lax; Max-Age=${YEAR}${https ? '; Secure' : ''}`;
     },
     send: (url, form) =>
       fetch(url, { method: 'POST', body: new URLSearchParams(form), credentials: 'same-origin', keepalive: true })

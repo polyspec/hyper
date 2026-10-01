@@ -22,7 +22,8 @@
 | `make test-js` | Runs the browser code tests, including the router conformance cases, and the type check |
 | `make test-php` | Runs the server package tests, including the router conformance cases, once with the generated program and once with the native extension |
 | `make lint` | Checks PHP formatting |
-| `make templates-check` | Checks that only the layout template carries `hx-` attributes (HC-6) and that the layout places `{# title}`, `{# data}` and every manifest region once (HY-3) |
+| `make templates-check` | Checks that only the layout template carries `hx-` attributes (HC-6), that the layout places `{# title}` and `{# data}` once, and that every region of the layout and of each route template is placed once, directly inside an element whose `id` is the region name, without block arguments (HY-3, HY-30) |
+| `make test-scripts` | Runs the tests of the check scripts, such as the region placement check with a broken fixture application |
 | `make parity` | Compares PHP documents with browser renders of document and region JSON, once with the generated program and once with the native extension |
 | `make bundle-size` | Prints the SSR script and CSR shell sizes and enforces the gzip limits in `config/bundle-size.json` |
 | `make e2e` | Runs the SSR, CSR, no-JavaScript and comparison flows in Chromium |

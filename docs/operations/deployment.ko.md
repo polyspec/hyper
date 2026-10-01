@@ -12,17 +12,17 @@
 ## 서버와 CDN(권장)
 
 서버는 요청 헤더로 두 종류의 요청을 구분한다(HY-15).
-- **직접 요청:** 주소창 입력, 새로고침, 북마크, 검색 크롤러, 링크 미리보기 봇의 요청이다. `Hy-Region`이 없으며 완성된 문서를 받는다.
-- **htmx 요청:** 페이지 안에서 htmx가 보내는 요청이다. `Accept: application/json`과 `Hy-Region`을 가지며 JSON을 받고, 브라우저가 이를 렌더한다.
+- **직접 요청:** 주소창 입력, 새로고침, 북마크, 검색 크롤러, 링크 미리보기 봇의 요청이다. `HX-Request`가 없으며 완성된 문서를 받는다.
+- **htmx 요청:** 페이지 안에서 htmx가 보내는 요청이다. `Accept: application/json`과 `HX-Request`를 가지며 JSON을 받고, 브라우저가 이를 렌더한다.
 
 따라서 검색엔진과 링크 미리보기는 언제나 제목이 들어 있는 완성된 문서를 받는다.
 
 | 경로 패턴 | 오리진 | 동작 |
 |---|---|---|
 | `/assets/*` | `public/assets`를 담은 S3 버킷 | `GET`과 `HEAD`. 클라이언트 스크립트와 템플릿 파일은 이름에 내용 해시가 들어 있다: `Cache-Control: public, max-age=31536000, immutable`. |
-| 기본값(`*`) | PHP 서버 | 모든 메서드를 허용하고 캐시하지 않는다. `Cookie`(세션 쿠키와 `hy-keep`), `Accept`, `Hy-Region`, `HX-Request`, `HX-Current-URL`, `Content-Type` 헤더와 쿼리 문자열을 전달한다. |
+| 기본값(`*`) | PHP 서버 | 모든 메서드를 허용하고 캐시하지 않는다. `Cookie`(세션 쿠키와 `__Host-hy-keep`), `Accept`, `HX-Request`, `HX-Current-URL`, `Content-Type` 헤더와 쿼리 문자열을 전달한다. |
 
-PHP는 기본 경로 없이 실행한다. 응답에는 `Vary: Accept, Hy-Region, HX-Current-URL`이 붙는다.
+PHP는 기본 경로 없이 실행한다. 응답에는 `Vary: Accept, HX-Request, HX-Current-URL`이 붙는다.
 
 `make server`가 만든 `build/server`를 PHP 코드와 함께 배포한다. 애플리케이션은 `App::open(program: ...)`으로 이 디렉터리를 연다. 가장 빠르게 렌더하려면 서버의 PHP 버전에 맞춰 `make ext`로 네이티브 템플릿 확장을 빌드하고, `php.ini`의 `extension` 설정으로 불러온다. 확장이 없으면 PHP는 `build/server/program.php`의 generated 프로그램으로 렌더한다(HY-48).
 

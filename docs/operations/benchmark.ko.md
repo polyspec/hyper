@@ -7,9 +7,11 @@
 | 타깃 | 스크립트 | 측정 대상 |
 |---|---|---|
 | `make bench-server` | `scripts/bench-server.php --app <directory> --iterations <n>` | 네트워크 없이 요청 종류별 `App::handle`, 그리고 10, 100, 1,000행에서 `board/rows.tpl` 렌더, `Bind::value`, `json_encode` 비용 |
-| `make bench-browser` | `scripts/bench-browser.mjs --ssr <port> --edge <port> --api <port> --runs <n>` | 첫 화면, 영역 이동, 10, 100, 1,000행에서 `hy-set` 변경 1회(시간, 단계, 메인 스레드 부하, 긴 작업), 반복 이동 중 메모리와 두 힙 스냅샷 사이의 증가, 템플릿 로드, 전송 바이트, Chromium 표 섹션 측정 |
+| `make bench-browser` | `scripts/bench-browser.mjs --ssr <port> --edge <port> --api <port> --runs <n>` | 첫 화면, 영역 이동, 10, 100, 1,000행에서 `hy-set` 변경 1회(시간, 단계, 메인 스레드 부하, 긴 작업), 반복 이동 중 메모리와 두 힙 스냅샷 사이의 증가, 템플릿 로드, 전송 바이트 |
 
 두 스크립트는 `examples/board/var/` 아래에 자체 데이터베이스를 만들고 끝나면 지운다. `bench-browser`는 포트 8085~8087에서 `scripts/serve-demo.mjs`를 실행한다.
+
+> 이 결과는 2026-10-01에, PHP 서버가 컴파일된 프로그램으로 렌더하기(HY-48) 전, 그리고 유지 값이 `kept`로 옮겨지기(HY-17) 전에 쟀다. 현재 코드의 성능이 아니며, 새 측정으로 교체한다.
 
 ## 방법
 
@@ -99,12 +101,6 @@
 | V8 코드 객체(`InstructionStream`, `TrustedByteArray`, `Code` 등) | | 약 76,000 | 클라이언트 번들의 컴파일된 코드 |
 | `blink::MediaQuerySet`과 그 `MediaQuery`, `MediaQueryFeatureExpNode` | 각 200 | 약 32,000 | 문서의 `StyleEngine`. `/board`로 이동할 때마다 1개. 아래 참조 |
 
-Chromium 표 섹션 측정:
-
-| 300회 넣었다 뺀 섹션 | 전 `blink::MediaQuerySet` | 후 |
-|---|---:|---:|
-| `<thead>` | 2 | 302 |
-| `<tbody>` | 2 | 2 |
 
 CSR은 `/board`에서 템플릿 파일 7개를 로드한다. 로컬 서버에서 가장 느린 파일은 3.3 ms 걸렸다. `/board` 문서는 4,428바이트(gzip 1,426)이고, 영역 JSON은 1,331바이트(gzip 535)다.
 
