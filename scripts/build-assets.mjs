@@ -10,12 +10,11 @@
 //
 // Usage: node scripts/build-assets.mjs --app examples/board --api /api
 
-import { createHash } from 'node:crypto';
 import { cpSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { join, relative, sep } from 'node:path';
+import { join } from 'node:path';
 import { parseArgs } from 'node:util';
 import { build } from 'esbuild';
-import { parse } from '@polyspec/template';
+import { sha256, writeTemplateFiles } from './template-files.mjs';
 
 const { values } = parseArgs({ options: { app: { type: 'string' }, api: { type: 'string' } } });
 if (!values.app || !values.api) throw new Error('--app and --api are required');
@@ -25,24 +24,7 @@ const buildDir = join(app, 'build');
 const assetsDir = join(app, 'public', 'assets');
 const templateFilesDir = join(assetsDir, 'templates');
 const csrDir = join(app, 'dist', 'csr');
-const dataTemplate = JSON.parse(readFileSync(join('packages', 'hyper-js', 'data-template.json'), 'utf8'));
-const { templateReferences } = await loadPackage();
-
-const sources = { [dataTemplate.name]: dataTemplate.source };
-for (const file of listFiles(templatesDir).filter((name) => name.endsWith('.tpl')).sort()) {
-  sources[relative(templatesDir, file).split(sep).join('/')] = readFileSync(file, 'utf8');
-}
-
-rmSync(templateFilesDir, { recursive: true, force: true });
-mkdirSync(templateFilesDir, { recursive: true });
-const index = {};
-for (const [name, source] of Object.entries(sources)) {
-  const ast = parse(source, name);
-  const text = JSON.stringify(ast);
-  const file = `${name.replace(/\.tpl$/, '').replaceAll('/', '-')}.${sha256(text).slice(0, 12)}.json`;
-  writeFileSync(join(templateFilesDir, file), text);
-  index[name] = { url: `/assets/templates/${file}`, deps: templateReferences(ast, name) };
-}
+const index = await writeTemplateFiles({ templates: templatesDir, output: templateFilesDir, urlPrefix: '/assets/templates' });
 mkdirSync(buildDir, { recursive: true });
 writeFileSync(join(buildDir, 'templates.index.json'), `${JSON.stringify(index, null, 2)}\n`);
 
@@ -89,27 +71,3 @@ cpSync(templateFilesDir, join(csrDir, 'assets', 'templates'), { recursive: true 
 
 console.log(`templates ${Object.keys(index).length}, ${hyperName}, dist/csr/index.html ${Buffer.byteLength(shell)} bytes`);
 console.log(`CSP for dist/csr/index.html: script-src 'sha256-${sha256(code, 'base64')}'; style-src 'sha256-${sha256(css, 'base64')}'`);
-
-// Loads templateReferences from the hyper browser package (HY-34).
-async function loadPackage() {
-  const result = await build({
-    stdin: { contents: "export { templateReferences } from '@polyspec/hyper';", resolveDir: join('packages', 'hyper-js'), sourcefile: 'build-entry.ts', loader: 'ts' },
-    bundle: true,
-    format: 'esm',
-    platform: 'neutral',
-    write: false,
-    logLevel: 'error',
-  });
-  return import(`data:text/javascript;base64,${Buffer.from(result.outputFiles[0].contents).toString('base64')}`);
-}
-
-function sha256(text, encoding = 'hex') {
-  return createHash('sha256').update(text).digest(encoding);
-}
-
-function listFiles(dir) {
-  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-    const path = join(dir, entry.name);
-    return entry.isDirectory() ? listFiles(path) : [path];
-  });
-}

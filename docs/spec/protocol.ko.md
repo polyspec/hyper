@@ -224,7 +224,7 @@
 
 ## 요청 경계와 실패
 
-- **HY-42** 요청 경로는 요청 대상의 경로다. 요청 대상에서 첫 `?`나 `#` 앞까지이며, 절대 형식 대상(`http://host/path`)에서는 authority 뒤의 부분이다. 그 이상 디코딩하지 않는다. 경로, 모든 깊이의 쿼리와 폼의 이름과 값, `HX-Current-URL` 헤더는 유효한 UTF-8이어야 한다. 그렇지 않으면 서버는 어떤 로더나 액션도 실행하기 전에 상태 400으로 응답한다. 쿠키는 검사하지 않는다. 서버는 JSON 객체가 아닌 `hy-keep` 쿠키와 그 안의 맞지 않는 값(HY-38)을 무시하고, 자기가 만든 식별자가 아닌 세션 쿠키에는 새 세션을 시작한다(HY-45).
+- **HY-42** 요청 경로는 요청 대상의 경로다. 요청 대상에서 첫 `?`나 `#` 앞까지이며, 절대 형식 대상(`http://host/path`)에서는 authority 뒤의 부분이다. 그 이상 디코딩하지 않는다. 경로는 RFC 9112가 요청 대상에 요구하는 대로 출력 가능한 ASCII 문자 `!`부터 `~`까지로만 이루어져야 하며, 모든 깊이의 쿼리와 폼의 이름과 값, `HX-Current-URL` 헤더는 유효한 UTF-8이어야 한다. 그렇지 않으면 서버는 어떤 로더나 액션도 실행하기 전에 상태 400으로 응답한다. 쿠키는 검사하지 않는다. 서버는 JSON 객체가 아닌 `hy-keep` 쿠키와 그 안의 맞지 않는 값(HY-38)을 무시하고, 자기가 만든 식별자가 아닌 세션 쿠키에는 새 세션을 시작한다(HY-45).
 - **HY-43** 애플리케이션이 처리하지 않은 예외는 상태 500과 텍스트 `Internal Server Error`를 만든다. 응답에는 예외 메시지, 파일 경로, 스택 트레이스가 없으며, 서버는 이를 자기 로그에 쓴다. PHP 설정 `display_errors`는 PHP가 요청을 시작하기 전에 꺼져 있어야 한다. PHP는 애플리케이션이 실행되기 전에 시작 경고(예: `max_input_vars`)를 출력하기 때문이다.
 - **HY-44** 공유 데이터와 영역 데이터는 template 데이터 모델의 값이다. ±(2^53 − 1) 밖의 수는 정수든 아니든, 문서든 JSON이든 HY-43으로 실패한다.
 - **HY-45** 서버 세션 쿠키는 `HttpOnly`, `SameSite=Lax`다. 요청이 HTTPS를 쓰거나, 애플리케이션이 HTTPS로 제공된다고 선언하면 `Secure`다. TLS를 끝내는 프록시 뒤의 서버는 반드시 이렇게 선언해야 한다. 서버는 자기가 만든 세션 식별자만 받아들이고, 요청이 세션 데이터를 읽거나 쓸 때만 세션을 시작한다. 라우팅 전에 거부한 요청(HY-42)과 경로가 어떤 라우트와도 맞지 않는 요청은 세션을 만들지 않는다. 모든 응답은 `Content-Security-Policy: frame-ancestors <sources>`를 가지며, sources는 애플리케이션이 정하고 기본값은 `'self'`다.
@@ -234,6 +234,16 @@
   - 취소된 요청은 실패가 아니다. 제한 시간(`hx-timeout` 또는 `htmx.config.defaultTimeout`)이 지나 htmx가 중단한 요청은 네트워크 실패다.
   - `render`, `set`, `hy-set`은 영역 렌더가 성공한 뒤에만 보관 데이터를 바꾼다. 실패하면 보관 데이터는 그대로다.
   - 클라이언트에서 문서 렌더가 실패하면 body에 `hy-error`를 설정한다.
+
+## Node 서버
+
+- **HY-54** Node 서버 package `@polyspec/hyper-server`는 이 문서의 서버 규칙을 PHP 서버와 같게 구현한다. 그 test는 같은 fixture로 PHP 서버 test의 사례를 실행한다. PHP 서버와 다른 점은 다음뿐이다.
+  - 문서는 브라우저가 문서 JSON 값을 렌더하는 방법(HY-12, HY-31, HY-38)으로, 브라우저 코드와 asset build의 템플릿 파일(HY-34)로 렌더한다.
+  - JSON 텍스트는 `JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES`를 준 PHP `json_encode`와 같은 바이트다. 문자열은 `"`, `\`, U+0020 아래 제어 문자(`\b`, `\f`, `\n`, `\r`, `\t`, 나머지는 `\u00xx`), U+2028과 U+2029(`\u2028`, `\u2029`)를 escape하고 다른 문자는 escape하지 않는다. ±(2^53 − 1) 안의 정수는 10진수로 쓴다. 그 밖의 수는 같은 수로 다시 읽히는 가장 짧은 숫자로 쓴다. 소수점 위치 p(수는 0.d × 10^p)가 −3부터 17 사이면 위치 표기로, 아니면 소수 자리가 하나 이상인 `d.ddde±x`로 쓴다. 음의 0은 `-0`이다. 유지 값(HY-38, HY-40)은 PHP `json_decode`처럼 decode한다. 정수 literal은 정수이고 다른 literal은 float이며, ±(2^53 − 1) 밖의 수나 유한하지 않은 수는 데이터 모델의 값이 아니고, 512단계로 중첩된 container, 짝 없는 surrogate escape, U+0000으로 시작하는 key는 실패한다. `conformance/json.json`에 두 서버가 통과하는 사례가 있다.
+  - 데이터 모델의 JavaScript 값은 null, boolean, ±(2^53 − 1) 안의 number나 bigint, string, 배열, 문자열 key의 `Map`, plain object다. UTF-8 형태가 없는 짝 없는 surrogate를 담은 문자열과 그 밖의 값은 HY-43으로 실패한다.
+  - loader와 action은 요청, reply(HY-52), 애플리케이션이 key로 bind한 service를 담은 context 인자 하나를 받는다.
+  - session store는 각 session을 한 디렉터리의 파일에 저장하며, 파일 이름은 store가 만든 64자리 16진수 식별자다. session cookie는 PHP session cookie와 같은 속성과 순서로 쓰고(`<name>=<id>; path=/; secure; HttpOnly; SameSite=Lax`, `secure`는 HY-45의 조건에서), 한 session의 요청은 차례로 실행한다.
+  - 폼 필드는 `application/x-www-form-urlencoded` body와 `multipart/form-data` body의 텍스트 필드에서 읽고, `a[b]` 같은 대괄호 이름은 그대로 둔다. 한도(기본 8 MiB)보다 큰 요청 body는 상태 413을 받는다.
 
 ## 오류
 

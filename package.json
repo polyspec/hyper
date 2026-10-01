@@ -5,7 +5,8 @@
   "description": "Region protocol that renders template language regions in the browser with htmx",
   "type": "module",
   "workspaces": [
-    "packages/hyper-js"
+    "packages/hyper-js",
+    "packages/hyper-node"
   ],
   "license": "MIT",
   "engines": {

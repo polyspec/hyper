@@ -103,7 +103,7 @@ final class App
 
     private function answer(Request $request, SessionStore $store): Response
     {
-        if (!$request->validUtf8()) {
+        if (!$request->validInput()) {
             return Response::text(400, 'Bad Request');
         }
         $path = Router::stripBasePath($request->path, $this->basePath);

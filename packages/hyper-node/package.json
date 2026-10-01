@@ -1,0 +1,22 @@
+{
+  "name": "@polyspec/hyper-server",
+  "version": "0.0.1",
+  "description": "Node.js HTTP server for the region protocol: routes, loaders, actions, sessions, documents and JSON",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sideEffects": false,
+  "engines": {
+    "node": ">=26"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@polyspec/hyper": "0.0.1",
+    "@polyspec/template": "file:../../../template/packages/template-ts"
+  }
+}

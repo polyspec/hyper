@@ -306,6 +306,9 @@ final class AppTest extends TestCase
         self::assertSame(200, $this->app()->handle(new Request('GET', '/', [], [], [], cookies: ['unrelated' => "\xFF"]), $this->session)->status);
         self::assertSame(400, $this->get('/', ['HX-Current-URL' => "http://x/\xFF"])->status);
         self::assertSame(400, $this->get("/items/\xFF")->status);
+        // A request target is ASCII (RFC 9112), so a raw UTF-8 path is rejected as well; a client encodes it.
+        self::assertSame(400, $this->get('/items/한')->status);
+        self::assertSame(200, $this->get('/items/%ED%95%9C')->status);
     }
 
     public function testUnhandledExceptionGivesAPlain500(): void

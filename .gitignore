@@ -11,3 +11,4 @@ examples/board/public/assets/manifest.json
 examples/board/var/*.db
 packages/hyper-php/tests/build/
 build/
+packages/hyper-node/tests/build/

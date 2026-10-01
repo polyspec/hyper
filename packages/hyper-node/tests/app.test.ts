@@ -1,0 +1,373 @@
+// The cases of packages/hyper-php/tests/AppTest.php against the same fixture application (HY-54).
+import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import { beforeEach, describe, expect, it } from 'vitest';
+import { createApplication, decodeResponse, renderParts, type Manifest, type TemplateIndex } from '@polyspec/hyper';
+import { parseJson, type Template } from '@polyspec/template/render';
+import { App, Result } from '../src/index.js';
+import { cookie, Fixture, FIXTURES, handlers, json, JSON_REGION, TEMPLATES } from './support.js';
+
+let fixture: Fixture;
+beforeEach(() => {
+  fixture = new Fixture();
+});
+
+describe('App', () => {
+  it('renders the document for an HTML request (HY-12, HY-15)', async () => {
+    const response = await fixture.get('/');
+    expect(response.status).toBe(200);
+    expect(response.headers['Content-Type']).toBe('text/html; charset=utf-8');
+    const token = fixture.session.get('_hyper_csrf') as string;
+    const data = `{"env":{"timezone":"+09:00"},"route":"home","params":{},"shared":{"title":"Home","csrf":"${token}"},`
+      + '"regions":{"side":{"count":0,"note":null},"content":{"name":"n0"}},"kept":{}}';
+    expect(response.body).toBe(
+      '<title>Home - Site</title>\n<aside id="side"><b>0</b>\n</aside>\n<main id="content"><p>Home|n0</p>\n</main>\n'
+      + `<script type="application/json" id="hy-data">${data}</script>`,
+    );
+  });
+
+  it('renders parts alone that match the document (HY-13)', async () => {
+    const manifest = JSON.parse(readFileSync(`${FIXTURES}app.json`, 'utf8')) as Manifest;
+    const index = JSON.parse(readFileSync(TEMPLATES.index, 'utf8')) as TemplateIndex;
+    const application = createApplication(manifest, index, async (url) => JSON.parse(readFileSync(`${TEMPLATES.root}${url}`, 'utf8')) as Template);
+    await application.templates.ensure(Object.keys(index));
+    const document = (await fixture.get('/')).body;
+    const parts = renderParts(application, decodeResponse(application, parseJson((await fixture.get('/', { Accept: 'application/json' })).body), '/'));
+    expect(document).toContain(`<title>${parts.title}</title>`);
+    expect(document).toContain(`<aside id="side">${parts.regions.get('side')}</aside>`);
+    expect(parts.regions.get('content')).toBe('<p>Home|n0</p>\n');
+    expect(document).toContain('<main id="content"><p>Home|n0</p>\n</main>');
+  });
+
+  it('embeds the document JSON in the document (HY-31)', async () => {
+    const html = (await fixture.get('/list')).body;
+    const body = (await fixture.get('/list', { Accept: 'application/json' })).body;
+    const found = /<script type="application\/json" id="hy-data">(.*)<\/script>/.exec(html)?.[1];
+    expect(JSON.parse(found!)).toEqual(JSON.parse(body));
+    expect(found).toContain('"a\\u003c"');
+  });
+
+  it('puts route regions right after the page region (HY-30)', async () => {
+    const region = json(await fixture.get('/list', JSON_REGION));
+    const document = json(await fixture.get('/list', { Accept: 'application/json' }));
+    expect(Object.keys(region.regions)).toEqual(['content', 'rows']);
+    expect(Object.keys(document.regions)).toEqual(['side', 'content', 'rows']);
+    expect(region.regions.rows).toEqual({ items: ['a<', 'b0'], open: false, mode: 'a', view: 'x', filter: { a: 1 }, tags: [] });
+    expect((await fixture.get('/list')).body).toContain('<ul id="rows"><li>a&lt;</li><li>b0</li></ul>');
+  });
+
+  it('passes route regions to the page region as HTML definitions (HY-13, HY-30)', async () => {
+    expect((await fixture.get('/list')).body).toContain('<main id="content"><h1>List</h1><ul id="rows"><li>a&lt;</li><li>b0</li></ul>\n</main>');
+  });
+
+  it('requires a route region loader to be declared (HY-30)', async () => {
+    await expect(App.open({ manifest: `${FIXTURES}app.json`, templates: TEMPLATES, timezone: 'Z', handlers: {
+      routes: { add: { post: () => Result.redirect('/') }, home: { regions: { rows: () => ({}) } } },
+    } })).rejects.toThrow('undeclared region rows');
+  });
+
+  it('stores and applies a server kept value (HY-37, HY-38, HY-40)', async () => {
+    const token = await fixture.token();
+    expect((await fixture.keep({ _csrf: token, region: 'rows', path: 'open', value: 'true' })).status).toBe(204);
+    const response = json(await fixture.get('/list', JSON_REGION));
+    expect((response.regions.rows as Record<string, unknown>).open).toBe(false);
+    expect(response.kept).toEqual({ rows: { open: true } });
+    const document = (await fixture.get('/list')).body;
+    expect(document).toContain('"rows":{"items":["a\\u003c","b0"],"open":false');
+    expect(document).toContain('"kept":{"rows":{"open":true}}');
+  });
+
+  it('rejects invalid keep requests (HY-40)', async () => {
+    const token = await fixture.token();
+    expect((await fixture.keep({ _csrf: 'wrong', region: 'rows', path: 'open', value: 'true' })).status).toBe(403);
+    expect((await fixture.keep({ _csrf: token, region: 'rows', path: 'mode', value: '"b"' })).status).toBe(400);
+    expect((await fixture.keep({ _csrf: token, region: 'rows', path: 'view', value: '"y"' })).status).toBe(400);
+    expect((await fixture.keep({ _csrf: token, region: 'missing', path: 'open', value: 'true' })).status).toBe(400);
+    expect((await fixture.keep({ _csrf: token, region: 'rows', path: 'open', value: 'tru' })).status).toBe(400);
+    expect((await fixture.keep({ _csrf: token, region: 'rows', path: 'constructor', value: 'true' })).status).toBe(400);
+    expect((await fixture.keep({}, 'GET')).status).toBe(405);
+    expect((json(await fixture.get('/list', JSON_REGION)).regions.rows as Record<string, unknown>).open).toBe(false);
+    expect(json(await fixture.get('/list', JSON_REGION)).kept).toEqual({});
+  });
+
+  it('sends cookie kept values apart from the region data (HY-17, HY-37, HY-38)', async () => {
+    const value = JSON.stringify({ rows: { mode: 'b', open: true, view: 'y' }, side: { count: 9 } });
+    const response = json(await fixture.get('/list', { ...JSON_REGION, ...cookie('hy-keep', value) }));
+    expect(response.regions.rows).toEqual({ items: ['a<', 'b0'], open: false, mode: 'a', view: 'x', filter: { a: 1 }, tags: [] });
+    expect(response.kept).toEqual({ rows: { mode: 'b' } });
+    for (const ignored of ['{"rows":{"mode":1}}', '{', '{"rows":{"filter":{"a":"s"}}}', '{"rows":{"filter":{"b":1}}}', '{"rows":{"filter":{}}}']) {
+      expect(json(await fixture.get('/list', { ...JSON_REGION, ...cookie('hy-keep', ignored) })).kept, ignored).toEqual({});
+    }
+    expect(json(await fixture.get('/list', { ...JSON_REGION, ...cookie('hy-keep', '{"rows":{"filter":{"a":2}}}') })).kept).toEqual({ rows: { filter: { a: 2 } } });
+  });
+
+  it('renders a region whose kept values break rendering without them (HY-38)', async () => {
+    const headers = cookie('hy-keep', '{"rows":{"mode":"b","tags":[1]}}');
+    const document = await fixture.get('/list', headers);
+    expect(document.status).toBe(200);
+    expect(document.body).toContain('<li>a&lt;</li><li>b0</li>');
+    expect(document.body).toContain('"kept":{}');
+    expect(json(await fixture.get('/list', { ...JSON_REGION, ...headers })).kept).toEqual({ rows: { mode: 'b', tags: [1] } });
+  });
+
+  it('rejects manifests with invalid keep declarations (HY-37, HY-40)', async () => {
+    for (const name of ['keep-kind', 'keep-page', 'keep-reserved', 'uses-topic']) {
+      await expect(App.open({ manifest: `${FIXTURES}invalid/${name}.json`, templates: TEMPLATES, handlers: {}, timezone: 'Z' }), name).rejects.toThrow();
+    }
+  });
+
+  it('rejects input that is not UTF-8 before loaders and actions (HY-42)', async () => {
+    const token = await fixture.token();
+    expect((await fixture.post('/add', `_csrf=${token}&name=bad%FF`)).status).toBe(400);
+    expect(fixture.counter.actions).toBe(0);
+    expect((await fixture.get('/?q=%C3')).status).toBe(400);
+    expect((await fixture.get('/?a[%FF][x]=1')).status).toBe(400);
+    expect((await fixture.get('/', { Cookie: 'hy-keep=%FF' })).status).toBe(200);
+    expect((await fixture.get('/', { Cookie: 'PHPSESSID=%FF' })).status).toBe(200);
+    expect((await fixture.get('/', { Cookie: 'unrelated=%FF' })).status).toBe(200);
+    expect((await fixture.get('/', { 'HX-Current-URL': 'http://x/\xFF' })).status).toBe(400);
+    expect((await fixture.get('/items/\xFF')).status).toBe(400);
+    // A request target is ASCII (RFC 9112), so a raw UTF-8 path is rejected as well; a client encodes it.
+    expect((await fixture.get(Buffer.from('/items/한').toString('latin1'))).status).toBe(400);
+    expect((await fixture.get('/items/%ED%95%9C')).status).toBe(200);
+  });
+
+  it('gives a plain 500 for an unhandled error and logs it (HY-43)', async () => {
+    for (const headers of [{}, JSON_REGION]) {
+      const response = await fixture.get('/items/broken', headers);
+      expect(response.status).toBe(500);
+      expect(response.body).toBe('Internal Server Error');
+    }
+    expect(fixture.log[0]).toContain('secret detail /srv/app.js');
+  });
+
+  it('fails an integer outside the safe range for a document and for JSON (HY-44)', async () => {
+    expect((await fixture.get('/items/huge')).status).toBe(500);
+    expect((await fixture.get('/items/huge', JSON_REGION)).status).toBe(500);
+  });
+
+  it('keeps numeric data keys (HY-17)', async () => {
+    expect((await fixture.get('/items/numeric', JSON_REGION)).body).toContain('"regions":{"content":{"5":"x","id":"n"}}');
+  });
+
+  it('rejects long kept values (HY-40)', async () => {
+    const token = await fixture.token();
+    expect((await fixture.keep({ _csrf: token, region: 'rows', path: 'open', value: JSON.stringify('a'.repeat(4095)) })).status).toBe(400);
+  });
+
+  it('ignores or rejects kept values outside the data model (HY-38, HY-40)', async () => {
+    const token = await fixture.token();
+    expect((await fixture.keep({ _csrf: token, region: 'rows', path: 'filter', value: '{"a":9007199254740993}' })).status).toBe(400);
+    expect((await fixture.keep({ _csrf: token, region: 'rows', path: 'filter', value: '{"a":1e400}' })).status).toBe(400);
+    for (const value of ['{"rows":{"filter":{"a":9007199254740993}}}', '{"rows":{"filter":{"a":1e400}}}']) {
+      const response = await fixture.get('/list', { ...JSON_REGION, ...cookie('hy-keep', value) });
+      expect(response.status).toBe(200);
+      expect(response.body).toContain('"filter":{"a":1}');
+      expect(response.body).toContain('"kept":{}');
+    }
+  });
+
+  it('ignores only the cookie kept values outside the data model, as PHP json_decode reads them (HY-38)', async () => {
+    const response = json(await fixture.get('/list', { ...JSON_REGION, ...cookie('hy-keep', '{"rows":{"filter":{"a":9007199254740993},"mode":"b"}}') }));
+    expect(response.kept).toEqual({ rows: { mode: 'b' } });
+  });
+
+  it('limits framing in every response (HY-45)', async () => {
+    for (const response of [await fixture.get('/'), await fixture.get('/missing'), await fixture.get('/items/broken'), await fixture.get('/', JSON_REGION)]) {
+      expect(response.headers['Content-Security-Policy']).toBe("frame-ancestors 'self'");
+    }
+    const framed = await fixture.handle({ target: '/' }, { frameAncestors: "'self' https://admin.example" });
+    expect(framed.headers['Content-Security-Policy']).toBe("frame-ancestors 'self' https://admin.example");
+  });
+
+  it('treats an empty kept map as a map (HY-38)', async () => {
+    for (const value of ['{"rows":{"filter":{}}}', '{"rows":{"filter":[]}}']) {
+      expect((await fixture.get('/list', { ...JSON_REGION, ...cookie('hy-keep', value) })).body).toContain('"kept":{}');
+    }
+  });
+
+  it('returns the protocol shape for a region request (HY-17, HY-18)', async () => {
+    const response = await fixture.get('/items/a%20b', JSON_REGION);
+    expect(response.status).toBe(200);
+    expect(response.headers['Content-Type']).toBe('application/json; charset=utf-8');
+    const token = fixture.session.get('_hyper_csrf') as string;
+    expect(response.body).toBe(`{"env":{"timezone":"+09:00"},"route":"item","params":{"id":"a b"},"shared":{"title":"Item","csrf":"${token}"},"regions":{"content":{"id":"a b"}},"kept":{}}`);
+  });
+
+  it('returns every region in manifest order for a document request (HY-15, HY-18)', async () => {
+    const response = json(await fixture.get('/', { Accept: 'application/json' }));
+    expect(response.route).toBe('home');
+    expect(Object.keys(response.regions)).toEqual(['side', 'content']);
+  });
+
+  it('writes empty maps as JSON objects (HY-17)', async () => {
+    expect((await fixture.get('/', JSON_REGION)).body).toContain('"params":{}');
+  });
+
+  it('adds the regions that use path after navigation (HY-11, HY-19)', async () => {
+    const same = json(await fixture.get('/', { ...JSON_REGION, 'HX-Current-URL': 'http://localhost/?page=2' }));
+    const other = json(await fixture.get('/', { ...JSON_REGION, 'HX-Current-URL': 'http://localhost/add' }));
+    expect(Object.keys(same.regions)).toEqual(['content']);
+    expect(Object.keys(other.regions)).toEqual(['content', 'side']);
+    expect(other.regions.side).toEqual({ count: 0, note: null });
+  });
+
+  it('treats an htmx JSON request as a region request and other JSON as a document request (HY-15, HY-18)', async () => {
+    expect(Object.keys(json(await fixture.get('/', JSON_REGION)).regions)).toEqual(['content']);
+    expect(Object.keys(json(await fixture.get('/', { Accept: 'application/json' })).regions)).toEqual(['side', 'content']);
+    expect((await fixture.get('/', JSON_REGION)).headers.Vary).toBe('Accept, HX-Request, HX-Current-URL');
+  });
+
+  it('reads only the host-only kept cookie on HTTPS (HY-39, HY-45)', async () => {
+    const options = { https: true, handlers: { routes: { add: { post: () => Result.redirect('/') }, list: { regions: { rows: () => ({ items: [], mode: 'a' }) } } } } };
+    const read = async (headers: Record<string, string>) => json(await fixture.handle({ target: '/list', headers: { ...JSON_REGION, ...headers } }, options)).kept;
+    expect(await read(cookie('__Host-hy-keep', '{"rows":{"mode":"b"}}'))).toEqual({ rows: { mode: 'b' } });
+    expect(await read(cookie('hy-keep', '{"rows":{"mode":"b"}}'))).toEqual({});
+    expect(json(await fixture.get('/list', { ...JSON_REGION, ...cookie('__Host-hy-keep', '{"rows":{"mode":"b"}}') })).kept).toEqual({});
+  });
+
+  it('removes the base path for routing and adds it to redirects (HY-8, HY-11)', async () => {
+    const routed = json(await fixture.get('/api/items/7', { ...JSON_REGION, 'HX-Current-URL': 'http://localhost/items/7' }, '/api'));
+    expect(Object.keys(routed.regions)).toEqual(['content']);
+    expect((await fixture.get('/items/7', {}, '/api')).status).toBe(404);
+    const token = await fixture.token();
+    const redirect = await fixture.post('/api/add', { _csrf: token, name: 'a' }, JSON_REGION, '/api');
+    expect(redirect.status).toBe(303);
+    expect(redirect.headers.Location).toBe('/api/');
+  });
+
+  it('rejects an action without the token (HY-24)', async () => {
+    await fixture.token();
+    expect((await fixture.post('/add', { _csrf: 'wrong', name: 'a' })).status).toBe(403);
+    expect(fixture.counter.actions).toBe(0);
+  });
+
+  it('redirects after a successful action and passes flash values and topics once (HY-25)', async () => {
+    const response = await fixture.post('/add', { _csrf: await fixture.token(), name: 'a' }, JSON_REGION);
+    expect(response.status).toBe(303);
+    expect(response.headers.Location).toBe('/');
+    const next = json(await fixture.get('/', JSON_REGION));
+    expect(Object.keys(next.regions)).toEqual(['content', 'side']);
+    expect(next.regions.side).toEqual({ count: 1, note: 'added' });
+    expect(next.regions.content).toEqual({ name: 'n1' });
+    expect(Object.keys(json(await fixture.get('/', JSON_REGION)).regions)).toEqual(['content']);
+  });
+
+  it('renders the page with status 422 for a rejected action (HY-26)', async () => {
+    const token = await fixture.token();
+    const jsonResponse = await fixture.post('/add', { _csrf: token, name: '' }, JSON_REGION);
+    const html = await fixture.post('/add', { _csrf: token, name: '' });
+    expect(jsonResponse.status).toBe(422);
+    expect(json(jsonResponse).regions.content).toEqual({ name: '', error: 'empty' });
+    expect(html.status).toBe(422);
+    expect(html.body).toContain('<p>Add| !empty</p>');
+    expect(fixture.counter.count).toBe(0);
+  });
+
+  it('fails unknown paths, missing resources and other methods (HY-27)', async () => {
+    expect((await fixture.get('/missing')).status).toBe(404);
+    expect((await fixture.get('/items/missing')).status).toBe(404);
+    expect((await fixture.post('/', {})).status).toBe(405);
+    expect((await fixture.handle({ method: 'DELETE', target: '/add' })).status).toBe(405);
+  });
+
+  it('answers a loader redirect with 303 and passes its flash values (HY-50)', async () => {
+    const response = await fixture.get('/items/moved', JSON_REGION);
+    expect(response.status).toBe(303);
+    expect(response.headers.Location).toBe('/items/new');
+    expect(response.body).toBe('');
+    expect((json(await fixture.get('/', { Accept: 'application/json' })).regions.side as Record<string, unknown>).note).toBe('moved');
+    expect((await fixture.get('/api/items/moved', {}, '/api')).headers.Location).toBe('/api/items/new');
+  });
+
+  it('answers a forbidden loader and action with 403 (HY-51)', async () => {
+    const page = await fixture.get('/items/private');
+    expect(page.status).toBe(403);
+    expect(page.body).toBe('Forbidden');
+    const action = await fixture.post('/add', { _csrf: await fixture.token(), name: 'closed' });
+    expect(action.status).toBe(403);
+    expect(fixture.counter.count).toBe(0);
+  });
+
+  it('puts the reply cookies and cache control into the response (HY-52)', async () => {
+    const page = await fixture.get('/items/member');
+    expect(page.status).toBe(200);
+    expect(page.headers['Set-Cookie']).toEqual([
+      'member=token.1; Path=/; HttpOnly; SameSite=Lax; Max-Age=3600',
+      'old=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0',
+    ]);
+    expect(page.headers['Cache-Control']).toBe('public, max-age=60');
+    const https = await fixture.handle({ target: '/items/member', https: true });
+    expect((https.headers['Set-Cookie'] as string[])[0]).toBe('member=token.1; Path=/; HttpOnly; SameSite=Lax; Secure; Max-Age=3600');
+    const forbidden = await fixture.get('/items/guarded');
+    expect(forbidden.status).toBe(403);
+    expect(forbidden.headers['Set-Cookie']).toEqual(['member=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0']);
+    expect((await fixture.get('/items/bad-cookie')).status).toBe(500);
+    expect((await fixture.get('/items/plain')).headers['Set-Cookie']).toBeUndefined();
+  });
+
+  it('does not let page responses be stored unless the reply sets Cache-Control (HY-52)', async () => {
+    expect((await fixture.get('/items/plain')).headers['Cache-Control']).toBe('no-store');
+    expect((await fixture.get('/items/plain', JSON_REGION)).headers['Cache-Control']).toBe('no-store');
+    const token = await fixture.token();
+    expect((await fixture.post('/add', { _csrf: token, name: '' })).headers['Cache-Control']).toBe('no-store');
+    expect((await fixture.get('/items/member', JSON_REGION)).headers['Cache-Control']).toBe('public, max-age=60');
+  });
+
+  it('tags JSON responses and answers a matching request with 304 (HY-53)', async () => {
+    const first = await fixture.get('/items/plain', { Accept: 'application/json' });
+    const tag = first.headers.ETag as string;
+    expect(tag).toBe(`"${createHash('sha256').update(first.body).digest('hex').slice(0, 32)}"`);
+    const again = await fixture.get('/items/plain', { Accept: 'application/json', 'If-None-Match': tag });
+    expect(again.status).toBe(304);
+    expect(again.body).toBe('');
+    expect(again.headers.ETag).toBe(tag);
+    expect((await fixture.get('/items/plain', { Accept: 'application/json', 'If-None-Match': '"other"' })).status).toBe(200);
+  });
+
+  it('requires the handlers to match the manifest (HY-2)', async () => {
+    await expect(App.open({ manifest: `${FIXTURES}app.json`, templates: TEMPLATES, timezone: 'Z', handlers: { routes: { unknown: {} } } })).rejects.toThrow('no route');
+  });
+
+  it('requires an action for a declared POST route (HY-2)', async () => {
+    await expect(App.open({ manifest: `${FIXTURES}app.json`, templates: TEMPLATES, timezone: 'Z', handlers: {} })).rejects.toThrow('no POST action');
+  });
+});
+
+describe('Node handlers', () => {
+  it('passes one context with the request, the reply and the services (HY-54)', async () => {
+    const seen: unknown[] = [];
+    const base = handlers();
+    const app = await fixture.app({ handlers: { ...base, shared: (context) => {
+      seen.push(Object.keys(context).sort(), context.services.get('counter') === fixture.counter);
+      return { site: 'x' };
+    } } });
+    const response = json(await app.handle((await import('../src/index.js')).Request.from({ method: 'GET', target: '/', headers: JSON_REGION }), fixture.session));
+    expect(seen).toEqual([['reply', 'request', 'services'], true]);
+    expect(response.shared).toEqual({ title: 'Home', csrf: fixture.session.get('_hyper_csrf'), site: 'x' });
+  });
+
+  it('fails data that is not a value of the data model (HY-44)', async () => {
+    class Point {
+      x = 1;
+    }
+    for (const value of [new Point(), '\uD800', Number.NaN, 1e20, 2 ** 53, () => 1]) {
+      const app = await fixture.app({ handlers: { ...handlers(), routes: { ...handlers().routes, home: { load: () => ({ value }) } } } });
+      const request = (await import('../src/index.js')).Request.from({ method: 'GET', target: '/', headers: JSON_REGION });
+      expect((await app.handle(request, fixture.session)).status, String(value)).toBe(500);
+    }
+  });
+
+  it('fails a service without a factory with 500 (HY-43)', async () => {
+    const app = await App.open<{ counter: { count: number } }>({ manifest: `${FIXTURES}app.json`, templates: TEMPLATES, timezone: 'Z', log: () => {}, handlers: {
+      routes: { add: { post: () => Result.redirect('/') }, home: { load: ({ services }) => ({ name: services.get('counter').count }) } },
+    } });
+    const request = (await import('../src/index.js')).Request.from({ method: 'GET', target: '/' });
+    expect((await app.handle(request, fixture.session)).status).toBe(500);
+  });
+
+  it('requires absolute paths and a template for every route (HY-34, HY-54)', async () => {
+    await expect(App.open({ manifest: 'app.json', templates: TEMPLATES, timezone: 'Z', handlers: {} })).rejects.toThrow('absolute');
+    await expect(App.open({ manifest: `${FIXTURES}app.json`, templates: { index: `${FIXTURES}app.json`, root: TEMPLATES.root }, timezone: 'Z', handlers: { routes: { add: { post: () => Result.redirect('/') } } } })).rejects.toThrow('template index');
+  });
+});

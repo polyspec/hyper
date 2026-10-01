@@ -72,12 +72,12 @@ final class Request
     }
 
     /**
-     * Returns true when the path, every query and form name and value at any depth, and HX-Current-URL are
-     * valid UTF-8 (HY-42). Cookies are not checked; hyper ignores invalid ones.
+     * Returns true when the path consists of printable ASCII characters and every query and form name and value
+     * at any depth and HX-Current-URL are valid UTF-8 (HY-42). Cookies are not checked; hyper ignores invalid ones.
      */
-    public function validUtf8(): bool
+    public function validInput(): bool
     {
-        return self::utf8($this->path) && self::utf8($this->header('HX-Current-URL') ?? '') && self::utf8Tree($this->query) && self::utf8Tree($this->form);
+        return preg_match('/^[\x21-\x7E]*$/D', $this->path) === 1 && self::utf8($this->header('HX-Current-URL') ?? '') && self::utf8Tree($this->query) && self::utf8Tree($this->form);
     }
 
     /** @param array<mixed> $values */

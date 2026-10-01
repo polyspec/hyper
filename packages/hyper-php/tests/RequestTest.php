@@ -52,15 +52,15 @@ final class RequestTest extends TestCase
     public function testInvalidUtf8KeysAreRejectedAtAnyDepth(): void
     {
         // HY-42
-        self::assertFalse((new Request('GET', '/', [], ['a' => ["\xFF" => ['x' => '1']]]))->validUtf8());
-        self::assertFalse((new Request('GET', '/', [], ["a\xFF" => ['x' => '1']]))->validUtf8());
-        self::assertFalse((new Request('POST', '/', [], [], ['a' => ['b' => ["\xC3" => 'v']]]))->validUtf8());
-        self::assertTrue((new Request('GET', '/', [], ['a' => ['b' => ['c' => 'd']]]))->validUtf8());
+        self::assertFalse((new Request('GET', '/', [], ['a' => ["\xFF" => ['x' => '1']]]))->validInput());
+        self::assertFalse((new Request('GET', '/', [], ["a\xFF" => ['x' => '1']]))->validInput());
+        self::assertFalse((new Request('POST', '/', [], [], ['a' => ['b' => ["\xC3" => 'v']]]))->validInput());
+        self::assertTrue((new Request('GET', '/', [], ['a' => ['b' => ['c' => 'd']]]))->validInput());
     }
 
     public function testCookiesAreNotChecked(): void
     {
         // HY-42: an invalid hy-keep is ignored and an invalid session cookie starts a new session.
-        self::assertTrue((new Request('GET', '/', cookies: ['hy-keep' => "\xFF", session_name() => "\xFF"]))->validUtf8());
+        self::assertTrue((new Request('GET', '/', cookies: ['hy-keep' => "\xFF", session_name() => "\xFF"]))->validInput());
     }
 }

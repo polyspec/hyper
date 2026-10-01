@@ -1,6 +1,7 @@
 BOARD := examples/board
 PHP_PACKAGE := packages/hyper-php
 JS_PACKAGE := packages/hyper-js
+NODE_PACKAGE := packages/hyper-node
 TEMPLATE_DIR := ../template
 FIXTURES := $(PHP_PACKAGE)/tests/fixtures
 # The native template extension, built from the template repository (HY-48).
@@ -8,7 +9,7 @@ EXT := build/ext/release/libpolyspec_template.$(if $(filter Darwin,$(shell uname
 
 .DEFAULT_GOAL := help
 
-.PHONY: help install template ext server server-fixtures assets test-js test-php lint templates-check test-scripts parity bundle-size e2e docs-check serve-demo bench-server bench-browser bench check
+.PHONY: help install template ext server server-fixtures node-server node-fixtures assets test-js test-node test-php lint templates-check test-scripts parity bundle-size e2e docs-check serve-demo bench-server bench-browser bench check
 
 help: ## List the targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
@@ -30,11 +31,21 @@ server: ## Build the board server program: its templates and the generated PHP p
 server-fixtures: ## Build the server program of the PHP test fixtures
 	node scripts/build-server.mjs --manifest $(FIXTURES)/app.json --templates $(FIXTURES)/templates --output $(PHP_PACKAGE)/tests/build/server --template-dir $(TEMPLATE_DIR)
 
+node-server: assets ## Build the board Node server into examples/board/build/node/server.mjs (HY-54)
+	npx tsc -p $(BOARD)/node/tsconfig.json
+	npx esbuild $(BOARD)/node/main.ts --bundle --platform=node --format=esm --target=node26 --log-level=warning --outfile=$(BOARD)/build/node/server.mjs
+
+node-fixtures: ## Build the template files of the PHP test fixtures for the Node server tests
+	node scripts/build-templates.mjs --templates $(FIXTURES)/templates --output $(NODE_PACKAGE)/tests/build
+
 assets: ## Build the board client bundle (SSR) and the single-file static shell (CSR)
 	node scripts/build-assets.mjs --app $(BOARD) --api /api
 
 test-js: ## Run the browser code tests, including the router conformance cases, and the type check
 	cd $(JS_PACKAGE) && npx vitest run && npx tsc --noEmit -p tsconfig.json
+
+test-node: node-fixtures ## Run the Node server tests, including the PHP AppTest cases and the JSON conformance cases, and the type check
+	cd $(NODE_PACKAGE) && npx vitest run && npx tsc --noEmit -p tsconfig.json
 
 test-php: server-fixtures ext ## Run the server package tests with the generated program and with the native extension
 	cd $(PHP_PACKAGE) && vendor/bin/phpunit
@@ -76,4 +87,4 @@ bench-browser: assets server ## Measure first screens, navigation, hy-set phases
 
 bench: bench-server bench-browser ## Run both measurements; results are reports, not pass or fail checks
 
-check: docs-check lint templates-check test-scripts test-js test-php parity bundle-size e2e ## Run every check
+check: docs-check lint templates-check test-scripts test-js test-node test-php parity bundle-size e2e ## Run every check

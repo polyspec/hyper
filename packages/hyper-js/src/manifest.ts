@@ -41,6 +41,7 @@ const KEPT_PATH = /^[A-Za-z_][A-Za-z0-9_]*(\.([A-Za-z_][A-Za-z0-9_]*|\d+))*$/;
 
 // Checks the manifest rules that the browser code relies on and returns the manifest.
 export function checkManifest(manifest: Manifest): Manifest {
+  if (typeof manifest.layout !== 'string' || typeof manifest.title !== 'string') throw new Error('hyper: the manifest has no layout or title template');
   const regionNames = new Set<string>();
   const addRegion = (name: string, keep: Record<string, KeepKind> | undefined, page: boolean): void => {
     if (!REGION_NAME.test(name) || RESERVED.has(name) || regionNames.has(name)) {
@@ -68,10 +69,14 @@ export function checkManifest(manifest: Manifest): Manifest {
   if (pages !== 1) throw new Error('hyper: the manifest must declare exactly one page region');
   const routeNames = new Set<string>();
   for (const route of manifest.routes) {
-    if (routeNames.has(route.name)) throw new Error(`hyper: duplicate route name ${route.name}`);
+    if (typeof route.name !== 'string' || route.name === '' || routeNames.has(route.name)) throw new Error(`hyper: duplicate or empty route name ${route.name}`);
+    if (typeof route.title !== 'string' || typeof route.template !== 'string') throw new Error(`hyper: route ${route.name} has no title or template`);
     routeNames.add(route.name);
     if (route.path.startsWith('/_hyper')) throw new Error(`hyper: route ${route.name} uses the reserved path /_hyper`);
-    for (const region of route.regions ?? []) addRegion(region.name, region.keep, false);
+    for (const region of route.regions ?? []) {
+      addRegion(region.name, region.keep, false);
+      if (typeof region.template !== 'string') throw new Error(`hyper: route region ${region.name} has no template`);
+    }
   }
   return manifest;
 }
