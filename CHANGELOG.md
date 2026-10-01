@@ -8,6 +8,7 @@
 
 - A route path can end with a rest parameter `{name*}`, which matches zero or more remaining request segments and holds the rest of the request path without decoding (HY-49). Both routers pass the cases of `conformance/rest.json`.
 - A loader or an action can stop a request with `Redirect`, which answers 303 with the location, flash values and changed topics of a redirect result (HY-50), or with `Forbidden`, which answers 403 (HY-51).
+- Loaders and actions receive the `Reply` of the request, which adds and removes cookies with the attributes of HY-45 and sets the `Cache-Control` of a page response; the response contains its cookies whatever its status (HY-52). A JSON page response has a strong `ETag`, and a request with the same `If-None-Match` receives 304 (HY-53). `Set-Cookie` is the one response header that holds several values.
 
 ### Fixed
 

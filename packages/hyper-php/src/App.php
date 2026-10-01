@@ -119,10 +119,22 @@ final class App
         $session = new Session($store);
         $flash = $session->takeFlash();
         $request = $request->withRoute((string) $path, $match['params'])->withSession($flash, $session->csrfToken());
+        $reply = new Reply();
 
+        return $this->routed($request, $route, $handler, $session, $flash, $reply)->withCookies($reply, $this->https || $request->https);
+    }
+
+    /**
+     * Answers a routed request with its page, action result or stop result.
+     *
+     * @param array{name: string, path: string, title: string, template: string, post: bool, regions: list<Region>} $route
+     * @param array{load?: \Closure, post?: \Closure, regions?: array<string, \Closure>} $handler
+     */
+    private function routed(Request $request, array $route, array $handler, Session $session, Flash $flash, Reply $reply): Response
+    {
         try {
             if ($request->method === 'GET') {
-                return $this->page($request, $route, $handler, $session, $flash, 200, []);
+                return $this->page($request, $route, $handler, $session, $flash, 200, [], $reply);
             }
             if ($request->method !== 'POST' || !isset($handler['post'])) {
                 return Response::text(405, 'Method Not Allowed');
@@ -130,7 +142,7 @@ final class App
             if (!hash_equals($request->csrfToken(), $request->formString('_csrf'))) {
                 return Response::text(403, 'Forbidden');
             }
-            $result = $this->container->call($handler['post'], [Request::class => $request]);
+            $result = $this->container->call($handler['post'], [Request::class => $request, Reply::class => $reply]);
             if (!$result instanceof Result) {
                 throw new \LogicException("POST action of route {$route['name']} did not return a Result");
             }
@@ -138,7 +150,7 @@ final class App
                 return $this->redirect($session, $result);
             }
 
-            return $this->page($request, $route, $handler, $session, $flash, 422, $result->data);
+            return $this->page($request, $route, $handler, $session, $flash, 422, $result->data, $reply);
         } catch (NotFound) {
             return Response::text(404, 'Not Found');
         } catch (Redirect $redirect) {
@@ -163,10 +175,10 @@ final class App
      * @param array{load?: \Closure, post?: \Closure, regions?: array<string, \Closure>} $handler
      * @param array<string, mixed> $invalid
      */
-    private function page(Request $request, array $route, array $handler, Session $session, Flash $flash, int $status, array $invalid): Response
+    private function page(Request $request, array $route, array $handler, Session $session, Flash $flash, int $status, array $invalid, Reply $reply): Response
     {
         $json = $request->wantsJson();
-        $provided = [Request::class => $request];
+        $provided = [Request::class => $request, Reply::class => $reply];
         $shared = ['title' => $route['title'], 'csrf' => $request->csrfToken()];
         if ($this->shared !== null) {
             $shared = array_replace($shared, $this->container->call($this->shared, $provided));
@@ -199,17 +211,28 @@ final class App
             // HY-44: every value must belong to the template data model, for JSON as for a document.
             Bind::value($response);
 
-            return new Response($status, [
+            $body = JsonEncoder::encode($response);
+            $headers = [
                 'Content-Type' => 'application/json; charset=utf-8',
-                'Cache-Control' => 'no-store',
+                'Cache-Control' => $status === 200 ? ($reply->cacheControlValue() ?? 'no-store') : 'no-store',
                 'Vary' => $vary,
-            ], JsonEncoder::encode($response));
+            ];
+            if ($status !== 200) {
+                return new Response($status, $headers, $body);
+            }
+            // HY-53: a strong tag of the body; a matching request receives 304 without a body.
+            $tag = '"' . substr(hash('sha256', $body), 0, 32) . '"';
+            $headers['ETag'] = $tag;
+
+            return $request->header('If-None-Match') === $tag ? new Response(304, $headers, '') : new Response(200, $headers, $body);
         }
 
-        return new Response($status, [
-            'Content-Type' => 'text/html; charset=utf-8',
-            'Vary' => $vary,
-        ], $this->document($request, $route, $shared, $data, $templates, $kept));
+        $headers = ['Content-Type' => 'text/html; charset=utf-8', 'Vary' => $vary];
+        if ($status === 200 && $reply->cacheControlValue() !== null) {
+            $headers['Cache-Control'] = $reply->cacheControlValue();
+        }
+
+        return new Response($status, $headers, $this->document($request, $route, $shared, $data, $templates, $kept));
     }
 
     /**

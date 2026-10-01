@@ -10,6 +10,7 @@ use Polyspec\Hyper\ArraySession;
 use Polyspec\Hyper\Forbidden;
 use Polyspec\Hyper\NotFound;
 use Polyspec\Hyper\Redirect;
+use Polyspec\Hyper\Reply;
 use Polyspec\Hyper\Renderer;
 use Polyspec\Hyper\Request;
 use Polyspec\Hyper\Response;
@@ -66,8 +67,23 @@ final class AppTest extends TestCase
                         'filter' => ['a' => 1],
                         'tags' => [],
                     ]]],
-                    'item' => ['load' => function (Request $request): array {
+                    'item' => ['load' => function (Request $request, Reply $reply): array {
                         return match ($request->param('id')) {
+                            'member' => (function () use ($reply): array {
+                                $reply->cookie('member', 'token.1', 3600)->removeCookie('old')->cacheControl('public, max-age=60');
+
+                                return ['id' => 'member'];
+                            })(),
+                            'guarded' => (function () use ($reply): array {
+                                $reply->removeCookie('member');
+
+                                throw new Forbidden();
+                            })(),
+                            'bad-cookie' => (function () use ($reply): array {
+                                $reply->cookie('hy-keep', 'x');
+
+                                return ['id' => 'x'];
+                            })(),
                             'missing' => throw new NotFound(),
                             'private' => throw new Forbidden(),
                             'moved' => throw new Redirect(Result::redirect('/items/new')->flash('note', 'moved')),
@@ -504,6 +520,38 @@ final class AppTest extends TestCase
         $action = $this->post('/add', ['_csrf' => $this->token(), 'name' => 'closed']);
         self::assertSame(403, $action->status);
         self::assertSame(0, $this->counter->count);
+    }
+
+    public function testReplyCookiesAndCacheControlReachTheResponse(): void
+    {
+        // HY-52
+        $page = $this->get('/items/member');
+        self::assertSame(200, $page->status);
+        self::assertSame([
+            'member=token.1; Path=/; HttpOnly; SameSite=Lax; Max-Age=3600',
+            'old=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0',
+        ], $page->headers['Set-Cookie']);
+        self::assertSame('public, max-age=60', $page->headers['Cache-Control']);
+        $https = $this->app()->handle(new Request('GET', '/items/member', [], https: true), $this->session);
+        self::assertSame('member=token.1; Path=/; HttpOnly; SameSite=Lax; Secure; Max-Age=3600', $https->headers['Set-Cookie'][0]);
+        $forbidden = $this->get('/items/guarded');
+        self::assertSame(403, $forbidden->status);
+        self::assertSame(['member=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0'], $forbidden->headers['Set-Cookie']);
+        self::assertSame(500, $this->get('/items/bad-cookie')->status);
+        self::assertArrayNotHasKey('Set-Cookie', $this->get('/items/plain')->headers);
+    }
+
+    public function testJsonResponsesHaveATagAndMatchingRequestsGet304(): void
+    {
+        // HY-53
+        $first = $this->get('/items/plain', ['Accept' => 'application/json']);
+        $tag = $first->headers['ETag'];
+        self::assertSame('"' . substr(hash('sha256', $first->body), 0, 32) . '"', $tag);
+        $again = $this->get('/items/plain', ['Accept' => 'application/json', 'If-None-Match' => $tag]);
+        self::assertSame(304, $again->status);
+        self::assertSame('', $again->body);
+        self::assertSame($tag, $again->headers['ETag']);
+        self::assertSame(200, $this->get('/items/plain', ['Accept' => 'application/json', 'If-None-Match' => '"other"'])->status);
     }
 
     public function testHandlersMustMatchTheManifest(): void

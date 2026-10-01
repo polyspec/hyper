@@ -7,7 +7,7 @@ namespace Polyspec\Hyper;
 /** One HTTP response. */
 final class Response
 {
-    /** @param array<string, string> $headers */
+    /** @param array<string, string|list<string>> $headers `Set-Cookie` holds a list; every other header holds one value */
     public function __construct(
         public readonly int $status,
         public readonly array $headers,
@@ -21,6 +21,14 @@ final class Response
         return new self($this->status, [...$this->headers, $name => $value], $this->body);
     }
 
+    /** Returns a copy with the cookies of a reply, when it has any (HY-52). */
+    public function withCookies(Reply $reply, bool $secure): self
+    {
+        $cookies = $reply->cookieHeaders($secure);
+
+        return $cookies === [] ? $this : new self($this->status, [...$this->headers, 'Set-Cookie' => $cookies], $this->body);
+    }
+
     /** Returns a plain text response. */
     public static function text(int $status, string $body): self
     {
@@ -32,7 +40,9 @@ final class Response
     {
         http_response_code($this->status);
         foreach ($this->headers as $name => $value) {
-            header("{$name}: {$value}");
+            foreach ((array) $value as $item) {
+                header("{$name}: {$item}", false);
+            }
         }
         echo $this->body;
     }

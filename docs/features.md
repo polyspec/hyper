@@ -10,6 +10,7 @@
 | router | PHP and browser routers with shared conformance cases | implemented | `make test-php`, `make test-js` |
 | rest-routes | Rest parameters `{name*}` at the end of route paths (HY-49) | implemented | `make test-php`, `make test-js` |
 | stop-results | Redirect and forbidden results of loaders and actions (HY-50, HY-51) | implemented | `make test-php` |
+| reply | Response cookies and cache control of loaders and actions, and JSON tags with 304 (HY-52, HY-53) | implemented | `make test-php` |
 | hyper-js | Browser code: region and document rendering, htmx extension, client-side rendering | implemented | `make test-js`, `make e2e` |
 | hyper-php | PHP server: routes, actions, CSRF, flash, changed topics, base path, documents and JSON | implemented | `make test-php` |
 | route-regions | Route regions inside a page with their own loaders (HY-30) | implemented | `make test-php`, `make parity` |
