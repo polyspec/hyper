@@ -56,5 +56,6 @@ make serve-demo
 - [기능 상태](docs/features.ko.md): 구현과 검증 상태를 기록한다.
 - [개발](docs/operations/development.ko.md): 검사와 에셋 빌드를 설명한다.
 - [배포](docs/operations/deployment.ko.md): S3와 CloudFront를 포함한 SSR과 CSR 배포를 설명한다.
+- [성능 측정](docs/operations/benchmark.ko.md): 성능 측정 방법과 결과를 기록한다.
 - [의존성](docs/operations/dependencies.ko.md): 고정한 버전을 기록한다.
 - [변경 기록](CHANGELOG.ko.md): 변경과 검증 결과를 기록한다.

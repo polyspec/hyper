@@ -53,5 +53,6 @@ make serve-demo
 - [Feature status](docs/features.md) records implementation and verification.
 - [Development](docs/operations/development.md) describes the checks and the asset build.
 - [Deployment](docs/operations/deployment.md) describes SSR and CSR deployment, including S3 and CloudFront.
+- [Benchmark](docs/operations/benchmark.md) describes the performance measurement and its results.
 - [Dependencies](docs/operations/dependencies.md) records pinned versions.
 - [Changelog](CHANGELOG.md) records changes and their verification.

@@ -20,6 +20,7 @@
 | comparison | SSR과 CSR 프레임을 담은 비교 페이지 | implemented | `make e2e` |
 | bundle-size | SSR 스크립트, CSR 셸, 템플릿 파일 크기 상한 | implemented | `make bundle-size` |
 | request-boundary | UTF-8 검사, 상세 없는 500 오류, 데이터 모델 검사, 강화한 세션 쿠키, 리다이렉트 검사, 실패 표시(HY-42 ~ HY-47) | implemented | `make test-php`, `make test-js`, `make e2e` |
+| benchmark | 서버와 브라우저 성능 측정: 요청 비용, 행 수별 렌더, 첫 화면, `hy-set` 메인 스레드 부하, 이동 중 메모리 | implemented | `make bench`, [성능 측정](operations/benchmark.ko.md) |
 | cdn-deployment | 서버와 CDN 배포(권장)와 정적 셸 배포 | 문서화, 배포 안 함 | [배포](operations/deployment.ko.md) |
 | other-servers | PHP 외 언어의 서버 패키지 | not started | |
 | publication | 패키지의 레지스트리 배포 | not started | |

@@ -5,7 +5,7 @@ TEMPLATE_DIR := ../template
 
 .DEFAULT_GOAL := help
 
-.PHONY: help install template assets test-js test-php lint templates-check parity bundle-size e2e docs-check serve-demo check
+.PHONY: help install template assets test-js test-php lint templates-check parity bundle-size e2e docs-check serve-demo bench-server bench-browser bench check
 
 help: ## List the targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
@@ -49,5 +49,13 @@ docs-check: ## Check document pairs, links and code blocks
 
 serve-demo: assets ## Serve SSR on :8080, CSR on :8081 and the comparison page on :8081/compare
 	node scripts/serve-demo.mjs --db $(BOARD)/var/board.db --ssr 8080 --edge 8081 --api 8082
+
+bench-server: ## Measure PHP request handling and rendering cost per row count without network
+	php scripts/bench-server.php --app $(BOARD) --iterations 300
+
+bench-browser: assets ## Measure first screens, navigation, hy-set load and memory in Chromium
+	node scripts/bench-browser.mjs --ssr 8085 --edge 8086 --api 8087 --runs 15
+
+bench: bench-server bench-browser ## Run both measurements; results are reports, not pass or fail checks
 
 check: docs-check lint templates-check test-js test-php parity bundle-size e2e ## Run every check
