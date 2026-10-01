@@ -11,6 +11,8 @@ use Polyspec\Hyper\Request;
 
 final class RequestTest extends TestCase
 {
+    private const FORM = ['Content-Type' => 'application/x-www-form-urlencoded'];
+
     /** @return iterable<string, array{string, string}> */
     public static function targets(): iterable
     {
@@ -54,7 +56,8 @@ final class RequestTest extends TestCase
         // HY-42
         self::assertFalse((new Request('GET', '/', [], 'a[%FF][x]=1'))->validInput());
         self::assertFalse((new Request('GET', '/', [], 'a%FF[x]=1'))->validInput());
-        self::assertFalse((new Request('POST', '/', [], '', ['a' => ['b' => ["\xC3" => 'v']]]))->validInput());
+        self::assertFalse((new Request('POST', '/', self::FORM, '', 'a[b][%C3]=v'))->validInput());
+        self::assertFalse((new Request('POST', '/', self::FORM, '', 'a=%E2%82'))->validInput());
         self::assertTrue((new Request('GET', '/', [], 'a[b][c]=d'))->validInput());
     }
 
@@ -81,6 +84,33 @@ final class RequestTest extends TestCase
         self::assertSame(2, $request->queryInt('b', 7));
         self::assertSame('', (new Request('GET', '/'))->rawQuery());
         self::assertSame([], (new Request('GET', '/'))->query()->names());
+    }
+
+    /** HY-57: every form value of the body in order, without nesting, whatever PHP put into $_POST. */
+    public function testFormValuesAreReadFromTheBodyInOrderWithoutNesting(): void
+    {
+        $request = new Request('POST', '/', self::FORM, '', 'title=%ED%95%9C+%EA%B8%80&roles[]=a&empty&roles%5B%5D=b&x=1&x=2');
+        $form = [];
+        foreach ($request->form() as $name => $values) {
+            $form[] = [$name, $values];
+        }
+        self::assertSame([['title', ['한 글']], ['roles[]', ['a', 'b']], ['empty', ['']], ['x', ['1', '2']]], $form);
+        self::assertSame('2', $request->formString('x'));
+        self::assertSame('', $request->formString('missing'));
+        self::assertSame([], (new Request('POST', '/', ['Content-Type' => 'text/plain'], '', 'a=1'))->form()->names());
+
+        $server = $_SERVER;
+        $post = $_POST;
+        $_SERVER['REQUEST_URI'] = '/';
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_SERVER['CONTENT_TYPE'] = 'application/x-www-form-urlencoded';
+        $_POST = ['ignored' => '1'];
+        try {
+            self::assertSame([], Request::fromGlobals()->form()->names());
+        } finally {
+            $_SERVER = $server;
+            $_POST = $post;
+        }
     }
 
     public function testCookiesAreNotChecked(): void

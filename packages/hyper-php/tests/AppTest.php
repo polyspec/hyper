@@ -116,7 +116,7 @@ final class AppTest extends TestCase
      */
     private function post(string $path, array $form, array $headers = [], string $basePath = ''): Response
     {
-        return $this->app($basePath)->handle(new Request('POST', $path, $headers, '', $form), $this->session);
+        return $this->app($basePath)->handle(new Request('POST', $path, ['Content-Type' => 'application/x-www-form-urlencoded', ...$headers], '', http_build_query($form)), $this->session);
     }
 
     private function token(): string
@@ -217,7 +217,7 @@ final class AppTest extends TestCase
     /** @param array<string, string> $form */
     private function keep(array $form, string $method = 'POST'): Response
     {
-        return $this->app()->handle(new Request($method, '/_hyper/keep', [], '', $form), $this->session);
+        return $this->app()->handle(new Request($method, '/_hyper/keep', ['Content-Type' => 'application/x-www-form-urlencoded'], '', http_build_query($form)), $this->session);
     }
 
     public function testServerKeptValueIsStoredAndApplied(): void
@@ -301,9 +301,9 @@ final class AppTest extends TestCase
         self::assertSame(0, $this->counter->actions);
         self::assertSame(400, $this->app()->handle(new Request('GET', '/', [], 'q=%C3'), $this->session)->status);
         self::assertSame(400, $this->app()->handle(new Request('GET', '/', [], 'a[%FF][x]=1'), $this->session)->status);
-        self::assertSame(200, $this->app()->handle(new Request('GET', '/', [], '', [], cookies: ['hy-keep' => "\xFF"]), $this->session)->status);
-        self::assertSame(200, $this->app()->handle(new Request('GET', '/', [], '', [], cookies: [session_name() => "\xFF"]), $this->session)->status);
-        self::assertSame(200, $this->app()->handle(new Request('GET', '/', [], '', [], cookies: ['unrelated' => "\xFF"]), $this->session)->status);
+        self::assertSame(200, $this->app()->handle(new Request('GET', '/', [], '', '', cookies: ['hy-keep' => "\xFF"]), $this->session)->status);
+        self::assertSame(200, $this->app()->handle(new Request('GET', '/', [], '', '', cookies: [session_name() => "\xFF"]), $this->session)->status);
+        self::assertSame(200, $this->app()->handle(new Request('GET', '/', [], '', '', cookies: ['unrelated' => "\xFF"]), $this->session)->status);
         self::assertSame(400, $this->get('/', ['HX-Current-URL' => "http://x/\xFF"])->status);
         self::assertSame(400, $this->get("/items/\xFF")->status);
         // A request target is ASCII (RFC 9112), so a raw UTF-8 path is rejected as well; a client encodes it.

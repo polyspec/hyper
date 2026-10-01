@@ -1,5 +1,5 @@
 {
-  "cases": [
+  "urlencoded": [
     { "label": "empty text", "text": "", "fields": [] },
     { "label": "one value", "text": "page=2", "fields": [["page", ["2"]]] },
     { "label": "repeated name keeps every value in order", "text": "a=1&b=2&a=3", "fields": [["a", ["1", "3"]], ["b", ["2"]]] },
@@ -17,5 +17,11 @@
     { "label": "a value that is not UTF-8 fails", "text": "a=%E2%82", "fields": null },
     { "label": "a name that is not UTF-8 fails", "text": "a%FF=1", "fields": null },
     { "label": "a bracketed name that is not UTF-8 fails", "text": "a[%C3]=v", "fields": null }
+  ],
+  "multipart": [
+    {"label": "text fields in order with repeated and bracketed names", "type": "multipart/form-data; boundary=XyZ", "body": "--XyZ\r\nContent-Disposition: form-data; name=\"roles[]\"\r\n\r\nadmin\r\n--XyZ\r\nContent-Disposition: form-data; name=\"title\"\r\n\r\n\u00ed\u0095\u009c \u00ea\u00b8\u0080\r\n--XyZ\r\nContent-Disposition: form-data; name=\"roles[]\"\r\n\r\neditor\r\n--XyZ--\r\n", "fields": [["roles[]", ["admin", "editor"]], ["title", ["\ud55c \uae00"]]]},
+    {"label": "a file field is not a form value", "type": "multipart/form-data; boundary=\"XyZ\"", "body": "--XyZ\r\nContent-Disposition: form-data; name=\"a\"\r\n\r\n1\r\n--XyZ\r\nContent-Disposition: form-data; name=\"file\"; filename=\"a.txt\"\r\nContent-Type: text/plain\r\n\r\nfile body\r\n--XyZ--\r\n", "fields": [["a", ["1"]]]},
+    {"label": "a value keeps its line breaks and percent signs", "type": "multipart/form-data; boundary=XyZ", "body": "--XyZ\r\nContent-Disposition: form-data; name=\"body\"\r\n\r\nline 1\r\nline+2 %41\r\n--XyZ--\r\n", "fields": [["body", ["line 1\r\nline+2 %41"]]]},
+    {"label": "a value that is not UTF-8 fails", "type": "multipart/form-data; boundary=XyZ", "body": "--XyZ\r\nContent-Disposition: form-data; name=\"a\"\r\n\r\n\u00ff\r\n--XyZ--\r\n", "fields": null}
   ]
 }

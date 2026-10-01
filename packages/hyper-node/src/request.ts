@@ -1,5 +1,5 @@
 // One HTTP request with the session values that the application reads.
-import { bytesOf, parseCookies, parseMultipart, parseUrlEncoded, utf8, type Fields } from './form.js';
+import { bytesOf, formFields, parseCookies, parseUrlEncoded, utf8, type Fields } from './form.js';
 import type { Flash } from './session.js';
 import type { Value } from './values.js';
 
@@ -30,23 +30,15 @@ interface State {
 export class Request {
   private constructor(private readonly state: State) {}
 
-  // Creates a request from its HTTP parts. A form body is read from application/x-www-form-urlencoded and from
-  // the text fields of multipart/form-data, as PHP reads $_POST.
+  // Creates a request from its HTTP parts. The form values are read from an application/x-www-form-urlencoded
+  // body and from the text fields of a multipart/form-data body, without nesting (HY-57).
   static from(init: RequestInit): Request {
     const headers = new Map<string, string>();
     for (const [name, value] of Object.entries(init.headers ?? {})) {
       if (value !== undefined) headers.set(name.toLowerCase(), Array.isArray(value) ? value.join(', ') : value);
     }
     const rawQuery = Request.targetQuery(init.target);
-    const body = init.body ?? new Uint8Array();
-    const type = headers.get('content-type') ?? '';
-    let form: Fields = { values: new Map(), valid: true };
-    if (/^application\/x-www-form-urlencoded\s*(;|$)/i.test(type)) {
-      form = parseUrlEncoded(Buffer.from(body.buffer, body.byteOffset, body.byteLength).toString('latin1'));
-    } else if (/^multipart\/form-data\s*;/i.test(type)) {
-      const boundary = /;\s*boundary=(?:"([^"]+)"|([^;\s]+))/i.exec(type);
-      if (boundary !== null) form = parseMultipart(body, (boundary[1] ?? boundary[2])!);
-    }
+    const form = formFields(headers.get('content-type') ?? '', init.body ?? new Uint8Array());
     return new Request({
       method: init.method.toUpperCase(),
       path: Request.targetPath(init.target),
@@ -163,6 +155,11 @@ export class Request {
   queryInt(name: string, fallback: number): number {
     const value = this.state.query.values.get(name)?.at(-1);
     return value !== undefined && /^-?[0-9]{1,15}$/.test(value) ? Number(value) : fallback;
+  }
+
+  // Returns every form value of the body in order, without nesting (HY-57).
+  form(): ReadonlyMap<string, readonly string[]> {
+    return copy(this.state.form);
   }
 
   // Returns the last form value of a name; an absent name gives the empty string.
