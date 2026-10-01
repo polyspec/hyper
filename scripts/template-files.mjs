@@ -4,13 +4,17 @@
 import { createHash } from 'node:crypto';
 import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { build } from 'esbuild';
 import { parse } from '@polyspec/template';
+
+// The browser package in this repository. The scripts read its source, not its build output, from any working directory.
+const browserPackage = fileURLToPath(new URL('../packages/hyper-js/', import.meta.url));
 
 // Parses every template of a directory and the reserved template hyper/data.tpl, writes each AST to
 // <output>/<name>.<hash>.json and returns the index: template name -> { url: <urlPrefix>/<file>, deps }.
 export async function writeTemplateFiles({ templates, output, urlPrefix }) {
-  const dataTemplate = JSON.parse(readFileSync(join('packages', 'hyper-js', 'data-template.json'), 'utf8'));
+  const dataTemplate = JSON.parse(readFileSync(join(browserPackage, 'data-template.json'), 'utf8'));
   const { templateReferences } = await loadPackage();
   const sources = { [dataTemplate.name]: dataTemplate.source };
   for (const file of listFiles(templates).filter((name) => name.endsWith('.tpl')).sort()) {
@@ -29,16 +33,23 @@ export async function writeTemplateFiles({ templates, output, urlPrefix }) {
   return index;
 }
 
-// Loads checkManifest and templateReferences from the hyper browser package (HY-2, HY-34).
-export async function loadPackage() {
-  const result = await build({
-    stdin: { contents: "export { checkManifest, templateReferences } from '@polyspec/hyper';", resolveDir: join('packages', 'hyper-js'), sourcefile: 'build-entry.ts', loader: 'ts' },
+// Bundles checkManifest and templateReferences from the source of the hyper browser package; the result names its
+// input files.
+export async function bundlePackage() {
+  return build({
+    stdin: { contents: "export { checkManifest, templateReferences } from './src/index.ts';", resolveDir: browserPackage, sourcefile: 'build-entry.ts', loader: 'ts' },
     bundle: true,
     format: 'esm',
     platform: 'neutral',
     write: false,
+    metafile: true,
     logLevel: 'error',
   });
+}
+
+// Loads checkManifest and templateReferences from the hyper browser package (HY-2, HY-34).
+export async function loadPackage() {
+  const result = await bundlePackage();
   return import(`data:text/javascript;base64,${Buffer.from(result.outputFiles[0].contents).toString('base64')}`);
 }
 

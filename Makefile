@@ -41,17 +41,17 @@ package-check: packages node-fixtures ## Install the npm packages into tests/pac
 	npx tsc -p tests/package-install/tsconfig.json
 	cd tests/package-install && npm test
 
-server: packages ## Build the board server program: its templates and the generated PHP program (HY-48)
+server: template ## Build the board server program: its templates and the generated PHP program (HY-48)
 	node scripts/build-server.mjs --manifest $(BOARD)/app/app.json --templates $(BOARD)/templates --output $(BOARD)/build/server --template-dir $(TEMPLATE_DIR) --php-namespace 'Polyspec\Hyper\Examples\Board\Program'
 
-server-fixtures: packages ## Build the server program of the PHP test fixtures
+server-fixtures: template ## Build the server program of the PHP test fixtures
 	node scripts/build-server.mjs --manifest $(FIXTURES)/app.json --templates $(FIXTURES)/templates --output $(PHP_PACKAGE)/tests/build/server --template-dir $(TEMPLATE_DIR) --php-namespace 'Polyspec\Hyper\Tests\Program'
 
 node-server: assets ## Build the board Node server into examples/board/build/node/server.mjs (HY-54)
 	npx tsc -p $(BOARD)/node/tsconfig.json
 	npx esbuild $(BOARD)/node/main.ts --bundle --platform=node --format=esm --target=node26 --log-level=warning --outfile=$(BOARD)/build/node/server.mjs
 
-node-fixtures: packages ## Build the template files of the PHP test fixtures for the Node server tests
+node-fixtures: template ## Build the template files of the PHP test fixtures for the Node server tests
 	node scripts/build-templates.mjs --templates $(FIXTURES)/templates --output $(NODE_PACKAGE)/tests/build
 
 assets: packages ## Build the board client bundle (SSR) and the single-file static shell (CSR)

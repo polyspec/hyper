@@ -23,7 +23,7 @@ const { deriveTypeManifest } = await load('type-manifest.mjs');
 const { parse } = await import(pathToFileURL(resolve(values['template-dir'], 'packages', 'template-ts', 'dist', 'index.mjs')).href);
 
 const manifest = JSON.parse(readFileSync(values.manifest, 'utf8'));
-const dataTemplate = JSON.parse(readFileSync(join('packages', 'hyper-js', 'data-template.json'), 'utf8'));
+const dataTemplate = JSON.parse(readFileSync(new URL('../packages/hyper-js/data-template.json', import.meta.url), 'utf8'));
 const output = resolve(values.output);
 const templates = join(output, 'templates');
 rmSync(output, { recursive: true, force: true });

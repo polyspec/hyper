@@ -19,7 +19,7 @@
 | `make template` | TypeScript template 패키지를 빌드하고, PHP template 패키지의 Composer 복사본을 다시 설치한다. 테스트, 에셋, 서버 빌드가 먼저 실행한다 |
 | `make template-check` | PHP template 패키지의 Composer 복사본이 template 저장소와 다르면 실패한다 |
 | `make ext` | template 저장소의 네이티브 템플릿 확장을 `build/ext`에 빌드한다(HY-48) |
-| `make packages` | `@polyspec/hyper`와 `@polyspec/hyper-server`의 JavaScript module과 type 선언을 각자의 `dist` 디렉터리에 build한다. Node 서버 test, 에셋과 서버 build, fixture build는 package를 exports로 가져오므로 이것을 먼저 실행한다(HY-61) |
+| `make packages` | `@polyspec/hyper`와 `@polyspec/hyper-server`의 JavaScript module과 type 선언을 각자의 `dist` 디렉터리에 build한다. Node 서버 test, board 에셋 build, `make package-check`는 package를 exports로 가져오므로 이것을 먼저 실행한다(HY-61). build script는 `data-template.json`, `checkManifest`, `templateReferences`를 script 옆 `packages/hyper-js`의 소스에서 읽으므로 `dist`가 필요 없고 어느 작업 디렉터리에서도 실행된다 |
 | `make package-check` | 두 package를 `npm install --install-links`로 `tests/package-install`에 설치하고, 그 test를 `erasableSyntaxOnly`로 선언에 대해 type 검사한 뒤 `node`로 실행한다(HY-61) |
 | `make server` | 게시판 서버 프로그램을 `examples/board/build/server`에 빌드한다(아래 참조) |
 | `make server-fixtures` | PHP 테스트 픽스처의 서버 프로그램을 빌드한다 |

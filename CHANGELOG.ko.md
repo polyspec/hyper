@@ -23,6 +23,7 @@
 
 ### 수정
 
+- build script가 browser package를 작업 디렉터리에서 읽었다: `packages/hyper-js/`의 `data-template.json`과 `packages/hyper-js/dist` build 출력의 `checkManifest`, `templateReferences`. 그래서 저장소 디렉터리 밖이나 `dist`가 없을 때 build가 실패했고, 이 script로 build하는 application은 이 저장소에 `dist`를 써야 했다. 이제 script는 자기 옆 `packages/hyper-js`의 `data-template.json`과 소스를 읽는다. `make server`, `make server-fixtures`, `make node-fixtures`는 더 이상 `make packages`를 실행하지 않는다. `tests/scripts/package-source.test.mjs`는 변경 전에 `./dist/index.js` 없음과 `packages/hyper-js/data-template.json`의 `ENOENT`로 실패했다.
 - `Polyspec\Hyper\Examples\Board\Posts`가 시계 함수를 받게 된 뒤로 PHP 측정기가 실패했다. 측정기가 `make check`에 들어 있지 않았기 때문이다. 이제 고정 시계를 넘기며, `make check`는 PHP 측정기를 측정마다 한 번씩 실행하는 `make bench-server-smoke`를 실행한다. 브라우저 측정기는 몇 분이 걸려 `make check` 밖에 두며, `docs/operations/benchmark.ko.md`에 이 사실을 적었다. 성능 측정 문서는 이제 현재 코드의 결과를 담는다(2026-10-02, 부하 평균 8인 기계에서 측정). 1,000행을 generated PHP 프로그램은 12.8 ms, 네이티브 확장은 3.6 ms에 렌더한다.
 - bundle 상한을 SSR 스크립트 32,500, CSR 셸 33,800 gzip 바이트로 올린다. 데이터 모델의 모든 숫자를 검사하는 템플릿 runtime이 SSR 스크립트를 32,057, CSR 셸을 33,364 gzip 바이트로 키운다. hyper 코드가 더한 것은 그중 79바이트다.
 - PHP session이 session의 모든 응답에 `Expires`, `Pragma`, 두 번째 `Cache-Control` header를 더했다. 그래서 JSON 응답에 `Cache-Control` header가 두 개 있었고, reply는 페이지를 cache 가능하게 만들 수 없었다. PHP는 303과 204처럼 body가 없는 응답에도 `text/html` type을 주었다. 이제 session은 자기 cookie만 더하고, 모든 페이지 응답은 reply가 상태 200에서 정하지 않으면 `Cache-Control: no-store`를 가지며, `App::run`은 기본 content type을 끈다(HY-52). 응답 header 전체를 비교해 이 결함을 찾았으며, `AppTest`, `RequestTest`, `RunTest`는 수정 전에 실패했다.
