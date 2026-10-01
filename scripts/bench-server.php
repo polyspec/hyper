@@ -82,7 +82,7 @@ $requests = [
     'GET /board, region JSON with left' => fn (): Request => new Request('GET', '/board', $region),
     'GET /board/1, document HTML' => fn (): Request => new Request('GET', '/board/1'),
     'GET /board/1, region JSON' => fn (): Request => new Request('GET', '/board/1', $region),
-    'POST /board/create, 422 region JSON' => fn (): Request => new Request('POST', '/board/create', $region, [], ['_csrf' => $token, 'title' => '', 'author' => 'a', 'body' => 'b']),
+    'POST /board/create, 422 region JSON' => fn (): Request => new Request('POST', '/board/create', [...$region, 'Content-Type' => 'application/x-www-form-urlencoded'], '', http_build_query(['_csrf' => $token, 'title' => '', 'author' => 'a', 'body' => 'b'])),
 ];
 echo "## Requests (App::handle, 10 rows per page)\n\n| Request | status | mean ms | p50 ms | p95 ms | bytes |\n|---|---:|---:|---:|---:|---:|\n";
 foreach ($requests as $label => $request) {
