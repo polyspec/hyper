@@ -20,10 +20,10 @@ final class Result
     ) {
     }
 
-    /** Returns a redirect to a path of this application. */
+    /** Returns a redirect to a path of this application (HY-46). */
     public static function redirect(string $location): self
     {
-        if (!str_starts_with($location, '/') || str_starts_with($location, '//')) {
+        if (preg_match('#^/(?![/\\\\])[^\x{00}-\x{20}\x{7F}-\x{9F}\\\\]*$#Du', $location) !== 1) {
             throw new \InvalidArgumentException("redirect location {$location} is not an application path");
         }
 

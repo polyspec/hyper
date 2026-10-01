@@ -9,6 +9,6 @@
     { "name": "home", "path": "/", "title": "Home", "template": "page.tpl" },
     { "name": "add", "path": "/add", "title": "Add", "template": "page.tpl", "post": true },
     { "name": "item", "path": "/items/{id}", "title": "Item", "template": "item.tpl" },
-    { "name": "list", "path": "/list", "title": "List", "template": "list.tpl", "regions": [{ "name": "rows", "template": "rows.tpl", "keep": { "open": "server", "mode": "cookie", "view": "localStorage" } }] }
+    { "name": "list", "path": "/list", "title": "List", "template": "list.tpl", "regions": [{ "name": "rows", "template": "rows.tpl", "keep": { "open": "server", "mode": "cookie", "view": "localStorage", "filter": "cookie" } }] }
   ]
 }

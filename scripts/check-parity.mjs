@@ -32,7 +32,7 @@ const application = browser.createApplication(
 await application.templates.ensure(Object.keys(index));
 
 rmSync(database, { force: true });
-const server = spawn('php', ['-S', `127.0.0.1:${values.port}`, '-t', join(app, 'public')], {
+const server = spawn('php', ['-d', 'display_errors=0', '-S', `127.0.0.1:${values.port}`, '-t', join(app, 'public')], {
   env: { ...process.env, BOARD_DB: database, BOARD_BASE_PATH: '' },
   stdio: 'ignore',
 });

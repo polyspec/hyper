@@ -15,6 +15,12 @@ final class Response
     ) {
     }
 
+    /** Returns a copy with one more header. */
+    public function withHeader(string $name, string $value): self
+    {
+        return new self($this->status, [...$this->headers, $name => $value], $this->body);
+    }
+
     /** Returns a plain text response. */
     public static function text(int $status, string $body): self
     {

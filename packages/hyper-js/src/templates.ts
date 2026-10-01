@@ -1,4 +1,4 @@
-import { MapLoader, type Template } from '@polyspec/template/render';
+import { MapLoader, resolvePath, type Template } from '@polyspec/template/render';
 import { DATA_TEMPLATE_NAME, type Manifest, type RouteDeclaration } from './manifest.js';
 
 // Template name to its file URL and the templates that it references by path (HY-34).
@@ -50,6 +50,24 @@ export class TemplateStore {
     }
     return pending;
   }
+}
+
+// Returns the names of the templates that the include and block tags of a parsed template
+// reference by path, resolved against the template name (HY-34).
+export function templateReferences(ast: Template, name: string): string[] {
+  const found = new Set<string>();
+  const visit = (node: unknown): void => {
+    if (Array.isArray(node)) {
+      node.forEach(visit);
+      return;
+    }
+    if (node === null || typeof node !== 'object') return;
+    const item = node as { type?: unknown; path?: unknown };
+    if ((item.type === 'Include' || item.type === 'Block') && typeof item.path === 'string') found.add(resolvePath(name, item.path));
+    Object.values(node).forEach(visit);
+  };
+  visit(ast.body);
+  return [...found].sort();
 }
 
 // Returns the templates that rendering a route needs before references are followed (HY-35).

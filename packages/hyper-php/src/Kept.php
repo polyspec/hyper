@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Polyspec\Hyper;
 
-/** Kept values (HY-37, HY-38). The JavaScript implementation follows the same rules; both pass conformance/keep.json. */
+use Polyspec\Template\Value\Bind;
+
+/** Kept values (HY-37, HY-38). Values outside the template data model are ignored. The JavaScript implementation follows the same rules; both pass conformance/keep.json. */
 final class Kept
 {
     public const KINDS = ['server', 'cookie', 'localStorage', 'sessionStorage'];
@@ -19,7 +21,9 @@ final class Kept
     public static function apply(array $data, array $kept): array
     {
         foreach ($kept as [$path, $value]) {
-            $data = self::replace($data, explode('.', $path), $value);
+            if (self::inDataModel($value)) {
+                $data = self::replace($data, explode('.', $path), $value);
+            }
         }
 
         return $data;
@@ -28,6 +32,23 @@ final class Kept
     /** @param list<string> $keys */
     private static function replace(mixed $container, array $keys, mixed $value): mixed
     {
+        if ($container instanceof \stdClass) {
+            $key = $keys[0];
+            if (!property_exists($container, $key)) {
+                return $container;
+            }
+            $copy = clone $container;
+            $rest = array_slice($keys, 1);
+            if ($rest === []) {
+                if (self::kind($copy->{$key}) === self::kind($value)) {
+                    $copy->{$key} = $value;
+                }
+            } else {
+                $copy->{$key} = self::replace($copy->{$key}, $rest, $value);
+            }
+
+            return $copy;
+        }
         if (!is_array($container)) {
             return $container;
         }
@@ -54,6 +75,18 @@ final class Kept
         $container[$index] = self::replace($container[$index], $keys, $value);
 
         return $container;
+    }
+
+    /** Returns true for a value of the template data model; for example, integers outside ±(2^53 − 1) are not. */
+    public static function inDataModel(mixed $value): bool
+    {
+        try {
+            Bind::value($value);
+
+            return true;
+        } catch (\Throwable) {
+            return false;
+        }
     }
 
     /** Returns the value type of the data model: null, bool, number, string, list or map. */

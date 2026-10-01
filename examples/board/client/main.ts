@@ -23,20 +23,24 @@ document.addEventListener('click', (event) => {
   if (!element) return;
   event.preventDefault();
   event.stopPropagation();
-  void hyper.setFrom(element).then(report);
+  // A failure leaves the data unchanged and marks the region with hy-error (HY-47).
+  hyper.setFrom(element).then(report, (error: unknown) => console.error(error));
 }, true);
 
-// The comparison page embeds both modes in frames and compares the bodies that they report after
-// htmx has processed a new body and after every swap.
+// The comparison page embeds both modes in frames and compares them after htmx has processed a new
+// body and after every swap. A frame sends only the SHA-256 of its body, because the body holds the
+// CSRF token, and only to the origin of the page that embeds it.
 const mode = basePath === null ? 'ssr' : 'csr';
-function report(): void {
-  if (window.parent !== window) {
-    window.parent.postMessage({ type: 'hyper-body', mode, path: location.pathname + location.search, body: document.body.innerHTML }, '*');
-  }
+const parentOrigin = window.parent !== window && document.referrer !== '' ? new URL(document.referrer).origin : null;
+async function report(): Promise<void> {
+  if (parentOrigin === null) return;
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(document.body.innerHTML));
+  const body = Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
+  window.parent.postMessage({ type: 'hyper-body', mode, path: location.pathname + location.search, body }, parentOrigin);
 }
-document.addEventListener('htmx:after:settle', report);
+document.addEventListener('htmx:after:settle', () => void report());
 document.addEventListener('htmx:after:process', (event) => {
-  if (event.target === document.body) report();
+  if (event.target === document.body) void report();
 });
 
 if (basePath === null) {

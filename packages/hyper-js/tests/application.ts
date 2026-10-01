@@ -1,5 +1,8 @@
 import { parse, type Template } from '@polyspec/template';
-import { createApplication, DATA_TEMPLATE_NAME, DATA_TEMPLATE_SOURCE, type Application, type Manifest, type TemplateIndex } from '../src/index.js';
+import { readFileSync } from 'node:fs';
+import { createApplication, DATA_TEMPLATE_NAME, type Application, type Manifest, type TemplateIndex } from '../src/index.js';
+
+const DATA_TEMPLATE_SOURCE: string = JSON.parse(readFileSync(new URL('../data-template.json', import.meta.url), 'utf8')).source;
 
 export const manifest: Manifest = {
   layout: 'layout.tpl',

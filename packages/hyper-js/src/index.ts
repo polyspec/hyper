@@ -2,7 +2,6 @@ export { createEngine } from './engine.js';
 export {
   checkManifest,
   DATA_TEMPLATE_NAME,
-  DATA_TEMPLATE_SOURCE,
   keptPaths,
   pageRegion,
   type Manifest,
@@ -12,7 +11,7 @@ export {
 } from './manifest.js';
 export { applyKept, browserStorage, KEEP_KINDS, valueToJson, type KeepKind, type KeepStorage } from './keep.js';
 export { Router, stripBasePath, type RouteMatch } from './router.js';
-export { routeTemplates, TemplateStore, type TemplateFetcher, type TemplateIndex } from './templates.js';
+export { routeTemplates, templateReferences, TemplateStore, type TemplateFetcher, type TemplateIndex } from './templates.js';
 export {
   createApplication,
   decodeResponse,
@@ -32,5 +31,6 @@ export {
   type HtmxApi,
   type HyperExtension,
   type HyperOptions,
+  type DocumentAdapter,
   type RequestContext,
 } from './hyper.js';

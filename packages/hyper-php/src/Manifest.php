@@ -44,7 +44,13 @@ final class Manifest
             if ($isPage === is_string($template)) {
                 throw new \InvalidArgumentException("manifest region {$name} must have a template unless it is the page region");
             }
-            $regions[$name] = new Region($name, $isPage, $template, array_values($region['uses'] ?? []), $region['keep'] ?? []);
+            $uses = array_values($region['uses'] ?? []);
+            foreach ($uses as $topic) {
+                if (!is_string($topic) || preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/D', $topic) !== 1) {
+                    throw new \InvalidArgumentException("manifest region {$name} uses an invalid topic");
+                }
+            }
+            $regions[$name] = new Region($name, $isPage, $template, $uses, $region['keep'] ?? []);
             if ($isPage) {
                 if ($page !== null) {
                     throw new \InvalidArgumentException('manifest declares more than one page region');

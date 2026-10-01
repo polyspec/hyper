@@ -56,13 +56,16 @@ final class AppTest extends TestCase
                         'open' => false,
                         'mode' => 'a',
                         'view' => 'x',
+                        'filter' => ['a' => 1],
                     ]]],
                     'item' => ['load' => function (Request $request): array {
-                        if ($request->param('id') === 'missing') {
-                            throw new NotFound();
-                        }
-
-                        return ['id' => $request->param('id')];
+                        return match ($request->param('id')) {
+                            'missing' => throw new NotFound(),
+                            'broken' => throw new \RuntimeException('secret detail /srv/app.php'),
+                            'huge' => ['id' => PHP_INT_MAX],
+                            'numeric' => ['5' => 'x', 'id' => 'n'],
+                            default => ['id' => $request->param('id')],
+                        };
                     }],
                 ],
             ],
@@ -154,7 +157,7 @@ final class AppTest extends TestCase
 
         self::assertSame(['content', 'rows'], array_keys($region['regions']));
         self::assertSame(['side', 'content', 'rows'], array_keys($document['regions']));
-        self::assertSame(['items' => ['a<', 'b0'], 'open' => false, 'mode' => 'a', 'view' => 'x'], $region['regions']['rows']);
+        self::assertSame(['items' => ['a<', 'b0'], 'open' => false, 'mode' => 'a', 'view' => 'x', 'filter' => ['a' => 1]], $region['regions']['rows']);
         self::assertStringContainsString('<ul id="rows" hy-region><li>a&lt;</li><li>b0</li></ul>', $this->get('/list')->body);
     }
 
@@ -220,7 +223,7 @@ final class AppTest extends TestCase
         $cookie = json_encode(['rows' => ['mode' => 'b', 'open' => true, 'view' => 'y'], 'side' => ['count' => 9]]);
         $request = new Request('GET', '/list', self::JSON, cookies: ['hy-keep' => $cookie]);
         $rows = self::json($this->app()->handle($request, $this->session))['regions']['rows'];
-        self::assertSame(['items' => ['a<', 'b0'], 'open' => false, 'mode' => 'b', 'view' => 'x'], $rows);
+        self::assertSame(['items' => ['a<', 'b0'], 'open' => false, 'mode' => 'b', 'view' => 'x', 'filter' => ['a' => 1]], $rows);
 
         $wrongType = new Request('GET', '/list', self::JSON, cookies: ['hy-keep' => '{"rows":{"mode":1}}']);
         self::assertSame('a', self::json($this->app()->handle($wrongType, $this->session))['regions']['rows']['mode']);
@@ -231,7 +234,7 @@ final class AppTest extends TestCase
     public function testManifestRejectsInvalidKeep(): void
     {
         // HY-37, HY-40
-        foreach (['keep-kind', 'keep-page', 'keep-reserved'] as $fixture) {
+        foreach (['keep-kind', 'keep-page', 'keep-reserved', 'uses-topic'] as $fixture) {
             try {
                 App::open(__DIR__ . "/fixtures/invalid/{$fixture}.json", __DIR__ . '/fixtures/templates', [], 'Z');
                 self::fail("{$fixture} was accepted");
@@ -239,6 +242,90 @@ final class AppTest extends TestCase
                 self::addToAssertionCount(1);
             }
         }
+    }
+
+    public function testRegionCheckPrecedesTheAction(): void
+    {
+        // HY-16
+        $token = $this->token();
+        $response = $this->post('/add', ['_csrf' => $token, 'name' => 'a'], ['Accept' => 'application/json', 'Hy-Region' => 'side']);
+
+        self::assertSame(400, $response->status);
+        self::assertSame(0, $this->counter->actions);
+    }
+
+    public function testInvalidUtf8IsRejectedBeforeLoadersAndActions(): void
+    {
+        // HY-42
+        $token = $this->token();
+        self::assertSame(400, $this->post('/add', ['_csrf' => $token, 'name' => "bad\xFF"])->status);
+        self::assertSame(0, $this->counter->actions);
+        self::assertSame(400, $this->app()->handle(new Request('GET', '/', [], ['q' => "\xC3"]), $this->session)->status);
+        self::assertSame(400, $this->app()->handle(new Request('GET', '/', [], [], [], cookies: ['hy-keep' => "\xFF"]), $this->session)->status);
+        self::assertSame(200, $this->app()->handle(new Request('GET', '/', [], [], [], cookies: ['unrelated' => "\xFF"]), $this->session)->status);
+        self::assertSame(400, $this->get('/', ['HX-Current-URL' => "http://x/\xFF"])->status);
+        self::assertSame(400, $this->get("/items/\xFF")->status);
+    }
+
+    public function testUnhandledExceptionGivesAPlain500(): void
+    {
+        // HY-43
+        foreach ([[], self::JSON] as $headers) {
+            $response = $this->get('/items/broken', $headers);
+            self::assertSame(500, $response->status);
+            self::assertSame('Internal Server Error', $response->body);
+        }
+    }
+
+    public function testIntegerOutsideTheSafeRangeFailsForDocumentAndJson(): void
+    {
+        // HY-44
+        self::assertSame(500, $this->get('/items/huge')->status);
+        self::assertSame(500, $this->get('/items/huge', self::JSON)->status);
+    }
+
+    public function testNumericDataKeysKeepTheirNames(): void
+    {
+        // HY-17: merging loader, invalid and shared data keeps numeric keys.
+        self::assertSame('{"5":"x","id":"n"}', json_encode(self::json($this->get('/items/numeric', self::JSON))['regions']['content']));
+    }
+
+    public function testKeepRejectsLongValues(): void
+    {
+        // HY-40
+        $token = $this->token();
+        $long = json_encode(str_repeat('a', 4095));
+        self::assertSame(400, $this->keep(['_csrf' => $token, 'region' => 'rows', 'path' => 'open', 'value' => $long])->status);
+    }
+
+    public function testKeptValuesOutsideTheDataModelAreIgnoredOrRejected(): void
+    {
+        // HY-38, HY-40
+        $token = $this->token();
+        self::assertSame(400, $this->keep(['_csrf' => $token, 'region' => 'rows', 'path' => 'filter', 'value' => '{"a":9007199254740993}'])->status);
+        self::assertSame(400, $this->keep(['_csrf' => $token, 'region' => 'rows', 'path' => 'filter', 'value' => '{"a":1e400}'])->status);
+        foreach (['{"rows":{"filter":{"a":9007199254740993}}}', '{"rows":{"filter":{"a":1e400}}}'] as $cookie) {
+            $response = $this->app()->handle(new Request('GET', '/list', self::JSON, cookies: ['hy-keep' => $cookie]), $this->session);
+            self::assertSame(200, $response->status);
+            self::assertStringContainsString('"filter":{"a":1}', $response->body);
+        }
+    }
+
+    public function testEveryResponseLimitsFraming(): void
+    {
+        // HY-45
+        foreach ([$this->get('/'), $this->get('/missing'), $this->get('/items/broken'), $this->get('/', ['Accept' => 'application/json', 'Hy-Region' => 'side'])] as $response) {
+            self::assertSame("frame-ancestors 'self'", $response->headers['Content-Security-Policy'] ?? null);
+        }
+        $framed = App::open(__DIR__ . '/fixtures/app.json', __DIR__ . '/fixtures/templates', ['routes' => ['add' => ['post' => fn (): Result => Result::redirect('/')]]], 'Z', frameAncestors: "'self' https://admin.example");
+        self::assertSame("frame-ancestors 'self' https://admin.example", $framed->handle(new Request('GET', '/'), $this->session)->headers['Content-Security-Policy']);
+    }
+
+    public function testKeptEmptyMapReplacesAMap(): void
+    {
+        // HY-38 with an empty map, which PHP arrays cannot tell from an empty list.
+        $request = new Request('GET', '/list', self::JSON, cookies: ['hy-keep' => '{"rows":{"filter":{}}}']);
+        self::assertStringContainsString('"filter":{}', $this->app()->handle($request, $this->session)->body);
     }
 
     public function testRegionRequestReturnsTheProtocolShape(): void

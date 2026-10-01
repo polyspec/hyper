@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Polyspec\Hyper;
 
+use Polyspec\Template\Value\Bind;
+
 /** Answers requests with documents, JSON and action redirects (HY-8, HY-10 to HY-19, HY-24 to HY-27). */
 final class App
 {
@@ -21,6 +23,8 @@ final class App
         private readonly array $routeHandlers,
         private readonly string $timezone,
         private readonly string $basePath,
+        private readonly bool $https,
+        private readonly string $frameAncestors,
         string $templates,
     ) {
         $this->container = new Container();
@@ -32,8 +36,15 @@ final class App
      *
      * @param array{shared?: \Closure, regions?: array<string, \Closure>, routes?: array<string, array{load?: \Closure, post?: \Closure, regions?: array<string, \Closure>}>} $handlers
      */
-    public static function open(string $manifest, string $templates, array $handlers, string $timezone, string $basePath = ''): self
-    {
+    public static function open(
+        string $manifest,
+        string $templates,
+        array $handlers,
+        string $timezone,
+        string $basePath = '',
+        bool $https = false,
+        string $frameAncestors = "'self'",
+    ): self {
         if (!is_dir($templates)) {
             throw new \InvalidArgumentException("template directory {$templates} does not exist");
         }
@@ -70,7 +81,7 @@ final class App
             }
         }
 
-        return new self($declared, $handlers['shared'] ?? null, $regionLoaders, $routeHandlers, $timezone, $basePath, $templates);
+        return new self($declared, $handlers['shared'] ?? null, $regionLoaders, $routeHandlers, $timezone, $basePath, $https, $frameAncestors, $templates);
     }
 
     /** Registers the factory of an application service. */
@@ -79,9 +90,24 @@ final class App
         $this->container->bind($class, $factory);
     }
 
-    /** Answers one request. */
+    /** Answers one request; an unhandled exception gives a plain 500 and is logged (HY-43). Every response limits framing (HY-45). */
     public function handle(Request $request, SessionStore $store): Response
     {
+        try {
+            $response = $this->answer($request, $store);
+        } catch (\Throwable $error) {
+            error_log(sprintf('hyper: %s: %s in %s:%d', $error::class, $error->getMessage(), $error->getFile(), $error->getLine()));
+            $response = Response::text(500, 'Internal Server Error');
+        }
+
+        return $response->withHeader('Content-Security-Policy', "frame-ancestors {$this->frameAncestors}");
+    }
+
+    private function answer(Request $request, SessionStore $store): Response
+    {
+        if (!$request->validUtf8()) {
+            return Response::text(400, 'Bad Request');
+        }
         $path = Router::stripBasePath($request->path, $this->basePath);
         if ($path === '/_hyper/keep') {
             return $this->keep($request, new Session($store));
@@ -92,6 +118,10 @@ final class App
         }
         $route = $this->manifest->routes[$match['name']];
         $handler = $this->routeHandlers[$route['name']] ?? [];
+        $region = $request->wantsJson() ? $request->region() : null;
+        if ($region !== null && $region !== $this->manifest->page->name) {
+            return Response::text(400, 'Bad Request');
+        }
         $session = new Session($store);
         $flash = $session->takeFlash();
         $request = $request->withRoute((string) $path, $match['params'])->withSession($flash, $session->csrfToken());
@@ -133,13 +163,10 @@ final class App
     {
         $json = $request->wantsJson();
         $region = $json ? $request->region() : null;
-        if ($region !== null && $region !== $this->manifest->page->name) {
-            return Response::text(400, 'Bad Request');
-        }
         $provided = [Request::class => $request];
         $shared = ['title' => $route['title'], 'csrf' => $request->csrfToken()];
         if ($this->shared !== null) {
-            $shared = [...$shared, ...$this->container->call($this->shared, $provided)];
+            $shared = array_replace($shared, $this->container->call($this->shared, $provided));
         }
 
         $changed = RegionPlanner::changedTopics($request, $flash, $this->basePath);
@@ -148,7 +175,7 @@ final class App
         foreach (RegionPlanner::select($this->manifest, !$json || $region === null, $changed) as $selected) {
             if ($selected->page) {
                 $loaded = isset($handler['load']) ? $this->container->call($handler['load'], $provided) : [];
-                $data[$selected->name] = [...$loaded, ...$invalid];
+                $data[$selected->name] = array_replace($loaded, $invalid);
                 $templates[$selected->name] = $route['template'];
                 foreach ($route['regions'] as $routeRegion) {
                     $loader = $handler['regions'][$routeRegion->name] ?? null;
@@ -162,7 +189,7 @@ final class App
             }
         }
 
-        $cookie = json_decode($request->cookie('hy-keep') ?? '', true);
+        $cookie = json_decode($request->cookie('hy-keep') ?? '');
         foreach ($data as $name => $regionData) {
             $region = $this->manifest->region($name);
             if ($region === null) {
@@ -173,7 +200,7 @@ final class App
             foreach ($region->keep as $keptPath => $kind) {
                 $values = match ($kind) {
                     'server' => $stored,
-                    'cookie' => is_array($cookie) && is_array($cookie[$name] ?? null) ? $cookie[$name] : [],
+                    'cookie' => $cookie instanceof \stdClass && ($cookie->{$name} ?? null) instanceof \stdClass ? get_object_vars($cookie->{$name}) : [],
                     default => [],
                 };
                 if (array_key_exists($keptPath, $values)) {
@@ -184,6 +211,8 @@ final class App
         }
 
         $response = JsonEncoder::value($this->timezone, $route['name'], $request->params(), $shared, $data);
+        // HY-44: every value must belong to the template data model, for JSON as for a document.
+        Bind::value($response);
         $vary = 'Accept, Hy-Region, HX-Current-URL';
         if ($json) {
             return new Response($status, [
@@ -219,9 +248,16 @@ final class App
         if ($region === null || ($region->keep[$path] ?? null) !== 'server') {
             return Response::text(400, 'Bad Request');
         }
+        $text = $request->formString('value');
+        if (strlen($text) > 4096) {
+            return Response::text(400, 'Bad Request');
+        }
         try {
-            $value = json_decode($request->formString('value'), true, flags: JSON_THROW_ON_ERROR);
+            $value = json_decode($text, false, flags: JSON_THROW_ON_ERROR);
         } catch (\JsonException) {
+            return Response::text(400, 'Bad Request');
+        }
+        if (!Kept::inDataModel($value)) {
             return Response::text(400, 'Bad Request');
         }
         $session->keep($name, $path, $value);
@@ -229,9 +265,11 @@ final class App
         return new Response(204, [], '');
     }
 
-    /** Answers the current PHP request with the PHP session and writes the response. */
+    /** Answers the current PHP request with the PHP session and writes the response; errors go to the log only. */
     public function run(): void
     {
-        $this->handle(Request::fromGlobals(), new NativeSession())->send();
+        ini_set('display_errors', '0');
+        ini_set('log_errors', '1');
+        $this->handle(Request::fromGlobals(), new NativeSession($this->https))->send();
     }
 }
