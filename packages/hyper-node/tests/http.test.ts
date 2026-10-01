@@ -12,8 +12,15 @@ let directory: string;
 let server: Server;
 let base: string;
 
+let reports: [string | null, number, number][];
+
 async function start(options: { https?: boolean; bodyLimit?: number } = {}): Promise<void> {
-  const app = await new Fixture().app({ https: options.https ?? false, ...(options.bodyLimit === undefined ? {} : { bodyLimit: options.bodyLimit }) });
+  reports = [];
+  const app = await new Fixture().app({
+    https: options.https ?? false,
+    ...(options.bodyLimit === undefined ? {} : { bodyLimit: options.bodyLimit }),
+    onResponse: (request, response, elapsed) => reports.push([request === null ? null : `${request.method} ${request.path()}`, response.status, elapsed]),
+  });
   server = app.server(new FileSessions({ directory, name: 'PHPSESSID' }));
   await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
   base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
@@ -71,6 +78,11 @@ describe('App.server', () => {
     expect(response).toContain("Content-Security-Policy: frame-ancestors 'self'\r\n");
     expect(response).toContain('Content-Type: text/plain; charset=utf-8\r\n');
     expect(response.endsWith('\r\n\r\nBad Request')).toBe(true);
+    // HY-60: the response that node:http does not give to the application is reported with its request line.
+    expect(reports.map((report) => report.slice(0, 2))).toEqual([[`GET /items/${Buffer.from('한').toString('latin1')}`, 400]]);
+    expect(reports[0]![2]).toBeGreaterThanOrEqual(0);
+    expect((await raw(Buffer.from('\x01\r\n\r\n'))).startsWith('HTTP/1.1 400 ')).toBe(true);
+    expect(reports[1]!.slice(0, 2)).toEqual([null, 400]);
   });
 
   it('answers a body larger than the limit of the application with 413 (HY-59)', async () => {
@@ -82,6 +94,7 @@ describe('App.server', () => {
     // A body without Content-Length is counted while it is read.
     const chunked = await raw(Buffer.from('POST /add HTTP/1.1\r\nHost: x\r\nConnection: close\r\nTransfer-Encoding: chunked\r\nContent-Type: text/plain\r\n\r\n8\r\n12345678\r\n8\r\n12345678\r\n0\r\n\r\n'));
     expect(chunked.startsWith('HTTP/1.1 413 ')).toBe(true);
+    expect(reports.map((report) => report.slice(0, 2))).toEqual([['POST /add', 413], ['POST /add', 413]]);
     expect(readdirSync(directory)).toEqual([]);
   });
 

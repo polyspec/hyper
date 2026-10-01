@@ -31,29 +31,38 @@ export function createServer<S extends object>(app: App<S>, sessions: FileSessio
   const files = options.files;
   if (files !== undefined && (!isAbsolute(files) || !statSync(files).isDirectory())) throw new Error(`hyper: ${files} is not an absolute directory`);
   const server = createHttpServer((incoming, outgoing) => {
-    serve(app, sessions, files, incoming, outgoing).catch((error: unknown) => {
+    const started = performance.now();
+    serve(app, sessions, files, incoming, outgoing, started).catch((error: unknown) => {
       app.fail(error);
       if (!outgoing.headersSent) write(outgoing, app.frame(Response.text(500, 'Internal Server Error')));
       else outgoing.destroy();
     });
   });
-  server.on('clientError', (error: NodeJS.ErrnoException, socket: Socket) => {
+  server.on('clientError', (error: NodeJS.ErrnoException & { rawPacket?: Buffer }, socket: Socket) => {
+    const started = performance.now();
     if (!socket.writable || error.code === 'ECONNRESET') {
       socket.destroy();
       return;
     }
     const [status, reason] = error.code === 'HPE_HEADER_OVERFLOW' ? [431, 'Request Header Fields Too Large'] : [400, 'Bad Request'];
-    const response = app.frame(Response.text(status, reason));
+    const response = app.report(requestLine(error.rawPacket), app.frame(Response.text(status, reason)), started);
     const headers = Object.entries(response.headers).map(([name, value]) => `${name}: ${String(value)}\r\n`).join('');
     socket.end(`HTTP/1.1 ${status} ${reason}\r\n${headers}Content-Length: ${Buffer.byteLength(reason)}\r\nConnection: close\r\n\r\n${reason}`);
   });
   return server;
 }
 
-async function serve<S extends object>(app: App<S>, sessions: FileSessions, files: string | undefined, incoming: IncomingMessage, outgoing: ServerResponse): Promise<void> {
+// Returns a request of the method and the target of the request line that node:http could not parse, or null
+// when the packet has no request line.
+function requestLine(packet: Buffer | undefined): Request | null {
+  const line = /^([!-~]+) ([^ \r\n]+) HTTP\/[0-9.]+\r?\n/.exec(packet?.toString('latin1') ?? '');
+  return line === null ? null : Request.from({ method: line[1]!, target: line[2]! });
+}
+
+async function serve<S extends object>(app: App<S>, sessions: FileSessions, files: string | undefined, incoming: IncomingMessage, outgoing: ServerResponse, started: number): Promise<void> {
   const file = files === undefined ? null : publicFile(files, incoming);
   if (file === null) {
-    write(outgoing, await answer(app, sessions, incoming));
+    write(outgoing, await answer(app, sessions, incoming, started));
     return;
   }
   outgoing.writeHead(200, { 'Content-Type': CONTENT_TYPES[extname(file)] ?? 'application/octet-stream', 'Content-Length': String(statSync(file).size) });
@@ -61,15 +70,21 @@ async function serve<S extends object>(app: App<S>, sessions: FileSessions, file
   else createReadStream(file).pipe(outgoing);
 }
 
-async function answer<S extends object>(app: App<S>, sessions: FileSessions, incoming: IncomingMessage): Promise<Response> {
+async function answer<S extends object>(app: App<S>, sessions: FileSessions, incoming: IncomingMessage, started: number): Promise<Response> {
   // The application answers a body larger than its limit with 413 (HY-59); the server reads no more of it.
   const { body, size } = await readBody(incoming, app.bodyLimit);
   const https = (incoming.socket as TLSSocket).encrypted === true;
   const request = Request.from({ method: incoming.method ?? 'GET', target: incoming.url ?? '/', headers: incoming.headers, body, bodySize: size, https });
-  const session = await sessions.open(request.cookie(sessions.name));
+  let session;
+  try {
+    session = await sessions.open(request.cookie(sessions.name));
+  } catch (error) {
+    app.fail(error);
+    return app.report(request, app.frame(Response.text(500, 'Internal Server Error')), started);
+  }
   let response: Response;
   try {
-    response = await app.handle(request, session);
+    response = await app.handle(request, session, started);
   } finally {
     session.close();
   }

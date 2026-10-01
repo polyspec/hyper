@@ -265,4 +265,5 @@
   3. 그다음 HY-24의 CSRF 검사가 403으로 응답한다.
 
   PHP의 `App::run`은 `post_max_size`가 한도보다 작거나, `multipart/form-data`가 폼 type인데 `enable_post_data_reading`이 켜져 있으면 응답하기 전에 실패한다(HY-57).
+- **HY-60** 애플리케이션은 응답 hook을 선언할 수 있다. 서버는 애플리케이션의 모든 응답마다 요청, 응답, 밀리초 단위의 경과 시간으로 hook을 한 번 호출한다. hyper가 스스로 응답하는 400(HY-42, HY-58), 403(HY-24, HY-51), 404와 405(HY-27), 413과 415(HY-59), 500(HY-43)도 포함한다. 요청은 받은 그대로의 요청이며 base path를 포함한다. 응답은 `Content-Security-Policy`(HY-45)를 가진 애플리케이션의 응답이며, 그 뒤에 session이 더하는 session cookie는 포함하지 않는다. 경과 시간은 요청의 시작부터 센다. `App::run`에서는 `REQUEST_TIME_FLOAT`부터, Node 서버에서는 `node:http`가 요청을 준 시각부터다. `handle`은 호출자에게서 시작 시각을 받으며, 받지 않으면 자기 호출부터 센다. Node 서버는 `node:http`가 해석하지 못하는 요청에 대한 400과 431 응답도 request line의 method와 target으로 만든 요청과 함께 보고하며, packet에 request line이 없으면 요청 없이 보고한다. Node 서버의 공개 디렉터리 파일은 애플리케이션의 응답이 아니다. hook이 던진 오류는 HY-43으로 처리하지 않으며 `handle`의 호출자에게 간다.
 - **HY-28** 브라우저 코드의 오류는 htmx 응답 훅에서 던져진다. htmx는 이를 `htmx:error` 이벤트로 보고하고 스왑하지 않는다.

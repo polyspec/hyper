@@ -6,7 +6,7 @@ namespace Polyspec\Hyper;
 
 use Polyspec\Template\Value\Bind;
 
-/** Answers requests with documents, JSON and action redirects (HY-8, HY-10 to HY-19, HY-24 to HY-27, HY-58, HY-59). */
+/** Answers requests with documents, JSON and action redirects (HY-8, HY-10 to HY-19, HY-24 to HY-27, HY-58 to HY-60). */
 final class App
 {
     private readonly Container $container;
@@ -28,6 +28,7 @@ final class App
         private readonly int $bodyLimit,
         /** @var list<string> */
         private readonly array $formTypes,
+        private readonly ?\Closure $onResponse,
         string $program,
     ) {
         $this->container = new Container();
@@ -43,6 +44,8 @@ final class App
      *
      * @param array{shared?: \Closure, regions?: array<string, \Closure>, routes?: array<string, array{load?: \Closure, post?: \Closure, regions?: array<string, \Closure>}>} $handlers
      * @param list<string> $formTypes `application/x-www-form-urlencoded` and `multipart/form-data`
+     * @param ?\Closure(Request, Response, float): void $onResponse called once for every response with the request,
+     *     the response and the elapsed milliseconds (HY-60)
      */
     public static function open(
         string $manifest,
@@ -54,6 +57,7 @@ final class App
         string $frameAncestors = "'self'",
         int $bodyLimit = 8 * 1024 * 1024,
         array $formTypes = ['application/x-www-form-urlencoded'],
+        ?\Closure $onResponse = null,
     ): self {
         if ($bodyLimit < 1) {
             throw new \InvalidArgumentException("body limit {$bodyLimit} is not a positive number of bytes");
@@ -94,7 +98,7 @@ final class App
             }
         }
 
-        return new self($declared, $handlers['shared'] ?? null, $regionLoaders, $routeHandlers, $timezone, $basePath, $https, $frameAncestors, $bodyLimit, array_values($formTypes), $program);
+        return new self($declared, $handlers['shared'] ?? null, $regionLoaders, $routeHandlers, $timezone, $basePath, $https, $frameAncestors, $bodyLimit, array_values($formTypes), $onResponse, $program);
     }
 
     /** Registers the factory of an application service. */
@@ -103,9 +107,14 @@ final class App
         $this->container->bind($class, $factory);
     }
 
-    /** Answers one request; an unhandled exception gives a plain 500 and is logged (HY-43). Every response limits framing (HY-45). */
-    public function handle(Request $request, SessionStore $store): Response
+    /**
+     * Answers one request; an unhandled exception gives a plain 500 and is logged (HY-43). Every response limits
+     * framing (HY-45) and is reported to onResponse with the milliseconds since `$started`, a microtime(true)
+     * value that defaults to now (HY-60).
+     */
+    public function handle(Request $request, SessionStore $store, ?float $started = null): Response
     {
+        $started ??= microtime(true);
         try {
             $response = $this->answer($request, $store);
         } catch (\Throwable $error) {
@@ -113,7 +122,12 @@ final class App
             $response = Response::text(500, 'Internal Server Error');
         }
 
-        return $response->withHeader('Content-Security-Policy', "frame-ancestors {$this->frameAncestors}");
+        $response = $response->withHeader('Content-Security-Policy', "frame-ancestors {$this->frameAncestors}");
+        if ($this->onResponse !== null) {
+            ($this->onResponse)($request, $response, (microtime(true) - $started) * 1000);
+        }
+
+        return $response;
     }
 
     private function answer(Request $request, SessionStore $store): Response
@@ -426,6 +440,8 @@ final class App
         ini_set('display_errors', '0');
         ini_set('log_errors', '1');
         ini_set('default_mimetype', '');
-        $this->handle(Request::fromGlobals(), new NativeSession($this->https))->send();
+        // The elapsed time of HY-60 counts from the start of the PHP request.
+        $started = $_SERVER['REQUEST_TIME_FLOAT'] ?? null;
+        $this->handle(Request::fromGlobals(), new NativeSession($this->https), is_float($started) ? $started : null)->send();
     }
 }

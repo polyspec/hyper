@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createApplication, decodeResponse, renderParts, type Manifest, type TemplateIndex } from '@polyspec/hyper';
 import { parseJson, type Template } from '@polyspec/template/render';
-import { App, Result } from '../src/index.js';
+import { App, Request, Result, type Response } from '../src/index.js';
 import { cookie, Fixture, FIXTURES, handlers, json, JSON_REGION, TEMPLATES } from './support.js';
 
 let fixture: Fixture;
@@ -323,6 +323,42 @@ describe('App', () => {
     for (const options of [{ formTypes: [] }, { formTypes: ['text/plain'] }, { formTypes: ['multipart/form-data', 'multipart/form-data'] }, { bodyLimit: 0 }, { bodyLimit: 1.5 }]) {
       await expect(fixture.app(options)).rejects.toThrow('hyper:');
     }
+  });
+
+  it('reports every response once with the request and the elapsed time (HY-60)', async () => {
+    const reports: [string, string, number, unknown, number][] = [];
+    const options = {
+      bodyLimit: 256,
+      onResponse: (request: Request | null, response: Response, elapsed: number) => {
+        reports.push([request!.method, request!.path(), response.status, response.headers['Content-Security-Policy'], elapsed]);
+      },
+    };
+    const token = await fixture.token();
+    const form = { 'Content-Type': 'application/x-www-form-urlencoded' };
+    const send = (method: string, target: string, headers: Record<string, string>, body: string | undefined, extra: { basePath?: string } = {}) => fixture.handle({ method, target, headers, body }, { ...options, ...extra });
+    await send('GET', '/api/', {}, undefined, { basePath: '/api' });
+    await send('GET', '/', {}, undefined);
+    await send('GET', '/?q=%FF', {}, undefined);
+    await send('POST', '/add', form, '_csrf=wrong');
+    await send('GET', '/missing', {}, undefined);
+    await send('POST', '/', form, '');
+    await send('POST', '/add', form, 'a'.repeat(257));
+    await send('POST', '/add', { 'Content-Type': 'text/plain' }, '');
+    await send('GET', '/items/broken', {}, undefined);
+    await send('POST', '/add', form, `_csrf=${token}&name=a`);
+    expect(reports.map((report) => report.slice(0, 3))).toEqual([
+      ['GET', '/api/', 200], ['GET', '/', 200], ['GET', '/', 400], ['POST', '/add', 403], ['GET', '/missing', 404],
+      ['POST', '/', 405], ['POST', '/add', 413], ['POST', '/add', 415], ['GET', '/items/broken', 500], ['POST', '/add', 303],
+    ]);
+    for (const report of reports) {
+      expect(report[3]).toBe("frame-ancestors 'self'");
+      expect(report[4]).toBeGreaterThanOrEqual(0);
+    }
+
+    // The elapsed time counts from the start that the caller gives, such as the time when the server received it.
+    reports.length = 0;
+    await (await fixture.app(options)).handle(Request.from({ method: 'GET', target: '/' }), fixture.session, performance.now() - 2000);
+    expect(reports[0]![4]).toBeGreaterThanOrEqual(2000);
   });
 
   it('answers a bad request loader and action with 400 (HY-58)', async () => {
