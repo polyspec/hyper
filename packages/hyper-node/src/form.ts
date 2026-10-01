@@ -1,12 +1,12 @@
-// Query strings, form bodies and cookies as PHP reads them into $_GET, $_POST and $_COOKIE, without nesting
-// bracketed names: a later field replaces an earlier field of the same name, and the first cookie of a name
-// counts. Names and values must be UTF-8 (HY-42).
+// Query strings, form bodies and cookies. Query and form fields are read without nesting: each name, in the order
+// of its first occurrence, has its values in request order, and a bracketed name is the name as written (HY-56).
+// The first cookie of a name counts, as PHP reads $_COOKIE. Names and values must be UTF-8 (HY-42).
 
 const strict = new TextDecoder('utf-8', { fatal: true });
 
 // The fields of a query string or a form body; `valid` is false when a name or a value is not UTF-8.
 export interface Fields {
-  values: Map<string, string>;
+  values: Map<string, string[]>;
   valid: boolean;
 }
 
@@ -82,7 +82,9 @@ function add(fields: Fields, nameBytes: Uint8Array, valueBytes: Uint8Array): voi
     fields.valid = false;
     return;
   }
-  if (name !== '') fields.values.set(name, value);
+  const values = fields.values.get(name);
+  if (values === undefined) fields.values.set(name, [value]);
+  else values.push(value);
 }
 
 // Parses a Cookie header. Values are URL-decoded; a cookie that is not UTF-8 is ignored, because hyper does not

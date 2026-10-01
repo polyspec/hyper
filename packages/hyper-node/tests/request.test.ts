@@ -53,6 +53,15 @@ describe('Request', () => {
     expect(request.cookie('b')).toBe('{"x":1}');
   });
 
+  it('reads every query value in order without nesting and the raw query (HY-56)', () => {
+    const request = Request.from({ method: 'GET', target: '/board?b=1&roles[]=a&roles%5B%5D=b&1=x&b=2&q=a+b#top' });
+    expect(request.rawQuery()).toBe('b=1&roles[]=a&roles%5B%5D=b&1=x&b=2&q=a+b');
+    expect([...request.query()]).toEqual([['b', ['1', '2']], ['roles[]', ['a', 'b']], ['1', ['x']], ['q', ['a b']]]);
+    expect(request.queryInt('b', 7)).toBe(2);
+    expect(Request.from({ method: 'GET', target: '/' }).rawQuery()).toBe('');
+    expect([...Request.from({ method: 'GET', target: '/?' }).query()]).toEqual([]);
+  });
+
   it('reads the text fields of a multipart form and leaves out files', () => {
     const body = [
       '--XyZ', 'Content-Disposition: form-data; name="title"', '', '한 글', '--XyZ',

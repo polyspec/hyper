@@ -52,6 +52,7 @@ This document defines the application manifest, routing, rendering, the requests
 ## Requests
 
 - **HY-15** A request with `Accept: application/json` and `HX-Request: true`, which htmx sends with every request, is a region request. A request with `Accept: application/json` and no `HX-Request` is a document request. Any other request is an HTML request and receives an HTML document. A region request always updates the page region (HY-18).
+- **HY-56** The raw query of a request is the request target after its first `?` up to its first `#`, or empty text without a `?`. Its values are read without nesting: the raw query is split at every `&` and an empty part is skipped; the name of a part is the text before its first `=` and the value is the rest, or empty text when the part has no `=`; in both, `+` is a space, `%XX` with two hexadecimal digits is its byte and any other `%` stays. A name with brackets, such as `roles[]` or `a[b]`, is the name as written, and an empty name is a name. The query values are an ordered map from each name, in the order of its first occurrence, to the list of its values in request order; a name or value that is not valid UTF-8 fails with HY-42. `Request` provides the raw query and the query values, and `queryInt` reads the last value of a name. `conformance/fields.json` holds texts with their values, and both servers pass every case.
 
 ## JSON response
 

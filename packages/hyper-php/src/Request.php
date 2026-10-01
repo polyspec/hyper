@@ -10,9 +10,12 @@ final class Request
     /** @var array<string, string> */
     private readonly array $headers;
 
+    /** The query values, or null when a name or a value is not UTF-8 (HY-42, HY-56). */
+    private readonly ?Fields $queryFields;
+
     /**
      * @param array<string, string> $headers header names in any case
-     * @param array<string, mixed> $query
+     * @param string $query the raw query: the request target after its first `?` up to its first `#`
      * @param array<string, mixed> $form
      * @param array<string, mixed> $flash
      * @param array<string, string> $params
@@ -22,7 +25,7 @@ final class Request
         public readonly string $method,
         public readonly string $path,
         array $headers = [],
-        private readonly array $query = [],
+        private readonly string $query = '',
         private readonly array $form = [],
         private readonly array $flash = [],
         private readonly string $csrfToken = '',
@@ -31,6 +34,7 @@ final class Request
         public readonly bool $https = false,
     ) {
         $this->headers = array_change_key_case($headers, CASE_LOWER);
+        $this->queryFields = Fields::parse($query);
     }
 
     /** Returns a copy that carries the flash values and the CSRF token of the session. */
@@ -72,12 +76,12 @@ final class Request
     }
 
     /**
-     * Returns true when the path consists of printable ASCII characters and every query and form name and value
-     * at any depth and HX-Current-URL are valid UTF-8 (HY-42). Cookies are not checked; hyper ignores invalid ones.
+     * Returns true when the path consists of printable ASCII characters, every query name and value and every form
+     * name and value at any depth and HX-Current-URL are valid UTF-8 (HY-42). Cookies are not checked; hyper ignores invalid ones.
      */
     public function validInput(): bool
     {
-        return preg_match('/^[\x21-\x7E]*$/D', $this->path) === 1 && self::utf8($this->header('HX-Current-URL') ?? '') && self::utf8Tree($this->query) && self::utf8Tree($this->form);
+        return preg_match('/^[\x21-\x7E]*$/D', $this->path) === 1 && self::utf8($this->header('HX-Current-URL') ?? '') && $this->queryFields !== null && self::utf8Tree($this->form);
     }
 
     /** @param array<mixed> $values */
@@ -133,11 +137,23 @@ final class Request
         return $this->path;
     }
 
-    /** Returns a query value as an integer, or the default when it is absent or not an integer. */
+    /** Returns the raw query of the request target, or the empty string (HY-56). */
+    public function rawQuery(): string
+    {
+        return $this->query;
+    }
+
+    /** Returns every query value in order, without nesting (HY-56). */
+    public function query(): Fields
+    {
+        return $this->queryFields ?? Fields::empty();
+    }
+
+    /** Returns the last query value of a name as an integer, or the default when it is absent or not an integer. */
     public function queryInt(string $name, int $default): int
     {
-        $value = $this->query[$name] ?? null;
-        if (is_string($value) && preg_match('/^-?\d{1,15}$/', $value) === 1) {
+        $value = $this->query()->last($name);
+        if ($value !== null && preg_match('/^-?\d{1,15}$/', $value) === 1) {
             return (int) $value;
         }
 
@@ -178,6 +194,15 @@ final class Request
         return $path === '' ? '/' : $path;
     }
 
+    /** Returns the raw query of a request target: the target after its first `?` up to its first `#` (HY-56). */
+    public static function targetQuery(string $target): string
+    {
+        $target = substr($target, 0, strcspn($target, '#'));
+        $question = strpos($target, '?');
+
+        return $question === false ? '' : substr($target, $question + 1);
+    }
+
     /** Creates a request from the PHP request globals. */
     public static function fromGlobals(): self
     {
@@ -191,7 +216,7 @@ final class Request
             strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? 'GET')),
             self::targetPath((string) ($_SERVER['REQUEST_URI'] ?? '/')),
             $headers,
-            $_GET,
+            self::targetQuery((string) ($_SERVER['REQUEST_URI'] ?? '/')),
             $_POST,
             cookies: array_filter($_COOKIE, 'is_string'),
             https: ($_SERVER['HTTPS'] ?? '') !== '' && ($_SERVER['HTTPS'] ?? '') !== 'off',
