@@ -12,10 +12,11 @@
 //
 // Usage: node scripts/build-assets.mjs --app examples/board --api /api
 
-import { cpSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseArgs } from 'node:util';
 import { build } from 'esbuild';
+import { copyDirectory, copyFile } from './output-files.mjs';
 import { loadPackage, sha256, writeTemplateFiles } from './template-files.mjs';
 
 const { values } = parseArgs({ options: { app: { type: 'string' }, api: { type: 'string' } } });
@@ -71,9 +72,9 @@ const shell = [
 rmSync(csrDir, { recursive: true, force: true });
 mkdirSync(join(csrDir, 'assets'), { recursive: true });
 writeFileSync(join(csrDir, 'index.html'), shell);
-cpSync(templateFilesDir, join(csrDir, 'assets', 'templates'), { recursive: true });
+copyDirectory(templateFilesDir, join(csrDir, 'assets', 'templates'));
 for (const name of readdirSync(assetsDir)) {
-  if (name.endsWith('.css')) cpSync(join(assetsDir, name), join(csrDir, 'assets', name));
+  if (name.endsWith('.css')) copyFile(join(assetsDir, name), join(csrDir, 'assets', name));
 }
 
 console.log(`templates ${Object.keys(index).length}, ${hyperName}, dist/csr/index.html ${Buffer.byteLength(shell)} bytes`);

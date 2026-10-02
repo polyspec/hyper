@@ -4,7 +4,7 @@
 
 | ID | Feature | Status | Evidence |
 |---|---|---|---|
-| protocol | Region protocol specification (HY-1 to HY-67) | implemented | [Protocol](spec/protocol.md) |
+| protocol | Region protocol specification (HY-1 to HY-68) | implemented | [Protocol](spec/protocol.md) |
 | composition | Screen composition rules (HC-1 to HC-7) and the template check for HC-6 | implemented | [Composition](spec/composition.md), `make templates-check` |
 | manifest | Application manifest read by PHP and the browser | implemented | `make test-php`, `make test-js` |
 | router | PHP and browser routers with shared conformance cases | implemented | `make test-php`, `make test-js` |
@@ -33,6 +33,7 @@
 | comparison | Comparison page with SSR and CSR frames | implemented | `make e2e` |
 | bundle-size | SSR script, CSR shell and template file size limits | implemented | `make bundle-size` |
 | npm-packages | `@polyspec/hyper` and `@polyspec/hyper-server` publish JavaScript with type declarations that Node runs from `node_modules`, and their source passes `erasableSyntaxOnly` (HY-61) | implemented | `make package-check` |
+| output-files | The asset build and the server build create their copied output files with the mode 0644, which a virtiofs bind mount of a Linux container accepts (HY-68) | implemented | `make test-scripts` |
 | query-values | Every query value in order without nesting, and the raw query (HY-56) | implemented | `make test-php`, `make test-node` |
 | form-values | Every form value of an urlencoded or multipart body in order without nesting (HY-57) | implemented | `make test-php`, `make test-node` |
 | request-boundary | UTF-8 checks, plain 500 errors, data model checks, hardened session cookie, redirect checks, failure marks (HY-42 to HY-47) | implemented | `make test-php`, `make test-js`, `make e2e` |
