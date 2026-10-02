@@ -48,15 +48,16 @@ export interface ClientRendering {
   shell: string;
   // The data base path, such as /_props (HY-8).
   basePath: string;
-  // Returns true for a request of a client-rendered page, for example by its Host header.
-  selects: (request: Request) => boolean;
+  // Returns true for a request of a client-rendered page, for example by its Host header, or a promise of the
+  // result, which the server awaits.
+  selects: (request: Request) => boolean | Promise<boolean>;
 }
 
 // A checked client rendering with the bytes of its shell.
 interface Client {
   basePath: string;
   shell: string;
-  selects: (request: Request) => boolean;
+  selects: (request: Request) => boolean | Promise<boolean>;
 }
 
 export interface AppOptions<S extends object> {
@@ -202,7 +203,7 @@ export class App<S extends object = Record<string, never>> {
   private async answer(request: Request, store: SessionStore, reply: Reply): Promise<Response> {
     if (request.bodySize() > this.bodyLimit) return Response.text(413, 'Content Too Large');
     if (!request.validInput()) return Response.text(400, 'Bad Request');
-    const client = this.chosen(request);
+    const client = await this.chosen(request);
     const basePath = client?.basePath ?? this.basePath;
     const path = stripBasePath(request.path(), basePath);
     if (client !== null && path === null) return this.shell(request, client);
@@ -224,9 +225,9 @@ export class App<S extends object = Record<string, never>> {
   }
 
   // Returns the client rendering when its selection chooses the request, and null otherwise (HY-62).
-  private chosen(request: Request): Client | null {
+  private async chosen(request: Request): Promise<Client | null> {
     if (this.client === null) return null;
-    const chosen: unknown = this.client.selects(request);
+    const chosen: unknown = await this.client.selects(request);
     if (typeof chosen !== 'boolean') throw new Error('hyper: the selection of the client rendering did not return a boolean');
     return chosen ? this.client : null;
   }
