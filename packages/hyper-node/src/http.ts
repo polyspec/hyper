@@ -33,7 +33,12 @@ export function createServer<S extends object>(app: App<S>, sessions: FileSessio
   if (files !== undefined && (!isAbsolute(files) || !statSync(files).isDirectory())) throw new Error(`hyper: ${files} is not an absolute directory`);
   const server = createHttpServer((incoming, outgoing) => {
     const started = performance.now();
-    serve(app, sessions, files, incoming, outgoing, started).catch((error: unknown) => {
+    // The connection closed before the response was written (HY-67).
+    const closed = new AbortController();
+    outgoing.on('close', () => {
+      if (!outgoing.writableEnded) closed.abort();
+    });
+    serve(app, sessions, files, incoming, outgoing, started, closed.signal).catch((error: unknown) => {
       app.fail(error);
       if (!outgoing.headersSent) write(outgoing, app.frame(Response.text(500, 'Internal Server Error')));
       else outgoing.destroy();
@@ -60,10 +65,12 @@ function requestLine(packet: Buffer | undefined): Request | null {
   return line === null ? null : Request.from({ method: line[1]!, target: line[2]! });
 }
 
-async function serve<S extends object>(app: App<S>, sessions: FileSessions, files: string | undefined, incoming: IncomingMessage, outgoing: ServerResponse, started: number): Promise<void> {
+async function serve<S extends object>(app: App<S>, sessions: FileSessions, files: string | undefined, incoming: IncomingMessage, outgoing: ServerResponse, started: number, signal: AbortSignal): Promise<void> {
   const file = files === undefined ? null : publicFile(files, incoming);
   if (file === null) {
-    write(outgoing, await answer(app, sessions, incoming, started));
+    const response = await answer(app, sessions, incoming, started, signal);
+    // A request whose client closed the connection has no response to write (HY-67).
+    if (response !== null) write(outgoing, response);
     return;
   }
   outgoing.writeHead(200, { 'Content-Type': CONTENT_TYPES[extname(file)] ?? 'application/octet-stream', 'Content-Length': String(statSync(file).size) });
@@ -71,7 +78,7 @@ async function serve<S extends object>(app: App<S>, sessions: FileSessions, file
   else createReadStream(file).pipe(outgoing);
 }
 
-async function answer<S extends object>(app: App<S>, sessions: FileSessions, incoming: IncomingMessage, started: number): Promise<Response> {
+async function answer<S extends object>(app: App<S>, sessions: FileSessions, incoming: IncomingMessage, started: number, signal: AbortSignal): Promise<Response | null> {
   // The application answers a body larger than its limit with 413 (HY-59); the server reads no more of it.
   const { body, size } = await readBody(incoming, app.bodyLimit);
   const https = (incoming.socket as TLSSocket).encrypted === true;
@@ -83,12 +90,13 @@ async function answer<S extends object>(app: App<S>, sessions: FileSessions, inc
     app.fail(error);
     return app.report(request, app.frame(Response.text(500, 'Internal Server Error')), started, new Reply());
   }
-  let response: Response;
+  let response: Response | null;
   try {
-    response = await app.handle(request, session, started);
+    response = await app.handle(request, session, started, signal);
   } finally {
     session.close();
   }
+  if (response === null) return null;
   const created = session.created;
   if (created === null) return response;
   // A new session sets its cookie first, as PHP does when the session starts (HY-45).

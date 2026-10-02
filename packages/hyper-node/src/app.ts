@@ -9,7 +9,7 @@ import type { Template } from '@polyspec/template/render';
 import type { FileSessions } from './file-sessions.js';
 import { createServer, type ServerOptions } from './http.js';
 import { decodeJson, inDataModel, JsonDecodeError } from './json.js';
-import { renderPage, type PageInput } from './page.js';
+import { Disconnected, renderPage, stopClosed, type PageInput } from './page.js';
 import { Reply } from './reply.js';
 import type { Request } from './request.js';
 import { Response } from './response.js';
@@ -85,6 +85,9 @@ export interface AppOptions<S extends object> {
   // request line node:http could not read. The reply is the reply of the loaders and actions of the request, or an
   // empty reply when the server answered before routing.
   onResponse?: (request: Request | null, response: Response, elapsed: number, reply: Reply) => void;
+  // Called once with the request, the elapsed milliseconds and the reply of a request whose client closed the
+  // connection before the server wrote its response; the server stops the request and writes no response (HY-67).
+  onDisconnect?: (request: Request, elapsed: number, reply: Reply) => void;
   // Receives the log line of an unhandled error (HY-43); the default writes it to the standard error.
   log?: (message: string) => void;
   // The client-rendered pages, which receive the static shell for HTML requests and JSON under the data base path
@@ -105,6 +108,7 @@ export class App<S extends object = Record<string, never>> {
   private readonly responseLimit: number;
   private readonly formTypes: readonly string[];
   private readonly onResponse: AppOptions<S>['onResponse'];
+  private readonly onDisconnect: AppOptions<S>['onDisconnect'];
   private readonly log: (message: string) => void;
   private readonly client: Client | null;
 
@@ -119,6 +123,7 @@ export class App<S extends object = Record<string, never>> {
     responseLimit: number,
     formTypes: readonly string[],
     onResponse: AppOptions<S>['onResponse'],
+    onDisconnect: AppOptions<S>['onDisconnect'],
     log: (message: string) => void,
     client: Client | null,
   ) {
@@ -133,6 +138,7 @@ export class App<S extends object = Record<string, never>> {
     this.responseLimit = responseLimit;
     this.formTypes = formTypes;
     this.onResponse = onResponse;
+    this.onDisconnect = onDisconnect;
     this.log = log;
     this.routes = new Map(application.manifest.routes.map((route) => [route.name, route]));
   }
@@ -162,7 +168,7 @@ export class App<S extends object = Record<string, never>> {
     checkHandlers(manifest, options.handlers);
     const client = options.clientRendering === undefined ? null : checkClient(options.clientRendering, manifest);
     for (const route of manifest.routes) await application.templates.ensure(routeTemplates(manifest, route));
-    return new App(application, options.handlers, options.timezone, basePath, options.https ?? false, options.frameAncestors ?? "'self'", bodyLimit, responseLimit, [...formTypes], options.onResponse, options.log ?? ((message) => process.stderr.write(`${message}\n`)), client);
+    return new App(application, options.handlers, options.timezone, basePath, options.https ?? false, options.frameAncestors ?? "'self'", bodyLimit, responseLimit, [...formTypes], options.onResponse, options.onDisconnect, options.log ?? ((message) => process.stderr.write(`${message}\n`)), client);
   }
 
   // Registers the factory of an application service.
@@ -178,13 +184,20 @@ export class App<S extends object = Record<string, never>> {
   // Answers one request; an unhandled error and a body larger than the response limit give a plain 500 and are
   // logged (HY-43, HY-66). Every response limits framing (HY-45), every failure is not cacheable (HY-65), and every
   // response is reported with the milliseconds since `started`, a performance.now() value that defaults to now
-  // (HY-60).
-  async handle(request: Request, store: SessionStore, started = performance.now()): Promise<Response> {
+  // (HY-60). With the signal of a connection, a request whose client closed the connection stops, is reported to
+  // onDisconnect and gives null, the response that is not written (HY-67).
+  async handle(request: Request, store: SessionStore, started?: number): Promise<Response>;
+  async handle(request: Request, store: SessionStore, started: number, signal: AbortSignal): Promise<Response | null>;
+  async handle(request: Request, store: SessionStore, started = performance.now(), signal?: AbortSignal): Promise<Response | null> {
     const reply = new Reply();
     let response: Response;
     try {
-      response = await this.answer(request, store, reply);
+      response = await this.answer(request, store, reply, signal);
     } catch (error) {
+      if (error instanceof Disconnected) {
+        this.onDisconnect?.(request, performance.now() - started, reply);
+        return null;
+      }
       this.fail(error);
       response = Response.text(500, 'Internal Server Error');
     }
@@ -216,10 +229,11 @@ export class App<S extends object = Record<string, never>> {
   }
 
   // Answers a request; the loaders and actions of a routed request receive `reply` (HY-52, HY-60).
-  private async answer(request: Request, store: SessionStore, reply: Reply): Promise<Response> {
+  private async answer(request: Request, store: SessionStore, reply: Reply, signal: AbortSignal | undefined): Promise<Response> {
     if (request.bodySize() > this.bodyLimit) return Response.text(413, 'Content Too Large');
     if (!request.validInput()) return Response.text(400, 'Bad Request');
     const client = await this.chosen(request);
+    stopClosed(signal);
     const basePath = client?.basePath ?? this.basePath;
     const path = stripBasePath(request.path(), basePath);
     if (client !== null && path === null) return this.shell(request, client);
@@ -236,7 +250,7 @@ export class App<S extends object = Record<string, never>> {
     const session = new Session(store);
     const flash = session.takeFlash();
     const routed = request.withRoute(path, match.params).withSession(flash, session.csrfToken());
-    const response = await this.routed({ request: routed, route, handler, session, flash, reply, status: 200, invalid: {}, basePath });
+    const response = await this.routed({ request: routed, route, handler, session, flash, reply, status: 200, invalid: {}, basePath, signal });
     return response.withCookies(reply, this.https || request.https);
   }
 
@@ -265,6 +279,7 @@ export class App<S extends object = Record<string, never>> {
       if (!this.formTypes.includes(request.mediaType())) return Response.text(415, 'Unsupported Media Type');
       if (!tokensEqual(request.csrfToken(), request.formString('_csrf'))) return Response.text(403, 'Forbidden');
       const result = await handler.post({ request, reply, services: this.services });
+      stopClosed(input.signal);
       if (!(result instanceof Result)) throw new Error(`hyper: POST action of route ${input.route.name} did not return a Result`);
       if (result.isRedirect()) return this.redirect(session, result, input.basePath);
       return await this.page({ ...input, status: result.status, invalid: result.data });

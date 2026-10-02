@@ -31,6 +31,7 @@ final class App
         private readonly array $formTypes,
         private readonly ?\Closure $onResponse,
         private readonly ?ClientRendering $client,
+        private readonly ?\Closure $onDisconnect,
         /** The bytes of the static shell of the client rendering (HY-62). */
         private readonly string $shell,
         string $program,
@@ -54,6 +55,9 @@ final class App
      *     server answered before routing (HY-60)
      * @param ?ClientRendering $clientRendering the client-rendered pages, which receive the static shell for HTML
      *     requests and JSON under the data base path (HY-62)
+     * @param ?\Closure(Request, float, Reply): void $onDisconnect called once with the request, the elapsed
+     *     milliseconds and the reply of a request whose client closed the connection, which PHP reports at the
+     *     first failed write of the response (HY-67)
      */
     public static function open(
         string $manifest,
@@ -68,6 +72,7 @@ final class App
         int $responseLimit = 8 * 1024 * 1024,
         ?\Closure $onResponse = null,
         ?ClientRendering $clientRendering = null,
+        ?\Closure $onDisconnect = null,
     ): self {
         if ($bodyLimit < 1) {
             throw new \InvalidArgumentException("body limit {$bodyLimit} is not a positive number of bytes");
@@ -113,7 +118,7 @@ final class App
 
         $shell = $clientRendering === null ? '' : self::shell($clientRendering, $declared);
 
-        return new self($declared, $handlers['shared'] ?? null, $regionLoaders, $routeHandlers, $timezone, $basePath, $https, $frameAncestors, $bodyLimit, $responseLimit, array_values($formTypes), $onResponse, $clientRendering, $shell, $program);
+        return new self($declared, $handlers['shared'] ?? null, $regionLoaders, $routeHandlers, $timezone, $basePath, $https, $frameAncestors, $bodyLimit, $responseLimit, array_values($formTypes), $onResponse, $clientRendering, $onDisconnect, $shell, $program);
     }
 
     /** Reads the static shell after checking the declaration of the client rendering against the manifest (HY-62). */
@@ -153,8 +158,12 @@ final class App
      */
     public function handle(Request $request, SessionStore $store, ?float $started = null): Response
     {
-        $started ??= microtime(true);
-        $reply = new Reply();
+        return $this->respond($request, $store, $started ?? microtime(true), new Reply());
+    }
+
+    /** Answers one request with the reply that its loaders and actions receive (HY-60). */
+    private function respond(Request $request, SessionStore $store, float $started, Reply $reply): Response
+    {
         try {
             $response = $this->answer($request, $store, $reply);
         } catch (\Throwable $error) {
@@ -516,7 +525,8 @@ final class App
 
     /**
      * Answers the current PHP request with the PHP session and writes the response; errors go to the log only.
-     * A response without a body receives no Content-Type from PHP (HY-52).
+     * A response without a body receives no Content-Type from PHP (HY-52), and a client that closed the connection
+     * ends the script at the first failed write and is reported to the disconnect hook (HY-67).
      */
     public function run(): void
     {
@@ -532,8 +542,22 @@ final class App
         ini_set('display_errors', '0');
         ini_set('log_errors', '1');
         ini_set('default_mimetype', '');
+        // HY-67: PHP reports a closed connection only at a failed write; with ignore_user_abort off it ends the
+        // script there, and the shutdown function calls the disconnect hook.
+        ignore_user_abort(false);
         // The elapsed time of HY-60 counts from the start of the PHP request.
         $started = $_SERVER['REQUEST_TIME_FLOAT'] ?? null;
-        $this->handle(Request::fromGlobals(), new NativeSession($this->https), is_float($started) ? $started : null)->send();
+        $started = is_float($started) ? $started : microtime(true);
+        $request = Request::fromGlobals();
+        $reply = new Reply();
+        if ($this->onDisconnect !== null) {
+            $hook = $this->onDisconnect;
+            register_shutdown_function(static function () use ($hook, $request, $started, $reply): void {
+                if (connection_aborted() === 1) {
+                    $hook($request, (microtime(true) - $started) * 1000, $reply);
+                }
+            });
+        }
+        $this->respond($request, new NativeSession($this->https), $started, $reply)->send();
     }
 }
