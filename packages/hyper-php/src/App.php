@@ -50,9 +50,9 @@ final class App
      *
      * @param array{shared?: \Closure, regions?: array<string, \Closure>, routes?: array<string, array{load?: \Closure, post?: \Closure, regions?: array<string, \Closure>}>} $handlers
      * @param list<string> $formTypes `application/x-www-form-urlencoded` and `multipart/form-data`
-     * @param ?\Closure(Request, Response, float, Reply): void $onResponse called once for every response with the
-     *     request, the response, the elapsed milliseconds and the reply of the request, which is empty when the
-     *     server answered before routing (HY-60)
+     * @param ?\Closure(Request, Response, float, Reply, ?string): void $onResponse called once for every response with
+     *     the request, the response, the elapsed milliseconds, the reply of the request, which is empty when the
+     *     server answered before routing, and the failure of a 500 of HY-43 or HY-66, else null (HY-60)
      * @param ?ClientRendering $clientRendering the client-rendered pages, which receive the static shell for HTML
      *     requests and JSON under the data base path (HY-62)
      * @param ?\Closure(Request, float, Reply): void $onDisconnect called once with the request, the elapsed
@@ -164,15 +164,19 @@ final class App
     /** Answers one request with the reply that its loaders and actions receive (HY-60). */
     private function respond(Request $request, SessionStore $store, float $started, Reply $reply): Response
     {
+        // The failure of a 500 of HY-43 or HY-66, which the hook receives (HY-60).
+        $failure = null;
         try {
             $response = $this->answer($request, $store, $reply);
         } catch (\Throwable $error) {
             error_log(sprintf('hyper: %s: %s in %s:%d', $error::class, $error->getMessage(), $error->getFile(), $error->getLine()));
+            $failure = $error->getMessage();
             $response = Response::text(500, 'Internal Server Error');
         }
         $size = strlen($response->body);
         if ($size > $this->responseLimit) {
-            error_log("hyper: the response to {$request->method} {$request->path} has {$size} bytes, more than the response limit of {$this->responseLimit} bytes");
+            $failure = "the response to {$request->method} {$request->path} has {$size} bytes, more than the response limit of {$this->responseLimit} bytes";
+            error_log("hyper: {$failure}");
             $response = Response::text(500, 'Internal Server Error');
         }
 
@@ -181,7 +185,7 @@ final class App
             $response = $response->withHeader('Cache-Control', 'no-store');
         }
         if ($this->onResponse !== null) {
-            ($this->onResponse)($request, $response, (microtime(true) - $started) * 1000, $reply);
+            ($this->onResponse)($request, $response, (microtime(true) - $started) * 1000, $reply, $failure);
         }
 
         return $response;
