@@ -6,7 +6,7 @@ namespace Polyspec\Hyper;
 
 use Polyspec\Template\Value\Bind;
 
-/** Answers requests with documents, JSON and action redirects (HY-8, HY-10 to HY-19, HY-24 to HY-27, HY-58 to HY-60). */
+/** Answers requests with documents, JSON, action redirects and the static shell (HY-8, HY-10 to HY-19, HY-24 to HY-27, HY-58 to HY-60, HY-62). */
 final class App
 {
     private readonly Container $container;
@@ -29,6 +29,9 @@ final class App
         /** @var list<string> */
         private readonly array $formTypes,
         private readonly ?\Closure $onResponse,
+        private readonly ?ClientRendering $client,
+        /** The bytes of the static shell of the client rendering (HY-62). */
+        private readonly string $shell,
         string $program,
     ) {
         $this->container = new Container();
@@ -47,6 +50,8 @@ final class App
      * @param ?\Closure(Request, Response, float, Reply): void $onResponse called once for every response with the
      *     request, the response, the elapsed milliseconds and the reply of the request, which is empty when the
      *     server answered before routing (HY-60)
+     * @param ?ClientRendering $clientRendering the client-rendered pages, which receive the static shell for HTML
+     *     requests and JSON under the data base path (HY-62)
      */
     public static function open(
         string $manifest,
@@ -59,6 +64,7 @@ final class App
         int $bodyLimit = 8 * 1024 * 1024,
         array $formTypes = ['application/x-www-form-urlencoded'],
         ?\Closure $onResponse = null,
+        ?ClientRendering $clientRendering = null,
     ): self {
         if ($bodyLimit < 1) {
             throw new \InvalidArgumentException("body limit {$bodyLimit} is not a positive number of bytes");
@@ -99,7 +105,32 @@ final class App
             }
         }
 
-        return new self($declared, $handlers['shared'] ?? null, $regionLoaders, $routeHandlers, $timezone, $basePath, $https, $frameAncestors, $bodyLimit, array_values($formTypes), $onResponse, $program);
+        $shell = $clientRendering === null ? '' : self::shell($clientRendering, $declared);
+
+        return new self($declared, $handlers['shared'] ?? null, $regionLoaders, $routeHandlers, $timezone, $basePath, $https, $frameAncestors, $bodyLimit, array_values($formTypes), $onResponse, $clientRendering, $shell, $program);
+    }
+
+    /** Reads the static shell after checking the declaration of the client rendering against the manifest (HY-62). */
+    private static function shell(ClientRendering $client, Manifest $manifest): string
+    {
+        $base = $client->basePath;
+        if ($base === '' || !str_starts_with($base, '/') || str_ends_with($base, '/')) {
+            throw new \InvalidArgumentException("data base path {$base} must start with / and must not end with /");
+        }
+        foreach ($manifest->routes as $name => $route) {
+            if ($route['path'] === $base || str_starts_with($route['path'], "{$base}/")) {
+                throw new \InvalidArgumentException("route {$name} lies under the data base path {$base}");
+            }
+        }
+        if (!str_starts_with($client->shell, '/') || !is_file($client->shell) || !is_readable($client->shell)) {
+            throw new \InvalidArgumentException("static shell {$client->shell} is not a readable file at an absolute path");
+        }
+        $shell = (string) file_get_contents($client->shell);
+        if (!str_contains($shell, '<meta name="hyper-api" content="' . htmlspecialchars($base, ENT_QUOTES) . '">')) {
+            throw new \InvalidArgumentException("static shell {$client->shell} does not declare the data base path {$base}");
+        }
+
+        return $shell;
     }
 
     /** Registers the factory of an application service. */
@@ -141,7 +172,12 @@ final class App
         if (!$request->validInput()) {
             return Response::text(400, 'Bad Request');
         }
-        $path = Router::stripBasePath($request->path, $this->basePath);
+        $client = $this->chosen($request);
+        $basePath = $client?->basePath ?? $this->basePath;
+        $path = Router::stripBasePath($request->path, $basePath);
+        if ($client !== null && $path === null) {
+            return $this->shellResponse($request);
+        }
         if ($path === '/_hyper/keep') {
             return $this->keep($request, new Session($store));
         }
@@ -151,11 +187,50 @@ final class App
         }
         $route = $this->manifest->routes[$match['name']];
         $handler = $this->routeHandlers[$route['name']] ?? [];
+        if ($client !== null) {
+            // HY-62: the data base path answers only JSON requests and actions, before the session is read.
+            if ($request->method !== 'GET' && ($request->method !== 'POST' || !isset($handler['post']))) {
+                return Response::text(405, 'Method Not Allowed');
+            }
+            if (!$request->wantsJson()) {
+                return Response::text(406, 'Not Acceptable');
+            }
+        }
         $session = new Session($store);
         $flash = $session->takeFlash();
         $request = $request->withRoute((string) $path, $match['params'])->withSession($flash, $session->csrfToken());
 
-        return $this->routed($request, $route, $handler, $session, $flash, $reply)->withCookies($reply, $this->https || $request->https);
+        return $this->routed($request, $route, $handler, $session, $flash, $reply, $basePath)->withCookies($reply, $this->https || $request->https);
+    }
+
+    /** Returns the client rendering when its selection chooses the request, and null otherwise (HY-62). */
+    private function chosen(Request $request): ?ClientRendering
+    {
+        if ($this->client === null) {
+            return null;
+        }
+        $chosen = ($this->client->selects)($request);
+        if (!is_bool($chosen)) {
+            throw new \LogicException('the selection of the client rendering did not return a boolean');
+        }
+
+        return $chosen ? $this->client : null;
+    }
+
+    /** Answers a client-rendered request outside the data base path: the static shell for a page (HY-62). */
+    private function shellResponse(Request $request): Response
+    {
+        if ($this->manifest->router->match($request->path) === null) {
+            return Response::text(404, 'Not Found');
+        }
+        if ($request->method !== 'GET') {
+            return Response::text(405, 'Method Not Allowed');
+        }
+        if ($request->wantsJson()) {
+            return Response::text(406, 'Not Acceptable');
+        }
+
+        return new Response(200, ['Content-Type' => 'text/html; charset=utf-8', 'Cache-Control' => 'no-cache', 'Vary' => 'Accept'], $this->shell);
     }
 
     /**
@@ -164,11 +239,11 @@ final class App
      * @param array{name: string, path: string, title: string, template: string, post: bool, regions: list<Region>} $route
      * @param array{load?: \Closure, post?: \Closure, regions?: array<string, \Closure>} $handler
      */
-    private function routed(Request $request, array $route, array $handler, Session $session, Flash $flash, Reply $reply): Response
+    private function routed(Request $request, array $route, array $handler, Session $session, Flash $flash, Reply $reply, string $basePath): Response
     {
         try {
             if ($request->method === 'GET') {
-                return $this->page($request, $route, $handler, $session, $flash, 200, [], $reply);
+                return $this->page($request, $route, $handler, $session, $flash, 200, [], $reply, $basePath);
             }
             if ($request->method !== 'POST' || !isset($handler['post'])) {
                 return Response::text(405, 'Method Not Allowed');
@@ -184,14 +259,14 @@ final class App
                 throw new \LogicException("POST action of route {$route['name']} did not return a Result");
             }
             if ($result->isRedirect()) {
-                return $this->redirect($session, $result);
+                return $this->redirect($session, $result, $basePath);
             }
 
-            return $this->page($request, $route, $handler, $session, $flash, $result->status, $result->data, $reply);
+            return $this->page($request, $route, $handler, $session, $flash, $result->status, $result->data, $reply, $basePath);
         } catch (NotFound) {
             return Response::text(404, 'Not Found');
         } catch (Redirect $redirect) {
-            return $this->redirect($session, $redirect->result);
+            return $this->redirect($session, $redirect->result, $basePath);
         } catch (Forbidden) {
             return Response::text(403, 'Forbidden');
         } catch (BadRequest) {
@@ -200,11 +275,11 @@ final class App
     }
 
     /** Stores the flash values and changed topics of a redirect result and answers 303 (HY-25, HY-50). */
-    private function redirect(Session $session, Result $result): Response
+    private function redirect(Session $session, Result $result, string $basePath): Response
     {
         $session->putFlash(new Flash($result->flash, $result->changed));
 
-        return new Response(303, ['Location' => $this->basePath . $result->location], '');
+        return new Response(303, ['Location' => $basePath . $result->location], '');
     }
 
     /**
@@ -214,7 +289,7 @@ final class App
      * @param array{load?: \Closure, post?: \Closure, regions?: array<string, \Closure>} $handler
      * @param array<string, mixed> $invalid
      */
-    private function page(Request $request, array $route, array $handler, Session $session, Flash $flash, int $status, array $invalid, Reply $reply): Response
+    private function page(Request $request, array $route, array $handler, Session $session, Flash $flash, int $status, array $invalid, Reply $reply, string $basePath): Response
     {
         $json = $request->wantsJson();
         $provided = [Request::class => $request, Reply::class => $reply];
@@ -223,7 +298,7 @@ final class App
             $shared = array_replace($shared, $this->container->call($this->shared, $provided));
         }
 
-        $changed = RegionPlanner::changedTopics($request, $flash, $this->basePath);
+        $changed = RegionPlanner::changedTopics($request, $flash, $basePath);
         $data = [];
         $templates = [];
         foreach (RegionPlanner::select($this->manifest, !$request->isRegionRequest(), $changed) as $selected) {

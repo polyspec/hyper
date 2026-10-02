@@ -1,5 +1,5 @@
-// Answers requests with documents, JSON and action redirects (HY-8, HY-10 to HY-19, HY-24 to HY-27, HY-40 to
-// HY-46, HY-50 to HY-54, HY-58 to HY-60).
+// Answers requests with documents, JSON, action redirects and the static shell (HY-8, HY-10 to HY-19, HY-24 to HY-27,
+// HY-40 to HY-46, HY-50 to HY-54, HY-58 to HY-60, HY-62).
 import { timingSafeEqual } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { isAbsolute, join } from 'node:path';
@@ -41,6 +41,24 @@ export interface Handlers<S extends object> {
   routes?: Record<string, RouteHandlers<S>>;
 }
 
+// The client-rendered pages of an application (HY-62): their HTML requests receive the static shell, and their JSON
+// requests and actions use the data base path.
+export interface ClientRendering {
+  // The absolute path of the static shell, which declares the data base path with <meta name="hyper-api"> (HY-22).
+  shell: string;
+  // The data base path, such as /_props (HY-8).
+  basePath: string;
+  // Returns true for a request of a client-rendered page, for example by its Host header.
+  selects: (request: Request) => boolean;
+}
+
+// A checked client rendering with the bytes of its shell.
+interface Client {
+  basePath: string;
+  shell: string;
+  selects: (request: Request) => boolean;
+}
+
 export interface AppOptions<S extends object> {
   // The absolute path of the manifest (HY-1).
   manifest: string;
@@ -65,6 +83,9 @@ export interface AppOptions<S extends object> {
   onResponse?: (request: Request | null, response: Response, elapsed: number, reply: Reply) => void;
   // Receives the log line of an unhandled error (HY-43); the default writes it to the standard error.
   log?: (message: string) => void;
+  // The client-rendered pages, which receive the static shell for HTML requests and JSON under the data base path
+  // (HY-62).
+  clientRendering?: ClientRendering;
 }
 
 export class App<S extends object = Record<string, never>> {
@@ -80,6 +101,7 @@ export class App<S extends object = Record<string, never>> {
   private readonly formTypes: readonly string[];
   private readonly onResponse: AppOptions<S>['onResponse'];
   private readonly log: (message: string) => void;
+  private readonly client: Client | null;
 
   private constructor(
     application: Application,
@@ -92,7 +114,9 @@ export class App<S extends object = Record<string, never>> {
     formTypes: readonly string[],
     onResponse: AppOptions<S>['onResponse'],
     log: (message: string) => void,
+    client: Client | null,
   ) {
+    this.client = client;
     this.application = application;
     this.handlers = handlers;
     this.timezone = timezone;
@@ -127,8 +151,9 @@ export class App<S extends object = Record<string, never>> {
     const fetcher = async (url: string): Promise<Template> => JSON.parse(readFileSync(join(options.templates.root, url), 'utf8')) as Template;
     const application = createApplication(manifest, index, fetcher);
     checkHandlers(manifest, options.handlers);
+    const client = options.clientRendering === undefined ? null : checkClient(options.clientRendering, manifest);
     for (const route of manifest.routes) await application.templates.ensure(routeTemplates(manifest, route));
-    return new App(application, options.handlers, options.timezone, basePath, options.https ?? false, options.frameAncestors ?? "'self'", bodyLimit, [...formTypes], options.onResponse, options.log ?? ((message) => process.stderr.write(`${message}\n`)));
+    return new App(application, options.handlers, options.timezone, basePath, options.https ?? false, options.frameAncestors ?? "'self'", bodyLimit, [...formTypes], options.onResponse, options.log ?? ((message) => process.stderr.write(`${message}\n`)), client);
   }
 
   // Registers the factory of an application service.
@@ -177,17 +202,41 @@ export class App<S extends object = Record<string, never>> {
   private async answer(request: Request, store: SessionStore, reply: Reply): Promise<Response> {
     if (request.bodySize() > this.bodyLimit) return Response.text(413, 'Content Too Large');
     if (!request.validInput()) return Response.text(400, 'Bad Request');
-    const path = stripBasePath(request.path(), this.basePath);
+    const client = this.chosen(request);
+    const basePath = client?.basePath ?? this.basePath;
+    const path = stripBasePath(request.path(), basePath);
+    if (client !== null && path === null) return this.shell(request, client);
     if (path === '/_hyper/keep') return this.keep(request, new Session(store));
     const match = path === null ? null : this.application.router.match(path);
     if (match === null || path === null) return Response.text(404, 'Not Found');
     const route = this.routes.get(match.name)!;
     const handler = this.handlers.routes?.[route.name] ?? {};
+    if (client !== null) {
+      // HY-62: the data base path answers only JSON requests and actions, before the session is read.
+      if (request.method !== 'GET' && (request.method !== 'POST' || handler.post === undefined)) return Response.text(405, 'Method Not Allowed');
+      if (!request.wantsJson()) return Response.text(406, 'Not Acceptable');
+    }
     const session = new Session(store);
     const flash = session.takeFlash();
     const routed = request.withRoute(path, match.params).withSession(flash, session.csrfToken());
-    const response = await this.routed({ request: routed, route, handler, session, flash, reply, status: 200, invalid: {} });
+    const response = await this.routed({ request: routed, route, handler, session, flash, reply, status: 200, invalid: {}, basePath });
     return response.withCookies(reply, this.https || request.https);
+  }
+
+  // Returns the client rendering when its selection chooses the request, and null otherwise (HY-62).
+  private chosen(request: Request): Client | null {
+    if (this.client === null) return null;
+    const chosen: unknown = this.client.selects(request);
+    if (typeof chosen !== 'boolean') throw new Error('hyper: the selection of the client rendering did not return a boolean');
+    return chosen ? this.client : null;
+  }
+
+  // Answers a client-rendered request outside the data base path: the static shell for a page (HY-62).
+  private shell(request: Request, client: Client): Response {
+    if (this.application.router.match(request.path()) === null) return Response.text(404, 'Not Found');
+    if (request.method !== 'GET') return Response.text(405, 'Method Not Allowed');
+    if (request.wantsJson()) return Response.text(406, 'Not Acceptable');
+    return new Response(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache', Vary: 'Accept' }, client.shell);
   }
 
   // Answers a routed request with its page, action result or stop result.
@@ -200,11 +249,11 @@ export class App<S extends object = Record<string, never>> {
       if (!tokensEqual(request.csrfToken(), request.formString('_csrf'))) return Response.text(403, 'Forbidden');
       const result = await handler.post({ request, reply, services: this.services });
       if (!(result instanceof Result)) throw new Error(`hyper: POST action of route ${input.route.name} did not return a Result`);
-      if (result.isRedirect()) return this.redirect(session, result);
+      if (result.isRedirect()) return this.redirect(session, result, input.basePath);
       return await this.page({ ...input, status: result.status, invalid: result.data });
     } catch (error) {
       if (error instanceof NotFound) return Response.text(404, 'Not Found');
-      if (error instanceof Redirect) return this.redirect(session, error.result);
+      if (error instanceof Redirect) return this.redirect(session, error.result, input.basePath);
       if (error instanceof Forbidden) return Response.text(403, 'Forbidden');
       if (error instanceof BadRequest) return Response.text(400, 'Bad Request');
       throw error;
@@ -212,13 +261,13 @@ export class App<S extends object = Record<string, never>> {
   }
 
   private page(input: PageInput<S>): Promise<Response> {
-    return renderPage(input, { application: this.application, handlers: this.handlers, services: this.services, timezone: this.timezone, basePath: this.basePath, https: this.https });
+    return renderPage(input, { application: this.application, handlers: this.handlers, services: this.services, timezone: this.timezone, https: this.https });
   }
 
   // Stores the flash values and changed topics of a redirect result and answers 303 (HY-25, HY-50).
-  private redirect(session: Session, result: Result): Response {
+  private redirect(session: Session, result: Result, basePath: string): Response {
     session.putFlash({ values: new Map(result.flashValues), changed: [...result.changedTopics] });
-    return new Response(303, { Location: this.basePath + result.location }, '');
+    return new Response(303, { Location: basePath + result.location }, '');
   }
 
   // Stores a kept value of a `server` path in the session (HY-40).
@@ -247,6 +296,24 @@ export class App<S extends object = Record<string, never>> {
 }
 
 const FORM_TYPES = ['application/x-www-form-urlencoded', 'multipart/form-data'];
+
+// Reads the static shell after checking the declaration of the client rendering against the manifest (HY-62).
+function checkClient(client: ClientRendering, manifest: Manifest): Client {
+  const base = client.basePath;
+  if (base === '' || !base.startsWith('/') || base.endsWith('/')) throw new Error(`hyper: data base path ${base} must start with / and must not end with /`);
+  for (const route of manifest.routes) {
+    if (route.path === base || route.path.startsWith(`${base}/`)) throw new Error(`hyper: route ${route.name} lies under the data base path ${base}`);
+  }
+  if (!isAbsolute(client.shell)) throw new Error(`hyper: static shell ${client.shell} is not an absolute path`);
+  const shell = readFileSync(client.shell, 'utf8');
+  if (!shell.includes(`<meta name="hyper-api" content="${escapeAttribute(base)}">`)) throw new Error(`hyper: static shell ${client.shell} does not declare the data base path ${base}`);
+  return { basePath: base, shell, selects: client.selects };
+}
+
+// Escapes a value as PHP htmlspecialchars with ENT_QUOTES does.
+function escapeAttribute(value: string): string {
+  return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#039;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
 
 // Compares two tokens in constant time for strings of the same length.
 function tokensEqual(known: string, given: string): boolean {

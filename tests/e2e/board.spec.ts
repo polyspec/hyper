@@ -84,7 +84,15 @@ test('SSR: PHP renders the first document and the browser renders region JSON', 
 
 test('CSR: a static shell renders every document from /api JSON', async ({ page }) => {
   const shell = await page.request.get(`${csr}/board`);
+  expect(await shell.text()).toContain('<html>\n');
   expect(await shell.text()).toContain('<body></body>');
+  // HY-63: the html element takes the attributes of the rendered layout, as the server-rendered document has them.
+  await page.goto(`${ssr}/board`);
+  const rendered = await page.evaluate(() => document.documentElement.outerHTML.slice(0, document.documentElement.outerHTML.indexOf('>') + 1));
+  await page.goto(`${csr}/board`);
+  await expect(page.locator('#content h1')).toHaveText('게시판');
+  expect(await page.evaluate(() => document.documentElement.outerHTML.slice(0, document.documentElement.outerHTML.indexOf('>') + 1))).toBe(rendered);
+  expect(rendered).toBe('<html lang="ko">');
   await boardFlow(page, csr, '/api', 'CSR 글', 2);
 });
 

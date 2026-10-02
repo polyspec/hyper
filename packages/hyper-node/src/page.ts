@@ -22,6 +22,8 @@ export interface PageInput<S extends object> {
   reply: Reply;
   status: number;
   invalid: Data;
+  // The base path of the request: the data base path for a client-rendered request (HY-8, HY-62).
+  basePath: string;
 }
 
 export interface PageEnvironment<S extends object> {
@@ -29,7 +31,6 @@ export interface PageEnvironment<S extends object> {
   handlers: Handlers<S>;
   services: Services<S>;
   timezone: string;
-  basePath: string;
   https: boolean;
 }
 
@@ -42,7 +43,7 @@ export async function renderPage<S extends object>(input: PageInput<S>, environm
   let shared: MapValue = new Map<string, Value>([['title', route.title], ['csrf', request.csrfToken()]]);
   if (handlers.shared !== undefined) shared = replaced(shared, toMap(await handlers.shared(context), 'shared data'));
 
-  const changed = changedTopics(request, input.flash, environment.basePath);
+  const changed = changedTopics(request, input.flash, input.basePath);
   const data = new Map<string, MapValue>();
   for (const selected of selectRegions(application.manifest, !request.isRegionRequest(), changed)) {
     if (selected.page === true) {

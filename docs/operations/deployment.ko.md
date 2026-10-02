@@ -42,6 +42,18 @@ PHP는 기본 경로 없이 실행한다. 응답에는 `Vary: Accept, HX-Request
 
 모든 페이지 경로가 같은 빈 셸을 반환한다. 그래서 JavaScript를 실행하지 않는 검색 크롤러와 링크 미리보기 봇은 내용도 제목도 보지 못한다. 이 형태는 그런 노출이 필요 없는 화면에만 쓴다.
 
+## 두 형태를 한 서버로
+
+PHP나 Node 서버 하나가 한 매니페스트의 서버 렌더 페이지와 클라이언트 렌더 페이지를 같은 handler로 응답할 수 있다(HY-62). 애플리케이션은 열 때 클라이언트 렌더를 선언한다. PHP에서는 `App::open(clientRendering: new ClientRendering(shell: '/srv/app/dist/csr/index.html', basePath: '/_props', selects: fn (Request $request): bool => ...))`, Node에서는 `App.open`의 `clientRendering` 옵션 `{ shell, basePath, selects }`다. 선택은 예를 들어 `Host` header로 클라이언트 렌더 요청을 고른다. 셸이 데이터 기본 경로를 선언하도록 `scripts/build-assets.mjs --api /_props`로 셸을 build한다. 그렇지 않으면 애플리케이션 열기가 실패한다.
+
+| 선택이 고른 페이지의 요청 | 응답 |
+|---|---|
+| 페이지 경로의 HTML `GET` | 셸, `Cache-Control: no-cache`, 세션과 loader 없음 |
+| `/_props` 아래의 JSON 요청이나 액션 | 서버 형태와 같은 JSON과 액션, `/_props` 아래의 `Location` |
+| `/_props` 아래의 HTML 요청, 그 밖의 JSON 요청 | 406 |
+
+선택이 고르지 않은 요청은 서버 형태처럼 응답한다. 셸 응답은 `frame-ancestors`(HY-45)를 가지며 응답 hook(HY-60)에 보고된다. 브라우저는 `html` 요소에 렌더한 layout의 `lang` 같은 속성을 준다(HY-63).
+
 ## 서버 설정
 
 - PHP 설정(`php.ini`, PHP-FPM 풀, 또는 `php -d display_errors=0`)에서 `display_errors=Off`로 둔다. PHP는 애플리케이션이 실행되기 전에 시작 경고(예: `max_input_vars` 초과)를 출력한다. 애플리케이션 안의 예외는 상세 없이 500으로 응답하고 로그에 남는다(HY-43).
