@@ -54,7 +54,7 @@ final class RunTest extends TestCase
         self::assertSame('Not Found', ob_get_clean());
     }
 
-    /** HY-60: the elapsed time of a PHP request counts from REQUEST_TIME_FLOAT, the start of the request. */
+    /** HY-60: the elapsed time of a PHP request counts on the monotonic clock from the start that the caller gives. */
     #[RunInSeparateProcess]
     public function testRunReportsTheElapsedTimeSinceTheRequestStarted(): void
     {
@@ -64,15 +64,39 @@ final class RunTest extends TestCase
         });
         $_SERVER['REQUEST_METHOD'] = 'GET';
         $_SERVER['REQUEST_URI'] = '/missing';
-        $_SERVER['REQUEST_TIME_FLOAT'] = microtime(true) - 1.5;
+
+        ob_start();
+        $app->run(hrtime(true) - 1_500_000_000);
+        ob_end_clean();
+
+        self::assertCount(1, $reports);
+        self::assertSame(['/missing', 404], array_slice($reports[0], 0, 2));
+        self::assertGreaterThanOrEqual(1500.0, $reports[0][2]);
+        self::assertLessThan(60000.0, $reports[0][2]);
+    }
+
+    /**
+     * HY-60: the elapsed time never reads the wall clock, so a system time that moves backwards during a request,
+     * here a REQUEST_TIME_FLOAT ten seconds after now, gives no negative time.
+     */
+    #[RunInSeparateProcess]
+    public function testRunReportsNoNegativeElapsedTimeWhenTheWallClockMovesBackwards(): void
+    {
+        $reports = [];
+        $app = App::open(__DIR__ . '/fixtures/app.json', __DIR__ . '/build/server', ['routes' => ['add' => ['post' => fn (): Result => Result::redirect('/')]]], 'Z', onResponse: function (Request $request, Response $response, float $elapsed) use (&$reports): void {
+            $reports[] = $elapsed;
+        });
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        $_SERVER['REQUEST_URI'] = '/missing';
+        $_SERVER['REQUEST_TIME_FLOAT'] = microtime(true) + 10.0;
 
         ob_start();
         $app->run();
         ob_end_clean();
 
         self::assertCount(1, $reports);
-        self::assertSame(['/missing', 404], array_slice($reports[0], 0, 2));
-        self::assertGreaterThanOrEqual(1500.0, $reports[0][2]);
+        self::assertGreaterThanOrEqual(0.0, $reports[0]);
+        self::assertLessThan(10000.0, $reports[0]);
     }
 
     /** HY-67: PHP ends the script at the first failed write of the response and calls the disconnect hook. */
@@ -110,9 +134,9 @@ final class RunTest extends TestCase
     /** Reads the standard error of the PHP built-in server until a line contains the text, for at most 5 seconds. */
     private static function waitFor($stderr, string $text): void
     {
-        $deadline = microtime(true) + 5.0;
+        $deadline = hrtime(true) + 5_000_000_000;
         $seen = '';
-        while (microtime(true) < $deadline) {
+        while (hrtime(true) < $deadline) {
             $read = [$stderr];
             $none = null;
             if (stream_select($read, $none, $none, 0, 200_000) === 1) {

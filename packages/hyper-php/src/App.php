@@ -153,16 +153,16 @@ final class App
     /**
      * Answers one request; an unhandled exception and a body larger than the response limit give a plain 500 and
      * are logged (HY-43, HY-66). Every response limits framing (HY-45), every failure is not cacheable (HY-65), and
-     * every response is reported to onResponse with the milliseconds since `$started`, a microtime(true) value that
-     * defaults to now (HY-60).
+     * every response is reported to onResponse with the milliseconds since `$started`, an hrtime(true) value of the
+     * monotonic clock that defaults to now (HY-60).
      */
-    public function handle(Request $request, SessionStore $store, ?float $started = null): Response
+    public function handle(Request $request, SessionStore $store, ?int $started = null): Response
     {
-        return $this->respond($request, $store, $started ?? microtime(true), new Reply());
+        return $this->respond($request, $store, $started ?? hrtime(true), new Reply());
     }
 
     /** Answers one request with the reply that its loaders and actions receive (HY-60). */
-    private function respond(Request $request, SessionStore $store, float $started, Reply $reply): Response
+    private function respond(Request $request, SessionStore $store, int $started, Reply $reply): Response
     {
         // The failure of a 500 of HY-43 or HY-66, which the hook receives (HY-60).
         $failure = null;
@@ -185,7 +185,7 @@ final class App
             $response = $response->withHeader('Cache-Control', 'no-store');
         }
         if ($this->onResponse !== null) {
-            ($this->onResponse)($request, $response, (microtime(true) - $started) * 1000, $reply, $failure);
+            ($this->onResponse)($request, $response, (hrtime(true) - $started) / 1e6, $reply, $failure);
         }
 
         return $response;
@@ -534,10 +534,13 @@ final class App
     /**
      * Answers the current PHP request with the PHP session and writes the response; errors go to the log only.
      * A response without a body receives no Content-Type from PHP (HY-52), and a client that closed the connection
-     * ends the script at the first failed write and is reported to the disconnect hook (HY-67).
+     * ends the script at the first failed write and is reported to the disconnect hook (HY-67). The elapsed time of
+     * HY-60 counts from `$started`, an hrtime(true) value of the monotonic clock that the caller takes at the start
+     * of the request, such as the first statement of its front controller, and that defaults to now.
      */
-    public function run(): void
+    public function run(?int $started = null): void
     {
+        $started ??= hrtime(true);
         // HY-59: PHP drops a body larger than post_max_size, and gives the body of a multipart request to
         // php://input only when enable_post_data_reading is off.
         $postMaxSize = ini_parse_quantity((string) ini_get('post_max_size'));
@@ -553,16 +556,13 @@ final class App
         // HY-67: PHP reports a closed connection only at a failed write; with ignore_user_abort off it ends the
         // script there, and the shutdown function calls the disconnect hook.
         ignore_user_abort(false);
-        // The elapsed time of HY-60 counts from the start of the PHP request.
-        $started = $_SERVER['REQUEST_TIME_FLOAT'] ?? null;
-        $started = is_float($started) ? $started : microtime(true);
         $request = Request::fromGlobals();
         $reply = new Reply();
         if ($this->onDisconnect !== null) {
             $hook = $this->onDisconnect;
             register_shutdown_function(static function () use ($hook, $request, $started, $reply): void {
                 if (connection_aborted() === 1) {
-                    $hook($request, (microtime(true) - $started) * 1000, $reply);
+                    $hook($request, (hrtime(true) - $started) / 1e6, $reply);
                 }
             });
         }
