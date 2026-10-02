@@ -1,5 +1,5 @@
 // Renders the route page as a document or as JSON (HY-12 to HY-19, HY-26, HY-30, HY-31, HY-38, HY-44, HY-52,
-// HY-53). The document is the browser rendering of the document JSON value, with the browser code.
+// HY-53, HY-69). The document is the browser rendering of the document JSON value, with the browser code.
 import { createHash } from 'node:crypto';
 import { decodeResponse, renderDocument, type Application, type RouteDeclaration } from '@polyspec/hyper';
 import type { Handlers, RouteHandlers } from './app.js';
@@ -82,16 +82,18 @@ export async function renderPage<S extends object>(input: PageInput<S>, environm
     ['regions', new Map(data)],
     ['kept', keptValues(request, input.session, data, application, environment.https)],
   ]);
-  const cacheControl = status === 200 ? (reply.cacheControlValue() ?? 'no-store') : 'no-store';
+  // HY-69: the reply gives a page with status 200 the status 403.
+  const pageStatus = status === 200 ? (reply.statusValue() ?? status) : status;
+  const cacheControl = pageStatus === 200 ? (reply.cacheControlValue() ?? 'no-store') : 'no-store';
   if (request.wantsJson()) {
     const body = encodeJson(value);
     const headers: Headers = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': cacheControl, Vary: VARY };
-    if (status !== 200) return new Response(status, headers, body);
+    if (pageStatus !== 200) return new Response(pageStatus, headers, body);
     // HY-53: a strong tag of the body; a matching GET request receives 304 without a body.
     const tag = `"${createHash('sha256').update(body).digest('hex').slice(0, 32)}"`;
     headers.ETag = tag;
     return request.method === 'GET' && request.header('If-None-Match') === tag ? new Response(304, headers, '') : new Response(200, headers, body);
   }
   const document = renderDocument(application, decodeResponse(application, value, request.path()));
-  return new Response(status, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': cacheControl, Vary: VARY }, document);
+  return new Response(pageStatus, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': cacheControl, Vary: VARY }, document);
 }

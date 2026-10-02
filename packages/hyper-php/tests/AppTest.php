@@ -65,6 +65,16 @@ final class AppTest extends TestCase
                         if ($request->formString('name') === 'preview') {
                             return Result::page(200, ['name' => 'preview']);
                         }
+                        if ($request->formString('name') === 'in-place') {
+                            $reply->status(403);
+
+                            return Result::page(200, ['name' => 'in-place']);
+                        }
+                        if ($request->formString('name') === 'in-place-refused') {
+                            $reply->status(403);
+
+                            return Result::invalid(['name' => 'in-place-refused', 'error' => 'empty']);
+                        }
                         if ($request->formString('name') === '') {
                             return Result::invalid(['name' => '', 'error' => 'empty']);
                         }
@@ -104,6 +114,21 @@ final class AppTest extends TestCase
                                 throw new Forbidden();
                             })(),
                             'unreadable' => throw new BadRequest(),
+                            'in-place' => (function () use ($reply): array {
+                                $reply->status(403)->cacheControl('public, max-age=60');
+
+                                return ['id' => 'in-place'];
+                            })(),
+                            'in-place-moved' => (function () use ($reply): array {
+                                $reply->status(403);
+
+                                throw new Redirect(Result::redirect('/items/new'));
+                            })(),
+                            'other-status' => (function () use ($reply): array {
+                                $reply->status(404);
+
+                                return ['id' => 'other-status'];
+                            })(),
                             'moved' => throw new Redirect(Result::redirect('/items/new')->flash('note', 'moved')),
                             'broken' => (function () use ($reply): array {
                                 $reply->note('stage', 'load');
@@ -778,6 +803,41 @@ final class AppTest extends TestCase
         self::assertSame(200, $again->status);
         self::assertSame($preview->body, $again->body);
         self::assertSame(200, $this->post('/add', ['_csrf' => $token, 'name' => 'preview'])->status);
+        self::assertSame(0, $this->counter->count);
+    }
+
+    public function testReplyGivesThePageTheStatus403(): void
+    {
+        // HY-69: the page renders as with 200 and has the status 403, no-store and no ETag; a GET with any tag runs.
+        $json = $this->get('/items/in-place', self::JSON);
+        self::assertSame(403, $json->status);
+        self::assertSame('application/json; charset=utf-8', $json->headers['Content-Type']);
+        self::assertSame('no-store', $json->headers['Cache-Control']);
+        self::assertArrayNotHasKey('ETag', $json->headers);
+        self::assertSame('in-place', self::json($json)['regions']['content']['id']);
+        $tagged = $this->get('/items/in-place', [...self::JSON, 'If-None-Match' => '"' . substr(hash('sha256', $json->body), 0, 32) . '"']);
+        self::assertSame(403, $tagged->status);
+        self::assertSame($json->body, $tagged->body);
+        $document = $this->get('/items/in-place');
+        self::assertSame(403, $document->status);
+        self::assertSame('text/html; charset=utf-8', $document->headers['Content-Type']);
+        self::assertSame('no-store', $document->headers['Cache-Control']);
+        self::assertStringContainsString('in-place', $document->body);
+
+        $token = $this->token();
+        $action = $this->post('/add', ['_csrf' => $token, 'name' => 'in-place'], self::JSON);
+        self::assertSame(403, $action->status);
+        self::assertSame('no-store', $action->headers['Cache-Control']);
+        self::assertSame('in-place', self::json($action)['regions']['content']['name']);
+        // A page with 409 or 422 and a redirect keep their own status.
+        self::assertSame(422, $this->post('/add', ['_csrf' => $token, 'name' => 'in-place-refused'], self::JSON)->status);
+        $moved = $this->get('/items/in-place-moved', self::JSON);
+        self::assertSame(303, $moved->status);
+        self::assertSame('/items/new', $moved->headers['Location']);
+        // Another status fails with HY-43.
+        $other = $this->get('/items/other-status', self::JSON);
+        self::assertSame(500, $other->status);
+        self::assertSame('Internal Server Error', $other->body);
         self::assertSame(0, $this->counter->count);
     }
 

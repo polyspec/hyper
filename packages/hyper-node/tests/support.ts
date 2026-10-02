@@ -35,6 +35,14 @@ export function handlers(): Handlers<Services> {
           if (request.formString('name') === 'unreadable') throw new BadRequest();
           if (request.formString('name') === 'taken') return Result.page(409, { name: 'taken', error: 'conflict' });
           if (request.formString('name') === 'preview') return Result.page(200, { name: 'preview' });
+          if (request.formString('name') === 'in-place') {
+            reply.status(403);
+            return Result.page(200, { name: 'in-place' });
+          }
+          if (request.formString('name') === 'in-place-refused') {
+            reply.status(403);
+            return Result.invalid({ name: 'in-place-refused', error: 'empty' });
+          }
           if (request.formString('name') === '') return Result.invalid({ name: '', error: 'empty' });
           counter.count++;
           return Result.redirect('/').flash('note', 'added').changed('count');
@@ -64,6 +72,15 @@ export function handlers(): Handlers<Services> {
               throw new Forbidden();
             case 'unreadable':
               throw new BadRequest();
+            case 'in-place':
+              reply.status(403).cacheControl('public, max-age=60');
+              return { id: 'in-place' };
+            case 'in-place-moved':
+              reply.status(403);
+              throw new Redirect(Result.redirect('/items/new'));
+            case 'other-status':
+              reply.status(404);
+              return { id: 'other-status' };
             case 'moved':
               throw new Redirect(Result.redirect('/items/new').flash('note', 'moved'));
             case 'broken':

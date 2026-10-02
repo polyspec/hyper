@@ -343,6 +343,10 @@ final class App
         }
 
         $kept = $this->kept($request, $session, $data);
+        // HY-69: the reply gives a page with status 200 the status 403.
+        if ($status === 200 && $reply->statusValue() !== null) {
+            $status = $reply->statusValue();
+        }
         $vary = 'Accept, HX-Request, HX-Current-URL';
         if ($json) {
             $response = JsonEncoder::value($this->timezone, $route['name'], $request->params(), $shared, $data, $kept);

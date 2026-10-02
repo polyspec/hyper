@@ -452,6 +452,41 @@ describe('App', () => {
     expect(fixture.counter.count).toBe(0);
   });
 
+  it('gives the page the status 403 of the reply (HY-69)', async () => {
+    // The page renders as with 200 and has the status 403, no-store and no ETag; a GET with any tag runs.
+    const page = await fixture.get('/items/in-place', JSON_REGION);
+    expect(page.status).toBe(403);
+    expect(page.headers['Content-Type']).toBe('application/json; charset=utf-8');
+    expect(page.headers['Cache-Control']).toBe('no-store');
+    expect(page.headers.ETag).toBeUndefined();
+    expect((json(page).regions.content as Record<string, unknown>).id).toBe('in-place');
+    const tag = `"${createHash('sha256').update(page.body).digest('hex').slice(0, 32)}"`;
+    const tagged = await fixture.get('/items/in-place', { ...JSON_REGION, 'If-None-Match': tag });
+    expect(tagged.status).toBe(403);
+    expect(tagged.body).toBe(page.body);
+    const document = await fixture.get('/items/in-place');
+    expect(document.status).toBe(403);
+    expect(document.headers['Content-Type']).toBe('text/html; charset=utf-8');
+    expect(document.headers['Cache-Control']).toBe('no-store');
+    expect(document.body).toContain('in-place');
+
+    const token = await fixture.token();
+    const action = await fixture.post('/add', { _csrf: token, name: 'in-place' }, JSON_REGION);
+    expect(action.status).toBe(403);
+    expect(action.headers['Cache-Control']).toBe('no-store');
+    expect((json(action).regions.content as Record<string, unknown>).name).toBe('in-place');
+    // A page with 409 or 422 and a redirect keep their own status.
+    expect((await fixture.post('/add', { _csrf: token, name: 'in-place-refused' }, JSON_REGION)).status).toBe(422);
+    const moved = await fixture.get('/items/in-place-moved', JSON_REGION);
+    expect(moved.status).toBe(303);
+    expect(moved.headers.Location).toBe('/items/new');
+    // Another status fails with HY-43.
+    const other = await fixture.get('/items/other-status', JSON_REGION);
+    expect(other.status).toBe(500);
+    expect(other.body).toBe('Internal Server Error');
+    expect(fixture.counter.count).toBe(0);
+  });
+
   it('accepts an action result status of 200, 409 or 422 only (HY-58)', () => {
     expect(Result.invalid({}).status).toBe(422);
     for (const status of [201, 303, 400, 404, 500]) expect(() => Result.page(status, {})).toThrow('status');

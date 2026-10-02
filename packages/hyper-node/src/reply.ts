@@ -1,8 +1,9 @@
-// The cookies and the cache control that the loaders and actions of one request give its response (HY-52), and the
-// notes that they give the response hook (HY-60).
+// The cookies, the cache control and the page status that the loaders and actions of one request give its response
+// (HY-52, HY-69), and the notes that they give the response hook (HY-60).
 export class Reply {
   private readonly cookies: [string, string, number | null][] = [];
   private cacheControlText: string | null = null;
+  private pageStatus: number | null = null;
   private readonly noted = new Map<string, unknown>();
 
   // Records a value of the request for the response hook; a later note of the same name replaces the value and keeps
@@ -42,6 +43,18 @@ export class Reply {
 
   cacheControlValue(): string | null {
     return this.cacheControlText;
+  }
+
+  // Gives a page response that has status 200 otherwise the status 403, for a page that shows other data in place of
+  // the data that the request may not see; another status fails (HY-69).
+  status(status: number): this {
+    if (status !== 403) throw new Error(`hyper: page status ${status} of a reply is not 403`);
+    this.pageStatus = status;
+    return this;
+  }
+
+  statusValue(): number | null {
+    return this.pageStatus;
   }
 
   cookieHeaders(secure: boolean): string[] {

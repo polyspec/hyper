@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Polyspec\Hyper;
 
 /**
- * The cookies and the cache control that the loaders and actions of one request give its response (HY-52), and the
- * notes that they give the response hook (HY-60).
+ * The cookies, the cache control and the page status that the loaders and actions of one request give its response
+ * (HY-52, HY-69), and the notes that they give the response hook (HY-60).
  */
 final class Reply
 {
@@ -14,6 +14,8 @@ final class Reply
     private array $cookies = [];
 
     private ?string $cacheControl = null;
+
+    private ?int $status = null;
 
     /** @var array<string, mixed> */
     private array $notes = [];
@@ -79,6 +81,25 @@ final class Reply
     public function cacheControlValue(): ?string
     {
         return $this->cacheControl;
+    }
+
+    /**
+     * Gives a page response that has status 200 otherwise the status 403, for a page that shows other data in place
+     * of the data that the request may not see; another status fails (HY-69).
+     */
+    public function status(int $status): self
+    {
+        if ($status !== 403) {
+            throw new \InvalidArgumentException("page status {$status} of a reply is not 403");
+        }
+        $this->status = $status;
+
+        return $this;
+    }
+
+    public function statusValue(): ?int
+    {
+        return $this->status;
     }
 
     /** @return list<string> */
