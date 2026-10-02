@@ -24,7 +24,7 @@ interface Case {
 const conformance = JSON.parse(readFileSync(new URL('../../../conformance/client.json', import.meta.url), 'utf8')) as { basePath: string; chosenHost: string; cases: Case[] };
 const SHELL = `${FIXTURES}shell/index.html`;
 const TOKEN = 'conformance-token';
-const client = (selects: (request: Request) => boolean = (request) => request.header('Host') === conformance.chosenHost): ClientRendering => ({ shell: SHELL, basePath: conformance.basePath, selects });
+const client = (selects: ClientRendering['selects'] = (request) => request.header('Host') === conformance.chosenHost): ClientRendering => ({ shell: SHELL, basePath: conformance.basePath, selects });
 
 describe('client rendering (HY-62)', () => {
   for (const item of conformance.cases) {
@@ -72,6 +72,25 @@ describe('client rendering (HY-62)', () => {
       ['/list', 200, "frame-ancestors 'self' https://frame.test", 0],
       ['/_props/list', 406, "frame-ancestors 'self' https://frame.test", 0],
     ]);
+  });
+
+  it('awaits a selection that returns a promise (HY-62)', async () => {
+    const shell = await new Fixture().handle({ target: '/list', headers: { Host: 'client.test' } }, { clientRendering: client(async (request) => request.header('Host') === 'client.test') });
+    expect(shell.status).toBe(200);
+    expect(shell.body).toBe(readFileSync(SHELL, 'utf8'));
+    const document = await new Fixture().handle({ target: '/list', headers: { Host: 'server.test' } }, { clientRendering: client(async () => false) });
+    expect(document.status).toBe(200);
+    expect(document.body).toContain('id="hy-data"');
+  });
+
+  it('answers 500 for a promise that rejects or resolves to another value (HY-43)', async () => {
+    for (const selects of [async () => 'csr' as unknown as boolean, async (): Promise<boolean> => { throw new Error('selection'); }]) {
+      const fixture = new Fixture();
+      const response = await fixture.handle({ target: '/' }, { clientRendering: client(selects) });
+      expect(response.status).toBe(500);
+      expect(response.body).toBe('Internal Server Error');
+      expect(fixture.log).toHaveLength(1);
+    }
   });
 
   it('answers 500 for a selection that throws or returns another value (HY-43)', async () => {
