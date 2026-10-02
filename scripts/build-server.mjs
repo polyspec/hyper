@@ -8,10 +8,11 @@
 // Usage: node scripts/build-server.mjs --manifest examples/board/app/app.json --templates examples/board/templates
 //          --output examples/board/build/server --template-dir ../template --php-namespace 'Polyspec\Hyper\Examples\Board\Program'
 
-import { cpSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
+import { copyDirectory } from './output-files.mjs';
 
 const { values } = parseArgs({ options: { manifest: { type: 'string' }, templates: { type: 'string' }, output: { type: 'string' }, 'template-dir': { type: 'string' }, 'php-namespace': { type: 'string' } } });
 for (const name of ['manifest', 'templates', 'output', 'template-dir', 'php-namespace']) if (!values[name]) throw new Error(`--${name} is required`);
@@ -27,7 +28,7 @@ const dataTemplate = JSON.parse(readFileSync(new URL('../packages/hyper-js/data-
 const output = resolve(values.output);
 const templates = join(output, 'templates');
 rmSync(output, { recursive: true, force: true });
-cpSync(values.templates, templates, { recursive: true });
+copyDirectory(values.templates, templates);
 mkdirSync(dirname(join(templates, dataTemplate.name)), { recursive: true });
 writeFileSync(join(templates, dataTemplate.name), dataTemplate.source);
 
