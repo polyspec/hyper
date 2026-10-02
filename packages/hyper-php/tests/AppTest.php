@@ -669,10 +669,12 @@ final class AppTest extends TestCase
             self::assertGreaterThanOrEqual(0.0, $report[4]);
         }
 
-        // The elapsed time counts from the start that the caller gives, such as the start of the PHP request.
+        // The elapsed time counts on the monotonic clock from the hrtime(true) start that the caller gives, such as the
+        // start of the PHP request.
         $reports = [];
-        $this->app('', $options)->handle(new Request('GET', '/'), $this->session, microtime(true) - 2.0);
+        $this->app('', $options)->handle(new Request('GET', '/'), $this->session, hrtime(true) - 2_000_000_000);
         self::assertGreaterThanOrEqual(2000.0, $reports[0][4]);
+        self::assertLessThan(60000.0, $reports[0][4]);
     }
 
     public function testTheHookReceivesTheReplyWithTheNotesOfTheLoadersAndActions(): void
