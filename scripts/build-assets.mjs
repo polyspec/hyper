@@ -5,8 +5,10 @@
 //                                                template render runtime, the manifest and the index
 //   public/assets/manifest.json                 the asset URLs that the server passes to the layout
 //   dist/csr/                                   the static deployment for client-side rendering:
-//                                                index.html with the stylesheet and the bundle inlined,
-//                                                and assets/templates/ with the template files
+//                                                index.html with app.css and the bundle inlined,
+//                                                assets/templates/ with the template files, and every
+//                                                .css file directly in public/assets, which rendered
+//                                                layouts link (HY-64)
 //
 // Usage: node scripts/build-assets.mjs --app examples/board --api /api
 
@@ -48,7 +50,7 @@ for (const name of readdirSync(assetsDir)) {
   if (/^(hyper-[0-9a-f]+\.js|manifest\.json)$/.test(name)) rmSync(join(assetsDir, name));
 }
 writeFileSync(join(assetsDir, hyperName), code);
-writeFileSync(join(assetsDir, 'manifest.json'), `${JSON.stringify({ css: '/assets/app.css', hyper: `/assets/${hyperName}` }, null, 2)}\n`);
+writeFileSync(join(assetsDir, 'manifest.json'), `${JSON.stringify({ css: '/assets/app.css', reader: '/assets/reader.css', hyper: `/assets/${hyperName}` }, null, 2)}\n`);
 
 const css = readFileSync(join(assetsDir, 'app.css'), 'utf8');
 const shell = [
@@ -70,6 +72,9 @@ rmSync(csrDir, { recursive: true, force: true });
 mkdirSync(join(csrDir, 'assets'), { recursive: true });
 writeFileSync(join(csrDir, 'index.html'), shell);
 cpSync(templateFilesDir, join(csrDir, 'assets', 'templates'), { recursive: true });
+for (const name of readdirSync(assetsDir)) {
+  if (name.endsWith('.css')) cpSync(join(assetsDir, name), join(csrDir, 'assets', name));
+}
 
 console.log(`templates ${Object.keys(index).length}, ${hyperName}, dist/csr/index.html ${Buffer.byteLength(shell)} bytes`);
-console.log(`CSP for dist/csr/index.html: script-src 'sha256-${sha256(code, 'base64')}'; style-src 'sha256-${sha256(css, 'base64')}'`);
+console.log(`CSP for dist/csr/index.html: script-src 'sha256-${sha256(code, 'base64')}'; style-src 'self' 'sha256-${sha256(css, 'base64')}'`);

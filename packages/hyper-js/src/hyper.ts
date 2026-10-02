@@ -1,5 +1,6 @@
 import { bind, parseJson, type ListValue, type MapValue, type Value } from '@polyspec/template/render';
-import { applyRegionKept, copyValue, decodeResponse, renderDocument, renderRegion, requireMap, toHtml, type Application, type DecodedResponse } from './response.js';
+import { applyRegionKept, copyValue, decodeResponse, renderDocument, renderLayout, renderRegion, requireMap, toHtml, type Application, type DecodedResponse } from './response.js';
+import { PageStylesheets, StylesheetError } from './stylesheets.js';
 import { stripBasePath } from './router.js';
 import { routeTemplates } from './templates.js';
 import { keptPaths, type RouteDeclaration } from './manifest.js';
@@ -24,6 +25,8 @@ export interface RequestContext {
   // when the region request was configured and when it was aborted (HY-47)
   hyperStart?: number;
   hyperAborted?: number;
+  // removes the stylesheet links that the shown content does not have, after the swap (HY-64)
+  hyperStylesheets?: () => void;
 }
 
 export interface HookDetail {
@@ -42,8 +45,11 @@ export interface HyperExtension {
 
 // Mounts documents that client-side rendering produces.
 export interface DocumentAdapter {
+  // Inserts the missing stylesheet links of the head of an HTML document and waits until they load; the returned
+  // function removes the other stylesheet links after the content is shown (HY-64).
+  stylesheets(html: string): Promise<() => void>;
   // Replaces the attributes of the html element (HY-63), the title and the body with those of a rendered document and
-  // lets htmx process the body.
+  // lets htmx process the body. The stylesheet links of the document are applied before (HY-64).
   mount(html: string): void;
   // Replaces the body with text, for a path without a route or a response that is not JSON.
   text(text: string): void;
@@ -275,8 +281,11 @@ export class Hyper {
       const decoded = decodeResponse(this.app, parseJson(text), path);
       this.applyBrowserKept(decoded);
       const html = renderDocument(this.app, decoded);
+      const settle = await this.page.stylesheets(html);
+      if (generation !== this.location) return;
       this.hold(decoded, true);
       this.page.mount(html);
+      settle();
     } catch {
       if (abort.signal.aborted || generation !== this.location) return;
       this.page.fail('0');
@@ -300,7 +309,17 @@ export class Hyper {
         }
       },
       htmx_before_request: (_elt, { ctx }) => {
-        if (ctx.hyperRegion === undefined) return;
+        if (ctx.hyperRegion === undefined) {
+          // The HTML document of a history restoration in server-side rendering brings its stylesheet links (HY-64).
+          if (basePath === '' && ctx.request.headers['HX-History-Restore-Request'] === 'true') {
+            ctx.fetch = async (url, init) => {
+              const response = await fetch(url, init as RequestInit);
+              if ((response.headers.get('content-type') ?? '').startsWith('text/html')) ctx.hyperStylesheets = await this.page.stylesheets(await response.clone().text());
+              return response;
+            };
+          }
+          return;
+        }
         // A region request is the latest navigation; a client-side restoration still loading is cancelled (HY-23).
         this.location++;
         this.locationAbort?.abort();
@@ -317,6 +336,13 @@ export class Hyper {
           const [response] = await Promise.all([fetch(url, init as RequestInit), loading]);
           const final = this.routeOf(response.url || url);
           if (final !== null && final !== requested) await this.app.templates.ensure(routeTemplates(this.app.manifest, final));
+          // The stylesheet links of the layout of the response load before htmx swaps (HY-64).
+          if ((response.headers.get('content-type') ?? '').startsWith('application/json')) {
+            const root = requireMap(parseJson(await response.clone().text()), 'response');
+            const timezone = requireMap(root.get('env') ?? null, 'env').get('timezone');
+            if (typeof timezone !== 'string') throw new Error('hyper: env.timezone is not a string');
+            ctx.hyperStylesheets = await this.page.stylesheets(renderLayout(this.app, requireMap(root.get('shared') ?? null, 'shared'), timezone));
+          }
           return response;
         };
       },
@@ -337,6 +363,9 @@ export class Hyper {
         for (const name of decoded.regions.keys()) clearError(this.element(name));
       },
       htmx_after_swap: (_elt, { ctx }) => {
+        const settle = ctx.hyperStylesheets;
+        delete ctx.hyperStylesheets;
+        settle?.();
         // Swaps of render and set have no request.
         if (basePath !== '' || ctx.request?.headers?.['HX-History-Restore-Request'] !== 'true') return;
         const embedded = this.element('hy-data')?.textContent;
@@ -344,6 +373,8 @@ export class Hyper {
       },
       htmx_error: (_elt, detail) => {
         const ctx = detail.ctx;
+        // A stylesheet of a history restoration in server-side rendering failed to load: the target is the body (HY-47, HY-64).
+        if (ctx !== undefined && ctx.hyperRegion === undefined && detail.error instanceof StylesheetError) markError(ctx.target, '0');
         if (ctx?.hyperRegion === undefined) return;
         if (detail.error instanceof Error && detail.error.name === 'AbortError' && !this.timedOut(ctx)) return;
         markError(ctx.target, '0');
@@ -537,6 +568,7 @@ export function replaceAttributes(target: AttributeElement, source: AttributeEle
 
 // The document adapter of a browser page.
 function browserDocument(htmx: HtmxApi): DocumentAdapter {
+  let stylesheets: PageStylesheets | null = null;
   const replaceBody = (source: HTMLElement | null, nodes: Node[]): void => {
     const body = document.createElement('body');
     for (const attribute of Array.from(source?.attributes ?? [])) body.setAttribute(attribute.name, attribute.value);
@@ -544,6 +576,7 @@ function browserDocument(htmx: HtmxApi): DocumentAdapter {
     document.body.replaceWith(body);
   };
   return {
+    stylesheets: (html) => (stylesheets ??= new PageStylesheets(document)).apply(new DOMParser().parseFromString(html, 'text/html')),
     mount: (html) => {
       const parsed = new DOMParser().parseFromString(html, 'text/html');
       replaceAttributes(document.documentElement, parsed.documentElement);

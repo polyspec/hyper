@@ -1,8 +1,8 @@
 {
   "measured": "2026-10-02",
   "limits": {
-    "ssrScript": 31900,
-    "csrShell": 33200,
+    "ssrScript": 32700,
+    "csrShell": 34000,
     "largestTemplate": 4096
   }
 }

@@ -70,8 +70,9 @@ BOARD_DB=$PWD/examples/board/var/node.db BOARD_SESSIONS=$PWD/examples/board/var/
 2. `build/templates.index.json`: 각 템플릿 이름과 그 파일 URL, 그리고 include 태그와 block 태그가 경로로 참조하는 템플릿 목록.
 3. `public/assets/hyper-<hash>.js`와 `public/assets/manifest.json`: 클라이언트 번들과, 서버가 레이아웃에 넘기는 URL. 번들에는 htmx, hyper 브라우저 코드, template 렌더 런타임, `app/app.json`, 색인이 들어 있고 템플릿은 없다.
 4. `dist/csr/`: CSR 배포물.
-   - `index.html`은 `<meta name="hyper-api">`를 가지고 스타일시트와 번들을 인라인한다.
+   - `index.html`은 `<meta name="hyper-api">`를 가지고 `app.css`와 번들을 인라인한다.
    - `assets/templates/`는 템플릿 파일을 담는다.
+   - `assets/`는 렌더한 layout이 link하는, `public/assets/` 바로 아래의 모든 `.css` 파일을 담는다(HY-64).
    - 번들에 `</script`가 들어 있으면 빌드는 실패하고, 빌드는 인라인 스크립트와 스타일시트의 Content Security Policy 해시를 출력한다.
 
 빌드는 이전 결과를 교체하므로, 반복해서 빌드해도 결과마다 파일이 하나만 남는다. 빌드 결과는 커밋하지 않는다.
@@ -85,7 +86,7 @@ BOARD_DB=$PWD/examples/board/var/node.db BOARD_SESSIONS=$PWD/examples/board/var/
 | 라우팅 | `conformance/routes.json`을 `make test-php`와 `make test-js`가 실행한다. 렌더할 때 브라우저는 자기 라우트가 서버가 보고한 라우트와 같은지도 확인한다(HY-20). |
 | Node 서버 | `make server-parity`는 parity 단계의 모든 요청을 각자 데이터베이스와 session을 가진 PHP 서버와 board Node 서버에 보내고, session 식별자, CSRF token, `ETag` 값을 placeholder로 바꾼 뒤 상태, header, body가 같은지 확인한다(HY-55). |
 | 문서 렌더 | `make parity`는 비교 단계마다 같은 세션에서 HTML 문서, 문서 JSON, 영역 JSON을 요청한다. 라우트 영역, 내장 데이터, `server`와 `cookie` 유지 값(HY-30, HY-31, HY-38)을 포함한 문서 JSON의 브라우저 렌더 결과는 PHP 문서와 바이트 단위로 같아야 하고, 영역 JSON의 모든 부분이 그 문서에 나타나야 한다. |
-| 브라우저에서의 동작 | `make e2e`는 SSR과 CSR에서 같은 흐름을 실행한다. 이동, 액션, 데이터 요청 없는 `hy-set` 변경, 새로고침과 새 탭에서의 유지 종류 네 가지, 라우트에 필요한 템플릿만 불러오기, SSR body와 CSR body가 같은지 확인하는 비교 페이지를 포함한다. |
+| 브라우저에서의 동작 | `make e2e`는 SSR과 CSR에서 같은 흐름을 실행한다. 이동, 액션, 데이터 요청 없는 `hy-set` 변경, 새로고침과 새 탭에서의 유지 종류 네 가지, 라우트에 필요한 템플릿만 불러오기, 페이지를 보이기 전에 불러오고 다른 페이지가 link하지 않으면 제거하는 layout의 stylesheet link(HY-64), SSR body와 CSR body가 같은지 확인하는 비교 페이지를 포함한다. |
 
 ## 측정한 크기
 
@@ -93,10 +94,10 @@ BOARD_DB=$PWD/examples/board/var/node.db BOARD_SESSIONS=$PWD/examples/board/var/
 
 | 출력 | 원본 바이트 | gzip 바이트 | brotli 바이트 | gzip 상한 |
 |---|---:|---:|---:|---:|
-| SSR 스크립트 `hyper-<hash>.js` | 94,778 | 31,586 | 28,251 | 31,900 |
-| CSR 셸 `dist/csr/index.html` | 98,283 | 32,892 | 29,213 | 33,200 |
-| 가장 큰 템플릿 파일(`board/rows.tpl`) | 5,569 | 1,325 | 1,077 | 4,096 |
-| 템플릿 파일 11개 합계 | | 5,635 | | |
+| SSR 스크립트 `hyper-<hash>.js` | 97,459 | 32,347 | 28,891 | 32,700 |
+| CSR 셸 `dist/csr/index.html` | 100,896 | 33,618 | 29,881 | 34,000 |
+| 가장 큰 템플릿 파일(`board/rows.tpl`) | 5,583 | 1,334 | 1,084 | 4,096 |
+| 템플릿 파일 11개 합계 | | 5,829 | | |
 
 `config/bundle-size.json`의 SSR 스크립트와 CSR 셸 상한은 측정한 gzip 크기에 약 1%를 더하고 100바이트 단위로 올린 값이다. 출력이 상한보다 커지는 변경은 같은 변경 안에서 상한을 고치고 그 증가가 필요한 이유를 적는다. 출력이 작아지는 변경은 같은 규칙으로 상한을 낮춘다.
 

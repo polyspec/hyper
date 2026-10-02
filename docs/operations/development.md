@@ -67,7 +67,7 @@ BOARD_DB=$PWD/examples/board/var/node.db BOARD_SESSIONS=$PWD/examples/board/var/
 1. `public/assets/templates/<name>.<hash>.json`: one AST file per template under `templates/`, and one for the reserved template `hyper/data.tpl` (HY-34).
 2. `build/templates.index.json`: each template name with its file URL and the templates that its include and block tags reference by path.
 3. `public/assets/hyper-<hash>.js` and `public/assets/manifest.json`: the client bundle and the URLs that the server passes to the layout. The bundle contains htmx, the hyper browser code, the template render runtime, `app/app.json` and the index, and no template.
-4. `dist/csr/`: the CSR deployment. `index.html` contains `<meta name="hyper-api">`, the stylesheet and the bundle inlined; `assets/templates/` contains the template files. The build fails when the bundle contains `</script`, and it prints the Content Security Policy hashes of the inlined script and stylesheet.
+4. `dist/csr/`: the CSR deployment. `index.html` contains `<meta name="hyper-api">`, `app.css` and the bundle inlined; `assets/templates/` contains the template files, and `assets/` contains every `.css` file directly in `public/assets/`, which rendered layouts link (HY-64). The build fails when the bundle contains `</script`, and it prints the Content Security Policy hashes of the inlined script and stylesheet.
 
 The build replaces earlier outputs, so repeated builds leave one file per output. The outputs are not committed.
 
@@ -80,7 +80,7 @@ The build replaces earlier outputs, so repeated builds leave one file per output
 | Routing | `conformance/routes.json` runs in `make test-php` and `make test-js`. During rendering, the browser also requires that its route equals the route that the server reported (HY-20). |
 | Document rendering | `make parity` requests every compare step as an HTML document, as document JSON and as region JSON in one session. The browser rendering of the document JSON, including route regions, the embedded data and `server` and `cookie` kept values (HY-30, HY-31, HY-38), must equal the PHP document byte for byte, and every part of the region JSON must appear in it. |
 | Node server | `make server-parity` sends every request of the parity steps to the PHP server and the board Node server, each with its own database and session, and requires equal statuses, headers and bodies after it replaces the session identifier, the CSRF token and the `ETag` value with placeholders (HY-55). |
-| Behavior in a browser | `make e2e` runs the same flows on SSR and CSR: navigation, actions, `hy-set` changes without a data request, the four kept kinds across a reload and a new tab, loading only the templates of a route, and the comparison page that requires equal SSR and CSR bodies. |
+| Behavior in a browser | `make e2e` runs the same flows on SSR and CSR: navigation, actions, `hy-set` changes without a data request, the four kept kinds across a reload and a new tab, loading only the templates of a route, the stylesheet links of the layout loaded before a page is shown and removed when another page does not link them (HY-64), and the comparison page that requires equal SSR and CSR bodies. |
 
 ## Measured sizes
 
@@ -88,10 +88,10 @@ Measured on 2026-10-02 with `make bundle-size` (htmx 4.0.0, esbuild 0.28.2, ten 
 
 | Output | Raw bytes | gzip bytes | brotli bytes | gzip limit |
 |---|---:|---:|---:|---:|
-| SSR script `hyper-<hash>.js` | 94,778 | 31,586 | 28,251 | 31,900 |
-| CSR shell `dist/csr/index.html` | 98,283 | 32,892 | 29,213 | 33,200 |
-| Largest template file (`board/rows.tpl`) | 5,569 | 1,325 | 1,077 | 4,096 |
-| All eleven template files | | 5,635 | | |
+| SSR script `hyper-<hash>.js` | 97,459 | 32,347 | 28,891 | 32,700 |
+| CSR shell `dist/csr/index.html` | 100,896 | 33,618 | 29,881 | 34,000 |
+| Largest template file (`board/rows.tpl`) | 5,583 | 1,334 | 1,084 | 4,096 |
+| All eleven template files | | 5,829 | | |
 
 The limits of the SSR script and the CSR shell in `config/bundle-size.json` are the measured gzip sizes plus about 1 %, rounded up to 100 bytes. A change that makes an output larger than its limit changes the limit in the same change and states why the growth is needed; a change that makes an output smaller lowers the limit by the same rule.
 

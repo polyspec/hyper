@@ -23,7 +23,7 @@ for (const name of ['root', 'compare', 'port', 'api-prefix', 'api-origin']) {
   if (!values[name]) throw new Error(`--${name} is required`);
 }
 const prefix = values['api-prefix'];
-const CONTENT_TYPES = { '.json': 'application/json; charset=utf-8', '.html': 'text/html; charset=utf-8' };
+const CONTENT_TYPES = { '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.html': 'text/html; charset=utf-8' };
 const api = new URL(values['api-origin']);
 
 const server = createServer((incoming, outgoing) => {
@@ -50,8 +50,8 @@ const server = createServer((incoming, outgoing) => {
   }
   const file = join(values.root, normalize(path).replace(/^([.][.][/\\])+/, ''));
   if (path !== '/' && existsSync(file) && statSync(file).isFile()) {
-    // Files under /assets/ carry a content hash in their names and never change; the shell changes with every deployment.
-    const cache = path.startsWith('/assets/') ? 'public, max-age=31536000, immutable' : 'no-cache';
+    // Template files carry a content hash in their names and never change; the stylesheets and the shell change with every deployment.
+    const cache = path.startsWith('/assets/templates/') ? 'public, max-age=31536000, immutable' : 'no-cache';
     outgoing.writeHead(200, { 'Content-Type': CONTENT_TYPES[file.slice(file.lastIndexOf('.'))] ?? 'application/octet-stream', 'Cache-Control': cache });
     outgoing.end(readFileSync(file));
     return;

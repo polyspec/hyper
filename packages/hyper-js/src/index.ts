@@ -19,12 +19,14 @@ export {
   regionTemplate,
   renderDocument,
   renderParts,
+  renderLayout,
   renderRegion,
   toHtml,
   type Application,
   type DecodedResponse,
   type RenderedParts,
 } from './response.js';
+export { PageStylesheets, planStylesheets, StylesheetError, stylesheetKey, type StylesheetStep } from './stylesheets.js';
 export {
   Hyper,
   parseAssignments,

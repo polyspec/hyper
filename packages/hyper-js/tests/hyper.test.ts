@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { applyKept, decodeResponse, Hyper, parseAssignments, renderDocument, valueToJson, type KeepStorage, type RequestContext } from '../src/index.js';
+import { applyKept, decodeResponse, Hyper, parseAssignments, renderDocument, StylesheetError, valueToJson, type KeepStorage, type RequestContext } from '../src/index.js';
 import { parseJson } from '@polyspec/template';
 import { sources, testApplication, testApplicationFailing } from './application.js';
 
@@ -26,11 +26,26 @@ class FakeStorage implements KeepStorage {
   }
 }
 
-// A document adapter that records what client-side rendering mounts.
+// A document adapter that records what client-side rendering mounts and the stylesheet applications (HY-64).
 class FakeDocument {
   readonly mounted: string[] = [];
+  // the source documents of the stylesheet applications
+  readonly sources: string[] = [];
+  // the order of the applications, the mounts and the removals of other links
+  readonly events: string[] = [];
+  // waits for the links of an application; a test replaces it to hold or fail an application
+  load: (html: string) => Promise<void> = async () => undefined;
+  async stylesheets(html: string): Promise<() => void> {
+    this.sources.push(html);
+    this.events.push('stylesheets');
+    await this.load(html);
+    return () => {
+      this.events.push('settle');
+    };
+  }
   mount(html: string): void {
     this.mounted.push(html);
+    this.events.push('mount');
   }
   text(text: string): void {
     this.mounted.push(`text:${text}`);
@@ -52,7 +67,7 @@ function regionElement(id: string): { id: string; attributes: Map<string, string
   };
 }
 
-function setup(basePath = '', fetched: string[] = [], storage = new FakeStorage()): { hyper: Hyper; swaps: Swap[] } {
+function setup(basePath = '', fetched: string[] = [], storage = new FakeStorage(), page = new FakeDocument()): { hyper: Hyper; swaps: Swap[] } {
   const swaps: Swap[] = [];
   const element = (id: string) => ({ id } as unknown as Element);
   const htmx = {
@@ -61,7 +76,7 @@ function setup(basePath = '', fetched: string[] = [], storage = new FakeStorage(
       swaps.push({ region: (ctx.target as unknown as { id: string }).id, text: ctx.text, swap: ctx.swap });
     },
   };
-  return { hyper: new Hyper(testApplication(fetched), htmx, { basePath, element, storage, currentUrl: () => 'http://localhost/' }), swaps };
+  return { hyper: new Hyper(testApplication(fetched), htmx, { basePath, element, storage, document: page, currentUrl: () => 'http://localhost/' }), swaps };
 }
 
 function region(id: string): { id: string } {
@@ -212,7 +227,7 @@ describe('held data, restorations and kept values', () => {
     const swaps: Swap[] = [];
     const element = (id: string) => (id === 'hy-data' ? ({ textContent: embedded } as unknown as Element) : ({ id } as unknown as Element));
     const htmx = { process: () => undefined, config: { defaultTimeout: 60000 }, parseInterval: Number, swap: async (ctx: { text: string; target: Element; swap: string }) => { swaps.push({ region: '', text: ctx.text, swap: ctx.swap }); } };
-    const hyper = new Hyper(testApplication(), htmx, { basePath: '', element, storage: new FakeStorage() });
+    const hyper = new Hyper(testApplication(), htmx, { basePath: '', element, storage: new FakeStorage(), document: new FakeDocument() });
     await request(hyper, '/list', 'http://localhost/list', listJson);
     const ctx = context('/items/7', { id: '', hasAttribute: () => false });
     ctx.request.headers['HX-History-Restore-Request'] = 'true';
@@ -371,6 +386,7 @@ describe('restorations, saves and failure marks', () => {
     const swaps: string[] = [];
     const hyper = new Hyper(testApplication(), { process: () => undefined, config: { defaultTimeout: 60000 }, parseInterval: Number, swap: async (ctx) => { swaps.push(ctx.text); } }, {
       basePath: '',
+      document: new FakeDocument(),
       storage: new FakeStorage(),
       element: (id) => (id === 'rows' ? (target as unknown as Element) : ({ id } as unknown as Element)),
     });
@@ -535,6 +551,7 @@ describe('concurrent changes, saves and timeouts', () => {
     const rows = regionElement('rows');
     const hyper = new Hyper(testApplication(), { process: () => undefined, config: { defaultTimeout: 60000 }, parseInterval: Number, swap: async () => undefined }, {
       basePath: '',
+      document: new FakeDocument(),
       storage,
       element: (id) => (id === 'rows' ? (rows as unknown as Element) : ({ id } as unknown as Element)),
     });
@@ -598,7 +615,7 @@ describe('swaps, storage order and client-side documents', () => {
       },
     };
     const storage = new FakeStorage();
-    const hyper = new Hyper(testApplication(), htmx, { basePath: '', element: (id) => ({ id } as unknown as Element), storage, currentUrl: () => 'http://localhost/' });
+    const hyper = new Hyper(testApplication(), htmx, { basePath: '', element: (id) => ({ id } as unknown as Element), storage, document: new FakeDocument(), currentUrl: () => 'http://localhost/' });
     await request(hyper, '/list', 'http://localhost/list', listJson);
     const change = hyper.set('rows', 'items.0.open', false);
     await new Promise((done) => setTimeout(done, 0));
@@ -706,5 +723,125 @@ describe('extension', () => {
     await vi.waitFor(() => expect(page.mounted).toHaveLength(1));
     expect(requested).toEqual(['/api/items/7']);
     expect(page.mounted[0]).toContain('<i>7</i>');
+  });
+});
+
+describe('stylesheet links (HY-64)', () => {
+  const itemJson = '{"env":{"timezone":"Z"},"route":"item","params":{"id":"7"},"shared":{"title":"T","csrf":"t"},"regions":{"side":{"count":1},"content":{"id":"7"}},"kept":{}}';
+  const htmx = { process: () => undefined, config: { defaultTimeout: 60000 }, parseInterval: Number, swap: async () => undefined };
+  const client = (page: FakeDocument, fetch: typeof globalThis.fetch) => new Hyper(testApplication(), htmx, { basePath: '/api', storage: new FakeStorage(), document: page, fetch });
+  // A promise with its resolve and reject functions.
+  const deferred = () => {
+    let resolve!: () => void;
+    let reject!: (error: unknown) => void;
+    const promise = new Promise<void>((done, fail) => { resolve = done; reject = fail; });
+    return { promise, resolve, reject };
+  };
+
+  it('applies the links of a client-rendered document before it mounts the document and removes the others after', async () => {
+    const page = new FakeDocument();
+    await client(page, async () => jsonResponse('', itemJson)).renderLocation('/items/7');
+    expect(page.events).toEqual(['stylesheets', 'mount', 'settle']);
+    expect(page.sources).toEqual(page.mounted);
+  });
+
+  it('marks the body and mounts nothing when a link of a client-rendered document fails to load', async () => {
+    const page = new FakeDocument();
+    page.load = async () => { throw new StylesheetError('http://localhost/a.css'); };
+    const hyper = client(page, async () => jsonResponse('', itemJson));
+    await hyper.renderLocation('/items/7');
+    expect(page.mounted).toEqual(['fail:0']);
+    expect(hyper.data('content')).toBeUndefined();
+  });
+
+  it('mounts only the latest client-rendered document when an earlier one still waits for its links', async () => {
+    const page = new FakeDocument();
+    const held = deferred();
+    page.load = (html) => (html.includes('<i>7</i>') ? held.promise : Promise.resolve());
+    const hyper = client(page, async (input) => jsonResponse('', String(input).includes('/items/') ? itemJson : listJson.replace('"regions":{', '"regions":{"side":{"count":1},')));
+    const first = hyper.renderLocation('/items/7');
+    await vi.waitFor(() => expect(page.sources).toHaveLength(1));
+    await hyper.renderLocation('/list');
+    held.resolve();
+    await first;
+    expect(page.mounted).toHaveLength(1);
+    expect(page.mounted[0]).toContain('<h1>H</h1>');
+    expect(page.events).toEqual(['stylesheets', 'stylesheets', 'mount', 'settle']);
+  });
+
+  it('applies the links of the layout of a region response before htmx receives the response', async () => {
+    const page = new FakeDocument();
+    const held = deferred();
+    page.load = () => held.promise;
+    const { hyper } = setup('', [], new FakeStorage(), page);
+    const extension = hyper.extension();
+    const ctx = context('/items/7');
+    extension.htmx_config_request(null, { ctx });
+    extension.htmx_before_request(null, { ctx });
+    vi.stubGlobal('fetch', async () => jsonResponse('http://localhost/items/7', itemJson));
+    let received = false;
+    const fetching = ctx.fetch!(ctx.request.action, {}).then((response) => { received = true; return response; });
+    await vi.waitFor(() => expect(page.sources).toHaveLength(1));
+    // The layout with the shared data, the title rendered alone and empty definitions of data and every region.
+    expect(page.sources[0]).toBe('<title>T - Site</title>\n<aside id="side"></aside>\n<main id="content"></main>\n');
+    await new Promise((done) => setTimeout(done, 0));
+    expect(received).toBe(false);
+    held.resolve();
+    const response = await fetching;
+    ctx.response = { raw: { url: response.url }, headers: response.headers };
+    ctx.text = await response.text();
+    extension.htmx_after_request(null, { ctx });
+    expect(page.events).toEqual(['stylesheets']);
+    extension.htmx_after_swap(null, { ctx });
+    expect(page.events).toEqual(['stylesheets', 'settle']);
+  });
+
+  it('fails a region request and marks the region when a link of its layout fails to load', async () => {
+    const page = new FakeDocument();
+    page.load = async () => { throw new StylesheetError('http://localhost/a.css'); };
+    const { hyper } = setup('', [], new FakeStorage(), page);
+    const extension = hyper.extension();
+    const target = regionElement('content');
+    const ctx = context('/items/7', target);
+    extension.htmx_config_request(null, { ctx });
+    extension.htmx_before_request(null, { ctx });
+    vi.stubGlobal('fetch', async () => jsonResponse('http://localhost/items/7', itemJson));
+    const error = await ctx.fetch!(ctx.request.action, {}).catch((failure: unknown) => failure);
+    expect(error).toBeInstanceOf(StylesheetError);
+    extension.htmx_error(null, { ctx, error });
+    expect(target.attributes.get('hy-error')).toBe('0');
+  });
+
+  it('applies the links of the document of a history restoration in server-side rendering', async () => {
+    const page = new FakeDocument();
+    const { hyper } = setup('', [], new FakeStorage(), page);
+    const extension = hyper.extension();
+    const ctx = context('/items/7', regionElement(''));
+    ctx.request.headers['HX-History-Restore-Request'] = 'true';
+    extension.htmx_config_request(null, { ctx });
+    extension.htmx_before_request(null, { ctx });
+    const html = '<html><head><link rel="stylesheet" href="/a.css"></head><body></body></html>';
+    vi.stubGlobal('fetch', async () => new Response(html, { headers: { 'content-type': 'text/html; charset=utf-8' } }));
+    const response = await ctx.fetch!(ctx.request.action, {});
+    expect(await response.text()).toBe(html);
+    expect(page.sources).toEqual([html]);
+    extension.htmx_after_swap(null, { ctx });
+    expect(page.events).toEqual(['stylesheets', 'settle']);
+  });
+
+  it('marks the body when a link of a history restoration in server-side rendering fails to load', async () => {
+    const page = new FakeDocument();
+    page.load = async () => { throw new StylesheetError('http://localhost/a.css'); };
+    const { hyper } = setup('', [], new FakeStorage(), page);
+    const extension = hyper.extension();
+    const body = regionElement('');
+    const ctx = context('/items/7', body);
+    ctx.request.headers['HX-History-Restore-Request'] = 'true';
+    extension.htmx_config_request(null, { ctx });
+    extension.htmx_before_request(null, { ctx });
+    vi.stubGlobal('fetch', async () => new Response('<html><head></head><body></body></html>', { headers: { 'content-type': 'text/html' } }));
+    const error = await ctx.fetch!(ctx.request.action, {}).catch((failure: unknown) => failure);
+    extension.htmx_error(null, { ctx, error });
+    expect(body.attributes.get('hy-error')).toBe('0');
   });
 });
