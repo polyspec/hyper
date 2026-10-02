@@ -218,6 +218,7 @@
   - 템플릿마다 AST 파일 하나. 파일 이름에는 내용의 해시가 들어간다.
   - 색인. 각 템플릿 이름을 파일 URL과, 그 템플릿의 include 태그와 block 태그가 경로로 참조하는 템플릿 이름 목록에 대응시킨다. 색인은 `hyper/data.tpl`도 담는다.
 - **HY-68** asset build와 server build는 출력으로 복사하는 모든 파일을 mode 0644로, 모든 디렉터리를 mode 0755로 만들고 원본 파일의 바이트를 쓴다. 소유자가 읽을 수 없는 mode로 파일을 만들지 않는다. Linux container(Apple `container`)의 virtiofs bind mount는 그런 생성을 `EACCES`로 거부하고, Node의 `fs.cpSync`는 대상 파일을 mode 0200으로 만들기 때문이다. `tests/scripts/output-files.test.mjs`는 출력이 virtiofs bind mount에 있는 container에서 두 복사를 실행한다.
+- **HY-70** asset build, template build, server build는 옵션 `--template-dir`가 가리키는 template 저장소에서 template 언어를 읽는다. parser, render runtime, manifest 검사 bundle은 그 저장소의 `packages/template-ts/package.json`의 `exports`가 `import` 조건으로 가리키는 module을 쓰고, server build는 `tools/compiler`의 compiler도 쓴다. asset build는 애플리케이션이 설치한 template package와 상관없이 client bundle의 `@polyspec/template`도 같은 package로 resolve한다. 어떤 build도 이 저장소의 의존성에서 `@polyspec/template`을 resolve하지 않는다. 따라서 호출자는 자신이 고른 template package로 build하고, 이 저장소 옆의 template checkout을 다시 build해도 다른 template 저장소를 가리킨 build의 결과는 바뀌지 않는다. `--template-dir`가 없는 build는 출력을 쓰기 전에 실패한다. `tests/scripts/template-dir.test.mjs`는 template package의 사본으로 build한다.
 - **HY-35** 브라우저는 렌더하기 전에 라우트에 필요한 템플릿을 불러온다. 레이아웃, 제목, `hyper/data.tpl`, 페이지가 아닌 모든 영역 템플릿, 라우트 템플릿, 모든 라우트 영역 템플릿, 그리고 이들이 참조하는 모든 템플릿(전이적으로)이다.
   - 영역 요청이면 불러오기를 요청과 함께 시작해 동시에 진행한다.
   - 응답 URL이 다른 라우트로 라우팅되면(예: 리다이렉트 뒤) 렌더하기 전에 그 라우트의 템플릿을 불러온다.

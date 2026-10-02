@@ -10,17 +10,21 @@
 //                                                .css file directly in public/assets, which rendered
 //                                                layouts link (HY-64)
 //
-// Usage: node scripts/build-assets.mjs --app examples/board --api /api
+// The template ASTs, the manifest check and the template render runtime of the bundle come from the template package
+// of the template repository --template-dir, whatever template package the application installed (HY-70).
+//
+// Usage: node scripts/build-assets.mjs --app examples/board --api /api --template-dir ../template
 
 import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseArgs } from 'node:util';
 import { build } from 'esbuild';
 import { copyDirectory, copyFile } from './output-files.mjs';
-import { loadPackage, sha256, writeTemplateFiles } from './template-files.mjs';
+import { loadPackage, sha256, templatePlugin, writeTemplateFiles } from './template-files.mjs';
 
-const { values } = parseArgs({ options: { app: { type: 'string' }, api: { type: 'string' } } });
-if (!values.app || !values.api) throw new Error('--app and --api are required');
+const { values } = parseArgs({ options: { app: { type: 'string' }, api: { type: 'string' }, 'template-dir': { type: 'string' } } });
+if (!values.app || !values.api || !values['template-dir']) throw new Error('--app, --api and --template-dir are required');
+const templateDir = values['template-dir'];
 const app = values.app;
 const templatesDir = join(app, 'templates');
 const buildDir = join(app, 'build');
@@ -28,8 +32,8 @@ const assetsDir = join(app, 'public', 'assets');
 const templateFilesDir = join(assetsDir, 'templates');
 const csrDir = join(app, 'dist', 'csr');
 // The browser does not check the manifest that the bundle contains, so the build checks it before it writes anything (HY-2).
-(await loadPackage()).checkManifest(JSON.parse(readFileSync(join(app, 'app', 'app.json'), 'utf8')));
-const index = await writeTemplateFiles({ templates: templatesDir, output: templateFilesDir, urlPrefix: '/assets/templates' });
+(await loadPackage(templateDir)).checkManifest(JSON.parse(readFileSync(join(app, 'app', 'app.json'), 'utf8')));
+const index = await writeTemplateFiles({ templates: templatesDir, output: templateFilesDir, urlPrefix: '/assets/templates', templateDir });
 mkdirSync(buildDir, { recursive: true });
 writeFileSync(join(buildDir, 'templates.index.json'), `${JSON.stringify(index, null, 2)}\n`);
 
@@ -42,6 +46,7 @@ const bundle = await build({
   target: 'es2022',
   write: false,
   logLevel: 'error',
+  plugins: [templatePlugin(templateDir)],
 });
 const code = Buffer.from(bundle.outputFiles[0].contents).toString('utf8');
 if (/<\/script/i.test(code)) throw new Error('the client bundle contains </script and cannot be inlined');

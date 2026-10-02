@@ -52,10 +52,10 @@ node-server: assets ## Build the board Node server into examples/board/build/nod
 	npx esbuild $(BOARD)/node/main.ts --bundle --platform=node --format=esm --target=node26 --log-level=warning --outfile=$(BOARD)/build/node/server.mjs
 
 node-fixtures: template ## Build the template files of the PHP test fixtures for the Node server tests
-	node scripts/build-templates.mjs --templates $(FIXTURES)/templates --output $(NODE_PACKAGE)/tests/build
+	node scripts/build-templates.mjs --templates $(FIXTURES)/templates --output $(NODE_PACKAGE)/tests/build --template-dir $(TEMPLATE_DIR)
 
 assets: packages ## Build the board client bundle (SSR) and the single-file static shell (CSR)
-	node scripts/build-assets.mjs --app $(BOARD) --api /api
+	node scripts/build-assets.mjs --app $(BOARD) --api /api --template-dir $(TEMPLATE_DIR)
 
 test-js: template ## Run the browser code tests, including the router conformance cases, and the type check
 	cd $(JS_PACKAGE) && npx vitest run && npx tsc --noEmit -p tsconfig.json

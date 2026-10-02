@@ -3,19 +3,36 @@
 
 import { createHash } from 'node:crypto';
 import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { join, relative, sep } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join, relative, resolve, sep } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { build } from 'esbuild';
-import { parse } from '@polyspec/template';
 
 // The browser package in this repository. The scripts read its source, not its build output, from any working directory.
 const browserPackage = fileURLToPath(new URL('../packages/hyper-js/', import.meta.url));
 
-// Parses every template of a directory and the reserved template hyper/data.tpl, writes each AST to
-// <output>/<name>.<hash>.json and returns the index: template name -> { url: <urlPrefix>/<file>, deps }.
-export async function writeTemplateFiles({ templates, output, urlPrefix }) {
+// The file of an export of the template package `packages/template-ts` of a template repository, by the `import`
+// condition of the `exports` of its package.json, such as `.` or `./render` (HY-70).
+export function templateExport(templateDir, subpath) {
+  if (typeof templateDir !== 'string' || templateDir === '') throw new Error('--template-dir is required');
+  const directory = resolve(templateDir, 'packages', 'template-ts');
+  const target = JSON.parse(readFileSync(join(directory, 'package.json'), 'utf8')).exports?.[subpath];
+  const file = typeof target === 'string' ? target : target?.import;
+  if (typeof file !== 'string') throw new Error(`${directory}/package.json exports no module for ${subpath}`);
+  return join(directory, file);
+}
+
+// The parser of the template package of a template repository (HY-70).
+async function loadParser(templateDir) {
+  return (await import(pathToFileURL(templateExport(templateDir, '.')).href)).parse;
+}
+
+// Parses every template of a directory and the reserved template hyper/data.tpl with the template package of the
+// template repository templateDir, writes each AST to <output>/<name>.<hash>.json and returns the index: template
+// name -> { url: <urlPrefix>/<file>, deps }.
+export async function writeTemplateFiles({ templates, output, urlPrefix, templateDir }) {
+  const parse = await loadParser(templateDir);
   const dataTemplate = JSON.parse(readFileSync(join(browserPackage, 'data-template.json'), 'utf8'));
-  const { templateReferences } = await loadPackage();
+  const { templateReferences } = await loadPackage(templateDir);
   const sources = { [dataTemplate.name]: dataTemplate.source };
   for (const file of listFiles(templates).filter((name) => name.endsWith('.tpl')).sort()) {
     sources[relative(templates, file).split(sep).join('/')] = readFileSync(file, 'utf8');
@@ -33,9 +50,22 @@ export async function writeTemplateFiles({ templates, output, urlPrefix }) {
   return index;
 }
 
-// Bundles checkManifest and templateReferences from the source of the hyper browser package; the result names its
-// input files.
-export async function bundlePackage() {
+// The esbuild plugin that resolves `@polyspec/template` and its subpaths to the template package of the template
+// repository templateDir (HY-70).
+export function templatePlugin(templateDir) {
+  templateExport(templateDir, '.');
+  return {
+    name: 'template-package',
+    setup(builder) {
+      builder.onResolve({ filter: /^@polyspec\/template(\/.*)?$/ }, (args) => ({ path: templateExport(templateDir, `.${args.path.slice('@polyspec/template'.length)}`) }));
+    },
+  };
+}
+
+// Bundles checkManifest and templateReferences from the source of the hyper browser package with the template package
+// of the template repository templateDir (HY-70); the result names its input files.
+export async function bundlePackage(templateDir) {
+  const templatePackage = templatePlugin(templateDir);
   return build({
     stdin: { contents: "export { checkManifest, templateReferences } from './src/index.ts';", resolveDir: browserPackage, sourcefile: 'build-entry.ts', loader: 'ts' },
     bundle: true,
@@ -44,12 +74,13 @@ export async function bundlePackage() {
     write: false,
     metafile: true,
     logLevel: 'error',
+    plugins: [templatePackage],
   });
 }
 
-// Loads checkManifest and templateReferences from the hyper browser package (HY-2, HY-34).
-export async function loadPackage() {
-  const result = await bundlePackage();
+// Loads checkManifest and templateReferences from the hyper browser package (HY-2, HY-34, HY-70).
+export async function loadPackage(templateDir) {
+  const result = await bundlePackage(templateDir);
   return import(`data:text/javascript;base64,${Buffer.from(result.outputFiles[0].contents).toString('base64')}`);
 }
 
