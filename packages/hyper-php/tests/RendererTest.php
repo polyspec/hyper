@@ -39,4 +39,32 @@ final class RendererTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         Renderer::open(__DIR__ . '/fixtures', 'Z');
     }
+
+    public function testNamesTheFirstMissingFileOfAProgram(): void
+    {
+        // HY-48: a missing build names the missing file when the application opens.
+        $root = sys_get_temp_dir() . '/hyper-renderer-' . bin2hex(random_bytes(6));
+        $files = ['program.php', 'program.json', 'templates'];
+        try {
+            foreach ($files as $missing) {
+                $program = "{$root}/without-" . strtr($missing, '.', '-');
+                mkdir($program, 0o700, true);
+                foreach ($files as $file) {
+                    if ($file === 'templates' && $missing !== 'templates') {
+                        mkdir("{$program}/templates");
+                    } elseif ($file !== 'templates' && $file !== $missing) {
+                        file_put_contents("{$program}/{$file}", '');
+                    }
+                }
+                try {
+                    Renderer::open($program, 'Z');
+                    self::fail("opened a program without {$missing}");
+                } catch (\InvalidArgumentException $error) {
+                    self::assertStringContainsString("{$program}/{$missing}", $error->getMessage());
+                }
+            }
+        } finally {
+            exec('rm -rf ' . escapeshellarg($root));
+        }
+    }
 }

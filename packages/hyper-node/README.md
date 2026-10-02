@@ -56,6 +56,7 @@ app.bind('posts', () => new Posts('/srv/board/var/board.db'));
 | `https` | Declares HTTPS, for example behind a TLS-terminating proxy; cookies are then `Secure` (HY-45). |
 | `frameAncestors` | The sources of `frame-ancestors`; the default is `'self'` (HY-45). |
 | `bodyLimit` | The largest request body in bytes; a larger body receives 413. The default is 8 MiB (HY-59). |
+| `responseLimit` | The largest response body in bytes; a larger body is not sent, and the request receives a plain 500. The default is 8 MiB (HY-66). |
 | `formTypes` | The media types of the request bodies that actions and `/_hyper/keep` accept: `application/x-www-form-urlencoded` and `multipart/form-data`; another type receives 415. The default is `['application/x-www-form-urlencoded']` (HY-59). |
 | `onResponse` | Called once for every response with the request, the response, the elapsed milliseconds and the reply of the request, also for the responses that hyper answers itself; the request is null only when `node:http` could not read the request line, and the reply is empty when the server answered before routing (HY-60). |
 | `log` | Receives the log line of an unhandled error (HY-43); the default writes to the standard error. |

@@ -26,6 +26,7 @@ final class App
         private readonly bool $https,
         private readonly string $frameAncestors,
         private readonly int $bodyLimit,
+        private readonly int $responseLimit,
         /** @var list<string> */
         private readonly array $formTypes,
         private readonly ?\Closure $onResponse,
@@ -43,7 +44,8 @@ final class App
      * its templates (HY-48) and the handlers that load data and run actions.
      *
      * The body limit is the largest request body in bytes, and the form types are the media types of the request
-     * bodies that actions and `/_hyper/keep` accept (HY-59).
+     * bodies that actions and `/_hyper/keep` accept (HY-59). The response limit is the largest response body in
+     * bytes that the server sends (HY-66).
      *
      * @param array{shared?: \Closure, regions?: array<string, \Closure>, routes?: array<string, array{load?: \Closure, post?: \Closure, regions?: array<string, \Closure>}>} $handlers
      * @param list<string> $formTypes `application/x-www-form-urlencoded` and `multipart/form-data`
@@ -63,11 +65,15 @@ final class App
         string $frameAncestors = "'self'",
         int $bodyLimit = 8 * 1024 * 1024,
         array $formTypes = ['application/x-www-form-urlencoded'],
+        int $responseLimit = 8 * 1024 * 1024,
         ?\Closure $onResponse = null,
         ?ClientRendering $clientRendering = null,
     ): self {
         if ($bodyLimit < 1) {
             throw new \InvalidArgumentException("body limit {$bodyLimit} is not a positive number of bytes");
+        }
+        if ($responseLimit < 1) {
+            throw new \InvalidArgumentException("response limit {$responseLimit} is not a positive number of bytes");
         }
         if ($formTypes === [] || array_values(array_unique($formTypes)) !== $formTypes || array_diff($formTypes, ['application/x-www-form-urlencoded', 'multipart/form-data']) !== []) {
             throw new \InvalidArgumentException('form types must be distinct values of application/x-www-form-urlencoded and multipart/form-data');
@@ -107,7 +113,7 @@ final class App
 
         $shell = $clientRendering === null ? '' : self::shell($clientRendering, $declared);
 
-        return new self($declared, $handlers['shared'] ?? null, $regionLoaders, $routeHandlers, $timezone, $basePath, $https, $frameAncestors, $bodyLimit, array_values($formTypes), $onResponse, $clientRendering, $shell, $program);
+        return new self($declared, $handlers['shared'] ?? null, $regionLoaders, $routeHandlers, $timezone, $basePath, $https, $frameAncestors, $bodyLimit, $responseLimit, array_values($formTypes), $onResponse, $clientRendering, $shell, $program);
     }
 
     /** Reads the static shell after checking the declaration of the client rendering against the manifest (HY-62). */
@@ -140,9 +146,10 @@ final class App
     }
 
     /**
-     * Answers one request; an unhandled exception gives a plain 500 and is logged (HY-43). Every response limits
-     * framing (HY-45) and is reported to onResponse with the milliseconds since `$started`, a microtime(true)
-     * value that defaults to now (HY-60).
+     * Answers one request; an unhandled exception and a body larger than the response limit give a plain 500 and
+     * are logged (HY-43, HY-66). Every response limits framing (HY-45), every failure is not cacheable (HY-65), and
+     * every response is reported to onResponse with the milliseconds since `$started`, a microtime(true) value that
+     * defaults to now (HY-60).
      */
     public function handle(Request $request, SessionStore $store, ?float $started = null): Response
     {
@@ -154,8 +161,16 @@ final class App
             error_log(sprintf('hyper: %s: %s in %s:%d', $error::class, $error->getMessage(), $error->getFile(), $error->getLine()));
             $response = Response::text(500, 'Internal Server Error');
         }
+        $size = strlen($response->body);
+        if ($size > $this->responseLimit) {
+            error_log("hyper: the response to {$request->method} {$request->path} has {$size} bytes, more than the response limit of {$this->responseLimit} bytes");
+            $response = Response::text(500, 'Internal Server Error');
+        }
 
         $response = $response->withHeader('Content-Security-Policy', "frame-ancestors {$this->frameAncestors}");
+        if ($response->status >= 400) {
+            $response = $response->withHeader('Cache-Control', 'no-store');
+        }
         if ($this->onResponse !== null) {
             ($this->onResponse)($request, $response, (microtime(true) - $started) * 1000, $reply);
         }

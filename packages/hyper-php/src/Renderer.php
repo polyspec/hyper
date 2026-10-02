@@ -21,8 +21,11 @@ final class Renderer
     /** Opens the program that `scripts/build-server.mjs` wrote to a directory. */
     public static function open(string $program, string $timezone): self
     {
-        if (!is_file("{$program}/program.php") || !is_file("{$program}/program.json") || !is_dir("{$program}/templates")) {
-            throw new \InvalidArgumentException("{$program} is not a server program built by scripts/build-server.mjs");
+        // A missing build fails here and names the missing file (HY-48).
+        foreach (["{$program}/program.php" => is_file(...), "{$program}/program.json" => is_file(...), "{$program}/templates" => is_dir(...)] as $path => $exists) {
+            if (!$exists($path)) {
+                throw new \InvalidArgumentException("{$path} of the server program {$program} is missing; scripts/build-server.mjs builds it");
+            }
         }
         if (extension_loaded('polyspec_template')) {
             return new self(new NativeEngine("{$program}/templates"), 'native', $timezone);

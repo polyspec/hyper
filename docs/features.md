@@ -4,7 +4,7 @@
 
 | ID | Feature | Status | Evidence |
 |---|---|---|---|
-| protocol | Region protocol specification (HY-1 to HY-64) | implemented | [Protocol](spec/protocol.md) |
+| protocol | Region protocol specification (HY-1 to HY-66) | implemented | [Protocol](spec/protocol.md) |
 | composition | Screen composition rules (HC-1 to HC-7) and the template check for HC-6 | implemented | [Composition](spec/composition.md), `make templates-check` |
 | manifest | Application manifest read by PHP and the browser | implemented | `make test-php`, `make test-js` |
 | router | PHP and browser routers with shared conformance cases | implemented | `make test-php`, `make test-js` |
@@ -12,6 +12,8 @@
 | stop-results | Redirect and forbidden results of loaders and actions (HY-50, HY-51) | implemented | `make test-php` |
 | page-statuses | Bad request stops of loaders and actions, and action results that render the page with 200, 409 or 422 (HY-58) | implemented | `make test-php`, `make test-node` |
 | body-checks | Body limit and accepted form types of the application, checked as 413, 415 and then the CSRF 403 (HY-59) | implemented | `make test-php`, `make test-node`, `make server-parity` |
+| failure-cache | `Cache-Control: no-store` on every response with a status of 400 or more (HY-65) | implemented | `make test-php`, `make test-node` |
+| response-limit | Response limit of the application: a larger body is not sent and the request receives a plain 500 (HY-66) | implemented | `make test-php`, `make test-node` |
 | response-hook | A response hook called once for every response with the request, the response, the elapsed time and the reply of the request with its notes (HY-60) | implemented | `make test-php`, `make test-node` |
 | client-shell | One server answers client-rendered pages with the static shell and JSON under a data base path, and server-rendered pages without it, by a selection of each request; the browser gives the `html` element the attributes of the rendered layout (HY-62, HY-63) | implemented | `make test-php`, `make test-node`, `make test-js`, `make e2e` |
 | stylesheet-links | The browser applies the stylesheet links of the head of a client-rendered document, of the layout of a region response and of a history restoration document: it keeps present links, loads missing links before it shows the content and then removes the others (HY-64) | implemented | `make test-js`, `make e2e` |

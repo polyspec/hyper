@@ -670,7 +670,80 @@ final class AppTest extends TestCase
         self::assertSame([
             [403, ['refusal' => 'private']], [403, ['refusal' => 'closed', 'kind' => 'closed']], [500, ['stage' => 'load']], [200, []], [404, []], [400, []],
         ], $reports);
-        self::assertSame(['Content-Type' => 'text/plain; charset=utf-8', 'Content-Security-Policy' => "frame-ancestors 'self'"], $forbidden->headers);
+        self::assertSame(['Content-Type' => 'text/plain; charset=utf-8', 'Content-Security-Policy' => "frame-ancestors 'self'", 'Cache-Control' => 'no-store'], $forbidden->headers);
+    }
+
+    public function testEveryFailureIsNotCacheable(): void
+    {
+        // HY-65: every response with a status of 400 or more has Cache-Control: no-store.
+        $token = $this->token();
+        $form = ['Content-Type' => 'application/x-www-form-urlencoded'];
+        $logged = ini_set('error_log', '/dev/null');
+        try {
+            $responses = [
+                $this->app()->handle(new Request('GET', '/', [], 'q=%FF'), $this->session),
+                $this->get('/items/unreadable', self::JSON),
+                $this->send('POST', '/add', $form, '_csrf=wrong', []),
+                $this->get('/items/private'),
+                $this->get('/missing'),
+                $this->get('/items/missing', self::JSON),
+                $this->send('PUT', '/', [], '', []),
+                $this->send('POST', '/add', $form, str_repeat('a', 65), ['bodyLimit' => 64]),
+                $this->send('POST', '/add', ['Content-Type' => 'text/plain'], '', []),
+                $this->post('/_hyper/keep', ['_csrf' => $token, 'region' => 'side', 'path' => 'x', 'value' => '1']),
+                $this->get('/items/broken'),
+                $this->post('/add', ['_csrf' => $token, 'name' => 'taken'], self::JSON),
+                $this->post('/add', ['_csrf' => $token, 'name' => ''], self::JSON),
+            ];
+        } finally {
+            ini_set('error_log', (string) $logged);
+        }
+        self::assertSame([400, 400, 403, 403, 404, 404, 405, 413, 415, 400, 500, 409, 422], array_map(fn (Response $response): int => $response->status, $responses));
+        foreach ($responses as $response) {
+            self::assertSame('no-store', $response->headers['Cache-Control'] ?? null, (string) $response->status);
+        }
+        self::assertSame('public, max-age=60', $this->get('/items/member')->headers['Cache-Control']);
+    }
+
+    public function testAResponseLargerThanTheLimitIsNotSent(): void
+    {
+        // HY-66: the server logs the size, answers a plain 500 that no cache stores and reports it to the hook.
+        $reports = [];
+        $options = [
+            'responseLimit' => 64,
+            'onResponse' => function (Request $request, Response $response, float $elapsed, Reply $reply) use (&$reports): void {
+                $reports[] = [$response->status, $reply->notes()];
+            },
+        ];
+        $log = tempnam(sys_get_temp_dir(), 'hyper-log-');
+        $logged = ini_set('error_log', $log);
+        try {
+            $document = $this->send('GET', '/', [], '', $options);
+            $json = $this->send('GET', '/items/7', self::JSON, '', $options);
+            $small = $this->send('GET', '/', [], '', ['responseLimit' => 1 << 20]);
+        } finally {
+            ini_set('error_log', (string) $logged);
+        }
+        $lines = (string) file_get_contents($log);
+        unlink($log);
+        foreach ([$document, $json] as $response) {
+            self::assertSame(500, $response->status);
+            self::assertSame('Internal Server Error', $response->body);
+            self::assertSame('no-store', $response->headers['Cache-Control']);
+            self::assertSame('text/plain; charset=utf-8', $response->headers['Content-Type']);
+        }
+        self::assertSame(200, $small->status);
+        self::assertMatchesRegularExpression('/hyper: the response to GET \/ has \d+ bytes, more than the response limit of 64 bytes/', $lines);
+        self::assertMatchesRegularExpression('/hyper: the response to GET \/items\/7 has \d+ bytes, more than the response limit of 64 bytes/', $lines);
+        self::assertSame([[500, []], [500, []]], $reports);
+        foreach ([0, -1] as $limit) {
+            try {
+                $this->app('', ['responseLimit' => $limit]);
+                self::fail("accepted the response limit {$limit}");
+            } catch (\InvalidArgumentException) {
+                self::addToAssertionCount(1);
+            }
+        }
     }
 
     public function testBadRequestLoaderAndActionAnswerWith400(): void

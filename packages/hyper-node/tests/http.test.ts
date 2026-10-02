@@ -77,6 +77,8 @@ describe('App.server', () => {
     expect(response.startsWith('HTTP/1.1 400 Bad Request\r\n')).toBe(true);
     expect(response).toContain("Content-Security-Policy: frame-ancestors 'self'\r\n");
     expect(response).toContain('Content-Type: text/plain; charset=utf-8\r\n');
+    // HY-65: no cache stores the failure.
+    expect(response).toContain('Cache-Control: no-store\r\n');
     expect(response.endsWith('\r\n\r\nBad Request')).toBe(true);
     // HY-60: the response that node:http does not give to the application is reported with its request line.
     expect(reports.map((report) => report.slice(0, 2))).toEqual([[`GET /items/${Buffer.from('한').toString('latin1')}`, 400]]);
@@ -93,6 +95,7 @@ describe('App.server', () => {
     expect(response.status).toBe(413);
     expect(await response.text()).toBe('Content Too Large');
     expect(response.headers.get('content-security-policy')).toBe("frame-ancestors 'self'");
+    expect(response.headers.get('cache-control')).toBe('no-store');
     // A body without Content-Length is counted while it is read.
     const chunked = await raw(Buffer.from('POST /add HTTP/1.1\r\nHost: x\r\nConnection: close\r\nTransfer-Encoding: chunked\r\nContent-Type: text/plain\r\n\r\n8\r\n12345678\r\n8\r\n12345678\r\n0\r\n\r\n'));
     expect(chunked.startsWith('HTTP/1.1 413 ')).toBe(true);
@@ -134,5 +137,13 @@ describe('App.server', () => {
     const response = await fetch(`${base}/items/broken`);
     expect(response.status).toBe(500);
     expect(await response.text()).toBe('Internal Server Error');
+    expect(response.headers.get('cache-control')).toBe('no-store');
+  });
+
+  it('answers a request with headers larger than node:http accepts with a 431 that no cache stores (HY-65)', async () => {
+    await start();
+    const response = await raw(Buffer.from(`GET / HTTP/1.1\r\nHost: x\r\nX-Large: ${'a'.repeat(20000)}\r\nConnection: close\r\n\r\n`));
+    expect(response.startsWith('HTTP/1.1 431 ')).toBe(true);
+    expect(response).toContain('Cache-Control: no-store\r\n');
   });
 });
