@@ -59,6 +59,7 @@ app.bind('posts', () => new Posts('/srv/board/var/board.db'));
 | `responseLimit` | 가장 큰 응답 body의 바이트 수. 더 큰 body는 보내지 않고, 요청은 텍스트 500을 받는다. 기본값은 8 MiB다(HY-66). |
 | `formTypes` | action과 `/_hyper/keep`이 받는 요청 body의 media type. `application/x-www-form-urlencoded`와 `multipart/form-data`이며, 다른 type은 415를 받는다. 기본값은 `['application/x-www-form-urlencoded']`다(HY-59). |
 | `onResponse` | hyper가 스스로 응답하는 것을 포함해 모든 응답마다 요청, 응답, 경과 밀리초, 요청의 reply로 한 번 호출한다. 요청은 `node:http`가 request line을 읽지 못한 경우에만 null이고, 서버가 라우팅 전에 응답했으면 reply는 비어 있다(HY-60). |
+| `onDisconnect` | 서버가 응답을 쓰기 전에 client가 연결을 닫은 요청의 요청, 경과 밀리초, reply로 한 번 호출한다. 서버는 그 요청의 다른 loader, action, 렌더를 실행하지 않고 응답을 쓰지 않는다(HY-67). |
 | `log` | 처리하지 않은 오류의 log 줄을 받는다(HY-43). 기본값은 표준 오류에 쓴다. |
 | `clientRendering` | 클라이언트 렌더 페이지. `shell`은 정적 셸의 절대 경로, `basePath`는 `/_props` 같은 데이터 기본 경로, `selects(request)`는 클라이언트 렌더 페이지의 요청이면 `true`를 반환하거나, 서버가 기다리는 `true` 또는 `false`의 promise를 반환한다. 선택이 고른 페이지의 HTML 요청은 `Cache-Control: no-cache`와 함께 셸을 받고, 그 JSON 요청과 action은 데이터 기본 경로를 쓴다. 다른 요청은 `basePath`로 응답한다(HY-62). |
 

@@ -24,6 +24,17 @@ export interface PageInput<S extends object> {
   invalid: Data;
   // The base path of the request: the data base path for a client-rendered request (HY-8, HY-62).
   basePath: string;
+  // Aborted when the client closed the connection (HY-67).
+  signal?: AbortSignal | undefined;
+}
+
+// Stops a request whose client closed the connection (HY-67).
+export class Disconnected extends Error {}
+
+// Throws Disconnected when the client of a request closed the connection, so that no further loader, action or
+// rendering runs (HY-67).
+export function stopClosed(signal: AbortSignal | undefined): void {
+  if (signal?.aborted === true) throw new Disconnected('hyper: the client closed the connection');
 }
 
 export interface PageEnvironment<S extends object> {
@@ -42,20 +53,24 @@ export async function renderPage<S extends object>(input: PageInput<S>, environm
   const context = { request, reply, services: environment.services };
   let shared: MapValue = new Map<string, Value>([['title', route.title], ['csrf', request.csrfToken()]]);
   if (handlers.shared !== undefined) shared = replaced(shared, toMap(await handlers.shared(context), 'shared data'));
+  stopClosed(input.signal);
 
   const changed = changedTopics(request, input.flash, input.basePath);
   const data = new Map<string, MapValue>();
   for (const selected of selectRegions(application.manifest, !request.isRegionRequest(), changed)) {
     if (selected.page === true) {
       const loaded = handler.load === undefined ? new Map() : toMap(await handler.load(context), `data of route ${route.name}`);
+      stopClosed(input.signal);
       data.set(selected.name, replaced(loaded, toMap(input.invalid, `invalid data of route ${route.name}`)));
       for (const region of route.regions ?? []) {
         const loader = handler.regions?.[region.name];
         data.set(region.name, loader === undefined ? new Map() : toMap(await loader(context), `data of region ${region.name}`));
+        stopClosed(input.signal);
       }
     } else {
       const loader = handlers.regions?.[selected.name];
       data.set(selected.name, loader === undefined ? new Map() : toMap(await loader(context), `data of region ${selected.name}`));
+      stopClosed(input.signal);
     }
   }
 

@@ -74,4 +74,58 @@ final class RunTest extends TestCase
         self::assertSame(['/missing', 404], array_slice($reports[0], 0, 2));
         self::assertGreaterThanOrEqual(1500.0, $reports[0][2]);
     }
+
+    /** HY-67: PHP ends the script at the first failed write of the response and calls the disconnect hook. */
+    public function testRunCallsTheDisconnectHookWhenTheClientClosedTheConnection(): void
+    {
+        $log = tempnam(sys_get_temp_dir(), 'hyper-disconnect-');
+        $port = self::freePort();
+        // ignore_user_abort is on here, so App::run must turn it off.
+        $server = proc_open([PHP_BINARY, '-d', 'ignore_user_abort=1', '-S', "127.0.0.1:{$port}", __DIR__ . '/Support/disconnect.php'], [0 => ['file', '/dev/null', 'r'], 1 => ['file', '/dev/null', 'w'], 2 => ['pipe', 'w']], $pipes, null, [...getenv(), 'HYPER_DISCONNECT_LOG' => $log]);
+        try {
+            self::waitFor($pipes[2], 'started');
+            $client = stream_socket_client("tcp://127.0.0.1:{$port}");
+            fwrite($client, "GET / HTTP/1.1\r\nHost: x\r\nConnection: close\r\n\r\n");
+            usleep(50_000);
+            fclose($client);
+            self::waitFor($pipes[2], 'Closing');
+        } finally {
+            proc_terminate($server);
+            proc_close($server);
+        }
+        $lines = (string) file_get_contents($log);
+        unlink($log);
+        self::assertSame("response 200\ndisconnect GET / 1 {\"stage\":\"shared\"}\n", $lines);
+    }
+
+    private static function freePort(): int
+    {
+        $socket = stream_socket_server('tcp://127.0.0.1:0');
+        $name = (string) stream_socket_get_name($socket, false);
+        fclose($socket);
+
+        return (int) substr($name, strrpos($name, ':') + 1);
+    }
+
+    /** Reads the standard error of the PHP built-in server until a line contains the text, for at most 5 seconds. */
+    private static function waitFor($stderr, string $text): void
+    {
+        $deadline = microtime(true) + 5.0;
+        $seen = '';
+        while (microtime(true) < $deadline) {
+            $read = [$stderr];
+            $none = null;
+            if (stream_select($read, $none, $none, 0, 200_000) === 1) {
+                $line = fgets($stderr);
+                if ($line === false) {
+                    break;
+                }
+                $seen .= $line;
+                if (str_contains($line, $text)) {
+                    return;
+                }
+            }
+        }
+        self::fail("the server wrote no line with {$text}: {$seen}");
+    }
 }

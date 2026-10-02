@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { FileSessions } from '../src/index.js';
-import { Fixture, FIXTURES } from './support.js';
+import { Fixture, FIXTURES, handlers } from './support.js';
 
 let directory: string;
 let server: Server;
@@ -145,5 +145,43 @@ describe('App.server', () => {
     const response = await raw(Buffer.from(`GET / HTTP/1.1\r\nHost: x\r\nX-Large: ${'a'.repeat(20000)}\r\nConnection: close\r\n\r\n`));
     expect(response.startsWith('HTTP/1.1 431 ')).toBe(true);
     expect(response).toContain('Cache-Control: no-store\r\n');
+  });
+
+  it('stops a request whose client closes the connection and calls the disconnect hook (HY-67)', async () => {
+    const calls: string[] = [];
+    const responses: number[] = [];
+    const disconnects: [string, boolean, Record<string, unknown>][] = [];
+    let closed: () => void = () => undefined;
+    const done = new Promise<void>((resolve) => (closed = resolve));
+    const app = await new Fixture().app({
+      handlers: {
+        ...handlers(),
+        shared: async ({ reply }) => {
+          calls.push('shared');
+          reply.note('stage', 'shared');
+          await new Promise((resolve) => setTimeout(resolve, 300));
+          return {};
+        },
+        regions: { side: () => (calls.push('side'), { count: 0, note: null }) },
+      },
+      onResponse: (_request, response) => responses.push(response.status),
+      onDisconnect: (request, elapsed, reply) => {
+        disconnects.push([`${request.method} ${request.path()}`, elapsed >= 250, Object.fromEntries(reply.notes())]);
+        closed();
+      },
+    });
+    server = app.server(new FileSessions({ directory, name: 'PHPSESSID' }));
+    await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+    const socket = connect((server.address() as AddressInfo).port, '127.0.0.1', () => socket.write('GET / HTTP/1.1\r\nHost: x\r\n\r\n'));
+    setTimeout(() => socket.destroy(), 50);
+    await Promise.race([done, new Promise((resolve) => setTimeout(resolve, 1500))]);
+    expect(disconnects).toEqual([['GET /', true, { stage: 'shared' }]]);
+    expect(calls).toEqual(['shared']);
+    expect(responses).toEqual([]);
+    // A request whose client stays receives its response and calls no disconnect hook.
+    base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+    expect((await fetch(`${base}/`)).status).toBe(200);
+    expect(disconnects.length).toBe(1);
+    expect(responses).toEqual([200]);
   });
 });
