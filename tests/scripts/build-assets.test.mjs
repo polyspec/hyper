@@ -2,11 +2,12 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { test } from 'node:test';
 
 test('rejects an invalid manifest and writes nothing', () => {
   const app = 'tests/scripts/fixtures/invalid-manifest';
-  const result = spawnSync(process.execPath, ['scripts/build-assets.mjs', '--app', app, '--api', '/api'], { encoding: 'utf8' });
+  const result = spawnSync(process.execPath, ['scripts/build-assets.mjs', '--app', app, '--api', '/api', '--template-dir', resolve('..', 'template')], { encoding: 'utf8' });
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /page region/);
   assert.equal(existsSync(`${app}/public`), false);

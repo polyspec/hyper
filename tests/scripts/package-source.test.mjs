@@ -11,7 +11,7 @@ import { bundlePackage } from '../../scripts/template-files.mjs';
 const repository = resolve('.');
 
 test('bundles the browser package from its source', async () => {
-  const inputs = Object.keys((await bundlePackage()).metafile.inputs).map((input) => resolve(input));
+  const inputs = Object.keys((await bundlePackage(resolve('..', 'template'))).metafile.inputs).map((input) => resolve(input));
   assert.deepEqual(inputs.filter((input) => input.startsWith(join(repository, 'packages', 'hyper-js', 'dist'))), []);
   assert.ok(inputs.some((input) => input.startsWith(join(repository, 'packages', 'hyper-js', 'src'))), inputs.join('\n'));
 });
@@ -20,7 +20,8 @@ test('builds the templates and the server program from another working directory
   const output = mkdtempSync(join(tmpdir(), 'hyper-scripts-'));
   try {
     const board = join(repository, 'examples', 'board');
-    const templates = spawnSync(process.execPath, [join(repository, 'scripts', 'build-templates.mjs'), '--templates', join(board, 'templates'), '--output', join(output, 'templates')], { cwd: output, encoding: 'utf8' });
+    const templates = spawnSync(process.execPath, [join(repository, 'scripts', 'build-templates.mjs'), '--templates', join(board, 'templates'), '--output', join(output, 'templates'),
+      '--template-dir', resolve('..', 'template')], { cwd: output, encoding: 'utf8' });
     assert.equal(templates.status, 0, templates.stderr);
     const server = spawnSync(process.execPath, [
       join(repository, 'scripts', 'build-server.mjs'), '--manifest', join(board, 'app', 'app.json'), '--templates', join(board, 'templates'),

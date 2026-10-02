@@ -23,7 +23,7 @@
 | `make package-check` | 두 package를 `npm install --install-links`로 `tests/package-install`에 설치하고, 그 test를 `erasableSyntaxOnly`로 선언에 대해 type 검사한 뒤 `node`로 실행한다(HY-61) |
 | `make server` | 게시판 서버 프로그램을 `examples/board/build/server`에 빌드한다(아래 참조) |
 | `make server-fixtures` | PHP 테스트 픽스처의 서버 프로그램을 빌드한다 |
-| `make node-fixtures` | `scripts/build-templates.mjs`로 Node 서버 test에 쓸 PHP test fixture의 템플릿 파일을 빌드한다 |
+| `make node-fixtures` | `scripts/build-templates.mjs`와 template 저장소 `../template`로 Node 서버 test에 쓸 PHP test fixture의 템플릿 파일을 빌드한다(HY-70) |
 | `make node-server` | board Node 서버를 타입 검사하고 `examples/board/build/node/server.mjs`로 bundle한다(아래 참조) |
 | `make assets` | 게시판 클라이언트 번들과 CSR 셸을 빌드한다(아래 참조) |
 | `make test-js` | 라우터 적합성 사례를 포함한 브라우저 코드 테스트와 타입 검사를 실행한다 |
@@ -64,7 +64,7 @@ BOARD_DB=$PWD/examples/board/var/node.db BOARD_SESSIONS=$PWD/examples/board/var/
 
 ## 에셋 빌드
 
-`scripts/build-assets.mjs --app <디렉터리> --api <기본 경로>`는 다음을 쓴다.
+`scripts/build-assets.mjs --app <디렉터리> --api <기본 경로> --template-dir <template 저장소>`는 그 template 저장소의 template package로 다음을 쓴다(HY-70).
 
 1. `public/assets/templates/<name>.<hash>.json`: `templates/` 아래 템플릿마다 AST 파일 하나, 그리고 예약 템플릿 `hyper/data.tpl`의 파일 하나(HY-34).
 2. `build/templates.index.json`: 각 템플릿 이름과 그 파일 URL, 그리고 include 태그와 block 태그가 경로로 참조하는 템플릿 목록.

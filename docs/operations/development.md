@@ -21,7 +21,7 @@
 | `make package-check` | Installs both packages into `tests/package-install` with `npm install --install-links`, type-checks its test against their declarations with `erasableSyntaxOnly` and runs it under `node` (HY-61) |
 | `make server` | Builds the board server program into `examples/board/build/server` (see below) |
 | `make server-fixtures` | Builds the server program of the PHP test fixtures |
-| `make node-fixtures` | Builds the template files of the PHP test fixtures for the Node server tests with `scripts/build-templates.mjs` |
+| `make node-fixtures` | Builds the template files of the PHP test fixtures for the Node server tests with `scripts/build-templates.mjs` and the template repository `../template` (HY-70) |
 | `make node-server` | Type-checks and bundles the board Node server into `examples/board/build/node/server.mjs` (see below) |
 | `make assets` | Builds the board client bundle and the CSR shell (see below) |
 | `make test-js` | Runs the browser code tests, including the router conformance cases, and the type check |
@@ -62,7 +62,7 @@ BOARD_DB=$PWD/examples/board/var/node.db BOARD_SESSIONS=$PWD/examples/board/var/
 
 ## Asset build
 
-`scripts/build-assets.mjs --app <directory> --api <base path>` writes:
+`scripts/build-assets.mjs --app <directory> --api <base path> --template-dir <template repository>` writes the following outputs with the template package of the template repository (HY-70):
 
 1. `public/assets/templates/<name>.<hash>.json`: one AST file per template under `templates/`, and one for the reserved template `hyper/data.tpl` (HY-34).
 2. `build/templates.index.json`: each template name with its file URL and the templates that its include and block tags reference by path.
