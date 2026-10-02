@@ -4,7 +4,7 @@
 
 | ID | Feature | Status | Evidence |
 |---|---|---|---|
-| protocol | Region protocol specification (HY-1 to HY-63) | implemented | [Protocol](spec/protocol.md) |
+| protocol | Region protocol specification (HY-1 to HY-64) | implemented | [Protocol](spec/protocol.md) |
 | composition | Screen composition rules (HC-1 to HC-7) and the template check for HC-6 | implemented | [Composition](spec/composition.md), `make templates-check` |
 | manifest | Application manifest read by PHP and the browser | implemented | `make test-php`, `make test-js` |
 | router | PHP and browser routers with shared conformance cases | implemented | `make test-php`, `make test-js` |
@@ -14,6 +14,7 @@
 | body-checks | Body limit and accepted form types of the application, checked as 413, 415 and then the CSRF 403 (HY-59) | implemented | `make test-php`, `make test-node`, `make server-parity` |
 | response-hook | A response hook called once for every response with the request, the response, the elapsed time and the reply of the request with its notes (HY-60) | implemented | `make test-php`, `make test-node` |
 | client-shell | One server answers client-rendered pages with the static shell and JSON under a data base path, and server-rendered pages without it, by a selection of each request; the browser gives the `html` element the attributes of the rendered layout (HY-62, HY-63) | implemented | `make test-php`, `make test-node`, `make test-js`, `make e2e` |
+| stylesheet-links | The browser applies the stylesheet links of the head of a client-rendered document, of the layout of a region response and of a history restoration document: it keeps present links, loads missing links before it shows the content and then removes the others (HY-64) | implemented | `make test-js`, `make e2e` |
 | reply | Response cookies and cache control of loaders and actions, and JSON tags with 304 (HY-52, HY-53) | implemented | `make test-php` |
 | hyper-js | Browser code: region and document rendering, htmx extension, client-side rendering | implemented | `make test-js`, `make e2e` |
 | hyper-php | PHP server: routes, actions, CSRF, flash, changed topics, base path, documents and JSON | implemented | `make test-php` |

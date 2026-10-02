@@ -189,6 +189,16 @@ export function renderDocument(app: Application, decoded: DecodedResponse): stri
   });
 }
 
+// Renders the layout of a region response for its stylesheet links: the layout with the shared data as root data,
+// the title rendered alone as the definition `title`, and an empty definition `data` and an empty definition for every
+// manifest region (HY-64).
+export function renderLayout(app: Application, shared: MapValue, timezone: string): string {
+  const env = { timezone };
+  const define: Record<string, { html: string }> = { title: { html: app.engine.render(app.manifest.title, shared, { env }) }, data: { html: '' } };
+  for (const region of app.manifest.regions) define[region.name] = { html: '' };
+  return app.engine.render(app.manifest.layout, shared, { define, env });
+}
+
 // Returns the response value without the kept values of the regions that dropped them (HY-31, HY-38).
 function embedded(decoded: DecodedResponse): MapValue {
   if (decoded.dropped.size === 0) return decoded.value;

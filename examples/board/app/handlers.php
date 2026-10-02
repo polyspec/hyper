@@ -37,7 +37,8 @@ function findPost(Request $request, Posts $posts): array
 
 // Loaders and actions of the regions and routes that app.json declares.
 return [
-    'shared' => fn (Assets $assets): array => ['assets' => $assets->urls()],
+    // The post page, the one route with the parameter `id`, links the reader stylesheet (HY-64).
+    'shared' => fn (Assets $assets, Request $request): array => ['assets' => $assets->urls(), 'reader' => $request->param('id') !== null],
 
     'regions' => [
         'left' => fn (Request $request, Posts $posts): array => [

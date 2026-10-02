@@ -39,8 +39,8 @@ if (time !== '' && !/^[0-9]{1,15}$/.test(time)) throw new Error('BOARD_TIME must
 app.bind('posts', () => new Posts(database, time === '' ? () => Math.floor(Date.now() / 1000) : () => Number(time)));
 app.bind('assets', () => {
   const urls = JSON.parse(readFileSync(join(board, 'public', 'assets', 'manifest.json'), 'utf8')) as Record<string, unknown>;
-  if (typeof urls.css !== 'string' || typeof urls.hyper !== 'string') throw new Error('the asset manifest has no css or hyper URL; run make assets');
-  return { css: urls.css, hyper: urls.hyper };
+  if (typeof urls.css !== 'string' || typeof urls.reader !== 'string' || typeof urls.hyper !== 'string') throw new Error('the asset manifest has no css, reader or hyper URL; run make assets');
+  return { css: urls.css, reader: urls.reader, hyper: urls.hyper };
 });
 // The session cookie has the name that the PHP board uses, PHP's default session name.
 const server = app.server(new FileSessions({ directory: sessionDirectory, name: 'PHPSESSID' }), { files: join(board, 'public') });

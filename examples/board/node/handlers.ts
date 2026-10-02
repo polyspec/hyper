@@ -4,7 +4,7 @@ import type { Post, Posts } from './posts.js';
 
 export interface Services {
   posts: Posts;
-  assets: { css: string; hyper: string };
+  assets: { css: string; reader: string; hyper: string };
 }
 
 const POSTS_PER_PAGE = 10;
@@ -34,7 +34,8 @@ function length(text: string): number {
 }
 
 export const handlers: Handlers<Services> = {
-  shared: ({ services }) => ({ assets: services.get('assets') }),
+  // The post page, the one route with the parameter `id`, links the reader stylesheet (HY-64).
+  shared: ({ request, services }) => ({ assets: services.get('assets'), reader: request.param('id') !== null }),
 
   regions: {
     left: ({ request, services }) => ({ path: request.path(), count: services.get('posts').count() }),

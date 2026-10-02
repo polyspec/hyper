@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{# title}</title>
 <link rel="stylesheet" href="{= assets.css}">
-<script type="module" src="{= assets.hyper}"></script>
+{? reader}<link rel="stylesheet" href="{= assets.reader}">
+{/}<script type="module" src="{= assets.hyper}"></script>
 </head>
 <body hx-boost:inherited="true" hx-target:inherited="#content" hx-swap:inherited="innerMorph">
 <div class="shell">

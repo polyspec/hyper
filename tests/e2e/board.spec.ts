@@ -236,6 +236,79 @@ test('a failed region request keeps the page and marks the region (HY-47)', asyn
   }
 });
 
+// Returns the paths of the stylesheet links of the head in order.
+function stylesheets(page: Page): Promise<string[]> {
+  return page.evaluate(() => Array.from(document.head.querySelectorAll('link[rel~="stylesheet"]'), (link) => new URL((link as HTMLLinkElement).href).pathname));
+}
+
+// HY-64: the post page links the reader stylesheet. It loads before the post is shown, also when its response is
+// slow, and the list removes it. Each page records the max-width of the post body when the body first appears.
+async function stylesheetFlow(page: Page, origin: string): Promise<void> {
+  const errors = collectErrors(page);
+  await page.route('**/assets/reader.css', async (route) => {
+    await new Promise((done) => setTimeout(done, 300));
+    await route.continue();
+  });
+  await page.addInitScript(() => {
+    const record = window as unknown as { postWidth?: string };
+    new MutationObserver(() => {
+      const body = document.querySelector('.post-body');
+      if (body === null) delete record.postWidth;
+      else record.postWidth ??= getComputedStyle(body).maxWidth;
+    }).observe(document, { childList: true, subtree: true });
+  });
+  const postWidth = () => page.evaluate(() => (window as unknown as { postWidth?: string }).postWidth);
+
+  await page.goto(`${origin}/board`);
+  await expect(page.locator('#content h1')).toHaveText('게시판');
+  expect(await stylesheets(page)).toEqual(['/assets/app.css']);
+  await page.locator('#rows tbody a').first().click();
+  await expect(page.locator('.post-body')).toBeVisible();
+  expect(await stylesheets(page)).toEqual(['/assets/app.css', '/assets/reader.css']);
+  expect(await postWidth()).not.toBe('none');
+  const post = page.url();
+
+  await page.getByRole('link', { name: '목록' }).click();
+  await expect(page.locator('#content h1')).toHaveText('게시판');
+  expect(await stylesheets(page)).toEqual(['/assets/app.css']);
+
+  await page.goBack();
+  await expect(page.locator('.post-body')).toBeVisible();
+  expect(await stylesheets(page)).toEqual(['/assets/app.css', '/assets/reader.css']);
+  expect(await postWidth()).not.toBe('none');
+  await page.goBack();
+  await expect(page.locator('#content h1')).toHaveText('게시판');
+  expect(await stylesheets(page)).toEqual(['/assets/app.css']);
+
+  // The first document of server-side rendering links its stylesheets itself; client-side rendering mounts it.
+  await page.goto(post);
+  await expect(page.locator('.post-body')).toBeVisible();
+  expect(await stylesheets(page)).toEqual(['/assets/app.css', '/assets/reader.css']);
+  if (origin === csr) expect(await postWidth()).not.toBe('none');
+  expect(await page.locator('.post-body').evaluate((body) => getComputedStyle(body).maxWidth)).not.toBe('none');
+  expect(errors).toEqual([]);
+}
+
+test('SSR applies the stylesheet links of the layout on navigation and history restoration (HY-64)', async ({ page }) => {
+  await stylesheetFlow(page, ssr);
+});
+
+test('CSR applies the stylesheet links of the rendered layout before it shows a page (HY-64)', async ({ page }) => {
+  await stylesheetFlow(page, csr);
+});
+
+test('a stylesheet that fails to load keeps the page and marks the region (HY-47, HY-64)', async ({ page }) => {
+  await page.route('**/assets/reader.css', (route) => route.fulfill({ status: 404, body: '' }));
+  for (const origin of [ssr, csr]) {
+    await page.goto(`${origin}/board`);
+    await expect(page.locator('#content h1')).toHaveText('게시판');
+    await page.locator('#rows tbody a').first().click();
+    await expect(page.locator('#content')).toHaveAttribute('hy-error', '0');
+    await expect(page.locator('#content h1')).toHaveText('게시판');
+    expect(await stylesheets(page)).toEqual(['/assets/app.css']);
+  }
+});
+
 test('the comparison page accepts only an http origin', async ({ page }) => {
   let dialogs = 0;
   page.on('dialog', (dialog) => { dialogs++; void dialog.dismiss(); });
