@@ -1,4 +1,4 @@
-export { App, type Action, type AppOptions, type Context, type Handlers, type Loader, type RouteHandlers } from './app.js';
+export { App, type Action, type AppOptions, type ClientRendering, type Context, type Handlers, type Loader, type RouteHandlers } from './app.js';
 export { FileSession, FileSessions, type FileSessionsOptions } from './file-sessions.js';
 export { type ServerOptions } from './http.js';
 export { decodeJson, encodeJson, inDataModel, JsonDecodeError, OutsideNumber, type DecodedValue } from './json.js';

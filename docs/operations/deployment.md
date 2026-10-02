@@ -33,6 +33,18 @@ Deploy `build/server`, which `make server` writes, next to the PHP code; the app
 
 Every page path returns the same empty shell, so search crawlers that do not run JavaScript and link preview bots see no content and no title. Use this form only for screens that do not need them.
 
+## One server for both forms
+
+One PHP or Node server can answer the server-rendered pages and the client-rendered pages of one manifest with the same handlers (HY-62). The application declares client rendering when it opens: `App::open(clientRendering: new ClientRendering(shell: '/srv/app/dist/csr/index.html', basePath: '/_props', selects: fn (Request $request): bool => ...))` in PHP, and the `clientRendering` option `{ shell, basePath, selects }` of `App.open` in Node. The selection chooses the client-rendered requests, for example by the `Host` header. Build the shell with `scripts/build-assets.mjs --api /_props`, so that it declares the data base path; the application fails to open otherwise.
+
+| Request of a chosen page | Response |
+|---|---|
+| HTML `GET` of a page path | The shell, `Cache-Control: no-cache`, without a session or a loader |
+| JSON request or action under `/_props` | JSON and actions as in the server form, with `Location` under `/_props` |
+| HTML request under `/_props`, JSON request outside it | 406 |
+
+A request that the selection does not choose is answered as in the server form. The shell response carries `frame-ancestors` (HY-45) and is reported to the response hook (HY-60). The browser gives the `html` element the attributes of the rendered layout, such as its `lang` (HY-63).
+
 ## Server settings
 
 - Set `display_errors=Off` in the PHP configuration (`php.ini`, PHP-FPM pool, or `php -d display_errors=0`). PHP writes startup warnings, such as an exceeded `max_input_vars`, before the application runs. An exception inside the application answers 500 without details and is logged (HY-43).

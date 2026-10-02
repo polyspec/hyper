@@ -28,6 +28,8 @@ export {
 export {
   Hyper,
   parseAssignments,
+  replaceAttributes,
+  type AttributeElement,
   type HookDetail,
   type HtmxApi,
   type HyperExtension,

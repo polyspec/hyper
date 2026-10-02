@@ -42,7 +42,8 @@ export interface HyperExtension {
 
 // Mounts documents that client-side rendering produces.
 export interface DocumentAdapter {
-  // Replaces the title and the body with those of a rendered document and lets htmx process the body.
+  // Replaces the attributes of the html element (HY-63), the title and the body with those of a rendered document and
+  // lets htmx process the body.
   mount(html: string): void;
   // Replaces the body with text, for a path without a route or a response that is not JSON.
   text(text: string): void;
@@ -521,6 +522,19 @@ function clearError(target: unknown): void {
   if (element !== null && typeof element === 'object' && typeof element.removeAttribute === 'function') element.removeAttribute('hy-error');
 }
 
+// An element whose attributes client-side rendering replaces (HY-63).
+export interface AttributeElement {
+  readonly attributes: ArrayLike<{ readonly name: string; readonly value: string }>;
+  setAttribute(name: string, value: string): void;
+  removeAttribute(name: string): void;
+}
+
+// Replaces the attributes of an element with the attributes of another element, in their order (HY-63).
+export function replaceAttributes(target: AttributeElement, source: AttributeElement): void {
+  for (const { name } of Array.from(target.attributes)) target.removeAttribute(name);
+  for (const { name, value } of Array.from(source.attributes)) target.setAttribute(name, value);
+}
+
 // The document adapter of a browser page.
 function browserDocument(htmx: HtmxApi): DocumentAdapter {
   const replaceBody = (source: HTMLElement | null, nodes: Node[]): void => {
@@ -532,6 +546,7 @@ function browserDocument(htmx: HtmxApi): DocumentAdapter {
   return {
     mount: (html) => {
       const parsed = new DOMParser().parseFromString(html, 'text/html');
+      replaceAttributes(document.documentElement, parsed.documentElement);
       document.title = parsed.title;
       replaceBody(parsed.body, Array.from(parsed.body.childNodes));
       htmx.process(document.body);

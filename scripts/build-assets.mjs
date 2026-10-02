@@ -53,7 +53,7 @@ writeFileSync(join(assetsDir, 'manifest.json'), `${JSON.stringify({ css: '/asset
 const css = readFileSync(join(assetsDir, 'app.css'), 'utf8');
 const shell = [
   '<!doctype html>',
-  '<html lang="ko">',
+  '<html>',
   '<head>',
   '<meta charset="utf-8">',
   '<meta name="viewport" content="width=device-width, initial-scale=1">',
