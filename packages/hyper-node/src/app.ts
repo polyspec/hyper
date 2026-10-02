@@ -77,6 +77,9 @@ export interface AppOptions<S extends object> {
   // The media types of the request bodies that actions and /_hyper/keep accept: application/x-www-form-urlencoded
   // and multipart/form-data. The default is application/x-www-form-urlencoded (HY-59).
   formTypes?: string[];
+  // The largest response body in bytes that the server sends; a larger body gives a plain 500. The default is
+  // 8 MiB (HY-66).
+  responseLimit?: number;
   // Called once for every response with the request, the response, the elapsed milliseconds and the reply of the
   // request, also for the responses that hyper answers itself (HY-60). The request is null only for a request whose
   // request line node:http could not read. The reply is the reply of the loaders and actions of the request, or an
@@ -99,6 +102,7 @@ export class App<S extends object = Record<string, never>> {
   readonly https: boolean;
   readonly frameAncestors: string;
   readonly bodyLimit: number;
+  private readonly responseLimit: number;
   private readonly formTypes: readonly string[];
   private readonly onResponse: AppOptions<S>['onResponse'];
   private readonly log: (message: string) => void;
@@ -112,6 +116,7 @@ export class App<S extends object = Record<string, never>> {
     https: boolean,
     frameAncestors: string,
     bodyLimit: number,
+    responseLimit: number,
     formTypes: readonly string[],
     onResponse: AppOptions<S>['onResponse'],
     log: (message: string) => void,
@@ -125,6 +130,7 @@ export class App<S extends object = Record<string, never>> {
     this.https = https;
     this.frameAncestors = frameAncestors;
     this.bodyLimit = bodyLimit;
+    this.responseLimit = responseLimit;
     this.formTypes = formTypes;
     this.onResponse = onResponse;
     this.log = log;
@@ -140,6 +146,8 @@ export class App<S extends object = Record<string, never>> {
     }
     const bodyLimit = options.bodyLimit ?? 8 * 1024 * 1024;
     if (!Number.isSafeInteger(bodyLimit) || bodyLimit < 1) throw new Error(`hyper: body limit ${bodyLimit} is not a positive number of bytes`);
+    const responseLimit = options.responseLimit ?? 8 * 1024 * 1024;
+    if (!Number.isSafeInteger(responseLimit) || responseLimit < 1) throw new Error(`hyper: response limit ${responseLimit} is not a positive number of bytes`);
     const formTypes = options.formTypes ?? ['application/x-www-form-urlencoded'];
     if (formTypes.length === 0 || new Set(formTypes).size !== formTypes.length || formTypes.some((type) => !FORM_TYPES.includes(type))) {
       throw new Error('hyper: form types must be distinct values of application/x-www-form-urlencoded and multipart/form-data');
@@ -154,7 +162,7 @@ export class App<S extends object = Record<string, never>> {
     checkHandlers(manifest, options.handlers);
     const client = options.clientRendering === undefined ? null : checkClient(options.clientRendering, manifest);
     for (const route of manifest.routes) await application.templates.ensure(routeTemplates(manifest, route));
-    return new App(application, options.handlers, options.timezone, basePath, options.https ?? false, options.frameAncestors ?? "'self'", bodyLimit, [...formTypes], options.onResponse, options.log ?? ((message) => process.stderr.write(`${message}\n`)), client);
+    return new App(application, options.handlers, options.timezone, basePath, options.https ?? false, options.frameAncestors ?? "'self'", bodyLimit, responseLimit, [...formTypes], options.onResponse, options.log ?? ((message) => process.stderr.write(`${message}\n`)), client);
   }
 
   // Registers the factory of an application service.
@@ -167,9 +175,10 @@ export class App<S extends object = Record<string, never>> {
     return createServer(this, sessions, options);
   }
 
-  // Answers one request; an unhandled error gives a plain 500 and is logged (HY-43). Every response limits
-  // framing (HY-45) and is reported with the milliseconds since `started`, a performance.now() value that defaults
-  // to now (HY-60).
+  // Answers one request; an unhandled error and a body larger than the response limit give a plain 500 and are
+  // logged (HY-43, HY-66). Every response limits framing (HY-45), every failure is not cacheable (HY-65), and every
+  // response is reported with the milliseconds since `started`, a performance.now() value that defaults to now
+  // (HY-60).
   async handle(request: Request, store: SessionStore, started = performance.now()): Promise<Response> {
     const reply = new Reply();
     let response: Response;
@@ -177,6 +186,11 @@ export class App<S extends object = Record<string, never>> {
       response = await this.answer(request, store, reply);
     } catch (error) {
       this.fail(error);
+      response = Response.text(500, 'Internal Server Error');
+    }
+    const size = Buffer.byteLength(response.body);
+    if (size > this.responseLimit) {
+      this.log(`hyper: the response to ${request.method} ${request.path()} has ${size} bytes, more than the response limit of ${this.responseLimit} bytes`);
       response = Response.text(500, 'Internal Server Error');
     }
     return this.report(request, this.frame(response), started, reply);
@@ -189,9 +203,11 @@ export class App<S extends object = Record<string, never>> {
     return response;
   }
 
-  // Adds the frame-ancestors policy of the application to a response (HY-45).
+  // Adds the frame-ancestors policy of the application to a response (HY-45), and to a failure the header that no
+  // cache stores it (HY-65).
   frame(response: Response): Response {
-    return response.withHeader('Content-Security-Policy', `frame-ancestors ${this.frameAncestors}`);
+    const framed = response.withHeader('Content-Security-Policy', `frame-ancestors ${this.frameAncestors}`);
+    return framed.status >= 400 ? framed.withHeader('Cache-Control', 'no-store') : framed;
   }
 
   // Writes the log line of an unhandled error (HY-43).

@@ -376,7 +376,49 @@ describe('App', () => {
       [403, { refusal: 'private' }], [403, { refusal: 'closed', kind: 'closed' }], [500, { stage: 'load' }], [200, {}], [404, {}], [400, {}],
     ]);
     expect(Object.keys((reports[1]![1]))).toEqual(['refusal', 'kind']);
-    expect(forbidden.headers).toEqual({ 'Content-Type': 'text/plain; charset=utf-8', 'Content-Security-Policy': "frame-ancestors 'self'" });
+    expect(forbidden.headers).toEqual({ 'Content-Type': 'text/plain; charset=utf-8', 'Content-Security-Policy': "frame-ancestors 'self'", 'Cache-Control': 'no-store' });
+  });
+
+  it('marks every failure as not cacheable (HY-65)', async () => {
+    const token = await fixture.token();
+    const form = { 'Content-Type': 'application/x-www-form-urlencoded' };
+    const send = (method: string, target: string, headers: Record<string, string>, body: string | undefined, options: { bodyLimit?: number } = {}) => fixture.handle({ method, target, headers, body }, options);
+    const responses = [
+      await send('GET', '/?q=%FF', {}, undefined),
+      await fixture.get('/items/unreadable', JSON_REGION),
+      await send('POST', '/add', form, '_csrf=wrong'),
+      await fixture.get('/items/private'),
+      await fixture.get('/missing'),
+      await fixture.get('/items/missing', JSON_REGION),
+      await send('PUT', '/', {}, undefined),
+      await send('POST', '/add', form, 'a'.repeat(65), { bodyLimit: 64 }),
+      await send('POST', '/add', { 'Content-Type': 'text/plain' }, ''),
+      await fixture.post('/_hyper/keep', { _csrf: token, region: 'side', path: 'x', value: '1' }),
+      await fixture.get('/items/broken'),
+      await fixture.post('/add', { _csrf: token, name: 'taken' }, JSON_REGION),
+      await fixture.post('/add', { _csrf: token, name: '' }, JSON_REGION),
+    ];
+    expect(responses.map((response) => response.status)).toEqual([400, 400, 403, 403, 404, 404, 405, 413, 415, 400, 500, 409, 422]);
+    for (const response of responses) expect([response.status, response.headers['Cache-Control']]).toEqual([response.status, 'no-store']);
+    expect((await fixture.get('/items/member')).headers['Cache-Control']).toBe('public, max-age=60');
+  });
+
+  it('does not send a response larger than the response limit (HY-66)', async () => {
+    const reports: [number, Record<string, unknown>][] = [];
+    const options = { responseLimit: 64, onResponse: (_request: Request | null, response: Response, _elapsed: number, reply: Reply) => reports.push([response.status, Object.fromEntries(reply.notes())]) };
+    const document = await fixture.handle({ target: '/' }, options);
+    const region = await fixture.handle({ target: '/items/7', headers: JSON_REGION }, options);
+    for (const response of [document, region]) {
+      expect(response.status).toBe(500);
+      expect(response.body).toBe('Internal Server Error');
+      expect(response.headers['Cache-Control']).toBe('no-store');
+      expect(response.headers['Content-Type']).toBe('text/plain; charset=utf-8');
+    }
+    expect((await fixture.handle({ target: '/' }, { responseLimit: 1 << 20 })).status).toBe(200);
+    expect(fixture.log[0]).toMatch(/^hyper: the response to GET \/ has \d+ bytes, more than the response limit of 64 bytes$/);
+    expect(fixture.log[1]).toMatch(/^hyper: the response to GET \/items\/7 has \d+ bytes, more than the response limit of 64 bytes$/);
+    expect(reports).toEqual([[500, {}], [500, {}]]);
+    for (const responseLimit of [0, -1, 1.5]) await expect(fixture.app({ responseLimit })).rejects.toThrow('hyper:');
   });
 
   it('answers a bad request loader and action with 400 (HY-58)', async () => {
