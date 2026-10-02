@@ -80,11 +80,12 @@ export interface AppOptions<S extends object> {
   // The largest response body in bytes that the server sends; a larger body gives a plain 500. The default is
   // 8 MiB (HY-66).
   responseLimit?: number;
-  // Called once for every response with the request, the response, the elapsed milliseconds and the reply of the
-  // request, also for the responses that hyper answers itself (HY-60). The request is null only for a request whose
-  // request line node:http could not read. The reply is the reply of the loaders and actions of the request, or an
-  // empty reply when the server answered before routing.
-  onResponse?: (request: Request | null, response: Response, elapsed: number, reply: Reply) => void;
+  // Called once for every response with the request, the response, the elapsed milliseconds, the reply of the
+  // request and the failure of a 500 of HY-43 or HY-66, also for the responses that hyper answers itself (HY-60). The
+  // request is null only for a request whose request line node:http could not read. The reply is the reply of the
+  // loaders and actions of the request, or an empty reply when the server answered before routing. The failure is
+  // the message of the error or the response limit line without its prefix, and null for every other response.
+  onResponse?: (request: Request | null, response: Response, elapsed: number, reply: Reply, failure: string | null) => void;
   // Called once with the request, the elapsed milliseconds and the reply of a request whose client closed the
   // connection before the server wrote its response; the server stops the request and writes no response (HY-67).
   onDisconnect?: (request: Request, elapsed: number, reply: Reply) => void;
@@ -191,6 +192,8 @@ export class App<S extends object = Record<string, never>> {
   async handle(request: Request, store: SessionStore, started = performance.now(), signal?: AbortSignal): Promise<Response | null> {
     const reply = new Reply();
     let response: Response;
+    // The failure of a 500 of HY-43 or HY-66, which the hook receives (HY-60).
+    let failure: string | null = null;
     try {
       response = await this.answer(request, store, reply, signal);
     } catch (error) {
@@ -198,21 +201,22 @@ export class App<S extends object = Record<string, never>> {
         this.onDisconnect?.(request, performance.now() - started, reply);
         return null;
       }
-      this.fail(error);
+      failure = this.fail(error);
       response = Response.text(500, 'Internal Server Error');
     }
     const size = Buffer.byteLength(response.body);
     if (size > this.responseLimit) {
-      this.log(`hyper: the response to ${request.method} ${request.path()} has ${size} bytes, more than the response limit of ${this.responseLimit} bytes`);
+      failure = `the response to ${request.method} ${request.path()} has ${size} bytes, more than the response limit of ${this.responseLimit} bytes`;
+      this.log(`hyper: ${failure}`);
       response = Response.text(500, 'Internal Server Error');
     }
-    return this.report(request, this.frame(response), started, reply);
+    return this.report(request, this.frame(response), started, reply, failure);
   }
 
-  // Calls onResponse with a response, the milliseconds since `started` and the reply of the request, and returns the
-  // response (HY-60).
-  report(request: Request | null, response: Response, started: number, reply: Reply): Response {
-    this.onResponse?.(request, response, performance.now() - started, reply);
+  // Calls onResponse with a response, the milliseconds since `started`, the reply of the request and the failure of a
+  // 500 of HY-43 or HY-66, and returns the response (HY-60).
+  report(request: Request | null, response: Response, started: number, reply: Reply, failure: string | null = null): Response {
+    this.onResponse?.(request, response, performance.now() - started, reply, failure);
     return response;
   }
 
@@ -223,9 +227,11 @@ export class App<S extends object = Record<string, never>> {
     return framed.status >= 400 ? framed.withHeader('Cache-Control', 'no-store') : framed;
   }
 
-  // Writes the log line of an unhandled error (HY-43).
-  fail(error: unknown): void {
+  // Writes the log line of an unhandled error (HY-43) and returns its failure for the response hook (HY-60): the
+  // message of an Error, or the text of another thrown value.
+  fail(error: unknown): string {
     this.log(`hyper: ${error instanceof Error ? (error.stack ?? `${error.name}: ${error.message}`) : String(error)}`);
+    return error instanceof Error ? error.message : String(error);
   }
 
   // Answers a request; the loaders and actions of a routed request receive `reply` (HY-52, HY-60).

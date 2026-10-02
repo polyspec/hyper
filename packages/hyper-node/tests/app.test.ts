@@ -362,8 +362,8 @@ describe('App', () => {
   });
 
   it('gives the hook the reply of the request with the notes of its loaders and actions (HY-60)', async () => {
-    const reports: [number, Record<string, unknown>][] = [];
-    const options = { onResponse: (_request: Request | null, response: Response, _elapsed: number, reply: Reply) => reports.push([response.status, Object.fromEntries(reply.notes())]) };
+    const reports: [number, Record<string, unknown>, string | null][] = [];
+    const options = { onResponse: (_request: Request | null, response: Response, _elapsed: number, reply: Reply, failure: string | null) => reports.push([response.status, Object.fromEntries(reply.notes()), failure]) };
     const token = await fixture.token();
     const send = (method: string, target: string, body?: string) => fixture.handle({ method, target, body }, options);
     const forbidden = await send('GET', '/items/private');
@@ -373,7 +373,8 @@ describe('App', () => {
     await send('GET', '/missing');
     await send('GET', '/?q=%FF');
     expect(reports).toEqual([
-      [403, { refusal: 'private' }], [403, { refusal: 'closed', kind: 'closed' }], [500, { stage: 'load' }], [200, {}], [404, {}], [400, {}],
+      [403, { refusal: 'private' }, null], [403, { refusal: 'closed', kind: 'closed' }, null], [500, { stage: 'load' }, 'secret detail /srv/app.js'],
+      [200, {}, null], [404, {}, null], [400, {}, null],
     ]);
     expect(Object.keys((reports[1]![1]))).toEqual(['refusal', 'kind']);
     expect(forbidden.headers).toEqual({ 'Content-Type': 'text/plain; charset=utf-8', 'Content-Security-Policy': "frame-ancestors 'self'", 'Cache-Control': 'no-store' });
@@ -404,8 +405,8 @@ describe('App', () => {
   });
 
   it('does not send a response larger than the response limit (HY-66)', async () => {
-    const reports: [number, Record<string, unknown>][] = [];
-    const options = { responseLimit: 64, onResponse: (_request: Request | null, response: Response, _elapsed: number, reply: Reply) => reports.push([response.status, Object.fromEntries(reply.notes())]) };
+    const reports: [number, Record<string, unknown>, string | null][] = [];
+    const options = { responseLimit: 64, onResponse: (_request: Request | null, response: Response, _elapsed: number, reply: Reply, failure: string | null) => reports.push([response.status, Object.fromEntries(reply.notes()), failure]) };
     const document = await fixture.handle({ target: '/' }, options);
     const region = await fixture.handle({ target: '/items/7', headers: JSON_REGION }, options);
     for (const response of [document, region]) {
@@ -417,7 +418,9 @@ describe('App', () => {
     expect((await fixture.handle({ target: '/' }, { responseLimit: 1 << 20 })).status).toBe(200);
     expect(fixture.log[0]).toMatch(/^hyper: the response to GET \/ has \d+ bytes, more than the response limit of 64 bytes$/);
     expect(fixture.log[1]).toMatch(/^hyper: the response to GET \/items\/7 has \d+ bytes, more than the response limit of 64 bytes$/);
-    expect(reports).toEqual([[500, {}], [500, {}]]);
+    expect(reports.map((report) => report.slice(0, 2))).toEqual([[500, {}], [500, {}]]);
+    // HY-60: the hook receives the failure that the server logs, without the prefix of the log.
+    expect(reports.map((report) => `hyper: ${report[2]}`)).toEqual(fixture.log.slice(0, 2));
     for (const responseLimit of [0, -1, 1.5]) await expect(fixture.app({ responseLimit })).rejects.toThrow('hyper:');
   });
 

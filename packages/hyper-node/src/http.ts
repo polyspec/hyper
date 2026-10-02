@@ -87,8 +87,7 @@ async function answer<S extends object>(app: App<S>, sessions: FileSessions, inc
   try {
     session = await sessions.open(request.cookie(sessions.name));
   } catch (error) {
-    app.fail(error);
-    return app.report(request, app.frame(Response.text(500, 'Internal Server Error')), started, new Reply());
+    return app.report(request, app.frame(Response.text(500, 'Internal Server Error')), started, new Reply(), app.fail(error));
   }
   let response: Response | null;
   try {

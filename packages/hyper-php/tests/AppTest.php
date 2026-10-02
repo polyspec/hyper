@@ -680,8 +680,8 @@ final class AppTest extends TestCase
         // HY-60: the reply of the request, also after a stop or an error, and an empty reply before routing.
         $reports = [];
         $options = [
-            'onResponse' => function (Request $request, Response $response, float $elapsed, Reply $reply) use (&$reports): void {
-                $reports[] = [$response->status, $reply->notes()];
+            'onResponse' => function (Request $request, Response $response, float $elapsed, Reply $reply, ?string $failure) use (&$reports): void {
+                $reports[] = [$response->status, $reply->notes(), $failure];
             },
         ];
         $token = $this->token();
@@ -693,7 +693,8 @@ final class AppTest extends TestCase
         $this->send('GET', '/missing', [], '', $options);
         $this->app('', $options)->handle(new Request('GET', '/', [], 'q=%FF'), $this->session);
         self::assertSame([
-            [403, ['refusal' => 'private']], [403, ['refusal' => 'closed', 'kind' => 'closed']], [500, ['stage' => 'load']], [200, []], [404, []], [400, []],
+            [403, ['refusal' => 'private'], null], [403, ['refusal' => 'closed', 'kind' => 'closed'], null], [500, ['stage' => 'load'], 'secret detail /srv/app.php'],
+            [200, [], null], [404, [], null], [400, [], null],
         ], $reports);
         self::assertSame(['Content-Type' => 'text/plain; charset=utf-8', 'Content-Security-Policy' => "frame-ancestors 'self'", 'Cache-Control' => 'no-store'], $forbidden->headers);
     }
@@ -736,8 +737,8 @@ final class AppTest extends TestCase
         $reports = [];
         $options = [
             'responseLimit' => 64,
-            'onResponse' => function (Request $request, Response $response, float $elapsed, Reply $reply) use (&$reports): void {
-                $reports[] = [$response->status, $reply->notes()];
+            'onResponse' => function (Request $request, Response $response, float $elapsed, Reply $reply, ?string $failure) use (&$reports): void {
+                $reports[] = [$response->status, $reply->notes(), $failure];
             },
         ];
         $log = tempnam(sys_get_temp_dir(), 'hyper-log-');
@@ -760,7 +761,13 @@ final class AppTest extends TestCase
         self::assertSame(200, $small->status);
         self::assertMatchesRegularExpression('/hyper: the response to GET \/ has \d+ bytes, more than the response limit of 64 bytes/', $lines);
         self::assertMatchesRegularExpression('/hyper: the response to GET \/items\/7 has \d+ bytes, more than the response limit of 64 bytes/', $lines);
-        self::assertSame([[500, []], [500, []]], $reports);
+        self::assertCount(2, $reports);
+        self::assertSame([500, []], array_slice($reports[0], 0, 2));
+        self::assertSame([500, []], array_slice($reports[1], 0, 2));
+        // HY-60: the hook receives the failure that the server logs, without the prefix of the log.
+        self::assertMatchesRegularExpression('/^the response to GET \/ has \d+ bytes, more than the response limit of 64 bytes$/D', $reports[0][2]);
+        self::assertMatchesRegularExpression('/^the response to GET \/items\/7 has \d+ bytes, more than the response limit of 64 bytes$/D', $reports[1][2]);
+        self::assertStringContainsString("hyper: {$reports[0][2]}", $lines);
         foreach ([0, -1] as $limit) {
             try {
                 $this->app('', ['responseLimit' => $limit]);
