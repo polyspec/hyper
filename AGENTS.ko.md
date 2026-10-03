@@ -8,6 +8,7 @@
 - 주제마다 정본 문서를 하나 둔다.
   - 프로토콜 계약: `docs/spec/`
   - 구현과 검증 상태: `docs/features.md`
+  - 계획한 작업, 검증 명령, 완료 여부: `docs/plans/execution-checklist.md`. 모든 변경은 그 안의 작업 하나에 속하고, 작업은 시작하기 전에 추가한다.
   - 현재 절차: `docs/operations/`
   - 실제 변경과 검증 결과: `CHANGELOG.md`
 - 문서는 현재 동작을 서술한다. 방향이 바뀌면 명세부터 수정하고 구현되지 않은 부분을 표시한다.
@@ -45,3 +46,4 @@
 
 - 커밋 전에 변경된 모든 패키지의 테스트와 `make docs-check`를 실행한다.
 - `docs/features.md`에서 기능을 implemented로 표시하기 전에 `make check`를 실행한다.
+- `docs/plans/execution-checklist.md`에서 작업을 완료로 표시하기 전에 커밋한 트리에서 그 작업의 검증 명령을 실행한다.
