@@ -13,17 +13,11 @@ beforeEach(() => {
 });
 
 describe('App', () => {
-  it('renders the document for an HTML request (HY-12, HY-15)', async () => {
+  it('renders the document for an HTML request without embedded data when the route has no route region (HY-12, HY-15, HY-31)', async () => {
     const response = await fixture.get('/');
     expect(response.status).toBe(200);
     expect(response.headers['Content-Type']).toBe('text/html; charset=utf-8');
-    const token = fixture.session.get('_hyper_csrf') as string;
-    const data = `{"env":{"timezone":"+09:00"},"route":"home","params":{},"shared":{"title":"Home","csrf":"${token}"},`
-      + '"regions":{"side":{"count":0,"note":null},"content":{"name":"n0"}},"kept":{}}';
-    expect(response.body).toBe(
-      '<title>Home - Site</title>\n<aside id="side"><b>0</b>\n</aside>\n<main id="content"><p>Home|n0</p>\n</main>\n'
-      + `<script type="application/json" id="hy-data">${data}</script>`,
-    );
+    expect(response.body).toBe('<title>Home - Site</title>\n<aside id="side"><b>0</b>\n</aside>\n<main id="content"><p>Home|n0</p>\n</main>\n');
   });
 
   it('renders parts alone that match the document (HY-13)', async () => {
@@ -39,11 +33,14 @@ describe('App', () => {
     expect(document).toContain('<main id="content"><p>Home|n0</p>\n</main>');
   });
 
-  it('embeds the document JSON in the document (HY-31)', async () => {
-    const html = (await fixture.get('/list')).body;
-    const body = (await fixture.get('/list', { Accept: 'application/json' })).body;
+  it('embeds only the route regions of the document JSON and their kept entries (HY-31)', async () => {
+    const headers = cookie('hy-keep', '{"rows":{"mode":"b"}}');
+    const html = (await fixture.get('/list', headers)).body;
+    const document = JSON.parse((await fixture.get('/list', { Accept: 'application/json', ...headers })).body) as { regions: Record<string, unknown>; kept: unknown };
+    expect(Object.keys(document.regions)).toEqual(['side', 'content', 'rows']);
     const found = /<script type="application\/json" id="hy-data">(.*)<\/script>/.exec(html)?.[1];
-    expect(JSON.parse(found!)).toEqual(JSON.parse(body));
+    expect(JSON.parse(found!)).toEqual({ ...document, regions: { rows: document.regions.rows } });
+    expect(JSON.parse(found!).kept).toEqual({ rows: { mode: 'b' } });
     expect(found).toContain('"a\\u003c"');
   });
 
@@ -111,7 +108,7 @@ describe('App', () => {
   });
 
   it('rejects manifests with invalid keep declarations (HY-37, HY-40)', async () => {
-    for (const name of ['keep-kind', 'keep-page', 'keep-reserved', 'uses-topic']) {
+    for (const name of ['keep-kind', 'keep-page', 'keep-manifest', 'keep-reserved', 'uses-topic']) {
       await expect(App.open({ manifest: `${FIXTURES}invalid/${name}.json`, templates: TEMPLATES, handlers: {}, timezone: 'Z' }), name).rejects.toThrow();
     }
   });

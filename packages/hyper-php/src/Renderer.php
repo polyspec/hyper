@@ -45,13 +45,13 @@ final class Renderer
      * @param array<string, mixed> $shared
      * @param array<string, array{template: string, data: array<string, mixed>}> $regions manifest regions
      * @param array<string, array{template: string, data: array<string, mixed>}> $routeRegions route regions of the page region
-     * @param array<string, mixed>|\stdClass $response the document JSON value embedded by `{# data}`
+     * @param array<string, mixed>|\stdClass|null $response the embedded data of `{# data}` (HY-31), or null when the route has no route region
      */
-    public function document(string $layout, string $title, array $shared, array $regions, string $page, array $routeRegions, array|\stdClass $response): string
+    public function document(string $layout, string $title, array $shared, array $regions, string $page, array $routeRegions, array|\stdClass|null $response): string
     {
         $define = [
             'title' => ['html' => $this->render($title, $shared, [])],
-            'data' => ['html' => $this->render(self::DATA_NAME, ['response' => $response], [])],
+            'data' => ['html' => $response === null ? '' : $this->render(self::DATA_NAME, ['response' => $response], [])],
         ];
         foreach ($regions as $name => $region) {
             $define[$name] = ['html' => $this->alone($region['template'], $shared, $region['data'], $name === $page ? $routeRegions : [])];

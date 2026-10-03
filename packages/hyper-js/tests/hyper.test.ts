@@ -130,10 +130,12 @@ describe('template delivery', () => {
 });
 
 describe('held data', () => {
-  it('holds the data of a rendered response (HY-32)', async () => {
+  it('holds the data of the route regions of a rendered response and no other region (HY-32)', async () => {
     const { hyper } = setup();
     await request(hyper, '/list', 'http://localhost/list', listJson);
-    expect(hyper.data('content')).toEqual(new Map([['heading', 'H']]));
+    expect((hyper.data('rows') as Map<string, unknown>).has('items')).toBe(true);
+    expect(hyper.data('content')).toBeUndefined();
+    expect(hyper.data('side')).toBeUndefined();
   });
 
   it('sets a nested value and renders only that region without a request (HY-33)', async () => {
@@ -146,19 +148,20 @@ describe('held data', () => {
     expect(swaps[1]!.text).toBe('<li>a</li><li class="open">b</li>');
   });
 
-  it('renders the page region with the held route regions (HY-33)', async () => {
+  it('refuses to change a region that is not a route region of the held route (HY-33)', async () => {
     const { hyper, swaps } = setup();
     await request(hyper, '/list', 'http://localhost/list', listJson);
-    await hyper.render('content', { heading: 'New' });
-    expect(swaps[0]!.text).toBe('<h1>New</h1><ul id="rows"><li class="open">a</li><li>b</li></ul>');
+    await expect(hyper.render('content', { heading: 'New' })).rejects.toThrow('region content is not a route region of the held route');
+    await expect(hyper.set('side', 'count', 5)).rejects.toThrow('region side is not a route region of the held route');
+    expect(swaps).toEqual([]);
   });
 
   it('runs hy-set assignments in the region that contains the element (HY-36)', async () => {
     const { hyper, swaps } = setup();
     await request(hyper, '/list', 'http://localhost/list', listJson);
     const button = {
-      // The closest element whose id is a region of the manifest or of the held route (HY-36).
-      closest: (selector: string) => (selector === '[id="side"],[id="content"],[id="rows"]' ? { id: 'rows' } : null),
+      // The closest element whose id is a route region of the held route (HY-36).
+      closest: (selector: string) => (selector === '[id="rows"]' ? { id: 'rows' } : null),
       getAttribute: () => 'items.0.open=false; items.0.name="x;y"',
     } as unknown as Element;
     await hyper.setFrom(button);
@@ -222,10 +225,9 @@ describe('kept data', () => {
 });
 
 describe('held data, restorations and kept values', () => {
-  it('replaces all held data from #hy-data after an SSR history restore (HY-32)', async () => {
-    const embedded = '{"env":{"timezone":"Z"},"route":"item","params":{"id":"7"},"shared":{"title":"T","csrf":"t"},"regions":{"side":{"count":1},"content":{"id":"7"}},"kept":{}}';
+  it('forgets the held data after an SSR history restore of a document without #hy-data (HY-32)', async () => {
     const swaps: Swap[] = [];
-    const element = (id: string) => (id === 'hy-data' ? ({ textContent: embedded } as unknown as Element) : ({ id } as unknown as Element));
+    const element = (id: string) => (id === 'hy-data' ? null : ({ id } as unknown as Element));
     const htmx = { process: () => undefined, config: { defaultTimeout: 60000 }, parseInterval: Number, swap: async (ctx: { text: string; target: Element; swap: string }) => { swaps.push({ region: '', text: ctx.text, swap: ctx.swap }); } };
     const hyper = new Hyper(testApplication(), htmx, { basePath: '', element, storage: new FakeStorage(), document: new FakeDocument() });
     await request(hyper, '/list', 'http://localhost/list', listJson);
@@ -234,7 +236,7 @@ describe('held data, restorations and kept values', () => {
     hyper.extension().htmx_after_swap(null, { ctx });
     await new Promise((done) => setTimeout(done, 0));
     expect(hyper.data('rows')).toBeUndefined();
-    expect(hyper.data('content')).toEqual(new Map([['id', '7']]));
+    await expect(hyper.set('rows', 'items.0.open', false)).rejects.toThrow('no response data is held');
   });
 
   it('ignores swaps that have no request, such as those of render and set', () => {
@@ -272,7 +274,8 @@ describe('held data, restorations and kept values', () => {
     await first;
     expect(page.mounted).toHaveLength(1);
     expect(page.mounted[0]).toContain('<i>7</i>');
-    expect(hyper.data('content')).toEqual(new Map([['id', '7']]));
+    // The route item has no route region, so the earlier restoration of /list did not leave its rows held.
+    expect(hyper.data('rows')).toBeUndefined();
   });
 
   it('fails to set a map key that the data does not contain (HY-33)', async () => {
@@ -585,24 +588,6 @@ describe('concurrent changes, saves and timeouts', () => {
 
 describe('swaps, storage order and client-side documents', () => {
   const homeJson = '{"env":{"timezone":"Z"},"route":"home","params":{},"shared":{"title":"T","csrf":"token"},"regions":{"content":{"name":"n"},"side":{"count":1}},"kept":{}}';
-
-  it('keeps a change of a region that a concurrent response does not contain (HY-33)', async () => {
-    const { hyper, swaps } = setup();
-    await request(hyper, '/', 'http://localhost/', homeJson);
-    const ensure = hyper.app.templates.ensure.bind(hyper.app.templates);
-    let release: () => void = () => undefined;
-    hyper.app.templates.ensure = (names) => {
-      hyper.app.templates.ensure = ensure;
-      return new Promise((done) => { release = () => done(ensure(names)); });
-    };
-    const change = hyper.set('side', 'count', 5);
-    await new Promise((done) => setTimeout(done, 0));
-    await request(hyper, '/', 'http://localhost/', homeJson.replace(',"side":{"count":1}', ''));
-    release();
-    await change;
-    expect(swaps.map((swap) => swap.text)).toEqual(['<b>5</b>']);
-    expect((hyper.data('side') as Map<string, unknown>).get('count')).toBe(5);
-  });
 
   it('renders the region again from held data when a response replaced it during the swap (HY-33)', async () => {
     const swaps: string[] = [];

@@ -124,19 +124,23 @@ export class Hyper {
     this.currentUrl = options.currentUrl ?? (() => window.location.href);
   }
 
-  // Holds the data of a rendered response. A replacing hold drops every region of the earlier
-  // response; otherwise only the regions of the earlier route are replaced (HY-32).
-  hold(decoded: DecodedResponse, replace = false): void {
+  // Holds the data of a rendered response: its route, environment and shared data and the data of the route regions
+  // of its route, which are the only regions that change in the browser (HY-30, HY-32). It replaces all held data.
+  hold(decoded: DecodedResponse): void {
     const loader: MapValue = new Map();
     const regions: MapValue = new Map();
-    if (this.held !== null && !replace) {
-      const dropped = new Set([this.app.page, ...(this.held.route.regions ?? []).map((region) => region.name)]);
-      for (const [name, data] of this.held.regions) if (!dropped.has(name)) regions.set(name, data);
-      for (const [name, data] of this.held.loader) if (!dropped.has(name)) loader.set(name, data);
+    for (const { name } of decoded.route.regions ?? []) {
+      const data = decoded.regions.get(name);
+      if (data !== undefined) regions.set(name, data);
+      const original = decoded.loader.get(name);
+      if (original !== undefined) loader.set(name, original);
     }
-    for (const [name, data] of decoded.regions) regions.set(name, data);
-    for (const [name, data] of decoded.loader) loader.set(name, data);
     this.held = { route: decoded.route, timezone: decoded.timezone, shared: decoded.shared, loader, regions };
+  }
+
+  // Forgets the held data, for a document without embedded data (HY-32).
+  release(): void {
+    this.held = null;
   }
 
   // Holds the data that the server embedded in the document, replacing all held data, starts loading
@@ -152,7 +156,7 @@ export class Hyper {
       return;
     }
     const changed = this.applyBrowserKept(decoded);
-    this.hold(decoded, true);
+    this.hold(decoded);
     const held = this.held!;
     try {
       await this.app.templates.ensure(routeTemplates(this.app.manifest, decoded.route));
@@ -183,11 +187,13 @@ export class Hyper {
 
   // Replaces the held data of a region and renders the region (HY-33).
   async render(region: string, data: unknown): Promise<void> {
+    this.requireRouteRegion(region);
     await this.change(region, () => requireMap(bind(data), `data of region ${region}`), Object.keys(keptPaths(this.app.manifest, region)));
   }
 
   // Sets one value in the held data of a region by a dotted path and renders the region (HY-33).
   async set(region: string, path: string, value: unknown): Promise<void> {
+    this.requireRouteRegion(region);
     await this.change(region, (data) => {
       assignPath(data, path, bind(value));
       return requireMap(data ?? null, `data of region ${region}`);
@@ -197,10 +203,11 @@ export class Hyper {
   // Runs the assignments of a `hy-set` attribute in the region that contains the element (HY-36).
   async setFrom(element: Element): Promise<void> {
     const held = this.requireHeld();
-    const names = [...this.app.manifest.regions.map((item) => item.name), ...(held.route.regions ?? []).map((item) => item.name)];
-    // A region element is the element whose id is a region name (HY-3, HY-36).
+    const names = (held.route.regions ?? []).map((item) => item.name);
+    if (names.length === 0) throw new Error('hyper: hy-set is outside a route region');
+    // A region element is the element whose id is the name of a route region of the held route (HY-3, HY-36).
     const region = element.closest(names.map((name) => `[id="${name}"]`).join(','))?.id;
-    if (region === undefined || region === '') throw new Error('hyper: hy-set is outside a region');
+    if (region === undefined || region === '') throw new Error('hyper: hy-set is outside a route region');
     const assignments = parseAssignments(element.getAttribute('hy-set') ?? '');
     await this.change(region, (data) => {
       for (const { path, value } of assignments) assignPath(data, path, bind(value));
@@ -283,7 +290,7 @@ export class Hyper {
       const html = renderDocument(this.app, decoded);
       const settle = await this.page.stylesheets(html);
       if (generation !== this.location) return;
-      this.hold(decoded, true);
+      this.hold(decoded);
       this.page.mount(html);
       settle();
     } catch {
@@ -368,8 +375,10 @@ export class Hyper {
         settle?.();
         // Swaps of render and set have no request.
         if (basePath !== '' || ctx.request?.headers?.['HX-History-Restore-Request'] !== 'true') return;
+        // A document without embedded data has no region that changes in the browser (HY-31, HY-32).
         const embedded = this.element('hy-data')?.textContent;
         if (embedded) void this.holdEmbedded(embedded, pathOf(ctx.request.action));
+        else this.release();
       },
       htmx_error: (_elt, detail) => {
         const ctx = detail.ctx;
@@ -483,6 +492,13 @@ export class Hyper {
   private requireHeld(): Held {
     if (this.held === null) throw new Error('hyper: no response data is held');
     return this.held;
+  }
+
+  // Only the route regions of the held route change in the browser (HY-33).
+  private requireRouteRegion(region: string): void {
+    if (!(this.requireHeld().route.regions ?? []).some((item) => item.name === region)) {
+      throw new Error(`hyper: region ${region} is not a route region of the held route`);
+    }
   }
 
   private routeOf(url: string): RouteDeclaration | null {

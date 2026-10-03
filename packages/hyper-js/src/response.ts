@@ -171,7 +171,7 @@ export function toHtml(app: Application, decoded: DecodedResponse): string {
 }
 
 // Renders the document of a decoded document response, including the embedded data, which carries the
-// loader data and the server kept values that were applied (HY-12, HY-22, HY-31, HY-38).
+// loader data and the server kept values of the route regions (HY-12, HY-22, HY-31, HY-38).
 export function renderDocument(app: Application, decoded: DecodedResponse): string {
   const names = [...app.manifest.regions.map((region) => region.name), ...(decoded.route.regions ?? []).map((region) => region.name)];
   for (const name of names) {
@@ -182,7 +182,7 @@ export function renderDocument(app: Application, decoded: DecodedResponse): stri
     // Every definition is HTML: the title, the embedded data and each manifest region rendered alone (HY-12).
     const define: Record<string, { html: string }> = {
       title: { html: app.engine.render(app.manifest.title, decoded.shared, { env }) },
-      data: { html: app.engine.render(DATA_TEMPLATE_NAME, new Map([['response', embedded(decoded)]]), { env }) },
+      data: { html: embeddedHtml(app, decoded, env) },
     };
     for (const region of app.manifest.regions) define[region.name] = { html: renderRegion(app, decoded.route, region.name, decoded.shared, decoded.regions, decoded.timezone) };
     return app.engine.render(app.manifest.layout, decoded.shared, { define, env });
@@ -199,11 +199,20 @@ export function renderLayout(app: Application, shared: MapValue, timezone: strin
   return app.engine.render(app.manifest.layout, shared, { define, env });
 }
 
-// Returns the response value without the kept values of the regions that dropped them (HY-31, HY-38).
-function embedded(decoded: DecodedResponse): MapValue {
-  if (decoded.dropped.size === 0) return decoded.value;
+// Renders the embedded data (HY-31): the response value with only the route regions of the route and their kept
+// entries, without the kept values of the regions that dropped them (HY-38). A route without route regions embeds
+// nothing.
+function embeddedHtml(app: Application, decoded: DecodedResponse, env: { timezone: string }): string {
+  const names = (decoded.route.regions ?? []).map((region) => region.name);
+  if (names.length === 0) return '';
+  const regions = requireMap(decoded.value.get('regions') ?? null, 'regions');
   const kept = requireMap(decoded.value.get('kept') ?? null, 'kept');
-  return new Map([...decoded.value, ['kept', new Map([...kept].filter(([name]) => !decoded.dropped.has(name)))]]);
+  const value: MapValue = new Map([...decoded.value].map(([key, item]): [string, Value] => {
+    if (key === 'regions') return [key, new Map(names.map((name): [string, Value] => [name, regions.get(name) ?? null]))];
+    if (key === 'kept') return [key, new Map([...kept].filter(([name]) => names.includes(name) && !decoded.dropped.has(name)))];
+    return [key, item];
+  }));
+  return app.engine.render(DATA_TEMPLATE_NAME, new Map([['response', value]]), { env });
 }
 
 export function requireMap(value: Value, label: string): MapValue {

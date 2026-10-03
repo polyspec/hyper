@@ -50,7 +50,11 @@ final class Manifest
                     throw new \InvalidArgumentException("manifest region {$name} uses an invalid topic");
                 }
             }
-            $regions[$name] = new Region($name, $isPage, $template, $uses, $region['keep'] ?? []);
+            // HY-37: only route regions change in the browser, so only they keep values.
+            if (array_key_exists('keep', $region)) {
+                throw new \InvalidArgumentException("manifest region {$name} cannot keep values; only route regions keep values");
+            }
+            $regions[$name] = new Region($name, $isPage, $template, $uses);
             if ($isPage) {
                 if ($page !== null) {
                     throw new \InvalidArgumentException('manifest declares more than one page region');

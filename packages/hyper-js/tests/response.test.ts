@@ -41,13 +41,13 @@ describe('toHtml', () => {
 });
 
 describe('renderDocument', () => {
-  it('renders the layout with the title, every region and the embedded data (HY-12, HY-31)', () => {
+  it('renders the layout with the title, every region and the data of the route regions (HY-12, HY-31)', () => {
     const value = response('list', '{"side":{"count":2},"content":{"heading":"H"},"rows":{"items":[{"name":"<a>"}]}}');
     const html = renderDocument(app, decodeResponse(app, value, '/list'));
     expect(html).toBe(
       '<title>T - Site</title>\n<aside id="side"><b>2</b></aside>\n<main id="content"><h1>H</h1><ul id="rows"><li>&lt;a&gt;</li></ul></main>\n'
       + '<script type="application/json" id="hy-data">{"env":{"timezone":"Z"},"route":"list","params":{},"shared":{"title":"T","shared_only":"s"},'
-      + '"regions":{"side":{"count":2},"content":{"heading":"H"},"rows":{"items":[{"name":"\\u003ca\\u003e"}]}},"kept":{}}</script>',
+      + '"regions":{"rows":{"items":[{"name":"\\u003ca\\u003e"}]}},"kept":{}}</script>',
     );
   });
 

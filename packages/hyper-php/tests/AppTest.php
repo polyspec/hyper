@@ -182,17 +182,13 @@ final class AppTest extends TestCase
 
     public function testHtmlRequestRendersTheDocument(): void
     {
-        // HY-12, HY-15
+        // HY-12, HY-15, HY-31: a route without route regions embeds no data.
         $response = $this->get('/');
 
         self::assertSame(200, $response->status);
         self::assertSame('text/html; charset=utf-8', $response->headers['Content-Type']);
-        $token = (string) $this->session->get('_hyper_csrf');
-        $data = '{"env":{"timezone":"+09:00"},"route":"home","params":{},"shared":{"title":"Home","csrf":"' . $token . '"},'
-            . '"regions":{"side":{"count":0,"note":null},"content":{"name":"n0"}},"kept":{}}';
         self::assertSame(
-            "<title>Home - Site</title>\n<aside id=\"side\"><b>0</b>\n</aside>\n<main id=\"content\"><p>Home|n0</p>\n</main>\n"
-            . "<script type=\"application/json\" id=\"hy-data\">{$data}</script>",
+            "<title>Home - Site</title>\n<aside id=\"side\"><b>0</b>\n</aside>\n<main id=\"content\"><p>Home|n0</p>\n</main>\n",
             $response->body,
         );
     }
@@ -213,14 +209,20 @@ final class AppTest extends TestCase
         self::assertStringContainsString("<main id=\"content\"><p>region|n</p>\n</main>", $document);
     }
 
-    public function testDocumentEmbedsTheDocumentJson(): void
+    public function testDocumentEmbedsOnlyTheRouteRegionsOfTheDocumentJson(): void
     {
-        // HY-31: the embedded value equals the document JSON response of the same request.
-        $html = $this->get('/list')->body;
-        $json = $this->get('/list', ['Accept' => 'application/json'])->body;
+        // HY-31: the embedded value is the document JSON response of the same request with only the route
+        // regions and their kept entries; the JSON response keeps every region (HY-18).
+        $cookies = ['hy-keep' => '{"rows":{"mode":"b"}}'];
+        $html = $this->app()->handle(new Request('GET', '/list', cookies: $cookies), $this->session)->body;
+        $json = self::json($this->app()->handle(new Request('GET', '/list', ['Accept' => 'application/json'], cookies: $cookies), $this->session));
 
+        self::assertSame(['side', 'content', 'rows'], array_keys($json['regions']));
         self::assertSame(1, preg_match('#<script type="application/json" id="hy-data">(.*)</script>#', $html, $found));
-        self::assertSame(json_decode($json, true), json_decode($found[1], true));
+        $expected = $json;
+        $expected['regions'] = ['rows' => $json['regions']['rows']];
+        self::assertSame($expected, json_decode($found[1], true));
+        self::assertSame(['rows' => ['mode' => 'b']], json_decode($found[1], true)['kept']);
         self::assertStringContainsString('"a\\u003c"', $found[1]);
     }
 
@@ -331,7 +333,7 @@ final class AppTest extends TestCase
     public function testManifestRejectsInvalidKeep(): void
     {
         // HY-37, HY-40
-        foreach (['keep-kind', 'keep-page', 'keep-reserved', 'uses-topic'] as $fixture) {
+        foreach (['keep-kind', 'keep-page', 'keep-manifest', 'keep-reserved', 'uses-topic'] as $fixture) {
             try {
                 App::open(__DIR__ . "/fixtures/invalid/{$fixture}.json", self::PROGRAM, [], 'Z');
                 self::fail("{$fixture} was accepted");
