@@ -7,6 +7,7 @@ namespace Polyspec\Hyper\Tests;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Polyspec\Hyper\Fields;
+use Polyspec\Hyper\Tests\Support\Json;
 
 /**
  * HY-56, HY-57: the cases of conformance/fields.json, which the Node server passes as well. A urlencoded text is the
@@ -17,19 +18,33 @@ final class FieldsTest extends TestCase
     /** @return iterable<string, array{string, ?list<array{string, list<string>}>}> */
     public static function cases(): iterable
     {
-        $fixture = json_decode((string) file_get_contents(__DIR__ . '/../../../conformance/fields.json'), true, flags: JSON_THROW_ON_ERROR);
-        foreach ($fixture['urlencoded'] as $case) {
-            yield $case['label'] => [$case['text'], $case['fields']];
+        foreach (Json::arrays(self::fixture()['urlencoded'] ?? null) as $case) {
+            yield Json::string($case['label'] ?? null) => [Json::string($case['text'] ?? null), self::expected($case['fields'] ?? null)];
         }
     }
 
     /** @return iterable<string, array{string, string, ?list<array{string, list<string>}>}> */
     public static function multipartCases(): iterable
     {
-        $fixture = json_decode((string) file_get_contents(__DIR__ . '/../../../conformance/fields.json'), true, flags: JSON_THROW_ON_ERROR);
-        foreach ($fixture['multipart'] as $case) {
-            yield $case['label'] => [$case['type'], (string) mb_convert_encoding($case['body'], 'ISO-8859-1', 'UTF-8'), $case['fields']];
+        foreach (Json::arrays(self::fixture()['multipart'] ?? null) as $case) {
+            yield Json::string($case['label'] ?? null) => [Json::string($case['type'] ?? null), (string) mb_convert_encoding(Json::string($case['body'] ?? null), 'ISO-8859-1', 'UTF-8'), self::expected($case['fields'] ?? null)];
         }
+    }
+
+    /** @return array<array-key, mixed> */
+    private static function fixture(): array
+    {
+        return Json::file(__DIR__ . '/../../../conformance/fields.json');
+    }
+
+    /** @return ?list<array{string, list<string>}> */
+    private static function expected(mixed $fields): ?array
+    {
+        if ($fields === null) {
+            return null;
+        }
+
+        return array_map(fn (array $pair): array => [Json::string($pair[0] ?? null), Json::strings($pair[1] ?? null)], Json::arrays($fields));
     }
 
     /** @param ?list<array{string, list<string>}> $expected */
@@ -86,8 +101,12 @@ final class FieldsTest extends TestCase
 
     public function testAbsentNameHasNoValues(): void
     {
-        self::assertSame([], Fields::parse('a=1')?->get('b'));
-        self::assertTrue((bool) Fields::parse('1=x')?->has('1'));
-        self::assertFalse((bool) Fields::parse('1=x')?->has('2'));
+        $fields = Fields::parse('a=1');
+        self::assertNotNull($fields);
+        self::assertSame([], $fields->get('b'));
+        $numeric = Fields::parse('1=x');
+        self::assertNotNull($numeric);
+        self::assertTrue($numeric->has('1'));
+        self::assertFalse($numeric->has('2'));
     }
 }

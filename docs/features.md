@@ -23,6 +23,7 @@
 | csrf | A masked CSRF token in every response, the session cookie `__Host-hy-session` or `hy-session`, session renewal in an action and no shared cache of a page (HY-24, HY-45, HY-52, HY-53, HY-72) | implemented | `make test-php`, `make test-node`, `make server-parity` |
 | read-paths | The read paths of every route computed from the template ASTs, written to `reads.json` for PHP and computed when the Node server opens; both servers send only those paths of the shared and region data (HY-44, HY-73) | implemented | `make test-js`, `make test-php`, `make test-node`, `make server-parity` |
 | php-errors | A warning, notice or deprecation of a PHP request fails it with the plain 500 instead of a wrong page (HY-74) | implemented | `make test-php` |
+| php-analysis | PHPStan at level `max` checks the source and the tests of the PHP server package, without a baseline or ignored errors | implemented | `make analyse-php` |
 | hyper-js | Browser code: region and document rendering, htmx extension, client-side rendering | implemented | `make test-js`, `make e2e` |
 | hyper-php | PHP server: routes, actions, CSRF, flash, changed topics, base path, documents and JSON | implemented | `make test-php` |
 | hyper-node | Node.js server `@polyspec/hyper-server` with the rules of the PHP server, file sessions, JSON with the bytes of PHP and the board example server (HY-54) | implemented | `make test-node`, `make node-server` |

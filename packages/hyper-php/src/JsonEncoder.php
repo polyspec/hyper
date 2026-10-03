@@ -11,8 +11,8 @@ final class JsonEncoder
      * Returns the response value; empty maps are `stdClass` so that JSON encoding and template binding both see maps.
      *
      * @param array<string, string> $params
-     * @param array<string, mixed> $shared
-     * @param array<string, array<string, mixed>> $regions region data by region name
+     * @param array<array-key, mixed> $shared
+     * @param array<string, array<array-key, mixed>> $regions region data by region name
      * @param array<string, array<string, mixed>> $kept kept values by region name and path
      * @return array<string, mixed>
      */
@@ -39,6 +39,10 @@ final class JsonEncoder
         return json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
     }
 
+    /**
+     * @param array<array-key, mixed> $value
+     * @return array<array-key, mixed>|\stdClass
+     */
     private static function map(array $value): array|\stdClass
     {
         return $value === [] ? new \stdClass() : $value;

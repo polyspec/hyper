@@ -1,0 +1,6 @@
+{
+  "layout": "layout.tpl",
+  "title": "title.tpl",
+  "regions": [{ "name": "content", "page": true }],
+  "routes": [{ "name": 5, "path": "/", "title": "Home", "template": "page.tpl" }]
+}

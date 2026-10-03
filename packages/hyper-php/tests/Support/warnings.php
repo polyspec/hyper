@@ -19,10 +19,11 @@ $app = App::open(
         'routes' => [
             'add' => ['post' => fn (): Result => Result::redirect('/')],
             'item' => ['load' => function (Request $request): array {
-                $values = [];
+                // Reads a key of a map; both requests below read a key that the map does not have.
+                $read = static fn (array $values, string $key): mixed => $values[$key];
 
                 return match ($request->param('id')) {
-                    'undefined-key' => ['id' => $values['missing']],
+                    'undefined-key' => ['id' => $read([], 'missing')],
                     'user-notice' => (function (): array {
                         trigger_error('a notice of the loader', E_USER_NOTICE);
 
@@ -33,7 +34,7 @@ $app = App::open(
 
                         return ['id' => 'deprecation'];
                     })(),
-                    default => ['id' => @$values['missing'] ?? 'silenced'],
+                    default => ['id' => @$read([], 'missing') ?? 'silenced'],
                 };
             }],
         ],
