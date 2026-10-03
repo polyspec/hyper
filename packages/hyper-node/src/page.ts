@@ -66,8 +66,11 @@ export async function renderPage<S extends object>(input: PageInput<S>, environm
       data.set(selected.name, replaced(loaded, toMap(input.invalid, `invalid data of route ${route.name}`)));
       for (const region of route.regions ?? []) {
         const loader = handler.regions?.[region.name];
-        data.set(region.name, loader === undefined ? new Map() : toMap(await loader(context), `data of region ${region.name}`));
+        const loaded = loader === undefined ? {} : await loader(context);
         stopClosed(input.signal);
+        // HY-75: a route region loader that returns null makes the region absent from this response.
+        if (loaded === null) continue;
+        data.set(region.name, toMap(loaded, `data of region ${region.name}`));
       }
     } else {
       const loader = handlers.regions?.[selected.name];

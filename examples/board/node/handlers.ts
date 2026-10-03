@@ -48,7 +48,8 @@ export const handlers: Handlers<Services> = {
         return { page, pages };
       },
       regions: {
-        notice: () => ({ notice: { text: '게시판 예제입니다. 정렬과 공지 닫기는 서버 요청 없이 처리됩니다.', closed: false } }),
+        // The notice is on the first page only; another page has no notice region (HY-75).
+        notice: ({ request, services }) => (currentPage(request, services.get('posts'))[0] === 1 ? { notice: { text: '게시판 예제입니다. 정렬과 공지 닫기는 서버 요청 없이 처리됩니다.', closed: false } } : null),
         rows: ({ request, services }) => {
           const posts = services.get('posts');
           const [page] = currentPage(request, posts);

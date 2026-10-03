@@ -57,6 +57,13 @@ describe('renderDocument', () => {
     for (const [name, html] of renderParts(app, decoded).regions) expect(document).toContain(`id="${name}">${html}</`);
   });
 
+  it('renders an absent route region nowhere and embeds no data without a present route region (HY-31, HY-75)', () => {
+    const decoded = decodeResponse(app, response('list', '{"side":{"count":2},"content":{"heading":"H"}}'), '/list');
+    expect(renderDocument(app, decoded)).toBe('<title>T - Site</title>\n<aside id="side"><b>2</b></aside>\n<main id="content"><h1>H</h1></main>\n');
+    expect(toHtml(app, decoded)).toContain('<h1>H</h1>');
+    expect(toHtml(app, decoded)).not.toContain('id="rows"');
+  });
+
   it('fails when a region is missing', () => {
     expect(() => renderDocument(app, decodeResponse(app, response('home', '{"content":{"name":"n"}}'), '/'))).toThrow('no region side');
   });

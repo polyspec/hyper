@@ -1,1 +1,1 @@
-<h1>{= title}</h1><ul id="rows">{# rows}</ul>
+<h1>{= title}</h1>{?# rows}<ul id="rows">{# rows}</ul>{/}

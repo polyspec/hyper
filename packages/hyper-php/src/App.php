@@ -373,7 +373,12 @@ final class App
                 $templates[$selected->name] = $route['template'];
                 foreach ($route['regions'] as $routeRegion) {
                     $loader = $handler['regions'][$routeRegion->name] ?? null;
-                    $data[$routeRegion->name] = $loader === null ? [] : self::map($this->container->call($loader, $provided), "the loader of region {$routeRegion->name}");
+                    $loaded = $loader === null ? [] : $this->container->call($loader, $provided);
+                    // HY-75: a route region loader that returns null makes the region absent from this response.
+                    if ($loaded === null) {
+                        continue;
+                    }
+                    $data[$routeRegion->name] = self::map($loaded, "the loader of region {$routeRegion->name}");
                     $templates[$routeRegion->name] = (string) $routeRegion->template;
                 }
             } else {
@@ -513,7 +518,7 @@ final class App
             }
         }
         $page = $this->manifest->page->name;
-        $routeRegions = array_map(fn (Region $region): string => $region->name, $route['regions']);
+        $routeRegions = self::present($route, $data);
         $others = array_values(array_diff(array_keys($data), [...$routeRegions, $page]));
         foreach ([...$routeRegions, ...$others, $page] as $name) {
             if (!isset($kept[$name])) {
@@ -537,6 +542,18 @@ final class App
     }
 
     /**
+     * Returns the names of the route regions of a route that are present in the data (HY-75).
+     *
+     * @param array{name: string, path: string, title: string, template: string, post: bool, regions: list<Region>} $route
+     * @param array<string, array<array-key, mixed>> $data
+     * @return list<string>
+     */
+    private static function present(array $route, array $data): array
+    {
+        return array_values(array_filter(array_map(fn (Region $region): string => $region->name, $route['regions']), fn (string $name): bool => array_key_exists($name, $data)));
+    }
+
+    /**
      * @param array{name: string, path: string, title: string, template: string, post: bool, regions: list<Region>} $route
      * @param array<array-key, mixed> $shared
      * @param array<string, array<array-key, mixed>> $data loader data, which the embedded data carries
@@ -546,10 +563,10 @@ final class App
      */
     private function renderDocument(Request $request, array $route, array $shared, array $data, array $applied, array $templates, array $kept): string
     {
-        // HY-31: the embedded data holds only the route regions and their kept entries, the data that the browser
-        // can change; a route without route regions embeds none. HY-44: rendering binds every value of the regions
+        // HY-31, HY-75: the embedded data holds only the present route regions and their kept entries, the data that
+        // the browser can change; a response without a present route region embeds none. HY-44: rendering binds every value of the regions
         // and of the embedded data, so a value outside the data model fails the document there.
-        $routeRegionNames = array_map(fn (Region $region): string => $region->name, $route['regions']);
+        $routeRegionNames = self::present($route, $data);
         $response = null;
         if ($routeRegionNames !== []) {
             $embedded = array_intersect_key($data, array_flip($routeRegionNames));

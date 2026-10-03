@@ -1,14 +1,15 @@
 // Checks HC-6: only the layout template of an application carries hx-* attributes; HY-3: the layout
-// places {# title}, {# data} and every manifest region exactly once; HY-3 and HY-30: every region,
-// in the layout and in each route template, is placed once, directly inside an element whose id is
-// the region name, without block arguments.
+// places {# title}, {# data} and every manifest region exactly once; HY-3 and HY-30: every region is
+// placed once, directly inside an element whose id is the region name, without block arguments: a
+// manifest region in the layout, and a route region in the route template or in a template that the
+// route template includes or places by path (HY-75).
 //
 // Usage: node scripts/check-templates.mjs --app examples/board
 
 import { readdirSync, readFileSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 import { parseArgs } from 'node:util';
-import { parse } from '@polyspec/template';
+import { parse, resolvePath } from '@polyspec/template';
 
 const { values } = parseArgs({ options: { app: { type: 'string' } } });
 if (!values.app) throw new Error('--app must name the application directory');
@@ -42,8 +43,29 @@ const placements = (body) => {
   visit(body);
   return found;
 };
-const checkRegions = (name, body, regions) => {
-  const found = placements(body);
+// Returns the block placements of a template and of every template that it includes or places by path.
+const graphPlacements = (entry) => {
+  const found = [];
+  const seen = new Set();
+  const visit = (name) => {
+    if (seen.has(name)) return;
+    seen.add(name);
+    const body = parse(readFileSync(join(templatesDir, name)), name).body;
+    found.push(...placements(body));
+    const references = (nodes) => {
+      for (const node of nodes) {
+        if ((node.type === 'Include' || node.type === 'Block') && typeof node.path === 'string') visit(resolvePath(name, node.path));
+        for (const value of Object.values(node)) {
+          if (Array.isArray(value) && value.every((item) => item !== null && typeof item === 'object' && typeof item.type === 'string')) references(value);
+        }
+      }
+    };
+    references(body);
+  };
+  visit(entry);
+  return found;
+};
+const checkRegions = (name, body, regions, found = placements(body)) => {
   for (const region of regions) {
     const places = found.filter((item) => item.node.id === region);
     if (places.length !== 1) {
@@ -67,7 +89,7 @@ const page = manifest.regions.find((region) => region.page).name;
 checkRegions(layout, layoutBody, [page]);
 for (const route of manifest.routes) {
   if ((route.regions ?? []).length === 0) continue;
-  checkRegions(route.template, parse(readFileSync(join(templatesDir, route.template)), route.template).body, route.regions.map((region) => region.name));
+  checkRegions(route.template, [], route.regions.map((region) => region.name), graphPlacements(route.template));
 }
 for (const problem of problems) console.error(problem);
 console.log(`${files.length} templates, ${problems.length} problem(s)`);

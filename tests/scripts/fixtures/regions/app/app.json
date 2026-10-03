@@ -2,10 +2,47 @@
   "layout": "layout.tpl",
   "title": "title.tpl",
   "regions": [
-    { "name": "left", "template": "left.tpl" },
-    { "name": "content", "page": true }
+    {
+      "name": "left",
+      "template": "left.tpl"
+    },
+    {
+      "name": "content",
+      "page": true
+    }
   ],
   "routes": [
-    { "name": "list", "path": "/", "title": "List", "template": "list.tpl", "regions": [{ "name": "notice", "template": "notice.tpl" }, { "name": "rows", "template": "rows.tpl" }] }
+    {
+      "name": "list",
+      "path": "/",
+      "title": "List",
+      "template": "list.tpl",
+      "regions": [
+        {
+          "name": "notice",
+          "template": "notice.tpl"
+        },
+        {
+          "name": "rows",
+          "template": "rows.tpl"
+        }
+      ]
+    },
+    {
+      "name": "view",
+      "path": "/view",
+      "title": "View",
+      "template": "view.tpl",
+      "regions": [
+        {
+          "name": "panel",
+          "template": "panel.tpl"
+        },
+        {
+          "name": "lost",
+          "template": "panel.tpl"
+        }
+      ]
+    }
   ]
 }

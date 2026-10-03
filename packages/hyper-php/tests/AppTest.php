@@ -699,6 +699,27 @@ final class AppTest extends TestCase
         self::assertSame(['items', 'open', 'mode', 'view', 'filter', 'tags'], array_keys(Json::array(Json::at($list, 'regions', 'rows'))));
     }
 
+    public function testRouteRegionWhoseLoaderReturnsNullIsAbsent(): void
+    {
+        // HY-75: no data, no kept entry and no definition; the page renders without the element and without #hy-data.
+        $rows = fn (Request $request): ?array => $request->queryInt('rows', 1) === 0 ? null : ['items' => ['a'], 'open' => false, 'mode' => 'a', 'view' => 'x', 'filter' => ['a' => 1], 'tags' => []];
+        $app = $this->app(options: ['handlers' => ['routes' => ['add' => ['post' => fn (): Result => Result::redirect('/')], 'list' => ['regions' => ['rows' => $rows]]]]]);
+        $cookies = ['hy-keep' => '{"rows":{"mode":"b"}}'];
+
+        $json = self::json($app->handle(new Request('GET', '/list', ['Accept' => 'application/json'], 'rows=0', cookies: $cookies), $this->session));
+        self::assertSame(['side', 'content'], array_keys(Json::array($json['regions'])));
+        self::assertSame([], $json['kept']);
+        $document = $app->handle(new Request('GET', '/list', [], 'rows=0', cookies: $cookies), $this->session)->body;
+        self::assertStringContainsString("<main id=\"content\"><h1>List</h1>\n</main>", $document);
+        self::assertStringNotContainsString('id="rows"', $document);
+        self::assertStringNotContainsString('id="hy-data"', $document);
+
+        // The same route with the region present.
+        $present = $app->handle(new Request('GET', '/list', [], 'rows=1', cookies: $cookies), $this->session)->body;
+        self::assertStringContainsString('<ul id="rows"><li>a</li></ul>', $present);
+        self::assertStringContainsString('id="hy-data"', $present);
+    }
+
     public function testRenewedSessionChangesTheTag(): void
     {
         // HY-53, HY-72: responses of one token share a tag whatever their masks; a renewed session has another tag.

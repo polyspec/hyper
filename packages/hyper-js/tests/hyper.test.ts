@@ -53,6 +53,11 @@ class FakeDocument {
   fail(status: string): void {
     this.mounted.push(`fail:${status}`);
   }
+  // the number of elements with an id in the page; a region element is present once unless a test says otherwise
+  readonly counts = new Map<string, number>();
+  elements(id: string): number {
+    return this.counts.get(id) ?? 1;
+  }
 }
 
 // A region element stub that records its hy-error attribute.
@@ -109,6 +114,9 @@ async function request(hyper: Hyper, action: string, responseUrl: string, body: 
 
 const listJson = '{"env":{"timezone":"Z"},"route":"list","params":{},"shared":{"title":"T","csrf":"token"},"regions":{"content":{"heading":"H"},"rows":{"items":[{"name":"a","open":true},{"name":"b","open":false}],"flag":false,"tab":"a"}},"kept":{}}';
 
+// The list route with its route region absent (HY-75).
+const absentJson = '{"env":{"timezone":"Z"},"route":"list","params":{},"shared":{"title":"T","csrf":"token"},"regions":{"content":{"heading":"H"}},"kept":{}}';
+
 afterEach(() => vi.unstubAllGlobals());
 
 describe('template delivery', () => {
@@ -148,11 +156,11 @@ describe('held data', () => {
     expect(swaps[1]!.text).toBe('<li>a</li><li class="open">b</li>');
   });
 
-  it('refuses to change a region that is not a route region of the held route (HY-33)', async () => {
+  it('refuses to change a region that is not a present route region of the held route (HY-33)', async () => {
     const { hyper, swaps } = setup();
     await request(hyper, '/list', 'http://localhost/list', listJson);
-    await expect(hyper.render('content', { heading: 'New' })).rejects.toThrow('region content is not a route region of the held route');
-    await expect(hyper.set('side', 'count', 5)).rejects.toThrow('region side is not a route region of the held route');
+    await expect(hyper.render('content', { heading: 'New' })).rejects.toThrow('region content is not a present route region of the held route');
+    await expect(hyper.set('side', 'count', 5)).rejects.toThrow('region side is not a present route region of the held route');
     expect(swaps).toEqual([]);
   });
 
@@ -497,6 +505,7 @@ describe('concurrent changes, saves and timeouts', () => {
       basePath: '',
       storage: new FakeStorage({ 'localStorage:rows:items.1.open': 'true' }),
       element: (id) => (id === 'rows' ? (rows as unknown as Element) : ({ id } as unknown as Element)),
+      document: new FakeDocument(),
     });
     await expect(hyper.holdEmbedded(listJson, '/list')).resolves.toBeUndefined();
     expect(rows.attributes.get('hy-error')).toBe('0');
@@ -521,6 +530,7 @@ describe('concurrent changes, saves and timeouts', () => {
       basePath: '',
       storage: new FakeStorage({ 'localStorage:rows:items.1.open': 'true', 'localStorage:rows:marks': '[1]' }),
       element: (id) => (id === 'rows' ? (rows as unknown as Element) : ({ id } as unknown as Element)),
+      document: new FakeDocument(),
     });
     await hyper.holdEmbedded(listJson.replace('"tab":"a"', '"tab":"a","marks":[]'), '/list');
     expect(swaps).toEqual(['<li class="open">a</li><li>b</li>']);
@@ -828,5 +838,38 @@ describe('stylesheet links (HY-64)', () => {
     const error = await ctx.fetch!(ctx.request.action, {}).catch((failure: unknown) => failure);
     extension.htmx_error(null, { ctx, error });
     expect(body.attributes.get('hy-error')).toBe('0');
+  });
+});
+
+describe('absent route regions (HY-75)', () => {
+  it('holds only the present route regions, so data, set and hy-set fail for an absent one', async () => {
+    const page = new FakeDocument();
+    page.counts.set('rows', 0);
+    const { hyper } = setup('', [], new FakeStorage(), page);
+    await hyper.holdEmbedded(absentJson, '/list');
+    expect(hyper.data('rows')).toBeUndefined();
+    await expect(hyper.set('rows', 'flag', true)).rejects.toThrow('rows');
+    await expect(hyper.render('rows', { flag: true })).rejects.toThrow('rows');
+    expect(page.mounted).toEqual([]);
+  });
+
+  it('marks the body when a present route region has no element, or an absent one has one', async () => {
+    const missing = new FakeDocument();
+    missing.counts.set('rows', 0);
+    await setup('', [], new FakeStorage(), missing).hyper.holdEmbedded(listJson, '/list');
+    expect(missing.mounted).toEqual(['fail:0']);
+
+    const twice = new FakeDocument();
+    twice.counts.set('rows', 2);
+    await setup('', [], new FakeStorage(), twice).hyper.holdEmbedded(listJson, '/list');
+    expect(twice.mounted).toEqual(['fail:0']);
+
+    const stray = new FakeDocument();
+    await setup('', [], new FakeStorage(), stray).hyper.holdEmbedded(absentJson, '/list');
+    expect(stray.mounted).toEqual(['fail:0']);
+
+    const present = new FakeDocument();
+    await setup('', [], new FakeStorage(), present).hyper.holdEmbedded(listJson, '/list');
+    expect(present.mounted).toEqual([]);
   });
 });

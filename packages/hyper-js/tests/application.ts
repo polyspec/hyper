@@ -28,7 +28,7 @@ export const sources: Record<string, string> = {
   'item.tpl': '<i>{= id}</i>{+ part.tpl}',
   'part.tpl': '<u>part</u>',
   'when.tpl': '{= date(at, "Y-m-d H:i")}',
-  'list.tpl': '<h1>{= heading}</h1><ul id="rows">{# rows}</ul>',
+  'list.tpl': '<h1>{= heading}</h1>{?# rows}<ul id="rows">{# rows}</ul>{/}',
   // A route region that reads a name of the page region data, which it must not see (HY-13).
   'leak.tpl': '<h1>{= heading}</h1><div id="inner">{# inner}</div>',
   'inner.tpl': '[{= heading}]',
