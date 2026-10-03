@@ -4,6 +4,7 @@ export class Reply {
   private readonly cookies: [string, string, number | null][] = [];
   private cacheControlText: string | null = null;
   private pageStatus: number | null = null;
+  private renewal = false;
   private readonly noted = new Map<string, unknown>();
 
   // Records a value of the request for the response hook; a later note of the same name replaces the value and keeps
@@ -34,11 +35,29 @@ export class Reply {
     return this;
   }
 
-  // Sets the Cache-Control of a page response with status 200.
+  // Sets the Cache-Control of a page response with status 200. A page carries the session token of its visitor, so the
+  // value keeps it out of shared caches: it has `private` or `no-store` and neither `public` nor `s-maxage` (HY-52).
   cacheControl(value: string): this {
     if (!/^[\x20-\x7e]+$/.test(value)) throw new Error('hyper: Cache-Control has a character that is not allowed');
+    const directives = value.split(',').map((part) => part.split('=')[0]!.trim().toLowerCase());
+    if (!directives.some((name) => name === 'private' || name === 'no-store') || directives.some((name) => name === 'public' || name === 's-maxage')) {
+      throw new Error(`hyper: Cache-Control ${value} lets a shared cache store the page; it needs private or no-store and neither public nor s-maxage`);
+    }
     this.cacheControlText = value;
     return this;
+  }
+
+  // Renews the session after the action of the request returns (HY-72).
+  renewSession(): this {
+    this.renewal = true;
+    return this;
+  }
+
+  // Returns whether a renewal was requested since the last call, and clears the request.
+  takeRenewal(): boolean {
+    const renewal = this.renewal;
+    this.renewal = false;
+    return renewal;
   }
 
   cacheControlValue(): string | null {

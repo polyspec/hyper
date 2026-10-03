@@ -17,23 +17,31 @@ final class NativeSession implements SessionStore
         if (session_status() === PHP_SESSION_ACTIVE) {
             return;
         }
-        $name = session_name();
+        $https = $this->https || (($_SERVER['HTTPS'] ?? '') !== '' && ($_SERVER['HTTPS'] ?? '') !== 'off');
+        $name = self::name($https);
         $id = $_COOKIE[$name] ?? null;
         if ($id !== null && (!is_string($id) || preg_match('/^[A-Za-z0-9,-]{22,256}$/D', $id) !== 1)) {
             unset($_COOKIE[$name]);
         }
-        session_start(self::options($this->https || (($_SERVER['HTTPS'] ?? '') !== '' && ($_SERVER['HTTPS'] ?? '') !== 'off')));
+        session_start(self::options($https));
+    }
+
+    /** Returns the session cookie name: `__Host-hy-session` over HTTPS and `hy-session` otherwise (HY-45). */
+    public static function name(bool $https): string
+    {
+        return $https ? '__Host-hy-session' : 'hy-session';
     }
 
     /**
-     * Returns the session options: an HttpOnly, SameSite=Lax cookie, Secure on HTTPS, only identifiers that
-     * the server created (HY-45), and no caching headers, because the application sets Cache-Control (HY-52).
+     * Returns the session options: the cookie name of HY-45 with `Path=/` and no `Domain`, HttpOnly, SameSite=Lax,
+     * Secure on HTTPS, only identifiers that the server created, and no caching headers, because the application
+     * sets Cache-Control (HY-52).
      *
-     * @return array{cookie_httponly: true, cookie_samesite: 'Lax', cookie_secure: bool, use_strict_mode: true, use_only_cookies: true, cache_limiter: ''}
+     * @return array{name: string, cookie_path: '/', cookie_domain: '', cookie_httponly: true, cookie_samesite: 'Lax', cookie_secure: bool, use_strict_mode: true, use_only_cookies: true, cache_limiter: ''}
      */
     public static function options(bool $https): array
     {
-        return ['cookie_httponly' => true, 'cookie_samesite' => 'Lax', 'cookie_secure' => $https, 'use_strict_mode' => true, 'use_only_cookies' => true, 'cache_limiter' => ''];
+        return ['name' => self::name($https), 'cookie_path' => '/', 'cookie_domain' => '', 'cookie_httponly' => true, 'cookie_samesite' => 'Lax', 'cookie_secure' => $https, 'use_strict_mode' => true, 'use_only_cookies' => true, 'cache_limiter' => ''];
     }
 
     public function get(string $key): mixed
@@ -53,5 +61,11 @@ final class NativeSession implements SessionStore
     {
         $this->start();
         unset($_SESSION[$key]);
+    }
+
+    public function renew(): void
+    {
+        $this->start();
+        session_regenerate_id(true);
     }
 }

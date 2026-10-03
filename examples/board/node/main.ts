@@ -43,5 +43,5 @@ app.bind('assets', () => {
   return { css: urls.css, reader: urls.reader, hyper: urls.hyper };
 });
 // The session cookie has the name that the PHP board uses, PHP's default session name.
-const server = app.server(new FileSessions({ directory: sessionDirectory, name: 'PHPSESSID' }), { files: join(board, 'public') });
+const server = app.server(new FileSessions({ directory: sessionDirectory }), { files: join(board, 'public') });
 server.listen(port, '127.0.0.1', () => process.stdout.write(`board on http://127.0.0.1:${port}\n`));

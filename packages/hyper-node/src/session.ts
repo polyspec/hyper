@@ -12,11 +12,14 @@ export interface SessionStore {
   set(key: string, value: unknown): void;
   // Removes the value stored under a key.
   remove(key: string): void;
+  // Moves the values to a new session identifier and deletes the old session (HY-72).
+  renew(): void;
 }
 
 // Stores the values of one session in memory.
 export class MemorySessionStore implements SessionStore {
   private readonly values = new Map<string, unknown>();
+  private renewed = 0;
 
   get(key: string): unknown {
     return this.values.get(key);
@@ -28,6 +31,16 @@ export class MemorySessionStore implements SessionStore {
 
   remove(key: string): void {
     this.values.delete(key);
+  }
+
+  // Counts the renewals; the values have no identifier in memory (HY-72).
+  renew(): void {
+    this.renewed++;
+  }
+
+  // The number of renewals.
+  get renewals(): number {
+    return this.renewed;
   }
 }
 
@@ -49,13 +62,19 @@ export class Session {
     this.store = store;
   }
 
-  // Returns the CSRF token and creates it on first use.
+  // Returns the CSRF token, 64 lowercase hexadecimal digits, and creates it on first use or over another value (HY-24).
   csrfToken(): string {
     const token = this.store.get(TOKEN);
-    if (typeof token === 'string' && token !== '') return token;
+    if (typeof token === 'string' && /^[0-9a-f]{64}$/.test(token)) return token;
     const created = randomBytes(32).toString('hex');
     this.store.set(TOKEN, created);
     return created;
+  }
+
+  // Moves the session to a new identifier and replaces its token (HY-72).
+  renew(): void {
+    this.store.renew();
+    this.store.set(TOKEN, randomBytes(32).toString('hex'));
   }
 
   // Returns the stored flash data and removes it from the session.

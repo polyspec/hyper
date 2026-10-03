@@ -45,10 +45,11 @@ final class RequestTest extends TestCase
     public function testSessionCookieOptions(): void
     {
         self::assertSame(
-            ['cookie_httponly' => true, 'cookie_samesite' => 'Lax', 'cookie_secure' => false, 'use_strict_mode' => true, 'use_only_cookies' => true, 'cache_limiter' => ''],
+            ['name' => 'hy-session', 'cookie_path' => '/', 'cookie_domain' => '', 'cookie_httponly' => true, 'cookie_samesite' => 'Lax', 'cookie_secure' => false, 'use_strict_mode' => true, 'use_only_cookies' => true, 'cache_limiter' => ''],
             NativeSession::options(false),
         );
         self::assertTrue(NativeSession::options(true)['cookie_secure']);
+        self::assertSame('__Host-hy-session', NativeSession::options(true)['name']);
     }
 
     public function testInvalidUtf8KeysAreRejectedAtAnyDepth(): void
@@ -116,6 +117,6 @@ final class RequestTest extends TestCase
     public function testCookiesAreNotChecked(): void
     {
         // HY-42: an invalid hy-keep is ignored and an invalid session cookie starts a new session.
-        self::assertTrue((new Request('GET', '/', cookies: ['hy-keep' => "\xFF", session_name() => "\xFF"]))->validInput());
+        self::assertTrue((new Request('GET', '/', cookies: ['hy-keep' => "\xFF", 'hy-session' => "\xFF"]))->validInput());
     }
 }

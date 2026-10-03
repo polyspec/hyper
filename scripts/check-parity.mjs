@@ -10,7 +10,7 @@
 //
 // With --node-port it also starts the board Node server (`make node-server`) with its own empty database and
 // session, sends every request of the steps to both servers, and requires the same status, the same headers and
-// the same body after it replaces the session identifier, the CSRF token and the ETag value with placeholders.
+// the same body after it replaces the session identifier, the masked CSRF token and the ETag value with placeholders.
 // Both servers store posts with the same creation time (BOARD_TIME).
 //
 // Usage: node scripts/check-parity.mjs --app examples/board --requests examples/board/tests/parity/requests.json --port 8092
@@ -28,7 +28,7 @@ import { build } from 'esbuild';
 const { values } = parseArgs({ options: { app: { type: 'string' }, requests: { type: 'string' }, port: { type: 'string' }, extension: { type: 'string' }, 'node-port': { type: 'string' } } });
 if (!values.app || !values.requests || !values.port) throw new Error('--app, --requests and --port are required');
 const app = values.app;
-const SESSION_COOKIE = 'PHPSESSID';
+const SESSION_COOKIE = 'hy-session';
 // The creation time of every post: 2026-10-01 12:00:00 UTC.
 const BOARD_TIME = '1790856000';
 // Headers that the HTTP server program writes by itself and that the comparison leaves out (HY-55).
@@ -114,15 +114,19 @@ try {
       fail(`${label}: statuses ${html.status}, ${documentJson.status}, ${regionJson.status}`);
     }
 
-    const rendered = browser.renderDocument(application, browser.decodeResponse(application, browser.parseJson(documentJson.text), path));
-    if (rendered !== html.text) fail(`${label}: browser document differs\n--- browser\n${rendered}\n--- server\n${html.text}`);
+    // Every response masks the session token anew (HY-24), so each text has the masked token of its own response
+    // replaced by <csrf> before the comparison.
+    const server = placeholder(html.text, html.token);
+    const rendered = placeholder(browser.renderDocument(application, browser.decodeResponse(application, browser.parseJson(documentJson.text), path)), documentJson.token);
+    if (rendered !== server) fail(`${label}: browser document differs\n--- browser\n${rendered}\n--- server\n${server}`);
 
     const parts = browser.renderParts(application, browser.decodeResponse(application, browser.parseJson(regionJson.text), path));
-    if (!html.text.includes(`<title>${parts.title}</title>`)) fail(`${label}: document does not contain the title ${parts.title}`);
-    for (const [name, region] of parts.regions) {
-      const tag = new RegExp(`<([a-z]+) id="${name}">`).exec(html.text)?.[1];
-      if (tag === undefined || !html.text.includes(`<${tag} id="${name}">${region}</${tag}>`)) {
-        fail(`${label}: region ${name} differs\n--- browser\n${region}\n--- server\n${html.text}`);
+    if (!server.includes(`<title>${parts.title}</title>`)) fail(`${label}: document does not contain the title ${parts.title}`);
+    for (const [name, alone] of parts.regions) {
+      const region = placeholder(alone, regionJson.token);
+      const tag = new RegExp(`<([a-z]+) id="${name}">`).exec(server)?.[1];
+      if (tag === undefined || !server.includes(`<${tag} id="${name}">${region}</${tag}>`)) {
+        fail(`${label}: region ${name} differs\n--- browser\n${region}\n--- server\n${server}`);
       }
     }
     console.log(`${failures === 0 ? 'ok' : 'checked'} ${label}: ${html.status}, route ${parts.route.name}, document ${Buffer.byteLength(rendered)} bytes, regions ${[...parts.regions.keys()].join(', ')}`);
@@ -173,7 +177,10 @@ function normalize(label, server, response) {
   for (const [name, value] of response.headers) {
     if (TRANSPORT_HEADERS.has(name) || name === 'set-cookie') continue;
     if (name === 'etag') {
-      const tag = `"${createHash('sha256').update(response.text).digest('hex').slice(0, 32)}"`;
+      // HY-53: the weak tag of the body with the masked token of the response replaced by the session token, which
+      // the masked value gives as its second half XOR its first half (HY-24).
+      const text = response.token === '' ? response.text : response.text.replaceAll(response.token, unmask(response.token));
+      const tag = `W/"${createHash('sha256').update(text).digest('hex').slice(0, 32)}"`;
       // A 304 has no body; its tag is the tag of the 200 body that the request named.
       if (response.status !== 304 && value !== tag) fail(`${label}: ${server} ETag ${value} is not the tag of its body`);
       headers.push(`${name}: <etag>`);
@@ -185,6 +192,17 @@ function normalize(label, server, response) {
     headers.push(`set-cookie: ${cookie.startsWith(`${SESSION_COOKIE}=`) ? cookie.replace(/^[^;]*/, `${SESSION_COOKIE}=<session>`) : replace(cookie)}`);
   }
   return { headers: headers.sort(), text: replace(response.text) };
+}
+
+// Returns a text with a masked token replaced by <csrf>.
+function placeholder(text, token) {
+  return token === '' ? text : text.replaceAll(token, '<csrf>');
+}
+
+// Returns the session token of a masked value (HY-24).
+function unmask(masked) {
+  const mask = Buffer.from(masked.slice(0, 64), 'hex');
+  return Buffer.from(Buffer.from(masked.slice(64), 'hex').map((byte, index) => byte ^ mask[index])).toString('hex');
 }
 
 function fail(message) {

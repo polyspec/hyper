@@ -226,7 +226,7 @@ final class App
         }
         $session = new Session($store);
         $flash = $session->takeFlash();
-        $request = $request->withRoute((string) $path, $match['params'])->withSession($flash, $session->csrfToken());
+        $request = $request->withRoute((string) $path, $match['params'])->withSession($flash, Csrf::masked($session->csrfToken()));
 
         return $this->routed($request, $route, $handler, $session, $flash, $reply, $basePath)->withCookies($reply, $this->https || $request->https);
     }
@@ -271,7 +271,7 @@ final class App
     {
         try {
             if ($request->method === 'GET') {
-                return $this->page($request, $route, $handler, $session, $flash, 200, [], $reply, $basePath);
+                return self::withoutRenewal($reply, $this->page($request, $route, $handler, $session, $flash, 200, [], $reply, $basePath));
             }
             if ($request->method !== 'POST' || !isset($handler['post'])) {
                 return Response::text(405, 'Method Not Allowed');
@@ -279,18 +279,23 @@ final class App
             if (!in_array($request->mediaType(), $this->formTypes, true)) {
                 return Response::text(415, 'Unsupported Media Type');
             }
-            if (!hash_equals($request->csrfToken(), $request->formString('_csrf'))) {
+            if (!Csrf::verify($session->csrfToken(), $request->formString('_csrf'))) {
                 return Response::text(403, 'Forbidden');
             }
             $result = $this->container->call($handler['post'], [Request::class => $request, Reply::class => $reply]);
             if (!$result instanceof Result) {
                 throw new \LogicException("POST action of route {$route['name']} did not return a Result");
             }
+            // HY-72: the action renews the session after it returns, and a page that it renders carries the new token.
+            if ($reply->takeRenewal()) {
+                $session->renew();
+                $request = $request->withSession($flash, Csrf::masked($session->csrfToken()));
+            }
             if ($result->isRedirect()) {
                 return $this->redirect($session, $result, $basePath);
             }
 
-            return $this->page($request, $route, $handler, $session, $flash, $result->status, $result->data, $reply, $basePath);
+            return self::withoutRenewal($reply, $this->page($request, $route, $handler, $session, $flash, $result->status, $result->data, $reply, $basePath));
         } catch (NotFound) {
             return Response::text(404, 'Not Found');
         } catch (Redirect $redirect) {
@@ -300,6 +305,16 @@ final class App
         } catch (BadRequest) {
             return Response::text(400, 'Bad Request');
         }
+    }
+
+    /** Fails when a loader or the shared handler renewed the session, because the page carries the old token (HY-72). */
+    private static function withoutRenewal(Reply $reply, Response $response): Response
+    {
+        if ($reply->takeRenewal()) {
+            throw new \LogicException('a loader or the shared handler called renewSession; only an action renews the session');
+        }
+
+        return $response;
     }
 
     /** Stores the flash values and changed topics of a redirect result and answers 303 (HY-25, HY-50). */
@@ -366,9 +381,10 @@ final class App
             if ($status !== 200) {
                 return new Response($status, $headers, $body);
             }
-            // HY-53: a strong tag of the body; a matching GET request receives 304 without a body and without
-            // `Content-Type`, because a 304 carries no representation.
-            $tag = '"' . substr(hash('sha256', $body), 0, 32) . '"';
+            // HY-53: a weak tag of the body with the masked token replaced by the session token, so the mask does not
+            // change it; a matching GET request receives 304 without a body and without `Content-Type`, because a
+            // 304 carries no representation.
+            $tag = 'W/"' . substr(hash('sha256', str_replace($request->csrfToken(), $session->csrfToken(), $body)), 0, 32) . '"';
             $headers['ETag'] = $tag;
             if ($request->method !== 'GET' || $request->header('If-None-Match') !== $tag) {
                 return new Response(200, $headers, $body);
@@ -515,7 +531,7 @@ final class App
         if (!in_array($request->mediaType(), $this->formTypes, true)) {
             return Response::text(415, 'Unsupported Media Type');
         }
-        if (!hash_equals($session->csrfToken(), $request->formString('_csrf'))) {
+        if (!Csrf::verify($session->csrfToken(), $request->formString('_csrf'))) {
             return Response::text(403, 'Forbidden');
         }
         $name = $request->formString('region');

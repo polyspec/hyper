@@ -1,11 +1,11 @@
 // Answers requests with documents, JSON, action redirects and the static shell (HY-8, HY-10 to HY-19, HY-24 to HY-27,
 // HY-40 to HY-46, HY-50 to HY-54, HY-58 to HY-60, HY-62).
-import { timingSafeEqual } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { isAbsolute, join } from 'node:path';
 import type { Server } from 'node:http';
 import { checkManifest, createApplication, keptPaths, routeTemplates, stripBasePath, type Application, type Manifest, type RouteDeclaration, type TemplateIndex } from '@polyspec/hyper';
 import type { Template } from '@polyspec/template/render';
+import { maskedToken, verifyToken } from './csrf.js';
 import type { FileSessions } from './file-sessions.js';
 import { createServer, type ServerOptions } from './http.js';
 import { decodeJson, inDataModel, JsonDecodeError } from './json.js';
@@ -255,7 +255,7 @@ export class App<S extends object = Record<string, never>> {
     }
     const session = new Session(store);
     const flash = session.takeFlash();
-    const routed = request.withRoute(path, match.params).withSession(flash, session.csrfToken());
+    const routed = request.withRoute(path, match.params).withSession(flash, maskedToken(session.csrfToken()));
     const response = await this.routed({ request: routed, route, handler, session, flash, reply, status: 200, invalid: {}, basePath, signal });
     return response.withCookies(reply, this.https || request.https);
   }
@@ -280,15 +280,21 @@ export class App<S extends object = Record<string, never>> {
   private async routed(input: PageInput<S>): Promise<Response> {
     const { request, handler, session, reply } = input;
     try {
-      if (request.method === 'GET') return await this.page(input);
+      if (request.method === 'GET') return withoutRenewal(reply, await this.page(input));
       if (request.method !== 'POST' || handler.post === undefined) return Response.text(405, 'Method Not Allowed');
       if (!this.formTypes.includes(request.mediaType())) return Response.text(415, 'Unsupported Media Type');
-      if (!tokensEqual(request.csrfToken(), request.formString('_csrf'))) return Response.text(403, 'Forbidden');
+      if (!verifyToken(session.csrfToken(), request.formString('_csrf'))) return Response.text(403, 'Forbidden');
       const result = await handler.post({ request, reply, services: this.services });
       stopClosed(input.signal);
       if (!(result instanceof Result)) throw new Error(`hyper: POST action of route ${input.route.name} did not return a Result`);
+      // HY-72: the action renews the session after it returns, and a page that it renders carries the new token.
+      let page = input;
+      if (reply.takeRenewal()) {
+        session.renew();
+        page = { ...input, request: request.withSession(input.flash, maskedToken(session.csrfToken())) };
+      }
       if (result.isRedirect()) return this.redirect(session, result, input.basePath);
-      return await this.page({ ...input, status: result.status, invalid: result.data });
+      return withoutRenewal(reply, await this.page({ ...page, status: result.status, invalid: result.data }));
     } catch (error) {
       if (error instanceof NotFound) return Response.text(404, 'Not Found');
       if (error instanceof Redirect) return this.redirect(session, error.result, input.basePath);
@@ -312,7 +318,7 @@ export class App<S extends object = Record<string, never>> {
   private keep(request: Request, session: Session): Response {
     if (request.method !== 'POST') return Response.text(405, 'Method Not Allowed');
     if (!this.formTypes.includes(request.mediaType())) return Response.text(415, 'Unsupported Media Type');
-    if (!tokensEqual(session.csrfToken(), request.formString('_csrf'))) return Response.text(403, 'Forbidden');
+    if (!verifyToken(session.csrfToken(), request.formString('_csrf'))) return Response.text(403, 'Forbidden');
     const name = request.formString('region');
     const path = request.formString('path');
     if (!Object.hasOwn(keptPaths(this.application.manifest, name), path) || keptPaths(this.application.manifest, name)[path] !== 'server') {
@@ -353,11 +359,10 @@ function escapeAttribute(value: string): string {
   return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#039;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-// Compares two tokens in constant time for strings of the same length.
-function tokensEqual(known: string, given: string): boolean {
-  const a = Buffer.from(known);
-  const b = Buffer.from(given);
-  return a.length === b.length && timingSafeEqual(a, b);
+// Fails when a loader or the shared handler renewed the session, because the page carries the old token (HY-72).
+function withoutRenewal(reply: Reply, response: Response): Response {
+  if (reply.takeRenewal()) throw new Error('hyper: a loader or the shared handler called renewSession; only an action renews the session');
+  return response;
 }
 
 // Checks that the handlers match the manifest (HY-2, HY-30).

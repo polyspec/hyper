@@ -72,7 +72,7 @@ app.bind('posts', () => new Posts('/srv/board/var/board.db'));
 | 필드 | 타입 | 뜻 |
 |---|---|---|
 | `request` | `Request` | `method`, `path()`, `params()`, `param(name)`, `query()`, `rawQuery()`, `queryInt(name, fallback)`, `form()`, `formString(name)`, `flash(name)`, `cookie(name)`, `header(name)`, `csrfToken()`, `currentPath()`, `wantsJson()`, `isRegionRequest()`, `https` |
-| `reply` | `Reply` | `cookie(name, value, maxAge?)`, `removeCookie(name)`, `cacheControl(value)`(HY-52). `note(name, value)`는 응답 hook을 위한 값을 기록하며, hook은 `notes()`로 읽는다(HY-60) |
+| `reply` | `Reply` | `cookie(name, value, maxAge?)`, `removeCookie(name)`, `private`나 `no-store`를 담은 `cacheControl(value)`(HY-52), 액션의 `renewSession()`(HY-72). `note(name, value)`는 응답 hook을 위한 값을 기록하며, hook은 `notes()`로 읽는다(HY-60) |
 | `services` | `Services<S>` | `get(key)`는 `app.bind`가 등록한 service를 반환한다 |
 
 loader는 데이터를 반환한다. 문자열 key의 plain object나 `Map`이며, 바로 반환하거나 promise로 반환한다. 값은 null, boolean, ±(2^53 − 1) 안의 number와 bigint, string, 배열, map, plain object다(HY-44, HY-54). plain object는 JavaScript 규칙대로 정수 같은 key를 앞에 두고, `Map`은 넣은 순서를 지킨다.
@@ -88,13 +88,13 @@ loader나 action은 `new NotFound()`(404, HY-27), `new Redirect(Result.redirect(
 ## HTTP로 제공하기
 
 ```ts
-const sessions = new FileSessions({ directory: '/srv/board/var/sessions', name: 'hyper_session' });
+const sessions = new FileSessions({ directory: '/srv/board/var/sessions' });
 app.server(sessions, { files: '/srv/board/public' }).listen(8080, '127.0.0.1');
 ```
 
 `app.server(sessions, options)`는 `node:http` 서버를 반환한다. 서버는 요청 body를 애플리케이션의 `bodyLimit`까지만 읽는다(HY-59). `options.files`는 절대 디렉터리이며, PHP 내장 서버가 document root를 제공하듯 그 안의 파일을 지정한 `GET`과 `HEAD` 요청에 그 파일을 준다. ASCII 밖의 바이트가 있는 요청 대상처럼 `node:http`가 해석하지 못하는 요청은 평문 400을 받는다(HY-42).
 
-`FileSessions({ directory, name, lifetime })`는 이 서버 process만 쓰는 기존 절대 디렉터리의 파일에 각 session을 저장한다. `name`은 session cookie 이름이고, `lifetime`은 session의 마지막 요청부터 session이 끝날 때까지의 초다(기본 1440, PHP `session.gc_maxlifetime`과 같다). store는 자기가 만든 식별자만 받아들이고, 요청이 session 데이터를 읽거나 쓸 때만 session을 시작하며, 한 session의 요청을 차례로 실행한다(HY-45). `sessions.collect()`는 끝난 session의 파일을 지운다. 서버는 원하는 주기로 이를 호출한다.
+`FileSessions({ directory, lifetime })`는 이 서버 process만 쓰는 기존 절대 디렉터리의 파일에 각 session을 저장한다. session cookie는 HTTPS에서 `__Host-hy-session`, 그렇지 않으면 `hy-session`이고(HY-45), `lifetime`은 session의 마지막 요청부터 session이 끝날 때까지의 초다(기본 1440, PHP `session.gc_maxlifetime`과 같다). store는 자기가 만든 식별자만 받아들이고, 요청이 session 데이터를 읽거나 쓸 때만 session을 시작하며, 한 session의 요청을 차례로 실행한다(HY-45). `sessions.collect()`는 끝난 session의 파일을 지운다. 서버는 원하는 주기로 이를 호출한다.
 
 ## HTTP 없이 요청에 응답하기
 

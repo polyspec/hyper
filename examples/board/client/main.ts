@@ -29,12 +29,13 @@ document.addEventListener('click', (event) => {
 
 // The comparison page embeds both modes in frames and compares them after htmx has processed a new
 // body and after every swap. A frame sends only the SHA-256 of its body, because the body holds the
-// CSRF token, and only to the origin of the page that embeds it.
+// CSRF token, and only to the origin of the page that embeds it. Every response masks the token anew
+// (HY-24), so the digest reads the body with each masked token, 128 hexadecimal digits, as <csrf>.
 const mode = basePath === null ? 'ssr' : 'csr';
 const parentOrigin = window.parent !== window && document.referrer !== '' ? new URL(document.referrer).origin : null;
 async function report(): Promise<void> {
   if (parentOrigin === null) return;
-  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(document.body.innerHTML));
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(document.body.innerHTML.replace(/\b[0-9a-f]{128}\b/g, '<csrf>')));
   const body = Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
   window.parent.postMessage({ type: 'hyper-body', mode, path: location.pathname + location.search, body }, parentOrigin);
 }

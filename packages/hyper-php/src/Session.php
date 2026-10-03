@@ -15,16 +15,23 @@ final class Session
     {
     }
 
-    /** Returns the CSRF token and creates it on first use. */
+    /** Returns the CSRF token, 64 lowercase hexadecimal digits, and creates it on first use or over another value (HY-24). */
     public function csrfToken(): string
     {
         $token = $this->store->get(self::TOKEN);
-        if (!is_string($token) || $token === '') {
+        if (!is_string($token) || preg_match('/^[0-9a-f]{64}$/D', $token) !== 1) {
             $token = bin2hex(random_bytes(32));
             $this->store->set(self::TOKEN, $token);
         }
 
         return $token;
+    }
+
+    /** Moves the session to a new identifier and replaces its token (HY-72). */
+    public function renew(): void
+    {
+        $this->store->renew();
+        $this->store->set(self::TOKEN, bin2hex(random_bytes(32)));
     }
 
     /** Returns the stored flash data and removes it from the session. */

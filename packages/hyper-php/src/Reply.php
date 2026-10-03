@@ -15,6 +15,8 @@ final class Reply
 
     private ?string $cacheControl = null;
 
+    private bool $renewal = false;
+
     private ?int $status = null;
 
     /** @var array<string, mixed> */
@@ -67,15 +69,40 @@ final class Reply
         return $this;
     }
 
-    /** Sets the Cache-Control of a page response with status 200. */
+    /**
+     * Sets the Cache-Control of a page response with status 200. A page carries the session token of its visitor, so
+     * the value keeps it out of shared caches: it has `private` or `no-store` and neither `public` nor `s-maxage`
+     * (HY-52).
+     */
     public function cacheControl(string $value): self
     {
         if (preg_match('/^[\x20-\x7e]+$/D', $value) !== 1) {
             throw new \InvalidArgumentException('Cache-Control has a character that is not allowed');
         }
+        $directives = array_map(fn (string $part): string => strtolower(trim(explode('=', $part, 2)[0])), explode(',', $value));
+        if (array_intersect($directives, ['private', 'no-store']) === [] || array_intersect($directives, ['public', 's-maxage']) !== []) {
+            throw new \InvalidArgumentException("Cache-Control {$value} lets a shared cache store the page; it needs private or no-store and neither public nor s-maxage");
+        }
         $this->cacheControl = $value;
 
         return $this;
+    }
+
+    /** Renews the session after the action of the request returns (HY-72). */
+    public function renewSession(): self
+    {
+        $this->renewal = true;
+
+        return $this;
+    }
+
+    /** Returns whether a renewal was requested since the last call, and clears the request. */
+    public function takeRenewal(): bool
+    {
+        $renewal = $this->renewal;
+        $this->renewal = false;
+
+        return $renewal;
     }
 
     public function cacheControlValue(): ?string
