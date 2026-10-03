@@ -3,9 +3,11 @@
 // reads.test.ts.
 import { parse, parseJson, type Template } from '@polyspec/template';
 import { MapLoader, resolvePath } from '@polyspec/template/render';
+import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { createEngine, keepRead, routeReads, templateReads, type ReadNode } from '../src/index.js';
+import { createEngine, keepRead, routeReads, type ReadNode } from '../src/index.js';
 import { manifest, sources } from './application.js';
 
 interface Case {
@@ -19,12 +21,25 @@ interface Case {
 
 const fixture = JSON.parse(readFileSync(new URL('../../../conformance/reads.json', import.meta.url), 'utf8')) as { cases: Case[] };
 
+// The time limit of the read paths of one case. The analysis runs in its own process, because an analysis that does
+// not finish blocks the process that runs it, so a time limit inside the test process cannot stop it.
+const READS_LIMIT_MS = 10_000;
+
+function readsWithin(item: Case): ReadNode {
+  const child = spawnSync(process.execPath, [fileURLToPath(new URL('./reads-process.ts', import.meta.url)), JSON.stringify(item)], {
+    encoding: 'utf8',
+    timeout: READS_LIMIT_MS,
+  });
+  if (child.error !== undefined) throw new Error(`the read paths of "${item.label}" did not finish within ${READS_LIMIT_MS} ms: ${child.error.message}`);
+  if (child.status !== 0) throw new Error(`the read paths of "${item.label}" failed: ${child.stderr}`);
+  return JSON.parse(child.stdout) as ReadNode;
+}
+
 describe('read paths (HY-73)', () => {
   for (const item of fixture.cases) {
     it(item.label, () => {
       const parsed = new Map(Object.entries(item.templates).map(([name, source]) => [name, parse(source, name)]));
-      const load = (name: string): Template => parsed.get(name)!;
-      expect(templateReads(load, resolvePath, item.template)).toEqual(item.reads);
+      expect(readsWithin(item)).toEqual(item.reads);
 
       const data = parseJson(JSON.stringify(item.data));
       const kept = keepRead(data, item.reads);
