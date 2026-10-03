@@ -50,4 +50,7 @@ Depends on: Wave 2.
 
 | ID | Task | Verification | Status |
 |---|---|---|---|
-| H4.1 | Specify how a page that places views at request time, under one route, declares the parts that change in the browser without a request | `make docs-check` | [ ] blocked: the design needs a decision on the board list view of the board example |
+| H4.1 | Specify absent route regions and their placement: a route region loader that returns null makes the region absent from the response (no data, no kept entries, no definition, so `{?# name}` is false); a template that the route template includes or places by path may place a route region; a present route region has exactly one element on the page, which the browser checks; the template check follows includes and blocks | `make docs-check` | [ ] |
+| H4.2 | PHP server: absent route regions in documents and JSON | `make test-php` | [ ] |
+| H4.3 | Browser package and Node server: absent route regions in rendering, held data and embedded data, and the element check | `make test-js`, `make test-node` | [ ] |
+| H4.4 | Template check, example (the notice route region is absent when there is no notice), browser tests, parity, feature status and changelog | `make check` | [ ] |
