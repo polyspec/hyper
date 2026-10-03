@@ -43,19 +43,20 @@ const KEPT_PATH = /^[A-Za-z_][A-Za-z0-9_]*(\.([A-Za-z_][A-Za-z0-9_]*|\d+))*$/;
 export function checkManifest(manifest: Manifest): Manifest {
   if (typeof manifest.layout !== 'string' || typeof manifest.title !== 'string') throw new Error('hyper: the manifest has no layout or title template');
   const regionNames = new Set<string>();
-  const addRegion = (name: string, keep: Record<string, KeepKind> | undefined, page: boolean): void => {
+  const addRegion = (name: string, keep: Record<string, KeepKind> | undefined, manifestRegion: boolean): void => {
     if (!REGION_NAME.test(name) || RESERVED.has(name) || regionNames.has(name)) {
       throw new Error(`hyper: invalid or duplicated region name ${JSON.stringify(name)}`);
     }
     regionNames.add(name);
-    if (page && keep !== undefined) throw new Error(`hyper: page region ${name} cannot keep values`);
+    // HY-37: only route regions change in the browser, so only they keep values.
+    if (manifestRegion && keep !== undefined) throw new Error(`hyper: manifest region ${name} cannot keep values; only route regions keep values`);
     for (const [path, kind] of Object.entries(keep ?? {})) {
       if (!KEPT_PATH.test(path) || !KEEP_KINDS.includes(kind)) throw new Error(`hyper: region ${name} has an invalid kept path ${path}`);
     }
   };
   let pages = 0;
   for (const region of manifest.regions) {
-    addRegion(region.name, region.keep, region.page === true);
+    addRegion(region.name, region.keep, true);
     for (const topic of region.uses ?? []) {
       if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(topic)) throw new Error(`hyper: region ${region.name} uses an invalid topic ${JSON.stringify(topic)}`);
     }

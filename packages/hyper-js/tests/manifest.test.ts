@@ -30,4 +30,11 @@ describe('checkManifest', () => {
     const route = valid().routes[0]!;
     expect(() => checkManifest({ ...valid(), routes: [{ ...route, regions: [{ name: 'rows' } as unknown as { name: string; template: string }] }] })).toThrow('route region rows');
   });
+
+  it('rejects kept paths on a manifest region, because only route regions keep values (HY-37)', () => {
+    expect(() => checkManifest({ ...valid(), regions: [{ name: 'side', template: 'side.tpl', keep: { a: 'server' } }, { name: 'content', page: true }] })).toThrow('manifest region side cannot keep values');
+    expect(() => checkManifest({ ...valid(), regions: [{ name: 'content', page: true, keep: { a: 'server' } }] })).toThrow('manifest region content cannot keep values');
+    const route = valid().routes[0]!;
+    expect(checkManifest({ ...valid(), routes: [{ ...route, regions: [{ name: 'rows', template: 'rows.tpl', keep: { a: 'server' } }] }] }).routes[0]!.regions![0]!.keep).toEqual({ a: 'server' });
+  });
 });

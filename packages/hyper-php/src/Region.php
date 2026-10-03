@@ -23,9 +23,6 @@ final class Region
                 throw new \InvalidArgumentException("region {$name} has an invalid kept path {$path}");
             }
         }
-        if ($page && $keep !== []) {
-            throw new \InvalidArgumentException("page region {$name} cannot keep values");
-        }
     }
 
     /**

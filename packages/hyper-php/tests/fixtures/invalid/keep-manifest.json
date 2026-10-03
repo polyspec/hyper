@@ -1,0 +1,6 @@
+{
+  "layout": "layout.tpl",
+  "title": "title.tpl",
+  "regions": [{ "name": "side", "template": "side.tpl", "uses": ["path"], "keep": { "a": "server" } }, { "name": "content", "page": true }],
+  "routes": []
+}

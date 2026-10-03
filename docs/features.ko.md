@@ -24,7 +24,7 @@
 | hyper-php | PHP 서버: 라우트, 액션, CSRF, flash, 바뀐 주제, 기본 경로, 문서와 JSON | implemented | `make test-php` |
 | hyper-node | PHP 서버의 규칙, 파일 session, PHP와 같은 바이트의 JSON을 갖춘 Node.js 서버 `@polyspec/hyper-server`와 board 예제 서버(HY-54) | implemented | `make test-node`, `make node-server` |
 | route-regions | 자기 로더를 가진 페이지 안의 라우트 영역(HY-30) | implemented | `make test-php`, `make parity` |
-| region-data | 요청 없이 동작하는 내장 문서 데이터, `data`, `render`, `set`, `hy-set`(HY-29 ~ HY-33, HY-36) | implemented | `make test-js`, `make e2e` |
+| region-data | 라우트 영역의 내장 데이터, 요청 없이 라우트 영역에서 동작하는 `data`, `render`, `set`, `hy-set`, 데이터 공개 규칙(HY-29 ~ HY-33, HY-36, HY-71) | implemented | `make test-js`, `make e2e` |
 | kept-data | 서버 세션, 쿠키, localStorage, sessionStorage의 유지 경로(HY-37 ~ HY-41) | implemented | `make test-php`, `make test-js`, `make parity`, `make e2e` |
 | template-delivery | 템플릿마다 파일 하나, 라우트별 불러오기(HY-34, HY-35) | implemented | `make test-js`, `make e2e`, `make bundle-size` |
 | parity | 브라우저의 문서와 영역이 PHP 문서와 바이트 단위로 같음 | implemented | `make parity` |

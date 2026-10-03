@@ -103,9 +103,6 @@ final class ClientTest extends TestCase
         if (array_key_exists('body', $case)) {
             self::assertSame($case['body'], $response->body);
         }
-        if ($case['document'] ?? false) {
-            self::assertStringContainsString('id="hy-data"', $response->body);
-        }
         if (isset($case['json'])) {
             $json = json_decode($response->body, true, flags: JSON_THROW_ON_ERROR);
             self::assertSame($case['json']['route'], $json['route']);

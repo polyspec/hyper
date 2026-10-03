@@ -483,10 +483,15 @@ final class App
      */
     private function renderDocument(Request $request, array $route, array $shared, array $data, array $applied, array $templates, array $kept): string
     {
-        // HY-44: rendering binds every value of the regions and of the embedded response, so a value outside the
-        // data model fails the document there; JSON, which is not rendered, is checked before it is encoded.
-        $response = JsonEncoder::value($this->timezone, $route['name'], $request->params(), $shared, $data, $kept);
+        // HY-31: the embedded data holds only the route regions and their kept entries, the data that the browser
+        // can change; a route without route regions embeds none. HY-44: rendering binds every value of the regions
+        // and of the embedded data, so a value outside the data model fails the document there.
         $routeRegionNames = array_map(fn (Region $region): string => $region->name, $route['regions']);
+        $response = null;
+        if ($routeRegionNames !== []) {
+            $embedded = array_intersect_key($data, array_flip($routeRegionNames));
+            $response = JsonEncoder::value($this->timezone, $route['name'], $request->params(), $shared, $embedded, array_intersect_key($kept, $embedded));
+        }
         $regions = [];
         $routeRegions = [];
         foreach ($applied as $name => $regionData) {

@@ -24,7 +24,7 @@
 | hyper-php | PHP server: routes, actions, CSRF, flash, changed topics, base path, documents and JSON | implemented | `make test-php` |
 | hyper-node | Node.js server `@polyspec/hyper-server` with the rules of the PHP server, file sessions, JSON with the bytes of PHP and the board example server (HY-54) | implemented | `make test-node`, `make node-server` |
 | route-regions | Route regions inside a page with their own loaders (HY-30) | implemented | `make test-php`, `make parity` |
-| region-data | Embedded document data, `data`, `render`, `set` and `hy-set` without requests (HY-29 to HY-33, HY-36) | implemented | `make test-js`, `make e2e` |
+| region-data | Embedded data of the route regions, `data`, `render`, `set` and `hy-set` on route regions without requests, and the public data rule (HY-29 to HY-33, HY-36, HY-71) | implemented | `make test-js`, `make e2e` |
 | kept-data | Kept paths in the server session, a cookie, localStorage and sessionStorage (HY-37 to HY-41) | implemented | `make test-php`, `make test-js`, `make parity`, `make e2e` |
 | template-delivery | One file per template, loaded per route (HY-34, HY-35) | implemented | `make test-js`, `make e2e`, `make bundle-size` |
 | parity | Browser documents and regions equal PHP documents byte for byte | implemented | `make parity` |

@@ -15,7 +15,6 @@ interface Case {
   headers: Record<string, string>;
   shell?: boolean;
   body?: string;
-  document?: boolean;
   json?: { route: string; params: Record<string, string>; regions: string[] };
   session?: boolean;
   actions: number;
@@ -46,7 +45,6 @@ describe('client rendering (HY-62)', () => {
         expect(response.headers).toEqual(item.headers);
       }
       if (item.body !== undefined) expect(response.body).toBe(item.body);
-      if (item.document === true) expect(response.body).toContain('id="hy-data"');
       if (item.json !== undefined) {
         const json = JSON.parse(response.body) as { route: string; params: Record<string, string>; regions: Record<string, unknown> };
         expect(json.route).toBe(item.json.route);

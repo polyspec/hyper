@@ -3,7 +3,8 @@
 declare(strict_types=1);
 
 // The front controller of the disconnect test (HY-67): its shared loader waits, so that the client closes the
-// connection first, and its document is larger than a write that a closed connection accepts. Both hooks append a
+// connection first, and its document is larger than a write that a closed connection accepts: the shared title,
+// which the document renders, has 1 MiB. Both hooks append a
 // line to the file of HYPER_DISCONNECT_LOG.
 
 require __DIR__ . '/../../vendor/autoload.php';
@@ -23,7 +24,7 @@ App::open(
             $reply->note('stage', 'shared');
             usleep(300_000);
 
-            return ['pad' => str_repeat('x', 1 << 20)];
+            return ['title' => str_repeat('x', 1 << 20)];
         },
         'routes' => ['add' => ['post' => fn (): Result => Result::redirect('/')]],
     ],
