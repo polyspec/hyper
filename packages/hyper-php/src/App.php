@@ -366,11 +366,16 @@ final class App
             if ($status !== 200) {
                 return new Response($status, $headers, $body);
             }
-            // HY-53: a strong tag of the body; a matching GET request receives 304 without a body.
+            // HY-53: a strong tag of the body; a matching GET request receives 304 without a body and without
+            // `Content-Type`, because a 304 carries no representation.
             $tag = '"' . substr(hash('sha256', $body), 0, 32) . '"';
             $headers['ETag'] = $tag;
+            if ($request->method !== 'GET' || $request->header('If-None-Match') !== $tag) {
+                return new Response(200, $headers, $body);
+            }
+            unset($headers['Content-Type']);
 
-            return $request->method === 'GET' && $request->header('If-None-Match') === $tag ? new Response(304, $headers, '') : new Response(200, $headers, $body);
+            return new Response(304, $headers, '');
         }
 
         $headers = [

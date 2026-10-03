@@ -903,6 +903,8 @@ final class AppTest extends TestCase
         self::assertSame(304, $again->status);
         self::assertSame('', $again->body);
         self::assertSame($tag, $again->headers['ETag']);
+        self::assertArrayNotHasKey('Content-Type', $again->headers);
+        self::assertSame($first->headers['Cache-Control'], $again->headers['Cache-Control']);
         self::assertSame(200, $this->get('/items/plain', ['Accept' => 'application/json', 'If-None-Match' => '"other"'])->status);
     }
 

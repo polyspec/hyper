@@ -528,6 +528,8 @@ describe('App', () => {
     expect(again.status).toBe(304);
     expect(again.body).toBe('');
     expect(again.headers.ETag).toBe(tag);
+    expect(again.headers['Content-Type']).toBeUndefined();
+    expect(again.headers['Cache-Control']).toBe(first.headers['Cache-Control']);
     expect((await fixture.get('/items/plain', { Accept: 'application/json', 'If-None-Match': '"other"' })).status).toBe(200);
   });
 
