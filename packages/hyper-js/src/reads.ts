@@ -116,11 +116,13 @@ function merge(a: ReadNode, b: ReadNode): ReadNode {
   return result;
 }
 
-// The scope of one rendered template file: its local variables, the names that a loop binds while its body is read,
-// and the paths of its context names (the scope arguments of a block); other names are root paths (RT-11, RT-26).
+// The scope of one rendered template file: its local variables, the loop variables that the loops bind while their
+// bodies are read, with the paths of their sources, and the paths of its context names (the scope arguments of a
+// block); other names are root paths (RT-11, RT-26). A loop variable exists only in the body of its loop, so it is not
+// a local variable of the scope.
 interface Scope {
   locals: Map<string, Map<string, Path>>;
-  bound: string[];
+  bound: { name: string; paths: Path[] }[];
   context: Map<string, Path[]>;
   changed: boolean;
 }
@@ -164,9 +166,7 @@ class Reads {
       case 'For': {
         const each = this.expr(node.iter as Expr, scope).map((path) => [...path, EACH]);
         for (const path of each) this.part(path);
-        const loop = node.name as string;
-        this.assign(scope, loop, each);
-        scope.bound.push(loop);
+        scope.bound.push({ name: node.name as string, paths: each });
         this.statements(node.body as Statement[], name, scope, placing, including);
         scope.bound.pop();
         if (node.empty !== null) this.statements(node.empty as Statement[], name, scope, placing, including);
@@ -257,11 +257,13 @@ class Reads {
     }
   }
 
-  // Returns the paths of a name: the loop variable inside its loop, otherwise the paths of its local variable together
-  // with its context paths, or its root path.
+  // Returns the paths of a name: inside the body of a loop that binds it, the paths of the loop source followed by
+  // `*` and of its assignments; otherwise the paths of its local variable together with its context paths, or its
+  // root path.
   private variable(name: string, scope: Scope): Path[] {
     const local = [...(scope.locals.get(name)?.values() ?? [])];
-    if (scope.bound.includes(name)) return local;
+    const loop = [...scope.bound].reverse().find((binding) => binding.name === name);
+    if (loop !== undefined) return [...loop.paths, ...local];
     return [...local, ...(scope.context.get(name) ?? [[name]])];
   }
 

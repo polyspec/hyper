@@ -33,6 +33,7 @@ Depends on: Wave 1.
 | H2.3 | Server build: write the read paths for the PHP server; PHP server: remove every path outside them before rendering and encoding | `make test-php` | [x] |
 | H2.4 | Node server: the same removal as H2.3 from the read paths of the browser package; shared cases in `conformance/reads.json` | `make test-node` | [x] |
 | H2.5 | Example, parity, browser tests, bundle size, feature status, README and changelog for H2.1 to H2.4 | `make check` | [x] |
+| H2.6 | Read paths of a loop variable only in the body of its loop, so that a loop variable that rebinds a name that an earlier assignment read ends the analysis; two cases in `conformance/reads.json` and a time limit for every case | `make test-js` | [ ] |
 
 ## Wave 3 — Fail on a defect instead of continuing
 
