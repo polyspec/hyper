@@ -5,7 +5,7 @@
 ## Documents
 
 - Every document has a `.ko.md` file with the same information. Edit both in the same change.
-- One authoritative document per topic. The protocol contract is in `docs/spec/`. Implementation and verification status is in `docs/features.md`. Current procedures are in `docs/operations/`. Actual changes and their verification results are in `CHANGELOG.md`.
+- One authoritative document per topic. The protocol contract is in `docs/spec/`. Implementation and verification status is in `docs/features.md`. Planned tasks, their verification commands and their completion are in `docs/plans/execution-checklist.md`; every change belongs to a task there, and a task is added before its work starts. Current procedures are in `docs/operations/`. Actual changes and their verification results are in `CHANGELOG.md`.
 - Documents describe current behavior. When the direction changes, change the specification first and mark parts that are not implemented.
 - A behavior change, its documents, its feature status row and its changelog entry are one change.
 - `make docs-check` verifies document pairs, links and identical code blocks. Content accuracy is verified by reading the code and the tests.
@@ -36,3 +36,4 @@
 
 - Run the tests of every changed package and `make docs-check` before a commit.
 - Run `make check` before marking a feature implemented in `docs/features.md`.
+- Run the verification command of a task on the committed tree before checking the task in `docs/plans/execution-checklist.md`.
