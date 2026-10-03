@@ -158,6 +158,7 @@
 
 ### 검증
 
+- 2026-10-04, "Run PHPStan at level max on the PHP package in make check"(H3.3): `make check` 통과(종료 상태 0). 오류 없는 `make analyse-php`, `make test-js` 테스트 206개, `make test-node` 테스트 330개, 생성된 프로그램으로 `make test-php` 테스트 312개와 네이티브 확장으로 312개(하나 건너뜀), `make parity`, `make server-parity` 응답 49개, `make bundle-size`, `make e2e` 테스트 16개를 포함한다.
 - 2026-10-02, 매니페스트 검사를 브라우저에서 옮긴 뒤: `make check` 통과(종료 상태 0). `make test-scripts` 테스트 3개, `make test-js` 165개, `make test-node` 248개, 각 프로그램으로 `make test-php` 224개, `make parity`, `make server-parity` 응답 41개, `make bundle-size`(SSR 31,586, CSR 32,892 gzip 바이트), `make e2e` 12개
 - 2026-10-01, 별도 server package를 이 저장소로 병합하고 네임스페이스를 변경한 뒤: `make check` 통과(종료 상태 0). template 복사본이 template 저장소와 같음, `make test-js` 테스트 165개, `make test-node` 테스트 248개, `make test-php`는 generated 프로그램으로 224개와 네이티브 확장으로 224개(해당하지 않는 1개는 건너뜀), 두 프로그램 모두로 `make parity`, `make server-parity` 응답 41개, `make bundle-size`(SSR 32,500 중 32,057, CSR 33,800 중 33,364 gzip 바이트), `make e2e` 테스트 12개
 - 2026-10-01, `hy-region`, `Hy-Region` 제거와 스왑, 유지 값, 리다이렉트, 세션의 수정 뒤: `make check` 통과. `make test-scripts` 테스트 2개, `make test-js` 테스트 145개, `make test-php`는 generated 프로그램으로 149개와 네이티브 확장으로 149개(해당하지 않는 테스트 1개는 건너뜀), 두 프로그램 모두로 `make parity`, `make bundle-size`, `make e2e` 테스트 12개
