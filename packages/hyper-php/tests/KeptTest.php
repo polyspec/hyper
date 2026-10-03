@@ -7,6 +7,7 @@ namespace Polyspec\Hyper\Tests;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Polyspec\Hyper\Kept;
+use Polyspec\Hyper\Tests\Support\Json;
 
 /**
  * HY-41: these are the same cases that the JavaScript implementation passes. The fixture is decoded
@@ -15,18 +16,18 @@ use Polyspec\Hyper\Kept;
  */
 final class KeptTest extends TestCase
 {
-    /** @return iterable<string, array{array<string, mixed>, list<array{0: string, 1: mixed}>, string}> */
+    /** @return iterable<string, array{array<array-key, mixed>, list<array{0: string, 1: mixed}>, string}> */
     public static function cases(): iterable
     {
-        $fixture = json_decode((string) file_get_contents(__DIR__ . '/../../../conformance/keep.json'), false, flags: JSON_THROW_ON_ERROR);
-        foreach ($fixture->cases as $case) {
-            $kept = array_map(fn (array $pair): array => [$pair[0], $pair[1]], $case->kept);
-            yield $case->label => [self::loaderData($case->data), $kept, json_encode($case->expected)];
+        $fixture = Json::objectFile(__DIR__ . '/../../../conformance/keep.json');
+        foreach (Json::objects($fixture->cases) as $case) {
+            $kept = array_map(fn (array $pair): array => [Json::string($pair[0] ?? null), $pair[1] ?? null], Json::arrays($case->kept));
+            yield Json::string($case->label) => [Json::array(self::loaderData($case->data)), $kept, json_encode($case->expected, JSON_THROW_ON_ERROR)];
         }
     }
 
     /**
-     * @param array<string, mixed> $data
+     * @param array<array-key, mixed> $data
      * @param list<array{0: string, 1: mixed}> $kept
      */
     #[DataProvider('cases')]

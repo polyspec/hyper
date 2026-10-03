@@ -14,16 +14,16 @@ final class Kept
     /**
      * Replaces values at kept paths when the path exists and the kept value conforms to its value.
      *
-     * @param array<string, mixed> $data
+     * @param array<array-key, mixed> $data
      * @param list<array{0: string, 1: mixed}> $kept
-     * @return array<string, mixed>
+     * @return array<array-key, mixed>
      */
     public static function apply(array $data, array $kept): array
     {
         foreach ($kept as [$path, $value]) {
             if (self::inDataModel($value)) {
                 $applied = false;
-                $data = self::replace($data, explode('.', $path), $value, $applied);
+                $data = self::replaceInArray($data, explode('.', $path), $value, $applied);
             }
         }
 
@@ -33,7 +33,7 @@ final class Kept
     /**
      * Returns the kept values that conform to the data, by path (HY-17, HY-38).
      *
-     * @param array<string, mixed> $data
+     * @param array<array-key, mixed> $data
      * @param list<array{0: string, 1: mixed}> $kept
      * @return array<string, mixed>
      */
@@ -43,7 +43,7 @@ final class Kept
         foreach ($kept as [$path, $value]) {
             $applied = false;
             if (self::inDataModel($value)) {
-                $data = self::replace($data, explode('.', $path), $value, $applied);
+                $data = self::replaceInArray($data, explode('.', $path), $value, $applied);
             }
             if ($applied) {
                 $selected[$path] = $value;
@@ -53,7 +53,7 @@ final class Kept
         return $selected;
     }
 
-    /** @param list<string> $keys */
+    /** @param non-empty-list<string> $keys */
     private static function replace(mixed $container, array $keys, mixed $value, bool &$applied): mixed
     {
         if ($container instanceof \stdClass) {
@@ -74,10 +74,19 @@ final class Kept
 
             return $copy;
         }
-        if (!is_array($container)) {
-            return $container;
-        }
-        $key = array_shift($keys);
+
+        return is_array($container) ? self::replaceInArray($container, $keys, $value, $applied) : $container;
+    }
+
+    /**
+     * @param array<array-key, mixed> $container
+     * @param non-empty-list<string> $keys
+     * @return array<array-key, mixed>
+     */
+    private static function replaceInArray(array $container, array $keys, mixed $value, bool &$applied): array
+    {
+        $key = $keys[0];
+        $rest = array_slice($keys, 1);
         if (array_is_list($container) && $container !== []) {
             // A list accepts only an index.
             if (preg_match('/^\d+$/D', $key) !== 1) {
@@ -90,7 +99,7 @@ final class Kept
         if (!array_key_exists($index, $container)) {
             return $container;
         }
-        if ($keys === []) {
+        if ($rest === []) {
             if (self::conforms($value, $container[$index])) {
                 $container[$index] = $value;
                 $applied = true;
@@ -98,7 +107,7 @@ final class Kept
 
             return $container;
         }
-        $container[$index] = self::replace($container[$index], $keys, $value, $applied);
+        $container[$index] = self::replace($container[$index], $rest, $value, $applied);
 
         return $container;
     }
@@ -122,13 +131,12 @@ final class Kept
      */
     private static function conforms(mixed $value, mixed $current): bool
     {
-        $kind = self::kind($current);
-        if ($kind !== self::kind($value)) {
+        if (self::kind($current) !== self::kind($value)) {
             return false;
         }
-        if ($kind === 'map') {
-            $data = $current instanceof \stdClass ? get_object_vars($current) : $current;
-            $kept = $value instanceof \stdClass ? get_object_vars($value) : $value;
+        $data = self::entries($current);
+        $kept = self::entries($value);
+        if ($data !== null && $kept !== null) {
             if ($data === []) {
                 return true;
             }
@@ -143,7 +151,7 @@ final class Kept
 
             return true;
         }
-        if ($kind === 'list' && $current !== []) {
+        if (is_array($current) && array_is_list($current) && $current !== [] && is_array($value)) {
             foreach ($value as $item) {
                 if (!self::conforms($item, $current[0])) {
                     return false;
@@ -152,6 +160,20 @@ final class Kept
         }
 
         return true;
+    }
+
+    /**
+     * Returns the entries of a map of the data model, or null for another value.
+     *
+     * @return array<array-key, mixed>|null
+     */
+    private static function entries(mixed $value): ?array
+    {
+        return match (true) {
+            $value instanceof \stdClass => get_object_vars($value),
+            is_array($value) && !array_is_list($value) => $value,
+            default => null,
+        };
     }
 
     /** Returns the value type of the data model: null, bool, number, string, list or map. */

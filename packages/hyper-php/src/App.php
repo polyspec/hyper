@@ -6,7 +6,12 @@ namespace Polyspec\Hyper;
 
 use Polyspec\Template\Value\Bind;
 
-/** Answers requests with documents, JSON, action redirects and the static shell (HY-8, HY-10 to HY-19, HY-24 to HY-27, HY-58 to HY-60, HY-62). */
+/**
+ * Answers requests with documents, JSON, action redirects and the static shell (HY-8, HY-10 to HY-19, HY-24 to HY-27, HY-58 to HY-60, HY-62).
+ *
+ * @phpstan-type RouteHandler array{load?: \Closure, post?: \Closure, regions?: array<string, \Closure>}
+ * @phpstan-type Handlers array{shared?: \Closure, regions?: array<string, \Closure>, routes?: array<string, RouteHandler>}
+ */
 final class App
 {
     private readonly Container $container;
@@ -16,7 +21,7 @@ final class App
 
     /**
      * @param array<string, \Closure> $regionLoaders
-     * @param array<string, array{load?: \Closure, post?: \Closure, regions?: array<string, \Closure>}> $routeHandlers
+     * @param array<string, RouteHandler> $routeHandlers
      */
     private function __construct(
         private readonly Manifest $manifest,
@@ -51,7 +56,7 @@ final class App
      * bodies that actions and `/_hyper/keep` accept (HY-59). The response limit is the largest response body in
      * bytes that the server sends (HY-66).
      *
-     * @param array{shared?: \Closure, regions?: array<string, \Closure>, routes?: array<string, array{load?: \Closure, post?: \Closure, regions?: array<string, \Closure>}>} $handlers
+     * @param Handlers $handlers
      * @param list<string> $formTypes `application/x-www-form-urlencoded` and `multipart/form-data`
      * @param ?\Closure(Request, Response, float, Reply, ?string): void $onResponse called once for every response with
      *     the request, the response, the elapsed milliseconds, the reply of the request, which is empty when the
@@ -121,7 +126,7 @@ final class App
 
         $shell = $clientRendering === null ? '' : self::shell($clientRendering, $declared);
 
-        return new self($declared, $handlers['shared'] ?? null, $regionLoaders, $routeHandlers, $timezone, $basePath, $https, $frameAncestors, $bodyLimit, $responseLimit, array_values($formTypes), $onResponse, $clientRendering, $onDisconnect, $shell, $program);
+        return new self($declared, $handlers['shared'] ?? null, $regionLoaders, $routeHandlers, $timezone, $basePath, $https, $frameAncestors, $bodyLimit, $responseLimit, $formTypes, $onResponse, $clientRendering, $onDisconnect, $shell, $program);
     }
 
     /** Reads the static shell after checking the declaration of the client rendering against the manifest (HY-62). */
@@ -164,8 +169,11 @@ final class App
         return $this->respond($request, $store, $started ?? hrtime(true), new Reply());
     }
 
-    /** Answers one request with the reply that its loaders and actions receive (HY-60). */
-    private function respond(Request $request, SessionStore $store, int $started, Reply $reply): Response
+    /**
+     * Answers one request with the reply that its loaders and actions receive (HY-60). `$started` is an hrtime(true)
+     * value, which is a float where an integer of the platform cannot hold it.
+     */
+    private function respond(Request $request, SessionStore $store, int|float $started, Reply $reply): Response
     {
         // The failure of a 500 of HY-43 or HY-66, which the hook receives (HY-60).
         $failure = null;
@@ -215,7 +223,7 @@ final class App
             return Response::text(400, 'Bad Request');
         }
         $client = $this->chosen($request);
-        $basePath = $client?->basePath ?? $this->basePath;
+        $basePath = $client === null ? $this->basePath : $client->basePath;
         $path = Router::stripBasePath($request->path, $basePath);
         if ($client !== null && $path === null) {
             return $this->shellResponse($request);
@@ -279,7 +287,7 @@ final class App
      * Answers a routed request with its page, action result or stop result.
      *
      * @param array{name: string, path: string, title: string, template: string, post: bool, regions: list<Region>} $route
-     * @param array{load?: \Closure, post?: \Closure, regions?: array<string, \Closure>} $handler
+     * @param RouteHandler $handler
      */
     private function routed(Request $request, array $route, array $handler, Session $session, Flash $flash, Reply $reply, string $basePath): Response
     {
@@ -343,7 +351,7 @@ final class App
      * Renders the route page as a document or as JSON.
      *
      * @param array{name: string, path: string, title: string, template: string, post: bool, regions: list<Region>} $route
-     * @param array{load?: \Closure, post?: \Closure, regions?: array<string, \Closure>} $handler
+     * @param RouteHandler $handler
      * @param array<string, mixed> $invalid
      */
     private function page(Request $request, array $route, array $handler, Session $session, Flash $flash, int $status, array $invalid, Reply $reply, string $basePath): Response
@@ -352,7 +360,7 @@ final class App
         $provided = [Request::class => $request, Reply::class => $reply];
         $shared = ['title' => $route['title'], 'csrf' => $request->csrfToken()];
         if ($this->shared !== null) {
-            $shared = array_replace($shared, $this->container->call($this->shared, $provided));
+            $shared = array_replace($shared, self::map($this->container->call($this->shared, $provided), 'the shared handler'));
         }
 
         $changed = RegionPlanner::changedTopics($request, $flash, $basePath);
@@ -360,17 +368,17 @@ final class App
         $templates = [];
         foreach (RegionPlanner::select($this->manifest, !$request->isRegionRequest(), $changed) as $selected) {
             if ($selected->page) {
-                $loaded = isset($handler['load']) ? $this->container->call($handler['load'], $provided) : [];
+                $loaded = isset($handler['load']) ? self::map($this->container->call($handler['load'], $provided), "the loader of route {$route['name']}") : [];
                 $data[$selected->name] = array_replace($loaded, $invalid);
                 $templates[$selected->name] = $route['template'];
                 foreach ($route['regions'] as $routeRegion) {
                     $loader = $handler['regions'][$routeRegion->name] ?? null;
-                    $data[$routeRegion->name] = $loader === null ? [] : $this->container->call($loader, $provided);
+                    $data[$routeRegion->name] = $loader === null ? [] : self::map($this->container->call($loader, $provided), "the loader of region {$routeRegion->name}");
                     $templates[$routeRegion->name] = (string) $routeRegion->template;
                 }
             } else {
                 $loader = $this->regionLoaders[$selected->name] ?? null;
-                $data[$selected->name] = $loader === null ? [] : $this->container->call($loader, $provided);
+                $data[$selected->name] = $loader === null ? [] : self::map($this->container->call($loader, $provided), "the loader of region {$selected->name}");
                 $templates[$selected->name] = (string) $selected->template;
             }
         }
@@ -425,9 +433,24 @@ final class App
     }
 
     /**
+     * Returns the value that the shared handler or a loader returned when it is a map of the data model: an array that
+     * is empty or is not a list (HY-44). Another value fails with HY-43.
+     *
+     * @return array<array-key, mixed>
+     */
+    private static function map(mixed $value, string $source): array
+    {
+        if (!is_array($value) || ($value !== [] && array_is_list($value))) {
+            throw new \LogicException("{$source} did not return a map");
+        }
+
+        return $value;
+    }
+
+    /**
      * Returns the conforming `server` and `cookie` kept values of the regions, by region and path (HY-17, HY-38).
      *
-     * @param array<string, array<string, mixed>> $data
+     * @param array<string, array<array-key, mixed>> $data
      * @return array<string, array<string, mixed>>
      */
     private function kept(Request $request, Session $session, array $data): array
@@ -467,8 +490,8 @@ final class App
      * the embedded data (HY-31, HY-38).
      *
      * @param array{name: string, path: string, title: string, template: string, post: bool, regions: list<Region>} $route
-     * @param array<string, mixed> $shared
-     * @param array<string, array<string, mixed>> $data
+     * @param array<array-key, mixed> $shared
+     * @param array<string, array<array-key, mixed>> $data
      * @param array<string, string> $templates
      * @param array<string, array<string, mixed>> $kept
      */
@@ -476,7 +499,10 @@ final class App
     {
         $applied = [];
         foreach ($data as $name => $regionData) {
-            $pairs = array_map(null, array_keys($kept[$name] ?? []), array_values($kept[$name] ?? []));
+            $pairs = [];
+            foreach ($kept[$name] ?? [] as $path => $value) {
+                $pairs[] = [$path, $value];
+            }
             $applied[$name] = Kept::apply($regionData, $pairs);
         }
         try {
@@ -512,9 +538,9 @@ final class App
 
     /**
      * @param array{name: string, path: string, title: string, template: string, post: bool, regions: list<Region>} $route
-     * @param array<string, mixed> $shared
-     * @param array<string, array<string, mixed>> $data loader data, which the embedded data carries
-     * @param array<string, array<string, mixed>> $applied region data with kept values applied, which the regions render
+     * @param array<array-key, mixed> $shared
+     * @param array<string, array<array-key, mixed>> $data loader data, which the embedded data carries
+     * @param array<string, array<array-key, mixed>> $applied region data with kept values applied, which the regions render
      * @param array<string, string> $templates
      * @param array<string, array<string, mixed>> $kept
      */

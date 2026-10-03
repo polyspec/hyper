@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Polyspec\Hyper;
 
 use Polyspec\Template\Native\Engine as NativeEngine;
+use Polyspec\Template\Program;
 
 /**
  * Renders documents and single regions with the compiled program of the application: the native template
@@ -14,7 +15,7 @@ final class Renderer
 {
     public const DATA_NAME = 'hyper/data.tpl';
 
-    private function __construct(private readonly object $program, public readonly string $engine, private readonly string $timezone)
+    private function __construct(private readonly Program|NativeEngine $program, public readonly string $engine, private readonly string $timezone)
     {
     }
 
@@ -31,20 +32,28 @@ final class Renderer
             return new self(new NativeEngine("{$program}/templates"), 'native', $timezone);
         }
         // The generated program is declared in the namespace that the build chose (HY-48).
-        $namespace = json_decode((string) file_get_contents("{$program}/program.json"), true, flags: JSON_THROW_ON_ERROR)['namespace'];
+        $declaration = json_decode((string) file_get_contents("{$program}/program.json"), true, flags: JSON_THROW_ON_ERROR);
+        $namespace = is_array($declaration) ? $declaration['namespace'] ?? null : null;
+        if (!is_string($namespace)) {
+            throw new \InvalidArgumentException("{$program}/program.json names no namespace");
+        }
         require_once "{$program}/program.php";
         $class = "\\{$namespace}\\GeneratedProgram";
+        $generated = new $class();
+        if (!$generated instanceof Program) {
+            throw new \InvalidArgumentException("{$class} of the server program {$program} is not a template program");
+        }
 
-        return new self(new $class(), 'generated', $timezone);
+        return new self($generated, 'generated', $timezone);
     }
 
     /**
      * Renders the document: the layout with the title, the embedded data and every manifest region rendered
      * alone as HTML definitions; the page region receives its route regions the same way.
      *
-     * @param array<string, mixed> $shared
-     * @param array<string, array{template: string, data: array<string, mixed>}> $regions manifest regions
-     * @param array<string, array{template: string, data: array<string, mixed>}> $routeRegions route regions of the page region
+     * @param array<array-key, mixed> $shared
+     * @param array<string, array{template: string, data: array<array-key, mixed>}> $regions manifest regions
+     * @param array<string, array{template: string, data: array<array-key, mixed>}> $routeRegions route regions of the page region
      * @param array<string, mixed>|\stdClass|null $response the embedded data of `{# data}` (HY-31), or null when the route has no route region
      */
     public function document(string $layout, string $title, array $shared, array $regions, string $page, array $routeRegions, array|\stdClass|null $response): string
@@ -64,9 +73,9 @@ final class Renderer
      * Renders one template alone with merge(shared, data) as root data; `$routeRegions` passes the route
      * regions of a page region, each rendered alone, as HTML definitions.
      *
-     * @param array<string, mixed> $shared
-     * @param array<string, mixed> $data
-     * @param array<string, array{template: string, data: array<string, mixed>}> $routeRegions
+     * @param array<array-key, mixed> $shared
+     * @param array<array-key, mixed> $data
+     * @param array<string, array{template: string, data: array<array-key, mixed>}> $routeRegions
      */
     public function alone(string $template, array $shared, array $data, array $routeRegions = []): string
     {
@@ -79,7 +88,7 @@ final class Renderer
     }
 
     /**
-     * @param array<string, mixed> $assign
+     * @param array<array-key, mixed> $assign
      * @param array<string, array{html: string}> $define
      */
     private function render(string $template, array $assign, array $define): string

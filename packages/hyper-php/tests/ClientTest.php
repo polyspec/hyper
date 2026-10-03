@@ -15,8 +15,13 @@ use Polyspec\Hyper\Request;
 use Polyspec\Hyper\Response;
 use Polyspec\Hyper\Result;
 use Polyspec\Hyper\Tests\Support\Counter;
+use Polyspec\Hyper\Tests\Support\Json;
 
-/** HY-62: one server answers the client-rendered and the server-rendered pages of the fixture manifest. */
+/**
+ * HY-62: one server answers the client-rendered and the server-rendered pages of the fixture manifest.
+ *
+ * @phpstan-type Options array{frameAncestors?: string, onResponse?: \Closure}
+ */
 final class ClientTest extends TestCase
 {
     private const PROGRAM = __DIR__ . '/build/server';
@@ -24,18 +29,18 @@ final class ClientTest extends TestCase
     // A session token of HY-24; the form carries a masked value of it.
     private const TOKEN = '00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff';
 
-    /** @return array<string, mixed> */
+    /** @return array<array-key, mixed> */
     private static function conformance(): array
     {
-        return json_decode((string) file_get_contents(__DIR__ . '/../../../conformance/client.json'), true, flags: JSON_THROW_ON_ERROR);
+        return Json::file(__DIR__ . '/../../../conformance/client.json');
     }
 
     /**
-     * @param array<string, mixed> $options further named arguments of App::open
+     * @param Options $options further named arguments of App::open
      */
     private static function app(Counter $counter, ?ClientRendering $client = null, array $options = []): App
     {
-        $client ??= new ClientRendering(self::SHELL, self::conformance()['basePath'], fn (Request $request): bool => $request->header('Host') === self::conformance()['chosenHost']);
+        $client ??= new ClientRendering(self::SHELL, Json::string(self::conformance()['basePath'] ?? null), fn (Request $request): bool => $request->header('Host') === self::conformance()['chosenHost']);
         $app = App::open(...[
             'manifest' => __DIR__ . '/fixtures/app.json',
             'program' => self::PROGRAM,
@@ -65,37 +70,38 @@ final class ClientTest extends TestCase
         return $app;
     }
 
-    /** @return iterable<string, array{array<string, mixed>}> */
+    /** @return iterable<string, array{array<array-key, mixed>}> */
     public static function cases(): iterable
     {
-        foreach (self::conformance()['cases'] as $case) {
-            yield $case['label'] => [$case];
+        foreach (Json::arrays(self::conformance()['cases'] ?? null) as $case) {
+            yield Json::string($case['label'] ?? null) => [$case];
         }
     }
 
-    /** @param array<string, mixed> $case */
+    /** @param array<array-key, mixed> $case */
     #[DataProvider('cases')]
     public function testConformance(array $case): void
     {
         $counter = new Counter();
         $session = new ArraySession();
-        $request = $case['request'];
-        $form = $request['form'] ?? null;
-        if ($case['request']['csrf'] ?? false) {
+        $request = Json::array($case['request'] ?? null);
+        $form = isset($request['form']) ? Json::stringMap($request['form']) : null;
+        if ($request['csrf'] ?? false) {
             $session->set('_hyper_csrf', self::TOKEN);
-            $form = ['_csrf' => Csrf::masked(self::TOKEN), ...$form];
+            $form = ['_csrf' => Csrf::masked(self::TOKEN), ...$form ?? []];
         }
-        $headers = $request['headers'];
+        $headers = Json::stringMap($request['headers'] ?? null);
         if ($form !== null) {
             $headers['Content-Type'] = 'application/x-www-form-urlencoded';
         }
-        $target = $request['target'];
-        $query = str_contains($target, '?') ? substr($target, strpos($target, '?') + 1) : '';
-        $path = str_contains($target, '?') ? substr($target, 0, strpos($target, '?')) : $target;
-        $response = self::app($counter)->handle(new Request($request['method'], $path, $headers, $query, $form === null ? '' : http_build_query($form)), $session);
+        $target = Json::string($request['target'] ?? null);
+        $question = strpos($target, '?');
+        $query = $question === false ? '' : substr($target, $question + 1);
+        $path = $question === false ? $target : substr($target, 0, $question);
+        $response = self::app($counter)->handle(new Request(Json::string($request['method'] ?? null), $path, $headers, $query, $form === null ? '' : http_build_query($form)), $session);
 
-        self::assertSame($case['status'], $response->status);
-        foreach ($case['headers'] as $name => $value) {
+        self::assertSame($case['status'] ?? null, $response->status);
+        foreach (Json::stringMap($case['headers'] ?? null) as $name => $value) {
             self::assertSame($value, $response->headers[$name] ?? null, $name);
         }
         if ($case['shell'] ?? false) {
@@ -106,10 +112,11 @@ final class ClientTest extends TestCase
             self::assertSame($case['body'], $response->body);
         }
         if (isset($case['json'])) {
-            $json = json_decode($response->body, true, flags: JSON_THROW_ON_ERROR);
-            self::assertSame($case['json']['route'], $json['route']);
-            self::assertSame($case['json']['params'], $json['params']);
-            self::assertSame($case['json']['regions'], array_keys($json['regions']));
+            $expected = Json::array($case['json']);
+            $json = Json::decode($response->body);
+            self::assertSame($expected['route'] ?? null, $json['route'] ?? null);
+            self::assertSame($expected['params'] ?? null, $json['params'] ?? null);
+            self::assertSame($expected['regions'] ?? null, array_keys(Json::array($json['regions'] ?? null)));
         }
         if (($case['session'] ?? true) === false) {
             self::assertNull($session->get('_hyper_csrf'));

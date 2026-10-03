@@ -7,19 +7,21 @@ namespace Polyspec\Hyper\Tests;
 use PHPUnit\Framework\TestCase;
 use Polyspec\Hyper\JsonEncoder;
 use Polyspec\Hyper\Reads;
+use Polyspec\Hyper\Tests\Support\Json;
 
 /** HY-73: the cases of conformance/reads.json, which the browser package and the Node server pass as well. */
 final class ReadsTest extends TestCase
 {
     public function testKeepsTheReadPathsOfEveryCase(): void
     {
-        $fixture = json_decode((string) file_get_contents(__DIR__ . '/../../../conformance/reads.json'), flags: JSON_THROW_ON_ERROR);
-        foreach ($fixture->cases as $case) {
-            $reads = json_decode((string) json_encode($case->reads), true, flags: JSON_THROW_ON_ERROR);
+        $fixture = Json::objectFile(__DIR__ . '/../../../conformance/reads.json');
+        foreach (Json::objects($fixture->cases) as $case) {
+            // A read node is true or a map, which the server reads from reads.json with objects as arrays.
+            $reads = $case->reads === true ? true : Json::decode(json_encode($case->reads, JSON_THROW_ON_ERROR));
             self::assertSame(
                 JsonEncoder::encode(['kept' => self::value($case->kept)]),
                 JsonEncoder::encode(['kept' => Reads::keep(self::value($case->data), $reads)]),
-                $case->label,
+                Json::string($case->label),
             );
         }
     }

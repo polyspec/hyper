@@ -18,7 +18,12 @@ use Polyspec\Hyper\Request;
 use Polyspec\Hyper\Response;
 use Polyspec\Hyper\Result;
 use Polyspec\Hyper\Tests\Support\Counter;
+use Polyspec\Hyper\Tests\Support\Json;
 
+/**
+ * @phpstan-import-type Handlers from App
+ * @phpstan-type Options array{handlers?: Handlers, basePath?: string, bodyLimit?: int, formTypes?: list<string>, responseLimit?: int, onResponse?: \Closure}
+ */
 final class AppTest extends TestCase
 {
     private const JSON = ['Accept' => 'application/json', 'HX-Request' => 'true'];
@@ -34,7 +39,7 @@ final class AppTest extends TestCase
         $this->counter = new Counter();
     }
 
-    /** @param array<string, mixed> $options further named arguments of App::open */
+    /** @param Options $options further named arguments of App::open */
     private function app(string $basePath = '', array $options = []): App
     {
         $counter = $this->counter;
@@ -190,7 +195,7 @@ final class AppTest extends TestCase
      */
     private function token(): string
     {
-        return (string) self::json($this->get('/list', self::JSON))['shared']['csrf'];
+        return Json::string(Json::at(self::json($this->get('/list', self::JSON)), 'shared', 'csrf'));
     }
 
     /**
@@ -199,7 +204,7 @@ final class AppTest extends TestCase
      */
     private function unmasked(string $body): string
     {
-        $token = (string) $this->session->get('_hyper_csrf');
+        $token = $this->sessionToken();
 
         return (string) preg_replace_callback('/[0-9a-f]{128}/', function (array $found) use ($token): string {
             self::assertTrue(Csrf::verify($token, $found[0]), $found[0]);
@@ -211,16 +216,35 @@ final class AppTest extends TestCase
     /** Returns the tag of a JSON body of the current session token (HY-53). */
     private function tag(string $body): string
     {
-        $masked = self::json(new Response(200, [], $body))['shared']['csrf'] ?? null;
-        $text = $masked === null ? $body : str_replace((string) $masked, (string) $this->session->get('_hyper_csrf'), $body);
+        $shared = self::json(new Response(200, [], $body))['shared'] ?? null;
+        $masked = is_array($shared) ? $shared['csrf'] ?? null : null;
+        $text = is_string($masked) ? str_replace($masked, $this->sessionToken(), $body) : $body;
 
         return 'W/"' . substr(hash('sha256', $text), 0, 32) . '"';
     }
 
-    /** @return array<string, mixed> */
+    /** @return array<array-key, mixed> */
     private static function json(Response $response): array
     {
-        return json_decode($response->body, true, flags: JSON_THROW_ON_ERROR);
+        return Json::decode($response->body);
+    }
+
+    /** Returns the session token, which the session holds after a page created it (HY-24). */
+    private function sessionToken(): string
+    {
+        $token = $this->session->get('_hyper_csrf');
+        self::assertIsString($token);
+
+        return $token;
+    }
+
+    /** Returns the value of a response header that occurs once. */
+    private static function header(Response $response, string $name): string
+    {
+        $value = $response->headers[$name] ?? null;
+        self::assertIsString($value, $name);
+
+        return $value;
     }
 
     public function testHtmlRequestRendersTheDocument(): void
@@ -260,12 +284,14 @@ final class AppTest extends TestCase
         $html = $this->app()->handle(new Request('GET', '/list', cookies: $cookies), $this->session)->body;
         $json = self::json($this->app()->handle(new Request('GET', '/list', ['Accept' => 'application/json'], cookies: $cookies), $this->session));
 
-        self::assertSame(['side', 'content', 'rows'], array_keys($json['regions']));
-        self::assertSame(1, preg_match('#<script type="application/json" id="hy-data">(.*)</script>#', $html, $found));
+        self::assertSame(['side', 'content', 'rows'], array_keys(Json::array($json['regions'])));
+        if (preg_match('#<script type="application/json" id="hy-data">(.*)</script>#', $html, $found) !== 1) {
+            self::fail('the document embeds no data');
+        }
         $expected = $json;
-        $expected['regions'] = ['rows' => $json['regions']['rows']];
-        self::assertSame(json_decode($this->unmasked((string) json_encode($expected)), true), json_decode($this->unmasked($found[1]), true));
-        self::assertSame(['rows' => ['mode' => 'b']], json_decode($found[1], true)['kept']);
+        $expected['regions'] = ['rows' => Json::at($json, 'regions', 'rows')];
+        self::assertSame(json_decode($this->unmasked(json_encode($expected, JSON_THROW_ON_ERROR)), true), json_decode($this->unmasked($found[1]), true));
+        self::assertSame(['rows' => ['mode' => 'b']], Json::decode($found[1])['kept']);
         self::assertStringContainsString('"a\\u003c"', $found[1]);
     }
 
@@ -275,9 +301,9 @@ final class AppTest extends TestCase
         $region = self::json($this->get('/list', self::JSON));
         $document = self::json($this->get('/list', ['Accept' => 'application/json']));
 
-        self::assertSame(['content', 'rows'], array_keys($region['regions']));
-        self::assertSame(['side', 'content', 'rows'], array_keys($document['regions']));
-        self::assertSame(['items' => ['a<', 'b0'], 'open' => false, 'mode' => 'a', 'view' => 'x', 'filter' => ['a' => 1], 'tags' => []], $region['regions']['rows']);
+        self::assertSame(['content', 'rows'], array_keys(Json::array($region['regions'])));
+        self::assertSame(['side', 'content', 'rows'], array_keys(Json::array($document['regions'])));
+        self::assertSame(['items' => ['a<', 'b0'], 'open' => false, 'mode' => 'a', 'view' => 'x', 'filter' => ['a' => 1], 'tags' => []], Json::at($region, 'regions', 'rows'));
         self::assertStringContainsString('<ul id="rows"><li>a&lt;</li><li>b0</li></ul>', $this->get('/list')->body);
     }
 
@@ -320,7 +346,7 @@ final class AppTest extends TestCase
         self::assertSame(204, $this->keep(['_csrf' => $token, 'region' => 'rows', 'path' => 'open', 'value' => 'true'])->status);
 
         $json = self::json($this->get('/list', self::JSON));
-        self::assertSame(false, $json['regions']['rows']['open']);
+        self::assertSame(false, Json::at($json, 'regions', 'rows', 'open'));
         self::assertSame(['rows' => ['open' => true]], $json['kept']);
         $document = $this->get('/list')->body;
         self::assertStringContainsString('"rows":{"items":["a\\u003c","b0"],"open":false', $document);
@@ -337,17 +363,17 @@ final class AppTest extends TestCase
         self::assertSame(400, $this->keep(['_csrf' => $token, 'region' => 'missing', 'path' => 'open', 'value' => 'true'])->status);
         self::assertSame(400, $this->keep(['_csrf' => $token, 'region' => 'rows', 'path' => 'open', 'value' => 'tru'])->status);
         self::assertSame(405, $this->keep([], 'GET')->status);
-        self::assertSame(false, self::json($this->get('/list', self::JSON))['regions']['rows']['open']);
+        self::assertSame(false, Json::at(self::json($this->get('/list', self::JSON)), 'regions', 'rows', 'open'));
         self::assertSame([], self::json($this->get('/list', self::JSON))['kept']);
     }
 
     public function testCookieKeptValuesAreSentApartFromTheRegionData(): void
     {
         // HY-17, HY-37, HY-38: only conforming values of cookie paths are sent, in `kept`.
-        $cookie = json_encode(['rows' => ['mode' => 'b', 'open' => true, 'view' => 'y'], 'side' => ['count' => 9]]);
+        $cookie = json_encode(['rows' => ['mode' => 'b', 'open' => true, 'view' => 'y'], 'side' => ['count' => 9]], JSON_THROW_ON_ERROR);
         $request = new Request('GET', '/list', self::JSON, cookies: ['hy-keep' => $cookie]);
         $json = self::json($this->app()->handle($request, $this->session));
-        self::assertSame(['items' => ['a<', 'b0'], 'open' => false, 'mode' => 'a', 'view' => 'x', 'filter' => ['a' => 1], 'tags' => []], $json['regions']['rows']);
+        self::assertSame(['items' => ['a<', 'b0'], 'open' => false, 'mode' => 'a', 'view' => 'x', 'filter' => ['a' => 1], 'tags' => []], Json::at($json, 'regions', 'rows'));
         self::assertSame(['rows' => ['mode' => 'b']], $json['kept']);
 
         foreach (['{"rows":{"mode":1}}', '{', '{"rows":{"filter":{"a":"s"}}}', '{"rows":{"filter":{"b":1}}}', '{"rows":{"filter":{}}}'] as $value) {
@@ -377,6 +403,19 @@ final class AppTest extends TestCase
     {
         // HY-37, HY-40
         foreach (['keep-kind', 'keep-page', 'keep-manifest', 'keep-reserved', 'uses-topic'] as $fixture) {
+            try {
+                App::open(__DIR__ . "/fixtures/invalid/{$fixture}.json", self::PROGRAM, [], 'Z');
+                self::fail("{$fixture} was accepted");
+            } catch (\InvalidArgumentException) {
+                self::addToAssertionCount(1);
+            }
+        }
+    }
+
+    public function testManifestRejectsListsAndNamesOfAnotherType(): void
+    {
+        // HY-2: `regions` and `routes` are lists, and region and route names are strings.
+        foreach (['routes-text', 'route-name-number', 'region-name-list'] as $fixture) {
             try {
                 App::open(__DIR__ . "/fixtures/invalid/{$fixture}.json", self::PROGRAM, [], 'Z');
                 self::fail("{$fixture} was accepted");
@@ -425,6 +464,27 @@ final class AppTest extends TestCase
         self::assertSame(500, $app->handle(new Request('GET', '/', self::JSON), $this->session)->status);
     }
 
+    public function testSharedDataAndRegionDataThatAreNotMapsFail(): void
+    {
+        // HY-44: the shared handler and every loader return a map, so a list or another value fails with HY-43.
+        $post = ['post' => fn (): Result => Result::redirect('/')];
+        foreach ([['b'], 'b'] as $value) {
+            $handlers = [
+                'shared' => ['shared' => fn (): mixed => $value, 'routes' => ['add' => $post]],
+                'region' => ['regions' => ['side' => fn (): mixed => $value], 'routes' => ['add' => $post]],
+                'route' => ['routes' => ['add' => $post, 'home' => ['load' => fn (): mixed => $value]]],
+            ];
+            foreach ($handlers as $label => $handler) {
+                $app = App::open(__DIR__ . '/fixtures/app.json', self::PROGRAM, $handler, 'Z');
+                // A document runs every loader; a region request runs no loader of an unchanged region (HY-18).
+                foreach ([[], ['Accept' => 'application/json']] as $headers) {
+                    $response = $app->handle(new Request('GET', '/', $headers), $this->session);
+                    self::assertSame(500, $response->status, "{$label} " . json_encode($value));
+                }
+            }
+        }
+    }
+
     public function testIntegerOutsideTheSafeRangeFailsForDocumentAndJson(): void
     {
         // HY-44
@@ -438,14 +498,14 @@ final class AppTest extends TestCase
     public function testNumericDataKeysKeepTheirNames(): void
     {
         // HY-17: merging loader, invalid and shared data keeps numeric keys.
-        self::assertSame('{"labels":{"5":"x"},"id":"n"}', json_encode(self::json($this->get('/items/numeric', self::JSON))['regions']['content']));
+        self::assertSame('{"labels":{"5":"x"},"id":"n"}', json_encode(Json::at(self::json($this->get('/items/numeric', self::JSON)), 'regions', 'content')));
     }
 
     public function testKeepRejectsLongValues(): void
     {
         // HY-40
         $token = $this->token();
-        $long = json_encode(str_repeat('a', 4095));
+        $long = json_encode(str_repeat('a', 4095), JSON_THROW_ON_ERROR);
         self::assertSame(400, $this->keep(['_csrf' => $token, 'region' => 'rows', 'path' => 'open', 'value' => $long])->status);
     }
 
@@ -503,7 +563,7 @@ final class AppTest extends TestCase
         $json = self::json($this->get('/', ['Accept' => 'application/json']));
 
         self::assertSame('home', $json['route']);
-        self::assertSame(['side', 'content'], array_keys($json['regions']));
+        self::assertSame(['side', 'content'], array_keys(Json::array($json['regions'])));
     }
 
     public function testEmptyMapsAreJsonObjects(): void
@@ -520,16 +580,16 @@ final class AppTest extends TestCase
         $same = self::json($this->get('/', [...self::JSON, 'HX-Current-URL' => 'http://localhost/?page=2']));
         $other = self::json($this->get('/', [...self::JSON, 'HX-Current-URL' => 'http://localhost/add']));
 
-        self::assertSame(['content'], array_keys($same['regions']));
-        self::assertSame(['content', 'side'], array_keys($other['regions']));
-        self::assertSame(['count' => 0, 'note' => null], $other['regions']['side']);
+        self::assertSame(['content'], array_keys(Json::array($same['regions'])));
+        self::assertSame(['content', 'side'], array_keys(Json::array($other['regions'])));
+        self::assertSame(['count' => 0, 'note' => null], Json::at($other, 'regions', 'side'));
     }
 
     public function testHtmxRequestIsARegionRequestAndOtherJsonIsADocumentRequest(): void
     {
         // HY-15, HY-18: htmx sends HX-Request; a JSON request without it receives every region.
-        self::assertSame(['content'], array_keys(self::json($this->get('/', self::JSON))['regions']));
-        self::assertSame(['side', 'content'], array_keys(self::json($this->get('/', ['Accept' => 'application/json']))['regions']));
+        self::assertSame(['content'], array_keys(Json::array(self::json($this->get('/', self::JSON))['regions'])));
+        self::assertSame(['side', 'content'], array_keys(Json::array(self::json($this->get('/', ['Accept' => 'application/json']))['regions'])));
         self::assertSame('Accept, HX-Request, HX-Current-URL', $this->get('/', self::JSON)->headers['Vary']);
     }
 
@@ -542,9 +602,9 @@ final class AppTest extends TestCase
                 'list' => ['regions' => ['rows' => fn (): array => ['items' => [], 'mode' => 'a']]],
             ],
         ], 'Z', https: true);
-        $read = fn (array $cookies): array => self::json($https->handle(new Request('GET', '/list', self::JSON, cookies: $cookies), $this->session))['kept'];
-        self::assertSame(['rows' => ['mode' => 'b']], $read(['__Host-hy-keep' => '{"rows":{"mode":"b"}}']));
-        self::assertSame([], $read(['hy-keep' => '{"rows":{"mode":"b"}}']));
+        $read = fn (string $cookie, string $value): array => Json::array(self::json($https->handle(new Request('GET', '/list', self::JSON, cookies: [$cookie => $value]), $this->session))['kept']);
+        self::assertSame(['rows' => ['mode' => 'b']], $read('__Host-hy-keep', '{"rows":{"mode":"b"}}'));
+        self::assertSame([], $read('hy-keep', '{"rows":{"mode":"b"}}'));
         self::assertSame([], self::json($this->app()->handle(new Request('GET', '/list', self::JSON, cookies: ['__Host-hy-keep' => '{"rows":{"mode":"b"}}']), $this->session))['kept']);
     }
 
@@ -552,7 +612,7 @@ final class AppTest extends TestCase
     {
         // HY-8, HY-11
         $routed = self::json($this->get('/api/items/7', [...self::JSON, 'HX-Current-URL' => 'http://localhost/items/7'], '/api'));
-        self::assertSame(['content'], array_keys($routed['regions']));
+        self::assertSame(['content'], array_keys(Json::array($routed['regions'])));
         self::assertSame(404, $this->get('/items/7', [], '/api')->status);
 
         $token = $this->token();
@@ -577,9 +637,9 @@ final class AppTest extends TestCase
         // neither the responses nor the accepted form values contain the token itself.
         $first = $this->get('/list', self::JSON);
         $second = $this->get('/list', self::JSON);
-        $token = (string) $this->session->get('_hyper_csrf');
-        $a = (string) self::json($first)['shared']['csrf'];
-        $b = (string) self::json($second)['shared']['csrf'];
+        $token = $this->sessionToken();
+        $a = Json::string(Json::at(self::json($first), 'shared', 'csrf'));
+        $b = Json::string(Json::at(self::json($second), 'shared', 'csrf'));
 
         self::assertMatchesRegularExpression('/^[0-9a-f]{128}$/D', $a);
         self::assertNotSame($a, $b);
@@ -594,11 +654,11 @@ final class AppTest extends TestCase
     {
         // HY-24: only a masked value is accepted.
         $this->token();
-        $response = $this->post('/add', ['_csrf' => (string) $this->session->get('_hyper_csrf'), 'name' => 'a']);
+        $response = $this->post('/add', ['_csrf' => $this->sessionToken(), 'name' => 'a']);
 
         self::assertSame(403, $response->status);
         self::assertSame(0, $this->counter->actions);
-        self::assertSame(403, $this->keep(['_csrf' => (string) $this->session->get('_hyper_csrf'), 'region' => 'rows', 'path' => 'open', 'value' => 'true'])->status);
+        self::assertSame(403, $this->keep(['_csrf' => $this->sessionToken(), 'region' => 'rows', 'path' => 'open', 'value' => 'true'])->status);
     }
 
     public function testActionRenewsTheSession(): void
@@ -606,12 +666,12 @@ final class AppTest extends TestCase
         // HY-72: the action replaces the token and renews the store; the flash values of the redirect stay, and a
         // masked value of the old token is refused afterwards.
         $old = $this->token();
-        $oldToken = (string) $this->session->get('_hyper_csrf');
+        $oldToken = $this->sessionToken();
 
         self::assertSame(303, $this->post('/add', ['_csrf' => $old, 'name' => 'sign-in'])->status);
         self::assertSame(1, $this->session->renewals());
         self::assertNotSame($oldToken, $this->session->get('_hyper_csrf'));
-        self::assertSame('renewed', self::json($this->get('/', ['Accept' => 'application/json']))['regions']['side']['note']);
+        self::assertSame('renewed', Json::at(self::json($this->get('/', ['Accept' => 'application/json'])), 'regions', 'side', 'note'));
         self::assertSame(403, $this->post('/add', ['_csrf' => $old, 'name' => 'a'])->status);
         self::assertSame(303, $this->post('/add', ['_csrf' => $this->token(), 'name' => 'a'])->status);
     }
@@ -621,42 +681,42 @@ final class AppTest extends TestCase
         // HY-72
         $page = self::json($this->post('/add', ['_csrf' => $this->token(), 'name' => 'sign-in-page'], self::JSON));
 
-        self::assertTrue(Csrf::verify((string) $this->session->get('_hyper_csrf'), (string) $page['shared']['csrf']));
+        self::assertTrue(Csrf::verify($this->sessionToken(), Json::string(Json::at($page, 'shared', 'csrf'))));
     }
 
     public function testServerSendsOnlyTheReadPaths(): void
     {
         // HY-73: values that no template of the route reads are not sent, in JSON or in the document.
         $json = self::json($this->get('/items/secret', self::JSON));
-        self::assertSame(['id' => 's'], $json['regions']['content']);
+        self::assertSame(['id' => 's'], Json::at($json, 'regions', 'content'));
         self::assertSame(['title' => 'Item'], $json['shared']);
         self::assertStringNotContainsString('"p"', $this->get('/items/secret', ['Accept' => 'application/json'])->body);
 
         $app = $this->app(options: ['handlers' => ['shared' => fn (): array => ['site' => 'x', 'name' => 'shared name'], 'routes' => ['add' => ['post' => fn (): Result => Result::redirect('/')], 'list' => ['regions' => ['rows' => fn (): array => ['items' => ['a'], 'open' => false, 'mode' => 'a', 'view' => 'x', 'filter' => [], 'tags' => [], 'unread' => 1]]]]]]);
         $list = self::json($app->handle(new Request('GET', '/list', self::JSON), $this->session));
         // The shared handler value name is read by the page template of another route, not by any template of /list.
-        self::assertSame(['title', 'csrf'], array_keys($list['shared']));
-        self::assertSame(['items', 'open', 'mode', 'view', 'filter', 'tags'], array_keys($list['regions']['rows']));
+        self::assertSame(['title', 'csrf'], array_keys(Json::array($list['shared'])));
+        self::assertSame(['items', 'open', 'mode', 'view', 'filter', 'tags'], array_keys(Json::array(Json::at($list, 'regions', 'rows'))));
     }
 
     public function testRenewedSessionChangesTheTag(): void
     {
         // HY-53, HY-72: responses of one token share a tag whatever their masks; a renewed session has another tag.
         $first = $this->get('/items/plain', ['Accept' => 'application/json']);
-        self::assertSame(304, $this->get('/items/plain', ['Accept' => 'application/json', 'If-None-Match' => $first->headers['ETag']])->status);
+        self::assertSame(304, $this->get('/items/plain', ['Accept' => 'application/json', 'If-None-Match' => self::header($first, 'ETag')])->status);
 
         self::assertSame(303, $this->post('/add', ['_csrf' => $this->token(), 'name' => 'sign-in'])->status);
-        $renewed = $this->get('/items/plain', ['Accept' => 'application/json', 'If-None-Match' => $first->headers['ETag']]);
+        $renewed = $this->get('/items/plain', ['Accept' => 'application/json', 'If-None-Match' => self::header($first, 'ETag')]);
         self::assertSame(200, $renewed->status);
-        self::assertNotSame($first->headers['ETag'], $renewed->headers['ETag']);
+        self::assertNotSame(self::header($first, 'ETag'), $renewed->headers['ETag']);
     }
 
     public function testStoredTokenOfAnotherFormIsReplaced(): void
     {
         // HY-24: a stored token that is not 64 lowercase hexadecimal digits is replaced by a new token.
         $this->session->set('_hyper_csrf', 'conformance-token');
-        $masked = (string) self::json($this->get('/list', self::JSON))['shared']['csrf'];
-        $token = (string) $this->session->get('_hyper_csrf');
+        $masked = Json::string(Json::at(self::json($this->get('/list', self::JSON)), 'shared', 'csrf'));
+        $token = $this->sessionToken();
 
         self::assertMatchesRegularExpression('/^[0-9a-f]{64}$/D', $token);
         self::assertTrue(Csrf::verify($token, $masked));
@@ -680,12 +740,12 @@ final class AppTest extends TestCase
         self::assertSame('/', $response->headers['Location']);
 
         $next = self::json($this->get('/', self::JSON));
-        self::assertSame(['content', 'side'], array_keys($next['regions']));
-        self::assertSame(['count' => 1, 'note' => 'added'], $next['regions']['side']);
-        self::assertSame(['name' => 'n1'], $next['regions']['content']);
+        self::assertSame(['content', 'side'], array_keys(Json::array($next['regions'])));
+        self::assertSame(['count' => 1, 'note' => 'added'], Json::at($next, 'regions', 'side'));
+        self::assertSame(['name' => 'n1'], Json::at($next, 'regions', 'content'));
 
         $after = self::json($this->get('/', self::JSON));
-        self::assertSame(['content'], array_keys($after['regions']));
+        self::assertSame(['content'], array_keys(Json::array($after['regions'])));
     }
 
     public function testRejectedActionRendersThePageWithStatus422(): void
@@ -696,7 +756,7 @@ final class AppTest extends TestCase
         $html = $this->post('/add', ['_csrf' => $token, 'name' => '']);
 
         self::assertSame(422, $json->status);
-        self::assertSame(['name' => '', 'error' => 'empty'], self::json($json)['regions']['content']);
+        self::assertSame(['name' => '', 'error' => 'empty'], Json::at(self::json($json), 'regions', 'content'));
         self::assertSame(422, $html->status);
         self::assertStringContainsString('<p>Add| !empty</p>', $html->body);
         self::assertSame(0, $this->counter->count);
@@ -718,7 +778,7 @@ final class AppTest extends TestCase
         self::assertSame(303, $response->status);
         self::assertSame('/items/new', $response->headers['Location']);
         self::assertSame('', $response->body);
-        self::assertSame('moved', self::json($this->get('/', ['Accept' => 'application/json']))['regions']['side']['note']);
+        self::assertSame('moved', Json::at(self::json($this->get('/', ['Accept' => 'application/json'])), 'regions', 'side', 'note'));
         self::assertSame('/api/items/new', $this->get('/api/items/moved', [], '/api')->headers['Location']);
     }
 
@@ -733,7 +793,10 @@ final class AppTest extends TestCase
         self::assertSame(0, $this->counter->count);
     }
 
-    /** @param array<string, string> $headers */
+    /**
+     * @param array<string, string> $headers
+     * @param Options $options
+     */
     private function send(string $method, string $path, array $headers, string $body, array $options): Response
     {
         return $this->app('', $options)->handle(new Request($method, $path, $headers, '', $body), $this->session);
@@ -816,10 +879,11 @@ final class AppTest extends TestCase
 
         // The elapsed time counts on the monotonic clock from the hrtime(true) start that the caller gives, such as the
         // start of the PHP request.
-        $reports = [];
+        $count = count($reports);
         $this->app('', $options)->handle(new Request('GET', '/'), $this->session, hrtime(true) - 2_000_000_000);
-        self::assertGreaterThanOrEqual(2000.0, $reports[0][4]);
-        self::assertLessThan(60000.0, $reports[0][4]);
+        self::assertCount($count + 1, $reports);
+        self::assertGreaterThanOrEqual(2000.0, $reports[$count][4]);
+        self::assertLessThan(60000.0, $reports[$count][4]);
     }
 
     public function testTheHookReceivesTheReplyWithTheNotesOfTheLoadersAndActions(): void
@@ -912,6 +976,8 @@ final class AppTest extends TestCase
         self::assertSame([500, []], array_slice($reports[0], 0, 2));
         self::assertSame([500, []], array_slice($reports[1], 0, 2));
         // HY-60: the hook receives the failure that the server logs, without the prefix of the log.
+        self::assertIsString($reports[0][2]);
+        self::assertIsString($reports[1][2]);
         self::assertMatchesRegularExpression('/^the response to GET \/ has \d+ bytes, more than the response limit of 64 bytes$/D', $reports[0][2]);
         self::assertMatchesRegularExpression('/^the response to GET \/items\/7 has \d+ bytes, more than the response limit of 64 bytes$/D', $reports[1][2]);
         self::assertStringContainsString("hyper: {$reports[0][2]}", $lines);
@@ -943,7 +1009,7 @@ final class AppTest extends TestCase
         $token = $this->token();
         $conflict = $this->post('/add', ['_csrf' => $token, 'name' => 'taken'], self::JSON);
         self::assertSame(409, $conflict->status);
-        self::assertSame(['name' => 'taken', 'error' => 'conflict'], self::json($conflict)['regions']['content']);
+        self::assertSame(['name' => 'taken', 'error' => 'conflict'], Json::at(self::json($conflict), 'regions', 'content'));
         self::assertSame('no-store', $conflict->headers['Cache-Control']);
         $document = $this->post('/add', ['_csrf' => $token, 'name' => 'taken']);
         self::assertSame(409, $document->status);
@@ -951,9 +1017,9 @@ final class AppTest extends TestCase
 
         $preview = $this->post('/add', ['_csrf' => $token, 'name' => 'preview'], ['Accept' => 'application/json']);
         self::assertSame(200, $preview->status);
-        self::assertSame('preview', self::json($preview)['regions']['content']['name']);
+        self::assertSame('preview', Json::at(self::json($preview), 'regions', 'content', 'name'));
         // HY-53: only a GET request receives 304; an action runs whatever tag the request names.
-        $again = $this->post('/add', ['_csrf' => $token, 'name' => 'preview'], ['Accept' => 'application/json', 'If-None-Match' => $preview->headers['ETag']]);
+        $again = $this->post('/add', ['_csrf' => $token, 'name' => 'preview'], ['Accept' => 'application/json', 'If-None-Match' => self::header($preview, 'ETag')]);
         self::assertSame(200, $again->status);
         self::assertSame($this->unmasked($preview->body), $this->unmasked($again->body));
         self::assertSame(200, $this->post('/add', ['_csrf' => $token, 'name' => 'preview'])->status);
@@ -968,7 +1034,7 @@ final class AppTest extends TestCase
         self::assertSame('application/json; charset=utf-8', $json->headers['Content-Type']);
         self::assertSame('no-store', $json->headers['Cache-Control']);
         self::assertArrayNotHasKey('ETag', $json->headers);
-        self::assertSame('in-place', self::json($json)['regions']['content']['id']);
+        self::assertSame('in-place', Json::at(self::json($json), 'regions', 'content', 'id'));
         $tagged = $this->get('/items/in-place', [...self::JSON, 'If-None-Match' => $this->tag($json->body)]);
         self::assertSame(403, $tagged->status);
         self::assertSame($this->unmasked($json->body), $this->unmasked($tagged->body));
@@ -982,7 +1048,7 @@ final class AppTest extends TestCase
         $action = $this->post('/add', ['_csrf' => $token, 'name' => 'in-place'], self::JSON);
         self::assertSame(403, $action->status);
         self::assertSame('no-store', $action->headers['Cache-Control']);
-        self::assertSame('in-place', self::json($action)['regions']['content']['name']);
+        self::assertSame('in-place', Json::at(self::json($action), 'regions', 'content', 'name'));
         // A page with 409 or 422 and a redirect keep their own status.
         self::assertSame(422, $this->post('/add', ['_csrf' => $token, 'name' => 'in-place-refused'], self::JSON)->status);
         $moved = $this->get('/items/in-place-moved', self::JSON);
@@ -1042,7 +1108,7 @@ final class AppTest extends TestCase
     {
         // HY-53
         $first = $this->get('/items/plain', ['Accept' => 'application/json']);
-        $tag = $first->headers['ETag'];
+        $tag = self::header($first, 'ETag');
         self::assertSame($this->tag($first->body), $tag);
         $again = $this->get('/items/plain', ['Accept' => 'application/json', 'If-None-Match' => $tag]);
         self::assertSame(304, $again->status);

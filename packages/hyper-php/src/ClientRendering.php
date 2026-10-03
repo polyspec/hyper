@@ -14,7 +14,8 @@ final class ClientRendering
      * @param string $shell the absolute path of the static shell, which declares the base path with
      *     `<meta name="hyper-api">` (HY-22)
      * @param string $basePath the data base path, such as `/_props` (HY-8)
-     * @param \Closure(Request): bool $selects returns true for a request of a client-rendered page
+     * @param \Closure(Request): mixed $selects returns true for a request of a client-rendered page and false for
+     *     another request; another value fails the request with HY-43
      */
     public function __construct(
         public readonly string $shell,

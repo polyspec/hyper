@@ -43,7 +43,11 @@ final class Container
     {
         if (!isset($this->instances[$class])) {
             $factory = $this->factories[$class] ?? throw new \LogicException("no factory is bound for {$class}");
-            $this->instances[$class] = $factory();
+            $instance = $factory();
+            if (!is_object($instance)) {
+                throw new \LogicException("the factory of {$class} did not return an object");
+            }
+            $this->instances[$class] = $instance;
         }
 
         return $this->instances[$class];

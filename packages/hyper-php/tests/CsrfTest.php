@@ -6,27 +6,28 @@ namespace Polyspec\Hyper\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Polyspec\Hyper\Csrf;
+use Polyspec\Hyper\Tests\Support\Json;
 
 /** HY-24: the cases of conformance/csrf.json, which the Node server passes as well. */
 final class CsrfTest extends TestCase
 {
-    /** @return array<string, list<array<string, mixed>>> */
-    private static function fixture(): array
+    /** @return list<array<array-key, mixed>> */
+    private static function fixture(string $part): array
     {
-        return json_decode((string) file_get_contents(__DIR__ . '/../../../conformance/csrf.json'), true, flags: JSON_THROW_ON_ERROR);
+        return Json::arrays(Json::file(__DIR__ . '/../../../conformance/csrf.json')[$part] ?? null);
     }
 
     public function testMasksTheTokenWithAMask(): void
     {
-        foreach (self::fixture()['mask'] as $case) {
-            self::assertSame($case['value'], Csrf::mask($case['token'], $case['mask']), $case['label']);
+        foreach (self::fixture('mask') as $case) {
+            self::assertSame($case['value'] ?? null, Csrf::mask(Json::string($case['token'] ?? null), Json::string($case['mask'] ?? null)), Json::string($case['label'] ?? null));
         }
     }
 
     public function testVerifiesAFormValue(): void
     {
-        foreach (self::fixture()['verify'] as $case) {
-            self::assertSame($case['valid'], Csrf::verify($case['token'], $case['value']), $case['label']);
+        foreach (self::fixture('verify') as $case) {
+            self::assertSame($case['valid'] ?? null, Csrf::verify(Json::string($case['token'] ?? null), Json::string($case['value'] ?? null)), Json::string($case['label'] ?? null));
         }
     }
 

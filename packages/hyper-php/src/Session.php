@@ -43,7 +43,20 @@ final class Session
             return new Flash([], []);
         }
 
-        return new Flash($flash['values'] ?? [], $flash['changed'] ?? []);
+        $values = $flash['values'] ?? [];
+        $changed = $flash['changed'] ?? [];
+        if (!is_array($values) || !is_array($changed) || !array_is_list($changed)) {
+            throw new \UnexpectedValueException('the session holds flash data that is not values and a list of topics');
+        }
+        $topics = [];
+        foreach ($changed as $topic) {
+            if (!is_string($topic)) {
+                throw new \UnexpectedValueException('the session holds a changed topic that is not a string');
+            }
+            $topics[] = $topic;
+        }
+
+        return new Flash($values, $topics);
     }
 
     /** Stores a kept value of a region (HY-39, HY-40). */
@@ -51,14 +64,16 @@ final class Session
     {
         $kept = $this->store->get(self::KEEP);
         $kept = is_array($kept) ? $kept : [];
-        $kept[$region][$path] = $value;
+        $regionKept = is_array($kept[$region] ?? null) ? $kept[$region] : [];
+        $regionKept[$path] = $value;
+        $kept[$region] = $regionKept;
         $this->store->set(self::KEEP, $kept);
     }
 
     /**
-     * Returns the kept values of a region in storing order.
+     * Returns the kept values of a region by path in storing order.
      *
-     * @return array<string, mixed>
+     * @return array<array-key, mixed>
      */
     public function kept(string $region): array
     {

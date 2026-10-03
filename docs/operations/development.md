@@ -28,6 +28,7 @@
 | `make test-node` | Runs the Node server tests: the cases of the PHP server tests against the same fixtures, the JSON cases of `conformance/json.json`, sessions, the HTTP server, and the type check |
 | `make test-php` | Runs the server package tests, including the router conformance cases, once with the generated program and once with the native extension |
 | `make lint` | Checks PHP formatting |
+| `make analyse-php` | Runs PHPStan at level `max` on the source and the tests of `packages/hyper-php` with `packages/hyper-php/phpstan.neon`, without a baseline and without ignored errors. PHPStan reads the signatures of the native template extension from `../template/packages/template-php-ext/stubs/polyspec_template.stub.php` and writes its cache to `build/phpstan` |
 | `make templates-check` | Checks that only the layout template carries `hx-` attributes (HC-6), that the layout places `{# title}` and `{# data}` once, and that every region of the layout and of each route template is placed once, directly inside an element whose `id` is the region name, without block arguments (HY-3, HY-30) |
 | `make test-scripts` | Runs the tests of the check scripts, such as the region placement check with a broken fixture application |
 | `make parity` | Compares PHP documents with browser renders of document and region JSON, once with the generated program and once with the native extension |

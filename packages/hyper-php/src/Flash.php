@@ -8,7 +8,7 @@ namespace Polyspec\Hyper;
 final class Flash
 {
     /**
-     * @param array<string, mixed> $values
+     * @param array<array-key, mixed> $values
      * @param list<string> $changed
      */
     public function __construct(

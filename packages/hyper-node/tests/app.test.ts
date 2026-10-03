@@ -4,8 +4,8 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { createApplication, decodeResponse, renderParts, type Manifest, type TemplateIndex } from '@polyspec/hyper';
 import { parseJson, type Template } from '@polyspec/template/render';
 import { verifyToken } from '../src/csrf.js';
-import { App, Reply as ReplyClass, Request, Result, type Reply, type Response } from '../src/index.js';
-import { cookie, Fixture, FIXTURES, handlers, json, JSON_REGION, TEMPLATES } from './support.js';
+import { App, Reply as ReplyClass, Request, Result, type Handlers, type Loader, type Reply, type Response } from '../src/index.js';
+import { cookie, Fixture, FIXTURES, handlers, json, JSON_REGION, TEMPLATES, type Services } from './support.js';
 
 let fixture: Fixture;
 beforeEach(() => {
@@ -110,6 +110,31 @@ describe('App', () => {
   it('rejects manifests with invalid keep declarations (HY-37, HY-40)', async () => {
     for (const name of ['keep-kind', 'keep-page', 'keep-manifest', 'keep-reserved', 'uses-topic']) {
       await expect(App.open({ manifest: `${FIXTURES}invalid/${name}.json`, templates: TEMPLATES, handlers: {}, timezone: 'Z' }), name).rejects.toThrow();
+    }
+  });
+
+  it('rejects manifests whose lists or names have another type (HY-2)', async () => {
+    for (const name of ['routes-text', 'route-name-number', 'region-name-list']) {
+      await expect(App.open({ manifest: `${FIXTURES}invalid/${name}.json`, templates: TEMPLATES, handlers: {}, timezone: 'Z' }), name).rejects.toThrow();
+    }
+  });
+
+  it('fails shared data and region data that are not maps (HY-44)', async () => {
+    for (const value of [['b'], 'b']) {
+      // The loaders return a value outside their declared type, which the server checks at run time.
+      const loader = (() => value) as unknown as Loader<Services>;
+      const variants: Record<string, Handlers<Services>> = {
+        shared: { ...handlers(), shared: loader },
+        region: { ...handlers(), regions: { side: loader } },
+        route: { ...handlers(), routes: { ...handlers().routes, home: { load: loader } } },
+      };
+      for (const [label, variant] of Object.entries(variants)) {
+        const app = await fixture.app({ handlers: variant });
+        // A document runs every loader; a region request runs no loader of an unchanged region (HY-18).
+        for (const headers of [{}, { Accept: 'application/json' }]) {
+          expect((await app.handle(Request.from({ method: 'GET', target: '/', headers }), fixture.session)).status, `${label} ${JSON.stringify(value)}`).toBe(500);
+        }
+      }
     }
   });
 

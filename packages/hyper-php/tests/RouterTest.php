@@ -7,37 +7,61 @@ namespace Polyspec\Hyper\Tests;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Polyspec\Hyper\Router;
+use Polyspec\Hyper\Tests\Support\Json;
 
 /** HY-9: these are the same cases that the JavaScript router passes. */
 final class RouterTest extends TestCase
 {
-    /** @return array<string, mixed> */
+    /** @return array<array-key, mixed> */
     private static function fixture(): array
     {
-        return json_decode((string) file_get_contents(__DIR__ . '/../../../conformance/routes.json'), true, flags: JSON_THROW_ON_ERROR);
+        return Json::file(__DIR__ . '/../../../conformance/routes.json');
+    }
+
+    /** @return list<array{name: string, path: string}> */
+    private static function routes(mixed $routes): array
+    {
+        return array_map(fn (array $route): array => ['name' => Json::string($route['name'] ?? null), 'path' => Json::string($route['path'] ?? null)], Json::arrays($routes));
+    }
+
+    /**
+     * @param array<array-key, mixed> $case
+     * @return array{string, array{name: string, params: array<string, string>}|null}
+     */
+    private static function routeCase(array $case): array
+    {
+        $result = $case['result'] ?? null;
+        if ($result !== null) {
+            $result = Json::array($result);
+            $result = ['name' => Json::string($result['name'] ?? null), 'params' => Json::stringMap($result['params'] ?? null)];
+        }
+
+        return [Json::string($case['path'] ?? null), $result];
     }
 
     /** @return iterable<string, array{string, array{name: string, params: array<string, string>}|null}> */
     public static function cases(): iterable
     {
-        foreach (self::fixture()['cases'] as $case) {
-            yield json_encode($case['path']) => [$case['path'], $case['result']];
+        foreach (Json::arrays(self::fixture()['cases'] ?? null) as $case) {
+            $routeCase = self::routeCase($case);
+            yield json_encode($routeCase[0], JSON_THROW_ON_ERROR) => $routeCase;
         }
     }
 
     /** @return iterable<string, array{string, array{name: string, params: array<string, string>}|null}> */
     public static function baseCases(): iterable
     {
-        foreach (self::fixture()['baseCases'] as $case) {
-            yield json_encode($case['path']) => [$case['path'], $case['result']];
+        foreach (Json::arrays(self::fixture()['baseCases'] ?? null) as $case) {
+            $routeCase = self::routeCase($case);
+            yield json_encode($routeCase[0], JSON_THROW_ON_ERROR) => $routeCase;
         }
     }
 
     /** @return iterable<string, array{string}> */
     public static function invalidPaths(): iterable
     {
-        foreach (self::fixture()['invalidPaths'] as $path) {
-            yield json_encode($path) => [$path];
+        foreach (Json::strings(self::fixture()['invalidPaths'] ?? null) as $path) {
+            yield json_encode($path, JSON_THROW_ON_ERROR) => [$path];
         }
     }
 
@@ -45,7 +69,7 @@ final class RouterTest extends TestCase
     #[DataProvider('cases')]
     public function testRoutesThePath(string $path, ?array $expected): void
     {
-        self::assertSame(self::normalize($expected), self::normalize((new Router(self::fixture()['routes']))->match($path)));
+        self::assertSame(self::normalize($expected), self::normalize((new Router(self::routes(self::fixture()['routes'] ?? null)))->match($path)));
     }
 
     /** @param array{name: string, params: array<string, string>}|null $expected */
@@ -53,8 +77,8 @@ final class RouterTest extends TestCase
     public function testRoutesThePathUnderTheBasePath(string $path, ?array $expected): void
     {
         $fixture = self::fixture();
-        $stripped = Router::stripBasePath($path, $fixture['basePath']);
-        $result = $stripped === null ? null : (new Router($fixture['routes']))->match($stripped);
+        $stripped = Router::stripBasePath($path, Json::string($fixture['basePath'] ?? null));
+        $result = $stripped === null ? null : (new Router(self::routes($fixture['routes'] ?? null)))->match($stripped);
         self::assertSame(self::normalize($expected), self::normalize($result));
     }
 
@@ -75,25 +99,26 @@ final class RouterTest extends TestCase
         return $result === null ? null : json_encode(['name' => $result['name'], 'params' => (object) $result['params']], JSON_THROW_ON_ERROR);
     }
 
-    /** @return array<string, mixed> */
+    /** @return array<array-key, mixed> */
     private static function rest(): array
     {
-        return json_decode((string) file_get_contents(__DIR__ . '/../../../conformance/rest.json'), true, flags: JSON_THROW_ON_ERROR);
+        return Json::file(__DIR__ . '/../../../conformance/rest.json');
     }
 
     /** @return iterable<string, array{string, array{name: string, params: array<string, string>}|null}> */
     public static function restCases(): iterable
     {
-        foreach (self::rest()['cases'] as $case) {
-            yield json_encode($case['path']) => [$case['path'], $case['result']];
+        foreach (Json::arrays(self::rest()['cases'] ?? null) as $case) {
+            $routeCase = self::routeCase($case);
+            yield json_encode($routeCase[0], JSON_THROW_ON_ERROR) => $routeCase;
         }
     }
 
     /** @return iterable<string, array{string}> */
     public static function invalidRestPaths(): iterable
     {
-        foreach (self::rest()['invalidPaths'] as $path) {
-            yield json_encode($path) => [$path];
+        foreach (Json::strings(self::rest()['invalidPaths'] ?? null) as $path) {
+            yield json_encode($path, JSON_THROW_ON_ERROR) => [$path];
         }
     }
 
@@ -105,7 +130,7 @@ final class RouterTest extends TestCase
     #[DataProvider('restCases')]
     public function testRoutesTheRestOfThePath(string $path, ?array $expected): void
     {
-        self::assertSame(self::normalize($expected), self::normalize((new Router(self::rest()['routes']))->match($path)));
+        self::assertSame(self::normalize($expected), self::normalize((new Router(self::routes(self::rest()['routes'] ?? null)))->match($path)));
     }
 
     #[DataProvider('invalidRestPaths')]

@@ -8,29 +8,30 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Polyspec\Hyper\JsonEncoder;
 use Polyspec\Hyper\Kept;
+use Polyspec\Hyper\Tests\Support\Json;
 
 /** HY-54: the JSON cases of conformance/json.json, which the Node server passes with the same bytes. */
 final class JsonTest extends TestCase
 {
-    /** @return object{encode: list<object{label: string, json: string, expected: string}>, decode: list<object{label: string, json: string, result: string}>} */
-    private static function fixture(): object
+    /** @return list<\stdClass> */
+    private static function fixture(string $part): array
     {
-        return json_decode((string) file_get_contents(__DIR__ . '/../../../conformance/json.json'), false, flags: JSON_THROW_ON_ERROR);
+        return Json::objects(Json::objectFile(__DIR__ . '/../../../conformance/json.json')->{$part});
     }
 
     /** @return iterable<string, array{string, string}> */
     public static function encodeCases(): iterable
     {
-        foreach (self::fixture()->encode as $case) {
-            yield $case->label => [$case->json, $case->expected];
+        foreach (self::fixture('encode') as $case) {
+            yield Json::string($case->label) => [Json::string($case->json), Json::string($case->expected)];
         }
     }
 
     /** @return iterable<string, array{string, string}> */
     public static function decodeCases(): iterable
     {
-        foreach (self::fixture()->decode as $case) {
-            yield $case->label => [$case->json, $case->result];
+        foreach (self::fixture('decode') as $case) {
+            yield Json::string($case->label) => [Json::string($case->json), Json::string($case->result)];
         }
     }
 

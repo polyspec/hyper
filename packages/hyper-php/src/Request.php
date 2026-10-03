@@ -20,9 +20,9 @@ final class Request
      * @param array<string, string> $headers header names in any case
      * @param string $query the raw query: the request target after its first `?` up to its first `#`
      * @param string $body the request body, whose form values the request reads (HY-57)
-     * @param array<string, mixed> $flash
+     * @param array<array-key, mixed> $flash
      * @param array<string, string> $params
-     * @param array<string, string> $cookies
+     * @param array<array-key, string> $cookies cookie values by name; PHP gives a decimal name as an integer key
      */
     public function __construct(
         public readonly string $method,
@@ -233,11 +233,15 @@ final class Request
                 $headers[$name] = $_SERVER[$key];
             }
         }
+        $method = $_SERVER['REQUEST_METHOD'] ?? null;
+        $target = $_SERVER['REQUEST_URI'] ?? null;
+        $target = is_string($target) ? $target : '/';
+
         return new self(
-            strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? 'GET')),
-            self::targetPath((string) ($_SERVER['REQUEST_URI'] ?? '/')),
+            strtoupper(is_string($method) ? $method : 'GET'),
+            self::targetPath($target),
             $headers,
-            self::targetQuery((string) ($_SERVER['REQUEST_URI'] ?? '/')),
+            self::targetQuery($target),
             // The raw body, not $_POST, which nests bracketed names. PHP gives the body of a multipart/form-data
             // request here only when enable_post_data_reading is off.
             (string) file_get_contents('php://input'),

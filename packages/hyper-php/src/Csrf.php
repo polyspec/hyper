@@ -19,7 +19,7 @@ final class Csrf
     /** Returns the token masked with a mask; both are 64 lowercase hexadecimal digits. */
     public static function mask(string $token, string $mask): string
     {
-        return $mask . bin2hex(hex2bin($mask) ^ hex2bin($token));
+        return $mask . bin2hex(self::bytes($mask) ^ self::bytes($token));
     }
 
     /** Returns true when a form value is a masked value of the token, compared in constant time. */
@@ -29,6 +29,17 @@ final class Csrf
             return false;
         }
 
-        return hash_equals(hex2bin($token), hex2bin(substr($value, 0, 64)) ^ hex2bin(substr($value, 64)));
+        return hash_equals(self::bytes($token), self::bytes(substr($value, 0, 64)) ^ self::bytes(substr($value, 64)));
+    }
+
+    /** Returns the bytes of an even number of hexadecimal digits; other text fails. */
+    private static function bytes(string $hex): string
+    {
+        $bytes = hex2bin($hex);
+        if ($bytes === false) {
+            throw new \InvalidArgumentException('a CSRF token or mask is not hexadecimal digits');
+        }
+
+        return $bytes;
     }
 }
