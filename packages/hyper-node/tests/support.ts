@@ -103,7 +103,9 @@ export function handlers(): Handlers<Services> {
             case 'huge':
               return { id: 9223372036854775807n };
             case 'numeric':
-              return { 5: 'x', id: 'n' };
+              return { labels: { 5: 'x' }, id: 'n' };
+            case 'secret':
+              return { id: 's', password: 'p', nested: { a: 1 } };
             default:
               return { id: request.param('id') };
           }
@@ -148,9 +150,10 @@ export class Fixture {
     return this.handle({ method: 'POST', target, headers, body }, { basePath });
   }
 
-  // Returns the masked token of a page response, as a form of the page carries it (HY-24).
+  // Returns the masked token of a page response (HY-24). The route region of /list keeps a value on the server, so its
+  // shared data keeps csrf (HY-73).
   async token(): Promise<string> {
-    return (json(await this.get('/', JSON_REGION)).shared as { csrf: string }).csrf;
+    return (json(await this.get('/list', JSON_REGION)).shared as { csrf: string }).csrf;
   }
 
   // Returns a body with every masked value of the session token replaced by `masked`, after it checks that each one
@@ -165,8 +168,8 @@ export class Fixture {
 
   // Returns the tag of a JSON body of the current session token (HY-53).
   tag(body: string): string {
-    const masked = (JSON.parse(body) as { shared: { csrf: string } }).shared.csrf;
-    const text = body.replaceAll(masked, this.session.get('_hyper_csrf') as string);
+    const masked = (JSON.parse(body) as { shared: { csrf?: string } }).shared.csrf;
+    const text = masked === undefined ? body : body.replaceAll(masked, this.session.get('_hyper_csrf') as string);
     return `W/"${createHash('sha256').update(text).digest('hex').slice(0, 32)}"`;
   }
 

@@ -48,11 +48,12 @@ function raw(bytes: Buffer): Promise<string> {
 describe('App.server', () => {
   it('sets the session cookie of a new session and keeps the session (HY-45)', async () => {
     await start();
-    const first = await fetch(`${base}/`, { headers: { Accept: 'application/json' } });
+    // The route region of /list keeps a value on the server, so its shared data keeps csrf (HY-73).
+    const first = await fetch(`${base}/list`, { headers: { Accept: 'application/json' } });
     const cookie = first.headers.get('set-cookie')!;
     expect(cookie).toMatch(/^hy-session=[0-9a-f]{64}; path=\/; HttpOnly; SameSite=Lax$/);
     const masked = ((await first.json()) as { shared: { csrf: string } }).shared.csrf;
-    const second = await fetch(`${base}/`, { headers: { Accept: 'application/json', Cookie: cookie.split(';')[0]! } });
+    const second = await fetch(`${base}/list`, { headers: { Accept: 'application/json', Cookie: cookie.split(';')[0]! } });
     expect(second.headers.get('set-cookie')).toBeNull();
     // HY-24: the second response masks the same session token anew.
     expect(((await second.json()) as { shared: { csrf: string } }).shared.csrf).not.toBe(masked);
