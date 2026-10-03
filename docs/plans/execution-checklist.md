@@ -40,9 +40,9 @@ Depends on: none.
 
 | ID | Task | Verification | Status |
 |---|---|---|---|
-| H3.1 | Specify that a PHP warning or notice during a request, such as an undefined variable or array key, fails the request as HY-43 does | `make docs-check` | [ ] |
-| H3.2 | PHP server: turn every warning and notice of a request into an exception with a failing test for each kind | `make test-php` | [ ] |
-| H3.3 | Run static analysis of the PHP package at its highest level in `make check` and fix every finding | `make check` | [ ] |
+| H3.1 | Specify that a PHP warning or notice during a request, such as an undefined variable or array key, fails the request as HY-43 does | `make docs-check` | [x] |
+| H3.2 | PHP server: turn every warning and notice of a request into an exception with a failing test for each kind | `make test-php` | [x] |
+| H3.3 | Run static analysis of the PHP package at its highest level in `make check` and fix every finding | `make check` | [x] |
 
 ## Wave 4 — Route regions of composed pages
 
