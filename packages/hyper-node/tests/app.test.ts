@@ -317,6 +317,23 @@ describe('App', () => {
     expect((await app.handle(Request.from({ method: 'GET', target: '/', headers: JSON_REGION }), fixture.session)).status).toBe(500);
   });
 
+  it('makes a route region absent when its loader returns null (HY-75)', async () => {
+    const base = handlers();
+    const rows = ({ request }: { request: Request }) => (request.queryInt('rows', 1) === 0 ? null : { items: ['a'], open: false, mode: 'a', view: 'x', filter: { a: 1 }, tags: [] });
+    const app = await fixture.app({ handlers: { ...base, routes: { ...base.routes, list: { regions: { rows } } } } });
+    const keep = cookie('hy-keep', '{"rows":{"mode":"b"}}');
+    const page = json(await app.handle(Request.from({ method: 'GET', target: '/list?rows=0', headers: { Accept: 'application/json', ...keep } }), fixture.session));
+    expect(Object.keys(page.regions)).toEqual(['side', 'content']);
+    expect(page.kept).toEqual({});
+    const document = (await app.handle(Request.from({ method: 'GET', target: '/list?rows=0', headers: keep }), fixture.session)).body;
+    expect(document).toContain('<main id="content"><h1>List</h1>\n</main>');
+    expect(document).not.toContain('id="rows"');
+    expect(document).not.toContain('id="hy-data"');
+    const present = (await app.handle(Request.from({ method: 'GET', target: '/list?rows=1', headers: keep }), fixture.session)).body;
+    expect(present).toContain('<ul id="rows"><li>a</li></ul>');
+    expect(present).toContain('id="hy-data"');
+  });
+
   it('changes the tag of a renewed session (HY-53, HY-72)', async () => {
     const first = await fixture.get('/items/plain', { Accept: 'application/json' });
     expect((await fixture.get('/items/plain', { Accept: 'application/json', 'If-None-Match': first.headers.ETag as string })).status).toBe(304);

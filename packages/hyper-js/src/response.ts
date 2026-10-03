@@ -101,7 +101,7 @@ function withKeptCheck<T>(app: Application, decoded: DecodedResponse, render: ()
   } catch (error) {
     if (decoded.kept.size === 0) throw error;
   }
-  const routeRegions = (decoded.route.regions ?? []).map((region) => region.name);
+  const routeRegions = presentRouteRegions(decoded.route, decoded.regions);
   const others = [...decoded.regions.keys()].filter((name) => name !== app.page && !routeRegions.includes(name));
   for (const name of [...routeRegions, ...others, app.page]) {
     if (!decoded.kept.has(name)) continue;
@@ -133,13 +133,13 @@ export function regionTemplate(app: Application, route: RouteDeclaration, name: 
 }
 
 // Renders one region alone with merge(shared, data) as root data; the page region receives each route
-// region rendered alone as an HTML definition (HY-13, HY-30).
+// present route region rendered alone as an HTML definition; an absent one has no definition (HY-13, HY-30, HY-75).
 export function renderRegion(app: Application, route: RouteDeclaration, name: string, shared: MapValue, regions: MapValue, timezone: string): string {
   const root: MapValue = new Map(shared);
   for (const [key, item] of requireMap(regions.get(name) ?? null, `region ${name}`)) root.set(key, item);
   const define: Record<string, { html: string }> = {};
   if (name === app.page) {
-    for (const region of route.regions ?? []) define[region.name] = { html: renderRegion(app, route, region.name, shared, regions, timezone) };
+    for (const region of presentRouteRegions(route, regions)) define[region] = { html: renderRegion(app, route, region, shared, regions, timezone) };
   }
   return app.engine.render(regionTemplate(app, route, name), root, { define, env: { timezone } });
 }
@@ -173,8 +173,7 @@ export function toHtml(app: Application, decoded: DecodedResponse): string {
 // Renders the document of a decoded document response, including the embedded data, which carries the
 // loader data and the server kept values of the route regions (HY-12, HY-22, HY-31, HY-38).
 export function renderDocument(app: Application, decoded: DecodedResponse): string {
-  const names = [...app.manifest.regions.map((region) => region.name), ...(decoded.route.regions ?? []).map((region) => region.name)];
-  for (const name of names) {
+  for (const { name } of app.manifest.regions) {
     if (!decoded.regions.has(name)) throw new Error(`hyper: document response has no region ${name}`);
   }
   return withKeptCheck(app, decoded, () => {
@@ -199,11 +198,11 @@ export function renderLayout(app: Application, shared: MapValue, timezone: strin
   return app.engine.render(app.manifest.layout, shared, { define, env });
 }
 
-// Renders the embedded data (HY-31): the response value with only the route regions of the route and their kept
-// entries, without the kept values of the regions that dropped them (HY-38). A route without route regions embeds
-// nothing.
+// Renders the embedded data (HY-31): the response value with only the present route regions of the route and their
+// kept entries, without the kept values of the regions that dropped them (HY-38). A response without a present route
+// region embeds nothing (HY-75).
 function embeddedHtml(app: Application, decoded: DecodedResponse, env: { timezone: string }): string {
-  const names = (decoded.route.regions ?? []).map((region) => region.name);
+  const names = presentRouteRegions(decoded.route, decoded.regions);
   if (names.length === 0) return '';
   const regions = requireMap(decoded.value.get('regions') ?? null, 'regions');
   const kept = requireMap(decoded.value.get('kept') ?? null, 'kept');
@@ -218,4 +217,9 @@ function embeddedHtml(app: Application, decoded: DecodedResponse, env: { timezon
 export function requireMap(value: Value, label: string): MapValue {
   if (!(value instanceof Map)) throw new Error(`hyper: ${label} is not an object`);
   return value;
+}
+
+// Returns the names of the route regions of a route that the region data has: the present route regions (HY-75).
+export function presentRouteRegions(route: RouteDeclaration, regions: MapValue): string[] {
+  return (route.regions ?? []).map((region) => region.name).filter((name) => regions.has(name));
 }

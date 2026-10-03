@@ -28,11 +28,13 @@ export interface Context<S extends object> {
 
 export type Loader<S extends object> = (context: Context<S>) => Data | Promise<Data>;
 export type Action<S extends object> = (context: Context<S>) => Result | Promise<Result>;
+// The loader of a route region, which returns null when the region is absent from the response (HY-75).
+export type RouteRegionLoader<S extends object> = (context: Context<S>) => Data | null | Promise<Data | null>;
 
 export interface RouteHandlers<S extends object> {
   load?: Loader<S>;
   post?: Action<S>;
-  regions?: Record<string, Loader<S>>;
+  regions?: Record<string, RouteRegionLoader<S>>;
 }
 
 export interface Handlers<S extends object> {

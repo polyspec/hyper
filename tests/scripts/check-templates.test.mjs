@@ -10,6 +10,8 @@ test('reports every region placement that breaks HY-3 and HY-30', () => {
     'layout.tpl: {# left} is not directly inside an element with id="left" (HY-3, HY-30)',
     'list.tpl: {# notice} has block arguments (HY-3, HY-30)',
     'list.tpl: {# rows} is not directly inside an element with id="rows" (HY-3, HY-30)',
+    // A route region placed in an included template passes; one that no template of the route places fails (HY-75).
+    'view.tpl: places {# lost} 0 times, expected once (HY-3, HY-30)',
   ]);
 });
 

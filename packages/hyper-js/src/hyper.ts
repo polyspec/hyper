@@ -55,6 +55,8 @@ export interface DocumentAdapter {
   text(text: string): void;
   // Marks the body as failed when a document cannot be rendered (HY-47).
   fail(status: string): void;
+  // Returns the number of elements with an id in the page (HY-75).
+  elements(id: string): number;
 }
 
 // The data of the last rendered response (HY-32): the loader data and the region data that rendered.
@@ -157,6 +159,7 @@ export class Hyper {
     }
     const changed = this.applyBrowserKept(decoded);
     this.hold(decoded);
+    this.checkElements();
     const held = this.held!;
     try {
       await this.app.templates.ensure(routeTemplates(this.app.manifest, decoded.route));
@@ -203,7 +206,7 @@ export class Hyper {
   // Runs the assignments of a `hy-set` attribute in the region that contains the element (HY-36).
   async setFrom(element: Element): Promise<void> {
     const held = this.requireHeld();
-    const names = (held.route.regions ?? []).map((item) => item.name);
+    const names = [...held.regions.keys()];
     if (names.length === 0) throw new Error('hyper: hy-set is outside a route region');
     // A region element is the element whose id is the name of a route region of the held route (HY-3, HY-36).
     const region = element.closest(names.map((name) => `[id="${name}"]`).join(','))?.id;
@@ -292,6 +295,7 @@ export class Hyper {
       if (generation !== this.location) return;
       this.hold(decoded);
       this.page.mount(html);
+      this.checkElements();
       settle();
     } catch {
       if (abort.signal.aborted || generation !== this.location) return;
@@ -373,6 +377,8 @@ export class Hyper {
         const settle = ctx.hyperStylesheets;
         delete ctx.hyperStylesheets;
         settle?.();
+        // A swap of the page region places the route region elements (HY-75).
+        if (ctx.hyperRegion === this.app.page) this.checkElements();
         // Swaps of render and set have no request.
         if (basePath !== '' || ctx.request?.headers?.['HX-History-Restore-Request'] !== 'true') return;
         // A document without embedded data has no region that changes in the browser (HY-31, HY-32).
@@ -494,10 +500,23 @@ export class Hyper {
     return this.held;
   }
 
-  // Only the route regions of the held route change in the browser (HY-33).
+  // Only the present route regions of the held route change in the browser (HY-33, HY-75).
   private requireRouteRegion(region: string): void {
-    if (!(this.requireHeld().route.regions ?? []).some((item) => item.name === region)) {
-      throw new Error(`hyper: region ${region} is not a route region of the held route`);
+    if (!this.requireHeld().regions.has(region)) {
+      throw new Error(`hyper: region ${region} is not a present route region of the held route`);
+    }
+  }
+
+  // Marks the body when a present route region of the held route has not exactly one element in the page, or an
+  // absent one has an element (HY-75).
+  private checkElements(): void {
+    const held = this.held;
+    if (held === null) return;
+    for (const { name } of held.route.regions ?? []) {
+      if (this.page.elements(name) !== (held.regions.has(name) ? 1 : 0)) {
+        this.page.fail('0');
+        return;
+      }
     }
   }
 
@@ -602,6 +621,7 @@ function browserDocument(htmx: HtmxApi): DocumentAdapter {
     },
     text: (text) => replaceBody(null, [document.createTextNode(text)]),
     fail: (status) => document.body.setAttribute('hy-error', status),
+    elements: (id) => document.querySelectorAll(`[id="${CSS.escape(id)}"]`).length,
   };
 }
 
