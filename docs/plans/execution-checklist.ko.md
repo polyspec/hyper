@@ -17,10 +17,10 @@
 
 | ID | 작업 | 검증 | 상태 |
 |---|---|---|---|
-| H1.1 | 가린 토큰(HY-24, HY-10, HY-71), 세션 쿠키 이름(HY-45), 세션 갱신(HY-72), 비공개 페이지 캐시(HY-52)를 명세하고 `conformance/csrf.json`을 추가한다 | `make docs-check` | [ ] |
-| H1.2 | PHP 서버: 모든 응답에서 토큰을 가리고 가린 값만 받는다(HY-24). 세션 쿠키 이름을 `__Host-hy-session` 또는 `hy-session`으로 정한다(HY-45). 액션에서 세션을 갱신하고 로더의 갱신은 실패시킨다(HY-72). 공유 캐시가 저장할 수 있는 `Cache-Control`을 거부한다(HY-52) | `make test-php` | [ ] |
-| H1.3 | Node 서버: H1.2와 같은 규칙, 그리고 쿠키 이름 옵션이 없는 `FileSessions` | `make test-node` | [ ] |
-| H1.4 | H1.1~H1.3에 대한 예제, 브라우저 테스트, 결과 일치 검사, 기능 상태, 배포 절차, 변경 기록 | `make check` | [ ] |
+| H1.1 | 가린 토큰(HY-24, HY-10, HY-71), 세션 쿠키 이름(HY-45), 세션 갱신(HY-72), 비공개 페이지 캐시(HY-52)를 명세하고 `conformance/csrf.json`을 추가한다 | `make docs-check` | [x] |
+| H1.2 | PHP 서버: 모든 응답에서 토큰을 가리고 가린 값만 받는다(HY-24). 세션 쿠키 이름을 `__Host-hy-session` 또는 `hy-session`으로 정한다(HY-45). 액션에서 세션을 갱신하고 로더의 갱신은 실패시킨다(HY-72). 공유 캐시가 저장할 수 있는 `Cache-Control`을 거부한다(HY-52) | `make test-php` | [x] |
+| H1.3 | Node 서버: H1.2와 같은 규칙, 그리고 쿠키 이름 옵션이 없는 `FileSessions` | `make test-node` | [x] |
+| H1.4 | H1.1~H1.3에 대한 예제, 브라우저 테스트, 결과 일치 검사, 기능 상태, 배포 절차, 변경 기록 | `make check` | [x] |
 
 ## 웨이브 2 — 템플릿이 읽는 데이터만 보내기
 
