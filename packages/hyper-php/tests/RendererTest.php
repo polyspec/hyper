@@ -44,7 +44,7 @@ final class RendererTest extends TestCase
     {
         // HY-48: a missing build names the missing file when the application opens.
         $root = sys_get_temp_dir() . '/hyper-renderer-' . bin2hex(random_bytes(6));
-        $files = ['program.php', 'program.json', 'templates'];
+        $files = ['program.php', 'program.json', 'reads.json', 'templates'];
         try {
             foreach ($files as $missing) {
                 $program = "{$root}/without-" . strtr($missing, '.', '-');

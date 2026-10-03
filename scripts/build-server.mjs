@@ -4,6 +4,7 @@
 //   <output>/program.php  the generated PHP program of the same templates, compiled with the compiler
 //                         of the template repository into the namespace --php-namespace
 //   <output>/program.json the namespace of the generated program
+//   <output>/reads.json   the read paths of every route, by which the server keeps data (HY-73)
 //
 // Usage: node scripts/build-server.mjs --manifest examples/board/app/app.json --templates examples/board/templates
 //          --output examples/board/build/server --template-dir ../template --php-namespace 'Polyspec\Hyper\Examples\Board\Program'
@@ -21,7 +22,9 @@ const load = (file) => import(pathToFileURL(join(compilerDir, file)).href);
 const { compileAst } = await load('ast-artifact.mjs');
 const { compileSource } = await load('compiler.mjs');
 const { deriveTypeManifest } = await load('type-manifest.mjs');
-const { parse } = await import(pathToFileURL(resolve(values['template-dir'], 'packages', 'template-ts', 'dist', 'index.mjs')).href);
+const { parse, resolvePath } = await import(pathToFileURL(resolve(values['template-dir'], 'packages', 'template-ts', 'dist', 'index.mjs')).href);
+// The read paths module imports only types, so Node runs its source with type stripping, without a bundler (HY-68, HY-73).
+const { routeReads } = await import(new URL('../packages/hyper-js/src/reads.ts', import.meta.url).href);
 
 const manifest = JSON.parse(readFileSync(values.manifest, 'utf8'));
 const dataTemplate = JSON.parse(readFileSync(new URL('../packages/hyper-js/data-template.json', import.meta.url), 'utf8'));
@@ -43,6 +46,7 @@ const graph = join(output, 'graph');
 compileAst({ root: templates, output: graph, entry: manifest.layout, refresh: 'true', typeManifest: typesPath });
 writeFileSync(join(output, 'program.php'), compileSource(join(graph, 'manifest.json'), typesPath, 'php', { phpNamespace: values['php-namespace'] }));
 writeFileSync(join(output, 'program.json'), `${JSON.stringify({ namespace: values['php-namespace'] }, null, 2)}\n`);
+writeFileSync(join(output, 'reads.json'), `${JSON.stringify({ routes: routeReads(manifest, (name) => parsed.get(name), resolvePath) })}\n`);
 process.stdout.write(`server program: ${parsed.size} templates, ${join(values.output, 'program.php')}\n`);
 
 function listTemplates(root, prefix = '') {

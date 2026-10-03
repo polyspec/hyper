@@ -144,7 +144,7 @@ describe('App', () => {
   });
 
   it('keeps numeric data keys (HY-17)', async () => {
-    expect((await fixture.get('/items/numeric', JSON_REGION)).body).toContain('"regions":{"content":{"5":"x","id":"n"}}');
+    expect((await fixture.get('/items/numeric', JSON_REGION)).body).toContain('"regions":{"content":{"labels":{"5":"x"},"id":"n"}}');
   });
 
   it('rejects long kept values (HY-40)', async () => {
@@ -187,9 +187,8 @@ describe('App', () => {
     const response = await fixture.get('/items/a%20b', JSON_REGION);
     expect(response.status).toBe(200);
     expect(response.headers['Content-Type']).toBe('application/json; charset=utf-8');
-    const masked = (json(response).shared as { csrf: string }).csrf;
-    expect(verifyToken(fixture.session.get('_hyper_csrf') as string, masked)).toBe(true);
-    expect(response.body).toBe(`{"env":{"timezone":"+09:00"},"route":"item","params":{"id":"a b"},"shared":{"title":"Item","csrf":"${masked}"},"regions":{"content":{"id":"a b"}},"kept":{}}`);
+    // HY-73: no template of the route reads csrf and no route region keeps a value on the server.
+    expect(response.body).toBe('{"env":{"timezone":"+09:00"},"route":"item","params":{"id":"a b"},"shared":{"title":"Item"},"regions":{"content":{"id":"a b"}},"kept":{}}');
   });
 
   it('returns every region in manifest order for a document request (HY-15, HY-18)', async () => {
@@ -235,8 +234,8 @@ describe('App', () => {
   });
 
   it('masks the token anew in every response and accepts every mask (HY-24)', async () => {
-    const first = await fixture.get('/', JSON_REGION);
-    const second = await fixture.get('/', JSON_REGION);
+    const first = await fixture.get('/list', JSON_REGION);
+    const second = await fixture.get('/list', JSON_REGION);
     const token = fixture.session.get('_hyper_csrf') as string;
     const a = (json(first).shared as { csrf: string }).csrf;
     const b = (json(second).shared as { csrf: string }).csrf;
@@ -273,6 +272,26 @@ describe('App', () => {
     expect(verifyToken(fixture.session.get('_hyper_csrf') as string, (page.shared as { csrf: string }).csrf)).toBe(true);
   });
 
+  it('sends only the paths that the templates of the route read (HY-73)', async () => {
+    const page = json(await fixture.get('/items/secret', JSON_REGION));
+    expect(page.regions.content).toEqual({ id: 's' });
+    expect(page.shared).toEqual({ title: 'Item' });
+    expect((await fixture.get('/items/secret', { Accept: 'application/json' })).body).not.toContain('"p"');
+
+    const base = handlers();
+    const app = await fixture.app({ handlers: { ...base, shared: () => ({ site: 'x', name: 'shared name' }), routes: { ...base.routes, list: { regions: { rows: () => ({ items: ['a'], open: false, mode: 'a', view: 'x', filter: {}, tags: [], unread: 1 }) } } } } });
+    const list = json(await app.handle(Request.from({ method: 'GET', target: '/list', headers: JSON_REGION }), fixture.session));
+    // The shared handler value name is read by the page template of another route, not by any template of /list.
+    expect(Object.keys(list.shared as object)).toEqual(['title', 'csrf']);
+    expect(Object.keys(list.regions.rows as object)).toEqual(['items', 'open', 'mode', 'view', 'filter', 'tags']);
+  });
+
+  it('fails a shared value outside the data model that no template reads (HY-44, HY-73)', async () => {
+    const app = await fixture.app({ handlers: { ...handlers(), shared: () => ({ big: 9223372036854775807n }) } });
+    expect((await app.handle(Request.from({ method: 'GET', target: '/' }), fixture.session)).status).toBe(500);
+    expect((await app.handle(Request.from({ method: 'GET', target: '/', headers: JSON_REGION }), fixture.session)).status).toBe(500);
+  });
+
   it('changes the tag of a renewed session (HY-53, HY-72)', async () => {
     const first = await fixture.get('/items/plain', { Accept: 'application/json' });
     expect((await fixture.get('/items/plain', { Accept: 'application/json', 'If-None-Match': first.headers.ETag as string })).status).toBe(304);
@@ -284,7 +303,7 @@ describe('App', () => {
 
   it('replaces a stored token that is not 64 lowercase hexadecimal digits (HY-24)', async () => {
     fixture.session.set('_hyper_csrf', 'conformance-token');
-    const masked = (json(await fixture.get('/', JSON_REGION)).shared as { csrf: string }).csrf;
+    const masked = (json(await fixture.get('/list', JSON_REGION)).shared as { csrf: string }).csrf;
     const token = fixture.session.get('_hyper_csrf') as string;
     expect(token).toMatch(/^[0-9a-f]{64}$/);
     expect(verifyToken(token, masked)).toBe(true);
@@ -619,10 +638,8 @@ describe('Node handlers', () => {
     } } });
     const response = json(await app.handle((await import('../src/index.js')).Request.from({ method: 'GET', target: '/', headers: JSON_REGION }), fixture.session));
     expect(seen).toEqual([['reply', 'request', 'services'], true]);
-    const { csrf, ...shared } = response.shared as { csrf: string };
-    expect(Object.keys(response.shared as object)).toEqual(['title', 'csrf', 'site']);
-    expect(shared).toEqual({ title: 'Home', site: 'x' });
-    expect(verifyToken(fixture.session.get('_hyper_csrf') as string, csrf)).toBe(true);
+    // HY-73: no template of the route reads site or csrf.
+    expect(response.shared).toEqual({ title: 'Home' });
   });
 
   it('fails data that is not a value of the data model (HY-44)', async () => {

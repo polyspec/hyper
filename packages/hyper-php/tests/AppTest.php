@@ -153,7 +153,8 @@ final class AppTest extends TestCase
                             })(),
                             'huge' => ['id' => PHP_INT_MAX],
                             'huge-float' => ['id' => 1e20],
-                            'numeric' => ['5' => 'x', 'id' => 'n'],
+                            'numeric' => ['labels' => ['5' => 'x'], 'id' => 'n'],
+                            'secret' => ['id' => 's', 'password' => 'p', 'nested' => ['a' => 1]],
                             default => ['id' => $request->param('id')],
                         };
                     }],
@@ -183,10 +184,13 @@ final class AppTest extends TestCase
         return $this->app($basePath)->handle(new Request('POST', $path, ['Content-Type' => 'application/x-www-form-urlencoded', ...$headers], '', http_build_query($form)), $this->session);
     }
 
-    /** Returns the masked token of a page response, as a form of the page carries it (HY-24). */
+    /**
+     * Returns the masked token of a page response (HY-24). The route region of /list keeps a value on the server, so
+     * its shared data keeps csrf (HY-73).
+     */
     private function token(): string
     {
-        return (string) self::json($this->get('/', self::JSON))['shared']['csrf'];
+        return (string) self::json($this->get('/list', self::JSON))['shared']['csrf'];
     }
 
     /**
@@ -207,10 +211,10 @@ final class AppTest extends TestCase
     /** Returns the tag of a JSON body of the current session token (HY-53). */
     private function tag(string $body): string
     {
-        $token = (string) $this->session->get('_hyper_csrf');
-        $masked = (string) self::json(new Response(200, [], $body))['shared']['csrf'];
+        $masked = self::json(new Response(200, [], $body))['shared']['csrf'] ?? null;
+        $text = $masked === null ? $body : str_replace((string) $masked, (string) $this->session->get('_hyper_csrf'), $body);
 
-        return 'W/"' . substr(hash('sha256', str_replace($masked, $token, $body)), 0, 32) . '"';
+        return 'W/"' . substr(hash('sha256', $text), 0, 32) . '"';
     }
 
     /** @return array<string, mixed> */
@@ -434,7 +438,7 @@ final class AppTest extends TestCase
     public function testNumericDataKeysKeepTheirNames(): void
     {
         // HY-17: merging loader, invalid and shared data keeps numeric keys.
-        self::assertSame('{"5":"x","id":"n"}', json_encode(self::json($this->get('/items/numeric', self::JSON))['regions']['content']));
+        self::assertSame('{"labels":{"5":"x"},"id":"n"}', json_encode(self::json($this->get('/items/numeric', self::JSON))['regions']['content']));
     }
 
     public function testKeepRejectsLongValues(): void
@@ -486,10 +490,9 @@ final class AppTest extends TestCase
 
         self::assertSame(200, $response->status);
         self::assertSame('application/json; charset=utf-8', $response->headers['Content-Type']);
-        $masked = (string) self::json($response)['shared']['csrf'];
-        self::assertTrue(Csrf::verify((string) $this->session->get('_hyper_csrf'), $masked));
+        // HY-73: no template of the route reads csrf and no route region keeps a value on the server.
         self::assertSame(
-            '{"env":{"timezone":"+09:00"},"route":"item","params":{"id":"a b"},"shared":{"title":"Item","csrf":"' . $masked . '"},"regions":{"content":{"id":"a b"}},"kept":{}}',
+            '{"env":{"timezone":"+09:00"},"route":"item","params":{"id":"a b"},"shared":{"title":"Item"},"regions":{"content":{"id":"a b"}},"kept":{}}',
             $response->body,
         );
     }
@@ -572,8 +575,8 @@ final class AppTest extends TestCase
     {
         // HY-24: two responses of one session carry different masked values of the token, both are accepted, and
         // neither the responses nor the accepted form values contain the token itself.
-        $first = $this->get('/', self::JSON);
-        $second = $this->get('/', self::JSON);
+        $first = $this->get('/list', self::JSON);
+        $second = $this->get('/list', self::JSON);
         $token = (string) $this->session->get('_hyper_csrf');
         $a = (string) self::json($first)['shared']['csrf'];
         $b = (string) self::json($second)['shared']['csrf'];
@@ -621,6 +624,21 @@ final class AppTest extends TestCase
         self::assertTrue(Csrf::verify((string) $this->session->get('_hyper_csrf'), (string) $page['shared']['csrf']));
     }
 
+    public function testServerSendsOnlyTheReadPaths(): void
+    {
+        // HY-73: values that no template of the route reads are not sent, in JSON or in the document.
+        $json = self::json($this->get('/items/secret', self::JSON));
+        self::assertSame(['id' => 's'], $json['regions']['content']);
+        self::assertSame(['title' => 'Item'], $json['shared']);
+        self::assertStringNotContainsString('"p"', $this->get('/items/secret', ['Accept' => 'application/json'])->body);
+
+        $app = $this->app(options: ['handlers' => ['shared' => fn (): array => ['site' => 'x', 'name' => 'shared name'], 'routes' => ['add' => ['post' => fn (): Result => Result::redirect('/')], 'list' => ['regions' => ['rows' => fn (): array => ['items' => ['a'], 'open' => false, 'mode' => 'a', 'view' => 'x', 'filter' => [], 'tags' => [], 'unread' => 1]]]]]]);
+        $list = self::json($app->handle(new Request('GET', '/list', self::JSON), $this->session));
+        // The shared handler value name is read by the page template of another route, not by any template of /list.
+        self::assertSame(['title', 'csrf'], array_keys($list['shared']));
+        self::assertSame(['items', 'open', 'mode', 'view', 'filter', 'tags'], array_keys($list['regions']['rows']));
+    }
+
     public function testRenewedSessionChangesTheTag(): void
     {
         // HY-53, HY-72: responses of one token share a tag whatever their masks; a renewed session has another tag.
@@ -637,7 +655,7 @@ final class AppTest extends TestCase
     {
         // HY-24: a stored token that is not 64 lowercase hexadecimal digits is replaced by a new token.
         $this->session->set('_hyper_csrf', 'conformance-token');
-        $masked = (string) self::json($this->get('/', self::JSON))['shared']['csrf'];
+        $masked = (string) self::json($this->get('/list', self::JSON))['shared']['csrf'];
         $token = (string) $this->session->get('_hyper_csrf');
 
         self::assertMatchesRegularExpression('/^[0-9a-f]{64}$/D', $token);

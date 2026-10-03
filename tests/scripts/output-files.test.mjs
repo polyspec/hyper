@@ -53,6 +53,9 @@ test('the server build writes the templates on a virtiofs bind mount', { timeout
     assert.equal(statSync(join(copied, name)).mode & 0o777, 0o644, name);
   }
   assert.ok(files(copied).includes('hyper/data.tpl'));
+  // HY-73: the read paths of every route, computed without a bundler in the container.
+  const reads = JSON.parse(readFileSync(join(output, 'server', 'reads.json'), 'utf8')).routes;
+  assert.deepEqual(Object.keys(reads).sort(), JSON.parse(readFileSync(join(root, 'examples', 'board', 'app', 'app.json'), 'utf8')).routes.map((route) => route.name).sort());
 });
 
 test('the output copies write a directory and a file on a virtiofs bind mount', { timeout: 120000 }, () => {

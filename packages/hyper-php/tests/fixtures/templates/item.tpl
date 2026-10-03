@@ -1,1 +1,1 @@
-<i>{= id}</i>
+<i>{= id}</i>{? labels}{= json(labels) | raw}{/}

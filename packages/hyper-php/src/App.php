@@ -12,6 +12,8 @@ final class App
     private readonly Container $container;
     private readonly Renderer $renderer;
 
+    private readonly Reads $reads;
+
     /**
      * @param array<string, \Closure> $regionLoaders
      * @param array<string, array{load?: \Closure, post?: \Closure, regions?: array<string, \Closure>}> $routeHandlers
@@ -38,6 +40,7 @@ final class App
     ) {
         $this->container = new Container();
         $this->renderer = Renderer::open($program, $timezone);
+        $this->reads = Reads::open($program);
     }
 
     /**
@@ -361,6 +364,13 @@ final class App
             }
         }
 
+        // HY-44: every value that the handlers returned belongs to the data model, also a value that no template reads.
+        Bind::value(['shared' => $shared, 'regions' => $data]);
+        // HY-73: the page keeps only the paths that the templates of the route read.
+        $shared = $this->reads->shared($route['name'], $shared);
+        foreach ($data as $name => $regionData) {
+            $data[$name] = $this->reads->region($route['name'], $name, $regionData);
+        }
         $kept = $this->kept($request, $session, $data);
         // HY-69: the reply gives a page with status 200 the status 403.
         if ($status === 200 && $reply->statusValue() !== null) {

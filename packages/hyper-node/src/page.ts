@@ -1,7 +1,7 @@
 // Renders the route page as a document or as JSON (HY-12 to HY-19, HY-26, HY-30, HY-31, HY-38, HY-44, HY-52,
 // HY-53, HY-69). The document is the browser rendering of the document JSON value, with the browser code.
 import { createHash } from 'node:crypto';
-import { decodeResponse, renderDocument, type Application, type RouteDeclaration } from '@polyspec/hyper';
+import { decodeResponse, keepRead, renderDocument, type Application, type RouteDeclaration, type RouteReads } from '@polyspec/hyper';
 import type { Handlers, RouteHandlers } from './app.js';
 import { encodeJson } from './json.js';
 import { keptValues } from './kept.js';
@@ -43,6 +43,8 @@ export interface PageEnvironment<S extends object> {
   services: Services<S>;
   timezone: string;
   https: boolean;
+  // The read paths of the route (HY-73).
+  reads: RouteReads;
 }
 
 const VARY = 'Accept, HX-Request, HX-Current-URL';
@@ -73,6 +75,12 @@ export async function renderPage<S extends object>(input: PageInput<S>, environm
       stopClosed(input.signal);
     }
   }
+
+  // HY-44: every value that the handlers returned belongs to the data model, also a value that no template reads.
+  encodeJson(new Map<string, Value>([['shared', shared], ['regions', new Map(data)]]));
+  // HY-73: the page keeps only the paths that the templates of the route read.
+  shared = keepRead(shared, environment.reads.shared) as MapValue;
+  for (const [name, regionData] of data) data.set(name, keepRead(regionData, environment.reads.regions[name]!) as MapValue);
 
   const value: MapValue = new Map<string, Value>([
     ['env', new Map([['timezone', environment.timezone]])],

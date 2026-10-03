@@ -3,8 +3,8 @@
 import { readFileSync } from 'node:fs';
 import { isAbsolute, join } from 'node:path';
 import type { Server } from 'node:http';
-import { checkManifest, createApplication, keptPaths, routeTemplates, stripBasePath, type Application, type Manifest, type RouteDeclaration, type TemplateIndex } from '@polyspec/hyper';
-import type { Template } from '@polyspec/template/render';
+import { checkManifest, createApplication, keptPaths, routeReads, routeTemplates, stripBasePath, type Application, type Manifest, type RouteDeclaration, type RouteReads, type TemplateIndex } from '@polyspec/hyper';
+import { resolvePath, type Template } from '@polyspec/template/render';
 import { maskedToken, verifyToken } from './csrf.js';
 import type { FileSessions } from './file-sessions.js';
 import { createServer, type ServerOptions } from './http.js';
@@ -111,6 +111,7 @@ export class App<S extends object = Record<string, never>> {
   private readonly onResponse: AppOptions<S>['onResponse'];
   private readonly onDisconnect: AppOptions<S>['onDisconnect'];
   private readonly log: (message: string) => void;
+  private readonly reads: Record<string, RouteReads>;
   private readonly client: Client | null;
 
   private constructor(
@@ -127,8 +128,10 @@ export class App<S extends object = Record<string, never>> {
     onDisconnect: AppOptions<S>['onDisconnect'],
     log: (message: string) => void,
     client: Client | null,
+    reads: Record<string, RouteReads>,
   ) {
     this.client = client;
+    this.reads = reads;
     this.application = application;
     this.handlers = handlers;
     this.timezone = timezone;
@@ -169,7 +172,11 @@ export class App<S extends object = Record<string, never>> {
     checkHandlers(manifest, options.handlers);
     const client = options.clientRendering === undefined ? null : checkClient(options.clientRendering, manifest);
     for (const route of manifest.routes) await application.templates.ensure(routeTemplates(manifest, route));
-    return new App(application, options.handlers, options.timezone, basePath, options.https ?? false, options.frameAncestors ?? "'self'", bodyLimit, responseLimit, [...formTypes], options.onResponse, options.onDisconnect, options.log ?? ((message) => process.stderr.write(`${message}\n`)), client);
+    // HY-73: the read paths of every route, from the templates that the asset build wrote.
+    const parsed = new Map<string, Template>();
+    for (const [name, entry] of Object.entries(index)) parsed.set(name, await fetcher(entry.url));
+    const reads = routeReads(manifest, (name) => parsed.get(name)!, resolvePath);
+    return new App(application, options.handlers, options.timezone, basePath, options.https ?? false, options.frameAncestors ?? "'self'", bodyLimit, responseLimit, [...formTypes], options.onResponse, options.onDisconnect, options.log ?? ((message) => process.stderr.write(`${message}\n`)), client, reads);
   }
 
   // Registers the factory of an application service.
@@ -305,7 +312,7 @@ export class App<S extends object = Record<string, never>> {
   }
 
   private page(input: PageInput<S>): Promise<Response> {
-    return renderPage(input, { application: this.application, handlers: this.handlers, services: this.services, timezone: this.timezone, https: this.https });
+    return renderPage(input, { application: this.application, handlers: this.handlers, services: this.services, timezone: this.timezone, https: this.https, reads: this.reads[input.route.name]! });
   }
 
   // Stores the flash values and changed topics of a redirect result and answers 303 (HY-25, HY-50).
