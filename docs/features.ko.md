@@ -4,7 +4,7 @@
 
 | ID | 기능 | 상태 | 근거 |
 |---|---|---|---|
-| protocol | 영역 프로토콜 명세(HY-1 ~ HY-69) | implemented | [프로토콜](spec/protocol.ko.md) |
+| protocol | 영역 프로토콜 명세(HY-1 ~ HY-72) | implemented | [프로토콜](spec/protocol.ko.md) |
 | composition | 화면 구성 규칙(HC-1 ~ HC-7)과 HC-6 템플릿 검사 | implemented | [화면 구성](spec/composition.ko.md), `make templates-check` |
 | manifest | PHP와 브라우저가 읽는 애플리케이션 매니페스트 | implemented | `make test-php`, `make test-js` |
 | router | 적합성 사례를 공유하는 PHP 라우터와 브라우저 라우터 | implemented | `make test-php`, `make test-js` |
@@ -20,6 +20,7 @@
 | client-shell | 한 서버가 요청마다의 선택에 따라 클라이언트 렌더 페이지에는 정적 셸과 데이터 기본 경로 아래의 JSON으로, 서버 렌더 페이지에는 그 경로 없이 응답하며, 브라우저는 `html` 요소에 렌더한 layout의 속성을 준다(HY-62, HY-63) | implemented | `make test-php`, `make test-node`, `make test-js`, `make e2e` |
 | stylesheet-links | 브라우저는 클라이언트 렌더 문서, 영역 응답의 layout, 히스토리 복원 문서의 head에 있는 stylesheet link를 적용한다. 있는 link는 유지하고, 없는 link는 내용을 보이기 전에 불러오며, 그 뒤 나머지를 제거한다(HY-64) | implemented | `make test-js`, `make e2e` |
 | reply | loader와 action의 응답 cookie와 cache control, JSON tag와 304(HY-52, HY-53) | implemented | `make test-php` |
+| csrf | 모든 응답의 가린 CSRF 토큰, 세션 쿠키 `__Host-hy-session` 또는 `hy-session`, 액션의 세션 갱신, 페이지의 공유 캐시 금지(HY-24, HY-45, HY-52, HY-53, HY-72) | implemented | `make test-php`, `make test-node`, `make server-parity` |
 | hyper-js | 브라우저 코드: 영역과 문서 렌더, htmx 확장, 클라이언트 렌더 | implemented | `make test-js`, `make e2e` |
 | hyper-php | PHP 서버: 라우트, 액션, CSRF, flash, 바뀐 주제, 기본 경로, 문서와 JSON | implemented | `make test-php` |
 | hyper-node | PHP 서버의 규칙, 파일 session, PHP와 같은 바이트의 JSON을 갖춘 Node.js 서버 `@polyspec/hyper-server`와 board 예제 서버(HY-54) | implemented | `make test-node`, `make node-server` |

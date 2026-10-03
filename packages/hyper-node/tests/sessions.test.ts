@@ -10,7 +10,7 @@ let directory: string;
 let sessions: FileSessions;
 beforeEach(() => {
   directory = mkdtempSync(join(tmpdir(), 'hyper-sessions-'));
-  sessions = new FileSessions({ directory, name: 'PHPSESSID' });
+  sessions = new FileSessions({ directory });
 });
 afterEach(() => {
   rmSync(directory, { recursive: true, force: true });
@@ -86,14 +86,34 @@ describe('FileSessions', () => {
     expect(order).toEqual(['a writes 2', 'b reads 2']);
   });
 
-  it('writes the session cookie with the attributes of the PHP session (HY-45)', () => {
-    expect(sessions.cookie('a'.repeat(64), false)).toBe(`PHPSESSID=${'a'.repeat(64)}; path=/; HttpOnly; SameSite=Lax`);
-    expect(sessions.cookie('a'.repeat(64), true)).toBe(`PHPSESSID=${'a'.repeat(64)}; path=/; secure; HttpOnly; SameSite=Lax`);
+  it('names the session cookie hy-session over HTTP and __Host-hy-session over HTTPS (HY-45)', () => {
+    expect(FileSessions.cookieName(false)).toBe('hy-session');
+    expect(FileSessions.cookieName(true)).toBe('__Host-hy-session');
+    expect(sessions.cookie('a'.repeat(64), false)).toBe(`hy-session=${'a'.repeat(64)}; path=/; HttpOnly; SameSite=Lax`);
+    expect(sessions.cookie('a'.repeat(64), true)).toBe(`__Host-hy-session=${'a'.repeat(64)}; path=/; secure; HttpOnly; SameSite=Lax`);
   });
 
-  it('requires an existing absolute directory, a cookie name and a positive lifetime', () => {
-    expect(() => new FileSessions({ directory: 'var/sessions', name: 'a' })).toThrow('absolute');
-    expect(() => new FileSessions({ directory, name: 'a b' })).toThrow('cookie name');
-    expect(() => new FileSessions({ directory, name: 'a', lifetime: 0 })).toThrow('lifetime');
+  it('renews a session: a new identifier with the same values, and no file of the old one (HY-72)', async () => {
+    const first = await sessions.open(null);
+    first.set('a', 1);
+    first.close();
+    const old = first.created!;
+    const session = await sessions.open(old);
+    session.renew();
+    session.close();
+    expect(session.created).toMatch(/^[0-9a-f]{64}$/);
+    expect(session.created).not.toBe(old);
+    expect(readdirSync(directory)).toEqual([session.created]);
+    const next = await sessions.open(session.created);
+    expect(next.get('a')).toBe(1);
+    next.close();
+    const stale = await sessions.open(old);
+    expect(stale.get('a')).toBeUndefined();
+    stale.close();
+  });
+
+  it('requires an existing absolute directory and a positive lifetime', () => {
+    expect(() => new FileSessions({ directory: 'var/sessions' })).toThrow('absolute');
+    expect(() => new FileSessions({ directory, lifetime: 0 })).toThrow('lifetime');
   });
 });

@@ -89,9 +89,10 @@ export async function renderPage<S extends object>(input: PageInput<S>, environm
     const body = encodeJson(value);
     const headers: Headers = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': cacheControl, Vary: VARY };
     if (pageStatus !== 200) return new Response(pageStatus, headers, body);
-    // HY-53: a strong tag of the body; a matching GET request receives 304 without a body and without
-    // `Content-Type`, because a 304 carries no representation.
-    const tag = `"${createHash('sha256').update(body).digest('hex').slice(0, 32)}"`;
+    // HY-53: a weak tag of the body with the masked token replaced by the session token, so the mask does not change
+    // it; a matching GET request receives 304 without a body and without `Content-Type`, because a 304 carries no
+    // representation.
+    const tag = `W/"${createHash('sha256').update(body.replaceAll(request.csrfToken(), input.session.csrfToken())).digest('hex').slice(0, 32)}"`;
     headers.ETag = tag;
     if (request.method !== 'GET' || request.header('If-None-Match') !== tag) return new Response(200, headers, body);
     const { 'Content-Type': _, ...notModified } = headers;

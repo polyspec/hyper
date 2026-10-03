@@ -21,7 +21,7 @@ async function start(options: { https?: boolean; bodyLimit?: number } = {}): Pro
     ...(options.bodyLimit === undefined ? {} : { bodyLimit: options.bodyLimit }),
     onResponse: (request, response, elapsed, reply) => reports.push([request === null ? null : `${request.method} ${request.path()}`, response.status, elapsed, reply.notes().size]),
   });
-  server = app.server(new FileSessions({ directory, name: 'PHPSESSID' }));
+  server = app.server(new FileSessions({ directory }));
   await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
   base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
 }
@@ -50,12 +50,13 @@ describe('App.server', () => {
     await start();
     const first = await fetch(`${base}/`, { headers: { Accept: 'application/json' } });
     const cookie = first.headers.get('set-cookie')!;
-    expect(cookie).toMatch(/^PHPSESSID=[0-9a-f]{64}; path=\/; HttpOnly; SameSite=Lax$/);
-    const token = ((await first.json()) as { shared: { csrf: string } }).shared.csrf;
+    expect(cookie).toMatch(/^hy-session=[0-9a-f]{64}; path=\/; HttpOnly; SameSite=Lax$/);
+    const masked = ((await first.json()) as { shared: { csrf: string } }).shared.csrf;
     const second = await fetch(`${base}/`, { headers: { Accept: 'application/json', Cookie: cookie.split(';')[0]! } });
     expect(second.headers.get('set-cookie')).toBeNull();
-    expect(((await second.json()) as { shared: { csrf: string } }).shared.csrf).toBe(token);
-    expect(readdirSync(directory)).toEqual([cookie.slice('PHPSESSID='.length, cookie.indexOf(';'))]);
+    // HY-24: the second response masks the same session token anew.
+    expect(((await second.json()) as { shared: { csrf: string } }).shared.csrf).not.toBe(masked);
+    expect(readdirSync(directory)).toEqual([cookie.slice('hy-session='.length, cookie.indexOf(';'))]);
   });
 
   it('creates no session for a path without a route (HY-45)', async () => {
@@ -121,7 +122,7 @@ describe('App.server', () => {
 
   it('serves the files of a public directory and sends other paths to the application', async () => {
     const app = await new Fixture().app();
-    server = app.server(new FileSessions({ directory, name: 'PHPSESSID' }), { files: FIXTURES });
+    server = app.server(new FileSessions({ directory }), { files: FIXTURES });
     await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
     base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
     const file = await fetch(`${base}/app.json`);
@@ -171,7 +172,7 @@ describe('App.server', () => {
         closed();
       },
     });
-    server = app.server(new FileSessions({ directory, name: 'PHPSESSID' }));
+    server = app.server(new FileSessions({ directory }));
     await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
     const socket = connect((server.address() as AddressInfo).port, '127.0.0.1', () => socket.write('GET / HTTP/1.1\r\nHost: x\r\n\r\n'));
     setTimeout(() => socket.destroy(), 50);

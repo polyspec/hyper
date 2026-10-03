@@ -72,7 +72,7 @@ Every loader and action receives one context object:
 | Field | Type | Meaning |
 |---|---|---|
 | `request` | `Request` | `method`, `path()`, `params()`, `param(name)`, `query()`, `rawQuery()`, `queryInt(name, fallback)`, `form()`, `formString(name)`, `flash(name)`, `cookie(name)`, `header(name)`, `csrfToken()`, `currentPath()`, `wantsJson()`, `isRegionRequest()`, `https` |
-| `reply` | `Reply` | `cookie(name, value, maxAge?)`, `removeCookie(name)`, `cacheControl(value)` (HY-52); `note(name, value)` records a value for the response hook, which reads `notes()` (HY-60) |
+| `reply` | `Reply` | `cookie(name, value, maxAge?)`, `removeCookie(name)`, `cacheControl(value)` with `private` or `no-store` (HY-52); `renewSession()` in an action (HY-72); `note(name, value)` records a value for the response hook, which reads `notes()` (HY-60) |
 | `services` | `Services<S>` | `get(key)` returns the service that `app.bind` registered |
 
 A loader returns data: a plain object or a `Map` with string keys, synchronously or as a promise. Values are null, booleans, numbers and bigints within ±(2^53 − 1), strings, arrays, maps and plain objects (HY-44, HY-54). A plain object puts integer-like keys first, as JavaScript does; a `Map` keeps insertion order.
@@ -88,13 +88,13 @@ A loader or an action stops the request by throwing `new NotFound()` (404, HY-27
 ## Serve over HTTP
 
 ```ts
-const sessions = new FileSessions({ directory: '/srv/board/var/sessions', name: 'hyper_session' });
+const sessions = new FileSessions({ directory: '/srv/board/var/sessions' });
 app.server(sessions, { files: '/srv/board/public' }).listen(8080, '127.0.0.1');
 ```
 
 `app.server(sessions, options)` returns a `node:http` server. The server reads a request body up to the `bodyLimit` of the application (HY-59). `options.files` is an absolute directory whose files are served for `GET` and `HEAD` requests that name them, as the PHP built-in server serves its document root. A request that `node:http` cannot parse, such as a request target with a byte outside ASCII, receives a plain 400 (HY-42).
 
-`FileSessions({ directory, name, lifetime })` keeps each session in a file of an existing absolute directory that only this server process writes. `name` is the session cookie name and `lifetime` the seconds after the last request of a session until it ends (1440 by default, as PHP's `session.gc_maxlifetime`). The store accepts only identifiers that it created, starts a session only when a request reads or writes session data, and runs the requests of one session one after another (HY-45). `sessions.collect()` removes the files of ended sessions; a server calls it on a schedule of its choice.
+`FileSessions({ directory, lifetime })` keeps each session in a file of an existing absolute directory that only this server process writes. The session cookie is `__Host-hy-session` on HTTPS and `hy-session` otherwise (HY-45), and `lifetime` is the seconds after the last request of a session until it ends (1440 by default, as PHP's `session.gc_maxlifetime`). The store accepts only identifiers that it created, starts a session only when a request reads or writes session data, and runs the requests of one session one after another (HY-45). `sessions.collect()` removes the files of ended sessions; a server calls it on a schedule of its choice.
 
 ## Answer requests without HTTP
 

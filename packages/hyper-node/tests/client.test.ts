@@ -5,6 +5,7 @@ import type { AddressInfo } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { maskedToken } from '../src/csrf.js';
 import { FileSessions, Request, type ClientRendering } from '../src/index.js';
 import { Fixture, FIXTURES } from './support.js';
 
@@ -22,7 +23,8 @@ interface Case {
 
 const conformance = JSON.parse(readFileSync(new URL('../../../conformance/client.json', import.meta.url), 'utf8')) as { basePath: string; chosenHost: string; cases: Case[] };
 const SHELL = `${FIXTURES}shell/index.html`;
-const TOKEN = 'conformance-token';
+// A session token of HY-24; the form carries a masked value of it.
+const TOKEN = '00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff';
 const client = (selects: ClientRendering['selects'] = (request) => request.header('Host') === conformance.chosenHost): ClientRendering => ({ shell: SHELL, basePath: conformance.basePath, selects });
 
 describe('client rendering (HY-62)', () => {
@@ -32,7 +34,7 @@ describe('client rendering (HY-62)', () => {
       let form = item.request.form;
       if (item.request.csrf === true) {
         fixture.session.set('_hyper_csrf', TOKEN);
-        form = { _csrf: TOKEN, ...form };
+        form = { _csrf: maskedToken(TOKEN), ...form };
       }
       const response = await fixture.handle(
         { method: item.request.method, target: item.request.target, headers: item.request.headers, body: form === undefined ? undefined : new URLSearchParams(form).toString() },
@@ -118,7 +120,7 @@ describe('client rendering (HY-62)', () => {
 
   it('serves the shell over node:http without a session (HY-45, HY-62)', async () => {
     const directory = mkdtempSync(join(tmpdir(), 'hyper-client-'));
-    const server = (await new Fixture().app({ clientRendering: client(() => true) })).server(new FileSessions({ directory, name: 'PHPSESSID' }));
+    const server = (await new Fixture().app({ clientRendering: client(() => true) })).server(new FileSessions({ directory }));
     try {
       await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
       const response = await fetch(`http://127.0.0.1:${(server.address() as AddressInfo).port}/items/7`);

@@ -1,6 +1,6 @@
 // Sessions in files of one absolute directory, for a server process (HY-45).
 import { randomBytes } from 'node:crypto';
-import { readdirSync, readFileSync, renameSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
+import { readdirSync, readFileSync, renameSync, rmSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
 import { isAbsolute, join } from 'node:path';
 import { deserialize, serialize } from 'node:v8';
 import type { SessionStore } from './session.js';
@@ -8,14 +8,11 @@ import type { SessionStore } from './session.js';
 export interface FileSessionsOptions {
   // An existing absolute directory that only this server process writes.
   directory: string;
-  // The session cookie name, for example PHPSESSID, the PHP default.
-  name: string;
   // Seconds after the last request of a session until the session ends; PHP's session.gc_maxlifetime is 1440.
   lifetime?: number;
 }
 
 const IDENTIFIER = /^[0-9a-f]{64}$/;
-const COOKIE_NAME = /^[A-Za-z0-9!#$%&'*+.^_`|~-]+$/;
 
 // Opens one session store per request. A session file is named by its identifier, so the server accepts only
 // identifiers that it created: a cookie value that is not 64 lowercase hexadecimal digits or has no unexpired
@@ -24,7 +21,6 @@ const COOKIE_NAME = /^[A-Za-z0-9!#$%&'*+.^_`|~-]+$/;
 // starts and writes it when it ends.
 export class FileSessions {
   readonly directory: string;
-  readonly name: string;
   readonly lifetime: number;
   private readonly queues = new Map<string, Promise<void>>();
 
@@ -32,11 +28,9 @@ export class FileSessions {
     if (!isAbsolute(options.directory) || !statSync(options.directory).isDirectory()) {
       throw new Error(`hyper: session directory ${options.directory} must be an existing absolute directory`);
     }
-    if (!COOKIE_NAME.test(options.name)) throw new Error(`hyper: session cookie name ${options.name} is not a cookie name`);
     const lifetime = options.lifetime ?? 1440;
     if (!Number.isSafeInteger(lifetime) || lifetime <= 0) throw new Error('hyper: session lifetime must be a positive number of seconds');
     this.directory = options.directory;
-    this.name = options.name;
     this.lifetime = lifetime;
   }
 
@@ -76,9 +70,14 @@ export class FileSessions {
     return Date.now() - statSync(file).mtimeMs > this.lifetime * 1000;
   }
 
+  // Returns the session cookie name: `__Host-hy-session` over HTTPS and `hy-session` otherwise (HY-45).
+  static cookieName(secure: boolean): string {
+    return secure ? '__Host-hy-session' : 'hy-session';
+  }
+
   // Returns the Set-Cookie value of a new session, with the attributes of the PHP session cookie (HY-45).
   cookie(id: string, secure: boolean): string {
-    return `${this.name}=${id}; path=/${secure ? '; secure' : ''}; HttpOnly; SameSite=Lax`;
+    return `${FileSessions.cookieName(secure)}=${id}; path=/${secure ? '; secure' : ''}; HttpOnly; SameSite=Lax`;
   }
 }
 
@@ -87,6 +86,7 @@ export class FileSession implements SessionStore {
   private values: Map<string, unknown> | null = null;
   private id: string | null = null;
   private createdId = false;
+  private renewedId: string | null = null;
   private readonly sessions: FileSessions;
   private readonly cookieId: string | null;
   private readonly release: () => void;
@@ -119,9 +119,20 @@ export class FileSession implements SessionStore {
     this.start().delete(key);
   }
 
-  // Writes a started session to its file, and lets the next request of the session start.
+  // Gives the values a new identifier, which the response sets as the session cookie; closing deletes the file of the
+  // old identifier (HY-72).
+  renew(): void {
+    this.start();
+    if (!this.createdId) this.renewedId = this.id;
+    this.id = randomBytes(32).toString('hex');
+    this.createdId = true;
+  }
+
+  // Writes a started session to its file, removes the file of a renewed identifier, and lets the next request of the
+  // session start.
   close(): void {
     try {
+      if (this.renewedId !== null) rmSync(join(this.sessions.directory, this.renewedId), { force: true });
       if (this.values !== null && this.id !== null) {
         const file = join(this.sessions.directory, this.id);
         writeFileSync(`${file}.tmp`, serialize(this.values), { mode: 0o600 });

@@ -15,4 +15,7 @@ interface SessionStore
 
     /** Removes the value stored under a key. */
     public function remove(string $key): void;
+
+    /** Moves the values to a new session identifier and deletes the old session (HY-72). */
+    public function renew(): void;
 }

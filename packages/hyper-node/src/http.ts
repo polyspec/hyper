@@ -5,7 +5,7 @@ import type { Socket } from 'node:net';
 import { extname, isAbsolute, join } from 'node:path';
 import type { TLSSocket } from 'node:tls';
 import type { App } from './app.js';
-import type { FileSessions } from './file-sessions.js';
+import { FileSessions } from './file-sessions.js';
 import { Reply } from './reply.js';
 import { Request } from './request.js';
 import { Response } from './response.js';
@@ -85,7 +85,7 @@ async function answer<S extends object>(app: App<S>, sessions: FileSessions, inc
   const request = Request.from({ method: incoming.method ?? 'GET', target: incoming.url ?? '/', headers: incoming.headers, body, bodySize: size, https });
   let session;
   try {
-    session = await sessions.open(request.cookie(sessions.name));
+    session = await sessions.open(request.cookie(FileSessions.cookieName(app.https || https)));
   } catch (error) {
     return app.report(request, app.frame(Response.text(500, 'Internal Server Error')), started, new Reply(), app.fail(error));
   }

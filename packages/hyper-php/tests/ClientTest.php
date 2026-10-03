@@ -9,6 +9,7 @@ use PHPUnit\Framework\TestCase;
 use Polyspec\Hyper\App;
 use Polyspec\Hyper\ArraySession;
 use Polyspec\Hyper\ClientRendering;
+use Polyspec\Hyper\Csrf;
 use Polyspec\Hyper\Reply;
 use Polyspec\Hyper\Request;
 use Polyspec\Hyper\Response;
@@ -20,7 +21,8 @@ final class ClientTest extends TestCase
 {
     private const PROGRAM = __DIR__ . '/build/server';
     private const SHELL = __DIR__ . '/fixtures/shell/index.html';
-    private const TOKEN = 'conformance-token';
+    // A session token of HY-24; the form carries a masked value of it.
+    private const TOKEN = '00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff';
 
     /** @return array<string, mixed> */
     private static function conformance(): array
@@ -81,7 +83,7 @@ final class ClientTest extends TestCase
         $form = $request['form'] ?? null;
         if ($case['request']['csrf'] ?? false) {
             $session->set('_hyper_csrf', self::TOKEN);
-            $form = ['_csrf' => self::TOKEN, ...$form];
+            $form = ['_csrf' => Csrf::masked(self::TOKEN), ...$form];
         }
         $headers = $request['headers'];
         if ($form !== null) {

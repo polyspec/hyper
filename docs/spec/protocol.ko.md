@@ -62,7 +62,7 @@
 
 ## 데이터와 주제
 
-- **HY-10** 공유 데이터는 레이아웃, 제목, 모든 영역이 받는 맵 하나다. 라우트 제목 `title`과 HY-24의 세션 토큰 `csrf`로 시작하고, 그 뒤에 애플리케이션이 추가하는 값이 온다.
+- **HY-10** 공유 데이터는 레이아웃, 제목, 모든 영역이 받는 맵 하나다. 라우트 제목 `title`과 이 응답을 위해 가린 HY-24의 세션 토큰 `csrf`로 시작하고, 그 뒤에 애플리케이션이 추가하는 값이 온다.
 - **HY-11** 페이지 영역이 아닌 모든 영역은 사용하는 주제를 선언한다. 주제는 바뀔 수 있는 데이터의 이름이다(예: `posts`). `path` 주제는 내장 주제다. 요청 경로가 `HX-Current-URL` 요청 헤더의 경로(기본 경로 제거 후)와 다르면 바뀐 것으로 본다.
 
 ## 렌더
@@ -174,7 +174,8 @@
 
 ## 액션
 
-- **HY-24** 액션 요청은 세션 토큰과 같은 폼 필드 `_csrf`를 담아야 한다. 그렇지 않으면 서버는 상태 403으로 응답하고 액션을 실행하지 않는다.
+- **HY-24** 세션 토큰은 세션이 처음 필요로 할 때 서버가 만드는 무작위 32바이트다. 응답의 값 `csrf`(HY-10)는 토큰을 가린 값이다. 서버가 응답마다 한 번 뽑는 무작위 32바이트 `r` 뒤에 `r`과 토큰의 XOR를 붙이고, 128자리 소문자 16진수로 쓴다. 응답마다 새 `r`을 뽑으므로 어떤 응답도 토큰의 바이트를 담지 않고, 요청 입력을 함께 담은 응답을 압축해도 그 크기로 토큰을 알아낼 수 없다. 액션 요청과 유지 값 저장(HY-40)은 세션 토큰을 가린 값을 폼 필드 `_csrf`로 담아야 한다. 이 값은 128자리 소문자 16진수이고, 뒤쪽 절반과 앞쪽 절반의 XOR가 토큰과 같아야 하며, 비교는 일정한 시간에 한다. 그렇지 않으면 서버는 상태 403으로 응답하고 액션을 실행하지 않는다. 서버는 토큰 자체를 보내지 않는다. `conformance/csrf.json`은 토큰, 가림 값, 폼 값과 기대 결과를 담고, 두 서버는 모든 사례를 통과한다.
+- **HY-72** 세션의 주인인 방문자가 바뀔 때, 예를 들어 로그인과 로그아웃에서 액션은 reply의 `renewSession()`으로 세션을 갱신한다. 액션이 끝나면 서버는 세션 값을 새 세션 식별자로 옮기고, 예전 세션을 지우고, 새 세션 토큰을 만들고, 새 세션 cookie를 설정한다. redirect의 flash 값과 유지 값은 남는다. 액션이 렌더하는 페이지는 새 토큰을 가린 값을 담는다. 로더나 공유 데이터 핸들러가 `renewSession()`을 부르면 HY-43으로 실패한다. 그 페이지는 예전 토큰을 담기 때문이다.
 - **HY-25** 성공한 액션은 리다이렉트를 반환한다.
   - 서버는 상태 303과 `Location`으로 응답한다.
   - 서버는 flash 값과 바뀐 주제를 세션에 저장하고, 다음 요청이 읽은 뒤 제거한다.
@@ -198,7 +199,7 @@
   - 라우트가 라우트 영역을 선언하지 않으면 정의 `data`는 비어 있고, 문서에는 `#hy-data`가 없다.
   - 서버와 브라우저가 같은 방법으로 계산하고 렌더하므로 문서는 양쪽에서 같은 바이트를 유지한다.
   - 영역 요청은 이 템플릿을 렌더하지 않는다. JSON 응답은 브라우저가 렌더하므로 모든 영역을 그대로 담는다(HY-18).
-- **HY-71** 서버가 보내는 데이터는 그 요청의 방문자에게 공개된다. 공유 데이터, 영역 데이터, 유지 값은 내장 데이터(HY-31), 모든 JSON 응답(HY-17), 브라우저 렌더(HY-22)로 브라우저에 가므로, 템플릿에 넘긴 값은 서버에만 남지 않는다. 로더와 공유 데이터 핸들러는 그 요청의 방문자가 봐도 되고 템플릿이 쓰는 값만 돌려준다. 비밀번호 해시, 세션 토큰, 방문자가 보면 안 되는 개인정보처럼 페이지가 보여 주지 않는 값은 넣지 않는다. 페이지가 보여 주는 값은 어차피 HTML로 브라우저에 간다. CSRF 토큰은 브라우저가 모든 폼과 함께 다시 보내야 하므로 공유 데이터다(HY-10).
+- **HY-71** 서버가 보내는 데이터는 그 요청의 방문자에게 공개된다. 공유 데이터, 영역 데이터, 유지 값은 내장 데이터(HY-31), 모든 JSON 응답(HY-17), 브라우저 렌더(HY-22)로 브라우저에 가므로, 템플릿에 넘긴 값은 서버에만 남지 않는다. 로더와 공유 데이터 핸들러는 그 요청의 방문자가 봐도 되고 템플릿이 쓰는 값만 돌려준다. 비밀번호 해시, 세션 토큰, 방문자가 보면 안 되는 개인정보처럼 페이지가 보여 주지 않는 값은 넣지 않는다. 페이지가 보여 주는 값은 어차피 HTML로 브라우저에 간다. 가린 CSRF 토큰은 브라우저가 모든 폼과 함께 다시 보내야 하므로 공유 데이터다(HY-10, HY-24). 세션 토큰 자체는 보내지 않는다.
 
 ## 브라우저 데이터
 
@@ -264,7 +265,7 @@
 - **HY-42** 요청 경로는 요청 대상의 경로다. 요청 대상에서 첫 `?`나 `#` 앞까지이며, 절대 형식 대상(`http://host/path`)에서는 authority 뒤의 부분이다. 그 이상 디코딩하지 않는다. 경로는 RFC 9112가 요청 대상에 요구하는 대로 출력 가능한 ASCII 문자 `!`부터 `~`까지로만 이루어져야 하며, 쿼리와 폼의 모든 이름과 값(HY-56, HY-57), `HX-Current-URL` 헤더는 유효한 UTF-8이어야 한다. 그렇지 않으면 서버는 어떤 로더나 액션도 실행하기 전에 상태 400으로 응답한다. 쿠키는 검사하지 않는다. 서버는 JSON 객체가 아닌 `hy-keep` 쿠키와 그 안의 맞지 않는 값(HY-38)을 무시하고, 자기가 만든 식별자가 아닌 세션 쿠키에는 새 세션을 시작한다(HY-45).
 - **HY-43** 애플리케이션이 처리하지 않은 예외는 상태 500과 텍스트 `Internal Server Error`를 만든다. 응답에는 예외 메시지, 파일 경로, 스택 트레이스가 없으며, 서버는 이를 자기 로그에 쓴다. PHP 설정 `display_errors`는 PHP가 요청을 시작하기 전에 꺼져 있어야 한다. PHP는 애플리케이션이 실행되기 전에 시작 경고(예: `max_input_vars`)를 출력하기 때문이다.
 - **HY-44** 공유 데이터와 영역 데이터는 template 데이터 모델의 값이다. ±(2^53 − 1) 밖의 수는 정수든 아니든, 문서든 JSON이든 HY-43으로 실패한다. 문서는 렌더가 그 값을 바인딩할 때 실패하고, 서버가 렌더하지 않는 JSON은 인코딩하기 전에 검사한다.
-- **HY-45** 서버 세션 쿠키는 `HttpOnly`, `SameSite=Lax`다. 요청이 HTTPS를 쓰거나, 애플리케이션이 HTTPS로 제공된다고 선언하면 `Secure`다. TLS를 끝내는 프록시 뒤의 서버는 반드시 이렇게 선언해야 한다. 서버는 자기가 만든 세션 식별자만 받아들이고, 요청이 세션 데이터를 읽거나 쓸 때만 세션을 시작한다. 라우팅 전에 거부한 요청(HY-42)과 경로가 어떤 라우트와도 맞지 않는 요청은 세션을 만들지 않는다. 모든 응답은 `Content-Security-Policy: frame-ancestors <sources>`를 가지며, sources는 애플리케이션이 정하고 기본값은 `'self'`다.
+- **HY-45** 서버 세션 쿠키의 이름은 요청이 HTTPS를 쓰거나 애플리케이션이 HTTPS로 제공된다고 선언하면 `__Host-hy-session`이고, 그렇지 않으면 `hy-session`이다. TLS를 끝내는 프록시 뒤의 서버는 반드시 이렇게 선언해야 한다. 애플리케이션은 이름을 정하지 않는다. 브라우저는 `__Host-` 쿠키를 그 호스트에서만 받으므로, 형제 하위 도메인 같은 다른 호스트가 자기가 토큰을 아는 세션을 방문자에게 심을 수 없다. 쿠키는 `Path=/`를 가지고 `Domain`이 없으며 `HttpOnly`, `SameSite=Lax`이고, 접두사와 같은 조건에서 `Secure`다. 서버는 자기가 만든 세션 식별자만 받아들이고, 요청이 세션 데이터를 읽거나 쓸 때만 세션을 시작한다. 라우팅 전에 거부한 요청(HY-42)과 경로가 어떤 라우트와도 맞지 않는 요청은 세션을 만들지 않는다. 모든 응답은 `Content-Security-Policy: frame-ancestors <sources>`를 가지며, sources는 애플리케이션이 정하고 기본값은 `'self'`다.
 - **HY-46** 리다이렉트 위치는 애플리케이션 경로다. 유효한 UTF-8이며 `/`로 시작하고, 두 번째 문자는 `/`도 `\`도 아니며, 제어 문자(C0, DEL, C1), 공백, `\`를 담지 않으며, 경로에 `.`이나 `..` 세그먼트가 없다. 점을 퍼센트 인코딩한 경우(`%2e`)도 마찬가지다.
 - **HY-47** 영역 요청이 JSON이 아닌 응답을 받거나, 렌더, 유지 값 저장, 템플릿 불러오기, stylesheet 불러오기(HY-64)가 실패하면, 브라우저는 스왑하지 않고 히스토리도 바꾸지 않는다.
   - 영역 요소의 `hy-error` 속성을 응답 상태로, 네트워크나 렌더 실패에는 `0`으로 설정한다. 이후 성공적으로 렌더되는 모든 영역에서 이 속성을 제거한다.
@@ -281,7 +282,7 @@
   - loader와 action은 요청, reply(HY-52), 애플리케이션이 key로 bind한 service를 담은 context 인자 하나를 받는다.
   - session store는 각 session을 한 디렉터리의 파일에 저장하며, 파일 이름은 store가 만든 64자리 16진수 식별자다. session cookie는 PHP session cookie와 같은 속성과 순서로 쓰고(`<name>=<id>; path=/; secure; HttpOnly; SameSite=Lax`, `secure`는 HY-45의 조건에서), 한 session의 요청은 차례로 실행한다.
 
-- **HY-55** `make server-parity`는 `examples/board/tests/parity/requests.json`의 단계를 PHP 서버와 board Node 서버에 동시에 실행한다. 각 서버는 자기 빈 데이터베이스와 session을 쓰고, 게시글의 생성 시각(`BOARD_TIME`)은 같다. 단계의 모든 요청에서 HTML 문서, 문서 JSON, 영역 JSON 모두 두 응답의 상태, header, body가 같아야 한다. 비교 전에 session cookie의 session 식별자를 `<session>`으로, 각 session의 CSRF token을 header와 body에서 `<csrf>`로 바꾸고, body에 token이 들어 있으므로 `ETag` 값이 그 body의 tag인지(HY-53) 확인한 뒤 `<etag>`로 바꾼다. HTTP 서버 프로그램이 스스로 쓰는 header인 `Date`, `Connection`, `Keep-Alive`, `Content-Length`, `Transfer-Encoding`과 PHP 내장 서버의 `Host`, `X-Powered-By`는 비교하지 않는다. header는 이름과 값 쌍의 집합으로 비교하고, `Set-Cookie`는 값마다 비교한다. 같은 실행에서 PHP 서버에 대한 `make parity`의 브라우저 비교도 수행한다.
+- **HY-55** `make server-parity`는 `examples/board/tests/parity/requests.json`의 단계를 PHP 서버와 board Node 서버에 동시에 실행한다. 각 서버는 자기 빈 데이터베이스와 session을 쓰고, 게시글의 생성 시각(`BOARD_TIME`)은 같다. 단계의 모든 요청에서 HTML 문서, 문서 JSON, 영역 JSON 모두 두 응답의 상태, header, body가 같아야 한다. 비교 전에 session cookie의 session 식별자를 `<session>`으로, 각 응답의 가린 CSRF token(HY-24)을 header와 body에서 `<csrf>`로 바꾸고, body에 가린 token이 들어 있으므로 `ETag` 값이 그 body의 tag인지(HY-53) 확인한 뒤 `<etag>`로 바꾼다. 이 확인에 쓰는 session token은 가린 값의 뒤쪽 절반과 앞쪽 절반의 XOR다. HTTP 서버 프로그램이 스스로 쓰는 header인 `Date`, `Connection`, `Keep-Alive`, `Content-Length`, `Transfer-Encoding`과 PHP 내장 서버의 `Host`, `X-Powered-By`는 비교하지 않는다. header는 이름과 값 쌍의 집합으로 비교하고, `Set-Cookie`는 값마다 비교한다. 같은 실행에서 PHP 서버에 대한 `make parity`의 브라우저 비교도 수행한다.
 
 - **HY-61** npm package `@polyspec/hyper`와 `@polyspec/hyper-server`는 type 선언을 가진 JavaScript module을 배포하며, 각 package의 build(`npm run build`)가 이를 자기 `dist` 디렉터리에 쓴다. 각 package의 `exports`는 `dist/index.js`와 `dist/index.d.ts`만 가리키고, package는 build 출력 중 `dist`만 담으므로, Node는 type을 제거하지 않는 `node_modules`에서 bundler 없이 이를 실행한다. TypeScript 소스는 지울 수 있는 문법(`erasableSyntaxOnly`)만 쓰며, 선언은 `erasableSyntaxOnly`를 켠 package에서 type 검사를 통과한다. `make package-check`는 두 package를 `npm install --install-links`로 `tests/package-install`에 설치하고, 그 test를 선언에 대해 type 검사한 뒤 `node`로 실행한다. TypeScript 소스를 export하는 package는 `ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING`으로 실패한다.
 
@@ -292,8 +293,8 @@
   - 405: `GET`도 아니고 선언된 `POST`도 아닌 메서드
 - **HY-50** loader나 action은 redirect로 요청을 멈출 수 있다. HY-25의 결과의 redirect를 던지며, 이 결과는 application 경로(HY-46)를 지정하고 flash 값과 바뀐 topic을 담을 수 있다. 서버는 상태 303과 base path를 붙인 `Location`으로 응답하고, HY-25처럼 flash 값과 바뀐 topic을 저장하며, 아무것도 렌더하지 않는다.
 - **HY-51** loader나 action은 금지로 요청을 멈출 수 있다. 서버는 상태 403과 텍스트 `Forbidden`으로 응답하고, 그 요청의 다른 loader나 action을 실행하지 않는다.
-- **HY-52** 요청의 모든 loader와 action은 그 요청의 reply를 받을 수 있다. reply는 이름이 `[a-z][a-z0-9_-]*`이고 `hy-`로 시작하지 않으며, 값이 `A-Z a-z 0-9 . _ ~ -` 문자이고, 선택적인 `Max-Age`를 가진 cookie를 더하거나, `Max-Age=0`으로 cookie를 지운다. 이런 cookie는 `Path=/`, `HttpOnly`, `SameSite=Lax`를 가지며 HY-45의 조건에서 `Secure`를 가진다. 다른 이름이나 값은 HY-43으로 실패한다. 페이지 응답은 `Cache-Control: no-store`를 가진다. reply는 상태 200인 페이지 응답의 `Cache-Control`을 정할 수 있으며 이 값은 `no-store`를 대신한다. 서버 세션은 응답에 자기 cookie만 더하고 caching header는 더하지 않는다. HY-53의 304를 포함해 body가 없는 응답은 `Content-Type`을 가지지 않는다. 요청의 응답은 페이지든, redirect든, HY-27, HY-50, HY-51의 실패든 그 reply의 cookie를 담는다.
-- **HY-53** 상태 200인 JSON 응답은 body의 SHA-256 digest 처음 32개 16진수로 만든 strong `ETag`를 가진다. `If-None-Match` header가 그 tag와 같은 `GET` 요청은 `Content-Type`을 뺀 200 응답의 header와 함께, body 없이 상태 304를 받는다. 304는 representation을 담지 않고(RFC 9110, 15.4.5절) php-fpm은 304의 `Content-Type`을 지우기 때문이다. action은 요청이 어떤 tag를 지정하든 실행된다.
+- **HY-52** 요청의 모든 loader와 action은 그 요청의 reply를 받을 수 있다. reply는 이름이 `[a-z][a-z0-9_-]*`이고 `hy-`로 시작하지 않으며, 값이 `A-Z a-z 0-9 . _ ~ -` 문자이고, 선택적인 `Max-Age`를 가진 cookie를 더하거나, `Max-Age=0`으로 cookie를 지운다. 이런 cookie는 `Path=/`, `HttpOnly`, `SameSite=Lax`를 가지며 HY-45의 조건에서 `Secure`를 가진다. 다른 이름이나 값은 HY-43으로 실패한다. 페이지 응답은 `Cache-Control: no-store`를 가진다. reply는 상태 200인 페이지 응답의 `Cache-Control`을 정할 수 있으며 이 값은 `no-store`를 대신한다. 페이지는 방문자의 세션 토큰을 담으므로(HY-10, HY-24), 지시어 `private`나 `no-store`가 없거나 `public`이나 `s-maxage`가 있는 값은 HY-43으로 실패한다. 공유 캐시가 한 방문자의 페이지를 다른 방문자에게 주면 안 되기 때문이다. 서버 세션은 응답에 자기 cookie만 더하고 caching header는 더하지 않는다. HY-53의 304를 포함해 body가 없는 응답은 `Content-Type`을 가지지 않는다. 요청의 응답은 페이지든, redirect든, HY-27, HY-50, HY-51의 실패든 그 reply의 cookie를 담는다.
+- **HY-53** 상태 200인 JSON 응답은 약한 `ETag` `W/"<digits>"`를 가진다. digits는 body에서 그 응답의 가린 토큰을 모두 세션 토큰으로 바꾼 뒤의 SHA-256 digest 처음 32개 16진수다(HY-24). 그래서 데이터와 세션 토큰이 같은 두 응답은 가림 값이 달라도 같은 tag를 가지며, 바이트가 다르므로 tag는 약하다(RFC 9110, 8.8.1절). 갱신한 세션(HY-72)은 토큰이 달라 tag도 다르다. `If-None-Match` header가 그 tag와 같은 `GET` 요청은 `Content-Type`을 뺀 200 응답의 header와 함께, body 없이 상태 304를 받는다. 304는 representation을 담지 않고(RFC 9110, 15.4.5절) php-fpm은 304의 `Content-Type`을 지우기 때문이다. action은 요청이 어떤 tag를 지정하든 실행된다.
 - **HY-58** loader나 action은 잘못된 요청으로 요청을 멈출 수 있다. 서버는 상태 400과 텍스트 `Bad Request`로 응답하고, 그 요청의 다른 loader나 action을 실행하지 않는다. action은 200, 409, 422 중 정한 상태와 데이터로 라우트 페이지를 반환할 수도 있다. 서버는 라우트 데이터에 그 데이터를 병합해 라우트 페이지를 JSON 요청에는 JSON으로, 그 밖의 요청에는 문서로 렌더하고 그 상태로 응답한다. 다른 상태는 HY-43으로 실패한다. HY-26은 상태 422인 페이지이고, 상태 200인 페이지는 HY-52와 HY-53을 따른다.
 - **HY-69** loader나 action은 PHP의 `Reply::status(403)`과 Node의 `reply.status(403)`으로 그 요청의 페이지에 상태 403을 줄 수 있다. 요청이 볼 수 없는 데이터 대신 다른 데이터를 보이는 페이지, 예를 들어 session이 필요한 페이지 대신 보이는 sign-in form을 위한 것이다. 그렇지 않으면 상태 200인 페이지 응답, 곧 `GET` 요청의 페이지나 상태 200인 action 결과 페이지(HY-58)는 상태 403을 가지며, 200일 때처럼 JSON 요청에는 JSON으로, 그 밖의 요청에는 문서로 렌더된다. 상태 400 이상인 모든 응답처럼 `Cache-Control: no-store`를 가지고(HY-65), 200이 아닌 모든 응답처럼 `ETag`가 없으며 304를 받지 않는다(HY-53). 상태 409나 422인 페이지, redirect, stop, 실패는 자기 상태를 유지한다. 다른 상태는 HY-43으로 실패한다. 403은 요청이 그 페이지를 볼 수 없음을 밝히기 때문이다. 401은 `WWW-Authenticate` challenge를 요구하고(RFC 9110), 200은 응답이 그 페이지라고 밝힌다.
 - **HY-59** 애플리케이션은 body 한도, 즉 가장 큰 요청 body의 바이트 수(기본 8 MiB)와 폼 type, 즉 action과 `/_hyper/keep`이 받는 요청 body의 media type을 선언한다. 폼 type은 `application/x-www-form-urlencoded`와 `multipart/form-data` 중 하나나 둘이며, 기본값은 `application/x-www-form-urlencoded`다. 다른 한도나 폼 type은 애플리케이션을 열 때 실패한다. 서버는 요청을 다음 순서로 검사하며, 검사가 실패하면 어떤 loader나 action도 실행하지 않는다.

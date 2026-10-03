@@ -1,5 +1,8 @@
 // The fixture application of the PHP server tests, served by the Node server.
+import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
+import { expect } from 'vitest';
+import { verifyToken } from '../src/csrf.js';
 import { App, BadRequest, Forbidden, MemorySessionStore, NotFound, Redirect, Request, Result, type AppOptions, type Handlers, type Response } from '../src/index.js';
 
 export const FIXTURES = fileURLToPath(new URL('../../hyper-php/tests/fixtures/', import.meta.url));
@@ -44,6 +47,14 @@ export function handlers(): Handlers<Services> {
             return Result.invalid({ name: 'in-place-refused', error: 'empty' });
           }
           if (request.formString('name') === '') return Result.invalid({ name: '', error: 'empty' });
+          if (request.formString('name') === 'sign-in') {
+            reply.renewSession();
+            return Result.redirect('/').flash('note', 'renewed');
+          }
+          if (request.formString('name') === 'sign-in-page') {
+            reply.renewSession();
+            return Result.page(200, { name: 'renewed' });
+          }
           counter.count++;
           return Result.redirect('/').flash('note', 'added').changed('count');
         },
@@ -57,7 +68,7 @@ export function handlers(): Handlers<Services> {
         load: async ({ request, reply }) => {
           switch (request.param('id')) {
             case 'member':
-              reply.cookie('member', 'token.1', 3600).removeCookie('old').cacheControl('public, max-age=60');
+              reply.cookie('member', 'token.1', 3600).removeCookie('old').cacheControl('private, max-age=60');
               return { id: 'member' };
             case 'guarded':
               reply.removeCookie('member');
@@ -73,7 +84,7 @@ export function handlers(): Handlers<Services> {
             case 'unreadable':
               throw new BadRequest();
             case 'in-place':
-              reply.status(403).cacheControl('public, max-age=60');
+              reply.status(403).cacheControl('private, max-age=60');
               return { id: 'in-place' };
             case 'in-place-moved':
               reply.status(403);
@@ -86,6 +97,9 @@ export function handlers(): Handlers<Services> {
             case 'broken':
               reply.note('stage', 'load');
               throw new Error('secret detail /srv/app.js');
+            case 'renew':
+              reply.renewSession();
+              return { id: 'renew' };
             case 'huge':
               return { id: 9223372036854775807n };
             case 'numeric':
@@ -134,9 +148,26 @@ export class Fixture {
     return this.handle({ method: 'POST', target, headers, body }, { basePath });
   }
 
+  // Returns the masked token of a page response, as a form of the page carries it (HY-24).
   async token(): Promise<string> {
-    await this.get('/');
-    return this.session.get('_hyper_csrf') as string;
+    return (json(await this.get('/', JSON_REGION)).shared as { csrf: string }).csrf;
+  }
+
+  // Returns a body with every masked value of the session token replaced by `masked`, after it checks that each one
+  // verifies, so two responses of one session compare equal although their masks differ (HY-24).
+  unmasked(body: string): string {
+    const token = this.session.get('_hyper_csrf') as string;
+    return body.replace(/[0-9a-f]{128}/g, (found) => {
+      expect(verifyToken(token, found), found).toBe(true);
+      return 'masked';
+    });
+  }
+
+  // Returns the tag of a JSON body of the current session token (HY-53).
+  tag(body: string): string {
+    const masked = (JSON.parse(body) as { shared: { csrf: string } }).shared.csrf;
+    const text = body.replaceAll(masked, this.session.get('_hyper_csrf') as string);
+    return `W/"${createHash('sha256').update(text).digest('hex').slice(0, 32)}"`;
   }
 
   keep(form: Record<string, string>, method = 'POST'): Promise<Response> {

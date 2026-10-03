@@ -29,7 +29,7 @@ describe('Request', () => {
   });
 
   it('does not check cookies (HY-42)', () => {
-    const request = Request.from({ method: 'GET', target: '/', headers: { Cookie: 'hy-keep=%FF; PHPSESSID=%FF' } });
+    const request = Request.from({ method: 'GET', target: '/', headers: { Cookie: 'hy-keep=%FF; hy-session=%FF' } });
     expect(request.validInput()).toBe(true);
     expect(request.cookie('hy-keep')).toBeNull();
   });

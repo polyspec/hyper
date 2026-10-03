@@ -8,6 +8,7 @@ use PHPUnit\Framework\TestCase;
 use Polyspec\Hyper\App;
 use Polyspec\Hyper\ArraySession;
 use Polyspec\Hyper\BadRequest;
+use Polyspec\Hyper\Csrf;
 use Polyspec\Hyper\Forbidden;
 use Polyspec\Hyper\NotFound;
 use Polyspec\Hyper\Redirect;
@@ -78,6 +79,16 @@ final class AppTest extends TestCase
                         if ($request->formString('name') === '') {
                             return Result::invalid(['name' => '', 'error' => 'empty']);
                         }
+                        if ($request->formString('name') === 'sign-in') {
+                            $reply->renewSession();
+
+                            return Result::redirect('/')->flash('note', 'renewed');
+                        }
+                        if ($request->formString('name') === 'sign-in-page') {
+                            $reply->renewSession();
+
+                            return Result::page(200, ['name' => 'renewed']);
+                        }
                         $counter->count++;
 
                         return Result::redirect('/')->flash('note', 'added')->changed('count');
@@ -93,7 +104,7 @@ final class AppTest extends TestCase
                     'item' => ['load' => function (Request $request, Reply $reply): array {
                         return match ($request->param('id')) {
                             'member' => (function () use ($reply): array {
-                                $reply->cookie('member', 'token.1', 3600)->removeCookie('old')->cacheControl('public, max-age=60');
+                                $reply->cookie('member', 'token.1', 3600)->removeCookie('old')->cacheControl('private, max-age=60');
 
                                 return ['id' => 'member'];
                             })(),
@@ -115,7 +126,7 @@ final class AppTest extends TestCase
                             })(),
                             'unreadable' => throw new BadRequest(),
                             'in-place' => (function () use ($reply): array {
-                                $reply->status(403)->cacheControl('public, max-age=60');
+                                $reply->status(403)->cacheControl('private, max-age=60');
 
                                 return ['id' => 'in-place'];
                             })(),
@@ -134,6 +145,11 @@ final class AppTest extends TestCase
                                 $reply->note('stage', 'load');
 
                                 throw new \RuntimeException('secret detail /srv/app.php');
+                            })(),
+                            'renew' => (function () use ($reply): array {
+                                $reply->renewSession();
+
+                                return ['id' => 'renew'];
                             })(),
                             'huge' => ['id' => PHP_INT_MAX],
                             'huge-float' => ['id' => 1e20],
@@ -167,11 +183,34 @@ final class AppTest extends TestCase
         return $this->app($basePath)->handle(new Request('POST', $path, ['Content-Type' => 'application/x-www-form-urlencoded', ...$headers], '', http_build_query($form)), $this->session);
     }
 
+    /** Returns the masked token of a page response, as a form of the page carries it (HY-24). */
     private function token(): string
     {
-        $this->get('/');
+        return (string) self::json($this->get('/', self::JSON))['shared']['csrf'];
+    }
 
-        return (string) $this->session->get('_hyper_csrf');
+    /**
+     * Returns a body with every masked value of the session token replaced by `masked`, after it checks that each one
+     * verifies, so two responses of one session compare equal although their masks differ (HY-24).
+     */
+    private function unmasked(string $body): string
+    {
+        $token = (string) $this->session->get('_hyper_csrf');
+
+        return (string) preg_replace_callback('/[0-9a-f]{128}/', function (array $found) use ($token): string {
+            self::assertTrue(Csrf::verify($token, $found[0]), $found[0]);
+
+            return 'masked';
+        }, $body);
+    }
+
+    /** Returns the tag of a JSON body of the current session token (HY-53). */
+    private function tag(string $body): string
+    {
+        $token = (string) $this->session->get('_hyper_csrf');
+        $masked = (string) self::json(new Response(200, [], $body))['shared']['csrf'];
+
+        return 'W/"' . substr(hash('sha256', str_replace($masked, $token, $body)), 0, 32) . '"';
     }
 
     /** @return array<string, mixed> */
@@ -221,7 +260,7 @@ final class AppTest extends TestCase
         self::assertSame(1, preg_match('#<script type="application/json" id="hy-data">(.*)</script>#', $html, $found));
         $expected = $json;
         $expected['regions'] = ['rows' => $json['regions']['rows']];
-        self::assertSame($expected, json_decode($found[1], true));
+        self::assertSame(json_decode($this->unmasked((string) json_encode($expected)), true), json_decode($this->unmasked($found[1]), true));
         self::assertSame(['rows' => ['mode' => 'b']], json_decode($found[1], true)['kept']);
         self::assertStringContainsString('"a\\u003c"', $found[1]);
     }
@@ -352,7 +391,7 @@ final class AppTest extends TestCase
         self::assertSame(400, $this->app()->handle(new Request('GET', '/', [], 'q=%C3'), $this->session)->status);
         self::assertSame(400, $this->app()->handle(new Request('GET', '/', [], 'a[%FF][x]=1'), $this->session)->status);
         self::assertSame(200, $this->app()->handle(new Request('GET', '/', [], '', '', cookies: ['hy-keep' => "\xFF"]), $this->session)->status);
-        self::assertSame(200, $this->app()->handle(new Request('GET', '/', [], '', '', cookies: [session_name() => "\xFF"]), $this->session)->status);
+        self::assertSame(200, $this->app()->handle(new Request('GET', '/', [], '', '', cookies: ['hy-session' => "\xFF"]), $this->session)->status);
         self::assertSame(200, $this->app()->handle(new Request('GET', '/', [], '', '', cookies: ['unrelated' => "\xFF"]), $this->session)->status);
         self::assertSame(400, $this->get('/', ['HX-Current-URL' => "http://x/\xFF"])->status);
         self::assertSame(400, $this->get("/items/\xFF")->status);
@@ -447,9 +486,10 @@ final class AppTest extends TestCase
 
         self::assertSame(200, $response->status);
         self::assertSame('application/json; charset=utf-8', $response->headers['Content-Type']);
-        $token = (string) $this->session->get('_hyper_csrf');
+        $masked = (string) self::json($response)['shared']['csrf'];
+        self::assertTrue(Csrf::verify((string) $this->session->get('_hyper_csrf'), $masked));
         self::assertSame(
-            '{"env":{"timezone":"+09:00"},"route":"item","params":{"id":"a b"},"shared":{"title":"Item","csrf":"' . $token . '"},"regions":{"content":{"id":"a b"}},"kept":{}}',
+            '{"env":{"timezone":"+09:00"},"route":"item","params":{"id":"a b"},"shared":{"title":"Item","csrf":"' . $masked . '"},"regions":{"content":{"id":"a b"}},"kept":{}}',
             $response->body,
         );
     }
@@ -526,6 +566,91 @@ final class AppTest extends TestCase
 
         self::assertSame(403, $response->status);
         self::assertSame(0, $this->counter->actions);
+    }
+
+    public function testEveryResponseMasksTheTokenAnew(): void
+    {
+        // HY-24: two responses of one session carry different masked values of the token, both are accepted, and
+        // neither the responses nor the accepted form values contain the token itself.
+        $first = $this->get('/', self::JSON);
+        $second = $this->get('/', self::JSON);
+        $token = (string) $this->session->get('_hyper_csrf');
+        $a = (string) self::json($first)['shared']['csrf'];
+        $b = (string) self::json($second)['shared']['csrf'];
+
+        self::assertMatchesRegularExpression('/^[0-9a-f]{128}$/D', $a);
+        self::assertNotSame($a, $b);
+        self::assertStringNotContainsString($token, $first->body);
+        self::assertStringNotContainsString($token, $this->get('/')->body);
+        self::assertSame(303, $this->post('/add', ['_csrf' => $a, 'name' => 'a'])->status);
+        self::assertSame(303, $this->post('/add', ['_csrf' => $b, 'name' => 'a'])->status);
+        self::assertSame(2, $this->counter->actions);
+    }
+
+    public function testActionWithTheTokenItselfIsRejected(): void
+    {
+        // HY-24: only a masked value is accepted.
+        $this->token();
+        $response = $this->post('/add', ['_csrf' => (string) $this->session->get('_hyper_csrf'), 'name' => 'a']);
+
+        self::assertSame(403, $response->status);
+        self::assertSame(0, $this->counter->actions);
+        self::assertSame(403, $this->keep(['_csrf' => (string) $this->session->get('_hyper_csrf'), 'region' => 'rows', 'path' => 'open', 'value' => 'true'])->status);
+    }
+
+    public function testActionRenewsTheSession(): void
+    {
+        // HY-72: the action replaces the token and renews the store; the flash values of the redirect stay, and a
+        // masked value of the old token is refused afterwards.
+        $old = $this->token();
+        $oldToken = (string) $this->session->get('_hyper_csrf');
+
+        self::assertSame(303, $this->post('/add', ['_csrf' => $old, 'name' => 'sign-in'])->status);
+        self::assertSame(1, $this->session->renewals());
+        self::assertNotSame($oldToken, $this->session->get('_hyper_csrf'));
+        self::assertSame('renewed', self::json($this->get('/', ['Accept' => 'application/json']))['regions']['side']['note']);
+        self::assertSame(403, $this->post('/add', ['_csrf' => $old, 'name' => 'a'])->status);
+        self::assertSame(303, $this->post('/add', ['_csrf' => $this->token(), 'name' => 'a'])->status);
+    }
+
+    public function testPageOfARenewingActionCarriesTheNewToken(): void
+    {
+        // HY-72
+        $page = self::json($this->post('/add', ['_csrf' => $this->token(), 'name' => 'sign-in-page'], self::JSON));
+
+        self::assertTrue(Csrf::verify((string) $this->session->get('_hyper_csrf'), (string) $page['shared']['csrf']));
+    }
+
+    public function testRenewedSessionChangesTheTag(): void
+    {
+        // HY-53, HY-72: responses of one token share a tag whatever their masks; a renewed session has another tag.
+        $first = $this->get('/items/plain', ['Accept' => 'application/json']);
+        self::assertSame(304, $this->get('/items/plain', ['Accept' => 'application/json', 'If-None-Match' => $first->headers['ETag']])->status);
+
+        self::assertSame(303, $this->post('/add', ['_csrf' => $this->token(), 'name' => 'sign-in'])->status);
+        $renewed = $this->get('/items/plain', ['Accept' => 'application/json', 'If-None-Match' => $first->headers['ETag']]);
+        self::assertSame(200, $renewed->status);
+        self::assertNotSame($first->headers['ETag'], $renewed->headers['ETag']);
+    }
+
+    public function testStoredTokenOfAnotherFormIsReplaced(): void
+    {
+        // HY-24: a stored token that is not 64 lowercase hexadecimal digits is replaced by a new token.
+        $this->session->set('_hyper_csrf', 'conformance-token');
+        $masked = (string) self::json($this->get('/', self::JSON))['shared']['csrf'];
+        $token = (string) $this->session->get('_hyper_csrf');
+
+        self::assertMatchesRegularExpression('/^[0-9a-f]{64}$/D', $token);
+        self::assertTrue(Csrf::verify($token, $masked));
+    }
+
+    public function testLoaderThatRenewsTheSessionFails(): void
+    {
+        // HY-72, HY-43
+        $response = $this->get('/items/renew');
+
+        self::assertSame(500, $response->status);
+        self::assertSame(0, $this->session->renewals());
     }
 
     public function testSuccessfulActionRedirectsAndPassesFlashAndTopicsOnce(): void
@@ -732,7 +857,7 @@ final class AppTest extends TestCase
         foreach ($responses as $response) {
             self::assertSame('no-store', $response->headers['Cache-Control'] ?? null, (string) $response->status);
         }
-        self::assertSame('public, max-age=60', $this->get('/items/member')->headers['Cache-Control']);
+        self::assertSame('private, max-age=60', $this->get('/items/member')->headers['Cache-Control']);
     }
 
     public function testAResponseLargerThanTheLimitIsNotSent(): void
@@ -812,7 +937,7 @@ final class AppTest extends TestCase
         // HY-53: only a GET request receives 304; an action runs whatever tag the request names.
         $again = $this->post('/add', ['_csrf' => $token, 'name' => 'preview'], ['Accept' => 'application/json', 'If-None-Match' => $preview->headers['ETag']]);
         self::assertSame(200, $again->status);
-        self::assertSame($preview->body, $again->body);
+        self::assertSame($this->unmasked($preview->body), $this->unmasked($again->body));
         self::assertSame(200, $this->post('/add', ['_csrf' => $token, 'name' => 'preview'])->status);
         self::assertSame(0, $this->counter->count);
     }
@@ -826,9 +951,9 @@ final class AppTest extends TestCase
         self::assertSame('no-store', $json->headers['Cache-Control']);
         self::assertArrayNotHasKey('ETag', $json->headers);
         self::assertSame('in-place', self::json($json)['regions']['content']['id']);
-        $tagged = $this->get('/items/in-place', [...self::JSON, 'If-None-Match' => '"' . substr(hash('sha256', $json->body), 0, 32) . '"']);
+        $tagged = $this->get('/items/in-place', [...self::JSON, 'If-None-Match' => $this->tag($json->body)]);
         self::assertSame(403, $tagged->status);
-        self::assertSame($json->body, $tagged->body);
+        self::assertSame($this->unmasked($json->body), $this->unmasked($tagged->body));
         $document = $this->get('/items/in-place');
         self::assertSame(403, $document->status);
         self::assertSame('text/html; charset=utf-8', $document->headers['Content-Type']);
@@ -875,7 +1000,7 @@ final class AppTest extends TestCase
             'member=token.1; Path=/; HttpOnly; SameSite=Lax; Max-Age=3600',
             'old=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0',
         ], $page->headers['Set-Cookie']);
-        self::assertSame('public, max-age=60', $page->headers['Cache-Control']);
+        self::assertSame('private, max-age=60', $page->headers['Cache-Control']);
         $https = $this->app()->handle(new Request('GET', '/items/member', [], https: true), $this->session);
         self::assertSame('member=token.1; Path=/; HttpOnly; SameSite=Lax; Secure; Max-Age=3600', $https->headers['Set-Cookie'][0]);
         $forbidden = $this->get('/items/guarded');
@@ -892,7 +1017,7 @@ final class AppTest extends TestCase
         self::assertSame('no-store', $this->get('/items/plain', self::JSON)->headers['Cache-Control']);
         $token = $this->token();
         self::assertSame('no-store', $this->post('/add', ['_csrf' => $token, 'name' => ''])->headers['Cache-Control']);
-        self::assertSame('public, max-age=60', $this->get('/items/member', self::JSON)->headers['Cache-Control']);
+        self::assertSame('private, max-age=60', $this->get('/items/member', self::JSON)->headers['Cache-Control']);
     }
 
     public function testJsonResponsesHaveATagAndMatchingRequestsGet304(): void
@@ -900,7 +1025,7 @@ final class AppTest extends TestCase
         // HY-53
         $first = $this->get('/items/plain', ['Accept' => 'application/json']);
         $tag = $first->headers['ETag'];
-        self::assertSame('"' . substr(hash('sha256', $first->body), 0, 32) . '"', $tag);
+        self::assertSame($this->tag($first->body), $tag);
         $again = $this->get('/items/plain', ['Accept' => 'application/json', 'If-None-Match' => $tag]);
         self::assertSame(304, $again->status);
         self::assertSame('', $again->body);

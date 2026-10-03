@@ -1,10 +1,10 @@
 // The cases of packages/hyper-php/tests/AppTest.php against the same fixture application (HY-54).
-import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createApplication, decodeResponse, renderParts, type Manifest, type TemplateIndex } from '@polyspec/hyper';
 import { parseJson, type Template } from '@polyspec/template/render';
-import { App, Request, Result, type Reply, type Response } from '../src/index.js';
+import { verifyToken } from '../src/csrf.js';
+import { App, Reply as ReplyClass, Request, Result, type Reply, type Response } from '../src/index.js';
 import { cookie, Fixture, FIXTURES, handlers, json, JSON_REGION, TEMPLATES } from './support.js';
 
 let fixture: Fixture;
@@ -39,7 +39,7 @@ describe('App', () => {
     const document = JSON.parse((await fixture.get('/list', { Accept: 'application/json', ...headers })).body) as { regions: Record<string, unknown>; kept: unknown };
     expect(Object.keys(document.regions)).toEqual(['side', 'content', 'rows']);
     const found = /<script type="application\/json" id="hy-data">(.*)<\/script>/.exec(html)?.[1];
-    expect(JSON.parse(found!)).toEqual({ ...document, regions: { rows: document.regions.rows } });
+    expect(JSON.parse(fixture.unmasked(found!))).toEqual(JSON.parse(fixture.unmasked(JSON.stringify({ ...document, regions: { rows: document.regions.rows } }))));
     expect(JSON.parse(found!).kept).toEqual({ rows: { mode: 'b' } });
     expect(found).toContain('"a\\u003c"');
   });
@@ -120,7 +120,7 @@ describe('App', () => {
     expect((await fixture.get('/?q=%C3')).status).toBe(400);
     expect((await fixture.get('/?a[%FF][x]=1')).status).toBe(400);
     expect((await fixture.get('/', { Cookie: 'hy-keep=%FF' })).status).toBe(200);
-    expect((await fixture.get('/', { Cookie: 'PHPSESSID=%FF' })).status).toBe(200);
+    expect((await fixture.get('/', { Cookie: 'hy-session=%FF' })).status).toBe(200);
     expect((await fixture.get('/', { Cookie: 'unrelated=%FF' })).status).toBe(200);
     expect((await fixture.get('/', { 'HX-Current-URL': 'http://x/\xFF' })).status).toBe(400);
     expect((await fixture.get('/items/\xFF')).status).toBe(400);
@@ -187,8 +187,9 @@ describe('App', () => {
     const response = await fixture.get('/items/a%20b', JSON_REGION);
     expect(response.status).toBe(200);
     expect(response.headers['Content-Type']).toBe('application/json; charset=utf-8');
-    const token = fixture.session.get('_hyper_csrf') as string;
-    expect(response.body).toBe(`{"env":{"timezone":"+09:00"},"route":"item","params":{"id":"a b"},"shared":{"title":"Item","csrf":"${token}"},"regions":{"content":{"id":"a b"}},"kept":{}}`);
+    const masked = (json(response).shared as { csrf: string }).csrf;
+    expect(verifyToken(fixture.session.get('_hyper_csrf') as string, masked)).toBe(true);
+    expect(response.body).toBe(`{"env":{"timezone":"+09:00"},"route":"item","params":{"id":"a b"},"shared":{"title":"Item","csrf":"${masked}"},"regions":{"content":{"id":"a b"}},"kept":{}}`);
   });
 
   it('returns every region in manifest order for a document request (HY-15, HY-18)', async () => {
@@ -231,6 +232,76 @@ describe('App', () => {
     const redirect = await fixture.post('/api/add', { _csrf: token, name: 'a' }, JSON_REGION, '/api');
     expect(redirect.status).toBe(303);
     expect(redirect.headers.Location).toBe('/api/');
+  });
+
+  it('masks the token anew in every response and accepts every mask (HY-24)', async () => {
+    const first = await fixture.get('/', JSON_REGION);
+    const second = await fixture.get('/', JSON_REGION);
+    const token = fixture.session.get('_hyper_csrf') as string;
+    const a = (json(first).shared as { csrf: string }).csrf;
+    const b = (json(second).shared as { csrf: string }).csrf;
+    expect(a).toMatch(/^[0-9a-f]{128}$/);
+    expect(a).not.toBe(b);
+    expect(first.body).not.toContain(token);
+    expect((await fixture.get('/')).body).not.toContain(token);
+    expect((await fixture.post('/add', { _csrf: a, name: 'a' })).status).toBe(303);
+    expect((await fixture.post('/add', { _csrf: b, name: 'a' })).status).toBe(303);
+    expect(fixture.counter.actions).toBe(2);
+  });
+
+  it('rejects the token itself (HY-24)', async () => {
+    await fixture.token();
+    const token = fixture.session.get('_hyper_csrf') as string;
+    expect((await fixture.post('/add', { _csrf: token, name: 'a' })).status).toBe(403);
+    expect(fixture.counter.actions).toBe(0);
+    expect((await fixture.keep({ _csrf: token, region: 'rows', path: 'open', value: 'true' })).status).toBe(403);
+  });
+
+  it('renews the session in an action (HY-72)', async () => {
+    const old = await fixture.token();
+    const oldToken = fixture.session.get('_hyper_csrf');
+    expect((await fixture.post('/add', { _csrf: old, name: 'sign-in' })).status).toBe(303);
+    expect(fixture.session.renewals).toBe(1);
+    expect(fixture.session.get('_hyper_csrf')).not.toBe(oldToken);
+    expect((json(await fixture.get('/', { Accept: 'application/json' })).regions.side as { note: string }).note).toBe('renewed');
+    expect((await fixture.post('/add', { _csrf: old, name: 'a' })).status).toBe(403);
+    expect((await fixture.post('/add', { _csrf: await fixture.token(), name: 'a' })).status).toBe(303);
+  });
+
+  it('gives the page of a renewing action the new token (HY-72)', async () => {
+    const page = json(await fixture.post('/add', { _csrf: await fixture.token(), name: 'sign-in-page' }, JSON_REGION));
+    expect(verifyToken(fixture.session.get('_hyper_csrf') as string, (page.shared as { csrf: string }).csrf)).toBe(true);
+  });
+
+  it('changes the tag of a renewed session (HY-53, HY-72)', async () => {
+    const first = await fixture.get('/items/plain', { Accept: 'application/json' });
+    expect((await fixture.get('/items/plain', { Accept: 'application/json', 'If-None-Match': first.headers.ETag as string })).status).toBe(304);
+    expect((await fixture.post('/add', { _csrf: await fixture.token(), name: 'sign-in' })).status).toBe(303);
+    const renewed = await fixture.get('/items/plain', { Accept: 'application/json', 'If-None-Match': first.headers.ETag as string });
+    expect(renewed.status).toBe(200);
+    expect(renewed.headers.ETag).not.toBe(first.headers.ETag);
+  });
+
+  it('replaces a stored token that is not 64 lowercase hexadecimal digits (HY-24)', async () => {
+    fixture.session.set('_hyper_csrf', 'conformance-token');
+    const masked = (json(await fixture.get('/', JSON_REGION)).shared as { csrf: string }).csrf;
+    const token = fixture.session.get('_hyper_csrf') as string;
+    expect(token).toMatch(/^[0-9a-f]{64}$/);
+    expect(verifyToken(token, masked)).toBe(true);
+  });
+
+  it('fails a loader that renews the session (HY-72, HY-43)', async () => {
+    expect((await fixture.get('/items/renew')).status).toBe(500);
+    expect(fixture.session.renewals).toBe(0);
+  });
+
+  it('refuses a Cache-Control that a shared cache may store (HY-52)', () => {
+    for (const value of ['private, max-age=60', 'no-store', 'Private', 'max-age=0, private', 'no-cache, no-store']) {
+      expect(new ReplyClass().cacheControl(value).cacheControlValue(), value).toBe(value);
+    }
+    for (const value of ['public, max-age=60', 'max-age=60', 'no-cache', 'private, s-maxage=60', 'private, public', 'PUBLIC, private', 'privateer', '']) {
+      expect(() => new ReplyClass().cacheControl(value), value).toThrow('Cache-Control');
+    }
   });
 
   it('rejects an action without the token (HY-24)', async () => {
@@ -398,7 +469,7 @@ describe('App', () => {
     ];
     expect(responses.map((response) => response.status)).toEqual([400, 400, 403, 403, 404, 404, 405, 413, 415, 400, 500, 409, 422]);
     for (const response of responses) expect([response.status, response.headers['Cache-Control']]).toEqual([response.status, 'no-store']);
-    expect((await fixture.get('/items/member')).headers['Cache-Control']).toBe('public, max-age=60');
+    expect((await fixture.get('/items/member')).headers['Cache-Control']).toBe('private, max-age=60');
   });
 
   it('does not send a response larger than the response limit (HY-66)', async () => {
@@ -447,7 +518,7 @@ describe('App', () => {
     // HY-53: only a GET request receives 304; an action runs whatever tag the request names.
     const again = await fixture.post('/add', { _csrf: token, name: 'preview' }, { Accept: 'application/json', 'If-None-Match': preview.headers.ETag as string });
     expect(again.status).toBe(200);
-    expect(again.body).toBe(preview.body);
+    expect(fixture.unmasked(again.body)).toBe(fixture.unmasked(preview.body));
     expect((await fixture.post('/add', { _csrf: token, name: 'preview' })).status).toBe(200);
     expect(fixture.counter.count).toBe(0);
   });
@@ -460,10 +531,9 @@ describe('App', () => {
     expect(page.headers['Cache-Control']).toBe('no-store');
     expect(page.headers.ETag).toBeUndefined();
     expect((json(page).regions.content as Record<string, unknown>).id).toBe('in-place');
-    const tag = `"${createHash('sha256').update(page.body).digest('hex').slice(0, 32)}"`;
-    const tagged = await fixture.get('/items/in-place', { ...JSON_REGION, 'If-None-Match': tag });
+    const tagged = await fixture.get('/items/in-place', { ...JSON_REGION, 'If-None-Match': fixture.tag(page.body) });
     expect(tagged.status).toBe(403);
-    expect(tagged.body).toBe(page.body);
+    expect(fixture.unmasked(tagged.body)).toBe(fixture.unmasked(page.body));
     const document = await fixture.get('/items/in-place');
     expect(document.status).toBe(403);
     expect(document.headers['Content-Type']).toBe('text/html; charset=utf-8');
@@ -499,7 +569,7 @@ describe('App', () => {
       'member=token.1; Path=/; HttpOnly; SameSite=Lax; Max-Age=3600',
       'old=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0',
     ]);
-    expect(page.headers['Cache-Control']).toBe('public, max-age=60');
+    expect(page.headers['Cache-Control']).toBe('private, max-age=60');
     const https = await fixture.handle({ target: '/items/member', https: true });
     expect((https.headers['Set-Cookie'] as string[])[0]).toBe('member=token.1; Path=/; HttpOnly; SameSite=Lax; Secure; Max-Age=3600');
     const forbidden = await fixture.get('/items/guarded');
@@ -514,13 +584,13 @@ describe('App', () => {
     expect((await fixture.get('/items/plain', JSON_REGION)).headers['Cache-Control']).toBe('no-store');
     const token = await fixture.token();
     expect((await fixture.post('/add', { _csrf: token, name: '' })).headers['Cache-Control']).toBe('no-store');
-    expect((await fixture.get('/items/member', JSON_REGION)).headers['Cache-Control']).toBe('public, max-age=60');
+    expect((await fixture.get('/items/member', JSON_REGION)).headers['Cache-Control']).toBe('private, max-age=60');
   });
 
   it('tags JSON responses and answers a matching request with 304 (HY-53)', async () => {
     const first = await fixture.get('/items/plain', { Accept: 'application/json' });
     const tag = first.headers.ETag as string;
-    expect(tag).toBe(`"${createHash('sha256').update(first.body).digest('hex').slice(0, 32)}"`);
+    expect(tag).toBe(fixture.tag(first.body));
     const again = await fixture.get('/items/plain', { Accept: 'application/json', 'If-None-Match': tag });
     expect(again.status).toBe(304);
     expect(again.body).toBe('');
@@ -549,7 +619,10 @@ describe('Node handlers', () => {
     } } });
     const response = json(await app.handle((await import('../src/index.js')).Request.from({ method: 'GET', target: '/', headers: JSON_REGION }), fixture.session));
     expect(seen).toEqual([['reply', 'request', 'services'], true]);
-    expect(response.shared).toEqual({ title: 'Home', csrf: fixture.session.get('_hyper_csrf'), site: 'x' });
+    const { csrf, ...shared } = response.shared as { csrf: string };
+    expect(Object.keys(response.shared as object)).toEqual(['title', 'csrf', 'site']);
+    expect(shared).toEqual({ title: 'Home', site: 'x' });
+    expect(verifyToken(fixture.session.get('_hyper_csrf') as string, csrf)).toBe(true);
   });
 
   it('fails data that is not a value of the data model (HY-44)', async () => {
