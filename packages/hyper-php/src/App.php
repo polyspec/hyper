@@ -169,12 +169,23 @@ final class App
     {
         // The failure of a 500 of HY-43 or HY-66, which the hook receives (HY-60).
         $failure = null;
+        // HY-74: a warning, notice or deprecation of the request becomes an exception instead of a wrong page; an
+        // error that `@` silences is not in error_reporting() here and stays silent.
+        set_error_handler(static function (int $level, string $message, string $file, int $line): bool {
+            if ((error_reporting() & $level) === 0) {
+                return false;
+            }
+
+            throw new \ErrorException($message, 0, $level, $file, $line);
+        });
         try {
             $response = $this->answer($request, $store, $reply);
         } catch (\Throwable $error) {
             error_log(sprintf('hyper: %s: %s in %s:%d', $error::class, $error->getMessage(), $error->getFile(), $error->getLine()));
             $failure = $error->getMessage();
             $response = Response::text(500, 'Internal Server Error');
+        } finally {
+            restore_error_handler();
         }
         $size = strlen($response->body);
         if ($size > $this->responseLimit) {

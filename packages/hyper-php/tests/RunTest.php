@@ -31,6 +31,21 @@ final class RunTest extends TestCase
         self::assertSame('', ini_get('default_mimetype'));
     }
 
+    /** HY-74: a warning, notice or deprecation of a request fails it with the plain 500 of HY-43; `@` stays silent. */
+    public function testWarningsNoticesAndDeprecationsFailTheRequest(): void
+    {
+        exec(escapeshellarg(PHP_BINARY) . ' -d error_log=/dev/null -d display_errors=0 ' . escapeshellarg(__DIR__ . '/Support/warnings.php'), $lines, $status);
+
+        self::assertSame(0, $status, implode("\n", $lines));
+        self::assertSame([
+            ['undefined-key', 500, 'Internal Server Error'],
+            ['user-notice', 500, 'Internal Server Error'],
+            ['deprecation', 500, 'Internal Server Error'],
+            ['silenced', 200, '{"env":{"timezone":"Z"},"route":"item","params":{"id":"silenced"},"shared":{"title":"Item"},"regions":{"side":{},"content":{"id":"silenced"}},"kept":{}}'],
+            ['handler', true],
+        ], array_map(fn (string $line): array => json_decode($line, true, flags: JSON_THROW_ON_ERROR), $lines));
+    }
+
     /** HY-59: PHP must give the application every body up to the limit, which post_max_size and the post data reading decide. */
     #[RunInSeparateProcess]
     public function testRunRefusesALimitThatPhpCannotDeliver(): void
