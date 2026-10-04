@@ -102,3 +102,14 @@ Depends on: none. The selection of HY-62 returns only `true` or `false`, so an a
 |---|---|---|---|
 | H9.1 | Specify in HY-62: the selection returns a choice, whether the request is of a client-rendered page and a value; every loader and action of the request reads the value from its request, and a request of an application without the declaration has the value null | `make docs-check` | [o] |
 | H9.2 | PHP and Node servers: `Choice`, `Request::selection()` and `request.selection()`, with tests that fail before the change; documents, feature status and changelog | `make check` | [o] |
+
+## Wave 10 — One data model check and add-only build outputs
+
+Depends on: H10.4 depends on template T14.2. The servers and the builds have four defects. The HY-44 check of PHP accepts an application object in loader data, which Node rejects with HY-43, so the two servers answer the same loader differently. The server build never runs the template checks of HC-6, HY-3 and HY-30, which only `make templates-check` runs on the board example, so a server program serves templates that violate them. The asset build removes the files of the previous build (`build-assets.mjs`, `template-files.mjs`) and writes its unhashed outputs into `public/`, so a server that still serves the previous build, or a page already open in a browser, loads files that are gone. Each render of a document binds the shared data again.
+
+| ID | Task | Verification | Status |
+|---|---|---|---|
+| H10.1 | HY-44: a native object (VAL-19) in the host binding of loader and shared handler values fails with HY-43, and values that binding turns into data model values (PHP `stdClass`, `JsonSerializable`) pass; cases that fail before the change on PHP | `make check` | [ ] |
+| H10.2 | Move the checks of `check-templates.mjs` into one function of a manifest and a template directory, used by `make templates-check` and by `build-server.mjs` before it writes anything; HY-48 states that a violation writes nothing; a case that fails before the change | `make check` | [ ] |
+| H10.3 | The asset build only adds files whose names hold a content hash and writes its unhashed outputs (`manifest.json`, `templates.index.json`) into the directory of `--output` (HY-34, HY-76); a build test that fails before the change | `make check` | [ ] |
+| H10.4 | Bind each pruned root once per document with the bound value of template T14.2 and use it in every render, so a value is checked at most twice whatever the number of renders; JSON responses bind only `params` again | `make check` | [ ] |

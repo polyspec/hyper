@@ -102,3 +102,14 @@
 |---|---|---|---|
 | H9.1 | HY-62에 명세한다. selection은 request가 client-rendered page의 것인지와 값을 담은 choice를 반환한다. request의 모든 loader와 action은 그 값을 request에서 읽고, 선언이 없는 application의 request는 값 null을 가진다 | `make docs-check` | [o] |
 | H9.2 | PHP와 Node server: `Choice`, `Request::selection()`, `request.selection()`과 변경 전에 실패하는 test, 문서, feature status, changelog | `make check` | [o] |
+
+## 웨이브 10 — data model 검사 한 번과 추가만 하는 build 출력
+
+의존: H10.4는 template T14.2에 의존한다. server와 build에는 결함 네 가지가 있다. PHP의 HY-44 검사는 loader data의 application object를 받지만 Node는 HY-43으로 거부하므로, 두 server가 같은 loader에 다르게 답한다. server build는 HC-6, HY-3, HY-30의 template 검사를 실행하지 않는다. 이 검사는 board 예제에서 `make templates-check`만 실행하므로, server program은 이를 어기는 template을 제공한다. asset build는 이전 build의 파일을 지우고(`build-assets.mjs`, `template-files.mjs`) hash 없는 출력을 `public/`에 쓴다. 그래서 이전 build를 아직 제공하는 server나 browser에 이미 열린 page가 사라진 파일을 읽는다. document의 render마다 shared data를 다시 binding한다.
+
+| ID | 작업 | 검증 | 상태 |
+|---|---|---|---|
+| H10.1 | HY-44: loader와 shared handler 값의 host binding에 native object(VAL-19)가 있으면 HY-43으로 실패하고, binding이 data model 값으로 바꾸는 값(PHP `stdClass`, `JsonSerializable`)은 통과한다. 변경 전 PHP에서 실패하는 case를 둔다 | `make check` | [ ] |
+| H10.2 | `check-templates.mjs`의 검사를 manifest와 template directory를 받는 함수 하나로 옮기고, `make templates-check`와 `build-server.mjs`가 아무것도 쓰기 전에 그 함수를 쓴다. HY-48에 위반이 있으면 아무것도 쓰지 않는다고 적는다. 변경 전에 실패하는 case를 둔다 | `make check` | [ ] |
+| H10.3 | asset build는 이름에 content hash가 있는 파일을 더하기만 하고, hash 없는 출력(`manifest.json`, `templates.index.json`)은 `--output` directory에 쓴다(HY-34, HY-76). 변경 전에 실패하는 build test를 둔다 | `make check` | [ ] |
+| H10.4 | template T14.2의 bound 값으로 pruning한 root를 document마다 한 번 binding하고 모든 render에 쓴다. 그래서 값은 render 횟수와 상관없이 최대 두 번 검사된다. JSON 응답은 `params`만 다시 binding한다 | `make check` | [ ] |
