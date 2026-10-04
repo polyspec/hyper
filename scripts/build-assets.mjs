@@ -72,6 +72,15 @@ for (const name of readdirSync(assetsDir)) {
 for (const script of scripts) writeFileSync(join(assetsDir, script.name), script.code);
 writeFileSync(join(assetsDir, 'manifest.json'), `${JSON.stringify({ hyper: `/assets/${entry.name}` }, null, 2)}\n`);
 
+// The compiled stylesheet lies in public/assets before the static deployment copies the stylesheets (HY-77).
+if (values.tailwind !== undefined) {
+  const [source, output, ...rest] = values.tailwind.split('=');
+  if (!source || !output || rest.length > 0) throw new Error(`--tailwind ${values.tailwind} is not <source>=<output>`);
+  const css = await tailwind(readFileSync(join(app, source), 'utf8'));
+  mkdirSync(dirname(join(app, output)), { recursive: true });
+  writeFileSync(join(app, output), css);
+}
+
 const shell = [
   '<!doctype html>',
   '<html>',
@@ -92,14 +101,6 @@ writeFileSync(join(csrDir, 'index.html'), shell);
 copyDirectory(templateFilesDir, join(csrDir, 'assets', 'templates'));
 for (const name of readdirSync(assetsDir)) {
   if (name.endsWith('.css') || name.startsWith('hyper-chunk-')) copyFile(join(assetsDir, name), join(csrDir, 'assets', name));
-}
-
-if (values.tailwind !== undefined) {
-  const [source, output, ...rest] = values.tailwind.split('=');
-  if (!source || !output || rest.length > 0) throw new Error(`--tailwind ${values.tailwind} is not <source>=<output>`);
-  const css = await tailwind(readFileSync(join(app, source), 'utf8'));
-  mkdirSync(dirname(join(app, output)), { recursive: true });
-  writeFileSync(join(app, output), css);
 }
 
 // Compiles the rules of an application stylesheet with the theme and the utilities of Tailwind CSS that the

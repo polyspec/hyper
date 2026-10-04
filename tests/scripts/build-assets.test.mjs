@@ -76,6 +76,8 @@ test('compiles a stylesheet with the Tailwind utilities that the templates use (
     // The rules of the source lie unchanged in the layer components, and no rule of the layer base exists.
     assert.match(css, /@layer components\s*{\s*\.home\s*{\s*color: #123456;?\s*}\s*}/);
     assert.doesNotMatch(css, /@layer base\s*{/);
+    // The static deployment holds the compiled stylesheet of the same build.
+    assert.equal(readFileSync(join(app, 'dist', 'csr', 'assets', 'app.css'), 'utf8'), css);
     // A source that cannot be read fails the build.
     const missing = buildAssets(app, '--tailwind', 'missing.css=public/assets/app.css');
     assert.notEqual(missing.status, 0);
