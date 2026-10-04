@@ -93,3 +93,12 @@
 | H8.1 | HY-77을 명세한다. `--tailwind <source>=<output>`은 application의 source stylesheet를 최신 stable Tailwind CSS의 theme과 utility로 compile하여, template과 client code가 쓰는 utility를 생성하고 source의 rule을 cascade layer `components`에 쓴다 | `make docs-check` | [o] |
 | H8.2 | asset build: 이 option과 변경 전에 실패하는 build test, dependency로서의 Tailwind CSS, 문서와 changelog | `make check` | [o] |
 | H8.2-1 | 정적 배포물이 stylesheet를 복사하기 전에 Tailwind stylesheet를 compile한다. build가 복사 뒤에 output을 썼으므로, `dist/csr/assets/`에는 첫 build의 output이 없었고 다음 build에서는 이전 build의 output이 있었다| `make check` | [o] |
+
+## 웨이브 9 — client rendering selection의 값이 handler에 전달된다
+
+의존: 없음. HY-62의 selection은 `true` 또는 `false`만 반환하므로, `Host` header의 service처럼 저장된 data를 읽는 selection을 둔 application은 같은 request에서 selection에서 한 번, handler에서 다시 한 번, 같은 data를 두 번 읽는다. selection은 값을 가진 choice를 반환하고, request의 모든 handler는 그 값을 request에서 읽는다.
+
+| ID | 작업 | 검증 | 상태 |
+|---|---|---|---|
+| H9.1 | HY-62에 명세한다. selection은 request가 client-rendered page의 것인지와 값을 담은 choice를 반환한다. request의 모든 loader와 action은 그 값을 request에서 읽고, 선언이 없는 application의 request는 값 null을 가진다 | `make docs-check` | [~] |
+| H9.2 | PHP와 Node server: `Choice`, `Request::selection()`, `request.selection()`과 변경 전에 실패하는 test, 문서, feature status, changelog | `make check` | [~] |
