@@ -7,9 +7,6 @@
   "engines": {
     "node": ">=26"
   },
-  "scripts": {
-    "test": "node --test package-install.test.ts"
-  },
   "dependencies": {
     "@polyspec/hyper": "file:../../packages/hyper-js",
     "@polyspec/hyper-server": "file:../../packages/hyper-node"

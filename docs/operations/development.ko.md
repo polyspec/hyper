@@ -43,6 +43,12 @@
 | `make bench` | 서버와 브라우저 성능을 보고하는 `make bench-server`와 `make bench-browser`를 실행한다([성능 측정](benchmark.ko.md) 참조). `make check`에는 포함하지 않는다 |
 | `make check` | 위의 모든 검사를 실행한다 |
 
+## Test 실행
+
+`scripts/run-tests.mjs <node|vitest|phpunit> [--timeout <seconds>] [--cwd <directory>] [--extension <file>] [--] [<arguments>]`는 test 도구를 실행하고, `make test-js`, `make test-node`, `make test-php`, `make test-scripts`, `make package-check`는 이것으로 test를 실행한다. 모든 test는 시작할 때 한 줄, 실행 중에는 5초마다 한 줄, 끝나면 결과와 경과 시간을 담은 한 줄을 출력하고, 실행은 개수와 경과 시간을 담은 줄로 끝난다. 모든 test는 자기 timeout을 가지며, `--timeout`이 다른 값을 주지 않으면 30초다. vitest와 `node --test`는 timeout에서 그 test를 실패시키고, `--teamcity`로 test마다 보고하는 PHPUnit은 runner가 PHPUnit을 멈추고 그 test를 이름으로 실패시킨다. `--extension`은 PHPUnit에 PHP extension을 불러온다. `tests/scripts/run-tests.test.mjs`가 runner와 `scripts/test-progress/`의 reporter를 시험한다.
+
+변경을 소유한 test만 실행하려면 그 파일이나 filter를 넘긴다. 예: `node scripts/run-tests.mjs vitest --cwd packages/hyper-js tests/router.test.ts`, `node scripts/run-tests.mjs phpunit --cwd packages/hyper-php -- --filter RouterTest`.
+
 ## 서버 빌드
 
 `scripts/build-server.mjs --manifest <app.json> --templates <directory> --output <directory> --template-dir <template repository> --php-namespace <namespace>`는 서버 프로그램을 만든다(HY-48).

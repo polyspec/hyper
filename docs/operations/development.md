@@ -41,6 +41,12 @@
 | `make bench` | Runs `make bench-server` and `make bench-browser`, which report server and browser performance (see [Benchmark](benchmark.md)); they are not part of `make check` |
 | `make check` | Runs every check above |
 
+## Test runs
+
+`scripts/run-tests.mjs <node|vitest|phpunit> [--timeout <seconds>] [--cwd <directory>] [--extension <file>] [--] [<arguments>]` runs a test tool, and `make test-js`, `make test-node`, `make test-php`, `make test-scripts` and `make package-check` run their tests through it. Every test prints a line when it starts, a line every 5 seconds while it runs and a line with its result and elapsed time, and the run ends with a line of the counts and the elapsed time. Every test has its own timeout, 30 seconds unless `--timeout` sets another: vitest and `node --test` fail the test at its timeout, and for PHPUnit, which `--teamcity` makes report each test, the runner stops PHPUnit and fails the test by its name. `--extension` loads a PHP extension into PHPUnit. `tests/scripts/run-tests.test.mjs` tests the runner and its reporters in `scripts/test-progress/`.
+
+To run the tests that own a change, pass their files or a filter, for example `node scripts/run-tests.mjs vitest --cwd packages/hyper-js tests/router.test.ts` or `node scripts/run-tests.mjs phpunit --cwd packages/hyper-php -- --filter RouterTest`.
+
 ## Server build
 
 `scripts/build-server.mjs --manifest <app.json> --templates <directory> --output <directory> --template-dir <template repository> --php-namespace <namespace>` writes the server program (HY-48):
