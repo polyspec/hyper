@@ -83,6 +83,7 @@
 | ID | 작업 | 검증 | 상태 |
 |---|---|---|---|
 | H7.1 | `scripts/check-documents.mjs`가 네 가지 작업 상태만, 두 언어에서 같게 받고, 일시 우회 작업은 원인과 재시도 조건을 담게 한다. `[x]` 행에서 실패하는지 확인한다. 모든 완료 작업을 `[o]`로 쓴다. AGENTS에 checklist 규칙을 적는다 | `make docs-check` | [o] |
+| H7.2 | AGENTS에 72자에서 줄을 바꾼 본문을 가진 commit message 형식 `type(scope): Subject (#task)`, `main`에서 직접 작업할 수 있음, branch와 worktree의 이름과 merge 뒤의 제거, merge할 수 없는 test code의 제거, 받은 지시를 agent memory와 함께 분류하는 규칙을 적는다 | `make docs-check` | [o] |
 
 ## 웨이브 8 — asset build의 Tailwind CSS
 
@@ -110,6 +111,7 @@
 | ID | 작업 | 검증 | 상태 |
 |---|---|---|---|
 | H10.1 | HY-44: loader와 shared handler 값의 host binding에 native object(VAL-19)가 있으면 HY-43으로 실패하고, binding이 data model 값으로 바꾸는 값(PHP `stdClass`, `JsonSerializable`)은 통과한다. 변경 전 PHP에서 실패하는 case를 둔다 | `make check` | [o] |
-| H10.2 | `check-templates.mjs`의 검사를 manifest와 template directory를 받는 함수 하나로 옮기고, `make templates-check`와 `build-server.mjs`가 아무것도 쓰기 전에 그 함수를 쓴다. HY-48에 위반이 있으면 아무것도 쓰지 않는다고 적는다. 변경 전에 실패하는 case를 둔다 | `make check` | [o] |
+| H10.2 | `check-templates.mjs`의 검사를 manifest와 template directory를 받는 함수 하나로 옮기고, `make templates-check`와 `build-server.mjs`가 아무것도 쓰기 전에 그 함수를 쓴다. HY-48에 위반이 있으면 아무것도 쓰지 않는다고 적는다. 변경 전에 실패하는 case를 둔다 | `make check` | [!] cause: the build check failed a route template that places the route region `rows` through a dynamic path, so H10.2 was reverted; retry: H10.2-1 is done |
+| H10.2-1 | route template이 동적 경로로 배치하는 route region이 HY-30과 HY-75를 어떻게 만족하는지 정한다(동적 경로로 `{# rows}`를 배치하는 route template은 그것을 정적으로 0번 배치한다). 규칙이나 application template을 고친 뒤, 그 배치의 case와 함께 H10.2를 다시 적용한다 | `make check` | [~] |
 | H10.3 | asset build는 이름에 content hash가 있는 파일을 더하기만 하고, hash 없는 출력(`manifest.json`, `templates.index.json`)은 `--output` directory에 쓴다(HY-34, HY-76). 변경 전에 실패하는 build test를 둔다 | `make check` | [ ] |
 | H10.4 | template T14.2의 bound 값으로 pruning한 root를 document마다 한 번 binding하고 모든 render에 쓴다. 그래서 값은 render 횟수와 상관없이 최대 두 번 검사된다. JSON 응답은 `params`만 다시 binding한다 | `make check` | [ ] |

@@ -83,6 +83,7 @@ Depends on: none. Every checklist uses four task states: `[ ]` waiting, `[~]` in
 | ID | Task | Verification | Status |
 |---|---|---|---|
 | H7.1 | Accept only the four task states in `scripts/check-documents.mjs`, the same in both languages, with the cause and the retry condition of a bypassed task; check it fails on the `[x]` rows; write every done task as `[o]`; state the checklist rules in AGENTS | `make docs-check` | [o] |
+| H7.2 | State in AGENTS the commit message format `type(scope): Subject (#task)` with a body wrapped at 72 characters, that work may be done on `main`, the names of branches and worktrees and their removal after the merge, the removal of test code that cannot be merged, and the classification of a received instruction with the agent memory | `make docs-check` | [o] |
 
 ## Wave 8 — Tailwind CSS in the asset build
 
@@ -110,6 +111,7 @@ Depends on: H10.4 depends on template T14.2. The servers and the builds have fou
 | ID | Task | Verification | Status |
 |---|---|---|---|
 | H10.1 | HY-44: a native object (VAL-19) in the host binding of loader and shared handler values fails with HY-43, and values that binding turns into data model values (PHP `stdClass`, `JsonSerializable`) pass; cases that fail before the change on PHP | `make check` | [o] |
-| H10.2 | Move the checks of `check-templates.mjs` into one function of a manifest and a template directory, used by `make templates-check` and by `build-server.mjs` before it writes anything; HY-48 states that a violation writes nothing; a case that fails before the change | `make check` | [o] |
+| H10.2 | Move the checks of `check-templates.mjs` into one function of a manifest and a template directory, used by `make templates-check` and by `build-server.mjs` before it writes anything; HY-48 states that a violation writes nothing; a case that fails before the change | `make check` | [!] cause: the build check failed a route template that places the route region `rows` through a dynamic path, so H10.2 was reverted; retry: H10.2-1 is done |
+| H10.2-1 | Decide how a route region that a route template places through a dynamic path satisfies HY-30 and HY-75 (a route template that places `{# rows}` through a dynamic path places it 0 times statically), change the rule or the application template, then reapply H10.2 with a case for that placement | `make check` | [~] |
 | H10.3 | The asset build only adds files whose names hold a content hash and writes its unhashed outputs (`manifest.json`, `templates.index.json`) into the directory of `--output` (HY-34, HY-76); a build test that fails before the change | `make check` | [ ] |
 | H10.4 | Bind each pruned root once per document with the bound value of template T14.2 and use it in every render, so a value is checked at most twice whatever the number of renders; JSON responses bind only `params` again | `make check` | [ ] |
