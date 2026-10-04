@@ -138,6 +138,27 @@ describe('App', () => {
     }
   });
 
+  it('fails application objects in shared data and passes plain objects (HY-44)', async () => {
+    class Order {
+      readonly id: number;
+      constructor(id: number) {
+        this.id = id;
+      }
+    }
+    const cases: [string, unknown, number][] = [
+      ['Date', new Date('2026-01-01T00:00:00Z'), 500],
+      ['nested application object', { list: [new Order(1)] }, 500],
+      ['plain object', { a: 1 }, 200],
+    ];
+    for (const [label, value, status] of cases) {
+      const shared = (() => ({ value })) as unknown as Loader<Services>;
+      const app = await fixture.app({ handlers: { ...handlers(), shared } });
+      for (const headers of [{}, { Accept: 'application/json' }]) {
+        expect((await app.handle(Request.from({ method: 'GET', target: '/', headers }), fixture.session)).status, label).toBe(status);
+      }
+    }
+  });
+
   it('rejects input that is not UTF-8 before loaders and actions (HY-42)', async () => {
     const token = await fixture.token();
     expect((await fixture.post('/add', `_csrf=${token}&name=bad%FF`)).status).toBe(400);

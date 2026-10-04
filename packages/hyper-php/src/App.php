@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Polyspec\Hyper;
 
-use Polyspec\Template\Value\Bind;
-
 /**
  * Answers requests with documents, JSON, action redirects and the static shell (HY-8, HY-10 to HY-19, HY-24 to HY-27, HY-58 to HY-60, HY-62).
  *
@@ -391,7 +389,7 @@ final class App
         }
 
         // HY-44: every value that the handlers returned belongs to the data model, also a value that no template reads.
-        Bind::value(['shared' => $shared, 'regions' => $data]);
+        DataModel::check(['shared' => $shared, 'regions' => $data]);
         // HY-73: the page keeps only the paths that the templates of the route read.
         $shared = $this->reads->shared($route['name'], $shared);
         foreach ($data as $name => $regionData) {
@@ -406,7 +404,7 @@ final class App
         if ($json) {
             $response = JsonEncoder::value($this->timezone, $route['name'], $request->params(), $shared, $data, $kept);
             // HY-44: every value must belong to the template data model, for JSON as for a document.
-            Bind::value($response);
+            DataModel::check($response);
 
             $body = JsonEncoder::encode($response);
             $headers = [
@@ -615,7 +613,7 @@ final class App
         } catch (\JsonException) {
             return Response::text(400, 'Bad Request');
         }
-        if (!Kept::inDataModel($value)) {
+        if (!DataModel::contains($value)) {
             return Response::text(400, 'Bad Request');
         }
         $session->keep($name, $path, $value);

@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Polyspec\Hyper;
 
-use Polyspec\Template\Value\Bind;
-
 /** Kept values (HY-37, HY-38). Values outside the template data model are ignored. The JavaScript implementation follows the same rules; both pass conformance/keep.json. */
 final class Kept
 {
@@ -21,7 +19,7 @@ final class Kept
     public static function apply(array $data, array $kept): array
     {
         foreach ($kept as [$path, $value]) {
-            if (self::inDataModel($value)) {
+            if (DataModel::contains($value)) {
                 $applied = false;
                 $data = self::replaceInArray($data, explode('.', $path), $value, $applied);
             }
@@ -42,7 +40,7 @@ final class Kept
         $selected = [];
         foreach ($kept as [$path, $value]) {
             $applied = false;
-            if (self::inDataModel($value)) {
+            if (DataModel::contains($value)) {
                 $data = self::replaceInArray($data, explode('.', $path), $value, $applied);
             }
             if ($applied) {
@@ -112,17 +110,6 @@ final class Kept
         return $container;
     }
 
-    /** Returns true for a value of the template data model; for example, integers outside ±(2^53 − 1) are not. */
-    public static function inDataModel(mixed $value): bool
-    {
-        try {
-            Bind::value($value);
-
-            return true;
-        } catch (\Throwable) {
-            return false;
-        }
-    }
 
     /**
      * Returns true when a kept value has the shape of the data value (HY-38): the same type, the same
