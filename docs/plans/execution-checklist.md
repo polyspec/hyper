@@ -55,3 +55,13 @@ Depends on: Wave 2.
 | H4.2 | PHP server: absent route regions in documents and JSON | `make test-php` | [x] |
 | H4.3 | Browser package and Node server: absent route regions in rendering, held data and embedded data, and the element check | `make test-js`, `make test-node` | [x] |
 | H4.4 | Template check, example (the notice route region is absent when there is no notice), browser tests, parity, feature status and changelog | `make check` | [x] |
+
+## Wave 5 — Load only the templates that rendering reaches
+
+Depends on: none. The browser loads every template that the templates of a route reference, transitively (HY-35). A page that selects views at request time with one route whose dispatch template references every view loads every view template on every page, also the views that it does not render.
+
+| ID | Task | Verification | Status |
+|---|---|---|---|
+| H5.1 | Specify that the browser loads a template when rendering reaches it: it renders, loads every template that the rendering requested and the loader did not hold, and renders again; a template that no rendering reaches is not loaded | `make docs-check` | [ ] |
+| H5.2 | Browser package: render with on-demand loading in region responses, client-side rendering, embedded data, `render` and `set`, with a test that a branch not taken loads no template | `make test-js` | [ ] |
+| H5.3 | Example, browser tests, bundle size, feature status and changelog | `make check` | [ ] |
