@@ -13,6 +13,9 @@
 // the same body after it replaces the session identifier, the masked CSRF token and the ETag value with placeholders.
 // Both servers store posts with the same creation time (BOARD_TIME).
 //
+// Every step prints a line when it starts and its result with the elapsed milliseconds. A request without a response
+// within REQUEST_TIMEOUT_MS fails by the name of its step and ends the check.
+//
 // Usage: node scripts/check-parity.mjs --app examples/board --requests examples/board/tests/parity/requests.json --port 8092
 //          [--extension build/ext/release/libpolyspec_template.dylib] [--node-port 8096]
 
@@ -33,6 +36,8 @@ const SESSION_COOKIE = 'hy-session';
 const BOARD_TIME = '1790856000';
 // Headers that the HTTP server program writes by itself and that the comparison leaves out (HY-55).
 const TRANSPORT_HEADERS = new Set(['date', 'connection', 'keep-alive', 'content-length', 'transfer-encoding', 'host', 'x-powered-by']);
+// The time in which a server answers a request of a step, its whole body included.
+const REQUEST_TIMEOUT_MS = 10_000;
 const { steps } = JSON.parse(readFileSync(values.requests, 'utf8'));
 
 const browser = await loadBrowserCode();
@@ -86,50 +91,26 @@ try {
     return response;
   };
 
-  await send({ method: 'GET', path: '/' }, {});
-  for (const step of steps) {
-    const label = `${step.method} ${step.path}`;
-    if (step.action === 'send') {
-      await send(step, {});
-      continue;
-    }
+  // Every request step prints a line when it starts and its result with the elapsed milliseconds. A step that
+  // throws, such as a request without a response within REQUEST_TIMEOUT_MS, fails by its name and ends the check,
+  // because the later steps depend on the session of the earlier ones.
+  for (const step of [{ action: 'send', method: 'GET', path: '/' }, ...steps]) {
     if (step.action === 'cookie') {
       keepCookie = `hy-keep=${encodeURIComponent(step.value)}`;
       continue;
     }
-    if (step.action === 'status') {
-      const html = await send(step, {});
-      const json = await send(step, { Accept: 'application/json' });
-      const routed = application.router.match(new URL(step.path, php.base).pathname);
-      if (html.status !== step.status || json.status !== step.status) fail(`${label}: statuses ${html.status} and ${json.status}, expected ${step.status}`);
-      console.log(`${failures === 0 ? 'ok' : 'checked'} ${label}: ${html.status}, browser route ${routed?.name ?? 'none'}`);
-      continue;
+    const label = `${step.action} ${step.method} ${step.path}`;
+    console.log(`▶ ${label}`);
+    const started = performance.now();
+    const elapsed = () => `${Math.round(performance.now() - started)} ms`;
+    let result;
+    try {
+      result = await runStep(step, label, send);
+    } catch (error) {
+      fail(`${label}: ${error.message} (${elapsed()})`);
+      break;
     }
-
-    const path = new URL(step.path, php.base).pathname;
-    const html = await send(step, {});
-    const documentJson = await send(step, { Accept: 'application/json' });
-    const regionJson = await send(step, { Accept: 'application/json', 'HX-Request': 'true', 'HX-Current-URL': php.base + step.currentPath });
-    if (html.status !== documentJson.status || html.status !== regionJson.status) {
-      fail(`${label}: statuses ${html.status}, ${documentJson.status}, ${regionJson.status}`);
-    }
-
-    // Every response masks the session token anew (HY-24), so each text has the masked token of its own response
-    // replaced by <csrf> before the comparison.
-    const server = placeholder(html.text, html.token);
-    const rendered = placeholder(browser.renderDocument(application, browser.decodeResponse(application, browser.parseJson(documentJson.text), path)), documentJson.token);
-    if (rendered !== server) fail(`${label}: browser document differs\n--- browser\n${rendered}\n--- server\n${server}`);
-
-    const parts = browser.renderParts(application, browser.decodeResponse(application, browser.parseJson(regionJson.text), path));
-    if (!server.includes(`<title>${parts.title}</title>`)) fail(`${label}: document does not contain the title ${parts.title}`);
-    for (const [name, alone] of parts.regions) {
-      const region = placeholder(alone, regionJson.token);
-      const tag = new RegExp(`<([a-z]+) id="${name}">`).exec(server)?.[1];
-      if (tag === undefined || !server.includes(`<${tag} id="${name}">${region}</${tag}>`)) {
-        fail(`${label}: region ${name} differs\n--- browser\n${region}\n--- server\n${server}`);
-      }
-    }
-    console.log(`${failures === 0 ? 'ok' : 'checked'} ${label}: ${html.status}, route ${parts.route.name}, document ${Buffer.byteLength(rendered)} bytes, regions ${[...parts.regions.keys()].join(', ')}`);
+    console.log(`${failures === 0 ? 'ok' : 'checked'} ${label}: ${result} (${elapsed()})`);
   }
   if (node !== null) console.log(`${failures === 0 ? 'ok' : 'checked'} Node server: ${compared} responses equal the PHP responses`);
 } finally {
@@ -141,6 +122,43 @@ if (failures > 0) {
   process.exit(1);
 }
 
+// Runs a send, status or compare step and returns the text of its result line.
+async function runStep(step, label, send) {
+  if (step.action === 'send') return String((await send(step, {})).status);
+  if (step.action === 'status') {
+    const html = await send(step, {});
+    const json = await send(step, { Accept: 'application/json' });
+    const routed = application.router.match(new URL(step.path, php.base).pathname);
+    if (html.status !== step.status || json.status !== step.status) fail(`${label}: statuses ${html.status} and ${json.status}, expected ${step.status}`);
+    return `${html.status}, browser route ${routed?.name ?? 'none'}`;
+  }
+
+  const path = new URL(step.path, php.base).pathname;
+  const html = await send(step, {});
+  const documentJson = await send(step, { Accept: 'application/json' });
+  const regionJson = await send(step, { Accept: 'application/json', 'HX-Request': 'true', 'HX-Current-URL': php.base + step.currentPath });
+  if (html.status !== documentJson.status || html.status !== regionJson.status) {
+    fail(`${label}: statuses ${html.status}, ${documentJson.status}, ${regionJson.status}`);
+  }
+
+  // Every response masks the session token anew (HY-24), so each text has the masked token of its own response
+  // replaced by <csrf> before the comparison.
+  const server = placeholder(html.text, html.token);
+  const rendered = placeholder(browser.renderDocument(application, browser.decodeResponse(application, browser.parseJson(documentJson.text), path)), documentJson.token);
+  if (rendered !== server) fail(`${label}: browser document differs\n--- browser\n${rendered}\n--- server\n${server}`);
+
+  const parts = browser.renderParts(application, browser.decodeResponse(application, browser.parseJson(regionJson.text), path));
+  if (!server.includes(`<title>${parts.title}</title>`)) fail(`${label}: document does not contain the title ${parts.title}`);
+  for (const [name, alone] of parts.regions) {
+    const region = placeholder(alone, regionJson.token);
+    const tag = new RegExp(`<([a-z]+) id="${name}">`).exec(server)?.[1];
+    if (tag === undefined || !server.includes(`<${tag} id="${name}">${region}</${tag}>`)) {
+      fail(`${label}: region ${name} differs\n--- browser\n${region}\n--- server\n${server}`);
+    }
+  }
+  return `${html.status}, route ${parts.route.name}, document ${Buffer.byteLength(rendered)} bytes, regions ${[...parts.regions.keys()].join(', ')}`;
+}
+
 // A client of one server with its own session cookie and CSRF token.
 function client(base) {
   const state = { base, cookie: '', token: '' };
@@ -150,10 +168,23 @@ function client(base) {
     const body = fields === undefined ? undefined : new URLSearchParams({ _csrf: state.token, ...fields });
     const cookies = [state.cookie, keepCookie].filter((item) => item !== '').join('; ');
     const type = step.contentType === undefined ? {} : { 'Content-Type': step.contentType };
-    const response = await fetch(base + step.path, { method: step.method, headers: { ...headers, ...type, ...(cookies ? { Cookie: cookies } : {}) }, body, redirect: 'manual' });
+    let response;
+    let text;
+    try {
+      response = await fetch(base + step.path, {
+        method: step.method,
+        headers: { ...headers, ...type, ...(cookies ? { Cookie: cookies } : {}) },
+        body,
+        redirect: 'manual',
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      });
+      text = await response.text();
+    } catch (error) {
+      if (error.name === 'TimeoutError') throw new Error(`${step.method} ${step.path} to ${base} got no response within ${REQUEST_TIMEOUT_MS} ms`);
+      throw error;
+    }
     const session = response.headers.getSetCookie().find((item) => item.startsWith(`${SESSION_COOKIE}=`));
     if (session !== undefined) state.cookie = session.split(';')[0];
-    const text = await response.text();
     state.token = /name="_csrf" value="([^"]+)"/.exec(text)?.[1] ?? /"csrf":"([^"]+)"/.exec(text)?.[1] ?? state.token;
     return { status: response.status, headers: response.headers, text, token: state.token };
   };
@@ -228,14 +259,20 @@ async function loadBrowserCode() {
   return import(`data:text/javascript;base64,${code}`);
 }
 
+// Waits until a server accepts connections. A server that accepts the connection and does not answer fails at
+// once.
 async function waitForServer(base) {
+  console.log(`▶ start ${base}`);
+  const started = performance.now();
   for (let attempt = 0; attempt < 50; attempt++) {
     try {
-      await fetch(base + '/missing', { redirect: 'manual' });
+      await fetch(base + '/missing', { redirect: 'manual', signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
+      console.log(`ok start ${base} (${Math.round(performance.now() - started)} ms)`);
       return;
-    } catch {
+    } catch (error) {
+      if (error.name === 'TimeoutError') throw new Error(`start ${base}: GET /missing got no response within ${REQUEST_TIMEOUT_MS} ms`);
       await new Promise((done) => setTimeout(done, 100));
     }
   }
-  throw new Error(`server did not start on ${base}`);
+  throw new Error(`start ${base}: the server did not accept connections within 50 attempts (${Math.round(performance.now() - started)} ms)`);
 }
