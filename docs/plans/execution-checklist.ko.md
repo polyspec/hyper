@@ -124,5 +124,5 @@
 | ID | 작업 | 검증 | 상태 |
 |---|---|---|---|
 | H11.1 | AGENTS의 필수 검사: 커밋 전에는 변경을 소유한 Red test와 Green test, 그리고 `make docs-check`; 작업은 Verification column에 적은 그 작업의 소유 명령으로 `[o]`가 된다; `make check`는 활성 작업이 모두 끝났을 때 한 번 실행한다 | `make docs-check` | [o] |
-| H11.2 | vitest, `node --test`, PHPUnit을 `scripts/run-tests.mjs`와 그 진행 reporter로 실행한다: 모든 test는 시작, 결과, 경과 시간을 출력하고 자기 timeout에서 이름으로 실패한다; `make test-js`, `test-node`, `test-php`, `test-scripts`, `package-check`가 이를 쓴다; runner는 자기 test를 가진다 | `node scripts/run-tests.mjs node -- tests/scripts/run-tests.test.mjs` | [ ] |
+| H11.2 | vitest, `node --test`, PHPUnit을 `scripts/run-tests.mjs`와 그 진행 reporter로 실행한다: 모든 test는 시작, 결과, 경과 시간을 출력하고 자기 timeout에서 이름으로 실패한다; `make test-js`, `test-node`, `test-php`, `test-scripts`, `package-check`가 이를 쓴다; runner는 자기 test를 가진다 | `node scripts/run-tests.mjs node -- tests/scripts/run-tests.test.mjs` | [~] |
 | H11.3 | `scripts/check-parity.mjs`는 모든 요청에 `AbortSignal.timeout`으로 timeout을 주고, step이 시작할 때 줄을 출력하고 결과와 함께 경과 밀리초를 출력하며, server가 응답하지 않으면 step 이름으로 실패한다; 응답하지 않는 server에 대한 test | `node scripts/run-tests.mjs node -- tests/scripts/check-parity.test.mjs` | [ ] |

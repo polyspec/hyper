@@ -39,7 +39,7 @@ package-check: packages node-fixtures ## Install the npm packages into tests/pac
 	rm -rf tests/package-install/node_modules
 	cd tests/package-install && npm install --install-links --no-package-lock --no-audit --no-fund
 	npx tsc -p tests/package-install/tsconfig.json
-	cd tests/package-install && npm test
+	node scripts/run-tests.mjs node --cwd tests/package-install -- package-install.test.ts
 
 server: template ## Build the board server program: its templates and the generated PHP program (HY-48)
 	node scripts/build-server.mjs --manifest $(BOARD)/app/app.json --templates $(BOARD)/templates --output $(BOARD)/build/server --template-dir $(TEMPLATE_DIR) --php-namespace 'Polyspec\Hyper\Examples\Board\Program'
@@ -59,14 +59,16 @@ assets: packages ## Build the board client bundle (SSR) and the single-file stat
 	cp $(BOARD)/public/assets/*.css $(BOARD)/build/csr/assets/
 
 test-js: template ## Run the browser code tests, including the router conformance cases, and the type check
-	cd $(JS_PACKAGE) && npx vitest run && npx tsc --noEmit -p tsconfig.json
+	node scripts/run-tests.mjs vitest --cwd $(JS_PACKAGE)
+	cd $(JS_PACKAGE) && npx tsc --noEmit -p tsconfig.json
 
 test-node: packages node-fixtures ## Run the Node server tests, including the PHP AppTest cases and the JSON conformance cases, and the type check
-	cd $(NODE_PACKAGE) && npx vitest run && npx tsc --noEmit -p tsconfig.json
+	node scripts/run-tests.mjs vitest --cwd $(NODE_PACKAGE)
+	cd $(NODE_PACKAGE) && npx tsc --noEmit -p tsconfig.json
 
 test-php: template server-fixtures ext ## Run the server package tests with the generated program and with the native extension
-	cd $(PHP_PACKAGE) && vendor/bin/phpunit
-	cd $(PHP_PACKAGE) && php -d extension=$(abspath $(EXT)) vendor/bin/phpunit
+	node scripts/run-tests.mjs phpunit --cwd $(PHP_PACKAGE)
+	node scripts/run-tests.mjs phpunit --cwd $(PHP_PACKAGE) --extension $(EXT)
 
 lint: ## Check PHP formatting
 	cd $(PHP_PACKAGE) && vendor/bin/pint --test
@@ -79,7 +81,7 @@ templates-check: ## Check hx- attributes (HC-6) and region placements (HY-3, HY-
 	node scripts/check-templates.mjs --app $(BOARD)
 
 test-scripts: ## Run the tests of the check scripts
-	TEMPLATE_DIR=$(TEMPLATE_DIR) node --test tests/scripts/
+	TEMPLATE_DIR=$(TEMPLATE_DIR) node scripts/run-tests.mjs node -- tests/scripts/
 
 parity: assets server ext ## Compare PHP documents (generated program and native extension) with browser renders of document and region JSON
 	node scripts/check-parity.mjs --app $(BOARD) --requests $(BOARD)/tests/parity/requests.json --port 8092
