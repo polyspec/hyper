@@ -31,7 +31,7 @@
 | route-regions | 자기 로더를 가진 페이지 안의 라우트 영역(HY-30) | implemented | `make test-php`, `make parity` |
 | region-data | 라우트 영역의 내장 데이터, 요청 없이 라우트 영역에서 동작하는 `data`, `render`, `set`, `hy-set`, 데이터 공개 규칙(HY-29 ~ HY-33, HY-36, HY-71) | implemented | `make test-js`, `make e2e` |
 | kept-data | 서버 세션, 쿠키, localStorage, sessionStorage의 유지 경로(HY-37 ~ HY-41) | implemented | `make test-php`, `make test-js`, `make parity`, `make e2e` |
-| template-delivery | 템플릿마다 파일 하나, 라우트별 불러오기(HY-34, HY-35) | implemented | `make test-js`, `make e2e`, `make bundle-size` |
+| template-delivery | 템플릿마다 파일 하나, 렌더가 닿는 템플릿만 불러오기(HY-34, HY-35) | implemented | `make test-js`, `make e2e`, `make bundle-size` |
 | parity | 브라우저의 문서와 영역이 PHP 문서와 바이트 단위로 같음 | implemented | `make parity` |
 | server-parity | 모든 parity 단계에서 Node 서버 응답이 상태, header, body까지 PHP 응답과 같음(HY-55) | implemented | `make server-parity` |
 | ssr | JSON 이동과 JavaScript 없는 동작을 갖춘 서버 렌더 | implemented | `make e2e` |

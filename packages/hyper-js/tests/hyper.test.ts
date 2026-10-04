@@ -127,6 +127,33 @@ describe('template delivery', () => {
     expect(fetched.sort()).toEqual(['/t/hyper/data.tpl', '/t/item.tpl', '/t/layout.tpl', '/t/part.tpl', '/t/side.tpl', '/t/title.tpl']);
   });
 
+  it('loads only the view template that the data selects, in a region response (HY-35)', async () => {
+    const fetched: string[] = [];
+    const { hyper } = setup('', fetched);
+    const ctx = await request(hyper, '/pick', 'http://localhost/pick', '{"env":{"timezone":"Z"},"route":"pick","params":{},"shared":{"title":"T"},"regions":{"content":{"view":"a"}},"kept":{}}');
+    expect(ctx.text).toBe('<title>T - Site</title><p>A</p>');
+    expect(fetched).toContain('/t/pick-a.tpl');
+    expect(fetched).not.toContain('/t/pick-b.tpl');
+  });
+
+  it('loads only the view template that the data selects, in client-side rendering (HY-35)', async () => {
+    const fetched: string[] = [];
+    const page = new FakeDocument();
+    const { hyper } = setup('/api', fetched, new FakeStorage(), page);
+    vi.stubGlobal('fetch', async () => jsonResponse('http://localhost/api/pick', '{"env":{"timezone":"Z"},"route":"pick","params":{},"shared":{"title":"T"},"regions":{"side":{"count":1},"content":{"view":"b"}},"kept":{}}'));
+    await hyper.renderLocation('/pick');
+    expect(page.mounted[0]).toContain('<p>B</p>');
+    expect(fetched).toContain('/t/pick-b.tpl');
+    expect(fetched).not.toContain('/t/pick-a.tpl');
+  });
+
+  it('loads no template when a server-rendered page opens and nothing renders (HY-35)', async () => {
+    const fetched: string[] = [];
+    const { hyper } = setup('', fetched);
+    await hyper.holdEmbedded(listJson, '/list');
+    expect(fetched).toEqual([]);
+  });
+
   it('loads the templates of the route that a redirect reaches (HY-35)', async () => {
     const fetched: string[] = [];
     const { hyper } = setup('', fetched);
@@ -480,11 +507,12 @@ describe('concurrent changes, saves and timeouts', () => {
     const storage = new FakeStorage();
     const { hyper, swaps } = setup('', [], storage);
     await request(hyper, '/list', 'http://localhost/list', listJson);
-    const ensure = hyper.app.templates.ensure.bind(hyper.app.templates);
+    // The change waits in the rendering that loads its templates (HY-35); the first rendering after this point waits.
+    const render = hyper.app.templates.render.bind(hyper.app.templates);
     let release: () => void = () => undefined;
-    hyper.app.templates.ensure = (names) => {
-      hyper.app.templates.ensure = ensure;
-      return new Promise((done) => { release = () => done(ensure(names)); });
+    hyper.app.templates.render = <T>(rendering: () => T): Promise<T> => {
+      hyper.app.templates.render = render;
+      return new Promise((done) => { release = () => done(render(rendering)); });
     };
     const change = hyper.set('rows', 'items.0.open', false);
     // The change starts after the queued calls before it, then waits for its templates.
