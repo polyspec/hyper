@@ -43,6 +43,22 @@
           "template": "panel.tpl"
         }
       ]
+    },
+    {
+      "name": "branch",
+      "path": "/branch",
+      "title": "Branch",
+      "template": "branch.tpl",
+      "regions": [
+        {
+          "name": "direct",
+          "template": "panel.tpl"
+        },
+        {
+          "name": "deep",
+          "template": "panel.tpl"
+        }
+      ]
     }
   ]
 }
