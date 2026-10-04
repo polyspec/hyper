@@ -1,5 +1,7 @@
 // Checks the documents of the repository: every English document has a Korean pair and the
-// reverse, every relative link resolves, and both documents of a pair contain the same code blocks.
+// reverse, every relative link resolves, both documents of a pair contain the same code blocks, and
+// every task of the execution checklist has one of the four task states of AGENTS, the same in both
+// languages.
 //
 // Usage: node scripts/check-documents.mjs
 
@@ -25,6 +27,16 @@ for (const file of files) {
     if (JSON.stringify(english) !== JSON.stringify(korean)) problems.push(`${file}: code blocks differ from ${pair}`);
   }
 }
+
+const CHECKLIST = 'docs/plans/execution-checklist.md';
+const states = (file) => readFileSync(file, 'utf8').split('\n').filter((line) => /^\| H[0-9]+\.[0-9-]+ \|/.test(line)).map((line) => {
+  const cells = line.split('|').slice(1, -1).map((cell) => cell.trim());
+  const state = cells[cells.length - 1];
+  // A bypassed task records its cause and its retry condition.
+  if (!/^\[( |~|o)\]$|^\[!\] cause: .+; retry: .+$/.test(state)) problems.push(`${file}: invalid task state for ${cells[0]}: ${state}`);
+  return [cells[0], state];
+});
+if (JSON.stringify(states(CHECKLIST)) !== JSON.stringify(states(CHECKLIST.replace(/\.md$/, '.ko.md')))) problems.push(`${CHECKLIST}: the task states differ from the Korean checklist`);
 
 for (const problem of problems) console.error(problem);
 console.log(`${files.length} documents, ${problems.length} problem(s)`);
