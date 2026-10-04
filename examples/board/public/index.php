@@ -39,5 +39,5 @@ $app = App::open(
     frameAncestors: is_string($frameAncestors) && $frameAncestors !== '' ? $frameAncestors : "'self'",
 );
 $app->bind(Posts::class, fn (): Posts => new Posts($database, $now));
-$app->bind(Assets::class, fn (): Assets => Assets::fromManifest(__DIR__ . '/../build/manifest.json'));
+$app->bind(Assets::class, fn (): Assets => Assets::fromManifest(__DIR__ . '/assets/manifest.json'));
 $app->run();
