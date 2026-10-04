@@ -38,7 +38,7 @@ const time = process.env.BOARD_TIME ?? '';
 if (time !== '' && !/^[0-9]{1,15}$/.test(time)) throw new Error('BOARD_TIME must be Unix seconds');
 app.bind('posts', () => new Posts(database, time === '' ? () => Math.floor(Date.now() / 1000) : () => Number(time)));
 app.bind('assets', () => {
-  const urls = JSON.parse(readFileSync(join(board, 'public', 'assets', 'manifest.json'), 'utf8')) as Record<string, unknown>;
+  const urls = JSON.parse(readFileSync(join(board, 'build', 'manifest.json'), 'utf8')) as Record<string, unknown>;
   if (typeof urls.hyper !== 'string') throw new Error('the asset manifest has no hyper URL; run make assets');
   return { hyper: urls.hyper };
 });

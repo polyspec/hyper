@@ -1,23 +1,24 @@
 // Prints the sizes of the browser outputs of an application and fails when a gzip size exceeds its
 // limit: the server-side rendering script, the client-side rendering shell and the largest template file.
 //
-// Usage: node scripts/check-bundle-size.mjs --app examples/board --limits config/bundle-size.json
+// Usage: node scripts/check-bundle-size.mjs --app examples/board --output examples/board/build --limits config/bundle-size.json
 
-import { readdirSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseArgs } from 'node:util';
 import { brotliCompressSync, constants, gzipSync } from 'node:zlib';
 
-const { values } = parseArgs({ options: { app: { type: 'string' }, limits: { type: 'string' } } });
-if (!values.app || !values.limits) throw new Error('--app and --limits are required');
-const manifest = JSON.parse(readFileSync(join(values.app, 'public', 'assets', 'manifest.json'), 'utf8'));
+const { values } = parseArgs({ options: { app: { type: 'string' }, output: { type: 'string' }, limits: { type: 'string' } } });
+if (!values.app || !values.output || !values.limits) throw new Error('--app, --output and --limits are required');
+const manifest = JSON.parse(readFileSync(join(values.output, 'manifest.json'), 'utf8'));
 const { limits } = JSON.parse(readFileSync(values.limits, 'utf8'));
-const templatesDir = join(values.app, 'public', 'assets', 'templates');
-const templates = readdirSync(templatesDir).map((name) => join(templatesDir, name));
+// The template files of the build that --output describes; public/assets/templates keeps the files of earlier builds.
+const index = JSON.parse(readFileSync(join(values.output, 'templates.index.json'), 'utf8'));
+const templates = Object.values(index).map(({ url }) => join(values.app, 'public', url));
 const largestTemplate = templates.reduce((largest, file) => (gzipSync(readFileSync(file)).length > gzipSync(readFileSync(largest)).length ? file : largest));
 const files = {
   ssrScript: join(values.app, 'public', manifest.hyper),
-  csrShell: join(values.app, 'dist', 'csr', 'index.html'),
+  csrShell: join(values.output, 'csr', 'index.html'),
   largestTemplate,
 };
 

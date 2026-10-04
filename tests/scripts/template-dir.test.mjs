@@ -49,7 +49,7 @@ test('the template build fails when the named template repository has no build o
 
 test('the asset build and the template build require --template-dir', () => {
   const runs = {
-    'build-assets.mjs': ['--app', 'examples/board', '--api', '/api'],
+    'build-assets.mjs': ['--app', 'examples/board', '--api', '/api', '--output', '/nonexistent'],
     'build-templates.mjs': ['--templates', 'examples/board/templates', '--output', '/nonexistent'],
   };
   for (const [script, options] of Object.entries(runs)) {
