@@ -48,6 +48,7 @@
 
 ### 수정
 
+- `tests/package-install`는 `@polyspec/hyper`의 export `./templates-index`와 그 declaration file을 기대한다(H10.3-1). H10.3이 이 export를 더했지만 package install test는 export `.`만 요구했으므로 `make package-check`가 `exports`의 차이로 실패했다.
 - server build가 출력을 지우거나 쓰기 전에 `templateProblems`(HC-6, HY-3, HY-30, HY-75)로 template을 검사하게 했다(HY-48, H10.2). 이 규칙은 board 예제에서 `make templates-check`만 실행했으므로, `build-server.mjs`로 build한 server program은 규칙을 어기는 template을 제공했다. 첫 시도(H10.2)는 어떤 template도 배치하지 않는 route region을 선언한 manifest의 build도 실패시켰으므로 되돌렸다. script test는 region fixture를 build해 사라진 region의 문제로 실패하고 출력을 남기지 않는지 확인하며, 변경 전에 실패했다.
 - `make templates-check`의 template 규칙이 조건 분기 안의 배치와 include를 보게 했다(HY-3, HY-30, HY-75, H10.2-1). 순회는 원소가 모두 node인 목록만 방문했는데, `{? }`의 분기는 type이 없는 객체이므로, 분기 안에 배치하거나 분기가 include하는 template에 배치한 region을 0번으로 셌다. server build가 쓸 수 있도록 규칙을 `scripts/template-rules.mjs`의 `templateProblems`로 옮겼다(H10.2). region fixture에 분기 안에 배치한 region과 분기 안의 include로 배치한 region을 가진 route를 더했고, 변경 전 검사는 둘 다 없다고 보고했다.
 - PHP server가 shared handler와 loader 값의 application object를 Node처럼 HY-43으로 거부하게 했다(HY-44, H10.1). host binding은 `DateTimeImmutable` 같은 application object를 native object(VAL-19)로 두는데, PHP 검사는 값을 bind만 했으므로 Node가 500을 낼 때 PHP는 200을 냈다. `DataModel::check`는 값을 bind하고 native object가 있으면 실패한다. 문서 검사, JSON 응답 검사, kept 값 검사가 이것을 쓰고, `Kept::inDataModel`은 `DataModel::contains`가 되었다. PHP `stdClass`와 `JsonSerializable`은 binding이 data model 값으로 바꾸므로 여전히 통과한다. 새 PHP case는 변경 전에 실패했고, Node case는 기존 동작을 고정한다.
