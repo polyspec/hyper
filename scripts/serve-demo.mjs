@@ -29,7 +29,7 @@ const children = [
   }),
   spawn(process.execPath, [
     'scripts/serve-edge.mjs',
-    '--root', `${board}/dist/csr`,
+    '--root', `${board}/build/csr`,
     '--compare', `${board}/compare.html`,
     '--port', values.edge,
     '--api-prefix', '/api',
