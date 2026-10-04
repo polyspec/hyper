@@ -8,7 +8,6 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Polyspec\Hyper\App;
 use Polyspec\Hyper\ArraySession;
-use Polyspec\Hyper\Choice;
 use Polyspec\Hyper\ClientRendering;
 use Polyspec\Hyper\Csrf;
 use Polyspec\Hyper\Reply;
@@ -41,7 +40,7 @@ final class ClientTest extends TestCase
      */
     private static function app(Counter $counter, ?ClientRendering $client = null, array $options = []): App
     {
-        $client ??= new ClientRendering(self::SHELL, Json::string(self::conformance()['basePath'] ?? null), fn (Request $request): Choice => new Choice($request->header('Host') === self::conformance()['chosenHost'], null));
+        $client ??= new ClientRendering(self::SHELL, Json::string(self::conformance()['basePath'] ?? null), fn (Request $request): bool => $request->header('Host') === self::conformance()['chosenHost']);
         $app = App::open(...[
             'manifest' => __DIR__ . '/fixtures/app.json',
             'program' => self::PROGRAM,
@@ -143,91 +142,12 @@ final class ClientTest extends TestCase
         ], $reports);
     }
 
-    public function testEveryHandlerOfARequestReadsTheValueOfTheChoice(): void
-    {
-        // HY-62: the selection runs once per request, and its value reaches the shared handler, the loaders and the
-        // action of the request, whether the selection chose the request or not.
-        $selections = 0;
-        $seen = [];
-        $app = App::open(
-            manifest: __DIR__ . '/fixtures/app.json',
-            program: self::PROGRAM,
-            handlers: [
-                'shared' => function (Request $request) use (&$seen): array {
-                    $seen[] = ['shared', $request->selection()];
-
-                    return [];
-                },
-                'regions' => ['side' => function (Request $request) use (&$seen): array {
-                    $seen[] = ['side', $request->selection()];
-
-                    return ['count' => 0, 'note' => null];
-                }],
-                'routes' => [
-                    'item' => ['load' => function (Request $request) use (&$seen): array {
-                        $seen[] = ['item', $request->selection()];
-
-                        return ['id' => $request->param('id')];
-                    }],
-                    'add' => ['post' => function (Request $request) use (&$seen): Result {
-                        $seen[] = ['add', $request->selection()];
-
-                        return Result::redirect('/');
-                    }],
-                ],
-            ],
-            timezone: '+09:00',
-            clientRendering: new ClientRendering(self::SHELL, '/_props', function (Request $request) use (&$selections): Choice {
-                $selections++;
-                $host = (string) $request->header('Host');
-
-                return new Choice($host === 'client.test', ['host' => $host]);
-            }),
-        );
-        $app->handle(new Request('GET', '/items/7', ['Host' => 'server.test']), new ArraySession());
-        self::assertSame(1, $selections);
-        self::assertSame([['shared', ['host' => 'server.test']], ['side', ['host' => 'server.test']], ['item', ['host' => 'server.test']]], $seen);
-        $seen = [];
-        $app->handle(new Request('GET', '/_props/items/7', ['Host' => 'client.test', 'Accept' => 'application/json']), new ArraySession());
-        self::assertSame(2, $selections);
-        self::assertSame([['shared', ['host' => 'client.test']], ['side', ['host' => 'client.test']], ['item', ['host' => 'client.test']]], $seen);
-        $seen = [];
-        $session = new ArraySession();
-        $session->set('_hyper_csrf', self::TOKEN);
-        $form = http_build_query(['_csrf' => Csrf::masked(self::TOKEN), 'name' => 'x']);
-        $response = $app->handle(new Request('POST', '/add', ['Host' => 'server.test', 'Content-Type' => 'application/x-www-form-urlencoded'], '', $form), $session);
-        self::assertSame(303, $response->status);
-        self::assertSame(3, $selections);
-        self::assertSame([['add', ['host' => 'server.test']]], $seen);
-    }
-
-    public function testARequestOfAnApplicationWithoutTheDeclarationHasTheValueNull(): void
-    {
-        // HY-62
-        $seen = [];
-        $app = App::open(
-            manifest: __DIR__ . '/fixtures/app.json',
-            program: self::PROGRAM,
-            handlers: ['routes' => [
-                'item' => ['load' => function (Request $request) use (&$seen): array {
-                    $seen[] = $request->selection();
-
-                    return ['id' => $request->param('id')];
-                }],
-                'add' => ['post' => fn (): Result => Result::redirect('/')],
-            ]],
-            timezone: '+09:00',
-        );
-        $app->handle(new Request('GET', '/items/7'), new ArraySession());
-        self::assertSame([null], $seen);
-    }
-
     public function testASelectionThatFailsAnswers500(): void
     {
         // HY-43, HY-62
         $logged = ini_set('error_log', '/dev/null');
         try {
-            foreach ([fn (): string => 'csr', fn (): bool => true, fn (): Choice => throw new \RuntimeException('selection')] as $selects) {
+            foreach ([fn (): string => 'csr', fn (): bool => throw new \RuntimeException('selection')] as $selects) {
                 $app = self::app(new Counter(), new ClientRendering(self::SHELL, '/_props', $selects));
                 $response = $app->handle(new Request('GET', '/'), new ArraySession());
                 self::assertSame(500, $response->status);
@@ -241,7 +161,7 @@ final class ClientTest extends TestCase
     public function testAnInvalidDeclarationFailsWhenTheApplicationOpens(): void
     {
         // HY-62
-        $selects = fn (): Choice => new Choice(true, null);
+        $selects = fn (): bool => true;
         $invalid = [
             'relative shell' => new ClientRendering('tests/fixtures/shell/index.html', '/_props', $selects),
             'missing shell' => new ClientRendering(__DIR__ . '/fixtures/shell/missing.html', '/_props', $selects),

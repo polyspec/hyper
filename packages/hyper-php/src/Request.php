@@ -35,7 +35,6 @@ final class Request
         private readonly array $params = [],
         private readonly array $cookies = [],
         public readonly bool $https = false,
-        private readonly mixed $selection = null,
     ) {
         $this->headers = array_change_key_case($headers, CASE_LOWER);
         $this->queryFields = Fields::parse($query);
@@ -45,7 +44,7 @@ final class Request
     /** Returns a copy that carries the flash values and the CSRF token of the session. */
     public function withSession(Flash $flash, string $csrfToken): self
     {
-        return new self($this->method, $this->path, $this->headers, $this->query, $this->body, $flash->values, $csrfToken, $this->params, $this->cookies, $this->https, $this->selection);
+        return new self($this->method, $this->path, $this->headers, $this->query, $this->body, $flash->values, $csrfToken, $this->params, $this->cookies, $this->https);
     }
 
     /**
@@ -55,22 +54,7 @@ final class Request
      */
     public function withRoute(string $path, array $params): self
     {
-        return new self($this->method, $path, $this->headers, $this->query, $this->body, $this->flash, $this->csrfToken, $params, $this->cookies, $this->https, $this->selection);
-    }
-
-    /** Returns a copy that carries the value of the choice of the client rendering selection (HY-62). */
-    public function withSelection(mixed $value): self
-    {
-        return new self($this->method, $this->path, $this->headers, $this->query, $this->body, $this->flash, $this->csrfToken, $this->params, $this->cookies, $this->https, $value);
-    }
-
-    /**
-     * Returns the value of the choice that the client rendering selection returned for this request, or null for an
-     * application without client rendering (HY-62).
-     */
-    public function selection(): mixed
-    {
-        return $this->selection;
+        return new self($this->method, $path, $this->headers, $this->query, $this->body, $this->flash, $this->csrfToken, $params, $this->cookies, $this->https);
     }
 
     /**

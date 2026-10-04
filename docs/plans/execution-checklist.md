@@ -93,12 +93,3 @@ Depends on: wave 6. Templates that style pages with Tailwind CSS use utility cla
 | H8.1 | Specify HY-77: `--tailwind <source>=<output>` compiles the source stylesheet of the application with the theme and the utilities of the latest stable Tailwind CSS, generating the utilities that the templates and the client code use, and writes the rules of the source in the cascade layer `components` | `make docs-check` | [o] |
 | H8.2 | Asset build: the option, with a build test that fails before the change; Tailwind CSS as a dependency; documents and changelog | `make check` | [o] |
 | H8.2-1 | Compile the Tailwind stylesheet before the static deployment copies the stylesheets: the build wrote the output after the copy, so `dist/csr/assets/` missed the output of a first build and held the output of the earlier build after a later one | `make check` | [o] |
-
-## Wave 9 — The value of the client rendering selection reaches the handlers
-
-Depends on: none. The selection of HY-62 returns only `true` or `false`, so an application whose selection reads stored data, such as the service of the `Host` header, reads the same data again in its handlers, once in the selection and once more in a handler of the same request. The selection returns a choice with a value, and every handler of the request reads that value from its request.
-
-| ID | Task | Verification | Status |
-|---|---|---|---|
-| H9.1 | Specify in HY-62: the selection returns a choice, whether the request is of a client-rendered page and a value; every loader and action of the request reads the value from its request, and a request of an application without the declaration has the value null | `make docs-check` | [~] |
-| H9.2 | PHP and Node servers: `Choice`, `Request::selection()` and `request.selection()`, with tests that fail before the change; documents, feature status and changelog | `make check` | [~] |

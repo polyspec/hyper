@@ -29,8 +29,6 @@ interface State {
   params: Record<string, string>;
   flash: Map<string, Value>;
   csrfToken: string;
-  // The value of the choice of the client rendering selection (HY-62).
-  selection: unknown;
 }
 
 export class Request {
@@ -64,7 +62,6 @@ export class Request {
       params: {},
       flash: new Map(),
       csrfToken: '',
-      selection: null,
     });
   }
 
@@ -100,17 +97,6 @@ export class Request {
   // Returns a copy with the routed path (base path removed) and the route parameters.
   withRoute(path: string, params: Record<string, string>): Request {
     return new Request({ ...this.state, path, params });
-  }
-
-  // Returns a copy that holds the value of the choice of the client rendering selection (HY-62).
-  withSelection(value: unknown): Request {
-    return new Request({ ...this.state, selection: value });
-  }
-
-  // Returns the value of the choice that the client rendering selection returned for this request, or null for an
-  // application without client rendering (HY-62).
-  selection(): unknown {
-    return this.state.selection;
   }
 
   // Returns the route parameters.

@@ -45,7 +45,7 @@ PHP는 기본 경로 없이 실행한다. 응답에는 `Vary: Accept, HX-Request
 
 ## 두 형태를 한 서버로
 
-PHP나 Node 서버 하나가 한 매니페스트의 서버 렌더 페이지와 클라이언트 렌더 페이지를 같은 handler로 응답할 수 있다(HY-62). 애플리케이션은 열 때 클라이언트 렌더를 선언한다. PHP에서는 `App::open(clientRendering: new ClientRendering(shell: '/srv/app/dist/csr/index.html', basePath: '/_props', selects: fn (Request $request): Choice => new Choice(chosen: ..., value: ...)))`, Node에서는 `App.open`의 `clientRendering` 옵션 `{ shell, basePath, selects }`다. 선택은 예를 들어 `Host` header로 클라이언트 렌더 요청을 고르고, host에 저장된 service 같은 그 값은 PHP의 `$request->selection()`과 Node의 `request.selection()`으로 요청의 모든 loader와 action에 전달되므로 handler가 그 값을 다시 읽지 않는다. 셸이 데이터 기본 경로를 선언하도록 `scripts/build-assets.mjs --api /_props`로 셸을 build한다. 그렇지 않으면 애플리케이션 열기가 실패한다.
+PHP나 Node 서버 하나가 한 매니페스트의 서버 렌더 페이지와 클라이언트 렌더 페이지를 같은 handler로 응답할 수 있다(HY-62). 애플리케이션은 열 때 클라이언트 렌더를 선언한다. PHP에서는 `App::open(clientRendering: new ClientRendering(shell: '/srv/app/dist/csr/index.html', basePath: '/_props', selects: fn (Request $request): bool => ...))`, Node에서는 `App.open`의 `clientRendering` 옵션 `{ shell, basePath, selects }`다. 선택은 예를 들어 `Host` header로 클라이언트 렌더 요청을 고른다. 셸이 데이터 기본 경로를 선언하도록 `scripts/build-assets.mjs --api /_props`로 셸을 build한다. 그렇지 않으면 애플리케이션 열기가 실패한다.
 
 | 선택이 고른 페이지의 요청 | 응답 |
 |---|---|
