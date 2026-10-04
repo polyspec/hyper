@@ -100,5 +100,5 @@ Depends on: none. The selection of HY-62 returns only `true` or `false`, so an a
 
 | ID | Task | Verification | Status |
 |---|---|---|---|
-| H9.1 | Specify in HY-62: the selection returns a choice, whether the request is of a client-rendered page and a value; every loader and action of the request reads the value from its request, and a request of an application without the declaration has the value null | `make docs-check` | [o] |
-| H9.2 | PHP and Node servers: `Choice`, `Request::selection()` and `request.selection()`, with tests that fail before the change; documents, feature status and changelog | `make check` | [o] |
+| H9.1 | Specify in HY-62: the selection returns a choice, whether the request is of a client-rendered page and a value; every loader and action of the request reads the value from its request, and a request of an application without the declaration has the value null | `make docs-check` | [~] |
+| H9.2 | PHP and Node servers: `Choice`, `Request::selection()` and `request.selection()`, with tests that fail before the change; documents, feature status and changelog | `make check` | [~] |
