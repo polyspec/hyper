@@ -62,6 +62,6 @@ Depends on: none. The browser loads every template that the templates of a route
 
 | ID | Task | Verification | Status |
 |---|---|---|---|
-| H5.1 | Specify that the browser loads a template when rendering reaches it: it renders, loads every template that the rendering requested and the loader did not hold, and renders again; a template that no rendering reaches is not loaded | `make docs-check` | [ ] |
-| H5.2 | Browser package: render with on-demand loading in region responses, client-side rendering, embedded data, `render` and `set`, with a test that a branch not taken loads no template | `make test-js` | [ ] |
-| H5.3 | Example, browser tests, bundle size, feature status and changelog | `make check` | [ ] |
+| H5.1 | Specify that the browser loads a template when rendering reaches it: it renders, loads every template that the rendering requested and the loader did not hold, and renders again; a template that no rendering reaches is not loaded | `make docs-check` | [x] |
+| H5.2 | Browser package: render with on-demand loading in region responses, client-side rendering, embedded data, `render` and `set`, with a test that a branch not taken loads no template | `make test-js` | [x] |
+| H5.3 | Example, browser tests, bundle size, feature status and changelog | `make check` | [x] |
