@@ -31,6 +31,9 @@
 ## Changes and history
 
 - Write commit messages, comments, documents and translations in direct language: name the action, state the subject and the object, explain a cause in one sentence, and do not use figurative or colloquial wording. Provide the same information in English and Korean.
+- A commit message is written in English as `type(scope): Subject (#task)`, a blank line, then a body that states what changed and why, wrapped at 72 characters. The type is one of `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`. The subject has at most 50 characters, starts with a capital letter, is imperative and ends without a period.
+- Work may be done on `main` directly. A branch or worktree, used for an agent or when the situation needs one, is named `{type}/{shortname}-{task id}` and `{project}-{shortname}-{task id}`, and is removed as soon as it is merged into `main`.
+- Test code that cannot be merged into `main` is removed before the commit, or cherry-picked when it is worth keeping. When it cannot be removed at once, a checklist sub-item records it with its removal condition.
 
 ## Required checks
 
@@ -46,5 +49,5 @@
 - A new problem gets a new task. A problem related to a task that is `[o]` gets a sub-item with the next derived ID (`H5.2-1`, `H5.2-2`) that goes through `[~]` and `[o]`; the `[o]` task keeps its state.
 - Independent tasks may run in parallel, but finishing a task in progress comes before starting a new one: the number of `[o]` tasks grows, not the number of `[~]` tasks.
 - Uncommitted changes never span more than one task. When a task becomes `[o]`, its changelog entry and its commit are made in the same unit of work.
-- A received instruction is classified first: a task of the checklist, a rule of this file, or an answer only. Unless the instruction states that it is urgent, record it as a task with its priority and continue the task in progress. Rules belong in this file without duplication, never in the checklist or the changelog.
+- A received instruction is classified first: a task of the checklist, a rule of this file, a note of the agent memory, or an answer only. The agent memory holds only what the requester and the agent need between sessions; what the project must keep goes into the repository (documents, comments, commit messages). Unless the instruction states that it is urgent, record it as a task with its priority and continue the task in progress. Rules belong in this file without duplication, never in the checklist or the changelog.
 - Korean documents write technical terms in English and only the surrounding text in Korean.
