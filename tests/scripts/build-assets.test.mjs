@@ -10,8 +10,8 @@ import { test } from 'node:test';
 
 const templateDir = resolve('..', 'template');
 
-function buildAssets(app) {
-  return spawnSync(process.execPath, ['scripts/build-assets.mjs', '--app', app, '--api', '/api', '--template-dir', templateDir], { encoding: 'utf8' });
+function buildAssets(app, ...options) {
+  return spawnSync(process.execPath, ['scripts/build-assets.mjs', '--app', app, '--api', '/api', '--template-dir', templateDir, ...options], { encoding: 'utf8' });
 }
 
 test('rejects an invalid manifest and writes nothing', () => {
@@ -54,6 +54,32 @@ test('writes the entry, a chunk for code that the entry imports with import(), t
     assert.equal(scripts().length, 2);
     assert.ok(!scripts().includes(chunk));
     assert.deepEqual(readdirSync(join(app, 'dist', 'csr', 'assets')).filter((name) => name.endsWith('.js')).sort(), scripts().filter((name) => name.startsWith('hyper-chunk-')));
+  } finally {
+    rmSync(app, { recursive: true, force: true });
+  }
+});
+
+test('compiles a stylesheet with the Tailwind utilities that the templates use (HY-77)', () => {
+  const app = mkdtempSync(join(tmpdir(), 'hyper-tailwind-'));
+  try {
+    cpSync('tests/scripts/fixtures/chunks', app, { recursive: true });
+    writeFileSync(join(app, 'templates', 'home.tpl'), '<p class="md:flex gap-4">home</p>\n');
+    writeFileSync(join(app, 'styles.css'), '.home {\n  color: #123456;\n}\n');
+    const result = buildAssets(app, '--tailwind', 'styles.css=public/assets/app.css');
+    assert.equal(result.status, 0, result.stderr);
+    const css = readFileSync(join(app, 'public', 'assets', 'app.css'), 'utf8');
+    assert.match(css, /^@layer theme, base, components, utilities;/m);
+    // The utilities that a template uses, and no utility that no file uses.
+    assert.ok(css.includes('.md\\:flex'), css);
+    assert.ok(css.includes('.gap-4'), css);
+    assert.ok(!css.includes('.grid-cols-3'), css);
+    // The rules of the source lie unchanged in the layer components, and no rule of the layer base exists.
+    assert.match(css, /@layer components\s*{\s*\.home\s*{\s*color: #123456;?\s*}\s*}/);
+    assert.doesNotMatch(css, /@layer base\s*{/);
+    // A source that cannot be read fails the build.
+    const missing = buildAssets(app, '--tailwind', 'missing.css=public/assets/app.css');
+    assert.notEqual(missing.status, 0);
+    assert.match(missing.stderr, /missing\.css/);
   } finally {
     rmSync(app, { recursive: true, force: true });
   }

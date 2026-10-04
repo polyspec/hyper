@@ -83,3 +83,12 @@ Depends on: none. Every checklist uses four task states: `[ ]` waiting, `[~]` in
 | ID | Task | Verification | Status |
 |---|---|---|---|
 | H7.1 | Accept only the four task states in `scripts/check-documents.mjs`, the same in both languages, with the cause and the retry condition of a bypassed task; check it fails on the `[x]` rows; write every done task as `[o]`; state the checklist rules in AGENTS | `make docs-check` | [o] |
+
+## Wave 8 — Tailwind CSS in the asset build
+
+Depends on: wave 6. Templates that style pages with Tailwind CSS use utility classes, and the asset build has no step that compiles a stylesheet with the Tailwind classes that the templates use.
+
+| ID | Task | Verification | Status |
+|---|---|---|---|
+| H8.1 | Specify HY-77: `--tailwind <source>=<output>` compiles the source stylesheet of the application with the theme and the utilities of the latest stable Tailwind CSS, generating the utilities that the templates and the client code use, and writes the rules of the source in the cascade layer `components` | `make docs-check` | [ ] |
+| H8.2 | Asset build: the option, with a build test that fails before the change; Tailwind CSS as a dependency; documents and changelog | `make check` | [ ] |
