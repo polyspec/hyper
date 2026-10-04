@@ -78,7 +78,7 @@ templates-check: ## Check hx- attributes (HC-6) and region placements (HY-3, HY-
 	node scripts/check-templates.mjs --app $(BOARD)
 
 test-scripts: ## Run the tests of the check scripts
-	TEMPLATE_DIR=$(TEMPLATE_DIR) node --test tests/scripts/
+	node --test tests/scripts/
 
 parity: assets server ext ## Compare PHP documents (generated program and native extension) with browser renders of document and region JSON
 	node scripts/check-parity.mjs --app $(BOARD) --requests $(BOARD)/tests/parity/requests.json --port 8092
