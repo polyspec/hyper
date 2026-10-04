@@ -247,6 +247,10 @@
   - 에셋 빌드는 애플리케이션이 이름을 정하는 파일을 쓰지 않는다. 템플릿 파일과 색인(HY-34), 진입 파일, 조각 파일, 진입 파일의 URL을 유일한 멤버 `hyper`로 담은 `public/assets/manifest.json`, 정적 셸을 쓴다. 애플리케이션은 자기 스타일시트를 직접 두고 링크한다.
   - 정적 셸은 `<meta name="hyper-api">`와 인라인한 진입 파일을 담고 스타일시트는 담지 않는다. 브라우저는 페이지를 보이기 전에 렌더한 레이아웃의 스타일시트 링크를 적용하기 때문이다(HY-22, HY-64).
   - `tests/scripts/build-assets.test.mjs`는 진입 파일이 `import()`로 모듈을 불러오는 애플리케이션을 빌드한다.
+- **HY-77** 옵션 `--tailwind <source>=<output>`이 application의 stylesheet를 가리키면 asset build는 그것을 Tailwind CSS로 compile한다. 두 경로는 application directory 기준 상대 경로다.
+  - output은 cascade layer `theme`, `base`, `components`, `utilities`를 이 순서로 선언하고, 최신 stable Tailwind CSS의 theme 변수와 `templates/`와 `client/` 아래 file이 쓰는 utility class를 담으며, source의 rule을 바꾸지 않고 layer `components`에 담는다. 그래서 utility class가 그 rule보다 우선한다.
+  - output은 layer `base`의 rule을 담지 않는다. 그래서 element는 Tailwind CSS 없이와 같이 application의 rule과 browser가 주는 모양을 가진다.
+  - build는 output을 다른 output과 함께 쓰고, source를 읽을 수 없거나 Tailwind CSS가 거부하면 실패한다. `tests/scripts/build-assets.test.mjs`는 template이 utility class를 쓰는 application을 build한다.
 
 ## 유지 데이터
 

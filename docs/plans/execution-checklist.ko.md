@@ -83,3 +83,12 @@
 | ID | 작업 | 검증 | 상태 |
 |---|---|---|---|
 | H7.1 | `scripts/check-documents.mjs`가 네 가지 작업 상태만, 두 언어에서 같게 받고, 일시 우회 작업은 원인과 재시도 조건을 담게 한다. `[x]` 행에서 실패하는지 확인한다. 모든 완료 작업을 `[o]`로 쓴다. AGENTS에 checklist 규칙을 적는다 | `make docs-check` | [o] |
+
+## 웨이브 8 — asset build의 Tailwind CSS
+
+의존: 웨이브 6. Tailwind CSS로 page를 꾸미는 template은 utility class를 쓰는데, asset build에는 template이 쓰는 Tailwind class로 stylesheet를 compile하는 단계가 없다.
+
+| ID | 작업 | 검증 | 상태 |
+|---|---|---|---|
+| H8.1 | HY-77을 명세한다. `--tailwind <source>=<output>`은 application의 source stylesheet를 최신 stable Tailwind CSS의 theme과 utility로 compile하여, template과 client code가 쓰는 utility를 생성하고 source의 rule을 cascade layer `components`에 쓴다 | `make docs-check` | [ ] |
+| H8.2 | asset build: 이 option과 변경 전에 실패하는 build test, dependency로서의 Tailwind CSS, 문서와 changelog | `make check` | [ ] |

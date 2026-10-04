@@ -6,6 +6,9 @@
 //   public/assets/hyper-chunk-<hash>.js         one chunk file per code that the entry imports with import() only,
 //                                                which the browser loads by its absolute URL when the code first runs
 //   public/assets/manifest.json                 the URL of the entry, which the server passes to the layout
+//   <output> of --tailwind <source>=<output>     the source stylesheet compiled with the Tailwind theme and the
+//                                                utilities that templates/ and client/ use, its rules in the
+//                                                layer components (HY-77)
 //   dist/csr/                                   the static deployment for client-side rendering: index.html with the
 //                                                entry inlined and no stylesheet, assets/templates/ with the template
 //                                                files, the chunk files, and every .css file directly in
@@ -17,13 +20,16 @@
 // Usage: node scripts/build-assets.mjs --app examples/board --api /api --template-dir ../template
 
 import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { basename, join } from 'node:path';
+import { basename, dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { compile } from '@tailwindcss/node';
+import { Scanner } from '@tailwindcss/oxide';
 import { parseArgs } from 'node:util';
 import { build } from 'esbuild';
 import { copyDirectory, copyFile } from './output-files.mjs';
 import { loadPackage, sha256, templatePlugin, writeTemplateFiles } from './template-files.mjs';
 
-const { values } = parseArgs({ options: { app: { type: 'string' }, api: { type: 'string' }, 'template-dir': { type: 'string' } } });
+const { values } = parseArgs({ options: { app: { type: 'string' }, api: { type: 'string' }, 'template-dir': { type: 'string' }, tailwind: { type: 'string' } } });
 if (!values.app || !values.api || !values['template-dir']) throw new Error('--app, --api and --template-dir are required');
 const templateDir = values['template-dir'];
 const app = values.app;
@@ -86,6 +92,31 @@ writeFileSync(join(csrDir, 'index.html'), shell);
 copyDirectory(templateFilesDir, join(csrDir, 'assets', 'templates'));
 for (const name of readdirSync(assetsDir)) {
   if (name.endsWith('.css') || name.startsWith('hyper-chunk-')) copyFile(join(assetsDir, name), join(csrDir, 'assets', name));
+}
+
+if (values.tailwind !== undefined) {
+  const [source, output, ...rest] = values.tailwind.split('=');
+  if (!source || !output || rest.length > 0) throw new Error(`--tailwind ${values.tailwind} is not <source>=<output>`);
+  const css = await tailwind(readFileSync(join(app, source), 'utf8'));
+  mkdirSync(dirname(join(app, output)), { recursive: true });
+  writeFileSync(join(app, output), css);
+}
+
+// Compiles the rules of an application stylesheet with the theme and the utilities of Tailwind CSS that the
+// templates and the client code use; the rules lie in the layer components and no rule of the layer base exists
+// (HY-77). Tailwind CSS resolves from the dependencies of this repository.
+async function tailwind(rules) {
+  const input = [
+    '@layer theme, base, components, utilities;',
+    '@import "tailwindcss/theme.css" layer(theme);',
+    '@import "tailwindcss/utilities.css" layer(utilities);',
+    `@source "${resolve(templatesDir)}";`,
+    `@source "${resolve(app, 'client')}";`,
+    `@layer components {\n${rules.trimEnd()}\n}`,
+  ].join('\n');
+  const compiler = await compile(input, { base: dirname(dirname(fileURLToPath(import.meta.url))), onDependency: () => {} });
+  const candidates = new Scanner({ sources: compiler.sources }).scan();
+  return compiler.build(candidates);
 }
 
 console.log(`templates ${Object.keys(index).length}, ${entry.name}, ${scripts.length - 1} chunks, dist/csr/index.html ${Buffer.byteLength(shell)} bytes`);
