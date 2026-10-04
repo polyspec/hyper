@@ -50,16 +50,22 @@ export interface ClientRendering {
   shell: string;
   // The data base path, such as /_props (HY-8).
   basePath: string;
-  // Returns true for a request of a client-rendered page, for example by its Host header, or a promise of the
-  // result, which the server awaits.
-  selects: (request: Request) => boolean | Promise<boolean>;
+  // Returns the choice of a request, for example by its Host header, or a promise of it, which the server awaits.
+  selects: (request: Request) => Choice | Promise<Choice>;
+}
+
+// The result of the selection of a client rendering (HY-62): whether the request is of a client-rendered page, and a
+// value that every loader and action of the request reads with request.selection(); the value is not undefined.
+export interface Choice {
+  chosen: boolean;
+  value: unknown;
 }
 
 // A checked client rendering with the bytes of its shell.
 interface Client {
   basePath: string;
   shell: string;
-  selects: (request: Request) => boolean | Promise<boolean>;
+  selects: (request: Request) => Choice | Promise<Choice>;
 }
 
 export interface AppOptions<S extends object> {
@@ -251,11 +257,13 @@ export class App<S extends object = Record<string, never>> {
   }
 
   // Answers a request; the loaders and actions of a routed request receive `reply` (HY-52, HY-60).
-  private async answer(request: Request, store: SessionStore, reply: Reply, signal: AbortSignal | undefined): Promise<Response> {
-    if (request.bodySize() > this.bodyLimit) return Response.text(413, 'Content Too Large');
-    if (!request.validInput()) return Response.text(400, 'Bad Request');
-    const client = await this.chosen(request);
+  private async answer(received: Request, store: SessionStore, reply: Reply, signal: AbortSignal | undefined): Promise<Response> {
+    if (received.bodySize() > this.bodyLimit) return Response.text(413, 'Content Too Large');
+    if (!received.validInput()) return Response.text(400, 'Bad Request');
+    const choice = await this.choice(received);
     stopClosed(signal);
+    const client = choice?.chosen === true ? this.client : null;
+    const request = received.withSelection(choice === null ? null : choice.value);
     const basePath = client?.basePath ?? this.basePath;
     const path = stripBasePath(request.path(), basePath);
     if (client !== null && path === null) return this.shell(request, client);
@@ -276,12 +284,14 @@ export class App<S extends object = Record<string, never>> {
     return response.withCookies(reply, this.https || request.https);
   }
 
-  // Returns the client rendering when its selection chooses the request, and null otherwise (HY-62).
-  private async chosen(request: Request): Promise<Client | null> {
+  // Returns the choice of the client rendering selection for the request, or null without client rendering (HY-62).
+  private async choice(request: Request): Promise<Choice | null> {
     if (this.client === null) return null;
-    const chosen: unknown = await this.client.selects(request);
-    if (typeof chosen !== 'boolean') throw new Error('hyper: the selection of the client rendering did not return a boolean');
-    return chosen ? this.client : null;
+    const choice: unknown = await this.client.selects(request);
+    if (typeof choice !== 'object' || choice === null || typeof (choice as { chosen?: unknown }).chosen !== 'boolean' || (choice as { value?: unknown }).value === undefined) {
+      throw new Error('hyper: the selection of the client rendering did not return a choice');
+    }
+    return choice as Choice;
   }
 
   // Answers a client-rendered request outside the data base path: the static shell for a page (HY-62).

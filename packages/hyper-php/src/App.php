@@ -222,7 +222,9 @@ final class App
         if (!$request->validInput()) {
             return Response::text(400, 'Bad Request');
         }
-        $client = $this->chosen($request);
+        $choice = $this->choice($request);
+        $client = $choice?->chosen === true ? $this->client : null;
+        $request = $request->withSelection($choice?->value);
         $basePath = $client === null ? $this->basePath : $client->basePath;
         $path = Router::stripBasePath($request->path, $basePath);
         if ($client !== null && $path === null) {
@@ -253,18 +255,18 @@ final class App
         return $this->routed($request, $route, $handler, $session, $flash, $reply, $basePath)->withCookies($reply, $this->https || $request->https);
     }
 
-    /** Returns the client rendering when its selection chooses the request, and null otherwise (HY-62). */
-    private function chosen(Request $request): ?ClientRendering
+    /** Returns the choice of the client rendering selection for the request, or null without client rendering (HY-62). */
+    private function choice(Request $request): ?Choice
     {
         if ($this->client === null) {
             return null;
         }
-        $chosen = ($this->client->selects)($request);
-        if (!is_bool($chosen)) {
-            throw new \LogicException('the selection of the client rendering did not return a boolean');
+        $choice = ($this->client->selects)($request);
+        if (!$choice instanceof Choice) {
+            throw new \LogicException('the selection of the client rendering did not return a Choice');
         }
 
-        return $chosen ? $this->client : null;
+        return $choice;
     }
 
     /** Answers a client-rendered request outside the data base path: the static shell for a page (HY-62). */
