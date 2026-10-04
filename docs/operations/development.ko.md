@@ -102,12 +102,12 @@ BOARD_DB=$PWD/examples/board/var/node.db BOARD_SESSIONS=$PWD/examples/board/var/
 
 ## 측정한 크기
 
-2026-10-04에 `make bundle-size`로 측정했다(htmx 4.0.0, esbuild 0.28.2, 게시판 템플릿 10개와 `hyper/data.tpl`).
+2026-10-05에 `make bundle-size`로 측정했다(htmx 4.0.0, esbuild 0.28.2, 게시판 템플릿 10개와 `hyper/data.tpl`).
 
 | 출력 | 원본 바이트 | gzip 바이트 | brotli 바이트 | gzip 상한 |
 |---|---:|---:|---:|---:|
-| SSR 스크립트 `hyper-<hash>.js` | 98,259 | 32,639 | 29,125 | 32,700 |
-| CSR 셸 `build/csr/index.html` | 98,498 | 32,782 | 29,220 | 33,200 |
+| SSR 스크립트 `hyper-<hash>.js` | 99,580 | 33,080 | 29,549 | 33,500 |
+| CSR 셸 `build/csr/index.html` | 99,819 | 33,224 | 29,551 | 33,600 |
 | 가장 큰 템플릿 파일(`board/rows.tpl`) | 5,583 | 1,334 | 1,084 | 4,096 |
 | 템플릿 파일 11개 합계 | | 5,818 | | |
 

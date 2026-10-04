@@ -92,12 +92,12 @@ The build replaces earlier outputs, so repeated builds leave one file per output
 
 ## Measured sizes
 
-Measured on 2026-10-04 with `make bundle-size` (htmx 4.0.0, esbuild 0.28.2, ten board templates and `hyper/data.tpl`):
+Measured on 2026-10-05 with `make bundle-size` (htmx 4.0.0, esbuild 0.28.2, ten board templates and `hyper/data.tpl`):
 
 | Output | Raw bytes | gzip bytes | brotli bytes | gzip limit |
 |---|---:|---:|---:|---:|
-| SSR script `hyper-<hash>.js` | 98,259 | 32,639 | 29,125 | 32,700 |
-| CSR shell `build/csr/index.html` | 98,498 | 32,782 | 29,220 | 33,200 |
+| SSR script `hyper-<hash>.js` | 99,580 | 33,080 | 29,549 | 33,500 |
+| CSR shell `build/csr/index.html` | 99,819 | 33,224 | 29,551 | 33,600 |
 | Largest template file (`board/rows.tpl`) | 5,583 | 1,334 | 1,084 | 4,096 |
 | All eleven template files | | 5,818 | | |
 
