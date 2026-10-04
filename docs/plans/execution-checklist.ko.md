@@ -117,6 +117,7 @@
 | H10.3-1 | `tests/package-install`가 H10.3이 더한 `@polyspec/hyper`의 export `./templates-index`를 기대하게 한다. package install test는 export `.`만 요구했으므로 main에서 `make package-check`가 실패했다 | `make package-check` | [o] |
 | H10.4 | template T14.2의 bound 값으로 pruning한 root를 document마다 한 번 binding하고 모든 render에 쓴다. 그래서 값은 render 횟수와 상관없이 최대 두 번 검사된다. JSON 응답은 `params`만 다시 binding한다 | `make check` | [o] |
 | H10.5 | 브라우저 package와 Node package가 template package의 host binding을 이름 `bindValue`로 부른다. template T14.2가 TypeScript host binding `bind`를 `bindValue`로 바꾸고 `bind`를 bound map에 주었으므로, template main에서 `packages/hyper-js`의 `tsc`가 `BoundMap is not assignable to Value`로 실패했고 | `make check` | [o] |
+| H10.6 | board 예제의 SSR script와 CSR shell을 `config/bundle-size.json`의 gzip 한도(2026-10-04 측정) 아래로 되돌리거나, 원인과 함께 새 한도를 기록한다. H10.3-1과 template main에서 `make bundle-size`는 SSR script를 gzip 33080 byte(한도 32700), CSR shell을 33224 byte(한도 33200)로 보고하므로 `make check`가 `bundle-size`에서 실패한다 | `make bundle-size` | [ ] |
 
 ## 웨이브 11 — 진행을 출력하고 한도가 있는 test 실행
 

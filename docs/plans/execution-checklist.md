@@ -117,6 +117,7 @@ Depends on: H10.4 depends on template T14.2. The servers and the builds have fou
 | H10.3-1 | Make `tests/package-install` expect the export `./templates-index` of `@polyspec/hyper` that H10.3 added: the package install test required the export `.` alone, so `make package-check` failed on main | `make package-check` | [o] |
 | H10.4 | Bind each pruned root once per document with the bound value of template T14.2 and use it in every render, so a value is checked at most twice whatever the number of renders; JSON responses bind only `params` again | `make check` | [o] |
 | H10.5 | Call the host binding of the template package by its name `bindValue` in the browser and Node packages: template T14.2 renamed the TypeScript host binding `bind` to `bindValue` and gave `bind` to the bound map, so `tsc` of `packages/hyper-js` failed with `BoundMap is not assignable to Value` against template main | `make check` | [o] |
+| H10.6 | Bring the SSR script and the CSR shell of the board example back under their gzip limits of `config/bundle-size.json` (measured 2026-10-04), or record new limits with their cause: on H10.3-1 with template main, `make bundle-size` reports the SSR script at 33080 gzip bytes (limit 32700) and the CSR shell at 33224 (limit 33200), so `make check` fails at `bundle-size` | `make bundle-size` | [ ] |
 
 ## Wave 11 — Bounded test runs that print their progress
 
