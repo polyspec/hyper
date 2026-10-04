@@ -47,9 +47,9 @@
 
 ## 필수 검사
 
-- 커밋 전에 변경된 모든 패키지의 테스트와 `make docs-check`를 실행한다.
-- `docs/features.md`에서 기능을 implemented로 표시하기 전에 `make check`를 실행한다.
-- `docs/plans/execution-checklist.md`에서 작업을 `[o]`로 바꾸기 전에 커밋한 tree에서 그 작업의 verification command를 실행한다.
+- 커밋 전에는 변경을 소유한 Red test와 Green test, 그리고 `make docs-check`를 실행한다. 수정마다 더 넓은 검사를 실행하지 않는다.
+- `docs/plans/execution-checklist.md`에서 작업을 `[o]`로 바꾸기 전에 커밋한 tree에서 그 작업의 verification command를 실행한다. Verification column에는 `make check`가 아니라 그 작업을 소유한 명령을 적는다. 이미 `[o]`인 행은 자기 명령을 그대로 둔다.
+- `make check`는 활성 작업이 모두 끝났을 때 정확히 한 번 실행하고, 수정마다 또는 작업마다 실행하지 않는다. `docs/features.md`에서 기능을 implemented로 표시하는 것은 그 실행이 통과한 뒤에만 한다.
 
 ## Checklist
 

@@ -37,9 +37,9 @@
 
 ## Required checks
 
-- Run the tests of every changed package and `make docs-check` before a commit.
-- Run `make check` before marking a feature implemented in `docs/features.md`.
-- Run the verification command of a task on the committed tree before marking the task `[o]` in `docs/plans/execution-checklist.md`.
+- Before a commit, run the Red and Green tests that own the change and `make docs-check`. Do not run broader checks for each fix.
+- Before marking a task `[o]` in `docs/plans/execution-checklist.md`, run the verification command of the task on the committed tree. The Verification column names the command that owns the task, not `make check`; rows that are already `[o]` keep their command.
+- Run `make check` exactly once, when every active task is done, and never for each fix or each task. Mark a feature implemented in `docs/features.md` only after that run passes.
 
 ## Checklist
 

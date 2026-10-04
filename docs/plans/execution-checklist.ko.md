@@ -116,3 +116,13 @@
 | H10.3 | asset build는 이름에 content hash가 있는 파일을 더하기만 하고, hash 없는 출력(`manifest.json`, `templates.index.json`)은 `--output` directory에 쓴다(HY-34, HY-76). 변경 전에 실패하는 build test를 둔다 | `make check` | [o] |
 | H10.4 | template T14.2의 bound 값으로 pruning한 root를 document마다 한 번 binding하고 모든 render에 쓴다. 그래서 값은 render 횟수와 상관없이 최대 두 번 검사된다. JSON 응답은 `params`만 다시 binding한다 | `make check` | [o] |
 | H10.5 | 브라우저 package와 Node package가 template package의 host binding을 이름 `bindValue`로 부른다. template T14.2가 TypeScript host binding `bind`를 `bindValue`로 바꾸고 `bind`를 bound map에 주었으므로, template main에서 `packages/hyper-js`의 `tsc`가 `BoundMap is not assignable to Value`로 실패했고 | `make check` | [o] |
+
+## 웨이브 11 — 진행을 출력하고 한도가 있는 test 실행
+
+의존: 없음. 세 곳에서 검사가 한도 없이 또는 진행 출력 없이 실행되었다. AGENTS의 필수 검사는 기능을 implemented로 표시하기 전에 `make check`를 요구했고, 작업 행은 검증으로 `make check`를 적었으므로, 작업마다 전체 suite가 실행되었다. test target은 vitest, `node --test`, PHPUnit을 직접 실행했다. `node --test`와 PHPUnit에는 test별 timeout이 없어서 끝나지 않는 test가 실행을 끝없이 멈추고, 세 도구 모두 test마다 시작과 경과 시간을 출력하지 않는다. `scripts/check-parity.mjs`는 timeout 없는 `fetch`로 요청하고 step이 끝난 뒤에만 줄을 출력하므로, 응답하지 않는 server가 step 이름 없이 검사를 멈춘다.
+
+| ID | 작업 | 검증 | 상태 |
+|---|---|---|---|
+| H11.1 | AGENTS의 필수 검사: 커밋 전에는 변경을 소유한 Red test와 Green test, 그리고 `make docs-check`; 작업은 Verification column에 적은 그 작업의 소유 명령으로 `[o]`가 된다; `make check`는 활성 작업이 모두 끝났을 때 한 번 실행한다 | `make docs-check` | [~] |
+| H11.2 | vitest, `node --test`, PHPUnit을 `scripts/run-tests.mjs`와 그 진행 reporter로 실행한다: 모든 test는 시작, 결과, 경과 시간을 출력하고 자기 timeout에서 이름으로 실패한다; `make test-js`, `test-node`, `test-php`, `test-scripts`, `package-check`가 이를 쓴다; runner는 자기 test를 가진다 | `node scripts/run-tests.mjs node -- tests/scripts/run-tests.test.mjs` | [ ] |
+| H11.3 | `scripts/check-parity.mjs`는 모든 요청에 `AbortSignal.timeout`으로 timeout을 주고, step이 시작할 때 줄을 출력하고 결과와 함께 경과 밀리초를 출력하며, server가 응답하지 않으면 step 이름으로 실패한다; 응답하지 않는 server에 대한 test | `node scripts/run-tests.mjs node -- tests/scripts/check-parity.test.mjs` | [ ] |
