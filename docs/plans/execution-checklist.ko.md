@@ -111,7 +111,7 @@
 | ID | 작업 | 검증 | 상태 |
 |---|---|---|---|
 | H10.1 | HY-44: loader와 shared handler 값의 host binding에 native object(VAL-19)가 있으면 HY-43으로 실패하고, binding이 data model 값으로 바꾸는 값(PHP `stdClass`, `JsonSerializable`)은 통과한다. 변경 전 PHP에서 실패하는 case를 둔다 | `make check` | [o] |
-| H10.2 | `check-templates.mjs`의 검사를 manifest와 template directory를 받는 함수 하나로 옮기고, `make templates-check`와 `build-server.mjs`가 아무것도 쓰기 전에 그 함수를 쓴다. HY-48에 위반이 있으면 아무것도 쓰지 않는다고 적는다. 변경 전에 실패하는 case를 둔다 | `make check` | [!] cause: the server build check failed builds whose views declare rows without a template that places the region, so H10.2 was reverted; retry: every such build passes the template rules |
+| H10.2 | `check-templates.mjs`의 검사를 manifest와 template directory를 받는 함수 하나로 옮기고, `make templates-check`와 `build-server.mjs`가 아무것도 쓰기 전에 그 함수를 쓴다. HY-48에 위반이 있으면 아무것도 쓰지 않는다고 적는다. 변경 전에 실패하는 case를 둔다 | `make check` | [o] |
 | H10.2-1 | template 규칙이 조건 분기 안의 배치와 include를 보게 한다. 순회는 type이 없는 객체 안의 node 목록을 건너뛰었으므로, `{? }` 분기를 거쳐 배치한 route region을 0번으로 셌다. server build가 쓰도록 규칙을 `scripts/template-rules.mjs`의 `templateProblems`로 옮긴다. 분기 안에 배치한 region과 분기 안의 include로 배치한 region을 가진 fixture route를 둔다 | `make check` | [o] |
 | H10.3 | asset build는 이름에 content hash가 있는 파일을 더하기만 하고, hash 없는 출력(`manifest.json`, `templates.index.json`)은 `--output` directory에 쓴다(HY-34, HY-76). 변경 전에 실패하는 build test를 둔다 | `make check` | [ ] |
 | H10.4 | template T14.2의 bound 값으로 pruning한 root를 document마다 한 번 binding하고 모든 render에 쓴다. 그래서 값은 render 횟수와 상관없이 최대 두 번 검사된다. JSON 응답은 `params`만 다시 binding한다 | `make check` | [ ] |
