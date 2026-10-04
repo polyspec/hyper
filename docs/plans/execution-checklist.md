@@ -72,6 +72,6 @@ Depends on: wave 5. A page must request only the resources that it uses, each on
 
 | ID | Task | Verification | Status |
 |---|---|---|---|
-| H6.1 | Specify HY-76: a page requests only the resources that it uses, each at most once; the asset build writes the client entry and one chunk file per code that the entry imports with `import()`, `manifest.json` with the entry URL only, and a static shell without a stylesheet | `make docs-check` | [ ] |
-| H6.2 | Asset build: chunk files, the manifest, the shell and the comments, with a build test that fails before the change | `make test-scripts` | [ ] |
-| H6.3 | Board example: the layout links its own stylesheets; documents, bundle size, feature status and changelog | `make check` | [ ] |
+| H6.1 | Specify HY-76: a page requests only the resources that it uses, each at most once; the asset build writes the client entry and one chunk file per code that the entry imports with `import()`, `manifest.json` with the entry URL only, and a static shell without a stylesheet | `make docs-check` | [x] |
+| H6.2 | Asset build: chunk files, the manifest, the shell and the comments, with a build test that fails before the change | `make test-scripts` | [x] |
+| H6.3 | Board example: the layout links its own stylesheets; documents, bundle size, feature status and changelog | `make check` | [x] |
