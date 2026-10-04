@@ -90,5 +90,5 @@
 
 | ID | 작업 | 검증 | 상태 |
 |---|---|---|---|
-| H8.1 | HY-77을 명세한다. `--tailwind <source>=<output>`은 application의 source stylesheet를 최신 stable Tailwind CSS의 theme과 utility로 compile하여, template과 client code가 쓰는 utility를 생성하고 source의 rule을 cascade layer `components`에 쓴다 | `make docs-check` | [ ] |
-| H8.2 | asset build: 이 option과 변경 전에 실패하는 build test, dependency로서의 Tailwind CSS, 문서와 changelog | `make check` | [ ] |
+| H8.1 | HY-77을 명세한다. `--tailwind <source>=<output>`은 application의 source stylesheet를 최신 stable Tailwind CSS의 theme과 utility로 compile하여, template과 client code가 쓰는 utility를 생성하고 source의 rule을 cascade layer `components`에 쓴다 | `make docs-check` | [o] |
+| H8.2 | asset build: 이 option과 변경 전에 실패하는 build test, dependency로서의 Tailwind CSS, 문서와 changelog | `make check` | [o] |
