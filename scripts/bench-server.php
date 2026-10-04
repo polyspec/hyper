@@ -41,7 +41,7 @@ $application = App::open(
     timezone: '+09:00',
 );
 $application->bind(Posts::class, fn (): Posts => $posts);
-$application->bind(Assets::class, fn (): Assets => Assets::fromManifest("{$app}/public/assets/manifest.json"));
+$application->bind(Assets::class, fn (): Assets => Assets::fromManifest("{$app}/build/manifest.json"));
 $session = new ArraySession();
 $application->handle(new Request('GET', '/board'), $session);
 $token = (string) $session->get('_hyper_csrf');

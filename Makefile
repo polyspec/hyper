@@ -55,7 +55,8 @@ node-fixtures: template ## Build the template files of the PHP test fixtures for
 	node scripts/build-templates.mjs --templates $(FIXTURES)/templates --output $(NODE_PACKAGE)/tests/build --template-dir $(TEMPLATE_DIR)
 
 assets: packages ## Build the board client bundle (SSR) and the single-file static shell (CSR)
-	node scripts/build-assets.mjs --app $(BOARD) --api /api --template-dir $(TEMPLATE_DIR)
+	node scripts/build-assets.mjs --app $(BOARD) --api /api --template-dir $(TEMPLATE_DIR) --output $(BOARD)/build
+	cp $(BOARD)/public/assets/*.css $(BOARD)/build/csr/assets/
 
 test-js: template ## Run the browser code tests, including the router conformance cases, and the type check
 	cd $(JS_PACKAGE) && npx vitest run && npx tsc --noEmit -p tsconfig.json
@@ -88,7 +89,7 @@ server-parity: node-server server ## Compare the Node server responses with the 
 	node scripts/check-parity.mjs --app $(BOARD) --requests $(BOARD)/tests/parity/requests.json --port 8094 --node-port 8096
 
 bundle-size: assets ## Print the SSR script and CSR shell sizes and enforce the gzip limits
-	node scripts/check-bundle-size.mjs --app $(BOARD) --limits config/bundle-size.json
+	node scripts/check-bundle-size.mjs --app $(BOARD) --output $(BOARD)/build --limits config/bundle-size.json
 
 e2e: assets server ## Run the SSR, CSR, no-JavaScript and comparison flows in Chromium
 	rm -f $(BOARD)/var/e2e.db
