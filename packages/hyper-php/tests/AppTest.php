@@ -485,6 +485,30 @@ final class AppTest extends TestCase
         }
     }
 
+    public function testApplicationObjectsInSharedDataFailAndBoundObjectsPass(): void
+    {
+        // HY-44: binding keeps an application object as a native object, which is not a value of the data model.
+        $post = ['routes' => ['add' => ['post' => fn (): Result => Result::redirect('/')]]];
+        $serializable = new class () implements \JsonSerializable {
+            public function jsonSerialize(): mixed
+            {
+                return ['a' => 1];
+            }
+        };
+        $cases = [
+            'DateTimeImmutable' => [new \DateTimeImmutable('2026-01-01T00:00:00Z'), 500],
+            'nested application object' => [['list' => [new \ArrayObject([])]], 500],
+            'stdClass' => [(object) ['a' => 1], 200],
+            'JsonSerializable' => [$serializable, 200],
+        ];
+        foreach ($cases as $label => [$value, $status]) {
+            $app = App::open(__DIR__ . '/fixtures/app.json', self::PROGRAM, ['shared' => fn (): array => ['value' => $value], ...$post], 'Z');
+            foreach ([[], self::JSON] as $headers) {
+                self::assertSame($status, $app->handle(new Request('GET', '/', $headers), $this->session)->status, $label);
+            }
+        }
+    }
+
     public function testIntegerOutsideTheSafeRangeFailsForDocumentAndJson(): void
     {
         // HY-44
