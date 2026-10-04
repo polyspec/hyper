@@ -110,6 +110,7 @@
 
 ### 변경
 
+- AGENTS의 필수 검사는 커밋 전에 변경을 소유한 test만 실행하고, 작업을 그 작업의 소유 명령으로 `[o]`로 바꾸며, `make check`는 활성 작업이 모두 끝났을 때 정확히 한 번 실행한다(H11.1). 예전에는 기능을 implemented로 표시하기 전에 `make check`를 요구했고 작업 행이 검증으로 `make check`를 적었으므로, 작업마다 전체 suite가 실행되었다. 새 작업 행은 소유 명령을 적고, 이미 `[o]`인 행은 자기 명령을 그대로 둔다.
 - 문서와 영역 응답은 루트를 각각 template engine의 bound map으로 한 번 bind하고, 모든 부분을 bound 루트의 `merge`로 렌더한다(H10.4, HY-13). 루트는 공유 데이터, 각 영역의 데이터, 문서에서는 내장 데이터다. 예전에는 렌더마다 공유 데이터와 영역 데이터를 다시 bind해서 문서가 렌더 횟수만큼 공유 데이터를 검사했다. 라우트 영역이 없는 문서에서 PHP test는 공유 값의 bind를 5번, JavaScript test는 4~6번 셌고, 이제는 2번과 1번이며, 라우트 영역이 있는 문서는 내장 데이터에서 한 번 더 bind한다. JSON 응답은 요청 parameter만 다시 검사한다(HY-44). pruning 전 검사가 handler 데이터를 다루기 때문이다. PHP `Renderer`는 bound map을 받고, 프로그램(native extension 또는 generated program)의 bound map으로 bind한다. hyper-js에는 `bindParts`와 `renderRegionOf`가 있다. hyper H10.4에서 hyper PHP test는 generated program과 native extension 모두에서 통과하고(317개), hyper-js(215개)와 hyper-node(334개) test가 통과한다.
 - HY-53의 304는 `Content-Type`을 뺀 200 응답의 header를 가지며, HY-52는 body가 없는 어떤 응답에도 `Content-Type`을 주지 않는다. 304는 representation을 담지 않고(RFC 9110, 15.4.5절), php-fpm은 304의 `Content-Type`을 지웠지만 Node server는 보냈으므로 두 server가 같은 요청에 다른 header로 응답했다. 변경 전 `AppTest`와 `app.test.ts`가 실패했다.
 - SSR 스크립트와 CSR 셸의 gzip 상한을 앞선 병합이 올린 32,500과 33,800에서 31,900과 33,200바이트로 낮추고, 개발 문서에 규칙을 적는다. 상한은 측정한 크기에 약 1%를 더해 100바이트 단위로 올린 값이며, 출력이 상한을 넘어 커지거나 작아지는 변경은 같은 변경 안에서 상한을 고친다.
