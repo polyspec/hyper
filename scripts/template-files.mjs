@@ -2,7 +2,7 @@
 // test fixtures use it, so the browser and the Node server read the same template files.
 
 import { createHash } from 'node:crypto';
-import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { build } from 'esbuild';
@@ -27,7 +27,7 @@ async function loadParser(templateDir) {
 }
 
 // Parses every template of a directory and the reserved template hyper/data.tpl with the template package of the
-// template repository templateDir, adds each AST as <output>/<name>.<hash>.json and returns the index: template
+// template repository templateDir, writes each AST to <output>/<name>.<hash>.json and returns the index: template
 // name -> { url: <urlPrefix>/<file>, deps }.
 export async function writeTemplateFiles({ templates, output, urlPrefix, templateDir }) {
   const parse = await loadParser(templateDir);
@@ -36,7 +36,7 @@ export async function writeTemplateFiles({ templates, output, urlPrefix, templat
   for (const file of listFiles(templates).filter((name) => name.endsWith('.tpl')).sort()) {
     sources[relative(templates, file).split(sep).join('/')] = readFileSync(file, 'utf8');
   }
-  // The directory only gains files: a file name holds the hash of its content, so an earlier build keeps its files.
+  rmSync(output, { recursive: true, force: true });
   mkdirSync(output, { recursive: true });
   const index = {};
   for (const [name, source] of Object.entries(sources)) {

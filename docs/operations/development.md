@@ -63,13 +63,13 @@ BOARD_DB=$PWD/examples/board/var/node.db BOARD_SESSIONS=$PWD/examples/board/var/
 
 ## Asset build
 
-`scripts/build-assets.mjs --app <directory> --api <base path> --template-dir <template repository> --output <directory>` writes the following outputs with the template package of the template repository (HY-70). Below `public/assets/` it only adds files whose names hold a hash of their content and removes none; the outputs without a hash lie in the directory of `--output` (HY-34). `make assets` passes `examples/board/build`.
+`scripts/build-assets.mjs --app <directory> --api <base path> --template-dir <template repository>` writes the following outputs with the template package of the template repository (HY-70):
 
 1. `public/assets/templates/<name>.<hash>.json`: one AST file per template under `templates/`, and one for the reserved template `hyper/data.tpl` (HY-34).
-2. `<output>/templates.index.json`: each template name with its file URL (HY-34). The client imports it as `@polyspec/hyper/templates-index`.
-3. `public/assets/hyper-<hash>.js`, `public/assets/hyper-chunk-<hash>.js` and `<output>/manifest.json`: the client entry, one chunk file per code that the entry imports with `import()` only, which the browser loads when that code first runs, and the URL of the entry as `hyper`, which the server passes to the layout (HY-76). The entry contains htmx, the hyper browser code, the template render runtime, `app/app.json` and the index, and no template. The build writes no file that the application names; the application places and links its own stylesheets.
+2. `build/templates.index.json`: each template name with its file URL (HY-34).
+3. `public/assets/hyper-<hash>.js`, `public/assets/hyper-chunk-<hash>.js` and `public/assets/manifest.json`: the client entry, one chunk file per code that the entry imports with `import()` only, which the browser loads when that code first runs, and the URL of the entry as `hyper`, which the server passes to the layout (HY-76). The entry contains htmx, the hyper browser code, the template render runtime, `app/app.json` and the index, and no template. The build writes no file that the application names; the application places and links its own stylesheets.
 4. With `--tailwind <source>=<output>`, the output stylesheet: the source compiled with the theme of Tailwind CSS and the utility classes that the files below `templates/` and `client/` use, with the rules of the source in the layer `components` and no rule of the layer `base` (HY-77).
-5. `<output>/csr/`: the CSR deployment. `index.html` contains `<meta name="hyper-api">` and the entry inlined, and no stylesheet, because the browser applies the stylesheet links of the rendered layout (HY-64, HY-76); `assets/templates/` contains the template files of this build, and `assets/` contains the chunk files of this build. The deployment holds no stylesheet: the application copies the stylesheets that its rendered layouts link, as `make assets` copies those of the board example. The build fails when the entry contains `</script`, and it prints the Content Security Policy with the hash of the inlined entry.
+5. `dist/csr/`: the CSR deployment. `index.html` contains `<meta name="hyper-api">` and the entry inlined, and no stylesheet, because the browser applies the stylesheet links of the rendered layout (HY-64, HY-76); `assets/templates/` contains the template files, and `assets/` contains the chunk files and every `.css` file directly in `public/assets/`, which rendered layouts link. The build fails when the entry contains `</script`, and it prints the Content Security Policy with the hash of the inlined entry.
 
 The build replaces earlier outputs, so repeated builds leave one file per output. The outputs are not committed.
 
@@ -91,7 +91,7 @@ Measured on 2026-10-04 with `make bundle-size` (htmx 4.0.0, esbuild 0.28.2, ten 
 | Output | Raw bytes | gzip bytes | brotli bytes | gzip limit |
 |---|---:|---:|---:|---:|
 | SSR script `hyper-<hash>.js` | 98,259 | 32,639 | 29,125 | 32,700 |
-| CSR shell `build/csr/index.html` | 98,498 | 32,782 | 29,220 | 33,200 |
+| CSR shell `dist/csr/index.html` | 98,498 | 32,782 | 29,220 | 33,200 |
 | Largest template file (`board/rows.tpl`) | 5,583 | 1,334 | 1,084 | 4,096 |
 | All eleven template files | | 5,818 | | |
 

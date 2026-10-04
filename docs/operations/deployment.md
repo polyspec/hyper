@@ -24,7 +24,7 @@ Deploy `build/server`, which `make server` writes, next to the PHP code; the app
 
 ## Static shell
 
-`make assets` writes `examples/board/build/csr/`: `index.html` with the client entry inlined and no stylesheet (HY-76), `assets/templates/` with one file per template, and the stylesheets `assets/app.css` and `assets/reader.css`, which `make assets` copies from `public/assets/` because the asset build copies no stylesheet, and which the rendered layout links and the browser applies before it shows a page (HY-64).
+`make assets` writes `examples/board/dist/csr/`: `index.html` with the client entry inlined and no stylesheet (HY-76), `assets/templates/` with one file per template, and the stylesheets `assets/app.css` and `assets/reader.css`, which the rendered layout links and the browser applies before it shows a page (HY-64).
 
 1. Upload `index.html` to an S3 bucket with `Content-Type: text/html; charset=utf-8` and `Cache-Control: no-cache`, `assets/templates/*` with `Content-Type: application/json` and `Cache-Control: public, max-age=31536000, immutable`, and `assets/*.css` with `Content-Type: text/css; charset=utf-8` and `Cache-Control: no-cache`, because their names carry no hash.
 2. Run PHP with the environment variable `BOARD_BASE_PATH=/api` (HY-8).
@@ -35,7 +35,7 @@ Every page path returns the same empty shell, so search crawlers that do not run
 
 ## One server for both forms
 
-One PHP or Node server can answer the server-rendered pages and the client-rendered pages of one manifest with the same handlers (HY-62). The application declares client rendering when it opens: `App::open(clientRendering: new ClientRendering(shell: '/srv/app/build/csr/index.html', basePath: '/_props', selects: fn (Request $request): Choice => new Choice(chosen: ..., value: ...)))` in PHP, and the `clientRendering` option `{ shell, basePath, selects }` of `App.open` in Node. The selection chooses the client-rendered requests, for example by the `Host` header, and its value, such as the stored service of the host, reaches every loader and action of the request through `$request->selection()` in PHP and `request.selection()` in Node, so that the handlers do not read it again. Build the shell with `scripts/build-assets.mjs --api /_props`, so that it declares the data base path; the application fails to open otherwise.
+One PHP or Node server can answer the server-rendered pages and the client-rendered pages of one manifest with the same handlers (HY-62). The application declares client rendering when it opens: `App::open(clientRendering: new ClientRendering(shell: '/srv/app/dist/csr/index.html', basePath: '/_props', selects: fn (Request $request): Choice => new Choice(chosen: ..., value: ...)))` in PHP, and the `clientRendering` option `{ shell, basePath, selects }` of `App.open` in Node. The selection chooses the client-rendered requests, for example by the `Host` header, and its value, such as the stored service of the host, reaches every loader and action of the request through `$request->selection()` in PHP and `request.selection()` in Node, so that the handlers do not read it again. Build the shell with `scripts/build-assets.mjs --api /_props`, so that it declares the data base path; the application fails to open otherwise.
 
 | Request of a chosen page | Response |
 |---|---|
@@ -61,5 +61,5 @@ A request that the selection does not choose is answered as in the server form. 
 |---|---|
 | `http://127.0.0.1:8080/board` | Server form: PHP at the root |
 | `http://127.0.0.1:8082/api/board` | PHP with `BOARD_BASE_PATH=/api` |
-| `http://127.0.0.1:8081/board` | Static shell: `scripts/serve-edge.mjs` returns files of `build/csr/`, the shell for every other path, and forwards `/api/*` to port 8082 |
+| `http://127.0.0.1:8081/board` | Static shell: `scripts/serve-edge.mjs` returns files of `dist/csr/`, the shell for every other path, and forwards `/api/*` to port 8082 |
 | `http://127.0.0.1:8081/compare?ssr=http://127.0.0.1:8080` | The comparison page: both forms in two frames and the result of comparing their bodies. It is a development tool and is not part of a deployment. |

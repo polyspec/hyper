@@ -8,14 +8,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
-    },
-    "./templates-index": {
-      "types": "./templates-index.d.ts"
     }
   },
   "files": [
-    "dist",
-    "templates-index.d.ts"
+    "dist"
   ],
   "sideEffects": false,
   "scripts": {

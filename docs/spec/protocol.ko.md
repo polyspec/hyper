@@ -233,9 +233,6 @@
 - **HY-34** 에셋 빌드는 다음을 쓴다. 클라이언트 번들은 색인과 `hyper/data.tpl`의 이름을 담고, 템플릿은 담지 않는다.
   - 템플릿마다 AST 파일 하나. 파일 이름에는 내용의 해시가 들어간다.
   - 색인. 각 템플릿 이름을 파일 URL에 대응시킨다. 색인은 `hyper/data.tpl`도 담는다.
-  - `public/assets` 아래에는 이름에 내용의 해시가 들어간 파일을 더하기만 하고 지우지 않는다. 그래서 이전 build의 서버나 열려 있는 페이지가 그 build의 모든 파일을 계속 불러온다. 쓰이는 어떤 build도 적지 않은 파일은 애플리케이션이 지운다.
-  - 해시가 없는 출력, 즉 색인, manifest(HY-76), 정적 셸 `csr/`는 필수 옵션 `--output`이 가리키는 디렉터리에 쓴다.
-  - 클라이언트는 색인을 module `@polyspec/hyper/templates-index`로 import하고, build가 이 module을 같은 build의 색인으로 resolve한다. package는 그 type만 선언한다.
 - **HY-68** asset build와 server build는 출력으로 복사하는 모든 파일을 mode 0644로, 모든 디렉터리를 mode 0755로 만들고 원본 파일의 바이트를 쓴다. 소유자가 읽을 수 없는 mode로 파일을 만들지 않는다. Linux container(Apple `container`)의 virtiofs bind mount는 그런 생성을 `EACCES`로 거부하고, Node의 `fs.cpSync`는 대상 파일을 mode 0200으로 만들기 때문이다. `tests/scripts/output-files.test.mjs`는 출력이 virtiofs bind mount에 있는 container에서 두 복사를 실행한다.
 - **HY-70** asset build, template build, server build는 옵션 `--template-dir`가 가리키는 template 저장소에서 template 언어를 읽는다. parser, render runtime, manifest 검사 bundle은 그 저장소의 `packages/template-ts/package.json`의 `exports`가 `import` 조건으로 가리키는 module을 쓰고, server build는 `tools/compiler`의 compiler도 쓴다. asset build는 애플리케이션이 설치한 template package와 상관없이 client bundle의 `@polyspec/template`도 같은 package로 resolve한다. 어떤 build도 이 저장소의 의존성에서 `@polyspec/template`을 resolve하지 않는다. 따라서 호출자는 자신이 고른 template package로 build하고, 이 저장소 옆의 template checkout을 다시 build해도 다른 template 저장소를 가리킨 build의 결과는 바뀌지 않는다. `--template-dir`가 없는 build는 출력을 쓰기 전에 실패한다. `tests/scripts/template-dir.test.mjs`는 template package의 사본으로 build한다.
 - **HY-35** 브라우저는 렌더가 템플릿에 닿을 때 그 템플릿을 불러온다. 렌더하고, 렌더가 불러오지 않은 템플릿을 요청했으면 그 템플릿들을 색인의 URL로 불러온 뒤 다시 렌더한다. 렌더가 끝나거나 다른 이유로 실패할 때까지 반복한다. 데이터가 고르지 않은 분기의 템플릿처럼 어떤 렌더도 닿지 않는 템플릿은 불러오지 않는다. 그래서 여러 화면 가운데 하나를 고르는 라우트 템플릿은 보여 주는 화면만 불러온다.
@@ -248,7 +245,7 @@
   - 브라우저는 렌더가 템플릿에 닿을 때 그 템플릿을 불러온다(HY-35).
   - 레이아웃은 자기가 렌더하는 내용의 스타일시트만 링크한다. 브라우저는 렌더한 head마다 그 스타일시트 링크를 적용하고, 이미 적용한 링크는 그대로 둔다(HY-64). 애플리케이션이 모든 페이지에 링크하는 스타일시트는 모든 페이지가 쓰는 스타일시트다.
   - 에셋 빌드는 클라이언트 진입 파일 `public/assets/hyper-<hash>.js`를 쓴다. 진입 파일이 정적으로 불러오지 않고 `import()`로만 불러오는 코드는 조각 파일 `public/assets/hyper-chunk-<hash>.js`로 쓴다. 브라우저는 그 코드가 처음 실행될 때 `/assets/` 아래의 절대 URL로 조각을 불러온다. 그래서 정적 셸이 인라인한 진입 파일도 조각을 불러올 수 있고, 브라우저는 모듈 하나를 한 번만 불러온다.
-  - 에셋 빌드는 애플리케이션이 이름을 정하는 파일을 쓰지 않는다. 템플릿 파일과 색인(HY-34), 진입 파일, 조각 파일, 진입 파일의 URL을 유일한 멤버 `hyper`로 담은 `--output` 디렉터리의 `manifest.json`, 정적 셸을 쓴다. 애플리케이션은 자기 스타일시트를 직접 두고 링크하며, 레이아웃이 링크하는 스타일시트를 정적 배포물에 복사한다. `public/assets`에는 이전 build의 파일이 남으므로 에셋 빌드는 스타일시트를 복사하지 않는다.
+  - 에셋 빌드는 애플리케이션이 이름을 정하는 파일을 쓰지 않는다. 템플릿 파일과 색인(HY-34), 진입 파일, 조각 파일, 진입 파일의 URL을 유일한 멤버 `hyper`로 담은 `public/assets/manifest.json`, 정적 셸을 쓴다. 애플리케이션은 자기 스타일시트를 직접 두고 링크한다.
   - 정적 셸은 `<meta name="hyper-api">`와 인라인한 진입 파일을 담고 스타일시트는 담지 않는다. 브라우저는 페이지를 보이기 전에 렌더한 레이아웃의 스타일시트 링크를 적용하기 때문이다(HY-22, HY-64).
   - `tests/scripts/build-assets.test.mjs`는 진입 파일이 `import()`로 모듈을 불러오는 애플리케이션을 빌드한다.
 - **HY-77** 옵션 `--tailwind <source>=<output>`이 application의 stylesheet를 가리키면 asset build는 그것을 Tailwind CSS로 compile한다. 두 경로는 application directory 기준 상대 경로다.
