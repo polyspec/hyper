@@ -117,7 +117,7 @@
 | H10.3-1 | `tests/package-install`가 H10.3이 더한 `@polyspec/hyper`의 export `./templates-index`를 기대하게 한다. package install test는 export `.`만 요구했으므로 main에서 `make package-check`가 실패했다 | `make package-check` | [o] |
 | H10.4 | template T14.2의 bound 값으로 pruning한 root를 document마다 한 번 binding하고 모든 render에 쓴다. 그래서 값은 render 횟수와 상관없이 최대 두 번 검사된다. JSON 응답은 `params`만 다시 binding한다 | `make check` | [o] |
 | H10.5 | 브라우저 package와 Node package가 template package의 host binding을 이름 `bindValue`로 부른다. template T14.2가 TypeScript host binding `bind`를 `bindValue`로 바꾸고 `bind`를 bound map에 주었으므로, template main에서 `packages/hyper-js`의 `tsc`가 `BoundMap is not assignable to Value`로 실패했고 | `make check` | [o] |
-| H10.6 | board 예제의 SSR script와 CSR shell을 `config/bundle-size.json`의 gzip 한도(2026-10-04 측정) 아래로 되돌리거나, 원인과 함께 새 한도를 기록한다. H10.3-1과 template main에서 `make bundle-size`는 SSR script를 gzip 33080 byte(한도 32700), CSR shell을 33224 byte(한도 33200)로 보고하므로 `make check`가 `bundle-size`에서 실패한다 | `make bundle-size` | [ ] |
+| H10.6 | SSR script와 CSR shell의 gzip 한도를 개발 문서의 규칙(측정 크기에 약 1%를 더하고 100바이트 단위로 올림)으로 다시 측정한다: gzip 33,080과 33,224 바이트에 대해 33,500과 33,600. 2026-10-04 이후 SSR script는 gzip 441바이트, CSR shell은 442바이트 커졌다. bundle이 render가 호출하는 코드를 담게 되었기 때문이다: template T14.2의 bound map runtime(`bind`, `merge`, `BoundMap`, `bindValue`, `bindMap`, `bindData`의 bound map 처리) minify 후 982바이트, `response.ts`에 있는 H10.4의 root binding(`bindParts`, `renderRegionOf`) 341바이트, H10.5의 이름 변경 13바이트. SSR 한도 32,700은 규칙을 따르지 않았다. 32,639바이트에 대한 규칙 값은 33,000이었고, 이 변경이 이를 바로잡는다 | `make bundle-size` | [~] |
 
 ## 웨이브 11 — 진행을 출력하고 한도가 있는 test 실행
 
