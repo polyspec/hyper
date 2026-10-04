@@ -66,9 +66,9 @@ BOARD_DB=$PWD/examples/board/var/node.db BOARD_SESSIONS=$PWD/examples/board/var/
 `scripts/build-assets.mjs --app <directory> --api <base path> --template-dir <template repository>` writes the following outputs with the template package of the template repository (HY-70):
 
 1. `public/assets/templates/<name>.<hash>.json`: one AST file per template under `templates/`, and one for the reserved template `hyper/data.tpl` (HY-34).
-2. `build/templates.index.json`: each template name with its file URL and the templates that its include and block tags reference by path.
-3. `public/assets/hyper-<hash>.js` and `public/assets/manifest.json`: the client bundle and the URLs that the server passes to the layout. The bundle contains htmx, the hyper browser code, the template render runtime, `app/app.json` and the index, and no template.
-4. `dist/csr/`: the CSR deployment. `index.html` contains `<meta name="hyper-api">`, `app.css` and the bundle inlined; `assets/templates/` contains the template files, and `assets/` contains every `.css` file directly in `public/assets/`, which rendered layouts link (HY-64). The build fails when the bundle contains `</script`, and it prints the Content Security Policy hashes of the inlined script and stylesheet.
+2. `build/templates.index.json`: each template name with its file URL (HY-34).
+3. `public/assets/hyper-<hash>.js`, `public/assets/hyper-chunk-<hash>.js` and `public/assets/manifest.json`: the client entry, one chunk file per code that the entry imports with `import()` only, which the browser loads when that code first runs, and the URL of the entry as `hyper`, which the server passes to the layout (HY-76). The entry contains htmx, the hyper browser code, the template render runtime, `app/app.json` and the index, and no template. The build writes no file that the application names; the application places and links its own stylesheets.
+4. `dist/csr/`: the CSR deployment. `index.html` contains `<meta name="hyper-api">` and the entry inlined, and no stylesheet, because the browser applies the stylesheet links of the rendered layout (HY-64, HY-76); `assets/templates/` contains the template files, and `assets/` contains the chunk files and every `.css` file directly in `public/assets/`, which rendered layouts link. The build fails when the entry contains `</script`, and it prints the Content Security Policy with the hash of the inlined entry.
 
 The build replaces earlier outputs, so repeated builds leave one file per output. The outputs are not committed.
 
@@ -85,14 +85,14 @@ The build replaces earlier outputs, so repeated builds leave one file per output
 
 ## Measured sizes
 
-Measured on 2026-10-02 with `make bundle-size` (htmx 4.0.0, esbuild 0.28.2, ten board templates and `hyper/data.tpl`):
+Measured on 2026-10-04 with `make bundle-size` (htmx 4.0.0, esbuild 0.28.2, ten board templates and `hyper/data.tpl`):
 
 | Output | Raw bytes | gzip bytes | brotli bytes | gzip limit |
 |---|---:|---:|---:|---:|
-| SSR script `hyper-<hash>.js` | 97,459 | 32,347 | 28,891 | 32,700 |
-| CSR shell `dist/csr/index.html` | 100,896 | 33,618 | 29,881 | 34,000 |
+| SSR script `hyper-<hash>.js` | 98,259 | 32,639 | 29,125 | 32,700 |
+| CSR shell `dist/csr/index.html` | 98,498 | 32,782 | 29,220 | 33,200 |
 | Largest template file (`board/rows.tpl`) | 5,583 | 1,334 | 1,084 | 4,096 |
-| All eleven template files | | 5,829 | | |
+| All eleven template files | | 5,818 | | |
 
 The limits of the SSR script and the CSR shell in `config/bundle-size.json` are the measured gzip sizes plus about 1 %, rounded up to 100 bytes. A change that makes an output larger than its limit changes the limit in the same change and states why the growth is needed; a change that makes an output smaller lowers the limit by the same rule.
 

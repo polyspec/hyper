@@ -1,7 +1,7 @@
 // Builds the template files of a template directory without an application bundle, for the tests of the Node
 // server package (HY-34):
 //   <output>/templates/<name>.<hash>.json  one AST file per template, including hyper/data.tpl
-//   <output>/templates.index.json          template name -> file URL (/templates/<file>) and referenced templates
+//   <output>/templates.index.json          template name -> file URL (/templates/<file>)
 //
 // The template ASTs come from the template package of the template repository --template-dir (HY-70).
 //

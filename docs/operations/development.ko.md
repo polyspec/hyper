@@ -68,13 +68,17 @@ BOARD_DB=$PWD/examples/board/var/node.db BOARD_SESSIONS=$PWD/examples/board/var/
 `scripts/build-assets.mjs --app <디렉터리> --api <기본 경로> --template-dir <template 저장소>`는 그 template 저장소의 template package로 다음을 쓴다(HY-70).
 
 1. `public/assets/templates/<name>.<hash>.json`: `templates/` 아래 템플릿마다 AST 파일 하나, 그리고 예약 템플릿 `hyper/data.tpl`의 파일 하나(HY-34).
-2. `build/templates.index.json`: 각 템플릿 이름과 그 파일 URL, 그리고 include 태그와 block 태그가 경로로 참조하는 템플릿 목록.
-3. `public/assets/hyper-<hash>.js`와 `public/assets/manifest.json`: 클라이언트 번들과, 서버가 레이아웃에 넘기는 URL. 번들에는 htmx, hyper 브라우저 코드, template 렌더 런타임, `app/app.json`, 색인이 들어 있고 템플릿은 없다.
+2. `build/templates.index.json`: 각 템플릿 이름과 그 파일 URL(HY-34).
+3. `public/assets/hyper-<hash>.js`, `public/assets/hyper-chunk-<hash>.js`, `public/assets/manifest.json`(HY-76).
+   - 클라이언트 진입 파일. htmx, hyper 브라우저 코드, template 렌더 런타임, `app/app.json`, 색인이 들어 있고 템플릿은 없다.
+   - 진입 파일이 `import()`로만 불러오는 코드마다 조각 파일 하나. 브라우저는 그 코드가 처음 실행될 때 조각을 불러온다.
+   - 진입 파일의 URL을 `hyper`로 담은 매니페스트. 서버가 레이아웃에 넘긴다.
+   - 빌드는 애플리케이션이 이름을 정하는 파일을 쓰지 않는다. 애플리케이션은 자기 스타일시트를 직접 두고 링크한다.
 4. `dist/csr/`: CSR 배포물.
-   - `index.html`은 `<meta name="hyper-api">`를 가지고 `app.css`와 번들을 인라인한다.
+   - `index.html`은 `<meta name="hyper-api">`와 인라인한 진입 파일을 담고 스타일시트는 담지 않는다. 브라우저가 렌더한 레이아웃의 스타일시트 링크를 적용하기 때문이다(HY-64, HY-76).
    - `assets/templates/`는 템플릿 파일을 담는다.
-   - `assets/`는 렌더한 layout이 link하는, `public/assets/` 바로 아래의 모든 `.css` 파일을 담는다(HY-64).
-   - 번들에 `</script`가 들어 있으면 빌드는 실패하고, 빌드는 인라인 스크립트와 스타일시트의 Content Security Policy 해시를 출력한다.
+   - `assets/`는 조각 파일과, 렌더한 layout이 link하는 `public/assets/` 바로 아래의 모든 `.css` 파일을 담는다.
+   - 진입 파일에 `</script`가 들어 있으면 빌드는 실패한다. 빌드는 인라인한 진입 파일의 해시를 담은 Content Security Policy를 출력한다.
 
 빌드는 이전 결과를 교체하므로, 반복해서 빌드해도 결과마다 파일이 하나만 남는다. 빌드 결과는 커밋하지 않는다.
 
@@ -91,14 +95,14 @@ BOARD_DB=$PWD/examples/board/var/node.db BOARD_SESSIONS=$PWD/examples/board/var/
 
 ## 측정한 크기
 
-2026-10-02에 `make bundle-size`로 측정했다(htmx 4.0.0, esbuild 0.28.2, 게시판 템플릿 10개와 `hyper/data.tpl`).
+2026-10-04에 `make bundle-size`로 측정했다(htmx 4.0.0, esbuild 0.28.2, 게시판 템플릿 10개와 `hyper/data.tpl`).
 
 | 출력 | 원본 바이트 | gzip 바이트 | brotli 바이트 | gzip 상한 |
 |---|---:|---:|---:|---:|
-| SSR 스크립트 `hyper-<hash>.js` | 97,459 | 32,347 | 28,891 | 32,700 |
-| CSR 셸 `dist/csr/index.html` | 100,896 | 33,618 | 29,881 | 34,000 |
+| SSR 스크립트 `hyper-<hash>.js` | 98,259 | 32,639 | 29,125 | 32,700 |
+| CSR 셸 `dist/csr/index.html` | 98,498 | 32,782 | 29,220 | 33,200 |
 | 가장 큰 템플릿 파일(`board/rows.tpl`) | 5,583 | 1,334 | 1,084 | 4,096 |
-| 템플릿 파일 11개 합계 | | 5,829 | | |
+| 템플릿 파일 11개 합계 | | 5,818 | | |
 
 `config/bundle-size.json`의 SSR 스크립트와 CSR 셸 상한은 측정한 gzip 크기에 약 1%를 더하고 100바이트 단위로 올린 값이다. 출력이 상한보다 커지는 변경은 같은 변경 안에서 상한을 고치고 그 증가가 필요한 이유를 적는다. 출력이 작아지는 변경은 같은 규칙으로 상한을 낮춘다.
 

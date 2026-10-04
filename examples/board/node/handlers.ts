@@ -4,7 +4,7 @@ import type { Post, Posts } from './posts.js';
 
 export interface Services {
   posts: Posts;
-  assets: { css: string; reader: string; hyper: string };
+  assets: { hyper: string };
 }
 
 const POSTS_PER_PAGE = 10;

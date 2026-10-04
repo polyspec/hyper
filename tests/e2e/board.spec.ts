@@ -275,9 +275,16 @@ async function stylesheetFlow(page: Page, origin: string): Promise<void> {
   });
   const postWidth = () => page.evaluate(() => (window as unknown as { postWidth?: string }).postWidth);
 
+  const requested: string[] = [];
+  page.on('request', (request) => {
+    if (request.url().endsWith('.css')) requested.push(new URL(request.url()).pathname);
+  });
   await page.goto(`${origin}/board`);
   await expect(page.locator('#content h1')).toHaveText('게시판');
   expect(await stylesheets(page)).toEqual(['/assets/app.css']);
+  // The page holds each stylesheet once, as a link of the rendered layout, and requested it once (HY-76).
+  expect(await page.locator('style').count()).toBe(0);
+  expect(requested).toEqual(['/assets/app.css']);
   await page.locator('#rows tbody a').first().click();
   await expect(page.locator('.post-body')).toBeVisible();
   expect(await stylesheets(page)).toEqual(['/assets/app.css', '/assets/reader.css']);

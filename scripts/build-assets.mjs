@@ -1,14 +1,15 @@
-// Builds the browser outputs of an application directory:
+// Builds the browser outputs of an application directory (HY-76):
 //   public/assets/templates/<name>.<hash>.json  one AST file per template, including hyper/data.tpl (HY-34)
-//   build/templates.index.json                  template name -> file URL and referenced templates
-//   public/assets/hyper-<hash>.js               the client bundle: htmx, the hyper browser code, the
-//                                                template render runtime, the manifest and the index
-//   public/assets/manifest.json                 the asset URLs that the server passes to the layout
-//   dist/csr/                                   the static deployment for client-side rendering:
-//                                                index.html with app.css and the bundle inlined,
-//                                                assets/templates/ with the template files, and every
-//                                                .css file directly in public/assets, which rendered
-//                                                layouts link (HY-64)
+//   build/templates.index.json                  template name -> file URL
+//   public/assets/hyper-<hash>.js               the client entry: htmx, the hyper browser code, the template render
+//                                                runtime, the manifest and the index
+//   public/assets/hyper-chunk-<hash>.js         one chunk file per code that the entry imports with import() only,
+//                                                which the browser loads by its absolute URL when the code first runs
+//   public/assets/manifest.json                 the URL of the entry, which the server passes to the layout
+//   dist/csr/                                   the static deployment for client-side rendering: index.html with the
+//                                                entry inlined and no stylesheet, assets/templates/ with the template
+//                                                files, the chunk files, and every .css file directly in
+//                                                public/assets, which rendered layouts link (HY-64)
 //
 // The template ASTs, the manifest check and the template render runtime of the bundle come from the template package
 // of the template repository --template-dir, whatever template package the application installed (HY-70).
@@ -16,7 +17,7 @@
 // Usage: node scripts/build-assets.mjs --app examples/board --api /api --template-dir ../template
 
 import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
 import { parseArgs } from 'node:util';
 import { build } from 'esbuild';
 import { copyDirectory, copyFile } from './output-files.mjs';
@@ -40,25 +41,31 @@ writeFileSync(join(buildDir, 'templates.index.json'), `${JSON.stringify(index, n
 const bundle = await build({
   entryPoints: [join(app, 'client', 'main.ts')],
   bundle: true,
+  splitting: true,
   minify: true,
   format: 'esm',
   platform: 'browser',
   target: 'es2022',
+  outdir: assetsDir,
+  publicPath: '/assets',
+  entryNames: 'hyper-[hash]',
+  chunkNames: 'hyper-chunk-[hash]',
   write: false,
   logLevel: 'error',
   plugins: [templatePlugin(templateDir)],
 });
-const code = Buffer.from(bundle.outputFiles[0].contents).toString('utf8');
-if (/<\/script/i.test(code)) throw new Error('the client bundle contains </script and cannot be inlined');
-const hyperName = `hyper-${sha256(code).slice(0, 12)}.js`;
+const scripts = bundle.outputFiles.map((file) => ({ name: basename(file.path), code: Buffer.from(file.contents).toString('utf8') }));
+const entries = scripts.filter((script) => !script.name.startsWith('hyper-chunk-'));
+if (entries.length !== 1) throw new Error(`the client build wrote ${entries.length} entry files`);
+const entry = entries[0];
+if (/<\/script/i.test(entry.code)) throw new Error('the client entry contains </script and cannot be inlined');
 
 for (const name of readdirSync(assetsDir)) {
-  if (/^(hyper-[0-9a-f]+\.js|manifest\.json)$/.test(name)) rmSync(join(assetsDir, name));
+  if (/^(hyper-[A-Za-z0-9-]+\.js|manifest\.json)$/.test(name)) rmSync(join(assetsDir, name));
 }
-writeFileSync(join(assetsDir, hyperName), code);
-writeFileSync(join(assetsDir, 'manifest.json'), `${JSON.stringify({ css: '/assets/app.css', reader: '/assets/reader.css', hyper: `/assets/${hyperName}` }, null, 2)}\n`);
+for (const script of scripts) writeFileSync(join(assetsDir, script.name), script.code);
+writeFileSync(join(assetsDir, 'manifest.json'), `${JSON.stringify({ hyper: `/assets/${entry.name}` }, null, 2)}\n`);
 
-const css = readFileSync(join(assetsDir, 'app.css'), 'utf8');
 const shell = [
   '<!doctype html>',
   '<html>',
@@ -67,8 +74,7 @@ const shell = [
   '<meta name="viewport" content="width=device-width, initial-scale=1">',
   `<meta name="hyper-api" content="${values.api}">`,
   '<title></title>',
-  `<style>${css}</style>`,
-  `<script type="module">${code}</script>`,
+  `<script type="module">${entry.code}</script>`,
   '</head>',
   '<body></body>',
   '</html>',
@@ -79,8 +85,8 @@ mkdirSync(join(csrDir, 'assets'), { recursive: true });
 writeFileSync(join(csrDir, 'index.html'), shell);
 copyDirectory(templateFilesDir, join(csrDir, 'assets', 'templates'));
 for (const name of readdirSync(assetsDir)) {
-  if (name.endsWith('.css')) copyFile(join(assetsDir, name), join(csrDir, 'assets', name));
+  if (name.endsWith('.css') || name.startsWith('hyper-chunk-')) copyFile(join(assetsDir, name), join(csrDir, 'assets', name));
 }
 
-console.log(`templates ${Object.keys(index).length}, ${hyperName}, dist/csr/index.html ${Buffer.byteLength(shell)} bytes`);
-console.log(`CSP for dist/csr/index.html: script-src 'sha256-${sha256(code, 'base64')}'; style-src 'self' 'sha256-${sha256(css, 'base64')}'`);
+console.log(`templates ${Object.keys(index).length}, ${entry.name}, ${scripts.length - 1} chunks, dist/csr/index.html ${Buffer.byteLength(shell)} bytes`);
+console.log(`CSP for dist/csr/index.html: script-src 'self' 'sha256-${sha256(entry.code, 'base64')}'; style-src 'self'`);

@@ -4,7 +4,7 @@
 
 | ID | Feature | Status | Evidence |
 |---|---|---|---|
-| protocol | Region protocol specification (HY-1 to HY-75) | implemented | [Protocol](spec/protocol.md) |
+| protocol | Region protocol specification (HY-1 to HY-76) | implemented | [Protocol](spec/protocol.md) |
 | composition | Screen composition rules (HC-1 to HC-7) and the template check for HC-6 | implemented | [Composition](spec/composition.md), `make templates-check` |
 | manifest | Application manifest read by PHP and the browser | implemented | `make test-php`, `make test-js` |
 | router | PHP and browser routers with shared conformance cases | implemented | `make test-php`, `make test-js` |
@@ -32,6 +32,7 @@
 | region-data | Embedded data of the route regions, `data`, `render`, `set` and `hy-set` on route regions without requests, and the public data rule (HY-29 to HY-33, HY-36, HY-71) | implemented | `make test-js`, `make e2e` |
 | kept-data | Kept paths in the server session, a cookie, localStorage and sessionStorage (HY-37 to HY-41) | implemented | `make test-php`, `make test-js`, `make parity`, `make e2e` |
 | template-delivery | One file per template, loaded when rendering reaches it (HY-34, HY-35) | implemented | `make test-js`, `make e2e`, `make bundle-size` |
+| asset-delivery | A page requests only the resources that it uses: client chunks loaded by `import()`, a manifest with the entry URL only, a static shell without a stylesheet (HY-76) | implemented | `make test-scripts`, `make e2e` |
 | parity | Browser documents and regions equal PHP documents byte for byte | implemented | `make parity` |
 | server-parity | Node server responses equal PHP responses in status, headers and body for every parity step (HY-55) | implemented | `make server-parity` |
 | ssr | Server-side rendering with JSON navigation and a no-JavaScript fallback | implemented | `make e2e` |

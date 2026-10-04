@@ -24,12 +24,12 @@ Deploy `build/server`, which `make server` writes, next to the PHP code; the app
 
 ## Static shell
 
-`make assets` writes `examples/board/dist/csr/`: `index.html` with `app.css` and the client script inlined, `assets/templates/` with one file per template, and the stylesheets `assets/app.css` and `assets/reader.css`, which the rendered layout links and the browser applies before it shows a page (HY-64).
+`make assets` writes `examples/board/dist/csr/`: `index.html` with the client entry inlined and no stylesheet (HY-76), `assets/templates/` with one file per template, and the stylesheets `assets/app.css` and `assets/reader.css`, which the rendered layout links and the browser applies before it shows a page (HY-64).
 
 1. Upload `index.html` to an S3 bucket with `Content-Type: text/html; charset=utf-8` and `Cache-Control: no-cache`, `assets/templates/*` with `Content-Type: application/json` and `Cache-Control: public, max-age=31536000, immutable`, and `assets/*.css` with `Content-Type: text/css; charset=utf-8` and `Cache-Control: no-cache`, because their names carry no hash.
 2. Run PHP with the environment variable `BOARD_BASE_PATH=/api` (HY-8).
 3. Route `/api/*` to PHP as in the table above, `/assets/*` to S3, and every other path to `/index.html` with a CloudFront Function on viewer request.
-4. Send a Content Security Policy that allows the inline script and stylesheet by hash and the linked stylesheets by `'self'`; `make assets` prints the policy.
+4. Send a Content Security Policy that allows the inline entry by hash and the chunk files and linked stylesheets by `'self'`; `make assets` prints the policy. Upload chunk files `assets/hyper-chunk-*.js` with `Content-Type: text/javascript; charset=utf-8` and `Cache-Control: public, max-age=31536000, immutable`, because their names carry a hash.
 
 Every page path returns the same empty shell, so search crawlers that do not run JavaScript and link preview bots see no content and no title. Use this form only for screens that do not need them.
 

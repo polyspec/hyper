@@ -28,7 +28,7 @@ PHP는 기본 경로 없이 실행한다. 응답에는 `Vary: Accept, HX-Request
 
 ## 정적 셸
 
-`make assets`는 `examples/board/dist/csr/`를 만든다. `app.css`와 클라이언트 스크립트를 인라인한 `index.html`, 템플릿마다 파일 하나를 담은 `assets/templates/`, 그리고 렌더한 layout이 link하고 브라우저가 페이지를 보이기 전에 적용하는 스타일시트 `assets/app.css`와 `assets/reader.css`다(HY-64).
+`make assets`는 `examples/board/dist/csr/`를 만든다. 클라이언트 진입 파일을 인라인하고 스타일시트는 담지 않은 `index.html`(HY-76), 템플릿마다 파일 하나를 담은 `assets/templates/`, 그리고 렌더한 layout이 link하고 브라우저가 페이지를 보이기 전에 적용하는 스타일시트 `assets/app.css`와 `assets/reader.css`다(HY-64).
 
 1. S3 버킷에 다음과 같이 올린다.
    - `index.html`: `Content-Type: text/html; charset=utf-8`, `Cache-Control: no-cache`
@@ -39,7 +39,7 @@ PHP는 기본 경로 없이 실행한다. 응답에는 `Vary: Accept, HX-Request
    - `/api/*`: 위 표와 같이 PHP로 보낸다.
    - `/assets/*`: S3로 보낸다.
    - 그 밖의 모든 경로: 뷰어 요청 단계의 CloudFront Function으로 `/index.html`로 보낸다.
-4. 인라인 스크립트와 스타일시트를 해시로, link한 스타일시트를 `'self'`로 허용하는 Content Security Policy를 보낸다. 그 정책은 `make assets`가 출력한다.
+4. 인라인한 진입 파일을 해시로, 조각 파일과 link한 스타일시트를 `'self'`로 허용하는 Content Security Policy를 보낸다. 그 정책은 `make assets`가 출력한다. 조각 파일 `assets/hyper-chunk-*.js`는 이름에 해시가 있으므로 `Content-Type: text/javascript; charset=utf-8`, `Cache-Control: public, max-age=31536000, immutable`로 올린다.
 
 모든 페이지 경로가 같은 빈 셸을 반환한다. 그래서 JavaScript를 실행하지 않는 검색 크롤러와 링크 미리보기 봇은 내용도 제목도 보지 못한다. 이 형태는 그런 노출이 필요 없는 화면에만 쓴다.
 

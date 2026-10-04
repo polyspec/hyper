@@ -65,3 +65,13 @@ Depends on: none. The browser loads every template that the templates of a route
 | H5.1 | Specify that the browser loads a template when rendering reaches it: it renders, loads every template that the rendering requested and the loader did not hold, and renders again; a template that no rendering reaches is not loaded | `make docs-check` | [x] |
 | H5.2 | Browser package: render with on-demand loading in region responses, client-side rendering, embedded data, `render` and `set`, with a test that a branch not taken loads no template | `make test-js` | [x] |
 | H5.3 | Example, browser tests, bundle size, feature status and changelog | `make check` | [x] |
+
+## Wave 6 — Request only the resources that a page uses
+
+Depends on: wave 5. A page must request only the resources that it uses, each once, for templates, stylesheets and scripts alike. The asset build breaks that rule in three places. It writes the client code into one file, so an application cannot load code that only some pages use when such a page needs it. The static shell inlines `app.css`, which the rendered layout links as well, so a client-rendered page loads it twice. The build writes `public/assets/manifest.json` with the board example names `css` and `reader`, which another application does not have. The header comments of `scripts/build-assets.mjs` and `scripts/build-templates.mjs` still describe the index with referenced templates, which wave 5 removed.
+
+| ID | Task | Verification | Status |
+|---|---|---|---|
+| H6.1 | Specify HY-76: a page requests only the resources that it uses, each at most once; the asset build writes the client entry and one chunk file per code that the entry imports with `import()`, `manifest.json` with the entry URL only, and a static shell without a stylesheet | `make docs-check` | [ ] |
+| H6.2 | Asset build: chunk files, the manifest, the shell and the comments, with a build test that fails before the change | `make test-scripts` | [ ] |
+| H6.3 | Board example: the layout links its own stylesheets; documents, bundle size, feature status and changelog | `make check` | [ ] |

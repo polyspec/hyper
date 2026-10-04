@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Polyspec\Hyper\Examples\Board;
 
-/** Reads the asset URLs that the asset build writes to its manifest. */
+/** Reads the URL of the client entry that the asset build writes to its manifest (HY-76). */
 final class Assets
 {
-    /** @param array{css: string, reader: string, hyper: string} $urls */
+    /** @param array{hyper: string} $urls */
     private function __construct(private readonly array $urls)
     {
     }
@@ -19,16 +19,14 @@ final class Assets
             throw new \RuntimeException("asset manifest {$file} does not exist; run make assets");
         }
         $urls = json_decode((string) file_get_contents($file), true, flags: JSON_THROW_ON_ERROR);
-        foreach (['css', 'reader', 'hyper'] as $name) {
-            if (!is_string($urls[$name] ?? null)) {
-                throw new \RuntimeException("asset manifest {$file} has no {$name} URL");
-            }
+        if (!is_array($urls) || !is_string($urls['hyper'] ?? null)) {
+            throw new \RuntimeException("asset manifest {$file} has no hyper URL");
         }
 
-        return new self(['css' => $urls['css'], 'reader' => $urls['reader'], 'hyper' => $urls['hyper']]);
+        return new self(['hyper' => $urls['hyper']]);
     }
 
-    /** @return array{css: string, reader: string, hyper: string} */
+    /** @return array{hyper: string} */
     public function urls(): array
     {
         return $this->urls;
