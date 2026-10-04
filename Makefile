@@ -80,7 +80,7 @@ analyse-php: template ## Run PHPStan at level max on the source and the tests of
 templates-check: ## Check hx- attributes (HC-6) and region placements (HY-3, HY-30) of the board templates
 	node scripts/check-templates.mjs --app $(BOARD)
 
-test-scripts: ## Run the tests of the check scripts
+test-scripts: packages ## Run the tests of the check scripts
 	TEMPLATE_DIR=$(TEMPLATE_DIR) node scripts/run-tests.mjs node -- tests/scripts/
 
 parity: assets server ext ## Compare PHP documents (generated program and native extension) with browser renders of document and region JSON
