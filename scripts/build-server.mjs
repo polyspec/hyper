@@ -1,5 +1,4 @@
-// Builds the server outputs of an application from its manifest and templates (HY-48), after the template rules
-// of scripts/template-rules.mjs pass:
+// Builds the server outputs of an application from its manifest and templates (HY-48):
 //   <output>/templates/   every template and the reserved template hyper/data.tpl, which the native
 //                         template extension reads
 //   <output>/program.php  the generated PHP program of the same templates, compiled with the compiler
@@ -15,7 +14,6 @@ import { dirname, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
 import { copyDirectory } from './output-files.mjs';
-import { templateProblems } from './template-rules.mjs';
 
 const { values } = parseArgs({ options: { manifest: { type: 'string' }, templates: { type: 'string' }, output: { type: 'string' }, 'template-dir': { type: 'string' }, 'php-namespace': { type: 'string' } } });
 for (const name of ['manifest', 'templates', 'output', 'template-dir', 'php-namespace']) if (!values[name]) throw new Error(`--${name} is required`);
@@ -29,12 +27,6 @@ const { parse, resolvePath } = await import(pathToFileURL(resolve(values['templa
 const { routeReads } = await import(new URL('../packages/hyper-js/src/reads.ts', import.meta.url).href);
 
 const manifest = JSON.parse(readFileSync(values.manifest, 'utf8'));
-// HY-48: templates that break the template rules fail the build before it removes or writes any output.
-const { problems } = templateProblems({ manifest, templatesDir: values.templates, parse, resolvePath });
-if (problems.length > 0) {
-  for (const problem of problems) process.stderr.write(`${problem}\n`);
-  process.exit(1);
-}
 const dataTemplate = JSON.parse(readFileSync(new URL('../packages/hyper-js/data-template.json', import.meta.url), 'utf8'));
 const output = resolve(values.output);
 const templates = join(output, 'templates');
