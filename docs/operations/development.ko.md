@@ -65,20 +65,20 @@ BOARD_DB=$PWD/examples/board/var/node.db BOARD_SESSIONS=$PWD/examples/board/var/
 
 ## 에셋 빌드
 
-`scripts/build-assets.mjs --app <디렉터리> --api <기본 경로> --template-dir <template 저장소>`는 그 template 저장소의 template package로 다음을 쓴다(HY-70).
+`scripts/build-assets.mjs --app <디렉터리> --api <기본 경로> --template-dir <template 저장소> --output <디렉터리>`는 그 template 저장소의 template package로 다음을 쓴다(HY-70). `public/assets/` 아래에는 이름에 내용의 해시가 들어간 파일을 더하기만 하고 지우지 않으며, 해시가 없는 출력은 `--output`의 디렉터리에 둔다(HY-34). `make assets`는 `examples/board/build`를 넘긴다.
 
 1. `public/assets/templates/<name>.<hash>.json`: `templates/` 아래 템플릿마다 AST 파일 하나, 그리고 예약 템플릿 `hyper/data.tpl`의 파일 하나(HY-34).
-2. `build/templates.index.json`: 각 템플릿 이름과 그 파일 URL(HY-34).
-3. `public/assets/hyper-<hash>.js`, `public/assets/hyper-chunk-<hash>.js`, `public/assets/manifest.json`(HY-76).
+2. `<output>/templates.index.json`: 각 템플릿 이름과 그 파일 URL(HY-34). 클라이언트는 이를 `@polyspec/hyper/templates-index`로 import한다.
+3. `public/assets/hyper-<hash>.js`, `public/assets/hyper-chunk-<hash>.js`, `<output>/manifest.json`(HY-76).
    - 클라이언트 진입 파일. htmx, hyper 브라우저 코드, template 렌더 런타임, `app/app.json`, 색인이 들어 있고 템플릿은 없다.
    - 진입 파일이 `import()`로만 불러오는 코드마다 조각 파일 하나. 브라우저는 그 코드가 처음 실행될 때 조각을 불러온다.
    - 진입 파일의 URL을 `hyper`로 담은 매니페스트. 서버가 레이아웃에 넘긴다.
    - 빌드는 애플리케이션이 이름을 정하는 파일을 쓰지 않는다. 애플리케이션은 자기 스타일시트를 직접 두고 링크한다.
 4. `--tailwind <source>=<output>`이 있으면 output stylesheet. source를 Tailwind CSS의 theme과, `templates/`와 `client/` 아래 file이 쓰는 utility class로 compile하고, source의 rule은 layer `components`에 두며 layer `base`의 rule은 두지 않는다(HY-77).
-5. `dist/csr/`: CSR 배포물.
+5. `<output>/csr/`: CSR 배포물.
    - `index.html`은 `<meta name="hyper-api">`와 인라인한 진입 파일을 담고 스타일시트는 담지 않는다. 브라우저가 렌더한 레이아웃의 스타일시트 링크를 적용하기 때문이다(HY-64, HY-76).
-   - `assets/templates/`는 템플릿 파일을 담는다.
-   - `assets/`는 조각 파일과, 렌더한 layout이 link하는 `public/assets/` 바로 아래의 모든 `.css` 파일을 담는다.
+   - `assets/templates/`는 이 build의 템플릿 파일을 담는다.
+   - `assets/`는 이 build의 조각 파일을 담는다. 배포물에는 스타일시트가 없다. 렌더한 layout이 link하는 스타일시트는 애플리케이션이 복사하며, board 예제는 `make assets`가 복사한다.
    - 진입 파일에 `</script`가 들어 있으면 빌드는 실패한다. 빌드는 인라인한 진입 파일의 해시를 담은 Content Security Policy를 출력한다.
 
 빌드는 이전 결과를 교체하므로, 반복해서 빌드해도 결과마다 파일이 하나만 남는다. 빌드 결과는 커밋하지 않는다.
@@ -101,7 +101,7 @@ BOARD_DB=$PWD/examples/board/var/node.db BOARD_SESSIONS=$PWD/examples/board/var/
 | 출력 | 원본 바이트 | gzip 바이트 | brotli 바이트 | gzip 상한 |
 |---|---:|---:|---:|---:|
 | SSR 스크립트 `hyper-<hash>.js` | 98,259 | 32,639 | 29,125 | 32,700 |
-| CSR 셸 `dist/csr/index.html` | 98,498 | 32,782 | 29,220 | 33,200 |
+| CSR 셸 `build/csr/index.html` | 98,498 | 32,782 | 29,220 | 33,200 |
 | 가장 큰 템플릿 파일(`board/rows.tpl`) | 5,583 | 1,334 | 1,084 | 4,096 |
 | 템플릿 파일 11개 합계 | | 5,818 | | |
 

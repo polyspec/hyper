@@ -4,7 +4,7 @@ import htmx from 'htmx.org/dist/htmx.esm.js';
 import { createApplication, Hyper, type HtmxApi, type Manifest, type TemplateIndex } from '@polyspec/hyper';
 import type { Template } from '@polyspec/template/render';
 import manifest from '../app/app.json';
-import index from '../build/templates.index.json';
+import index from '@polyspec/hyper/templates-index';
 
 const app = createApplication(manifest as Manifest, index as TemplateIndex, async (url) => {
   const response = await fetch(url);
