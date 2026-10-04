@@ -100,5 +100,5 @@
 
 | ID | 작업 | 검증 | 상태 |
 |---|---|---|---|
-| H9.1 | HY-62에 명세한다. selection은 request가 client-rendered page의 것인지와 값을 담은 choice를 반환한다. request의 모든 loader와 action은 그 값을 request에서 읽고, 선언이 없는 application의 request는 값 null을 가진다 | `make docs-check` | [~] |
-| H9.2 | PHP와 Node server: `Choice`, `Request::selection()`, `request.selection()`과 변경 전에 실패하는 test, 문서, feature status, changelog | `make check` | [~] |
+| H9.1 | HY-62에 명세한다. selection은 request가 client-rendered page의 것인지와 값을 담은 choice를 반환한다. request의 모든 loader와 action은 그 값을 request에서 읽고, 선언이 없는 application의 request는 값 null을 가진다 | `make docs-check` | [o] |
+| H9.2 | PHP와 Node server: `Choice`, `Request::selection()`, `request.selection()`과 변경 전에 실패하는 test, 문서, feature status, changelog | `make check` | [o] |
