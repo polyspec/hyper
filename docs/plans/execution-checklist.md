@@ -92,3 +92,4 @@ Depends on: wave 6. Templates that style pages with Tailwind CSS use utility cla
 |---|---|---|---|
 | H8.1 | Specify HY-77: `--tailwind <source>=<output>` compiles the source stylesheet of the application with the theme and the utilities of the latest stable Tailwind CSS, generating the utilities that the templates and the client code use, and writes the rules of the source in the cascade layer `components` | `make docs-check` | [o] |
 | H8.2 | Asset build: the option, with a build test that fails before the change; Tailwind CSS as a dependency; documents and changelog | `make check` | [o] |
+| H8.2-1 | Compile the Tailwind stylesheet before the static deployment copies the stylesheets: the build wrote the output after the copy, so `dist/csr/assets/` missed the output of a first build and held the output of the earlier build after a later one | `make check` | [o] |
