@@ -1,5 +1,5 @@
 import { bindValue, parseJson, type ListValue, type MapValue, type Value } from '@polyspec/template/render';
-import { applyRegionKept, copyValue, decodeResponse, renderDocument, renderLayout, renderRegion, requireMap, toHtml, type Application, type DecodedResponse } from './response.js';
+import { applyRegionKept, copyValue, decodeResponse, renderDocument, renderLayout, renderRegionOf, requireMap, toHtml, type Application, type DecodedResponse } from './response.js';
 import { PageStylesheets, StylesheetError } from './stylesheets.js';
 import { stripBasePath } from './router.js';
 import { routeTemplates } from './templates.js';
@@ -232,7 +232,7 @@ export class Hyper {
       const held = this.requireHeld();
       const regions: MapValue = new Map(held.regions);
       regions.set(region, next);
-      const html = await this.app.templates.render(() => renderRegion(this.app, held.route, region, held.shared, regions, held.timezone));
+      const html = await this.app.templates.render(() => renderRegionOf(this.app, held.route, region, held.shared, regions, held.timezone));
       if (replaced()) return;
       const target = this.element(region);
       if (target === null) throw new Error(`hyper: region element #${region} does not exist`);
@@ -487,7 +487,7 @@ export class Hyper {
 
   private async renderHeld(region: string): Promise<void> {
     const held = this.requireHeld();
-    const html = await this.app.templates.render(() => renderRegion(this.app, held.route, region, held.shared, held.regions, held.timezone));
+    const html = await this.app.templates.render(() => renderRegionOf(this.app, held.route, region, held.shared, held.regions, held.timezone));
     const target = this.element(region);
     if (target === null) throw new Error(`hyper: region element #${region} does not exist`);
     await this.htmx.swap({ text: html, target, swap: 'innerMorph', sourceElement: target });

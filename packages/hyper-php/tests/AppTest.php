@@ -264,15 +264,17 @@ final class AppTest extends TestCase
     {
         // HY-13
         $renderer = Renderer::open(self::PROGRAM, '+09:00');
-        $shared = ['title' => 'T', 'name' => 'shared'];
+        $shared = $renderer->bind(['title' => 'T', 'name' => 'shared']);
+        $side = $renderer->bind(['count' => 1, 'note' => 'x']);
+        $content = $renderer->bind(['title' => 'region', 'name' => 'n']);
         $document = $renderer->document('layout.tpl', 'title.tpl', $shared, [
-            'side' => ['template' => 'side.tpl', 'data' => ['count' => 1, 'note' => 'x']],
-            'content' => ['template' => 'page.tpl', 'data' => ['title' => 'region', 'name' => 'n']],
-        ], 'content', [], new \stdClass());
+            'side' => ['template' => 'side.tpl', 'data' => $side],
+            'content' => ['template' => 'page.tpl', 'data' => $content],
+        ], 'content', [], $renderer->bind(['response' => new \stdClass()]));
 
-        self::assertStringContainsString('<title>' . $renderer->alone('title.tpl', $shared, []) . '</title>', $document);
-        self::assertStringContainsString('<aside id="side">' . $renderer->alone('side.tpl', $shared, ['count' => 1, 'note' => 'x']) . '</aside>', $document);
-        self::assertSame("<p>region|n</p>\n", $renderer->alone('page.tpl', $shared, ['title' => 'region', 'name' => 'n']));
+        self::assertStringContainsString('<title>' . $renderer->alone('title.tpl', $shared, $renderer->bind([])) . '</title>', $document);
+        self::assertStringContainsString('<aside id="side">' . $renderer->alone('side.tpl', $shared, $side) . '</aside>', $document);
+        self::assertSame("<p>region|n</p>\n", $renderer->alone('page.tpl', $shared, $content));
         self::assertStringContainsString("<main id=\"content\"><p>region|n</p>\n</main>", $document);
     }
 
@@ -311,17 +313,17 @@ final class AppTest extends TestCase
     {
         // HY-13, HY-30
         $renderer = Renderer::open(self::PROGRAM, 'Z');
-        $shared = ['title' => 'T'];
-        $rows = ['template' => 'rows.tpl', 'data' => ['items' => ['x']]];
-        $page = $renderer->alone('list.tpl', $shared, [], ['rows' => $rows]);
+        $shared = $renderer->bind(['title' => 'T']);
+        $rows = ['template' => 'rows.tpl', 'data' => $renderer->bind(['items' => ['x']])];
+        $page = $renderer->alone('list.tpl', $shared, $renderer->bind([]), ['rows' => $rows]);
         $document = $renderer->document('layout.tpl', 'title.tpl', $shared, [
-            'side' => ['template' => 'side.tpl', 'data' => ['count' => 1]],
-            'content' => ['template' => 'list.tpl', 'data' => []],
-        ], 'content', ['rows' => $rows], new \stdClass());
+            'side' => ['template' => 'side.tpl', 'data' => $renderer->bind(['count' => 1])],
+            'content' => ['template' => 'list.tpl', 'data' => $renderer->bind([])],
+        ], 'content', ['rows' => $rows], $renderer->bind(['response' => new \stdClass()]));
 
         self::assertSame("<h1>T</h1><ul id=\"rows\"><li>x</li></ul>\n", $page);
         self::assertStringContainsString('<main id="content">' . $page . '</main>', $document);
-        self::assertStringContainsString('<ul id="rows">' . $renderer->alone('rows.tpl', $shared, ['items' => ['x']]) . '</ul>', $document);
+        self::assertStringContainsString('<ul id="rows">' . $renderer->alone('rows.tpl', $shared, $rows['data']) . '</ul>', $document);
     }
 
     public function testRouteRegionLoaderMustBeDeclared(): void
@@ -507,6 +509,45 @@ final class AppTest extends TestCase
                 self::assertSame($status, $app->handle(new Request('GET', '/', $headers), $this->session)->status, $label);
             }
         }
+    }
+
+    public function testBindsEachRootOncePerDocument(): void
+    {
+        // H10.4: the HY-44 check binds the shared data once, and the document binds it once more for all of its
+        // renders (title, side, content and layout), so the number of checks does not grow with the renders. A route
+        // with route regions binds it once more in the embedded data (HY-31). A JSON response checks only the
+        // parameters again and encodes the value once.
+        $title = new class () implements \JsonSerializable {
+            public int $serialized = 0;
+
+            public function jsonSerialize(): mixed
+            {
+                $this->serialized++;
+
+                return 'T';
+            }
+        };
+        $app = App::open(__DIR__ . '/fixtures/app.json', self::PROGRAM, [
+            'shared' => fn (): array => ['title' => $title],
+            'routes' => [
+                'home' => ['load' => fn (): array => ['name' => 'n']],
+                'add' => ['post' => fn (): Result => Result::redirect('/')],
+                'list' => ['regions' => ['rows' => fn (): array => ['items' => []]]],
+            ],
+        ], 'Z');
+
+        $document = $app->handle(new Request('GET', '/'), $this->session);
+        self::assertSame(200, $document->status);
+        self::assertStringContainsString('<title>T - Site</title>', $document->body);
+        self::assertSame(2, $title->serialized);
+
+        $title->serialized = 0;
+        self::assertSame(200, $app->handle(new Request('GET', '/', self::JSON), $this->session)->status);
+        self::assertSame(2, $title->serialized);
+
+        $title->serialized = 0;
+        self::assertSame(200, $app->handle(new Request('GET', '/list'), $this->session)->status);
+        self::assertSame(3, $title->serialized);
     }
 
     public function testIntegerOutsideTheSafeRangeFailsForDocumentAndJson(): void

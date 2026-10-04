@@ -1,4 +1,4 @@
-import { type Engine, type MapValue, type Value } from '@polyspec/template/render';
+import { bind, merge, type BoundMap, type Engine, type MapValue, type Value } from '@polyspec/template/render';
 import { createEngine } from './engine.js';
 import { applyKept } from './keep.js';
 import { DATA_TEMPLATE_NAME, keptPaths, pageRegion, type Manifest, type RouteDeclaration } from './manifest.js';
@@ -95,7 +95,7 @@ export function applyRegionKept(decoded: DecodedResponse, name: string, pairs: r
 
 // Runs a rendering of a decoded response. When it fails, every region whose rendering alone fails with its
 // kept values returns to its loader data, route regions first, and the rendering runs again (HY-38).
-function withKeptCheck<T>(app: Application, decoded: DecodedResponse, render: () => T): T {
+function withKeptCheck<T>(app: Application, decoded: DecodedResponse, parts: BoundParts, render: () => T): T {
   try {
     return render();
   } catch (error) {
@@ -107,10 +107,11 @@ function withKeptCheck<T>(app: Application, decoded: DecodedResponse, render: ()
   for (const name of [...routeRegions, ...others, app.page]) {
     if (!decoded.kept.has(name)) continue;
     try {
-      renderRegion(app, decoded.route, name, decoded.shared, decoded.regions, decoded.timezone);
+      renderRegion(app, decoded.route, name, parts, decoded.timezone);
     } catch (error) {
       if (missingTemplate(error)) throw error;
       decoded.regions.set(name, copyValue(decoded.loader.get(name) ?? null));
+      parts.regions.set(name, bind(requireMap(decoded.regions.get(name) ?? null, `region ${name}`)));
       decoded.kept.delete(name);
       decoded.dropped.add(name);
     }
@@ -134,28 +135,52 @@ export function regionTemplate(app: Application, route: RouteDeclaration, name: 
   return template;
 }
 
+// The roots of a response, each bound once (VAL-22): the shared data and the data of every region. Every render
+// of the response merges them, so the renders check no value again (H10.4).
+export interface BoundParts {
+  shared: BoundMap;
+  regions: Map<string, BoundMap>;
+}
+
+// Binds the shared data and the data of every region once.
+export function bindParts(shared: MapValue, regions: MapValue): BoundParts {
+  return {
+    shared: bind(shared),
+    regions: new Map([...regions].map(([name, data]): [string, BoundMap] => [name, bind(requireMap(data, `region ${name}`))])),
+  };
+}
+
 // Renders one region alone with merge(shared, data) as root data; the page region receives each route
 // present route region rendered alone as an HTML definition; an absent one has no definition (HY-13, HY-30, HY-75).
-export function renderRegion(app: Application, route: RouteDeclaration, name: string, shared: MapValue, regions: MapValue, timezone: string): string {
-  const root: MapValue = new Map(shared);
-  for (const [key, item] of requireMap(regions.get(name) ?? null, `region ${name}`)) root.set(key, item);
+export function renderRegion(app: Application, route: RouteDeclaration, name: string, parts: BoundParts, timezone: string): string {
+  const data = parts.regions.get(name);
+  if (data === undefined) throw new Error(`hyper: region ${name} is not an object`);
   const define: Record<string, { html: string }> = {};
   if (name === app.page) {
-    for (const region of presentRouteRegions(route, regions)) define[region] = { html: renderRegion(app, route, region, shared, regions, timezone) };
+    for (const region of presentRouteRegions(route, parts.regions)) define[region] = { html: renderRegion(app, route, region, parts, timezone) };
   }
-  return app.engine.render(regionTemplate(app, route, name), root, { define, env: { timezone } });
+  return app.engine.render(regionTemplate(app, route, name), merge(parts.shared, data), { define, env: { timezone } });
+}
+
+// Renders one region of held data alone (HY-33): binds the shared data, the region and, for the page region, its
+// present route regions once, and renders the region with them.
+export function renderRegionOf(app: Application, route: RouteDeclaration, name: string, shared: MapValue, regions: MapValue, timezone: string): string {
+  const names = name === app.page ? [name, ...presentRouteRegions(route, regions)] : [name];
+  const parts = bindParts(shared, new Map(names.map((item): [string, Value] => [item, regions.get(item) ?? null])));
+  return renderRegion(app, route, name, parts, timezone);
 }
 
 // Renders the title and every region of a decoded response alone (HY-13, HY-38).
 export function renderParts(app: Application, decoded: DecodedResponse): RenderedParts {
-  const regions = withKeptCheck(app, decoded, () => {
+  const parts = bindParts(decoded.shared, decoded.regions);
+  const regions = withKeptCheck(app, decoded, parts, () => {
     const rendered = new Map<string, string>();
     for (const name of decoded.regions.keys()) {
-      rendered.set(name, renderRegion(app, decoded.route, name, decoded.shared, decoded.regions, decoded.timezone));
+      rendered.set(name, renderRegion(app, decoded.route, name, parts, decoded.timezone));
     }
     return rendered;
   });
-  const title = app.engine.render(app.manifest.title, decoded.shared, { env: { timezone: decoded.timezone } });
+  const title = app.engine.render(app.manifest.title, parts.shared, { env: { timezone: decoded.timezone } });
   return { route: decoded.route, title, regions };
 }
 
@@ -178,15 +203,16 @@ export function renderDocument(app: Application, decoded: DecodedResponse): stri
   for (const { name } of app.manifest.regions) {
     if (!decoded.regions.has(name)) throw new Error(`hyper: document response has no region ${name}`);
   }
-  return withKeptCheck(app, decoded, () => {
+  const parts = bindParts(decoded.shared, decoded.regions);
+  return withKeptCheck(app, decoded, parts, () => {
     const env = { timezone: decoded.timezone };
     // Every definition is HTML: the title, the embedded data and each manifest region rendered alone (HY-12).
     const define: Record<string, { html: string }> = {
-      title: { html: app.engine.render(app.manifest.title, decoded.shared, { env }) },
+      title: { html: app.engine.render(app.manifest.title, parts.shared, { env }) },
       data: { html: embeddedHtml(app, decoded, env) },
     };
-    for (const region of app.manifest.regions) define[region.name] = { html: renderRegion(app, decoded.route, region.name, decoded.shared, decoded.regions, decoded.timezone) };
-    return app.engine.render(app.manifest.layout, decoded.shared, { define, env });
+    for (const region of app.manifest.regions) define[region.name] = { html: renderRegion(app, decoded.route, region.name, parts, decoded.timezone) };
+    return app.engine.render(app.manifest.layout, parts.shared, { define, env });
   });
 }
 
@@ -222,7 +248,7 @@ export function requireMap(value: Value, label: string): MapValue {
 }
 
 // Returns the names of the route regions of a route that the region data has: the present route regions (HY-75).
-export function presentRouteRegions(route: RouteDeclaration, regions: MapValue): string[] {
+export function presentRouteRegions(route: RouteDeclaration, regions: ReadonlyMap<string, unknown>): string[] {
   return (route.regions ?? []).map((region) => region.name).filter((name) => regions.has(name));
 }
 

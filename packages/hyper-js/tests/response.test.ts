@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseJson } from '@polyspec/template';
+import { parseJson, type Value } from '@polyspec/template';
 import { decodeResponse, renderDocument, renderParts, toHtml } from '../src/index.js';
 import { loadedApplication } from './application.js';
 
@@ -37,6 +37,36 @@ describe('toHtml', () => {
 
   it('fails for a region that neither the manifest nor the route declares', () => {
     expect(() => toHtml(app, decodeResponse(app, response('home', '{"content":{},"other":{}}'), '/'))).toThrow('is not in the manifest');
+  });
+});
+
+describe('binding', () => {
+  // H10.4: a document binds each root once: the shared data, every region and the embedded data, and every render
+  // merges the bound roots, so the number of binds does not grow with the renders.
+  function probed(route: string, regions: string, path: string): { decoded: ReturnType<typeof decodeResponse>; reads: () => number } {
+    const decoded = decodeResponse(app, response(route, regions), path);
+    let count = 0;
+    const probe = { get value(): string { count++; return 'p'; } };
+    decoded.shared.set('probe', probe as unknown as Value);
+    return { decoded, reads: () => count };
+  }
+
+  it('binds the shared data once for every render of a document without route regions', () => {
+    const { decoded, reads } = probed('home', '{"side":{"count":3},"content":{"name":"n"}}', '/');
+    renderDocument(app, decoded);
+    expect(reads()).toBe(1);
+  });
+
+  it('binds the shared data once more in the embedded data of a document with route regions (HY-31)', () => {
+    const { decoded, reads } = probed('list', '{"side":{"count":2},"content":{"heading":"H"},"rows":{"items":[]}}', '/list');
+    renderDocument(app, decoded);
+    expect(reads()).toBe(2);
+  });
+
+  it('binds the shared data once for the title and the regions of a region response', () => {
+    const { decoded, reads } = probed('list', '{"side":{"count":2},"content":{"heading":"H"},"rows":{"items":[]}}', '/list');
+    renderParts(app, decoded);
+    expect(reads()).toBe(1);
   });
 });
 

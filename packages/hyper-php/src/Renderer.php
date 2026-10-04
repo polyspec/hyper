@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace Polyspec\Hyper;
 
+use Polyspec\Template\BoundMap;
+use Polyspec\Template\Native\BoundMap as NativeBoundMap;
 use Polyspec\Template\Native\Engine as NativeEngine;
 use Polyspec\Template\Program;
 
 /**
  * Renders documents and single regions with the compiled program of the application: the native template
  * extension when PHP has loaded it, and otherwise the generated PHP program (HY-12, HY-13, HY-30, HY-31, HY-48).
+ * The caller binds each root of a document once with `bind`, and every render merges the bound roots, so the
+ * renders of a document check no value again (HY-13, VAL-22).
  */
 final class Renderer
 {
@@ -48,19 +52,29 @@ final class Renderer
     }
 
     /**
+     * Binds a root of the data of a document once, with the bound map of the program (VAL-22): the native
+     * extension takes only its own bound maps, and the generated program only those of the PHP package.
+     *
+     * @param array<array-key, mixed>|\stdClass $value
+     */
+    public function bind(array|\stdClass $value): BoundMap|NativeBoundMap
+    {
+        return $this->program instanceof NativeEngine ? NativeBoundMap::bind($value) : BoundMap::bind($value);
+    }
+
+    /**
      * Renders the document: the layout with the title, the embedded data and every manifest region rendered
      * alone as HTML definitions; the page region receives its route regions the same way.
      *
-     * @param array<array-key, mixed> $shared
-     * @param array<string, array{template: string, data: array<array-key, mixed>}> $regions manifest regions
-     * @param array<string, array{template: string, data: array<array-key, mixed>}> $routeRegions route regions of the page region
-     * @param array<string, mixed>|\stdClass|null $response the embedded data of `{# data}` (HY-31), or null when the route has no route region
+     * @param array<string, array{template: string, data: BoundMap|NativeBoundMap}> $regions manifest regions
+     * @param array<string, array{template: string, data: BoundMap|NativeBoundMap}> $routeRegions route regions of the page region
+     * @param BoundMap|NativeBoundMap|null $data the bound root of `{# data}`, the map with the member `response` (HY-31), or null when the route has no route region
      */
-    public function document(string $layout, string $title, array $shared, array $regions, string $page, array $routeRegions, array|\stdClass|null $response): string
+    public function document(string $layout, string $title, BoundMap|NativeBoundMap $shared, array $regions, string $page, array $routeRegions, BoundMap|NativeBoundMap|null $data): string
     {
         $define = [
             'title' => ['html' => $this->render($title, $shared, [])],
-            'data' => ['html' => $response === null ? '' : $this->render(self::DATA_NAME, ['response' => $response], [])],
+            'data' => ['html' => $data === null ? '' : $this->render(self::DATA_NAME, $data, [])],
         ];
         foreach ($regions as $name => $region) {
             $define[$name] = ['html' => $this->alone($region['template'], $shared, $region['data'], $name === $page ? $routeRegions : [])];
@@ -73,25 +87,20 @@ final class Renderer
      * Renders one template alone with merge(shared, data) as root data; `$routeRegions` passes the route
      * regions of a page region, each rendered alone, as HTML definitions.
      *
-     * @param array<array-key, mixed> $shared
-     * @param array<array-key, mixed> $data
-     * @param array<string, array{template: string, data: array<array-key, mixed>}> $routeRegions
+     * @param array<string, array{template: string, data: BoundMap|NativeBoundMap}> $routeRegions
      */
-    public function alone(string $template, array $shared, array $data, array $routeRegions = []): string
+    public function alone(string $template, BoundMap|NativeBoundMap $shared, BoundMap|NativeBoundMap $data, array $routeRegions = []): string
     {
         $define = [];
         foreach ($routeRegions as $name => $region) {
             $define[$name] = ['html' => $this->alone($region['template'], $shared, $region['data'])];
         }
 
-        return $this->render($template, array_replace($shared, $data), $define);
+        return $this->render($template, $this->program instanceof NativeEngine ? NativeBoundMap::merge($shared, $data) : BoundMap::merge($shared, $data), $define);
     }
 
-    /**
-     * @param array<array-key, mixed> $assign
-     * @param array<string, array{html: string}> $define
-     */
-    private function render(string $template, array $assign, array $define): string
+    /** @param array<string, array{html: string}> $define */
+    private function render(string $template, BoundMap|NativeBoundMap $assign, array $define): string
     {
         $options = ['env' => ['timezone' => $this->timezone]];
         if ($define !== []) {
