@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Polyspec\Hyper;
 
+use Polyspec\Template\BoundMap;
+use Polyspec\Template\Native\BoundMap as NativeBoundMap;
+
 /**
  * Answers requests with documents, JSON, action redirects and the static shell (HY-8, HY-10 to HY-19, HY-24 to HY-27, HY-58 to HY-60, HY-62).
  *
@@ -403,8 +406,9 @@ final class App
         $vary = 'Accept, HX-Request, HX-Current-URL';
         if ($json) {
             $response = JsonEncoder::value($this->timezone, $route['name'], $request->params(), $shared, $data, $kept);
-            // HY-44: every value must belong to the template data model, for JSON as for a document.
-            DataModel::check($response);
+            // HY-44: the check above covered the handler data, and a kept value enters only when it belongs to the
+            // data model, so only the parameters of the request are checked here.
+            DataModel::check($request->params());
 
             $body = JsonEncoder::encode($response);
             $headers = [
@@ -502,16 +506,18 @@ final class App
      */
     private function document(Request $request, array $route, array $shared, array $data, array $templates, array $kept): string
     {
+        // H10.4: each root of the document is bound once, and every render merges the bound roots (VAL-22).
+        $boundShared = $this->renderer->bind($shared);
         $applied = [];
         foreach ($data as $name => $regionData) {
             $pairs = [];
             foreach ($kept[$name] ?? [] as $path => $value) {
                 $pairs[] = [$path, $value];
             }
-            $applied[$name] = Kept::apply($regionData, $pairs);
+            $applied[$name] = $this->renderer->bind(Kept::apply($regionData, $pairs));
         }
         try {
-            return $this->renderDocument($request, $route, $shared, $data, $applied, $templates, $kept);
+            return $this->renderDocument($request, $route, $shared, $boundShared, $data, $applied, $templates, $kept);
         } catch (\Throwable $error) {
             if ($kept === []) {
                 throw $error;
@@ -531,14 +537,14 @@ final class App
                         $define[$routeRegion] = ['template' => $templates[$routeRegion], 'data' => $applied[$routeRegion]];
                     }
                 }
-                $this->renderer->alone($templates[$name], $shared, $applied[$name], $define);
+                $this->renderer->alone($templates[$name], $boundShared, $applied[$name], $define);
             } catch (\Throwable) {
-                $applied[$name] = $data[$name];
+                $applied[$name] = $this->renderer->bind($data[$name]);
                 unset($kept[$name]);
             }
         }
 
-        return $this->renderDocument($request, $route, $shared, $data, $applied, $templates, $kept);
+        return $this->renderDocument($request, $route, $shared, $boundShared, $data, $applied, $templates, $kept);
     }
 
     /**
@@ -555,17 +561,17 @@ final class App
 
     /**
      * @param array{name: string, path: string, title: string, template: string, post: bool, regions: list<Region>} $route
-     * @param array<array-key, mixed> $shared
+     * @param array<array-key, mixed> $shared shared data, which the embedded data carries
      * @param array<string, array<array-key, mixed>> $data loader data, which the embedded data carries
-     * @param array<string, array<array-key, mixed>> $applied region data with kept values applied, which the regions render
+     * @param array<string, BoundMap|NativeBoundMap> $applied bound region data with kept values applied, which the regions render
      * @param array<string, string> $templates
      * @param array<string, array<string, mixed>> $kept
      */
-    private function renderDocument(Request $request, array $route, array $shared, array $data, array $applied, array $templates, array $kept): string
+    private function renderDocument(Request $request, array $route, array $shared, BoundMap|NativeBoundMap $boundShared, array $data, array $applied, array $templates, array $kept): string
     {
         // HY-31, HY-75: the embedded data holds only the present route regions and their kept entries, the data that
-        // the browser can change; a response without a present route region embeds none. HY-44: rendering binds every value of the regions
-        // and of the embedded data, so a value outside the data model fails the document there.
+        // the browser can change; a response without a present route region embeds none. The embedded data is one more root, bound
+        // once (H10.4).
         $routeRegionNames = self::present($route, $data);
         $response = null;
         if ($routeRegionNames !== []) {
@@ -583,7 +589,7 @@ final class App
             }
         }
 
-        return $this->renderer->document($this->manifest->layout, $this->manifest->title, $shared, $regions, $this->manifest->page->name, $routeRegions, $response);
+        return $this->renderer->document($this->manifest->layout, $this->manifest->title, $boundShared, $regions, $this->manifest->page->name, $routeRegions, $response === null ? null : $this->renderer->bind(['response' => $response]));
     }
 
     /** Stores a kept value of a `server` path in the session (HY-40). */
