@@ -11,14 +11,22 @@ import { App, Forbidden, MemorySessionStore, Request, Result, type Handlers, typ
 const FIXTURES = fileURLToPath(new URL('../../packages/hyper-php/tests/fixtures/', import.meta.url));
 const BUILD = fileURLToPath(new URL('../../packages/hyper-node/tests/build/', import.meta.url));
 
+// The exports of each package; the browser package also exports the declaration of the template index, which an
+// application build resolves to the index of its own asset build (HY-34).
+const EXPORTS: Record<string, unknown> = {
+  '@polyspec/hyper': { '.': { types: './dist/index.d.ts', default: './dist/index.js' }, './templates-index': { types: './templates-index.d.ts' } },
+  '@polyspec/hyper-server': { '.': { types: './dist/index.d.ts', default: './dist/index.js' } },
+};
+
 test('the installed packages are JavaScript with declarations', () => {
   for (const name of ['@polyspec/hyper', '@polyspec/hyper-server']) {
     const entry = import.meta.resolve(name);
     assert.ok(entry.endsWith(`/tests/package-install/node_modules/${name}/dist/index.js`), entry);
     const directory = fileURLToPath(new URL('..', entry));
     const manifest = JSON.parse(readFileSync(join(directory, 'package.json'), 'utf8')) as { exports: unknown };
-    assert.deepEqual(manifest.exports, { '.': { types: './dist/index.d.ts', default: './dist/index.js' } });
+    assert.deepEqual(manifest.exports, EXPORTS[name]);
     assert.ok(existsSync(join(directory, 'dist', 'index.d.ts')));
+    if (name === '@polyspec/hyper') assert.ok(existsSync(join(directory, 'templates-index.d.ts')));
     assert.ok(!existsSync(join(directory, 'src')), `${name} contains its source`);
   }
 });
