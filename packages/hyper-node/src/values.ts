@@ -1,5 +1,5 @@
 // Values of the template data model that loaders and actions give the server (HY-44, HY-54).
-import { bind, NativeObject, SafeString, type MapValue, type Value } from '@polyspec/template/render';
+import { bindValue, NativeObject, SafeString, type MapValue, type Value } from '@polyspec/template/render';
 
 export { NativeObject, SafeString, type MapValue, type Value };
 
@@ -13,7 +13,7 @@ export type Data = Record<string, unknown> | Map<string, unknown>;
 // ±(2^53 − 1), a string without a lone surrogate, an array, a Map with string keys or a plain object.
 // Any other value fails, and the request fails with HY-43 (HY-44).
 export function toValue(input: unknown): Value {
-  const value = bind(input);
+  const value = bindValue(input);
   check(value);
   return value;
 }

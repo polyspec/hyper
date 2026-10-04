@@ -1,4 +1,4 @@
-import { bind, parseJson, type ListValue, type MapValue, type Value } from '@polyspec/template/render';
+import { bindValue, parseJson, type ListValue, type MapValue, type Value } from '@polyspec/template/render';
 import { applyRegionKept, copyValue, decodeResponse, renderDocument, renderLayout, renderRegion, requireMap, toHtml, type Application, type DecodedResponse } from './response.js';
 import { PageStylesheets, StylesheetError } from './stylesheets.js';
 import { stripBasePath } from './router.js';
@@ -185,14 +185,14 @@ export class Hyper {
   // Replaces the held data of a region and renders the region (HY-33).
   async render(region: string, data: unknown): Promise<void> {
     this.requireRouteRegion(region);
-    await this.change(region, () => requireMap(bind(data), `data of region ${region}`), Object.keys(keptPaths(this.app.manifest, region)));
+    await this.change(region, () => requireMap(bindValue(data), `data of region ${region}`), Object.keys(keptPaths(this.app.manifest, region)));
   }
 
   // Sets one value in the held data of a region by a dotted path and renders the region (HY-33).
   async set(region: string, path: string, value: unknown): Promise<void> {
     this.requireRouteRegion(region);
     await this.change(region, (data) => {
-      assignPath(data, path, bind(value));
+      assignPath(data, path, bindValue(value));
       return requireMap(data ?? null, `data of region ${region}`);
     }, [path]);
   }
@@ -207,7 +207,7 @@ export class Hyper {
     if (region === undefined || region === '') throw new Error('hyper: hy-set is outside a route region');
     const assignments = parseAssignments(element.getAttribute('hy-set') ?? '');
     await this.change(region, (data) => {
-      for (const { path, value } of assignments) assignPath(data, path, bind(value));
+      for (const { path, value } of assignments) assignPath(data, path, bindValue(value));
       return requireMap(data ?? null, `data of region ${region}`);
     }, assignments.map((assignment) => assignment.path));
   }
