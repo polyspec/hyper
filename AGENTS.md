@@ -36,4 +36,15 @@
 
 - Run the tests of every changed package and `make docs-check` before a commit.
 - Run `make check` before marking a feature implemented in `docs/features.md`.
-- Run the verification command of a task on the committed tree before checking the task in `docs/plans/execution-checklist.md`.
+- Run the verification command of a task on the committed tree before marking the task `[o]` in `docs/plans/execution-checklist.md`.
+
+## Checklist
+
+- This repository has one checklist, `docs/plans/execution-checklist.md`. Split a task into sub-items or add tasks to it; do not create another checklist. Every repository keeps its own checklist.
+- A task has one of four states: `[ ]` waiting, `[~]` in progress, `[o]` done, `[!] cause: <cause>; retry: <condition>` bypassed. `make docs-check` accepts no other state.
+- `[!]` is used only when the next task cannot proceed without bypassing this one. When the retry condition holds, resume the task without waiting for approval. `[!]` is not done. An audit covers only the `[!]` tasks with their causes and retry conditions and does not repeat unrelated full test runs.
+- A new problem gets a new task. A problem related to a task that is `[o]` gets a sub-item with the next derived ID (`H5.2-1`, `H5.2-2`) that goes through `[~]` and `[o]`; the `[o]` task keeps its state.
+- Independent tasks may run in parallel, but finishing a task in progress comes before starting a new one: the number of `[o]` tasks grows, not the number of `[~]` tasks.
+- Uncommitted changes never span more than one task. When a task becomes `[o]`, its changelog entry and its commit are made in the same unit of work.
+- A received instruction is classified first: a task of the checklist, a rule of this file, or an answer only. Unless the instruction states that it is urgent, record it as a task with its priority and continue the task in progress. Rules belong in this file without duplication, never in the checklist or the changelog.
+- Korean documents write technical terms in English and only the surrounding text in Korean.
