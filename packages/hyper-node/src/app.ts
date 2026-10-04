@@ -173,7 +173,14 @@ export class App<S extends object = Record<string, never>> {
     const application = createApplication(manifest, index, fetcher);
     checkHandlers(manifest, options.handlers);
     const client = options.clientRendering === undefined ? null : checkClient(options.clientRendering, manifest);
-    for (const route of manifest.routes) await application.templates.ensure(routeTemplates(manifest, route));
+    // Every entry template of every route is in the index (HY-34), and the server renders every page, so it reads
+    // every template of the index (HY-35).
+    for (const route of manifest.routes) {
+      for (const name of routeTemplates(manifest, route)) {
+        if (typeof index[name]?.url !== 'string') throw new Error(`hyper: template ${name} is not in the template index`);
+      }
+    }
+    await application.templates.ensure(Object.keys(index));
     // HY-73: the read paths of every route, from the templates that the asset build wrote.
     const parsed = new Map<string, Template>();
     for (const [name, entry] of Object.entries(index)) parsed.set(name, await fetcher(entry.url));

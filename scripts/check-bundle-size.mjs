@@ -33,5 +33,5 @@ for (const [name, file] of Object.entries(files)) {
   console.log(`${verdict} ${name} ${file}: raw ${bytes.length}, gzip ${gzip} (limit ${limit}), brotli ${brotli}`);
 }
 const templatesGzip = templates.reduce((total, file) => total + gzipSync(readFileSync(file), { level: 9 }).length, 0);
-console.log(`templates: ${templates.length} files, ${templatesGzip} gzip bytes in total, loaded per route`);
+console.log(`templates: ${templates.length} files, ${templatesGzip} gzip bytes in total, loaded when rendering reaches them`);
 if (failed) process.exit(1);

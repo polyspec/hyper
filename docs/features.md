@@ -31,7 +31,7 @@
 | route-regions | Route regions inside a page with their own loaders (HY-30) | implemented | `make test-php`, `make parity` |
 | region-data | Embedded data of the route regions, `data`, `render`, `set` and `hy-set` on route regions without requests, and the public data rule (HY-29 to HY-33, HY-36, HY-71) | implemented | `make test-js`, `make e2e` |
 | kept-data | Kept paths in the server session, a cookie, localStorage and sessionStorage (HY-37 to HY-41) | implemented | `make test-php`, `make test-js`, `make parity`, `make e2e` |
-| template-delivery | One file per template, loaded per route (HY-34, HY-35) | implemented | `make test-js`, `make e2e`, `make bundle-size` |
+| template-delivery | One file per template, loaded when rendering reaches it (HY-34, HY-35) | implemented | `make test-js`, `make e2e`, `make bundle-size` |
 | parity | Browser documents and regions equal PHP documents byte for byte | implemented | `make parity` |
 | server-parity | Node server responses equal PHP responses in status, headers and body for every parity step (HY-55) | implemented | `make server-parity` |
 | ssr | Server-side rendering with JSON navigation and a no-JavaScript fallback | implemented | `make e2e` |

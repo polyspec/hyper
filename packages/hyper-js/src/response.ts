@@ -1,4 +1,4 @@
-import { MapLoader, type Engine, type MapValue, type Value } from '@polyspec/template/render';
+import { type Engine, type MapValue, type Value } from '@polyspec/template/render';
 import { createEngine } from './engine.js';
 import { applyKept } from './keep.js';
 import { DATA_TEMPLATE_NAME, keptPaths, pageRegion, type Manifest, type RouteDeclaration } from './manifest.js';
@@ -42,12 +42,12 @@ export interface RenderedParts {
 // It does not check the manifest: the asset build checks the manifest that a bundle contains, and a server checks
 // its manifest with checkManifest when it starts (HY-2).
 export function createApplication(manifest: Manifest, index: TemplateIndex, fetcher: TemplateFetcher): Application {
-  const loader = new MapLoader();
+  const templates = new TemplateStore(index, fetcher);
   return {
     manifest,
     router: new Router(manifest.routes),
-    templates: new TemplateStore(index, fetcher, loader),
-    engine: createEngine(loader),
+    templates,
+    engine: createEngine(templates.loader),
     page: pageRegion(manifest),
   };
 }
@@ -99,7 +99,8 @@ function withKeptCheck<T>(app: Application, decoded: DecodedResponse, render: ()
   try {
     return render();
   } catch (error) {
-    if (decoded.kept.size === 0) throw error;
+    // A template that is not loaded yet is not a failure of kept values; the caller loads it and renders again (HY-35).
+    if (decoded.kept.size === 0 || missingTemplate(error)) throw error;
   }
   const routeRegions = presentRouteRegions(decoded.route, decoded.regions);
   const others = [...decoded.regions.keys()].filter((name) => name !== app.page && !routeRegions.includes(name));
@@ -107,7 +108,8 @@ function withKeptCheck<T>(app: Application, decoded: DecodedResponse, render: ()
     if (!decoded.kept.has(name)) continue;
     try {
       renderRegion(app, decoded.route, name, decoded.shared, decoded.regions, decoded.timezone);
-    } catch {
+    } catch (error) {
+      if (missingTemplate(error)) throw error;
       decoded.regions.set(name, copyValue(decoded.loader.get(name) ?? null));
       decoded.kept.delete(name);
       decoded.dropped.add(name);
@@ -222,4 +224,9 @@ export function requireMap(value: Value, label: string): MapValue {
 // Returns the names of the route regions of a route that the region data has: the present route regions (HY-75).
 export function presentRouteRegions(route: RouteDeclaration, regions: MapValue): string[] {
   return (route.regions ?? []).map((region) => region.name).filter((name) => regions.has(name));
+}
+
+// Returns true for the failure of a rendering that requested a template that the loader does not hold (HY-35).
+function missingTemplate(error: unknown): boolean {
+  return (error as { code?: unknown } | null)?.code === 'E_LOAD_NOT_FOUND';
 }

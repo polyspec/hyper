@@ -161,12 +161,6 @@ export class Hyper {
     this.hold(decoded);
     this.checkElements();
     const held = this.held!;
-    try {
-      await this.app.templates.ensure(routeTemplates(this.app.manifest, decoded.route));
-    } catch {
-      if (this.held === held) for (const region of changed) markError(this.element(region), '0');
-      return;
-    }
     for (const region of changed) {
       if (this.held !== held) return;
       try {
@@ -235,14 +229,13 @@ export class Hyper {
     let next: MapValue;
     try {
       next = update(before === undefined ? undefined : copyValue(before));
-      await this.app.templates.ensure(routeTemplates(this.app.manifest, this.requireHeld().route));
-      if (replaced()) return;
       const held = this.requireHeld();
-      const target = this.element(region);
-      if (target === null) throw new Error(`hyper: region element #${region} does not exist`);
       const regions: MapValue = new Map(held.regions);
       regions.set(region, next);
-      const html = renderRegion(this.app, held.route, region, held.shared, regions, held.timezone);
+      const html = await this.app.templates.render(() => renderRegion(this.app, held.route, region, held.shared, regions, held.timezone));
+      if (replaced()) return;
+      const target = this.element(region);
+      if (target === null) throw new Error(`hyper: region element #${region} does not exist`);
       await this.htmx.swap({ text: html, target, swap: 'innerMorph', sourceElement: target });
       if (replaced()) {
         if (this.requireHeld().regions.has(region)) await this.renderHeld(region);
@@ -290,7 +283,7 @@ export class Hyper {
       if (generation !== this.location) return;
       const decoded = decodeResponse(this.app, parseJson(text), path);
       this.applyBrowserKept(decoded);
-      const html = renderDocument(this.app, decoded);
+      const html = await this.app.templates.render(() => renderDocument(this.app, decoded));
       const settle = await this.page.stylesheets(html);
       if (generation !== this.location) return;
       this.hold(decoded);
@@ -352,7 +345,14 @@ export class Hyper {
             const root = requireMap(parseJson(await response.clone().text()), 'response');
             const timezone = requireMap(root.get('env') ?? null, 'env').get('timezone');
             if (typeof timezone !== 'string') throw new Error('hyper: env.timezone is not a string');
-            ctx.hyperStylesheets = await this.page.stylesheets(renderLayout(this.app, requireMap(root.get('shared') ?? null, 'shared'), timezone));
+            ctx.hyperStylesheets = await this.page.stylesheets(await this.app.templates.render(() => renderLayout(this.app, requireMap(root.get('shared') ?? null, 'shared'), timezone)));
+            // Load the templates that the rendering of the response reaches before htmx renders it synchronously (HY-35).
+            const path = stripBasePath(pathOf(response.url || url), basePath);
+            if (path !== null) {
+              const decoded = decodeResponse(this.app, root, path);
+              this.applyBrowserKept(decoded);
+              await this.app.templates.render(() => toHtml(this.app, decoded)).catch(() => undefined);
+            }
           }
           return response;
         };
@@ -487,10 +487,9 @@ export class Hyper {
 
   private async renderHeld(region: string): Promise<void> {
     const held = this.requireHeld();
-    await this.app.templates.ensure(routeTemplates(this.app.manifest, held.route));
+    const html = await this.app.templates.render(() => renderRegion(this.app, held.route, region, held.shared, held.regions, held.timezone));
     const target = this.element(region);
     if (target === null) throw new Error(`hyper: region element #${region} does not exist`);
-    const html = renderRegion(this.app, held.route, region, held.shared, held.regions, held.timezone);
     await this.htmx.swap({ text: html, target, swap: 'innerMorph', sourceElement: target });
     clearError(target);
   }

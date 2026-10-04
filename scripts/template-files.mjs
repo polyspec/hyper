@@ -32,7 +32,6 @@ async function loadParser(templateDir) {
 export async function writeTemplateFiles({ templates, output, urlPrefix, templateDir }) {
   const parse = await loadParser(templateDir);
   const dataTemplate = JSON.parse(readFileSync(join(browserPackage, 'data-template.json'), 'utf8'));
-  const { templateReferences } = await loadPackage(templateDir);
   const sources = { [dataTemplate.name]: dataTemplate.source };
   for (const file of listFiles(templates).filter((name) => name.endsWith('.tpl')).sort()) {
     sources[relative(templates, file).split(sep).join('/')] = readFileSync(file, 'utf8');
@@ -45,7 +44,7 @@ export async function writeTemplateFiles({ templates, output, urlPrefix, templat
     const text = JSON.stringify(ast);
     const file = `${name.replace(/\.tpl$/, '').replaceAll('/', '-')}.${sha256(text).slice(0, 12)}.json`;
     writeFileSync(join(output, file), text);
-    index[name] = { url: `${urlPrefix}/${file}`, deps: templateReferences(ast, name) };
+    index[name] = { url: `${urlPrefix}/${file}` };
   }
   return index;
 }
@@ -62,12 +61,12 @@ export function templatePlugin(templateDir) {
   };
 }
 
-// Bundles checkManifest and templateReferences from the source of the hyper browser package with the template package
+// Bundles checkManifest from the source of the hyper browser package with the template package
 // of the template repository templateDir (HY-70); the result names its input files.
 export async function bundlePackage(templateDir) {
   const templatePackage = templatePlugin(templateDir);
   return build({
-    stdin: { contents: "export { checkManifest, templateReferences } from './src/index.ts';", resolveDir: browserPackage, sourcefile: 'build-entry.ts', loader: 'ts' },
+    stdin: { contents: "export { checkManifest } from './src/index.ts';", resolveDir: browserPackage, sourcefile: 'build-entry.ts', loader: 'ts' },
     bundle: true,
     format: 'esm',
     platform: 'neutral',
@@ -78,7 +77,7 @@ export async function bundlePackage(templateDir) {
   });
 }
 
-// Loads checkManifest and templateReferences from the hyper browser package (HY-2, HY-34, HY-70).
+// Loads checkManifest from the hyper browser package (HY-2, HY-70).
 export async function loadPackage(templateDir) {
   const result = await bundlePackage(templateDir);
   return import(`data:text/javascript;base64,${Buffer.from(result.outputFiles[0].contents).toString('base64')}`);

@@ -99,7 +99,9 @@ test('CSR: a static shell renders every document from /api JSON', async ({ page 
 // HY-33, HY-36: hy-set changes region data and renders the region with no data request. Template files
 // are static assets; the page starts loading them when it holds the data (HY-32, HY-35). Saving a
 // server kept value is a background request that rendering does not wait for (HY-39).
-async function dataFlow(page: Page, origin: string): Promise<void> {
+// `loaded` names the template files that the changes load: a server-rendered page loads the templates of a region when
+// it first renders it, and a client-rendered page has loaded them when it rendered the page.
+async function dataFlow(page: Page, origin: string, loaded: string[]): Promise<void> {
   const errors = collectErrors(page);
   await page.goto(`${origin}/board`);
   await expect(page.locator('#rows tbody tr')).toHaveCount(2);
@@ -121,16 +123,20 @@ async function dataFlow(page: Page, origin: string): Promise<void> {
   await page.getByRole('button', { name: '공지 펼치기' }).click();
   await expect(page.locator('#notice .notice p')).toContainText('서버 요청 없이');
 
-  expect(requests).toEqual([]);
+  // The page sends no request to the application and loads only the template files of the regions that it renders
+  // (HY-30, HY-35).
+  const templates = requests.filter((url) => new URL(url).pathname.includes('/assets/templates/'));
+  expect(requests.filter((url) => !templates.includes(url))).toEqual([]);
+  expect(templates.map((url) => new URL(url).pathname.split('/').pop()!.replace(/\.[0-9a-f]+\.json$/, '')).sort()).toEqual(loaded);
   expect(errors).toEqual([]);
 }
 
 test('SSR: the first page changes region data without a request', async ({ page }) => {
-  await dataFlow(page, ssr);
+  await dataFlow(page, ssr, ['board-notice', 'board-rows']);
 });
 
 test('CSR: region data changes without a request', async ({ page }) => {
-  await dataFlow(page, csr);
+  await dataFlow(page, csr, []);
 });
 
 // HY-37 to HY-40: each kind keeps its value across a reload; sessionStorage stays in its tab.

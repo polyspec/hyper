@@ -17,6 +17,8 @@ export const manifest: Manifest = {
     { name: 'when', path: '/when', title: 'When', template: 'when.tpl' },
     { name: 'list', path: '/list', title: 'List', template: 'list.tpl', regions: [{ name: 'rows', template: 'rows.tpl', keep: { 'items.0.open': 'server', 'items.1.open': 'localStorage', flag: 'cookie', tab: 'sessionStorage', tags: 'cookie', marks: 'localStorage', filter: 'server', 'filter.a': 'localStorage' } }] },
     { name: 'leak', path: '/leak', title: 'Leak', template: 'leak.tpl', regions: [{ name: 'inner', template: 'inner.tpl' }] },
+    // A route template that selects one of two views by its data, as a page that places views at request time (HY-35).
+    { name: 'pick', path: '/pick', title: 'Pick', template: 'pick.tpl' },
   ],
 };
 
@@ -32,17 +34,19 @@ export const sources: Record<string, string> = {
   // A route region that reads a name of the page region data, which it must not see (HY-13).
   'leak.tpl': '<h1>{= heading}</h1><div id="inner">{# inner}</div>',
   'inner.tpl': '[{= heading}]',
+  'pick.tpl': '{? view == "a"}{+ pick-a.tpl}{:}{+ pick-b.tpl}{/}',
+  'pick-a.tpl': '<p>A</p>',
+  'pick-b.tpl': '<p>B</p>',
   // A loop over each item of tags and marks fails for an item that is not a list, a map or null.
   'rows.tpl': '{@ r = items}<li{? r.open} class="open"{/}>{= r.name}</li>{/}{@ t = tags}{@ x = t}{= x}{/}{/}{@ t = marks}{@ x = t}{= x}{/}{/}',
   [DATA_TEMPLATE_NAME]: DATA_TEMPLATE_SOURCE,
 };
 
-const deps: Record<string, string[]> = { 'item.tpl': ['part.tpl'] };
 
 // Creates an application whose template fetcher records the requested URLs.
 export function testApplication(fetched: string[] = []): Application {
   const parsed: Record<string, Template> = Object.fromEntries(Object.entries(sources).map(([name, source]) => [name, parse(source, name)]));
-  const index: TemplateIndex = Object.fromEntries(Object.keys(sources).map((name) => [name, { url: `/t/${name}`, deps: deps[name] ?? [] }]));
+  const index: TemplateIndex = Object.fromEntries(Object.keys(sources).map((name) => [name, { url: `/t/${name}` }]));
   return createApplication(manifest, index, async (url) => {
     fetched.push(url);
     return parsed[url.slice('/t/'.length)]!;
@@ -58,7 +62,7 @@ export async function loadedApplication(): Promise<Application> {
 
 // Creates an application whose template fetcher always fails.
 export function testApplicationFailing(): Application {
-  const index: TemplateIndex = Object.fromEntries(Object.keys(sources).map((name) => [name, { url: `/t/${name}`, deps: deps[name] ?? [] }]));
+  const index: TemplateIndex = Object.fromEntries(Object.keys(sources).map((name) => [name, { url: `/t/${name}` }]));
   return createApplication(manifest, index, async () => {
     throw new Error('404');
   });

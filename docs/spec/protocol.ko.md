@@ -187,7 +187,7 @@
 
 - **HY-29** 영역의 출력은 템플릿, 공유 데이터, 영역 데이터의 함수다. 브라우저는 영역 데이터를 교체하고 렌더하는 방법으로만 페이지를 바꾼다. 폼 컨트롤은 사용자가 입력 중인 값을 가진다. 그 밖의 모든 화면 상태(예: 정렬 순서, 펼친 패널)는 영역 데이터다.
 - **HY-30** 라우트는 라우트 영역을 선언할 수 있다. 예: `"regions": [{ "name": "rows", "template": "board/rows.tpl" }]`.
-  - 페이지 중 요청 없이 브라우저에서 바뀌는 부분이 라우트 영역이다.
+  - 페이지 중 애플리케이션에 요청하지 않고 브라우저에서 바뀌는 부분이 라우트 영역이다. 그 변경이 렌더하는 템플릿 가운데 아직 불러오지 않은 파일은 불러올 수 있다(HY-35).
   - 라우트 템플릿, 또는 라우트 템플릿이 포함하거나 경로로 배치하는 템플릿이 각 라우트 영역을 블록 인자 없이 `{# name}`으로 배치한다. 이 태그는 `id`가 영역 이름인 요소 안에 둔다. 그 템플릿들 가운데 어디에도 라우트 영역을 배치하지 않으면 `make templates-check`가 실패한다.
   - 라우트 영역의 로더는 `null`을 돌려줄 수 있고, 그러면 그 응답에서 영역은 없다(HY-75).
   - 영역 이름은 매니페스트 영역과 모든 라우트 영역을 통틀어 고유하다.
@@ -231,13 +231,15 @@
 
 - **HY-34** 에셋 빌드는 다음을 쓴다. 클라이언트 번들은 색인과 `hyper/data.tpl`의 이름을 담고, 템플릿은 담지 않는다.
   - 템플릿마다 AST 파일 하나. 파일 이름에는 내용의 해시가 들어간다.
-  - 색인. 각 템플릿 이름을 파일 URL과, 그 템플릿의 include 태그와 block 태그가 경로로 참조하는 템플릿 이름 목록에 대응시킨다. 색인은 `hyper/data.tpl`도 담는다.
+  - 색인. 각 템플릿 이름을 파일 URL에 대응시킨다. 색인은 `hyper/data.tpl`도 담는다.
 - **HY-68** asset build와 server build는 출력으로 복사하는 모든 파일을 mode 0644로, 모든 디렉터리를 mode 0755로 만들고 원본 파일의 바이트를 쓴다. 소유자가 읽을 수 없는 mode로 파일을 만들지 않는다. Linux container(Apple `container`)의 virtiofs bind mount는 그런 생성을 `EACCES`로 거부하고, Node의 `fs.cpSync`는 대상 파일을 mode 0200으로 만들기 때문이다. `tests/scripts/output-files.test.mjs`는 출력이 virtiofs bind mount에 있는 container에서 두 복사를 실행한다.
 - **HY-70** asset build, template build, server build는 옵션 `--template-dir`가 가리키는 template 저장소에서 template 언어를 읽는다. parser, render runtime, manifest 검사 bundle은 그 저장소의 `packages/template-ts/package.json`의 `exports`가 `import` 조건으로 가리키는 module을 쓰고, server build는 `tools/compiler`의 compiler도 쓴다. asset build는 애플리케이션이 설치한 template package와 상관없이 client bundle의 `@polyspec/template`도 같은 package로 resolve한다. 어떤 build도 이 저장소의 의존성에서 `@polyspec/template`을 resolve하지 않는다. 따라서 호출자는 자신이 고른 template package로 build하고, 이 저장소 옆의 template checkout을 다시 build해도 다른 template 저장소를 가리킨 build의 결과는 바뀌지 않는다. `--template-dir`가 없는 build는 출력을 쓰기 전에 실패한다. `tests/scripts/template-dir.test.mjs`는 template package의 사본으로 build한다.
-- **HY-35** 브라우저는 렌더하기 전에 라우트에 필요한 템플릿을 불러온다. 레이아웃, 제목, `hyper/data.tpl`, 페이지가 아닌 모든 영역 템플릿, 라우트 템플릿, 모든 라우트 영역 템플릿, 그리고 이들이 참조하는 모든 템플릿(전이적으로)이다.
-  - 영역 요청이면 불러오기를 요청과 함께 시작해 동시에 진행한다.
-  - 응답 URL이 다른 라우트로 라우팅되면(예: 리다이렉트 뒤) 렌더하기 전에 그 라우트의 템플릿을 불러온다.
+- **HY-35** 브라우저는 렌더가 템플릿에 닿을 때 그 템플릿을 불러온다. 렌더하고, 렌더가 불러오지 않은 템플릿을 요청했으면 그 템플릿들을 색인의 URL로 불러온 뒤 다시 렌더한다. 렌더가 끝나거나 다른 이유로 실패할 때까지 반복한다. 데이터가 고르지 않은 분기의 템플릿처럼 어떤 렌더도 닿지 않는 템플릿은 불러오지 않는다. 그래서 여러 화면 가운데 하나를 고르는 라우트 템플릿은 보여 주는 화면만 불러온다.
+  - 라우트의 진입 템플릿은 레이아웃, 제목, `hyper/data.tpl`, 페이지가 아닌 모든 영역 템플릿, 라우트 템플릿, 모든 라우트 영역 템플릿이다. 영역 요청이면 진입 템플릿 불러오기를 요청과 함께 시작해 동시에 진행한다. 응답 URL이 다른 라우트로 라우팅되면(예: 리다이렉트 뒤) 그 라우트의 진입 템플릿을 불러온다.
+  - 서버가 렌더한 페이지를 열 때는 템플릿을 불러오지 않는다. 브라우저가 그 페이지의 영역을 처음 렌더할 때 필요한 템플릿을 불러온다.
+  - 색인에 없는 이름은 렌더를 실패시킨다(HY-47).
   - 불러온 템플릿은 페이지가 내려갈 때까지 유지한다.
+  - 모든 페이지를 렌더하는 Node 서버는 열 때 색인의 모든 템플릿을 읽는다.
 
 ## 유지 데이터
 
