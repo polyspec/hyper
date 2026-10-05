@@ -11,7 +11,7 @@ FIXTURES := $(PHP_PACKAGE)/tests/fixtures
 # The lock of `make serve-demo`, whose fixed ports exist once on this machine (scripts/holder-lock.mjs).
 SERVE_DEMO_LOCK := /tmp/hyper-serve-demo.lock
 # npm installs every dependency as a copy and no bin link (HY-79, .npmrc), so the recipes start the tools with node.
-TSC := node node_modules/typescript/bin/tsc
+TSC := node scripts/tsc.mjs
 # The esbuild package replaces bin/esbuild with the executable of the platform when it installs.
 ESBUILD := node_modules/esbuild/bin/esbuild
 # The copy of packages/hyper-php that the board installs with Composer (HY-79).
@@ -51,9 +51,9 @@ ext: template ## Build the native template extension of the declared copy of the
 	cargo build --locked --release --manifest-path $(TEMPLATE_DIR)/packages/template-php-ext/Cargo.toml --target-dir build/ext
 
 packages: template ## Build the JavaScript modules and type declarations of the npm packages into their dist directories and reinstall their npm copies (HY-61, HY-79)
-	rm -rf $(JS_PACKAGE)/dist && $(TSC) -p $(JS_PACKAGE)/tsconfig.build.json
+	rm -rf $(JS_PACKAGE)/dist && cd $(JS_PACKAGE) && npm run --silent build
 	rm -rf node_modules/@polyspec/hyper && npm install --no-audit --no-fund
-	rm -rf $(NODE_PACKAGE)/dist && $(TSC) -p $(NODE_PACKAGE)/tsconfig.build.json
+	rm -rf $(NODE_PACKAGE)/dist && cd $(NODE_PACKAGE) && npm run --silent build
 	rm -rf node_modules/@polyspec/hyper-server && npm install --no-audit --no-fund
 
 hyper-php-copy: ## Write the copy of packages/hyper-php that the board installs and reinstall it in the board (HY-79)
