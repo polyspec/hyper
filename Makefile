@@ -39,9 +39,10 @@ COMPOSER := $(CURDIR)/var/tools/bin/composer
 INSTALL_LOCK := var/install.lock
 
 # A recipe with several checks runs every check to its end (HY-86): `$(call check,<name>,<command>)` prints the command,
-# runs it in a subshell and records the name when it fails, and `$(checks_result)` then fails and names every failed
+# runs it through scripts/line-end.mjs, which ends its output with a newline so the next line starts at column 0
+# (HY-84), and records the name when it fails, and `$(checks_result)` then fails and names every failed
 # check. A recipe that uses them starts with `@failed=; \` and joins its checks with `\`.
-check = echo '$(2)'; ( $(2) ) || failed="$$failed $(1);";
+check = echo '$(2)'; node scripts/line-end.mjs '$(2)' || failed="$$failed $(1);";
 checks_result = test -z "$$failed" || { echo "failed checks:$$failed"; exit 1; }
 
 # The tracked Git hooks (scripts/git-hooks.mjs). Every make run sets core.hooksPath to this directory when it differs,

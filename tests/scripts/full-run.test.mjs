@@ -306,3 +306,15 @@ test('a make target resolves its result with its last output lines, standard err
   assert.ok(!failed.lastLines.includes('line 0'));
   assert.deepEqual(await makeTarget(directory, 'passes'), { passed: true, lastLines: ['fine'] });
 });
+
+test('a target whose output ends without a newline is followed by a line at column 0 (HY-84)', async t => {
+  const directory = mkdtempSync(path.join(tmpdir(), 'hyper-full-run-line-'));
+  t.after(() => rmSync(directory, { recursive: true, force: true }));
+  writeFileSync(path.join(directory, 'Makefile'), "joined:\n\t@printf 'no newline'\n");
+  const script = `import { makeTarget } from ${JSON.stringify(path.join(ROOT, 'scripts/full-run.mjs'))};
+    const result = await makeTarget(${JSON.stringify(directory)}, 'joined');
+    console.log('[full-run] next line ' + result.passed);`;
+  const run = spawnSync(process.execPath, ['--input-type=module', '-e', script], { encoding: 'utf8', env: { ...process.env, MAKEFLAGS: '', MAKELEVEL: '' } });
+  assert.equal(run.status, 0, run.stderr);
+  assert.ok(run.stdout.split('\n').includes('[full-run] next line true'), JSON.stringify(run.stdout));
+});
