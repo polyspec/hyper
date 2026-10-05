@@ -1,11 +1,8 @@
 import { expect, test, type BrowserContext, type Page, type Response } from '@playwright/test';
-import { ports } from '../../playwright.config.js';
+import { csr, ssr } from './origins.js';
 
 // The tests share one database and run in order: each test starts from the posts created before it.
 test.describe.configure({ mode: 'serial' });
-
-const ssr = `http://127.0.0.1:${ports.ssr}`;
-const csr = `http://127.0.0.1:${ports.edge}`;
 
 // Waits for the htmx fetch response of a path; a followed redirect reports its final URL.
 function fetchResponse(page: Page, path: string): Promise<Response> {
