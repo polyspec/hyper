@@ -22,10 +22,12 @@ function temporary(t, prefix) {
 
 // Starts a process that reads `paths` without pause until `stop` exists and resolves the number of reads that found
 // a path missing or, for `contents`, a content that is not one of them.
+// `contents` is the file of a JSON array of the contents that a read may find, or null.
 function poll(paths, stop, contents = null) {
   const code = `
     const { existsSync, readFileSync } = require('node:fs');
-    const [paths, stop, contents] = JSON.parse(process.argv[1]);
+    const [paths, stop, file] = JSON.parse(process.argv[1]);
+    const contents = file && JSON.parse(readFileSync(file, 'utf8'));
     let reads = 0; let misses = 0;
     while (!existsSync(stop)) {
       for (const file of paths) {
@@ -37,13 +39,21 @@ function poll(paths, stop, contents = null) {
       }
     }
     process.stdout.write(JSON.stringify({ reads, misses }));`;
-  const child = spawn(process.execPath, ['-e', code, JSON.stringify([paths, stop, contents])], { stdio: ['ignore', 'pipe', 'inherit'] });
+  const child = spawn(process.execPath, checked(['-e', code, JSON.stringify([paths, stop, contents])]), { stdio: ['ignore', 'pipe', 'inherit'] });
   let output = '';
   child.stdout.on('data', (data) => { output += data; });
   return new Promise((resolve) => child.on('close', () => resolve(JSON.parse(output))));
 }
 
-const node = (args, options = {}) => spawnSync(process.execPath, args, { cwd: ROOT, encoding: 'utf8', ...options });
+// Linux refuses a single argument longer than MAX_ARG_STRLEN, 32 pages of 4 KiB, with E2BIG, where macOS limits only
+// the sum of the arguments; every argument of a child process stays below it, so a case runs the same on both.
+const ARGUMENT_LIMIT = 131072;
+function checked(args) {
+  for (const argument of args) assert.ok(Buffer.byteLength(argument) < ARGUMENT_LIMIT, `an argument of ${Buffer.byteLength(argument)} bytes is above the ${ARGUMENT_LIMIT} bytes that Linux allows one argument; give it in a file`);
+  return args;
+}
+
+const node = (args, options = {}) => spawnSync(process.execPath, checked(args), { cwd: ROOT, encoding: 'utf8', ...options });
 
 test('a reader of a package copy never finds a file missing while the copy is written again', async (t) => {
   const directory = temporary(t, 'hyper-publish-copy-');
@@ -81,9 +91,14 @@ test('two writers of one copy both succeed and leave the complete copy', async (
 test('a reader of a file never reads a partial content while the file is written again', async (t) => {
   const directory = temporary(t, 'hyper-publish-file-');
   const file = path.join(directory, 'manifest.json');
-  const contents = ['a'.repeat(200_000), 'b'.repeat(10)];
-  const script = `import { writeFileAtomic } from ${JSON.stringify(path.join(ROOT, 'scripts/output-files.mjs'))};
-    for (let index = 0; index < 300; index++) writeFileAtomic(${JSON.stringify(file)}, ${JSON.stringify(contents)}[index % 2]);`;
+  // The contents go to the writer and the reader in a file of another directory, because one of them is longer than
+  // one argument may be on Linux.
+  const contents = path.join(temporary(t, 'hyper-publish-contents-'), 'contents.json');
+  writeFileSync(contents, JSON.stringify(['a'.repeat(200_000), 'b'.repeat(10)]));
+  const script = `import { readFileSync } from 'node:fs';
+    import { writeFileAtomic } from ${JSON.stringify(path.join(ROOT, 'scripts/output-files.mjs'))};
+    const contents = JSON.parse(readFileSync(${JSON.stringify(contents)}, 'utf8'));
+    for (let index = 0; index < 300; index++) writeFileAtomic(${JSON.stringify(file)}, contents[index % 2]);`;
   node(['--input-type=module', '-e', script]);
   const stop = path.join(directory, 'stop');
   const reader = poll([file], stop, contents);
