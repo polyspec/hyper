@@ -32,7 +32,7 @@
     { "paths": ["scripts/copy-package.mjs", "scripts/publish.mjs", "scripts/tracked-files.mjs"], "targets": ["template-check"], "tests": ["tests/scripts/publish.test.mjs", "tests/scripts/template-copy.test.mjs", "tests/scripts/build-assets.test.mjs"] },
     { "paths": ["scripts/copy-template.mjs", "config/template.json"], "targets": ["template-check"], "tests": ["tests/scripts/template-copy.test.mjs", "tests/scripts/full-run.test.mjs"] },
     { "paths": ["scripts/full-run.mjs"], "tests": ["tests/scripts/full-run.test.mjs", "tests/scripts/push-gate.test.mjs"] },
-    { "paths": ["scripts/git-hooks.mjs", "scripts/push-gate.mjs", ".githooks/**", ".github/workflows/*.yml"], "tests": ["tests/scripts/push-gate.test.mjs"] },
+    { "paths": ["scripts/git-hooks.mjs", "scripts/push-gate.mjs", ".githooks/**", ".github/workflows/*.yml"], "tests": ["tests/scripts/push-gate.test.mjs", "tests/scripts/ci-workflow.test.mjs"] },
     { "paths": ["scripts/holder-lock.mjs"], "tests": ["tests/scripts/publish.test.mjs", "tests/scripts/serve-demo.test.mjs", "tests/scripts/full-run.test.mjs"] },
     { "paths": ["scripts/owner-check.mjs", "scripts/owner-checks.json"], "tests": ["tests/scripts/owner-check.test.mjs"] },
     { "paths": ["scripts/run-e2e.mjs"], "targets": ["e2e"], "tests": ["tests/scripts/run-e2e.test.mjs"] },

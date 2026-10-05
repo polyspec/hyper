@@ -62,7 +62,7 @@ $(if $(filter $(HOOKS_PATH),$(shell git config core.hooksPath)),,$(shell git con
 
 .DEFAULT_GOAL := help
 
-.PHONY: help tools toolchain-check owner-check install hyper-php-copy template template-check rust-downloads-check ext packages package-check server server-fixtures node-server node-fixtures assets test-js test-node test-php lint analyse-php templates-check test-scripts parity server-parity bundle-size e2e docs-check serve-demo bench-server bench-server-smoke bench-browser bench check rerun-failed serve-demo-unlock hooks hooks-check
+.PHONY: help tools toolchain-check owner-check install hyper-php-copy template template-check rust-downloads-check ext packages package-check server server-fixtures node-server node-fixtures assets test-js test-node test-php lint analyse-php templates-check test-scripts parity server-parity bundle-size e2e docs-check serve-demo bench-server bench-server-smoke bench-browser bench check rerun-failed serve-demo-unlock hooks hooks-check push-gate-commit
 
 help: ## List the targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
@@ -193,6 +193,10 @@ docs-check: hooks-check ## Check that the pre-push hook is installed, then docum
 hooks: ## Set core.hooksPath to the tracked Git hooks of .githooks and check that the pre-push hook is installed
 	git config core.hooksPath $(HOOKS_PATH)
 	node scripts/push-gate.mjs hooks-check
+
+push-gate-commit: ## Fail when the commit COMMIT has a checklist task in progress or does not track the pre-push hook as an executable file; the job push-gate of GitHub runs it
+	$(if $(COMMIT),,$(error COMMIT names the commit that the push gate checks, such as make push-gate-commit COMMIT=HEAD))
+	node scripts/push-gate.mjs commit $(COMMIT)
 
 hooks-check: ## Fail while the pre-push hook of .githooks is not installed or not executable
 	node scripts/push-gate.mjs hooks-check

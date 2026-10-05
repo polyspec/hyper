@@ -11,6 +11,8 @@ import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
+import { dryRun } from './make-dry-run.mjs';
+
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const CHECKLIST = 'docs/plans/execution-checklist.md';
 // The files that the hook runs, copied from this checkout into each temporary checkout.
@@ -175,5 +177,9 @@ test('the workflow push-gate runs the gate on every push and pull request', () =
   assert.doesNotMatch(workflow, /branches|timeout-minutes/);
   assert.match(workflow, /^ {2}push-gate:\n/m);
   assert.match(workflow, /node-version-file: \.node-version/);
-  assert.match(workflow, /run: node scripts\/push-gate\.mjs commit \$\{\{ github\.event\.pull_request\.head\.sha \|\| github\.sha \}\}/);
+  assert.match(workflow, /run: make push-gate-commit COMMIT=\$\{\{ github\.event\.pull_request\.head\.sha \|\| github\.sha \}\}/);
+  assert.deepEqual(dryRun('push-gate-commit', { variables: ['COMMIT=0123abc'] }), ['node scripts/push-gate.mjs commit 0123abc']);
+  const missing = spawnSync('make', ['--no-print-directory', '-n', 'push-gate-commit'], { cwd: ROOT, encoding: 'utf8', env: { ...process.env, MAKEFLAGS: '', MAKELEVEL: '' } });
+  assert.notEqual(missing.status, 0);
+  assert.match(missing.stderr, /COMMIT names the commit that the push gate checks/);
 });

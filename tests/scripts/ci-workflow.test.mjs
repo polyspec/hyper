@@ -1,0 +1,84 @@
+// Tests the rules of the GitHub workflows (HY-86, HY-90): every job runs on the declared runner ubuntu-26.04-arm, every
+// action is pinned by its commit, no step or job has a time limit, every step after the first of a job runs after a
+// failed step (`if: ${{ !cancelled() }}`), and every step that runs a command runs one make target, so the exported
+// settings and the checks of the Makefile, such as the offline settings and the toolchain check, apply to it.
+import assert from 'node:assert/strict';
+import { readdirSync, readFileSync } from 'node:fs';
+import path from 'node:path';
+import { test } from 'node:test';
+import { fileURLToPath } from 'node:url';
+
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
+const WORKFLOWS = path.join(ROOT, '.github/workflows');
+const RUNNER = 'ubuntu-26.04-arm';
+
+/**
+ * The jobs of a workflow file, read from the block layout that the workflows of this repository use: a job is a key
+ * at indent 2 below `jobs:`, a step is an item `- ` at indent 6 below its `steps:`. Returns
+ * [{ name, text, steps: [{ text, run, uses, if }] }].
+ */
+function jobs(text) {
+  const lines = text.split('\n');
+  const start = lines.indexOf('jobs:');
+  assert.ok(start >= 0, 'the workflow has no jobs: line');
+  const found = [];
+  for (const line of lines.slice(start + 1)) {
+    if (/^\S/.test(line)) break;
+    const job = /^ {2}([\w-]+):$/.exec(line);
+    if (job) {
+      found.push({ name: job[1], lines: [], steps: [] });
+      continue;
+    }
+    const current = found.at(-1);
+    if (!current) continue;
+    current.lines.push(line);
+    if (/^ {6}- /.test(line)) current.steps.push([line.replace(/^ {6}- /, '        ')]);
+    else if (current.steps.length > 0 && /^ {8}/.test(line)) current.steps.at(-1).push(line);
+  }
+  const value = (step, key) => {
+    const line = step.find((entry) => entry.startsWith(`        ${key}:`));
+    return line === undefined ? undefined : line.slice(`        ${key}:`.length).trim();
+  };
+  return found.map((job) => ({
+    name: job.name,
+    text: job.lines.join('\n'),
+    steps: job.steps.map((step) => ({ text: step.join('\n'), run: value(step, 'run'), uses: value(step, 'uses'), if: value(step, 'if') })),
+  }));
+}
+
+const workflows = () => readdirSync(WORKFLOWS).filter((name) => name.endsWith('.yml')).map((name) => ({ name, text: readFileSync(path.join(WORKFLOWS, name), 'utf8') }));
+
+test('the reader finds the jobs and the steps of a workflow', () => {
+  const read = jobs('on:\n  push:\njobs:\n  first:\n    runs-on: x\n    steps:\n      - uses: a/b@c\n        with:\n          d: e\n      - run: make one\n        if: ${{ !cancelled() }}\n  second:\n    steps:\n      - id: s\n        run: make two\n');
+  assert.deepEqual(read.map((job) => job.name), ['first', 'second']);
+  assert.deepEqual(read[0].steps.map((step) => [step.uses, step.run, step.if]), [['a/b@c', undefined, undefined], [undefined, 'make one', '${{ !cancelled() }}']]);
+  assert.equal(read[1].steps[0].run, 'make two');
+});
+
+test('every job runs on the declared runner without a time limit, and every action is pinned by its commit', () => {
+  const found = [];
+  for (const workflow of workflows()) {
+    if (/timeout-minutes/.test(workflow.text)) found.push(`${workflow.name}: timeout-minutes`);
+    for (const job of jobs(workflow.text)) {
+      if (!new RegExp(`^ {4}runs-on: ${RUNNER}$`, 'm').test(job.text)) found.push(`${workflow.name} ${job.name}: runs-on is not ${RUNNER}`);
+      for (const step of job.steps.filter((entry) => entry.uses)) {
+        if (!/^[\w.-]+\/[\w./-]+@[0-9a-f]{40} # v\d/.test(step.uses)) found.push(`${workflow.name} ${job.name}: ${step.uses} is not pinned by a commit with its release`);
+      }
+    }
+  }
+  assert.deepEqual(found, []);
+});
+
+test('every step that runs a command runs make, and every step after the first runs after a failed step (HY-86)', () => {
+  const found = [];
+  for (const workflow of workflows()) {
+    for (const job of jobs(workflow.text)) {
+      assert.ok(job.steps.length > 0, `${workflow.name} ${job.name} has no step`);
+      job.steps.forEach((step, index) => {
+        if (step.run !== undefined && !/^make [^|&;<>`$\n]*(\$\{\{ [^}]+ \}\}[^|&;<>`$\n]*)*$/.test(step.run)) found.push(`${workflow.name} ${job.name}: the step "${step.run}" runs a command other than one make`);
+        if (index > 0 && !(step.if ?? '').includes('!cancelled()')) found.push(`${workflow.name} ${job.name}: step ${index + 1} runs only while every earlier step passed`);
+      });
+    }
+  }
+  assert.deepEqual(found, []);
+});

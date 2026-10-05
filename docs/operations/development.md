@@ -44,6 +44,7 @@
 | `make docs-check` | Runs `make hooks-check`, then checks document pairs, links and code blocks |
 | `make hooks` | Sets `core.hooksPath` to `.githooks` and runs `make hooks-check` (see [Push](#push)) |
 | `make hooks-check` | Fails while `core.hooksPath` is not `.githooks` or `.githooks/pre-push` is missing or not executable |
+| `make push-gate-commit` | Fails when the commit `COMMIT` has a checklist task in progress or does not track `.githooks/pre-push` with mode 100755; the job `push-gate` of GitHub runs it (see [Push](#push)) |
 | `make serve-demo` | Serves SSR, CSR and the comparison page on the fixed ports 8080 to 8082 while it holds the lock `/tmp/hyper-serve-demo.lock`; a second demo fails with the holder (see [Deployment](deployment.md)) |
 | `make serve-demo-unlock` | Removes the lock of a demo whose process has ended; fails while the demo runs |
 | `make bench-server-smoke` | Runs the PHP benchmark once per measurement; `make check` includes it so that a change that breaks the benchmark fails |
@@ -73,7 +74,7 @@ A push happens only when no task of the checklist is `[~]`, neither in a pushed 
 
 Git does not install hooks from a clone. Every `make` run therefore sets `core.hooksPath` to `.githooks` when it has another value, and `make hooks` sets it explicitly. `make hooks-check`, which `make docs-check` runs before each commit, and the guard of the full run fail while `core.hooksPath` is not `.githooks` or the hook is missing or not executable.
 
-The workflow `.github/workflows/push-gate.yml` is the only CI workflow of the repository. Its job `push-gate` runs `node scripts/push-gate.mjs commit <sha>` on the pushed commit of every branch and on the head commit of every pull request, so a push that skipped the hook, or came from a checkout without it, still fails there. It fails for a task in progress, for a commit without the checklist and for a commit that does not track `.githooks/pre-push` with mode 100755; it prints each line of the failure as an annotation and writes it into the job summary.
+The workflow `.github/workflows/push-gate.yml` is the only CI workflow of the repository. Its job `push-gate` runs `make push-gate-commit COMMIT=<sha>`, which runs `node scripts/push-gate.mjs commit <sha>`, on the pushed commit of every branch and on the head commit of every pull request, so a push that skipped the hook, or came from a checkout without it, still fails there. It fails for a task in progress, for a commit without the checklist and for a commit that does not track `.githooks/pre-push` with mode 100755; it prints each line of the failure as an annotation and writes it into the job summary.
 
 ## Test runs
 
