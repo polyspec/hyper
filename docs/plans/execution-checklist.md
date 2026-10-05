@@ -84,6 +84,7 @@ Depends on: none. Every checklist uses four task states: `[ ]` waiting, `[~]` in
 |---|---|---|---|
 | H7.1 | Accept only the four task states in `scripts/check-documents.mjs`, the same in both languages, with the cause and the retry condition of a bypassed task; check it fails on the `[x]` rows; write every done task as `[o]`; state the checklist rules in AGENTS | `make docs-check` | [o] |
 | H7.2 | State in AGENTS the commit message format `type(scope): Subject (#task)` with a body wrapped at 72 characters, that work may be done on `main`, the names of branches and worktrees and their removal after the merge, the removal of test code that cannot be merged, and the classification of a received instruction with the agent memory | `make docs-check` | [o] |
+| H7.1-1 | Allow a task state marker in this checklist only as the state of a task row, at the start of its last cell: the legend of How to use and the texts of wave 7, H7.1, H11.1 and H11.1-1 wrote markers in inline code, and `scripts/check-documents.mjs` read only the last cell of each task row, so a tool that counted markers counted tasks in progress that do not exist. AGENTS defines the states; remove the legend, name states in words in the texts, and make `make docs-check` fail for every other marker with its file, line and column, without exceptions; a case of `tests/scripts/check-documents.test.mjs` that fails before the change | `make docs-check`, `node scripts/run-tests.mjs node -- tests/scripts/check-documents.test.mjs` | [~] |
 
 ## Wave 8 — Tailwind CSS in the asset build
 
