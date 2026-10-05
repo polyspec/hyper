@@ -55,3 +55,7 @@
 ## Wave 13
 
 의존: 없음. AGENTS는 `[~]` 작업이 없을 때만 push를 허용하지만 이를 강제하는 것이 없었다. push는 진행 중인 작업이 있는 tree를 보냈고, 그 tree의 전체 suite는 guard가 거부한다. pre-push hook은 `make`를 실행한 모든 checkout에서 그런 push를 거부하고, workflow `push-gate`는 hook을 거치지 않은 push도 포함해 그런 commit에 대해 GitHub에서 실패한다.
+
+## Wave 14
+
+의존: 없음. 이 저장소의 검사는 실행 시각과 machine, 이전 실행이 남긴 상태에 따라 다른 결과를 냈다. 2026-10-05의 full run은 7개 target에서 실패했다. 모든 target이 `make template`을 실행했고, 그것은 template 저장소가 `dist`를 다시 build하는 동안 `../template`의 working tree를 복사했다. 이어서 npm 12.2.0이 `npm pack --json`을 object로 출력해 복사가 `TypeError: object is not iterable`로 실패했다. 이 저장소의 검사에는 열 가지 결함 class가 있다. 시각이나 외부 세계에 의존하는 결과, 남은 상태에 의존하는 test, 지운 뒤 쓰는 방식으로 publish하는 출력, 첫 실패한 검사에서 멈추는 recipe, 스스로 설명하지 않는 실패, 실행하지 않고 통과할 수 있는 case, 누수된 process와 파일, 버전에 따라 다른 tool 출력에 대한 assertion, owner test가 없는 변경 경로, 공유 상태의 경쟁이다. 각 class는 이 저장소의 모든 사례를 고치는 작업과 AGENTS의 규칙을 받는다.

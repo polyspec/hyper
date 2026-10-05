@@ -4,7 +4,7 @@
 
 | ID | Feature | Status | Evidence |
 |---|---|---|---|
-| protocol | Region protocol specification (HY-1 to HY-79) | implemented | [Protocol](spec/protocol.md) |
+| protocol | Region protocol specification (HY-1 to HY-80) | implemented | [Protocol](spec/protocol.md) |
 | composition | Screen composition rules (HC-1 to HC-7) and the template check for HC-6 | implemented | [Composition](spec/composition.md), `make templates-check` |
 | manifest | Application manifest read by PHP and the browser | implemented | `make test-php`, `make test-js` |
 | router | PHP and browser routers with shared conformance cases | implemented | `make test-php`, `make test-js` |
@@ -44,6 +44,7 @@
 | output-files | The asset build and the server build create their copied output files with the mode 0644, which a virtiofs bind mount of a Linux container accepts (HY-68) | implemented | `make test-scripts` |
 | template-dir | The asset build, the template build and the server build read the template package of the template repository that `--template-dir` names (HY-70) | implemented | `make test-scripts` |
 | template-copy | npm, Composer, PHPStan, the native extension build and the build scripts read the template repository only through its declared copy `var/products/template` (HY-78) | implemented | `make test-scripts`, `make template-check` |
+| template-branch | The declared copy is the commit at the head of the template branch that `config/template.json` names; a missing branch, a build of other inputs or a changed input fails the copy with the expected and the actual value, `make template` copies only when `config/template.json` changes, and the full-run record names the branch (HY-80) | implemented; full run pending | `tests/scripts/template-copy.test.mjs`, `tests/scripts/full-run.test.mjs` |
 | query-values | Every query value in order without nesting, and the raw query (HY-56) | implemented | `make test-php`, `make test-node` |
 | form-values | Every form value of an urlencoded or multipart body in order without nesting (HY-57) | implemented | `make test-php`, `make test-node` |
 | request-boundary | UTF-8 checks, plain 500 errors, data model checks, hardened session cookie, redirect checks, failure marks (HY-42 to HY-47) | implemented | `make test-php`, `make test-js`, `make e2e` |

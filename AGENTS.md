@@ -16,6 +16,7 @@
 - Use the simplest implementation that fully meets the current requirements. Do not add abstractions, configuration or indirection for uncertain future needs.
 - Separate concerns into modules. Split a file that has more than one responsibility.
 - Do not use temporary scripts or folders. Every check is a Makefile target, a script under `scripts/`, or a committed test, and is idempotent.
+- A result depends only on the tree. Every input from outside the repository is named in a tracked file and verified before use: another repository by its branch (`config/template.json`, HY-80), a build output by the hash of its inputs. A mismatch fails with the expected and the actual value. No check reads the working tree of another checkout as it happens to be.
 - Keep code and tests in separate directories inside each package.
 - Handle a defect by adding a failing test that reproduces it, fixing the code, and keeping the test.
 - Use repository-relative paths. Require explicit paths for external inputs.
