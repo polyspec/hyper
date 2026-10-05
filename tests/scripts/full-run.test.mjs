@@ -185,6 +185,9 @@ test('a full run records each target, and the same tree is refused a second time
   assert.equal(written.tree, git(directory, 'rev-parse', 'HEAD^{tree}'));
   // The record names the template branch of the run (HY-80).
   assert.equal(written.template, TEMPLATE_BRANCH);
+  // The record holds the running releases of the tools, the PHP patch among them, as the evidence of the run (HY-81).
+  assert.equal(written.environment.node, process.version);
+  assert.match(written.environment.php, /^\d+\.\d+\.\d+$/);
   assert.match(first.output, new RegExp(`^\\[full-run\\] template branch ${TEMPLATE_BRANCH} \\(config/template\\.json\\)$`, 'm'));
   assert.equal(written.result, 'passed');
   assert.ok(written.ended);

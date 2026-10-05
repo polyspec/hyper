@@ -20,6 +20,7 @@ import { fileURLToPath } from 'node:url';
 
 import { hooksProblem } from './git-hooks.mjs';
 import { acquire } from './holder-lock.mjs';
+import { versions } from './toolchain.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const USAGE = 'Usage: node scripts/full-run.mjs run <target>... | rerun-failed';
@@ -187,7 +188,7 @@ export async function fullRun({ root = ROOT, mode, targets = [], runTarget = nam
 async function runTargets({ root, mode, targets, runTarget, print, decision, record, tree, commit, template }) {
   const now = () => new Date().toISOString();
   const current = mode === 'run'
-    ? { tree, commit, template, result: 'incomplete', pid: process.pid, started: now(), ended: null, targets: targets.map(name => ({ name, status: 'pending' })), reruns: [] }
+    ? { tree, commit, template, environment: versions(), result: 'incomplete', pid: process.pid, started: now(), ended: null, targets: targets.map(name => ({ name, status: 'pending' })), reruns: [] }
     : { ...record, result: 'incomplete', pid: process.pid };
   const rerun = mode === 'run' ? null : { started: now(), ended: null, targets: decision.targets, result: 'incomplete' };
   if (rerun) current.reruns.push(rerun);

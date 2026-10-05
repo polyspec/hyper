@@ -3,7 +3,10 @@
 //   Node.js    .node-version
 //   npm        `packageManager` of package.json, npm@<version>+sha512.<hex digest of the release tarball>
 //   Composer   config/toolchain.json, `composer` with its version and the SHA-256 of composer.phar
-//   PHP, make  config/toolchain.json, `php` and `make`
+//   PHP        config/toolchain.json, `php` as <major>.<minor>: a patch release of the pinned minor passes, and the full
+//              run records the running patch (HY-81)
+// make is not pinned: the expansion of every target of the Makefile gives the same commands under GNU Make 3.81 and 4,
+// and the recipes start npm and Composer by their absolute paths, which make 3.81 needs.
 //   Rust       rust-toolchain.toml of the template branch (HY-80), which the declared copy holds
 // npm and Composer are installed into this checkout, below the ignored directory var/tools, and never into the
 // machine: a global tool is shared by every checkout and session of the machine, and an install of one replaces the
@@ -12,8 +15,8 @@
 //
 //   node scripts/toolchain.mjs install         install the pinned npm and Composer into var/tools; a release that
 //                                             is already installed is kept. The download is verified by its digest.
-//   node scripts/toolchain.mjs check <make>    fail when a running tool is not the pinned one, naming the expected
-//                                             and the actual version or path; <make> is $(MAKE_VERSION)
+//   node scripts/toolchain.mjs check           fail when a running tool is not the pinned one, naming the expected
+//                                             and the actual version or path
 import { execFileSync, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
@@ -133,7 +136,7 @@ const output = (command, args) => {
 };
 
 /** The tools that differ from their pins, each with the expected and the actual value. */
-export function problems({ pinned = pins(), make }) {
+export function problems({ pinned = pins() } = {}) {
   const found = [];
   const expect = (tool, expected, actual) => {
     if (actual !== expected) found.push(`${tool}: expected ${expected}, actual ${actual}`);
@@ -143,18 +146,29 @@ export function problems({ pinned = pins(), make }) {
   expect('npm on PATH', path.join(BIN, 'npm'), which.error ?? which.text);
   const npm = output('npm', ['--version']);
   expect('npm', pinned.npm.version, npm.error ?? npm.text);
-  const php = output('php', ['-r', 'echo PHP_VERSION;']);
+  const php = output('php', ['-r', 'echo PHP_MAJOR_VERSION, ".", PHP_MINOR_VERSION;']);
   expect('PHP', pinned.php, php.error ?? php.text);
   const composerPath = output('/usr/bin/which', ['composer']);
   expect('Composer on PATH', path.join(BIN, 'composer'), composerPath.error ?? composerPath.text);
   const phar = path.join(TOOLS, 'composer', 'composer.phar');
   expect('Composer', pinned.composer.sha256, existsSync(phar) ? digest('sha256', readFileSync(phar)) : `no ${path.relative(ROOT, phar)}`);
-  if (make !== undefined) expect('make', pinned.make, make);
   return found;
 }
 
+/** The running releases of the tools, which the full run records as the evidence of its environment. */
+export function versions() {
+  const text = (command, args) => { const result = output(command, args); return result.error ?? result.text; };
+  return {
+    node: process.version,
+    npm: text('npm', ['--version']),
+    php: text('php', ['-r', 'echo PHP_VERSION;']),
+    composer: text('composer', ['--version', '--no-ansi']).split('\n')[0],
+    make: text('make', ['--version']).split('\n')[0],
+  };
+}
+
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  const [action, make] = process.argv.slice(2);
+  const [action, ...rest] = process.argv.slice(2);
   try {
     if (action === 'install') {
       const pinned = pins();
@@ -162,14 +176,14 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
       await installNpm(pinned.npm);
       await installComposer(pinned.composer);
       writeCommands();
-    } else if (action === 'check' && make !== undefined) {
-      const found = problems({ make });
+    } else if (action === 'check' && rest.length === 0) {
+      const found = problems();
       if (found.length > 0) {
         process.stderr.write(`the toolchain differs from its pins (HY-81); \`make tools\` installs npm and Composer into var/tools:\n${found.map((line) => `  ${line}`).join('\n')}\n`);
         process.exitCode = 1;
       }
     } else {
-      throw new Error('Usage: node scripts/toolchain.mjs install | check <make version>');
+      throw new Error('Usage: node scripts/toolchain.mjs install | check');
     }
   } catch (error) {
     process.stderr.write(`${error.message}\n`);
