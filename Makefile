@@ -91,11 +91,11 @@ test-scripts: packages ## Run the tests of the check scripts
 	TEMPLATE_DIR=$(TEMPLATE_DIR) node scripts/run-tests.mjs node -- tests/scripts/
 
 parity: assets server ext ## Compare PHP documents (generated program and native extension) with browser renders of document and region JSON
-	node scripts/check-parity.mjs --app $(BOARD) --requests $(BOARD)/tests/parity/requests.json --port 8092
-	node scripts/check-parity.mjs --app $(BOARD) --requests $(BOARD)/tests/parity/requests.json --port 8092 --extension $(EXT)
+	node scripts/check-parity.mjs --app $(BOARD) --requests $(BOARD)/tests/parity/requests.json
+	node scripts/check-parity.mjs --app $(BOARD) --requests $(BOARD)/tests/parity/requests.json --extension $(EXT)
 
 server-parity: node-server server ## Compare the Node server responses with the PHP responses, with the browser comparison of parity (HY-55)
-	node scripts/check-parity.mjs --app $(BOARD) --requests $(BOARD)/tests/parity/requests.json --port 8094 --node-port 8096
+	node scripts/check-parity.mjs --app $(BOARD) --requests $(BOARD)/tests/parity/requests.json --node
 
 bundle-size: assets ## Print the SSR script and CSR shell sizes and enforce the gzip limits
 	node scripts/check-bundle-size.mjs --app $(BOARD) --output $(BOARD)/build --limits config/bundle-size.json

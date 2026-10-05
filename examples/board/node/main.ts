@@ -1,9 +1,10 @@
 // Serves the board example with the Node server, as public/index.php serves it with PHP. `make node-server` builds
 // this file into build/node/server.mjs.
 //
-// Environment: BOARD_DB (the SQLite database file), BOARD_SESSIONS (an absolute session directory), BOARD_PORT,
-// and as for PHP BOARD_BASE_PATH, BOARD_HTTPS=1, BOARD_FRAME_ANCESTORS (HY-45) and BOARD_TIME.
+// Environment: BOARD_DB (the SQLite database file), BOARD_SESSIONS (an absolute session directory), BOARD_PORT (0
+// lets the system assign the port; the server prints the port that it listens on), and as for PHP BOARD_BASE_PATH, BOARD_HTTPS=1, BOARD_FRAME_ANCESTORS (HY-45) and BOARD_TIME.
 import { mkdirSync, readFileSync } from 'node:fs';
+import type { AddressInfo } from 'node:net';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { App, FileSessions } from '@polyspec/hyper-server';
@@ -44,4 +45,4 @@ app.bind('assets', () => {
 });
 // The session cookie has the name that the PHP board uses, PHP's default session name.
 const server = app.server(new FileSessions({ directory: sessionDirectory }), { files: join(board, 'public') });
-server.listen(port, '127.0.0.1', () => process.stdout.write(`board on http://127.0.0.1:${port}\n`));
+server.listen(port, '127.0.0.1', () => process.stdout.write(`board on http://127.0.0.1:${(server.address() as AddressInfo).port}\n`));

@@ -136,3 +136,4 @@
 | ID | 작업 | 검증 | 상태 |
 |---|---|---|---|
 | H12.1 | HY-78: template 저장소를 `scripts/copy-template.mjs`가 쓰는 선언한 복사본 `var/products/template`으로만 읽는다(build된 TypeScript package의 `npm pack`, PHP package, 네이티브 확장, Rust crate, compiler의 추적 파일). npm은 사본을 설치하고, Composer, PHPStan, `make ext`는 복사본을 읽으며, `make template`은 template 저장소에서 아무것도 build하지 않는다 | `node scripts/run-tests.mjs node -- tests/scripts/template-copy.test.mjs` | [o] |
+| H12.2 | `scripts/check-parity.mjs`는 `scripts/board-servers.mjs`로 PHP 서버와 board Node 서버를 system이 배정하는 port에 띄우고, 각 서버가 출력에 알리는 주소로 요청을 보내며, 그 출력에 서버의 prefix를 붙여 출력하고, database와 session 디렉터리를 실행의 임시 디렉터리에 둔다. option `--port`, `--node-port`와 polling하는 `waitForServer`는 없앤다 | `node scripts/run-tests.mjs node -- tests/scripts/check-parity.test.mjs` | [o] |

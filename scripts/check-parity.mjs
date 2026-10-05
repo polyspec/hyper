@@ -8,28 +8,34 @@
 // and requires that (2) equals (1) byte for byte and that every part of (3) appears in (1).
 // Rendering also requires that the browser router selects the route that the server reported.
 //
-// With --node-port it also starts the board Node server (`make node-server`) with its own empty database and
+// With --node it also starts the board Node server (`make node-server`) with its own empty database and
 // session, sends every request of the steps to both servers, and requires the same status, the same headers and
 // the same body after it replaces the session identifier, the masked CSRF token and the ETag value with placeholders.
 // Both servers store posts with the same creation time (BOARD_TIME).
 //
+// The servers of a run listen on ports that the system assigns, and the check sends its requests to the address
+// that each server reports in its output (scripts/board-servers.mjs), so it never tests a server of another run.
+// Their databases and the session directory lie in a temporary directory of the run, which the check removes.
+//
 // Every step prints a line when it starts and its result with the elapsed milliseconds. A request without a response
 // within REQUEST_TIMEOUT_MS fails by the name of its step and ends the check.
 //
-// Usage: node scripts/check-parity.mjs --app examples/board --requests examples/board/tests/parity/requests.json --port 8092
-//          [--extension build/ext/release/libpolyspec_template.dylib] [--node-port 8096]
+// Usage: node scripts/check-parity.mjs --app examples/board --requests examples/board/tests/parity/requests.json
+//          [--extension build/ext/release/libpolyspec_template.dylib] [--node]
 
-import { spawn, spawnSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { readFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { build } from 'esbuild';
+import { startNode, startPhp, stopServers } from './board-servers.mjs';
 
 // --extension loads the native template extension into PHP, so the server renders with it instead of the
 // generated program (HY-48).
-const { values } = parseArgs({ options: { app: { type: 'string' }, requests: { type: 'string' }, port: { type: 'string' }, extension: { type: 'string' }, 'node-port': { type: 'string' } } });
-if (!values.app || !values.requests || !values.port) throw new Error('--app, --requests and --port are required');
+const { values } = parseArgs({ options: { app: { type: 'string' }, requests: { type: 'string' }, extension: { type: 'string' }, node: { type: 'boolean' } } });
+if (!values.app || !values.requests) throw new Error('--app and --requests are required');
 const app = values.app;
 const SESSION_COOKIE = 'hy-session';
 // The creation time of every post: 2026-10-01 12:00:00 UTC.
@@ -55,34 +61,23 @@ const loaded = spawnSync('php', [...extension, '-r', "exit(extension_loaded('pol
 if (loaded !== Boolean(values.extension)) throw new Error(`PHP ${loaded ? 'loaded' : 'did not load'} the native template extension`);
 console.log(`template program: ${loaded ? 'native extension' : 'generated PHP'}`);
 
-const files = [];
+// The databases and the session directory of the run.
+const run = mkdtempSync(join(tmpdir(), 'hyper-parity-'));
+console.log(`run directory: ${run}`);
 const children = [];
-const php = client(`http://127.0.0.1:${values.port}`);
-const phpDatabase = resolve(app, 'var', 'parity.db');
-files.push(phpDatabase);
-rmSync(phpDatabase, { force: true });
-children.push(spawn('php', [...extension, '-d', 'display_errors=0', '-S', `127.0.0.1:${values.port}`, '-t', join(app, 'public')], {
-  env: { ...process.env, BOARD_DB: phpDatabase, BOARD_BASE_PATH: '', BOARD_TIME },
-  stdio: 'ignore',
-}));
+let php = null;
 let node = null;
-if (values['node-port']) {
-  node = client(`http://127.0.0.1:${values['node-port']}`);
-  const nodeDatabase = resolve(app, 'var', 'parity-node.db');
-  const sessions = resolve(app, 'var', 'parity-sessions');
-  files.push(nodeDatabase, sessions);
-  rmSync(nodeDatabase, { force: true });
-  rmSync(sessions, { recursive: true, force: true });
-  children.push(spawn(process.execPath, [join(app, 'build', 'node', 'server.mjs')], {
-    env: { ...process.env, BOARD_DB: nodeDatabase, BOARD_SESSIONS: sessions, BOARD_PORT: values['node-port'], BOARD_BASE_PATH: '', BOARD_TIME },
-    stdio: ['ignore', 'ignore', 'inherit'],
-  }));
-}
-
 let failures = 0;
 let compared = 0;
 try {
-  await Promise.all([php, node].filter((item) => item !== null).map((item) => waitForServer(item.base)));
+  const phpServer = await startPhp({ name: 'php', app, port: 0, extension: values.extension, env: { BOARD_DB: join(run, 'php.db'), BOARD_BASE_PATH: '', BOARD_TIME } });
+  children.push(phpServer.child);
+  php = client(phpServer.url);
+  if (values.node) {
+    const nodeServer = await startNode({ name: 'node', app, port: 0, env: { BOARD_DB: join(run, 'node.db'), BOARD_SESSIONS: join(run, 'sessions'), BOARD_BASE_PATH: '', BOARD_TIME } });
+    children.push(nodeServer.child);
+    node = client(nodeServer.url);
+  }
   let keepCookie = '';
   // Sends a step to the PHP server, and to the Node server when it runs, and compares the two responses.
   const send = async (step, headers) => {
@@ -113,9 +108,11 @@ try {
     console.log(`${failures === 0 ? 'ok' : 'checked'} ${label}: ${result} (${elapsed()})`);
   }
   if (node !== null) console.log(`${failures === 0 ? 'ok' : 'checked'} Node server: ${compared} responses equal the PHP responses`);
+} catch (error) {
+  fail(error.message);
 } finally {
-  for (const child of children) child.kill();
-  for (const file of files) rmSync(file, { recursive: true, force: true });
+  await stopServers(children);
+  rmSync(run, { recursive: true, force: true });
 }
 if (failures > 0) {
   console.error(`${failures} parity failure(s)`);
@@ -257,22 +254,4 @@ async function loadBrowserCode() {
   });
   const code = Buffer.from(result.outputFiles[0].contents).toString('base64');
   return import(`data:text/javascript;base64,${code}`);
-}
-
-// Waits until a server accepts connections. A server that accepts the connection and does not answer fails at
-// once.
-async function waitForServer(base) {
-  console.log(`▶ start ${base}`);
-  const started = performance.now();
-  for (let attempt = 0; attempt < 50; attempt++) {
-    try {
-      await fetch(base + '/missing', { redirect: 'manual', signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
-      console.log(`ok start ${base} (${Math.round(performance.now() - started)} ms)`);
-      return;
-    } catch (error) {
-      if (error.name === 'TimeoutError') throw new Error(`start ${base}: GET /missing got no response within ${REQUEST_TIMEOUT_MS} ms`);
-      await new Promise((done) => setTimeout(done, 100));
-    }
-  }
-  throw new Error(`start ${base}: the server did not accept connections within 50 attempts (${Math.round(performance.now() - started)} ms)`);
 }
