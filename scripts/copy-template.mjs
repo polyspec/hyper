@@ -15,11 +15,11 @@
 //
 // Usage: node scripts/copy-template.mjs --repository ../template --output var/products/template
 import { execFileSync } from 'node:child_process';
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, statSync, utimesSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
-import { copyFile } from './output-files.mjs';
+import { copyTracked, git } from './tracked-files.mjs';
 
 const TRACKED = ['packages/template-php', 'packages/template-php-ext', 'packages/template-rust', 'tools/compiler', 'contracts/functions.json'];
 const TYPESCRIPT = 'packages/template-ts';
@@ -30,11 +30,7 @@ const repository = resolve(values.repository);
 const output = resolve(values.output);
 const next = `${output}.next`;
 
-// Git runs without the variables that Git sets for its hooks, which would name the repository of the hook.
-const gitEnv = Object.fromEntries(Object.entries(process.env).filter(([name]) => !['GIT_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE'].includes(name)));
-const git = (...args) => execFileSync('git', ['-C', repository, ...args], { encoding: 'utf8', env: gitEnv });
-
-const commit = git('rev-parse', 'HEAD').trim();
+const commit = git(repository, 'rev-parse', 'HEAD').trim();
 console.log(`template copy: ${repository} at ${commit} -> ${output}`);
 rmSync(next, { recursive: true, force: true });
 
@@ -59,19 +55,8 @@ try {
 
 // The tracked paths, as the working tree holds them.
 for (const path of TRACKED) {
-  const deleted = new Set(git('ls-files', '-d', '-z', '--', path).split('\0').filter(Boolean));
-  const files = git('ls-files', '-c', '-z', '--', path).split('\0').filter((file) => file !== '' && !deleted.has(file));
-  if (files.length === 0) throw new Error(`${repository} tracks no file below ${path}`);
-  for (const file of files) {
-    const source = join(repository, file);
-    const target = join(next, file);
-    copyFile(source, target);
-    const { atimeMs, mtimeMs, mode } = statSync(source);
-    utimesSync(target, atimeMs / 1000, mtimeMs / 1000);
-    // Keep the executable bits, for example of bin files.
-    if (mode & 0o111) chmodSync(target, 0o755);
-  }
-  console.log(`template copy: copied ${path} (${files.length} files${deleted.size > 0 ? `; not copied, deleted in the working tree: ${[...deleted].join(' ')}` : ''})`);
+  const { files, deleted } = copyTracked({ repository, path, target: next });
+  console.log(`template copy: copied ${path} (${files.length} files${deleted.length > 0 ? `; not copied, deleted in the working tree: ${deleted.join(' ')}` : ''})`);
 }
 
 mkdirSync(dirname(output), { recursive: true });
