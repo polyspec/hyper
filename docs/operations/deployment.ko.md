@@ -65,7 +65,7 @@ PHP나 Node 서버 하나가 한 매니페스트의 서버 렌더 페이지와 �
 
 ## 로컬 재현
 
-`make serve-demo`는 데이터베이스 하나로 두 형태를 실행한다.
+`make serve-demo`는 데이터베이스 하나로 두 형태를 실행한다. 주소가 바뀌지 않도록 port가 고정되어 있으므로, 한 machine에서 demo는 한 번에 하나만 실행된다. demo는 자신의 checkout, process ID, 시작 시각을 적은 lock file `/tmp/hyper-serve-demo.lock`을 잡고, 두 번째 demo는 그 holder를 밝히며 실패한다. demo는 멈출 때(Ctrl+C나 SIGTERM) lock을 푼다. demo process가 끝난 lock은 그 holder와 함께 보고되고 남는다. `make serve-demo-unlock`이 그 lock을 지우며, demo가 실행 중이면 실패한다.
 
 | URL | 역할 |
 |---|---|
