@@ -100,9 +100,8 @@ server-parity: node-server server ## Compare the Node server responses with the 
 bundle-size: assets ## Print the SSR script and CSR shell sizes and enforce the gzip limits
 	node scripts/check-bundle-size.mjs --app $(BOARD) --output $(BOARD)/build --limits config/bundle-size.json
 
-e2e: assets server ## Run the SSR, CSR, no-JavaScript and comparison flows in Chromium
-	rm -f $(BOARD)/var/e2e.db
-	npx playwright test
+e2e: assets server ## Run the SSR, CSR, no-JavaScript and comparison flows in Chromium on servers of the run
+	node scripts/run-e2e.mjs
 
 docs-check: ## Check document pairs, links and code blocks
 	node scripts/check-documents.mjs

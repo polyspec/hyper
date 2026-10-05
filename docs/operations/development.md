@@ -34,7 +34,7 @@
 | `make parity` | Compares PHP documents with browser renders of document and region JSON, once with the generated program and once with the native extension |
 | `make server-parity` | Runs the parity steps against the PHP server and the board Node server and compares the status, the headers and the body of every response, with the browser comparison of `make parity` (HY-55) |
 | `make bundle-size` | Prints the SSR script and CSR shell sizes and enforces the gzip limits in `config/bundle-size.json` |
-| `make e2e` | Runs the SSR, CSR, no-JavaScript and comparison flows in Chromium |
+| `make e2e` | Runs the SSR, CSR, no-JavaScript and comparison flows in Chromium on servers and a database of the run (`scripts/run-e2e.mjs`) |
 | `make docs-check` | Checks document pairs, links and code blocks |
 | `make serve-demo` | Serves SSR, CSR and the comparison page (see [Deployment](deployment.md)) |
 | `make bench-server-smoke` | Runs the PHP benchmark once per measurement; `make check` includes it so that a change that breaks the benchmark fails |
@@ -50,6 +50,8 @@ To run the tests that own a change, pass their files or a filter, for example `n
 ## Servers of a run
 
 `make parity` and `make server-parity` start their own servers with `scripts/board-servers.mjs`: every server listens on a port that the system assigns, and the check sends its requests to the address that the server reports in its output (`Development Server (http://127.0.0.1:<port>) started` of PHP, `board on http://127.0.0.1:<port>` of the board Node server, `edge http://127.0.0.1:<port>` of `scripts/serve-edge.mjs`). A request therefore reaches a server of the same run, also while a run from another checkout or session runs. Starting a server is a step without a time limit: it prints its start, every output line of the server with the prefix `[<name>]` and its address with the elapsed time, and fails when the server exits first. The databases and the session directory of a run lie in a temporary directory, which `scripts/check-parity.mjs` prints as `run directory: <path>` and removes.
+
+`make e2e` runs `scripts/run-e2e.mjs` in the same way: it starts the board example in both rendering modes (the API origin, the edge and the SSR origin) on an empty database in its run directory, and runs `playwright test` with the addresses in `HYPER_E2E_SSR` and `HYPER_E2E_CSR`, which `tests/e2e/origins.ts` requires; its arguments are passed to Playwright, for example `node scripts/run-e2e.mjs -g 'stylesheet'`. Playwright starts no server itself.
 
 ## Server build
 
