@@ -29,7 +29,7 @@
 - Keep code and tests in separate directories inside each package.
 - Handle a defect by adding a failing test that reproduces it, fixing the code, and keeping the test.
 - Use repository-relative paths. Require explicit paths for external inputs.
-- Do not use symbolic links. Package managers install every dependency, also a package of this repository, as a copy, and no bin link; a recipe starts a tool with the file of its package (HY-79).
+- Do not use symbolic links. Package managers install every dependency, also a package of this repository, as a copy, and no bin link, and a changed copy of a package of this repository or of the template copy is published file by file (`scripts/publish.mjs`, HY-82); a recipe starts a tool with the file of its package (HY-79).
 - Template syntax and rendering rules belong to the template language. This repository uses them and does not change them.
 
 ## Decision and acceptance rules
