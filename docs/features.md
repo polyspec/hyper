@@ -43,6 +43,7 @@
 | npm-packages | `@polyspec/hyper` and `@polyspec/hyper-server` publish JavaScript with type declarations that Node runs from `node_modules`, and their source passes `erasableSyntaxOnly` (HY-61) | implemented | `make package-check` |
 | output-files | The asset build and the server build create their copied output files with the mode 0644, which a virtiofs bind mount of a Linux container accepts (HY-68) | implemented | `make test-scripts` |
 | template-dir | The asset build, the template build and the server build read the template package of the template repository that `--template-dir` names (HY-70) | implemented | `make test-scripts` |
+| template-copy | npm, Composer, PHPStan, the native extension build and the build scripts read the template repository only through its declared copy `var/products/template` (HY-78) | implemented | `make test-scripts`, `make template-check` |
 | query-values | Every query value in order without nesting, and the raw query (HY-56) | implemented | `make test-php`, `make test-node` |
 | form-values | Every form value of an urlencoded or multipart body in order without nesting (HY-57) | implemented | `make test-php`, `make test-node` |
 | request-boundary | UTF-8 checks, plain 500 errors, data model checks, hardened session cookie, redirect checks, failure marks (HY-42 to HY-47) | implemented | `make test-php`, `make test-js`, `make e2e` |
