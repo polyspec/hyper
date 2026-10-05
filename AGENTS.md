@@ -40,7 +40,7 @@
 
 - Before a commit, run the Red and Green tests that own the change and `make docs-check`. Do not run broader checks for each fix.
 - Before marking a task `[o]` in `docs/plans/execution-checklist.md`, run the verification command of the task on the committed tree. The Verification column names the command that owns the task, not `make check`; rows that are already `[o]` keep their command.
-- Run `make check` exactly once, when every active task is done, and never for each fix or each task. Mark a feature implemented in `docs/features.md` only after that run passes.
+- Run `make check` exactly once, when every active task is done, and never for each fix or each task. The guard `scripts/full-run.mjs` enforces this before any step: `make check` is refused while a task is `[~]`, while tracked changes are uncommitted, and when `var/full-run.json` records a full run of the current tree; `make rerun-failed` reruns only the targets of the current tree that did not pass (`docs/operations/development.md`). Mark a feature implemented in `docs/features.md` only after that run passes.
 
 ## Checklist
 
