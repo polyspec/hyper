@@ -14,6 +14,10 @@
     "dist"
   ],
   "sideEffects": false,
+  "scripts": {
+    "build": "node ../../scripts/tsc.mjs -p tsconfig.build.json",
+    "tsc": "node ../../scripts/tsc.mjs"
+  },
   "engines": {
     "node": ">=26"
   },
