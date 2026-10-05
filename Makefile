@@ -38,6 +38,12 @@ COMPOSER := $(CURDIR)/var/tools/bin/composer
 # The lock of the package manager installs of this checkout: one npm or Composer install at a time (HY-82).
 INSTALL_LOCK := var/install.lock
 
+# A recipe with several checks runs every check to its end (HY-86): `$(call check,<name>,<command>)` prints the command,
+# runs it in a subshell and records the name when it fails, and `$(checks_result)` then fails and names every failed
+# check. A recipe that uses them starts with `@failed=; \` and joins its checks with `\`.
+check = echo '$(2)'; ( $(2) ) || failed="$$failed $(1);";
+checks_result = test -z "$$failed" || { echo "failed checks:$$failed"; exit 1; }
+
 # The tracked Git hooks (scripts/git-hooks.mjs). Every make run sets core.hooksPath to this directory when it differs,
 # so the pre-push hook refuses a push while a checklist task is in progress (AGENTS.md) in every checkout that ran make.
 HOOKS_PATH := .githooks
@@ -77,9 +83,11 @@ $(TEMPLATE_STAMP): $(TEMPLATE_CONFIG) scripts/copy-template.mjs | toolchain-chec
 	touch $@
 
 template-check: template ## Fail when an npm or Composer copy of a template package differs from the declared copy
-	diff -r $(TEMPLATE_DIR)/packages/template-ts/dist node_modules/@polyspec/template/dist
-	diff -r $(TEMPLATE_DIR)/packages/template-php/src $(PHP_PACKAGE)/vendor/polyspec/template/src
-	diff -r $(TEMPLATE_DIR)/packages/template-php/src $(BOARD)/vendor/polyspec/template/src
+	@failed=; \
+	$(call check,the npm copy,diff -r $(TEMPLATE_DIR)/packages/template-ts/dist node_modules/@polyspec/template/dist) \
+	$(call check,the Composer copy of $(PHP_PACKAGE),diff -r $(TEMPLATE_DIR)/packages/template-php/src $(PHP_PACKAGE)/vendor/polyspec/template/src) \
+	$(call check,the Composer copy of $(BOARD),diff -r $(TEMPLATE_DIR)/packages/template-php/src $(BOARD)/vendor/polyspec/template/src) \
+	$(checks_result)
 
 ext: template ## Build the native template extension of the declared copy with its Rust toolchain into build/ext (HY-81)
 	cd $(TEMPLATE_DIR)/packages/template-php-ext && cargo build --locked --release --target-dir $(CURDIR)/build/ext
@@ -117,20 +125,28 @@ assets: packages ## Build the board client bundle (SSR) and the single-file stat
 	node scripts/build-assets.mjs --app $(BOARD) --api /api --template-dir $(TEMPLATE_DIR) --output $(BOARD)/build --static public/assets/app.css --static public/assets/reader.css
 
 test-js: template ## Run the browser code tests, including the router conformance cases, and the type check
-	node scripts/run-tests.mjs vitest --cwd $(JS_PACKAGE)
-	$(TSC) --noEmit -p $(JS_PACKAGE)/tsconfig.json
+	@failed=; \
+	$(call check,the tests of $(JS_PACKAGE),node scripts/run-tests.mjs vitest --cwd $(JS_PACKAGE)) \
+	$(call check,the type check of $(JS_PACKAGE),$(TSC) --noEmit -p $(JS_PACKAGE)/tsconfig.json) \
+	$(checks_result)
 
 test-node: packages node-fixtures ## Run the Node server tests, including the PHP AppTest cases and the JSON conformance cases, and the type check
-	node scripts/run-tests.mjs vitest --cwd $(NODE_PACKAGE)
-	$(TSC) --noEmit -p $(NODE_PACKAGE)/tsconfig.json
+	@failed=; \
+	$(call check,the tests of $(NODE_PACKAGE),node scripts/run-tests.mjs vitest --cwd $(NODE_PACKAGE)) \
+	$(call check,the type check of $(NODE_PACKAGE),$(TSC) --noEmit -p $(NODE_PACKAGE)/tsconfig.json) \
+	$(checks_result)
 
 test-php: template server-fixtures ext ## Run the server package tests with the generated program and with the native extension
-	node scripts/run-tests.mjs phpunit --cwd $(PHP_PACKAGE)
-	node scripts/run-tests.mjs phpunit --cwd $(PHP_PACKAGE) --extension $(EXT)
+	@failed=; \
+	$(call check,PHPUnit with the generated program,node scripts/run-tests.mjs phpunit --cwd $(PHP_PACKAGE)) \
+	$(call check,PHPUnit with the native extension,node scripts/run-tests.mjs phpunit --cwd $(PHP_PACKAGE) --extension $(EXT)) \
+	$(checks_result)
 
 lint: toolchain-check ## Check PHP formatting
-	cd $(PHP_PACKAGE) && vendor/bin/pint --test
-	cd $(BOARD) && vendor/bin/pint --test app src public
+	@failed=; \
+	$(call check,Pint of $(PHP_PACKAGE),cd $(PHP_PACKAGE) && vendor/bin/pint --test) \
+	$(call check,Pint of $(BOARD),cd $(BOARD) && vendor/bin/pint --test app src public) \
+	$(checks_result)
 
 analyse-php: template ## Run PHPStan at level max on the source and the tests of the server package
 	cd $(PHP_PACKAGE) && vendor/bin/phpstan analyse --no-progress --memory-limit=$(PHPSTAN_MEMORY)
@@ -142,8 +158,10 @@ test-scripts: packages ## Run the tests of the check scripts
 	TEMPLATE_DIR=$(TEMPLATE_DIR) node scripts/run-tests.mjs node -- tests/scripts/
 
 parity: assets server ext ## Compare PHP documents (generated program and native extension) with browser renders of document and region JSON
-	node scripts/check-parity.mjs --app $(BOARD) --requests $(BOARD)/tests/parity/requests.json
-	node scripts/check-parity.mjs --app $(BOARD) --requests $(BOARD)/tests/parity/requests.json --extension $(EXT)
+	@failed=; \
+	$(call check,parity with the generated program,node scripts/check-parity.mjs --app $(BOARD) --requests $(BOARD)/tests/parity/requests.json) \
+	$(call check,parity with the native extension,node scripts/check-parity.mjs --app $(BOARD) --requests $(BOARD)/tests/parity/requests.json --extension $(EXT)) \
+	$(checks_result)
 
 server-parity: node-server server ## Compare the Node server responses with the PHP responses, with the browser comparison of parity (HY-55)
 	node scripts/check-parity.mjs --app $(BOARD) --requests $(BOARD)/tests/parity/requests.json --node
@@ -171,8 +189,10 @@ serve-demo-unlock: ## Remove the lock of a demo whose process has ended
 	node scripts/holder-lock.mjs clear $(SERVE_DEMO_LOCK)
 
 bench-server: server ext ## Measure PHP request handling and rendering cost per row count, with the generated program and with the native extension
-	php scripts/bench-server.php --app $(BOARD) --iterations 300
-	php -d extension=$(abspath $(EXT)) scripts/bench-server.php --app $(BOARD) --iterations 300
+	@failed=; \
+	$(call check,the benchmark with the generated program,php scripts/bench-server.php --app $(BOARD) --iterations 300) \
+	$(call check,the benchmark with the native extension,php -d extension=$(abspath $(EXT)) scripts/bench-server.php --app $(BOARD) --iterations 300) \
+	$(checks_result)
 
 bench-browser: assets server ## Measure first screens, navigation, hy-set phases and load, and memory in Chromium
 	node scripts/bench-browser.mjs --runs 15
