@@ -17,7 +17,8 @@ let children = [];
 try {
   const board = await startBoard({ app: 'examples/board', database: join(run, 'board.db'), ports: { ssr: 0, edge: 0, api: 0 } });
   children = board.children;
-  const playwright = spawn(resolve('node_modules/.bin/playwright'), ['test', ...process.argv.slice(2)], {
+  // npm installs no bin links (HY-79), so the runner starts the command line entry of Playwright with node.
+  const playwright = spawn(process.execPath, [resolve('node_modules/@playwright/test/cli.js'), 'test', ...process.argv.slice(2)], {
     env: { ...process.env, HYPER_E2E_SSR: board.ssr, HYPER_E2E_CSR: board.edge },
     stdio: 'inherit',
   });

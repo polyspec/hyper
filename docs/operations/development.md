@@ -7,17 +7,18 @@
 - Node.js 26.8.1 (`.node-version`), PHP 8.2 or later with `pdo_sqlite`, Composer 2.
 - The template repository at `../template` (`TEMPLATE_REPOSITORY`) with a build of its TypeScript package, which `make build-ts` of the template repository makes. This repository builds nothing there: `make template` copies it into `var/products/template` (HY-78), and the browser code imports the TypeScript package from that copy.
 - Rust (the version that the template repository pins) to build the native template extension with `make ext`.
-- Chromium for Playwright: `npx playwright install chromium`.
+- Chromium for Playwright: `node node_modules/@playwright/test/cli.js install chromium`.
 
 ## Targets
 
 | Target | Action |
 |---|---|
-| `make install` | Writes the declared copy of the template repository and installs npm and Composer dependencies |
+| `make install` | Writes the declared copy of the template repository and the copy of `packages/hyper-php`, and installs npm and Composer dependencies as copies without bin links (HY-79) |
+| `make hyper-php-copy` | Writes the copy `var/products/hyper-php` of the tracked files of `packages/hyper-php` and reinstalls it in the board with Composer (HY-79); `make server` runs it first |
 | `make template` | Writes the declared copy `var/products/template` of the template repository with `scripts/copy-template.mjs` and reinstalls the npm copy of the TypeScript template package and the Composer copies of the PHP template package from it (HY-78); tests, assets and server builds run it first |
 | `make template-check` | Fails when the npm copy of the TypeScript template package or a Composer copy of the PHP template package differs from the declared copy |
 | `make ext` | Builds the native template extension of the declared copy of the template repository into `build/ext` (HY-48, HY-78) |
-| `make packages` | Builds the JavaScript modules and type declarations of `@polyspec/hyper` and `@polyspec/hyper-server` into their `dist` directories; the Node server tests, the board asset build, `make package-check` and `make test-scripts` run it first, because they import the packages through their exports (HY-61). The build scripts read `data-template.json`, `checkManifest` and `templateReferences` from the source of `packages/hyper-js` next to them, so they do not need `dist` and run from any working directory |
+| `make packages` | Builds the JavaScript modules and type declarations of `@polyspec/hyper` and `@polyspec/hyper-server` into their `dist` directories and installs the npm copy of each again (HY-79); the Node server tests, the board asset build, `make package-check` and `make test-scripts` run it first, because they import the packages through their exports (HY-61). The build scripts read `data-template.json`, `checkManifest` and `templateReferences` from the source of `packages/hyper-js` next to them, so they do not need `dist` and run from any working directory |
 | `make package-check` | Installs both packages into `tests/package-install` with `npm install --install-links`, type-checks its test against their declarations with `erasableSyntaxOnly` and runs it under `node` (HY-61) |
 | `make server` | Builds the board server program into `examples/board/build/server` (see below) |
 | `make server-fixtures` | Builds the server program of the PHP test fixtures |
