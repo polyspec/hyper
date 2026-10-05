@@ -29,6 +29,7 @@
 - test는 자기가 읽는 것을 만든다(HY-85). fixture의 추적 파일은 자기 임시 디렉터리에 복사하고, 설치나 build처럼 다른 target이 쓰는 입력은 test가 읽기 전에 `requireBuilt`로 그 target과 함께 밝힌다. build 출력은 자기 checkout의 절대 경로를 담지 않고, cargo target 디렉터리 같은 어떤 build 디렉터리도 checkout 사이에 공유하지 않는다.
 - 여러 검사의 run은 모든 검사를 끝까지 실행한 뒤 실패하고, 실패한 검사를 각각 밝힌다(HY-86). recipe는 `$(call check,...)`와 `$(checks_result)`를 쓰고, 검사하는 여러 goal의 make는 `-k`로 실행하며, 첫 CI step 뒤의 step은 `if: ${{ !cancelled() }}`로 실행한다. 앞 step의 출력을 읽는 step만 그 실패에서 멈춘다.
 - run의 어떤 process나 파일도 run보다 오래 남지 않는다(HY-87). run은 서버와 임시 디렉터리를 만들 때부터 가지며 끝, 실패, SIGINT, SIGTERM에서 멈추고 기다리고 지운다. test는 디렉터리를 쓰는 process가 끝난 뒤에만 그 디렉터리를 지운다.
+- 추적하는 모든 경로는 `scripts/owner-checks.json`에 owner를 가진다(HY-88). 경로를 더하는 변경은 그 owner 규칙을 더하고, 저장소의 일부를 복사하는 test는 그 일부가 가져오는 것도 복사한다.
 - 각 패키지 안에서 코드와 테스트를 별도 디렉터리에 둔다.
 - 결함은 재현하는 실패 테스트를 추가하고, 코드를 수정하고, 테스트를 유지하는 절차로 처리한다.
 - 저장소 상대경로를 사용한다. 외부 입력 경로는 명시적으로 받는다.
@@ -56,7 +57,7 @@
 
 ## 필수 검사
 
-- 커밋 전에는 변경을 소유한 Red test와 Green test, 그리고 `make docs-check`를 실행한다. 수정마다 더 넓은 검사를 실행하지 않는다.
+- 커밋 전에는 변경의 Red test와 Green test, 바뀐 모든 경로의 owner를 실행하는 `make owner-check`(`scripts/owner-checks.json`, HY-88), 그리고 `make docs-check`를 실행한다. 수정마다 더 넓은 검사를 실행하지 않는다.
 - `docs/plans/execution-checklist.md`에서 작업을 `[o]`로 바꾸기 전에 커밋한 tree에서 그 작업의 verification command를 실행한다. Verification column에는 `make check`가 아니라 그 작업을 소유한 명령을 적는다. 이미 `[o]`인 행은 자기 명령을 그대로 둔다.
 - `make check`는 활성 작업이 모두 끝났을 때 정확히 한 번 실행하고, 수정마다 또는 작업마다 실행하지 않는다. guard `scripts/full-run.mjs`가 어떤 단계보다 먼저 이를 강제한다. 작업이 `[~]`이거나, 추적 파일의 변경이 커밋되지 않았거나, `var/full-run.json`이 현재 tree의 전체 실행을 기록하고 있으면 `make check`는 거부된다. `make rerun-failed`는 현재 tree에서 통과하지 못한 target만 다시 실행한다(`docs/operations/development.md`). `docs/features.md`에서 기능을 implemented로 표시하는 것은 그 실행이 통과한 뒤에만 한다.
 - push는 push하는 commit에도 working tree에도 `docs/plans/execution-checklist.md`의 `[~]` 작업이 없을 때만 한다. 추적하는 pre-push hook `.githooks/pre-push`가 `node scripts/push-gate.mjs hook`을 실행하고, 이 script는 그런 push를 거부하며 활성 ID를 작업과 함께 밝힌다. 모든 `make` 실행이 `core.hooksPath`를 `.githooks`로 설정한다. `make hooks`는 이를 명시적으로 설정하고, `make docs-check`가 실행하는 `make hooks-check`와 전체 실행의 guard는 그것이 설정되지 않았으면 실패한다. GitHub에서는 `.github/workflows/push-gate.yml`의 job `push-gate`가 모든 push와 pull request에서 `node scripts/push-gate.mjs commit <sha>`를 실행하고, push가 hook을 거치지 않았어도 그런 commit에 대해 실패한다(`docs/operations/development.ko.md`).

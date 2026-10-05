@@ -51,7 +51,7 @@ $(if $(filter $(HOOKS_PATH),$(shell git config core.hooksPath)),,$(shell git con
 
 .DEFAULT_GOAL := help
 
-.PHONY: help tools toolchain-check install hyper-php-copy template template-check ext packages package-check server server-fixtures node-server node-fixtures assets test-js test-node test-php lint analyse-php templates-check test-scripts parity server-parity bundle-size e2e docs-check serve-demo bench-server bench-server-smoke bench-browser bench check rerun-failed serve-demo-unlock hooks hooks-check
+.PHONY: help tools toolchain-check owner-check install hyper-php-copy template template-check ext packages package-check server server-fixtures node-server node-fixtures assets test-js test-node test-php lint analyse-php templates-check test-scripts parity server-parity bundle-size e2e docs-check serve-demo bench-server bench-server-smoke bench-browser bench check rerun-failed serve-demo-unlock hooks hooks-check
 
 help: ## List the targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
@@ -154,8 +154,8 @@ analyse-php: template ## Run PHPStan at level max on the source and the tests of
 templates-check: toolchain-check ## Check hx- attributes (HC-6) and region placements (HY-3, HY-30) of the board templates
 	node scripts/check-templates.mjs --app $(BOARD)
 
-test-scripts: packages ## Run the tests of the check scripts
-	TEMPLATE_DIR=$(TEMPLATE_DIR) node scripts/run-tests.mjs node -- tests/scripts/
+test-scripts: packages ## Run the tests of the check scripts, or only the files of TESTS
+	TEMPLATE_DIR=$(TEMPLATE_DIR) node scripts/run-tests.mjs node -- $(or $(TESTS),tests/scripts/)
 
 parity: assets server ext ## Compare PHP documents (generated program and native extension) with browser renders of document and region JSON
 	@failed=; \
@@ -210,6 +210,9 @@ CHECK_TARGETS := template-check bench-server-smoke docs-check lint analyse-php t
 
 check: ## Run every check through the guard: once per tree, when no checklist task is [~]
 	node scripts/full-run.mjs run $(CHECK_TARGETS)
+
+owner-check: ## Run the owner checks of the changed paths (scripts/owner-checks.json): PATHS, the paths since BASE, or the uncommitted changes (HY-88)
+	node scripts/owner-check.mjs $(if $(PATHS),--paths "$(PATHS)") $(if $(BASE),--base "$(BASE)")
 
 rerun-failed: ## Rerun only the targets of make check that did not pass on the current tree
 	node scripts/full-run.mjs rerun-failed
