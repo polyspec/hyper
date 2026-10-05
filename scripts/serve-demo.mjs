@@ -22,7 +22,7 @@ for (const name of ['db', 'ssr', 'edge', 'api', 'lock']) {
   if (!values[name]) throw new Error(`--${name} is required`);
 }
 
-let children = [];
+const children = [];
 let stopping = false;
 // Stops the servers once and exits; the exit releases the lock.
 const stop = async (code) => {
@@ -31,11 +31,13 @@ const stop = async (code) => {
   await stopServers(children);
   process.exit(code);
 };
+// A signal during the start stops the servers that have started too.
+process.on('SIGINT', () => stop(0));
+process.on('SIGTERM', () => stop(0));
 try {
   acquire(values.lock, resolve(dirname(fileURLToPath(import.meta.url)), '..'));
   console.log(`holding ${values.lock}`);
-  const board = await startBoard({ app: 'examples/board', database: resolve(values.db), ports: { ssr: Number(values.ssr), edge: Number(values.edge), api: Number(values.api) } });
-  children = board.children;
+  const board = await startBoard({ app: 'examples/board', database: resolve(values.db), ports: { ssr: Number(values.ssr), edge: Number(values.edge), api: Number(values.api) }, children });
   console.log(`SSR ${board.ssr}/board`);
   console.log(`CSR ${board.edge}/board`);
   console.log(`compare ${board.edge}/compare?ssr=${board.ssr}`);
@@ -43,8 +45,6 @@ try {
   console.error(error.message);
   process.exit(1);
 }
-process.on('SIGINT', () => stop(0));
-process.on('SIGTERM', () => stop(0));
 for (const child of children) {
   child.on('exit', (code, signal) => {
     console.error(`a server exited ${signal ? `on ${signal}` : `with ${code}`}; stopping the demo`);

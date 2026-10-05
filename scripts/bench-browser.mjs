@@ -6,13 +6,11 @@
 //
 // Usage: node scripts/bench-browser.mjs --runs 15
 
-import { mkdtempSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { parseArgs } from 'node:util';
 import { gzipSync } from 'node:zlib';
 import { chromium } from '@playwright/test';
-import { startBoard, stopServers } from './board-servers.mjs';
+import { serverRun, startBoard } from './board-servers.mjs';
 
 const { values } = parseArgs({ options: { runs: { type: 'string' } } });
 if (!values.runs) throw new Error('--runs is required');
@@ -85,8 +83,8 @@ const KINDS = [
   ['gc', /GC|Scavenge|MarkCompact/],
   ['script', /^(FunctionCall|EvaluateScript|TimerFire|FireAnimationFrame|EventDispatch|RunMicrotasks|V8\.|v8\.)/],
 ];
-const run = mkdtempSync(join(tmpdir(), 'hyper-bench-browser-'));
-console.log(`run directory: ${run}`);
+const run = serverRun('hyper-bench-browser-');
+console.log(`run directory: ${run.directory}`);
 
 const median = (items) => [...items].sort((a, b) => a - b)[Math.floor(items.length / 2)];
 const p95 = (items) => [...items].sort((a, b) => a - b)[Math.floor(items.length * 0.95)];
@@ -102,10 +100,8 @@ const observer = () => {
 };
 
 let browser;
-let children = [];
 try {
-  const board = await startBoard({ app: 'examples/board', database: join(run, 'board.db'), ports: { ssr: 0, edge: 0, api: 0 } });
-  children = board.children;
+  const board = await startBoard({ app: 'examples/board', database: join(run.directory, 'board.db'), ports: { ssr: 0, edge: 0, api: 0 }, children: run.children });
   const ssr = board.ssr;
   const csr = board.edge;
   await seed(ssr, 30);
@@ -224,8 +220,7 @@ try {
   console.log(`\n${runs} runs per measurement, Chromium ${browser.version()}, Node ${process.version}`);
 } finally {
   await browser?.close();
-  await stopServers(children);
-  rmSync(run, { recursive: true, force: true });
+  await run.close();
 }
 
 // Sums the self time of every event on the renderer main thread by kind, so that a style recalculation

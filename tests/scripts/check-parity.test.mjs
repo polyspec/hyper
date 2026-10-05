@@ -39,15 +39,25 @@ function fixture(t, steps) {
   return app;
 }
 
-// Runs the check and resolves its exit status and output; the check is killed when it has not ended within 20 s.
-async function check(app) {
-  const child = spawn(process.execPath, ['scripts/check-parity.mjs', '--app', app, '--requests', join(app, 'requests.json')], { stdio: ['ignore', 'pipe', 'pipe'] });
+// Runs the check in a process group of its own and resolves its exit status and output; when it has not ended within
+// 20 s the whole group is killed, so its servers end with it (HY-87). `whenOutput(text, act)` acts once the output
+// holds `text`.
+async function check(app, { whenOutput } = {}) {
+  const child = spawn(process.execPath, ['scripts/check-parity.mjs', '--app', app, '--requests', join(app, 'requests.json')], { stdio: ['ignore', 'pipe', 'pipe'], detached: true });
   let output = '';
-  child.stdout.on('data', (data) => { output += data; });
-  child.stderr.on('data', (data) => { output += data; });
+  let acted = false;
+  const read = (data) => {
+    output += data;
+    if (whenOutput && !acted && output.includes(whenOutput.text)) {
+      acted = true;
+      whenOutput.act(child, output);
+    }
+  };
+  child.stdout.on('data', read);
+  child.stderr.on('data', read);
   const status = await new Promise((resolve) => {
-    const limit = setTimeout(() => { child.kill('SIGKILL'); resolve('killed'); }, 20_000);
-    child.on('close', (code) => { clearTimeout(limit); resolve(code); });
+    const limit = setTimeout(() => { process.kill(-child.pid, 'SIGKILL'); resolve('killed'); }, 20_000);
+    child.on('close', (code, signal) => { clearTimeout(limit); resolve(code ?? signal); });
   });
   assert.notEqual(status, 'killed', `The check did not end within 20 s:\n${output}`);
   return { status, output };
@@ -93,4 +103,16 @@ test('a request file without a status or a compare step fails before any server 
   assert.equal(status, 1, output);
   assert.match(output, /requests\.json holds no status or compare step; expected at least 1, actual 0 of 1 steps/);
   assert.doesNotMatch(output, /start php/);
+});
+
+test('a check that receives SIGTERM stops its server and removes its run directory before it ends (HY-87)', async (t) => {
+  const app = fixture(t, [{ action: 'send', method: 'GET', path: '/' }, { action: 'compare', method: 'GET', path: '/slow', currentPath: '/' }]);
+  const { status, output } = await check(app, { whenOutput: { text: '▶ compare GET /slow', act: (child) => child.kill('SIGTERM') } });
+  assert.equal(status, 143, output);
+  const url = /^ok start php: (http:\/\/127\.0\.0\.1:\d+) /m.exec(output)?.[1];
+  const run = /^run directory: (\S+)$/m.exec(output)?.[1];
+  assert.ok(url && run, output);
+  assert.match(output, /SIGTERM: stopping 1 servers and removing /);
+  assert.equal(existsSync(run), false);
+  await assert.rejects(fetch(url, { signal: AbortSignal.timeout(2000) }), (error) => error.cause?.code === 'ECONNREFUSED', 'the PHP server of the check still answers');
 });

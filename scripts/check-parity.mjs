@@ -25,12 +25,11 @@
 
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { build } from 'esbuild';
-import { startNode, startPhp, stopServers } from './board-servers.mjs';
+import { serverRun, startNode, startPhp } from './board-servers.mjs';
 
 // --extension loads the native template extension into PHP, so the server renders with it instead of the
 // generated program (HY-48).
@@ -65,20 +64,18 @@ if (loaded !== Boolean(values.extension)) throw new Error(`PHP ${loaded ? 'loade
 console.log(`template program: ${loaded ? 'native extension' : 'generated PHP'}`);
 
 // The databases and the session directory of the run.
-const run = mkdtempSync(join(tmpdir(), 'hyper-parity-'));
-console.log(`run directory: ${run}`);
-const children = [];
+const run = serverRun('hyper-parity-');
+console.log(`run directory: ${run.directory}`);
+const { children } = run;
 let php = null;
 let node = null;
 let failures = 0;
 let compared = 0;
 try {
-  const phpServer = await startPhp({ name: 'php', app, port: 0, extension: values.extension, env: { BOARD_DB: join(run, 'php.db'), BOARD_BASE_PATH: '', BOARD_TIME } });
-  children.push(phpServer.child);
+  const phpServer = await startPhp({ name: 'php', app, port: 0, extension: values.extension, env: { BOARD_DB: join(run.directory, 'php.db'), BOARD_BASE_PATH: '', BOARD_TIME }, children });
   php = client(phpServer.url);
   if (values.node) {
-    const nodeServer = await startNode({ name: 'node', app, port: 0, env: { BOARD_DB: join(run, 'node.db'), BOARD_SESSIONS: join(run, 'sessions'), BOARD_BASE_PATH: '', BOARD_TIME } });
-    children.push(nodeServer.child);
+    const nodeServer = await startNode({ name: 'node', app, port: 0, env: { BOARD_DB: join(run.directory, 'node.db'), BOARD_SESSIONS: join(run.directory, 'sessions'), BOARD_BASE_PATH: '', BOARD_TIME }, children });
     node = client(nodeServer.url);
   }
   let keepCookie = '';
@@ -115,8 +112,7 @@ try {
 } catch (error) {
   fail(error.message);
 } finally {
-  await stopServers(children);
-  rmSync(run, { recursive: true, force: true });
+  await run.close();
 }
 if (failures > 0) {
   console.error(`${failures} parity failure(s)`);

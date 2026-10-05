@@ -5,7 +5,14 @@
 // Starting a server is a step without a time limit: it prints its start, every output line of the server with the
 // prefix [<name>] and its result with the elapsed time, ends when the server reports its address and fails when the
 // server exits first.
+//
+// A run owns its servers and its temporary directory (HY-87): `serverRun` creates the directory, every server joins
+// the children of the run when it is spawned, before it reports its address, and `close` stops every child, waits
+// until each has exited and then removes the directory. A run closes on its end, on its failure and on SIGINT and
+// SIGTERM, so no server outlives the run and no server holds a file of a removed directory.
 import { spawn } from 'node:child_process';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
 const PHP_READY = /Development Server \((http:\/\/127\.0\.0\.1:\d+)\) started/;
@@ -16,12 +23,13 @@ const EDGE_READY = /^edge (http:\/\/127\.0\.0\.1:\d+) /m;
  * Starts a server process and resolves { child, url } once a line of its output matches `ready`, whose first group
  * is the address of the server; rejects when the process exits or fails to start first.
  */
-export function startServer({ name, command, args, env, ready }) {
+export function startServer({ name, command, args, env, ready, children }) {
   const step = `start ${name}`;
   process.stdout.write(`▶ ${step}\n`);
   const started = performance.now();
   const elapsed = () => `${Math.round(performance.now() - started)} ms`;
   const child = spawn(command, args, { env, stdio: ['ignore', 'pipe', 'pipe'] });
+  children.push(child);
   return new Promise((resolvePromise, reject) => {
     let url = null;
     let pending = '';
@@ -52,7 +60,7 @@ export function startServer({ name, command, args, env, ready }) {
 }
 
 /** Starts the PHP server of the application directory `app` on `port`; `extension` loads the native extension. */
-export function startPhp({ name, app, port, env, extension }) {
+export function startPhp({ name, app, port, env, extension, children }) {
   const loaded = extension ? ['-d', `extension=${resolve(extension)}`] : [];
   return startServer({
     name,
@@ -60,22 +68,24 @@ export function startPhp({ name, app, port, env, extension }) {
     args: [...loaded, '-d', 'display_errors=0', '-S', `127.0.0.1:${port}`, '-t', join(app, 'public')],
     env: { ...process.env, ...env },
     ready: PHP_READY,
+    children,
   });
 }
 
 /** Starts the board Node server of `make node-server` on `port`. */
-export function startNode({ name, app, port, env }) {
+export function startNode({ name, app, port, env, children }) {
   return startServer({
     name,
     command: process.execPath,
     args: [join(app, 'build', 'node', 'server.mjs')],
     env: { ...process.env, ...env, BOARD_PORT: String(port) },
     ready: NODE_READY,
+    children,
   });
 }
 
 /** Starts the edge of scripts/serve-edge.mjs on `port`, which forwards /api to `api`. */
-export function startEdge({ name, app, port, api }) {
+export function startEdge({ name, app, port, api, children }) {
   return startServer({
     name,
     command: process.execPath,
@@ -89,29 +99,49 @@ export function startEdge({ name, app, port, api }) {
     ],
     env: process.env,
     ready: EDGE_READY,
+    children,
   });
 }
 
 /**
  * Starts the board example in both rendering modes on the database `database`: the API origin (PHP under /api), the
  * edge that serves the static shell and forwards /api to it, and the SSR origin (PHP at the root), whose pages the
- * comparison page of the edge frames. `ports` gives the port of each server, 0 for a port that the system assigns.
- * Resolves { ssr, edge, api, children }.
+ * comparison page of the edge frames. `ports` gives the port of each server, 0 for a port that the system assigns;
+ * every server joins `children` when it is spawned. When a server fails to start, the servers that started are
+ * stopped and have exited before the returned promise rejects. Resolves { ssr, edge, api }.
  */
-export async function startBoard({ app, database, ports }) {
-  const children = [];
+export async function startBoard({ app, database, ports, children }) {
   try {
-    const api = await startPhp({ name: 'api', app, port: ports.api, env: { BOARD_DB: database, BOARD_BASE_PATH: '/api' } });
-    children.push(api.child);
-    const edge = await startEdge({ name: 'edge', app, port: ports.edge, api: api.url });
-    children.push(edge.child);
-    const ssr = await startPhp({ name: 'ssr', app, port: ports.ssr, env: { BOARD_DB: database, BOARD_BASE_PATH: '', BOARD_FRAME_ANCESTORS: `'self' ${edge.url}` } });
-    children.push(ssr.child);
-    return { ssr: ssr.url, edge: edge.url, api: api.url, children };
+    const api = await startPhp({ name: 'api', app, port: ports.api, env: { BOARD_DB: database, BOARD_BASE_PATH: '/api' }, children });
+    const edge = await startEdge({ name: 'edge', app, port: ports.edge, api: api.url, children });
+    const ssr = await startPhp({ name: 'ssr', app, port: ports.ssr, env: { BOARD_DB: database, BOARD_BASE_PATH: '', BOARD_FRAME_ANCESTORS: `'self' ${edge.url}` }, children });
+    return { ssr: ssr.url, edge: edge.url, api: api.url };
   } catch (error) {
-    stopServers(children);
+    await stopServers(children);
     throw error;
   }
+}
+
+/**
+ * The resources of one run: a temporary directory named with `prefix` and the server children of the run. `close`
+ * stops every child, waits until each has exited, removes the directory and is idempotent; SIGINT and SIGTERM close
+ * the run and end the process with the status of the signal.
+ */
+export function serverRun(prefix) {
+  const directory = mkdtempSync(join(tmpdir(), prefix));
+  const children = [];
+  let closing = null;
+  const close = () => {
+    closing ??= stopServers(children).then(() => rmSync(directory, { recursive: true, force: true }));
+    return closing;
+  };
+  const onSignal = (signal) => {
+    process.stderr.write(`${signal}: stopping ${children.length} servers and removing ${directory}\n`);
+    close().then(() => process.exit(signal === 'SIGINT' ? 130 : 143));
+  };
+  process.once('SIGINT', onSignal);
+  process.once('SIGTERM', onSignal);
+  return { directory, children, close };
 }
 
 /** Stops the server processes and resolves once every one has exited. */
