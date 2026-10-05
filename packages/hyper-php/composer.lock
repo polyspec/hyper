@@ -4,15 +4,15 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "48315fb5988770f79715c918ea2ffb8e",
+    "content-hash": "5570fc5ef13d8d1de4811be84e559345",
     "packages": [
         {
             "name": "polyspec/template",
             "version": "dev-main",
             "dist": {
                 "type": "path",
-                "url": "../../../template/packages/template-php",
-                "reference": "b0c35fbe1ba7a3facea93bdd7cb6ef2b50fe3370"
+                "url": "../../var/products/template/packages/template-php",
+                "reference": "5ac57fc0b9b4874eaa1a817c146fdfb7f9e10ea9"
             },
             "require": {
                 "ext-mbstring": "*",

@@ -7,7 +7,7 @@
 - Node.js 26.8.1(`.node-version`)
 - `pdo_sqlite`가 있는 PHP 8.2 이상
 - Composer 2
-- `../template`에 있는 template 저장소. `make template`이 그 TypeScript 패키지를 빌드하며, 브라우저 코드가 이 패키지를 가져온다.
+- `../template`(`TEMPLATE_REPOSITORY`)에 있고 TypeScript 패키지가 build된 template 저장소. template 저장소의 `make build-ts`가 그 build를 만든다. 이 저장소는 그곳에서 아무것도 build하지 않는다. `make template`이 그것을 `var/products/template`에 복사하고(HY-78), 브라우저 코드는 그 복사본의 TypeScript 패키지를 가져온다.
 - 네이티브 템플릿 확장을 `make ext`로 빌드할 Rust(template 저장소가 고정한 버전)
 - Playwright용 Chromium: `npx playwright install chromium`
 
@@ -15,22 +15,22 @@
 
 | 타깃 | 동작 |
 |---|---|
-| `make install` | npm과 Composer 의존성을 설치한다 |
-| `make template` | TypeScript template 패키지를 빌드하고, PHP template 패키지의 Composer 복사본을 다시 설치한다. 테스트, 에셋, 서버 빌드가 먼저 실행한다 |
-| `make template-check` | PHP template 패키지의 Composer 복사본이 template 저장소와 다르면 실패한다 |
-| `make ext` | template 저장소의 네이티브 템플릿 확장을 `build/ext`에 빌드한다(HY-48) |
+| `make install` | template 저장소의 선언한 복사본을 쓰고 npm과 Composer 의존성을 설치한다 |
+| `make template` | `scripts/copy-template.mjs`로 template 저장소의 선언한 복사본 `var/products/template`을 쓰고, 그 복사본에서 TypeScript template 패키지의 npm 사본과 PHP template 패키지의 Composer 사본을 다시 설치한다(HY-78). 테스트, 에셋, 서버 빌드가 먼저 실행한다 |
+| `make template-check` | TypeScript template 패키지의 npm 사본이나 PHP template 패키지의 Composer 사본이 선언한 복사본과 다르면 실패한다 |
+| `make ext` | template 저장소의 선언한 복사본에서 네이티브 템플릿 확장을 `build/ext`에 빌드한다(HY-48, HY-78) |
 | `make packages` | `@polyspec/hyper`와 `@polyspec/hyper-server`의 JavaScript module과 type 선언을 각자의 `dist` 디렉터리에 build한다. Node 서버 test, board 에셋 build, `make package-check`, `make test-scripts`는 package를 exports로 가져오므로 이것을 먼저 실행한다(HY-61). build script는 `data-template.json`, `checkManifest`, `templateReferences`를 script 옆 `packages/hyper-js`의 소스에서 읽으므로 `dist`가 필요 없고 어느 작업 디렉터리에서도 실행된다 |
 | `make package-check` | 두 package를 `npm install --install-links`로 `tests/package-install`에 설치하고, 그 test를 `erasableSyntaxOnly`로 선언에 대해 type 검사한 뒤 `node`로 실행한다(HY-61) |
 | `make server` | 게시판 서버 프로그램을 `examples/board/build/server`에 빌드한다(아래 참조) |
 | `make server-fixtures` | PHP 테스트 픽스처의 서버 프로그램을 빌드한다 |
-| `make node-fixtures` | `scripts/build-templates.mjs`와 template 저장소 `../template`로 Node 서버 test에 쓸 PHP test fixture의 템플릿 파일을 빌드한다(HY-70) |
+| `make node-fixtures` | `scripts/build-templates.mjs`와 template 저장소의 선언한 복사본으로 Node 서버 test에 쓸 PHP test fixture의 템플릿 파일을 빌드한다(HY-70, HY-78) |
 | `make node-server` | board Node 서버를 타입 검사하고 `examples/board/build/node/server.mjs`로 bundle한다(아래 참조) |
 | `make assets` | 게시판 클라이언트 번들과 CSR 셸을 빌드한다(아래 참조) |
 | `make test-js` | 라우터 적합성 사례를 포함한 브라우저 코드 테스트와 타입 검사를 실행한다 |
 | `make test-node` | Node 서버 test를 실행한다. 같은 fixture로 PHP 서버 test의 사례, `conformance/json.json`의 JSON 사례, session, HTTP 서버, 타입 검사를 실행한다 |
 | `make test-php` | 라우터 적합성 사례를 포함한 서버 패키지 테스트를 generated 프로그램으로 한 번, 네이티브 확장으로 한 번 실행한다 |
 | `make lint` | PHP 형식을 검사한다 |
-| `make analyse-php` | `packages/hyper-php/phpstan.neon`으로 `packages/hyper-php`의 소스와 테스트에 레벨 `max`의 PHPStan을 실행한다. 기준선(baseline)과 무시하는 오류는 없다. PHPStan은 네이티브 template 확장의 시그니처를 `../template/packages/template-php-ext/stubs/polyspec_template.stub.php`에서 읽고, 캐시를 `build/phpstan`에 쓴다 |
+| `make analyse-php` | `packages/hyper-php/phpstan.neon`으로 `packages/hyper-php`의 소스와 테스트에 레벨 `max`의 PHPStan을 실행한다. 기준선(baseline)과 무시하는 오류는 없다. PHPStan은 네이티브 template 확장의 시그니처를 `var/products/template/packages/template-php-ext/stubs/polyspec_template.stub.php`에서 읽고(HY-78), 캐시를 `build/phpstan`에 쓴다 |
 | `make templates-check` | 레이아웃 템플릿만 `hx-` 속성을 가지는지(HC-6), 레이아웃이 `{# title}`과 `{# data}`를 한 번씩 배치하는지, 레이아웃과 각 라우트 템플릿의 모든 영역이 블록 인자 없이 `id`가 영역 이름인 요소 바로 안에 한 번씩 배치되는지(HY-3, HY-30) 검사한다 |
 | `make test-scripts` | 검사 스크립트의 테스트를 실행한다. 예: 잘못된 픽스처 애플리케이션으로 영역 배치 검사를 시험한다 |
 | `make parity` | PHP 문서와, 문서 JSON과 영역 JSON의 브라우저 렌더 결과를 비교한다. generated 프로그램으로 한 번, 네이티브 확장으로 한 번 실행한다 |

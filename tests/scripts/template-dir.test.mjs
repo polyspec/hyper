@@ -1,5 +1,6 @@
 // Tests that the asset build and the template build read the template package of the template repository that
-// the caller names, not the template package that this repository installed (HY-70).
+// the caller names, not the template package that this repository installed (HY-70). The fixture repository holds
+// a copy of the installed package.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { cpSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
@@ -9,9 +10,9 @@ import { test } from 'node:test';
 import { bundlePackage } from '../../scripts/template-files.mjs';
 
 const repository = resolve('.');
-const installed = resolve('..', 'template', 'packages', 'template-ts');
+const installed = resolve('node_modules', '@polyspec', 'template');
 
-// A template repository with a copy of the template package of the template repository next to this one.
+// A template repository with a copy of the installed template package.
 function templateDir(withBuild) {
   const directory = mkdtempSync(join(tmpdir(), 'hyper-template-dir-'));
   const target = join(directory, 'packages', 'template-ts');

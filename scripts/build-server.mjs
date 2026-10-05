@@ -8,7 +8,7 @@
 //   <output>/reads.json   the read paths of every route, by which the server keeps data (HY-73)
 //
 // Usage: node scripts/build-server.mjs --manifest examples/board/app/app.json --templates examples/board/templates
-//          --output examples/board/build/server --template-dir ../template --php-namespace 'Polyspec\Hyper\Examples\Board\Program'
+//          --output examples/board/build/server --template-dir var/products/template --php-namespace 'Polyspec\Hyper\Examples\Board\Program'
 
 import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';

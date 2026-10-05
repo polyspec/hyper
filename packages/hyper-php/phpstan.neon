@@ -6,8 +6,9 @@ parameters:
     excludePaths:
         # `make server-fixtures` generates this program; the tests load it at run time.
         - tests/build (?)
-    # The native template extension registers Polyspec\Template\Native\Engine; the template repository holds its signatures.
+    # The native template extension registers Polyspec\Template\Native\Engine; the declared copy of the template
+    # repository holds its signatures (HY-78).
     scanFiles:
-        - ../../../template/packages/template-php-ext/stubs/polyspec_template.stub.php
+        - ../../var/products/template/packages/template-php-ext/stubs/polyspec_template.stub.php
     # The repository ignores build/, which holds the outputs of the Makefile targets.
     tmpDir: ../../build/phpstan

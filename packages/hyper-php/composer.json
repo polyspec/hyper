@@ -4,7 +4,7 @@
     "type": "library",
     "license": "MIT",
     "repositories": [
-        { "type": "path", "url": "../../../template/packages/template-php", "options": { "symlink": false } }
+        { "type": "path", "url": "../../var/products/template/packages/template-php", "options": { "symlink": false, "reference": "config", "versions": { "polyspec/template": "dev-main" } } }
     ],
     "require": {
         "php": "^8.2",

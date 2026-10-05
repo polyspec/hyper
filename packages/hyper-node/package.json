@@ -24,6 +24,6 @@
   },
   "dependencies": {
     "@polyspec/hyper": "0.0.1",
-    "@polyspec/template": "file:../../../template/packages/template-ts"
+    "@polyspec/template": "file:../../var/products/template/packages/template-ts"
   }
 }

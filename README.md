@@ -34,7 +34,7 @@ Pages and regions contain no `hx-*` attributes. Links and forms are plain HTML a
 
 ## Start
 
-The template repository must be next to this repository (`../template`).
+The template repository must be next to this repository (`../template`) with a build of its TypeScript package (`make build-ts` in the template repository). `make install` and `make template` copy it into `var/products/template`, and every build and check reads that copy (HY-78).
 
 ```sh
 make install

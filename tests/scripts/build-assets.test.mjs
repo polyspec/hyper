@@ -6,10 +6,9 @@ import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { cpSync, existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { join } from 'node:path';
 import { test } from 'node:test';
-
-const templateDir = resolve('..', 'template');
+import { templateDir } from './declared-template.mjs';
 
 function buildAssets(app, ...options) {
   return spawnSync(process.execPath, ['scripts/build-assets.mjs', '--app', app, '--api', '/api', '--template-dir', templateDir, '--output', join(app, 'out'), ...options], { encoding: 'utf8' });

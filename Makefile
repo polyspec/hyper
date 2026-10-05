@@ -2,9 +2,12 @@ BOARD := examples/board
 PHP_PACKAGE := packages/hyper-php
 JS_PACKAGE := packages/hyper-js
 NODE_PACKAGE := packages/hyper-node
-TEMPLATE_DIR := ../template
+# The template repository, read only by `make template`, which writes its declared copy TEMPLATE_DIR (HY-78). Every
+# other recipe, npm, Composer and the native extension build read the copy.
+TEMPLATE_REPOSITORY := ../template
+TEMPLATE_DIR := var/products/template
 FIXTURES := $(PHP_PACKAGE)/tests/fixtures
-# The native template extension, built from the template repository (HY-48).
+# The native template extension, built from the declared copy of the template repository (HY-48, HY-78).
 EXT := build/ext/release/libpolyspec_template.$(if $(filter Darwin,$(shell uname)),dylib,so)
 
 .DEFAULT_GOAL := help
@@ -14,21 +17,25 @@ EXT := build/ext/release/libpolyspec_template.$(if $(filter Darwin,$(shell uname
 help: ## List the targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
 
-install: ## Install npm and Composer dependencies
+install: ## Write the declared copy of the template repository and install npm and Composer dependencies from it
+	node scripts/copy-template.mjs --repository $(TEMPLATE_REPOSITORY) --output $(TEMPLATE_DIR)
 	npm ci
 	composer install --working-dir=$(PHP_PACKAGE)
 	composer install --working-dir=$(BOARD)
 
-template: ## Build the TypeScript template package and reinstall the PHP template package copies from the template repository
-	cd $(TEMPLATE_DIR) && npm run build -w @polyspec/template
+template: ## Write the declared copy of the template repository and reinstall the npm and Composer copies of its packages from it (HY-78)
+	node scripts/copy-template.mjs --repository $(TEMPLATE_REPOSITORY) --output $(TEMPLATE_DIR)
+	rm -rf node_modules/@polyspec/template
+	npm install --no-audit --no-fund
 	composer reinstall polyspec/template --no-interaction --working-dir=$(PHP_PACKAGE)
 	composer reinstall polyspec/template --no-interaction --working-dir=$(BOARD)
 
-template-check: template ## Fail when a Composer copy of the PHP template package differs from the template repository
+template-check: template ## Fail when an npm or Composer copy of a template package differs from the declared copy
+	diff -r $(TEMPLATE_DIR)/packages/template-ts/dist node_modules/@polyspec/template/dist
 	diff -r $(TEMPLATE_DIR)/packages/template-php/src $(PHP_PACKAGE)/vendor/polyspec/template/src
 	diff -r $(TEMPLATE_DIR)/packages/template-php/src $(BOARD)/vendor/polyspec/template/src
 
-ext: ## Build the native template extension of the template repository into build/ext
+ext: template ## Build the native template extension of the declared copy of the template repository into build/ext
 	cargo build --locked --release --manifest-path $(TEMPLATE_DIR)/packages/template-php-ext/Cargo.toml --target-dir build/ext
 
 packages: template ## Build the JavaScript modules and type declarations of the npm packages into their dist directories (HY-61)
