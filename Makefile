@@ -2,10 +2,14 @@ BOARD := examples/board
 PHP_PACKAGE := packages/hyper-php
 JS_PACKAGE := packages/hyper-js
 NODE_PACKAGE := packages/hyper-node
-# The template repository, read only by `make template`, which writes its declared copy TEMPLATE_DIR (HY-78). Every
-# other recipe, npm, Composer and the native extension build read the copy.
+# The template repository, read only by `make template`, which writes its declared copy TEMPLATE_DIR (HY-78) of the
+# commit at the head of the branch that TEMPLATE_CONFIG names (HY-80). Every other recipe, npm, Composer and the native extension build read the copy.
 TEMPLATE_REPOSITORY := ../template
+TEMPLATE_CONFIG := config/template.json
 TEMPLATE_DIR := var/products/template
+# Written after the copy and its npm and Composer installs; the copy is written again only when config/template.json or
+# the copy script changes, so one run of many targets copies the template repository at most once.
+TEMPLATE_STAMP := $(TEMPLATE_DIR)/installed.stamp
 FIXTURES := $(PHP_PACKAGE)/tests/fixtures
 # The native template extension, built from the declared copy of the template repository (HY-48, HY-78).
 # The lock of `make serve-demo`, whose fixed ports exist once on this machine (scripts/holder-lock.mjs).
@@ -33,19 +37,23 @@ $(if $(filter $(HOOKS_PATH),$(shell git config core.hooksPath)),,$(shell git con
 help: ## List the targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
 
-install: ## Write the declared copy of the template repository and install npm and Composer dependencies from it
-	node scripts/copy-template.mjs --repository $(TEMPLATE_REPOSITORY) --output $(TEMPLATE_DIR)
+install: ## Write the declared copy of the template branch and install npm and Composer dependencies from it
+	node scripts/copy-template.mjs --repository $(TEMPLATE_REPOSITORY) --config $(TEMPLATE_CONFIG) --output $(TEMPLATE_DIR)
 	node scripts/copy-package.mjs --path $(PHP_PACKAGE) --output $(HYPER_PHP_COPY)
 	npm ci
 	composer install --working-dir=$(PHP_PACKAGE)
 	composer install --working-dir=$(BOARD)
+	touch $(TEMPLATE_STAMP)
 
-template: ## Write the declared copy of the template repository and reinstall the npm and Composer copies of its packages from it (HY-78)
-	node scripts/copy-template.mjs --repository $(TEMPLATE_REPOSITORY) --output $(TEMPLATE_DIR)
+template: $(TEMPLATE_STAMP) ## Write the declared copy of the template branch and reinstall the npm and Composer copies of its packages from it, when config/template.json changed (HY-78, HY-80)
+
+$(TEMPLATE_STAMP): $(TEMPLATE_CONFIG) scripts/copy-template.mjs
+	node scripts/copy-template.mjs --repository $(TEMPLATE_REPOSITORY) --config $(TEMPLATE_CONFIG) --output $(TEMPLATE_DIR)
 	rm -rf node_modules/@polyspec/template
 	npm install --no-audit --no-fund
 	composer reinstall polyspec/template --no-interaction --working-dir=$(PHP_PACKAGE)
 	composer reinstall polyspec/template --no-interaction --working-dir=$(BOARD)
+	touch $@
 
 template-check: template ## Fail when an npm or Composer copy of a template package differs from the declared copy
 	diff -r $(TEMPLATE_DIR)/packages/template-ts/dist node_modules/@polyspec/template/dist

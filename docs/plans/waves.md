@@ -55,3 +55,7 @@ Depends on: none. Two runs from different checkouts or sessions replaced or rese
 ## Wave 13
 
 Depends on: none. AGENTS allows a push only when no task is `[~]`, and nothing enforced it: a push sent a tree with a task in progress, and the full suite of that tree is refused by its guard. The pre-push hook refuses such a push in every checkout that ran `make`, and the workflow `push-gate` fails for such a commit on GitHub, also for a push that skipped the hook.
+
+## Wave 14
+
+Depends on: none. The checks of this repository gave results that depended on the time and the machine of the run and on the state that earlier runs left. The full run of 2026-10-05 failed in 7 targets, because every target ran `make template`, which copied the working tree of `../template` while the template repository rebuilt its `dist`; npm 12.2.0 then printed `npm pack --json` as an object, so the copy failed with `TypeError: object is not iterable`. The checks of this repository have ten defect classes: results that depend on time or the outside world, tests that depend on leftover state, outputs published by removing and then writing, recipes that stop at their first failing check, failures that do not explain themselves, cases that can pass without running, leaked processes and files, assertions on tool output that varies, changed paths without owning tests, and races on shared state. Each class gets a task that fixes every instance in this repository and a rule in AGENTS.

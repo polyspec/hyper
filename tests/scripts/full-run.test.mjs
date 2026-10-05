@@ -26,6 +26,8 @@ const CHECKLIST = `# Execution checklist
 | H1.3 | Remove the old runner | \`make test-scripts\` | [!] cause: blocked; retry: H1.2 done |
 `;
 
+const TEMPLATE_BRANCH = 'main';
+
 const DONE = CHECKLIST.replace('| [~] |', '| [o] |');
 
 // The commands that make prints for `target` without running them.
@@ -48,6 +50,8 @@ function checkout(t, checklist) {
   mkdirSync(path.join(directory, 'docs/plans'), { recursive: true });
   writeFileSync(path.join(directory, 'docs/plans/execution-checklist.md'), checklist);
   writeFileSync(path.join(directory, '.gitignore'), '/var/\n');
+  mkdirSync(path.join(directory, 'config'));
+  writeFileSync(path.join(directory, 'config/template.json'), `${JSON.stringify({ branch: TEMPLATE_BRANCH })}\n`);
   mkdirSync(path.join(directory, '.githooks'));
   writeFileSync(path.join(directory, '.githooks/pre-push'), '#!/bin/sh\n');
   chmodSync(path.join(directory, '.githooks/pre-push'), 0o755);
@@ -182,6 +186,9 @@ test('a full run records each target, and the same tree is refused a second time
   assert.match(first.output, /^\[full-run\] run: no full-run record/);
   const written = record(directory);
   assert.equal(written.tree, git(directory, 'rev-parse', 'HEAD^{tree}'));
+  // The record names the template branch of the run (HY-80).
+  assert.equal(written.template, TEMPLATE_BRANCH);
+  assert.match(first.output, new RegExp(`^\\[full-run\\] template branch ${TEMPLATE_BRANCH} \\(config/template\\.json\\)$`, 'm'));
   assert.equal(written.result, 'passed');
   assert.ok(written.ended);
   assert.deepEqual(written.targets.map(target => target.status), ['passed', 'passed', 'passed']);

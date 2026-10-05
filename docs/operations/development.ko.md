@@ -7,7 +7,7 @@
 - Node.js 26.8.1(`.node-version`)
 - `pdo_sqlite`가 있는 PHP 8.2 이상
 - Composer 2
-- `../template`(`TEMPLATE_REPOSITORY`)에 있고 TypeScript 패키지가 build된 template 저장소. template 저장소의 `make build-ts`가 그 build를 만든다. 이 저장소는 그곳에서 아무것도 build하지 않는다. `make template`이 그것을 `var/products/template`에 복사하고(HY-78), 브라우저 코드는 그 복사본의 TypeScript 패키지를 가져온다.
+- `../template`(`TEMPLATE_REPOSITORY`)에 있고 `config/template.json`이 밝히는 branch와(HY-80) 그 head commit의 TypeScript 패키지 build를 가진 template 저장소. template 저장소의 `make build-ts`가 그 build를 만든다. 그렇지 않으면 복사는 기대값과 실제값인 commit이나 입력 hash를 밝히며 실패한다. 이 저장소는 그곳에서 아무것도 build하지 않는다. `make template`이 그것을 `var/products/template`에 복사하고(HY-78), 브라우저 코드는 그 복사본의 TypeScript 패키지를 가져온다.
 - 네이티브 템플릿 확장을 `make ext`로 빌드할 Rust(template 저장소가 고정한 버전)
 - Playwright용 Chromium: `node node_modules/@playwright/test/cli.js install chromium`
 
@@ -17,7 +17,7 @@
 |---|---|
 | `make install` | template 저장소의 선언한 복사본과 `packages/hyper-php`의 사본을 쓰고, npm과 Composer 의존성을 bin link 없는 사본으로 설치한다(HY-79) |
 | `make hyper-php-copy` | `packages/hyper-php`의 추적 파일 사본 `var/products/hyper-php`를 쓰고 Composer로 board에 다시 설치한다(HY-79). `make server`가 먼저 실행한다 |
-| `make template` | `scripts/copy-template.mjs`로 template 저장소의 선언한 복사본 `var/products/template`을 쓰고, 그 복사본에서 TypeScript template 패키지의 npm 사본과 PHP template 패키지의 Composer 사본을 다시 설치한다(HY-78). 테스트, 에셋, 서버 빌드가 먼저 실행한다 |
+| `make template` | `scripts/copy-template.mjs`로 template branch의 선언한 복사본 `var/products/template`을 쓰고, 그 복사본에서 TypeScript template 패키지의 npm 사본과 PHP template 패키지의 Composer 사본을 다시 설치한다(HY-78, HY-80). `config/template.json`이나 복사 script가 `var/products/template/installed.stamp`보다 새로울 때만 그렇게 한다. 테스트, 에셋, 서버 빌드가 먼저 실행한다 |
 | `make template-check` | TypeScript template 패키지의 npm 사본이나 PHP template 패키지의 Composer 사본이 선언한 복사본과 다르면 실패한다 |
 | `make ext` | template 저장소의 선언한 복사본에서 네이티브 템플릿 확장을 `build/ext`에 빌드한다(HY-48, HY-78) |
 | `make packages` | `@polyspec/hyper`와 `@polyspec/hyper-server`의 JavaScript module과 type 선언을 각 package가 선언한 build(`scripts/tsc.mjs`를 실행하는 `npm run build`)로 각자의 `dist` 디렉터리에 build하고 각 npm 사본을 다시 설치한다(HY-79). Node 서버 test, board 에셋 build, `make package-check`, `make test-scripts`는 package를 exports로 가져오므로 이것을 먼저 실행한다(HY-61). build script는 `data-template.json`, `checkManifest`, `templateReferences`를 script 옆 `packages/hyper-js`의 소스에서 읽으므로 `dist`가 필요 없고 어느 작업 디렉터리에서도 실행된다 |
