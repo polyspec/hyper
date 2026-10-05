@@ -38,12 +38,13 @@
     { "paths": ["scripts/run-e2e.mjs"], "targets": ["e2e"], "tests": ["tests/scripts/run-e2e.test.mjs"] },
     { "paths": ["scripts/run-tests.mjs", "scripts/test-progress/**"], "tests": ["tests/scripts/run-tests.test.mjs"] },
     { "paths": ["scripts/line-end.mjs"], "tests": ["tests/scripts/check-recipes.test.mjs"] },
+    { "paths": ["scripts/ci-run.mjs"], "tests": ["tests/scripts/ci-run.test.mjs"] },
     { "paths": ["scripts/rust-downloads.mjs"], "targets": ["rust-downloads-check"], "tests": ["tests/scripts/rust-downloads.test.mjs"] },
     { "paths": ["scripts/serve-demo.mjs"], "tests": ["tests/scripts/serve-demo.test.mjs"] },
     { "paths": ["scripts/toolchain.mjs", "config/toolchain.json", ".node-version"], "tests": ["tests/scripts/toolchain.test.mjs", "tests/scripts/package-build.test.mjs"] },
     { "paths": ["scripts/tsc.mjs"], "targets": ["test-js"], "tests": ["tests/scripts/package-build.test.mjs"] },
     { "paths": ["package.json", "package-lock.json", ".npmrc"], "targets": ["test-js", "test-node", "package-check"], "tests": ["tests/scripts/toolchain.test.mjs", "tests/scripts/no-symlinks.test.mjs", "tests/scripts/template-copy.test.mjs"] },
-    { "paths": ["Makefile"], "tests": ["tests/scripts/toolchain.test.mjs", "tests/scripts/template-copy.test.mjs", "tests/scripts/full-run.test.mjs", "tests/scripts/check-recipes.test.mjs", "tests/scripts/push-gate.test.mjs", "tests/scripts/owner-check.test.mjs"] },
+    { "paths": ["Makefile"], "tests": ["tests/scripts/toolchain.test.mjs", "tests/scripts/template-copy.test.mjs", "tests/scripts/full-run.test.mjs", "tests/scripts/check-recipes.test.mjs", "tests/scripts/push-gate.test.mjs", "tests/scripts/owner-check.test.mjs", "tests/scripts/ci-workflow.test.mjs"] },
     { "paths": [".gitignore"], "tests": ["tests/scripts/ignored-files.test.mjs"] }
   ]
 }

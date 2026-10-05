@@ -62,7 +62,7 @@ $(if $(filter $(HOOKS_PATH),$(shell git config core.hooksPath)),,$(shell git con
 
 .DEFAULT_GOAL := help
 
-.PHONY: help tools toolchain-check owner-check install hyper-php-copy template template-check rust-downloads-check ext packages package-check server server-fixtures node-server node-fixtures assets test-js test-node test-php lint analyse-php templates-check test-scripts parity server-parity bundle-size e2e docs-check serve-demo bench-server bench-server-smoke bench-browser bench check rerun-failed serve-demo-unlock hooks hooks-check push-gate-commit
+.PHONY: help tools toolchain-check owner-check install hyper-php-copy template template-check rust-downloads-check ext packages package-check server server-fixtures node-server node-fixtures assets test-js test-node test-php lint analyse-php templates-check test-scripts parity server-parity bundle-size e2e docs-check serve-demo bench-server bench-server-smoke bench-browser bench check rerun-failed serve-demo-unlock hooks hooks-check push-gate-commit ci-pins ci-check ci-summary install-browser
 
 help: ## List the targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
@@ -227,11 +227,35 @@ bench: bench-server bench-browser ## Run both measurements; results are reports,
 # current tree that did not pass.
 CHECK_TARGETS := template-check bench-server-smoke docs-check lint analyse-php templates-check test-scripts test-js test-node package-check test-php parity server-parity bundle-size e2e
 
+# The CI groups of the full suite (HY-91): each job of .github/workflows/ci.yml runs the targets CI_TARGETS_<group> of
+# one group with `make ci-check GROUP=<group>`, so the groups together run every target of CHECK_TARGETS once
+# (tests/scripts/ci-workflow.test.mjs). A group gathers the targets that need the same setup: docs only Node.js, php
+# and node PHP, the template build and the install, board also Chromium.
+CI_GROUPS := docs php node board
+CI_TARGETS_docs := docs-check
+CI_TARGETS_php := template-check bench-server-smoke lint analyse-php test-php
+CI_TARGETS_node := templates-check test-scripts test-js test-node package-check
+CI_TARGETS_board := parity server-parity bundle-size e2e
+
 check: ## Run every check through the guard: once per tree, when no checklist task is [~]
 	node scripts/full-run.mjs run $(CHECK_TARGETS)
 
 owner-check: ## Run the owner checks of the changed paths (scripts/owner-checks.json): PATHS, the paths since BASE, or the uncommitted changes (HY-88)
 	node scripts/owner-check.mjs $(if $(PATHS),--paths "$(PATHS)") $(if $(BASE),--base "$(BASE)")
+
+ci-pins: ## Print the PHP minor of config/toolchain.json and the template branch of config/template.json, and give them to the workflow as step outputs (HY-91)
+	node scripts/ci-run.mjs pins
+
+ci-check: ## Run the targets of the CI group GROUP to their ends and write its report var/ci/GROUP; only on GitHub Actions (HY-91)
+	$(if $(CI_TARGETS_$(GROUP)),,$(error GROUP names a CI group of CI_GROUPS: $(CI_GROUPS)))
+	node scripts/ci-run.mjs run $(GROUP) $(CI_TARGETS_$(GROUP))
+
+ci-summary: ## Write the summary of the CI group GROUP into var/ci/GROUP/summary.md and the job summary of GitHub (HY-91)
+	$(if $(filter $(GROUP),$(CI_GROUPS)),,$(error GROUP names a CI group of CI_GROUPS: $(CI_GROUPS)))
+	node scripts/ci-run.mjs summary $(GROUP)
+
+install-browser: ## Install Chromium of the pinned Playwright and its system libraries; the CI group board runs it (HY-91)
+	$(ONLINE) node node_modules/@playwright/test/cli.js install --with-deps chromium
 
 rerun-failed: ## Rerun only the targets of make check that did not pass on the current tree
 	node scripts/full-run.mjs rerun-failed

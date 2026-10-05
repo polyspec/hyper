@@ -82,3 +82,51 @@ test('every step that runs a command runs make, and every step after the first r
   }
   assert.deepEqual(found, []);
 });
+
+// The CI groups of the Makefile: CI_GROUPS and the targets CI_TARGETS_<group> of each.
+function groups() {
+  const makefile = readFileSync(path.join(ROOT, 'Makefile'), 'utf8');
+  const variable = (name) => new RegExp(`^${name} := (.*)$`, 'm').exec(makefile)?.[1].split(' ').filter(Boolean);
+  const names = variable('CI_GROUPS') ?? [];
+  return { names, targets: Object.fromEntries(names.map((name) => [name, variable(`CI_TARGETS_${name}`) ?? []])), check: variable('CHECK_TARGETS') };
+}
+
+test('the CI groups run every target of the full suite once (HY-91)', () => {
+  const { names, targets, check } = groups();
+  assert.ok(names.length > 1, `CI_GROUPS: ${names.join(' ')}`);
+  const all = Object.values(targets).flat();
+  assert.deepEqual([...all].sort(), [...check].sort(), 'the targets of the CI groups are not the targets of CHECK_TARGETS, each once');
+});
+
+test('the workflow ci runs every CI group in a job that runs to its end and uploads its report (HY-91)', () => {
+  const text = readFileSync(path.join(WORKFLOWS, 'ci.yml'), 'utf8');
+  assert.match(text, /^on:\n {2}push:\n {4}branches: \[main\]\n {2}pull_request:\n/m);
+  const { names, targets } = groups();
+  const read = jobs(text);
+  assert.ok(read.length > 0);
+  for (const job of read) {
+    assert.match(job.text, /^ {4}strategy:\n {6}fail-fast: false\n/m, `${job.name}: fail-fast`);
+    const matrix = [...job.text.matchAll(/^ {10}- group: ([\w-]+)$/gm)].map((match) => match[1]);
+    assert.deepEqual(matrix, names, `${job.name}: the matrix groups are not CI_GROUPS`);
+    const index = (predicate, name) => {
+      const at = job.steps.findIndex(predicate);
+      assert.ok(at >= 0, `${job.name} has no ${name} step`);
+      assert.match(job.steps[at].if ?? '', /^\$\{\{ !cancelled\(\) \}\}$/, `${job.name}: the ${name} step runs only while every earlier step passed`);
+      return at;
+    };
+    const check = index((step) => step.run === 'make ci-check GROUP=${{ matrix.group }}', 'make ci-check');
+    const summary = index((step) => step.run === 'make ci-summary GROUP=${{ matrix.group }}', 'make ci-summary');
+    const report = index((step) => /^actions\/upload-artifact@/.test(step.uses ?? ''), 'report upload');
+    assert.ok(check < summary && summary < report, `${job.name}: the report steps follow make ci-check`);
+    assert.match(job.steps[summary].text, /CI_STEPS: \$\{\{ toJSON\(steps\) \}\}/);
+    assert.match(job.steps[report].text, /path: hyper\/var\/ci\/\$\{\{ matrix\.group \}\}\/\n/);
+    assert.match(job.steps[report].text, /if-no-files-found: error/);
+    // Chromium is installed only in the group whose targets run a browser.
+    const browser = job.steps.find((step) => step.run === 'make install-browser');
+    assert.match(browser?.if ?? '', /matrix\.browser/);
+    for (const [group, list] of Object.entries(targets)) {
+      const flagged = new RegExp(`- group: ${group}\\n(?: {12}\\w+: true\\n)* {12}browser: true\\n`).test(job.text);
+      assert.equal(flagged, list.some((target) => ['parity', 'server-parity', 'e2e'].includes(target)), `${group}: browser flag`);
+    }
+  }
+});
