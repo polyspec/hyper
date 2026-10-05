@@ -3,7 +3,7 @@
 // (HY-89): `cargo fetch --locked --offline` in the directory reads no network, selects the toolchain of the
 // rust-toolchain.toml above it and fails on a missing toolchain or crate. cargo answers a missing crate with the advice
 // to retry without --offline, and rustup a missing toolchain with `rustup toolchain install`; neither is the fix of a
-// check, so this check prints the first error line and names `make install`, which installs both. `make ext` runs it
+// check, so this check prints the first error line and names `make install-rust`, which installs both. `make ext` runs it
 // first.
 //
 // Usage: node scripts/rust-downloads.mjs <crate directory>
@@ -19,7 +19,7 @@ const crate = resolve(directory);
 const fetch = spawnSync('cargo', ['fetch', '--locked', '--offline'], { cwd: crate, encoding: 'utf8' });
 if (fetch.error || fetch.status !== 0) {
   const cause = fetch.error?.message ?? `${fetch.stderr}${fetch.stdout}`.split('\n').find((line) => line.startsWith('error')) ?? `cargo fetch --locked --offline exited with ${fetch.status}`;
-  console.error(`the Rust toolchain or a crate of ${crate} is not installed: ${cause}\nrun make install, which installs the Rust toolchain of the declared copy and downloads the crates of its Cargo.lock`);
+  console.error(`the Rust toolchain or a crate of ${crate} is not installed: ${cause}\nrun make install-rust, which installs the Rust toolchain of the declared copy and downloads the crates of its Cargo.lock`);
   process.exit(1);
 }
 console.log(`[rust-downloads] the Rust toolchain and the crates of ${crate} are installed`);
