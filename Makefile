@@ -25,6 +25,13 @@ HYPER_PHP_COPY := var/products/hyper-php
 PHPSTAN_MEMORY := 256M
 EXT := build/ext/release/libpolyspec_template.$(if $(filter Darwin,$(shell uname)),dylib,so)
 
+# The toolchain (HY-81, scripts/toolchain.mjs): npm and Composer of this checkout, which `make tools` installs into
+# var/tools, come first on PATH for every recipe and the programs that it starts. rustup never installs a toolchain on
+# the first cargo, because several processes of one run may start cargo at once; `make install` and `make template`
+# install the Rust toolchain of the declared copy, and a missing toolchain fails with the message of rustup.
+export PATH := $(CURDIR)/var/tools/bin:$(PATH)
+export RUSTUP_AUTO_INSTALL := 0
+
 # The tracked Git hooks (scripts/git-hooks.mjs). Every make run sets core.hooksPath to this directory when it differs,
 # so the pre-push hook refuses a push while a checklist task is in progress (AGENTS.md) in every checkout that ran make.
 HOOKS_PATH := .githooks
@@ -32,23 +39,32 @@ $(if $(filter $(HOOKS_PATH),$(shell git config core.hooksPath)),,$(shell git con
 
 .DEFAULT_GOAL := help
 
-.PHONY: help install hyper-php-copy template template-check ext packages package-check server server-fixtures node-server node-fixtures assets test-js test-node test-php lint analyse-php templates-check test-scripts parity server-parity bundle-size e2e docs-check serve-demo bench-server bench-server-smoke bench-browser bench check rerun-failed serve-demo-unlock hooks hooks-check
+.PHONY: help tools toolchain-check install hyper-php-copy template template-check ext packages package-check server server-fixtures node-server node-fixtures assets test-js test-node test-php lint analyse-php templates-check test-scripts parity server-parity bundle-size e2e docs-check serve-demo bench-server bench-server-smoke bench-browser bench check rerun-failed serve-demo-unlock hooks hooks-check
 
 help: ## List the targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
 
-install: ## Write the declared copy of the template branch and install npm and Composer dependencies from it
+tools: ## Install the pinned npm and Composer into var/tools (HY-81)
+	node scripts/toolchain.mjs install
+
+toolchain-check: ## Fail when Node.js, npm, Composer, PHP or make differs from its pin, naming the expected and the actual value (HY-81)
+	node scripts/toolchain.mjs check $(MAKE_VERSION)
+
+install: tools ## Install the pinned tools, write the declared copy of the template branch and install npm and Composer dependencies and the Rust toolchain from it
+	node scripts/toolchain.mjs check $(MAKE_VERSION)
 	node scripts/copy-template.mjs --repository $(TEMPLATE_REPOSITORY) --config $(TEMPLATE_CONFIG) --output $(TEMPLATE_DIR)
+	cd $(TEMPLATE_DIR) && rustup toolchain install --no-self-update
 	node scripts/copy-package.mjs --path $(PHP_PACKAGE) --output $(HYPER_PHP_COPY)
 	npm ci
 	composer install --working-dir=$(PHP_PACKAGE)
 	composer install --working-dir=$(BOARD)
 	touch $(TEMPLATE_STAMP)
 
-template: $(TEMPLATE_STAMP) ## Write the declared copy of the template branch and reinstall the npm and Composer copies of its packages from it, when config/template.json changed (HY-78, HY-80)
+template: toolchain-check $(TEMPLATE_STAMP) ## Write the declared copy of the template branch and reinstall the npm and Composer copies of its packages from it, when config/template.json changed (HY-78, HY-80)
 
-$(TEMPLATE_STAMP): $(TEMPLATE_CONFIG) scripts/copy-template.mjs
+$(TEMPLATE_STAMP): $(TEMPLATE_CONFIG) scripts/copy-template.mjs | toolchain-check
 	node scripts/copy-template.mjs --repository $(TEMPLATE_REPOSITORY) --config $(TEMPLATE_CONFIG) --output $(TEMPLATE_DIR)
+	cd $(TEMPLATE_DIR) && rustup toolchain install --no-self-update
 	rm -rf node_modules/@polyspec/template
 	npm install --no-audit --no-fund
 	composer reinstall polyspec/template --no-interaction --working-dir=$(PHP_PACKAGE)
@@ -60,8 +76,8 @@ template-check: template ## Fail when an npm or Composer copy of a template pack
 	diff -r $(TEMPLATE_DIR)/packages/template-php/src $(PHP_PACKAGE)/vendor/polyspec/template/src
 	diff -r $(TEMPLATE_DIR)/packages/template-php/src $(BOARD)/vendor/polyspec/template/src
 
-ext: template ## Build the native template extension of the declared copy of the template repository into build/ext
-	cargo build --locked --release --manifest-path $(TEMPLATE_DIR)/packages/template-php-ext/Cargo.toml --target-dir build/ext
+ext: template ## Build the native template extension of the declared copy with its Rust toolchain into build/ext (HY-81)
+	cd $(TEMPLATE_DIR)/packages/template-php-ext && cargo build --locked --release --target-dir $(CURDIR)/build/ext
 
 packages: template ## Build the JavaScript modules and type declarations of the npm packages into their dist directories and reinstall their npm copies (HY-61, HY-79)
 	rm -rf $(JS_PACKAGE)/dist && cd $(JS_PACKAGE) && npm run --silent build
@@ -108,14 +124,14 @@ test-php: template server-fixtures ext ## Run the server package tests with the 
 	node scripts/run-tests.mjs phpunit --cwd $(PHP_PACKAGE)
 	node scripts/run-tests.mjs phpunit --cwd $(PHP_PACKAGE) --extension $(EXT)
 
-lint: ## Check PHP formatting
+lint: toolchain-check ## Check PHP formatting
 	cd $(PHP_PACKAGE) && vendor/bin/pint --test
 	cd $(BOARD) && vendor/bin/pint --test app src public
 
 analyse-php: template ## Run PHPStan at level max on the source and the tests of the server package
 	cd $(PHP_PACKAGE) && vendor/bin/phpstan analyse --no-progress --memory-limit=$(PHPSTAN_MEMORY)
 
-templates-check: ## Check hx- attributes (HC-6) and region placements (HY-3, HY-30) of the board templates
+templates-check: toolchain-check ## Check hx- attributes (HC-6) and region placements (HY-3, HY-30) of the board templates
 	node scripts/check-templates.mjs --app $(BOARD)
 
 test-scripts: packages ## Run the tests of the check scripts

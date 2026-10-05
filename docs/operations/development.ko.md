@@ -4,17 +4,17 @@
 
 ## 도구
 
-- Node.js 26.8.1(`.node-version`)
-- `pdo_sqlite`가 있는 PHP 8.2 이상
-- Composer 2
+- pin한 도구(HY-81): `.node-version`의 Node.js, `pdo_sqlite`가 있는 `config/toolchain.json`의 PHP, `config/toolchain.json`의 GNU make, rustup. `make install`은 `packageManager`의 npm과 `config/toolchain.json`의 Composer를 `var/tools`에 설치하고(`make tools`) template 복사본의 Rust toolchain을 설치한다. `make toolchain-check`는 pin과 다른 모든 도구를 밝힌다.
 - `../template`(`TEMPLATE_REPOSITORY`)에 있고 `config/template.json`이 밝히는 branch와(HY-80) 그 head commit의 TypeScript 패키지 build를 가진 template 저장소. template 저장소의 `make build-ts`가 그 build를 만든다. 그렇지 않으면 복사는 기대값과 실제값인 commit이나 입력 hash를 밝히며 실패한다. 이 저장소는 그곳에서 아무것도 build하지 않는다. `make template`이 그것을 `var/products/template`에 복사하고(HY-78), 브라우저 코드는 그 복사본의 TypeScript 패키지를 가져온다.
-- 네이티브 템플릿 확장을 `make ext`로 빌드할 Rust(template 저장소가 고정한 버전)
+- Rust: template branch의 `rust-toolchain.toml`의 toolchain이며 `make ext`가 그것으로 빌드한다. cargo는 toolchain을 설치하지 않는다(`RUSTUP_AUTO_INSTALL=0`).
 - Playwright용 Chromium: `node node_modules/@playwright/test/cli.js install chromium`
 
 ## 타깃
 
 | 타깃 | 동작 |
 |---|---|
+| `make tools` | `packageManager`의 npm과 `config/toolchain.json`의 Composer를 `var/tools`에 설치하고 `var/tools/bin`의 명령을 쓰며, 각 download를 pin한 digest로 확인한다(HY-81) |
+| `make toolchain-check` | Node.js, npm, PHP, Composer, make가 pin과 다르면 실패하고 각각의 기대값과 실제값을 밝힌다(HY-81) |
 | `make install` | template 저장소의 선언한 복사본과 `packages/hyper-php`의 사본을 쓰고, npm과 Composer 의존성을 bin link 없는 사본으로 설치한다(HY-79) |
 | `make hyper-php-copy` | `packages/hyper-php`의 추적 파일 사본 `var/products/hyper-php`를 쓰고 Composer로 board에 다시 설치한다(HY-79). `make server`가 먼저 실행한다 |
 | `make template` | `scripts/copy-template.mjs`로 template branch의 선언한 복사본 `var/products/template`을 쓰고, 그 복사본에서 TypeScript template 패키지의 npm 사본과 PHP template 패키지의 Composer 사본을 다시 설치한다(HY-78, HY-80). `config/template.json`이나 복사 script가 `var/products/template/installed.stamp`보다 새로울 때만 그렇게 한다. 테스트, 에셋, 서버 빌드가 먼저 실행한다 |

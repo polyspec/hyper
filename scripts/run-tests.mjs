@@ -14,6 +14,7 @@ import readline from 'node:readline';
 import { fileURLToPath } from 'node:url';
 
 import { createProgress } from './test-progress/progress.mjs';
+import { toolPath } from './toolchain.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const USAGE = 'Usage: node scripts/run-tests.mjs <node|vitest|phpunit> [--timeout <seconds>] [--cwd <directory>] [--extension <file>] [--] [<arguments>]';
@@ -113,7 +114,8 @@ async function main() {
   process.stdout.write(`▶ ${label} (each test ${options.timeoutSeconds}s)\n`);
   const reads = options.tool === 'phpunit';
   // A runner started from inside node --test must not join that run as its child.
-  const env = { ...process.env };
+  // The tool and the programs that it starts find npm and Composer of this checkout first (HY-81).
+  const env = { ...process.env, PATH: toolPath() };
   delete env.NODE_TEST_CONTEXT;
   const child = spawn(command, args, { cwd: options.cwd, env, stdio: ['ignore', reads ? 'pipe' : 'inherit', 'inherit'], detached: reads });
   let timedOut = false;

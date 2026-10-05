@@ -58,14 +58,33 @@ const CLEAN = `# Execution checklist
 | H1.3 | Bypass this task | \`make docs-check\` | [!] cause: H1.2 is in progress; retry: H1.2 done |
 `;
 
-// Runs the document check in a directory that holds `text` as both checklists.
-function check(t, text) {
+// Runs the document check in a Git checkout that tracks `text` as both checklists and the files of `extra`, and holds
+// the untracked files of `untracked`.
+function check(t, text, { extra = {}, untracked = {} } = {}) {
   const directory = mkdtempSync(path.join(tmpdir(), 'hyper-check-documents-'));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
-  mkdirSync(path.join(directory, 'docs/plans'), { recursive: true });
-  for (const name of ['execution-checklist.md', 'execution-checklist.ko.md']) writeFileSync(path.join(directory, 'docs/plans', name), text);
+  const write = (file, content) => {
+    mkdirSync(path.dirname(path.join(directory, file)), { recursive: true });
+    writeFileSync(path.join(directory, file), content);
+  };
+  for (const name of ['execution-checklist.md', 'execution-checklist.ko.md']) write(`docs/plans/${name}`, text);
+  for (const [file, content] of Object.entries(extra)) write(file, content);
+  spawnSync('git', ['init', '-q'], { cwd: directory });
+  spawnSync('git', ['add', '-A'], { cwd: directory });
+  for (const [file, content] of Object.entries(untracked)) write(file, content);
   return spawnSync(process.execPath, [SCRIPT], { cwd: directory, encoding: 'utf8' });
 }
+
+test('the check reads the tracked documents only, not files that installs and builds leave in the checkout', (t) => {
+  const untracked = { 'var/tools/npm/docs/README.md': '[a link](/nowhere)\n' };
+  const clean = check(t, CLEAN, { untracked });
+  assert.equal(clean.stderr, '');
+  assert.equal(clean.status, 0, clean.stdout);
+  assert.match(clean.stdout, /^2 documents, 0 problem\(s\)$/m);
+  const tracked = check(t, CLEAN, { extra: { 'docs/guide.md': '[a link](missing.md)\n' } });
+  assert.deepEqual(tracked.stderr.split('\n').filter(Boolean), ['docs/guide.md: missing pair docs/guide.ko.md', 'docs/guide.md: link missing.md does not resolve']);
+  assert.equal(tracked.status, 1);
+});
 
 test('a state marker outside a task state fails with its file, line and column', (t) => {
   const run = check(t, STRAY);
