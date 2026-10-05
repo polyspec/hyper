@@ -12,6 +12,7 @@ import path from 'node:path';
 import { test } from 'node:test';
 
 import { BIN, COMPOSER, NPM, pins, problems, toolPath, verifiedDownload } from '../../scripts/toolchain.mjs';
+import { dryRun } from './make-dry-run.mjs';
 
 test('the pins name an exact release of every tool', () => {
   const pinned = pins();
@@ -62,11 +63,6 @@ test('a download is used only with its pinned digest', async (t) => {
 });
 
 test('the recipes that run npm, Composer, PHP or cargo check the toolchain first, and install installs the tools first', () => {
-  const dryRun = (target) => {
-    const result = spawnSync('make', ['--no-print-directory', '-n', target], { encoding: 'utf8', env: { ...process.env, MAKEFLAGS: '', MAKELEVEL: '' } });
-    assert.equal(result.status, 0, result.stderr);
-    return result.stdout.split('\n').filter(Boolean);
-  };
   for (const target of ['template', 'lint', 'templates-check']) {
     assert.equal(dryRun(target)[0], `node scripts/toolchain.mjs check ${pins().make}`, target);
   }
@@ -95,9 +91,7 @@ test('every recipe starts npm and Composer by the absolute paths of var/tools/bi
   const lines = [];
   for (const target of targets) {
     // An empty template directory makes the dry run print the recipe of the template copy.
-    const result = spawnSync('make', ['--no-print-directory', '-n', target, `TEMPLATE_DIR=${directory}`], { encoding: 'utf8', env: { ...process.env, MAKEFLAGS: '', MAKELEVEL: '' } });
-    assert.equal(result.status, 0, `${target}: ${result.stderr}`);
-    lines.push(...result.stdout.split('\n').filter(Boolean));
+    lines.push(...dryRun(target, { variables: [`TEMPLATE_DIR=${directory}`] }));
   }
   // A command that a lock runs follows its --.
   const commands = lines.flatMap((line) => line.split(/&&|;|\|\||\s--\s/).map((part) => part.trim()));
