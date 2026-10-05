@@ -5,7 +5,7 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { chmodSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -76,7 +76,7 @@ test('the recipes that run npm, Composer, PHP or cargo check the toolchain first
     assert.equal(dryRun(target)[0], 'node scripts/toolchain.mjs check', target);
   }
   const install = dryRun('install');
-  assert.deepEqual(install.slice(0, 2), ['node scripts/toolchain.mjs install', 'node scripts/toolchain.mjs check']);
+  assert.deepEqual(install.slice(0, 2), ['env -u CARGO_NET_OFFLINE -u npm_config_offline -u COMPOSER_DISABLE_NETWORK node scripts/toolchain.mjs install', 'node scripts/toolchain.mjs check']);
 });
 
 // The make of the pin looks up the program of a recipe line without shell syntax on the PATH of its own process: an
@@ -123,4 +123,47 @@ test('no recipe queries a registry: installs follow their lock without an audit,
   const composer = commands.filter((command) => command.startsWith(`${COMPOSER} `));
   assert.deepEqual(composer.filter((command) => !/^\S+ install /.test(command)), [], 'a Composer command other than install');
   assert.equal(spawnSync('git', ['ls-files', '--error-unmatch', 'tests/package-install/package-lock.json'], { encoding: 'utf8' }).status, 0, 'tests/package-install/package-lock.json is not tracked');
+});
+
+// The settings that keep cargo, npm and Composer from reading the network, and the prefix of the downloads that lift
+// them (HY-89).
+const OFFLINE = { CARGO_NET_OFFLINE: 'true', npm_config_offline: 'true', COMPOSER_DISABLE_NETWORK: '1' };
+const ONLINE = `env ${Object.keys(OFFLINE).map((name) => `-u ${name}`).join(' ')} `;
+
+test('every recipe runs cargo, npm and Composer offline, and $(ONLINE) lifts it (HY-89)', (t) => {
+  const directory = mkdtempSync(path.join(tmpdir(), 'hyper-offline-'));
+  t.after(() => rmSync(directory, { recursive: true, force: true }));
+  const extra = path.join(directory, 'env.mk');
+  writeFileSync(extra, 'hyper-recipe-env:\n\t@env\nhyper-online-env:\n\t@$(ONLINE) env\n');
+  const caller = ['MAKEFLAGS', 'MFLAGS', 'MAKELEVEL', 'MAKEOVERRIDES', ...Object.keys(OFFLINE)];
+  const env = Object.fromEntries(Object.entries(process.env).filter(([name]) => !caller.includes(name)));
+  const run = (target) => {
+    const result = spawnSync('make', ['--no-print-directory', '-s', '-f', 'Makefile', '-f', extra, target], { encoding: 'utf8', env });
+    assert.equal(result.status, 0, result.stderr);
+    return Object.fromEntries(result.stdout.split('\n').filter((line) => line.includes('=')).map((line) => [line.slice(0, line.indexOf('=')), line.slice(line.indexOf('=') + 1)]));
+  };
+  const recipe = run('hyper-recipe-env');
+  for (const [name, value] of Object.entries(OFFLINE)) assert.equal(recipe[name], value, `${name} of a recipe`);
+  const online = run('hyper-online-env');
+  for (const name of Object.keys(OFFLINE)) assert.equal(online[name], undefined, `${name} under $(ONLINE)`);
+});
+
+test('only make tools and make install download, each download through $(ONLINE), and no check target downloads (HY-89)', (t) => {
+  const directory = mkdtempSync(path.join(tmpdir(), 'hyper-downloads-'));
+  t.after(() => rmSync(directory, { recursive: true, force: true }));
+  assert.deepEqual(dryRun('tools'), [`${ONLINE}node scripts/toolchain.mjs install`]);
+  const install = dryRun('install', { variables: [`TEMPLATE_DIR=${directory}`] });
+  const downloads = install.filter((line) => / ci |composer install|cargo fetch|toolchain\.mjs install/.test(line.replace(/ -- /, ' ')));
+  assert.ok(install.some((line) => line === `cd ${directory}/packages/template-php-ext && ${ONLINE}cargo fetch --locked`), install.join('\n'));
+  assert.deepEqual(downloads.filter((line) => !line.includes(ONLINE)), [], 'a download of make install without $(ONLINE)');
+  // An empty template directory makes each dry run print the recipe of the template copy as well.
+  const checks = /^CHECK_TARGETS := (.+)$/m.exec(readFileSync('Makefile', 'utf8'))[1].split(' ');
+  assert.ok(checks.length > 10, checks.join(' '));
+  for (const target of [...checks, 'ext', 'template']) {
+    const lines = dryRun(target, { variables: [`TEMPLATE_DIR=${directory}`] });
+    assert.deepEqual(lines.filter((line) => /rustup|env -u|cargo fetch(?! --locked --offline)/.test(line)), [], `${target} downloads`);
+  }
+  const ext = dryRun('ext', { variables: [`TEMPLATE_DIR=${directory}`] });
+  const check = ext.indexOf(`node scripts/rust-downloads.mjs ${directory}/packages/template-php-ext`);
+  assert.ok(check >= 0 && check < ext.findIndex((line) => line.includes('cargo build')), ext.join('\n'));
 });
