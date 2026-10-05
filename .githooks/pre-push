@@ -1,0 +1,6 @@
+#!/bin/sh
+# The pre-push hook of the repository: it refuses a push while a task of docs/plans/execution-checklist.md is in
+# progress (AGENTS.md). Every make run sets core.hooksPath to .githooks; the push gate reads the refs of the push from
+# stdin.
+cd "$(git rev-parse --show-toplevel)" || exit 1
+exec node scripts/push-gate.mjs hook

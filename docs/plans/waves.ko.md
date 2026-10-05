@@ -51,3 +51,7 @@
 ## Wave 12
 
 의존: 없음. 서로 다른 checkout이나 session의 두 실행이, 다른 실행이 쓰고 있는 resource를 바꾸거나 초기화했다. node_modules는 `@polyspec/template`을 `../template/packages/template-ts`에 link했고, 그 build는 `dist`를 비운다(tsup `clean: true`). `make template`은 template 저장소에서 그 package를 build했고, Composer, PHPStan, `make ext`는 template checkout을 읽었다. `make parity`와 `make server-parity`는 고정 port 8092, 8094, 8096에 서버를 띄우고 그 port에서 응답하는 아무 서버나 받아들였으며, 고정 database `examples/board/var/parity*.db`와 session directory `parity-sessions`를 썼다. `make e2e`는 port 8090, 8091, 8093과 `var/e2e.db`를, `make bench-browser`는 port 8085 ~ 8087과 `var/bench-browser.db`를 썼다. 실행의 resource는 그 실행이 격리한다(system이 배정하고 서버가 알리는 port, 임시 directory). 하나뿐인 resource는 한 번에 holder 하나를 가지며, holder는 원자적으로 만드는 lock file에 기록되고 그 file은 holder의 checkout, process ID, 시작 시각을 적는다. 다른 실행은 그 holder를 밝히며 실패하고, holder가 lock을 푼다. process가 끝난 lock은 보고되고 명시적인 명령으로 지운다.
+
+## Wave 13
+
+의존: 없음. AGENTS는 `[~]` 작업이 없을 때만 push를 허용하지만 이를 강제하는 것이 없었다. push는 진행 중인 작업이 있는 tree를 보냈고, 그 tree의 전체 suite는 guard가 거부한다. pre-push hook은 `make`를 실행한 모든 checkout에서 그런 push를 거부하고, workflow `push-gate`는 hook을 거치지 않은 push도 포함해 그런 commit에 대해 GitHub에서 실패한다.

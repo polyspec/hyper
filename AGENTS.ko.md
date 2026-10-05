@@ -51,6 +51,7 @@
 - 커밋 전에는 변경을 소유한 Red test와 Green test, 그리고 `make docs-check`를 실행한다. 수정마다 더 넓은 검사를 실행하지 않는다.
 - `docs/plans/execution-checklist.md`에서 작업을 `[o]`로 바꾸기 전에 커밋한 tree에서 그 작업의 verification command를 실행한다. Verification column에는 `make check`가 아니라 그 작업을 소유한 명령을 적는다. 이미 `[o]`인 행은 자기 명령을 그대로 둔다.
 - `make check`는 활성 작업이 모두 끝났을 때 정확히 한 번 실행하고, 수정마다 또는 작업마다 실행하지 않는다. guard `scripts/full-run.mjs`가 어떤 단계보다 먼저 이를 강제한다. 작업이 `[~]`이거나, 추적 파일의 변경이 커밋되지 않았거나, `var/full-run.json`이 현재 tree의 전체 실행을 기록하고 있으면 `make check`는 거부된다. `make rerun-failed`는 현재 tree에서 통과하지 못한 target만 다시 실행한다(`docs/operations/development.md`). `docs/features.md`에서 기능을 implemented로 표시하는 것은 그 실행이 통과한 뒤에만 한다.
+- push는 push하는 commit에도 working tree에도 `docs/plans/execution-checklist.md`의 `[~]` 작업이 없을 때만 한다. 추적하는 pre-push hook `.githooks/pre-push`가 `node scripts/push-gate.mjs hook`을 실행하고, 이 script는 그런 push를 거부하며 활성 ID를 작업과 함께 밝힌다. 모든 `make` 실행이 `core.hooksPath`를 `.githooks`로 설정한다. `make hooks`는 이를 명시적으로 설정하고, `make docs-check`가 실행하는 `make hooks-check`와 전체 실행의 guard는 그것이 설정되지 않았으면 실패한다. GitHub에서는 `.github/workflows/push-gate.yml`의 job `push-gate`가 모든 push와 pull request에서 `node scripts/push-gate.mjs commit <sha>`를 실행하고, push가 hook을 거치지 않았어도 그런 commit에 대해 실패한다(`docs/operations/development.ko.md`).
 
 ## Checklist
 

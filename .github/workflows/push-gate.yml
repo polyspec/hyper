@@ -1,0 +1,25 @@
+# The push gate on GitHub (AGENTS.md): a push happens only when no checklist task is in progress. The job push-gate
+# runs the gate of the pre-push hook on the pushed commit of every branch and on the head commit of every pull request,
+# so a push that did not run the hook still fails here. It fails for a task in progress, for a commit without the
+# checklist and for a commit that does not track .githooks/pre-push as an executable file, and names each in the job
+# summary.
+name: push-gate
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  push-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .node-version
+      - run: node scripts/push-gate.mjs commit ${{ github.event.pull_request.head.sha || github.sha }}
