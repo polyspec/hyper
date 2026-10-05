@@ -86,7 +86,7 @@ workflow `.github/workflows/push-gate.yml`은 모든 push를 검사한다. 그 j
 
 ## CI
 
-workflow `.github/workflows/ci.yml`은 `main`으로의 push 뒤와 모든 pull request에 대해 전체 suite를 실행한다(HY-91). 그 job `check`는 Makefile의 CI group마다 항목 하나를 `fail-fast: false`로 가진다.
+workflow `.github/workflows/ci.yml`은 `main`으로의 push 뒤와 모든 pull request에 대해 전체 suite를 실행한다(HY-91). runner가 적으므로 새 push는 같은 ref에서 아직 진행 중인 run을 멈춘다. 그 job `check`는 Makefile의 CI group마다 항목 하나를 `fail-fast: false`로 가진다.
 
 | Group | Target | 준비 |
 |---|---|---|

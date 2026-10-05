@@ -103,6 +103,10 @@ test('the CI groups run every target of the full suite once (HY-91)', () => {
 test('the workflow ci runs every CI group in a job that runs to its end and uploads its report (HY-91)', () => {
   const text = readFileSync(path.join(WORKFLOWS, 'ci.yml'), 'utf8');
   assert.match(text, /^on:\n {2}push:\n {4}branches: \[main\]\n {2}pull_request:\n/m);
+  // The runners are few, so a new push stops the run of the same workflow and ref that is still going (HY-91). The
+  // push gate keeps every run: each pushed commit is checked.
+  assert.match(text, /^concurrency:\n {2}group: \$\{\{ github\.workflow \}\}-\$\{\{ github\.ref \}\}\n {2}cancel-in-progress: true\n/m);
+  assert.doesNotMatch(readFileSync(path.join(WORKFLOWS, 'push-gate.yml'), 'utf8'), /^concurrency:/m);
   const { names, targets } = groups();
   const read = jobs(text);
   assert.ok(read.length > 0);
