@@ -60,6 +60,8 @@
 
 ## Full run
 
+The full suite runs on GitHub after a push (see [CI](#ci)); no local full run is required before a commit or a push. A local `make check` is the only run of `make virtiofs-check`, which belongs to the full suite on Darwin only, so the virtiofs cases of HY-68 run only when someone runs `make check` on a Mac.
+
 `make check` runs once per committed tree, when no task of `docs/plans/execution-checklist.md` is `[~]`. Before any step it starts `scripts/full-run.mjs`, which prints its decision with the reason (`[full-run] run: ...` or `[full-run] refuse: ...`) and refuses with status 1:
 
 - while a task row of the checklist is `[~]`; the refusal lists each active ID with its task;

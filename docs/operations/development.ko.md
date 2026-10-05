@@ -60,6 +60,8 @@
 
 ## 전체 실행
 
+전체 suite는 push 뒤에 GitHub에서 실행하며([CI](#ci) 참고), 커밋이나 push 전에 local 전체 실행은 필요하지 않다. Darwin에서만 full suite에 속하는 `make virtiofs-check`는 local `make check`에서만 실행되므로, HY-68의 virtiofs case는 누군가 Mac에서 `make check`를 실행할 때만 실행된다.
+
 `make check`는 `docs/plans/execution-checklist.md`의 작업 중 `[~]`인 것이 없을 때, 커밋된 tree마다 한 번 실행된다. 어떤 단계보다 먼저 `scripts/full-run.mjs`를 시작하며, 이 guard는 판단을 이유와 함께 출력하고(`[full-run] run: ...` 또는 `[full-run] refuse: ...`) 다음의 경우 status 1로 거부한다.
 
 - checklist의 작업 행이 `[~]`일 때. 거부 메시지는 활성 ID를 작업과 함께 나열한다.
