@@ -1,8 +1,8 @@
 // Checks the documents of the repository: every English document has a Korean pair and the
 // reverse, every relative link resolves, both documents of a pair contain the same code blocks, and
 // every task of the execution checklist has one of the four task states of AGENTS, the same in both
-// languages, and a task state marker of the checklist appears only as the state of a task row, at the start
-// of its last cell.
+// languages, a task state marker of the checklist appears only as the state of a task row, at the start of
+// its last cell, and the checklist holds only headings and task tables.
 //
 // Usage: node scripts/check-documents.mjs
 
@@ -31,8 +31,15 @@ for (const file of files) {
 
 const CHECKLIST = 'docs/plans/execution-checklist.md';
 const TASK = /^\| H[0-9]+\.[0-9-]+ \|/;
+const SEPARATOR = /^\|(\s*:?-{3,}:?\s*\|)+\s*$/;
 for (const file of [CHECKLIST, CHECKLIST.replace(/\.md$/, '.ko.md')]) {
-  readFileSync(file, 'utf8').split('\n').forEach((line, index) => {
+  const lines = readFileSync(file, 'utf8').split('\n');
+  lines.forEach((line, index) => {
+    // The checklist holds blank lines, headings and task tables: a header row, its separator row and task rows.
+    const header = line.startsWith('|') && SEPARATOR.test(lines[index + 1] ?? '');
+    if (!(line.trim() === '' || /^#{1,6} /.test(line) || TASK.test(line) || SEPARATOR.test(line) || header)) {
+      problems.push(`${file}:${index + 1}:${line.search(/\S/) + 1}: text outside a task row; a checklist holds only task rows, their table headers and headings`);
+    }
     // The column of the state: the first character of the last cell of a task row.
     const end = line.trimEnd().length - 1;
     const cell = TASK.test(line) && line[end] === '|' ? line.lastIndexOf('|', end - 1) + 1 : -1;
