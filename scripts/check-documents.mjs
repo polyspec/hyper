@@ -1,7 +1,8 @@
 // Checks the documents of the repository: every English document has a Korean pair and the
 // reverse, every relative link resolves, both documents of a pair contain the same code blocks, and
 // every task of the execution checklist has one of the four task states of AGENTS, the same in both
-// languages.
+// languages, and a task state marker of the checklist appears only as the state of a task row, at the start
+// of its last cell.
 //
 // Usage: node scripts/check-documents.mjs
 
@@ -29,6 +30,18 @@ for (const file of files) {
 }
 
 const CHECKLIST = 'docs/plans/execution-checklist.md';
+const TASK = /^\| H[0-9]+\.[0-9-]+ \|/;
+for (const file of [CHECKLIST, CHECKLIST.replace(/\.md$/, '.ko.md')]) {
+  readFileSync(file, 'utf8').split('\n').forEach((line, index) => {
+    // The column of the state: the first character of the last cell of a task row.
+    const end = line.trimEnd().length - 1;
+    const cell = TASK.test(line) && line[end] === '|' ? line.lastIndexOf('|', end - 1) + 1 : -1;
+    const state = cell < 0 ? -1 : cell + line.slice(cell).search(/\S/);
+    for (const marker of line.matchAll(/\[[ ~o!]\]/g)) {
+      if (marker.index !== state) problems.push(`${file}:${index + 1}:${marker.index + 1}: state marker ${marker[0]} outside a task state; a checklist marker appears only as the state of a task row`);
+    }
+  });
+}
 const states = (file) => readFileSync(file, 'utf8').split('\n').filter((line) => /^\| H[0-9]+\.[0-9-]+ \|/.test(line)).map((line) => {
   const cells = line.split('|').slice(1, -1).map((cell) => cell.trim());
   const state = cells[cells.length - 1];
