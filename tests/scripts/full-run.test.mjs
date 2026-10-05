@@ -301,8 +301,10 @@ test('a make target resolves its result with its last output lines, standard err
   const failed = await makeTarget(directory, 'fails');
   assert.equal(failed.passed, false);
   assert.equal(failed.lastLines.length, LAST_LINES);
+  // The last lines hold the last output of the recipe on both streams. The line in which make names the failed recipe
+  // differs between GNU Make 3.81 and 4 (`[fails]`, `[Makefile:28: fails]`), and make is not pinned (HY-81, HY-83).
   assert.ok(failed.lastLines.includes('the cause'), failed.lastLines.join('\n'));
-  assert.ok(failed.lastLines.some(line => /\*\*\* \[fails\] Error 3/.test(line)), failed.lastLines.join('\n'));
+  assert.ok(failed.lastLines.includes(`line ${LAST_LINES + 4}`), failed.lastLines.join('\n'));
   assert.ok(!failed.lastLines.includes('line 0'));
   assert.deepEqual(await makeTarget(directory, 'passes'), { passed: true, lastLines: ['fine'] });
 });

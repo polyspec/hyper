@@ -51,6 +51,7 @@
 
 ### 수정
 
+- `tests/scripts/full-run.test.mjs`는 GNU Make 4에서 통과한다(H14.17, HY-83). 이 test는 GNU Make 3.81의 줄 `*** [fails] Error 3`을 확인했는데, CI runner의 GNU Make 4.4.1은 이를 `*** [Makefile:28: fails] Error 3`으로 쓰므로 CI run에서 `make test-scripts`가 실패했다. 이제 case는 두 stream에서 recipe의 마지막 출력을 확인한다.
 - CI target의 첫 실패 줄은 test reporter가 `✖`로 표시한 줄과 그 세부 줄이다(H14.16, HY-91). CI run에서 `test-scripts`의 요약은 실패하는 서버를 시작하는 통과한 test의 출력 `FAIL start ssr`과 이름에 error와 failure가 든 test의 시작 줄 `▶`로 시작했고, 실패한 test 네 개 중 하나의 원인만 보였다.
 - Rust toolchain과 native extension의 crate는 extension을 build하는 곳에서만 설치한다(H14.15, HY-89, HY-91). `make install`은 extension을 build하지 않는 CI group `docs`와 `node`를 포함해 모든 checkout과 CI job에 그것을 설치했다. template 저장소에는 VS Code로 같은 결함이 있었다(T20.1-6). `make install-rust`가 이를 설치하고, `make rust-downloads-check`는 그것을 밝히며, CI group `php`와 `board`만 그것을 실행한다. template branch에는 npm 의존성만 설치하는 target이 없으므로, 그 branch의 make install은 group `node`에서 여전히 그 Rust toolchain을 설치한다.
 - GitHub workflow의 모든 step은 선언한 runner에서 make target 하나를 실행한다(H14.13, HY-90). job `push-gate`는 major tag로 pin한 action으로 `ubuntu-latest`에서 `node scripts/push-gate.mjs commit <sha>`를 직접 실행했으므로, Makefile의 설정과 검사가 적용되지 않았고 runner와 action은 그 release와 함께 바뀌었다. 이제 commit으로 pin한 action으로 `ubuntu-26.04-arm`에서 `make push-gate-commit COMMIT=<sha>`를 실행하고, 첫 step 뒤의 step은 `if: ${{ !cancelled() }}`로 실행한다. 새 `tests/scripts/ci-workflow.test.mjs`는 make 하나가 아닌 명령을 실행하는 step, 다른 runner의 job, commit pin이 없는 action, `timeout-minutes`, `!cancelled()` 없는 뒤 step에 대해 실패하며, 변경 전에 `push-gate.yml`의 그런 문제 6개를 밝혔다.
