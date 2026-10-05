@@ -44,6 +44,7 @@
 | `make docs-check` | `make hooks-check`를 실행한 뒤 문서 쌍, 링크, 코드 블록을 검사한다 |
 | `make hooks` | `core.hooksPath`를 `.githooks`로 설정하고 `make hooks-check`를 실행한다([Push](#push) 참조) |
 | `make hooks-check` | `core.hooksPath`가 `.githooks`가 아니거나 `.githooks/pre-push`가 없거나 실행할 수 없으면 실패한다 |
+| `make push-gate-commit` | commit `COMMIT`에 진행 중인 checklist 작업이 있거나 그 commit이 `.githooks/pre-push`를 mode 100755로 추적하지 않으면 실패한다. GitHub의 job `push-gate`가 이를 실행한다([Push](#push) 참고) |
 | `make serve-demo` | lock `/tmp/hyper-serve-demo.lock`을 잡은 채 고정 port 8080 ~ 8082에서 SSR, CSR, 비교 페이지를 실행한다. 두 번째 demo는 holder를 밝히며 실패한다([배포](deployment.ko.md) 참조) |
 | `make serve-demo-unlock` | process가 끝난 demo의 lock을 지운다. demo가 실행 중이면 실패한다 |
 | `make bench-server-smoke` | PHP 측정기를 측정마다 한 번씩 실행한다. 측정기를 깨는 변경이 실패하도록 `make check`에 들어 있다 |
@@ -73,7 +74,7 @@ push는 push하는 commit에도 working tree에도 checklist의 `[~]` 작업이 
 
 Git은 clone에서 hook을 설치하지 않는다. 그래서 모든 `make` 실행이 `core.hooksPath`가 다른 값이면 `.githooks`로 설정하고, `make hooks`는 이를 명시적으로 설정한다. 커밋 전에 `make docs-check`가 실행하는 `make hooks-check`와 전체 실행의 guard는 `core.hooksPath`가 `.githooks`가 아니거나 hook이 없거나 실행할 수 없으면 실패한다.
 
-workflow `.github/workflows/push-gate.yml`은 이 저장소의 유일한 CI workflow다. 그 job `push-gate`는 모든 branch에 push된 commit과 모든 pull request의 head commit에 `node scripts/push-gate.mjs commit <sha>`를 실행하므로, hook을 거치지 않았거나 hook이 없는 checkout에서 온 push도 그곳에서 실패한다. 진행 중인 작업이 있을 때, checklist가 없는 commit일 때, `.githooks/pre-push`를 mode 100755로 추적하지 않는 commit일 때 실패하며, 실패의 각 줄을 annotation으로 출력하고 job summary에 쓴다.
+workflow `.github/workflows/push-gate.yml`은 이 저장소의 유일한 CI workflow다. 그 job `push-gate`는 모든 branch에 push된 commit과 모든 pull request의 head commit에 `node scripts/push-gate.mjs commit <sha>`를 실행하는 `make push-gate-commit COMMIT=<sha>`를 실행하므로, hook을 거치지 않았거나 hook이 없는 checkout에서 온 push도 그곳에서 실패한다. 진행 중인 작업이 있을 때, checklist가 없는 commit일 때, `.githooks/pre-push`를 mode 100755로 추적하지 않는 commit일 때 실패하며, 실패의 각 줄을 annotation으로 출력하고 job summary에 쓴다.
 
 ## Test 실행
 
