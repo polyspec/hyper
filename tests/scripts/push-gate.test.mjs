@@ -14,7 +14,18 @@ import { fileURLToPath } from 'node:url';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const CHECKLIST = 'docs/plans/execution-checklist.md';
 // The files that the hook runs, copied from this checkout into each temporary checkout.
-const FILES = ['.githooks/pre-push', 'scripts/push-gate.mjs', 'scripts/full-run.mjs', 'scripts/git-hooks.mjs', 'Makefile'];
+// The scripts that the gate imports, followed through their relative imports, so that the copy of the checkout runs
+// the gate whatever modules it comes to import.
+function imports(file, found = new Set()) {
+  if (found.has(file)) return found;
+  found.add(file);
+  for (const [, target] of readFileSync(path.join(ROOT, file), 'utf8').matchAll(/^import [^;]* from '(\.\.?\/[^']+)';$/gm)) {
+    imports(path.join(path.dirname(file), target), found);
+  }
+  return found;
+}
+
+const FILES = ['.githooks/pre-push', 'Makefile', ...imports('scripts/push-gate.mjs')];
 
 const ACTIVE = `| ID | Task | Verification | Status |
 |---|---|---|---|
