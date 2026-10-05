@@ -7,9 +7,12 @@
 //
 // Usage: node scripts/holder-lock.mjs clear <lock>
 //          removes the lock when its holder process has ended, and fails while the holder runs
+//        node scripts/holder-lock.mjs run <lock> -- <command> [<argument>...]
+//          runs the command while it holds the lock and ends with its status; another holder fails the command
 import { randomBytes } from 'node:crypto';
-import { linkSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { spawnSync } from 'node:child_process';
+import { linkSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 /** Returns the holder that a lock file names, or null when the lock does not exist. */
@@ -47,12 +50,13 @@ export function describeHolder(holder) {
 }
 
 /**
- * Takes the lock for the checkout `checkout` and releases it when this process exits; a caller that handles a signal
- * ends with process.exit. Fails with the holder when another process holds the lock, also when that process has
- * ended.
+ * Takes the lock for the checkout `checkout` and returns the function that releases it; the lock is also released when
+ * this process exits, and a caller that handles a signal ends with process.exit. Fails with the holder when another
+ * holder has the lock, also when that process has ended.
  */
 export function acquire(lock, checkout) {
   const holder = { checkout: resolve(checkout), pid: process.pid, started: new Date().toISOString(), token: randomBytes(16).toString('hex') };
+  mkdirSync(dirname(lock), { recursive: true });
   const pending = `${lock}.${process.pid}.${holder.token}`;
   writeFileSync(pending, `${JSON.stringify(holder)}\n`, { flag: 'wx' });
   try {
@@ -65,14 +69,17 @@ export function acquire(lock, checkout) {
   } finally {
     unlinkSync(pending);
   }
-  process.on('exit', () => {
+  const release = () => {
+    process.removeListener('exit', release);
     const current = readHolder(lock);
     if (current === null || current.token !== holder.token) {
       process.stderr.write(`${lock} is no longer held by process ${process.pid}\n`);
       return;
     }
     unlinkSync(lock);
-  });
+  };
+  process.on('exit', release);
+  return release;
 }
 
 /** Removes a lock whose holder process has ended and returns its holder; fails while the holder runs. */
@@ -87,9 +94,16 @@ export function clear(lock) {
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const [action, lock, ...rest] = process.argv.slice(2);
   try {
-    if (action !== 'clear' || lock === undefined || rest.length > 0) throw new Error('usage: holder-lock.mjs clear <lock>');
-    const holder = clear(lock);
-    process.stdout.write(`removed ${lock} of ${describeHolder(holder)}, which has ended\n`);
+    if (action === 'run' && lock !== undefined && rest[0] === '--' && rest.length > 1) {
+      acquire(lock, resolve(dirname(fileURLToPath(import.meta.url)), '..'));
+      const result = spawnSync(rest[1], rest.slice(2), { stdio: 'inherit' });
+      if (result.error) throw new Error(`${rest[1]} cannot run: ${result.error.message}`);
+      process.exitCode = result.status ?? 1;
+    } else {
+      if (action !== 'clear' || lock === undefined || rest.length > 0) throw new Error('usage: holder-lock.mjs clear <lock> | run <lock> -- <command> [<argument>...]');
+      const holder = clear(lock);
+      process.stdout.write(`removed ${lock} of ${describeHolder(holder)}, which has ended\n`);
+    }
   } catch (error) {
     process.stderr.write(`${error.message}\n`);
     process.exitCode = 1;

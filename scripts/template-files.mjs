@@ -2,7 +2,8 @@
 // test fixtures use it, so the browser and the Node server read the same template files.
 
 import { createHash } from 'node:crypto';
-import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readdirSync, readFileSync } from 'node:fs';
+import { writeFileAtomic } from './output-files.mjs';
 import { join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { build } from 'esbuild';
@@ -43,7 +44,7 @@ export async function writeTemplateFiles({ templates, output, urlPrefix, templat
     const ast = parse(source, name);
     const text = JSON.stringify(ast);
     const file = `${name.replace(/\.tpl$/, '').replaceAll('/', '-')}.${sha256(text).slice(0, 12)}.json`;
-    writeFileSync(join(output, file), text);
+    writeFileAtomic(join(output, file), text);
     index[name] = { url: `${urlPrefix}/${file}` };
   }
   return index;

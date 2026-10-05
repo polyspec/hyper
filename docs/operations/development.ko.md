@@ -16,11 +16,11 @@
 | `make tools` | `packageManager`의 npm과 `config/toolchain.json`의 Composer를 `var/tools`에 설치하고 `var/tools/bin`의 명령을 쓰며, 각 download를 pin한 digest로 확인한다(HY-81) |
 | `make toolchain-check` | Node.js, npm, PHP, Composer, make가 pin과 다르면 실패하고 각각의 기대값과 실제값을 밝힌다(HY-81) |
 | `make install` | template 저장소의 선언한 복사본과 `packages/hyper-php`의 사본을 쓰고, npm과 Composer 의존성을 bin link 없는 사본으로 설치한다(HY-79) |
-| `make hyper-php-copy` | `packages/hyper-php`의 추적 파일 사본 `var/products/hyper-php`를 쓰고 Composer로 board에 다시 설치한다(HY-79). `make server`가 먼저 실행한다 |
-| `make template` | `scripts/copy-template.mjs`로 template branch의 선언한 복사본 `var/products/template`을 쓰고, 그 복사본에서 TypeScript template 패키지의 npm 사본과 PHP template 패키지의 Composer 사본을 다시 설치한다(HY-78, HY-80). `config/template.json`이나 복사 script가 `var/products/template/installed.stamp`보다 새로울 때만 그렇게 한다. 테스트, 에셋, 서버 빌드가 먼저 실행한다 |
+| `make hyper-php-copy` | `packages/hyper-php`의 추적 파일 사본 `var/products/hyper-php`를 쓰고 board의 Composer 사본에 publish한다(HY-79, HY-82). `make server`가 먼저 실행한다 |
+| `make template` | `scripts/copy-template.mjs`로 template branch의 선언한 복사본 `var/products/template`을 쓰고, 그 복사본에서 TypeScript template 패키지의 npm 사본과 PHP template 패키지의 Composer 사본을 파일 단위로 publish한다(HY-78, HY-80, HY-82). `config/template.json`이나 복사 script가 `var/products/template/installed.stamp`보다 새로울 때만 그렇게 한다. 테스트, 에셋, 서버 빌드가 먼저 실행한다 |
 | `make template-check` | TypeScript template 패키지의 npm 사본이나 PHP template 패키지의 Composer 사본이 선언한 복사본과 다르면 실패한다 |
 | `make ext` | template 저장소의 선언한 복사본에서 네이티브 템플릿 확장을 `build/ext`에 빌드한다(HY-48, HY-78) |
-| `make packages` | `@polyspec/hyper`와 `@polyspec/hyper-server`의 JavaScript module과 type 선언을 각 package가 선언한 build(`scripts/tsc.mjs`를 실행하는 `npm run build`)로 각자의 `dist` 디렉터리에 build하고 각 npm 사본을 다시 설치한다(HY-79). Node 서버 test, board 에셋 build, `make package-check`, `make test-scripts`는 package를 exports로 가져오므로 이것을 먼저 실행한다(HY-61). build script는 `data-template.json`, `checkManifest`, `templateReferences`를 script 옆 `packages/hyper-js`의 소스에서 읽으므로 `dist`가 필요 없고 어느 작업 디렉터리에서도 실행된다 |
+| `make packages` | `@polyspec/hyper`와 `@polyspec/hyper-server`의 JavaScript module과 type 선언을 각 package가 선언한 build(`scripts/tsc.mjs`를 실행하는 `npm run build`)로 각자의 `dist` 디렉터리에 build하고 build와 각 npm 사본을 파일 단위로 publish한다(HY-79, HY-82). Node 서버 test, board 에셋 build, `make package-check`, `make test-scripts`는 package를 exports로 가져오므로 이것을 먼저 실행한다(HY-61). build script는 `data-template.json`, `checkManifest`, `templateReferences`를 script 옆 `packages/hyper-js`의 소스에서 읽으므로 `dist`가 필요 없고 어느 작업 디렉터리에서도 실행된다 |
 | `make package-check` | 두 package를 `npm install --install-links`로 `tests/package-install`에 설치하고, 그 test를 `erasableSyntaxOnly`로 선언에 대해 type 검사한 뒤 `node`로 실행한다(HY-61) |
 | `make server` | 게시판 서버 프로그램을 `examples/board/build/server`에 빌드한다(아래 참조) |
 | `make server-fixtures` | PHP 테스트 픽스처의 서버 프로그램을 빌드한다 |
@@ -119,7 +119,7 @@ BOARD_DB=$PWD/examples/board/var/node.db BOARD_SESSIONS=$PWD/examples/board/var/
 5. `<output>/csr/`: CSR 배포물.
    - `index.html`은 `<meta name="hyper-api">`와 인라인한 진입 파일을 담고 스타일시트는 담지 않는다. 브라우저가 렌더한 레이아웃의 스타일시트 링크를 적용하기 때문이다(HY-64, HY-76).
    - `assets/templates/`는 이 build의 템플릿 파일을 담는다.
-   - `assets/`는 이 build의 조각 파일을 담는다. 배포물에는 스타일시트가 없다. 렌더한 layout이 link하는 스타일시트는 애플리케이션이 복사하며, board 예제는 `make assets`가 복사한다.
+   - `assets/`는 이 build의 조각 파일을 담는다. 배포물은 `--static`이 밝히는 `public/` 아래 파일을 같은 경로에 담는다. 애플리케이션은 렌더한 layout이 link하는 스타일시트를 밝히며, `make assets`는 board 예제의 `public/assets/app.css`와 `public/assets/reader.css`를 밝힌다. 배포물은 파일 단위로, `index.html`을 마지막으로 publish한다(HY-82).
    - 진입 파일에 `</script`가 들어 있으면 빌드는 실패한다. 빌드는 인라인한 진입 파일의 해시를 담은 Content Security Policy를 출력한다.
 
 빌드는 이전 결과를 교체하므로, 반복해서 빌드해도 결과마다 파일이 하나만 남는다. 빌드 결과는 커밋하지 않는다.

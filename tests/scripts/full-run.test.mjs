@@ -4,7 +4,7 @@
 // current tree that did not pass. The targets of these tests are stubs; no test runs a real target.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
@@ -263,4 +263,23 @@ test('a run that stops records the run as incomplete, and rerun-failed runs its 
   assert.equal(rerun.status, 0, rerun.output);
   assert.deepEqual(rerun.ran, ['b', 'c']);
   assert.equal(record(directory).result, 'passed');
+});
+
+test('a second full run of the checkout that starts while the first runs fails with the holder of the lock', async t => {
+  const directory = checkout(t, DONE);
+  let finish;
+  const waiting = new Promise(resolve => { finish = resolve; });
+  let entered;
+  const inside = new Promise(resolve => { entered = resolve; });
+  const lines = [];
+  const first = fullRun({ root: directory, mode: 'run', targets: ['a'], print: () => {}, runTarget: async () => { entered(); await waiting; return true; } });
+  await inside;
+  const second = await fullRun({ root: directory, mode: 'rerun-failed', print: line => lines.push(line), runTarget: async () => true });
+  assert.equal(second, 1);
+  const third = await fullRun({ root: directory, mode: 'run', targets: ['b'], print: line => lines.push(line), runTarget: async () => true });
+  assert.equal(third, 1);
+  assert.match(lines.join('\n'), /refuse: another full run of this checkout: .*full-run\.lock is held by process \d+ of the checkout/);
+  finish();
+  assert.equal(await first, 0);
+  assert.equal(existsSync(path.join(directory, 'var/full-run.lock')), false);
 });

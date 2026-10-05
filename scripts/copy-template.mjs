@@ -19,15 +19,17 @@
 // contents in that commit equals the recorded hash, and that the record and the packed build files did not change
 // while npm packed them; each mismatch fails the copy and names the expected and the actual value. The copy takes the packed
 // file from an empty pack directory and does not parse the output of npm, whose format differs between npm versions.
-// The copy is written next to its target and then replaces it. This script builds nothing in the template repository.
+// The copy is written into a staging directory of this process and published file by file (scripts/publish.mjs,
+// HY-82), so a reader never finds a file missing. This script builds nothing in the template repository.
 //
 // Usage: node scripts/copy-template.mjs --repository ../template --config config/template.json --output var/products/template
 import { execFileSync, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join, relative, resolve } from 'node:path';
+import { join, relative, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
+import { publish, staging } from './publish.mjs';
 import { NPM } from './toolchain.mjs';
 import { git } from './tracked-files.mjs';
 
@@ -39,7 +41,7 @@ const { values } = parseArgs({ options: { repository: { type: 'string' }, config
 if (!values.repository || !values.config || !values.output) throw new Error('--repository, --config and --output are required');
 const repository = resolve(values.repository);
 const output = resolve(values.output);
-const next = `${output}.next`;
+const next = staging(output);
 
 const branch = JSON.parse(readFileSync(values.config, 'utf8')).branch;
 if (typeof branch !== 'string' || branch === '') {
@@ -107,12 +109,15 @@ try {
   const missing = TRACKED.filter((path) => !existsSync(join(next, path)));
   if (missing.length > 0) throw new Error(`the head commit ${commit} of ${repository} has no ${missing.join(', ')}`);
   console.log(`template copy: extracted ${TRACKED.join(', ')} of ${commit}`);
+} catch (error) {
+  rmSync(next, { recursive: true, force: true });
+  throw error;
 } finally {
   rmSync(scratch, { recursive: true, force: true });
 }
 writeFileSync(join(next, 'copy.json'), `${JSON.stringify({ commit, inputs: actual }, null, 2)}\n`);
 
-mkdirSync(dirname(output), { recursive: true });
-rmSync(output, { recursive: true, force: true });
-renameSync(next, output);
-console.log(`template copy: wrote ${output}`);
+// Every file moves into the copy with a rename, copy.json last, so a reader of the copy never finds a file missing
+// (HY-82).
+const published = publish(next, output, { last: ['copy.json'] });
+console.log(`template copy: wrote ${output} (${published.files} files${published.removed.length > 0 ? `; removed ${published.removed.length}` : ''})`);

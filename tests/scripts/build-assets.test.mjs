@@ -94,6 +94,13 @@ test('compiles a stylesheet with the Tailwind utilities that the templates use (
     assert.doesNotMatch(css, /@layer base\s*{/);
     // The static deployment holds no stylesheet: the application copies the stylesheets that its layouts link.
     assert.equal(existsSync(join(app, 'out', 'csr', 'assets', 'app.css')), false);
+    // The static deployment holds the files that --static names, at their paths below public/ (HY-76).
+    const named = buildAssets(app, '--tailwind', 'styles.css=public/assets/app.css', '--static', 'public/assets/app.css');
+    assert.equal(named.status, 0, named.stderr);
+    assert.equal(readFileSync(join(app, 'out', 'csr', 'assets', 'app.css'), 'utf8'), readFileSync(join(app, 'public', 'assets', 'app.css'), 'utf8'));
+    const outside = buildAssets(app, '--static', 'styles.css');
+    assert.notEqual(outside.status, 0);
+    assert.match(outside.stderr, /--static styles\.css is not below public\//);
     // A source that cannot be read fails the build.
     const missing = buildAssets(app, '--tailwind', 'missing.css=public/assets/app.css');
     assert.notEqual(missing.status, 0);

@@ -99,7 +99,8 @@ test('every recipe starts npm and Composer by the absolute paths of var/tools/bi
     assert.equal(result.status, 0, `${target}: ${result.stderr}`);
     lines.push(...result.stdout.split('\n').filter(Boolean));
   }
-  const commands = lines.flatMap((line) => line.split(/&&|;|\|\|/).map((part) => part.trim()));
+  // A command that a lock runs follows its --.
+  const commands = lines.flatMap((line) => line.split(/&&|;|\|\||\s--\s/).map((part) => part.trim()));
   const tools = commands.filter((command) => /^(\S*\/)?(npm|npx|composer)( |$)/.test(command));
   assert.ok(tools.some((command) => command.startsWith(`${NPM} `)) && tools.some((command) => command.startsWith(`${COMPOSER} `)), lines.join('\n'));
   assert.deepEqual(tools.filter((command) => !command.startsWith(`${NPM} `) && !command.startsWith(`${COMPOSER} `)), []);

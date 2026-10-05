@@ -15,6 +15,7 @@ import { dirname, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
 import { copyDirectory } from './output-files.mjs';
+import { publish, staging } from './publish.mjs';
 import { templateProblems } from './template-rules.mjs';
 
 const { values } = parseArgs({ options: { manifest: { type: 'string' }, templates: { type: 'string' }, output: { type: 'string' }, 'template-dir': { type: 'string' }, 'php-namespace': { type: 'string' } } });
@@ -36,7 +37,10 @@ if (problems.length > 0) {
   process.exit(1);
 }
 const dataTemplate = JSON.parse(readFileSync(new URL('../packages/hyper-js/data-template.json', import.meta.url), 'utf8'));
-const output = resolve(values.output);
+// The output is written into a staging directory of this process and published file by file, the program files last,
+// so a server that reads the output never finds a file missing (HY-82).
+const target = resolve(values.output);
+const output = staging(target);
 const templates = join(output, 'templates');
 rmSync(output, { recursive: true, force: true });
 copyDirectory(values.templates, templates);
@@ -55,6 +59,7 @@ compileAst({ root: templates, output: graph, entry: manifest.layout, refresh: 't
 writeFileSync(join(output, 'program.php'), compileSource(join(graph, 'manifest.json'), typesPath, 'php', { phpNamespace: values['php-namespace'] }));
 writeFileSync(join(output, 'program.json'), `${JSON.stringify({ namespace: values['php-namespace'] }, null, 2)}\n`);
 writeFileSync(join(output, 'reads.json'), `${JSON.stringify({ routes: routeReads(manifest, (name) => parsed.get(name), resolvePath) })}\n`);
+publish(output, target, { last: ['reads.json', 'program.json', 'program.php'] });
 process.stdout.write(`server program: ${parsed.size} templates, ${join(values.output, 'program.php')}\n`);
 
 function listTemplates(root, prefix = '') {

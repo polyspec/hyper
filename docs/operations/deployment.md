@@ -24,7 +24,7 @@ Deploy `build/server`, which `make server` writes, next to the PHP code; the app
 
 ## Static shell
 
-`make assets` writes `examples/board/build/csr/`: `index.html` with the client entry inlined and no stylesheet (HY-76), `assets/templates/` with one file per template, and the stylesheets `assets/app.css` and `assets/reader.css`, which `make assets` copies from `public/assets/` because the asset build copies no stylesheet, and which the rendered layout links and the browser applies before it shows a page (HY-64).
+`make assets` writes `examples/board/build/csr/`: `index.html` with the client entry inlined and no stylesheet (HY-76), `assets/templates/` with one file per template, and the stylesheets `assets/app.css` and `assets/reader.css`, which `make assets` names with `--static` from `public/assets/`, and which the rendered layout links and the browser applies before it shows a page (HY-64).
 
 1. Upload `index.html` to an S3 bucket with `Content-Type: text/html; charset=utf-8` and `Cache-Control: no-cache`, `assets/templates/*` with `Content-Type: application/json` and `Cache-Control: public, max-age=31536000, immutable`, and `assets/*.css` with `Content-Type: text/css; charset=utf-8` and `Cache-Control: no-cache`, because their names carry no hash.
 2. Run PHP with the environment variable `BOARD_BASE_PATH=/api` (HY-8).
