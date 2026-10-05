@@ -127,17 +127,23 @@ export function makeTarget(root, target) {
   return new Promise((resolve, reject) => {
     const child = spawn('make', [target], { cwd: root, stdio: ['inherit', 'pipe', 'pipe'] });
     const lines = [];
+    // Each stream that make leaves without a final newline gets one, so the next line of the guard starts at column 0.
     const keep = (stream, output) => {
       let pending = '';
+      let last = '\n';
       stream.on('data', data => {
         output.write(data);
+        if (data.length > 0) last = String(data).at(-1);
         pending += data;
         const parts = pending.split('\n');
         pending = parts.pop();
         lines.push(...parts);
         lines.splice(0, Math.max(0, lines.length - LAST_LINES));
       });
-      return () => { if (pending !== '') lines.push(pending); };
+      return () => {
+        if (pending !== '') lines.push(pending);
+        if (last !== '\n') output.write('\n');
+      };
     };
     const flushOut = keep(child.stdout, process.stdout);
     const flushErr = keep(child.stderr, process.stderr);

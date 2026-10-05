@@ -31,7 +31,8 @@ test('make lint runs both formatting checks when the first fails and names both'
   const projects = ['package', 'board'].map((name) => {
     const project = path.join(directory, name);
     mkdirSync(path.join(project, 'vendor', 'bin'), { recursive: true });
-    writeFileSync(path.join(project, 'vendor', 'bin', 'pint'), `#!/bin/sh\ntouch ${path.join(directory, `${name}.ran`)}\necho "${name} is not formatted"\nexit 1\n`);
+    // The stub prints without a final newline, as Pint does.
+    writeFileSync(path.join(project, 'vendor', 'bin', 'pint'), `#!/bin/sh\ntouch ${path.join(directory, `${name}.ran`)}\nprintf '${name} is not formatted'\nexit 1\n`);
     chmodSync(path.join(project, 'vendor', 'bin', 'pint'), 0o755);
     return project;
   });
@@ -39,6 +40,12 @@ test('make lint runs both formatting checks when the first fails and names both'
   assert.notEqual(run.status, 0);
   assert.ok(existsSync(path.join(directory, 'package.ran')) && existsSync(path.join(directory, 'board.ran')), run.stdout + run.stderr);
   assert.match(run.stdout, new RegExp(`failed checks: Pint of ${projects[0]}; Pint of ${projects[1]};`));
+  // Every line of the recipe starts at column 0, after output without a final newline too (HY-84).
+  const lines = run.stdout.split('\n');
+  assert.ok(lines.includes('package is not formatted'), run.stdout);
+  assert.ok(lines.includes(`cd ${projects[1]} && vendor/bin/pint --test app src public`), run.stdout);
+  assert.ok(lines.includes('board is not formatted'), run.stdout);
+  assert.ok(lines.some((line) => line.startsWith('failed checks:')), run.stdout);
 });
 
 test('make test-js runs the type check when the tests fail and names both', (t) => {
@@ -60,7 +67,7 @@ test('every other recipe with several checks runs them in one accumulating comma
     const start = lines.findLastIndex((line) => line === 'failed=; \\');
     assert.ok(start >= 0, `${target}:\n${lines.join('\n')}`);
     const recipe = lines.slice(start);
-    assert.equal(recipe.filter((line) => line.includes(') || failed="$failed ')).length, checks, `${target}:\n${recipe.join('\n')}`);
+    assert.equal(recipe.filter((line) => line.includes("node scripts/line-end.mjs '") && line.includes(' || failed="$failed ')).length, checks, `${target}:\n${recipe.join('\n')}`);
     assert.match(recipe.at(-1), /test -z "\$failed" \|\| \{ echo "failed checks:\$failed"; exit 1; \}/, target);
   }
 });
