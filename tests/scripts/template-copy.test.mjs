@@ -12,6 +12,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { test } from 'node:test';
 import { dryRun } from './make-dry-run.mjs';
+import { requireBuilt } from './requires.mjs';
 
 const repository = resolve('.');
 const COPY = join(repository, 'var', 'products', 'template');
@@ -172,13 +173,16 @@ test('make template copies the head commit only when config/template.json or the
   assert.doesNotMatch(templateRun(), /copy-template/);
 });
 
-test('npm installs the template package as a copy inside this checkout', () => {
-  for (const path of ['node_modules/@polyspec/template', 'packages/hyper-js/node_modules/@polyspec/template', 'packages/hyper-node/node_modules/@polyspec/template']) {
-    if (!existsSync(join(repository, path))) continue;
-    assert.equal(lstatSync(join(repository, path)).isSymbolicLink(), false, path);
-    assert.ok(realpathSync(join(repository, path)).startsWith(`${repository}/`), path);
+test('npm installs the template package as one copy inside this checkout', () => {
+  requireBuilt('template', 'node_modules/@polyspec/template/package.json');
+  const path = 'node_modules/@polyspec/template';
+  assert.equal(lstatSync(join(repository, path)).isSymbolicLink(), false, path);
+  assert.equal(lstatSync(join(repository, path)).isDirectory(), true, path);
+  assert.ok(realpathSync(join(repository, path)).startsWith(`${repository}/`), path);
+  // The packages of the workspace resolve the root copy through the overrides, so they hold no copy of their own.
+  for (const nested of ['packages/hyper-js/node_modules/@polyspec/template', 'packages/hyper-node/node_modules/@polyspec/template']) {
+    assert.equal(existsSync(join(repository, nested)), false, nested);
   }
-  assert.equal(lstatSync(join(repository, 'node_modules/@polyspec/template')).isDirectory(), true);
 });
 
 test('Composer, PHPStan and the native extension build read the declared copy', () => {

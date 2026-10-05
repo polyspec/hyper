@@ -7,6 +7,9 @@ import { spawn, spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { test } from 'node:test';
+import { requireBuilt } from './requires.mjs';
+
+requireBuilt('install', 'node_modules/@playwright/test/cli.js', 'examples/board/vendor/autoload.php');
 
 test('the browser tests run on servers of the run while another server holds a port of an earlier run', async (t) => {
   // A server of another run answers every request with 500 on 127.0.0.1:8091, the edge port of an earlier run.

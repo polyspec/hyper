@@ -1,6 +1,6 @@
 // Tests that the asset build and the template build read the template package of the template repository that
 // the caller names, not the template package that this repository installed (HY-70). The fixture repository holds
-// a copy of the installed package.
+// a copy of the TypeScript package of the declared template copy, which `make test-scripts` names in TEMPLATE_DIR.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { cpSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
@@ -8,17 +8,21 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { test } from 'node:test';
 import { bundlePackage } from '../../scripts/template-files.mjs';
+import { templateDir as declared } from './declared-template.mjs';
+import { requireBuilt } from './requires.mjs';
 
 const repository = resolve('.');
 const installed = resolve('node_modules', '@polyspec', 'template');
+const source = join(declared, 'packages', 'template-ts');
+requireBuilt('template', join(source, 'dist', 'index.mjs'));
 
-// A template repository with a copy of the installed template package.
+// A template repository with a copy of the TypeScript package of the declared template copy.
 function templateDir(withBuild) {
   const directory = mkdtempSync(join(tmpdir(), 'hyper-template-dir-'));
   const target = join(directory, 'packages', 'template-ts');
   mkdirSync(target, { recursive: true });
-  cpSync(join(installed, 'package.json'), join(target, 'package.json'));
-  if (withBuild) cpSync(join(installed, 'dist'), join(target, 'dist'), { recursive: true });
+  cpSync(join(source, 'package.json'), join(target, 'package.json'));
+  if (withBuild) cpSync(join(source, 'dist'), join(target, 'dist'), { recursive: true });
   return directory;
 }
 
@@ -28,7 +32,7 @@ test('bundles the browser package with the template package of the named templat
     const inputs = Object.keys((await bundlePackage(directory)).metafile.inputs).map((input) => resolve(input));
     const template = join(directory, 'packages', 'template-ts');
     assert.ok(inputs.some((input) => input.startsWith(`${template}/dist/`)), inputs.join('\n'));
-    assert.deepEqual(inputs.filter((input) => input.startsWith(`${installed}/`)), []);
+    assert.deepEqual(inputs.filter((input) => input.startsWith(`${installed}/`) || input.startsWith(`${source}/`)), []);
   } finally {
     rmSync(directory, { recursive: true, force: true });
   }
