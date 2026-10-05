@@ -10,6 +10,9 @@ FIXTURES := $(PHP_PACKAGE)/tests/fixtures
 # The native template extension, built from the declared copy of the template repository (HY-48, HY-78).
 # The lock of `make serve-demo`, whose fixed ports exist once on this machine (scripts/holder-lock.mjs).
 SERVE_DEMO_LOCK := /tmp/hyper-serve-demo.lock
+# The PHP memory limit of PHPStan: a run without its result cache (build/phpstan) needs 132 MB in its worker, above
+# the default limit of 128M.
+PHPSTAN_MEMORY := 256M
 EXT := build/ext/release/libpolyspec_template.$(if $(filter Darwin,$(shell uname)),dylib,so)
 
 .DEFAULT_GOAL := help
@@ -84,7 +87,7 @@ lint: ## Check PHP formatting
 	cd $(BOARD) && vendor/bin/pint --test app src public
 
 analyse-php: template ## Run PHPStan at level max on the source and the tests of the server package
-	cd $(PHP_PACKAGE) && vendor/bin/phpstan analyse --no-progress
+	cd $(PHP_PACKAGE) && vendor/bin/phpstan analyse --no-progress --memory-limit=$(PHPSTAN_MEMORY)
 
 templates-check: ## Check hx- attributes (HC-6) and region placements (HY-3, HY-30) of the board templates
 	node scripts/check-templates.mjs --app $(BOARD)
