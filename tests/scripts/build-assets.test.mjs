@@ -4,29 +4,40 @@
 // public/assets and writes its other outputs into the directory of --output (HY-34, HY-76).
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { cpSync, existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { test } from 'node:test';
+import { copyTracked } from '../../scripts/tracked-files.mjs';
 import { templateDir } from './declared-template.mjs';
+
+// Copies the tracked files of a fixture application, so a file that an earlier run left in the fixture cannot decide
+// the result (HY-85).
+const fixture = (name, target) => copyTracked({ repository: resolve('.'), path: `tests/scripts/fixtures/${name}`, target, base: `tests/scripts/fixtures/${name}` });
 
 function buildAssets(app, ...options) {
   return spawnSync(process.execPath, ['scripts/build-assets.mjs', '--app', app, '--api', '/api', '--template-dir', templateDir, '--output', join(app, 'out'), ...options], { encoding: 'utf8' });
 }
 
 test('rejects an invalid manifest and writes nothing', () => {
-  const app = 'tests/scripts/fixtures/invalid-manifest';
-  const result = buildAssets(app);
-  assert.notEqual(result.status, 0);
-  assert.match(result.stderr, /page region/);
-  assert.equal(existsSync(`${app}/public`), false);
-  assert.equal(existsSync(`${app}/out`), false);
+  // A copy of the fixture, so an output of an earlier run cannot decide the result (HY-85).
+  const app = mkdtempSync(join(tmpdir(), 'hyper-invalid-manifest-'));
+  try {
+    fixture('invalid-manifest', app);
+    const result = buildAssets(app);
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /page region/);
+    assert.equal(existsSync(`${app}/public`), false);
+    assert.equal(existsSync(`${app}/out`), false);
+  } finally {
+    rmSync(app, { recursive: true, force: true });
+  }
 });
 
 test('writes the entry, a chunk for code that the entry imports with import(), the manifest and the shell (HY-76)', () => {
   const app = mkdtempSync(join(tmpdir(), 'hyper-chunks-'));
   try {
-    cpSync('tests/scripts/fixtures/chunks', app, { recursive: true });
+    fixture('chunks', app);
     const first = buildAssets(app);
     assert.equal(first.status, 0, first.stderr);
     const assets = join(app, 'public', 'assets');
@@ -78,7 +89,7 @@ test('writes the entry, a chunk for code that the entry imports with import(), t
 test('compiles a stylesheet with the Tailwind utilities that the templates use (HY-77)', () => {
   const app = mkdtempSync(join(tmpdir(), 'hyper-tailwind-'));
   try {
-    cpSync('tests/scripts/fixtures/chunks', app, { recursive: true });
+    fixture('chunks', app);
     writeFileSync(join(app, 'templates', 'home.tpl'), '<p class="md:flex gap-4">home</p>\n');
     writeFileSync(join(app, 'styles.css'), '.home {\n  color: #123456;\n}\n');
     const result = buildAssets(app, '--tailwind', 'styles.css=public/assets/app.css');

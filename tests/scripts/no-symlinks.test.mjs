@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import { readdirSync, readlinkSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import { test } from 'node:test';
+import { requireBuilt } from './requires.mjs';
 
 const repository = resolve('.');
 
@@ -31,7 +32,7 @@ function installDirectories(directory) {
 }
 
 test('no directory node_modules or vendor holds a symbolic link', () => {
+  requireBuilt('install', 'node_modules', 'packages/hyper-php/vendor', 'examples/board/vendor');
   const directories = installDirectories(repository);
-  assert.ok(directories.some((path) => path === join(repository, 'node_modules')), 'node_modules is missing; run make install');
   assert.deepEqual(directories.flatMap(links), []);
 });

@@ -9,6 +9,9 @@ import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
+import { requireBuilt } from './requires.mjs';
+
+requireBuilt('packages', 'node_modules/@polyspec/hyper/dist/index.js');
 
 const MANIFEST = {
   layout: 'layout.tpl',

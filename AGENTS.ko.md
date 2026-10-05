@@ -26,6 +26,7 @@
 - 다른 process가 다시 쓰이는 동안 읽을 수 있는 출력은 없는 파일이나 일부만 쓰인 파일 없이 publish한다(HY-82). 파일은 rename 한 번으로(`writeFileAtomic`), 디렉터리는 쓰는 process의 staging 디렉터리에서 파일 단위로(`scripts/publish.mjs`) publish한다. 어떤 recipe도 출력을 지운 뒤 쓰지 않는다. package manager 설치나 full run처럼 두 process가 동시에 쓸 수 있는 자원은 `scripts/holder-lock.mjs`의 lock으로 잡고, port, database, 임시 디렉터리 같은 run의 다른 모든 자원은 그 run만의 것이다.
 - 검사는 run 맥락과 pin하지 않은 release가 바꾸지 않는 형태로 tool 출력을 읽는다(HY-83). make dry run은 `tests/scripts/make-dry-run.mjs`의 `dryRun`으로, tool에 machine이 읽는 형태가 있으면 그것을, 다른 text는 HY-81이 pin한 tool의 것만 읽는다.
 - 검사는 무언가를 검사했을 때만 통과한다(HY-84). 실행된 test가 없는 test run, 아무것도 고르지 않는 선택이나 목록, top level에서 await하는 node test 파일은 실패한다. 실패는 보고되는 곳에서 기대한 것, 일어난 것, 원인을 보이는 출력을 밝힌다. timeout은 step을 밝히고, full run은 실패한 각 target의 마지막 줄들을 출력한다.
+- test는 자기가 읽는 것을 만든다(HY-85). fixture의 추적 파일은 자기 임시 디렉터리에 복사하고, 설치나 build처럼 다른 target이 쓰는 입력은 test가 읽기 전에 `requireBuilt`로 그 target과 함께 밝힌다. build 출력은 자기 checkout의 절대 경로를 담지 않고, cargo target 디렉터리 같은 어떤 build 디렉터리도 checkout 사이에 공유하지 않는다.
 - 각 패키지 안에서 코드와 테스트를 별도 디렉터리에 둔다.
 - 결함은 재현하는 실패 테스트를 추가하고, 코드를 수정하고, 테스트를 유지하는 절차로 처리한다.
 - 저장소 상대경로를 사용한다. 외부 입력 경로는 명시적으로 받는다.

@@ -10,6 +10,10 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { test } from 'node:test';
 import { NPM } from '../../scripts/toolchain.mjs';
+import { requireBuilt } from './requires.mjs';
+
+requireBuilt('install', 'node_modules/typescript/package.json', 'var/tools/bin/npm');
+requireBuilt('packages', 'node_modules/@polyspec/hyper/dist/index.d.ts');
 
 for (const directory of ['packages/hyper-js', 'packages/hyper-node']) {
   test(`npm run build compiles ${directory} without a bin link`, { timeout: 60_000 }, (t) => {

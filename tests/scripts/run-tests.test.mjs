@@ -203,3 +203,10 @@ test('no node test file awaits at its top level (HY-84)', async () => {
     assert.doesNotMatch(run.stdout, /› late/, 'node --test --test-force-exit ran a test registered after a top-level await');
   });
 });
+
+test('a test that reads an input of another target fails with its path and the target that writes it (HY-85)', async () => {
+  const { requireBuilt } = await import('./requires.mjs');
+  assert.throws(() => requireBuilt('packages', 'node_modules/@polyspec/does-not-exist/dist/index.js'),
+    /node_modules\/@polyspec\/does-not-exist\/dist\/index\.js is missing; `make packages` writes it, and `make test-scripts` runs it first/);
+  assert.doesNotThrow(() => requireBuilt('install', 'package.json'));
+});
