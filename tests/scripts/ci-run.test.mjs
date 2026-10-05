@@ -159,3 +159,15 @@ test('pins gives the PHP minor and the template branch as step outputs', (t) => 
   assert.equal(readFileSync(output, 'utf8'), 'php=8.5\ntemplate=main\n');
   assert.deepEqual(pins({ root: ROOT, env: {}, print: quiet }), { php: JSON.parse(readFileSync(path.join(ROOT, 'config/toolchain.json'), 'utf8')).php, template: JSON.parse(readFileSync(path.join(ROOT, 'config/template.json'), 'utf8')).branch });
 });
+
+test('a warning line of a passing target is recorded and named in the summary', async (t) => {
+  const root = checkout(t);
+  writeFileSync(path.join(root, 'Makefile'), 'measure:\n\t@echo "ok ssrScript: gzip 10"\n\t@echo "WARNING csrShell x: gzip 20 bytes exceed the limit 10 of config"\n');
+  const status = await ciRun({ root, group: 'g', targets: ['measure'], env: { GITHUB_ACTIONS: 'true' }, print: quiet, output: quiet });
+  assert.equal(status, 0);
+  const record = JSON.parse(readFileSync(path.join(root, 'var/ci/g/record.json'), 'utf8'));
+  assert.deepEqual(record.targets[0].warnings, ['WARNING csrShell x: gzip 20 bytes exceed the limit 10 of config']);
+  const summary = readFileSync(path.join(root, 'var/ci/g/summary.md'), 'utf8');
+  assert.match(summary, /1 passed, 0 failed, 0 not finished, 1 warning\./);
+  assert.match(summary, /^## warnings\n\n- measure: WARNING csrShell x: gzip 20 bytes exceed the limit 10 of config$/m);
+});
