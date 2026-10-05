@@ -47,6 +47,10 @@
 
 To run the tests that own a change, pass their files or a filter, for example `node scripts/run-tests.mjs vitest --cwd packages/hyper-js tests/router.test.ts` or `node scripts/run-tests.mjs phpunit --cwd packages/hyper-php -- --filter RouterTest`.
 
+## Servers of a run
+
+`make parity` and `make server-parity` start their own servers with `scripts/board-servers.mjs`: every server listens on a port that the system assigns, and the check sends its requests to the address that the server reports in its output (`Development Server (http://127.0.0.1:<port>) started` of PHP, `board on http://127.0.0.1:<port>` of the board Node server, `edge http://127.0.0.1:<port>` of `scripts/serve-edge.mjs`). A request therefore reaches a server of the same run, also while a run from another checkout or session runs. Starting a server is a step without a time limit: it prints its start, every output line of the server with the prefix `[<name>]` and its address with the elapsed time, and fails when the server exits first. The databases and the session directory of a run lie in a temporary directory, which `scripts/check-parity.mjs` prints as `run directory: <path>` and removes.
+
 ## Server build
 
 `scripts/build-server.mjs --manifest <app.json> --templates <directory> --output <directory> --template-dir <template repository> --php-namespace <namespace>` writes the server program (HY-48):
@@ -65,7 +69,7 @@ make node-server
 BOARD_DB=$PWD/examples/board/var/node.db BOARD_SESSIONS=$PWD/examples/board/var/sessions BOARD_PORT=8084 node examples/board/build/node/server.mjs
 ```
 
-`BOARD_SESSIONS` is an absolute session directory, and `BOARD_BASE_PATH`, `BOARD_HTTPS` and `BOARD_FRAME_ANCESTORS` have the meaning that they have for PHP. `BOARD_TIME`, for both servers, fixes the creation time of new posts in Unix seconds, so that `make server-parity` compares the same posts. The Node server renders with the template files of `make assets` (HY-54).
+`BOARD_PORT=0` lets the system assign the port; the server prints `board on http://127.0.0.1:<port>` with the port that it listens on. `BOARD_SESSIONS` is an absolute session directory, and `BOARD_BASE_PATH`, `BOARD_HTTPS` and `BOARD_FRAME_ANCESTORS` have the meaning that they have for PHP. `BOARD_TIME`, for both servers, fixes the creation time of new posts in Unix seconds, so that `make server-parity` compares the same posts. The Node server renders with the template files of `make assets` (HY-54).
 
 ## Asset build
 

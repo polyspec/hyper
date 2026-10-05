@@ -2,6 +2,9 @@
 // API prefix go to the API origin unchanged, `/compare` returns the comparison page, a path of a file
 // in the deployment directory returns that file, and every other path returns index.html.
 //
+// It prints `edge http://127.0.0.1:<port> (...)` with the port that it listens on, also when --port 0 lets the
+// system assign the port.
+//
 // Usage: node scripts/serve-edge.mjs --root examples/board/dist/csr --compare examples/board/compare.html
 //          --port 8081 --api-prefix /api --api-origin http://127.0.0.1:8082
 
@@ -60,5 +63,5 @@ const server = createServer((incoming, outgoing) => {
   outgoing.end(readFileSync(join(values.root, 'index.html')));
 });
 server.listen(Number(values.port), '127.0.0.1', () => {
-  console.log(`edge http://127.0.0.1:${values.port} (${prefix} -> ${api.origin})`);
+  console.log(`edge http://127.0.0.1:${server.address().port} (${prefix} -> ${api.origin})`);
 });
