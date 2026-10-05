@@ -10,6 +10,12 @@ FIXTURES := $(PHP_PACKAGE)/tests/fixtures
 # The native template extension, built from the declared copy of the template repository (HY-48, HY-78).
 # The lock of `make serve-demo`, whose fixed ports exist once on this machine (scripts/holder-lock.mjs).
 SERVE_DEMO_LOCK := /tmp/hyper-serve-demo.lock
+# npm installs every dependency as a copy and no bin link (HY-79, .npmrc), so the recipes start the tools with node.
+TSC := node node_modules/typescript/bin/tsc
+# The esbuild package replaces bin/esbuild with the executable of the platform when it installs.
+ESBUILD := node_modules/esbuild/bin/esbuild
+# The copy of packages/hyper-php that the board installs with Composer (HY-79).
+HYPER_PHP_COPY := var/products/hyper-php
 # The PHP memory limit of PHPStan: a run without its result cache (build/phpstan) needs 132 MB in its worker, above
 # the default limit of 128M.
 PHPSTAN_MEMORY := 256M
@@ -17,13 +23,14 @@ EXT := build/ext/release/libpolyspec_template.$(if $(filter Darwin,$(shell uname
 
 .DEFAULT_GOAL := help
 
-.PHONY: help install template template-check ext packages package-check server server-fixtures node-server node-fixtures assets test-js test-node test-php lint analyse-php templates-check test-scripts parity server-parity bundle-size e2e docs-check serve-demo bench-server bench-server-smoke bench-browser bench check serve-demo-unlock
+.PHONY: help install hyper-php-copy template template-check ext packages package-check server server-fixtures node-server node-fixtures assets test-js test-node test-php lint analyse-php templates-check test-scripts parity server-parity bundle-size e2e docs-check serve-demo bench-server bench-server-smoke bench-browser bench check serve-demo-unlock
 
 help: ## List the targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
 
 install: ## Write the declared copy of the template repository and install npm and Composer dependencies from it
 	node scripts/copy-template.mjs --repository $(TEMPLATE_REPOSITORY) --output $(TEMPLATE_DIR)
+	node scripts/copy-package.mjs --path $(PHP_PACKAGE) --output $(HYPER_PHP_COPY)
 	npm ci
 	composer install --working-dir=$(PHP_PACKAGE)
 	composer install --working-dir=$(BOARD)
@@ -43,25 +50,31 @@ template-check: template ## Fail when an npm or Composer copy of a template pack
 ext: template ## Build the native template extension of the declared copy of the template repository into build/ext
 	cargo build --locked --release --manifest-path $(TEMPLATE_DIR)/packages/template-php-ext/Cargo.toml --target-dir build/ext
 
-packages: template ## Build the JavaScript modules and type declarations of the npm packages into their dist directories (HY-61)
-	npm run build -w @polyspec/hyper
-	npm run build -w @polyspec/hyper-server
+packages: template ## Build the JavaScript modules and type declarations of the npm packages into their dist directories and reinstall their npm copies (HY-61, HY-79)
+	rm -rf $(JS_PACKAGE)/dist && $(TSC) -p $(JS_PACKAGE)/tsconfig.build.json
+	rm -rf node_modules/@polyspec/hyper && npm install --no-audit --no-fund
+	rm -rf $(NODE_PACKAGE)/dist && $(TSC) -p $(NODE_PACKAGE)/tsconfig.build.json
+	rm -rf node_modules/@polyspec/hyper-server && npm install --no-audit --no-fund
+
+hyper-php-copy: ## Write the copy of packages/hyper-php that the board installs and reinstall it in the board (HY-79)
+	node scripts/copy-package.mjs --path $(PHP_PACKAGE) --output $(HYPER_PHP_COPY)
+	composer reinstall polyspec/hyper --no-interaction --working-dir=$(BOARD)
 
 package-check: packages node-fixtures ## Install the npm packages into tests/package-install, type-check its test against their declarations and run it under node (HY-61)
 	rm -rf tests/package-install/node_modules
-	cd tests/package-install && npm install --install-links --no-package-lock --no-audit --no-fund
-	npx tsc -p tests/package-install/tsconfig.json
+	cd tests/package-install && npm install --install-links --no-bin-links --no-package-lock --no-audit --no-fund
+	$(TSC) -p tests/package-install/tsconfig.json
 	node scripts/run-tests.mjs node --cwd tests/package-install -- package-install.test.ts
 
-server: template ## Build the board server program: its templates and the generated PHP program (HY-48)
+server: template hyper-php-copy ## Build the board server program: its templates and the generated PHP program (HY-48)
 	node scripts/build-server.mjs --manifest $(BOARD)/app/app.json --templates $(BOARD)/templates --output $(BOARD)/build/server --template-dir $(TEMPLATE_DIR) --php-namespace 'Polyspec\Hyper\Examples\Board\Program'
 
 server-fixtures: template ## Build the server program of the PHP test fixtures
 	node scripts/build-server.mjs --manifest $(FIXTURES)/app.json --templates $(FIXTURES)/templates --output $(PHP_PACKAGE)/tests/build/server --template-dir $(TEMPLATE_DIR) --php-namespace 'Polyspec\Hyper\Tests\Program'
 
 node-server: assets ## Build the board Node server into examples/board/build/node/server.mjs (HY-54)
-	npx tsc -p $(BOARD)/node/tsconfig.json
-	npx esbuild $(BOARD)/node/main.ts --bundle --platform=node --format=esm --target=node26 --log-level=warning --outfile=$(BOARD)/build/node/server.mjs
+	$(TSC) -p $(BOARD)/node/tsconfig.json
+	$(ESBUILD) $(BOARD)/node/main.ts --bundle --platform=node --format=esm --target=node26 --log-level=warning --outfile=$(BOARD)/build/node/server.mjs
 
 node-fixtures: template ## Build the template files of the PHP test fixtures for the Node server tests
 	node scripts/build-templates.mjs --templates $(FIXTURES)/templates --output $(NODE_PACKAGE)/tests/build --template-dir $(TEMPLATE_DIR)
@@ -72,11 +85,11 @@ assets: packages ## Build the board client bundle (SSR) and the single-file stat
 
 test-js: template ## Run the browser code tests, including the router conformance cases, and the type check
 	node scripts/run-tests.mjs vitest --cwd $(JS_PACKAGE)
-	cd $(JS_PACKAGE) && npx tsc --noEmit -p tsconfig.json
+	$(TSC) --noEmit -p $(JS_PACKAGE)/tsconfig.json
 
 test-node: packages node-fixtures ## Run the Node server tests, including the PHP AppTest cases and the JSON conformance cases, and the type check
 	node scripts/run-tests.mjs vitest --cwd $(NODE_PACKAGE)
-	cd $(NODE_PACKAGE) && npx tsc --noEmit -p tsconfig.json
+	$(TSC) --noEmit -p $(NODE_PACKAGE)/tsconfig.json
 
 test-php: template server-fixtures ext ## Run the server package tests with the generated program and with the native extension
 	node scripts/run-tests.mjs phpunit --cwd $(PHP_PACKAGE)

@@ -33,7 +33,7 @@ test('the browser tests run on servers of the run while another server holds a p
 
 test('Playwright without the runner fails and names the missing address', () => {
   const env = Object.fromEntries(Object.entries(process.env).filter(([name]) => !name.startsWith('HYPER_E2E_')));
-  const result = spawnSync('node_modules/.bin/playwright', ['test', '--list'], { env, encoding: 'utf8' });
+  const result = spawnSync(process.execPath, ['node_modules/@playwright/test/cli.js', 'test', '--list'], { env, encoding: 'utf8' });
   assert.notEqual(result.status, 0);
   assert.match(`${result.stdout}${result.stderr}`, /HYPER_E2E_SSR is required; run the browser tests with make e2e/);
 });
