@@ -26,6 +26,28 @@ const STRAY = `# Execution checklist
 - [x] H1.5 Close the task in the task list form
 `;
 
+const PROSE = `# Execution checklist
+
+[한국어](execution-checklist.ko.md).
+
+This document lists the planned tasks.
+
+## How to use
+
+- Task ID format: \`H<wave>.<number>\`.
+
+## Wave 1 — Write the tasks
+
+Depends on: none.
+
+| ID | Task | Verification | Status |
+|---|---|---|---|
+| H1.1 | Write the task | \`make docs-check\` | [o] |
+| Note | A row that is not a task | none | none |
+
+| A table | without a separator |
+`;
+
 const CLEAN = `# Execution checklist
 
 | ID | Task | Verification | Status |
@@ -50,6 +72,17 @@ test('a state marker outside a task state fails with its file, line and column',
   const expected = ['docs/plans/execution-checklist.md', 'docs/plans/execution-checklist.ko.md'].flatMap((file) =>
     [['3:52', '[ ]'], ['3:67', '[~]'], ['7:25', '[o]'], ['9:68', '[~]'], ['10:44', '[o]'], ['11:31', '[X]'], ['12:3', '[x]']].map(
       ([location, marker]) => `${file}:${location}: state marker ${marker} outside a task state; a checklist marker appears only as the state of a task row`,
+    ),
+  );
+  assert.deepEqual(run.stderr.split('\n').filter((line) => line.includes('state marker')), expected);
+  assert.equal(run.status, 1);
+});
+
+test('a line that is not a task row, a table header or a heading fails with its file, line and column', (t) => {
+  const run = check(t, PROSE);
+  const expected = ['docs/plans/execution-checklist.md', 'docs/plans/execution-checklist.ko.md'].flatMap((file) =>
+    ['3:1', '5:1', '9:1', '13:1', '18:1', '20:1'].map(
+      (location) => `${file}:${location}: text outside a task row; a checklist holds only task rows, their table headers and headings`,
     ),
   );
   assert.deepEqual(run.stderr.split('\n').filter(Boolean), expected);
