@@ -41,7 +41,7 @@
 | comparison | SSR과 CSR 프레임을 담은 비교 페이지 | implemented | `make e2e` |
 | bundle-size | SSR 스크립트, CSR 셸, 템플릿 파일 크기 상한 | implemented | `make bundle-size` |
 | npm-packages | `@polyspec/hyper`와 `@polyspec/hyper-server`는 Node가 `node_modules`에서 실행하는 JavaScript와 type 선언을 배포하며, 소스는 `erasableSyntaxOnly`를 통과한다(HY-61) | implemented | `make package-check` |
-| output-files | asset build와 server build는 복사한 출력 파일을 Linux container의 virtiofs bind mount가 받아들이는 mode 0644로 만든다(HY-68) | implemented | `make test-scripts` |
+| output-files | asset build와 server build는 복사한 출력 파일에 어떤 umask에서도 mode 0644를, 디렉터리에 0755를 주어 다른 사용자가 읽을 수 있게 하며, Linux container의 virtiofs bind mount는 이를 받아들인다(HY-68) | implemented; full run pending | `make test-scripts`, Darwin에서 `make virtiofs-check` |
 | template-dir | asset build, template build, server build는 `--template-dir`가 가리키는 template 저장소의 template package를 읽는다(HY-70) | implemented | `make test-scripts` |
 | template-copy | npm, Composer, PHPStan, 네이티브 확장 build, build script는 template 저장소를 선언한 복사본 `var/products/template`으로만 읽는다(HY-78) | implemented | `make test-scripts`, `make template-check` |
 | ci-suite | 전체 suite는 `main`으로의 push 뒤와 모든 pull request에 대해 GitHub에서 CI group마다 job 하나로 모든 target을 끝까지 실행하고, job summary와 각 target의 상태, 시간, 첫 실패 줄, 전체 log를 담은 보고서를 upload한다(HY-91) | implemented; full run pending | `tests/scripts/ci-run.test.mjs`, `tests/scripts/ci-workflow.test.mjs` |

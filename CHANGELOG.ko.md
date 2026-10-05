@@ -51,6 +51,7 @@
 
 ### 수정
 
+- 출력 복사는 어떤 umask에서도 파일에 mode 0644를, 디렉터리에 0755를 준다(H14.19, HY-68). 복사는 그 mode로 만들었고 process의 umask가 이를 줄였으므로, umask 077에서 출력은 mode 0600과 0700을 가졌고 다른 사용자는 읽을 수 없었다. 이제 원인은 모든 platform에서 umask 077과 GitHub runner의 `nobody` 읽기로 test한다. Linux에는 `container`가 없어 CI run에서 `spawnSync container ENOENT`로 실패한 Apple `container` case는 Darwin에서만 full suite의 target인 `make virtiofs-check`에서 실행한다.
 - `tests/scripts/publish.test.mjs`는 Linux에서 실행된다(H14.18). 그 file case는 200 000 byte의 내용을 writer와 reader process에 인자 하나로 주었는데, Linux는 131 072 byte를 넘는 인자를 `spawn E2BIG`로 거부하므로 CI run에서 `make test-scripts`가 실패했다. 이제 내용은 파일로 전달하고, test의 child process의 모든 인자를 그 한계와 비교한다.
 - `tests/scripts/full-run.test.mjs`는 GNU Make 4에서 통과한다(H14.17, HY-83). 이 test는 GNU Make 3.81의 줄 `*** [fails] Error 3`을 확인했는데, CI runner의 GNU Make 4.4.1은 이를 `*** [Makefile:28: fails] Error 3`으로 쓰므로 CI run에서 `make test-scripts`가 실패했다. 이제 case는 두 stream에서 recipe의 마지막 출력을 확인한다.
 - CI target의 첫 실패 줄은 test reporter가 `✖`로 표시한 줄과 그 세부 줄이다(H14.16, HY-91). CI run에서 `test-scripts`의 요약은 실패하는 서버를 시작하는 통과한 test의 출력 `FAIL start ssr`과 이름에 error와 failure가 든 test의 시작 줄 `▶`로 시작했고, 실패한 test 네 개 중 하나의 원인만 보였다.

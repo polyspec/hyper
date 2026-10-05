@@ -62,7 +62,7 @@ $(if $(filter $(HOOKS_PATH),$(shell git config core.hooksPath)),,$(shell git con
 
 .DEFAULT_GOAL := help
 
-.PHONY: help tools toolchain-check owner-check install hyper-php-copy template template-check rust-downloads-check install-rust ext packages package-check server server-fixtures node-server node-fixtures assets test-js test-node test-php lint analyse-php templates-check test-scripts parity server-parity bundle-size e2e docs-check serve-demo bench-server bench-server-smoke bench-browser bench check rerun-failed serve-demo-unlock hooks hooks-check push-gate-commit ci-pins ci-check ci-summary install-browser
+.PHONY: help tools toolchain-check owner-check install hyper-php-copy template template-check rust-downloads-check install-rust ext packages package-check server server-fixtures node-server node-fixtures assets test-js test-node test-php lint analyse-php templates-check test-scripts virtiofs-check parity server-parity bundle-size e2e docs-check serve-demo bench-server bench-server-smoke bench-browser bench check rerun-failed serve-demo-unlock hooks hooks-check push-gate-commit ci-pins ci-check ci-summary install-browser
 
 help: ## List the targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
@@ -191,6 +191,9 @@ bundle-size: assets ## Print the SSR script and CSR shell sizes and enforce the 
 e2e: assets server ## Run the SSR, CSR, no-JavaScript and comparison flows in Chromium on servers of the run
 	node scripts/run-e2e.mjs
 
+virtiofs-check: template ## Write the outputs of the server build and of the output copies on a virtiofs bind mount of Apple container (HY-68); a target of the full suite on Darwin
+	TEMPLATE_DIR=$(TEMPLATE_DIR) node scripts/run-tests.mjs node -- tests/virtiofs/
+
 docs-check: hooks-check ## Check that the pre-push hook is installed, then document pairs, links and code blocks
 	node scripts/check-documents.mjs
 
@@ -240,6 +243,12 @@ CI_TARGETS_docs := docs-check
 CI_TARGETS_php := template-check bench-server-smoke lint analyse-php test-php
 CI_TARGETS_node := templates-check test-scripts test-js test-node package-check
 CI_TARGETS_board := parity server-parity bundle-size e2e
+
+# The targets of the full suite that exist on one platform only. Apple `container`, whose bind mounts are virtiofs,
+# exists on Darwin, so `make virtiofs-check` belongs to the full suite there and nowhere else; on Darwin a missing
+# `container` fails it (tests/scripts/ci-workflow.test.mjs). The CI groups run CHECK_TARGETS of Linux.
+DARWIN_TARGETS := virtiofs-check
+CHECK_TARGETS += $(if $(filter Darwin,$(shell uname)),$(DARWIN_TARGETS))
 
 check: ## Run every check through the guard: once per tree, when no checklist task is [~]
 	node scripts/full-run.mjs run $(CHECK_TARGETS)

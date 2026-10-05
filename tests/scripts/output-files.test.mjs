@@ -1,78 +1,81 @@
-// Tests that the build scripts write their output files on a virtiofs bind mount of a Linux
-// container (HY-68). The bind mounts of Apple `container` are virtiofs, which refuses to create a
-// file with a mode that its owner cannot read, such as the mode 0200 with which `fs.cpSync` of
-// Node creates its destination files. The test runs the scripts in the official Node image with
-// a temporary output directory of the test mounted writable, which the test removes; a missing
-// `container` command fails the test.
+// Tests the cause that HY-68 guards against, on every platform: the output copies give every file the mode 0644 and
+// every directory the mode 0755 whatever the umask of the process, also over an existing file of another mode, so a
+// process of another user can read them. A virtiofs bind mount of a Linux container refused a file that its owner
+// could not read; that symptom is tested where it exists, with Apple `container` on Darwin
+// (tests/virtiofs/output-files.test.mjs, `make virtiofs-check`).
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync } from 'node:fs';
+import { chmodSync, mkdirSync, mkdtempSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { templateDir as template } from './declared-template.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
+const OUTPUT_FILES = join(root, 'scripts', 'output-files.mjs');
 
-const image = 'docker.io/library/node:26.8.1-trixie-slim@sha256:c0753125a3789977aefe869cbebccf70e3cfd7ea84ca48547458f02e4f1d7146';
-
-// Runs node with `args` in the container with a temporary output directory of the test mounted as /output.
-function run(t, args) {
-  const output = mkdtempSync(join(tmpdir(), 'hyper-virtiofs-'));
-  t.after(() => rmSync(output, { recursive: true, force: true }));
-  // The declared copy of the template repository lies inside this checkout (HY-78).
-  if (!template.startsWith(`${root}/`)) throw new Error(`${template} is not inside ${root}`);
-  const mounts = [
-    ['--mount', `type=bind,source=${root},target=${root},readonly`],
-    ['--mount', `type=bind,source=${output},target=/output`],
-  ].flat();
-  const result = spawnSync('container', ['run', '--rm', ...mounts, image, 'node', ...args], { encoding: 'utf8' });
-  if (result.error) throw new Error(`container cannot run: ${result.error.message}`);
-  return { ...result, output };
+function temporary(t) {
+  const directory = mkdtempSync(join(tmpdir(), 'hyper-output-modes-'));
+  t.after(() => rmSync(directory, { recursive: true, force: true }));
+  // Another user reaches the outputs through this directory.
+  chmodSync(directory, 0o755);
+  return directory;
 }
 
-function files(directory, prefix = '') {
+// Every entry below `directory` with its mode.
+function modes(directory, prefix = '') {
   return readdirSync(join(directory, prefix), { withFileTypes: true }).flatMap((entry) => {
     const name = prefix === '' ? entry.name : `${prefix}/${entry.name}`;
-    return entry.isDirectory() ? files(directory, name) : [name];
-  }).sort();
+    const mode = statSync(join(directory, name)).mode & 0o777;
+    return entry.isDirectory() ? [[`${name}/`, mode], ...modes(directory, name)] : [[name, mode]];
+  });
 }
 
-test('the server build writes the templates on a virtiofs bind mount', { timeout: 120000 }, (t) => {
-  const templates = join(root, 'examples', 'board', 'templates');
-  const result = run(t, [
-    join(root, 'scripts', 'build-server.mjs'),
-    '--manifest', join(root, 'examples', 'board', 'app', 'app.json'),
-    '--templates', templates,
-    '--output', '/output/server',
-    '--template-dir', template,
-    '--php-namespace', 'Polyspec\\Hyper\\Examples\\Board\\Program',
-  ]);
-  assert.equal(result.status, 0, `${result.stdout}${result.stderr}`);
-  const { output } = result;
-  const copied = join(output, 'server', 'templates');
-  for (const name of files(templates)) {
-    assert.deepEqual(readFileSync(join(copied, name)), readFileSync(join(templates, name)), name);
-    assert.equal(statSync(join(copied, name)).mode & 0o777, 0o644, name);
-  }
-  assert.ok(files(copied).includes('hyper/data.tpl'));
-  // HY-73: the read paths of every route, computed without a bundler in the container.
-  const reads = JSON.parse(readFileSync(join(output, 'server', 'reads.json'), 'utf8')).routes;
-  assert.deepEqual(Object.keys(reads).sort(), JSON.parse(readFileSync(join(root, 'examples', 'board', 'app', 'app.json'), 'utf8')).routes.map((route) => route.name).sort());
+// Writes the outputs of the copies in a process with the umask 077, which leaves only the owner any permission.
+function writeOutputs(t) {
+  const directory = temporary(t);
+  const source = join(directory, 'source');
+  mkdirSync(join(source, 'nested'), { recursive: true });
+  writeFileSync(join(source, 'a.tpl'), 'a');
+  writeFileSync(join(source, 'nested', 'b.tpl'), 'b');
+  const output = join(directory, 'output');
+  mkdirSync(join(output, 'file'), { recursive: true, mode: 0o755 });
+  chmodSync(output, 0o755);
+  chmodSync(join(output, 'file'), 0o755);
+  // An earlier output of another mode is written again.
+  writeFileSync(join(output, 'file', 'a.tpl'), 'old', { mode: 0o600 });
+  const script = [
+    `import { copyDirectory, copyFile, writeFileAtomic } from ${JSON.stringify(OUTPUT_FILES)};`,
+    `copyDirectory(${JSON.stringify(source)}, ${JSON.stringify(join(output, 'directory', 'deep'))});`,
+    `copyFile(${JSON.stringify(join(source, 'a.tpl'))}, ${JSON.stringify(join(output, 'file', 'a.tpl'))});`,
+    `copyFile(${JSON.stringify(join(source, 'a.tpl'))}, ${JSON.stringify(join(output, 'new', 'path', 'a.tpl'))});`,
+    `writeFileAtomic(${JSON.stringify(join(output, 'atomic', 'manifest.json'))}, '{}');`,
+  ].join('\n');
+  const run = spawnSync('/bin/sh', ['-c', 'umask 077 && exec "$0" --input-type=module -e "$1"', process.execPath, script], { encoding: 'utf8' });
+  assert.equal(run.status, 0, `${run.stdout}${run.stderr}`);
+  return output;
+}
+
+test('the output copies give files the mode 0644 and directories 0755 under the umask 077 (HY-68)', (t) => {
+  const output = writeOutputs(t);
+  const found = modes(output);
+  assert.deepEqual(found.map(([name]) => name).sort(), ['atomic/', 'atomic/manifest.json', 'directory/', 'directory/deep/', 'directory/deep/a.tpl', 'directory/deep/nested/', 'directory/deep/nested/b.tpl', 'file/', 'file/a.tpl', 'new/', 'new/path/', 'new/path/a.tpl']);
+  const wrong = found.filter(([name, mode]) => mode !== (name.endsWith('/') ? 0o755 : 0o644)).map(([name, mode]) => `${name} ${mode.toString(8)}`);
+  assert.deepEqual(wrong, []);
 });
 
-test('the output copies write a directory and a file on a virtiofs bind mount', { timeout: 120000 }, (t) => {
-  const source = join(root, 'examples', 'board', 'templates');
-  const script = [
-    `import { copyDirectory, copyFile } from ${JSON.stringify(join(root, 'scripts', 'output-files.mjs'))};`,
-    `copyDirectory(${JSON.stringify(source)}, '/output/directory');`,
-    `copyFile(${JSON.stringify(join(source, 'layout.tpl'))}, '/output/file/layout.tpl');`,
-  ].join('\n');
-  const result = run(t, ['--input-type=module', '--eval', script]);
-  assert.equal(result.status, 0, `${result.stdout}${result.stderr}`);
-  const { output } = result;
-  assert.deepEqual(files(join(output, 'directory')), files(source));
-  assert.deepEqual(readFileSync(join(output, 'file', 'layout.tpl')), readFileSync(join(source, 'layout.tpl')));
-  assert.equal(statSync(join(output, 'file', 'layout.tpl')).mode & 0o777, 0o644);
+// A process of another user reads every output. It runs where sudo starts a process as nobody without a password, as
+// on the GitHub runner, whose CI=true makes the case required there.
+test('a process of another user reads every output (HY-68)', (t) => {
+  const allowed = spawnSync('sudo', ['-n', '-u', 'nobody', 'true']).status === 0;
+  if (!allowed) {
+    assert.notEqual(process.env.CI, 'true', 'sudo -n -u nobody is not allowed on CI, where this case is required');
+    t.skip('sudo -n -u nobody is not allowed on this machine; CI runs this case');
+    return;
+  }
+  const output = writeOutputs(t);
+  for (const [name] of modes(output).filter(([entry]) => !entry.endsWith('/'))) {
+    const read = spawnSync('sudo', ['-n', '-u', 'nobody', 'cat', join(output, name)], { encoding: 'utf8' });
+    assert.equal(read.status, 0, `nobody cannot read ${name}: ${read.stderr}`);
+  }
 });
