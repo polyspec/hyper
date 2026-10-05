@@ -7,7 +7,6 @@
 ## 사용법
 
 - 작업 ID 형식: `H<웨이브>.<번호>`.
-- 모든 작업 행의 마지막 열은 상태다(AGENTS). `[ ]` 대기, `[~]` 진행 중, `[o]` 완료, `[!] cause: <원인>; retry: <조건>` 일시 우회. 커밋한 tree에서 verification command가 통과한 뒤에만 `[o]`로 바꾼다.
 - 작업은 명세를 먼저 바꾸고, 규칙 식별자를 인용하는 실패하는 테스트를 추가한 다음, 구현을 바꾼다.
 - 웨이브는 의존한다고 적은 웨이브가 완료되면 시작한다.
 
@@ -78,13 +77,13 @@
 
 ## 웨이브 7 — 네 가지 작업 상태
 
-의존: 없음. 모든 checklist는 네 가지 작업 상태를 쓴다. `[ ]` 대기, `[~]` 진행 중, `[o]` 완료, 원인과 재시도 조건을 적은 `[!]` 일시 우회다. 이 checklist는 `[x]`와 `[ ] blocked: <이유>`를 썼고, 상태를 읽는 검사가 없었다.
+의존: 없음. 모든 checklist는 네 가지 작업 상태를 쓴다. 대기, 진행 중, 완료, 원인과 재시도 조건을 적은 일시 우회다. 이 checklist는 완료 작업을 대괄호 안의 x로, 막힌 작업을 대기 표시 뒤의 `blocked: <이유>`로 적었고, 상태를 읽는 검사가 없었다.
 
 | ID | 작업 | 검증 | 상태 |
 |---|---|---|---|
-| H7.1 | `scripts/check-documents.mjs`가 네 가지 작업 상태만, 두 언어에서 같게 받고, 일시 우회 작업은 원인과 재시도 조건을 담게 한다. `[x]` 행에서 실패하는지 확인한다. 모든 완료 작업을 `[o]`로 쓴다. AGENTS에 checklist 규칙을 적는다 | `make docs-check` | [o] |
+| H7.1 | `scripts/check-documents.mjs`가 네 가지 작업 상태만, 두 언어에서 같게 받고, 일시 우회 작업은 원인과 재시도 조건을 담게 한다. x로 표시한 행에서 실패하는지 확인한다. 모든 완료 작업을 완료 표시로 쓴다. AGENTS에 checklist 규칙을 적는다 | `make docs-check` | [o] |
 | H7.2 | AGENTS에 72자에서 줄을 바꾼 본문을 가진 commit message 형식 `type(scope): Subject (#task)`, `main`에서 직접 작업할 수 있음, branch와 worktree의 이름과 merge 뒤의 제거, merge할 수 없는 test code의 제거, 받은 지시를 agent memory와 함께 분류하는 규칙을 적는다 | `make docs-check` | [o] |
-| H7.1-1 | 이 checklist에서 작업 상태 표시는 작업 행 마지막 칸 첫머리의 상태로만 쓴다. 사용법의 범례와 웨이브 7, H7.1, H11.1, H11.1-1의 문장이 inline code로 표시를 적었고 `scripts/check-documents.mjs`는 작업 행의 마지막 칸만 읽었으므로, 표시를 세는 도구가 존재하지 않는 진행 중 작업을 셌다. AGENTS가 상태를 정의한다. 범례를 없애고 문장은 상태를 말로 적으며, `make docs-check`가 다른 모든 표시에 대해 file, 줄, 열을 적고 예외 없이 실패하게 한다. 변경 전에 실패하는 `tests/scripts/check-documents.test.mjs`의 case를 둔다 | `make docs-check`, `node scripts/run-tests.mjs node -- tests/scripts/check-documents.test.mjs` | [~] |
+| H7.1-1 | 이 checklist에서 작업 상태 표시는 작업 행 마지막 칸 첫머리의 상태로만 쓴다. 사용법의 범례와 웨이브 7, H7.1, H11.1, H11.1-1의 문장이 inline code로 표시를 적었고 `scripts/check-documents.mjs`는 작업 행의 마지막 칸만 읽었으므로, 표시를 세는 도구가 존재하지 않는 진행 중 작업을 셌다. AGENTS가 상태를 정의한다. 범례를 없애고 문장은 상태를 말로 적으며, `make docs-check`가 다른 모든 표시에 대해 file, 줄, 열을 적고 예외 없이 실패하게 한다. 변경 전에 실패하는 `tests/scripts/check-documents.test.mjs`의 case를 둔다. Red: test의 fixture는 범례, 작업의 inline code, 일시 우회 작업의 원인, 작업이 아닌 행의 마지막 칸에 표시를 담는다. 이전 검사는 이 fixture에 `2 documents, 0 problem(s)`를 출력했다. Green: 2개 case가 통과하고 fixture는 언어마다 위치 5개로 실패한다. 검사를 넣고 문장이 이전 것일 때 `make docs-check`는 언어마다 10, 81, 85, 128, 131번 줄의 문제 28개로 실패했고, 변경 후에는 통과한다 | `make docs-check`, `node scripts/run-tests.mjs node -- tests/scripts/check-documents.test.mjs` | [o] |
 
 ## 웨이브 8 — asset build의 Tailwind CSS
 
@@ -126,10 +125,10 @@
 
 | ID | 작업 | 검증 | 상태 |
 |---|---|---|---|
-| H11.1 | AGENTS의 필수 검사: 커밋 전에는 변경을 소유한 Red test와 Green test, 그리고 `make docs-check`; 작업은 Verification column에 적은 그 작업의 소유 명령으로 `[o]`가 된다; `make check`는 활성 작업이 모두 끝났을 때 한 번 실행한다 | `make docs-check` | [o] |
+| H11.1 | AGENTS의 필수 검사: 커밋 전에는 변경을 소유한 Red test와 Green test, 그리고 `make docs-check`; 작업은 Verification column에 적은 그 작업의 소유 명령으로 완료가 된다; `make check`는 활성 작업이 모두 끝났을 때 한 번 실행한다 | `make docs-check` | [o] |
 | H11.2 | vitest, `node --test`, PHPUnit을 `scripts/run-tests.mjs`와 그 진행 reporter로 실행한다: 모든 test는 시작, 결과, 경과 시간을 출력하고 자기 timeout에서 이름으로 실패한다; `make test-js`, `test-node`, `test-php`, `test-scripts`, `package-check`가 이를 쓴다; runner는 자기 test를 가진다 | `node scripts/run-tests.mjs node -- tests/scripts/run-tests.test.mjs` | [o] |
 | H11.3 | `scripts/check-parity.mjs`는 모든 요청에 `AbortSignal.timeout`으로 timeout을 주고, step이 시작할 때 줄을 출력하고 결과와 함께 경과 밀리초를 출력하며, server가 응답하지 않으면 step 이름으로 실패한다; 응답하지 않는 server에 대한 test | `node scripts/run-tests.mjs node -- tests/scripts/check-parity.test.mjs` | [o] |
-| H11.1-1 | 한 번의 전체 실행을 guard `scripts/full-run.mjs`로 강제한다. `make check`는 어떤 단계보다 먼저 이 guard를 시작한다. guard는 이 checklist의 작업 행이 `[~]`이면 거부하고 활성 ID를 작업과 함께 나열하며, 추적 파일의 변경이 커밋되지 않았으면 거부하고, 같은 tree(`git rev-parse HEAD^{tree}`)의 두 번째 전체 실행을 앞선 실행을 밝히며 거부한다. `CHECK_TARGETS`의 각 target을 `make <target>`으로 끝까지 실행하고, 각 target의 앞뒤에 `var/full-run.json`(tree, commit, 결과, 각 target의 상태와 시각)을 쓰므로 멈춘 실행은 `incomplete`로 남는다. `make rerun-failed`는 현재 tree에서 통과하지 못한 target만 다시 실행하고, 그것이 통과하면 결과를 완성한다. 원인: AGENTS는 `make check`를 활성 작업이 모두 끝났을 때 정확히 한 번 실행한다고 적지만 이를 강제하는 것이 없었다. 진행 중인 작업이 있는 실행, 커밋되지 않은 변경의 실행, 같은 tree의 두 번째 실행이 모두 suite를 시작했다. Red: `make -n check`는 `template-check`의 첫 단계를 출력했으므로 suite는 checklist의 내용과 상관없이 시작했고, `make -n rerun-failed`는 `No rule to make target`으로 실패했으며, `tests/scripts/full-run.test.mjs`는 `scripts/full-run.mjs`에 대한 `ERR_MODULE_NOT_FOUND`로 실패했다. Green: 그 10개 case가 통과한다. `make -n check`는 guard만 출력하고, `[~]`가 있는 fixture checklist, 더러운 tree, 한 tree의 두 번째 실행, record 없는 `rerun-failed`는 stub target이 실행되기 전에 거부되며, `rerun-failed`는 실패했거나 끝나지 않은 stub target만 실행한다 | `node scripts/run-tests.mjs node -- tests/scripts/full-run.test.mjs` | [o] |
+| H11.1-1 | 한 번의 전체 실행을 guard `scripts/full-run.mjs`로 강제한다. `make check`는 어떤 단계보다 먼저 이 guard를 시작한다. guard는 이 checklist의 작업 행이 진행 중이면 거부하고 활성 ID를 작업과 함께 나열하며, 추적 파일의 변경이 커밋되지 않았으면 거부하고, 같은 tree(`git rev-parse HEAD^{tree}`)의 두 번째 전체 실행을 앞선 실행을 밝히며 거부한다. `CHECK_TARGETS`의 각 target을 `make <target>`으로 끝까지 실행하고, 각 target의 앞뒤에 `var/full-run.json`(tree, commit, 결과, 각 target의 상태와 시각)을 쓰므로 멈춘 실행은 `incomplete`로 남는다. `make rerun-failed`는 현재 tree에서 통과하지 못한 target만 다시 실행하고, 그것이 통과하면 결과를 완성한다. 원인: AGENTS는 `make check`를 활성 작업이 모두 끝났을 때 정확히 한 번 실행한다고 적지만 이를 강제하는 것이 없었다. 진행 중인 작업이 있는 실행, 커밋되지 않은 변경의 실행, 같은 tree의 두 번째 실행이 모두 suite를 시작했다. Red: `make -n check`는 `template-check`의 첫 단계를 출력했으므로 suite는 checklist의 내용과 상관없이 시작했고, `make -n rerun-failed`는 `No rule to make target`으로 실패했으며, `tests/scripts/full-run.test.mjs`는 `scripts/full-run.mjs`에 대한 `ERR_MODULE_NOT_FOUND`로 실패했다. Green: 그 10개 case가 통과한다. `make -n check`는 guard만 출력하고, 진행 중 작업이 있는 fixture checklist, 더러운 tree, 한 tree의 두 번째 실행, record 없는 `rerun-failed`는 stub target이 실행되기 전에 거부되며, `rerun-failed`는 실패했거나 끝나지 않은 stub target만 실행한다 | `node scripts/run-tests.mjs node -- tests/scripts/full-run.test.mjs` | [o] |
 
 ## Wave 12 — 한 실행의 test resource
 
