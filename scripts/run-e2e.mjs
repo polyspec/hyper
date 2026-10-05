@@ -6,17 +6,13 @@
 //
 // Usage: node scripts/run-e2e.mjs [<playwright test arguments>...]
 import { spawn } from 'node:child_process';
-import { mkdtempSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { startBoard, stopServers } from './board-servers.mjs';
+import { serverRun, startBoard } from './board-servers.mjs';
 
-const run = mkdtempSync(join(tmpdir(), 'hyper-e2e-'));
-console.log(`run directory: ${run}`);
-let children = [];
+const run = serverRun('hyper-e2e-');
+console.log(`run directory: ${run.directory}`);
 try {
-  const board = await startBoard({ app: 'examples/board', database: join(run, 'board.db'), ports: { ssr: 0, edge: 0, api: 0 } });
-  children = board.children;
+  const board = await startBoard({ app: 'examples/board', database: join(run.directory, 'board.db'), ports: { ssr: 0, edge: 0, api: 0 }, children: run.children });
   // npm installs no bin links (HY-79), so the runner starts the command line entry of Playwright with node.
   const playwright = spawn(process.execPath, [resolve('node_modules/@playwright/test/cli.js'), 'test', ...process.argv.slice(2)], {
     env: { ...process.env, HYPER_E2E_SSR: board.ssr, HYPER_E2E_CSR: board.edge },
@@ -32,6 +28,5 @@ try {
   console.error(error.message);
   process.exitCode = 1;
 } finally {
-  await stopServers(children);
-  rmSync(run, { recursive: true, force: true });
+  await run.close();
 }

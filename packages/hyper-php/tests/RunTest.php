@@ -121,14 +121,16 @@ final class RunTest extends TestCase
     /** HY-67: PHP ends the script at the first failed write of the response and calls the disconnect hook. */
     public function testRunCallsTheDisconnectHookWhenTheClientClosedTheConnection(): void
     {
-        $log = tempnam(sys_get_temp_dir(), 'hyper-disconnect-');
-        $port = self::freePort();
-        // ignore_user_abort is on here, so App::run must turn it off.
-        $server = proc_open([PHP_BINARY, '-d', 'ignore_user_abort=1', '-S', "127.0.0.1:{$port}", __DIR__ . '/Support/disconnect.php'], [0 => ['file', '/dev/null', 'r'], 1 => ['file', '/dev/null', 'w'], 2 => ['pipe', 'w']], $pipes, null, [...getenv(), 'HYPER_DISCONNECT_LOG' => $log]);
-        if ($server === false) {
-            self::fail('the PHP built-in server did not start');
-        }
+        // The log and the server are released when the case ends, also when it fails (HY-87).
+        $log = (string) tempnam(sys_get_temp_dir(), 'hyper-disconnect-');
+        $server = false;
         try {
+            $port = self::freePort();
+            // ignore_user_abort is on here, so App::run must turn it off.
+            $server = proc_open([PHP_BINARY, '-d', 'ignore_user_abort=1', '-S', "127.0.0.1:{$port}", __DIR__ . '/Support/disconnect.php'], [0 => ['file', '/dev/null', 'r'], 1 => ['file', '/dev/null', 'w'], 2 => ['pipe', 'w']], $pipes, null, [...getenv(), 'HYPER_DISCONNECT_LOG' => $log]);
+            if ($server === false) {
+                self::fail('the PHP built-in server did not start');
+            }
             self::waitFor($pipes[2], 'started');
             $client = stream_socket_client("tcp://127.0.0.1:{$port}");
             if ($client === false) {
@@ -138,12 +140,14 @@ final class RunTest extends TestCase
             usleep(50_000);
             fclose($client);
             self::waitFor($pipes[2], 'Closing');
+            $lines = (string) file_get_contents($log);
         } finally {
-            proc_terminate($server);
-            proc_close($server);
+            if ($server !== false) {
+                proc_terminate($server);
+                proc_close($server);
+            }
+            unlink($log);
         }
-        $lines = (string) file_get_contents($log);
-        unlink($log);
         self::assertSame("response 200\ndisconnect GET / 1 {\"stage\":\"shared\"}\n", $lines);
     }
 

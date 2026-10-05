@@ -28,6 +28,7 @@
 - 검사는 무언가를 검사했을 때만 통과한다(HY-84). 실행된 test가 없는 test run, 아무것도 고르지 않는 선택이나 목록, top level에서 await하는 node test 파일은 실패한다. 실패는 보고되는 곳에서 기대한 것, 일어난 것, 원인을 보이는 출력을 밝힌다. timeout은 step을 밝히고, full run은 실패한 각 target의 마지막 줄들을 출력한다.
 - test는 자기가 읽는 것을 만든다(HY-85). fixture의 추적 파일은 자기 임시 디렉터리에 복사하고, 설치나 build처럼 다른 target이 쓰는 입력은 test가 읽기 전에 `requireBuilt`로 그 target과 함께 밝힌다. build 출력은 자기 checkout의 절대 경로를 담지 않고, cargo target 디렉터리 같은 어떤 build 디렉터리도 checkout 사이에 공유하지 않는다.
 - 여러 검사의 run은 모든 검사를 끝까지 실행한 뒤 실패하고, 실패한 검사를 각각 밝힌다(HY-86). recipe는 `$(call check,...)`와 `$(checks_result)`를 쓰고, 검사하는 여러 goal의 make는 `-k`로 실행하며, 첫 CI step 뒤의 step은 `if: ${{ !cancelled() }}`로 실행한다. 앞 step의 출력을 읽는 step만 그 실패에서 멈춘다.
+- run의 어떤 process나 파일도 run보다 오래 남지 않는다(HY-87). run은 서버와 임시 디렉터리를 만들 때부터 가지며 끝, 실패, SIGINT, SIGTERM에서 멈추고 기다리고 지운다. test는 디렉터리를 쓰는 process가 끝난 뒤에만 그 디렉터리를 지운다.
 - 각 패키지 안에서 코드와 테스트를 별도 디렉터리에 둔다.
 - 결함은 재현하는 실패 테스트를 추가하고, 코드를 수정하고, 테스트를 유지하는 절차로 처리한다.
 - 저장소 상대경로를 사용한다. 외부 입력 경로는 명시적으로 받는다.

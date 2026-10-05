@@ -12,19 +12,31 @@ import { test } from 'node:test';
 const repository = resolve('.');
 const HOLDER = /held by process (\d+) of the checkout (\S+), started at (\d{4}-\d\d-\d\dT[\d:.]+Z)/;
 
+// A temporary directory with the demos of a test. One hook ends every demo that still runs, waits for its exit and
+// checks that it released its lock, and only then removes the directory, which holds the lock and the database of the
+// demos (HY-87); node:test runs the hooks of a test in the order of their registration.
 function workspace(t) {
   const directory = mkdtempSync(join(tmpdir(), 'hyper-serve-demo-'));
-  t.after(() => rmSync(directory, { recursive: true, force: true }));
-  return directory;
+  const demos = [];
+  t.after(async () => {
+    for (const demo of demos) {
+      if (demo.child.exitCode === null && demo.child.signalCode === null) {
+        await new Promise((done) => { demo.child.once('exit', done); demo.child.kill(); });
+      }
+      assert.doesNotMatch(demo.output(), /is no longer held by process/, 'the directory of the demo was removed before the demo stopped');
+    }
+    rmSync(directory, { recursive: true, force: true });
+  });
+  return { directory, demos };
 }
 
 const demoArgs = (directory) => ['scripts/serve-demo.mjs', '--db', join(directory, 'board.db'), '--ssr', '0', '--edge', '0', '--api', '0', '--lock', join(directory, 'demo.lock')];
 
-// Starts a demo and resolves it once it prints its comparison address.
-function startDemo(t, directory) {
+// Starts a demo in a workspace and resolves it once it prints its comparison address.
+function startDemo({ directory, demos }) {
   const child = spawn(process.execPath, demoArgs(directory), { stdio: ['ignore', 'pipe', 'pipe'] });
-  t.after(() => (child.exitCode === null && child.signalCode === null ? new Promise((done) => { child.once('exit', done); child.kill(); }) : undefined));
   let output = '';
+  demos.push({ child, output: () => output });
   child.stderr.on('data', (data) => { output += data; });
   return new Promise((resolvePromise, reject) => {
     child.stdout.on('data', (data) => {
@@ -36,9 +48,10 @@ function startDemo(t, directory) {
 }
 
 test('a second demo fails with the holder, and the first releases the lock when it stops', { timeout: 20_000 }, async (t) => {
-  const directory = workspace(t);
+  const space = workspace(t);
+  const { directory } = space;
   const lock = join(directory, 'demo.lock');
-  const first = await startDemo(t, directory);
+  const first = await startDemo(space);
   const holder = JSON.parse(readFileSync(lock, 'utf8'));
   assert.equal(holder.pid, first.child.pid);
   assert.equal(holder.checkout, repository);
@@ -55,7 +68,7 @@ test('a second demo fails with the holder, and the first releases the lock when 
 });
 
 test('a lock of an ended demo is reported and stays until clear removes it', { timeout: 20_000 }, (t) => {
-  const directory = workspace(t);
+  const { directory } = workspace(t);
   const lock = join(directory, 'demo.lock');
   const ended = Number(spawnSync(process.execPath, ['-e', 'process.stdout.write(String(process.pid))'], { encoding: 'utf8' }).stdout);
   writeFileSync(lock, `${JSON.stringify({ checkout: repository, pid: ended, started: '2026-10-05T00:00:00.000Z', token: 'ended' })}\n`);
@@ -69,8 +82,9 @@ test('a lock of an ended demo is reported and stays until clear removes it', { t
 });
 
 test('clear fails while the demo runs', { timeout: 20_000 }, async (t) => {
-  const directory = workspace(t);
-  const first = await startDemo(t, directory);
+  const space = workspace(t);
+  const { directory } = space;
+  const first = await startDemo(space);
   const refused = spawnSync(process.execPath, ['scripts/holder-lock.mjs', 'clear', join(directory, 'demo.lock')], { encoding: 'utf8' });
   assert.equal(refused.status, 1);
   assert.match(refused.stderr, new RegExp(`held by process ${first.child.pid} of the checkout .*, which still runs`));
