@@ -4,7 +4,7 @@
 
 | ID | 기능 | 상태 | 근거 |
 |---|---|---|---|
-| protocol | 영역 프로토콜 명세(HY-1 ~ HY-88) | implemented | [프로토콜](spec/protocol.ko.md) |
+| protocol | 영역 프로토콜 명세(HY-1 ~ HY-89) | implemented | [프로토콜](spec/protocol.ko.md) |
 | composition | 화면 구성 규칙(HC-1 ~ HC-7)과 HC-6 템플릿 검사 | implemented | [화면 구성](spec/composition.ko.md), `make templates-check` |
 | manifest | PHP와 브라우저가 읽는 애플리케이션 매니페스트 | implemented | `make test-php`, `make test-js` |
 | router | 적합성 사례를 공유하는 PHP 라우터와 브라우저 라우터 | implemented | `make test-php`, `make test-js` |
@@ -44,6 +44,7 @@
 | output-files | asset build와 server build는 복사한 출력 파일을 Linux container의 virtiofs bind mount가 받아들이는 mode 0644로 만든다(HY-68) | implemented | `make test-scripts` |
 | template-dir | asset build, template build, server build는 `--template-dir`가 가리키는 template 저장소의 template package를 읽는다(HY-70) | implemented | `make test-scripts` |
 | template-copy | npm, Composer, PHPStan, 네이티브 확장 build, build script는 template 저장소를 선언한 복사본 `var/products/template`으로만 읽는다(HY-78) | implemented | `make test-scripts`, `make template-check` |
+| no-live-inputs | 어떤 recipe도 registry에 질의하지 않고, `tests/package-install`은 lock에서 offline 설치하며, test는 event로 순서를 정하고, test 서버는 system이 정한 port에서 listen하며, 서버 시작은 진행을 출력하고, 빈 목록은 검사를 실패시킨다(HY-89) | implemented; full run pending | `tests/scripts/toolchain.test.mjs`, `tests/scripts/board-servers.test.mjs`, `tests/scripts/check-bundle-size.test.mjs`, `packages/hyper-node/tests/http.test.ts` |
 | owner-check | 추적하는 모든 경로는 `scripts/owner-checks.json`에 owner를 가지고, `make owner-check`는 바뀐 경로의 owner를 실행한다(HY-88) | implemented; full run pending | `tests/scripts/owner-check.test.mjs`, `tests/scripts/ignored-files.test.mjs` |
 | run-resources | run의 서버와 임시 디렉터리는 run이 끝날 때, 실패할 때, SIGINT와 SIGTERM에서 멈추고 지워지며, test는 process가 끝난 뒤에만 디렉터리를 지운다(HY-87) | implemented; full run pending | `tests/scripts/board-servers.test.mjs`, `tests/scripts/check-parity.test.mjs`, `tests/scripts/serve-demo.test.mjs` |
 | all-checks | 여러 검사를 가진 recipe는 각 검사를 끝까지 실행하고 실패한 모든 검사를 밝힌다(HY-86) | implemented; full run pending | `tests/scripts/check-recipes.test.mjs` |

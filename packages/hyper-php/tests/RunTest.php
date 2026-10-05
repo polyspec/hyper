@@ -125,13 +125,17 @@ final class RunTest extends TestCase
         $log = (string) tempnam(sys_get_temp_dir(), 'hyper-disconnect-');
         $server = false;
         try {
-            $port = self::freePort();
-            // ignore_user_abort is on here, so App::run must turn it off.
-            $server = proc_open([PHP_BINARY, '-d', 'ignore_user_abort=1', '-S', "127.0.0.1:{$port}", __DIR__ . '/Support/disconnect.php'], [0 => ['file', '/dev/null', 'r'], 1 => ['file', '/dev/null', 'w'], 2 => ['pipe', 'w']], $pipes, null, [...getenv(), 'HYPER_DISCONNECT_LOG' => $log]);
+            // The server listens on a port that the system assigns and reports it, so no other process can take the
+            // port between its choice and its use (HY-89). ignore_user_abort is on here, so App::run must turn it off.
+            $server = proc_open([PHP_BINARY, '-d', 'ignore_user_abort=1', '-S', '127.0.0.1:0', __DIR__ . '/Support/disconnect.php'], [0 => ['file', '/dev/null', 'r'], 1 => ['file', '/dev/null', 'w'], 2 => ['pipe', 'w']], $pipes, null, [...getenv(), 'HYPER_DISCONNECT_LOG' => $log]);
             if ($server === false) {
                 self::fail('the PHP built-in server did not start');
             }
-            self::waitFor($pipes[2], 'started');
+            $started = self::waitFor($pipes[2], 'started');
+            if (preg_match('/\(http:\/\/127\.0\.0\.1:(\d+)\) started/', $started, $address) !== 1) {
+                self::fail("the server reported no address: {$started}");
+            }
+            $port = (int) $address[1];
             $client = stream_socket_client("tcp://127.0.0.1:{$port}");
             if ($client === false) {
                 self::fail("no connection to port {$port}");
@@ -151,24 +155,13 @@ final class RunTest extends TestCase
         self::assertSame("response 200\ndisconnect GET / 1 {\"stage\":\"shared\"}\n", $lines);
     }
 
-    private static function freePort(): int
-    {
-        $socket = stream_socket_server('tcp://127.0.0.1:0');
-        if ($socket === false) {
-            self::fail('no free port');
-        }
-        $name = (string) stream_socket_get_name($socket, false);
-        fclose($socket);
-
-        return (int) substr($name, strrpos($name, ':') + 1);
-    }
-
     /**
-     * Reads the standard error of the PHP built-in server until a line contains the text, for at most 5 seconds.
+     * Reads the standard error of the PHP built-in server until a line contains the text, for at most 5 seconds, and
+     * returns that line.
      *
      * @param resource $stderr
      */
-    private static function waitFor($stderr, string $text): void
+    private static function waitFor($stderr, string $text): string
     {
         $deadline = hrtime(true) + 5_000_000_000;
         $seen = '';
@@ -182,7 +175,7 @@ final class RunTest extends TestCase
                 }
                 $seen .= $line;
                 if (str_contains($line, $text)) {
-                    return;
+                    return $line;
                 }
             }
         }

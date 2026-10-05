@@ -156,28 +156,40 @@ describe('App.server', () => {
     const disconnects: [string, boolean, Record<string, unknown>][] = [];
     let closed: () => void = () => undefined;
     const done = new Promise<void>((resolve) => (closed = resolve));
+    // The first request waits inside its shared handler until the server has seen its connection close, so the
+    // order of the events does not depend on the time that any step takes.
+    let entered: () => void = () => undefined;
+    const running = new Promise<void>((resolve) => (entered = resolve));
+    let release: () => void = () => undefined;
+    const released = new Promise<void>((resolve) => (release = resolve));
     const app = await new Fixture().app({
       handlers: {
         ...handlers(),
         shared: async ({ reply }) => {
           calls.push('shared');
           reply.note('stage', 'shared');
-          await new Promise((resolve) => setTimeout(resolve, 300));
+          if (calls.length === 1) {
+            entered();
+            await released;
+          }
           return {};
         },
         regions: { side: () => (calls.push('side'), { count: 0, note: null }) },
       },
       onResponse: (_request, response) => responses.push(response.status),
       onDisconnect: (request, elapsed, reply) => {
-        disconnects.push([`${request.method} ${request.path()}`, elapsed >= 250, Object.fromEntries(reply.notes())]);
+        disconnects.push([`${request.method} ${request.path()}`, elapsed > 0, Object.fromEntries(reply.notes())]);
         closed();
       },
     });
     server = app.server(new FileSessions({ directory }));
+    // The server registers its own listeners of a connection first, so it has seen the close when this one runs.
+    server.once('connection', (connection) => connection.once('close', () => release()));
     await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
     const socket = connect((server.address() as AddressInfo).port, '127.0.0.1', () => socket.write('GET / HTTP/1.1\r\nHost: x\r\n\r\n'));
-    setTimeout(() => socket.destroy(), 50);
-    await Promise.race([done, new Promise((resolve) => setTimeout(resolve, 1500))]);
+    await running;
+    socket.destroy();
+    await done;
     expect(disconnects).toEqual([['GET /', true, { stage: 'shared' }]]);
     expect(calls).toEqual(['shared']);
     expect(responses).toEqual([]);

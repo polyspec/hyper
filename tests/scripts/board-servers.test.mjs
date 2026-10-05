@@ -66,3 +66,21 @@ test('a run that ends on SIGTERM stops its servers and removes its directory', a
   assert.equal(existsSync(directory), false);
   await assert.rejects(fetch(url, { signal: AbortSignal.timeout(2000) }), (error) => error.cause?.code === 'ECONNREFUSED');
 });
+
+test('a server start that waits prints its progress with the line it waits for and the last line of the server (HY-89)', async () => {
+  const script = `
+    import { serverRun, startServer } from ${JSON.stringify(path.join(ROOT, 'scripts/board-servers.mjs'))};
+    const run = serverRun('hyper-board-servers-slow-');
+    startServer({ name: 'slow', command: process.execPath, args: ['-e', "console.log('warming up'); setInterval(() => {}, 1000)"], env: process.env, ready: /^ready (\\S+)$/, children: run.children, progressMs: 100 });`;
+  const child = spawn(process.execPath, ['--input-type=module', '-e', script], { cwd: ROOT, stdio: ['ignore', 'pipe', 'pipe'] });
+  let output = '';
+  const ended = new Promise((resolve) => child.on('close', (code) => resolve(code)));
+  await new Promise((resolve) => child.stdout.on('data', (data) => {
+    output += data;
+    if (/^… start slow waits.*printed 1 lines/m.test(output)) resolve();
+  }));
+  child.kill('SIGTERM');
+  assert.equal(await ended, 143);
+  assert.match(output, /^\[slow\] warming up$/m);
+  assert.match(output, /^… start slow waits for a line that matches \/\^ready \(\\S\+\)\$\/ \(\d+ ms\); the server printed 1 lines, the last: warming up$/m);
+});

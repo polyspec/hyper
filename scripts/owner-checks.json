@@ -26,7 +26,7 @@
     { "paths": ["scripts/build-assets.mjs", "scripts/template-files.mjs", "scripts/build-templates.mjs"], "targets": ["bundle-size"], "tests": ["tests/scripts/build-assets.test.mjs", "tests/scripts/template-dir.test.mjs", "tests/scripts/package-source.test.mjs"] },
     { "paths": ["scripts/build-server.mjs", "scripts/template-rules.mjs", "scripts/check-templates.mjs"], "targets": ["templates-check"], "tests": ["tests/scripts/check-templates.test.mjs", "tests/scripts/package-source.test.mjs"] },
     { "paths": ["scripts/output-files.mjs"], "tests": ["tests/scripts/publish.test.mjs", "tests/scripts/output-files.test.mjs", "tests/scripts/build-assets.test.mjs"] },
-    { "paths": ["scripts/check-bundle-size.mjs", "config/bundle-size.json"], "targets": ["bundle-size"] },
+    { "paths": ["scripts/check-bundle-size.mjs", "config/bundle-size.json"], "targets": ["bundle-size"], "tests": ["tests/scripts/check-bundle-size.test.mjs"] },
     { "paths": ["scripts/check-documents.mjs"], "targets": ["docs-check"], "tests": ["tests/scripts/check-documents.test.mjs"] },
     { "paths": ["scripts/check-parity.mjs"], "targets": ["parity"], "tests": ["tests/scripts/check-parity.test.mjs"] },
     { "paths": ["scripts/copy-package.mjs", "scripts/publish.mjs", "scripts/tracked-files.mjs"], "targets": ["template-check"], "tests": ["tests/scripts/publish.test.mjs", "tests/scripts/template-copy.test.mjs", "tests/scripts/build-assets.test.mjs"] },
