@@ -37,7 +37,7 @@ for (const file of [CHECKLIST, CHECKLIST.replace(/\.md$/, '.ko.md')]) {
     const end = line.trimEnd().length - 1;
     const cell = TASK.test(line) && line[end] === '|' ? line.lastIndexOf('|', end - 1) + 1 : -1;
     const state = cell < 0 ? -1 : cell + line.slice(cell).search(/\S/);
-    for (const marker of line.matchAll(/\[[ ~o!]\]/g)) {
+    for (const marker of line.matchAll(/\[[ ~o!xX]\]/g)) {
       if (marker.index !== state) problems.push(`${file}:${index + 1}:${marker.index + 1}: state marker ${marker[0]} outside a task state; a checklist marker appears only as the state of a task row`);
     }
   });

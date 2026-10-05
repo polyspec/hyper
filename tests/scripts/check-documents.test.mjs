@@ -22,6 +22,8 @@ const STRAY = `# Execution checklist
 | H1.2 | Keep this task in progress | \`make docs-check\` | [~] |
 | H1.3 | Bypass this task | \`make docs-check\` | [!] cause: H1.2 is [~]; retry: H1.2 done |
 | Note | A row that is not a task | none | [o] |
+| H1.4 | Close the task with \`[X]\` | \`make docs-check\` | [o] |
+- [x] H1.5 Close the task in the task list form
 `;
 
 const CLEAN = `# Execution checklist
@@ -46,7 +48,7 @@ function check(t, text) {
 test('a state marker outside a task state fails with its file, line and column', (t) => {
   const run = check(t, STRAY);
   const expected = ['docs/plans/execution-checklist.md', 'docs/plans/execution-checklist.ko.md'].flatMap((file) =>
-    [['3:52', '[ ]'], ['3:67', '[~]'], ['7:25', '[o]'], ['9:68', '[~]'], ['10:44', '[o]']].map(
+    [['3:52', '[ ]'], ['3:67', '[~]'], ['7:25', '[o]'], ['9:68', '[~]'], ['10:44', '[o]'], ['11:31', '[X]'], ['12:3', '[x]']].map(
       ([location, marker]) => `${file}:${location}: state marker ${marker} outside a task state; a checklist marker appears only as the state of a task row`,
     ),
   );
