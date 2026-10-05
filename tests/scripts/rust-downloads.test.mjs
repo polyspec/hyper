@@ -1,6 +1,6 @@
 // Tests the check of the Rust downloads (HY-89, scripts/rust-downloads.mjs): `make ext` runs cargo offline, and the
 // check before it runs `cargo fetch --locked --offline` in the crate directory, so a missing toolchain or crate fails
-// with the first error line of cargo and `run make install`, never with the advice of cargo or rustup to download.
+// with the first error line of cargo and `run make install-rust`, never with the advice of cargo or rustup to download.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -33,18 +33,18 @@ test('the check fetches the locked crates offline in the crate directory and pas
   assert.match(run.stdout, /the Rust toolchain and the crates of .+crate are installed/);
 });
 
-test('a missing crate fails with the first error line of cargo and make install, without the advice to go online', (t) => {
+test('a missing crate fails with the first error line of cargo and make install-rust, without the advice to go online', (t) => {
   const run = check(t, { status: 101, stderr: 'error: failed to download `itoa v1.0.15`\n\nCaused by:\n  attempting to make an HTTP request, but --offline was specified\n\nhelp: if this error is too generic, retry without the offline flag\n' });
   assert.equal(run.status, 1);
   assert.match(run.stderr, /error: failed to download `itoa v1\.0\.15`/);
-  assert.match(run.stderr, /run make install, which installs the Rust toolchain of the declared copy and downloads the crates of its Cargo\.lock/);
+  assert.match(run.stderr, /run make install-rust, which installs the Rust toolchain of the declared copy and downloads the crates of its Cargo\.lock/);
   assert.doesNotMatch(run.stderr, /retry|offline flag/);
 });
 
-test('a missing toolchain fails with the error line of rustup and make install, not rustup toolchain install', (t) => {
+test('a missing toolchain fails with the error line of rustup and make install-rust, not rustup toolchain install', (t) => {
   const run = check(t, { status: 1, stderr: "error: toolchain '1.98.1-aarch64-apple-darwin' is not installed\nhelp: run `rustup toolchain install` to install it\n" });
   assert.equal(run.status, 1);
   assert.match(run.stderr, /error: toolchain '1\.98\.1-aarch64-apple-darwin' is not installed/);
-  assert.match(run.stderr, /run make install/);
+  assert.match(run.stderr, /run make install-rust/);
   assert.doesNotMatch(run.stderr, /rustup toolchain install/);
 });

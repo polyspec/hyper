@@ -4,10 +4,10 @@
 
 ## Toolchain
 
-- The pinned toolchain (HY-81): Node.js of `.node-version`, PHP of the minor of `config/toolchain.json` with `pdo_sqlite`, GNU Make 3.81 or later, and rustup. `make install` installs npm of `packageManager` and Composer of `config/toolchain.json` into `var/tools` (`make tools`) and the Rust toolchain of the template copy; `make toolchain-check` names every tool that differs from its pin.
+- The pinned toolchain (HY-81): Node.js of `.node-version`, PHP of the minor of `config/toolchain.json` with `pdo_sqlite`, GNU Make 3.81 or later, and rustup. `make install` installs npm of `packageManager` and Composer of `config/toolchain.json` into `var/tools` (`make tools`), and `make install-rust` the Rust toolchain of the template copy; `make toolchain-check` names every tool that differs from its pin.
 - The template repository at `../template` (`TEMPLATE_REPOSITORY`), with the branch that `config/template.json` names (HY-80) and a build of the TypeScript package of its head commit, which `make build-ts` of the template repository makes; the copy fails with the expected and the actual branch or input hash otherwise. This repository builds nothing there: `make template` copies it into `var/products/template` (HY-78), and the browser code imports the TypeScript package from that copy.
 - Rust: the toolchain of `rust-toolchain.toml` of the template branch, with which `make ext` builds; cargo installs no toolchain (`RUSTUP_AUTO_INSTALL=0`).
-- The network: only `make tools`, `make install` and `make install-browser` download. Every other recipe runs cargo, npm and Composer offline (`CARGO_NET_OFFLINE`, `npm_config_offline`, `COMPOSER_DISABLE_NETWORK`), so a missing download fails at once and names `make install` (HY-89).
+- The network: only `make tools`, `make install`, `make install-rust` and `make install-browser` download. Every other recipe runs cargo, npm and Composer offline (`CARGO_NET_OFFLINE`, `npm_config_offline`, `COMPOSER_DISABLE_NETWORK`), so a missing download fails at once and names the install target that makes it (HY-89).
 - Chromium for Playwright: `make install-browser`, which installs the Chromium of the pinned Playwright and, on Linux, its system libraries.
 
 ## Targets
@@ -16,11 +16,12 @@
 |---|---|
 | `make tools` | Installs npm of `packageManager` and Composer of `config/toolchain.json` into `var/tools` and writes the commands of `var/tools/bin`, verifying each download by its pinned digest (HY-81) |
 | `make toolchain-check` | Fails when Node.js, npm, Composer or the PHP minor differs from its pin and names the expected and the actual value of each (HY-81) |
-| `make install` | Writes the declared copy of the template repository and the copy of `packages/hyper-php`, installs npm and Composer dependencies as copies without bin links (HY-79), and installs the Rust toolchain of the declared copy and downloads the crates of the native extension (HY-89) |
+| `make install` | Writes the declared copy of the template repository and the copy of `packages/hyper-php`, and installs npm and Composer dependencies as copies without bin links (HY-79) |
+| `make install-rust` | Installs the Rust toolchain of the declared copy and downloads the crates of the native extension, which `make ext` needs (HY-89) |
 | `make hyper-php-copy` | Writes the copy `var/products/hyper-php` of the tracked files of `packages/hyper-php` and publishes it into the Composer copy of the board (HY-79, HY-82); `make server` runs it first |
 | `make template` | Writes the declared copy `var/products/template` of the template branch with `scripts/copy-template.mjs` and publishes the npm copy of the TypeScript template package and the Composer copies of the PHP template package from it file by file (HY-78, HY-80, HY-82); it does so only when `config/template.json` or the copy script is newer than `var/products/template/installed.stamp`. Tests, assets and server builds run it first |
 | `make template-check` | Fails when the npm copy of the TypeScript template package or a Composer copy of the PHP template package differs from the declared copy |
-| `make rust-downloads-check` | Fails when the Rust toolchain or a crate of the native extension of the declared copy is missing, with the first error line of cargo and `run make install` (HY-89) |
+| `make rust-downloads-check` | Fails when the Rust toolchain or a crate of the native extension of the declared copy is missing, with the first error line of cargo and `run make install-rust` (HY-89) |
 | `make ext` | Builds the native template extension of the declared copy of the template repository offline into `build/ext` after `make rust-downloads-check` (HY-48, HY-78, HY-89) |
 | `make packages` | Builds the JavaScript modules and type declarations of `@polyspec/hyper` and `@polyspec/hyper-server` into their `dist` directories with the declared build of each package (`npm run build`, which runs `scripts/tsc.mjs`) and publishes the build and the npm copy of each file by file (HY-79, HY-82); the Node server tests, the board asset build, `make package-check` and `make test-scripts` run it first, because they import the packages through their exports (HY-61). The build scripts read `data-template.json`, `checkManifest` and `templateReferences` from the source of `packages/hyper-js` next to them, so they do not need `dist` and run from any working directory |
 | `make package-check` | Installs both packages into `tests/package-install` offline from its `package-lock.json` with `npm ci --offline --install-links` (HY-89), type-checks its test against their declarations with `erasableSyntaxOnly` and runs it under `node` (HY-61) |
@@ -87,9 +88,9 @@ The workflow `.github/workflows/ci.yml` runs the full suite after a push to `mai
 | Group | Targets | Setup |
 |---|---|---|
 | `docs` | `docs-check` | Node.js |
-| `php` | `template-check`, `bench-server-smoke`, `lint`, `analyse-php`, `test-php` | Node.js, PHP, the template build, `make install` |
+| `php` | `template-check`, `bench-server-smoke`, `lint`, `analyse-php`, `test-php` | Node.js, PHP, the template build, `make install`, `make install-rust` |
 | `node` | `templates-check`, `test-scripts`, `test-js`, `test-node`, `package-check` | Node.js, PHP, the template build, `make install` |
-| `board` | `parity`, `server-parity`, `bundle-size`, `e2e` | Node.js, PHP, the template build, `make install`, `make install-browser` |
+| `board` | `parity`, `server-parity`, `bundle-size`, `e2e` | Node.js, PHP, the template build, `make install`, `make install-rust`, `make install-browser` |
 
 Each step runs one make target (HY-90) and every step after the first runs after a failed step. `make ci-pins` gives the PHP minor of `config/toolchain.json` and the template branch of `config/template.json` to the workflow, which sets up PHP of that minor and checks out the template repository at that branch as `../template`, where `make install build-ts` builds its TypeScript package. `make ci-check GROUP=<group>` runs every target of the group with its own `make -k <target>` to its end and prints `[ci] start <target>` and `[ci] <target> passed|failed in <seconds> s`; it refuses outside GitHub Actions, because a checkout runs the full suite through `make check`. `make ci-summary GROUP=<group>` writes the job summary. The job uploads the artifact `ci-<group>-<run id>-<attempt>`, the directory `var/ci/<group>/`:
 

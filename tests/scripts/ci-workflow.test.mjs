@@ -8,6 +8,8 @@ import path from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
+import { dryRun } from './make-dry-run.mjs';
+
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const WORKFLOWS = path.join(ROOT, '.github/workflows');
 const RUNNER = 'ubuntu-26.04-arm';
@@ -124,9 +126,14 @@ test('the workflow ci runs every CI group in a job that runs to its end and uplo
     // Chromium is installed only in the group whose targets run a browser.
     const browser = job.steps.find((step) => step.run === 'make install-browser');
     assert.match(browser?.if ?? '', /matrix\.browser/);
+    // The Rust toolchain and the crates are installed only in the groups with a target that builds the extension.
+    const rust = job.steps.find((step) => step.run === 'make install-rust');
+    assert.match(rust?.if ?? '', /matrix\.rust/);
+    const flag = (group, name) => new RegExp(`- group: ${group}\\n(?: {12}\\w+: true\\n)* {12}${name}: true\\n`).test(job.text);
     for (const [group, list] of Object.entries(targets)) {
-      const flagged = new RegExp(`- group: ${group}\\n(?: {12}\\w+: true\\n)* {12}browser: true\\n`).test(job.text);
-      assert.equal(flagged, list.some((target) => ['parity', 'server-parity', 'e2e'].includes(target)), `${group}: browser flag`);
+      assert.equal(flag(group, 'browser'), list.some((target) => ['parity', 'server-parity', 'e2e'].includes(target)), `${group}: browser flag`);
+      const builds = list.some((target) => dryRun(target, { variables: ['TEMPLATE_DIR=var/products/template'] }).some((line) => line.includes('cargo build')));
+      assert.equal(flag(group, 'rust'), builds, `${group}: rust flag`);
     }
   }
 });

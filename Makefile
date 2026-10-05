@@ -29,14 +29,14 @@ EXT := build/ext/release/libpolyspec_template.$(if $(filter Darwin,$(shell uname
 
 # The toolchain (HY-81, scripts/toolchain.mjs): npm and Composer of this checkout, which `make tools` installs into
 # var/tools, come first on PATH for every recipe and the programs that it starts. rustup never installs a toolchain on
-# the first cargo, because several processes of one run may start cargo at once; `make install` installs the Rust
-# toolchain of the declared copy, and `make rust-downloads-check` fails with `run make install` while it is missing.
+# the first cargo, because several processes of one run may start cargo at once; `make install-rust` installs the Rust
+# toolchain of the declared copy, and `make rust-downloads-check` fails with `run make install-rust` while it is missing.
 export PATH := $(CURDIR)/var/tools/bin:$(PATH)
 export RUSTUP_AUTO_INSTALL := 0
 # A check reads no network (HY-89): `make install` downloads everything that the checks read, and every other recipe
 # and the programs that it starts run cargo, npm and Composer offline, so a missing download fails at once instead of
-# reaching a registry in one run and not in another. The downloads of `make tools` and `make install` lift the
-# settings with $(ONLINE).
+# reaching a registry in one run and not in another. The downloads of `make tools`, `make install`, `make install-rust`
+# and `make install-browser` lift the settings with $(ONLINE).
 export CARGO_NET_OFFLINE := true
 export npm_config_offline := true
 export COMPOSER_DISABLE_NETWORK := 1
@@ -62,7 +62,7 @@ $(if $(filter $(HOOKS_PATH),$(shell git config core.hooksPath)),,$(shell git con
 
 .DEFAULT_GOAL := help
 
-.PHONY: help tools toolchain-check owner-check install hyper-php-copy template template-check rust-downloads-check ext packages package-check server server-fixtures node-server node-fixtures assets test-js test-node test-php lint analyse-php templates-check test-scripts parity server-parity bundle-size e2e docs-check serve-demo bench-server bench-server-smoke bench-browser bench check rerun-failed serve-demo-unlock hooks hooks-check push-gate-commit ci-pins ci-check ci-summary install-browser
+.PHONY: help tools toolchain-check owner-check install hyper-php-copy template template-check rust-downloads-check install-rust ext packages package-check server server-fixtures node-server node-fixtures assets test-js test-node test-php lint analyse-php templates-check test-scripts parity server-parity bundle-size e2e docs-check serve-demo bench-server bench-server-smoke bench-browser bench check rerun-failed serve-demo-unlock hooks hooks-check push-gate-commit ci-pins ci-check ci-summary install-browser
 
 help: ## List the targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
@@ -73,11 +73,9 @@ tools: ## Install the pinned npm and Composer into var/tools (HY-81)
 toolchain-check: ## Fail when Node.js, npm, Composer or the PHP minor differs from its pin, naming the expected and the actual value (HY-81)
 	node scripts/toolchain.mjs check
 
-install: tools ## Install the pinned tools, write the declared copy of the template branch and install npm and Composer dependencies, the Rust toolchain and the crates of the native extension from it; the only target besides tools that downloads (HY-89)
+install: tools ## Install the pinned tools, write the declared copy of the template branch and install npm and Composer dependencies from it; make install-rust installs the Rust toolchain of the native extension (HY-89)
 	node scripts/toolchain.mjs check
 	node scripts/copy-template.mjs --repository $(TEMPLATE_REPOSITORY) --config $(TEMPLATE_CONFIG) --output $(TEMPLATE_DIR)
-	cd $(TEMPLATE_DIR) && rustup toolchain install --no-self-update
-	cd $(EXT_DIR) && $(ONLINE) cargo fetch --locked
 	node scripts/copy-package.mjs --path $(PHP_PACKAGE) --output $(HYPER_PHP_COPY)
 	$(ONLINE) node scripts/holder-lock.mjs run $(INSTALL_LOCK) -- $(NPM) ci --no-audit --no-fund
 	$(ONLINE) node scripts/holder-lock.mjs run $(INSTALL_LOCK) -- $(COMPOSER) install --working-dir=$(PHP_PACKAGE)
@@ -100,9 +98,15 @@ template-check: template ## Fail when an npm or Composer copy of a template pack
 	$(call check,the Composer copy of $(BOARD),diff -r $(TEMPLATE_DIR)/packages/template-php/src $(BOARD)/vendor/polyspec/template/src) \
 	$(checks_result)
 
+# The Rust toolchain and the crates are installed only where `make ext` runs: the targets that build the extension
+# (test-php, parity, bench-server) need them, and the CI groups without such a target do not install them (HY-91).
+install-rust: template ## Install the Rust toolchain of the declared copy and download the crates of the native extension, after make install (HY-89)
+	cd $(TEMPLATE_DIR) && rustup toolchain install --no-self-update
+	cd $(EXT_DIR) && $(ONLINE) cargo fetch --locked
+
 # cargo runs offline and answers a missing crate with the advice to retry without --offline, and rustup a missing
 # toolchain with `rustup toolchain install`; this check names the fix of a check instead, make install (HY-89).
-rust-downloads-check: template ## Fail when the Rust toolchain or a crate of the native extension of the declared copy is missing, naming make install (HY-89)
+rust-downloads-check: template ## Fail when the Rust toolchain or a crate of the native extension of the declared copy is missing, naming make install-rust (HY-89)
 	node scripts/rust-downloads.mjs $(EXT_DIR)
 
 ext: template rust-downloads-check ## Build the native template extension of the declared copy offline with its Rust toolchain into build/ext (HY-81)
