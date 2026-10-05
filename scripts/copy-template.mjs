@@ -28,6 +28,7 @@ import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, renameSy
 import { tmpdir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
+import { NPM } from './toolchain.mjs';
 import { git } from './tracked-files.mjs';
 
 const TRACKED = ['packages/template-php', 'packages/template-php-ext', 'packages/template-rust', 'tools/compiler', 'contracts/functions.json', 'rust-toolchain.toml'];
@@ -85,7 +86,7 @@ const scratch = mkdtempSync(join(tmpdir(), 'hyper-template-pack-'));
 try {
   const packed = join(scratch, 'pack');
   mkdirSync(packed);
-  execFileSync('npm', ['pack', '--ignore-scripts', '--loglevel=warn', '--pack-destination', packed], { cwd: typescript, stdio: ['ignore', 'ignore', 'inherit'] });
+  execFileSync(NPM, ['pack', '--ignore-scripts', '--loglevel=warn', '--pack-destination', packed], { cwd: typescript, stdio: ['ignore', 'ignore', 'inherit'] });
   const archives = readdirSync(packed);
   if (archives.length !== 1 || !archives[0].endsWith('.tgz')) throw new Error(`npm pack of ${typescript} wrote ${JSON.stringify(archives)}, expected one .tgz file`);
   const target = join(next, TYPESCRIPT);

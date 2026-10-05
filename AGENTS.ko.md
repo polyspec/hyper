@@ -22,7 +22,7 @@
 - 관심사를 모듈로 분리한다. 책임이 둘 이상인 파일은 분리한다.
 - 임시 스크립트나 임시 폴더를 사용하지 않는다. 모든 검사는 Makefile 타깃, `scripts/` 아래 스크립트, 커밋된 테스트 중 하나이며 멱등하다.
 - 결과는 tree에만 의존한다. 저장소 밖의 모든 입력은 추적 파일에 밝히고 사용 전에 확인한다. 다른 저장소는 branch로(`config/template.json`, HY-80), build 출력은 그 입력의 hash로 확인한다. 불일치는 기대값과 실제값을 밝히며 실패한다. 어떤 검사도 다른 checkout의 working tree를 그때의 상태 그대로 읽지 않는다.
-- build하거나 검사하는 모든 도구는 추적 파일에 pin한 정확한 release이며 사용 전에 확인한다(HY-81). `.node-version`, `packageManager`, `config/toolchain.json`, template 복사본의 `rust-toolchain.toml`이다. 도구는 모든 checkout과 session이 공유하는 machine이 아니라 checkout(`var/tools`)에 설치한다. download는 pin한 digest가 맞을 때만 사용하고, 어떤 도구도 처음 사용할 때 다른 도구를 설치하지 않는다.
+- build하거나 검사하는 모든 도구는 추적 파일에 pin한 정확한 release이며 사용 전에 확인한다(HY-81). `.node-version`, `packageManager`, `config/toolchain.json`, template 복사본의 `rust-toolchain.toml`이다. 도구는 모든 checkout과 session이 공유하는 machine이 아니라 checkout(`var/tools`)에 설치한다. download는 pin한 digest가 맞을 때만 사용하고, 어떤 도구도 처음 사용할 때 다른 도구를 설치하지 않는다. recipe나 script는 checkout의 도구를 절대 경로로 시작한다. make는 shell 문법이 없는 recipe 줄을 자기 `PATH`에서 찾기 때문이다.
 - 각 패키지 안에서 코드와 테스트를 별도 디렉터리에 둔다.
 - 결함은 재현하는 실패 테스트를 추가하고, 코드를 수정하고, 테스트를 유지하는 절차로 처리한다.
 - 저장소 상대경로를 사용한다. 외부 입력 경로는 명시적으로 받는다.

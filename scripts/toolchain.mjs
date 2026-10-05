@@ -23,6 +23,9 @@ import { fileURLToPath } from 'node:url';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const TOOLS = path.join(ROOT, 'var', 'tools');
 export const BIN = path.join(TOOLS, 'bin');
+// The commands of the pinned npm and Composer, which scripts start by their absolute paths.
+export const NPM = path.join(BIN, 'npm');
+export const COMPOSER = path.join(BIN, 'composer');
 
 /** The pinned versions and digests of the tools. */
 export function pins(root = ROOT) {
