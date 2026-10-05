@@ -46,7 +46,7 @@
 
 - This repository has one checklist, `docs/plans/execution-checklist.md`. Split a task into sub-items or add tasks to it; do not create another checklist. Every repository keeps its own checklist.
 - A task has one of four states: `[ ]` waiting, `[~]` in progress, `[o]` done, `[!] cause: <cause>; retry: <condition>` bypassed. `make docs-check` accepts no other state.
-- A task state marker appears in the checklist only as the state of a task row, at the start of its last cell. The checklist has no legend; its texts name states in words. `make docs-check` fails for any other marker and names its file, line and column.
+- A task state marker, also an x or a capital X between brackets as Markdown task lists write it, appears in the checklist only as the state of a task row, at the start of its last cell. The checklist has no legend; its texts name states in words. `make docs-check` fails for any other marker and names its file, line and column.
 - `[!]` is used only when the next task cannot proceed without bypassing this one. When the retry condition holds, resume the task without waiting for approval. `[!]` is not done. An audit covers only the `[!]` tasks with their causes and retry conditions and does not repeat unrelated full test runs.
 - A new problem gets a new task. A problem related to a task that is `[o]` gets a sub-item with the next derived ID (`H5.2-1`, `H5.2-2`) that goes through `[~]` and `[o]`; the `[o]` task keeps its state.
 - Independent tasks may run in parallel, but finishing a task in progress comes before starting a new one: the number of `[o]` tasks grows, not the number of `[~]` tasks.
