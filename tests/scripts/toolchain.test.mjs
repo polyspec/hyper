@@ -148,10 +148,11 @@ test('every recipe runs cargo, npm and Composer offline, and $(ONLINE) lifts it 
   for (const name of Object.keys(OFFLINE)) assert.equal(online[name], undefined, `${name} under $(ONLINE)`);
 });
 
-test('only make tools and make install download, each download through $(ONLINE), and no check target downloads (HY-89)', (t) => {
+test('only make tools, make install and make install-browser download, each download through $(ONLINE), and no check target downloads (HY-89)', (t) => {
   const directory = mkdtempSync(path.join(tmpdir(), 'hyper-downloads-'));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   assert.deepEqual(dryRun('tools'), [`${ONLINE}node scripts/toolchain.mjs install`]);
+  assert.deepEqual(dryRun('install-browser'), [`${ONLINE}node node_modules/@playwright/test/cli.js install --with-deps chromium`]);
   const install = dryRun('install', { variables: [`TEMPLATE_DIR=${directory}`] });
   const downloads = install.filter((line) => / ci |composer install|cargo fetch|toolchain\.mjs install/.test(line.replace(/ -- /, ' ')));
   assert.ok(install.some((line) => line === `cd ${directory}/packages/template-php-ext && ${ONLINE}cargo fetch --locked`), install.join('\n'));

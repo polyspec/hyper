@@ -7,8 +7,8 @@
 - pin한 도구(HY-81): `.node-version`의 Node.js, `pdo_sqlite`가 있는 `config/toolchain.json` minor의 PHP, GNU Make 3.81 이상, rustup. `make install`은 `packageManager`의 npm과 `config/toolchain.json`의 Composer를 `var/tools`에 설치하고(`make tools`) template 복사본의 Rust toolchain을 설치한다. `make toolchain-check`는 pin과 다른 모든 도구를 밝힌다.
 - `../template`(`TEMPLATE_REPOSITORY`)에 있고 `config/template.json`이 밝히는 branch와(HY-80) 그 head commit의 TypeScript 패키지 build를 가진 template 저장소. template 저장소의 `make build-ts`가 그 build를 만든다. 그렇지 않으면 복사는 기대값과 실제값인 commit이나 입력 hash를 밝히며 실패한다. 이 저장소는 그곳에서 아무것도 build하지 않는다. `make template`이 그것을 `var/products/template`에 복사하고(HY-78), 브라우저 코드는 그 복사본의 TypeScript 패키지를 가져온다.
 - Rust: template branch의 `rust-toolchain.toml`의 toolchain이며 `make ext`가 그것으로 빌드한다. cargo는 toolchain을 설치하지 않는다(`RUSTUP_AUTO_INSTALL=0`).
-- network: `make tools`와 `make install`만 download한다. 다른 모든 recipe는 cargo, npm, Composer를 offline으로 실행하므로(`CARGO_NET_OFFLINE`, `npm_config_offline`, `COMPOSER_DISABLE_NETWORK`) 없는 download는 바로 실패하고 `make install`을 밝힌다(HY-89).
-- Playwright용 Chromium: `node node_modules/@playwright/test/cli.js install chromium`
+- network: `make tools`, `make install`, `make install-browser`만 download한다. 다른 모든 recipe는 cargo, npm, Composer를 offline으로 실행하므로(`CARGO_NET_OFFLINE`, `npm_config_offline`, `COMPOSER_DISABLE_NETWORK`) 없는 download는 바로 실패하고 `make install`을 밝힌다(HY-89).
+- Playwright용 Chromium: `make install-browser`. pin한 Playwright의 Chromium과, Linux에서는 그 system library를 설치한다.
 
 ## 타깃
 
@@ -45,6 +45,10 @@
 | `make hooks` | `core.hooksPath`를 `.githooks`로 설정하고 `make hooks-check`를 실행한다([Push](#push) 참조) |
 | `make hooks-check` | `core.hooksPath`가 `.githooks`가 아니거나 `.githooks/pre-push`가 없거나 실행할 수 없으면 실패한다 |
 | `make push-gate-commit` | commit `COMMIT`에 진행 중인 checklist 작업이 있거나 그 commit이 `.githooks/pre-push`를 mode 100755로 추적하지 않으면 실패한다. GitHub의 job `push-gate`가 이를 실행한다([Push](#push) 참고) |
+| `make ci-pins` | `config/toolchain.json`의 PHP minor와 `config/template.json`의 template branch를 출력하고 step output으로 workflow에 준다([CI](#ci) 참고) |
+| `make ci-check` | CI group `GROUP`의 target을 끝까지 실행하고 보고서 `var/ci/<group>/`을 쓴다. GitHub Actions에서만 실행한다([CI](#ci) 참고) |
+| `make ci-summary` | CI group `GROUP`의 요약을 보고서와 job summary에 쓴다([CI](#ci) 참고) |
+| `make install-browser` | pin한 Playwright의 Chromium과, Linux에서는 그 system library를 설치한다. `$(ONLINE)`을 거친 download다(HY-89) |
 | `make serve-demo` | lock `/tmp/hyper-serve-demo.lock`을 잡은 채 고정 port 8080 ~ 8082에서 SSR, CSR, 비교 페이지를 실행한다. 두 번째 demo는 holder를 밝히며 실패한다([배포](deployment.ko.md) 참조) |
 | `make serve-demo-unlock` | process가 끝난 demo의 lock을 지운다. demo가 실행 중이면 실패한다 |
 | `make bench-server-smoke` | PHP 측정기를 측정마다 한 번씩 실행한다. 측정기를 깨는 변경이 실패하도록 `make check`에 들어 있다 |
@@ -74,7 +78,24 @@ push는 push하는 commit에도 working tree에도 checklist의 `[~]` 작업이 
 
 Git은 clone에서 hook을 설치하지 않는다. 그래서 모든 `make` 실행이 `core.hooksPath`가 다른 값이면 `.githooks`로 설정하고, `make hooks`는 이를 명시적으로 설정한다. 커밋 전에 `make docs-check`가 실행하는 `make hooks-check`와 전체 실행의 guard는 `core.hooksPath`가 `.githooks`가 아니거나 hook이 없거나 실행할 수 없으면 실패한다.
 
-workflow `.github/workflows/push-gate.yml`은 이 저장소의 유일한 CI workflow다. 그 job `push-gate`는 모든 branch에 push된 commit과 모든 pull request의 head commit에 `node scripts/push-gate.mjs commit <sha>`를 실행하는 `make push-gate-commit COMMIT=<sha>`를 실행하므로, hook을 거치지 않았거나 hook이 없는 checkout에서 온 push도 그곳에서 실패한다. 진행 중인 작업이 있을 때, checklist가 없는 commit일 때, `.githooks/pre-push`를 mode 100755로 추적하지 않는 commit일 때 실패하며, 실패의 각 줄을 annotation으로 출력하고 job summary에 쓴다.
+workflow `.github/workflows/push-gate.yml`은 모든 push를 검사한다. 그 job `push-gate`는 모든 branch에 push된 commit과 모든 pull request의 head commit에 `node scripts/push-gate.mjs commit <sha>`를 실행하는 `make push-gate-commit COMMIT=<sha>`를 실행하므로, hook을 거치지 않았거나 hook이 없는 checkout에서 온 push도 그곳에서 실패한다. 진행 중인 작업이 있을 때, checklist가 없는 commit일 때, `.githooks/pre-push`를 mode 100755로 추적하지 않는 commit일 때 실패하며, 실패의 각 줄을 annotation으로 출력하고 job summary에 쓴다.
+
+## CI
+
+workflow `.github/workflows/ci.yml`은 `main`으로의 push 뒤와 모든 pull request에 대해 전체 suite를 실행한다(HY-91). 그 job `check`는 Makefile의 CI group마다 항목 하나를 `fail-fast: false`로 가진다.
+
+| Group | Target | 준비 |
+|---|---|---|
+| `docs` | `docs-check` | Node.js |
+| `php` | `template-check`, `bench-server-smoke`, `lint`, `analyse-php`, `test-php` | Node.js, PHP, template build, `make install` |
+| `node` | `templates-check`, `test-scripts`, `test-js`, `test-node`, `package-check` | Node.js, PHP, template build, `make install` |
+| `board` | `parity`, `server-parity`, `bundle-size`, `e2e` | Node.js, PHP, template build, `make install`, `make install-browser` |
+
+각 step은 make target 하나를 실행하고(HY-90), 첫 step 뒤의 모든 step은 실패한 step 뒤에도 실행한다. `make ci-pins`는 `config/toolchain.json`의 PHP minor와 `config/template.json`의 template branch를 workflow에 주고, workflow는 그 minor의 PHP를 준비하고 template 저장소를 그 branch로 `../template`에 checkout하며, 그곳에서 `make install build-ts`가 TypeScript 패키지를 build한다. `make ci-check GROUP=<group>`은 group의 모든 target을 자기 `make -k <target>`으로 끝까지 실행하고 `[ci] start <target>`과 `[ci] <target> passed|failed in <seconds> s`를 출력한다. checkout은 `make check`로 전체 suite를 실행하므로 GitHub Actions 밖에서는 거부한다. `make ci-summary GROUP=<group>`은 job summary를 쓴다. job은 artifact `ci-<group>-<run id>-<attempt>`로 디렉터리 `var/ci/<group>/`을 upload한다.
+
+- `summary.md`: commit, tree, template branch, Node.js, npm, patch를 포함한 PHP, Composer, make의 실행 중인 release, 각 setup step의 결과, target의 상태, 시간, 첫 실패 줄의 표, 그리고 실패한 각 target의 첫 실패 줄;
+- `record.json`: 같은 내용의 data이며 각 target 앞뒤에 쓰므로, 멈춘 runner는 실행 중이던 target을 남긴다;
+- `logs/<target>.log`: 각 target의 명령, 전체 출력, make가 끝난 방식.
 
 ## Test 실행
 

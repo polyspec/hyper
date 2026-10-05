@@ -4,7 +4,7 @@
 
 | ID | 기능 | 상태 | 근거 |
 |---|---|---|---|
-| protocol | 영역 프로토콜 명세(HY-1 ~ HY-90) | implemented | [프로토콜](spec/protocol.ko.md) |
+| protocol | 영역 프로토콜 명세(HY-1 ~ HY-91) | implemented | [프로토콜](spec/protocol.ko.md) |
 | composition | 화면 구성 규칙(HC-1 ~ HC-7)과 HC-6 템플릿 검사 | implemented | [화면 구성](spec/composition.ko.md), `make templates-check` |
 | manifest | PHP와 브라우저가 읽는 애플리케이션 매니페스트 | implemented | `make test-php`, `make test-js` |
 | router | 적합성 사례를 공유하는 PHP 라우터와 브라우저 라우터 | implemented | `make test-php`, `make test-js` |
@@ -44,6 +44,7 @@
 | output-files | asset build와 server build는 복사한 출력 파일을 Linux container의 virtiofs bind mount가 받아들이는 mode 0644로 만든다(HY-68) | implemented | `make test-scripts` |
 | template-dir | asset build, template build, server build는 `--template-dir`가 가리키는 template 저장소의 template package를 읽는다(HY-70) | implemented | `make test-scripts` |
 | template-copy | npm, Composer, PHPStan, 네이티브 확장 build, build script는 template 저장소를 선언한 복사본 `var/products/template`으로만 읽는다(HY-78) | implemented | `make test-scripts`, `make template-check` |
+| ci-suite | 전체 suite는 `main`으로의 push 뒤와 모든 pull request에 대해 GitHub에서 CI group마다 job 하나로 모든 target을 끝까지 실행하고, job summary와 각 target의 상태, 시간, 첫 실패 줄, 전체 log를 담은 보고서를 upload한다(HY-91) | implemented; full run pending | `tests/scripts/ci-run.test.mjs`, `tests/scripts/ci-workflow.test.mjs` |
 | ci-steps | 모든 GitHub workflow는 commit으로 pin한 action으로 시간 제한 없이 `ubuntu-26.04-arm`에서 실행하고, 모든 step은 make target 하나를 실행한다(HY-90) | implemented; full run pending | `tests/scripts/ci-workflow.test.mjs`, `tests/scripts/push-gate.test.mjs` |
 | no-live-inputs | 어떤 recipe도 registry에 질의하지 않고, 모든 recipe는 cargo, npm, Composer를 offline으로 실행하며 `make tools`와 `make install`만 download하고, 없는 download는 `make install`을 밝히며, `tests/package-install`은 lock에서 offline 설치하며, test는 event로 순서를 정하고, test 서버는 system이 정한 port에서 listen하며, 서버 시작은 진행을 출력하고, 빈 목록은 검사를 실패시킨다(HY-89) | implemented; full run pending | `tests/scripts/toolchain.test.mjs`, `tests/scripts/rust-downloads.test.mjs`, `tests/scripts/board-servers.test.mjs`, `tests/scripts/check-bundle-size.test.mjs`, `packages/hyper-node/tests/http.test.ts` |
 | owner-check | 추적하는 모든 경로는 `scripts/owner-checks.json`에 owner를 가지고, `make owner-check`는 바뀐 경로의 owner를 실행한다(HY-88) | implemented | `tests/scripts/owner-check.test.mjs`, `tests/scripts/ignored-files.test.mjs` |

@@ -7,8 +7,8 @@
 - The pinned toolchain (HY-81): Node.js of `.node-version`, PHP of the minor of `config/toolchain.json` with `pdo_sqlite`, GNU Make 3.81 or later, and rustup. `make install` installs npm of `packageManager` and Composer of `config/toolchain.json` into `var/tools` (`make tools`) and the Rust toolchain of the template copy; `make toolchain-check` names every tool that differs from its pin.
 - The template repository at `../template` (`TEMPLATE_REPOSITORY`), with the branch that `config/template.json` names (HY-80) and a build of the TypeScript package of its head commit, which `make build-ts` of the template repository makes; the copy fails with the expected and the actual branch or input hash otherwise. This repository builds nothing there: `make template` copies it into `var/products/template` (HY-78), and the browser code imports the TypeScript package from that copy.
 - Rust: the toolchain of `rust-toolchain.toml` of the template branch, with which `make ext` builds; cargo installs no toolchain (`RUSTUP_AUTO_INSTALL=0`).
-- The network: only `make tools` and `make install` download. Every other recipe runs cargo, npm and Composer offline (`CARGO_NET_OFFLINE`, `npm_config_offline`, `COMPOSER_DISABLE_NETWORK`), so a missing download fails at once and names `make install` (HY-89).
-- Chromium for Playwright: `node node_modules/@playwright/test/cli.js install chromium`.
+- The network: only `make tools`, `make install` and `make install-browser` download. Every other recipe runs cargo, npm and Composer offline (`CARGO_NET_OFFLINE`, `npm_config_offline`, `COMPOSER_DISABLE_NETWORK`), so a missing download fails at once and names `make install` (HY-89).
+- Chromium for Playwright: `make install-browser`, which installs the Chromium of the pinned Playwright and, on Linux, its system libraries.
 
 ## Targets
 
@@ -45,6 +45,10 @@
 | `make hooks` | Sets `core.hooksPath` to `.githooks` and runs `make hooks-check` (see [Push](#push)) |
 | `make hooks-check` | Fails while `core.hooksPath` is not `.githooks` or `.githooks/pre-push` is missing or not executable |
 | `make push-gate-commit` | Fails when the commit `COMMIT` has a checklist task in progress or does not track `.githooks/pre-push` with mode 100755; the job `push-gate` of GitHub runs it (see [Push](#push)) |
+| `make ci-pins` | Prints the PHP minor of `config/toolchain.json` and the template branch of `config/template.json` and gives them to the workflow as step outputs (see [CI](#ci)) |
+| `make ci-check` | Runs the targets of the CI group `GROUP` to their ends and writes the report `var/ci/<group>/`; only under GitHub Actions (see [CI](#ci)) |
+| `make ci-summary` | Writes the summary of the CI group `GROUP` into its report and the job summary (see [CI](#ci)) |
+| `make install-browser` | Installs the Chromium of the pinned Playwright and, on Linux, its system libraries; a download through `$(ONLINE)` (HY-89) |
 | `make serve-demo` | Serves SSR, CSR and the comparison page on the fixed ports 8080 to 8082 while it holds the lock `/tmp/hyper-serve-demo.lock`; a second demo fails with the holder (see [Deployment](deployment.md)) |
 | `make serve-demo-unlock` | Removes the lock of a demo whose process has ended; fails while the demo runs |
 | `make bench-server-smoke` | Runs the PHP benchmark once per measurement; `make check` includes it so that a change that breaks the benchmark fails |
@@ -74,7 +78,24 @@ A push happens only when no task of the checklist is `[~]`, neither in a pushed 
 
 Git does not install hooks from a clone. Every `make` run therefore sets `core.hooksPath` to `.githooks` when it has another value, and `make hooks` sets it explicitly. `make hooks-check`, which `make docs-check` runs before each commit, and the guard of the full run fail while `core.hooksPath` is not `.githooks` or the hook is missing or not executable.
 
-The workflow `.github/workflows/push-gate.yml` is the only CI workflow of the repository. Its job `push-gate` runs `make push-gate-commit COMMIT=<sha>`, which runs `node scripts/push-gate.mjs commit <sha>`, on the pushed commit of every branch and on the head commit of every pull request, so a push that skipped the hook, or came from a checkout without it, still fails there. It fails for a task in progress, for a commit without the checklist and for a commit that does not track `.githooks/pre-push` with mode 100755; it prints each line of the failure as an annotation and writes it into the job summary.
+The workflow `.github/workflows/push-gate.yml` gates every push. Its job `push-gate` runs `make push-gate-commit COMMIT=<sha>`, which runs `node scripts/push-gate.mjs commit <sha>`, on the pushed commit of every branch and on the head commit of every pull request, so a push that skipped the hook, or came from a checkout without it, still fails there. It fails for a task in progress, for a commit without the checklist and for a commit that does not track `.githooks/pre-push` with mode 100755; it prints each line of the failure as an annotation and writes it into the job summary.
+
+## CI
+
+The workflow `.github/workflows/ci.yml` runs the full suite after a push to `main` and for every pull request (HY-91). Its job `check` has one entry per CI group of the Makefile, with `fail-fast: false`:
+
+| Group | Targets | Setup |
+|---|---|---|
+| `docs` | `docs-check` | Node.js |
+| `php` | `template-check`, `bench-server-smoke`, `lint`, `analyse-php`, `test-php` | Node.js, PHP, the template build, `make install` |
+| `node` | `templates-check`, `test-scripts`, `test-js`, `test-node`, `package-check` | Node.js, PHP, the template build, `make install` |
+| `board` | `parity`, `server-parity`, `bundle-size`, `e2e` | Node.js, PHP, the template build, `make install`, `make install-browser` |
+
+Each step runs one make target (HY-90) and every step after the first runs after a failed step. `make ci-pins` gives the PHP minor of `config/toolchain.json` and the template branch of `config/template.json` to the workflow, which sets up PHP of that minor and checks out the template repository at that branch as `../template`, where `make install build-ts` builds its TypeScript package. `make ci-check GROUP=<group>` runs every target of the group with its own `make -k <target>` to its end and prints `[ci] start <target>` and `[ci] <target> passed|failed in <seconds> s`; it refuses outside GitHub Actions, because a checkout runs the full suite through `make check`. `make ci-summary GROUP=<group>` writes the job summary. The job uploads the artifact `ci-<group>-<run id>-<attempt>`, the directory `var/ci/<group>/`:
+
+- `summary.md`: the commit, the tree, the template branch, the running releases of Node.js, npm, PHP with its patch, Composer and make, the outcome of each setup step, and a table of the targets with their status, time and first failure lines, followed by the first failure lines of each failed target;
+- `record.json`: the same as data, written before and after each target, so a runner that stopped leaves the target that was running;
+- `logs/<target>.log`: the command and the full output of each target and how make ended.
 
 ## Test runs
 

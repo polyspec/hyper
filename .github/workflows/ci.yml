@@ -1,0 +1,96 @@
+# The full suite on GitHub (HY-91): after a push to main and for every pull request, one job per CI group of the
+# Makefile (CI_GROUPS) runs the targets of its group, which together are the targets of CHECK_TARGETS. A failure never
+# stops the run: the matrix does not cancel the other groups (fail-fast: false), every step after the first runs after
+# a failed step (`if: ${{ !cancelled() }}`), and `make ci-check` runs every target of the group to its end. Each job
+# writes the job summary and uploads its report var/ci/<group>/: the record with the status, the time and the first
+# failure lines of each target, the full log of each target and the summary. Every step that runs a command runs one
+# make target, the jobs run on ubuntu-26.04-arm, the actions are pinned by commit and no step has a time limit (HY-90,
+# tests/scripts/ci-workflow.test.mjs).
+#
+# The toolchain comes from the pinned files: Node.js from .node-version, PHP by the minor of config/toolchain.json, whose
+# running patch the record names, and npm and Composer from `make install` into var/tools of the checkout. The template
+# repository is checked out next to this repository at the branch of config/template.json, as ../template of the
+# Makefile, and its TypeScript package is built there with its own make targets; `make install` then copies it and
+# downloads everything that the checks read. Only the group board installs Chromium.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: check (${{ matrix.group }})
+    runs-on: ubuntu-26.04-arm
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - group: docs
+          - group: php
+            install: true
+          - group: node
+            install: true
+          - group: board
+            install: true
+            browser: true
+    defaults:
+      run:
+        working-directory: hyper
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        id: checkout
+        with:
+          path: hyper
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        id: node
+        if: ${{ !cancelled() }}
+        with:
+          node-version-file: hyper/.node-version
+      - id: pins
+        if: ${{ !cancelled() }}
+        run: make ci-pins
+      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2.37.2
+        id: php
+        if: ${{ !cancelled() && matrix.install }}
+        with:
+          php-version: ${{ steps.pins.outputs.php }}
+          extensions: pdo_sqlite
+          tools: none
+          coverage: none
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        id: template
+        if: ${{ !cancelled() && matrix.install }}
+        with:
+          repository: polyspec/template
+          ref: ${{ steps.pins.outputs.template }}
+          path: template
+      - id: template-build
+        if: ${{ !cancelled() && matrix.install }}
+        working-directory: template
+        run: make install build-ts
+      - id: install
+        if: ${{ !cancelled() && matrix.install }}
+        run: make install
+      - id: browser
+        if: ${{ !cancelled() && matrix.browser }}
+        run: make install-browser
+      - id: check
+        if: ${{ !cancelled() }}
+        run: make ci-check GROUP=${{ matrix.group }}
+      - id: summary
+        if: ${{ !cancelled() }}
+        env:
+          CI_STEPS: ${{ toJSON(steps) }}
+        run: make ci-summary GROUP=${{ matrix.group }}
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        id: report
+        if: ${{ !cancelled() }}
+        with:
+          name: ci-${{ matrix.group }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: hyper/var/ci/${{ matrix.group }}/
+          if-no-files-found: error
