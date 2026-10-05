@@ -59,11 +59,11 @@ help: ## List the targets
 tools: ## Install the pinned npm and Composer into var/tools (HY-81)
 	node scripts/toolchain.mjs install
 
-toolchain-check: ## Fail when Node.js, npm, Composer, PHP or make differs from its pin, naming the expected and the actual value (HY-81)
-	node scripts/toolchain.mjs check $(MAKE_VERSION)
+toolchain-check: ## Fail when Node.js, npm, Composer or the PHP minor differs from its pin, naming the expected and the actual value (HY-81)
+	node scripts/toolchain.mjs check
 
 install: tools ## Install the pinned tools, write the declared copy of the template branch and install npm and Composer dependencies and the Rust toolchain from it
-	node scripts/toolchain.mjs check $(MAKE_VERSION)
+	node scripts/toolchain.mjs check
 	node scripts/copy-template.mjs --repository $(TEMPLATE_REPOSITORY) --config $(TEMPLATE_CONFIG) --output $(TEMPLATE_DIR)
 	cd $(TEMPLATE_DIR) && rustup toolchain install --no-self-update
 	node scripts/copy-package.mjs --path $(PHP_PACKAGE) --output $(HYPER_PHP_COPY)

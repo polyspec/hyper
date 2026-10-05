@@ -11,7 +11,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { test } from 'node:test';
 
-import { BIN, COMPOSER, NPM, pins, problems, toolPath, verifiedDownload } from '../../scripts/toolchain.mjs';
+import { BIN, COMPOSER, NPM, pins, problems, toolPath, verifiedDownload, versions } from '../../scripts/toolchain.mjs';
 import { dryRun } from './make-dry-run.mjs';
 
 test('the pins name an exact release of every tool', () => {
@@ -19,10 +19,11 @@ test('the pins name an exact release of every tool', () => {
   assert.match(pinned.node, /^\d+\.\d+\.\d+$/);
   assert.match(pinned.npm.version, /^\d+\.\d+\.\d+$/);
   assert.match(pinned.npm.sha512, /^[0-9a-f]{128}$/);
-  assert.match(pinned.php, /^\d+\.\d+\.\d+$/);
+  // PHP is pinned by its minor release; make is not pinned.
+  assert.match(pinned.php, /^\d+\.\d+$/);
+  assert.equal(pinned.make, undefined);
   assert.match(pinned.composer.version, /^\d+\.\d+\.\d+$/);
   assert.match(pinned.composer.sha256, /^[0-9a-f]{64}$/);
-  assert.match(pinned.make, /^\d+\.\d+(\.\d+)?$/);
 });
 
 test('a packageManager without an exact release and its digest is refused with the expected form', (t) => {
@@ -35,14 +36,22 @@ test('a packageManager without an exact release and its digest is refused with t
   assert.throws(() => pins(root), /packageManager as npm@<major>\.<minor>\.<patch>\+sha512\.<128 hexadecimal digits>; it records "npm@12\.2\.0"/);
 });
 
+test('a patch release of the pinned PHP minor passes, and the full run can record the running releases', () => {
+  const running = spawnSync('php', ['-r', 'echo PHP_MAJOR_VERSION, ".", PHP_MINOR_VERSION;'], { encoding: 'utf8' }).stdout;
+  assert.deepEqual(problems({ pinned: { ...pins(), php: running } }).filter((line) => line.startsWith('PHP')), []);
+  const recorded = versions();
+  assert.match(recorded.php, new RegExp(`^${running.replace('.', '\\.')}\\.\\d+$`));
+  assert.equal(recorded.node, process.version);
+  assert.match(recorded.make, /^GNU Make \d/);
+});
+
 test('every tool that differs from its pin is named with the expected and the actual value', () => {
-  const pinned = { ...pins(), node: '1.2.3', npm: { version: '0.0.1', sha512: 'f'.repeat(128) }, php: '0.0.0', composer: { version: '0.0.0', sha256: '0'.repeat(64) }, make: '0.1' };
-  const found = problems({ pinned, make: '3.81' });
+  const pinned = { ...pins(), node: '1.2.3', npm: { version: '0.0.1', sha512: 'f'.repeat(128) }, php: '0.0', composer: { version: '0.0.0', sha256: '0'.repeat(64) } };
+  const found = problems({ pinned });
   assert.ok(found.includes(`Node.js: expected v1.2.3, actual ${process.version}`), found.join('\n'));
   assert.ok(found.some((line) => /^npm: expected 0\.0\.1, actual /.test(line)), found.join('\n'));
-  assert.ok(found.some((line) => /^PHP: expected 0\.0\.0, actual \d+\.\d+\.\d+$/.test(line)), found.join('\n'));
+  assert.ok(found.some((line) => /^PHP: expected 0\.0, actual \d+\.\d+$/.test(line)), found.join('\n'));
   assert.ok(found.some((line) => line.startsWith(`Composer: expected ${'0'.repeat(64)}, actual `)), found.join('\n'));
-  assert.ok(found.includes('make: expected 0.1, actual 3.81'), found.join('\n'));
 });
 
 test('npm and Composer of this checkout come first on PATH, once', () => {
@@ -64,10 +73,10 @@ test('a download is used only with its pinned digest', async (t) => {
 
 test('the recipes that run npm, Composer, PHP or cargo check the toolchain first, and install installs the tools first', () => {
   for (const target of ['template', 'lint', 'templates-check']) {
-    assert.equal(dryRun(target)[0], `node scripts/toolchain.mjs check ${pins().make}`, target);
+    assert.equal(dryRun(target)[0], 'node scripts/toolchain.mjs check', target);
   }
   const install = dryRun('install');
-  assert.deepEqual(install.slice(0, 2), ['node scripts/toolchain.mjs install', `node scripts/toolchain.mjs check ${pins().make}`]);
+  assert.deepEqual(install.slice(0, 2), ['node scripts/toolchain.mjs install', 'node scripts/toolchain.mjs check']);
 });
 
 // The make of the pin looks up the program of a recipe line without shell syntax on the PATH of its own process: an
@@ -80,7 +89,9 @@ test('make starts a recipe line without shell syntax from its own PATH, so a rec
   chmodSync(path.join(directory, 'bin', 'npm'), 0o755);
   writeFileSync(path.join(directory, 'Makefile'), `export PATH := ${directory}/bin:$(PATH)\nNPM := ${directory}/bin/npm\nsimple:\n\t@npm --version\nnamed:\n\t@$(NPM) --version\n`);
   const run = (target) => spawnSync('make', ['--no-print-directory', '-s', target], { cwd: directory, encoding: 'utf8', env: { ...process.env, MAKEFLAGS: '', MAKELEVEL: '' } }).stdout.trim();
-  assert.notEqual(run('simple'), 'pinned', 'this make found the npm of the exported PATH; the absolute path is still required by the other makes of the rule');
+  // GNU Make 3.81 runs the npm of its own PATH for the simple line; a recipe that names the path runs the pinned tool
+  // under every make.
+  if (/^GNU Make 3\.81\b/.test(spawnSync('make', ['--version'], { encoding: 'utf8' }).stdout)) assert.notEqual(run('simple'), 'pinned');
   assert.equal(run('named'), 'pinned');
 });
 
