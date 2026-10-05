@@ -5,13 +5,13 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { test } from 'node:test';
 
-import { BIN, pins, problems, toolPath, verifiedDownload } from '../../scripts/toolchain.mjs';
+import { BIN, COMPOSER, NPM, pins, problems, toolPath, verifiedDownload } from '../../scripts/toolchain.mjs';
 
 test('the pins name an exact release of every tool', () => {
   const pinned = pins();
@@ -72,4 +72,35 @@ test('the recipes that run npm, Composer, PHP or cargo check the toolchain first
   }
   const install = dryRun('install');
   assert.deepEqual(install.slice(0, 2), ['node scripts/toolchain.mjs install', `node scripts/toolchain.mjs check ${pins().make}`]);
+});
+
+// The make of the pin looks up the program of a recipe line without shell syntax on the PATH of its own process: an
+// exported PATH reaches the programs that the recipe starts, not the lookup of the recipe line itself.
+test('make starts a recipe line without shell syntax from its own PATH, so a recipe names the pinned tool by its path', (t) => {
+  const directory = mkdtempSync(path.join(tmpdir(), 'hyper-make-path-'));
+  t.after(() => rmSync(directory, { recursive: true, force: true }));
+  mkdirSync(path.join(directory, 'bin'));
+  writeFileSync(path.join(directory, 'bin', 'npm'), '#!/bin/sh\necho pinned\n');
+  chmodSync(path.join(directory, 'bin', 'npm'), 0o755);
+  writeFileSync(path.join(directory, 'Makefile'), `export PATH := ${directory}/bin:$(PATH)\nNPM := ${directory}/bin/npm\nsimple:\n\t@npm --version\nnamed:\n\t@$(NPM) --version\n`);
+  const run = (target) => spawnSync('make', ['--no-print-directory', '-s', target], { cwd: directory, encoding: 'utf8', env: { ...process.env, MAKEFLAGS: '', MAKELEVEL: '' } }).stdout.trim();
+  assert.notEqual(run('simple'), 'pinned', 'this make found the npm of the exported PATH; the absolute path is still required by the other makes of the rule');
+  assert.equal(run('named'), 'pinned');
+});
+
+test('every recipe starts npm and Composer by the absolute paths of var/tools/bin', (t) => {
+  const directory = mkdtempSync(path.join(tmpdir(), 'hyper-recipes-'));
+  t.after(() => rmSync(directory, { recursive: true, force: true }));
+  const targets = ['install', 'template', 'packages', 'hyper-php-copy', 'package-check', 'test-scripts', 'test-node', 'test-php', 'lint', 'analyse-php', 'parity', 'server-parity', 'e2e', 'bundle-size'];
+  const lines = [];
+  for (const target of targets) {
+    // An empty template directory makes the dry run print the recipe of the template copy.
+    const result = spawnSync('make', ['--no-print-directory', '-n', target, `TEMPLATE_DIR=${directory}`], { encoding: 'utf8', env: { ...process.env, MAKEFLAGS: '', MAKELEVEL: '' } });
+    assert.equal(result.status, 0, `${target}: ${result.stderr}`);
+    lines.push(...result.stdout.split('\n').filter(Boolean));
+  }
+  const commands = lines.flatMap((line) => line.split(/&&|;|\|\|/).map((part) => part.trim()));
+  const tools = commands.filter((command) => /^(\S*\/)?(npm|npx|composer)( |$)/.test(command));
+  assert.ok(tools.some((command) => command.startsWith(`${NPM} `)) && tools.some((command) => command.startsWith(`${COMPOSER} `)), lines.join('\n'));
+  assert.deepEqual(tools.filter((command) => !command.startsWith(`${NPM} `) && !command.startsWith(`${COMPOSER} `)), []);
 });
