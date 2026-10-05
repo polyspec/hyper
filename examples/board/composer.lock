@@ -4,15 +4,15 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "98165f66d6c95d2b01505eab5426e84c",
+    "content-hash": "d52be5e44b4e52f91bb737ba898bddb2",
     "packages": [
         {
             "name": "polyspec/hyper",
             "version": "dev-main",
             "dist": {
                 "type": "path",
-                "url": "../../var/products/hyper-php",
-                "reference": "677376b1b65a8f05ad9a7da22ee05a47af47dfda"
+                "url": "../../packages/hyper-php",
+                "reference": "042a5bf48b36650315d07192341d57b8ea112d53"
             },
             "require": {
                 "php": "^8.2",
@@ -20,7 +20,6 @@
             },
             "require-dev": {
                 "laravel/pint": "^1.0",
-                "phpstan/phpstan": "^2.2.16",
                 "phpunit/phpunit": "^11.5"
             },
             "type": "library",
@@ -47,7 +46,6 @@
             ],
             "description": "Server side of the region protocol: routes, actions and region JSON for template language layouts",
             "transport-options": {
-                "symlink": false,
                 "relative": true
             }
         },

@@ -4,7 +4,7 @@
     "type": "project",
     "license": "MIT",
     "repositories": [
-        { "type": "path", "url": "../../var/products/hyper-php", "options": { "symlink": false, "reference": "config", "versions": { "polyspec/hyper": "dev-main" } } },
+        { "type": "path", "url": "../../packages/hyper-php" },
         { "type": "path", "url": "../../var/products/template/packages/template-php", "options": { "symlink": false, "reference": "config", "versions": { "polyspec/template": "dev-main" } } }
     ],
     "require": {

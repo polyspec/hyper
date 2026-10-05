@@ -17,6 +17,11 @@
   "engines": {
     "node": ">=26"
   },
+  "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.build.json",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
   "dependencies": {
     "@polyspec/hyper": "0.0.1",
     "@polyspec/template": "file:../../var/products/template/packages/template-ts"

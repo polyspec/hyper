@@ -18,6 +18,11 @@
     "templates-index.d.ts"
   ],
   "sideEffects": false,
+  "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.build.json",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
   "dependencies": {
     "@polyspec/template": "file:../../var/products/template/packages/template-ts",
     "htmx.org": "4.0.0"
