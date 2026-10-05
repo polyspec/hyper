@@ -43,6 +43,7 @@
 | npm-packages | `@polyspec/hyper`와 `@polyspec/hyper-server`는 Node가 `node_modules`에서 실행하는 JavaScript와 type 선언을 배포하며, 소스는 `erasableSyntaxOnly`를 통과한다(HY-61) | implemented | `make package-check` |
 | output-files | asset build와 server build는 복사한 출력 파일을 Linux container의 virtiofs bind mount가 받아들이는 mode 0644로 만든다(HY-68) | implemented | `make test-scripts` |
 | template-dir | asset build, template build, server build는 `--template-dir`가 가리키는 template 저장소의 template package를 읽는다(HY-70) | implemented | `make test-scripts` |
+| template-copy | npm, Composer, PHPStan, 네이티브 확장 build, build script는 template 저장소를 선언한 복사본 `var/products/template`으로만 읽는다(HY-78) | implemented | `make test-scripts`, `make template-check` |
 | query-values | 중첩 없이 순서대로 읽는 모든 쿼리 값과 원본 쿼리(HY-56) | implemented | `make test-php`, `make test-node` |
 | form-values | urlencoded body나 multipart body에서 중첩 없이 순서대로 읽는 모든 폼 값(HY-57) | implemented | `make test-php`, `make test-node` |
 | request-boundary | UTF-8 검사, 상세 없는 500 오류, 데이터 모델 검사, 강화한 세션 쿠키, 리다이렉트 검사, 실패 표시(HY-42 ~ HY-47) | implemented | `make test-php`, `make test-js`, `make e2e` |
