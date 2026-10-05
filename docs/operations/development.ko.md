@@ -21,7 +21,7 @@
 | `make template-check` | TypeScript template 패키지의 npm 사본이나 PHP template 패키지의 Composer 사본이 선언한 복사본과 다르면 실패한다 |
 | `make ext` | template 저장소의 선언한 복사본에서 네이티브 템플릿 확장을 `build/ext`에 빌드한다(HY-48, HY-78) |
 | `make packages` | `@polyspec/hyper`와 `@polyspec/hyper-server`의 JavaScript module과 type 선언을 각 package가 선언한 build(`scripts/tsc.mjs`를 실행하는 `npm run build`)로 각자의 `dist` 디렉터리에 build하고 build와 각 npm 사본을 파일 단위로 publish한다(HY-79, HY-82). Node 서버 test, board 에셋 build, `make package-check`, `make test-scripts`는 package를 exports로 가져오므로 이것을 먼저 실행한다(HY-61). build script는 `data-template.json`, `checkManifest`, `templateReferences`를 script 옆 `packages/hyper-js`의 소스에서 읽으므로 `dist`가 필요 없고 어느 작업 디렉터리에서도 실행된다 |
-| `make package-check` | 두 package를 `npm install --install-links`로 `tests/package-install`에 설치하고, 그 test를 `erasableSyntaxOnly`로 선언에 대해 type 검사한 뒤 `node`로 실행한다(HY-61) |
+| `make package-check` | 두 package를 그 `package-lock.json`에서 `npm ci --offline --install-links`로 `tests/package-install`에 offline 설치하고(HY-89), 그 test를 `erasableSyntaxOnly`로 선언에 대해 type 검사한 뒤 `node`로 실행한다(HY-61) |
 | `make server` | 게시판 서버 프로그램을 `examples/board/build/server`에 빌드한다(아래 참조) |
 | `make server-fixtures` | PHP 테스트 픽스처의 서버 프로그램을 빌드한다 |
 | `make node-fixtures` | `scripts/build-templates.mjs`와 template 저장소의 선언한 복사본으로 Node 서버 test에 쓸 PHP test fixture의 템플릿 파일을 빌드한다(HY-70, HY-78) |

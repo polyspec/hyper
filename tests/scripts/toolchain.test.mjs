@@ -99,3 +99,17 @@ test('every recipe starts npm and Composer by the absolute paths of var/tools/bi
   assert.ok(tools.some((command) => command.startsWith(`${NPM} `)) && tools.some((command) => command.startsWith(`${COMPOSER} `)), lines.join('\n'));
   assert.deepEqual(tools.filter((command) => !command.startsWith(`${NPM} `) && !command.startsWith(`${COMPOSER} `)), []);
 });
+
+test('no recipe queries a registry: installs follow their lock without an audit, and the package install test installs offline (HY-89)', () => {
+  const targets = ['install', 'template', 'packages', 'hyper-php-copy', 'package-check', 'test-scripts', 'test-js', 'test-node', 'test-php', 'lint', 'analyse-php', 'parity', 'server-parity', 'e2e', 'bundle-size', 'templates-check', 'docs-check'];
+  const lines = targets.flatMap((target) => dryRun(target, { variables: ['TEMPLATE_DIR=var/products/template-dry-run'] }));
+  const commands = lines.flatMap((line) => line.split(/&&|;|\|\||\s--\s/).map((part) => part.trim()));
+  const npm = commands.filter((command) => command.startsWith(`${NPM} `));
+  assert.ok(npm.length > 0, lines.join('\n'));
+  assert.deepEqual(npm.filter((command) => !/^\S+ (ci|run) /.test(command)), [], 'an npm command other than ci or run');
+  assert.deepEqual(npm.filter((command) => / ci /.test(command) && !command.includes('--no-audit')), []);
+  assert.ok(npm.some((command) => / ci --offline /.test(command)), 'the package install test installs offline');
+  const composer = commands.filter((command) => command.startsWith(`${COMPOSER} `));
+  assert.deepEqual(composer.filter((command) => !/^\S+ install /.test(command)), [], 'a Composer command other than install');
+  assert.equal(spawnSync('git', ['ls-files', '--error-unmatch', 'tests/package-install/package-lock.json'], { encoding: 'utf8' }).status, 0, 'tests/package-install/package-lock.json is not tracked');
+});

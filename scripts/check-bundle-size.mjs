@@ -15,6 +15,7 @@ const { limits } = JSON.parse(readFileSync(values.limits, 'utf8'));
 // The template files of the build that --output describes; public/assets/templates keeps the files of earlier builds.
 const index = JSON.parse(readFileSync(join(values.output, 'templates.index.json'), 'utf8'));
 const templates = Object.values(index).map(({ url }) => join(values.app, 'public', url));
+if (templates.length === 0) throw new Error(`${join(values.output, 'templates.index.json')} names no template file; expected at least 1, actual 0`);
 const largestTemplate = templates.reduce((largest, file) => (gzipSync(readFileSync(file)).length > gzipSync(readFileSync(largest)).length ? file : largest));
 const files = {
   ssrScript: join(values.app, 'public', manifest.hyper),

@@ -3,8 +3,9 @@
 // assigns when the caller gives 0, and the run learns its address from the line in which that server reports that
 // it listens; a request therefore reaches the server that this run started and never a server of another run.
 // Starting a server is a step without a time limit: it prints its start, every output line of the server with the
-// prefix [<name>] and its result with the elapsed time, ends when the server reports its address and fails when the
-// server exits first.
+// prefix [<name>], a progress line every 5 seconds while it waits that names the line it waits for and the last line
+// that the server printed, and its result with the elapsed time; it ends when the server reports its address and
+// fails when the server exits first (HY-89).
 //
 // A run owns its servers and its temporary directory (HY-87): `serverRun` creates the directory, every server joins
 // the children of the run when it is spawned, before it reports its address, and `close` stops every child, waits
@@ -23,7 +24,7 @@ const EDGE_READY = /^edge (http:\/\/127\.0\.0\.1:\d+) /m;
  * Starts a server process and resolves { child, url } once a line of its output matches `ready`, whose first group
  * is the address of the server; rejects when the process exits or fails to start first.
  */
-export function startServer({ name, command, args, env, ready, children }) {
+export function startServer({ name, command, args, env, ready, children, progressMs = 5000 }) {
   const step = `start ${name}`;
   process.stdout.write(`▶ ${step}\n`);
   const started = performance.now();
@@ -33,14 +34,23 @@ export function startServer({ name, command, args, env, ready, children }) {
   return new Promise((resolvePromise, reject) => {
     let url = null;
     let pending = '';
+    let printed = 0;
+    let last = null;
+    const progress = setInterval(() => {
+      process.stdout.write(`… ${step} waits for a line that matches ${ready} (${elapsed()}); the server printed ${printed} lines${last === null ? '' : `, the last: ${last}`}\n`);
+    }, progressMs);
+    progress.unref();
     const read = (data) => {
       pending += data;
       const lines = pending.split('\n');
       pending = lines.pop();
       for (const line of lines) {
+        printed += 1;
+        last = line;
         process.stdout.write(`[${name}] ${line}\n`);
         const match = url === null ? ready.exec(line) : null;
         if (match) {
+          clearInterval(progress);
           url = match[1];
           process.stdout.write(`ok ${step}: ${url} (${elapsed()})\n`);
           resolvePromise({ child, url });
@@ -49,8 +59,9 @@ export function startServer({ name, command, args, env, ready, children }) {
     };
     child.stdout.on('data', read);
     child.stderr.on('data', read);
-    child.on('error', (error) => reject(new Error(`${step}: ${error.message}`)));
+    child.on('error', (error) => { clearInterval(progress); reject(new Error(`${step}: ${error.message}`)); });
     child.on('exit', (code, signal) => {
+      clearInterval(progress);
       if (pending !== '') process.stdout.write(`[${name}] ${pending}\n`);
       if (url !== null) return;
       process.stdout.write(`FAIL ${step} (${elapsed()})\n`);

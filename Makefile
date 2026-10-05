@@ -67,7 +67,7 @@ install: tools ## Install the pinned tools, write the declared copy of the templ
 	node scripts/copy-template.mjs --repository $(TEMPLATE_REPOSITORY) --config $(TEMPLATE_CONFIG) --output $(TEMPLATE_DIR)
 	cd $(TEMPLATE_DIR) && rustup toolchain install --no-self-update
 	node scripts/copy-package.mjs --path $(PHP_PACKAGE) --output $(HYPER_PHP_COPY)
-	node scripts/holder-lock.mjs run $(INSTALL_LOCK) -- $(NPM) ci
+	node scripts/holder-lock.mjs run $(INSTALL_LOCK) -- $(NPM) ci --no-audit --no-fund
 	node scripts/holder-lock.mjs run $(INSTALL_LOCK) -- $(COMPOSER) install --working-dir=$(PHP_PACKAGE)
 	node scripts/holder-lock.mjs run $(INSTALL_LOCK) -- $(COMPOSER) install --working-dir=$(BOARD)
 	touch $(TEMPLATE_STAMP)
@@ -103,8 +103,7 @@ hyper-php-copy: ## Write the copy of packages/hyper-php that the board installs 
 	node scripts/publish.mjs composer-copy $(HYPER_PHP_COPY) $(BOARD)/vendor/polyspec/hyper
 
 package-check: packages node-fixtures ## Install the npm packages into tests/package-install, type-check its test against their declarations and run it under node (HY-61)
-	rm -rf tests/package-install/node_modules
-	cd tests/package-install && $(NPM) install --install-links --no-bin-links --no-package-lock --no-audit --no-fund
+	cd tests/package-install && node ../../scripts/holder-lock.mjs run ../../$(INSTALL_LOCK) -- $(NPM) ci --offline --install-links --no-bin-links --no-audit --no-fund
 	$(TSC) -p tests/package-install/tsconfig.json
 	node scripts/run-tests.mjs node --cwd tests/package-install -- package-install.test.ts
 

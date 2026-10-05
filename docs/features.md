@@ -4,7 +4,7 @@
 
 | ID | Feature | Status | Evidence |
 |---|---|---|---|
-| protocol | Region protocol specification (HY-1 to HY-88) | implemented | [Protocol](spec/protocol.md) |
+| protocol | Region protocol specification (HY-1 to HY-89) | implemented | [Protocol](spec/protocol.md) |
 | composition | Screen composition rules (HC-1 to HC-7) and the template check for HC-6 | implemented | [Composition](spec/composition.md), `make templates-check` |
 | manifest | Application manifest read by PHP and the browser | implemented | `make test-php`, `make test-js` |
 | router | PHP and browser routers with shared conformance cases | implemented | `make test-php`, `make test-js` |
@@ -44,6 +44,7 @@
 | output-files | The asset build and the server build create their copied output files with the mode 0644, which a virtiofs bind mount of a Linux container accepts (HY-68) | implemented | `make test-scripts` |
 | template-dir | The asset build, the template build and the server build read the template package of the template repository that `--template-dir` names (HY-70) | implemented | `make test-scripts` |
 | template-copy | npm, Composer, PHPStan, the native extension build and the build scripts read the template repository only through its declared copy `var/products/template` (HY-78) | implemented | `make test-scripts`, `make template-check` |
+| no-live-inputs | No recipe queries a registry, `tests/package-install` installs offline from its lock, tests order events by events, test servers listen on ports that the system assigns, server starts print their progress, and an empty list fails a check (HY-89) | implemented; full run pending | `tests/scripts/toolchain.test.mjs`, `tests/scripts/board-servers.test.mjs`, `tests/scripts/check-bundle-size.test.mjs`, `packages/hyper-node/tests/http.test.ts` |
 | owner-check | Every tracked path has owners in `scripts/owner-checks.json`, and `make owner-check` runs the owners of the changed paths (HY-88) | implemented; full run pending | `tests/scripts/owner-check.test.mjs`, `tests/scripts/ignored-files.test.mjs` |
 | run-resources | The servers and the temporary directory of a run are stopped and removed on its end, its failure and SIGINT and SIGTERM; tests remove a directory only after its processes exited (HY-87) | implemented; full run pending | `tests/scripts/board-servers.test.mjs`, `tests/scripts/check-parity.test.mjs`, `tests/scripts/serve-demo.test.mjs` |
 | all-checks | A recipe with several checks runs each to its end and names every failed check (HY-86) | implemented; full run pending | `tests/scripts/check-recipes.test.mjs` |
