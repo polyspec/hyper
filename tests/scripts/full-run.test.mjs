@@ -11,6 +11,7 @@ import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 import { activeItems, decide, fullRun, RECORD } from '../../scripts/full-run.mjs';
+import { dryRun } from './make-dry-run.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 
@@ -30,12 +31,6 @@ const TEMPLATE_BRANCH = 'main';
 
 const DONE = CHECKLIST.replace('| [~] |', '| [o] |');
 
-// The commands that make prints for `target` without running them.
-function dryRun(target) {
-  const run = spawnSync('make', ['-n', target], { cwd: ROOT, encoding: 'utf8' });
-  assert.equal(run.status, 0, run.stderr);
-  return run.stdout.split('\n').filter(Boolean);
-}
 
 function git(cwd, ...args) {
   const run = spawnSync('git', args, { cwd, encoding: 'utf8' });
@@ -97,6 +92,8 @@ test('make check and make rerun-failed start the guard before any step', () => {
   assert.match(check[0], /^node scripts\/full-run\.mjs run template-check bench-server-smoke docs-check lint /, check.join('\n'));
   assert.equal(check.length, 1, check.join('\n'));
   assert.deepEqual(dryRun('rerun-failed'), ['node scripts/full-run.mjs rerun-failed']);
+  // The same commands when this process runs inside a make that prints its directories (HY-83).
+  assert.deepEqual(dryRun('rerun-failed', { env: { ...process.env, MAKEFLAGS: 'w', MAKELEVEL: '2' } }), ['node scripts/full-run.mjs rerun-failed']);
 });
 
 test('the active items are the task rows in state [~], with their titles', () => {

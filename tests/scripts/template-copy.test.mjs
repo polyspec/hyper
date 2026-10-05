@@ -11,6 +11,7 @@ import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, realpathSy
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { test } from 'node:test';
+import { dryRun } from './make-dry-run.mjs';
 
 const repository = resolve('.');
 const COPY = join(repository, 'var', 'products', 'template');
@@ -96,8 +97,9 @@ test('the copy holds the packed TypeScript package and the tracked paths of the 
   assert.equal(statSync(join(to, 'packages/template-php/bin/template.php')).mode & 0o111, 0o111);
   // The native extension builds in the copy with the Rust toolchain of the template repository (HY-81).
   assert.equal(readFileSync(join(to, 'rust-toolchain.toml'), 'utf8'), '[toolchain]\nchannel = "1.98.1"\nprofile = "minimal"\n');
-  const rust = spawnSync('rustup', ['show', 'active-toolchain'], { cwd: join(to, 'packages/template-php-ext'), encoding: 'utf8', env: { ...process.env, RUSTUP_AUTO_INSTALL: '0' } });
-  assert.match(rust.stdout, /^1\.98\.1-\S+ \(overridden by '.*rust-toolchain\.toml'\)/, `${rust.stdout}${rust.stderr}`);
+  // rustc -vV prints its release as a key and value line, the stable form of the pinned compiler (HY-83).
+  const rust = spawnSync('rustc', ['-vV'], { cwd: join(to, 'packages/template-php-ext'), encoding: 'utf8', env: { ...process.env, RUSTUP_AUTO_INSTALL: '0' } });
+  assert.match(rust.stdout, /^release: 1\.98\.1$/m, `${rust.stdout}${rust.stderr}`);
   assert.deepEqual(JSON.parse(readFileSync(join(to, 'copy.json'), 'utf8')), { commit: template.git('rev-parse', 'HEAD').trim(), inputs: inputsHash(template.directory) });
   assert.equal(existsSync(`${to}.next`), false);
 });
@@ -162,16 +164,12 @@ test('the copy fails for a build of other inputs than the head commit and names 
 test('make template copies the head commit only when config/template.json or the copy script changed, and builds nothing in the template repository', (t) => {
   const directory = mkdtempSync(join(tmpdir(), 'hyper-template-stamp-'));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
-  const dryRun = () => {
-    const result = spawnSync('make', ['--no-print-directory', '-n', 'template', `TEMPLATE_DIR=${directory}`], { encoding: 'utf8', env: { ...process.env, MAKEFLAGS: '', MAKELEVEL: '' } });
-    assert.equal(result.status, 0, result.stderr);
-    return result.stdout;
-  };
-  const first = dryRun();
+  const templateRun = () => dryRun('template', { variables: [`TEMPLATE_DIR=${directory}`] }).join('\n');
+  const first = templateRun();
   assert.match(first, new RegExp(`^node scripts/copy-template\\.mjs --repository \\.\\./template --config config/template\\.json --output ${directory}$`, 'm'));
   assert.doesNotMatch(first, /npm run build|cd \.\.\/template/);
   writeFileSync(join(directory, 'installed.stamp'), '');
-  assert.doesNotMatch(dryRun(), /copy-template/);
+  assert.doesNotMatch(templateRun(), /copy-template/);
 });
 
 test('npm installs the template package as a copy inside this checkout', () => {
@@ -192,6 +190,5 @@ test('Composer, PHPStan and the native extension build read the declared copy', 
   }
   const scanned = /scanFiles:\n\s+- (\S+)/.exec(readFileSync('packages/hyper-php/phpstan.neon', 'utf8'))[1];
   assert.equal(resolve('packages/hyper-php', scanned), join(COPY, 'packages/template-php-ext/stubs/polyspec_template.stub.php'));
-  const ext = spawnSync('make', ['-n', 'ext'], { encoding: 'utf8' });
-  assert.match(ext.stdout, /^cd var\/products\/template\/packages\/template-php-ext && cargo build --locked --release --target-dir \S+\/build\/ext$/m);
+  assert.match(dryRun('ext').join('\n'), /^cd var\/products\/template\/packages\/template-php-ext && cargo build --locked --release --target-dir \S+\/build\/ext$/m);
 });
