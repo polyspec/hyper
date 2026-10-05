@@ -49,13 +49,30 @@ const MAKE_LINE = /^make(?:\[\d+\])?: (?:\*\*\*|Target .* not remade)/;
 // eslint-disable-next-line no-control-regex
 const ANSI = /\x1b\[[0-9;]*[A-Za-z]/g;
 
+// A line in which a test reporter of this repository (scripts/test-progress, PHPUnit through scripts/run-tests.mjs)
+// marks a failure, and a line in which it starts a test, whose name may hold an error word.
+const MARKED = /✖/;
+const START = /^(?:\[\s*[\d.]+s\] )?▶ /;
+
 /**
- * The first failure lines of a failed target: its failure lines in their order, at most FAILURE_LINES, or its last
- * FAILURE_LINES lines when it printed none, then `exit`, how make ended.
+ * The first failure lines of a failed target, then `exit`, how make ended. When a reporter marked failures with `✖`,
+ * they are the marked lines with the indented detail lines that follow each, because other lines that hold an error
+ * word, such as the output of a passing test that starts a failing server, are not the failure. Otherwise they are the
+ * failure lines in their order, never a start line `▶`, else the last lines. At most FAILURE_LINES lines.
  */
 export function failureLines(lines, exit) {
   const plain = lines.map((line) => line.replace(ANSI, ''));
-  const failed = plain.filter((line) => !line.includes('✔') && !MAKE_LINE.test(line) && FAILURE.some((pattern) => pattern.test(line)));
+  const marked = [];
+  let detail = false;
+  for (const line of plain) {
+    if (MARKED.test(line)) {
+      marked.push(line);
+      detail = true;
+    } else if (detail && /^\s+\S/.test(line)) marked.push(line);
+    else detail = false;
+  }
+  if (marked.length > 0) return [...marked.slice(0, FAILURE_LINES), exit];
+  const failed = plain.filter((line) => !line.includes('✔') && !START.test(line) && !MAKE_LINE.test(line) && FAILURE.some((pattern) => pattern.test(line)));
   return [...(failed.length > 0 ? failed.slice(0, FAILURE_LINES) : plain.filter((line) => line.trim() !== '').slice(-FAILURE_LINES)), exit];
 }
 

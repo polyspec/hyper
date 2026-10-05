@@ -120,6 +120,38 @@ test('the failure lines are the error lines in their order, else the last lines,
   assert.equal(failureLines(Array.from({ length: 50 }, (_, index) => `Error ${index}`), 'end').length, 21);
 });
 
+// The output of make test-scripts in a CI run: a passing test prints a failed server start of its own, and
+// the start lines of tests hold the words error and failure in their names.
+test('the failure lines of a run with marked failures are the marked lines and their details, not start lines', () => {
+  const lines = [
+    '[    0.1s] ▶ tests/scripts/board-servers.test.mjs › a board whose server fails to start stops the servers',
+    'FAIL start ssr (55 ms)',
+    '[    0.2s] ✔ tests/scripts/board-servers.test.mjs › a board whose server fails to start stops the servers (0.2s)',
+    '[    2.0s] ▶ tests/scripts/ci-run.test.mjs › the failure lines are the error lines in their order',
+    '[    2.1s] ✖ tests/scripts/output-files.test.mjs › the server build writes the templates (0.0s)',
+    '           Error: container cannot run: spawnSync container ENOENT',
+    '[    2.1s] ✖ tests/scripts/output-files.test.mjs (0.0s)',
+    '[    3.5s] ▶ tests/scripts/full-run.test.mjs › a make target resolves its result',
+    '[    3.6s] ✖ tests/scripts/full-run.test.mjs › a make target resolves its result (0.1s)',
+    '           AssertionError [ERR_ASSERTION]: line 7',
+    '           line 8',
+    '               at TestContext.<anonymous> (file:///full-run.test.mjs:305:10)',
+    '[    3.7s] ✔ tests/scripts/full-run.test.mjs › another (0.0s)',
+    '[   15.1s] ✖ node --test: 118 passed, 4 failed, 0 timed out, 0 skipped, 3 groups failed (15.1s)',
+  ];
+  assert.deepEqual(failureLines(lines, 'make test-scripts exited with status 2'), [
+    '[    2.1s] ✖ tests/scripts/output-files.test.mjs › the server build writes the templates (0.0s)',
+    '           Error: container cannot run: spawnSync container ENOENT',
+    '[    2.1s] ✖ tests/scripts/output-files.test.mjs (0.0s)',
+    '[    3.6s] ✖ tests/scripts/full-run.test.mjs › a make target resolves its result (0.1s)',
+    '           AssertionError [ERR_ASSERTION]: line 7',
+    '           line 8',
+    '               at TestContext.<anonymous> (file:///full-run.test.mjs:305:10)',
+    '[   15.1s] ✖ node --test: 118 passed, 4 failed, 0 timed out, 0 skipped, 3 groups failed (15.1s)',
+    'make test-scripts exited with status 2',
+  ]);
+});
+
 test('pins gives the PHP minor and the template branch as step outputs', (t) => {
   const root = checkout(t);
   const output = path.join(root, 'output.txt');
