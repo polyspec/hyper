@@ -4,7 +4,7 @@
 
 | ID | 기능 | 상태 | 근거 |
 |---|---|---|---|
-| protocol | 영역 프로토콜 명세(HY-1 ~ HY-79) | implemented | [프로토콜](spec/protocol.ko.md) |
+| protocol | 영역 프로토콜 명세(HY-1 ~ HY-78) | implemented | [프로토콜](spec/protocol.ko.md) |
 | composition | 화면 구성 규칙(HC-1 ~ HC-7)과 HC-6 템플릿 검사 | implemented | [화면 구성](spec/composition.ko.md), `make templates-check` |
 | manifest | PHP와 브라우저가 읽는 애플리케이션 매니페스트 | implemented | `make test-php`, `make test-js` |
 | router | 적합성 사례를 공유하는 PHP 라우터와 브라우저 라우터 | implemented | `make test-php`, `make test-js` |

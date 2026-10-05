@@ -53,9 +53,8 @@ export function toolCommand({ tool, timeoutSeconds, cwd, extension, args }) {
       };
     case 'vitest':
       return {
-        // npm installs no bin links (HY-79), so the runner starts the entry of the vitest package with node.
-        command: process.execPath,
-        args: [path.join(ROOT, 'node_modules/vitest/vitest.mjs'), 'run', `--testTimeout=${milliseconds}`, `--hookTimeout=${milliseconds}`, `--reporter=${path.join(ROOT, 'scripts/test-progress/vitest-reporter.mjs')}`, ...args],
+        command: path.join(ROOT, 'node_modules/.bin/vitest'),
+        args: ['run', `--testTimeout=${milliseconds}`, `--hookTimeout=${milliseconds}`, `--reporter=${path.join(ROOT, 'scripts/test-progress/vitest-reporter.mjs')}`, ...args],
       };
     case 'phpunit':
       return { command: 'php', args: [...(extension ? ['-d', `extension=${extension}`] : []), path.join(cwd, 'vendor/bin/phpunit'), '--teamcity', ...args] };
