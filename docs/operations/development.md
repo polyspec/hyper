@@ -41,7 +41,23 @@
 | `make serve-demo-unlock` | Removes the lock of a demo whose process has ended; fails while the demo runs |
 | `make bench-server-smoke` | Runs the PHP benchmark once per measurement; `make check` includes it so that a change that breaks the benchmark fails |
 | `make bench` | Runs `make bench-server` and `make bench-browser`, which report server and browser performance (see [Benchmark](benchmark.md)); they are not part of `make check` |
-| `make check` | Runs every check above |
+| `make check` | Runs every check above through the guard of the full run (see below) |
+| `make rerun-failed` | Reruns only the targets of `make check` that did not pass on the current tree (see below) |
+
+## Full run
+
+`make check` runs once per committed tree, when no task of `docs/plans/execution-checklist.md` is `[~]`. Before any step it starts `scripts/full-run.mjs`, which prints its decision with the reason (`[full-run] run: ...` or `[full-run] refuse: ...`) and refuses with status 1:
+
+- while a task row of the checklist is `[~]`; the refusal lists each active ID with its task;
+- while tracked files have uncommitted changes (`git status --porcelain --untracked-files=no`), because a full run verifies a committed tree;
+- when `var/full-run.json` records a full run of the current tree (`git rev-parse HEAD^{tree}`); the refusal names that run with its commit, its start time and its result;
+- while the process of an `incomplete` record still runs.
+
+The guard runs each target of `CHECK_TARGETS` with `make <target>` to its end, also after a target fails, and prints `[full-run] start <target> (<n>/<total>)` and `[full-run] <target> passed|failed in <seconds> s`; no target has a time limit. It writes `var/full-run.json` before and after each target: the tree, the commit, the process, the start and end times, the result (`incomplete` until the last target ends, then `passed` or `failed`), the failed targets and each target with its status (`pending`, `running`, `passed`, `failed`), its times and its elapsed milliseconds. A run that is stopped therefore stays recorded as `incomplete`, with the target that was running. `var/` is ignored by Git, so each checkout and worktree has its own record. A commit that changes the tree permits a new full run when no task is `[~]`.
+
+`make rerun-failed` reruns only the targets of the current tree that did not pass: the failed targets and the targets that an `incomplete` run did not finish. It is refused like `make check` for a task in progress, uncommitted changes and a running process, and also when there is no record, when the record belongs to another tree and when the full run of the tree passed. It writes each rerun into `reruns` of the record; when every target has passed, the result of the tree becomes `passed`.
+
+The repository has no CI workflow. A new checkout has no record, so `make check` runs there when no task is `[~]` and the tree is clean; a push happens only when every active task is done.
 
 ## Test runs
 

@@ -23,7 +23,7 @@ EXT := build/ext/release/libpolyspec_template.$(if $(filter Darwin,$(shell uname
 
 .DEFAULT_GOAL := help
 
-.PHONY: help install hyper-php-copy template template-check ext packages package-check server server-fixtures node-server node-fixtures assets test-js test-node test-php lint analyse-php templates-check test-scripts parity server-parity bundle-size e2e docs-check serve-demo bench-server bench-server-smoke bench-browser bench check serve-demo-unlock
+.PHONY: help install hyper-php-copy template template-check ext packages package-check server server-fixtures node-server node-fixtures assets test-js test-node test-php lint analyse-php templates-check test-scripts parity server-parity bundle-size e2e docs-check serve-demo bench-server bench-server-smoke bench-browser bench check rerun-failed serve-demo-unlock
 
 help: ## List the targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
@@ -142,4 +142,14 @@ bench-server-smoke: assets server ## Run the PHP benchmark once per measurement 
 
 bench: bench-server bench-browser ## Run both measurements; results are reports, not pass or fail checks
 
-check: template-check bench-server-smoke docs-check lint analyse-php templates-check test-scripts test-js test-node package-check test-php parity server-parity bundle-size e2e ## Run every check
+# The targets of the full suite. `make check` runs them through the guard scripts/full-run.mjs, which refuses while a
+# checklist task is [~], while tracked changes are uncommitted or when var/full-run.json records a run of the current tree,
+# runs each target with `make <target>` to its end and records its result; `make rerun-failed` reruns the targets of the
+# current tree that did not pass.
+CHECK_TARGETS := template-check bench-server-smoke docs-check lint analyse-php templates-check test-scripts test-js test-node package-check test-php parity server-parity bundle-size e2e
+
+check: ## Run every check through the guard: once per tree, when no checklist task is [~]
+	node scripts/full-run.mjs run $(CHECK_TARGETS)
+
+rerun-failed: ## Rerun only the targets of make check that did not pass on the current tree
+	node scripts/full-run.mjs rerun-failed
