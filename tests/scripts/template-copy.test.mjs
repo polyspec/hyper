@@ -40,6 +40,7 @@ function templateRepository(t, withBuild) {
     'packages/template-rust/Cargo.toml': '[package]\n',
     'tools/compiler/compiler.mjs': 'export {};\n',
     'contracts/functions.json': '{}\n',
+    'rust-toolchain.toml': '[toolchain]\nchannel = "1.98.1"\nprofile = "minimal"\n',
   };
   for (const [path, text] of Object.entries(files)) {
     mkdirSync(dirname(join(directory, path)), { recursive: true });
@@ -93,6 +94,10 @@ test('the copy holds the packed TypeScript package and the tracked paths of the 
     assert.equal(Math.floor(statSync(join(to, path)).mtimeMs / 1000), committed, path);
   }
   assert.equal(statSync(join(to, 'packages/template-php/bin/template.php')).mode & 0o111, 0o111);
+  // The native extension builds in the copy with the Rust toolchain of the template repository (HY-81).
+  assert.equal(readFileSync(join(to, 'rust-toolchain.toml'), 'utf8'), '[toolchain]\nchannel = "1.98.1"\nprofile = "minimal"\n');
+  const rust = spawnSync('rustup', ['show', 'active-toolchain'], { cwd: join(to, 'packages/template-php-ext'), encoding: 'utf8', env: { ...process.env, RUSTUP_AUTO_INSTALL: '0' } });
+  assert.match(rust.stdout, /^1\.98\.1-\S+ \(overridden by '.*rust-toolchain\.toml'\)/, `${rust.stdout}${rust.stderr}`);
   assert.deepEqual(JSON.parse(readFileSync(join(to, 'copy.json'), 'utf8')), { commit: template.git('rev-parse', 'HEAD').trim(), inputs: inputsHash(template.directory) });
   assert.equal(existsSync(`${to}.next`), false);
 });
@@ -188,5 +193,5 @@ test('Composer, PHPStan and the native extension build read the declared copy', 
   const scanned = /scanFiles:\n\s+- (\S+)/.exec(readFileSync('packages/hyper-php/phpstan.neon', 'utf8'))[1];
   assert.equal(resolve('packages/hyper-php', scanned), join(COPY, 'packages/template-php-ext/stubs/polyspec_template.stub.php'));
   const ext = spawnSync('make', ['-n', 'ext'], { encoding: 'utf8' });
-  assert.match(ext.stdout, /cargo build --locked --release --manifest-path var\/products\/template\/packages\/template-php-ext\/Cargo\.toml/);
+  assert.match(ext.stdout, /^cd var\/products\/template\/packages\/template-php-ext && cargo build --locked --release --target-dir \S+\/build\/ext$/m);
 });

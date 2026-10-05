@@ -9,6 +9,7 @@
 //   packages/template-php-ext  the native extension and the Rust crate packages/template-rust that it builds from
 //   packages/template-rust
 //   tools/compiler             the compiler of the generated programs and contracts/functions.json that it reads
+//   rust-toolchain.toml        the Rust toolchain of the template repository, with which `make ext` builds (HY-81)
 //   copy.json                  the head commit and the input hash of the TypeScript build
 // Every path except packages/template-ts is taken from the head commit with `git archive`, so its files and their
 // modification times (the commit time) are the same on every machine, and cargo builds the extension again only when
@@ -29,7 +30,7 @@ import { dirname, join, relative, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { git } from './tracked-files.mjs';
 
-const TRACKED = ['packages/template-php', 'packages/template-php-ext', 'packages/template-rust', 'tools/compiler', 'contracts/functions.json'];
+const TRACKED = ['packages/template-php', 'packages/template-php-ext', 'packages/template-rust', 'tools/compiler', 'contracts/functions.json', 'rust-toolchain.toml'];
 const TYPESCRIPT = 'packages/template-ts';
 const RECORD = `${TYPESCRIPT}/dist.inputs.json`;
 

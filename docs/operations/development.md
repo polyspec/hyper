@@ -4,15 +4,17 @@
 
 ## Toolchain
 
-- Node.js 26.8.1 (`.node-version`), PHP 8.2 or later with `pdo_sqlite`, Composer 2.
+- The pinned toolchain (HY-81): Node.js of `.node-version`, PHP of `config/toolchain.json` with `pdo_sqlite`, GNU make of `config/toolchain.json`, and rustup. `make install` installs npm of `packageManager` and Composer of `config/toolchain.json` into `var/tools` (`make tools`) and the Rust toolchain of the template copy; `make toolchain-check` names every tool that differs from its pin.
 - The template repository at `../template` (`TEMPLATE_REPOSITORY`), with the branch that `config/template.json` names (HY-80) and a build of the TypeScript package of its head commit, which `make build-ts` of the template repository makes; the copy fails with the expected and the actual branch or input hash otherwise. This repository builds nothing there: `make template` copies it into `var/products/template` (HY-78), and the browser code imports the TypeScript package from that copy.
-- Rust (the version that the template repository pins) to build the native template extension with `make ext`.
+- Rust: the toolchain of `rust-toolchain.toml` of the template branch, with which `make ext` builds; cargo installs no toolchain (`RUSTUP_AUTO_INSTALL=0`).
 - Chromium for Playwright: `node node_modules/@playwright/test/cli.js install chromium`.
 
 ## Targets
 
 | Target | Action |
 |---|---|
+| `make tools` | Installs npm of `packageManager` and Composer of `config/toolchain.json` into `var/tools` and writes the commands of `var/tools/bin`, verifying each download by its pinned digest (HY-81) |
+| `make toolchain-check` | Fails when Node.js, npm, PHP, Composer or make differs from its pin and names the expected and the actual value of each (HY-81) |
 | `make install` | Writes the declared copy of the template repository and the copy of `packages/hyper-php`, and installs npm and Composer dependencies as copies without bin links (HY-79) |
 | `make hyper-php-copy` | Writes the copy `var/products/hyper-php` of the tracked files of `packages/hyper-php` and reinstalls it in the board with Composer (HY-79); `make server` runs it first |
 | `make template` | Writes the declared copy `var/products/template` of the template branch with `scripts/copy-template.mjs` and reinstalls the npm copy of the TypeScript template package and the Composer copies of the PHP template package from it (HY-78, HY-80); it does so only when `config/template.json` or the copy script is newer than `var/products/template/installed.stamp`. Tests, assets and server builds run it first |

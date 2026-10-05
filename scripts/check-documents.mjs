@@ -4,13 +4,16 @@
 // languages, a task state marker of the checklist appears only as the state of a task row, at the start of
 // its last cell, and the checklist holds only headings and task tables.
 //
+// The documents are the Markdown files that Git tracks, so files that installs and builds leave in the checkout, such
+// as the copies of var/ or the documentation of the npm of var/tools, never change the result.
+//
 // Usage: node scripts/check-documents.mjs
 
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
-import { dirname, join, relative } from 'node:path';
+import { execFileSync } from 'node:child_process';
+import { existsSync, readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 
-const IGNORED = new Set(['node_modules', 'vendor', 'test-results', 'playwright-report', '.git', 'build']);
-const files = listMarkdown('.');
+const files = execFileSync('git', ['ls-files', '-z', '--', '*.md'], { encoding: 'utf8' }).split('\0').filter(Boolean).filter((file) => existsSync(file));
 const problems = [];
 
 for (const file of files) {
@@ -61,15 +64,6 @@ if (JSON.stringify(states(CHECKLIST)) !== JSON.stringify(states(CHECKLIST.replac
 for (const problem of problems) console.error(problem);
 console.log(`${files.length} documents, ${problems.length} problem(s)`);
 if (problems.length > 0) process.exit(1);
-
-function listMarkdown(dir) {
-  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-    if (IGNORED.has(entry.name)) return [];
-    const path = relative('.', join(dir, entry.name));
-    if (entry.isDirectory()) return listMarkdown(path);
-    return entry.name.endsWith('.md') ? [path] : [];
-  });
-}
 
 function codeBlocks(text) {
   return [...text.matchAll(/^```[^\n]*\n([\s\S]*?)^```/gm)].map((match) => match[1]);
