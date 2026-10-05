@@ -86,7 +86,7 @@ The workflow `.github/workflows/push-gate.yml` gates every push. Its job `push-g
 
 ## CI
 
-The workflow `.github/workflows/ci.yml` runs the full suite after a push to `main` and for every pull request (HY-91). Its job `check` has one entry per CI group of the Makefile, with `fail-fast: false`:
+The workflow `.github/workflows/ci.yml` runs the full suite after a push to `main` and for every pull request (HY-91); a new push stops the run of the same ref that is still going, because the runners are few. Its job `check` has one entry per CI group of the Makefile, with `fail-fast: false`:
 
 | Group | Targets | Setup |
 |---|---|---|
