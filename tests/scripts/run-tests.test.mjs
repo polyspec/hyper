@@ -1,7 +1,7 @@
 // Tests scripts/run-tests.mjs: every test prints its start, its result and its elapsed time, and a test that
 // outlives its timeout fails by its name while the run ends.
 import assert from 'node:assert/strict';
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { readdirSync, readFileSync } from 'node:fs';
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
@@ -75,13 +75,26 @@ test('PHPUnit TeamCity messages name each test by class and method and other lin
   ]);
 });
 
+// Runs the runner with `args` and resolves its status and output when it ends. A runner that does not stop a test at
+// its timeout never ends, and the timeout of the case fails the case; no case measures the time of the run.
+function runToEnd(args) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(process.execPath, [RUNNER, ...args], { stdio: ['ignore', 'pipe', 'pipe'] });
+    let stdout = '';
+    let stderr = '';
+    child.stdout.on('data', (data) => { stdout += data; });
+    child.stderr.on('data', (data) => { stderr += data; });
+    child.once('error', reject);
+    child.once('close', (status) => resolve({ status, stdout, stderr }));
+  });
+}
+
 test('a node test that outlives its timeout fails by its name and the run ends', async () => {
   await withDirectory(async (directory) => {
     const file = path.join(directory, 'hang.test.mjs');
-    await writeFile(file, "import test from 'node:test';\ntest('hangs', () => new Promise(resolve => setTimeout(resolve, 600_000)));\ntest('passes', () => {});\n");
-    const started = Date.now();
-    const run = spawnSync(process.execPath, [RUNNER, 'node', '--timeout', '1', '--', file], { encoding: 'utf8' });
-    assert.ok(Date.now() - started < 20_000, 'The run did not stop at the timeout');
+    // The test never ends by itself: only the timeout of the runner ends it.
+    await writeFile(file, "import test from 'node:test';\ntest('hangs', () => new Promise(() => setInterval(() => {}, 1000)));\ntest('passes', () => {});\n");
+    const run = await runToEnd(['node', '--timeout', '1', '--', file]);
     assert.notEqual(run.status, 0);
     assert.match(run.stdout, /▶ .*hang\.test\.mjs › hangs\n/);
     assert.match(run.stdout, /✖ .*hang\.test\.mjs › hangs \(1\.0s\)\n\s+test timed out after 1000ms/);
@@ -91,10 +104,8 @@ test('a node test that outlives its timeout fails by its name and the run ends',
 
 test('a vitest test that outlives its timeout fails by its name and the run ends', async () => {
   await withDirectory(async (directory) => {
-    await writeFile(path.join(directory, 'hang.test.mjs'), "import { test } from 'vitest';\ntest('hangs', () => new Promise(resolve => setTimeout(resolve, 600_000)));\ntest('passes', () => {});\n");
-    const started = Date.now();
-    const run = spawnSync(process.execPath, [RUNNER, 'vitest', '--timeout', '1', '--cwd', directory], { encoding: 'utf8' });
-    assert.ok(Date.now() - started < 20_000, 'The run did not stop at the timeout');
+    await writeFile(path.join(directory, 'hang.test.mjs'), "import { test } from 'vitest';\ntest('hangs', () => new Promise(() => setInterval(() => {}, 1000)));\ntest('passes', () => {});\n");
+    const run = await runToEnd(['vitest', '--timeout', '1', '--cwd', directory]);
     assert.notEqual(run.status, 0);
     assert.match(run.stdout, /▶ .*hang\.test\.mjs › hangs\n/);
     assert.match(run.stdout, /✖ .*hang\.test\.mjs › hangs \(1\.0s\)\n\s+Error: Test timed out in 1000ms/);
@@ -106,10 +117,8 @@ test('a vitest test that outlives its timeout fails by its name and the run ends
 test('a PHPUnit test that outlives its timeout stops PHPUnit and fails by its name', async () => {
   await withDirectory(async (directory) => {
     const file = path.join(directory, 'HangTest.php');
-    await writeFile(file, '<?php\nuse PHPUnit\\Framework\\TestCase;\nfinal class HangTest extends TestCase {\n    public function testHangs(): void { sleep(600); $this->assertTrue(true); }\n}\n');
-    const started = Date.now();
-    const run = spawnSync(process.execPath, [RUNNER, 'phpunit', '--timeout', '1', '--cwd', 'packages/hyper-php', '--', '--no-configuration', file], { encoding: 'utf8' });
-    assert.ok(Date.now() - started < 20_000, 'The run did not stop at the timeout');
+    await writeFile(file, '<?php\nuse PHPUnit\\Framework\\TestCase;\nfinal class HangTest extends TestCase {\n    public function testHangs(): void { while (true) { sleep(1); } }\n}\n');
+    const run = await runToEnd(['phpunit', '--timeout', '1', '--cwd', 'packages/hyper-php', '--', '--no-configuration', file]);
     assert.notEqual(run.status, 0);
     assert.match(run.stdout, /▶ HangTest::testHangs\n/);
     assert.match(run.stdout, /⏱ HangTest::testHangs exceeded its 1\.0s timeout\n/);
@@ -209,4 +218,13 @@ test('a test that reads an input of another target fails with its path and the t
   assert.throws(() => requireBuilt('packages', 'node_modules/@polyspec/does-not-exist/dist/index.js'),
     /node_modules\/@polyspec\/does-not-exist\/dist\/index\.js is missing; `make packages` writes it, and `make test-scripts` runs it first/);
   assert.doesNotThrow(() => requireBuilt('install', 'package.json'));
+});
+
+// A case asserts behaviour, never the wall time of a step, which grows with the load of the machine (HY-89): a run that
+// must stop is awaited until it ends, and the timeout of the case fails a run that does not.
+test('no test of the check scripts asserts the wall time of a step', () => {
+  const directory = path.join(ROOT, 'tests/scripts');
+  const found = readdirSync(directory).filter((name) => name.endsWith('.test.mjs')).flatMap((name) => readFileSync(path.join(directory, name), 'utf8').split('\n').map((line, index) => [name, index + 1, line]))
+    .filter(([, , line]) => /assert[\w.]*\(.*(?:Date|performance)\.now\(\) - /.test(line)).map(([name, line]) => `${name}:${line}`);
+  assert.deepEqual(found, []);
 });
