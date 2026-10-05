@@ -39,7 +39,7 @@
 | ssr | Server-side rendering with JSON navigation and a no-JavaScript fallback | implemented | `make e2e` |
 | csr | Client-side rendering from one static `index.html` and `/api` JSON | implemented | `make e2e` |
 | comparison | Comparison page with SSR and CSR frames | implemented | `make e2e` |
-| bundle-size | SSR script, CSR shell and template file size limits | implemented | `make bundle-size` |
+| bundle-size | SSR script, CSR shell and template file sizes measured against their limits; a size above its limit is a warning, never a failure | implemented; full run pending | `make bundle-size`, `tests/scripts/check-bundle-size.test.mjs` |
 | npm-packages | `@polyspec/hyper` and `@polyspec/hyper-server` publish JavaScript with type declarations that Node runs from `node_modules`, and their source passes `erasableSyntaxOnly` (HY-61) | implemented | `make package-check` |
 | output-files | The asset build and the server build give their copied output files the mode 0644 and their directories 0755 under any umask, readable by another user, which a virtiofs bind mount of a Linux container accepts (HY-68) | implemented; Darwin run pending | `make test-scripts`, `make virtiofs-check` on Darwin |
 | template-dir | The asset build, the template build and the server build read the template package of the template repository that `--template-dir` names (HY-70) | implemented | `make test-scripts` |

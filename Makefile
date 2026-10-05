@@ -185,7 +185,7 @@ parity: assets server ext ## Compare PHP documents (generated program and native
 server-parity: node-server server ## Compare the Node server responses with the PHP responses, with the browser comparison of parity (HY-55)
 	node scripts/check-parity.mjs --app $(BOARD) --requests $(BOARD)/tests/parity/requests.json --node
 
-bundle-size: assets ## Print the SSR script and CSR shell sizes and enforce the gzip limits
+bundle-size: assets ## Print the sizes of the SSR script, the CSR shell and the largest template with their gzip limits; a size above its limit is a warning, never a failure
 	node scripts/check-bundle-size.mjs --app $(BOARD) --output $(BOARD)/build --limits config/bundle-size.json
 
 e2e: assets server ## Run the SSR, CSR, no-JavaScript and comparison flows in Chromium on servers of the run

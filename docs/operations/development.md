@@ -40,7 +40,7 @@
 | `make virtiofs-check` | Runs the server build and the output copies in Apple `container` with the output on a virtiofs bind mount (HY-68); a target of `make check` on Darwin only (`DARWIN_TARGETS`), which fails when `container` is missing |
 | `make parity` | Compares PHP documents with browser renders of document and region JSON, once with the generated program and once with the native extension |
 | `make server-parity` | Runs the parity steps against the PHP server and the board Node server and compares the status, the headers and the body of every response, with the browser comparison of `make parity` (HY-55) |
-| `make bundle-size` | Prints the SSR script and CSR shell sizes and enforces the gzip limits in `config/bundle-size.json` |
+| `make bundle-size` | Prints the sizes of the SSR script, the CSR shell and the largest template with their gzip limits in `config/bundle-size.json`; a size above its limit prints a `WARNING` line, on GitHub also an annotation `::warning::` and a warning in the CI summary, and the target passes |
 | `make e2e` | Runs the SSR, CSR, no-JavaScript and comparison flows in Chromium on servers and a database of the run (`scripts/run-e2e.mjs`) |
 | `make owner-check` | Runs the owners of the changed paths that `scripts/owner-checks.json` declares, after it checks that every tracked path has an owner; `PATHS` names the paths and `BASE` takes the changes since a revision (HY-88) |
 | `make docs-check` | Runs `make hooks-check`, then checks document pairs, links and code blocks |
@@ -167,6 +167,6 @@ Measured on 2026-10-05 with `make bundle-size` (htmx 4.0.0, esbuild 0.28.2, ten 
 | Largest template file (`board/rows.tpl`) | 5,583 | 1,334 | 1,084 | 4,096 |
 | All eleven template files | | 5,818 | | |
 
-The limits of the SSR script and the CSR shell in `config/bundle-size.json` are the measured gzip sizes plus about 1 %, rounded up to 100 bytes. A change that makes an output larger than its limit changes the limit in the same change and states why the growth is needed; a change that makes an output smaller lowers the limit by the same rule.
+The limits of the SSR script and the CSR shell in `config/bundle-size.json` are the measured gzip sizes plus about 1 %, rounded up to 100 bytes. A size above its limit is a warning, not a failure (AGENTS); a change that makes an output larger than its limit changes the limit in the same change and states why the growth is needed; a change that makes an output smaller lowers the limit by the same rule.
 
 The browser loads only the templates that its rendering reaches (HY-35), and a template file is cached by its hashed name. The AST of a template is about twice the size of its source after compression, because every node records its source span. `config/bundle-size.json` limits a template file to 4,096 gzip bytes, so a template that grows past it is split into blocks.

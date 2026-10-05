@@ -1,5 +1,7 @@
-// Prints the sizes of the browser outputs of an application and fails when a gzip size exceeds its
-// limit: the server-side rendering script, the client-side rendering shell and the largest template file.
+// Measures the browser outputs of an application: the server-side rendering script, the client-side rendering shell
+// and the largest template file. It prints each size with its gzip limit, and a size above its limit is a warning, never
+// a failure, because performance is measured and reported (AGENTS): a line `WARNING <name> ...`, and on GitHub Actions
+// an annotation `::warning::`, which the CI summary lists (scripts/ci-run.mjs). A missing input fails.
 //
 // Usage: node scripts/check-bundle-size.mjs --app examples/board --output examples/board/build --limits config/bundle-size.json
 
@@ -23,17 +25,18 @@ const files = {
   largestTemplate,
 };
 
-let failed = false;
 for (const [name, file] of Object.entries(files)) {
   const limit = limits[name];
   if (typeof limit !== 'number') throw new Error(`no limit for ${name}`);
   const bytes = readFileSync(file);
   const gzip = gzipSync(bytes, { level: 9 }).length;
   const brotli = brotliCompressSync(bytes, { params: { [constants.BROTLI_PARAM_QUALITY]: 11 } }).length;
-  const verdict = gzip <= limit ? 'ok' : 'FAIL';
-  if (verdict === 'FAIL') failed = true;
-  console.log(`${verdict} ${name} ${file}: raw ${bytes.length}, gzip ${gzip} (limit ${limit}), brotli ${brotli}`);
+  if (gzip <= limit) {
+    console.log(`ok ${name} ${file}: gzip ${gzip} bytes within the limit ${limit}; raw ${bytes.length}, brotli ${brotli}`);
+    continue;
+  }
+  console.log(`WARNING ${name} ${file}: gzip ${gzip} bytes exceed the limit ${limit}; raw ${bytes.length}, brotli ${brotli}`);
+  if (process.env.GITHUB_ACTIONS === 'true') console.log(`::warning title=bundle size::${name}: gzip ${gzip} bytes exceed the limit ${limit}`);
 }
 const templatesGzip = templates.reduce((total, file) => total + gzipSync(readFileSync(file), { level: 9 }).length, 0);
 console.log(`templates: ${templates.length} files, ${templatesGzip} gzip bytes in total, loaded when rendering reaches them`);
-if (failed) process.exit(1);

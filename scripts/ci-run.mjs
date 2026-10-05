@@ -45,6 +45,9 @@ const FAILURE = [
   /\b[1-9]\d* failed\b|failed checks:|\bfailed:|exited with (?:code |status )?[1-9]/,
   /No space left on device|ENOSPC|EDQUOT/,
 ];
+// A warning of a passing target, such as a size above its limit (scripts/check-bundle-size.mjs): measured, never a
+// failure, and named in the summary.
+const WARNING = /^WARNING /;
 const MAKE_LINE = /^make(?:\[\d+\])?: (?:\*\*\*|Target .* not remade)/;
 // eslint-disable-next-line no-control-regex
 const ANSI = /\x1b\[[0-9;]*[A-Za-z]/g;
@@ -190,11 +193,13 @@ export function render({ group, record, steps = {} }) {
   }
   if (record && !record.error) {
     const count = (...statuses) => record.targets.filter((target) => statuses.includes(target.status)).length;
-    lines.push(`${count('passed')} passed, ${count('failed')} failed, ${count('running', 'pending')} not finished.`, '');
+    const warned = record.targets.flatMap((target) => (target.warnings ?? []).map((warning) => `- ${target.name}: ${warning}`));
+    lines.push(`${count('passed')} passed, ${count('failed')} failed, ${count('running', 'pending')} not finished${warned.length > 0 ? `, ${warned.length} warning${warned.length === 1 ? '' : 's'}` : ''}.`, '');
     lines.push('| target | status | time | first failure lines |', '|---|---|---|---|');
     for (const target of record.targets) {
       lines.push(`| ${cell(target.name)} | ${target.status} | ${seconds(target.elapsedMs)} | ${cell((target.failures ?? []).slice(0, 3).join(' / '))} |`);
     }
+    if (warned.length > 0) lines.push('', '## warnings', '', ...warned);
     const errors = record.reportErrors ?? [];
     if (errors.length > 0) lines.push('', '## report write failures', '', '```', ...errors, '```');
     for (const target of record.targets.filter((entry) => entry.status === 'failed')) {
@@ -248,6 +253,8 @@ export async function ciRun({ root = ROOT, group, targets, env = process.env, pr
     const passed = exit === `make ${target.name} exited with status 0`;
     Object.assign(target, { status: passed ? 'passed' : 'failed', ended: now(), elapsedMs: Date.now() - begin });
     if (!passed) target.failures = failureLines(lines, exit);
+    const warnings = lines.map((line) => line.replace(ANSI, '')).filter((line) => WARNING.test(line));
+    if (warnings.length > 0) target.warnings = warnings.slice(0, FAILURE_LINES);
     save();
     print(`[ci] ${target.name} ${target.status} in ${seconds(target.elapsedMs)}`);
   }
