@@ -1,18 +1,21 @@
 // Measures the board example in Chromium: the first screen in SSR and CSR, a region navigation, the
 // re-render of hy-set as the number of rows grows with its script, style and layout load, the template
-// engine alone, memory over repeated navigation, template loading and the transferred bytes. It starts its own servers on the given ports with its own database.
+// engine alone, memory over repeated navigation, template loading and the transferred bytes. It starts its own servers
+// with scripts/board-servers.mjs on ports that the system assigns and its own database in a temporary directory of
+// the run, which it removes.
 //
-// Usage: node scripts/bench-browser.mjs --ssr 8070 --edge 8071 --api 8072 --runs 15
+// Usage: node scripts/bench-browser.mjs --runs 15
 
-import { spawn } from 'node:child_process';
-import { rmSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { parseArgs } from 'node:util';
 import { gzipSync } from 'node:zlib';
 import { chromium } from '@playwright/test';
+import { startBoard, stopServers } from './board-servers.mjs';
 
-const { values } = parseArgs({ options: { ssr: { type: 'string' }, edge: { type: 'string' }, api: { type: 'string' }, runs: { type: 'string' } } });
-for (const name of ['ssr', 'edge', 'api', 'runs']) if (!values[name]) throw new Error(`--${name} is required`);
+const { values } = parseArgs({ options: { runs: { type: 'string' } } });
+if (!values.runs) throw new Error('--runs is required');
 const runs = Number(values.runs);
 const TRACE_CATEGORIES = ['toplevel', 'devtools.timeline', 'disabled-by-default-devtools.timeline', 'v8', 'blink.user_timing'];
 const PHASES = ['total', 'hyper', 'template', 'parse', 'morph', 'settle', 'process', 'events'];
@@ -82,11 +85,8 @@ const KINDS = [
   ['gc', /GC|Scavenge|MarkCompact/],
   ['script', /^(FunctionCall|EvaluateScript|TimerFire|FireAnimationFrame|EventDispatch|RunMicrotasks|V8\.|v8\.)/],
 ];
-const ssr = `http://127.0.0.1:${values.ssr}`;
-const csr = `http://127.0.0.1:${values.edge}`;
-const database = resolve('examples/board/var/bench-browser.db');
-rmSync(database, { force: true });
-const demo = spawn(process.execPath, ['scripts/serve-demo.mjs', '--db', database, '--ssr', values.ssr, '--edge', values.edge, '--api', values.api], { stdio: 'ignore' });
+const run = mkdtempSync(join(tmpdir(), 'hyper-bench-browser-'));
+console.log(`run directory: ${run}`);
 
 const median = (items) => [...items].sort((a, b) => a - b)[Math.floor(items.length / 2)];
 const p95 = (items) => [...items].sort((a, b) => a - b)[Math.floor(items.length * 0.95)];
@@ -102,8 +102,12 @@ const observer = () => {
 };
 
 let browser;
+let children = [];
 try {
-  await waitFor(`${csr}/compare`);
+  const board = await startBoard({ app: 'examples/board', database: join(run, 'board.db'), ports: { ssr: 0, edge: 0, api: 0 } });
+  children = board.children;
+  const ssr = board.ssr;
+  const csr = board.edge;
   await seed(ssr, 30);
   browser = await chromium.launch();
   const lines = ['| Measurement | median | p95 | unit |', '|---|---:|---:|---|'];
@@ -220,8 +224,8 @@ try {
   console.log(`\n${runs} runs per measurement, Chromium ${browser.version()}, Node ${process.version}`);
 } finally {
   await browser?.close();
-  demo.kill();
-  rmSync(database, { force: true });
+  await stopServers(children);
+  rmSync(run, { recursive: true, force: true });
 }
 
 // Sums the self time of every event on the renderer main thread by kind, so that a style recalculation
@@ -361,18 +365,6 @@ async function navigationMemory(browser, origin, cycles) {
     .slice(0, 12)
     .map((item) => `| ${item.key} | ${item.count} | ${item.size} | ${retained(item.key)} |`);
   return { rows, growth, from: cycles / 2, to: cycles };
-}
-
-async function waitFor(url) {
-  for (let attempt = 0; attempt < 100; attempt++) {
-    try {
-      await fetch(url);
-      return;
-    } catch {
-      await new Promise((done) => setTimeout(done, 100));
-    }
-  }
-  throw new Error(`${url} did not start`);
 }
 
 // Creates posts through the create action, as a browser would.

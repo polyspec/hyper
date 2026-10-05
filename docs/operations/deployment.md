@@ -55,7 +55,7 @@ A request that the selection does not choose is answered as in the server form. 
 
 ## Local reproduction
 
-`make serve-demo` runs both forms on one database:
+`make serve-demo` runs both forms on one database. Its ports are fixed so that the addresses stay the same, so one demo runs at a time on a machine: the demo holds the lock file `/tmp/hyper-serve-demo.lock`, which names the checkout, the process ID and the start time of the demo, and a second demo fails with that holder. The demo releases the lock when it stops (Ctrl+C or SIGTERM). A lock whose demo process has ended is reported with that holder and stays; `make serve-demo-unlock` removes it and fails while the demo runs.
 
 | URL | Role |
 |---|---|

@@ -8,11 +8,13 @@ TEMPLATE_REPOSITORY := ../template
 TEMPLATE_DIR := var/products/template
 FIXTURES := $(PHP_PACKAGE)/tests/fixtures
 # The native template extension, built from the declared copy of the template repository (HY-48, HY-78).
+# The lock of `make serve-demo`, whose fixed ports exist once on this machine (scripts/holder-lock.mjs).
+SERVE_DEMO_LOCK := /tmp/hyper-serve-demo.lock
 EXT := build/ext/release/libpolyspec_template.$(if $(filter Darwin,$(shell uname)),dylib,so)
 
 .DEFAULT_GOAL := help
 
-.PHONY: help install template template-check ext packages package-check server server-fixtures node-server node-fixtures assets test-js test-node test-php lint analyse-php templates-check test-scripts parity server-parity bundle-size e2e docs-check serve-demo bench-server bench-server-smoke bench-browser bench check
+.PHONY: help install template template-check ext packages package-check server server-fixtures node-server node-fixtures assets test-js test-node test-php lint analyse-php templates-check test-scripts parity server-parity bundle-size e2e docs-check serve-demo bench-server bench-server-smoke bench-browser bench check serve-demo-unlock
 
 help: ## List the targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
@@ -106,15 +108,18 @@ e2e: assets server ## Run the SSR, CSR, no-JavaScript and comparison flows in Ch
 docs-check: ## Check document pairs, links and code blocks
 	node scripts/check-documents.mjs
 
-serve-demo: assets server ## Serve SSR on :8080, CSR on :8081 and the comparison page on :8081/compare
-	node scripts/serve-demo.mjs --db $(BOARD)/var/board.db --ssr 8080 --edge 8081 --api 8082
+serve-demo: assets server ## Serve SSR on :8080, CSR on :8081 and the comparison page on :8081/compare; fails with the holder while another demo runs
+	node scripts/serve-demo.mjs --db $(BOARD)/var/board.db --ssr 8080 --edge 8081 --api 8082 --lock $(SERVE_DEMO_LOCK)
+
+serve-demo-unlock: ## Remove the lock of a demo whose process has ended
+	node scripts/holder-lock.mjs clear $(SERVE_DEMO_LOCK)
 
 bench-server: server ext ## Measure PHP request handling and rendering cost per row count, with the generated program and with the native extension
 	php scripts/bench-server.php --app $(BOARD) --iterations 300
 	php -d extension=$(abspath $(EXT)) scripts/bench-server.php --app $(BOARD) --iterations 300
 
 bench-browser: assets server ## Measure first screens, navigation, hy-set phases and load, and memory in Chromium
-	node scripts/bench-browser.mjs --ssr 8085 --edge 8086 --api 8087 --runs 15
+	node scripts/bench-browser.mjs --runs 15
 
 bench-server-smoke: assets server ## Run the PHP benchmark once per measurement so that a change that breaks it fails make check
 	php scripts/bench-server.php --app $(BOARD) --iterations 1 > /dev/null

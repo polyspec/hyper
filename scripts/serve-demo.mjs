@@ -1,49 +1,53 @@
-// Starts the board example in both rendering modes on one database:
+// Starts the board example in both rendering modes on one database for interactive development:
 //   SSR  http://127.0.0.1:<ssr>      PHP renders documents and answers JSON at the root
 //   API  http://127.0.0.1:<api>/api  PHP answers JSON under /api (the CSR data origin)
 //   CSR  http://127.0.0.1:<edge>     the edge serves the static shell and forwards /api
 //   compare http://127.0.0.1:<edge>/compare?ssr=http://127.0.0.1:<ssr>
 //
-// Usage: node scripts/serve-demo.mjs --db examples/board/var/demo.db --ssr 8080 --edge 8081 --api 8082
-
-import { spawn } from 'node:child_process';
-import { resolve } from 'node:path';
+// The ports are fixed so that the addresses stay the same between sessions, so the demo exists once: it holds the
+// lock --lock of scripts/holder-lock.mjs while it runs, and a second demo fails with the checkout, the process ID and
+// the start time of the first. A lock of an ended demo is reported and stays until `make serve-demo-unlock` removes
+// it. The servers start with scripts/board-servers.mjs, which prints their output; SIGINT and SIGTERM stop them.
+//
+// Usage: node scripts/serve-demo.mjs --db examples/board/var/board.db --ssr 8080 --edge 8081 --api 8082
+//          --lock /tmp/hyper-serve-demo.lock
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
+import { startBoard, stopServers } from './board-servers.mjs';
+import { acquire } from './holder-lock.mjs';
 
-const { values } = parseArgs({ options: { db: { type: 'string' }, ssr: { type: 'string' }, edge: { type: 'string' }, api: { type: 'string' } } });
-for (const name of ['db', 'ssr', 'edge', 'api']) {
+const { values } = parseArgs({ options: { db: { type: 'string' }, ssr: { type: 'string' }, edge: { type: 'string' }, api: { type: 'string' }, lock: { type: 'string' } } });
+for (const name of ['db', 'ssr', 'edge', 'api', 'lock']) {
   if (!values[name]) throw new Error(`--${name} is required`);
 }
-const board = 'examples/board';
-const database = resolve(values.db);
 
-const children = [
-  spawn('php', ['-d', 'display_errors=0', '-S', `127.0.0.1:${values.ssr}`, '-t', `${board}/public`], {
-    // The comparison page on the edge origin frames the SSR pages.
-    env: { ...process.env, BOARD_DB: database, BOARD_BASE_PATH: '', BOARD_FRAME_ANCESTORS: `'self' http://127.0.0.1:${values.edge}` },
-    stdio: 'ignore',
-  }),
-  spawn('php', ['-d', 'display_errors=0', '-S', `127.0.0.1:${values.api}`, '-t', `${board}/public`], {
-    env: { ...process.env, BOARD_DB: database, BOARD_BASE_PATH: '/api' },
-    stdio: 'ignore',
-  }),
-  spawn(process.execPath, [
-    'scripts/serve-edge.mjs',
-    '--root', `${board}/build/csr`,
-    '--compare', `${board}/compare.html`,
-    '--port', values.edge,
-    '--api-prefix', '/api',
-    '--api-origin', `http://127.0.0.1:${values.api}`,
-  ], { stdio: 'inherit' }),
-];
-console.log(`SSR http://127.0.0.1:${values.ssr}/board`);
-console.log(`CSR http://127.0.0.1:${values.edge}/board`);
-console.log(`compare http://127.0.0.1:${values.edge}/compare?ssr=http://127.0.0.1:${values.ssr}`);
-
-const stop = () => {
-  for (const child of children) child.kill();
-  process.exit(0);
+let children = [];
+let stopping = false;
+// Stops the servers once and exits; the exit releases the lock.
+const stop = async (code) => {
+  if (stopping) return;
+  stopping = true;
+  await stopServers(children);
+  process.exit(code);
 };
-process.on('SIGINT', stop);
-process.on('SIGTERM', stop);
-for (const child of children) child.on('exit', (code) => { if (code) stop(); });
+try {
+  acquire(values.lock, resolve(dirname(fileURLToPath(import.meta.url)), '..'));
+  console.log(`holding ${values.lock}`);
+  const board = await startBoard({ app: 'examples/board', database: resolve(values.db), ports: { ssr: Number(values.ssr), edge: Number(values.edge), api: Number(values.api) } });
+  children = board.children;
+  console.log(`SSR ${board.ssr}/board`);
+  console.log(`CSR ${board.edge}/board`);
+  console.log(`compare ${board.edge}/compare?ssr=${board.ssr}`);
+} catch (error) {
+  console.error(error.message);
+  process.exit(1);
+}
+process.on('SIGINT', () => stop(0));
+process.on('SIGTERM', () => stop(0));
+for (const child of children) {
+  child.on('exit', (code, signal) => {
+    console.error(`a server exited ${signal ? `on ${signal}` : `with ${code}`}; stopping the demo`);
+    stop(1);
+  });
+}
