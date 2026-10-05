@@ -24,7 +24,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
-    "@polyspec/template": "file:../../../template/packages/template-ts",
+    "@polyspec/template": "file:../../var/products/template/packages/template-ts",
     "htmx.org": "4.0.0"
   }
 }

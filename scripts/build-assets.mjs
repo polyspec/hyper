@@ -20,7 +20,7 @@
 // The template ASTs, the manifest check and the template render runtime of the bundle come from the template package
 // of the template repository --template-dir, whatever template package the application installed (HY-70).
 //
-// Usage: node scripts/build-assets.mjs --app examples/board --api /api --template-dir ../template --output examples/board/build
+// Usage: node scripts/build-assets.mjs --app examples/board --api /api --template-dir var/products/template --output examples/board/build
 
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';

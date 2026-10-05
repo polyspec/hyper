@@ -6,7 +6,7 @@
 // The template ASTs come from the template package of the template repository --template-dir (HY-70).
 //
 // Usage: node scripts/build-templates.mjs --templates packages/hyper-php/tests/fixtures/templates --output packages/hyper-node/tests/build
-//          --template-dir ../template
+//          --template-dir var/products/template
 
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';

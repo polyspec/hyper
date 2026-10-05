@@ -37,7 +37,7 @@ hyper는 애플리케이션 하나에서 template 언어 템플릿으로 두 가
 
 ## 시작
 
-template 저장소가 이 저장소 옆(`../template`)에 있어야 한다.
+template 저장소가 이 저장소 옆(`../template`)에 있고, 그 TypeScript package가 build되어 있어야 한다(template 저장소의 `make build-ts`). `make install`과 `make template`은 그것을 `var/products/template`에 복사하고, 모든 build와 검사는 그 복사본을 읽는다(HY-78).
 
 ```sh
 make install

@@ -10,18 +10,19 @@ import { mkdirSync, readdirSync, readFileSync, rmSync, statSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
+import { templateDir as template } from './declared-template.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
-const template = resolve(root, '..', 'template');
 const output = join(root, 'tests', 'scripts', 'build', 'virtiofs');
 const image = 'docker.io/library/node:26.8.1-trixie-slim@sha256:c0753125a3789977aefe869cbebccf70e3cfd7ea84ca48547458f02e4f1d7146';
 
 function run(args) {
   rmSync(output, { recursive: true, force: true });
   mkdirSync(output, { recursive: true });
+  // The declared copy of the template repository lies inside this checkout (HY-78).
+  if (!template.startsWith(`${root}/`)) throw new Error(`${template} is not inside ${root}`);
   const mounts = [
     ['--mount', `type=bind,source=${root},target=${root},readonly`],
-    ['--mount', `type=bind,source=${template},target=${template},readonly`],
     ['--mount', `type=bind,source=${output},target=/output`],
   ].flat();
   const result = spawnSync('container', ['run', '--rm', ...mounts, image, 'node', ...args], { encoding: 'utf8' });
