@@ -51,6 +51,7 @@
 
 ### 수정
 
+- `tests/scripts/run-tests.test.mjs`의 timeout case는 wall time이 아니라 동작을 확인한다(H14.20, HY-89). 그 case는 멈추지 않는 test가 있는 실행이 20초 안에 끝났음을 확인했는데, 부하가 걸린 machine은 runner가 제대로 동작하는 동안에도 이를 넘을 수 있다. 이제 각 case는 스스로 끝나지 않는 test가 있는 실행의 끝을 기다리고 그 출력을 확인하며, test를 멈추지 않는 runner는 case의 timeout이 실패시킨다. 새 case는 검사 script의 test에서 `Date.now()`나 `performance.now()`의 차이에 대한 assertion에 대해 실패한다.
 - 출력 복사는 어떤 umask에서도 파일에 mode 0644를, 디렉터리에 0755를 준다(H14.19, HY-68). 복사는 그 mode로 만들었고 process의 umask가 이를 줄였으므로, umask 077에서 출력은 mode 0600과 0700을 가졌고 다른 사용자는 읽을 수 없었다. 이제 원인은 모든 platform에서 umask 077과 GitHub runner의 `nobody` 읽기로 test한다. Linux에는 `container`가 없어 CI run에서 `spawnSync container ENOENT`로 실패한 Apple `container` case는 Darwin에서만 full suite의 target인 `make virtiofs-check`에서 실행한다.
 - `tests/scripts/publish.test.mjs`는 Linux에서 실행된다(H14.18). 그 file case는 200 000 byte의 내용을 writer와 reader process에 인자 하나로 주었는데, Linux는 131 072 byte를 넘는 인자를 `spawn E2BIG`로 거부하므로 CI run에서 `make test-scripts`가 실패했다. 이제 내용은 파일로 전달하고, test의 child process의 모든 인자를 그 한계와 비교한다.
 - `tests/scripts/full-run.test.mjs`는 GNU Make 4에서 통과한다(H14.17, HY-83). 이 test는 GNU Make 3.81의 줄 `*** [fails] Error 3`을 확인했는데, CI runner의 GNU Make 4.4.1은 이를 `*** [Makefile:28: fails] Error 3`으로 쓰므로 CI run에서 `make test-scripts`가 실패했다. 이제 case는 두 stream에서 recipe의 마지막 출력을 확인한다.
