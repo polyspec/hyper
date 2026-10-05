@@ -117,17 +117,40 @@ function alive(pid) {
 
 const seconds = milliseconds => `${(milliseconds / 1000).toFixed(1)} s`;
 
-// Runs `make <target>` in the checkout with the output of make; resolves whether it ended with status 0.
-function makeTarget(root, target) {
+// The number of last output lines of a failed target that the record and the summary keep (HY-84).
+export const LAST_LINES = 20;
+
+// Runs `make <target>` in the checkout and prints its output as it comes; resolves { passed, lastLines }, the last
+// LAST_LINES lines of its standard output and standard error in the order of arrival.
+export function makeTarget(root, target) {
   return new Promise((resolve, reject) => {
-    const child = spawn('make', [target], { cwd: root, stdio: 'inherit' });
+    const child = spawn('make', [target], { cwd: root, stdio: ['inherit', 'pipe', 'pipe'] });
+    const lines = [];
+    const keep = (stream, output) => {
+      let pending = '';
+      stream.on('data', data => {
+        output.write(data);
+        pending += data;
+        const parts = pending.split('\n');
+        pending = parts.pop();
+        lines.push(...parts);
+        lines.splice(0, Math.max(0, lines.length - LAST_LINES));
+      });
+      return () => { if (pending !== '') lines.push(pending); };
+    };
+    const flushOut = keep(child.stdout, process.stdout);
+    const flushErr = keep(child.stderr, process.stderr);
     child.once('error', reject);
-    child.once('exit', status => resolve(status === 0));
+    child.once('close', status => {
+      flushOut();
+      flushErr();
+      resolve({ passed: status === 0, lastLines: lines.slice(-LAST_LINES) });
+    });
   });
 }
 
 /**
- * Inspects the checkout, decides and runs. `runTarget(name)` resolves whether a target passed. Returns the exit
+ * Inspects the checkout, decides and runs. `runTarget(name)` resolves { passed, lastLines } of a target. Returns the exit
  * status: 0 when the full result of the tree is passed, 1 otherwise.
  */
 export async function fullRun({ root = ROOT, mode, targets = [], runTarget = name => makeTarget(root, name), print = line => console.log(line) }) {
@@ -177,8 +200,10 @@ async function runTargets({ root, mode, targets, runTarget, print, decision, rec
     writeRecord(root, current);
     print(`[full-run] start ${name} (${index + 1}/${decision.targets.length})`);
     const targetBegin = Date.now();
-    const passed = await runTarget(name);
+    const { passed, lastLines } = await runTarget(name);
     Object.assign(target, { status: passed ? 'passed' : 'failed', ended: now(), elapsedMs: Date.now() - targetBegin });
+    if (passed) delete target.lastLines;
+    else target.lastLines = lastLines;
     writeRecord(root, current);
     print(`[full-run] ${name} ${target.status} in ${seconds(target.elapsedMs)}`);
   }
@@ -190,6 +215,10 @@ async function runTargets({ root, mode, targets, runTarget, print, decision, rec
   if (rerun) Object.assign(rerun, { ended: current.ended, result: decision.targets.every(name => !failed.includes(name)) ? 'passed' : 'failed' });
   writeRecord(root, current);
   const summary = `${decision.targets.length - decision.targets.filter(name => failed.includes(name)).length} of ${decision.targets.length} targets passed in ${seconds(Date.now() - begin)}`;
+  // Each failed target is summarized with its last output lines, so the cause stands with the result (HY-84).
+  for (const target of current.targets.filter(entry => entry.status === 'failed')) {
+    print(`[full-run] ${target.name} failed; its last ${target.lastLines.length} lines:\n${target.lastLines.map(line => `  | ${line}`).join('\n')}`);
+  }
   print(failed.length === 0
     ? `[full-run] result passed for tree ${tree}: ${summary}`
     : `[full-run] result failed for tree ${tree}: ${summary}; failed: ${failed.join(', ')}; make rerun-failed reruns them`);

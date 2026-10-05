@@ -2,6 +2,8 @@
 // passes, fails, is skipped or runs out of time, each stamped with the run's elapsed time. Every
 // test runner of the project prints through this module, so all suites read the same way.
 
+import { writeFileSync } from 'node:fs';
+
 const seconds = milliseconds => `${(milliseconds / 1000).toFixed(1)}s`;
 
 /**
@@ -77,16 +79,21 @@ export function createProgress({ write, heartbeatMs = 5000, timeoutMs, onTimeout
     close(label, { exitCode = 0 } = {}) {
       clearInterval(timer);
       for (const id of [...running.keys()]) this.fail(id, undefined, 'the test did not finish');
-      const failed = counts.failed + counts.timedOut + groupCounts.failed + (exitCode === 0 ? 0 : 1);
+      const ran = counts.passed + counts.failed + counts.timedOut;
+      // A run in which no test ran fails, so a selection that selects nothing never passes (HY-84).
+      const failed = counts.failed + counts.timedOut + groupCounts.failed + (exitCode === 0 ? 0 : 1) + (ran === 0 ? 1 : 0);
       const tests = counts.passed + counts.failed + counts.timedOut + counts.skipped;
       // A group can fail while every test in it passed, for example on a failed hook of a file.
       const groupsFailed = groupCounts.failed === 1 ? ', 1 group failed' : `, ${groupCounts.failed} groups failed`;
       const summary = tests || !(groupCounts.passed + groupCounts.failed)
         ? `${counts.passed} passed, ${counts.failed} failed, ${counts.timedOut} timed out, ${counts.skipped} skipped${groupCounts.failed ? groupsFailed : ''}`
         : `${groupCounts.passed} passed, ${groupCounts.failed} failed`;
-      const exit = exitCode === 0 ? '' : `, the tool exited with ${exitCode}`;
+      const exit = `${ran === 0 ? ', no test ran' : ''}${exitCode === 0 ? '' : `, the tool exited with ${exitCode}`}`;
       line(`${failed ? '✖' : '✔'} ${label}: ${summary}${exit} (${seconds(now() - started)})`);
-      return { ...counts, ok: failed === 0 };
+      const result = { ...counts, ran, ok: failed === 0 };
+      // The runner of the tool reads the counts from the file that HYPER_TEST_RESULT names (scripts/run-tests.mjs).
+      if (process.env.HYPER_TEST_RESULT) writeFileSync(process.env.HYPER_TEST_RESULT, JSON.stringify(result));
+      return result;
     },
     counts,
   };

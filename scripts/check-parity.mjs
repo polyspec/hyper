@@ -45,6 +45,9 @@ const TRANSPORT_HEADERS = new Set(['date', 'connection', 'keep-alive', 'content-
 // The time in which a server answers a request of a step, its whole body included.
 const REQUEST_TIMEOUT_MS = 10_000;
 const { steps } = JSON.parse(readFileSync(values.requests, 'utf8'));
+// A request file without a status or a compare step would pass without checking anything (HY-84).
+const checks = steps.filter((step) => step.action === 'status' || step.action === 'compare').length;
+if (checks === 0) throw new Error(`${values.requests} holds no status or compare step; expected at least 1, actual 0 of ${steps.length} steps`);
 
 const browser = await loadBrowserCode();
 const index = JSON.parse(readFileSync(join(app, 'build', 'templates.index.json'), 'utf8'));
@@ -107,6 +110,7 @@ try {
     }
     console.log(`${failures === 0 ? 'ok' : 'checked'} ${label}: ${result} (${elapsed()})`);
   }
+  if (node !== null && compared === 0) fail('the Node server answered no compared request; expected at least 1, actual 0');
   if (node !== null) console.log(`${failures === 0 ? 'ok' : 'checked'} Node server: ${compared} responses equal the PHP responses`);
 } catch (error) {
   fail(error.message);

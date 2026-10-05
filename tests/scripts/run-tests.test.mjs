@@ -2,7 +2,8 @@
 // outlives its timeout fails by its name while the run ends.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { readdirSync, readFileSync } from 'node:fs';
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
@@ -152,5 +153,53 @@ test('a vitest hook that runs out of time is printed with its file, suite, cause
     assert.match(run.stdout, /✖ .*file-hook\.test\.mjs \(\d+\.\ds\)\n\s+Error: Hook timed out in 300ms/);
     assert.match(run.stdout, /✖ .*suite-hook\.test\.mjs › suite \(\d+\.\ds\)\n\s+Error: Hook timed out in 300ms/);
     assert.match(run.stdout, /✖ vitest: 2 passed, 0 failed, 0 timed out, 0 skipped, 3 groups failed/);
+  });
+});
+
+test('a run in which no test ran fails for node, vitest and PHPUnit and says so (HY-84)', async () => {
+  await withDirectory(async (directory) => {
+    const noTest = /no test ran: expected at least 1 test that passes, fails or runs out of time, actual 0/;
+    const empty = path.join(directory, 'empty');
+    await mkdir(empty);
+    const none = spawnSync(process.execPath, [RUNNER, 'node', '--', empty], { encoding: 'utf8' });
+    assert.notEqual(none.status, 0, none.stdout);
+    assert.match(none.stdout, noTest);
+    const file = path.join(directory, 'one.test.mjs');
+    await writeFile(file, "import test from 'node:test';\ntest('passes', () => {});\n");
+    const unselected = spawnSync(process.execPath, [RUNNER, 'node', '--', '--test-name-pattern=selects-nothing', file], { encoding: 'utf8' });
+    assert.notEqual(unselected.status, 0, unselected.stdout);
+    assert.match(unselected.stdout, noTest);
+    const vitest = path.join(directory, 'vitest');
+    await mkdir(vitest);
+    await writeFile(path.join(vitest, 'one.test.mjs'), "import { test } from 'vitest';\ntest('passes', () => {});\n");
+    const filtered = spawnSync(process.execPath, [RUNNER, 'vitest', '--cwd', vitest, '--', '-t', 'selects-nothing'], { encoding: 'utf8' });
+    assert.notEqual(filtered.status, 0, filtered.stdout);
+    assert.match(filtered.stdout, noTest);
+    const php = path.join(directory, 'OneTest.php');
+    await writeFile(php, '<?php\nuse PHPUnit\\Framework\\TestCase;\nfinal class OneTest extends TestCase {\n    public function testPasses(): void { $this->assertTrue(true); }\n}\n');
+    const phpunit = spawnSync(process.execPath, [RUNNER, 'phpunit', '--cwd', 'packages/hyper-php', '--', '--no-configuration', '--filter', 'selectsNothing', php], { encoding: 'utf8' });
+    assert.notEqual(phpunit.status, 0, phpunit.stdout);
+    assert.match(phpunit.stdout, noTest);
+    const ran = spawnSync(process.execPath, [RUNNER, 'node', '--', file], { encoding: 'utf8' });
+    assert.equal(ran.status, 0, ran.stdout);
+  });
+});
+
+// node --test runs with --test-force-exit, which ends a file when its registered tests end, so a test that a file
+// registers after a top-level await never runs and is not counted.
+test('no node test file awaits at its top level (HY-84)', async () => {
+  const directories = ['tests/scripts', 'tests/package-install'];
+  const files = directories.flatMap((directory) => readdirSync(path.join(ROOT, directory)).filter((name) => /\.test\.(mjs|ts)$/.test(name)).map((name) => path.join(directory, name)));
+  assert.ok(files.length > 10, files.join('\n'));
+  const found = files.flatMap((file) => readFileSync(path.join(ROOT, file), 'utf8').split('\n')
+    .map((line, index) => ({ line, at: `${file}:${index + 1}` }))
+    .filter(({ line }) => /^[^\s/].*\bawait\b|^await\b/.test(line)).map(({ at, line }) => `${at}: ${line}`));
+  assert.deepEqual(found, []);
+  await withDirectory(async (directory) => {
+    const file = path.join(directory, 'late.test.mjs');
+    await writeFile(file, "import test from 'node:test';\ntest('first', () => {});\nawait new Promise((resolve) => setTimeout(resolve, 200));\ntest('late', () => {});\n");
+    const run = spawnSync(process.execPath, [RUNNER, 'node', '--', file], { encoding: 'utf8' });
+    assert.match(run.stdout, /✔ .*late\.test\.mjs › first/);
+    assert.doesNotMatch(run.stdout, /› late/, 'node --test --test-force-exit ran a test registered after a top-level await');
   });
 });

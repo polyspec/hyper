@@ -10,7 +10,7 @@ import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
-import { activeItems, decide, fullRun, RECORD } from '../../scripts/full-run.mjs';
+import { activeItems, decide, fullRun, LAST_LINES, makeTarget, RECORD } from '../../scripts/full-run.mjs';
 import { dryRun } from './make-dry-run.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
@@ -81,7 +81,7 @@ async function guard(directory, mode, targets, failing = []) {
       assert.equal(current.result, 'incomplete');
       assert.equal(current.targets.find(target => target.name === name).status, 'running');
       ran.push(name);
-      return !failing.includes(name);
+      return { passed: !failing.includes(name), lastLines: [`${name}: error 1`, `${name}: error 2`] };
     },
   });
   return { status, output: lines.join('\n'), ran };
@@ -244,7 +244,7 @@ test('a run that stops records the run as incomplete, and rerun-failed runs its 
     print: () => {},
     runTarget: async name => {
       if (name === 'b') throw new Error('stopped');
-      return true;
+      return { passed: true, lastLines: [] };
     },
   }), /stopped/);
   const stopped = record(directory);
@@ -269,14 +269,37 @@ test('a second full run of the checkout that starts while the first runs fails w
   let entered;
   const inside = new Promise(resolve => { entered = resolve; });
   const lines = [];
-  const first = fullRun({ root: directory, mode: 'run', targets: ['a'], print: () => {}, runTarget: async () => { entered(); await waiting; return true; } });
+  const first = fullRun({ root: directory, mode: 'run', targets: ['a'], print: () => {}, runTarget: async () => { entered(); await waiting; return { passed: true, lastLines: [] }; } });
   await inside;
-  const second = await fullRun({ root: directory, mode: 'rerun-failed', print: line => lines.push(line), runTarget: async () => true });
+  const second = await fullRun({ root: directory, mode: 'rerun-failed', print: line => lines.push(line), runTarget: async () => ({ passed: true, lastLines: [] }) });
   assert.equal(second, 1);
-  const third = await fullRun({ root: directory, mode: 'run', targets: ['b'], print: line => lines.push(line), runTarget: async () => true });
+  const third = await fullRun({ root: directory, mode: 'run', targets: ['b'], print: line => lines.push(line), runTarget: async () => ({ passed: true, lastLines: [] }) });
   assert.equal(third, 1);
   assert.match(lines.join('\n'), /refuse: another full run of this checkout: .*full-run\.lock is held by process \d+ of the checkout/);
   finish();
   assert.equal(await first, 0);
   assert.equal(existsSync(path.join(directory, 'var/full-run.lock')), false);
+});
+
+test('the record and the summary hold the last output lines of each failed target (HY-84)', async t => {
+  const directory = checkout(t, DONE);
+  const run = await guard(directory, 'run', ['a', 'b', 'c'], ['b']);
+  assert.equal(run.status, 1);
+  const written = record(directory);
+  assert.deepEqual(written.targets.map(target => target.lastLines ?? null), [null, ['b: error 1', 'b: error 2'], null]);
+  assert.match(run.output, /^\[full-run\] b failed; its last 2 lines:\n  \| b: error 1\n  \| b: error 2$/m);
+});
+
+test('a make target resolves its result with its last output lines, standard error included', async t => {
+  const directory = mkdtempSync(path.join(tmpdir(), 'hyper-full-run-make-'));
+  t.after(() => rmSync(directory, { recursive: true, force: true }));
+  const lines = Array.from({ length: LAST_LINES + 5 }, (_, index) => `\t@echo line ${index}`).join('\n');
+  writeFileSync(path.join(directory, 'Makefile'), `fails:\n${lines}\n\t@echo the cause >&2\n\t@exit 3\npasses:\n\t@echo fine\n`);
+  const failed = await makeTarget(directory, 'fails');
+  assert.equal(failed.passed, false);
+  assert.equal(failed.lastLines.length, LAST_LINES);
+  assert.ok(failed.lastLines.includes('the cause'), failed.lastLines.join('\n'));
+  assert.ok(failed.lastLines.some(line => /\*\*\* \[fails\] Error 3/.test(line)), failed.lastLines.join('\n'));
+  assert.ok(!failed.lastLines.includes('line 0'));
+  assert.deepEqual(await makeTarget(directory, 'passes'), { passed: true, lastLines: ['fine'] });
 });
