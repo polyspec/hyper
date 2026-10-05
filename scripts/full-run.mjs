@@ -6,7 +6,8 @@
 //
 // The full suite runs once, when every active checklist item is done (AGENTS). The guard refuses a run while a task
 // row of docs/plans/execution-checklist.md is `[~]`, while tracked changes are uncommitted, while the pre-push hook is
-// not installed (scripts/git-hooks.mjs), and while the run of another process is still going on. A full run is refused
+// not installed (scripts/git-hooks.mjs), and while the run of another process is still going on: a run holds the lock
+// var/full-run.lock (scripts/holder-lock.mjs), so two runs that start together cannot both run. A full run is refused
 // when var/full-run.json already records a run of the current tree (`git rev-parse HEAD^{tree}`); `rerun-failed` is
 // refused unless that record exists and has targets that did not pass. The record names the template branch that
 // config/template.json names (HY-80), which the tree contains, so the record states every input of the run. The guard prints its decision with the reason, runs each target with `make <target>` to its end,
@@ -18,6 +19,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { hooksProblem } from './git-hooks.mjs';
+import { acquire } from './holder-lock.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const USAGE = 'Usage: node scripts/full-run.mjs run <target>... | rerun-failed';
@@ -26,6 +28,9 @@ export const CHECKLIST = 'docs/plans/execution-checklist.md';
 export const RECORD = 'var/full-run.json';
 // The file that names the template branch (HY-80).
 export const TEMPLATE_CONFIG = 'config/template.json';
+// The lock that a running full run holds (scripts/holder-lock.mjs): a second run of the checkout fails with its holder
+// instead of deciding on a record that the first run is still writing (HY-82).
+export const LOCK = 'var/full-run.lock';
 
 const TASK_ROW = /^\|\s*(H\d[\w.-]*)\s*\|/;
 
@@ -137,10 +142,26 @@ export async function fullRun({ root = ROOT, mode, targets = [], runTarget = nam
   const record = readRecord(root);
   const running = Boolean(record && record.result === 'incomplete' && record.pid !== process.pid && alive(record.pid));
   const decision = decide({ mode, targets, active, dirty, hooks, tree, record, running });
+  let release = () => {};
+  if (decision.run) {
+    try {
+      release = acquire(path.join(root, LOCK), root);
+    } catch (error) {
+      print(`[full-run] refuse: another full run of this checkout: ${error.message}`);
+      return 1;
+    }
+  }
   print(`[full-run] ${decision.run ? 'run' : 'refuse'}: ${decision.reason}`);
   if (decision.run) print(`[full-run] template branch ${template} (${TEMPLATE_CONFIG})`);
   if (!decision.run) return 1;
+  try {
+    return await runTargets({ root, mode, targets, runTarget, print, decision, record, tree, commit, template });
+  } finally {
+    release();
+  }
+}
 
+async function runTargets({ root, mode, targets, runTarget, print, decision, record, tree, commit, template }) {
   const now = () => new Date().toISOString();
   const current = mode === 'run'
     ? { tree, commit, template, result: 'incomplete', pid: process.pid, started: now(), ended: null, targets: targets.map(name => ({ name, status: 'pending' })), reruns: [] }

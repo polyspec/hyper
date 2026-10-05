@@ -14,25 +14,32 @@
 //                                                layer components (HY-77)
 //   <output>/csr/                               the static deployment for client-side rendering: index.html with the
 //                                                entry inlined and no stylesheet, assets/templates/ with the template
-//                                                files of this build and its chunk files; the application copies the
-//                                                stylesheets that its rendered layouts link (HY-64, HY-76)
+//                                                files of this build and its chunk files, and the files that
+//                                                --static names: the application names the stylesheets that its
+//                                                rendered layouts link (HY-64, HY-76). The deployment is published
+//                                                file by file (HY-82).
+//
+// Every output file is written with one rename (scripts/output-files.mjs, scripts/publish.mjs), so a server of an
+// earlier build or a reader of the outputs never finds a file missing or partly written (HY-82).
 //
 // The template ASTs, the manifest check and the template render runtime of the bundle come from the template package
 // of the template repository --template-dir, whatever template package the application installed (HY-70).
 //
 // Usage: node scripts/build-assets.mjs --app examples/board --api /api --template-dir var/products/template --output examples/board/build
+//          [--static public/assets/app.css]...
 
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { readFileSync, rmSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { compile } from '@tailwindcss/node';
 import { Scanner } from '@tailwindcss/oxide';
 import { parseArgs } from 'node:util';
 import { build } from 'esbuild';
-import { copyFile } from './output-files.mjs';
+import { copyFile, writeFileAtomic } from './output-files.mjs';
+import { publish, staging } from './publish.mjs';
 import { loadPackage, sha256, templatePlugin, writeTemplateFiles } from './template-files.mjs';
 
-const { values } = parseArgs({ options: { app: { type: 'string' }, api: { type: 'string' }, 'template-dir': { type: 'string' }, output: { type: 'string' }, tailwind: { type: 'string' } } });
+const { values } = parseArgs({ options: { app: { type: 'string' }, api: { type: 'string' }, 'template-dir': { type: 'string' }, output: { type: 'string' }, tailwind: { type: 'string' }, static: { type: 'string', multiple: true } } });
 if (!values.app || !values.api || !values['template-dir'] || !values.output) throw new Error('--app, --api, --template-dir and --output are required');
 const templateDir = values['template-dir'];
 const app = values.app;
@@ -44,8 +51,7 @@ const csrDir = join(output, 'csr');
 // The browser does not check the manifest that the bundle contains, so the build checks it before it writes anything (HY-2).
 (await loadPackage(templateDir)).checkManifest(JSON.parse(readFileSync(join(app, 'app', 'app.json'), 'utf8')));
 const index = await writeTemplateFiles({ templates: templatesDir, output: templateFilesDir, urlPrefix: '/assets/templates', templateDir });
-mkdirSync(output, { recursive: true });
-writeFileSync(join(output, 'templates.index.json'), `${JSON.stringify(index, null, 2)}\n`);
+writeFileAtomic(join(output, 'templates.index.json'), `${JSON.stringify(index, null, 2)}\n`);
 
 const bundle = await build({
   entryPoints: [join(app, 'client', 'main.ts')],
@@ -69,16 +75,15 @@ if (entries.length !== 1) throw new Error(`the client build wrote ${entries.leng
 const entry = entries[0];
 if (/<\/script/i.test(entry.code)) throw new Error('the client entry contains </script and cannot be inlined');
 
-for (const script of scripts) writeFileSync(join(assetsDir, script.name), script.code);
-writeFileSync(join(output, 'manifest.json'), `${JSON.stringify({ hyper: `/assets/${entry.name}` }, null, 2)}\n`);
+for (const script of scripts) writeFileAtomic(join(assetsDir, script.name), script.code);
+writeFileAtomic(join(output, 'manifest.json'), `${JSON.stringify({ hyper: `/assets/${entry.name}` }, null, 2)}\n`);
 
 // The compiled stylesheet lies in public/assets before the static deployment copies the stylesheets (HY-77).
 if (values.tailwind !== undefined) {
   const [source, output, ...rest] = values.tailwind.split('=');
   if (!source || !output || rest.length > 0) throw new Error(`--tailwind ${values.tailwind} is not <source>=<output>`);
   const css = await tailwind(readFileSync(join(app, source), 'utf8'));
-  mkdirSync(dirname(join(app, output)), { recursive: true });
-  writeFileSync(join(app, output), css);
+  writeFileAtomic(join(app, output), css);
 }
 
 const shell = [
@@ -95,15 +100,23 @@ const shell = [
   '</html>',
   '',
 ].join('\n');
-rmSync(csrDir, { recursive: true, force: true });
-mkdirSync(join(csrDir, 'assets'), { recursive: true });
-writeFileSync(join(csrDir, 'index.html'), shell);
-mkdirSync(join(csrDir, 'assets', 'templates'), { recursive: true });
+// The static deployment is written into a staging directory of this process and published file by file, the shell
+// last, so a server of the deployment never finds a file missing (HY-82).
+const csrNext = staging(csrDir);
+rmSync(csrNext, { recursive: true, force: true });
+writeFileAtomic(join(csrNext, 'index.html'), shell);
 for (const { url } of Object.values(index)) {
   const name = url.slice('/assets/templates/'.length);
-  copyFile(join(templateFilesDir, name), join(csrDir, 'assets', 'templates', name));
+  copyFile(join(templateFilesDir, name), join(csrNext, 'assets', 'templates', name));
 }
-for (const script of scripts.filter((script) => script !== entry)) copyFile(join(assetsDir, script.name), join(csrDir, 'assets', script.name));
+for (const script of scripts.filter((script) => script !== entry)) copyFile(join(assetsDir, script.name), join(csrNext, 'assets', script.name));
+// A file of --static lies below public/ of the application and keeps its path below public/ in the deployment.
+for (const file of values.static ?? []) {
+  if (!file.startsWith('public/')) throw new Error(`--static ${file} is not below public/ of ${app}`);
+  copyFile(join(app, file), join(csrNext, file.slice('public/'.length)));
+}
+publish(csrNext, csrDir, { last: ['index.html'] });
+
 
 // The esbuild plugin that resolves @polyspec/hyper/templates-index to the template index of this build (HY-34).
 function indexPlugin(templateIndex) {

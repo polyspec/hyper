@@ -35,6 +35,8 @@ export RUSTUP_AUTO_INSTALL := 0
 # recipes start npm and Composer by the absolute paths of var/tools/bin.
 NPM := $(CURDIR)/var/tools/bin/npm
 COMPOSER := $(CURDIR)/var/tools/bin/composer
+# The lock of the package manager installs of this checkout: one npm or Composer install at a time (HY-82).
+INSTALL_LOCK := var/install.lock
 
 # The tracked Git hooks (scripts/git-hooks.mjs). Every make run sets core.hooksPath to this directory when it differs,
 # so the pre-push hook refuses a push while a checklist task is in progress (AGENTS.md) in every checkout that ran make.
@@ -59,9 +61,9 @@ install: tools ## Install the pinned tools, write the declared copy of the templ
 	node scripts/copy-template.mjs --repository $(TEMPLATE_REPOSITORY) --config $(TEMPLATE_CONFIG) --output $(TEMPLATE_DIR)
 	cd $(TEMPLATE_DIR) && rustup toolchain install --no-self-update
 	node scripts/copy-package.mjs --path $(PHP_PACKAGE) --output $(HYPER_PHP_COPY)
-	$(NPM) ci
-	$(COMPOSER) install --working-dir=$(PHP_PACKAGE)
-	$(COMPOSER) install --working-dir=$(BOARD)
+	node scripts/holder-lock.mjs run $(INSTALL_LOCK) -- $(NPM) ci
+	node scripts/holder-lock.mjs run $(INSTALL_LOCK) -- $(COMPOSER) install --working-dir=$(PHP_PACKAGE)
+	node scripts/holder-lock.mjs run $(INSTALL_LOCK) -- $(COMPOSER) install --working-dir=$(BOARD)
 	touch $(TEMPLATE_STAMP)
 
 template: toolchain-check $(TEMPLATE_STAMP) ## Write the declared copy of the template branch and reinstall the npm and Composer copies of its packages from it, when config/template.json changed (HY-78, HY-80)
@@ -69,10 +71,9 @@ template: toolchain-check $(TEMPLATE_STAMP) ## Write the declared copy of the te
 $(TEMPLATE_STAMP): $(TEMPLATE_CONFIG) scripts/copy-template.mjs | toolchain-check
 	node scripts/copy-template.mjs --repository $(TEMPLATE_REPOSITORY) --config $(TEMPLATE_CONFIG) --output $(TEMPLATE_DIR)
 	cd $(TEMPLATE_DIR) && rustup toolchain install --no-self-update
-	rm -rf node_modules/@polyspec/template
-	$(NPM) install --no-audit --no-fund
-	$(COMPOSER) reinstall polyspec/template --no-interaction --working-dir=$(PHP_PACKAGE)
-	$(COMPOSER) reinstall polyspec/template --no-interaction --working-dir=$(BOARD)
+	node scripts/publish.mjs npm-copy $(TEMPLATE_DIR)/packages/template-ts node_modules/@polyspec/template
+	node scripts/publish.mjs composer-copy $(TEMPLATE_DIR)/packages/template-php $(PHP_PACKAGE)/vendor/polyspec/template
+	node scripts/publish.mjs composer-copy $(TEMPLATE_DIR)/packages/template-php $(BOARD)/vendor/polyspec/template
 	touch $@
 
 template-check: template ## Fail when an npm or Composer copy of a template package differs from the declared copy
@@ -84,14 +85,14 @@ ext: template ## Build the native template extension of the declared copy with i
 	cd $(TEMPLATE_DIR)/packages/template-php-ext && cargo build --locked --release --target-dir $(CURDIR)/build/ext
 
 packages: template ## Build the JavaScript modules and type declarations of the npm packages into their dist directories and reinstall their npm copies (HY-61, HY-79)
-	rm -rf $(JS_PACKAGE)/dist && cd $(JS_PACKAGE) && $(NPM) run --silent build
-	rm -rf node_modules/@polyspec/hyper && $(NPM) install --no-audit --no-fund
-	rm -rf $(NODE_PACKAGE)/dist && cd $(NODE_PACKAGE) && $(NPM) run --silent build
-	rm -rf node_modules/@polyspec/hyper-server && $(NPM) install --no-audit --no-fund
+	cd $(JS_PACKAGE) && $(NPM) run --silent build -- --outDir dist.next-$$$$ && node ../../scripts/publish.mjs directory dist.next-$$$$ dist
+	node scripts/publish.mjs npm-copy $(JS_PACKAGE) node_modules/@polyspec/hyper
+	cd $(NODE_PACKAGE) && $(NPM) run --silent build -- --outDir dist.next-$$$$ && node ../../scripts/publish.mjs directory dist.next-$$$$ dist
+	node scripts/publish.mjs npm-copy $(NODE_PACKAGE) node_modules/@polyspec/hyper-server
 
 hyper-php-copy: ## Write the copy of packages/hyper-php that the board installs and reinstall it in the board (HY-79)
 	node scripts/copy-package.mjs --path $(PHP_PACKAGE) --output $(HYPER_PHP_COPY)
-	$(COMPOSER) reinstall polyspec/hyper --no-interaction --working-dir=$(BOARD)
+	node scripts/publish.mjs composer-copy $(HYPER_PHP_COPY) $(BOARD)/vendor/polyspec/hyper
 
 package-check: packages node-fixtures ## Install the npm packages into tests/package-install, type-check its test against their declarations and run it under node (HY-61)
 	rm -rf tests/package-install/node_modules
@@ -113,8 +114,7 @@ node-fixtures: template ## Build the template files of the PHP test fixtures for
 	node scripts/build-templates.mjs --templates $(FIXTURES)/templates --output $(NODE_PACKAGE)/tests/build --template-dir $(TEMPLATE_DIR)
 
 assets: packages ## Build the board client bundle (SSR) and the single-file static shell (CSR)
-	node scripts/build-assets.mjs --app $(BOARD) --api /api --template-dir $(TEMPLATE_DIR) --output $(BOARD)/build
-	cp $(BOARD)/public/assets/*.css $(BOARD)/build/csr/assets/
+	node scripts/build-assets.mjs --app $(BOARD) --api /api --template-dir $(TEMPLATE_DIR) --output $(BOARD)/build --static public/assets/app.css --static public/assets/reader.css
 
 test-js: template ## Run the browser code tests, including the router conformance cases, and the type check
 	node scripts/run-tests.mjs vitest --cwd $(JS_PACKAGE)

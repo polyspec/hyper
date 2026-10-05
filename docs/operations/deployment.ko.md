@@ -28,7 +28,7 @@ PHP는 기본 경로 없이 실행한다. 응답에는 `Vary: Accept, HX-Request
 
 ## 정적 셸
 
-`make assets`는 `examples/board/build/csr/`를 만든다. 클라이언트 진입 파일을 인라인하고 스타일시트는 담지 않은 `index.html`(HY-76), 템플릿마다 파일 하나를 담은 `assets/templates/`, 그리고 렌더한 layout이 link하고 브라우저가 페이지를 보이기 전에 적용하는 스타일시트 `assets/app.css`와 `assets/reader.css`다(HY-64). 에셋 빌드는 스타일시트를 복사하지 않으므로 `make assets`가 `public/assets/`에서 이 둘을 복사한다.
+`make assets`는 `examples/board/build/csr/`를 만든다. 클라이언트 진입 파일을 인라인하고 스타일시트는 담지 않은 `index.html`(HY-76), 템플릿마다 파일 하나를 담은 `assets/templates/`, 그리고 렌더한 layout이 link하고 브라우저가 페이지를 보이기 전에 적용하는 스타일시트 `assets/app.css`와 `assets/reader.css`다(HY-64). `make assets`는 `--static`으로 `public/assets/`의 이 둘을 밝힌다.
 
 1. S3 버킷에 다음과 같이 올린다.
    - `index.html`: `Content-Type: text/html; charset=utf-8`, `Cache-Control: no-cache`
