@@ -1,10 +1,10 @@
 // Tests the guard of the full suite (scripts/full-run.mjs): `make check` starts the guard before any step, the guard
-// refuses while a checklist item is `[~]`, while tracked changes are uncommitted and when the current tree already has
-// a full run, it records each target as the run proceeds, and `make rerun-failed` reruns only the targets of the
+// refuses while a checklist item is `[~]`, while tracked changes are uncommitted, while the pre-push hook is not
+// installed and when the current tree already has a full run, it records each target as the run proceeds, and `make rerun-failed` reruns only the targets of the
 // current tree that did not pass. The targets of these tests are stubs; no test runs a real target.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
@@ -41,14 +41,18 @@ function git(cwd, ...args) {
   return run.stdout.trim();
 }
 
-// A Git checkout with a committed checklist.
+// A Git checkout with a committed checklist and an installed pre-push hook.
 function checkout(t, checklist) {
   const directory = mkdtempSync(path.join(tmpdir(), 'hyper-full-run-'));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   mkdirSync(path.join(directory, 'docs/plans'), { recursive: true });
   writeFileSync(path.join(directory, 'docs/plans/execution-checklist.md'), checklist);
   writeFileSync(path.join(directory, '.gitignore'), '/var/\n');
+  mkdirSync(path.join(directory, '.githooks'));
+  writeFileSync(path.join(directory, '.githooks/pre-push'), '#!/bin/sh\n');
+  chmodSync(path.join(directory, '.githooks/pre-push'), 0o755);
   git(directory, 'init', '--quiet');
+  git(directory, 'config', 'core.hooksPath', '.githooks');
   git(directory, 'add', '.');
   git(directory, '-c', 'user.name=test', '-c', 'user.email=test@example.com', 'commit', '--quiet', '-m', 'checklist');
   return directory;
@@ -96,8 +100,8 @@ test('the active items are the task rows in state [~], with their titles', () =>
   assert.deepEqual(activeItems(DONE), []);
 });
 
-test('the decision refuses an active item, a dirty tree and a second run of a tree', () => {
-  const clean = { mode: 'run', targets: ['a', 'b'], active: [], dirty: [], tree: 'tree-1', record: null, running: false };
+test('the decision refuses an active item, a dirty tree, a missing hook and a second run of a tree', () => {
+  const clean = { mode: 'run', targets: ['a', 'b'], active: [], dirty: [], hooks: null, tree: 'tree-1', record: null, running: false };
   const fresh = decide(clean);
   assert.equal(fresh.run, true);
   assert.deepEqual(fresh.targets, ['a', 'b']);
@@ -110,6 +114,10 @@ test('the decision refuses an active item, a dirty tree and a second run of a tr
   const dirty = decide({ ...clean, dirty: [' M Makefile'] });
   assert.equal(dirty.run, false);
   assert.match(dirty.reason, /uncommitted tracked changes[\s\S]*M Makefile/);
+
+  const hooks = decide({ ...clean, hooks: 'the pre-push hook is not installed: core.hooksPath is not set, not .githooks; run make hooks' });
+  assert.equal(hooks.run, false);
+  assert.match(hooks.reason, /pre-push hook is not installed[\s\S]*run make hooks/);
 
   const earlier = { tree: 'tree-1', commit: 'c1', result: 'passed', started: '2026-10-05T01:00:00.000Z', targets: [{ name: 'a', status: 'passed' }, { name: 'b', status: 'passed' }] };
   const second = decide({ ...clean, record: earlier });
@@ -127,7 +135,7 @@ test('the decision refuses an active item, a dirty tree and a second run of a tr
 });
 
 test('the decision of rerun-failed needs a record of the current tree with targets that did not pass', () => {
-  const clean = { mode: 'rerun-failed', targets: [], active: [], dirty: [], tree: 'tree-1', record: null, running: false };
+  const clean = { mode: 'rerun-failed', targets: [], active: [], dirty: [], hooks: null, tree: 'tree-1', record: null, running: false };
   assert.match(decide(clean).reason, /no full-run record/);
   assert.equal(decide(clean).run, false);
   const failed = { tree: 'tree-1', commit: 'c1', result: 'failed', started: 's', targets: [{ name: 'a', status: 'passed' }, { name: 'b', status: 'failed' }, { name: 'c', status: 'pending' }] };
@@ -136,6 +144,16 @@ test('the decision of rerun-failed needs a record of the current tree with targe
   assert.deepEqual(decide({ ...clean, record: failed }).targets, ['b', 'c']);
   assert.equal(decide({ ...clean, record: { ...failed, result: 'passed', targets: [{ name: 'a', status: 'passed' }] } }).run, false);
   assert.equal(decide({ ...clean, record: failed, dirty: [' M x'] }).run, false);
+  assert.equal(decide({ ...clean, record: failed, hooks: 'not installed' }).run, false);
+});
+
+test('a checkout without the pre-push hook installed refuses the run before any target', async t => {
+  const directory = checkout(t, DONE);
+  git(directory, 'config', '--unset', 'core.hooksPath');
+  const { status, output, ran } = await guard(directory, 'run', ['a']);
+  assert.equal(status, 1);
+  assert.deepEqual(ran, []);
+  assert.match(output, /^\[full-run\] refuse: the pre-push hook is not installed: core\.hooksPath is not set, not \.githooks; run make hooks/);
 });
 
 test('a checklist with an active item refuses the run before any target', async t => {

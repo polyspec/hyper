@@ -21,9 +21,14 @@ HYPER_PHP_COPY := var/products/hyper-php
 PHPSTAN_MEMORY := 256M
 EXT := build/ext/release/libpolyspec_template.$(if $(filter Darwin,$(shell uname)),dylib,so)
 
+# The tracked Git hooks (scripts/git-hooks.mjs). Every make run sets core.hooksPath to this directory when it differs,
+# so the pre-push hook refuses a push while a checklist task is in progress (AGENTS.md) in every checkout that ran make.
+HOOKS_PATH := .githooks
+$(if $(filter $(HOOKS_PATH),$(shell git config core.hooksPath)),,$(shell git config core.hooksPath $(HOOKS_PATH)))
+
 .DEFAULT_GOAL := help
 
-.PHONY: help install hyper-php-copy template template-check ext packages package-check server server-fixtures node-server node-fixtures assets test-js test-node test-php lint analyse-php templates-check test-scripts parity server-parity bundle-size e2e docs-check serve-demo bench-server bench-server-smoke bench-browser bench check rerun-failed serve-demo-unlock
+.PHONY: help install hyper-php-copy template template-check ext packages package-check server server-fixtures node-server node-fixtures assets test-js test-node test-php lint analyse-php templates-check test-scripts parity server-parity bundle-size e2e docs-check serve-demo bench-server bench-server-smoke bench-browser bench check rerun-failed serve-demo-unlock hooks hooks-check
 
 help: ## List the targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
@@ -121,8 +126,15 @@ bundle-size: assets ## Print the SSR script and CSR shell sizes and enforce the 
 e2e: assets server ## Run the SSR, CSR, no-JavaScript and comparison flows in Chromium on servers of the run
 	node scripts/run-e2e.mjs
 
-docs-check: ## Check document pairs, links and code blocks
+docs-check: hooks-check ## Check that the pre-push hook is installed, then document pairs, links and code blocks
 	node scripts/check-documents.mjs
+
+hooks: ## Set core.hooksPath to the tracked Git hooks of .githooks and check that the pre-push hook is installed
+	git config core.hooksPath $(HOOKS_PATH)
+	node scripts/push-gate.mjs hooks-check
+
+hooks-check: ## Fail while the pre-push hook of .githooks is not installed or not executable
+	node scripts/push-gate.mjs hooks-check
 
 serve-demo: assets server ## Serve SSR on :8080, CSR on :8081 and the comparison page on :8081/compare; fails with the holder while another demo runs
 	node scripts/serve-demo.mjs --db $(BOARD)/var/board.db --ssr 8080 --edge 8081 --api 8082 --lock $(SERVE_DEMO_LOCK)

@@ -36,7 +36,9 @@
 | `make server-parity` | Runs the parity steps against the PHP server and the board Node server and compares the status, the headers and the body of every response, with the browser comparison of `make parity` (HY-55) |
 | `make bundle-size` | Prints the SSR script and CSR shell sizes and enforces the gzip limits in `config/bundle-size.json` |
 | `make e2e` | Runs the SSR, CSR, no-JavaScript and comparison flows in Chromium on servers and a database of the run (`scripts/run-e2e.mjs`) |
-| `make docs-check` | Checks document pairs, links and code blocks |
+| `make docs-check` | Runs `make hooks-check`, then checks document pairs, links and code blocks |
+| `make hooks` | Sets `core.hooksPath` to `.githooks` and runs `make hooks-check` (see [Push](#push)) |
+| `make hooks-check` | Fails while `core.hooksPath` is not `.githooks` or `.githooks/pre-push` is missing or not executable |
 | `make serve-demo` | Serves SSR, CSR and the comparison page on the fixed ports 8080 to 8082 while it holds the lock `/tmp/hyper-serve-demo.lock`; a second demo fails with the holder (see [Deployment](deployment.md)) |
 | `make serve-demo-unlock` | Removes the lock of a demo whose process has ended; fails while the demo runs |
 | `make bench-server-smoke` | Runs the PHP benchmark once per measurement; `make check` includes it so that a change that breaks the benchmark fails |
@@ -51,13 +53,22 @@
 - while a task row of the checklist is `[~]`; the refusal lists each active ID with its task;
 - while tracked files have uncommitted changes (`git status --porcelain --untracked-files=no`), because a full run verifies a committed tree;
 - when `var/full-run.json` records a full run of the current tree (`git rev-parse HEAD^{tree}`); the refusal names that run with its commit, its start time and its result;
+- while the pre-push hook is not installed (`make hooks-check`); the refusal names `make hooks`;
 - while the process of an `incomplete` record still runs.
 
 The guard runs each target of `CHECK_TARGETS` with `make <target>` to its end, also after a target fails, and prints `[full-run] start <target> (<n>/<total>)` and `[full-run] <target> passed|failed in <seconds> s`; no target has a time limit. It writes `var/full-run.json` before and after each target: the tree, the commit, the process, the start and end times, the result (`incomplete` until the last target ends, then `passed` or `failed`), the failed targets and each target with its status (`pending`, `running`, `passed`, `failed`), its times and its elapsed milliseconds. A run that is stopped therefore stays recorded as `incomplete`, with the target that was running. `var/` is ignored by Git, so each checkout and worktree has its own record. A commit that changes the tree permits a new full run when no task is `[~]`.
 
 `make rerun-failed` reruns only the targets of the current tree that did not pass: the failed targets and the targets that an `incomplete` run did not finish. It is refused like `make check` for a task in progress, uncommitted changes and a running process, and also when there is no record, when the record belongs to another tree and when the full run of the tree passed. It writes each rerun into `reruns` of the record; when every target has passed, the result of the tree becomes `passed`.
 
-The repository has no CI workflow. A new checkout has no record, so `make check` runs there when no task is `[~]` and the tree is clean; a push happens only when every active task is done.
+A new checkout has no record, so `make check` runs there when no task is `[~]` and the tree is clean.
+
+## Push
+
+A push happens only when no task of the checklist is `[~]`, neither in a pushed commit nor in the working tree. The tracked pre-push hook `.githooks/pre-push` runs `node scripts/push-gate.mjs hook`, which reads the refs of the push from its input, parses the checklist of every pushed commit (`git show <sha>:docs/plans/execution-checklist.md`) and of the working tree with `activeItems` of `scripts/full-run.mjs`, and refuses the push with status 1. The refusal names each active ID with its task and the ref and commit or the working tree that holds it, states the rule and says to complete each task or to mark it `[!]` with its cause and retry condition. A pushed commit without the checklist, and a checklist that cannot be parsed, also refuse the push.
+
+Git does not install hooks from a clone. Every `make` run therefore sets `core.hooksPath` to `.githooks` when it has another value, and `make hooks` sets it explicitly. `make hooks-check`, which `make docs-check` runs before each commit, and the guard of the full run fail while `core.hooksPath` is not `.githooks` or the hook is missing or not executable.
+
+The workflow `.github/workflows/push-gate.yml` is the only CI workflow of the repository. Its job `push-gate` runs `node scripts/push-gate.mjs commit <sha>` on the pushed commit of every branch and on the head commit of every pull request, so a push that skipped the hook, or came from a checkout without it, still fails there. It fails for a task in progress, for a commit without the checklist and for a commit that does not track `.githooks/pre-push` with mode 100755; it prints each line of the failure as an annotation and writes it into the job summary.
 
 ## Test runs
 

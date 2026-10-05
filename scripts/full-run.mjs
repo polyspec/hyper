@@ -5,16 +5,18 @@
 //   node scripts/full-run.mjs rerun-failed      rerun the targets of the current tree that did not pass
 //
 // The full suite runs once, when every active checklist item is done (AGENTS). The guard refuses a run while a task
-// row of docs/plans/execution-checklist.md is `[~]`, while tracked changes are uncommitted, and while the run of
-// another process is still going on. A full run is refused when var/full-run.json already records a run of the
-// current tree (`git rev-parse HEAD^{tree}`); `rerun-failed` is refused unless that record exists and has targets that
-// did not pass. The guard prints its decision with the reason, runs each target with `make <target>` to its end,
+// row of docs/plans/execution-checklist.md is `[~]`, while tracked changes are uncommitted, while the pre-push hook is
+// not installed (scripts/git-hooks.mjs), and while the run of another process is still going on. A full run is refused
+// when var/full-run.json already records a run of the current tree (`git rev-parse HEAD^{tree}`); `rerun-failed` is
+// refused unless that record exists and has targets that did not pass. The guard prints its decision with the reason, runs each target with `make <target>` to its end,
 // prints its start and its result with the elapsed time, and writes the record before and after each target, so a run
 // that is stopped stays recorded as `incomplete`. No step has a time limit.
 import { spawn, spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+
+import { hooksProblem } from './git-hooks.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const USAGE = 'Usage: node scripts/full-run.mjs run <target>... | rerun-failed';
@@ -41,10 +43,11 @@ const notPassed = record => record.targets.filter(target => target.status !== 'p
 
 /**
  * Decides whether the guard runs. `mode` is `run` or `rerun-failed`; `active` the active checklist items; `dirty` the
- * `git status --porcelain` lines of tracked files; `tree` the current tree; `record` the record of the last run or
- * null; `running` whether the process of an incomplete record still exists. Returns `{ run, reason, targets }`.
+ * `git status --porcelain` lines of tracked files; `hooks` why the pre-push hook is not installed, or null; `tree` the
+ * current tree; `record` the record of the last run or null; `running` whether the process of an incomplete record
+ * still exists. Returns `{ run, reason, targets }`.
  */
-export function decide({ mode, targets, active, dirty, tree, record, running }) {
+export function decide({ mode, targets, active, dirty, hooks, tree, record, running }) {
   const refuse = reason => ({ run: false, reason, targets: [] });
   if (active.length > 0) {
     return refuse(`${active.length} active checklist item${active.length === 1 ? '' : 's'} in ${CHECKLIST}; the full suite runs once, when every active item is done:\n${active.map(item => `  ${item.id} ${item.title}`).join('\n')}`);
@@ -52,6 +55,7 @@ export function decide({ mode, targets, active, dirty, tree, record, running }) 
   if (dirty.length > 0) {
     return refuse(`the working tree has uncommitted tracked changes; a full run verifies a committed tree:\n${dirty.map(line => `  ${line}`).join('\n')}`);
   }
+  if (hooks) return refuse(hooks);
   if (record && running) {
     return refuse(`the run started ${record.started} by process ${record.pid} is still running on tree ${record.tree}`);
   }
@@ -121,11 +125,12 @@ function makeTarget(root, target) {
 export async function fullRun({ root = ROOT, mode, targets = [], runTarget = name => makeTarget(root, name), print = line => console.log(line) }) {
   const active = activeItems(readFileSync(path.join(root, CHECKLIST), 'utf8'));
   const dirty = git(root, 'status', '--porcelain', '--untracked-files=no').split('\n').filter(Boolean);
+  const hooks = hooksProblem(root);
   const tree = git(root, 'rev-parse', 'HEAD^{tree}').trim();
   const commit = git(root, 'rev-parse', 'HEAD').trim();
   const record = readRecord(root);
   const running = Boolean(record && record.result === 'incomplete' && record.pid !== process.pid && alive(record.pid));
-  const decision = decide({ mode, targets, active, dirty, tree, record, running });
+  const decision = decide({ mode, targets, active, dirty, hooks, tree, record, running });
   print(`[full-run] ${decision.run ? 'run' : 'refuse'}: ${decision.reason}`);
   if (!decision.run) return 1;
 
