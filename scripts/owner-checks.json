@@ -13,6 +13,7 @@
     { "paths": ["examples/board/node/**"], "targets": ["server-parity"] },
     { "paths": ["examples/board/tests/parity/**"], "targets": ["parity", "server-parity"] },
     { "paths": ["tests/e2e/**", "playwright.config.ts"], "targets": ["e2e"], "tests": ["tests/scripts/run-e2e.test.mjs"] },
+    { "paths": ["tests/virtiofs/**"], "targets": ["virtiofs-check"] },
     { "paths": ["tests/package-install/**"], "targets": ["package-check"] },
     { "paths": ["tests/scripts/*.test.mjs"], "tests": ["$path"] },
     { "paths": ["tests/scripts/fixtures/{chunks,invalid-manifest}/**"], "tests": ["tests/scripts/build-assets.test.mjs"] },

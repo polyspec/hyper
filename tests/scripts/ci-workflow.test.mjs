@@ -137,3 +137,22 @@ test('the workflow ci runs every CI group in a job that runs to its end and uplo
     }
   }
 });
+
+// A target of the full suite declared for one platform runs there and is never skipped there (HY-68): the full suite of
+// Darwin runs DARWIN_TARGETS, which no CI group of Linux runs, and their tests skip no case and fail without their tool.
+test('a target declared for Darwin is in the full suite exactly on Darwin and skips nothing there', () => {
+  const makefile = readFileSync(path.join(ROOT, 'Makefile'), 'utf8');
+  const darwin = /^DARWIN_TARGETS := (.*)$/m.exec(makefile)?.[1].split(' ').filter(Boolean) ?? [];
+  assert.deepEqual(darwin, ['virtiofs-check']);
+  const { check } = groups();
+  assert.deepEqual(darwin.filter((target) => check.includes(target)), [], 'a Darwin target in the CHECK_TARGETS of every platform');
+  const suite = dryRun('check').find((line) => line.startsWith('node scripts/full-run.mjs run ')).split(' ').slice(3);
+  assert.deepEqual(suite, process.platform === 'darwin' ? [...check, ...darwin] : check);
+  const virtiofs = readdirSync(path.join(ROOT, 'tests/virtiofs')).filter((name) => name.endsWith('.test.mjs'));
+  assert.ok(virtiofs.length > 0);
+  for (const name of virtiofs) {
+    const text = readFileSync(path.join(ROOT, 'tests/virtiofs', name), 'utf8');
+    assert.doesNotMatch(text, /\.skip\(|\bskip:|\btodo\b/, `${name} skips a case`);
+    assert.match(text, /if \(result\.error\) throw new Error\(`container cannot run: /, `${name} does not fail without container`);
+  }
+});
