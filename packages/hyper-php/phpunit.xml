@@ -4,7 +4,8 @@
          bootstrap="vendor/autoload.php"
          colors="true"
          failOnWarning="true"
-         failOnRisky="true">
+         failOnRisky="true"
+         failOnEmptyTestSuite="true">
     <php>
         <!-- Tests that cause HY-43 errors would otherwise print the logged errors. -->
         <ini name="error_log" value="/dev/null"/>

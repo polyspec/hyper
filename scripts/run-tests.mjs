@@ -7,8 +7,12 @@
 //
 // The arguments after the runner's options go to the tool. --extension loads a PHP extension into PHPUnit.
 // node (node --test) and vitest stop a test at its timeout themselves; for phpunit this runner stops the tool
-// when a test outlives it.
+// when a test outlives it. A run in which no test ran, because no file, no test or no name pattern selected one, fails
+// (HY-84): the progress reporters write their counts to the file of HYPER_TEST_RESULT, and the runner requires at least
+// one test that passed, failed or ran out of time.
 import { spawn } from 'node:child_process';
+import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
 import readline from 'node:readline';
 import { fileURLToPath } from 'node:url';
@@ -115,7 +119,9 @@ async function main() {
   const reads = options.tool === 'phpunit';
   // A runner started from inside node --test must not join that run as its child.
   // The tool and the programs that it starts find npm and Composer of this checkout first (HY-81).
-  const env = { ...process.env, PATH: toolPath() };
+  const results = mkdtempSync(path.join(tmpdir(), 'hyper-test-result-'));
+  const resultFile = path.join(results, 'result.json');
+  const env = { ...process.env, PATH: toolPath(), HYPER_TEST_RESULT: resultFile };
   delete env.NODE_TEST_CONTEXT;
   const child = spawn(command, args, { cwd: options.cwd, env, stdio: ['ignore', reads ? 'pipe' : 'inherit', 'inherit'], detached: reads });
   let timedOut = false;
@@ -127,14 +133,24 @@ async function main() {
   if (reads) readline.createInterface({ input: child.stdout }).on('line', phpunitEvents(progress));
   const { status, signal } = await new Promise((resolve) => child.on('close', (status, signal) => resolve({ status, signal })));
   const code = status ?? (signal ? 1 : 0);
+  let counts = null;
   if (progress) {
-    const summary = progress.close(label, { exitCode: timedOut ? 0 : code });
-    process.exitCode = summary.ok && !timedOut ? 0 : 1;
+    counts = progress.close(label, { exitCode: timedOut ? 0 : code });
+    process.exitCode = counts.ok && !timedOut ? 0 : 1;
   } else {
     // node --test and vitest print their summary from inside the tool; a tool that then ends on a signal or a
     // nonzero code fails the run, and this line names why.
     if (code !== 0) process.stdout.write(`✖ ${label}: the tool ended ${signal ? `on ${signal}` : `with exit code ${status}`}\n`);
     process.exitCode = code;
+  }
+  if (!progress && existsSync(resultFile)) counts = JSON.parse(readFileSync(resultFile, 'utf8'));
+  rmSync(results, { recursive: true, force: true });
+  if (counts === null) {
+    process.stdout.write(`✖ ${label}: the progress reporter wrote no counts, so the run cannot show that a test ran\n`);
+    process.exitCode = 1;
+  } else if (counts.ran === 0) {
+    process.stdout.write(`✖ ${label}: no test ran: expected at least 1 test that passes, fails or runs out of time, actual 0 (${counts.skipped} skipped)\n`);
+    process.exitCode = 1;
   }
 }
 

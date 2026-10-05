@@ -83,3 +83,11 @@ test('the check tests its own server while another server answers on the port of
   assert.equal(existsSync(run), false);
   assert.equal(existsSync(join(app, 'var')), false);
 });
+
+test('a request file without a status or a compare step fails before any server starts (HY-84)', async (t) => {
+  const app = fixture(t, [{ action: 'send', method: 'GET', path: '/' }]);
+  const { status, output } = await check(app);
+  assert.equal(status, 1, output);
+  assert.match(output, /requests\.json holds no status or compare step; expected at least 1, actual 0 of 1 steps/);
+  assert.doesNotMatch(output, /start php/);
+});
