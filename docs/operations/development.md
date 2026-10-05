@@ -38,6 +38,7 @@
 | `make server-parity` | Runs the parity steps against the PHP server and the board Node server and compares the status, the headers and the body of every response, with the browser comparison of `make parity` (HY-55) |
 | `make bundle-size` | Prints the SSR script and CSR shell sizes and enforces the gzip limits in `config/bundle-size.json` |
 | `make e2e` | Runs the SSR, CSR, no-JavaScript and comparison flows in Chromium on servers and a database of the run (`scripts/run-e2e.mjs`) |
+| `make owner-check` | Runs the owners of the changed paths that `scripts/owner-checks.json` declares, after it checks that every tracked path has an owner; `PATHS` names the paths and `BASE` takes the changes since a revision (HY-88) |
 | `make docs-check` | Runs `make hooks-check`, then checks document pairs, links and code blocks |
 | `make hooks` | Sets `core.hooksPath` to `.githooks` and runs `make hooks-check` (see [Push](#push)) |
 | `make hooks-check` | Fails while `core.hooksPath` is not `.githooks` or `.githooks/pre-push` is missing or not executable |
