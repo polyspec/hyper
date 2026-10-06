@@ -61,7 +61,12 @@ export const handlers: Handlers<Services> = {
     'board.show': {
       load: ({ request, services }) => ({ post: findPost(request, services.get('posts')) }),
       regions: {
-        reader: ({ request, services }) => ({ post: findPost(request, services.get('posts')), large: false }),
+        // The post page embeds its data, so the reader changes without a request; the list embeds none and the
+        // browser requests its data when it first changes a region (HY-31, HY-92).
+        reader: ({ request, reply, services }) => {
+          reply.embedData();
+          return { post: findPost(request, services.get('posts')), large: false };
+        },
       },
     },
 

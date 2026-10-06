@@ -283,7 +283,8 @@ export class Hyper {
       if (generation !== this.location) return;
       const decoded = decodeResponse(this.app, parseJson(text), path);
       this.applyBrowserKept(decoded);
-      const html = await this.app.templates.render(() => renderDocument(this.app, decoded));
+      // A client-rendered document never embeds its data, because the browser holds the data of the JSON (HY-31).
+      const html = await this.app.templates.render(() => renderDocument(this.app, decoded, { embed: false }));
       const settle = await this.page.stylesheets(html);
       if (generation !== this.location) return;
       this.hold(decoded);

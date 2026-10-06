@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Polyspec\Hyper\Examples\Board\Assets;
 use Polyspec\Hyper\Examples\Board\Posts;
 use Polyspec\Hyper\NotFound;
+use Polyspec\Hyper\Reply;
 use Polyspec\Hyper\Request;
 use Polyspec\Hyper\Result;
 
@@ -75,7 +76,13 @@ return [
         'board.show' => [
             'load' => fn (Request $request, Posts $posts): array => ['post' => findPost($request, $posts)],
             'regions' => [
-                'reader' => fn (Request $request, Posts $posts): array => ['post' => findPost($request, $posts), 'large' => false],
+                // The post page embeds its data, so the reader changes without a request; the list embeds none and
+                // the browser requests its data when it first changes a region (HY-31, HY-92).
+                'reader' => function (Request $request, Reply $reply, Posts $posts): array {
+                    $reply->embedData();
+
+                    return ['post' => findPost($request, $posts), 'large' => false];
+                },
             ],
         ],
 

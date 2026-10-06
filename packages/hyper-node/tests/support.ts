@@ -61,7 +61,11 @@ export function handlers(): Handlers<Services> {
       },
       list: {
         regions: {
-          rows: ({ services }) => ({ items: ['a<', `b${services.get('counter').count}`], open: false, mode: 'a', view: 'x', filter: { a: 1 }, tags: [] }),
+          rows: ({ request, reply, services }) => {
+            // HY-92: the query embed=1 makes the document embed its data.
+            if (request.queryInt('embed', 0) === 1) reply.embedData();
+            return { items: ['a<', `b${services.get('counter').count}`], open: false, mode: 'a', view: 'x', filter: { a: 1 }, tags: [] };
+          },
         },
       },
       item: {

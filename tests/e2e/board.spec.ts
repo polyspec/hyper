@@ -223,14 +223,14 @@ test('SSR: after a history restore the list holds its own data (HY-32)', async (
   expect(errors).toEqual([]);
 });
 
-test('SSR embeds only the data of the route regions (HY-31)', async ({ page }) => {
-  // The home route has no route region: its document embeds no data.
-  const home = await (await page.request.get(`${ssr}/`)).text();
-  expect(home).not.toContain('id="hy-data"');
-  // The list embeds the data of notice and rows and not the data of left or the page region.
-  const list = await (await page.request.get(`${ssr}/board`)).text();
-  const embedded = JSON.parse(/<script type="application\/json" id="hy-data">(.*?)<\/script>/s.exec(list)![1]!) as { regions: Record<string, unknown> };
-  expect(Object.keys(embedded.regions)).toEqual(['notice', 'rows']);
+test('SSR embeds only the data of the route regions, and only when the reply asks for it (HY-31, HY-92)', async ({ page }) => {
+  // The home route has no route region and the list does not ask: their documents embed no data.
+  expect(await (await page.request.get(`${ssr}/`)).text()).not.toContain('id="hy-data"');
+  expect(await (await page.request.get(`${ssr}/board`)).text()).not.toContain('id="hy-data"');
+  // The post page asks: it embeds the data of reader and not the data of left or the page region.
+  const post = await (await page.request.get(`${ssr}/board/1`)).text();
+  const embedded = JSON.parse(/<script type="application\/json" id="hy-data">(.*?)<\/script>/s.exec(post)![1]!) as { regions: Record<string, unknown> };
+  expect(Object.keys(embedded.regions)).toEqual(['reader']);
 });
 
 test('a failed region request keeps the page and marks the region (HY-47)', async ({ page }) => {

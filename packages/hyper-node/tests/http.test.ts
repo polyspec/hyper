@@ -107,8 +107,8 @@ describe('App.server', () => {
 
   it('sends no Content-Type without a body and one Cache-Control for a page (HY-52)', async () => {
     await start();
-    // The document of /list embeds the data of its route region, including the shared CSRF token (HY-31).
-    const first = await fetch(`${base}/list`);
+    // The document of /list?embed=1 embeds the data of its route region, including the shared CSRF token (HY-31, HY-92).
+    const first = await fetch(`${base}/list?embed=1`);
     const cookie = first.headers.get('set-cookie')!.split(';')[0]!;
     const token = /"csrf":"([0-9a-f]+)"/.exec(await first.text())![1]!;
     expect(first.headers.get('cache-control')).toBe('no-store');

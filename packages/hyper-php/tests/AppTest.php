@@ -98,14 +98,21 @@ final class AppTest extends TestCase
 
                         return Result::redirect('/')->flash('note', 'added')->changed('count');
                     }],
-                    'list' => ['regions' => ['rows' => fn (Counter $counter): array => [
-                        'items' => ['a<', "b{$counter->count}"],
-                        'open' => false,
-                        'mode' => 'a',
-                        'view' => 'x',
-                        'filter' => ['a' => 1],
-                        'tags' => [],
-                    ]]],
+                    'list' => ['regions' => ['rows' => function (Request $request, Reply $reply, Counter $counter): array {
+                        // HY-92: the query embed=1 makes the document embed its data.
+                        if ($request->queryInt('embed', 0) === 1) {
+                            $reply->embedData();
+                        }
+
+                        return [
+                            'items' => ['a<', "b{$counter->count}"],
+                            'open' => false,
+                            'mode' => 'a',
+                            'view' => 'x',
+                            'filter' => ['a' => 1],
+                            'tags' => [],
+                        ];
+                    }]],
                     'item' => ['load' => function (Request $request, Reply $reply): array {
                         return match ($request->param('id')) {
                             'member' => (function () use ($reply): array {
@@ -283,7 +290,7 @@ final class AppTest extends TestCase
         // HY-31: the embedded value is the document JSON response of the same request with only the route
         // regions and their kept entries; the JSON response keeps every region (HY-18).
         $cookies = ['hy-keep' => '{"rows":{"mode":"b"}}'];
-        $html = $this->app()->handle(new Request('GET', '/list', cookies: $cookies), $this->session)->body;
+        $html = $this->app()->handle(new Request('GET', '/list', [], 'embed=1', cookies: $cookies), $this->session)->body;
         $json = self::json($this->app()->handle(new Request('GET', '/list', ['Accept' => 'application/json'], cookies: $cookies), $this->session));
 
         self::assertSame(['side', 'content', 'rows'], array_keys(Json::array($json['regions'])));
@@ -295,6 +302,19 @@ final class AppTest extends TestCase
         self::assertSame(json_decode($this->unmasked(json_encode($expected, JSON_THROW_ON_ERROR)), true), json_decode($this->unmasked($found[1]), true));
         self::assertSame(['rows' => ['mode' => 'b']], Json::decode($found[1])['kept']);
         self::assertStringContainsString('"a\\u003c"', $found[1]);
+    }
+
+    public function testDocumentEmbedsNoDataWithoutTheReply(): void
+    {
+        // HY-31, HY-92: a document embeds its data only when the reply asks for it; the JSON response is the same.
+        $document = $this->get('/list')->body;
+        self::assertStringContainsString('<ul id="rows"><li>a&lt;</li><li>b0</li></ul>', $document);
+        self::assertStringNotContainsString('id="hy-data"', $document);
+        self::assertStringContainsString('id="hy-data"', $this->app()->handle(new Request('GET', '/list', [], 'embed=1'), $this->session)->body);
+
+        $plain = $this->app()->handle(new Request('GET', '/list', ['Accept' => 'application/json']), $this->session)->body;
+        $asked = $this->app()->handle(new Request('GET', '/list', ['Accept' => 'application/json'], 'embed=1'), $this->session)->body;
+        self::assertSame($this->unmasked($plain), $this->unmasked($asked));
     }
 
     public function testRouteRegionsFollowThePageRegion(): void
@@ -350,7 +370,7 @@ final class AppTest extends TestCase
         $json = self::json($this->get('/list', self::JSON));
         self::assertSame(false, Json::at($json, 'regions', 'rows', 'open'));
         self::assertSame(['rows' => ['open' => true]], $json['kept']);
-        $document = $this->get('/list')->body;
+        $document = $this->app()->handle(new Request('GET', '/list', [], 'embed=1'), $this->session)->body;
         self::assertStringContainsString('"rows":{"items":["a\\u003c","b0"],"open":false', $document);
         self::assertStringContainsString('"kept":{"rows":{"open":true}}', $document);
     }
@@ -391,7 +411,7 @@ final class AppTest extends TestCase
         // HY-38: a conforming value can still fail in the template; the document drops the kept values
         // of that region, and the embedded data no longer contains them.
         $cookies = ['hy-keep' => '{"rows":{"mode":"b","tags":[1]}}'];
-        $document = $this->app()->handle(new Request('GET', '/list', cookies: $cookies), $this->session);
+        $document = $this->app()->handle(new Request('GET', '/list', [], 'embed=1', cookies: $cookies), $this->session);
         self::assertSame(200, $document->status);
         self::assertStringContainsString('<li>a&lt;</li><li>b0</li>', $document->body);
         self::assertStringContainsString('"kept":{}', $document->body);
@@ -514,8 +534,8 @@ final class AppTest extends TestCase
     public function testBindsEachRootOncePerDocument(): void
     {
         // H10.4: the HY-44 check binds the shared data once, and the document binds it once more for all of its
-        // renders (title, side, content and layout), so the number of checks does not grow with the renders. A route
-        // with route regions binds it once more in the embedded data (HY-31). A JSON response checks only the
+        // renders (title, side, content and layout), so the number of checks does not grow with the renders. A document
+        // that embeds its data binds it once more in the embedded data (HY-31, HY-92). A JSON response checks only the
         // parameters again and encodes the value once.
         $title = new class () implements \JsonSerializable {
             public int $serialized = 0;
@@ -532,7 +552,13 @@ final class AppTest extends TestCase
             'routes' => [
                 'home' => ['load' => fn (): array => ['name' => 'n']],
                 'add' => ['post' => fn (): Result => Result::redirect('/')],
-                'list' => ['regions' => ['rows' => fn (): array => ['items' => []]]],
+                'list' => ['regions' => ['rows' => function (Request $request, Reply $reply): array {
+                    if ($request->queryInt('embed', 0) === 1) {
+                        $reply->embedData();
+                    }
+
+                    return ['items' => []];
+                }]],
             ],
         ], 'Z');
 
@@ -547,6 +573,10 @@ final class AppTest extends TestCase
 
         $title->serialized = 0;
         self::assertSame(200, $app->handle(new Request('GET', '/list'), $this->session)->status);
+        self::assertSame(2, $title->serialized);
+
+        $title->serialized = 0;
+        self::assertSame(200, $app->handle(new Request('GET', '/list', [], 'embed=1'), $this->session)->status);
         self::assertSame(3, $title->serialized);
     }
 
@@ -767,7 +797,11 @@ final class AppTest extends TestCase
     public function testRouteRegionWhoseLoaderReturnsNullIsAbsent(): void
     {
         // HY-75: no data, no kept entry and no definition; the page renders without the element and without #hy-data.
-        $rows = fn (Request $request): ?array => $request->queryInt('rows', 1) === 0 ? null : ['items' => ['a'], 'open' => false, 'mode' => 'a', 'view' => 'x', 'filter' => ['a' => 1], 'tags' => []];
+        $rows = function (Request $request, Reply $reply): ?array {
+            $reply->embedData();
+
+            return $request->queryInt('rows', 1) === 0 ? null : ['items' => ['a'], 'open' => false, 'mode' => 'a', 'view' => 'x', 'filter' => ['a' => 1], 'tags' => []];
+        };
         $app = $this->app(options: ['handlers' => ['routes' => ['add' => ['post' => fn (): Result => Result::redirect('/')], 'list' => ['regions' => ['rows' => $rows]]]]]);
         $cookies = ['hy-keep' => '{"rows":{"mode":"b"}}'];
 

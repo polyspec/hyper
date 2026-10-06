@@ -284,7 +284,7 @@ describe('held data, restorations and kept values', () => {
     await app.templates.ensure(Object.keys(sources));
     const decoded = decodeResponse(app, parseJson(listJson.replace('"tab":"a"', '"tab":"a"')), '/list');
     applyKept(decoded.regions.get('rows') as Map<string, never>, [['items.1.open', true]]);
-    const html = renderDocument(app, { ...decoded, regions: new Map([...decoded.regions, ['side', new Map([['count', 0]])]]) });
+    const html = renderDocument(app, { ...decoded, regions: new Map([...decoded.regions, ['side', new Map([['count', 0]])]]) }, { embed: true });
     expect(html).toContain('<li class="open">b</li>');
     expect(html).toContain('{"name":"b","open":false}');
   });
@@ -657,6 +657,20 @@ describe('swaps, storage order and client-side documents', () => {
     await hyper.set('rows', 'filter', { a: 2 });
     await request(hyper, '/list', 'http://localhost/list', json);
     expect((hyper.data('rows') as Map<string, unknown>).get('filter')).toEqual(new Map([['a', 2]]));
+  });
+
+  it('mounts a client-rendered document without embedded data (HY-22, HY-31)', async () => {
+    const page = new FakeDocument();
+    const hyper = new Hyper(testApplication(), { process: () => undefined, config: { defaultTimeout: 60000 }, parseInterval: Number, swap: async () => undefined }, {
+      basePath: '/api',
+      storage: new FakeStorage(),
+      document: page,
+      fetch: async () => jsonResponse('http://localhost/api/list', listJson.replace('"regions":{', '"regions":{"side":{"count":1},')),
+    });
+    await hyper.renderLocation('/list');
+    expect(page.mounted).toHaveLength(1);
+    expect(page.mounted[0]).toContain('id="rows"');
+    expect(page.mounted[0]).not.toContain('id="hy-data"');
   });
 
   it('routes the response URL after a redirect in client-side rendering (HY-22)', async () => {

@@ -109,6 +109,7 @@ export async function renderPage<S extends object>(input: PageInput<S>, environm
     const { 'Content-Type': _, ...notModified } = headers;
     return new Response(304, notModified, '');
   }
-  const document = renderDocument(application, decodeResponse(application, value, request.path()));
+  // HY-92: the document embeds its data only when the reply asks for it.
+  const document = renderDocument(application, decodeResponse(application, value, request.path()), { embed: reply.embedsData() });
   return new Response(pageStatus, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': cacheControl, Vary: VARY }, document);
 }

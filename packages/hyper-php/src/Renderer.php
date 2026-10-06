@@ -68,7 +68,7 @@ final class Renderer
      *
      * @param array<string, array{template: string, data: BoundMap|NativeBoundMap}> $regions manifest regions
      * @param array<string, array{template: string, data: BoundMap|NativeBoundMap}> $routeRegions route regions of the page region
-     * @param BoundMap|NativeBoundMap|null $data the bound root of `{# data}`, the map with the member `response` (HY-31), or null when the route has no route region
+     * @param BoundMap|NativeBoundMap|null $data the bound root of `{# data}`, the map with the member `response` (HY-31), or null when the document embeds no data (HY-92)
      */
     public function document(string $layout, string $title, BoundMap|NativeBoundMap $shared, array $regions, string $page, array $routeRegions, BoundMap|NativeBoundMap|null $data): string
     {
