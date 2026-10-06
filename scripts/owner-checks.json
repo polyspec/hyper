@@ -33,7 +33,8 @@
     { "paths": ["scripts/copy-package.mjs", "scripts/publish.mjs", "scripts/tracked-files.mjs"], "targets": ["template-check"], "tests": ["tests/scripts/publish.test.mjs", "tests/scripts/template-copy.test.mjs", "tests/scripts/build-assets.test.mjs"] },
     { "paths": ["scripts/copy-template.mjs", "config/template.json"], "targets": ["template-check"], "tests": ["tests/scripts/template-copy.test.mjs", "tests/scripts/full-run.test.mjs"] },
     { "paths": ["scripts/full-run.mjs"], "tests": ["tests/scripts/full-run.test.mjs", "tests/scripts/push-gate.test.mjs"] },
-    { "paths": ["scripts/git-hooks.mjs", "scripts/push-gate.mjs", ".githooks/**", ".github/workflows/*.yml"], "tests": ["tests/scripts/push-gate.test.mjs", "tests/scripts/ci-workflow.test.mjs"] },
+    { "paths": ["scripts/git-hooks.mjs", "scripts/push-gate.mjs", ".githooks/**", ".github/workflows/*.yml"], "tests": ["tests/scripts/push-gate.test.mjs", "tests/scripts/ci-workflow.test.mjs", "tests/scripts/github-ruleset.test.mjs"] },
+    { "paths": ["scripts/github-ruleset.mjs", ".github/ruleset.json"], "tests": ["tests/scripts/github-ruleset.test.mjs"] },
     { "paths": ["scripts/holder-lock.mjs"], "tests": ["tests/scripts/publish.test.mjs", "tests/scripts/serve-demo.test.mjs", "tests/scripts/full-run.test.mjs"] },
     { "paths": ["scripts/owner-check.mjs", "scripts/owner-checks.json"], "tests": ["tests/scripts/owner-check.test.mjs"] },
     { "paths": ["scripts/run-e2e.mjs"], "targets": ["e2e"], "tests": ["tests/scripts/run-e2e.test.mjs"] },
@@ -45,7 +46,7 @@
     { "paths": ["scripts/toolchain.mjs", "config/toolchain.json", ".node-version"], "tests": ["tests/scripts/toolchain.test.mjs", "tests/scripts/package-build.test.mjs"] },
     { "paths": ["scripts/tsc.mjs"], "targets": ["test-js"], "tests": ["tests/scripts/package-build.test.mjs"] },
     { "paths": ["package.json", "package-lock.json", ".npmrc"], "targets": ["test-js", "test-node", "package-check"], "tests": ["tests/scripts/toolchain.test.mjs", "tests/scripts/no-symlinks.test.mjs", "tests/scripts/template-copy.test.mjs"] },
-    { "paths": ["Makefile"], "tests": ["tests/scripts/toolchain.test.mjs", "tests/scripts/template-copy.test.mjs", "tests/scripts/full-run.test.mjs", "tests/scripts/check-recipes.test.mjs", "tests/scripts/push-gate.test.mjs", "tests/scripts/owner-check.test.mjs", "tests/scripts/ci-workflow.test.mjs"] },
+    { "paths": ["Makefile"], "tests": ["tests/scripts/toolchain.test.mjs", "tests/scripts/template-copy.test.mjs", "tests/scripts/full-run.test.mjs", "tests/scripts/check-recipes.test.mjs", "tests/scripts/push-gate.test.mjs", "tests/scripts/owner-check.test.mjs", "tests/scripts/ci-workflow.test.mjs", "tests/scripts/github-ruleset.test.mjs"] },
     { "paths": [".gitignore"], "tests": ["tests/scripts/ignored-files.test.mjs"] }
   ]
 }

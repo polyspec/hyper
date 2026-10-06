@@ -4,7 +4,7 @@
 
 | ID | 기능 | 상태 | 근거 |
 |---|---|---|---|
-| protocol | 영역 프로토콜 명세(HY-1 ~ HY-93) | implemented | [프로토콜](spec/protocol.ko.md) |
+| protocol | 영역 프로토콜 명세(HY-1 ~ HY-94) | implemented | [프로토콜](spec/protocol.ko.md) |
 | composition | 화면 구성 규칙(HC-1 ~ HC-7)과 HC-6 템플릿 검사 | implemented | [화면 구성](spec/composition.ko.md), `make templates-check` |
 | manifest | PHP와 브라우저가 읽는 애플리케이션 매니페스트 | implemented | `make test-php`, `make test-js` |
 | router | 적합성 사례를 공유하는 PHP 라우터와 브라우저 라우터 | implemented | `make test-php`, `make test-js` |
@@ -46,6 +46,7 @@
 | template-copy | npm, Composer, PHPStan, 네이티브 확장 build, build script는 template 저장소를 선언한 복사본 `var/products/template`으로만 읽는다(HY-78) | implemented | `make test-scripts`, `make template-check` |
 | ci-suite | 전체 suite는 `main`으로의 push 뒤와 모든 pull request에 대해 GitHub에서 CI group마다 job 하나로 모든 target을 끝까지 실행하고, job summary와 각 target의 상태, 시간, 첫 실패 줄, 전체 log를 담은 보고서를 upload한다(HY-91) | implemented | `tests/scripts/ci-run.test.mjs`, `tests/scripts/ci-workflow.test.mjs` |
 | ci-steps | 모든 GitHub workflow는 commit으로 pin한 action으로 시간 제한 없이 `ubuntu-26.04-arm`에서 실행하고, 모든 step은 make target 하나를 실행한다(HY-90) | implemented | `tests/scripts/ci-workflow.test.mjs`, `tests/scripts/push-gate.test.mjs` |
+| publish-main |  | implemented | `tests/scripts/github-ruleset.test.mjs`, `make github-ruleset-check` |
 | no-live-inputs | 어떤 recipe도 registry에 질의하지 않고, 모든 recipe는 cargo, npm, Composer를 offline으로 실행하며 설치 target만 download하고, 없는 download는 그것을 만드는 설치 target을 밝히며, `tests/package-install`은 lock에서 offline 설치하며, test는 event로 순서를 정하고, test 서버는 system이 정한 port에서 listen하며, 서버 시작은 진행을 출력하고, 빈 목록은 검사를 실패시킨다(HY-89) | implemented | `tests/scripts/toolchain.test.mjs`, `tests/scripts/rust-downloads.test.mjs`, `tests/scripts/board-servers.test.mjs`, `tests/scripts/check-bundle-size.test.mjs`, `packages/hyper-node/tests/http.test.ts` |
 | owner-check | 추적하는 모든 경로는 `scripts/owner-checks.json`에 owner를 가지고, `make owner-check`는 바뀐 경로의 owner를 실행한다(HY-88) | implemented | `tests/scripts/owner-check.test.mjs`, `tests/scripts/ignored-files.test.mjs` |
 | run-resources | run의 서버와 임시 디렉터리는 run이 끝날 때, 실패할 때, SIGINT와 SIGTERM에서 멈추고 지워지며, test는 process가 끝난 뒤에만 디렉터리를 지운다(HY-87) | implemented | `tests/scripts/board-servers.test.mjs`, `tests/scripts/check-parity.test.mjs`, `tests/scripts/serve-demo.test.mjs` |

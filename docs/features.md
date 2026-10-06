@@ -4,7 +4,7 @@
 
 | ID | Feature | Status | Evidence |
 |---|---|---|---|
-| protocol | Region protocol specification (HY-1 to HY-93) | implemented | [Protocol](spec/protocol.md) |
+| protocol | Region protocol specification (HY-1 to HY-94) | implemented | [Protocol](spec/protocol.md) |
 | composition | Screen composition rules (HC-1 to HC-7) and the template check for HC-6 | implemented | [Composition](spec/composition.md), `make templates-check` |
 | manifest | Application manifest read by PHP and the browser | implemented | `make test-php`, `make test-js` |
 | router | PHP and browser routers with shared conformance cases | implemented | `make test-php`, `make test-js` |
@@ -46,6 +46,7 @@
 | template-copy | npm, Composer, PHPStan, the native extension build and the build scripts read the template repository only through its declared copy `var/products/template` (HY-78) | implemented | `make test-scripts`, `make template-check` |
 | ci-suite | The full suite runs on GitHub after a push to `main` and for every pull request, one job per CI group, every target to its end, with a job summary and an uploaded report of the status, the time, the first failure lines and the full log of each target (HY-91) | implemented | `tests/scripts/ci-run.test.mjs`, `tests/scripts/ci-workflow.test.mjs` |
 | ci-steps | Every GitHub workflow runs on `ubuntu-26.04-arm` with actions pinned by commit and no time limit, and every step runs one make target (HY-90) | implemented | `tests/scripts/ci-workflow.test.mjs`, `tests/scripts/push-gate.test.mjs` |
+| publish-main |  | implemented | `tests/scripts/github-ruleset.test.mjs`, `make github-ruleset-check` |
 | no-live-inputs | No recipe queries a registry, every recipe runs cargo, npm and Composer offline and only the install targets download, a missing download names the install target that makes it, `tests/package-install` installs offline from its lock, tests order events by events, test servers listen on ports that the system assigns, server starts print their progress, and an empty list fails a check (HY-89) | implemented | `tests/scripts/toolchain.test.mjs`, `tests/scripts/rust-downloads.test.mjs`, `tests/scripts/board-servers.test.mjs`, `tests/scripts/check-bundle-size.test.mjs`, `packages/hyper-node/tests/http.test.ts` |
 | owner-check | Every tracked path has owners in `scripts/owner-checks.json`, and `make owner-check` runs the owners of the changed paths (HY-88) | implemented | `tests/scripts/owner-check.test.mjs`, `tests/scripts/ignored-files.test.mjs` |
 | run-resources | The servers and the temporary directory of a run are stopped and removed on its end, its failure and SIGINT and SIGTERM; tests remove a directory only after its processes exited (HY-87) | implemented | `tests/scripts/board-servers.test.mjs`, `tests/scripts/check-parity.test.mjs`, `tests/scripts/serve-demo.test.mjs` |

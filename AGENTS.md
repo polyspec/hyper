@@ -5,6 +5,7 @@
 ## Documents
 
 - Every document has a `.ko.md` file with the same information. Edit both in the same change.
+- A record describes only this repository. A changelog entry, a task, a wave background, a comment and a commit message state a defect as a fact about this repository: the input, the behaviour and the expected behaviour. They name no other product, no user of this repository, no reporter and no source of a decision, and a sentence that carries no such fact is deleted. An identifier is named after its role in this repository.
 - One authoritative document per topic. The protocol contract is in `docs/spec/`. Implementation and verification status is in `docs/features.md`. Planned tasks, their verification commands and their completion are in `docs/plans/execution-checklist.md`; every change belongs to a task there, and a task is added before its work starts. Current procedures are in `docs/operations/`. Actual changes and their verification results are in `CHANGELOG.md`.
 - Documents describe current behavior. When the direction changes, change the specification first and mark parts that are not implemented.
 - A behavior change, its documents, its feature status row and its changelog entry are one change.
