@@ -7,7 +7,7 @@
 //              run records the running patch (HY-81)
 // make is not pinned: the expansion of every target of the Makefile gives the same commands under GNU Make 3.81 and 4,
 // and the recipes start npm and Composer by their absolute paths, which make 3.81 needs.
-//   Rust       rust-toolchain.toml of the template branch (HY-80), which the declared copy holds
+//   Rust       rust-toolchain.toml of the branch main of the template repository, which the declared copy holds (HY-80)
 // npm and Composer are installed into this checkout, below the ignored directory var/tools, and never into the
 // machine: a global tool is shared by every checkout and session of the machine, and an install of one replaces the
 // tool of the others. var/tools/bin holds the commands `npm`, `npx` and `composer`, which run the installed releases;

@@ -1,9 +1,10 @@
-// Tests that this repository reads the template repository only through its declared copy (HY-78) of the commit
-// at the head of the branch that config/template.json names (HY-80): the copy script copies it whatever commit the template
-// checkout is at, fails with the expected and the actual value for a missing branch and a build of other inputs, writes nothing into the
-// template repository, and the
-// Makefile copies again only when config/template.json changes; npm installs the TypeScript package as a copy inside this
-// checkout, and Composer, PHPStan and the native extension build read the copy.
+// Tests that this repository reads the template repository only through its declared copy (HY-78) of the commit at
+// the head of its branch main (HY-80): the copy script copies that commit whatever commit the working tree of the
+// template checkout is at, fails with the expected and the actual value for a missing branch and a build of other
+// inputs, writes nothing into the template repository and writes nothing into a current copy, and the Makefile runs
+// the copy on every make template and installs the packages again only when the copy changed; npm installs the
+// TypeScript package as a copy inside this checkout, and Composer, PHPStan and the native extension build read the
+// copy.
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
@@ -49,18 +50,11 @@ function templateRepository(t, withBuild) {
     writeFileSync(join(directory, path), text, { mode: path.endsWith('template.php') ? 0o755 : 0o644 });
   }
   const git = (...args) => execFileSync('git', ['-c', 'user.name=hyper', '-c', 'user.email=hyper@localhost', '-C', directory, ...args], { encoding: 'utf8' });
-  git('init', '-q');
+  git('init', '-q', '-b', 'main');
   git('add', '-A');
   git('commit', '-q', '-m', 'fixture');
   if (withBuild) build(directory);
-  const config = join(directory, '..', `${directory.split('/').pop()}.template.json`);
-  t.after(() => rmSync(config, { force: true }));
-  const declareCommit = (commit) => {
-    git('update-ref', 'refs/heads/declared', commit);
-    writeFileSync(config, `${JSON.stringify({ branch: 'declared' })}\n`);
-  };
-  declareCommit(git('rev-parse', 'HEAD').trim());
-  return { directory, git, config, declareCommit, status: () => git('status', '--porcelain', '--ignored') };
+  return { directory, git, main: () => git('rev-parse', 'main').trim(), status: () => git('status', '--porcelain', '--ignored') };
 }
 
 // Builds the TypeScript package of a fixture repository and records the hash of its inputs.
@@ -76,9 +70,10 @@ function output(t) {
   return join(directory, 'template');
 }
 
-const copy = (template, to) => spawnSync(process.execPath, [join(repository, 'scripts', 'copy-template.mjs'), '--repository', template.directory, '--config', template.config, '--output', to], { encoding: 'utf8' });
+const copy = (template, to, branch = 'main') => spawnSync(process.execPath, [join(repository, 'scripts', 'copy-template.mjs'), '--repository', template.directory, '--branch', branch, '--output', to], { encoding: 'utf8' });
+const scriptHash = createHash('sha256').update(readFileSync(join(repository, 'scripts', 'copy-template.mjs'))).digest('hex');
 
-test('the copy holds the packed TypeScript package and the tracked paths of the head commit and writes nothing into the template repository', (t) => {
+test('the copy holds the packed TypeScript package and the tracked paths of the commit of the branch and writes nothing into the template repository', (t) => {
   const template = templateRepository(t, true);
   // A change of the working tree that is not committed is not part of the copy.
   writeFileSync(join(template.directory, 'tools/compiler/compiler.mjs'), 'export const changed = true;\n');
@@ -101,7 +96,7 @@ test('the copy holds the packed TypeScript package and the tracked paths of the 
   // rustc -vV prints its release as a key and value line, the stable form of the pinned compiler (HY-83).
   const rust = spawnSync('rustc', ['-vV'], { cwd: join(to, 'packages/template-php-ext'), encoding: 'utf8', env: { ...process.env, RUSTUP_AUTO_INSTALL: '0' } });
   assert.match(rust.stdout, /^release: 1\.98\.1$/m, `${rust.stdout}${rust.stderr}`);
-  assert.deepEqual(JSON.parse(readFileSync(join(to, 'copy.json'), 'utf8')), { commit: template.git('rev-parse', 'HEAD').trim(), inputs: inputsHash(template.directory) });
+  assert.deepEqual(JSON.parse(readFileSync(join(to, 'copy.json'), 'utf8')), { branch: 'main', commit: template.main(), inputs: inputsHash(template.directory), script: scriptHash });
   assert.equal(existsSync(`${to}.next`), false);
 });
 
@@ -116,8 +111,9 @@ test('the copy fails without a build of the TypeScript package and names the bui
   assert.equal(existsSync(to), false);
 });
 
-test('the copy takes the head commit while the checkout of the template repository is at a later commit', (t) => {
+test('the copy takes the commit of the branch main while the working tree of the template repository is at another branch', (t) => {
   const template = templateRepository(t, true);
+  template.git('checkout', '-q', '-b', 'side');
   writeFileSync(join(template.directory, 'contracts/functions.json'), '{"next": true}\n');
   template.git('commit', '-q', '-am', 'next');
   const to = output(t);
@@ -128,49 +124,76 @@ test('the copy takes the head commit while the checkout of the template reposito
 
 test('the copy fails for a branch that the template repository does not have and names it', (t) => {
   const template = templateRepository(t, true);
-  writeFileSync(template.config, `${JSON.stringify({ branch: 'missing' })}\n`);
   const to = output(t);
-  const result = copy(template, to);
+  const result = copy(template, to, 'missing');
   assert.notEqual(result.status, 0);
-  assert.ok(result.stderr.includes(`has no branch missing, which ${template.config} names`), result.stderr);
+  assert.ok(result.stderr.includes(`${template.directory} has no branch missing`), result.stderr);
   assert.equal(existsSync(to), false);
 });
 
-test('the copy fails for a build of other inputs than the head commit and names the expected and the actual inputs', (t) => {
+test('the copy writes nothing while the copy holds the commit of the branch, and copies again when the branch moves', (t) => {
   const template = templateRepository(t, true);
-  const first = template.git('rev-parse', 'HEAD').trim();
+  const to = output(t);
+  const first = copy(template, to);
+  assert.equal(first.status, 0, first.stderr);
+  const record = join(to, 'copy.json');
+  const written = statSync(record).mtimeMs;
+  const again = copy(template, to);
+  assert.equal(again.status, 0, again.stderr);
+  assert.match(again.stdout, /holds the commit [0-9a-f]{40} of the branch main; nothing to copy/);
+  assert.equal(statSync(record).mtimeMs, written);
+  writeFileSync(join(template.directory, 'contracts/functions.json'), '{"next": true}\n');
+  template.git('commit', '-q', '-am', 'next');
+  const moved = copy(template, to);
+  assert.equal(moved.status, 0, moved.stderr);
+  assert.equal(readFileSync(join(to, 'contracts/functions.json'), 'utf8'), '{"next": true}\n');
+  assert.equal(JSON.parse(readFileSync(record, 'utf8')).commit, template.main());
+});
+
+test('the copy fails for a build of other inputs than the commit of the branch and names the expected and the actual inputs', (t) => {
+  const template = templateRepository(t, true);
   // A source change committed without a build: the record names the inputs of the earlier commit.
   const recorded = inputsHash(template.directory);
   writeFileSync(join(template.directory, 'packages/template-ts/src/index.ts'), 'export const built = 2;\n');
   template.git('commit', '-q', '-am', 'source');
-  template.declareCommit(template.git('rev-parse', 'HEAD').trim());
   const to = output(t);
   const stale = copy(template, to);
   assert.notEqual(stale.status, 0);
-  assert.ok(stale.stderr.includes(`records a build of the inputs ${recorded}, expected the inputs ${inputsHash(template.directory)} of the head commit`), stale.stderr);
-  // A build of the later commit while the branch is at the earlier one.
+  assert.ok(stale.stderr.includes(`records a build of the inputs ${recorded}, expected the inputs ${inputsHash(template.directory)} of the commit ${template.main()} of the branch main`), stale.stderr);
+  // A build of a later commit of another branch while main is at the earlier one.
+  const first = template.main();
+  template.git('branch', '-q', 'side');
+  template.git('reset', '-q', '--hard', 'HEAD~1');
+  template.git('checkout', '-q', 'side');
   build(template.directory);
-  template.declareCommit(first);
   const later = copy(template, to);
   assert.notEqual(later.status, 0);
-  assert.ok(later.stderr.includes(`records a build of the inputs ${inputsHash(template.directory)}, expected the inputs ${recorded} of the head commit ${first}`), later.stderr);
-  // An input that the head commit does not have.
+  assert.ok(later.stderr.includes(`records a build of the inputs ${inputsHash(template.directory)}, expected the inputs ${recorded} of the commit ${template.main()} of the branch main`), later.stderr);
+  assert.notEqual(template.main(), first);
+  // An input that the commit of the branch does not have.
   writeFileSync(join(template.directory, 'scripts/build-package.mjs'), `process.stdout.write(${JSON.stringify([...INPUTS, 'packages/template-ts/src/extra.ts'].join('\n'))} + '\\n');\n`);
   const extra = copy(template, to);
   assert.notEqual(extra.status, 0);
-  assert.match(extra.stderr, /differ from the head commit [0-9a-f]{40}: packages\/template-ts\/src\/extra\.ts is not in the commit/);
+  assert.match(extra.stderr, /differ from the commit [0-9a-f]{40} of the branch main: packages\/template-ts\/src\/extra\.ts is not in the commit/);
   assert.equal(existsSync(to), false);
 });
 
-test('make template copies the head commit only when config/template.json or the copy script changed, and builds nothing in the template repository', (t) => {
+test('make template runs the copy of the branch main every time, installs the packages only when the copy changed, and builds nothing in the template repository', (t) => {
   const directory = mkdtempSync(join(tmpdir(), 'hyper-template-stamp-'));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
-  const templateRun = () => dryRun('template', { variables: [`TEMPLATE_DIR=${directory}`] }).join('\n');
+  const templateRun = (...options) => dryRun('template', { variables: [`TEMPLATE_DIR=${directory}`, ...options] }).join('\n');
+  const copyLine = new RegExp(`^node scripts/copy-template\\.mjs --repository \\.\\./template --branch main --output ${directory}$`, 'm');
   const first = templateRun();
-  assert.match(first, new RegExp(`^node scripts/copy-template\\.mjs --repository \\.\\./template --config config/template\\.json --output ${directory}$`, 'm'));
+  assert.match(first, copyLine);
+  assert.match(first, /publish\.mjs npm-copy/);
   assert.doesNotMatch(first, /npm run build|cd \.\.\/template/);
+  writeFileSync(join(directory, 'copy.json'), '{}\n');
   writeFileSync(join(directory, 'installed.stamp'), '');
-  assert.doesNotMatch(templateRun(), /copy-template/);
+  // The copy runs while the stamp exists, because the branch may have moved.
+  assert.match(templateRun(), copyLine);
+  // A copy that the copy script left unchanged installs nothing.
+  const unchanged = templateRun('-o', join(directory, 'copy.json'));
+  assert.doesNotMatch(unchanged, /copy-template|publish\.mjs/);
 });
 
 test('npm installs the template package as one copy inside this checkout', () => {

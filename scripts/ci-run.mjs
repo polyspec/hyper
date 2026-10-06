@@ -2,14 +2,14 @@
 // The runner of the CI groups of the full suite (HY-91). Each job of .github/workflows/ci.yml runs one group of the
 // targets of CHECK_TARGETS, which the Makefile names in CI_TARGETS_<group>, through make:
 //
-//   node scripts/ci-run.mjs pins                     make ci-pins: the PHP minor of config/toolchain.json and the
-//                                                    template branch of config/template.json, as step outputs
+//   node scripts/ci-run.mjs pins                     make ci-pins: the PHP minor of config/toolchain.json, as a
+//                                                    step output
 //   node scripts/ci-run.mjs run <group> <target>...  make ci-check GROUP=<group>: every target of the group
 //   node scripts/ci-run.mjs summary <group>          make ci-summary GROUP=<group>: the summary of the run
 //
 // `run` starts each target with its own `make --no-print-directory -k <target>` and lets it run to its end, also after
 // an earlier target failed, with no time limit: a target is a long operation, which its log shows line by line. The
-// report of the group is var/ci/<group>/: `record.json` with the commit, the tree, the template branch, the running
+// report of the group is var/ci/<group>/: `record.json` with the tree, the running
 // releases of the tools (the PHP patch among them) and each target with its status, its times and, for a failed
 // target, its first failure lines; `logs/<target>.log` with the full output of each target; and `summary.md`. The
 // record is written before and after each target, so a runner that stops leaves the target that was running. No report
@@ -115,16 +115,14 @@ function readJson(file) {
   }
 }
 
-/** The PHP minor and the template branch that the workflow reads before it sets up PHP and checks out the template repository. */
+/** The pin that the workflow reads before it sets up PHP. */
 export function pins({ root = ROOT, env = process.env, print = (line) => console.log(line) } = {}) {
   const php = JSON.parse(readFileSync(path.join(root, 'config/toolchain.json'), 'utf8')).php;
-  const template = JSON.parse(readFileSync(path.join(root, 'config/template.json'), 'utf8')).branch;
   if (!/^\d+\.\d+$/.test(php ?? '')) throw new Error(`config/toolchain.json pins no PHP minor: expected "php" as <major>.<minor>, actual ${JSON.stringify(php)}`);
-  if (!/^[\w./-]+$/.test(template ?? '')) throw new Error(`config/template.json names no branch: expected "branch", actual ${JSON.stringify(template)}`);
-  const text = `php=${php}\ntemplate=${template}\n`;
+  const text = `php=${php}\n`;
   print(text.trimEnd());
   if (env.GITHUB_OUTPUT) appendFileSync(env.GITHUB_OUTPUT, text);
-  return { php, template };
+  return { php };
 }
 
 // Runs `make <target>` in the checkout: its output goes to `output` and into the log of the target line by line, as
@@ -181,7 +179,7 @@ export function render({ group, record, steps = {} }) {
     lines.push(`**make ci-check GROUP=${group} recorded no run**${record?.error ? ` (${record.error})` : ''}: it stopped before its first target, or the step did not run. The log of that step shows why.`, '');
   } else {
     const environment = Object.entries(record.environment ?? {}).map(([tool, version]) => `${tool} ${version}`).join(', ');
-    lines.push(`commit \`${record.commit}\`, tree \`${record.tree}\`, template \`${record.template}\`, started ${record.started}, ended ${record.ended ?? 'never'}, result **${record.result}**`, '');
+    lines.push(`tree \`${record.tree}\`, started ${record.started}, ended ${record.ended ?? 'never'}, result **${record.result}**`, '');
     if (environment) lines.push(`environment: ${environment}`, '');
     const running = record.targets.find((target) => target.status === 'running');
     if (record.result === 'incomplete') lines.push(`**The runner ended without recording the end of its run; ${running ? `${running.name} was running` : 'no target was running'}.** The targets below are as the runner last recorded them.`, '');
@@ -226,12 +224,9 @@ export async function ciRun({ root = ROOT, group, targets, env = process.env, pr
   const report = reportDirectory(root, group);
   const writer = reportWriter(print);
   const now = () => new Date().toISOString();
-  const templateConfig = readJson(path.join(root, 'config/template.json'));
   const record = {
     group,
-    commit: git(root, 'rev-parse', 'HEAD'),
     tree: git(root, 'rev-parse', 'HEAD^{tree}'),
-    template: templateConfig.branch ?? templateConfig.error,
     environment: { ...versions(), runner: `${env.ImageOS ?? 'unknown image'} ${env.ImageVersion ?? ''}`.trim() },
     result: 'incomplete',
     started: now(),
@@ -243,7 +238,7 @@ export async function ciRun({ root = ROOT, group, targets, env = process.env, pr
     writer.write(path.join(report, 'record.json'), `${JSON.stringify(record, null, 2)}\n`);
   };
   save();
-  print(`[ci] group ${group}: ${targets.length} targets on commit ${record.commit}, template ${record.template}`);
+  print(`[ci] group ${group}: ${targets.length} targets on tree ${record.tree}`);
   for (const [index, target] of record.targets.entries()) {
     Object.assign(target, { status: 'running', started: now() });
     save();
