@@ -47,6 +47,8 @@
 | `make hooks` | `core.hooksPath`를 `.githooks`로 설정하고 `make hooks-check`를 실행한다([Push](#push) 참조) |
 | `make hooks-check` | `core.hooksPath`가 `.githooks`가 아니거나 `.githooks/pre-push`가 없거나 실행할 수 없으면 실패한다 |
 | `make push-gate-commit` | commit `COMMIT`에 진행 중인 checklist 작업이 있거나 그 commit이 `.githooks/pre-push`를 mode 100755로 추적하지 않으면 실패한다. GitHub의 job `push-gate`가 이를 실행한다([Push](#push) 참고) |
+| `make github-ruleset` | `.github/ruleset.json`의 merge 설정을 바꾸고 그 이름의 GitHub ruleset을 다른 곳만 만들거나 갱신한 뒤 다시 비교한다([main 공개](#main-공개) 참고) |
+| `make github-ruleset-check` | merge 설정이나 live GitHub ruleset이 `.github/ruleset.json`과 다르면 field마다 live 값과 선언 값을 밝히며 실패한다. 아무것도 바꾸지 않는다 |
 | `make ci-pins` | `config/toolchain.json`의 PHP minor와 `config/template.json`의 template branch를 출력하고 step output으로 workflow에 준다([CI](#ci) 참고) |
 | `make ci-check` | CI group `GROUP`의 target을 끝까지 실행하고 보고서 `var/ci/<group>/`을 쓴다. GitHub Actions에서만 실행한다([CI](#ci) 참고) |
 | `make ci-summary` | CI group `GROUP`의 요약을 보고서와 job summary에 쓴다([CI](#ci) 참고) |
@@ -82,11 +84,32 @@ push는 push하는 commit에도 working tree에도 checklist의 `[~]` 작업이 
 
 Git은 clone에서 hook을 설치하지 않는다. 그래서 모든 `make` 실행이 `core.hooksPath`가 다른 값이면 `.githooks`로 설정하고, `make hooks`는 이를 명시적으로 설정한다. 커밋 전에 `make docs-check`가 실행하는 `make hooks-check`와 전체 실행의 guard는 `core.hooksPath`가 `.githooks`가 아니거나 hook이 없거나 실행할 수 없으면 실패한다.
 
-workflow `.github/workflows/push-gate.yml`은 모든 push를 검사한다. 그 job `push-gate`는 모든 branch에 push된 commit과 모든 pull request의 head commit에 `node scripts/push-gate.mjs commit <sha>`를 실행하는 `make push-gate-commit COMMIT=<sha>`를 실행하므로, hook을 거치지 않았거나 hook이 없는 checkout에서 온 push도 그곳에서 실패한다. 진행 중인 작업이 있을 때, checklist가 없는 commit일 때, `.githooks/pre-push`를 mode 100755로 추적하지 않는 commit일 때 실패하며, 실패의 각 줄을 annotation으로 출력하고 job summary에 쓴다. 이어서 job은 문서 쌍, link, code block, checklist 규칙인 `make docs-check`를 실행하며, 이 검사는 network를 읽지 않으므로, 이를 어기는 commit은 ruleset `main`이 요구하는 check에서 실패한다([main 공개](#main-공개) 참고).
+workflow `.github/workflows/push-gate.yml`은 모든 push를 검사한다. 그 job `push-gate`는 merge queue의 branch `gh-readonly-queue/**`를 뺀 모든 branch에 push된 commit, 모든 pull request의 head commit, 모든 merge group에 `node scripts/push-gate.mjs commit <sha>`를 실행하는 `make push-gate-commit COMMIT=<sha>`를 실행하므로, hook을 거치지 않았거나 hook이 없는 checkout에서 온 push도 그곳에서 실패한다. 진행 중인 작업이 있을 때, checklist가 없는 commit일 때, `.githooks/pre-push`를 mode 100755로 추적하지 않는 commit일 때 실패하며, 실패의 각 줄을 annotation으로 출력하고 job summary에 쓴다. 이어서 job은 문서 쌍, link, code block, checklist 규칙인 `make docs-check`를 실행하며, 이 검사는 network를 읽지 않으므로, 이를 어기는 commit은 ruleset `main`이 요구하는 check에서 실패한다([main 공개](#main-공개) 참고).
+
+## main 공개
+
+모든 변경은 pull request와 merge queue를 거쳐 `main`에 닿으며(HY-94), 이 저장소의 어떤 명령도 `main`을 push하지 않는다. branch는 GitHub의 표준 명령이나 GitHub UI로 공개한다.
+
+```sh
+git push origin HEAD:refs/heads/<branch>
+gh pr create --base main --head <branch> --fill
+gh pr merge <branch> --auto --rebase
+```
+
+`.github/ruleset.json`의 GitHub ruleset `main`은 enforcement `active`로 `refs/heads/main`에 적용되고 bypass actor가 없으므로 관리자에게도 적용된다. 그 rule은 다음과 같다.
+
+- `pull_request`: 변경은 pull request로 들어온다. 승인은 필요 없고 모든 merge method를 허용한다. merge queue는 자기 method로 merge하고, `gh pr merge --auto`는 스스로 고른 method로 auto-merge를 요청하므로, `rebase`만 허용하는 rule은 pull request를 queue 밖에 둔다.
+- `merge_queue`: merge queue는 method `REBASE`로 merge하므로 pull request의 각 commit이 그대로 `main`의 commit이 된다. grouping strategy는 `ALLGREEN`이고, 한 번에 최대 5개 항목을 build하고 merge하며, 더 많은 항목을 기다리지 않는다. `check_response_timeout_minutes`는 GitHub의 최댓값인 360이므로 긴 suite가 이것으로 끊기지 않는다.
+- `required_linear_history`, `non_fast_forward`, `deletion`: `main`에 merge commit, force-push, 삭제가 없다.
+- `required_status_checks`: GitHub Actions app(integration 15368)의 check `push-gate`, `check (docs)`, `check (php)`, `check (node)`, `check (board)`. 곧 `make push-gate-commit`과 `make docs-check`를 실행하는 `.github/workflows/push-gate.yml`의 job과, CI group마다 하나씩 전체 suite를 실행하는 `.github/workflows/ci.yml`의 job이다.
+
+직접 `git push origin <commit>:main`을 하면 `GH013: Repository rule violations found`로 거부된다. `gh pr merge --auto`는 pull request에서 필수 check가 통과하면 pull request를 merge queue에 넣는다. queue는 이를 `main` 위에 branch `gh-readonly-queue/main/pr-<number>-<sha>`의 merge group으로 rebase하고, 두 workflow가 그 commit에서 실행하며(`merge_group`), check가 통과하면 `main`을 정확히 그 commit으로 옮긴다. 실패한 check는 pull request를 queue에서 빼고 `main`은 움직이지 않는다. push gate는 queue의 branch로의 push에서는 실행하지 않는다. 그 merge group run이 이미 검사하기 때문이다. merge group의 `ci.yml` run은 취소되지 않는다. group마다 자기 ref가 있고 `cancel-in-progress`는 pull request에만 적용되기 때문이다. merge된 pull request의 branch는 삭제된다(`delete_branch_on_merge`). rebase는 merge된 commit에 새 hash를 주므로 `git pull --rebase`가 queue가 merge한 local commit을 버린다.
+
+`make github-ruleset`은 선언의 저장소 설정(`allow_rebase_merge`, `allow_auto_merge`, `delete_branch_on_merge`)을 바꾸고 선언한 이름의 ruleset을 다른 곳만 만들거나 갱신한 뒤 다시 비교한다. `make github-ruleset-check`는 아무것도 바꾸지 않으며, 설정이 다르거나 live ruleset이 없거나 선언과 다르면 field마다 live 값과 선언 값을 밝히며 실패한다. 둘 다 make 변수 `GH`(설정하지 않으면 `gh`)의 GitHub CLI를 실행하며, 그 CLI에는 저장소의 administration 권한이 필요하다. 전체 suite의 어떤 target도 이들을 실행하지 않는다. `tests/scripts/github-ruleset.test.mjs`는 가짜 `gh`로 script를 실행한다.
 
 ## CI
 
-workflow `.github/workflows/ci.yml`은 `main`으로의 push 뒤와 모든 pull request에 대해 전체 suite를 실행한다(HY-91). runner가 적으므로 새 push는 같은 ref에서 아직 진행 중인 run을 멈춘다. 그 job `check`는 Makefile의 CI group마다 항목 하나를 `fail-fast: false`로 가진다.
+workflow `.github/workflows/ci.yml`은 모든 pull request와 merge queue의 모든 merge group에 대해 전체 suite를 실행한다(HY-91, [main 공개](#main-공개) 참고). runner가 적으므로 pull request의 새 push는 아직 진행 중인 앞선 push의 run을 멈추고, merge group의 run은 취소하지 않는다. 그 job `check`는 Makefile의 CI group마다 항목 하나를 `fail-fast: false`로 가진다.
 
 | Group | Target | 준비 |
 |---|---|---|

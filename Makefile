@@ -66,7 +66,7 @@ $(if $(filter $(HOOKS_PATH),$(shell git config core.hooksPath)),,$(shell git con
 
 .DEFAULT_GOAL := help
 
-.PHONY: help tools toolchain-check owner-check install hyper-php-copy template template-check rust-downloads-check install-rust ext packages package-check server server-fixtures node-server node-fixtures assets test-js test-node test-php lint analyse-php templates-check test-scripts virtiofs-check parity server-parity bundle-size e2e docs-check serve-demo bench-server bench-server-smoke bench-browser bench check rerun-failed serve-demo-unlock hooks hooks-check push-gate-commit ci-pins ci-check ci-summary install-browser github-ruleset github-ruleset-check push
+.PHONY: help tools toolchain-check owner-check install hyper-php-copy template template-check rust-downloads-check install-rust ext packages package-check server server-fixtures node-server node-fixtures assets test-js test-node test-php lint analyse-php templates-check test-scripts virtiofs-check parity server-parity bundle-size e2e docs-check serve-demo bench-server bench-server-smoke bench-browser bench check rerun-failed serve-demo-unlock hooks hooks-check push-gate-commit ci-pins ci-check ci-summary install-browser github-ruleset github-ruleset-check
 
 help: ## List the targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
@@ -212,13 +212,13 @@ push-gate-commit: ## Fail when the commit COMMIT has a checklist task in progres
 hooks-check: ## Fail while the pre-push hook of .githooks is not installed or not executable
 	node scripts/push-gate.mjs hooks-check
 
-# The GitHub ruleset main of .github/ruleset.json (HY-94, scripts/github-ruleset.mjs): it requires the check push-gate,
-# refuses a force-push and a deletion of main and has no bypass actor. These targets reach the GitHub API, so no target
-# of the full suite runs them.
-github-ruleset: ## Create or update the GitHub ruleset of .github/ruleset.json by its name, then compare it again (HY-94)
+# The GitHub ruleset main and the merge settings of .github/ruleset.json (HY-94, scripts/github-ruleset.mjs): every
+# change reaches main through a pull request and the merge queue, which requires the check push-gate and every job of
+# the full suite. These targets reach the GitHub API, so no target of the full suite runs them, and none publishes.
+github-ruleset: ## Change the merge settings and create or update the GitHub ruleset of .github/ruleset.json where they differ, then compare again (HY-94)
 	node scripts/github-ruleset.mjs apply --gh $(GH)
 
-github-ruleset-check: ## Fail when the live GitHub ruleset is missing or differs from .github/ruleset.json, naming each field; changes nothing (HY-94)
+github-ruleset-check: ## Fail when a merge setting or the live GitHub ruleset differs from .github/ruleset.json, naming each field; changes nothing (HY-94)
 	node scripts/github-ruleset.mjs check --gh $(GH)
 
 serve-demo: assets server ## Serve SSR on :8080, CSR on :8081 and the comparison page on :8081/compare; fails with the holder while another demo runs
