@@ -1,5 +1,5 @@
 import { MapLoader, type Loader, type LoadResult, type Template } from '@polyspec/template/render';
-import { DATA_TEMPLATE_NAME, type Manifest, type RouteDeclaration } from './manifest.js';
+import type { Manifest, RouteDeclaration } from './manifest.js';
 
 // Template name to its file URL (HY-34).
 export type TemplateIndex = Record<string, { url: string }>;
@@ -68,9 +68,10 @@ export class TemplateStore {
   }
 }
 
-// Returns the entry templates of a route: the templates that rendering it starts from (HY-35).
+// Returns the entry templates of a route: the templates that rendering it starts from in the browser, which never renders
+// `hyper/data.tpl` (HY-31, HY-35).
 export function routeTemplates(manifest: Manifest, route: RouteDeclaration): string[] {
   const regions = manifest.regions.flatMap((region) => (region.template === undefined ? [] : [region.template]));
   const routeRegions = (route.regions ?? []).map((region) => region.template);
-  return [manifest.layout, manifest.title, DATA_TEMPLATE_NAME, ...regions, route.template, ...routeRegions];
+  return [manifest.layout, manifest.title, ...regions, route.template, ...routeRegions];
 }

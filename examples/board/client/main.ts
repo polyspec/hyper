@@ -47,10 +47,6 @@ document.addEventListener('htmx:after:process', (event) => {
   if (event.target === document.body) void report();
 });
 
-if (basePath === null) {
-  // HY-32: the server embedded the document data, so the first page can change without a request.
-  const embedded = document.getElementById('hy-data')?.textContent;
-  if (embedded) void hyper.holdEmbedded(embedded, location.pathname);
-} else {
-  void hyper.renderLocation(location.pathname + location.search);
-}
+// HY-22, HY-32, HY-93: a client-rendered page renders its document; a server-rendered page holds its embedded data, or
+// obtains the data when it first needs it.
+void hyper.open();
