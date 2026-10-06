@@ -275,7 +275,7 @@ DARWIN_TARGETS := virtiofs-check
 CHECK_TARGETS += $(if $(filter Darwin,$(shell uname)),$(DARWIN_TARGETS))
 
 check: ## Run every check through the guard: once per tree, when no checklist task is [~]
-	node scripts/full-run.mjs run $(CHECK_TARGETS)
+	TEMPLATE_REPOSITORY=$(TEMPLATE_REPOSITORY) TEMPLATE_BRANCH=$(TEMPLATE_BRANCH) node scripts/full-run.mjs run $(CHECK_TARGETS)
 
 owner-check: ## Run the owner checks of the changed paths (scripts/owner-checks.json): PATHS, the paths since BASE, or the uncommitted changes (HY-88)
 	node scripts/owner-check.mjs $(if $(PATHS),--paths "$(PATHS)") $(if $(BASE),--base "$(BASE)")
@@ -295,4 +295,4 @@ install-browser: ## Install Chromium of the pinned Playwright and its system lib
 	$(ONLINE) node node_modules/@playwright/test/cli.js install --with-deps chromium
 
 rerun-failed: ## Rerun only the targets of make check that did not pass on the current tree
-	node scripts/full-run.mjs rerun-failed
+	TEMPLATE_REPOSITORY=$(TEMPLATE_REPOSITORY) TEMPLATE_BRANCH=$(TEMPLATE_BRANCH) node scripts/full-run.mjs rerun-failed

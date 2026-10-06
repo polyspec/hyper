@@ -29,6 +29,9 @@ const CHECKLIST = `# Execution checklist
 
 const DONE = CHECKLIST.replace('| [~] |', '| [o] |');
 
+// The template repository of a fixture checkout: a Git repository with a branch main in the ignored var/template.
+const TEMPLATE = { repository: 'var/template', branch: 'main' };
+
 
 function git(cwd, ...args) {
   const run = spawnSync('git', args, { cwd, encoding: 'utf8' });
@@ -50,8 +53,20 @@ function checkout(t, checklist) {
   git(directory, 'config', 'core.hooksPath', '.githooks');
   git(directory, 'add', '.');
   git(directory, '-c', 'user.name=test', '-c', 'user.email=test@example.com', 'commit', '--quiet', '-m', 'checklist');
+  const template = path.join(directory, TEMPLATE.repository);
+  mkdirSync(template, { recursive: true });
+  git(template, 'init', '--quiet', '-b', TEMPLATE.branch);
+  commitTemplate(directory, 'first');
   return directory;
 }
+
+// Commits to the branch main of the template repository of a fixture checkout and returns the new commit.
+function commitTemplate(directory, message) {
+  const template = path.join(directory, TEMPLATE.repository);
+  git(template, '-c', 'user.name=test', '-c', 'user.email=test@example.com', 'commit', '--quiet', '--allow-empty', '-m', message);
+  return git(template, 'rev-parse', 'HEAD');
+}
+const templateMain = directory => git(path.join(directory, TEMPLATE.repository), 'rev-parse', TEMPLATE.branch);
 
 const commit = (directory, file, text) => {
   writeFileSync(path.join(directory, file), text);
@@ -68,6 +83,7 @@ async function guard(directory, mode, targets, failing = []) {
   const ran = [];
   const status = await fullRun({
     root: directory,
+    template: TEMPLATE,
     mode,
     targets,
     print: line => lines.push(line),
@@ -85,11 +101,13 @@ async function guard(directory, mode, targets, failing = []) {
 
 test('make check and make rerun-failed start the guard before any step', () => {
   const check = dryRun('check');
-  assert.match(check[0], /^node scripts\/full-run\.mjs run template-check bench-server-smoke docs-check lint /, check.join('\n'));
+  // The guard reads the commit of the template branch from the template repository of the Makefile (HY-80).
+  assert.match(check[0], /^TEMPLATE_REPOSITORY=\.\.\/template TEMPLATE_BRANCH=main node scripts\/full-run\.mjs run template-check bench-server-smoke docs-check lint /, check.join('\n'));
   assert.equal(check.length, 1, check.join('\n'));
-  assert.deepEqual(dryRun('rerun-failed'), ['node scripts/full-run.mjs rerun-failed']);
+  const rerun = ['TEMPLATE_REPOSITORY=../template TEMPLATE_BRANCH=main node scripts/full-run.mjs rerun-failed'];
+  assert.deepEqual(dryRun('rerun-failed'), rerun);
   // The same commands when this process runs inside a make that prints its directories (HY-83).
-  assert.deepEqual(dryRun('rerun-failed', { env: { ...process.env, MAKEFLAGS: 'w', MAKELEVEL: '2' } }), ['node scripts/full-run.mjs rerun-failed']);
+  assert.deepEqual(dryRun('rerun-failed', { env: { ...process.env, MAKEFLAGS: 'w', MAKELEVEL: '2' } }), rerun);
 });
 
 test('the active items are the task rows in state [~], with their titles', () => {
@@ -98,7 +116,7 @@ test('the active items are the task rows in state [~], with their titles', () =>
 });
 
 test('the decision refuses an active item, a dirty tree, a missing hook and a second run of a tree', () => {
-  const clean = { mode: 'run', targets: ['a', 'b'], active: [], dirty: [], hooks: null, tree: 'tree-1', record: null, running: false };
+  const clean = { mode: 'run', targets: ['a', 'b'], active: [], dirty: [], hooks: null, tree: 'tree-1', template: 'main-1', record: null, running: false };
   const fresh = decide(clean);
   assert.equal(fresh.run, true);
   assert.deepEqual(fresh.targets, ['a', 'b']);
@@ -116,10 +134,15 @@ test('the decision refuses an active item, a dirty tree, a missing hook and a se
   assert.equal(hooks.run, false);
   assert.match(hooks.reason, /pre-push hook is not installed[\s\S]*run make hooks/);
 
-  const earlier = { tree: 'tree-1', result: 'passed', started: '2026-10-05T01:00:00.000Z', targets: [{ name: 'a', status: 'passed' }, { name: 'b', status: 'passed' }] };
+  const earlier = { tree: 'tree-1', template: 'main-1', result: 'passed', started: '2026-10-05T01:00:00.000Z', targets: [{ name: 'a', status: 'passed' }, { name: 'b', status: 'passed' }] };
   const second = decide({ ...clean, record: earlier });
   assert.equal(second.run, false);
-  assert.match(second.reason, /full run of tree tree-1 started 2026-10-05T01:00:00\.000Z with result passed/);
+  assert.match(second.reason, /full run of tree tree-1 with the template commit main-1 started 2026-10-05T01:00:00\.000Z with result passed/);
+
+  // The same tree with another commit of the template branch is a new run (HY-80).
+  const moved = decide({ ...clean, template: 'main-2', record: earlier });
+  assert.equal(moved.run, true);
+  assert.match(moved.reason, /the template commit main-2 differs from the template commit main-1 of the last full run/);
 
   const changed = decide({ ...clean, tree: 'tree-2', record: earlier });
   assert.equal(changed.run, true);
@@ -132,12 +155,14 @@ test('the decision refuses an active item, a dirty tree, a missing hook and a se
 });
 
 test('the decision of rerun-failed needs a record of the current tree with targets that did not pass', () => {
-  const clean = { mode: 'rerun-failed', targets: [], active: [], dirty: [], hooks: null, tree: 'tree-1', record: null, running: false };
+  const clean = { mode: 'rerun-failed', targets: [], active: [], dirty: [], hooks: null, tree: 'tree-1', template: 'main-1', record: null, running: false };
   assert.match(decide(clean).reason, /no full-run record/);
   assert.equal(decide(clean).run, false);
-  const failed = { tree: 'tree-1', result: 'failed', started: 's', targets: [{ name: 'a', status: 'passed' }, { name: 'b', status: 'failed' }, { name: 'c', status: 'pending' }] };
+  const failed = { tree: 'tree-1', template: 'main-1', result: 'failed', started: 's', targets: [{ name: 'a', status: 'passed' }, { name: 'b', status: 'failed' }, { name: 'c', status: 'pending' }] };
   assert.equal(decide({ ...clean, tree: 'tree-2', record: failed }).run, false);
   assert.match(decide({ ...clean, tree: 'tree-2', record: failed }).reason, /verified tree tree-1, not the current tree tree-2/);
+  assert.equal(decide({ ...clean, template: 'main-2', record: failed }).run, false);
+  assert.match(decide({ ...clean, template: 'main-2', record: failed }).reason, /verified the template commit main-1, not the current template commit main-2/);
   assert.deepEqual(decide({ ...clean, record: failed }).targets, ['b', 'c']);
   assert.equal(decide({ ...clean, record: { ...failed, result: 'passed', targets: [{ name: 'a', status: 'passed' }] } }).run, false);
   assert.equal(decide({ ...clean, record: failed, dirty: [' M x'] }).run, false);
@@ -179,8 +204,10 @@ test('a full run records each target, and the same tree is refused a second time
   assert.match(first.output, /^\[full-run\] run: no full-run record/);
   const written = record(directory);
   assert.equal(written.tree, git(directory, 'rev-parse', 'HEAD^{tree}'));
-  // The record names the run by its tree.
-  assert.deepEqual(Object.keys(written).sort(), ['ended', 'environment', 'failed', 'pid', 'reruns', 'result', 'started', 'targets', 'tree']);
+  // The record names the run by its tree and the commit of the template branch, read when the guard starts (HY-80).
+  assert.equal(written.template, templateMain(directory));
+  assert.match(first.output, new RegExp(`^\\[full-run\\] template commit ${written.template} of the branch main of var/template$`, 'm'));
+  assert.deepEqual(Object.keys(written).sort(), ['ended', 'environment', 'failed', 'pid', 'reruns', 'result', 'started', 'targets', 'template', 'tree']);
   // The record holds the running releases of the tools, the PHP patch among them, as the evidence of the run (HY-81).
   assert.equal(written.environment.node, process.version);
   assert.match(written.environment.php, /^\d+\.\d+\.\d+$/);
@@ -191,7 +218,14 @@ test('a full run records each target, and the same tree is refused a second time
   const second = await guard(directory, 'run', ['a', 'b', 'c']);
   assert.equal(second.status, 1);
   assert.deepEqual(second.ran, []);
-  assert.match(second.output, new RegExp(`refuse: the full run of tree ${written.tree} started ${written.started} with result passed`));
+  assert.match(second.output, new RegExp(`refuse: the full run of tree ${written.tree} with the template commit ${written.template} started ${written.started} with result passed`));
+
+  // A new commit of the template branch permits a new full run of the same tree.
+  const next = commitTemplate(directory, 'next');
+  const moved = await guard(directory, 'run', ['a']);
+  assert.equal(moved.status, 0, moved.output);
+  assert.match(moved.output, new RegExp(`the template commit ${next} differs from the template commit ${written.template}`));
+  assert.equal(record(directory).template, next);
 
   commit(directory, 'next.txt', 'next\n');
   const changed = await guard(directory, 'run', ['a']);
@@ -237,6 +271,7 @@ test('a run that stops records the run as incomplete, and rerun-failed runs its 
   const directory = checkout(t, DONE);
   await assert.rejects(fullRun({
     root: directory,
+    template: TEMPLATE,
     mode: 'run',
     targets: ['a', 'b', 'c'],
     print: () => {},
@@ -267,11 +302,11 @@ test('a second full run of the checkout that starts while the first runs fails w
   let entered;
   const inside = new Promise(resolve => { entered = resolve; });
   const lines = [];
-  const first = fullRun({ root: directory, mode: 'run', targets: ['a'], print: () => {}, runTarget: async () => { entered(); await waiting; return { passed: true, lastLines: [] }; } });
+  const first = fullRun({ root: directory, template: TEMPLATE, mode: 'run', targets: ['a'], print: () => {}, runTarget: async () => { entered(); await waiting; return { passed: true, lastLines: [] }; } });
   await inside;
-  const second = await fullRun({ root: directory, mode: 'rerun-failed', print: line => lines.push(line), runTarget: async () => ({ passed: true, lastLines: [] }) });
+  const second = await fullRun({ root: directory, template: TEMPLATE, mode: 'rerun-failed', print: line => lines.push(line), runTarget: async () => ({ passed: true, lastLines: [] }) });
   assert.equal(second, 1);
-  const third = await fullRun({ root: directory, mode: 'run', targets: ['b'], print: line => lines.push(line), runTarget: async () => ({ passed: true, lastLines: [] }) });
+  const third = await fullRun({ root: directory, template: TEMPLATE, mode: 'run', targets: ['b'], print: line => lines.push(line), runTarget: async () => ({ passed: true, lastLines: [] }) });
   assert.equal(third, 1);
   assert.match(lines.join('\n'), /refuse: another full run of this checkout: .*full-run\.lock is held by process \d+ of the checkout/);
   finish();

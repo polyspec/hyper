@@ -165,7 +165,7 @@ test('a target declared for Darwin is in the full suite exactly on Darwin and sk
   assert.deepEqual(darwin, ['virtiofs-check']);
   const { check } = groups();
   assert.deepEqual(darwin.filter((target) => check.includes(target)), [], 'a Darwin target in the CHECK_TARGETS of every platform');
-  const suite = dryRun('check').find((line) => line.startsWith('node scripts/full-run.mjs run ')).split(' ').slice(3);
+  const suite = dryRun('check').find((line) => line.includes(' node scripts/full-run.mjs run ')).split(' node scripts/full-run.mjs run ')[1].split(' ');
   assert.deepEqual(suite, process.platform === 'darwin' ? [...check, ...darwin] : check);
   const virtiofs = readdirSync(path.join(ROOT, 'tests/virtiofs')).filter((name) => name.endsWith('.test.mjs'));
   assert.ok(virtiofs.length > 0);
