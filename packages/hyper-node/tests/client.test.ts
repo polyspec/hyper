@@ -78,7 +78,7 @@ describe('client rendering (HY-62)', () => {
     const shell = await new Fixture().handle({ target: '/list', headers: { Host: 'client.test' } }, { clientRendering: client(async (request) => ({ chosen: request.header('Host') === 'client.test', value: null })) });
     expect(shell.status).toBe(200);
     expect(shell.body).toBe(readFileSync(SHELL, 'utf8'));
-    const document = await new Fixture().handle({ target: '/list', headers: { Host: 'server.test' } }, { clientRendering: client(async () => ({ chosen: false, value: null })) });
+    const document = await new Fixture().handle({ target: '/list?embed=1', headers: { Host: 'server.test' } }, { clientRendering: client(async () => ({ chosen: false, value: null })) });
     expect(document.status).toBe(200);
     expect(document.body).toContain('id="hy-data"');
   });

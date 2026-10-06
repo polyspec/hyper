@@ -35,13 +35,23 @@ describe('App', () => {
 
   it('embeds only the route regions of the document JSON and their kept entries (HY-31)', async () => {
     const headers = cookie('hy-keep', '{"rows":{"mode":"b"}}');
-    const html = (await fixture.get('/list', headers)).body;
+    const html = (await fixture.get('/list?embed=1', headers)).body;
     const document = JSON.parse((await fixture.get('/list', { Accept: 'application/json', ...headers })).body) as { regions: Record<string, unknown>; kept: unknown };
     expect(Object.keys(document.regions)).toEqual(['side', 'content', 'rows']);
     const found = /<script type="application\/json" id="hy-data">(.*)<\/script>/.exec(html)?.[1];
     expect(JSON.parse(fixture.unmasked(found!))).toEqual(JSON.parse(fixture.unmasked(JSON.stringify({ ...document, regions: { rows: document.regions.rows } }))));
     expect(JSON.parse(found!).kept).toEqual({ rows: { mode: 'b' } });
     expect(found).toContain('"a\\u003c"');
+  });
+
+  it('embeds no data in a document without the reply, and the JSON response is the same (HY-31, HY-92)', async () => {
+    const document = (await fixture.get('/list')).body;
+    expect(document).toContain('<ul id="rows"><li>a&lt;</li><li>b0</li></ul>');
+    expect(document).not.toContain('id="hy-data"');
+    expect((await fixture.get('/list?embed=1')).body).toContain('id="hy-data"');
+    const plain = (await fixture.get('/list', { Accept: 'application/json' })).body;
+    const asked = (await fixture.get('/list?embed=1', { Accept: 'application/json' })).body;
+    expect(fixture.unmasked(asked)).toBe(fixture.unmasked(plain));
   });
 
   it('puts route regions right after the page region (HY-30)', async () => {
@@ -69,7 +79,7 @@ describe('App', () => {
     const response = json(await fixture.get('/list', JSON_REGION));
     expect((response.regions.rows as Record<string, unknown>).open).toBe(false);
     expect(response.kept).toEqual({ rows: { open: true } });
-    const document = (await fixture.get('/list')).body;
+    const document = (await fixture.get('/list?embed=1')).body;
     expect(document).toContain('"rows":{"items":["a\\u003c","b0"],"open":false');
     expect(document).toContain('"kept":{"rows":{"open":true}}');
   });
@@ -100,7 +110,7 @@ describe('App', () => {
 
   it('renders a region whose kept values break rendering without them (HY-38)', async () => {
     const headers = cookie('hy-keep', '{"rows":{"mode":"b","tags":[1]}}');
-    const document = await fixture.get('/list', headers);
+    const document = await fixture.get('/list?embed=1', headers);
     expect(document.status).toBe(200);
     expect(document.body).toContain('<li>a&lt;</li><li>b0</li>');
     expect(document.body).toContain('"kept":{}');
@@ -340,7 +350,10 @@ describe('App', () => {
 
   it('makes a route region absent when its loader returns null (HY-75)', async () => {
     const base = handlers();
-    const rows = ({ request }: { request: Request }) => (request.queryInt('rows', 1) === 0 ? null : { items: ['a'], open: false, mode: 'a', view: 'x', filter: { a: 1 }, tags: [] });
+    const rows = ({ request, reply }: { request: Request; reply: Reply }) => {
+      reply.embedData();
+      return request.queryInt('rows', 1) === 0 ? null : { items: ['a'], open: false, mode: 'a', view: 'x', filter: { a: 1 }, tags: [] };
+    };
     const app = await fixture.app({ handlers: { ...base, routes: { ...base.routes, list: { regions: { rows } } } } });
     const keep = cookie('hy-keep', '{"rows":{"mode":"b"}}');
     const page = json(await app.handle(Request.from({ method: 'GET', target: '/list?rows=0', headers: { Accept: 'application/json', ...keep } }), fixture.session));

@@ -1,10 +1,11 @@
-// The cookies, the cache control and the page status that the loaders and actions of one request give its response
-// (HY-52, HY-69), and the notes that they give the response hook (HY-60).
+// The cookies, the cache control, the page status and the embedding of the data that the loaders and actions of one
+// request give its response (HY-52, HY-69, HY-92), and the notes that they give the response hook (HY-60).
 export class Reply {
   private readonly cookies: [string, string, number | null][] = [];
   private cacheControlText: string | null = null;
   private pageStatus: number | null = null;
   private renewal = false;
+  private embed = false;
   private readonly noted = new Map<string, unknown>();
 
   // Records a value of the request for the response hook; a later note of the same name replaces the value and keeps
@@ -74,6 +75,17 @@ export class Reply {
 
   statusValue(): number | null {
     return this.pageStatus;
+  }
+
+  // Makes the HTML document of the response embed its data (HY-31, HY-92).
+  embedData(): this {
+    this.embed = true;
+    return this;
+  }
+
+  // Returns whether the HTML document of the response embeds its data (HY-92).
+  embedsData(): boolean {
+    return this.embed;
   }
 
   cookieHeaders(secure: boolean): string[] {

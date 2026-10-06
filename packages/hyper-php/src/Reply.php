@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Polyspec\Hyper;
 
 /**
- * The cookies, the cache control and the page status that the loaders and actions of one request give its response
- * (HY-52, HY-69), and the notes that they give the response hook (HY-60).
+ * The cookies, the cache control, the page status and the embedding of the data that the loaders and actions of one
+ * request give its response (HY-52, HY-69, HY-92), and the notes that they give the response hook (HY-60).
  */
 final class Reply
 {
@@ -18,6 +18,8 @@ final class Reply
     private bool $renewal = false;
 
     private ?int $status = null;
+
+    private bool $embed = false;
 
     /** @var array<string, mixed> */
     private array $notes = [];
@@ -127,6 +129,20 @@ final class Reply
     public function statusValue(): ?int
     {
         return $this->status;
+    }
+
+    /** Makes the HTML document of the response embed its data (HY-31, HY-92). */
+    public function embedData(): self
+    {
+        $this->embed = true;
+
+        return $this;
+    }
+
+    /** Returns whether the HTML document of the response embeds its data (HY-92). */
+    public function embedsData(): bool
+    {
+        return $this->embed;
     }
 
     /** @return list<string> */

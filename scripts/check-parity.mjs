@@ -141,7 +141,10 @@ async function runStep(step, label, send) {
   // Every response masks the session token anew (HY-24), so each text has the masked token of its own response
   // replaced by <csrf> before the comparison.
   const server = placeholder(html.text, html.token);
-  const rendered = placeholder(browser.renderDocument(application, browser.decodeResponse(application, browser.parseJson(documentJson.text), path)), documentJson.token);
+  // The server embeds the data of a document when the reply of its request asks for it (HY-92); the browser renders
+  // the document with the same choice and must give the same bytes, the embedded data included.
+  const embed = html.text.includes('<script type="application/json" id="hy-data">');
+  const rendered = placeholder(browser.renderDocument(application, browser.decodeResponse(application, browser.parseJson(documentJson.text), path), { embed }), documentJson.token);
   if (rendered !== server) fail(`${label}: browser document differs\n--- browser\n${rendered}\n--- server\n${server}`);
 
   const parts = browser.renderParts(application, browser.decodeResponse(application, browser.parseJson(regionJson.text), path));

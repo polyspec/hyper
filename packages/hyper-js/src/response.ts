@@ -197,9 +197,10 @@ export function toHtml(app: Application, decoded: DecodedResponse): string {
   return html;
 }
 
-// Renders the document of a decoded document response, including the embedded data, which carries the
-// loader data and the server kept values of the route regions (HY-12, HY-22, HY-31, HY-38).
-export function renderDocument(app: Application, decoded: DecodedResponse): string {
+// Renders the document of a decoded document response. With `embed` the document embeds its data, which carries the
+// loader data and the server kept values of the route regions; without it the definition `data` is empty (HY-12,
+// HY-22, HY-31, HY-38, HY-92).
+export function renderDocument(app: Application, decoded: DecodedResponse, options: { embed: boolean }): string {
   for (const { name } of app.manifest.regions) {
     if (!decoded.regions.has(name)) throw new Error(`hyper: document response has no region ${name}`);
   }
@@ -209,7 +210,7 @@ export function renderDocument(app: Application, decoded: DecodedResponse): stri
     // Every definition is HTML: the title, the embedded data and each manifest region rendered alone (HY-12).
     const define: Record<string, { html: string }> = {
       title: { html: app.engine.render(app.manifest.title, parts.shared, { env }) },
-      data: { html: embeddedHtml(app, decoded, env) },
+      data: { html: options.embed ? embeddedHtml(app, decoded, env) : '' },
     };
     for (const region of app.manifest.regions) define[region.name] = { html: renderRegion(app, decoded.route, region.name, parts, decoded.timezone) };
     return app.engine.render(app.manifest.layout, parts.shared, { define, env });

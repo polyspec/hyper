@@ -59,3 +59,7 @@
 ## Wave 14
 
 의존: 없음. 이 저장소의 검사는 실행 시각과 machine, 이전 실행이 남긴 상태에 따라 다른 결과를 냈다. 2026-10-05의 full run은 7개 target에서 실패했다. 모든 target이 `make template`을 실행했고, 그것은 template 저장소가 `dist`를 다시 build하는 동안 `../template`의 working tree를 복사했다. 이어서 npm 12.2.0이 `npm pack --json`을 object로 출력해 복사가 `TypeError: object is not iterable`로 실패했다. 이 저장소의 검사에는 열 가지 결함 class가 있다. 시각이나 외부 세계에 의존하는 결과, 남은 상태에 의존하는 test, 지운 뒤 쓰는 방식으로 publish하는 출력, 첫 실패한 검사에서 멈추는 recipe, 스스로 설명하지 않는 실패, 실행하지 않고 통과할 수 있는 case, 누수된 process와 파일, 버전에 따라 다른 tool 출력에 대한 assertion, owner test가 없는 변경 경로, 공유 상태의 경쟁이다. 각 class는 이 저장소의 모든 사례를 고치는 작업과 AGENTS의 규칙을 받는다.
+
+## Wave 15
+
+의존: 없음. 있는 라우트 영역이 있는 라우트의 모든 서버 렌더 문서는 데이터를 `#hy-data`에 내장했다. 그래서 페이지의 소스에 HTML과 함께 데이터가 보였고 HTML이 컸다. 보기만 하는 페이지는 그 데이터를 쓰지 않는다. 이제 애플리케이션이 문서가 데이터를 내장할지 요청마다 정하며(HY-92), 기본으로 문서는 데이터를 내장하지 않는다. 브라우저는 데이터가 처음 필요할 때 페이지의 문서 JSON을 한 번 요청한다(HY-93).

@@ -438,7 +438,7 @@ final class App
             'Vary' => $vary,
         ];
 
-        return new Response($status, $headers, $this->document($request, $route, $shared, $data, $templates, $kept));
+        return new Response($status, $headers, $this->document($request, $route, $shared, $data, $templates, $kept, $reply->embedsData()));
     }
 
     /**
@@ -496,7 +496,7 @@ final class App
     /**
      * Renders the document with the kept values applied. When that fails, every region whose rendering alone
      * fails with its kept values renders with its loader data, route regions first, and its kept values leave
-     * the embedded data (HY-31, HY-38).
+     * the embedded data (HY-31, HY-38). The document embeds its data only when `$embed` is true (HY-92).
      *
      * @param array{name: string, path: string, title: string, template: string, post: bool, regions: list<Region>} $route
      * @param array<array-key, mixed> $shared
@@ -504,7 +504,7 @@ final class App
      * @param array<string, string> $templates
      * @param array<string, array<string, mixed>> $kept
      */
-    private function document(Request $request, array $route, array $shared, array $data, array $templates, array $kept): string
+    private function document(Request $request, array $route, array $shared, array $data, array $templates, array $kept, bool $embed): string
     {
         // H10.4: each root of the document is bound once, and every render merges the bound roots (VAL-22).
         $boundShared = $this->renderer->bind($shared);
@@ -517,7 +517,7 @@ final class App
             $applied[$name] = $this->renderer->bind(Kept::apply($regionData, $pairs));
         }
         try {
-            return $this->renderDocument($request, $route, $shared, $boundShared, $data, $applied, $templates, $kept);
+            return $this->renderDocument($request, $route, $shared, $boundShared, $data, $applied, $templates, $kept, $embed);
         } catch (\Throwable $error) {
             if ($kept === []) {
                 throw $error;
@@ -544,7 +544,7 @@ final class App
             }
         }
 
-        return $this->renderDocument($request, $route, $shared, $boundShared, $data, $applied, $templates, $kept);
+        return $this->renderDocument($request, $route, $shared, $boundShared, $data, $applied, $templates, $kept, $embed);
     }
 
     /**
@@ -566,15 +566,16 @@ final class App
      * @param array<string, BoundMap|NativeBoundMap> $applied bound region data with kept values applied, which the regions render
      * @param array<string, string> $templates
      * @param array<string, array<string, mixed>> $kept
+     * @param bool $embed whether the reply asked the document to embed its data (HY-92)
      */
-    private function renderDocument(Request $request, array $route, array $shared, BoundMap|NativeBoundMap $boundShared, array $data, array $applied, array $templates, array $kept): string
+    private function renderDocument(Request $request, array $route, array $shared, BoundMap|NativeBoundMap $boundShared, array $data, array $applied, array $templates, array $kept, bool $embed): string
     {
-        // HY-31, HY-75: the embedded data holds only the present route regions and their kept entries, the data that
-        // the browser can change; a response without a present route region embeds none. The embedded data is one more root, bound
-        // once (H10.4).
+        // HY-31, HY-75, HY-92: a document embeds its data only when the reply asks for it, and then only the present
+        // route regions and their kept entries, the data that the browser can change; a response without a present
+        // route region embeds none. The embedded data is one more root, bound once (H10.4).
         $routeRegionNames = self::present($route, $data);
         $response = null;
-        if ($routeRegionNames !== []) {
+        if ($embed && $routeRegionNames !== []) {
             $embedded = array_intersect_key($data, array_flip($routeRegionNames));
             $response = JsonEncoder::value($this->timezone, $route['name'], $request->params(), $shared, $embedded, array_intersect_key($kept, $embedded));
         }
