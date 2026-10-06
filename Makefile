@@ -55,6 +55,10 @@ INSTALL_LOCK := var/install.lock
 check = echo '$(2)'; node scripts/line-end.mjs '$(2)' || failed="$$failed $(1);";
 checks_result = test -z "$$failed" || { echo "failed checks:$$failed"; exit 1; }
 
+# The GitHub CLI of the machine, authenticated with administration access to the repository; only the targets
+# github-ruleset and github-ruleset-check start it (HY-94).
+GH := gh
+
 # The tracked Git hooks (scripts/git-hooks.mjs). Every make run sets core.hooksPath to this directory when it differs,
 # so the pre-push hook refuses a push while a checklist task is in progress (AGENTS.md) in every checkout that ran make.
 HOOKS_PATH := .githooks
@@ -62,7 +66,7 @@ $(if $(filter $(HOOKS_PATH),$(shell git config core.hooksPath)),,$(shell git con
 
 .DEFAULT_GOAL := help
 
-.PHONY: help tools toolchain-check owner-check install hyper-php-copy template template-check rust-downloads-check install-rust ext packages package-check server server-fixtures node-server node-fixtures assets test-js test-node test-php lint analyse-php templates-check test-scripts virtiofs-check parity server-parity bundle-size e2e docs-check serve-demo bench-server bench-server-smoke bench-browser bench check rerun-failed serve-demo-unlock hooks hooks-check push-gate-commit ci-pins ci-check ci-summary install-browser
+.PHONY: help tools toolchain-check owner-check install hyper-php-copy template template-check rust-downloads-check install-rust ext packages package-check server server-fixtures node-server node-fixtures assets test-js test-node test-php lint analyse-php templates-check test-scripts virtiofs-check parity server-parity bundle-size e2e docs-check serve-demo bench-server bench-server-smoke bench-browser bench check rerun-failed serve-demo-unlock hooks hooks-check push-gate-commit ci-pins ci-check ci-summary install-browser github-ruleset github-ruleset-check push
 
 help: ## List the targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
@@ -207,6 +211,15 @@ push-gate-commit: ## Fail when the commit COMMIT has a checklist task in progres
 
 hooks-check: ## Fail while the pre-push hook of .githooks is not installed or not executable
 	node scripts/push-gate.mjs hooks-check
+
+# The GitHub ruleset main of .github/ruleset.json (HY-94, scripts/github-ruleset.mjs): it requires the check push-gate,
+# refuses a force-push and a deletion of main and has no bypass actor. These targets reach the GitHub API, so no target
+# of the full suite runs them.
+github-ruleset: ## Create or update the GitHub ruleset of .github/ruleset.json by its name, then compare it again (HY-94)
+	node scripts/github-ruleset.mjs apply --gh $(GH)
+
+github-ruleset-check: ## Fail when the live GitHub ruleset is missing or differs from .github/ruleset.json, naming each field; changes nothing (HY-94)
+	node scripts/github-ruleset.mjs check --gh $(GH)
 
 serve-demo: assets server ## Serve SSR on :8080, CSR on :8081 and the comparison page on :8081/compare; fails with the holder while another demo runs
 	node scripts/serve-demo.mjs --db $(BOARD)/var/board.db --ssr 8080 --edge 8081 --api 8082 --lock $(SERVE_DEMO_LOCK)

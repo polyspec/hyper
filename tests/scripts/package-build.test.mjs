@@ -1,8 +1,8 @@
 // Tests that each npm package of this repository declares a build that runs the TypeScript compiler by the path of
-// its package (scripts/tsc.mjs, HY-79): npm installs no bin links, so `npm exec tsc` finds no command, and a package build
-// that builds a package runs `npm run build` in its directory. The test builds each package into a temporary
-// directory and leaves dist unchanged; `npm run tsc -- <tsc arguments>` runs the compiler with the arguments of a
-// package, such as its own project file. Run it after `make install`.
+// its package (scripts/tsc.mjs, HY-79): npm installs no bin links, so `npm exec tsc` finds no command, and a package
+// is built with `npm run build` in its directory. The test builds each package into a temporary directory and leaves
+// dist unchanged; `npm run tsc -- <tsc arguments>` runs the compiler with the arguments of the call, such as a project
+// file. Run it after `make install`.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdtempSync, rmSync } from 'node:fs';
