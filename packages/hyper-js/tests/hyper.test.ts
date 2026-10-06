@@ -124,7 +124,7 @@ describe('template delivery', () => {
     const fetched: string[] = [];
     const { hyper } = setup('', fetched);
     await request(hyper, '/items/7', 'http://localhost/items/7', '{"env":{"timezone":"Z"},"route":"item","params":{"id":"7"},"shared":{"title":"T"},"regions":{"content":{"id":"7"}},"kept":{}}');
-    expect(fetched.sort()).toEqual(['/t/hyper/data.tpl', '/t/item.tpl', '/t/layout.tpl', '/t/part.tpl', '/t/side.tpl', '/t/title.tpl']);
+    expect(fetched.sort()).toEqual(['/t/item.tpl', '/t/layout.tpl', '/t/part.tpl', '/t/side.tpl', '/t/title.tpl']);
   });
 
   it('loads only the view template that the data selects, in a region response (HY-35)', async () => {
@@ -168,9 +168,9 @@ describe('held data', () => {
   it('holds the data of the route regions of a rendered response and no other region (HY-32)', async () => {
     const { hyper } = setup();
     await request(hyper, '/list', 'http://localhost/list', listJson);
-    expect((hyper.data('rows') as Map<string, unknown>).has('items')).toBe(true);
-    expect(hyper.data('content')).toBeUndefined();
-    expect(hyper.data('side')).toBeUndefined();
+    expect(((await hyper.data('rows')) as Map<string, unknown>).has('items')).toBe(true);
+    expect(await hyper.data('content')).toBeUndefined();
+    expect(await hyper.data('side')).toBeUndefined();
   });
 
   it('sets a nested value and renders only that region without a request (HY-33)', async () => {
@@ -210,8 +210,8 @@ describe('held data', () => {
     await expect(hyper.set('rows', 'missing.flag', 1)).rejects.toThrow('does not exist');
   });
 
-  it('fails when nothing is held', async () => {
-    await expect(setup().hyper.set('rows', 'a', 1)).rejects.toThrow('no response data');
+  it('fails without a request when nothing is held and the region is not a route region of the current page (HY-93)', async () => {
+    await expect(setup().hyper.set('rows', 'a', 1)).rejects.toThrow('region rows is not a route region of the route home of the current page');
   });
 });
 
@@ -238,7 +238,7 @@ describe('kept data', () => {
     const { hyper } = setup('', [], storage);
     const ctx = await request(hyper, '/list', 'http://localhost/list', listJson);
     expect(ctx.text).toBe('<title>T - Site</title><h1>H</h1><ul id="rows"><li class="open">a</li><li class="open">b</li></ul>');
-    const rows = hyper.data('rows') as Map<string, unknown>;
+    const rows = (await hyper.data('rows')) as Map<string, unknown>;
     expect(rows.get('tab')).toBe('a');
     expect(rows.get('flag')).toBe(false);
   });
@@ -264,14 +264,22 @@ describe('held data, restorations and kept values', () => {
     const swaps: Swap[] = [];
     const element = (id: string) => (id === 'hy-data' ? null : ({ id } as unknown as Element));
     const htmx = { process: () => undefined, config: { defaultTimeout: 60000 }, parseInterval: Number, swap: async (ctx: { text: string; target: Element; swap: string }) => { swaps.push({ region: '', text: ctx.text, swap: ctx.swap }); } };
-    const hyper = new Hyper(testApplication(), htmx, { basePath: '', element, storage: new FakeStorage(), document: new FakeDocument() });
+    const requested: string[] = [];
+    const hyper = new Hyper(testApplication(), htmx, {
+      basePath: '', element, storage: new FakeStorage(), document: new FakeDocument(), currentUrl: () => 'http://localhost/items/7',
+      fetch: async (input) => {
+        requested.push(String(input));
+        return jsonResponse('http://localhost/items/7', '{}');
+      },
+    });
     await request(hyper, '/list', 'http://localhost/list', listJson);
     const ctx = context('/items/7', { id: '', hasAttribute: () => false });
     ctx.request.headers['HX-History-Restore-Request'] = 'true';
     hyper.extension().htmx_after_swap(null, { ctx });
     await new Promise((done) => setTimeout(done, 0));
-    expect(hyper.data('rows')).toBeUndefined();
-    await expect(hyper.set('rows', 'items.0.open', false)).rejects.toThrow('no response data is held');
+    expect(await hyper.data('rows')).toBeUndefined();
+    await expect(hyper.set('rows', 'items.0.open', false)).rejects.toThrow('region rows is not a route region of the route item of the current page');
+    expect(requested).toEqual([]);
   });
 
   it('ignores swaps that have no request, such as those of render and set', () => {
@@ -310,14 +318,14 @@ describe('held data, restorations and kept values', () => {
     expect(page.mounted).toHaveLength(1);
     expect(page.mounted[0]).toContain('<i>7</i>');
     // The route item has no route region, so the earlier restoration of /list did not leave its rows held.
-    expect(hyper.data('rows')).toBeUndefined();
+    expect(await hyper.data('rows')).toBeUndefined();
   });
 
   it('fails to set a map key that the data does not contain (HY-33)', async () => {
     const { hyper } = setup();
     await request(hyper, '/list', 'http://localhost/list', listJson);
     await expect(hyper.set('rows', 'nosuchkey', 1)).rejects.toThrow();
-    expect((hyper.data('rows') as Map<string, unknown>).has('nosuchkey')).toBe(false);
+    expect(((await hyper.data('rows')) as Map<string, unknown>).has('nosuchkey')).toBe(false);
   });
 
   it('stores kept paths under or above a changed path (HY-39)', async () => {
@@ -431,7 +439,7 @@ describe('restorations, saves and failure marks', () => {
     await request(hyper, '/list', 'http://localhost/list', listJson);
     await expect(hyper.render('rows', { items: 5, flag: false, tab: 'a' })).rejects.toThrow();
     expect(swaps).toEqual([]);
-    expect((hyper.data('rows') as Map<string, unknown>).get('items')).toHaveLength(2);
+    expect(((await hyper.data('rows')) as Map<string, unknown>).get('items')).toHaveLength(2);
     expect(target.attributes.get('hy-error')).toBe('0');
   });
 
@@ -498,7 +506,7 @@ describe('concurrent changes, saves and timeouts', () => {
     const { hyper } = setup();
     await request(hyper, '/list', 'http://localhost/list', listJson);
     await Promise.all([hyper.set('rows', 'flag', true), hyper.set('rows', 'tab', 'b')]);
-    const rows = hyper.data('rows') as Map<string, unknown>;
+    const rows = (await hyper.data('rows')) as Map<string, unknown>;
     expect(rows.get('flag')).toBe(true);
     expect(rows.get('tab')).toBe('b');
   });
@@ -522,7 +530,7 @@ describe('concurrent changes, saves and timeouts', () => {
     await change;
     expect(swaps).toEqual([]);
     expect(storage.sent).toEqual([]);
-    const rows = hyper.data('rows') as Map<string, unknown>;
+    const rows = (await hyper.data('rows')) as Map<string, unknown>;
     expect(rows.get('tab')).toBe('c');
     expect(((rows.get('items') as Map<string, unknown>[])[0]!).get('open')).toBe(true);
   });
@@ -563,7 +571,7 @@ describe('concurrent changes, saves and timeouts', () => {
     await hyper.holdEmbedded(listJson.replace('"tab":"a"', '"tab":"a","marks":[]'), '/list');
     expect(swaps).toEqual(['<li class="open">a</li><li>b</li>']);
     expect(rows.attributes.has('hy-error')).toBe(false);
-    expect((hyper.data('rows') as Map<string, unknown>).get('marks')).toEqual([]);
+    expect(((await hyper.data('rows')) as Map<string, unknown>).get('marks')).toEqual([]);
   });
 
   it('marks a region whose request timed out, and not one cancelled before (HY-47)', async () => {
@@ -656,7 +664,7 @@ describe('swaps, storage order and client-side documents', () => {
     await request(hyper, '/list', 'http://localhost/list', json);
     await hyper.set('rows', 'filter', { a: 2 });
     await request(hyper, '/list', 'http://localhost/list', json);
-    expect((hyper.data('rows') as Map<string, unknown>).get('filter')).toEqual(new Map([['a', 2]]));
+    expect(((await hyper.data('rows')) as Map<string, unknown>).get('filter')).toEqual(new Map([['a', 2]]));
   });
 
   it('mounts a client-rendered document without embedded data (HY-22, HY-31)', async () => {
@@ -742,7 +750,7 @@ describe('extension', () => {
     extension.htmx_before_history_update(null, history);
     expect(history.history.path).toBe('/items/7?x=1');
     await request(hyper, '/list', 'http://localhost/api/list', listJson);
-    expect(hyper.data('rows')).toBeDefined();
+    expect(await hyper.data('rows')).toBeDefined();
 
     const page = new FakeDocument();
     const requested: string[] = [];
@@ -766,7 +774,7 @@ describe('extension', () => {
 describe('stylesheet links (HY-64)', () => {
   const itemJson = '{"env":{"timezone":"Z"},"route":"item","params":{"id":"7"},"shared":{"title":"T","csrf":"t"},"regions":{"side":{"count":1},"content":{"id":"7"}},"kept":{}}';
   const htmx = { process: () => undefined, config: { defaultTimeout: 60000 }, parseInterval: Number, swap: async () => undefined };
-  const client = (page: FakeDocument, fetch: typeof globalThis.fetch) => new Hyper(testApplication(), htmx, { basePath: '/api', storage: new FakeStorage(), document: page, fetch });
+  const client = (page: FakeDocument, fetch: typeof globalThis.fetch) => new Hyper(testApplication(), htmx, { basePath: '/api', storage: new FakeStorage(), document: page, fetch, currentUrl: () => 'http://localhost/items/7' });
   // A promise with its resolve and reject functions.
   const deferred = () => {
     let resolve!: () => void;
@@ -788,7 +796,7 @@ describe('stylesheet links (HY-64)', () => {
     const hyper = client(page, async () => jsonResponse('', itemJson));
     await hyper.renderLocation('/items/7');
     expect(page.mounted).toEqual(['fail:0']);
-    expect(hyper.data('content')).toBeUndefined();
+    expect(await hyper.data('content')).toBeUndefined();
   });
 
   it('mounts only the latest client-rendered document when an earlier one still waits for its links', async () => {
@@ -889,7 +897,7 @@ describe('absent route regions (HY-75)', () => {
     page.counts.set('rows', 0);
     const { hyper } = setup('', [], new FakeStorage(), page);
     await hyper.holdEmbedded(absentJson, '/list');
-    expect(hyper.data('rows')).toBeUndefined();
+    expect(await hyper.data('rows')).toBeUndefined();
     await expect(hyper.set('rows', 'flag', true)).rejects.toThrow('rows');
     await expect(hyper.render('rows', { flag: true })).rejects.toThrow('rows');
     expect(page.mounted).toEqual([]);
@@ -913,5 +921,166 @@ describe('absent route regions (HY-75)', () => {
     const present = new FakeDocument();
     await setup('', [], new FakeStorage(), present).hyper.holdEmbedded(listJson, '/list');
     expect(present.mounted).toEqual([]);
+  });
+});
+
+// A page of the list route whose server-rendered document embeds no data, with a document request that the test
+// answers (HY-93).
+function obtaining(options: { storage?: FakeStorage; url?: string; answer?: (url: string) => Promise<Response> } = {}) {
+  const swaps: Swap[] = [];
+  const requests: { url: string; headers: Record<string, string> }[] = [];
+  const page = new FakeDocument();
+  const elements = new Map<string, ReturnType<typeof regionElement>>();
+  const element = (id: string): Element | null => {
+    if (id === 'hy-data') return null;
+    if (!elements.has(id)) elements.set(id, regionElement(id));
+    return elements.get(id) as unknown as Element;
+  };
+  const htmx = {
+    process: () => undefined, config: { defaultTimeout: 60000 }, parseInterval: Number,
+    swap: async (ctx: { text: string; target: Element; swap: string }) => {
+      swaps.push({ region: (ctx.target as unknown as { id: string }).id, text: ctx.text, swap: ctx.swap });
+    },
+  };
+  const answer = options.answer ?? (async () => jsonResponse('http://localhost/list', listJson));
+  const hyper = new Hyper(testApplication(), htmx, {
+    basePath: '', element, storage: options.storage ?? new FakeStorage(), document: page, currentUrl: () => options.url ?? 'http://localhost/list?page=2',
+    fetch: async (input, init) => {
+      const url = String(input);
+      requests.push({ url, headers: { ...((init?.headers ?? {}) as Record<string, string>) } });
+      return answer(url);
+    },
+  });
+  return { hyper, swaps, requests, page, elements };
+}
+
+describe('obtaining the data of a page without embedded data (HY-93)', () => {
+  it('sends no request when the page opens without a stored browser kept value (HY-32)', async () => {
+    const { hyper, requests, swaps, page } = obtaining();
+    await hyper.open();
+    expect(requests).toEqual([]);
+    expect(swaps).toEqual([]);
+    expect(page.mounted).toEqual([]);
+  });
+
+  it('obtains the data when the page opens with a stored browser kept value and renders the kept value (HY-32, HY-38)', async () => {
+    const { hyper, requests, swaps } = obtaining({ storage: new FakeStorage({ 'localStorage:rows:items.1.open': 'true' }) });
+    await hyper.open();
+    expect(requests).toEqual([{ url: '/list?page=2', headers: { Accept: 'application/json' } }]);
+    expect(swaps).toEqual([{ region: 'rows', text: '<li class="open">a</li><li class="open">b</li>', swap: 'innerMorph' }]);
+    expect(((await hyper.data('rows')) as Map<string, unknown>).get('tab')).toBe('a');
+    expect(requests).toHaveLength(1);
+  });
+
+  it('obtains the data once for the first change, renders every present route region from it and then applies the change', async () => {
+    const { hyper, requests, swaps } = obtaining();
+    await hyper.set('rows', 'items.0.open', false);
+    await hyper.set('rows', 'items.1.open', true);
+    expect(requests).toEqual([{ url: '/list?page=2', headers: { Accept: 'application/json' } }]);
+    expect(swaps.map((swap) => swap.text)).toEqual([
+      '<li class="open">a</li><li>b</li>',
+      '<li>a</li><li>b</li>',
+      '<li>a</li><li class="open">b</li>',
+    ]);
+  });
+
+  it('sends one request for calls that need the data while it is pending (HY-93)', async () => {
+    let release: () => void = () => undefined;
+    const { hyper, requests } = obtaining({ answer: () => new Promise((resolve) => { release = () => resolve(jsonResponse('http://localhost/list', listJson)); }) });
+    const reading = hyper.data('rows');
+    const setting = hyper.set('rows', 'flag', true);
+    await new Promise((done) => setTimeout(done, 0));
+    release();
+    expect(((await reading) as Map<string, unknown>).has('items')).toBe(true);
+    await setting;
+    expect(requests).toHaveLength(1);
+    expect(((await hyper.data('rows')) as Map<string, unknown>).get('flag')).toBe(true);
+  });
+
+  it('drops the obtained data when a region response replaced the held data while the request was pending', async () => {
+    let release: () => void = () => undefined;
+    const { hyper } = obtaining({ answer: () => new Promise((resolve) => { release = () => resolve(jsonResponse('http://localhost/list', listJson)); }) });
+    const setting = hyper.set('rows', 'flag', true);
+    await new Promise((done) => setTimeout(done, 0));
+    await request(hyper, '/list', 'http://localhost/list', listJson.replace('"tab":"a"', '"tab":"z"'));
+    release();
+    await setting;
+    const rows = (await hyper.data('rows')) as Map<string, unknown>;
+    expect(rows.get('tab')).toBe('z');
+    expect(rows.get('flag')).toBe(true);
+  });
+
+  it('marks the region with the status and holds nothing when the request fails, and requests again on the next change (HY-47)', async () => {
+    let status = 500;
+    const { hyper, requests, elements } = obtaining({
+      answer: async () => (status === 500 ? new Response('failed', { status: 500, headers: { 'content-type': 'text/plain' } }) : jsonResponse('http://localhost/list', listJson)),
+    });
+    await expect(hyper.set('rows', 'flag', true)).rejects.toThrow('received status 500');
+    expect(elements.get('rows')!.attributes.get('hy-error')).toBe('500');
+    status = 200;
+    await hyper.set('rows', 'flag', true);
+    expect(requests).toHaveLength(2);
+    expect(((await hyper.data('rows')) as Map<string, unknown>).get('flag')).toBe(true);
+  });
+
+  it('fails with 0 when the response routes to another route than the current page (HY-20)', async () => {
+    const item = '{"env":{"timezone":"Z"},"route":"item","params":{"id":"7"},"shared":{"title":"T"},"regions":{"side":{"count":1},"content":{"id":"7"}},"kept":{}}';
+    const { hyper, elements } = obtaining({ answer: async () => jsonResponse('http://localhost/items/7', item) });
+    await expect(hyper.set('rows', 'flag', true)).rejects.toThrow('routes to item');
+    expect(elements.get('rows')!.attributes.get('hy-error')).toBe('0');
+    expect(await hyper.data('side')).toBeUndefined();
+  });
+
+  it('marks the body when the data that the page needs when it opens cannot be obtained (HY-47)', async () => {
+    const { hyper, page } = obtaining({
+      storage: new FakeStorage({ 'sessionStorage:rows:tab': '"b"' }),
+      answer: async () => { throw new TypeError('network'); },
+    });
+    await hyper.open();
+    expect(page.mounted).toEqual(['fail:0']);
+  });
+
+  it('runs hy-set in a route region of the current page while nothing is held (HY-36)', async () => {
+    const { hyper, swaps, requests } = obtaining();
+    const button = {
+      closest: (selector: string) => (selector === '[id="rows"]' ? { id: 'rows' } : null),
+      getAttribute: () => 'items.0.name="x"',
+    } as unknown as Element;
+    await hyper.setFrom(button);
+    expect(requests).toHaveLength(1);
+    expect(swaps.at(-1)!.text).toBe('<li class="open">x</li><li>b</li>');
+  });
+
+  it('holds the data of a region response without any request of its own, so the server needs no signal (HY-18, HY-32)', async () => {
+    const { hyper, requests } = obtaining();
+    await request(hyper, '/list', 'http://localhost/list', listJson);
+    await hyper.set('rows', 'flag', true);
+    expect(requests).toEqual([]);
+  });
+
+  it('holds the embedded data when the document has #hy-data and sends no request (HY-31, HY-32)', async () => {
+    const swaps: Swap[] = [];
+    const requests: string[] = [];
+    const embedded = { id: 'hy-data', textContent: listJson } as unknown as Element;
+    const htmx = { process: () => undefined, config: { defaultTimeout: 60000 }, parseInterval: Number, swap: async (ctx: { text: string; target: Element; swap: string }) => { swaps.push({ region: '', text: ctx.text, swap: ctx.swap }); } };
+    const hyper = new Hyper(testApplication(), htmx, {
+      basePath: '', element: (id) => (id === 'hy-data' ? embedded : ({ id } as unknown as Element)), storage: new FakeStorage(), document: new FakeDocument(),
+      currentUrl: () => 'http://localhost/list', fetch: async (input) => { requests.push(String(input)); return jsonResponse('', listJson); },
+    });
+    await hyper.open();
+    await hyper.set('rows', 'flag', true);
+    expect(requests).toEqual([]);
+    expect(swaps).toHaveLength(1);
+  });
+
+  it('renders the document of client-side rendering when it opens (HY-22)', async () => {
+    const page = new FakeDocument();
+    const hyper = new Hyper(testApplication(), { process: () => undefined, config: { defaultTimeout: 60000 }, parseInterval: Number, swap: async () => undefined }, {
+      basePath: '/api', storage: new FakeStorage(), document: page, currentUrl: () => 'http://localhost/list?page=2',
+      fetch: async () => jsonResponse('http://localhost/api/list', listJson.replace('"regions":{', '"regions":{"side":{"count":1},')),
+    });
+    await hyper.open();
+    expect(page.mounted).toHaveLength(1);
+    expect(page.mounted[0]).toContain('id="rows"');
   });
 });

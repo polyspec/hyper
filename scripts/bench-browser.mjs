@@ -116,7 +116,7 @@ try {
       const page = await context.newPage();
       await page.addInitScript(observer);
       await page.goto(`${origin}/board`);
-      await page.waitForFunction(() => window.benchMarks['게시판'] !== undefined && window.hyper?.data('rows') !== undefined);
+      await page.waitForFunction(() => window.benchMarks['게시판'] !== undefined && document.getElementById('rows') !== null);
       first.push(await page.evaluate(() => window.benchMarks['게시판']));
       await page.waitForLoadState('networkidle');
       const start = await page.evaluate(() => {
@@ -137,7 +137,9 @@ try {
   const cdp = await context.newCDPSession(page);
   await cdp.send('Performance.enable');
   await page.goto(`${ssr}/board`);
-  await page.waitForFunction(() => window.hyper?.data('rows') !== undefined);
+  // The rows element exists once the server or the browser rendered the list; a server-rendered list holds no data
+  // until it needs it (HY-93).
+  await page.waitForFunction(() => document.getElementById('rows') !== null);
   await page.waitForLoadState('networkidle');
   const load = [];
   const attribution = [];
@@ -326,7 +328,9 @@ async function navigationMemory(browser, origin, cycles) {
   const cdp = await context.newCDPSession(page);
   await cdp.send('Performance.enable');
   await page.goto(`${origin}/board`);
-  await page.waitForFunction(() => window.hyper?.data('rows') !== undefined);
+  // The rows element exists once the server or the browser rendered the list; a server-rendered list holds no data
+  // until it needs it (HY-93).
+  await page.waitForFunction(() => document.getElementById('rows') !== null);
   await page.waitForLoadState('networkidle');
   const visit = async (selector) => {
     const before = await page.evaluate(() => location.pathname + document.querySelector('#content h1')?.textContent);

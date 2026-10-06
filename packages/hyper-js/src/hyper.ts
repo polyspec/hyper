@@ -1,5 +1,6 @@
 import { bindValue, parseJson, type ListValue, type MapValue, type Value } from '@polyspec/template/render';
-import { applyRegionKept, copyValue, decodeResponse, renderDocument, renderLayout, renderRegionOf, requireMap, toHtml, type Application, type DecodedResponse } from './response.js';
+import { applyRegionKept, copyValue, decodeResponse, presentRouteRegions, renderDocument, renderLayout, renderRegionOf, requireMap, toHtml, type Application, type DecodedResponse } from './response.js';
+import { ObtainError, requestDocument } from './obtain.js';
 import { PageStylesheets, StylesheetError } from './stylesheets.js';
 import { stripBasePath } from './router.js';
 import { routeTemplates } from './templates.js';
@@ -79,7 +80,7 @@ export interface HyperOptions {
   basePath: string;
   // Returns the element with an id; the default reads the document.
   element?: (id: string) => Element | null;
-  // Performs requests for client-side rendering; the default is the global fetch.
+  // Performs the requests of client-side rendering and the document requests of HY-93; the default is the global fetch.
   fetch?: typeof fetch;
   // Stores kept values (HY-37); the default uses the browser document.
   storage?: KeepStorage;
@@ -108,6 +109,9 @@ export class Hyper {
   private queue: Promise<void> = Promise.resolve();
   private location = 0;
   private locationAbort: AbortController | null = null;
+  // the number of times that held data was replaced or forgotten, and the pending document request (HY-93)
+  private holds = 0;
+  private obtaining: Promise<void> | null = null;
   private readonly element: (id: string) => Element | null;
   private readonly request: typeof fetch;
   private readonly page: DocumentAdapter;
@@ -138,11 +142,102 @@ export class Hyper {
       if (original !== undefined) loader.set(name, original);
     }
     this.held = { route: decoded.route, timezone: decoded.timezone, shared: decoded.shared, loader, regions };
+    this.holds++;
   }
 
   // Forgets the held data, for a document without embedded data (HY-32).
   release(): void {
     this.held = null;
+    this.holds++;
+  }
+
+  // Starts the page. Client-side rendering renders the document of the current URL (HY-22). A server-rendered page
+  // holds its embedded data; without it the page holds nothing and obtains the data only when a browser kept value is
+  // stored for a route region of its route (HY-32, HY-93). A failure marks the body and does not reject (HY-47).
+  async open(): Promise<void> {
+    const url = new URL(this.currentUrl());
+    if (this.options.basePath !== '') return this.renderLocation(url.pathname + url.search);
+    await this.openServerRendered(url.pathname);
+  }
+
+  private async openServerRendered(path: string): Promise<void> {
+    const embedded = this.element('hy-data')?.textContent;
+    if (embedded) return this.holdEmbedded(embedded, path);
+    this.release();
+    if (!this.storedKept()) return;
+    try {
+      await this.obtain();
+    } catch (error) {
+      if (this.held === null) this.page.fail(error instanceof ObtainError ? error.status : '0');
+    }
+  }
+
+  // Returns true when a localStorage or sessionStorage value is stored for a kept path of a route region of the route
+  // of the current page (HY-32, HY-38).
+  private storedKept(): boolean {
+    for (const { name } of this.pageRoute()?.regions ?? []) {
+      for (const [path, kind] of Object.entries(keptPaths(this.app.manifest, name))) {
+        if ((kind === 'localStorage' || kind === 'sessionStorage') && this.storage().read(kind, name, path) !== null) return true;
+      }
+    }
+    return false;
+  }
+
+  // Returns the route of the current page, whose URL holds no base path (HY-22, HY-23).
+  private pageRoute(): RouteDeclaration | null {
+    const match = this.app.router.match(new URL(this.currentUrl()).pathname);
+    return match === null ? null : this.app.manifest.routes.find((item) => item.name === match.name)!;
+  }
+
+  // Returns the held data, obtained with a document request when the browser holds none; a region that is not a route
+  // region of the route of the current page fails without a request, and a failed request marks the region (HY-47, HY-93).
+  private async heldFor(region: string): Promise<Held> {
+    if (this.held !== null) return this.held;
+    const route = this.pageRoute();
+    if (!(route?.regions ?? []).some((item) => item.name === region)) {
+      throw new Error(`hyper: region ${region} is not a route region of the route ${route?.name ?? 'none'} of the current page`);
+    }
+    try {
+      await this.obtain();
+    } catch (error) {
+      markError(this.element(region), error instanceof ObtainError ? error.status : '0');
+      throw error;
+    }
+    return this.requireHeld();
+  }
+
+  // Sends one document request for the current page; calls that need the data while it is pending wait for it (HY-93).
+  private obtain(): Promise<void> {
+    this.obtaining ??= this.obtainOnce().finally(() => {
+      this.obtaining = null;
+    });
+    return this.obtaining;
+  }
+
+  // Holds the data of the document JSON of the current page and renders every present route region from it. A response
+  // that replaced the held data while the request was pending wins, and the data of the request is dropped (HY-93).
+  private async obtainOnce(): Promise<void> {
+    const holds = this.holds;
+    const page = new URL(this.currentUrl());
+    const url = this.options.basePath + page.pathname + page.search;
+    const { value, url: answered } = await requestDocument(this.request, url);
+    if (this.holds !== holds) return;
+    const route = this.pageRoute();
+    const path = stripBasePath(pathOf(answered), this.options.basePath);
+    const routed = path === null ? null : this.app.router.match(path);
+    if (path === null || routed === null || routed.name !== route?.name) {
+      throw new ObtainError(`hyper: the document of ${url} routes to ${routed?.name ?? 'no route'}, expected the route ${route?.name ?? 'none'} of the current page`, '0');
+    }
+    let decoded: DecodedResponse;
+    try {
+      decoded = decodeResponse(this.app, value, path);
+    } catch (error) {
+      throw new ObtainError(`hyper: the document of ${url} cannot be decoded: ${String(error)}`, '0');
+    }
+    this.applyBrowserKept(decoded);
+    this.hold(decoded);
+    this.checkElements();
+    await this.renderHeldRegions(presentRouteRegions(decoded.route, decoded.regions));
   }
 
   // Holds the data that the server embedded in the document, replacing all held data, starts loading
@@ -160,8 +255,14 @@ export class Hyper {
     const changed = this.applyBrowserKept(decoded);
     this.hold(decoded);
     this.checkElements();
+    await this.renderHeldRegions(changed);
+  }
+
+  // Renders regions from the held data. A region that does not render with its kept values renders with its loader
+  // data, and a region that fails then is marked (HY-38, HY-47). A response that replaces the held data ends the loop.
+  private async renderHeldRegions(regions: readonly string[]): Promise<void> {
     const held = this.held!;
-    for (const region of changed) {
+    for (const region of regions) {
       if (this.held !== held) return;
       try {
         await this.renderHeld(region);
@@ -177,20 +278,20 @@ export class Hyper {
     }
   }
 
-  // Returns the held data of a region (HY-33).
-  data(region: string): Value | undefined {
+  // Returns the held data of a region, obtained first while the browser holds no data and the region is a route region
+  // of the route of the current page (HY-33, HY-93).
+  async data(region: string): Promise<Value | undefined> {
+    if (this.held === null && (this.pageRoute()?.regions ?? []).some((item) => item.name === region)) await this.heldFor(region);
     return this.held?.regions.get(region);
   }
 
   // Replaces the held data of a region and renders the region (HY-33).
   async render(region: string, data: unknown): Promise<void> {
-    this.requireRouteRegion(region);
     await this.change(region, () => requireMap(bindValue(data), `data of region ${region}`), Object.keys(keptPaths(this.app.manifest, region)));
   }
 
   // Sets one value in the held data of a region by a dotted path and renders the region (HY-33).
   async set(region: string, path: string, value: unknown): Promise<void> {
-    this.requireRouteRegion(region);
     await this.change(region, (data) => {
       assignPath(data, path, bindValue(value));
       return requireMap(data ?? null, `data of region ${region}`);
@@ -199,8 +300,8 @@ export class Hyper {
 
   // Runs the assignments of a `hy-set` attribute in the region that contains the element (HY-36).
   async setFrom(element: Element): Promise<void> {
-    const held = this.requireHeld();
-    const names = [...held.regions.keys()];
+    // While nothing is held, the route regions of the route of the current page (HY-93).
+    const names = this.held === null ? (this.pageRoute()?.regions ?? []).map((item) => item.name) : [...this.held.regions.keys()];
     if (names.length === 0) throw new Error('hyper: hy-set is outside a route region');
     // A region element is the element whose id is the name of a route region of the held route (HY-3, HY-36).
     const region = element.closest(names.map((name) => `[id="${name}"]`).join(','))?.id;
@@ -212,9 +313,14 @@ export class Hyper {
     }, assignments.map((assignment) => assignment.path));
   }
 
-  // Queues a change; calls run one after another in call order (HY-33).
+  // Queues a change; calls run one after another in call order, and the first obtains the data while the browser holds
+  // none (HY-33, HY-93).
   private change(region: string, update: (data: Value | undefined) => MapValue, paths: readonly string[]): Promise<void> {
-    const run = this.queue.then(() => this.applyChange(region, update, paths));
+    const run = this.queue.then(async () => {
+      await this.heldFor(region);
+      this.requireRouteRegion(region);
+      await this.applyChange(region, update, paths);
+    });
     this.queue = run.catch(() => undefined);
     return run;
   }
@@ -382,10 +488,8 @@ export class Hyper {
         if (ctx.hyperRegion === this.app.page) this.checkElements();
         // Swaps of render and set have no request.
         if (basePath !== '' || ctx.request?.headers?.['HX-History-Restore-Request'] !== 'true') return;
-        // A document without embedded data has no region that changes in the browser (HY-31, HY-32).
-        const embedded = this.element('hy-data')?.textContent;
-        if (embedded) void this.holdEmbedded(embedded, pathOf(ctx.request.action));
-        else this.release();
+        // The restored document holds its embedded data, or the browser obtains the data when it needs it (HY-32, HY-93).
+        void this.openServerRendered(pathOf(ctx.request.action));
       },
       htmx_error: (_elt, detail) => {
         const ctx = detail.ctx;

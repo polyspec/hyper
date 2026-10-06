@@ -3,7 +3,7 @@
 import { readFileSync } from 'node:fs';
 import { isAbsolute, join } from 'node:path';
 import type { Server } from 'node:http';
-import { checkManifest, createApplication, keptPaths, routeReads, routeTemplates, stripBasePath, type Application, type Manifest, type RouteDeclaration, type RouteReads, type TemplateIndex } from '@polyspec/hyper';
+import { checkManifest, createApplication, DATA_TEMPLATE_NAME, keptPaths, routeReads, routeTemplates, stripBasePath, type Application, type Manifest, type RouteDeclaration, type RouteReads, type TemplateIndex } from '@polyspec/hyper';
 import { resolvePath, type Template } from '@polyspec/template/render';
 import { maskedToken, verifyToken } from './csrf.js';
 import type { FileSessions } from './file-sessions.js';
@@ -179,10 +179,10 @@ export class App<S extends object = Record<string, never>> {
     const application = createApplication(manifest, index, fetcher);
     checkHandlers(manifest, options.handlers);
     const client = options.clientRendering === undefined ? null : checkClient(options.clientRendering, manifest);
-    // Every entry template of every route is in the index (HY-34), and the server renders every page, so it reads
-    // every template of the index (HY-35).
+    // Every entry template of every route and the template of the embedded data are in the index (HY-31, HY-34), and the
+    // server renders every page, so it reads every template of the index (HY-35).
     for (const route of manifest.routes) {
-      for (const name of routeTemplates(manifest, route)) {
+      for (const name of [...routeTemplates(manifest, route), DATA_TEMPLATE_NAME]) {
         if (typeof index[name]?.url !== 'string') throw new Error(`hyper: template ${name} is not in the template index`);
       }
     }
