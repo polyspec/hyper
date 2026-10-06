@@ -85,6 +85,19 @@ test('every step that runs a command runs make, and every step after the first r
   assert.deepEqual(found, []);
 });
 
+test('every workflow runs on pull requests and merge groups, and a push trigger skips the branches of the queue (HY-94)', () => {
+  const found = [];
+  for (const workflow of workflows()) {
+    const trigger = /^on:\n((?: {2}.*\n)+)/m.exec(workflow.text)?.[1] ?? '';
+    const events = [...trigger.matchAll(/^ {2}([\w-]+):/gm)].map(match => match[1]);
+    // The ruleset main requires the checks of every workflow, and the merge queue runs them on the merge group.
+    if (!events.includes('pull_request') || !events.includes('merge_group')) found.push(`${workflow.name}: runs on ${events.join(', ')}, not on pull_request and merge_group`);
+    // A push to a branch of the merge queue would run the checks of the merge group a second time.
+    if (events.includes('push') && !trigger.includes("  push:\n    branches-ignore: ['gh-readonly-queue/**']\n")) found.push(`${workflow.name}: the push trigger lacks branches-ignore: ['gh-readonly-queue/**']`);
+  }
+  assert.deepEqual(found, []);
+});
+
 // The CI groups of the Makefile: CI_GROUPS and the targets CI_TARGETS_<group> of each.
 function groups() {
   const makefile = readFileSync(path.join(ROOT, 'Makefile'), 'utf8');
@@ -102,10 +115,12 @@ test('the CI groups run every target of the full suite once (HY-91)', () => {
 
 test('the workflow ci runs every CI group in a job that runs to its end and uploads its report (HY-91)', () => {
   const text = readFileSync(path.join(WORKFLOWS, 'ci.yml'), 'utf8');
-  assert.match(text, /^on:\n {2}push:\n {4}branches: \[main\]\n {2}pull_request:\n/m);
-  // The runners are few, so a new push stops the run of the same workflow and ref that is still going (HY-91). The
-  // push gate keeps every run: each pushed commit is checked.
-  assert.match(text, /^concurrency:\n {2}group: \$\{\{ github\.workflow \}\}-\$\{\{ github\.ref \}\}\n {2}cancel-in-progress: true\n/m);
+  // The ruleset main requires the jobs on every pull request and every merge group, the commit that main receives
+  // (HY-94); a push to main never happens outside the merge queue.
+  assert.match(text, /^on:\n {2}pull_request:\n {2}merge_group:\n\n/m);
+  // The runners are few, so a new push to a pull request stops the run of its previous push (HY-91). A merge group has a
+  // ref of its own and its run is never cancelled. The push gate keeps every run: each pushed commit is checked.
+  assert.match(text, /^concurrency:\n {2}group: \$\{\{ github\.workflow \}\}-\$\{\{ github\.ref \}\}\n {2}cancel-in-progress: \$\{\{ github\.event_name == 'pull_request' \}\}\n/m);
   assert.doesNotMatch(readFileSync(path.join(WORKFLOWS, 'push-gate.yml'), 'utf8'), /^concurrency:/m);
   const { names, targets } = groups();
   const read = jobs(text);

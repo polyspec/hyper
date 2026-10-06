@@ -47,6 +47,8 @@
 | `make hooks` | Sets `core.hooksPath` to `.githooks` and runs `make hooks-check` (see [Push](#push)) |
 | `make hooks-check` | Fails while `core.hooksPath` is not `.githooks` or `.githooks/pre-push` is missing or not executable |
 | `make push-gate-commit` | Fails when the commit `COMMIT` has a checklist task in progress or does not track `.githooks/pre-push` with mode 100755; the job `push-gate` of GitHub runs it (see [Push](#push)) |
+| `make github-ruleset` | Changes the merge settings of `.github/ruleset.json` and creates the GitHub ruleset of its name, or updates it, where they differ, and compares again (see [Publishing main](#publishing-main)) |
+| `make github-ruleset-check` | Fails when a merge setting or the live GitHub ruleset differs from `.github/ruleset.json`, naming each field with its live and its declared value; changes nothing |
 | `make ci-pins` | Prints the PHP minor of `config/toolchain.json` and the template branch of `config/template.json` and gives them to the workflow as step outputs (see [CI](#ci)) |
 | `make ci-check` | Runs the targets of the CI group `GROUP` to their ends and writes the report `var/ci/<group>/`; only under GitHub Actions (see [CI](#ci)) |
 | `make ci-summary` | Writes the summary of the CI group `GROUP` into its report and the job summary (see [CI](#ci)) |
@@ -82,11 +84,32 @@ A push happens only when no task of the checklist is `[~]`, neither in a pushed 
 
 Git does not install hooks from a clone. Every `make` run therefore sets `core.hooksPath` to `.githooks` when it has another value, and `make hooks` sets it explicitly. `make hooks-check`, which `make docs-check` runs before each commit, and the guard of the full run fail while `core.hooksPath` is not `.githooks` or the hook is missing or not executable.
 
-The workflow `.github/workflows/push-gate.yml` gates every push. Its job `push-gate` runs `make push-gate-commit COMMIT=<sha>`, which runs `node scripts/push-gate.mjs commit <sha>`, on the pushed commit of every branch and on the head commit of every pull request, so a push that skipped the hook, or came from a checkout without it, still fails there. It fails for a task in progress, for a commit without the checklist and for a commit that does not track `.githooks/pre-push` with mode 100755; it prints each line of the failure as an annotation and writes it into the job summary. The job then runs `make docs-check`, the document pairs, links, code blocks and checklist rules, which read no network, so a commit that breaks them fails the check that the ruleset `main` requires (see [Publishing main](#publishing-main)).
+The workflow `.github/workflows/push-gate.yml` gates every push. Its job `push-gate` runs `make push-gate-commit COMMIT=<sha>`, which runs `node scripts/push-gate.mjs commit <sha>`, on the pushed commit of every branch except the branches `gh-readonly-queue/**` of the merge queue, on the head commit of every pull request and on every merge group, so a push that skipped the hook, or came from a checkout without it, still fails there. It fails for a task in progress, for a commit without the checklist and for a commit that does not track `.githooks/pre-push` with mode 100755; it prints each line of the failure as an annotation and writes it into the job summary. The job then runs `make docs-check`, the document pairs, links, code blocks and checklist rules, which read no network, so a commit that breaks them fails the check that the ruleset `main` requires (see [Publishing main](#publishing-main)).
+
+## Publishing main
+
+Every change reaches `main` through a pull request and the merge queue (HY-94); no command of this repository pushes `main`. Publish a branch with the standard commands of GitHub, or with the GitHub UI:
+
+```sh
+git push origin HEAD:refs/heads/<branch>
+gh pr create --base main --head <branch> --fill
+gh pr merge <branch> --auto --rebase
+```
+
+The GitHub ruleset `main` of `.github/ruleset.json` applies to `refs/heads/main` with enforcement `active` and no bypass actor, so it binds administrators too. Its rules:
+
+- `pull_request`: a change arrives through a pull request; no approval is required, and every merge method is allowed: the merge queue merges with its own method, and `gh pr merge --auto` asks for auto-merge with a method of its own choice, so a rule that allowed only `rebase` would leave the pull request out of the queue;
+- `merge_queue`: the merge queue merges with the method `REBASE`, so each commit of a pull request lands on `main` as a commit of its own, with the grouping strategy `ALLGREEN`, at most 5 entries built and merged at once and no wait for more entries; `check_response_timeout_minutes` is 360, the maximum of GitHub, so a long suite is never cut by it;
+- `required_linear_history`, `non_fast_forward` and `deletion`: no merge commit, no force-push and no deletion of `main`;
+- `required_status_checks`: the checks `push-gate`, `check (docs)`, `check (php)`, `check (node)` and `check (board)` of the GitHub Actions app (integration 15368), the job of `.github/workflows/push-gate.yml`, which runs `make push-gate-commit` and `make docs-check`, and the jobs of `.github/workflows/ci.yml`, one per CI group, which run the full suite.
+
+A direct `git push origin <commit>:main` is refused with `GH013: Repository rule violations found`. `gh pr merge --auto` adds the pull request to the merge queue once its required checks pass on the pull request. The queue rebases it onto `main` as a merge group on the branch `gh-readonly-queue/main/pr-<number>-<sha>`, both workflows run on that commit (`merge_group`), and the queue moves `main` to exactly that commit when the checks pass; a failed check removes the pull request from the queue, and `main` does not move. The push gate does not run on a push to a branch of the queue, which its merge group run checks already. The run of `ci.yml` for a merge group is never cancelled: each group has a ref of its own, and `cancel-in-progress` holds only for pull requests. The branch of a merged pull request is deleted (`delete_branch_on_merge`). The rebase gives the merged commits new hashes; `git pull --rebase` drops the local commits that the queue merged.
+
+`make github-ruleset` changes the repository settings of the declaration (`allow_rebase_merge`, `allow_auto_merge`, `delete_branch_on_merge`) and creates the ruleset of the declared name, or updates it, where they differ, and compares again; `make github-ruleset-check` changes nothing and fails, naming each field with its live and its declared value, when a setting differs or the live ruleset is missing or differs from the declaration. Both start the GitHub CLI of the make variable `GH` (`gh` unless set), which needs administration access to the repository; no target of the full suite runs them. `tests/scripts/github-ruleset.test.mjs` runs the script against a fake `gh`.
 
 ## CI
 
-The workflow `.github/workflows/ci.yml` runs the full suite after a push to `main` and for every pull request (HY-91); a new push stops the run of the same ref that is still going, because the runners are few. Its job `check` has one entry per CI group of the Makefile, with `fail-fast: false`:
+The workflow `.github/workflows/ci.yml` runs the full suite for every pull request and every merge group of the merge queue (HY-91, see [Publishing main](#publishing-main)); a new push to a pull request stops the run of its earlier push that is still going, because the runners are few, and the run of a merge group is never cancelled. Its job `check` has one entry per CI group of the Makefile, with `fail-fast: false`:
 
 | Group | Targets | Setup |
 |---|---|---|

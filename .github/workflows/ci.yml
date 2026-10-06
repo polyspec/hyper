@@ -1,11 +1,11 @@
-# The full suite on GitHub (HY-91): after a push to main and for every pull request, one job per CI group of the
-# Makefile (CI_GROUPS) runs the targets of its group, which together are the targets of CHECK_TARGETS. A failure never
-# stops the run: the matrix does not cancel the other groups (fail-fast: false), every step after the first runs after
-# a failed step (`if: ${{ !cancelled() }}`), and `make ci-check` runs every target of the group to its end. Each job
-# writes the job summary and uploads its report var/ci/<group>/: the record with the status, the time and the first
-# failure lines of each target, the full log of each target and the summary. Every step that runs a command runs one
-# make target, the jobs run on ubuntu-26.04-arm, the actions are pinned by commit and no step has a time limit (HY-90,
-# tests/scripts/ci-workflow.test.mjs).
+# The full suite on GitHub (HY-91): for every pull request and every merge group of the merge queue, the commit that
+# main receives (HY-94), one job per CI group of the Makefile (CI_GROUPS) runs the targets of its group, which together
+# are the targets of CHECK_TARGETS. A failure never stops the run: the matrix does not cancel the other groups
+# (fail-fast: false), every step after the first runs after a failed step (`if: ${{ !cancelled() }}`), and `make
+# ci-check` runs every target of the group to its end. Each job writes the job summary and uploads its report
+# var/ci/<group>/: the record with the status, the time and the first failure lines of each target, the full log of each
+# target and the summary. Every step that runs a command runs one make target, the jobs run on ubuntu-26.04-arm, the
+# actions are pinned by commit and no step has a time limit (HY-90, tests/scripts/ci-workflow.test.mjs).
 #
 # The toolchain comes from the pinned files: Node.js from .node-version, PHP by the minor of config/toolchain.json, whose
 # running patch the record names, and npm and Composer from `make install` into var/tools of the checkout. The template
@@ -18,14 +18,14 @@
 name: ci
 
 on:
-  push:
-    branches: [main]
   pull_request:
+  merge_group:
 
-# The runners are few: a new push stops the run of this workflow for the same ref that is still going (HY-91).
+# The runners are few: a new push to a pull request stops the run of its previous push (HY-91). Each merge group has a
+# ref of its own (gh-readonly-queue/main/pr-<number>-<sha>), and its run is never cancelled.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read

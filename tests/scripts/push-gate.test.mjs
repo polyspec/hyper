@@ -202,8 +202,8 @@ test('the job push-gate fails a commit whose checklist breaks the document rules
 
 test('the workflow push-gate runs the gate on every push and pull request', () => {
   const workflow = readFileSync(path.join(ROOT, '.github/workflows/push-gate.yml'), 'utf8');
-  assert.match(workflow, /^on:\n {2}push:\n {2}pull_request:\n/m);
-  assert.doesNotMatch(workflow, /branches|timeout-minutes/);
+  assert.match(workflow, /^on:\n {2}push:\n {4}branches-ignore: \['gh-readonly-queue\/\*\*'\]\n {2}pull_request:\n {2}merge_group:\n/m);
+  assert.doesNotMatch(workflow, /timeout-minutes/);
   assert.match(workflow, /^ {2}push-gate:\n/m);
   assert.match(workflow, /node-version-file: \.node-version/);
   assert.match(workflow, /run: make push-gate-commit COMMIT=\$\{\{ github\.event\.pull_request\.head\.sha \|\| github\.sha \}\}/);
