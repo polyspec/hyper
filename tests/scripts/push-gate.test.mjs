@@ -1,8 +1,8 @@
 // Tests the push gate (scripts/push-gate.mjs): the pre-push hook .githooks/pre-push refuses a push while a task of the
 // checklist is [~] in a pushed commit or in the working tree, and when a pushed commit has no checklist; every make run
 // installs the hook; `hooks-check` fails while the hook is not installed; the workflow push-gate runs `commit <sha>`,
-// which fails for a task in progress and for a commit that does not track the hook as executable. Each test pushes to
-// a temporary bare repository.
+// which fails for a task in progress and for a commit that does not track the hook as executable, and `make docs-check`,
+// which fails for a checklist that breaks the document rules (H13.2). Each test pushes to a temporary bare repository.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { chmodSync, copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -27,7 +27,7 @@ function imports(file, found = new Set()) {
   return found;
 }
 
-const FILES = ['.githooks/pre-push', 'Makefile', ...imports('scripts/push-gate.mjs')];
+const FILES = ['.githooks/pre-push', 'Makefile', ...imports('scripts/push-gate.mjs'), ...imports('scripts/check-documents.mjs')];
 
 const ACTIVE = `| ID | Task | Verification | Status |
 |---|---|---|---|
@@ -169,6 +169,35 @@ test('the workflow command fails for a task in progress and for an untracked or 
   const untracked = gate(commitAll(directory, 'no hook'));
   assert.equal(untracked.status, 1);
   assert.match(untracked.stdout, /::error::  commit [0-9a-f]{7}: the commit does not track \.githooks\/pre-push/);
+});
+
+// The make commands of the steps of the job push-gate, with the commit of the run in place of its expression.
+function pushGateCommands(sha) {
+  const workflow = readFileSync(path.join(ROOT, '.github/workflows/push-gate.yml'), 'utf8');
+  return [...workflow.matchAll(/^ {6}- run: (make .*)$/gm)].map(match => match[1].replace('${{ github.event.pull_request.head.sha || github.sha }}', sha));
+}
+
+test('the job push-gate fails a commit whose checklist breaks the document rules (H13.2)', t => {
+  // A marker outside a task state: make docs-check fails for it, and no task is [~], so the gate of tasks passes.
+  const broken = `${DONE}| H1.3 | Write [x] the printer | \`make test-ts\` | [ ] |\n`;
+  const { directory } = checkout(t, broken);
+  writeFileSync(path.join(directory, CHECKLIST.replace(/\.md$/, '.ko.md')), broken);
+  const sha = commitAll(directory, 'broken marker');
+  const commands = pushGateCommands(sha);
+  assert.ok(commands.length > 0, 'the job push-gate runs no make step');
+  const results = commands.map(command => ({ command, ...run(directory, 'sh', ['-c', command]) }));
+  const failed = results.filter(result => result.status !== 0);
+  assert.ok(failed.length > 0, `every step of the job push-gate passed a broken checklist:\n${results.map(result => `${result.command}: ${result.status}`).join('\n')}`);
+  assert.match(failed.map(result => result.stdout + result.stderr).join('\n'), /execution-checklist\.md:\d+:\d+/);
+
+  // The same job passes the checklist without the broken marker.
+  writeFileSync(path.join(directory, CHECKLIST), DONE);
+  writeFileSync(path.join(directory, CHECKLIST.replace(/\.md$/, '.ko.md')), DONE);
+  const clean = commitAll(directory, 'fixed marker');
+  for (const command of pushGateCommands(clean)) {
+    const result = run(directory, 'sh', ['-c', command]);
+    assert.equal(result.status, 0, `${command}\n${result.stdout}${result.stderr}`);
+  }
 });
 
 test('the workflow push-gate runs the gate on every push and pull request', () => {
