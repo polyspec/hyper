@@ -1,6 +1,6 @@
 // Copies the files that Git tracks below a path of a repository, as its working tree holds them: a tracked file that
 // the working tree deleted is not copied and is returned, so that the caller names it. Every copy keeps the
-// modification time of its source, so that a build tool such as cargo builds again only when a source changed, and
+// modification time of its source, so that a build tool such as make builds again only when a source changed, and
 // the executable bits.
 import { execFileSync } from 'node:child_process';
 import { chmodSync, statSync, utimesSync } from 'node:fs';

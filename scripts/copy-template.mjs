@@ -5,16 +5,16 @@
 // The copy is the commit at the head of the branch `--branch` (main) of the checkout of the template repository when
 // the copy runs (HY-80), whatever commit its working tree is at; a missing branch fails the copy. The copy has the
 // layout of the template repository and holds:
-//   packages/template-ts       the files that `npm pack` packs from the built TypeScript package, without its scripts
+//   packages/template-ts       the files that `npm pack` packs from the built TypeScript package, without its scripts,
+//                              and its sources and build configuration, whose digest the compiler records
 //   packages/template-php      the PHP package
-//   packages/template-php-ext  the native extension and the Rust crate packages/template-rust that it builds from
-//   packages/template-rust
+//   packages/template-php-ext  the C sources and the stub of the native extension
 //   tools/compiler             the compiler of the generated programs and contracts/functions.json that it reads
-//   rust-toolchain.toml        the Rust toolchain of the template repository, with which `make ext` builds (HY-81)
+//   package-lock.json          the lock of the TypeScript build, which the digest of the compiler reads
+//   scripts                    the build of the native extension, build-php-extension.mjs, and the scripts it imports
 //   copy.json                  the branch, its commit, the input hash of the TypeScript build and the hash of this script
-// Every path except packages/template-ts is taken from the commit of the branch with `git archive`, so its files and
-// their modification times (the commit time) are the same on every machine, and cargo builds the extension again only
-// when the branch moves. The TypeScript package is a build output of the template repository: its record
+// Every path except the packed files of packages/template-ts is taken from the commit of the branch with `git archive`,
+// so its files and their modification times (the commit time) are the same on every machine. The TypeScript package is a build output of the template repository: its record
 // `packages/template-ts/dist.inputs.json` names the hash of the inputs of the build (scripts/build-package.mjs of the
 // template repository). The copy requires that the inputs are the files of the commit of the branch, that the hash of
 // their contents in that commit equals the recorded hash, and that the record and the packed build files did not change
@@ -38,7 +38,11 @@ import { publish, staging } from './publish.mjs';
 import { NPM } from './toolchain.mjs';
 import { git } from './tracked-files.mjs';
 
-const TRACKED = ['packages/template-php', 'packages/template-php-ext', 'packages/template-rust', 'tools/compiler', 'contracts/functions.json', 'rust-toolchain.toml'];
+const TRACKED = [
+  'packages/template-php', 'packages/template-php-ext/src', 'tools/compiler', 'contracts/functions.json', 'package-lock.json',
+  'packages/template-ts/src', 'packages/template-ts/tsconfig.json', 'packages/template-ts/tsup.config.ts',
+  'scripts/build-php-extension.mjs', 'scripts/publish-build.mjs', 'scripts/temporary-workspace.mjs', 'scripts/test-progress/step.mjs',
+];
 const TYPESCRIPT = 'packages/template-ts';
 const RECORD = `${TYPESCRIPT}/dist.inputs.json`;
 
