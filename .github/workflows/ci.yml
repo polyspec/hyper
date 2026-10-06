@@ -11,10 +11,10 @@
 # running patch the record names, and npm and Composer from `make install` into var/tools of the checkout. The template
 # repository is checked out next to this repository at its branch main, as ../template of the Makefile, and its
 # TypeScript package is built there with its own make targets; `make install` then copies the branch main and
-# downloads everything that the checks read. Only the groups that build the native extension, php and board, install
-# the Rust toolchain and its crates (make install-rust), and only the group board installs Chromium. The template step
-# runs the make install of the template repository, which also installs its Rust toolchain, because the template
-# repository has no target that installs its npm dependencies alone; build-ts needs them.
+# downloads everything that the checks read. `make ext` builds the native extension with phpize and php-config of the
+# PHP of setup-php, and only the group board installs Chromium. The template step runs the make install of the template
+# repository, because the template repository has no target that installs its npm dependencies alone; build-ts needs
+# them.
 name: ci
 
 on:
@@ -41,12 +41,10 @@ jobs:
           - group: docs
           - group: php
             install: true
-            rust: true
           - group: node
             install: true
           - group: board
             install: true
-            rust: true
             browser: true
     defaults:
       run:
@@ -86,9 +84,6 @@ jobs:
       - id: install
         if: ${{ !cancelled() && matrix.install }}
         run: make install
-      - id: rust
-        if: ${{ !cancelled() && matrix.rust }}
-        run: make install-rust
       - id: browser
         if: ${{ !cancelled() && matrix.browser }}
         run: make install-browser

@@ -41,7 +41,6 @@
     { "paths": ["scripts/run-tests.mjs", "scripts/test-progress/**"], "tests": ["tests/scripts/run-tests.test.mjs"] },
     { "paths": ["scripts/line-end.mjs"], "tests": ["tests/scripts/check-recipes.test.mjs"] },
     { "paths": ["scripts/ci-run.mjs"], "tests": ["tests/scripts/ci-run.test.mjs"] },
-    { "paths": ["scripts/rust-downloads.mjs"], "targets": ["rust-downloads-check"], "tests": ["tests/scripts/rust-downloads.test.mjs"] },
     { "paths": ["scripts/serve-demo.mjs"], "tests": ["tests/scripts/serve-demo.test.mjs"] },
     { "paths": ["scripts/toolchain.mjs", "config/toolchain.json", ".node-version"], "tests": ["tests/scripts/toolchain.test.mjs", "tests/scripts/package-build.test.mjs"] },
     { "paths": ["scripts/tsc.mjs"], "targets": ["test-js"], "tests": ["tests/scripts/package-build.test.mjs"] },

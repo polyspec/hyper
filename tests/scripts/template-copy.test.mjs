@@ -4,7 +4,7 @@
 // inputs, writes nothing into the template repository and writes nothing into a current copy, and the Makefile runs
 // the copy on every make template and installs the packages again only when the copy changed; npm installs the
 // TypeScript package as a copy inside this checkout, and Composer, PHPStan and the native extension build read the
-// copy.
+// copy, which holds what the compiler of the template repository reads.
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
@@ -39,11 +39,19 @@ function templateRepository(t, withBuild) {
     'packages/template-ts/src/index.ts': 'export const built = true;\n',
     'packages/template-php/composer.json': '{"name": "polyspec/template"}\n',
     'packages/template-php/bin/template.php': '<?php\n',
-    'packages/template-php-ext/Cargo.toml': '[package]\n',
-    'packages/template-rust/Cargo.toml': '[package]\n',
+    'packages/template-ts/tsconfig.json': '{}\n',
+    'packages/template-ts/tsup.config.ts': 'export default {};\n',
+    'packages/template-php-ext/src/config.m4': 'PHP_NEW_EXTENSION(polyspec_template, polyspec_template.c, $ext_shared)\n',
+    'packages/template-php-ext/src/polyspec_template.stub.php': '<?php\n',
+    'packages/template-php-ext/tests/EngineTest.php': '<?php\n',
     'tools/compiler/compiler.mjs': 'export {};\n',
     'contracts/functions.json': '{}\n',
-    'rust-toolchain.toml': '[toolchain]\nchannel = "1.98.1"\nprofile = "minimal"\n',
+    'package-lock.json': '{}\n',
+    'scripts/build-php-extension.mjs': 'export {};\n',
+    'scripts/publish-build.mjs': 'export {};\n',
+    'scripts/temporary-workspace.mjs': 'export {};\n',
+    'scripts/test-progress/step.mjs': 'export {};\n',
+    'scripts/other.mjs': 'export {};\n',
   };
   for (const [path, text] of Object.entries(files)) {
     mkdirSync(dirname(join(directory, path)), { recursive: true });
@@ -85,17 +93,20 @@ test('the copy holds the packed TypeScript package and the tracked paths of the 
   assert.equal(readFileSync(join(to, 'packages/template-ts/dist/index.mjs'), 'utf8'), 'export const built = true;\n');
   assert.equal(readFileSync(join(to, 'tools/compiler/compiler.mjs'), 'utf8'), 'export {};\n');
   const committed = Number(template.git('log', '-1', '--format=%ct').trim());
-  for (const path of ['packages/template-php/composer.json', 'packages/template-php-ext/Cargo.toml', 'packages/template-rust/Cargo.toml', 'tools/compiler/compiler.mjs', 'contracts/functions.json']) {
+  // The compiler records the digest of the sources of the TypeScript package, of its build configuration and of the lock,
+  // and `make ext` runs the build script of the template repository with the scripts that it imports.
+  const copied = ['packages/template-php/composer.json', 'packages/template-php-ext/src/config.m4', 'packages/template-php-ext/src/polyspec_template.stub.php', 'tools/compiler/compiler.mjs', 'contracts/functions.json', 'package-lock.json',
+    'packages/template-ts/src/index.ts', 'packages/template-ts/tsconfig.json', 'packages/template-ts/tsup.config.ts',
+    'scripts/build-php-extension.mjs', 'scripts/publish-build.mjs', 'scripts/temporary-workspace.mjs', 'scripts/test-progress/step.mjs'];
+  for (const path of copied) {
     assert.ok(existsSync(join(to, path)), path);
     // The modification time is the commit time, the same on every machine.
     assert.equal(Math.floor(statSync(join(to, path)).mtimeMs / 1000), committed, path);
   }
   assert.equal(statSync(join(to, 'packages/template-php/bin/template.php')).mode & 0o111, 0o111);
-  // The native extension builds in the copy with the Rust toolchain of the template repository (HY-81).
-  assert.equal(readFileSync(join(to, 'rust-toolchain.toml'), 'utf8'), '[toolchain]\nchannel = "1.98.1"\nprofile = "minimal"\n');
-  // rustc -vV prints its release as a key and value line, the stable form of the pinned compiler (HY-83).
-  const rust = spawnSync('rustc', ['-vV'], { cwd: join(to, 'packages/template-php-ext'), encoding: 'utf8', env: { ...process.env, RUSTUP_AUTO_INSTALL: '0' } });
-  assert.match(rust.stdout, /^release: 1\.98\.1$/m, `${rust.stdout}${rust.stderr}`);
+  // The packed package.json stays, and no other file of the template repository is copied.
+  assert.equal(JSON.parse(readFileSync(join(to, 'packages/template-ts/package.json'), 'utf8')).name, '@polyspec/template');
+  for (const path of ['packages/template-php-ext/tests/EngineTest.php', 'scripts/other.mjs']) assert.equal(existsSync(join(to, path)), false, path);
   assert.deepEqual(JSON.parse(readFileSync(join(to, 'copy.json'), 'utf8')), { branch: 'main', commit: template.main(), inputs: inputsHash(template.directory), script: scriptHash });
   assert.equal(existsSync(`${to}.next`), false);
 });
@@ -216,6 +227,6 @@ test('Composer, PHPStan and the native extension build read the declared copy', 
     assert.equal(repositories[0].options.symlink, false, manifest);
   }
   const scanned = /scanFiles:\n\s+- (\S+)/.exec(readFileSync('packages/hyper-php/phpstan.neon', 'utf8'))[1];
-  assert.equal(resolve('packages/hyper-php', scanned), join(COPY, 'packages/template-php-ext/stubs/polyspec_template.stub.php'));
-  assert.match(dryRun('ext').join('\n'), /^cd var\/products\/template\/packages\/template-php-ext && cargo build --locked --release --target-dir \S+\/build\/ext$/m);
+  assert.equal(resolve('packages/hyper-php', scanned), join(COPY, 'packages/template-php-ext/src/polyspec_template.stub.php'));
+  assert.match(dryRun('ext').join('\n'), /^node var\/products\/template\/scripts\/build-php-extension\.mjs var\/products\/template\/packages\/template-php-ext\/src \S+\/build\/ext\/polyspec_template\.so$/m);
 });

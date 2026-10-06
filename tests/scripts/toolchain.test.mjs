@@ -1,7 +1,7 @@
 // Tests the toolchain of the repository (HY-81, scripts/toolchain.mjs): every tool is pinned in a tracked file, a tool
 // that differs from its pin fails the check with the expected and the actual value, npm and Composer of this checkout
 // come first on PATH, a download is used only with its pinned digest, and the recipes that run tools check the
-// toolchain first. The Rust toolchain of the native extension build is checked by tests/scripts/template-copy.test.mjs.
+// toolchain first.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
@@ -71,12 +71,12 @@ test('a download is used only with its pinned digest', async (t) => {
   await assert.rejects(verifiedDownload(url, 'sha512', '0'.repeat(128)), new RegExp(`has the sha512 digest ${sha512}, expected the pinned ${'0'.repeat(128)}`));
 });
 
-test('the recipes that run npm, Composer, PHP or cargo check the toolchain first, and install installs the tools first', () => {
+test('the recipes that run npm, Composer or PHP check the toolchain first, and install installs the tools first', () => {
   for (const target of ['template', 'lint', 'templates-check']) {
     assert.equal(dryRun(target)[0], 'node scripts/toolchain.mjs check', target);
   }
   const install = dryRun('install');
-  assert.deepEqual(install.slice(0, 2), ['env -u CARGO_NET_OFFLINE -u npm_config_offline -u COMPOSER_DISABLE_NETWORK node scripts/toolchain.mjs install', 'node scripts/toolchain.mjs check']);
+  assert.deepEqual(install.slice(0, 2), ['env -u npm_config_offline -u COMPOSER_DISABLE_NETWORK node scripts/toolchain.mjs install', 'node scripts/toolchain.mjs check']);
 });
 
 // The make of the pin looks up the program of a recipe line without shell syntax on the PATH of its own process: an
@@ -125,12 +125,12 @@ test('no recipe queries a registry: installs follow their lock without an audit,
   assert.equal(spawnSync('git', ['ls-files', '--error-unmatch', 'tests/package-install/package-lock.json'], { encoding: 'utf8' }).status, 0, 'tests/package-install/package-lock.json is not tracked');
 });
 
-// The settings that keep cargo, npm and Composer from reading the network, and the prefix of the downloads that lift
+// The settings that keep npm and Composer from reading the network, and the prefix of the downloads that lift
 // them (HY-89).
-const OFFLINE = { CARGO_NET_OFFLINE: 'true', npm_config_offline: 'true', COMPOSER_DISABLE_NETWORK: '1' };
+const OFFLINE = { npm_config_offline: 'true', COMPOSER_DISABLE_NETWORK: '1' };
 const ONLINE = `env ${Object.keys(OFFLINE).map((name) => `-u ${name}`).join(' ')} `;
 
-test('every recipe runs cargo, npm and Composer offline, and $(ONLINE) lifts it (HY-89)', (t) => {
+test('every recipe runs npm and Composer offline, and $(ONLINE) lifts it (HY-89)', (t) => {
   const directory = mkdtempSync(path.join(tmpdir(), 'hyper-offline-'));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   const extra = path.join(directory, 'env.mk');
@@ -148,27 +148,20 @@ test('every recipe runs cargo, npm and Composer offline, and $(ONLINE) lifts it 
   for (const name of Object.keys(OFFLINE)) assert.equal(online[name], undefined, `${name} under $(ONLINE)`);
 });
 
-test('only make tools, make install, make install-rust and make install-browser download, each download through $(ONLINE), and no check target downloads (HY-89)', (t) => {
+test('only make tools, make install and make install-browser download, each download through $(ONLINE), and no check target downloads (HY-89)', (t) => {
   const directory = mkdtempSync(path.join(tmpdir(), 'hyper-downloads-'));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   assert.deepEqual(dryRun('tools'), [`${ONLINE}node scripts/toolchain.mjs install`]);
   assert.deepEqual(dryRun('install-browser'), [`${ONLINE}node node_modules/@playwright/test/cli.js install --with-deps chromium`]);
   const install = dryRun('install', { variables: [`TEMPLATE_DIR=${directory}`] });
-  const downloads = install.filter((line) => / ci |composer install|cargo fetch|toolchain\.mjs install/.test(line.replace(/ -- /, ' ')));
-  // The Rust toolchain and the crates are installed only by make install-rust, which the jobs that build the
-  // extension run (T20.1-6 of the template repository).
-  assert.deepEqual(install.filter((line) => /rustup|cargo/.test(line)), [], install.join('\n'));
-  const rust = dryRun('install-rust', { variables: [`TEMPLATE_DIR=${directory}`] }).filter((line) => /rustup|cargo/.test(line));
-  assert.deepEqual(rust, [`cd ${directory} && rustup toolchain install --no-self-update`, `cd ${directory}/packages/template-php-ext && ${ONLINE}cargo fetch --locked`]);
+  const downloads = install.filter((line) => / ci |composer install|toolchain\.mjs install/.test(line.replace(/ -- /, ' ')));
+  assert.ok(downloads.length > 0, install.join('\n'));
   assert.deepEqual(downloads.filter((line) => !line.includes(ONLINE)), [], 'a download of make install without $(ONLINE)');
   // An empty template directory makes each dry run print the recipe of the template copy as well.
   const checks = /^CHECK_TARGETS := (.+)$/m.exec(readFileSync('Makefile', 'utf8'))[1].split(' ');
   assert.ok(checks.length > 10, checks.join(' '));
   for (const target of [...checks, 'ext', 'template']) {
     const lines = dryRun(target, { variables: [`TEMPLATE_DIR=${directory}`] });
-    assert.deepEqual(lines.filter((line) => /rustup|env -u|cargo fetch(?! --locked --offline)/.test(line)), [], `${target} downloads`);
+    assert.deepEqual(lines.filter((line) => /env -u/.test(line)), [], `${target} downloads`);
   }
-  const ext = dryRun('ext', { variables: [`TEMPLATE_DIR=${directory}`] });
-  const check = ext.indexOf(`node scripts/rust-downloads.mjs ${directory}/packages/template-php-ext`);
-  assert.ok(check >= 0 && check < ext.findIndex((line) => line.includes('cargo build')), ext.join('\n'));
 });

@@ -27,24 +27,20 @@ HYPER_PHP_COPY := var/products/hyper-php
 # The PHP memory limit of PHPStan: a run without its result cache (build/phpstan) needs 132 MB in its worker, above
 # the default limit of 128M.
 PHPSTAN_MEMORY := 256M
-# The crate of the native template extension in the declared copy.
-EXT_DIR := $(TEMPLATE_DIR)/packages/template-php-ext
-EXT := build/ext/release/libpolyspec_template.$(if $(filter Darwin,$(shell uname)),dylib,so)
+# The C sources of the native template extension in the declared copy, and the library that `make ext` builds.
+EXT_DIR := $(TEMPLATE_DIR)/packages/template-php-ext/src
+EXT := build/ext/polyspec_template.so
 
 # The toolchain (HY-81, scripts/toolchain.mjs): npm and Composer of this checkout, which `make tools` installs into
-# var/tools, come first on PATH for every recipe and the programs that it starts. rustup never installs a toolchain on
-# the first cargo, because several processes of one run may start cargo at once; `make install-rust` installs the Rust
-# toolchain of the declared copy, and `make rust-downloads-check` fails with `run make install-rust` while it is missing.
+# var/tools, come first on PATH for every recipe and the programs that it starts.
 export PATH := $(CURDIR)/var/tools/bin:$(PATH)
-export RUSTUP_AUTO_INSTALL := 0
 # A check reads no network (HY-89): `make install` downloads everything that the checks read, and every other recipe
-# and the programs that it starts run cargo, npm and Composer offline, so a missing download fails at once instead of
-# reaching a registry in one run and not in another. The downloads of `make tools`, `make install`, `make install-rust`
-# and `make install-browser` lift the settings with $(ONLINE).
-export CARGO_NET_OFFLINE := true
+# and the programs that it starts run npm and Composer offline, so a missing download fails at once instead of
+# reaching a registry in one run and not in another. The downloads of `make tools`, `make install` and
+# `make install-browser` lift the settings with $(ONLINE).
 export npm_config_offline := true
 export COMPOSER_DISABLE_NETWORK := 1
-ONLINE := env -u CARGO_NET_OFFLINE -u npm_config_offline -u COMPOSER_DISABLE_NETWORK
+ONLINE := env -u npm_config_offline -u COMPOSER_DISABLE_NETWORK
 # make 3.81 looks up the program of a recipe line without shell syntax on its own PATH, not on the exported one, so the
 # recipes start npm and Composer by the absolute paths of var/tools/bin.
 NPM := $(CURDIR)/var/tools/bin/npm
@@ -70,7 +66,7 @@ $(if $(filter $(HOOKS_PATH),$(shell git config core.hooksPath)),,$(shell git con
 
 .DEFAULT_GOAL := help
 
-.PHONY: help tools toolchain-check owner-check install hyper-php-copy template template-branch template-check rust-downloads-check install-rust ext packages package-check server server-fixtures node-server node-fixtures assets test-js test-node test-php lint analyse-php templates-check test-scripts virtiofs-check parity server-parity bundle-size e2e docs-check serve-demo bench-server bench-server-smoke bench-browser bench check rerun-failed serve-demo-unlock hooks hooks-check push-gate-commit ci-pins ci-check ci-summary install-browser github-ruleset github-ruleset-check
+.PHONY: help tools toolchain-check owner-check install hyper-php-copy template template-branch template-check ext packages package-check server server-fixtures node-server node-fixtures assets test-js test-node test-php lint analyse-php templates-check test-scripts virtiofs-check parity server-parity bundle-size e2e docs-check serve-demo bench-server bench-server-smoke bench-browser bench check rerun-failed serve-demo-unlock hooks hooks-check push-gate-commit ci-pins ci-check ci-summary install-browser github-ruleset github-ruleset-check
 
 help: ## List the targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
@@ -81,7 +77,7 @@ tools: ## Install the pinned npm and Composer into var/tools (HY-81)
 toolchain-check: ## Fail when Node.js, npm, Composer or the PHP minor differs from its pin, naming the expected and the actual value (HY-81)
 	node scripts/toolchain.mjs check
 
-install: tools ## Install the pinned tools, write the declared copy of the template branch and install npm and Composer dependencies from it; make install-rust installs the Rust toolchain of the native extension (HY-89)
+install: tools ## Install the pinned tools, write the declared copy of the template branch and install npm and Composer dependencies from it (HY-89)
 	node scripts/toolchain.mjs check
 	node scripts/copy-template.mjs --repository $(TEMPLATE_REPOSITORY) --branch $(TEMPLATE_BRANCH) --output $(TEMPLATE_DIR)
 	node scripts/copy-package.mjs --path $(PHP_PACKAGE) --output $(HYPER_PHP_COPY)
@@ -113,19 +109,11 @@ template-check: template ## Fail when an npm or Composer copy of a template pack
 	$(call check,the Composer copy of $(BOARD),diff -r $(TEMPLATE_DIR)/packages/template-php/src $(BOARD)/vendor/polyspec/template/src) \
 	$(checks_result)
 
-# The Rust toolchain and the crates are installed only where `make ext` runs: the targets that build the extension
-# (test-php, parity, bench-server) need them, and the CI groups without such a target do not install them (HY-91).
-install-rust: template ## Install the Rust toolchain of the declared copy and download the crates of the native extension, after make install (HY-89)
-	cd $(TEMPLATE_DIR) && rustup toolchain install --no-self-update
-	cd $(EXT_DIR) && $(ONLINE) cargo fetch --locked
-
-# cargo runs offline and answers a missing crate with the advice to retry without --offline, and rustup a missing
-# toolchain with `rustup toolchain install`; this check names the fix of a check instead, make install (HY-89).
-rust-downloads-check: template ## Fail when the Rust toolchain or a crate of the native extension of the declared copy is missing, naming make install-rust (HY-89)
-	node scripts/rust-downloads.mjs $(EXT_DIR)
-
-ext: template rust-downloads-check ## Build the native template extension of the declared copy offline with its Rust toolchain into build/ext (HY-81)
-	cd $(EXT_DIR) && cargo build --locked --release --target-dir $(CURDIR)/build/ext
+# The build of the template repository (build-php-extension.mjs of the declared copy) runs phpize, configure and make
+# with the php-config of PATH in a temporary directory, builds again only when the sources or the PHP build changed,
+# and publishes the library with a rename (HY-82).
+ext: template ## Build the native template extension of the declared copy with phpize of the PHP of PATH into build/ext (HY-48, HY-78)
+	node $(TEMPLATE_DIR)/scripts/build-php-extension.mjs $(EXT_DIR) $(CURDIR)/$(EXT)
 
 packages: template ## Build the JavaScript modules and type declarations of the npm packages into their dist directories and reinstall their npm copies (HY-61, HY-79)
 	cd $(JS_PACKAGE) && $(NPM) run --silent build -- --outDir dist.next-$$$$ && node ../../scripts/publish.mjs directory dist.next-$$$$ dist

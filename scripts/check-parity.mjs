@@ -21,7 +21,7 @@
 // within REQUEST_TIMEOUT_MS fails by the name of its step and ends the check.
 //
 // Usage: node scripts/check-parity.mjs --app examples/board --requests examples/board/tests/parity/requests.json
-//          [--extension build/ext/release/libpolyspec_template.dylib] [--node]
+//          [--extension build/ext/polyspec_template.so] [--node]
 
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
