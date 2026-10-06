@@ -31,7 +31,7 @@
     { "paths": ["scripts/check-documents.mjs"], "targets": ["docs-check"], "tests": ["tests/scripts/check-documents.test.mjs"] },
     { "paths": ["scripts/check-parity.mjs"], "targets": ["parity"], "tests": ["tests/scripts/check-parity.test.mjs"] },
     { "paths": ["scripts/copy-package.mjs", "scripts/publish.mjs", "scripts/tracked-files.mjs"], "targets": ["template-check"], "tests": ["tests/scripts/publish.test.mjs", "tests/scripts/template-copy.test.mjs", "tests/scripts/build-assets.test.mjs"] },
-    { "paths": ["scripts/copy-template.mjs", "config/template.json"], "targets": ["template-check"], "tests": ["tests/scripts/template-copy.test.mjs", "tests/scripts/full-run.test.mjs"] },
+    { "paths": ["scripts/copy-template.mjs"], "targets": ["template-check"], "tests": ["tests/scripts/template-copy.test.mjs"] },
     { "paths": ["scripts/full-run.mjs"], "tests": ["tests/scripts/full-run.test.mjs", "tests/scripts/push-gate.test.mjs"] },
     { "paths": ["scripts/git-hooks.mjs", "scripts/push-gate.mjs", ".githooks/**", ".github/workflows/*.yml"], "tests": ["tests/scripts/push-gate.test.mjs", "tests/scripts/ci-workflow.test.mjs", "tests/scripts/github-ruleset.test.mjs"] },
     { "paths": ["scripts/github-ruleset.mjs", ".github/ruleset.json"], "tests": ["tests/scripts/github-ruleset.test.mjs"] },

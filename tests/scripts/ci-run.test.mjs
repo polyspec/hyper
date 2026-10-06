@@ -27,7 +27,6 @@ function checkout(t) {
     '',
   ].join('\n'));
   mkdirSync(path.join(root, 'config'));
-  writeFileSync(path.join(root, 'config/template.json'), '{ "branch": "main" }\n');
   writeFileSync(path.join(root, 'config/toolchain.json'), '{ "php": "8.5" }\n');
   for (const args of [['init', '--quiet'], ['add', '-A'], ['-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '--quiet', '-m', 'fixture']]) {
     assert.equal(spawnSync('git', args, { cwd: root }).status, 0);
@@ -46,7 +45,9 @@ test('every target runs to its end after a failed target, and the report holds e
   assert.equal(record.result, 'failed');
   assert.deepEqual(record.targets.map((target) => [target.name, target.status]), [['bad', 'failed'], ['good', 'passed'], ['later', 'passed'], ['noisy', 'failed']]);
   assert.ok(record.targets.every((target) => Number.isInteger(target.elapsedMs) && target.started && target.ended), JSON.stringify(record.targets));
-  assert.equal(record.template, 'main');
+  // The record names the run by its tree.
+  assert.equal(record.tree, spawnSync('git', ['rev-parse', 'HEAD^{tree}'], { cwd: root, encoding: 'utf8' }).stdout.trim());
+  assert.deepEqual(Object.keys(record).sort(), ['ended', 'environment', 'group', 'reportErrors', 'result', 'started', 'targets', 'tree']);
   assert.match(record.environment.node, /^v\d+/);
   const bad = record.targets[0];
   // make ends with status 2 for a failed recipe, whatever status the recipe ended with.
@@ -107,7 +108,7 @@ test('the summary step writes the job summary, also for a run that recorded noth
   assert.equal(readFileSync(stepSummary, 'utf8'), nothing);
 
   mkdirSync(path.join(root, 'var/ci/g'), { recursive: true });
-  writeFileSync(path.join(root, 'var/ci/g/record.json'), JSON.stringify({ group: 'g', result: 'incomplete', commit: 'c', tree: 't', template: 'p', started: 's', environment: {}, targets: [{ name: 'good', status: 'passed', elapsedMs: 1000, log: 'logs/good.log' }, { name: 'bad', status: 'running', log: 'logs/bad.log' }, { name: 'later', status: 'pending' }] }));
+  writeFileSync(path.join(root, 'var/ci/g/record.json'), JSON.stringify({ group: 'g', result: 'incomplete', tree: 't', started: 's', environment: {}, targets: [{ name: 'good', status: 'passed', elapsedMs: 1000, log: 'logs/good.log' }, { name: 'bad', status: 'running', log: 'logs/bad.log' }, { name: 'later', status: 'pending' }] }));
   ciSummary({ root, group: 'g', env: { GITHUB_STEP_SUMMARY: stepSummary }, print: quiet });
   const stopped = readFileSync(path.join(root, 'var/ci/g/summary.md'), 'utf8');
   assert.match(stopped, /The runner ended without recording the end of its run; bad was running/);
@@ -152,12 +153,12 @@ test('the failure lines of a run with marked failures are the marked lines and t
   ]);
 });
 
-test('pins gives the PHP minor and the template branch as step outputs', (t) => {
+test('the pins give the PHP minor as a step output', (t) => {
   const root = checkout(t);
   const output = path.join(root, 'output.txt');
-  assert.deepEqual(pins({ root, env: { GITHUB_OUTPUT: output }, print: quiet }), { php: '8.5', template: 'main' });
-  assert.equal(readFileSync(output, 'utf8'), 'php=8.5\ntemplate=main\n');
-  assert.deepEqual(pins({ root: ROOT, env: {}, print: quiet }), { php: JSON.parse(readFileSync(path.join(ROOT, 'config/toolchain.json'), 'utf8')).php, template: JSON.parse(readFileSync(path.join(ROOT, 'config/template.json'), 'utf8')).branch });
+  assert.deepEqual(pins({ root, env: { GITHUB_OUTPUT: output }, print: quiet }), { php: '8.5' });
+  assert.equal(readFileSync(output, 'utf8'), 'php=8.5\n');
+  assert.deepEqual(pins({ root: ROOT, env: {}, print: quiet }), { php: JSON.parse(readFileSync(path.join(ROOT, 'config/toolchain.json'), 'utf8')).php });
 });
 
 test('a warning line of a passing target is recorded and named in the summary', async (t) => {

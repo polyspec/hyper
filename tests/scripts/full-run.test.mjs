@@ -27,8 +27,6 @@ const CHECKLIST = `# Execution checklist
 | H1.3 | Remove the old runner | \`make test-scripts\` | [!] cause: blocked; retry: H1.2 done |
 `;
 
-const TEMPLATE_BRANCH = 'main';
-
 const DONE = CHECKLIST.replace('| [~] |', '| [o] |');
 
 
@@ -45,8 +43,6 @@ function checkout(t, checklist) {
   mkdirSync(path.join(directory, 'docs/plans'), { recursive: true });
   writeFileSync(path.join(directory, 'docs/plans/execution-checklist.md'), checklist);
   writeFileSync(path.join(directory, '.gitignore'), '/var/\n');
-  mkdirSync(path.join(directory, 'config'));
-  writeFileSync(path.join(directory, 'config/template.json'), `${JSON.stringify({ branch: TEMPLATE_BRANCH })}\n`);
   mkdirSync(path.join(directory, '.githooks'));
   writeFileSync(path.join(directory, '.githooks/pre-push'), '#!/bin/sh\n');
   chmodSync(path.join(directory, '.githooks/pre-push'), 0o755);
@@ -120,10 +116,10 @@ test('the decision refuses an active item, a dirty tree, a missing hook and a se
   assert.equal(hooks.run, false);
   assert.match(hooks.reason, /pre-push hook is not installed[\s\S]*run make hooks/);
 
-  const earlier = { tree: 'tree-1', commit: 'c1', result: 'passed', started: '2026-10-05T01:00:00.000Z', targets: [{ name: 'a', status: 'passed' }, { name: 'b', status: 'passed' }] };
+  const earlier = { tree: 'tree-1', result: 'passed', started: '2026-10-05T01:00:00.000Z', targets: [{ name: 'a', status: 'passed' }, { name: 'b', status: 'passed' }] };
   const second = decide({ ...clean, record: earlier });
   assert.equal(second.run, false);
-  assert.match(second.reason, /full run of tree tree-1 \(commit c1\) started 2026-10-05T01:00:00\.000Z with result passed/);
+  assert.match(second.reason, /full run of tree tree-1 started 2026-10-05T01:00:00\.000Z with result passed/);
 
   const changed = decide({ ...clean, tree: 'tree-2', record: earlier });
   assert.equal(changed.run, true);
@@ -139,7 +135,7 @@ test('the decision of rerun-failed needs a record of the current tree with targe
   const clean = { mode: 'rerun-failed', targets: [], active: [], dirty: [], hooks: null, tree: 'tree-1', record: null, running: false };
   assert.match(decide(clean).reason, /no full-run record/);
   assert.equal(decide(clean).run, false);
-  const failed = { tree: 'tree-1', commit: 'c1', result: 'failed', started: 's', targets: [{ name: 'a', status: 'passed' }, { name: 'b', status: 'failed' }, { name: 'c', status: 'pending' }] };
+  const failed = { tree: 'tree-1', result: 'failed', started: 's', targets: [{ name: 'a', status: 'passed' }, { name: 'b', status: 'failed' }, { name: 'c', status: 'pending' }] };
   assert.equal(decide({ ...clean, tree: 'tree-2', record: failed }).run, false);
   assert.match(decide({ ...clean, tree: 'tree-2', record: failed }).reason, /verified tree tree-1, not the current tree tree-2/);
   assert.deepEqual(decide({ ...clean, record: failed }).targets, ['b', 'c']);
@@ -183,12 +179,11 @@ test('a full run records each target, and the same tree is refused a second time
   assert.match(first.output, /^\[full-run\] run: no full-run record/);
   const written = record(directory);
   assert.equal(written.tree, git(directory, 'rev-parse', 'HEAD^{tree}'));
-  // The record names the template branch of the run (HY-80).
-  assert.equal(written.template, TEMPLATE_BRANCH);
+  // The record names the run by its tree.
+  assert.deepEqual(Object.keys(written).sort(), ['ended', 'environment', 'failed', 'pid', 'reruns', 'result', 'started', 'targets', 'tree']);
   // The record holds the running releases of the tools, the PHP patch among them, as the evidence of the run (HY-81).
   assert.equal(written.environment.node, process.version);
   assert.match(written.environment.php, /^\d+\.\d+\.\d+$/);
-  assert.match(first.output, new RegExp(`^\\[full-run\\] template branch ${TEMPLATE_BRANCH} \\(config/template\\.json\\)$`, 'm'));
   assert.equal(written.result, 'passed');
   assert.ok(written.ended);
   assert.deepEqual(written.targets.map(target => target.status), ['passed', 'passed', 'passed']);
@@ -196,7 +191,7 @@ test('a full run records each target, and the same tree is refused a second time
   const second = await guard(directory, 'run', ['a', 'b', 'c']);
   assert.equal(second.status, 1);
   assert.deepEqual(second.ran, []);
-  assert.match(second.output, new RegExp(`refuse: the full run of tree ${written.tree} \\(commit ${written.commit}\\) started ${written.started} with result passed`));
+  assert.match(second.output, new RegExp(`refuse: the full run of tree ${written.tree} started ${written.started} with result passed`));
 
   commit(directory, 'next.txt', 'next\n');
   const changed = await guard(directory, 'run', ['a']);

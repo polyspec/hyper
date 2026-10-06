@@ -5,8 +5,8 @@
 ## 도구
 
 - pin한 도구(HY-81): `.node-version`의 Node.js, `pdo_sqlite`가 있는 `config/toolchain.json` minor의 PHP, GNU Make 3.81 이상, rustup. `make install`은 `packageManager`의 npm과 `config/toolchain.json`의 Composer를 `var/tools`에 설치하고(`make tools`), `make install-rust`는 template 복사본의 Rust toolchain을 설치한다. `make toolchain-check`는 pin과 다른 모든 도구를 밝힌다.
-- `../template`(`TEMPLATE_REPOSITORY`)에 있고 `config/template.json`이 밝히는 branch와(HY-80) 그 head commit의 TypeScript 패키지 build를 가진 template 저장소. template 저장소의 `make build-ts`가 그 build를 만든다. 그렇지 않으면 복사는 기대값과 실제값인 commit이나 입력 hash를 밝히며 실패한다. 이 저장소는 그곳에서 아무것도 build하지 않는다. `make template`이 그것을 `var/products/template`에 복사하고(HY-78), 브라우저 코드는 그 복사본의 TypeScript 패키지를 가져온다.
-- Rust: template branch의 `rust-toolchain.toml`의 toolchain이며 `make ext`가 그것으로 빌드한다. cargo는 toolchain을 설치하지 않는다(`RUSTUP_AUTO_INSTALL=0`).
+- `../template`(`TEMPLATE_REPOSITORY`)에 있고 branch `main`(`TEMPLATE_BRANCH`, HY-80)과 그 branch의 commit의 TypeScript 패키지 build를 가진 template 저장소. template 저장소의 `make build-ts`가 그 build를 만든다. 그렇지 않으면 복사는 기대값과 실제값인 입력 hash를 밝히며 실패한다. 이 저장소는 그곳에서 아무것도 build하지 않는다. `make template`이 그것을 `var/products/template`에 복사하고(HY-78), 브라우저 코드는 그 복사본의 TypeScript 패키지를 가져온다.
+- Rust: template branch `main`의 `rust-toolchain.toml`의 toolchain이며 `make ext`가 그것으로 빌드한다. cargo는 toolchain을 설치하지 않는다(`RUSTUP_AUTO_INSTALL=0`).
 - network: `make tools`, `make install`, `make install-rust`, `make install-browser`만 download한다. 다른 모든 recipe는 cargo, npm, Composer를 offline으로 실행하므로(`CARGO_NET_OFFLINE`, `npm_config_offline`, `COMPOSER_DISABLE_NETWORK`) 없는 download는 바로 실패하고 그것을 만드는 설치 target을 밝힌다(HY-89).
 - Playwright용 Chromium: `make install-browser`. pin한 Playwright의 Chromium과, Linux에서는 그 system library를 설치한다.
 
@@ -19,7 +19,7 @@
 | `make install` | template 저장소의 선언한 복사본과 `packages/hyper-php`의 사본을 쓰고, npm과 Composer 의존성을 bin link 없는 사본으로 설치한다(HY-79) |
 | `make install-rust` | 선언한 복사본의 Rust toolchain을 설치하고 `make ext`가 필요로 하는 native extension의 crate를 download한다(HY-89) |
 | `make hyper-php-copy` | `packages/hyper-php`의 추적 파일 사본 `var/products/hyper-php`를 쓰고 board의 Composer 사본에 publish한다(HY-79, HY-82). `make server`가 먼저 실행한다 |
-| `make template` | `scripts/copy-template.mjs`로 template branch의 선언한 복사본 `var/products/template`을 쓰고, 그 복사본에서 TypeScript template 패키지의 npm 사본과 PHP template 패키지의 Composer 사본을 파일 단위로 publish한다(HY-78, HY-80, HY-82). `config/template.json`이나 복사 script가 `var/products/template/installed.stamp`보다 새로울 때만 그렇게 한다. 테스트, 에셋, 서버 빌드가 먼저 실행한다 |
+| `make template` | `scripts/copy-template.mjs`로 template branch `main`의 commit의 선언한 복사본 `var/products/template`을 쓰고(복사본이 그 commit을 담고 있으면 아무것도 쓰지 않는다), 그 복사본에서 TypeScript template 패키지의 npm 사본과 PHP template 패키지의 Composer 사본을 파일 단위로 publish한다(HY-78, HY-80, HY-82). publish는 `var/products/template/copy.json`이 `var/products/template/installed.stamp`보다 새로울 때만 한다. 테스트, 에셋, 서버 빌드가 먼저 실행한다 |
 | `make template-check` | TypeScript template 패키지의 npm 사본이나 PHP template 패키지의 Composer 사본이 선언한 복사본과 다르면 실패한다 |
 | `make rust-downloads-check` | 선언한 복사본의 native extension의 Rust toolchain이나 crate가 없으면 cargo의 첫 오류 줄과 `run make install-rust`로 실패한다(HY-89) |
 | `make ext` | `make rust-downloads-check` 뒤에 template 저장소의 선언한 복사본에서 네이티브 템플릿 확장을 offline으로 `build/ext`에 빌드한다(HY-48, HY-78, HY-89) |
@@ -49,7 +49,7 @@
 | `make push-gate-commit` | commit `COMMIT`에 진행 중인 checklist 작업이 있거나 그 commit이 `.githooks/pre-push`를 mode 100755로 추적하지 않으면 실패한다. GitHub의 job `push-gate`가 이를 실행한다([Push](#push) 참고) |
 | `make github-ruleset` | `.github/ruleset.json`의 merge 설정을 바꾸고 그 이름의 GitHub ruleset을 다른 곳만 만들거나 갱신한 뒤 다시 비교한다([main 공개](#main-공개) 참고) |
 | `make github-ruleset-check` | merge 설정이나 live GitHub ruleset이 `.github/ruleset.json`과 다르면 field마다 live 값과 선언 값을 밝히며 실패한다. 아무것도 바꾸지 않는다 |
-| `make ci-pins` | `config/toolchain.json`의 PHP minor와 `config/template.json`의 template branch를 출력하고 step output으로 workflow에 준다([CI](#ci) 참고) |
+| `make ci-pins` | `config/toolchain.json`의 PHP minor를 출력하고 step output으로 workflow에 준다([CI](#ci) 참고) |
 | `make ci-check` | CI group `GROUP`의 target을 끝까지 실행하고 보고서 `var/ci/<group>/`을 쓴다. GitHub Actions에서만 실행한다([CI](#ci) 참고) |
 | `make ci-summary` | CI group `GROUP`의 요약을 보고서와 job summary에 쓴다([CI](#ci) 참고) |
 | `make install-browser` | pin한 Playwright의 Chromium과, Linux에서는 그 system library를 설치한다. `$(ONLINE)`을 거친 download다(HY-89) |
@@ -68,11 +68,11 @@
 
 - checklist의 작업 행이 `[~]`일 때. 거부 메시지는 활성 ID를 작업과 함께 나열한다.
 - 추적 파일에 커밋되지 않은 변경이 있을 때(`git status --porcelain --untracked-files=no`). 전체 실행은 커밋된 tree를 검증하기 때문이다.
-- `var/full-run.json`이 현재 tree(`git rev-parse HEAD^{tree}`)의 전체 실행을 기록하고 있을 때. 거부 메시지는 그 실행을 commit, 시작 시각, 결과와 함께 밝힌다.
+- `var/full-run.json`이 현재 tree(`git rev-parse HEAD^{tree}`)의 전체 실행을 기록하고 있을 때. 거부 메시지는 그 실행을 tree, 시작 시각, 결과와 함께 밝힌다.
 - pre-push hook이 설치되지 않았을 때(`make hooks-check`). 거부 메시지는 `make hooks`를 밝힌다.
 - `incomplete` record의 process가 아직 실행 중일 때.
 
-guard는 `CHECK_TARGETS`의 각 target을 `make <target>`으로 끝까지 실행하며, target이 실패한 뒤에도 계속하고, `[full-run] start <target> (<n>/<total>)`와 `[full-run] <target> passed|failed in <seconds> s`를 출력한다. 어떤 target에도 시간 제한이 없다. 각 target의 앞뒤에 `var/full-run.json`을 쓴다. 이 record는 tree, commit, process, 시작과 끝 시각, 결과(마지막 target이 끝날 때까지 `incomplete`, 그다음 `passed` 또는 `failed`), 실패한 target, 그리고 각 target의 상태(`pending`, `running`, `passed`, `failed`), 시각, 경과 millisecond, 실패한 target이면 마지막 출력 20줄(`lastLines`)을 담는다. guard는 그 줄들도 결과 전에 실패한 target과 함께 출력한다(HY-84). 따라서 멈춘 실행은 실행 중이던 target과 함께 `incomplete`로 기록되어 남는다. `var/`는 Git이 무시하므로 checkout과 worktree마다 자기 record를 가진다. tree를 바꾸는 commit은 `[~]` 작업이 없을 때 새 전체 실행을 허용한다.
+guard는 `CHECK_TARGETS`의 각 target을 `make <target>`으로 끝까지 실행하며, target이 실패한 뒤에도 계속하고, `[full-run] start <target> (<n>/<total>)`와 `[full-run] <target> passed|failed in <seconds> s`를 출력한다. 어떤 target에도 시간 제한이 없다. 각 target의 앞뒤에 `var/full-run.json`을 쓴다. 이 record는 tree, process, 시작과 끝 시각, 결과(마지막 target이 끝날 때까지 `incomplete`, 그다음 `passed` 또는 `failed`), 실패한 target, 그리고 각 target의 상태(`pending`, `running`, `passed`, `failed`), 시각, 경과 millisecond, 실패한 target이면 마지막 출력 20줄(`lastLines`)을 담는다. guard는 그 줄들도 결과 전에 실패한 target과 함께 출력한다(HY-84). 따라서 멈춘 실행은 실행 중이던 target과 함께 `incomplete`로 기록되어 남는다. `var/`는 Git이 무시하므로 checkout과 worktree마다 자기 record를 가진다. tree를 바꾸는 commit은 `[~]` 작업이 없을 때 새 전체 실행을 허용한다.
 
 `make rerun-failed`는 현재 tree에서 통과하지 못한 target, 즉 실패한 target과 `incomplete` 실행이 끝내지 못한 target만 다시 실행한다. 진행 중인 작업, 커밋되지 않은 변경, 실행 중인 process에 대해서는 `make check`와 같이 거부되고, record가 없을 때, record가 다른 tree의 것일 때, 그 tree의 전체 실행이 통과했을 때도 거부된다. 각 재실행을 record의 `reruns`에 쓰고, 모든 target이 통과하면 그 tree의 결과는 `passed`가 된다.
 
@@ -118,9 +118,9 @@ workflow `.github/workflows/ci.yml`은 모든 pull request와 merge queue의 모
 | `node` | `templates-check`, `test-scripts`, `test-js`, `test-node`, `package-check` | Node.js, PHP, template build, `make install` |
 | `board` | `parity`, `server-parity`, `bundle-size`, `e2e` | Node.js, PHP, template build, `make install`, `make install-rust`, `make install-browser` |
 
-각 step은 make target 하나를 실행하고(HY-90), 첫 step 뒤의 모든 step은 실패한 step 뒤에도 실행한다. `make ci-pins`는 `config/toolchain.json`의 PHP minor와 `config/template.json`의 template branch를 workflow에 주고, workflow는 그 minor의 PHP를 준비하고 template 저장소를 그 branch로 `../template`에 checkout하며, 그곳에서 `make install build-ts`가 TypeScript 패키지를 build한다. `make ci-check GROUP=<group>`은 group의 모든 target을 자기 `make -k <target>`으로 끝까지 실행하고 `[ci] start <target>`과 `[ci] <target> passed|failed in <seconds> s`를 출력한다. checkout은 `make check`로 전체 suite를 실행하므로 GitHub Actions 밖에서는 거부한다. `make ci-summary GROUP=<group>`은 job summary를 쓴다. job은 artifact `ci-<group>-<run id>-<attempt>`로 디렉터리 `var/ci/<group>/`을 upload한다.
+각 step은 make target 하나를 실행하고(HY-90), 첫 step 뒤의 모든 step은 실패한 step 뒤에도 실행한다. `make ci-pins`는 `config/toolchain.json`의 PHP minor를 workflow에 주고, workflow는 그 minor의 PHP를 준비하고 template 저장소를 그 branch `main`으로 `../template`에 checkout하며, 그곳에서 `make install build-ts`가 TypeScript 패키지를 build한다. `make ci-check GROUP=<group>`은 group의 모든 target을 자기 `make -k <target>`으로 끝까지 실행하고 `[ci] start <target>`과 `[ci] <target> passed|failed in <seconds> s`를 출력한다. checkout은 `make check`로 전체 suite를 실행하므로 GitHub Actions 밖에서는 거부한다. `make ci-summary GROUP=<group>`은 job summary를 쓴다. job은 artifact `ci-<group>-<run id>-<attempt>`로 디렉터리 `var/ci/<group>/`을 upload한다.
 
-- `summary.md`: commit, tree, template branch, Node.js, npm, patch를 포함한 PHP, Composer, make의 실행 중인 release, 각 setup step의 결과, target의 상태, 시간, 첫 실패 줄의 표, 그리고 실패한 각 target의 첫 실패 줄;
+- `summary.md`: tree, Node.js, npm, patch를 포함한 PHP, Composer, make의 실행 중인 release, 각 setup step의 결과, target의 상태, 시간, 첫 실패 줄의 표, 그리고 실패한 각 target의 첫 실패 줄;
 - `record.json`: 같은 내용의 data이며 각 target 앞뒤에 쓰므로, 멈춘 runner는 실행 중이던 target을 남긴다;
 - `logs/<target>.log`: 각 target의 명령, 전체 출력, make가 끝난 방식.
 

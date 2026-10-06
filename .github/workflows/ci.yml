@@ -9,12 +9,12 @@
 #
 # The toolchain comes from the pinned files: Node.js from .node-version, PHP by the minor of config/toolchain.json, whose
 # running patch the record names, and npm and Composer from `make install` into var/tools of the checkout. The template
-# repository is checked out next to this repository at the branch of config/template.json, as ../template of the
-# Makefile, and its TypeScript package is built there with its own make targets; `make install` then copies it and
+# repository is checked out next to this repository at its branch main, as ../template of the Makefile, and its
+# TypeScript package is built there with its own make targets; `make install` then copies the branch main and
 # downloads everything that the checks read. Only the groups that build the native extension, php and board, install
 # the Rust toolchain and its crates (make install-rust), and only the group board installs Chromium. The template step
-# runs the make install of the template branch, which also installs its Rust toolchain, because that branch has
-# no target that installs its npm dependencies alone; build-ts needs them.
+# runs the make install of the template repository, which also installs its Rust toolchain, because the template
+# repository has no target that installs its npm dependencies alone; build-ts needs them.
 name: ci
 
 on:
@@ -77,7 +77,7 @@ jobs:
         if: ${{ !cancelled() && matrix.install }}
         with:
           repository: polyspec/template
-          ref: ${{ steps.pins.outputs.template }}
+          ref: main
           path: template
       - id: template-build
         if: ${{ !cancelled() && matrix.install }}

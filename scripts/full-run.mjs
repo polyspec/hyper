@@ -9,10 +9,10 @@
 // not installed (scripts/git-hooks.mjs), and while the run of another process is still going on: a run holds the lock
 // var/full-run.lock (scripts/holder-lock.mjs), so two runs that start together cannot both run. A full run is refused
 // when var/full-run.json already records a run of the current tree (`git rev-parse HEAD^{tree}`); `rerun-failed` is
-// refused unless that record exists and has targets that did not pass. The record names the template branch that
-// config/template.json names (HY-80), which the tree contains, so the record states every input of the run. The guard prints its decision with the reason, runs each target with `make <target>` to its end,
-// prints its start and its result with the elapsed time, and writes the record before and after each target, so a run
-// that is stopped stays recorded as `incomplete`. No step has a time limit.
+// refused unless that record exists and has targets that did not pass. The guard prints its decision with the reason,
+// runs each target with `make <target>` to its end, prints its start and its result with the elapsed time, and writes
+// the record before and after each target, so a run that is stopped stays recorded as `incomplete`. No step has a time
+// limit.
 import { spawn, spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
@@ -27,8 +27,6 @@ const USAGE = 'Usage: node scripts/full-run.mjs run <target>... | rerun-failed';
 export const CHECKLIST = 'docs/plans/execution-checklist.md';
 // The record of the last full run of this checkout; /var/ is ignored by Git.
 export const RECORD = 'var/full-run.json';
-// The file that names the template branch (HY-80).
-export const TEMPLATE_CONFIG = 'config/template.json';
 // The lock that a running full run holds (scripts/holder-lock.mjs): a second run of the checkout fails with its holder
 // instead of deciding on a record that the first run is still writing (HY-82).
 export const LOCK = 'var/full-run.lock';
@@ -72,7 +70,7 @@ export function decide({ mode, targets, active, dirty, hooks, tree, record, runn
     if (record && record.tree === tree) {
       const open = notPassed(record);
       const rerun = open.length > 0 ? `; make rerun-failed reruns its targets that did not pass: ${open.join(', ')}` : '';
-      return refuse(`the full run of tree ${tree} (commit ${record.commit}) started ${record.started} with result ${record.result}; the full suite runs once per tree${rerun}`);
+      return refuse(`the full run of tree ${tree} started ${record.started} with result ${record.result}; the full suite runs once per tree${rerun}`);
     }
     const before = record
       ? `tree ${tree} differs from the tree ${record.tree} of the last full run (result ${record.result}, started ${record.started})`
@@ -165,10 +163,6 @@ export async function fullRun({ root = ROOT, mode, targets = [], runTarget = nam
   const dirty = git(root, 'status', '--porcelain', '--untracked-files=no').split('\n').filter(Boolean);
   const hooks = hooksProblem(root);
   const tree = git(root, 'rev-parse', 'HEAD^{tree}').trim();
-  const commit = git(root, 'rev-parse', 'HEAD').trim();
-  const configFile = path.join(root, TEMPLATE_CONFIG);
-  if (!existsSync(configFile)) throw new Error(`${TEMPLATE_CONFIG} is missing in ${root}; it names the template branch of the run (HY-80)`);
-  const template = JSON.parse(readFileSync(configFile, 'utf8')).branch;
   const record = readRecord(root);
   const running = Boolean(record && record.result === 'incomplete' && record.pid !== process.pid && alive(record.pid));
   const decision = decide({ mode, targets, active, dirty, hooks, tree, record, running });
@@ -182,19 +176,18 @@ export async function fullRun({ root = ROOT, mode, targets = [], runTarget = nam
     }
   }
   print(`[full-run] ${decision.run ? 'run' : 'refuse'}: ${decision.reason}`);
-  if (decision.run) print(`[full-run] template branch ${template} (${TEMPLATE_CONFIG})`);
   if (!decision.run) return 1;
   try {
-    return await runTargets({ root, mode, targets, runTarget, print, decision, record, tree, commit, template });
+    return await runTargets({ root, mode, targets, runTarget, print, decision, record, tree });
   } finally {
     release();
   }
 }
 
-async function runTargets({ root, mode, targets, runTarget, print, decision, record, tree, commit, template }) {
+async function runTargets({ root, mode, targets, runTarget, print, decision, record, tree }) {
   const now = () => new Date().toISOString();
   const current = mode === 'run'
-    ? { tree, commit, template, environment: versions(), result: 'incomplete', pid: process.pid, started: now(), ended: null, targets: targets.map(name => ({ name, status: 'pending' })), reruns: [] }
+    ? { tree, environment: versions(), result: 'incomplete', pid: process.pid, started: now(), ended: null, targets: targets.map(name => ({ name, status: 'pending' })), reruns: [] }
     : { ...record, result: 'incomplete', pid: process.pid };
   const rerun = mode === 'run' ? null : { started: now(), ended: null, targets: decision.targets, result: 'incomplete' };
   if (rerun) current.reruns.push(rerun);

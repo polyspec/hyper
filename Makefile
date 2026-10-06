@@ -3,12 +3,16 @@ PHP_PACKAGE := packages/hyper-php
 JS_PACKAGE := packages/hyper-js
 NODE_PACKAGE := packages/hyper-node
 # The template repository, read only by `make template`, which writes its declared copy TEMPLATE_DIR (HY-78) of the
-# commit at the head of the branch that TEMPLATE_CONFIG names (HY-80). Every other recipe, npm, Composer and the native extension build read the copy.
+# commit at the head of its branch TEMPLATE_BRANCH (HY-80). Every other recipe, npm, Composer and the native extension
+# build read the copy.
 TEMPLATE_REPOSITORY := ../template
-TEMPLATE_CONFIG := config/template.json
+TEMPLATE_BRANCH := main
 TEMPLATE_DIR := var/products/template
-# Written after the copy and its npm and Composer installs; the copy is written again only when config/template.json or
-# the copy script changes, so one run of many targets copies the template repository at most once.
+# The record of the copy, which the copy script rewrites only when it writes a new copy: when the branch moved, the
+# build of the TypeScript package changed or the copy script changed.
+TEMPLATE_COPY := $(TEMPLATE_DIR)/copy.json
+# Written after the npm and Composer installs of the copy; they run again only when TEMPLATE_COPY is newer, so one run
+# of many targets installs the template packages at most once.
 TEMPLATE_STAMP := $(TEMPLATE_DIR)/installed.stamp
 FIXTURES := $(PHP_PACKAGE)/tests/fixtures
 # The native template extension, built from the declared copy of the template repository (HY-48, HY-78).
@@ -66,7 +70,7 @@ $(if $(filter $(HOOKS_PATH),$(shell git config core.hooksPath)),,$(shell git con
 
 .DEFAULT_GOAL := help
 
-.PHONY: help tools toolchain-check owner-check install hyper-php-copy template template-check rust-downloads-check install-rust ext packages package-check server server-fixtures node-server node-fixtures assets test-js test-node test-php lint analyse-php templates-check test-scripts virtiofs-check parity server-parity bundle-size e2e docs-check serve-demo bench-server bench-server-smoke bench-browser bench check rerun-failed serve-demo-unlock hooks hooks-check push-gate-commit ci-pins ci-check ci-summary install-browser github-ruleset github-ruleset-check
+.PHONY: help tools toolchain-check owner-check install hyper-php-copy template template-branch template-check rust-downloads-check install-rust ext packages package-check server server-fixtures node-server node-fixtures assets test-js test-node test-php lint analyse-php templates-check test-scripts virtiofs-check parity server-parity bundle-size e2e docs-check serve-demo bench-server bench-server-smoke bench-browser bench check rerun-failed serve-demo-unlock hooks hooks-check push-gate-commit ci-pins ci-check ci-summary install-browser github-ruleset github-ruleset-check
 
 help: ## List the targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
@@ -79,17 +83,24 @@ toolchain-check: ## Fail when Node.js, npm, Composer or the PHP minor differs fr
 
 install: tools ## Install the pinned tools, write the declared copy of the template branch and install npm and Composer dependencies from it; make install-rust installs the Rust toolchain of the native extension (HY-89)
 	node scripts/toolchain.mjs check
-	node scripts/copy-template.mjs --repository $(TEMPLATE_REPOSITORY) --config $(TEMPLATE_CONFIG) --output $(TEMPLATE_DIR)
+	node scripts/copy-template.mjs --repository $(TEMPLATE_REPOSITORY) --branch $(TEMPLATE_BRANCH) --output $(TEMPLATE_DIR)
 	node scripts/copy-package.mjs --path $(PHP_PACKAGE) --output $(HYPER_PHP_COPY)
 	$(ONLINE) node scripts/holder-lock.mjs run $(INSTALL_LOCK) -- $(NPM) ci --no-audit --no-fund
 	$(ONLINE) node scripts/holder-lock.mjs run $(INSTALL_LOCK) -- $(COMPOSER) install --working-dir=$(PHP_PACKAGE)
 	$(ONLINE) node scripts/holder-lock.mjs run $(INSTALL_LOCK) -- $(COMPOSER) install --working-dir=$(BOARD)
 	touch $(TEMPLATE_STAMP)
 
-template: toolchain-check $(TEMPLATE_STAMP) ## Write the declared copy of the template branch and reinstall the npm and Composer copies of its packages from it, when config/template.json changed (HY-78, HY-80)
+template: toolchain-check $(TEMPLATE_STAMP) ## Write the declared copy of the template branch and reinstall the npm and Composer copies of its packages from it, when the copy changed (HY-78, HY-80)
 
-$(TEMPLATE_STAMP): $(TEMPLATE_CONFIG) scripts/copy-template.mjs | toolchain-check
-	node scripts/copy-template.mjs --repository $(TEMPLATE_REPOSITORY) --config $(TEMPLATE_CONFIG) --output $(TEMPLATE_DIR)
+# The copy script runs on every make template and leaves TEMPLATE_COPY unchanged while the copy is current; make reads
+# the modification time of TEMPLATE_COPY after the recipe.
+$(TEMPLATE_COPY): template-branch | toolchain-check
+	node scripts/copy-template.mjs --repository $(TEMPLATE_REPOSITORY) --branch $(TEMPLATE_BRANCH) --output $(TEMPLATE_DIR)
+
+# An empty target without a file, so the copy script runs on every make template.
+template-branch:
+
+$(TEMPLATE_STAMP): $(TEMPLATE_COPY)
 	node scripts/publish.mjs npm-copy $(TEMPLATE_DIR)/packages/template-ts node_modules/@polyspec/template
 	node scripts/publish.mjs composer-copy $(TEMPLATE_DIR)/packages/template-php $(PHP_PACKAGE)/vendor/polyspec/template
 	node scripts/publish.mjs composer-copy $(TEMPLATE_DIR)/packages/template-php $(BOARD)/vendor/polyspec/template
@@ -269,7 +280,7 @@ check: ## Run every check through the guard: once per tree, when no checklist ta
 owner-check: ## Run the owner checks of the changed paths (scripts/owner-checks.json): PATHS, the paths since BASE, or the uncommitted changes (HY-88)
 	node scripts/owner-check.mjs $(if $(PATHS),--paths "$(PATHS)") $(if $(BASE),--base "$(BASE)")
 
-ci-pins: ## Print the PHP minor of config/toolchain.json and the template branch of config/template.json, and give them to the workflow as step outputs (HY-91)
+ci-pins: ## Print the PHP minor of config/toolchain.json and give it to the workflow as a step output (HY-91)
 	node scripts/ci-run.mjs pins
 
 ci-check: ## Run the targets of the CI group GROUP to their ends and write its report var/ci/GROUP; only on GitHub Actions (HY-91)
