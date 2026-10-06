@@ -7,9 +7,12 @@
 // The full suite runs once, when every active checklist item is done (AGENTS). The guard refuses a run while a task
 // row of docs/plans/execution-checklist.md is `[~]`, while tracked changes are uncommitted, while the pre-push hook is
 // not installed (scripts/git-hooks.mjs), and while the run of another process is still going on: a run holds the lock
-// var/full-run.lock (scripts/holder-lock.mjs), so two runs that start together cannot both run. A full run is refused
-// when var/full-run.json already records a run of the current tree (`git rev-parse HEAD^{tree}`); `rerun-failed` is
-// refused unless that record exists and has targets that did not pass. The guard prints its decision with the reason,
+// var/full-run.lock (scripts/holder-lock.mjs), so two runs that start together cannot both run. A run is keyed by the
+// current tree (`git rev-parse HEAD^{tree}`) and the commit of the template branch, which the guard reads when it
+// starts from the template repository TEMPLATE_REPOSITORY and its branch TEMPLATE_BRANCH that make check and make
+// rerun-failed pass (HY-80); the record in the ignored var/full-run.json names both. A full run is refused when the
+// record already names a run of the current tree and template commit; `rerun-failed` is refused unless that record
+// exists and has targets that did not pass. The guard prints its decision with the reason,
 // runs each target with `make <target>` to its end, prints its start and its result with the elapsed time, and writes
 // the record before and after each target, so a run that is stopped stays recorded as `incomplete`. No step has a time
 // limit.
@@ -51,10 +54,10 @@ const notPassed = record => record.targets.filter(target => target.status !== 'p
 /**
  * Decides whether the guard runs. `mode` is `run` or `rerun-failed`; `active` the active checklist items; `dirty` the
  * `git status --porcelain` lines of tracked files; `hooks` why the pre-push hook is not installed, or null; `tree` the
- * current tree; `record` the record of the last run or null; `running` whether the process of an incomplete record
+ * current tree; `template` the current commit of the template branch; `record` the record of the last run or null; `running` whether the process of an incomplete record
  * still exists. Returns `{ run, reason, targets }`.
  */
-export function decide({ mode, targets, active, dirty, hooks, tree, record, running }) {
+export function decide({ mode, targets, active, dirty, hooks, tree, template, record, running }) {
   const refuse = reason => ({ run: false, reason, targets: [] });
   if (active.length > 0) {
     return refuse(`${active.length} active checklist item${active.length === 1 ? '' : 's'} in ${CHECKLIST}; the full suite runs once, when every active item is done:\n${active.map(item => `  ${item.id} ${item.title}`).join('\n')}`);
@@ -67,18 +70,21 @@ export function decide({ mode, targets, active, dirty, hooks, tree, record, runn
     return refuse(`the run started ${record.started} by process ${record.pid} is still running on tree ${record.tree}`);
   }
   if (mode === 'run') {
-    if (record && record.tree === tree) {
+    if (record && record.tree === tree && record.template === template) {
       const open = notPassed(record);
       const rerun = open.length > 0 ? `; make rerun-failed reruns its targets that did not pass: ${open.join(', ')}` : '';
-      return refuse(`the full run of tree ${tree} started ${record.started} with result ${record.result}; the full suite runs once per tree${rerun}`);
+      return refuse(`the full run of tree ${tree} with the template commit ${template} started ${record.started} with result ${record.result}; the full suite runs once per tree and template commit${rerun}`);
     }
-    const before = record
-      ? `tree ${tree} differs from the tree ${record.tree} of the last full run (result ${record.result}, started ${record.started})`
-      : `no full-run record in ${RECORD} for tree ${tree}`;
+    const before = !record
+      ? `no full-run record in ${RECORD} for tree ${tree}`
+      : record.tree !== tree
+        ? `tree ${tree} differs from the tree ${record.tree} of the last full run (result ${record.result}, started ${record.started})`
+        : `the template commit ${template} differs from the template commit ${record.template} of the last full run of tree ${tree} (result ${record.result}, started ${record.started})`;
     return { run: true, reason: `${before}; no active checklist item; ${targets.length} targets`, targets };
   }
   if (!record) return refuse(`no full-run record in ${RECORD}; rerun-failed reruns the targets of a full run of the current tree that did not pass`);
   if (record.tree !== tree) return refuse(`the last full run (started ${record.started}) verified tree ${record.tree}, not the current tree ${tree}; rerun-failed reruns only targets of the current tree`);
+  if (record.template !== template) return refuse(`the last full run (started ${record.started}) verified the template commit ${record.template}, not the current template commit ${template}; rerun-failed reruns only targets of the current template commit`);
   const open = notPassed(record);
   if (open.length === 0) return refuse(`the full run of tree ${tree} started ${record.started} passed; no target failed`);
   return { run: true, reason: `the full run of tree ${tree} started ${record.started} has ${open.length} target${open.length === 1 ? '' : 's'} that did not pass: ${open.join(', ')}`, targets: open };
@@ -158,14 +164,18 @@ export function makeTarget(root, target) {
  * Inspects the checkout, decides and runs. `runTarget(name)` resolves { passed, lastLines } of a target. Returns the exit
  * status: 0 when the full result of the tree is passed, 1 otherwise.
  */
-export async function fullRun({ root = ROOT, mode, targets = [], runTarget = name => makeTarget(root, name), print = line => console.log(line) }) {
+export async function fullRun({ root = ROOT, mode, targets = [], template: source = { repository: process.env.TEMPLATE_REPOSITORY, branch: process.env.TEMPLATE_BRANCH }, runTarget = name => makeTarget(root, name), print = line => console.log(line) }) {
+  if (!source.repository || !source.branch) {
+    throw new Error('TEMPLATE_REPOSITORY and TEMPLATE_BRANCH name the template repository and its branch of the run (HY-80); make check and make rerun-failed set them');
+  }
   const active = activeItems(readFileSync(path.join(root, CHECKLIST), 'utf8'));
   const dirty = git(root, 'status', '--porcelain', '--untracked-files=no').split('\n').filter(Boolean);
   const hooks = hooksProblem(root);
   const tree = git(root, 'rev-parse', 'HEAD^{tree}').trim();
+  const template = git(path.resolve(root, source.repository), 'rev-parse', '--verify', `refs/heads/${source.branch}^{commit}`).trim();
   const record = readRecord(root);
   const running = Boolean(record && record.result === 'incomplete' && record.pid !== process.pid && alive(record.pid));
-  const decision = decide({ mode, targets, active, dirty, hooks, tree, record, running });
+  const decision = decide({ mode, targets, active, dirty, hooks, tree, template, record, running });
   let release = () => {};
   if (decision.run) {
     try {
@@ -176,18 +186,19 @@ export async function fullRun({ root = ROOT, mode, targets = [], runTarget = nam
     }
   }
   print(`[full-run] ${decision.run ? 'run' : 'refuse'}: ${decision.reason}`);
+  if (decision.run) print(`[full-run] template commit ${template} of the branch ${source.branch} of ${source.repository}`);
   if (!decision.run) return 1;
   try {
-    return await runTargets({ root, mode, targets, runTarget, print, decision, record, tree });
+    return await runTargets({ root, mode, targets, runTarget, print, decision, record, tree, template });
   } finally {
     release();
   }
 }
 
-async function runTargets({ root, mode, targets, runTarget, print, decision, record, tree }) {
+async function runTargets({ root, mode, targets, runTarget, print, decision, record, tree, template }) {
   const now = () => new Date().toISOString();
   const current = mode === 'run'
-    ? { tree, environment: versions(), result: 'incomplete', pid: process.pid, started: now(), ended: null, targets: targets.map(name => ({ name, status: 'pending' })), reruns: [] }
+    ? { tree, template, environment: versions(), result: 'incomplete', pid: process.pid, started: now(), ended: null, targets: targets.map(name => ({ name, status: 'pending' })), reruns: [] }
     : { ...record, result: 'incomplete', pid: process.pid };
   const rerun = mode === 'run' ? null : { started: now(), ended: null, targets: decision.targets, result: 'incomplete' };
   if (rerun) current.reruns.push(rerun);

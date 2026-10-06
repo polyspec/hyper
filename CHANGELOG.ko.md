@@ -148,6 +148,7 @@
 
 ### 변경
 
+- full run은 tree와 template branch의 commit으로 구분한다(H14.1-2, HY-80). `make check`와 `make rerun-failed`는 `TEMPLATE_REPOSITORY`와 `TEMPLATE_BRANCH`를 `scripts/full-run.mjs`에 넘기고, guard는 시작할 때 branch의 commit을 읽어 무시되는 `var/full-run.json`에 기록한다. branch의 새 commit은 같은 tree의 새 전체 실행을 허용하고, `make rerun-failed`는 현재 tree와 template commit의 실행의 target만 다시 실행한다. `full-run.test.mjs`의 15개 case가 통과한다.
 - 선언한 template 복사본은 template 저장소의 branch `main` head에 있는 commit이다(H14.1-1, HY-80). `scripts/copy-template.mjs --branch main`은 실행할 때 branch를 해석하고 없는 branch에는 실패하며, `var/products/template/copy.json`이 같은 branch, commit, 입력 hash, script hash를 기록하고 있으면 아무것도 쓰지 않는다. `make template`은 매번 복사를 실행하고 `copy.json`이 `installed.stamp`보다 새로울 때만 template package를 다시 설치한다. CI workflow는 template 저장소를 `main`으로 checkout하고, `make ci-pins`는 PHP minor만 주며, full run과 CI group의 기록은 run을 tree로 밝힌다. `template-copy.test.mjs`의 9개 case, `full-run.test.mjs`의 15개 case, `ci-run.test.mjs`의 9개 case가 통과한다.
 - 새 push는 같은 ref에서 아직 진행 중인 CI run을 멈춘다(H14.23, HY-91). runner는 적고, 각 push는 앞선 run 뒤에 전체 run을 쌓았다. `.github/workflows/ci.yml`은 group `${{ github.workflow }}-${{ github.ref }}`와 `cancel-in-progress: true`로 `concurrency`를 선언하고, push gate는 모든 run을 유지한다.
 - `make bundle-size`는 측정하며 크기 때문에 실패하지 않는다(H14.22). 이 target은 gzip 크기가 `config/bundle-size.json`의 상한을 넘으면 실패했지만, 성능은 측정하고 보고하는 것이다. 이제 각 크기를 상한과 함께 출력하고, 상한을 넘는 크기에 대해 `WARNING` 줄과 GitHub에서 CI 요약이 warnings에 나열하는 annotation `::warning::`을 내며 통과한다. 없는 입력은 여전히 실패한다. `tests/scripts/check-bundle-size.test.mjs`의 case는 실패로 끝나는 측정 script에 대해 실패한다.
