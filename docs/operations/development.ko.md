@@ -82,7 +82,7 @@ push는 push하는 commit에도 working tree에도 checklist의 `[~]` 작업이 
 
 Git은 clone에서 hook을 설치하지 않는다. 그래서 모든 `make` 실행이 `core.hooksPath`가 다른 값이면 `.githooks`로 설정하고, `make hooks`는 이를 명시적으로 설정한다. 커밋 전에 `make docs-check`가 실행하는 `make hooks-check`와 전체 실행의 guard는 `core.hooksPath`가 `.githooks`가 아니거나 hook이 없거나 실행할 수 없으면 실패한다.
 
-workflow `.github/workflows/push-gate.yml`은 모든 push를 검사한다. 그 job `push-gate`는 모든 branch에 push된 commit과 모든 pull request의 head commit에 `node scripts/push-gate.mjs commit <sha>`를 실행하는 `make push-gate-commit COMMIT=<sha>`를 실행하므로, hook을 거치지 않았거나 hook이 없는 checkout에서 온 push도 그곳에서 실패한다. 진행 중인 작업이 있을 때, checklist가 없는 commit일 때, `.githooks/pre-push`를 mode 100755로 추적하지 않는 commit일 때 실패하며, 실패의 각 줄을 annotation으로 출력하고 job summary에 쓴다.
+workflow `.github/workflows/push-gate.yml`은 모든 push를 검사한다. 그 job `push-gate`는 모든 branch에 push된 commit과 모든 pull request의 head commit에 `node scripts/push-gate.mjs commit <sha>`를 실행하는 `make push-gate-commit COMMIT=<sha>`를 실행하므로, hook을 거치지 않았거나 hook이 없는 checkout에서 온 push도 그곳에서 실패한다. 진행 중인 작업이 있을 때, checklist가 없는 commit일 때, `.githooks/pre-push`를 mode 100755로 추적하지 않는 commit일 때 실패하며, 실패의 각 줄을 annotation으로 출력하고 job summary에 쓴다. 이어서 job은 문서 쌍, link, code block, checklist 규칙인 `make docs-check`를 실행하며, 이 검사는 network를 읽지 않으므로, 이를 어기는 commit은 ruleset `main`이 요구하는 check에서 실패한다([main 공개](#main-공개) 참고).
 
 ## CI
 

@@ -117,6 +117,7 @@
 | ID | 작업 | 검증 | 상태 |
 |---|---|---|---|
 | H13.1 | 작업이 진행 중인 동안 push를 거부한다. 추적하는 pre-push hook `.githooks/pre-push`가 `node scripts/push-gate.mjs hook`을 실행하고, 이 script는 push하는 모든 commit과 working tree의 checklist를 `scripts/full-run.mjs`의 `activeItems`로 parse해 활성 ID를 작업과 함께 밝히며 push를 거부한다. push하는 commit에 checklist가 없어도 거부한다. 모든 `make` 실행이 `core.hooksPath`를 `.githooks`로 설정하고, `make docs-check`가 실행하는 `make hooks-check`와 전체 실행의 guard는 그것이 설정되지 않았으면 실패한다. `.github/workflows/push-gate.yml`의 job `push-gate`는 모든 push와 pull request에서 `node scripts/push-gate.mjs commit <sha>`를 실행하고, 진행 중인 작업이 있거나 commit이 hook을 실행 가능한 file로 추적하지 않으면 실패한다 | `node scripts/run-tests.mjs node -- tests/scripts/push-gate.test.mjs tests/scripts/full-run.test.mjs` | [o] |
+| H13.2 | HY-94: 필수 check에서 문서와 checklist 규칙을 실행한다. job `push-gate`는 `make push-gate-commit`만 실행했으므로, checklist의 작업 상태가 아닌 곳에 상태 표시가 있는 commit이 ruleset `main`이 요구하는 check를 통과했다. job은 그 뒤에 `if: ${{ !cancelled() }}`로 `make docs-check`를 실행하며, 문서 검사는 network를 읽지 않는다. `push-gate.test.mjs`는 그런 표시가 있는 commit에서 job의 make step을 실행해 checklist 줄을 밝히는 실패를 요구하고, 표시가 없으면 모든 step이 통과하기를 요구한다 | `node scripts/run-tests.mjs node -- tests/scripts/push-gate.test.mjs` | [o] |
 
 ## [Wave 14](waves.ko.md#wave-14) — tree에만 의존하는 결과
 
