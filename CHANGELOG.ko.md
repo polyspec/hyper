@@ -2,10 +2,11 @@
 
 [English](CHANGELOG.md).
 
-## 미배포
+## Unreleased
 
 ### 추가
 
+- 두 changelog는 맨 위에 section `## Unreleased`를 두고, 모든 변경은 항목을 그곳에 추가한다(H13.5-1). 이 저장소의 버전은 릴리스되지 않았으므로 모든 항목이 그 section에 있으며, 릴리스 pull request가 그 section을 `## X.Y.Z`로 바꾼다.
 - workflow `ci.yml`은 수동 실행(`workflow_dispatch`)에서도 실행되고, 각 workflow는 trigger를 정확히 선언한다(H13.4-1, HY-91, HY-94). `ci.yml`은 `pull_request`, `merge_group`, `workflow_dispatch`에서, `push-gate.yml`은 `gh-readonly-queue/**` 밖의 `push`, `pull_request`, `merge_group`에서 실행된다. `ci-workflow.test.mjs`는 각 workflow의 `on:` block을 정확히 요구하고 다른 workflow가 없을 것을 요구한다.
 - 모든 변경은 pull request와 merge queue를 거쳐 `main`에 닿는다(H13.4, HY-94). ruleset `main`은 모든 merge method를 허용하는 승인 없는 pull request, method `REBASE`인 merge queue, 선형 이력, check `push-gate`, `check (docs)`, `check (php)`, `check (node)`, `check (board)`를 요구하고, bypass actor 없이 force-push와 삭제를 거부한다. 선언은 `allow_rebase_merge`, `allow_auto_merge`, `delete_branch_on_merge`도 정한다. `ci.yml`은 pull request와 merge group에서 실행하고 `main` push에서는 더 이상 실행하지 않으며 pull request run만 취소한다. `push-gate.yml`은 merge group에서도 실행하고 queue의 branch는 건너뛴다.
 - ruleset `main`이 요구하는 check인 job `push-gate`는 작업 gate 뒤에 `make docs-check`를 실행한다(H13.2, HY-94). 이 job은 진행 중인 작업만 검사했으므로, 작업 상태가 아닌 곳의 상태 표시처럼 checklist나 문서가 `make docs-check`의 규칙을 어기는 commit이 이를 통과해 `main`에 닿을 수 있었다. 문서 검사는 network를 읽지 않는다.
