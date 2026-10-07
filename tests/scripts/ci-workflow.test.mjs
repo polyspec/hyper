@@ -282,7 +282,7 @@ test('release runs its steps in order with the tag, the template tag and the per
     'read only': [text.replace('  contents: write\n', '  contents: read\n'), 'the permissions are not exactly contents: write'],
     'no tag': [text.replace('      TAG: ${{ github.ref_name }}\n', ''), 'the job release does not set TAG'],
     shallow: [text.replace('          fetch-depth: 0\n', '          fetch-depth: 1\n'), 'the first step is not actions/checkout with fetch-depth: 0'],
-    'template ref': [text.replace('          ref: v0.0.1\n', '          ref: main\n'), 'the job release does not check out polyspec/template once at TEMPLATE_TAG'],
+    'template ref': [text.replace(/^ {10}ref: v\d+\.\d+\.\d+\n/m, '          ref: main\n'), 'the job release does not check out polyspec/template once at TEMPLATE_TAG'],
   };
   for (const [name, [changed, message]] of Object.entries(broken)) {
     assert.notEqual(changed, text, name);

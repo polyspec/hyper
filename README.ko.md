@@ -37,7 +37,7 @@ hyper는 애플리케이션 하나에서 template 언어 템플릿으로 두 가
 
 ## 시작
 
-template 저장소가 이 저장소 옆(`../template`)에 있고, tag `v0.0.1`(Makefile의 `TEMPLATE_TAG`)과 그 tag의 commit의 TypeScript package build를 가지고 있어야 한다(그 tag를 checkout한 template 저장소의 `make build-ts`). `make install`과 `make template`은 그 commit을 `var/products/template`에 복사하고, 모든 build와 검사는 그 복사본을 읽는다(HY-78, HY-80).
+template 저장소가 이 저장소 옆(`../template`)에 있고, tag `v0.0.2`(Makefile의 `TEMPLATE_TAG`)과 그 tag의 commit의 TypeScript package build를 가지고 있어야 한다(그 tag를 checkout한 template 저장소의 `make build-ts`). `make install`과 `make template`은 그 commit을 `var/products/template`에 복사하고, 모든 build와 검사는 그 복사본을 읽는다(HY-78, HY-80).
 
 ```sh
 make install

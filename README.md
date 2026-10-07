@@ -34,7 +34,7 @@ Pages and regions contain no `hx-*` attributes. Links and forms are plain HTML a
 
 ## Start
 
-The template repository must be next to this repository (`../template`) with its tag `v0.0.1` (`TEMPLATE_TAG` of the Makefile) and a build of the TypeScript package of the commit of that tag (`make build-ts` in a checkout of that tag of the template repository). `make install` and `make template` copy that commit into `var/products/template`, and every build and check reads that copy (HY-78, HY-80).
+The template repository must be next to this repository (`../template`) with its tag `v0.0.2` (`TEMPLATE_TAG` of the Makefile) and a build of the TypeScript package of the commit of that tag (`make build-ts` in a checkout of that tag of the template repository). `make install` and `make template` copy that commit into `var/products/template`, and every build and check reads that copy (HY-78, HY-80).
 
 ```sh
 make install

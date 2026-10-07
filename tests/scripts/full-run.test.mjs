@@ -106,9 +106,9 @@ async function guard(directory, mode, targets, failing = []) {
 test('make check and make rerun-failed start the guard before any step', () => {
   const check = dryRun('check');
   // The guard reads the commit of the template tag from the template repository of the Makefile (HY-80).
-  assert.match(check[0], /^TEMPLATE_REPOSITORY=\.\.\/template TEMPLATE_TAG=v0\.0\.1 node scripts\/full-run\.mjs run template-check bench-server-smoke docs-check lint /, check.join('\n'));
+  assert.match(check[0], /^TEMPLATE_REPOSITORY=\.\.\/template TEMPLATE_TAG=v0\.0\.2 node scripts\/full-run\.mjs run template-check bench-server-smoke docs-check lint /, check.join('\n'));
   assert.equal(check.length, 1, check.join('\n'));
-  const rerun = ['TEMPLATE_REPOSITORY=../template TEMPLATE_TAG=v0.0.1 node scripts/full-run.mjs rerun-failed'];
+  const rerun = ['TEMPLATE_REPOSITORY=../template TEMPLATE_TAG=v0.0.2 node scripts/full-run.mjs rerun-failed'];
   assert.deepEqual(dryRun('rerun-failed'), rerun);
   // The same commands when this process runs inside a make that prints its directories (HY-83).
   assert.deepEqual(dryRun('rerun-failed', { env: { ...process.env, MAKEFLAGS: 'w', MAKELEVEL: '2' } }), rerun);

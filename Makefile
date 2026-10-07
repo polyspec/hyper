@@ -6,7 +6,7 @@ NODE_PACKAGE := packages/hyper-node
 # commit of its tag TEMPLATE_TAG (HY-80), the one declaration of the template release; .github/workflows/ci.yml checks
 # out the same tag. Every other recipe, npm, Composer and the native extension build read the copy.
 TEMPLATE_REPOSITORY := ../template
-TEMPLATE_TAG := v0.0.1
+TEMPLATE_TAG := v0.0.2
 TEMPLATE_DIR := var/products/template
 # The record of the copy, which the copy script rewrites only when it writes a new copy: when the tag names another
 # commit, the build of the TypeScript package changed or the copy script changed.

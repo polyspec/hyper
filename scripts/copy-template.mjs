@@ -26,7 +26,7 @@
 // by file, copy.json last (scripts/publish.mjs, HY-82), so a reader never finds a file missing. This script builds
 // nothing in the template repository.
 //
-// Usage: node scripts/copy-template.mjs --repository ../template --tag v0.0.1 --output var/products/template
+// Usage: node scripts/copy-template.mjs --repository ../template --tag v0.0.2 --output var/products/template
 import { execFileSync, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
