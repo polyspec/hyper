@@ -6,6 +6,7 @@
 
 ### Fixed
 
+- The template repository is used at its tag `v0.0.2`, the released tag of the template repository (H13.5-7, HY-80). `TEMPLATE_TAG` of the Makefile is `v0.0.2`; `.github/workflows/ci.yml` and `.github/workflows/release.yml` check out the template repository at `v0.0.2`, and the documents name that tag. `ci-workflow.test.mjs` and `template-copy.test.mjs` read the tag from `TEMPLATE_TAG` of the Makefile. The template tag `v0.0.1` has no GitHub Release. `make install` copies the commit of `v0.0.2`, and `make test-js`, `make test-node` and `make test-php` pass on that copy.
 - The notes of a GitHub Release fit the body limit of GitHub, 125000 characters (H13.5-6, HY-95). `make release-publish` passes the section `## X.Y.Z` of `CHANGELOG.md` when it has at most 125000 characters, and otherwise the one line `The changes of X.Y.Z are listed in [CHANGELOG.md](https://github.com/polyspec/hyper/blob/<tag>/CHANGELOG.md#<anchor>).`; the anchor is the id of an `<a id="...">` line above the heading, or else the version without its dots, and each segment of the tag is URL-encoded. GitHub refuses a release whose body is longer than 125000 characters.
 
 ## 0.0.1

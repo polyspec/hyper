@@ -6,6 +6,7 @@
 
 ### 수정
 
+- template 저장소는 그 저장소의 릴리스된 tag `v0.0.2`로 쓰인다(H13.5-7, HY-80). Makefile의 `TEMPLATE_TAG`는 `v0.0.2`이고, `.github/workflows/ci.yml`과 `.github/workflows/release.yml`은 template 저장소를 `v0.0.2`로 checkout하며, 문서는 그 tag를 밝힌다. `ci-workflow.test.mjs`와 `template-copy.test.mjs`는 tag를 Makefile의 `TEMPLATE_TAG`에서 읽는다. template tag `v0.0.1`에는 GitHub Release가 없다. `make install`은 `v0.0.2`의 commit을 복사하고, `make test-js`, `make test-node`, `make test-php`는 그 복사본에서 통과한다.
 - GitHub Release의 notes는 GitHub의 본문 한도 125000자에 맞는다(H13.5-6, HY-95). `make release-publish`는 `CHANGELOG.md`의 section `## X.Y.Z`가 125000자 이하이면 그 section을, 아니면 한 줄 `The changes of X.Y.Z are listed in [CHANGELOG.md](https://github.com/polyspec/hyper/blob/<tag>/CHANGELOG.md#<anchor>).`을 넘긴다. anchor는 heading 위 `<a id="...">` 줄의 id이고, 없으면 점을 뺀 버전이며, tag의 각 segment는 URL 인코딩된다. GitHub는 본문이 125000자보다 긴 release를 거부한다.
 
 ## 0.0.1

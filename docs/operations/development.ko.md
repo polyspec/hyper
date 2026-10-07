@@ -5,7 +5,7 @@
 ## 도구
 
 - pin한 도구(HY-81): `.node-version`의 Node.js, `pdo_sqlite`가 있는 `config/toolchain.json` minor의 PHP, GNU Make 3.81 이상, 네이티브 확장을 위한 그 PHP의 phpize, php-config와 C compiler. `make install`은 `packageManager`의 npm과 `config/toolchain.json`의 Composer를 `var/tools`에 설치한다(`make tools`). `make toolchain-check`는 pin과 다른 모든 도구를 밝힌다.
-- `../template`(`TEMPLATE_REPOSITORY`)에 있고 tag `v0.0.1`(`TEMPLATE_TAG`, HY-80)과 그 tag의 commit의 TypeScript 패키지 build를 가진 template 저장소. 그 tag의 checkout에서 template 저장소의 `make build-ts`가 그 build를 만든다. tag가 없으면 `make template-tag`가 실패하고, build가 다르면 복사는 기대값과 실제값인 입력 hash를 밝히며 실패한다. 이 저장소는 그곳에서 아무것도 build하지 않는다. `make template`이 그것을 `var/products/template`에 복사하고(HY-78), 브라우저 코드는 그 복사본의 TypeScript 패키지를 가져온다.
+- `../template`(`TEMPLATE_REPOSITORY`)에 있고 tag `v0.0.2`(`TEMPLATE_TAG`, HY-80)과 그 tag의 commit의 TypeScript 패키지 build를 가진 template 저장소. 그 tag의 checkout에서 template 저장소의 `make build-ts`가 그 build를 만든다. tag가 없으면 `make template-tag`가 실패하고, build가 다르면 복사는 기대값과 실제값인 입력 hash를 밝히며 실패한다. 이 저장소는 그곳에서 아무것도 build하지 않는다. `make template`이 그것을 `var/products/template`에 복사하고(HY-78), 브라우저 코드는 그 복사본의 TypeScript 패키지를 가져온다.
 - network: `make tools`, `make install`, `make install-browser`만 download한다. 다른 모든 recipe는 npm, Composer를 offline으로 실행하므로(`npm_config_offline`, `COMPOSER_DISABLE_NETWORK`) 없는 download는 바로 실패하고 그것을 만드는 설치 target을 밝힌다(HY-89).
 - Playwright용 Chromium: `make install-browser`. pin한 Playwright의 Chromium과, Linux에서는 그 system library를 설치한다.
 

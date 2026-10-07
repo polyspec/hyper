@@ -18,7 +18,8 @@ import { requireBuilt } from './requires.mjs';
 const repository = resolve('.');
 const COPY = join(repository, 'var', 'products', 'template');
 const INPUTS = ['packages/template-ts/package.json', 'packages/template-ts/src/index.ts'];
-const TAG = 'v0.0.1';
+// The tag TEMPLATE_TAG of the Makefile, the one declaration of the template release (HY-80).
+const TAG = /^TEMPLATE_TAG := (\S+)$/m.exec(readFileSync(join(repository, 'Makefile'), 'utf8'))[1];
 
 // The hash of the inputs of a TypeScript build, as scripts/build-package.mjs of the template repository records it.
 function inputsHash(directory) {
@@ -185,7 +186,7 @@ test('the copy writes nothing while the copy holds the commit of the tag, and co
   const written = statSync(record).mtimeMs;
   const again = copy(template, to);
   assert.equal(again.status, 0, again.stderr);
-  assert.match(again.stdout, /holds the commit [0-9a-f]{40} of the tag v0\.0\.1; nothing to copy/);
+  assert.match(again.stdout, new RegExp(`holds the commit [0-9a-f]{40} of the tag ${TAG.replaceAll('.', '\\.')}; nothing to copy`));
   assert.equal(statSync(record).mtimeMs, written);
   // A new commit of the branch main does not change the copy.
   writeFileSync(join(template.directory, 'contracts/functions.json'), '{"next": true}\n');
@@ -212,19 +213,19 @@ test('the copy fails for a build of other inputs than the commit of the tag and 
   const to = output(t);
   const stale = copy(template, to);
   assert.notEqual(stale.status, 0);
-  assert.ok(stale.stderr.includes(`records a build of the inputs ${recorded}, expected the inputs ${inputsHash(template.directory)} of the commit ${template.tagged()} of the tag v0.0.1`), stale.stderr);
+  assert.ok(stale.stderr.includes(`records a build of the inputs ${recorded}, expected the inputs ${inputsHash(template.directory)} of the commit ${template.tagged()} of the tag ${TAG}`), stale.stderr);
   // A build of the later commit of the branch main while the tag names the earlier one.
   build(template.directory);
   template.tag(first);
   const later = copy(template, to);
   assert.notEqual(later.status, 0);
-  assert.ok(later.stderr.includes(`records a build of the inputs ${inputsHash(template.directory)}, expected the inputs ${recorded} of the commit ${first} of the tag v0.0.1`), later.stderr);
+  assert.ok(later.stderr.includes(`records a build of the inputs ${inputsHash(template.directory)}, expected the inputs ${recorded} of the commit ${first} of the tag ${TAG}`), later.stderr);
   assert.notEqual(template.main(), first);
   // An input that the commit of the tag does not have.
   writeFileSync(join(template.directory, 'scripts/build-package.mjs'), `process.stdout.write(${JSON.stringify([...INPUTS, 'packages/template-ts/src/extra.ts'].join('\n'))} + '\\n');\n`);
   const extra = copy(template, to);
   assert.notEqual(extra.status, 0);
-  assert.match(extra.stderr, /differ from the commit [0-9a-f]{40} of the tag v0\.0\.1: packages\/template-ts\/src\/extra\.ts is not in the commit/);
+  assert.match(extra.stderr, new RegExp(`differ from the commit [0-9a-f]{40} of the tag ${TAG.replaceAll('.', '\\.')}: packages/template-ts/src/extra\\.ts is not in the commit`));
   assert.equal(existsSync(to), false);
 });
 
@@ -232,11 +233,11 @@ test('make template checks the tag and runs the copy of the tag every time, inst
   const directory = mkdtempSync(join(tmpdir(), 'hyper-template-stamp-'));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   const templateRun = (...options) => dryRun('template', { variables: [`TEMPLATE_DIR=${directory}`, ...options] }).join('\n');
-  const copyLine = new RegExp(`^node scripts/copy-template\\.mjs --repository \\.\\./template --tag v0\\.0\\.1 --output ${directory}$`, 'm');
+  const copyLine = new RegExp(`^node scripts/copy-template\\.mjs --repository \\.\\./template --tag ${TAG.replaceAll('.', '\\.')} --output ${directory}$`, 'm');
   const first = templateRun();
   assert.match(first, copyLine);
   // make template-tag checks the tag of the template checkout before the copy.
-  assert.match(first, /^git -C \.\.\/template rev-parse --verify --quiet 'refs\/tags\/v0\.0\.1\^\{commit\}'/m);
+  assert.match(first, new RegExp(`^git -C \\.\\./template rev-parse --verify --quiet 'refs/tags/${TAG.replaceAll('.', '\\.')}\\^\\{commit\\}'`, 'm'));
   assert.match(first, /publish\.mjs npm-copy/);
   assert.doesNotMatch(first, /npm run build|cd \.\.\/template/);
   writeFileSync(join(directory, 'copy.json'), '{}\n');
