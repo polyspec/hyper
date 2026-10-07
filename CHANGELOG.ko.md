@@ -6,6 +6,7 @@
 
 ### 추가
 
+- ruleset `main`은 정확히 check `push-gate`와 `ci-passed`를 요구한다(H13.5-2, HY-94). `ci.yml`의 마지막 job `ci-passed`는 다른 모든 job을 need로 가지고, `if: ${{ always() }}`로 그 모든 job 뒤에 실행되며, need로 가진 job의 결과가 모두 `success`가 아니면 실패하는 `make ci-passed`를 실행한다. `ci.yml`에 추가한 job은 `needs`에 들어가면 요구된다. `ci-workflow.test.mjs`는 job이 없거나, 마지막이 아니거나, `if: ${{ always() }}`가 없거나, 다른 모든 job을 need로 가지지 않거나, 다른 runner에서 실행되거나, 다른 step을 실행하면 실패한다.
 - 두 changelog는 맨 위에 section `## Unreleased`를 두고, 모든 변경은 항목을 그곳에 추가한다(H13.5-1). 이 저장소의 버전은 릴리스되지 않았으므로 모든 항목이 그 section에 있으며, 릴리스 pull request가 그 section을 `## X.Y.Z`로 바꾼다.
 - workflow `ci.yml`은 수동 실행(`workflow_dispatch`)에서도 실행되고, 각 workflow는 trigger를 정확히 선언한다(H13.4-1, HY-91, HY-94). `ci.yml`은 `pull_request`, `merge_group`, `workflow_dispatch`에서, `push-gate.yml`은 `gh-readonly-queue/**` 밖의 `push`, `pull_request`, `merge_group`에서 실행된다. `ci-workflow.test.mjs`는 각 workflow의 `on:` block을 정확히 요구하고 다른 workflow가 없을 것을 요구한다.
 - 모든 변경은 pull request와 merge queue를 거쳐 `main`에 닿는다(H13.4, HY-94). ruleset `main`은 모든 merge method를 허용하는 승인 없는 pull request, method `REBASE`인 merge queue, 선형 이력, check `push-gate`, `check (docs)`, `check (php)`, `check (node)`, `check (board)`를 요구하고, bypass actor 없이 force-push와 삭제를 거부한다. 선언은 `allow_rebase_merge`, `allow_auto_merge`, `delete_branch_on_merge`도 정한다. `ci.yml`은 pull request와 merge group에서 실행하고 `main` push에서는 더 이상 실행하지 않으며 pull request run만 취소한다. `push-gate.yml`은 merge group에서도 실행하고 queue의 branch는 건너뛴다.

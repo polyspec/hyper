@@ -6,6 +6,7 @@
 //                                                    step output
 //   node scripts/ci-run.mjs run <group> <target>...  make ci-check GROUP=<group>: every target of the group
 //   node scripts/ci-run.mjs summary <group>          make ci-summary GROUP=<group>: the summary of the run
+//   node scripts/ci-run.mjs passed                   make ci-passed: every job of RESULTS passed
 //
 // `run` starts each target with its own `make --no-print-directory -k <target>` and lets it run to its end, also after
 // an earlier target failed, with no time limit: a target is a long operation, which its log shows line by line. The
@@ -20,6 +21,12 @@
 // `summary` writes summary.md and the job summary of GitHub (GITHUB_STEP_SUMMARY) from the record, also when the run
 // recorded nothing or did not record its end, and names every setup step that did not succeed from CI_STEPS, the
 // JSON of the step results that the workflow passes (`toJSON(steps)`).
+//
+// `passed` is the step of the job ci-passed, the last job of ci.yml, which runs after every other job of the workflow
+// (`if: ${{ always() }}`) and is the check of ci.yml that the ruleset main requires (HY-94). It reads the environment
+// variable RESULTS, the JSON of `needs` (`{"<job>": {"result": "success", "outputs": {}}}`), prints the result of each
+// job and fails unless every job has the result `success`: a failed, skipped or cancelled job fails it, and so do
+// RESULTS that is unset, is not JSON or names no job.
 import { spawn, spawnSync } from 'node:child_process';
 import { appendFileSync, existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
@@ -28,7 +35,7 @@ import { fileURLToPath } from 'node:url';
 import { versions } from './toolchain.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const USAGE = 'Usage: node scripts/ci-run.mjs pins | run <group> <target>... | summary <group>';
+const USAGE = 'Usage: node scripts/ci-run.mjs pins | run <group> <target>... | summary <group> | passed';
 // The number of failure lines and of last lines that the record keeps of a failed target.
 export const FAILURE_LINES = 20;
 // The variables of a calling make, which a target of the run does not inherit.
@@ -287,12 +294,38 @@ export function ciSummary({ root = ROOT, group, env = process.env, print = (line
   return writer.errors.length === 0 ? 0 : 1;
 }
 
+/** make ci-passed: 0 when every job of `text`, the JSON of `needs`, has the result success, else 1. */
+export function ciPassed({ text, print = console.log }) {
+  const fail = (message) => {
+    print(`[ci-passed] failed: ${message}`);
+    return 1;
+  };
+  if (text === undefined) return fail('RESULTS is not set; the step passes the JSON of needs: make ci-passed RESULTS=<json>');
+  let needs;
+  try {
+    needs = JSON.parse(text);
+  } catch (error) {
+    return fail(`RESULTS is not JSON: ${error.message}: ${JSON.stringify(text)}`);
+  }
+  if (needs === null || typeof needs !== 'object' || Array.isArray(needs) || Object.keys(needs).length === 0) return fail(`RESULTS names no job: ${JSON.stringify(text)}`);
+  const failed = [];
+  for (const [job, value] of Object.entries(needs)) {
+    const result = value !== null && typeof value === 'object' && typeof value.result === 'string' ? value.result : 'no result';
+    print(`[ci-passed] ${job}: ${result}`);
+    if (result !== 'success') failed.push(`${job} (${result})`);
+  }
+  if (failed.length > 0) return fail(`${failed.join(', ')}; every needed job must have the result success`);
+  print(`[ci-passed] every needed job passed: ${Object.keys(needs).join(', ')}`);
+  return 0;
+}
+
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const [mode, group, ...targets] = process.argv.slice(2);
   try {
     if (mode === 'pins' && group === undefined) pins();
     else if (mode === 'run' && group) process.exitCode = await ciRun({ group, targets });
     else if (mode === 'summary' && group && targets.length === 0) process.exitCode = ciSummary({ group });
+    else if (mode === 'passed' && group === undefined) process.exitCode = ciPassed({ text: process.env.RESULTS });
     else {
       console.error(USAGE);
       process.exitCode = 2;

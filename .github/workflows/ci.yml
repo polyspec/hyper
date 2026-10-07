@@ -4,7 +4,8 @@
 # (fail-fast: false), every step after the first runs after a failed step (`if: ${{ !cancelled() }}`), and `make
 # ci-check` runs every target of the group to its end. Each job writes the job summary and uploads its report
 # var/ci/<group>/: the record with the status, the time and the first failure lines of each target, the full log of each
-# target and the summary. Every step that runs a command runs one make target, the jobs run on ubuntu-26.04-arm, the
+# target and the summary. The ruleset main requires the job ci-passed, the last job, which passes only when every other
+# job of this workflow passed (HY-94). Every step that runs a command runs one make target, the jobs run on ubuntu-26.04-arm, the
 # actions are pinned by commit and no step has a time limit (HY-90, tests/scripts/ci-workflow.test.mjs).
 #
 # The toolchain comes from the pinned files: Node.js from .node-version, PHP by the minor of config/toolchain.json, whose
@@ -103,3 +104,17 @@ jobs:
           name: ci-${{ matrix.group }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: hyper/var/ci/${{ matrix.group }}/
           if-no-files-found: error
+  # The check of this workflow that the ruleset main requires (HY-94). It runs after every other job, also after a
+  # failed, skipped or cancelled one (if: always()), and make ci-passed fails unless every job of needs has the result
+  # success, so a new job of this workflow is required once it is listed in needs. Each step needs the step before it.
+  ci-passed:
+    if: ${{ always() }}
+    needs: [check]
+    runs-on: ubuntu-26.04-arm
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version-file: .node-version
+      - name: make ci-passed
+        run: make ci-passed RESULTS='${{ toJSON(needs) }}'
