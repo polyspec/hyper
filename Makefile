@@ -66,7 +66,7 @@ $(if $(filter $(HOOKS_PATH),$(shell git config core.hooksPath)),,$(shell git con
 
 .DEFAULT_GOAL := help
 
-.PHONY: help tools toolchain-check owner-check install hyper-php-copy template template-tag template-check ext packages package-check server server-fixtures node-server node-fixtures assets test-js test-node test-php lint analyse-php templates-check test-scripts virtiofs-check parity server-parity bundle-size e2e docs-check serve-demo bench-server bench-server-smoke bench-browser bench check rerun-failed serve-demo-unlock hooks hooks-check push-gate-commit ci-pins ci-check ci-summary ci-passed install-browser github-ruleset github-ruleset-check
+.PHONY: help tools toolchain-check owner-check install hyper-php-copy template template-tag template-check ext packages package-check server server-fixtures node-server node-fixtures assets test-js test-node test-php lint analyse-php templates-check test-scripts virtiofs-check parity server-parity bundle-size e2e docs-check serve-demo bench-server bench-server-smoke bench-browser bench check rerun-failed serve-demo-unlock hooks hooks-check push-gate-commit ci-pins ci-check ci-summary ci-passed install-browser release-verify release-versions release-assets release-publish github-ruleset github-ruleset-check
 
 help: ## List the targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
@@ -294,3 +294,19 @@ install-browser: ## Install Chromium of the pinned Playwright and its system lib
 
 rerun-failed: ## Rerun only the targets of make check that did not pass on the current tree
 	TEMPLATE_REPOSITORY=$(TEMPLATE_REPOSITORY) TEMPLATE_TAG=$(TEMPLATE_TAG) node scripts/full-run.mjs rerun-failed
+
+# The steps of .github/workflows/release.yml for the tag TAG (scripts/release.mjs), in this order: release-verify
+# requires the tagged commit on origin/main with the checks push-gate and ci-passed passed, release-versions the version
+# of the tag in every manifest and its section in CHANGELOG.md, release-assets builds the packages and their archives
+# into var/release/assets, and release-publish creates the GitHub Release. The workflow sets TAG in the environment, and
+# the recipe passes it as "$$TAG", so the name of a tag never becomes shell text. A step without TAG fails before any
+# prerequisite runs.
+RELEASE_STEPS := release-verify release-versions release-assets release-publish
+$(if $(filter $(RELEASE_STEPS),$(MAKECMDGOALS)),$(if $(TAG),,$(error make $(filter $(RELEASE_STEPS),$(MAKECMDGOALS)) needs TAG=<tag>, a tag vX.Y.Z)))
+
+release-verify: ## Fail unless the commit of the tag TAG is on origin/main and passed the checks push-gate and ci-passed
+release-versions: ## Fail unless every manifest declares the version of the tag TAG and CHANGELOG.md has its section
+release-assets: packages ## Build the packages and the archive of each into var/release/assets for the tag TAG
+release-publish: ## Create the GitHub Release of the tag TAG with its changelog section and the archives
+$(RELEASE_STEPS):
+	node scripts/release.mjs $(@:release-%=%) "$$TAG"

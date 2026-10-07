@@ -6,6 +6,7 @@
 
 ### 추가
 
+- `main`의 commit에 붙인 tag가 그 commit을 릴리스한다(H13.5-3, HY-95). `.github/workflows/release.yml`은 권한 `contents: write`로 tag `v*` 또는 `*/v*`의 push에서 실행된다. `make release-verify`는 tag된 commit이 `origin/main`에 있고 check run `push-gate`와 `ci-passed`가 `success`로 끝났는지, `make release-versions`는 모든 manifest에 tag의 버전이 있고 `CHANGELOG.md`에 section `## X.Y.Z`가 있는지 확인하고, `make release-assets`는 패키지와 npm, Composer archive를 만들며, `make release-publish`는 section을 notes로 GitHub Release를 만든다(`scripts/release.mjs`, `tests/scripts/release.test.mjs`). AGENTS가 릴리스 절차를 적는다.
 - ruleset `main`은 정확히 check `push-gate`와 `ci-passed`를 요구한다(H13.5-2, HY-94). `ci.yml`의 마지막 job `ci-passed`는 다른 모든 job을 need로 가지고, `if: ${{ always() }}`로 그 모든 job 뒤에 실행되며, need로 가진 job의 결과가 모두 `success`가 아니면 실패하는 `make ci-passed`를 실행한다. `ci.yml`에 추가한 job은 `needs`에 들어가면 요구된다. `ci-workflow.test.mjs`는 job이 없거나, 마지막이 아니거나, `if: ${{ always() }}`가 없거나, 다른 모든 job을 need로 가지지 않거나, 다른 runner에서 실행되거나, 다른 step을 실행하면 실패한다.
 - 두 changelog는 맨 위에 section `## Unreleased`를 두고, 모든 변경은 항목을 그곳에 추가한다(H13.5-1). 이 저장소의 버전은 릴리스되지 않았으므로 모든 항목이 그 section에 있으며, 릴리스 pull request가 그 section을 `## X.Y.Z`로 바꾼다.
 - workflow `ci.yml`은 수동 실행(`workflow_dispatch`)에서도 실행되고, 각 workflow는 trigger를 정확히 선언한다(H13.4-1, HY-91, HY-94). `ci.yml`은 `pull_request`, `merge_group`, `workflow_dispatch`에서, `push-gate.yml`은 `gh-readonly-queue/**` 밖의 `push`, `pull_request`, `merge_group`에서 실행된다. `ci-workflow.test.mjs`는 각 workflow의 `on:` block을 정확히 요구하고 다른 workflow가 없을 것을 요구한다.

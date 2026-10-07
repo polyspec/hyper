@@ -105,6 +105,19 @@ gh pr merge <branch> --auto --rebase
 
 `make github-ruleset`은 선언의 저장소 설정(`allow_rebase_merge`, `allow_auto_merge`, `delete_branch_on_merge`)을 바꾸고 선언한 이름의 ruleset을 다른 곳만 만들거나 갱신한 뒤 다시 비교한다. `make github-ruleset-check`는 아무것도 바꾸지 않으며, 설정이 다르거나 live ruleset이 없거나 선언과 다르면 field마다 live 값과 선언 값을 밝히며 실패한다. 둘 다 make 변수 `GH`(설정하지 않으면 `gh`)의 GitHub CLI를 실행하며, 그 CLI에는 저장소의 administration 권한이 필요하다. 전체 suite의 어떤 target도 이들을 실행하지 않는다. `tests/scripts/github-ruleset.test.mjs`는 가짜 `gh`로 script를 실행한다.
 
+## Tag 릴리스
+
+릴리스는 `main`의 commit에 붙인 tag `vX.Y.Z`이다(HY-95, 절차는 `AGENTS.md`). tag의 push는 `.github/workflows/release.yml`을 실행하며, 그 step은 다음 순서로 `scripts/release.mjs`를 실행하고 첫 실패에서 멈춘다.
+
+```sh
+make release-verify
+make release-versions
+make release-assets
+make release-publish
+```
+
+`make release-verify`는 tag된 commit이 `origin/main`에 있고 그 commit의 최신 check run `push-gate`와 `ci-passed`(`gh api repos/<repository>/commits/<sha>/check-runs`)가 결론 `success`로 완료되었는지 확인한다. `make release-versions`는 버전을 선언하는 모든 manifest에 X.Y.Z가 있고 `CHANGELOG.md`에 section `## X.Y.Z`가 있는지 확인하며, 다른 파일마다 그 버전과 tag의 버전을 적는다. `make release-assets`는 패키지를 빌드하고(`make packages`) `polyspec-hyper-X.Y.Z.tgz`, `polyspec-hyper-server-X.Y.Z.tgz`, `polyspec-hyper-X.Y.Z.zip`을 `var/release/assets`에 쓴다. `make release-publish`는 section을 notes로 하고 archive를 붙여 GitHub Release를 만든다. job은 `ci.yml`의 job `check`처럼 Node.js, PHP, `TEMPLATE_TAG`의 template 저장소, `make install`을 준비하며, tag는 환경 변수 `TAG`로 step에 전달된다. `tests/scripts/release.test.mjs`는 어떤 tag도 릴리스하지 않는 manifest인 `tests/package-install/package.json`과 `examples/board/composer.json`을 나열하고, 릴리스되지도 나열되지도 않은 tracked manifest가 있으면 실패한다.
+
 ## CI
 
 workflow `.github/workflows/ci.yml`은 모든 pull request, merge queue의 모든 merge group, 모든 수동 실행(`workflow_dispatch`)에 대해 전체 suite를 실행한다(HY-91, [main 공개](#main-공개) 참고). runner가 적으므로 pull request의 새 push는 아직 진행 중인 앞선 push의 run을 멈추고, merge group의 run은 취소하지 않는다. 그 job `check`는 Makefile의 CI group마다 항목 하나를 `fail-fast: false`로 가진다.

@@ -105,6 +105,19 @@ A direct `git push origin <commit>:main` is refused with `GH013: Repository rule
 
 `make github-ruleset` changes the repository settings of the declaration (`allow_rebase_merge`, `allow_auto_merge`, `delete_branch_on_merge`) and creates the ruleset of the declared name, or updates it, where they differ, and compares again; `make github-ruleset-check` changes nothing and fails, naming each field with its live and its declared value, when a setting differs or the live ruleset is missing or differs from the declaration. Both start the GitHub CLI of the make variable `GH` (`gh` unless set), which needs administration access to the repository; no target of the full suite runs them. `tests/scripts/github-ruleset.test.mjs` runs the script against a fake `gh`.
 
+## Tag releases
+
+A release is a tag `vX.Y.Z` of a commit of `main` (HY-95, the procedure in `AGENTS.md`). The push of the tag runs `.github/workflows/release.yml`, whose steps run `scripts/release.mjs` in this order and stop at the first failure:
+
+```sh
+make release-verify
+make release-versions
+make release-assets
+make release-publish
+```
+
+`make release-verify` requires the tagged commit on `origin/main` and the latest check runs `push-gate` and `ci-passed` of the commit (`gh api repos/<repository>/commits/<sha>/check-runs`) completed with the conclusion `success`. `make release-versions` requires X.Y.Z in every manifest that declares a version and the section `## X.Y.Z` in `CHANGELOG.md`, and names each file with its version and the version of the tag. `make release-assets` builds the packages (`make packages`) and writes `polyspec-hyper-X.Y.Z.tgz`, `polyspec-hyper-server-X.Y.Z.tgz` and `polyspec-hyper-X.Y.Z.zip` into `var/release/assets`. `make release-publish` creates the GitHub Release with the section as notes and the archives. The job sets up Node.js, PHP, the template repository at `TEMPLATE_TAG` and `make install` as the job `check` of `ci.yml` does; the tag reaches the steps through the environment variable `TAG`. `tests/scripts/release.test.mjs` lists the manifests that no tag releases, `tests/package-install/package.json` and `examples/board/composer.json`, and fails for a tracked manifest that is neither released nor listed.
+
 ## CI
 
 The workflow `.github/workflows/ci.yml` runs the full suite for every pull request, every merge group of the merge queue and every manual run (`workflow_dispatch`) (HY-91, see [Publishing main](#publishing-main)); a new push to a pull request stops the run of its earlier push that is still going, because the runners are few, and the run of a merge group is never cancelled. Its job `check` has one entry per CI group of the Makefile, with `fail-fast: false`:
