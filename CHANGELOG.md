@@ -4,6 +4,8 @@
 
 ## Unreleased
 
+## 0.0.1
+
 ### Added
 
 - The release covers a Go module tag at any depth, and its assets are npm tarballs and Composer zips only (H13.5-4, HY-95). The trigger of `.github/workflows/release.yml` is `tags: ['v*', '**/v*']`: in a tag filter `*` does not match `/`, so `**/v*` covers the tag of a Go module at any depth. A Cargo package is not released as an archive; it is consumed by git tag, because `cargo package` rewrites git dependencies into crates.io requirements that do not resolve. `scripts/release.mjs` lists a tracked `Cargo.toml` with that reason, and `tests/scripts/release.test.mjs` fails on another asset kind.
