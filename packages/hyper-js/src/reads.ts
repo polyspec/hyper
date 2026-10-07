@@ -1,7 +1,7 @@
 // The read paths of templates and routes, and the data that they keep (HY-73). A read node is `true` when the value
 // at its path is read whole, and otherwise names the keys read below it and, under `each`, what is read of every
-// entry of a map or element of a list. This module imports only types, so that scripts/build-server.mjs runs it with
-// the type stripping of Node and without a bundler, also in a Linux container (HY-68).
+// entry of a map or element of a list. This module imports only types, so that tests/reads-process.ts runs it with
+// the type stripping of Node and without a bundler.
 import type { MapValue, Template, Value } from '@polyspec/template/render';
 import type { Manifest } from './manifest.js';
 

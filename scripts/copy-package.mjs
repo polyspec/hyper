@@ -1,15 +1,15 @@
 // Writes the copy of a package directory of this repository that an application of this repository installs, so that
 // a package manager installs a copy and not a symbolic link (HY-79): the files that Git tracks below the directory, as
 // the working tree holds them, without the dependencies, caches and build outputs of the package. The copy is written
-// into a staging directory of this process and published file by file (scripts/publish.mjs, HY-82), so a reader never
-// finds a file missing.
+// into a staging directory of this process and published file by file (packages/hyper-build/lib/publish.mjs, HY-82),
+// so a reader never finds a file missing.
 //
 // Usage: node scripts/copy-package.mjs --path packages/hyper-php --output var/products/hyper-php
 import { rmSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
-import { publish, staging } from './publish.mjs';
+import { publish, staging } from '../packages/hyper-build/lib/publish.mjs';
 import { copyTracked } from './tracked-files.mjs';
 
 const { values } = parseArgs({ options: { path: { type: 'string' }, output: { type: 'string' } } });

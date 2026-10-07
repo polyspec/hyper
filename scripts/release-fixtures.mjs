@@ -28,6 +28,13 @@ export const FIXTURES = 'tests/release-install';
 // The npm settings of a consumer install: a URL dependency of the root package.json is allowed, which npm 12 refuses by
 // default (allow-remote).
 export const NPM_CONSUMER = ['--allow-remote=root'];
+// The npm setting of the lock write only (H13.5-14): npm 12.2.0 counts the registry tarball of a package with
+// `bundleDependencies`, here `@tailwindcss/oxide-wasm32-wasi` below `@polyspec/hyper-build`, as a remote package
+// while it builds a lock and refuses it under `allow-remote=root` with EALLOWREMOTE
+// (https://github.com/npm/cli/pull/9818). npm has no allow list of URLs, so the lock write allows every remote
+// package; `npm ci` of the fixture keeps NPM_CONSUMER and installs only what the lock pins by its integrity.
+// Remove this setting when the npm release that `packageManager` pins contains npm/cli#9818.
+export const NPM_LOCK_WRITE = ['--allow-remote=all'];
 export const UNREACHABLE = 'http://127.0.0.1:9/';
 
 const run = (command, args, options = {}) => {
@@ -86,7 +93,7 @@ export function writeLocks(root) {
   try {
     const { assets } = stageAssets(root, folder);
     const npm = npmProject(root, folder, assets, { lock: false });
-    run('npm', ['install', '--package-lock-only', `--cache=${path.join(folder, 'npm-cache')}`, `--@polyspec:registry=${UNREACHABLE}`, '--fetch-retries=0', ...NPM_CONSUMER, '--no-audit', '--no-fund'], { cwd: npm, env: consumerEnv() });
+    run('npm', ['install', '--package-lock-only', `--cache=${path.join(folder, 'npm-cache')}`, `--@polyspec:registry=${UNREACHABLE}`, '--fetch-retries=0', ...NPM_LOCK_WRITE, '--no-audit', '--no-fund'], { cwd: npm, env: consumerEnv() });
     const npmLock = JSON.parse(readFileSync(path.join(npm, 'package-lock.json'), 'utf8'));
     for (const entry of Object.values(npmLock.packages)) if (String(entry.resolved).startsWith('file:')) delete entry.integrity;
     writeFileSync(path.join(root, FIXTURES, 'npm/package-lock.json'), `${JSON.stringify(npmLock, null, 2)}\n`);

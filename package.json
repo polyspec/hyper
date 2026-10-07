@@ -11,11 +11,8 @@
   "packageManager": "npm@12.2.0+sha512.66c2632a94e796649738b2d7894d710c2cc2e1696893823066687f6b0d8a52e5f2b54eeaeaa32ffdc513ecca1e49ff794a5c2ec3f9515d879f1b3182b291cf35",
   "devDependencies": {
     "@playwright/test": "1.63.0",
-    "@tailwindcss/node": "4.3.3",
-    "@tailwindcss/oxide": "4.3.3",
     "@types/node": "26.6.3",
     "esbuild": "0.28.2",
-    "tailwindcss": "4.3.3",
     "typescript": "7.0.2",
     "vitest": "5.0.3"
   },
@@ -26,12 +23,14 @@
   },
   "dependencies": {
     "@polyspec/hyper": "file:packages/hyper-js",
+    "@polyspec/hyper-build": "file:packages/hyper-build",
     "@polyspec/hyper-server": "file:packages/hyper-node",
     "@polyspec/template": "https://github.com/polyspec/template/releases/download/v0.0.4/polyspec-template-0.0.4.tgz",
     "@polyspec/template-compiler": "https://github.com/polyspec/template/releases/download/v0.0.4/polyspec-template-compiler-0.0.4.tgz"
   },
   "overrides": {
     "@polyspec/hyper": "file:packages/hyper-js",
-    "@polyspec/template": "https://github.com/polyspec/template/releases/download/v0.0.4/polyspec-template-0.0.4.tgz"
+    "@polyspec/template": "https://github.com/polyspec/template/releases/download/v0.0.4/polyspec-template-0.0.4.tgz",
+    "@polyspec/template-compiler": "https://github.com/polyspec/template/releases/download/v0.0.4/polyspec-template-compiler-0.0.4.tgz"
   }
 }

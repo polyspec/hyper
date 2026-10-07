@@ -1,4 +1,5 @@
-// Builds the browser outputs of an application directory (HY-76). Below public/assets it only adds files whose names
+#!/usr/bin/env node
+// Builds the browser outputs of an application directory (HY-76, HY-96). Below public/assets it only adds files whose names
 // hold a hash of their content, so a server or an open page of an earlier build still loads its files; the outputs
 // without a hash lie in the directory of --output (HY-34):
 //   public/assets/templates/<name>.<hash>.json  one AST file per template, including hyper/data.tpl (HY-34)
@@ -19,13 +20,14 @@
 //                                                rendered layouts link (HY-64, HY-76). The deployment is published
 //                                                file by file (HY-82).
 //
-// Every output file is written with one rename (scripts/output-files.mjs, scripts/publish.mjs), so a server of an
-// earlier build or a reader of the outputs never finds a file missing or partly written (HY-82).
+// Every output file is written with one rename (lib/output-files.mjs, lib/publish.mjs), so a server of an earlier
+// build or a reader of the outputs never finds a file missing or partly written (HY-82).
 //
-// The template ASTs, the manifest check and the template render runtime of the bundle come from the template package
-// `@polyspec/template` that this repository installs, whatever template package the application installed (HY-70).
+// The template ASTs and the template render runtime of the bundle come from the template package `@polyspec/template`
+// that this package depends on, whatever template package the application installed (HY-70); the manifest check
+// comes from the browser package `@polyspec/hyper`.
 //
-// Usage: node scripts/build-assets.mjs --app examples/board --api /api --output examples/board/build
+// Usage: hyper-build-assets --app . --api /api --output build [--tailwind <source>=<output>]
 //          [--static public/assets/app.css]...
 
 import { readFileSync, rmSync } from 'node:fs';
@@ -35,9 +37,10 @@ import { compile } from '@tailwindcss/node';
 import { Scanner } from '@tailwindcss/oxide';
 import { parseArgs } from 'node:util';
 import { build } from 'esbuild';
-import { copyFile, writeFileAtomic } from './output-files.mjs';
-import { publish, staging } from './publish.mjs';
-import { loadPackage, sha256, templatePlugin, writeTemplateFiles } from './template-files.mjs';
+import { checkManifest } from '@polyspec/hyper';
+import { copyFile, writeFileAtomic } from '../lib/output-files.mjs';
+import { publish, staging } from '../lib/publish.mjs';
+import { sha256, templatePlugin, writeTemplateFiles } from '../lib/template-files.mjs';
 
 const { values } = parseArgs({ options: { app: { type: 'string' }, api: { type: 'string' }, output: { type: 'string' }, tailwind: { type: 'string' }, static: { type: 'string', multiple: true } } });
 if (!values.app || !values.api || !values.output) throw new Error('--app, --api and --output are required');
@@ -48,7 +51,7 @@ const assetsDir = join(app, 'public', 'assets');
 const templateFilesDir = join(assetsDir, 'templates');
 const csrDir = join(output, 'csr');
 // The browser does not check the manifest that the bundle contains, so the build checks it before it writes anything (HY-2).
-(await loadPackage()).checkManifest(JSON.parse(readFileSync(join(app, 'app', 'app.json'), 'utf8')));
+checkManifest(JSON.parse(readFileSync(join(app, 'app', 'app.json'), 'utf8')));
 const index = await writeTemplateFiles({ templates: templatesDir, output: templateFilesDir, urlPrefix: '/assets/templates' });
 writeFileAtomic(join(output, 'templates.index.json'), `${JSON.stringify(index, null, 2)}\n`);
 
@@ -130,7 +133,7 @@ function indexPlugin(templateIndex) {
 
 // Compiles the rules of an application stylesheet with the theme and the utilities of Tailwind CSS that the
 // templates and the client code use; the rules lie in the layer components and no rule of the layer base exists
-// (HY-77). Tailwind CSS resolves from the dependencies of this repository.
+// (HY-77). Tailwind CSS resolves from the dependencies of this package.
 async function tailwind(rules) {
   const input = [
     '@layer theme, base, components, utilities;',

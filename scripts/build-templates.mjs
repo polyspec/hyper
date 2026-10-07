@@ -3,15 +3,15 @@
 //   <output>/templates/<name>.<hash>.json  one AST file per template, including hyper/data.tpl
 //   <output>/templates.index.json          template name -> file URL (/templates/<file>)
 //
-// The template ASTs come from the template package `@polyspec/template` that this repository installs (HY-70).
+// The template ASTs come from the template package `@polyspec/template` that `@polyspec/hyper-build` depends on (HY-70).
 //
 // Usage: node scripts/build-templates.mjs --templates packages/hyper-php/tests/fixtures/templates --output packages/hyper-node/tests/build
 
 
 import { join } from 'node:path';
 import { parseArgs } from 'node:util';
-import { writeFileAtomic } from './output-files.mjs';
-import { writeTemplateFiles } from './template-files.mjs';
+import { writeFileAtomic } from '../packages/hyper-build/lib/output-files.mjs';
+import { writeTemplateFiles } from '../packages/hyper-build/lib/template-files.mjs';
 
 const { values } = parseArgs({ options: { templates: { type: 'string' }, output: { type: 'string' } } });
 if (!values.templates || !values.output) throw new Error('--templates and --output are required');

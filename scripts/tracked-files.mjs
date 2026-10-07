@@ -5,7 +5,7 @@
 import { execFileSync } from 'node:child_process';
 import { chmodSync, statSync, utimesSync } from 'node:fs';
 import { join, relative } from 'node:path';
-import { copyFile } from './output-files.mjs';
+import { copyFile } from '../packages/hyper-build/lib/output-files.mjs';
 
 // Git runs without the variables that Git sets for its hooks, which would name the repository of the hook.
 const gitEnv = () => Object.fromEntries(Object.entries(process.env).filter(([name]) => !['GIT_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE'].includes(name)));

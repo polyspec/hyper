@@ -1,0 +1,30 @@
+{
+  "name": "@polyspec/hyper-build",
+  "version": "0.0.3",
+  "description": "Build commands of the region protocol: the server program and the browser assets of an application",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "hyper-build-assets": "bin/hyper-build-assets.mjs",
+    "hyper-build-server": "bin/hyper-build-server.mjs"
+  },
+  "exports": {
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "bin",
+    "lib"
+  ],
+  "engines": {
+    "node": ">=26"
+  },
+  "dependencies": {
+    "@polyspec/hyper": "0.0.3",
+    "@polyspec/template": "0.0.4",
+    "@polyspec/template-compiler": "0.0.4",
+    "@tailwindcss/node": "4.3.3",
+    "@tailwindcss/oxide": "4.3.3",
+    "esbuild": "0.28.2",
+    "tailwindcss": "4.3.3"
+  }
+}

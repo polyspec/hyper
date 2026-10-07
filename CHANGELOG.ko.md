@@ -4,6 +4,14 @@
 
 ## Unreleased
 
+### 추가
+
+- npm package `@polyspec/hyper-build`가 build 명령을 릴리스한다(H13.5-13, HY-96). bin `hyper-build-server`와 `hyper-build-assets`는 consumer가 checkout에서 실행했고 어떤 릴리스 asset도 담지 않았던 `scripts/build-server.mjs`와 `scripts/build-assets.mjs`를 대신한다. package는 `@polyspec/hyper`, `@polyspec/template`, `@polyspec/template-compiler`, esbuild, Tailwind CSS를 정확한 버전으로 요구하고, `make release-assets`는 `polyspec-hyper-build-X.Y.Z.tgz`를 쓴다. build는 `packages/hyper-js`의 source 대신 배포된 브라우저 package의 manifest 검사, read path, 새 export `@polyspec/hyper/data-template.json`을 읽으므로, `make server`, `make server-fixtures`, `make node-fixtures`는 이제 `make packages`를 먼저 실행한다. Makefile은 bin을 그 파일로 실행하고, 저장소의 script는 package의 module을 import한다.
+
+### 검증
+
+- `tests/scripts/release-install.test.mjs`는 npm consumer fixture에 `polyspec-hyper-build-X.Y.Z.tgz`를 설치하고 `node_modules/.bin`의 두 bin으로 sample 애플리케이션 `tests/release-install/app`을 `--tailwind`와 함께 빌드한다(H13.5-13). npm은 consumer에서 esbuild의 `postinstall` script를 막고, esbuild는 platform package로 실행된다. npm 12.2.0은 lock을 쓰는 동안 `allow-remote=root`에서 `@tailwindcss/oxide-wasm32-wasi`의 bundled dependency tarball을 거부하므로(https://github.com/npm/cli/pull/9818), `make release-fixtures`는 pin한 npm이 수정을 담을 때까지 `--allow-remote=all`로 fixture lock을 쓴다(H13.5-14). fixture의 `npm ci`는 `--allow-remote=root`를 유지한다.
+
 ## 0.0.3
 
 ### 변경

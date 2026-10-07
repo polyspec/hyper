@@ -3,7 +3,7 @@
 import { parse, type Template } from '@polyspec/template';
 import { resolvePath } from '@polyspec/template/render';
 
-// Node runs the source with type stripping, as scripts/build-server.mjs does (HY-68).
+// Node runs the source with type stripping.
 const { templateReads } = (await import(new URL('../src/reads.ts', import.meta.url).href)) as typeof import('../src/reads.js');
 const item = JSON.parse(process.argv[2]!) as { templates: Record<string, string>; template: string };
 const parsed = new Map(Object.entries(item.templates).map(([name, source]) => [name, parse(source, name)]));

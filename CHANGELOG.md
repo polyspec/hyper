@@ -4,6 +4,14 @@
 
 ## Unreleased
 
+### Added
+
+- The npm package `@polyspec/hyper-build` releases the build commands (H13.5-13, HY-96). Its bins `hyper-build-server` and `hyper-build-assets` replace `scripts/build-server.mjs` and `scripts/build-assets.mjs`, which consumers ran from a checkout and no release asset held; the package requires `@polyspec/hyper`, `@polyspec/template`, `@polyspec/template-compiler`, esbuild and Tailwind CSS at exact versions, and `make release-assets` writes `polyspec-hyper-build-X.Y.Z.tgz`. The builds read the manifest check, the read paths and the new export `@polyspec/hyper/data-template.json` of the published browser package instead of the source of `packages/hyper-js`, so `make server`, `make server-fixtures` and `make node-fixtures` now run `make packages` first. The Makefile runs the bins by their files, and the scripts of the repository import the modules of the package.
+
+### Verification
+
+- `tests/scripts/release-install.test.mjs` installs `polyspec-hyper-build-X.Y.Z.tgz` in the npm consumer fixture and builds the sample application `tests/release-install/app` with both bins of `node_modules/.bin`, with `--tailwind` (H13.5-13). npm blocks the `postinstall` script of esbuild in the consumer, and esbuild runs from its platform package. npm 12.2.0 refuses the bundled-dependency tarball of `@tailwindcss/oxide-wasm32-wasi` under `allow-remote=root` while it writes a lock (https://github.com/npm/cli/pull/9818), so `make release-fixtures` writes the fixture lock with `--allow-remote=all` until the pinned npm contains the fix (H13.5-14); `npm ci` of the fixture keeps `--allow-remote=root`.
+
 ## 0.0.3
 
 ### Changed
