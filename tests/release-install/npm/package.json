@@ -1,0 +1,11 @@
+{
+  "name": "release-install-npm",
+  "private": true,
+  "description": "A consumer that installs the release tarballs of this repository and of the template release (HY-95)",
+  "type": "module",
+  "dependencies": {
+    "@polyspec/hyper": "file:polyspec-hyper-0.0.3.tgz",
+    "@polyspec/hyper-server": "file:polyspec-hyper-server-0.0.3.tgz",
+    "@polyspec/template": "file:polyspec-template-0.0.2.tgz"
+  }
+}

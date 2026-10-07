@@ -121,7 +121,7 @@ test('no recipe queries a registry: installs follow their lock without an audit,
   assert.deepEqual(npm.filter((command) => / ci /.test(command) && !command.includes('--no-audit')), []);
   assert.ok(npm.some((command) => / ci --offline /.test(command)), 'the package install test installs offline');
   const composer = commands.filter((command) => command.startsWith(`${COMPOSER} `));
-  assert.deepEqual(composer.filter((command) => !/^\S+ install /.test(command)), [], 'a Composer command other than install');
+  assert.deepEqual(composer.filter((command) => !/^\S+ install(?: |$)/.test(command)), [], 'a Composer command other than install');
   assert.equal(spawnSync('git', ['ls-files', '--error-unmatch', 'tests/package-install/package-lock.json'], { encoding: 'utf8' }).status, 0, 'tests/package-install/package-lock.json is not tracked');
 });
 

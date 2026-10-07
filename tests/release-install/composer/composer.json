@@ -1,0 +1,13 @@
+{
+    "name": "polyspec/release-install-composer",
+    "description": "A consumer that installs the release zips of this repository and of the template release from an artifact repository (HY-95)",
+    "type": "project",
+    "license": "MIT",
+    "repositories": [
+        { "type": "artifact", "url": "assets" },
+        { "packagist.org": false }
+    ],
+    "require": {
+        "polyspec/hyper": "0.0.3"
+    }
+}

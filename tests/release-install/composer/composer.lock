@@ -1,0 +1,101 @@
+{
+    "_readme": [
+        "This file locks the dependencies of your project to a known state",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
+        "This file is @generated automatically"
+    ],
+    "content-hash": "3758615cc63b788de7d560cb2bd89b80",
+    "packages": [
+        {
+            "name": "polyspec/hyper",
+            "version": "0.0.3",
+            "dist": {
+                "type": "zip",
+                "url": "assets/polyspec-hyper-0.0.3.zip"
+            },
+            "require": {
+                "php": "^8.2",
+                "polyspec/template": "0.0.2"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.0",
+                "phpstan/phpstan": "^2.2.16",
+                "phpunit/phpunit": "^11.5"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Polyspec\\Hyper\\": "src/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Polyspec\\Hyper\\Tests\\": "tests/"
+                }
+            },
+            "scripts": {
+                "test": [
+                    "phpunit"
+                ],
+                "lint": [
+                    "pint --test"
+                ]
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "Server side of the region protocol: routes, actions and region JSON for template language layouts"
+        },
+        {
+            "name": "polyspec/template",
+            "version": "0.0.2",
+            "dist": {
+                "type": "zip",
+                "url": "assets/polyspec-template-0.0.2.zip"
+            },
+            "require": {
+                "ext-mbstring": "*",
+                "php": "^8.2"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.0",
+                "phpunit/phpunit": "^11.5"
+            },
+            "bin": [
+                "bin/template.php"
+            ],
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Polyspec\\Template\\": "src/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Polyspec\\Template\\Tests\\": "tests/"
+                }
+            },
+            "scripts": {
+                "test": [
+                    "phpunit"
+                ],
+                "lint": [
+                    "pint --test"
+                ]
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "Template language implementation: lexer, parser, renderer, functions and CLI"
+        }
+    ],
+    "packages-dev": [],
+    "aliases": [],
+    "minimum-stability": "stable",
+    "stability-flags": {},
+    "prefer-stable": false,
+    "prefer-lowest": false,
+    "platform": {},
+    "platform-dev": {},
+    "plugin-api-version": "2.9.0"
+}

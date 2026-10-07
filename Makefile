@@ -15,6 +15,8 @@ TEMPLATE_COPY := $(TEMPLATE_DIR)/copy.json
 # of many targets installs the template packages at most once.
 TEMPLATE_STAMP := $(TEMPLATE_DIR)/installed.stamp
 FIXTURES := $(PHP_PACKAGE)/tests/fixtures
+# The Composer vendor directory of the private root composer.json, which installs packages/hyper-php for development.
+PHP_VENDOR := $(CURDIR)/vendor
 # The native template extension, built from the declared copy of the template repository (HY-48, HY-78).
 # The lock of `make serve-demo`, whose fixed ports exist once on this machine (scripts/holder-lock.mjs).
 SERVE_DEMO_LOCK := /tmp/hyper-serve-demo.lock
@@ -66,7 +68,7 @@ $(if $(filter $(HOOKS_PATH),$(shell git config core.hooksPath)),,$(shell git con
 
 .DEFAULT_GOAL := help
 
-.PHONY: help tools toolchain-check owner-check install hyper-php-copy template template-tag template-check ext packages package-check server server-fixtures node-server node-fixtures assets test-js test-node test-php lint analyse-php templates-check test-scripts virtiofs-check parity server-parity bundle-size e2e docs-check serve-demo bench-server bench-server-smoke bench-browser bench check rerun-failed serve-demo-unlock hooks hooks-check push-gate-commit ci-pins ci-check ci-summary ci-passed install-browser release-verify release-versions release-assets release-publish github-ruleset github-ruleset-check
+.PHONY: help tools toolchain-check owner-check install hyper-php-copy template template-tag template-check ext packages package-check server server-fixtures node-server node-fixtures assets test-js test-node test-php lint analyse-php templates-check test-scripts virtiofs-check parity server-parity bundle-size e2e docs-check serve-demo bench-server bench-server-smoke bench-browser bench check rerun-failed serve-demo-unlock hooks hooks-check push-gate-commit ci-pins ci-check ci-summary ci-passed install-browser release-verify release-versions release-assets release-publish release-fixtures github-ruleset github-ruleset-check
 
 help: ## List the targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
@@ -171,12 +173,12 @@ test-php: template server-fixtures ext ## Run the server package tests with the 
 
 lint: toolchain-check ## Check PHP formatting
 	@failed=; \
-	$(call check,Pint of $(PHP_PACKAGE),cd $(PHP_PACKAGE) && ../../vendor/bin/pint --test) \
+	$(call check,Pint of $(PHP_PACKAGE),cd $(PHP_PACKAGE) && $(PHP_VENDOR)/bin/pint --test) \
 	$(call check,Pint of $(BOARD),cd $(BOARD) && vendor/bin/pint --test app src public) \
 	$(checks_result)
 
 analyse-php: template ## Run PHPStan at level max on the source and the tests of the server package
-	cd $(PHP_PACKAGE) && ../../vendor/bin/phpstan analyse --no-progress --memory-limit=$(PHPSTAN_MEMORY)
+	cd $(PHP_PACKAGE) && $(PHP_VENDOR)/bin/phpstan analyse --no-progress --memory-limit=$(PHPSTAN_MEMORY)
 
 templates-check: toolchain-check ## Check hx- attributes (HC-6) and region placements (HY-3, HY-30) of the board templates
 	node scripts/check-templates.mjs --app $(BOARD)
@@ -306,6 +308,12 @@ $(if $(filter $(RELEASE_STEPS),$(MAKECMDGOALS)),$(if $(TAG),,$(error make $(filt
 
 release-verify: ## Fail unless the commit of the tag TAG is on origin/main and passed the checks push-gate and ci-passed
 release-versions: ## Fail unless every manifest declares the version of the tag TAG and CHANGELOG.md has its section
+# The locks of the consumer fixtures of tests/release-install (scripts/release-fixtures.mjs, HY-95): npm and Composer
+# resolve the fixtures against the assets of the tree and the public registry, so the target runs through $(ONLINE);
+# the release commit runs it when a release version changes.
+release-fixtures: packages template ## Write the locks of the consumer fixtures of tests/release-install from the assets of the tree
+	$(ONLINE) node scripts/release-fixtures.mjs --template-dir $(TEMPLATE_DIR)
+
 release-assets: packages ## Build the packages and the archive of each into var/release/assets for the tag TAG
 release-publish: ## Create the GitHub Release of the tag TAG with its changelog section and the archives
 $(RELEASE_STEPS):
