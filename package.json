@@ -27,10 +27,11 @@
   "dependencies": {
     "@polyspec/hyper": "file:packages/hyper-js",
     "@polyspec/hyper-server": "file:packages/hyper-node",
-    "@polyspec/template": "file:var/products/template/packages/template-ts"
+    "@polyspec/template": "https://github.com/polyspec/template/releases/download/v0.0.4/polyspec-template-0.0.4.tgz",
+    "@polyspec/template-compiler": "https://github.com/polyspec/template/releases/download/v0.0.4/polyspec-template-compiler-0.0.4.tgz"
   },
   "overrides": {
     "@polyspec/hyper": "file:packages/hyper-js",
-    "@polyspec/template": "file:var/products/template/packages/template-ts"
+    "@polyspec/template": "https://github.com/polyspec/template/releases/download/v0.0.4/polyspec-template-0.0.4.tgz"
   }
 }

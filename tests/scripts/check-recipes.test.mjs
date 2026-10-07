@@ -49,7 +49,7 @@ test('make lint runs both formatting checks when the first fails and names both'
 });
 
 test('make test-js runs the type check when the tests fail and names both', (t) => {
-  requireBuilt('template', 'var/products/template/installed.stamp');
+  requireBuilt('install', 'node_modules/@polyspec/template/package.json');
   const directory = temporary(t);
   writeFileSync(path.join(directory, 'fails.test.mjs'), "import { test, expect } from 'vitest';\ntest('fails', () => expect(1).toBe(2));\n");
   writeFileSync(path.join(directory, 'wrong.ts'), "export const value: number = 'text';\n");
@@ -62,7 +62,7 @@ test('make test-js runs the type check when the tests fail and names both', (t) 
 });
 
 test('every other recipe with several checks runs them in one accumulating command', () => {
-  for (const [target, checks] of [['template-check', 3], ['test-node', 2], ['test-php', 2], ['parity', 2], ['bench-server', 2]]) {
+  for (const [target, checks] of [['test-node', 2], ['test-php', 2], ['parity', 2], ['bench-server', 2]]) {
     const lines = dryRun(target, { variables: ['TEMPLATE_DIR=var/products/template'] });
     const start = lines.findLastIndex((line) => line === 'failed=; \\');
     assert.ok(start >= 0, `${target}:\n${lines.join('\n')}`);

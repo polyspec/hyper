@@ -9,13 +9,12 @@
 # actions are pinned by commit and no step has a time limit (HY-90, tests/scripts/ci-workflow.test.mjs).
 #
 # The toolchain comes from the pinned files: Node.js from .node-version, PHP by the minor of config/toolchain.json, whose
-# running patch the record names, and npm and Composer from `make install` into var/tools of the checkout. The template
-# repository is checked out next to this repository at its tag v0.0.2 (TEMPLATE_TAG of the Makefile, HY-80), as
-# ../template of the Makefile, and its TypeScript package is built there with its own make targets; `make install` then
-# copies the commit of that tag and downloads everything that the checks read. `make ext` builds the native extension
-# with phpize and php-config of the PHP of setup-php, and only the group board installs Chromium. The template step runs
-# the make install of the template repository, because the template repository has no target that installs its npm
-# dependencies alone; build-ts needs them.
+# running patch the record names, and npm and Composer from `make install` into var/tools of the checkout. `make
+# install` installs the template packages from the assets of the template release with npm and Composer (HY-70). The
+# template repository is checked out next to this repository at its tag v0.0.4 (TEMPLATE_TAG of the Makefile, HY-80),
+# as ../template of the Makefile, and `make install` copies the native extension sources of the commit of that tag
+# (HY-78). `make ext` builds the native extension with phpize and php-config of the PHP of setup-php, and only the group
+# board installs Chromium.
 name: ci
 
 on:
@@ -77,12 +76,8 @@ jobs:
         if: ${{ !cancelled() && matrix.install }}
         with:
           repository: polyspec/template
-          ref: v0.0.2
+          ref: v0.0.4
           path: template
-      - id: template-build
-        if: ${{ !cancelled() && matrix.install }}
-        working-directory: template
-        run: make install build-ts
       - id: install
         if: ${{ !cancelled() && matrix.install }}
         run: make install

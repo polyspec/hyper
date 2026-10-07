@@ -142,5 +142,5 @@ test('the declaration of this repository owns every path and selects the owners 
   // A script that no test named before HY-88 selects its owners.
   const script = spawnSync(process.execPath, [SCRIPT, '--dry-run', '--paths', 'scripts/copy-package.mjs'], { cwd: ROOT, encoding: 'utf8' });
   assert.equal(script.status, 0, script.stdout + script.stderr);
-  assert.match(script.stdout, /^\[owner-check\] 1 changed paths select template-check; test-scripts TESTS=tests\/scripts\/build-assets\.test\.mjs tests\/scripts\/publish\.test\.mjs tests\/scripts\/template-copy\.test\.mjs$/m);
+  assert.match(script.stdout, /^\[owner-check\] 1 changed paths select test-php; test-scripts TESTS=tests\/scripts\/build-assets\.test\.mjs tests\/scripts\/publish\.test\.mjs tests\/scripts\/template-copy\.test\.mjs$/m);
 });

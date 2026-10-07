@@ -1,65 +1,57 @@
-// Tests that the asset build and the template build read the template package of the template repository that
-// the caller names, not the template package that this repository installed (HY-70). The fixture repository holds
-// a copy of the TypeScript package of the declared template copy, which `make test-scripts` names in TEMPLATE_DIR.
+// Tests that the asset build, the template build and the server build read the template packages that this repository
+// installs, @polyspec/template and @polyspec/template-compiler, by their package names (HY-70): npm installs them from
+// the tarballs of the template release that the root package.json names by their URLs and package-lock.json pins by
+// their integrity, and no build takes a template directory.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { cpSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { test } from 'node:test';
 import { bundlePackage } from '../../scripts/template-files.mjs';
-import { templateDir as declared } from './declared-template.mjs';
 import { requireBuilt } from './requires.mjs';
 
 const repository = resolve('.');
 const installed = resolve('node_modules', '@polyspec', 'template');
-const source = join(declared, 'packages', 'template-ts');
-requireBuilt('template', join(source, 'dist', 'index.mjs'));
+const PACKAGES = ['@polyspec/template', '@polyspec/template-compiler'];
+const read = (file) => JSON.parse(readFileSync(join(repository, file), 'utf8'));
 
-// A template repository with a copy of the TypeScript package of the declared template copy.
-function templateDir(withBuild) {
-  const directory = mkdtempSync(join(tmpdir(), 'hyper-template-dir-'));
-  const target = join(directory, 'packages', 'template-ts');
-  mkdirSync(target, { recursive: true });
-  cpSync(join(source, 'package.json'), join(target, 'package.json'));
-  if (withBuild) cpSync(join(source, 'dist'), join(target, 'dist'), { recursive: true });
-  return directory;
-}
-
-test('bundles the browser package with the template package of the named template repository', async () => {
-  const directory = templateDir(true);
-  try {
-    const inputs = Object.keys((await bundlePackage(directory)).metafile.inputs).map((input) => resolve(input));
-    const template = join(directory, 'packages', 'template-ts');
-    assert.ok(inputs.some((input) => input.startsWith(`${template}/dist/`)), inputs.join('\n'));
-    assert.deepEqual(inputs.filter((input) => input.startsWith(`${installed}/`) || input.startsWith(`${source}/`)), []);
-  } finally {
-    rmSync(directory, { recursive: true, force: true });
-  }
+test('bundles the browser package with the installed template package', async () => {
+  requireBuilt('install', 'node_modules/@polyspec/template/package.json');
+  const inputs = Object.keys((await bundlePackage()).metafile.inputs).map((input) => resolve(input));
+  assert.ok(inputs.some((input) => input.startsWith(`${installed}/dist/`)), inputs.join('\n'));
+  assert.deepEqual(inputs.filter((input) => input.includes('/var/products/')), []);
 });
 
-test('the template build fails when the named template repository has no build of its template package', () => {
-  const directory = templateDir(false);
-  const output = mkdtempSync(join(tmpdir(), 'hyper-template-output-'));
-  try {
-    const result = spawnSync(process.execPath, [join(repository, 'scripts', 'build-templates.mjs'),
-      '--templates', join(repository, 'examples', 'board', 'templates'), '--output', output, '--template-dir', directory], { encoding: 'utf8' });
-    assert.notEqual(result.status, 0);
-    assert.ok(result.stderr.includes(join(directory, 'packages', 'template-ts', 'dist')), result.stderr);
-  } finally {
-    rmSync(directory, { recursive: true, force: true });
-    rmSync(output, { recursive: true, force: true });
+test('npm installs the template packages from the tarballs of the template release that the lock pins', () => {
+  requireBuilt('install', ...PACKAGES.map((name) => `node_modules/${name}/package.json`));
+  const root = read('package.json');
+  const lock = read('package-lock.json');
+  const version = read('packages/hyper-js/package.json').dependencies['@polyspec/template'];
+  assert.match(version, /^\d+\.\d+\.\d+$/, 'packages/hyper-js requires an exact template version');
+  assert.equal(read('packages/hyper-node/package.json').dependencies['@polyspec/template'], version);
+  for (const name of PACKAGES) {
+    const tarball = `https://github.com/polyspec/template/releases/download/v${version}/${name.slice(1).replace('/', '-')}-${version}.tgz`;
+    assert.equal(root.dependencies[name], tarball, name);
+    const entry = lock.packages[`node_modules/${name}`];
+    assert.equal(entry.resolved, tarball, name);
+    assert.equal(entry.version, version, name);
+    assert.match(entry.integrity, /^sha512-/, `${name} is pinned by its integrity`);
+    assert.equal(read(`node_modules/${name}/package.json`).version, version, name);
   }
+  // The packages of the workspace require the exact version, which the root resolves to the same tarball.
+  assert.equal(root.overrides['@polyspec/template'], root.dependencies['@polyspec/template']);
+  assert.match(readFileSync(join(repository, '.npmrc'), 'utf8'), /^allow-remote=root$/m);
 });
 
-test('the asset build and the template build require --template-dir', () => {
+test('the asset build, the template build and the server build take no template directory', () => {
   const runs = {
     'build-assets.mjs': ['--app', 'examples/board', '--api', '/api', '--output', '/nonexistent'],
     'build-templates.mjs': ['--templates', 'examples/board/templates', '--output', '/nonexistent'],
+    'build-server.mjs': ['--manifest', 'examples/board/app/app.json', '--templates', 'examples/board/templates', '--output', '/nonexistent', '--php-namespace', 'X'],
   };
   for (const [script, options] of Object.entries(runs)) {
-    const result = spawnSync(process.execPath, [join(repository, 'scripts', script), ...options], { encoding: 'utf8' });
+    const result = spawnSync(process.execPath, [join(repository, 'scripts', script), ...options, '--template-dir', 'var/products/template'], { encoding: 'utf8' });
     assert.notEqual(result.status, 0, script);
-    assert.match(result.stderr, /--template-dir/, script);
+    assert.match(result.stderr, /Unknown option '--template-dir'/, script);
   }
 });

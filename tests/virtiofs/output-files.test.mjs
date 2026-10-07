@@ -12,7 +12,6 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { templateDir as template } from '../scripts/declared-template.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
@@ -47,7 +46,6 @@ test('the server build writes the templates on a virtiofs bind mount', { timeout
     '--manifest', join(root, 'examples', 'board', 'app', 'app.json'),
     '--templates', templates,
     '--output', '/output/server',
-    '--template-dir', template,
     '--php-namespace', 'Polyspec\\Hyper\\Examples\\Board\\Program',
   ]);
   assert.equal(result.status, 0, `${result.stdout}${result.stderr}`);
