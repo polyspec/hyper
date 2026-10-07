@@ -4,6 +4,10 @@
 
 ## Unreleased
 
+### Fixed
+
+- The notes of a GitHub Release fit the body limit of GitHub, 125000 characters (H13.5-6, HY-95). `make release-publish` passes the section `## X.Y.Z` of `CHANGELOG.md` when it has at most 125000 characters, and otherwise the one line `The changes of X.Y.Z are listed in [CHANGELOG.md](https://github.com/polyspec/hyper/blob/<tag>/CHANGELOG.md#<anchor>).`; the anchor is the id of an `<a id="...">` line above the heading, or else the version without its dots, and each segment of the tag is URL-encoded. GitHub refuses a release whose body is longer than 125000 characters.
+
 ## 0.0.1
 
 ### Added

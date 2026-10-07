@@ -23,7 +23,9 @@
 // `git archive` of the tagged commit (.zip); the release assets are npm tarballs and Composer zips only, and a Cargo
 // package is not released as an archive: it is consumed by git tag, because `cargo package` rewrites git dependencies
 // into crates.io requirements that do not resolve. A Go tag builds and attaches nothing. `publish` runs `gh release create TAG --verify-tag --title TAG --notes-file
-// <the section X.Y.Z>` with the archives of `assets`. Each failure names the tag, the file or check and both values, and
+// <notes>` with the archives of `assets`: the notes are the section X.Y.Z when it has at most NOTES_LIMIT characters, and
+// otherwise the one line `The changes of X.Y.Z are listed in [CHANGELOG.md](<link>).`, whose link is CHANGELOG.md at the
+// tag with the anchor of the section: the id of an `<a id="...">` line above `## X.Y.Z`, or else X.Y.Z without its dots. Each failure names the tag, the file or check and both values, and
 // exits with status 1.
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -37,6 +39,10 @@ export const MAIN = 'origin/main';
 export const CHECKS = ['push-gate', 'ci-passed'];
 export const CHANGELOG = 'CHANGELOG.md';
 export const ASSETS = 'var/release/assets';
+// The repository whose files the notes of a release link.
+export const REPOSITORY = 'polyspec/hyper';
+// The longest body of a GitHub Release, in characters: GitHub refuses a longer one.
+export const NOTES_LIMIT = 125000;
 // The packages that a tag vX.Y.Z releases, one archive each: npm tarballs and Composer zips only.
 export const PACKAGES = [
   { kind: 'npm', directory: 'packages/hyper-js', name: '@polyspec/hyper' },
@@ -125,6 +131,26 @@ export function changelogSection(root, version) {
   return `${body.join('\n')}\n`;
 }
 
+/** The anchor of the section `## version`: the id of an `<a id="...">` line above it, or the version without its dots. */
+export function changelogAnchor(root, version) {
+  const lines = readFileSync(path.join(root, CHANGELOG), 'utf8').split('\n');
+  let index = lines.indexOf(`## ${version}`) - 1;
+  while (index >= 0 && !lines[index].trim()) index -= 1;
+  const explicit = index >= 0 ? /^<a id="([^"]+)"><\/a>$/.exec(lines[index].trim()) : null;
+  return explicit ? explicit[1] : version.replaceAll('.', '');
+}
+
+/** The URL of CHANGELOG.md at the tag with the anchor; each segment of the tag is encoded, so its slashes stay. */
+export const changelogLink = (tag, anchor) => `https://github.com/${REPOSITORY}/blob/${tag.split('/').map(encodeURIComponent).join('/')}/${CHANGELOG}#${anchor}`;
+
+/** The notes of the release of the tag: the section when it fits NOTES_LIMIT, otherwise one line that links it. */
+export function releaseNotes(root, tag) {
+  const [, version] = parseTag(tag);
+  const section = changelogSection(root, version);
+  if ([...section].length <= NOTES_LIMIT) return section;
+  return `The changes of ${version} are listed in [${CHANGELOG}](${changelogLink(tag, changelogAnchor(root, version))}).\n`;
+}
+
 /** Every manifest of the tag declares its version, and CHANGELOG.md has the section of the version. */
 export function versions(root, tag) {
   const [directory, version] = parseTag(tag);
@@ -175,10 +201,9 @@ export function assets(root, tag) {
   return names;
 }
 
-/** Create the GitHub Release of the tag with the section of CHANGELOG.md as notes and the archives of assets. */
+/** Create the GitHub Release of the tag with the notes of releaseNotes and the archives of assets. */
 export function publish(root, tag) {
-  const [, version] = parseTag(tag);
-  const notes = changelogSection(root, version);
+  const notes = releaseNotes(root, tag);
   const names = assetNames(tag);
   const target = path.join(root, ASSETS);
   const missing = names.filter((name) => !existsSync(path.join(target, name)));
