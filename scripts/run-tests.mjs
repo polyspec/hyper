@@ -63,7 +63,7 @@ export function toolCommand({ tool, timeoutSeconds, cwd, extension, args }) {
         args: [path.join(ROOT, 'node_modules/vitest/vitest.mjs'), 'run', `--testTimeout=${milliseconds}`, `--hookTimeout=${milliseconds}`, `--reporter=${path.join(ROOT, 'scripts/test-progress/vitest-reporter.mjs')}`, ...args],
       };
     case 'phpunit':
-      return { command: 'php', args: [...(extension ? ['-d', `extension=${extension}`] : []), path.join(cwd, 'vendor/bin/phpunit'), '--teamcity', ...args] };
+      return { command: 'php', args: [...(extension ? ['-d', `extension=${extension}`] : []), path.join(ROOT, 'vendor/bin/phpunit'), '--teamcity', ...args] };
   }
   throw new Error(USAGE);
 }

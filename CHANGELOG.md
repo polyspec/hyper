@@ -4,6 +4,10 @@
 
 ## Unreleased
 
+### Fixed
+
+- The release assets hold the manifests of the tree unchanged (H13.5-11, HY-95, HY-79). `make release-assets` rewrote the packed manifests, so a published package differed from its manifest in the tree. `packages/hyper-js/package.json` and `packages/hyper-node/package.json` require `@polyspec/template` 0.0.2 and `@polyspec/hyper` 0.0.3, and the private root `package.json` supplies the copies of the checkout through `file:` dependencies and `overrides`. `packages/hyper-php/composer.json` declares `version` 0.0.3, requires `polyspec/template` 0.0.2 and has no `repositories`; the private root `composer.json` and `composer.lock` install it for development into the root `vendor` from `var/products/hyper-php` and the template copy, and `examples/board/composer.json` requires `polyspec/template` 0.0.2. `make release-assets` packs the manifests unchanged and fails for a packed manifest that differs from its source manifest, and `tests/scripts/release.test.mjs` checks the manifests of the tree. The npm install of `tests/scripts/release-install.test.mjs` takes htmx.org from the public registry into an empty cache of the test and points the scope `@polyspec` at an unreachable registry; with an empty npm cache the earlier `npm install --offline` failed with `ENOTCACHED` for htmx.org.
+
 ## 0.0.3
 
 ### Fixed

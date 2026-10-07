@@ -1,14 +1,12 @@
 {
     "name": "polyspec/hyper",
+    "version": "0.0.3",
     "description": "Server side of the region protocol: routes, actions and region JSON for template language layouts",
     "type": "library",
     "license": "MIT",
-    "repositories": [
-        { "type": "path", "url": "../../var/products/template/packages/template-php", "options": { "symlink": false, "reference": "config", "versions": { "polyspec/template": "dev-main" } } }
-    ],
     "require": {
         "php": "^8.2",
-        "polyspec/template": "@dev"
+        "polyspec/template": "0.0.2"
     },
     "require-dev": {
         "laravel/pint": "^1.0",

@@ -3,7 +3,7 @@
   "always": [],
   "owners": [
     { "paths": ["docs/**", "*.md", "packages/*/README*.md"], "targets": ["docs-check"] },
-    { "paths": ["packages/hyper-php/{src,tests}/**", "packages/hyper-php/{composer.json,composer.lock,phpstan.neon,phpunit.xml,pint.json}"], "targets": ["test-php", "analyse-php", "lint"] },
+    { "paths": ["packages/hyper-php/{src,tests}/**", "packages/hyper-php/{composer.json,phpstan.neon,phpunit.xml,pint.json}", "composer.json", "composer.lock"], "targets": ["test-php", "analyse-php", "lint"] },
     { "paths": ["packages/hyper-js/**"], "targets": ["test-js", "package-check", "bundle-size"] },
     { "paths": ["packages/hyper-node/**"], "targets": ["test-node", "package-check"] },
     { "paths": ["conformance/**"], "targets": ["test-js", "test-node", "test-php"] },
@@ -41,7 +41,7 @@
     { "paths": ["scripts/run-tests.mjs", "scripts/test-progress/**"], "tests": ["tests/scripts/run-tests.test.mjs"] },
     { "paths": ["scripts/line-end.mjs"], "tests": ["tests/scripts/check-recipes.test.mjs"] },
     { "paths": ["scripts/ci-run.mjs"], "tests": ["tests/scripts/ci-run.test.mjs"] },
-    { "paths": ["scripts/release.mjs", "CHANGELOG.md", "package.json", "packages/hyper-js/package.json", "packages/hyper-node/package.json", "packages/hyper-php/composer.json", "tests/package-install/package.json", "examples/board/composer.json"], "tests": ["tests/scripts/release.test.mjs", "tests/scripts/release-install.test.mjs"] },
+    { "paths": ["scripts/release.mjs", "CHANGELOG.md", "package.json", "packages/hyper-js/package.json", "packages/hyper-node/package.json", "packages/hyper-php/composer.json", "tests/package-install/package.json", "examples/board/composer.json", "composer.json"], "tests": ["tests/scripts/release.test.mjs", "tests/scripts/release-install.test.mjs"] },
     { "paths": ["scripts/serve-demo.mjs"], "tests": ["tests/scripts/serve-demo.test.mjs"] },
     { "paths": ["scripts/toolchain.mjs", "config/toolchain.json", ".node-version"], "tests": ["tests/scripts/toolchain.test.mjs", "tests/scripts/package-build.test.mjs"] },
     { "paths": ["scripts/tsc.mjs"], "targets": ["test-js"], "tests": ["tests/scripts/package-build.test.mjs"] },

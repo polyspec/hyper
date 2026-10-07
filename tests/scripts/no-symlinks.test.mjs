@@ -32,7 +32,7 @@ function installDirectories(directory) {
 }
 
 test('no directory node_modules or vendor holds a symbolic link', () => {
-  requireBuilt('install', 'node_modules', 'packages/hyper-php/vendor', 'examples/board/vendor');
+  requireBuilt('install', 'node_modules', 'vendor', 'examples/board/vendor');
   const directories = installDirectories(repository);
   assert.deepEqual(directories.flatMap(links), []);
 });

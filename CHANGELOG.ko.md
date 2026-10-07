@@ -4,6 +4,10 @@
 
 ## Unreleased
 
+### 수정
+
+- 릴리스 에셋은 tree의 manifest를 바꾸지 않고 담는다(H13.5-11, HY-95, HY-79). `make release-assets`가 packed manifest를 다시 써서 공개된 패키지가 tree의 manifest와 달랐다. `packages/hyper-js/package.json`과 `packages/hyper-node/package.json`은 `@polyspec/template` 0.0.2와 `@polyspec/hyper` 0.0.3을 요구하고, private root `package.json`이 `file:` 의존성과 `overrides`로 checkout의 사본을 공급한다. `packages/hyper-php/composer.json`은 `version` 0.0.3을 선언하고 `polyspec/template` 0.0.2를 요구하며 `repositories`가 없다. private root `composer.json`과 `composer.lock`은 개발용으로 그것을 `var/products/hyper-php`와 template 사본에서 root `vendor`에 설치하고, `examples/board/composer.json`은 `polyspec/template` 0.0.2를 요구한다. `make release-assets`는 manifest를 바꾸지 않고 pack하며 source manifest와 다른 packed manifest에 실패하고, `tests/scripts/release.test.mjs`는 tree의 manifest를 검사한다. `tests/scripts/release-install.test.mjs`의 npm 설치는 htmx.org를 공개 registry에서 test의 빈 cache로 받고 scope `@polyspec`을 닿지 않는 registry로 돌린다. 빈 npm cache에서 이전의 `npm install --offline`은 htmx.org에 대해 `ENOTCACHED`로 실패했다.
+
 ## 0.0.3
 
 ### 수정

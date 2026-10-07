@@ -82,7 +82,7 @@ install: tools ## Install the pinned tools, write the declared copy of the templ
 	node scripts/copy-template.mjs --repository $(TEMPLATE_REPOSITORY) --tag $(TEMPLATE_TAG) --output $(TEMPLATE_DIR)
 	node scripts/copy-package.mjs --path $(PHP_PACKAGE) --output $(HYPER_PHP_COPY)
 	$(ONLINE) node scripts/holder-lock.mjs run $(INSTALL_LOCK) -- $(NPM) ci --no-audit --no-fund
-	$(ONLINE) node scripts/holder-lock.mjs run $(INSTALL_LOCK) -- $(COMPOSER) install --working-dir=$(PHP_PACKAGE)
+	$(ONLINE) node scripts/holder-lock.mjs run $(INSTALL_LOCK) -- $(COMPOSER) install
 	$(ONLINE) node scripts/holder-lock.mjs run $(INSTALL_LOCK) -- $(COMPOSER) install --working-dir=$(BOARD)
 	touch $(TEMPLATE_STAMP)
 
@@ -103,14 +103,14 @@ template-tag: ## Fail when the template repository TEMPLATE_REPOSITORY has no ta
 
 $(TEMPLATE_STAMP): $(TEMPLATE_COPY)
 	node scripts/publish.mjs npm-copy $(TEMPLATE_DIR)/packages/template-ts node_modules/@polyspec/template
-	node scripts/publish.mjs composer-copy $(TEMPLATE_DIR)/packages/template-php $(PHP_PACKAGE)/vendor/polyspec/template
+	node scripts/publish.mjs composer-copy $(TEMPLATE_DIR)/packages/template-php vendor/polyspec/template
 	node scripts/publish.mjs composer-copy $(TEMPLATE_DIR)/packages/template-php $(BOARD)/vendor/polyspec/template
 	touch $@
 
 template-check: template ## Fail when an npm or Composer copy of a template package differs from the declared copy
 	@failed=; \
 	$(call check,the npm copy,diff -r $(TEMPLATE_DIR)/packages/template-ts/dist node_modules/@polyspec/template/dist) \
-	$(call check,the Composer copy of $(PHP_PACKAGE),diff -r $(TEMPLATE_DIR)/packages/template-php/src $(PHP_PACKAGE)/vendor/polyspec/template/src) \
+	$(call check,the Composer copy of the repository root,diff -r $(TEMPLATE_DIR)/packages/template-php/src vendor/polyspec/template/src) \
 	$(call check,the Composer copy of $(BOARD),diff -r $(TEMPLATE_DIR)/packages/template-php/src $(BOARD)/vendor/polyspec/template/src) \
 	$(checks_result)
 
@@ -171,12 +171,12 @@ test-php: template server-fixtures ext ## Run the server package tests with the 
 
 lint: toolchain-check ## Check PHP formatting
 	@failed=; \
-	$(call check,Pint of $(PHP_PACKAGE),cd $(PHP_PACKAGE) && vendor/bin/pint --test) \
+	$(call check,Pint of $(PHP_PACKAGE),cd $(PHP_PACKAGE) && ../../vendor/bin/pint --test) \
 	$(call check,Pint of $(BOARD),cd $(BOARD) && vendor/bin/pint --test app src public) \
 	$(checks_result)
 
 analyse-php: template ## Run PHPStan at level max on the source and the tests of the server package
-	cd $(PHP_PACKAGE) && vendor/bin/phpstan analyse --no-progress --memory-limit=$(PHPSTAN_MEMORY)
+	cd $(PHP_PACKAGE) && ../../vendor/bin/phpstan analyse --no-progress --memory-limit=$(PHPSTAN_MEMORY)
 
 templates-check: toolchain-check ## Check hx- attributes (HC-6) and region placements (HY-3, HY-30) of the board templates
 	node scripts/check-templates.mjs --app $(BOARD)

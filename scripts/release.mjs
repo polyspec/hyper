@@ -20,11 +20,10 @@
 // does) and requires the section `## X.Y.Z` in CHANGELOG.md. `assets` builds one archive per package, named
 // `<package name>-<version>.<ext>` with `@scope/` written as `scope-` and `vendor/` as `vendor-`: `npm pack` of the built
 // package (.tgz; `make release-assets` builds the packages first) and a zip of the directory of a Composer package from
-// `git archive` of the tagged commit (.zip). The manifest of each archive is rewritten so that it needs nothing of this
-// repository: a polyspec package is named by the exact version of its release, a package of this repository by the
-// version of the tag and a template package by the version of TEMPLATE_TAG of the Makefile, and a composer.json has the
-// field version and no repositories; a consumer installs the archives together, npm tarballs as file: dependencies and
-// Composer zips from an artifact repository. `assets` fails for a packed manifest of manifestProblems; the release assets are npm tarballs and Composer zips only, and a Cargo
+// `git archive` of the tagged commit (.zip), each with the manifest of the tree unchanged. A published manifest names
+// every polyspec package by an exact version and a composer.json declares its version and no repositories, so a
+// consumer installs the archives together, npm tarballs as file: dependencies and Composer zips from an artifact
+// repository. `assets` fails for a packed manifest of manifestProblems and for one that differs from its source; the release assets are npm tarballs and Composer zips only, and a Cargo
 // package is not released as an archive: it is consumed by git tag, because `cargo package` rewrites git dependencies
 // into crates.io requirements that do not resolve. A Go tag builds and attaches nothing. `publish` runs `gh release create TAG --verify-tag --title TAG --notes-file
 // <notes>` with the archives of `assets`: the notes are the section X.Y.Z when it has at most NOTES_LIMIT characters, and
@@ -36,6 +35,7 @@ import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, 
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { isDeepStrictEqual } from 'node:util';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const USAGE = 'Usage: node scripts/release.mjs verify|versions|assets|publish <tag>';
@@ -61,12 +61,10 @@ export const GIT_TAG = 'not released as an archive; consumed by git tag';
 export const NOT_RELEASED = {
   'tests/package-install/package.json': 'the test package that installs the npm archives of the packages',
   'examples/board/composer.json': 'the example application, which installs the packages from the checkout',
+  'composer.json': 'the private development root of packages/hyper-php, which resolves the packages from the checkout',
 };
 // The Go modules: a tag <directory>/vX.Y.Z releases the module of that directory. This repository has none.
 export const GO_MODULES = {};
-// The polyspec packages of the template repository, which a packed manifest names at the version of TEMPLATE_TAG of the
-// Makefile.
-export const TEMPLATE_PACKAGES = ['@polyspec/template', 'polyspec/template'];
 // The dependency fields of a packed manifest that name polyspec packages.
 const NPM_FIELDS = ['dependencies', 'peerDependencies', 'optionalDependencies'];
 const COMPOSER_FIELDS = ['require', 'require-dev'];
@@ -194,43 +192,6 @@ export function assetNames(tag) {
   return PACKAGES.map(({ kind, name }) => assetName(name, version, EXTENSIONS[kind]));
 }
 
-/** The tag of the template repository that this repository depends on: TEMPLATE_TAG of the Makefile (HY-80). */
-export function templateTag(root) {
-  const found = /^TEMPLATE_TAG := (v\d+\.\d+\.\d+)$/m.exec(readFileSync(path.join(root, 'Makefile'), 'utf8'));
-  if (!found) throw new Stop('Makefile: no line TEMPLATE_TAG := vX.Y.Z');
-  return found[1];
-}
-
-/** The exact version of the release of a polyspec package: the version of the tag for a package of this repository, and
- * the version of TEMPLATE_TAG for a template package. */
-function releasedDependency(name, kind, { version, template }) {
-  if (PACKAGES.some((entry) => entry.kind === kind && entry.name === name)) return version;
-  if (TEMPLATE_PACKAGES.includes(name)) return template.slice(1);
-  throw new Stop(`${name}: a polyspec package that is neither a package of this repository nor a template package`);
-}
-
-/** The packed package.json: every @polyspec/* dependency is the exact version of its release. */
-export function npmManifest(manifest, release) {
-  const result = structuredClone(manifest);
-  for (const field of NPM_FIELDS) {
-    for (const name of Object.keys(result[field] ?? {})) {
-      if (name.startsWith('@polyspec/')) result[field][name] = releasedDependency(name, 'npm', release);
-    }
-  }
-  return result;
-}
-
-/** The packed composer.json: the version of the release, no repositories and every polyspec/* requirement exact. */
-export function composerManifest(manifest, release) {
-  const { name, repositories, version, ...rest } = structuredClone(manifest);
-  for (const field of COMPOSER_FIELDS) {
-    for (const required of Object.keys(rest[field] ?? {})) {
-      if (required.startsWith('polyspec/')) rest[field][required] = releasedDependency(required, 'composer', release);
-    }
-  }
-  return { name, version: release.version, ...rest };
-}
-
 /** Each dependency of a packed manifest that a consumer outside this repository cannot resolve, and a wrong version. */
 export function manifestProblems(asset, manifest, version) {
   const problems = [];
@@ -261,40 +222,33 @@ export function packedManifests(target, names) {
   }));
 }
 
-/** npm pack of a package, with the manifest of the packed copy rewritten by npmManifest and packed again. */
-function packNpm(root, folder, target, name, release) {
-  const work = mkdtempSync(path.join(tmpdir(), 'release-pack-'));
-  try {
-    run('npm', ['pack', '--pack-destination', work], { cwd: path.join(root, folder) });
-    run('tar', ['-xzf', path.join(work, name), '-C', work]);
-    const file = path.join(work, 'package', 'package.json');
-    writeFileSync(file, `${JSON.stringify(npmManifest(JSON.parse(readFileSync(file, 'utf8')), release), null, 2)}\n`);
-    run('tar', ['-czf', path.join(target, name), '-C', work, 'package'], { env: { ...process.env, COPYFILE_DISABLE: '1' } });
-  } finally {
-    rmSync(work, { recursive: true, force: true });
-  }
+/** The manifest of a package as the tree declares it: package.json of the working tree for npm pack, which packs the
+ * working tree, and composer.json of the commit for git archive. */
+function sourceManifest(root, commit, kind, folder) {
+  if (kind === 'npm') return JSON.parse(readFileSync(path.join(root, folder, 'package.json'), 'utf8'));
+  return JSON.parse(run('git', ['show', `${commit}:${folder}/composer.json`], { cwd: root }));
 }
 
-/** The zip of a Composer package from `git archive` of the commit, with composer.json rewritten by composerManifest. */
-function packComposer(root, commit, folder, target, name, release) {
-  const manifest = composerManifest(JSON.parse(run('git', ['show', `${commit}:${folder}/composer.json`], { cwd: root })), release);
-  run('git', ['archive', '--format=zip', `--output=${path.join(target, name)}`, `--add-virtual-file=composer.json:${JSON.stringify(manifest, null, 4)}\n`, `${commit}:${folder}`, '--', ':(exclude)composer.json'], { cwd: root });
-}
-
-/** Build the archive of every package at the commit for the tag into target; fail on a packed manifest of manifestProblems. */
+/** Build the archive of every package at the commit for the tag into target, with the manifests of the tree unchanged;
+ * fail for a packed manifest of manifestProblems or one that differs from its source manifest. */
 export function buildAssets(root, commit, tag, target) {
   const [, version] = parseTag(tag);
-  const release = { tag, version, template: templateTag(root) };
   rmSync(target, { recursive: true, force: true });
   mkdirSync(target, { recursive: true });
   const names = assetNames(tag);
   PACKAGES.forEach(({ kind, directory: folder }, index) => {
-    if (kind === 'npm') packNpm(root, folder, target, names[index], release);
-    else packComposer(root, commit, folder, target, names[index], release);
+    if (kind === 'npm') run('npm', ['pack', '--pack-destination', target], { cwd: path.join(root, folder) });
+    else run('git', ['archive', '--format=zip', `--output=${path.join(target, names[index])}`, `${commit}:${folder}`], { cwd: root });
   });
   const present = readdirSync(target).sort();
   if (JSON.stringify(present) !== JSON.stringify([...names].sort())) throw new Stop(`${target} holds [${present.join(', ')}], not the archives [${[...names].sort().join(', ')}]`);
-  const problems = Object.entries(packedManifests(target, names)).flatMap(([name, manifest]) => manifestProblems(name, manifest, version));
+  const packed = packedManifests(target, names);
+  const problems = PACKAGES.flatMap(({ kind, directory: folder }, index) => {
+    const name = names[index];
+    const found = manifestProblems(name, packed[name], version);
+    if (!isDeepStrictEqual(packed[name], sourceManifest(root, commit, kind, folder))) found.push(`${name}: the packed manifest differs from ${folder}/${kind === 'npm' ? 'package.json' : 'composer.json'}`);
+    return found;
+  });
   if (problems.length > 0) throw new Stop(problems.join('; '));
   return names;
 }

@@ -62,7 +62,7 @@
 
 - Every change reaches `main` through the merge queue with the required checks, so every commit of `main` passed the full suite. A release is a tag of a commit of `main` (HY-95), and only the maintainer creates, moves or pushes a tag; a tag is never raised through a pull request.
 - Every change adds its entry under `## Unreleased` at the top of `CHANGELOG.md` and `CHANGELOG.ko.md`.
-- The version-bump pull request `chore(release): Release X.Y.Z (#<task>)` sets the version X.Y.Z in `package.json`, `packages/hyper-js/package.json` and `packages/hyper-node/package.json` (`packages/hyper-php/composer.json` has no `version` field and takes the version from the tag) and renames `## Unreleased` of both changelogs to `## X.Y.Z`, with a new empty `## Unreleased` above it.
+- The version-bump pull request `chore(release): Release X.Y.Z (#<task>)` sets the version X.Y.Z in `package.json`, `packages/hyper-js/package.json`, `packages/hyper-node/package.json` and `packages/hyper-php/composer.json`, the requirement of `@polyspec/hyper` in `packages/hyper-node/package.json` and of `polyspec/hyper` in the private root `composer.json` and renames `## Unreleased` of both changelogs to `## X.Y.Z`, with a new empty `## Unreleased` above it.
 - The maintainer tags the merged commit of `main` `vX.Y.Z` and pushes the tag. The push runs `.github/workflows/release.yml`, which requires the tagged commit on `main` with the checks `push-gate` and `ci-passed` passed, the version in every manifest and the section `## X.Y.Z` in `CHANGELOG.md`, builds the package archives and creates the GitHub Release (`docs/operations/development.md`).
 
 ## Checklist

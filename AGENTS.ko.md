@@ -72,7 +72,7 @@
 
 - 모든 변경은 필수 check와 함께 merge queue로 `main`에 닿으므로, `main`의 모든 commit은 전체 suite를 통과했다. 릴리스는 `main`의 commit에 붙인 tag이고(HY-95), tag를 만들고 옮기고 push하는 것은 메인테이너뿐이다. tag는 pull request로 올리지 않는다.
 - 모든 변경은 항목을 `CHANGELOG.md`와 `CHANGELOG.ko.md` 맨 위의 `## Unreleased` 아래에 추가한다.
-- 버전 올림 pull request `chore(release): Release X.Y.Z (#<task>)`는 `package.json`, `packages/hyper-js/package.json`, `packages/hyper-node/package.json`의 버전을 X.Y.Z로 정하고(`packages/hyper-php/composer.json`에는 `version` field가 없으며 버전을 tag에서 받는다), 두 changelog의 `## Unreleased`를 `## X.Y.Z`로 바꾸고 그 위에 비어 있는 새 `## Unreleased`를 둔다.
+- 버전 올림 pull request `chore(release): Release X.Y.Z (#<task>)`는 `package.json`, `packages/hyper-js/package.json`, `packages/hyper-node/package.json`, `packages/hyper-php/composer.json`의 버전과, `packages/hyper-node/package.json`의 `@polyspec/hyper` requirement와 private root `composer.json`의 `polyspec/hyper` requirement를 X.Y.Z로 정하고, 두 changelog의 `## Unreleased`를 `## X.Y.Z`로 바꾸고 그 위에 비어 있는 새 `## Unreleased`를 둔다.
 - 메인테이너는 merge된 `main`의 commit에 `vX.Y.Z` tag를 붙이고 push한다. push는 `.github/workflows/release.yml`을 실행한다. 이 workflow는 tag된 commit이 `main`에 있고 check `push-gate`와 `ci-passed`를 통과했는지, 모든 manifest에 버전이 있고 `CHANGELOG.md`에 section `## X.Y.Z`가 있는지 확인하고, 패키지 archive를 만들어 GitHub Release를 생성한다(`docs/operations/development.md`).
 
 ## Checklist

@@ -5,7 +5,7 @@ declare(strict_types=1);
 // The requests of the warning test (HY-74), outside PHPUnit, which lowers error_reporting() while a test runs. It
 // answers four JSON requests with the fixture application and prints each status and body as one JSON line.
 
-require __DIR__ . '/../../vendor/autoload.php';
+require __DIR__ . '/../../../../vendor/autoload.php';
 
 use Polyspec\Hyper\App;
 use Polyspec\Hyper\ArraySession;

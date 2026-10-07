@@ -4,15 +4,60 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5570fc5ef13d8d1de4811be84e559345",
+    "content-hash": "03db2e2b6d7bb03413b4e6caa77e4d6b",
     "packages": [
         {
-            "name": "polyspec/template",
-            "version": "dev-main",
+            "name": "polyspec/hyper",
+            "version": "0.0.3",
             "dist": {
                 "type": "path",
-                "url": "../../var/products/template/packages/template-php",
-                "reference": "5ac57fc0b9b4874eaa1a817c146fdfb7f9e10ea9"
+                "url": "var/products/hyper-php",
+                "reference": "f8638331b06453e0329ae7efa1bea8ad156571f8"
+            },
+            "require": {
+                "php": "^8.2",
+                "polyspec/template": "0.0.2"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.0",
+                "phpstan/phpstan": "^2.2.16",
+                "phpunit/phpunit": "^11.5"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Polyspec\\Hyper\\": "src/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Polyspec\\Hyper\\Tests\\": "tests/"
+                }
+            },
+            "scripts": {
+                "test": [
+                    "phpunit"
+                ],
+                "lint": [
+                    "pint --test"
+                ]
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "Server side of the region protocol: routes, actions and region JSON for template language layouts",
+            "transport-options": {
+                "symlink": false,
+                "relative": true
+            }
+        },
+        {
+            "name": "polyspec/template",
+            "version": "0.0.2",
+            "dist": {
+                "type": "path",
+                "url": "var/products/template/packages/template-php",
+                "reference": "cb445884ff289a415142a75f62e0b85fa321ffd2"
             },
             "require": {
                 "ext-mbstring": "*",
@@ -1956,9 +2001,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "polyspec/template": 20
-    },
+    "stability-flags": {},
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
