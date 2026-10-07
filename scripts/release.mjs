@@ -60,6 +60,8 @@ export const GIT_TAG = 'not released as an archive; consumed by git tag';
 // The tracked manifests that no tag releases, with the reason.
 export const NOT_RELEASED = {
   'tests/package-install/package.json': 'the test package that installs the npm archives of the packages',
+  'tests/release-install/npm/package.json': 'the npm consumer fixture that installs the release tarballs',
+  'tests/release-install/composer/composer.json': 'the Composer consumer fixture that installs the release zips',
   'examples/board/composer.json': 'the example application, which installs the packages from the checkout',
   'composer.json': 'the private development root of packages/hyper-php, which resolves the packages from the checkout',
 };

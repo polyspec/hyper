@@ -36,7 +36,7 @@ test('make lint runs both formatting checks when the first fails and names both'
     chmodSync(path.join(project, 'vendor', 'bin', 'pint'), 0o755);
     return project;
   });
-  const run = make('lint', [`PHP_PACKAGE=${projects[0]}`, `BOARD=${projects[1]}`]);
+  const run = make('lint', [`PHP_PACKAGE=${projects[0]}`, `PHP_VENDOR=${path.join(projects[0], 'vendor')}`, `BOARD=${projects[1]}`]);
   assert.notEqual(run.status, 0);
   assert.ok(existsSync(path.join(directory, 'package.ran')) && existsSync(path.join(directory, 'board.ran')), run.stdout + run.stderr);
   assert.match(run.stdout, new RegExp(`failed checks: Pint of ${projects[0]}; Pint of ${projects[1]};`));
