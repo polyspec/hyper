@@ -5,7 +5,7 @@
 ## 도구
 
 - pin한 도구(HY-81): `.node-version`의 Node.js, `pdo_sqlite`가 있는 `config/toolchain.json` minor의 PHP, GNU Make 3.81 이상, 네이티브 확장을 위한 그 PHP의 phpize, php-config와 C compiler. `make install`은 `packageManager`의 npm과 `config/toolchain.json`의 Composer를 `var/tools`에 설치한다(`make tools`). `make toolchain-check`는 pin과 다른 모든 도구를 밝힌다.
-- `../template`(`TEMPLATE_REPOSITORY`)에 있고 branch `main`(`TEMPLATE_BRANCH`, HY-80)과 그 branch의 commit의 TypeScript 패키지 build를 가진 template 저장소. template 저장소의 `make build-ts`가 그 build를 만든다. 그렇지 않으면 복사는 기대값과 실제값인 입력 hash를 밝히며 실패한다. 이 저장소는 그곳에서 아무것도 build하지 않는다. `make template`이 그것을 `var/products/template`에 복사하고(HY-78), 브라우저 코드는 그 복사본의 TypeScript 패키지를 가져온다.
+- `../template`(`TEMPLATE_REPOSITORY`)에 있고 tag `v0.0.1`(`TEMPLATE_TAG`, HY-80)과 그 tag의 commit의 TypeScript 패키지 build를 가진 template 저장소. 그 tag의 checkout에서 template 저장소의 `make build-ts`가 그 build를 만든다. tag가 없으면 `make template-tag`가 실패하고, build가 다르면 복사는 기대값과 실제값인 입력 hash를 밝히며 실패한다. 이 저장소는 그곳에서 아무것도 build하지 않는다. `make template`이 그것을 `var/products/template`에 복사하고(HY-78), 브라우저 코드는 그 복사본의 TypeScript 패키지를 가져온다.
 - network: `make tools`, `make install`, `make install-browser`만 download한다. 다른 모든 recipe는 npm, Composer를 offline으로 실행하므로(`npm_config_offline`, `COMPOSER_DISABLE_NETWORK`) 없는 download는 바로 실패하고 그것을 만드는 설치 target을 밝힌다(HY-89).
 - Playwright용 Chromium: `make install-browser`. pin한 Playwright의 Chromium과, Linux에서는 그 system library를 설치한다.
 
@@ -17,7 +17,8 @@
 | `make toolchain-check` | Node.js, npm, Composer, PHP minor가 pin과 다르면 실패하고 각각의 기대값과 실제값을 밝힌다(HY-81) |
 | `make install` | template 저장소의 선언한 복사본과 `packages/hyper-php`의 사본을 쓰고, npm과 Composer 의존성을 bin link 없는 사본으로 설치한다(HY-79) |
 | `make hyper-php-copy` | `packages/hyper-php`의 추적 파일 사본 `var/products/hyper-php`를 쓰고 board의 Composer 사본에 publish한다(HY-79, HY-82). `make server`가 먼저 실행한다 |
-| `make template` | `scripts/copy-template.mjs`로 template branch `main`의 commit의 선언한 복사본 `var/products/template`을 쓰고(복사본이 그 commit을 담고 있으면 아무것도 쓰지 않는다), 그 복사본에서 TypeScript template 패키지의 npm 사본과 PHP template 패키지의 Composer 사본을 파일 단위로 publish한다(HY-78, HY-80, HY-82). publish는 `var/products/template/copy.json`이 `var/products/template/installed.stamp`보다 새로울 때만 한다. 테스트, 에셋, 서버 빌드가 먼저 실행한다 |
+| `make template` | `scripts/copy-template.mjs`로 template tag `TEMPLATE_TAG`의 commit의 선언한 복사본 `var/products/template`을 쓰고(복사본이 그 commit을 담고 있으면 아무것도 쓰지 않는다), 그 복사본에서 TypeScript template 패키지의 npm 사본과 PHP template 패키지의 Composer 사본을 파일 단위로 publish한다(HY-78, HY-80, HY-82). publish는 `var/products/template/copy.json`이 `var/products/template/installed.stamp`보다 새로울 때만 한다. 테스트, 에셋, 서버 빌드가 먼저 실행한다 |
+| `make template-tag` | template 저장소 `TEMPLATE_REPOSITORY`에 tag `TEMPLATE_TAG`가 없으면 기대한 tag와 저장소가 가진 tag를 밝히며 실패한다. `make template`이 복사 전에 실행한다(HY-80) |
 | `make template-check` | TypeScript template 패키지의 npm 사본이나 PHP template 패키지의 Composer 사본이 선언한 복사본과 다르면 실패한다 |
 | `make ext` | template 저장소의 선언한 복사본의 C 소스에서 그 build script, phpize, `PATH`의 php-config로 네이티브 템플릿 확장을 `build/ext/polyspec_template.so`에 빌드하며, 소스나 PHP build가 바뀐 때만 다시 빌드한다(HY-48, HY-78) |
 | `make packages` | `@polyspec/hyper`와 `@polyspec/hyper-server`의 JavaScript module과 type 선언을 각 package가 선언한 build(`scripts/tsc.mjs`를 실행하는 `npm run build`)로 각자의 `dist` 디렉터리에 build하고 build와 각 npm 사본을 파일 단위로 publish한다(HY-79, HY-82). Node 서버 test, board 에셋 build, `make package-check`, `make test-scripts`는 package를 exports로 가져오므로 이것을 먼저 실행한다(HY-61). build script는 `data-template.json`, `checkManifest`, `templateReferences`를 script 옆 `packages/hyper-js`의 소스에서 읽으므로 `dist`가 필요 없고 어느 작업 디렉터리에서도 실행된다 |
@@ -61,15 +62,15 @@
 
 전체 suite는 push 뒤에 GitHub에서 실행하며([CI](#ci) 참고), 커밋이나 push 전에 local 전체 실행은 필요하지 않다. Darwin에서만 full suite에 속하는 `make virtiofs-check`는 local `make check`에서만 실행되므로, HY-68의 virtiofs case는 누군가 Mac에서 `make check`를 실행할 때만 실행된다.
 
-`make check`는 `docs/plans/execution-checklist.md`의 작업 중 `[~]`인 것이 없을 때, 커밋된 tree와 template branch `main`의 commit마다 한 번 실행된다(HY-80). 어떤 단계보다 먼저 `scripts/full-run.mjs`를 시작하며, 이 guard는 판단을 이유와 함께 출력하고(`[full-run] run: ...` 또는 `[full-run] refuse: ...`) 다음의 경우 status 1로 거부한다.
+`make check`는 `docs/plans/execution-checklist.md`의 작업 중 `[~]`인 것이 없을 때, 커밋된 tree와 template tag `TEMPLATE_TAG`의 commit마다 한 번 실행된다(HY-80). 어떤 단계보다 먼저 `scripts/full-run.mjs`를 시작하며, 이 guard는 판단을 이유와 함께 출력하고(`[full-run] run: ...` 또는 `[full-run] refuse: ...`) 다음의 경우 status 1로 거부한다.
 
 - checklist의 작업 행이 `[~]`일 때. 거부 메시지는 활성 ID를 작업과 함께 나열한다.
 - 추적 파일에 커밋되지 않은 변경이 있을 때(`git status --porcelain --untracked-files=no`). 전체 실행은 커밋된 tree를 검증하기 때문이다.
-- `var/full-run.json`이 현재 tree(`git rev-parse HEAD^{tree}`)와 guard가 Makefile의 `TEMPLATE_REPOSITORY`와 `TEMPLATE_BRANCH`에서 읽는 template branch의 현재 commit의 전체 실행을 기록하고 있을 때. 거부 메시지는 그 실행을 tree, template commit, 시작 시각, 결과와 함께 밝힌다.
+- `var/full-run.json`이 현재 tree(`git rev-parse HEAD^{tree}`)와 guard가 Makefile의 `TEMPLATE_REPOSITORY`와 `TEMPLATE_TAG`에서 읽는 template tag의 commit의 전체 실행을 기록하고 있을 때. 거부 메시지는 그 실행을 tree, template commit, 시작 시각, 결과와 함께 밝힌다.
 - pre-push hook이 설치되지 않았을 때(`make hooks-check`). 거부 메시지는 `make hooks`를 밝힌다.
 - `incomplete` record의 process가 아직 실행 중일 때.
 
-guard는 `CHECK_TARGETS`의 각 target을 `make <target>`으로 끝까지 실행하며, target이 실패한 뒤에도 계속하고, `[full-run] start <target> (<n>/<total>)`와 `[full-run] <target> passed|failed in <seconds> s`를 출력한다. 어떤 target에도 시간 제한이 없다. 각 target의 앞뒤에 `var/full-run.json`을 쓴다. 이 record는 tree, template commit, process, 시작과 끝 시각, 결과(마지막 target이 끝날 때까지 `incomplete`, 그다음 `passed` 또는 `failed`), 실패한 target, 그리고 각 target의 상태(`pending`, `running`, `passed`, `failed`), 시각, 경과 millisecond, 실패한 target이면 마지막 출력 20줄(`lastLines`)을 담는다. guard는 그 줄들도 결과 전에 실패한 target과 함께 출력한다(HY-84). 따라서 멈춘 실행은 실행 중이던 target과 함께 `incomplete`로 기록되어 남는다. `var/`는 Git이 무시하므로 checkout과 worktree마다 자기 record를 가진다. tree를 바꾸는 commit이나 template branch의 새 commit은 `[~]` 작업이 없을 때 새 전체 실행을 허용한다.
+guard는 `CHECK_TARGETS`의 각 target을 `make <target>`으로 끝까지 실행하며, target이 실패한 뒤에도 계속하고, `[full-run] start <target> (<n>/<total>)`와 `[full-run] <target> passed|failed in <seconds> s`를 출력한다. 어떤 target에도 시간 제한이 없다. 각 target의 앞뒤에 `var/full-run.json`을 쓴다. 이 record는 tree, template commit, process, 시작과 끝 시각, 결과(마지막 target이 끝날 때까지 `incomplete`, 그다음 `passed` 또는 `failed`), 실패한 target, 그리고 각 target의 상태(`pending`, `running`, `passed`, `failed`), 시각, 경과 millisecond, 실패한 target이면 마지막 출력 20줄(`lastLines`)을 담는다. guard는 그 줄들도 결과 전에 실패한 target과 함께 출력한다(HY-84). 따라서 멈춘 실행은 실행 중이던 target과 함께 `incomplete`로 기록되어 남는다. `var/`는 Git이 무시하므로 checkout과 worktree마다 자기 record를 가진다. tree를 바꾸는 commit이나 다른 commit에 있는 template tag는 `[~]` 작업이 없을 때 새 전체 실행을 허용한다.
 
 `make rerun-failed`는 현재 tree와 template commit에서 통과하지 못한 target, 즉 실패한 target과 `incomplete` 실행이 끝내지 못한 target만 다시 실행한다. 진행 중인 작업, 커밋되지 않은 변경, 실행 중인 process에 대해서는 `make check`와 같이 거부되고, record가 없을 때, record가 다른 tree나 template commit의 것일 때, 그 tree의 전체 실행이 통과했을 때도 거부된다. 각 재실행을 record의 `reruns`에 쓰고, 모든 target이 통과하면 그 tree의 결과는 `passed`가 된다.
 
@@ -115,7 +116,7 @@ workflow `.github/workflows/ci.yml`은 모든 pull request와 merge queue의 모
 | `node` | `templates-check`, `test-scripts`, `test-js`, `test-node`, `package-check` | Node.js, PHP, template build, `make install` |
 | `board` | `parity`, `server-parity`, `bundle-size`, `e2e` | Node.js, PHP, template build, `make install`, `make install-browser` |
 
-각 step은 make target 하나를 실행하고(HY-90), 첫 step 뒤의 모든 step은 실패한 step 뒤에도 실행한다. `make ci-pins`는 `config/toolchain.json`의 PHP minor를 workflow에 주고, workflow는 그 minor의 PHP를 준비하고 template 저장소를 그 branch `main`으로 `../template`에 checkout하며, 그곳에서 `make install build-ts`가 TypeScript 패키지를 build한다. `make ci-check GROUP=<group>`은 group의 모든 target을 자기 `make -k <target>`으로 끝까지 실행하고 `[ci] start <target>`과 `[ci] <target> passed|failed in <seconds> s`를 출력한다. checkout은 `make check`로 전체 suite를 실행하므로 GitHub Actions 밖에서는 거부한다. `make ci-summary GROUP=<group>`은 job summary를 쓴다. job은 artifact `ci-<group>-<run id>-<attempt>`로 디렉터리 `var/ci/<group>/`을 upload한다.
+각 step은 make target 하나를 실행하고(HY-90), 첫 step 뒤의 모든 step은 실패한 step 뒤에도 실행한다. `make ci-pins`는 `config/toolchain.json`의 PHP minor를 workflow에 주고, workflow는 그 minor의 PHP를 준비하고 template 저장소를 Makefile의 tag `TEMPLATE_TAG`로 `../template`에 checkout하며, 그곳에서 `make install build-ts`가 TypeScript 패키지를 build한다. `make ci-check GROUP=<group>`은 group의 모든 target을 자기 `make -k <target>`으로 끝까지 실행하고 `[ci] start <target>`과 `[ci] <target> passed|failed in <seconds> s`를 출력한다. checkout은 `make check`로 전체 suite를 실행하므로 GitHub Actions 밖에서는 거부한다. `make ci-summary GROUP=<group>`은 job summary를 쓴다. job은 artifact `ci-<group>-<run id>-<attempt>`로 디렉터리 `var/ci/<group>/`을 upload한다.
 
 - `summary.md`: tree, Node.js, npm, patch를 포함한 PHP, Composer, make의 실행 중인 release, 각 setup step의 결과, target의 상태, 시간, 첫 실패 줄의 표, 그리고 실패한 각 target의 첫 실패 줄;
 - `record.json`: 같은 내용의 data이며 각 target 앞뒤에 쓰므로, 멈춘 runner는 실행 중이던 target을 남긴다;

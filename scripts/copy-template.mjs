@@ -2,8 +2,8 @@
 // (`--template-dir`), npm, Composer, PHPStan and the native extension build read the copy and never the checkout of
 // the template repository, whose builds another process may write again at any time.
 //
-// The copy is the commit at the head of the branch `--branch` (main) of the checkout of the template repository when
-// the copy runs (HY-80), whatever commit its working tree is at; a missing branch fails the copy. The copy has the
+// The copy is the commit of the tag `--tag` (TEMPLATE_TAG of the Makefile) of the checkout of the template repository
+// (HY-80), whatever commit its working tree or any of its branches is at; a missing tag fails the copy. The copy has the
 // layout of the template repository and holds:
 //   packages/template-ts       the files that `npm pack` packs from the built TypeScript package, without its scripts,
 //                              and its sources and build configuration, whose digest the compiler records
@@ -12,21 +12,21 @@
 //   tools/compiler             the compiler of the generated programs and contracts/functions.json that it reads
 //   package-lock.json          the lock of the TypeScript build, which the digest of the compiler reads
 //   scripts                    the build of the native extension, build-php-extension.mjs, and the scripts it imports
-//   copy.json                  the branch, its commit, the input hash of the TypeScript build and the hash of this script
-// Every path except the packed files of packages/template-ts is taken from the commit of the branch with `git archive`,
+//   copy.json                  the tag, its commit, the input hash of the TypeScript build and the hash of this script
+// Every path except the packed files of packages/template-ts is taken from the commit of the tag with `git archive`,
 // so its files and their modification times (the commit time) are the same on every machine. The TypeScript package is a build output of the template repository: its record
 // `packages/template-ts/dist.inputs.json` names the hash of the inputs of the build (scripts/build-package.mjs of the
-// template repository). The copy requires that the inputs are the files of the commit of the branch, that the hash of
+// template repository). The copy requires that the inputs are the files of the commit of the tag, that the hash of
 // their contents in that commit equals the recorded hash, and that the record and the packed build files did not change
 // while npm packed them; each mismatch fails the copy and names the expected and the actual value. The copy takes the
 // packed file from an empty pack directory and does not parse the output of npm, whose format differs between npm
-// versions. When copy.json of the output already names the same branch, commit, input hash and script hash, the copy
+// versions. When copy.json of the output already names the same tag, commit, input hash and script hash, the copy
 // writes nothing, so the modification time of copy.json changes only with a new copy and `make template` installs the
 // packages again only then. Otherwise the copy is written into a staging directory of this process and published file
 // by file, copy.json last (scripts/publish.mjs, HY-82), so a reader never finds a file missing. This script builds
 // nothing in the template repository.
 //
-// Usage: node scripts/copy-template.mjs --repository ../template --branch main --output var/products/template
+// Usage: node scripts/copy-template.mjs --repository ../template --tag v0.0.1 --output var/products/template
 import { execFileSync, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -46,19 +46,22 @@ const TRACKED = [
 const TYPESCRIPT = 'packages/template-ts';
 const RECORD = `${TYPESCRIPT}/dist.inputs.json`;
 
-const { values } = parseArgs({ options: { repository: { type: 'string' }, branch: { type: 'string' }, output: { type: 'string' } } });
-if (!values.repository || !values.branch || !values.output) throw new Error('--repository, --branch and --output are required');
+const { values } = parseArgs({ options: { repository: { type: 'string' }, tag: { type: 'string' }, output: { type: 'string' } } });
+if (!values.repository || !values.tag || !values.output) throw new Error('--repository, --tag and --output are required');
 const repository = resolve(values.repository);
 const output = resolve(values.output);
 const next = staging(output);
 
-const branch = values.branch;
-const resolved = spawnSync('git', ['-C', repository, 'rev-parse', '--verify', '--quiet', `refs/heads/${branch}^{commit}`], { encoding: 'utf8' });
-if (resolved.status !== 0) throw new Error(`${repository} has no branch ${branch}; check out the template repository with its branch ${branch}`);
+const tag = values.tag;
+const resolved = spawnSync('git', ['-C', repository, 'rev-parse', '--verify', '--quiet', `refs/tags/${tag}^{commit}`], { encoding: 'utf8' });
+if (resolved.status !== 0) {
+  const tags = spawnSync('git', ['-C', repository, 'tag', '--list'], { encoding: 'utf8' }).stdout.split('\n').filter(Boolean);
+  throw new Error(`${repository} has no tag ${tag}: expected the tag ${tag}, actual tags ${tags.length > 0 ? tags.join(', ') : 'none'}; fetch the tags of the template repository with \`git -C ${values.repository} fetch --tags\``);
+}
 const commit = resolved.stdout.trim();
-console.log(`template copy: the branch ${branch} of ${repository} at ${commit} -> ${output}`);
+console.log(`template copy: the tag ${tag} of ${repository} at ${commit} -> ${output}`);
 
-// The TypeScript package: its build must be the build of the inputs of the commit of the branch, whatever commit the
+// The TypeScript package: its build must be the build of the inputs of the commit of the tag, whatever commit the
 // working tree of the template repository is at.
 const typescript = join(repository, TYPESCRIPT);
 const readRecord = () => {
@@ -74,21 +77,21 @@ const listed = new Set(git(repository, 'ls-tree', '-r', '--name-only', commit, '
 const absent = inputs.filter((file) => !listed.has(file));
 const unlisted = [...listed].filter((file) => !inputs.includes(file));
 if (absent.length > 0 || unlisted.length > 0) {
-  throw new Error(`the inputs of the build of ${TYPESCRIPT} differ from the commit ${commit} of the branch ${branch}: ${[...absent.map((file) => `${file} is not in the commit`), ...unlisted.map((file) => `${file} of the commit is not an input`)].join('; ')}; build the branch ${branch} in the template repository with \`make build-ts\``);
+  throw new Error(`the inputs of the build of ${TYPESCRIPT} differ from the commit ${commit} of the tag ${tag}: ${[...absent.map((file) => `${file} is not in the commit`), ...unlisted.map((file) => `${file} of the commit is not an input`)].join('; ')}; check out the tag ${tag} in the template repository and build it with \`make build-ts\``);
 }
 const hash = createHash('sha256');
 for (const file of inputs) hash.update(`${file}\0`).update(execFileSync('git', ['-C', repository, 'show', `${commit}:${file}`], { maxBuffer: 1 << 28 })).update('\0');
 hash.update(process.version);
 const actual = hash.digest('hex');
 if (record.hash !== actual) {
-  throw new Error(`${RECORD} records a build of the inputs ${record.hash}, expected the inputs ${actual} of the commit ${commit} of the branch ${branch} with Node.js ${process.version}; build the branch ${branch} in the template repository with \`make build-ts\``);
+  throw new Error(`${RECORD} records a build of the inputs ${record.hash}, expected the inputs ${actual} of the commit ${commit} of the tag ${tag} with Node.js ${process.version}; check out the tag ${tag} in the template repository and build it with \`make build-ts\``);
 }
 
 const script = createHash('sha256').update(readFileSync(fileURLToPath(import.meta.url))).digest('hex');
-const description = `${JSON.stringify({ branch, commit, inputs: actual, script }, null, 2)}\n`;
+const description = `${JSON.stringify({ tag, commit, inputs: actual, script }, null, 2)}\n`;
 const recorded = join(output, 'copy.json');
 if (existsSync(recorded) && readFileSync(recorded, 'utf8') === description) {
-  console.log(`template copy: ${output} holds the commit ${commit} of the branch ${branch}; nothing to copy`);
+  console.log(`template copy: ${output} holds the commit ${commit} of the tag ${tag}; nothing to copy`);
   process.exit(0);
 }
 
@@ -114,12 +117,12 @@ try {
   }
   console.log(`template copy: packed ${TYPESCRIPT} (${files.length} build files, inputs ${actual.slice(0, 12)})`);
 
-  // The tracked paths, as the commit of the branch holds them.
+  // The tracked paths, as the commit of the tag holds them.
   const archive = join(scratch, 'tracked.tar');
   execFileSync('git', ['-C', repository, 'archive', '--format=tar', `--output=${archive}`, commit, '--', ...TRACKED]);
   execFileSync('tar', ['-x', '-f', archive, '-C', next]);
   const missing = TRACKED.filter((path) => !existsSync(join(next, path)));
-  if (missing.length > 0) throw new Error(`the commit ${commit} of the branch ${branch} of ${repository} has no ${missing.join(', ')}`);
+  if (missing.length > 0) throw new Error(`the commit ${commit} of the tag ${tag} of ${repository} has no ${missing.join(', ')}`);
   console.log(`template copy: extracted ${TRACKED.join(', ')} of ${commit}`);
 } catch (error) {
   rmSync(next, { recursive: true, force: true });

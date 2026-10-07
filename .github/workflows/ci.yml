@@ -9,12 +9,12 @@
 #
 # The toolchain comes from the pinned files: Node.js from .node-version, PHP by the minor of config/toolchain.json, whose
 # running patch the record names, and npm and Composer from `make install` into var/tools of the checkout. The template
-# repository is checked out next to this repository at its branch main, as ../template of the Makefile, and its
-# TypeScript package is built there with its own make targets; `make install` then copies the branch main and
-# downloads everything that the checks read. `make ext` builds the native extension with phpize and php-config of the
-# PHP of setup-php, and only the group board installs Chromium. The template step runs the make install of the template
-# repository, because the template repository has no target that installs its npm dependencies alone; build-ts needs
-# them.
+# repository is checked out next to this repository at its tag v0.0.1 (TEMPLATE_TAG of the Makefile, HY-80), as
+# ../template of the Makefile, and its TypeScript package is built there with its own make targets; `make install` then
+# copies the commit of that tag and downloads everything that the checks read. `make ext` builds the native extension
+# with phpize and php-config of the PHP of setup-php, and only the group board installs Chromium. The template step runs
+# the make install of the template repository, because the template repository has no target that installs its npm
+# dependencies alone; build-ts needs them.
 name: ci
 
 on:
@@ -75,7 +75,7 @@ jobs:
         if: ${{ !cancelled() && matrix.install }}
         with:
           repository: polyspec/template
-          ref: main
+          ref: v0.0.1
           path: template
       - id: template-build
         if: ${{ !cancelled() && matrix.install }}

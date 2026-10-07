@@ -29,8 +29,9 @@ const CHECKLIST = `# Execution checklist
 
 const DONE = CHECKLIST.replace('| [~] |', '| [o] |');
 
-// The template repository of a fixture checkout: a Git repository with a branch main in the ignored var/template.
-const TEMPLATE = { repository: 'var/template', branch: 'main' };
+// The template repository of a fixture checkout: a Git repository in the ignored var/template whose tag v0.0.1 names
+// its first commit.
+const TEMPLATE = { repository: 'var/template', tag: 'v0.0.1' };
 
 
 function git(cwd, ...args) {
@@ -55,18 +56,21 @@ function checkout(t, checklist) {
   git(directory, '-c', 'user.name=test', '-c', 'user.email=test@example.com', 'commit', '--quiet', '-m', 'checklist');
   const template = path.join(directory, TEMPLATE.repository);
   mkdirSync(template, { recursive: true });
-  git(template, 'init', '--quiet', '-b', TEMPLATE.branch);
-  commitTemplate(directory, 'first');
+  git(template, 'init', '--quiet', '-b', 'main');
+  tagTemplate(directory, commitTemplate(directory, 'first'));
   return directory;
 }
 
-// Commits to the branch main of the template repository of a fixture checkout and returns the new commit.
+// Commits to the branch main of the template repository of a fixture checkout and returns the new commit; the tag
+// stays where it is.
 function commitTemplate(directory, message) {
   const template = path.join(directory, TEMPLATE.repository);
   git(template, '-c', 'user.name=test', '-c', 'user.email=test@example.com', 'commit', '--quiet', '--allow-empty', '-m', message);
   return git(template, 'rev-parse', 'HEAD');
 }
-const templateMain = directory => git(path.join(directory, TEMPLATE.repository), 'rev-parse', TEMPLATE.branch);
+// Points the tag of the template repository of a fixture checkout at a commit.
+const tagTemplate = (directory, commit) => git(path.join(directory, TEMPLATE.repository), 'tag', '--force', TEMPLATE.tag, commit);
+const templateTag = directory => git(path.join(directory, TEMPLATE.repository), 'rev-parse', `refs/tags/${TEMPLATE.tag}^{commit}`);
 
 const commit = (directory, file, text) => {
   writeFileSync(path.join(directory, file), text);
@@ -101,10 +105,10 @@ async function guard(directory, mode, targets, failing = []) {
 
 test('make check and make rerun-failed start the guard before any step', () => {
   const check = dryRun('check');
-  // The guard reads the commit of the template branch from the template repository of the Makefile (HY-80).
-  assert.match(check[0], /^TEMPLATE_REPOSITORY=\.\.\/template TEMPLATE_BRANCH=main node scripts\/full-run\.mjs run template-check bench-server-smoke docs-check lint /, check.join('\n'));
+  // The guard reads the commit of the template tag from the template repository of the Makefile (HY-80).
+  assert.match(check[0], /^TEMPLATE_REPOSITORY=\.\.\/template TEMPLATE_TAG=v0\.0\.1 node scripts\/full-run\.mjs run template-check bench-server-smoke docs-check lint /, check.join('\n'));
   assert.equal(check.length, 1, check.join('\n'));
-  const rerun = ['TEMPLATE_REPOSITORY=../template TEMPLATE_BRANCH=main node scripts/full-run.mjs rerun-failed'];
+  const rerun = ['TEMPLATE_REPOSITORY=../template TEMPLATE_TAG=v0.0.1 node scripts/full-run.mjs rerun-failed'];
   assert.deepEqual(dryRun('rerun-failed'), rerun);
   // The same commands when this process runs inside a make that prints its directories (HY-83).
   assert.deepEqual(dryRun('rerun-failed', { env: { ...process.env, MAKEFLAGS: 'w', MAKELEVEL: '2' } }), rerun);
@@ -139,7 +143,7 @@ test('the decision refuses an active item, a dirty tree, a missing hook and a se
   assert.equal(second.run, false);
   assert.match(second.reason, /full run of tree tree-1 with the template commit main-1 started 2026-10-05T01:00:00\.000Z with result passed/);
 
-  // The same tree with another commit of the template branch is a new run (HY-80).
+  // The same tree with another commit of the template tag is a new run (HY-80).
   const moved = decide({ ...clean, template: 'main-2', record: earlier });
   assert.equal(moved.run, true);
   assert.match(moved.reason, /the template commit main-2 differs from the template commit main-1 of the last full run/);
@@ -204,9 +208,9 @@ test('a full run records each target, and the same tree is refused a second time
   assert.match(first.output, /^\[full-run\] run: no full-run record/);
   const written = record(directory);
   assert.equal(written.tree, git(directory, 'rev-parse', 'HEAD^{tree}'));
-  // The record names the run by its tree and the commit of the template branch, read when the guard starts (HY-80).
-  assert.equal(written.template, templateMain(directory));
-  assert.match(first.output, new RegExp(`^\\[full-run\\] template commit ${written.template} of the branch main of var/template$`, 'm'));
+  // The record names the run by its tree and the commit of the template tag, read when the guard starts (HY-80).
+  assert.equal(written.template, templateTag(directory));
+  assert.match(first.output, new RegExp(`^\\[full-run\\] template commit ${written.template} of the tag v0\\.0\\.1 of var/template$`, 'm'));
   assert.deepEqual(Object.keys(written).sort(), ['ended', 'environment', 'failed', 'pid', 'reruns', 'result', 'started', 'targets', 'template', 'tree']);
   // The record holds the running releases of the tools, the PHP patch among them, as the evidence of the run (HY-81).
   assert.equal(written.environment.node, process.version);
@@ -220,8 +224,15 @@ test('a full run records each target, and the same tree is refused a second time
   assert.deepEqual(second.ran, []);
   assert.match(second.output, new RegExp(`refuse: the full run of tree ${written.tree} with the template commit ${written.template} started ${written.started} with result passed`));
 
-  // A new commit of the template branch permits a new full run of the same tree.
+  // A new commit of the branch main of the template repository leaves the run of the tag as it is.
   const next = commitTemplate(directory, 'next');
+  const branchMoved = await guard(directory, 'run', ['a']);
+  assert.equal(branchMoved.status, 1);
+  assert.deepEqual(branchMoved.ran, []);
+  assert.match(branchMoved.output, new RegExp(`refuse: the full run of tree ${written.tree} with the template commit ${written.template} started`));
+
+  // The tag at another commit permits a new full run of the same tree.
+  tagTemplate(directory, next);
   const moved = await guard(directory, 'run', ['a']);
   assert.equal(moved.status, 0, moved.output);
   assert.match(moved.output, new RegExp(`the template commit ${next} differs from the template commit ${written.template}`));
