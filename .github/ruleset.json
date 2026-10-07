@@ -53,10 +53,7 @@
           "do_not_enforce_on_create": false,
           "required_status_checks": [
             {"context": "push-gate", "integration_id": 15368},
-            {"context": "check (docs)", "integration_id": 15368},
-            {"context": "check (php)", "integration_id": 15368},
-            {"context": "check (node)", "integration_id": 15368},
-            {"context": "check (board)", "integration_id": 15368}
+            {"context": "ci-passed", "integration_id": 15368}
           ]
         }
       }

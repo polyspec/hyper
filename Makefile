@@ -66,7 +66,7 @@ $(if $(filter $(HOOKS_PATH),$(shell git config core.hooksPath)),,$(shell git con
 
 .DEFAULT_GOAL := help
 
-.PHONY: help tools toolchain-check owner-check install hyper-php-copy template template-tag template-check ext packages package-check server server-fixtures node-server node-fixtures assets test-js test-node test-php lint analyse-php templates-check test-scripts virtiofs-check parity server-parity bundle-size e2e docs-check serve-demo bench-server bench-server-smoke bench-browser bench check rerun-failed serve-demo-unlock hooks hooks-check push-gate-commit ci-pins ci-check ci-summary install-browser github-ruleset github-ruleset-check
+.PHONY: help tools toolchain-check owner-check install hyper-php-copy template template-tag template-check ext packages package-check server server-fixtures node-server node-fixtures assets test-js test-node test-php lint analyse-php templates-check test-scripts virtiofs-check parity server-parity bundle-size e2e docs-check serve-demo bench-server bench-server-smoke bench-browser bench check rerun-failed serve-demo-unlock hooks hooks-check push-gate-commit ci-pins ci-check ci-summary ci-passed install-browser github-ruleset github-ruleset-check
 
 help: ## List the targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
@@ -217,8 +217,8 @@ hooks-check: ## Fail while the pre-push hook of .githooks is not installed or no
 	node scripts/push-gate.mjs hooks-check
 
 # The GitHub ruleset main and the merge settings of .github/ruleset.json (HY-94, scripts/github-ruleset.mjs): every
-# change reaches main through a pull request and the merge queue, which requires the check push-gate and every job of
-# the full suite. These targets reach the GitHub API, so no target of the full suite runs them, and none publishes.
+# change reaches main through a pull request and the merge queue, which requires the checks push-gate and ci-passed, the
+# last job of the full suite. These targets reach the GitHub API, so no target of the full suite runs them, and none publishes.
 github-ruleset: ## Change the merge settings and create or update the GitHub ruleset of .github/ruleset.json where they differ, then compare again (HY-94)
 	node scripts/github-ruleset.mjs apply --gh $(GH)
 
@@ -283,6 +283,11 @@ ci-check: ## Run the targets of the CI group GROUP to their ends and write its r
 ci-summary: ## Write the summary of the CI group GROUP into var/ci/GROUP/summary.md and the job summary of GitHub (HY-91)
 	$(if $(filter $(GROUP),$(CI_GROUPS)),,$(error GROUP names a CI group of CI_GROUPS: $(CI_GROUPS)))
 	node scripts/ci-run.mjs summary $(GROUP)
+
+# make passes a variable of its command line to the environment of the recipe, so the script reads RESULTS there and the
+# JSON never becomes shell text.
+ci-passed: ## Fail unless every job of RESULTS, the JSON of needs of the job ci-passed of ci.yml, has the result success (HY-94)
+	node scripts/ci-run.mjs passed
 
 install-browser: ## Install Chromium of the pinned Playwright and its system libraries; the CI group board runs it (HY-91)
 	$(ONLINE) node node_modules/@playwright/test/cli.js install --with-deps chromium

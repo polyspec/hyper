@@ -117,19 +117,19 @@ test('main takes changes only through pull requests and the merge queue, without
   assert.deepEqual(DECLARATION.settings, { allow_rebase_merge: true, allow_auto_merge: true, delete_branch_on_merge: true });
 });
 
-test('the required checks are the job of the push gate and every job of the full suite (HY-94)', () => {
+test('the required checks are the job of the push gate and the job ci-passed of the full suite (HY-94)', () => {
   const checks = DECLARATION.ruleset.rules.find(rule => rule.type === 'required_status_checks').parameters.required_status_checks;
   // The check of a job without a name is the job ID; push-gate.yml has one job and gives it no name.
   const gate = readFileSync(path.join(WORKFLOWS, 'push-gate.yml'), 'utf8');
   assert.deepEqual([...gate.split('\njobs:\n')[1].matchAll(/^ {2}([\w-]+):\s*$/gm)].map(match => match[1]), ['push-gate']);
   assert.doesNotMatch(gate, /^ {4}name:/m);
-  // The job check of ci.yml is named by its matrix group, and its groups are CI_GROUPS of the Makefile.
+  // ci-passed, the last job of ci.yml, passes only when every other job of ci.yml passed (ci-workflow.test.mjs), so it
+  // stands for the whole workflow; it has no name, so its check is its job ID.
   const ci = readFileSync(path.join(WORKFLOWS, 'ci.yml'), 'utf8');
-  assert.match(ci, /^ {4}name: check \(\$\{\{ matrix\.group \}\}\)$/m);
-  const groups = /^CI_GROUPS := (.*)$/m.exec(readFileSync(path.join(ROOT, 'Makefile'), 'utf8'))[1].split(' ');
-  assert.deepEqual([...ci.matchAll(/^ {10}- group: ([\w-]+)$/gm)].map(match => match[1]), groups);
+  assert.equal([...ci.split('\njobs:\n')[1].matchAll(/^ {2}([\w-]+):\s*$/gm)].map(match => match[1]).at(-1), 'ci-passed');
+  assert.doesNotMatch(ci.split('\n  ci-passed:\n')[1], /^ {4}name:/m);
   // 15368 is the GitHub Actions app, so a status of the same name from another app does not satisfy the rule.
-  assert.deepEqual(checks, ['push-gate', ...groups.map(group => `check (${group})`)].map(context => ({ context, integration_id: 15368 })));
+  assert.deepEqual(checks, ['push-gate', 'ci-passed'].map(context => ({ context, integration_id: 15368 })));
 });
 
 test('the Makefile runs the script for each target with the GitHub CLI of GH and publishes nothing (HY-94)', () => {

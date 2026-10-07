@@ -10,7 +10,7 @@ import path from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
-import { ciRun, ciSummary, failureLines, pins } from '../../scripts/ci-run.mjs';
+import { ciPassed, ciRun, ciSummary, failureLines, pins } from '../../scripts/ci-run.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 
@@ -171,4 +171,43 @@ test('a warning line of a passing target is recorded and named in the summary', 
   const summary = readFileSync(path.join(root, 'var/ci/g/summary.md'), 'utf8');
   assert.match(summary, /1 passed, 0 failed, 0 not finished, 1 warning\./);
   assert.match(summary, /^## warnings\n\n- measure: WARNING csrShell x: gzip 20 bytes exceed the limit 10 of config$/m);
+});
+
+// The JSON of `needs` that GitHub writes into the step of the job ci-passed: one entry per needed job with its result.
+const needs = (result) => `{\n  "check": {\n    "result": "${result}",\n    "outputs": {}\n  }\n}`;
+const passed = (text) => {
+  const lines = [];
+  return { status: ciPassed({ text, print: (line) => lines.push(line) }), output: lines.join('\n') };
+};
+
+test('ci-passed passes when every needed job has the result success', () => {
+  const { status, output } = passed(needs('success'));
+  assert.equal(status, 0, output);
+  assert.match(output, /^\[ci-passed\] check: success$/m);
+  assert.match(output, /^\[ci-passed\] every needed job passed: check$/m);
+});
+
+test('ci-passed fails for a failed, skipped or cancelled job and names it with its result', () => {
+  for (const result of ['failure', 'skipped', 'cancelled']) {
+    const { status, output } = passed(JSON.stringify({ check: { result: 'success', outputs: {} }, other: { result, outputs: {} } }));
+    assert.equal(status, 1, output);
+    assert.match(output, new RegExp(`\\[ci-passed\\] failed: other \\(${result}\\); every needed job must have the result success`));
+  }
+});
+
+test('ci-passed fails for results that are unset, not JSON or name no job, naming the cause', () => {
+  for (const [text, cause] of [[undefined, 'RESULTS is not set'], ['', 'RESULTS is not JSON'], ['{', 'RESULTS is not JSON'], ['{}', 'RESULTS names no job'], ['[]', 'RESULTS names no job'], ['{"check": "success"}', 'check: no result']]) {
+    const { status, output } = passed(text);
+    assert.equal(status, 1, output);
+    assert.ok(output.includes(cause), `${JSON.stringify(text)}: ${output}`);
+  }
+});
+
+test('make ci-passed reads the multi-line JSON of needs from its command line', () => {
+  const env = Object.fromEntries(Object.entries(process.env).filter(([name]) => !['MAKEFLAGS', 'MFLAGS', 'MAKELEVEL', 'MAKEOVERRIDES', 'RESULTS'].includes(name)));
+  for (const [result, status] of [['success', 0], ['failure', 2]]) {
+    const ran = spawnSync('make', ['--no-print-directory', 'ci-passed', `RESULTS=${needs(result)}`], { cwd: ROOT, env, encoding: 'utf8' });
+    assert.equal(ran.status, status, ran.stdout + ran.stderr);
+    assert.match(ran.stdout, new RegExp(`\\[ci-passed\\] check: ${result}`));
+  }
 });

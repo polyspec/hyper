@@ -1,7 +1,10 @@
 // Tests the rules of the GitHub workflows (HY-86, HY-90): every job runs on the declared runner ubuntu-26.04-arm, every
 // action is pinned by its commit, no step or job has a time limit, every step after the first of a job runs after a
-// failed step (`if: ${{ !cancelled() }}`), and every step that runs a command runs one make target, so the exported
-// settings and the checks of the Makefile, such as the offline settings and the toolchain check, apply to it.
+// failed step (`if: ${{ !cancelled() }}`), except in the jobs whose every step needs the earlier one (STOPPING), and
+// every step that runs a command runs one make target, so the exported settings and the checks of the Makefile, such
+// as the offline settings and the toolchain check, apply to it. The last job of ci.yml is ci-passed, the check of ci.yml
+// that the ruleset main requires (HY-94): it runs after every other job (`if: ${{ always() }}`), needs every other job
+// of the workflow, runs on their runner and runs `make ci-passed` with the JSON of `needs`.
 import assert from 'node:assert/strict';
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
@@ -13,6 +16,11 @@ import { dryRun } from './make-dry-run.mjs';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const WORKFLOWS = path.join(ROOT, '.github/workflows');
 const RUNNER = 'ubuntu-26.04-arm';
+// The jobs whose every step needs the one before it, so a failed step stops the job: ci-passed reports the results of
+// the other jobs of ci.yml, and each step of release reads what the step before it checked or built.
+const STOPPING = { 'ci.yml': ['ci-passed'], 'release.yml': ['release'] };
+const CI_PASSED = 'ci-passed';
+const CI_PASSED_RUN = "make ci-passed RESULTS='${{ toJSON(needs) }}'";
 
 /**
  * The jobs of a workflow file, read from the block layout that the workflows of this repository use: a job is a key
@@ -78,7 +86,7 @@ test('every step that runs a command runs make, and every step after the first r
       assert.ok(job.steps.length > 0, `${workflow.name} ${job.name} has no step`);
       job.steps.forEach((step, index) => {
         if (step.run !== undefined && !/^make [^|&;<>`$\n]*(\$\{\{ [^}]+ \}\}[^|&;<>`$\n]*)*$/.test(step.run)) found.push(`${workflow.name} ${job.name}: the step "${step.run}" runs a command other than one make`);
-        if (index > 0 && !(step.if ?? '').includes('!cancelled()')) found.push(`${workflow.name} ${job.name}: step ${index + 1} runs only while every earlier step passed`);
+        if (index > 0 && !(STOPPING[workflow.name] ?? []).includes(job.name) && !(step.if ?? '').includes('!cancelled()')) found.push(`${workflow.name} ${job.name}: step ${index + 1} runs only while every earlier step passed`);
       });
     }
   }
@@ -138,7 +146,7 @@ test('the workflow ci runs every CI group in a job that runs to its end and uplo
   assert.match(text, /^concurrency:\n {2}group: \$\{\{ github\.workflow \}\}-\$\{\{ github\.ref \}\}\n {2}cancel-in-progress: \$\{\{ github\.event_name == 'pull_request' \}\}\n/m);
   assert.doesNotMatch(readFileSync(path.join(WORKFLOWS, 'push-gate.yml'), 'utf8'), /^concurrency:/m);
   const { names, targets } = groups();
-  const read = jobs(text);
+  const read = jobs(text).filter((job) => job.name !== CI_PASSED);
   assert.ok(read.length > 0);
   for (const job of read) {
     assert.match(job.text, /^ {4}strategy:\n {6}fail-fast: false\n/m, `${job.name}: fail-fast`);
@@ -173,7 +181,7 @@ test('the workflow ci runs every CI group in a job that runs to its end and uplo
 test('the workflow ci checks out the template repository at the tag TEMPLATE_TAG of the Makefile (HY-80)', () => {
   const tag = /^TEMPLATE_TAG := (\S+)$/m.exec(readFileSync(path.join(ROOT, 'Makefile'), 'utf8'))?.[1];
   assert.match(tag ?? '', /^v\d+\.\d+\.\d+$/, 'the Makefile declares no TEMPLATE_TAG');
-  for (const job of jobs(readFileSync(path.join(WORKFLOWS, 'ci.yml'), 'utf8'))) {
+  for (const job of jobs(readFileSync(path.join(WORKFLOWS, 'ci.yml'), 'utf8')).filter((job) => job.name !== CI_PASSED)) {
     const checkouts = job.steps.filter((step) => /^ {10}repository: polyspec\/template$/m.test(step.text));
     assert.equal(checkouts.length, 1, `${job.name}: one checkout of polyspec/template`);
     assert.deepEqual([...checkouts[0].text.matchAll(/^ {10}ref: (.*)$/gm)].map((match) => match[1]), [tag], `${job.name}: the ref of the template checkout is not TEMPLATE_TAG ${tag}`);
@@ -196,5 +204,43 @@ test('a target declared for Darwin is in the full suite exactly on Darwin and sk
     const text = readFileSync(path.join(ROOT, 'tests/virtiofs', name), 'utf8');
     assert.doesNotMatch(text, /\.skip\(|\bskip:|\btodo\b/, `${name} skips a case`);
     assert.match(text, /if \(result\.error\) throw new Error\(`container cannot run: /, `${name} does not fail without container`);
+  }
+});
+
+/** Each broken rule of the job ci-passed of a workflow text. */
+function ciPassedProblems(text) {
+  const read = jobs(text);
+  const job = read.find((entry) => entry.name === CI_PASSED);
+  if (!job) return [`the job ${CI_PASSED} is missing; the ruleset main requires it as the check of ci.yml`];
+  const key = (entry, name) => new RegExp(`^ {4}${name}: (.*)$`, 'm').exec(entry.text)?.[1];
+  const others = read.filter((entry) => entry.name !== CI_PASSED).map((entry) => entry.name);
+  const found = [];
+  if (read.at(-1).name !== CI_PASSED) found.push(`the job ${CI_PASSED} is not the last job; the jobs are ${read.map((entry) => entry.name).join(', ')}`);
+  if (key(job, 'if') !== '${{ always() }}') found.push(`the job ${CI_PASSED} has if: ${key(job, 'if')}, not \${{ always() }}; it must run after a failed, skipped or cancelled job too`);
+  const needs = (key(job, 'needs') ?? '').replace(/^\[|\]$/g, '').split(',').map((name) => name.trim()).filter(Boolean);
+  if ([...needs].sort().join() !== [...others].sort().join()) found.push(`the job ${CI_PASSED} needs [${needs.join(', ')}], not every other job [${others.join(', ')}]`);
+  const runners = [...new Set(read.filter((entry) => entry.name !== CI_PASSED).map((entry) => key(entry, 'runs-on')))];
+  if (runners.length !== 1 || key(job, 'runs-on') !== runners[0]) found.push(`the job ${CI_PASSED} runs on ${key(job, 'runs-on')}, not on the runner of the other jobs ${runners.join(', ')}`);
+  const runs = job.steps.filter((step) => step.run !== undefined).map((step) => step.run);
+  if (runs.length !== 1 || runs[0] !== CI_PASSED_RUN || job.steps.at(-1).run !== CI_PASSED_RUN) found.push(`the job ${CI_PASSED} runs [${runs.join(', ')}], not the last step ${CI_PASSED_RUN}`);
+  return found;
+}
+
+test('ci-passed is the last job of ci.yml, runs always, needs every other job and runs make ci-passed (HY-94)', () => {
+  const text = readFileSync(path.join(WORKFLOWS, 'ci.yml'), 'utf8');
+  assert.deepEqual(ciPassedProblems(text), []);
+  const [head, tail] = text.split('\n  ci-passed:\n');
+  const broken = {
+    missing: [head + '\n', 'the job ci-passed is missing'],
+    'not last': [head.replace('\njobs:\n', `\njobs:\n  ci-passed:\n${tail.trimEnd()}\n`) + '\n', 'the job ci-passed is not the last job'],
+    'not always': [text.replace('    if: ${{ always() }}\n', '    if: ${{ success() }}\n'), 'the job ci-passed has if: ${{ success() }}'],
+    'needs no job': [text.replace('    needs: [check]\n', '    needs: []\n'), 'the job ci-passed needs [], not every other job [check]'],
+    'another runner': [text.replace('    needs: [check]\n    runs-on: ubuntu-26.04-arm\n', '    needs: [check]\n    runs-on: ubuntu-24.04\n'), 'the job ci-passed runs on ubuntu-24.04, not on the runner of the other jobs'],
+    'another step': [text.replace(CI_PASSED_RUN, 'make ci-passed'), 'the job ci-passed runs [make ci-passed], not the last step'],
+  };
+  for (const [name, [changed, message]] of Object.entries(broken)) {
+    assert.notEqual(changed, text, name);
+    const problems = ciPassedProblems(changed);
+    assert.ok(problems.some((problem) => problem.startsWith(message)), `${name}: ${problems.join('; ')}`);
   }
 });
