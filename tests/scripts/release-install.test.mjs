@@ -1,8 +1,10 @@
 // Installs the release assets of this repository outside the repository (scripts/release.mjs, HY-95): an npm project
 // in a temporary directory installs @polyspec/hyper-server with every tarball that it needs listed as `file:`, and a
 // Composer project installs polyspec/hyper from an `artifact` repository of the packed zips. The template packages are
-// packed from the declared copy of the template repository (HY-78) and stand in for its release assets. No case reaches
-// GitHub or a registry; htmx.org comes from the npm cache that `make install` fills.
+// packed from the declared copy of the template repository (HY-78) and stand in for its release assets. The npm case
+// installs as a consumer does: its third-party packages, htmx.org, come from the public registry into an empty cache
+// of the test, and every polyspec package comes from its tarball, because the scope @polyspec points at an unreachable
+// registry. The Composer case reads only the artifact repository.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { cpSync, mkdirSync, readdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
@@ -15,6 +17,8 @@ import { assetName, buildAssets, PACKAGES, packedManifests } from '../../scripts
 import { templateDir } from './declared-template.mjs';
 import { requireBuilt } from './requires.mjs';
 
+// A registry address that refuses every connection: port 9 of the loopback address.
+const UNREACHABLE = 'http://127.0.0.1:9/';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 
 const run = (command, args, options = {}) => {
@@ -56,7 +60,12 @@ test('an npm project outside the repository installs the server package from the
   mkdirSync(project);
   const dependencies = Object.fromEntries(Object.entries(tarballs).map(([name, file]) => [name, `file:${path.join(target, file)}`]));
   writeFileSync(path.join(project, 'package.json'), JSON.stringify({ name: 'release-install', private: true, type: 'module', dependencies }, null, 2));
-  run('npm', ['install', '--offline', '--no-bin-links', '--no-audit', '--no-fund'], { cwd: project });
+  // A consumer: the third-party packages come from the public registry into an empty cache of the test, and the
+  // scope @polyspec points at an address that refuses every connection, so a polyspec package comes only from its
+  // tarball.
+  const cache = path.join(folder, 'npm-cache');
+  const env = Object.fromEntries(Object.entries(process.env).filter(([name]) => name.toLowerCase() !== 'npm_config_offline'));
+  run('npm', ['install', `--cache=${cache}`, `--@polyspec:registry=${UNREACHABLE}`, '--no-bin-links', '--no-audit', '--no-fund'], { cwd: project, env });
   const loaded = run('node', ['--input-type=module', '-e', "const server = await import('@polyspec/hyper-server'); const hyper = await import('@polyspec/hyper'); console.log(typeof server.App, typeof hyper.Router);"], { cwd: project });
   assert.equal(loaded.trim(), 'function function');
   const lock = JSON.parse(readFileSync(path.join(project, 'package-lock.json'), 'utf8'));

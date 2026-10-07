@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "98165f66d6c95d2b01505eab5426e84c",
+    "content-hash": "a2d771b8889f66bb43488a28b98d07f2",
     "packages": [
         {
             "name": "polyspec/hyper",
@@ -53,11 +53,11 @@
         },
         {
             "name": "polyspec/template",
-            "version": "dev-main",
+            "version": "0.0.2",
             "dist": {
                 "type": "path",
                 "url": "../../var/products/template/packages/template-php",
-                "reference": "5ac57fc0b9b4874eaa1a817c146fdfb7f9e10ea9"
+                "reference": "cb445884ff289a415142a75f62e0b85fa321ffd2"
             },
             "require": {
                 "ext-mbstring": "*",
@@ -174,8 +174,7 @@
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
-        "polyspec/hyper": 20,
-        "polyspec/template": 20
+        "polyspec/hyper": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,

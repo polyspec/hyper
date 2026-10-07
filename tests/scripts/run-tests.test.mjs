@@ -44,7 +44,7 @@ test('arguments select a tool, a per-test timeout, a directory and a PHP extensi
   const phpunit = toolCommand(parseArguments(['phpunit', '--cwd', 'packages/hyper-php', '--extension', 'build/ext/a.so', '--', '--filter', 'X']));
   assert.deepEqual(phpunit, {
     command: 'php',
-    args: ['-d', `extension=${path.join(ROOT, 'build/ext/a.so')}`, path.join(ROOT, 'packages/hyper-php/vendor/bin/phpunit'), '--teamcity', '--filter', 'X'],
+    args: ['-d', `extension=${path.join(ROOT, 'build/ext/a.so')}`, path.join(ROOT, 'vendor/bin/phpunit'), '--teamcity', '--filter', 'X'],
   });
 });
 

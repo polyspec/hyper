@@ -1,0 +1,53 @@
+{
+    "name": "polyspec/hyper-workspace",
+    "description": "The development install of the PHP package packages/hyper-php with the declared copy of the template repository; not published",
+    "type": "project",
+    "license": "MIT",
+    "repositories": [
+        {
+            "type": "path",
+            "url": "var/products/hyper-php",
+            "options": {
+                "symlink": false,
+                "reference": "config"
+            }
+        },
+        {
+            "type": "path",
+            "url": "var/products/template/packages/template-php",
+            "options": {
+                "symlink": false,
+                "reference": "config",
+                "versions": {
+                    "polyspec/template": "0.0.2"
+                }
+            }
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "polyspec/hyper": "0.0.3",
+        "polyspec/template": "0.0.2"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.0",
+        "phpstan/phpstan": "^2.2.16",
+        "phpunit/phpunit": "^11.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "Polyspec\\Hyper\\": "packages/hyper-php/src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Polyspec\\Hyper\\Tests\\": "packages/hyper-php/tests/"
+        }
+    },
+    "config": {
+        "platform": {
+            "php": "8.2.0"
+        },
+        "sort-packages": true
+    }
+}

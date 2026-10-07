@@ -262,7 +262,7 @@ test('npm installs the template package as one copy inside this checkout', () =>
 });
 
 test('Composer, PHPStan and the native extension build read the declared copy', () => {
-  for (const manifest of ['packages/hyper-php/composer.json', 'examples/board/composer.json']) {
+  for (const manifest of ['composer.json', 'examples/board/composer.json']) {
     const repositories = JSON.parse(readFileSync(manifest, 'utf8')).repositories.filter((item) => item.url.endsWith('/template-php'));
     assert.equal(repositories.length, 1, manifest);
     assert.equal(resolve(dirname(manifest), repositories[0].url), join(COPY, 'packages/template-php'), manifest);

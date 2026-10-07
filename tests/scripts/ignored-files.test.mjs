@@ -12,7 +12,7 @@ const git = (...args) => spawnSync('git', args, { cwd: ROOT, encoding: 'utf8' })
 // One path inside each output that an install, a build, a test run or a guard writes.
 const OUTPUTS = [
   'node_modules/vitest/package.json',
-  'packages/hyper-php/vendor/autoload.php',
+  'vendor/autoload.php',
   'examples/board/vendor/autoload.php',
   'tests/package-install/node_modules/@polyspec/hyper/package.json',
   'packages/hyper-js/dist/index.js',

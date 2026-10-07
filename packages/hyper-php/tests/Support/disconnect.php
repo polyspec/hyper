@@ -7,7 +7,7 @@ declare(strict_types=1);
 // which the document renders, has 1 MiB. Both hooks append a
 // line to the file of HYPER_DISCONNECT_LOG.
 
-require __DIR__ . '/../../vendor/autoload.php';
+require __DIR__ . '/../../../../vendor/autoload.php';
 
 use Polyspec\Hyper\App;
 use Polyspec\Hyper\Reply;

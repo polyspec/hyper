@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@polyspec/hyper": "file:../../packages/hyper-js",
-    "@polyspec/hyper-server": "file:../../packages/hyper-node"
+    "@polyspec/hyper-server": "file:../../packages/hyper-node",
+    "@polyspec/template": "file:../../var/products/template/packages/template-ts"
   }
 }
