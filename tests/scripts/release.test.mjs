@@ -10,7 +10,7 @@ import path from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
-import { ASSETS, assetName, assetNames, assets, changelogSection, CHECKS, GIT_TAG, GO_MODULES, MANIFESTS, NOT_RELEASED, PACKAGES, parseTag, publish, Stop, verify, versions } from '../../scripts/release.mjs';
+import { ASSETS, assetName, assetNames, assets, changelogSection, CHECKS, NOTES_LIMIT, changelogLink, releaseNotes, GIT_TAG, GO_MODULES, MANIFESTS, NOT_RELEASED, PACKAGES, parseTag, publish, Stop, verify, versions } from '../../scripts/release.mjs';
 import { dryRun } from './make-dry-run.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
@@ -203,6 +203,31 @@ test('publish creates the release with the notes and the archives', (t) => {
   assert.deepEqual(call, ['release', 'create', 'v0.0.1', '--verify-tag', '--title', 'v0.0.1', '--notes-file', file, ...assetNames(tag).map((name) => path.join(box.root, ASSETS, name))]);
   assert.equal(notes, '### Added\n\n- The first entry of 0.0.1.\n');
   assert.equal(existsSync(file), false, 'the notes file is removed');
+});
+
+test('a section within the limit is the notes, and a longer one is a line that links the section', (t) => {
+  assert.equal(NOTES_LIMIT, 125000);
+  const fits = `- ${'é'.repeat(NOTES_LIMIT - 3)}\n`;
+  assert.equal([...fits].length, NOTES_LIMIT);
+  const kept = sandbox(t, { changelog: `# Changelog\n\n## Unreleased\n\n## 0.0.2\n\n${fits}\n## 0.0.1\n\n- The first entry.\n` });
+  assert.equal(releaseNotes(kept.root, 'v0.0.2'), fits);
+  const long = `- ${'é'.repeat(NOTES_LIMIT - 2)}\n`;
+  const linked = sandbox(t, { changelog: `# Changelog\n\n## Unreleased\n\n## 0.0.2\n\n${long}\n<a id="0-0-1"></a>\n## 0.0.1\n\n${long}` });
+  assert.equal(releaseNotes(linked.root, 'v0.0.2'), 'The changes of 0.0.2 are listed in [CHANGELOG.md](https://github.com/polyspec/hyper/blob/v0.0.2/CHANGELOG.md#002).\n');
+  assert.equal(releaseNotes(linked.root, 'v0.0.1'), 'The changes of 0.0.1 are listed in [CHANGELOG.md](https://github.com/polyspec/hyper/blob/v0.0.1/CHANGELOG.md#0-0-1).\n');
+});
+
+test('publish passes the line that links a section over the limit', (t) => {
+  const box = sandbox(t, { changelog: `# Changelog\n\n## Unreleased\n\n## 0.0.1\n\n- ${'x'.repeat(NOTES_LIMIT)}\n` });
+  const tag = box.tag('v0.0.1');
+  assets(box.root, tag);
+  publish(box.root, tag);
+  assert.equal(box.recorded().notes, 'The changes of 0.0.1 are listed in [CHANGELOG.md](https://github.com/polyspec/hyper/blob/v0.0.1/CHANGELOG.md#001).\n');
+});
+
+test('the link of a section encodes each segment of the tag', () => {
+  assert.equal(changelogLink('dir/sub/v1.2.3', '123'), 'https://github.com/polyspec/hyper/blob/dir/sub/v1.2.3/CHANGELOG.md#123');
+  assert.equal(changelogLink('a b/v1.2.3', '123'), 'https://github.com/polyspec/hyper/blob/a%20b/v1.2.3/CHANGELOG.md#123');
 });
 
 test('publish without the archives fails before any request', (t) => {

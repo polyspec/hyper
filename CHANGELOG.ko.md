@@ -4,6 +4,10 @@
 
 ## Unreleased
 
+### 수정
+
+- GitHub Release의 notes는 GitHub의 본문 한도 125000자에 맞는다(H13.5-6, HY-95). `make release-publish`는 `CHANGELOG.md`의 section `## X.Y.Z`가 125000자 이하이면 그 section을, 아니면 한 줄 `The changes of X.Y.Z are listed in [CHANGELOG.md](https://github.com/polyspec/hyper/blob/<tag>/CHANGELOG.md#<anchor>).`을 넘긴다. anchor는 heading 위 `<a id="...">` 줄의 id이고, 없으면 점을 뺀 버전이며, tag의 각 segment는 URL 인코딩된다. GitHub는 본문이 125000자보다 긴 release를 거부한다.
+
 ## 0.0.1
 
 ### 추가
