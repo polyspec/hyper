@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3758615cc63b788de7d560cb2bd89b80",
+    "content-hash": "2e36f39bd5486ce9d566385dbe3196be",
     "packages": [
         {
             "name": "polyspec/hyper",
@@ -15,7 +15,7 @@
             },
             "require": {
                 "php": "^8.2",
-                "polyspec/template": "0.0.2"
+                "polyspec/template": "0.0.4"
             },
             "require-dev": {
                 "laravel/pint": "^1.0",
@@ -48,18 +48,15 @@
         },
         {
             "name": "polyspec/template",
-            "version": "0.0.2",
+            "version": "0.0.4",
             "dist": {
                 "type": "zip",
-                "url": "assets/polyspec-template-0.0.2.zip"
+                "url": "https://github.com/polyspec/template/releases/download/v0.0.4/polyspec-template-0.0.4.zip",
+                "shasum": "99874991fa028f34d5905ae0ecc66f104f166a48"
             },
             "require": {
                 "ext-mbstring": "*",
                 "php": "^8.2"
-            },
-            "require-dev": {
-                "laravel/pint": "^1.0",
-                "phpunit/phpunit": "^11.5"
             },
             "bin": [
                 "bin/template.php"
@@ -69,19 +66,6 @@
                 "psr-4": {
                     "Polyspec\\Template\\": "src/"
                 }
-            },
-            "autoload-dev": {
-                "psr-4": {
-                    "Polyspec\\Template\\Tests\\": "tests/"
-                }
-            },
-            "scripts": {
-                "test": [
-                    "phpunit"
-                ],
-                "lint": [
-                    "pint --test"
-                ]
             },
             "license": [
                 "MIT"

@@ -34,7 +34,7 @@ Pages and regions contain no `hx-*` attributes. Links and forms are plain HTML a
 
 ## Start
 
-The template repository must be next to this repository (`../template`) with its tag `v0.0.2` (`TEMPLATE_TAG` of the Makefile) and a build of the TypeScript package of the commit of that tag (`make build-ts` in a checkout of that tag of the template repository). `make install` and `make template` copy that commit into `var/products/template`, and every build and check reads that copy (HY-78, HY-80).
+npm installs the template packages `@polyspec/template` and `@polyspec/template-compiler` from the tarballs of the template release v0.0.4 and Composer installs `polyspec/template` from its zip, as `package.json`, `composer.json` and their locks pin them (HY-70). The template repository must be next to this repository (`../template`) with its tag `v0.0.4` (`TEMPLATE_TAG` of the Makefile) for the native extension only: `make install` and `make template` copy its C sources, its stub and its build script of that commit into `var/products/template`, which `make ext` and PHPStan read (HY-78, HY-80).
 
 ```sh
 make install

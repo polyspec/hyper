@@ -276,7 +276,7 @@ function releaseProblems(text) {
 test('release runs its steps in order with the tag, the template tag and the permission to release', () => {
   const text = readFileSync(path.join(WORKFLOWS, 'release.yml'), 'utf8');
   assert.deepEqual(releaseProblems(text), []);
-  assert.deepEqual(jobs(text)[0].steps.filter((step) => step.run !== undefined).map((step) => step.run), ['make ci-pins', 'make install build-ts', 'make install', ...RELEASE_STEPS]);
+  assert.deepEqual(jobs(text)[0].steps.filter((step) => step.run !== undefined).map((step) => step.run), ['make ci-pins', 'make install', ...RELEASE_STEPS]);
   const broken = {
     order: [text.replace('run: make release-versions', 'run: make release-swap').replace('run: make release-verify', 'run: make release-versions').replace('run: make release-swap', 'run: make release-verify'), 'the steps run'],
     'read only': [text.replace('  contents: write\n', '  contents: read\n'), 'the permissions are not exactly contents: write'],

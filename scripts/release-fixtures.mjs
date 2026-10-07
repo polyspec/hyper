@@ -1,31 +1,33 @@
 #!/usr/bin/env node
 // The consumer fixtures of the release assets (HY-95, HY-89): tests/release-install/npm holds a package.json that
-// depends on the release tarballs by `file:` and its package-lock.json, and tests/release-install/composer a
-// composer.json with an `artifact` repository of the release zips and its composer.lock. The test
-// tests/scripts/release-install.test.mjs installs them in a temporary directory outside the repository with `npm ci`
-// and `composer install`; `make release-fixtures` writes the locks.
+// depends on the release tarballs of this repository by `file:` and on the tarball of the template release by its URL,
+// and its package-lock.json; tests/release-install/composer holds a composer.json with an `artifact` repository of the
+// release zips of this repository and a `package` repository of the zip of the template release, and its
+// composer.lock. The test tests/scripts/release-install.test.mjs installs them in a temporary directory outside the
+// repository with `npm ci` and `composer install`; `make release-fixtures` writes the locks.
 //
-//   node scripts/release-fixtures.mjs --template-dir <declared template copy>
+//   node scripts/release-fixtures.mjs
 //
-// The assets are the archives of `buildAssets` at the version of packages/hyper-js/package.json, and the template
-// archives are packed from the declared copy of the template repository (HY-78) at the version of TEMPLATE_TAG. The
-// npm lock pins every third-party package with its exact version and integrity; a polyspec package is a local
-// tarball of the same run, so its lock entry names the file without an integrity, and the Composer lock names each zip
-// without a shasum. The locks change when a release version or a dependency changes, never with the content of an
-// archive.
+// The assets are the archives of `buildAssets` at the version of packages/hyper-js/package.json. The npm lock pins
+// every package that it downloads, third-party packages and the template tarball, with its exact version and
+// integrity, and the Composer lock pins the template zip with its shasum; a package of this repository is a local
+// archive of the same run, so its lock entry names the file without an integrity or a shasum. The locks change when a
+// release version or a dependency changes, never with the content of an archive of this repository.
 import { spawnSync } from 'node:child_process';
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { parseArgs } from 'node:util';
 
-import { assetName, buildAssets } from './release.mjs';
+import { buildAssets } from './release.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const FIXTURES = 'tests/release-install';
 // A registry address that refuses every connection: port 9 of the loopback address. The scope @polyspec points at
 // it, so a polyspec package comes only from its tarball.
+// The npm settings of a consumer install: a URL dependency of the root package.json is allowed, which npm 12 refuses by
+// default (allow-remote).
+export const NPM_CONSUMER = ['--allow-remote=root'];
 export const UNREACHABLE = 'http://127.0.0.1:9/';
 
 const run = (command, args, options = {}) => {
@@ -44,35 +46,23 @@ export function outside() {
   return folder;
 }
 
-/** The release archives of this repository and the template archives in `folder/assets`; their names. */
-export function stageAssets(root, templateDir, folder) {
-  const version = JSON.parse(readFileSync(path.join(root, 'packages/hyper-js/package.json'), 'utf8')).version;
+/** The release archives of this repository in `folder/assets`, their version and the template version they require. */
+export function stageAssets(root, folder) {
+  const manifest = JSON.parse(readFileSync(path.join(root, 'packages/hyper-js/package.json'), 'utf8'));
   const assets = path.join(folder, 'assets');
   const commit = run('git', ['rev-parse', 'HEAD'], { cwd: root }).trim();
-  buildAssets(root, commit, `v${version}`, assets);
-  const template = JSON.parse(readFileSync(path.join(templateDir, 'packages/template-ts/package.json'), 'utf8')).version;
-  run('npm', ['pack', '--pack-destination', assets], { cwd: path.join(templateDir, 'packages/template-ts') });
-  // The zip of the template PHP package: its files with the version of the template release, archived by git.
-  const source = path.join(folder, 'template-php');
-  cpSync(path.join(templateDir, 'packages/template-php'), source, { recursive: true, filter: (file) => path.basename(file) !== 'vendor' });
-  const composer = JSON.parse(readFileSync(path.join(source, 'composer.json'), 'utf8'));
-  writeFileSync(path.join(source, 'composer.json'), `${JSON.stringify({ name: composer.name, version: template, ...composer }, null, 4)}\n`);
-  run('git', ['init', '--quiet'], { cwd: source });
-  run('git', ['add', '-A'], { cwd: source });
-  const tree = run('git', ['write-tree'], { cwd: source }).trim();
-  run('git', ['archive', '--format=zip', `--output=${path.join(assets, assetName('polyspec/template', template, 'zip'))}`, tree], { cwd: source });
-  rmSync(source, { recursive: true, force: true });
-  return { version, template, assets };
+  buildAssets(root, commit, `v${manifest.version}`, assets);
+  return { version: manifest.version, template: manifest.dependencies['@polyspec/template'], assets };
 }
 
-/** The npm consumer: the fixture and every tarball that its package.json names, in `folder/npm`. */
+/** The npm consumer: the fixture and every local tarball that its package.json names, in `folder/npm`. */
 export function npmProject(root, folder, assets, { lock = true } = {}) {
   const project = path.join(folder, 'npm');
   mkdirSync(project, { recursive: true });
   const manifest = JSON.parse(readFileSync(path.join(root, FIXTURES, 'npm/package.json'), 'utf8'));
   writeFileSync(path.join(project, 'package.json'), `${JSON.stringify(manifest, null, 2)}\n`);
   if (lock) cpSync(path.join(root, FIXTURES, 'npm/package-lock.json'), path.join(project, 'package-lock.json'));
-  for (const spec of Object.values(manifest.dependencies)) {
+  for (const spec of Object.values(manifest.dependencies).filter((value) => value.startsWith('file:'))) {
     const file = spec.replace(/^file:/, '');
     if (!existsSync(path.join(assets, file))) throw new Error(`${FIXTURES}/npm/package.json names ${file}, which is not a built asset; the release versions changed, run make release-fixtures`);
     cpSync(path.join(assets, file), path.join(project, file));
@@ -80,7 +70,7 @@ export function npmProject(root, folder, assets, { lock = true } = {}) {
   return project;
 }
 
-/** The Composer consumer: the fixture and the zips in its artifact repository `folder/composer/assets`. */
+/** The Composer consumer: the fixture and the zips of this repository in its artifact repository `folder/composer/assets`. */
 export function composerProject(root, folder, assets, { lock = true } = {}) {
   const project = path.join(folder, 'composer');
   mkdirSync(path.join(project, 'assets'), { recursive: true });
@@ -91,12 +81,12 @@ export function composerProject(root, folder, assets, { lock = true } = {}) {
 }
 
 /** Write the locks of both fixtures from the assets of the tree. */
-export function writeLocks(root, templateDir) {
+export function writeLocks(root) {
   const folder = outside();
   try {
-    const { assets } = stageAssets(root, templateDir, folder);
+    const { assets } = stageAssets(root, folder);
     const npm = npmProject(root, folder, assets, { lock: false });
-    run('npm', ['install', '--package-lock-only', `--cache=${path.join(folder, 'npm-cache')}`, `--@polyspec:registry=${UNREACHABLE}`, '--fetch-retries=0', '--no-audit', '--no-fund'], { cwd: npm, env: consumerEnv() });
+    run('npm', ['install', '--package-lock-only', `--cache=${path.join(folder, 'npm-cache')}`, `--@polyspec:registry=${UNREACHABLE}`, '--fetch-retries=0', ...NPM_CONSUMER, '--no-audit', '--no-fund'], { cwd: npm, env: consumerEnv() });
     const npmLock = JSON.parse(readFileSync(path.join(npm, 'package-lock.json'), 'utf8'));
     for (const entry of Object.values(npmLock.packages)) if (String(entry.resolved).startsWith('file:')) delete entry.integrity;
     writeFileSync(path.join(root, FIXTURES, 'npm/package-lock.json'), `${JSON.stringify(npmLock, null, 2)}\n`);
@@ -111,8 +101,6 @@ export function writeLocks(root, templateDir) {
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  const { values } = parseArgs({ options: { 'template-dir': { type: 'string' } } });
-  if (!values['template-dir']) throw new Error('--template-dir is required');
-  writeLocks(ROOT, path.resolve(values['template-dir']));
+  writeLocks(ROOT);
   console.log(`release fixtures: wrote ${FIXTURES}/npm/package-lock.json and ${FIXTURES}/composer/composer.lock`);
 }

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a2d771b8889f66bb43488a28b98d07f2",
+    "content-hash": "82746a81219fe744ae2726db7063d482",
     "packages": [
         {
             "name": "polyspec/hyper",
@@ -12,11 +12,11 @@
             "dist": {
                 "type": "path",
                 "url": "../../var/products/hyper-php",
-                "reference": "677376b1b65a8f05ad9a7da22ee05a47af47dfda"
+                "reference": "508a793ebeda4c8c7ee33b82eac9ef6250bc89de"
             },
             "require": {
                 "php": "^8.2",
-                "polyspec/template": "@dev"
+                "polyspec/template": "0.0.4"
             },
             "require-dev": {
                 "laravel/pint": "^1.0",
@@ -53,19 +53,15 @@
         },
         {
             "name": "polyspec/template",
-            "version": "0.0.2",
+            "version": "0.0.4",
             "dist": {
-                "type": "path",
-                "url": "../../var/products/template/packages/template-php",
-                "reference": "cb445884ff289a415142a75f62e0b85fa321ffd2"
+                "type": "zip",
+                "url": "https://github.com/polyspec/template/releases/download/v0.0.4/polyspec-template-0.0.4.zip",
+                "shasum": "99874991fa028f34d5905ae0ecc66f104f166a48"
             },
             "require": {
                 "ext-mbstring": "*",
                 "php": "^8.2"
-            },
-            "require-dev": {
-                "laravel/pint": "^1.0",
-                "phpunit/phpunit": "^11.5"
             },
             "bin": [
                 "bin/template.php"
@@ -76,27 +72,10 @@
                     "Polyspec\\Template\\": "src/"
                 }
             },
-            "autoload-dev": {
-                "psr-4": {
-                    "Polyspec\\Template\\Tests\\": "tests/"
-                }
-            },
-            "scripts": {
-                "test": [
-                    "phpunit"
-                ],
-                "lint": [
-                    "pint --test"
-                ]
-            },
             "license": [
                 "MIT"
             ],
-            "description": "Template language implementation: lexer, parser, renderer, functions and CLI",
-            "transport-options": {
-                "symlink": false,
-                "relative": true
-            }
+            "description": "Template language implementation: lexer, parser, renderer, functions and CLI"
         }
     ],
     "packages-dev": [

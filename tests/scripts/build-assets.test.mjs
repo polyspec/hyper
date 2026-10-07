@@ -9,14 +9,13 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { test } from 'node:test';
 import { copyTracked } from '../../scripts/tracked-files.mjs';
-import { templateDir } from './declared-template.mjs';
 
 // Copies the tracked files of a fixture application, so a file that an earlier run left in the fixture cannot decide
 // the result (HY-85).
 const fixture = (name, target) => copyTracked({ repository: resolve('.'), path: `tests/scripts/fixtures/${name}`, target, base: `tests/scripts/fixtures/${name}` });
 
 function buildAssets(app, ...options) {
-  return spawnSync(process.execPath, ['scripts/build-assets.mjs', '--app', app, '--api', '/api', '--template-dir', templateDir, '--output', join(app, 'out'), ...options], { encoding: 'utf8' });
+  return spawnSync(process.execPath, ['scripts/build-assets.mjs', '--app', app, '--api', '/api', '--output', join(app, 'out'), ...options], { encoding: 'utf8' });
 }
 
 test('rejects an invalid manifest and writes nothing', () => {

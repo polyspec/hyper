@@ -2,18 +2,17 @@ BOARD := examples/board
 PHP_PACKAGE := packages/hyper-php
 JS_PACKAGE := packages/hyper-js
 NODE_PACKAGE := packages/hyper-node
-# The template repository, read only by `make template`, which writes its declared copy TEMPLATE_DIR (HY-78) of the
-# commit of its tag TEMPLATE_TAG (HY-80), the one declaration of the template release; .github/workflows/ci.yml checks
-# out the same tag. Every other recipe, npm, Composer and the native extension build read the copy.
+# npm installs the template packages @polyspec/template and @polyspec/template-compiler and Composer installs
+# polyspec/template from the assets of the template release that package.json and composer.json name (HY-70). The
+# template repository, read only by `make template`, gives the C sources and the stub of the native extension: its
+# declared copy TEMPLATE_DIR (HY-78) of the commit of its tag TEMPLATE_TAG (HY-80), the release of the template
+# packages; .github/workflows/ci.yml checks out the same tag. `make ext` and PHPStan read the copy.
 TEMPLATE_REPOSITORY := ../template
-TEMPLATE_TAG := v0.0.2
+TEMPLATE_TAG := v0.0.4
 TEMPLATE_DIR := var/products/template
 # The record of the copy, which the copy script rewrites only when it writes a new copy: when the tag names another
-# commit, the build of the TypeScript package changed or the copy script changed.
+# commit or the copy script changed.
 TEMPLATE_COPY := $(TEMPLATE_DIR)/copy.json
-# Written after the npm and Composer installs of the copy; they run again only when TEMPLATE_COPY is newer, so one run
-# of many targets installs the template packages at most once.
-TEMPLATE_STAMP := $(TEMPLATE_DIR)/installed.stamp
 FIXTURES := $(PHP_PACKAGE)/tests/fixtures
 # The Composer vendor directory of the private root composer.json, which installs packages/hyper-php for development.
 PHP_VENDOR := $(CURDIR)/vendor
@@ -68,7 +67,7 @@ $(if $(filter $(HOOKS_PATH),$(shell git config core.hooksPath)),,$(shell git con
 
 .DEFAULT_GOAL := help
 
-.PHONY: help tools toolchain-check owner-check install hyper-php-copy template template-tag template-check ext packages package-check server server-fixtures node-server node-fixtures assets test-js test-node test-php lint analyse-php templates-check test-scripts virtiofs-check parity server-parity bundle-size e2e docs-check serve-demo bench-server bench-server-smoke bench-browser bench check rerun-failed serve-demo-unlock hooks hooks-check push-gate-commit ci-pins ci-check ci-summary ci-passed install-browser release-verify release-versions release-assets release-publish release-fixtures github-ruleset github-ruleset-check
+.PHONY: help tools toolchain-check owner-check install hyper-php-copy template template-tag ext packages package-check server server-fixtures node-server node-fixtures assets test-js test-node test-php lint analyse-php templates-check test-scripts virtiofs-check parity server-parity bundle-size e2e docs-check serve-demo bench-server bench-server-smoke bench-browser bench check rerun-failed serve-demo-unlock hooks hooks-check push-gate-commit ci-pins ci-check ci-summary ci-passed install-browser release-verify release-versions release-assets release-publish release-fixtures github-ruleset github-ruleset-check
 
 help: ## List the targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
@@ -79,20 +78,16 @@ tools: ## Install the pinned npm and Composer into var/tools (HY-81)
 toolchain-check: ## Fail when Node.js, npm, Composer or the PHP minor differs from its pin, naming the expected and the actual value (HY-81)
 	node scripts/toolchain.mjs check
 
-install: tools ## Install the pinned tools, write the declared copy of the template tag and install npm and Composer dependencies from it (HY-89)
+install: tools ## Install the pinned tools, write the declared copy of the template tag and install the npm and Composer dependencies (HY-89)
 	node scripts/toolchain.mjs check
 	node scripts/copy-template.mjs --repository $(TEMPLATE_REPOSITORY) --tag $(TEMPLATE_TAG) --output $(TEMPLATE_DIR)
 	node scripts/copy-package.mjs --path $(PHP_PACKAGE) --output $(HYPER_PHP_COPY)
 	$(ONLINE) node scripts/holder-lock.mjs run $(INSTALL_LOCK) -- $(NPM) ci --no-audit --no-fund
 	$(ONLINE) node scripts/holder-lock.mjs run $(INSTALL_LOCK) -- $(COMPOSER) install
 	$(ONLINE) node scripts/holder-lock.mjs run $(INSTALL_LOCK) -- $(COMPOSER) install --working-dir=$(BOARD)
-	touch $(TEMPLATE_STAMP)
 
-template: toolchain-check $(TEMPLATE_STAMP) ## Write the declared copy of the template tag and reinstall the npm and Composer copies of its packages from it, when the copy changed (HY-78, HY-80)
-
-# The copy script runs on every make template and leaves TEMPLATE_COPY unchanged while the copy is current; make reads
-# the modification time of TEMPLATE_COPY after the recipe.
-$(TEMPLATE_COPY): template-tag | toolchain-check
+# The copy script runs on every make template and leaves TEMPLATE_COPY unchanged while the copy is current.
+template: toolchain-check template-tag ## Write the declared copy of the native extension sources of the template tag (HY-78, HY-80)
 	node scripts/copy-template.mjs --repository $(TEMPLATE_REPOSITORY) --tag $(TEMPLATE_TAG) --output $(TEMPLATE_DIR)
 
 # A target without a file, so the copy script runs on every make template; it fails when the template checkout has no
@@ -103,26 +98,13 @@ template-tag: ## Fail when the template repository TEMPLATE_REPOSITORY has no ta
 	  echo "template-tag: fetch the tags of the template repository with git -C $(TEMPLATE_REPOSITORY) fetch --tags" >&2; \
 	  exit 1; }
 
-$(TEMPLATE_STAMP): $(TEMPLATE_COPY)
-	node scripts/publish.mjs npm-copy $(TEMPLATE_DIR)/packages/template-ts node_modules/@polyspec/template
-	node scripts/publish.mjs composer-copy $(TEMPLATE_DIR)/packages/template-php vendor/polyspec/template
-	node scripts/publish.mjs composer-copy $(TEMPLATE_DIR)/packages/template-php $(BOARD)/vendor/polyspec/template
-	touch $@
-
-template-check: template ## Fail when an npm or Composer copy of a template package differs from the declared copy
-	@failed=; \
-	$(call check,the npm copy,diff -r $(TEMPLATE_DIR)/packages/template-ts/dist node_modules/@polyspec/template/dist) \
-	$(call check,the Composer copy of the repository root,diff -r $(TEMPLATE_DIR)/packages/template-php/src vendor/polyspec/template/src) \
-	$(call check,the Composer copy of $(BOARD),diff -r $(TEMPLATE_DIR)/packages/template-php/src $(BOARD)/vendor/polyspec/template/src) \
-	$(checks_result)
-
 # The build of the template repository (build-php-extension.mjs of the declared copy) runs phpize, configure and make
 # with the php-config of PATH in a temporary directory, builds again only when the sources or the PHP build changed,
 # and publishes the library with a rename (HY-82).
 ext: template ## Build the native template extension of the declared copy with phpize of the PHP of PATH into build/ext (HY-48, HY-78)
 	node $(TEMPLATE_DIR)/scripts/build-php-extension.mjs $(EXT_DIR) $(CURDIR)/$(EXT)
 
-packages: template ## Build the JavaScript modules and type declarations of the npm packages into their dist directories and reinstall their npm copies (HY-61, HY-79)
+packages: toolchain-check ## Build the JavaScript modules and type declarations of the npm packages into their dist directories and reinstall their npm copies (HY-61, HY-79)
 	cd $(JS_PACKAGE) && $(NPM) run --silent build -- --outDir dist.next-$$$$ && node ../../scripts/publish.mjs directory dist.next-$$$$ dist
 	node scripts/publish.mjs npm-copy $(JS_PACKAGE) node_modules/@polyspec/hyper
 	cd $(NODE_PACKAGE) && $(NPM) run --silent build -- --outDir dist.next-$$$$ && node ../../scripts/publish.mjs directory dist.next-$$$$ dist
@@ -133,27 +115,27 @@ hyper-php-copy: ## Write the copy of packages/hyper-php that the board installs 
 	node scripts/publish.mjs composer-copy $(HYPER_PHP_COPY) $(BOARD)/vendor/polyspec/hyper
 
 package-check: packages node-fixtures ## Install the npm packages into tests/package-install, type-check its test against their declarations and run it under node (HY-61)
-	cd tests/package-install && node ../../scripts/holder-lock.mjs run ../../$(INSTALL_LOCK) -- $(NPM) ci --offline --install-links --no-bin-links --no-audit --no-fund
+	cd tests/package-install && node ../../scripts/holder-lock.mjs run ../../$(INSTALL_LOCK) -- $(NPM) ci --offline --install-links --no-bin-links --allow-remote=root --no-audit --no-fund
 	$(TSC) -p tests/package-install/tsconfig.json
 	node scripts/run-tests.mjs node --cwd tests/package-install -- package-install.test.ts
 
-server: template hyper-php-copy ## Build the board server program: its templates and the generated PHP program (HY-48)
-	node scripts/build-server.mjs --manifest $(BOARD)/app/app.json --templates $(BOARD)/templates --output $(BOARD)/build/server --template-dir $(TEMPLATE_DIR) --php-namespace 'Polyspec\Hyper\Examples\Board\Program'
+server: toolchain-check hyper-php-copy ## Build the board server program: its templates and the generated PHP program (HY-48)
+	node scripts/build-server.mjs --manifest $(BOARD)/app/app.json --templates $(BOARD)/templates --output $(BOARD)/build/server --php-namespace 'Polyspec\Hyper\Examples\Board\Program'
 
-server-fixtures: template ## Build the server program of the PHP test fixtures
-	node scripts/build-server.mjs --manifest $(FIXTURES)/app.json --templates $(FIXTURES)/templates --output $(PHP_PACKAGE)/tests/build/server --template-dir $(TEMPLATE_DIR) --php-namespace 'Polyspec\Hyper\Tests\Program'
+server-fixtures: toolchain-check ## Build the server program of the PHP test fixtures
+	node scripts/build-server.mjs --manifest $(FIXTURES)/app.json --templates $(FIXTURES)/templates --output $(PHP_PACKAGE)/tests/build/server --php-namespace 'Polyspec\Hyper\Tests\Program'
 
 node-server: assets ## Build the board Node server into examples/board/build/node/server.mjs (HY-54)
 	$(TSC) -p $(BOARD)/node/tsconfig.json
 	$(ESBUILD) $(BOARD)/node/main.ts --bundle --platform=node --format=esm --target=node26 --log-level=warning --outfile=$(BOARD)/build/node/server.mjs
 
-node-fixtures: template ## Build the template files of the PHP test fixtures for the Node server tests
-	node scripts/build-templates.mjs --templates $(FIXTURES)/templates --output $(NODE_PACKAGE)/tests/build --template-dir $(TEMPLATE_DIR)
+node-fixtures: toolchain-check ## Build the template files of the PHP test fixtures for the Node server tests
+	node scripts/build-templates.mjs --templates $(FIXTURES)/templates --output $(NODE_PACKAGE)/tests/build
 
 assets: packages ## Build the board client bundle (SSR) and the single-file static shell (CSR)
-	node scripts/build-assets.mjs --app $(BOARD) --api /api --template-dir $(TEMPLATE_DIR) --output $(BOARD)/build --static public/assets/app.css --static public/assets/reader.css
+	node scripts/build-assets.mjs --app $(BOARD) --api /api --output $(BOARD)/build --static public/assets/app.css --static public/assets/reader.css
 
-test-js: template ## Run the browser code tests, including the router conformance cases, and the type check
+test-js: toolchain-check ## Run the browser code tests, including the router conformance cases, and the type check
 	@failed=; \
 	$(call check,the tests of $(JS_PACKAGE),node scripts/run-tests.mjs vitest --cwd $(JS_PACKAGE)) \
 	$(call check,the type check of $(JS_PACKAGE),$(TSC) --noEmit -p $(JS_PACKAGE)/tsconfig.json) \
@@ -184,7 +166,7 @@ templates-check: toolchain-check ## Check hx- attributes (HC-6) and region place
 	node scripts/check-templates.mjs --app $(BOARD)
 
 test-scripts: packages ## Run the tests of the check scripts, or only the files of TESTS
-	TEMPLATE_DIR=$(TEMPLATE_DIR) node scripts/run-tests.mjs node -- $(or $(TESTS),tests/scripts/)
+	node scripts/run-tests.mjs node -- $(or $(TESTS),tests/scripts/)
 
 parity: assets server ext ## Compare PHP documents (generated program and native extension) with browser renders of document and region JSON
 	@failed=; \
@@ -201,8 +183,8 @@ bundle-size: assets ## Print the sizes of the SSR script, the CSR shell and the 
 e2e: assets server ## Run the SSR, CSR, no-JavaScript and comparison flows in Chromium on servers of the run
 	node scripts/run-e2e.mjs
 
-virtiofs-check: template ## Write the outputs of the server build and of the output copies on a virtiofs bind mount of Apple container (HY-68); a target of the full suite on Darwin
-	TEMPLATE_DIR=$(TEMPLATE_DIR) node scripts/run-tests.mjs node -- tests/virtiofs/
+virtiofs-check: toolchain-check ## Write the outputs of the server build and of the output copies on a virtiofs bind mount of Apple container (HY-68); a target of the full suite on Darwin
+	node scripts/run-tests.mjs node -- tests/virtiofs/
 
 docs-check: hooks-check ## Check that the pre-push hook is installed, then document pairs, links and code blocks
 	node scripts/check-documents.mjs
@@ -251,7 +233,7 @@ bench: bench-server bench-browser ## Run both measurements; results are reports,
 # checklist task is [~], while tracked changes are uncommitted or when var/full-run.json records a run of the current tree,
 # runs each target with `make <target>` to its end and records its result; `make rerun-failed` reruns the targets of the
 # current tree that did not pass.
-CHECK_TARGETS := template-check bench-server-smoke docs-check lint analyse-php templates-check test-scripts test-js test-node package-check test-php parity server-parity bundle-size e2e
+CHECK_TARGETS := bench-server-smoke docs-check lint analyse-php templates-check test-scripts test-js test-node package-check test-php parity server-parity bundle-size e2e
 
 # The CI groups of the full suite (HY-91): each job of .github/workflows/ci.yml runs the targets CI_TARGETS_<group> of
 # one group with `make ci-check GROUP=<group>`, so the groups together run every target of CHECK_TARGETS once
@@ -259,7 +241,7 @@ CHECK_TARGETS := template-check bench-server-smoke docs-check lint analyse-php t
 # and node PHP, the template build and the install, board also Chromium.
 CI_GROUPS := docs php node board
 CI_TARGETS_docs := docs-check
-CI_TARGETS_php := template-check bench-server-smoke lint analyse-php test-php
+CI_TARGETS_php := bench-server-smoke lint analyse-php test-php
 CI_TARGETS_node := templates-check test-scripts test-js test-node package-check
 CI_TARGETS_board := parity server-parity bundle-size e2e
 
@@ -311,8 +293,8 @@ release-versions: ## Fail unless every manifest declares the version of the tag 
 # The locks of the consumer fixtures of tests/release-install (scripts/release-fixtures.mjs, HY-95): npm and Composer
 # resolve the fixtures against the assets of the tree and the public registry, so the target runs through $(ONLINE);
 # the release commit runs it when a release version changes.
-release-fixtures: packages template ## Write the locks of the consumer fixtures of tests/release-install from the assets of the tree
-	$(ONLINE) node scripts/release-fixtures.mjs --template-dir $(TEMPLATE_DIR)
+release-fixtures: packages ## Write the locks of the consumer fixtures of tests/release-install from the assets of the tree
+	$(ONLINE) node scripts/release-fixtures.mjs
 
 release-assets: packages ## Build the packages and the archive of each into var/release/assets for the tag TAG
 release-publish: ## Create the GitHub Release of the tag TAG with its changelog section and the archives

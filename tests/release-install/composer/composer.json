@@ -1,10 +1,11 @@
 {
     "name": "polyspec/release-install-composer",
-    "description": "A consumer that installs the release zips of this repository and of the template release from an artifact repository (HY-95)",
+    "description": "A consumer that installs the release zips of this repository from an artifact repository and the zip of the template release from a package repository (HY-95)",
     "type": "project",
     "license": "MIT",
     "repositories": [
         { "type": "artifact", "url": "assets" },
+        { "type": "package", "package": { "name": "polyspec/template", "version": "0.0.4", "type": "library", "description": "Template language implementation: lexer, parser, renderer, functions and CLI", "license": "MIT", "dist": { "type": "zip", "url": "https://github.com/polyspec/template/releases/download/v0.0.4/polyspec-template-0.0.4.zip", "shasum": "99874991fa028f34d5905ae0ecc66f104f166a48" }, "require": { "php": "^8.2", "ext-mbstring": "*" }, "autoload": { "psr-4": { "Polyspec\\Template\\": "src/" } }, "bin": ["bin/template.php"] } },
         { "packagist.org": false }
     ],
     "require": {

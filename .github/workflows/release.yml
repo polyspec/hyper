@@ -8,8 +8,8 @@
 # (npm pack of packages/hyper-js and packages/hyper-node, a zip of packages/hyper-php); make release-publish creates the
 # GitHub Release with the section as notes and the archives attached (scripts/release.mjs). TAG reaches the make
 # targets through the environment, never as shell text. The setup is the one of the job check of ci.yml: Node.js from
-# .node-version, PHP by the minor of config/toolchain.json, the template repository at its tag v0.0.2 (TEMPLATE_TAG of
-# the Makefile, HY-80) next to this repository with its TypeScript package built, and make install. Every step that
+# .node-version, PHP by the minor of config/toolchain.json, the template repository at its tag v0.0.4 (TEMPLATE_TAG of
+# the Makefile, HY-80) next to this repository, and make install. Every step that
 # runs a command runs one make target, the job runs on ubuntu-26.04-arm and the actions are pinned by commit (HY-90,
 # tests/scripts/ci-workflow.test.mjs).
 name: release
@@ -50,10 +50,8 @@ jobs:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           repository: polyspec/template
-          ref: v0.0.2
+          ref: v0.0.4
           path: template
-      - working-directory: template
-        run: make install build-ts
       - name: make install
         run: make install
       - name: verify the tagged commit

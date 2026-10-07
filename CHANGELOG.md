@@ -4,6 +4,10 @@
 
 ## Unreleased
 
+### Changed
+
+- npm and Composer install the template packages from the assets of the template release v0.0.4 (H14.1-5, HY-70, HY-78, HY-80). The private root `package.json` requires `@polyspec/template` and `@polyspec/template-compiler` by the URLs of their release tarballs with an override of `@polyspec/template`, `.npmrc` sets `allow-remote=root`, and `package-lock.json` pins each tarball by its URL and integrity; the private root `composer.json` and `examples/board/composer.json` take `polyspec/template` from a `package` repository of the release zip with its sha1 `shasum`. The published manifests require template 0.0.4 exactly. `scripts/build-server.mjs`, `scripts/build-assets.mjs` and `scripts/build-templates.mjs` import `@polyspec/template` and `@polyspec/template-compiler/*` by package name and no longer take `--template-dir`. The declared copy `var/products/template` holds only the native extension sources, its stub and its build script of the tag `TEMPLATE_TAG` (`v0.0.4`), which `make ext` and PHPStan read; `make template` installs nothing, and `make template-check` is removed. CI checks out the template tag without building it, and the consumer fixtures of `tests/release-install` take the template tarball and zip by their release URLs.
+
 ## 0.0.3
 
 ### Fixed

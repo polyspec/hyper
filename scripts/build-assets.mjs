@@ -23,9 +23,9 @@
 // earlier build or a reader of the outputs never finds a file missing or partly written (HY-82).
 //
 // The template ASTs, the manifest check and the template render runtime of the bundle come from the template package
-// of the template repository --template-dir, whatever template package the application installed (HY-70).
+// `@polyspec/template` that this repository installs, whatever template package the application installed (HY-70).
 //
-// Usage: node scripts/build-assets.mjs --app examples/board --api /api --template-dir var/products/template --output examples/board/build
+// Usage: node scripts/build-assets.mjs --app examples/board --api /api --output examples/board/build
 //          [--static public/assets/app.css]...
 
 import { readFileSync, rmSync } from 'node:fs';
@@ -39,9 +39,8 @@ import { copyFile, writeFileAtomic } from './output-files.mjs';
 import { publish, staging } from './publish.mjs';
 import { loadPackage, sha256, templatePlugin, writeTemplateFiles } from './template-files.mjs';
 
-const { values } = parseArgs({ options: { app: { type: 'string' }, api: { type: 'string' }, 'template-dir': { type: 'string' }, output: { type: 'string' }, tailwind: { type: 'string' }, static: { type: 'string', multiple: true } } });
-if (!values.app || !values.api || !values['template-dir'] || !values.output) throw new Error('--app, --api, --template-dir and --output are required');
-const templateDir = values['template-dir'];
+const { values } = parseArgs({ options: { app: { type: 'string' }, api: { type: 'string' }, output: { type: 'string' }, tailwind: { type: 'string' }, static: { type: 'string', multiple: true } } });
+if (!values.app || !values.api || !values.output) throw new Error('--app, --api and --output are required');
 const app = values.app;
 const templatesDir = join(app, 'templates');
 const output = values.output;
@@ -49,8 +48,8 @@ const assetsDir = join(app, 'public', 'assets');
 const templateFilesDir = join(assetsDir, 'templates');
 const csrDir = join(output, 'csr');
 // The browser does not check the manifest that the bundle contains, so the build checks it before it writes anything (HY-2).
-(await loadPackage(templateDir)).checkManifest(JSON.parse(readFileSync(join(app, 'app', 'app.json'), 'utf8')));
-const index = await writeTemplateFiles({ templates: templatesDir, output: templateFilesDir, urlPrefix: '/assets/templates', templateDir });
+(await loadPackage()).checkManifest(JSON.parse(readFileSync(join(app, 'app', 'app.json'), 'utf8')));
+const index = await writeTemplateFiles({ templates: templatesDir, output: templateFilesDir, urlPrefix: '/assets/templates' });
 writeFileAtomic(join(output, 'templates.index.json'), `${JSON.stringify(index, null, 2)}\n`);
 
 const bundle = await build({
@@ -67,7 +66,7 @@ const bundle = await build({
   chunkNames: 'hyper-chunk-[hash]',
   write: false,
   logLevel: 'error',
-  plugins: [templatePlugin(templateDir), indexPlugin(index)],
+  plugins: [templatePlugin(), indexPlugin(index)],
 });
 const scripts = bundle.outputFiles.map((file) => ({ name: basename(file.path), code: Buffer.from(file.contents).toString('utf8') }));
 const entries = scripts.filter((script) => !script.name.startsWith('hyper-chunk-'));
