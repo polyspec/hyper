@@ -118,6 +118,33 @@ make release-publish
 
 `make release-verify`는 tag된 commit이 `origin/main`에 있고 그 commit의 최신 check run `push-gate`와 `ci-passed`(`gh api repos/<repository>/commits/<sha>/check-runs`)가 결론 `success`로 완료되었는지 확인한다. `make release-versions`는 버전을 선언하는 모든 manifest에 X.Y.Z가 있고 `CHANGELOG.md`에 section `## X.Y.Z`가 있는지 확인하며, 다른 파일마다 그 버전과 tag의 버전을 적는다. `make release-assets`는 패키지를 빌드하고(`make packages`) `polyspec-hyper-X.Y.Z.tgz`, `polyspec-hyper-server-X.Y.Z.tgz`, `polyspec-hyper-X.Y.Z.zip`을 `var/release/assets`에 쓴다. `make release-publish`는 section을 notes로 하고 archive를 붙여 GitHub Release를 만든다. job은 `ci.yml`의 job `check`처럼 Node.js, PHP, `TEMPLATE_TAG`의 template 저장소, `make install`을 준비하며, tag는 환경 변수 `TAG`로 step에 전달된다. `tests/scripts/release.test.mjs`는 어떤 tag도 릴리스하지 않는 manifest인 `tests/package-install/package.json`과 `examples/board/composer.json`을 나열하고, 릴리스되지도 나열되지도 않은 tracked manifest가 있으면 실패한다.
 
+packed manifest는 모든 polyspec 패키지를 그 릴리스의 정확한 버전으로 적고 이 저장소의 어떤 것도 필요로 하지 않는다(HY-95). `make release-assets`는 각 npm 패키지를 pack하고, pack된 사본의 `package/package.json`을 다시 쓴 뒤 다시 pack한다. 이 저장소의 패키지에 대한 의존성은 tag의 버전이고, `@polyspec/template`에 대한 의존성은 Makefile의 `TEMPLATE_TAG`의 버전이다. zip의 `composer.json`은 tag의 버전을 가진 field `version`을 갖고, `repositories`가 없으며, requirement `polyspec/template`는 `TEMPLATE_TAG`의 버전이다. 저장소의 manifest는 checkout 안을 가리키는 link를 그대로 둔다. packed manifest가 polyspec 패키지를 `file:`, `link:`, `workspace:` 경로, git, `github:`, ssh source, URL, range 또는 `@dev`로 적거나, zip이 `repositories`를 선언하거나, 그 `version`이 tag의 버전이 아니면 `make release-assets`는 실패하고 archive, field, 패키지와 그 값을 적는다. `tests/scripts/release-install.test.mjs`는 아래와 같이 저장소 밖의 임시 디렉터리에 에셋을 설치한다.
+
+### 릴리스 에셋 설치
+
+consumer는 필요한 릴리스의 에셋을 내려받아 함께 설치한다. registry는 필요 없다. npm에서는 모든 tarball을 `file:` 의존성으로 적고, packed manifest의 각 정확한 버전은 옆에 설치된 tarball이 충족한다.
+
+```json
+{
+  "dependencies": {
+    "@polyspec/hyper-server": "file:polyspec-hyper-server-X.Y.Z.tgz",
+    "@polyspec/hyper": "file:polyspec-hyper-X.Y.Z.tgz",
+    "@polyspec/template": "file:polyspec-template-T.T.T.tgz"
+  }
+}
+```
+
+Composer에서는 zip `polyspec-hyper-X.Y.Z.zip`과 `polyspec-template-T.T.T.zip`을 한 디렉터리에 두고 그 디렉터리를 `artifact` repository로 선언한다. zip들은 이름과 버전으로 서로를 찾는다.
+
+```json
+{
+  "repositories": [{ "type": "artifact", "url": "release-assets" }],
+  "require": { "polyspec/hyper": "X.Y.Z" }
+}
+```
+
+T.T.T는 그 릴리스의 `TEMPLATE_TAG`의 버전이다.
+
 ## CI
 
 workflow `.github/workflows/ci.yml`은 모든 pull request, merge queue의 모든 merge group, 모든 수동 실행(`workflow_dispatch`)에 대해 전체 suite를 실행한다(HY-91, [main 공개](#main-공개) 참고). runner가 적으므로 pull request의 새 push는 아직 진행 중인 앞선 push의 run을 멈추고, merge group의 run은 취소하지 않는다. 그 job `check`는 Makefile의 CI group마다 항목 하나를 `fail-fast: false`로 가진다.

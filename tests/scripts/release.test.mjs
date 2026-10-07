@@ -10,7 +10,7 @@ import path from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
-import { ASSETS, assetName, assetNames, assets, changelogSection, CHECKS, NOTES_LIMIT, changelogLink, releaseNotes, GIT_TAG, GO_MODULES, MANIFESTS, NOT_RELEASED, PACKAGES, parseTag, publish, Stop, verify, versions } from '../../scripts/release.mjs';
+import { ASSETS, assetName, assetNames, assets, changelogSection, CHECKS, manifestProblems, packedManifests, TEMPLATE_PACKAGES, templateTag, NOTES_LIMIT, changelogLink, releaseNotes, GIT_TAG, GO_MODULES, MANIFESTS, NOT_RELEASED, PACKAGES, parseTag, publish, Stop, verify, versions } from '../../scripts/release.mjs';
 import { dryRun } from './make-dry-run.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
@@ -32,15 +32,35 @@ if (args[0] === 'api' && args[1] === '--paginate') {
 writeFileSync(process.env.FAKE_STATE, JSON.stringify(state));
 `;
 const FAKE_NPM = `
-import { readFileSync, writeFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
 const args = process.argv.slice(2);
 if (args[0] !== 'pack') process.exit(1);
-const manifest = JSON.parse(readFileSync('package.json', 'utf8'));
+const text = readFileSync('package.json', 'utf8');
+const manifest = JSON.parse(text);
 const name = manifest.name.replace(/^@/, '').replaceAll('/', '-');
-writeFileSync(path.join(args[args.indexOf('--pack-destination') + 1], name + '-' + manifest.version + '.tgz'), 'npm');
+const folder = mkdtempSync(path.join(tmpdir(), 'fake-npm-'));
+mkdirSync(path.join(folder, 'package'));
+writeFileSync(path.join(folder, 'package', 'package.json'), text);
+writeFileSync(path.join(folder, 'package', 'index.js'), 'export {};\\n');
+const output = path.resolve(args[args.indexOf('--pack-destination') + 1], name + '-' + manifest.version + '.tgz');
+const packed = spawnSync('tar', ['-czf', output, '-C', folder, 'package'], { encoding: 'utf8' });
+rmSync(folder, { recursive: true, force: true });
+if (packed.status !== 0) { console.error(packed.stderr); process.exit(1); }
 `;
 const CHANGELOG = '# Changelog\n\n## Unreleased\n\n### Added\n\n- A change after the release.\n\n<a id="0-0-1"></a>\n## 0.0.1\n\n### Added\n\n- The first entry of 0.0.1.\n';
+
+// The dependencies of the packages as the workspace declares them: links into the checkout and bare versions.
+const WORKSPACE_DEPENDENCIES = (version) => ({
+  '@polyspec/hyper': { dependencies: { '@polyspec/template': 'file:../../var/products/template/packages/template-ts', 'htmx.org': '4.0.0' } },
+  '@polyspec/hyper-server': { dependencies: { '@polyspec/hyper': version, '@polyspec/template': 'file:../../var/products/template/packages/template-ts' } },
+  'polyspec/hyper': {
+    repositories: [{ type: 'path', url: '../../var/products/template/packages/template-php' }],
+    require: { php: '^8.2', 'polyspec/template': '@dev' },
+  },
+});
 
 const git = (cwd, ...args) => {
   const result = spawnSync('git', ['-c', 'user.name=test', '-c', 'user.email=test@example.com', ...args], { cwd, encoding: 'utf8' });
@@ -65,8 +85,11 @@ function sandbox(t, { version = '0.0.1', changelog = CHANGELOG } = {}) {
     const file = path.join(root, manifest);
     mkdirSync(path.dirname(file), { recursive: true });
     const name = names[path.dirname(manifest)] ?? '@polyspec/hyper-workspace';
-    writeFileSync(file, JSON.stringify(path.basename(manifest) === 'composer.json' ? { name } : { name, version }));
+    const data = path.basename(manifest) === 'composer.json' ? { name } : { name, version };
+    Object.assign(data, WORKSPACE_DEPENDENCIES(version)[name] ?? {});
+    writeFileSync(file, JSON.stringify(data));
   }
+  writeFileSync(path.join(root, 'Makefile'), 'TEMPLATE_TAG := v0.0.2\n');
   mkdirSync(path.join(root, 'packages/hyper-php/src'));
   writeFileSync(path.join(root, 'packages/hyper-php/src/App.php'), '<?php\n');
   writeFileSync(path.join(root, 'CHANGELOG.md'), changelog);
@@ -190,6 +213,58 @@ test('assets builds one archive per package', (t) => {
   const listing = spawnSync('unzip', ['-Z1', path.join(box.root, ASSETS, 'polyspec-hyper-0.0.1.zip')], { encoding: 'utf8' });
   assert.equal(listing.status, 0, listing.stderr);
   assert.deepEqual(listing.stdout.trim().split('\n').sort(), ['composer.json', 'src/', 'src/App.php']);
+});
+
+test('the template tag is TEMPLATE_TAG of the Makefile', (t) => {
+  assert.equal(templateTag(sandbox(t).root), 'v0.0.2');
+  assert.equal(templateTag(ROOT), /^TEMPLATE_TAG := (\S+)$/m.exec(readFileSync(path.join(ROOT, 'Makefile'), 'utf8'))[1]);
+  assert.deepEqual(TEMPLATE_PACKAGES, ['@polyspec/template', 'polyspec/template']);
+});
+
+test('every packed manifest names a polyspec package by the exact version of its release', (t) => {
+  const box = sandbox(t);
+  const tag = box.tag('v0.0.1');
+  assets(box.root, tag);
+  const manifests = packedManifests(path.join(box.root, ASSETS), assetNames(tag));
+  const template = '0.0.2';
+  assert.deepEqual(manifests['polyspec-hyper-0.0.1.tgz'], { name: '@polyspec/hyper', version: '0.0.1', dependencies: { '@polyspec/template': template, 'htmx.org': '4.0.0' } });
+  assert.deepEqual(manifests['polyspec-hyper-server-0.0.1.tgz'], {
+    name: '@polyspec/hyper-server',
+    version: '0.0.1',
+    dependencies: { '@polyspec/hyper': '0.0.1', '@polyspec/template': template },
+  });
+  assert.deepEqual(manifests['polyspec-hyper-0.0.1.zip'], { name: 'polyspec/hyper', version: '0.0.1', require: { php: '^8.2', 'polyspec/template': '0.0.2' } });
+  assert.deepEqual(Object.keys(manifests['polyspec-hyper-0.0.1.zip']).slice(0, 2), ['name', 'version']);
+  for (const [name, manifest] of Object.entries(manifests)) assert.deepEqual(manifestProblems(name, manifest, '0.0.1'), [], name);
+  const workspace = JSON.parse(readFileSync(path.join(box.root, 'packages/hyper-node/package.json'), 'utf8'));
+  assert.equal(workspace.dependencies['@polyspec/hyper'], '0.0.1', 'the workspace manifest keeps its dependencies');
+});
+
+test('a packed manifest with a dependency that resolves only in the repository fails', () => {
+  const npm = (spec, field = 'dependencies') => manifestProblems('a.tgz', { name: '@polyspec/hyper', version: '0.0.1', [field]: { '@polyspec/template': spec } }, '0.0.1');
+  for (const spec of ['file:../template', 'link:../template', 'workspace:*', '^0.0.2', '~0.0.2', '*', 'https://github.com/polyspec/template/releases/download/v0.0.2/polyspec-template-0.0.2.tgz', 'git+https://github.com/polyspec/template.git#v0.0.2', 'github:polyspec/template#v0.0.2', 'git+ssh://git@github.com/polyspec/template.git', 'polyspec/template#v0.0.2']) {
+    assert.deepEqual(npm(spec), [`a.tgz: dependencies @polyspec/template is ${spec}, not an exact released version`], spec);
+  }
+  assert.deepEqual(npm('^0.0.2', 'peerDependencies'), ['a.tgz: peerDependencies @polyspec/template is ^0.0.2, not an exact released version']);
+  assert.deepEqual(npm('file:x', 'optionalDependencies'), ['a.tgz: optionalDependencies @polyspec/template is file:x, not an exact released version']);
+  assert.deepEqual(npm('0.0.2'), []);
+  assert.deepEqual(manifestProblems('a.tgz', { name: '@polyspec/hyper', dependencies: { 'htmx.org': '^4.0.0' } }, '0.0.1'), []);
+  const composer = (data) => manifestProblems('a.zip', { name: 'polyspec/hyper', version: '0.0.1', ...data }, '0.0.1');
+  assert.deepEqual(composer({ require: { 'polyspec/template': '0.0.2' } }), []);
+  assert.deepEqual(composer({ require: { 'polyspec/template': '@dev' } }), ['a.zip: require polyspec/template is @dev, not an exact released version']);
+  assert.deepEqual(composer({ require: { 'polyspec/template': 'dev-main' } }), ['a.zip: require polyspec/template is dev-main, not an exact released version']);
+  assert.deepEqual(composer({ 'require-dev': { 'polyspec/template': '^0.0.2' } }), ['a.zip: require-dev polyspec/template is ^0.0.2, not an exact released version']);
+  assert.deepEqual(composer({ repositories: [{ type: 'path', url: '../template' }], require: { 'polyspec/template': '0.0.2' } }), ['a.zip: repositories is declared; a consumer resolves no repository of a package']);
+  assert.deepEqual(manifestProblems('a.zip', { name: 'polyspec/hyper', require: {} }, '0.0.1'), ['a.zip: version is undefined, not the release version 0.0.1']);
+});
+
+test('assets fails when a packed manifest declares a dependency that resolves only in the repository', (t) => {
+  const box = sandbox(t);
+  const file = path.join(box.root, 'packages/hyper-js/package.json');
+  writeFileSync(file, JSON.stringify({ name: '@polyspec/hyper', version: '0.0.1', dependencies: { '@polyspec/other': 'file:../other' } }));
+  git(box.root, 'commit', '--quiet', '-am', 'other');
+  git(box.root, 'update-ref', 'refs/remotes/origin/main', 'HEAD');
+  stops(() => assets(box.root, box.tag('v0.0.1', git(box.root, 'rev-parse', 'HEAD'))), '@polyspec/other: a polyspec package that is neither a package of this repository nor a template package');
 });
 
 test('publish creates the release with the notes and the archives', (t) => {

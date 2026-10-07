@@ -4,6 +4,10 @@
 
 ## Unreleased
 
+### 수정
+
+- 릴리스 에셋은 저장소 밖에서 설치된다(H13.5-9, HY-95). packed manifest는 `@polyspec/template`을 checkout 안의 `file:` 경로로, `polyspec/template`을 path repository와 함께 `@dev`로 적었고 zip에는 `version`이 없어서 어떤 consumer도 설치할 수 없었다. `make release-assets`는 각 npm 패키지를 pack하고 pack된 사본의 `package.json`을 다시 쓴 뒤 다시 pack하며, 다시 쓴 `composer.json`으로 zip을 쓴다. 모든 polyspec 의존성은 그 릴리스의 정확한 버전이며, 이 저장소의 패키지는 tag의 버전, template 패키지는 `TEMPLATE_TAG`의 버전이고, zip은 `version`을 갖고 `repositories`가 없다. polyspec 패키지에 대한 경로, git, `github:`, ssh, URL, range, `@dev` 의존성, `repositories`, 빠진 버전에는 실패하고 archive, field, 값을 적는다. 저장소의 manifest는 checkout 안을 가리키는 link를 그대로 둔다. `docs/operations/development.md`는 consumer가 에셋을 설치하는 방법을 밝힌다. npm tarball은 `file:` 의존성으로, Composer zip은 `artifact` repository에서 설치한다. Red: 검사는 v0.0.2의 에셋에서 문제 5개를 적는다. Green: `tests/scripts/release.test.mjs`는 25개 case를 통과하고, `tests/scripts/release-install.test.mjs`는 저장소 밖 임시 디렉터리에서 packed 에셋을 `npm install --offline`과 `artifact` repository의 Composer로 설치한다.
+
 ## 0.0.2
 
 ### 수정
