@@ -1,6 +1,6 @@
 {
   "name": "@polyspec/hyper-build",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Build commands of the region protocol: the server program and the browser assets of an application",
   "license": "MIT",
   "type": "module",
@@ -19,7 +19,7 @@
     "node": ">=26"
   },
   "dependencies": {
-    "@polyspec/hyper": "0.0.3",
+    "@polyspec/hyper": "0.0.4",
     "@polyspec/template": "0.0.4",
     "@polyspec/template-compiler": "0.0.4",
     "@tailwindcss/node": "4.3.3",

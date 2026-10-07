@@ -1,6 +1,6 @@
 {
   "name": "@polyspec/hyper",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Browser extension for htmx that renders region JSON with template language templates",
   "license": "MIT",
   "type": "module",

@@ -9,6 +9,6 @@
         { "packagist.org": false }
     ],
     "require": {
-        "polyspec/hyper": "0.0.3"
+        "polyspec/hyper": "0.0.4"
     }
 }

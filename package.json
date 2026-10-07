@@ -1,6 +1,6 @@
 {
   "name": "@polyspec/hyper-workspace",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "private": true,
   "description": "Region protocol that renders template language regions in the browser with htmx",
   "type": "module",
