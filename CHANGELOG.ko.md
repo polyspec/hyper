@@ -4,11 +4,11 @@
 
 ## Unreleased
 
+## 0.0.3
+
 ### 변경
 
 - npm과 Composer는 template package를 template release v0.0.4의 asset에서 설치한다(H14.1-5, HY-70, HY-78, HY-80). private root `package.json`은 `@polyspec/template`과 `@polyspec/template-compiler`를 release tarball의 URL로 요구하고 `@polyspec/template`을 override하며, `.npmrc`는 `allow-remote=root`를 두고, `package-lock.json`은 각 tarball을 URL과 integrity로 고정한다. private root `composer.json`과 `examples/board/composer.json`은 `polyspec/template`을 sha1 `shasum`을 가진 release zip의 `package` repository에서 받는다. 공개 manifest는 template 0.0.4를 정확히 요구한다. `scripts/build-server.mjs`, `scripts/build-assets.mjs`, `scripts/build-templates.mjs`는 `@polyspec/template`과 `@polyspec/template-compiler/*`를 package 이름으로 import하고 더는 `--template-dir`를 받지 않는다. 선언한 복사본 `var/products/template`은 `make ext`와 PHPStan이 읽는 tag `TEMPLATE_TAG`(`v0.0.4`)의 네이티브 확장 소스, stub, build script만 담는다. `make template`은 아무것도 설치하지 않고, `make template-check`는 제거했다. CI는 template tag를 build하지 않고 checkout하며, `tests/release-install`의 consumer fixture는 template tarball과 zip을 release URL로 받는다.
-
-## 0.0.3
 
 ### 수정
 
