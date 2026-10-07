@@ -94,11 +94,18 @@ test('every step that runs a command runs make, and every step after the first r
 });
 
 // The on: block of each workflow, exactly: the checks run on every pull request, every merge group and every manual run;
-// the push gate also on every push to a branch outside the merge queue. No other workflow exists (HY-91, HY-94).
+// the push gate also on every push to a branch outside the merge queue; the release on the push of a tag vX.Y.Z or
+// <directory>/vX.Y.Z. No other workflow exists (HY-91, HY-94).
 const TRIGGERS = {
   'ci.yml': 'on:\n  pull_request:\n  merge_group:\n  workflow_dispatch:\n',
   'push-gate.yml': "on:\n  push:\n    branches-ignore: ['gh-readonly-queue/**']\n  pull_request:\n  merge_group:\n",
+  'release.yml': "on:\n  push:\n    tags: ['v*', '*/v*']\n",
 };
+// The workflows whose checks the ruleset main requires; they run on every pull request and every merge group.
+const CHECK_WORKFLOWS = ['ci.yml', 'push-gate.yml'];
+// The steps of release.yml in their order (scripts/release.mjs): verify the tagged commit, check the versions, build the
+// archives, create the release.
+const RELEASE_STEPS = ['make release-verify', 'make release-versions', 'make release-assets', 'make release-publish'];
 
 test('each workflow declares exactly its triggers (HY-91, HY-94)', () => {
   assert.deepEqual(workflows().map(workflow => workflow.name).sort(), Object.keys(TRIGGERS).sort());
@@ -108,15 +115,15 @@ test('each workflow declares exactly its triggers (HY-91, HY-94)', () => {
   }
 });
 
-test('every workflow runs on pull requests and merge groups, and a push trigger skips the branches of the queue (HY-94)', () => {
+test('every workflow of a required check runs on pull requests and merge groups, and a push of branches skips the branches of the queue (HY-94)', () => {
   const found = [];
   for (const workflow of workflows()) {
     const trigger = /^on:\n((?: {2}.*\n)+)/m.exec(workflow.text)?.[1] ?? '';
     const events = [...trigger.matchAll(/^ {2}([\w-]+):/gm)].map(match => match[1]);
     // The ruleset main requires the checks of every workflow, and the merge queue runs them on the merge group.
-    if (!events.includes('pull_request') || !events.includes('merge_group')) found.push(`${workflow.name}: runs on ${events.join(', ')}, not on pull_request and merge_group`);
+    if (CHECK_WORKFLOWS.includes(workflow.name) && (!events.includes('pull_request') || !events.includes('merge_group'))) found.push(`${workflow.name}: runs on ${events.join(', ')}, not on pull_request and merge_group`);
     // A push to a branch of the merge queue would run the checks of the merge group a second time.
-    if (events.includes('push') && !trigger.includes("  push:\n    branches-ignore: ['gh-readonly-queue/**']\n")) found.push(`${workflow.name}: the push trigger lacks branches-ignore: ['gh-readonly-queue/**']`);
+    if (events.includes('push') && !trigger.includes('    tags:') && !trigger.includes("  push:\n    branches-ignore: ['gh-readonly-queue/**']\n")) found.push(`${workflow.name}: the push trigger lacks branches-ignore: ['gh-readonly-queue/**']`);
   }
   assert.deepEqual(found, []);
 });
@@ -241,6 +248,42 @@ test('ci-passed is the last job of ci.yml, runs always, needs every other job an
   for (const [name, [changed, message]] of Object.entries(broken)) {
     assert.notEqual(changed, text, name);
     const problems = ciPassedProblems(changed);
+    assert.ok(problems.some((problem) => problem.startsWith(message)), `${name}: ${problems.join('; ')}`);
+  }
+});
+
+/** Each broken rule of release.yml: one job with the permission to create a release, the tag in its environment, the
+ * whole history checked out, the template repository at TEMPLATE_TAG and the release steps last and in order. */
+function releaseProblems(text) {
+  const found = [];
+  if (!/^permissions:\n {2}contents: write\n(?! )/m.test(text)) found.push('the permissions are not exactly contents: write, which gh release create needs');
+  const read = jobs(text);
+  if (read.map((job) => job.name).join() !== 'release') return [...found, `the jobs are ${read.map((job) => job.name).join(', ')}, not the one job release`];
+  const [job] = read;
+  if (!/^ {6}TAG: \$\{\{ github\.ref_name \}\}$/m.test(job.text)) found.push('the job release does not set TAG: ${{ github.ref_name }} in its environment');
+  if (!/^actions\/checkout@/.test(job.steps[0].uses ?? '') || !/^ {10}fetch-depth: 0$/m.test(job.steps[0].text)) found.push('the first step is not actions/checkout with fetch-depth: 0; the ancestry check needs origin/main');
+  const tag = /^TEMPLATE_TAG := (\S+)$/m.exec(readFileSync(path.join(ROOT, 'Makefile'), 'utf8'))?.[1];
+  const template = job.steps.filter((step) => /^ {10}repository: polyspec\/template$/m.test(step.text));
+  if (template.length !== 1 || !template[0].text.includes(`\n          ref: ${tag}\n`)) found.push(`the job release does not check out polyspec/template once at TEMPLATE_TAG ${tag}`);
+  const runs = job.steps.filter((step) => step.run !== undefined).map((step) => step.run);
+  if (runs.slice(-RELEASE_STEPS.length).join('\n') !== RELEASE_STEPS.join('\n')) found.push(`the steps run [${runs.join(', ')}], not the release steps [${RELEASE_STEPS.join(', ')}] last and in order`);
+  return found;
+}
+
+test('release runs its steps in order with the tag, the template tag and the permission to release', () => {
+  const text = readFileSync(path.join(WORKFLOWS, 'release.yml'), 'utf8');
+  assert.deepEqual(releaseProblems(text), []);
+  assert.deepEqual(jobs(text)[0].steps.filter((step) => step.run !== undefined).map((step) => step.run), ['make ci-pins', 'make install build-ts', 'make install', ...RELEASE_STEPS]);
+  const broken = {
+    order: [text.replace('run: make release-versions', 'run: make release-swap').replace('run: make release-verify', 'run: make release-versions').replace('run: make release-swap', 'run: make release-verify'), 'the steps run'],
+    'read only': [text.replace('  contents: write\n', '  contents: read\n'), 'the permissions are not exactly contents: write'],
+    'no tag': [text.replace('      TAG: ${{ github.ref_name }}\n', ''), 'the job release does not set TAG'],
+    shallow: [text.replace('          fetch-depth: 0\n', '          fetch-depth: 1\n'), 'the first step is not actions/checkout with fetch-depth: 0'],
+    'template ref': [text.replace('          ref: v0.0.1\n', '          ref: main\n'), 'the job release does not check out polyspec/template once at TEMPLATE_TAG'],
+  };
+  for (const [name, [changed, message]] of Object.entries(broken)) {
+    assert.notEqual(changed, text, name);
+    const problems = releaseProblems(changed);
     assert.ok(problems.some((problem) => problem.startsWith(message)), `${name}: ${problems.join('; ')}`);
   }
 });

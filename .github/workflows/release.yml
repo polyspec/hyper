@@ -1,0 +1,65 @@
+# Release: a tag push creates the GitHub Release of the tag. Every change reaches main through the merge queue with the
+# required checks (HY-94), so every commit of main passed the full suite; the maintainer releases by tagging a commit of
+# main vX.Y.Z after a version-bump pull request. The steps run in order and stop at the first failure, because each step
+# needs the one before it: make release-verify requires the tagged commit on origin/main with the check runs push-gate
+# and ci-passed concluded success, without running the tests again; make release-versions requires the version of the
+# tag in every manifest and its section in CHANGELOG.md; make release-assets builds the npm packages and the archives
+# (npm pack of packages/hyper-js and packages/hyper-node, a zip of packages/hyper-php); make release-publish creates the
+# GitHub Release with the section as notes and the archives attached (scripts/release.mjs). TAG reaches the make
+# targets through the environment, never as shell text. The setup is the one of the job check of ci.yml: Node.js from
+# .node-version, PHP by the minor of config/toolchain.json, the template repository at its tag v0.0.1 (TEMPLATE_TAG of
+# the Makefile, HY-80) next to this repository with its TypeScript package built, and make install. Every step that
+# runs a command runs one make target, the job runs on ubuntu-26.04-arm and the actions are pinned by commit (HY-90,
+# tests/scripts/ci-workflow.test.mjs).
+name: release
+
+on:
+  push:
+    tags: ['v*', '*/v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-26.04-arm
+    env:
+      TAG: ${{ github.ref_name }}
+      GH_TOKEN: ${{ github.token }}
+    defaults:
+      run:
+        working-directory: hyper
+    steps:
+      # The whole history and every branch, so origin/main is there for the ancestry check.
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          path: hyper
+          fetch-depth: 0
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version-file: hyper/.node-version
+      - id: pins
+        run: make ci-pins
+      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2.37.2
+        with:
+          php-version: ${{ steps.pins.outputs.php }}
+          extensions: pdo_sqlite
+          tools: none
+          coverage: none
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          repository: polyspec/template
+          ref: v0.0.1
+          path: template
+      - working-directory: template
+        run: make install build-ts
+      - name: make install
+        run: make install
+      - name: verify the tagged commit
+        run: make release-verify
+      - name: check the versions
+        run: make release-versions
+      - name: build the assets
+        run: make release-assets
+      - name: create the release
+        run: make release-publish
