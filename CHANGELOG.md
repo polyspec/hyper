@@ -4,6 +4,8 @@
 
 ## Unreleased
 
+## 0.0.2
+
 ### Fixed
 
 - The template repository is used at its tag `v0.0.2`, the released tag of the template repository (H13.5-7, HY-80). `TEMPLATE_TAG` of the Makefile is `v0.0.2`; `.github/workflows/ci.yml` and `.github/workflows/release.yml` check out the template repository at `v0.0.2`, and the documents name that tag. `ci-workflow.test.mjs` and `template-copy.test.mjs` read the tag from `TEMPLATE_TAG` of the Makefile. The template tag `v0.0.1` has no GitHub Release. `make install` copies the commit of `v0.0.2`, and `make test-js`, `make test-node` and `make test-php` pass on that copy.
