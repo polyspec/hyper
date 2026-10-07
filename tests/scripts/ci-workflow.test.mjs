@@ -152,6 +152,19 @@ test('the workflow ci runs every CI group in a job that runs to its end and uplo
   }
 });
 
+// The workflow ci checks out the template repository at the tag TEMPLATE_TAG of the Makefile, the one declaration of
+// the template release (HY-80), so the copy of `make install` finds that tag and CI checks the same template commit as
+// a local run.
+test('the workflow ci checks out the template repository at the tag TEMPLATE_TAG of the Makefile (HY-80)', () => {
+  const tag = /^TEMPLATE_TAG := (\S+)$/m.exec(readFileSync(path.join(ROOT, 'Makefile'), 'utf8'))?.[1];
+  assert.match(tag ?? '', /^v\d+\.\d+\.\d+$/, 'the Makefile declares no TEMPLATE_TAG');
+  for (const job of jobs(readFileSync(path.join(WORKFLOWS, 'ci.yml'), 'utf8'))) {
+    const checkouts = job.steps.filter((step) => /^ {10}repository: polyspec\/template$/m.test(step.text));
+    assert.equal(checkouts.length, 1, `${job.name}: one checkout of polyspec/template`);
+    assert.deepEqual([...checkouts[0].text.matchAll(/^ {10}ref: (.*)$/gm)].map((match) => match[1]), [tag], `${job.name}: the ref of the template checkout is not TEMPLATE_TAG ${tag}`);
+  }
+});
+
 // A target of the full suite declared for one platform runs there and is never skipped there (HY-68): the full suite of
 // Darwin runs DARWIN_TARGETS, which no CI group of Linux runs, and their tests skip no case and fail without their tool.
 test('a target declared for Darwin is in the full suite exactly on Darwin and skips nothing there', () => {

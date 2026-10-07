@@ -8,8 +8,8 @@
 // row of docs/plans/execution-checklist.md is `[~]`, while tracked changes are uncommitted, while the pre-push hook is
 // not installed (scripts/git-hooks.mjs), and while the run of another process is still going on: a run holds the lock
 // var/full-run.lock (scripts/holder-lock.mjs), so two runs that start together cannot both run. A run is keyed by the
-// current tree (`git rev-parse HEAD^{tree}`) and the commit of the template branch, which the guard reads when it
-// starts from the template repository TEMPLATE_REPOSITORY and its branch TEMPLATE_BRANCH that make check and make
+// current tree (`git rev-parse HEAD^{tree}`) and the commit of the template tag, which the guard reads when it
+// starts from the template repository TEMPLATE_REPOSITORY and its tag TEMPLATE_TAG that make check and make
 // rerun-failed pass (HY-80); the record in the ignored var/full-run.json names both. A full run is refused when the
 // record already names a run of the current tree and template commit; `rerun-failed` is refused unless that record
 // exists and has targets that did not pass. The guard prints its decision with the reason,
@@ -54,7 +54,7 @@ const notPassed = record => record.targets.filter(target => target.status !== 'p
 /**
  * Decides whether the guard runs. `mode` is `run` or `rerun-failed`; `active` the active checklist items; `dirty` the
  * `git status --porcelain` lines of tracked files; `hooks` why the pre-push hook is not installed, or null; `tree` the
- * current tree; `template` the current commit of the template branch; `record` the record of the last run or null; `running` whether the process of an incomplete record
+ * current tree; `template` the commit of the template tag; `record` the record of the last run or null; `running` whether the process of an incomplete record
  * still exists. Returns `{ run, reason, targets }`.
  */
 export function decide({ mode, targets, active, dirty, hooks, tree, template, record, running }) {
@@ -164,15 +164,15 @@ export function makeTarget(root, target) {
  * Inspects the checkout, decides and runs. `runTarget(name)` resolves { passed, lastLines } of a target. Returns the exit
  * status: 0 when the full result of the tree is passed, 1 otherwise.
  */
-export async function fullRun({ root = ROOT, mode, targets = [], template: source = { repository: process.env.TEMPLATE_REPOSITORY, branch: process.env.TEMPLATE_BRANCH }, runTarget = name => makeTarget(root, name), print = line => console.log(line) }) {
-  if (!source.repository || !source.branch) {
-    throw new Error('TEMPLATE_REPOSITORY and TEMPLATE_BRANCH name the template repository and its branch of the run (HY-80); make check and make rerun-failed set them');
+export async function fullRun({ root = ROOT, mode, targets = [], template: source = { repository: process.env.TEMPLATE_REPOSITORY, tag: process.env.TEMPLATE_TAG }, runTarget = name => makeTarget(root, name), print = line => console.log(line) }) {
+  if (!source.repository || !source.tag) {
+    throw new Error('TEMPLATE_REPOSITORY and TEMPLATE_TAG name the template repository and its tag of the run (HY-80); make check and make rerun-failed set them');
   }
   const active = activeItems(readFileSync(path.join(root, CHECKLIST), 'utf8'));
   const dirty = git(root, 'status', '--porcelain', '--untracked-files=no').split('\n').filter(Boolean);
   const hooks = hooksProblem(root);
   const tree = git(root, 'rev-parse', 'HEAD^{tree}').trim();
-  const template = git(path.resolve(root, source.repository), 'rev-parse', '--verify', `refs/heads/${source.branch}^{commit}`).trim();
+  const template = git(path.resolve(root, source.repository), 'rev-parse', '--verify', `refs/tags/${source.tag}^{commit}`).trim();
   const record = readRecord(root);
   const running = Boolean(record && record.result === 'incomplete' && record.pid !== process.pid && alive(record.pid));
   const decision = decide({ mode, targets, active, dirty, hooks, tree, template, record, running });
@@ -186,7 +186,7 @@ export async function fullRun({ root = ROOT, mode, targets = [], template: sourc
     }
   }
   print(`[full-run] ${decision.run ? 'run' : 'refuse'}: ${decision.reason}`);
-  if (decision.run) print(`[full-run] template commit ${template} of the branch ${source.branch} of ${source.repository}`);
+  if (decision.run) print(`[full-run] template commit ${template} of the tag ${source.tag} of ${source.repository}`);
   if (!decision.run) return 1;
   try {
     return await runTargets({ root, mode, targets, runTarget, print, decision, record, tree, template });

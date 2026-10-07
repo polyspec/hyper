@@ -3,13 +3,13 @@ PHP_PACKAGE := packages/hyper-php
 JS_PACKAGE := packages/hyper-js
 NODE_PACKAGE := packages/hyper-node
 # The template repository, read only by `make template`, which writes its declared copy TEMPLATE_DIR (HY-78) of the
-# commit at the head of its branch TEMPLATE_BRANCH (HY-80). Every other recipe, npm, Composer and the native extension
-# build read the copy.
+# commit of its tag TEMPLATE_TAG (HY-80), the one declaration of the template release; .github/workflows/ci.yml checks
+# out the same tag. Every other recipe, npm, Composer and the native extension build read the copy.
 TEMPLATE_REPOSITORY := ../template
-TEMPLATE_BRANCH := main
+TEMPLATE_TAG := v0.0.1
 TEMPLATE_DIR := var/products/template
-# The record of the copy, which the copy script rewrites only when it writes a new copy: when the branch moved, the
-# build of the TypeScript package changed or the copy script changed.
+# The record of the copy, which the copy script rewrites only when it writes a new copy: when the tag names another
+# commit, the build of the TypeScript package changed or the copy script changed.
 TEMPLATE_COPY := $(TEMPLATE_DIR)/copy.json
 # Written after the npm and Composer installs of the copy; they run again only when TEMPLATE_COPY is newer, so one run
 # of many targets installs the template packages at most once.
@@ -66,7 +66,7 @@ $(if $(filter $(HOOKS_PATH),$(shell git config core.hooksPath)),,$(shell git con
 
 .DEFAULT_GOAL := help
 
-.PHONY: help tools toolchain-check owner-check install hyper-php-copy template template-branch template-check ext packages package-check server server-fixtures node-server node-fixtures assets test-js test-node test-php lint analyse-php templates-check test-scripts virtiofs-check parity server-parity bundle-size e2e docs-check serve-demo bench-server bench-server-smoke bench-browser bench check rerun-failed serve-demo-unlock hooks hooks-check push-gate-commit ci-pins ci-check ci-summary install-browser github-ruleset github-ruleset-check
+.PHONY: help tools toolchain-check owner-check install hyper-php-copy template template-tag template-check ext packages package-check server server-fixtures node-server node-fixtures assets test-js test-node test-php lint analyse-php templates-check test-scripts virtiofs-check parity server-parity bundle-size e2e docs-check serve-demo bench-server bench-server-smoke bench-browser bench check rerun-failed serve-demo-unlock hooks hooks-check push-gate-commit ci-pins ci-check ci-summary install-browser github-ruleset github-ruleset-check
 
 help: ## List the targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
@@ -77,24 +77,29 @@ tools: ## Install the pinned npm and Composer into var/tools (HY-81)
 toolchain-check: ## Fail when Node.js, npm, Composer or the PHP minor differs from its pin, naming the expected and the actual value (HY-81)
 	node scripts/toolchain.mjs check
 
-install: tools ## Install the pinned tools, write the declared copy of the template branch and install npm and Composer dependencies from it (HY-89)
+install: tools ## Install the pinned tools, write the declared copy of the template tag and install npm and Composer dependencies from it (HY-89)
 	node scripts/toolchain.mjs check
-	node scripts/copy-template.mjs --repository $(TEMPLATE_REPOSITORY) --branch $(TEMPLATE_BRANCH) --output $(TEMPLATE_DIR)
+	node scripts/copy-template.mjs --repository $(TEMPLATE_REPOSITORY) --tag $(TEMPLATE_TAG) --output $(TEMPLATE_DIR)
 	node scripts/copy-package.mjs --path $(PHP_PACKAGE) --output $(HYPER_PHP_COPY)
 	$(ONLINE) node scripts/holder-lock.mjs run $(INSTALL_LOCK) -- $(NPM) ci --no-audit --no-fund
 	$(ONLINE) node scripts/holder-lock.mjs run $(INSTALL_LOCK) -- $(COMPOSER) install --working-dir=$(PHP_PACKAGE)
 	$(ONLINE) node scripts/holder-lock.mjs run $(INSTALL_LOCK) -- $(COMPOSER) install --working-dir=$(BOARD)
 	touch $(TEMPLATE_STAMP)
 
-template: toolchain-check $(TEMPLATE_STAMP) ## Write the declared copy of the template branch and reinstall the npm and Composer copies of its packages from it, when the copy changed (HY-78, HY-80)
+template: toolchain-check $(TEMPLATE_STAMP) ## Write the declared copy of the template tag and reinstall the npm and Composer copies of its packages from it, when the copy changed (HY-78, HY-80)
 
 # The copy script runs on every make template and leaves TEMPLATE_COPY unchanged while the copy is current; make reads
 # the modification time of TEMPLATE_COPY after the recipe.
-$(TEMPLATE_COPY): template-branch | toolchain-check
-	node scripts/copy-template.mjs --repository $(TEMPLATE_REPOSITORY) --branch $(TEMPLATE_BRANCH) --output $(TEMPLATE_DIR)
+$(TEMPLATE_COPY): template-tag | toolchain-check
+	node scripts/copy-template.mjs --repository $(TEMPLATE_REPOSITORY) --tag $(TEMPLATE_TAG) --output $(TEMPLATE_DIR)
 
-# An empty target without a file, so the copy script runs on every make template.
-template-branch:
+# A target without a file, so the copy script runs on every make template; it fails when the template checkout has no
+# tag TEMPLATE_TAG.
+template-tag: ## Fail when the template repository TEMPLATE_REPOSITORY has no tag TEMPLATE_TAG, naming the expected tag and the tags it has (HY-80)
+	@git -C $(TEMPLATE_REPOSITORY) rev-parse --verify --quiet 'refs/tags/$(TEMPLATE_TAG)^{commit}' >/dev/null || { \
+	  echo "template-tag: $(TEMPLATE_REPOSITORY) has no tag $(TEMPLATE_TAG): expected the tag $(TEMPLATE_TAG), actual tags: $$(git -C $(TEMPLATE_REPOSITORY) tag --list 2>/dev/null | tr '\n' ' ')" >&2; \
+	  echo "template-tag: fetch the tags of the template repository with git -C $(TEMPLATE_REPOSITORY) fetch --tags" >&2; \
+	  exit 1; }
 
 $(TEMPLATE_STAMP): $(TEMPLATE_COPY)
 	node scripts/publish.mjs npm-copy $(TEMPLATE_DIR)/packages/template-ts node_modules/@polyspec/template
@@ -263,7 +268,7 @@ DARWIN_TARGETS := virtiofs-check
 CHECK_TARGETS += $(if $(filter Darwin,$(shell uname)),$(DARWIN_TARGETS))
 
 check: ## Run every check through the guard: once per tree, when no checklist task is [~]
-	TEMPLATE_REPOSITORY=$(TEMPLATE_REPOSITORY) TEMPLATE_BRANCH=$(TEMPLATE_BRANCH) node scripts/full-run.mjs run $(CHECK_TARGETS)
+	TEMPLATE_REPOSITORY=$(TEMPLATE_REPOSITORY) TEMPLATE_TAG=$(TEMPLATE_TAG) node scripts/full-run.mjs run $(CHECK_TARGETS)
 
 owner-check: ## Run the owner checks of the changed paths (scripts/owner-checks.json): PATHS, the paths since BASE, or the uncommitted changes (HY-88)
 	node scripts/owner-check.mjs $(if $(PATHS),--paths "$(PATHS)") $(if $(BASE),--base "$(BASE)")
@@ -283,4 +288,4 @@ install-browser: ## Install Chromium of the pinned Playwright and its system lib
 	$(ONLINE) node node_modules/@playwright/test/cli.js install --with-deps chromium
 
 rerun-failed: ## Rerun only the targets of make check that did not pass on the current tree
-	TEMPLATE_REPOSITORY=$(TEMPLATE_REPOSITORY) TEMPLATE_BRANCH=$(TEMPLATE_BRANCH) node scripts/full-run.mjs rerun-failed
+	TEMPLATE_REPOSITORY=$(TEMPLATE_REPOSITORY) TEMPLATE_TAG=$(TEMPLATE_TAG) node scripts/full-run.mjs rerun-failed
