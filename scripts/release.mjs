@@ -20,7 +20,9 @@
 // does) and requires the section `## X.Y.Z` in CHANGELOG.md. `assets` builds one archive per package, named
 // `<package name>-<version>.<ext>` with `@scope/` written as `scope-` and `vendor/` as `vendor-`: `npm pack` of the built
 // package (.tgz; `make release-assets` builds the packages first) and a zip of the directory of a Composer package from
-// `git archive` of the tagged commit (.zip). `publish` runs `gh release create TAG --verify-tag --title TAG --notes-file
+// `git archive` of the tagged commit (.zip); the release assets are npm tarballs and Composer zips only, and a Cargo
+// package is not released as an archive: it is consumed by git tag, because `cargo package` rewrites git dependencies
+// into crates.io requirements that do not resolve. A Go tag builds and attaches nothing. `publish` runs `gh release create TAG --verify-tag --title TAG --notes-file
 // <the section X.Y.Z>` with the archives of `assets`. Each failure names the tag, the file or check and both values, and
 // exits with status 1.
 import { spawnSync } from 'node:child_process';
@@ -35,7 +37,7 @@ export const MAIN = 'origin/main';
 export const CHECKS = ['push-gate', 'ci-passed'];
 export const CHANGELOG = 'CHANGELOG.md';
 export const ASSETS = 'var/release/assets';
-// The packages that a tag vX.Y.Z releases, one archive each.
+// The packages that a tag vX.Y.Z releases, one archive each: npm tarballs and Composer zips only.
 export const PACKAGES = [
   { kind: 'npm', directory: 'packages/hyper-js', name: '@polyspec/hyper' },
   { kind: 'npm', directory: 'packages/hyper-node', name: '@polyspec/hyper-server' },
@@ -43,6 +45,8 @@ export const PACKAGES = [
 ];
 // The manifests whose version a tag vX.Y.Z sets: those of the packages and the private workspace of the repository root.
 export const MANIFESTS = ['package.json', 'packages/hyper-js/package.json', 'packages/hyper-node/package.json', 'packages/hyper-php/composer.json'];
+// A tracked Cargo.toml is listed in NOT_RELEASED with this reason; this repository tracks none.
+export const GIT_TAG = 'not released as an archive; consumed by git tag';
 // The tracked manifests that no tag releases, with the reason.
 export const NOT_RELEASED = {
   'tests/package-install/package.json': 'the test package that installs the npm archives of the packages',

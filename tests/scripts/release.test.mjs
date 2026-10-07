@@ -10,7 +10,7 @@ import path from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
-import { ASSETS, assetName, assetNames, assets, changelogSection, CHECKS, GO_MODULES, MANIFESTS, NOT_RELEASED, PACKAGES, parseTag, publish, Stop, verify, versions } from '../../scripts/release.mjs';
+import { ASSETS, assetName, assetNames, assets, changelogSection, CHECKS, GIT_TAG, GO_MODULES, MANIFESTS, NOT_RELEASED, PACKAGES, parseTag, publish, Stop, verify, versions } from '../../scripts/release.mjs';
 import { dryRun } from './make-dry-run.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
@@ -222,6 +222,16 @@ test('the declarations cover every tracked manifest of the repository', () => {
     assert.equal(JSON.parse(readFileSync(manifest, 'utf8')).name, name, directory);
     assert.ok(MANIFESTS.includes(path.relative(ROOT, manifest)), `${directory}: its manifest is not version-checked`);
   }
+});
+
+test('the assets are npm tarballs and Composer zips, and a crate is consumed by git tag', () => {
+  assert.deepEqual([...new Set(PACKAGES.map(({ kind }) => kind))].sort(), ['composer', 'npm']);
+  assert.equal(GIT_TAG, 'not released as an archive; consumed by git tag');
+  for (const file of [...MANIFESTS, ...Object.keys(NOT_RELEASED)].filter((file) => path.basename(file) === 'Cargo.toml')) {
+    assert.equal(NOT_RELEASED[file], GIT_TAG, file);
+  }
+  const source = readFileSync(path.join(ROOT, 'scripts/release.mjs'), 'utf8');
+  assert.ok(!source.includes("'package', '--no-verify'") && !source.includes('.crate'), 'scripts/release.mjs builds a Cargo archive');
 });
 
 test('make runs each step with the tag of the environment', () => {

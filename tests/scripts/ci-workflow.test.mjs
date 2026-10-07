@@ -95,11 +95,12 @@ test('every step that runs a command runs make, and every step after the first r
 
 // The on: block of each workflow, exactly: the checks run on every pull request, every merge group and every manual run;
 // the push gate also on every push to a branch outside the merge queue; the release on the push of a tag vX.Y.Z or
-// <directory>/vX.Y.Z. No other workflow exists (HY-91, HY-94).
+// <directory>/vX.Y.Z at any depth (in a tag filter * does not match /, so **/v* covers a Go module tag). No other
+// workflow exists (HY-91, HY-94).
 const TRIGGERS = {
   'ci.yml': 'on:\n  pull_request:\n  merge_group:\n  workflow_dispatch:\n',
   'push-gate.yml': "on:\n  push:\n    branches-ignore: ['gh-readonly-queue/**']\n  pull_request:\n  merge_group:\n",
-  'release.yml': "on:\n  push:\n    tags: ['v*', '*/v*']\n",
+  'release.yml': "on:\n  push:\n    tags: ['v*', '**/v*']\n",
 };
 // The workflows whose checks the ruleset main requires; they run on every pull request and every merge group.
 const CHECK_WORKFLOWS = ['ci.yml', 'push-gate.yml'];
@@ -113,6 +114,8 @@ test('each workflow declares exactly its triggers (HY-91, HY-94)', () => {
     const declared = /^(on:\n(?: {2}.*\n)+)/m.exec(workflow.text)?.[1] ?? '';
     assert.equal(declared, TRIGGERS[workflow.name], `${workflow.name} declares other triggers`);
   }
+  // The trigger */v* matches a tag with one / only, so it misses a Go module tag deeper in the tree.
+  assert.notEqual("on:\n  push:\n    tags: ['v*', '*/v*']\n", TRIGGERS['release.yml']);
 });
 
 test('every workflow of a required check runs on pull requests and merge groups, and a push of branches skips the branches of the queue (HY-94)', () => {
