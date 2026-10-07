@@ -4,9 +4,9 @@
   "description": "A consumer that installs the release tarballs of this repository and the tarballs of the template release, and builds a sample application with the bins of the build package (HY-95, HY-96)",
   "type": "module",
   "dependencies": {
-    "@polyspec/hyper": "file:polyspec-hyper-0.0.3.tgz",
-    "@polyspec/hyper-build": "file:polyspec-hyper-build-0.0.3.tgz",
-    "@polyspec/hyper-server": "file:polyspec-hyper-server-0.0.3.tgz",
+    "@polyspec/hyper": "file:polyspec-hyper-0.0.4.tgz",
+    "@polyspec/hyper-build": "file:polyspec-hyper-build-0.0.4.tgz",
+    "@polyspec/hyper-server": "file:polyspec-hyper-server-0.0.4.tgz",
     "@polyspec/template": "https://github.com/polyspec/template/releases/download/v0.0.4/polyspec-template-0.0.4.tgz",
     "@polyspec/template-compiler": "https://github.com/polyspec/template/releases/download/v0.0.4/polyspec-template-compiler-0.0.4.tgz",
     "htmx.org": "4.0.0"

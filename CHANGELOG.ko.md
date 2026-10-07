@@ -4,6 +4,8 @@
 
 ## Unreleased
 
+## 0.0.4
+
 ### 추가
 
 - npm package `@polyspec/hyper-build`가 build 명령을 릴리스한다(H13.5-13, HY-96). bin `hyper-build-server`와 `hyper-build-assets`는 consumer가 checkout에서 실행했고 어떤 릴리스 asset도 담지 않았던 `scripts/build-server.mjs`와 `scripts/build-assets.mjs`를 대신한다. package는 `@polyspec/hyper`, `@polyspec/template`, `@polyspec/template-compiler`, esbuild, Tailwind CSS를 정확한 버전으로 요구하고, `make release-assets`는 `polyspec-hyper-build-X.Y.Z.tgz`를 쓴다. build는 `packages/hyper-js`의 source 대신 배포된 브라우저 package의 manifest 검사, read path, 새 export `@polyspec/hyper/data-template.json`을 읽으므로, `make server`, `make server-fixtures`, `make node-fixtures`는 이제 `make packages`를 먼저 실행한다. Makefile은 bin을 그 파일로 실행하고, 저장소의 script는 package의 module을 import한다.
