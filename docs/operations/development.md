@@ -107,7 +107,7 @@ A direct `git push origin <commit>:main` is refused with `GH013: Repository rule
 
 ## CI
 
-The workflow `.github/workflows/ci.yml` runs the full suite for every pull request and every merge group of the merge queue (HY-91, see [Publishing main](#publishing-main)); a new push to a pull request stops the run of its earlier push that is still going, because the runners are few, and the run of a merge group is never cancelled. Its job `check` has one entry per CI group of the Makefile, with `fail-fast: false`:
+The workflow `.github/workflows/ci.yml` runs the full suite for every pull request, every merge group of the merge queue and every manual run (`workflow_dispatch`) (HY-91, see [Publishing main](#publishing-main)); a new push to a pull request stops the run of its earlier push that is still going, because the runners are few, and the run of a merge group is never cancelled. Its job `check` has one entry per CI group of the Makefile, with `fail-fast: false`:
 
 | Group | Targets | Setup |
 |---|---|---|

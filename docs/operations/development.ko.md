@@ -107,7 +107,7 @@ gh pr merge <branch> --auto --rebase
 
 ## CI
 
-workflow `.github/workflows/ci.yml`은 모든 pull request와 merge queue의 모든 merge group에 대해 전체 suite를 실행한다(HY-91, [main 공개](#main-공개) 참고). runner가 적으므로 pull request의 새 push는 아직 진행 중인 앞선 push의 run을 멈추고, merge group의 run은 취소하지 않는다. 그 job `check`는 Makefile의 CI group마다 항목 하나를 `fail-fast: false`로 가진다.
+workflow `.github/workflows/ci.yml`은 모든 pull request, merge queue의 모든 merge group, 모든 수동 실행(`workflow_dispatch`)에 대해 전체 suite를 실행한다(HY-91, [main 공개](#main-공개) 참고). runner가 적으므로 pull request의 새 push는 아직 진행 중인 앞선 push의 run을 멈추고, merge group의 run은 취소하지 않는다. 그 job `check`는 Makefile의 CI group마다 항목 하나를 `fail-fast: false`로 가진다.
 
 | Group | Target | 준비 |
 |---|---|---|

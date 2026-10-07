@@ -85,6 +85,21 @@ test('every step that runs a command runs make, and every step after the first r
   assert.deepEqual(found, []);
 });
 
+// The on: block of each workflow, exactly: the checks run on every pull request, every merge group and every manual run;
+// the push gate also on every push to a branch outside the merge queue. No other workflow exists (HY-91, HY-94).
+const TRIGGERS = {
+  'ci.yml': 'on:\n  pull_request:\n  merge_group:\n  workflow_dispatch:\n',
+  'push-gate.yml': "on:\n  push:\n    branches-ignore: ['gh-readonly-queue/**']\n  pull_request:\n  merge_group:\n",
+};
+
+test('each workflow declares exactly its triggers (HY-91, HY-94)', () => {
+  assert.deepEqual(workflows().map(workflow => workflow.name).sort(), Object.keys(TRIGGERS).sort());
+  for (const workflow of workflows()) {
+    const declared = /^(on:\n(?: {2}.*\n)+)/m.exec(workflow.text)?.[1] ?? '';
+    assert.equal(declared, TRIGGERS[workflow.name], `${workflow.name} declares other triggers`);
+  }
+});
+
 test('every workflow runs on pull requests and merge groups, and a push trigger skips the branches of the queue (HY-94)', () => {
   const found = [];
   for (const workflow of workflows()) {
@@ -116,8 +131,8 @@ test('the CI groups run every target of the full suite once (HY-91)', () => {
 test('the workflow ci runs every CI group in a job that runs to its end and uploads its report (HY-91)', () => {
   const text = readFileSync(path.join(WORKFLOWS, 'ci.yml'), 'utf8');
   // The ruleset main requires the jobs on every pull request and every merge group, the commit that main receives
-  // (HY-94); a push to main never happens outside the merge queue.
-  assert.match(text, /^on:\n {2}pull_request:\n {2}merge_group:\n\n/m);
+  // (HY-94); a push to main never happens outside the merge queue. A manual run checks any branch.
+  assert.match(text, /^on:\n {2}pull_request:\n {2}merge_group:\n {2}workflow_dispatch:\n\n/m);
   // The runners are few, so a new push to a pull request stops the run of its previous push (HY-91). A merge group has a
   // ref of its own and its run is never cancelled. The push gate keeps every run: each pushed commit is checked.
   assert.match(text, /^concurrency:\n {2}group: \$\{\{ github\.workflow \}\}-\$\{\{ github\.ref \}\}\n {2}cancel-in-progress: \$\{\{ github\.event_name == 'pull_request' \}\}\n/m);
