@@ -23,13 +23,13 @@ final class Renderer
     {
     }
 
-    /** Opens the program that `scripts/build-server.mjs` wrote to a directory. */
+    /** Opens the program that `hyper-build-server` of `@polyspec/hyper-build` wrote to a directory. */
     public static function open(string $program, string $timezone): self
     {
         // A missing build fails here and names the missing file (HY-48).
         foreach (["{$program}/program.php" => is_file(...), "{$program}/program.json" => is_file(...), "{$program}/reads.json" => is_file(...), "{$program}/templates" => is_dir(...)] as $path => $exists) {
             if (!$exists($path)) {
-                throw new \InvalidArgumentException("{$path} of the server program {$program} is missing; scripts/build-server.mjs builds it");
+                throw new \InvalidArgumentException("{$path} of the server program {$program} is missing; hyper-build-server of @polyspec/hyper-build builds it");
             }
         }
         if (extension_loaded('polyspec_template')) {

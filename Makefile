@@ -2,6 +2,7 @@ BOARD := examples/board
 PHP_PACKAGE := packages/hyper-php
 JS_PACKAGE := packages/hyper-js
 NODE_PACKAGE := packages/hyper-node
+BUILD_PACKAGE := packages/hyper-build
 # npm installs the template packages @polyspec/template and @polyspec/template-compiler and Composer installs
 # polyspec/template from the assets of the template release that package.json and composer.json name (HY-70). The
 # template repository, read only by `make template`, gives the C sources and the stub of the native extension: its
@@ -104,11 +105,12 @@ template-tag: ## Fail when the template repository TEMPLATE_REPOSITORY has no ta
 ext: template ## Build the native template extension of the declared copy with phpize of the PHP of PATH into build/ext (HY-48, HY-78)
 	node $(TEMPLATE_DIR)/scripts/build-php-extension.mjs $(EXT_DIR) $(CURDIR)/$(EXT)
 
-packages: toolchain-check ## Build the JavaScript modules and type declarations of the npm packages into their dist directories and reinstall their npm copies (HY-61, HY-79)
+packages: toolchain-check ## Build the JavaScript modules and type declarations of the npm packages into their dist directories and reinstall their npm copies (HY-61, HY-79, HY-96)
 	cd $(JS_PACKAGE) && $(NPM) run --silent build -- --outDir dist.next-$$$$ && node ../../scripts/publish.mjs directory dist.next-$$$$ dist
 	node scripts/publish.mjs npm-copy $(JS_PACKAGE) node_modules/@polyspec/hyper
 	cd $(NODE_PACKAGE) && $(NPM) run --silent build -- --outDir dist.next-$$$$ && node ../../scripts/publish.mjs directory dist.next-$$$$ dist
 	node scripts/publish.mjs npm-copy $(NODE_PACKAGE) node_modules/@polyspec/hyper-server
+	node scripts/publish.mjs npm-copy $(BUILD_PACKAGE) node_modules/@polyspec/hyper-build
 
 hyper-php-copy: ## Write the copy of packages/hyper-php that the board installs and reinstall it in the board (HY-79)
 	node scripts/copy-package.mjs --path $(PHP_PACKAGE) --output $(HYPER_PHP_COPY)
@@ -119,21 +121,21 @@ package-check: packages node-fixtures ## Install the npm packages into tests/pac
 	$(TSC) -p tests/package-install/tsconfig.json
 	node scripts/run-tests.mjs node --cwd tests/package-install -- package-install.test.ts
 
-server: toolchain-check hyper-php-copy ## Build the board server program: its templates and the generated PHP program (HY-48)
-	node scripts/build-server.mjs --manifest $(BOARD)/app/app.json --templates $(BOARD)/templates --output $(BOARD)/build/server --php-namespace 'Polyspec\Hyper\Examples\Board\Program'
+server: packages hyper-php-copy ## Build the board server program: its templates and the generated PHP program (HY-48)
+	node $(BUILD_PACKAGE)/bin/hyper-build-server.mjs --manifest $(BOARD)/app/app.json --templates $(BOARD)/templates --output $(BOARD)/build/server --php-namespace 'Polyspec\Hyper\Examples\Board\Program'
 
-server-fixtures: toolchain-check ## Build the server program of the PHP test fixtures
-	node scripts/build-server.mjs --manifest $(FIXTURES)/app.json --templates $(FIXTURES)/templates --output $(PHP_PACKAGE)/tests/build/server --php-namespace 'Polyspec\Hyper\Tests\Program'
+server-fixtures: packages ## Build the server program of the PHP test fixtures
+	node $(BUILD_PACKAGE)/bin/hyper-build-server.mjs --manifest $(FIXTURES)/app.json --templates $(FIXTURES)/templates --output $(PHP_PACKAGE)/tests/build/server --php-namespace 'Polyspec\Hyper\Tests\Program'
 
 node-server: assets ## Build the board Node server into examples/board/build/node/server.mjs (HY-54)
 	$(TSC) -p $(BOARD)/node/tsconfig.json
 	$(ESBUILD) $(BOARD)/node/main.ts --bundle --platform=node --format=esm --target=node26 --log-level=warning --outfile=$(BOARD)/build/node/server.mjs
 
-node-fixtures: toolchain-check ## Build the template files of the PHP test fixtures for the Node server tests
+node-fixtures: packages ## Build the template files of the PHP test fixtures for the Node server tests
 	node scripts/build-templates.mjs --templates $(FIXTURES)/templates --output $(NODE_PACKAGE)/tests/build
 
 assets: packages ## Build the board client bundle (SSR) and the single-file static shell (CSR)
-	node scripts/build-assets.mjs --app $(BOARD) --api /api --output $(BOARD)/build --static public/assets/app.css --static public/assets/reader.css
+	node $(BUILD_PACKAGE)/bin/hyper-build-assets.mjs --app $(BOARD) --api /api --output $(BOARD)/build --static public/assets/app.css --static public/assets/reader.css
 
 test-js: toolchain-check ## Run the browser code tests, including the router conformance cases, and the type check
 	@failed=; \

@@ -57,6 +57,7 @@ const CHANGELOG = '# Changelog\n\n## Unreleased\n\n### Added\n\n- A change after
 const WORKSPACE_DEPENDENCIES = (version) => ({
   '@polyspec/hyper': { dependencies: { '@polyspec/template': '0.0.2', 'htmx.org': '4.0.0' } },
   '@polyspec/hyper-server': { dependencies: { '@polyspec/hyper': version, '@polyspec/template': '0.0.2' } },
+  '@polyspec/hyper-build': { bin: { 'hyper-build-server': 'bin/hyper-build-server.mjs' }, dependencies: { '@polyspec/hyper': version, '@polyspec/template': '0.0.2', '@polyspec/template-compiler': '0.0.2', esbuild: '0.28.2' } },
   'polyspec/hyper': { require: { php: '^8.2', 'polyspec/template': '0.0.2' } },
 });
 
@@ -199,7 +200,7 @@ test('without the repository the verification fails before any request', (t) => 
 test('an archive is named after its package and version', () => {
   assert.equal(assetName('@polyspec/hyper-server', '0.0.1', 'tgz'), 'polyspec-hyper-server-0.0.1.tgz');
   assert.equal(assetName('polyspec/hyper', '1.2.3', 'zip'), 'polyspec-hyper-1.2.3.zip');
-  assert.deepEqual(assetNames('v0.0.1'), ['polyspec-hyper-0.0.1.tgz', 'polyspec-hyper-server-0.0.1.tgz', 'polyspec-hyper-0.0.1.zip']);
+  assert.deepEqual(assetNames('v0.0.1'), ['polyspec-hyper-0.0.1.tgz', 'polyspec-hyper-server-0.0.1.tgz', 'polyspec-hyper-build-0.0.1.tgz', 'polyspec-hyper-0.0.1.zip']);
 });
 
 test('assets builds one archive per package', (t) => {
@@ -222,13 +223,14 @@ test('every packed manifest is its source manifest unchanged', (t) => {
     assert.deepEqual(manifests[assetNames(tag)[index]], source, directory);
   });
   assert.deepEqual(manifests['polyspec-hyper-server-0.0.1.tgz'].dependencies, { '@polyspec/hyper': '0.0.1', '@polyspec/template': '0.0.2' });
+  assert.deepEqual(manifests['polyspec-hyper-build-0.0.1.tgz'].bin, { 'hyper-build-server': 'bin/hyper-build-server.mjs' });
 });
 
 test('a packed manifest that differs from its source fails', (t) => {
   const box = sandbox(t);
   process.env.FAKE_PACK_FIELD = 'description';
   t.after(() => { delete process.env.FAKE_PACK_FIELD; });
-  stops(() => assets(box.root, box.tag('v0.0.1')), 'polyspec-hyper-0.0.1.tgz: the packed manifest differs from packages/hyper-js/package.json; polyspec-hyper-server-0.0.1.tgz: the packed manifest differs from packages/hyper-node/package.json');
+  stops(() => assets(box.root, box.tag('v0.0.1')), 'polyspec-hyper-0.0.1.tgz: the packed manifest differs from packages/hyper-js/package.json; polyspec-hyper-server-0.0.1.tgz: the packed manifest differs from packages/hyper-node/package.json; polyspec-hyper-build-0.0.1.tgz: the packed manifest differs from packages/hyper-build/package.json');
 });
 
 test('every published manifest of the tree names a polyspec package by an exact version and declares no repositories', () => {

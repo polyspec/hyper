@@ -50,8 +50,8 @@ final class App
     }
 
     /**
-     * Creates an application from its manifest, the server program that `scripts/build-server.mjs` built from
-     * its templates (HY-48) and the handlers that load data and run actions.
+     * Creates an application from its manifest, the server program that `hyper-build-server` of
+     * `@polyspec/hyper-build` built from its templates (HY-48) and the handlers that load data and run actions.
      *
      * The body limit is the largest request body in bytes, and the form types are the media types of the request
      * bodies that actions and `/_hyper/keep` accept (HY-59). The response limit is the largest response body in

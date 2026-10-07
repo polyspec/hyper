@@ -1,4 +1,4 @@
-// Tests the outputs of scripts/build-assets.mjs: it checks the manifest before it writes any output (HY-2), and it
+// Tests the outputs of hyper-build-assets: it checks the manifest before it writes any output (HY-2), and it
 // writes the client entry, a chunk file for code that the entry imports with import(), the manifest with the entry
 // URL only and a static shell without a stylesheet (HY-76); it only adds files with a hash in their names below
 // public/assets and writes its other outputs into the directory of --output (HY-34, HY-76).
@@ -15,7 +15,7 @@ import { copyTracked } from '../../scripts/tracked-files.mjs';
 const fixture = (name, target) => copyTracked({ repository: resolve('.'), path: `tests/scripts/fixtures/${name}`, target, base: `tests/scripts/fixtures/${name}` });
 
 function buildAssets(app, ...options) {
-  return spawnSync(process.execPath, ['scripts/build-assets.mjs', '--app', app, '--api', '/api', '--output', join(app, 'out'), ...options], { encoding: 'utf8' });
+  return spawnSync(process.execPath, ['packages/hyper-build/bin/hyper-build-assets.mjs', '--app', app, '--api', '/api', '--output', join(app, 'out'), ...options], { encoding: 'utf8' });
 }
 
 test('rejects an invalid manifest and writes nothing', () => {

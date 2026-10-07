@@ -116,15 +116,17 @@ make release-assets
 make release-publish
 ```
 
-`make release-verify`는 tag된 commit이 `origin/main`에 있고 그 commit의 최신 check run `push-gate`와 `ci-passed`(`gh api repos/<repository>/commits/<sha>/check-runs`)가 결론 `success`로 완료되었는지 확인한다. `make release-versions`는 버전을 선언하는 모든 manifest에 X.Y.Z가 있고 `CHANGELOG.md`에 section `## X.Y.Z`가 있는지 확인하며, 다른 파일마다 그 버전과 tag의 버전을 적는다. `make release-assets`는 패키지를 빌드하고(`make packages`) `polyspec-hyper-X.Y.Z.tgz`, `polyspec-hyper-server-X.Y.Z.tgz`, `polyspec-hyper-X.Y.Z.zip`을 `var/release/assets`에 쓴다. `make release-publish`는 section을 notes로 하고 archive를 붙여 GitHub Release를 만든다. job은 `ci.yml`의 job `check`처럼 Node.js, PHP, `TEMPLATE_TAG`의 template 저장소, `make install`을 준비하며, tag는 환경 변수 `TAG`로 step에 전달된다. `tests/scripts/release.test.mjs`는 어떤 tag도 릴리스하지 않는 manifest인 `tests/package-install/package.json`과 `examples/board/composer.json`을 나열하고, 릴리스되지도 나열되지도 않은 tracked manifest가 있으면 실패한다.
+`make release-verify`는 tag된 commit이 `origin/main`에 있고 그 commit의 최신 check run `push-gate`와 `ci-passed`(`gh api repos/<repository>/commits/<sha>/check-runs`)가 결론 `success`로 완료되었는지 확인한다. `make release-versions`는 버전을 선언하는 모든 manifest에 X.Y.Z가 있고 `CHANGELOG.md`에 section `## X.Y.Z`가 있는지 확인하며, 다른 파일마다 그 버전과 tag의 버전을 적는다. `make release-assets`는 패키지를 빌드하고(`make packages`) `polyspec-hyper-X.Y.Z.tgz`, `polyspec-hyper-server-X.Y.Z.tgz`, `polyspec-hyper-build-X.Y.Z.tgz`, `polyspec-hyper-X.Y.Z.zip`을 `var/release/assets`에 쓴다. `make release-publish`는 section을 notes로 하고 archive를 붙여 GitHub Release를 만든다. job은 `ci.yml`의 job `check`처럼 Node.js, PHP, `TEMPLATE_TAG`의 template 저장소, `make install`을 준비하며, tag는 환경 변수 `TAG`로 step에 전달된다. `tests/scripts/release.test.mjs`는 어떤 tag도 릴리스하지 않는 manifest인 `tests/package-install/package.json`과 `examples/board/composer.json`을 나열하고, 릴리스되지도 나열되지도 않은 tracked manifest가 있으면 실패한다.
 
-공개되는 manifest는 tree의 manifest이고, `make release-assets`는 그것을 바꾸지 않고 pack한다(HY-95). 공개되는 manifest는 모든 polyspec 패키지를 정확한 버전으로 적는다. `packages/hyper-js/package.json`과 `packages/hyper-node/package.json`은 `@polyspec/template`을 template release의 버전으로, `@polyspec/hyper`를 릴리스의 버전으로 요구하고, `packages/hyper-php/composer.json`은 `version`을 선언하고 `polyspec/template`을 template release의 버전으로 요구하며 `repositories`가 없다. packed manifest가 polyspec 패키지를 `file:`, `link:`, `workspace:` 경로, git, `github:`, ssh source, URL, range 또는 `@dev`로 적거나, zip이 `repositories`를 선언하거나 tag의 버전이 없거나, packed manifest가 source manifest와 다르면 `make release-assets`는 실패하고 archive, field, 패키지와 그 값을 적는다. `tests/scripts/release.test.mjs`는 같은 검사를 tree의 manifest에 적용한다. `tests/scripts/release-install.test.mjs`는 아래와 같이 저장소 밖의 임시 디렉터리에 에셋을 설치한다.
+공개되는 manifest는 tree의 manifest이고, `make release-assets`는 그것을 바꾸지 않고 pack한다(HY-95). 공개되는 manifest는 모든 polyspec 패키지를 정확한 버전으로 적는다. `packages/hyper-js/package.json`, `packages/hyper-node/package.json`, `packages/hyper-build/package.json`은 `@polyspec/template`을(`packages/hyper-build/package.json`은 `@polyspec/template-compiler`도) template release의 버전으로, `@polyspec/hyper`를 릴리스의 버전으로 요구하고, `packages/hyper-php/composer.json`은 `version`을 선언하고 `polyspec/template`을 template release의 버전으로 요구하며 `repositories`가 없다. packed manifest가 polyspec 패키지를 `file:`, `link:`, `workspace:` 경로, git, `github:`, ssh source, URL, range 또는 `@dev`로 적거나, zip이 `repositories`를 선언하거나 tag의 버전이 없거나, packed manifest가 source manifest와 다르면 `make release-assets`는 실패하고 archive, field, 패키지와 그 값을 적는다. `tests/scripts/release.test.mjs`는 같은 검사를 tree의 manifest에 적용한다. `tests/scripts/release-install.test.mjs`는 아래와 같이 저장소 밖의 임시 디렉터리에 에셋을 설치한다.
 
-`tests/scripts/release-install.test.mjs`는 consumer처럼 저장소 밖의 임시 디렉터리에서 `tests/release-install`의 commit된 fixture로 에셋을 설치한다. 이 저장소의 릴리스 tarball을 `file:`로, template release의 tarball을 URL로 의존하는 `npm/package.json`과 그 `package-lock.json`은 빈 cache와, scope `@polyspec`을 닿지 않는 registry `http://127.0.0.1:9/`로 돌린 `npm ci --allow-remote=root`로 설치하므로 이 저장소의 polyspec 패키지는 그 tarball에서만 오고 template tarball과 htmx.org는 lock이 pin한 대로 download된다. 이 저장소의 릴리스 zip의 `artifact` repository와 template release의 zip의 `package` repository를 둔 `composer/composer.json`과 그 `composer.lock`은 빈 `COMPOSER_HOME`과 cache로 `composer install`한다. `make release-fixtures`가 두 lock을 쓴다(`scripts/release-fixtures.mjs`). archive는 같은 실행에서 build되므로 lock은 이 저장소의 tarball이나 zip을 integrity나 shasum 없이 적고, 따라서 lock은 릴리스 버전이나 의존성이 바뀔 때만 바뀌며 릴리스 commit이 이 target을 실행한다.
+`tests/scripts/release-install.test.mjs`는 consumer처럼 저장소 밖의 임시 디렉터리에서 `tests/release-install`의 commit된 fixture로 에셋을 설치한다. 이 저장소의 릴리스 tarball을 `file:`로, template release의 tarball을 URL로 의존하는 `npm/package.json`과 그 `package-lock.json`은 빈 cache와, scope `@polyspec`을 닿지 않는 registry `http://127.0.0.1:9/`로 돌린 `npm ci --allow-remote=root`로 설치하므로 이 저장소의 polyspec 패키지는 그 tarball에서만 오고 template tarball과 third-party 패키지는 lock이 pin한 대로 download된다. 그 다음 `node_modules/.bin`의 bin `hyper-build-server`와 `hyper-build-assets`가 sample 애플리케이션 `tests/release-install/app`을 `--tailwind`와 함께 빌드한다(HY-96). 이 저장소의 릴리스 zip의 `artifact` repository와 template release의 zip의 `package` repository를 둔 `composer/composer.json`과 그 `composer.lock`은 빈 `COMPOSER_HOME`과 cache로 `composer install`한다. `make release-fixtures`가 두 lock을 쓴다(`scripts/release-fixtures.mjs`). archive는 같은 실행에서 build되므로 lock은 이 저장소의 tarball이나 zip을 integrity나 shasum 없이 적고, 따라서 lock은 릴리스 버전이나 의존성이 바뀔 때만 바뀌며 릴리스 commit이 이 target을 실행한다.
+
+npm 12.2.0은 `allow-remote=root`에서 npm fixture의 lock을 쓰지 못한다. lock을 만드는 동안 `bundleDependencies`를 가진 패키지, 여기서는 `@tailwindcss/oxide` 아래의 `@tailwindcss/oxide-wasm32-wasi`의 registry tarball을 remote 패키지로 세고 `EALLOWREMOTE`로 실패하기 때문이다([npm/cli#9818](https://github.com/npm/cli/pull/9818)). npm에는 URL별 허용 목록이 없으므로 `scripts/release-fixtures.mjs`는 `--allow-remote=all`로 lock을 쓰고, fixture의 `npm ci`는 `--allow-remote=root`를 유지하여 lock이 integrity로 pin한 것만 설치한다. 이 설정은 `packageManager`의 npm 릴리스가 npm/cli#9818을 담으면 제거한다(H13.5-14). consumer 설치에서 npm은 esbuild의 `postinstall` script를 막는다. consumer가 install script를 허용하지 않기 때문이다. esbuild는 npm이 optional 의존성으로 설치하는 platform 패키지(예: `@esbuild/darwin-arm64`)로 실행되고, `@tailwindcss/oxide`에는 install script가 없다.
 
 ### 개발 구성
 
-private root는 checkout 안의 패키지를 찾아 주며 공개되지 않는다. root `package.json`은 `@polyspec/hyper`와 `@polyspec/hyper-server`를 `packages/hyper-js`와 `packages/hyper-node`의 `file:` 사본으로, `@polyspec/template`과 `@polyspec/template-compiler`를 template release의 tarball URL로 선언하고, 패키지의 정확한 버전이 이 사본과 template tarball로 풀리게 하는 `overrides`를 둔다. npm 12는 기본으로 URL 의존성을 설치하지 않으므로 `.npmrc`가 `allow-remote=root`를 둔다. npm은 workspace를 언제나 link하므로 npm workspace는 두지 않는다(HY-79). root `composer.json`은 path repository `var/products/hyper-php`와, sha1 `shasum`을 가진 template release의 zip의 `package` repository에서 root `vendor`로 설치하고 `packages/hyper-php`의 namespace를 tree에 연결한다. `composer.lock`이 그 lock이다. 두 root는 template release v0.0.4를 받는다(HY-70). 그 tag는 `make template`이 네이티브 확장 소스를 복사하는 Makefile의 `TEMPLATE_TAG`이다(HY-80).
+private root는 checkout 안의 패키지를 찾아 주며 공개되지 않는다. root `package.json`은 `@polyspec/hyper`, `@polyspec/hyper-server`, `@polyspec/hyper-build`를 `packages/hyper-js`, `packages/hyper-node`, `packages/hyper-build`의 `file:` 사본으로, `@polyspec/template`과 `@polyspec/template-compiler`를 template release의 tarball URL로 선언하고, 패키지의 정확한 버전이 이 사본과 template tarball로 풀리게 하는 `overrides`를 둔다. npm 12는 기본으로 URL 의존성을 설치하지 않으므로 `.npmrc`가 `allow-remote=root`를 둔다. npm은 workspace를 언제나 link하므로 npm workspace는 두지 않는다(HY-79). root `composer.json`은 path repository `var/products/hyper-php`와, sha1 `shasum`을 가진 template release의 zip의 `package` repository에서 root `vendor`로 설치하고 `packages/hyper-php`의 namespace를 tree에 연결한다. `composer.lock`이 그 lock이다. 두 root는 template release v0.0.4를 받는다(HY-70). 그 tag는 `make template`이 네이티브 확장 소스를 복사하는 Makefile의 `TEMPLATE_TAG`이다(HY-80).
 
 ### 릴리스 에셋 설치
 
@@ -134,8 +136,10 @@ consumer는 필요한 릴리스의 에셋을 내려받아 함께 설치한다. r
 {
   "dependencies": {
     "@polyspec/hyper-server": "file:polyspec-hyper-server-X.Y.Z.tgz",
+    "@polyspec/hyper-build": "file:polyspec-hyper-build-X.Y.Z.tgz",
     "@polyspec/hyper": "file:polyspec-hyper-X.Y.Z.tgz",
-    "@polyspec/template": "file:polyspec-template-T.T.T.tgz"
+    "@polyspec/template": "file:polyspec-template-T.T.T.tgz",
+    "@polyspec/template-compiler": "file:polyspec-template-compiler-T.T.T.tgz"
   }
 }
 ```
@@ -149,7 +153,7 @@ Composer에서는 zip `polyspec-hyper-X.Y.Z.zip`과 `polyspec-template-T.T.T.zip
 }
 ```
 
-T.T.T는 그 릴리스의 `packages/hyper-js/package.json`이 요구하는 `@polyspec/template`의 버전이다.
+T.T.T는 그 릴리스의 `packages/hyper-js/package.json`이 요구하는 `@polyspec/template`의 버전이다. 애플리케이션을 빌드하는 consumer는 `@polyspec/hyper-build`를 설치하고 그 bin을 `node_modules/.bin`에서 실행한다(HY-96, 아래 서버 빌드와 에셋 빌드).
 
 ## CI
 
@@ -182,10 +186,11 @@ workflow `.github/workflows/ci.yml`은 모든 pull request, merge queue의 모�
 
 ## 서버 빌드
 
-`scripts/build-server.mjs --manifest <app.json> --templates <directory> --output <directory> --php-namespace <namespace>`는 서버 프로그램을 만든다(HY-48).
+build 패키지 `@polyspec/hyper-build`의 bin `hyper-build-server --manifest <app.json> --templates <directory> --output <directory> --php-namespace <namespace>`는 서버 프로그램을 만든다(HY-48, HY-96). `make server`는 checkout에서 `node packages/hyper-build/bin/hyper-build-server.mjs`로 실행한다.
 
 1. `templates/`: 애플리케이션의 모든 템플릿과 예약 템플릿 `hyper/data.tpl`. 네이티브 확장이 이 파일을 읽는다.
-2. `program.php`: 같은 템플릿을 설치한 compiler package `@polyspec/template-compiler`로(HY-70), 주어진 PHP 네임스페이스(게시판은 `Polyspec\Hyper\Examples\Board\Program`)에 컴파일한 generated PHP 프로그램. `program.json`은 그 네임스페이스를 기록하며, 렌더러가 이 파일을 읽는다. 서버가 각 영역을 단독으로 렌더하므로, 모든 템플릿은 대상으로 렌더되고 모든 정의는 HTML이다.
+2. `program.php`: 같은 템플릿을 `@polyspec/hyper-build`가 요구하는 compiler package `@polyspec/template-compiler`로(HY-70), 주어진 PHP 네임스페이스(게시판은 `Polyspec\Hyper\Examples\Board\Program`)에 컴파일한 generated PHP 프로그램. `program.json`은 그 네임스페이스를 기록하며, 렌더러가 이 파일을 읽는다. 서버가 각 영역을 단독으로 렌더하므로, 모든 템플릿은 대상으로 렌더되고 모든 정의는 HTML이다.
+3. `reads.json`: `@polyspec/hyper`의 `routeReads`로 계산한 모든 라우트의 read path(HY-73).
 
 PHP가 `polyspec_template`을 불러왔으면 네이티브 확장으로, 그렇지 않으면 `program.php`로 렌더한다. 두 출력은 같은 원본에서 만들어지므로, 서버는 확장을 불러오는지 여부만으로 엔진을 바꿀 수 있다.
 
@@ -202,7 +207,7 @@ BOARD_DB=$PWD/examples/board/var/node.db BOARD_SESSIONS=$PWD/examples/board/var/
 
 ## 에셋 빌드
 
-`scripts/build-assets.mjs --app <디렉터리> --api <기본 경로> --output <디렉터리>`는 설치한 template package `@polyspec/template`으로 다음을 쓴다(HY-70). `public/assets/` 아래에는 이름에 내용의 해시가 들어간 파일을 더하기만 하고 지우지 않으며, 해시가 없는 출력은 `--output`의 디렉터리에 둔다(HY-34). `make assets`는 `examples/board/build`를 넘긴다.
+`@polyspec/hyper-build`의 bin `hyper-build-assets --app <디렉터리> --api <기본 경로> --output <디렉터리>`는 build 패키지가 요구하는 template package `@polyspec/template`으로 다음을 쓴다(HY-70, HY-96). `make assets`는 checkout에서 `node packages/hyper-build/bin/hyper-build-assets.mjs`로 실행한다. `public/assets/` 아래에는 이름에 내용의 해시가 들어간 파일을 더하기만 하고 지우지 않으며, 해시가 없는 출력은 `--output`의 디렉터리에 둔다(HY-34). `make assets`는 `examples/board/build`를 넘긴다.
 
 1. `public/assets/templates/<name>.<hash>.json`: `templates/` 아래 템플릿마다 AST 파일 하나, 그리고 예약 템플릿 `hyper/data.tpl`의 파일 하나(HY-34).
 2. `<output>/templates.index.json`: 각 템플릿 이름과 그 파일 URL(HY-34). 클라이언트는 이를 `@polyspec/hyper/templates-index`로 import한다.
@@ -211,7 +216,7 @@ BOARD_DB=$PWD/examples/board/var/node.db BOARD_SESSIONS=$PWD/examples/board/var/
    - 진입 파일이 `import()`로만 불러오는 코드마다 조각 파일 하나. 브라우저는 그 코드가 처음 실행될 때 조각을 불러온다.
    - 진입 파일의 URL을 `hyper`로 담은 매니페스트. 서버가 레이아웃에 넘긴다.
    - 빌드는 애플리케이션이 이름을 정하는 파일을 쓰지 않는다. 애플리케이션은 자기 스타일시트를 직접 두고 링크한다.
-4. `--tailwind <source>=<output>`이 있으면 output stylesheet. source를 Tailwind CSS의 theme과, `templates/`와 `client/` 아래 file이 쓰는 utility class로 compile하고, source의 rule은 layer `components`에 두며 layer `base`의 rule은 두지 않는다(HY-77).
+4. `--tailwind <source>=<output>`이 있으면 output stylesheet. source를 Tailwind CSS의 theme과, `templates/`와 `client/` 아래 file이 쓰는 utility class로 compile하고, source의 rule은 layer `components`에 두며 layer `base`의 rule은 두지 않는다(HY-77). Tailwind CSS는 `@polyspec/hyper-build`의 의존성이므로, npm 12.2.0으로 기본값 `allow-remote=none`에서 lock을 쓰는 애플리케이션은 Tag 릴리스 절의 npm 결함을 만난다. npm 릴리스가 수정을 담을 때까지 npm은 `@tailwindcss/oxide-wasm32-wasi`의 tarball을 `EALLOWREMOTE`로 거부한다([npm/cli#9818](https://github.com/npm/cli/pull/9818)).
 5. `<output>/csr/`: CSR 배포물.
    - `index.html`은 `<meta name="hyper-api">`와 인라인한 진입 파일을 담고 스타일시트는 담지 않는다. 브라우저가 렌더한 레이아웃의 스타일시트 링크를 적용하기 때문이다(HY-64, HY-76).
    - `assets/templates/`는 이 build의 템플릿 파일을 담는다.

@@ -31,8 +31,9 @@ export interface Manifest {
   routes: RouteDeclaration[];
 }
 
-// The reserved template that embeds the document data (HY-31). Its source is in data-template.json,
-// which the asset build reads; the client bundle carries only the name (HY-34).
+// The reserved template that embeds the document data (HY-31). Its source is in data-template.json, which the
+// package exports as `@polyspec/hyper/data-template.json` for the builds; the client bundle carries only the name
+// (HY-34).
 export const DATA_TEMPLATE_NAME = 'hyper/data.tpl';
 
 const REGION_NAME = /^[A-Za-z][A-Za-z0-9_-]*$/;

@@ -11,11 +11,13 @@
     },
     "./templates-index": {
       "types": "./templates-index.d.ts"
-    }
+    },
+    "./data-template.json": "./data-template.json"
   },
   "files": [
     "dist",
-    "templates-index.d.ts"
+    "templates-index.d.ts",
+    "data-template.json"
   ],
   "sideEffects": false,
   "scripts": {

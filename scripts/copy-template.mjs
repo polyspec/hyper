@@ -12,8 +12,8 @@
 // Every path is taken from the commit of the tag with `git archive`, so its files and their modification times (the
 // commit time) are the same on every machine. When copy.json of the output already names the same tag, commit and
 // script hash, the copy writes nothing. Otherwise the copy is written into a staging directory of this process and
-// published file by file, copy.json last (scripts/publish.mjs, HY-82), so a reader never finds a file missing. This
-// script builds nothing in the template repository.
+// published file by file, copy.json last (packages/hyper-build/lib/publish.mjs, HY-82), so a reader never finds a file
+// missing. This script builds nothing in the template repository.
 //
 // Usage: node scripts/copy-template.mjs --repository ../template --tag v0.0.4 --output var/products/template
 import { execFileSync, spawnSync } from 'node:child_process';
@@ -23,7 +23,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
-import { publish, staging } from './publish.mjs';
+import { publish, staging } from '../packages/hyper-build/lib/publish.mjs';
 
 const TRACKED = [
   'packages/template-php-ext/src',

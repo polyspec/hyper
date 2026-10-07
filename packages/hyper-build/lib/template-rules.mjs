@@ -2,7 +2,7 @@
 // attributes; HY-3, the layout places {# title}, {# data} and every manifest region exactly once; HY-3 and HY-30,
 // every region is placed once, directly inside an element whose id is the region name, without block arguments:
 // a manifest region in the layout, and a route region in the route template or in a template that the route
-// template includes or places by path (HY-75). `make templates-check` and the server build use it, so an
+// template includes or places by path (HY-75). `make templates-check` and the server build use it, so a
 // server program never serves templates that break these rules.
 
 import { readdirSync, readFileSync } from 'node:fs';

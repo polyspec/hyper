@@ -51,10 +51,11 @@ export const NOTES_LIMIT = 125000;
 export const PACKAGES = [
   { kind: 'npm', directory: 'packages/hyper-js', name: '@polyspec/hyper' },
   { kind: 'npm', directory: 'packages/hyper-node', name: '@polyspec/hyper-server' },
+  { kind: 'npm', directory: 'packages/hyper-build', name: '@polyspec/hyper-build' },
   { kind: 'composer', directory: 'packages/hyper-php', name: 'polyspec/hyper' },
 ];
 // The manifests whose version a tag vX.Y.Z sets: those of the packages and the private workspace of the repository root.
-export const MANIFESTS = ['package.json', 'packages/hyper-js/package.json', 'packages/hyper-node/package.json', 'packages/hyper-php/composer.json'];
+export const MANIFESTS = ['package.json', 'packages/hyper-js/package.json', 'packages/hyper-node/package.json', 'packages/hyper-build/package.json', 'packages/hyper-php/composer.json'];
 // A tracked Cargo.toml is listed in NOT_RELEASED with this reason; this repository tracks none.
 export const GIT_TAG = 'not released as an archive; consumed by git tag';
 // The tracked manifests that no tag releases, with the reason.

@@ -42,7 +42,7 @@ function files(directory, prefix = '') {
 test('the server build writes the templates on a virtiofs bind mount', { timeout: 120000 }, (t) => {
   const templates = join(root, 'examples', 'board', 'templates');
   const result = run(t, [
-    join(root, 'scripts', 'build-server.mjs'),
+    join(root, 'packages', 'hyper-build', 'bin', 'hyper-build-server.mjs'),
     '--manifest', join(root, 'examples', 'board', 'app', 'app.json'),
     '--templates', templates,
     '--output', '/output/server',
@@ -64,7 +64,7 @@ test('the server build writes the templates on a virtiofs bind mount', { timeout
 test('the output copies write a directory and a file on a virtiofs bind mount', { timeout: 120000 }, (t) => {
   const source = join(root, 'examples', 'board', 'templates');
   const script = [
-    `import { copyDirectory, copyFile } from ${JSON.stringify(join(root, 'scripts', 'output-files.mjs'))};`,
+    `import { copyDirectory, copyFile } from ${JSON.stringify(join(root, 'packages', 'hyper-build', 'lib', 'output-files.mjs'))};`,
     `copyDirectory(${JSON.stringify(source)}, '/output/directory');`,
     `copyFile(${JSON.stringify(join(source, 'layout.tpl'))}, '/output/file/layout.tpl');`,
   ].join('\n');

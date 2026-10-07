@@ -1,5 +1,6 @@
-// Builds the server outputs of an application from its manifest and templates (HY-48), after the template rules
-// of scripts/template-rules.mjs pass:
+#!/usr/bin/env node
+// Builds the server outputs of an application from its manifest and templates (HY-48, HY-96), after the template
+// rules of lib/template-rules.mjs pass:
 //   <output>/templates/   every template and the reserved template hyper/data.tpl, which the native
 //                         template extension reads
 //   <output>/program.php  the generated PHP program of the same templates, compiled with the compiler
@@ -7,25 +8,24 @@
 //   <output>/program.json the namespace of the generated program
 //   <output>/reads.json   the read paths of every route, by which the server keeps data (HY-73)
 //
-// Usage: node scripts/build-server.mjs --manifest examples/board/app/app.json --templates examples/board/templates
-//          --output examples/board/build/server --php-namespace 'Polyspec\Hyper\Examples\Board\Program'
+// Usage: hyper-build-server --manifest app/app.json --templates templates --output build/server
+//          --php-namespace 'App\Program'
 
 import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
-import { copyDirectory } from './output-files.mjs';
-import { publish, staging } from './publish.mjs';
-import { templateProblems } from './template-rules.mjs';
+import { routeReads } from '@polyspec/hyper';
+import dataTemplate from '@polyspec/hyper/data-template.json' with { type: 'json' };
+import { compileAst } from '@polyspec/template-compiler/ast-artifact.mjs';
+import { compileSource } from '@polyspec/template-compiler/compiler.mjs';
+import { deriveTypeManifest } from '@polyspec/template-compiler/type-manifest.mjs';
+import { parse, resolvePath } from '@polyspec/template';
+import { copyDirectory } from '../lib/output-files.mjs';
+import { publish, staging } from '../lib/publish.mjs';
+import { templateProblems } from '../lib/template-rules.mjs';
 
 const { values } = parseArgs({ options: { manifest: { type: 'string' }, templates: { type: 'string' }, output: { type: 'string' }, 'php-namespace': { type: 'string' } } });
 for (const name of ['manifest', 'templates', 'output', 'php-namespace']) if (!values[name]) throw new Error(`--${name} is required`);
-// The compiler and the parser are the packages that this repository installs (HY-70).
-const { compileAst } = await import('@polyspec/template-compiler/ast-artifact.mjs');
-const { compileSource } = await import('@polyspec/template-compiler/compiler.mjs');
-const { deriveTypeManifest } = await import('@polyspec/template-compiler/type-manifest.mjs');
-const { parse, resolvePath } = await import('@polyspec/template');
-// The read paths module imports only types, so Node runs its source with type stripping, without a bundler (HY-68, HY-73).
-const { routeReads } = await import(new URL('../packages/hyper-js/src/reads.ts', import.meta.url).href);
 
 const manifest = JSON.parse(readFileSync(values.manifest, 'utf8'));
 // HY-48: templates that break the template rules fail the build before it removes or writes any output.
@@ -34,7 +34,6 @@ if (problems.length > 0) {
   for (const problem of problems) process.stderr.write(`${problem}\n`);
   process.exit(1);
 }
-const dataTemplate = JSON.parse(readFileSync(new URL('../packages/hyper-js/data-template.json', import.meta.url), 'utf8'));
 // The output is written into a staging directory of this process and published file by file, the program files last,
 // so a server that reads the output never finds a file missing (HY-82).
 const target = resolve(values.output);
