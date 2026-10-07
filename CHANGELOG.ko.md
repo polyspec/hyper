@@ -4,6 +4,8 @@
 
 ## Unreleased
 
+## 0.0.1
+
 ### 추가
 
 - 릴리스는 어느 깊이의 Go 모듈 tag든 포함하고, 그 asset은 npm tarball과 Composer zip뿐이다(H13.5-4, HY-95). `.github/workflows/release.yml`의 trigger는 `tags: ['v*', '**/v*']`이다. tag filter에서 `*`는 `/`와 맞지 않으므로 `**/v*`가 어느 깊이의 Go 모듈 tag든 포함한다. Cargo 패키지는 archive로 릴리스하지 않고 git tag로 사용한다. `cargo package`는 git 의존성을 해석되지 않는 crates.io 요구로 바꾸기 때문이다. `scripts/release.mjs`는 추적되는 `Cargo.toml`을 그 사유로 적고, `tests/scripts/release.test.mjs`는 다른 종류의 asset에서 실패한다.
