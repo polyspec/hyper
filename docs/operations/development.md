@@ -118,6 +118,33 @@ make release-publish
 
 `make release-verify` requires the tagged commit on `origin/main` and the latest check runs `push-gate` and `ci-passed` of the commit (`gh api repos/<repository>/commits/<sha>/check-runs`) completed with the conclusion `success`. `make release-versions` requires X.Y.Z in every manifest that declares a version and the section `## X.Y.Z` in `CHANGELOG.md`, and names each file with its version and the version of the tag. `make release-assets` builds the packages (`make packages`) and writes `polyspec-hyper-X.Y.Z.tgz`, `polyspec-hyper-server-X.Y.Z.tgz` and `polyspec-hyper-X.Y.Z.zip` into `var/release/assets`. `make release-publish` creates the GitHub Release with the archives and the section as notes when it has at most 125000 characters, the limit of GitHub; a longer section becomes the one line `The changes of X.Y.Z are listed in [CHANGELOG.md](https://github.com/polyspec/hyper/blob/<tag>/CHANGELOG.md#<anchor>).`, which links `CHANGELOG.md` at the tag with the anchor of the section: the id of an `<a id="...">` line above the heading, or else the version without its dots. The job sets up Node.js, PHP, the template repository at `TEMPLATE_TAG` and `make install` as the job `check` of `ci.yml` does; the tag reaches the steps through the environment variable `TAG`. `tests/scripts/release.test.mjs` lists the manifests that no tag releases, `tests/package-install/package.json` and `examples/board/composer.json`, and fails for a tracked manifest that is neither released nor listed.
 
+The packed manifests name every polyspec package by the exact version of its release and need nothing of this repository (HY-95). `make release-assets` packs each npm package, rewrites `package/package.json` of the packed copy and packs it again: a dependency on a package of this repository is the version of the tag, and a dependency on `@polyspec/template` is the version of `TEMPLATE_TAG` of the Makefile. The `composer.json` of the zip has the field `version` with the version of the tag, no `repositories` and the requirement `polyspec/template` at the version of `TEMPLATE_TAG`. The manifests of the repository keep their links into the checkout. `make release-assets` fails and names the archive, the field, the package and its value when a packed manifest names a polyspec package by a `file:`, `link:` or `workspace:` path, a git, `github:` or ssh source, a URL, a range or `@dev`, when a zip declares `repositories`, or when its `version` is not the version of the tag. `tests/scripts/release-install.test.mjs` installs the assets in a temporary directory outside the repository, as below.
+
+### Installing the release assets
+
+A consumer downloads the assets of the releases that it needs and installs them together; no registry is needed. With npm, the consumer lists every tarball as a `file:` dependency, and each exact version of a packed manifest is satisfied by the tarball installed beside it:
+
+```json
+{
+  "dependencies": {
+    "@polyspec/hyper-server": "file:polyspec-hyper-server-X.Y.Z.tgz",
+    "@polyspec/hyper": "file:polyspec-hyper-X.Y.Z.tgz",
+    "@polyspec/template": "file:polyspec-template-T.T.T.tgz"
+  }
+}
+```
+
+With Composer, the consumer puts the zips `polyspec-hyper-X.Y.Z.zip` and `polyspec-template-T.T.T.zip` into one directory and declares it as an `artifact` repository; the zips resolve each other by name and version:
+
+```json
+{
+  "repositories": [{ "type": "artifact", "url": "release-assets" }],
+  "require": { "polyspec/hyper": "X.Y.Z" }
+}
+```
+
+T.T.T is the version of `TEMPLATE_TAG` of the release.
+
 ## CI
 
 The workflow `.github/workflows/ci.yml` runs the full suite for every pull request, every merge group of the merge queue and every manual run (`workflow_dispatch`) (HY-91, see [Publishing main](#publishing-main)); a new push to a pull request stops the run of its earlier push that is still going, because the runners are few, and the run of a merge group is never cancelled. Its job `check` has one entry per CI group of the Makefile, with `fail-fast: false`:

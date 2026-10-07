@@ -4,6 +4,10 @@
 
 ## Unreleased
 
+### Fixed
+
+- The release assets install outside the repository (H13.5-9, HY-95). The packed manifests named `@polyspec/template` by a `file:` path into the checkout and `polyspec/template` by `@dev` with a path repository, and the zip had no `version`, so no consumer could install them. `make release-assets` packs each npm package, rewrites `package.json` of the packed copy and packs it again, and writes the zip with a rewritten `composer.json`: every polyspec dependency is the exact version of its release, a package of this repository at the version of the tag and a template package at the version of `TEMPLATE_TAG`, and the zip has `version` and no `repositories`. It fails and names the archive, the field and the value for a path, git, `github:`, ssh, URL, range or `@dev` dependency on a polyspec package, for `repositories` and for a missing version. The manifests of the repository keep their links into the checkout. `docs/operations/development.md` states how a consumer installs the assets: npm tarballs as `file:` dependencies, Composer zips from an `artifact` repository. Red: the check names 5 problems in the assets of v0.0.2. Green: `tests/scripts/release.test.mjs` passes 25 cases, and `tests/scripts/release-install.test.mjs` installs the packed assets with `npm install --offline` and with Composer from an `artifact` repository in a temporary directory outside the repository.
+
 ## 0.0.2
 
 ### Fixed
