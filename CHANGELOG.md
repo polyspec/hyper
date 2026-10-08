@@ -17,6 +17,7 @@
 - The Python tests that read a manifest or a program from a temporary directory remove that directory after the read (H15.3-6).
 - The docstring and the test name of the region request check name the `HX-Request` header, not a client library (H15.3-7).
 - The Python README names the kept functions by their module path, `polyspec.hyper.kept.apply` and `polyspec.hyper.kept.select` (H15.3-8).
+- The Python README install line takes the release tag as the placeholder `vX.Y.Z`, because no release tag carries `packages/hyper-python` yet (H15.3-9).
 
 ## 0.0.4
 
