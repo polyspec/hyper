@@ -497,6 +497,7 @@
         "examples/board/composer.lock"
       ],
       "targets": [
+        "dependency-policy-check",
         "dependency-policy-mutation-check"
       ]
     }

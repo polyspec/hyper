@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: 81abab38cdcc092d9a53b833dc1f101c68a16928f7fd3e40bcaa2ad97afc5028 -->
+<!-- source-sha256: 02e5b292ef035a1d3b99a68fba991ba65b2c31d90f740c5da951650165b2a75a -->
 # 개발
 
 [English](development.md).
@@ -155,7 +155,7 @@ workflow `.github/workflows/ci.yml`은 `main`의 push와 모든 수동 실행(`w
 | 항목 | Target | 준비 |
 |---|---|---|
 | `docs` | `kit-check`, `kit-test`, `documents-check`, `hooks-check`, `push-gate-commit`, `commits-check`, `owner-validate` | Node.js, Python |
-| `php` | `dependency-policy-mutation-check`, `bench-server-smoke`, `lint`, `analyse-php`, `test-php` | Node.js, Python, PHP, template checkout, `make install` |
+| `php` | `dependency-policy-check`, `dependency-policy-mutation-check`, `bench-server-smoke`, `lint`, `analyse-php`, `test-php` | Node.js, Python, PHP, template checkout, `make install` |
 | `node` | `templates-check`, `test-scripts`, `test-js`, `test-node`, `package-check` | Node.js, Python, PHP, template checkout, `make install` |
 | `board` | `parity`, `server-parity`, `bundle-size`, `e2e` | Node.js, Python, PHP, template checkout, `make install`, `make install-browser` |
 | `python-3.11`, `python` | `test-python` | Node.js, Python 3.11과 `.python-version`의 Python |
