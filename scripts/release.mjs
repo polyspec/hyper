@@ -65,6 +65,7 @@ export const NOT_RELEASED = {
   'tests/release-install/composer/composer.json': 'the Composer consumer fixture that installs the release zips',
   'examples/board/composer.json': 'the example application, which installs the packages from the checkout',
   'composer.json': 'the private development root of packages/hyper-php, which resolves the packages from the checkout',
+  'packages/hyper-python/pyproject.toml': 'the Python package, which no release step builds before the release row H15.3-18 is done',
 };
 // The Go modules: a tag <directory>/vX.Y.Z releases the module of that directory. This repository has none.
 export const GO_MODULES = {};
