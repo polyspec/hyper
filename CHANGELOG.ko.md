@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 081004daf2fe0f5b91ad433b486861a0af1377ea1441ab4b66f354a4fe343e11 -->
+<!-- source-sha256: e975363b1dc87ea7b540eb049dc783899b33b06b6b453a497412ec55e618db3c -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- H16.6: vendor한 공유 도구가 `polyspec/kit`의 tag `v0.0.7`입니다. 이 tag의 의존성 gate는 lock이 그 디렉터리를 가리킬 때 `file:<디렉터리>`로 요구한 로컬 npm 패키지를 받아들입니다.
 - H16.5: vendor한 공유 도구가 `polyspec/kit`의 tag `v0.0.6`입니다. 이 tag는 의존성 policy에서 저장소 root의 Composer manifest를 받아들이고, 복사본으로 설치한 npm 패키지의 lock 항목을 읽으며, `make documents-stamp`를 더합니다.
 - H15.3-14(우회): 행이 제거된 `CI_TARGETS_python` 대신 `ci.yml`의 matrix 항목과 `CHECK_TARGETS`를, pull request의 필수 check 대신 `main`의 push의 실패한 check를 적습니다. 재시도 조건은 그대로입니다: template release tag가 `packages/template-python`을 담는다.
 - H16.4: `AGENTS.md`와 `AGENTS.ko.md`가 버전 0.1 전까지의 공개(모든 작업이 끝났을 때만 `main`을 push, pull request, merge queue, ruleset 없음, `main`의 CI 실행의 check `ci-passed`가 성공한 뒤에만 release tag), archive 이름 `<package>-<language>-<version>.<ext>`, 버전 올림 파일(`packages/hyper-python/pyproject.toml`, `examples/board/composer.json`과 그 lock), 공유 도구의 소유(`scripts/kit/`와 `tests/kit/`는 kit에서만 바뀌고 저장소 설정은 `config/*.json`), 명령 `make documents-check`, `scripts/kit/full-run.mjs`, `scripts/kit/push-gate.mjs`, `config/owner-checks.json`을 적습니다. 검증: `make documents-check`가 통과합니다.

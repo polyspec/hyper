@@ -5,6 +5,7 @@
 
 ## Unreleased
 
+- H16.6: the vendored shared tools are the tag `v0.0.7` of `polyspec/kit`, whose dependency gate accepts a local npm package required as `file:<its directory>` when the lock names that directory.
 - H16.5: the vendored shared tools are the tag `v0.0.6` of `polyspec/kit`, which accepts a Composer manifest at the repository root in the dependency policy, reads the lock entry of an npm package installed as a copy and adds `make documents-stamp`.
 - H15.3-14 (bypassed): the row names the matrix entries of `ci.yml` and `CHECK_TARGETS` instead of the removed `CI_TARGETS_python`, and the failed check of the push of `main` instead of the required check of a pull request; the retry condition is unchanged: a template release tag contains `packages/template-python`.
 - H16.4: `AGENTS.md` and `AGENTS.ko.md` state the publication until version 0.1 (a push of `main` only when every task is done, no pull request, merge queue or ruleset, a release tag only after the check `ci-passed` of the CI run of `main` succeeded), the archive names `<package>-<language>-<version>.<ext>`, the files of the version bump (`packages/hyper-python/pyproject.toml`, `examples/board/composer.json` and its lock), the ownership of the shared tools (`scripts/kit/` and `tests/kit/` change only in kit, the repository configuration is `config/*.json`) and the commands `make documents-check`, `scripts/kit/full-run.mjs`, `scripts/kit/push-gate.mjs` and `config/owner-checks.json`. Verified: `make documents-check` passes.
