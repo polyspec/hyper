@@ -91,3 +91,14 @@ test('every option that a recipe passes to a script of scripts/ is declared by t
   assert.ok(checked > 10, `only ${checked} options were checked`);
   assert.deepEqual(found, []);
 });
+
+// The targets of the kit that run npm in the consumer projects of tests/release-install need npm_config_allow_remote (H13.5-14):
+// npm 12 refuses the template tarballs, which the lock pins by their integrity, under the default setting, so `npm ci` of
+// release-consumer and release-proof runs with `root`; npm 12.2.0 also refuses to write the lock while it counts the registry
+// tarball of a package with bundleDependencies as remote (npm/cli#9818), so release-consumer-lock runs with `all`.
+test('every target that runs npm in the release consumer projects exports npm_config_allow_remote', () => {
+  const makefile = readFileSync(path.join(ROOT, 'Makefile'), 'utf8');
+  const expected = { 'release-consumer': 'root', 'release-proof': 'root', 'release-consumer-lock': 'all' };
+  const actual = Object.fromEntries(Object.keys(expected).map((target) => [target, new RegExp(`^${target}: export npm_config_allow_remote := (\\w+)$`, 'm').exec(makefile)?.[1]]));
+  assert.deepEqual(actual, expected);
+});

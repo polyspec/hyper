@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: 7cfd57c721d6c7b76e7fac10a0a8d2444c471a081fb5b00e9688010872caf8bf -->
+<!-- source-sha256: c7dba523bfca9cfccdcadf63e300c92f51e776b1bad9260c5ed743d5eebe7d88 -->
 # 개발
 
 [English](development.md).
@@ -115,7 +115,7 @@ make release-publish
 
 `make release-consumer TAG=vX.Y.Z`는 consumer처럼 저장소 밖의 임시 디렉터리에서 `tests/release-install`의 commit된 프로젝트로 `var/release/assets`의 archive를 빈 cache로 설치한다. 이 저장소의 릴리스 tarball을 `file:`로, template release의 tarball을 URL로 의존하는 `npm/package.json`과 그 `package-lock.json`은, scope `@polyspec`을 닿지 않는 registry `http://127.0.0.1:9/`로 돌린 `npm ci`로 설치하므로 이 저장소의 polyspec 패키지는 그 tarball에서만 오고 template tarball과 third-party 패키지는 lock이 pin한 대로 download된다. 이 저장소의 릴리스 zip의 `artifact` repository `artifacts`와 template release의 zip의 `package` repository를 둔 `composer/composer.json`과 그 `composer.lock`은 `composer install`로 설치한다. 설치한 각 패키지는 `config/release.json`의 smoke 명령을 실행한다. npm 패키지는 import하고, `@polyspec/hyper-build`의 bin `hyper-build-server`와 `hyper-build-assets`는 모든 import를 불러 첫 인자 검사에서 멈추며, Composer 패키지의 class `Polyspec\Hyper\App`은 불러와진다. `make release-consumer-lock TAG=vX.Y.Z`는 archive로 두 manifest와 lock을 쓴다. archive는 같은 실행에서 build되므로 lock은 이 저장소의 tarball이나 zip을 integrity나 shasum 없이 적고, 따라서 lock은 릴리스 버전이나 의존성이 바뀔 때만 바뀌며 릴리스 commit이 이 target을 실행한다.
 
-npm 12.2.0은 `allow-remote=root`에서 npm consumer 프로젝트의 lock을 쓰지 못한다. lock을 만드는 동안 `bundleDependencies`를 가진 패키지, 여기서는 `@tailwindcss/oxide` 아래의 `@tailwindcss/oxide-wasm32-wasi`의 registry tarball을 remote 패키지로 세고 `EALLOWREMOTE`로 실패하기 때문이다([npm/cli#9818](https://github.com/npm/cli/pull/9818)). npm에는 URL별 허용 목록이 없으므로 Makefile은 `make release-consumer-lock`을 `npm_config_allow_remote=all`로 실행하고, `make release-consumer`는 template tarball에 npm 12가 필요로 하는 `npm_config_allow_remote=root`로 실행하며 lock이 integrity로 pin한 것만 설치한다. 이 설정은 `packageManager`의 npm 릴리스가 npm/cli#9818을 담으면 제거한다(H13.5-14). consumer 설치에서 npm은 esbuild의 `postinstall` script를 막는다. consumer가 install script를 허용하지 않기 때문이다. esbuild는 npm이 optional 의존성으로 설치하는 platform 패키지(예: `@esbuild/darwin-arm64`)로 실행되고, `@tailwindcss/oxide`에는 install script가 없다.
+npm 12.2.0은 `allow-remote=root`에서 npm consumer 프로젝트의 lock을 쓰지 못한다. lock을 만드는 동안 `bundleDependencies`를 가진 패키지, 여기서는 `@tailwindcss/oxide` 아래의 `@tailwindcss/oxide-wasm32-wasi`의 registry tarball을 remote 패키지로 세고 `EALLOWREMOTE`로 실패하기 때문이다([npm/cli#9818](https://github.com/npm/cli/pull/9818)). npm에는 URL별 허용 목록이 없으므로 Makefile은 `make release-consumer-lock`을 `npm_config_allow_remote=all`로 실행하고, `make release-consumer`와 `make release-proof`는 template tarball에 npm 12가 필요로 하는 `npm_config_allow_remote=root`로 실행하며 lock이 integrity로 pin한 것만 설치한다. 이 설정은 `packageManager`의 npm 릴리스가 npm/cli#9818을 담으면 제거한다(H13.5-14). consumer 설치에서 npm은 esbuild의 `postinstall` script를 막는다. consumer가 install script를 허용하지 않기 때문이다. esbuild는 npm이 optional 의존성으로 설치하는 platform 패키지(예: `@esbuild/darwin-arm64`)로 실행되고, `@tailwindcss/oxide`에는 install script가 없다.
 
 ### 개발 구성
 

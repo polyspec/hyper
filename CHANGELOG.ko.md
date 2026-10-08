@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: ae1ec84997bfa66e4ad5385c06a553c6be57025bb20a0a9d75098a1731512b21 -->
+<!-- source-sha256: 96832fcf7ac2a3739df2708f8440e716c0d3745083f8caca7296eda58719bea0 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- H17.1-1: `make release-proof`가 `make release-consumer`처럼 `npm_config_allow_remote=root`로 실행됩니다. 이 설정이 없으면 consumer 프로젝트의 `npm ci`가 template tarball 때문에 `EALLOWREMOTE`로 실패했습니다(npm 12.2.0). `release-consumer-lock`은 `all`을 유지합니다(H13.5-14). `tests/scripts/check-recipes.test.mjs`는 세 target 각각의 값을 요구합니다. 검증: `make release-proof TAG=v0.0.5`가 통과합니다.
 ## 0.0.5
 
 - H17.1: 버전 0.0.5를 `package.json`, npm 패키지 셋, `packages/hyper-php/composer.json`, `packages/hyper-python/pyproject.toml`, `tests/package-install/package.json`에, `@polyspec/hyper`와 `polyspec/hyper`의 requirement와 그 lock에, `tests/release-install`의 consumer 프로젝트에 정했고, `## Unreleased`가 이 section이 되었습니다. 검증: `make release-versions TAG=v0.0.5`, `make release-coverage`, `make release-consumer TAG=v0.0.5`, `make dependency-policy-check`와 버전을 읽는 unit test가 통과합니다.
