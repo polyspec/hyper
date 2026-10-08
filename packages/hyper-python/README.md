@@ -30,7 +30,7 @@ fields = Fields.parse(b'page=2&sort=title')  # names ['page', 'sort'], get('page
   HY-42, HY-56, HY-57, HY-62); `target_path` and `target_query` split a request target.
 - `Manifest.from_file` reads and checks the application manifest (HY-1, HY-2); `Region` is one manifest region or
   route region with its kept paths (HY-37).
-- `Kept.apply` and `Kept.select` apply kept values that conform to the data (HY-38); `Reads.keep` keeps the read
+- `polyspec.hyper.kept.apply` and `polyspec.hyper.kept.select` apply kept values that conform to the data (HY-38); `Reads.keep` keeps the read
   paths of the data (HY-73).
 - `Result` is the outcome of an action (HY-25, HY-26, HY-46, HY-58), `Reply` the cookies, the cache control, the
   page status and the data embedding of a response (HY-52, HY-69, HY-92), and `NotFound`, `Forbidden`, `BadRequest`

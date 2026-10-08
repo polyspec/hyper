@@ -16,6 +16,7 @@
 
 - Python 테스트가 manifest나 program을 임시 디렉터리에서 읽은 뒤 그 디렉터리를 지운다 (H15.3-6).
 - region request 확인의 docstring과 테스트 이름이 client 라이브러리 대신 `HX-Request` header를 가리킨다 (H15.3-7).
+- Python README가 kept 함수를 module 경로 `polyspec.hyper.kept.apply`와 `polyspec.hyper.kept.select`로 가리킨다 (H15.3-8).
 
 ## 0.0.4
 
