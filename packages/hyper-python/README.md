@@ -56,3 +56,19 @@ response = app.handle(request, ArraySession())
 - `ClientRendering` with `Choice` declares the client-rendered pages of an application (HY-62): the static shell,
   the data base path and the selection of each request.
 
+- The server module serves an application over the Python standard library `http.server` with sessions in files:
+  `create_server(app, sessions)` returns a threaded HTTP server that sends every request to `App.handle`, reads no
+  more of a body larger than the body limit (HY-59), sets the cookie of a new session first (HY-45) and serves the
+  files of an optional public directory as the PHP built-in server serves its document root. `FileSessions` keeps
+  each session in a JSON file named by an identifier of 64 hexadecimal digits that it created, writes the file with
+  one rename and runs the requests of one session one after another.
+
+```python
+from polyspec.hyper.file_sessions import FileSessions
+from polyspec.hyper.server import create_server
+
+server = create_server(app, FileSessions('/var/lib/board/sessions'), files='public', port=8080)
+server.serve_forever()
+```
+
+

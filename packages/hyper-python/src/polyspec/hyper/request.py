@@ -21,8 +21,11 @@ class Request:
     def __init__(self, method: str, path: str, headers: Optional[dict[str, str]] = None, query: str = '',
                  body: bytes = b'', flash: Optional[dict] = None, csrf_token: str = '',
                  params: Optional[dict[str, str]] = None, cookies: Optional[dict[str, str]] = None,
-                 https: bool = False, selection: object = None):
+                 https: bool = False, selection: object = None, body_size: Optional[int] = None):
         self.method = method
+        # The size of the body that the server received, when it stopped reading a body larger than the limit
+        # (HY-59); None counts the body itself.
+        self._given_body_size = body_size
         self._path = path
         self._headers = {name.lower(): value for name, value in (headers or {}).items()}
         self._query = query
@@ -83,7 +86,7 @@ class Request:
             length = int(declared) if declared.isdigit() else 0
         except ValueError:
             length = 0
-        return max(len(self._body), length)
+        return max(len(self._body), length, self._given_body_size or 0)
 
     def media_type(self) -> str:
         """Returns the media type of the Content-Type header in lower case, without its parameters (HY-59)."""
@@ -167,10 +170,11 @@ class Request:
 
     def _copy(self, **changes) -> 'Request':
         state = {'path': self._path, 'flash': self._flash, 'csrf_token': self._csrf_token,
-                 'params': self._params, 'selection': self._selection}
+                 'params': self._params, 'selection': self._selection, 'body_size': self._given_body_size}
         state.update(changes)
         return Request(self.method, state['path'], self._headers, self._query, self._body, state['flash'],
-                       state['csrf_token'], state['params'], self._cookies, self.https, state['selection'])
+                       state['csrf_token'], state['params'], self._cookies, self.https, state['selection'],
+                       state['body_size'])
 
 
 def _is_utf8(text: str) -> bool:
