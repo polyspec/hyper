@@ -6,6 +6,7 @@
     { "paths": ["packages/hyper-php/{src,tests}/**", "packages/hyper-php/{composer.json,phpstan.neon,phpunit.xml,pint.json}", "composer.json", "composer.lock"], "targets": ["test-php", "analyse-php", "lint"] },
     { "paths": ["packages/hyper-js/**"], "targets": ["test-js", "package-check", "bundle-size"] },
     { "paths": ["packages/hyper-node/**"], "targets": ["test-node", "package-check"] },
+    { "paths": ["packages/hyper-python/**", ".python-version"], "targets": ["test-python"] },
     { "paths": ["conformance/**"], "targets": ["test-js", "test-node", "test-php"] },
     { "paths": ["examples/board/{app,templates}/**"], "targets": ["templates-check", "parity", "server-parity", "e2e", "bundle-size"] },
     { "paths": ["examples/board/{client,public}/**", "examples/board/compare.html"], "targets": ["parity", "e2e", "bundle-size"] },

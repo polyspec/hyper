@@ -7,6 +7,7 @@
 | 의존성 | 버전 | 종류 | 이유 | 해제 조건 |
 |---|---|---|---|---|
 | Node.js, npm, PHP, Composer | `.node-version` 26.8.1, `packageManager` npm 12.2.0, `config/toolchain.json`의 정확한 Composer 2.10.3과 minor인 PHP 8.5. make는 pin하지 않는다 | 도구 | 같은 도구로만 build와 검사가 같은 결과를 낸다(HY-81). npm 12는 `npm pack --json`을 npm 11과 다르게 출력한다. | 없음. 새 release는 pin을 바꾸는 commit이 된다. PHP patch release는 통과하고 full run이 그것을 기록한다. |
+| Python | `.python-version` 3.14와 `config/toolchain.json`의 `python` pin, `packages/hyper-python`의 `requires-python >= 3.11` | 도구 | Python 서버 package가 3.11과 최신 안정 release에서 돈다. CI가 둘 다 돌린다(H15.3). | 없음. 새 안정 release는 `.python-version`과 pin을 바꾸는 commit이 된다. |
 | `htmx.org` | `4.0.0` 정확히 고정 | 런타임, 클라이언트 스크립트에 번들 | 영역 프로토콜은 htmx 4의 훅, 요청 컨텍스트 필드, 스왑 동작을 사용하며, 이를 4.0.0 소스로 확인했다. npm은 4.0.0에 `next` 태그를 붙이고 2.x를 `latest`로 유지하므로, 고정하지 않은 범위는 htmx 2를 선택한다. | npm이 htmx 4 릴리스에 `latest` 태그를 붙이면 `^4` 범위를 사용하고 `make check`를 다시 실행한다. |
 | `@playwright/test`, `@types/node`, `esbuild`, `typescript`, `vitest` | 정확히 고정 | 개발 | `npm ci`가 같은 도구를 설치하도록 root package가 개발 도구 버전을 정확히 고정한다. | 각 도구를 최신 안정 버전으로 올리고 `make check`를 다시 실행한다. |
 | `laravel/pint` | `^1.0`, 1.30.4로 해석 | 개발 | Pint 1.31 이후 버전은 PHP 8.3을 요구하고, Composer 플랫폼은 PHP 8.2다. | 지원 PHP 범위가 8.3부터 시작할 때. |

@@ -4,6 +4,10 @@
 
 ## Unreleased
 
+### Added
+
+- Python package `packages/hyper-python` (`polyspec-hyper`, namespace `polyspec.hyper`)이 router(HY-4 to HY-8, HY-49), query와 form 값(HY-56, HY-57), mask된 CSRF token(HY-24), PHP 서버와 같은 바이트의 JSON text(HY-17, HY-54)를 구현한다. `unittest` test가 `conformance/routes.json`, `rest.json`, `csrf.json`, `fields.json`, `json.json`의 모든 사례를 읽는다(H15.3-1).
+
 ## 0.0.4
 
 ### 추가
