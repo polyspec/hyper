@@ -18,15 +18,22 @@ class Container:
         self._factories[cls] = factory
         self._instances.pop(cls, None)
 
-    def call(self, function: 'callable', provided: dict[type, object]) -> object:
-        """Calls a function with an argument for every parameter whose annotation names a class: a provided object
-        of this call, or the service of the class that `bind` registered."""
+    def call(self, function: 'callable', provided: dict[object, object]) -> object:
+        """Calls a function with an argument for every parameter: a parameter whose annotation names a class
+        receives a provided object of this call or the service of the class that `bind` registered, and a parameter
+        without an annotation receives the provided object of its name, which is how a lambda names the request
+        `request` and the reply `reply`."""
         arguments = []
         for parameter in inspect.signature(function).parameters.values():
             annotation = parameter.annotation
+            if annotation is inspect.Parameter.empty:
+                if parameter.name not in provided:
+                    raise TypeError(f'parameter {parameter.name} has no class type')
+                arguments.append(provided[parameter.name])
+                continue
             if not isinstance(annotation, type) or annotation in (str, int, float, bool, bytes, object):
                 raise TypeError(f'parameter {parameter.name} has no class type')
-            arguments.append(provided.get(annotation, self._service(annotation)))
+            arguments.append(provided[annotation] if annotation in provided else self._service(annotation))
         return function(*arguments)
 
     def _service(self, cls: type) -> object:
