@@ -3,6 +3,10 @@ PHP_PACKAGE := packages/hyper-php
 JS_PACKAGE := packages/hyper-js
 NODE_PACKAGE := packages/hyper-node
 BUILD_PACKAGE := packages/hyper-build
+PYTHON_PACKAGE := packages/hyper-python
+# The Python of the checks is the python3 of PATH; requires-python >= 3.11 and the Python pin of
+# config/toolchain.json name the release that CI runs.
+PYTHON := python3
 # npm installs the template packages @polyspec/template and @polyspec/template-compiler and Composer installs
 # polyspec/template from the assets of the template release that package.json and composer.json name (HY-70). The
 # template repository, read only by `make template`, gives the C sources and the stub of the native extension: its
@@ -68,7 +72,7 @@ $(if $(filter $(HOOKS_PATH),$(shell git config core.hooksPath)),,$(shell git con
 
 .DEFAULT_GOAL := help
 
-.PHONY: help tools toolchain-check owner-check install hyper-php-copy template template-tag ext packages package-check server server-fixtures node-server node-fixtures assets test-js test-node test-php lint analyse-php templates-check test-scripts virtiofs-check parity server-parity bundle-size e2e docs-check serve-demo bench-server bench-server-smoke bench-browser bench check rerun-failed serve-demo-unlock hooks hooks-check push-gate-commit ci-pins ci-check ci-summary ci-passed install-browser release-verify release-versions release-assets release-publish release-fixtures github-ruleset github-ruleset-check
+.PHONY: help tools toolchain-check owner-check install hyper-php-copy template template-tag ext packages package-check server server-fixtures node-server node-fixtures assets test-js test-node test-php test-python lint analyse-php templates-check test-scripts virtiofs-check parity server-parity bundle-size e2e docs-check serve-demo bench-server bench-server-smoke bench-browser bench check rerun-failed serve-demo-unlock hooks hooks-check push-gate-commit ci-pins ci-check ci-summary ci-passed install-browser release-verify release-versions release-assets release-publish release-fixtures github-ruleset github-ruleset-check
 
 help: ## List the targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
@@ -154,6 +158,9 @@ test-php: template server-fixtures ext ## Run the server package tests with the 
 	$(call check,PHPUnit with the generated program,node scripts/run-tests.mjs phpunit --cwd $(PHP_PACKAGE)) \
 	$(call check,PHPUnit with the native extension,node scripts/run-tests.mjs phpunit --cwd $(PHP_PACKAGE) --extension $(EXT)) \
 	$(checks_result)
+
+test-python: ## Run the Python server package tests, which read the conformance cases of routes, rest, csrf, fields and json
+	PYTHONPATH=$(CURDIR)/$(PYTHON_PACKAGE)/src $(PYTHON) $(PYTHON_PACKAGE)/tests/run.py
 
 lint: toolchain-check ## Check PHP formatting
 	@failed=; \

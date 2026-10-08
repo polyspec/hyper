@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools==80.9.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "polyspec-hyper"
+version = "0.0.4"
+description = "Server for the polyspec region protocol: manifest, routing, documents, JSON responses, actions and sessions"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    # The template release v0.0.5 carries the Python template package; until that tag exists, the tests of
+    # `make test-python-render` import the template package of the sibling checkout (docs/plans/execution-checklist.md,
+    # H15.3-3).
+    "polyspec-template @ git+https://github.com/polyspec/template@v0.0.5#subdirectory=packages/template-python",
+]
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
