@@ -22,6 +22,7 @@
 - Python package의 `setuptools==80.9.0` pin을 사유와 제거 조건과 함께 의존성 기록에 적는다 (H15.3-10).
 - H15.3 verification은 `make test-python-render`와 `make server-parity-python`이 template release가 Python package를 담을 때까지 CI 밖에서 실행된다고 적는다 (H15.3-11).
 - Python package의 build backend pin을 `setuptools==80.9.0`에서 `setuptools==84.0.0`으로 바꾼다. 형제 Python 패키지가 고정한 release와 같다 (H15.3-13).
+- H15.3의 render와 parity target은 CI group에 없다. template checkout이 `packages/template-python` 없는 tag에 고정되어 있어 넣으면 필수 check가 실패하므로, 그 tag가 생길 때까지 우회한다 (H15.3-14).
 
 ## 0.0.4
 
