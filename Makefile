@@ -176,7 +176,7 @@ test-scripts: packages ## Run the tests of the check scripts, or only the files 
 parity: assets server ext ## Compare PHP documents (generated program and native extension) with browser renders of document and region JSON
 	@failed=; \
 	$(call check,parity with the generated program,node scripts/check-parity.mjs --app $(BOARD) --requests $(BOARD)/tests/parity/requests.json) \
-	$(call check,parity with the native extension,node scripts/check-parity.mjs --app $(BOARD) --requests $(BOARD)/tests/parity/requests.json --php-extension $(EXT)) \
+	$(call check,parity with the native extension,node scripts/check-parity.mjs --app $(BOARD) --requests $(BOARD)/tests/parity/requests.json --extension $(EXT)) \
 	$(checks_result)
 
 server-parity: node-server server ## Compare the Node server responses with the PHP responses, with the browser comparison of parity (HY-55)
