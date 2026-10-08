@@ -24,6 +24,7 @@
 - The H15.3 verification names `make test-python-render` and `make server-parity-python` as running outside CI until a template release carries the Python package (H15.3-11).
 - The Python package's build backend pin changes from `setuptools==80.9.0` to `setuptools==84.0.0`, the release that the sibling Python packages pin (H15.3-13).
 - The render and parity targets are not in a CI group: the template checkout is pinned to a tag without `packages/template-python`, so adding them would fail the required check. The item is bypassed until that tag exists (H15.3-14).
+- The package data of `packages/hyper-python` declares the `py.typed` marker of the namespace package `polyspec.hyper`, and `make test-python` runs the package data test of `tests/package` beside the unit tests (H15.3-15).
 
 ## 0.0.4
 

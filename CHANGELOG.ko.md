@@ -24,6 +24,7 @@
 - H15.3 verification은 `make test-python-render`와 `make server-parity-python`이 template release가 Python package를 담을 때까지 CI 밖에서 실행된다고 적는다 (H15.3-11).
 - Python package의 build backend pin을 `setuptools==80.9.0`에서 `setuptools==84.0.0`으로 바꾼다. 형제 Python 패키지가 고정한 release와 같다 (H15.3-13).
 - H15.3의 render와 parity target은 CI group에 없다. template checkout이 `packages/template-python` 없는 tag에 고정되어 있어 넣으면 필수 check가 실패하므로, 그 tag가 생길 때까지 우회한다 (H15.3-14).
+- `packages/hyper-python`의 package data가 namespace package `polyspec.hyper`의 `py.typed` marker를 선언하고, `make test-python`이 단위 test 옆에서 `tests/package`의 package data test를 실행한다 (H15.3-15).
 
 ## 0.0.4
 
