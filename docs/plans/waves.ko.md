@@ -1,5 +1,5 @@
 <!-- doc-id: waves -->
-<!-- source-sha256: 9b42856bf8e00314fb7d0cc5a69d2ab8f963ab7dd8c2cf18688ed8cd02868dd3 -->
+<!-- source-sha256: 1d51b2070fa82b57ea045d36c3acb1301717dac237f8d7b4bb2aa3497522d53b -->
 # 웨이브 배경
 
 [English](waves.md).
@@ -68,4 +68,4 @@
 
 ## Wave 16
 
-의존: 없음. push를 막고, 전체 suite를 실행하고, 문서를 검사하고, owner 검사를 고르고, test를 실행하고, CI를 보고하고, toolchain을 검사하고, release하고, 의존성을 검토하는 script는 여러 polyspec 저장소에 복사본으로 있었고 저장소마다 달랐다. 이제 이 script는 공유 도구 저장소 `polyspec/kit`에서 온다. 이 저장소는 tag `v0.0.7`의 `scripts/kit/`와 `tests/kit/`를 byte 단위로 같은 복사본으로 가지며(`kit.json`, `.kit/kit.lock.json`), 다른 저장소와는 `config/*.json`에서만 다르다. 버전 0.1 전까지 변경은 그 변경을 소유한 unit test로 검사하고, 모든 작업이 끝났을 때 `main`에 한 번 push한다. `main`의 push는 CI group job을 실행하며, release tag는 그 CI 실행의 check `ci-passed`가 성공한 뒤에만 붙인다(W16).
+의존: 없음. push를 막고, 전체 suite를 실행하고, 문서를 검사하고, owner 검사를 고르고, test를 실행하고, CI를 보고하고, toolchain을 검사하고, release하고, 의존성을 검토하는 script는 여러 polyspec 저장소에 복사본으로 있었고 저장소마다 달랐다. 이제 이 script는 공유 도구 저장소 `polyspec/kit`에서 온다. 이 저장소는 tag `v0.0.9`의 `scripts/kit/`와 `tests/kit/`를 byte 단위로 같은 복사본으로 가지며(`kit.json`, `.kit/kit.lock.json`), 다른 저장소와는 `config/*.json`에서만 다르다. 버전 0.1 전까지 변경은 그 변경을 소유한 unit test로 검사하고, 모든 작업이 끝났을 때 `main`에 한 번 push한다. `main`의 push는 CI group job을 실행하며, release tag는 그 CI 실행의 check `ci-passed`가 성공한 뒤에만 붙인다(W16).
