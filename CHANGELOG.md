@@ -15,6 +15,7 @@
 ### Fixed
 
 - The Python tests that read a manifest or a program from a temporary directory remove that directory after the read (H15.3-6).
+- The docstring and the test name of the region request check name the `HX-Request` header, not a client library (H15.3-7).
 
 ## 0.0.4
 
