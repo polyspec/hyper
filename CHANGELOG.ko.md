@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 1c797197e646652374c7f5b67759de09f2f15f9d3d3b5fe846e4965c124a7a77 -->
+<!-- source-sha256: e224be6569736caf4ee303e9eae5cb1b306a2f84da6830d8832a569bd66b9bb9 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- H16.8: vendor한 공유 도구가 `polyspec/kit`의 tag `v0.0.9`입니다. 이 tag의 test fixture는 `.gitignore`가 무시하는 `tests/kit/fixture/vendor/`가 아니라 `tests/kit/fixture/external/`에 있어서 clone에서도 `make kit-check`와 `make kit-test`가 fixture를 찾습니다. 이 tag는 문서 검사에 site link anchor를, 의존성 gate에 URL override 건너뛰기를 더하고 `make install-tools`가 `TOOLS`를 받게 합니다.
 - H16.7: `tests/scripts/ci-workflow.test.mjs`는 `release.yml`이 아닌 workflow의 `push:` trigger에 `branches:` filter가 없거나 `tags:` filter가 있을 때, 그리고 `config/release.json`의 check가 tag로 시작되는 workflow에서 올 때 실패합니다. tag push가 tag된 commit에 그 workflow의 check run을 만들어 `make release-verify`가 그것에 실패하기 때문입니다. `ci.yml`은 이미 `main`으로의 push에서만 시작합니다.
 - H16.6: vendor한 공유 도구가 `polyspec/kit`의 tag `v0.0.7`입니다. 이 tag의 의존성 gate는 lock이 그 디렉터리를 가리킬 때 `file:<디렉터리>`로 요구한 로컬 npm 패키지를 받아들입니다.
 - H16.5: vendor한 공유 도구가 `polyspec/kit`의 tag `v0.0.6`입니다. 이 tag는 의존성 policy에서 저장소 root의 Composer manifest를 받아들이고, 복사본으로 설치한 npm 패키지의 lock 항목을 읽으며, `make documents-stamp`를 더합니다.

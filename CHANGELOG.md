@@ -5,6 +5,7 @@
 
 ## Unreleased
 
+- H16.8: the vendored shared tools are the tag `v0.0.9` of `polyspec/kit`, whose test fixture lies in `tests/kit/fixture/external/` instead of `tests/kit/fixture/vendor/`, which `.gitignore` ignores, so `make kit-check` and `make kit-test` find the fixture in a clone. The tag also adds site-link anchors to the document check, skips URL overrides in the dependency gate and lets `make install-tools` take `TOOLS`.
 - H16.7: `tests/scripts/ci-workflow.test.mjs` fails for a workflow other than `release.yml` whose `push:` trigger has no `branches:` filter or has a `tags:` filter, and for a check of `config/release.json` that comes from a workflow that a tag starts, because a tag push would create a check run of that workflow on the tagged commit and `make release-verify` would fail against it. `ci.yml` already starts only on pushes to `main`.
 - H16.6: the vendored shared tools are the tag `v0.0.7` of `polyspec/kit`, whose dependency gate accepts a local npm package required as `file:<its directory>` when the lock names that directory.
 - H16.5: the vendored shared tools are the tag `v0.0.6` of `polyspec/kit`, which accepts a Composer manifest at the repository root in the dependency policy, reads the lock entry of an npm package installed as a copy and adds `make documents-stamp`.
