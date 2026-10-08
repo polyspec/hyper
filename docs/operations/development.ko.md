@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: 323c901a369e005f25f2b408ccc9449531e1511379e295648965720b1d4e27eb -->
+<!-- source-sha256: f365f56ed268d35b0e8078782f3f032a119340cf96d8d3ec3c51e56a24b59bda -->
 # 개발
 
 [English](development.md).
@@ -7,7 +7,7 @@
 ## 도구
 
 - pin한 도구(HY-81): `.node-version`의 Node.js, `pdo_sqlite`가 있는 `.php-version`의 PHP, `.python-version`의 Python, GNU Make 3.81 이상, 네이티브 확장을 위한 그 PHP의 phpize, php-config와 C compiler. `make install`은 `packageManager`의 npm과 `config/toolchain.json`의 Composer를 `var/tools`에 설치한다(`make install-tools`). `make toolchain-check`는 pin과 다른 모든 도구를 밝힌다.
-- 공유 도구: `scripts/kit/`와 `tests/kit/`는 공유 도구 저장소 `polyspec/kit`의 tag `v0.0.4`의 복사본이며(`kit.json`, `.kit/kit.lock.json`), `config/*.json`이 이를 설정한다. `make kit-sync KIT_TAG=<tag>`가 복사본을 쓰며 복사본을 바꾸는 유일한 명령이다. `make kit-check`는 파일이 lock과 다르거나 `config/*.json`이 schema를 어기면 실패하고, `make kit-test`는 도구의 test를 실행한다.
+- 공유 도구: `scripts/kit/`와 `tests/kit/`는 공유 도구 저장소 `polyspec/kit`의 tag `v0.0.6`의 복사본이며(`kit.json`, `.kit/kit.lock.json`), `config/*.json`이 이를 설정한다. `make kit-sync KIT_TAG=<tag>`가 복사본을 쓰며 복사본을 바꾸는 유일한 명령이다. `make kit-check`는 파일이 lock과 다르거나 `config/*.json`이 schema를 어기면 실패하고, `make kit-test`는 도구의 test를 실행한다.
 - template package: npm은 `@polyspec/template`과 `@polyspec/template-compiler`를 template release의 tarball에서, Composer는 `polyspec/template`을 그 zip에서 `package.json`, `composer.json`과 그 lock이 고정한 대로 설치한다(HY-70). `make install`이 이를 download한다.
 - `../template`(`TEMPLATE_REPOSITORY`)에 있고 tag `v0.0.4`(`TEMPLATE_TAG`, HY-80)를 가진 template 저장소는 네이티브 확장에만 쓴다. `make template`이 그 C 소스, stub, build script를 `var/products/template`에 복사하고(HY-78), tag가 없으면 `make template-tag`가 실패한다. 이 저장소는 그곳에서 아무것도 build하지 않는다.
 - network: `make install-tools`, `make install`, `make install-browser`, `make kit-sync`만 download한다. 다른 모든 recipe는 npm, Composer를 offline으로 실행하므로(`npm_config_offline`, `COMPOSER_DISABLE_NETWORK`) 없는 download는 바로 실패하고 그것을 만드는 설치 target을 밝힌다(HY-89).

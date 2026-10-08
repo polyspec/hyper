@@ -1,5 +1,5 @@
 <!-- doc-id: agents -->
-<!-- source-sha256: 7576b351f204c7a2f90eb79be4a09d786452bb38527410524df57467e55041a1 -->
+<!-- source-sha256: c892acd4658a6f30f0c18dbed36e4787f7fb966d3e9c3df63d30468335c81805 -->
 # 개발
 
 [English](AGENTS.md).
@@ -36,7 +36,7 @@
 - 여러 검사의 run은 모든 검사를 끝까지 실행한 뒤 실패하고, 실패한 검사를 각각 밝힌다(HY-86). recipe는 `$(call check,...)`와 `$(checks_result)`를 쓰고, 검사하는 여러 goal의 make는 `-k`로 실행하며, 첫 CI step 뒤의 step은 `if: ${{ !cancelled() }}`로 실행한다. 앞 step의 출력을 읽는 step만 그 실패에서 멈춘다.
 - run의 어떤 process나 파일도 run보다 오래 남지 않는다(HY-87). run은 서버와 임시 디렉터리를 만들 때부터 가지며 끝, 실패, SIGINT, SIGTERM에서 멈추고 기다리고 지운다. test는 디렉터리를 쓰는 process가 끝난 뒤에만 그 디렉터리를 지운다.
 - 추적하는 모든 경로는 `config/owner-checks.json`에 owner를 가진다(HY-88). 경로를 더하는 변경은 그 owner 규칙을 더하고, 저장소의 일부를 복사하는 test는 그 일부가 가져오는 것도 복사한다.
-- 공유 도구는 `scripts/kit/`와 `tests/kit/`이며, 저장소 `polyspec/kit`의 tag `v0.0.4`의 복사본이다(`kit.json`, `.kit/kit.lock.json`). 이 파일들은 kit에서만 바꾸고 `make kit-sync KIT_TAG=<tag>`로 복사하며, `make kit-check`는 바뀌거나 없거나 더 있는 파일에 대해 실패한다. 이 저장소는 다른 저장소와 `config/*.json`과 자기 script에서만 다르며, 공유 도구의 결함이나 없는 기능은 여기서 우회하지 않고 kit에 보고한다.
+- 공유 도구는 `scripts/kit/`와 `tests/kit/`이며, 저장소 `polyspec/kit`의 tag `v0.0.6`의 복사본이다(`kit.json`, `.kit/kit.lock.json`). 이 파일들은 kit에서만 바꾸고 `make kit-sync KIT_TAG=<tag>`로 복사하며, `make kit-check`는 바뀌거나 없거나 더 있는 파일에 대해 실패한다. 이 저장소는 다른 저장소와 `config/*.json`과 자기 script에서만 다르며, 공유 도구의 결함이나 없는 기능은 여기서 우회하지 않고 kit에 보고한다.
 - 각 패키지 안에서 코드와 테스트를 별도 디렉터리에 둔다.
 - 결함은 재현하는 실패 테스트를 추가하고, 코드를 수정하고, 테스트를 유지하는 절차로 처리한다.
 - 저장소 상대경로를 사용한다. 외부 입력 경로는 명시적으로 받는다.
