@@ -5,6 +5,9 @@
 
 ## Unreleased
 
+## 0.0.5
+
+- H17.1: the version 0.0.5 is set in `package.json`, the three npm packages, `packages/hyper-php/composer.json`, `packages/hyper-python/pyproject.toml` and `tests/package-install/package.json`, in the requirements of `@polyspec/hyper` and `polyspec/hyper` with their locks, and in the consumer projects of `tests/release-install`; `## Unreleased` became this section. Verified: `make release-versions TAG=v0.0.5`, `make release-coverage`, `make release-consumer TAG=v0.0.5`, `make dependency-policy-check` and the unit tests that read versions pass.
 - H16.9: the second run of `make parity` passes `--extension` to `scripts/check-parity.mjs` again; it passed `--php-extension`, which the script does not declare, so it failed at its start. `tests/scripts/check-recipes.test.mjs` fails when a recipe passes an option that the script of `scripts/` it starts does not declare. Verified: `make test-scripts` for that file and `make parity` pass.
 - H16.8: the vendored shared tools are the tag `v0.0.9` of `polyspec/kit`, whose test fixture lies in `tests/kit/fixture/external/` instead of `tests/kit/fixture/vendor/`, which `.gitignore` ignores, so `make kit-check` and `make kit-test` find the fixture in a clone. The tag also adds site-link anchors to the document check, skips URL overrides in the dependency gate and lets `make install-tools` take `TOOLS`.
 - H16.7: `tests/scripts/ci-workflow.test.mjs` fails for a workflow other than `release.yml` whose `push:` trigger has no `branches:` filter or has a `tags:` filter, and for a check of `config/release.json` that comes from a workflow that a tag starts, because a tag push would create a check run of that workflow on the tagged commit and `make release-verify` would fail against it. `ci.yml` already starts only on pushes to `main`.
