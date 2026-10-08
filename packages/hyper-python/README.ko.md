@@ -30,7 +30,7 @@ fields = Fields.parse(b'page=2&sort=title')  # names ['page', 'sort'], get('page
   HY-56, HY-57, HY-62). `target_path`와 `target_query`가 요청 target을 나눈다.
 - `Manifest.from_file`이 application manifest를 읽고 검사한다 (HY-1, HY-2). `Region`은 kept 경로를 가진 manifest
   영역 또는 라우트 영역 하나다 (HY-37).
-- `Kept.apply`와 `Kept.select`는 데이터에 맞는 kept 값을 적용한다 (HY-38). `Reads.keep`은 데이터에서 read 경로가
+- `polyspec.hyper.kept.apply`와 `polyspec.hyper.kept.select`는 데이터에 맞는 kept 값을 적용한다 (HY-38). `Reads.keep`은 데이터에서 read 경로가
   읽는 부분만 남긴다 (HY-73).
 - `Result`는 action의 결과다 (HY-25, HY-26, HY-46, HY-58). `Reply`는 응답의 cookie, cache control, page 상태,
   데이터 내장 선택이다 (HY-52, HY-69, HY-92). `NotFound`, `Forbidden`, `BadRequest`, `Redirect`는 loader와 action의
