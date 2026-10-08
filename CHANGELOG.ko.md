@@ -1,11 +1,14 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: a7b9a149b839305f5baeac81f9d14d850766508fafe19be087cea55fbbbf7155 -->
+<!-- source-sha256: ae1ec84997bfa66e4ad5385c06a553c6be57025bb20a0a9d75098a1731512b21 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+## 0.0.5
+
+- H17.1: 버전 0.0.5를 `package.json`, npm 패키지 셋, `packages/hyper-php/composer.json`, `packages/hyper-python/pyproject.toml`, `tests/package-install/package.json`에, `@polyspec/hyper`와 `polyspec/hyper`의 requirement와 그 lock에, `tests/release-install`의 consumer 프로젝트에 정했고, `## Unreleased`가 이 section이 되었습니다. 검증: `make release-versions TAG=v0.0.5`, `make release-coverage`, `make release-consumer TAG=v0.0.5`, `make dependency-policy-check`와 버전을 읽는 unit test가 통과합니다.
 - H16.9: `make parity`의 두 번째 실행이 `scripts/check-parity.mjs`에 다시 `--extension`을 넘깁니다. 이전에는 그 script가 선언하지 않는 `--php-extension`을 넘겨 시작할 때 실패했습니다. `tests/scripts/check-recipes.test.mjs`는 recipe가 시작하는 `scripts/`의 script가 선언하지 않는 option을 넘기면 실패합니다. 검증: 그 파일의 `make test-scripts`와 `make parity`가 통과합니다.
 - H16.8: vendor한 공유 도구가 `polyspec/kit`의 tag `v0.0.9`입니다. 이 tag의 test fixture는 `.gitignore`가 무시하는 `tests/kit/fixture/vendor/`가 아니라 `tests/kit/fixture/external/`에 있어서 clone에서도 `make kit-check`와 `make kit-test`가 fixture를 찾습니다. 이 tag는 문서 검사에 site link anchor를, 의존성 gate에 URL override 건너뛰기를 더하고 `make install-tools`가 `TOOLS`를 받게 합니다.
 - H16.7: `tests/scripts/ci-workflow.test.mjs`는 `release.yml`이 아닌 workflow의 `push:` trigger에 `branches:` filter가 없거나 `tags:` filter가 있을 때, 그리고 `config/release.json`의 check가 tag로 시작되는 workflow에서 올 때 실패합니다. tag push가 tag된 commit에 그 workflow의 check run을 만들어 `make release-verify`가 그것에 실패하기 때문입니다. `ci.yml`은 이미 `main`으로의 push에서만 시작합니다.
