@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "composerPlatforms": [
+    {
+      "manifest": "composer.json",
+      "php": "8.2.0"
+    },
+    {
+      "manifest": "examples/board/composer.json",
+      "php": "8.2.0"
+    }
+  ],
+  "pythonManifests": [
+    "packages/hyper-python/pyproject.toml"
+  ],
+  "exceptions": []
+}

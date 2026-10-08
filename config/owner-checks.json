@@ -488,6 +488,17 @@
       "targets": [
         "owner-validate"
       ]
+    },
+    {
+      "paths": [
+        "config/dependency-policy.json",
+        "config/dependency-review.json",
+        "composer.lock",
+        "examples/board/composer.lock"
+      ],
+      "targets": [
+        "dependency-policy-mutation-check"
+      ]
     }
   ]
 }

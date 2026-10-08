@@ -154,7 +154,7 @@ The workflow `.github/workflows/ci.yml` runs the full suite for the push of `mai
 | Entry | Targets | Setup |
 |---|---|---|
 | `docs` | `kit-check`, `kit-test`, `documents-check`, `hooks-check`, `push-gate-commit`, `commits-check`, `owner-validate` | Node.js, Python |
-| `php` | `bench-server-smoke`, `lint`, `analyse-php`, `test-php` | Node.js, Python, PHP, the template checkout, `make install` |
+| `php` | `dependency-policy-mutation-check`, `bench-server-smoke`, `lint`, `analyse-php`, `test-php` | Node.js, Python, PHP, the template checkout, `make install` |
 | `node` | `templates-check`, `test-scripts`, `test-js`, `test-node`, `package-check` | Node.js, Python, PHP, the template checkout, `make install` |
 | `board` | `parity`, `server-parity`, `bundle-size`, `e2e` | Node.js, Python, PHP, the template checkout, `make install`, `make install-browser` |
 | `python-3.11`, `python` | `test-python` | Node.js, Python 3.11 and the Python of `.python-version` |
