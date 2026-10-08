@@ -7,8 +7,10 @@ masked CSRF token and JSON text with the bytes of the PHP server, all as an inde
 rules. The conformance cases of `conformance/routes.json`, `rest.json`, `csrf.json`, `fields.json` and `json.json`
 run as `unittest` tests (`make test-python`).
 
+Replace `vX.Y.Z` with the first release tag that contains `packages/hyper-python`. No release tag carries the package yet.
+
 ```sh
-pip install "polyspec-hyper @ git+https://github.com/polyspec/hyper@v0.0.4#subdirectory=packages/hyper-python"
+pip install "polyspec-hyper @ git+https://github.com/polyspec/hyper@vX.Y.Z#subdirectory=packages/hyper-python"
 ```
 
 ```python
