@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 44f50f5ab84e685b472b1e4b41908020089a5ad67bd20370e1e5ad39edf0a0b5 -->
+<!-- source-sha256: 06e65d6d7f6b0baddc7a77efedd64e34a9fe09bbc40a030fa8b694d556e98f74 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- H15.3-14(우회): 행이 제거된 `CI_TARGETS_python` 대신 `ci.yml`의 matrix 항목과 `CHECK_TARGETS`를, pull request의 필수 check 대신 `main`의 push의 실패한 check를 적습니다. 재시도 조건은 그대로입니다: template release tag가 `packages/template-python`을 담는다.
 - H16.4: `AGENTS.md`와 `AGENTS.ko.md`가 버전 0.1 전까지의 공개(모든 작업이 끝났을 때만 `main`을 push, pull request, merge queue, ruleset 없음, `main`의 CI 실행의 check `ci-passed`가 성공한 뒤에만 release tag), archive 이름 `<package>-<language>-<version>.<ext>`, 버전 올림 파일(`packages/hyper-python/pyproject.toml`, `examples/board/composer.json`과 그 lock), 공유 도구의 소유(`scripts/kit/`와 `tests/kit/`는 kit에서만 바뀌고 저장소 설정은 `config/*.json`), 명령 `make documents-check`, `scripts/kit/full-run.mjs`, `scripts/kit/push-gate.mjs`, `config/owner-checks.json`을 적습니다. 검증: `make documents-check`가 통과합니다.
 - H16.3(우회): `make dependency-review UPDATE=1`은 `@playwright/test`를 1.64.0으로, `@types/node`를 26.6.4로, `phpstan/phpstan`을 2.3.1로, `phpunit/phpunit`을 11.5.57로 manifest와 lock과 함께 올렸고, `examples/board/composer.json`은 `polyspec/hyper`를 `@dev`가 아니라 path 패키지의 버전 `0.0.4`로 요구하므로 그 lock이 `0.0.4`를 기록합니다. `config/dependency-policy.json`과 검토 기록은 commit하지 않았습니다. kit의 schema가 저장소 root의 Composer manifest `composer.json`을 거부하고, kit의 의존성 검사가 이 저장소가 복사본으로 설치하는 패키지의 lock 항목을 읽지 않아 `make dependency-policy-check`가 npm 패키지 셋을 보고하기 때문입니다. 행이 재시도 조건을 밝힙니다. kit가 쓰는 policy와 기록은 재시도를 위해 보관합니다.
 - H16.2: `config/release.json`으로 설정한 `scripts/kit/release.mjs`와 `scripts/kit/release-consumer.mjs`가 `scripts/release.mjs`와 `scripts/release-fixtures.mjs`를 그 test와 함께 대체합니다. 릴리스 archive 이름은 `<package>-<language>-<version>.<ext>`(`polyspec-hyper-npm-X.Y.Z.tgz`, `polyspec-hyper-server-npm-X.Y.Z.tgz`, `polyspec-hyper-build-npm-X.Y.Z.tgz`, `polyspec-hyper-php-X.Y.Z.zip`)이고, Python 패키지 `packages/hyper-python`은 git tag로 사용하며 그 버전을 `make release-versions`가 확인하고, `release.yml`은 tag된 commit의 check run `ci-passed`를 요구합니다. `make release-consumer`는 `tests/release-install`의 consumer 프로젝트에 archive를 설치하고 패키지마다 smoke 명령을 실행하며, 제거한 release 설치 test의 sample 애플리케이션 빌드를 대신합니다. `make release-consumer-lock`은 npm 12.2.0이 `allow-remote=root`에서 아직 lock을 거부하므로(H13.5-14, npm/cli#9818은 열려 있음) `npm_config_allow_remote=all`로 manifest와 lock을 씁니다. 검증: `make release-assets TAG=v0.0.4`, `make release-consumer-lock TAG=v0.0.4`(두 번째 실행은 같은 byte를 씀), `make release-consumer TAG=v0.0.4`(패키지 4개를 설치하고 검사함), `make release-versions TAG=v0.0.4`, `make release-coverage`, `make kit-check`, `make owner-validate`, `make documents-check`가 통과합니다.
