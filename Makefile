@@ -256,7 +256,8 @@ release-assets: packages
 # npm 12.2.0 counts the registry tarball of a package with bundleDependencies, here @tailwindcss/oxide-wasm32-wasi below
 # @polyspec/hyper-build, as a remote package while it writes a lock and refuses it under allow-remote=root with
 # EALLOWREMOTE (https://github.com/npm/cli/pull/9818), so the lock of the npm consumer project is written with
-# allow-remote=all. The install of the consumer uses allow-remote=root, which npm 12 needs for the template tarballs that
-# the lock pins by their integrity (H13.5-14).
+# allow-remote=all. The install of the consumer projects, in release-consumer and in release-proof, uses allow-remote=root,
+# which npm 12 needs for the template tarballs that the lock pins by their integrity (H13.5-14).
 release-consumer-lock: export npm_config_allow_remote := all
 release-consumer: export npm_config_allow_remote := root
+release-proof: export npm_config_allow_remote := root

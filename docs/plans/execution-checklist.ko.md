@@ -1,5 +1,5 @@
 <!-- doc-id: execution-checklist -->
-<!-- source-sha256: e854de15824668a0b73a1ddc53d46ebe592efde89e8b18e628429b7bb80c17f8 -->
+<!-- source-sha256: 73da0246f0afd4c289147614710386727c87d337ca75f98d08e077f1ea334592 -->
 # 실행 체크리스트
 
 ## [웨이브 1](waves.ko.md#wave-1) — 애플리케이션이 약하게 만들 수 없는 CSRF 방어
@@ -224,3 +224,4 @@
 | ID | 작업 | 검증 | 상태 |
 |---|---|---|---|
 | H17.1 | 릴리스 commit `chore(release): Release 0.0.5 (#H17.1)`: `package.json`, npm 패키지 셋, `packages/hyper-php/composer.json`, `packages/hyper-python/pyproject.toml`, `tests/package-install/package.json`의 버전을 0.0.5로 정하고, `packages/hyper-node/package.json`과 `packages/hyper-build/package.json`의 `@polyspec/hyper` requirement와 `composer.json`과 `examples/board/composer.json`의 `polyspec/hyper` requirement를 lock과 함께 정하며, 두 changelog의 `## Unreleased`를 `## 0.0.5`로 바꾸고, 검토 기록을 다시 쓰고, `tests/release-install`의 consumer 프로젝트의 manifest와 lock을 0.0.5 archive용으로 쓴다. Red: `make release-versions TAG=v0.0.5`가 0.0.4인 모든 manifest를 보고한다. Green: 통과하고 `make release-consumer TAG=v0.0.5`가 0.0.5 archive를 설치한다. | `make release-versions TAG=v0.0.5`, `make release-consumer TAG=v0.0.5` | [o] |
+| H17.1-1 | `make release-proof TAG=v0.0.5`가 consumer 프로젝트의 `npm ci`에서 `EALLOWREMOTE`로 실패한다. target이 `npm_config_allow_remote` 없이 실행되고 npm 12가 lock이 integrity로 pin한 template tarball을 거부하기 때문이다. Red: `tests/scripts/check-recipes.test.mjs`가 `release-proof`에 `npm_config_allow_remote`가 없다고 보고한다. Green: `release-consumer`와 `release-proof`는 `root`(`npm ci`가 필요로 하는 가장 좁은 값)를, `release-consumer-lock`은 `all`을(H13.5-14) export하고 `make release-proof TAG=v0.0.5`가 통과한다. | `make test-scripts TESTS="tests/scripts/check-recipes.test.mjs"`, `make release-proof TAG=v0.0.5` | [o] |

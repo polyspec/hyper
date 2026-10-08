@@ -5,6 +5,7 @@
 
 ## Unreleased
 
+- H17.1-1: `make release-proof` runs with `npm_config_allow_remote=root` like `make release-consumer`; without it the `npm ci` of the consumer project failed with `EALLOWREMOTE` for the template tarballs (npm 12.2.0). `release-consumer-lock` keeps `all` (H13.5-14). `tests/scripts/check-recipes.test.mjs` requires the value of each of the three targets. Verified: `make release-proof TAG=v0.0.5` passes.
 ## 0.0.5
 
 - H17.1: the version 0.0.5 is set in `package.json`, the three npm packages, `packages/hyper-php/composer.json`, `packages/hyper-python/pyproject.toml` and `tests/package-install/package.json`, in the requirements of `@polyspec/hyper` and `polyspec/hyper` with their locks, and in the consumer projects of `tests/release-install`; `## Unreleased` became this section. Verified: `make release-versions TAG=v0.0.5`, `make release-coverage`, `make release-consumer TAG=v0.0.5`, `make dependency-policy-check` and the unit tests that read versions pass.
