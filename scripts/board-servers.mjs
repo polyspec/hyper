@@ -1,7 +1,8 @@
-// Starts the servers of a run of the board example: the PHP server, the board Node server and the edge of
-// scripts/serve-edge.mjs. Each server listens on the port that the caller gives, or on a port that the system
-// assigns when the caller gives 0, and the run learns its address from the line in which that server reports that
-// it listens; a request therefore reaches the server that this run started and never a server of another run.
+// Starts the servers of a run of the board example: the PHP server, the board Node server, the board Python
+// server and the edge of scripts/serve-edge.mjs. Each server listens on the port that the caller gives, or on a
+// port that the system assigns when the caller gives 0, and the run learns its address from the line in which
+// that server reports that it listens; a request therefore reaches the server that this run started and never a
+// server of another run.
 // Starting a server is a step without a time limit: it prints its start, every output line of the server with the
 // prefix [<name>], a progress line every 5 seconds while it waits that names the line it waits for and the last line
 // that the server printed, and its result with the elapsed time; it ends when the server reports its address and
@@ -14,11 +15,16 @@
 import { spawn } from 'node:child_process';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const PHP_READY = /Development Server \((http:\/\/127\.0\.0\.1:\d+)\) started/;
 const NODE_READY = /^board on (http:\/\/127\.0\.0\.1:\d+)$/m;
 const EDGE_READY = /^edge (http:\/\/127\.0\.0\.1:\d+) /m;
+// The repository root, whose package sources and sibling template checkout give the Python server its modules.
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+// The Python interpreter of the board Python server; HYPER_PYTHON names another one.
+const PYTHON = process.env.HYPER_PYTHON || 'python3';
 
 /**
  * Starts a server process and resolves { child, url } once a line of its output matches `ready`, whose first group
@@ -90,6 +96,24 @@ export function startNode({ name, app, port, env, children }) {
     command: process.execPath,
     args: [join(app, 'build', 'node', 'server.mjs')],
     env: { ...process.env, ...env, BOARD_PORT: String(port) },
+    ready: NODE_READY,
+    children,
+  });
+}
+
+/** Starts the board Python server of examples/board/python on `port`; it renders with the template Python package
+ * of the sibling checkout ../template until a template release carries the package (H15.3-3). */
+export function startPython({ name, app, port, env, children }) {
+  return startServer({
+    name,
+    command: PYTHON,
+    args: [join(app, 'python', 'main.py')],
+    env: {
+      ...process.env,
+      ...env,
+      BOARD_PORT: String(port),
+      PYTHONPATH: [join(ROOT, 'packages', 'hyper-python', 'src'), join(ROOT, '..', 'template', 'packages', 'template-python', 'src'), process.env.PYTHONPATH].filter(Boolean).join(':'),
+    },
     ready: NODE_READY,
     children,
   });

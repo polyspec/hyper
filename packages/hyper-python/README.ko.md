@@ -54,3 +54,18 @@ response = app.handle(request, ArraySession())
 - `ClientRendering`과 `Choice`가 application의 클라이언트 렌더 페이지를 선언한다 (HY-62): 정적 shell, data base
   path, 요청마다의 selection.
 
+- server module가 표준 라이브러리 `http.server`로 file session과 함께 application을 서비스한다.
+  `create_server(app, sessions)`가 모든 요청을 `App.handle`에 보내는 thread HTTP server를 반환한다. body limit보다
+  큰 body를 더 읽지 않고(HY-59), 새 session의 cookie를 가장 먼저 설정하며(HY-45), 선택의 public 디렉터리 파일을 PHP
+  built-in server가 document root를 서비스하듯이 서비스한다. `FileSessions`는 세션마다 자신이 만든 64자리 16진수
+  identifier로 이름 붙은 JSON 파일을 두고, rename 한 번으로 파일을 쓰며, 한 세션의 요청을 순서대로 돌린다.
+
+```python
+from polyspec.hyper.file_sessions import FileSessions
+from polyspec.hyper.server import create_server
+
+server = create_server(app, FileSessions('/var/lib/board/sessions'), files='public', port=8080)
+server.serve_forever()
+```
+
+

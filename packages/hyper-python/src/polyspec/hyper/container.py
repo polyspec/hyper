@@ -4,6 +4,7 @@ the PHP server receive them (HY-62)."""
 from __future__ import annotations
 
 import inspect
+import typing
 
 
 class Container:
@@ -24,8 +25,14 @@ class Container:
         without an annotation receives the provided object of its name, which is how a lambda names the request
         `request` and the reply `reply`."""
         arguments = []
+        try:
+            # A function with `from __future__ import annotations` names its types as text; the resolved hints give
+            # the classes.
+            hints = typing.get_type_hints(function)
+        except Exception as error:  # noqa: BLE001 - a hint that no import resolves names no class type
+            raise TypeError(f'the parameter types of the handler cannot be resolved: {error}') from None
         for parameter in inspect.signature(function).parameters.values():
-            annotation = parameter.annotation
+            annotation = hints.get(parameter.name, parameter.annotation)
             if annotation is inspect.Parameter.empty:
                 if parameter.name not in provided:
                     raise TypeError(f'parameter {parameter.name} has no class type')
