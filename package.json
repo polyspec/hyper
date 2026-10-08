@@ -10,8 +10,8 @@
   },
   "packageManager": "npm@12.2.0+sha512.66c2632a94e796649738b2d7894d710c2cc2e1696893823066687f6b0d8a52e5f2b54eeaeaa32ffdc513ecca1e49ff794a5c2ec3f9515d879f1b3182b291cf35",
   "devDependencies": {
-    "@playwright/test": "1.63.0",
-    "@types/node": "26.6.3",
+    "@playwright/test": "1.64.0",
+    "@types/node": "26.6.4",
     "esbuild": "0.28.2",
     "typescript": "7.0.2",
     "vitest": "5.0.3"
