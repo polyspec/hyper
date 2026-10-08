@@ -1,5 +1,5 @@
 <!-- doc-id: features -->
-<!-- source-sha256: cb969dd31b85a16a3995beee15458419afaee7f08d9ca6a5191f575ae70c7770 -->
+<!-- source-sha256: 839c68e9e8ebb62fd9073be6bc7d7dd687382276271ca023df260a9925180972 -->
 # 기능 상태
 
 [English](features.md).
@@ -30,7 +30,7 @@
 | hyper-js | 브라우저 코드: 영역과 문서 렌더, htmx 확장, 클라이언트 렌더 | implemented | `make test-js`, `make e2e` |
 | hyper-php | PHP 서버: 라우트, 액션, CSRF, flash, 바뀐 주제, 기본 경로, 문서와 JSON | implemented | `make test-php` |
 | hyper-node | PHP 서버의 규칙, 파일 session, PHP와 같은 바이트의 JSON을 갖춘 Node.js 서버 `@polyspec/hyper-server`와 board 예제 서버(HY-54) | implemented | `make test-node`, `make node-server` |
-| hyper-python | PHP 서버의 규칙을 가진 Python 서버 `polyspec-hyper`. template Python package로 렌더하고 file session과 `http.server` 서버, board 예제 서버를 둔다 (H15.3) | 구현됨; render target의 CI 실행은 우회 상태입니다 (H15.3-14) | `make test-python`, `make test-python-render`, `make server-parity-python` |
+| hyper-python | PHP 서버의 규칙을 가진 Python 서버 `polyspec-hyper`. template Python package로 렌더하고 file session과 `http.server` 서버, board 예제 서버를 둔다 (H15.3) | implemented; CI run pending | `make test-python`, `make test-python-render`, `make server-parity-python` |
 | route-regions | 자기 로더를 가진 페이지 안의 라우트 영역(HY-30) | implemented | `make test-php`, `make parity` |
 | region-data | 라우트 영역의 내장 데이터, 요청 없이 라우트 영역에서 동작하는 `data`, `render`, `set`, `hy-set`, 데이터 공개 규칙(HY-29 ~ HY-33, HY-36, HY-71) | implemented | `make test-js`, `make e2e` |
 | kept-data | 서버 세션, 쿠키, localStorage, sessionStorage의 유지 경로(HY-37 ~ HY-41) | implemented | `make test-php`, `make test-js`, `make parity`, `make e2e` |
@@ -61,7 +61,7 @@
 | atomic-outputs | 다른 process가 읽는 출력은 rename으로 파일 단위 publish하고, 파일 하나는 rename 한 번으로 쓰며, 설치한 사본은 의존성 tree가 같을 때만 publish하고, package manager 설치와 full run은 lock을 잡는다(HY-82) | implemented; CI run pending | `tests/scripts/publish.test.mjs`, `tests/scripts/toolchain.test.mjs`, `tests/kit/holder-lock.test.mjs` |
 | toolchain-pin | Node.js, npm, Composer는 정확한 release로, PHP와 Python은 minor release로 추적 파일에 pin한다. npm과 Composer는 digest로 확인해 checkout의 `var/tools`에 설치하고 `PATH`의 맨 앞에 둔다. `make toolchain-check`는 pin과 다른 모든 도구를 밝히고 CI 보고서는 실행 중인 release를 기록한다(HY-81) | implemented; CI run pending | `tests/scripts/toolchain.test.mjs`, `tests/scripts/template-copy.test.mjs`, `tests/kit/check-toolchain.test.mjs` |
 | kit-tools | push gate, 전체 실행 guard, Git hook, holder lock, 문서와 commit 검사, owner 검사, test runner, CI 보고서, toolchain 설치와 검사, release는 `scripts/kit/`와 `tests/kit/`에 있는 `polyspec/kit` tag `v0.0.7`의 vendor 복사본이며 `config/*.json`이 이를 설정한다. `.kit/kit.lock.json`과 다른 vendor 파일과 schema를 어기는 설정은 실패한다 | implemented; CI run pending | `make kit-check`, `make kit-test` |
-| template-tag | 선언한 복사본은 branch `main`이 어느 commit에 있든 template 저장소의 tag `TEMPLATE_TAG`(`v0.0.4`)의 commit이다. 없는 tag는 기대값과 실제값을 밝히며 복사를 실패시키고, `make template-tag`는 tag가 없는 checkout에 실패하며, 복사본이 그 commit을 담고 있는 동안 복사는 아무것도 쓰지 않고, `make template`은 아무것도 설치하지 않으며, CI는 template 저장소를 같은 tag로 checkout한다(HY-80) | implemented; CI run pending | `tests/scripts/template-copy.test.mjs`, `tests/scripts/ci-workflow.test.mjs`, `make template-tag` |
+| template-tag | 선언한 복사본은 branch `main`이 어느 commit에 있든 template 저장소의 tag `TEMPLATE_TAG`(`v0.0.5`)의 commit이다. 없는 tag는 기대값과 실제값을 밝히며 복사를 실패시키고, `make template-tag`는 tag가 없는 checkout에 실패하며, 복사본이 그 commit을 담고 있는 동안 복사는 아무것도 쓰지 않고, `make template`은 아무것도 설치하지 않으며, CI는 template 저장소를 같은 tag로 checkout한다(HY-80) | implemented; CI run pending | `tests/scripts/template-copy.test.mjs`, `tests/scripts/ci-workflow.test.mjs`, `make template-tag` |
 | query-values | 중첩 없이 순서대로 읽는 모든 쿼리 값과 원본 쿼리(HY-56) | implemented | `make test-php`, `make test-node` |
 | form-values | urlencoded body나 multipart body에서 중첩 없이 순서대로 읽는 모든 폼 값(HY-57) | implemented | `make test-php`, `make test-node` |
 | request-boundary | UTF-8 검사, 상세 없는 500 오류, 데이터 모델 검사, 강화한 세션 쿠키, 리다이렉트 검사, 실패 표시(HY-42 ~ HY-47) | implemented | `make test-php`, `make test-js`, `make e2e` |

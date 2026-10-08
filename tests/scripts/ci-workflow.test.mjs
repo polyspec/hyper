@@ -207,7 +207,7 @@ test('the workflow ci runs every matrix entry in a job that runs to its end and 
     const browser = job.steps.find((step) => step.run === 'make install-browser');
     assert.match(browser?.if ?? '', /matrix\.browser/);
     for (const entry of matrixEntries(text)) {
-      assert.equal(entry.browser, entry.targets.some((target) => ['parity', 'server-parity', 'e2e'].includes(target)), `${entry.name}: browser flag`);
+      assert.equal(entry.browser, entry.targets.some((target) => ['parity', 'server-parity', 'server-parity-python', 'e2e'].includes(target)), `${entry.name}: browser flag`);
     }
     // The toolchain check of the recipes reads the Python of PATH, so every job sets up the Python of .python-version.
     const python = job.steps.find((step) => /^actions\/setup-python@/.test(step.uses ?? ''));

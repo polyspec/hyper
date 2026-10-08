@@ -12,7 +12,7 @@
 # The toolchain comes from the pinned files: Node.js from .node-version, PHP from .php-version, Python from
 # .python-version, and npm and Composer from `make install` into var/tools of the checkout. `make install` installs the
 # template packages from the assets of the template release with npm and Composer (HY-70). The template repository is
-# checked out next to this repository at its tag v0.0.4 (TEMPLATE_TAG of the Makefile, HY-80), as ../template of the
+# checked out next to this repository at its tag v0.0.5 (TEMPLATE_TAG of the Makefile, HY-80), as ../template of the
 # Makefile, and `make install` copies the native extension sources of the commit of that tag (HY-78). `make ext` builds
 # the native extension with phpize and php-config of the PHP of setup-php, and only the group board installs Chromium.
 name: ci
@@ -51,6 +51,11 @@ jobs:
             targets: test-python
           - name: python
             targets: test-python
+          # The render tests and the Python server comparison need the template checkout, PHP and the browser.
+          - name: python-render
+            install: true
+            browser: true
+            targets: test-python-render server-parity-python
     defaults:
       run:
         working-directory: hyper
@@ -83,7 +88,7 @@ jobs:
         if: ${{ !cancelled() && matrix.install }}
         with:
           repository: polyspec/template
-          ref: v0.0.4
+          ref: v0.0.5
           path: template
       - id: install
         if: ${{ !cancelled() && matrix.install }}

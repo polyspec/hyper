@@ -10,9 +10,9 @@
   "dependencies": {
     "@polyspec/hyper": "file:../../packages/hyper-js",
     "@polyspec/hyper-server": "file:../../packages/hyper-node",
-    "@polyspec/template": "https://github.com/polyspec/template/releases/download/v0.0.4/polyspec-template-0.0.4.tgz"
+    "@polyspec/template": "https://github.com/polyspec/template/releases/download/v0.0.5/polyspec-template-npm-0.0.5.tgz"
   },
   "overrides": {
-    "@polyspec/template": "https://github.com/polyspec/template/releases/download/v0.0.4/polyspec-template-0.0.4.tgz"
+    "@polyspec/template": "https://github.com/polyspec/template/releases/download/v0.0.5/polyspec-template-npm-0.0.5.tgz"
   }
 }

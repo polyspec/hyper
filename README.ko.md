@@ -1,5 +1,5 @@
 <!-- doc-id: readme -->
-<!-- source-sha256: 2e5622fe21f6e13dc5001c455cdbac836b4595a79587723e203b2195d39016b4 -->
+<!-- source-sha256: 3c635c2aab47b1bb9a8ef0f2f25cb9232590947926c73d14b28d116e73310da4 -->
 # hyper
 
 [English](README.md).
@@ -40,7 +40,7 @@ hyper는 애플리케이션 하나에서 template 언어 템플릿으로 두 가
 
 ## 시작
 
-npm은 template package `@polyspec/template`과 `@polyspec/template-compiler`를 template release v0.0.4의 tarball에서, Composer는 `polyspec/template`을 그 zip에서 `package.json`, `composer.json`과 그 lock이 고정한 대로 설치한다(HY-70). 네이티브 확장을 위해서만 template 저장소가 이 저장소 옆(`../template`)에 tag `v0.0.4`(Makefile의 `TEMPLATE_TAG`)와 함께 있어야 한다. `make install`과 `make template`은 그 commit의 C 소스, stub, build script를 `var/products/template`에 복사하고, `make ext`와 PHPStan이 그 복사본을 읽는다(HY-78, HY-80).
+npm은 template package `@polyspec/template`과 `@polyspec/template-compiler`를 template release v0.0.5의 tarball에서, Composer는 `polyspec/template`을 그 zip에서 `package.json`, `composer.json`과 그 lock이 고정한 대로 설치한다(HY-70). 네이티브 확장을 위해서만 template 저장소가 이 저장소 옆(`../template`)에 tag `v0.0.5`(Makefile의 `TEMPLATE_TAG`)와 함께 있어야 한다. `make install`과 `make template`은 그 commit의 C 소스, stub, build script를 `var/products/template`에 복사하고, `make ext`와 PHPStan이 그 복사본을 읽는다(HY-78, HY-80).
 
 ```sh
 make install

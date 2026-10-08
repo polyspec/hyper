@@ -25,7 +25,7 @@
     "tsc": "node ../../scripts/tsc.mjs"
   },
   "dependencies": {
-    "@polyspec/template": "0.0.4",
+    "@polyspec/template": "0.0.5",
     "htmx.org": "4.0.0"
   }
 }

@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: 02e5b292ef035a1d3b99a68fba991ba65b2c31d90f740c5da951650165b2a75a -->
+<!-- source-sha256: 05a98f79101f0ba3ef8e0853eaaa0ee353bb2d9f2f44f4395488569f82448d95 -->
 # 개발
 
 [English](development.md).
@@ -9,7 +9,7 @@
 - pin한 도구(HY-81): `.node-version`의 Node.js, `pdo_sqlite`가 있는 `.php-version`의 PHP, `.python-version`의 Python, GNU Make 3.81 이상, 네이티브 확장을 위한 그 PHP의 phpize, php-config와 C compiler. `make install`은 `packageManager`의 npm과 `config/toolchain.json`의 Composer를 `var/tools`에 설치한다(`make install-tools`). `make toolchain-check`는 pin과 다른 모든 도구를 밝힌다.
 - 공유 도구: `scripts/kit/`와 `tests/kit/`는 공유 도구 저장소 `polyspec/kit`의 tag `v0.0.7`의 복사본이며(`kit.json`, `.kit/kit.lock.json`), `config/*.json`이 이를 설정한다. `make kit-sync KIT_TAG=<tag>`가 복사본을 쓰며 복사본을 바꾸는 유일한 명령이다. `make kit-check`는 파일이 lock과 다르거나 `config/*.json`이 schema를 어기면 실패하고, `make kit-test`는 도구의 test를 실행한다.
 - template package: npm은 `@polyspec/template`과 `@polyspec/template-compiler`를 template release의 tarball에서, Composer는 `polyspec/template`을 그 zip에서 `package.json`, `composer.json`과 그 lock이 고정한 대로 설치한다(HY-70). `make install`이 이를 download한다.
-- `../template`(`TEMPLATE_REPOSITORY`)에 있고 tag `v0.0.4`(`TEMPLATE_TAG`, HY-80)를 가진 template 저장소는 네이티브 확장에만 쓴다. `make template`이 그 C 소스, stub, build script를 `var/products/template`에 복사하고(HY-78), tag가 없으면 `make template-tag`가 실패한다. 이 저장소는 그곳에서 아무것도 build하지 않는다.
+- `../template`(`TEMPLATE_REPOSITORY`)에 있고 tag `v0.0.5`(`TEMPLATE_TAG`, HY-80)를 가진 template 저장소는 네이티브 확장에만 쓴다. `make template`이 그 C 소스, stub, build script를 `var/products/template`에 복사하고(HY-78), tag가 없으면 `make template-tag`가 실패한다. 이 저장소는 그곳에서 아무것도 build하지 않는다.
 - network: `make install-tools`, `make install`, `make install-browser`, `make kit-sync`만 download한다. 다른 모든 recipe는 npm, Composer를 offline으로 실행하므로(`npm_config_offline`, `COMPOSER_DISABLE_NETWORK`) 없는 download는 바로 실패하고 그것을 만드는 설치 target을 밝힌다(HY-89).
 - Playwright용 Chromium: `make install-browser`. pin한 Playwright의 Chromium과, Linux에서는 그 system library를 설치한다.
 
@@ -115,11 +115,11 @@ make release-publish
 
 `make release-consumer TAG=vX.Y.Z`는 consumer처럼 저장소 밖의 임시 디렉터리에서 `tests/release-install`의 commit된 프로젝트로 `var/release/assets`의 archive를 빈 cache로 설치한다. 이 저장소의 릴리스 tarball을 `file:`로, template release의 tarball을 URL로 의존하는 `npm/package.json`과 그 `package-lock.json`은, scope `@polyspec`을 닿지 않는 registry `http://127.0.0.1:9/`로 돌린 `npm ci`로 설치하므로 이 저장소의 polyspec 패키지는 그 tarball에서만 오고 template tarball과 third-party 패키지는 lock이 pin한 대로 download된다. 이 저장소의 릴리스 zip의 `artifact` repository `artifacts`와 template release의 zip의 `package` repository를 둔 `composer/composer.json`과 그 `composer.lock`은 `composer install`로 설치한다. 설치한 각 패키지는 `config/release.json`의 smoke 명령을 실행한다. npm 패키지는 import하고, `@polyspec/hyper-build`의 bin `hyper-build-server`와 `hyper-build-assets`는 모든 import를 불러 첫 인자 검사에서 멈추며, Composer 패키지의 class `Polyspec\Hyper\App`은 불러와진다. `make release-consumer-lock TAG=vX.Y.Z`는 archive로 두 manifest와 lock을 쓴다. archive는 같은 실행에서 build되므로 lock은 이 저장소의 tarball이나 zip을 integrity나 shasum 없이 적고, 따라서 lock은 릴리스 버전이나 의존성이 바뀔 때만 바뀌며 릴리스 commit이 이 target을 실행한다.
 
-npm 12.2.0은 `allow-remote=root`에서 npm consumer 프로젝트의 lock을 쓰지 못한다. lock을 만드는 동안 `bundleDependencies`를 가진 패키지, 여기서는 `@tailwindcss/oxide` 아래의 `@tailwindcss/oxide-wasm32-wasi`의 registry tarball을 remote 패키지로 세고 `EALLOWREMOTE`로 실패하기 때문이다([npm/cli#9818](https://github.com/npm/cli/pull/9818)). npm에는 URL별 허용 목록이 없으므로 Makefile은 `make release-consumer-lock`을 `npm_config_allow_remote=all`로 실행하고, consumer 설치는 설정이 필요 없으며 lock이 integrity로 pin한 것만 설치한다. 이 설정은 `packageManager`의 npm 릴리스가 npm/cli#9818을 담으면 제거한다(H13.5-14). consumer 설치에서 npm은 esbuild의 `postinstall` script를 막는다. consumer가 install script를 허용하지 않기 때문이다. esbuild는 npm이 optional 의존성으로 설치하는 platform 패키지(예: `@esbuild/darwin-arm64`)로 실행되고, `@tailwindcss/oxide`에는 install script가 없다.
+npm 12.2.0은 `allow-remote=root`에서 npm consumer 프로젝트의 lock을 쓰지 못한다. lock을 만드는 동안 `bundleDependencies`를 가진 패키지, 여기서는 `@tailwindcss/oxide` 아래의 `@tailwindcss/oxide-wasm32-wasi`의 registry tarball을 remote 패키지로 세고 `EALLOWREMOTE`로 실패하기 때문이다([npm/cli#9818](https://github.com/npm/cli/pull/9818)). npm에는 URL별 허용 목록이 없으므로 Makefile은 `make release-consumer-lock`을 `npm_config_allow_remote=all`로 실행하고, `make release-consumer`는 template tarball에 npm 12가 필요로 하는 `npm_config_allow_remote=root`로 실행하며 lock이 integrity로 pin한 것만 설치한다. 이 설정은 `packageManager`의 npm 릴리스가 npm/cli#9818을 담으면 제거한다(H13.5-14). consumer 설치에서 npm은 esbuild의 `postinstall` script를 막는다. consumer가 install script를 허용하지 않기 때문이다. esbuild는 npm이 optional 의존성으로 설치하는 platform 패키지(예: `@esbuild/darwin-arm64`)로 실행되고, `@tailwindcss/oxide`에는 install script가 없다.
 
 ### 개발 구성
 
-private root는 checkout 안의 패키지를 찾아 주며 공개되지 않는다. root `package.json`은 `@polyspec/hyper`, `@polyspec/hyper-server`, `@polyspec/hyper-build`를 `packages/hyper-js`, `packages/hyper-node`, `packages/hyper-build`의 `file:` 사본으로, `@polyspec/template`과 `@polyspec/template-compiler`를 template release의 tarball URL로 선언하고, 패키지의 정확한 버전이 이 사본과 template tarball로 풀리게 하는 `overrides`를 둔다. npm 12는 기본으로 URL 의존성을 설치하지 않으므로 `.npmrc`가 `allow-remote=root`를 둔다. npm은 workspace를 언제나 link하므로 npm workspace는 두지 않는다(HY-79). root `composer.json`은 path repository `var/products/hyper-php`와, sha1 `shasum`을 가진 template release의 zip의 `package` repository에서 root `vendor`로 설치하고 `packages/hyper-php`의 namespace를 tree에 연결한다. `composer.lock`이 그 lock이다. 두 root는 template release v0.0.4를 받는다(HY-70). 그 tag는 `make template`이 네이티브 확장 소스를 복사하는 Makefile의 `TEMPLATE_TAG`이다(HY-80).
+private root는 checkout 안의 패키지를 찾아 주며 공개되지 않는다. root `package.json`은 `@polyspec/hyper`, `@polyspec/hyper-server`, `@polyspec/hyper-build`를 `packages/hyper-js`, `packages/hyper-node`, `packages/hyper-build`의 `file:` 사본으로, `@polyspec/template`과 `@polyspec/template-compiler`를 template release의 tarball URL로 선언하고, 패키지의 정확한 버전이 이 사본과 template tarball로 풀리게 하는 `overrides`를 둔다. npm 12는 기본으로 URL 의존성을 설치하지 않으므로 `.npmrc`가 `allow-remote=root`를 둔다. npm은 workspace를 언제나 link하므로 npm workspace는 두지 않는다(HY-79). root `composer.json`은 path repository `var/products/hyper-php`와, sha1 `shasum`을 가진 template release의 zip의 `package` repository에서 root `vendor`로 설치하고 `packages/hyper-php`의 namespace를 tree에 연결한다. `composer.lock`이 그 lock이다. 두 root는 template release v0.0.5를 받는다(HY-70). 그 tag는 `make template`이 네이티브 확장 소스를 복사하는 Makefile의 `TEMPLATE_TAG`이다(HY-80).
 
 ### 릴리스 에셋 설치
 
@@ -131,13 +131,13 @@ consumer는 필요한 릴리스의 에셋을 내려받아 함께 설치한다. r
     "@polyspec/hyper-server": "file:polyspec-hyper-server-npm-X.Y.Z.tgz",
     "@polyspec/hyper-build": "file:polyspec-hyper-build-npm-X.Y.Z.tgz",
     "@polyspec/hyper": "file:polyspec-hyper-npm-X.Y.Z.tgz",
-    "@polyspec/template": "file:polyspec-template-T.T.T.tgz",
-    "@polyspec/template-compiler": "file:polyspec-template-compiler-T.T.T.tgz"
+    "@polyspec/template": "file:polyspec-template-npm-T.T.T.tgz",
+    "@polyspec/template-compiler": "file:polyspec-template-compiler-npm-T.T.T.tgz"
   }
 }
 ```
 
-Composer에서는 zip `polyspec-hyper-php-X.Y.Z.zip`과 `polyspec-template-T.T.T.zip`을 한 디렉터리에 두고 그 디렉터리를 `artifact` repository로 선언한다. zip들은 이름과 버전으로 서로를 찾는다.
+Composer에서는 zip `polyspec-hyper-php-X.Y.Z.zip`과 `polyspec-template-php-T.T.T.zip`을 한 디렉터리에 두고 그 디렉터리를 `artifact` repository로 선언한다. zip들은 이름과 버전으로 서로를 찾는다.
 
 ```json
 {
@@ -159,6 +159,7 @@ workflow `.github/workflows/ci.yml`은 `main`의 push와 모든 수동 실행(`w
 | `node` | `templates-check`, `test-scripts`, `test-js`, `test-node`, `package-check` | Node.js, Python, PHP, template checkout, `make install` |
 | `board` | `parity`, `server-parity`, `bundle-size`, `e2e` | Node.js, Python, PHP, template checkout, `make install`, `make install-browser` |
 | `python-3.11`, `python` | `test-python` | Node.js, Python 3.11과 `.python-version`의 Python |
+| `python-render` | `test-python-render`, `server-parity-python` | Node.js, Python, PHP, template checkout, `make install`, `make install-browser` |
 
 각 step은 make target 하나를 실행하고(HY-90), 첫 step 뒤의 모든 step은 실패한 step 뒤에도 실행한다. workflow는 `.node-version`, `.python-version`, `.php-version`에서 Node.js, Python, PHP를 준비하고 template 저장소를 Makefile의 tag `TEMPLATE_TAG`로 `../template`에 checkout하며, `make install`은 그곳에서 네이티브 확장 소스를 복사한다. `make ci-targets TARGETS="<targets>" CI_REPORT=var/ci/<name>`은 항목의 모든 target을 자기 `make -k <target>`으로 끝까지 실행하고 보고서를 쓴다. `make ci-summary CI_REPORT=var/ci/<name>`은 job summary를 쓴다. job은 artifact `ci-<name>-<run id>-<attempt>`, 곧 디렉터리 `var/ci/<name>/`을 upload한다.
 

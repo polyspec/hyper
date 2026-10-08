@@ -23,6 +23,6 @@
   },
   "dependencies": {
     "@polyspec/hyper": "0.0.4",
-    "@polyspec/template": "0.0.4"
+    "@polyspec/template": "0.0.5"
   }
 }
