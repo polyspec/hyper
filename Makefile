@@ -252,17 +252,20 @@ bench: bench-server bench-browser ## Run both measurements; results are reports,
 # checklist task is [~], while tracked changes are uncommitted or when var/full-run.json records a run of the current tree,
 # runs each target with `make <target>` to its end and records its result; `make rerun-failed` reruns the targets of the
 # current tree that did not pass.
-CHECK_TARGETS := bench-server-smoke docs-check lint analyse-php templates-check test-scripts test-js test-node package-check test-php parity server-parity server-parity-python bundle-size e2e
+CHECK_TARGETS := bench-server-smoke docs-check lint analyse-php templates-check test-scripts test-js test-node test-python package-check test-php parity server-parity bundle-size e2e
 
 # The CI groups of the full suite (HY-91): each job of .github/workflows/ci.yml runs the targets CI_TARGETS_<group> of
 # one group with `make ci-check GROUP=<group>`, so the groups together run every target of CHECK_TARGETS once
 # (tests/scripts/ci-workflow.test.mjs). A group gathers the targets that need the same setup: docs only Node.js, php
-# and node PHP, the template build and the install, board also Chromium.
-CI_GROUPS := docs php node board
+# and node PHP, the template build and the install, board also Chromium, python only the Python of its pins.
+CI_GROUPS := docs php node board python
 CI_TARGETS_docs := docs-check
 CI_TARGETS_php := bench-server-smoke lint analyse-php test-php
 CI_TARGETS_node := templates-check test-scripts test-js test-node package-check
-CI_TARGETS_board := parity server-parity server-parity-python bundle-size e2e
+CI_TARGETS_board := parity server-parity bundle-size e2e
+# The Python group needs no install: its tests use only the standard library. Its job runs twice, on 3.11 of the
+# matrix entry and on the Python pin of config/toolchain.json, which `make ci-pins` gives the workflow.
+CI_TARGETS_python := test-python
 
 # The targets of the full suite that exist on one platform only. Apple `container`, whose bind mounts are virtiofs,
 # exists on Darwin, so `make virtiofs-check` belongs to the full suite there and nowhere else; on Darwin a missing

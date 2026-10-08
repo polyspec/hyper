@@ -2,8 +2,8 @@
 // The runner of the CI groups of the full suite (HY-91). Each job of .github/workflows/ci.yml runs one group of the
 // targets of CHECK_TARGETS, which the Makefile names in CI_TARGETS_<group>, through make:
 //
-//   node scripts/ci-run.mjs pins                     make ci-pins: the PHP minor of config/toolchain.json, as a
-//                                                    step output
+//   node scripts/ci-run.mjs pins                     make ci-pins: the PHP and the Python minor of
+//                                                    config/toolchain.json, as step outputs
 //   node scripts/ci-run.mjs run <group> <target>...  make ci-check GROUP=<group>: every target of the group
 //   node scripts/ci-run.mjs summary <group>          make ci-summary GROUP=<group>: the summary of the run
 //   node scripts/ci-run.mjs passed                   make ci-passed: every job of RESULTS passed
@@ -122,14 +122,15 @@ function readJson(file) {
   }
 }
 
-/** The pin that the workflow reads before it sets up PHP. */
+/** The pins that the workflow reads before it sets up PHP and Python. */
 export function pins({ root = ROOT, env = process.env, print = (line) => console.log(line) } = {}) {
-  const php = JSON.parse(readFileSync(path.join(root, 'config/toolchain.json'), 'utf8')).php;
+  const { php, python } = JSON.parse(readFileSync(path.join(root, 'config/toolchain.json'), 'utf8'));
   if (!/^\d+\.\d+$/.test(php ?? '')) throw new Error(`config/toolchain.json pins no PHP minor: expected "php" as <major>.<minor>, actual ${JSON.stringify(php)}`);
-  const text = `php=${php}\n`;
-  print(text.trimEnd());
+  if (!/^\d+\.\d+$/.test(python ?? '')) throw new Error(`config/toolchain.json pins no Python minor: expected "python" as <major>.<minor>, actual ${JSON.stringify(python)}`);
+  const text = `php=${php}\npython=${python}\n`;
+  for (const line of text.trimEnd().split('\n')) print(line);
   if (env.GITHUB_OUTPUT) appendFileSync(env.GITHUB_OUTPUT, text);
-  return { php };
+  return { php, python };
 }
 
 // Runs `make <target>` in the checkout: its output goes to `output` and into the log of the target line by line, as

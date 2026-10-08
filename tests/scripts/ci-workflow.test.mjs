@@ -160,8 +160,12 @@ test('the workflow ci runs every CI group in a job that runs to its end and uplo
   assert.ok(read.length > 0);
   for (const job of read) {
     assert.match(job.text, /^ {4}strategy:\n {6}fail-fast: false\n/m, `${job.name}: fail-fast`);
+    // The matrix holds one entry per CI group and may hold more entries of one group, as the python group does for
+    // 3.11 and the pinned release: every entry names a CI group, and every CI group has an entry.
     const matrix = [...job.text.matchAll(/^ {10}- group: ([\w-]+)$/gm)].map((match) => match[1]);
-    assert.deepEqual(matrix, names, `${job.name}: the matrix groups are not CI_GROUPS`);
+    assert.ok(matrix.length >= names.length, `${job.name}: the matrix holds fewer entries than CI_GROUPS`);
+    assert.ok(matrix.every((group) => names.includes(group)), `${job.name}: the matrix groups are not CI_GROUPS`);
+    assert.ok(names.every((group) => matrix.includes(group)), `${job.name}: a CI group has no matrix entry`);
     const index = (predicate, name) => {
       const at = job.steps.findIndex(predicate);
       assert.ok(at >= 0, `${job.name} has no ${name} step`);

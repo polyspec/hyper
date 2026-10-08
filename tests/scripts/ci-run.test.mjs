@@ -27,7 +27,7 @@ function checkout(t) {
     '',
   ].join('\n'));
   mkdirSync(path.join(root, 'config'));
-  writeFileSync(path.join(root, 'config/toolchain.json'), '{ "php": "8.5" }\n');
+  writeFileSync(path.join(root, 'config/toolchain.json'), '{ "php": "8.5", "python": "3.14" }\n');
   for (const args of [['init', '--quiet'], ['add', '-A'], ['-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '--quiet', '-m', 'fixture']]) {
     assert.equal(spawnSync('git', args, { cwd: root }).status, 0);
   }
@@ -153,12 +153,13 @@ test('the failure lines of a run with marked failures are the marked lines and t
   ]);
 });
 
-test('the pins give the PHP minor as a step output', (t) => {
+test('the pins give the PHP minor and the Python pin as step outputs', (t) => {
   const root = checkout(t);
   const output = path.join(root, 'output.txt');
-  assert.deepEqual(pins({ root, env: { GITHUB_OUTPUT: output }, print: quiet }), { php: '8.5' });
-  assert.equal(readFileSync(output, 'utf8'), 'php=8.5\n');
-  assert.deepEqual(pins({ root: ROOT, env: {}, print: quiet }), { php: JSON.parse(readFileSync(path.join(ROOT, 'config/toolchain.json'), 'utf8')).php });
+  assert.deepEqual(pins({ root, env: { GITHUB_OUTPUT: output }, print: quiet }), { php: '8.5', python: '3.14' });
+  assert.equal(readFileSync(output, 'utf8'), 'php=8.5\npython=3.14\n');
+  const pinned = JSON.parse(readFileSync(path.join(ROOT, 'config/toolchain.json'), 'utf8'));
+  assert.deepEqual(pins({ root: ROOT, env: {}, print: quiet }), { php: pinned.php, python: pinned.python });
 });
 
 test('a warning line of a passing target is recorded and named in the summary', async (t) => {
