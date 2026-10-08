@@ -8,6 +8,7 @@
 
 - Python package `packages/hyper-python` (`polyspec-hyper`, namespace `polyspec.hyper`)이 router(HY-4 to HY-8, HY-49), query와 form 값(HY-56, HY-57), mask된 CSRF token(HY-24), PHP 서버와 같은 바이트의 JSON text(HY-17, HY-54)를 구현한다. `unittest` test가 `conformance/routes.json`, `rest.json`, `csrf.json`, `fields.json`, `json.json`의 모든 사례를 읽는다(H15.3-1).
 - Python package가 query, form, selection 값을 가진 request, cookie와 cache control, page 상태, 데이터 내장을 가진 reply, action의 결과와 stop, 영역과 kept 경로를 가진 manifest, 응답의 영역 선택, data model 검사, 데이터에 맞는 kept 값(HY-37, HY-38), 데이터가 read 경로가 읽는 부분만 남기는 것(HY-73)을 더한다. `unittest` test가 `conformance/keep.json`(31)과 `conformance/reads.json`(23)의 모든 사례를 읽는다(H15.3-2).
+- Python package가 요청에 답한다. `App.open`이 manifest, handler, 서버 program으로 application을 만들고 `App.handle`이 문서, JSON, action redirect, stop 결과로 요청 하나에 답한다(HY-8, HY-15 to HY-19, HY-24 to HY-27, HY-40, HY-50 to HY-62, HY-65 to HY-67). `ClientRendering`과 `Choice`가 클라이언트 렌더 페이지를 선언하고(HY-62) renderer가 template Python package로 렌더한다. `make test-python-render`가 형제 checkout의 template package로 렌더링 test를 돌리며 `unittest` test가 `conformance/client.json`(24)의 모든 사례를 읽는다(H15.3-3).
 
 ## 0.0.4
 

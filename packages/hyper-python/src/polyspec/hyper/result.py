@@ -42,7 +42,7 @@ class Result:
     def flash_value(self, name: str, value: object) -> 'Result':
         """Returns a copy that stores a flash value, a value of the data model, for the next request."""
         check(value)
-        return Result(self.location, self.status, self.data, {**self.flash, name: value}, self.changed)
+        return Result(self.location, self.status, self.data, {**self.flash, name: value}, self.changed_topics)
 
     def changed(self, *topics: str) -> 'Result':
         """Returns a copy that records changed topics for the next request."""
