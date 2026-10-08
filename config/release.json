@@ -1,0 +1,96 @@
+{
+  "schema": 1,
+  "repositoryUrl": "https://github.com/polyspec/hyper",
+  "changelog": "CHANGELOG.md",
+  "changelogTranslations": [
+    "CHANGELOG.ko.md"
+  ],
+  "checks": [
+    "ci-passed"
+  ],
+  "packages": [
+    {
+      "kind": "npm",
+      "directory": "packages/hyper-js",
+      "name": "@polyspec/hyper"
+    },
+    {
+      "kind": "npm",
+      "directory": "packages/hyper-node",
+      "name": "@polyspec/hyper-server"
+    },
+    {
+      "kind": "npm",
+      "directory": "packages/hyper-build",
+      "name": "@polyspec/hyper-build"
+    },
+    {
+      "kind": "composer",
+      "directory": "packages/hyper-php",
+      "name": "polyspec/hyper"
+    }
+  ],
+  "manifests": {
+    "package.json": "version",
+    "packages/hyper-js/package.json": "archive",
+    "packages/hyper-node/package.json": "archive",
+    "packages/hyper-build/package.json": "archive",
+    "packages/hyper-php/composer.json": "archive",
+    "packages/hyper-python/pyproject.toml": "git-tag"
+  },
+  "notReleased": {
+    "tests/package-install/package.json": "the test package that installs the npm archives of the packages",
+    "tests/release-install/npm/package.json": "the npm consumer project that installs the release tarballs",
+    "tests/release-install/composer/composer.json": "the Composer consumer project that installs the release zips",
+    "examples/board/composer.json": "the example application, which installs the packages from the checkout",
+    "composer.json": "the private development root of packages/hyper-php, which resolves the packages from the checkout"
+  },
+  "goModules": {},
+  "consumers": {
+    "npm": {
+      "directory": "tests/release-install/npm",
+      "smoke": {
+        "@polyspec/hyper": [
+          "node",
+          "--input-type=module",
+          "-e",
+          "const loaded = await import('@polyspec/hyper'); if (typeof loaded.Router !== 'function') throw new Error('@polyspec/hyper lacks Router');"
+        ],
+        "@polyspec/hyper-server": [
+          "node",
+          "--input-type=module",
+          "-e",
+          "const loaded = await import('@polyspec/hyper-server'); if (typeof loaded.App !== 'function') throw new Error('@polyspec/hyper-server lacks App');"
+        ],
+        "@polyspec/hyper-build": [
+          "node",
+          "-e",
+          "const { spawnSync } = require('node:child_process'); for (const bin of ['hyper-build-server', 'hyper-build-assets']) { const run = spawnSync(process.execPath, ['node_modules/@polyspec/hyper-build/bin/' + bin + '.mjs'], { encoding: 'utf8' }); if (!/ (is|are) required/.test(run.stderr)) { console.error(bin + ' did not reach its argument check:\\n' + run.stderr); process.exit(1); } }"
+        ]
+      }
+    },
+    "composer": {
+      "directory": "tests/release-install/composer",
+      "smoke": {
+        "polyspec/hyper": [
+          "php",
+          "-r",
+          "require 'vendor/autoload.php'; exit(class_exists('Polyspec\\\\Hyper\\\\App') ? 0 : 1);"
+        ]
+      }
+    }
+  },
+  "proof": {
+    "gitTag": {
+      "packages/hyper-python/pyproject.toml": {
+        "kind": "python",
+        "name": "polyspec-hyper",
+        "smoke": [
+          "python",
+          "-c",
+          "import polyspec.hyper"
+        ]
+      }
+    }
+  }
+}

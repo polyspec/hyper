@@ -238,8 +238,7 @@
       "tests": [
         "tests/scripts/build-assets.test.mjs",
         "tests/scripts/template-dir.test.mjs",
-        "tests/scripts/package-source.test.mjs",
-        "tests/scripts/release-install.test.mjs"
+        "tests/scripts/package-source.test.mjs"
       ]
     },
     {
@@ -254,8 +253,7 @@
       ],
       "tests": [
         "tests/scripts/check-templates.test.mjs",
-        "tests/scripts/package-source.test.mjs",
-        "tests/scripts/release-install.test.mjs"
+        "tests/scripts/package-source.test.mjs"
       ]
     },
     {
@@ -277,9 +275,7 @@
       ],
       "tests": [
         "tests/scripts/package-source.test.mjs",
-        "tests/scripts/template-dir.test.mjs",
-        "tests/scripts/release.test.mjs",
-        "tests/scripts/release-install.test.mjs"
+        "tests/scripts/template-dir.test.mjs"
       ]
     },
     {
@@ -337,8 +333,7 @@
         ".github/workflows/*.yml"
       ],
       "tests": [
-        "tests/scripts/ci-workflow.test.mjs",
-        "tests/scripts/release.test.mjs"
+        "tests/scripts/ci-workflow.test.mjs"
       ]
     },
     {
@@ -372,7 +367,6 @@
     },
     {
       "paths": [
-        "scripts/release.mjs",
         "CHANGELOG.md",
         "package.json",
         "packages/hyper-js/package.json",
@@ -382,12 +376,11 @@
         "tests/package-install/package.json",
         "examples/board/composer.json",
         "composer.json",
-        "scripts/release-fixtures.mjs",
+        "config/release.json",
         "tests/release-install/**"
       ],
-      "tests": [
-        "tests/scripts/release.test.mjs",
-        "tests/scripts/release-install.test.mjs"
+      "targets": [
+        "release-coverage"
       ]
     },
     {
@@ -449,8 +442,7 @@
         "tests/scripts/toolchain.test.mjs",
         "tests/scripts/template-copy.test.mjs",
         "tests/scripts/check-recipes.test.mjs",
-        "tests/scripts/ci-workflow.test.mjs",
-        "tests/scripts/release.test.mjs"
+        "tests/scripts/ci-workflow.test.mjs"
       ]
     },
     {

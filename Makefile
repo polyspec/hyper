@@ -246,24 +246,16 @@ rerun-failed: template-tag
 install-browser: ## Install Chromium of the pinned Playwright and its system libraries; the CI group board runs it (HY-91)
 	$(ONLINE) node node_modules/@playwright/test/cli.js install --with-deps chromium
 
-# The steps of .github/workflows/release.yml for the tag TAG (scripts/release.mjs), in this order: release-verify
-# requires the tagged commit on origin/main with the checks push-gate and ci-passed passed, release-versions the version
-# of the tag in every manifest and its section in CHANGELOG.md, release-assets builds the packages and their archives
-# into var/release/assets, and release-publish creates the GitHub Release. The workflow sets TAG in the environment, and
-# the recipe passes it as "$$TAG", so the name of a tag never becomes shell text. A step without TAG fails before any
-# prerequisite runs.
-RELEASE_STEPS := release-verify release-versions release-assets release-publish
-$(if $(filter $(RELEASE_STEPS),$(MAKECMDGOALS)),$(if $(TAG),,$(error make $(filter $(RELEASE_STEPS),$(MAKECMDGOALS)) needs TAG=<tag>, a tag vX.Y.Z)))
+# The steps of .github/workflows/release.yml for the tag TAG (scripts/kit/release.mjs, config/release.json), in this order:
+# release-verify requires the tagged commit on origin/main with the check ci-passed passed, release-versions the version of
+# the tag in every manifest and its section in CHANGELOG.md, release-assets builds the packages and their archives into
+# var/release/assets, and release-publish creates the GitHub Release. The targets are those of scripts/kit/kit.mk; the
+# archives are built from the built packages, so release-assets builds them first.
+release-assets: packages
 
-release-verify: ## Fail unless the commit of the tag TAG is on origin/main and passed the checks push-gate and ci-passed
-release-versions: ## Fail unless every manifest declares the version of the tag TAG and CHANGELOG.md has its section
-# The locks of the consumer fixtures of tests/release-install (scripts/release-fixtures.mjs, HY-95): npm and Composer
-# resolve the fixtures against the assets of the tree and the public registry, so the target runs through $(ONLINE);
-# the release commit runs it when a release version changes.
-release-fixtures: packages ## Write the locks of the consumer fixtures of tests/release-install from the assets of the tree
-	$(ONLINE) node scripts/release-fixtures.mjs
-
-release-assets: packages ## Build the packages and the archive of each into var/release/assets for the tag TAG
-release-publish: ## Create the GitHub Release of the tag TAG with its changelog section and the archives
-$(RELEASE_STEPS):
-	node scripts/release.mjs $(@:release-%=%) "$$TAG"
+# npm 12.2.0 counts the registry tarball of a package with bundleDependencies, here @tailwindcss/oxide-wasm32-wasi below
+# @polyspec/hyper-build, as a remote package while it writes a lock and refuses it under allow-remote=root with
+# EALLOWREMOTE (https://github.com/npm/cli/pull/9818), so the lock of the npm consumer project is written with
+# allow-remote=all. The install of the consumer needs no setting: it installs only what the lock pins by its integrity
+# (H13.5-14).
+release-consumer-lock: export npm_config_allow_remote := all
