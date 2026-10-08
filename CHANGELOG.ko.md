@@ -4,6 +4,7 @@
 
 ## Unreleased
 
+- H15.3-16: `docs/operations/dependencies.md`와 한글 쌍에 `packages/hyper-python`의 Python git 의존성 `polyspec-template`을 template tag `v0.0.5`에 기록했습니다. 이유와 제거 조건을 함께 적었습니다.
 ### Added
 
 - 실행 checklist가 작업 H15.3과 하위 항목 H15.3-1부터 H15.3-5까지를 열고, wave 15 배경이 Python 구현을 적는다 (H15.3).

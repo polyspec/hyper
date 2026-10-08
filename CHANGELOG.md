@@ -4,6 +4,7 @@
 
 ## Unreleased
 
+- H15.3-16: `docs/operations/dependencies.md` and its Korean pair record the Python git dependency `polyspec-template` of `packages/hyper-python` on the template tag `v0.0.5`, with its reason and its removal condition.
 ### Added
 
 - The execution checklist opens the task H15.3 with its sub-items H15.3-1 to H15.3-5, and the wave 15 background names the Python implementation (H15.3).
