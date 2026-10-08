@@ -1,5 +1,6 @@
 // Proves that the browser code renders the same bytes as the PHP server (HY-12, HY-13, HY-20, HY-30, HY-31), and
-// with --node-port that the Node server answers every request as the PHP server does (HY-55).
+// with --node or --python that the Node or the Python server answers every request as the PHP server does
+// (HY-55).
 // It starts the application with an empty database and runs the steps of a request file in one
 // session; a cookie step sets the hy-keep cookie of HY-39. For every compare step it requests:
 //   1. the HTML document, rendered by PHP,
@@ -8,10 +9,11 @@
 // and requires that (2) equals (1) byte for byte and that every part of (3) appears in (1).
 // Rendering also requires that the browser router selects the route that the server reported.
 //
-// With --node it also starts the board Node server (`make node-server`) with its own empty database and
-// session, sends every request of the steps to both servers, and requires the same status, the same headers and
-// the same body after it replaces the session identifier, the masked CSRF token and the ETag value with placeholders.
-// Both servers store posts with the same creation time (BOARD_TIME).
+// With --node or --python it also starts the board Node server (`make node-server`) or the board Python server
+// (examples/board/python) with its own empty database and session, sends every request of the steps to both
+// servers, and requires the same status, the same headers and the same body after it replaces the session
+// identifier, the masked CSRF token and the ETag value with placeholders. The servers store posts with the same
+// creation time (BOARD_TIME).
 //
 // The servers of a run listen on ports that the system assigns, and the check sends its requests to the address
 // that each server reports in its output (scripts/board-servers.mjs), so it never tests a server of another run.
@@ -21,7 +23,7 @@
 // within REQUEST_TIMEOUT_MS fails by the name of its step and ends the check.
 //
 // Usage: node scripts/check-parity.mjs --app examples/board --requests examples/board/tests/parity/requests.json
-//          [--extension build/ext/polyspec_template.so] [--node]
+//          [--extension build/ext/polyspec_template.so] [--node] [--python]
 
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
@@ -29,18 +31,19 @@ import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { build } from 'esbuild';
-import { serverRun, startNode, startPhp } from './board-servers.mjs';
+import { serverRun, startNode, startPhp, startPython } from './board-servers.mjs';
 
 // --extension loads the native template extension into PHP, so the server renders with it instead of the
 // generated program (HY-48).
-const { values } = parseArgs({ options: { app: { type: 'string' }, requests: { type: 'string' }, extension: { type: 'string' }, node: { type: 'boolean' } } });
+const { values } = parseArgs({ options: { app: { type: 'string' }, requests: { type: 'string' }, extension: { type: 'string' }, node: { type: 'boolean' }, python: { type: 'boolean' } } });
 if (!values.app || !values.requests) throw new Error('--app and --requests are required');
 const app = values.app;
 const SESSION_COOKIE = 'hy-session';
 // The creation time of every post: 2026-10-01 12:00:00 UTC.
 const BOARD_TIME = '1790856000';
-// Headers that the HTTP server program writes by itself and that the comparison leaves out (HY-55).
-const TRANSPORT_HEADERS = new Set(['date', 'connection', 'keep-alive', 'content-length', 'transfer-encoding', 'host', 'x-powered-by']);
+// Headers that the HTTP server program writes by itself and that the comparison leaves out (HY-55): the
+// X-Powered-By of the PHP built-in server and the Server of the Python http.server.
+const TRANSPORT_HEADERS = new Set(['date', 'connection', 'keep-alive', 'content-length', 'transfer-encoding', 'host', 'x-powered-by', 'server']);
 // The time in which a server answers a request of a step, its whole body included.
 const REQUEST_TIMEOUT_MS = 10_000;
 const { steps } = JSON.parse(readFileSync(values.requests, 'utf8'));
@@ -69,6 +72,7 @@ console.log(`run directory: ${run.directory}`);
 const { children } = run;
 let php = null;
 let node = null;
+let python = null;
 let failures = 0;
 let compared = 0;
 try {
@@ -78,11 +82,16 @@ try {
     const nodeServer = await startNode({ name: 'node', app, port: 0, env: { BOARD_DB: join(run.directory, 'node.db'), BOARD_SESSIONS: join(run.directory, 'sessions'), BOARD_BASE_PATH: '', BOARD_TIME }, children });
     node = client(nodeServer.url);
   }
+  if (values.python) {
+    const pythonServer = await startPython({ name: 'python', app, port: 0, env: { BOARD_DB: join(run.directory, 'python.db'), BOARD_SESSIONS: join(run.directory, 'python-sessions'), BOARD_BASE_PATH: '', BOARD_TIME }, children });
+    python = client(pythonServer.url);
+  }
   let keepCookie = '';
   // Sends a step to the PHP server, and to the Node server when it runs, and compares the two responses.
   const send = async (step, headers) => {
     const response = await php.send(step, headers, keepCookie);
-    if (node !== null) compare(`${step.method} ${step.path} ${JSON.stringify(headers)}`, response, await node.send(step, headers, keepCookie));
+    if (node !== null) compare(`${step.method} ${step.path} ${JSON.stringify(headers)}`, response, await node.send(step, headers, keepCookie), 'Node');
+    if (python !== null) compare(`${step.method} ${step.path} ${JSON.stringify(headers)}`, response, await python.send(step, headers, keepCookie), 'Python');
     return response;
   };
 
@@ -109,6 +118,8 @@ try {
   }
   if (node !== null && compared === 0) fail('the Node server answered no compared request; expected at least 1, actual 0');
   if (node !== null) console.log(`${failures === 0 ? 'ok' : 'checked'} Node server: ${compared} responses equal the PHP responses`);
+  if (python !== null && compared === 0) fail('the Python server answered no compared request; expected at least 1, actual 0');
+  if (python !== null) console.log(`${failures === 0 ? 'ok' : 'checked'} Python server: ${compared} responses equal the PHP responses`);
 } catch (error) {
   fail(error.message);
 } finally {
@@ -193,13 +204,13 @@ function client(base) {
 
 // Compares a PHP response and a Node response after the placeholders of HY-55 replace the values that differ by
 // session.
-function compare(label, expected, actual) {
+function compare(label, expected, actual, server) {
   compared++;
   const a = normalize(label, 'PHP', expected);
-  const b = normalize(label, 'Node', actual);
-  if (expected.status !== actual.status) fail(`${label}: Node status ${actual.status}, PHP status ${expected.status}`);
-  if (a.headers.join('\n') !== b.headers.join('\n')) fail(`${label}: headers differ\n--- PHP\n${a.headers.join('\n')}\n--- Node\n${b.headers.join('\n')}`);
-  if (a.text !== b.text) fail(`${label}: bodies differ\n--- PHP\n${a.text}\n--- Node\n${b.text}`);
+  const b = normalize(label, server, actual);
+  if (expected.status !== actual.status) fail(`${label}: ${server} status ${actual.status}, PHP status ${expected.status}`);
+  if (a.headers.join('\n') !== b.headers.join('\n')) fail(`${label}: headers differ\n--- PHP\n${a.headers.join('\n')}\n--- ${server}\n${b.headers.join('\n')}`);
+  if (a.text !== b.text) fail(`${label}: bodies differ\n--- PHP\n${a.text}\n--- ${server}\n${b.text}`);
 }
 
 function normalize(label, server, response) {

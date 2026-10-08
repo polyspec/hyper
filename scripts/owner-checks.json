@@ -12,6 +12,7 @@
     { "paths": ["examples/board/{client,public}/**", "examples/board/compare.html"], "targets": ["parity", "e2e", "bundle-size"] },
     { "paths": ["examples/board/src/**", "examples/board/{composer.json,composer.lock,pint.json}", "examples/board/var/**"], "targets": ["lint", "parity", "server-parity", "e2e"] },
     { "paths": ["examples/board/node/**"], "targets": ["server-parity"] },
+    { "paths": ["examples/board/python/**"], "targets": ["server-parity-python"] },
     { "paths": ["examples/board/tests/parity/**"], "targets": ["parity", "server-parity"] },
     { "paths": ["tests/e2e/**", "playwright.config.ts"], "targets": ["e2e"], "tests": ["tests/scripts/run-e2e.test.mjs"] },
     { "paths": ["tests/virtiofs/**"], "targets": ["virtiofs-check"] },

@@ -72,7 +72,7 @@ $(if $(filter $(HOOKS_PATH),$(shell git config core.hooksPath)),,$(shell git con
 
 .DEFAULT_GOAL := help
 
-.PHONY: help tools toolchain-check owner-check install hyper-php-copy template template-tag ext packages package-check server server-fixtures node-server node-fixtures assets test-js test-node test-php test-python lint analyse-php templates-check test-scripts virtiofs-check parity server-parity bundle-size e2e docs-check serve-demo bench-server bench-server-smoke bench-browser bench check rerun-failed serve-demo-unlock hooks hooks-check push-gate-commit ci-pins ci-check ci-summary ci-passed install-browser release-verify release-versions release-assets release-publish release-fixtures github-ruleset github-ruleset-check
+.PHONY: help tools toolchain-check owner-check install hyper-php-copy template template-tag ext packages package-check server server-fixtures node-server node-fixtures assets test-js test-node test-php test-python lint analyse-php templates-check test-scripts virtiofs-check parity server-parity server-parity-python bundle-size e2e docs-check serve-demo bench-server bench-server-smoke bench-browser bench check rerun-failed serve-demo-unlock hooks hooks-check push-gate-commit ci-pins ci-check ci-summary ci-passed install-browser release-verify release-versions release-assets release-publish release-fixtures github-ruleset github-ruleset-check
 
 help: ## List the targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
@@ -191,6 +191,11 @@ parity: assets server ext ## Compare PHP documents (generated program and native
 server-parity: node-server server ## Compare the Node server responses with the PHP responses, with the browser comparison of parity (HY-55)
 	node scripts/check-parity.mjs --app $(BOARD) --requests $(BOARD)/tests/parity/requests.json --node
 
+# The Python server renders with the template Python package of the sibling checkout (H15.3-3), so this comparison
+# runs where that checkout exists, until a template release carries the package.
+server-parity-python: assets server ## Compare the Python server responses with the PHP responses, with the browser comparison of parity (HY-55)
+	node scripts/check-parity.mjs --app $(BOARD) --requests $(BOARD)/tests/parity/requests.json --python
+
 bundle-size: assets ## Print the sizes of the SSR script, the CSR shell and the largest template with their gzip limits; a size above its limit is a warning, never a failure
 	node scripts/check-bundle-size.mjs --app $(BOARD) --output $(BOARD)/build --limits config/bundle-size.json
 
@@ -247,7 +252,7 @@ bench: bench-server bench-browser ## Run both measurements; results are reports,
 # checklist task is [~], while tracked changes are uncommitted or when var/full-run.json records a run of the current tree,
 # runs each target with `make <target>` to its end and records its result; `make rerun-failed` reruns the targets of the
 # current tree that did not pass.
-CHECK_TARGETS := bench-server-smoke docs-check lint analyse-php templates-check test-scripts test-js test-node package-check test-php parity server-parity bundle-size e2e
+CHECK_TARGETS := bench-server-smoke docs-check lint analyse-php templates-check test-scripts test-js test-node package-check test-php parity server-parity server-parity-python bundle-size e2e
 
 # The CI groups of the full suite (HY-91): each job of .github/workflows/ci.yml runs the targets CI_TARGETS_<group> of
 # one group with `make ci-check GROUP=<group>`, so the groups together run every target of CHECK_TARGETS once
@@ -257,7 +262,7 @@ CI_GROUPS := docs php node board
 CI_TARGETS_docs := docs-check
 CI_TARGETS_php := bench-server-smoke lint analyse-php test-php
 CI_TARGETS_node := templates-check test-scripts test-js test-node package-check
-CI_TARGETS_board := parity server-parity bundle-size e2e
+CI_TARGETS_board := parity server-parity server-parity-python bundle-size e2e
 
 # The targets of the full suite that exist on one platform only. Apple `container`, whose bind mounts are virtiofs,
 # exists on Darwin, so `make virtiofs-check` belongs to the full suite there and nowhere else; on Darwin a missing
