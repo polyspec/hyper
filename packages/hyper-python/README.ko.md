@@ -7,8 +7,10 @@ PHP 서버와 같은 바이트의 JSON text를 같은 규칙의 독립 구현으
 `rest.json`, `csrf.json`, `fields.json`, `json.json`의 conformance 사례가 `unittest` test로 돌아간다
 (`make test-python`).
 
+`vX.Y.Z`를 `packages/hyper-python`을 담은 첫 release tag로 바꾼다. 아직 package를 담은 release tag가 없다.
+
 ```sh
-pip install "polyspec-hyper @ git+https://github.com/polyspec/hyper@v0.0.4#subdirectory=packages/hyper-python"
+pip install "polyspec-hyper @ git+https://github.com/polyspec/hyper@vX.Y.Z#subdirectory=packages/hyper-python"
 ```
 
 ```python
