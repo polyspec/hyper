@@ -37,7 +37,7 @@ jobs:
             targets: kit-check kit-test documents-check hooks-check push-gate-commit commits-check owner-validate
           - name: php
             install: true
-            targets: bench-server-smoke lint analyse-php test-php
+            targets: dependency-policy-mutation-check bench-server-smoke lint analyse-php test-php
           - name: node
             install: true
             targets: templates-check test-scripts test-js test-node package-check

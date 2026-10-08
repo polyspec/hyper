@@ -220,7 +220,7 @@ bench: bench-server bench-browser ## Run both measurements; results are reports,
 # checklist task is [~], while tracked changes are uncommitted or when var/full-run.json records a run of the current tree
 # and the commit of the template tag, runs each target with `make <target>` to its end and records its result;
 # `make rerun-failed` reruns the targets of the current tree that did not pass.
-CHECK_TARGETS := kit-check kit-test documents-check hooks-check push-gate-commit commits-check owner-validate bench-server-smoke lint analyse-php templates-check test-scripts test-js test-node test-python package-check test-php parity server-parity bundle-size e2e
+CHECK_TARGETS := kit-check kit-test documents-check hooks-check push-gate-commit commits-check owner-validate dependency-policy-mutation-check bench-server-smoke lint analyse-php templates-check test-scripts test-js test-node test-python package-check test-php parity server-parity bundle-size e2e
 
 # The CI groups of the full suite (HY-91) are the entries of the matrix of .github/workflows/ci.yml: each entry runs its
 # `targets` with `make ci-targets`, so the entries together run every target of CHECK_TARGETS once

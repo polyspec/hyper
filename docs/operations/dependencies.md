@@ -5,7 +5,7 @@
 
 Every dependency uses the latest stable release that supports the declared runtime range: Node.js 26 and PHP 8.2. An exact pin records its reason and the condition that removes it.
 
-The review of 2026-10-08 (`make dependency-review UPDATE=1`) raised `@playwright/test` to 1.64.0, `@types/node` to 26.6.4, `phpstan/phpstan` to 2.3.1 and `phpunit/phpunit` to 11.5.57.
+The review of 2026-10-08 (`make dependency-review UPDATE=1`) raised `@playwright/test` to 1.64.0, `@types/node` to 26.6.4, `phpstan/phpstan` to 2.3.1 and `phpunit/phpunit` to 11.5.57. `config/dependency-policy.json` names the Composer and Python manifests that the review reads, and `make dependency-review RECORD=1` writes the review record `config/dependency-review.json`.
 
 | Dependency | Version | Kind | Reason | Removal condition |
 |---|---|---|---|---|

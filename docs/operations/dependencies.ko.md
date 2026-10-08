@@ -1,12 +1,12 @@
 <!-- doc-id: dependencies -->
-<!-- source-sha256: 704b7358985926723deb9e52d04a57ddfaef9819ebee8e8c8bd422997eb0bc76 -->
+<!-- source-sha256: 099cadaed4f5b5e3066146ffc67e8fbf73a7c4041daa934c8225476067bc42bd -->
 # 의존성
 
 [English](dependencies.md).
 
 모든 의존성은 선언한 런타임 범위(Node.js 26, PHP 8.2)를 지원하는 최신 안정 버전을 사용한다. 정확한 버전 고정은 그 이유와 고정을 해제하는 조건을 기록한다.
 
-2026-10-08의 검토(`make dependency-review UPDATE=1`)는 `@playwright/test`를 1.64.0으로, `@types/node`를 26.6.4로, `phpstan/phpstan`을 2.3.1로, `phpunit/phpunit`을 11.5.57로 올렸다.
+2026-10-08의 검토(`make dependency-review UPDATE=1`)는 `@playwright/test`를 1.64.0으로, `@types/node`를 26.6.4로, `phpstan/phpstan`을 2.3.1로, `phpunit/phpunit`을 11.5.57로 올렸다. `config/dependency-policy.json`은 검토가 읽는 Composer와 Python manifest를 밝히고, `make dependency-review RECORD=1`은 검토 기록 `config/dependency-review.json`을 쓴다.
 
 | 의존성 | 버전 | 종류 | 이유 | 해제 조건 |
 |---|---|---|---|---|

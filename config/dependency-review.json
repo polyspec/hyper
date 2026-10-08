@@ -1,0 +1,108 @@
+{
+  "schema": 1,
+  "comment": "Written by make dependency-review RECORD=1 (scripts/kit/dependency-review.mjs) from the registries; make dependency-policy-check compares the checkout with it without a network.",
+  "reviewed": "2026-10-08T21:58:45.075Z",
+  "locks": [
+    {
+      "lock": "package-lock.json",
+      "sha256": "6192cf576839d7acb06d8d77acb73c2d6e0f8fa1ef21e83a3776820b4ef676f2",
+      "advisories": []
+    },
+    {
+      "lock": "composer.lock",
+      "sha256": "e77df00b747ee0b3e432b68d10fbf2e893c23a6c414f7fc69302a57eeae06d2a",
+      "advisories": []
+    },
+    {
+      "lock": "examples/board/composer.lock",
+      "sha256": "ee4a7c2d777e9df7e19b56a04223c813155764927c17444e0fdb34570be282a7",
+      "advisories": []
+    }
+  ],
+  "dependencies": [
+    {
+      "ecosystem": "npm",
+      "manifest": "package.json",
+      "package": "@playwright/test",
+      "version": "1.64.0",
+      "latest": "1.64.0"
+    },
+    {
+      "ecosystem": "npm",
+      "manifest": "package.json",
+      "package": "@types/node",
+      "version": "26.6.4",
+      "latest": "26.6.4"
+    },
+    {
+      "ecosystem": "npm",
+      "manifest": "package.json",
+      "package": "esbuild",
+      "version": "0.28.2",
+      "latest": "0.28.2"
+    },
+    {
+      "ecosystem": "npm",
+      "manifest": "package.json",
+      "package": "typescript",
+      "version": "7.0.2",
+      "latest": "7.0.2"
+    },
+    {
+      "ecosystem": "npm",
+      "manifest": "package.json",
+      "package": "vitest",
+      "version": "5.0.3",
+      "latest": "5.0.3"
+    },
+    {
+      "ecosystem": "composer",
+      "manifest": "composer.json",
+      "package": "polyspec/template",
+      "version": "0.0.4",
+      "latest": "0.0.4"
+    },
+    {
+      "ecosystem": "composer",
+      "manifest": "composer.json",
+      "package": "laravel/pint",
+      "version": "v1.30.4",
+      "latest": "v1.30.4"
+    },
+    {
+      "ecosystem": "composer",
+      "manifest": "composer.json",
+      "package": "phpstan/phpstan",
+      "version": "2.3.1",
+      "latest": "2.3.1"
+    },
+    {
+      "ecosystem": "composer",
+      "manifest": "composer.json",
+      "package": "phpunit/phpunit",
+      "version": "11.5.57",
+      "latest": "11.5.57"
+    },
+    {
+      "ecosystem": "composer",
+      "manifest": "examples/board/composer.json",
+      "package": "polyspec/template",
+      "version": "0.0.4",
+      "latest": "0.0.4"
+    },
+    {
+      "ecosystem": "composer",
+      "manifest": "examples/board/composer.json",
+      "package": "laravel/pint",
+      "version": "v1.30.4",
+      "latest": "v1.30.4"
+    },
+    {
+      "ecosystem": "pypi",
+      "manifest": "packages/hyper-python/pyproject.toml",
+      "package": "setuptools",
+      "version": "84.0.0",
+      "latest": "84.0.0"
+    }
+  ]
+}
