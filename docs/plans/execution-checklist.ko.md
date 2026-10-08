@@ -1,5 +1,5 @@
 <!-- doc-id: execution-checklist -->
-<!-- source-sha256: f7e4f5beb9899da5966c245268b8c3c82010b389a70de0f8544a6fc1fd0aac30 -->
+<!-- source-sha256: e3876aa06a6e5b63ac52c9e5b1dfe367c5b7b278d75bc080798d15fd2c93353c -->
 # 실행 체크리스트
 
 ## [웨이브 1](waves.ko.md#wave-1) — 애플리케이션이 약하게 만들 수 없는 CSRF 방어
@@ -217,3 +217,4 @@
 | H16.6 | vendor한 `polyspec/kit`의 공유 도구를 tag `v0.0.7`로 올린다. 이 tag의 의존성 gate는 lock이 그 디렉터리를 가리킬 때 `file:<디렉터리>`로 요구한 로컬 npm 패키지를 받아들인다. Red: tag `v0.0.6`에서 `make dependency-policy-check`가 이 저장소의 npm 패키지 셋을 보고한다. Green: `make kit-sync KIT_TAG=v0.0.7`의 두 번째 실행은 `unchanged`를 출력하고 `make kit-check`가 통과한다. | `make kit-check`, `make dependency-policy-check` | [o] |
 | H16.7 | tag push는 `push:` trigger에 `branches:` filter가 없는 모든 workflow를 시작하고, 그 workflow의 check run이 tag된 commit에 생기며, `make release-verify`는 그 commit에서 `config/release.json`의 check가 성공이기를 요구한다. tag에서 시작하는 workflow는 `release.yml`뿐이어야 하고 job `ci-passed`는 branch filter가 있는 workflow에서 와야 한다. Red: `push:`에 `branches: [main]`이 없게 바꾼 `ci.yml`이 workflow test를 통과한다. Green: `tests/scripts/ci-workflow.test.mjs`가 그런 `push:` trigger에 실패하고 이 저장소의 workflow에는 통과한다. | `make test-scripts TESTS="tests/scripts/ci-workflow.test.mjs"` | [o] |
 | H16.8 | vendor한 `polyspec/kit`의 공유 도구를 tag `v0.0.9`로 올린다. Red: CI job `check (docs)`에서 `make kit-check`와 `make kit-test`가 실패한다. tag `v0.0.7`의 fixture가 `tests/kit/fixture/vendor/`에 있고 `.gitignore`가 이를 무시하므로(`vendor/`) clone에 그 파일이 없기 때문이다. Green: tag `v0.0.9`의 fixture는 `tests/kit/fixture/external/`에 있고, `make kit-sync KIT_TAG=v0.0.9`의 두 번째 실행은 `unchanged`를 출력하며 `make kit-check`와 `make kit-test`가 통과한다. | `make kit-check`, `make kit-test` | [o] |
+| H16.9 | `make parity`는 `scripts/check-parity.mjs`에 `--php-extension`을 넘기지만 그 script의 option은 `--extension`이므로, 두 번째 parity 실행이 시작할 때 `ERR_PARSE_ARGS_UNKNOWN_OPTION`으로 실패한다. option 이름은 H16.1에서 `scripts/kit/run-tests.mjs`를 위해 `--extension`을 `--php-extension`으로 바꿀 때 이 줄도 함께 바뀐 데서 왔다. Red: `tests/scripts/check-recipes.test.mjs`가 `scripts/check-parity.mjs`가 `--php-extension`을 선언하지 않는다고 보고한다. Green: recipe가 `scripts/`의 script에 넘기는 모든 option을 그 script가 선언하고 `make parity`가 통과한다. | `make test-scripts TESTS="tests/scripts/check-recipes.test.mjs"`, `make parity` | [o] |

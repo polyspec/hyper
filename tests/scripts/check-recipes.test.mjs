@@ -3,7 +3,7 @@
 // recipes with several checks show one accumulating command.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { test } from 'node:test';
@@ -70,4 +70,24 @@ test('every other recipe with several checks runs them in one accumulating comma
     assert.equal(recipe.filter((line) => line.includes("node scripts/line-end.mjs '") && line.includes(' || failed="$failed ')).length, checks, `${target}:\n${recipe.join('\n')}`);
     assert.match(recipe.at(-1), /test -z "\$failed" \|\| \{ echo "failed checks:\$failed"; exit 1; \}/, target);
   }
+});
+
+// A recipe passes only options that the script it starts declares: node:util parseArgs throws for an unknown option, so
+// an option renamed in one place fails the target at its start, as `--php-extension` (the option of the test runner of the
+// kit) did for scripts/check-parity.mjs, whose option is `--extension`.
+test('every option that a recipe passes to a script of scripts/ is declared by that script', () => {
+  const makefile = readFileSync(path.join(ROOT, 'Makefile'), 'utf8');
+  const found = [];
+  let checked = 0;
+  for (const [, script, rest] of makefile.matchAll(/node scripts\/([\w-]+\.mjs)([^\n]*)/g)) {
+    const source = readFileSync(path.join(ROOT, 'scripts', script), 'utf8');
+    if (!source.includes('parseArgs(')) continue;
+    const declared = new Set([...source.matchAll(/['"]?([a-z][\w-]*)['"]?:\s*\{\s*type:/g)].map((match) => match[1]));
+    for (const [, option] of rest.matchAll(/(?:^|\s)--([\w-]+)/g)) {
+      checked += 1;
+      if (!declared.has(option)) found.push(`scripts/${script} does not declare --${option}; it declares ${[...declared].map((name) => `--${name}`).join(', ')}`);
+    }
+  }
+  assert.ok(checked > 10, `only ${checked} options were checked`);
+  assert.deepEqual(found, []);
 });
