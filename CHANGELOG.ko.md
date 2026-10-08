@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 6e7cc497705074aa16a85504bf4c56051f5c3cf9abcfe41cc08bed7938f65c9d -->
+<!-- source-sha256: acfc633821a5dedab44c8e3cdf5cc19cbe63fa66b18b3a3fc4a2552fc89f96ef -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- H16.7: `tests/scripts/ci-workflow.test.mjs`는 `release.yml`이 아닌 workflow의 `push:` trigger에 `branches:` filter가 없거나 `tags:` filter가 있을 때, 그리고 `config/release.json`의 check가 tag로 시작되는 workflow에서 올 때 실패합니다. tag push가 tag된 commit에 그 workflow의 check run을 만들어 `make release-verify`가 그것에 실패하기 때문입니다. `ci.yml`은 이미 `main`으로의 push에서만 시작합니다.
 - H16.6: vendor한 공유 도구가 `polyspec/kit`의 tag `v0.0.7`입니다. 이 tag의 의존성 gate는 lock이 그 디렉터리를 가리킬 때 `file:<디렉터리>`로 요구한 로컬 npm 패키지를 받아들입니다.
 - H16.5: vendor한 공유 도구가 `polyspec/kit`의 tag `v0.0.6`입니다. 이 tag는 의존성 policy에서 저장소 root의 Composer manifest를 받아들이고, 복사본으로 설치한 npm 패키지의 lock 항목을 읽으며, `make documents-stamp`를 더합니다.
 - H15.3-14(우회): 행이 제거된 `CI_TARGETS_python` 대신 `ci.yml`의 matrix 항목과 `CHECK_TARGETS`를, pull request의 필수 check 대신 `main`의 push의 실패한 check를 적습니다. 재시도 조건은 그대로입니다: template release tag가 `packages/template-python`을 담는다.

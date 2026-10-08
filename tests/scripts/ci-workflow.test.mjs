@@ -105,6 +105,37 @@ const TRIGGERS = {
 // the archives, create the release.
 const RELEASE_STEPS = ['make release-verify', 'make release-versions', 'make release-assets', 'make release-publish'];
 
+/**
+ * The ways in which a workflow starts on a tag push. A tag push starts every workflow whose `push:` has no `branches:`
+ * filter, and the check runs of that workflow then stand on the tagged commit, where `make release-verify` requires the
+ * checks of config/release.json to be successful (HY-95). Only release.yml may run on a tag.
+ */
+function tagStartProblems(name, text) {
+  const trigger = /^on:\n((?: {2}.*\n)+)/m.exec(text)?.[1] ?? '';
+  const push = /^ {2}push:\n((?: {4}.*\n)*)/m.exec(trigger)?.[1];
+  const tagged = push !== undefined && (/^ {4}tags:/m.test(push) || !/^ {4}branches(-ignore)?:/m.test(push));
+  if (name === 'release.yml') return tagged && /^ {4}tags:/m.test(push) && !/^ {4}branches/m.test(push) ? [] : ['release.yml is not triggered by tags only'];
+  return tagged ? [`${name}: the push trigger starts on a tag; it needs branches: [main]`] : [];
+}
+
+test('only release.yml starts on a tag, and no check of config/release.json comes from a workflow that a tag starts (HY-95)', () => {
+  const read = workflows();
+  assert.deepEqual(read.flatMap((workflow) => tagStartProblems(workflow.name, workflow.text)), []);
+  const checks = JSON.parse(readFileSync(path.join(ROOT, 'config/release.json'), 'utf8')).checks;
+  assert.ok(checks.length > 0, 'config/release.json names no check');
+  for (const check of checks) {
+    const owners = read.filter((workflow) => jobs(workflow.text).some((job) => job.name === check)).map((workflow) => workflow.name);
+    assert.ok(owners.length > 0, `no workflow has the job ${check}`);
+    assert.deepEqual(owners.filter((name) => tagStartProblems(name, read.find((workflow) => workflow.name === name).text).length > 0 || name === 'release.yml'), [], `${check} is started by a tag`);
+  }
+  // A workflow with a push trigger that has no branch filter, or a tag filter, is found.
+  assert.equal(tagStartProblems('ci.yml', 'on:\n  push:\n  workflow_dispatch:\n').length, 1);
+  assert.equal(tagStartProblems('ci.yml', "on:\n  push:\n    tags: ['v*']\n").length, 1);
+  assert.equal(tagStartProblems('ci.yml', 'on:\n  push:\n    branches: [main]\n  workflow_dispatch:\n').length, 0);
+  assert.equal(tagStartProblems('push-gate.yml', "on:\n  push:\n    branches-ignore: ['gh-readonly-queue/**']\n").length, 0);
+  assert.equal(tagStartProblems('release.yml', "on:\n  push:\n    tags: ['v*']\n").length, 0);
+});
+
 test('each workflow declares exactly its triggers (HY-91, HY-95)', () => {
   assert.deepEqual(workflows().map(workflow => workflow.name).sort(), Object.keys(TRIGGERS).sort());
   for (const workflow of workflows()) {
