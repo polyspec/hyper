@@ -1,3 +1,5 @@
+<!-- doc-id: readme -->
+<!-- source-sha256: 2e5622fe21f6e13dc5001c455cdbac836b4595a79587723e203b2195d39016b4 -->
 # hyper
 
 [English](README.md).

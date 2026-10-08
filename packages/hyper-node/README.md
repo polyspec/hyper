@@ -1,3 +1,4 @@
+<!-- doc-id: hyper-node-readme -->
 # @polyspec/hyper-server
 
 [한국어](README.ko.md).

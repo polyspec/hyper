@@ -1,3 +1,4 @@
+<!-- doc-id: hyper-build-readme -->
 # @polyspec/hyper-build
 
 [한국어](README.ko.md).

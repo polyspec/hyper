@@ -1,3 +1,5 @@
+<!-- doc-id: hyper-build-readme -->
+<!-- source-sha256: e27d7288e4b0e89b13c3bd6dfc5d6ea0dbffca0b41592c0f6224cb1837015405 -->
 # @polyspec/hyper-build
 
 [English](README.md).

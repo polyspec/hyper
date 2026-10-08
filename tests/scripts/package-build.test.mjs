@@ -9,9 +9,10 @@ import { existsSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { test } from 'node:test';
-import { NPM } from '../../scripts/toolchain.mjs';
 import { requireBuilt } from './requires.mjs';
 
+// The npm of this checkout, which `make install-tools` writes (HY-81).
+const NPM = resolve('var/tools/bin/npm');
 requireBuilt('install', 'node_modules/typescript/package.json', 'var/tools/bin/npm');
 requireBuilt('packages', 'node_modules/@polyspec/hyper/dist/index.d.ts');
 

@@ -1,3 +1,5 @@
+<!-- doc-id: benchmark -->
+<!-- source-sha256: da3d82f7d1b8f3a8be70c507c2837eb79f4da368322dfb85a0e5d3af2441fb20 -->
 # 성능 측정
 
 [English](benchmark.md).

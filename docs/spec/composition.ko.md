@@ -1,3 +1,5 @@
+<!-- doc-id: composition -->
+<!-- source-sha256: 7745f966c9dcc3693732ffbc6cd10455613967aa62db8a0a133bfc9da704d1c8 -->
 # 화면 구성
 
 [English](composition.md).

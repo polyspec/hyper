@@ -1,3 +1,5 @@
+<!-- doc-id: waves -->
+<!-- source-sha256: b219ab75172ba01a195a6841b4845a8764db6611d06c50f39b09565c59d96373 -->
 # 웨이브 배경
 
 [English](waves.md).
@@ -63,3 +65,7 @@
 ## Wave 15
 
 의존: 없음. 있는 라우트 영역이 있는 라우트의 모든 서버 렌더 문서는 데이터를 `#hy-data`에 내장했다. 그래서 페이지의 소스에 HTML과 함께 데이터가 보였고 HTML이 컸다. 보기만 하는 페이지는 그 데이터를 쓰지 않는다. 이제 애플리케이션이 문서가 데이터를 내장할지 요청마다 정하며(HY-92), 기본으로 문서는 데이터를 내장하지 않는다. 브라우저는 데이터가 처음 필요할 때 페이지의 문서 JSON을 한 번 요청한다(HY-93). protocol의 서버 규칙은 Python 구현도 가진다. package `packages/hyper-python`이 template Python package로 렌더하고 `http.server`로 board 예제를 서비스한다(H15.3).
+
+## Wave 16
+
+의존: 없음. push를 막고, 전체 suite를 실행하고, 문서를 검사하고, owner 검사를 고르고, test를 실행하고, CI를 보고하고, toolchain을 검사하고, release하고, 의존성을 검토하는 script는 여러 polyspec 저장소에 복사본으로 있었고 저장소마다 달랐다. 이제 이 script는 공유 도구 저장소 `polyspec/kit`에서 온다. 이 저장소는 tag `v0.0.4`의 `scripts/kit/`와 `tests/kit/`를 byte 단위로 같은 복사본으로 가지며(`kit.json`, `.kit/kit.lock.json`), 다른 저장소와는 `config/*.json`에서만 다르다. 버전 0.1 전까지 변경은 그 변경을 소유한 unit test로 검사하고, 모든 작업이 끝났을 때 `main`에 한 번 push한다. `main`의 push는 CI group job을 실행하며, release tag는 그 CI 실행의 check `ci-passed`가 성공한 뒤에만 붙인다(W16).
