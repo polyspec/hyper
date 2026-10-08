@@ -37,3 +37,22 @@ fields = Fields.parse(b'page=2&sort=title')  # names ['page', 'sort'], get('page
   and `Redirect` the stops of loaders and actions (HY-27, HY-50, HY-51, HY-58).
 - `Session` with `ArraySession` owns the CSRF token, the flash values and the kept values of one session (HY-24,
   HY-25, HY-40, HY-72).
+
+- `App.open` creates an application from its manifest, the server program that `hyper-build-server` of
+  `@polyspec/hyper-build` built (the `templates` directory and `reads.json` of it; the Python server needs neither
+  `program.php` nor `program.json`, which the generated PHP program uses) and the handlers that load data and run
+  actions; `App.handle` answers one request (HY-8, HY-15 to HY-19, HY-24 to HY-27, HY-40, HY-50 to HY-62,
+  HY-65 to HY-67). A handler parameter receives the request or the reply by its type, and an application service
+  of the class that `App.bind` registered.
+
+```python
+from polyspec.hyper.app import App
+from polyspec.hyper.session import ArraySession
+
+app = App.open(manifest='app/app.json', program='build/server', handlers=handlers(), timezone='+09:00')
+response = app.handle(request, ArraySession())
+```
+
+- `ClientRendering` with `Choice` declares the client-rendered pages of an application (HY-62): the static shell,
+  the data base path and the selection of each request.
+

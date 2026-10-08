@@ -36,3 +36,21 @@ fields = Fields.parse(b'page=2&sort=title')  # names ['page', 'sort'], get('page
   데이터 내장 선택이다 (HY-52, HY-69, HY-92). `NotFound`, `Forbidden`, `BadRequest`, `Redirect`는 loader와 action의
   stop이다 (HY-27, HY-50, HY-51, HY-58).
 - `Session`과 `ArraySession`이 세션 하나의 CSRF token, flash 값, kept 값을 관리한다 (HY-24, HY-25, HY-40, HY-72).
+
+- `App.open`이 manifest, `hyper-build-server`가 만든 서버 program(그중 `templates` 디렉터리와 `reads.json`. Python
+  서버는 생성된 PHP program이 쓰는 `program.php`와 `program.json`이 필요 없다), 데이터를 읽고 action을 실행하는
+  handler로 application을 만든다. `App.handle`이 요청 하나에 답한다 (HY-8, HY-15 to HY-19, HY-24 to HY-27, HY-40,
+  HY-50 to HY-62, HY-65 to HY-67). handler parameter는 타입으로 request나 reply를 받고, `App.bind`가 등록한
+  application service는 그 클래스로 받는다.
+
+```python
+from polyspec.hyper.app import App
+from polyspec.hyper.session import ArraySession
+
+app = App.open(manifest='app/app.json', program='build/server', handlers=handlers(), timezone='+09:00')
+response = app.handle(request, ArraySession())
+```
+
+- `ClientRendering`과 `Choice`가 application의 클라이언트 렌더 페이지를 선언한다 (HY-62): 정적 shell, data base
+  path, 요청마다의 selection.
+

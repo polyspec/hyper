@@ -81,6 +81,19 @@ def encode_string(text: str) -> str:
     return '"' + _ESCAPED.sub(escape, text) + '"'
 
 
+def value(timezone: str, route: str, params: dict, shared: dict, regions: dict, kept: dict | None = None) -> dict:
+    """Returns the JSON response value of a page (HY-17); `regions` holds the loader data by region name and `kept`
+    the kept values by region name and path."""
+    return {
+        'env': {'timezone': timezone},
+        'route': route,
+        'params': params,
+        'shared': shared,
+        'regions': regions,
+        'kept': kept or {},
+    }
+
+
 class OutsideNumber:
     """A number of a JSON text that has no value in the data model: a number outside ±(2^53 − 1) or one that is not
     finite (HY-38, HY-40)."""

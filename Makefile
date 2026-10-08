@@ -162,6 +162,11 @@ test-php: template server-fixtures ext ## Run the server package tests with the 
 test-python: ## Run the Python server package tests, which read the conformance cases of routes, rest, csrf, fields and json
 	PYTHONPATH=$(CURDIR)/$(PYTHON_PACKAGE)/src $(PYTHON) $(PYTHON_PACKAGE)/tests/run.py
 
+# The rendering tests need the template Python package (H15.3-3): until a template release carries it, they read it
+# from the sibling checkout $(TEMPLATE_REPOSITORY), and `make server-fixtures` writes the server program they open.
+test-python-render: server-fixtures ## Run the Python rendering tests with the template package of the sibling checkout (H15.3-3)
+	PYTHONPATH=$(CURDIR)/$(PYTHON_PACKAGE)/src:$(CURDIR)/$(TEMPLATE_REPOSITORY)/packages/template-python/src $(PYTHON) $(PYTHON_PACKAGE)/tests/run.py $(PYTHON_PACKAGE)/tests/render 'render_*.py'
+
 lint: toolchain-check ## Check PHP formatting
 	@failed=; \
 	$(call check,Pint of $(PHP_PACKAGE),cd $(PHP_PACKAGE) && $(PHP_VENDOR)/bin/pint --test) \
