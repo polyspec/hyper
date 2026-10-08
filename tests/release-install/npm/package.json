@@ -7,12 +7,12 @@
     "@polyspec/hyper": "file:polyspec-hyper-npm-0.0.4.tgz",
     "@polyspec/hyper-build": "file:polyspec-hyper-build-npm-0.0.4.tgz",
     "@polyspec/hyper-server": "file:polyspec-hyper-server-npm-0.0.4.tgz",
-    "@polyspec/template": "https://github.com/polyspec/template/releases/download/v0.0.4/polyspec-template-0.0.4.tgz",
-    "@polyspec/template-compiler": "https://github.com/polyspec/template/releases/download/v0.0.4/polyspec-template-compiler-0.0.4.tgz",
+    "@polyspec/template": "https://github.com/polyspec/template/releases/download/v0.0.5/polyspec-template-npm-0.0.5.tgz",
+    "@polyspec/template-compiler": "https://github.com/polyspec/template/releases/download/v0.0.5/polyspec-template-compiler-npm-0.0.5.tgz",
     "htmx.org": "4.0.0"
   },
   "overrides": {
-    "@polyspec/template": "https://github.com/polyspec/template/releases/download/v0.0.4/polyspec-template-0.0.4.tgz",
-    "@polyspec/template-compiler": "https://github.com/polyspec/template/releases/download/v0.0.4/polyspec-template-compiler-0.0.4.tgz"
+    "@polyspec/template": "https://github.com/polyspec/template/releases/download/v0.0.5/polyspec-template-npm-0.0.5.tgz",
+    "@polyspec/template-compiler": "https://github.com/polyspec/template/releases/download/v0.0.5/polyspec-template-compiler-npm-0.0.5.tgz"
   }
 }

@@ -41,7 +41,7 @@ test('npm installs the template packages from the tarballs of the template relea
   assert.equal(read('packages/hyper-node/package.json').dependencies['@polyspec/template'], version);
   for (const name of PACKAGES) assert.equal(read('packages/hyper-build/package.json').dependencies[name], version, name);
   for (const name of PACKAGES) {
-    const tarball = `https://github.com/polyspec/template/releases/download/v${version}/${name.slice(1).replace('/', '-')}-${version}.tgz`;
+    const tarball = `https://github.com/polyspec/template/releases/download/v${version}/${name.slice(1).replace('/', '-')}-npm-${version}.tgz`;
     assert.equal(root.dependencies[name], tarball, name);
     const entry = lock.packages[`node_modules/${name}`];
     assert.equal(entry.resolved, tarball, name);

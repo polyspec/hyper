@@ -5,13 +5,13 @@
     "license": "MIT",
     "repositories": [
         { "type": "path", "url": "../../var/products/hyper-php", "options": { "symlink": false, "reference": "config" } },
-        { "type": "package", "package": { "name": "polyspec/template", "version": "0.0.4", "type": "library", "description": "Template language implementation: lexer, parser, renderer, functions and CLI", "license": "MIT", "dist": {"type": "zip", "url": "https://github.com/polyspec/template/releases/download/v0.0.4/polyspec-template-0.0.4.zip", "shasum": "99874991fa028f34d5905ae0ecc66f104f166a48"}, "require": {"php": "^8.2", "ext-mbstring": "*"}, "autoload": {"psr-4": {"Polyspec\\Template\\": "src/"}}, "bin": ["bin/template.php"] } }
+        { "type": "package", "package": { "name": "polyspec/template", "version": "0.0.5", "type": "library", "description": "Template language implementation: lexer, parser, renderer, functions and CLI", "license": "MIT", "dist": {"type": "zip", "url": "https://github.com/polyspec/template/releases/download/v0.0.5/polyspec-template-php-0.0.5.zip", "shasum": "0e0f1b690ab394175a7999ef071c2c0780dcfa93"}, "require": {"php": "^8.2", "ext-mbstring": "*"}, "autoload": {"psr-4": {"Polyspec\\Template\\": "src/"}}, "bin": ["bin/template.php"] } }
     ],
     "require": {
         "php": "^8.2",
         "ext-pdo_sqlite": "*",
         "polyspec/hyper": "0.0.4",
-        "polyspec/template": "0.0.4"
+        "polyspec/template": "0.0.5"
     },
     "require-dev": {
         "laravel/pint": "^1.0"

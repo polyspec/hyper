@@ -19,7 +19,7 @@ PYTHON := python3
 # declared copy TEMPLATE_DIR (HY-78) of the commit of its tag TEMPLATE_TAG (HY-80), the release of the template
 # packages; .github/workflows/ci.yml checks out the same tag. `make ext` and PHPStan read the copy.
 TEMPLATE_REPOSITORY := ../template
-TEMPLATE_TAG := v0.0.4
+TEMPLATE_TAG := v0.0.5
 TEMPLATE_DIR := var/products/template
 # The record of the copy, which the copy script rewrites only when it writes a new copy: when the tag names another
 # commit or the copy script changed.
@@ -153,9 +153,9 @@ test-php: template server-fixtures ext ## Run the server package tests with the 
 test-python: ## Run the Python server package tests, which read the conformance cases of routes, rest, csrf, fields and json
 	PYTHONPATH=$(CURDIR)/$(PYTHON_PACKAGE)/src $(PYTHON) $(PYTHON_PACKAGE)/tests/run.py; unit=$$?; $(PYTHON) $(PYTHON_PACKAGE)/tests/run.py $(PYTHON_PACKAGE)/tests/package 'test_*.py'; package=$$?; test $$unit -eq 0 -a $$package -eq 0
 
-# The rendering tests need the template Python package (H15.3-3): until a template release carries it, they read it
-# from the sibling checkout $(TEMPLATE_REPOSITORY), and `make server-fixtures` writes the server program they open.
-test-python-render: server-fixtures ## Run the Python rendering tests with the template package of the sibling checkout (H15.3-3)
+# The rendering tests need the template Python package (H15.3-3), which they read from the checkout $(TEMPLATE_REPOSITORY)
+# of the template tag TEMPLATE_TAG (CI checks it out as ../template), and `make server-fixtures` writes the server program they open.
+test-python-render: server-fixtures ## Run the Python rendering tests with the template package of the template checkout (H15.3-3)
 	PYTHONPATH=$(CURDIR)/$(PYTHON_PACKAGE)/src:$(CURDIR)/$(TEMPLATE_REPOSITORY)/packages/template-python/src $(PYTHON) $(PYTHON_PACKAGE)/tests/run.py $(PYTHON_PACKAGE)/tests/render 'render_*.py'
 
 lint: toolchain-check ## Check PHP formatting
@@ -182,8 +182,8 @@ parity: assets server ext ## Compare PHP documents (generated program and native
 server-parity: node-server server ## Compare the Node server responses with the PHP responses, with the browser comparison of parity (HY-55)
 	node scripts/check-parity.mjs --app $(BOARD) --requests $(BOARD)/tests/parity/requests.json --node
 
-# The Python server renders with the template Python package of the sibling checkout (H15.3-3), so this comparison
-# runs where that checkout exists, until a template release carries the package.
+# The Python server renders with the template Python package of the template checkout (H15.3-3), so this comparison
+# runs where that checkout exists.
 server-parity-python: assets server ## Compare the Python server responses with the PHP responses, with the browser comparison of parity (HY-55)
 	node scripts/check-parity.mjs --app $(BOARD) --requests $(BOARD)/tests/parity/requests.json --python
 
@@ -220,7 +220,7 @@ bench: bench-server bench-browser ## Run both measurements; results are reports,
 # checklist task is [~], while tracked changes are uncommitted or when var/full-run.json records a run of the current tree
 # and the commit of the template tag, runs each target with `make <target>` to its end and records its result;
 # `make rerun-failed` reruns the targets of the current tree that did not pass.
-CHECK_TARGETS := kit-check kit-test documents-check hooks-check push-gate-commit commits-check owner-validate dependency-policy-check dependency-policy-mutation-check bench-server-smoke lint analyse-php templates-check test-scripts test-js test-node test-python package-check test-php parity server-parity bundle-size e2e
+CHECK_TARGETS := kit-check kit-test documents-check hooks-check push-gate-commit commits-check owner-validate dependency-policy-check dependency-policy-mutation-check bench-server-smoke lint analyse-php templates-check test-scripts test-js test-node test-python test-python-render package-check test-php parity server-parity server-parity-python bundle-size e2e
 
 # The CI groups of the full suite (HY-91) are the entries of the matrix of .github/workflows/ci.yml: each entry runs its
 # `targets` with `make ci-targets`, so the entries together run every target of CHECK_TARGETS once
@@ -256,6 +256,7 @@ release-assets: packages
 # npm 12.2.0 counts the registry tarball of a package with bundleDependencies, here @tailwindcss/oxide-wasm32-wasi below
 # @polyspec/hyper-build, as a remote package while it writes a lock and refuses it under allow-remote=root with
 # EALLOWREMOTE (https://github.com/npm/cli/pull/9818), so the lock of the npm consumer project is written with
-# allow-remote=all. The install of the consumer needs no setting: it installs only what the lock pins by its integrity
-# (H13.5-14).
+# allow-remote=all. The install of the consumer uses allow-remote=root, which npm 12 needs for the template tarballs that
+# the lock pins by their integrity (H13.5-14).
 release-consumer-lock: export npm_config_allow_remote := all
+release-consumer: export npm_config_allow_remote := root

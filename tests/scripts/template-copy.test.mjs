@@ -195,7 +195,7 @@ test('Composer installs the template PHP package from the zip of the template re
     const packages = repositories.filter((item) => item.type === 'package' && item.package.name === 'polyspec/template');
     assert.equal(packages.length, 1, manifest);
     assert.equal(packages[0].package.version, version, manifest);
-    assert.deepEqual({ ...packages[0].package.dist, shasum: undefined }, { type: 'zip', url: `https://github.com/polyspec/template/releases/download/v${version}/polyspec-template-${version}.zip`, shasum: undefined }, manifest);
+    assert.deepEqual({ ...packages[0].package.dist, shasum: undefined }, { type: 'zip', url: `https://github.com/polyspec/template/releases/download/v${version}/polyspec-template-php-${version}.zip`, shasum: undefined }, manifest);
     assert.match(packages[0].package.dist.shasum, /^[0-9a-f]{40}$/, `${manifest}: the zip is pinned by its shasum`);
     const lock = JSON.parse(readFileSync(manifest.replace(/\.json$/, '.lock'), 'utf8'));
     assert.deepEqual(lock.packages.find(({ name }) => name === 'polyspec/template').dist, packages[0].package.dist, manifest);
