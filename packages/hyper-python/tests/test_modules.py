@@ -48,7 +48,7 @@ class RequestValuesTest(unittest.TestCase):
         self.assertEqual(3, Request('POST', '/x', {}, body=b'123').body_size())
         self.assertEqual(3, Request('POST', '/x', {'Content-Length': 'x'}, body=b'123').body_size())
 
-    def test_a_region_request_wants_json_with_the_htmx_header(self) -> None:
+    def test_a_region_request_wants_json_with_the_hx_request_header(self) -> None:
         self.assertTrue(Request('GET', '/x', {'Accept': 'application/json', 'HX-Request': 'true'}).is_region_request())
         self.assertFalse(Request('GET', '/x', {'Accept': 'application/json'}).is_region_request())
         self.assertFalse(Request('GET', '/x', {'Accept': 'text/html', 'HX-Request': 'true'}).is_region_request())
