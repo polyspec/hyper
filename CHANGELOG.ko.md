@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 06e65d6d7f6b0baddc7a77efedd64e34a9fe09bbc40a030fa8b694d556e98f74 -->
+<!-- source-sha256: c4707141dd16e946eb562f583a43976d01648222e496089357cbe73960c5aeb9 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- H16.5: vendor한 공유 도구가 `polyspec/kit`의 tag `v0.0.6`입니다. 이 tag는 의존성 policy에서 저장소 root의 Composer manifest를 받아들이고, 복사본으로 설치한 npm 패키지의 lock 항목을 읽으며, `make documents-stamp`를 더합니다.
 - H15.3-14(우회): 행이 제거된 `CI_TARGETS_python` 대신 `ci.yml`의 matrix 항목과 `CHECK_TARGETS`를, pull request의 필수 check 대신 `main`의 push의 실패한 check를 적습니다. 재시도 조건은 그대로입니다: template release tag가 `packages/template-python`을 담는다.
 - H16.4: `AGENTS.md`와 `AGENTS.ko.md`가 버전 0.1 전까지의 공개(모든 작업이 끝났을 때만 `main`을 push, pull request, merge queue, ruleset 없음, `main`의 CI 실행의 check `ci-passed`가 성공한 뒤에만 release tag), archive 이름 `<package>-<language>-<version>.<ext>`, 버전 올림 파일(`packages/hyper-python/pyproject.toml`, `examples/board/composer.json`과 그 lock), 공유 도구의 소유(`scripts/kit/`와 `tests/kit/`는 kit에서만 바뀌고 저장소 설정은 `config/*.json`), 명령 `make documents-check`, `scripts/kit/full-run.mjs`, `scripts/kit/push-gate.mjs`, `config/owner-checks.json`을 적습니다. 검증: `make documents-check`가 통과합니다.
 - H16.3(우회): `make dependency-review UPDATE=1`은 `@playwright/test`를 1.64.0으로, `@types/node`를 26.6.4로, `phpstan/phpstan`을 2.3.1로, `phpunit/phpunit`을 11.5.57로 manifest와 lock과 함께 올렸고, `examples/board/composer.json`은 `polyspec/hyper`를 `@dev`가 아니라 path 패키지의 버전 `0.0.4`로 요구하므로 그 lock이 `0.0.4`를 기록합니다. `config/dependency-policy.json`과 검토 기록은 commit하지 않았습니다. kit의 schema가 저장소 root의 Composer manifest `composer.json`을 거부하고, kit의 의존성 검사가 이 저장소가 복사본으로 설치하는 패키지의 lock 항목을 읽지 않아 `make dependency-policy-check`가 npm 패키지 셋을 보고하기 때문입니다. 행이 재시도 조건을 밝힙니다. kit가 쓰는 policy와 기록은 재시도를 위해 보관합니다.

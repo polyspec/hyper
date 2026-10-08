@@ -1,5 +1,5 @@
 <!-- doc-id: features -->
-<!-- source-sha256: d1184b20669d335ea7990888713ccaf3f94db8b6d11ca3c741cb044b6a7f6b37 -->
+<!-- source-sha256: beeb89da4700612a78664ed8985b5fee131a596d0c6a6f1fd68f9ea8510b9392 -->
 # 기능 상태
 
 [English](features.md).
@@ -60,7 +60,7 @@
 | tool-output | 검사는 run 맥락이나 pin하지 않은 release에 따라 바뀌지 않는 형태로 tool 출력을 읽는다. 호출한 make의 변수 없는 make dry run, machine이 읽는 형태, pin한 도구의 text만 읽는다(HY-83) | implemented; CI run pending | `tests/kit/full-run.test.mjs`, `tests/scripts/template-copy.test.mjs` |
 | atomic-outputs | 다른 process가 읽는 출력은 rename으로 파일 단위 publish하고, 파일 하나는 rename 한 번으로 쓰며, 설치한 사본은 의존성 tree가 같을 때만 publish하고, package manager 설치와 full run은 lock을 잡는다(HY-82) | implemented; CI run pending | `tests/scripts/publish.test.mjs`, `tests/scripts/toolchain.test.mjs`, `tests/kit/holder-lock.test.mjs` |
 | toolchain-pin | Node.js, npm, Composer는 정확한 release로, PHP와 Python은 minor release로 추적 파일에 pin한다. npm과 Composer는 digest로 확인해 checkout의 `var/tools`에 설치하고 `PATH`의 맨 앞에 둔다. `make toolchain-check`는 pin과 다른 모든 도구를 밝히고 CI 보고서는 실행 중인 release를 기록한다(HY-81) | implemented; CI run pending | `tests/scripts/toolchain.test.mjs`, `tests/scripts/template-copy.test.mjs`, `tests/kit/check-toolchain.test.mjs` |
-| kit-tools | push gate, 전체 실행 guard, Git hook, holder lock, 문서와 commit 검사, owner 검사, test runner, CI 보고서, toolchain 설치와 검사, release는 `scripts/kit/`와 `tests/kit/`에 있는 `polyspec/kit` tag `v0.0.4`의 vendor 복사본이며 `config/*.json`이 이를 설정한다. `.kit/kit.lock.json`과 다른 vendor 파일과 schema를 어기는 설정은 실패한다 | implemented; CI run pending | `make kit-check`, `make kit-test` |
+| kit-tools | push gate, 전체 실행 guard, Git hook, holder lock, 문서와 commit 검사, owner 검사, test runner, CI 보고서, toolchain 설치와 검사, release는 `scripts/kit/`와 `tests/kit/`에 있는 `polyspec/kit` tag `v0.0.6`의 vendor 복사본이며 `config/*.json`이 이를 설정한다. `.kit/kit.lock.json`과 다른 vendor 파일과 schema를 어기는 설정은 실패한다 | implemented; CI run pending | `make kit-check`, `make kit-test` |
 | template-tag | 선언한 복사본은 branch `main`이 어느 commit에 있든 template 저장소의 tag `TEMPLATE_TAG`(`v0.0.4`)의 commit이다. 없는 tag는 기대값과 실제값을 밝히며 복사를 실패시키고, `make template-tag`는 tag가 없는 checkout에 실패하며, 복사본이 그 commit을 담고 있는 동안 복사는 아무것도 쓰지 않고, `make template`은 아무것도 설치하지 않으며, CI는 template 저장소를 같은 tag로 checkout한다(HY-80) | implemented; CI run pending | `tests/scripts/template-copy.test.mjs`, `tests/scripts/ci-workflow.test.mjs`, `make template-tag` |
 | query-values | 중첩 없이 순서대로 읽는 모든 쿼리 값과 원본 쿼리(HY-56) | implemented | `make test-php`, `make test-node` |
 | form-values | urlencoded body나 multipart body에서 중첩 없이 순서대로 읽는 모든 폼 값(HY-57) | implemented | `make test-php`, `make test-node` |
