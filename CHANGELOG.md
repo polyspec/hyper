@@ -7,6 +7,7 @@
 ### Added
 
 - The Python package `packages/hyper-python` (`polyspec-hyper`, namespace `polyspec.hyper`) implements the router (HY-4 to HY-8, HY-49), the query and form values (HY-56, HY-57), the masked CSRF token (HY-24) and the JSON text with the bytes of the PHP server (HY-17, HY-54); its `unittest` tests read every case of `conformance/routes.json`, `rest.json`, `csrf.json`, `fields.json` and `json.json` (H15.3-1).
+- The Python package adds the request with its query, form and selection values, the reply with its cookies, cache control, page status and data embedding, the results and stops of actions, the manifest with its regions and kept paths, the region selection of a response, the data model check, the kept values that conform (HY-37, HY-38) and the read paths that the data keeps (HY-73); the `unittest` tests read every case of `conformance/keep.json` (31) and `conformance/reads.json` (23) (H15.3-2).
 
 ## 0.0.4
 
