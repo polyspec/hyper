@@ -19,6 +19,7 @@
 - The Python README names the kept functions by their module path, `polyspec.hyper.kept.apply` and `polyspec.hyper.kept.select` (H15.3-8).
 - The Python README install line takes the release tag as the placeholder `vX.Y.Z`, because no release tag carries `packages/hyper-python` yet (H15.3-9).
 - The `setuptools==80.9.0` pin of the Python package is recorded in the dependency record with its reason and its removal condition (H15.3-10).
+- The H15.3 verification names `make test-python-render` and `make server-parity-python` as running outside CI until a template release carries the Python package (H15.3-11).
 
 ## 0.0.4
 
