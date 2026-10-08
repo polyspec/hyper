@@ -2,7 +2,7 @@
 
 [한국어](README.ko.md).
 
-The Python server of the [region protocol](../../../docs/spec/protocol.md): routing, query and form values, the
+The Python server of the [region protocol](../../docs/spec/protocol.md): routing, query and form values, the
 masked CSRF token and JSON text with the bytes of the PHP server, all as an independent implementation of the same
 rules. The conformance cases of `conformance/routes.json`, `rest.json`, `csrf.json`, `fields.json` and `json.json`
 run as `unittest` tests (`make test-python`).
@@ -26,3 +26,14 @@ fields = Fields.parse(b'page=2&sort=title')  # names ['page', 'sort'], get('page
 - `mask`, `masked` and `verify` mask the session token for a response and verify a masked form value (HY-24).
 - `encode` and `decode` write and read JSON with the bytes of PHP `json_encode` and `json_decode`
   (HY-17, HY-54); `in_data_model` tells a decoded value that belongs to the template data model.
+- `Request` holds one HTTP request with its route parameters, flash values, cookies and selection value (HY-15,
+  HY-42, HY-56, HY-57, HY-62); `target_path` and `target_query` split a request target.
+- `Manifest.from_file` reads and checks the application manifest (HY-1, HY-2); `Region` is one manifest region or
+  route region with its kept paths (HY-37).
+- `Kept.apply` and `Kept.select` apply kept values that conform to the data (HY-38); `Reads.keep` keeps the read
+  paths of the data (HY-73).
+- `Result` is the outcome of an action (HY-25, HY-26, HY-46, HY-58), `Reply` the cookies, the cache control, the
+  page status and the data embedding of a response (HY-52, HY-69, HY-92), and `NotFound`, `Forbidden`, `BadRequest`
+  and `Redirect` the stops of loaders and actions (HY-27, HY-50, HY-51, HY-58).
+- `Session` with `ArraySession` owns the CSRF token, the flash values and the kept values of one session (HY-24,
+  HY-25, HY-40, HY-72).
