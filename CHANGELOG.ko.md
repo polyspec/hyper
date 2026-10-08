@@ -21,6 +21,7 @@
 - Python README의 설치 줄은 release tag 자리에 `vX.Y.Z`를 쓴다. 아직 `packages/hyper-python`을 담은 release tag가 없다 (H15.3-9).
 - Python package의 `setuptools==80.9.0` pin을 사유와 제거 조건과 함께 의존성 기록에 적는다 (H15.3-10).
 - H15.3 verification은 `make test-python-render`와 `make server-parity-python`이 template release가 Python package를 담을 때까지 CI 밖에서 실행된다고 적는다 (H15.3-11).
+- Python package의 build backend pin을 `setuptools==80.9.0`에서 `setuptools==84.0.0`으로 바꾼다. 형제 Python 패키지가 고정한 release와 같다 (H15.3-13).
 
 ## 0.0.4
 
