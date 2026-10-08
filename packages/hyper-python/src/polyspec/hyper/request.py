@@ -102,7 +102,7 @@ class Request:
         return 'application/json' in (self.header('Accept') or '')
 
     def is_region_request(self) -> bool:
-        """Returns True for a region request: JSON from htmx, which sends HX-Request with every request (HY-15)."""
+        """Returns True for a region request: a JSON request that carries the HX-Request header (HY-15)."""
         return self.wants_json() and self.header('HX-Request') == 'true'
 
     def current_path(self) -> Optional[str]:
