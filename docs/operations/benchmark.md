@@ -1,3 +1,4 @@
+<!-- doc-id: benchmark -->
 # Benchmark
 
 [한국어](benchmark.ko.md).

@@ -1,56 +1,56 @@
-# The full suite on GitHub (HY-91): for every pull request, every merge group of the merge queue, the commit that main
-# receives (HY-94), and every manual run (workflow_dispatch), one job per CI group of the Makefile (CI_GROUPS) runs the targets of its group, which together
-# are the targets of CHECK_TARGETS. A failure never stops the run: the matrix does not cancel the other groups
-# (fail-fast: false), every step after the first runs after a failed step (`if: ${{ !cancelled() }}`), and `make
-# ci-check` runs every target of the group to its end. Each job writes the job summary and uploads its report
-# var/ci/<group>/: the record with the status, the time and the first failure lines of each target, the full log of each
-# target and the summary. The ruleset main requires the job ci-passed, the last job, which passes only when every other
-# job of this workflow passed (HY-94). Every step that runs a command runs one make target, the jobs run on ubuntu-26.04-arm, the
-# actions are pinned by commit and no step has a time limit (HY-90, tests/scripts/ci-workflow.test.mjs).
+# The full suite on GitHub (HY-91): the push of main and every manual run (workflow_dispatch) run one job per entry of
+# the matrix, and each entry runs its `targets` with `make ci-targets`. The targets of the entries together are the
+# targets of CHECK_TARGETS of the Makefile, each once; the entries python and python-3.11 run the same targets on two
+# Python releases (tests/scripts/ci-workflow.test.mjs). A failure never stops the run: the matrix does not cancel the other
+# entries (fail-fast: false), every step after the first runs after a failed step (`if: ${{ !cancelled() }}`), and
+# `make ci-targets` runs every target to its end. Each job writes the job summary and uploads its report var/ci/<name>/:
+# the record with the status, the time and the first failure lines of each target, the full log of each target and the
+# summary. The last job, ci-passed, passes only when every other job of this workflow passed; a release tag requires
+# it on the tagged commit (HY-94, HY-95). Every step that runs a command runs one make target, the jobs run on
+# ubuntu-26.04-arm, the actions are pinned by commit and no step has a time limit (HY-90).
 #
-# The toolchain comes from the pinned files: Node.js from .node-version, PHP by the minor of config/toolchain.json, whose
-# running patch the record names, and npm and Composer from `make install` into var/tools of the checkout. `make
-# install` installs the template packages from the assets of the template release with npm and Composer (HY-70). The
-# template repository is checked out next to this repository at its tag v0.0.4 (TEMPLATE_TAG of the Makefile, HY-80),
-# as ../template of the Makefile, and `make install` copies the native extension sources of the commit of that tag
-# (HY-78). `make ext` builds the native extension with phpize and php-config of the PHP of setup-php, and only the group
-# board installs Chromium.
+# The toolchain comes from the pinned files: Node.js from .node-version, PHP from .php-version, Python from
+# .python-version, and npm and Composer from `make install` into var/tools of the checkout. `make install` installs the
+# template packages from the assets of the template release with npm and Composer (HY-70). The template repository is
+# checked out next to this repository at its tag v0.0.4 (TEMPLATE_TAG of the Makefile, HY-80), as ../template of the
+# Makefile, and `make install` copies the native extension sources of the commit of that tag (HY-78). `make ext` builds
+# the native extension with phpize and php-config of the PHP of setup-php, and only the group board installs Chromium.
 name: ci
 
 on:
-  pull_request:
-  merge_group:
+  push:
+    branches: [main]
   workflow_dispatch:
-
-# The runners are few: a new push to a pull request stops the run of its previous push (HY-91). Each merge group has a
-# ref of its own (gh-readonly-queue/main/pr-<number>-<sha>), and its run is never cancelled.
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
 
 jobs:
   check:
-    name: check (${{ matrix.group }})
+    name: check (${{ matrix.name }})
     runs-on: ubuntu-26.04-arm
     strategy:
       fail-fast: false
       matrix:
         include:
-          - group: docs
-          - group: php
+          - name: docs
+            targets: kit-check kit-test documents-check hooks-check push-gate-commit commits-check owner-validate
+          - name: php
             install: true
-          - group: node
+            targets: bench-server-smoke lint analyse-php test-php
+          - name: node
             install: true
-          - group: board
+            targets: templates-check test-scripts test-js test-node package-check
+          - name: board
             install: true
             browser: true
-          # The Python group runs on 3.11, the oldest supported release, and on the pin of config/toolchain.json.
-          - group: python
+            targets: parity server-parity bundle-size e2e
+          # The Python group runs on 3.11, the oldest supported release, and on the release of .python-version.
+          - name: python-3.11
             python: '3.11'
-          - group: python
+            targets: test-python
+          - name: python
+            targets: test-python
     defaults:
       run:
         working-directory: hyper
@@ -64,19 +64,17 @@ jobs:
         if: ${{ !cancelled() }}
         with:
           node-version-file: hyper/.node-version
-      - id: pins
-        if: ${{ !cancelled() }}
-        run: make ci-pins
       - uses: actions/setup-python@06da6279cdbca41027908073e81a4544dc79c06b # v7.0.0
         id: python
-        if: ${{ !cancelled() && matrix.group == 'python' }}
+        if: ${{ !cancelled() }}
         with:
-          python-version: ${{ matrix.python || steps.pins.outputs.python }}
+          python-version: ${{ matrix.python }}
+          python-version-file: hyper/.python-version
       - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2.37.2
         id: php
         if: ${{ !cancelled() && matrix.install }}
         with:
-          php-version: ${{ steps.pins.outputs.php }}
+          php-version-file: hyper/.php-version
           extensions: pdo_sqlite
           tools: none
           coverage: none
@@ -95,20 +93,20 @@ jobs:
         run: make install-browser
       - id: check
         if: ${{ !cancelled() }}
-        run: make ci-check GROUP=${{ matrix.group }}
+        run: make ci-targets TARGETS="${{ matrix.targets }}" CI_REPORT=var/ci/${{ matrix.name }}
       - id: summary
         if: ${{ !cancelled() }}
         env:
           CI_STEPS: ${{ toJSON(steps) }}
-        run: make ci-summary GROUP=${{ matrix.group }}
+        run: make ci-summary CI_REPORT=var/ci/${{ matrix.name }}
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         id: report
         if: ${{ !cancelled() }}
         with:
-          name: ci-${{ matrix.group }}-${{ github.run_id }}-${{ github.run_attempt }}
-          path: hyper/var/ci/${{ matrix.group }}/
+          name: ci-${{ matrix.name }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: hyper/var/ci/${{ matrix.name }}/
           if-no-files-found: error
-  # The check of this workflow that the ruleset main requires (HY-94). It runs after every other job, also after a
+  # The check that a release tag requires on the tagged commit (HY-95). It runs after every other job, also after a
   # failed, skipped or cancelled one (if: always()), and make ci-passed fails unless every job of needs has the result
   # success, so a new job of this workflow is required once it is listed in needs. Each step needs the step before it.
   ci-passed:

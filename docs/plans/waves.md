@@ -1,3 +1,4 @@
+<!-- doc-id: waves -->
 # Wave background
 
 [한국어](waves.ko.md).
@@ -63,3 +64,7 @@ Depends on: none. The checks of this repository gave results that depended on th
 ## Wave 15
 
 Depends on: none. Every server-rendered document of a route with a present route region embedded its data in `#hy-data`, so the source of a page showed its data next to its HTML and the HTML was larger, although a page that is only viewed never uses that data. An application now chooses per request whether a document embeds its data (HY-92), and a document embeds none by default; the browser requests the document JSON of the page once when it first needs the data (HY-93). The server rules of the protocol also have a Python implementation, the package `packages/hyper-python`, which renders with the template Python package and serves the board example over `http.server` (H15.3).
+
+## Wave 16
+
+Depends on: none. The scripts that gate pushes, run the full suite, check documents, select owner checks, run tests, report CI, check toolchains, release and review dependencies existed as copies in several polyspec repositories and differed between them. They now come from the shared tool repository `polyspec/kit`: this repository holds the byte-for-byte copy `scripts/kit/` and `tests/kit/` of the tag `v0.0.4` (`kit.json`, `.kit/kit.lock.json`) and differs from the other repositories only in `config/*.json`. Until version 0.1 a change is checked by its owning unit test and pushed to `main` once, when every task is done; the push of `main` runs the CI group jobs, and a release tag is set only after the check `ci-passed` of that CI run succeeded.

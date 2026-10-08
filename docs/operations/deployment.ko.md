@@ -1,3 +1,5 @@
+<!-- doc-id: deployment -->
+<!-- source-sha256: 2b6b9198bee54481686cba43593e5a54db2d732affc942e85db272ca257d99fa -->
 # 배포
 
 [English](deployment.md).

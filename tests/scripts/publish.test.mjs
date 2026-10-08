@@ -1,7 +1,7 @@
 // Tests that outputs which other processes read are published without a missing or partly written file (HY-82,
 // packages/hyper-build/lib/publish.mjs, writeFileAtomic of packages/hyper-build/lib/output-files.mjs): a reader polls an output while scripts write it
 // again, concurrent writers of one output both succeed, an installed copy is published only while the package manager
-// would install the same dependency tree, and the package manager installs and the full run hold a lock.
+// would install the same dependency tree.
 import assert from 'node:assert/strict';
 import { spawn, spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
@@ -136,22 +136,4 @@ test('an installed copy is published only while the package manager would instal
   const missing = node(['scripts/publish.mjs', 'npm-copy', source, npmTarget]);
   assert.equal(missing.status, 1);
   assert.match(missing.stderr, /node_modules\/package is not installed; run `npm install`/);
-});
-
-test('a package manager install holds the install lock, and a second one fails with the holder', async (t) => {
-  const directory = temporary(t, 'hyper-publish-lock-');
-  const lock = path.join(directory, 'install.lock');
-  const started = path.join(directory, 'started');
-  const stop = path.join(directory, 'stop');
-  const first = spawn(process.execPath, ['scripts/holder-lock.mjs', 'run', lock, '--', process.execPath, '-e',
-    `require('node:fs').writeFileSync(${JSON.stringify(started)}, ''); while (!require('node:fs').existsSync(${JSON.stringify(stop)})) {}`], { cwd: ROOT, stdio: 'inherit' });
-  const firstEnd = new Promise((resolve) => first.on('close', resolve));
-  while (!existsSync(started)) await new Promise((resolve) => setTimeout(resolve, 10));
-  const second = node(['scripts/holder-lock.mjs', 'run', lock, '--', process.execPath, '-e', '']);
-  assert.equal(second.status, 1);
-  assert.match(second.stderr, new RegExp(`install\\.lock is held by process ${first.pid} of the checkout ${ROOT.replaceAll('/', '\\/')}`));
-  writeFileSync(stop, '');
-  assert.equal(await firstEnd, 0);
-  assert.equal(existsSync(lock), false);
-  assert.equal(node(['scripts/holder-lock.mjs', 'run', lock, '--', process.execPath, '-e', 'process.exit(3)']).status, 3);
 });

@@ -1,3 +1,4 @@
+<!-- doc-id: readme -->
 # hyper
 
 [한국어](README.ko.md).

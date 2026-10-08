@@ -1,3 +1,4 @@
+<!-- doc-id: composition -->
 # Screen composition
 
 [한국어](composition.ko.md).

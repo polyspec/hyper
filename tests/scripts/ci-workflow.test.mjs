@@ -1,10 +1,11 @@
-// Tests the rules of the GitHub workflows (HY-86, HY-90): every job runs on the declared runner ubuntu-26.04-arm, every
-// action is pinned by its commit, no step or job has a time limit, every step after the first of a job runs after a
+// Tests the rules of the GitHub workflows (HY-86, HY-90, HY-91): every job runs on the declared runner ubuntu-26.04-arm,
+// every action is pinned by its commit, no step or job has a time limit, every step after the first of a job runs after a
 // failed step (`if: ${{ !cancelled() }}`), except in the jobs whose every step needs the earlier one (STOPPING), and
 // every step that runs a command runs one make target, so the exported settings and the checks of the Makefile, such
-// as the offline settings and the toolchain check, apply to it. The last job of ci.yml is ci-passed, the check of ci.yml
-// that the ruleset main requires (HY-94): it runs after every other job (`if: ${{ always() }}`), needs every other job
-// of the workflow, runs on their runner and runs `make ci-passed` with the JSON of `needs`.
+// as the offline settings and the toolchain check, apply to it. The entries of the matrix of ci.yml run the targets of
+// CHECK_TARGETS, each once. The last job of ci.yml is ci-passed, the check that a release tag requires (HY-95): it runs
+// after every other job (`if: ${{ always() }}`), needs every other job of the workflow, runs on their runner and runs
+// `make ci-passed` with the JSON of `needs`.
 import assert from 'node:assert/strict';
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
@@ -93,22 +94,18 @@ test('every step that runs a command runs make, and every step after the first r
   assert.deepEqual(found, []);
 });
 
-// The on: block of each workflow, exactly: the checks run on every pull request, every merge group and every manual run;
-// the push gate also on every push to a branch outside the merge queue; the release on the push of a tag vX.Y.Z or
-// <directory>/vX.Y.Z at any depth (in a tag filter * does not match /, so **/v* covers a Go module tag). No other
-// workflow exists (HY-91, HY-94).
+// The on: block of each workflow, exactly: the checks run on the push of main and on every manual run; the release on
+// the push of a tag vX.Y.Z or <directory>/vX.Y.Z at any depth (in a tag filter * does not match /, so **/v* covers a Go
+// module tag). No other workflow exists, and none runs on a pull request or a merge group (HY-91, HY-95).
 const TRIGGERS = {
-  'ci.yml': 'on:\n  pull_request:\n  merge_group:\n  workflow_dispatch:\n',
-  'push-gate.yml': "on:\n  push:\n    branches-ignore: ['gh-readonly-queue/**']\n  pull_request:\n  merge_group:\n",
+  'ci.yml': 'on:\n  push:\n    branches: [main]\n  workflow_dispatch:\n',
   'release.yml': "on:\n  push:\n    tags: ['v*', '**/v*']\n",
 };
-// The workflows whose checks the ruleset main requires; they run on every pull request and every merge group.
-const CHECK_WORKFLOWS = ['ci.yml', 'push-gate.yml'];
-// The steps of release.yml in their order (scripts/release.mjs): verify the tagged commit, check the versions, build the
-// archives, create the release.
+// The steps of release.yml in their order (scripts/kit/release.mjs): verify the tagged commit, check the versions, build
+// the archives, create the release.
 const RELEASE_STEPS = ['make release-verify', 'make release-versions', 'make release-assets', 'make release-publish'];
 
-test('each workflow declares exactly its triggers (HY-91, HY-94)', () => {
+test('each workflow declares exactly its triggers (HY-91, HY-95)', () => {
   assert.deepEqual(workflows().map(workflow => workflow.name).sort(), Object.keys(TRIGGERS).sort());
   for (const workflow of workflows()) {
     const declared = /^(on:\n(?: {2}.*\n)+)/m.exec(workflow.text)?.[1] ?? '';
@@ -116,76 +113,74 @@ test('each workflow declares exactly its triggers (HY-91, HY-94)', () => {
   }
   // The trigger */v* matches a tag with one / only, so it misses a Go module tag deeper in the tree.
   assert.notEqual("on:\n  push:\n    tags: ['v*', '*/v*']\n", TRIGGERS['release.yml']);
+  for (const workflow of workflows()) assert.doesNotMatch(workflow.text, /pull_request|merge_group|gh-readonly-queue/, `${workflow.name} names a pull request or a merge group`);
 });
 
-test('every workflow of a required check runs on pull requests and merge groups, and a push of branches skips the branches of the queue (HY-94)', () => {
-  const found = [];
-  for (const workflow of workflows()) {
-    const trigger = /^on:\n((?: {2}.*\n)+)/m.exec(workflow.text)?.[1] ?? '';
-    const events = [...trigger.matchAll(/^ {2}([\w-]+):/gm)].map(match => match[1]);
-    // The ruleset main requires the checks of every workflow, and the merge queue runs them on the merge group.
-    if (CHECK_WORKFLOWS.includes(workflow.name) && (!events.includes('pull_request') || !events.includes('merge_group'))) found.push(`${workflow.name}: runs on ${events.join(', ')}, not on pull_request and merge_group`);
-    // A push to a branch of the merge queue would run the checks of the merge group a second time.
-    if (events.includes('push') && !trigger.includes('    tags:') && !trigger.includes("  push:\n    branches-ignore: ['gh-readonly-queue/**']\n")) found.push(`${workflow.name}: the push trigger lacks branches-ignore: ['gh-readonly-queue/**']`);
+/**
+ * The entries of the matrix of ci.yml, read from the block layout: an entry is an item `- name: <name>` at indent 10 and its
+ * keys are at indent 12. Returns [{ name, targets: [...], install, browser, python }].
+ */
+function matrixEntries(text) {
+  const entries = [];
+  for (const line of text.split('\n')) {
+    const item = /^ {10}- name: (\S+)$/.exec(line);
+    if (item) { entries.push({ name: item[1] }); continue; }
+    const key = /^ {12}(\w+): (.*)$/.exec(line);
+    if (key && entries.length > 0) entries.at(-1)[key[1]] = key[2].replace(/^'(.*)'$/, '$1');
   }
-  assert.deepEqual(found, []);
-});
-
-// The CI groups of the Makefile: CI_GROUPS and the targets CI_TARGETS_<group> of each.
-function groups() {
-  const makefile = readFileSync(path.join(ROOT, 'Makefile'), 'utf8');
-  const variable = (name) => new RegExp(`^${name} := (.*)$`, 'm').exec(makefile)?.[1].split(' ').filter(Boolean);
-  const names = variable('CI_GROUPS') ?? [];
-  return { names, targets: Object.fromEntries(names.map((name) => [name, variable(`CI_TARGETS_${name}`) ?? []])), check: variable('CHECK_TARGETS') };
+  return entries.map(entry => ({ ...entry, targets: (entry.targets ?? '').split(' ').filter(Boolean), install: entry.install === 'true', browser: entry.browser === 'true' }));
 }
 
-test('the CI groups run every target of the full suite once (HY-91)', () => {
-  const { names, targets, check } = groups();
-  assert.ok(names.length > 1, `CI_GROUPS: ${names.join(' ')}`);
-  const all = Object.values(targets).flat();
-  assert.deepEqual([...all].sort(), [...check].sort(), 'the targets of the CI groups are not the targets of CHECK_TARGETS, each once');
+// CHECK_TARGETS of the Makefile without the targets of one platform.
+function checkTargets() {
+  const makefile = readFileSync(path.join(ROOT, 'Makefile'), 'utf8');
+  return /^CHECK_TARGETS := (.*)$/m.exec(makefile)?.[1].split(' ').filter(Boolean);
+}
+
+test('the matrix entries of ci.yml run every target of the full suite once (HY-91)', () => {
+  const entries = matrixEntries(readFileSync(path.join(WORKFLOWS, 'ci.yml'), 'utf8'));
+  assert.ok(entries.length > 1, JSON.stringify(entries));
+  assert.equal(new Set(entries.map(entry => entry.name)).size, entries.length, 'a matrix name repeats; the reports of two entries would share one artifact');
+  // An entry that repeats the targets of another entry runs them on another release of its tool, as python-3.11 does.
+  const groups = new Map();
+  for (const entry of entries) {
+    const key = entry.targets.join(' ');
+    groups.set(key, [...(groups.get(key) ?? []), entry]);
+  }
+  for (const [key, same] of groups) assert.ok(same.length === 1 || same.every(entry => entry.name.startsWith('python')), `${key} runs in ${same.map(entry => entry.name).join(', ')}`);
+  const all = [...groups.keys()].flatMap(key => key.split(' '));
+  assert.deepEqual([...all].sort(), [...checkTargets()].sort(), 'the targets of the matrix entries are not the targets of CHECK_TARGETS, each once');
 });
 
-test('the workflow ci runs every CI group in a job that runs to its end and uploads its report (HY-91)', () => {
+test('the workflow ci runs every matrix entry in a job that runs to its end and uploads its report (HY-91)', () => {
   const text = readFileSync(path.join(WORKFLOWS, 'ci.yml'), 'utf8');
-  // The ruleset main requires the jobs on every pull request and every merge group, the commit that main receives
-  // (HY-94); a push to main never happens outside the merge queue. A manual run checks any branch.
-  assert.match(text, /^on:\n {2}pull_request:\n {2}merge_group:\n {2}workflow_dispatch:\n\n/m);
-  // The runners are few, so a new push to a pull request stops the run of its previous push (HY-91). A merge group has a
-  // ref of its own and its run is never cancelled. The push gate keeps every run: each pushed commit is checked.
-  assert.match(text, /^concurrency:\n {2}group: \$\{\{ github\.workflow \}\}-\$\{\{ github\.ref \}\}\n {2}cancel-in-progress: \$\{\{ github\.event_name == 'pull_request' \}\}\n/m);
-  assert.doesNotMatch(readFileSync(path.join(WORKFLOWS, 'push-gate.yml'), 'utf8'), /^concurrency:/m);
-  const { names, targets } = groups();
   const read = jobs(text).filter((job) => job.name !== CI_PASSED);
   assert.ok(read.length > 0);
   for (const job of read) {
     assert.match(job.text, /^ {4}strategy:\n {6}fail-fast: false\n/m, `${job.name}: fail-fast`);
-    // The matrix holds one entry per CI group and may hold more entries of one group, as the python group does for
-    // 3.11 and the pinned release: every entry names a CI group, and every CI group has an entry.
-    const matrix = [...job.text.matchAll(/^ {10}- group: ([\w-]+)$/gm)].map((match) => match[1]);
-    assert.ok(matrix.length >= names.length, `${job.name}: the matrix holds fewer entries than CI_GROUPS`);
-    assert.ok(matrix.every((group) => names.includes(group)), `${job.name}: the matrix groups are not CI_GROUPS`);
-    assert.ok(names.every((group) => matrix.includes(group)), `${job.name}: a CI group has no matrix entry`);
     const index = (predicate, name) => {
       const at = job.steps.findIndex(predicate);
       assert.ok(at >= 0, `${job.name} has no ${name} step`);
       assert.match(job.steps[at].if ?? '', /^\$\{\{ !cancelled\(\) \}\}$/, `${job.name}: the ${name} step runs only while every earlier step passed`);
       return at;
     };
-    const check = index((step) => step.run === 'make ci-check GROUP=${{ matrix.group }}', 'make ci-check');
-    const summary = index((step) => step.run === 'make ci-summary GROUP=${{ matrix.group }}', 'make ci-summary');
+    const check = index((step) => step.run === 'make ci-targets TARGETS="${{ matrix.targets }}" CI_REPORT=var/ci/${{ matrix.name }}', 'make ci-targets');
+    const summary = index((step) => step.run === 'make ci-summary CI_REPORT=var/ci/${{ matrix.name }}', 'make ci-summary');
     const report = index((step) => /^actions\/upload-artifact@/.test(step.uses ?? ''), 'report upload');
-    assert.ok(check < summary && summary < report, `${job.name}: the report steps follow make ci-check`);
+    assert.ok(check < summary && summary < report, `${job.name}: the report steps follow make ci-targets`);
     assert.match(job.steps[summary].text, /CI_STEPS: \$\{\{ toJSON\(steps\) \}\}/);
-    assert.match(job.steps[report].text, /path: hyper\/var\/ci\/\$\{\{ matrix\.group \}\}\/\n/);
+    assert.match(job.steps[report].text, /path: hyper\/var\/ci\/\$\{\{ matrix\.name \}\}\/\n/);
     assert.match(job.steps[report].text, /if-no-files-found: error/);
-    // Chromium is installed only in the group whose targets run a browser.
+    assert.match(job.steps[report].text, /name: ci-\$\{\{ matrix\.name \}\}-/);
+    // Chromium is installed only in the entries whose targets run a browser.
     const browser = job.steps.find((step) => step.run === 'make install-browser');
     assert.match(browser?.if ?? '', /matrix\.browser/);
-    const flag = (group, name) => new RegExp(`- group: ${group}\\n(?: {12}\\w+: true\\n)* {12}${name}: true\\n`).test(job.text);
-    for (const [group, list] of Object.entries(targets)) {
-      assert.equal(flag(group, 'browser'), list.some((target) => ['parity', 'server-parity', 'e2e'].includes(target)), `${group}: browser flag`);
+    for (const entry of matrixEntries(text)) {
+      assert.equal(entry.browser, entry.targets.some((target) => ['parity', 'server-parity', 'e2e'].includes(target)), `${entry.name}: browser flag`);
     }
+    // The toolchain check of the recipes reads the Python of PATH, so every job sets up the Python of .python-version.
+    const python = job.steps.find((step) => /^actions\/setup-python@/.test(step.uses ?? ''));
+    assert.match(python?.text ?? '', /python-version-file: hyper\/\.python-version/, `${job.name}: the Python of .python-version`);
   }
 });
 
@@ -208,9 +203,12 @@ test('a target declared for Darwin is in the full suite exactly on Darwin and sk
   const makefile = readFileSync(path.join(ROOT, 'Makefile'), 'utf8');
   const darwin = /^DARWIN_TARGETS := (.*)$/m.exec(makefile)?.[1].split(' ').filter(Boolean) ?? [];
   assert.deepEqual(darwin, ['virtiofs-check']);
-  const { check } = groups();
+  const check = checkTargets();
   assert.deepEqual(darwin.filter((target) => check.includes(target)), [], 'a Darwin target in the CHECK_TARGETS of every platform');
-  const suite = dryRun('check').find((line) => line.includes(' node scripts/full-run.mjs run ')).split(' node scripts/full-run.mjs run ')[1].split(' ');
+  const commit = '0'.repeat(40);
+  const line = dryRun('check', { variables: [`TEMPLATE_COMMIT=${commit}`] }).find((entry) => entry.includes(' scripts/kit/full-run.mjs run '));
+  assert.ok(line, 'make check does not run scripts/kit/full-run.mjs');
+  const suite = line.split(` scripts/kit/full-run.mjs run --key template=${commit} `)[1].split(' ');
   assert.deepEqual(suite, process.platform === 'darwin' ? [...check, ...darwin] : check);
   const virtiofs = readdirSync(path.join(ROOT, 'tests/virtiofs')).filter((name) => name.endsWith('.test.mjs'));
   assert.ok(virtiofs.length > 0);
@@ -225,7 +223,7 @@ test('a target declared for Darwin is in the full suite exactly on Darwin and sk
 function ciPassedProblems(text) {
   const read = jobs(text);
   const job = read.find((entry) => entry.name === CI_PASSED);
-  if (!job) return [`the job ${CI_PASSED} is missing; the ruleset main requires it as the check of ci.yml`];
+  if (!job) return [`the job ${CI_PASSED} is missing; a release tag requires it as the check of ci.yml`];
   const key = (entry, name) => new RegExp(`^ {4}${name}: (.*)$`, 'm').exec(entry.text)?.[1];
   const others = read.filter((entry) => entry.name !== CI_PASSED).map((entry) => entry.name);
   const found = [];
@@ -240,7 +238,7 @@ function ciPassedProblems(text) {
   return found;
 }
 
-test('ci-passed is the last job of ci.yml, runs always, needs every other job and runs make ci-passed (HY-94)', () => {
+test('ci-passed is the last job of ci.yml, runs always, needs every other job and runs make ci-passed (HY-95)', () => {
   const text = readFileSync(path.join(WORKFLOWS, 'ci.yml'), 'utf8');
   assert.deepEqual(ciPassedProblems(text), []);
   const [head, tail] = text.split('\n  ci-passed:\n');
@@ -280,7 +278,7 @@ function releaseProblems(text) {
 test('release runs its steps in order with the tag, the template tag and the permission to release', () => {
   const text = readFileSync(path.join(WORKFLOWS, 'release.yml'), 'utf8');
   assert.deepEqual(releaseProblems(text), []);
-  assert.deepEqual(jobs(text)[0].steps.filter((step) => step.run !== undefined).map((step) => step.run), ['make ci-pins', 'make install', ...RELEASE_STEPS]);
+  assert.deepEqual(jobs(text)[0].steps.filter((step) => step.run !== undefined).map((step) => step.run), ['make install', ...RELEASE_STEPS]);
   const broken = {
     order: [text.replace('run: make release-versions', 'run: make release-swap').replace('run: make release-verify', 'run: make release-versions').replace('run: make release-swap', 'run: make release-verify'), 'the steps run'],
     'read only': [text.replace('  contents: write\n', '  contents: read\n'), 'the permissions are not exactly contents: write'],

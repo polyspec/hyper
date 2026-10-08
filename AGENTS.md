@@ -1,3 +1,4 @@
+<!-- doc-id: agents -->
 # Development
 
 [한국어](AGENTS.ko.md).

@@ -1,21 +1,27 @@
+<!-- doc-id: development -->
+<!-- source-sha256: e288146b6b11d149029d139c3029bb1bfe2ef58dc70207e21812e577e09bb58a -->
 # 개발
 
 [English](development.md).
 
 ## 도구
 
-- pin한 도구(HY-81): `.node-version`의 Node.js, `pdo_sqlite`가 있는 `config/toolchain.json` minor의 PHP, GNU Make 3.81 이상, 네이티브 확장을 위한 그 PHP의 phpize, php-config와 C compiler. `make install`은 `packageManager`의 npm과 `config/toolchain.json`의 Composer를 `var/tools`에 설치한다(`make tools`). `make toolchain-check`는 pin과 다른 모든 도구를 밝힌다.
+- pin한 도구(HY-81): `.node-version`의 Node.js, `pdo_sqlite`가 있는 `.php-version`의 PHP, `.python-version`의 Python, GNU Make 3.81 이상, 네이티브 확장을 위한 그 PHP의 phpize, php-config와 C compiler. `make install`은 `packageManager`의 npm과 `config/toolchain.json`의 Composer를 `var/tools`에 설치한다(`make install-tools`). `make toolchain-check`는 pin과 다른 모든 도구를 밝힌다.
+- 공유 도구: `scripts/kit/`와 `tests/kit/`는 공유 도구 저장소 `polyspec/kit`의 tag `v0.0.4`의 복사본이며(`kit.json`, `.kit/kit.lock.json`), `config/*.json`이 이를 설정한다. `make kit-sync KIT_TAG=<tag>`가 복사본을 쓰며 복사본을 바꾸는 유일한 명령이다. `make kit-check`는 파일이 lock과 다르거나 `config/*.json`이 schema를 어기면 실패하고, `make kit-test`는 도구의 test를 실행한다.
 - template package: npm은 `@polyspec/template`과 `@polyspec/template-compiler`를 template release의 tarball에서, Composer는 `polyspec/template`을 그 zip에서 `package.json`, `composer.json`과 그 lock이 고정한 대로 설치한다(HY-70). `make install`이 이를 download한다.
 - `../template`(`TEMPLATE_REPOSITORY`)에 있고 tag `v0.0.4`(`TEMPLATE_TAG`, HY-80)를 가진 template 저장소는 네이티브 확장에만 쓴다. `make template`이 그 C 소스, stub, build script를 `var/products/template`에 복사하고(HY-78), tag가 없으면 `make template-tag`가 실패한다. 이 저장소는 그곳에서 아무것도 build하지 않는다.
-- network: `make tools`, `make install`, `make install-browser`만 download한다. 다른 모든 recipe는 npm, Composer를 offline으로 실행하므로(`npm_config_offline`, `COMPOSER_DISABLE_NETWORK`) 없는 download는 바로 실패하고 그것을 만드는 설치 target을 밝힌다(HY-89).
+- network: `make install-tools`, `make install`, `make install-browser`, `make kit-sync`만 download한다. 다른 모든 recipe는 npm, Composer를 offline으로 실행하므로(`npm_config_offline`, `COMPOSER_DISABLE_NETWORK`) 없는 download는 바로 실패하고 그것을 만드는 설치 target을 밝힌다(HY-89).
 - Playwright용 Chromium: `make install-browser`. pin한 Playwright의 Chromium과, Linux에서는 그 system library를 설치한다.
 
 ## 타깃
 
 | 타깃 | 동작 |
 |---|---|
-| `make tools` | `packageManager`의 npm과 `config/toolchain.json`의 Composer를 `var/tools`에 설치하고 `var/tools/bin`의 명령을 쓰며, 각 download를 pin한 digest로 확인한다(HY-81) |
-| `make toolchain-check` | Node.js, npm, Composer, PHP minor가 pin과 다르면 실패하고 각각의 기대값과 실제값을 밝힌다(HY-81) |
+| `make install-tools` | `packageManager`의 npm과 `config/toolchain.json`의 Composer를 `var/tools`에 설치하고 `var/tools/bin`의 명령을 쓰며, 각 download를 pin한 digest로 확인한다(HY-81) |
+| `make toolchain-check` | Node.js, npm, PHP, Python, Composer가 pin과 다르면 실패하고 각각의 기대값과 실제값을 밝힌다(HY-81) |
+| `make kit-sync` | `KIT_TAG`의 공유 도구를 `scripts/kit/`와 `tests/kit/`에 복사하고 `.kit/kit.lock.json`을 쓴다. 같은 tag에서 두 번째 실행은 `unchanged`를 출력한다 |
+| `make kit-check` | vendor한 파일이 `.kit/kit.lock.json`과 다르거나 없거나 lock에 없으면, 또는 `config/*.json`이 schema를 어기면 실패한다 |
+| `make kit-test` | `tests/kit`의 공유 도구 test를 실행한다 |
 | `make install` | template 저장소의 네이티브 확장 소스의 선언한 복사본과 `packages/hyper-php`의 사본을 쓰고, template release의 template package(HY-70)를 포함한 npm과 Composer 의존성을 bin link 없는 사본으로 설치한다(HY-79) |
 | `make hyper-php-copy` | `packages/hyper-php`의 추적 파일 사본 `var/products/hyper-php`를 쓰고 board의 Composer 사본에 publish한다(HY-79, HY-82). `make server`가 먼저 실행한다 |
 | `make template` | `scripts/copy-template.mjs`로 template tag `TEMPLATE_TAG`의 commit의 네이티브 확장 소스를 선언한 복사본 `var/products/template`에 쓰고(복사본이 그 commit을 담고 있으면 아무것도 쓰지 않는다, HY-78, HY-80, HY-82) 아무것도 설치하지 않는다. `make ext`, `make test-php`, `make analyse-php`가 먼저 실행한다 |
@@ -40,16 +46,16 @@
 | `make server-parity` | parity 단계를 PHP 서버와 board Node 서버에 실행해 모든 응답의 상태, header, body를 비교하고, `make parity`의 브라우저 비교도 수행한다(HY-55) |
 | `make bundle-size` | SSR 스크립트, CSR 셸, 가장 큰 템플릿의 크기를 `config/bundle-size.json`의 gzip 상한과 함께 출력한다. 상한을 넘는 크기는 `WARNING` 줄을, GitHub에서는 annotation `::warning::`과 CI 요약의 warning도 내고, target은 통과한다 |
 | `make e2e` | SSR, CSR, JavaScript 없는 흐름, 비교 흐름을 Chromium에서 실행한다(실행의 서버와 database에서, `scripts/run-e2e.mjs`) |
-| `make owner-check` | 모든 추적 경로에 owner가 있는지 확인한 뒤 `scripts/owner-checks.json`이 선언한 바뀐 경로의 owner를 실행한다. `PATHS`는 경로를 밝히고 `BASE`는 그 revision 이후의 변경을 가져온다(HY-88) |
-| `make docs-check` | `make hooks-check`를 실행한 뒤 문서 쌍, 링크, 코드 블록을 검사한다 |
-| `make hooks` | `core.hooksPath`를 `.githooks`로 설정하고 `make hooks-check`를 실행한다([Push](#push) 참조) |
-| `make hooks-check` | `core.hooksPath`가 `.githooks`가 아니거나 `.githooks/pre-push`가 없거나 실행할 수 없으면 실패한다 |
-| `make push-gate-commit` | commit `COMMIT`에 진행 중인 checklist 작업이 있거나 그 commit이 `.githooks/pre-push`를 mode 100755로 추적하지 않으면 실패한다. GitHub의 job `push-gate`가 이를 실행한다([Push](#push) 참고) |
-| `make github-ruleset` | `.github/ruleset.json`의 merge 설정을 바꾸고 그 이름의 GitHub ruleset을 다른 곳만 만들거나 갱신한 뒤 다시 비교한다([main 공개](#main-공개) 참고) |
-| `make github-ruleset-check` | merge 설정이나 live GitHub ruleset이 `.github/ruleset.json`과 다르면 field마다 live 값과 선언 값을 밝히며 실패한다. 아무것도 바꾸지 않는다 |
-| `make ci-pins` | `config/toolchain.json`의 PHP minor를 출력하고 step output으로 workflow에 준다([CI](#ci) 참고) |
-| `make ci-check` | CI group `GROUP`의 target을 끝까지 실행하고 보고서 `var/ci/<group>/`을 쓴다. GitHub Actions에서만 실행한다([CI](#ci) 참고) |
-| `make ci-summary` | CI group `GROUP`의 요약을 보고서와 job summary에 쓴다([CI](#ci) 참고) |
+| `make owner-check` | `config/owner-checks.json`이 선언한 바뀐 경로의 owner를 실행한다. `PATHS`는 경로를 밝히고 `BASE`는 그 revision 이후의 변경을 가져온다(HY-88) |
+| `make owner-validate` | 추적 경로에 owner가 없거나 `config/owner-checks.json`이 없는 target이나 test 파일을 밝히면 실패한다(HY-88) |
+| `make documents-check` | `config/documents.json`의 문서를 검사한다: 문서 쌍, marker `doc-id`와 `source-sha256`, 링크, 코드 블록, changelog, checklist |
+| `make commits-check` | `RANGE`(기본은 마지막 commit)의 commit message를 `config/commits.json`으로 검사한다 |
+| `make hooks` | `core.hooksPath`를 `.githooks`로 설정하고 pre-push hook을 쓰며 `make hooks-check`를 실행한다([Push](#push) 참조) |
+| `make hooks-check` | `core.hooksPath`가 `.githooks`가 아니거나 `.githooks/pre-push`가 없거나 실행할 수 없거나 바뀌었으면 실패한다 |
+| `make push-gate-commit` | commit `COMMIT`(기본 `HEAD`)에 진행 중인 checklist 작업이 있거나 그 commit이 `.githooks/pre-push`를 mode 100755로 추적하지 않으면 실패한다([Push](#push) 참고) |
+| `make ci-targets` | make target `TARGETS`를 끝까지 실행하고 보고서 `CI_REPORT`를 쓴다([CI](#ci) 참고) |
+| `make ci-summary` | 보고서 `CI_REPORT`의 요약과 job summary를 쓴다([CI](#ci) 참고) |
+| `make ci-passed` | `RESULTS`, 곧 `needs`의 JSON의 모든 job의 결과가 `success`가 아니면 실패한다([CI](#ci) 참고) |
 | `make install-browser` | pin한 Playwright의 Chromium과, Linux에서는 그 system library를 설치한다. `$(ONLINE)`을 거친 download다(HY-89) |
 | `make serve-demo` | lock `/tmp/hyper-serve-demo.lock`을 잡은 채 고정 port 8080 ~ 8082에서 SSR, CSR, 비교 페이지를 실행한다. 두 번째 demo는 holder를 밝히며 실패한다([배포](deployment.ko.md) 참조) |
 | `make serve-demo-unlock` | process가 끝난 demo의 lock을 지운다. demo가 실행 중이면 실패한다 |
@@ -60,50 +66,37 @@
 
 ## 전체 실행
 
-전체 suite는 push 뒤에 GitHub에서 실행하며([CI](#ci) 참고), 커밋이나 push 전에 local 전체 실행은 필요하지 않다. Darwin에서만 full suite에 속하는 `make virtiofs-check`는 local `make check`에서만 실행되므로, HY-68의 virtiofs case는 누군가 Mac에서 `make check`를 실행할 때만 실행된다.
+전체 suite는 `main`의 push 뒤에 GitHub에서 실행하며([CI](#ci) 참고), 커밋이나 push 전에 local 전체 실행은 필요하지 않다. Darwin에서만 full suite에 속하는 `make virtiofs-check`는 local `make check`에서만 실행되므로, HY-68의 virtiofs case는 누군가 Mac에서 `make check`를 실행할 때만 실행된다.
 
-`make check`는 `docs/plans/execution-checklist.md`의 작업 중 `[~]`인 것이 없을 때, 커밋된 tree와, 그 실행이 네이티브 확장 소스를 build하는 template tag `TEMPLATE_TAG`의 commit마다 한 번 실행된다(HY-80). 어떤 단계보다 먼저 `scripts/full-run.mjs`를 시작하며, 이 guard는 판단을 이유와 함께 출력하고(`[full-run] run: ...` 또는 `[full-run] refuse: ...`) 다음의 경우 status 1로 거부한다.
+`make check`는 `docs/plans/execution-checklist.md`의 작업 중 `[~]`인 것이 없을 때, 커밋된 tree와, 그 실행이 네이티브 확장 소스를 build하는 template tag `TEMPLATE_TAG`의 commit마다 한 번 실행된다(HY-80). 어떤 단계보다 먼저 `scripts/kit/full-run.mjs run --key template=<tag의 commit> <targets>`를 시작하며, 이 guard는 판단을 이유와 함께 출력하고(`[full-run] run: ...` 또는 `[full-run] refuse: ...`) 상태 1로 거부한다.
 
-- checklist의 작업 행이 `[~]`일 때. 거부 메시지는 활성 ID를 작업과 함께 나열한다.
-- 추적 파일에 커밋되지 않은 변경이 있을 때(`git status --porcelain --untracked-files=no`). 전체 실행은 커밋된 tree를 검증하기 때문이다.
-- `var/full-run.json`이 현재 tree(`git rev-parse HEAD^{tree}`)와 guard가 Makefile의 `TEMPLATE_REPOSITORY`와 `TEMPLATE_TAG`에서 읽는 template tag의 commit의 전체 실행을 기록하고 있을 때. 거부 메시지는 그 실행을 tree, template commit, 시작 시각, 결과와 함께 밝힌다.
+- checklist(`config/checklist.json`)의 작업 행이 `[~]`일 때. 거부 메시지는 활성 ID를 작업과 함께 나열한다.
+- 추적 파일에 커밋되지 않은 변경이 있거나 무시되지 않는 untracked 파일이 있을 때(`git status --porcelain --untracked-files=all`). 전체 실행은 커밋된 tree를 검증하기 때문이다.
+- `var/full-run.json`이 현재 tree(`git rev-parse HEAD^{tree}`)와 같은 key `template`, 곧 Makefile이 `TEMPLATE_REPOSITORY`와 `TEMPLATE_TAG`에서 읽는 template tag의 commit의 전체 실행을 기록하고 있을 때. 거부 메시지는 그 실행을 tree, key, 시작 시각, 결과와 함께 밝힌다.
 - pre-push hook이 설치되지 않았을 때(`make hooks-check`). 거부 메시지는 `make hooks`를 밝힌다.
-- `incomplete` record의 process가 아직 실행 중일 때.
+- `incomplete` record의 process가 아직 실행 중이거나 다른 전체 실행이 `var/full-run.lock`을 잡고 있을 때.
 
-guard는 `CHECK_TARGETS`의 각 target을 `make <target>`으로 끝까지 실행하며, target이 실패한 뒤에도 계속하고, `[full-run] start <target> (<n>/<total>)`와 `[full-run] <target> passed|failed in <seconds> s`를 출력한다. 어떤 target에도 시간 제한이 없다. 각 target의 앞뒤에 `var/full-run.json`을 쓴다. 이 record는 tree, template commit, process, 시작과 끝 시각, 결과(마지막 target이 끝날 때까지 `incomplete`, 그다음 `passed` 또는 `failed`), 실패한 target, 그리고 각 target의 상태(`pending`, `running`, `passed`, `failed`), 시각, 경과 millisecond, 실패한 target이면 마지막 출력 20줄(`lastLines`)을 담는다. guard는 그 줄들도 결과 전에 실패한 target과 함께 출력한다(HY-84). 따라서 멈춘 실행은 실행 중이던 target과 함께 `incomplete`로 기록되어 남는다. `var/`는 Git이 무시하므로 checkout과 worktree마다 자기 record를 가진다. tree를 바꾸는 commit이나 다른 commit에 있는 template tag는 `[~]` 작업이 없을 때 새 전체 실행을 허용한다.
+guard는 `CHECK_TARGETS`의 각 target을 `make -k <target>`으로 끝까지 실행하며, target이 실패한 뒤에도 계속하고, `[full-run] start <target> (<n>/<total>)`와 `[full-run] <target> passed|failed in <seconds>`를 출력한다. 어떤 target에도 시간 제한이 없다. 각 target의 출력은 `var/report/full-run/targets/<target>.log`에도 쓴다. guard는 각 target 앞뒤에 `var/full-run.json`을 쓴다: tree, commit, key, process, 시작과 끝 시각, 결과(마지막 target이 끝날 때까지 `incomplete`, 그다음 `passed` 또는 `failed`), 실패한 target, 각 target의 상태(`pending`, `running`, `passed`, `failed`), 시각, 경과 밀리초, 실패한 target은 마지막 20줄의 출력(`lastLines`)이며, guard는 이를 결과 전에 실패한 target과 함께 출력한다(HY-84). 그래서 멈춘 실행은 실행 중이던 target과 함께 `incomplete`로 기록된 채 남는다. `var/`는 Git이 무시하므로 checkout과 worktree마다 자기 record를 가진다. tree를 바꾸는 commit이나 다른 commit의 template tag는 `[~]` 작업이 없을 때 새 전체 실행을 허용한다.
 
-`make rerun-failed`는 현재 tree와 template commit에서 통과하지 못한 target, 즉 실패한 target과 `incomplete` 실행이 끝내지 못한 target만 다시 실행한다. 진행 중인 작업, 커밋되지 않은 변경, 실행 중인 process에 대해서는 `make check`와 같이 거부되고, record가 없을 때, record가 다른 tree나 template commit의 것일 때, 그 tree의 전체 실행이 통과했을 때도 거부된다. 각 재실행을 record의 `reruns`에 쓰고, 모든 target이 통과하면 그 tree의 결과는 `passed`가 된다.
+`make rerun-failed`는 현재 tree와 template commit에서 통과하지 못한 target, 즉 실패한 target과 `incomplete` 실행이 끝내지 못한 target만 다시 실행한다. 진행 중인 작업, 커밋되지 않은 변경, 실행 중인 process에 대해서는 `make check`와 같이 거부되고, record가 없을 때, record가 다른 tree나 template commit의 것일 때, 그 tree의 전체 실행이 통과했을 때도 거부된다. 다시 실행한 결과는 record의 `reruns`에 쓰고, 모든 target이 통과하면 tree의 결과가 `passed`가 된다.
 
 새 checkout에는 record가 없으므로, 그곳에서 `make check`는 `[~]` 작업이 없고 tree가 깨끗하면 실행된다.
 
 ## Push
 
-push는 push하는 commit에도 working tree에도 checklist의 `[~]` 작업이 없을 때만 한다. 추적하는 pre-push hook `.githooks/pre-push`가 `node scripts/push-gate.mjs hook`을 실행한다. 이 script는 입력에서 push의 ref를 읽고, push하는 모든 commit의 checklist(`git show <sha>:docs/plans/execution-checklist.md`)와 working tree의 checklist를 `scripts/full-run.mjs`의 `activeItems`로 parse하며, status 1로 push를 거부한다. 거부 메시지는 활성 ID를 작업과 함께, 그리고 그것을 가진 ref와 commit 또는 working tree를 밝히고, 규칙을 적고, 각 작업을 완료하거나 원인과 재시도 조건과 함께 `[!]`로 표시하라고 안내한다. checklist가 없는 commit을 push하거나 checklist를 parse할 수 없을 때도 push를 거부한다.
+push는 push하는 commit에도 working tree에도 checklist의 `[~]` 작업이 없을 때만 한다. 추적하는 pre-push hook `.githooks/pre-push`는 `make hooks`가 쓰며 `node scripts/kit/push-gate.mjs hook`을 실행한다. 이 script는 입력에서 push의 ref를 읽고, push하는 모든 commit의 checklist(`git show <sha>:docs/plans/execution-checklist.md`)와 working tree의 checklist를 `config/checklist.json`의 tracker로 파싱하고, 상태 1로 push를 거부한다. 거부 메시지는 활성 ID를 작업, ref와 commit 또는 그것을 가진 working tree와 함께 밝히고, 규칙을 말하며, 각 작업을 완료하거나 원인과 재시도 조건과 함께 `[!]`로 표시하라고 알린다. checklist가 없는 push된 commit과 파싱할 수 없는 checklist도 push를 거부한다.
 
-Git은 clone에서 hook을 설치하지 않는다. 그래서 모든 `make` 실행이 `core.hooksPath`가 다른 값이면 `.githooks`로 설정하고, `make hooks`는 이를 명시적으로 설정한다. 커밋 전에 `make docs-check`가 실행하는 `make hooks-check`와 전체 실행의 guard는 `core.hooksPath`가 `.githooks`가 아니거나 hook이 없거나 실행할 수 없으면 실패한다.
-
-workflow `.github/workflows/push-gate.yml`은 모든 push를 검사한다. 그 job `push-gate`는 merge queue의 branch `gh-readonly-queue/**`를 뺀 모든 branch에 push된 commit, 모든 pull request의 head commit, 모든 merge group에 `node scripts/push-gate.mjs commit <sha>`를 실행하는 `make push-gate-commit COMMIT=<sha>`를 실행하므로, hook을 거치지 않았거나 hook이 없는 checkout에서 온 push도 그곳에서 실패한다. 진행 중인 작업이 있을 때, checklist가 없는 commit일 때, `.githooks/pre-push`를 mode 100755로 추적하지 않는 commit일 때 실패하며, 실패의 각 줄을 annotation으로 출력하고 job summary에 쓴다. 이어서 job은 문서 쌍, link, code block, checklist 규칙인 `make docs-check`를 실행하며, 이 검사는 network를 읽지 않으므로, 이를 어기는 commit은 ruleset `main`이 요구하는 check에서 실패한다([main 공개](#main-공개) 참고).
+Git은 clone에서 hook을 설치하지 않는다. 그래서 `.githooks/pre-push`를 추적하는 checkout에서는 모든 `make` 실행이 `core.hooksPath`를 `.githooks`로 설정하고, `make hooks`는 이를 명시적으로 설정하며 hook을 쓴다. `make hooks-check`와 전체 실행의 guard는 `core.hooksPath`가 `.githooks`가 아니거나 hook이 없거나 실행할 수 없거나 도구의 hook과 다르면 실패한다. `make push-gate-commit COMMIT=<sha>`는 hook을 건너뛴 push를 위해 같은 gate를 commit에 실행하고, CI group `docs`가 push된 commit에 이를 실행한다.
 
 ## main 공개
 
-모든 변경은 pull request와 merge queue를 거쳐 `main`에 닿으며(HY-94), 이 저장소의 어떤 명령도 `main`을 push하지 않는다. branch는 GitHub의 표준 명령이나 GitHub UI로 공개한다.
+버전 0.1 전까지 이 저장소에는 pull request, merge queue, GitHub ruleset이 없다(HY-94). 변경은 그것을 소유한 unit test로 검사하고, checklist의 각 작업은 자기 commit에서 `[o]`가 되며, `main`은 모든 작업이 `[o]`일 때 한 번 push한다.
 
 ```sh
-git push origin HEAD:refs/heads/<branch>
-gh pr create --base main --head <branch> --fill
-gh pr merge <branch> --auto --rebase
+git push origin main
 ```
 
-`.github/ruleset.json`의 GitHub ruleset `main`은 enforcement `active`로 `refs/heads/main`에 적용되고 bypass actor가 없으므로 관리자에게도 적용된다. 그 rule은 다음과 같다.
-
-- `pull_request`: 변경은 pull request로 들어온다. 승인은 필요 없고 모든 merge method를 허용한다. merge queue는 자기 method로 merge하고, `gh pr merge --auto`는 스스로 고른 method로 auto-merge를 요청하므로, `rebase`만 허용하는 rule은 pull request를 queue 밖에 둔다.
-- `merge_queue`: merge queue는 method `REBASE`로 merge하므로 pull request의 각 commit이 그대로 `main`의 commit이 된다. grouping strategy는 `ALLGREEN`이고, 한 번에 최대 5개 항목을 build하고 merge하며, 더 많은 항목을 기다리지 않는다. `check_response_timeout_minutes`는 GitHub의 최댓값인 360이므로 긴 suite가 이것으로 끊기지 않는다.
-- `required_linear_history`, `non_fast_forward`, `deletion`: `main`에 merge commit, force-push, 삭제가 없다.
-- `required_status_checks`: 정확히 GitHub Actions app(integration 15368)의 check `push-gate`와 `ci-passed`. 곧 `make push-gate-commit`과 `make docs-check`를 실행하는 `.github/workflows/push-gate.yml`의 job과 `.github/workflows/ci.yml`의 마지막 job이다. `ci-passed`는 `ci.yml`의 다른 모든 job을 need로 가지고, 그중 하나가 실패하거나 skip되거나 취소되어도 그 모든 job 뒤에 실행되며(`if: ${{ always() }}`), need로 가진 모든 job의 결과를 출력하고 하나라도 `success`가 아니면 실패하는 `make ci-passed RESULTS='${{ toJSON(needs) }}'`를 실행한다(`scripts/ci-run.mjs passed`). `ci.yml`에 추가한 job은 `needs`에 넣으므로 필수 check가 그 job을 포함한다. `tests/scripts/ci-workflow.test.mjs`는 `ci-passed`가 없거나, 마지막 job이 아니거나, `if: ${{ always() }}`가 없거나, 다른 모든 job을 need로 가지지 않거나, 다른 runner에서 실행되거나, 다른 step을 실행하면 실패한다.
-
-직접 `git push origin <commit>:main`을 하면 `GH013: Repository rule violations found`로 거부된다. `gh pr merge --auto`는 pull request에서 필수 check가 통과하면 pull request를 merge queue에 넣는다. queue는 이를 `main` 위에 branch `gh-readonly-queue/main/pr-<number>-<sha>`의 merge group으로 rebase하고, 두 workflow가 그 commit에서 실행하며(`merge_group`), check가 통과하면 `main`을 정확히 그 commit으로 옮긴다. 실패한 check는 pull request를 queue에서 빼고 `main`은 움직이지 않는다. push gate는 queue의 branch로의 push에서는 실행하지 않는다. 그 merge group run이 이미 검사하기 때문이다. merge group의 `ci.yml` run은 취소되지 않는다. group마다 자기 ref가 있고 `cancel-in-progress`는 pull request에만 적용되기 때문이다. merge된 pull request의 branch는 삭제된다(`delete_branch_on_merge`). rebase는 merge된 commit에 새 hash를 주므로 `git pull --rebase`가 queue가 merge한 local commit을 버린다.
-
-`make github-ruleset`은 선언의 저장소 설정(`allow_rebase_merge`, `allow_auto_merge`, `delete_branch_on_merge`)을 바꾸고 선언한 이름의 ruleset을 다른 곳만 만들거나 갱신한 뒤 다시 비교한다. `make github-ruleset-check`는 아무것도 바꾸지 않으며, 설정이 다르거나 live ruleset이 없거나 선언과 다르면 field마다 live 값과 선언 값을 밝히며 실패한다. 둘 다 make 변수 `GH`(설정하지 않으면 `gh`)의 GitHub CLI를 실행하며, 그 CLI에는 저장소의 administration 권한이 필요하다. 전체 suite의 어떤 target도 이들을 실행하지 않는다. `tests/scripts/github-ruleset.test.mjs`는 가짜 `gh`로 script를 실행한다.
+`main`의 push는 `.github/workflows/ci.yml`, 곧 전체 suite를 실행한다([CI](#ci) 참고). 그 마지막 job `ci-passed`는 다른 모든 job이 통과했을 때만 통과한다. release tag는 그 commit에서 `ci-passed`가 성공한 뒤에만 `main`의 commit에 붙인다([Tag 릴리스](#tag-릴리스) 참고).
 
 ## Tag 릴리스
 
@@ -157,26 +150,29 @@ T.T.T는 그 릴리스의 `packages/hyper-js/package.json`이 요구하는 `@pol
 
 ## CI
 
-workflow `.github/workflows/ci.yml`은 모든 pull request, merge queue의 모든 merge group, 모든 수동 실행(`workflow_dispatch`)에 대해 전체 suite를 실행한다(HY-91, [main 공개](#main-공개) 참고). runner가 적으므로 pull request의 새 push는 아직 진행 중인 앞선 push의 run을 멈추고, merge group의 run은 취소하지 않는다. 그 job `check`는 Makefile의 CI group마다 항목 하나를 `fail-fast: false`로 가진다.
+workflow `.github/workflows/ci.yml`은 `main`의 push와 모든 수동 실행(`workflow_dispatch`)에 대해 전체 suite를 실행한다(HY-91, [main 공개](#main-공개) 참고). 그 job `check`는 CI group마다 matrix 항목 하나를 `fail-fast: false`로 가지며, 각 항목은 자기가 실행하는 target을 밝힌다.
 
-| Group | Target | 준비 |
+| 항목 | Target | 준비 |
 |---|---|---|
-| `docs` | `docs-check` | Node.js |
-| `php` | `bench-server-smoke`, `lint`, `analyse-php`, `test-php` | Node.js, PHP, template checkout, `make install` |
-| `node` | `templates-check`, `test-scripts`, `test-js`, `test-node`, `package-check` | Node.js, PHP, template checkout, `make install` |
-| `board` | `parity`, `server-parity`, `bundle-size`, `e2e` | Node.js, PHP, template checkout, `make install`, `make install-browser` |
+| `docs` | `kit-check`, `kit-test`, `documents-check`, `hooks-check`, `push-gate-commit`, `commits-check`, `owner-validate` | Node.js, Python |
+| `php` | `bench-server-smoke`, `lint`, `analyse-php`, `test-php` | Node.js, Python, PHP, template checkout, `make install` |
+| `node` | `templates-check`, `test-scripts`, `test-js`, `test-node`, `package-check` | Node.js, Python, PHP, template checkout, `make install` |
+| `board` | `parity`, `server-parity`, `bundle-size`, `e2e` | Node.js, Python, PHP, template checkout, `make install`, `make install-browser` |
+| `python-3.11`, `python` | `test-python` | Node.js, Python 3.11과 `.python-version`의 Python |
 
-각 step은 make target 하나를 실행하고(HY-90), 첫 step 뒤의 모든 step은 실패한 step 뒤에도 실행한다. `make ci-pins`는 `config/toolchain.json`의 PHP minor를 workflow에 주고, workflow는 그 minor의 PHP를 준비하고 template 저장소를 Makefile의 tag `TEMPLATE_TAG`로 `../template`에 checkout하며, `make install`은 그곳에서 네이티브 확장 소스를 복사한다. `make ci-check GROUP=<group>`은 group의 모든 target을 자기 `make -k <target>`으로 끝까지 실행하고 `[ci] start <target>`과 `[ci] <target> passed|failed in <seconds> s`를 출력한다. checkout은 `make check`로 전체 suite를 실행하므로 GitHub Actions 밖에서는 거부한다. `make ci-summary GROUP=<group>`은 job summary를 쓴다. job은 artifact `ci-<group>-<run id>-<attempt>`로 디렉터리 `var/ci/<group>/`을 upload한다.
+각 step은 make target 하나를 실행하고(HY-90), 첫 step 뒤의 모든 step은 실패한 step 뒤에도 실행한다. workflow는 `.node-version`, `.python-version`, `.php-version`에서 Node.js, Python, PHP를 준비하고 template 저장소를 Makefile의 tag `TEMPLATE_TAG`로 `../template`에 checkout하며, `make install`은 그곳에서 네이티브 확장 소스를 복사한다. `make ci-targets TARGETS="<targets>" CI_REPORT=var/ci/<name>`은 항목의 모든 target을 자기 `make -k <target>`으로 끝까지 실행하고 보고서를 쓴다. `make ci-summary CI_REPORT=var/ci/<name>`은 job summary를 쓴다. job은 artifact `ci-<name>-<run id>-<attempt>`, 곧 디렉터리 `var/ci/<name>/`을 upload한다.
 
 - `summary.md`: tree, Node.js, npm, patch를 포함한 PHP, Composer, make의 실행 중인 release, 각 setup step의 결과, target의 상태, 시간, 첫 실패 줄의 표, 그리고 실패한 각 target의 첫 실패 줄;
 - `record.json`: 같은 내용의 data이며 각 target 앞뒤에 쓰므로, 멈춘 runner는 실행 중이던 target을 남긴다;
-- `logs/<target>.log`: 각 target의 명령, 전체 출력, make가 끝난 방식.
+- `targets/<target>.log`: 각 target의 명령, 전체 출력, make가 끝난 방식.
+
+마지막 job `ci-passed`는 다른 모든 job 뒤에 실행되고 `make ci-passed RESULTS='<needs의 JSON>'`을 실행한다. 이 target은 필요한 모든 job의 결과를 출력하고 하나라도 `success`가 아니면 실패한다. `ci.yml`에 추가한 job은 `needs`에 나열한다. `tests/scripts/ci-workflow.test.mjs`는 `ci-passed`가 없거나, 마지막 job이 아니거나, `if: ${{ always() }}`가 없거나, 다른 모든 job을 need하지 않거나, 다른 runner에서 실행하거나, 다른 step을 실행하면 실패한다.
 
 ## Test 실행
 
-`scripts/run-tests.mjs <node|vitest|phpunit> [--timeout <seconds>] [--cwd <directory>] [--extension <file>] [--] [<arguments>]`는 test 도구를 실행하고, `make test-js`, `make test-node`, `make test-php`, `make test-scripts`, `make package-check`는 이것으로 test를 실행한다. 모든 test는 시작할 때 한 줄, 실행 중에는 5초마다 한 줄, 끝나면 결과와 경과 시간을 담은 한 줄을 출력하고, 실행은 개수와 경과 시간을 담은 줄로 끝난다. 모든 test는 자기 timeout을 가지며, `--timeout`이 다른 값을 주지 않으면 30초다. vitest와 `node --test`는 timeout에서 그 test를 실패시키고, `--teamcity`로 test마다 보고하는 PHPUnit은 runner가 PHPUnit을 멈추고 그 test를 이름으로 실패시킨다. `--extension`은 PHPUnit에 PHP extension을 불러온다. `tests/scripts/run-tests.test.mjs`가 runner와 `scripts/test-progress/`의 reporter를 시험한다.
+`scripts/kit/run-tests.mjs <node|vitest|go|cargo|phpunit> [--timeout <seconds>] [--cwd <directory>] [--php-extension <file>] [--] [<arguments>]`는 test 도구를 실행하고, `make test-js`, `make test-node`, `make test-php`, `make test-scripts`, `make package-check`는 이것으로 test를 실행한다. PHPUnit은 `COMPOSER_VENDOR_DIR`의 vendor 디렉터리의 것이며 `make test-php`가 이를 root `vendor`로 설정한다. 모든 test는 시작할 때 한 줄, 실행 중에는 5초마다 한 줄, 끝나면 결과와 경과 시간을 담은 한 줄을 출력하고, 실행은 개수와 경과 시간을 담은 줄로 끝난다. 모든 test는 자기 timeout을 가지며, `--timeout`이 다른 값을 주지 않으면 30초다. vitest와 `node --test`는 timeout에서 그 test를 실패시키고, `--teamcity`로 test마다 보고하는 PHPUnit은 runner가 PHPUnit을 멈추고 그 test를 이름으로 실패시킨다. `--php-extension`은 PHPUnit에 PHP extension을 불러온다. `tests/kit/run-tests.test.mjs`가 runner와 reporter를 시험한다.
 
-변경을 소유한 test만 실행하려면 그 파일이나 filter를 넘긴다. 예: `node scripts/run-tests.mjs vitest --cwd packages/hyper-js tests/router.test.ts`, `node scripts/run-tests.mjs phpunit --cwd packages/hyper-php -- --filter RouterTest`.
+변경을 소유한 test만 실행하려면 그 파일이나 filter를 넘긴다. 예: `node scripts/kit/run-tests.mjs vitest --cwd packages/hyper-js tests/router.test.ts`, `COMPOSER_VENDOR_DIR=$PWD/vendor node scripts/kit/run-tests.mjs phpunit --cwd packages/hyper-php -- --filter RouterTest`.
 
 ## 한 실행의 서버
 

@@ -1,9 +1,11 @@
+<!-- doc-id: changelog -->
 # Changelog
 
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
 
+- H16.1: the shared tools of `polyspec/kit` at the tag `v0.0.4` (`scripts/kit/`, `tests/kit/`, `kit.json`, `.kit/kit.lock.json`) replace the push gate, the guard of the full run, the Git hook installer, the holder lock, the document check, the owner check, the test runner, the CI report and the toolchain scripts of this repository, which are removed with their tests. `config/checklist.json`, `config/documents.json`, `config/owner-checks.json`, `config/commits.json` and `config/toolchain.json` configure them, `.php-version` declares the PHP minor, and every document pair carries the markers `doc-id` and `source-sha256`. `make ci-targets` runs the targets of one matrix entry of `ci.yml`, which runs on the push of `main` and on manual runs only; the GitHub ruleset, `push-gate.yml`, the `merge_group` trigger and the pull request text are removed, and `main` is pushed once, when every task is done. The `serve-demo` lock no longer installs signal handlers, so the demo stops its servers before it exits. Verified: `make kit-check`, `make kit-test` (322 tests), `make documents-check`, `make hooks-check`, `make commits-check`, `make owner-validate`, `make toolchain-check` and `make test-scripts` for the workflow, recipe, publish, serve-demo, toolchain and package-build tests pass; a second `make kit-sync KIT_TAG=v0.0.4` prints `unchanged`.
 - H15.3-17: the H15.3 row of `docs/features.md` and its Korean pair state that the CI run of the render targets is bypassed (H15.3-14), instead of "CI run pending".
 - H15.3-16: `docs/operations/dependencies.md` and its Korean pair record the Python git dependency `polyspec-template` of `packages/hyper-python` on the template tag `v0.0.5`, with its reason and its removal condition.
 ### Added

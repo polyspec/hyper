@@ -8,7 +8,7 @@
 # (npm pack of packages/hyper-js and packages/hyper-node, a zip of packages/hyper-php); make release-publish creates the
 # GitHub Release with the section as notes and the archives attached (scripts/release.mjs). TAG reaches the make
 # targets through the environment, never as shell text. The setup is the one of the job check of ci.yml: Node.js from
-# .node-version, PHP by the minor of config/toolchain.json, the template repository at its tag v0.0.4 (TEMPLATE_TAG of
+# .node-version, PHP from .php-version, Python from .python-version, the template repository at its tag v0.0.4 (TEMPLATE_TAG of
 # the Makefile, HY-80) next to this repository, and make install. Every step that
 # runs a command runs one make target, the job runs on ubuntu-26.04-arm and the actions are pinned by commit (HY-90,
 # tests/scripts/ci-workflow.test.mjs).
@@ -39,11 +39,12 @@ jobs:
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version-file: hyper/.node-version
-      - id: pins
-        run: make ci-pins
+      - uses: actions/setup-python@06da6279cdbca41027908073e81a4544dc79c06b # v7.0.0
+        with:
+          python-version-file: hyper/.python-version
       - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2.37.2
         with:
-          php-version: ${{ steps.pins.outputs.php }}
+          php-version-file: hyper/.php-version
           extensions: pdo_sqlite
           tools: none
           coverage: none

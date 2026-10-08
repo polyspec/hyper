@@ -1,9 +1,12 @@
+<!-- doc-id: changelog -->
+<!-- source-sha256: 0b3f09bcc53845b68dcb3e7631a2ff830224e4268eae878703598e204f27231c -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- H16.1: `polyspec/kit`의 tag `v0.0.4`에 있는 공유 도구(`scripts/kit/`, `tests/kit/`, `kit.json`, `.kit/kit.lock.json`)가 이 저장소의 push gate, 전체 실행 guard, Git hook 설치 도구, holder lock, 문서 검사, owner 검사, test runner, CI 보고서, toolchain script를 대체하며, 이들은 그 test와 함께 제거했습니다. `config/checklist.json`, `config/documents.json`, `config/owner-checks.json`, `config/commits.json`, `config/toolchain.json`이 이를 설정하고, `.php-version`이 PHP minor를 선언하며, 모든 문서 쌍이 marker `doc-id`와 `source-sha256`을 가집니다. `make ci-targets`는 `main`의 push와 수동 실행에서만 실행하는 `ci.yml`의 matrix 항목 하나의 target을 실행합니다. GitHub ruleset, `push-gate.yml`, trigger `merge_group`, pull request 설명을 제거했고 `main`은 모든 작업이 끝났을 때 한 번 push합니다. `serve-demo`의 lock은 더 이상 signal handler를 설치하지 않으므로 demo는 종료하기 전에 서버를 멈춥니다. 검증: `make kit-check`, `make kit-test`(322개 test), `make documents-check`, `make hooks-check`, `make commits-check`, `make owner-validate`, `make toolchain-check`가 통과하고, workflow, recipe, publish, serve-demo, toolchain, package-build test의 `make test-scripts`가 통과하며, 두 번째 `make kit-sync KIT_TAG=v0.0.4`는 `unchanged`를 출력합니다.
 - H15.3-17: `docs/features.md`와 한글 쌍의 H15.3 행이 "CI 실행 대기"가 아니라 render target의 CI 실행이 우회되었다고(H15.3-14) 적습니다.
 - H15.3-16: `docs/operations/dependencies.md`와 한글 쌍에 `packages/hyper-python`의 Python git 의존성 `polyspec-template`을 template tag `v0.0.5`에 기록했습니다. 이유와 제거 조건을 함께 적었습니다.
 ### Added

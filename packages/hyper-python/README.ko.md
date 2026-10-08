@@ -1,3 +1,5 @@
+<!-- doc-id: hyper-python-readme -->
+<!-- source-sha256: 2b503c30476bb7f584fe7844f92779b3cb6155d289a916d461c4f51157e08450 -->
 # polyspec-hyper
 
 [English](README.md).

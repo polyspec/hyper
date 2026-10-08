@@ -1,6 +1,6 @@
-// Tests the holder lock of `make serve-demo` (scripts/holder-lock.mjs): the demo holds its lock while it runs, a
-// second demo fails with the checkout, the process ID and the start time of the first, the demo releases the lock
-// when it stops, and a lock of an ended process is reported and stays until `clear` removes it. The demos of the
+// Tests the holder lock of `make serve-demo` (scripts/kit/holder-lock.mjs): the demo holds its lock while it runs, a
+// second demo fails with the checkout, the process ID and the start time of the first, and the demo releases the lock
+// when it stops. The rules of the lock itself are tested in tests/kit/holder-lock.test.mjs. The demos of the
 // test listen on ports that the system assigns.
 import assert from 'node:assert/strict';
 import { spawn, spawnSync } from 'node:child_process';
@@ -10,7 +10,7 @@ import { join, resolve } from 'node:path';
 import { test } from 'node:test';
 
 const repository = resolve('.');
-const HOLDER = /held by process (\d+) of the checkout (\S+), started at (\d{4}-\d\d-\d\dT[\d:.]+Z)/;
+const HOLDER = /held by process (\d+) \(started ([^)]+)\) of the checkout (\S+), held since/;
 
 // A temporary directory with the demos of a test. One hook ends every demo that still runs, waits for its exit and
 // checks that it released its lock, and only then removes the directory, which holds the lock and the database of the
@@ -23,7 +23,7 @@ function workspace(t) {
       if (demo.child.exitCode === null && demo.child.signalCode === null) {
         await new Promise((done) => { demo.child.once('exit', done); demo.child.kill(); });
       }
-      assert.doesNotMatch(demo.output(), /is no longer held by process/, 'the directory of the demo was removed before the demo stopped');
+      assert.doesNotMatch(demo.output(), /ENOENT/, 'the directory of the demo was removed before the demo stopped');
     }
     rmSync(directory, { recursive: true, force: true });
   });
@@ -59,33 +59,10 @@ test('a second demo fails with the holder, and the first releases the lock when 
   assert.equal(second.status, 1);
   const named = HOLDER.exec(second.stderr);
   assert.ok(named, second.stderr);
-  assert.deepEqual([Number(named[1]), named[2], named[3]], [first.child.pid, repository, holder.started]);
+  assert.deepEqual([Number(named[1]), named[2], named[3]], [first.child.pid, holder.processStart, repository]);
   assert.doesNotMatch(second.stdout, /start (api|edge|ssr)/);
   first.child.kill('SIGTERM');
   const code = await new Promise((done) => first.child.once('exit', done));
   assert.equal(code, 0, first.output());
   assert.equal(existsSync(lock), false);
-});
-
-test('a lock of an ended demo is reported and stays until clear removes it', { timeout: 20_000 }, (t) => {
-  const { directory } = workspace(t);
-  const lock = join(directory, 'demo.lock');
-  const ended = Number(spawnSync(process.execPath, ['-e', 'process.stdout.write(String(process.pid))'], { encoding: 'utf8' }).stdout);
-  writeFileSync(lock, `${JSON.stringify({ checkout: repository, pid: ended, started: '2026-10-05T00:00:00.000Z', token: 'ended' })}\n`);
-  const refused = spawnSync(process.execPath, demoArgs(directory), { encoding: 'utf8' });
-  assert.equal(refused.status, 1);
-  assert.match(refused.stderr, new RegExp(`held by process ${ended} of the checkout .*, and that process has ended; remove the lock with`));
-  assert.equal(existsSync(lock), true);
-  const cleared = spawnSync(process.execPath, ['scripts/holder-lock.mjs', 'clear', lock], { encoding: 'utf8' });
-  assert.equal(cleared.status, 0, cleared.stderr);
-  assert.equal(existsSync(lock), false);
-});
-
-test('clear fails while the demo runs', { timeout: 20_000 }, async (t) => {
-  const space = workspace(t);
-  const { directory } = space;
-  const first = await startDemo(space);
-  const refused = spawnSync(process.execPath, ['scripts/holder-lock.mjs', 'clear', join(directory, 'demo.lock')], { encoding: 'utf8' });
-  assert.equal(refused.status, 1);
-  assert.match(refused.stderr, new RegExp(`held by process ${first.child.pid} of the checkout .*, which still runs`));
 });

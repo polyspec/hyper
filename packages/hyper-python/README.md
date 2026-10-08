@@ -1,3 +1,4 @@
+<!-- doc-id: hyper-python-readme -->
 # polyspec-hyper
 
 [한국어](README.ko.md).
