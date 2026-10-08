@@ -1,6 +1,7 @@
 # The application answers document requests, JSON requests, region requests and actions with the rules of the PHP
 # server (HY-15 to HY-19, HY-24 to HY-26, HY-40, HY-50 to HY-53, HY-58, HY-69, HY-73, HY-92).
 import json
+import tempfile
 import unittest
 from pathlib import Path
 from urllib.parse import urlencode
@@ -193,16 +194,17 @@ class KeepTest(unittest.TestCase):
 class ProgramTest(unittest.TestCase):
     def test_a_missing_program_names_the_missing_file(self) -> None:
         # HY-48: a missing build fails when the application opens and names the missing file.
-        empty = Path(__import__('tempfile').mkdtemp())
-        with self.assertRaises(ValueError) as missing:
-            App.open(manifest=str(FIXTURES / 'app.json'), program=str(empty), handlers=handlers(),
-                     timezone='+09:00')
-        self.assertIn('reads.json', str(missing.exception))
-        (empty / 'reads.json').write_text('{"routes": {}}', encoding='utf-8')
-        with self.assertRaises(ValueError) as missing:
-            App.open(manifest=str(FIXTURES / 'app.json'), program=str(empty), handlers=handlers(),
-                     timezone='+09:00')
-        self.assertIn('templates', str(missing.exception))
+        with tempfile.TemporaryDirectory() as directory:
+            empty = Path(directory)
+            with self.assertRaises(ValueError) as missing:
+                App.open(manifest=str(FIXTURES / 'app.json'), program=str(empty), handlers=handlers(),
+                         timezone='+09:00')
+            self.assertIn('reads.json', str(missing.exception))
+            (empty / 'reads.json').write_text('{"routes": {}}', encoding='utf-8')
+            with self.assertRaises(ValueError) as missing:
+                App.open(manifest=str(FIXTURES / 'app.json'), program=str(empty), handlers=handlers(),
+                         timezone='+09:00')
+            self.assertIn('templates', str(missing.exception))
 
 
 def _token(app: App, store: ArraySession) -> str:

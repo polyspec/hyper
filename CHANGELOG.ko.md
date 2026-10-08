@@ -12,6 +12,10 @@
 - Python package가 표준 라이브러리 `http.server`로 application을 서비스한다. `create_server`가 모든 요청을 `App.handle`에 보내고, body limit보다 큰 body를 더 읽지 않으며(HY-59), 새 session의 cookie를 가장 먼저 설정하고(HY-45) 선택의 public 디렉터리 파일을 서비스한다. `FileSessions`는 세션마다 자신이 만든 identifier로 이름 붙은 JSON 파일을 두고 rename 한 번으로 쓰며 한 세션의 요청을 순서대로 돌린다. board 예제 서버 `examples/board/python`이 board의 parity 요청에 답하고 `make server-parity-python`이 65개 응답을 status, header, body로 PHP 응답과 비교한다. 비교는 PHP built-in server의 `X-Powered-By`를 빼듯이 `http.server`의 `Server` header를 뺀다(HY-55, H15.3-4).
 - Makefile의 CI group `python`(`CI_TARGETS_python`)이 `.github/workflows/ci.yml` matrix에서 Python 3.11과 `config/toolchain.json`의 Python pin으로 `make test-python`을 돌린다. `make ci-pins`가 PHP minor와 함께 그 값을 step output으로 준다. test가 표준 라이브러리만 쓰므로 group은 아무것도 install하지 않는다. owner 규칙이 새 경로를 소유하고 feature 상태와 README 표가 Python 서버를 적는다(H15.3-5).
 
+### 수정
+
+- Python 테스트가 manifest나 program을 임시 디렉터리에서 읽은 뒤 그 디렉터리를 지운다 (H15.3-6).
+
 ## 0.0.4
 
 ### 추가

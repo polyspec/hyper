@@ -1,6 +1,7 @@
 # The manifest of the PHP test fixtures and the rules that reject an invalid declaration (HY-1, HY-2, HY-37, HY-40,
 # HY-49).
 import json
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -10,14 +11,11 @@ FIXTURES = Path(__file__).resolve().parents[2] / 'hyper-php' / 'tests' / 'fixtur
 
 
 def manifest(content: object) -> Manifest:
-    """Reads a manifest from a value, as a file holds it."""
-    return Manifest.from_file(str(_write(content)))
-
-
-def _write(content: object) -> Path:
-    file = Path(__import__('tempfile').mkdtemp()) / 'app.json'
-    file.write_text(json.dumps(content), encoding='utf-8')
-    return file
+    """Reads a manifest from a value, as a file holds it; the file is removed after the read."""
+    with tempfile.TemporaryDirectory() as directory:
+        file = Path(directory) / 'app.json'
+        file.write_text(json.dumps(content), encoding='utf-8')
+        return Manifest.from_file(str(file))
 
 
 BASE = {'layout': 'layout.tpl', 'title': 'title.tpl',

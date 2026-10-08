@@ -12,6 +12,10 @@
 - The Python package serves an application over the standard library `http.server`: `create_server` sends every request to `App.handle`, reads no more of a body larger than the body limit (HY-59), sets the cookie of a new session first (HY-45) and serves the files of an optional public directory, and `FileSessions` keeps each session in a JSON file named by an identifier that it created, written with one rename, with the requests of one session one after another; the board example server `examples/board/python` answers the parity requests of the board, and `make server-parity-python` compares its 65 responses with the PHP responses in status, headers and body, leaving the `Server` header of `http.server` out as the comparison leaves `X-Powered-By` of the PHP built-in server out (HY-55, H15.3-4).
 - The CI group `python` of the Makefile (`CI_TARGETS_python`) runs `make test-python` in the matrix of `.github/workflows/ci.yml` on Python 3.11 and on the Python pin of `config/toolchain.json`, which `make ci-pins` gives as a step output beside the PHP minor; the group installs nothing, because the tests use only the standard library. The owner rules own the new paths, the feature status and the README tables name the Python server (H15.3-5).
 
+### Fixed
+
+- The Python tests that read a manifest or a program from a temporary directory remove that directory after the read (H15.3-6).
+
 ## 0.0.4
 
 ### Added
