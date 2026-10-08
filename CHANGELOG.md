@@ -4,6 +4,7 @@
 
 ## Unreleased
 
+- H15.3-17: the H15.3 row of `docs/features.md` and its Korean pair state that the CI run of the render targets is bypassed (H15.3-14), instead of "CI run pending".
 - H15.3-16: `docs/operations/dependencies.md` and its Korean pair record the Python git dependency `polyspec-template` of `packages/hyper-python` on the template tag `v0.0.5`, with its reason and its removal condition.
 ### Added
 

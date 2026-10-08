@@ -28,7 +28,7 @@
 | hyper-js | Browser code: region and document rendering, htmx extension, client-side rendering | implemented | `make test-js`, `make e2e` |
 | hyper-php | PHP server: routes, actions, CSRF, flash, changed topics, base path, documents and JSON | implemented | `make test-php` |
 | hyper-node | Node.js server `@polyspec/hyper-server` with the rules of the PHP server, file sessions, JSON with the bytes of PHP and the board example server (HY-54) | implemented | `make test-node`, `make node-server` |
-| hyper-python | Python server `polyspec-hyper` with the rules of the PHP server, rendering with the template Python package, sessions in files, an `http.server` server and the board example server (H15.3) | implemented; CI run pending | `make test-python`, `make test-python-render`, `make server-parity-python` |
+| hyper-python | Python server `polyspec-hyper` with the rules of the PHP server, rendering with the template Python package, sessions in files, an `http.server` server and the board example server (H15.3) | implemented; the CI run of its render targets is bypassed (H15.3-14) | `make test-python`, `make test-python-render`, `make server-parity-python` |
 | route-regions | Route regions inside a page with their own loaders (HY-30) | implemented | `make test-php`, `make parity` |
 | region-data | Embedded data of the route regions, `data`, `render`, `set` and `hy-set` on route regions without requests, and the public data rule (HY-29 to HY-33, HY-36, HY-71) | implemented | `make test-js`, `make e2e` |
 | kept-data | Kept paths in the server session, a cookie, localStorage and sessionStorage (HY-37 to HY-41) | implemented | `make test-php`, `make test-js`, `make parity`, `make e2e` |

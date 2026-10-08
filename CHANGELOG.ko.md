@@ -4,6 +4,7 @@
 
 ## Unreleased
 
+- H15.3-17: `docs/features.md`와 한글 쌍의 H15.3 행이 "CI 실행 대기"가 아니라 render target의 CI 실행이 우회되었다고(H15.3-14) 적습니다.
 - H15.3-16: `docs/operations/dependencies.md`와 한글 쌍에 `packages/hyper-python`의 Python git 의존성 `polyspec-template`을 template tag `v0.0.5`에 기록했습니다. 이유와 제거 조건을 함께 적었습니다.
 ### Added
 
