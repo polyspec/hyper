@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: de2b27c29d64af0e30fd3d7647c20d4e0cbe91943427ae489db5744dc40e63e8 -->
+<!-- source-sha256: b2f03f766f904c13fd264e33dbd90a0b1ecb94c9764ff515f9b700666c4d2c50 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- H13.5-14: 행에 npm `EALLOWREMOTE`의 원인(npm 12.2.0, npm/cli#9818은 아직 open)과 구현 방식을 적었습니다. `release-consumer-lock`은 `npm_config_allow_remote=all`로, `release-consumer`와 `release-proof`는 `root`로 실행합니다. 검증: `make release-consumer-lock TAG=v0.0.5`가 diff 없이 exit 0, `make release-consumer TAG=v0.0.5`가 exit 0, `make release-proof TAG=v0.0.5`가 exit 0입니다.
 - H14.1-7: 네이티브 template 확장을 tag `v0.0.5`의 php-ext release asset `polyspec-template-php-ext-php-0.0.5.zip`에서 build합니다. `config/template-ext.json`이 sha256으로 pin합니다. `make install`이 가져와 검증하고(`scripts/template-ext.mjs fetch`), `make ext`가 풀린 asset을 offline으로 build하며(`scripts/template-ext.mjs build`), PHPStan은 그 stub을 읽습니다. template 저장소의 복사본(`scripts/copy-template.mjs`, `template` target, `var/products/template` 복사본)은 제거했고, full-run key를 위한 `make template-tag`는 남겼습니다. 원래 acceptance(Composer 저장소에서 PIE 설치)는 프로젝트가 Packagist에 게시하지 않아 0.1 전에는 충족할 수 없었습니다. `tests/scripts/template-ext.test.mjs`와 `tests/scripts/template-pins.test.mjs`가 `tests/scripts/template-copy.test.mjs`를 대체합니다. 검증: `make ext`, `make test-php`, `make analyse-php`가 모두 exit 0입니다.
 - H17.1-1: `make release-proof`가 `make release-consumer`처럼 `npm_config_allow_remote=root`로 실행됩니다. 이 설정이 없으면 consumer 프로젝트의 `npm ci`가 template tarball 때문에 `EALLOWREMOTE`로 실패했습니다(npm 12.2.0). `release-consumer-lock`은 `all`을 유지합니다(H13.5-14). `tests/scripts/check-recipes.test.mjs`는 세 target 각각의 값을 요구합니다. 검증: `make release-proof TAG=v0.0.5`가 통과합니다.
 ## 0.0.5
