@@ -71,4 +71,4 @@ Depends on: none. The scripts that gate pushes, run the full suite, check docume
 
 ## Wave 17
 
-Depends on: wave 16. The release 0.0.5 sets the version 0.0.5 in every manifest that `config/release.json` lists, with the template pins of the release v0.0.5 and the Python package consumed by git tag.
+Depends on: wave 16. The release 0.0.5 sets the version 0.0.5 in every manifest that `config/release.json` lists, with the template pins of the release v0.0.5 and the Python package consumed by git tag. The release 0.0.6 sets the version 0.0.6 in the same manifests and keeps the template pins of the release v0.0.5.

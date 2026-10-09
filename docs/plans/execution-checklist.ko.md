@@ -1,5 +1,5 @@
 <!-- doc-id: execution-checklist -->
-<!-- source-sha256: bb2e175e5b0965a99a89eb578e3c7e17fe2499622ebbcc3f646aa91cbcc15e41 -->
+<!-- source-sha256: aba8f7d5f15470a8c4eefa41f3f6d141f0a1bf365247d51cb8ad57bd281d3eac -->
 # 실행 체크리스트
 
 ## [웨이브 1](waves.ko.md#wave-1) — 애플리케이션이 약하게 만들 수 없는 CSRF 방어
@@ -221,9 +221,10 @@
 | H16.8 | vendor한 `polyspec/kit`의 공유 도구를 tag `v0.0.9`로 올린다. Red: CI job `check (docs)`에서 `make kit-check`와 `make kit-test`가 실패한다. tag `v0.0.7`의 fixture가 `tests/kit/fixture/vendor/`에 있고 `.gitignore`가 이를 무시하므로(`vendor/`) clone에 그 파일이 없기 때문이다. Green: tag `v0.0.9`의 fixture는 `tests/kit/fixture/external/`에 있고, `make kit-sync KIT_TAG=v0.0.9`의 두 번째 실행은 `unchanged`를 출력하며 `make kit-check`와 `make kit-test`가 통과한다. | `make kit-check`, `make kit-test` | [o] |
 | H16.9 | `make parity`는 `scripts/check-parity.mjs`에 `--php-extension`을 넘기지만 그 script의 option은 `--extension`이므로, 두 번째 parity 실행이 시작할 때 `ERR_PARSE_ARGS_UNKNOWN_OPTION`으로 실패한다. option 이름은 H16.1에서 `scripts/kit/run-tests.mjs`를 위해 `--extension`을 `--php-extension`으로 바꿀 때 이 줄도 함께 바뀐 데서 왔다. Red: `tests/scripts/check-recipes.test.mjs`가 `scripts/check-parity.mjs`가 `--php-extension`을 선언하지 않는다고 보고한다. Green: recipe가 `scripts/`의 script에 넘기는 모든 option을 그 script가 선언하고 `make parity`가 통과한다. | `make test-scripts TESTS="tests/scripts/check-recipes.test.mjs"`, `make parity` | [o] |
 
-## [Wave 17](waves.ko.md#wave-17) — 릴리스 0.0.5
+## [Wave 17](waves.ko.md#wave-17) — 릴리스 0.0.5와 0.0.6
 
 | ID | 작업 | 검증 | 상태 |
 |---|---|---|---|
 | H17.1 | 릴리스 commit `chore(release): Release 0.0.5 (#H17.1)`: `package.json`, npm 패키지 셋, `packages/hyper-php/composer.json`, `packages/hyper-python/pyproject.toml`, `tests/package-install/package.json`의 버전을 0.0.5로 정하고, `packages/hyper-node/package.json`과 `packages/hyper-build/package.json`의 `@polyspec/hyper` requirement와 `composer.json`과 `examples/board/composer.json`의 `polyspec/hyper` requirement를 lock과 함께 정하며, 두 changelog의 `## Unreleased`를 `## 0.0.5`로 바꾸고, 검토 기록을 다시 쓰고, `tests/release-install`의 consumer 프로젝트의 manifest와 lock을 0.0.5 archive용으로 쓴다. Red: `make release-versions TAG=v0.0.5`가 0.0.4인 모든 manifest를 보고한다. Green: 통과하고 `make release-consumer TAG=v0.0.5`가 0.0.5 archive를 설치한다. | `make release-versions TAG=v0.0.5`, `make release-consumer TAG=v0.0.5` | [o] |
 | H17.1-1 | `make release-proof TAG=v0.0.5`가 consumer 프로젝트의 `npm ci`에서 `EALLOWREMOTE`로 실패한다. target이 `npm_config_allow_remote` 없이 실행되고 npm 12가 lock이 integrity로 pin한 template tarball을 거부하기 때문이다. Red: `tests/scripts/check-recipes.test.mjs`가 `release-proof`에 `npm_config_allow_remote`가 없다고 보고한다. Green: `release-consumer`와 `release-proof`는 `root`(`npm ci`가 필요로 하는 가장 좁은 값)를, `release-consumer-lock`은 `all`을(H13.5-14) export하고 `make release-proof TAG=v0.0.5`가 통과한다. | `make test-scripts TESTS="tests/scripts/check-recipes.test.mjs"`, `make release-proof TAG=v0.0.5` | [o] |
+| H17.2 | 릴리스 commit `chore(release): Release 0.0.6 (#H17.2)`: `package.json`, npm 패키지 셋, `packages/hyper-php/composer.json`, `packages/hyper-python/pyproject.toml`, `tests/package-install/package.json`의 버전을 0.0.6으로 정하고, `packages/hyper-node/package.json`과 `packages/hyper-build/package.json`의 `@polyspec/hyper` requirement와 `composer.json`과 `examples/board/composer.json`의 `polyspec/hyper` requirement를 lock과 함께 정하며, 두 changelog의 `## Unreleased`를 `## 0.0.6`으로 바꾸고, 검토 기록을 다시 쓰고, `tests/release-install`의 consumer 프로젝트의 manifest와 lock을 0.0.6 archive용으로 쓴다. template pin은 `TEMPLATE_TAG` `v0.0.5`에 남는다. Red: `make release-versions TAG=v0.0.6`이 0.0.5인 모든 manifest를 보고한다. Green: 통과하고 `make release-consumer TAG=v0.0.6`이 0.0.6 archive를 설치한다. | `make release-versions TAG=v0.0.6`, `make release-consumer TAG=v0.0.6` | [o] |

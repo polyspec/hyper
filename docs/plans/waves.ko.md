@@ -1,5 +1,5 @@
 <!-- doc-id: waves -->
-<!-- source-sha256: ff65bbc22d0834a680dcd102208f107ae38ebe3cf0cf1345135b2c811b8126ff -->
+<!-- source-sha256: 34953070ff022cce4c528e6dee1391e0427cf98cb636ef9e587c25b375aacc2f -->
 # 웨이브 배경
 
 [English](waves.md).
@@ -72,4 +72,4 @@
 
 ## Wave 17
 
-의존: wave 16. 릴리스 0.0.5는 `config/release.json`이 나열하는 모든 manifest의 버전을 0.0.5로 정하며, 이는 릴리스 v0.0.5의 template pin과 git tag로 사용하는 Python 패키지를 포함한다.
+의존: wave 16. 릴리스 0.0.5는 `config/release.json`이 나열하는 모든 manifest의 버전을 0.0.5로 정하며, 이는 릴리스 v0.0.5의 template pin과 git tag로 사용하는 Python 패키지를 포함한다. 릴리스 0.0.6은 같은 manifest의 버전을 0.0.6으로 정하고 릴리스 v0.0.5의 template pin을 유지한다.
