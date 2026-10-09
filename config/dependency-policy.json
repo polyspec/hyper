@@ -11,7 +11,7 @@
     }
   ],
   "pythonManifests": [
-    "packages/hyper-python/pyproject.toml"
+    "packages/hyper-server-python/pyproject.toml"
   ],
   "exceptions": []
 }

@@ -47,7 +47,7 @@
     },
     {
       "paths": [
-        "packages/hyper-python/**"
+        "packages/hyper-server-python/**"
       ],
       "targets": [
         "test-python",

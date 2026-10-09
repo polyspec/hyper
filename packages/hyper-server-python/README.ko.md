@@ -1,6 +1,6 @@
-<!-- doc-id: hyper-python-readme -->
-<!-- source-sha256: 7ad6d1ba831d7f6e5e818ee94f393c3c97f69f881ff9e23685f43ae05a598541 -->
-# polyspec-hyper
+<!-- doc-id: hyper-server-python-readme -->
+<!-- source-sha256: 7284c2a32a0c989df1d8899ceccaff2a5ce51758c68f37e901e2011368a1314c -->
+# polyspec-hyper-server
 
 [English](README.md).
 
@@ -9,10 +9,10 @@ PHP 서버와 같은 바이트의 JSON text를 같은 규칙의 독립 구현으
 `rest.json`, `csrf.json`, `fields.json`, `json.json`의 conformance 사례가 `unittest` test로 돌아간다
 (`make test-python`).
 
-`vX.Y.Z`를 `packages/hyper-python`을 담은 첫 release tag로 바꾼다. 아직 package를 담은 release tag가 없다.
+`vX.Y.Z`를 `packages/hyper-server-python`을 담은 첫 release tag로 바꾼다. 아직 package를 담은 release tag가 없다.
 
 ```sh
-pip install "polyspec-hyper @ git+https://github.com/polyspec/hyper@vX.Y.Z#subdirectory=packages/hyper-python"
+pip install "polyspec-hyper-server @ git+https://github.com/polyspec/hyper@vX.Y.Z#subdirectory=packages/hyper-server-python"
 ```
 
 ```python

@@ -112,7 +112,7 @@ export function startPython({ name, app, port, env, children }) {
       ...process.env,
       ...env,
       BOARD_PORT: String(port),
-      PYTHONPATH: [join(ROOT, 'packages', 'hyper-python', 'src'), join(ROOT, '..', 'template', 'packages', 'template-python', 'src'), process.env.PYTHONPATH].filter(Boolean).join(':'),
+      PYTHONPATH: [join(ROOT, 'packages', 'hyper-server-python', 'src'), join(ROOT, '..', 'template', 'packages', 'template-python', 'src'), process.env.PYTHONPATH].filter(Boolean).join(':'),
     },
     ready: NODE_READY,
     children,

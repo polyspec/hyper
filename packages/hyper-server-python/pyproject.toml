@@ -3,7 +3,7 @@ requires = ["setuptools==84.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "polyspec-hyper"
+name = "polyspec-hyper-server"
 version = "0.0.6"
 description = "Server for the polyspec region protocol: manifest, routing, documents, JSON responses, actions and sessions"
 readme = "README.md"

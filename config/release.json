@@ -36,7 +36,7 @@
     "packages/hyper-server-node/package.json": "archive",
     "packages/hyper-build/package.json": "archive",
     "packages/hyper-server-php/composer.json": "archive",
-    "packages/hyper-python/pyproject.toml": "git-tag"
+    "packages/hyper-server-python/pyproject.toml": "git-tag"
   },
   "notReleased": {
     "tests/package-install/package.json": "the test package that installs the npm archives of the packages",
@@ -82,9 +82,9 @@
   },
   "proof": {
     "gitTag": {
-      "packages/hyper-python/pyproject.toml": {
+      "packages/hyper-server-python/pyproject.toml": {
         "kind": "python",
-        "name": "polyspec-hyper",
+        "name": "polyspec-hyper-server",
         "smoke": [
           "python",
           "-c",
