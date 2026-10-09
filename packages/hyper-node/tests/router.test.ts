@@ -2,7 +2,7 @@
 // package (HY-9, HY-49).
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { Router, stripBasePath } from '@polyspec/hyper';
+import { Router, stripBasePath } from '@polyspec/hyper-client';
 
 interface Case {
   path: string;

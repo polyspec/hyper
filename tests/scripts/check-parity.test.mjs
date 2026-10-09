@@ -11,7 +11,7 @@ import { join } from 'node:path';
 import { test } from 'node:test';
 import { requireBuilt } from './requires.mjs';
 
-requireBuilt('packages', 'node_modules/@polyspec/hyper/dist/index.js');
+requireBuilt('packages', 'node_modules/@polyspec/hyper-client/dist/index.js');
 
 const MANIFEST = {
   layout: 'layout.tpl',

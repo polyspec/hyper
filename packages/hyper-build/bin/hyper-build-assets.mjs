@@ -8,7 +8,7 @@
 //   public/assets/hyper-chunk-<hash>.js         one chunk file per code that the entry imports with import() only,
 //                                                which the browser loads by its absolute URL when the code first runs
 //   <output>/templates.index.json               template name -> file URL; the client imports it as
-//                                                @polyspec/hyper/templates-index
+//                                                @polyspec/hyper-client/templates-index
 //   <output>/manifest.json                      the URL of the entry, which the server passes to the layout
 //   <output> of --tailwind <source>=<output>     the source stylesheet compiled with the Tailwind theme and the
 //                                                utilities that templates/ and client/ use, its rules in the
@@ -25,7 +25,7 @@
 //
 // The template ASTs and the template render runtime of the bundle come from the template package `@polyspec/template`
 // that this package depends on, whatever template package the application installed (HY-70); the manifest check
-// comes from the browser package `@polyspec/hyper`.
+// comes from the browser package `@polyspec/hyper-client`.
 //
 // Usage: hyper-build-assets --app . --api /api --output build [--tailwind <source>=<output>]
 //          [--static public/assets/app.css]...
@@ -37,7 +37,7 @@ import { compile } from '@tailwindcss/node';
 import { Scanner } from '@tailwindcss/oxide';
 import { parseArgs } from 'node:util';
 import { build } from 'esbuild';
-import { checkManifest } from '@polyspec/hyper';
+import { checkManifest } from '@polyspec/hyper-client';
 import { copyFile, writeFileAtomic } from '../lib/output-files.mjs';
 import { publish, staging } from '../lib/publish.mjs';
 import { sha256, templatePlugin, writeTemplateFiles } from '../lib/template-files.mjs';
@@ -120,12 +120,12 @@ for (const file of values.static ?? []) {
 publish(csrNext, csrDir, { last: ['index.html'] });
 
 
-// The esbuild plugin that resolves @polyspec/hyper/templates-index to the template index of this build (HY-34).
+// The esbuild plugin that resolves @polyspec/hyper-client/templates-index to the template index of this build (HY-34).
 function indexPlugin(templateIndex) {
   return {
     name: 'templates-index',
     setup(builder) {
-      builder.onResolve({ filter: /^@polyspec\/hyper\/templates-index$/ }, () => ({ path: 'templates-index', namespace: 'templates-index' }));
+      builder.onResolve({ filter: /^@polyspec\/hyper-client\/templates-index$/ }, () => ({ path: 'templates-index', namespace: 'templates-index' }));
       builder.onLoad({ filter: /.*/, namespace: 'templates-index' }, () => ({ contents: JSON.stringify(templateIndex), loader: 'json' }));
     },
   };

@@ -6,7 +6,7 @@ include scripts/kit/kit.mk
 
 BOARD := examples/board
 PHP_PACKAGE := packages/hyper-php
-JS_PACKAGE := packages/hyper-js
+JS_PACKAGE := packages/hyper-client
 NODE_PACKAGE := packages/hyper-node
 BUILD_PACKAGE := packages/hyper-build
 PYTHON_PACKAGE := packages/hyper-python
@@ -91,7 +91,7 @@ ext: toolchain-check ## Build the native template extension from the unpacked ph
 
 packages: toolchain-check ## Build the JavaScript modules and type declarations of the npm packages into their dist directories and reinstall their npm copies (HY-61, HY-79, HY-96)
 	cd $(JS_PACKAGE) && $(NPM) run --silent build -- --outDir dist.next-$$$$ && node ../../scripts/publish.mjs directory dist.next-$$$$ dist
-	node scripts/publish.mjs npm-copy $(JS_PACKAGE) node_modules/@polyspec/hyper
+	node scripts/publish.mjs npm-copy $(JS_PACKAGE) node_modules/@polyspec/hyper-client
 	cd $(NODE_PACKAGE) && $(NPM) run --silent build -- --outDir dist.next-$$$$ && node ../../scripts/publish.mjs directory dist.next-$$$$ dist
 	node scripts/publish.mjs npm-copy $(NODE_PACKAGE) node_modules/@polyspec/hyper-server
 	node scripts/publish.mjs npm-copy $(BUILD_PACKAGE) node_modules/@polyspec/hyper-build

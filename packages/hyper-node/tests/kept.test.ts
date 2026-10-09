@@ -2,7 +2,7 @@
 // selected values applied to the data give the expected data (HY-38, HY-41).
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { applyKept, copyValue } from '@polyspec/hyper';
+import { applyKept, copyValue } from '@polyspec/hyper-client';
 import { parseJson, type MapValue, type Value } from '@polyspec/template/render';
 import type { DecodedValue } from '../src/index.js';
 import { selectKept } from '../src/kept.js';

@@ -22,7 +22,7 @@
     "node": ">=26"
   },
   "dependencies": {
-    "@polyspec/hyper": "0.0.6",
+    "@polyspec/hyper-client": "0.0.6",
     "@polyspec/template": "0.0.5"
   }
 }

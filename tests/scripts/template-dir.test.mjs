@@ -36,8 +36,8 @@ test('npm installs the template packages from the tarballs of the template relea
   requireBuilt('install', ...PACKAGES.map((name) => `node_modules/${name}/package.json`));
   const root = read('package.json');
   const lock = read('package-lock.json');
-  const version = read('packages/hyper-js/package.json').dependencies['@polyspec/template'];
-  assert.match(version, /^\d+\.\d+\.\d+$/, 'packages/hyper-js requires an exact template version');
+  const version = read('packages/hyper-client/package.json').dependencies['@polyspec/template'];
+  assert.match(version, /^\d+\.\d+\.\d+$/, 'packages/hyper-client requires an exact template version');
   assert.equal(read('packages/hyper-node/package.json').dependencies['@polyspec/template'], version);
   for (const name of PACKAGES) assert.equal(read('packages/hyper-build/package.json').dependencies[name], version, name);
   for (const name of PACKAGES) {

@@ -5,7 +5,7 @@ import { createHash } from 'node:crypto';
 import { mkdirSync, readdirSync, readFileSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import dataTemplate from '@polyspec/hyper/data-template.json' with { type: 'json' };
+import dataTemplate from '@polyspec/hyper-client/data-template.json' with { type: 'json' };
 import { writeFileAtomic } from './output-files.mjs';
 
 // The file of a module of the template package `@polyspec/template` that this package depends on, such as

@@ -14,8 +14,8 @@
 import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
-import { routeReads } from '@polyspec/hyper';
-import dataTemplate from '@polyspec/hyper/data-template.json' with { type: 'json' };
+import { routeReads } from '@polyspec/hyper-client';
+import dataTemplate from '@polyspec/hyper-client/data-template.json' with { type: 'json' };
 import { compileAst } from '@polyspec/template-compiler/ast-artifact.mjs';
 import { compileSource } from '@polyspec/template-compiler/compiler.mjs';
 import { deriveTypeManifest } from '@polyspec/template-compiler/type-manifest.mjs';

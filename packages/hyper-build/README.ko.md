@@ -1,10 +1,10 @@
 <!-- doc-id: hyper-build-readme -->
-<!-- source-sha256: e27d7288e4b0e89b13c3bd6dfc5d6ea0dbffca0b41592c0f6224cb1837015405 -->
+<!-- source-sha256: 28cbb947820f0a0e3cf635e385b31052423de456c37bc9dc285a1444e8ae85d7 -->
 # @polyspec/hyper-build
 
 [English](README.md).
 
-영역 프로토콜의 build 명령이다(HY-96). 애플리케이션은 패키지를 설치하고 `node_modules/.bin`의 bin 두 개를 실행한다. 패키지는 브라우저 패키지 `@polyspec/hyper`와 템플릿 패키지 `@polyspec/template`, `@polyspec/template-compiler`를 자신이 요구하는 정확한 버전으로 읽는다(HY-70).
+영역 프로토콜의 build 명령이다(HY-96). 애플리케이션은 패키지를 설치하고 `node_modules/.bin`의 bin 두 개를 실행한다. 패키지는 브라우저 패키지 `@polyspec/hyper-client`와 템플릿 패키지 `@polyspec/template`, `@polyspec/template-compiler`를 자신이 요구하는 정확한 버전으로 읽는다(HY-70).
 
 Node.js 26 이상이 필요하다. 패키지는 JavaScript 모듈을 build 단계 없이 그대로 publish한다.
 

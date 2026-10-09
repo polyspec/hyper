@@ -8,7 +8,7 @@
     "node": ">=26"
   },
   "dependencies": {
-    "@polyspec/hyper": "file:../../packages/hyper-js",
+    "@polyspec/hyper-client": "file:../../packages/hyper-client",
     "@polyspec/hyper-server": "file:../../packages/hyper-node",
     "@polyspec/template": "https://github.com/polyspec/template/releases/download/v0.0.5/polyspec-template-npm-0.0.5.tgz"
   },

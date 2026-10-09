@@ -57,7 +57,7 @@ test('writes the entry, a chunk for code that the entry imports with import(), t
     const index = JSON.parse(readFileSync(join(output, 'templates.index.json'), 'utf8'));
     assert.match(index['home.tpl'].url, /^\/assets\/templates\/home\.[0-9a-f]{12}\.json$/);
     assert.deepEqual(readdirSync(assets).filter((name) => !name.startsWith('hyper-') && name !== 'templates'), []);
-    // The entry contains the index of the build, which it imports as @polyspec/hyper/templates-index.
+    // The entry contains the index of the build, which it imports as @polyspec/hyper-client/templates-index.
     assert.ok(code.includes(index['home.tpl'].url), code);
     const shell = readFileSync(join(output, 'csr', 'index.html'), 'utf8');
     assert.ok(shell.includes(code), shell);

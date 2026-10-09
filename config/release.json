@@ -11,8 +11,8 @@
   "packages": [
     {
       "kind": "npm",
-      "directory": "packages/hyper-js",
-      "name": "@polyspec/hyper"
+      "directory": "packages/hyper-client",
+      "name": "@polyspec/hyper-client"
     },
     {
       "kind": "npm",
@@ -32,7 +32,7 @@
   ],
   "manifests": {
     "package.json": "version",
-    "packages/hyper-js/package.json": "archive",
+    "packages/hyper-client/package.json": "archive",
     "packages/hyper-node/package.json": "archive",
     "packages/hyper-build/package.json": "archive",
     "packages/hyper-php/composer.json": "archive",
@@ -50,11 +50,11 @@
     "npm": {
       "directory": "tests/release-install/npm",
       "smoke": {
-        "@polyspec/hyper": [
+        "@polyspec/hyper-client": [
           "node",
           "--input-type=module",
           "-e",
-          "const loaded = await import('@polyspec/hyper'); if (typeof loaded.Router !== 'function') throw new Error('@polyspec/hyper lacks Router');"
+          "const loaded = await import('@polyspec/hyper-client'); if (typeof loaded.Router !== 'function') throw new Error('@polyspec/hyper-client lacks Router');"
         ],
         "@polyspec/hyper-server": [
           "node",

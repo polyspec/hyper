@@ -1,12 +1,12 @@
 <!-- doc-id: hyper-node-readme -->
-<!-- source-sha256: 2fdf3aca44b8458d2383f7a1ac5c94410d86504f28a81a03c44308586ad43d8b -->
+<!-- source-sha256: 05fefd4fbe20a6d87902cd6e0832b2bcbd5d1a2ab4d084a9dcb290fcd6f2298a -->
 # @polyspec/hyper-server
 
 [English](README.md).
 
-영역 프로토콜의 Node.js 서버다. PHP 서버 `polyspec/hyper`와 같은 규칙을 구현한다([영역 프로토콜](../../docs/spec/protocol.ko.md) 참고, 다른 점은 HY-54에 있다). base path를 쓰는 라우트, 공유·영역·라우트 loader, CSRF를 검사하는 `POST` action, redirect와 invalid 결과, `Redirect`, `Forbidden`, `NotFound`, reply cookie와 cache control, JSON tag와 304, flash 값과 바뀐 topic, `/_hyper/keep`을 쓰는 유지 값, 요청 검사, 평문 오류 응답, 데이터 모델 검사, 파일 session을 구현한다. 문서는 `@polyspec/hyper`의 브라우저 코드와 asset build의 템플릿 파일로 렌더하므로, 서버 문서는 같은 JSON을 브라우저가 렌더한 결과다.
+영역 프로토콜의 Node.js 서버다. PHP 서버 `polyspec/hyper`와 같은 규칙을 구현한다([영역 프로토콜](../../docs/spec/protocol.ko.md) 참고, 다른 점은 HY-54에 있다). base path를 쓰는 라우트, 공유·영역·라우트 loader, CSRF를 검사하는 `POST` action, redirect와 invalid 결과, `Redirect`, `Forbidden`, `NotFound`, reply cookie와 cache control, JSON tag와 304, flash 값과 바뀐 topic, `/_hyper/keep`을 쓰는 유지 값, 요청 검사, 평문 오류 응답, 데이터 모델 검사, 파일 session을 구현한다. 문서는 `@polyspec/hyper-client`의 브라우저 코드와 asset build의 템플릿 파일로 렌더하므로, 서버 문서는 같은 JSON을 브라우저가 렌더한 결과다.
 
-Node.js 26 이상에서 동작한다. 이 package는 `@polyspec/hyper`처럼 type 선언을 가진 JavaScript module을 `dist`에 담아 배포하며, `npm run build`(두 package 모두는 `make packages`)가 이를 쓴다. Node는 bundler 없이 `node_modules`에서 이 package를 실행하며, 선언은 `erasableSyntaxOnly`로 type 검사를 통과한다(HY-61). `make node-server`는 board 예제를 esbuild로 파일 하나에 bundle한다.
+Node.js 26 이상에서 동작한다. 이 package는 `@polyspec/hyper-client`처럼 type 선언을 가진 JavaScript module을 `dist`에 담아 배포하며, `npm run build`(두 package 모두는 `make packages`)가 이를 쓴다. Node는 bundler 없이 `node_modules`에서 이 package를 실행하며, 선언은 `erasableSyntaxOnly`로 type 검사를 통과한다(HY-61). `make node-server`는 board 예제를 esbuild로 파일 하나에 bundle한다.
 
 ## 애플리케이션 열기
 

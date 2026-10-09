@@ -28,7 +28,7 @@
     },
     {
       "paths": [
-        "packages/hyper-js/**"
+        "packages/hyper-client/**"
       ],
       "targets": [
         "test-js",
@@ -371,7 +371,7 @@
       "paths": [
         "CHANGELOG.md",
         "package.json",
-        "packages/hyper-js/package.json",
+        "packages/hyper-client/package.json",
         "packages/hyper-node/package.json",
         "packages/hyper-build/package.json",
         "packages/hyper-php/composer.json",
@@ -501,6 +501,17 @@
       "targets": [
         "dependency-policy-check",
         "dependency-policy-mutation-check"
+      ]
+    },
+    {
+      "paths": [
+        "config/release.json",
+        "packages/*/package.json",
+        "packages/*/composer.json",
+        "packages/*/pyproject.toml"
+      ],
+      "tests": [
+        "tests/scripts/package-names.test.mjs"
       ]
     }
   ]

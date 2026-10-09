@@ -1,7 +1,7 @@
 // The cases of packages/hyper-php/tests/AppTest.php against the same fixture application (HY-54).
 import { readFileSync } from 'node:fs';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { createApplication, decodeResponse, renderParts, type Manifest, type TemplateIndex } from '@polyspec/hyper';
+import { createApplication, decodeResponse, renderParts, type Manifest, type TemplateIndex } from '@polyspec/hyper-client';
 import { parseJson, type Template } from '@polyspec/template/render';
 import { verifyToken } from '../src/csrf.js';
 import { App, Reply as ReplyClass, Request, Result, type Handlers, type Loader, type Reply, type Response } from '../src/index.js';
