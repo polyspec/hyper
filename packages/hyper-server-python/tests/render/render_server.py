@@ -288,13 +288,13 @@ class WrittenTest(unittest.TestCase):
         # HY-99: the server calls the hook after it wrote the response, with the request, the response and True.
         events: list = []
 
-        def written(request: Request, response: Response, sent: bool) -> None:
-            events.append((request.path(), response.status, sent))
+        def written(request: Request, response: Response, sent: bool, elapsed: float) -> None:
+            events.append((request.path(), response.status, sent, elapsed >= 0))
 
         with Served(open_app(loader([])), written=written) as served:
             status, _, _ = parse(read_all(served.connect()))
         self.assertEqual(200, status)
-        self.assertEqual([('/', 200, True)], events)
+        self.assertEqual([('/', 200, True, True)], events)
 
     def test_the_write_hook_runs_before_the_disconnect_hook_when_the_write_fails(self) -> None:
         # HY-99, HY-67: a write that fails because the client closed the connection reports False before the
@@ -309,7 +309,7 @@ class WrittenTest(unittest.TestCase):
 
         app = open_app(loader([]), on_response=on_response,
                        on_disconnect=lambda request, elapsed, reply: events.append(('disconnect', request.path())))
-        with Served(app, written=lambda request, response, sent: events.append(
+        with Served(app, written=lambda request, response, sent, elapsed: events.append(
                 ('written', request.path(), response.status, sent))) as served:
             client = served.connect()
             try:
@@ -327,7 +327,7 @@ class WrittenTest(unittest.TestCase):
             return Response.text(400, 'Bad Request')
 
         with Served(open_app(loader([])), around=around,
-                    written=lambda request, response, sent: events.append((response.status, response.body, sent))) \
+                    written=lambda request, response, sent, elapsed: events.append((response.status, response.body, sent))) \
                 as served:
             status, _, body = parse(read_all(served.connect()))
         self.assertEqual((400, b'Bad Request'), (status, body))
@@ -347,7 +347,7 @@ class WrittenTest(unittest.TestCase):
 
         app = open_app(loader([]), on_disconnect=lambda *args: events.append('disconnect'))
         with Served(app, around=around,
-                    written=lambda request, response, sent: events.append(('written', sent))) as served:
+                    written=lambda request, response, sent, elapsed: events.append(('written', sent))) as served:
             client = served.connect()
             try:
                 rendered.wait()
