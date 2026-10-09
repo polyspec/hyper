@@ -1,5 +1,6 @@
 # The `http.server` server of the package with a real socket on 127.0.0.1 and a port that the system assigns: the
-# disconnect hook of a client that closed the connection (HY-60, HY-67) and the request hook `around` (HY-97).
+# disconnect hook of a client that closed the connection (HY-60, HY-67), the request hook `around` (HY-97) and the
+# write hook `written` (HY-99).
 import json
 import shutil
 import socket
@@ -280,6 +281,86 @@ class AroundTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as sessions:
             with self.assertRaisesRegex(ValueError, 'around'):
                 create_server(open_app(loader([])), FileSessions(sessions), around='wrap')
+
+
+class WrittenTest(unittest.TestCase):
+    def test_the_write_hook_receives_the_request_and_the_response(self) -> None:
+        # HY-99: the server calls the hook after it wrote the response, with the request, the response and True.
+        events: list = []
+
+        def written(request: Request, response: Response, sent: bool) -> None:
+            events.append((request.path(), response.status, sent))
+
+        with Served(open_app(loader([])), written=written) as served:
+            status, _, _ = parse(read_all(served.connect()))
+        self.assertEqual(200, status)
+        self.assertEqual([('/', 200, True)], events)
+
+    def test_the_write_hook_runs_before_the_disconnect_hook_when_the_write_fails(self) -> None:
+        # HY-99, HY-67: a write that fails because the client closed the connection reports False before the
+        # disconnect hook runs.
+        events: list = []
+        rendered = threading.Event()
+        closed = threading.Event()
+
+        def on_response(request, response, elapsed, reply, failure) -> None:
+            rendered.set()
+            closed.wait()
+
+        app = open_app(loader([]), on_response=on_response,
+                       on_disconnect=lambda request, elapsed, reply: events.append(('disconnect', request.path())))
+        with Served(app, written=lambda request, response, sent: events.append(
+                ('written', request.path(), response.status, sent))) as served:
+            client = served.connect()
+            try:
+                rendered.wait()
+                reset(client)
+            finally:
+                closed.set()
+        self.assertEqual([('written', '/', 200, False), ('disconnect', '/')], events)
+
+    def test_the_write_hook_runs_for_a_response_of_around_alone(self) -> None:
+        # HY-99: the hook is called also when `around` returned its own response without calling `answer` (HY-97).
+        events: list = []
+
+        def around(request: Request, answer: Callable) -> Response:
+            return Response.text(400, 'Bad Request')
+
+        with Served(open_app(loader([])), around=around,
+                    written=lambda request, response, sent: events.append((response.status, response.body, sent))) \
+                as served:
+            status, _, body = parse(read_all(served.connect()))
+        self.assertEqual((400, b'Bad Request'), (status, body))
+        self.assertEqual([(400, 'Bad Request', True)], events)
+
+    def test_the_write_hook_of_a_response_of_around_alone_to_a_closed_connection_calls_no_disconnect(self) -> None:
+        # HY-99, HY-67: the failed write of a response of `around` alone reports False, and without a call of
+        # `answer` the disconnect hook does not run (HY-97).
+        events: list = []
+        rendered = threading.Event()
+        closed = threading.Event()
+
+        def around(request: Request, answer: Callable) -> Response:
+            rendered.set()
+            closed.wait()
+            return Response.text(200, 'x' * LARGE)
+
+        app = open_app(loader([]), on_disconnect=lambda *args: events.append('disconnect'))
+        with Served(app, around=around,
+                    written=lambda request, response, sent: events.append(('written', sent))) as served:
+            client = served.connect()
+            try:
+                rendered.wait()
+                reset(client)
+            finally:
+                closed.set()
+            self.assertEqual([], served.sessions())
+        self.assertEqual([('written', False)], events)
+
+    def test_a_write_hook_that_is_not_callable_fails_when_the_server_is_created(self) -> None:
+        with tempfile.TemporaryDirectory() as sessions:
+            with self.assertRaisesRegex(ValueError, 'written'):
+                create_server(open_app(loader([])), FileSessions(sessions), written='log')
 
 
 if __name__ == '__main__':

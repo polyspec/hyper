@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: e7716b59eff7621978e376f80daf82f9a68dd31372daa895662af1986772f8c4 -->
+<!-- source-sha256: e281de76966e0e4e5702862a926b09b921e74f225bfce60faf2519bfa461c7a7 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- Python 서버 `polyspec-hyper-server`가 `create_server`에서 선택적 쓰기 hook `written`을 받는다. 서버는 자기가 쓰려 한 요청마다 그 요청과 쓴 응답, 쓰기가 끝났는지로 이를 호출하고, client가 연결을 닫아 실패한 쓰기는 연결 끊김 hook보다 먼저 알린다(HY-99, #H18.6).
 
 ## 0.0.7
 
