@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: ddd97d3101c42ae9e8ad850ea4920ccba23881a64132853eb7b9d34fbfb72fb7 -->
+<!-- source-sha256: bdcb84e19cedf6246a6d00e931e30ad1712ff4bb77aabc5dbd4d54b7c8665535 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H18.8: README가 세 서버를 밝힌다. 도입부가 PHP·Node.js·Python 서버를 적고, SSR과 CSR mode와 router 문장이 서버를 적으며, json.json의 적합성 줄이 Python 서버를 적는다(HY-54).
 
 ## 0.0.8
 

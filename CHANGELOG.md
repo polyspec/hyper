@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- H18.8: README states the three servers: the introduction names the PHP, Node.js and Python server, the SSR and CSR modes and the router sentence name the server, and the conformance row of json.json names the Python server (HY-54).
 
 ## 0.0.8
 
