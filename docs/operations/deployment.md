@@ -3,11 +3,11 @@
 
 [한국어](deployment.ko.md).
 
-One application deploys in two forms. Both use the same manifest, templates, client bundle and PHP handlers.
+One application deploys in two forms. Both use the same manifest, templates, client bundle and handlers, on the PHP, Node.js and Python server alike.
 
 | Form | First document | Later navigation | Use |
 |---|---|---|---|
-| Server and CDN (recommended) | PHP renders it (SSR) | JSON, rendered by the browser | Every application whose server can render HTML |
+| Server and CDN (recommended) | The server renders it (SSR) | JSON, rendered by the browser | Every application whose server can render HTML |
 | Static shell | The browser renders it from `/api` JSON (CSR) | JSON, rendered by the browser | A backend that serves JSON only |
 
 ## Server and CDN (recommended)
@@ -36,7 +36,7 @@ Every page path returns the same empty shell, so search crawlers that do not run
 
 ## One server for both forms
 
-One PHP or Node server can answer the server-rendered pages and the client-rendered pages of one manifest with the same handlers (HY-62). The application declares client rendering when it opens: `App::open(clientRendering: new ClientRendering(shell: '/srv/app/build/csr/index.html', basePath: '/_props', selects: fn (Request $request): Choice => new Choice(chosen: ..., value: ...)))` in PHP, and the `clientRendering` option `{ shell, basePath, selects }` of `App.open` in Node. The selection chooses the client-rendered requests, for example by the `Host` header, and its value, such as the stored service of the host, reaches every loader and action of the request through `$request->selection()` in PHP and `request.selection()` in Node, so that the handlers do not read it again. Build the shell with `hyper-build-assets --api /_props` of `@polyspec/hyper-build`, so that it declares the data base path; the application fails to open otherwise.
+One server of either implementation can answer the server-rendered pages and the client-rendered pages of one manifest with the same handlers (HY-62). The application declares client rendering when it opens: `App::open(clientRendering: new ClientRendering(shell: '/srv/app/build/csr/index.html', basePath: '/_props', selects: fn (Request $request): Choice => new Choice(chosen: ..., value: ...)))` in PHP, the `clientRendering` option `{ shell, basePath, selects }` of `App.open` in Node, and `client_rendering=ClientRendering(shell='/srv/app/build/csr/index.html', base_path='/_props', selects=...)` in Python. The selection chooses the client-rendered requests, for example by the `Host` header, and its value, such as the stored service of the host, reaches every loader and action of the request through `$request->selection()` in PHP, `request.selection()` in Node and Python, so that the handlers do not read it again. Build the shell with `hyper-build-assets --api /_props` of `@polyspec/hyper-build`, so that it declares the data base path; the application fails to open otherwise.
 
 | Request of a chosen page | Response |
 |---|---|

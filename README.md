@@ -28,8 +28,8 @@ Pages and regions contain no `hx-*` attributes. Links and forms are plain HTML a
 |---|---|---|
 | `packages/hyper-client` | `@polyspec/hyper-client` | Browser code: manifest, router, region and document rendering, htmx extension, client-side rendering |
 | `packages/hyper-server-php` | `polyspec/hyper-server` | Server: manifest, router, actions, region selection, documents and JSON |
-| `packages/hyper-server-node` | `@polyspec/hyper-server` | Node.js server with the rules of the PHP server; it renders documents with the browser code ([README](packages/hyper-server-node/README.md)) |
-| `packages/hyper-server-python` | `polyspec-hyper-server` | Python server with the rules of the PHP server; it renders with the template Python package and serves over `http.server` ([README](packages/hyper-server-python/README.md)) |
+| `packages/hyper-server-node` | `@polyspec/hyper-server` | Node.js implementation of the server protocol; it renders documents with the browser code ([README](packages/hyper-server-node/README.md)) |
+| `packages/hyper-server-python` | `polyspec-hyper-server` | Python implementation of the server protocol; it renders with the template Python package and serves over `http.server` ([README](packages/hyper-server-python/README.md)) |
 | `examples/board` | | Board example: layout, left and content regions; list, detail, create, validation |
 | `conformance/routes.json` | | Router cases that both routers pass |
 | `conformance/json.json` | | JSON encoding and decoding cases that the PHP, the Node.js and the Python server pass |

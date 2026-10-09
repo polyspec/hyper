@@ -1,5 +1,5 @@
 <!-- doc-id: execution-checklist -->
-<!-- source-sha256: 775b779db7a16d7e42e9c1ef802aa1f745d11c15d7dc791405d02d9e9a59540d -->
+<!-- source-sha256: 258321cdda165319fbe51cf3f9120af0e6d7d25e412d5be0369f5ba9a382308d -->
 # 실행 체크리스트
 
 ## [웨이브 1](waves.ko.md#wave-1) — 애플리케이션이 약하게 만들 수 없는 CSRF 방어
@@ -243,3 +243,4 @@
 | H18.7 | Release commit `chore(release): Release 0.0.8 (#H18.7)`: `config/release.json`의 모든 manifest와 `@polyspec/hyper-client`와 `polyspec/hyper-server`의 requirement와 그 lock에 version 0.0.8을 적고, 두 changelog의 `## Unreleased`를 `## 0.0.8`로 바꾸고, review 기록을 다시 쓰고, `tests/release-install`의 consumer project manifest와 lock을 0.0.8 archive로 쓴다. Red: `make release-versions TAG=v0.0.8`이 모든 manifest를 0.0.7로, 두 changelog에 `## 0.0.8` 절이 없다고 보고했다. Green: 통과하고, `make release-consumer TAG=v0.0.8`이 archive `polyspec-hyper-client-npm-0.0.8.tgz`, `polyspec-hyper-server-npm-0.0.8.tgz`, `polyspec-hyper-build-npm-0.0.8.tgz`, `polyspec-hyper-server-php-0.0.8.zip`를 설치한다. | `make release-versions TAG=v0.0.8`, `make release-consumer TAG=v0.0.8` || [o] |
 | H18.6-1 | 쓰기 hook `written`이 요청 도착 이후의 경과 밀리초도 받는다. 응답 hook과 연결 끊김 hook도 같은 값을 받는다(HY-60, HY-67). 쓰기 시점에 요청 기록을 남기는 consumer가 요청의 경과 시간을 적을 수 있다. Red: 경과 시간을 읽는 `WrittenTest` case가 elapsed argument를 넘기지 않는 H18.6의 `written`에서 `TypeError`로 실패했다. Green: `tests/render/render_server.py`의 case 32개와 `make test-python`이 통과한다. | `make test-python`, `make test-python-render` || [o] |
 | H18.8 | README가 세 서버를 밝힌다. 도입부가 PHP·Node.js·Python 서버를 적고 애플리케이션이 셋에서 바뀌지 않고 실행된다고 말하며, SSR과 CSR mode가 PHP라 적던 자리에 서버를 적고, router 문장이 세 서버의 router를 적으며, json.json의 적합성 줄이 Python 서버를 적는다. 원인: README가 PHP의 mode와 router만 설명했다. Node.js 서버는 H15.3부터, Python 서버는 H18.4부터 같은 규칙으로 응답한다. | `make documents-check` | [o] |
+| H18.9 | 서버를 하나의 protocol의 구현으로 적는다. 어떤 문서도 서버가 PHP 서버의 규칙을 가진다고 적거나 PHP만 렌더한다고 적거나 Python 없이 PHP와 Node만 나열하지 않게 한다. README와 docs/features가 Node.js·Python package를 server protocol의 구현으로 적고, deployment 문서가 렌더 주체를 서버로, 한 서버를 '어느 구현의 서버'로 적으며, protocol 규칙 HY-62와 HY-92가 Python 형식 `request.selection()`, `reply.embed_data()`, `client_rendering` 선언을 적는다. | `make documents-check` | [o] |

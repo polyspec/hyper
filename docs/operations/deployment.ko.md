@@ -1,14 +1,14 @@
 <!-- doc-id: deployment -->
-<!-- source-sha256: 2b6b9198bee54481686cba43593e5a54db2d732affc942e85db272ca257d99fa -->
+<!-- source-sha256: 917965352cc289fb20c65675d3d392cb8174c768264783fc363eda708e7ad572 -->
 # 배포
 
 [English](deployment.md).
 
-애플리케이션 하나를 두 가지 형태로 배포할 수 있다. 두 형태는 같은 매니페스트, 템플릿, 클라이언트 번들, PHP 핸들러를 사용한다.
+애플리케이션 하나를 두 가지 형태로 배포할 수 있다. 두 형태는 같은 매니페스트, 템플릿, 클라이언트 번들, handler를 사용하고 PHP·Node.js·Python server가 같다.
 
 | 형태 | 첫 문서 | 이후 이동 | 용도 |
 |---|---|---|---|
-| 서버와 CDN(권장) | PHP가 렌더한다(SSR) | JSON을 받아 브라우저가 렌더한다 | 서버가 HTML을 렌더할 수 있는 모든 애플리케이션 |
+| 서버와 CDN(권장) | 서버가 렌더한다(SSR) | JSON을 받아 브라우저가 렌더한다 | 서버가 HTML을 렌더할 수 있는 모든 애플리케이션 |
 | 정적 셸 | 브라우저가 `/api` JSON으로 렌더한다(CSR) | JSON을 받아 브라우저가 렌더한다 | JSON만 제공하는 백엔드 |
 
 ## 서버와 CDN(권장)
@@ -47,7 +47,7 @@ PHP는 기본 경로 없이 실행한다. 응답에는 `Vary: Accept, HX-Request
 
 ## 두 형태를 한 서버로
 
-PHP나 Node 서버 하나가 한 매니페스트의 서버 렌더 페이지와 클라이언트 렌더 페이지를 같은 handler로 응답할 수 있다(HY-62). 애플리케이션은 열 때 클라이언트 렌더를 선언한다. PHP에서는 `App::open(clientRendering: new ClientRendering(shell: '/srv/app/build/csr/index.html', basePath: '/_props', selects: fn (Request $request): Choice => new Choice(chosen: ..., value: ...)))`, Node에서는 `App.open`의 `clientRendering` 옵션 `{ shell, basePath, selects }`다. 선택은 예를 들어 `Host` header로 클라이언트 렌더 요청을 고르고, host에 저장된 service 같은 그 값은 PHP의 `$request->selection()`과 Node의 `request.selection()`으로 요청의 모든 loader와 action에 전달되므로 handler가 그 값을 다시 읽지 않는다. 셸이 데이터 기본 경로를 선언하도록 `@polyspec/hyper-build`의 `hyper-build-assets --api /_props`로 셸을 build한다. 그렇지 않으면 애플리케이션 열기가 실패한다.
+어느 구현의 서버 하나가 한 매니페스트의 서버 렌더 페이지와 클라이언트 렌더 페이지를 같은 handler로 응답할 수 있다(HY-62). 애플리케이션은 열 때 클라이언트 렌더를 선언한다. PHP에서는 `App::open(clientRendering: new ClientRendering(shell: '/srv/app/build/csr/index.html', basePath: '/_props', selects: fn (Request $request): Choice => new Choice(chosen: ..., value: ...)))`, Node에서는 `App.open`의 `clientRendering` 옵션 `{ shell, basePath, selects }`, Python에서는 `client_rendering=ClientRendering(shell='/srv/app/build/csr/index.html', base_path='/_props', selects=...)`다. 선택은 예를 들어 `Host` header로 클라이언트 렌더 요청을 고르고, host에 저장된 service 같은 그 값은 PHP의 `$request->selection()`과 Node·Python의 `request.selection()`으로 요청의 모든 loader와 action에 전달되므로 handler가 그 값을 다시 읽지 않는다. 셸이 데이터 기본 경로를 선언하도록 `@polyspec/hyper-build`의 `hyper-build-assets --api /_props`로 셸을 build한다. 그렇지 않으면 애플리케이션 열기가 실패한다.
 
 | 선택이 고른 페이지의 요청 | 응답 |
 |---|---|
