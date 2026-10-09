@@ -38,7 +38,7 @@
     },
     {
       "paths": [
-        "packages/hyper-node/**"
+        "packages/hyper-server-node/**"
       ],
       "targets": [
         "test-node",
@@ -372,7 +372,7 @@
         "CHANGELOG.md",
         "package.json",
         "packages/hyper-client/package.json",
-        "packages/hyper-node/package.json",
+        "packages/hyper-server-node/package.json",
         "packages/hyper-build/package.json",
         "packages/hyper-php/composer.json",
         "tests/package-install/package.json",

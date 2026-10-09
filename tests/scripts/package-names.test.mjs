@@ -12,6 +12,7 @@ const release = JSON.parse(readFileSync(join(repository, 'config/release.json'),
 // The packages of HY-98: the directory, the kind of its manifest and the name.
 const PACKAGES = [
   { directory: 'packages/hyper-client', kind: 'npm', name: '@polyspec/hyper-client' },
+  { directory: 'packages/hyper-server-node', kind: 'npm', name: '@polyspec/hyper-server' },
   { directory: 'packages/hyper-build', kind: 'npm', name: '@polyspec/hyper-build' },
 ];
 

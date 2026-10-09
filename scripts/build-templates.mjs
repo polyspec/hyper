@@ -5,7 +5,7 @@
 //
 // The template ASTs come from the template package `@polyspec/template` that `@polyspec/hyper-build` depends on (HY-70).
 //
-// Usage: node scripts/build-templates.mjs --templates packages/hyper-php/tests/fixtures/templates --output packages/hyper-node/tests/build
+// Usage: node scripts/build-templates.mjs --templates packages/hyper-php/tests/fixtures/templates --output packages/hyper-server-node/tests/build
 
 
 import { join } from 'node:path';

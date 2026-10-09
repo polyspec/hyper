@@ -6,7 +6,7 @@
 # make release-verify requires the tagged commit on origin/main with the check run ci-passed concluded success, without
 # running the tests again; make release-versions requires the version of the tag in every manifest and its section in
 # CHANGELOG.md and CHANGELOG.ko.md; make release-assets builds the archives <package>-<language>-<version>.<ext> (npm pack
-# of packages/hyper-client, packages/hyper-node and packages/hyper-build, a zip of packages/hyper-php); make release-publish
+# of packages/hyper-client, packages/hyper-server-node and packages/hyper-build, a zip of packages/hyper-php); make release-publish
 # creates the GitHub Release with the section as notes and the archives attached. TAG reaches the make targets through the
 # environment, never as shell text. The setup is the one of the job check of ci.yml: Node.js from .node-version, Python
 # from .python-version, PHP from .php-version, the template repository at its tag v0.0.5 (TEMPLATE_TAG of the Makefile,

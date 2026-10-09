@@ -9,9 +9,9 @@ examples/board/public/assets/templates/
 examples/board/var/*.db
 packages/hyper-php/tests/build/
 build/
-packages/hyper-node/tests/build/
+packages/hyper-server-node/tests/build/
 packages/hyper-client/dist/
-packages/hyper-node/dist/
+packages/hyper-server-node/dist/
 __pycache__/
 /var/
 *.next-*
