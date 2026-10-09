@@ -30,7 +30,8 @@ fields = Fields.parse(b'page=2&sort=title')  # names ['page', 'sort'], get('page
 - `encode` and `decode` write and read JSON with the bytes of PHP `json_encode` and `json_decode`
   (HY-17, HY-54); `in_data_model` tells a decoded value that belongs to the template data model.
 - `Request` holds one HTTP request with its route parameters, flash values, cookies and selection value (HY-15,
-  HY-42, HY-56, HY-57, HY-62); `target_path` and `target_query` split a request target.
+  HY-42, HY-56, HY-57, HY-62); `target_path` and `target_query` split a request target, and `with_header(name,
+  value)` returns a copy whose header of the name, compared without case, has the value (HY-97).
 - `Manifest.from_file` reads and checks the application manifest (HY-1, HY-2); `Region` is one manifest region or
   route region with its kept paths (HY-37).
 - `polyspec.hyper.kept.apply` and `polyspec.hyper.kept.select` apply kept values that conform to the data (HY-38); `Reads.keep` keeps the read
@@ -81,6 +82,33 @@ from polyspec.hyper.server import create_server
 
 server = create_server(app, FileSessions('/var/lib/board/sessions'), files='public', port=8080)
 server.serve_forever()
+```
+
+- `around`, an optional argument of `create_server`, is the request hook of the server (HY-97). The server calls it
+  once for every request that it gives to the application, with the request as the server built it and a function
+  `answer(request)`, and sends the `Response` that it returns. `answer` runs the application for a request with
+  the session of the request and returns the response with the cookie of a new session first. `around` may call
+  `answer` with a changed request, change the response that `answer` returns, or return its own response without
+  calling `answer`; then the server opens no session and runs no loader, action or hook of the application for that
+  request. The disconnect hook receives the request and the reply of the last call of `answer`. A consumer of the
+  Node server does the same by replacing the `request` listener of the server that `app.server()` returns. The
+  files of the public directory do not reach `around`, and a value that is not callable fails when the server is
+  created.
+
+```python
+import secrets
+
+from polyspec.hyper.response import Response
+
+
+def around(request, answer):
+    if request.header('X-Web-Server') != 'front':
+        return Response.text(400, 'Bad Request')
+    request_id = secrets.token_hex(8)
+    response = answer(request.with_header('X-Request-Id', request_id))
+    return response.with_header('X-Request-Id', request_id)
+
+server = create_server(app, FileSessions('/var/lib/board/sessions'), around=around, port=8080)
 ```
 
 

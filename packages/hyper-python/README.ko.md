@@ -1,5 +1,5 @@
 <!-- doc-id: hyper-python-readme -->
-<!-- source-sha256: 8a4b03a0096ba1c084514008d79f2cbf4e2d9af211e5de1d2515a54b5df7caf0 -->
+<!-- source-sha256: 7ad6d1ba831d7f6e5e818ee94f393c3c97f69f881ff9e23685f43ae05a598541 -->
 # polyspec-hyper
 
 [English](README.md).
@@ -31,7 +31,8 @@ fields = Fields.parse(b'page=2&sort=title')  # names ['page', 'sort'], get('page
 - `encode`와 `decode`는 PHP `json_encode`와 `json_decode`의 바이트로 JSON을 쓰고 읽는다 (HY-17, HY-54).
   `in_data_model`은 decode된 값이 template data model에 속하는지 알려준다.
 - `Request`는 route parameter, flash 값, cookie, selection 값을 가진 HTTP 요청 하나를 보관한다 (HY-15, HY-42,
-  HY-56, HY-57, HY-62). `target_path`와 `target_query`가 요청 target을 나눈다.
+  HY-56, HY-57, HY-62). `target_path`와 `target_query`가 요청 target을 나누고,
+  `with_header(name, value)`는 대소문자를 구분하지 않고 비교한 그 이름의 header가 값을 가진 사본을 반환한다 (HY-97).
 - `Manifest.from_file`이 application manifest를 읽고 검사한다 (HY-1, HY-2). `Region`은 kept 경로를 가진 manifest
   영역 또는 라우트 영역 하나다 (HY-37).
 - `polyspec.hyper.kept.apply`와 `polyspec.hyper.kept.select`는 데이터에 맞는 kept 값을 적용한다 (HY-38). `Reads.keep`은 데이터에서 read 경로가
@@ -77,6 +78,31 @@ from polyspec.hyper.server import create_server
 
 server = create_server(app, FileSessions('/var/lib/board/sessions'), files='public', port=8080)
 server.serve_forever()
+```
+
+- `create_server`의 선택 인자 `around`는 서버의 요청 hook이다 (HY-97). 서버는 애플리케이션에 주는 모든 요청마다
+  서버가 만든 요청과 함수 `answer(request)`로 이를 한 번 호출하고, 반환된 `Response`를 보낸다. `answer`는 요청의
+  session으로 요청에 대해 애플리케이션을 실행하고, 새 session의 cookie를 가장 먼저 둔 응답을 반환한다. `around`는
+  바꾼 요청으로 `answer`를 호출하거나, `answer`가 반환한 응답을 바꾸거나, `answer`를 호출하지 않고 자기 응답을
+  반환할 수 있다. 그때 서버는 그 요청에 대해 session을 열지 않고 애플리케이션의 loader, action, hook을 실행하지
+  않는다. 연결 끊김 hook은 마지막 `answer` 호출의 요청과 reply를 받는다. Node 서버의 consumer는 `app.server()`가
+  반환한 서버의 `request` listener를 바꿔 같은 일을 한다. public 디렉터리의 파일은 `around`에 닿지 않고, callable이
+  아닌 값은 서버를 만들 때 실패한다.
+
+```python
+import secrets
+
+from polyspec.hyper.response import Response
+
+
+def around(request, answer):
+    if request.header('X-Web-Server') != 'front':
+        return Response.text(400, 'Bad Request')
+    request_id = secrets.token_hex(8)
+    response = answer(request.with_header('X-Request-Id', request_id))
+    return response.with_header('X-Request-Id', request_id)
+
+server = create_server(app, FileSessions('/var/lib/board/sessions'), around=around, port=8080)
 ```
 
 

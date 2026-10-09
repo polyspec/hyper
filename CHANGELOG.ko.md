@@ -1,5 +1,5 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 1dd135c47754925eb502ef9ccd534068646a3b48a5389e6ed79e9e17ebb187e5 -->
+<!-- source-sha256: 873612c7f26deb336f97fbeda588f0bc51b5c37011ff61b4ae6f9510cbc84336 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
@@ -10,6 +10,7 @@
 - H14.1-7: 네이티브 template 확장을 tag `v0.0.5`의 php-ext release asset `polyspec-template-php-ext-php-0.0.5.zip`에서 build합니다. `config/template-ext.json`이 sha256으로 pin합니다. `make install`이 가져와 검증하고(`scripts/template-ext.mjs fetch`), `make ext`가 풀린 asset을 offline으로 build하며(`scripts/template-ext.mjs build`), PHPStan은 그 stub을 읽습니다. template 저장소의 복사본(`scripts/copy-template.mjs`, `template` target, `var/products/template` 복사본)은 제거했고, full-run key를 위한 `make template-tag`는 남겼습니다. 원래 acceptance(Composer 저장소에서 PIE 설치)는 프로젝트가 Packagist에 게시하지 않아 0.1 전에는 충족할 수 없었습니다. `tests/scripts/template-ext.test.mjs`와 `tests/scripts/template-pins.test.mjs`가 `tests/scripts/template-copy.test.mjs`를 대체합니다. 검증: `make ext`, `make test-php`, `make analyse-php`가 모두 exit 0입니다.
 - H17.1-1: `make release-proof`가 `make release-consumer`처럼 `npm_config_allow_remote=root`로 실행됩니다. 이 설정이 없으면 consumer 프로젝트의 `npm ci`가 template tarball 때문에 `EALLOWREMOTE`로 실패했습니다(npm 12.2.0). `release-consumer-lock`은 `all`을 유지합니다(H13.5-14). `tests/scripts/check-recipes.test.mjs`는 세 target 각각의 값을 요구합니다. 검증: `make release-proof TAG=v0.0.5`가 통과합니다.
 - H15.3-20: Python 서버가 HY-67의 연결 끊김 hook을 호출합니다. `App.open`은 `on_disconnect`를 받고 callable이 아니면 실패합니다. `App.respond`는 응답과 요청의 reply를 반환하고 `App.handle`은 응답을 반환합니다. `create_server`는 응답 hook 뒤에 응답을 쓰고, 쓰기가 `BrokenPipeError`, `ConnectionResetError`, `ConnectionAbortedError`로 실패하면 요청, 밀리초 단위의 경과 시간, reply로 hook을 한 번 호출합니다. 모든 쓰기가 성공하면 닫힘을 알지 못합니다. HY-67에 Python 서버를 적었습니다. 검증: `packages/hyper-python/tests/render/render_server.py`의 사례 3개가 변경 전에는 `on_disconnect`에 대한 `TypeError`로 실패했고 변경 뒤에는 통과합니다.
+- H15.3-21: Python 서버가 HY-97의 요청 hook `around`를 받습니다. `create_server`는 요청과, 요청의 session과 새 session의 cookie로 애플리케이션을 실행하는 `answer(request)`로 이를 호출하고, 반환된 `Response`를 보냅니다. `around`는 새 `Request.with_header(name, value)`로 요청을 바꾸거나, 응답을 바꾸거나, 혼자 응답할 수 있으며, 그때는 session을 열지 않고 애플리케이션의 hook을 실행하지 않습니다. 연결 끊김 hook은 마지막 `answer`의 요청과 reply를 받습니다. callable이 아닌 값은 서버를 만들 때 실패합니다. HY-97은 Node 서버의 `request` listener를 기준으로 규칙을 적습니다. 검증: `packages/hyper-python/tests/render/render_server.py`의 `AroundTest` 사례 6개가 `around`에 대한 `TypeError`로, `tests/test_modules.py`의 `with_header` 사례가 `AttributeError`로 변경 전에 실패했고 변경 뒤에는 모두 통과합니다.
 ## 0.0.5
 
 - H17.1: 버전 0.0.5를 `package.json`, npm 패키지 셋, `packages/hyper-php/composer.json`, `packages/hyper-python/pyproject.toml`, `tests/package-install/package.json`에, `@polyspec/hyper`와 `polyspec/hyper`의 requirement와 그 lock에, `tests/release-install`의 consumer 프로젝트에 정했고, `## Unreleased`가 이 section이 되었습니다. 검증: `make release-versions TAG=v0.0.5`, `make release-coverage`, `make release-consumer TAG=v0.0.5`, `make dependency-policy-check`와 버전을 읽는 unit test가 통과합니다.
