@@ -1,6 +1,6 @@
 {
   "name": "@polyspec/hyper-client",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "Browser extension for htmx that renders region JSON with template language templates",
   "license": "MIT",
   "type": "module",

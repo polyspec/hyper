@@ -1,5 +1,5 @@
 <!-- doc-id: dependencies -->
-<!-- source-sha256: 508a3fa18b8d6cd5124095e447c98361efe3eb5af93324ca231363e8e6f3d3f0 -->
+<!-- source-sha256: da0c9ef6036afa2e7ce67658a1d0f944dfabfd541778f6350f65e5bc2a75d6bc -->
 # 의존성
 
 [English](dependencies.md).
@@ -19,7 +19,7 @@
 | `laravel/pint` | `^1.0`, 1.30.4로 해석 | 개발 | Pint 1.31 이후 버전은 PHP 8.3을 요구하고, Composer 플랫폼은 PHP 8.2다. | 지원 PHP 범위가 8.3부터 시작할 때. |
 | `phpunit/phpunit` | `^11.5.57` | 개발 | PHPUnit 12 이후 버전은 PHP 8.3을 요구한다. | 지원 PHP 범위가 8.3부터 시작할 때. |
 | `phpstan/phpstan` | `^2.3.1` | 개발 | 최신 안정 릴리스다. PHPStan 2.3은 PHP 7.4 이후를 지원하므로 이 범위에는 호환성 고정이 없다. | 없음. |
-| `@polyspec/hyper-server`와 `@polyspec/hyper-build`의 `@polyspec/hyper-client` | `0.0.6` 정확히 | 런타임, build | Node 서버는 같은 저장소의 브라우저 package로 렌더하고, build package는 그것으로 manifest를 검사하고 read path를 계산하며 예약 템플릿 `hyper/data.tpl`을 읽으므로, 둘 다 그 정확한 버전을 요구한다. root package는 이것을 `packages/hyper-client`의 사본으로 override한다(HY-79). | package가 배포되어 한 버전 범위로 함께 출시될 때. |
+| `@polyspec/hyper-server`와 `@polyspec/hyper-build`의 `@polyspec/hyper-client` | `0.0.7` 정확히 | 런타임, build | Node 서버는 같은 저장소의 브라우저 package로 렌더하고, build package는 그것으로 manifest를 검사하고 read path를 계산하며 예약 템플릿 `hyper/data.tpl`을 읽으므로, 둘 다 그 정확한 버전을 요구한다. root package는 이것을 `packages/hyper-client`의 사본으로 override한다(HY-79). | package가 배포되어 한 버전 범위로 함께 출시될 때. |
 | `@polyspec/hyper-build`의 `esbuild`, `tailwindcss`, `@tailwindcss/node`, `@tailwindcss/oxide` | 정확히 고정 | build | build package는 client entry를 esbuild로 bundle하고 `--tailwind`의 stylesheet를 Tailwind CSS로 compile하므로(HY-77, HY-96), consumer는 이 저장소의 test가 실행한 릴리스로 빌드한다. root package는 Tailwind CSS 패키지를 `@polyspec/hyper-build`를 통해 설치하고, esbuild는 `make node-server`를 위해 직접 요구한다. | 각 도구를 최신 안정 버전으로 올리고 `make check`를 다시 실행한다. |
 | `@polyspec/template`, `@polyspec/template-compiler`, `polyspec/template` | tag `v0.0.5`의 release asset | 런타임, build | template 패키지가 npm과 Packagist에 없으므로, npm은 `@polyspec/template`과 `@polyspec/template-compiler`를 template 저장소의 GitHub Release `v0.0.5`의 tarball에서 URL로 설치하고 `package-lock.json`이 그 integrity로 고정한다(`.npmrc`의 `allow-remote=root`, root 의존성, workspace package의 override). Composer는 private root `composer.json`과 `examples/board/composer.json`의 sha1 `shasum`을 가진 `package` repository로 그 release의 zip에서 `polyspec/template`을 설치한다(HY-70). 공개 manifest는 정확한 version `0.0.5`를 요구한다. 네이티브 확장은 `make install`이 가져오고 `config/template-ext.json`이 sha256으로 pin한 tag `TEMPLATE_TAG`(`v0.0.5`)의 php-ext asset에서 온다(HY-78, H14.1-7). | template 패키지가 npm과 Packagist에 배포될 때. |
 | `docker.io/library/node:26.8.1-trixie-slim` | digest `sha256:c0753125a3789977aefe869cbebccf70e3cfd7ea84ca48547458f02e4f1d7146` | 테스트 | `tests/scripts/output-files.test.mjs`는 bind mount가 virtiofs인 Apple `container`의 Linux container에서 workspace의 Node 버전으로 build 복사를 실행한다(HY-68). digest는 테스트가 실행된 image를 고정한다. | Node 26.8.1이 더 이상 선언된 Node 버전이 아닐 때. 그때 새 버전의 image를 고정한다. |

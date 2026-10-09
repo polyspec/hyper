@@ -75,4 +75,4 @@ Depends on: wave 16. The release 0.0.5 sets the version 0.0.5 in every manifest 
 
 ## Wave 18
 
-Depends on: wave 17. The same name `polyspec/hyper` named the browser package on npm and the PHP server on Composer, and the directories `hyper-js` and `hyper-node` differed from the package names. Every package name now states its role, client, server or build, and every directory below `packages/` states the role and the language of a server, so a release archive name states the role and the registry of its package.
+Depends on: wave 17. The same name `polyspec/hyper` named the browser package on npm and the PHP server on Composer, and the directories `hyper-js` and `hyper-node` differed from the package names. Every package name now states its role, client, server or build, and every directory below `packages/` states the role and the language of a server, so a release archive name states the role and the registry of its package. The release 0.0.7 publishes the packages with these names.
