@@ -184,7 +184,7 @@
       "tests": [
         "tests/scripts/check-recipes.test.mjs",
         "tests/scripts/toolchain.test.mjs",
-        "tests/scripts/template-copy.test.mjs"
+        "tests/scripts/template-pins.test.mjs"
       ]
     },
     {
@@ -314,19 +314,20 @@
       ],
       "tests": [
         "tests/scripts/publish.test.mjs",
-        "tests/scripts/template-copy.test.mjs",
+        "tests/scripts/template-pins.test.mjs",
         "tests/scripts/build-assets.test.mjs"
       ]
     },
     {
       "paths": [
-        "scripts/copy-template.mjs"
+        "scripts/template-ext.mjs",
+        "config/template-ext.json"
       ],
       "targets": [
-        "analyse-php"
+        "ext"
       ],
       "tests": [
-        "tests/scripts/template-copy.test.mjs"
+        "tests/scripts/template-ext.test.mjs"
       ]
     },
     {
@@ -432,7 +433,7 @@
       "tests": [
         "tests/scripts/toolchain.test.mjs",
         "tests/scripts/no-symlinks.test.mjs",
-        "tests/scripts/template-copy.test.mjs"
+        "tests/scripts/template-pins.test.mjs"
       ]
     },
     {
@@ -441,7 +442,7 @@
       ],
       "tests": [
         "tests/scripts/toolchain.test.mjs",
-        "tests/scripts/template-copy.test.mjs",
+        "tests/scripts/template-pins.test.mjs",
         "tests/scripts/check-recipes.test.mjs",
         "tests/scripts/ci-workflow.test.mjs"
       ]

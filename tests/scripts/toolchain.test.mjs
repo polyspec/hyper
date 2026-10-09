@@ -18,7 +18,7 @@ const NPM = path.join(ROOT, 'var/tools/bin/npm');
 const COMPOSER = path.join(ROOT, 'var/tools/bin/composer');
 
 test('the recipes that run npm, Composer or PHP check the toolchain first, and install installs the tools first', () => {
-  for (const target of ['template', 'lint', 'templates-check']) {
+  for (const target of ['ext', 'lint', 'templates-check']) {
     assert.equal(dryRun(target)[0].trim(), 'node scripts/kit/check-toolchain.mjs', target);
   }
   const install = dryRun('install');
@@ -51,7 +51,7 @@ test('make starts a recipe line without shell syntax from its own PATH, so a rec
 test('every recipe starts npm and Composer by the absolute paths of var/tools/bin', (t) => {
   const directory = mkdtempSync(path.join(tmpdir(), 'hyper-recipes-'));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
-  const targets = ['install', 'template', 'packages', 'hyper-php-copy', 'package-check', 'test-scripts', 'test-node', 'test-php', 'lint', 'analyse-php', 'parity', 'server-parity', 'e2e', 'bundle-size'];
+  const targets = ['install', 'ext', 'packages', 'hyper-php-copy', 'package-check', 'test-scripts', 'test-node', 'test-php', 'lint', 'analyse-php', 'parity', 'server-parity', 'e2e', 'bundle-size'];
   const lines = [];
   for (const target of targets) {
     // An empty template directory makes the dry run print the recipe of the template copy.
@@ -65,7 +65,7 @@ test('every recipe starts npm and Composer by the absolute paths of var/tools/bi
 });
 
 test('no recipe queries a registry: installs follow their lock without an audit, and the package install test installs offline (HY-89)', () => {
-  const targets = ['install', 'template', 'packages', 'hyper-php-copy', 'package-check', 'test-scripts', 'test-js', 'test-node', 'test-php', 'lint', 'analyse-php', 'parity', 'server-parity', 'e2e', 'bundle-size', 'templates-check', 'documents-check'];
+  const targets = ['install', 'ext', 'packages', 'hyper-php-copy', 'package-check', 'test-scripts', 'test-js', 'test-node', 'test-php', 'lint', 'analyse-php', 'parity', 'server-parity', 'e2e', 'bundle-size', 'templates-check', 'documents-check'];
   const lines = targets.flatMap((target) => dryRun(target, { variables: ['TEMPLATE_DIR=var/products/template-dry-run'] }));
   const commands = lines.flatMap((line) => line.split(/&&|;|\|\||\s--\s/).map((part) => part.trim()));
   const npm = commands.filter((command) => command.startsWith(`${NPM} `));
@@ -113,7 +113,7 @@ test('only make install-tools, make install and make install-browser download, e
   // An empty template directory makes each dry run print the recipe of the template copy as well.
   const checks = /^CHECK_TARGETS := (.+)$/m.exec(readFileSync('Makefile', 'utf8'))[1].split(' ');
   assert.ok(checks.length > 10, checks.join(' '));
-  for (const target of [...checks, 'ext', 'template']) {
+  for (const target of [...checks, 'ext']) {
     const lines = dryRun(target, { variables: [`TEMPLATE_DIR=${directory}`] });
     assert.deepEqual(lines.filter((line) => /env -u/.test(line)), [], `${target} downloads`);
   }

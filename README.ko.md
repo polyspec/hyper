@@ -1,5 +1,5 @@
 <!-- doc-id: readme -->
-<!-- source-sha256: 3c635c2aab47b1bb9a8ef0f2f25cb9232590947926c73d14b28d116e73310da4 -->
+<!-- source-sha256: 9c9192fbddc1328b22771e84a14a58d2f7282782b08d2359eacbd9bbcfdf1aba -->
 # hyper
 
 [English](README.md).
@@ -40,11 +40,10 @@ hyper는 애플리케이션 하나에서 template 언어 템플릿으로 두 가
 
 ## 시작
 
-npm은 template package `@polyspec/template`과 `@polyspec/template-compiler`를 template release v0.0.5의 tarball에서, Composer는 `polyspec/template`을 그 zip에서 `package.json`, `composer.json`과 그 lock이 고정한 대로 설치한다(HY-70). 네이티브 확장을 위해서만 template 저장소가 이 저장소 옆(`../template`)에 tag `v0.0.5`(Makefile의 `TEMPLATE_TAG`)와 함께 있어야 한다. `make install`과 `make template`은 그 commit의 C 소스, stub, build script를 `var/products/template`에 복사하고, `make ext`와 PHPStan이 그 복사본을 읽는다(HY-78, HY-80).
+npm은 template package `@polyspec/template`과 `@polyspec/template-compiler`를 template release v0.0.5의 tarball에서, Composer는 `polyspec/template`을 그 zip에서 `package.json`, `composer.json`과 그 lock이 고정한 대로 설치한다(HY-70). npm은 template package `@polyspec/template`과 `@polyspec/template-compiler`를 template release v0.0.5의 tarball에서, Composer는 `polyspec/template`을 그 zip에서 `package.json`, `composer.json`과 그 lock이 고정한 대로 설치한다(HY-70). `make install`은 같은 release의 php-ext asset `polyspec-template-php-ext-php-0.0.5.zip`도 가져와 `config/template-ext.json`의 sha256으로 확인하고 `var/products/template-ext`에 풀며, `make ext`가 그것으로 네이티브 확장을 build하고 PHPStan이 stub을 읽는다(H14.1-7).
 
 ```sh
 make install
-make template
 make serve-demo
 ```
 

@@ -1,5 +1,5 @@
 <!-- doc-id: features -->
-<!-- source-sha256: 63907436fa14bc4aa321d23f98202972217154db2ea643d08736069dba48719e -->
+<!-- source-sha256: 7e92352696433fd27144bc35df4393b0d0c7620a54fcf8e328c89e791cf24914 -->
 # 기능 상태
 
 [English](features.md).
@@ -47,7 +47,7 @@
 | build-package | `@polyspec/hyper-build`는 bin `hyper-build-server`와 `hyper-build-assets`를 배포하고, 그 모듈은 배포하는 파일, Node, manifest가 요구하는 패키지만 import한다. consumer는 릴리스 tarball에서 이것을 설치하고 두 bin을 실행한다(HY-96) | implemented; CI run pending | `tests/scripts/package-source.test.mjs`, `make release-consumer` |
 | output-files | asset build와 server build는 복사한 출력 파일에 어떤 umask에서도 mode 0644를, 디렉터리에 0755를 주어 다른 사용자가 읽을 수 있게 하며, Linux container의 virtiofs bind mount는 이를 받아들인다(HY-68) | implemented; Darwin run pending | `make test-scripts`, Darwin에서 `make virtiofs-check` |
 | template-dir | asset build, template build, server build는 npm이 template release의 tarball에서 설치하는 template package `@polyspec/template`과 `@polyspec/template-compiler`를 package 이름으로 읽고, Composer는 `polyspec/template`을 template release의 zip에서 설치하며, 공개 manifest는 정확한 template version을 요구한다(HY-70) | implemented; CI run pending | `make test-scripts` |
-| template-copy | PHPStan과 네이티브 확장 build는 template 저장소를 확장 소스, stub, build script만 담는 선언한 복사본 `var/products/template`으로만 읽는다(HY-78) | implemented; CI run pending | `make test-scripts`, `make analyse-php`, `make test-php` |
+| template-ext | 네이티브 template 확장은 `config/template-ext.json`이 sha256으로 pin한 tag `TEMPLATE_TAG`(`v0.0.5`)의 php-ext release asset에서 build한다. `make install`이 가져와 검증하고, `make ext`가 offline으로 build하며, PHPStan은 그 stub을 읽는다. 어떤 recipe도 확장을 위해 template 저장소를 읽거나 복사하지 않는다(H14.1-7) | implemented; CI run pending | `tests/scripts/template-ext.test.mjs`, `tests/scripts/template-pins.test.mjs`, `make ext`, `make test-php` |
 | ci-suite | 전체 suite는 `main`의 push와 모든 수동 실행에 대해 GitHub에서 CI group마다 job 하나로 모든 target을 끝까지 실행하고, job summary와 각 target의 상태, 시간, 첫 실패 줄, 전체 log를 담은 보고서를 upload한다(HY-91) | implemented; CI run pending | `tests/kit/ci.test.mjs`, `tests/scripts/ci-workflow.test.mjs` |
 | ci-steps | 모든 GitHub workflow는 commit으로 pin한 action으로 시간 제한 없이 `ubuntu-26.04-arm`에서 실행하고, 모든 step은 make target 하나를 실행한다(HY-90) | implemented; CI run pending | `tests/scripts/ci-workflow.test.mjs` |
 | publish-main | 버전 0.1 전까지 변경은 pull request, merge queue, ruleset 없이 checklist의 모든 작업이 끝났을 때 `main`에 한 번 push한다. pre-push hook은 작업이 진행 중이면 push를 거부하고, `main`의 push는 CI workflow를 실행하며, 그 마지막 job `ci-passed`는 workflow의 다른 모든 job이 통과했을 때만 통과한다(HY-94) | implemented; CI run pending | `tests/kit/push-gate.test.mjs`, `tests/kit/git-hooks.test.mjs`, `tests/scripts/ci-workflow.test.mjs` |
@@ -61,7 +61,7 @@
 | atomic-outputs | 다른 process가 읽는 출력은 rename으로 파일 단위 publish하고, 파일 하나는 rename 한 번으로 쓰며, 설치한 사본은 의존성 tree가 같을 때만 publish하고, package manager 설치와 full run은 lock을 잡는다(HY-82) | implemented; CI run pending | `tests/scripts/publish.test.mjs`, `tests/scripts/toolchain.test.mjs`, `tests/kit/holder-lock.test.mjs` |
 | toolchain-pin | Node.js, npm, Composer는 정확한 release로, PHP와 Python은 minor release로 추적 파일에 pin한다. npm과 Composer는 digest로 확인해 checkout의 `var/tools`에 설치하고 `PATH`의 맨 앞에 둔다. `make toolchain-check`는 pin과 다른 모든 도구를 밝히고 CI 보고서는 실행 중인 release를 기록한다(HY-81) | implemented; CI run pending | `tests/scripts/toolchain.test.mjs`, `tests/scripts/template-copy.test.mjs`, `tests/kit/check-toolchain.test.mjs` |
 | kit-tools | push gate, 전체 실행 guard, Git hook, holder lock, 문서와 commit 검사, owner 검사, test runner, CI 보고서, toolchain 설치와 검사, release는 `scripts/kit/`와 `tests/kit/`에 있는 `polyspec/kit` tag `v0.0.9`의 vendor 복사본이며 `config/*.json`이 이를 설정한다. `.kit/kit.lock.json`과 다른 vendor 파일과 schema를 어기는 설정은 실패한다 | implemented; CI run pending | `make kit-check`, `make kit-test` |
-| template-tag | 선언한 복사본은 branch `main`이 어느 commit에 있든 template 저장소의 tag `TEMPLATE_TAG`(`v0.0.5`)의 commit이다. 없는 tag는 기대값과 실제값을 밝히며 복사를 실패시키고, `make template-tag`는 tag가 없는 checkout에 실패하며, 복사본이 그 commit을 담고 있는 동안 복사는 아무것도 쓰지 않고, `make template`은 아무것도 설치하지 않으며, CI는 template 저장소를 같은 tag로 checkout한다(HY-80) | implemented; CI run pending | `tests/scripts/template-copy.test.mjs`, `tests/scripts/ci-workflow.test.mjs`, `make template-tag` |
+| template-tag | full-run key는 branch `main`이 어느 commit에 있든 template 저장소의 tag `TEMPLATE_TAG`(`v0.0.5`)의 commit이다. 없는 tag는 `make template-tag`를 기대값과 실제값을 밝히며 실패시킨다(HY-80) | implemented; CI run pending | `tests/scripts/template-pins.test.mjs` |
 | query-values | 중첩 없이 순서대로 읽는 모든 쿼리 값과 원본 쿼리(HY-56) | implemented | `make test-php`, `make test-node` |
 | form-values | urlencoded body나 multipart body에서 중첩 없이 순서대로 읽는 모든 폼 값(HY-57) | implemented | `make test-php`, `make test-node` |
 | request-boundary | UTF-8 검사, 상세 없는 500 오류, 데이터 모델 검사, 강화한 세션 쿠키, 리다이렉트 검사, 실패 표시(HY-42 ~ HY-47) | implemented | `make test-php`, `make test-js`, `make e2e` |
