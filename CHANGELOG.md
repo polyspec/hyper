@@ -4,6 +4,11 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+
+## 0.0.8
+
+- H18.7: the version 0.0.8 is set in `package.json`, the three npm packages, `packages/hyper-server-php/composer.json`, `packages/hyper-server-python/pyproject.toml` and `tests/package-install/package.json`, in the requirements of `@polyspec/hyper-client` and `polyspec/hyper-server` with their locks, and in the consumer projects of `tests/release-install`; `## Unreleased` became this section. The archives of 0.0.8 are `polyspec-hyper-client-npm-0.0.8.tgz`, `polyspec-hyper-server-npm-0.0.8.tgz`, `polyspec-hyper-build-npm-0.0.8.tgz` and `polyspec-hyper-server-php-0.0.8.zip`. Verified: `make release-versions TAG=v0.0.8`, `make release-consumer TAG=v0.0.8` and `make dependency-policy-check` pass.
+
 - The Python server `polyspec-hyper-server` takes an optional write hook `written` in `create_server`, which the server calls with the request, the response that it wrote and whether the write ended; a write that failed because the client closed the connection reports it before the disconnect hook (HY-99, #H18.6).
 
 ## 0.0.7

@@ -1,5 +1,5 @@
 <!-- doc-id: waves -->
-<!-- source-sha256: 2c3c328286a5a61f63ee01b4fd925c8c82479ea52ed572ff69b726b601b9f56d -->
+<!-- source-sha256: e07736c939bbe1a7316f11712a29417dca3da83fc2db734977e873179e0fd6c7 -->
 # 웨이브 배경
 
 [English](waves.md).
@@ -76,4 +76,4 @@
 
 ## Wave 18
 
-의존: wave 17. 같은 이름 `polyspec/hyper`가 npm에서는 browser package를, Composer에서는 PHP server를 가리켰고, directory `hyper-js`와 `hyper-node`는 package 이름과 달랐다. 이제 모든 package 이름은 역할(client, server, build)을 밝히고, `packages/` 아래 모든 directory는 역할과 server의 언어를 밝히므로, release archive 이름이 그 package의 역할과 registry를 밝힌다. 릴리스 0.0.7은 이 이름으로 package를 배포한다.
+의존: wave 17. 같은 이름 `polyspec/hyper`가 npm에서는 browser package를, Composer에서는 PHP server를 가리켰고, directory `hyper-js`와 `hyper-node`는 package 이름과 달랐다. 이제 모든 package 이름은 역할(client, server, build)을 밝히고, `packages/` 아래 모든 directory는 역할과 server의 언어를 밝히므로, release archive 이름이 그 package의 역할과 registry를 밝힌다. 릴리스 0.0.7은 이 이름으로 package를 배포한다. 0.0.8 release가 Python 서버에 쓰기 hook을 준다.
