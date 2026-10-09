@@ -1,5 +1,5 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 9cf9964cc383baa2dcdded0fc7986e17f0aa067b233b2ca798b5b86ee1d5e2e9 -->
+<!-- source-sha256: ddd97d3101c42ae9e8ad850ea4920ccba23881a64132853eb7b9d34fbfb72fb7 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
@@ -8,6 +8,7 @@
 
 ## 0.0.8
 
+- H18.6-1: 쓰기 hook `written`이 요청 도착 이후의 경과 밀리초도 받는다(HY-99, #H18.6-1).
 - H18.7: `package.json`, npm package 3개, `packages/hyper-server-php/composer.json`, `packages/hyper-server-python/pyproject.toml`, `tests/package-install/package.json`와 `@polyspec/hyper-client`와 `polyspec/hyper-server`의 requirement와 그 lock, `tests/release-install`의 consumer project에 version 0.0.8을 적었고, `## Unreleased`가 이 절이 되었다. 0.0.8의 archive는 `polyspec-hyper-client-npm-0.0.8.tgz`, `polyspec-hyper-server-npm-0.0.8.tgz`, `polyspec-hyper-build-npm-0.0.8.tgz`, `polyspec-hyper-server-php-0.0.8.zip`이다. 확인: `make release-versions TAG=v0.0.8`, `make release-consumer TAG=v0.0.8`, `make dependency-policy-check` 통과.
 
 - Python 서버 `polyspec-hyper-server`가 `create_server`에서 선택적 쓰기 hook `written`을 받는다. 서버는 자기가 쓰려 한 요청마다 그 요청과 쓴 응답, 쓰기가 끝났는지로 이를 호출하고, client가 연결을 닫아 실패한 쓰기는 연결 끊김 hook보다 먼저 알린다(HY-99, #H18.6).
