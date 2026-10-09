@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: bdcb84e19cedf6246a6d00e931e30ad1712ff4bb77aabc5dbd4d54b7c8665535 -->
+<!-- source-sha256: c7a81aa11d5f4b92ef4f1f8f038273af1c2e14453dacf53fcc58df64a0c53a62 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H18.9: 문서가 Node.js와 Python 서버를 PHP 서버의 규칙을 가진 서버가 아니라 하나의 server protocol의 구현으로 적는다. deployment 문서가 렌더 주체를 서버로 적고, HY-62와 HY-92가 선택·데이터 내장·클라이언트 렌더 선언의 Python 형식을 적는다.
 - H18.8: README가 세 서버를 밝힌다. 도입부가 PHP·Node.js·Python 서버를 적고, SSR과 CSR mode와 router 문장이 서버를 적으며, json.json의 적합성 줄이 Python 서버를 적는다(HY-54).
 
 ## 0.0.8

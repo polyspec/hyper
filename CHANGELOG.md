@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- H18.9: the documents name the Node.js and the Python server as implementations of the one server protocol, not as servers with the rules of the PHP server; the deployment document names the server as the renderer, and HY-62 and HY-92 name the Python forms of the selection, the data embedding and the client-rendering declaration.
 - H18.8: README states the three servers: the introduction names the PHP, Node.js and Python server, the SSR and CSR modes and the router sentence name the server, and the conformance row of json.json names the Python server (HY-54).
 
 ## 0.0.8
