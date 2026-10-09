@@ -5,7 +5,7 @@ Environment: BOARD_DB (the SQLite database file), BOARD_SESSIONS (an absolute se
 lets the system assign the port; the server prints the port that it listens on), and as for PHP BOARD_BASE_PATH,
 BOARD_HTTPS=1, BOARD_FRAME_ANCESTORS (HY-45) and BOARD_TIME.
 
-Usage: python3 examples/board/python/main.py   (the working directory holds packages/hyper-python/src on
+Usage: python3 examples/board/python/main.py   (the working directory holds packages/hyper-server-python/src on
 PYTHONPATH, which `make server-parity-python` sets)."""
 
 from __future__ import annotations

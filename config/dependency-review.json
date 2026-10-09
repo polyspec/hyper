@@ -99,7 +99,7 @@
     },
     {
       "ecosystem": "pypi",
-      "manifest": "packages/hyper-python/pyproject.toml",
+      "manifest": "packages/hyper-server-python/pyproject.toml",
       "package": "setuptools",
       "version": "84.0.0",
       "latest": "84.0.0"
