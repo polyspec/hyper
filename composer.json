@@ -42,7 +42,7 @@
     ],
     "require": {
         "php": "^8.2",
-        "polyspec/hyper-server": "0.0.6",
+        "polyspec/hyper-server": "0.0.7",
         "polyspec/template": "0.0.5"
     },
     "require-dev": {

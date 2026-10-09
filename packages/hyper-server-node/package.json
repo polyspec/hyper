@@ -1,6 +1,6 @@
 {
   "name": "@polyspec/hyper-server",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "Node.js HTTP server for the region protocol: routes, loaders, actions, sessions, documents and JSON",
   "license": "MIT",
   "type": "module",
@@ -22,7 +22,7 @@
     "node": ">=26"
   },
   "dependencies": {
-    "@polyspec/hyper-client": "0.0.6",
+    "@polyspec/hyper-client": "0.0.7",
     "@polyspec/template": "0.0.5"
   }
 }
