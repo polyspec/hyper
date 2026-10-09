@@ -7,7 +7,7 @@ include scripts/kit/kit.mk
 BOARD := examples/board
 PHP_PACKAGE := packages/hyper-php
 JS_PACKAGE := packages/hyper-client
-NODE_PACKAGE := packages/hyper-node
+NODE_PACKAGE := packages/hyper-server-node
 BUILD_PACKAGE := packages/hyper-build
 PYTHON_PACKAGE := packages/hyper-python
 # The Python of the checks is the python3 of PATH; requires-python >= 3.11 and the Python pin of

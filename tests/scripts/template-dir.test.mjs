@@ -38,7 +38,7 @@ test('npm installs the template packages from the tarballs of the template relea
   const lock = read('package-lock.json');
   const version = read('packages/hyper-client/package.json').dependencies['@polyspec/template'];
   assert.match(version, /^\d+\.\d+\.\d+$/, 'packages/hyper-client requires an exact template version');
-  assert.equal(read('packages/hyper-node/package.json').dependencies['@polyspec/template'], version);
+  assert.equal(read('packages/hyper-server-node/package.json').dependencies['@polyspec/template'], version);
   for (const name of PACKAGES) assert.equal(read('packages/hyper-build/package.json').dependencies[name], version, name);
   for (const name of PACKAGES) {
     const tarball = `https://github.com/polyspec/template/releases/download/v${version}/${name.slice(1).replace('/', '-')}-npm-${version}.tgz`;

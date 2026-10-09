@@ -16,7 +16,7 @@
     },
     {
       "kind": "npm",
-      "directory": "packages/hyper-node",
+      "directory": "packages/hyper-server-node",
       "name": "@polyspec/hyper-server"
     },
     {
@@ -33,7 +33,7 @@
   "manifests": {
     "package.json": "version",
     "packages/hyper-client/package.json": "archive",
-    "packages/hyper-node/package.json": "archive",
+    "packages/hyper-server-node/package.json": "archive",
     "packages/hyper-build/package.json": "archive",
     "packages/hyper-php/composer.json": "archive",
     "packages/hyper-python/pyproject.toml": "git-tag"

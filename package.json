@@ -24,7 +24,7 @@
   "dependencies": {
     "@polyspec/hyper-build": "file:packages/hyper-build",
     "@polyspec/hyper-client": "file:packages/hyper-client",
-    "@polyspec/hyper-server": "file:packages/hyper-node",
+    "@polyspec/hyper-server": "file:packages/hyper-server-node",
     "@polyspec/template": "https://github.com/polyspec/template/releases/download/v0.0.5/polyspec-template-npm-0.0.5.tgz",
     "@polyspec/template-compiler": "https://github.com/polyspec/template/releases/download/v0.0.5/polyspec-template-compiler-npm-0.0.5.tgz"
   },

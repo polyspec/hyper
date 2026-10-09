@@ -5,6 +5,7 @@
 
 ## Unreleased
 
+- H18.2: the Node server package `@polyspec/hyper-server` moved from `packages/hyper-node` to `packages/hyper-server-node` (HY-98), with the paths of the Makefile, the scripts, the tests, the configuration, the documents and the locks. Verified: the case of the Node server in `tests/scripts/package-names.test.mjs` failed with `packages/hyper-server-node/package.json is missing` before the move and passes after it; the locks that npm writes for the moved package equal the committed ones; `make test-node`, `make test-js` and `make package-check` pass.
 - H18.1: HY-98 states that the name of every package states its role and that its directory states the role and the language of a server. The browser package `@polyspec/hyper` in `packages/hyper-js` is now `@polyspec/hyper-client` in `packages/hyper-client`, with the module `@polyspec/hyper-client/templates-index`, the requirements of `@polyspec/hyper-server` and `@polyspec/hyper-build` and the locks; its release archive becomes `polyspec-hyper-client-npm-X.Y.Z.tgz`. Verified: `tests/scripts/package-names.test.mjs` failed with `packages/hyper-client/package.json is missing` on the tree before the change and passes after it; `make test-scripts` for the package, build, template and parity script tests, `make test-js`, `make test-node` and `make package-check` pass.
 
 ## 0.0.6

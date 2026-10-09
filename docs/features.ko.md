@@ -1,5 +1,5 @@
 <!-- doc-id: features -->
-<!-- source-sha256: 419cce887b9454556e25efde8de6b40df7c484dee134fda68e5721e5b882f6a3 -->
+<!-- source-sha256: 96b34a9c4966aeabda18aefd9ee2d4fbcbade421dcba13e609376c3dada5adb5 -->
 # 기능 상태
 
 [English](features.md).
@@ -29,7 +29,7 @@
 | php-analysis | 레벨 `max`의 PHPStan이 기준선이나 무시하는 오류 없이 PHP 서버 패키지의 소스와 테스트를 검사한다 | implemented | `make analyse-php` |
 | hyper-client | 브라우저 코드: 영역과 문서 렌더, htmx 확장, 클라이언트 렌더 | implemented | `make test-js`, `make e2e` |
 | hyper-php | PHP 서버: 라우트, 액션, CSRF, flash, 바뀐 주제, 기본 경로, 문서와 JSON | implemented | `make test-php` |
-| hyper-node | PHP 서버의 규칙, 파일 session, PHP와 같은 바이트의 JSON을 갖춘 Node.js 서버 `@polyspec/hyper-server`와 board 예제 서버(HY-54) | implemented | `make test-node`, `make node-server` |
+| hyper-server-node | PHP 서버의 규칙, 파일 session, PHP와 같은 바이트의 JSON을 갖춘 Node.js 서버 `@polyspec/hyper-server`와 board 예제 서버(HY-54) | implemented | `make test-node`, `make node-server` |
 | python-request-hook | Python 서버 `create_server`의 요청 hook `around`. 요청과 `answer`를 받고, `Request.with_header`로 요청을 바꾸거나 응답을 바꾸며, session과 애플리케이션의 hook 없이 혼자 응답할 수 있다 (HY-97) | implemented; CI run pending | `make test-python`, `make test-python-render` |
 | hyper-python | PHP 서버의 규칙을 가진 Python 서버 `polyspec-hyper`. template Python package로 렌더하고 file session과 `http.server` 서버, board 예제 서버를 둔다 (H15.3) | implemented; CI run pending | `make test-python`, `make test-python-render`, `make server-parity-python` |
 | route-regions | 자기 로더를 가진 페이지 안의 라우트 영역(HY-30) | implemented | `make test-php`, `make parity` |
@@ -52,7 +52,7 @@
 | ci-suite | 전체 suite는 `main`의 push와 모든 수동 실행에 대해 GitHub에서 CI group마다 job 하나로 모든 target을 끝까지 실행하고, job summary와 각 target의 상태, 시간, 첫 실패 줄, 전체 log를 담은 보고서를 upload한다(HY-91) | implemented; CI run pending | `tests/kit/ci.test.mjs`, `tests/scripts/ci-workflow.test.mjs` |
 | ci-steps | 모든 GitHub workflow는 commit으로 pin한 action으로 시간 제한 없이 `ubuntu-26.04-arm`에서 실행하고, 모든 step은 make target 하나를 실행한다(HY-90) | implemented; CI run pending | `tests/scripts/ci-workflow.test.mjs` |
 | publish-main | 버전 0.1 전까지 변경은 pull request, merge queue, ruleset 없이 checklist의 모든 작업이 끝났을 때 `main`에 한 번 push한다. pre-push hook은 작업이 진행 중이면 push를 거부하고, `main`의 push는 CI workflow를 실행하며, 그 마지막 job `ci-passed`는 workflow의 다른 모든 job이 통과했을 때만 통과한다(HY-94) | implemented; CI run pending | `tests/kit/push-gate.test.mjs`, `tests/kit/git-hooks.test.mjs`, `tests/scripts/ci-workflow.test.mjs` |
-| no-live-inputs | 어떤 recipe도 registry에 질의하지 않고, 모든 recipe는 npm, Composer를 offline으로 실행하며 설치 target만 download하고, 없는 download는 그것을 만드는 설치 target을 밝히며, `tests/package-install`은 lock에서 offline 설치하며, test는 event로 순서를 정하고, test 서버는 system이 정한 port에서 listen하며, 서버 시작은 진행을 출력하고, 빈 목록은 검사를 실패시킨다(HY-89) | implemented | `tests/scripts/toolchain.test.mjs`, `tests/scripts/board-servers.test.mjs`, `tests/scripts/check-bundle-size.test.mjs`, `packages/hyper-node/tests/http.test.ts` |
+| no-live-inputs | 어떤 recipe도 registry에 질의하지 않고, 모든 recipe는 npm, Composer를 offline으로 실행하며 설치 target만 download하고, 없는 download는 그것을 만드는 설치 target을 밝히며, `tests/package-install`은 lock에서 offline 설치하며, test는 event로 순서를 정하고, test 서버는 system이 정한 port에서 listen하며, 서버 시작은 진행을 출력하고, 빈 목록은 검사를 실패시킨다(HY-89) | implemented | `tests/scripts/toolchain.test.mjs`, `tests/scripts/board-servers.test.mjs`, `tests/scripts/check-bundle-size.test.mjs`, `packages/hyper-server-node/tests/http.test.ts` |
 | owner-check | 추적하는 모든 경로는 `config/owner-checks.json`에 owner를 가지고, `make owner-validate`가 이를 검사하며, `make owner-check`는 바뀐 경로의 owner를 실행한다(HY-88) | implemented; CI run pending | `tests/kit/owner-check.test.mjs`, `tests/scripts/ignored-files.test.mjs` |
 | run-resources | run의 서버와 임시 디렉터리는 run이 끝날 때, 실패할 때, SIGINT와 SIGTERM에서 멈추고 지워지며, test는 process가 끝난 뒤에만 디렉터리를 지운다(HY-87) | implemented | `tests/scripts/board-servers.test.mjs`, `tests/scripts/check-parity.test.mjs`, `tests/scripts/serve-demo.test.mjs` |
 | all-checks | 여러 검사를 가진 recipe는 각 검사를 끝까지 실행하고 실패한 모든 검사를 밝힌다(HY-86) | implemented | `tests/scripts/check-recipes.test.mjs` |

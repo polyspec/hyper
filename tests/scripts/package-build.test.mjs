@@ -16,7 +16,7 @@ const NPM = resolve('var/tools/bin/npm');
 requireBuilt('install', 'node_modules/typescript/package.json', 'var/tools/bin/npm');
 requireBuilt('packages', 'node_modules/@polyspec/hyper-client/dist/index.d.ts');
 
-for (const directory of ['packages/hyper-client', 'packages/hyper-node']) {
+for (const directory of ['packages/hyper-client', 'packages/hyper-server-node']) {
   test(`npm run build compiles ${directory} without a bin link`, { timeout: 60_000 }, (t) => {
     const output = mkdtempSync(join(tmpdir(), 'hyper-package-build-'));
     t.after(() => rmSync(output, { recursive: true, force: true }));
