@@ -14,7 +14,7 @@ from polyspec.hyper.result import Result
 from polyspec.hyper.session import ArraySession
 
 TESTS = Path(__file__).resolve().parents[2]
-FIXTURES = TESTS.parent / 'hyper-php' / 'tests' / 'fixtures'
+FIXTURES = TESTS.parent / 'hyper-server-php' / 'tests' / 'fixtures'
 PROGRAM = FIXTURES.parent / 'build' / 'server'
 TOKEN = '00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff'
 

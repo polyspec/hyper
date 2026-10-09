@@ -4,7 +4,7 @@
 // into a staging directory of this process and published file by file (packages/hyper-build/lib/publish.mjs, HY-82),
 // so a reader never finds a file missing.
 //
-// Usage: node scripts/copy-package.mjs --path packages/hyper-php --output var/products/hyper-php
+// Usage: node scripts/copy-package.mjs --path packages/hyper-server-php --output var/products/hyper-server-php
 import { rmSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';

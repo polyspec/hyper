@@ -13,6 +13,7 @@ const release = JSON.parse(readFileSync(join(repository, 'config/release.json'),
 const PACKAGES = [
   { directory: 'packages/hyper-client', kind: 'npm', name: '@polyspec/hyper-client' },
   { directory: 'packages/hyper-server-node', kind: 'npm', name: '@polyspec/hyper-server' },
+  { directory: 'packages/hyper-server-php', kind: 'composer', name: 'polyspec/hyper-server' },
   { directory: 'packages/hyper-build', kind: 'npm', name: '@polyspec/hyper-build' },
 ];
 

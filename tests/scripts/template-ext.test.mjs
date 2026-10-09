@@ -39,5 +39,5 @@ test('make install fetches the php-ext asset through $(ONLINE) and verifies it (
 
 test('the template repository is not copied any more, and the stub of PHPStan reads the unpacked asset (H14.1-7)', () => {
   assert.doesNotMatch(read('Makefile'), /copy-template/);
-  assert.match(read('packages/hyper-php/phpstan.neon'), /var\/products\/template-ext\/src\/polyspec_template\.stub\.php/);
+  assert.match(read('packages/hyper-server-php/phpstan.neon'), /var\/products\/template-ext\/src\/polyspec_template\.stub\.php/);
 });

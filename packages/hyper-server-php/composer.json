@@ -1,5 +1,5 @@
 {
-    "name": "polyspec/hyper",
+    "name": "polyspec/hyper-server",
     "version": "0.0.6",
     "description": "Server side of the region protocol: routes, actions and region JSON for template language layouts",
     "type": "library",

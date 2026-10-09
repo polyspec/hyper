@@ -62,8 +62,8 @@ test('npm installs the template package as one copy inside this checkout', () =>
 });
 
 test('Composer installs the template PHP package from the zip of the template release, and PHPStan reads the stub of the unpacked php-ext asset', () => {
-  const version = JSON.parse(readFileSync('packages/hyper-php/composer.json', 'utf8')).require['polyspec/template'];
-  assert.match(version, /^\d+\.\d+\.\d+$/, 'packages/hyper-php requires an exact template version');
+  const version = JSON.parse(readFileSync('packages/hyper-server-php/composer.json', 'utf8')).require['polyspec/template'];
+  assert.match(version, /^\d+\.\d+\.\d+$/, 'packages/hyper-server-php requires an exact template version');
   for (const manifest of ['composer.json', 'examples/board/composer.json']) {
     const { repositories, require } = JSON.parse(readFileSync(manifest, 'utf8'));
     assert.equal(require['polyspec/template'], version, manifest);
@@ -76,6 +76,6 @@ test('Composer installs the template PHP package from the zip of the template re
     const lock = JSON.parse(readFileSync(manifest.replace(/\.json$/, '.lock'), 'utf8'));
     assert.deepEqual(lock.packages.find(({ name }) => name === 'polyspec/template').dist, packages[0].package.dist, manifest);
   }
-  const scanned = /scanFiles:\n\s+- (\S+)/.exec(readFileSync('packages/hyper-php/phpstan.neon', 'utf8'))[1];
-  assert.equal(resolve('packages/hyper-php', scanned), join(repository, 'var/products/template-ext/src/polyspec_template.stub.php'));
+  const scanned = /scanFiles:\n\s+- (\S+)/.exec(readFileSync('packages/hyper-server-php/phpstan.neon', 'utf8'))[1];
+  assert.equal(resolve('packages/hyper-server-php', scanned), join(repository, 'var/products/template-ext/src/polyspec_template.stub.php'));
 });

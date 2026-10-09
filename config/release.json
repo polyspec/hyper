@@ -26,8 +26,8 @@
     },
     {
       "kind": "composer",
-      "directory": "packages/hyper-php",
-      "name": "polyspec/hyper"
+      "directory": "packages/hyper-server-php",
+      "name": "polyspec/hyper-server"
     }
   ],
   "manifests": {
@@ -35,7 +35,7 @@
     "packages/hyper-client/package.json": "archive",
     "packages/hyper-server-node/package.json": "archive",
     "packages/hyper-build/package.json": "archive",
-    "packages/hyper-php/composer.json": "archive",
+    "packages/hyper-server-php/composer.json": "archive",
     "packages/hyper-python/pyproject.toml": "git-tag"
   },
   "notReleased": {
@@ -43,7 +43,7 @@
     "tests/release-install/npm/package.json": "the npm consumer project that installs the release tarballs",
     "tests/release-install/composer/composer.json": "the Composer consumer project that installs the release zips",
     "examples/board/composer.json": "the example application, which installs the packages from the checkout",
-    "composer.json": "the private development root of packages/hyper-php, which resolves the packages from the checkout"
+    "composer.json": "the private development root of packages/hyper-server-php, which resolves the packages from the checkout"
   },
   "goModules": {},
   "consumers": {
@@ -72,7 +72,7 @@
     "composer": {
       "directory": "tests/release-install/composer",
       "smoke": {
-        "polyspec/hyper": [
+        "polyspec/hyper-server": [
           "php",
           "-r",
           "require 'vendor/autoload.php'; exit(class_exists('Polyspec\\\\Hyper\\\\App') ? 0 : 1);"

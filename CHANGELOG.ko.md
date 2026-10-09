@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 11c6f7fb67cc590555f2aeb39605fc4b94786bc7d77f3abb8676d34fa4215cbe -->
+<!-- source-sha256: 86671266524e0eb07d764c7c9bf32d91be330aa30044551ee3569bcdf9d64d8d -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- H18.3: `packages/hyper-php`의 Composer package `polyspec/hyper`는 이제 `packages/hyper-server-php`의 `polyspec/hyper-server`이며(HY-98), 복사본 `var/products/hyper-server-php`, private root `composer.json`과 `examples/board/composer.json`의 requirement와 그 lock, release 설정, 문서가 함께 바뀌었습니다. release archive는 `polyspec-hyper-server-php-X.Y.Z.zip`이 됩니다. HY-98은 H18.2의 Node server directory도 밝힙니다. 검증: `tests/scripts/package-names.test.mjs`의 PHP server case가 변경 전 tree에서 `packages/hyper-server-php/composer.json is missing`으로 실패했고 변경 후 통과합니다. `composer update polyspec/hyper polyspec/hyper-server`가 두 lock을 썼습니다. `make release-versions TAG=v0.0.6`이 모든 manifest를 읽습니다.
 - H18.2: Node server package `@polyspec/hyper-server`를 `packages/hyper-node`에서 `packages/hyper-server-node`로 옮겼고(HY-98), Makefile, script, test, 설정, 문서, lock의 경로를 함께 바꿨습니다. 검증: `tests/scripts/package-names.test.mjs`의 Node server case가 이동 전에 `packages/hyper-server-node/package.json is missing`으로 실패했고 이동 후 통과합니다. 옮긴 package에 대해 npm이 쓰는 lock이 commit한 lock과 같습니다. `make test-node`, `make test-js`, `make package-check`가 통과합니다.
 - H18.1: HY-98은 모든 package 이름이 역할을 밝히고, directory가 역할과 server의 언어를 밝힌다고 정합니다. `packages/hyper-js`의 browser package `@polyspec/hyper`는 이제 `packages/hyper-client`의 `@polyspec/hyper-client`이며, module `@polyspec/hyper-client/templates-index`, `@polyspec/hyper-server`와 `@polyspec/hyper-build`의 requirement, lock이 함께 바뀌었습니다. release archive는 `polyspec-hyper-client-npm-X.Y.Z.tgz`가 됩니다. 검증: `tests/scripts/package-names.test.mjs`가 변경 전 tree에서 `packages/hyper-client/package.json is missing`으로 실패했고 변경 후 통과합니다. package, build, template, parity script test의 `make test-scripts`, `make test-js`, `make test-node`, `make package-check`가 통과합니다.
 

@@ -1,5 +1,5 @@
 <!-- doc-id: features -->
-<!-- source-sha256: 96b34a9c4966aeabda18aefd9ee2d4fbcbade421dcba13e609376c3dada5adb5 -->
+<!-- source-sha256: a25965b9a809b5eb6f6db8e47b4ebd37be41458aa85f0a3d858dfa1fb9c9f6f6 -->
 # 기능 상태
 
 [English](features.md).
@@ -28,7 +28,7 @@
 | absent-route-regions | 로더가 null을 돌려주는 라우트 영역은 응답에 없다. 라우트 템플릿이 포함하거나 배치하는 템플릿도 라우트 영역을 배치할 수 있다. 브라우저는 모든 라우트 영역의 요소를 확인한다(HY-30, HY-75) | implemented | `make test-js`, `make test-php`, `make test-node`, `make templates-check`, `make server-parity` |
 | php-analysis | 레벨 `max`의 PHPStan이 기준선이나 무시하는 오류 없이 PHP 서버 패키지의 소스와 테스트를 검사한다 | implemented | `make analyse-php` |
 | hyper-client | 브라우저 코드: 영역과 문서 렌더, htmx 확장, 클라이언트 렌더 | implemented | `make test-js`, `make e2e` |
-| hyper-php | PHP 서버: 라우트, 액션, CSRF, flash, 바뀐 주제, 기본 경로, 문서와 JSON | implemented | `make test-php` |
+| hyper-server-php | PHP 서버: 라우트, 액션, CSRF, flash, 바뀐 주제, 기본 경로, 문서와 JSON | implemented | `make test-php` |
 | hyper-server-node | PHP 서버의 규칙, 파일 session, PHP와 같은 바이트의 JSON을 갖춘 Node.js 서버 `@polyspec/hyper-server`와 board 예제 서버(HY-54) | implemented | `make test-node`, `make node-server` |
 | python-request-hook | Python 서버 `create_server`의 요청 hook `around`. 요청과 `answer`를 받고, `Request.with_header`로 요청을 바꾸거나 응답을 바꾸며, session과 애플리케이션의 hook 없이 혼자 응답할 수 있다 (HY-97) | implemented; CI run pending | `make test-python`, `make test-python-render` |
 | hyper-python | PHP 서버의 규칙을 가진 Python 서버 `polyspec-hyper`. template Python package로 렌더하고 file session과 `http.server` 서버, board 예제 서버를 둔다 (H15.3) | implemented; CI run pending | `make test-python`, `make test-python-render`, `make server-parity-python` |
