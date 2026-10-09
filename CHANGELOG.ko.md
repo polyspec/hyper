@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 4311d501c7ef66633fe263f8bdf823be602e49aadce3d6c5262ad098872ffdca -->
+<!-- source-sha256: 41a69fdd5460b182527460a7323201b42d56091bda8a9b3c6417dbf5c6fdf7ec -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- H18.3-1: H18.1과 H18.3이 바꾼 lock에 대해 review record를 다시 썼습니다. 검증: `make dependency-policy-check`가 세 lock이 review 뒤에 바뀌었다고 보고했고, `make dependency-review RECORD=1`이 예외 없는 새 stable release와 advisory를 찾지 않았으며, `make dependency-policy-check`와 `make dependency-policy-mutation-check`가 통과합니다.
 - H18.4: `packages/hyper-python`의 Python distribution `polyspec-hyper`는 이제 `packages/hyper-server-python`의 `polyspec-hyper-server`이며(HY-98), Makefile, script, 설정, 문서의 경로가 함께 바뀌었습니다. import package `polyspec.hyper`는 유지됩니다. `tests/scripts/package-names.test.mjs`는 `packages/`에 HY-98의 directory만 있는지도 검사합니다. 검증: Python server case가 이동 전에 `packages/hyper-server-python/pyproject.toml is missing`으로 실패했고 이동 후 6개 case가 통과합니다. `make test-python`이 통과합니다.
 - H18.3: `packages/hyper-php`의 Composer package `polyspec/hyper`는 이제 `packages/hyper-server-php`의 `polyspec/hyper-server`이며(HY-98), 복사본 `var/products/hyper-server-php`, private root `composer.json`과 `examples/board/composer.json`의 requirement와 그 lock, release 설정, 문서가 함께 바뀌었습니다. release archive는 `polyspec-hyper-server-php-X.Y.Z.zip`이 됩니다. HY-98은 H18.2의 Node server directory도 밝힙니다. 검증: `tests/scripts/package-names.test.mjs`의 PHP server case가 변경 전 tree에서 `packages/hyper-server-php/composer.json is missing`으로 실패했고 변경 후 통과합니다. `composer update polyspec/hyper polyspec/hyper-server`가 두 lock을 썼습니다. `make release-versions TAG=v0.0.6`이 모든 manifest를 읽습니다.
 - H18.2: Node server package `@polyspec/hyper-server`를 `packages/hyper-node`에서 `packages/hyper-server-node`로 옮겼고(HY-98), Makefile, script, test, 설정, 문서, lock의 경로를 함께 바꿨습니다. 검증: `tests/scripts/package-names.test.mjs`의 Node server case가 이동 전에 `packages/hyper-server-node/package.json is missing`으로 실패했고 이동 후 통과합니다. 옮긴 package에 대해 npm이 쓰는 lock이 commit한 lock과 같습니다. `make test-node`, `make test-js`, `make package-check`가 통과합니다.
