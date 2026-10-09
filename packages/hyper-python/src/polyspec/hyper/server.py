@@ -1,9 +1,9 @@
 """Serves an application over `http.server` with sessions in files: every request of the socket server goes to
-`App.respond`, as the Node server serves an application over `node:http` (HY-54). A request that answers a body
-larger than the body limit reads no more of it (HY-59), a new session sets its cookie first (HY-45), a response
-whose write fails because the client closed the connection is reported to the disconnect hook (HY-67), and a GET
-or HEAD request whose path names a file of the public directory receives the file, as the PHP built-in server
-serves its document root."""
+`App.respond`, as the Node server serves an application over `node:http` (HY-54), through the request hook `around`
+when the application gives one (HY-97). A request that answers a body larger than the body limit reads no more of
+it (HY-59), a new session sets its cookie first (HY-45), a response whose write fails because the client closed the
+connection is reported to the disconnect hook (HY-67), and a GET or HEAD request whose path names a file of the
+public directory receives the file, as the PHP built-in server serves its document root."""
 
 from __future__ import annotations
 
@@ -11,10 +11,11 @@ import re
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from typing import Optional
+from typing import Callable, Optional
 
 from .app import App
 from .file_sessions import FileSessions, cookie_header, cookie_name
+from .reply import Reply
 from .request import Request
 from .response import Response
 
@@ -28,11 +29,21 @@ _PUBLIC_PATH = re.compile(r'^(\/[A-Za-z0-9_-][A-Za-z0-9._-]*)+$')
 
 
 def create_server(app: App, sessions: FileSessions, files: Optional[str] = None, host: str = '127.0.0.1',
-                  port: int = 0) -> ThreadingHTTPServer:
+                  port: int = 0,
+                  around: Optional[Callable[[Request, Callable[[Request], Response]], Response]] = None
+                  ) -> ThreadingHTTPServer:
     """Returns a server that answers every request with the application. `files` names an absolute directory of
-    public files: a GET or HEAD request whose path names a file in it receives the file."""
+    public files: a GET or HEAD request whose path names a file in it receives the file.
+
+    `around` is called once for every other request with the request as the server built it and a function
+    `answer(request)` that runs the application for a request with the session of the request and returns the
+    response with the cookie of a new session; the server sends the `Response` that `around` returns. `around` may
+    call `answer` with a changed request, change its response or return its own response without calling it, and
+    then no session is opened and no hook of the application runs (HY-97)."""
     if files is not None and (not Path(files).is_absolute() or not Path(files).is_dir()):
         raise ValueError(f'{files} is not an absolute directory')
+    if around is not None and not callable(around):
+        raise ValueError('around must be a callable or None')
     app_address = app, sessions, files
 
     class Handler(BaseHTTPRequestHandler):
@@ -72,25 +83,37 @@ def create_server(app: App, sessions: FileSessions, files: Optional[str] = None,
             request = Request(self.command, Request.target_path(self.path), _headers(self.headers),
                               Request.target_query(self.path), body, cookies=_cookies(self.headers.get('Cookie')),
                               https=application.https, body_size=size)
-            session = session_store.open(request.cookie(cookie_name(application.https)))
-            try:
-                response, reply = application.respond(request, session, started)
-            finally:
-                session.close()
-            created = session.created
-            if created is not None:
+            # The request and the reply of the last answer of the application, which the disconnect hook receives
+            # (HY-67, HY-97).
+            answered: list[tuple[Request, Reply]] = []
+
+            def answer(given: Request) -> Response:
+                session = session_store.open(given.cookie(cookie_name(application.https)))
+                try:
+                    response, reply = application.respond(given, session, started)
+                finally:
+                    session.close()
+                answered[:] = [(given, reply)]
+                created = session.created
+                if created is None:
+                    return response
                 # A new session sets its cookie first, as PHP does when the session starts (HY-45).
                 existing = response.headers.get('Set-Cookie', [])
-                response = Response(response.status, {**response.headers,
-                                                      'Set-Cookie': [cookie_header(created, application.https),
-                                                                     *(existing if isinstance(existing, list) else [])]},
-                                    response.body)
+                return Response(response.status, {**response.headers,
+                                                  'Set-Cookie': [cookie_header(created, application.https),
+                                                                 *(existing if isinstance(existing, list) else [])]},
+                                response.body)
+
+            response = answer(request) if around is None else around(request, answer)
+            if not isinstance(response, Response):
+                raise TypeError(f'around returned {type(response).__name__}, not a Response')
             try:
                 self.send(response)
             except CLOSED:
                 # HY-67: the write of the response failed because the client closed the connection.
                 self.close_connection = True
-                application.disconnected(request, started, reply)
+                if answered:
+                    application.disconnected(answered[0][0], started, answered[0][1])
 
         def read_body(self, limit: int) -> tuple[bytes, int]:
             """Reads the request body and its size. A body larger than the limit gives no bytes and the size read

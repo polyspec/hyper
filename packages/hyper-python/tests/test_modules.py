@@ -57,6 +57,19 @@ class RequestValuesTest(unittest.TestCase):
         self.assertEqual('/list', Request('GET', '/x', {'HX-Current-URL': 'http://host.example/list?a=b'}).current_path())
         self.assertIsNone(Request('GET', '/x').current_path())
 
+    def test_a_copy_with_a_header_sets_the_header_by_its_name_without_case(self) -> None:
+        # HY-97: the request hook of the server adds a header to the request that it gives to the application.
+        request = Request('POST', '/x', {'Accept': 'text/html', 'Content-Type': 'application/x-www-form-urlencoded'},
+                          'a=1', b'name=n', cookies={'c': 'v'}, https=True).with_selection('s')
+        copy = request.with_header('accept', 'application/json').with_header('X-Request-Id', 'r1')
+        self.assertEqual('application/json', copy.header('Accept'))
+        self.assertEqual('r1', copy.header('x-request-id'))
+        self.assertEqual('text/html', request.header('Accept'))
+        self.assertIsNone(request.header('X-Request-Id'))
+        self.assertEqual(('POST', '/x', 'a=1', 'n', 'v', True, 's'),
+                         (copy.method, copy.path(), copy.raw_query(), copy.form_string('name'), copy.cookie('c'),
+                          copy.https, copy.selection()))
+
     def test_the_selection_of_a_request(self) -> None:
         request = Request('GET', '/x').with_selection({'host': 'a.test'})
         self.assertEqual({'host': 'a.test'}, request.selection())

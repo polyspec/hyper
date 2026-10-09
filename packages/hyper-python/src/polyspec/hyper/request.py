@@ -49,6 +49,11 @@ class Request:
         """Returns a copy with the routed path (base path removed) and the route parameters."""
         return self._copy(path=path, params=params)
 
+    def with_header(self, name: str, value: str) -> 'Request':
+        """Returns a copy whose header of the name, compared without case as `header` reads it, has the value
+        (HY-97)."""
+        return self._copy(headers={**self._headers, name.lower(): value})
+
     def with_selection(self, value: object) -> 'Request':
         """Returns a copy that carries the value of the choice of the client rendering selection (HY-62)."""
         return self._copy(selection=value)
@@ -169,10 +174,10 @@ class Request:
         return '' if question < 0 else before[question + 1:]
 
     def _copy(self, **changes) -> 'Request':
-        state = {'path': self._path, 'flash': self._flash, 'csrf_token': self._csrf_token,
+        state = {'path': self._path, 'headers': self._headers, 'flash': self._flash, 'csrf_token': self._csrf_token,
                  'params': self._params, 'selection': self._selection, 'body_size': self._given_body_size}
         state.update(changes)
-        return Request(self.method, state['path'], self._headers, self._query, self._body, state['flash'],
+        return Request(self.method, state['path'], state['headers'], self._query, self._body, state['flash'],
                        state['csrf_token'], state['params'], self._cookies, self.https, state['selection'],
                        state['body_size'])
 

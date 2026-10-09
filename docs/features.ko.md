@@ -1,5 +1,5 @@
 <!-- doc-id: features -->
-<!-- source-sha256: 0860f16d7112a5dc61ceb7d144fea9814fdfcb3e28d281167965d4f6bd69f7ba -->
+<!-- source-sha256: 2aa673b0d325cea8b753cc967e67e8dbe014ee088cb3ad587e675f23fc9a6525 -->
 # 기능 상태
 
 [English](features.md).
@@ -30,6 +30,7 @@
 | hyper-js | 브라우저 코드: 영역과 문서 렌더, htmx 확장, 클라이언트 렌더 | implemented | `make test-js`, `make e2e` |
 | hyper-php | PHP 서버: 라우트, 액션, CSRF, flash, 바뀐 주제, 기본 경로, 문서와 JSON | implemented | `make test-php` |
 | hyper-node | PHP 서버의 규칙, 파일 session, PHP와 같은 바이트의 JSON을 갖춘 Node.js 서버 `@polyspec/hyper-server`와 board 예제 서버(HY-54) | implemented | `make test-node`, `make node-server` |
+| python-request-hook | Python 서버 `create_server`의 요청 hook `around`. 요청과 `answer`를 받고, `Request.with_header`로 요청을 바꾸거나 응답을 바꾸며, session과 애플리케이션의 hook 없이 혼자 응답할 수 있다 (HY-97) | implemented; CI run pending | `make test-python`, `make test-python-render` |
 | hyper-python | PHP 서버의 규칙을 가진 Python 서버 `polyspec-hyper`. template Python package로 렌더하고 file session과 `http.server` 서버, board 예제 서버를 둔다 (H15.3) | implemented; CI run pending | `make test-python`, `make test-python-render`, `make server-parity-python` |
 | route-regions | 자기 로더를 가진 페이지 안의 라우트 영역(HY-30) | implemented | `make test-php`, `make parity` |
 | region-data | 라우트 영역의 내장 데이터, 요청 없이 라우트 영역에서 동작하는 `data`, `render`, `set`, `hy-set`, 데이터 공개 규칙(HY-29 ~ HY-33, HY-36, HY-71) | implemented | `make test-js`, `make e2e` |
