@@ -15,19 +15,14 @@ PYTHON_PACKAGE := packages/hyper-python
 PYTHON := python3
 # npm installs the template packages @polyspec/template and @polyspec/template-compiler and Composer installs
 # polyspec/template from the assets of the template release that package.json and composer.json name (HY-70). The
-# template repository, read only by `make template`, gives the C sources and the stub of the native extension: its
-# declared copy TEMPLATE_DIR (HY-78) of the commit of its tag TEMPLATE_TAG (HY-80), the release of the template
-# packages; .github/workflows/ci.yml checks out the same tag. `make ext` and PHPStan read the copy.
+# native template extension is the php-ext asset of the same release, which config/template-ext.json pins (H14.1-7).
+# The template repository of TEMPLATE_REPOSITORY is read only for the commit of TEMPLATE_TAG in the full-run key (HY-80).
 TEMPLATE_REPOSITORY := ../template
 TEMPLATE_TAG := v0.0.5
-TEMPLATE_DIR := var/products/template
-# The record of the copy, which the copy script rewrites only when it writes a new copy: when the tag names another
-# commit or the copy script changed.
-TEMPLATE_COPY := $(TEMPLATE_DIR)/copy.json
 FIXTURES := $(PHP_PACKAGE)/tests/fixtures
 # The Composer vendor directory of the private root composer.json, which installs packages/hyper-php for development.
 PHP_VENDOR := $(CURDIR)/vendor
-# The native template extension, built from the declared copy of the template repository (HY-48, HY-78).
+# The native template extension, built from the unpacked php-ext asset (HY-48, H14.1-7).
 # The lock of `make serve-demo`, whose fixed ports exist once on this machine (scripts/holder-lock.mjs).
 SERVE_DEMO_LOCK := /tmp/hyper-serve-demo.lock
 # npm installs every dependency as a copy and no bin link (HY-79, .npmrc), so the recipes start the tools with node.
@@ -39,8 +34,7 @@ HYPER_PHP_COPY := var/products/hyper-php
 # The PHP memory limit of PHPStan: a run without its result cache (build/phpstan) needs 132 MB in its worker, above
 # the default limit of 128M.
 PHPSTAN_MEMORY := 256M
-# The C sources of the native template extension in the declared copy, and the library that `make ext` builds.
-EXT_DIR := $(TEMPLATE_DIR)/packages/template-php-ext/src
+# The library that `make ext` builds from the unpacked php-ext asset, which `make install` fetches (H14.1-7).
 EXT := build/ext/polyspec_template.so
 
 # The toolchain (HY-81, scripts/kit/install-tools.mjs): npm and Composer of this checkout, which `make install-tools`
@@ -69,36 +63,31 @@ checks_result = test -z "$$failed" || { echo "failed checks:$$failed"; exit 1; }
 
 .DEFAULT_GOAL := help
 
-.PHONY: help install hyper-php-copy template template-tag ext packages package-check server server-fixtures node-server node-fixtures assets test-js test-node test-php test-python test-python-render lint analyse-php templates-check test-scripts virtiofs-check parity server-parity server-parity-python bundle-size e2e serve-demo bench-server bench-server-smoke bench-browser bench check serve-demo-unlock install-browser
+.PHONY: help install hyper-php-copy template-tag ext packages package-check server server-fixtures node-server node-fixtures assets test-js test-node test-php test-python test-python-render lint analyse-php templates-check test-scripts virtiofs-check parity server-parity server-parity-python bundle-size e2e serve-demo bench-server bench-server-smoke bench-browser bench check serve-demo-unlock install-browser
 
 help: ## List the targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
 
-install: install-tools ## Install the pinned tools, write the declared copy of the template tag and install the npm and Composer dependencies (HY-89)
+install: install-tools ## Install the pinned tools, fetch the php-ext asset of the template tag and install the npm and Composer dependencies (HY-89, H14.1-7)
 	node scripts/kit/check-toolchain.mjs
-	node scripts/copy-template.mjs --repository $(TEMPLATE_REPOSITORY) --tag $(TEMPLATE_TAG) --output $(TEMPLATE_DIR)
+	$(ONLINE) node scripts/template-ext.mjs fetch
 	node scripts/copy-package.mjs --path $(PHP_PACKAGE) --output $(HYPER_PHP_COPY)
 	$(ONLINE) node scripts/kit/holder-lock.mjs run $(INSTALL_LOCK) -- $(NPM) ci --no-audit --no-fund
 	$(ONLINE) node scripts/kit/holder-lock.mjs run $(INSTALL_LOCK) -- $(COMPOSER) install
 	$(ONLINE) node scripts/kit/holder-lock.mjs run $(INSTALL_LOCK) -- $(COMPOSER) install --working-dir=$(BOARD)
 
-# The copy script runs on every make template and leaves TEMPLATE_COPY unchanged while the copy is current.
-template: toolchain-check template-tag ## Write the declared copy of the native extension sources of the template tag (HY-78, HY-80)
-	node scripts/copy-template.mjs --repository $(TEMPLATE_REPOSITORY) --tag $(TEMPLATE_TAG) --output $(TEMPLATE_DIR)
-
-# A target without a file, so the copy script runs on every make template; it fails when the template checkout has no
-# tag TEMPLATE_TAG.
+# Fails when the template checkout has no tag TEMPLATE_TAG; the full-run key names that commit (HY-80).
 template-tag: ## Fail when the template repository TEMPLATE_REPOSITORY has no tag TEMPLATE_TAG, naming the expected tag and the tags it has (HY-80)
 	@git -C $(TEMPLATE_REPOSITORY) rev-parse --verify --quiet 'refs/tags/$(TEMPLATE_TAG)^{commit}' >/dev/null || { \
 	  echo "template-tag: $(TEMPLATE_REPOSITORY) has no tag $(TEMPLATE_TAG): expected the tag $(TEMPLATE_TAG), actual tags: $$(git -C $(TEMPLATE_REPOSITORY) tag --list 2>/dev/null | tr '\n' ' ')" >&2; \
 	  echo "template-tag: fetch the tags of the template repository with git -C $(TEMPLATE_REPOSITORY) fetch --tags" >&2; \
 	  exit 1; }
 
-# The build of the template repository (build-php-extension.mjs of the declared copy) runs phpize, configure and make
-# with the php-config of PATH in a temporary directory, builds again only when the sources or the PHP build changed,
-# and publishes the library with a rename (HY-82).
-ext: template ## Build the native template extension of the declared copy with phpize of the PHP of PATH into build/ext (HY-48, HY-78)
-	node $(TEMPLATE_DIR)/scripts/build-php-extension.mjs $(EXT_DIR) $(CURDIR)/$(EXT)
+# The build (scripts/template-ext.mjs) runs phpize, configure and make of the unpacked asset with the php-config of PATH in
+# a temporary directory, builds again only when the sources or the PHP build changed, and publishes the library with a
+# rename (HY-82). It runs offline: `make install` fetched the asset.
+ext: toolchain-check ## Build the native template extension from the unpacked php-ext asset with phpize of the PHP of PATH into build/ext (HY-48, H14.1-7)
+	node scripts/template-ext.mjs build $(CURDIR)/$(EXT)
 
 packages: toolchain-check ## Build the JavaScript modules and type declarations of the npm packages into their dist directories and reinstall their npm copies (HY-61, HY-79, HY-96)
 	cd $(JS_PACKAGE) && $(NPM) run --silent build -- --outDir dist.next-$$$$ && node ../../scripts/publish.mjs directory dist.next-$$$$ dist
@@ -144,7 +133,7 @@ test-node: packages node-fixtures ## Run the Node server tests, including the PH
 	$(call check,the type check of $(NODE_PACKAGE),$(TSC) --noEmit -p $(NODE_PACKAGE)/tsconfig.json) \
 	$(checks_result)
 
-test-php: template server-fixtures ext ## Run the server package tests with the generated program and with the native extension
+test-php: server-fixtures ext ## Run the server package tests with the generated program and with the native extension
 	@failed=; \
 	$(call check,PHPUnit with the generated program,COMPOSER_VENDOR_DIR=$(PHP_VENDOR) node scripts/kit/run-tests.mjs phpunit --cwd $(PHP_PACKAGE)) \
 	$(call check,PHPUnit with the native extension,COMPOSER_VENDOR_DIR=$(PHP_VENDOR) node scripts/kit/run-tests.mjs phpunit --cwd $(PHP_PACKAGE) --php-extension $(EXT)) \
@@ -164,7 +153,7 @@ lint: toolchain-check ## Check PHP formatting
 	$(call check,Pint of $(BOARD),cd $(BOARD) && vendor/bin/pint --test app src public) \
 	$(checks_result)
 
-analyse-php: template ## Run PHPStan at level max on the source and the tests of the server package
+analyse-php: ext ## Run PHPStan at level max on the source and the tests of the server package
 	cd $(PHP_PACKAGE) && $(PHP_VENDOR)/bin/phpstan analyse --no-progress --memory-limit=$(PHPSTAN_MEMORY)
 
 templates-check: toolchain-check ## Check hx- attributes (HC-6) and region placements (HY-3, HY-30) of the board templates

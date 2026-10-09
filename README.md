@@ -36,11 +36,10 @@ Pages and regions contain no `hx-*` attributes. Links and forms are plain HTML a
 
 ## Start
 
-npm installs the template packages `@polyspec/template` and `@polyspec/template-compiler` from the tarballs of the template release v0.0.5 and Composer installs `polyspec/template` from its zip, as `package.json`, `composer.json` and their locks pin them (HY-70). The template repository must be next to this repository (`../template`) with its tag `v0.0.5` (`TEMPLATE_TAG` of the Makefile) for the native extension only: `make install` and `make template` copy its C sources, its stub and its build script of that commit into `var/products/template`, which `make ext` and PHPStan read (HY-78, HY-80).
+npm installs the template packages `@polyspec/template` and `@polyspec/template-compiler` from the tarballs of the template release v0.0.5 and Composer installs `polyspec/template` from its zip, as `package.json`, `composer.json` and their locks pin them (HY-70). `make install` also fetches the php-ext asset `polyspec-template-php-ext-php-0.0.5.zip` of that release, verifies its sha256 in `config/template-ext.json` and unpacks it into `var/products/template-ext`, from which `make ext` builds the native extension and PHPStan reads the stub (H14.1-7).
 
 ```sh
 make install
-make template
 make serve-demo
 ```
 

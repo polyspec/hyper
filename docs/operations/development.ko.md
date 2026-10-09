@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: c7dba523bfca9cfccdcadf63e300c92f51e776b1bad9260c5ed743d5eebe7d88 -->
+<!-- source-sha256: d7515cfcebfd592c72c9ec1d8a9f8b2fc147323278af48571350738aa41b9228 -->
 # 개발
 
 [English](development.md).
@@ -9,7 +9,7 @@
 - pin한 도구(HY-81): `.node-version`의 Node.js, `pdo_sqlite`가 있는 `.php-version`의 PHP, `.python-version`의 Python, GNU Make 3.81 이상, 네이티브 확장을 위한 그 PHP의 phpize, php-config와 C compiler. `make install`은 `packageManager`의 npm과 `config/toolchain.json`의 Composer를 `var/tools`에 설치한다(`make install-tools`). `make toolchain-check`는 pin과 다른 모든 도구를 밝힌다.
 - 공유 도구: `scripts/kit/`와 `tests/kit/`는 공유 도구 저장소 `polyspec/kit`의 tag `v0.0.9`의 복사본이며(`kit.json`, `.kit/kit.lock.json`), `config/*.json`이 이를 설정한다. `make kit-sync KIT_TAG=<tag>`가 복사본을 쓰며 복사본을 바꾸는 유일한 명령이다. `make kit-check`는 파일이 lock과 다르거나 `config/*.json`이 schema를 어기면 실패하고, `make kit-test`는 도구의 test를 실행한다.
 - template package: npm은 `@polyspec/template`과 `@polyspec/template-compiler`를 template release의 tarball에서, Composer는 `polyspec/template`을 그 zip에서 `package.json`, `composer.json`과 그 lock이 고정한 대로 설치한다(HY-70). `make install`이 이를 download한다.
-- `../template`(`TEMPLATE_REPOSITORY`)에 있고 tag `v0.0.5`(`TEMPLATE_TAG`, HY-80)를 가진 template 저장소는 네이티브 확장에만 쓴다. `make template`이 그 C 소스, stub, build script를 `var/products/template`에 복사하고(HY-78), tag가 없으면 `make template-tag`가 실패한다. 이 저장소는 그곳에서 아무것도 build하지 않는다.
+- 네이티브 template 확장: release `v0.0.5`(`TEMPLATE_TAG`)의 php-ext asset `polyspec-template-php-ext-php-0.0.5.zip`이며, `config/template-ext.json`이 sha256으로 pin한다(H14.1-7). `make install`이 `$(ONLINE)`으로 내려받아 `var/products/template-ext`에 풀고, `make ext`가 offline으로 build한다. `../template`(`TEMPLATE_REPOSITORY`)의 template 저장소는 full-run key가 밝히는 tag의 commit을 읽을 때만 쓰며, tag가 없으면 `make template-tag`가 실패한다.
 - network: `make install-tools`, `make install`, `make install-browser`, `make kit-sync`만 download한다. 다른 모든 recipe는 npm, Composer를 offline으로 실행하므로(`npm_config_offline`, `COMPOSER_DISABLE_NETWORK`) 없는 download는 바로 실패하고 그것을 만드는 설치 target을 밝힌다(HY-89).
 - Playwright용 Chromium: `make install-browser`. pin한 Playwright의 Chromium과, Linux에서는 그 system library를 설치한다.
 
@@ -22,11 +22,10 @@
 | `make kit-sync` | `KIT_TAG`의 공유 도구를 `scripts/kit/`와 `tests/kit/`에 복사하고 `.kit/kit.lock.json`을 쓴다. 같은 tag에서 두 번째 실행은 `unchanged`를 출력한다 |
 | `make kit-check` | vendor한 파일이 `.kit/kit.lock.json`과 다르거나 없거나 lock에 없으면, 또는 `config/*.json`이 schema를 어기면 실패한다 |
 | `make kit-test` | `tests/kit`의 공유 도구 test를 실행한다 |
-| `make install` | template 저장소의 네이티브 확장 소스의 선언한 복사본과 `packages/hyper-php`의 사본을 쓰고, template release의 template package(HY-70)를 포함한 npm과 Composer 의존성을 bin link 없는 사본으로 설치한다(HY-79) |
+| `make install` | pin한 도구를 설치하고, `packages/hyper-php`의 복사본을 쓰며, template tag의 php-ext asset을 `$(ONLINE)`으로 `var/products/template-ext`에 pin한 sha256과 함께 가져오고(H14.1-7), template release의 template package를 포함한 npm과 Composer 의존성을 lock대로 설치한다(HY-70, HY-79) |
 | `make hyper-php-copy` | `packages/hyper-php`의 추적 파일 사본 `var/products/hyper-php`를 쓰고 board의 Composer 사본에 publish한다(HY-79, HY-82). `make server`가 먼저 실행한다 |
-| `make template` | `scripts/copy-template.mjs`로 template tag `TEMPLATE_TAG`의 commit의 네이티브 확장 소스를 선언한 복사본 `var/products/template`에 쓰고(복사본이 그 commit을 담고 있으면 아무것도 쓰지 않는다, HY-78, HY-80, HY-82) 아무것도 설치하지 않는다. `make ext`, `make test-php`, `make analyse-php`가 먼저 실행한다 |
-| `make template-tag` | template 저장소 `TEMPLATE_REPOSITORY`에 tag `TEMPLATE_TAG`가 없으면 기대한 tag와 저장소가 가진 tag를 밝히며 실패한다. `make template`이 복사 전에 실행한다(HY-80) |
-| `make ext` | template 저장소의 선언한 복사본의 C 소스에서 그 build script, phpize, `PATH`의 php-config로 네이티브 템플릿 확장을 `build/ext/polyspec_template.so`에 빌드하며, 소스나 PHP build가 바뀐 때만 다시 빌드한다(HY-48, HY-78) |
+| `make template-tag` | 템플릿 저장소 `TEMPLATE_REPOSITORY`에 tag `TEMPLATE_TAG`가 없으면 기대한 tag와 저장소가 가진 tag를 밝히며 실패한다. `make check`의 full-run key가 그 commit을 밝힌다(HY-80) |
+| `make ext` | `var/products/template-ext`에 풀린 php-ext asset의 소스를 `PATH`의 php-config로 phpize, configure, make해 `build/ext/polyspec_template.so`를 build한다. offline으로 실행하며, 소스나 PHP build가 바뀔 때만 다시 build한다(HY-48, H14.1-7) |
 | `make packages` | `@polyspec/hyper`와 `@polyspec/hyper-server`의 JavaScript module과 type 선언을 각 package가 선언한 build(`scripts/tsc.mjs`를 실행하는 `npm run build`)로 각자의 `dist` 디렉터리에 build하고 build와 각 npm 사본을 파일 단위로 publish한다(HY-79, HY-82). Node 서버 test, board 에셋 build, `make package-check`, `make test-scripts`는 package를 exports로 가져오므로 이것을 먼저 실행한다(HY-61). build script는 `data-template.json`, `checkManifest`, `templateReferences`를 script 옆 `packages/hyper-js`의 소스에서 읽으므로 `dist`가 필요 없고 어느 작업 디렉터리에서도 실행된다 |
 | `make package-check` | 두 package를 그 `package-lock.json`에서 `npm ci --offline --install-links`로 `tests/package-install`에 offline 설치하고(HY-89), 그 test를 `erasableSyntaxOnly`로 선언에 대해 type 검사한 뒤 `node`로 실행한다(HY-61) |
 | `make server` | 게시판 서버 프로그램을 `examples/board/build/server`에 빌드한다(아래 참조) |
@@ -38,7 +37,7 @@
 | `make test-node` | Node 서버 test를 실행한다. 같은 fixture로 PHP 서버 test의 사례, `conformance/json.json`의 JSON 사례, session, HTTP 서버, 타입 검사를 실행한다 |
 | `make test-php` | 라우터 적합성 사례를 포함한 서버 패키지 테스트를 generated 프로그램으로 한 번, 네이티브 확장으로 한 번 실행한다 |
 | `make lint` | PHP 형식을 검사한다 |
-| `make analyse-php` | `packages/hyper-php/phpstan.neon`으로 `packages/hyper-php`의 소스와 테스트에 레벨 `max`의 PHPStan을 실행한다. 기준선(baseline)과 무시하는 오류는 없다. PHPStan은 네이티브 template 확장의 시그니처를 `var/products/template/packages/template-php-ext/src/polyspec_template.stub.php`에서 읽고(HY-78), 캐시를 `build/phpstan`에 쓴다. 그 캐시가 없는 실행은 worker에서 기본 PHP 한도 128M보다 큰 132 MB를 쓰므로 `--memory-limit=256M`으로 실행한다 |
+| `make analyse-php` | `packages/hyper-php/phpstan.neon`으로 `packages/hyper-php`의 소스와 테스트에 레벨 `max`의 PHPStan을 실행한다. 기준선(baseline)과 무시하는 오류는 없다. PHPStan은 풀린 php-ext asset의 stub `var/products/template-ext/src/polyspec_template.stub.php`에서 네이티브 template 확장의 시그니처를 읽고(H14.1-7), cache는 `build/phpstan`에 쓴다. 메모리 제한은 `--memory-limit=256M`이다. 먼저 `make ext`를 실행한다 |
 | `make templates-check` | 레이아웃 템플릿만 `hx-` 속성을 가지는지(HC-6), 레이아웃이 `{# title}`과 `{# data}`를 한 번씩 배치하는지, 레이아웃과 각 라우트 템플릿의 모든 영역이 블록 인자 없이 `id`가 영역 이름인 요소 바로 안에 한 번씩 배치되는지(HY-3, HY-30) 검사한다 |
 | `make test-scripts` | 검사 스크립트의 테스트를 실행한다. 예: 잘못된 픽스처 애플리케이션으로 영역 배치 검사를 시험한다 |
 | `make virtiofs-check` | 출력이 virtiofs bind mount에 있는 Apple `container`에서 server build와 출력 복사를 실행한다(HY-68). Darwin에서만 `make check`의 target이며(`DARWIN_TARGETS`), `container`가 없으면 실패한다 |
