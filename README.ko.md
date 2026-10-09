@@ -1,17 +1,17 @@
 <!-- doc-id: readme -->
-<!-- source-sha256: 5c466fc2d89299566e415c345cd58db91f7615aec4917ece8849047ac27fe056 -->
+<!-- source-sha256: f5dfdc8039de7f0133e6d9c4456b9885517d939d29a902da17b3325304a95ad3 -->
 # hyper
 
 [English](README.md).
 
-hyper는 애플리케이션 하나에서 template 언어 템플릿으로 두 가지 방식의 페이지 렌더를 제공한다.
+hyper는 애플리케이션 하나에서 template 언어 템플릿으로 두 가지 방식의 페이지 렌더를 제공한다. 애플리케이션은 PHP 서버, Node.js 서버, Python 서버에서 바뀌지 않고 실행되며, 세 서버는 같은 규칙으로 응답한다.
 
-- **SSR**: PHP가 요청을 라우팅하고 템플릿으로 문서를 렌더한다. 이후 링크와 폼은 JSON을 요청하고, 브라우저가 바뀐 영역을 렌더한다.
-- **CSR**: 모든 경로에 정적 파일 하나 `index.html`을 제공한다. 브라우저가 경로를 라우팅하고, `/api` 아래의 PHP에 JSON을 요청해 문서 전체를 렌더한다. 이 형태는 JSON만 제공하는 백엔드를 위한 것이다. 권장 배포는 서버 하나가 직접 요청에는 SSR로, htmx 요청에는 JSON으로 응답하는 방식이다([배포](docs/operations/deployment.ko.md) 참조).
+- **SSR**: 서버가 요청을 라우팅하고 템플릿으로 문서를 렌더한다. 이후 링크와 폼은 JSON을 요청하고, 브라우저가 바뀐 영역을 렌더한다.
+- **CSR**: 모든 경로에 정적 파일 하나 `index.html`을 제공한다. 브라우저가 경로를 라우팅하고, `/api` 아래의 서버에 JSON을 요청해 문서 전체를 렌더한다. 이 형태는 JSON만 제공하는 백엔드를 위한 것이다. 권장 배포는 서버 하나가 직접 요청에는 SSR로, htmx 요청에는 JSON으로 응답하는 방식이다([배포](docs/operations/deployment.ko.md) 참조).
 
 두 방식은 매니페스트 하나 `app.json`(레이아웃, 제목, 영역, 라우트)을 읽고 같은 템플릿을 렌더한다. 화면은 데이터의 함수다. 브라우저에서 바뀌는 부분은 라우트 영역이며, `hy-set="notice.closed=true"`나 `set('notice', 'notice.closed', true)`가 요청 없이 그 데이터를 바꾸고 다시 렌더한다. 라우트 영역은 새로고침 후에도 남을 데이터 경로와 그 저장소(`server`, `cookie`, `localStorage`, `sessionStorage`)를 선언한다. 문서는 라우트 영역의 데이터만 담고, 라우트 영역이 없는 페이지는 데이터를 담지 않는다. 서버가 보내는 값은 모두 브라우저에 가므로, 로더는 방문자가 봐도 되는 값만 돌려준다(HY-71). 서버는 빌드가 템플릿 AST로 계산한, 그 라우트의 템플릿이 읽는 경로만 보낸다(HY-73). 템플릿은 라우트별로 불러온다.
-- PHP 라우터와 브라우저 라우터는 같은 적합성 사례를 통과한다.
-- 예제의 모든 페이지에서 브라우저는 PHP와 같은 바이트를 렌더한다.
+- 세 서버의 라우터와 브라우저 라우터는 같은 적합성 사례를 통과한다.
+- 예제의 모든 페이지에서 브라우저는 서버와 같은 바이트를 렌더한다.
 - 이동, 폼 전송, 스왑, 히스토리는 htmx 4가 수행한다.
 
 템플릿은 template 언어를 바꾸지 않고 사용한다. 레이아웃은 블록 태그로 영역을 배치한다.
@@ -36,7 +36,7 @@ hyper는 애플리케이션 하나에서 template 언어 템플릿으로 두 가
 | `packages/hyper-server-python` | `polyspec-hyper-server` | PHP 서버의 규칙을 가진 Python 서버. template Python package로 렌더하고 `http.server`로 서비스한다 ([README](packages/hyper-server-python/README.ko.md)) |
 | `examples/board` | | 게시판 예제. 레이아웃, 레프트, 컨텐츠 영역. 목록, 상세, 글쓰기, 검증 |
 | `conformance/routes.json` | | 두 라우터가 함께 통과하는 라우터 사례 |
-| `conformance/json.json` | | PHP 서버와 Node.js 서버가 통과하는 JSON encode와 decode 사례 |
+| `conformance/json.json` | | PHP·Node.js·Python 서버가 통과하는 JSON encode와 decode 사례 |
 
 ## 시작
 

@@ -3,12 +3,12 @@
 
 [한국어](README.ko.md).
 
-hyper renders pages with template language templates in two modes from one application:
+hyper renders pages with template language templates in two modes from one application. The application runs unchanged on the PHP server, the Node.js server and the Python server, which answer with the same rules:
 
-- **SSR**: PHP routes the request and renders the document from the templates. After that, links and forms request JSON and the browser renders the changed regions.
-- **CSR**: one static file, `index.html`, is served for every path. The browser routes the path, requests JSON from PHP under `/api` and renders the whole document. This form is for backends that serve JSON only; the recommended deployment serves direct requests with SSR and htmx requests with JSON from one server (see [Deployment](docs/operations/deployment.md)).
+- **SSR**: the server routes the request and renders the document from the templates. After that, links and forms request JSON and the browser renders the changed regions.
+- **CSR**: one static file, `index.html`, is served for every path. The browser routes the path, requests JSON from the server under `/api` and renders the whole document. This form is for backends that serve JSON only; the recommended deployment serves direct requests with SSR and htmx requests with JSON from one server (see [Deployment](docs/operations/deployment.md)).
 
-Both modes read one manifest, `app.json` (layout, title, regions and routes), and render the same templates. The screen is a function of data: a part that changes in the browser is a route region, and `hy-set="notice.closed=true"` or `set('notice', 'notice.closed', true)` changes its data and renders it again without a request. A route region declares which data paths survive a reload and where they are kept: `server`, `cookie`, `localStorage` or `sessionStorage`. A document embeds only the data of its route regions, and a page without route regions embeds none. Every value that the server sends reaches the browser, so a loader returns only values that the visitor may see (HY-71), and the server sends only the paths that the templates of the route read, which the build computes from the template ASTs (HY-73). Templates load per route. The PHP router and the browser router pass the same conformance cases, and the browser renders the same bytes as PHP for every page of the example. htmx 4 performs navigation, form submission, swaps and history.
+Both modes read one manifest, `app.json` (layout, title, regions and routes), and render the same templates. The screen is a function of data: a part that changes in the browser is a route region, and `hy-set="notice.closed=true"` or `set('notice', 'notice.closed', true)` changes its data and renders it again without a request. A route region declares which data paths survive a reload and where they are kept: `server`, `cookie`, `localStorage` or `sessionStorage`. A document embeds only the data of its route regions, and a page without route regions embeds none. Every value that the server sends reaches the browser, so a loader returns only values that the visitor may see (HY-71), and the server sends only the paths that the templates of the route read, which the build computes from the template ASTs (HY-73). Templates load per route. The routers of the three servers and the browser router pass the same conformance cases, and the browser renders the same bytes as the server for every page of the example. htmx 4 performs navigation, form submission, swaps and history.
 
 Templates use the template language without changes. A layout places regions with block tags:
 
@@ -32,7 +32,7 @@ Pages and regions contain no `hx-*` attributes. Links and forms are plain HTML a
 | `packages/hyper-server-python` | `polyspec-hyper-server` | Python server with the rules of the PHP server; it renders with the template Python package and serves over `http.server` ([README](packages/hyper-server-python/README.md)) |
 | `examples/board` | | Board example: layout, left and content regions; list, detail, create, validation |
 | `conformance/routes.json` | | Router cases that both routers pass |
-| `conformance/json.json` | | JSON encoding and decoding cases that the PHP and the Node.js server pass |
+| `conformance/json.json` | | JSON encoding and decoding cases that the PHP, the Node.js and the Python server pass |
 
 ## Start
 

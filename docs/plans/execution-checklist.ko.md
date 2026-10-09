@@ -1,5 +1,5 @@
 <!-- doc-id: execution-checklist -->
-<!-- source-sha256: 58ba5fe864e6340c89c7bc10885343ca445a2675241d0d8e4e0fd964b8552a67 -->
+<!-- source-sha256: 775b779db7a16d7e42e9c1ef802aa1f745d11c15d7dc791405d02d9e9a59540d -->
 # 실행 체크리스트
 
 ## [웨이브 1](waves.ko.md#wave-1) — 애플리케이션이 약하게 만들 수 없는 CSRF 방어
@@ -242,3 +242,4 @@
 | H18.6 | Python 서버 `polyspec-hyper-server`에 쓰기 hook을 준다. `create_server`이 선택적 `written`을 받아, 서버는 응답을 연결에 쓰려고 한 모든 요청마다 `around`에 준 요청(HY-97)과 쓴 `Response`, 쓰기가 끝났는지로 이를 한 번 호출한다. client가 연결을 닫아 실패한 쓰기는 연결 끊김 hook보다 먼저 `False`를 알린다(HY-67). Red: `tests/render/render_server.py`의 새 `WrittenTest` case 5개가 `TypeError: create_server() got an unexpected keyword argument 'written'`으로 실패했다. Green: `tests/render/render_server.py`의 case 32개와 `make test-python`이 통과한다. | `make test-python`, `make test-python-render` || [o] |
 | H18.7 | Release commit `chore(release): Release 0.0.8 (#H18.7)`: `config/release.json`의 모든 manifest와 `@polyspec/hyper-client`와 `polyspec/hyper-server`의 requirement와 그 lock에 version 0.0.8을 적고, 두 changelog의 `## Unreleased`를 `## 0.0.8`로 바꾸고, review 기록을 다시 쓰고, `tests/release-install`의 consumer project manifest와 lock을 0.0.8 archive로 쓴다. Red: `make release-versions TAG=v0.0.8`이 모든 manifest를 0.0.7로, 두 changelog에 `## 0.0.8` 절이 없다고 보고했다. Green: 통과하고, `make release-consumer TAG=v0.0.8`이 archive `polyspec-hyper-client-npm-0.0.8.tgz`, `polyspec-hyper-server-npm-0.0.8.tgz`, `polyspec-hyper-build-npm-0.0.8.tgz`, `polyspec-hyper-server-php-0.0.8.zip`를 설치한다. | `make release-versions TAG=v0.0.8`, `make release-consumer TAG=v0.0.8` || [o] |
 | H18.6-1 | 쓰기 hook `written`이 요청 도착 이후의 경과 밀리초도 받는다. 응답 hook과 연결 끊김 hook도 같은 값을 받는다(HY-60, HY-67). 쓰기 시점에 요청 기록을 남기는 consumer가 요청의 경과 시간을 적을 수 있다. Red: 경과 시간을 읽는 `WrittenTest` case가 elapsed argument를 넘기지 않는 H18.6의 `written`에서 `TypeError`로 실패했다. Green: `tests/render/render_server.py`의 case 32개와 `make test-python`이 통과한다. | `make test-python`, `make test-python-render` || [o] |
+| H18.8 | README가 세 서버를 밝힌다. 도입부가 PHP·Node.js·Python 서버를 적고 애플리케이션이 셋에서 바뀌지 않고 실행된다고 말하며, SSR과 CSR mode가 PHP라 적던 자리에 서버를 적고, router 문장이 세 서버의 router를 적으며, json.json의 적합성 줄이 Python 서버를 적는다. 원인: README가 PHP의 mode와 router만 설명했다. Node.js 서버는 H15.3부터, Python 서버는 H18.4부터 같은 규칙으로 응답한다. | `make documents-check` | [o] |
