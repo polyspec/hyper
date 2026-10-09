@@ -6,7 +6,7 @@ from pathlib import Path
 from polyspec.hyper import ArraySession, BadRequest, Forbidden, Flash, NotFound, Redirect, Reply, Request, Result, \
     Session
 
-FIXTURES = Path(__file__).resolve().parents[2] / 'hyper-php' / 'tests' / 'fixtures'
+FIXTURES = Path(__file__).resolve().parents[2] / 'hyper-server-php' / 'tests' / 'fixtures'
 
 
 class TargetTest(unittest.TestCase):

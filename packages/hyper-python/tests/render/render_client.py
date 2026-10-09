@@ -13,7 +13,7 @@ from polyspec.hyper.result import Result
 from polyspec.hyper.session import ArraySession
 
 TESTS = Path(__file__).resolve().parents[2]
-FIXTURES = TESTS.parent / 'hyper-php' / 'tests' / 'fixtures'
+FIXTURES = TESTS.parent / 'hyper-server-php' / 'tests' / 'fixtures'
 PROGRAM = FIXTURES.parent / 'build' / 'server'
 SHELL = FIXTURES / 'shell' / 'index.html'
 CONFORMANCE = Path(__file__).resolve().parents[4] / 'conformance'

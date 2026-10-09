@@ -1,4 +1,4 @@
-// The cases of packages/hyper-php/tests/ResultTest.php (HY-46). A PHP string that is not UTF-8 corresponds to a
+// The cases of packages/hyper-server-php/tests/ResultTest.php (HY-46). A PHP string that is not UTF-8 corresponds to a
 // JavaScript string with a lone surrogate.
 import { describe, expect, it } from 'vitest';
 import { Redirect, Result } from '../src/index.js';

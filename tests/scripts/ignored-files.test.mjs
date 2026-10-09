@@ -18,7 +18,7 @@ const OUTPUTS = [
   'packages/hyper-client/dist/index.js',
   'packages/hyper-client/dist.next-12345/index.js',
   'packages/hyper-server-node/dist/index.js',
-  'packages/hyper-php/tests/build/server/program.php',
+  'packages/hyper-server-php/tests/build/server/program.php',
   'packages/hyper-server-node/tests/build/templates.index.json',
   'examples/board/build/server/program.php',
   'examples/board/build/csr.next-12345/index.html',
@@ -37,7 +37,7 @@ const OUTPUTS = [
   'var/install.lock',
   'test-results/.last-run.json',
   'playwright-report/index.html',
-  'packages/hyper-php/.phpunit.result.cache',
+  'packages/hyper-server-php/.phpunit.result.cache',
 ];
 
 test('.gitignore ignores no tracked file', () => {

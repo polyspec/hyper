@@ -18,7 +18,7 @@ from polyspec.hyper.response import Response
 from polyspec.hyper.server import create_server
 
 TESTS = Path(__file__).resolve().parents[2]
-MANIFEST = TESTS.parent / 'hyper-php' / 'tests' / 'fixtures' / 'app.json'
+MANIFEST = TESTS.parent / 'hyper-server-php' / 'tests' / 'fixtures' / 'app.json'
 # The JSON response of the route `home` carries a string of this many bytes. The body is larger than the buffers of
 # a loopback socket, so a write of it to a closed connection fails also when the reset of the client arrives late.
 LARGE = 6 * 1024 * 1024

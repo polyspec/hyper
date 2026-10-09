@@ -1,4 +1,4 @@
-// The cases of packages/hyper-php/tests/AppTest.php against the same fixture application (HY-54).
+// The cases of packages/hyper-server-php/tests/AppTest.php against the same fixture application (HY-54).
 import { readFileSync } from 'node:fs';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createApplication, decodeResponse, renderParts, type Manifest, type TemplateIndex } from '@polyspec/hyper-client';

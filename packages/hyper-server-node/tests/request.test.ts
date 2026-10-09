@@ -1,4 +1,4 @@
-// The cases of packages/hyper-php/tests/RequestTest.php (HY-42, HY-45).
+// The cases of packages/hyper-server-php/tests/RequestTest.php (HY-42, HY-45).
 import { describe, expect, it } from 'vitest';
 import { Request } from '../src/index.js';
 

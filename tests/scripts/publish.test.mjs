@@ -57,27 +57,27 @@ const node = (args, options = {}) => spawnSync(process.execPath, checked(args), 
 
 test('a reader of a package copy never finds a file missing while the copy is written again', async (t) => {
   const directory = temporary(t, 'hyper-publish-copy-');
-  const output = path.join(directory, 'hyper-php');
-  const first = node(['scripts/copy-package.mjs', '--path', 'packages/hyper-php', '--output', output]);
+  const output = path.join(directory, 'hyper-server-php');
+  const first = node(['scripts/copy-package.mjs', '--path', 'packages/hyper-server-php', '--output', output]);
   assert.equal(first.status, 0, first.stderr);
   const stop = path.join(directory, 'stop');
   const reader = poll([path.join(output, 'composer.json'), path.join(output, 'src', 'App.php')], stop);
   for (let index = 0; index < 5; index++) {
-    const again = node(['scripts/copy-package.mjs', '--path', 'packages/hyper-php', '--output', output]);
+    const again = node(['scripts/copy-package.mjs', '--path', 'packages/hyper-server-php', '--output', output]);
     assert.equal(again.status, 0, again.stderr);
   }
   writeFileSync(stop, '');
   const { reads, misses } = await reader;
   assert.ok(reads > 0);
   assert.equal(misses, 0, `${misses} of ${reads} reads found a file missing`);
-  assert.deepEqual(files(output), spawnSync('git', ['ls-files', '--', '.'], { cwd: path.join(ROOT, 'packages/hyper-php'), encoding: 'utf8' }).stdout.split('\n').filter(Boolean).sort());
+  assert.deepEqual(files(output), spawnSync('git', ['ls-files', '--', '.'], { cwd: path.join(ROOT, 'packages/hyper-server-php'), encoding: 'utf8' }).stdout.split('\n').filter(Boolean).sort());
 });
 
 test('two writers of one copy both succeed and leave the complete copy', async (t) => {
   const directory = temporary(t, 'hyper-publish-writers-');
-  const output = path.join(directory, 'hyper-php');
+  const output = path.join(directory, 'hyper-server-php');
   const write = () => new Promise((resolve) => {
-    const child = spawn(process.execPath, ['scripts/copy-package.mjs', '--path', 'packages/hyper-php', '--output', output], { cwd: ROOT, stdio: ['ignore', 'pipe', 'pipe'] });
+    const child = spawn(process.execPath, ['scripts/copy-package.mjs', '--path', 'packages/hyper-server-php', '--output', output], { cwd: ROOT, stdio: ['ignore', 'pipe', 'pipe'] });
     let text = '';
     child.stderr.on('data', (data) => { text += data; });
     child.on('close', (status) => resolve({ status, text }));
@@ -85,7 +85,7 @@ test('two writers of one copy both succeed and leave the complete copy', async (
   const results = await Promise.all([write(), write(), write()]);
   for (const result of results) assert.equal(result.status, 0, result.text);
   assert.ok(existsSync(path.join(output, 'composer.json')));
-  assert.deepEqual(files(directory).filter((file) => !file.startsWith('hyper-php/')), []);
+  assert.deepEqual(files(directory).filter((file) => !file.startsWith('hyper-server-php/')), []);
 });
 
 test('a reader of a file never reads a partial content while the file is written again', async (t) => {

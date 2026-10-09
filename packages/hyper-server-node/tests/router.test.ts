@@ -1,4 +1,4 @@
-// The router cases of packages/hyper-php/tests/RouterTest.php: the server routes with the router of the browser
+// The router cases of packages/hyper-server-php/tests/RouterTest.php: the server routes with the router of the browser
 // package (HY-9, HY-49).
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';

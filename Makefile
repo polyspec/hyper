@@ -5,7 +5,7 @@
 include scripts/kit/kit.mk
 
 BOARD := examples/board
-PHP_PACKAGE := packages/hyper-php
+PHP_PACKAGE := packages/hyper-server-php
 JS_PACKAGE := packages/hyper-client
 NODE_PACKAGE := packages/hyper-server-node
 BUILD_PACKAGE := packages/hyper-build
@@ -20,7 +20,7 @@ PYTHON := python3
 TEMPLATE_REPOSITORY := ../template
 TEMPLATE_TAG := v0.0.5
 FIXTURES := $(PHP_PACKAGE)/tests/fixtures
-# The Composer vendor directory of the private root composer.json, which installs packages/hyper-php for development.
+# The Composer vendor directory of the private root composer.json, which installs packages/hyper-server-php for development.
 PHP_VENDOR := $(CURDIR)/vendor
 # The native template extension, built from the unpacked php-ext asset (HY-48, H14.1-7).
 # The lock of `make serve-demo`, whose fixed ports exist once on this machine (scripts/holder-lock.mjs).
@@ -29,8 +29,8 @@ SERVE_DEMO_LOCK := /tmp/hyper-serve-demo.lock
 TSC := node scripts/tsc.mjs
 # The esbuild package replaces bin/esbuild with the executable of the platform when it installs.
 ESBUILD := node_modules/esbuild/bin/esbuild
-# The copy of packages/hyper-php that the board installs with Composer (HY-79).
-HYPER_PHP_COPY := var/products/hyper-php
+# The copy of packages/hyper-server-php that the board installs with Composer (HY-79).
+HYPER_PHP_COPY := var/products/hyper-server-php
 # The PHP memory limit of PHPStan: a run without its result cache (build/phpstan) needs 132 MB in its worker, above
 # the default limit of 128M.
 PHPSTAN_MEMORY := 256M
@@ -63,7 +63,7 @@ checks_result = test -z "$$failed" || { echo "failed checks:$$failed"; exit 1; }
 
 .DEFAULT_GOAL := help
 
-.PHONY: help install hyper-php-copy template-tag ext packages package-check server server-fixtures node-server node-fixtures assets test-js test-node test-php test-python test-python-render lint analyse-php templates-check test-scripts virtiofs-check parity server-parity server-parity-python bundle-size e2e serve-demo bench-server bench-server-smoke bench-browser bench check serve-demo-unlock install-browser
+.PHONY: help install hyper-server-php-copy template-tag ext packages package-check server server-fixtures node-server node-fixtures assets test-js test-node test-php test-python test-python-render lint analyse-php templates-check test-scripts virtiofs-check parity server-parity server-parity-python bundle-size e2e serve-demo bench-server bench-server-smoke bench-browser bench check serve-demo-unlock install-browser
 
 help: ## List the targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
@@ -96,16 +96,16 @@ packages: toolchain-check ## Build the JavaScript modules and type declarations 
 	node scripts/publish.mjs npm-copy $(NODE_PACKAGE) node_modules/@polyspec/hyper-server
 	node scripts/publish.mjs npm-copy $(BUILD_PACKAGE) node_modules/@polyspec/hyper-build
 
-hyper-php-copy: ## Write the copy of packages/hyper-php that the board installs and reinstall it in the board (HY-79)
+hyper-server-php-copy: ## Write the copy of packages/hyper-server-php that the board installs and reinstall it in the board (HY-79)
 	node scripts/copy-package.mjs --path $(PHP_PACKAGE) --output $(HYPER_PHP_COPY)
-	node scripts/publish.mjs composer-copy $(HYPER_PHP_COPY) $(BOARD)/vendor/polyspec/hyper
+	node scripts/publish.mjs composer-copy $(HYPER_PHP_COPY) $(BOARD)/vendor/polyspec/hyper-server
 
 package-check: packages node-fixtures ## Install the npm packages into tests/package-install, type-check its test against their declarations and run it under node (HY-61)
 	cd tests/package-install && node ../../scripts/kit/holder-lock.mjs run ../../$(INSTALL_LOCK) -- $(NPM) ci --offline --install-links --no-bin-links --allow-remote=root --no-audit --no-fund
 	$(TSC) -p tests/package-install/tsconfig.json
 	node scripts/kit/run-tests.mjs node --cwd tests/package-install -- package-install.test.ts
 
-server: packages hyper-php-copy ## Build the board server program: its templates and the generated PHP program (HY-48)
+server: packages hyper-server-php-copy ## Build the board server program: its templates and the generated PHP program (HY-48)
 	node $(BUILD_PACKAGE)/bin/hyper-build-server.mjs --manifest $(BOARD)/app/app.json --templates $(BOARD)/templates --output $(BOARD)/build/server --php-namespace 'Polyspec\Hyper\Examples\Board\Program'
 
 server-fixtures: packages ## Build the server program of the PHP test fixtures

@@ -7,7 +7,7 @@ examples/board/build/
 examples/board/public/assets/hyper-*.js
 examples/board/public/assets/templates/
 examples/board/var/*.db
-packages/hyper-php/tests/build/
+packages/hyper-server-php/tests/build/
 build/
 packages/hyper-server-node/tests/build/
 packages/hyper-client/dist/

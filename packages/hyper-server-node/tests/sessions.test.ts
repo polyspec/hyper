@@ -1,4 +1,4 @@
-// Sessions in files (HY-45), the counterpart of packages/hyper-php/tests/NativeSessionTest.php and the session
+// Sessions in files (HY-45), the counterpart of packages/hyper-server-php/tests/NativeSessionTest.php and the session
 // cookie options of RequestTest.php.
 import { existsSync, mkdtempSync, readdirSync, rmSync, utimesSync } from 'node:fs';
 import { tmpdir } from 'node:os';

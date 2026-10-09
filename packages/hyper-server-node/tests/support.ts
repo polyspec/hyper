@@ -5,7 +5,7 @@ import { expect } from 'vitest';
 import { verifyToken } from '../src/csrf.js';
 import { App, BadRequest, Forbidden, MemorySessionStore, NotFound, Redirect, Request, Result, type AppOptions, type Handlers, type Response } from '../src/index.js';
 
-export const FIXTURES = fileURLToPath(new URL('../../hyper-php/tests/fixtures/', import.meta.url));
+export const FIXTURES = fileURLToPath(new URL('../../hyper-server-php/tests/fixtures/', import.meta.url));
 // The template files of the fixtures, which `make test-node` builds with scripts/build-templates.mjs.
 export const BUILD = fileURLToPath(new URL('./build/', import.meta.url));
 export const TEMPLATES = { index: `${BUILD}templates.index.json`, root: BUILD };

@@ -15,8 +15,8 @@
     },
     {
       "paths": [
-        "packages/hyper-php/{src,tests}/**",
-        "packages/hyper-php/{composer.json,phpstan.neon,phpunit.xml,pint.json}",
+        "packages/hyper-server-php/{src,tests}/**",
+        "packages/hyper-server-php/{composer.json,phpstan.neon,phpunit.xml,pint.json}",
         "composer.json",
         "composer.lock"
       ],
@@ -374,7 +374,7 @@
         "packages/hyper-client/package.json",
         "packages/hyper-server-node/package.json",
         "packages/hyper-build/package.json",
-        "packages/hyper-php/composer.json",
+        "packages/hyper-server-php/composer.json",
         "tests/package-install/package.json",
         "examples/board/composer.json",
         "composer.json",
