@@ -1,8 +1,9 @@
 """Serves an application over `http.server` with sessions in files: every request of the socket server goes to
-`App.handle`, as the Node server serves an application over `node:http` (HY-54). A request that answers a body
-larger than the body limit reads no more of it (HY-59), a new session sets its cookie first (HY-45), and a GET or
-HEAD request whose path names a file of the public directory receives the file, as the PHP built-in server serves
-its document root."""
+`App.respond`, as the Node server serves an application over `node:http` (HY-54). A request that answers a body
+larger than the body limit reads no more of it (HY-59), a new session sets its cookie first (HY-45), a response
+whose write fails because the client closed the connection is reported to the disconnect hook (HY-67), and a GET
+or HEAD request whose path names a file of the public directory receives the file, as the PHP built-in server
+serves its document root."""
 
 from __future__ import annotations
 
@@ -16,6 +17,9 @@ from .app import App
 from .file_sessions import FileSessions, cookie_header, cookie_name
 from .request import Request
 from .response import Response
+
+# The errors of a write to a connection that the client closed (HY-67).
+CLOSED = (BrokenPipeError, ConnectionResetError, ConnectionAbortedError)
 
 CONTENT_TYPES = {'.css': 'text/css; charset=utf-8', '.html': 'text/html; charset=utf-8',
                  '.js': 'text/javascript; charset=utf-8', '.json': 'application/json; charset=utf-8',
@@ -70,7 +74,7 @@ def create_server(app: App, sessions: FileSessions, files: Optional[str] = None,
                               https=application.https, body_size=size)
             session = session_store.open(request.cookie(cookie_name(application.https)))
             try:
-                response = application.handle(request, session, started)
+                response, reply = application.respond(request, session, started)
             finally:
                 session.close()
             created = session.created
@@ -81,7 +85,12 @@ def create_server(app: App, sessions: FileSessions, files: Optional[str] = None,
                                                       'Set-Cookie': [cookie_header(created, application.https),
                                                                      *(existing if isinstance(existing, list) else [])]},
                                     response.body)
-            self.send(response)
+            try:
+                self.send(response)
+            except CLOSED:
+                # HY-67: the write of the response failed because the client closed the connection.
+                self.close_connection = True
+                application.disconnected(request, started, reply)
 
         def read_body(self, limit: int) -> tuple[bytes, int]:
             """Reads the request body and its size. A body larger than the limit gives no bytes and the size read

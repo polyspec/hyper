@@ -37,7 +37,8 @@ class App:
     def __init__(self, manifest: Manifest, shared: Optional[Callable], region_loaders: dict,
                  route_handlers: dict, timezone: str, base_path: str, https: bool, frame_ancestors: str,
                  body_limit: int, response_limit: int, form_types: list[str],
-                 on_response: Optional[Callable], client: Optional[ClientRendering], shell: str, program: str):
+                 on_response: Optional[Callable], on_disconnect: Optional[Callable],
+                 client: Optional[ClientRendering], shell: str, program: str):
         self.manifest = manifest
         self.timezone = timezone
         self.base_path = base_path
@@ -50,6 +51,7 @@ class App:
         self._response_limit = response_limit
         self._form_types = form_types
         self._on_response = on_response
+        self._on_disconnect = on_disconnect
         self._client = client
         self._shell = shell
         self.container = Container()
@@ -62,7 +64,8 @@ class App:
     def open(manifest: str, program: str, handlers: dict, timezone: str, base_path: str = '',
              https: bool = False, frame_ancestors: str = "'self'", body_limit: int = 8 * 1024 * 1024,
              form_types: Optional[list[str]] = None, response_limit: int = 8 * 1024 * 1024,
-             on_response: Optional[Callable] = None, client_rendering: Optional[ClientRendering] = None) -> 'App':
+             on_response: Optional[Callable] = None, on_disconnect: Optional[Callable] = None,
+             client_rendering: Optional[ClientRendering] = None) -> 'App':
         """Creates an application from its manifest, the server program that `hyper-build-server` of
         `@polyspec/hyper-build` built from its templates (HY-48) and the handlers that load data and run actions.
 
@@ -70,7 +73,9 @@ class App:
         bodies that actions and `/_hyper/keep` accept (HY-59). The response limit is the largest response body in
         bytes that the server sends (HY-66). `on_response` is called once for every response with the request, the
         response, the elapsed milliseconds, the reply of the request, which is empty when the server answered
-        before routing, and the failure of a 500 of HY-43 or HY-66, else None (HY-60)."""
+        before routing, and the failure of a 500 of HY-43 or HY-66, else None (HY-60). `on_disconnect` is called once
+        with the request, the elapsed milliseconds and the reply of a request whose response the server of
+        `polyspec.hyper.server` could not write because the client closed the connection (HY-67)."""
         if body_limit < 1:
             raise ValueError(f'body limit {body_limit} is not a positive number of bytes')
         if response_limit < 1:
@@ -81,6 +86,8 @@ class App:
                              'and multipart/form-data')
         if base_path != '' and (not base_path.startswith('/') or base_path.endswith('/')):
             raise ValueError(f'base path {base_path} must start with / and must not end with /')
+        if on_disconnect is not None and not callable(on_disconnect):
+            raise ValueError('on_disconnect must be a callable or None')
         declared = Manifest.from_file(manifest)
 
         region_loaders = handlers.get('regions', {})
@@ -105,7 +112,8 @@ class App:
         shell = '' if client_rendering is None else _shell(client_rendering, declared)
 
         return App(declared, handlers.get('shared'), region_loaders, route_handlers, timezone, base_path, https,
-                   frame_ancestors, body_limit, response_limit, types, on_response, client_rendering, shell, program)
+                   frame_ancestors, body_limit, response_limit, types, on_response, on_disconnect, client_rendering,
+                   shell, program)
 
     def bind(self, cls: type, factory: Callable) -> None:
         """Registers the factory of an application service."""
@@ -116,9 +124,14 @@ class App:
         and are logged (HY-43, HY-66). Every response limits framing (HY-45), every failure is not cacheable
         (HY-65), and every response is reported to `on_response` with the milliseconds since `started`, a
         `perf_counter_ns` value of the monotonic clock that defaults to now (HY-60)."""
-        return self._respond(request, store, started if started is not None else time.perf_counter_ns(), Reply())
+        return self.respond(request, store, started)[0]
 
-    def _respond(self, request: Request, store: SessionStore, started: int, reply: Reply) -> Response:
+    def respond(self, request: Request, store: SessionStore, started: Optional[int] = None) -> tuple[Response, Reply]:
+        """Answers one request as `handle` does and returns the response with the reply of the request, which the
+        server passes to `disconnected` when it cannot write the response (HY-67)."""
+        if started is None:
+            started = time.perf_counter_ns()
+        reply = Reply()
         # The failure of a 500 of HY-43 or HY-66, which the hook receives (HY-60).
         failure = None
         try:
@@ -139,7 +152,13 @@ class App:
             response = response.with_header('Cache-Control', 'no-store')
         if self._on_response is not None:
             self._on_response(request, response, (time.perf_counter_ns() - started) / 1e6, reply, failure)
-        return response
+        return response, reply
+
+    def disconnected(self, request: Request, started: int, reply: Reply) -> None:
+        """Reports a request whose response could not be written because the client closed the connection to
+        `on_disconnect`, with the milliseconds since `started`, a `perf_counter_ns` value (HY-67)."""
+        if self._on_disconnect is not None:
+            self._on_disconnect(request, (time.perf_counter_ns() - started) / 1e6, reply)
 
     def _answer(self, request: Request, store: SessionStore, reply: Reply) -> Response:
         """Answers a request; the loaders and actions of a routed request receive `reply` (HY-52, HY-60)."""

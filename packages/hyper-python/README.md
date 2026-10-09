@@ -46,7 +46,14 @@ fields = Fields.parse(b'page=2&sort=title')  # names ['page', 'sort'], get('page
   `program.php` nor `program.json`, which the generated PHP program uses) and the handlers that load data and run
   actions; `App.handle` answers one request (HY-8, HY-15 to HY-19, HY-24 to HY-27, HY-40, HY-50 to HY-62,
   HY-65 to HY-67). A handler parameter receives the request or the reply by its type, and an application service
-  of the class that `App.bind` registered.
+  of the class that `App.bind` registered. `App.respond` answers a request as `App.handle` does and returns the
+  response with the reply of the request.
+- `on_response` of `App.open` is called once for every response with the request, the response, the elapsed
+  milliseconds, the reply of the request and the failure of a 500 (HY-60). `on_disconnect` is called once with the
+  request, the elapsed milliseconds and the reply of a request whose response the server could not write because
+  the client closed the connection; the server renders the complete response and calls `on_response` first, and it
+  does not detect a close when every write of the response succeeds (HY-67). A value of `on_disconnect` that is not
+  callable fails when the application opens.
 
 ```python
 from polyspec.hyper.app import App
@@ -60,9 +67,11 @@ response = app.handle(request, ArraySession())
   the data base path and the selection of each request.
 
 - The server module serves an application over the Python standard library `http.server` with sessions in files:
-  `create_server(app, sessions)` returns a threaded HTTP server that sends every request to `App.handle`, reads no
-  more of a body larger than the body limit (HY-59), sets the cookie of a new session first (HY-45) and serves the
-  files of an optional public directory as the PHP built-in server serves its document root. `FileSessions` keeps
+  `create_server(app, sessions)` returns a threaded HTTP server that sends every request to `App.respond`, reads no
+  more of a body larger than the body limit (HY-59), sets the cookie of a new session first (HY-45), calls the
+  disconnect hook when a write of the response fails with `BrokenPipeError`, `ConnectionResetError` or
+  `ConnectionAbortedError` (HY-67) and serves the files of an optional public directory as the PHP built-in server
+  serves its document root. `FileSessions` keeps
   each session in a JSON file named by an identifier of 64 hexadecimal digits that it created, writes the file with
   one rename and runs the requests of one session one after another.
 
