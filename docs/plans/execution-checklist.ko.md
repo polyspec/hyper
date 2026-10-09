@@ -1,5 +1,5 @@
 <!-- doc-id: execution-checklist -->
-<!-- source-sha256: cf9d3ad6349334280b1f34320edaa3c24e8503a9d5f1e3dae32dd65a5e39b8fc -->
+<!-- source-sha256: 0240d6f4379d3f2dd42d56895cec4959fdd8e04f1b236f0092e3b271442e4da9 -->
 # 실행 체크리스트
 
 ## [웨이브 1](waves.ko.md#wave-1) — 애플리케이션이 약하게 만들 수 없는 CSRF 방어
@@ -204,6 +204,7 @@
 | H15.3-17 | `docs/features.md`와 `docs/features.ko.md`의 H15.3 문구를 우회된 행 H15.3-14에 맞춘다. 상태 `구현됨; CI 실행 대기 중`은 H15.3-14가 우회되었음을 적지 않는다. 상태는 `make test-python`을 실행하는 CI group `python`을 적고, `make test-python-render`와 `make server-parity-python`이 CI 밖에서 실행됨을 적으며, 우회된 행 H15.3-14와 재시도 조건(template release tag가 `packages/template-python`을 담는다)을 적는다. | `make docs-check` | [o] |
 | H15.3-18 | `packages/hyper-python`의 release 행, 대기 중: `pyproject.toml`의 version은 이 branch에서 `0.0.4`로 남고, version-bump pull request `chore(release): Release 0.0.5`에서 `0.0.5`가 된다. 이 branch에서는 바꾸지 않는다. | `make docs-check` | [o] |
 | H15.3-19 | `scripts/release.mjs`에 추적되는 manifest `packages/hyper-python/pyproject.toml`을 선언한다: release test `the declarations cover every tracked manifest of the repository`는 추적되는 모든 manifest가 `MANIFESTS` 또는 `NOT_RELEASED`에 있어야 하고, Python manifest는 어느 쪽에도 없어 CI group `node`가 실패한다. `NOT_RELEASED`에 사유와 함께 추가한다: H15.3-18 release 행이 끝나기 전에는 어떤 release 단계도 Python package를 빌드하지 않는다. Red: 이 사례가 `packages/hyper-python/pyproject.toml`이 없는 추적 manifest 목록과 함께 실패한다. Green: 사례가 통과한다. Red: 사례가 추적되는 manifest 목록에 `packages/hyper-python/pyproject.toml`이 없어 실패했다. Green: 사례가 통과한다. | `make test-scripts TESTS="tests/scripts/release.test.mjs"` | [o] |
+| H15.3-20 | HY-67: Python 서버가 연결 끊김 hook을 호출한다. `polyspec.hyper.app`의 `App.open`은 `on_disconnect`를 받고, callable이 아니면 실패한다. `App.respond`는 `handle`처럼 요청에 응답하고 응답과 요청의 reply를 반환하며, `handle`은 그 응답을 반환한다. `create_server`는 `respond`가 반환한 응답을 보내고, 그 쓰기가 `BrokenPipeError`, `ConnectionResetError`, `ConnectionAbortedError`로 실패하면 요청, 요청의 시작 시각, reply로 `App.disconnected`를 호출하며, 이 method가 밀리초 단위의 경과 시간으로 hook을 한 번 호출한다. 응답 hook(HY-60)은 쓰기 전에 실행되고, 모든 쓰기가 성공하면 닫힘을 알지 못한다. `tests/render/render_server.py`는 127.0.0.1과 system이 정한 port에서 `create_server`로 애플리케이션을 제공한다. 한 client는 응답 hook이 시작된 뒤 6 MB 응답을 읽기 전에 연결을 닫고, 다른 client는 응답 전체를 읽는다. Red: `render_server.py`의 사례 3개가 `TypeError: App.open() got an unexpected keyword argument 'on_disconnect'`로 실패했다. Green: `PYTHONPATH=packages/hyper-python/src`와 tag `v0.0.5`의 template package로 실행한 사례 3개가 통과한다. | `make test-python-render` | [o] |
 
 ## [Wave 16](waves.ko.md#wave-16) — polyspec/kit의 공유 도구
 

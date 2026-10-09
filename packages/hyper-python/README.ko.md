@@ -1,5 +1,5 @@
 <!-- doc-id: hyper-python-readme -->
-<!-- source-sha256: 2b503c30476bb7f584fe7844f92779b3cb6155d289a916d461c4f51157e08450 -->
+<!-- source-sha256: 8a4b03a0096ba1c084514008d79f2cbf4e2d9af211e5de1d2515a54b5df7caf0 -->
 # polyspec-hyper
 
 [English](README.md).
@@ -45,7 +45,13 @@ fields = Fields.parse(b'page=2&sort=title')  # names ['page', 'sort'], get('page
   서버는 생성된 PHP program이 쓰는 `program.php`와 `program.json`이 필요 없다), 데이터를 읽고 action을 실행하는
   handler로 application을 만든다. `App.handle`이 요청 하나에 답한다 (HY-8, HY-15 to HY-19, HY-24 to HY-27, HY-40,
   HY-50 to HY-62, HY-65 to HY-67). handler parameter는 타입으로 request나 reply를 받고, `App.bind`가 등록한
-  application service는 그 클래스로 받는다.
+  application service는 그 클래스로 받는다. `App.respond`는 `App.handle`처럼 요청에 답하고 응답과 요청의 reply를
+  반환한다.
+- `App.open`의 `on_response`는 모든 응답마다 한 번 요청, 응답, 밀리초 단위의 경과 시간, 요청의 reply, 500의 실패로
+  호출된다 (HY-60). `on_disconnect`는 client가 연결을 닫아 서버가 응답을 쓰지 못한 요청에 대해 요청, 밀리초 단위의
+  경과 시간, 요청의 reply로 한 번 호출된다. 서버는 응답을 끝까지 렌더하고 `on_response`를 먼저 호출하며, 응답의
+  모든 쓰기가 성공하면 닫힘을 알지 못한다 (HY-67). callable이 아닌 `on_disconnect` 값은 application을 열 때
+  실패한다.
 
 ```python
 from polyspec.hyper.app import App
@@ -59,9 +65,10 @@ response = app.handle(request, ArraySession())
   path, 요청마다의 selection.
 
 - server module가 표준 라이브러리 `http.server`로 file session과 함께 application을 서비스한다.
-  `create_server(app, sessions)`가 모든 요청을 `App.handle`에 보내는 thread HTTP server를 반환한다. body limit보다
-  큰 body를 더 읽지 않고(HY-59), 새 session의 cookie를 가장 먼저 설정하며(HY-45), 선택의 public 디렉터리 파일을 PHP
-  built-in server가 document root를 서비스하듯이 서비스한다. `FileSessions`는 세션마다 자신이 만든 64자리 16진수
+  `create_server(app, sessions)`가 모든 요청을 `App.respond`에 보내는 thread HTTP server를 반환한다. body limit보다
+  큰 body를 더 읽지 않고(HY-59), 새 session의 cookie를 가장 먼저 설정하며(HY-45), 응답의 쓰기가 `BrokenPipeError`,
+  `ConnectionResetError`, `ConnectionAbortedError`로 실패하면 연결 끊김 hook을 호출하고(HY-67), 선택의 public
+  디렉터리 파일을 PHP built-in server가 document root를 서비스하듯이 서비스한다. `FileSessions`는 세션마다 자신이 만든 64자리 16진수
   identifier로 이름 붙은 JSON 파일을 두고, rename 한 번으로 파일을 쓰며, 한 세션의 요청을 순서대로 돌린다.
 
 ```python
