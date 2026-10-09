@@ -1,5 +1,5 @@
 <!-- doc-id: waves -->
-<!-- source-sha256: 34953070ff022cce4c528e6dee1391e0427cf98cb636ef9e587c25b375aacc2f -->
+<!-- source-sha256: 2c77bab34627e3cf4f2d8914591dfcc57852ec4d7a2b3a8e6a407f77253125c2 -->
 # 웨이브 배경
 
 [English](waves.md).
@@ -73,3 +73,7 @@
 ## Wave 17
 
 의존: wave 16. 릴리스 0.0.5는 `config/release.json`이 나열하는 모든 manifest의 버전을 0.0.5로 정하며, 이는 릴리스 v0.0.5의 template pin과 git tag로 사용하는 Python 패키지를 포함한다. 릴리스 0.0.6은 같은 manifest의 버전을 0.0.6으로 정하고 릴리스 v0.0.5의 template pin을 유지한다.
+
+## Wave 18
+
+의존: wave 17. 같은 이름 `polyspec/hyper`가 npm에서는 browser package를, Composer에서는 PHP server를 가리켰고, directory `hyper-js`와 `hyper-node`는 package 이름과 달랐다. 이제 모든 package 이름은 역할(client, server, build)을 밝히고, `packages/` 아래 모든 directory는 역할과 server의 언어를 밝히므로, release archive 이름이 그 package의 역할과 registry를 밝힌다.
