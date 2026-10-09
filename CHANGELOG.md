@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- The Python server `polyspec-hyper-server` takes an optional write hook `written` in `create_server`, which the server calls with the request, the response that it wrote and whether the write ended; a write that failed because the client closed the connection reports it before the disconnect hook (HY-99, #H18.6).
 
 ## 0.0.7
 

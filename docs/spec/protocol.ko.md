@@ -1,5 +1,5 @@
 <!-- doc-id: protocol -->
-<!-- source-sha256: a08ea6638547a7b536e44b1f72418d380232b40a511463c0f76ebf597df21690 -->
+<!-- source-sha256: 50ddd231651bcf3e19eb1cfef0c2a0e21f71474a30e2d2a2e3b301e3d6c3abdb -->
 # 영역 프로토콜
 
 [English](protocol.md).
@@ -336,6 +336,9 @@
 
 - **HY-97** Python 서버 `polyspec-hyper-server`의 `create_server`(`polyspec.hyper.server`)는 선택적 요청 hook `around`를 받는다. 서버는 애플리케이션에 주는 모든 요청마다, 서버가 만든 요청과 함수 `answer`로 이를 한 번 호출하고, `around`가 반환한 `Response`를 보낸다. `answer(request)`는 `around`가 없을 때의 서버처럼 요청에 대해 애플리케이션을 실행한다. 요청의 session cookie로 그 session을 열고, 응답 hook(HY-60)을 호출하는 `App.respond`로 응답하고, session을 닫은 뒤, 새 session의 cookie를 가장 먼저 둔 응답을 반환한다(HY-45). `around`는 요청이나 바꾼 사본으로 `answer`를 호출할 수 있다. 사본의 예는 `Request.with_header(name, value)`가 header를 설정한 사본이다(이름은 `Request.header`가 읽듯 대소문자를 구분하지 않고 비교한다). `around`는 `answer`가 반환한 응답을 바꿀 수 있고, `answer`를 호출하지 않고 자기 응답을 반환할 수 있다. 그때 서버는 그 요청에 대해 session을 열지 않고 애플리케이션의 loader, action, hook을 실행하지 않는다. client가 연결을 닫아 응답의 쓰기가 실패하면(HY-67), 서버는 마지막 `answer` 호출의 요청과 reply로 연결 끊김 hook을 호출하고, `around`가 `answer`를 호출하지 않았으면 호출하지 않는다. public 디렉터리의 파일은 `around` 전에 제공되며 `around`에 닿지 않는다. callable이 아닌 `around` 값은 `create_server`를 호출할 때 실패한다. `answer` 밖에서 `around`가 발생시킨 오류와 `Response`가 아닌 반환값은 HY-43이 처리하지 않는다. `http.server`가 오류를 표준 오류에 쓰고 응답 없이 연결을 닫는다.
   - Node 서버는 `app.server()`가 반환한 `node:http` 서버로 같은 것을 준다. consumer는 그 `request` listener를 애플리케이션의 listener를 호출하는 listener로 바꿔, 각 요청을 자기 context에서 실행하거나, 요청과 응답에 request id header를 더하거나, 애플리케이션보다 먼저 요청에 스스로 응답한다. 예를 들어 자기 web server에서 오지 않은 요청에 400으로 응답한다. `http.server` 요청 handler를 바꿀 수 없는 Python 서버의 애플리케이션에는 `around`가 이것들을 준다.
+
+- **HY-99** Python 서버 `polyspec-hyper-server`의 `create_server`(`polyspec.hyper.server`)는 선택적 쓰기 hook `written`을 받는다. 서버는 응답을 연결에 쓰려고 한 모든 요청마다, `around`에 준 요청(HY-97)과 쓴 `Response`, 쓰기가 끝났는지를 담아 이를 한 번 호출한다. 상태 줄, header, body를 오류 없이 썼으면 `True`이고, client가 연결을 닫아 쓰기가 실패했으면(HY-67) `False`이다. `False`일 때 서버는 연결 끊김 hook보다 `written`을 먼저 호출한다. `around`가 `answer`를 호출하지 않고 자기 응답을 반환했을 때도 호출되고, `around`도 받지 않는 public directory의 file과(HY-97) 응답 없이 끝난 요청(HY-43)에는 호출되지 않는다. callable이 아닌 `written` 값은 `create_server`를 호출할 때 실패한다. `written`이 발생시킨 오류는 HY-43이 처리하지 않는다. `http.server`가 오류를 표준 오류에 쓰고 연결을 닫는다.
+  - Node 서버는 `node:http` response object의 event로 같은 것을 준다. `app.server()`가 반환한 `node:http` 서버의 consumer는 응답 쓰기의 끝과 그 앞의 연결 닫김 event에 listener를 등록한다.
 
 - **HY-55** `make server-parity`는 `examples/board/tests/parity/requests.json`의 단계를 PHP 서버와 board Node 서버에 동시에 실행한다. 각 서버는 자기 빈 데이터베이스와 session을 쓰고, 게시글의 생성 시각(`BOARD_TIME`)은 같다. 단계의 모든 요청에서 HTML 문서, 문서 JSON, 영역 JSON 모두 두 응답의 상태, header, body가 같아야 한다. 비교 전에 session cookie의 session 식별자를 `<session>`으로, 각 응답의 가린 CSRF token(HY-24)을 header와 body에서 `<csrf>`로 바꾸고, body에 가린 token이 들어 있으므로 `ETag` 값이 그 body의 tag인지(HY-53) 확인한 뒤 `<etag>`로 바꾼다. 이 확인에 쓰는 session token은 가린 값의 뒤쪽 절반과 앞쪽 절반의 XOR다. HTTP 서버 프로그램이 스스로 쓰는 header인 `Date`, `Connection`, `Keep-Alive`, `Content-Length`, `Transfer-Encoding`과 PHP 내장 서버의 `Host`, `X-Powered-By`는 비교하지 않는다. header는 이름과 값 쌍의 집합으로 비교하고, `Set-Cookie`는 값마다 비교한다. 같은 실행에서 PHP 서버에 대한 `make parity`의 브라우저 비교도 수행한다.
 

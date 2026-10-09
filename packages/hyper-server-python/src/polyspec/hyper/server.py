@@ -1,6 +1,7 @@
 """Serves an application over `http.server` with sessions in files: every request of the socket server goes to
 `App.respond`, as the Node server serves an application over `node:http` (HY-54), through the request hook `around`
-when the application gives one (HY-97). A request that answers a body larger than the body limit reads no more of
+when the application gives one (HY-97), and the write hook `written` reports every response whose write ended or
+failed (HY-99). A request that answers a body larger than the body limit reads no more of
 it (HY-59), a new session sets its cookie first (HY-45), a response whose write fails because the client closed the
 connection is reported to the disconnect hook (HY-67), and a GET or HEAD request whose path names a file of the
 public directory receives the file, as the PHP built-in server serves its document root."""
@@ -30,7 +31,8 @@ _PUBLIC_PATH = re.compile(r'^(\/[A-Za-z0-9_-][A-Za-z0-9._-]*)+$')
 
 def create_server(app: App, sessions: FileSessions, files: Optional[str] = None, host: str = '127.0.0.1',
                   port: int = 0,
-                  around: Optional[Callable[[Request, Callable[[Request], Response]], Response]] = None
+                  around: Optional[Callable[[Request, Callable[[Request], Response]], Response]] = None,
+                  written: Optional[Callable[[Request, Response, bool], None]] = None
                   ) -> ThreadingHTTPServer:
     """Returns a server that answers every request with the application. `files` names an absolute directory of
     public files: a GET or HEAD request whose path names a file in it receives the file.
@@ -39,11 +41,17 @@ def create_server(app: App, sessions: FileSessions, files: Optional[str] = None,
     `answer(request)` that runs the application for a request with the session of the request and returns the
     response with the cookie of a new session; the server sends the `Response` that `around` returns. `around` may
     call `answer` with a changed request, change its response or return its own response without calling it, and
-    then no session is opened and no hook of the application runs (HY-97)."""
+    then no session is opened and no hook of the application runs (HY-97).
+
+    `written` is called once for every request whose response the server tried to write to the connection, with the
+    request that it gave to `around`, the response that it wrote and whether the write ended; a write that failed
+    because the client closed the connection reports `False`, before the disconnect hook (HY-99, HY-67)."""
     if files is not None and (not Path(files).is_absolute() or not Path(files).is_dir()):
         raise ValueError(f'{files} is not an absolute directory')
     if around is not None and not callable(around):
         raise ValueError('around must be a callable or None')
+    if written is not None and not callable(written):
+        raise ValueError('written must be a callable or None')
     app_address = app, sessions, files
 
     class Handler(BaseHTTPRequestHandler):
@@ -110,10 +118,17 @@ def create_server(app: App, sessions: FileSessions, files: Optional[str] = None,
             try:
                 self.send(response)
             except CLOSED:
-                # HY-67: the write of the response failed because the client closed the connection.
+                # HY-67: the write of the response failed because the client closed the connection; HY-99: the
+                # write hook runs before the disconnect hook.
                 self.close_connection = True
+                if written is not None:
+                    written(request, response, False)
                 if answered:
                     application.disconnected(answered[0][0], started, answered[0][1])
+                return
+            if written is not None:
+                # HY-99: the write of the status line, the headers and the body ended without an error.
+                written(request, response, True)
 
         def read_body(self, limit: int) -> tuple[bytes, int]:
             """Reads the request body and its size. A body larger than the limit gives no bytes and the size read

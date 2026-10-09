@@ -1,5 +1,5 @@
 <!-- doc-id: execution-checklist -->
-<!-- source-sha256: d4b7d01fbc22559efacb3b72624b4dc5cbb75553d4a8c326b115598911ad4600 -->
+<!-- source-sha256: 6a462e9abf4d1f950a10191a956c1959d554a7cb5e5c85c716b9f420bca38da2 -->
 # 실행 체크리스트
 
 ## [웨이브 1](waves.ko.md#wave-1) — 애플리케이션이 약하게 만들 수 없는 CSRF 방어
@@ -239,3 +239,4 @@
 | H18.3-1 | H18.1과 H18.3의 lock 변경을 새 review record 없이 commit해서 `make dependency-policy-check`가 실패한다. Red: `package-lock.json`, `composer.lock`, `examples/board/composer.lock`이 review 뒤에 바뀌었다고 보고한다. Green: `make dependency-review RECORD=1`이 record를 쓰고, `make dependency-policy-check`와 `make dependency-policy-mutation-check`가 통과한다. | `make dependency-policy-check`, `make dependency-policy-mutation-check` | [o] |
 | H18.4 | `packages/hyper-python`의 Python distribution `polyspec-hyper`를 `packages/hyper-server-python`의 `polyspec-hyper-server`로 바꾸고(HY-98), 그것을 이름으로 부르는 경로와 문서를 함께 바꾼다. import package `polyspec.hyper`는 유지한다. Red: `tests/scripts/package-names.test.mjs`가 `packages/hyper-python`의 `polyspec-hyper`를 보고한다. Green: test가 모든 package에 대해 통과한다. | `make test-scripts TESTS="tests/scripts/package-names.test.mjs"` || [o] |
 | H18.5 | Release commit `chore(release): Release 0.0.7 (#H18.5)`: `config/release.json`의 모든 manifest와 `@polyspec/hyper-client`, `polyspec/hyper-server`의 요구와 그 lock에 버전 0.0.7을 정하고, 두 changelog의 `## Unreleased`를 `## 0.0.7`로 바꾸고, review record를 다시 쓰고, `tests/release-install`의 consumer project manifest와 lock을 0.0.7 archive로 쓴다. Red: `make release-versions TAG=v0.0.7`이 모든 manifest를 0.0.6으로 보고한다. Green: 통과하고, `make release-consumer TAG=v0.0.7`이 archive `polyspec-hyper-client-npm-0.0.7.tgz`, `polyspec-hyper-server-npm-0.0.7.tgz`, `polyspec-hyper-build-npm-0.0.7.tgz`, `polyspec-hyper-server-php-0.0.7.zip`을 설치한다. | `make release-versions TAG=v0.0.7`, `make release-consumer TAG=v0.0.7` || [o] |
+| H18.6 | Python 서버 `polyspec-hyper-server`에 쓰기 hook을 준다. `create_server`이 선택적 `written`을 받아, 서버는 응답을 연결에 쓰려고 한 모든 요청마다 `around`에 준 요청(HY-97)과 쓴 `Response`, 쓰기가 끝났는지로 이를 한 번 호출한다. client가 연결을 닫아 실패한 쓰기는 연결 끊김 hook보다 먼저 `False`를 알린다(HY-67). Red: `tests/render/render_server.py`의 새 `WrittenTest` case 5개가 `TypeError: create_server() got an unexpected keyword argument 'written'`으로 실패했다. Green: `tests/render/render_server.py`의 case 32개와 `make test-python`이 통과한다. | `make test-python`, `make test-python-render` || [o] |
