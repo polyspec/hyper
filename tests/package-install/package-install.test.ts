@@ -4,7 +4,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
-import { Router, stripBasePath } from '@polyspec/hyper';
+import { Router, stripBasePath } from '@polyspec/hyper-client';
 import { App, Forbidden, MemorySessionStore, Request, Result, type Handlers, type Reply, type Response } from '@polyspec/hyper-server';
 
 // The fixtures of the server tests: the manifest and the template files that `make node-fixtures` builds.
@@ -15,7 +15,7 @@ const BUILD = fileURLToPath(new URL('../../packages/hyper-node/tests/build/', im
 // application build resolves to the index of its own asset build (HY-34), and the source of the reserved template
 // hyper/data.tpl, which the builds of @polyspec/hyper-build read (HY-96).
 const EXPORTS: Record<string, unknown> = {
-  '@polyspec/hyper': {
+  '@polyspec/hyper-client': {
     '.': { types: './dist/index.d.ts', default: './dist/index.js' },
     './templates-index': { types: './templates-index.d.ts' },
     './data-template.json': './data-template.json',
@@ -24,14 +24,14 @@ const EXPORTS: Record<string, unknown> = {
 };
 
 test('the installed packages are JavaScript with declarations', () => {
-  for (const name of ['@polyspec/hyper', '@polyspec/hyper-server']) {
+  for (const name of ['@polyspec/hyper-client', '@polyspec/hyper-server']) {
     const entry = import.meta.resolve(name);
     assert.ok(entry.endsWith(`/tests/package-install/node_modules/${name}/dist/index.js`), entry);
     const directory = fileURLToPath(new URL('..', entry));
     const manifest = JSON.parse(readFileSync(join(directory, 'package.json'), 'utf8')) as { exports: unknown };
     assert.deepEqual(manifest.exports, EXPORTS[name]);
     assert.ok(existsSync(join(directory, 'dist', 'index.d.ts')));
-    if (name === '@polyspec/hyper') {
+    if (name === '@polyspec/hyper-client') {
       assert.ok(existsSync(join(directory, 'templates-index.d.ts')));
       const dataTemplate = JSON.parse(readFileSync(join(directory, 'data-template.json'), 'utf8')) as { name: string };
       assert.equal(dataTemplate.name, 'hyper/data.tpl');

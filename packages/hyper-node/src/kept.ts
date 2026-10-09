@@ -1,5 +1,5 @@
 // Kept values that the server reads from the session and the hy-keep cookie (HY-17, HY-37 to HY-39).
-import { applyKept, copyValue, keptPaths, type Application } from '@polyspec/hyper';
+import { applyKept, copyValue, keptPaths, type Application } from '@polyspec/hyper-client';
 import { decodeJson, inDataModel, JsonDecodeError, type DecodedValue } from './json.js';
 import type { Request } from './request.js';
 import type { Session } from './session.js';

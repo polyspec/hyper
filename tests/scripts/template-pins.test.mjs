@@ -56,7 +56,7 @@ test('npm installs the template package as one copy inside this checkout', () =>
   assert.equal(lstatSync(join(repository, path)).isDirectory(), true, path);
   assert.ok(realpathSync(join(repository, path)).startsWith(`${repository}/`), path);
   // The packages of the workspace resolve the root package through the overrides, so they hold no copy of their own.
-  for (const nested of ['packages/hyper-js/node_modules/@polyspec/template', 'packages/hyper-node/node_modules/@polyspec/template']) {
+  for (const nested of ['packages/hyper-client/node_modules/@polyspec/template', 'packages/hyper-node/node_modules/@polyspec/template']) {
     assert.equal(existsSync(join(repository, nested)), false, nested);
   }
 });

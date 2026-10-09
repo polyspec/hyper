@@ -255,8 +255,8 @@ function fail(message) {
 async function loadBrowserCode() {
   const result = await build({
     stdin: {
-      contents: "export { createApplication, decodeResponse, renderDocument, renderParts } from '@polyspec/hyper'; export { parseJson } from '@polyspec/template/render';",
-      resolveDir: resolve('packages', 'hyper-js'),
+      contents: "export { createApplication, decodeResponse, renderDocument, renderParts } from '@polyspec/hyper-client'; export { parseJson } from '@polyspec/template/render';",
+      resolveDir: resolve('packages', 'hyper-client'),
       sourcefile: 'parity-entry.ts',
       loader: 'ts',
     },

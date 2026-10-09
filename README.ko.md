@@ -1,5 +1,5 @@
 <!-- doc-id: readme -->
-<!-- source-sha256: 9c9192fbddc1328b22771e84a14a58d2f7282782b08d2359eacbd9bbcfdf1aba -->
+<!-- source-sha256: bc8fc100b986a7f8b160cab19dc4d3c4847295d17decbd94711f814c842fda28 -->
 # hyper
 
 [English](README.md).
@@ -30,7 +30,7 @@ hyper는 애플리케이션 하나에서 template 언어 템플릿으로 두 가
 
 | 경로 | 이름 | 역할 |
 |---|---|---|
-| `packages/hyper-js` | `@polyspec/hyper` | 브라우저 코드. 매니페스트, 라우터, 영역과 문서 렌더, htmx 확장, 클라이언트 렌더 |
+| `packages/hyper-client` | `@polyspec/hyper-client` | 브라우저 코드. 매니페스트, 라우터, 영역과 문서 렌더, htmx 확장, 클라이언트 렌더 |
 | `packages/hyper-php` | `polyspec/hyper` | 서버. 매니페스트, 라우터, 액션, 영역 선택, 문서와 JSON |
 | `packages/hyper-node` | `@polyspec/hyper-server` | PHP 서버의 규칙을 갖춘 Node.js 서버. 문서를 브라우저 코드로 렌더한다([README](packages/hyper-node/README.ko.md)) |
 | `packages/hyper-python` | `polyspec-hyper` | PHP 서버의 규칙을 가진 Python 서버. template Python package로 렌더하고 `http.server`로 서비스한다 ([README](packages/hyper-python/README.ko.md)) |

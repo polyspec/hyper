@@ -1,7 +1,7 @@
 // Renders the route page as a document or as JSON (HY-12 to HY-19, HY-26, HY-30, HY-31, HY-38, HY-44, HY-52,
 // HY-53, HY-69). The document is the browser rendering of the document JSON value, with the browser code.
 import { createHash } from 'node:crypto';
-import { decodeResponse, keepRead, renderDocument, type Application, type RouteDeclaration, type RouteReads } from '@polyspec/hyper';
+import { decodeResponse, keepRead, renderDocument, type Application, type RouteDeclaration, type RouteReads } from '@polyspec/hyper-client';
 import type { Handlers, RouteHandlers } from './app.js';
 import { encodeJson } from './json.js';
 import { keptValues } from './kept.js';

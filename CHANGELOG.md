@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- H18.1: HY-98 states that the name of every package states its role and that its directory states the role and the language of a server. The browser package `@polyspec/hyper` in `packages/hyper-js` is now `@polyspec/hyper-client` in `packages/hyper-client`, with the module `@polyspec/hyper-client/templates-index`, the requirements of `@polyspec/hyper-server` and `@polyspec/hyper-build` and the locks; its release archive becomes `polyspec-hyper-client-npm-X.Y.Z.tgz`. Verified: `tests/scripts/package-names.test.mjs` failed with `packages/hyper-client/package.json is missing` on the tree before the change and passes after it; `make test-scripts` for the package, build, template and parity script tests, `make test-js`, `make test-node` and `make package-check` pass.
+
 ## 0.0.6
 
 - H17.2: the version 0.0.6 is set in `package.json`, the three npm packages, `packages/hyper-php/composer.json`, `packages/hyper-python/pyproject.toml` and `tests/package-install/package.json`, in the requirements of `@polyspec/hyper` and `polyspec/hyper` with their locks, and in the consumer projects of `tests/release-install`; `## Unreleased` became this section. Verified: `make release-versions TAG=v0.0.6`, `make release-coverage`, `make release-consumer TAG=v0.0.6`, `make dependency-policy-check` and the unit tests that read versions pass.

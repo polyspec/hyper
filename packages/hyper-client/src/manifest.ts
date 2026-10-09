@@ -32,7 +32,7 @@ export interface Manifest {
 }
 
 // The reserved template that embeds the document data (HY-31). Its source is in data-template.json, which the
-// package exports as `@polyspec/hyper/data-template.json` for the builds; the client bundle carries only the name
+// package exports as `@polyspec/hyper-client/data-template.json` for the builds; the client bundle carries only the name
 // (HY-34).
 export const DATA_TEMPLATE_NAME = 'hyper/data.tpl';
 

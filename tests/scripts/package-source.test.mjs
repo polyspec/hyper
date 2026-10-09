@@ -43,7 +43,7 @@ test('the modules of the build package import only its published files, Node and
 });
 
 test('builds the templates and the server program from another working directory', () => {
-  requireBuilt('packages', 'node_modules/@polyspec/hyper/dist/index.js', 'node_modules/@polyspec/hyper/data-template.json');
+  requireBuilt('packages', 'node_modules/@polyspec/hyper-client/dist/index.js', 'node_modules/@polyspec/hyper-client/data-template.json');
   const output = mkdtempSync(join(tmpdir(), 'hyper-scripts-'));
   try {
     const board = join(repository, 'examples', 'board');

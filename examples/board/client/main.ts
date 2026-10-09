@@ -1,10 +1,10 @@
 // The one browser script of the board example. Without `<meta name="hyper-api">` the page was
 // rendered by the server (SSR); with it the page is a static shell that renders in the browser (CSR).
 import htmx from 'htmx.org/dist/htmx.esm.js';
-import { createApplication, Hyper, type HtmxApi, type Manifest, type TemplateIndex } from '@polyspec/hyper';
+import { createApplication, Hyper, type HtmxApi, type Manifest, type TemplateIndex } from '@polyspec/hyper-client';
 import type { Template } from '@polyspec/template/render';
 import manifest from '../app/app.json';
-import index from '@polyspec/hyper/templates-index';
+import index from '@polyspec/hyper-client/templates-index';
 
 const app = createApplication(manifest as Manifest, index as TemplateIndex, async (url) => {
   const response = await fetch(url);

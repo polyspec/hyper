@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 05a40fd059364c03e284f54206c384869573601cd737ccbdd0c09a3f49442ff1 -->
+<!-- source-sha256: 3e2be9c34b150c43acb1ee5dff8194d40a5978c1663909e3463b410dbbafce96 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- H18.1: HY-98은 모든 package 이름이 역할을 밝히고, directory가 역할과 server의 언어를 밝힌다고 정합니다. `packages/hyper-js`의 browser package `@polyspec/hyper`는 이제 `packages/hyper-client`의 `@polyspec/hyper-client`이며, module `@polyspec/hyper-client/templates-index`, `@polyspec/hyper-server`와 `@polyspec/hyper-build`의 requirement, lock이 함께 바뀌었습니다. release archive는 `polyspec-hyper-client-npm-X.Y.Z.tgz`가 됩니다. 검증: `tests/scripts/package-names.test.mjs`가 변경 전 tree에서 `packages/hyper-client/package.json is missing`으로 실패했고 변경 후 통과합니다. package, build, template, parity script test의 `make test-scripts`, `make test-js`, `make test-node`, `make package-check`가 통과합니다.
 
 ## 0.0.6
 

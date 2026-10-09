@@ -10,7 +10,7 @@ examples/board/var/*.db
 packages/hyper-php/tests/build/
 build/
 packages/hyper-node/tests/build/
-packages/hyper-js/dist/
+packages/hyper-client/dist/
 packages/hyper-node/dist/
 __pycache__/
 /var/
