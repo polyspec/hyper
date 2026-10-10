@@ -1,13 +1,13 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: fc9cb0c5a59b241e30172aaf503c05597b0035446c4ca31fb74e803647ab4983 -->
+<!-- source-sha256: 915543137703557e3914dee53f5e3dc121cab056da7e72961af3a4e0ca031e3f -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+## 0.0.10
 - H19.4: WSGI와 ASGI callable이 서버가 받은 요청 대상을 `create_server`와 같이 읽는다. `create_wsgi`는 `RAW_URI`에서, 없으면 `REQUEST_URI`에서 대상을 읽고, `create_asgi`는 `scope['raw_path']`를 latin-1로 디코드한 값에서 경로를 읽는다. 이전에는 두 callable이 퍼센트 디코드된 `PATH_INFO`와 `scope['path']`를 읽어서 `GET /notes/a%20b`가 `/notes/a b`로 application에 닿았고 `/a%2Fb`가 `/a/b`와 합쳐졌다. 이제 인코드된 공백, 인코드된 슬래시와 퍼센트 시퀀스가 보낸 그대로 application에 닿는다(HY-100, HY-101). key가 없는 WSGI environ과 `raw_path`가 없는 ASGI scope는 빠진 key의 이름을 적은 오류로 요청을 실패시킨다.
-
 - H19.4-1: `test_the_request_reaches_the_application`가 body를 environ key `wsgi.input`으로 보낸다. 이전에는 오타인 keyword `wsgi_input`을 넘겨서 body가 읽히지 않았다. 고친 test는 application이 body의 값 `hey`를 받는다고 확인한다(#H19.4-1). Red: broken body read에서 고치기 전 test는 통과했고, 고친 test는 `AssertionError: 'hey' != ''`로 실패했다. Green: `make test-python`가 unit test 80개와 package test 2개를 통과한다.
 
 ## 0.0.9
