@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- H19.2: the Python server package publishes an ASGI application callable: `create_asgi` of `polyspec.hyper.asgi` takes the arguments of `create_server` and returns an ASGI 3 callable that an ASGI server runs; it answers every request of the scope type `http` as `create_server` does, runs the pipeline of a request in a worker thread and reports a failed send to `written` before the disconnect hook (HY-101).
 - H19.1: the Python server package publishes a WSGI application callable: `create_wsgi` of `polyspec.hyper.wsgi` takes the arguments of `create_server` and returns a callable that a WSGI server runs; it answers every request as `create_server` does, and `written` reports a write that the premature close of the body iterable ends (HY-100). The request pipeline of the three transports lies in `polyspec.hyper.pipeline`.
 - H18.9: the documents name the Node.js and the Python server as implementations of the one server protocol, not as servers with the rules of the PHP server; the deployment document names the server as the renderer, and HY-62 and HY-92 name the Python forms of the selection, the data embedding and the client-rendering declaration.
 - H18.8: README states the three servers: the introduction names the PHP, Node.js and Python server, the SSR and CSR modes and the router sentence name the server, and the conformance row of json.json names the Python server (HY-54).
