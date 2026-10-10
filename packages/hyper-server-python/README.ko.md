@@ -1,5 +1,5 @@
 <!-- doc-id: hyper-server-python-readme -->
-<!-- source-sha256: 7284c2a32a0c989df1d8899ceccaff2a5ce51758c68f37e901e2011368a1314c -->
+<!-- source-sha256: 5981116d5e53f6bb36fd9506c8e024acd45260ed0148a7a58d13d182a9f8e79e -->
 # polyspec-hyper-server
 
 [English](README.md).
@@ -88,6 +88,7 @@ server.serve_forever()
   않는다. 연결 끊김 hook은 마지막 `answer` 호출의 요청과 reply를 받는다. Node 서버의 consumer는 `app.server()`가
   반환한 서버의 `request` listener를 바꿔 같은 일을 한다. public 디렉터리의 파일은 `around`에 닿지 않고, callable이
   아닌 값은 서버를 만들 때 실패한다.
+- `create_server`, `create_wsgi`, `create_asgi`의 선택 인자 `written`은 쓰기 hook이다 (HY-99). 서버는 애플리케이션에 준 모든 요청마다 한 번 호출하며, 요청, 쓰기를 시작한 응답 또는 탈출 오류의 평범한 500, 쓰기가 끝났는지, 경과 밀리초와 탈출 오류의 failure를 받는다. 연결 끊김 hook 전에 호출된다.
 
 ```python
 import secrets

@@ -14,7 +14,7 @@ from typing import Callable, Optional, Union
 
 from .app import App
 from .file_sessions import FileSessions
-from .pipeline import CONTENT_TYPES, Exchange, answer_with, cookie_values, declared_length, escape, head_request, public_file, validate
+from .pipeline import CONTENT_TYPES, Exchange, answer_with, cookie_values, declared_length, escape, head_request, plain_500, public_file, validate
 from .request import Request
 from .response import Response
 
@@ -29,7 +29,7 @@ class FileResponse:
 
 def create_asgi(app: App, sessions: FileSessions, files: Optional[str] = None,
                 around: Optional[Callable[[Request, Callable[[Request], Response]], Response]] = None,
-                written: Optional[Callable[[Request, Response, bool, float], None]] = None
+                written: Optional[Callable[[Request, Response, bool, float, Optional[str]], None]] = None
                 ) -> Callable:
     """Returns an ASGI 3 application callable that answers every request with the application, as
     `create_server` does (HY-101). `files`, `around` and `written` mean what they mean there (HY-97,
@@ -45,32 +45,54 @@ def create_asgi(app: App, sessions: FileSessions, files: Optional[str] = None,
             raise ValueError(f'the callable answers the scope type http, not {scope["type"]}')
         started = time.perf_counter_ns()
         exchange = Exchange(written, started)
+        failure: Optional[str] = None
         try:
             result: Union[Response, FileResponse] = await _answer(app, sessions, around, files, scope, receive, exchange)
         except Exception as error:  # noqa: BLE001 - HY-60: an error that escapes the answer gets the plain 500
             result = escape(app, error)
+            failure = str(error)
+        except asyncio.CancelledError:
+            # HY-99: a cancellation before the answer ends the write without a response that started.
+            exchange.report(plain_500(app), False)
+            raise
         if isinstance(result, FileResponse):
             await send({'type': 'http.response.start', 'status': 200, 'headers': result.headers})
             await send({'type': 'http.response.body', 'body': result.data})
             return
-        headers = [(name.lower().encode('ascii'), item.encode('utf-8')) for name, value in result.headers.items()
-                   for item in (value if isinstance(value, list) else [value])]
-        empty = result.status in (204, 304)
-        encoded = b'' if empty else result.body.encode('utf-8')
-        if not empty:
-            headers.append((b'content-length', str(len(encoded)).encode('ascii')))
+        try:
+            headers, body = _messages(result)
+        except Exception as error:  # noqa: BLE001 - HY-60: a header or a body that cannot be encoded is an escape
+            result = escape(app, error)
+            failure = str(error)
+            headers, body = _messages(result)
         try:
             await send({'type': 'http.response.start', 'status': result.status, 'headers': headers})
-            await send({'type': 'http.response.body', 'body': encoded})
+            await send({'type': 'http.response.body', 'body': body})
         except Exception:
             # HY-101 and HY-67: a send raised, which an ASGI server does for a connection that the client
             # closed; the write hook runs before the disconnect hook, and the error propagates.
-            exchange.report(result, False)
+            exchange.report(result, False, failure)
             exchange.disconnect(app)
             raise
-        exchange.report(result, True)
+        except asyncio.CancelledError:
+            # HY-99: a cancellation of the task ends the write; it is not a closed connection, so no disconnect hook runs.
+            exchange.report(result, False, failure)
+            raise
+        exchange.report(result, True, failure)
 
     return application
+
+
+def _messages(response: Response) -> tuple[list[tuple[bytes, bytes]], bytes]:
+    """Returns the headers and the body of a response as the ASGI messages carry them (HY-101). A 204 or 304 response
+    has no body and no Content-Length."""
+    empty = response.status in (204, 304)
+    body = b'' if empty else response.body.encode('utf-8')
+    headers = [(name.lower().encode('ascii'), item.encode('utf-8')) for name, value in response.headers.items()
+               for item in (value if isinstance(value, list) else [value])]
+    if not empty:
+        headers.append((b'content-length', str(len(body)).encode('ascii')))
+    return headers, body
 
 
 async def _answer(app: App, sessions: FileSessions, around: Optional[Callable], files: Optional[str], scope: dict,

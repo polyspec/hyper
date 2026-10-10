@@ -93,7 +93,7 @@ class AsgiTest(unittest.TestCase):
     def test_the_request_reaches_the_application(self) -> None:
         written = []
         application = create_asgi(self.app, self.sessions,
-                                  written=lambda request, response, ended, elapsed: written.append(
+                                  written=lambda request, response, ended, elapsed, failure: written.append(
                                       (request, ended)))
         sends = Sends()
         run(application, scope(method='POST', path='/news', raw_path=b'/news', query_string=b'page=2',
@@ -159,7 +159,7 @@ class AsgiTest(unittest.TestCase):
     def test_a_failed_send_reports_and_disconnects(self) -> None:
         written = []
         application = create_asgi(self.app, self.sessions,
-                                  written=lambda request, response, ended, elapsed: written.append(
+                                  written=lambda request, response, ended, elapsed, failure: written.append(
                                       (request, ended)))
         with self.assertRaises(OSError):
             run(application, scope(), Sends(broken=True), Receives(b''))
@@ -172,7 +172,7 @@ class AsgiTest(unittest.TestCase):
         application = create_asgi(self.app, self.sessions,
                                   around=lambda request, answer: captured.append(request)
                                   or Response(204, {}, ''),
-                                  written=lambda request, response, ended, elapsed: written.append(
+                                  written=lambda request, response, ended, elapsed, failure: written.append(
                                       (request, ended)))
         sends = Sends()
         run(application, scope(), sends, Receives(b''))
@@ -203,7 +203,7 @@ class AsgiTest(unittest.TestCase):
                 written = []
                 sends = Sends()
                 application = create_asgi(self.app, self.sessions,
-                                          written=lambda request, response, ended, elapsed: written.append(request))
+                                          written=lambda request, response, ended, elapsed, failure: written.append(request))
                 with contextlib.redirect_stderr(io.StringIO()) as stderr:
                     run(application, values, sends, Receives(b''))
                 self.assertIn('raw_path', stderr.getvalue())
@@ -218,7 +218,7 @@ class AsgiTest(unittest.TestCase):
         # the request as received, with an empty body and the Content-Length that the client declared.
         written = []
         application = create_asgi(self.app, self.sessions,
-                                  written=lambda request, response, ended, elapsed: written.append(
+                                  written=lambda request, response, ended, elapsed, failure: written.append(
                                       (request, response.status, ended)))
         sends = Sends()
         with contextlib.redirect_stderr(io.StringIO()):
@@ -239,11 +239,31 @@ class AsgiTest(unittest.TestCase):
             raise RuntimeError('around boom')
 
         application = create_asgi(self.app, self.sessions, around=around,
-                                  written=lambda request, response, ended, elapsed: written.append(
+                                  written=lambda request, response, ended, elapsed, failure: written.append(
                                       (request.path(), response.status, ended)))
         with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(OSError):
             run(application, scope(path='/list', raw_path=b'/list'), Sends(broken=True), Receives(b''))
         self.assertEqual([('/list', 500, False)], written)
+
+
+    def test_a_cancelled_send_reports_an_unended_write_and_propagates_the_cancellation(self) -> None:
+        # HY-99, HY-101: a cancellation of the task ends the write without an ended write; the cancellation propagates,
+        # and the disconnect hook does not run, because a cancellation does not state that the client closed.
+        written = []
+        application = create_asgi(self.app, self.sessions,
+                                  written=lambda request, response, ended, elapsed, failure: written.append(
+                                      (request.path(), response.status, ended, failure)))
+
+        class CancelledSends(Sends):
+            async def __call__(self, event: dict) -> None:
+                if event['type'] == 'http.response.body':
+                    raise asyncio.CancelledError()
+                self.events.append(event)
+
+        with self.assertRaises(asyncio.CancelledError):
+            run(application, scope(path='/list', raw_path=b'/list'), CancelledSends(), Receives(b''))
+        self.assertEqual([('/list', 200, False, None)], written)
+        self.assertEqual([], self.app.disconnected_calls)
 
 
 class BrokenReceives:

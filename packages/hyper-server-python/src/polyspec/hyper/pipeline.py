@@ -94,15 +94,15 @@ class Exchange:
         self.answered: list[tuple[Request, Reply]] = []
         self.reported = False
 
-    def report(self, response: Response, ended: bool) -> None:
-        """Calls the write hook once with the response that the server tried to write, whether the write
-        ended and the elapsed milliseconds since the arrival of the request (HY-99). A request without a
-        request to report is not reported (HY-60)."""
+    def report(self, response: Response, ended: bool, failure: Optional[str] = None) -> None:
+        """Calls the write hook once with the response whose write started (or the plain 500 when none started),
+        whether the write ended, the elapsed milliseconds since the arrival of the request and the failure of an
+        escaped error (HY-99). A request without a request to report is not reported (HY-60)."""
         if self.reported:
             return
         self.reported = True
         if self.written is not None and self.request is not None:
-            self.written(self.request, response, ended, (time.perf_counter_ns() - self.started) / 1e6)
+            self.written(self.request, response, ended, (time.perf_counter_ns() - self.started) / 1e6, failure)
 
     def disconnect(self, app: App) -> None:
         """Calls the disconnect hook with the request and the reply of the last call of `answer` (HY-67)."""
@@ -125,9 +125,14 @@ def declared_length(value: Optional[str]) -> int:
 
 def escape(app: App, error: BaseException) -> Response:
     """Logs an error that escapes the answer of a request with its message (HY-43) and returns the plain 500
-    that hyper writes (HY-60): the text, `Cache-Control: no-store` (HY-65) and the frame policy (HY-45)."""
+    that hyper writes (HY-60)."""
     sys.stderr.write(f'hyper: {type(error).__name__}: {error}\n')
     traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
+    return plain_500(app)
+
+
+def plain_500(app: App) -> Response:
+    """Returns hyper's plain 500 (HY-60): the text, `Cache-Control: no-store` (HY-65) and the frame policy (HY-45)."""
     response = Response.text(500, 'Internal Server Error')
     return response.with_header('Content-Security-Policy', f'frame-ancestors {app.frame_ancestors}') \
         .with_header('Cache-Control', 'no-store')
