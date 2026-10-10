@@ -39,7 +39,7 @@ class Application:
 
 
 def environ(**changes) -> dict:
-    values = {'REQUEST_METHOD': 'GET', 'PATH_INFO': '/', 'QUERY_STRING': '', 'wsgi.input': Input(b'')}
+    values = {'REQUEST_METHOD': 'GET', 'RAW_URI': '/', 'wsgi.input': Input(b'')}
     values.update(changes)
     return values
 
@@ -89,7 +89,7 @@ class WsgiTest(unittest.TestCase):
                                   written=lambda request, response, ended, elapsed: written.append(
                                       (request, response, ended)))
         status, _, body = call(application, environ(
-            REQUEST_METHOD='POST', PATH_INFO='/news', QUERY_STRING='page=2', CONTENT_LENGTH='5',
+            REQUEST_METHOD='POST', RAW_URI='/news?page=2', CONTENT_LENGTH='5',
             HTTP_COOKIE='a=1; limepie=s', HTTP_X_NAME='one',
             wsgi_input=Input(b'hello')))
         self.assertEqual('200 OK', status)
@@ -130,7 +130,7 @@ class WsgiTest(unittest.TestCase):
         around_calls = []
         application = create_wsgi(self.app, self.sessions, files=str(files),
                                   around=lambda request, answer: around_calls.append(request))
-        status, headers, body = call(application, environ(PATH_INFO='/a.css'))
+        status, headers, body = call(application, environ(RAW_URI='/a.css'))
         self.assertEqual('200 OK', status)
         self.assertEqual('text/css; charset=utf-8', dict(headers)['Content-Type'])
         self.assertEqual(b'body{}', body)
@@ -161,4 +161,34 @@ class WsgiTest(unittest.TestCase):
         self.assertEqual('204 No Content', status)
         self.assertEqual([], headers)
         self.assertEqual(b'', body)
+        self.assertEqual([], self.app.requests)
+
+    def test_the_raw_target_is_used_and_not_the_decoded_path_info(self) -> None:
+        # HY-100: PATH_INFO is percent-decoded by the server; the path is the target as sent.
+        cases = [('/notes/a%20b', '/notes/a b', '/notes/a%20b', ''),
+                 ('/notes/a%2Fb', '/notes/a/b', '/notes/a%2Fb', ''),
+                 ('/caf%C3%A9?q=%E2%82%AC', '/caf\xc3\xa9', '/caf%C3%A9', 'q=%E2%82%AC')]
+        application = create_wsgi(self.app, self.sessions)
+        for target, decoded, path, query in cases:
+            with self.subTest(target=target):
+                call(application, environ(RAW_URI=target, PATH_INFO=decoded))
+                self.assertEqual((path, query), (self.app.requests[-1].path(), self.app.requests[-1].raw_query()))
+
+    def test_request_uri_is_read_when_raw_uri_is_absent(self) -> None:
+        # HY-100: uWSGI and mod_wsgi give REQUEST_URI.
+        application = create_wsgi(self.app, self.sessions)
+        call(application, {'REQUEST_METHOD': 'GET', 'REQUEST_URI': '/notes/a%20b?x=1',
+                           'PATH_INFO': '/notes/a b', 'wsgi.input': Input(b'')})
+        self.assertEqual(('/notes/a%20b', 'x=1'), (self.app.requests[0].path(), self.app.requests[0].raw_query()))
+
+    def test_a_missing_target_fails_naming_both_keys(self) -> None:
+        # HY-100: PATH_INFO is never re-encoded into a path; the request fails before start_response.
+        application = create_wsgi(self.app, self.sessions)
+        started: list = []
+        with self.assertRaises(RuntimeError) as failure:
+            application({'REQUEST_METHOD': 'GET', 'PATH_INFO': '/notes/a b', 'wsgi.input': Input(b'')},
+                        lambda status, headers, exc_info=None: started.append(status))
+        self.assertIn('RAW_URI', str(failure.exception))
+        self.assertIn('REQUEST_URI', str(failure.exception))
+        self.assertEqual([], started)
         self.assertEqual([], self.app.requests)

@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- H19.4: the WSGI and ASGI callables read the request target that the server received, as `create_server` reads it: `create_wsgi` takes the target from `RAW_URI`, or else from `REQUEST_URI`, and `create_asgi` takes the path from `scope['raw_path']` decoded as latin-1. Before, both read the percent-decoded `PATH_INFO` and `scope['path']`, so `GET /notes/a%20b` reached the application as `/notes/a b` and `/a%2Fb` merged with `/a/b`. An encoded space, an encoded slash and a percent sequence now reach the application as sent (HY-100, HY-101). A WSGI environ without both keys and an ASGI scope without `raw_path` fail the request with an error that names the missing key.
+
 ## 0.0.9
 - H19.3-1: the dependency policy of 0.0.9 passes. `package-lock.json` records `@polyspec/hyper-build`, `@polyspec/hyper-client` and `@polyspec/hyper-server` at 0.0.9, with their `@polyspec/hyper-client` requirement at 0.0.9; `@types/node` is 26.6.5, the latest stable release at the review; and the review record is written again for the three locks (#H19.3-1). Red: `node scripts/kit/check-dependency-policy.mjs` printed 6 findings. Green: it prints 0 findings and `make dependency-policy-mutation-check` passes.
 - H19.2: the Python server package publishes an ASGI application callable: `create_asgi` of `polyspec.hyper.asgi` takes the arguments of `create_server` and returns an ASGI 3 callable that an ASGI server runs; it answers every request of the scope type `http` as `create_server` does, runs the pipeline of a request in a worker thread and reports a failed send to `written` before the disconnect hook (HY-101).

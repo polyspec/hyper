@@ -32,8 +32,8 @@ def create_wsgi(app: App, sessions: FileSessions, files: Optional[str] = None,
     def application(environ: dict, start_response: Callable) -> object:
         started = time.perf_counter_ns()
         method = environ['REQUEST_METHOD']
-        path = environ.get('PATH_INFO', '/')
-        served = None if files is None else public_file(files, method, path)
+        target = _request_target(environ)
+        served = None if files is None else public_file(files, method, target)
         if served is not None:
             # HY-100: the files of the public directory are served before `around`; no hook runs.
             data = served.read_bytes()
@@ -43,7 +43,8 @@ def create_wsgi(app: App, sessions: FileSessions, files: Optional[str] = None,
         declared = environ.get('CONTENT_LENGTH') or ''
         length = int(declared) if declared.isdigit() else 0
         body, size = read_limited(environ['wsgi.input'].read, app.body_limit, length)
-        request = Request(method, path, _environ_headers(environ), environ.get('QUERY_STRING', ''), body,
+        request = Request(method, Request.target_path(target), _environ_headers(environ),
+                          Request.target_query(target), body,
                           cookies=cookie_values(environ.get('HTTP_COOKIE')), https=app.https, body_size=size)
         response, answered = answer_with(app, sessions, around, request, started)
         headers = [(name, item) for name, value in response.headers.items()
@@ -72,6 +73,16 @@ def create_wsgi(app: App, sessions: FileSessions, files: Optional[str] = None,
         return body_iterable()
 
     return application
+
+
+def _request_target(environ: dict) -> str:
+    """Returns the request target that the WSGI server received (HY-100): `RAW_URI` of gunicorn, or else
+    `REQUEST_URI` of uWSGI and mod_wsgi. `PATH_INFO` is percent-decoded by the server and is never used.
+    Fails when the environ has neither key."""
+    for key in ('RAW_URI', 'REQUEST_URI'):
+        if key in environ:
+            return environ[key]
+    raise RuntimeError('the WSGI environ has neither RAW_URI nor REQUEST_URI, so the request target is unknown (HY-100)')
 
 
 def status(code: int) -> str:

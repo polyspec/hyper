@@ -70,7 +70,7 @@ class Receives:
 
 
 def scope(**changes) -> dict:
-    values = {'type': 'http', 'method': 'GET', 'path': '/', 'query_string': b'',
+    values = {'type': 'http', 'method': 'GET', 'path': '/', 'raw_path': b'/', 'query_string': b'',
               'headers': []}
     values.update(changes)
     return values
@@ -93,7 +93,7 @@ class AsgiTest(unittest.TestCase):
                                   written=lambda request, response, ended, elapsed: written.append(
                                       (request, ended)))
         sends = Sends()
-        run(application, scope(method='POST', path='/news', query_string=b'page=2',
+        run(application, scope(method='POST', path='/news', raw_path=b'/news', query_string=b'page=2',
                                headers=[(b'x-name', b'one'), (b'cookie', b'a=1; hy-session=s')]),
             sends, Receives(b'hello'))
         request = self.app.requests[0]
@@ -145,7 +145,7 @@ class AsgiTest(unittest.TestCase):
         application = create_asgi(self.app, self.sessions, files=str(files),
                                   around=lambda request, answer: around_calls.append(request))
         sends = Sends()
-        run(application, scope(path='/a.css'), sends, Receives(b''))
+        run(application, scope(path='/a.css', raw_path=b'/a.css'), sends, Receives(b''))
         self.assertEqual(200, sends.events[0]['status'])
         self.assertEqual([(b'content-type', b'text/css; charset=utf-8'), (b'content-length', b'6')],
                          sends.events[0]['headers'])
@@ -178,3 +178,28 @@ class AsgiTest(unittest.TestCase):
         self.assertEqual(b'', sends.events[1]['body'])
         self.assertEqual([], self.app.requests)
         self.assertEqual([(captured[0], True)], written)
+
+    def test_the_raw_path_is_used_and_not_the_decoded_path(self) -> None:
+        # HY-101: `path` is percent-decoded by the server; the path is `raw_path` as sent.
+        cases = [(b'/notes/a%20b', '/notes/a b', '/notes/a%20b', ''),
+                 (b'/notes/a%2Fb', '/notes/a/b', '/notes/a%2Fb', ''),
+                 (b'/caf%C3%A9', '/caf\xc3\xa9', '/caf%C3%A9', 'q=%E2%82%AC')]
+        for raw, decoded, path, query in cases:
+            with self.subTest(raw=raw):
+                run(create_asgi(self.app, self.sessions),
+                    scope(path=decoded, raw_path=raw, query_string=query.encode('latin-1')),
+                    Sends(), Receives(b''))
+                request = self.app.requests[-1]
+                self.assertEqual((path, query), (request.path(), request.raw_query()))
+
+    def test_a_missing_raw_path_fails_naming_it(self) -> None:
+        # HY-101: the path is never built from the decoded `path`; the request fails before any send.
+        without = {key: value for key, value in scope(path='/notes/a b').items() if key != 'raw_path'}
+        for values in (without, scope(path='/notes/a b', raw_path=None)):
+            with self.subTest(values=values):
+                sends = Sends()
+                with self.assertRaises(RuntimeError) as failure:
+                    run(create_asgi(self.app, self.sessions), values, sends, Receives(b''))
+                self.assertIn('raw_path', str(failure.exception))
+                self.assertEqual([], sends.events)
+                self.assertEqual([], self.app.requests)
