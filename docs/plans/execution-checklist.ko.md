@@ -1,5 +1,5 @@
 <!-- doc-id: execution-checklist -->
-<!-- source-sha256: 76732f7f10fc2817b04c1bd6f817490d76182c5a81e3ec87966f6977906d19ed -->
+<!-- source-sha256: 812af06cccf41828575a5ee120b0c7571f3ed02b5031c0f3eed7dc00c7d1cb3f -->
 # 실행 체크리스트
 
 ## [웨이브 1](waves.ko.md#wave-1) — 애플리케이션이 약하게 만들 수 없는 CSRF 방어
@@ -251,4 +251,4 @@
 |---|---|---|---|
 | H19.1 | Python server package `polyspec-hyper-server`에 WSGI application callable을 준다. `docs/spec/protocol.md`에 HY-100을 적고, `polyspec.hyper.wsgi`의 `create_wsgi`를 더한다. 이것은 `create_server`의 인자(HY-97, HY-99)를 받아 WSGI application callable(PEP 3333)을 돌려주며 그 callable이 `create_server`와 같이 모든 요청에 답한다. 먼저 실패하는 test를 쓰고, `docs/features.md`의 `hyper-server-python` 행에 callable을 적는다. | `make test-python`, `make documents-check`  Red: `make test-python`가 새 `tests/test_wsgi.py`에서 `ModuleNotFoundError: No module named 'polyspec.hyper.wsgi'`로 실패했다. Green: `make test-python`가 unit test 67개와 package test 2개를 통과하고 `make documents-check`가 통과한다. | [o] |
 | H19.2 | Python server package에 ASGI application callable을 준다. `docs/spec/protocol.md`에 HY-101을 적고, `polyspec.hyper.asgi`의 `create_asgi`를 더한다. 이것은 `create_server`의 인자(HY-97, HY-99)를 받아 ASGI 3 application callable을 돌려주며 그 callable이 `create_server`와 같이 모든 요청에 답하고 요청의 pipeline을 worker thread에서 실행한다. 먼저 실패하는 test를 쓰고, `docs/features.md`의 `hyper-server-python` 행에 callable을 적는다. | `make test-python`, `make documents-check`  Red: `make test-python`가 새 `tests/test_asgi.py`에서 `ModuleNotFoundError: No module named 'polyspec.hyper.asgi'`로 실패했다. Green: `make test-python`가 unit test 74개와 package test 2개를 통과하고 `make documents-check`가 통과한다. | [o] |
-| H19.3 | 릴리스 commit `chore(release): Release 0.0.9 (#H19.3)`: `config/release.json`이 나열하는 모든 manifest와 `@polyspec/hyper-client`와 `polyspec/hyper-server`의 요구에서 버전을 0.0.9로 정하고 lock을 쓰고, 두 changelog의 `## Unreleased`를 `## 0.0.9`로 바꾸고, review 기록을 다시 쓰고, `tests/release-install`의 소비자 project의 manifest와 lock을 0.0.9 archive로 쓴다. | `make release-versions TAG=v0.0.9`, `make release-consumer TAG=v0.0.9` | [ ] |
+| H19.3 | 릴리스 commit `chore(release): Release 0.0.9 (#H19.3)`: `config/release.json`이 나열하는 모든 manifest와 `@polyspec/hyper-client`와 `polyspec/hyper-server`의 요구에서 버전을 0.0.9로 정하고 lock을 쓰고, 두 changelog의 `## Unreleased`를 `## 0.0.9`로 바꾸고, review 기록을 다시 쓰고, `tests/release-install`의 소비자 project의 manifest와 lock을 0.0.9 archive로 쓴다. | `make release-versions TAG=v0.0.9`, `make release-consumer TAG=v0.0.9` | [~] |
