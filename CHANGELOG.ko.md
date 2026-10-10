@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 9dc0d801828a5b28e8a791f4fdd84d062b1e7adc0694ab43ae37943de521ffca -->
+<!-- source-sha256: 9893d8143a61ca2902739a366303e22294c7c7c30dbce1d18e2d8f70aacf2d91 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H19.2: Python server package가 ASGI application callable을 발행한다. `polyspec.hyper.asgi`의 `create_asgi`는 `create_server`의 인자를 받아 ASGI server가 실행하는 ASGI 3 callable을 돌려준다. scope type `http`의 모든 요청에 `create_server`와 같이 답하고, 요청의 pipeline을 worker thread에서 실행하며, 실패한 send를 disconnect hook보다 먼저 `written`에 보고한다(HY-101).
 - H19.1: Python server package가 WSGI application callable을 발행한다. `polyspec.hyper.wsgi`의 `create_wsgi`는 `create_server`의 인자를 받아 WSGI server가 실행하는 callable을 돌려주며, 그 callable은 `create_server`와 같이 모든 요청에 답하고 `written`이 body iterable의 조기 종료로 끝난 write를 보고한다(HY-100). 세 transport의 요청 pipeline은 `polyspec.hyper.pipeline`에 있다.
 - H18.9: 문서가 Node.js와 Python 서버를 PHP 서버의 규칙을 가진 서버가 아니라 하나의 server protocol의 구현으로 적는다. deployment 문서가 렌더 주체를 서버로 적고, HY-62와 HY-92가 선택·데이터 내장·클라이언트 렌더 선언의 Python 형식을 적는다.
 - H18.8: README가 세 서버를 밝힌다. 도입부가 PHP·Node.js·Python 서버를 적고, SSR과 CSR mode와 router 문장이 서버를 적으며, json.json의 적합성 줄이 Python 서버를 적는다(HY-54).
