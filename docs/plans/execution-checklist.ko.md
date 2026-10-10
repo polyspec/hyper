@@ -1,5 +1,5 @@
 <!-- doc-id: execution-checklist -->
-<!-- source-sha256: 258321cdda165319fbe51cf3f9120af0e6d7d25e412d5be0369f5ba9a382308d -->
+<!-- source-sha256: ad2404d198e2354936281ce7d280ce5fcef3763b97a6c5d4ec9d2239134f46f1 -->
 # 실행 체크리스트
 
 ## [웨이브 1](waves.ko.md#wave-1) — 애플리케이션이 약하게 만들 수 없는 CSRF 방어
@@ -244,3 +244,11 @@
 | H18.6-1 | 쓰기 hook `written`이 요청 도착 이후의 경과 밀리초도 받는다. 응답 hook과 연결 끊김 hook도 같은 값을 받는다(HY-60, HY-67). 쓰기 시점에 요청 기록을 남기는 consumer가 요청의 경과 시간을 적을 수 있다. Red: 경과 시간을 읽는 `WrittenTest` case가 elapsed argument를 넘기지 않는 H18.6의 `written`에서 `TypeError`로 실패했다. Green: `tests/render/render_server.py`의 case 32개와 `make test-python`이 통과한다. | `make test-python`, `make test-python-render` || [o] |
 | H18.8 | README가 세 서버를 밝힌다. 도입부가 PHP·Node.js·Python 서버를 적고 애플리케이션이 셋에서 바뀌지 않고 실행된다고 말하며, SSR과 CSR mode가 PHP라 적던 자리에 서버를 적고, router 문장이 세 서버의 router를 적으며, json.json의 적합성 줄이 Python 서버를 적는다. 원인: README가 PHP의 mode와 router만 설명했다. Node.js 서버는 H15.3부터, Python 서버는 H18.4부터 같은 규칙으로 응답한다. | `make documents-check` | [o] |
 | H18.9 | 서버를 하나의 protocol의 구현으로 적는다. 어떤 문서도 서버가 PHP 서버의 규칙을 가진다고 적거나 PHP만 렌더한다고 적거나 Python 없이 PHP와 Node만 나열하지 않게 한다. README와 docs/features가 Node.js·Python package를 server protocol의 구현으로 적고, deployment 문서가 렌더 주체를 서버로, 한 서버를 '어느 구현의 서버'로 적으며, protocol 규칙 HY-62와 HY-92가 Python 형식 `request.selection()`, `reply.embed_data()`, `client_rendering` 선언을 적는다. | `make documents-check` | [o] |
+
+## [Wave 19](waves.ko.md#wave-19) — production server가 실행하는 server callable
+
+| ID | Task | Verification | Status |
+|---|---|---|---|
+| H19.1 | Python server package `polyspec-hyper-server`에 WSGI application callable을 준다. `docs/spec/protocol.md`에 HY-100을 적고, `polyspec.hyper.wsgi`의 `create_wsgi`를 더한다. 이것은 `create_server`의 인자(HY-97, HY-99)를 받아 WSGI application callable(PEP 3333)을 돌려주며 그 callable이 `create_server`와 같이 모든 요청에 답한다. 먼저 실패하는 test를 쓰고, `docs/features.md`의 `hyper-server-python` 행에 callable을 적는다. | `make test-python`, `make documents-check`  Red: `make test-python`가 새 `tests/test_wsgi.py`에서 `ModuleNotFoundError: No module named 'polyspec.hyper.wsgi'`로 실패했다. Green: `make test-python`가 unit test 67개와 package test 2개를 통과하고 `make documents-check`가 통과한다. | [o] |
+| H19.2 | Python server package에 ASGI application callable을 준다. `docs/spec/protocol.md`에 HY-101을 적고, `polyspec.hyper.asgi`의 `create_asgi`를 더한다. 이것은 `create_server`의 인자(HY-97, HY-99)를 받아 ASGI 3 application callable을 돌려주며 그 callable이 `create_server`와 같이 모든 요청에 답하고 요청의 pipeline을 worker thread에서 실행한다. 먼저 실패하는 test를 쓰고, `docs/features.md`의 `hyper-server-python` 행에 callable을 적는다. | `make test-python`, `make documents-check` | [ ] |
+| H19.3 | 릴리스 commit `chore(release): Release 0.0.9 (#H19.3)`: `config/release.json`이 나열하는 모든 manifest와 `@polyspec/hyper-client`와 `polyspec/hyper-server`의 요구에서 버전을 0.0.9로 정하고 lock을 쓰고, 두 changelog의 `## Unreleased`를 `## 0.0.9`로 바꾸고, review 기록을 다시 쓰고, `tests/release-install`의 소비자 project의 manifest와 lock을 0.0.9 archive로 쓴다. | `make release-versions TAG=v0.0.9`, `make release-consumer TAG=v0.0.9` | [ ] |
