@@ -1,20 +1,29 @@
 """A WSGI application callable of the server pipeline (HY-100): a WSGI server runs the callable and
 the pipeline answers every request as `create_server` does (HY-97, HY-99) — the public files, the
-body limit (HY-59), the session cookie of a new session first (HY-45) and the hooks. The library
-names no server; a deployment runs the callable with the server that it chooses."""
+body limit (HY-59), the session cookie of a new session first (HY-45), the hooks and the plain 500 of
+an escaped error (HY-60). The library names no server; a deployment runs the callable with the server
+that it chooses."""
 
 from __future__ import annotations
 
 import time
+from dataclasses import dataclass
 from http import HTTPStatus
-from typing import Callable, Optional
+from typing import Callable, Optional, Union
 
 from .app import App
 from .file_sessions import FileSessions
-from .pipeline import CONTENT_TYPES, answer_with, cookie_values, public_file, read_limited, reported, validate
-from .reply import Reply
+from .pipeline import CONTENT_TYPES, Exchange, answer_with, cookie_values, declared_length, escape, head_request, public_file, read_limited, validate
 from .request import Request
 from .response import Response
+
+
+@dataclass
+class FileResponse:
+    """A file of the public directory that the callable serves before `around` (HY-100)."""
+
+    headers: list[tuple[str, str]]
+    data: bytes
 
 
 def create_wsgi(app: App, sessions: FileSessions, files: Optional[str] = None,
@@ -31,52 +40,68 @@ def create_wsgi(app: App, sessions: FileSessions, files: Optional[str] = None,
 
     def application(environ: dict, start_response: Callable) -> object:
         started = time.perf_counter_ns()
-        method = environ['REQUEST_METHOD']
-        target = _request_target(environ)
-        served = None if files is None else public_file(files, method, target)
-        if served is not None:
-            # HY-100: the files of the public directory are served before `around`; no hook runs.
-            data = served.read_bytes()
-            start_response(status(200), [('Content-Type', CONTENT_TYPES.get(served.suffix, 'application/octet-stream')),
-                                         ('Content-Length', str(len(data)))])
-            return [b''] if method == 'HEAD' else [data]
-        declared = environ.get('CONTENT_LENGTH') or ''
-        length = int(declared) if declared.isdigit() else 0
-        if length > app.body_limit:
-            # HY-100 and HY-59: a body over the limit is not read; its size is its Content-Length.
-            body, size = b'', length
-        else:
-            body, size = read_limited(environ['wsgi.input'].read, app.body_limit, length)
-        request = Request(method, Request.target_path(target), _environ_headers(environ),
-                          Request.target_query(target), body,
-                          cookies=cookie_values(environ.get('HTTP_COOKIE')), https=app.https, body_size=size)
-        response, answered = answer_with(app, sessions, around, request, started)
-        headers = [(name, item) for name, value in response.headers.items()
+        exchange = Exchange(written, started)
+        try:
+            result: Union[Response, FileResponse] = _answer(app, sessions, around, files, environ, exchange)
+        except Exception as error:  # noqa: BLE001 - HY-60: an error that escapes the answer gets the plain 500
+            result = escape(app, error)
+        if isinstance(result, FileResponse):
+            start_response(status(200), result.headers)
+            return [result.data]
+        headers = [(name, item) for name, value in result.headers.items()
                    for item in (value if isinstance(value, list) else [value])]
-        empty = response.status in (204, 304)
-        encoded = b'' if empty else response.body.encode('utf-8')
+        empty = result.status in (204, 304)
+        encoded = b'' if empty else result.body.encode('utf-8')
         if not empty:
             headers.append(('Content-Length', str(len(encoded))))
-        start_response(status(response.status), headers)
+        start_response(status(result.status), headers)
         if empty:
-            reported(written, request, response, True, started)
+            exchange.report(result, True)
             return [b'']
-
-        def body_iterable():
-            try:
-                yield encoded
-            except GeneratorExit:
-                # HY-100 and HY-67: the server closed the body iterable before its end, so the write
-                # of the response failed; the write hook runs before the disconnect hook.
-                reported(written, request, response, False, started)
-                if answered:
-                    app.disconnected(answered[0][0], started, answered[0][1])
-                raise
-            reported(written, request, response, True, started)
-
-        return body_iterable()
+        return _body(app, exchange, result, encoded)
 
     return application
+
+
+def _answer(app: App, sessions: FileSessions, around: Optional[Callable], files: Optional[str], environ: dict,
+            exchange: Exchange) -> Union[Response, FileResponse]:
+    """Answers the request of the environ: a file of the public directory, or the application through `around`.
+    The request as received is kept in the exchange before the body is read (HY-60)."""
+    method = environ['REQUEST_METHOD']
+    target = _request_target(environ)
+    declared = declared_length(environ.get('CONTENT_LENGTH'))
+    exchange.request = head_request(method, target, _environ_headers(environ), environ.get('HTTP_COOKIE'), app.https,
+                                    declared)
+    served = None if files is None else public_file(files, method, target)
+    if served is not None:
+        # HY-100: the files of the public directory are served before `around`; no hook runs.
+        data = served.read_bytes()
+        return FileResponse([('Content-Type', CONTENT_TYPES.get(served.suffix, 'application/octet-stream')),
+                             ('Content-Length', str(len(data)))], b'' if method == 'HEAD' else data)
+    if declared > app.body_limit:
+        # HY-100 and HY-59: a body over the limit is not read; its size is its Content-Length.
+        body, size = b'', declared
+    else:
+        body, size = read_limited(environ['wsgi.input'].read, app.body_limit, declared)
+    exchange.request = Request(method, Request.target_path(target), _environ_headers(environ),
+                               Request.target_query(target), body,
+                               cookies=cookie_values(environ.get('HTTP_COOKIE')), https=app.https, body_size=size)
+    return answer_with(app, sessions, around, exchange)
+
+
+def _body(app: App, exchange: Exchange, response: Response, encoded: bytes):
+    """Returns the body iterable of a response. The write hook receives the end of the write when the server
+    consumes the whole iterable; a server that closes the iterable early reports a failed write, and the
+    disconnect hook runs when the request was answered by the application (HY-67, HY-99)."""
+    try:
+        yield encoded
+    except GeneratorExit:
+        # HY-100 and HY-67: the server closed the body iterable before its end, so the write of the response
+        # failed; the write hook runs before the disconnect hook.
+        exchange.report(response, False)
+        exchange.disconnect(app)
+        raise
+    exchange.report(response, True)
 
 
 def _request_target(environ: dict) -> str:

@@ -2,6 +2,8 @@
 # WSGI server runs, with the public files, the body limit (HY-59), the session cookie of a new
 # session (HY-45), the request hook `around` (HY-97), the write hook `written` (HY-99) and the
 # disconnect hook on a write that a premature close of the body iterable ends (HY-67).
+import contextlib
+import io
 import tempfile
 import unittest
 from pathlib import Path
@@ -17,6 +19,7 @@ class Application:
     """An application that answers with what the request gave, and records it and its replies."""
 
     https = False
+    frame_ancestors = "'self'"
     body_limit = 16
 
     def __init__(self, opens_session: bool = False):
@@ -185,14 +188,79 @@ class WsgiTest(unittest.TestCase):
                            'PATH_INFO': '/notes/a b', 'wsgi.input': Input(b'')})
         self.assertEqual(('/notes/a%20b', 'x=1'), (self.app.requests[0].path(), self.app.requests[0].raw_query()))
 
-    def test_a_missing_target_fails_naming_both_keys(self) -> None:
-        # HY-100: PATH_INFO is never re-encoded into a path; the request fails before start_response.
-        application = create_wsgi(self.app, self.sessions)
+    def test_a_missing_target_answers_the_plain_500_and_reports_nothing(self) -> None:
+        # HY-100: PATH_INFO is never re-encoded into a path; the request has no target, so no request is reported.
+        written = []
+        application = create_wsgi(self.app, self.sessions,
+                                  written=lambda request, response, ended, elapsed: written.append(request))
         started: list = []
-        with self.assertRaises(RuntimeError) as failure:
-            application({'REQUEST_METHOD': 'GET', 'PATH_INFO': '/notes/a b', 'wsgi.input': Input(b'')},
-                        lambda status, headers, exc_info=None: started.append(status))
-        self.assertIn('RAW_URI', str(failure.exception))
-        self.assertIn('REQUEST_URI', str(failure.exception))
-        self.assertEqual([], started)
+        stderr = io.StringIO()
+        with contextlib.redirect_stderr(stderr):
+            status, headers, body = call(application, {'REQUEST_METHOD': 'GET', 'PATH_INFO': '/notes/a b',
+                                                       'wsgi.input': Input(b'')})
+        self.assertEqual('500 Internal Server Error', status)
+        self.assertEqual(b'Internal Server Error', body)
+        self.assertIn(('Cache-Control', 'no-store'), headers)
+        self.assertIn(("Content-Security-Policy", "frame-ancestors 'self'"), headers)
+        self.assertIn('RAW_URI', stderr.getvalue())
+        self.assertIn('REQUEST_URI', stderr.getvalue())
         self.assertEqual([], self.app.requests)
+        self.assertEqual([], written)
+
+    def test_a_failed_body_read_answers_the_plain_500_and_reports_the_request(self) -> None:
+        # HY-60: a body that cannot be read is an escaped error before `around`; the write hook receives the request
+        # as the server received it, with an empty body and the size that the client declared.
+        written = []
+        application = create_wsgi(self.app, self.sessions,
+                                  written=lambda request, response, ended, elapsed: written.append(
+                                      (request, response, ended)))
+        with contextlib.redirect_stderr(io.StringIO()):
+            status, headers, body = call(application, environ(
+                REQUEST_METHOD='POST', RAW_URI='/news', CONTENT_LENGTH='5', **{'wsgi.input': BrokenInput()}))
+        self.assertEqual('500 Internal Server Error', status)
+        self.assertEqual(b'Internal Server Error', body)
+        self.assertEqual([], self.app.requests)
+        self.assertEqual(1, len(written))
+        request, response, ended = written[0]
+        self.assertEqual(('POST', '/news'), (request.method, request.path()))
+        self.assertEqual(5, request.body_size())
+        self.assertEqual(500, response.status)
+        self.assertTrue(ended)
+
+    def test_an_around_error_answers_the_plain_500_and_reports_the_request(self) -> None:
+        # HY-97, HY-60: an error that `around` raises outside `answer` is an escaped error.
+        written = []
+
+        def around(request, answer):
+            raise RuntimeError('around boom')
+
+        application = create_wsgi(self.app, self.sessions, around=around,
+                                  written=lambda request, response, ended, elapsed: written.append(
+                                      (request.path(), response.status, ended)))
+        with contextlib.redirect_stderr(io.StringIO()) as stderr:
+            status, _, body = call(application, environ(RAW_URI='/list'))
+        self.assertEqual('500 Internal Server Error', status)
+        self.assertEqual(b'Internal Server Error', body)
+        self.assertIn('around boom', stderr.getvalue())
+        self.assertEqual([('/list', 500, True)], written)
+
+    def test_a_premature_close_of_the_plain_500_reports_a_failed_write(self) -> None:
+        # HY-60, HY-99: the server closes the iterable of the 500 before its end; the write failed and is reported once.
+        written = []
+
+        def around(request, answer):
+            raise RuntimeError('around boom')
+
+        application = create_wsgi(self.app, self.sessions, around=around,
+                                  written=lambda request, response, ended, elapsed: written.append((response.status, ended)))
+        with contextlib.redirect_stderr(io.StringIO()):
+            half_call(application, environ(RAW_URI='/list'))
+        self.assertEqual([(500, False)], written)
+        self.assertEqual([], self.app.disconnected_calls)
+
+
+class BrokenInput:
+    """A `wsgi.input` whose read fails, as a client that closed the connection makes it."""
+
+    def read(self, size: int) -> bytes:
+        raise OSError('the client closed the connection')

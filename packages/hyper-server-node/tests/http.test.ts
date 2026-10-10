@@ -162,13 +162,33 @@ describe('App.server', () => {
     server = app.server(new FileSessions({ directory }));
     await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
     base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
-    // The plain 500 of an escaped error (HY-60) follows the production engines; no hook receives it.
+    // The plain 500 of an escaped error is hyper's own response (HY-60); the response hook does not receive it.
     const response = await fetch(`${base}/list`);
     expect(response.status).toBe(500);
     expect(await response.text()).toBe('Internal Server Error');
     expect(response.headers.get('cache-control')).toBe('no-store');
+    expect(response.headers.get('content-security-policy')).toBe("frame-ancestors 'self'");
     expect(calls).toEqual(['GET /list']);
     expect(logged.filter((line) => line.startsWith('hyper: Error: hook boom'))).toHaveLength(1);
+  });
+
+  it('reports the plain 500 of an escaped error to the write events of its response with its request (HY-60, HY-99)', async () => {
+    const app = await new Fixture().app({
+      onResponse: () => {
+        throw new Error('hook boom');
+      },
+    });
+    server = app.server(new FileSessions({ directory }));
+    // The write events of the node:http response are the write hook of the Node server (HY-99): a listener that runs
+    // before the server's own listener receives the end of the write of the 500 with its request.
+    const writes: Promise<string>[] = [];
+    server.prependListener('request', (incoming, outgoing) => {
+      writes.push(new Promise((resolve) => outgoing.on('finish', () => resolve(`${incoming.method} ${incoming.url} ${outgoing.statusCode}`))));
+    });
+    await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+    base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+    expect((await fetch(`${base}/list`)).status).toBe(500);
+    expect(await Promise.all(writes)).toEqual(['GET /list 500']);
   });
 
   it('answers a request with headers larger than node:http accepts with a 431 that no cache stores (HY-65)', async () => {
