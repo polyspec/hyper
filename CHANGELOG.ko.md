@@ -1,11 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 0730cda4807905b1f32a190da4a010729339dd64ed8551f3fcc4b29f9b97f683 -->
+<!-- source-sha256: aaf0a06662a44e419dcbc1865237b2baeb763099c0eaf1c90b1006f486e8a27a -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
-- H19.8: 의존성 policy 검사의 행은 `tests/package-install`의 lock을 읽는 kit 변경을 기다리며, 그 재시도 조건을 행에 적었다. 이 저장소의 검사 복사본은 루트 lock만 읽으며, 이 저장소는 kit의 파일을 바꾸지 않는다.
+- H19.8: 의존성 policy 검사가 루트 lock과 함께 `tests/package-install`의 lock을 읽는다. `config/dependency-policy.json`이 두 lock을 `npmLocks`에 이름 붙이고, kit 도구를 v0.0.13에서 동기화했으며, review 기록이 두 lock을 모두 포함한다. Red: 그 lock의 hyper-client version을 0.0.7로 두면 검사가 finding으로 실패한다. Green: 실제 lock은 finding 0개로 통과한다(#H19.8).
 
 ## 0.0.10
 - H19.4: WSGI와 ASGI callable이 서버가 받은 요청 대상을 `create_server`와 같이 읽는다. `create_wsgi`는 `RAW_URI`에서, 없으면 `REQUEST_URI`에서 대상을 읽고, `create_asgi`는 `scope['raw_path']`를 latin-1로 디코드한 값에서 경로를 읽는다. 이전에는 두 callable이 퍼센트 디코드된 `PATH_INFO`와 `scope['path']`를 읽어서 `GET /notes/a%20b`가 `/notes/a b`로 application에 닿았고 `/a%2Fb`가 `/a/b`와 합쳐졌다. 이제 인코드된 공백, 인코드된 슬래시와 퍼센트 시퀀스가 보낸 그대로 application에 닿는다(HY-100, HY-101). key가 없는 WSGI environ과 `raw_path`가 없는 ASGI scope는 빠진 key의 이름을 적은 오류로 요청을 실패시킨다.
