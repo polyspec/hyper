@@ -38,10 +38,11 @@ export function createServer<S extends object>(app: App<S>, sessions: FileSessio
     outgoing.on('close', () => {
       if (!outgoing.writableEnded) closed.abort();
     });
+    // An error that escapes the answer of a request is not handled by HY-43: it is logged, no response is written and the
+    // connection closes, as the Python server does (HY-60).
     serve(app, sessions, files, incoming, outgoing, started, closed.signal).catch((error: unknown) => {
       app.fail(error);
-      if (!outgoing.headersSent) write(outgoing, app.frame(Response.text(500, 'Internal Server Error')));
-      else outgoing.destroy();
+      outgoing.destroy();
     });
   });
   server.on('clientError', (error: NodeJS.ErrnoException & { rawPacket?: Buffer }, socket: Socket) => {
@@ -83,12 +84,7 @@ async function answer<S extends object>(app: App<S>, sessions: FileSessions, inc
   const { body, size } = await readBody(incoming, app.bodyLimit);
   const https = (incoming.socket as TLSSocket).encrypted === true;
   const request = Request.from({ method: incoming.method ?? 'GET', target: incoming.url ?? '/', headers: incoming.headers, body, bodySize: size, https });
-  let session;
-  try {
-    session = await sessions.open(request.cookie(FileSessions.cookieName(app.https || https)));
-  } catch (error) {
-    return app.report(request, app.frame(Response.text(500, 'Internal Server Error')), started, new Reply(), app.fail(error));
-  }
+  const session = await sessions.open(request.cookie(FileSessions.cookieName(app.https || https)));
   let response: Response | null;
   try {
     response = await app.handle(request, session, started, signal);

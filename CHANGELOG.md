@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- H19.9: the Node server writes no response for an error that escapes the answer of a request: it logs the error with the message of HY-43, closes the connection and calls no further response hook for that request, as the Python server does (HY-60). Before, the server wrote a plain 500 after such an error, and the response hook did not receive that response with its request. Red: a response hook that throws left the client a response with status 500 (`promise resolved "Response { status: 500`); Green: the client gets no response, the error is logged once and the hook is called once (#H19.9).
 - H19.8: the dependency policy check reads the lock of `tests/package-install` as well as the root lock: `config/dependency-policy.json` names both in `npmLocks`, the kit tools are synced from v0.0.13, and the review record covers both locks. Red: a stale hyper-client version (0.0.7) in that lock fails the check with a finding; Green: the real lock passes with 0 findings (#H19.8).
 
 ## 0.0.10
