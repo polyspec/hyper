@@ -7,7 +7,7 @@ import { checkManifest, createApplication, DATA_TEMPLATE_NAME, keptPaths, routeR
 import { resolvePath, type Template } from '@polyspec/template/render';
 import { maskedToken, verifyToken } from './csrf.js';
 import type { FileSessions } from './file-sessions.js';
-import { createServer, type ServerOptions } from './http.js';
+import { createListener, createServer, type Listener, type ServerOptions } from './http.js';
 import { decodeJson, inDataModel, JsonDecodeError } from './json.js';
 import { Disconnected, renderPage, stopClosed, type PageInput } from './page.js';
 import { Reply } from './reply.js';
@@ -103,6 +103,9 @@ export interface AppOptions<S extends object> {
   // (HY-62).
   clientRendering?: ClientRendering;
 }
+
+// The outcome of a request for its transport: the response, or a stop because its connection closed (HY-67).
+export type Answer = { stopped: false; response: Response; reply: Reply } | { stopped: true; reply: Reply };
 
 export class App<S extends object = Record<string, never>> {
   readonly services = new Services<S>();
@@ -204,14 +207,25 @@ export class App<S extends object = Record<string, never>> {
     return createServer(this, sessions, options);
   }
 
+  // Returns the node:http request listener that `server` installs (HY-102).
+  listener(sessions: FileSessions, options: ServerOptions = {}): Listener {
+    return createListener(this, sessions, options);
+  }
+
   // Answers one request; an unhandled error and a body larger than the response limit give a plain 500 and are
   // logged (HY-43, HY-66). Every response limits framing (HY-45), every failure is not cacheable (HY-65), and every
   // response is reported with the milliseconds since `started`, a performance.now() value that defaults to now
-  // (HY-60). With the signal of a connection, a request whose client closed the connection stops, is reported to
-  // onDisconnect and gives null, the response that is not written (HY-67).
-  async handle(request: Request, store: SessionStore, started?: number): Promise<Response>;
-  async handle(request: Request, store: SessionStore, started: number, signal: AbortSignal): Promise<Response | null>;
-  async handle(request: Request, store: SessionStore, started = performance.now(), signal?: AbortSignal): Promise<Response | null> {
+  // (HY-60).
+  async handle(request: Request, store: SessionStore, started = performance.now()): Promise<Response> {
+    const answer = await this.respond(request, store, started, undefined);
+    if (answer.stopped) throw new Error('hyper: a request stopped without the signal of a closed connection');
+    return answer.response;
+  }
+
+  // Answers one request for the transport of a server, which gives the signal of the connection (HY-67). A request
+  // whose client closed the connection stops and gives no response; the transport then calls `disconnected` after its
+  // write hook (HY-99). The loaders and actions of a routed request receive the reply of the answer (HY-52, HY-60).
+  async respond(request: Request, store: SessionStore, started: number, signal: AbortSignal | undefined): Promise<Answer> {
     const reply = new Reply();
     let response: Response;
     // The failure of a 500 of HY-43 or HY-66, which the hook receives (HY-60).
@@ -219,10 +233,7 @@ export class App<S extends object = Record<string, never>> {
     try {
       response = await this.answer(request, store, reply, signal);
     } catch (error) {
-      if (error instanceof Disconnected) {
-        this.onDisconnect?.(request, performance.now() - started, reply);
-        return null;
-      }
+      if (error instanceof Disconnected) return { stopped: true, reply };
       failure = this.fail(error);
       response = Response.text(500, 'Internal Server Error');
     }
@@ -232,7 +243,12 @@ export class App<S extends object = Record<string, never>> {
       this.log(`hyper: ${failure}`);
       response = Response.text(500, 'Internal Server Error');
     }
-    return this.report(request, this.frame(response), started, reply, failure);
+    return { stopped: false, response: this.report(request, this.frame(response), started, reply, failure), reply };
+  }
+
+  // Calls onDisconnect with the request, the elapsed milliseconds since `started` and the reply of a stopped request (HY-67).
+  disconnected(request: Request, started: number, reply: Reply): void {
+    this.onDisconnect?.(request, performance.now() - started, reply);
   }
 
   // Calls onResponse with a response, the milliseconds since `started`, the reply of the request and the failure of a

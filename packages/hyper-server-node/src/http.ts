@@ -14,7 +14,17 @@ export interface ServerOptions {
   // An absolute directory of public files. A GET or HEAD request whose path names a file in it receives the file,
   // as the PHP built-in server serves its document root; every other request goes to the application.
   files?: string;
+  // The write hook (HY-99): called once for every request that the application answers, with the request, the response
+  // whose write started or the plain 500 of an escaped error, whether the write ended, the elapsed milliseconds and the
+  // failure of an escaped error.
+  written?: WriteHook;
 }
+
+// The write hook of a server (HY-99).
+export type WriteHook = (request: Request, response: Response, ended: boolean, elapsed: number, failure: string | null) => void;
+
+// The request listener of node:http that an application runs for every request (HY-102).
+export type Listener = (incoming: IncomingMessage, outgoing: ServerResponse) => Promise<void>;
 
 const CONTENT_TYPES: Record<string, string> = {
   '.css': 'text/css; charset=utf-8',
@@ -29,31 +39,7 @@ const CONTENT_TYPES: Record<string, string> = {
 // Returns a server that answers every request with the application. A request whose start line or headers
 // node:http cannot parse, such as a request target with a byte outside ASCII (HY-42), receives a plain 400.
 export function createServer<S extends object>(app: App<S>, sessions: FileSessions, options: ServerOptions = {}): Server {
-  const files = options.files;
-  if (files !== undefined && (!isAbsolute(files) || !statSync(files).isDirectory())) throw new Error(`hyper: ${files} is not an absolute directory`);
-  const server = createHttpServer((incoming, outgoing) => {
-    const started = performance.now();
-    // The connection closed before the response was written (HY-67).
-    const closed = new AbortController();
-    outgoing.on('close', () => {
-      if (!outgoing.writableEnded) closed.abort();
-    });
-    // An error that escapes the answer of a request is logged with the message of HY-43 and answered with a plain 500 that no
-    // hook receives; when the response has started or the 500 cannot be written, the connection closes instead (HY-60).
-    serve(app, sessions, files, incoming, outgoing, started, closed.signal).catch((error: unknown) => {
-      app.fail(error);
-      if (outgoing.headersSent || outgoing.destroyed) {
-        outgoing.destroy();
-        return;
-      }
-      try {
-        write(outgoing, app.frame(Response.text(500, 'Internal Server Error')));
-      } catch (writeError) {
-        app.fail(writeError);
-        outgoing.destroy();
-      }
-    });
-  });
+  const server = createHttpServer(createListener(app, sessions, options));
   server.on('clientError', (error: NodeJS.ErrnoException & { rawPacket?: Buffer }, socket: Socket) => {
     const started = performance.now();
     if (!socket.writable || error.code === 'ECONNRESET') {
@@ -68,6 +54,84 @@ export function createServer<S extends object>(app: App<S>, sessions: FileSessio
   return server;
 }
 
+// Returns the request listener that answers every request of node:http with the application and sessions in files
+// (HY-102). It settles after the write hook and the disconnect hook of the request have run (HY-99, HY-67).
+export function createListener<S extends object>(app: App<S>, sessions: FileSessions, options: ServerOptions = {}): Listener {
+  const files = options.files;
+  if (files !== undefined && (!isAbsolute(files) || !statSync(files).isDirectory())) throw new Error(`hyper: ${files} is not an absolute directory`);
+  const written = options.written;
+  if (written !== undefined && typeof written !== 'function') throw new Error('hyper: the write hook must be a function');
+  return async (incoming, outgoing) => {
+    const started = performance.now();
+    // The connection closed before the response was written (HY-67).
+    const closed = new AbortController();
+    outgoing.on('close', () => {
+      if (!outgoing.writableEnded) closed.abort();
+    });
+    const finished = new Promise<void>((resolve) => outgoing.once('close', () => resolve()));
+    const https = (incoming.socket as TLSSocket).encrypted === true;
+    // The request as the server received it, with an empty body until the body is read (HY-60), and the response of
+    // the request: the response whose write started, or the plain 500 of an escaped error (HY-99).
+    let request: Request | null = null;
+    let reply: Reply | null = null;
+    let response: Response | null = null;
+    let failure: string | null = null;
+    let stopped = false;
+    try {
+      const file = files === undefined ? null : publicFile(files, incoming);
+      if (file !== null) {
+        serveFile(outgoing, incoming, file);
+        return;
+      }
+      request = Request.from({ method: incoming.method ?? 'GET', target: incoming.url ?? '/', headers: incoming.headers, https });
+      // The application answers a body larger than its limit with 413 (HY-59); the server reads no more of it.
+      const { body, size } = await readBody(incoming, app.bodyLimit);
+      request = Request.from({ method: incoming.method ?? 'GET', target: incoming.url ?? '/', headers: incoming.headers, body, bodySize: size, https });
+      const session = await sessions.open(request.cookie(FileSessions.cookieName(app.https || https)));
+      let answer;
+      try {
+        answer = await app.respond(request, session, started, closed.signal);
+      } finally {
+        session.close();
+      }
+      reply = answer.reply;
+      if (answer.stopped) {
+        // A request whose client closed the connection has no response to write (HY-67).
+        stopped = true;
+        response = app.frame(Response.text(500, 'Internal Server Error'));
+      } else {
+        response = withSessionCookie(app, sessions, answer.response, session.created, https);
+        write(outgoing, response);
+      }
+    } catch (error) {
+      // An error that escapes the answer of a request is logged with the message of HY-43 and answered with a plain 500
+      // that hyper writes; when the response has started or the 500 cannot be written, the connection closes (HY-60).
+      failure = app.fail(error);
+      if (outgoing.headersSent || outgoing.destroyed) {
+        outgoing.destroy();
+        response ??= app.frame(Response.text(500, 'Internal Server Error'));
+      } else {
+        response = app.frame(Response.text(500, 'Internal Server Error'));
+        try {
+          write(outgoing, response);
+        } catch (writeError) {
+          app.fail(writeError);
+          outgoing.destroy();
+        }
+      }
+    }
+    if (request === null || response === null) return;
+    // HY-99: the write hook runs after the close of the response; the disconnect hook (HY-67) follows it, also when the
+    // write hook raises, which then reaches the transport.
+    await finished;
+    try {
+      written?.(request, response, outgoing.writableFinished, performance.now() - started, failure);
+    } finally {
+      if (stopped && reply !== null) app.disconnected(request, started, reply);
+    }
+  };
+}
+
 // Returns a request of the method and the target of the request line that node:http could not parse, or null
 // when the packet has no request line.
 function requestLine(packet: Buffer | undefined): Request | null {
@@ -75,38 +139,19 @@ function requestLine(packet: Buffer | undefined): Request | null {
   return line === null ? null : Request.from({ method: line[1]!, target: line[2]! });
 }
 
-async function serve<S extends object>(app: App<S>, sessions: FileSessions, files: string | undefined, incoming: IncomingMessage, outgoing: ServerResponse, started: number, signal: AbortSignal): Promise<void> {
-  const file = files === undefined ? null : publicFile(files, incoming);
-  if (file === null) {
-    const response = await answer(app, sessions, incoming, started, signal);
-    // A request whose client closed the connection has no response to write (HY-67).
-    if (response !== null) write(outgoing, response);
-    return;
-  }
-  outgoing.writeHead(200, { 'Content-Type': CONTENT_TYPES[extname(file)] ?? 'application/octet-stream', 'Content-Length': String(statSync(file).size) });
-  if (incoming.method === 'HEAD') outgoing.end();
-  else createReadStream(file).pipe(outgoing);
-}
-
-async function answer<S extends object>(app: App<S>, sessions: FileSessions, incoming: IncomingMessage, started: number, signal: AbortSignal): Promise<Response | null> {
-  // The application answers a body larger than its limit with 413 (HY-59); the server reads no more of it.
-  const { body, size } = await readBody(incoming, app.bodyLimit);
-  const https = (incoming.socket as TLSSocket).encrypted === true;
-  const request = Request.from({ method: incoming.method ?? 'GET', target: incoming.url ?? '/', headers: incoming.headers, body, bodySize: size, https });
-  const session = await sessions.open(request.cookie(FileSessions.cookieName(app.https || https)));
-  let response: Response | null;
-  try {
-    response = await app.handle(request, session, started, signal);
-  } finally {
-    session.close();
-  }
-  if (response === null) return null;
-  const created = session.created;
+// Adds the cookie of a new session first, as PHP does when the session starts (HY-45).
+function withSessionCookie<S extends object>(app: App<S>, sessions: FileSessions, response: Response, created: string | null, https: boolean): Response {
   if (created === null) return response;
-  // A new session sets its cookie first, as PHP does when the session starts (HY-45).
   const cookie = sessions.cookie(created, app.https || https);
   const cookies = response.headers['Set-Cookie'];
   return new Response(response.status, { ...response.headers, 'Set-Cookie': [cookie, ...(Array.isArray(cookies) ? cookies : [])] }, response.body);
+}
+
+// Serves a file of the public directory (HY-62): no application runs and no hook is called.
+function serveFile(outgoing: ServerResponse, incoming: IncomingMessage, file: string): void {
+  outgoing.writeHead(200, { 'Content-Type': CONTENT_TYPES[extname(file)] ?? 'application/octet-stream', 'Content-Length': String(statSync(file).size) });
+  if (incoming.method === 'HEAD') outgoing.end();
+  else createReadStream(file).pipe(outgoing);
 }
 
 // Returns the file of a GET or HEAD request path in the public directory, or null.

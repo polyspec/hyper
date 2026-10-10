@@ -1,10 +1,10 @@
 // The HTTP server of an application with sessions in files (HY-42, HY-43, HY-45, HY-52, HY-54).
 import { mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
-import type { Server } from 'node:http';
+import { createServer as createHttpServer, type Server } from 'node:http';
 import { connect, type AddressInfo } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { FileSessions } from '../src/index.js';
 import { Fixture, FIXTURES, handlers } from './support.js';
 
@@ -246,5 +246,123 @@ describe('App.server', () => {
     expect((await fetch(`${base}/`)).status).toBe(200);
     expect(disconnects.length).toBe(1);
     expect(responses).toEqual([200]);
+  });
+});
+
+// The write hook of the Node server (HY-99) and the listener that App.listener returns (HY-102).
+describe('the write hook and App.listener', () => {
+  type Written = [string, number, boolean, string | null];
+
+  it('App.listener returns the request listener of the application (HY-102)', async () => {
+    const app = await new Fixture().app();
+    const listener = app.listener(new FileSessions({ directory }));
+    expect(typeof listener).toBe('function');
+    // A node:http server that installs only this listener answers the application.
+    const plain = createHttpServer(listener);
+    await new Promise<void>((resolve) => plain.listen(0, '127.0.0.1', resolve));
+    const response = await fetch(`http://127.0.0.1:${(plain.address() as AddressInfo).port}/`);
+    await new Promise((resolve) => plain.close(resolve));
+    expect(response.status).toBe(200);
+  });
+
+  it('calls the write hook once after the close of the response, with the response that it wrote and ended true (HY-99)', async () => {
+    const written: Written[] = [];
+    const app = await new Fixture().app();
+    server = app.server(new FileSessions({ directory }), {
+      written: (request, response, ended, elapsed, failure) => {
+        expect(elapsed).toBeGreaterThanOrEqual(0);
+        written.push([`${request.method} ${request.path()}`, response.status, ended, failure]);
+      },
+    });
+    await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+    base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+    expect((await fetch(`${base}/`)).status).toBe(200);
+    // The hook runs after the close of the response, which may come after the client has read the response.
+    await vi.waitFor(() => expect(written).toEqual([['GET /', 200, true, null]]));
+  });
+
+  it('reports the plain 500 of an escaped error once with ended true and its failure, and keeps a header set before the listener (HY-60, HY-99)', async () => {
+    const written: Written[] = [];
+    const app = await new Fixture().app({
+      onResponse: () => {
+        throw new Error('hook boom');
+      },
+    });
+    server = app.server(new FileSessions({ directory }), {
+      written: (request, response, ended, _elapsed, failure) => written.push([`${request.method} ${request.path()}`, response.status, ended, failure]),
+    });
+    // A header that the caller sets before the listener of hyper runs stays on the plain 500 (HY-60).
+    server.prependListener('request', (_incoming, outgoing) => outgoing.setHeader('X-Before', 'kept'));
+    await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+    base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+    const response = await fetch(`${base}/list`);
+    expect(response.status).toBe(500);
+    expect(response.headers.get('x-before')).toBe('kept');
+    await vi.waitFor(() => expect(written).toEqual([['GET /list', 500, true, 'hook boom']]));
+  });
+
+  it('calls the write hook with ended false before the disconnect hook when the client closes the connection (HY-67, HY-99)', async () => {
+    const events: string[] = [];
+    let entered: () => void = () => undefined;
+    const running = new Promise<void>((resolve) => (entered = resolve));
+    let release: () => void = () => undefined;
+    const released = new Promise<void>((resolve) => (release = resolve));
+    const app = await new Fixture().app({
+      handlers: {
+        ...handlers(),
+        shared: async () => {
+          entered();
+          await released;
+          return {};
+        },
+      },
+      onDisconnect: (request) => events.push(`disconnect ${request.method} ${request.path()}`),
+    });
+    server = app.server(new FileSessions({ directory }), {
+      written: (request, response, ended, _elapsed, failure) => events.push(`written ${request.method} ${request.path()} ${response.status} ${ended} ${failure}`),
+    });
+    server.once('connection', (connection) => connection.once('close', () => release()));
+    await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+    const socket = connect((server.address() as AddressInfo).port, '127.0.0.1', () => socket.write('GET / HTTP/1.1\r\nHost: x\r\n\r\n'));
+    await running;
+    socket.destroy();
+    // The listener settles after the write hook and the disconnect hook (HY-102).
+    await vi.waitFor(() => expect(events).toHaveLength(2));
+    expect(events).toEqual(['written GET / 500 false null', 'disconnect GET /']);
+  });
+
+  it('settles the promise of the listener after the write hook and the disconnect hook (HY-102)', async () => {
+    const events: string[] = [];
+    let entered: () => void = () => undefined;
+    const running = new Promise<void>((resolve) => (entered = resolve));
+    let release: () => void = () => undefined;
+    const released = new Promise<void>((resolve) => (release = resolve));
+    const app = await new Fixture().app({
+      handlers: {
+        ...handlers(),
+        shared: async () => {
+          entered();
+          await released;
+          return {};
+        },
+      },
+      onDisconnect: (request) => events.push(`disconnect ${request.method} ${request.path()}`),
+    });
+    const sessions = new FileSessions({ directory });
+    const listener = app.listener(sessions, {
+      written: (request, response, ended) => events.push(`written ${request.method} ${request.path()} ${response.status} ${ended}`),
+    });
+    const settled: Promise<void>[] = [];
+    const plain = createHttpServer((incoming, outgoing) => {
+      settled.push(listener(incoming, outgoing).then(() => void events.push('settled')));
+    });
+    plain.once('connection', (connection) => connection.once('close', () => release()));
+    await new Promise<void>((resolve) => plain.listen(0, '127.0.0.1', resolve));
+    const socket = connect((plain.address() as AddressInfo).port, '127.0.0.1', () => socket.write('GET / HTTP/1.1\r\nHost: x\r\n\r\n'));
+    await running;
+    socket.destroy();
+    await Promise.all(settled);
+    await new Promise((resolve) => plain.close(resolve));
+    expect(events).toEqual(['written GET / 500 false', 'disconnect GET /', 'settled']);
   });
 });
