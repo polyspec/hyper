@@ -42,7 +42,11 @@ def create_wsgi(app: App, sessions: FileSessions, files: Optional[str] = None,
             return [b''] if method == 'HEAD' else [data]
         declared = environ.get('CONTENT_LENGTH') or ''
         length = int(declared) if declared.isdigit() else 0
-        body, size = read_limited(environ['wsgi.input'].read, app.body_limit, length)
+        if length > app.body_limit:
+            # HY-100 and HY-59: a body over the limit is not read; its size is its Content-Length.
+            body, size = b'', length
+        else:
+            body, size = read_limited(environ['wsgi.input'].read, app.body_limit, length)
         request = Request(method, Request.target_path(target), _environ_headers(environ),
                           Request.target_query(target), body,
                           cookies=cookie_values(environ.get('HTTP_COOKIE')), https=app.https, body_size=size)
