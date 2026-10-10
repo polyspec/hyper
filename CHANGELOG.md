@@ -4,6 +4,8 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+
+## 0.0.11
 - H19.9-1: an error that escapes the answer of a request gets a plain 500 with the text `Internal Server Error` on the Node server and the Python `create_server`, as the production engines answer it, instead of a closed connection, which nginx answers with 502 Bad Gateway (HY-60). The server logs the message of HY-43 first, reports the 500 to no hook, and closes the connection when the response has started or the 500 cannot be written. Red: the Node response hook test received no 500 but a closed connection, the Python test raised `RemoteDisconnected`; Green: both servers answer the 500 with its frame policy and no cache, and no hook receives it (#H19.9-1).
 - H19.9: the Node server writes no response for an error that escapes the answer of a request: it logs the error with the message of HY-43, closes the connection and calls no further response hook for that request, as the Python server does (HY-60). Before, the server wrote a plain 500 after such an error, and the response hook did not receive that response with its request. Red: a response hook that throws left the client a response with status 500 (`promise resolved "Response { status: 500`); Green: the client gets no response, the error is logged once and the hook is called once (#H19.9).
 - H19.8: the dependency policy check reads the lock of `tests/package-install` as well as the root lock: `config/dependency-policy.json` names both in `npmLocks`, the kit tools are synced from v0.0.13, and the review record covers both locks. Red: a stale hyper-client version (0.0.7) in that lock fails the check with a finding; Green: the real lock passes with 0 findings (#H19.8).
