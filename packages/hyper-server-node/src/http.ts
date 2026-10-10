@@ -38,11 +38,20 @@ export function createServer<S extends object>(app: App<S>, sessions: FileSessio
     outgoing.on('close', () => {
       if (!outgoing.writableEnded) closed.abort();
     });
-    // An error that escapes the answer of a request is not handled by HY-43: it is logged, no response is written and the
-    // connection closes, as the Python server does (HY-60).
+    // An error that escapes the answer of a request is logged with the message of HY-43 and answered with a plain 500 that no
+    // hook receives; when the response has started or the 500 cannot be written, the connection closes instead (HY-60).
     serve(app, sessions, files, incoming, outgoing, started, closed.signal).catch((error: unknown) => {
       app.fail(error);
-      outgoing.destroy();
+      if (outgoing.headersSent || outgoing.destroyed) {
+        outgoing.destroy();
+        return;
+      }
+      try {
+        write(outgoing, app.frame(Response.text(500, 'Internal Server Error')));
+      } catch (writeError) {
+        app.fail(writeError);
+        outgoing.destroy();
+      }
     });
   });
   server.on('clientError', (error: NodeJS.ErrnoException & { rawPacket?: Buffer }, socket: Socket) => {
