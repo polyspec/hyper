@@ -1,5 +1,5 @@
 <!-- doc-id: hyper-server-node-readme -->
-<!-- source-sha256: 20c9568e46de05d753a1ff6c466f8a49af4e713bc015bde6e97ae7dc2089b1c2 -->
+<!-- source-sha256: 235bbcd076fa06c2f6c00324776ef4322945d1d0485fe7789123633b343a2061 -->
 # @polyspec/hyper-server
 
 [English](README.md).
@@ -95,6 +95,8 @@ app.server(sessions, { files: '/srv/board/public' }).listen(8080, '127.0.0.1');
 ```
 
 `app.server(sessions, options)`는 `node:http` 서버를 반환한다. 서버는 요청 body를 애플리케이션의 `bodyLimit`까지만 읽는다(HY-59). `options.files`는 절대 디렉터리이며, PHP 내장 서버가 document root를 제공하듯 그 안의 파일을 지정한 `GET`과 `HEAD` 요청에 그 파일을 준다. ASCII 밖의 바이트가 있는 요청 대상처럼 `node:http`가 해석하지 못하는 요청은 평문 400을 받는다(HY-42).
+
+`app.listener(sessions, options)`는 `app.server`가 설치하는 request listener를 반환한다(HY-102). 그 promise는 요청의 쓰기 hook과 연결 끊김 hook이 실행된 뒤 settle된다. `options.written`은 쓰기 hook이다(HY-99). 애플리케이션이 답한 요청마다 응답이 닫힌 뒤 한 번 호출되며, 요청, 쓰기를 시작한 응답 또는 탈출 오류의 평범한 500, 쓰기가 끝났는지, 경과 밀리초와 탈출 오류의 failure를 받는다.
 
 `FileSessions({ directory, lifetime })`는 이 서버 process만 쓰는 기존 절대 디렉터리의 파일에 각 session을 저장한다. session cookie는 HTTPS에서 `__Host-hy-session`, 그렇지 않으면 `hy-session`이고(HY-45), `lifetime`은 session의 마지막 요청부터 session이 끝날 때까지의 초다(기본 1440, PHP `session.gc_maxlifetime`과 같다). store는 자기가 만든 식별자만 받아들이고, 요청이 session 데이터를 읽거나 쓸 때만 session을 시작하며, 한 session의 요청을 차례로 실행한다(HY-45). `sessions.collect()`는 끝난 session의 파일을 지운다. 서버는 원하는 주기로 이를 호출한다.
 

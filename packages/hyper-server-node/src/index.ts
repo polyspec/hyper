@@ -1,6 +1,6 @@
-export { App, type Action, type AppOptions, type Choice, type ClientRendering, type Context, type Handlers, type Loader, type RouteHandlers, type RouteRegionLoader } from './app.js';
+export { App, type Action, type Answer, type AppOptions, type Choice, type ClientRendering, type Context, type Handlers, type Loader, type RouteHandlers, type RouteRegionLoader } from './app.js';
 export { FileSession, FileSessions, type FileSessionsOptions } from './file-sessions.js';
-export { type ServerOptions } from './http.js';
+export { type Listener, type ServerOptions, type WriteHook } from './http.js';
 export { decodeJson, encodeJson, inDataModel, JsonDecodeError, OutsideNumber, type DecodedValue } from './json.js';
 export { Reply } from './reply.js';
 export { Request, type RequestInit } from './request.js';
