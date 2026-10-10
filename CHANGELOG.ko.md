@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 197bab20247b90ef50e269ef2ce6c4003e7c03d6ad5a26b286566b49c1657531 -->
+<!-- source-sha256: 1c801d14619e1913c3cf3544dd59bd14a701b27b48fc399bc203251cc7cd5148 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- H19.4: WSGI와 ASGI callable이 서버가 받은 요청 대상을 `create_server`와 같이 읽는다. `create_wsgi`는 `RAW_URI`에서, 없으면 `REQUEST_URI`에서 대상을 읽고, `create_asgi`는 `scope['raw_path']`를 latin-1로 디코드한 값에서 경로를 읽는다. 이전에는 두 callable이 퍼센트 디코드된 `PATH_INFO`와 `scope['path']`를 읽어서 `GET /notes/a%20b`가 `/notes/a b`로 application에 닿았고 `/a%2Fb`가 `/a/b`와 합쳐졌다. 이제 인코드된 공백, 인코드된 슬래시와 퍼센트 시퀀스가 보낸 그대로 application에 닿는다(HY-100, HY-101). key가 없는 WSGI environ과 `raw_path`가 없는 ASGI scope는 빠진 key의 이름을 적은 오류로 요청을 실패시킨다.
 
 ## 0.0.9
 - H19.3-1: 0.0.9의 dependency policy가 통과한다. `package-lock.json`이 `@polyspec/hyper-build`, `@polyspec/hyper-client`, `@polyspec/hyper-server`를 0.0.9로 기록하고, 그 중 `@polyspec/hyper-client` 요구도 0.0.9이며, `@types/node`는 review 시점의 최신 stable release인 26.6.5이고, 세 lock에 대해 review 기록을 다시 썼다 (#H19.3-1). Red: `node scripts/kit/check-dependency-policy.mjs`가 finding 6개를 출력했다. Green: finding 0개를 출력하고 `make dependency-policy-mutation-check`가 통과한다.
