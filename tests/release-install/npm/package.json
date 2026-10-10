@@ -4,9 +4,9 @@
   "description": "A consumer that installs the release tarballs of this repository and the tarballs of the template release (HY-95, HY-96)",
   "type": "module",
   "dependencies": {
-    "@polyspec/hyper-client": "file:polyspec-hyper-client-npm-0.0.9.tgz",
-    "@polyspec/hyper-build": "file:polyspec-hyper-build-npm-0.0.9.tgz",
-    "@polyspec/hyper-server": "file:polyspec-hyper-server-npm-0.0.9.tgz",
+    "@polyspec/hyper-client": "file:polyspec-hyper-client-npm-0.0.10.tgz",
+    "@polyspec/hyper-build": "file:polyspec-hyper-build-npm-0.0.10.tgz",
+    "@polyspec/hyper-server": "file:polyspec-hyper-server-npm-0.0.10.tgz",
     "@polyspec/template": "https://github.com/polyspec/template/releases/download/v0.0.5/polyspec-template-npm-0.0.5.tgz",
     "@polyspec/template-compiler": "https://github.com/polyspec/template/releases/download/v0.0.5/polyspec-template-compiler-npm-0.0.5.tgz",
     "htmx.org": "4.0.0"
