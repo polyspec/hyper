@@ -1,5 +1,5 @@
 <!-- doc-id: waves -->
-<!-- source-sha256: fc0ebe6b4e4bb143e673e006663218e3dfcacb5a1ee5f991225ead19500bcf6c -->
+<!-- source-sha256: 7429ec31ec7dbae697a59fdec1d55496779dd2a34fbe5453b07b7575d091db1a -->
 # 웨이브 배경
 
 [English](waves.md).
@@ -81,3 +81,7 @@
 ## Wave 19
 
 의존: wave 18. Python server는 `http.server` 위에서 application을 serving했는데, Python 문서는 그것을 production에 권장하지 않는다고 적으며 무엇이 앞에 서더라도 그렇다. `php -S`가 PHP에서 그러하듯이. 그래서 application이 그 프로젝트가 production에 권장하는 server 아래에서는 실행될 수 없었다. server의 pipeline — public file, body 제한, request hook `around`(HY-97), 새 session의 session cookie(HY-45), write hook `written`(HY-99), 실패한 write의 disconnect hook(HY-67) — 이 이제 WSGI application callable과 ASGI application callable로도 서 있다. library는 어떤 server도 이름하지 않고 그 의존을 갖지 않는다. 배포가 자기가 고른 server로 callable을 실행한다. 릴리스 0.0.9가 이 callable들을 발행한다.
+
+## Wave 20
+
+의존: wave 19. 요청의 answer를 벗어난 오류는 adapter마다 다른 방식으로 consumer에게 닿았다. PHP는 평범한 500을 응답 hook에 보고했고, Node와 Python `create_server`는 hook 보고 없이 그것을 썼으며, WSGI와 ASGI callable은 오류를 server에 전파했다. 쓰기 hook `written`은 Python `create_server`와 Node 응답의 event에만 있었으므로, consumer가 PHP 요청의 응답을 기록할 수 없었다. HY-99는 이제 모든 서버에 같은 값을 주는 쓰기 hook 하나를 정하고, HY-102는 Node 서버에 애플리케이션의 listener를 준다. HY-60은 탈출 오류의 평범한 500이 hyper가 요청을 받기 전에 호출자가 설정한 header를 유지한다고 정한다.
