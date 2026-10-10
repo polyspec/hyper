@@ -119,11 +119,13 @@ class WsgiTest(unittest.TestCase):
         return set_cookies[0]
 
     def test_a_body_over_the_limit_reads_no_more(self) -> None:
+        # HY-100: the callable reads the body up to the body limit of the application and no more (HY-59).
         application = create_wsgi(self.app, self.sessions)
         input = Input(b'0123456789abcdef0123456789')
-        call(application, environ(REQUEST_METHOD='POST', CONTENT_LENGTH='25', wsgi_input=input))
+        call(application, environ(REQUEST_METHOD='POST', CONTENT_LENGTH='25', **{'wsgi.input': input}))
         request = self.app.requests[0]
         self.assertEqual(25, request.body_size())
+        self.assertLessEqual(sum(input.reads), self.app.body_limit)
 
     def test_a_public_file_is_served_before_around(self) -> None:
         files = Path(self.directory.name) / 'public'
