@@ -143,6 +143,31 @@ describe('App.server', () => {
     expect(response.headers.get('cache-control')).toBe('no-store');
   });
 
+  it('reports the 500 of a handler failure to the response hook with its request (HY-43, HY-60)', async () => {
+    await start();
+    expect((await fetch(`${base}/items/broken`)).status).toBe(500);
+    expect(reports.map((report) => report.slice(0, 2))).toEqual([['GET /items/broken', 500]]);
+  });
+
+  it('writes no response for an error that the response hook throws, logs it and calls no further hook (HY-60)', async () => {
+    const logged: string[] = [];
+    const calls: string[] = [];
+    const app = await new Fixture().app({
+      log: (message) => logged.push(message),
+      onResponse: (request) => {
+        calls.push(request === null ? 'null' : `${request.method} ${request.path()}`);
+        throw new Error('hook boom');
+      },
+    });
+    server = app.server(new FileSessions({ directory }));
+    await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+    base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+    // The connection closes without a response, as the Python server closes it for the same error.
+    await expect(fetch(`${base}/list`)).rejects.toThrow();
+    expect(calls).toEqual(['GET /list']);
+    expect(logged.filter((line) => line.startsWith('hyper: Error: hook boom'))).toHaveLength(1);
+  });
+
   it('answers a request with headers larger than node:http accepts with a 431 that no cache stores (HY-65)', async () => {
     await start();
     const response = await raw(Buffer.from(`GET / HTTP/1.1\r\nHost: x\r\nX-Large: ${'a'.repeat(20000)}\r\nConnection: close\r\n\r\n`));

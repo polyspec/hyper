@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: aaf0a06662a44e419dcbc1865237b2baeb763099c0eaf1c90b1006f486e8a27a -->
+<!-- source-sha256: 40d769d53bf57ddb3362baa399f818770ec94b87248f9e84bdb3475b6d4beb21 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H19.9: Node 서버는 요청의 answer를 벗어나는 오류에 대해 응답을 쓰지 않는다. 서버는 HY-43의 message로 오류를 기록하고, 연결을 닫으며, 그 요청에 대해 응답 hook을 더 호출하지 않는다. Python 서버와 같다(HY-60). 이전에는 그런 오류 뒤에 서버가 평범한 500을 썼고, 응답 hook은 그 응답을 요청과 함께 받지 못했다. Red: 던지는 응답 hook에서 클라이언트가 status 500 응답을 받았다(`promise resolved "Response { status: 500`); Green: 클라이언트는 응답을 받지 않고, 오류는 한 번 기록되며, hook은 한 번 호출된다(#H19.9).
 - H19.8: 의존성 policy 검사가 루트 lock과 함께 `tests/package-install`의 lock을 읽는다. `config/dependency-policy.json`이 두 lock을 `npmLocks`에 이름 붙이고, kit 도구를 v0.0.13에서 동기화했으며, review 기록이 두 lock을 모두 포함한다. Red: 그 lock의 hyper-client version을 0.0.7로 두면 검사가 finding으로 실패한다. Green: 실제 lock은 finding 0개로 통과한다(#H19.8).
 
 ## 0.0.10
