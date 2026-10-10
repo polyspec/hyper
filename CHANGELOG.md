@@ -5,8 +5,8 @@
 
 ## Unreleased
 
+## 0.0.10
 - H19.4: the WSGI and ASGI callables read the request target that the server received, as `create_server` reads it: `create_wsgi` takes the target from `RAW_URI`, or else from `REQUEST_URI`, and `create_asgi` takes the path from `scope['raw_path']` decoded as latin-1. Before, both read the percent-decoded `PATH_INFO` and `scope['path']`, so `GET /notes/a%20b` reached the application as `/notes/a b` and `/a%2Fb` merged with `/a/b`. An encoded space, an encoded slash and a percent sequence now reach the application as sent (HY-100, HY-101). A WSGI environ without both keys and an ASGI scope without `raw_path` fail the request with an error that names the missing key.
-
 - H19.4-1: the test `test_the_request_reaches_the_application` sends its body through the environ key `wsgi.input`; it passed the misspelled keyword `wsgi_input`, so the body was never read. The test now asserts that the application receives the value `hey` of the body (#H19.4-1). Red: with a broken body read the test before the fix passed, and the fixed test failed with `AssertionError: 'hey' != ''`. Green: `make test-python` passes its 80 unit tests and 2 package tests.
 
 ## 0.0.9

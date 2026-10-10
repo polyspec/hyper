@@ -10,7 +10,7 @@
     "require": {
         "php": "^8.2",
         "ext-pdo_sqlite": "*",
-        "polyspec/hyper-server": "0.0.9",
+        "polyspec/hyper-server": "0.0.10",
         "polyspec/template": "0.0.5"
     },
     "require-dev": {

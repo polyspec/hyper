@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "polyspec-hyper-server"
-version = "0.0.9"
+version = "0.0.10"
 description = "Server for the polyspec region protocol: manifest, routing, documents, JSON responses, actions and sessions"
 readme = "README.md"
 requires-python = ">=3.11"
