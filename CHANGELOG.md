@@ -4,7 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
-- H19.8: the row of the dependency policy check waits for the kit change that reads the lock of `tests/package-install`, and its retry condition is written in the row. The copy of the check in this repository reads only the root lock, and this repository changes no file of kit.
+- H19.8: the dependency policy check reads the lock of `tests/package-install` as well as the root lock: `config/dependency-policy.json` names both in `npmLocks`, the kit tools are synced from v0.0.13, and the review record covers both locks. Red: a stale hyper-client version (0.0.7) in that lock fails the check with a finding; Green: the real lock passes with 0 findings (#H19.8).
 
 ## 0.0.10
 - H19.4: the WSGI and ASGI callables read the request target that the server received, as `create_server` reads it: `create_wsgi` takes the target from `RAW_URI`, or else from `REQUEST_URI`, and `create_asgi` takes the path from `scope['raw_path']` decoded as latin-1. Before, both read the percent-decoded `PATH_INFO` and `scope['path']`, so `GET /notes/a%20b` reached the application as `/notes/a b` and `/a%2Fb` merged with `/a/b`. An encoded space, an encoded slash and a percent sequence now reach the application as sent (HY-100, HY-101). A WSGI environ without both keys and an ASGI scope without `raw_path` fail the request with an error that names the missing key.
