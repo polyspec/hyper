@@ -149,7 +149,7 @@ describe('App.server', () => {
     expect(reports.map((report) => report.slice(0, 2))).toEqual([['GET /items/broken', 500]]);
   });
 
-  it('writes no response for an error that the response hook throws, logs it and calls no further hook (HY-60)', async () => {
+  it('answers a plain 500 for an error that the response hook throws, logs it and calls no further hook (HY-60)', async () => {
     const logged: string[] = [];
     const calls: string[] = [];
     const app = await new Fixture().app({
@@ -162,8 +162,11 @@ describe('App.server', () => {
     server = app.server(new FileSessions({ directory }));
     await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
     base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
-    // The connection closes without a response, as the Python server closes it for the same error.
-    await expect(fetch(`${base}/list`)).rejects.toThrow();
+    // The plain 500 of an escaped error (HY-60) follows the production engines; no hook receives it.
+    const response = await fetch(`${base}/list`);
+    expect(response.status).toBe(500);
+    expect(await response.text()).toBe('Internal Server Error');
+    expect(response.headers.get('cache-control')).toBe('no-store');
     expect(calls).toEqual(['GET /list']);
     expect(logged.filter((line) => line.startsWith('hyper: Error: hook boom'))).toHaveLength(1);
   });

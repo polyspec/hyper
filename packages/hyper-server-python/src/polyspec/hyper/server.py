@@ -8,7 +8,9 @@ public directory receives the file, as the PHP built-in server serves its docume
 
 from __future__ import annotations
 
+import sys
 import time
+import traceback
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Callable, Optional
 
@@ -69,15 +71,21 @@ def create_server(app: App, sessions: FileSessions, files: Optional[str] = None,
         def serve(self) -> None:
             application, session_store, public = app_address
             started = _now_ns()
-            file = None if public is None else public_file(public, self.command, self.path)
-            if file is not None:
-                self.send_file(file)
+            self.headers_started = False
+            try:
+                file = None if public is None else public_file(public, self.command, self.path)
+                if file is not None:
+                    self.send_file(file)
+                    return
+                body, size = self.read_body(application.body_limit)
+                request = Request(self.command, Request.target_path(self.path), _headers(self.headers),
+                                  Request.target_query(self.path), body, cookies=cookie_values(self.headers.get('Cookie')),
+                                  https=application.https, body_size=size)
+                response, answered = answer_with(application, session_store, around, request, started)
+            except Exception as error:
+                # HY-60: an error that escapes the answer is a plain 500 that no hook receives.
+                self.escaped(application, error)
                 return
-            body, size = self.read_body(application.body_limit)
-            request = Request(self.command, Request.target_path(self.path), _headers(self.headers),
-                              Request.target_query(self.path), body, cookies=cookie_values(self.headers.get('Cookie')),
-                              https=application.https, body_size=size)
-            response, answered = answer_with(application, session_store, around, request, started)
             try:
                 self.send(response)
             except CLOSED:
@@ -88,7 +96,33 @@ def create_server(app: App, sessions: FileSessions, files: Optional[str] = None,
                 if answered:
                     application.disconnected(answered[0][0], started, answered[0][1])
                 return
+            except Exception as error:
+                self.escaped(application, error)
+                return
             reported(written, request, response, True, started)
+
+        def escaped(self, application, error: Exception) -> None:
+            """Logs an error that escapes the answer of a request with its message (HY-43) and answers a plain 500
+            with the frame policy and no cache (HY-45, HY-65), or closes the connection when the response has started
+            or the 500 cannot be written (HY-60)."""
+            sys.stderr.write(f'hyper: {type(error).__name__}: {error}\n')
+            traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
+            if self.headers_started:
+                self.close_connection = True
+                return
+            response = Response.text(500, 'Internal Server Error')
+            response = response.with_header('Content-Security-Policy', f'frame-ancestors {application.frame_ancestors}')
+            response = response.with_header('Cache-Control', 'no-store')
+            try:
+                self.send(response)
+            except Exception as write_error:
+                sys.stderr.write(f'hyper: {type(write_error).__name__}: {write_error}\n')
+                self.close_connection = True
+
+        def end_headers(self) -> None:
+            # The status line and the headers leave the server with the end of the headers (HY-60).
+            self.headers_started = True
+            super().end_headers()
 
         def read_body(self, limit: int) -> tuple[bytes, int]:
             """Reads the request body and its size. A body larger than the limit gives no bytes and the size read
