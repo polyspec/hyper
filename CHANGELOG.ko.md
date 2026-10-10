@@ -1,5 +1,5 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: decb7dbe1433a5c6175ebcbc04dbfee408f6f5ae0b924d8dfc7e1a77ad153d88 -->
+<!-- source-sha256: 38fd9307b0a623ab9a7967584d3cb7e3ef0c4adbeb669125a38cb37fbec830cf -->
 # 변경 기록
 
 [English](CHANGELOG.md).
@@ -7,6 +7,7 @@
 ## Unreleased
 
 ## 0.0.11
+- H19.9-2: 요청의 answer를 벗어난 오류는 모든 adapter에서 hyper 자신의 평범한 500으로 답한다. 상태 500, 텍스트 `Internal Server Error`, `Cache-Control: no-store`, frame 정책이다(HY-60). WSGI와 ASGI callable은 오류를 전파하는 대신 `start_response`나 첫 send 전에 그 500을 쓴다(HY-100, HY-101). Python 서버의 쓰기 hook은 `around`가 실행되지 않았어도 받은 그대로의 요청과 함께 그 500을 한 번 받는다(HY-99). PHP `App::run`은 처리되지 않은 예외와 요청의 치명적 오류에 대해 그 500을 쓴다. 이전에는 Python callable이 오류를 전파했고, `create_server`는 쓰기 hook에 그 오류의 보고를 주지 않았으며, PHP는 그 오류를 web server의 500까지 보냈다. Red: `make test-python`은 단위 테스트 87개를 실행해 `failures=2, errors=8`로 실패했고, `make test-php`는 321개 테스트를 실행해 `Failures: 3`으로 실패했다. Node 테스트는 첫 실행에서 통과했는데, Node 서버가 이미 그 500을 응답으로 쓰기 때문이다. Green: `make test-python`은 단위 테스트 87개와 package 테스트 2개를 통과하고, `make test-node`는 테스트 338개와 type check를 통과하며, `make test-php`는 321개 테스트를, `make test-python-render`는 32개 테스트를 통과한다(#H19.9-2).
 - H19.9-1: 요청의 answer를 벗어난 오류는 Node 서버와 Python `create_server`에서 연결을 닫는 대신 `Internal Server Error` 텍스트의 평범한 500으로 답한다. production 엔진과 같으며, nginx는 닫힌 연결에 502 Bad Gateway로 답한다(HY-60). 서버는 먼저 HY-43의 message를 기록하고, 500을 어떤 hook에도 보고하지 않으며, 응답이 시작되었거나 500 쓰기가 실패하면 연결을 닫는다. Red: Node 응답 hook 테스트는 500 대신 닫힌 연결을 받았고, Python 테스트는 `RemoteDisconnected`를 일으켰다. Green: 두 서버 모두 frame 정책과 no-cache를 가진 500으로 답하며, 어떤 hook도 그것을 받지 않는다(#H19.9-1).
 - H19.9: Node 서버는 요청의 answer를 벗어나는 오류에 대해 응답을 쓰지 않는다. 서버는 HY-43의 message로 오류를 기록하고, 연결을 닫으며, 그 요청에 대해 응답 hook을 더 호출하지 않는다. Python 서버와 같다(HY-60). 이전에는 그런 오류 뒤에 서버가 평범한 500을 썼고, 응답 hook은 그 응답을 요청과 함께 받지 못했다. Red: 던지는 응답 hook에서 클라이언트가 status 500 응답을 받았다(`promise resolved "Response { status: 500`); Green: 클라이언트는 응답을 받지 않고, 오류는 한 번 기록되며, hook은 한 번 호출된다(#H19.9).
 - H19.8: 의존성 policy 검사가 루트 lock과 함께 `tests/package-install`의 lock을 읽는다. `config/dependency-policy.json`이 두 lock을 `npmLocks`에 이름 붙이고, kit 도구를 v0.0.13에서 동기화했으며, review 기록이 두 lock을 모두 포함한다. Red: 그 lock의 hyper-client version을 0.0.7로 두면 검사가 finding으로 실패한다. Green: 실제 lock은 finding 0개로 통과한다(#H19.8).

@@ -155,6 +155,90 @@ final class RunTest extends TestCase
         self::assertSame("response 200\ndisconnect GET / 1 {\"stage\":\"shared\"}\n", $lines);
     }
 
+    /** HY-60: a fatal error before the response hook runs writes the plain 500 and reports it to the hook once. */
+    public function testAFatalErrorBeforeTheResponseHookWritesThePlain500AndReportsIt(): void
+    {
+        [$status, $headers, $body, $lines] = self::escape('fatal');
+
+        self::assertSame(500, $status);
+        self::assertSame('Internal Server Error', $body);
+        self::assertContains('Cache-Control: no-store', $headers);
+        self::assertContains("Content-Security-Policy: frame-ancestors 'self'", $headers);
+        self::assertSame("response 500\n", $lines);
+    }
+
+    /** HY-60: a fatal error after the response hook ran writes the plain 500 and calls the hook no second time. */
+    public function testAFatalErrorAfterTheResponseHookWritesThePlain500WithoutASecondReport(): void
+    {
+        [$status, $headers, $body, $lines] = self::escape('hook-fatal');
+
+        self::assertSame(500, $status);
+        self::assertSame('Internal Server Error', $body);
+        self::assertContains('Cache-Control: no-store', $headers);
+        self::assertSame("response 200\n", $lines);
+    }
+
+    /** HY-60: an uncaught exception after the response hook ran writes the plain 500 through the exception handler. */
+    public function testAnUncaughtExceptionAfterTheResponseHookWritesThePlain500WithoutASecondReport(): void
+    {
+        [$status, $headers, $body, $lines] = self::escape('hook-throws');
+
+        self::assertSame(500, $status);
+        self::assertSame('Internal Server Error', $body);
+        self::assertContains('Cache-Control: no-store', $headers);
+        self::assertSame("response 200\n", $lines);
+    }
+
+    /**
+     * Serves the escape front controller in the given mode with the PHP built-in server and returns the status, the
+     * headers, the body of the response and the lines that the response hook appended to the log.
+     *
+     * @return array{int, list<string>, string, string}
+     */
+    private static function escape(string $mode): array
+    {
+        $log = (string) tempnam(sys_get_temp_dir(), 'hyper-escape-');
+        $server = false;
+        try {
+            $server = proc_open([PHP_BINARY, '-d', 'display_errors=0', '-d', 'error_log=/dev/null', '-S', '127.0.0.1:0', __DIR__ . '/Support/escape.php'], [0 => ['file', '/dev/null', 'r'], 1 => ['file', '/dev/null', 'w'], 2 => ['pipe', 'w']], $pipes, null, [...getenv(), 'HYPER_ESCAPE_MODE' => $mode, 'HYPER_ESCAPE_LOG' => $log]);
+            if ($server === false) {
+                self::fail('the PHP built-in server did not start');
+            }
+            $started = self::waitFor($pipes[2], 'started');
+            if (preg_match('/\(http:\/\/127\.0\.0\.1:(\d+)\) started/', $started, $address) !== 1) {
+                self::fail("the server reported no address: {$started}");
+            }
+            $context = stream_context_create(['http' => ['ignore_errors' => true, 'timeout' => 10]]);
+            $stream = fopen("http://127.0.0.1:{$address[1]}/", 'r', false, $context);
+            if ($stream === false) {
+                self::fail('the PHP built-in server gave no response');
+            }
+            $body = (string) stream_get_contents($stream);
+            // The wrapper data of an HTTP stream holds the status line and the headers of the response.
+            $lines = stream_get_meta_data($stream)['wrapper_data'] ?? null;
+            fclose($stream);
+            if (!is_array($lines) || $lines === []) {
+                self::fail('the response had no status line');
+            }
+            $headers = [];
+            foreach ($lines as $line) {
+                if (!is_string($line)) {
+                    self::fail('a header of the response is not text');
+                }
+                $headers[] = $line;
+            }
+            $status = (int) explode(' ', $headers[0])[1];
+
+            return [$status, array_slice($headers, 1), $body, (string) file_get_contents($log)];
+        } finally {
+            if ($server !== false) {
+                proc_terminate($server);
+                proc_close($server);
+            }
+            unlink($log);
+        }
+    }
+
     /**
      * Reads the standard error of the PHP built-in server until a line contains the text, for at most 5 seconds, and
      * returns that line.

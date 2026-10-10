@@ -1,12 +1,14 @@
 """The request pipeline of the Python server, which every transport of the package serves with: the
 public files, the body limit (HY-59), the session cookie of a new session first (HY-45), the
-request hook `around` (HY-97), the write hook `written` (HY-99) and the disconnect hook on a
-failed write (HY-67)."""
+request hook `around` (HY-97), the write hook `written` (HY-99), the plain 500 of an escaped error
+(HY-60) and the disconnect hook on a failed write (HY-67)."""
 
 from __future__ import annotations
 
 import re
+import sys
 import time
+import traceback
 from pathlib import Path
 from typing import Callable, Optional
 
@@ -80,23 +82,71 @@ def read_limited(read: Callable[[int], bytes], limit: int, length: int) -> tuple
     return bytes(body), max(size, length)
 
 
-def answer_with(app: App, sessions: FileSessions, around: Optional[Callable], request: Request,
-                started: int) -> tuple[Response, list[tuple[Request, Reply]]]:
-    """Answers a request through the request hook `around` (HY-97) and the application: `around` is
-    None or it receives the request and an `answer` function; `answer` opens the session of the
-    request by its session cookie, answers with `App.respond`, closes the session and returns the
-    response with the cookie of a new session first (HY-45). Returns the response to send and the
-    request and the reply of the last call of `answer`, which the disconnect hook receives
-    (HY-67, HY-97)."""
-    answered: list[tuple[Request, Reply]] = []
+class Exchange:
+    """One request of a transport in the pipeline: the request as the transport received it (HY-60), the
+    reply of the last call of `answer` (HY-67) and the write hook, which receives the response of the request
+    once (HY-99). `request` is None while the transport has no target to report."""
+
+    def __init__(self, written: Optional[Callable], started: int):
+        self.request: Optional[Request] = None
+        self.written = written
+        self.started = started
+        self.answered: list[tuple[Request, Reply]] = []
+        self.reported = False
+
+    def report(self, response: Response, ended: bool) -> None:
+        """Calls the write hook once with the response that the server tried to write, whether the write
+        ended and the elapsed milliseconds since the arrival of the request (HY-99). A request without a
+        request to report is not reported (HY-60)."""
+        if self.reported:
+            return
+        self.reported = True
+        if self.written is not None and self.request is not None:
+            self.written(self.request, response, ended, (time.perf_counter_ns() - self.started) / 1e6)
+
+    def disconnect(self, app: App) -> None:
+        """Calls the disconnect hook with the request and the reply of the last call of `answer` (HY-67)."""
+        if self.answered:
+            app.disconnected(self.answered[0][0], self.started, self.answered[0][1])
+
+
+def head_request(method: str, target: str, headers: dict[str, str], cookie: Optional[str], https: bool,
+                 declared: int) -> Request:
+    """Returns the request as the transport received it before its body was read (HY-60): the target, the
+    headers and the cookies, an empty body, and the size that the Content-Length declares."""
+    return Request(method, Request.target_path(target), headers, Request.target_query(target), b'',
+                   cookies=cookie_values(cookie), https=https, body_size=declared)
+
+
+def declared_length(value: Optional[str]) -> int:
+    """Returns the size that a Content-Length header declares, or 0 when it declares none or is not digits."""
+    return int(value) if value is not None and value.isdigit() else 0
+
+
+def escape(app: App, error: BaseException) -> Response:
+    """Logs an error that escapes the answer of a request with its message (HY-43) and returns the plain 500
+    that hyper writes (HY-60): the text, `Cache-Control: no-store` (HY-65) and the frame policy (HY-45)."""
+    sys.stderr.write(f'hyper: {type(error).__name__}: {error}\n')
+    traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
+    response = Response.text(500, 'Internal Server Error')
+    return response.with_header('Content-Security-Policy', f'frame-ancestors {app.frame_ancestors}') \
+        .with_header('Cache-Control', 'no-store')
+
+
+def answer_with(app: App, sessions: FileSessions, around: Optional[Callable], exchange: Exchange) -> Response:
+    """Answers the request of the exchange through the request hook `around` (HY-97) and the application:
+    `around` is None or it receives the request and an `answer` function; `answer` opens the session of the
+    request by its session cookie, answers with `App.respond`, closes the session and returns the response
+    with the cookie of a new session first (HY-45). The reply of the last call of `answer` is kept in the
+    exchange for the disconnect hook (HY-67, HY-97)."""
 
     def answer(given: Request) -> Response:
         session = sessions.open(given.cookie(cookie_name(app.https)))
         try:
-            response, reply = app.respond(given, session, started)
+            response, reply = app.respond(given, session, exchange.started)
         finally:
             session.close()
-        answered[:] = [(given, reply)]
+        exchange.answered[:] = [(given, reply)]
         created = session.created
         if created is None:
             return response
@@ -107,18 +157,13 @@ def answer_with(app: App, sessions: FileSessions, around: Optional[Callable], re
                                                          *(existing if isinstance(existing, list) else [])]},
                         response.body)
 
+    request = exchange.request
+    if request is None:
+        raise RuntimeError('the exchange has no request to answer (HY-60)')
     response = answer(request) if around is None else around(request, answer)
     if not isinstance(response, Response):
         raise TypeError(f'around returned {type(response).__name__}, not a Response')
-    return response, answered
-
-
-def reported(written: Optional[Callable], request: Request, response: Response, ended: bool,
-             started: int) -> None:
-    """Calls the write hook `written` (HY-99) with whether the write of the response ended and the
-    elapsed milliseconds since the arrival of the request."""
-    if written is not None:
-        written(request, response, ended, (time.perf_counter_ns() - started) / 1e6)
+    return response
 
 
 def _url_decode(text: str) -> bytes:

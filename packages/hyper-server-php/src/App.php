@@ -20,6 +20,12 @@ final class App
 
     private readonly Reads $reads;
 
+    /** The error types that end the script with a fatal error, which `run` answers with the plain 500 (HY-60). */
+    private const FATAL = [E_ERROR, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR];
+
+    /** Whether the response hook has been called for the request that `run` answers (HY-60). */
+    private bool $reported = false;
+
     /**
      * @param array<string, \Closure> $regionLoaders
      * @param array<string, RouteHandler> $routeHandlers
@@ -203,15 +209,41 @@ final class App
             $response = Response::text(500, 'Internal Server Error');
         }
 
-        $response = $response->withHeader('Content-Security-Policy', "frame-ancestors {$this->frameAncestors}");
-        if ($response->status >= 400) {
-            $response = $response->withHeader('Cache-Control', 'no-store');
-        }
+        $response = $this->framed($response);
         if ($this->onResponse !== null) {
+            $this->reported = true;
             ($this->onResponse)($request, $response, (hrtime(true) - $started) / 1e6, $reply, $failure);
         }
 
         return $response;
+    }
+
+    /** Adds the frame-ancestors policy of the application to a response (HY-45), and no-store to a failure (HY-65). */
+    private function framed(Response $response): Response
+    {
+        $response = $response->withHeader('Content-Security-Policy', "frame-ancestors {$this->frameAncestors}");
+
+        return $response->status >= 400 ? $response->withHeader('Cache-Control', 'no-store') : $response;
+    }
+
+    /**
+     * Writes hyper's plain 500 for an error that escapes the answer of the request (HY-60): the text, no-store and the
+     * frame policy, as the other failures of the server. The response hook receives that 500 only when it has not run
+     * for the request, so no hook is called twice. Headers that have been sent leave the response as it is.
+     */
+    private function escaped(?Request $request, Reply $reply, int|float $started, string $description, string $failure): void
+    {
+        error_log("hyper: {$description}");
+        if (headers_sent()) {
+            return;
+        }
+        $response = $this->framed(Response::text(500, 'Internal Server Error'));
+        if ($request !== null && !$this->reported && $this->onResponse !== null) {
+            $this->reported = true;
+            ($this->onResponse)($request, $response, (hrtime(true) - $started) / 1e6, $reply, $failure);
+        }
+        // The plain 500 replaces the queued response, which a fatal error or the session may have changed (HY-60).
+        $response->sendReplacing('HTTP/1.1 500 Internal Server Error');
     }
 
     /** Answers a request; the loaders and actions of a routed request receive `$reply` (HY-52, HY-60). */
@@ -629,7 +661,8 @@ final class App
     }
 
     /**
-     * Answers the current PHP request with the PHP session and writes the response; errors go to the log only.
+     * Answers the current PHP request with the PHP session and writes the response; errors go to the log, and an error
+     * that escapes the answer gets the plain 500 of HY-60.
      * A response without a body receives no Content-Type from PHP (HY-52), and a client that closed the connection
      * ends the script at the first failed write and is reported to the disconnect hook (HY-67). The elapsed time of
      * HY-60 counts from `$started`, an hrtime(true) value of the monotonic clock that the caller takes at the start
@@ -653,8 +686,21 @@ final class App
         // HY-67: PHP reports a closed connection only at a failed write; with ignore_user_abort off it ends the
         // script there, and the shutdown function calls the disconnect hook.
         ignore_user_abort(false);
-        $request = Request::fromGlobals();
+        $request = null;
         $reply = new Reply();
+        $this->reported = false;
+        // HY-60: an uncaught exception and a fatal error of the request write the plain 500 of hyper, the same as the
+        // other servers, instead of the web server's 500. The request is known once it is built.
+        set_exception_handler(function (\Throwable $error) use (&$request, $reply, $started): void {
+            $this->escaped($request, $reply, $started, sprintf('%s: %s in %s:%d', $error::class, $error->getMessage(), $error->getFile(), $error->getLine()), $error->getMessage());
+        });
+        register_shutdown_function(function () use (&$request, $reply, $started): void {
+            $error = error_get_last();
+            if ($error !== null && in_array($error['type'], self::FATAL, true)) {
+                $this->escaped($request, $reply, $started, "fatal error: {$error['message']} in {$error['file']}:{$error['line']}", $error['message']);
+            }
+        });
+        $request = Request::fromGlobals();
         if ($this->onDisconnect !== null) {
             $hook = $this->onDisconnect;
             register_shutdown_function(static function () use ($hook, $request, $started, $reply): void {
