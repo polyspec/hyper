@@ -8,25 +8,15 @@ public directory receives the file, as the PHP built-in server serves its docume
 
 from __future__ import annotations
 
-import re
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from pathlib import Path
 from typing import Callable, Optional
 
 from .app import App
-from .file_sessions import FileSessions, cookie_header, cookie_name
-from .reply import Reply
+from .file_sessions import FileSessions
+from .pipeline import CLOSED, CONTENT_TYPES, answer_with, cookie_values, public_file, read_limited, reported, validate
 from .request import Request
 from .response import Response
-
-# The errors of a write to a connection that the client closed (HY-67).
-CLOSED = (BrokenPipeError, ConnectionResetError, ConnectionAbortedError)
-
-CONTENT_TYPES = {'.css': 'text/css; charset=utf-8', '.html': 'text/html; charset=utf-8',
-                 '.js': 'text/javascript; charset=utf-8', '.json': 'application/json; charset=utf-8',
-                 '.png': 'image/png', '.svg': 'image/svg+xml', '.txt': 'text/plain; charset=utf-8'}
-_PUBLIC_PATH = re.compile(r'^(\/[A-Za-z0-9_-][A-Za-z0-9._-]*)+$')
 
 
 def create_server(app: App, sessions: FileSessions, files: Optional[str] = None, host: str = '127.0.0.1',
@@ -47,12 +37,7 @@ def create_server(app: App, sessions: FileSessions, files: Optional[str] = None,
     request that it gave to `around`, the response that it wrote, whether the write ended and the elapsed
     milliseconds since the arrival of the request; a write that failed because the client closed the connection
     reports that it did not end, before the disconnect hook (HY-99, HY-67)."""
-    if files is not None and (not Path(files).is_absolute() or not Path(files).is_dir()):
-        raise ValueError(f'{files} is not an absolute directory')
-    if around is not None and not callable(around):
-        raise ValueError('around must be a callable or None')
-    if written is not None and not callable(written):
-        raise ValueError('written must be a callable or None')
+    validate(files, around, written)
     app_address = app, sessions, files
 
     class Handler(BaseHTTPRequestHandler):
@@ -84,68 +69,33 @@ def create_server(app: App, sessions: FileSessions, files: Optional[str] = None,
         def serve(self) -> None:
             application, session_store, public = app_address
             started = _now_ns()
-            file = None if public is None else _public_file(public, self.command, self.path)
+            file = None if public is None else public_file(public, self.command, self.path)
             if file is not None:
                 self.send_file(file)
                 return
             body, size = self.read_body(application.body_limit)
             request = Request(self.command, Request.target_path(self.path), _headers(self.headers),
-                              Request.target_query(self.path), body, cookies=_cookies(self.headers.get('Cookie')),
+                              Request.target_query(self.path), body, cookies=cookie_values(self.headers.get('Cookie')),
                               https=application.https, body_size=size)
-            # The request and the reply of the last answer of the application, which the disconnect hook receives
-            # (HY-67, HY-97).
-            answered: list[tuple[Request, Reply]] = []
-
-            def answer(given: Request) -> Response:
-                session = session_store.open(given.cookie(cookie_name(application.https)))
-                try:
-                    response, reply = application.respond(given, session, started)
-                finally:
-                    session.close()
-                answered[:] = [(given, reply)]
-                created = session.created
-                if created is None:
-                    return response
-                # A new session sets its cookie first, as PHP does when the session starts (HY-45).
-                existing = response.headers.get('Set-Cookie', [])
-                return Response(response.status, {**response.headers,
-                                                  'Set-Cookie': [cookie_header(created, application.https),
-                                                                 *(existing if isinstance(existing, list) else [])]},
-                                response.body)
-
-            response = answer(request) if around is None else around(request, answer)
-            if not isinstance(response, Response):
-                raise TypeError(f'around returned {type(response).__name__}, not a Response')
+            response, answered = answer_with(application, session_store, around, request, started)
             try:
                 self.send(response)
             except CLOSED:
                 # HY-67: the write of the response failed because the client closed the connection; HY-99: the
                 # write hook runs before the disconnect hook.
                 self.close_connection = True
-                if written is not None:
-                    written(request, response, False, (_now_ns() - started) / 1e6)
+                reported(written, request, response, False, started)
                 if answered:
                     application.disconnected(answered[0][0], started, answered[0][1])
                 return
-            if written is not None:
-                # HY-99: the write of the status line, the headers and the body ended without an error.
-                written(request, response, True, (_now_ns() - started) / 1e6)
+            reported(written, request, response, True, started)
 
         def read_body(self, limit: int) -> tuple[bytes, int]:
             """Reads the request body and its size. A body larger than the limit gives no bytes and the size read
             so far; the rest of it is read and discarded, so that the response can be sent (HY-59)."""
             declared = self.headers.get('Content-Length') or ''
             length = int(declared) if declared.isdigit() else 0
-            size = 0
-            body = bytearray()
-            while size < length:
-                chunk = self.rfile.read(min(65536, length - size))
-                if not chunk:
-                    break
-                size += len(chunk)
-                if size <= limit:
-                    body.extend(chunk)
-            return bytes(body), max(size, length if declared.isdigit() else 0)
+            return read_limited(self.rfile.read, limit, length)
 
         def send(self, response: Response) -> None:
             empty = response.status in (204, 304)
@@ -160,7 +110,7 @@ def create_server(app: App, sessions: FileSessions, files: Optional[str] = None,
             if body:
                 self.wfile.write(body)
 
-        def send_file(self, file: Path) -> None:
+        def send_file(self, file) -> None:
             size = file.stat().st_size
             self.send_response(200)
             self.send_header('Content-Type', CONTENT_TYPES.get(file.suffix, 'application/octet-stream'))
@@ -178,63 +128,6 @@ def _headers(headers) -> dict[str, str]:
     for name, value in headers.items():
         joined.setdefault(name.lower(), []).append(value)
     return {name: ', '.join(values) for name, values in joined.items()}
-
-
-def _cookies(header: Optional[str]) -> dict[str, str]:
-    """Parses a Cookie header: values are URL-decoded and the first cookie of a name counts, as PHP reads
-    `$_COOKIE`; a cookie that is not UTF-8 is ignored, because hyper does not check cookies (HY-42)."""
-    cookies: dict[str, str] = {}
-    if header is None:
-        return cookies
-    for pair in header.split(';'):
-        equals = pair.find('=')
-        if equals < 0:
-            continue
-        name = _utf8(_url_decode(pair[:equals].lstrip(' ')))
-        value = _utf8(_url_decode(pair[equals + 1:]))
-        if name not in (None, '') and value is not None and name not in cookies:
-            cookies[name] = value
-    return cookies
-
-
-def _url_decode(text: str) -> bytes:
-    """Decodes `+` to a space and `%XX` to its byte, as PHP urldecode does; any other `%` stays."""
-    decoded = bytearray()
-    index = 0
-    while index < len(text):
-        char = text[index]
-        if char == '+':
-            decoded.append(0x20)
-            index += 1
-        elif char == '%' and index + 2 < len(text) + 1 and _hex(text[index + 1:index + 3]):
-            decoded.append(int(text[index + 1:index + 3], 16))
-            index += 3
-        else:
-            decoded.extend(char.encode('latin-1'))
-            index += 1
-    return bytes(decoded)
-
-
-def _hex(text: str) -> bool:
-    return len(text) == 2 and all(char in '0123456789abcdefABCDEF' for char in text)
-
-
-def _utf8(data: bytes) -> Optional[str]:
-    try:
-        return data.decode('utf-8')
-    except UnicodeDecodeError:
-        return None
-
-
-def _public_file(files: str, method: str, target: str) -> Optional[Path]:
-    """Returns the file of a GET or HEAD request path in the public directory, or None."""
-    if method not in ('GET', 'HEAD'):
-        return None
-    path = Request.target_path(target)
-    if _PUBLIC_PATH.fullmatch(path) is None:
-        return None
-    file = Path(files) / path.lstrip('/')
-    return file if file.is_file() else None
 
 
 def _now_ns() -> int:

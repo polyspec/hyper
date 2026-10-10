@@ -76,3 +76,7 @@ Depends on: wave 16. The release 0.0.5 sets the version 0.0.5 in every manifest 
 ## Wave 18
 
 Depends on: wave 17. The same name `polyspec/hyper` named the browser package on npm and the PHP server on Composer, and the directories `hyper-js` and `hyper-node` differed from the package names. Every package name now states its role, client, server or build, and every directory below `packages/` states the role and the language of a server, so a release archive name states the role and the registry of its package. The release 0.0.7 publishes the packages with these names. The release 0.0.8 gives the Python server the write hook.
+
+## Wave 19
+
+Depends on: wave 18. The Python server served an application over `http.server`, which the Python documentation marks as not recommended for production, whatever fronts it, as `php -S` is for PHP; an application could not run under a server that a project recommends for production. The pipeline of the server — the public files, the body limit, the request hook `around` (HY-97), the session cookie of a new session (HY-45), the write hook `written` (HY-99) and the disconnect hook on a failed write (HY-67) — now stands also as a WSGI application callable and as an ASGI application callable. The library names no server and takes no dependency on one: a deployment runs the callable with the server that it chooses. The release 0.0.9 publishes the callables.

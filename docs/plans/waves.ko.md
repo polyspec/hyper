@@ -1,5 +1,5 @@
 <!-- doc-id: waves -->
-<!-- source-sha256: e07736c939bbe1a7316f11712a29417dca3da83fc2db734977e873179e0fd6c7 -->
+<!-- source-sha256: fc0ebe6b4e4bb143e673e006663218e3dfcacb5a1ee5f991225ead19500bcf6c -->
 # 웨이브 배경
 
 [English](waves.md).
@@ -77,3 +77,7 @@
 ## Wave 18
 
 의존: wave 17. 같은 이름 `polyspec/hyper`가 npm에서는 browser package를, Composer에서는 PHP server를 가리켰고, directory `hyper-js`와 `hyper-node`는 package 이름과 달랐다. 이제 모든 package 이름은 역할(client, server, build)을 밝히고, `packages/` 아래 모든 directory는 역할과 server의 언어를 밝히므로, release archive 이름이 그 package의 역할과 registry를 밝힌다. 릴리스 0.0.7은 이 이름으로 package를 배포한다. 0.0.8 release가 Python 서버에 쓰기 hook을 준다.
+
+## Wave 19
+
+의존: wave 18. Python server는 `http.server` 위에서 application을 serving했는데, Python 문서는 그것을 production에 권장하지 않는다고 적으며 무엇이 앞에 서더라도 그렇다. `php -S`가 PHP에서 그러하듯이. 그래서 application이 그 프로젝트가 production에 권장하는 server 아래에서는 실행될 수 없었다. server의 pipeline — public file, body 제한, request hook `around`(HY-97), 새 session의 session cookie(HY-45), write hook `written`(HY-99), 실패한 write의 disconnect hook(HY-67) — 이 이제 WSGI application callable과 ASGI application callable로도 서 있다. library는 어떤 server도 이름하지 않고 그 의존을 갖지 않는다. 배포가 자기가 고른 server로 callable을 실행한다. 릴리스 0.0.9가 이 callable들을 발행한다.

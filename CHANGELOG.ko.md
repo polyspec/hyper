@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: c7a81aa11d5f4b92ef4f1f8f038273af1c2e14453dacf53fcc58df64a0c53a62 -->
+<!-- source-sha256: 9dc0d801828a5b28e8a791f4fdd84d062b1e7adc0694ab43ae37943de521ffca -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H19.1: Python server package가 WSGI application callable을 발행한다. `polyspec.hyper.wsgi`의 `create_wsgi`는 `create_server`의 인자를 받아 WSGI server가 실행하는 callable을 돌려주며, 그 callable은 `create_server`와 같이 모든 요청에 답하고 `written`이 body iterable의 조기 종료로 끝난 write를 보고한다(HY-100). 세 transport의 요청 pipeline은 `polyspec.hyper.pipeline`에 있다.
 - H18.9: 문서가 Node.js와 Python 서버를 PHP 서버의 규칙을 가진 서버가 아니라 하나의 server protocol의 구현으로 적는다. deployment 문서가 렌더 주체를 서버로 적고, HY-62와 HY-92가 선택·데이터 내장·클라이언트 렌더 선언의 Python 형식을 적는다.
 - H18.8: README가 세 서버를 밝힌다. 도입부가 PHP·Node.js·Python 서버를 적고, SSR과 CSR mode와 router 문장이 서버를 적으며, json.json의 적합성 줄이 Python 서버를 적는다(HY-54).
 
