@@ -24,7 +24,7 @@ from .response import Response
 def create_server(app: App, sessions: FileSessions, files: Optional[str] = None, host: str = '127.0.0.1',
                   port: int = 0,
                   around: Optional[Callable[[Request, Callable[[Request], Response]], Response]] = None,
-                  written: Optional[Callable[[Request, Response, bool, float], None]] = None
+                  written: Optional[Callable[[Request, Response, bool, float, Optional[str]], None]] = None
                   ) -> ThreadingHTTPServer:
     """Returns a server that answers every request with the application. `files` names an absolute directory of
     public files: a GET or HEAD request whose path names a file in it receives the file.
@@ -39,7 +39,7 @@ def create_server(app: App, sessions: FileSessions, files: Optional[str] = None,
     request that it gave to `around`, the response that it wrote, whether the write ended and the elapsed
     milliseconds since the arrival of the request; a write that failed because the client closed the connection
     reports that it did not end, before the disconnect hook (HY-99, HY-67). The plain 500 of an escaped error is
-    reported the same way (HY-60)."""
+    reported the same way, with the failure of the error (HY-60, HY-99)."""
     validate(files, around, written)
     app_address = app, sessions, files
 
@@ -88,7 +88,7 @@ def create_server(app: App, sessions: FileSessions, files: Optional[str] = None,
                                            https=application.https, body_size=size)
                 response = answer_with(application, session_store, around, exchange)
             except Exception as error:
-                self.write_escape(application, error, exchange)
+                self.escape_error(application, error, exchange, None)
                 return
             try:
                 self.send(response)
@@ -100,32 +100,29 @@ def create_server(app: App, sessions: FileSessions, files: Optional[str] = None,
                 exchange.disconnect(application)
                 return
             except Exception as error:
-                # A send that fails before the headers leave the server is answered with the plain 500 (HY-60).
-                if self.headers_started:
-                    sys.stderr.write(f'hyper: {type(error).__name__}: {error}\n')
-                    self.close_connection = True
-                    exchange.report(response, False)
-                    return
-                self.write_escape(application, error, exchange)
+                self.escape_error(application, error, exchange, response)
                 return
             exchange.report(response, True)
 
-        def write_escape(self, application, error: Exception, exchange: Exchange) -> None:
-            """Logs an error that escapes the answer of a request (HY-60) and writes hyper's plain 500 when the response
-            has not started; the write hook receives that 500 once. When the response has started, or the 500 cannot
-            be written, the connection closes."""
+        def escape_error(self, application, error: Exception, exchange: Exchange, started: Optional[Response]) -> None:
+            """Logs an error that escapes the answer of a request (HY-60) and writes hyper's plain 500 when no write
+            has started. `started` is the response whose write started, or None. When the headers have left the
+            server, the 500 cannot be written: the connection closes and the write hook receives `started` with
+            ended false. The write hook receives the plain 500 once, with the failure of the error (HY-99)."""
             response = escape(application, error)
+            failure = str(error)
             if self.headers_started:
                 self.close_connection = True
+                exchange.report(started if started is not None else response, False, failure)
                 return
             try:
                 self.send(response)
             except Exception as write_error:
                 sys.stderr.write(f'hyper: {type(write_error).__name__}: {write_error}\n')
                 self.close_connection = True
-                exchange.report(response, False)
+                exchange.report(response, False, failure)
                 return
-            exchange.report(response, True)
+            exchange.report(response, True, failure)
 
         def end_headers(self) -> None:
             # The status line and the headers leave the server with the end of the headers (HY-60).

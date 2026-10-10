@@ -94,6 +94,7 @@ server.serve_forever()
   Node server does the same by replacing the `request` listener of the server that `app.server()` returns. The
   files of the public directory do not reach `around`, and a value that is not callable fails when the server is
   created.
+- `written`, an optional argument of `create_server`, `create_wsgi` and `create_asgi`, is the write hook (HY-99). The server calls it once for every request that it gives to the application, with the request, the response whose write started or the plain 500 of an escaped error, whether the write ended, the elapsed milliseconds and the failure of an escaped error. It is called before the disconnect hook.
 
 ```python
 import secrets

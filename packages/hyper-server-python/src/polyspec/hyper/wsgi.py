@@ -6,6 +6,7 @@ that it chooses."""
 
 from __future__ import annotations
 
+import sys
 import time
 from dataclasses import dataclass
 from http import HTTPStatus
@@ -28,14 +29,16 @@ class FileResponse:
 
 def create_wsgi(app: App, sessions: FileSessions, files: Optional[str] = None,
                 around: Optional[Callable[[Request, Callable[[Request], Response]], Response]] = None,
-                written: Optional[Callable[[Request, Response, bool, float], None]] = None
+                written: Optional[Callable[[Request, Response, bool, float, Optional[str]], None]] = None
                 ) -> Callable[[dict, Callable], object]:
     """Returns a WSGI application callable (PEP 3333) that answers every request with the
     application, as `create_server` does (HY-100). `files`, `around` and `written` mean what they
     mean there (HY-97, HY-99): `written` reports that the write ended when the WSGI server consumed
     the whole body iterable, and that it failed when the server closed the iterable before its end,
     which PEP 3333 defines as premature termination; when the write failed, the disconnect hook runs
-    with the request and the reply of the last call of `answer` (HY-67)."""
+    with the request and the reply of the last call of `answer` (HY-67). An error before
+    `start_response`, a `start_response` that raises, and a status, header or body that cannot be
+    encoded are escaped errors: the plain 500 goes through `start_response` (HY-60, HY-99)."""
     validate(files, around, written)
 
     def application(environ: dict, start_response: Callable) -> object:
@@ -44,23 +47,81 @@ def create_wsgi(app: App, sessions: FileSessions, files: Optional[str] = None,
         try:
             result: Union[Response, FileResponse] = _answer(app, sessions, around, files, environ, exchange)
         except Exception as error:  # noqa: BLE001 - HY-60: an error that escapes the answer gets the plain 500
-            result = escape(app, error)
+            return _escape(app, exchange, error, start_response)
         if isinstance(result, FileResponse):
             start_response(status(200), result.headers)
             return [result.data]
-        headers = [(name, item) for name, value in result.headers.items()
-                   for item in (value if isinstance(value, list) else [value])]
-        empty = result.status in (204, 304)
-        encoded = b'' if empty else result.body.encode('utf-8')
-        if not empty:
-            headers.append(('Content-Length', str(len(encoded))))
-        start_response(status(result.status), headers)
-        if empty:
-            exchange.report(result, True)
-            return [b'']
-        return _body(app, exchange, result, encoded)
+        try:
+            line, headers, encoded = _encode(result)
+        except Exception as error:  # noqa: BLE001 - HY-60: a status, header or body that cannot be written is an escape
+            return _escape(app, exchange, error, start_response)
+        try:
+            start_response(line, headers)
+        except Exception as error:  # noqa: BLE001 - HY-60: a start_response that raises is an escape
+            return _escape(app, exchange, error, start_response, sys.exc_info())
+        return _Body(app, exchange, result, [encoded], None)
 
     return application
+
+
+class _Body:
+    """The body iterable of a response (HY-99). The write ends when the server consumes the whole
+    iterable, and a server that closes it before its end reports a write that did not end; the
+    disconnect hook then runs when the request was answered by the application (HY-67)."""
+
+    def __init__(self, app: App, exchange: Exchange, response: Response, chunks: list[bytes], failure: Optional[str]):
+        self.app = app
+        self.exchange = exchange
+        self.response = response
+        self.chunks = chunks
+        self.failure = failure
+        self.done = False
+
+    def __iter__(self):
+        yield from self.chunks
+        self._finish(True)
+
+    def close(self) -> None:
+        self._finish(False)
+
+    def _finish(self, ended: bool) -> None:
+        if self.done:
+            return
+        self.done = True
+        self.exchange.report(self.response, ended, self.failure)
+        if not ended:
+            self.exchange.disconnect(self.app)
+
+
+def _encode(response: Response) -> tuple[str, list[tuple[str, str]], bytes]:
+    """Returns the status line, the headers and the body of a response as PEP 3333 writes them. Fails for a
+    status that is not an HTTP status, a header or a value that is not latin-1, and a body that is not
+    UTF-8 (HY-60)."""
+    empty = response.status in (204, 304)
+    encoded = b'' if empty else response.body.encode('utf-8')
+    headers = [(name, item) for name, value in response.headers.items()
+               for item in (value if isinstance(value, list) else [value])]
+    for name, value in headers:
+        f'{name}: {value}'.encode('latin-1')
+    if not empty:
+        headers.append(('Content-Length', str(len(encoded))))
+    return status(response.status), headers, encoded
+
+
+def _escape(app: App, exchange: Exchange, error: BaseException, start_response: Callable,
+            exc_info=None) -> _Body:
+    """Answers an error that escapes the answer with the plain 500 through `start_response` (HY-60). The write hook
+    receives the 500 with the failure when the server consumes its body (HY-99). A `start_response` that raises
+    again reports the write as not ended and propagates."""
+    response = escape(app, error)
+    failure = str(error)
+    line, headers, encoded = _encode(response)
+    try:
+        start_response(line, headers, exc_info)
+    except Exception:
+        exchange.report(response, False, failure)
+        raise
+    return _Body(app, exchange, response, [encoded], failure)
 
 
 def _answer(app: App, sessions: FileSessions, around: Optional[Callable], files: Optional[str], environ: dict,
@@ -87,21 +148,6 @@ def _answer(app: App, sessions: FileSessions, around: Optional[Callable], files:
                                Request.target_query(target), body,
                                cookies=cookie_values(environ.get('HTTP_COOKIE')), https=app.https, body_size=size)
     return answer_with(app, sessions, around, exchange)
-
-
-def _body(app: App, exchange: Exchange, response: Response, encoded: bytes):
-    """Returns the body iterable of a response. The write hook receives the end of the write when the server
-    consumes the whole iterable; a server that closes the iterable early reports a failed write, and the
-    disconnect hook runs when the request was answered by the application (HY-67, HY-99)."""
-    try:
-        yield encoded
-    except GeneratorExit:
-        # HY-100 and HY-67: the server closed the body iterable before its end, so the write of the response
-        # failed; the write hook runs before the disconnect hook.
-        exchange.report(response, False)
-        exchange.disconnect(app)
-        raise
-    exchange.report(response, True)
 
 
 def _request_target(environ: dict) -> str:
