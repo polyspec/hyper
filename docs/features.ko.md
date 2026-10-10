@@ -1,5 +1,5 @@
 <!-- doc-id: features -->
-<!-- source-sha256: a0e15ffd07975e5a5560d6c992f11701683c0a0d52aea65adfd14ce7b512fddb -->
+<!-- source-sha256: 083b705a1f6a9023e780355a642aec4344290a519c2a144c570a40a7e423f973 -->
 # 기능 상태
 
 [English](features.md).
@@ -19,7 +19,8 @@
 | response-limit | 애플리케이션의 응답 한도. 더 큰 body는 보내지 않고 요청은 텍스트 500을 받는다(HY-66) | implemented | `make test-php`, `make test-node` |
 | disconnect-hook | client가 연결을 닫은 요청의 연결 끊김 hook. Node 서버는 요청을 멈추고, PHP는 첫 실패한 쓰기에서 script를 끝내며, Python 서버는 응답의 첫 실패한 쓰기를 알린다(HY-67) | implemented; Python CI run pending | `make test-php`, `make test-node`, `make test-python-render` |
 | response-hook | 모든 응답마다 요청, 응답, 경과 시간, note를 가진 요청의 reply, 500의 실패로 한 번 호출하는 응답 hook(HY-60) | implemented | `make test-php`, `make test-node` |
-| escaped-error | 요청의 answer를 벗어난 오류의 평범한 500은 모든 adapter에서 같다. 받은 그대로의 요청과 함께 Python 서버의 쓰기 hook과 Node 서버의 쓰기 event에 한 번 보고되며, 응답 hook이 실행되지 않았을 때 PHP의 응답 hook에 보고된다(HY-60, HY-99, HY-100, HY-101) | implemented; CI run pending | `make test-python`, `make test-node`, `make test-php`, `make test-python-render` |
+| escaped-error | 요청의 answer를 벗어난 오류의 평범한 500은 모든 adapter에서 같다. PHP와 Node에서는 호출자가 hyper가 요청을 받기 전에 설정한 header를 유지한다. 받은 그대로의 요청과 오류의 failure와 함께 쓰기 hook에 한 번 보고되며, 어떤 응답 hook에도 보고되지 않는다(HY-60, HY-99, HY-100, HY-101) | implemented; CI run pending | `make test-python`, `make test-node`, `make test-php`, `make test-python-render` |
+| write-hook | 모든 서버의 쓰기 hook `written`은 애플리케이션이 답한 요청마다 한 번 호출되며, 요청, 쓰기를 시작한 응답, 쓰기가 끝났는지, 경과 시간과 탈출 오류의 failure를 받는다. Node의 `App.listener`가 반환하는 listener는 그 뒤에 settle된다(HY-99, HY-102) | implemented; CI run pending | `make test-php`, `make test-node`, `make test-python`, `make test-python-render` |
 | client-shell | 한 서버가 요청마다의 선택(요청의 모든 handler가 그 값을 읽는다)에 따라 클라이언트 렌더 페이지에는 정적 셸과 데이터 기본 경로 아래의 JSON으로, 서버 렌더 페이지에는 그 경로 없이 응답하며, 브라우저는 `html` 요소에 렌더한 layout의 속성을 준다(HY-62, HY-63) | implemented | `make test-php`, `make test-node`, `make test-js`, `make e2e` |
 | stylesheet-links | 브라우저는 클라이언트 렌더 문서, 영역 응답의 layout, 히스토리 복원 문서의 head에 있는 stylesheet link를 적용한다. 있는 link는 유지하고, 없는 link는 내용을 보이기 전에 불러오며, 그 뒤 나머지를 제거한다(HY-64) | implemented | `make test-js`, `make e2e` |
 | reply | loader와 action의 응답 cookie와 cache control, JSON tag와 304(HY-52, HY-53) | implemented | `make test-php` |
