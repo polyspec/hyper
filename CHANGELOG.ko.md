@@ -1,5 +1,5 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: f1b491b56c0898a3a2b5b062a4cf66c42acff61fd30bf60fe505d44e500c75b5 -->
+<!-- source-sha256: 6a8567064a91ed9d03053038976e20cc2c7e4854d9317b4590cb6503a0929f88 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
@@ -7,6 +7,7 @@
 ## Unreleased
 
 ## 0.0.11
+- H19.11: `tests/release-install`의 consumer project가 release 0.0.11을 요구한다. 그 manifest와 lock은 0.0.11 archive 네 개를 가리키며, `make release-consumer TAG=v0.0.11`이 그것을 설치하고 확인한다(#H19.11).
 - H19.9-3: HY-99는 PHP consumer가 응답의 쓰기 결과를 받는 방법을 정한다. PHP에는 쓰기 hook이 없고, consumer는 요청을 처음부터 아는 자기 shutdown 함수에서 `http_response_code()`를 읽는다(HY-67과 같은 방식). code는 바뀌지 않는다. Red: HY-99에 PHP의 쓰기 channel 규칙이 없었다. Green: `make documents-check`가 15 document pairs를 통과한다(#H19.9-3).
 - H19.9-2: 요청의 answer를 벗어난 오류는 모든 adapter에서 hyper 자신의 평범한 500으로 답한다. 상태 500, 텍스트 `Internal Server Error`, `Cache-Control: no-store`, frame 정책이다(HY-60). WSGI와 ASGI callable은 오류를 전파하는 대신 `start_response`나 첫 send 전에 그 500을 쓴다(HY-100, HY-101). Python 서버의 쓰기 hook은 `around`가 실행되지 않았어도 받은 그대로의 요청과 함께 그 500을 한 번 받는다(HY-99). PHP `App::run`은 처리되지 않은 예외와 요청의 치명적 오류에 대해 그 500을 쓴다. 이전에는 Python callable이 오류를 전파했고, `create_server`는 쓰기 hook에 그 오류의 보고를 주지 않았으며, PHP는 그 오류를 web server의 500까지 보냈다. Red: `make test-python`은 단위 테스트 87개를 실행해 `failures=2, errors=8`로 실패했고, `make test-php`는 321개 테스트를 실행해 `Failures: 3`으로 실패했다. Node 테스트는 첫 실행에서 통과했는데, Node 서버가 이미 그 500을 응답으로 쓰기 때문이다. Green: `make test-python`은 단위 테스트 87개와 package 테스트 2개를 통과하고, `make test-node`는 테스트 338개와 type check를 통과하며, `make test-php`는 321개 테스트를, `make test-python-render`는 32개 테스트를 통과한다(#H19.9-2).
 - H19.9-1: 요청의 answer를 벗어난 오류는 Node 서버와 Python `create_server`에서 연결을 닫는 대신 `Internal Server Error` 텍스트의 평범한 500으로 답한다. production 엔진과 같으며, nginx는 닫힌 연결에 502 Bad Gateway로 답한다(HY-60). 서버는 먼저 HY-43의 message를 기록하고, 500을 어떤 hook에도 보고하지 않으며, 응답이 시작되었거나 500 쓰기가 실패하면 연결을 닫는다. Red: Node 응답 hook 테스트는 500 대신 닫힌 연결을 받았고, Python 테스트는 `RemoteDisconnected`를 일으켰다. Green: 두 서버 모두 frame 정책과 no-cache를 가진 500으로 답하며, 어떤 hook도 그것을 받지 않는다(#H19.9-1).

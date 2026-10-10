@@ -40,6 +40,6 @@
         }
     ],
     "require": {
-        "polyspec/hyper-server": "0.0.10"
+        "polyspec/hyper-server": "0.0.11"
     }
 }
