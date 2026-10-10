@@ -90,8 +90,9 @@ class WsgiTest(unittest.TestCase):
                                       (request, response, ended)))
         status, _, body = call(application, environ(
             REQUEST_METHOD='POST', RAW_URI='/news?page=2', CONTENT_LENGTH='5',
+            CONTENT_TYPE='application/x-www-form-urlencoded',
             HTTP_COOKIE='a=1; limepie=s', HTTP_X_NAME='one',
-            wsgi_input=Input(b'hello')))
+            **{'wsgi.input': Input(b'a=hey')}))
         self.assertEqual('200 OK', status)
         self.assertEqual(b'POST /news', body)
         request = self.app.requests[0]
@@ -101,6 +102,7 @@ class WsgiTest(unittest.TestCase):
         self.assertEqual('one', request.header('x-name'))
         self.assertEqual('s', request.cookie('limepie'))
         self.assertEqual(5, request.body_size())
+        self.assertEqual('hey', request.form_string('a'))
 
     def test_a_new_session_sets_its_cookie_first(self) -> None:
         self.app.opens_session = True
