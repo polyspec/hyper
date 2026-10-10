@@ -1,21 +1,21 @@
 {
   "schema": 1,
   "comment": "Written by make dependency-review RECORD=1 (scripts/kit/dependency-review.mjs) from the registries; make dependency-policy-check compares the checkout with it without a network.",
-  "reviewed": "2026-10-09T15:12:31.831Z",
+  "reviewed": "2026-10-10T15:25:49.771Z",
   "locks": [
     {
       "lock": "package-lock.json",
-      "sha256": "2d44873707b6858bf80fa6da9f883a9362442d22aeeb4248bcc970564ab4718a",
+      "sha256": "3f8dd6425c41a4608a4e4a3f8ef739fa885a8ff8ba66a134c3536be2f9759409",
       "advisories": []
     },
     {
       "lock": "composer.lock",
-      "sha256": "13b73894155d0770411e4833622419b491b1d74dba81c5891e61661524d3a433",
+      "sha256": "82a33edf7d6590e5444e0d7ad2ecabe9373adbaed3d6e544d28471ef14ac36e3",
       "advisories": []
     },
     {
       "lock": "examples/board/composer.lock",
-      "sha256": "68899331e57985afc884f5ef2456fa4e90bcf65b4243a27ee6a06b15c17a9ecf",
+      "sha256": "d0712c37417d376f544277a883b75c79650e26f8c1ff158a559873d026403623",
       "advisories": []
     }
   ],
@@ -31,8 +31,8 @@
       "ecosystem": "npm",
       "manifest": "package.json",
       "package": "@types/node",
-      "version": "26.6.4",
-      "latest": "26.6.4"
+      "version": "26.6.5",
+      "latest": "26.6.5"
     },
     {
       "ecosystem": "npm",
