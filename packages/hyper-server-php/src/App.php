@@ -24,7 +24,6 @@ final class App
     private const FATAL = [E_ERROR, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR];
 
     /** Whether the response hook has been called for the request that `run` answers (HY-60). */
-    private bool $reported = false;
 
     /**
      * @param array<string, \Closure> $regionLoaders
@@ -46,6 +45,7 @@ final class App
         private readonly ?\Closure $onResponse,
         private readonly ?ClientRendering $client,
         private readonly ?\Closure $onDisconnect,
+        private readonly ?\Closure $written,
         /** The bytes of the static shell of the client rendering (HY-62). */
         private readonly string $shell,
         string $program,
@@ -73,6 +73,9 @@ final class App
      * @param ?\Closure(Request, float, Reply): void $onDisconnect called once with the request, the elapsed
      *     milliseconds and the reply of a request whose client closed the connection, which PHP reports at the
      *     first failed write of the response (HY-67)
+     * @param ?\Closure(Request, Response, bool, float, ?string): void $written called once for every request that the
+     *     run answers, with the response whose write started or the plain 500 of an escaped error, whether the write
+     *     ended, the elapsed milliseconds and the failure of an escaped error (HY-99)
      */
     public static function open(
         string $manifest,
@@ -88,6 +91,7 @@ final class App
         ?\Closure $onResponse = null,
         ?ClientRendering $clientRendering = null,
         ?\Closure $onDisconnect = null,
+        ?\Closure $written = null,
     ): self {
         if ($bodyLimit < 1) {
             throw new \InvalidArgumentException("body limit {$bodyLimit} is not a positive number of bytes");
@@ -133,7 +137,7 @@ final class App
 
         $shell = $clientRendering === null ? '' : self::shell($clientRendering, $declared);
 
-        return new self($declared, $handlers['shared'] ?? null, $regionLoaders, $routeHandlers, $timezone, $basePath, $https, $frameAncestors, $bodyLimit, $responseLimit, $formTypes, $onResponse, $clientRendering, $onDisconnect, $shell, $program);
+        return new self($declared, $handlers['shared'] ?? null, $regionLoaders, $routeHandlers, $timezone, $basePath, $https, $frameAncestors, $bodyLimit, $responseLimit, $formTypes, $onResponse, $clientRendering, $onDisconnect, $written, $shell, $program);
     }
 
     /** Reads the static shell after checking the declaration of the client rendering against the manifest (HY-62). */
@@ -211,7 +215,6 @@ final class App
 
         $response = $this->framed($response);
         if ($this->onResponse !== null) {
-            $this->reported = true;
             ($this->onResponse)($request, $response, (hrtime(true) - $started) / 1e6, $reply, $failure);
         }
 
@@ -228,22 +231,25 @@ final class App
 
     /**
      * Writes hyper's plain 500 for an error that escapes the answer of the request (HY-60): the text, no-store and the
-     * frame policy, as the other failures of the server. The response hook receives that 500 only when it has not run
-     * for the request, so no hook is called twice. Headers that have been sent leave the response as it is.
+     * frame policy, as the other failures of the server. The headers that the caller set before `App::run` (`$kept`)
+     * stay, and no other header does (HY-60). Headers that have been sent leave the response as it is, and the write
+     * is then not complete (HY-99). The response hook receives no escaped 500 (HY-60).
+     *
+     * @param list<string> $kept
      */
-    private function escaped(?Request $request, Reply $reply, int|float $started, string $description, string $failure): void
+    private function escaped(string $description, string $failure, Delivery $delivery, array $kept): void
     {
         error_log("hyper: {$description}");
+        $delivery->failure = $failure;
         if (headers_sent()) {
+            $delivery->complete = false;
+
             return;
         }
         $response = $this->framed(Response::text(500, 'Internal Server Error'));
-        if ($request !== null && !$this->reported && $this->onResponse !== null) {
-            $this->reported = true;
-            ($this->onResponse)($request, $response, (hrtime(true) - $started) / 1e6, $reply, $failure);
-        }
         // The plain 500 replaces the queued response, which a fatal error or the session may have changed (HY-60).
-        $response->sendReplacing('HTTP/1.1 500 Internal Server Error');
+        $response->sendReplacing($kept, 'HTTP/1.1 500 Internal Server Error');
+        $delivery->response = $response;
     }
 
     /** Answers a request; the loaders and actions of a routed request receive `$reply` (HY-52, HY-60). */
@@ -670,6 +676,8 @@ final class App
      */
     public function run(?int $started = null): void
     {
+        // The headers that the caller set before this call stay on the plain 500 of an escaped error (HY-60).
+        $kept = headers_list();
         $started ??= hrtime(true);
         // HY-59: PHP drops a body larger than post_max_size, and gives the body of a multipart request to
         // php://input only when enable_post_data_reading is off.
@@ -686,21 +694,30 @@ final class App
         // HY-67: PHP reports a closed connection only at a failed write; with ignore_user_abort off it ends the
         // script there, and the shutdown function calls the disconnect hook.
         ignore_user_abort(false);
-        $request = null;
         $reply = new Reply();
-        $this->reported = false;
+        $delivery = new Delivery();
         // HY-60: an uncaught exception and a fatal error of the request write the plain 500 of hyper, the same as the
         // other servers, instead of the web server's 500. The request is known once it is built.
-        set_exception_handler(function (\Throwable $error) use (&$request, $reply, $started): void {
-            $this->escaped($request, $reply, $started, sprintf('%s: %s in %s:%d', $error::class, $error->getMessage(), $error->getFile(), $error->getLine()), $error->getMessage());
+        set_exception_handler(function (\Throwable $error) use ($delivery, $kept): void {
+            $this->escaped(sprintf('%s: %s in %s:%d', $error::class, $error->getMessage(), $error->getFile(), $error->getLine()), $error->getMessage(), $delivery, $kept);
         });
-        register_shutdown_function(function () use (&$request, $reply, $started): void {
+        register_shutdown_function(function () use ($delivery, $kept): void {
             $error = error_get_last();
             if ($error !== null && in_array($error['type'], self::FATAL, true)) {
-                $this->escaped($request, $reply, $started, "fatal error: {$error['message']} in {$error['file']}:{$error['line']}", $error['message']);
+                $this->escaped("fatal error: {$error['message']} in {$error['file']}:{$error['line']}", $error['message'], $delivery, $kept);
             }
         });
         $request = Request::fromGlobals();
+        // HY-99: the write hook runs after the escape function and before the disconnect hook. A response that no write
+        // started is the plain 500, and its write is not complete.
+        if ($this->written !== null) {
+            $hook = $this->written;
+            register_shutdown_function(static function () use ($hook, $request, $started, $delivery): void {
+                $response = $delivery->response ?? Response::text(500, 'Internal Server Error');
+                $ended = $delivery->response !== null && $delivery->complete && connection_aborted() !== 1;
+                $hook($request, $response, $ended, (hrtime(true) - $started) / 1e6, $delivery->failure);
+            });
+        }
         if ($this->onDisconnect !== null) {
             $hook = $this->onDisconnect;
             register_shutdown_function(static function () use ($hook, $request, $started, $reply): void {
@@ -709,6 +726,8 @@ final class App
                 }
             });
         }
-        $this->respond($request, new NativeSession($this->https), $started, $reply)->send();
+        $response = $this->respond($request, new NativeSession($this->https), $started, $reply);
+        $delivery->response = $response;
+        $response->send();
     }
 }

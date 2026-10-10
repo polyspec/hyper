@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- H20.2: the PHP server writes the plain 500 of an escaped error with the headers that the caller set before `App::run`, and no other header (HY-60). `App::open` takes the write hook `written`, which `App::run` calls once for every run, after the escape function and before the disconnect hook, with the response, `ended`, the elapsed time and the failure (HY-99). `ended` is false when the client closed the connection or when a fatal error followed the sent headers. The response hook receives no escaped 500.
 - H20.1: the rules of the write hook and the plain 500 of an escaped error: HY-60 keeps the headers that the caller set before hyper received the request; HY-99 gives every server a write hook `written` with its request, response, `ended`, elapsed time and failure, called after the answer and the write and before the disconnect hook; HY-100 and HY-101 pass the escaped 500 to `start_response` or `send`; HY-102 names `App.listener` of the Node server. A PHP consumer no longer reads the write result from its own shutdown function, and no adapter reports an escaped 500 to the response hook.
 
 ## 0.0.11

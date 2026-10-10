@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 24d3a8a02176a8b3055adb4fd69ddd9e8bc0c98046630cc5becdf1e54292c14c -->
+<!-- source-sha256: 7cf95ba45810361ae68bf2eac0d92b3c5bd7b38b056a098419c419a212202748 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H20.2: PHP 서버는 탈출 오류의 평범한 500을 `App::run` 전에 호출자가 설정한 header와 함께 쓰며, 다른 header는 쓰지 않는다(HY-60). `App::open`은 쓰기 hook `written`을 받고, `App::run`은 실행마다 한 번, escape 함수 뒤와 연결 끊김 hook 전에 응답, `ended`, 경과 시간과 failure와 함께 호출한다(HY-99). `ended`는 client가 연결을 닫았거나 보낸 header 뒤에 치명적 오류가 있으면 false다. 응답 hook은 탈출의 500을 받지 않는다.
 - H20.1: 쓰기 hook과 탈출 오류의 평범한 500의 rule을 정한다. HY-60은 hyper가 요청을 받기 전에 호출자가 설정한 header를 유지한다. HY-99는 모든 서버에 쓰기 hook `written`을 준다. 이 hook은 요청, 응답, `ended`, 경과 시간과 failure를 받으며, answer와 쓰기 뒤, 연결 끊김 hook 전에 호출된다. HY-100과 HY-101은 탈출의 500을 `start_response`나 `send`에 넘긴다. HY-102는 Node 서버의 `App.listener`를 이름한다. 어떤 adapter도 탈출 오류의 500을 응답 hook에 보고하지 않는다.
 
 ## 0.0.11

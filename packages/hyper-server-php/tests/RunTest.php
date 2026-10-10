@@ -118,7 +118,7 @@ final class RunTest extends TestCase
         self::assertLessThan(10000.0, $reports[0]);
     }
 
-    /** HY-67: PHP ends the script at the first failed write of the response and calls the disconnect hook. */
+    /** HY-67, HY-99: PHP ends the script at the first failed write of the response, reports the write before the disconnect hook. */
     public function testRunCallsTheDisconnectHookWhenTheClientClosedTheConnection(): void
     {
         // The log and the server are released when the case ends, also when it fails (HY-87).
@@ -152,11 +152,11 @@ final class RunTest extends TestCase
             }
             unlink($log);
         }
-        self::assertSame("response 200\ndisconnect GET / 1 {\"stage\":\"shared\"}\n", $lines);
+        self::assertSame("response 200\nwritten 200 false null\ndisconnect GET / 1 {\"stage\":\"shared\"}\n", $lines);
     }
 
-    /** HY-60: a fatal error before the response hook runs writes the plain 500 and reports it to the hook once. */
-    public function testAFatalErrorBeforeTheResponseHookWritesThePlain500AndReportsIt(): void
+    /** HY-60, HY-99: a fatal error before the response hook runs writes the plain 500 and no response hook runs. */
+    public function testAFatalErrorBeforeTheResponseHookWritesThePlain500AndReportsItToTheWriteHook(): void
     {
         [$status, $headers, $body, $lines] = self::escape('fatal');
 
@@ -164,43 +164,85 @@ final class RunTest extends TestCase
         self::assertSame('Internal Server Error', $body);
         self::assertContains('Cache-Control: no-store', $headers);
         self::assertContains("Content-Security-Policy: frame-ancestors 'self'", $headers);
-        self::assertSame("response 500\n", $lines);
+        self::assertMatchesRegularExpression('/\Awritten 500 true "Allowed memory size of 8388608 bytes exhausted/', $lines);
     }
 
-    /** HY-60: a fatal error after the response hook ran writes the plain 500 and calls the hook no second time. */
-    public function testAFatalErrorAfterTheResponseHookWritesThePlain500WithoutASecondReport(): void
+    /** HY-60, HY-99: a fatal error after the response hook ran writes the plain 500 and reports it to the write hook. */
+    public function testAFatalErrorAfterTheResponseHookWritesThePlain500AndReportsItToTheWriteHook(): void
     {
         [$status, $headers, $body, $lines] = self::escape('hook-fatal');
 
         self::assertSame(500, $status);
         self::assertSame('Internal Server Error', $body);
         self::assertContains('Cache-Control: no-store', $headers);
-        self::assertSame("response 200\n", $lines);
+        self::assertSame("response 200\nwritten 500 true \"a fatal error of the response hook\"\n", $lines);
     }
 
-    /** HY-60: an uncaught exception after the response hook ran writes the plain 500 through the exception handler. */
-    public function testAnUncaughtExceptionAfterTheResponseHookWritesThePlain500WithoutASecondReport(): void
+    /** HY-60, HY-99: an uncaught exception after the response hook ran writes the plain 500 and calls the write hook once with its failure. */
+    public function testAnUncaughtExceptionAfterTheResponseHookWritesThePlain500AndReportsItToTheWriteHook(): void
     {
         [$status, $headers, $body, $lines] = self::escape('hook-throws');
 
         self::assertSame(500, $status);
         self::assertSame('Internal Server Error', $body);
         self::assertContains('Cache-Control: no-store', $headers);
-        self::assertSame("response 200\n", $lines);
+        self::assertSame("response 200\nwritten 500 true \"a response hook that throws\"\n", $lines);
+    }
+
+    /** HY-60: the plain 500 of an escaped error keeps the headers that the caller set before App::run, and no other header. */
+    public function testTheEscapedFiveHundredKeepsTheHeadersSetBeforeRun(): void
+    {
+        [$status, $headers, , $lines] = self::escape('hook-throws', ['HYPER_ESCAPE_HEADER' => '1']);
+
+        self::assertSame(500, $status);
+        self::assertSame("response 200\nwritten 500 true \"a response hook that throws\"\n", $lines);
+        self::assertContains('X-Before: kept', $headers);
+        self::assertNotContains('Content-Type: text/html; charset=utf-8', $headers);
+    }
+
+    /** HY-99: a response that the write hook reports ended is reported once with ended true, after the response hook. */
+    public function testTheWriteHookReportsAnAnsweredRequestAsEnded(): void
+    {
+        [$status, , $body, $lines] = self::escape('normal');
+
+        self::assertSame(200, $status);
+        self::assertNotSame('', $body);
+        self::assertSame("response 200\nwritten 200 true null\n", $lines);
+    }
+
+    /** HY-99: a fatal error after App::run sent the response reports ended false with the failure, and no second response. */
+    public function testAFatalErrorAfterTheHeadersWereSentReportsAnUnendedWrite(): void
+    {
+        [$status, , , $lines] = self::escape('after-send');
+
+        self::assertSame(200, $status);
+        self::assertSame("response 200\nwritten 200 false \"after the response\"\n", $lines);
+    }
+
+    /** HY-99: a fatal error from max_execution_time gives the plain 500 and calls the write hook once. */
+    public function testAMaxExecutionTimeFatalErrorReportsThePlain500ToTheWriteHook(): void
+    {
+        [$status, , $body, $lines] = self::escape('time-limit');
+
+        self::assertSame(500, $status);
+        self::assertSame('Internal Server Error', $body);
+        self::assertMatchesRegularExpression('/\Awritten 500 true "Maximum execution time of 1 second exceeded"\n\z/', $lines);
     }
 
     /**
-     * Serves the escape front controller in the given mode with the PHP built-in server and returns the status, the
+     * Serves the escape front controller in the given mode with the PHP built-in server, which writes the response when
+     * the output reaches the server (`output_buffering` off, so that `headers_sent()` tells whether the headers left), and returns the status, the
      * headers, the body of the response and the lines that the response hook appended to the log.
      *
+     * @param array<string, string> $env the environment of the server that the case adds to its own
      * @return array{int, list<string>, string, string}
      */
-    private static function escape(string $mode): array
+    private static function escape(string $mode, array $env = []): array
     {
         $log = (string) tempnam(sys_get_temp_dir(), 'hyper-escape-');
         $server = false;
         try {
-            $server = proc_open([PHP_BINARY, '-d', 'display_errors=0', '-d', 'error_log=/dev/null', '-S', '127.0.0.1:0', __DIR__ . '/Support/escape.php'], [0 => ['file', '/dev/null', 'r'], 1 => ['file', '/dev/null', 'w'], 2 => ['pipe', 'w']], $pipes, null, [...getenv(), 'HYPER_ESCAPE_MODE' => $mode, 'HYPER_ESCAPE_LOG' => $log]);
+            $server = proc_open([PHP_BINARY, '-d', 'display_errors=0', '-d', 'error_log=/dev/null', '-d', 'output_buffering=0', '-S', '127.0.0.1:0', __DIR__ . '/Support/escape.php'], [0 => ['file', '/dev/null', 'r'], 1 => ['file', '/dev/null', 'w'], 2 => ['pipe', 'w']], $pipes, null, [...getenv(), ...$env, 'HYPER_ESCAPE_MODE' => $mode, 'HYPER_ESCAPE_LOG' => $log]);
             if ($server === false) {
                 self::fail('the PHP built-in server did not start');
             }

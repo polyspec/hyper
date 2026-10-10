@@ -48,13 +48,19 @@ final class Response
     }
 
     /**
-     * Writes this response in place of a failed one (HY-60): the queued headers are dropped, and the status line is set
-     * with header(), because a fatal error makes PHP queue its own status line, which http_response_code() refuses to
-     * replace. `$statusLine` is the whole status line, such as `HTTP/1.1 500 Internal Server Error`.
+     * Writes this response in place of a failed one (HY-60): the queued headers are dropped, then the `$kept` header lines
+     * of the caller are added again, and the status line is set with header(), because a fatal error makes PHP queue its
+     * own status line, which http_response_code() refuses to replace. `$statusLine` is the whole status line, such as
+     * `HTTP/1.1 500 Internal Server Error`.
+     *
+     * @param list<string> $kept
      */
-    public function sendReplacing(string $statusLine): void
+    public function sendReplacing(array $kept, string $statusLine): void
     {
         header_remove();
+        foreach ($kept as $line) {
+            header($line, false);
+        }
         header($statusLine, true, $this->status);
         foreach ($this->headers as $name => $value) {
             foreach ((array) $value as $item) {
