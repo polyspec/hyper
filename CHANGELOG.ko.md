@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 6a8567064a91ed9d03053038976e20cc2c7e4854d9317b4590cb6503a0929f88 -->
+<!-- source-sha256: 24d3a8a02176a8b3055adb4fd69ddd9e8bc0c98046630cc5becdf1e54292c14c -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H20.1: 쓰기 hook과 탈출 오류의 평범한 500의 rule을 정한다. HY-60은 hyper가 요청을 받기 전에 호출자가 설정한 header를 유지한다. HY-99는 모든 서버에 쓰기 hook `written`을 준다. 이 hook은 요청, 응답, `ended`, 경과 시간과 failure를 받으며, answer와 쓰기 뒤, 연결 끊김 hook 전에 호출된다. HY-100과 HY-101은 탈출의 500을 `start_response`나 `send`에 넘긴다. HY-102는 Node 서버의 `App.listener`를 이름한다. 어떤 adapter도 탈출 오류의 500을 응답 hook에 보고하지 않는다.
 
 ## 0.0.11
 - H19.11: `tests/release-install`의 consumer project가 release 0.0.11을 요구한다. 그 manifest와 lock은 0.0.11 archive 네 개를 가리키며, `make release-consumer TAG=v0.0.11`이 그것을 설치하고 확인한다(#H19.11).

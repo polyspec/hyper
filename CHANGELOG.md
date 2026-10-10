@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- H20.1: the rules of the write hook and the plain 500 of an escaped error: HY-60 keeps the headers that the caller set before hyper received the request; HY-99 gives every server a write hook `written` with its request, response, `ended`, elapsed time and failure, called after the answer and the write and before the disconnect hook; HY-100 and HY-101 pass the escaped 500 to `start_response` or `send`; HY-102 names `App.listener` of the Node server. A PHP consumer no longer reads the write result from its own shutdown function, and no adapter reports an escaped 500 to the response hook.
 
 ## 0.0.11
 - H19.11: the consumer projects of `tests/release-install` require the release 0.0.11: their manifests and locks name the archives `polyspec-hyper-client-npm-0.0.11.tgz`, `polyspec-hyper-server-npm-0.0.11.tgz`, `polyspec-hyper-build-npm-0.0.11.tgz` and `polyspec-hyper-server-php-0.0.11.zip`, and `make release-consumer TAG=v0.0.11` installs and checks them (#H19.11).
