@@ -1,5 +1,5 @@
 <!-- doc-id: waves -->
-<!-- source-sha256: 7aa9367703e47080d1dc80d6d79fd8921504225e65c0967a1d7805381196716b -->
+<!-- source-sha256: 08d99e6ede27108f0f3ba8f5bb44cf1c515f0b8d234fbb94a402dfe37ab73868 -->
 # 웨이브 배경
 
 [English](waves.md).
@@ -89,3 +89,7 @@
 ## Wave 21
 
 의존: wave 20. 페이지는 정책이 허용하는 만큼 페이지의 주소를 연결된 사이트에 Referer header로 보낸다. reply에는 Referrer-Policy header를 정하는 메서드가 없어서 application이 그 header를 제한할 수 없었고, 일반 header setter는 Cache-Control, frame 정책, cookie처럼 hyper가 페이지 header에 지키는 규칙을 우회했을 것이다. reply는 각 adapter에 명명된 메서드 `referrerPolicy`를 가지며(HY-103), 이 메서드는 Referrer-Policy 명세의 토큰만 받는다.
+
+## Wave 22
+
+의존: wave 21. `AGENTS.md`의 경로와 symbolic link 규칙이 외부 도구가 만드는 link와 경로까지 다루는 것처럼 읽혀서, 변경이 이 저장소에 uv(Python 환경과 lock) 같은 생태계의 표준 도구를 다시 만들라고 요구하는 것으로 해석될 수 있었다. 이제 규칙은 기존 외부 도구나 라이브러리를 자기 동작과 함께 있는 그대로 쓴다고 정하며, 경로와 symbolic link 규칙은 이 저장소가 만드는 것을 다스린다고 밝힌다.

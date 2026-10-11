@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: cc09998dbdad35104f5ee7974f8b66274a079f59e873ffaed67c71828f15371f -->
+<!-- source-sha256: 181eae8eed261c4fea260e4be995fcce2eba88b6bec6ada09de9f37d0771a253 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H22.1: `AGENTS.md`와 `AGENTS.ko.md`는 기존 외부 도구나 라이브러리를 자기 동작(예: 만드는 symbolic link)과 함께 있는 그대로 쓴다고 밝히고, 경로와 symbolic link 규칙이 이 저장소가 만드는 것에 적용된다고 밝힌다. 도구 설정은 바뀌지 않았다.
 - H21.7: `make virtiofs-check`의 두 테스트가 다시 실행된다. `tests/virtiofs/output-files.test.mjs`의 guard는 제거된 선언 복사본 대신 build가 resolve하는 template package를 확인하므로, 실행이 더 이상 `ReferenceError: template is not defined`로 실패하지 않는다. 이 target은 Darwin에서만 실행하며, target의 설명과 container image의 dependency row가 그 이유를 밝히고 모든 platform에서 원인을 시험하는 테스트를 이름으로 밝힌다.
 - H21.6: `tests/scripts/check-recipes.test.mjs`의 helper `make`은 `FORCE_COLOR`를 뺀 채 `make`를 실행하므로, shell이 `FORCE_COLOR`를 설정해도 `make test-js`의 type check 테스트가 통과한다. tsc는 `FORCE_COLOR`가 설정되면 출력에 색을 넣어 `wrong.ts(1,14): error TS2322` 대조가 깨졌다. `NO_COLOR`는 유지한다.
 - H21.4: hyper는 template release 0.0.6 하나에만 의존한다. npm 패키지 `@polyspec/template`과 `@polyspec/template-compiler`는 release v0.0.6의 tarball에서 설치하며, 이는 root `package.json`(dependencies와 overrides), `packages/hyper-build`, `packages/hyper-client`, `packages/hyper-server-node`, `tests/package-install`에 있고, 그 lock은 npm이 쓴다. Composer는 `polyspec/template` 0.0.6을 root `composer.json`, `packages/hyper-server-php/composer.json`, `examples/board/composer.json`에서 그 zip으로 설치하며, 그 lock은 Composer가 쓴다. zip의 sha1은 `02f0244bd3fd663b68576d0c740284306b3f8320`이고, php-ext asset `polyspec-template-php-ext-php-0.0.6.zip`의 sha256은 `0e6253200c7314f7ef89b3ebb5f90a983331795ca49dd177fb70511e0dde5092`이며, 둘 다 release asset의 digest와 같다. `config/template-ext.json`, Makefile의 `TEMPLATE_TAG`, workflow의 template checkout, `packages/hyper-server-python/pyproject.toml`의 Python git tag가 v0.0.6을 가리킨다. `tests/release-install`의 consumer 프로젝트는 hyper release 0.0.13의 archive가 정확히 0.0.5를 요구하므로 0.0.5를 유지한다. hyper가 쓰는 0.0.5와 0.0.6 사이 template 변경은 npm, Composer, php-ext 패키지의 version 필드와, `packages/hyper-server-python/pyproject.toml`이 이미 선언한 Python `requires-python` `>=3.14`뿐이다. `tests/scripts/template-version.test.mjs`가 모든 pin을 검사한다. 0.0.5 tree에서는 여덟 case 중 일곱이 실패하고, 0.0.6에서는 여덟 case가 모두 통과한다.
