@@ -1,8 +1,15 @@
 // The cookies, the cache control, the page status and the embedding of the data that the loaders and actions of one
 // request give its response (HY-52, HY-69, HY-92), and the notes that they give the response hook (HY-60).
+// The tokens of the Referrer-Policy specification that a reply may set (HY-103).
+const REFERRER_POLICIES: readonly string[] = [
+  'no-referrer', 'no-referrer-when-downgrade', 'origin', 'origin-when-cross-origin',
+  'same-origin', 'strict-origin', 'strict-origin-when-cross-origin', 'unsafe-url',
+];
+
 export class Reply {
   private readonly cookies: [string, string, number | null][] = [];
   private cacheControlText: string | null = null;
+  private referrerPolicyText: string | null = null;
   private pageStatus: number | null = null;
   private renewal = false;
   private embed = false;
@@ -63,6 +70,22 @@ export class Reply {
 
   cacheControlValue(): string | null {
     return this.cacheControlText;
+  }
+
+  // Sets the Referrer-Policy of the page and JSON answers of the request, whatever their status; a value that is not a
+  // token of the Referrer-Policy specification fails (HY-103).
+  referrerPolicy(value: string): this {
+    if (!REFERRER_POLICIES.includes(value)) throw new Error(`hyper: Referrer-Policy ${value} is not a token of the Referrer-Policy specification`);
+    this.referrerPolicyText = value;
+    return this;
+  }
+
+  referrerPolicyValue(): string | null {
+    return this.referrerPolicyText;
+  }
+
+  referrerPolicyHeaders(): Record<string, string> {
+    return this.referrerPolicyText === null ? {} : { 'Referrer-Policy': this.referrerPolicyText };
   }
 
   // Gives a page response that has status 200 otherwise the status 403, for a page that shows other data in place of

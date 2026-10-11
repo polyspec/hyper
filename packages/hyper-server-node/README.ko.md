@@ -1,5 +1,5 @@
 <!-- doc-id: hyper-server-node-readme -->
-<!-- source-sha256: 235bbcd076fa06c2f6c00324776ef4322945d1d0485fe7789123633b343a2061 -->
+<!-- source-sha256: f5b957690e0cf783abaa52ece95ef0302573de8851904fa0371648c864d83763 -->
 # @polyspec/hyper-server
 
 [English](README.md).
@@ -74,7 +74,7 @@ app.bind('posts', () => new Posts('/srv/board/var/board.db'));
 | 필드 | 타입 | 뜻 |
 |---|---|---|
 | `request` | `Request` | `method`, `path()`, `params()`, `param(name)`, `query()`, `rawQuery()`, `queryInt(name, fallback)`, `form()`, `formString(name)`, `flash(name)`, `cookie(name)`, `header(name)`, `csrfToken()`, `currentPath()`, `wantsJson()`, `isRegionRequest()`, `https` |
-| `reply` | `Reply` | `cookie(name, value, maxAge?)`, `removeCookie(name)`, `private`나 `no-store`를 담은 `cacheControl(value)`(HY-52), 액션의 `renewSession()`(HY-72). `note(name, value)`는 응답 hook을 위한 값을 기록하며, hook은 `notes()`로 읽는다(HY-60) |
+| `reply` | `Reply` | `cookie(name, value, maxAge?)`, `removeCookie(name)`, `private`나 `no-store`를 담은 `cacheControl(value)`(HY-52), Referrer-Policy 명세의 토큰을 받는 `referrerPolicy(value)`(HY-103), 액션의 `renewSession()`(HY-72). `note(name, value)`는 응답 hook을 위한 값을 기록하며, hook은 `notes()`로 읽는다(HY-60) |
 | `services` | `Services<S>` | `get(key)`는 `app.bind`가 등록한 service를 반환한다 |
 
 loader는 데이터를 반환한다. 문자열 key의 plain object나 `Map`이며, 바로 반환하거나 promise로 반환한다. 값은 null, boolean, ±(2^53 − 1) 안의 number와 bigint, string, 배열, map, plain object다(HY-44, HY-54). plain object는 JavaScript 규칙대로 정수 같은 key를 앞에 두고, `Map`은 넣은 순서를 지킨다.

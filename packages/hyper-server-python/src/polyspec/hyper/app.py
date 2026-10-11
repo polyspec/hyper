@@ -310,6 +310,7 @@ class App:
                 'Content-Type': 'application/json; charset=utf-8',
                 'Cache-Control': (reply.cache_control_value() or 'no-store') if status == 200 else 'no-store',
                 'Vary': vary,
+                **reply.referrer_policy_headers(),
             }
             if status != 200:
                 return Response(status, headers, body)
@@ -328,6 +329,7 @@ class App:
             'Content-Type': 'text/html; charset=utf-8',
             'Cache-Control': (reply.cache_control_value() or 'no-store') if status == 200 else 'no-store',
             'Vary': vary,
+            **reply.referrer_policy_headers(),
         }
         return Response(status, headers,
                         self._document(request, route, shared, data, templates, kept, reply.embeds_data()))

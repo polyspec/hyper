@@ -8,6 +8,9 @@ import re
 _COOKIE_NAME = re.compile(r'[a-z][a-z0-9_-]*\Z')
 _COOKIE_VALUE = re.compile(r'[A-Za-z0-9._~-]+\Z')
 _CACHE_CONTROL = re.compile(r'[\x20-\x7e]+\Z')
+# The tokens of the Referrer-Policy specification that a reply may set (HY-103).
+_REFERRER_POLICIES = ('no-referrer', 'no-referrer-when-downgrade', 'origin', 'origin-when-cross-origin',
+                      'same-origin', 'strict-origin', 'strict-origin-when-cross-origin', 'unsafe-url')
 
 
 class Reply:
@@ -17,6 +20,7 @@ class Reply:
         # One cookie: name, value and Max-Age (HY-52).
         self._cookies: list[tuple[str, str, int | None]] = []
         self._cache_control: str | None = None
+        self._referrer_policy: str | None = None
         self._renewal = False
         self._status: int | None = None
         self._embed = False
@@ -77,6 +81,22 @@ class Reply:
     def cache_control_value(self) -> str | None:
         """Returns the Cache-Control that the reply sets, or None."""
         return self._cache_control
+
+    def referrer_policy(self, value: str) -> 'Reply':
+        """Sets the Referrer-Policy of the page and JSON answers of the request, whatever their status; a value that is
+        not a token of the Referrer-Policy specification fails (HY-103)."""
+        if value not in _REFERRER_POLICIES:
+            raise ValueError(f'Referrer-Policy {value} is not a token of the Referrer-Policy specification')
+        self._referrer_policy = value
+        return self
+
+    def referrer_policy_value(self) -> str | None:
+        """Returns the Referrer-Policy that the reply sets, or None."""
+        return self._referrer_policy
+
+    def referrer_policy_headers(self) -> dict[str, str]:
+        """Returns the Referrer-Policy header of the reply, or no header (HY-103)."""
+        return {} if self._referrer_policy is None else {'Referrer-Policy': self._referrer_policy}
 
     def status(self, status: int) -> 'Reply':
         """Gives a page response that has status 200 otherwise the status 403, for a page that shows other data in

@@ -73,7 +73,7 @@ Every loader and action receives one context object:
 | Field | Type | Meaning |
 |---|---|---|
 | `request` | `Request` | `method`, `path()`, `params()`, `param(name)`, `query()`, `rawQuery()`, `queryInt(name, fallback)`, `form()`, `formString(name)`, `flash(name)`, `cookie(name)`, `header(name)`, `csrfToken()`, `currentPath()`, `wantsJson()`, `isRegionRequest()`, `https` |
-| `reply` | `Reply` | `cookie(name, value, maxAge?)`, `removeCookie(name)`, `cacheControl(value)` with `private` or `no-store` (HY-52); `renewSession()` in an action (HY-72); `note(name, value)` records a value for the response hook, which reads `notes()` (HY-60) |
+| `reply` | `Reply` | `cookie(name, value, maxAge?)`, `removeCookie(name)`, `cacheControl(value)` with `private` or `no-store` (HY-52); `referrerPolicy(value)` with a token of the Referrer-Policy specification (HY-103); `renewSession()` in an action (HY-72); `note(name, value)` records a value for the response hook, which reads `notes()` (HY-60) |
 | `services` | `Services<S>` | `get(key)` returns the service that `app.bind` registered |
 
 A loader returns data: a plain object or a `Map` with string keys, synchronously or as a promise. Values are null, booleans, numbers and bigints within ±(2^53 − 1), strings, arrays, maps and plain objects (HY-44, HY-54). A plain object puts integer-like keys first, as JavaScript does; a `Map` keeps insertion order.
