@@ -459,6 +459,7 @@ final class App
                 'Content-Type' => 'application/json; charset=utf-8',
                 'Cache-Control' => $status === 200 ? ($reply->cacheControlValue() ?? 'no-store') : 'no-store',
                 'Vary' => $vary,
+                ...$reply->referrerPolicyHeaders(),
             ];
             if ($status !== 200) {
                 return new Response($status, $headers, $body);
@@ -480,6 +481,7 @@ final class App
             'Content-Type' => 'text/html; charset=utf-8',
             'Cache-Control' => $status === 200 ? ($reply->cacheControlValue() ?? 'no-store') : 'no-store',
             'Vary' => $vary,
+            ...$reply->referrerPolicyHeaders(),
         ];
 
         return new Response($status, $headers, $this->document($request, $route, $shared, $data, $templates, $kept, $reply->embedsData()));

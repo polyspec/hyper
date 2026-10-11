@@ -13,7 +13,15 @@ final class Reply
     /** @var list<array{string, string, ?int}> name, value and Max-Age */
     private array $cookies = [];
 
+    /** The tokens of the Referrer-Policy specification that a reply may set (HY-103). */
+    private const REFERRER_POLICIES = [
+        'no-referrer', 'no-referrer-when-downgrade', 'origin', 'origin-when-cross-origin',
+        'same-origin', 'strict-origin', 'strict-origin-when-cross-origin', 'unsafe-url',
+    ];
+
     private ?string $cacheControl = null;
+
+    private ?string $referrerPolicy = null;
 
     private bool $renewal = false;
 
@@ -110,6 +118,31 @@ final class Reply
     public function cacheControlValue(): ?string
     {
         return $this->cacheControl;
+    }
+
+    /**
+     * Sets the Referrer-Policy of the page and JSON answers of the request, whatever their status; a value that is not a
+     * token of the Referrer-Policy specification fails (HY-103).
+     */
+    public function referrerPolicy(string $value): self
+    {
+        if (!in_array($value, self::REFERRER_POLICIES, true)) {
+            throw new \InvalidArgumentException("Referrer-Policy {$value} is not a token of the Referrer-Policy specification");
+        }
+        $this->referrerPolicy = $value;
+
+        return $this;
+    }
+
+    public function referrerPolicyValue(): ?string
+    {
+        return $this->referrerPolicy;
+    }
+
+    /** @return array<string, string> */
+    public function referrerPolicyHeaders(): array
+    {
+        return $this->referrerPolicy === null ? [] : ['Referrer-Policy' => $this->referrerPolicy];
     }
 
     /**

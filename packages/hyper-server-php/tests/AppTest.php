@@ -1233,7 +1233,7 @@ final class AppTest extends TestCase
         self::assertSame('same-origin', $page->headers['Referrer-Policy']);
         $json = $this->get('/items/referrer', self::JSON);
         self::assertSame('same-origin', $json->headers['Referrer-Policy']);
-        $again = $this->get('/items/referrer', ['Accept' => 'application/json', 'If-None-Match' => self::header($json, 'ETag')]);
+        $again = $this->get('/items/referrer', self::JSON + ['If-None-Match' => self::header($json, 'ETag')]);
         self::assertSame(304, $again->status);
         self::assertSame('same-origin', $again->headers['Referrer-Policy']);
         self::assertSame('origin', $this->get('/items/referrer-in-place', self::JSON)->headers['Referrer-Policy']);
