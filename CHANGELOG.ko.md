@@ -1,5 +1,5 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 1d2b7d7710f0032c625e9adce88bd99efd58b2f6e5d88e7af8d4116bc17b81e7 -->
+<!-- source-sha256: 2e8cde58a8579613a58ee7b5c32eed5e5c2984c52dff13e99694610715bda65c -->
 # 변경 기록
 
 [English](CHANGELOG.md).
@@ -7,6 +7,7 @@
 ## Unreleased
 
 ## 0.0.13
+- H21.3: `tests/release-install`의 consumer 프로젝트는 release 0.0.13을 요구한다. 그 manifest와 lock은 archive `polyspec-hyper-client-npm-0.0.13.tgz`, `polyspec-hyper-server-npm-0.0.13.tgz`, `polyspec-hyper-build-npm-0.0.13.tgz`, `polyspec-hyper-server-php-0.0.13.zip`을 가리키며, `make release-consumer TAG=v0.0.13`이 이를 설치하고 검사한다 (#H21.3).
 - H20.13: pre-push hook은 push되는 모든 commit의 message를 `config/commits.json`으로 검사하고, commit에 finding이 있으면 push를 거부한다. 따라서 72자를 넘는 body 줄이 있는 commit은 push되지 않는다. vendored kit은 `v0.0.17`이다.
 - H21.1: reply는 PHP와 Node에서 명명된 메서드 `referrerPolicy(value)`를, Python에서 `referrer_policy(value)`를 가진다. 요청의 페이지와 JSON 응답의 `Referrer-Policy`를, 응답의 상태와 관계없이, Referrer-Policy 명세의 토큰 여덟 개 중 하나로 정한다. 다른 값은 HY-43으로 실패한다(HY-103).
 - H20.12: `packages/hyper-server-python/pyproject.toml`은 `requires-python >=3.14`를 밝힌다. `.python-version`의 minor release이며 CI가 테스트하는 값이다(`tests/scripts/python-requires.test.mjs`). 의존성 기록도 같은 값을 밝힌다.
