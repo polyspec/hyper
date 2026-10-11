@@ -13,7 +13,7 @@
 # installs the Python and the npm of the checkout into var/tools, so CI runs the Python of a local run. npm and Composer
 # also come from `make install` into var/tools of the checkout. `make install` installs the
 # template packages from the assets of the template release with npm and Composer (HY-70). The template repository is
-# checked out next to this repository at its tag v0.0.5 (TEMPLATE_TAG of the Makefile, HY-80), as ../template of the
+# checked out next to this repository at its tag v0.0.6 (TEMPLATE_TAG of the Makefile, HY-80), as ../template of the
 # Makefile, and `make install` copies the native extension sources of the commit of that tag (HY-78). `make ext` builds
 # the native extension with phpize and php-config of the PHP of setup-php, and only the group board installs Chromium.
 name: ci
@@ -82,7 +82,7 @@ jobs:
         if: ${{ !cancelled() && matrix.install }}
         with:
           repository: polyspec/template
-          ref: v0.0.5
+          ref: v0.0.6
           path: template
       - id: install
         if: ${{ !cancelled() && matrix.install }}

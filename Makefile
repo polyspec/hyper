@@ -19,7 +19,7 @@ PYTHON := $(CURDIR)/var/tools/bin/python3
 # native template extension is the php-ext asset of the same release, which config/template-ext.json pins (H14.1-7).
 # The template repository of TEMPLATE_REPOSITORY is read only for the commit of TEMPLATE_TAG in the full-run key (HY-80).
 TEMPLATE_REPOSITORY := ../template
-TEMPLATE_TAG := v0.0.5
+TEMPLATE_TAG := v0.0.6
 FIXTURES := $(PHP_PACKAGE)/tests/fixtures
 # The Composer vendor directory of the private root composer.json, which installs packages/hyper-server-php for development.
 PHP_VENDOR := $(CURDIR)/vendor

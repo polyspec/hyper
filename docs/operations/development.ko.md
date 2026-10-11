@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: 010b24fcd4560a7c3045217027a87bdcc3695bcb6a2efb28fc5daefd14298967 -->
+<!-- source-sha256: 92e58d421bc9645e0e00052389ecf2a47877d35938df0a1a32ff9ac48141e8c7 -->
 # 개발
 
 [English](development.md).
@@ -9,7 +9,7 @@
 - pin한 도구(HY-81): `.node-version`의 Node.js, `pdo_sqlite`가 있는 `.php-version`의 PHP, `config/toolchain.json`의 `pythonBuild` Python(`make install-tools`가 설치하고 minor release는 `.python-version`에 있다), GNU Make 3.81 이상, 네이티브 확장을 위한 그 PHP의 phpize, php-config와 C compiler. `make install`은 `packageManager`의 npm과 `config/toolchain.json`의 Composer를 `var/tools`에 설치한다(`make install-tools`). `make toolchain-check`는 pin과 다른 모든 도구를 밝힌다.
 - 공유 도구: `scripts/kit/`와 `tests/kit/`는 공유 도구 저장소 `polyspec/kit`의 tag `v0.0.9`의 복사본이며(`kit.json`, `.kit/kit.lock.json`), `config/*.json`이 이를 설정한다. `make kit-sync KIT_TAG=<tag>`가 복사본을 쓰며 복사본을 바꾸는 유일한 명령이다. `make kit-check`는 파일이 lock과 다르거나 `config/*.json`이 schema를 어기면 실패하고, `make kit-test`는 도구의 test를 실행한다.
 - template package: npm은 `@polyspec/template`과 `@polyspec/template-compiler`를 template release의 tarball에서, Composer는 `polyspec/template`을 그 zip에서 `package.json`, `composer.json`과 그 lock이 고정한 대로 설치한다(HY-70). `make install`이 이를 download한다.
-- 네이티브 template 확장: release `v0.0.5`(`TEMPLATE_TAG`)의 php-ext asset `polyspec-template-php-ext-php-0.0.5.zip`이며, `config/template-ext.json`이 sha256으로 pin한다(H14.1-7). `make install`이 `$(ONLINE)`으로 내려받아 `var/products/template-ext`에 풀고, `make ext`가 offline으로 build한다. `../template`(`TEMPLATE_REPOSITORY`)의 template 저장소는 full-run key가 밝히는 tag의 commit을 읽을 때만 쓰며, tag가 없으면 `make template-tag`가 실패한다.
+- 네이티브 template 확장: release `v0.0.6`(`TEMPLATE_TAG`)의 php-ext asset `polyspec-template-php-ext-php-0.0.6.zip`이며, `config/template-ext.json`이 sha256으로 pin한다(H14.1-7). `make install`이 `$(ONLINE)`으로 내려받아 `var/products/template-ext`에 풀고, `make ext`가 offline으로 build한다. `../template`(`TEMPLATE_REPOSITORY`)의 template 저장소는 full-run key가 밝히는 tag의 commit을 읽을 때만 쓰며, tag가 없으면 `make template-tag`가 실패한다.
 - network: `make install-tools`, `make install`, `make install-browser`, `make kit-sync`만 download한다. 다른 모든 recipe는 npm, Composer를 offline으로 실행하므로(`npm_config_offline`, `COMPOSER_DISABLE_NETWORK`) 없는 download는 바로 실패하고 그것을 만드는 설치 target을 밝힌다(HY-89).
 - Playwright용 Chromium: `make install-browser`. pin한 Playwright의 Chromium과, Linux에서는 그 system library를 설치한다.
 
@@ -118,7 +118,7 @@ npm 12.2.0은 `allow-remote=root`에서 npm consumer 프로젝트의 lock을 쓰
 
 ### 개발 구성
 
-private root는 checkout 안의 패키지를 찾아 주며 공개되지 않는다. root `package.json`은 `@polyspec/hyper-client`, `@polyspec/hyper-server`, `@polyspec/hyper-build`를 `packages/hyper-client`, `packages/hyper-server-node`, `packages/hyper-build`의 `file:` 사본으로, `@polyspec/template`과 `@polyspec/template-compiler`를 template release의 tarball URL로 선언하고, 패키지의 정확한 버전이 이 사본과 template tarball로 풀리게 하는 `overrides`를 둔다. npm 12는 기본으로 URL 의존성을 설치하지 않으므로 `.npmrc`가 `allow-remote=root`를 둔다. npm은 workspace를 언제나 link하므로 npm workspace는 두지 않는다(HY-79). root `composer.json`은 path repository `var/products/hyper-server-php`와, sha1 `shasum`을 가진 template release의 zip의 `package` repository에서 root `vendor`로 설치하고 `packages/hyper-server-php`의 namespace를 tree에 연결한다. `composer.lock`이 그 lock이다. 두 root는 template release v0.0.5를 받는다(HY-70). 그 tag는 `make template`이 네이티브 확장 소스를 복사하는 Makefile의 `TEMPLATE_TAG`이다(HY-80).
+private root는 checkout 안의 패키지를 찾아 주며 공개되지 않는다. root `package.json`은 `@polyspec/hyper-client`, `@polyspec/hyper-server`, `@polyspec/hyper-build`를 `packages/hyper-client`, `packages/hyper-server-node`, `packages/hyper-build`의 `file:` 사본으로, `@polyspec/template`과 `@polyspec/template-compiler`를 template release의 tarball URL로 선언하고, 패키지의 정확한 버전이 이 사본과 template tarball로 풀리게 하는 `overrides`를 둔다. npm 12는 기본으로 URL 의존성을 설치하지 않으므로 `.npmrc`가 `allow-remote=root`를 둔다. npm은 workspace를 언제나 link하므로 npm workspace는 두지 않는다(HY-79). root `composer.json`은 path repository `var/products/hyper-server-php`와, sha1 `shasum`을 가진 template release의 zip의 `package` repository에서 root `vendor`로 설치하고 `packages/hyper-server-php`의 namespace를 tree에 연결한다. `composer.lock`이 그 lock이다. 두 root는 template release v0.0.6을 받는다(HY-70). 그 tag는 `make template`이 네이티브 확장 소스를 복사하는 Makefile의 `TEMPLATE_TAG`이다(HY-80).
 
 ### 릴리스 에셋 설치
 

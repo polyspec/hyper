@@ -9,7 +9,7 @@
 # of packages/hyper-client, packages/hyper-server-node and packages/hyper-build, a zip of packages/hyper-server-php); make release-publish
 # creates the GitHub Release with the section as notes and the archives attached. TAG reaches the make targets through the
 # environment, never as shell text. The setup is the one of the job check of ci.yml: Node.js from .node-version, the Python
-# of make install-tools (config/toolchain.json pythonBuild), PHP from .php-version, the template repository at its tag v0.0.5 (TEMPLATE_TAG of the Makefile,
+# of make install-tools (config/toolchain.json pythonBuild), PHP from .php-version, the template repository at its tag v0.0.6 (TEMPLATE_TAG of the Makefile,
 # HY-80) next to this repository, and make install. Every step that runs a command runs one make target, the job runs on
 # ubuntu-26.04-arm and the actions are pinned by commit (HY-90, tests/scripts/ci-workflow.test.mjs).
 name: release
@@ -50,7 +50,7 @@ jobs:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           repository: polyspec/template
-          ref: v0.0.5
+          ref: v0.0.6
           path: template
       - name: make install
         run: make install
