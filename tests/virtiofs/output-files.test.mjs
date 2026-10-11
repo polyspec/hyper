@@ -8,10 +8,13 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
+
+import { requireBuilt } from '../scripts/requires.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
@@ -19,10 +22,13 @@ const image = 'docker.io/library/node:26.8.1-trixie-slim@sha256:c0753125a3789977
 
 // Runs node with `args` in the container with a temporary output directory of the test mounted as /output.
 function run(t, args) {
+  requireBuilt('install', 'node_modules/@polyspec/template/package.json');
+  // The template packages that the build loads by their names lie inside this checkout, which the bind mount of the
+  // root covers (HY-70, HY-78). The template is the one that the build resolves from its package.
+  const template = createRequire(join(root, 'packages', 'hyper-build', 'package.json')).resolve('@polyspec/template');
+  if (!template.startsWith(`${root}/`)) throw new Error(`${template} is not inside ${root}`);
   const output = mkdtempSync(join(tmpdir(), 'hyper-virtiofs-'));
   t.after(() => rmSync(output, { recursive: true, force: true }));
-  // The declared copy of the template repository lies inside this checkout (HY-78).
-  if (!template.startsWith(`${root}/`)) throw new Error(`${template} is not inside ${root}`);
   const mounts = [
     ['--mount', `type=bind,source=${root},target=${root},readonly`],
     ['--mount', `type=bind,source=${output},target=/output`],
