@@ -4,15 +4,15 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e373e1e6e59b085998efcdf58e09865c",
+    "content-hash": "bfa302ad80f8b4d60482a11c4abee62e",
     "packages": [
         {
             "name": "polyspec/hyper-server",
-            "version": "0.0.12",
+            "version": "0.0.13",
             "dist": {
                 "type": "path",
                 "url": "var/products/hyper-server-php",
-                "reference": "2d4d99352ca8bd910e3116136c85e981a4180f58"
+                "reference": "2b9251cf5b85a57c9fc7124dfa6e5da8994a35fc"
             },
             "require": {
                 "php": "^8.2",
