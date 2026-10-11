@@ -1,5 +1,5 @@
 <!-- doc-id: waves -->
-<!-- source-sha256: 7429ec31ec7dbae697a59fdec1d55496779dd2a34fbe5453b07b7575d091db1a -->
+<!-- source-sha256: 7aa9367703e47080d1dc80d6d79fd8921504225e65c0967a1d7805381196716b -->
 # 웨이브 배경
 
 [English](waves.md).
@@ -85,3 +85,7 @@
 ## Wave 20
 
 의존: wave 19. 요청의 answer를 벗어난 오류는 adapter마다 다른 방식으로 consumer에게 닿았다. PHP는 평범한 500을 응답 hook에 보고했고, Node와 Python `create_server`는 hook 보고 없이 그것을 썼으며, WSGI와 ASGI callable은 오류를 server에 전파했다. 쓰기 hook `written`은 Python `create_server`와 Node 응답의 event에만 있었으므로, consumer가 PHP 요청의 응답을 기록할 수 없었다. HY-99는 이제 모든 서버에 같은 값을 주는 쓰기 hook 하나를 정하고, HY-102는 Node 서버에 애플리케이션의 listener를 준다. HY-60은 탈출 오류의 평범한 500이 hyper가 요청을 받기 전에 호출자가 설정한 header를 유지한다고 정한다.
+
+## Wave 21
+
+의존: wave 20. 페이지는 정책이 허용하는 만큼 페이지의 주소를 연결된 사이트에 Referer header로 보낸다. reply에는 Referrer-Policy header를 정하는 메서드가 없어서 application이 그 header를 제한할 수 없었고, 일반 header setter는 Cache-Control, frame 정책, cookie처럼 hyper가 페이지 header에 지키는 규칙을 우회했을 것이다. reply는 각 adapter에 명명된 메서드 `referrerPolicy`를 가지며(HY-103), 이 메서드는 Referrer-Policy 명세의 토큰만 받는다.
