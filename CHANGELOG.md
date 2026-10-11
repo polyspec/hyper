@@ -6,6 +6,7 @@
 ## Unreleased
 
 ## 0.0.12
+- H20.10: the consumer projects of `tests/release-install` require the release 0.0.12: their manifests and locks name the archives `polyspec-hyper-client-npm-0.0.12.tgz`, `polyspec-hyper-server-npm-0.0.12.tgz`, `polyspec-hyper-build-npm-0.0.12.tgz` and `polyspec-hyper-server-php-0.0.12.zip`, and `make release-consumer TAG=v0.0.12` installs and checks them (#H20.10).
 - H20.7: the write hook receives a null response for a request that ends before a response started: a closed connection (HY-67) in the Node server, an `exit()` without output in PHP, and a cancelled ASGI task before its answer. The hook gets `ended` false and no failure unless an error escaped (HY-99).
 - H20.6: the PHP write hook follows what PHP sent under either output buffering mode. A fatal error with output buffering on drops the buffered body, so the plain 500 is the only body (HY-60, HY-99).
 - H20.4: the Python server writes the escaped errors of its callables and of `create_server` with the failure of the error (HY-60, HY-99). A WSGI body is an iterable whose `close` reports a write that did not end, and a 204 or 304 response reports its write at the end of the iterable. A status, a header or a body that cannot be written, and a `start_response` that raises, are escaped errors that pass the plain 500 through `start_response` (HY-100). An ASGI cancellation of a send reports a write that did not end and propagates (HY-101). The write hook takes the failure as its fifth argument.

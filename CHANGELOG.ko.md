@@ -1,5 +1,5 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 166cb999b2bcf9ff04b5384fe3acde914d789e2460d13d594a787ca9edde130f -->
+<!-- source-sha256: d6942107ea089da0fe701e73189a1d240b025e1b7be386a01651ed5f62fe44e3 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
@@ -7,6 +7,7 @@
 ## Unreleased
 
 ## 0.0.12
+- H20.10: `tests/release-install`의 consumer 프로젝트는 release 0.0.12를 요구한다. 그 manifest와 lock은 archive `polyspec-hyper-client-npm-0.0.12.tgz`, `polyspec-hyper-server-npm-0.0.12.tgz`, `polyspec-hyper-build-npm-0.0.12.tgz`, `polyspec-hyper-server-php-0.0.12.zip`을 가리키며, `make release-consumer TAG=v0.0.12`이 이를 설치하고 검사한다 (#H20.10).
 - H20.7: 응답이 시작되기 전에 요청이 끝나면 쓰기 hook은 null 응답을 받는다. Node 서버는 연결이 닫힌 요청, PHP는 출력 없는 `exit()`, Python ASGI는 answer 전에 취소된 task가 그렇다. hook은 탈출 오류가 없으면 `ended` false와 failure null을 받는다(HY-99).
 - H20.6: PHP 쓰기 hook은 두 output buffering 방식 모두에서 PHP가 보낸 것을 따른다. output buffering이 켜진 상태의 탈출 오류는 buffer된 body를 버리므로 평범한 500이 유일한 body다(HY-60, HY-99).
 - H20.4: Python 서버는 callable과 `create_server`의 탈출 오류에 오류의 failure를 붙여 보고한다(HY-60, HY-99). WSGI body는 `close`가 끝나지 않은 write를 보고하는 iterable이며, 204와 304 응답은 write를 iterable의 끝에서 보고한다. 쓸 수 없는 status, header, body와 던지는 `start_response`는 탈출 오류이며, 평범한 500을 `start_response`로 넘긴다(HY-100). ASGI send의 취소는 끝나지 않은 write를 보고하고 전파된다(HY-101). 쓰기 hook은 failure를 다섯 번째 인자로 받는다.
