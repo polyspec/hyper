@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "bfa302ad80f8b4d60482a11c4abee62e",
+    "content-hash": "8a087e739deda96e1be41f55fc943bd7",
     "packages": [
         {
             "name": "polyspec/hyper-server",
@@ -12,11 +12,11 @@
             "dist": {
                 "type": "path",
                 "url": "var/products/hyper-server-php",
-                "reference": "2b9251cf5b85a57c9fc7124dfa6e5da8994a35fc"
+                "reference": "5934f11f0c3b7ff768c3b525ea2b9f62df6ff7bb"
             },
             "require": {
                 "php": "^8.2",
-                "polyspec/template": "0.0.5"
+                "polyspec/template": "0.0.6"
             },
             "require-dev": {
                 "laravel/pint": "^1.0",
@@ -53,11 +53,11 @@
         },
         {
             "name": "polyspec/template",
-            "version": "0.0.5",
+            "version": "0.0.6",
             "dist": {
                 "type": "zip",
-                "url": "https://github.com/polyspec/template/releases/download/v0.0.5/polyspec-template-php-0.0.5.zip",
-                "shasum": "0e0f1b690ab394175a7999ef071c2c0780dcfa93"
+                "url": "https://github.com/polyspec/template/releases/download/v0.0.6/polyspec-template-php-0.0.6.zip",
+                "shasum": "02f0244bd3fd663b68576d0c740284306b3f8320"
             },
             "require": {
                 "ext-mbstring": "*",

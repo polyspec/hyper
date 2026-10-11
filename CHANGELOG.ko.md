@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 2e8cde58a8579613a58ee7b5c32eed5e5c2984c52dff13e99694610715bda65c -->
+<!-- source-sha256: e8ab9a4d0800651d6f8cedddbf586ac12391e5fbc4e054008d5b2d939fb06818 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H21.4: hyper는 template release 0.0.6 하나에만 의존한다. npm 패키지 `@polyspec/template`과 `@polyspec/template-compiler`는 release v0.0.6의 tarball에서 설치하며, 이는 root `package.json`(dependencies와 overrides), `packages/hyper-build`, `packages/hyper-client`, `packages/hyper-server-node`, `tests/package-install`에 있고, 그 lock은 npm이 쓴다. Composer는 `polyspec/template` 0.0.6을 root `composer.json`, `packages/hyper-server-php/composer.json`, `examples/board/composer.json`에서 그 zip으로 설치하며, 그 lock은 Composer가 쓴다. zip의 sha1은 `02f0244bd3fd663b68576d0c740284306b3f8320`이고, php-ext asset `polyspec-template-php-ext-php-0.0.6.zip`의 sha256은 `0e6253200c7314f7ef89b3ebb5f90a983331795ca49dd177fb70511e0dde5092`이며, 둘 다 release asset의 digest와 같다. `config/template-ext.json`, Makefile의 `TEMPLATE_TAG`, workflow의 template checkout, `packages/hyper-server-python/pyproject.toml`의 Python git tag가 v0.0.6을 가리킨다. `tests/release-install`의 consumer 프로젝트는 hyper release 0.0.13의 archive가 정확히 0.0.5를 요구하므로 0.0.5를 유지한다. hyper가 쓰는 0.0.5와 0.0.6 사이 template 변경은 npm, Composer, php-ext 패키지의 version 필드와, `packages/hyper-server-python/pyproject.toml`이 이미 선언한 Python `requires-python` `>=3.14`뿐이다. `tests/scripts/template-version.test.mjs`가 모든 pin을 검사한다. 0.0.5 tree에서는 여덟 case 중 일곱이 실패하고, 0.0.6에서는 여덟 case가 모두 통과한다.
 
 ## 0.0.13
 - H21.3: `tests/release-install`의 consumer 프로젝트는 release 0.0.13을 요구한다. 그 manifest와 lock은 archive `polyspec-hyper-client-npm-0.0.13.tgz`, `polyspec-hyper-server-npm-0.0.13.tgz`, `polyspec-hyper-build-npm-0.0.13.tgz`, `polyspec-hyper-server-php-0.0.13.zip`을 가리키며, `make release-consumer TAG=v0.0.13`이 이를 설치하고 검사한다 (#H21.3).

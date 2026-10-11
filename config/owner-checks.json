@@ -513,6 +513,28 @@
       "tests": [
         "tests/scripts/package-names.test.mjs"
       ]
+    },
+    {
+      "paths": [
+        "Makefile",
+        "package.json",
+        "package-lock.json",
+        "composer.json",
+        "composer.lock",
+        "examples/board/composer.json",
+        "examples/board/composer.lock",
+        "config/template-ext.json",
+        ".github/workflows/*.yml",
+        "packages/*/package.json",
+        "packages/*/composer.json",
+        "packages/*/pyproject.toml",
+        "tests/package-install/package.json",
+        "tests/package-install/package-lock.json",
+        "tests/release-install/**"
+      ],
+      "tests": [
+        "tests/scripts/template-version.test.mjs"
+      ]
     }
   ]
 }
