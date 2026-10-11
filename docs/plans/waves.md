@@ -88,3 +88,7 @@ Depends on: wave 19. An error that escapes the answer of a request reached the c
 ## Wave 21
 
 Depends on: wave 20. A page sends its address in the Referer header to the sites that it links to, as the policy of the page allows. The reply had no method for the Referrer-Policy header, so an application could not limit that header, and a general header setter would bypass the rules that hyper keeps for the headers of a page, such as Cache-Control, the frame policy and the cookies. The reply gets the named method `referrerPolicy` in each adapter (HY-103), which accepts only the tokens of the Referrer-Policy specification.
+
+## Wave 22
+
+Depends on: wave 21. The rules of `AGENTS.md` read as if the path and symbolic link rules covered the links and paths that outside tools create, so a change could be read as requiring this repository to rebuild a standard tool of its ecosystem, such as uv for Python environments and locks. The rules now state that an existing outside tool or library is used as it is, with its own behavior, and that the path and symbolic link rules govern what this repository creates.
