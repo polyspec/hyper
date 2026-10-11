@@ -130,6 +130,16 @@ final class AppTest extends TestCase
 
                                 return ['id' => 'x'];
                             })(),
+                            'referrer' => (function () use ($reply): array {
+                                $reply->referrerPolicy('same-origin');
+
+                                return ['id' => 'referrer'];
+                            })(),
+                            'referrer-in-place' => (function () use ($reply): array {
+                                $reply->status(403)->referrerPolicy('origin');
+
+                                return ['id' => 'referrer-in-place'];
+                            })(),
                             'missing' => throw new NotFound(),
                             'private' => (function () use ($reply): array {
                                 $reply->note('refusal', 'private');
@@ -1212,6 +1222,23 @@ final class AppTest extends TestCase
         self::assertSame(['member=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0'], $forbidden->headers['Set-Cookie']);
         self::assertSame(500, $this->get('/items/bad-cookie')->status);
         self::assertArrayNotHasKey('Set-Cookie', $this->get('/items/plain')->headers);
+    }
+
+    public function testTheReferrerPolicyOfTheReplyReachesEveryPageAndJsonAnswer(): void
+    {
+        // HY-103: a page, a JSON answer, the 304 of that answer and a page with status 403 carry the value of the reply;
+        // a page without a call and a plain text failure carry none.
+        $page = $this->get('/items/referrer');
+        self::assertSame(200, $page->status);
+        self::assertSame('same-origin', $page->headers['Referrer-Policy']);
+        $json = $this->get('/items/referrer', self::JSON);
+        self::assertSame('same-origin', $json->headers['Referrer-Policy']);
+        $again = $this->get('/items/referrer', ['Accept' => 'application/json', 'If-None-Match' => self::header($json, 'ETag')]);
+        self::assertSame(304, $again->status);
+        self::assertSame('same-origin', $again->headers['Referrer-Policy']);
+        self::assertSame('origin', $this->get('/items/referrer-in-place', self::JSON)->headers['Referrer-Policy']);
+        self::assertArrayNotHasKey('Referrer-Policy', $this->get('/items/plain')->headers);
+        self::assertArrayNotHasKey('Referrer-Policy', $this->get('/items/missing')->headers);
     }
 
     public function testPageResponsesAreNotStoredUnlessTheReplySetsCacheControl(): void

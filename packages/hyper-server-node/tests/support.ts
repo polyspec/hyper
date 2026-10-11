@@ -80,6 +80,12 @@ export function handlers(): Handlers<Services> {
             case 'bad-cookie':
               reply.cookie('hy-keep', 'x');
               return { id: 'x' };
+            case 'referrer':
+              reply.referrerPolicy('same-origin');
+              return { id: 'referrer' };
+            case 'referrer-in-place':
+              reply.status(403).referrerPolicy('origin');
+              return { id: 'referrer-in-place' };
             case 'missing':
               throw new NotFound();
             case 'private':

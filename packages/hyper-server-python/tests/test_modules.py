@@ -135,6 +135,15 @@ class ReplyTest(unittest.TestCase):
         reply.cache_control('private, max-age=60')
         self.assertEqual('private, max-age=60', reply.cache_control_value())
 
+    def test_a_referrer_policy_is_a_token_of_the_specification(self) -> None:
+        for value in ['no-referrer', 'no-referrer-when-downgrade', 'origin', 'origin-when-cross-origin', 'same-origin',
+                      'strict-origin', 'strict-origin-when-cross-origin', 'unsafe-url']:
+            self.assertEqual(value, Reply().referrer_policy(value).referrer_policy_value(), value)
+        self.assertIsNone(Reply().referrer_policy_value())
+        for value in ['', 'none', 'NO-REFERRER', 'unsafe', 'origin, same-origin', 'no-referrer ']:
+            with self.assertRaises(ValueError, msg=value):
+                Reply().referrer_policy(value)
+
     def test_the_page_status_of_a_reply_is_403(self) -> None:
         reply = Reply()
         with self.assertRaises(ValueError):
