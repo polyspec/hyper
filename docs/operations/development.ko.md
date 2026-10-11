@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: 0ba05623dbd36fc0fec4e03e057f62d0c1dcabf804a05b653f843b0707f30429 -->
+<!-- source-sha256: 010b24fcd4560a7c3045217027a87bdcc3695bcb6a2efb28fc5daefd14298967 -->
 # 개발
 
 [English](development.md).
@@ -83,7 +83,7 @@ guard는 `CHECK_TARGETS`의 각 target을 `make -k <target>`으로 끝까지 실
 
 ## Push
 
-push는 push하는 commit에도 working tree에도 checklist의 `[~]` 작업이 없을 때만 한다. 추적하는 pre-push hook `.githooks/pre-push`는 `make hooks`가 쓰며 `node scripts/kit/push-gate.mjs hook`을 실행한다. 이 script는 입력에서 push의 ref를 읽고, push하는 모든 commit의 checklist(`git show <sha>:docs/plans/execution-checklist.md`)와 working tree의 checklist를 `config/checklist.json`의 tracker로 파싱하고, 상태 1로 push를 거부한다. 거부 메시지는 활성 ID를 작업, ref와 commit 또는 그것을 가진 working tree와 함께 밝히고, 규칙을 말하며, 각 작업을 완료하거나 원인과 재시도 조건과 함께 `[!]`로 표시하라고 알린다. checklist가 없는 push된 commit과 파싱할 수 없는 checklist도 push를 거부한다.
+push는 push하는 commit에도 working tree에도 checklist의 `[~]` 작업이 없을 때만 한다. 추적하는 pre-push hook `.githooks/pre-push`는 `make hooks`가 쓰며 `node scripts/kit/push-gate.mjs hook`을 실행한다. 이 script는 입력에서 push의 ref를 읽고, push하는 모든 commit의 checklist(`git show <sha>:docs/plans/execution-checklist.md`)와 working tree의 checklist를 `config/checklist.json`의 tracker로 파싱하고, 상태 1로 push를 거부한다. push가 보내는 각 commit의 message도 `make commits-check`와 같이 `config/commits.json`으로 검사하고, finding이 있으면 push된 commit은 다시 쓰지 않으므로 push를 거부한다. 거부 메시지는 활성 ID를 작업, ref와 commit 또는 그것을 가진 working tree와 함께 밝히고, 규칙을 말하며, 각 작업을 완료하거나 원인과 재시도 조건과 함께 `[!]`로 표시하라고 알린다. checklist가 없는 push된 commit과 파싱할 수 없는 checklist도 push를 거부한다.
 
 Git은 clone에서 hook을 설치하지 않는다. 그래서 `.githooks/pre-push`를 추적하는 checkout에서는 모든 `make` 실행이 `core.hooksPath`를 `.githooks`로 설정하고, `make hooks`는 이를 명시적으로 설정하며 hook을 쓴다. `make hooks-check`와 전체 실행의 guard는 `core.hooksPath`가 `.githooks`가 아니거나 hook이 없거나 실행할 수 없거나 도구의 hook과 다르면 실패한다. `make push-gate-commit COMMIT=<sha>`는 hook을 건너뛴 push를 위해 같은 gate를 commit에 실행하고, CI group `docs`가 push된 commit에 이를 실행한다.
 

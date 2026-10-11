@@ -1,5 +1,5 @@
 <!-- doc-id: agents -->
-<!-- source-sha256: 3ffb2045f982ad3ad03b183ee90c04785e9686d90bc4d1f1906a551b8ab4843a -->
+<!-- source-sha256: dbbc96d52e438664a42b51fa52132a96f53721fe0c538bfc42fe6c828d7fb694 -->
 # 개발
 
 [English](AGENTS.md).
@@ -68,7 +68,7 @@
 - `docs/plans/execution-checklist.md`에서 작업을 `[o]`로 바꾸기 전에 커밋한 tree에서 그 작업의 verification command를 실행한다. Verification column에는 `make check`가 아니라 그 작업을 소유한 명령을 적는다. 이미 `[o]`인 행은 자기 명령을 그대로 둔다.
 - 커밋이나 push 전에 local `make check`는 필요하지 않다. 실행한다면 활성 작업이 모두 끝났을 때 tree와 template commit마다 한 번 실행하고, 수정마다 또는 작업마다 실행하지 않는다. guard `scripts/kit/full-run.mjs`가 어떤 단계보다 먼저 이를 강제한다. 작업이 `[~]`이거나, 추적 파일의 변경이 커밋되지 않았거나, `var/full-run.json`이 현재 tree와 template commit의 전체 실행을 기록하고 있으면 `make check`는 거부된다. `make rerun-failed`는 현재 tree와 template commit에서 통과하지 못한 target만 다시 실행한다(`docs/operations/development.md`). `docs/features.md`에서 기능을 implemented로 표시하는 것은 그 target의 전체 실행, 곧 `.github/workflows/ci.yml`의 실행이나 local `make check`가 통과한 뒤에만 한다.
 - `main`의 push와 모든 수동 실행(`workflow_dispatch`)에 대해 GitHub은 `.github/workflows/ci.yml`의 job에서 CI group마다 하나씩 모든 target을 끝까지 실행해 전체 suite를 실행한다. 각 job은 job summary를 쓰고 각 target의 상태, 시간, 첫 실패 줄, 전체 log를 담은 보고서 `var/ci/<name>/`을 upload한다(HY-91). 전체 suite와 end-to-end 검사는 이곳에서 실행하며, 다음 push 전에 그것이 밝힌 모든 실패를 고친다. 알려진 한계: CI runner는 Linux이므로 Darwin에서만 full suite의 target인(`DARWIN_TARGETS`, HY-68) `make virtiofs-check`는 누군가 Mac에서 local `make check`를 실행할 때만 실행된다.
-- push는 push하는 commit에도 working tree에도 `docs/plans/execution-checklist.md`의 `[~]` 작업이 없을 때만 하며, 이것이 push 전의 유일한 gate이고 test는 실행하지 않는다. 추적하는 pre-push hook `.githooks/pre-push`는 `make hooks`가 쓰며 `node scripts/kit/push-gate.mjs hook`을 실행하고, 이 script는 그런 push를 거부하며 활성 ID를 작업과 함께 밝힌다. 모든 `make` 실행이 `core.hooksPath`를 `.githooks`로 설정한다. `make hooks-check`와 전체 실행의 guard는 그것이 설정되지 않았거나 hook이 다르면 실패한다. `make push-gate-commit COMMIT=<sha>`는 hook을 건너뛴 push를 위해 같은 gate를 commit에 실행하고, CI group `docs`가 이를 실행한다(`docs/operations/development.ko.md`).
+- push는 push하는 commit에도 working tree에도 `docs/plans/execution-checklist.md`의 `[~]` 작업이 없을 때만 하며, test는 실행하지 않는다. 또한 push가 보내는 commit에 `make commits-check`(`config/commits.json`)의 finding이 있으면 push를 거부한다. push된 commit은 다시 쓰지 않기 때문이다. 추적하는 pre-push hook `.githooks/pre-push`는 `make hooks`가 쓰며 `node scripts/kit/push-gate.mjs hook`을 실행하고, 이 script는 그런 push를 거부하며 활성 ID를 작업과 함께 밝힌다. 모든 `make` 실행이 `core.hooksPath`를 `.githooks`로 설정한다. `make hooks-check`와 전체 실행의 guard는 그것이 설정되지 않았거나 hook이 다르면 실패한다. `make push-gate-commit COMMIT=<sha>`는 hook을 건너뛴 push를 위해 같은 gate를 commit에 실행하고, CI group `docs`가 이를 실행한다(`docs/operations/development.ko.md`).
 - 버전 0.1 전까지 변경은 그것을 소유한 unit test로 검사하고, `main`은 checklist의 모든 작업이 `[o]`일 때 한 번 push한다(HY-94). pull request, merge queue, GitHub ruleset은 없으며 push는 `git push origin main`이다. `main`의 push는 `.github/workflows/ci.yml`을 실행하고, 그 마지막 job `ci-passed`는 workflow의 다른 모든 job이 통과했을 때만 통과한다. 그 push의 CI 실행이 commit의 증거이며, release tag는 tag된 commit에서 `ci-passed`가 성공한 뒤에만 붙인다(`docs/operations/development.ko.md`).
 
 ## 릴리스

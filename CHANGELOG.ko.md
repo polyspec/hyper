@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: f44bbfaef7666d06b59bc2a8d59f4419b952e667c15906d17345944c3817bb42 -->
+<!-- source-sha256: b72f70a7876cf3711548bdced41e00a7d971d72803de586c3b654478c217bf29 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- H20.13: pre-push hook은 push되는 모든 commit의 message를 `config/commits.json`으로 검사하고, commit에 finding이 있으면 push를 거부한다. 따라서 72자를 넘는 body 줄이 있는 commit은 push되지 않는다. vendored kit은 `v0.0.17`이다.
 - H20.12: `packages/hyper-server-python/pyproject.toml`은 `requires-python >=3.14`를 밝힌다. `.python-version`의 minor release이며 CI가 테스트하는 값이다(`tests/scripts/python-requires.test.mjs`). 의존성 기록도 같은 값을 밝힌다.
 - H20.11: `make install-tools`가 `config/toolchain.json`의 `pythonBuild`(3.14.8)을 `var/tools`에 설치하며, 모든 check와 CI job은 PATH의 Python 대신 그 Python을 돌린다. CI matrix 항목 `python-3.11`을 지워 CI는 고정된 release만 돌린다. release tag는 annotated tag다(HY-95). vendored kit은 `v0.0.16`이다.
 
