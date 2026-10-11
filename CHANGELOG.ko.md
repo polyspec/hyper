@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: d6942107ea089da0fe701e73189a1d240b025e1b7be386a01651ed5f62fe44e3 -->
+<!-- source-sha256: 12afc4c5950c5b576527cfb5c0176459d1f41878f39774e551785fa7d1225c57 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- H20.11: `make install-tools`가 `config/toolchain.json`의 `pythonBuild`(3.14.8)을 `var/tools`에 설치하며, 모든 check와 CI job은 PATH의 Python 대신 그 Python을 돌린다. CI matrix 항목 `python-3.11`을 지워 CI는 고정된 release만 돌린다. release tag는 annotated tag다(HY-95). vendored kit은 `v0.0.16`이다.
 
 ## 0.0.12
 - H20.10: `tests/release-install`의 consumer 프로젝트는 release 0.0.12를 요구한다. 그 manifest와 lock은 archive `polyspec-hyper-client-npm-0.0.12.tgz`, `polyspec-hyper-server-npm-0.0.12.tgz`, `polyspec-hyper-build-npm-0.0.12.tgz`, `polyspec-hyper-server-php-0.0.12.zip`을 가리키며, `make release-consumer TAG=v0.0.12`이 이를 설치하고 검사한다 (#H20.10).

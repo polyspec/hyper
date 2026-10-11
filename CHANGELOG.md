@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- H20.11: `make install-tools` installs the Python of `config/toolchain.json` `pythonBuild` (3.14.8) into `var/tools`, and every check and CI job runs that Python instead of the Python of PATH; the CI matrix entry `python-3.11` is removed, so CI runs the pinned release only. The release tag is an annotated tag (HY-95), and the vendored kit is `v0.0.16`.
+
 ## 0.0.12
 - H20.10: the consumer projects of `tests/release-install` require the release 0.0.12: their manifests and locks name the archives `polyspec-hyper-client-npm-0.0.12.tgz`, `polyspec-hyper-server-npm-0.0.12.tgz`, `polyspec-hyper-build-npm-0.0.12.tgz` and `polyspec-hyper-server-php-0.0.12.zip`, and `make release-consumer TAG=v0.0.12` installs and checks them (#H20.10).
 - H20.7: the write hook receives a null response for a request that ends before a response started: a closed connection (HY-67) in the Node server, an `exit()` without output in PHP, and a cancelled ASGI task before its answer. The hook gets `ended` false and no failure unless an error escaped (HY-99).
