@@ -1,5 +1,5 @@
 <!-- doc-id: execution-checklist -->
-<!-- source-sha256: c86a12a67ffad544107e6a11b2c88a0379e044ae610a0f7d120efcc31db9fda4 -->
+<!-- source-sha256: b82b3c0bfa53b5bdb67112060996c2e7dd1baaff4e64f672d84d30d064d4a492 -->
 # 실행 체크리스트
 
 ## [웨이브 1](waves.ko.md#wave-1) — 애플리케이션이 약하게 만들 수 없는 CSRF 방어
@@ -289,4 +289,4 @@
 
 | ID | Task | Verification | Status |
 |---|---|---|---|
-| H21.1 | PHP, Node, Python에 page와 JSON 응답의 `Referrer-Policy` header를 정하는 명명된 reply 메서드 `referrerPolicy`를 더하고, Referrer-Policy 명세의 토큰만 받는다(HY-103). 각 adapter의 테스트, 기능 상태와 changelog | `make test-php`, `make test-node`, `make test-python`, `make test-python-render`, `make documents-check`, `make commits-check` | [~] |
+| H21.1 | PHP, Node, Python에 page와 JSON 응답의 `Referrer-Policy` header를 정하는 명명된 reply 메서드 `referrerPolicy`를 더하고, Referrer-Policy 명세의 토큰만 받는다(HY-103). 각 adapter의 테스트, 기능 상태와 changelog | `make test-php`, `make test-node`, `make test-python`, `make test-python-render`, `make documents-check`, `make commits-check`  Red: 메서드가 없던 상태에서 `make test-php`는 `phpunit packages/hyper-server-php: 328 passed, 3 failed`를 출력했고, `Call to undefined method Polyspec\Hyper\Reply::referrerPolicy()`가 두 번, `testTheReferrerPolicyOfTheReplyReachesEveryPageAndJsonAnswer`는 `Failed asserting that 500 is identical to 200`로 실패했다. `make test-node`는 `vitest: 343 passed, 2 failed`를 출력했고 type check는 `TS2339: Property 'referrerPolicy' does not exist on type 'Reply'`로 실패했다. `make test-python`은 `Ran 97 tests`와 `FAILED (errors=1)`를 출력했다(`'Reply' object has no attribute 'referrer_policy'`). `make test-python-render`는 `Ran 34 tests`와 `FAILED (failures=1, errors=1)`를 출력했고, `ReferrerPolicyTest`의 두 case가 실패했다. Green: `make test-php`는 생성된 program에서 `phpunit packages/hyper-server-php: 331 passed, 0 failed`, native extension에서 `331 passed, 0 failed, 1 skipped`를 출력했다. skip은 기존 `RendererTest::testLoadsTheGeneratedProgramFromItsNamespace`다. `make test-node`는 `vitest: 345 passed, 0 failed`를 출력했고 type check는 0으로 끝났다. `make test-python`은 `Ran 97 tests`와 `OK`, 패키지 실행은 `Ran 2 tests`와 `OK`를 출력했다. `make test-python-render`는 `Ran 34 tests`와 `OK`를 출력했다. `make lint`와 `make analyse-php`는 0으로 끝났고, `make documents-check`와 `make commits-check`가 통과했다. | [o] |
