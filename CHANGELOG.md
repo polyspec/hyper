@@ -6,6 +6,7 @@
 ## Unreleased
 
 ## 0.0.13
+- H21.3: the consumer projects of `tests/release-install` require the release 0.0.13: their manifests and locks name the archives `polyspec-hyper-client-npm-0.0.13.tgz`, `polyspec-hyper-server-npm-0.0.13.tgz`, `polyspec-hyper-build-npm-0.0.13.tgz` and `polyspec-hyper-server-php-0.0.13.zip`, and `make release-consumer TAG=v0.0.13` installs and checks them (#H21.3).
 - H20.13: the pre-push hook checks the messages of every pushed commit with `config/commits.json` and refuses a push whose commit has a finding, so a commit with a body line over 72 characters is not pushed. The vendored kit is `v0.0.17`.
 - H21.1: the reply gets the named method `referrerPolicy(value)` in PHP and Node and `referrer_policy(value)` in Python. It sets the `Referrer-Policy` of the page and JSON answers of the request, whatever the status of the answer, to one of the eight tokens of the Referrer-Policy specification; another value fails with HY-43 (HY-103).
 - H20.12: `packages/hyper-server-python/pyproject.toml` declares `requires-python >=3.14`, the minor release of `.python-version` that CI tests (`tests/scripts/python-requires.test.mjs`). The dependency record states the same.
