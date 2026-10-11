@@ -172,13 +172,12 @@ test('the matrix entries of ci.yml run every target of the full suite once (HY-9
   const entries = matrixEntries(readFileSync(path.join(WORKFLOWS, 'ci.yml'), 'utf8'));
   assert.ok(entries.length > 1, JSON.stringify(entries));
   assert.equal(new Set(entries.map(entry => entry.name)).size, entries.length, 'a matrix name repeats; the reports of two entries would share one artifact');
-  // An entry that repeats the targets of another entry runs them on another release of its tool, as python-3.11 does.
   const groups = new Map();
   for (const entry of entries) {
     const key = entry.targets.join(' ');
     groups.set(key, [...(groups.get(key) ?? []), entry]);
   }
-  for (const [key, same] of groups) assert.ok(same.length === 1 || same.every(entry => entry.name.startsWith('python')), `${key} runs in ${same.map(entry => entry.name).join(', ')}`);
+  for (const [key, same] of groups) assert.equal(same.length, 1, `${key} runs in ${same.map(entry => entry.name).join(', ')}`);
   const all = [...groups.keys()].flatMap(key => key.split(' '));
   assert.deepEqual([...all].sort(), [...checkTargets()].sort(), 'the targets of the matrix entries are not the targets of CHECK_TARGETS, each once');
 });
@@ -209,9 +208,11 @@ test('the workflow ci runs every matrix entry in a job that runs to its end and 
     for (const entry of matrixEntries(text)) {
       assert.equal(entry.browser, entry.targets.some((target) => ['parity', 'server-parity', 'server-parity-python', 'e2e'].includes(target)), `${entry.name}: browser flag`);
     }
-    // The toolchain check of the recipes reads the Python of PATH, so every job sets up the Python of .python-version.
-    const python = job.steps.find((step) => /^actions\/setup-python@/.test(step.uses ?? ''));
-    assert.match(python?.text ?? '', /python-version-file: hyper\/\.python-version/, `${job.name}: the Python of .python-version`);
+    // The recipes run the Python of var/tools, so every job runs make install-tools before its first check.
+    const tools = job.steps.findIndex((step) => step.run === 'make install-tools');
+    const checks = job.steps.findIndex((step) => step.run?.startsWith('make ci-targets'));
+    assert.ok(tools >= 0 && tools < checks, `${job.name}: make install-tools runs before the checks`);
+    assert.ok(!job.steps.some((step) => /^actions\/setup-python@/.test(step.uses ?? '')), `${job.name}: no setup-python step`);
   }
 });
 
@@ -309,7 +310,7 @@ function releaseProblems(text) {
 test('release runs its steps in order with the tag, the template tag and the permission to release', () => {
   const text = readFileSync(path.join(WORKFLOWS, 'release.yml'), 'utf8');
   assert.deepEqual(releaseProblems(text), []);
-  assert.deepEqual(jobs(text)[0].steps.filter((step) => step.run !== undefined).map((step) => step.run), ['make install', ...RELEASE_STEPS]);
+  assert.deepEqual(jobs(text)[0].steps.filter((step) => step.run !== undefined).map((step) => step.run), ['make install-tools', 'make install', ...RELEASE_STEPS]);
   const broken = {
     order: [text.replace('run: make release-versions', 'run: make release-swap').replace('run: make release-verify', 'run: make release-versions').replace('run: make release-swap', 'run: make release-verify'), 'the steps run'],
     'read only': [text.replace('  contents: write\n', '  contents: read\n'), 'the permissions are not exactly contents: write'],

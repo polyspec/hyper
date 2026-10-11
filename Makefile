@@ -10,9 +10,10 @@ JS_PACKAGE := packages/hyper-client
 NODE_PACKAGE := packages/hyper-server-node
 BUILD_PACKAGE := packages/hyper-build
 PYTHON_PACKAGE := packages/hyper-server-python
-# The Python of the checks is the python3 of PATH; requires-python >= 3.11 and the Python pin of
-# .python-version name the release that CI runs.
-PYTHON := python3
+# The Python of the checks is the Python that config/toolchain.json pythonBuild declares and `make install-tools` installs
+# into var/tools (HY-81, K26); .python-version names its minor release. requires-python >= 3.11 is the floor of the package.
+# The absolute path, as NPM and COMPOSER have, because make looks up a recipe line on its own PATH.
+PYTHON := $(CURDIR)/var/tools/bin/python3
 # npm installs the template packages @polyspec/template and @polyspec/template-compiler and Composer installs
 # polyspec/template from the assets of the template release that package.json and composer.json name (HY-70). The
 # native template extension is the php-ext asset of the same release, which config/template-ext.json pins (H14.1-7).
@@ -139,12 +140,12 @@ test-php: server-fixtures ext ## Run the server package tests with the generated
 	$(call check,PHPUnit with the native extension,COMPOSER_VENDOR_DIR=$(PHP_VENDOR) node scripts/kit/run-tests.mjs phpunit --cwd $(PHP_PACKAGE) --php-extension $(EXT)) \
 	$(checks_result)
 
-test-python: ## Run the Python server package tests, which read the conformance cases of routes, rest, csrf, fields and json
+test-python: toolchain-check ## Run the Python server package tests, which read the conformance cases of routes, rest, csrf, fields and json
 	PYTHONPATH=$(CURDIR)/$(PYTHON_PACKAGE)/src $(PYTHON) $(PYTHON_PACKAGE)/tests/run.py; unit=$$?; $(PYTHON) $(PYTHON_PACKAGE)/tests/run.py $(PYTHON_PACKAGE)/tests/package 'test_*.py'; package=$$?; test $$unit -eq 0 -a $$package -eq 0
 
 # The rendering tests need the template Python package (H15.3-3), which they read from the checkout $(TEMPLATE_REPOSITORY)
 # of the template tag TEMPLATE_TAG (CI checks it out as ../template), and `make server-fixtures` writes the server program they open.
-test-python-render: server-fixtures ## Run the Python rendering tests with the template package of the template checkout (H15.3-3)
+test-python-render: server-fixtures toolchain-check ## Run the Python rendering tests with the template package of the template checkout (H15.3-3)
 	PYTHONPATH=$(CURDIR)/$(PYTHON_PACKAGE)/src:$(CURDIR)/$(TEMPLATE_REPOSITORY)/packages/template-python/src $(PYTHON) $(PYTHON_PACKAGE)/tests/run.py $(PYTHON_PACKAGE)/tests/render 'render_*.py'
 
 lint: toolchain-check ## Check PHP formatting

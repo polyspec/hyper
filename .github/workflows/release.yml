@@ -8,8 +8,8 @@
 # CHANGELOG.md and CHANGELOG.ko.md; make release-assets builds the archives <package>-<language>-<version>.<ext> (npm pack
 # of packages/hyper-client, packages/hyper-server-node and packages/hyper-build, a zip of packages/hyper-server-php); make release-publish
 # creates the GitHub Release with the section as notes and the archives attached. TAG reaches the make targets through the
-# environment, never as shell text. The setup is the one of the job check of ci.yml: Node.js from .node-version, Python
-# from .python-version, PHP from .php-version, the template repository at its tag v0.0.5 (TEMPLATE_TAG of the Makefile,
+# environment, never as shell text. The setup is the one of the job check of ci.yml: Node.js from .node-version, the Python
+# of make install-tools (config/toolchain.json pythonBuild), PHP from .php-version, the template repository at its tag v0.0.5 (TEMPLATE_TAG of the Makefile,
 # HY-80) next to this repository, and make install. Every step that runs a command runs one make target, the job runs on
 # ubuntu-26.04-arm and the actions are pinned by commit (HY-90, tests/scripts/ci-workflow.test.mjs).
 name: release
@@ -39,9 +39,8 @@ jobs:
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version-file: hyper/.node-version
-      - uses: actions/setup-python@06da6279cdbca41027908073e81a4544dc79c06b # v7.0.0
-        with:
-          python-version-file: hyper/.python-version
+      - name: install the tools
+        run: make install-tools
       - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2.37.2
         with:
           php-version-file: hyper/.php-version
