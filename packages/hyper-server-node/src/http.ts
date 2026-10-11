@@ -21,7 +21,7 @@ export interface ServerOptions {
 }
 
 // The write hook of a server (HY-99).
-export type WriteHook = (request: Request, response: Response, ended: boolean, elapsed: number, failure: string | null) => void;
+export type WriteHook = (request: Request, response: Response | null, ended: boolean, elapsed: number, failure: string | null) => void;
 
 // The request listener of node:http that an application runs for every request (HY-102).
 export type Listener = (incoming: IncomingMessage, outgoing: ServerResponse) => Promise<void>;
@@ -71,7 +71,8 @@ export function createListener<S extends object>(app: App<S>, sessions: FileSess
     const finished = new Promise<void>((resolve) => outgoing.once('close', () => resolve()));
     const https = (incoming.socket as TLSSocket).encrypted === true;
     // The request as the server received it, with an empty body until the body is read (HY-60), and the response of
-    // the request: the response whose write started, or the plain 500 of an escaped error (HY-99).
+    // the request: the response whose write started, the plain 500 of an escaped error, or null when the request ended
+    // before a response started (HY-99).
     let request: Request | null = null;
     let reply: Reply | null = null;
     let response: Response | null = null;
@@ -96,9 +97,8 @@ export function createListener<S extends object>(app: App<S>, sessions: FileSess
       }
       reply = answer.reply;
       if (answer.stopped) {
-        // A request whose client closed the connection has no response to write (HY-67).
+        // A request whose client closed the connection has no response to write (HY-67); the write hook receives null (HY-99).
         stopped = true;
-        response = app.frame(Response.text(500, 'Internal Server Error'));
       } else {
         response = withSessionCookie(app, sessions, answer.response, session.created, https);
         write(outgoing, response);
@@ -120,7 +120,7 @@ export function createListener<S extends object>(app: App<S>, sessions: FileSess
         }
       }
     }
-    if (request === null || response === null) return;
+    if (request === null) return;
     // HY-99: the write hook runs after the close of the response; the disconnect hook (HY-67) follows it, also when the
     // write hook raises, which then reaches the transport.
     await finished;

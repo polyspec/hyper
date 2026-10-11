@@ -219,6 +219,34 @@ final class RunTest extends TestCase
         self::assertSame("response 200\nwritten 200 false \"after the response\"\n", $lines);
     }
 
+    /** HY-99: with output buffering on and no output flushed, a fatal error replaces the response with the plain 500, which the hook receives with ended true. */
+    public function testAFatalErrorWithOutputBufferingOnReplacesTheResponseAndReportsThePlain500(): void
+    {
+        [$status, , $body, $lines] = self::escape('after-send', [], '4096');
+
+        self::assertSame(500, $status);
+        self::assertSame('Internal Server Error', $body);
+        self::assertSame("response 200\nwritten 500 true \"after the response\"\n", $lines);
+    }
+
+    /** HY-99: with output buffering on, a flush that sent the headers before a fatal error keeps the started response with ended false. */
+    public function testAFatalErrorAfterAFlushWithOutputBufferingOnKeepsTheStartedResponseUnended(): void
+    {
+        [$status, , , $lines] = self::escape('after-send-flushed', [], '4096');
+
+        self::assertSame(200, $status);
+        self::assertSame("response 200\nwritten 200 false \"after the response\"\n", $lines);
+    }
+
+    /** HY-99: exit() before any output ends the request without a response, so the hook receives a null response with ended false. */
+    public function testAnExitWithoutOutputGivesTheHookANullResponse(): void
+    {
+        [, , $body, $lines] = self::escape('exit');
+
+        self::assertSame('', $body);
+        self::assertSame("written null false null\n", $lines);
+    }
+
     /** HY-99: a fatal error from max_execution_time gives the plain 500 and calls the write hook once. */
     public function testAMaxExecutionTimeFatalErrorReportsThePlain500ToTheWriteHook(): void
     {
@@ -235,14 +263,15 @@ final class RunTest extends TestCase
      * headers, the body of the response and the lines that the response hook appended to the log.
      *
      * @param array<string, string> $env the environment of the server that the case adds to its own
+     * @param string $outputBuffering the output_buffering setting of the server
      * @return array{int, list<string>, string, string}
      */
-    private static function escape(string $mode, array $env = []): array
+    private static function escape(string $mode, array $env = [], string $outputBuffering = '0'): array
     {
         $log = (string) tempnam(sys_get_temp_dir(), 'hyper-escape-');
         $server = false;
         try {
-            $server = proc_open([PHP_BINARY, '-d', 'display_errors=0', '-d', 'error_log=/dev/null', '-d', 'output_buffering=0', '-S', '127.0.0.1:0', __DIR__ . '/Support/escape.php'], [0 => ['file', '/dev/null', 'r'], 1 => ['file', '/dev/null', 'w'], 2 => ['pipe', 'w']], $pipes, null, [...getenv(), ...$env, 'HYPER_ESCAPE_MODE' => $mode, 'HYPER_ESCAPE_LOG' => $log]);
+            $server = proc_open([PHP_BINARY, '-d', 'display_errors=0', '-d', 'error_log=/dev/null', '-d', 'output_buffering=' . $outputBuffering, '-S', '127.0.0.1:0', __DIR__ . '/Support/escape.php'], [0 => ['file', '/dev/null', 'r'], 1 => ['file', '/dev/null', 'w'], 2 => ['pipe', 'w']], $pipes, null, [...getenv(), ...$env, 'HYPER_ESCAPE_MODE' => $mode, 'HYPER_ESCAPE_LOG' => $log]);
             if ($server === false) {
                 self::fail('the PHP built-in server did not start');
             }

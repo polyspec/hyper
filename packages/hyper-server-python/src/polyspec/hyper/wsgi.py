@@ -29,7 +29,7 @@ class FileResponse:
 
 def create_wsgi(app: App, sessions: FileSessions, files: Optional[str] = None,
                 around: Optional[Callable[[Request, Callable[[Request], Response]], Response]] = None,
-                written: Optional[Callable[[Request, Response, bool, float, Optional[str]], None]] = None
+                written: Optional[Callable[[Request, Optional[Response], bool, float, Optional[str]], None]] = None
                 ) -> Callable[[dict, Callable], object]:
     """Returns a WSGI application callable (PEP 3333) that answers every request with the
     application, as `create_server` does (HY-100). `files`, `around` and `written` mean what they
