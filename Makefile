@@ -11,7 +11,7 @@ NODE_PACKAGE := packages/hyper-server-node
 BUILD_PACKAGE := packages/hyper-build
 PYTHON_PACKAGE := packages/hyper-server-python
 # The Python of the checks is the Python that config/toolchain.json pythonBuild declares and `make install-tools` installs
-# into var/tools (HY-81, K26); .python-version names its minor release. requires-python >= 3.11 is the floor of the package.
+# into var/tools (HY-81, K26); .python-version names its minor release. requires-python >= 3.14 states the tested minor of the package (H20.12).
 # The absolute path, as NPM and COMPOSER have, because make looks up a recipe line on its own PATH.
 PYTHON := $(CURDIR)/var/tools/bin/python3
 # npm installs the template packages @polyspec/template and @polyspec/template-compiler and Composer installs

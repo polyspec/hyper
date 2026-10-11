@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 12afc4c5950c5b576527cfb5c0176459d1f41878f39774e551785fa7d1225c57 -->
+<!-- source-sha256: f44bbfaef7666d06b59bc2a8d59f4419b952e667c15906d17345944c3817bb42 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- H20.12: `packages/hyper-server-python/pyproject.toml`은 `requires-python >=3.14`를 밝힌다. `.python-version`의 minor release이며 CI가 테스트하는 값이다(`tests/scripts/python-requires.test.mjs`). 의존성 기록도 같은 값을 밝힌다.
 - H20.11: `make install-tools`가 `config/toolchain.json`의 `pythonBuild`(3.14.8)을 `var/tools`에 설치하며, 모든 check와 CI job은 PATH의 Python 대신 그 Python을 돌린다. CI matrix 항목 `python-3.11`을 지워 CI는 고정된 release만 돌린다. release tag는 annotated tag다(HY-95). vendored kit은 `v0.0.16`이다.
 
 ## 0.0.12
