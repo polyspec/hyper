@@ -84,3 +84,7 @@ Depends on: wave 18. The Python server served an application over `http.server`,
 ## Wave 20
 
 Depends on: wave 19. An error that escapes the answer of a request reached the consumers in a different way in each adapter: PHP reported its plain 500 to the response hook, Node and the Python `create_server` wrote it without a hook, and the WSGI and ASGI callables let the error propagate to their server. The write hook `written` existed only for the Python `create_server` and for the events of the Node response, so a consumer could not record the response of a PHP request. HY-99 now gives every server one write hook with the same values, HY-102 gives the Node server a listener for an application, and HY-60 states that the plain 500 of an escaped error keeps the headers that the caller set before hyper received the request.
+
+## Wave 21
+
+Depends on: wave 20. A page sends its address in the Referer header to the sites that it links to, as the policy of the page allows. The reply had no method for the Referrer-Policy header, so an application could not limit that header, and a general header setter would bypass the rules that hyper keeps for the headers of a page, such as Cache-Control, the frame policy and the cookies. The reply gets the named method `referrerPolicy` in each adapter (HY-103), which accepts only the tokens of the Referrer-Policy specification.
