@@ -5,6 +5,7 @@
 
 ## Unreleased
 
+- H20.12: `packages/hyper-server-python/pyproject.toml` declares `requires-python >=3.14`, the minor release of `.python-version` that CI tests (`tests/scripts/python-requires.test.mjs`). The dependency record states the same.
 - H20.11: `make install-tools` installs the Python of `config/toolchain.json` `pythonBuild` (3.14.8) into `var/tools`, and every check and CI job runs that Python instead of the Python of PATH; the CI matrix entry `python-3.11` is removed, so CI runs the pinned release only. The release tag is an annotated tag (HY-95), and the vendored kit is `v0.0.16`.
 
 ## 0.0.12
