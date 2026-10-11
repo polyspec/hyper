@@ -28,4 +28,26 @@ final class ReplyTest extends TestCase
             }
         }
     }
+
+    public function testAcceptsEachTokenOfTheReferrerPolicySpecification(): void
+    {
+        // HY-103
+        foreach (['no-referrer', 'no-referrer-when-downgrade', 'origin', 'origin-when-cross-origin', 'same-origin', 'strict-origin', 'strict-origin-when-cross-origin', 'unsafe-url'] as $value) {
+            self::assertSame($value, (new Reply())->referrerPolicy($value)->referrerPolicyValue(), $value);
+        }
+        self::assertNull((new Reply())->referrerPolicyValue());
+    }
+
+    public function testRefusesAReferrerPolicyThatIsNotAToken(): void
+    {
+        // HY-103
+        foreach (['', 'none', 'NO-REFERRER', 'unsafe', 'origin, same-origin', 'no-referrer '] as $value) {
+            try {
+                (new Reply())->referrerPolicy($value);
+                self::fail("{$value} is accepted");
+            } catch (\InvalidArgumentException $error) {
+                self::assertStringContainsString('Referrer-Policy', $error->getMessage(), $value);
+            }
+        }
+    }
 }

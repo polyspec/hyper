@@ -399,6 +399,31 @@ describe('App', () => {
     }
   });
 
+  it('accepts each token of the Referrer-Policy specification and refuses another value (HY-103)', () => {
+    for (const value of ['no-referrer', 'no-referrer-when-downgrade', 'origin', 'origin-when-cross-origin', 'same-origin', 'strict-origin', 'strict-origin-when-cross-origin', 'unsafe-url']) {
+      expect(new ReplyClass().referrerPolicy(value).referrerPolicyValue(), value).toBe(value);
+    }
+    expect(new ReplyClass().referrerPolicyValue()).toBeNull();
+    for (const value of ['', 'none', 'NO-REFERRER', 'unsafe', 'origin, same-origin', 'no-referrer ']) {
+      expect(() => new ReplyClass().referrerPolicy(value), value).toThrow('Referrer-Policy');
+    }
+  });
+
+  it('puts the referrer policy of the reply into every page and JSON answer (HY-103)', async () => {
+    const JSON_PAGE = { Accept: 'application/json', 'HX-Request': 'true' };
+    const page = await fixture.get('/items/referrer');
+    expect(page.status).toBe(200);
+    expect(page.headers['Referrer-Policy']).toBe('same-origin');
+    const json = await fixture.get('/items/referrer', JSON_PAGE);
+    expect(json.headers['Referrer-Policy']).toBe('same-origin');
+    const again = await fixture.get('/items/referrer', { ...JSON_PAGE, 'If-None-Match': json.headers.ETag as string });
+    expect(again.status).toBe(304);
+    expect(again.headers['Referrer-Policy']).toBe('same-origin');
+    expect((await fixture.get('/items/referrer-in-place', JSON_PAGE)).headers['Referrer-Policy']).toBe('origin');
+    expect((await fixture.get('/items/plain')).headers['Referrer-Policy']).toBeUndefined();
+    expect((await fixture.get('/items/missing')).headers['Referrer-Policy']).toBeUndefined();
+  });
+
   it('rejects an action without the token (HY-24)', async () => {
     await fixture.token();
     expect((await fixture.post('/add', { _csrf: 'wrong', name: 'a' })).status).toBe(403);

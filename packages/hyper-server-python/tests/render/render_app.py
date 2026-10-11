@@ -161,6 +161,37 @@ class ActionTest(unittest.TestCase):
         self.assertEqual('no-store', response.headers['Cache-Control'])
 
 
+class ReferrerPolicyTest(unittest.TestCase):
+    def test_the_referrer_policy_of_the_reply_reaches_every_page_and_json_answer(self) -> None:
+        # HY-103: a document, a JSON answer and the 304 of that answer carry the value of the reply.
+        def shared_loader(request: Request, reply: Reply) -> dict:
+            reply.referrer_policy('strict-origin-when-cross-origin')
+            return {'site': 'fixture'}
+
+        app = App.open(manifest=str(FIXTURES / 'app.json'), program=str(PROGRAM),
+                       handlers={**handlers(), 'shared': shared_loader}, timezone='+09:00')
+        store = ArraySession()
+        document = app.handle(get('/'), store)
+        self.assertEqual('strict-origin-when-cross-origin', document.headers['Referrer-Policy'])
+        answer = app.handle(get('/', {'Accept': 'application/json'}), store)
+        self.assertEqual('strict-origin-when-cross-origin', answer.headers['Referrer-Policy'])
+        again = app.handle(get('/', {'Accept': 'application/json', 'If-None-Match': answer.headers['ETag']}), store)
+        self.assertEqual(304, again.status)
+        self.assertEqual('strict-origin-when-cross-origin', again.headers['Referrer-Policy'])
+        self.assertNotIn('Referrer-Policy', opened().handle(get('/'), ArraySession()).headers)
+
+    def test_the_referrer_policy_of_a_page_with_status_403_is_written(self) -> None:
+        def shared_loader(request: Request, reply: Reply) -> dict:
+            reply.status(403).referrer_policy('origin')
+            return {}
+
+        app = App.open(manifest=str(FIXTURES / 'app.json'), program=str(PROGRAM),
+                       handlers={**handlers(), 'shared': shared_loader}, timezone='+09:00')
+        response = app.handle(get('/', {'Accept': 'application/json'}), ArraySession())
+        self.assertEqual(403, response.status)
+        self.assertEqual('origin', response.headers['Referrer-Policy'])
+
+
 class KeepTest(unittest.TestCase):
     def test_a_conforming_kept_value_replaces_its_path(self) -> None:
         store = ArraySession()
