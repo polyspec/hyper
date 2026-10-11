@@ -73,9 +73,10 @@ final class App
      * @param ?\Closure(Request, float, Reply): void $onDisconnect called once with the request, the elapsed
      *     milliseconds and the reply of a request whose client closed the connection, which PHP reports at the
      *     first failed write of the response (HY-67)
-     * @param ?\Closure(Request, Response, bool, float, ?string): void $written called once for every request that the
-     *     run answers, with the response whose write started or the plain 500 of an escaped error, whether the write
-     *     ended, the elapsed milliseconds and the failure of an escaped error (HY-99)
+     * @param ?\Closure(Request, ?Response, bool, float, ?string): void $written called once for every request that the
+     *     run answers, with the response whose write started, the plain 500 of an escaped error, or null when the request
+     *     ended before a response started; whether the write ended, the elapsed milliseconds and the failure of an
+     *     escaped error (HY-99)
      */
     public static function open(
         string $manifest,
@@ -247,6 +248,11 @@ final class App
             return;
         }
         $response = $this->framed(Response::text(500, 'Internal Server Error'));
+        // The output that the response buffered is dropped, so that the body of the response that it replaces does not leave
+        // the server with the plain 500 (HY-60, HY-99).
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
         // The plain 500 replaces the queued response, which a fatal error or the session may have changed (HY-60).
         $response->sendReplacing($kept, 'HTTP/1.1 500 Internal Server Error');
         $delivery->response = $response;
@@ -713,9 +719,9 @@ final class App
         if ($this->written !== null) {
             $hook = $this->written;
             register_shutdown_function(static function () use ($hook, $request, $started, $delivery): void {
-                $response = $delivery->response ?? Response::text(500, 'Internal Server Error');
+                // HY-99: a request that ended before a response started has no response; its write did not end.
                 $ended = $delivery->response !== null && $delivery->complete && connection_aborted() !== 1;
-                $hook($request, $response, $ended, (hrtime(true) - $started) / 1e6, $delivery->failure);
+                $hook($request, $delivery->response, $ended, (hrtime(true) - $started) / 1e6, $delivery->failure);
             });
         }
         if ($this->onDisconnect !== null) {

@@ -24,7 +24,7 @@ from .response import Response
 def create_server(app: App, sessions: FileSessions, files: Optional[str] = None, host: str = '127.0.0.1',
                   port: int = 0,
                   around: Optional[Callable[[Request, Callable[[Request], Response]], Response]] = None,
-                  written: Optional[Callable[[Request, Response, bool, float, Optional[str]], None]] = None
+                  written: Optional[Callable[[Request, Optional[Response], bool, float, Optional[str]], None]] = None
                   ) -> ThreadingHTTPServer:
     """Returns a server that answers every request with the application. `files` names an absolute directory of
     public files: a GET or HEAD request whose path names a file in it receives the file.

@@ -14,7 +14,7 @@ from typing import Callable, Optional, Union
 
 from .app import App
 from .file_sessions import FileSessions
-from .pipeline import CONTENT_TYPES, Exchange, answer_with, cookie_values, declared_length, escape, head_request, plain_500, public_file, validate
+from .pipeline import CONTENT_TYPES, Exchange, answer_with, cookie_values, declared_length, escape, head_request, public_file, validate
 from .request import Request
 from .response import Response
 
@@ -29,7 +29,7 @@ class FileResponse:
 
 def create_asgi(app: App, sessions: FileSessions, files: Optional[str] = None,
                 around: Optional[Callable[[Request, Callable[[Request], Response]], Response]] = None,
-                written: Optional[Callable[[Request, Response, bool, float, Optional[str]], None]] = None
+                written: Optional[Callable[[Request, Optional[Response], bool, float, Optional[str]], None]] = None
                 ) -> Callable:
     """Returns an ASGI 3 application callable that answers every request with the application, as
     `create_server` does (HY-101). `files`, `around` and `written` mean what they mean there (HY-97,
@@ -52,8 +52,8 @@ def create_asgi(app: App, sessions: FileSessions, files: Optional[str] = None,
             result = escape(app, error)
             failure = str(error)
         except asyncio.CancelledError:
-            # HY-99: a cancellation before the answer ends the write without a response that started.
-            exchange.report(plain_500(app), False)
+            # HY-99: a cancellation before the answer ends the request before a response started: a null response.
+            exchange.report(None, False)
             raise
         if isinstance(result, FileResponse):
             await send({'type': 'http.response.start', 'status': 200, 'headers': result.headers})

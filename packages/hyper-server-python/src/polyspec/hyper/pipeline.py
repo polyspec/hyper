@@ -94,8 +94,9 @@ class Exchange:
         self.answered: list[tuple[Request, Reply]] = []
         self.reported = False
 
-    def report(self, response: Response, ended: bool, failure: Optional[str] = None) -> None:
-        """Calls the write hook once with the response whose write started (or the plain 500 when none started),
+    def report(self, response: Optional[Response], ended: bool, failure: Optional[str] = None) -> None:
+        """Calls the write hook once with the response whose write started, the plain 500 of an escaped error, or None
+        when the request ended before a response started (HY-99),
         whether the write ended, the elapsed milliseconds since the arrival of the request and the failure of an
         escaped error (HY-99). A request without a request to report is not reported (HY-60)."""
         if self.reported:

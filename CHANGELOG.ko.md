@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: f6942cd3ec61c8f3cd7ca93eb7d219bba49dc90bc1c940269005985c4351be7f -->
+<!-- source-sha256: 67ef8dfb770acdc6995df98af64167aa7c9abeb1371798ab7cb3ee6c29a885a3 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H20.7: 응답이 시작되기 전에 요청이 끝나면 쓰기 hook은 null 응답을 받는다. Node 서버는 연결이 닫힌 요청, PHP는 출력 없는 `exit()`, Python ASGI는 answer 전에 취소된 task가 그렇다. hook은 탈출 오류가 없으면 `ended` false와 failure null을 받는다(HY-99).
+- H20.6: PHP 쓰기 hook은 두 output buffering 방식 모두에서 PHP가 보낸 것을 따른다. output buffering이 켜진 상태의 탈출 오류는 buffer된 body를 버리므로 평범한 500이 유일한 body다(HY-60, HY-99).
 - H20.4: Python 서버는 callable과 `create_server`의 탈출 오류에 오류의 failure를 붙여 보고한다(HY-60, HY-99). WSGI body는 `close`가 끝나지 않은 write를 보고하는 iterable이며, 204와 304 응답은 write를 iterable의 끝에서 보고한다. 쓸 수 없는 status, header, body와 던지는 `start_response`는 탈출 오류이며, 평범한 500을 `start_response`로 넘긴다(HY-100). ASGI send의 취소는 끝나지 않은 write를 보고하고 전파된다(HY-101). 쓰기 hook은 failure를 다섯 번째 인자로 받는다.
 - H20.3: Node 서버는 요청 listener를 `App.listener(sessions, options)`로 제공한다(HY-102). `App.listener`와 `App.server`의 옵션 `written`은 답한 요청마다 응답이 닫힌 뒤, 연결 끊김 hook 전에 한 번 호출되며, `ended`는 `writableFinished`와 같다(HY-99). listener의 promise는 두 hook이 끝난 뒤 settle된다. client가 연결을 닫은 요청은 쓰지 않은 평범한 500과 `ended` false를 보고한다.
 - H20.2: PHP 서버는 탈출 오류의 평범한 500을 `App::run` 전에 호출자가 설정한 header와 함께 쓰며, 다른 header는 쓰지 않는다(HY-60). `App::open`은 쓰기 hook `written`을 받고, `App::run`은 실행마다 한 번, escape 함수 뒤와 연결 끊김 hook 전에 응답, `ended`, 경과 시간과 failure와 함께 호출한다(HY-99). `ended`는 client가 연결을 닫았거나 보낸 header 뒤에 치명적 오류가 있으면 false다. 응답 hook은 탈출의 500을 받지 않는다.

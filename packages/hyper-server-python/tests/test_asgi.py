@@ -266,6 +266,23 @@ class AsgiTest(unittest.TestCase):
         self.assertEqual([], self.app.disconnected_calls)
 
 
+    def test_a_cancellation_before_the_answer_reports_a_null_response(self) -> None:
+        # HY-99, HY-101: a task cancelled while it reads the body ends before a response started; the write hook
+        # receives a null response with ended false, and the cancellation propagates.
+        written = []
+        application = create_asgi(self.app, self.sessions,
+                                  written=lambda request, response, ended, elapsed, failure: written.append(
+                                      (request.path(), None if response is None else response.status, ended, failure)))
+
+        async def cancelled_receive() -> dict:
+            raise asyncio.CancelledError()
+
+        with self.assertRaises(asyncio.CancelledError):
+            run(application, scope(path='/list', raw_path=b'/list'), Sends(), cancelled_receive)
+        self.assertEqual([('/list', None, False, None)], written)
+        self.assertEqual([], self.app.requests)
+
+
 class BrokenReceives:
     """The `receive` of an ASGI server whose client closed the connection while it sent the body."""
 
