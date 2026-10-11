@@ -20,9 +20,11 @@ function temporary(t) {
   return directory;
 }
 
-// Runs `make <target> <variables>` in the checkout without the variables of a calling make.
+// Runs `make <target> <variables>` in the checkout without the variables of a calling make. The tests match the plain
+// text of the output, so FORCE_COLOR is removed: tsc colours its output whenever FORCE_COLOR is set, whatever its value.
+// NO_COLOR is kept, because tsc and vitest read it as the opt-out.
 function make(target, variables) {
-  const env = Object.fromEntries(Object.entries(process.env).filter(([name]) => !['MAKEFLAGS', 'MFLAGS', 'MAKELEVEL', 'MAKEOVERRIDES'].includes(name)));
+  const env = Object.fromEntries(Object.entries(process.env).filter(([name]) => !['MAKEFLAGS', 'MFLAGS', 'MAKELEVEL', 'MAKEOVERRIDES', 'FORCE_COLOR'].includes(name)));
   return spawnSync('make', ['--no-print-directory', target, ...variables], { cwd: ROOT, env, encoding: 'utf8' });
 }
 
