@@ -1,26 +1,26 @@
 {
   "schema": 1,
   "comment": "Written by make dependency-review RECORD=1 (scripts/kit/dependency-review.mjs) from the registries; make dependency-policy-check compares the checkout with it without a network.",
-  "reviewed": "2026-10-11T10:42:18.178Z",
+  "reviewed": "2026-10-13T17:49:39.406Z",
   "locks": [
     {
       "lock": "package-lock.json",
-      "sha256": "a1061f9c738b92c16e16c0a6a21b0dd390d509710c0c7a9e5969f73211971363",
+      "sha256": "5e0e21a2f6b819656ffb58788ff9f7ef15e0c88e1769d32e9481eee178efe625",
       "advisories": []
     },
     {
       "lock": "tests/package-install/package-lock.json",
-      "sha256": "827d1c6dd476f37578abf85b92587cc1d73add294ef69b8d2271537288d8c4fc",
+      "sha256": "a749844ea797be36efa6cf62c07f71cb7ea3dd69dabe68b540b2e29386e280ae",
       "advisories": []
     },
     {
       "lock": "composer.lock",
-      "sha256": "63b03ee65d2f640fbf71daa0475ab2668e8ea390b0c371867e2dd04b65ec0e87",
+      "sha256": "7a298286ea3522a824fe7220875d62a56145ea2e920e36ffe2de15bd53976a9f",
       "advisories": []
     },
     {
       "lock": "examples/board/composer.lock",
-      "sha256": "726330ec0ab32fbac50a7e384a66c0fa1858850c7eec039777946acacb734cb9",
+      "sha256": "b920fadfc4241a8c1a19a7dd7da7d60ffebf82ea7a5d22d678a7f2ce21523418",
       "advisories": []
     }
   ],
@@ -58,7 +58,7 @@
       "manifest": "package.json",
       "package": "vitest",
       "version": "5.0.3",
-      "latest": "5.0.3"
+      "latest": "5.0.4"
     },
     {
       "ecosystem": "composer",
@@ -72,7 +72,7 @@
       "manifest": "composer.json",
       "package": "laravel/pint",
       "version": "v1.30.4",
-      "latest": "v1.30.4"
+      "latest": "v1.32.1"
     },
     {
       "ecosystem": "composer",
@@ -86,7 +86,7 @@
       "manifest": "composer.json",
       "package": "phpunit/phpunit",
       "version": "11.5.57",
-      "latest": "11.5.57"
+      "latest": "13.4.2"
     },
     {
       "ecosystem": "composer",
@@ -100,7 +100,7 @@
       "manifest": "examples/board/composer.json",
       "package": "laravel/pint",
       "version": "v1.30.4",
-      "latest": "v1.30.4"
+      "latest": "v1.32.1"
     },
     {
       "ecosystem": "pypi",

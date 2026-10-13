@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 181eae8eed261c4fea260e4be995fcce2eba88b6bec6ada09de9f37d0771a253 -->
+<!-- source-sha256: 1d12aee93004309846fd557e0c9d38f18bab71c7d5ab2d7276ab6e686c8e3909 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H23.1: toolchain 하한은 kit의 pin이다. `.node-version`은 26.11.1이고 모든 `package.json`의 `engines.node`는 `>=26.11.1`이다. root `composer.json`, `packages/hyper-server-php/composer.json`, `examples/board/composer.json`은 Composer platform 8.5.0에서 PHP `>=8.5`를 요구하며, `config/dependency-policy.json`이 그 platform을 밝히고 lock이 그것을 기록한다.
 - H22.1: `AGENTS.md`와 `AGENTS.ko.md`는 기존 외부 도구나 라이브러리를 자기 동작(예: 만드는 symbolic link)과 함께 있는 그대로 쓴다고 밝히고, 경로와 symbolic link 규칙이 이 저장소가 만드는 것에 적용된다고 밝힌다. 도구 설정은 바뀌지 않았다.
 - H21.7: `make virtiofs-check`의 두 테스트가 다시 실행된다. `tests/virtiofs/output-files.test.mjs`의 guard는 제거된 선언 복사본 대신 build가 resolve하는 template package를 확인하므로, 실행이 더 이상 `ReferenceError: template is not defined`로 실패하지 않는다. 이 target은 Darwin에서만 실행하며, target의 설명과 container image의 dependency row가 그 이유를 밝히고 모든 platform에서 원인을 시험하는 테스트를 이름으로 밝힌다.
 - H21.6: `tests/scripts/check-recipes.test.mjs`의 helper `make`은 `FORCE_COLOR`를 뺀 채 `make`를 실행하므로, shell이 `FORCE_COLOR`를 설정해도 `make test-js`의 type check 테스트가 통과한다. tsc는 `FORCE_COLOR`가 설정되면 출력에 색을 넣어 `wrong.ts(1,14): error TS2322` 대조가 깨졌다. `NO_COLOR`는 유지한다.

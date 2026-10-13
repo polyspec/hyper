@@ -1,5 +1,5 @@
 <!-- doc-id: execution-checklist -->
-<!-- source-sha256: 55a5946dfc2e8b4b7ef1ecbea54e85f3e839a1b77f8e2f5faa91926204d66a89 -->
+<!-- source-sha256: 1ee525239b22cf971a66b5693f0b519fd7746e72bd7b41b2494b6c5368b12cf3 -->
 # 실행 체크리스트
 
 ## [웨이브 1](waves.ko.md#wave-1) — 애플리케이션이 약하게 만들 수 없는 CSRF 방어
@@ -301,3 +301,12 @@
 | ID | Task | Verification | Status |
 |---|---|---|---|
 | H22.1 | `AGENTS.md`와 `AGENTS.ko.md`에 기존 외부 도구나 라이브러리를 다시 만들지 않고, 그 생태계의 표준 도구를 자기 동작(예: 만드는 symbolic link)과 함께 있는 그대로 쓴다는 점을 밝힌다. 경로와 symbolic link 규칙이 이 저장소가 만드는 것에 적용된다는 점도 밝힌다. 도구 설정은 바꾸지 않는다. 변경 전에는 규칙에 외부 도구가 없었고 symbolic link 규칙이 이 저장소가 만드는 것으로 한정되지 않았다. 기대 결과: `make documents-check`가 통과한다. | `make documents-check` | [o] |
+
+## [웨이브 23](waves.ko.md#wave-23) — npm 패키지 @polyspec/kit인 공유 도구
+
+| ID | 작업 | 검증 | 상태 |
+|---|---|---|---|
+| H23.1 | toolchain 하한이 kit의 pin과 같다. `.node-version`은 26.11.1, 이 저장소의 모든 `package.json`의 `engines.node`는 `>=26.11.1`이다. root `composer.json`, `packages/hyper-server-php/composer.json`, `examples/board/composer.json`의 `require.php`는 `>=8.5`, `config.platform.php`는 `8.5.0`이며, lock은 Composer가 쓰며, `config/dependency-policy.json`의 Composer platform은 8.5.0이다. `requires-python`은 `>=3.14`, `typescript`는 7.0.2로 그대로다. Red: `make install`이 `node: 26.11.1 runs here and .node-version declares 26.8.1`로 끝났다. | `make toolchain-check`, `make documents-check` | [ ] |
+| H23.2 | npm은 자기 기본값으로 설치한다(HY-79). `.npmrc`에서 `install-links=true`와 `bin-links=false`를 빼고, root `package.json`은 `packages/hyper-client`, `packages/hyper-server-node`, `packages/hyper-build`를 npm workspace로 선언하며, 패키지는 npm의 bin link로 `tsc`를 실행해 build하고, `scripts/tsc.mjs`와 `scripts/publish.mjs`의 `npm-copy` action을 없앤다. Composer는 복사본 `var/products/hyper-server-php`를 유지한다. Red: `.npmrc`가 `bin-links=false`를 설정한 동안 bin link를 쓰는 `tests/scripts/package-build.test.mjs`가 실패했다. | `node scripts/kit/run-tests.mjs node -- tests/scripts/package-build.test.mjs tests/scripts/no-symlinks.test.mjs tests/scripts/publish.test.mjs`, `make documents-check` | [ ] |
+| H23.3 | 공유 도구는 release asset의 URL과 integrity로 pin한 npm 패키지 `@polyspec/kit`이다. vendored `scripts/kit/*`, `tests/kit/*`, `.kit/kit.lock.json`, `kit.json`을 없애고, Makefile은 `scripts/kit/kit-bootstrap.mk`를 include하여 `$(KIT)`의 도구를 실행하며, `make kit-sync`가 `kit.copies`의 파일을 쓰고, `config/layout.yml`이 `make layout-check`의 폴더 지도를 정하며, pre-push hook은 `make push-gate-hook`을 부른다. | `make kit-check`, `make toolchain-check`, `make layout-check`, `make documents-check`, `make owner-validate` | [ ] |
+| H23.4 | 개발 dependency는 `make dependency-review RECORD=1`의 검토가 밝히는 최신 안정 release를 쓴다. `vitest`는 5.0.4로 올리고, platform이 PHP 8.2였던 동안 PHP 8.3을 요구하는 release 아래로 고정한 `laravel/pint`와 `phpunit/phpunit`을 root `composer.json`, `packages/hyper-server-php/composer.json`, `examples/board/composer.json`과 그 lock에서 올리고, `docs/operations/dependencies.md`의 두 행을 없앤다. 원인: H23.1이 PHP 하한을 8.5로 올려서 두 pin의 해제 조건이 충족되었다. Red: `make dependency-policy-check`가 `package.json vitest: 5.0.3 is older than 5.0.4, the latest stable release at the review of 2026-10-13T17:49:39.406Z`를 출력했다. | `make test-php`, `make lint`, `make analyse-php`, `make dependency-policy-check`, `make documents-check` | [ ] |

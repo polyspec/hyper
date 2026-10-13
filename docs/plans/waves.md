@@ -92,3 +92,7 @@ Depends on: wave 20. A page sends its address in the Referer header to the sites
 ## Wave 22
 
 Depends on: wave 21. The rules of `AGENTS.md` read as if the path and symbolic link rules covered the links and paths that outside tools create, so a change could be read as requiring this repository to rebuild a standard tool of its ecosystem, such as uv for Python environments and locks. The rules now state that an existing outside tool or library is used as it is, with its own behavior, and that the path and symbolic link rules govern what this repository creates.
+
+## Wave 23
+
+Depends on: wave 22. The shared tools were a vendored copy of the tag of the kit repository in `scripts/kit` and `tests/kit`, and npm installed every dependency as a copy and without bin links, which forced `scripts/tsc.mjs` and the copies of the npm packages in `node_modules`. kit is now the npm package `@polyspec/kit`: this repository installs it from the asset of its release, holds only the files of `kit.copies` as copies, and declares the toolchain floors that kit pins. npm installs with its own defaults: the npm packages of this repository are npm workspaces and the tools run through the bin links of npm.

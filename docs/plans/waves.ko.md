@@ -1,5 +1,5 @@
 <!-- doc-id: waves -->
-<!-- source-sha256: 08d99e6ede27108f0f3ba8f5bb44cf1c515f0b8d234fbb94a402dfe37ab73868 -->
+<!-- source-sha256: 21b5d0516ee1e35310f085951d18a73f01ed086c85fc5edbccace15ed37bb1b5 -->
 # 웨이브 배경
 
 [English](waves.md).
@@ -93,3 +93,7 @@
 ## Wave 22
 
 의존: wave 21. `AGENTS.md`의 경로와 symbolic link 규칙이 외부 도구가 만드는 link와 경로까지 다루는 것처럼 읽혀서, 변경이 이 저장소에 uv(Python 환경과 lock) 같은 생태계의 표준 도구를 다시 만들라고 요구하는 것으로 해석될 수 있었다. 이제 규칙은 기존 외부 도구나 라이브러리를 자기 동작과 함께 있는 그대로 쓴다고 정하며, 경로와 symbolic link 규칙은 이 저장소가 만드는 것을 다스린다고 밝힌다.
+
+## Wave 23
+
+의존: wave 22. 공유 도구는 `scripts/kit`과 `tests/kit`에 둔 kit 저장소 tag의 vendored 복사본이었고, npm은 모든 dependency를 bin link 없이 복사본으로 설치해서 `scripts/tsc.mjs`와 `node_modules`의 npm 패키지 복사본이 필요했다. 이제 kit은 npm 패키지 `@polyspec/kit`이다. 이 저장소는 release asset에서 그것을 설치하고, `kit.copies`의 파일만 복사본으로 가지며, kit이 pin하는 toolchain 하한을 선언한다. npm은 자기 기본값으로 설치한다. 이 저장소의 npm 패키지는 npm workspace이고 도구는 npm의 bin link로 실행한다.

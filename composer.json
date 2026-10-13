@@ -41,7 +41,7 @@
         }
     ],
     "require": {
-        "php": "^8.2",
+        "php": ">=8.5",
         "polyspec/hyper-server": "0.0.13",
         "polyspec/template": "0.0.6"
     },
@@ -62,7 +62,7 @@
     },
     "config": {
         "platform": {
-            "php": "8.2.0"
+            "php": "8.5.0"
         },
         "sort-packages": true
     }

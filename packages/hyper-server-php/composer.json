@@ -5,7 +5,7 @@
     "type": "library",
     "license": "MIT",
     "require": {
-        "php": "^8.2",
+        "php": ">=8.5",
         "polyspec/template": "0.0.6"
     },
     "require-dev": {
@@ -29,7 +29,7 @@
     },
     "config": {
         "platform": {
-            "php": "8.2.0"
+            "php": "8.5.0"
         },
         "sort-packages": true
     }
