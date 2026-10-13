@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- H23.5: `packages/hyper-server-python/pyproject.toml` names `polyspec-template` by the wheel asset of the template release v0.0.6 with the sha256 of that asset, in place of the git tag with its subdirectory.
 - H23.2: npm installs with its own defaults. `.npmrc` no longer sets `install-links=true` and `bin-links=false`; the root `package.json` declares the npm workspaces `packages/*` (`packages/hyper-client`, `packages/hyper-server-node` and `packages/hyper-build`), the packages build with the `tsc` of the bin link of npm, and the recipes start TypeScript and Playwright through `node_modules/.bin`. `scripts/tsc.mjs` and the `npm-copy` action of `scripts/publish.mjs` are removed, and `tests/scripts/no-symlinks.test.mjs` checks the Composer `vendor` directories only.
 - H23.1: the toolchain floors are the pins of kit: `.node-version` is 26.11.1 and `engines.node` of every `package.json` is `>=26.11.1`; the root `composer.json`, `packages/hyper-server-php/composer.json` and `examples/board/composer.json` require PHP `>=8.5` on the Composer platform 8.5.0, which `config/dependency-policy.json` names, and their locks record it.
 - H22.1: `AGENTS.md` and `AGENTS.ko.md` state that an existing outside tool or library is used as it is, with its own behavior, such as the symbolic links that it creates, and that the path and symbolic link rules govern what this repository creates. No tool configuration changed.
