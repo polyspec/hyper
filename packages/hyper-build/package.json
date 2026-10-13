@@ -16,7 +16,7 @@
     "lib"
   ],
   "engines": {
-    "node": ">=26"
+    "node": ">=26.11.1"
   },
   "dependencies": {
     "@polyspec/hyper-client": "0.0.13",

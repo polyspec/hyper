@@ -8,7 +8,7 @@
         { "type": "package", "package": { "name": "polyspec/template", "version": "0.0.6", "type": "library", "description": "Template language implementation: lexer, parser, renderer, functions and CLI", "license": "MIT", "dist": {"type": "zip", "url": "https://github.com/polyspec/template/releases/download/v0.0.6/polyspec-template-php-0.0.6.zip", "shasum": "02f0244bd3fd663b68576d0c740284306b3f8320"}, "require": {"php": "^8.2", "ext-mbstring": "*"}, "autoload": {"psr-4": {"Polyspec\\Template\\": "src/"}}, "bin": ["bin/template.php"] } }
     ],
     "require": {
-        "php": "^8.2",
+        "php": ">=8.5",
         "ext-pdo_sqlite": "*",
         "polyspec/hyper-server": "0.0.13",
         "polyspec/template": "0.0.6"
@@ -23,7 +23,7 @@
     },
     "config": {
         "platform": {
-            "php": "8.2.0"
+            "php": "8.5.0"
         },
         "sort-packages": true
     }

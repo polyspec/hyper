@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- H23.1: the toolchain floors are the pins of kit: `.node-version` is 26.11.1 and `engines.node` of every `package.json` is `>=26.11.1`; the root `composer.json`, `packages/hyper-server-php/composer.json` and `examples/board/composer.json` require PHP `>=8.5` on the Composer platform 8.5.0, which `config/dependency-policy.json` names, and their locks record it.
 - H22.1: `AGENTS.md` and `AGENTS.ko.md` state that an existing outside tool or library is used as it is, with its own behavior, such as the symbolic links that it creates, and that the path and symbolic link rules govern what this repository creates. No tool configuration changed.
 - H21.7: `make virtiofs-check` runs its two tests again: the guard of `tests/virtiofs/output-files.test.mjs` checks the template package that the build resolves, not the removed declared copy, so the run no longer fails with `ReferenceError: template is not defined`. The target stays on Darwin only, and the description of the target and the dependency row of the container image state why and name the test that covers the cause on every platform.
 - H21.6: the helper `make` of `tests/scripts/check-recipes.test.mjs` runs `make` without `FORCE_COLOR`, so its test of the type check of `make test-js` passes in a shell that sets `FORCE_COLOR`. tsc colours its output whenever `FORCE_COLOR` is set, which broke the match of `wrong.ts(1,14): error TS2322`; `NO_COLOR` is kept.
