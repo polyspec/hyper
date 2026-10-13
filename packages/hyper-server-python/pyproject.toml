@@ -9,10 +9,10 @@ description = "Server for the polyspec region protocol: manifest, routing, docum
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
-    # The git tag v0.0.6 of the template repository carries the Python template package in packages/template-python
-    # (H21.4); the wheel form of this dependency is H21.5. No Python lock exists for this package. `make test-python-render`
-    # does not install this declaration: it reads the package from the sibling checkout TEMPLATE_REPOSITORY (H15.3-3).
-    "polyspec-template @ git+https://github.com/polyspec/template@v0.0.6#subdirectory=packages/template-python",
+    # The wheel asset of the template release v0.0.6 with the sha256 of that asset (H21.4, H23.5). No Python lock exists
+    # for this package. `make test-python-render` does not install this declaration: it reads the package from the sibling
+    # checkout TEMPLATE_REPOSITORY (H15.3-3).
+    "polyspec-template @ https://github.com/polyspec/template/releases/download/v0.0.6/polyspec_template-0.0.6-py3-none-any.whl#sha256=9fd57fe2f08e8b6aaf110bb7cbba51b0661db172176214d3120ca7ae1626d662",
 ]
 
 [tool.setuptools]

@@ -95,11 +95,13 @@ test('config/template-ext.json names the php-ext asset of the release (H21.4)', 
   assert.equal(config.asset, `polyspec-template-php-ext-php-${VERSION}.zip`);
 });
 
-test('the Python package of the server is the git tag of the release (H21.4)', () => {
+test('the Python package of the server names the wheel asset of the release with its sha256 (H21.4, H23.5)', () => {
   const pyproject = read('packages/hyper-server-python/pyproject.toml');
-  assert.ok(
-    pyproject.includes(`"polyspec-template @ git+https://github.com/polyspec/template@${TAG}#subdirectory=packages/template-python",`),
-    'pyproject.toml names the template package at the tag of the release',
+  const requirements = [...pyproject.matchAll(/"(polyspec-template @ [^"]*)"/g)].map((match) => match[1]);
+  assert.deepEqual(
+    requirements.map((requirement) => requirement.replace(/#sha256=[0-9a-f]{64}$/, '#sha256=<hex>')),
+    [`polyspec-template @ ${RELEASE}/polyspec_template-${VERSION}-py3-none-any.whl#sha256=<hex>`],
+    'pyproject.toml names the template wheel of the release asset and the sha256 of that asset',
   );
 });
 

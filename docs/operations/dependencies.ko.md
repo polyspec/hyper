@@ -1,5 +1,5 @@
 <!-- doc-id: dependencies -->
-<!-- source-sha256: a5b02045d4193958d9d2d51e5254937eb44ea01be7c9e1c5d9b59d829912f701 -->
+<!-- source-sha256: fd08a0a0ffd815a43fd99bd379d53e1b33a92279af4651fc7f6eea0e3b04cba8 -->
 # 의존성
 
 [English](dependencies.md).
@@ -13,7 +13,7 @@
 | Node.js, npm, PHP, Composer | `.node-version` 26.11.1, `packageManager` npm 12.2.0, `config/toolchain.json`의 정확한 Composer 2.10.3과 `.php-version`의 minor인 PHP 8.5. make는 pin하지 않는다 | 도구 | 같은 도구로만 build와 검사가 같은 결과를 낸다(HY-81). npm 12는 `npm pack --json`을 npm 11과 다르게 출력한다. | 없음. 새 release는 pin을 바꾸는 commit이 된다. PHP patch release는 통과하고 full run이 그것을 기록한다. |
 | Python | `.python-version` 3.14, `packages/hyper-server-python`의 `requires-python >= 3.14` | 도구 | Python 서버 package는 고정된 minor 3.14를 요구한다. CI가 그 build만 테스트하므로 그렇다(H20.12). | 없음. 새 안정 release는 `.python-version`을 바꾸는 commit이 된다. |
 | `packages/hyper-server-python/pyproject.toml`의 `setuptools` | `84.0.0` 정확히 고정 | build | `polyspec-hyper-server`의 build backend다. 같은 backend release로 build하도록 정확히 고정한다. 다른 저장소의 Python 패키지 `polyspec-ordered-json`과 `polyspec-template`이 고정한 release와 같아서, Python 패키지들이 build backend를 공유한다 (H15.3-13). | 더 새로운 stable setuptools release를 채택하는 dependency 검토에서 pin을 바꾸고, 그 pin을 고정한 형제 Python 패키지도 같은 변경에서 바꾼다. |
-| `pyproject.toml`의 `polyspec-template` (`packages/hyper-server-python`) | `polyspec/template`의 git tag `v0.0.6` (`git+https://github.com/polyspec/template@v0.0.6#subdirectory=packages/template-python`) | runtime | 0.1 전에는 polyspec package를 registry에 올리지 않으므로 GitHub tag에서 설치합니다. `v0.0.6`는 `packages/template-python`을 담는 template tag입니다. | polyspec가 Python 패키지를 registry에 올릴 때 기록을 지웁니다. |
+| `pyproject.toml`의 `polyspec-template` (`packages/hyper-server-python`) | `polyspec/template`의 release `v0.0.6`의 wheel asset과 그 sha256 (`https://github.com/polyspec/template/releases/download/v0.0.6/polyspec_template-0.0.6-py3-none-any.whl#sha256=9fd57fe2f08e8b6aaf110bb7cbba51b0661db172176214d3120ca7ae1626d662`) | runtime | 0.1 전에는 polyspec package를 registry에 올리지 않으므로 GitHub Release의 wheel asset에서 설치하고, 그 asset의 sha256으로 검증한다(H23.5). | polyspec가 Python 패키지를 registry에 올릴 때 기록을 지웁니다. |
 | `htmx.org` | `4.0.0` 정확히 고정 | 런타임, 클라이언트 스크립트에 번들 | 영역 프로토콜은 htmx 4의 훅, 요청 컨텍스트 필드, 스왑 동작을 사용하며, 이를 4.0.0 소스로 확인했다. npm은 4.0.0에 `next` 태그를 붙이고 2.x를 `latest`로 유지하므로, 고정하지 않은 범위는 htmx 2를 선택한다. | npm이 htmx 4 릴리스에 `latest` 태그를 붙이면 `^4` 범위를 사용하고 `make check`를 다시 실행한다. |
 | `@playwright/test`, `@types/node`, `esbuild`, `typescript`, `vitest` | 정확히 고정 | 개발 | `npm ci`가 같은 도구를 설치하도록 root package가 개발 도구 버전을 정확히 고정한다. | 각 도구를 최신 안정 버전으로 올리고 `make check`를 다시 실행한다. |
 | `laravel/pint` | `^1.0`, 1.30.4로 해석 | 개발 | Pint 1.31 이후 버전은 PHP 8.3을 요구하고, Composer 플랫폼은 PHP 8.2였다. | H23.1부터 지원 PHP 범위가 8.5에서 시작하므로 조건이 충족되었다. H23.4가 요구 버전을 올린다. |
