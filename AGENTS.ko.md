@@ -1,5 +1,5 @@
 <!-- doc-id: agents -->
-<!-- source-sha256: 5cc87f775171b0581d7e66e73d77bd8018fb0d325b0c4ad6ea43a606fc7f2f04 -->
+<!-- source-sha256: 91716fb478b4eb302fb5dbd27418f491f8ad97ff641a20e9f1239e59ebfcbe33 -->
 # 개발
 
 [English](AGENTS.md).
@@ -40,7 +40,7 @@
 - 각 패키지 안에서 코드와 테스트를 별도 디렉터리에 둔다.
 - 결함은 재현하는 실패 테스트를 추가하고, 코드를 수정하고, 테스트를 유지하는 절차로 처리한다.
 - 이 저장소가 만드는 경로와 추적 파일에 이름을 적는 경로에는 저장소 상대경로를 사용한다. 경로는 선언적으로(추적 파일에 이름을 적어) 또는 발견(discovery)으로(문서나 script가 밝힌 발견 규칙에 따라) 정한다. 외부 입력 경로는 명시적으로 받는다.
-- 이 저장소가 만드는 것에 symbolic link를 사용하지 않는다. package manager는 이 저장소의 package를 포함한 모든 의존성을 사본으로 설치하고 bin link를 만들지 않으며, 이 저장소나 template 복사본의 package의 바뀐 사본은 파일 단위로 publish한다(`scripts/publish.mjs`, HY-82). recipe는 도구를 그 package의 파일로 실행한다(HY-79).
+- 이 저장소가 만드는 것에 symbolic link를 사용하지 않는다. npm은 자기 기본값으로 설치한다. 이 저장소의 npm package는 npm이 link하는 npm workspace이고, recipe는 npm의 bin link로 도구를 절대 경로로 실행한다(HY-79). Composer는 이 저장소의 PHP package를 사본으로 설치하고, 바뀐 사본은 파일 단위로 publish한다(`scripts/publish.mjs`, HY-82).
 - 기존 외부 도구나 라이브러리가 이미 하는 일을 다시 만들지 않는다. 그 생태계의 표준 도구를 있는 그대로 사용하고(예: Python interpreter, 환경, lock은 uv, PHP 의존성은 Composer), 그 도구가 만드는 symbolic link처럼 자기 동작을 받아들인다. 이 저장소의 규칙은 이 저장소가 만드는 것을 다스린다.
 - 템플릿 문법과 렌더 규칙은 template 언어에 속한다. 이 저장소는 그 규칙을 사용하며 바꾸지 않는다.
 

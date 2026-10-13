@@ -111,7 +111,7 @@ test('a reader of a file never reads a partial content while the file is written
   assert.deepEqual(files(directory).sort(), ['manifest.json', 'stop']);
 });
 
-test('an installed copy is published only while the package manager would install the same dependency tree', (t) => {
+test('the Composer copy is published only while Composer would install the same dependency tree', (t) => {
   const directory = temporary(t, 'hyper-publish-installed-');
   const source = path.join(directory, 'package');
   const target = path.join(directory, 'vendor', 'polyspec', 'package');
@@ -132,8 +132,7 @@ test('an installed copy is published only while the package manager would instal
   assert.equal(changed.status, 1);
   assert.ok(changed.stderr.includes(`require of ${path.join(source, 'composer.json')} is {"php":"^8.3"}, the installed ${path.join(target, 'composer.json')} has {"php":"^8.2"}; run \`composer reinstall polyspec/package`), changed.stderr);
   assert.equal(JSON.parse(readFileSync(path.join(target, 'composer.json'), 'utf8')).require.php, '^8.2');
-  const npmTarget = path.join(directory, 'node_modules', 'package');
-  const missing = node(['scripts/publish.mjs', 'npm-copy', source, npmTarget]);
+  const missing = node(['scripts/publish.mjs', 'composer-copy', source, path.join(directory, 'vendor', 'polyspec', 'missing')]);
   assert.equal(missing.status, 1);
-  assert.match(missing.stderr, /node_modules\/package is not installed; run `npm install`/);
+  assert.match(missing.stderr, /vendor\/polyspec\/missing is not installed; run `composer reinstall polyspec\/package/);
 });

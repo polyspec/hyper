@@ -1,8 +1,7 @@
-// Tests that each npm package of this repository declares a build that runs the TypeScript compiler by the path of
-// its package (scripts/tsc.mjs, HY-79): npm installs no bin links, so `npm exec tsc` finds no command, and a package
-// is built with `npm run build` in its directory. The test builds each package into a temporary directory and leaves
-// dist unchanged; `npm run tsc -- <tsc arguments>` runs the compiler with the arguments of the call, such as a project
-// file. Run it after `make install`.
+// Tests that each npm package of this repository builds with the TypeScript compiler that npm links into node_modules/.bin
+// (HY-79): npm installs with its own defaults, so `npm exec tsc` finds the compiler, and a package is built with
+// `npm run build` in its directory. The test builds each package into a temporary directory and leaves dist unchanged.
+// Run it after `make install`.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdtempSync, rmSync } from 'node:fs';
@@ -14,25 +13,20 @@ import { requireBuilt } from './requires.mjs';
 // The npm of this checkout, which `make install-tools` writes (HY-81).
 const NPM = resolve('var/tools/bin/npm');
 requireBuilt('install', 'node_modules/typescript/package.json', 'var/tools/bin/npm');
-requireBuilt('packages', 'node_modules/@polyspec/hyper-client/dist/index.d.ts');
 
 for (const directory of ['packages/hyper-client', 'packages/hyper-server-node']) {
-  test(`npm run build compiles ${directory} without a bin link`, { timeout: 60_000 }, (t) => {
+  test(`npm exec finds the tsc of the bin link of npm in ${directory}`, { timeout: 60_000 }, () => {
+    const exec = spawnSync(NPM, ['exec', '--offline', '--no', '--', 'tsc', '--version'], { cwd: resolve(directory), encoding: 'utf8' });
+    assert.equal(exec.status, 0, `${exec.stdout}${exec.stderr}`);
+    assert.match(exec.stdout, /^Version 7\.0\.2/);
+  });
+
+  test(`npm run build compiles ${directory}`, { timeout: 60_000 }, (t) => {
     const output = mkdtempSync(join(tmpdir(), 'hyper-package-build-'));
     t.after(() => rmSync(output, { recursive: true, force: true }));
-    const exec = spawnSync(NPM, ['exec', '--offline', '--no', '--', 'tsc', '--version'], { cwd: resolve(directory), encoding: 'utf8' });
-    assert.notEqual(exec.status, 0, 'npm found a tsc command; the checkout installed bin links');
     const build = spawnSync(NPM, ['run', '--silent', 'build', '--', '--outDir', output], { cwd: resolve(directory), encoding: 'utf8' });
     assert.equal(build.status, 0, `${build.stdout}${build.stderr}`);
     assert.ok(existsSync(join(output, 'index.js')), output);
     assert.ok(existsSync(join(output, 'index.d.ts')), output);
-  });
-
-  test(`npm run tsc runs the compiler of ${directory} with the arguments of the call`, { timeout: 60_000 }, (t) => {
-    const output = mkdtempSync(join(tmpdir(), 'hyper-package-tsc-'));
-    t.after(() => rmSync(output, { recursive: true, force: true }));
-    const tsc = spawnSync(NPM, ['run', '--silent', 'tsc', '--', '-p', 'tsconfig.build.json', '--outDir', output], { cwd: resolve(directory), encoding: 'utf8' });
-    assert.equal(tsc.status, 0, `${tsc.stdout}${tsc.stderr}`);
-    assert.ok(existsSync(join(output, 'index.js')), output);
   });
 }

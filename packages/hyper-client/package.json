@@ -21,8 +21,7 @@
   ],
   "sideEffects": false,
   "scripts": {
-    "build": "node ../../scripts/tsc.mjs -p tsconfig.build.json",
-    "tsc": "node ../../scripts/tsc.mjs"
+    "build": "tsc -p tsconfig.build.json"
   },
   "dependencies": {
     "@polyspec/template": "0.0.6",

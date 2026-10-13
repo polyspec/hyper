@@ -1,11 +1,11 @@
 {
   "schema": 1,
   "comment": "Written by make dependency-review RECORD=1 (scripts/kit/dependency-review.mjs) from the registries; make dependency-policy-check compares the checkout with it without a network.",
-  "reviewed": "2026-10-13T17:49:39.406Z",
+  "reviewed": "2026-10-13T17:56:51.803Z",
   "locks": [
     {
       "lock": "package-lock.json",
-      "sha256": "5e0e21a2f6b819656ffb58788ff9f7ef15e0c88e1769d32e9481eee178efe625",
+      "sha256": "4cd3e3ea9e310d0cbc37f073ad95c2baf62caf6e030f7e6761c8b6fdf973c557",
       "advisories": []
     },
     {
@@ -59,6 +59,41 @@
       "package": "vitest",
       "version": "5.0.3",
       "latest": "5.0.4"
+    },
+    {
+      "ecosystem": "npm",
+      "manifest": "packages/hyper-build/package.json",
+      "package": "@tailwindcss/node",
+      "version": "4.3.3",
+      "latest": "4.3.3"
+    },
+    {
+      "ecosystem": "npm",
+      "manifest": "packages/hyper-build/package.json",
+      "package": "@tailwindcss/oxide",
+      "version": "4.3.3",
+      "latest": "4.3.3"
+    },
+    {
+      "ecosystem": "npm",
+      "manifest": "packages/hyper-build/package.json",
+      "package": "esbuild",
+      "version": "0.28.2",
+      "latest": "0.28.2"
+    },
+    {
+      "ecosystem": "npm",
+      "manifest": "packages/hyper-build/package.json",
+      "package": "tailwindcss",
+      "version": "4.3.3",
+      "latest": "4.3.3"
+    },
+    {
+      "ecosystem": "npm",
+      "manifest": "packages/hyper-client/package.json",
+      "package": "htmx.org",
+      "version": "4.0.0",
+      "latest": "2.0.11"
     },
     {
       "ecosystem": "composer",
