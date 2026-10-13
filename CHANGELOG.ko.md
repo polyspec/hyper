@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 1d12aee93004309846fd557e0c9d38f18bab71c7d5ab2d7276ab6e686c8e3909 -->
+<!-- source-sha256: 150a02662570257180f79fb66ef44f83ea3a7289e4b637e25d1708ff67e33714 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H23.2: npm은 자기 기본값으로 설치한다. `.npmrc`는 더 이상 `install-links=true`와 `bin-links=false`를 설정하지 않는다. root `package.json`은 npm workspace `packages/*`(`packages/hyper-client`, `packages/hyper-server-node`, `packages/hyper-build`)를 선언하고, package는 npm의 bin link인 `tsc`로 build하며, recipe는 TypeScript와 Playwright를 `node_modules/.bin`으로 실행한다. `scripts/tsc.mjs`와 `scripts/publish.mjs`의 `npm-copy` action을 없앴고, `tests/scripts/no-symlinks.test.mjs`는 Composer `vendor` 디렉터리만 검사한다.
 - H23.1: toolchain 하한은 kit의 pin이다. `.node-version`은 26.11.1이고 모든 `package.json`의 `engines.node`는 `>=26.11.1`이다. root `composer.json`, `packages/hyper-server-php/composer.json`, `examples/board/composer.json`은 Composer platform 8.5.0에서 PHP `>=8.5`를 요구하며, `config/dependency-policy.json`이 그 platform을 밝히고 lock이 그것을 기록한다.
 - H22.1: `AGENTS.md`와 `AGENTS.ko.md`는 기존 외부 도구나 라이브러리를 자기 동작(예: 만드는 symbolic link)과 함께 있는 그대로 쓴다고 밝히고, 경로와 symbolic link 규칙이 이 저장소가 만드는 것에 적용된다고 밝힌다. 도구 설정은 바뀌지 않았다.
 - H21.7: `make virtiofs-check`의 두 테스트가 다시 실행된다. `tests/virtiofs/output-files.test.mjs`의 guard는 제거된 선언 복사본 대신 build가 resolve하는 template package를 확인하므로, 실행이 더 이상 `ReferenceError: template is not defined`로 실패하지 않는다. 이 target은 Darwin에서만 실행하며, target의 설명과 container image의 dependency row가 그 이유를 밝히고 모든 platform에서 원인을 시험하는 테스트를 이름으로 밝힌다.

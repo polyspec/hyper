@@ -26,8 +26,8 @@ PHP_VENDOR := $(CURDIR)/vendor
 # The native template extension, built from the unpacked php-ext asset (HY-48, H14.1-7).
 # The lock of `make serve-demo`, whose fixed ports exist once on this machine (scripts/holder-lock.mjs).
 SERVE_DEMO_LOCK := /tmp/hyper-serve-demo.lock
-# npm installs every dependency as a copy and no bin link (HY-79, .npmrc), so the recipes start the tools with node.
-TSC := node scripts/tsc.mjs
+# The TypeScript compiler of the bin link that npm writes (HY-79), by its absolute path, as NPM and COMPOSER.
+TSC := $(CURDIR)/node_modules/.bin/tsc
 # The esbuild package replaces bin/esbuild with the executable of the platform when it installs.
 ESBUILD := node_modules/esbuild/bin/esbuild
 # The copy of packages/hyper-server-php that the board installs with Composer (HY-79).
@@ -90,19 +90,16 @@ template-tag: ## Fail when the template repository TEMPLATE_REPOSITORY has no ta
 ext: toolchain-check ## Build the native template extension from the unpacked php-ext asset with phpize of the PHP of PATH into build/ext (HY-48, H14.1-7)
 	node scripts/template-ext.mjs build $(CURDIR)/$(EXT)
 
-packages: toolchain-check ## Build the JavaScript modules and type declarations of the npm packages into their dist directories and reinstall their npm copies (HY-61, HY-79, HY-96)
+packages: toolchain-check ## Build the JavaScript modules and type declarations of the npm packages into their dist directories; npm links the workspaces (HY-61, HY-79, HY-96)
 	cd $(JS_PACKAGE) && $(NPM) run --silent build -- --outDir dist.next-$$$$ && node ../../scripts/publish.mjs directory dist.next-$$$$ dist
-	node scripts/publish.mjs npm-copy $(JS_PACKAGE) node_modules/@polyspec/hyper-client
 	cd $(NODE_PACKAGE) && $(NPM) run --silent build -- --outDir dist.next-$$$$ && node ../../scripts/publish.mjs directory dist.next-$$$$ dist
-	node scripts/publish.mjs npm-copy $(NODE_PACKAGE) node_modules/@polyspec/hyper-server
-	node scripts/publish.mjs npm-copy $(BUILD_PACKAGE) node_modules/@polyspec/hyper-build
 
 hyper-server-php-copy: ## Write the copy of packages/hyper-server-php that the board installs and reinstall it in the board (HY-79)
 	node scripts/copy-package.mjs --path $(PHP_PACKAGE) --output $(HYPER_PHP_COPY)
 	node scripts/publish.mjs composer-copy $(HYPER_PHP_COPY) $(BOARD)/vendor/polyspec/hyper-server
 
 package-check: packages node-fixtures ## Install the npm packages into tests/package-install, type-check its test against their declarations and run it under node (HY-61)
-	cd tests/package-install && node ../../scripts/kit/holder-lock.mjs run ../../$(INSTALL_LOCK) -- $(NPM) ci --offline --install-links --no-bin-links --allow-remote=root --no-audit --no-fund
+	cd tests/package-install && node ../../scripts/kit/holder-lock.mjs run ../../$(INSTALL_LOCK) -- $(NPM) ci --offline --install-links --allow-remote=root --no-audit --no-fund
 	$(TSC) -p tests/package-install/tsconfig.json
 	node scripts/kit/run-tests.mjs node --cwd tests/package-install -- package-install.test.ts
 

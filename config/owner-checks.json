@@ -410,17 +410,6 @@
     },
     {
       "paths": [
-        "scripts/tsc.mjs"
-      ],
-      "targets": [
-        "test-js"
-      ],
-      "tests": [
-        "tests/scripts/package-build.test.mjs"
-      ]
-    },
-    {
-      "paths": [
         "package.json",
         "package-lock.json",
         ".npmrc"
