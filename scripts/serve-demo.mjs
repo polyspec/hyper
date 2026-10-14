@@ -15,7 +15,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { startBoard, stopServers } from './board-servers.mjs';
-import { acquireHolderLock } from './kit/holder-lock.mjs';
+import { acquireHolderLock } from '@polyspec/kit/holder-lock';
 
 const { values } = parseArgs({ options: { db: { type: 'string' }, ssr: { type: 'string' }, edge: { type: 'string' }, api: { type: 'string' }, lock: { type: 'string' } } });
 for (const name of ['db', 'ssr', 'edge', 'api', 'lock']) {
