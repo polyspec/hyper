@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "comment": "The release archives of the template release that hyper uses (kit K140, H23.11-2): the php-ext zip, which make install unpacks into var/products/template-ext for make ext, and the php zip in the Composer artifact repository var/products/template-php of composer.json and examples/board/composer.json. TEMPLATE_TAG of the Makefile reads the version of template-php.",
+  "comment": "The release archives of the template release that hyper uses (kit K140, H23.11-2): the php-ext zip, which make install unpacks into var/products/template-ext for make ext, and the php zip in the Composer artifact repository var/products/template-php of composer.json and examples/board/composer.json. TEMPLATE_TAG of the Makefile reads the version of template-php. template-php-consumer is the php zip of the template release that the published hyper release of the consumer projects of tests/release-install requires; release-consumer puts it into the artifact repository of the Composer consumer (consumers.composer.polyspec of config/release.json, H23.11-1), and the release whose archives require another template release moves it with the consumer locks (H21.4).",
   "assets": [
     {
       "name": "template-php-ext",
@@ -16,6 +16,13 @@
       "url": "https://github.com/polyspec/template/releases/download/v{version}/polyspec-template-php-{version}.zip",
       "sha256": "948cf2167efa7bf5ccbd1fe31ee47626eecc51a2acd0f1913b0e6e477d5f7edd",
       "directory": "var/products/template-php"
+    },
+    {
+      "name": "template-php-consumer",
+      "version": "0.0.5",
+      "url": "https://github.com/polyspec/template/releases/download/v{version}/polyspec-template-php-{version}.zip",
+      "sha256": "3437e9d83aff0ca658911be1acd3a160668102f6c9444c7f4c971fee05312e72",
+      "directory": "var/products/release-consumer"
     }
   ]
 }

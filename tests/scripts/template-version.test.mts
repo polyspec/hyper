@@ -76,13 +76,18 @@ test('the Composer manifests and locks name the template zip of the release (H21
   }
 });
 
-test('the Composer consumer project of tests/release-install names the template version of the archives it installs (H21.4)', () => {
+test('the Composer consumer project of tests/release-install takes the template zip of the archives it installs from its artifact repository (H21.4, H23.11-1)', () => {
   const { require, repositories } = json('tests/release-install/composer/composer.json');
-  if (require['polyspec/template']) assert.equal(require['polyspec/template'], CONSUMER_VERSION);
-  const item = repositories.find((item: { type: string; package?: { name: string } }) => item.type === 'package' && item.package?.name === 'polyspec/template');
-  assert.equal(item.package.version, CONSUMER_VERSION);
-  assert.equal(item.package.dist.url, `${CONSUMER_RELEASE}/polyspec-template-php-${CONSUMER_VERSION}.zip`);
+  assert.equal(require['polyspec/template'], CONSUMER_VERSION, 'tests/release-install/composer/composer.json require polyspec/template');
+  assert.deepEqual(repositories.filter((item: { type?: string }) => item.type === 'package'), [], 'the consumer keeps an inline package repository');
+  // kit K140: consumers.composer.polyspec names the entries of config/release-assets.json whose zips release-consumer puts
+  // into the artifact repository of the project beside the archives of the tag.
+  const names: string[] = json('config/release.json').consumers.composer.polyspec;
+  const entries = json('config/release-assets.json').assets.filter(({ name }: { name: string }) => names.includes(name));
+  assert.deepEqual(entries.map(({ url, version }: { url: string; version: string }) => url.replaceAll('{version}', version)), [`${CONSUMER_RELEASE}/polyspec-template-php-${CONSUMER_VERSION}.zip`]);
   const entry = json('tests/release-install/composer/composer.lock').packages.find(({ name }: { name: string }) => name === 'polyspec/template');
+  // make release-consumer-lock writes the lock on the release commit (kit release-consumer.mts), so the lock of the last
+  // release names its version; its dist moves to the artifact repository with the next release.
   assert.equal(entry.version, CONSUMER_VERSION);
 });
 
