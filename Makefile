@@ -12,10 +12,10 @@ JS_PACKAGE := packages/hyper-client
 NODE_PACKAGE := packages/hyper-server-node
 BUILD_PACKAGE := packages/hyper-build
 PYTHON_PACKAGE := packages/hyper-server-python
-# The Python of the checks is the Python that config/toolchain.json pythonBuild declares and `make install-tools` installs
-# into var/tools (HY-81, K26); .python-version names its minor release. requires-python >= 3.14 states the tested minor of the package (H20.12).
+# The Python of the checks is the python of mise.toml, which `make install-tools` installs with mise at the digest of mise.lock
+# and its shim runs (HY-81, kit K127). requires-python >= 3.14 states the tested minor of the package (H20.12).
 # The absolute path, as NPM and COMPOSER have, because make looks up a recipe line on its own PATH.
-PYTHON := $(CURDIR)/var/tools/bin/python3
+PYTHON := $(CURDIR)/var/tools/mise/shims/python3
 # npm installs the template packages @polyspec/template and @polyspec/template-compiler and Composer installs
 # polyspec/template from the assets of the template release that package.json and composer.json name (HY-70). The
 # native template extension is the php-ext asset of the same release, which config/template-ext.json pins (H14.1-7).
@@ -51,9 +51,9 @@ export npm_config_offline := true
 export COMPOSER_DISABLE_NETWORK := 1
 ONLINE := env -u npm_config_offline -u COMPOSER_DISABLE_NETWORK
 # make 3.81 looks up the program of a recipe line without shell syntax on its own PATH, not on the exported one, so the
-# recipes start npm and Composer by the absolute paths of var/tools/bin.
+# recipes start npm by the absolute path of var/tools/bin and Composer, a tool of mise.toml, by that of its shim.
 NPM := $(CURDIR)/var/tools/bin/npm
-COMPOSER := $(CURDIR)/var/tools/bin/composer
+COMPOSER := $(CURDIR)/var/tools/mise/shims/composer
 # The lock of the package manager installs of this checkout: one npm or Composer install at a time (HY-82).
 INSTALL_LOCK := var/install.lock
 

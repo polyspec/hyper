@@ -398,7 +398,8 @@
         "config/toolchain.json",
         ".node-version",
         ".php-version",
-        ".python-version"
+        "mise.toml",
+        "mise.lock"
       ],
       "tests": [
         "tests/scripts/toolchain.test.mjs",
