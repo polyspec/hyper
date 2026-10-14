@@ -249,8 +249,10 @@ test('the workflow ci runs every matrix entry in a job that runs to its end and 
 // the template release (HY-80), so the copy of `make install` finds that tag and CI checks the same template commit as
 // a local run.
 test('the workflow ci checks out the template repository at the tag TEMPLATE_TAG of the Makefile (HY-80)', () => {
-  const tag = /^TEMPLATE_TAG := (\S+)$/m.exec(readFileSync(path.join(ROOT, 'Makefile'), 'utf8'))?.[1];
-  assert.match(tag ?? '', /^v\d+\.\d+\.\d+$/, 'the Makefile declares no TEMPLATE_TAG');
+  // TEMPLATE_TAG reads the version of the entry template-php of config/release-assets.json (H23.11-2); make template-tag names it.
+  const lines = dryRun('template-tag', { variables: ['TEMPLATE_REPOSITORY=/nonexistent/hyper-template'] });
+  const tag = lines.map((line) => /'refs\/tags\/(v\d+\.\d+\.\d+)\^\{commit\}'/.exec(line)?.[1]).find((found) => found !== undefined);
+  assert.match(tag ?? '', /^v\d+\.\d+\.\d+$/, `make template-tag names no tag TEMPLATE_TAG: ${lines.join('\n')}`);
   for (const job of jobs(readFileSync(path.join(WORKFLOWS, 'ci.yml'), 'utf8')).filter((job) => job.name !== CI_PASSED)) {
     const checkouts = job.steps.filter((step) => /^ {10}repository: polyspec\/template$/m.test(step.text));
     assert.equal(checkouts.length, 1, `${job.name}: one checkout of polyspec/template`);
