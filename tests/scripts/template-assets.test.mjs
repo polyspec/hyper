@@ -15,15 +15,17 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 const read = (file) => readFileSync(path.join(ROOT, file), 'utf8');
 const tagOf = () => /^TEMPLATE_TAG := (\S+)$/m.exec(read('Makefile'))?.[1];
 
-test('config/template-assets.json names the php-ext and the php assets of the template tag with their pinned sha256 (H14.1-7, H23.11)', () => {
+test('config/template-assets.json pins the php-ext and the php assets of the template tag by URL, sha256 and destination (H14.1-7, H23.11)', () => {
   const config = JSON.parse(read('config/template-assets.json'));
   const TAG = tagOf();
-  assert.equal(config.tag, TAG, 'the tag of config/template-assets.json is not TEMPLATE_TAG of the Makefile');
   const version = TAG.slice(1);
-  assert.deepEqual(Object.keys(config.assets).sort(), ['php', 'php-ext']);
-  assert.equal(config.assets['php-ext'].name, `polyspec-template-php-ext-php-${version}.zip`, 'the asset name is not the kit name of the php-ext asset');
-  assert.equal(config.assets.php.name, `polyspec-template-php-${version}.zip`, 'the asset name is not the kit name of the php asset');
-  for (const asset of Object.values(config.assets)) assert.match(asset.sha256, /^[0-9a-f]{64}$/);
+  const release = `https://github.com/polyspec/template/releases/download/${TAG}`;
+  assert.equal(config.schema, 1);
+  assert.deepEqual(config.assets.map(({ url, destination }) => ({ url, destination })), [
+    { url: `${release}/polyspec-template-php-ext-php-${version}.zip`, destination: `var/products/polyspec-template-php-ext-php-${version}.zip` },
+    { url: `${release}/polyspec-template-php-${version}.zip`, destination: `var/products/template-php/polyspec-template-php-${version}.zip` },
+  ], 'the assets are not the kit names of the php-ext and php assets of TEMPLATE_TAG, or not in their destinations');
+  for (const asset of config.assets) assert.match(asset.sha256, /^[0-9a-f]{64}$/);
 });
 
 test('make ext builds the unpacked release asset offline and runs no copy of the template repository (H14.1-7)', () => {
@@ -33,11 +35,14 @@ test('make ext builds the unpacked release asset offline and runs no copy of the
   assert.deepEqual(lines.filter((line) => /\b(curl|fetch)\b|gh release/.test(line)), [], 'ext downloads: only make install downloads (HY-89)');
 });
 
-test('make install fetches the template assets through $(ONLINE) and verifies them (H14.1-7, H23.11)', () => {
+test('make install fetches the template assets through $(ONLINE) and unpacks the php-ext asset offline (H14.1-7, H23.11)', () => {
   const lines = dryRun('install');
-  const fetch = lines.filter((line) => /node scripts\/template-assets\.mjs fetch/.test(line));
-  assert.equal(fetch.length, 1, lines.join('\n'));
-  assert.match(fetch[0], /^env -u npm_config_offline -u COMPOSER_DISABLE_NETWORK node scripts\/template-assets\.mjs fetch/);
+  const steps = lines.filter((line) => /node scripts\/template-assets\.mjs /.test(line));
+  assert.deepEqual(steps, [
+    'env -u npm_config_offline -u COMPOSER_DISABLE_NETWORK node scripts/template-assets.mjs fetch',
+    'node scripts/template-assets.mjs unpack',
+  ], lines.join('\n'));
+  assert.ok(lines.indexOf(steps[1]) < lines.findIndex((line) => /composer install/.test(line)), 'Composer reads the artifact repository before make install fetched it');
 });
 
 test('the template repository is not copied any more, and the stub of PHPStan reads the unpacked asset (H14.1-7)', () => {
