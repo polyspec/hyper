@@ -12,6 +12,7 @@ import path from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
+import { jsonArray, jsonString, parseJsonObject } from '../../scripts/json.mts';
 import { dryRun } from './make-dry-run.mts';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
@@ -141,7 +142,8 @@ function tagStartProblems(name: string, text: string): string[] {
 test('only release.yml starts on a tag, and no check of config/release.json comes from a workflow that a tag starts (HY-95)', () => {
   const read = workflows();
   assert.deepEqual(read.flatMap((workflow) => tagStartProblems(workflow.name, workflow.text)), []);
-  const { checks } = JSON.parse(readFileSync(path.join(ROOT, 'config/release.json'), 'utf8')) as { checks: string[] };
+  const checks = jsonArray(parseJsonObject(readFileSync(path.join(ROOT, 'config/release.json'), 'utf8'), 'config/release.json').checks, 'config/release.json checks')
+    .map((check, index) => jsonString(check, `config/release.json checks[${index}]`));
   assert.ok(checks.length > 0, 'config/release.json names no check');
   for (const check of checks) {
     const owners = read.filter((workflow) => jobs(workflow.text).some((job) => job.name === check)).map((workflow) => workflow.name);

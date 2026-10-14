@@ -8,6 +8,7 @@ import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSy
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { test } from 'node:test';
+import { jsonObject, jsonString, parseJsonObject } from '../../scripts/json.mts';
 import { copyTracked } from '../../scripts/tracked-files.mts';
 
 // Copies the tracked files of a fixture application, so a file that an earlier run left in the fixture cannot decide
@@ -55,11 +56,12 @@ test('writes the entry, a chunk for code that the entry imports with import(), t
     assert.ok(readFileSync(join(assets, chunk), 'utf8').includes('chunk: bind the forms'));
     // The manifest, the index and the static shell lie in the directory of --output, not below public (HY-34).
     assert.deepEqual(JSON.parse(readFileSync(join(output, 'manifest.json'), 'utf8')), { hyper: `/assets/${entry}` });
-    const index = JSON.parse(readFileSync(join(output, 'templates.index.json'), 'utf8'));
-    assert.match(index['home.tpl'].url, /^\/assets\/templates\/home\.[0-9a-f]{12}\.json$/);
+    const indexFile = join(output, 'templates.index.json');
+    const homeUrl = jsonString(jsonObject(parseJsonObject(readFileSync(indexFile, 'utf8'), indexFile)['home.tpl'], `${indexFile} home.tpl`).url, `${indexFile} home.tpl url`);
+    assert.match(homeUrl, /^\/assets\/templates\/home\.[0-9a-f]{12}\.json$/);
     assert.deepEqual(readdirSync(assets).filter((name) => !name.startsWith('hyper-') && name !== 'templates'), []);
     // The entry contains the index of the build, which it imports as @polyspec/hyper-client/templates-index.
-    assert.ok(code.includes(index['home.tpl'].url), code);
+    assert.ok(code.includes(homeUrl), code);
     const shell = readFileSync(join(output, 'csr', 'index.html'), 'utf8');
     assert.ok(shell.includes(code), shell);
     assert.doesNotMatch(shell, /<style|<link/);
@@ -76,7 +78,7 @@ test('writes the entry, a chunk for code that the entry imports with import(), t
     assert.ok(scripts().includes(chunk) && scripts().includes(entry));
     for (const name of firstTemplates) assert.ok(templateFiles().includes(name), name);
     assert.equal(templateFiles().length, firstTemplates.length + 1);
-    const secondEntry = JSON.parse(readFileSync(join(output, 'manifest.json'), 'utf8')).hyper;
+    const secondEntry = parseJsonObject(readFileSync(join(output, 'manifest.json'), 'utf8'), 'manifest.json').hyper;
     assert.notEqual(secondEntry, `/assets/${entry}`);
     // The static shell of the second build holds the chunk of that build only.
     const secondChunk = scripts().find((name) => name.startsWith('hyper-chunk-') && name !== chunk);

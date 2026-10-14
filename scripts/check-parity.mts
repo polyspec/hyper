@@ -34,24 +34,30 @@ import { build } from 'esbuild';
 import type * as Client from '@polyspec/hyper-client';
 import type { parseJson } from '@polyspec/template/render';
 import { serverRun, startNode, startPhp, startPython } from './board-servers.mts';
+import { isJsonObject, jsonNumber, jsonObject, jsonObjects, jsonString, parseJsonObject } from './json.mts';
 
-// A step of the request file: an action with the request it sends and what it checks.
-interface Step {
-  action: string;
+// A step of the request file: a cookie step sets the hy-keep cookie, and a send, status or compare step sends its
+// request and checks what its action names.
+interface CookieStep {
+  action: 'cookie';
+  value: string;
+}
+interface RequestStep {
+  action: 'send' | 'status' | 'compare';
   method: string;
   path: string;
-  value?: string;
-  status?: number;
-  currentPath?: string;
-  form?: Record<string, string>;
-  pad?: number;
-  contentType?: string;
+  status?: number | undefined;
+  currentPath?: string | undefined;
+  form?: Record<string, string> | undefined;
+  pad?: number | undefined;
+  contentType?: string | undefined;
 }
+type Step = CookieStep | RequestStep;
 interface Answer { status: number; headers: Headers; text: string; token: string }
-interface ServerClient { base: string; send: (step: Step, headers: Record<string, string>, keepCookie: string) => Promise<Answer> }
-type Send = (step: Step, headers: Record<string, string>) => Promise<Answer>;
+interface ServerClient { base: string; send: (step: RequestStep, headers: Record<string, string>, keepCookie: string) => Promise<Answer> }
+type Send = (step: RequestStep, headers: Record<string, string>) => Promise<Answer>;
 // The browser code that loadBrowserCode bundles from @polyspec/hyper-client and @polyspec/template/render.
-type BrowserCode = Pick<typeof Client, 'createApplication' | 'decodeResponse' | 'renderDocument' | 'renderParts'> & { parseJson: typeof parseJson };
+type BrowserCode = Pick<typeof Client, 'checkManifest' | 'checkTemplateIndex' | 'createApplication' | 'decodeResponse' | 'renderDocument' | 'renderParts'> & { parseJson: typeof parseJson };
 
 const errorMessage = (error: unknown): string => (error instanceof Error ? error.message : String(error));
 
@@ -69,15 +75,17 @@ const BOARD_TIME = '1790856000';
 const TRANSPORT_HEADERS = new Set(['date', 'connection', 'keep-alive', 'content-length', 'transfer-encoding', 'host', 'x-powered-by', 'server']);
 // The time in which a server answers a request of a step, its whole body included.
 const REQUEST_TIMEOUT_MS = 10_000;
-const { steps } = JSON.parse(readFileSync(requests, 'utf8')) as { steps: Step[] };
+const steps = readSteps(requests);
 // A request file without a status or a compare step would pass without checking anything (HY-84).
 const checks = steps.filter((step) => step.action === 'status' || step.action === 'compare').length;
 if (checks === 0) throw new Error(`${requests} holds no status or compare step; expected at least 1, actual 0 of ${steps.length} steps`);
 
 const browser = await loadBrowserCode();
-const index = JSON.parse(readFileSync(join(app, 'build', 'templates.index.json'), 'utf8')) as Client.TemplateIndex;
+const indexFile = join(app, 'build', 'templates.index.json');
+const index = browser.checkTemplateIndex(JSON.parse(readFileSync(indexFile, 'utf8')), indexFile);
+const manifest: unknown = JSON.parse(readFileSync(join(app, 'app', 'app.json'), 'utf8'));
 const application = browser.createApplication(
-  JSON.parse(readFileSync(join(app, 'app', 'app.json'), 'utf8')) as Client.Manifest,
+  browser.checkManifest(manifest),
   index,
   async (url: string) => JSON.parse(readFileSync(join(app, 'public', url), 'utf8')) as Awaited<ReturnType<Client.TemplateFetcher>>,
 );
@@ -120,9 +128,9 @@ try {
   // Every request step prints a line when it starts and its result with the elapsed milliseconds. A step that
   // throws, such as a request without a response within REQUEST_TIMEOUT_MS, fails by its name and ends the check,
   // because the later steps depend on the session of the earlier ones.
-  for (const step of [{ action: 'send', method: 'GET', path: '/' }, ...steps]) {
+  const first: Step = { action: 'send', method: 'GET', path: '/' };
+  for (const step of [first, ...steps]) {
     if (step.action === 'cookie') {
-      if (step.value === undefined) throw new Error(`a cookie step of ${requests} has no value`);
       keepCookie = `hy-keep=${encodeURIComponent(step.value)}`;
       continue;
     }
@@ -154,7 +162,7 @@ if (failures > 0) {
 }
 
 // Runs a send, status or compare step and returns the text of its result line.
-async function runStep(step: Step, label: string, send: Send, php: ServerClient): Promise<string> {
+async function runStep(step: RequestStep, label: string, send: Send, php: ServerClient): Promise<string> {
   if (step.action === 'send') return String((await send(step, {})).status);
   if (step.action === 'status') {
     const html = await send(step, {});
@@ -197,7 +205,7 @@ async function runStep(step: Step, label: string, send: Send, php: ServerClient)
 // A client of one server with its own session cookie and CSRF token.
 function client(base: string): ServerClient {
   const state = { cookie: '', token: '' };
-  const send = async (step: Step, headers: Record<string, string>, keepCookie: string): Promise<Answer> => {
+  const send = async (step: RequestStep, headers: Record<string, string>, keepCookie: string): Promise<Answer> => {
     // A step may add a field `pad` of that many bytes and send the form with another Content-Type (HY-59).
     const fields = step.pad === undefined ? step.form : { ...step.form, pad: 'a'.repeat(step.pad) };
     const body = fields === undefined ? undefined : new URLSearchParams({ _csrf: state.token, ...fields });
@@ -287,7 +295,7 @@ function fail(message: string): void {
 async function loadBrowserCode(): Promise<BrowserCode> {
   const result = await build({
     stdin: {
-      contents: "export { createApplication, decodeResponse, renderDocument, renderParts } from '@polyspec/hyper-client'; export { parseJson } from '@polyspec/template/render';",
+      contents: "export { checkManifest, checkTemplateIndex, createApplication, decodeResponse, renderDocument, renderParts } from '@polyspec/hyper-client'; export { parseJson } from '@polyspec/template/render';",
       resolveDir: resolve('packages', 'client'),
       sourcefile: 'parity-entry.ts',
       loader: 'ts',
@@ -301,5 +309,38 @@ async function loadBrowserCode(): Promise<BrowserCode> {
   const output = result.outputFiles[0];
   if (output === undefined) throw new Error('esbuild wrote no bundle of the browser code');
   const code = Buffer.from(output.contents).toString('base64');
-  return (await import(`data:text/javascript;base64,${code}`)) as BrowserCode;
+  const module: unknown = await import(`data:text/javascript;base64,${code}`);
+  if (!isBrowserCode(module)) throw new Error('the bundle of the browser code does not export checkManifest, checkTemplateIndex, createApplication, decodeResponse, renderDocument, renderParts and parseJson');
+  return module;
 }
+
+// The bundle exports each function of BrowserCode.
+function isBrowserCode(module: unknown): module is BrowserCode {
+  return isJsonObject(module) && ['checkManifest', 'checkTemplateIndex', 'createApplication', 'decodeResponse', 'renderDocument', 'renderParts', 'parseJson'].every((name) => typeof module[name] === 'function');
+}
+
+// The steps of the request file `file`.
+function readSteps(file: string): Step[] {
+  return jsonObjects(parseJsonObject(readFileSync(file, 'utf8'), file).steps, `${file} steps`).map((entry, index): Step => {
+    const where = `${file} steps[${index}]`;
+    const action = jsonString(entry.action, `${where} action`);
+    if (action === 'cookie') {
+      if (entry.value === undefined) throw new Error(`a cookie step of ${file} has no value`);
+      return { action, value: jsonString(entry.value, `${where} value`) };
+    }
+    if (action !== 'send' && action !== 'status' && action !== 'compare') throw new Error(`${where} has the action ${action}; expected cookie, send, status or compare`);
+    const optional = <T,>(key: string, read: (value: unknown, where: string) => T): T | undefined => (entry[key] === undefined ? undefined : read(entry[key], `${where} ${key}`));
+    return {
+      action,
+      method: jsonString(entry.method, `${where} method`),
+      path: jsonString(entry.path, `${where} path`),
+      status: optional('status', jsonNumber),
+      currentPath: optional('currentPath', jsonString),
+      form: optional('form', (value, at) => Object.fromEntries(Object.entries(jsonObject(value, at)).map(([name, field]) => [name, jsonString(field, `${at} ${name}`)]))),
+      pad: optional('pad', jsonNumber),
+      contentType: optional('contentType', jsonString),
+    };
+  });
+}
+
+

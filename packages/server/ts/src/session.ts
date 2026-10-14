@@ -1,7 +1,7 @@
 // Session values of one browser session: the CSRF token, the flash values and the kept values (HY-24, HY-25,
 // HY-40).
 import { randomBytes } from 'node:crypto';
-import { toValue, type MapValue, type Value } from './values.js';
+import { isMapValue, toValue, type MapValue, type Value } from './values.js';
 
 // Stores the values of one browser session. `FileSessions` gives one store per request; `MemorySessionStore`
 // keeps one session in memory for tests.
@@ -81,11 +81,11 @@ export class Session {
   takeFlash(): Flash {
     const flash = this.store.get(FLASH);
     this.store.remove(FLASH);
-    if (!(flash instanceof Map)) return { values: new Map(), changed: [] };
-    const values = flash.get('values');
-    const changed = flash.get('changed');
+    if (!(flash instanceof Map)) return { values: new Map<string, Value>(), changed: [] };
+    const values: unknown = flash.get('values');
+    const changed: unknown = flash.get('changed');
     return {
-      values: values instanceof Map ? (values as Map<string, Value>) : new Map(),
+      values: values instanceof Map ? storedMap(values, 'flash values') : new Map<string, Value>(),
       changed: Array.isArray(changed) ? changed.filter((topic): topic is string => typeof topic === 'string') : [],
     };
   }
@@ -98,7 +98,13 @@ export class Session {
   // Stores a kept value of a region (HY-39, HY-40).
   keep(region: string, path: string, value: Value): void {
     const stored = this.store.get(KEEP);
-    const kept = new Map(stored instanceof Map ? (stored as Map<string, MapValue>) : []);
+    const kept = new Map<string, MapValue>();
+    if (stored instanceof Map) {
+      for (const [name, values] of stored) {
+        if (typeof name !== 'string') throw new Error('hyper: the session holds kept values under a region name that is not a string');
+        kept.set(name, storedMap(values, `kept values of region ${name}`));
+      }
+    }
     kept.set(region, new Map(kept.get(region) ?? []).set(path, toValue(value)));
     this.store.set(KEEP, kept);
   }
@@ -106,7 +112,13 @@ export class Session {
   // Returns the kept values of a region in storing order.
   kept(region: string): MapValue {
     const stored = this.store.get(KEEP);
-    const values = stored instanceof Map ? stored.get(region) : undefined;
-    return values instanceof Map ? values : new Map();
+    const values: unknown = stored instanceof Map ? stored.get(region) : undefined;
+    return values instanceof Map ? storedMap(values, `kept values of region ${region}`) : new Map<string, Value>();
   }
+}
+
+// A map of values that the session stored with toValue; another value fails, since the session holds only those.
+function storedMap(value: unknown, what: string): MapValue {
+  if (!isMapValue(value)) throw new Error(`hyper: the session holds ${what} that are not a map of values`);
+  return value;
 }

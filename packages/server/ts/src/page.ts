@@ -11,7 +11,7 @@ import type { Request } from './request.js';
 import { Response, type Headers } from './response.js';
 import type { Services } from './services.js';
 import type { Flash, Session } from './session.js';
-import { replaced, toMap, type Data, type MapValue, type Value } from './values.js';
+import { replaced, requireMap, toMap, type Data, type MapValue, type Value } from './values.js';
 
 export interface PageInput<S extends object> {
   request: Request;
@@ -82,8 +82,12 @@ export async function renderPage<S extends object>(input: PageInput<S>, environm
   // HY-44: every value that the handlers returned belongs to the data model, also a value that no template reads.
   encodeJson(new Map<string, Value>([['shared', shared], ['regions', new Map(data)]]));
   // HY-73: the page keeps only the paths that the templates of the route read.
-  shared = keepRead(shared, environment.reads.shared) as MapValue;
-  for (const [name, regionData] of data) data.set(name, keepRead(regionData, environment.reads.regions[name]!) as MapValue);
+  shared = requireMap(keepRead(shared, environment.reads.shared), 'the shared data');
+  for (const [name, regionData] of data) {
+    const reads = environment.reads.regions[name];
+    if (reads === undefined) throw new Error(`hyper: region ${name} has no read paths`);
+    data.set(name, requireMap(keepRead(regionData, reads), `data of region ${name}`));
+  }
 
   const value: MapValue = new Map<string, Value>([
     ['env', new Map([['timezone', environment.timezone]])],

@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: ecc5b189bb304a957628fcb18642ff257cd29ed7655d88c295ae28e6d4031ce9 -->
+<!-- source-sha256: 10e3208d68d3ad1fc08ed946c41db77cc2feb813dc8373593a281b5062b04d5a -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H23.13: TypeScript가 kit 0.0.46과 0.0.47의 type-checked rule(K155, K156, K157)을 cast, `any`, non-null assertion 없이 통과한다. `@polyspec/hyper-client`: `checkManifest`는 manifest를 `unknown`으로 받아 검사한 선언을 돌려주며, 새 `checkTemplateIndex`는 template index를 같은 방식으로 검사한다. `Hyper`, `HtmxApi`, `HyperOptions`는 region element에 대해 generic이며(기본값 `Element`), `HtmxApi`는 기본 `element` option이 쓰는 `find`를 가지고, `parseInterval`은 `number | undefined`를 돌려주며 undefined는 timeout이 없다는 뜻이다. 그래서 페이지의 htmx가 그대로 `HtmxApi`에 맞는다. `RegionElement`와 `AssignmentElement` type을 export한다. `@polyspec/hyper-server`: `Services`는 자기 key만 bind하므로 `constructor` 같은 `Object.prototype`의 key에는 factory가 없다. 저장된 flash나 kept 값이 값의 map이 아니거나 파일에 문자열이 아닌 key가 있는 session은 값을 넘기지 않고 그 파일과 함께 실패한다.
 - H23.18: hyper는 `@polyspec/kit` 0.0.46을 pin한다. wheel build backend는 `config/toolchain.json`의 `pythonBackend`로 한 번만 선언하며(kit K166), layout의 root `composer.json`과 `composer.lock`, release coverage의 `config/php-lint/composer.json`은 kit이 다룬다(K167).
 
 ## 0.0.15

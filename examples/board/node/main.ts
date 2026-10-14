@@ -4,7 +4,6 @@
 // Environment: BOARD_DB (the SQLite database file), BOARD_SESSIONS (an absolute session directory), BOARD_PORT (0
 // lets the system assign the port; the server prints the port that it listens on), and as for PHP BOARD_BASE_PATH, BOARD_HTTPS=1, BOARD_FRAME_ANCESTORS (HY-45) and BOARD_TIME.
 import { mkdirSync, readFileSync } from 'node:fs';
-import type { AddressInfo } from 'node:net';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { App, FileSessions } from '@polyspec/hyper-server';
@@ -39,10 +38,15 @@ const time = process.env.BOARD_TIME ?? '';
 if (time !== '' && !/^[0-9]{1,15}$/.test(time)) throw new Error('BOARD_TIME must be Unix seconds');
 app.bind('posts', () => new Posts(database, time === '' ? () => Math.floor(Date.now() / 1000) : () => Number(time)));
 app.bind('assets', () => {
-  const urls = JSON.parse(readFileSync(join(board, 'build', 'manifest.json'), 'utf8')) as Record<string, unknown>;
-  if (typeof urls.hyper !== 'string') throw new Error('the asset manifest has no hyper URL; run make assets');
+  const urls: unknown = JSON.parse(readFileSync(join(board, 'build', 'manifest.json'), 'utf8'));
+  if (typeof urls !== 'object' || urls === null || !('hyper' in urls) || typeof urls.hyper !== 'string') throw new Error('the asset manifest has no hyper URL; run make assets');
   return { hyper: urls.hyper };
 });
 // The session cookie has the name that the PHP board uses, PHP's default session name.
 const server = app.server(new FileSessions({ directory: sessionDirectory }), { files: join(board, 'public') });
-server.listen(port, '127.0.0.1', () => process.stdout.write(`board on http://127.0.0.1:${(server.address() as AddressInfo).port}\n`));
+server.listen(port, '127.0.0.1', () => {
+  // A server that listens on a TCP port has an AddressInfo; a pipe or a closed server has none.
+  const address = server.address();
+  if (address === null || typeof address === 'string') throw new Error(`the board server listens on no TCP port: ${String(address)}`);
+  process.stdout.write(`board on http://127.0.0.1:${address.port}\n`);
+});

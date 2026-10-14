@@ -6,11 +6,18 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { test } from 'node:test';
+import { type JsonObject, jsonArray, jsonObject, jsonObjects, jsonString, parseJsonObject } from '../../scripts/json.mts';
 import { dryRun } from './make-dry-run.mts';
 
 const repository = resolve('.');
 const read = (file: string) => readFileSync(join(repository, file), 'utf8');
-const json = (file: string) => JSON.parse(read(file));
+const json = (file: string): JsonObject => parseJsonObject(read(file), file);
+// The object `key` of `object`; an absent key fails.
+const member = (object: JsonObject, key: string, where: string): JsonObject => jsonObject(object[key], `${where} ${key}`);
+// The object `key` of `object`, or an empty object when the manifest declares none, as `dependencies` of a package.
+const optionalMember = (object: JsonObject, key: string, where: string): JsonObject => (object[key] === undefined ? {} : member(object, key, where));
+// The entry of the package `name` of the `packages` list of a Composer lock.
+const composerPackage = (lock: string, name: string): JsonObject | undefined => jsonObjects(json(lock).packages, `${lock} packages`).find((entry) => entry.name === name);
 
 // The template release that hyper depends on (H21.4). Every pin below names this version.
 const VERSION = '0.0.6';
@@ -22,6 +29,11 @@ const NPM_PACKAGES = ['@polyspec/template', '@polyspec/template-compiler'];
 const CONSUMER_VERSION = '0.0.6';
 const CONSUMER_RELEASE = `https://github.com/polyspec/template/releases/download/v${CONSUMER_VERSION}`;
 
+// The entries of config/release-assets.json, and the URL of an entry with its version.
+const assets = (): JsonObject[] => jsonObjects(json('config/release-assets.json').assets, 'config/release-assets.json assets');
+const assetUrl = (entry: JsonObject): string =>
+  jsonString(entry.url, 'config/release-assets.json url').replaceAll('{version}', jsonString(entry.version, 'config/release-assets.json version'));
+
 test('TEMPLATE_TAG of the Makefile is the tag of the single template release (H21.4, H23.11-2)', () => {
   const lines = dryRun('template-tag', { variables: ['TEMPLATE_REPOSITORY=/nonexistent/hyper-template'] });
   assert.ok(lines.some((line) => line.includes(`'refs/tags/${TAG}^{commit}'`)), `make template-tag does not check the tag ${TAG}: ${lines.join('\n')}`);
@@ -31,19 +43,19 @@ test('the npm manifests name the template tarballs of the release, and their dep
   const root = json('package.json');
   for (const name of NPM_PACKAGES) {
     const tarball = `${RELEASE}/${name.slice(1).replace('/', '-')}-npm-${VERSION}.tgz`;
-    assert.equal(root.dependencies[name], tarball, `package.json dependencies ${name}`);
-    assert.equal(root.overrides[name], tarball, `package.json overrides ${name}`);
+    assert.equal(member(root, 'dependencies', 'package.json')[name], tarball, `package.json dependencies ${name}`);
+    assert.equal(member(root, 'overrides', 'package.json')[name], tarball, `package.json overrides ${name}`);
   }
   for (const manifest of ['packages/client/package.json', 'packages/server/ts/package.json', 'packages/build/package.json']) {
-    const dependencies = json(manifest).dependencies ?? {};
+    const dependencies = optionalMember(json(manifest), 'dependencies', manifest);
     for (const name of NPM_PACKAGES.filter((name) => name in dependencies)) assert.equal(dependencies[name], VERSION, `${manifest} ${name}`);
   }
-  const installed = json('tests/package-install/package.json').dependencies ?? {};
+  const installed = optionalMember(json('tests/package-install/package.json'), 'dependencies', 'tests/package-install/package.json');
   assert.ok(NPM_PACKAGES.some((name) => name in installed), 'tests/package-install installs a template package');
   for (const name of NPM_PACKAGES.filter((name) => name in installed)) {
     assert.equal(installed[name], `${RELEASE}/${name.slice(1).replace('/', '-')}-npm-${VERSION}.tgz`, `tests/package-install/package.json ${name}`);
   }
-  const consumer = json('tests/release-install/npm/package.json').dependencies ?? {};
+  const consumer = optionalMember(json('tests/release-install/npm/package.json'), 'dependencies', 'tests/release-install/npm/package.json');
   for (const name of NPM_PACKAGES.filter((name) => name in consumer)) {
     assert.equal(consumer[name], `${CONSUMER_RELEASE}/${name.slice(1).replace('/', '-')}-npm-${CONSUMER_VERSION}.tgz`, `tests/release-install/npm/package.json ${name}`);
   }
@@ -51,48 +63,52 @@ test('the npm manifests name the template tarballs of the release, and their dep
 
 test('the npm locks record the template tarballs of the release (H21.4)', () => {
   for (const lock of ['package-lock.json', 'tests/package-install/package-lock.json']) {
-    const packages = json(lock).packages;
+    const packages = member(json(lock), 'packages', lock);
     for (const name of NPM_PACKAGES) {
-      const entry = packages[`node_modules/${name}`];
-      if (!entry) continue;
+      const value = packages[`node_modules/${name}`];
+      if (value === undefined) continue;
+      const entry = jsonObject(value, `${lock} node_modules/${name}`);
       assert.equal(entry.version, VERSION, `${lock} ${name} version`);
       assert.equal(entry.resolved, `${RELEASE}/${name.slice(1).replace('/', '-')}-npm-${VERSION}.tgz`, `${lock} ${name} resolved`);
     }
   }
-  assert.ok(json('package-lock.json').packages['node_modules/@polyspec/template'], 'the root lock pins @polyspec/template');
+  assert.ok(member(json('package-lock.json'), 'packages', 'package-lock.json')['node_modules/@polyspec/template'], 'the root lock pins @polyspec/template');
 });
 
 test('the Composer manifests and locks name the template zip of the release (H21.4, H23.11)', () => {
   const manifests = ['composer.json', 'packages/server/php/composer.json', 'examples/board/composer.json'];
   for (const manifest of manifests) {
-    const { require } = json(manifest);
-    if (require?.['polyspec/template']) assert.equal(require['polyspec/template'], VERSION, `${manifest} require`);
+    const require = member(json(manifest), 'require', manifest);
+    if (require['polyspec/template']) assert.equal(require['polyspec/template'], VERSION, `${manifest} require`);
   }
   for (const lock of ['composer.lock', 'examples/board/composer.lock']) {
-    const entry = json(lock).packages.find(({ name }: { name: string }) => name === 'polyspec/template');
+    const entry = composerPackage(lock, 'polyspec/template');
+    assert.ok(entry, `${lock} locks polyspec/template`);
     assert.equal(entry.version, VERSION, `${lock} version`);
-    assert.match(entry.dist.url, new RegExp(`(^|/)var/products/template-php/polyspec-template-php-${VERSION.replaceAll('.', '\\.')}\\.zip$`), `${lock} dist url`);
+    assert.match(jsonString(member(entry, 'dist', lock).url, `${lock} dist url`), new RegExp(`(^|/)var/products/template-php/polyspec-template-php-${VERSION.replaceAll('.', '\\.')}\\.zip$`), `${lock} dist url`);
   }
 });
 
 test('the Composer consumer project of tests/release-install takes the template zip of the archives it installs from its artifact repository (H21.4, H23.11-1)', () => {
-  const { require, repositories } = json('tests/release-install/composer/composer.json');
-  assert.equal(require['polyspec/template'], CONSUMER_VERSION, 'tests/release-install/composer/composer.json require polyspec/template');
-  assert.deepEqual(repositories.filter((item: { type?: string }) => item.type === 'package'), [], 'the consumer keeps an inline package repository');
+  const consumer = 'tests/release-install/composer/composer.json';
+  const manifest = json(consumer);
+  assert.equal(member(manifest, 'require', consumer)['polyspec/template'], CONSUMER_VERSION, `${consumer} require polyspec/template`);
+  assert.deepEqual(jsonObjects(manifest.repositories, `${consumer} repositories`).filter((item) => item.type === 'package'), [], 'the consumer keeps an inline package repository');
   // kit K140: consumers.composer.polyspec names the entries of config/release-assets.json whose zips release-consumer puts
   // into the artifact repository of the project beside the archives of the tag.
-  const names: string[] = json('config/release.json').consumers.composer.polyspec;
-  const entries = json('config/release-assets.json').assets.filter(({ name }: { name: string }) => names.includes(name));
-  assert.deepEqual(entries.map(({ url, version }: { url: string; version: string }) => url.replaceAll('{version}', version)), [`${CONSUMER_RELEASE}/polyspec-template-php-${CONSUMER_VERSION}.zip`]);
-  const entry = json('tests/release-install/composer/composer.lock').packages.find(({ name }: { name: string }) => name === 'polyspec/template');
+  const composer = member(member(json('config/release.json'), 'consumers', 'config/release.json'), 'composer', 'config/release.json consumers');
+  const names = jsonArray(composer.polyspec, 'config/release.json consumers.composer.polyspec');
+  const entries = assets().filter(({ name }) => names.includes(name));
+  assert.deepEqual(entries.map(assetUrl), [`${CONSUMER_RELEASE}/polyspec-template-php-${CONSUMER_VERSION}.zip`]);
+  const entry = composerPackage('tests/release-install/composer/composer.lock', 'polyspec/template');
+  assert.ok(entry, 'tests/release-install/composer/composer.lock locks polyspec/template');
   // make release-consumer-lock writes the lock on the release commit (kit release-consumer.mts), so the lock of the last
   // release names its version; its dist moves to the artifact repository with the next release.
   assert.equal(entry.version, CONSUMER_VERSION);
 });
 
 test('config/release-assets.json names the php-ext and the php archives of the release (H21.4, H23.11-2)', () => {
-  const assets = json('config/release-assets.json').assets.filter(({ name }: { name: string }) => name === 'template-php-ext' || name === 'template-php');
-  const urls = assets.map(({ url, version }: { url: string; version: string }) => url.replaceAll('{version}', version));
+  const urls = assets().filter(({ name }) => name === 'template-php-ext' || name === 'template-php').map(assetUrl);
   assert.deepEqual(urls, [`${RELEASE}/polyspec-template-php-ext-php-${VERSION}.zip`, `${RELEASE}/polyspec-template-php-${VERSION}.zip`]);
 });
 

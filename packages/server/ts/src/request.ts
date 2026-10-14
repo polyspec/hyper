@@ -120,7 +120,7 @@ export class Request {
 
   // Returns a route parameter, or null.
   param(name: string): string | null {
-    return Object.hasOwn(this.state.params, name) ? this.state.params[name]! : null;
+    return Object.hasOwn(this.state.params, name) ? this.state.params[name] ?? null : null;
   }
 
   // Returns a cookie value, or null.

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { parseJson, type Value } from '@polyspec/template';
 import { decodeResponse, renderDocument, renderParts, toHtml } from '../src/index.js';
 import { loadedApplication } from './application.js';
+import { mapOf } from './values.js';
 
 const app = await loadedApplication();
 
@@ -46,8 +47,14 @@ describe('binding', () => {
   function probed(route: string, regions: string, path: string): { decoded: ReturnType<typeof decodeResponse>; reads: () => number } {
     const decoded = decodeResponse(app, response(route, regions), path);
     let count = 0;
-    const probe = { get value(): string { count++; return 'p'; } };
-    decoded.shared.set('probe', probe as unknown as Value);
+    // A map that counts the binds that iterate it.
+    class Probe extends Map<string, Value> {
+      override *[Symbol.iterator](): MapIterator<[string, Value]> {
+        count++;
+        yield* super[Symbol.iterator]();
+      }
+    }
+    decoded.shared.set('probe', new Probe([['value', 'p']]));
     return { decoded, reads: () => count };
   }
 
@@ -114,7 +121,7 @@ describe('kept values of a response', () => {
 
   it('applies the server and cookie kept values and embeds the loader data with them (HY-17, HY-31, HY-38)', () => {
     const decoded = decodeResponse(app, response('list', regions, undefined, undefined, '{"rows":{"items.0.open":true,"tab":"b"}}'), '/list');
-    expect((decoded.regions.get('rows') as Map<string, unknown>).get('tab')).toBe('a');
+    expect(mapOf(decoded.regions.get('rows')).get('tab')).toBe('a');
     const html = renderDocument(app, decoded, { embed: true });
     expect(html).toContain('<li class="open">a</li>');
     expect(html).toContain('"rows":{"items":[{"name":"a","open":false}],"flag":false,"tab":"a","tags":[]}},"kept":{"rows":{"items.0.open":true,"tab":"b"}}}');
@@ -128,7 +135,7 @@ describe('kept values of a response', () => {
 
     const decoded = decodeResponse(app, response('list', regions, undefined, undefined, kept), '/list');
     expect(toHtml(app, decoded)).toContain('<ul id="rows"><li>a</li></ul>');
-    expect((decoded.regions.get('rows') as Map<string, unknown>).get('tags')).toEqual([]);
+    expect(mapOf(decoded.regions.get('rows')).get('tags')).toEqual([]);
   });
 
   it('fails when a region does not render with its loader data either', () => {

@@ -47,7 +47,7 @@ export class Reply {
   // value keeps it out of shared caches: it has `private` or `no-store` and neither `public` nor `s-maxage` (HY-52).
   cacheControl(value: string): this {
     if (!/^[\x20-\x7e]+$/.test(value)) throw new Error('hyper: Cache-Control has a character that is not allowed');
-    const directives = value.split(',').map((part) => part.split('=')[0]!.trim().toLowerCase());
+    const directives = value.split(',').map((part) => (part.includes('=') ? part.slice(0, part.indexOf('=')) : part).trim().toLowerCase());
     if (!directives.some((name) => name === 'private' || name === 'no-store') || directives.some((name) => name === 'public' || name === 's-maxage')) {
       throw new Error(`hyper: Cache-Control ${value} lets a shared cache store the page; it needs private or no-store and neither public nor s-maxage`);
     }

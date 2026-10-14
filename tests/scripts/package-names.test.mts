@@ -6,11 +6,12 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { test } from 'node:test';
+import { jsonObjects, jsonString, parseJsonObject } from '../../scripts/json.mts';
 
 const repository = resolve('.');
 type Kind = 'npm' | 'composer' | 'python';
-interface ReleasedPackage { kind: string; directory: string; name: string }
-const release = JSON.parse(readFileSync(join(repository, 'config/release.json'), 'utf8')) as { manifests: Record<string, string>; packages: ReleasedPackage[] };
+// The packages that config/release.json releases.
+const released = jsonObjects(parseJsonObject(readFileSync(join(repository, 'config/release.json'), 'utf8'), 'config/release.json').packages, 'config/release.json packages');
 
 // The packages of HY-98: the directory, the kind of its manifest and the name.
 const PACKAGES: { directory: string; kind: Kind; name: string }[] = [
@@ -27,7 +28,7 @@ const RELEASED_KIND: Record<Kind, string> = { npm: 'npm', composer: 'composer', 
 
 // The name of a manifest: the field name of package.json and composer.json, the name of [project] of pyproject.toml.
 function manifestName(kind: Kind, text: string): string | null {
-  if (kind !== 'python') return (JSON.parse(text) as { name: string }).name;
+  if (kind !== 'python') return jsonString(parseJsonObject(text, `the ${kind} manifest`).name, `the name of the ${kind} manifest`);
   const project = /^\[project\]\n([\s\S]*?)(?=^\[|(?![\s\S]))/m.exec(text)?.[1];
   return project === undefined ? null : /^name = "([^"]*)"$/m.exec(project)?.[1] ?? null;
 }
@@ -37,8 +38,8 @@ for (const { directory, kind, name } of PACKAGES) {
     const manifest = join(repository, directory, MANIFEST[kind]);
     assert.ok(existsSync(manifest), `${directory}/${MANIFEST[kind]} is missing`);
     assert.equal(manifestName(kind, readFileSync(manifest, 'utf8')), name, `the name of ${directory}/${MANIFEST[kind]}`);
-    const released = release.packages.filter(item => item.name === name && item.kind === RELEASED_KIND[kind]);
-    assert.deepEqual(released, [{ kind: RELEASED_KIND[kind], directory, name }], `the entry of ${name} in config/release.json`);
+    const entries = released.filter(item => item.name === name && item.kind === RELEASED_KIND[kind]);
+    assert.deepEqual(entries, [{ kind: RELEASED_KIND[kind], directory, name }], `the entry of ${name} in config/release.json`);
   });
 }
 

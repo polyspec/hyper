@@ -23,7 +23,9 @@ function encodeNumber(value: number): string {
   if (!Number.isFinite(value)) throw new RangeError('hyper: a number that is not finite has no JSON text');
   if (Object.is(value, -0)) return '-0';
   if (Number.isInteger(value) && Math.abs(value) <= MAX_SAFE_INTEGER) return String(value);
-  const [mantissa, exponent] = Math.abs(value).toExponential().split('e') as [string, string];
+  const exponential = Math.abs(value).toExponential();
+  const mantissa = exponential.slice(0, exponential.indexOf('e'));
+  const exponent = exponential.slice(exponential.indexOf('e') + 1);
   const digits = mantissa.replace('.', '');
   const point = Number(exponent) + 1;
   let text: string;
@@ -75,20 +77,20 @@ export function decodeJson(text: string): DecodedValue {
     throw new JsonDecodeError(`hyper: ${message} at offset ${index}`);
   };
   const whitespace = (): void => {
-    while (index < text.length && ' \t\n\r'.includes(text[index]!)) index++;
+    while (index < text.length && ' \t\n\r'.includes(text.charAt(index))) index++;
   };
   const string = (): string => {
     index++;
     let result = '';
     for (;;) {
       const char = text[index];
-      if (char === undefined) fail('unterminated string');
+      if (char === undefined) return fail('unterminated string');
       if (char === '"') {
         index++;
         if (!result.isWellFormed()) fail('lone surrogate');
         return result;
       }
-      if (char! < ' ') fail('control character in string');
+      if (char < ' ') fail('control character in string');
       if (char !== '\\') {
         result += char;
         index++;
@@ -173,7 +175,7 @@ export function decodeJson(text: string): DecodedValue {
 }
 
 // Returns true when a decoded value contains no OutsideNumber, so that it is a value of the data model.
-export function inDataModel(value: DecodedValue): value is Value & DecodedValue {
+export function inDataModel(value: Value | DecodedValue): value is Value {
   if (value instanceof OutsideNumber) return false;
   if (Array.isArray(value)) return value.every(inDataModel);
   if (value instanceof Map) return [...value.values()].every(inDataModel);

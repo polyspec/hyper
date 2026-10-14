@@ -9,14 +9,14 @@ import path from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
+import { type JsonObject, jsonObjects, jsonString, parseJsonObject } from '../../scripts/json.mts';
 import { dryRun } from './make-dry-run.mts';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const read = (file: string) => readFileSync(path.join(ROOT, file), 'utf8');
 
-/** An entry of config/release-assets.json (schema release-assets.schema.json of kit). */
-interface Entry { name: string; version: string; url: string; sha256: string; directory: string; unpack?: string }
-const entries = (): Entry[] => (JSON.parse(read('config/release-assets.json')) as { assets: Entry[] }).assets;
+/** The entries of config/release-assets.json (schema release-assets.schema.json of kit). */
+const entries = (): JsonObject[] => jsonObjects(parseJsonObject(read('config/release-assets.json'), 'config/release-assets.json').assets, 'config/release-assets.json assets');
 
 test('config/release-assets.json pins the php-ext and the php zips of one template release, the php-ext one unpacked (H23.11-2)', () => {
   const RELEASE = 'https://github.com/polyspec/template/releases/download/v{version}';
@@ -33,7 +33,7 @@ test('the own downloader of the template assets is gone (H23.11-2)', () => {
 });
 
 test('TEMPLATE_TAG of the Makefile reads the version of the template-php entry, its one declaration (H23.11-2)', () => {
-  const version = entries().find(({ name }) => name === 'template-php')?.version;
+  const version = jsonString(entries().find(({ name }) => name === 'template-php')?.version, 'the version of template-php');
   assert.match(read('Makefile'), /^TEMPLATE_TAG = v\$\(shell node \$\(KIT\)\/release-assets\.\$\(KIT_EXT\) version template-php\)$/m);
   const lines = dryRun('template-tag', { variables: ['TEMPLATE_REPOSITORY=/nonexistent/hyper-template'] });
   assert.ok(lines.some((line) => line.includes(`'refs/tags/v${version}^{commit}'`)), lines.join('\n'));

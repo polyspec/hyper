@@ -16,5 +16,5 @@
     "noEmit": true,
     "types": ["node"]
   },
-  "include": ["scripts/*.mts", "tests/scripts/*.mts", "tests/virtiofs/*.mts", "tests/e2e/*.ts", "benchmarks/*.mts"]
+  "include": ["scripts/*.mts", "tests/scripts/*.mts", "tests/virtiofs/*.mts", "tests/e2e/*.ts", "benchmarks/*.mts", "examples/board/client/window.d.ts"]
 }

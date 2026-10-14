@@ -1,4 +1,4 @@
-import { bindValue, parseJson, type ListValue, type MapValue, type Value } from '@polyspec/template/render';
+import { bindValue, parseJson, type MapValue, type Value } from '@polyspec/template/render';
 import { applyRegionKept, copyValue, decodeResponse, presentRouteRegions, renderDocument, renderLayout, renderRegionOf, requireMap, toHtml, type Application, type DecodedResponse } from './response.js';
 import { ObtainError, requestDocument, type Fetch } from './obtain.js';
 import { PageStylesheets, StylesheetError } from './stylesheets.js';
@@ -7,12 +7,15 @@ import { routeTemplates } from './templates.js';
 import { keptPaths, type RouteDeclaration } from './manifest.js';
 import { browserStorage, valueToJson, type KeepStorage } from './keep.js';
 
-// The htmx operations that the browser code uses.
-export interface HtmxApi {
+// The htmx operations that the browser code uses. E is the element of a region: a DOM Element in the browser, where
+// htmx itself is the HtmxApi, and a RegionElement of a test. find reads the element of a region by its id selector;
+// parseInterval returns undefined for a value that is no interval, which is no timeout.
+export interface HtmxApi<E extends RegionElement = Element> {
   process(element: Element): void;
-  swap(ctx: { text: string; target: Element; swap: string; sourceElement: Element }): Promise<unknown>;
+  swap(ctx: { text: string; target: E; swap: string; sourceElement: E }): Promise<unknown>;
+  find(selector: string): E | null;
   config: { defaultTimeout: number };
-  parseInterval(value: string): number;
+  parseInterval(value: string): number | undefined;
 }
 
 // The part of an htmx 4 request context that the extension reads and writes.
@@ -21,7 +24,7 @@ export interface RequestContext {
   request: { action: string; method?: string; headers: Record<string, string>; abort?: () => void; timeout?: string | number | null };
   response?: { raw?: { url: string }; status?: number; headers: { get(name: string): string | null } };
   text?: string;
-  fetch?: (url: string, init: unknown) => Promise<Response>;
+  fetch?: (url: string, init: RequestInit) => Promise<Response>;
   hyperRegion?: string;
   // when the region request was configured and when it was aborted (HY-47)
   hyperStart?: number;
@@ -38,7 +41,8 @@ export interface HyperExtension {
   htmx_config_request(elt: unknown, detail: HookDetail): void;
   htmx_before_request(elt: unknown, detail: HookDetail): void;
   htmx_after_request(elt: unknown, detail: HookDetail): boolean | void;
-  htmx_after_swap(elt: unknown, detail: HookDetail): void;
+  // A swap of render and set has a context without a request.
+  htmx_after_swap(elt: unknown, detail: { ctx: Partial<RequestContext> }): void;
   htmx_error(elt: unknown, detail: { ctx?: RequestContext; error?: unknown }): void;
   htmx_before_history_update(elt: unknown, detail: { history: { type: string; path: string } }): void;
   htmx_before_history_restore(elt: unknown, detail: { path: string }): boolean;
@@ -69,17 +73,20 @@ interface Held {
   regions: MapValue;
 }
 
-interface RegionElement {
-  id: string;
+// The element of a region that Hyper reads by its id: the embedded data, the target of a swap and the element whose
+// hy-error attribute marks a failure (HY-47). A DOM Element is one.
+export interface RegionElement {
+  readonly id: string;
+  readonly textContent?: string | null;
   setAttribute?(name: string, value: string): void;
   removeAttribute?(name: string): void;
 }
 
-export interface HyperOptions {
+export interface HyperOptions<E extends RegionElement = Element> {
   // The base path of the server for client-side rendering; empty for server-side rendering (HY-22, HY-23).
   basePath: string;
-  // Returns the element with an id; the default reads the document.
-  element?: (id: string) => Element | null;
+  // Returns the element with an id; the default finds it with htmx in the document.
+  element?: (id: string) => E | null;
   // Performs the requests of client-side rendering and the document requests of HY-93; the default is the global fetch.
   fetch?: Fetch;
   // Stores kept values (HY-37); the default uses the browser document.
@@ -99,7 +106,7 @@ interface Pending {
 }
 
 // Holds region data and renders regions from it (HY-29 to HY-39, HY-47).
-export class Hyper {
+export class Hyper<E extends RegionElement = Element> {
   private held: Held | null = null;
   private browserStorage: KeepStorage | null = null;
   // server kept values whose saving has not completed, by region and path (HY-38, HY-39)
@@ -112,19 +119,19 @@ export class Hyper {
   // the number of times that held data was replaced or forgotten, and the pending document request (HY-93)
   private holds = 0;
   private obtaining: Promise<void> | null = null;
-  private readonly element: (id: string) => Element | null;
+  private readonly element: (id: string) => E | null;
   private readonly request: Fetch;
   private readonly page: DocumentAdapter;
   private readonly currentUrl: () => string;
   readonly app: Application;
-  private readonly htmx: HtmxApi;
-  private readonly options: HyperOptions;
+  private readonly htmx: HtmxApi<E>;
+  private readonly options: HyperOptions<E>;
 
-  constructor(app: Application, htmx: HtmxApi, options: HyperOptions) {
+  constructor(app: Application, htmx: HtmxApi<E>, options: HyperOptions<E>) {
     this.app = app;
     this.htmx = htmx;
     this.options = options;
-    this.element = options.element ?? ((id) => document.getElementById(id));
+    this.element = options.element ?? ((id) => htmx.find(`[id="${CSS.escape(id)}"]`));
     this.request = options.fetch ?? ((input, init) => fetch(input, init));
     this.page = options.document ?? browserDocument(htmx);
     this.currentUrl = options.currentUrl ?? (() => window.location.href);
@@ -186,7 +193,7 @@ export class Hyper {
   // Returns the route of the current page, whose URL holds no base path (HY-22, HY-23).
   private pageRoute(): RouteDeclaration | null {
     const match = this.app.router.match(new URL(this.currentUrl()).pathname);
-    return match === null ? null : this.app.manifest.routes.find((item) => item.name === match.name)!;
+    return match === null ? null : this.routeNamed(match.name);
   }
 
   // Returns the held data, obtained with a document request when the browser holds none; a region that is not a route
@@ -261,7 +268,7 @@ export class Hyper {
   // Renders regions from the held data. A region that does not render with its kept values renders with its loader
   // data, and a region that fails then is marked (HY-38, HY-47). A response that replaces the held data ends the loop.
   private async renderHeldRegions(regions: readonly string[]): Promise<void> {
-    const held = this.held!;
+    const held = this.requireHeld();
     for (const region of regions) {
       if (this.held !== held) return;
       try {
@@ -299,7 +306,7 @@ export class Hyper {
   }
 
   // Runs the assignments of a `hy-set` attribute in the region that contains the element (HY-36).
-  async setFrom(element: Element): Promise<void> {
+  async setFrom(element: AssignmentElement): Promise<void> {
     // While nothing is held, the route regions of the route of the current page (HY-93).
     const names = this.held === null ? (this.pageRoute()?.regions ?? []).map((item) => item.name) : [...this.held.regions.keys()];
     if (names.length === 0) throw new Error('hyper: hy-set is outside a route region');
@@ -369,7 +376,7 @@ export class Hyper {
       this.page.text('Not Found');
       return;
     }
-    const route = this.app.manifest.routes.find((item) => item.name === match.name)!;
+    const route = this.routeNamed(match.name);
     try {
       const [response] = await Promise.all([
         this.request(this.options.basePath + url.pathname + url.search, { headers: { Accept: 'application/json' }, credentials: 'same-origin', signal: abort.signal }),
@@ -424,7 +431,7 @@ export class Hyper {
           // The HTML document of a history restoration in server-side rendering brings its stylesheet links (HY-64).
           if (basePath === '' && ctx.request.headers['HX-History-Restore-Request'] === 'true') {
             ctx.fetch = async (url, init) => {
-              const response = await fetch(url, init as RequestInit);
+              const response = await fetch(url, init);
               if ((response.headers.get('content-type') ?? '').startsWith('text/html')) ctx.hyperStylesheets = await this.page.stylesheets(await response.clone().text());
               return response;
             };
@@ -444,7 +451,7 @@ export class Hyper {
         const loading = requested === null ? Promise.resolve() : this.app.templates.ensure(routeTemplates(this.app.manifest, requested));
         loading.catch(() => undefined);
         ctx.fetch = async (url, init) => {
-          const [response] = await Promise.all([fetch(url, init as RequestInit), loading]);
+          const [response] = await Promise.all([fetch(url, init), loading]);
           const final = this.routeOf(response.url || url);
           if (final !== null && final !== requested) await this.app.templates.ensure(routeTemplates(this.app.manifest, final));
           // The stylesheet links of the layout of the response load before htmx swaps (HY-64).
@@ -516,7 +523,7 @@ export class Hyper {
   // Returns true when htmx aborted a region request after its timeout passed (HY-47).
   private timedOut(ctx: RequestContext): boolean {
     const timeout = ctx.request.timeout != null ? this.htmx.parseInterval(String(ctx.request.timeout)) : this.htmx.config.defaultTimeout;
-    return timeout > 0 && ctx.hyperStart !== undefined && ctx.hyperAborted !== undefined && ctx.hyperAborted - ctx.hyperStart >= timeout;
+    return timeout !== undefined && timeout > 0 && ctx.hyperStart !== undefined && ctx.hyperAborted !== undefined && ctx.hyperAborted - ctx.hyperStart >= timeout;
   }
 
   // Applies localStorage, sessionStorage and pending server values to the region data of a response,
@@ -570,7 +577,8 @@ export class Hyper {
   // Sends the pending value of a server path. When the save settles and a later change exists, the latest
   // value is sent next; otherwise a success clears the pending value and a failure marks the region (HY-39).
   private save(region: string, path: string): void {
-    const pending = this.pending.get(region)!.get(path)!;
+    const pending = this.pending.get(region)?.get(path);
+    if (pending === undefined) throw new Error(`hyper: region ${region} has no pending value at ${path}`);
     const change = pending.change;
     pending.sending = change;
     const csrf = this.held?.shared.get('csrf');
@@ -581,7 +589,7 @@ export class Hyper {
         if (current === undefined) return;
         current.sending = null;
         if (current.change !== change) this.save(region, path);
-        else if (saved) this.pending.get(region)!.delete(path);
+        else if (saved) this.pending.get(region)?.delete(path);
         else markError(this.element(region), '0');
       });
   }
@@ -597,6 +605,13 @@ export class Hyper {
     if (target === null) throw new Error(`hyper: region element #${region} does not exist`);
     await this.htmx.swap({ text: html, target, swap: 'innerMorph', sourceElement: target });
     clearError(target);
+  }
+
+  // Returns the declaration of a route that the router matched; the router holds the routes of the manifest.
+  private routeNamed(name: string): RouteDeclaration {
+    const route = this.app.manifest.routes.find((item) => item.name === name);
+    if (route === undefined) throw new Error(`hyper: route ${name} is not in the manifest`);
+    return route;
   }
 
   private requireHeld(): Held {
@@ -627,7 +642,7 @@ export class Hyper {
   private routeOf(url: string): RouteDeclaration | null {
     const path = stripBasePath(pathOf(url), this.options.basePath);
     const match = path === null ? null : this.app.router.match(path);
-    return match === null ? null : this.app.manifest.routes.find((item) => item.name === match.name)!;
+    return match === null ? null : this.routeNamed(match.name);
   }
 }
 
@@ -648,8 +663,9 @@ export function parseAssignments(text: string): { path: string; value: unknown }
       start = index + 1;
       if (part === '') continue;
       const found = /^([A-Za-z_][A-Za-z0-9_]*(?:\.(?:[A-Za-z_][A-Za-z0-9_]*|\d+))*)\s*=\s*(.+)$/s.exec(part);
-      if (found === null) throw new Error(`hyper: invalid hy-set assignment ${JSON.stringify(part)}`);
-      assignments.push({ path: found[1]!, value: JSON.parse(found[2]!) });
+      const [, assignedPath, json] = found ?? [];
+      if (assignedPath === undefined || json === undefined) throw new Error(`hyper: invalid hy-set assignment ${JSON.stringify(part)}`);
+      assignments.push({ path: assignedPath, value: JSON.parse(json) });
     }
   }
   return assignments;
@@ -657,16 +673,17 @@ export function parseAssignments(text: string): { path: string; value: unknown }
 
 // Replaces the value at an existing path; a missing map key or list index fails (HY-33).
 function assignPath(data: Value | undefined, path: string, value: Value): void {
-  const keys = path.split('.');
+  // The key after the last dot names the value, and the keys before it its container.
+  const dot = path.lastIndexOf('.');
+  const last = path.slice(dot + 1);
   let container = data;
-  for (const key of keys.slice(0, -1)) {
+  for (const key of dot < 0 ? [] : path.slice(0, dot).split('.')) {
     container = childOf(container, key);
     if (container === undefined) throw new Error(`hyper: ${path} does not exist in the region data`);
   }
-  const last = keys[keys.length - 1]!;
   if (childOf(container, last) === undefined) throw new Error(`hyper: ${path} does not exist in the region data`);
   if (container instanceof Map) container.set(last, value);
-  else (container as ListValue)[Number(last)] = value;
+  else if (Array.isArray(container)) container[Number(last)] = value;
 }
 
 function valueAt(data: Value | undefined, path: string): Value | undefined {
@@ -677,19 +694,32 @@ function valueAt(data: Value | undefined, path: string): Value | undefined {
 
 function childOf(container: Value | undefined, key: string): Value | undefined {
   if (container instanceof Map) return container.get(key);
-  if (Array.isArray(container) && /^\d+$/.test(key)) return (container as ListValue)[Number(key)];
+  if (Array.isArray(container) && /^\d+$/.test(key)) return container[Number(key)];
   return undefined;
 }
 
 // Marks a region element as failed with a status, or clears the mark (HY-47).
 function markError(target: unknown, status: string): void {
-  const element = target as RegionElement | null;
-  if (element !== null && typeof element === 'object' && typeof element.setAttribute === 'function') element.setAttribute('hy-error', status);
+  if (hasSetAttribute(target)) target.setAttribute('hy-error', status);
 }
 
 function clearError(target: unknown): void {
-  const element = target as RegionElement | null;
-  if (element !== null && typeof element === 'object' && typeof element.removeAttribute === 'function') element.removeAttribute('hy-error');
+  if (hasRemoveAttribute(target)) target.removeAttribute('hy-error');
+}
+
+function hasSetAttribute(target: unknown): target is { setAttribute(name: string, value: string): void } {
+  return typeof target === 'object' && target !== null && 'setAttribute' in target && typeof target.setAttribute === 'function';
+}
+
+function hasRemoveAttribute(target: unknown): target is { removeAttribute(name: string): void } {
+  return typeof target === 'object' && target !== null && 'removeAttribute' in target && typeof target.removeAttribute === 'function';
+}
+
+// An element with a `hy-set` attribute: its assignments and the closest element of a region (HY-36). A DOM Element is
+// one.
+export interface AssignmentElement {
+  closest(selectors: string): { readonly id: string } | null;
+  getAttribute(name: string): string | null;
 }
 
 // An element whose attributes client-side rendering replaces (HY-63).
@@ -706,7 +736,7 @@ export function replaceAttributes(target: AttributeElement, source: AttributeEle
 }
 
 // The document adapter of a browser page.
-function browserDocument(htmx: HtmxApi): DocumentAdapter {
+function browserDocument(htmx: { process(element: Element): void }): DocumentAdapter {
   let stylesheets: PageStylesheets | null = null;
   const replaceBody = (source: HTMLElement | null, nodes: Node[]): void => {
     const body = document.createElement('body');

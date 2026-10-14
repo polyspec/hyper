@@ -4,18 +4,34 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { applyKept, copyValue } from '@polyspec/hyper-client';
 import { parseJson, type MapValue, type Value } from '@polyspec/template/render';
-import type { DecodedValue } from '../src/index.js';
 import { selectKept } from '../src/kept.js';
+import { requireMap } from '../src/values.js';
 
-const fixture = parseJson(readFileSync(new URL('../../../../contracts/keep.json', import.meta.url), 'utf8')) as MapValue;
-const cases = (fixture.get('cases') as Value[]).map((value) => value as MapValue);
+const fixture = requireMap(parseJson(readFileSync(new URL('../../../../contracts/keep.json', import.meta.url), 'utf8')), 'contracts/keep.json');
+const cases = list(fixture.get('cases'), 'cases').map((value) => requireMap(value, 'a case'));
+
+// Returns a value of the contract that is a list; another value fails the test.
+function list(value: Value | undefined, label: string): Value[] {
+  if (!Array.isArray(value)) throw new TypeError(`${label} is not a list`);
+  return value;
+}
+
+// Returns a value of the contract that is a string; another value fails the test.
+function string(value: Value | undefined, label: string): string {
+  if (typeof value !== 'string') throw new TypeError(`${label} is not a string`);
+  return value;
+}
 
 describe('selectKept conformance', () => {
-  it.each(cases.map((item) => [item.get('label') as string, item] as const))('%s', (_label, item) => {
-    const data = item.get('data') as MapValue;
-    const kept = (item.get('kept') as Value[][]).map(([path, value]) => [path as string, value as DecodedValue] as [string, DecodedValue]);
+  it.each(cases.map((item) => [string(item.get('label'), 'label'), item] as const))('%s', (_label, item) => {
+    const data = requireMap(item.get('data') ?? null, 'data');
+    const kept = list(item.get('kept'), 'kept').map((entry): [string, Value] => {
+      const [path, value] = list(entry, 'a kept pair');
+      if (value === undefined) throw new TypeError('a kept pair has no value');
+      return [string(path, 'a kept path'), value];
+    });
     const selected = selectKept(data, kept);
-    const applied = copyValue(data) as MapValue;
+    const applied = requireMap(copyValue(data), 'data');
     applyKept(applied, [...selected]);
     expect(applied).toEqual(item.get('expected'));
   });

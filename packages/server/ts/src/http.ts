@@ -3,8 +3,9 @@ import { createReadStream, statSync } from 'node:fs';
 import { createServer as createHttpServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import type { Socket } from 'node:net';
 import { extname, isAbsolute, join } from 'node:path';
-import type { TLSSocket } from 'node:tls';
+import { TLSSocket } from 'node:tls';
 import type { App } from './app.js';
+import { errorCode } from './error-code.js';
 import { FileSessions } from './file-sessions.js';
 import { Reply } from './reply.js';
 import { Request } from './request.js';
@@ -69,7 +70,7 @@ export function createListener<S extends object>(app: App<S>, sessions: FileSess
       if (!outgoing.writableEnded) closed.abort();
     });
     const finished = new Promise<void>((resolve) => outgoing.once('close', () => resolve()));
-    const https = (incoming.socket as TLSSocket).encrypted === true;
+    const https = incoming.socket instanceof TLSSocket && incoming.socket.encrypted;
     // The request as the server received it, with an empty body until the body is read (HY-60), and the response of
     // the request: the response whose write started, the plain 500 of an escaped error, or null when the request ended
     // before a response started (HY-99).
@@ -136,7 +137,8 @@ export function createListener<S extends object>(app: App<S>, sessions: FileSess
 // when the packet has no request line.
 function requestLine(packet: Buffer | undefined): Request | null {
   const line = /^([!-~]+) ([^ \r\n]+) HTTP\/[0-9.]+\r?\n/.exec(packet?.toString('latin1') ?? '');
-  return line === null ? null : Request.from({ method: line[1]!, target: line[2]! });
+  const [, method, target] = line ?? [];
+  return method === undefined || target === undefined ? null : Request.from({ method, target });
 }
 
 // Adds the cookie of a new session first, as PHP does when the session starts (HY-45).
@@ -163,7 +165,7 @@ function publicFile(files: string, incoming: IncomingMessage): string | null {
   try {
     return statSync(file).isFile() ? file : null;
   } catch (error) {
-    if (['ENOENT', 'ENOTDIR'].includes((error as NodeJS.ErrnoException).code ?? '')) return null;
+    if (['ENOENT', 'ENOTDIR'].includes(errorCode(error) ?? '')) return null;
     throw error;
   }
 }

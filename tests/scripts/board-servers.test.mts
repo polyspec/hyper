@@ -11,6 +11,7 @@ import { test, type TestContext } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 import { startBoard, startPython } from '../../scripts/board-servers.mts';
+import { jsonString, parseJsonObject } from '../../scripts/json.mts';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 
@@ -66,7 +67,10 @@ test('a run that ends on SIGTERM stops its servers and removes its directory', a
   const started = new Promise<{ directory: string; url: string }>((resolve) => child.stdout.on('data', (data: Buffer) => {
     output += data.toString();
     const line = output.split('\n').find((text) => text.startsWith('{'));
-    if (line) resolve(JSON.parse(line) as { directory: string; url: string });
+    if (line) {
+      const started = parseJsonObject(line, 'the output of the run');
+      resolve({ directory: jsonString(started.directory, 'directory'), url: jsonString(started.url, 'url') });
+    }
   }));
   const ended = new Promise<number | null>((resolve) => child.on('close', (code) => resolve(code)));
   const { directory, url } = await started;

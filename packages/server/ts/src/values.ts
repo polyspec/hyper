@@ -20,9 +20,31 @@ export function toValue(input: unknown): Value {
 
 // Converts loader data into a map of the data model.
 export function toMap(input: unknown, label: string): MapValue {
-  const value = toValue(input);
+  return requireMap(toValue(input), label);
+}
+
+// Returns a value of the data model that is a map, such as a copy of a map; another value fails.
+export function requireMap(value: Value, label: string): MapValue {
   if (!(value instanceof Map)) throw new TypeError(`hyper: ${label} is not a map`);
   return value;
+}
+
+// Returns true for a value of the data model as the server stores it: null, a boolean, a number, a string, a safe
+// string, an application object, an array of values or a Map of string keys to values.
+function isValue(input: unknown): input is Value {
+  if (input === null || typeof input === 'boolean' || typeof input === 'number' || typeof input === 'string') return true;
+  if (input instanceof SafeString || input instanceof NativeObject) return true;
+  if (Array.isArray(input)) return input.every(isValue);
+  return isMapValue(input);
+}
+
+// Returns true for a Map of string keys to values of the data model.
+export function isMapValue(input: unknown): input is MapValue {
+  if (!(input instanceof Map)) return false;
+  for (const [key, item] of input) {
+    if (typeof key !== 'string' || !isValue(item)) return false;
+  }
+  return true;
 }
 
 function check(value: Value): void {

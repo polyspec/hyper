@@ -15,6 +15,7 @@ export function changedTopics(request: Request, flash: Flash, basePath: string):
 // changed topic for a region request.
 export function selectRegions(manifest: Manifest, document: boolean, changed: readonly string[]): RegionDeclaration[] {
   if (document) return manifest.regions;
-  const page = manifest.regions.find((region) => region.page === true)!;
+  const page = manifest.regions.find((region) => region.page === true);
+  if (page === undefined) throw new Error('hyper: the manifest has no page region');
   return [page, ...manifest.regions.filter((region) => region.page !== true && (region.uses ?? []).some((topic) => changed.includes(topic)))];
 }

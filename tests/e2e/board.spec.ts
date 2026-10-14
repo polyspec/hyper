@@ -1,8 +1,27 @@
 import { expect, test, type BrowserContext, type Page, type Response } from '@playwright/test';
+import { isJsonObject } from '../../scripts/json.mts';
 import { csr, ssr } from './origins.js';
+
+// The globals that the tests set in a page: a marker of the document and the max-width of the post body.
+declare global {
+  interface Window {
+    documentMarker?: number;
+    postWidth?: string;
+  }
+}
 
 // The tests share one database and run in order: each test starts from the posts created before it.
 test.describe.configure({ mode: 'serial' });
+
+// The value at the path `keys` of a JSON value, or undefined when a step is no object.
+function at(value: unknown, ...keys: string[]): unknown {
+  let current = value;
+  for (const key of keys) {
+    if (!isJsonObject(current)) return undefined;
+    current = current[key];
+  }
+  return current;
+}
 
 // Waits for the htmx fetch response of a path; a followed redirect reports its final URL.
 function fetchResponse(page: Page, path: string): Promise<Response> {
@@ -20,11 +39,11 @@ function collectErrors(page: Page): string[] {
 }
 
 async function markDocument(page: Page): Promise<void> {
-  await page.evaluate(() => { (window as unknown as { documentMarker: number }).documentMarker = 1; });
+  await page.evaluate(() => { window.documentMarker = 1; });
 }
 
 async function documentWasKept(page: Page): Promise<boolean> {
-  return page.evaluate(() => (window as unknown as { documentMarker?: number }).documentMarker === 1);
+  return page.evaluate(() => window.documentMarker === 1);
 }
 
 // Runs the board flow: list, create page, rejected input, accepted input, detail page, history back.
@@ -125,7 +144,7 @@ async function dataFlow(page: Page, origin: string, documents: string[], loaded:
   // renders (HY-30, HY-35, HY-93).
   const templates = requests.filter((url) => new URL(url).pathname.includes('/assets/templates/'));
   expect(requests.filter((url) => !templates.includes(url)).map((url) => new URL(url).pathname)).toEqual(documents);
-  expect(templates.map((url) => new URL(url).pathname.split('/').pop()!.replace(/\.[0-9a-f]+\.json$/, '')).sort()).toEqual(loaded);
+  expect(templates.map((url) => { const path = new URL(url).pathname; return path.slice(path.lastIndexOf('/') + 1); }).map((file) => file.replace(/\.[0-9a-f]+\.json$/, '')).sort()).toEqual(loaded);
   expect(errors).toEqual([]);
 }
 
@@ -171,12 +190,13 @@ async function keepFlow(page: Page, context: BrowserContext, origin: string, dat
     expect(list).not.toContain('board-table compact');
     expect(await (await page.request.get(detail)).text()).toContain('post-body large');
   } else {
-    const json = await (await page.request.get(`${origin}${dataPrefix}/board`, { headers: { Accept: 'application/json' } })).json();
+    const json: unknown = await (await page.request.get(`${origin}${dataPrefix}/board`, { headers: { Accept: 'application/json' } })).json();
     // HY-17: regions hold the loader data, and kept holds the server and cookie values.
-    expect(json.regions.notice.notice.closed).toBe(false);
-    expect(json.kept.notice['notice.closed']).toBe(true);
-    expect(json.regions.rows.sort).toBe('');
-    expect(json.kept.rows).toBeUndefined();
+    expect(at(json, 'regions', 'notice', 'notice', 'closed')).toBe(false);
+    expect(at(json, 'kept', 'notice', 'notice.closed')).toBe(true);
+    expect(at(json, 'regions', 'rows', 'sort')).toBe('');
+    expect(isJsonObject(at(json, 'kept'))).toBe(true);
+    expect(at(json, 'kept', 'rows')).toBeUndefined();
   }
 
   const tab = await context.newPage();
@@ -230,8 +250,11 @@ test('SSR embeds only the data of the route regions, and only when the reply ask
   expect(await (await page.request.get(`${ssr}/board`)).text()).not.toContain('id="hy-data"');
   // The post page asks: it embeds the data of reader and not the data of left or the page region.
   const post = await (await page.request.get(`${ssr}/board/1`)).text();
-  const embedded = JSON.parse(/<script type="application\/json" id="hy-data">(.*?)<\/script>/s.exec(post)![1]!) as { regions: Record<string, unknown> };
-  expect(Object.keys(embedded.regions)).toEqual(['reader']);
+  const script = /<script type="application\/json" id="hy-data">(.*?)<\/script>/s.exec(post)?.[1];
+  if (script === undefined) throw new Error('the post page embeds no data');
+  const embedded: unknown = JSON.parse(script);
+  const regions = at(embedded, 'regions');
+  expect(isJsonObject(regions) ? Object.keys(regions) : regions).toEqual(['reader']);
 });
 
 test('a failed region request keeps the page and marks the region (HY-47)', async ({ page }) => {
@@ -239,7 +262,7 @@ test('a failed region request keeps the page and marks the region (HY-47)', asyn
     await page.goto(`${origin}/board`);
     await page.waitForLoadState('networkidle');
     const failed = page.waitForResponse((response) => response.status() === 404);
-    await page.evaluate(() => (window as unknown as { htmx: { ajax(method: string, path: string, options: object): Promise<unknown> } }).htmx.ajax('GET', '/board/999', { target: '#content' }));
+    await page.evaluate(() => window.htmx.ajax('GET', '/board/999', { target: '#content' }));
     await failed;
     await expect(page.locator('#content')).toHaveAttribute('hy-error', '404');
     await expect(page.locator('#content h1')).toHaveText('게시판');
@@ -252,7 +275,7 @@ test('a failed region request keeps the page and marks the region (HY-47)', asyn
 
 // Returns the paths of the stylesheet links of the head in order.
 function stylesheets(page: Page): Promise<string[]> {
-  return page.evaluate(() => Array.from(document.head.querySelectorAll('link[rel~="stylesheet"]'), (link) => new URL((link as HTMLLinkElement).href).pathname));
+  return page.evaluate(() => Array.from(document.head.querySelectorAll<HTMLLinkElement>('link[rel~="stylesheet"]'), (link) => new URL(link.href).pathname));
 }
 
 // HY-64: the post page links the reader stylesheet. It loads before the post is shown, also when its response is
@@ -264,14 +287,13 @@ async function stylesheetFlow(page: Page, origin: string): Promise<void> {
     await route.continue();
   });
   await page.addInitScript(() => {
-    const record = window as unknown as { postWidth?: string };
     new MutationObserver(() => {
       const body = document.querySelector('.post-body');
-      if (body === null) delete record.postWidth;
-      else record.postWidth ??= getComputedStyle(body).maxWidth;
+      if (body === null) delete window.postWidth;
+      else window.postWidth ??= getComputedStyle(body).maxWidth;
     }).observe(document, { childList: true, subtree: true });
   });
-  const postWidth = () => page.evaluate(() => (window as unknown as { postWidth?: string }).postWidth);
+  const postWidth = () => page.evaluate(() => window.postWidth);
 
   const requested: string[] = [];
   page.on('request', (request) => {

@@ -8,6 +8,7 @@ import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { test, type TestContext } from 'node:test';
+import { parseJsonObject } from '../../scripts/json.mts';
 
 const repository = resolve('.');
 const HOLDER = /held by process (\d+) \(started ([^)]+)\) of the checkout (\S+), held since/;
@@ -17,8 +18,6 @@ const HOLDER = /held by process (\d+) \(started ([^)]+)\) of the checkout (\S+),
 // demos (HY-87); node:test runs the hooks of a test in the order of their registration.
 // A started demo: its process and the output that it printed so far.
 interface Demo { child: ChildProcess; output: () => string }
-// The lock file that the holder-lock tool writes, as the test reads it.
-interface Holder { pid: number; checkout: string; processStart: string }
 
 function workspace(t: TestContext): { directory: string; demos: Demo[] } {
   const directory = mkdtempSync(join(tmpdir(), 'hyper-serve-demo-'));
@@ -57,7 +56,7 @@ test('a second demo fails with the holder, and the first releases the lock when 
   const { directory } = space;
   const lock = join(directory, 'demo.lock');
   const first = await startDemo(space);
-  const holder = JSON.parse(readFileSync(lock, 'utf8')) as Holder;
+  const holder = parseJsonObject(readFileSync(lock, 'utf8'), lock);
   assert.equal(holder.pid, first.child.pid);
   assert.equal(holder.checkout, repository);
   const second = spawnSync(process.execPath, demoArgs(directory), { encoding: 'utf8' });

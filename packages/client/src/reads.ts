@@ -2,7 +2,7 @@
 // at its path is read whole, and otherwise names the keys read below it and, under `each`, what is read of every
 // entry of a map or element of a list. This module imports only types, so that tests/reads-process.ts runs it with
 // the type stripping of Node and without a bundler.
-import type { MapValue, Template, Value } from '@polyspec/template/render';
+import type { Expr, MapValue, Node as Statement, Template, Value } from '@polyspec/template/render';
 import type { Manifest } from './manifest.js';
 
 // Resolves a path of an include or block tag against the name of the template that contains it (RT-9).
@@ -21,9 +21,6 @@ const EACH = null;
 type Step = string | typeof EACH;
 type Path = Step[];
 
-type Expr = { type: string; [field: string]: unknown };
-type Statement = { type: string; [field: string]: unknown };
-
 // Returns the read node of a template and of every template that it includes or places by path.
 export function templateReads(load: (name: string) => Template, resolve: ResolvePath, name: string): ReadNode {
   const reads = new Reads(load, resolve);
@@ -34,7 +31,8 @@ export function templateReads(load: (name: string) => Template, resolve: Resolve
 // Returns the read nodes of every route of a manifest (HY-73).
 export function routeReads(manifest: Manifest, load: (name: string) => Template, resolve: ResolvePath): Record<string, RouteReads> {
   const regions = manifest.regions.flatMap((region) => (region.template === undefined ? [] : [[region.name, region.template] as const]));
-  const page = manifest.regions.find((region) => region.page === true)!.name;
+  const page = manifest.regions.find((region) => region.page === true)?.name;
+  if (page === undefined) throw new Error('hyper: the manifest must declare exactly one page region');
   const cache = new Map<string, ReadNode>();
   const read = (name: string): ReadNode => {
     let node = cache.get(name);
@@ -97,8 +95,7 @@ function childNode(node: Exclude<ReadNode, true>, key: string): ReadNode | undef
 // Returns the node that reads one path whole.
 function pathNode(path: Path): ReadNode {
   let node: ReadNode = true;
-  for (let index = path.length - 1; index >= 0; index--) {
-    const step = path[index]!;
+  for (const step of [...path].reverse()) {
     node = step === EACH ? { each: node } : { keys: { [step]: node } };
   }
   return node;
@@ -109,7 +106,10 @@ function merge(a: ReadNode, b: ReadNode): ReadNode {
   const result: { keys?: Record<string, ReadNode>; each?: ReadNode } = {};
   if (a.keys !== undefined || b.keys !== undefined) {
     const keys: Record<string, ReadNode> = { ...a.keys };
-    for (const [key, node] of Object.entries(b.keys ?? {})) keys[key] = Object.hasOwn(keys, key) ? merge(keys[key]!, node) : node;
+    for (const [key, node] of Object.entries(b.keys ?? {})) {
+      const existing = Object.hasOwn(keys, key) ? keys[key] : undefined;
+      keys[key] = existing === undefined ? node : merge(existing, node);
+    }
     result.keys = keys;
   }
   if (a.each !== undefined || b.each !== undefined) result.each = a.each === undefined ? b.each : b.each === undefined ? a.each : merge(a.each, b.each);
@@ -143,7 +143,7 @@ class Reads {
     const placed = [...placing, name];
     while (scope.changed) {
       scope.changed = false;
-      this.statements(this.load(name).body as unknown as Statement[], name, scope, placed, [name]);
+      this.statements(this.load(name).body, name, scope, placed, [name]);
     }
   }
 
@@ -154,45 +154,45 @@ class Reads {
   private statement(node: Statement, name: string, scope: Scope, placing: string[], including: string[]): void {
     switch (node.type) {
       case 'Echo':
-        this.whole(this.expr(node.expr as Expr, scope));
+        this.whole(this.expr(node.expr, scope));
         return;
       case 'If':
-        for (const branch of node.branches as { test: Expr; body: Statement[] }[]) {
+        for (const branch of node.branches) {
           this.whole(this.expr(branch.test, scope));
           this.statements(branch.body, name, scope, placing, including);
         }
-        if (node.else !== null) this.statements(node.else as Statement[], name, scope, placing, including);
+        if (node.else !== null) this.statements(node.else, name, scope, placing, including);
         return;
       case 'For': {
-        const each = this.expr(node.iter as Expr, scope).map((path) => [...path, EACH]);
+        const each = this.expr(node.iter, scope).map((path) => [...path, EACH]);
         for (const path of each) this.part(path);
-        scope.bound.push({ name: node.name as string, paths: each });
-        this.statements(node.body as Statement[], name, scope, placing, including);
+        scope.bound.push({ name: node.name, paths: each });
+        this.statements(node.body, name, scope, placing, including);
         scope.bound.pop();
-        if (node.empty !== null) this.statements(node.empty as Statement[], name, scope, placing, including);
+        if (node.empty !== null) this.statements(node.empty, name, scope, placing, including);
         return;
       }
       case 'Set':
-        this.assign(scope, node.name as string, this.expr(node.expr as Expr, scope));
+        this.assign(scope, node.name, this.expr(node.expr, scope));
         return;
       case 'Include': {
-        const target = this.resolve(name, node.path as string);
+        const target = this.resolve(name, node.path);
         if (including.includes(target)) return;
-        this.statements(this.load(target).body as unknown as Statement[], target, scope, placing, [...including, target]);
+        this.statements(this.load(target).body, target, scope, placing, [...including, target]);
         return;
       }
       case 'Block': {
-        const args = (node.scope as { name: string; expr: Expr }[]).map((item) => [item.name, this.expr(item.expr, scope)] as const);
+        const args = node.scope.map((item) => [item.name, this.expr(item.expr, scope)] as const);
         if (node.path === null) return;
-        const target = this.resolve(name, node.path as string);
+        const target = this.resolve(name, node.path);
         // Placing a template that is already being placed fails when it renders (RT-22), so it reads nothing.
         if (placing.includes(target)) return;
         this.template(target, new Map(args), placing);
         return;
       }
       case 'IfBlock':
-        this.statements(node.body as Statement[], name, scope, placing, including);
-        if (node.else !== null) this.statements(node.else as Statement[], name, scope, placing, including);
+        this.statements(node.body, name, scope, placing, including);
+        if (node.else !== null) this.statements(node.else, name, scope, placing, including);
         return;
       default:
         return;
@@ -203,49 +203,49 @@ class Reads {
   private expr(expr: Expr, scope: Scope): Path[] {
     switch (expr.type) {
       case 'Var':
-        return this.variable(expr.name as string, scope);
+        return this.variable(expr.name, scope);
       case 'LoopMeta':
-        return expr.field === 'value_' ? this.variable(expr.loop as string, scope) : [];
+        return expr.field === 'value_' ? this.variable(expr.loop, scope) : [];
       case 'Member':
-        return this.expr(expr.object as Expr, scope).map((path) => [...path, expr.key as string]);
+        return this.expr(expr.object, scope).map((path) => [...path, expr.key]);
       case 'Index': {
-        const index = expr.index as Expr;
+        const index = expr.index;
         if (index.type === 'Literal' && (index.kind === 'string' || index.kind === 'number')) {
-          return this.expr(expr.object as Expr, scope).map((path) => [...path, String(index.value)]);
+          return this.expr(expr.object, scope).map((path) => [...path, String(index.value)]);
         }
-        this.whole(this.expr(expr.object as Expr, scope));
+        this.whole(this.expr(expr.object, scope));
         this.whole(this.expr(index, scope));
         return [];
       }
       case 'Binary':
-        if (expr.op === '??') return [...this.expr(expr.left as Expr, scope), ...this.expr(expr.right as Expr, scope)];
-        this.whole(this.expr(expr.left as Expr, scope));
-        this.whole(this.expr(expr.right as Expr, scope));
+        if (expr.op === '??') return [...this.expr(expr.left, scope), ...this.expr(expr.right, scope)];
+        this.whole(this.expr(expr.left, scope));
+        this.whole(this.expr(expr.right, scope));
         return [];
       case 'Ternary': {
-        const test = this.expr(expr.test as Expr, scope);
+        const test = this.expr(expr.test, scope);
         this.whole(test);
-        const then = expr.then === null ? test : this.expr(expr.then as Expr, scope);
-        return [...then, ...this.expr(expr.else as Expr, scope)];
+        const then = expr.then === null ? test : this.expr(expr.then, scope);
+        return [...then, ...this.expr(expr.else, scope)];
       }
       case 'Unary':
-        this.whole(this.expr(expr.operand as Expr, scope));
+        this.whole(this.expr(expr.operand, scope));
         return [];
       case 'Call':
       case 'ClassCall':
-        for (const arg of expr.args as Expr[]) this.whole(this.expr(arg, scope));
+        for (const arg of expr.args) this.whole(this.expr(arg, scope));
         return [];
       case 'MemberCall':
-        this.whole(this.expr(expr.object as Expr, scope));
-        for (const arg of expr.args as Expr[]) this.whole(this.expr(arg, scope));
+        this.whole(this.expr(expr.object, scope));
+        for (const arg of expr.args) this.whole(this.expr(arg, scope));
         return [];
       case 'List':
-        for (const item of expr.items as Expr[]) this.whole(this.expr(item.type === 'Spread' ? (item.expr as Expr) : item, scope));
+        for (const item of expr.items) this.whole(this.expr(item.type === 'Spread' ? item.expr : item, scope));
         return [];
       case 'Map':
-        for (const entry of expr.entries as (Expr | { key: Expr; value: Expr })[]) {
+        for (const entry of expr.entries) {
           if ('type' in entry) {
-            this.whole(this.expr(entry.expr as Expr, scope));
+            this.whole(this.expr(entry.expr, scope));
           } else {
             this.whole(this.expr(entry.key, scope));
             this.whole(this.expr(entry.value, scope));
@@ -289,8 +289,7 @@ class Reads {
   // Reads a path in part: the entries of a loop.
   private part(path: Path): void {
     let node: ReadNode = {};
-    for (let index = path.length - 1; index >= 0; index--) {
-      const step = path[index]!;
+    for (const step of [...path].reverse()) {
       node = step === EACH ? { each: node } : { keys: { [step]: node } };
     }
     this.root = merge(this.root, node);
