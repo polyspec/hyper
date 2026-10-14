@@ -1,12 +1,12 @@
 // Tests the template pins of this repository (HY-70, HY-80, H14.1-7): `make template-tag` fails for a template checkout
 // without the tag TEMPLATE_TAG, which the full-run key names; npm installs the template package as one copy inside the
-// checkout; Composer installs the template PHP package from the zip of the template release; and PHPStan reads the stub
-// of the unpacked php-ext asset (scripts/template-ext.mjs), not a copy of the template repository.
+// checkout; Composer installs the template PHP package from the verified zip of the template release in an artifact repository; and PHPStan reads the stub
+// of the unpacked php-ext asset (scripts/template-assets.mjs), not a copy of the template repository.
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, join, relative, resolve } from 'node:path';
 import { test } from 'node:test';
 import { requireBuilt } from './requires.mjs';
 
@@ -64,17 +64,20 @@ test('npm installs the template package as one copy inside this checkout', () =>
 test('Composer installs the template PHP package from the zip of the template release, and PHPStan reads the stub of the unpacked php-ext asset', () => {
   const version = JSON.parse(readFileSync('packages/hyper-server-php/composer.json', 'utf8')).require['polyspec/template'];
   assert.match(version, /^\d+\.\d+\.\d+$/, 'packages/hyper-server-php requires an exact template version');
+  // config/template-assets.json pins the zip; make install verifies it by its sha256 and writes it into var/products/template-php,
+  // the artifact repository of both Composer projects, so no manifest copies the metadata of the template package.
+  const { assets } = JSON.parse(readFileSync('config/template-assets.json', 'utf8'));
+  assert.equal(assets.php.name, `polyspec-template-php-${version}.zip`);
   for (const manifest of ['composer.json', 'examples/board/composer.json']) {
     const { repositories, require } = JSON.parse(readFileSync(manifest, 'utf8'));
     assert.equal(require['polyspec/template'], version, manifest);
-    assert.deepEqual(repositories.filter((item) => String(item.url).includes('var/products/template')), [], manifest);
-    const packages = repositories.filter((item) => item.type === 'package' && item.package.name === 'polyspec/template');
-    assert.equal(packages.length, 1, manifest);
-    assert.equal(packages[0].package.version, version, manifest);
-    assert.deepEqual({ ...packages[0].package.dist, shasum: undefined }, { type: 'zip', url: `https://github.com/polyspec/template/releases/download/v${version}/polyspec-template-php-${version}.zip`, shasum: undefined }, manifest);
-    assert.match(packages[0].package.dist.shasum, /^[0-9a-f]{40}$/, `${manifest}: the zip is pinned by its shasum`);
-    const lock = JSON.parse(readFileSync(manifest.replace(/\.json$/, '.lock'), 'utf8'));
-    assert.deepEqual(lock.packages.find(({ name }) => name === 'polyspec/template').dist, packages[0].package.dist, manifest);
+    const directory = relative(dirname(resolve(manifest)), join(repository, 'var/products/template-php'));
+    assert.deepEqual(repositories.filter((item) => item.type !== 'path'), [{ type: 'artifact', url: directory }], `${manifest}: the template zip comes from the artifact repository ${directory}`);
+    const entry = JSON.parse(readFileSync(manifest.replace(/\.json$/, '.lock'), 'utf8')).packages.find(({ name }) => name === 'polyspec/template');
+    assert.equal(entry.version, version, manifest);
+    assert.equal(entry.dist.type, 'zip', manifest);
+    assert.equal(entry.dist.url, `${directory}/${assets.php.name}`, manifest);
+    assert.match(entry.dist.shasum, /^[0-9a-f]{40}$/, `${manifest}: the lock pins the zip by its sha1`);
   }
   const scanned = /scanFiles:\n\s+- (\S+)/.exec(readFileSync('packages/hyper-server-php/phpstan.neon', 'utf8'))[1];
   assert.equal(resolve('packages/hyper-server-php', scanned), join(repository, 'var/products/template-ext/src/polyspec_template.stub.php'));

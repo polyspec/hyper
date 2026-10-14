@@ -1,5 +1,5 @@
 // Tests that hyper depends on one template release, 0.0.6 (H21.4): the tag TEMPLATE_TAG of the Makefile, the npm packages
-// and their locks, the Composer packages and their locks, the php-ext asset of config/template-ext.json, the Python package
+// and their locks, the Composer packages and their locks, the php-ext and php assets of config/template-assets.json, the Python package
 // of packages/hyper-server-python, and the checkouts of the template repository in the workflows name that release and no
 // other. A mixed version fails here before any install runs.
 import assert from 'node:assert/strict';
@@ -62,20 +62,16 @@ test('the npm locks record the template tarballs of the release (H21.4)', () => 
   assert.ok(json('package-lock.json').packages['node_modules/@polyspec/template'], 'the root lock pins @polyspec/template');
 });
 
-test('the Composer manifests and locks name the template zip of the release (H21.4)', () => {
+test('the Composer manifests and locks name the template zip of the release (H21.4, H23.11)', () => {
   const manifests = ['composer.json', 'packages/hyper-server-php/composer.json', 'examples/board/composer.json'];
   for (const manifest of manifests) {
-    const { require, repositories = [] } = json(manifest);
+    const { require } = json(manifest);
     if (require?.['polyspec/template']) assert.equal(require['polyspec/template'], VERSION, `${manifest} require`);
-    for (const item of repositories.filter((item) => item.type === 'package' && item.package?.name === 'polyspec/template')) {
-      assert.equal(item.package.version, VERSION, `${manifest} repository version`);
-      assert.equal(item.package.dist.url, `${RELEASE}/polyspec-template-php-${VERSION}.zip`, `${manifest} repository dist url`);
-    }
   }
   for (const lock of ['composer.lock', 'examples/board/composer.lock']) {
     const entry = json(lock).packages.find(({ name }) => name === 'polyspec/template');
     assert.equal(entry.version, VERSION, `${lock} version`);
-    assert.equal(entry.dist.url, `${RELEASE}/polyspec-template-php-${VERSION}.zip`, `${lock} dist url`);
+    assert.match(entry.dist.url, new RegExp(`(^|/)var/products/template-php/polyspec-template-php-${VERSION.replaceAll('.', '\\.')}\\.zip$`), `${lock} dist url`);
   }
 });
 
@@ -89,10 +85,11 @@ test('the Composer consumer project of tests/release-install names the template 
   assert.equal(entry.version, CONSUMER_VERSION);
 });
 
-test('config/template-ext.json names the php-ext asset of the release (H21.4)', () => {
-  const config = json('config/template-ext.json');
+test('config/template-assets.json names the php-ext and the php assets of the release (H21.4, H23.11)', () => {
+  const config = json('config/template-assets.json');
   assert.equal(config.tag, TAG);
-  assert.equal(config.asset, `polyspec-template-php-ext-php-${VERSION}.zip`);
+  assert.equal(config.assets['php-ext'].name, `polyspec-template-php-ext-php-${VERSION}.zip`);
+  assert.equal(config.assets.php.name, `polyspec-template-php-${VERSION}.zip`);
 });
 
 test('the Python package of the server names the wheel asset of the release with its sha256 (H21.4, H23.5)', () => {
