@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: e70cc917ee094da7857b93937ec20751f8a2bbf2b266be0b4c2f358149ce096c -->
+<!-- source-sha256: 3d39cab3600dab858f1dbdaafabea6d1e06330b5f1f4a38153178ee3c2ecdd32 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H23.16: hyper는 `@polyspec/kit` 0.0.45를 pin한다. 그 knip은 pin된 런타임의 binary를 무시하고 `config/knip-entries.json`의 `binaries`와 `workspaces`를 읽는다(kit K152, K154).
 - H23.11-1: Composer consumer 프로젝트 `tests/release-install/composer`는 template zip을 그 artifact repository에서 받으며, release-consumer가 `config/release-assets.json`의 entry `template-php-consumer`의 zip을 거기에 둔다(`consumers.composer.polyspec`, kit K140). inline `package` repository는 없어졌다. 프로젝트의 lock은 다음 릴리스가 쓸 때 artifact repository로 옮겨간다.
 - H23.15: Python 서버 패키지 `polyspec-hyper-server`는 kit의 package kind `wheel`로 릴리스하며, template 의존성의 `packages/server/python/pylock.toml`을 `make python-lock`이 쓰고 `make python-lock-check`가 비교한다. kit가 없앤 `proof.gitTag`의 proof kind `python` 때문에 `config/release.json`을 읽는 모든 릴리스 단계가 실패했다. `config/release.json`은 `make release-coverage`가 요구한 대로 `config/php-lint/composer.json`도 릴리스하지 않는 파일로 분류한다.
 - H23.11-2: kit의 `config/release-assets.json`이 template release의 php-ext·php zip을 pin하고, `make install`은 `make release-assets-fetch`로 그것을 가져온다. 이 target은 sha256을 확인하고, php zip을 Composer artifact repository에 두며, php-ext zip을 푼다(kit K140). `scripts/template-assets.mts`와 `config/template-assets.json`은 없어졌고, 확장의 build는 `scripts/build-template-ext.mts`이며, Makefile의 `TEMPLATE_TAG`는 entry `template-php`의 version을 읽는다.
