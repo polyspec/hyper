@@ -1,11 +1,11 @@
 {
   "schema": 1,
   "comment": "Written by make dependency-review RECORD=1 (scripts/kit/dependency-review.mts) from the registries; make dependency-policy-check compares the checkout with it without a network.",
-  "reviewed": "2026-10-14T02:54:01.493Z",
+  "reviewed": "2026-10-14T08:13:10.995Z",
   "locks": [
     {
       "lock": "package-lock.json",
-      "sha256": "8ca7929a3b745e77bd35bc052c96a8514ab4dd8cbfa035101d312ec2e017b5e9",
+      "sha256": "e6a99cac8d74f34b7b00b6f732eb162fb09a1088dcc8d2c1de29c5e5bc3291da",
       "advisories": [
         {
           "package": "sprintf-js",
@@ -24,12 +24,12 @@
     },
     {
       "lock": "composer.lock",
-      "sha256": "7a298286ea3522a824fe7220875d62a56145ea2e920e36ffe2de15bd53976a9f",
+      "sha256": "ebe7d08f926cfebeb121690756991dda6114ad2b4288b8f813c06f5646c3da15",
       "advisories": []
     },
     {
       "lock": "examples/board/composer.lock",
-      "sha256": "b920fadfc4241a8c1a19a7dd7da7d60ffebf82ea7a5d22d678a7f2ce21523418",
+      "sha256": "ad6c4db26a71fafc05d6f38ed0a7510ccdab6044dc9b2ccaf1441721d9cc2230",
       "advisories": []
     }
   ],
@@ -66,7 +66,7 @@
       "ecosystem": "npm",
       "manifest": "package.json",
       "package": "vitest",
-      "version": "5.0.3",
+      "version": "5.0.4",
       "latest": "5.0.4"
     },
     {
@@ -115,7 +115,7 @@
       "ecosystem": "composer",
       "manifest": "composer.json",
       "package": "laravel/pint",
-      "version": "v1.30.4",
+      "version": "v1.32.1",
       "latest": "v1.32.1"
     },
     {
@@ -129,7 +129,7 @@
       "ecosystem": "composer",
       "manifest": "composer.json",
       "package": "phpunit/phpunit",
-      "version": "11.5.57",
+      "version": "13.4.2",
       "latest": "13.4.2"
     },
     {
@@ -143,7 +143,7 @@
       "ecosystem": "composer",
       "manifest": "examples/board/composer.json",
       "package": "laravel/pint",
-      "version": "v1.30.4",
+      "version": "v1.32.1",
       "latest": "v1.32.1"
     },
     {
