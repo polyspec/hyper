@@ -1,5 +1,5 @@
 <!-- doc-id: agents -->
-<!-- source-sha256: 540f0dfbf3f7bca85ce28cf7ae9761c10414293ca2add8f144042d2138c4371e -->
+<!-- source-sha256: 3634d54dcac3f9be0c9d646ef7354672381a1b8030f31f7d848b3e8485097ab3 -->
 # 개발
 
 [English](AGENTS.md).
@@ -29,8 +29,8 @@
 - 어떤 결과도 live service나 시간에 의존하지 않는다(HY-89). 어떤 검사도 결과가 시간에 따라 달라지는 registry 질의, 예를 들어 latest 조회, version range 해석, outdated package나 새 릴리스에 대한 질의를 하지 않고 다른 live service에 질의하지 않는다. lock이 정확한 버전과 integrity로 pin한 package의 download는 설치이며 `npm ci`와 `composer install`처럼 허용된다. 설치는 audit 없이 lock을 따르며, test는 event나 주입한 clock으로 event의 순서를 정하고 timer를 경쟁시키지 않으며, run의 서버는 system이 정하고 보고하는 port에서 listen한다. 모든 recipe는 npm, Composer를 offline으로 실행하고(Makefile의 `npm_config_offline`, `COMPOSER_DISABLE_NETWORK`), `make install-tools`, `make install-packages`, `make install`, `make install-browser`만 `$(ONLINE)`으로 download하며, 없는 download는 tool의 online 재시도 권고가 아니라 그것을 만드는 설치 target으로 실패한다. 서버 시작 같은 긴 작업은 시간 제한 없이 기다리며 진행을 출력한다.
 - 성능은 측정하고 보고하며 검사를 실패시키지 않는다. 상한을 넘는 크기나 시간은 값과 상한을 담은 `WARNING` 줄, GitHub의 annotation `::warning::`, CI 요약의 warning을 내고 검사는 통과한다(`make bundle-size`, `make bench`). 측정 script는 사용법 오류나 없는 입력에 대해서만 실패한다.
 - 모든 GitHub workflow는 job을 `ubuntu-26.04-arm`에서 실행하고, 각 action을 commit으로 pin하며, `timeout-minutes`를 두지 않고, step의 모든 명령을 script나 tool을 직접 실행하지 않고 make target 하나로 실행하므로 Makefile의 설정과 검사가 그 step에 적용된다(HY-90).
-- 다른 process가 다시 쓰이는 동안 읽을 수 있는 출력은 없는 파일이나 일부만 쓰인 파일 없이 publish한다(HY-82). 파일은 rename 한 번으로(`writeFileAtomic`), 디렉터리는 쓰는 process의 staging 디렉터리에서 파일 단위로(`scripts/publish.mjs`) publish한다. 어떤 recipe도 출력을 지운 뒤 쓰지 않는다. package manager 설치나 full run처럼 두 process가 동시에 쓸 수 있는 자원은 `@polyspec/kit`의 `holder-lock`의 lock으로 잡고, port, database, 임시 디렉터리 같은 run의 다른 모든 자원은 그 run만의 것이다.
-- 검사는 run 맥락과 pin하지 않은 release가 바꾸지 않는 형태로 tool 출력을 읽는다(HY-83). make dry run은 `tests/scripts/make-dry-run.mjs`의 `dryRun`으로, tool에 machine이 읽는 형태가 있으면 그것을, 다른 text는 HY-81이 pin한 tool의 것만 읽는다.
+- 다른 process가 다시 쓰이는 동안 읽을 수 있는 출력은 없는 파일이나 일부만 쓰인 파일 없이 publish한다(HY-82). 파일은 rename 한 번으로(`writeFileAtomic`), 디렉터리는 쓰는 process의 staging 디렉터리에서 파일 단위로(`scripts/publish.mts`) publish한다. 어떤 recipe도 출력을 지운 뒤 쓰지 않는다. package manager 설치나 full run처럼 두 process가 동시에 쓸 수 있는 자원은 `@polyspec/kit`의 `holder-lock`의 lock으로 잡고, port, database, 임시 디렉터리 같은 run의 다른 모든 자원은 그 run만의 것이다.
+- 검사는 run 맥락과 pin하지 않은 release가 바꾸지 않는 형태로 tool 출력을 읽는다(HY-83). make dry run은 `tests/scripts/make-dry-run.mts`의 `dryRun`으로, tool에 machine이 읽는 형태가 있으면 그것을, 다른 text는 HY-81이 pin한 tool의 것만 읽는다.
 - 검사는 무언가를 검사했을 때만 통과한다(HY-84). 실행된 test가 없는 test run, 아무것도 고르지 않는 선택이나 목록, top level에서 await하는 node test 파일은 실패한다. 실패는 보고되는 곳에서 기대한 것, 일어난 것, 원인을 보이는 출력을 밝힌다. timeout은 step을 밝히고, full run은 실패한 각 target의 마지막 줄들을 출력한다.
 - test는 자기가 읽는 것을 만든다(HY-85). fixture의 추적 파일은 자기 임시 디렉터리에 복사하고, 설치나 build처럼 다른 target이 쓰는 입력은 test가 읽기 전에 `requireBuilt`로 그 target과 함께 밝힌다. build 출력은 자기 checkout의 절대 경로를 담지 않고, 어떤 build 디렉터리도 checkout 사이에 공유하지 않는다.
 - 여러 검사의 run은 모든 검사를 끝까지 실행한 뒤 실패하고, 실패한 검사를 각각 밝힌다(HY-86). recipe는 `$(call check,...)`와 `$(checks_result)`를 쓰고, 검사하는 여러 goal의 make는 `-k`로 실행하며, 첫 CI step 뒤의 step은 `if: ${{ !cancelled() }}`로 실행한다. 앞 step의 출력을 읽는 step만 그 실패에서 멈춘다.
@@ -40,7 +40,7 @@
 - 각 패키지 안에서 코드와 테스트를 별도 디렉터리에 둔다.
 - 결함은 재현하는 실패 테스트를 추가하고, 코드를 수정하고, 테스트를 유지하는 절차로 처리한다.
 - 이 저장소가 만드는 경로와 추적 파일에 이름을 적는 경로에는 저장소 상대경로를 사용한다. 경로는 선언적으로(추적 파일에 이름을 적어) 또는 발견(discovery)으로(문서나 script가 밝힌 발견 규칙에 따라) 정한다. 외부 입력 경로는 명시적으로 받는다.
-- 이 저장소가 만드는 것에 symbolic link를 사용하지 않는다. npm은 자기 기본값으로 설치한다. 이 저장소의 npm package는 npm이 link하는 npm workspace이고, recipe는 npm의 bin link로 도구를 절대 경로로 실행한다(HY-79). Composer는 이 저장소의 PHP package를 사본으로 설치하고, 바뀐 사본은 파일 단위로 publish한다(`scripts/publish.mjs`, HY-82).
+- 이 저장소가 만드는 것에 symbolic link를 사용하지 않는다. npm은 자기 기본값으로 설치한다. 이 저장소의 npm package는 npm이 link하는 npm workspace이고, recipe는 npm의 bin link로 도구를 절대 경로로 실행한다(HY-79). Composer는 이 저장소의 PHP package를 사본으로 설치하고, 바뀐 사본은 파일 단위로 publish한다(`scripts/publish.mts`, HY-82).
 - 기존 외부 도구나 라이브러리가 이미 하는 일을 다시 만들지 않는다. 그 생태계의 표준 도구를 있는 그대로 사용하고(예: Python interpreter, 환경, lock은 uv, PHP 의존성은 Composer), 그 도구가 만드는 symbolic link처럼 자기 동작을 받아들인다. 이 저장소의 규칙은 이 저장소가 만드는 것을 다스린다.
 - 템플릿 문법과 렌더 규칙은 template 언어에 속한다. 이 저장소는 그 규칙을 사용하며 바꾸지 않는다.
 

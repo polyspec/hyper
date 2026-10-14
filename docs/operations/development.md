@@ -31,7 +31,7 @@
 | `make package-check` | Installs both packages into `tests/package-install` offline from its `package-lock.json` with `npm ci --offline`, which links them to their directories (HY-89), checks the files that `npm pack` publishes, type-checks its test against their declarations with `erasableSyntaxOnly` and runs it under `node` (HY-61) |
 | `make server` | Builds the board server program into `examples/board/build/server` (see below) |
 | `make server-fixtures` | Builds the server program of the PHP test fixtures |
-| `make node-fixtures` | Builds the template files of the PHP test fixtures for the Node server tests with `scripts/build-templates.mjs` and the installed template package (HY-70) |
+| `make node-fixtures` | Builds the template files of the PHP test fixtures for the Node server tests with `scripts/build-templates.mts` and the installed template package (HY-70) |
 | `make node-server` | Type-checks and bundles the board Node server into `examples/board/build/node/server.mjs` (see below) |
 | `make assets` | Builds the board client bundle and the CSR shell (see below) |
 | `make test-js` | Runs the browser code tests, including the router conformance cases, and the type check |
@@ -40,12 +40,13 @@
 | `make lint` | Checks PHP formatting |
 | `make analyse-php` | Runs PHPStan at level `max` on the source and the tests of `packages/hyper-server-php` with `packages/hyper-server-php/phpstan.neon`, without a baseline and without ignored errors. PHPStan reads the signatures of the native template extension from the stub of the unpacked php-ext asset `var/products/template-ext/src/polyspec_template.stub.php` (H14.1-7) and writes its cache to `build/phpstan`. It runs with `--memory-limit=256M`, because a run without that cache needs 132 MB in its worker, above the default PHP limit of 128M. It runs `make ext` first |
 | `make templates-check` | Checks that only the layout template carries `hx-` attributes (HC-6), that the layout places `{# title}` and `{# data}` once, and that every region of the layout and of each route template is placed once, directly inside an element whose `id` is the region name, without block arguments (HY-3, HY-30) |
+| `make typecheck` | Checks the types of the TypeScript of `scripts/`, `tests/` and `benchmarks/` with the tsc of `node_modules` and the root `tsconfig.json` (strict, `erasableSyntaxOnly`); Node runs these `.mts` files by type stripping and never checks them (S9) |
 | `make test-scripts` | Runs the tests of the check scripts, such as the region placement check with a broken fixture application |
-| `make virtiofs-check` | Runs the server build and the output copies in Apple `container` with the output on a virtiofs bind mount (HY-68); a target of `make check` on Darwin only (`DARWIN_TARGETS`), which fails when `container` is missing. It runs only on Darwin because the virtiofs bind mount that it tests exists only in Apple `container`, and no Linux target of CI checks that symptom. The cause is tested on every platform by `tests/scripts/output-files.test.mjs` |
+| `make virtiofs-check` | Runs the server build and the output copies in Apple `container` with the output on a virtiofs bind mount (HY-68); a target of `make check` on Darwin only (`DARWIN_TARGETS`), which fails when `container` is missing. It runs only on Darwin because the virtiofs bind mount that it tests exists only in Apple `container`, and no Linux target of CI checks that symptom. The cause is tested on every platform by `tests/scripts/output-files.test.mts` |
 | `make parity` | Compares PHP documents with browser renders of document and region JSON, once with the generated program and once with the native extension |
 | `make server-parity` | Runs the parity steps against the PHP server and the board Node server and compares the status, the headers and the body of every response, with the browser comparison of `make parity` (HY-55) |
 | `make bundle-size` | Prints the sizes of the SSR script, the CSR shell and the largest template with their gzip limits in `config/bundle-size.json`; a size above its limit prints a `WARNING` line, on GitHub also an annotation `::warning::` and a warning in the CI summary, and the target passes |
-| `make e2e` | Runs the SSR, CSR, no-JavaScript and comparison flows in Chromium on servers and a database of the run (`scripts/run-e2e.mjs`) |
+| `make e2e` | Runs the SSR, CSR, no-JavaScript and comparison flows in Chromium on servers and a database of the run (`scripts/run-e2e.mts`) |
 | `make owner-check` | Runs the owners of the changed paths that `config/owner-checks.json` declares; `PATHS` names the paths and `BASE` takes the changes since a revision (HY-88) |
 | `make owner-validate` | Fails when a tracked path has no owner or `config/owner-checks.json` names a missing target or test file (HY-88) |
 | `make documents-check` | Checks the documents of `config/documents.json`: translation pairs, the `doc-id` and `source-sha256` markers, links, code blocks, the changelog and the checklist |
@@ -66,7 +67,7 @@
 
 ## Full run
 
-The full suite runs on GitHub after the push of `main` (see [CI](#ci)); no local full run is required before a commit or a push. A local `make check` is the only run of `make virtiofs-check`, which belongs to the full suite on Darwin only, so the virtiofs cases of HY-68 run only when someone runs `make check` on a Mac. CI never runs them; the cause of HY-68 is covered on every platform by `tests/scripts/output-files.test.mjs`.
+The full suite runs on GitHub after the push of `main` (see [CI](#ci)); no local full run is required before a commit or a push. A local `make check` is the only run of `make virtiofs-check`, which belongs to the full suite on Darwin only, so the virtiofs cases of HY-68 run only when someone runs `make check` on a Mac. CI never runs them; the cause of HY-68 is covered on every platform by `tests/scripts/output-files.test.mts`.
 
 `make check` runs once per committed tree and commit of the template tag `TEMPLATE_TAG` (HY-80), whose native extension sources the run builds, when no task of `docs/plans/execution-checklist.md` is `[~]`. Before any step it starts `node_modules/@polyspec/kit/dist/full-run.mjs run --key template=<commit of the tag> <targets>`, which prints its decision with the reason (`[full-run] run: ...` or `[full-run] refuse: ...`) and refuses with status 1:
 
@@ -167,7 +168,7 @@ Each step runs one make target (HY-90) and every step after the first runs after
 - `record.json`: the same as data, written before and after each target, so a runner that stopped leaves the target that was running;
 - `targets/<target>.log`: the command and the full output of each target and how make ended.
 
-The last job `ci-passed` runs after every other job and runs `make ci-passed RESULTS='<JSON of needs>'`, which prints the result of every needed job and fails unless each one is `success`. A job added to `ci.yml` is listed in `needs`; `tests/scripts/ci-workflow.test.mjs` fails when `ci-passed` is missing, is not the last job, lacks `if: ${{ always() }}`, does not need every other job, runs on another runner or runs another step.
+The last job `ci-passed` runs after every other job and runs `make ci-passed RESULTS='<JSON of needs>'`, which prints the result of every needed job and fails unless each one is `success`. A job added to `ci.yml` is listed in `needs`; `tests/scripts/ci-workflow.test.mts` fails when `ci-passed` is missing, is not the last job, lacks `if: ${{ always() }}`, does not need every other job, runs on another runner or runs another step.
 
 ## Test runs
 
@@ -177,9 +178,9 @@ To run the tests that own a change, pass their files or a filter, for example `n
 
 ## Servers of a run
 
-`make parity` and `make server-parity` start their own servers with `scripts/board-servers.mjs`: every server listens on a port that the system assigns, and the check sends its requests to the address that the server reports in its output (`Development Server (http://127.0.0.1:<port>) started` of PHP, `board on http://127.0.0.1:<port>` of the board Node server, `edge http://127.0.0.1:<port>` of `scripts/serve-edge.mjs`). A request therefore reaches a server of the same run, also while a run from another checkout or session runs. Starting a server is a step without a time limit: it prints its start, every output line of the server with the prefix `[<name>]` and its address with the elapsed time, and fails when the server exits first. The databases and the session directory of a run lie in a temporary directory, which `scripts/check-parity.mjs` prints as `run directory: <path>` and removes.
+`make parity` and `make server-parity` start their own servers with `scripts/board-servers.mts`: every server listens on a port that the system assigns, and the check sends its requests to the address that the server reports in its output (`Development Server (http://127.0.0.1:<port>) started` of PHP, `board on http://127.0.0.1:<port>` of the board Node server, `edge http://127.0.0.1:<port>` of `scripts/serve-edge.mts`). A request therefore reaches a server of the same run, also while a run from another checkout or session runs. Starting a server is a step without a time limit: it prints its start, every output line of the server with the prefix `[<name>]` and its address with the elapsed time, and fails when the server exits first. The databases and the session directory of a run lie in a temporary directory, which `scripts/check-parity.mts` prints as `run directory: <path>` and removes.
 
-`make e2e` runs `scripts/run-e2e.mjs` in the same way: it starts the board example in both rendering modes (the API origin, the edge and the SSR origin) on an empty database in its run directory, and runs `playwright test` with the addresses in `HYPER_E2E_SSR` and `HYPER_E2E_CSR`, which `tests/e2e/origins.ts` requires; its arguments are passed to Playwright, for example `node scripts/run-e2e.mjs -g 'stylesheet'`. Playwright starts no server itself. `make bench-browser` starts its servers and its database in the same way.
+`make e2e` runs `scripts/run-e2e.mts` in the same way: it starts the board example in both rendering modes (the API origin, the edge and the SSR origin) on an empty database in its run directory, and runs `playwright test` with the addresses in `HYPER_E2E_SSR` and `HYPER_E2E_CSR`, which `tests/e2e/origins.ts` requires; its arguments are passed to Playwright, for example `node scripts/run-e2e.mts -g 'stylesheet'`. Playwright starts no server itself. `make bench-browser` starts its servers and its database in the same way.
 
 ## Server build
 

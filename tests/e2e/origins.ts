@@ -1,4 +1,4 @@
-// The origins of the servers that scripts/run-e2e.mjs started for this run: SSR (PHP at the root) and CSR (the edge
+// The origins of the servers that scripts/run-e2e.mts started for this run: SSR (PHP at the root) and CSR (the edge
 // with the static shell, which forwards /api).
 function origin(name: string): string {
   const value = process.env[name];

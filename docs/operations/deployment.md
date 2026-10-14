@@ -62,5 +62,5 @@ A request that the selection does not choose is answered as in the server form. 
 |---|---|
 | `http://127.0.0.1:8080/board` | Server form: PHP at the root |
 | `http://127.0.0.1:8082/api/board` | PHP with `BOARD_BASE_PATH=/api` |
-| `http://127.0.0.1:8081/board` | Static shell: `scripts/serve-edge.mjs` returns files of `build/csr/`, the shell for every other path, and forwards `/api/*` to port 8082 |
+| `http://127.0.0.1:8081/board` | Static shell: `scripts/serve-edge.mts` returns files of `build/csr/`, the shell for every other path, and forwards `/api/*` to port 8082 |
 | `http://127.0.0.1:8081/compare?ssr=http://127.0.0.1:8080` | The comparison page: both forms in two frames and the result of comparing their bodies. It is a development tool and is not part of a deployment. |

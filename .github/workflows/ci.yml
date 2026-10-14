@@ -1,6 +1,6 @@
 # The full suite on GitHub (HY-91): the push of main and every manual run (workflow_dispatch) run one job per entry of
 # the matrix, and each entry runs its `targets` with `make ci-targets`. The targets of the entries together are the
-# targets of CHECK_TARGETS of the Makefile, each once (tests/scripts/ci-workflow.test.mjs). A failure never stops the run: the matrix does not cancel the other
+# targets of CHECK_TARGETS of the Makefile, each once (tests/scripts/ci-workflow.test.mts). A failure never stops the run: the matrix does not cancel the other
 # entries (fail-fast: false), every step after the first runs after a failed step (`if: ${{ !cancelled() }}`), and
 # `make ci-targets` runs every target to its end. Each job writes the job summary and uploads its report var/ci/<name>/:
 # the record with the status, the time and the first failure lines of each target, the full log of each target and the
@@ -37,7 +37,7 @@ jobs:
       matrix:
         include:
           - name: docs
-            targets: kit-check toolchain-check layout-check documents-check hooks-check push-gate-commit commits-check owner-validate
+            targets: kit-check toolchain-check layout-check typecheck documents-check hooks-check push-gate-commit commits-check owner-validate
           - name: php
             install: true
             targets: dependency-policy-check dependency-policy-mutation-check bench-server-smoke lint analyse-php test-php

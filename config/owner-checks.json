@@ -133,7 +133,7 @@
         "e2e"
       ],
       "tests": [
-        "tests/scripts/run-e2e.test.mjs"
+        "tests/scripts/run-e2e.test.mts"
       ]
     },
     {
@@ -154,10 +154,13 @@
     },
     {
       "paths": [
-        "tests/scripts/*.test.mjs"
+        "tests/scripts/*.test.mts"
       ],
       "tests": [
         "$path"
+      ],
+      "targets": [
+        "typecheck"
       ]
     },
     {
@@ -165,7 +168,7 @@
         "tests/scripts/fixtures/{chunks,invalid-manifest}/**"
       ],
       "tests": [
-        "tests/scripts/build-assets.test.mjs"
+        "tests/scripts/build-assets.test.mts"
       ]
     },
     {
@@ -173,39 +176,46 @@
         "tests/scripts/fixtures/regions/**"
       ],
       "tests": [
-        "tests/scripts/check-templates.test.mjs"
+        "tests/scripts/check-templates.test.mts"
       ]
     },
     {
       "paths": [
-        "tests/scripts/make-dry-run.mjs"
+        "tests/scripts/make-dry-run.mts"
       ],
       "tests": [
-        "tests/scripts/check-recipes.test.mjs",
-        "tests/scripts/toolchain.test.mjs",
-        "tests/scripts/template-pins.test.mjs"
-      ]
-    },
-    {
-      "paths": [
-        "tests/scripts/requires.mjs"
-      ],
-      "tests": [
-        "tests/scripts/check-recipes.test.mjs",
-        "tests/scripts/template-dir.test.mjs"
-      ]
-    },
-    {
-      "paths": [
-        "scripts/bench-browser.mjs"
+        "tests/scripts/check-recipes.test.mts",
+        "tests/scripts/toolchain.test.mts",
+        "tests/scripts/template-pins.test.mts"
       ],
       "targets": [
-        "bench-browser"
+        "typecheck"
       ]
     },
     {
       "paths": [
-        "scripts/bench-server.php"
+        "tests/scripts/requires.mts"
+      ],
+      "tests": [
+        "tests/scripts/check-recipes.test.mts",
+        "tests/scripts/template-dir.test.mts"
+      ],
+      "targets": [
+        "typecheck"
+      ]
+    },
+    {
+      "paths": [
+        "benchmarks/browser.mts"
+      ],
+      "targets": [
+        "bench-browser",
+        "typecheck"
+      ]
+    },
+    {
+      "paths": [
+        "benchmarks/server.php"
       ],
       "targets": [
         "bench-server-smoke"
@@ -213,47 +223,50 @@
     },
     {
       "paths": [
-        "scripts/board-servers.mjs",
-        "scripts/serve-edge.mjs"
+        "scripts/board-servers.mts",
+        "scripts/serve-edge.mts"
       ],
       "targets": [
-        "parity"
+        "parity",
+        "typecheck"
       ],
       "tests": [
-        "tests/scripts/board-servers.test.mjs",
-        "tests/scripts/check-parity.test.mjs",
-        "tests/scripts/run-e2e.test.mjs",
-        "tests/scripts/serve-demo.test.mjs"
+        "tests/scripts/board-servers.test.mts",
+        "tests/scripts/check-parity.test.mts",
+        "tests/scripts/run-e2e.test.mts",
+        "tests/scripts/serve-demo.test.mts"
       ]
     },
     {
       "paths": [
         "packages/hyper-build/bin/hyper-build-assets.mjs",
         "packages/hyper-build/lib/template-files.mjs",
-        "scripts/build-templates.mjs"
+        "scripts/build-templates.mts"
       ],
       "targets": [
-        "bundle-size"
+        "bundle-size",
+        "typecheck"
       ],
       "tests": [
-        "tests/scripts/build-assets.test.mjs",
-        "tests/scripts/template-dir.test.mjs",
-        "tests/scripts/package-source.test.mjs"
+        "tests/scripts/build-assets.test.mts",
+        "tests/scripts/template-dir.test.mts",
+        "tests/scripts/package-source.test.mts"
       ]
     },
     {
       "paths": [
         "packages/hyper-build/bin/hyper-build-server.mjs",
         "packages/hyper-build/lib/template-rules.mjs",
-        "scripts/check-templates.mjs"
+        "scripts/check-templates.mts"
       ],
       "targets": [
         "templates-check",
-        "test-php"
+        "test-php",
+        "typecheck"
       ],
       "tests": [
-        "tests/scripts/check-templates.test.mjs",
-        "tests/scripts/package-source.test.mjs"
+        "tests/scripts/check-templates.test.mts",
+        "tests/scripts/package-source.test.mts"
       ]
     },
     {
@@ -261,9 +274,9 @@
         "packages/hyper-build/lib/output-files.mjs"
       ],
       "tests": [
-        "tests/scripts/publish.test.mjs",
-        "tests/scripts/output-files.test.mjs",
-        "tests/scripts/build-assets.test.mjs"
+        "tests/scripts/publish.test.mts",
+        "tests/scripts/output-files.test.mts",
+        "tests/scripts/build-assets.test.mts"
       ]
     },
     {
@@ -274,58 +287,62 @@
         "package-check"
       ],
       "tests": [
-        "tests/scripts/package-source.test.mjs",
-        "tests/scripts/template-dir.test.mjs"
+        "tests/scripts/package-source.test.mts",
+        "tests/scripts/template-dir.test.mts"
       ]
     },
     {
       "paths": [
-        "scripts/check-bundle-size.mjs",
+        "scripts/check-bundle-size.mts",
         "config/bundle-size.json"
       ],
       "targets": [
-        "bundle-size"
+        "bundle-size",
+        "typecheck"
       ],
       "tests": [
-        "tests/scripts/check-bundle-size.test.mjs"
+        "tests/scripts/check-bundle-size.test.mts"
       ]
     },
     {
       "paths": [
-        "scripts/check-parity.mjs"
+        "scripts/check-parity.mts"
       ],
       "targets": [
-        "parity"
+        "parity",
+        "typecheck"
       ],
       "tests": [
-        "tests/scripts/check-parity.test.mjs"
+        "tests/scripts/check-parity.test.mts"
       ]
     },
     {
       "paths": [
-        "scripts/publish.mjs",
+        "scripts/publish.mts",
         "packages/hyper-build/lib/publish.mjs",
-        "scripts/tracked-files.mjs"
+        "scripts/tracked-files.mts"
       ],
       "targets": [
-        "test-php"
+        "test-php",
+        "typecheck"
       ],
       "tests": [
-        "tests/scripts/publish.test.mjs",
-        "tests/scripts/template-pins.test.mjs",
-        "tests/scripts/build-assets.test.mjs"
+        "tests/scripts/publish.test.mts",
+        "tests/scripts/template-pins.test.mts",
+        "tests/scripts/build-assets.test.mts"
       ]
     },
     {
       "paths": [
-        "scripts/template-assets.mjs",
+        "scripts/template-assets.mts",
         "config/template-assets.json"
       ],
       "targets": [
-        "ext"
+        "ext",
+        "typecheck"
       ],
       "tests": [
-        "tests/scripts/template-assets.test.mjs"
+        "tests/scripts/template-assets.test.mts"
       ]
     },
     {
@@ -333,7 +350,7 @@
         ".github/workflows/*.yml"
       ],
       "tests": [
-        "tests/scripts/ci-workflow.test.mjs"
+        "tests/scripts/ci-workflow.test.mts"
       ]
     },
     {
@@ -348,21 +365,25 @@
     },
     {
       "paths": [
-        "scripts/run-e2e.mjs"
+        "scripts/run-e2e.mts"
       ],
       "targets": [
-        "e2e"
+        "e2e",
+        "typecheck"
       ],
       "tests": [
-        "tests/scripts/run-e2e.test.mjs"
+        "tests/scripts/run-e2e.test.mts"
       ]
     },
     {
       "paths": [
-        "scripts/line-end.mjs"
+        "scripts/line-end.mts"
       ],
       "tests": [
-        "tests/scripts/check-recipes.test.mjs"
+        "tests/scripts/check-recipes.test.mts"
+      ],
+      "targets": [
+        "typecheck"
       ]
     },
     {
@@ -385,10 +406,13 @@
     },
     {
       "paths": [
-        "scripts/serve-demo.mjs"
+        "scripts/serve-demo.mts"
       ],
       "tests": [
-        "tests/scripts/serve-demo.test.mjs"
+        "tests/scripts/serve-demo.test.mts"
+      ],
+      "targets": [
+        "typecheck"
       ]
     },
     {
@@ -400,8 +424,8 @@
         "mise.lock"
       ],
       "tests": [
-        "tests/scripts/toolchain.test.mjs",
-        "tests/scripts/package-build.test.mjs"
+        "tests/scripts/toolchain.test.mts",
+        "tests/scripts/package-build.test.mts"
       ],
       "targets": [
         "toolchain-check"
@@ -419,9 +443,9 @@
         "package-check"
       ],
       "tests": [
-        "tests/scripts/toolchain.test.mjs",
-        "tests/scripts/no-symlinks.test.mjs",
-        "tests/scripts/template-pins.test.mjs"
+        "tests/scripts/toolchain.test.mts",
+        "tests/scripts/no-symlinks.test.mts",
+        "tests/scripts/template-pins.test.mts"
       ]
     },
     {
@@ -429,10 +453,10 @@
         "Makefile"
       ],
       "tests": [
-        "tests/scripts/toolchain.test.mjs",
-        "tests/scripts/template-pins.test.mjs",
-        "tests/scripts/check-recipes.test.mjs",
-        "tests/scripts/ci-workflow.test.mjs"
+        "tests/scripts/toolchain.test.mts",
+        "tests/scripts/template-pins.test.mts",
+        "tests/scripts/check-recipes.test.mts",
+        "tests/scripts/ci-workflow.test.mts"
       ]
     },
     {
@@ -456,7 +480,8 @@
         "config/php-lint/**"
       ],
       "targets": [
-        "kit-check"
+        "kit-check",
+        "typecheck"
       ]
     },
     {
@@ -464,7 +489,7 @@
         ".gitignore"
       ],
       "tests": [
-        "tests/scripts/ignored-files.test.mjs"
+        "tests/scripts/ignored-files.test.mts"
       ]
     },
     {
@@ -511,7 +536,7 @@
         "packages/*/pyproject.toml"
       ],
       "tests": [
-        "tests/scripts/package-names.test.mjs"
+        "tests/scripts/package-names.test.mts"
       ]
     },
     {
@@ -533,7 +558,7 @@
         "tests/release-install/**"
       ],
       "tests": [
-        "tests/scripts/template-version.test.mjs"
+        "tests/scripts/template-version.test.mts"
       ]
     },
     {
@@ -542,6 +567,14 @@
       ],
       "targets": [
         "layout-check"
+      ]
+    },
+    {
+      "paths": [
+        "tsconfig.json"
+      ],
+      "targets": [
+        "typecheck"
       ]
     }
   ]
