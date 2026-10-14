@@ -8,8 +8,8 @@
 # it on the tagged commit (HY-94, HY-95). Every step that runs a command runs one make target, the jobs run on
 # ubuntu-26.04-arm, the actions are pinned by commit and no step has a time limit (HY-90).
 #
-# The toolchain comes from the pinned files: Node.js from .node-version, PHP from .php-version, and Python from
-# config/toolchain.json pythonBuild (.python-version names its minor release). Every job, ci-passed too, first runs the
+# The toolchain comes from the pinned files: Node.js from .node-version, PHP from .php-version, and Python and the other
+# tools of mise.toml, which make install-tools installs at the digests of mise.lock. Every job, ci-passed too, first runs the
 # bootstrap of the shared tools @polyspec/kit: `make install-tools TOOLS=npm` installs the npm of packageManager into
 # var/tools and `make install-packages` installs package-lock.json with it, the package included, whose kit.mk has the
 # other targets. Every check job then runs `make install-tools`, which installs the Python and Composer of the checkout

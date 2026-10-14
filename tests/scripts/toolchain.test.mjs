@@ -14,7 +14,8 @@ import { dryRun } from './make-dry-run.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const NPM = path.join(ROOT, 'var/tools/bin/npm');
-const COMPOSER = path.join(ROOT, 'var/tools/bin/composer');
+// Composer is a tool of mise.toml, run by its shim (kit K127).
+const COMPOSER = path.join(ROOT, 'var/tools/mise/shims/composer');
 // The built tools of @polyspec/kit, which the kit.mk of the package runs.
 const KIT = 'node_modules/@polyspec/kit/dist';
 
@@ -49,7 +50,7 @@ test('make starts a recipe line without shell syntax from its own PATH, so a rec
   assert.equal(run('named'), 'pinned');
 });
 
-test('every recipe starts npm and Composer by the absolute paths of var/tools/bin', (t) => {
+test('every recipe starts npm and Composer by the absolute paths of var/tools/bin and of the shims of mise', (t) => {
   const directory = mkdtempSync(path.join(tmpdir(), 'hyper-recipes-'));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   const targets = ['install', 'ext', 'packages', 'hyper-server-php-copy', 'package-check', 'test-scripts', 'test-node', 'test-php', 'lint', 'analyse-php', 'parity', 'server-parity', 'e2e', 'bundle-size'];
