@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- H23.12: `make dependency-review UPDATE=1` reviewed the lock of kit 0.0.43 and raised `@playwright/test` to 1.64.1 with its lock.
 - H23.6: `make typecheck` builds the npm packages first, since `scripts/check-parity.mts` imports the declarations of `@polyspec/hyper-client` from its dist; the docs job of CI, which builds no package, failed with TS2307.
 - H23.12: hyper pins `@polyspec/kit` 0.0.43 with the integrity of the published file; its copies let oxlint allow the registrations of node:test, give knip the scripts, benchmarks and test files as entries, and turn `ae-missing-release-tag` of API Extractor off (kit K138, K139, K142).
 - H23.6: the folders follow S5, S7 and S9 of kit's layout, and `make layout-check` passes. The packages move to `packages/client`, `packages/build` and `packages/server/{ts,php,python}`, with their published names unchanged; `conformance/` is `contracts/`; `playwright.config.ts` is in `tests/e2e`; the benchmarks are in `benchmarks/`. The scripts and tool tests are TypeScript (`.mts`) that `make typecheck` checks with the root `tsconfig.json`. No recipe sets `PYTHONPATH`: `make install-python` makes the venv of the Python server package with `uv sync --locked` from its `uv.lock`, and the board Python server runs its Python, which the Makefile exports as `HYPER_PYTHON`. Composer installs the PHP server package from the path repository `packages/server/php` with `symlink: false`, and `make hyper-server-php-install` mirrors it into the board again; `scripts/copy-package.mjs` is removed.
