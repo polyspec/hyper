@@ -49,8 +49,9 @@ jobs:
             browser: true
             targets: parity server-parity bundle-size e2e
           - name: python
+            python: true
             targets: test-python
-          # The render tests and the Python server comparison need the template checkout, PHP and the browser.
+          # The render tests and the Python server comparison need PHP and the browser.
           - name: python-render
             install: true
             browser: true
@@ -95,6 +96,9 @@ jobs:
       - id: install
         if: ${{ !cancelled() && matrix.install }}
         run: make install
+      - id: python
+        if: ${{ !cancelled() && matrix.python }}
+        run: make install-python
       - id: browser
         if: ${{ !cancelled() && matrix.browser }}
         run: make install-browser

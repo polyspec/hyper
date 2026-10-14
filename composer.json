@@ -6,7 +6,7 @@
     "repositories": [
         {
             "type": "path",
-            "url": "var/products/hyper-server-php",
+            "url": "packages/hyper-server-php",
             "options": {
                 "symlink": false,
                 "reference": "config"

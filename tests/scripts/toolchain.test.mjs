@@ -53,7 +53,7 @@ test('make starts a recipe line without shell syntax from its own PATH, so a rec
 test('every recipe starts npm and Composer by the absolute paths of var/tools/bin and of the shims of mise', (t) => {
   const directory = mkdtempSync(path.join(tmpdir(), 'hyper-recipes-'));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
-  const targets = ['install', 'ext', 'packages', 'hyper-server-php-copy', 'package-check', 'test-scripts', 'test-node', 'test-php', 'lint', 'analyse-php', 'parity', 'server-parity', 'e2e', 'bundle-size'];
+  const targets = ['install', 'ext', 'packages', 'hyper-server-php-install', 'package-check', 'test-scripts', 'test-node', 'test-php', 'lint', 'analyse-php', 'parity', 'server-parity', 'e2e', 'bundle-size'];
   const lines = [];
   for (const target of targets) {
     // An empty template directory makes the dry run print the recipe of the template copy.
@@ -67,7 +67,7 @@ test('every recipe starts npm and Composer by the absolute paths of var/tools/bi
 });
 
 test('no recipe queries a registry: installs follow their lock without an audit, and the package install test installs offline (HY-89)', () => {
-  const targets = ['install', 'ext', 'packages', 'hyper-server-php-copy', 'package-check', 'test-scripts', 'test-js', 'test-node', 'test-php', 'lint', 'analyse-php', 'parity', 'server-parity', 'e2e', 'bundle-size', 'templates-check', 'documents-check'];
+  const targets = ['install', 'ext', 'packages', 'hyper-server-php-install', 'package-check', 'test-scripts', 'test-js', 'test-node', 'test-php', 'lint', 'analyse-php', 'parity', 'server-parity', 'e2e', 'bundle-size', 'templates-check', 'documents-check'];
   const lines = targets.flatMap((target) => dryRun(target, { variables: ['TEMPLATE_DIR=var/products/template-dry-run'] }));
   const commands = lines.flatMap((line) => line.split(/&&|;|\|\||\s--\s/).map((part) => part.trim()));
   const npm = commands.filter((command) => command.startsWith(`${NPM} `));
@@ -78,7 +78,7 @@ test('no recipe queries a registry: installs follow their lock without an audit,
   // The npm ci of make install-packages is the recipe of @polyspec/kit, so the .npmrc of the checkout turns its audit off.
   assert.match(readFileSync(path.join(ROOT, '.npmrc'), 'utf8'), /^audit=false$/m, '.npmrc does not set audit=false');
   const composer = commands.filter((command) => command.startsWith(`${COMPOSER} `));
-  assert.deepEqual(composer.filter((command) => !/^\S+ install(?: |$)/.test(command)), [], 'a Composer command other than install');
+  assert.deepEqual(composer.filter((command) => !/^\S+ (?:re)?install(?: |$)/.test(command)), [], 'a Composer command other than install or reinstall');
   assert.equal(spawnSync('git', ['ls-files', '--error-unmatch', 'tests/package-install/package-lock.json'], { encoding: 'utf8' }).status, 0, 'tests/package-install/package-lock.json is not tracked');
 });
 

@@ -15,7 +15,11 @@ PYTHON_PACKAGE := packages/hyper-server-python
 # The Python of the checks is the python of mise.toml, which `make install-tools` installs with mise at the digest of mise.lock
 # and its shim runs (HY-81, kit K127). requires-python >= 3.14 states the tested minor of the package (H20.12).
 # The absolute path, as NPM and COMPOSER have, because make looks up a recipe line on its own PATH.
-PYTHON := $(CURDIR)/var/tools/mise/shims/python3
+# The virtual environment of the Python server package: make install makes it from the Python of mise.toml with kit's
+# python-venv and installs the package into it in editable mode with its dependencies, the template wheel of the release
+# included, so the tests and the board Python server import the installed packages and read no source path (S5).
+PYTHON_VENV := $(CURDIR)/$(PYTHON_PACKAGE)/.venv
+UV := $(CURDIR)/var/tools/mise/shims/uv
 # npm installs the template packages @polyspec/template and @polyspec/template-compiler from the tarballs of the template
 # release that package.json names (HY-70). config/template-assets.json pins the php zip and the php-ext asset of the same
 # release with their sha256: make install verifies both, puts the php zip into the Composer artifact repository
@@ -35,7 +39,6 @@ TSC := $(CURDIR)/node_modules/.bin/tsc
 # The esbuild package replaces bin/esbuild with the executable of the platform when it installs.
 ESBUILD := node_modules/esbuild/bin/esbuild
 # The copy of packages/hyper-server-php that the board installs with Composer (HY-79).
-HYPER_PHP_COPY := var/products/hyper-server-php
 # The PHP memory limit of PHPStan: a run without its result cache (build/phpstan) needs 132 MB in its worker, above
 # the default limit of 128M.
 PHPSTAN_MEMORY := 256M
@@ -68,7 +71,7 @@ checks_result = test -z "$$failed" || { echo "failed checks:$$failed"; exit 1; }
 
 .DEFAULT_GOAL := help
 
-.PHONY: help install hyper-server-php-copy template-tag ext packages package-check server server-fixtures node-server node-fixtures assets test-js test-node test-php test-python test-python-render lint analyse-php templates-check test-scripts virtiofs-check parity server-parity server-parity-python bundle-size e2e serve-demo bench-server bench-server-smoke bench-browser bench check serve-demo-unlock install-browser
+.PHONY: help install install-python hyper-server-php-install template-tag ext packages package-check server server-fixtures node-server node-fixtures assets test-js test-node test-php test-python test-python-render lint analyse-php templates-check test-scripts virtiofs-check parity server-parity server-parity-python bundle-size e2e serve-demo bench-server bench-server-smoke bench-browser bench check serve-demo-unlock install-browser
 
 help: ## List the targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
@@ -77,9 +80,13 @@ install: install-tools ## Install the pinned tools, fetch the assets of the temp
 	node $(KIT)/check-toolchain.$(KIT_EXT)
 	$(ONLINE) node scripts/template-assets.mjs fetch
 	node scripts/template-assets.mjs unpack
-	node scripts/copy-package.mjs --path $(PHP_PACKAGE) --output $(HYPER_PHP_COPY)
+	$(MAKE) --no-print-directory install-python
 	$(ONLINE) node $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(COMPOSER) install
 	$(ONLINE) node $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(COMPOSER) install --working-dir=$(BOARD)
+
+install-python: ## Make the venv of the Python server package and install the package into it in editable mode with its dependencies (S5)
+	$(MAKE) --no-print-directory python-venv DIR=$(PYTHON_VENV)
+	$(ONLINE) $(UV) pip install --quiet --python $(PYTHON_VENV)/bin/python --editable $(PYTHON_PACKAGE)
 
 # The release of hyper reads the template repository at TEMPLATE_TAG next to this checkout, and the installed dependencies:
 # the release workflow that kit vendors runs make release-prepare before release-tools (kit K132), and this rule checks the
@@ -106,16 +113,17 @@ packages: toolchain-check ## Build the JavaScript modules and type declarations 
 	cd $(JS_PACKAGE) && $(NPM) run --silent build -- --outDir dist.next-$$$$ && node ../../scripts/publish.mjs directory dist.next-$$$$ dist
 	cd $(NODE_PACKAGE) && $(NPM) run --silent build -- --outDir dist.next-$$$$ && node ../../scripts/publish.mjs directory dist.next-$$$$ dist
 
-hyper-server-php-copy: ## Write the copy of packages/hyper-server-php that the board installs and reinstall it in the board (HY-79)
-	node scripts/copy-package.mjs --path $(PHP_PACKAGE) --output $(HYPER_PHP_COPY)
-	node scripts/publish.mjs composer-copy $(HYPER_PHP_COPY) $(BOARD)/vendor/polyspec/hyper-server
+# The path repository of the board mirrors the PHP server package (symlink false, HY-79); composer reinstall mirrors the
+# working tree of the package again, so the board runs the current source. It reads no registry.
+hyper-server-php-install: ## Mirror packages/hyper-server-php into the vendor of the board again with composer reinstall (HY-79)
+	node $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(COMPOSER) reinstall --no-interaction polyspec/hyper-server --working-dir=$(BOARD)
 
 package-check: packages node-fixtures ## Install the npm packages into tests/package-install, type-check its test against their declarations and run it under node (HY-61)
 	cd tests/package-install && node ../../$(KIT)/holder-lock.$(KIT_EXT) run ../../$(INSTALL_LOCK) -- $(NPM) ci --offline --allow-remote=root --no-audit --no-fund
 	$(TSC) -p tests/package-install/tsconfig.json
 	node $(KIT)/run-tests.$(KIT_EXT) node --cwd tests/package-install -- package-install.test.ts
 
-server: packages hyper-server-php-copy ## Build the board server program: its templates and the generated PHP program (HY-48)
+server: packages hyper-server-php-install ## Build the board server program: its templates and the generated PHP program (HY-48)
 	node $(BUILD_PACKAGE)/bin/hyper-build-server.mjs --manifest $(BOARD)/app/app.json --templates $(BOARD)/templates --output $(BOARD)/build/server --php-namespace 'Polyspec\Hyper\Examples\Board\Program'
 
 server-fixtures: packages ## Build the server program of the PHP test fixtures
@@ -150,12 +158,12 @@ test-php: server-fixtures ext ## Run the server package tests with the generated
 	$(checks_result)
 
 test-python: toolchain-check ## Run the Python server package tests, which read the conformance cases of routes, rest, csrf, fields and json
-	PYTHONPATH=$(CURDIR)/$(PYTHON_PACKAGE)/src $(PYTHON) $(PYTHON_PACKAGE)/tests/run.py; unit=$$?; $(PYTHON) $(PYTHON_PACKAGE)/tests/run.py $(PYTHON_PACKAGE)/tests/package 'test_*.py'; package=$$?; test $$unit -eq 0 -a $$package -eq 0
+	$(PYTHON_VENV)/bin/python $(PYTHON_PACKAGE)/tests/run.py; unit=$$?; $(PYTHON_VENV)/bin/python $(PYTHON_PACKAGE)/tests/run.py $(PYTHON_PACKAGE)/tests/package 'test_*.py'; package=$$?; test $$unit -eq 0 -a $$package -eq 0
 
-# The rendering tests need the template Python package (H15.3-3), which they read from the checkout $(TEMPLATE_REPOSITORY)
-# of the template tag TEMPLATE_TAG (CI checks it out as ../template), and `make server-fixtures` writes the server program they open.
-test-python-render: server-fixtures toolchain-check ## Run the Python rendering tests with the template package of the template checkout (H15.3-3)
-	PYTHONPATH=$(CURDIR)/$(PYTHON_PACKAGE)/src:$(CURDIR)/$(TEMPLATE_REPOSITORY)/packages/template-python/src $(PYTHON) $(PYTHON_PACKAGE)/tests/run.py $(PYTHON_PACKAGE)/tests/render 'render_*.py'
+# The rendering tests need the template Python package (H15.3-3), the wheel of the template release that the venv of make
+# install holds, and `make server-fixtures` writes the server program they open.
+test-python-render: server-fixtures toolchain-check ## Run the Python rendering tests with the template package of the venv (H15.3-3)
+	$(PYTHON_VENV)/bin/python $(PYTHON_PACKAGE)/tests/run.py $(PYTHON_PACKAGE)/tests/render 'render_*.py'
 
 lint: toolchain-check ## Check PHP formatting
 	@failed=; \

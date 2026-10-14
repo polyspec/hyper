@@ -23,8 +23,9 @@ const NODE_READY = /^board on (http:\/\/127\.0\.0\.1:\d+)$/m;
 const EDGE_READY = /^edge (http:\/\/127\.0\.0\.1:\d+) /m;
 // The repository root, whose package sources and sibling template checkout give the Python server its modules.
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-// The Python interpreter of the board Python server; HYPER_PYTHON names another one.
-const PYTHON = process.env.HYPER_PYTHON || 'python3';
+// The Python of the venv of the Python server package, which make install makes and installs the package and the template
+// wheel into; the board Python server imports them from it.
+const PYTHON = join(ROOT, 'packages', 'hyper-server-python', '.venv', 'bin', 'python');
 
 /**
  * Starts a server process and resolves { child, url } once a line of its output matches `ready`, whose first group
@@ -101,8 +102,7 @@ export function startNode({ name, app, port, env, children }) {
   });
 }
 
-/** Starts the board Python server of examples/board/python on `port`; it renders with the template Python package
- * of the sibling checkout ../template until a template release carries the package (H15.3-3). */
+/** Starts the board Python server of examples/board/python on `port` with the Python of the venv of make install. */
 export function startPython({ name, app, port, env, children }) {
   return startServer({
     name,
@@ -112,7 +112,6 @@ export function startPython({ name, app, port, env, children }) {
       ...process.env,
       ...env,
       BOARD_PORT: String(port),
-      PYTHONPATH: [join(ROOT, 'packages', 'hyper-server-python', 'src'), join(ROOT, '..', 'template', 'packages', 'template-python', 'src'), process.env.PYTHONPATH].filter(Boolean).join(':'),
     },
     ready: NODE_READY,
     children,

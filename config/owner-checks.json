@@ -303,7 +303,6 @@
     },
     {
       "paths": [
-        "scripts/copy-package.mjs",
         "scripts/publish.mjs",
         "packages/hyper-build/lib/publish.mjs",
         "scripts/tracked-files.mjs"
