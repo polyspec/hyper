@@ -7,7 +7,7 @@ import { parseJson, type MapValue, type Value } from '@polyspec/template/render'
 import type { DecodedValue } from '../src/index.js';
 import { selectKept } from '../src/kept.js';
 
-const fixture = parseJson(readFileSync(new URL('../../../conformance/keep.json', import.meta.url), 'utf8')) as MapValue;
+const fixture = parseJson(readFileSync(new URL('../../../contracts/keep.json', import.meta.url), 'utf8')) as MapValue;
 const cases = (fixture.get('cases') as Value[]).map((value) => value as MapValue);
 
 describe('selectKept conformance', () => {

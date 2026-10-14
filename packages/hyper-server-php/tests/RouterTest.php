@@ -15,7 +15,7 @@ final class RouterTest extends TestCase
     /** @return array<array-key, mixed> */
     private static function fixture(): array
     {
-        return Json::file(__DIR__ . '/../../../conformance/routes.json');
+        return Json::file(__DIR__ . '/../../../contracts/routes.json');
     }
 
     /** @return list<array{name: string, path: string}> */
@@ -102,7 +102,7 @@ final class RouterTest extends TestCase
     /** @return array<array-key, mixed> */
     private static function rest(): array
     {
-        return Json::file(__DIR__ . '/../../../conformance/rest.json');
+        return Json::file(__DIR__ . '/../../../contracts/rest.json');
     }
 
     /** @return iterable<string, array{string, array{name: string, params: array<string, string>}|null}> */

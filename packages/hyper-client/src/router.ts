@@ -1,4 +1,4 @@
-// Route matching (HY-4 to HY-8, HY-49). The PHP router implements the same rules; both pass conformance/routes.json and conformance/rest.json.
+// Route matching (HY-4 to HY-8, HY-49). The PHP router implements the same rules; both pass contracts/routes.json and contracts/rest.json.
 
 export interface RouteMatch {
   name: string;

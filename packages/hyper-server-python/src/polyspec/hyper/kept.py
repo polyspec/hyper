@@ -1,5 +1,5 @@
 """Kept values (HY-37, HY-38). Values outside the template data model are ignored. The PHP and the JavaScript
-implementation follow the same rules; all three pass the cases of conformance/keep.json."""
+implementation follow the same rules; all three pass the cases of contracts/keep.json."""
 
 from __future__ import annotations
 

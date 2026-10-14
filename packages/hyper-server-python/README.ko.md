@@ -1,11 +1,11 @@
 <!-- doc-id: hyper-server-python-readme -->
-<!-- source-sha256: 5981116d5e53f6bb36fd9506c8e024acd45260ed0148a7a58d13d182a9f8e79e -->
+<!-- source-sha256: 4890194d3c2d55058d56e0c89e8012945cdaea5eccf062fdb6bdff01929d5aec -->
 # polyspec-hyper-server
 
 [English](README.md).
 
 [Region protocol](../../docs/spec/protocol.md)의 Python 서버: routing, query와 form 값, mask된 CSRF token,
-PHP 서버와 같은 바이트의 JSON text를 같은 규칙의 독립 구현으로 제공한다. `conformance/routes.json`,
+PHP 서버와 같은 바이트의 JSON text를 같은 규칙의 독립 구현으로 제공한다. `contracts/routes.json`,
 `rest.json`, `csrf.json`, `fields.json`, `json.json`의 conformance 사례가 `unittest` test로 돌아간다
 (`make test-python`).
 

@@ -5,7 +5,7 @@
 
 The Python server of the [region protocol](../../docs/spec/protocol.md): routing, query and form values, the
 masked CSRF token and JSON text with the bytes of the PHP server, all as an independent implementation of the same
-rules. The conformance cases of `conformance/routes.json`, `rest.json`, `csrf.json`, `fields.json` and `json.json`
+rules. The conformance cases of `contracts/routes.json`, `rest.json`, `csrf.json`, `fields.json` and `json.json`
 run as `unittest` tests (`make test-python`).
 
 Replace `vX.Y.Z` with the first release tag that contains `packages/hyper-server-python`. No release tag carries the package yet.

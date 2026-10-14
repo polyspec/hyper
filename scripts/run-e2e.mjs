@@ -14,7 +14,7 @@ console.log(`run directory: ${run.directory}`);
 try {
   const board = await startBoard({ app: 'examples/board', database: join(run.directory, 'board.db'), ports: { ssr: 0, edge: 0, api: 0 }, children: run.children });
   // The bin link of Playwright that npm writes (HY-79).
-  const playwright = spawn(resolve('node_modules/.bin/playwright'), ['test', ...process.argv.slice(2)], {
+  const playwright = spawn(resolve('node_modules/.bin/playwright'), ['test', '--config', 'tests/e2e/playwright.config.ts', ...process.argv.slice(2)], {
     env: { ...process.env, HYPER_E2E_SSR: board.ssr, HYPER_E2E_CSR: board.edge },
     stdio: 'inherit',
   });

@@ -1,9 +1,9 @@
-// The cases of conformance/csrf.json (HY-24), which PHP passes in CsrfTest.
+// The cases of contracts/csrf.json (HY-24), which PHP passes in CsrfTest.
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { maskedToken, maskToken, verifyToken } from '../src/csrf.js';
 
-const fixture = JSON.parse(readFileSync(new URL('../../../conformance/csrf.json', import.meta.url), 'utf8')) as {
+const fixture = JSON.parse(readFileSync(new URL('../../../contracts/csrf.json', import.meta.url), 'utf8')) as {
   mask: { label: string; token: string; mask: string; value: string }[];
   verify: { label: string; token: string; value: string; valid: boolean }[];
 };

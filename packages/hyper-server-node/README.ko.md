@@ -1,5 +1,5 @@
 <!-- doc-id: hyper-server-node-readme -->
-<!-- source-sha256: 8112f86507f1566789f6c28942d738e8cc5b272011110dc4136e5c7c6db20be0 -->
+<!-- source-sha256: 74135695f3b5eac238ce00f2581c834274cf12ecc663aabfab5320a75ff218e1 -->
 # @polyspec/hyper-server
 
 [English](README.md).
@@ -114,4 +114,4 @@ const response = await app.handle(Request.from({ method: 'GET', target: '/board'
 
 ## JSON
 
-`encodeJson(value)`는 `JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES`를 준 PHP `json_encode`의 바이트를 쓰고, `decodeJson(text)`는 PHP `json_decode`처럼 읽으며 데이터 모델 밖의 수는 `OutsideNumber`로 둔다(HY-54). 둘 다 PHP 서버처럼 `conformance/json.json`을 통과한다.
+`encodeJson(value)`는 `JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES`를 준 PHP `json_encode`의 바이트를 쓰고, `decodeJson(text)`는 PHP `json_decode`처럼 읽으며 데이터 모델 밖의 수는 `OutsideNumber`로 둔다(HY-54). 둘 다 PHP 서버처럼 `contracts/json.json`을 통과한다.

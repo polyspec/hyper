@@ -5,7 +5,7 @@ export type KeepKind = 'server' | 'cookie' | 'localStorage' | 'sessionStorage';
 export const KEEP_KINDS: readonly KeepKind[] = ['server', 'cookie', 'localStorage', 'sessionStorage'];
 
 // Replaces values at kept paths when the path exists and the kept value conforms to its value (HY-38). The PHP
-// implementation follows the same rules; both pass conformance/keep.json.
+// implementation follows the same rules; both pass contracts/keep.json.
 export function applyKept(data: MapValue, kept: readonly (readonly [string, Value])[]): string[] {
   const applied: string[] = [];
   for (const [path, value] of kept) {

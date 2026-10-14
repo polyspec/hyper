@@ -1,6 +1,6 @@
 """JSON text with the bytes of the PHP server (HY-17, HY-54): PHP encodes with
 ``json_encode(JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)`` and decodes kept values with ``json_decode``. The
-PHP and the JavaScript server pass the same cases of conformance/json.json."""
+PHP and the JavaScript server pass the same cases of contracts/json.json."""
 
 from __future__ import annotations
 

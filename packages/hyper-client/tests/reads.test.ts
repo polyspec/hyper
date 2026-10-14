@@ -1,4 +1,4 @@
-// The cases of conformance/reads.json (HY-73): the browser package computes the read paths of every case, keeps the
+// The cases of contracts/reads.json (HY-73): the browser package computes the read paths of every case, keeps the
 // expected data, and the kept data renders the same bytes as the data. PHP and Node keep the data in ReadsTest and
 // reads.test.ts.
 import { parse, parseJson, type Template } from '@polyspec/template';
@@ -19,7 +19,7 @@ interface Case {
   kept: unknown;
 }
 
-const fixture = JSON.parse(readFileSync(new URL('../../../conformance/reads.json', import.meta.url), 'utf8')) as { cases: Case[] };
+const fixture = JSON.parse(readFileSync(new URL('../../../contracts/reads.json', import.meta.url), 'utf8')) as { cases: Case[] };
 
 // The time limit of the read paths of one case. The analysis runs in its own process, because an analysis that does
 // not finish blocks the process that runs it, so a time limit inside the test process cannot stop it.

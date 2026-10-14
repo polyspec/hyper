@@ -1,16 +1,16 @@
 # The masked session token of the conformance cases (HY-24). The PHP and the JavaScript implementation pass the same
-# cases of conformance/csrf.json.
+# cases of contracts/csrf.json.
 import json
 import unittest
 from pathlib import Path
 
 from polyspec.hyper.csrf import mask, masked, verify
 
-CONFORMANCE = Path(__file__).resolve().parents[3] / 'conformance'
+CONTRACTS = Path(__file__).resolve().parents[3] / 'contracts'
 
 
 def file(name: str) -> dict:
-    return json.loads((CONFORMANCE / name).read_text(encoding='utf-8'))
+    return json.loads((CONTRACTS / name).read_text(encoding='utf-8'))
 
 
 class MaskTest(unittest.TestCase):

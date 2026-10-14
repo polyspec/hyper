@@ -1,11 +1,11 @@
-// The cases of conformance/fields.json (HY-56, HY-57), which PHP passes in FieldsTest. A urlencoded text is the
+// The cases of contracts/fields.json (HY-56, HY-57), which PHP passes in FieldsTest. A urlencoded text is the
 // UTF-8 encoding of its JSON string, which node:http gives as characters that are bytes; a multipart body is text
 // whose characters are its bytes.
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { formFields, parseUrlEncoded } from '../src/form.js';
 
-const fixture = JSON.parse(readFileSync(new URL('../../../conformance/fields.json', import.meta.url), 'utf8')) as {
+const fixture = JSON.parse(readFileSync(new URL('../../../contracts/fields.json', import.meta.url), 'utf8')) as {
   urlencoded: { label: string; text: string; fields: [string, string[]][] | null }[];
   multipart: { label: string; type: string; body: string; fields: [string, string[]][] | null }[];
 };

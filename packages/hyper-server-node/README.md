@@ -113,4 +113,4 @@ const response = await app.handle(Request.from({ method: 'GET', target: '/board'
 
 ## JSON
 
-`encodeJson(value)` writes the bytes of PHP `json_encode` with `JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES`, and `decodeJson(text)` reads as PHP `json_decode` does, with `OutsideNumber` for numbers outside the data model (HY-54). Both pass `conformance/json.json`, as the PHP server does.
+`encodeJson(value)` writes the bytes of PHP `json_encode` with `JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES`, and `decodeJson(text)` reads as PHP `json_decode` does, with `OutsideNumber` for numbers outside the data model (HY-54). Both pass `contracts/json.json`, as the PHP server does.

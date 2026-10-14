@@ -7,7 +7,7 @@ interface Case {
   result: { name: string; params: Record<string, string> } | null;
 }
 
-const fixture = JSON.parse(readFileSync(new URL('../../../conformance/routes.json', import.meta.url), 'utf8')) as {
+const fixture = JSON.parse(readFileSync(new URL('../../../contracts/routes.json', import.meta.url), 'utf8')) as {
   routes: { name: string; path: string }[];
   cases: Case[];
   basePath: string;
@@ -32,7 +32,7 @@ describe('Router conformance', () => {
   });
 });
 
-const rest = JSON.parse(readFileSync(new URL('../../../conformance/rest.json', import.meta.url), 'utf8')) as {
+const rest = JSON.parse(readFileSync(new URL('../../../contracts/rest.json', import.meta.url), 'utf8')) as {
   routes: { name: string; path: string }[];
   cases: Case[];
   invalidPaths: string[];

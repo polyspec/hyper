@@ -1,4 +1,4 @@
-// The cases of conformance/client.json (HY-62), which PHP passes in ClientTest: one server answers the client-rendered
+// The cases of contracts/client.json (HY-62), which PHP passes in ClientTest: one server answers the client-rendered
 // and the server-rendered pages of the fixture manifest.
 import { mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import type { AddressInfo } from 'node:net';
@@ -21,7 +21,7 @@ interface Case {
   actions: number;
 }
 
-const conformance = JSON.parse(readFileSync(new URL('../../../conformance/client.json', import.meta.url), 'utf8')) as { basePath: string; chosenHost: string; cases: Case[] };
+const conformance = JSON.parse(readFileSync(new URL('../../../contracts/client.json', import.meta.url), 'utf8')) as { basePath: string; chosenHost: string; cases: Case[] };
 const SHELL = `${FIXTURES}shell/index.html`;
 // A session token of HY-24; the form carries a masked value of it.
 const TOKEN = '00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff';

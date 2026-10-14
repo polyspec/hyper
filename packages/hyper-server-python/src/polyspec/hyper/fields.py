@@ -1,6 +1,6 @@
 """Query and form values, without nesting: an ordered map from each name, in the order of its first occurrence, to
 its values in request order (HY-56, HY-57). A bracketed name is the name as written. The PHP and the JavaScript
-implementation pass the same cases of conformance/fields.json."""
+implementation pass the same cases of contracts/fields.json."""
 
 from __future__ import annotations
 

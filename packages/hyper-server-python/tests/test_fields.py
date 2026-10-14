@@ -1,5 +1,5 @@
 # Query and form values of the conformance cases (HY-56, HY-57). The PHP and the JavaScript implementation pass the
-# same cases of conformance/fields.json: a urlencoded text is the UTF-8 encoding of its JSON string, and a multipart
+# same cases of contracts/fields.json: a urlencoded text is the UTF-8 encoding of its JSON string, and a multipart
 # body is text whose characters are its bytes.
 import json
 import unittest
@@ -7,11 +7,11 @@ from pathlib import Path
 
 from polyspec.hyper.fields import Fields
 
-CONFORMANCE = Path(__file__).resolve().parents[3] / 'conformance'
+CONTRACTS = Path(__file__).resolve().parents[3] / 'contracts'
 
 
 def file(name: str) -> dict:
-    return json.loads((CONFORMANCE / name).read_text(encoding='utf-8'))
+    return json.loads((CONTRACTS / name).read_text(encoding='utf-8'))
 
 
 def entries(fields: Fields | None) -> list | None:

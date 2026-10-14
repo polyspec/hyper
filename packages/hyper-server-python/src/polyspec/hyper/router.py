@@ -1,5 +1,5 @@
 """Route matching (HY-4 to HY-8, HY-49). The PHP and the JavaScript router implement the same rules; all three pass
-the cases of conformance/routes.json and conformance/rest.json."""
+the cases of contracts/routes.json and contracts/rest.json."""
 
 from __future__ import annotations
 

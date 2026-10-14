@@ -1,16 +1,16 @@
 # Router matching of the conformance cases (HY-4 to HY-8, HY-49). The PHP and the JavaScript router pass the same
-# cases of conformance/routes.json and conformance/rest.json.
+# cases of contracts/routes.json and contracts/rest.json.
 import json
 import unittest
 from pathlib import Path
 
 from polyspec.hyper.router import Router, strip_base_path
 
-CONFORMANCE = Path(__file__).resolve().parents[3] / 'conformance'
+CONTRACTS = Path(__file__).resolve().parents[3] / 'contracts'
 
 
 def file(name: str) -> dict:
-    return json.loads((CONFORMANCE / name).read_text(encoding='utf-8'))
+    return json.loads((CONTRACTS / name).read_text(encoding='utf-8'))
 
 
 class RoutesTest(unittest.TestCase):
