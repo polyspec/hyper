@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 3d39cab3600dab858f1dbdaafabea6d1e06330b5f1f4a38153178ee3c2ecdd32 -->
+<!-- source-sha256: d6b2c22567bc5d15117ca8f38998ec51ce1edfad4548d9ec8ab170635b741efb -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H23.13: `htmx.org`는 board 예제를 build하는 private root의 개발 의존성이며, 애플리케이션이 넘기는 htmx의 타입만 적는 공개 `@polyspec/hyper-client`의 의존성이 아니다. `config/knip-entries.json`은 make가 layout entry 밖에서 실행하는 파일, make virtiofs-check의 Apple `container`, `hyper-build-assets`의 CSS text가 import하는 `packages/build`의 `tailwindcss`를 선언한다.
 - H23.16: hyper는 `@polyspec/kit` 0.0.45를 pin한다. 그 knip은 pin된 런타임의 binary를 무시하고 `config/knip-entries.json`의 `binaries`와 `workspaces`를 읽는다(kit K152, K154).
 - H23.11-1: Composer consumer 프로젝트 `tests/release-install/composer`는 template zip을 그 artifact repository에서 받으며, release-consumer가 `config/release-assets.json`의 entry `template-php-consumer`의 zip을 거기에 둔다(`consumers.composer.polyspec`, kit K140). inline `package` repository는 없어졌다. 프로젝트의 lock은 다음 릴리스가 쓸 때 artifact repository로 옮겨간다.
 - H23.15: Python 서버 패키지 `polyspec-hyper-server`는 kit의 package kind `wheel`로 릴리스하며, template 의존성의 `packages/server/python/pylock.toml`을 `make python-lock`이 쓰고 `make python-lock-check`가 비교한다. kit가 없앤 `proof.gitTag`의 proof kind `python` 때문에 `config/release.json`을 읽는 모든 릴리스 단계가 실패했다. `config/release.json`은 `make release-coverage`가 요구한 대로 `config/php-lint/composer.json`도 릴리스하지 않는 파일로 분류한다.

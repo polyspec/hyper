@@ -1,11 +1,11 @@
 {
   "schema": 1,
   "comment": "Written by make dependency-review RECORD=1 (scripts/kit/dependency-review.mts) from the registries; make dependency-policy-check compares the checkout with it without a network.",
-  "reviewed": "2026-10-14T16:08:30.426Z",
+  "reviewed": "2026-10-14T16:10:47.473Z",
   "locks": [
     {
       "lock": "package-lock.json",
-      "sha256": "5461aff9589e900648ce966db182e060a930d71fcf2b26cb92530fd350c48efb",
+      "sha256": "621b48c48600b29889d8b8a819e732b7ab8df6d5d4cca043dd420059ab2a65e9",
       "advisories": [
         {
           "package": "sprintf-js",
@@ -19,7 +19,7 @@
     },
     {
       "lock": "tests/package-install/package-lock.json",
-      "sha256": "2eadb8f39df94c9973db8d2b8e62f1fee458bd7c9be9d8a002a215a9c0a3c601",
+      "sha256": "baed58f3037ec4f75f36e40980200a3af5ded9311861921bff1d3a669216e298",
       "advisories": []
     },
     {
@@ -63,6 +63,13 @@
     {
       "ecosystem": "npm",
       "manifest": "package.json",
+      "package": "htmx.org",
+      "version": "4.0.0",
+      "latest": "2.0.11"
+    },
+    {
+      "ecosystem": "npm",
+      "manifest": "package.json",
       "package": "typescript",
       "version": "7.0.2",
       "latest": "7.0.2"
@@ -101,13 +108,6 @@
       "package": "tailwindcss",
       "version": "4.3.3",
       "latest": "4.3.3"
-    },
-    {
-      "ecosystem": "npm",
-      "manifest": "packages/client/package.json",
-      "package": "htmx.org",
-      "version": "4.0.0",
-      "latest": "2.0.11"
     },
     {
       "ecosystem": "composer",
