@@ -1,5 +1,5 @@
 <!-- doc-id: benchmark -->
-<!-- source-sha256: da3d82f7d1b8f3a8be70c507c2837eb79f4da368322dfb85a0e5d3af2441fb20 -->
+<!-- source-sha256: ebd9e299b03b593c00861f6de0483a131a7eb955ea667f4f7e89e29ea266d9e6 -->
 # 성능 측정
 
 [English](benchmark.md).
@@ -8,10 +8,10 @@
 
 | 타깃 | 스크립트 | 측정 대상 |
 |---|---|---|
-| `make bench-server` | `scripts/bench-server.php --app <directory> --iterations <n>` | 네트워크 없이 요청 종류별 `App::handle`, 그리고 10, 100, 1,000행에서 `board/rows.tpl` 렌더, `Bind::value`, `json_encode` 비용. generated PHP 프로그램으로 한 번, 네이티브 템플릿 확장으로 한 번 실행한다(HY-48) |
-| `make bench-browser` | `scripts/bench-browser.mjs --ssr <port> --edge <port> --api <port> --runs <n>` | 첫 화면, 영역 이동, 10, 100, 1,000행에서 `hy-set` 변경 1회(시간, 단계, 메인 스레드 부하, 긴 작업), 반복 이동 중 메모리와 두 힙 스냅샷 사이의 증가, 템플릿 로드, 전송 바이트 |
+| `make bench-server` | `benchmarks/server.php --app <directory> --iterations <n>` | 네트워크 없이 요청 종류별 `App::handle`, 그리고 10, 100, 1,000행에서 `board/rows.tpl` 렌더, `Bind::value`, `json_encode` 비용. generated PHP 프로그램으로 한 번, 네이티브 템플릿 확장으로 한 번 실행한다(HY-48) |
+| `make bench-browser` | `benchmarks/browser.mts --ssr <port> --edge <port> --api <port> --runs <n>` | 첫 화면, 영역 이동, 10, 100, 1,000행에서 `hy-set` 변경 1회(시간, 단계, 메인 스레드 부하, 긴 작업), 반복 이동 중 메모리와 두 힙 스냅샷 사이의 증가, 템플릿 로드, 전송 바이트 |
 
-`bench-server`는 `examples/board/var/` 아래에 자체 데이터베이스를 만들고 끝나면 지운다. `bench-browser`는 `scripts/board-servers.mjs`로 board 예제를 system이 배정하는 port와 실행의 임시 디렉터리에 있는 자체 데이터베이스로 띄우고, 그 디렉터리를 `run directory: <path>`로 출력하고 지운다. 따라서 다른 checkout이나 session의 실행은 다른 서버와 다른 데이터베이스를 쓴다. `make check`는 PHP 측정기를 측정마다 한 번씩 실행하는 `make bench-server-smoke`를 실행하므로, 측정기를 깨는 변경은 검사에서 실패한다. 브라우저 측정기는 몇 분이 걸려 `make check`에 넣지 않았으므로, 변경이 그것을 깨도 다음 `make bench`까지 드러나지 않을 수 있다.
+`bench-server`는 `examples/board/var/` 아래에 자체 데이터베이스를 만들고 끝나면 지운다. `bench-browser`는 `scripts/board-servers.mts`로 board 예제를 system이 배정하는 port와 실행의 임시 디렉터리에 있는 자체 데이터베이스로 띄우고, 그 디렉터리를 `run directory: <path>`로 출력하고 지운다. 따라서 다른 checkout이나 session의 실행은 다른 서버와 다른 데이터베이스를 쓴다. `make check`는 PHP 측정기를 측정마다 한 번씩 실행하는 `make bench-server-smoke`를 실행하므로, 측정기를 깨는 변경은 검사에서 실패한다. 브라우저 측정기는 몇 분이 걸려 `make check`에 넣지 않았으므로, 변경이 그것을 깨도 다음 `make bench`까지 드러나지 않을 수 있다.
 
 ## 방법
 

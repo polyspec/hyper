@@ -1,5 +1,5 @@
 <!-- doc-id: deployment -->
-<!-- source-sha256: 917965352cc289fb20c65675d3d392cb8174c768264783fc363eda708e7ad572 -->
+<!-- source-sha256: be56b856c599ffa0be371d7b4d114ede4d5adda7002338334df135bfe43570e8 -->
 # 배포
 
 [English](deployment.md).
@@ -73,5 +73,5 @@ PHP는 기본 경로 없이 실행한다. 응답에는 `Vary: Accept, HX-Request
 |---|---|
 | `http://127.0.0.1:8080/board` | 서버 형태: 루트의 PHP |
 | `http://127.0.0.1:8082/api/board` | `BOARD_BASE_PATH=/api`로 실행한 PHP |
-| `http://127.0.0.1:8081/board` | 정적 셸: `scripts/serve-edge.mjs`가 `build/csr/`의 파일을 반환하고, 그 밖의 모든 경로에는 셸을 반환하며, `/api/*`를 포트 8082로 전달한다 |
+| `http://127.0.0.1:8081/board` | 정적 셸: `scripts/serve-edge.mts`가 `build/csr/`의 파일을 반환하고, 그 밖의 모든 경로에는 셸을 반환하며, `/api/*`를 포트 8082로 전달한다 |
 | `http://127.0.0.1:8081/compare?ssr=http://127.0.0.1:8080` | 비교 페이지: 두 형태를 두 프레임에 띄우고 두 body의 비교 결과를 표시한다. 개발 도구이며 배포에 포함하지 않는다. |

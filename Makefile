@@ -20,6 +20,8 @@ PYTHON_PACKAGE := packages/hyper-server-python
 # included, so the tests and the board Python server import the installed packages and read no source path (S5).
 PYTHON_VENV := $(CURDIR)/$(PYTHON_PACKAGE)/.venv
 UV := $(CURDIR)/var/tools/mise/shims/uv
+# The Python of that venv, which scripts/board-servers.mts starts the board Python server with.
+export HYPER_PYTHON := $(PYTHON_VENV)/bin/python
 # npm installs the template packages @polyspec/template and @polyspec/template-compiler from the tarballs of the template
 # release that package.json names (HY-70). config/template-assets.json pins the php zip and the php-ext asset of the same
 # release with their sha256: make install verifies both, puts the php zip into the Composer artifact repository
@@ -32,7 +34,7 @@ FIXTURES := $(PHP_PACKAGE)/tests/fixtures
 # The Composer vendor directory of the private root composer.json, which installs packages/hyper-server-php for development.
 PHP_VENDOR := $(CURDIR)/vendor
 # The native template extension, built from the unpacked php-ext asset (HY-48, H14.1-7).
-# The lock of `make serve-demo`, whose fixed ports exist once on this machine (scripts/holder-lock.mjs).
+# The lock of `make serve-demo`, whose fixed ports exist once on this machine (holder-lock of @polyspec/kit).
 SERVE_DEMO_LOCK := /tmp/hyper-serve-demo.lock
 # The TypeScript compiler of the bin link that npm writes (HY-79), by its absolute path, as NPM and COMPOSER.
 TSC := $(CURDIR)/node_modules/.bin/tsc
@@ -63,23 +65,23 @@ COMPOSER := $(CURDIR)/var/tools/mise/shims/composer
 INSTALL_LOCK := var/install.lock
 
 # A recipe with several checks runs every check to its end (HY-86): `$(call check,<name>,<command>)` prints the command,
-# runs it through scripts/line-end.mjs, which ends its output with a newline so the next line starts at column 0
+# runs it through scripts/line-end.mts, which ends its output with a newline so the next line starts at column 0
 # (HY-84), and records the name when it fails, and `$(checks_result)` then fails and names every failed
 # check. A recipe that uses them starts with `@failed=; \` and joins its checks with `\`.
-check = echo '$(2)'; node scripts/line-end.mjs '$(2)' || failed="$$failed $(1);";
+check = echo '$(2)'; node scripts/line-end.mts '$(2)' || failed="$$failed $(1);";
 checks_result = test -z "$$failed" || { echo "failed checks:$$failed"; exit 1; }
 
 .DEFAULT_GOAL := help
 
-.PHONY: help install install-python hyper-server-php-install template-tag ext packages package-check server server-fixtures node-server node-fixtures assets test-js test-node test-php test-python test-python-render lint analyse-php templates-check test-scripts virtiofs-check parity server-parity server-parity-python bundle-size e2e serve-demo bench-server bench-server-smoke bench-browser bench check serve-demo-unlock install-browser
+.PHONY: help install install-python typecheck hyper-server-php-install template-tag ext packages package-check server server-fixtures node-server node-fixtures assets test-js test-node test-php test-python test-python-render lint analyse-php templates-check test-scripts virtiofs-check parity server-parity server-parity-python bundle-size e2e serve-demo bench-server bench-server-smoke bench-browser bench check serve-demo-unlock install-browser
 
 help: ## List the targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
 
 install: install-tools ## Install the pinned tools, fetch the assets of the template tag and install the Composer dependencies; make install-packages installs the npm packages (HY-89, H14.1-7)
 	node $(KIT)/check-toolchain.$(KIT_EXT)
-	$(ONLINE) node scripts/template-assets.mjs fetch
-	node scripts/template-assets.mjs unpack
+	$(ONLINE) node scripts/template-assets.mts fetch
+	node scripts/template-assets.mts unpack
 	$(MAKE) --no-print-directory install-python
 	$(ONLINE) node $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(COMPOSER) install
 	$(ONLINE) node $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(COMPOSER) install --working-dir=$(BOARD)
@@ -103,15 +105,15 @@ template-tag: ## Fail when the template repository TEMPLATE_REPOSITORY has no ta
 	  echo "template-tag: fetch the tags of the template repository with git -C $(TEMPLATE_REPOSITORY) fetch --tags" >&2; \
 	  exit 1; }
 
-# The build (scripts/template-assets.mjs) runs phpize, configure and make of the unpacked asset with the php-config of PATH in
+# The build (scripts/template-assets.mts) runs phpize, configure and make of the unpacked asset with the php-config of PATH in
 # a temporary directory, builds again only when the sources or the PHP build changed, and publishes the library with a
 # rename (HY-82). It runs offline: `make install` fetched the asset.
 ext: toolchain-check ## Build the native template extension from the unpacked php-ext asset with phpize of the PHP of PATH into build/ext (HY-48, H14.1-7)
-	node scripts/template-assets.mjs build $(CURDIR)/$(EXT)
+	node scripts/template-assets.mts build $(CURDIR)/$(EXT)
 
 packages: toolchain-check ## Build the JavaScript modules and type declarations of the npm packages into their dist directories; npm links the workspaces (HY-61, HY-79, HY-96)
-	cd $(JS_PACKAGE) && $(NPM) run --silent build -- --outDir dist.next-$$$$ && node ../../scripts/publish.mjs directory dist.next-$$$$ dist
-	cd $(NODE_PACKAGE) && $(NPM) run --silent build -- --outDir dist.next-$$$$ && node ../../scripts/publish.mjs directory dist.next-$$$$ dist
+	cd $(JS_PACKAGE) && $(NPM) run --silent build -- --outDir dist.next-$$$$ && node ../../scripts/publish.mts directory dist.next-$$$$ dist
+	cd $(NODE_PACKAGE) && $(NPM) run --silent build -- --outDir dist.next-$$$$ && node ../../scripts/publish.mts directory dist.next-$$$$ dist
 
 # The path repository of the board mirrors the PHP server package (symlink false, HY-79); composer reinstall mirrors the
 # working tree of the package again, so the board runs the current source. It reads no registry.
@@ -134,7 +136,7 @@ node-server: assets ## Build the board Node server into examples/board/build/nod
 	$(ESBUILD) $(BOARD)/node/main.ts --bundle --platform=node --format=esm --target=node26 --log-level=warning --outfile=$(BOARD)/build/node/server.mjs
 
 node-fixtures: packages ## Build the template files of the PHP test fixtures for the Node server tests
-	node scripts/build-templates.mjs --templates $(FIXTURES)/templates --output $(NODE_PACKAGE)/tests/build
+	node scripts/build-templates.mts --templates $(FIXTURES)/templates --output $(NODE_PACKAGE)/tests/build
 
 assets: packages ## Build the board client bundle (SSR) and the single-file static shell (CSR)
 	node $(BUILD_PACKAGE)/bin/hyper-build-assets.mjs --app $(BOARD) --api /api --output $(BOARD)/build --static public/assets/app.css --static public/assets/reader.css
@@ -175,51 +177,56 @@ analyse-php: ext ## Run PHPStan at level max on the source and the tests of the 
 	cd $(PHP_PACKAGE) && $(PHP_VENDOR)/bin/phpstan analyse --no-progress --memory-limit=$(PHPSTAN_MEMORY)
 
 templates-check: toolchain-check ## Check hx- attributes (HC-6) and region placements (HY-3, HY-30) of the board templates
-	node scripts/check-templates.mjs --app $(BOARD)
+	node scripts/check-templates.mts --app $(BOARD)
+
+# The TypeScript of scripts/, tests/ and benchmarks/ (tsconfig.json), which Node runs by type stripping and so never checks
+# itself (S9 of kit).
+typecheck: ## Check the types of the TypeScript of scripts/, tests/ and benchmarks/ with the tsc of node_modules (tsconfig.json)
+	$(TSC) -p tsconfig.json
 
 test-scripts: packages ## Run the tests of the check scripts, or only the files of TESTS
 	node $(KIT)/run-tests.$(KIT_EXT) node -- $(or $(TESTS),tests/scripts/)
 
 parity: assets server ext ## Compare PHP documents (generated program and native extension) with browser renders of document and region JSON
 	@failed=; \
-	$(call check,parity with the generated program,node scripts/check-parity.mjs --app $(BOARD) --requests $(BOARD)/tests/parity/requests.json) \
-	$(call check,parity with the native extension,node scripts/check-parity.mjs --app $(BOARD) --requests $(BOARD)/tests/parity/requests.json --extension $(EXT)) \
+	$(call check,parity with the generated program,node scripts/check-parity.mts --app $(BOARD) --requests $(BOARD)/tests/parity/requests.json) \
+	$(call check,parity with the native extension,node scripts/check-parity.mts --app $(BOARD) --requests $(BOARD)/tests/parity/requests.json --extension $(EXT)) \
 	$(checks_result)
 
 server-parity: node-server server ## Compare the Node server responses with the PHP responses, with the browser comparison of parity (HY-55)
-	node scripts/check-parity.mjs --app $(BOARD) --requests $(BOARD)/tests/parity/requests.json --node
+	node scripts/check-parity.mts --app $(BOARD) --requests $(BOARD)/tests/parity/requests.json --node
 
 # The Python server renders with the template Python package of the template checkout (H15.3-3), so this comparison
 # runs where that checkout exists.
 server-parity-python: assets server ## Compare the Python server responses with the PHP responses, with the browser comparison of parity (HY-55)
-	node scripts/check-parity.mjs --app $(BOARD) --requests $(BOARD)/tests/parity/requests.json --python
+	node scripts/check-parity.mts --app $(BOARD) --requests $(BOARD)/tests/parity/requests.json --python
 
 bundle-size: assets ## Print the sizes of the SSR script, the CSR shell and the largest template with their gzip limits; a size above its limit is a warning, never a failure
-	node scripts/check-bundle-size.mjs --app $(BOARD) --output $(BOARD)/build --limits config/bundle-size.json
+	node scripts/check-bundle-size.mts --app $(BOARD) --output $(BOARD)/build --limits config/bundle-size.json
 
 e2e: assets server ## Run the SSR, CSR, no-JavaScript and comparison flows in Chromium on servers of the run
-	node scripts/run-e2e.mjs
+	node scripts/run-e2e.mts
 
 virtiofs-check: toolchain-check ## Write the outputs of the server build and of the output copies on a virtiofs bind mount of Apple container (HY-68); a target of the full suite on Darwin
 	node $(KIT)/run-tests.$(KIT_EXT) node -- tests/virtiofs/
 
 serve-demo: assets server ## Serve SSR on :8080, CSR on :8081 and the comparison page on :8081/compare; fails with the holder while another demo runs
-	node scripts/serve-demo.mjs --db $(BOARD)/var/board.db --ssr 8080 --edge 8081 --api 8082 --lock $(SERVE_DEMO_LOCK)
+	node scripts/serve-demo.mts --db $(BOARD)/var/board.db --ssr 8080 --edge 8081 --api 8082 --lock $(SERVE_DEMO_LOCK)
 
 serve-demo-unlock: ## Remove the lock of a demo whose process has ended
 	node $(KIT)/holder-lock.$(KIT_EXT) clear $(SERVE_DEMO_LOCK)
 
 bench-server: server ext ## Measure PHP request handling and rendering cost per row count, with the generated program and with the native extension
 	@failed=; \
-	$(call check,the benchmark with the generated program,php scripts/bench-server.php --app $(BOARD) --iterations 300) \
-	$(call check,the benchmark with the native extension,php -d extension=$(abspath $(EXT)) scripts/bench-server.php --app $(BOARD) --iterations 300) \
+	$(call check,the benchmark with the generated program,php benchmarks/server.php --app $(BOARD) --iterations 300) \
+	$(call check,the benchmark with the native extension,php -d extension=$(abspath $(EXT)) benchmarks/server.php --app $(BOARD) --iterations 300) \
 	$(checks_result)
 
 bench-browser: assets server ## Measure first screens, navigation, hy-set phases and load, and memory in Chromium
-	node scripts/bench-browser.mjs --runs 15
+	node benchmarks/browser.mts --runs 15
 
 bench-server-smoke: assets server ## Run the PHP benchmark once per measurement so that a change that breaks it fails make check
-	php scripts/bench-server.php --app $(BOARD) --iterations 1 > /dev/null
+	php benchmarks/server.php --app $(BOARD) --iterations 1 > /dev/null
 
 bench: bench-server bench-browser ## Run both measurements; results are reports, not pass or fail checks
 
@@ -227,16 +234,16 @@ bench: bench-server bench-browser ## Run both measurements; results are reports,
 # checklist task is [~], while tracked changes are uncommitted or when var/full-run.json records a run of the current tree
 # and the commit of the template tag, runs each target with `make <target>` to its end and records its result;
 # `make rerun-failed` reruns the targets of the current tree that did not pass.
-CHECK_TARGETS := kit-check toolchain-check layout-check documents-check hooks-check push-gate-commit commits-check owner-validate dependency-policy-check dependency-policy-mutation-check bench-server-smoke lint analyse-php templates-check test-scripts test-js test-node test-python test-python-render package-check test-php parity server-parity server-parity-python bundle-size e2e
+CHECK_TARGETS := kit-check toolchain-check layout-check typecheck documents-check hooks-check push-gate-commit commits-check owner-validate dependency-policy-check dependency-policy-mutation-check bench-server-smoke lint analyse-php templates-check test-scripts test-js test-node test-python test-python-render package-check test-php parity server-parity server-parity-python bundle-size e2e
 
 # The CI groups of the full suite (HY-91) are the entries of the matrix of .github/workflows/ci.yml: each entry runs its
 # `targets` with `make ci-targets`, so the entries together run every target of CHECK_TARGETS once
-# (tests/scripts/ci-workflow.test.mjs). An entry gathers the targets that need the same setup: docs only Node.js, php and
+# (tests/scripts/ci-workflow.test.mts). An entry gathers the targets that need the same setup: docs only Node.js, php and
 # node PHP, the template build and the install, board also Chromium, python only the Python of its pins.
 
 # The targets of the full suite that exist on one platform only. Apple `container`, whose bind mounts are virtiofs,
 # exists on Darwin, so `make virtiofs-check` belongs to the full suite there and nowhere else; on Darwin a missing
-# `container` fails it (tests/scripts/ci-workflow.test.mjs). The CI groups run CHECK_TARGETS of Linux.
+# `container` fails it (tests/scripts/ci-workflow.test.mts). The CI groups run CHECK_TARGETS of Linux.
 DARWIN_TARGETS := virtiofs-check
 CHECK_TARGETS += $(if $(filter Darwin,$(shell uname)),$(DARWIN_TARGETS))
 
