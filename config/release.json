@@ -82,7 +82,7 @@
     "composer": {
       "directory": "tests/release-install/composer",
       "polyspec": [
-        "template-php-consumer"
+        "template-php"
       ],
       "smoke": {
         "polyspec/hyper-server": [
