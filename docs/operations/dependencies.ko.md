@@ -1,12 +1,12 @@
 <!-- doc-id: dependencies -->
-<!-- source-sha256: 38126c170961ce7d8d9028e53ddc017cbc27082169cbae7a897bdb9a7757af14 -->
+<!-- source-sha256: d5e26eca2167232fc096ea03f0636030a0a0451c4f4ba5df3d90c555baffd124 -->
 # 의존성
 
 [English](dependencies.md).
 
 모든 의존성은 선언한 런타임 범위(`make toolchain-check`가 요구하는 하한인 Node.js 26.11.1, PHP 8.5)를 지원하는 최신 안정 버전을 사용한다. 정확한 버전 고정은 그 이유와 고정을 해제하는 조건을 기록한다.
 
-2026-10-08의 검토(`make dependency-review UPDATE=1`)는 `@playwright/test`를 1.64.0으로, `@types/node`를 26.6.4로, `phpstan/phpstan`을 2.3.1로, `phpunit/phpunit`을 11.5.57로 올렸다. `config/dependency-policy.json`은 검토가 읽는 Composer와 Python manifest를 밝히고, `make dependency-review RECORD=1`은 검토 기록 `config/dependency-review.json`을 쓴다.
+2026-10-14의 검토(`make dependency-review UPDATE=1`)는 PHP 하한 8.5가 허용하는 대로 `vitest`를 5.0.4로, `laravel/pint`를 1.32.1로, `phpunit/phpunit`을 13.4.2로 올렸다(H23.4). `packages/hyper-server-php/composer.json`도 같은 범위를 요구한다. `config/dependency-policy.json`은 검토가 읽는 Composer와 Python manifest를 밝히고, `make dependency-review RECORD=1`은 검토 기록 `config/dependency-review.json`을 쓴다.
 
 | 의존성 | 버전 | 종류 | 이유 | 해제 조건 |
 |---|---|---|---|---|
@@ -16,8 +16,6 @@
 | `pyproject.toml`의 `polyspec-template` (`packages/hyper-server-python`) | `polyspec/template`의 release `v0.0.6`의 wheel asset과 그 sha256 (`https://github.com/polyspec/template/releases/download/v0.0.6/polyspec_template-0.0.6-py3-none-any.whl#sha256=9fd57fe2f08e8b6aaf110bb7cbba51b0661db172176214d3120ca7ae1626d662`) | runtime | 0.1 전에는 polyspec package를 registry에 올리지 않으므로 GitHub Release의 wheel asset에서 설치하고, 그 asset의 sha256으로 검증한다(H23.5). | polyspec가 Python 패키지를 registry에 올릴 때 기록을 지웁니다. |
 | `htmx.org` | `4.0.0` 정확히 고정 | 런타임, 클라이언트 스크립트에 번들 | 영역 프로토콜은 htmx 4의 훅, 요청 컨텍스트 필드, 스왑 동작을 사용하며, 이를 4.0.0 소스로 확인했다. npm은 4.0.0에 `next` 태그를 붙이고 2.x를 `latest`로 유지하므로, 고정하지 않은 범위는 htmx 2를 선택한다. | npm이 htmx 4 릴리스에 `latest` 태그를 붙이면 `^4` 범위를 사용하고 `make check`를 다시 실행한다. |
 | `@playwright/test`, `@types/node`, `esbuild`, `typescript`, `vitest` | 정확히 고정 | 개발 | `npm ci`가 같은 도구를 설치하도록 root package가 개발 도구 버전을 정확히 고정한다. | 각 도구를 최신 안정 버전으로 올리고 `make check`를 다시 실행한다. |
-| `laravel/pint` | `^1.0`, 1.30.4로 해석 | 개발 | Pint 1.31 이후 버전은 PHP 8.3을 요구하고, Composer 플랫폼은 PHP 8.2였다. | H23.1부터 지원 PHP 범위가 8.5에서 시작하므로 조건이 충족되었다. H23.4가 요구 버전을 올린다. |
-| `phpunit/phpunit` | `^11.5.57` | 개발 | PHPUnit 12 이후 버전은 PHP 8.3을 요구한다. | H23.1부터 지원 PHP 범위가 8.5에서 시작하므로 조건이 충족되었다. H23.4가 요구 버전을 올린다. |
 | `phpstan/phpstan` | `^2.3.1` | 개발 | 최신 안정 릴리스다. PHPStan 2.3은 PHP 7.4 이후를 지원하므로 이 범위에는 호환성 고정이 없다. | 없음. |
 | `@polyspec/hyper-server`와 `@polyspec/hyper-build`의 `@polyspec/hyper-client` | `0.0.8` 정확히 | 런타임, build | Node 서버는 같은 저장소의 브라우저 package로 렌더하고, build package는 그것으로 manifest를 검사하고 read path를 계산하며 예약 템플릿 `hyper/data.tpl`을 읽으므로, 둘 다 그 정확한 버전을 요구한다. root package는 이것을 `packages/hyper-client`의 사본으로 override한다(HY-79). | package가 배포되어 한 버전 범위로 함께 출시될 때. |
 | `@polyspec/hyper-build`의 `esbuild`, `tailwindcss`, `@tailwindcss/node`, `@tailwindcss/oxide` | 정확히 고정 | build | build package는 client entry를 esbuild로 bundle하고 `--tailwind`의 stylesheet를 Tailwind CSS로 compile하므로(HY-77, HY-96), consumer는 이 저장소의 test가 실행한 릴리스로 빌드한다. root package는 Tailwind CSS 패키지를 `@polyspec/hyper-build`를 통해 설치하고, esbuild는 `make node-server`를 위해 직접 요구한다. | 각 도구를 최신 안정 버전으로 올리고 `make check`를 다시 실행한다. |

@@ -15,7 +15,7 @@ final class ResultTest extends TestCase
     public static function rejected(): iterable
     {
         foreach (['', 'board', '//evil.example', '/\\evil.example', "/\t/evil.example", "/ok\r\nX-Injected: 1", '/a b', "/a\x00", "/a\u{85}", "/a\xFF", '/a\\b', '/.//evil.example', '/a/..//evil.example', '/%2E//evil.example', '/a/%2e%2E/b', '/a/.', '/./b?x=1'] as $location) {
-            yield bin2hex($location) => [$location];
+            yield '0x' . bin2hex($location) => [$location];
         }
     }
 
