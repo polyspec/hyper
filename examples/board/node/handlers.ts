@@ -25,12 +25,12 @@ function findPost(request: Request, posts: Posts): Post {
 
 // Removes the characters that PHP trim removes: space, tab, line feed, carriage return, NUL and vertical tab.
 function trim(text: string): string {
-  return text.replace(/^[ \t\n\r\0\x0B]+|[ \t\n\r\0\x0B]+$/g, '');
+  return text.replace(/^[ \t\n\r\0\v]+|[ \t\n\r\0\v]+$/g, '');
 }
 
 // Returns the number of characters, as PHP mb_strlen counts them.
 function length(text: string): number {
-  return [...text].length;
+  return Array.from(text).length;
 }
 
 export const handlers: Handlers<Services> = {

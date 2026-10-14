@@ -25,7 +25,7 @@ export function utf8(bytes: Uint8Array): string | null {
 }
 
 // Decodes `+` to a space and `%XX` to its byte, as PHP urldecode does; any other `%` stays.
-export function urlDecode(text: string): Uint8Array {
+function urlDecode(text: string): Uint8Array {
   const bytes: number[] = [];
   for (let index = 0; index < text.length; index++) {
     const char = text[index]!;
@@ -61,7 +61,7 @@ export function formFields(type: string, body: Uint8Array): Fields {
 }
 
 // Parses the text fields of a multipart/form-data body; file fields are not form values.
-export function parseMultipart(body: Uint8Array, boundary: string): Fields {
+function parseMultipart(body: Uint8Array, boundary: string): Fields {
   const fields: Fields = { values: new Map(), valid: true };
   const buffer = Buffer.from(body.buffer, body.byteOffset, body.byteLength);
   const delimiter = Buffer.from(`--${boundary}`, 'latin1');

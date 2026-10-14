@@ -83,7 +83,7 @@ export class PageStylesheets {
       inserted.push(link);
     }
     try {
-      await Promise.all(chosen.map((link) => this.loading.get(link)));
+      await Promise.all(chosen.flatMap((link) => this.loading.get(link) ?? []));
     } catch (error) {
       for (const link of inserted) link.remove();
       throw error;

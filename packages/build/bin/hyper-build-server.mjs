@@ -66,5 +66,5 @@ function listTemplates(root, prefix = '') {
     if (entry.isDirectory()) names.push(...listTemplates(root, name));
     else if (entry.name.endsWith('.tpl')) names.push(name);
   }
-  return names.sort();
+  return names.sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
 }

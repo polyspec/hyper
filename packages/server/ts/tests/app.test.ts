@@ -1,5 +1,6 @@
 // The cases of packages/server/php/tests/AppTest.php against the same fixture application (HY-54).
 import { readFileSync } from 'node:fs';
+import { inspect } from 'node:util';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createApplication, decodeResponse, renderParts, type Manifest, type TemplateIndex } from '@polyspec/hyper-client';
 import { parseJson, type Template } from '@polyspec/template/render';
@@ -750,7 +751,7 @@ describe('Node handlers', () => {
     for (const value of [new Point(), '\uD800', Number.NaN, 1e20, 2 ** 53, () => 1]) {
       const app = await fixture.app({ handlers: { ...handlers(), routes: { ...handlers().routes, home: { load: () => ({ value }) } } } });
       const request = (await import('../src/index.js')).Request.from({ method: 'GET', target: '/', headers: JSON_REGION });
-      expect((await app.handle(request, fixture.session)).status, String(value)).toBe(500);
+      expect((await app.handle(request, fixture.session)).status, inspect(value)).toBe(500);
     }
   });
 

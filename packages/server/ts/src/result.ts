@@ -19,7 +19,7 @@ export class Result {
 
   // Returns a redirect to a path of this application (HY-46).
   static redirect(location: string): Result {
-    if (!location.isWellFormed() || !/^\/(?![/\\])[^\x00-\x20\x7f-\x9f\\]*$/.test(location) || hasDotSegment(location)) {
+    if (!location.isWellFormed() || !/^\/(?![/\\])[^\p{Cc} \\]*$/u.test(location) || hasDotSegment(location)) {
       throw new Error(`hyper: redirect location ${JSON.stringify(location)} is not an application path`);
     }
     return new Result(location, 303, {}, new Map(), []);

@@ -1,4 +1,4 @@
-import { parseJson, type MapValue, type Value } from '@polyspec/template/render';
+import { NativeObject, parseJson, SafeString, type MapValue, type Value } from '@polyspec/template/render';
 
 // The storage of a kept path (HY-37).
 export type KeepKind = 'server' | 'cookie' | 'localStorage' | 'sessionStorage';
@@ -31,7 +31,7 @@ function childOf(container: Value | undefined, key: string): Value | undefined {
 // Returns true when a kept value has the shape of the data value (HY-38): the same type, the same keys
 // of a map with conforming values, and list items that conform to the first data item. An empty map or
 // list gives no shape.
-export function conforms(value: Value, current: Value): boolean {
+function conforms(value: Value, current: Value): boolean {
   if (current instanceof Map) {
     if (!(value instanceof Map)) return false;
     if (current.size === 0) return true;
@@ -56,11 +56,13 @@ function kindOf(value: Value): string {
   return typeof value === 'object' ? 'string' : typeof value;
 }
 
-// Returns the JSON text of a value with map keys in their order.
+// Returns the JSON text of a value with map keys in their order; a safe string is its text, and an application object,
+// which has no JSON text, fails as on the server (HY-44).
 export function valueToJson(value: Value): string {
   if (value instanceof Map) return `{${[...value].map(([key, item]) => `${JSON.stringify(key)}:${valueToJson(item)}`).join(',')}}`;
   if (Array.isArray(value)) return `[${value.map(valueToJson).join(',')}]`;
-  if (value !== null && typeof value === 'object') return JSON.stringify(String(value));
+  if (value instanceof SafeString) return JSON.stringify(value.text);
+  if (value instanceof NativeObject) throw new TypeError('hyper: an application object has no JSON text');
   return JSON.stringify(value);
 }
 
