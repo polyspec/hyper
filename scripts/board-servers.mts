@@ -180,7 +180,13 @@ export function serverRun(prefix: string): { directory: string; children: ChildP
   };
   const onSignal = (signal: NodeJS.Signals) => {
     process.stderr.write(`${signal}: stopping ${children.length} servers and removing ${directory}\n`);
-    close().then(() => process.exit(signal === 'SIGINT' ? 130 : 143));
+    close().then(
+      () => process.exit(signal === 'SIGINT' ? 130 : 143),
+      (error: unknown) => {
+        process.stderr.write(`${signal}: the run did not close: ${error instanceof Error ? error.message : String(error)}\n`);
+        process.exit(1);
+      },
+    );
   };
   process.once('SIGINT', onSignal);
   process.once('SIGTERM', onSignal);

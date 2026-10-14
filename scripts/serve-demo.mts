@@ -28,12 +28,17 @@ const [db, ssr, edge, api, lock] = [required('db'), required('ssr'), required('e
 
 const children: ChildProcess[] = [];
 let stopping = false;
-// Stops the servers once and exits; the exit releases the lock.
-const stop = async (code: number) => {
+// Stops the servers once and exits; the exit releases the lock. A failure to stop them is reported and exits with 1.
+const stop = (code: number): void => {
   if (stopping) return;
   stopping = true;
-  await stopServers(children);
-  process.exit(code);
+  stopServers(children).then(
+    () => process.exit(code),
+    (error: unknown) => {
+      console.error(`the servers did not stop: ${error instanceof Error ? error.message : String(error)}`);
+      process.exit(1);
+    },
+  );
 };
 // A signal during the start stops the servers that have started too.
 process.on('SIGINT', () => stop(0));
