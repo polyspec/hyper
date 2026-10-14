@@ -14,6 +14,7 @@ import { dirname, join, resolve } from 'node:path';
 import { test, type TestContext } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
+import { jsonObject, jsonObjects, jsonString, parseJsonObject } from '../../scripts/json.mts';
 import { requireBuilt } from '../scripts/requires.mts';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -63,8 +64,11 @@ test('the server build writes the templates on a virtiofs bind mount', { timeout
   }
   assert.ok(files(copied).includes('hyper/data.tpl'));
   // HY-73: the read paths of every route, computed without a bundler in the container.
-  const reads = JSON.parse(readFileSync(join(output, 'server', 'reads.json'), 'utf8')).routes;
-  assert.deepEqual(Object.keys(reads).sort(), (JSON.parse(readFileSync(join(root, 'examples', 'board', 'app', 'app.json'), 'utf8')) as { routes: { name: string }[] }).routes.map((route) => route.name).sort());
+  const readsFile = join(output, 'server', 'reads.json');
+  const reads = jsonObject(parseJsonObject(readFileSync(readsFile, 'utf8'), readsFile).routes, `${readsFile} routes`);
+  const manifestFile = join(root, 'examples', 'board', 'app', 'app.json');
+  const routes = jsonObjects(parseJsonObject(readFileSync(manifestFile, 'utf8'), manifestFile).routes, `${manifestFile} routes`);
+  assert.deepEqual(Object.keys(reads).sort(), routes.map((route, index) => jsonString(route.name, `${manifestFile} routes[${index}] name`)).sort());
 });
 
 test('the output copies write a directory and a file on a virtiofs bind mount', { timeout: 120000 }, (t) => {

@@ -3,7 +3,7 @@ import { applyKept, copyValue, keptPaths, type Application } from '@polyspec/hyp
 import { decodeJson, inDataModel, JsonDecodeError, type DecodedValue } from './json.js';
 import type { Request } from './request.js';
 import type { Session } from './session.js';
-import type { MapValue } from './values.js';
+import { requireMap, type MapValue, type Value } from './values.js';
 
 // Returns the conforming `server` and `cookie` kept values of the regions, by region and path (HY-17, HY-38).
 export function keptValues(request: Request, session: Session, data: Map<string, MapValue>, application: Application, https: boolean): MapValue {
@@ -13,10 +13,10 @@ export function keptValues(request: Request, session: Session, data: Map<string,
   for (const [name, regionData] of data) {
     const stored = session.kept(name);
     const cookieValues = cookie instanceof Map ? cookie.get(name) : undefined;
-    const pairs: [string, DecodedValue][] = [];
+    const pairs: [string, Value | DecodedValue][] = [];
     for (const [path, kind] of Object.entries(keptPaths(application.manifest, name))) {
-      const source = (kind === 'server' ? stored : kind === 'cookie' && cookieValues instanceof Map ? cookieValues : new Map()) as Map<string, DecodedValue>;
-      if (source.has(path)) pairs.push([path, source.get(path)!]);
+      const value = kind === 'server' ? stored.get(path) : kind === 'cookie' && cookieValues instanceof Map ? cookieValues.get(path) : undefined;
+      if (value !== undefined) pairs.push([path, value]);
     }
     const selected = selectKept(regionData, pairs);
     if (selected.size > 0) kept.set(name, selected);
@@ -25,8 +25,8 @@ export function keptValues(request: Request, session: Session, data: Map<string,
 }
 
 // Returns the kept values that conform to the data, by path, applying each one before the next (HY-38).
-export function selectKept(data: MapValue, pairs: [string, DecodedValue][]): MapValue {
-  const applied = copyValue(data) as MapValue;
+export function selectKept(data: MapValue, pairs: [string, Value | DecodedValue][]): MapValue {
+  const applied = requireMap(copyValue(data), 'the region data');
   const selected: MapValue = new Map();
   for (const [path, value] of pairs) {
     if (inDataModel(value) && applyKept(applied, [[path, value]]).length > 0) selected.set(path, value);

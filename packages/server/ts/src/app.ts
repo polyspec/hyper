@@ -3,7 +3,7 @@
 import { readFileSync } from 'node:fs';
 import { isAbsolute, join } from 'node:path';
 import type { Server } from 'node:http';
-import { checkManifest, createApplication, DATA_TEMPLATE_NAME, keptPaths, routeReads, routeTemplates, stripBasePath, type Application, type Manifest, type RouteDeclaration, type RouteReads, type TemplateIndex } from '@polyspec/hyper-client';
+import { checkManifest, checkTemplateIndex, createApplication, DATA_TEMPLATE_NAME, keptPaths, routeReads, routeTemplates, stripBasePath, type Application, type Manifest, type RouteDeclaration, type RouteReads } from '@polyspec/hyper-client';
 import { resolvePath, type Template } from '@polyspec/template/render';
 import { maskedToken, verifyToken } from './csrf.js';
 import type { FileSessions } from './file-sessions.js';
@@ -176,8 +176,8 @@ export class App<S extends object = Record<string, never>> {
     for (const path of [options.manifest, options.templates.index, options.templates.root]) {
       if (!isAbsolute(path)) throw new Error(`hyper: ${path} is not an absolute path`);
     }
-    const manifest = checkManifest(JSON.parse(readFileSync(options.manifest, 'utf8')) as Manifest);
-    const index = JSON.parse(readFileSync(options.templates.index, 'utf8')) as TemplateIndex;
+    const manifest = checkManifest(JSON.parse(readFileSync(options.manifest, 'utf8')));
+    const index = checkTemplateIndex(JSON.parse(readFileSync(options.templates.index, 'utf8')), `the template index ${options.templates.index}`);
     const fetcher = async (url: string): Promise<Template> => JSON.parse(readFileSync(join(options.templates.root, url), 'utf8')) as Template;
     const application = createApplication(manifest, index, fetcher);
     checkHandlers(manifest, options.handlers);
@@ -193,7 +193,11 @@ export class App<S extends object = Record<string, never>> {
     // HY-73: the read paths of every route, from the templates that the asset build wrote.
     const parsed = new Map<string, Template>();
     for (const [name, entry] of Object.entries(index)) parsed.set(name, await fetcher(entry.url));
-    const reads = routeReads(manifest, (name) => parsed.get(name)!, resolvePath);
+    const reads = routeReads(manifest, (name) => {
+      const template = parsed.get(name);
+      if (template === undefined) throw new Error(`hyper: template ${name} is not in the template index`);
+      return template;
+    }, resolvePath);
     return new App(application, options.handlers, options.timezone, basePath, options.https ?? false, options.frameAncestors ?? "'self'", bodyLimit, responseLimit, [...formTypes], options.onResponse, options.onDisconnect, options.log ?? ((message) => process.stderr.write(`${message}\n`)), client, reads);
   }
 
@@ -286,7 +290,8 @@ export class App<S extends object = Record<string, never>> {
     if (path === '/_hyper/keep') return this.keep(request, new Session(store));
     const match = path === null ? null : this.application.router.match(path);
     if (match === null || path === null) return Response.text(404, 'Not Found');
-    const route = this.routes.get(match.name)!;
+    const route = this.routes.get(match.name);
+    if (route === undefined) throw new Error(`hyper: route ${match.name} is not declared`);
     const handler = this.handlers.routes?.[route.name] ?? {};
     if (client !== null) {
       // HY-62: the data base path answers only JSON requests and actions, before the session is read.
@@ -304,10 +309,10 @@ export class App<S extends object = Record<string, never>> {
   private async choice(request: Request): Promise<Choice | null> {
     if (this.client === null) return null;
     const choice: unknown = await this.client.selects(request);
-    if (typeof choice !== 'object' || choice === null || typeof (choice as { chosen?: unknown }).chosen !== 'boolean' || (choice as { value?: unknown }).value === undefined) {
+    if (typeof choice !== 'object' || choice === null || !('chosen' in choice) || typeof choice.chosen !== 'boolean' || !('value' in choice) || choice.value === undefined) {
       throw new Error('hyper: the selection of the client rendering did not return a choice');
     }
-    return choice as Choice;
+    return { chosen: choice.chosen, value: choice.value };
   }
 
   // Answers a client-rendered request outside the data base path: the static shell for a page (HY-62).
@@ -346,8 +351,15 @@ export class App<S extends object = Record<string, never>> {
     }
   }
 
+  // The read paths of a route, which create computes for every route of the manifest (HY-73).
+  private readsOf(route: string): RouteReads {
+    const reads = this.reads[route];
+    if (reads === undefined) throw new Error(`hyper: route ${route} has no read paths`);
+    return reads;
+  }
+
   private page(input: PageInput<S>): Promise<Response> {
-    return renderPage(input, { application: this.application, handlers: this.handlers, services: this.services, timezone: this.timezone, https: this.https, reads: this.reads[input.route.name]! });
+    return renderPage(input, { application: this.application, handlers: this.handlers, services: this.services, timezone: this.timezone, https: this.https, reads: this.readsOf(input.route.name) });
   }
 
   // Stores the flash values and changed topics of a redirect result and answers 303 (HY-25, HY-50).
@@ -426,3 +438,4 @@ function checkHandlers<S extends object>(manifest: Manifest, handlers: Handlers<
     if (route.post === true && handlers.routes?.[route.name]?.post === undefined) throw new Error(`hyper: route ${route.name} declares post but has no POST action`);
   }
 }
+

@@ -10,6 +10,7 @@ import { test, type TestContext } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 import { files } from '../../packages/build/lib/publish.mjs';
+import { jsonNumber, parseJsonObject } from '../../scripts/json.mts';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 
@@ -41,7 +42,10 @@ function poll(paths: string[], stop: string, contents: string | null = null): Pr
   const child = spawn(process.execPath, checked(['-e', code, JSON.stringify([paths, stop, contents])]), { stdio: ['ignore', 'pipe', 'inherit'] });
   let output = '';
   child.stdout.on('data', (data) => { output += data; });
-  return new Promise((resolve) => child.on('close', () => resolve(JSON.parse(output) as { reads: number; misses: number })));
+  return new Promise((resolve) => child.on('close', () => {
+    const counts = parseJsonObject(output, 'the output of the reader');
+    resolve({ reads: jsonNumber(counts.reads, 'reads'), misses: jsonNumber(counts.misses, 'misses') });
+  }));
 }
 
 // Linux refuses a single argument longer than MAX_ARG_STRLEN, 32 pages of 4 KiB, with E2BIG, where macOS limits only

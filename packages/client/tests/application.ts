@@ -1,8 +1,9 @@
 import { parse, type Template } from '@polyspec/template';
-import { readFileSync } from 'node:fs';
+import dataTemplate from '../data-template.json';
+import { defined } from './values.js';
 import { createApplication, DATA_TEMPLATE_NAME, type Application, type Manifest, type TemplateIndex } from '../src/index.js';
 
-const DATA_TEMPLATE_SOURCE: string = JSON.parse(readFileSync(new URL('../data-template.json', import.meta.url), 'utf8')).source;
+const DATA_TEMPLATE_SOURCE = dataTemplate.source;
 
 export const manifest: Manifest = {
   layout: 'layout.tpl',
@@ -49,7 +50,7 @@ export function testApplication(fetched: string[] = []): Application {
   const index: TemplateIndex = Object.fromEntries(Object.keys(sources).map((name) => [name, { url: `/t/${name}` }]));
   return createApplication(manifest, index, async (url) => {
     fetched.push(url);
-    return parsed[url.slice('/t/'.length)]!;
+    return defined(parsed[url.slice('/t/'.length)], `the template of ${url}`);
   });
 }
 

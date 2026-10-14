@@ -4,15 +4,13 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { formFields, parseUrlEncoded } from '../src/form.js';
+import { list, parsed, record, text } from './support.js';
 
-const fixture = JSON.parse(readFileSync(new URL('../../../../contracts/fields.json', import.meta.url), 'utf8')) as {
-  urlencoded: { label: string; text: string; fields: [string, string[]][] | null }[];
-  multipart: { label: string; type: string; body: string; fields: [string, string[]][] | null }[];
-};
+const fixture = record(parsed(readFileSync(new URL('../../../../contracts/fields.json', import.meta.url), 'utf8')));
 
 describe('parseUrlEncoded conformance', () => {
-  it.each(fixture.urlencoded.map((item) => [item.label, item] as const))('%s', (_label, item) => {
-    const fields = parseUrlEncoded(Buffer.from(item.text, 'utf8').toString('latin1'));
+  it.each(list(fixture.urlencoded).map(record).map((item) => [text(item.label), item] as const))('%s', (_label, item) => {
+    const fields = parseUrlEncoded(Buffer.from(text(item.text), 'utf8').toString('latin1'));
     if (item.fields === null) {
       expect(fields.valid).toBe(false);
       return;
@@ -23,8 +21,8 @@ describe('parseUrlEncoded conformance', () => {
 });
 
 describe('formFields conformance of multipart bodies', () => {
-  it.each(fixture.multipart.map((item) => [item.label, item] as const))('%s', (_label, item) => {
-    const fields = formFields(item.type, Buffer.from(item.body, 'latin1'));
+  it.each(list(fixture.multipart).map(record).map((item) => [text(item.label), item] as const))('%s', (_label, item) => {
+    const fields = formFields(text(item.type), Buffer.from(text(item.body), 'latin1'));
     if (item.fields === null) {
       expect(fields.valid).toBe(false);
       return;

@@ -3,8 +3,11 @@
 import { parse, type Template } from '@polyspec/template';
 import { resolvePath } from '@polyspec/template/render';
 
-// Node runs the source with type stripping.
-const { templateReads } = (await import(new URL('../src/reads.ts', import.meta.url).href)) as typeof import('../src/reads.js');
-const item = JSON.parse(process.argv[2]!) as { templates: Record<string, string>; template: string };
+// Node runs the sources with type stripping.
+import { templateReads } from '../src/reads.ts';
+import { defined, isRecord, isStringRecord } from './values.ts';
+
+const item: unknown = JSON.parse(process.argv[2] ?? '');
+if (!isRecord(item) || !isStringRecord(item.templates) || typeof item.template !== 'string') throw new Error('the case has no templates or template');
 const parsed = new Map(Object.entries(item.templates).map(([name, source]) => [name, parse(source, name)]));
-process.stdout.write(JSON.stringify(templateReads((name): Template => parsed.get(name)!, resolvePath, item.template)));
+process.stdout.write(JSON.stringify(templateReads((name): Template => defined(parsed.get(name), `the template ${name}`), resolvePath, item.template)));

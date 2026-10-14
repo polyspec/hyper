@@ -1,12 +1,12 @@
 // The HTTP server of an application with sessions in files (HY-42, HY-43, HY-45, HY-52, HY-54).
 import { mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { createServer as createHttpServer, type Server } from 'node:http';
-import { connect, type AddressInfo } from 'node:net';
+import { connect } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { FileSessions } from '../src/index.js';
-import { Fixture, FIXTURES, handlers } from './support.js';
+import { Fixture, FIXTURES, handlers, parsed, port, present, record, text } from './support.js';
 
 let directory: string;
 let server: Server;
@@ -23,7 +23,7 @@ async function start(options: { https?: boolean; bodyLimit?: number } = {}): Pro
   });
   server = app.server(new FileSessions({ directory }));
   await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
-  base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+  base = `http://127.0.0.1:${port(server)}`;
 }
 
 beforeEach(() => {
@@ -37,8 +37,7 @@ afterEach(async () => {
 // Sends raw request bytes and returns the raw response text.
 function raw(bytes: Buffer): Promise<string> {
   return new Promise((resolve) => {
-    const port = (server.address() as AddressInfo).port;
-    const socket = connect(port, '127.0.0.1', () => socket.write(bytes));
+    const socket = connect(port(server), '127.0.0.1', () => socket.write(bytes));
     let text = '';
     socket.on('data', (chunk) => (text += chunk.toString('latin1')));
     socket.on('end', () => resolve(text));
@@ -50,13 +49,13 @@ describe('App.server', () => {
     await start();
     // The route region of /list keeps a value on the server, so its shared data keeps csrf (HY-73).
     const first = await fetch(`${base}/list`, { headers: { Accept: 'application/json' } });
-    const cookie = first.headers.get('set-cookie')!;
+    const cookie = present(first.headers.get('set-cookie'));
     expect(cookie).toMatch(/^hy-session=[0-9a-f]{64}; path=\/; HttpOnly; SameSite=Lax$/);
-    const masked = ((await first.json()) as { shared: { csrf: string } }).shared.csrf;
-    const second = await fetch(`${base}/list`, { headers: { Accept: 'application/json', Cookie: cookie.split(';')[0]! } });
+    const masked = text(record(record(parsed(await first.text())).shared).csrf);
+    const second = await fetch(`${base}/list`, { headers: { Accept: 'application/json', Cookie: present(cookie.split(';')[0]) } });
     expect(second.headers.get('set-cookie')).toBeNull();
     // HY-24: the second response masks the same session token anew.
-    expect(((await second.json()) as { shared: { csrf: string } }).shared.csrf).not.toBe(masked);
+    expect(record(record(parsed(await second.text())).shared).csrf).not.toBe(masked);
     expect(readdirSync(directory)).toEqual([cookie.slice('hy-session='.length, cookie.indexOf(';'))]);
   });
 
@@ -84,9 +83,9 @@ describe('App.server', () => {
     expect(response.endsWith('\r\n\r\nBad Request')).toBe(true);
     // HY-60: the response that node:http does not give to the application is reported with its request line.
     expect(reports.map((report) => report.slice(0, 2))).toEqual([[`GET /items/${Buffer.from('한').toString('latin1')}`, 400]]);
-    expect(reports[0]![2]).toBeGreaterThanOrEqual(0);
+    expect(present(reports[0])[2]).toBeGreaterThanOrEqual(0);
     expect((await raw(Buffer.from('\x01\r\n\r\n'))).startsWith('HTTP/1.1 400 ')).toBe(true);
-    expect(reports[1]!.slice(0, 2)).toEqual([null, 400]);
+    expect(present(reports[1]).slice(0, 2)).toEqual([null, 400]);
     // HY-60: a response that node:http does not give to the application has an empty reply.
     expect(reports.map((report) => report[3])).toEqual([0, 0]);
   });
@@ -109,8 +108,8 @@ describe('App.server', () => {
     await start();
     // The document of /list?embed=1 embeds the data of its route region, including the shared CSRF token (HY-31, HY-92).
     const first = await fetch(`${base}/list?embed=1`);
-    const cookie = first.headers.get('set-cookie')!.split(';')[0]!;
-    const token = /"csrf":"([0-9a-f]+)"/.exec(await first.text())![1]!;
+    const cookie = present(present(first.headers.get('set-cookie')).split(';')[0]);
+    const token = present(present(/"csrf":"([0-9a-f]+)"/.exec(await first.text()))[1]);
     expect(first.headers.get('cache-control')).toBe('no-store');
     const kept = await fetch(`${base}/_hyper/keep`, { method: 'POST', headers: { Cookie: cookie }, body: new URLSearchParams({ _csrf: token, region: 'rows', path: 'open', value: 'true' }) });
     expect(kept.status).toBe(204);
@@ -125,7 +124,7 @@ describe('App.server', () => {
     const app = await new Fixture().app();
     server = app.server(new FileSessions({ directory }), { files: FIXTURES });
     await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
-    base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+    base = `http://127.0.0.1:${port(server)}`;
     const file = await fetch(`${base}/app.json`);
     expect(file.status).toBe(200);
     expect(file.headers.get('content-type')).toBe('application/json; charset=utf-8');
@@ -161,7 +160,7 @@ describe('App.server', () => {
     });
     server = app.server(new FileSessions({ directory }));
     await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
-    base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+    base = `http://127.0.0.1:${port(server)}`;
     // The plain 500 of an escaped error is hyper's own response (HY-60); the response hook does not receive it.
     const response = await fetch(`${base}/list`);
     expect(response.status).toBe(500);
@@ -186,7 +185,7 @@ describe('App.server', () => {
       writes.push(new Promise((resolve) => outgoing.on('finish', () => resolve(`${incoming.method} ${incoming.url} ${outgoing.statusCode}`))));
     });
     await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
-    base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+    base = `http://127.0.0.1:${port(server)}`;
     expect((await fetch(`${base}/list`)).status).toBe(500);
     expect(await Promise.all(writes)).toEqual(['GET /list 500']);
   });
@@ -234,7 +233,7 @@ describe('App.server', () => {
     // The server registers its own listeners of a connection first, so it has seen the close when this one runs.
     server.once('connection', (connection) => connection.once('close', () => release()));
     await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
-    const socket = connect((server.address() as AddressInfo).port, '127.0.0.1', () => socket.write('GET / HTTP/1.1\r\nHost: x\r\n\r\n'));
+    const socket = connect(port(server), '127.0.0.1', () => socket.write('GET / HTTP/1.1\r\nHost: x\r\n\r\n'));
     await running;
     socket.destroy();
     await done;
@@ -242,7 +241,7 @@ describe('App.server', () => {
     expect(calls).toEqual(['shared']);
     expect(responses).toEqual([]);
     // A request whose client stays receives its response and calls no disconnect hook.
-    base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+    base = `http://127.0.0.1:${port(server)}`;
     expect((await fetch(`${base}/`)).status).toBe(200);
     expect(disconnects.length).toBe(1);
     expect(responses).toEqual([200]);
@@ -260,7 +259,7 @@ describe('the write hook and App.listener', () => {
     // A node:http server that installs only this listener answers the application.
     const plain = createHttpServer(listener);
     await new Promise<void>((resolve) => plain.listen(0, '127.0.0.1', resolve));
-    const response = await fetch(`http://127.0.0.1:${(plain.address() as AddressInfo).port}/`);
+    const response = await fetch(`http://127.0.0.1:${port(plain)}/`);
     await new Promise((resolve) => plain.close(resolve));
     expect(response.status).toBe(200);
   });
@@ -275,7 +274,7 @@ describe('the write hook and App.listener', () => {
       },
     });
     await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
-    base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+    base = `http://127.0.0.1:${port(server)}`;
     expect((await fetch(`${base}/`)).status).toBe(200);
     // The hook runs after the close of the response, which may come after the client has read the response.
     await vi.waitFor(() => expect(written).toEqual([['GET /', 200, true, null]]));
@@ -294,7 +293,7 @@ describe('the write hook and App.listener', () => {
     // A header that the caller sets before the listener of hyper runs stays on the plain 500 (HY-60).
     server.prependListener('request', (_incoming, outgoing) => outgoing.setHeader('X-Before', 'kept'));
     await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
-    base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+    base = `http://127.0.0.1:${port(server)}`;
     const response = await fetch(`${base}/list`);
     expect(response.status).toBe(500);
     expect(response.headers.get('x-before')).toBe('kept');
@@ -323,7 +322,7 @@ describe('the write hook and App.listener', () => {
     });
     server.once('connection', (connection) => connection.once('close', () => release()));
     await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
-    const socket = connect((server.address() as AddressInfo).port, '127.0.0.1', () => socket.write('GET / HTTP/1.1\r\nHost: x\r\n\r\n'));
+    const socket = connect(port(server), '127.0.0.1', () => socket.write('GET / HTTP/1.1\r\nHost: x\r\n\r\n'));
     await running;
     socket.destroy();
     // The listener settles after the write hook and the disconnect hook (HY-102).
@@ -359,7 +358,7 @@ describe('the write hook and App.listener', () => {
     });
     plain.once('connection', (connection) => connection.once('close', () => release()));
     await new Promise<void>((resolve) => plain.listen(0, '127.0.0.1', resolve));
-    const socket = connect((plain.address() as AddressInfo).port, '127.0.0.1', () => socket.write('GET / HTTP/1.1\r\nHost: x\r\n\r\n'));
+    const socket = connect(port(plain), '127.0.0.1', () => socket.write('GET / HTTP/1.1\r\nHost: x\r\n\r\n'));
     await running;
     socket.destroy();
     await Promise.all(settled);

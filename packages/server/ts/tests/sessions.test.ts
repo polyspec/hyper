@@ -1,10 +1,12 @@
 // Sessions in files (HY-45), the counterpart of packages/server/php/tests/NativeSessionTest.php and the session
 // cookie options of RequestTest.php.
-import { existsSync, mkdtempSync, readdirSync, rmSync, utimesSync } from 'node:fs';
+import { existsSync, mkdtempSync, readdirSync, rmSync, utimesSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { serialize } from 'node:v8';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { FileSessions } from '../src/index.js';
+import { present } from './support.js';
 
 let directory: string;
 let sessions: FileSessions;
@@ -31,13 +33,31 @@ describe('FileSessions', () => {
     expect(readdirSync(directory)).toEqual([session.created]);
   });
 
+  it('fails for a session file that holds no map of values by name', async () => {
+    const first = await sessions.open(null);
+    first.set('a', 1);
+    first.close();
+    const id = present(first.created);
+    const file = join(directory, id);
+    writeFileSync(file, serialize([1]));
+    const list = await sessions.open(id);
+    expect(() => list.get('a')).toThrow(`hyper: session file ${file} holds no map of values`);
+    list.close();
+    writeFileSync(file, serialize(new Map([[1, 'a']])));
+    const numbered = await sessions.open(id);
+    expect(() => numbered.get('a')).toThrow(`hyper: session file ${file} holds a key that is not a string`);
+    numbered.close();
+  });
+
   it('reads a session that it created and sets no new cookie for it', async () => {
     const first = await sessions.open(null);
     first.set('a', new Map([['b', [1, -0, 'c']]]));
     first.close();
     const second = await sessions.open(first.created);
     expect(second.get('a')).toEqual(new Map([['b', [1, -0, 'c']]]));
-    expect(Object.is((second.get('a') as Map<string, number[]>).get('b')![1], -0)).toBe(true);
+    const stored = second.get('a');
+    const numbers: unknown = stored instanceof Map ? stored.get('b') : undefined;
+    expect(Array.isArray(numbers) && Object.is(numbers[1], -0)).toBe(true);
     second.close();
     expect(second.created).toBeNull();
   });
@@ -56,7 +76,7 @@ describe('FileSessions', () => {
     const first = await sessions.open(null);
     first.set('a', 1);
     first.close();
-    const id = first.created!;
+    const id = present(first.created);
     const old = new Date(Date.now() - 1441 * 1000);
     utimesSync(join(directory, id), old, old);
     const later = await sessions.open(id);
@@ -71,7 +91,7 @@ describe('FileSessions', () => {
     const first = await sessions.open(null);
     first.set('n', 1);
     first.close();
-    const id = first.created!;
+    const id = present(first.created);
     const order: string[] = [];
     const a = await sessions.open(id);
     const opening = sessions.open(id).then((b) => {
@@ -97,7 +117,7 @@ describe('FileSessions', () => {
     const first = await sessions.open(null);
     first.set('a', 1);
     first.close();
-    const old = first.created!;
+    const old = present(first.created);
     const session = await sessions.open(old);
     session.renew();
     session.close();

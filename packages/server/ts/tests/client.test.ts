@@ -1,57 +1,48 @@
 // The cases of contracts/client.json (HY-62), which PHP passes in ClientTest: one server answers the client-rendered
 // and the server-rendered pages of the fixture manifest.
 import { mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
-import type { AddressInfo } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { maskedToken } from '../src/csrf.js';
 import { FileSessions, Request, Result, type Choice, type ClientRendering } from '../src/index.js';
-import { Fixture, FIXTURES } from './support.js';
+import { Fixture, FIXTURES, list, parsed, port, present, record, strings, text } from './support.js';
 
-interface Case {
-  label: string;
-  request: { method: string; target: string; headers: Record<string, string>; form?: Record<string, string>; csrf?: boolean };
-  status: number;
-  headers: Record<string, string>;
-  shell?: boolean;
-  body?: string;
-  json?: { route: string; params: Record<string, string>; regions: string[] };
-  session?: boolean;
-  actions: number;
-}
-
-const conformance = JSON.parse(readFileSync(new URL('../../../../contracts/client.json', import.meta.url), 'utf8')) as { basePath: string; chosenHost: string; cases: Case[] };
+const conformance = record(parsed(readFileSync(new URL('../../../../contracts/client.json', import.meta.url), 'utf8')));
+const BASE_PATH = text(conformance.basePath);
+const CHOSEN_HOST = text(conformance.chosenHost);
 const SHELL = `${FIXTURES}shell/index.html`;
 // A session token of HY-24; the form carries a masked value of it.
 const TOKEN = '00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff';
-const client = (selects: ClientRendering['selects'] = (request) => ({ chosen: request.header('Host') === conformance.chosenHost, value: null })): ClientRendering => ({ shell: SHELL, basePath: conformance.basePath, selects });
+const client = (selects: ClientRendering['selects'] = (request) => ({ chosen: request.header('Host') === CHOSEN_HOST, value: null })): ClientRendering => ({ shell: SHELL, basePath: BASE_PATH, selects });
 
 describe('client rendering (HY-62)', () => {
-  for (const item of conformance.cases) {
-    it(item.label, async () => {
+  for (const item of list(conformance.cases).map(record)) {
+    it(text(item.label), async () => {
       const fixture = new Fixture();
-      let form = item.request.form;
-      if (item.request.csrf === true) {
+      const request = record(item.request);
+      let form = request.form === undefined ? undefined : strings(request.form);
+      if (request.csrf === true) {
         fixture.session.set('_hyper_csrf', TOKEN);
         form = { _csrf: maskedToken(TOKEN), ...form };
       }
       const response = await fixture.handle(
-        { method: item.request.method, target: item.request.target, headers: item.request.headers, body: form === undefined ? undefined : new URLSearchParams(form).toString() },
+        { method: text(request.method), target: text(request.target), headers: strings(request.headers), body: form === undefined ? undefined : new URLSearchParams(form).toString() },
         { clientRendering: client() },
       );
       expect(response.status).toBe(item.status);
-      for (const [name, value] of Object.entries(item.headers)) expect(response.headers[name], name).toBe(value);
+      for (const [name, value] of Object.entries(record(item.headers))) expect(response.headers[name], name).toBe(value);
       if (item.shell === true) {
         expect(response.body).toBe(readFileSync(SHELL, 'utf8'));
         expect(response.headers).toEqual(item.headers);
       }
       if (item.body !== undefined) expect(response.body).toBe(item.body);
       if (item.json !== undefined) {
-        const json = JSON.parse(response.body) as { route: string; params: Record<string, string>; regions: Record<string, unknown> };
-        expect(json.route).toBe(item.json.route);
-        expect(json.params).toEqual(item.json.params);
-        expect(Object.keys(json.regions)).toEqual(item.json.regions);
+        const json = record(parsed(response.body));
+        const expected = record(item.json);
+        expect(json.route).toBe(expected.route);
+        expect(json.params).toEqual(expected.params);
+        expect(Object.keys(record(json.regions))).toEqual(expected.regions);
       }
       if (item.session === false) expect(fixture.session.get('_hyper_csrf')).toBeUndefined();
       expect(fixture.counter.actions).toBe(item.actions);
@@ -59,12 +50,12 @@ describe('client rendering (HY-62)', () => {
   }
 
   it('reports the shell response with the frame policy and an empty reply (HY-45, HY-60)', async () => {
-    const reports: [string, number, string | undefined, number][] = [];
+    const reports: [string, number, string | string[] | undefined, number][] = [];
     const fixture = new Fixture();
     const app = await fixture.app({
       clientRendering: client(),
       frameAncestors: "'self' https://frame.test",
-      onResponse: (request, response, _elapsed, reply) => reports.push([request!.path(), response.status, response.headers['Content-Security-Policy'] as string | undefined, reply.notes().size]),
+      onResponse: (request, response, _elapsed, reply) => reports.push([present(request).path(), response.status, response.headers['Content-Security-Policy'], reply.notes().size]),
     });
     await app.handle(Request.from({ method: 'GET', target: '/list', headers: { Host: 'client.test' } }), fixture.session);
     await app.handle(Request.from({ method: 'GET', target: '/_props/list', headers: { Host: 'client.test' } }), fixture.session);
@@ -84,7 +75,19 @@ describe('client rendering (HY-62)', () => {
   });
 
   it('answers 500 for a promise that rejects or resolves to another value (HY-43)', async () => {
-    for (const selects of [async () => 'csr' as unknown as Choice, async () => true as unknown as Choice, async () => ({ chosen: true }) as unknown as Choice, async (): Promise<Choice> => { throw new Error('selection'); }]) {
+    // The selections resolve to values outside their declared type, which the server checks at run time.
+    const selections: ClientRendering['selects'][] = [
+      // @ts-expect-error: a string is no Choice.
+      async () => 'csr',
+      // @ts-expect-error: a boolean is no Choice.
+      async () => true,
+      // @ts-expect-error: a choice without a value is no Choice.
+      async () => ({ chosen: true }),
+      async (): Promise<Choice> => {
+        throw new Error('selection');
+      },
+    ];
+    for (const selects of selections) {
       const fixture = new Fixture();
       const response = await fixture.handle({ target: '/' }, { clientRendering: client(selects) });
       expect(response.status).toBe(500);
@@ -94,7 +97,20 @@ describe('client rendering (HY-62)', () => {
   });
 
   it('answers 500 for a selection that throws or returns another value (HY-43)', async () => {
-    for (const selects of [() => 'csr' as unknown as Choice, () => true as unknown as Choice, () => ({ chosen: 'yes', value: null }) as unknown as Choice, () => ({ chosen: true, value: undefined }), (): Choice => { throw new Error('selection'); }]) {
+    // The selections return values outside their declared type, which the server checks at run time.
+    const selections: ClientRendering['selects'][] = [
+      // @ts-expect-error: a string is no Choice.
+      () => 'csr',
+      // @ts-expect-error: a boolean is no Choice.
+      () => true,
+      // @ts-expect-error: a choice whose chosen is a string is no Choice.
+      () => ({ chosen: 'yes', value: null }),
+      () => ({ chosen: true, value: undefined }),
+      (): Choice => {
+        throw new Error('selection');
+      },
+    ];
+    for (const selects of selections) {
       const fixture = new Fixture();
       const response = await fixture.handle({ target: '/' }, { clientRendering: client(selects) });
       expect(response.status).toBe(500);
@@ -186,7 +202,7 @@ describe('client rendering (HY-62)', () => {
     const server = (await new Fixture().app({ clientRendering: client(() => ({ chosen: true, value: null })) })).server(new FileSessions({ directory }));
     try {
       await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
-      const response = await fetch(`http://127.0.0.1:${(server.address() as AddressInfo).port}/items/7`);
+      const response = await fetch(`http://127.0.0.1:${port(server)}/items/7`);
       expect(response.status).toBe(200);
       expect(response.headers.get('cache-control')).toBe('no-cache');
       expect(response.headers.get('set-cookie')).toBeNull();

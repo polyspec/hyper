@@ -28,7 +28,7 @@ export function utf8(bytes: Uint8Array): string | null {
 function urlDecode(text: string): Uint8Array {
   const bytes: number[] = [];
   for (let index = 0; index < text.length; index++) {
-    const char = text[index]!;
+    const char = text.charAt(index);
     if (char === '+') {
       bytes.push(0x20);
     } else if (char === '%' && /^[0-9A-Fa-f]{2}$/.test(text.slice(index + 1, index + 3))) {
@@ -57,7 +57,8 @@ export function parseUrlEncoded(text: string): Fields {
 export function formFields(type: string, body: Uint8Array): Fields {
   if (/^application\/x-www-form-urlencoded\s*(;|$)/i.test(type)) return parseUrlEncoded(Buffer.from(body.buffer, body.byteOffset, body.byteLength).toString('latin1'));
   const boundary = /^multipart\/form-data\s*;/i.test(type) ? /;\s*boundary=(?:"([^"]+)"|([^;\s]+))/i.exec(type) : null;
-  return boundary === null ? { values: new Map(), valid: true } : parseMultipart(body, (boundary[1] ?? boundary[2])!);
+  const value = boundary?.[1] ?? boundary?.[2];
+  return value === undefined ? { values: new Map(), valid: true } : parseMultipart(body, value);
 }
 
 // Parses the text fields of a multipart/form-data body; file fields are not form values.

@@ -1,19 +1,8 @@
-import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { Router, stripBasePath } from '../src/router.js';
+import fixture from '../../../contracts/routes.json';
+import rest from '../../../contracts/rest.json';
 
-interface Case {
-  path: string;
-  result: { name: string; params: Record<string, string> } | null;
-}
-
-const fixture = JSON.parse(readFileSync(new URL('../../../contracts/routes.json', import.meta.url), 'utf8')) as {
-  routes: { name: string; path: string }[];
-  cases: Case[];
-  basePath: string;
-  baseCases: Case[];
-  invalidPaths: string[];
-};
 const router = new Router(fixture.routes);
 
 // HY-9: these are the same cases that the PHP router passes.
@@ -32,11 +21,6 @@ describe('Router conformance', () => {
   });
 });
 
-const rest = JSON.parse(readFileSync(new URL('../../../contracts/rest.json', import.meta.url), 'utf8')) as {
-  routes: { name: string; path: string }[];
-  cases: Case[];
-  invalidPaths: string[];
-};
 
 // HY-49: these are the same rest parameter cases that the PHP router passes.
 describe('Router rest parameters', () => {

@@ -306,6 +306,20 @@
     },
     {
       "paths": [
+        "scripts/json.mts"
+      ],
+      "targets": [
+        "typecheck",
+        "lint-ts"
+      ],
+      "tests": [
+        "tests/scripts/check-parity.test.mts",
+        "tests/scripts/template-version.test.mts",
+        "tests/scripts/ci-workflow.test.mts"
+      ]
+    },
+    {
+      "paths": [
         "scripts/check-parity.mts"
       ],
       "targets": [

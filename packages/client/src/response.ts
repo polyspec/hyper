@@ -62,10 +62,12 @@ export function decodeResponse(app: Application, response: Value, path: string):
   if (match === null || match.name !== name) {
     throw new Error(`hyper: browser route ${JSON.stringify(match?.name ?? null)} for ${path} differs from server route ${JSON.stringify(name)}`);
   }
+  const route = app.manifest.routes.find((item) => item.name === match.name);
+  if (route === undefined) throw new Error(`hyper: route ${match.name} is not in the manifest`);
   const loader = requireMap(root.get('regions') ?? null, 'regions');
   const decoded: DecodedResponse = {
     value: root,
-    route: app.manifest.routes.find((item) => item.name === match.name)!,
+    route,
     params: requireMap(root.get('params') ?? null, 'params'),
     timezone,
     shared: requireMap(root.get('shared') ?? null, 'shared'),
@@ -255,5 +257,5 @@ export function presentRouteRegions(route: RouteDeclaration, regions: ReadonlyMa
 
 // Returns true for the failure of a rendering that requested a template that the loader does not hold (HY-35).
 function missingTemplate(error: unknown): boolean {
-  return (error as { code?: unknown } | null)?.code === 'E_LOAD_NOT_FOUND';
+  return typeof error === 'object' && error !== null && 'code' in error && error.code === 'E_LOAD_NOT_FOUND';
 }

@@ -12,22 +12,20 @@ import { gzipSync } from 'node:zlib';
 import { chromium } from '@playwright/test';
 import type { Browser, CDPSession } from '@playwright/test';
 import { serverRun, startBoard } from '../scripts/board-servers.mts';
+import { isJsonObject, jsonArray, jsonObject, jsonObjects, jsonString, parseJsonObject } from '../scripts/json.mts';
 
-// The globals of the board page that the measurements read: the Hyper instance and htmx of examples/board/client/main.ts,
-// and the marks and posts that this script sets.
-interface BenchWindow {
-  hyper: {
-    app: { engine: { render: (...args: unknown[]) => unknown } };
-    set: (region: string, path: string, value: unknown) => Promise<unknown>;
-    render: (region: string, data: unknown) => Promise<unknown>;
-  };
-  htmx: { swap?: (...args: unknown[]) => Promise<unknown>; process?: (...args: unknown[]) => unknown };
-  benchMarks: Record<string, number>;
-  benchPosts: unknown[];
+// The globals of the board page that the measurements read: the Hyper instance and htmx of examples/board/client/main.ts
+// (examples/board/client/window.d.ts), and the marks and posts that this script sets.
+declare global {
+  interface Window {
+    benchMarks: Record<string, number>;
+    benchPosts: unknown[];
+  }
 }
 type Kind = 'script' | 'style' | 'layout' | 'paint' | 'gc';
 // An event of a Chromium trace; a complete event (ph X) has a duration.
-interface TraceEvent { ph: string; name: string; pid: number; tid: number; ts: number; dur?: number; args: { name?: string } }
+// The fields of an event that the load reads; threadName is the name of args of a thread_name event.
+interface TraceEvent { ph?: string | undefined; name?: string | undefined; pid?: number | undefined; tid?: number | undefined; ts?: number | undefined; dur?: number | undefined; threadName?: string | undefined }
 interface Span { name: string; ts: number; dur: number; children: number }
 interface LongTask { duration: number; parts: [string, number][] }
 type Load = Record<Kind | 'total' | 'other' | 'longest' | 'long', number> & { longTasks: LongTask[] };
@@ -51,7 +49,7 @@ const PHASES = ['total', 'hyper', 'template', 'parse', 'morph', 'settle', 'proce
 // call to htmx:before:swap, morph is to htmx:before:settle, settle is to htmx:after:settle, process is
 // htmx.process of the new content, and events is the rest of the swap.
 async function attributeChange({ runs, path, values }: { runs: number; path: string; values: unknown[] }): Promise<Record<string, number>> {
-  const { hyper, htmx } = window as unknown as BenchWindow;
+  const { hyper, htmx } = window;
   const engine = hyper.app.engine;
   const sum = { total: 0, hyper: 0, template: 0, parse: 0, morph: 0, settle: 0, process: 0, events: 0 };
   const at: Record<string, number> = {};
@@ -66,23 +64,26 @@ async function attributeChange({ runs, path, values }: { runs: number; path: str
     document.addEventListener(name, listener, true);
     return [name, listener];
   });
-  const render = engine.render;
-  engine.render = function (this: unknown, ...args: unknown[]) {
+  // Each timer is an own property of the object. The finally block restores the own property that the object had before,
+  // or deletes the timer when the method came from the prototype, so the object is as it was in either case.
+  const owned = (target: object, name: string) => ({ target, name, descriptor: Object.getOwnPropertyDescriptor(target, name) });
+  const restores = [owned(engine, 'render'), owned(htmx, 'swap'), owned(htmx, 'process')];
+  const render = engine.render.bind(engine);
+  engine.render = (...args: Parameters<typeof render>) => {
     const start = performance.now();
-    try { return render.apply(this, args); } finally { sum.template += performance.now() - start; }
+    try { return render(...args); } finally { sum.template += performance.now() - start; }
   };
-  const swap = htmx.swap;
-  const process = htmx.process;
-  if (swap === undefined || process === undefined) throw new Error('the page has no htmx.swap or htmx.process');
-  htmx.swap = async function (this: unknown, ...args: unknown[]) {
+  const swap = htmx.swap.bind(htmx);
+  const process = htmx.process.bind(htmx);
+  htmx.swap = async (...args: Parameters<typeof swap>) => {
     at.swap = performance.now();
-    try { return await swap.apply(this, args); } finally { at.swapped = performance.now(); }
+    try { return await swap(...args); } finally { at.swapped = performance.now(); }
   };
   let depth = 0;
   let processStart = 0;
-  htmx.process = function (this: unknown, ...args: unknown[]) {
+  htmx.process = (...args: Parameters<typeof process>) => {
     if (depth++ === 0) processStart = performance.now();
-    try { return process.apply(this, args); } finally { if (--depth === 0) sum.process += performance.now() - processStart; }
+    try { return process(...args); } finally { if (--depth === 0) sum.process += performance.now() - processStart; }
   };
   try {
     for (let run = 0; run < runs; run++) {
@@ -102,9 +103,10 @@ async function attributeChange({ runs, path, values }: { runs: number; path: str
       await new Promise((done) => requestAnimationFrame(() => setTimeout(done, 0)));
     }
   } finally {
-    engine.render = render;
-    delete htmx.swap;
-    delete htmx.process;
+    for (const { target, name, descriptor } of restores) {
+      if (descriptor === undefined) Reflect.deleteProperty(target, name);
+      else Object.defineProperty(target, name, descriptor);
+    }
     for (const [name, listener] of listeners) document.removeEventListener(name, listener, true);
   }
   return sum;
@@ -132,7 +134,7 @@ const row = (label: string, items: number[], unit = 'ms'): string => `| ${label}
 
 // Records when the first #content h1 with a given text appears, measured from navigation start.
 const observer = (): void => {
-  const page = window as unknown as BenchWindow;
+  const page = window;
   page.benchMarks = {};
   new MutationObserver(() => {
     const heading = document.querySelector('#content h1')?.textContent;
@@ -159,9 +161,9 @@ try {
       const page = await context.newPage();
       await page.addInitScript(observer);
       await page.goto(`${origin}/board`);
-      await page.waitForFunction(() => (window as unknown as BenchWindow).benchMarks['게시판'] !== undefined && document.getElementById('rows') !== null);
+      await page.waitForFunction(() => window.benchMarks['게시판'] !== undefined && document.getElementById('rows') !== null);
       first.push(await page.evaluate(() => {
-        const mark = (window as unknown as BenchWindow).benchMarks['게시판'];
+        const mark = window.benchMarks['게시판'];
         if (mark === undefined) throw new Error('the list heading has no mark');
         return mark;
       }));
@@ -173,9 +175,9 @@ try {
         link.click();
         return at;
       });
-      await page.waitForFunction(() => (window as unknown as BenchWindow).benchMarks['글쓰기'] !== undefined);
+      await page.waitForFunction(() => window.benchMarks['글쓰기'] !== undefined);
       navigation.push((await page.evaluate(() => {
-        const mark = (window as unknown as BenchWindow).benchMarks['글쓰기'];
+        const mark = window.benchMarks['글쓰기'];
         if (mark === undefined) throw new Error('the create heading has no mark');
         return mark;
       })) - start);
@@ -199,7 +201,7 @@ try {
   const longTasks: string[] = [];
   for (const count of [10, 100, 1000]) {
     await page.evaluate(async (count) => {
-      const bench = window as unknown as BenchWindow;
+      const bench = window;
       bench.benchPosts = Array.from({ length: count }, (_, index) => ({ id: index + 1, title: `게시글 ${index} <제목>`, author: `작성자 ${index}`, created_at: 1790000000 + index }));
       await bench.hyper.render('rows', { posts: bench.benchPosts, sort: '', compact: false, highlight: null });
       await new Promise((done) => requestAnimationFrame(() => setTimeout(done, 0)));
@@ -210,17 +212,17 @@ try {
       const times: number[] = [];
       for (let run = 0; run < runs; run++) {
         const at = performance.now();
-        await (window as unknown as BenchWindow).hyper.set('rows', 'sort', run % 2 === 0 ? 'title' : '');
+        await window.hyper.set('rows', 'sort', run % 2 === 0 ? 'title' : '');
         times.push(performance.now() - at);
         await new Promise((done) => requestAnimationFrame(() => setTimeout(done, 0)));
       }
       return times;
     }, runs);
-    const trace = mainThreadLoad((JSON.parse((await launched.stopTracing()).toString()) as { traceEvents: TraceEvent[] }).traceEvents);
+    const trace = mainThreadLoad(traceEvents((await launched.stopTracing()).toString()));
     await cdp.send('HeapProfiler.collectGarbage');
     const nodes = metric(await metrics(cdp), 'Nodes');
     const engine = await page.evaluate((runs) => {
-      const bench = window as unknown as BenchWindow;
+      const bench = window;
       const assign = { title: '게시판', posts: bench.benchPosts, sort: 'title', compact: false, highlight: null };
       const times: number[] = [];
       for (let run = 0; run < runs; run++) {
@@ -250,8 +252,7 @@ try {
   await csrPage.goto(`${csr}/board`);
   await csrPage.waitForLoadState('networkidle');
   const templates = await csrPage.evaluate(() => performance.getEntriesByType('resource')
-    .filter((entry) => entry instanceof PerformanceResourceTiming && entry.name.includes('/assets/templates/'))
-    .map((entry) => entry as PerformanceResourceTiming)
+    .filter((entry): entry is PerformanceResourceTiming => entry instanceof PerformanceResourceTiming && entry.name.includes('/assets/templates/'))
     .map((entry) => ({ duration: entry.duration, bytes: entry.encodedBodySize })));
   lines.push(`| CSR: template files loaded for /board | ${templates.length} | | files |`);
   lines.push(`| CSR: template loading, slowest file (first visit, local server) | ${Math.max(...templates.map((item) => item.duration)).toFixed(2)} | | ms |`);
@@ -286,13 +287,14 @@ try {
 // Sums the self time of every event on the renderer main thread by kind, so that a style recalculation
 // forced inside a script counts as style and not as script. Returns milliseconds.
 function mainThreadLoad(events: TraceEvent[]): Load {
-  const names = events.filter((event) => event.ph === 'M' && event.name === 'thread_name' && event.args.name === 'CrRendererMain');
+  const names = events.filter((event) => event.ph === 'M' && event.name === 'thread_name' && event.threadName === 'CrRendererMain');
   const busiest = names
     .map((thread) => ({ thread, count: events.filter((event) => event.pid === thread.pid && event.tid === thread.tid && event.name === 'RunTask').length }))
     .sort((a, b) => b.count - a.count)[0]?.thread;
   if (busiest === undefined) throw new Error('the trace has no renderer main thread CrRendererMain');
   const complete: Span[] = events
-    .filter((event): event is TraceEvent & { dur: number } => event.pid === busiest.pid && event.tid === busiest.tid && event.ph === 'X' && typeof event.dur === 'number')
+    .filter((event): event is TraceEvent & { name: string; ts: number; dur: number } => event.pid === busiest.pid && event.tid === busiest.tid && event.ph === 'X'
+      && typeof event.name === 'string' && typeof event.ts === 'number' && typeof event.dur === 'number')
     .map((event) => ({ name: event.name, ts: event.ts, dur: event.dur, children: 0 }))
     .sort((a, b) => a.ts - b.ts || b.dur - a.dur);
   const load: Load = { total: 0, script: 0, style: 0, layout: 0, paint: 0, gc: 0, other: 0, longest: 0, long: 0, longTasks: [] };
@@ -337,7 +339,7 @@ async function heapCounts(cdp: CDPSession): Promise<{ counts: Map<string, HeapEn
   cdp.on('HeapProfiler.addHeapSnapshotChunk', collect);
   await cdp.send('HeapProfiler.takeHeapSnapshot', { reportProgress: false });
   cdp.off('HeapProfiler.addHeapSnapshotChunk', collect);
-  const snapshot = JSON.parse(chunks.join('')) as HeapSnapshot;
+  const snapshot = heapSnapshot(chunks.join(''));
   const fields = snapshot.snapshot.meta.node_fields;
   const types = snapshot.snapshot.meta.node_types[0];
   // The value of a field of the heap snapshot; an index outside the snapshot is an error.
@@ -459,4 +461,38 @@ async function seed(origin: string, count: number): Promise<void> {
       redirect: 'manual',
     });
   }
+}
+
+// The events of a Chromium trace with the fields that mainThreadLoad reads; a field of another type is absent.
+function traceEvents(text: string): TraceEvent[] {
+  const number = (value: unknown): number | undefined => (typeof value === 'number' ? value : undefined);
+  const string = (value: unknown): string | undefined => (typeof value === 'string' ? value : undefined);
+  return jsonObjects(parseJsonObject(text, 'the trace').traceEvents, 'the trace traceEvents').map((event) => ({
+    ph: string(event.ph),
+    name: string(event.name),
+    pid: number(event.pid),
+    tid: number(event.tid),
+    ts: number(event.ts),
+    dur: number(event.dur),
+    threadName: isJsonObject(event.args) ? string(event.args.name) : undefined,
+  }));
+}
+
+// The heap snapshot of `text` with the fields that heapCounts reads.
+function heapSnapshot(text: string): HeapSnapshot {
+  const value = parseJsonObject(text, 'the heap snapshot');
+  const meta = jsonObject(jsonObject(value.snapshot, 'the heap snapshot snapshot').meta, 'the heap snapshot meta');
+  const strings = (list: unknown, where: string): string[] => jsonArray(list, where).map((item, index) => jsonString(item, `${where}[${index}]`));
+  const numbers = (list: unknown, where: string): number[] => {
+    const items = jsonArray(list, where);
+    if (!items.every((item): item is number => typeof item === 'number')) throw new TypeError(`${where} holds a value that is no number`);
+    return items;
+  };
+  const [nodeTypes, ...otherTypes] = jsonArray(meta.node_types, 'the heap snapshot node_types');
+  return {
+    snapshot: { meta: { node_fields: strings(meta.node_fields, 'node_fields'), node_types: [strings(nodeTypes, 'node_types[0]'), ...otherTypes], edge_fields: strings(meta.edge_fields, 'edge_fields') } },
+    nodes: numbers(value.nodes, 'the heap snapshot nodes'),
+    edges: numbers(value.edges, 'the heap snapshot edges'),
+    strings: strings(value.strings, 'the heap snapshot strings'),
+  };
 }

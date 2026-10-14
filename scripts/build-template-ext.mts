@@ -12,15 +12,17 @@ import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFile
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { jsonObjects, parseJsonObject } from './json.mts';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const USAGE = 'usage: node scripts/build-template-ext.mts <library>';
 
 /** The unpack directory of the entry template-php-ext of config/release-assets.json, which make release-assets-fetch writes. */
 function unpacked(): string {
-  const { assets } = JSON.parse(readFileSync(path.join(ROOT, 'config/release-assets.json'), 'utf8')) as { assets: { name: string; unpack?: string }[] };
+  const file = 'config/release-assets.json';
+  const assets = jsonObjects(parseJsonObject(readFileSync(path.join(ROOT, file), 'utf8'), file).assets, `${file} assets`);
   const unpack = assets.find(({ name }) => name === 'template-php-ext')?.unpack;
-  if (unpack === undefined) throw new Error('config/release-assets.json declares no entry template-php-ext with unpack');
+  if (typeof unpack !== 'string') throw new Error('config/release-assets.json declares no entry template-php-ext with unpack');
   return path.join(ROOT, unpack);
 }
 // The sources that the build reads: the C files, the headers, config.m4 and the stub.
@@ -48,7 +50,7 @@ export function buildExtension(library: string): void {
   }
   const digest = hash.digest('hex');
   const stamp = `${library}.inputs.json`;
-  if (existsSync(library) && existsSync(stamp) && (JSON.parse(readFileSync(stamp, 'utf8')) as { hash?: unknown }).hash === digest) {
+  if (existsSync(library) && existsSync(stamp) && parseJsonObject(readFileSync(stamp, 'utf8'), stamp).hash === digest) {
     console.log(`build-template-ext: ${library} is current for PHP ${php}`);
     return;
   }

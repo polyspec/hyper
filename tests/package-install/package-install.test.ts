@@ -24,11 +24,21 @@ const EXPORTS: Record<string, unknown> = {
   '@polyspec/hyper-server': { '.': { types: './dist/index.d.ts', default: './dist/index.js' } },
 };
 
+// JSON.parse returns any: the test takes each JSON value as unknown and narrows the parts that it reads.
+type JsonObject = { [key: string]: unknown };
+const isJsonObject = (value: unknown): value is JsonObject => typeof value === 'object' && value !== null && !Array.isArray(value);
+function jsonObject(value: unknown, where: string): JsonObject {
+  if (!isJsonObject(value)) throw new TypeError(`${where} is not a JSON object`);
+  return value;
+}
+const readObject = (file: string | URL): JsonObject => jsonObject(JSON.parse(readFileSync(file, 'utf8')), String(file));
+
 // The directory of each package in this repository: the target of its link in the lock of this project (H23.8).
-const LOCK = JSON.parse(readFileSync(new URL('package-lock.json', import.meta.url), 'utf8')) as { packages: Record<string, { resolved?: string; link?: boolean }> };
+const LOCK = jsonObject(readObject(new URL('package-lock.json', import.meta.url)).packages, 'package-lock.json packages');
 function linkedDirectory(name: string): string {
-  const entry = LOCK.packages[`node_modules/${name}`];
-  if (entry?.link !== true || entry.resolved === undefined) throw new Error(`package-lock.json links ${name} to no directory`);
+  const value = LOCK[`node_modules/${name}`];
+  const entry = value === undefined ? undefined : jsonObject(value, `package-lock.json node_modules/${name}`);
+  if (entry?.link !== true || typeof entry.resolved !== 'string') throw new Error(`package-lock.json links ${name} to no directory`);
   return fileURLToPath(new URL(`${entry.resolved}/`, import.meta.url));
 }
 const NPM = fileURLToPath(new URL('../../var/tools/bin/npm', import.meta.url));
@@ -37,11 +47,9 @@ test('the installed packages are the packages of this repository, JavaScript wit
   for (const name of ['@polyspec/hyper-client', '@polyspec/hyper-server']) {
     const directory = linkedDirectory(name);
     assert.equal(import.meta.resolve(name), pathToFileURL(join(directory, 'dist', 'index.js')).href);
-    const manifest = JSON.parse(readFileSync(join(directory, 'package.json'), 'utf8')) as { exports: unknown };
-    assert.deepEqual(manifest.exports, EXPORTS[name]);
+    assert.deepEqual(readObject(join(directory, 'package.json')).exports, EXPORTS[name]);
     if (name === '@polyspec/hyper-client') {
-      const dataTemplate = JSON.parse(readFileSync(join(directory, 'data-template.json'), 'utf8')) as { name: string };
-      assert.equal(dataTemplate.name, 'hyper/data.tpl');
+      assert.equal(readObject(join(directory, 'data-template.json')).name, 'hyper/data.tpl');
     }
   }
 });
@@ -50,7 +58,13 @@ test('each package publishes its build and declarations without its source', () 
   for (const name of ['@polyspec/hyper-client', '@polyspec/hyper-server']) {
     // npm pack --dry-run lists the files that the published archive holds; npm 12 keys its JSON by the package name.
     const pack = execFileSync(NPM, ['pack', '--dry-run', '--json', '--ignore-scripts'], { cwd: linkedDirectory(name), encoding: 'utf8' });
-    const files = (JSON.parse(pack) as Record<string, { files: { path: string }[] }>)[name].files.map((file) => file.path);
+    const packed: unknown = jsonObject(jsonObject(JSON.parse(pack), 'the output of npm pack')[name], `the output of npm pack ${name}`).files;
+    if (!Array.isArray(packed)) throw new TypeError(`npm pack lists no files of ${name}`);
+    const files = packed.map((file: unknown) => {
+      const path = jsonObject(file, `a file of npm pack ${name}`).path;
+      if (typeof path !== 'string') throw new TypeError(`a file of npm pack ${name} has no path`);
+      return path;
+    });
     const expected = ['package.json', 'dist/index.js', 'dist/index.d.ts', ...(name === '@polyspec/hyper-client' ? ['templates-index.d.ts', 'data-template.json'] : [])];
     for (const file of expected) assert.ok(files.includes(file), `${name} publishes ${file}`);
     assert.deepEqual(files.filter((file) => file.startsWith('src/')), [], `${name} publishes its source`);

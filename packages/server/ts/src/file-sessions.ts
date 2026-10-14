@@ -3,6 +3,7 @@ import { randomBytes } from 'node:crypto';
 import { readdirSync, readFileSync, renameSync, rmSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
 import { isAbsolute, join } from 'node:path';
 import { deserialize, serialize } from 'node:v8';
+import { errorCode } from './error-code.js';
 import type { SessionStore } from './session.js';
 
 export interface FileSessionsOptions {
@@ -151,11 +152,18 @@ export class FileSession implements SessionStore {
       try {
         content = this.sessions.expired(file) ? null : readFileSync(file);
       } catch (error) {
-        if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+        if (errorCode(error) !== 'ENOENT') throw error;
       }
       if (content !== null) {
         this.id = this.cookieId;
-        this.values = deserialize(content) as Map<string, unknown>;
+        const stored: unknown = deserialize(content);
+        if (!(stored instanceof Map)) throw new Error(`hyper: session file ${file} holds no map of values`);
+        const values = new Map<string, unknown>();
+        for (const [key, item] of stored) {
+          if (typeof key !== 'string') throw new Error(`hyper: session file ${file} holds a key that is not a string`);
+          values.set(key, item);
+        }
+        this.values = values;
         return this.values;
       }
     }

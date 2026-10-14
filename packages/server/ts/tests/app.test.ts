@@ -2,11 +2,11 @@
 import { readFileSync } from 'node:fs';
 import { inspect } from 'node:util';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { createApplication, decodeResponse, renderParts, type Manifest, type TemplateIndex } from '@polyspec/hyper-client';
+import { checkManifest, createApplication, decodeResponse, renderParts, type TemplateIndex } from '@polyspec/hyper-client';
 import { parseJson, type Template } from '@polyspec/template/render';
 import { verifyToken } from '../src/csrf.js';
 import { App, Reply as ReplyClass, Request, Result, type Handlers, type Loader, type Reply, type Response } from '../src/index.js';
-import { cookie, Fixture, FIXTURES, handlers, json, JSON_REGION, TEMPLATES, type Services } from './support.js';
+import { cookie, Fixture, FIXTURES, handlers, json, JSON_REGION, parsed, present, record, TEMPLATES, text, type Services } from './support.js';
 
 let fixture: Fixture;
 beforeEach(() => {
@@ -22,8 +22,8 @@ describe('App', () => {
   });
 
   it('renders parts alone that match the document (HY-13)', async () => {
-    const manifest = JSON.parse(readFileSync(`${FIXTURES}app.json`, 'utf8')) as Manifest;
-    const index = JSON.parse(readFileSync(TEMPLATES.index, 'utf8')) as TemplateIndex;
+    const manifest = checkManifest(JSON.parse(readFileSync(`${FIXTURES}app.json`, 'utf8')));
+    const index: TemplateIndex = Object.fromEntries(Object.entries(record(parsed(readFileSync(TEMPLATES.index, 'utf8')))).map(([name, entry]) => [name, { url: text(record(entry).url) }]));
     const application = createApplication(manifest, index, async (url) => JSON.parse(readFileSync(`${TEMPLATES.root}${url}`, 'utf8')) as Template);
     await application.templates.ensure(Object.keys(index));
     const document = (await fixture.get('/')).body;
@@ -37,11 +37,11 @@ describe('App', () => {
   it('embeds only the route regions of the document JSON and their kept entries (HY-31)', async () => {
     const headers = cookie('hy-keep', '{"rows":{"mode":"b"}}');
     const html = (await fixture.get('/list?embed=1', headers)).body;
-    const document = JSON.parse((await fixture.get('/list', { Accept: 'application/json', ...headers })).body) as { regions: Record<string, unknown>; kept: unknown };
+    const document = json(await fixture.get('/list', { Accept: 'application/json', ...headers }));
     expect(Object.keys(document.regions)).toEqual(['side', 'content', 'rows']);
     const found = /<script type="application\/json" id="hy-data">(.*)<\/script>/.exec(html)?.[1];
-    expect(JSON.parse(fixture.unmasked(found!))).toEqual(JSON.parse(fixture.unmasked(JSON.stringify({ ...document, regions: { rows: document.regions.rows } }))));
-    expect(JSON.parse(found!).kept).toEqual({ rows: { mode: 'b' } });
+    expect(JSON.parse(fixture.unmasked(present(found)))).toEqual(JSON.parse(fixture.unmasked(JSON.stringify({ ...document, regions: { rows: document.regions.rows } }))));
+    expect(record(parsed(present(found))).kept).toEqual({ rows: { mode: 'b' } });
     expect(found).toContain('"a\\u003c"');
   });
 
@@ -78,7 +78,7 @@ describe('App', () => {
     const token = await fixture.token();
     expect((await fixture.keep({ _csrf: token, region: 'rows', path: 'open', value: 'true' })).status).toBe(204);
     const response = json(await fixture.get('/list', JSON_REGION));
-    expect((response.regions.rows as Record<string, unknown>).open).toBe(false);
+    expect(record(response.regions.rows).open).toBe(false);
     expect(response.kept).toEqual({ rows: { open: true } });
     const document = (await fixture.get('/list?embed=1')).body;
     expect(document).toContain('"rows":{"items":["a\\u003c","b0"],"open":false');
@@ -94,7 +94,7 @@ describe('App', () => {
     expect((await fixture.keep({ _csrf: token, region: 'rows', path: 'open', value: 'tru' })).status).toBe(400);
     expect((await fixture.keep({ _csrf: token, region: 'rows', path: 'constructor', value: 'true' })).status).toBe(400);
     expect((await fixture.keep({}, 'GET')).status).toBe(405);
-    expect((json(await fixture.get('/list', JSON_REGION)).regions.rows as Record<string, unknown>).open).toBe(false);
+    expect(record(json(await fixture.get('/list', JSON_REGION)).regions.rows).open).toBe(false);
     expect(json(await fixture.get('/list', JSON_REGION)).kept).toEqual({});
   });
 
@@ -133,7 +133,8 @@ describe('App', () => {
   it('fails shared data and region data that are not maps (HY-44)', async () => {
     for (const value of [['b'], 'b']) {
       // The loaders return a value outside their declared type, which the server checks at run time.
-      const loader = (() => value) as unknown as Loader<Services>;
+      // @ts-expect-error: the loader returns a list or a string, which is no Data, and the server fails it at run time.
+      const loader: Loader<Services> = () => value;
       const variants: Record<string, Handlers<Services>> = {
         shared: { ...handlers(), shared: loader },
         region: { ...handlers(), regions: { side: loader } },
@@ -162,7 +163,7 @@ describe('App', () => {
       ['plain object', { a: 1 }, 200],
     ];
     for (const [label, value, status] of cases) {
-      const shared = (() => ({ value })) as unknown as Loader<Services>;
+      const shared: Loader<Services> = () => ({ value });
       const app = await fixture.app({ handlers: { ...handlers(), shared } });
       for (const headers of [{}, { Accept: 'application/json' }]) {
         expect((await app.handle(Request.from({ method: 'GET', target: '/', headers }), fixture.session)).status, label).toBe(status);
@@ -293,9 +294,9 @@ describe('App', () => {
   it('masks the token anew in every response and accepts every mask (HY-24)', async () => {
     const first = await fixture.get('/list', JSON_REGION);
     const second = await fixture.get('/list', JSON_REGION);
-    const token = fixture.session.get('_hyper_csrf') as string;
-    const a = (json(first).shared as { csrf: string }).csrf;
-    const b = (json(second).shared as { csrf: string }).csrf;
+    const token = text(fixture.session.get('_hyper_csrf'));
+    const a = text(json(first).shared.csrf);
+    const b = text(json(second).shared.csrf);
     expect(a).toMatch(/^[0-9a-f]{128}$/);
     expect(a).not.toBe(b);
     expect(first.body).not.toContain(token);
@@ -307,7 +308,7 @@ describe('App', () => {
 
   it('rejects the token itself (HY-24)', async () => {
     await fixture.token();
-    const token = fixture.session.get('_hyper_csrf') as string;
+    const token = text(fixture.session.get('_hyper_csrf'));
     expect((await fixture.post('/add', { _csrf: token, name: 'a' })).status).toBe(403);
     expect(fixture.counter.actions).toBe(0);
     expect((await fixture.keep({ _csrf: token, region: 'rows', path: 'open', value: 'true' })).status).toBe(403);
@@ -319,14 +320,14 @@ describe('App', () => {
     expect((await fixture.post('/add', { _csrf: old, name: 'sign-in' })).status).toBe(303);
     expect(fixture.session.renewals).toBe(1);
     expect(fixture.session.get('_hyper_csrf')).not.toBe(oldToken);
-    expect((json(await fixture.get('/', { Accept: 'application/json' })).regions.side as { note: string }).note).toBe('renewed');
+    expect(record(json(await fixture.get('/', { Accept: 'application/json' })).regions.side).note).toBe('renewed');
     expect((await fixture.post('/add', { _csrf: old, name: 'a' })).status).toBe(403);
     expect((await fixture.post('/add', { _csrf: await fixture.token(), name: 'a' })).status).toBe(303);
   });
 
   it('gives the page of a renewing action the new token (HY-72)', async () => {
     const page = json(await fixture.post('/add', { _csrf: await fixture.token(), name: 'sign-in-page' }, JSON_REGION));
-    expect(verifyToken(fixture.session.get('_hyper_csrf') as string, (page.shared as { csrf: string }).csrf)).toBe(true);
+    expect(verifyToken(text(fixture.session.get('_hyper_csrf')), text(page.shared.csrf))).toBe(true);
   });
 
   it('sends only the paths that the templates of the route read (HY-73)', async () => {
@@ -339,8 +340,8 @@ describe('App', () => {
     const app = await fixture.app({ handlers: { ...base, shared: () => ({ site: 'x', name: 'shared name' }), routes: { ...base.routes, list: { regions: { rows: () => ({ items: ['a'], open: false, mode: 'a', view: 'x', filter: {}, tags: [], unread: 1 }) } } } } });
     const list = json(await app.handle(Request.from({ method: 'GET', target: '/list', headers: JSON_REGION }), fixture.session));
     // The shared handler value name is read by the page template of another route, not by any template of /list.
-    expect(Object.keys(list.shared as object)).toEqual(['title', 'csrf']);
-    expect(Object.keys(list.regions.rows as object)).toEqual(['items', 'open', 'mode', 'view', 'filter', 'tags']);
+    expect(Object.keys(list.shared)).toEqual(['title', 'csrf']);
+    expect(Object.keys(record(list.regions.rows))).toEqual(['items', 'open', 'mode', 'view', 'filter', 'tags']);
   });
 
   it('fails a shared value outside the data model that no template reads (HY-44, HY-73)', async () => {
@@ -371,17 +372,17 @@ describe('App', () => {
 
   it('changes the tag of a renewed session (HY-53, HY-72)', async () => {
     const first = await fixture.get('/items/plain', { Accept: 'application/json' });
-    expect((await fixture.get('/items/plain', { Accept: 'application/json', 'If-None-Match': first.headers.ETag as string })).status).toBe(304);
+    expect((await fixture.get('/items/plain', { Accept: 'application/json', 'If-None-Match': text(first.headers.ETag) })).status).toBe(304);
     expect((await fixture.post('/add', { _csrf: await fixture.token(), name: 'sign-in' })).status).toBe(303);
-    const renewed = await fixture.get('/items/plain', { Accept: 'application/json', 'If-None-Match': first.headers.ETag as string });
+    const renewed = await fixture.get('/items/plain', { Accept: 'application/json', 'If-None-Match': text(first.headers.ETag) });
     expect(renewed.status).toBe(200);
     expect(renewed.headers.ETag).not.toBe(first.headers.ETag);
   });
 
   it('replaces a stored token that is not 64 lowercase hexadecimal digits (HY-24)', async () => {
     fixture.session.set('_hyper_csrf', 'conformance-token');
-    const masked = (json(await fixture.get('/list', JSON_REGION)).shared as { csrf: string }).csrf;
-    const token = fixture.session.get('_hyper_csrf') as string;
+    const masked = text(json(await fixture.get('/list', JSON_REGION)).shared.csrf);
+    const token = text(fixture.session.get('_hyper_csrf'));
     expect(token).toMatch(/^[0-9a-f]{64}$/);
     expect(verifyToken(token, masked)).toBe(true);
   });
@@ -417,7 +418,7 @@ describe('App', () => {
     expect(page.headers['Referrer-Policy']).toBe('same-origin');
     const json = await fixture.get('/items/referrer', JSON_PAGE);
     expect(json.headers['Referrer-Policy']).toBe('same-origin');
-    const again = await fixture.get('/items/referrer', { ...JSON_PAGE, 'If-None-Match': json.headers.ETag as string });
+    const again = await fixture.get('/items/referrer', { ...JSON_PAGE, 'If-None-Match': text(json.headers.ETag) });
     expect(again.status).toBe(304);
     expect(again.headers['Referrer-Policy']).toBe('same-origin');
     expect((await fixture.get('/items/referrer-in-place', JSON_PAGE)).headers['Referrer-Policy']).toBe('origin');
@@ -465,7 +466,7 @@ describe('App', () => {
     expect(response.status).toBe(303);
     expect(response.headers.Location).toBe('/items/new');
     expect(response.body).toBe('');
-    expect((json(await fixture.get('/', { Accept: 'application/json' })).regions.side as Record<string, unknown>).note).toBe('moved');
+    expect(record(json(await fixture.get('/', { Accept: 'application/json' })).regions.side).note).toBe('moved');
     expect((await fixture.get('/api/items/moved', {}, '/api')).headers.Location).toBe('/api/items/new');
   });
 
@@ -519,7 +520,7 @@ describe('App', () => {
     const options = {
       bodyLimit: 256,
       onResponse: (request: Request | null, response: Response, elapsed: number) => {
-        reports.push([request!.method, request!.path(), response.status, response.headers['Content-Security-Policy'], elapsed]);
+        reports.push([present(request).method, present(request).path(), response.status, response.headers['Content-Security-Policy'], elapsed]);
       },
     };
     const token = await fixture.token();
@@ -547,7 +548,7 @@ describe('App', () => {
     // The elapsed time counts from the start that the caller gives, such as the time when the server received it.
     reports.length = 0;
     await (await fixture.app(options)).handle(Request.from({ method: 'GET', target: '/' }), fixture.session, performance.now() - 2000);
-    expect(reports[0]![4]).toBeGreaterThanOrEqual(2000);
+    expect(present(reports[0])[4]).toBeGreaterThanOrEqual(2000);
   });
 
   it('gives the hook the reply of the request with the notes of its loaders and actions (HY-60)', async () => {
@@ -565,7 +566,7 @@ describe('App', () => {
       [403, { refusal: 'private' }, null], [403, { refusal: 'closed', kind: 'closed' }, null], [500, { stage: 'load' }, 'secret detail /srv/app.js'],
       [200, {}, null], [404, {}, null], [400, {}, null],
     ]);
-    expect(Object.keys((reports[1]![1]))).toEqual(['refusal', 'kind']);
+    expect(Object.keys(present(reports[1])[1])).toEqual(['refusal', 'kind']);
     expect(forbidden.headers).toEqual({ 'Content-Type': 'text/plain; charset=utf-8', 'Content-Security-Policy': "frame-ancestors 'self'", 'Cache-Control': 'no-store' });
   });
 
@@ -635,9 +636,9 @@ describe('App', () => {
 
     const preview = await fixture.post('/add', { _csrf: token, name: 'preview' }, { Accept: 'application/json' });
     expect(preview.status).toBe(200);
-    expect((json(preview).regions.content as Record<string, unknown>).name).toBe('preview');
+    expect(record(json(preview).regions.content).name).toBe('preview');
     // HY-53: only a GET request receives 304; an action runs whatever tag the request names.
-    const again = await fixture.post('/add', { _csrf: token, name: 'preview' }, { Accept: 'application/json', 'If-None-Match': preview.headers.ETag as string });
+    const again = await fixture.post('/add', { _csrf: token, name: 'preview' }, { Accept: 'application/json', 'If-None-Match': text(preview.headers.ETag) });
     expect(again.status).toBe(200);
     expect(fixture.unmasked(again.body)).toBe(fixture.unmasked(preview.body));
     expect((await fixture.post('/add', { _csrf: token, name: 'preview' })).status).toBe(200);
@@ -651,7 +652,7 @@ describe('App', () => {
     expect(page.headers['Content-Type']).toBe('application/json; charset=utf-8');
     expect(page.headers['Cache-Control']).toBe('no-store');
     expect(page.headers.ETag).toBeUndefined();
-    expect((json(page).regions.content as Record<string, unknown>).id).toBe('in-place');
+    expect(record(json(page).regions.content).id).toBe('in-place');
     const tagged = await fixture.get('/items/in-place', { ...JSON_REGION, 'If-None-Match': fixture.tag(page.body) });
     expect(tagged.status).toBe(403);
     expect(fixture.unmasked(tagged.body)).toBe(fixture.unmasked(page.body));
@@ -665,7 +666,7 @@ describe('App', () => {
     const action = await fixture.post('/add', { _csrf: token, name: 'in-place' }, JSON_REGION);
     expect(action.status).toBe(403);
     expect(action.headers['Cache-Control']).toBe('no-store');
-    expect((json(action).regions.content as Record<string, unknown>).name).toBe('in-place');
+    expect(record(json(action).regions.content).name).toBe('in-place');
     // A page with 409 or 422 and a redirect keep their own status.
     expect((await fixture.post('/add', { _csrf: token, name: 'in-place-refused' }, JSON_REGION)).status).toBe(422);
     const moved = await fixture.get('/items/in-place-moved', JSON_REGION);
@@ -692,7 +693,7 @@ describe('App', () => {
     ]);
     expect(page.headers['Cache-Control']).toBe('private, max-age=60');
     const https = await fixture.handle({ target: '/items/member', https: true });
-    expect((https.headers['Set-Cookie'] as string[])[0]).toBe('member=token.1; Path=/; HttpOnly; SameSite=Lax; Secure; Max-Age=3600');
+    expect(https.headers['Set-Cookie']?.[0]).toBe('member=token.1; Path=/; HttpOnly; SameSite=Lax; Secure; Max-Age=3600');
     const forbidden = await fixture.get('/items/guarded');
     expect(forbidden.status).toBe(403);
     expect(forbidden.headers['Set-Cookie']).toEqual(['member=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0']);
@@ -710,7 +711,7 @@ describe('App', () => {
 
   it('tags JSON responses and answers a matching request with 304 (HY-53)', async () => {
     const first = await fixture.get('/items/plain', { Accept: 'application/json' });
-    const tag = first.headers.ETag as string;
+    const tag = text(first.headers.ETag);
     expect(tag).toBe(fixture.tag(first.body));
     const again = await fixture.get('/items/plain', { Accept: 'application/json', 'If-None-Match': tag });
     expect(again.status).toBe(304);

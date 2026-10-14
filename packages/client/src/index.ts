@@ -12,7 +12,7 @@ export {
 export { applyKept, browserStorage, KEEP_KINDS, valueToJson, type KeepKind, type KeepStorage } from './keep.js';
 export { keepRead, routeReads, templateReads, type ReadNode, type ResolvePath, type RouteReads } from './reads.js';
 export { Router, stripBasePath, type RouteMatch } from './router.js';
-export { routeTemplates, TemplateStore, type TemplateFetcher, type TemplateIndex } from './templates.js';
+export { checkTemplateIndex, routeTemplates, TemplateStore, type TemplateFetcher, type TemplateIndex } from './templates.js';
 export type { Fetch } from './obtain.js';
 export {
   copyValue,
@@ -36,11 +36,13 @@ export {
   Hyper,
   parseAssignments,
   replaceAttributes,
+  type AssignmentElement,
   type AttributeElement,
   type HookDetail,
   type HtmxApi,
   type HyperExtension,
   type HyperOptions,
+  type RegionElement,
   type DocumentAdapter,
   type RequestContext,
 } from './hyper.js';

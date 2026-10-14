@@ -8,12 +8,19 @@ import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, realpathSy
 import { tmpdir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
 import { test, type TestContext } from 'node:test';
+import { jsonObject, jsonObjects, jsonString, parseJsonObject } from '../../scripts/json.mts';
 import { requireBuilt } from './requires.mts';
 
 const repository = resolve('.');
 /** An entry of config/release-assets.json. */
 interface Entry { name: string; version: string; url: string; directory: string }
-const entries = (): Entry[] => (JSON.parse(readFileSync(join(repository, 'config/release-assets.json'), 'utf8')) as { assets: Entry[] }).assets;
+const ASSETS = 'config/release-assets.json';
+const entries = (): Entry[] => jsonObjects(parseJsonObject(readFileSync(join(repository, ASSETS), 'utf8'), ASSETS).assets, `${ASSETS} assets`).map((entry, index) => {
+  const field = (key: string): string => jsonString(entry[key], `${ASSETS} assets[${index}] ${key}`);
+  return { name: field('name'), version: field('version'), url: field('url'), directory: field('directory') };
+});
+// The JSON object of the file `file`.
+const readObject = (file: string) => parseJsonObject(readFileSync(file, 'utf8'), file);
 // The tag TEMPLATE_TAG of the Makefile, the tag of the version of the entry template-php of config/release-assets.json,
 // the one declaration of the template release (HY-80, H23.11-2).
 function templateTag(): string {
@@ -71,8 +78,9 @@ test('npm installs the template package as one copy inside this checkout', () =>
 });
 
 test('Composer installs the template PHP package from the zip of the template release, and PHPStan reads the stub of the unpacked php-ext asset', () => {
-  const version = (JSON.parse(readFileSync('packages/server/php/composer.json', 'utf8')) as { require: Record<string, string> }).require['polyspec/template'];
-  assert.ok(version !== undefined, 'packages/server/php requires no polyspec/template');
+  const required = jsonObject(readObject('packages/server/php/composer.json').require, 'packages/server/php/composer.json require')['polyspec/template'];
+  assert.ok(required !== undefined, 'packages/server/php requires no polyspec/template');
+  const version = jsonString(required, 'packages/server/php/composer.json require polyspec/template');
   assert.match(version, /^\d+\.\d+\.\d+$/, 'packages/server/php requires an exact template version');
   // config/release-assets.json pins the zip; make install checks it by its sha256 and writes it into var/products/template-php,
   // the artifact repository of both Composer projects, so no manifest copies the metadata of the template package.
@@ -80,17 +88,18 @@ test('Composer installs the template PHP package from the zip of the template re
   const pinned = entries().filter(({ directory }) => directory === 'var/products/template-php');
   assert.deepEqual(pinned.map(({ url, version }) => url.replaceAll('{version}', version).split('/').pop()), [zip]);
   for (const manifest of ['composer.json', 'examples/board/composer.json']) {
-    const { repositories, require } = JSON.parse(readFileSync(manifest, 'utf8')) as { repositories: { type: string; url: string }[]; require: Record<string, string> };
-    assert.equal(require['polyspec/template'], version, manifest);
+    const { repositories, require } = readObject(manifest);
+    assert.equal(jsonObject(require, `${manifest} require`)['polyspec/template'], version, manifest);
     const directory = relative(dirname(resolve(manifest)), join(repository, 'var/products/template-php'));
-    assert.deepEqual(repositories.filter((item) => item.type !== 'path'), [{ type: 'artifact', url: directory }], `${manifest}: the template zip comes from the artifact repository ${directory}`);
-    const lock = JSON.parse(readFileSync(manifest.replace(/\.json$/, '.lock'), 'utf8')) as { packages: { name: string; version: string; dist: { type: string; url: string; shasum: string } }[] };
-    const entry = lock.packages.find(({ name }) => name === 'polyspec/template');
+    assert.deepEqual(jsonObjects(repositories, `${manifest} repositories`).filter((item) => item.type !== 'path'), [{ type: 'artifact', url: directory }], `${manifest}: the template zip comes from the artifact repository ${directory}`);
+    const lockFile = manifest.replace(/\.json$/, '.lock');
+    const entry = jsonObjects(readObject(lockFile).packages, `${lockFile} packages`).find(({ name }) => name === 'polyspec/template');
     assert.ok(entry !== undefined, `${manifest}: the lock has no polyspec/template`);
     assert.equal(entry.version, version, manifest);
-    assert.equal(entry.dist.type, 'zip', manifest);
-    assert.equal(entry.dist.url, `${directory}/${zip}`, manifest);
-    assert.match(entry.dist.shasum, /^[0-9a-f]{40}$/, `${manifest}: the lock pins the zip by its sha1`);
+    const dist = jsonObject(entry.dist, `${lockFile} polyspec/template dist`);
+    assert.equal(dist.type, 'zip', manifest);
+    assert.equal(dist.url, `${directory}/${zip}`, manifest);
+    assert.match(jsonString(dist.shasum, `${lockFile} polyspec/template dist shasum`), /^[0-9a-f]{40}$/, `${manifest}: the lock pins the zip by its sha1`);
   }
   const scanned = /scanFiles:\n\s+- (\S+)/.exec(readFileSync('packages/server/php/phpstan.neon', 'utf8'))?.[1];
   assert.ok(scanned !== undefined, 'packages/server/php/phpstan.neon scans no file');

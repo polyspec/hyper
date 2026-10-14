@@ -44,7 +44,9 @@ export class Posts {
 
   // Returns the number of posts.
   count(): number {
-    return Number(this.db.prepare('SELECT COUNT(*) AS count FROM posts').get()!.count);
+    const row = this.db.prepare('SELECT COUNT(*) AS count FROM posts').get();
+    if (row === undefined) throw new Error('SELECT COUNT(*) returned no row');
+    return Number(row.count);
   }
 
   // Returns the number of pages for a page size.

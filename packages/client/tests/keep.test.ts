@@ -1,16 +1,21 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { parseJson, type MapValue, type Value } from '@polyspec/template';
+import { parseJson } from '@polyspec/template';
 import { applyKept, keepCookieName } from '../src/keep.js';
+import { listOf, mapOf, stringOf } from './values.js';
 
-const fixture = parseJson(readFileSync(new URL('../../../contracts/keep.json', import.meta.url), 'utf8')) as MapValue;
-const cases = (fixture.get('cases') as Value[]).map((value) => value as MapValue);
+const fixture = mapOf(parseJson(readFileSync(new URL('../../../contracts/keep.json', import.meta.url), 'utf8')));
+const cases = listOf(fixture.get('cases')).map((value) => mapOf(value));
 
 // HY-41: these are the same cases that the PHP implementation passes.
 describe('applyKept conformance', () => {
-  it.each(cases.map((item) => [item.get('label') as string, item] as const))('%s', (_label, item) => {
-    const data = item.get('data') as MapValue;
-    const kept = (item.get('kept') as Value[][]).map(([path, value]) => [path as string, value as Value] as const);
+  it.each(cases.map((item) => [stringOf(item.get('label')), item] as const))('%s', (_label, item) => {
+    const data = mapOf(item.get('data'));
+    const kept = listOf(item.get('kept')).map((entry) => {
+      const [path, value] = listOf(entry);
+      if (value === undefined) throw new Error('a kept entry has no value');
+      return [stringOf(path), value] as const;
+    });
     applyKept(data, kept);
     expect(data).toEqual(item.get('expected'));
   });

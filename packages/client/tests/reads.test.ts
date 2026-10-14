@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { createEngine, keepRead, routeReads, type ReadNode } from '../src/index.js';
 import { manifest, sources } from './application.js';
+import { defined, isRecord, isStringRecord } from './values.js';
 
 interface Case {
   label: string;
@@ -19,24 +20,38 @@ interface Case {
   kept: unknown;
 }
 
-const fixture = JSON.parse(readFileSync(new URL('../../../contracts/reads.json', import.meta.url), 'utf8')) as { cases: Case[] };
+const fixture: unknown = JSON.parse(readFileSync(new URL('../../../contracts/reads.json', import.meta.url), 'utf8'));
+if (!isRecord(fixture) || !Array.isArray(fixture.cases) || !fixture.cases.every(isCase)) throw new Error('contracts/reads.json has a case that is not a case');
+const cases: Case[] = fixture.cases;
+
+function isCase(value: unknown): value is Case {
+  return isRecord(value) && typeof value.label === 'string' && isStringRecord(value.templates) && typeof value.template === 'string' && isReadNode(value.reads);
+}
+
+function isReadNode(value: unknown): value is ReadNode {
+  if (value === true) return true;
+  if (!isRecord(value)) return false;
+  return Object.entries(value).every(([key, child]) =>
+    key === 'each' ? isReadNode(child) : key === 'keys' && isRecord(child) && Object.values(child).every(isReadNode));
+}
 
 // The time limit of the read paths of one case. The analysis runs in its own process, because an analysis that does
 // not finish blocks the process that runs it, so a time limit inside the test process cannot stop it.
 const READS_LIMIT_MS = 10_000;
 
-function readsWithin(item: Case): ReadNode {
+function readsWithin(item: Case): unknown {
   const child = spawnSync(process.execPath, [fileURLToPath(new URL('./reads-process.ts', import.meta.url)), JSON.stringify(item)], {
     encoding: 'utf8',
     timeout: READS_LIMIT_MS,
   });
   if (child.error !== undefined) throw new Error(`the read paths of "${item.label}" did not finish within ${READS_LIMIT_MS} ms: ${child.error.message}`);
   if (child.status !== 0) throw new Error(`the read paths of "${item.label}" failed: ${child.stderr}`);
-  return JSON.parse(child.stdout) as ReadNode;
+  const reads: unknown = JSON.parse(child.stdout);
+  return reads;
 }
 
 describe('read paths (HY-73)', () => {
-  for (const item of fixture.cases) {
+  for (const item of cases) {
     it(item.label, () => {
       const parsed = new Map(Object.entries(item.templates).map(([name, source]) => [name, parse(source, name)]));
       expect(readsWithin(item)).toEqual(item.reads);
@@ -54,14 +69,14 @@ describe('read paths (HY-73)', () => {
 
   it('reads the shared data of every template of a route and the data of each region from its template', () => {
     const parsed = new Map(Object.entries(sources).map(([name, source]) => [name, parse(source, name)]));
-    const reads = routeReads(manifest, (name) => parsed.get(name)!, resolvePath);
+    const reads = routeReads(manifest, (name) => defined(parsed.get(name), `the template ${name}`), resolvePath);
     expect(reads.home).toEqual({
       shared: { keys: { title: true, count: true, name: true, shared_only: true } },
       regions: { side: { keys: { count: true } }, content: { keys: { title: true, name: true, shared_only: true } } },
     });
     // The route region keeps a value on the server, so csrf is read whole (HY-39); its kept paths are read whole.
-    expect(reads.list!.shared).toMatchObject({ keys: { csrf: true } });
-    expect(reads.list!.regions.rows).toEqual({
+    expect(defined(reads.list, 'the reads of list').shared).toMatchObject({ keys: { csrf: true } });
+    expect(defined(reads.list, 'the reads of list').regions.rows).toEqual({
       keys: {
         items: { each: { keys: { open: true, name: true } }, keys: { 0: { keys: { open: true } }, 1: { keys: { open: true } } } },
         tags: true,

@@ -76,9 +76,10 @@ function matchSegments(segments: Segment[], parts: string[]): Record<string, str
   }
   if (segments.length !== parts.length) return null;
   const params: Record<string, string> = {};
-  for (let index = 0; index < segments.length; index++) {
-    const segment = segments[index]!;
-    const part = parts[index]!;
+  for (const [index, segment] of segments.entries()) {
+    const part = parts[index];
+    // segments and parts have the same length, checked above.
+    if (part === undefined) throw new Error(`hyper: the path has no part ${index} for its segment`);
     if ('literal' in segment) {
       if (segment.literal !== part) return null;
     } else if ('param' in segment) {
@@ -101,7 +102,9 @@ function decodeSegment(part: string): string | null {
       bytes.push(parseInt(hex, 16));
       index += 3;
     } else {
-      const codePoint = part.codePointAt(index)!;
+      // index is below the length of part, so a code point starts there.
+      const codePoint = part.codePointAt(index);
+      if (codePoint === undefined) throw new Error(`hyper: ${part} has no code point at ${index}`);
       const character = String.fromCodePoint(codePoint);
       bytes.push(...encoder.encode(character));
       index += character.length;

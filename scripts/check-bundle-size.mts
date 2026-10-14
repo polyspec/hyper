@@ -9,20 +9,24 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseArgs } from 'node:util';
 import { brotliCompressSync, constants, gzipSync } from 'node:zlib';
+import { checkTemplateIndex } from '@polyspec/hyper-client';
+import { jsonObject, jsonString, parseJsonObject } from './json.mts';
 
 const { values } = parseArgs({ options: { app: { type: 'string' }, output: { type: 'string' }, limits: { type: 'string' } } });
 const { app, output, limits: limitsFile } = values;
 if (!app || !output || !limitsFile) throw new Error('--app, --output and --limits are required');
-const manifest = JSON.parse(readFileSync(join(output, 'manifest.json'), 'utf8')) as { hyper: string };
-const { limits } = JSON.parse(readFileSync(limitsFile, 'utf8')) as { limits: Record<string, unknown> };
+const manifestFile = join(output, 'manifest.json');
+const hyper = jsonString(parseJsonObject(readFileSync(manifestFile, 'utf8'), manifestFile).hyper, `${manifestFile} hyper`);
+const limits = jsonObject(parseJsonObject(readFileSync(limitsFile, 'utf8'), limitsFile).limits, `${limitsFile} limits`);
 // The template files of the build that --output describes; public/assets/templates keeps the files of earlier builds.
-const index = JSON.parse(readFileSync(join(output, 'templates.index.json'), 'utf8')) as Record<string, { url: string }>;
-const templates = Object.values(index).map(({ url }) => join(app, 'public', url));
+const indexFile = join(output, 'templates.index.json');
+const index = checkTemplateIndex(JSON.parse(readFileSync(indexFile, 'utf8')), indexFile);
+const templates = Object.values(index).map((entry) => join(app, 'public', entry.url));
 const [firstTemplate] = templates;
 if (firstTemplate === undefined) throw new Error(`${join(output, 'templates.index.json')} names no template file; expected at least 1, actual 0`);
 const largestTemplate = templates.reduce((largest, file) => (gzipSync(readFileSync(file)).length > gzipSync(readFileSync(largest)).length ? file : largest), firstTemplate);
 const files = {
-  ssrScript: join(app, 'public', manifest.hyper),
+  ssrScript: join(app, 'public', hyper),
   csrShell: join(output, 'csr', 'index.html'),
   largestTemplate,
 };

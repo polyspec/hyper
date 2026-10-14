@@ -8,7 +8,7 @@ const MASKED = /^[0-9a-f]{128}$/;
 export function maskToken(token: string, mask: string): string {
   const key = Buffer.from(mask, 'hex');
   const value = Buffer.from(token, 'hex');
-  return mask + Buffer.from(key.map((byte, index) => byte ^ value[index]!)).toString('hex');
+  return mask + Buffer.from(key.map((byte, index) => byte ^ value.readUInt8(index))).toString('hex');
 }
 
 // Returns the token masked with a new random mask.
@@ -20,6 +20,6 @@ export function maskedToken(token: string): string {
 export function verifyToken(token: string, value: string): boolean {
   if (!MASKED.test(value)) return false;
   const mask = Buffer.from(value.slice(0, 64), 'hex');
-  const unmasked = Buffer.from(Buffer.from(value.slice(64), 'hex').map((byte, index) => byte ^ mask[index]!));
+  const unmasked = Buffer.from(Buffer.from(value.slice(64), 'hex').map((byte, index) => byte ^ mask.readUInt8(index)));
   return timingSafeEqual(unmasked, Buffer.from(token, 'hex'));
 }

@@ -69,14 +69,16 @@ export class PageStylesheets {
     let last: HTMLLinkElement | null = null;
     for (const step of planStylesheets(present.map((link) => link.key), wanted.map((link) => link.key))) {
       if (step.kept !== null) {
-        last = present[step.kept]!.element;
+        last = entryAt(present, step.kept).element;
         chosen.push(last);
         continue;
       }
-      const link = this.page.importNode(wanted[step.source]!.element, true);
-      this.loading.set(link, loaded(link, wanted[step.source]!.key));
+      const source = entryAt(wanted, step.source);
+      const link = this.page.importNode(source.element, true);
+      this.loading.set(link, loaded(link, source.key));
+      const [first] = present;
       if (last !== null) last.after(link);
-      else if (present.length > 0) present[0]!.element.before(link);
+      else if (first !== undefined) first.element.before(link);
       else this.page.head.append(link);
       last = link;
       chosen.push(link);
@@ -113,4 +115,11 @@ function loaded(link: HTMLLinkElement, key: string): Promise<void> {
   // A page that no longer waits for the link does not report its failure again.
   promise.catch(() => undefined);
   return promise;
+}
+
+// Returns the entry of a list at an index that planStylesheets planned from that list.
+function entryAt<T>(list: readonly T[], index: number): T {
+  const entry = list[index];
+  if (entry === undefined) throw new Error(`hyper: the stylesheet plan names the missing entry ${index}`);
+  return entry;
 }

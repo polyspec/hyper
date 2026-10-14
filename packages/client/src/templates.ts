@@ -4,6 +4,20 @@ import type { Manifest, RouteDeclaration } from './manifest.js';
 // Template name to its file URL (HY-34).
 export type TemplateIndex = Record<string, { url: string }>;
 
+// Returns the template index of a JSON value, the URL of each template by its name (HY-34); another value fails. source
+// names the value in the error, such as the file that held it.
+export function checkTemplateIndex(value: unknown, source = 'the template index'): TemplateIndex {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) throw new Error(`hyper: ${source} is not an object of templates`);
+  const index: TemplateIndex = {};
+  const entries: [string, unknown][] = Object.entries(value);
+  for (const [name, entry] of entries) {
+    const url: unknown = typeof entry === 'object' && entry !== null && 'url' in entry ? entry.url : undefined;
+    if (typeof url !== 'string') throw new Error(`hyper: template ${name} has no URL in ${source}`);
+    index[name] = { url };
+  }
+  return index;
+}
+
 // Returns the parsed template stored at a URL.
 export type TemplateFetcher = (url: string) => Promise<Template>;
 
@@ -60,7 +74,9 @@ export class TemplateStore {
   private load(name: string): Promise<void> {
     let pending = this.loading.get(name);
     if (pending === undefined) {
-      pending = this.fetcher(this.index[name]!.url).then((template) => this.held.set(name, template));
+      const entry = this.index[name];
+      if (entry === undefined) throw new Error(`hyper: template ${name} is not in the template index`);
+      pending = this.fetcher(entry.url).then((template) => this.held.set(name, template));
       pending.catch(() => this.loading.delete(name));
       this.loading.set(name, pending);
     }

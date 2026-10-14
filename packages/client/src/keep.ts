@@ -9,14 +9,15 @@ export const KEEP_KINDS: readonly KeepKind[] = ['server', 'cookie', 'localStorag
 export function applyKept(data: MapValue, kept: readonly (readonly [string, Value])[]): string[] {
   const applied: string[] = [];
   for (const [path, value] of kept) {
-    const keys = path.split('.');
+    // The key after the last dot names the value, and the keys before it its container.
+    const dot = path.lastIndexOf('.');
+    const last = path.slice(dot + 1);
     let container: Value | undefined = data;
-    for (const key of keys.slice(0, -1)) container = childOf(container, key);
-    const last = keys[keys.length - 1]!;
+    for (const key of dot < 0 ? [] : path.slice(0, dot).split('.')) container = childOf(container, key);
     const current = childOf(container, last);
     if (current === undefined || !conforms(value, current)) continue;
     if (container instanceof Map) container.set(last, value);
-    else (container as Value[])[Number(last)] = value;
+    else if (Array.isArray(container)) container[Number(last)] = value;
     applied.push(path);
   }
   return applied;
@@ -44,7 +45,8 @@ function conforms(value: Value, current: Value): boolean {
   }
   if (Array.isArray(current)) {
     if (!Array.isArray(value)) return false;
-    return current.length === 0 || value.every((item) => conforms(item, current[0]!));
+    const [first] = current;
+    return first === undefined || value.every((item) => conforms(item, first));
   }
   return kindOf(value) === kindOf(current);
 }

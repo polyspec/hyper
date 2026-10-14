@@ -7,6 +7,7 @@ import { mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, relative, resolve, sep } from 'node:path';
 import { test } from 'node:test';
+import { jsonArray, jsonObject, jsonString, parseJsonObject } from '../../scripts/json.mts';
 import { requireBuilt } from './requires.mts';
 
 const repository = resolve('.');
@@ -26,9 +27,11 @@ function specifiers(source: string): string[] {
 }
 
 test('the modules of the build package import only its published files, Node and its dependencies', () => {
-  const manifest = JSON.parse(readFileSync(join(build, 'package.json'), 'utf8')) as { dependencies: Record<string, string>; files: string[] };
-  const dependencies = Object.keys(manifest.dependencies);
-  const modules = manifest.files.flatMap((folder) => readdirSync(join(build, folder), { recursive: true, encoding: 'utf8' }).map((file) => join(build, folder, file)))
+  const manifestFile = join(build, 'package.json');
+  const manifest = parseJsonObject(readFileSync(manifestFile, 'utf8'), manifestFile);
+  const dependencies = Object.keys(jsonObject(manifest.dependencies, `${manifestFile} dependencies`));
+  const folders = jsonArray(manifest.files, `${manifestFile} files`).map((folder, index) => jsonString(folder, `${manifestFile} files[${index}]`));
+  const modules = folders.flatMap((folder) => readdirSync(join(build, folder), { recursive: true, encoding: 'utf8' }).map((file) => join(build, folder, file)))
     .filter((file) => file.endsWith('.mjs'));
   assert.ok(modules.length >= 6, `expected at least 6 modules, actual ${modules.length}`);
   for (const module of modules) {
@@ -38,7 +41,7 @@ test('the modules of the build package import only its published files, Node and
       if (specifier.startsWith('.')) {
         const target = relative(build, resolve(module, '..', specifier));
         const top = target.split(sep)[0];
-        assert.ok(top !== undefined && !target.startsWith('..') && manifest.files.includes(top), `${name} imports ${specifier} outside the published files`);
+        assert.ok(top !== undefined && !target.startsWith('..') && folders.includes(top), `${name} imports ${specifier} outside the published files`);
         continue;
       }
       const packageName = specifier.split('/').slice(0, specifier.startsWith('@') ? 2 : 1).join('/');

@@ -4,11 +4,11 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import type { Value } from '@polyspec/template/render';
 import { decodeJson, encodeJson, inDataModel, JsonDecodeError, OutsideNumber, type DecodedValue } from '../src/index.js';
+import { list, parsed, record, text } from './support.js';
 
-const fixture = JSON.parse(readFileSync(new URL('../../../../contracts/json.json', import.meta.url), 'utf8')) as {
-  encode: { label: string; json: string; expected: string }[];
-  decode: { label: string; json: string; result: 'value' | 'outside' | 'error' }[];
-};
+const fixture = record(parsed(readFileSync(new URL('../../../../contracts/json.json', import.meta.url), 'utf8')));
+const encode = list(fixture.encode).map(record);
+const decode = list(fixture.decode).map(record);
 
 // Encoding writes every finite number, also one outside the data model, as PHP json_encode does.
 function finite(value: DecodedValue): Value {
@@ -19,16 +19,16 @@ function finite(value: DecodedValue): Value {
 }
 
 describe('encodeJson conformance', () => {
-  it.each(fixture.encode.map((item) => [item.label, item] as const))('%s', (_label, item) => {
-    expect(encodeJson(finite(decodeJson(item.json)))).toBe(item.expected);
+  it.each(encode.map((item) => [text(item.label), item] as const))('%s', (_label, item) => {
+    expect(encodeJson(finite(decodeJson(text(item.json))))).toBe(item.expected);
   });
 });
 
 describe('decodeJson conformance', () => {
-  it.each(fixture.decode.map((item) => [item.label, item] as const))('%s', (_label, item) => {
+  it.each(decode.map((item) => [text(item.label), item] as const))('%s', (_label, item) => {
     let result: string;
     try {
-      result = inDataModel(decodeJson(item.json)) ? 'value' : 'outside';
+      result = inDataModel(decodeJson(text(item.json))) ? 'value' : 'outside';
     } catch (error) {
       if (!(error instanceof JsonDecodeError)) throw error;
       result = 'error';
@@ -68,7 +68,8 @@ describe('PHP json_decode limits', () => {
   });
 
   it('reads an integer literal as an integer and a later duplicate key replaces the value in place', () => {
-    expect(encodeJson(decodeJson('-0') as number)).toBe('0');
+    const zero = decodeJson('-0');
+    expect(inDataModel(zero) && encodeJson(zero)).toBe('0');
     expect(decodeJson('{"a":1,"b":2,"a":3}')).toEqual(new Map([['a', 3], ['b', 2]]));
   });
 });
