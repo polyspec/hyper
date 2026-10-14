@@ -1,5 +1,5 @@
 <!-- doc-id: dependencies -->
-<!-- source-sha256: f24dc09649376d880f8b3254cf34f40e8ddba665087675bcd5ad9530b7f9dea0 -->
+<!-- source-sha256: a312ad452533b1eb9b4ea31f07971f7ed7ecf0f12d1836966fc43eb0453813cb -->
 # 의존성
 
 [English](dependencies.md).
@@ -14,7 +14,7 @@
 | Python | `mise.toml`의 `python` 3.14.8, `packages/server/python`의 `requires-python >= 3.14` | 도구 | Python 서버 package는 고정된 minor 3.14를 요구한다. CI가 그 build만 테스트하므로 그렇다(H20.12). | 없음. 새 안정 release는 `mise.toml`을 바꾸는 commit이 된다. |
 | `packages/server/python/pyproject.toml`의 `setuptools` | `84.0.0` 정확히 고정 | build | `polyspec-hyper-server`의 build backend다. 같은 backend release로 build하도록 정확히 고정한다. 다른 저장소의 Python 패키지 `polyspec-ordered-json`과 `polyspec-template`이 고정한 release와 같아서, Python 패키지들이 build backend를 공유한다 (H15.3-13). | 더 새로운 stable setuptools release를 채택하는 dependency 검토에서 pin을 바꾸고, 그 pin을 고정한 형제 Python 패키지도 같은 변경에서 바꾼다. |
 | `pyproject.toml`의 `polyspec-template` (`packages/server/python`) | `polyspec/template`의 release `v0.0.6`의 wheel asset과 그 sha256 (`https://github.com/polyspec/template/releases/download/v0.0.6/polyspec_template-0.0.6-py3-none-any.whl#sha256=9fd57fe2f08e8b6aaf110bb7cbba51b0661db172176214d3120ca7ae1626d662`) | runtime | 0.1 전에는 polyspec package를 registry에 올리지 않으므로 GitHub Release의 wheel asset에서 설치하고, 그 asset의 sha256으로 검증한다(H23.5). | polyspec가 Python 패키지를 registry에 올릴 때 기록을 지웁니다. |
-| `htmx.org` | `4.0.0` 정확히 고정 | 런타임, 클라이언트 스크립트에 번들 | 영역 프로토콜은 htmx 4의 훅, 요청 컨텍스트 필드, 스왑 동작을 사용하며, 이를 4.0.0 소스로 확인했다. npm은 4.0.0에 `next` 태그를 붙이고 2.x를 `latest`로 유지하므로, 고정하지 않은 범위는 htmx 2를 선택한다. | npm이 htmx 4 릴리스에 `latest` 태그를 붙이면 `^4` 범위를 사용하고 `make check`를 다시 실행한다. |
+| `htmx.org` | `4.0.0` 정확히 고정 | 개발: board 예제, 그 클라이언트 스크립트에 번들 | board 예제가 htmx를 import하고 `@polyspec/hyper-client`의 확장을 등록한다. 클라이언트 패키지는 받은 htmx의 타입만 적고 어떤 htmx release에도 의존하지 않으므로, 공개 클라이언트 패키지가 아닌 private root `package.json`이 이를 선언한다. 영역 프로토콜은 htmx 4의 훅, 요청 컨텍스트 필드, 스왑 동작을 사용하며, 이를 4.0.0 소스로 확인했다. npm은 4.0.0에 `next` 태그를 붙이고 2.x를 `latest`로 유지하므로, 고정하지 않은 범위는 htmx 2를 선택한다. | npm이 htmx 4 릴리스에 `latest` 태그를 붙이면 `^4` 범위를 사용하고 `make check`를 다시 실행한다. |
 | `@playwright/test`, `@types/node`, `esbuild`, `typescript`, `vitest` | 정확히 고정 | 개발 | `npm ci`가 같은 도구를 설치하도록 root package가 개발 도구 버전을 정확히 고정한다. | 각 도구를 최신 안정 버전으로 올리고 `make check`를 다시 실행한다. |
 | `phpstan/phpstan` | `^2.3.1` | 개발 | 최신 안정 릴리스다. PHPStan 2.3은 PHP 7.4 이후를 지원하므로 이 범위에는 호환성 고정이 없다. | 없음. |
 | `@polyspec/hyper-server`와 `@polyspec/hyper-build`의 `@polyspec/hyper-client` | `0.0.8` 정확히 | 런타임, build | Node 서버는 같은 저장소의 브라우저 package로 렌더하고, build package는 그것으로 manifest를 검사하고 read path를 계산하며 예약 템플릿 `hyper/data.tpl`을 읽으므로, 둘 다 그 정확한 버전을 요구한다. root package는 이것을 `packages/client`의 사본으로 override한다(HY-79). | package가 배포되어 한 버전 범위로 함께 출시될 때. |

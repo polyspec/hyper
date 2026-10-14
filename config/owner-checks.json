@@ -486,6 +486,15 @@
     },
     {
       "paths": [
+        "config/knip-entries.json"
+      ],
+      "targets": [
+        "kit-check",
+        "lint-ts"
+      ]
+    },
+    {
+      "paths": [
         ".gitignore"
       ],
       "tests": [

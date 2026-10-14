@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "entries": {
+    "examples/board/client/main.ts": "The browser script of the board example: make assets bundles it with hyper-build-assets --app examples/board.",
+    "examples/board/node/main.ts": "The board Node server: make node-server bundles it with esbuild into examples/board/build/node/server.mjs.",
+    "tests/e2e/playwright.config.ts": "The Playwright configuration of make e2e: scripts/run-e2e.mts runs playwright test --config with it.",
+    "tests/scripts/fixtures/chunks/client/main.ts": "The fixture app of the chunk tests of hyper-build-assets, which tests/scripts bundle by its directory."
+  },
+  "binaries": {
+    "container": "Apple container, whose bind mounts are virtiofs: make virtiofs-check (tests/virtiofs) runs it on Darwin."
+  },
+  "workspaces": {
+    "packages/build": {
+      "reason": "The npm package @polyspec/hyper-build, a workspace of the root package.json.",
+      "ignoreDependencies": {
+        "tailwindcss": "bin/hyper-build-assets.mjs compiles the stylesheet of an app with @tailwindcss/node from the CSS text '@import \"tailwindcss/theme.css\"' and the other layers of tailwindcss, which Tailwind CSS resolves from this package; knip reads no import in that text."
+      }
+    }
+  }
+}
