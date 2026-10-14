@@ -1,5 +1,5 @@
 <!-- doc-id: protocol -->
-<!-- source-sha256: 1cd28e37eb849ea8a5d4727fe3c38f68b01076ef8b7e5472825dd17a158e902e -->
+<!-- source-sha256: 2c6c2676839b4e1982748d748417200dff08a2d0c87ba73763562e83a5d77783 -->
 # 영역 프로토콜
 
 [English](protocol.md).
