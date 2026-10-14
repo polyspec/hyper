@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 4522e9c8a3590ec54d6ca9c700b608856dc1de31451be8d0391febcb942cf602 -->
+<!-- source-sha256: 05663f9a7cf81ca9f02b454b05ae1470f69549b432ecbdddce038967180c38e1 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H23.6-1: `config/layout.yml`은 kit의 목록 전체를 반복하던 override 대신 `layout-root-files`의 `vars.root_files`에 hyper의 root 파일 `composer.json`, `composer.lock`, `.npmrc`만 적는다(kit K145).
 - H23.14: hyper는 게시된 파일의 integrity로 `@polyspec/kit` 0.0.44를 pin한다. 그 복사본으로 ruff는 cache를 `var/ruff`에 두고, bootstrap은 byte를 `Uint8Array`로 받으며, `config/layout.yml`은 kit의 목록에 root 파일을 더한다. `make install-tools`는 kit가 더 쓰지 않는 `var/tools/bin`의 wrapper를 없앤다(kit K145, K147, K149, K150).
 - H23.13: `@polyspec/hyper-client`의 `valueToJson`은 safe string을 `"[object Object]"`로 쓰던 대신 그 text로 쓰고, 애플리케이션 객체는 서버에서처럼 실패한다. client의 `fetch` 옵션은 client가 호출하는 대로 URL을 문자열로 받는 export 타입 `Fetch`다. 이 저장소의 `make lint-ts` finding을 고쳤고, 이 검사는 K145와 K150을 가진 kit release까지 전체 suite 밖에 있다.
 - H23.12: `make dependency-review UPDATE=1`은 kit 0.0.43의 lock을 검토하고 `@playwright/test`를 lock과 함께 1.64.1로 올렸다.

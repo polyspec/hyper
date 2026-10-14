@@ -29,48 +29,13 @@ rules:
       # The tool test of the build copies on the virtiofs mounts of a Linux container (make virtiofs-check).
       - "!tests/virtiofs"
 
+  # S5: the root files of hyper beyond the list of kit (K145).
+  # composer.json and composer.lock: the private development root of the PHP server package, which resolves the published
+  # manifest of the package with the template zip and the development tools (config/release.json); a published Composer
+  # manifest has no lock.
+  # .npmrc: the npm configuration of the root project; npm reads a project .npmrc only from the root of the project.
   - id: layout-root-files
-    paths:
-      - "*"
-      - "!README.md"
-      - "!README.ko.md"
-      - "!AGENTS.md"
-      - "!AGENTS.ko.md"
-      - "!PRINCIPLES.md"
-      - "!PRINCIPLES.ko.md"
-      - "!CHANGELOG.md"
-      - "!CHANGELOG.ko.md"
-      - "!LICENSE"
-      - "!Makefile"
-      - "!kit.json"
-      - "!package.json"
-      - "!package-lock.json"
-      - "!tsconfig.json"
-      - "!.gitignore"
-      - "!.gitattributes"
-      - "!.node-version"
-      - "!.python-version"
-      - "!.php-version"
-      - "!rust-toolchain.toml"
-      - "!mise.toml"
-      - "!mise.lock"
-      - "!ruff.toml"
-      - "!phpcs.xml.dist"
-      - "!phpstan.dist.neon"
-      - "!Cargo.toml"
-      - "!Cargo.lock"
-      - "!go.work"
-      - "!go.work.sum"
-      - "!.golangci.yml"
-      - "!.oxlintrc.json"
-      - "!knip.json"
-      - "!.editorconfig"
-      # The private development root of the PHP server package, which resolves the published manifest of the package with
-      # the template zip and the development tools (config/release.json); a published Composer manifest has no lock.
-      - "!composer.json"
-      - "!composer.lock"
-      # The npm configuration of the root project: npm reads a project .npmrc only from the root of the project.
-      - "!.npmrc"
+    vars: { root_files: "{composer.json,composer.lock,.npmrc}" }
 
   # S5: hyper has three components. The browser package and the build package are TypeScript packages without ports; the
   # server of the region protocol has its ports in packages/server/<runtime>/ (ts for Node.js, php, python).
