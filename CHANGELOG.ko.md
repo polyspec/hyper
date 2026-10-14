@@ -1,10 +1,13 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: c809d9854b08f8785a62a113b0e828165833bad82dfcc9fa604fcf2c649abfa1 -->
+<!-- source-sha256: 92b0c9165e4acaf1e58d344e33fe87db44648cac3e31ed07af4618d9a9e0406f -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+## 0.0.15
+- H23.17: tag v0.0.14에는 GitHub Release가 없다. 그 릴리스 workflow가 게시 전에 실패했기 때문이다. `var/tools/wheels`에 wheel build backend가 없었다. 릴리스 0.0.15는 0.0.14의 변경과 아래의 backend 선언을 담는다.
 - H23.17: `config/toolchain.json`이 wheel build backend `setuptools==84.0.0`을 그 sha256과 함께 `pythonBackend`로 선언하므로, 릴리스 workflow가 `make release-tools`로 실행하는 `make install-tools`가 그것을 `var/tools/wheels`에 설치한다. tag v0.0.14의 릴리스 workflow는 그 wheel이 없어서 실패했다.
 
 ## 0.0.14
