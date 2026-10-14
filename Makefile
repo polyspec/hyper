@@ -86,7 +86,7 @@ install: install-tools ## Install the pinned tools, fetch the assets of the temp
 
 install-python: ## Make the venv of the Python server package and install the package into it in editable mode with its dependencies (S5)
 	$(MAKE) --no-print-directory python-venv DIR=$(PYTHON_VENV)
-	$(ONLINE) $(UV) pip install --quiet --python $(PYTHON_VENV)/bin/python --editable $(PYTHON_PACKAGE)
+	$(ONLINE) $(UV) sync --quiet --locked --project $(PYTHON_PACKAGE)
 
 # The release of hyper reads the template repository at TEMPLATE_TAG next to this checkout, and the installed dependencies:
 # the release workflow that kit vendors runs make release-prepare before release-tools (kit K132), and this rule checks the

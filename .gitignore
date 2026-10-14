@@ -16,3 +16,4 @@ __pycache__/
 /var/
 *.next-*
 .venv/
+*.egg-info/
