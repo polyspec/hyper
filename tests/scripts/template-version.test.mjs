@@ -105,10 +105,20 @@ test('the Python package of the server names the wheel asset of the release with
   );
 });
 
-test('the workflows check out the template repository at the tag of the release (H21.4)', () => {
-  for (const workflow of ['.github/workflows/ci.yml', '.github/workflows/release.yml']) {
-    const refs = [...read(workflow).matchAll(/^ {10}ref: (v\d+\.\d+\.\d+)$/gm)].map((match) => match[1]);
-    assert.ok(refs.length > 0, `${workflow} checks out the template repository`);
-    assert.deepEqual([...new Set(refs)], [TAG], `${workflow} template ref`);
-  }
+test('CI checks out the template repository at the tag of the release (H21.4)', () => {
+  const refs = [...read('.github/workflows/ci.yml').matchAll(/^ {10}ref: (v\d+\.\d+\.\d+)$/gm)].map((match) => match[1]);
+  assert.ok(refs.length > 0, 'ci.yml checks out the template repository');
+  assert.deepEqual([...new Set(refs)], [TAG], 'ci.yml template ref');
+});
+
+// The release workflow is the one that kit vendors, which runs make release-prepare before release-tools (kit K132): the
+// release-prepare:: rule of the Makefile checks out the template repository at TEMPLATE_TAG and installs (H23.7).
+test('the release prepares the template repository at the tag of the release through release-prepare (H23.7)', () => {
+  assert.match(read('.github/workflows/release.yml'), /^\s+run: make release-prepare$/m);
+  const makefile = read('Makefile');
+  assert.match(makefile, new RegExp(`^TEMPLATE_TAG := ${TAG.replaceAll('.', '\\.')}$`, 'm'));
+  const rule = /^release-prepare::.*\n((?:\t.*\n)+)/m.exec(makefile)?.[1] ?? '';
+  assert.match(rule, /git clone --quiet --depth 1 --branch \$\(TEMPLATE_TAG\) https:\/\/github\.com\/polyspec\/template\.git \$\(TEMPLATE_REPOSITORY\)/);
+  assert.match(rule, /\$\(MAKE\) template-tag/);
+  assert.match(rule, /\$\(MAKE\) install$/m);
 });
