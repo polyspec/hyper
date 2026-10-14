@@ -4,6 +4,9 @@
   "description": "Browser extension for htmx that renders region JSON with template language templates",
   "license": "MIT",
   "type": "module",
+  "engines": {
+    "node": ">=26.11.1"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
