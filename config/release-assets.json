@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "comment": "The release archives of the template release that hyper uses (kit K140, H23.11-2): the php-ext zip, which make install unpacks into var/products/template-ext for make ext, and the php zip in the Composer artifact repository var/products/template-php of composer.json and examples/board/composer.json. TEMPLATE_TAG of the Makefile reads the version of template-php.",
+  "assets": [
+    {
+      "name": "template-php-ext",
+      "version": "0.0.6",
+      "url": "https://github.com/polyspec/template/releases/download/v{version}/polyspec-template-php-ext-php-{version}.zip",
+      "sha256": "0e6253200c7314f7ef89b3ebb5f90a983331795ca49dd177fb70511e0dde5092",
+      "directory": "var/products",
+      "unpack": "var/products/template-ext"
+    },
+    {
+      "name": "template-php",
+      "version": "0.0.6",
+      "url": "https://github.com/polyspec/template/releases/download/v{version}/polyspec-template-php-{version}.zip",
+      "sha256": "948cf2167efa7bf5ccbd1fe31ee47626eecc51a2acd0f1913b0e6e477d5f7edd",
+      "directory": "var/products/template-php"
+    }
+  ]
+}

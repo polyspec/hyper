@@ -1,7 +1,7 @@
 // Tests the template pins of this repository (HY-70, HY-80, H14.1-7): `make template-tag` fails for a template checkout
 // without the tag TEMPLATE_TAG, which the full-run key names; npm installs the template package as one copy inside the
 // checkout; Composer installs the template PHP package from the verified zip of the template release in an artifact repository; and PHPStan reads the stub
-// of the unpacked php-ext asset (scripts/template-assets.mts), not a copy of the template repository.
+// of the unpacked php-ext archive (config/release-assets.json), not a copy of the template repository.
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
@@ -11,11 +11,15 @@ import { test, type TestContext } from 'node:test';
 import { requireBuilt } from './requires.mts';
 
 const repository = resolve('.');
-// The tag TEMPLATE_TAG of the Makefile, the one declaration of the template release (HY-80).
+/** An entry of config/release-assets.json. */
+interface Entry { name: string; version: string; url: string; directory: string }
+const entries = (): Entry[] => (JSON.parse(readFileSync(join(repository, 'config/release-assets.json'), 'utf8')) as { assets: Entry[] }).assets;
+// The tag TEMPLATE_TAG of the Makefile, the tag of the version of the entry template-php of config/release-assets.json,
+// the one declaration of the template release (HY-80, H23.11-2).
 function templateTag(): string {
-  const tag = /^TEMPLATE_TAG := (\S+)$/m.exec(readFileSync(join(repository, 'Makefile'), 'utf8'))?.[1];
-  if (tag === undefined) throw new Error('the Makefile declares no TEMPLATE_TAG');
-  return tag;
+  const version = entries().find(({ name }) => name === 'template-php')?.version;
+  if (version === undefined) throw new Error('config/release-assets.json declares no entry template-php');
+  return `v${version}`;
 }
 const TAG = templateTag();
 
@@ -70,11 +74,11 @@ test('Composer installs the template PHP package from the zip of the template re
   const version = (JSON.parse(readFileSync('packages/server/php/composer.json', 'utf8')) as { require: Record<string, string> }).require['polyspec/template'];
   assert.ok(version !== undefined, 'packages/server/php requires no polyspec/template');
   assert.match(version, /^\d+\.\d+\.\d+$/, 'packages/server/php requires an exact template version');
-  // config/template-assets.json pins the zip; make install verifies it by its sha256 and writes it into var/products/template-php,
+  // config/release-assets.json pins the zip; make install checks it by its sha256 and writes it into var/products/template-php,
   // the artifact repository of both Composer projects, so no manifest copies the metadata of the template package.
   const zip = `polyspec-template-php-${version}.zip`;
-  const { assets } = JSON.parse(readFileSync('config/template-assets.json', 'utf8')) as { assets: { destination: string }[] };
-  assert.deepEqual(assets.filter(({ destination }) => destination.startsWith('var/products/template-php/')).map(({ destination }) => destination), [`var/products/template-php/${zip}`]);
+  const pinned = entries().filter(({ directory }) => directory === 'var/products/template-php');
+  assert.deepEqual(pinned.map(({ url, version }) => url.replaceAll('{version}', version).split('/').pop()), [zip]);
   for (const manifest of ['composer.json', 'examples/board/composer.json']) {
     const { repositories, require } = JSON.parse(readFileSync(manifest, 'utf8')) as { repositories: { type: string; url: string }[]; require: Record<string, string> };
     assert.equal(require['polyspec/template'], version, manifest);

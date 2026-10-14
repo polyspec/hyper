@@ -1,5 +1,5 @@
 // Tests that hyper depends on one template release, 0.0.6 (H21.4): the tag TEMPLATE_TAG of the Makefile, the npm packages
-// and their locks, the Composer packages and their locks, the php-ext and php assets of config/template-assets.json, the Python package
+// and their locks, the Composer packages and their locks, the php-ext and php archives of config/release-assets.json, the Python package
 // of packages/server/python, and the checkouts of the template repository in the workflows name that release and no
 // other. A mixed version fails here before any install runs.
 import assert from 'node:assert/strict';
@@ -23,9 +23,9 @@ const NPM_PACKAGES = ['@polyspec/template', '@polyspec/template-compiler'];
 const CONSUMER_VERSION = '0.0.5';
 const CONSUMER_RELEASE = `https://github.com/polyspec/template/releases/download/v${CONSUMER_VERSION}`;
 
-test('TEMPLATE_TAG of the Makefile is the tag of the single template release (H21.4)', () => {
-  const tag = /^TEMPLATE_TAG := (\S+)$/m.exec(read('Makefile'))?.[1];
-  assert.equal(tag, TAG, `TEMPLATE_TAG is ${tag}, expected ${TAG}`);
+test('TEMPLATE_TAG of the Makefile is the tag of the single template release (H21.4, H23.11-2)', () => {
+  const lines = dryRun('template-tag', { variables: ['TEMPLATE_REPOSITORY=/nonexistent/hyper-template'] });
+  assert.ok(lines.some((line) => line.includes(`'refs/tags/${TAG}^{commit}'`)), `make template-tag does not check the tag ${TAG}: ${lines.join('\n')}`);
 });
 
 test('the npm manifests name the template tarballs of the release, and their dependencies name its version (H21.4)', () => {
@@ -86,8 +86,9 @@ test('the Composer consumer project of tests/release-install names the template 
   assert.equal(entry.version, CONSUMER_VERSION);
 });
 
-test('config/template-assets.json names the php-ext and the php assets of the release (H21.4, H23.11)', () => {
-  const urls = json('config/template-assets.json').assets.map(({ url }: { url: string }) => url);
+test('config/release-assets.json names the php-ext and the php archives of the release (H21.4, H23.11-2)', () => {
+  const assets = json('config/release-assets.json').assets.filter(({ name }: { name: string }) => name === 'template-php-ext' || name === 'template-php');
+  const urls = assets.map(({ url, version }: { url: string; version: string }) => url.replaceAll('{version}', version));
   assert.deepEqual(urls, [`${RELEASE}/polyspec-template-php-ext-php-${VERSION}.zip`, `${RELEASE}/polyspec-template-php-${VERSION}.zip`]);
 });
 
