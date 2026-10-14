@@ -1,6 +1,6 @@
 // Tests that the name of every package of this repository states its role and that its directory below packages/
 // states the role and the language of a server (HY-98): the manifest in the directory declares the name, and
-// config/release.json releases the package from that directory, or names its manifest for the git tag.
+// config/release.json releases the package from that directory, the Python package as a wheel (H23.15).
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
@@ -22,6 +22,8 @@ const PACKAGES: { directory: string; kind: Kind; name: string }[] = [
 ];
 
 const MANIFEST: Record<Kind, string> = { npm: 'package.json', composer: 'composer.json', python: 'pyproject.toml' };
+// The package kind of config/release.json for each kind of manifest: kit releases a Python package as a wheel.
+const RELEASED_KIND: Record<Kind, string> = { npm: 'npm', composer: 'composer', python: 'wheel' };
 
 // The name of a manifest: the field name of package.json and composer.json, the name of [project] of pyproject.toml.
 function manifestName(kind: Kind, text: string): string | null {
@@ -35,13 +37,8 @@ for (const { directory, kind, name } of PACKAGES) {
     const manifest = join(repository, directory, MANIFEST[kind]);
     assert.ok(existsSync(manifest), `${directory}/${MANIFEST[kind]} is missing`);
     assert.equal(manifestName(kind, readFileSync(manifest, 'utf8')), name, `the name of ${directory}/${MANIFEST[kind]}`);
-    if (kind === 'python') {
-      // A Python package is consumed by the git tag and has no archive; config/release.json names its manifest.
-      assert.equal(release.manifests[`${directory}/${MANIFEST[kind]}`], 'git-tag', `the manifest entry of ${name} in config/release.json`);
-      return;
-    }
-    const released = release.packages.filter(item => item.name === name);
-    assert.deepEqual(released, [{ kind, directory, name }], `the entry of ${name} in config/release.json`);
+    const released = release.packages.filter(item => item.name === name && item.kind === RELEASED_KIND[kind]);
+    assert.deepEqual(released, [{ kind: RELEASED_KIND[kind], directory, name }], `the entry of ${name} in config/release.json`);
   });
 }
 
