@@ -13,6 +13,7 @@
   "pythonManifests": [
     "packages/hyper-server-python/pyproject.toml"
   ],
+  "pythonLocks": [],
   "npmLocks": [
     "package-lock.json",
     "tests/package-install/package-lock.json"
