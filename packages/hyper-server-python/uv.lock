@@ -1,0 +1,22 @@
+version = 1
+revision = 5
+requires-python = ">=3.14"
+
+[[package]]
+name = "polyspec-hyper-server"
+version = "0.0.13"
+source = { editable = "." }
+dependencies = [
+    { name = "polyspec-template" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "polyspec-template", url = "https://github.com/polyspec/template/releases/download/v0.0.6/polyspec_template-0.0.6-py3-none-any.whl" }]
+
+[[package]]
+name = "polyspec-template"
+version = "0.0.6"
+source = { url = "https://github.com/polyspec/template/releases/download/v0.0.6/polyspec_template-0.0.6-py3-none-any.whl" }
+wheels = [
+    { url = "https://github.com/polyspec/template/releases/download/v0.0.6/polyspec_template-0.0.6-py3-none-any.whl", hash = "sha256:9fd57fe2f08e8b6aaf110bb7cbba51b0661db172176214d3120ca7ae1626d662" },
+]

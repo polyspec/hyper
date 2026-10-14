@@ -24,17 +24,18 @@ const EXPORTS: Record<string, unknown> = {
   '@polyspec/hyper-server': { '.': { types: './dist/index.d.ts', default: './dist/index.js' } },
 };
 
-// The directory of each package in this repository, which the lock links into node_modules.
-const DIRECTORIES: Record<string, string> = {
-  '@polyspec/hyper-client': 'hyper-client',
-  '@polyspec/hyper-server': 'hyper-server-node',
-};
-const PACKAGES = fileURLToPath(new URL('../../packages/', import.meta.url));
+// The directory of each package in this repository: the target of its link in the lock of this project (H23.8).
+const LOCK = JSON.parse(readFileSync(new URL('package-lock.json', import.meta.url), 'utf8')) as { packages: Record<string, { resolved?: string; link?: boolean }> };
+function linkedDirectory(name: string): string {
+  const entry = LOCK.packages[`node_modules/${name}`];
+  if (entry?.link !== true || entry.resolved === undefined) throw new Error(`package-lock.json links ${name} to no directory`);
+  return fileURLToPath(new URL(`${entry.resolved}/`, import.meta.url));
+}
 const NPM = fileURLToPath(new URL('../../var/tools/bin/npm', import.meta.url));
 
 test('the installed packages are the packages of this repository, JavaScript with declarations', () => {
   for (const name of ['@polyspec/hyper-client', '@polyspec/hyper-server']) {
-    const directory = join(PACKAGES, DIRECTORIES[name]);
+    const directory = linkedDirectory(name);
     assert.equal(import.meta.resolve(name), pathToFileURL(join(directory, 'dist', 'index.js')).href);
     const manifest = JSON.parse(readFileSync(join(directory, 'package.json'), 'utf8')) as { exports: unknown };
     assert.deepEqual(manifest.exports, EXPORTS[name]);
@@ -48,7 +49,7 @@ test('the installed packages are the packages of this repository, JavaScript wit
 test('each package publishes its build and declarations without its source', () => {
   for (const name of ['@polyspec/hyper-client', '@polyspec/hyper-server']) {
     // npm pack --dry-run lists the files that the published archive holds; npm 12 keys its JSON by the package name.
-    const pack = execFileSync(NPM, ['pack', '--dry-run', '--json', '--ignore-scripts'], { cwd: join(PACKAGES, DIRECTORIES[name]), encoding: 'utf8' });
+    const pack = execFileSync(NPM, ['pack', '--dry-run', '--json', '--ignore-scripts'], { cwd: linkedDirectory(name), encoding: 'utf8' });
     const files = (JSON.parse(pack) as Record<string, { files: { path: string }[] }>)[name].files.map((file) => file.path);
     const expected = ['package.json', 'dist/index.js', 'dist/index.d.ts', ...(name === '@polyspec/hyper-client' ? ['templates-index.d.ts', 'data-template.json'] : [])];
     for (const file of expected) assert.ok(files.includes(file), `${name} publishes ${file}`);
