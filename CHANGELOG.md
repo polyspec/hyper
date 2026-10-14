@@ -4,6 +4,9 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+
+## 0.0.15
+- H23.17: the tag v0.0.14 has no GitHub Release, because its release workflow failed before it published: the wheel build backend was missing from `var/tools/wheels`. Release 0.0.15 contains the changes of 0.0.14 and the declaration of the backend below.
 - H23.17: `config/toolchain.json` declares the wheel build backend `setuptools==84.0.0` with its sha256 as `pythonBackend`, so `make install-tools`, which the release workflow runs through `make release-tools`, installs it into `var/tools/wheels`; the release workflow of the tag v0.0.14 failed because the wheel was missing.
 
 ## 0.0.14
