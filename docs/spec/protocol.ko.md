@@ -1,5 +1,5 @@
 <!-- doc-id: protocol -->
-<!-- source-sha256: 3591d27e115d7b298df5bf00e951664b5149dad94ff7a88b31ab4f50cf7c766a -->
+<!-- source-sha256: 4abf66b056c9724346aeedfdbb1c4b95cc691ae47bcbb523fe0bc3abc6ee0b06 -->
 # 영역 프로토콜
 
 [English](protocol.md).
@@ -344,7 +344,7 @@
 
 - **HY-55** `make server-parity`는 `examples/board/tests/parity/requests.json`의 단계를 PHP 서버와 board Node 서버에 동시에 실행한다. 각 서버는 자기 빈 데이터베이스와 session을 쓰고, 게시글의 생성 시각(`BOARD_TIME`)은 같다. 단계의 모든 요청에서 HTML 문서, 문서 JSON, 영역 JSON 모두 두 응답의 상태, header, body가 같아야 한다. 비교 전에 session cookie의 session 식별자를 `<session>`으로, 각 응답의 가린 CSRF token(HY-24)을 header와 body에서 `<csrf>`로 바꾸고, body에 가린 token이 들어 있으므로 `ETag` 값이 그 body의 tag인지(HY-53) 확인한 뒤 `<etag>`로 바꾼다. 이 확인에 쓰는 session token은 가린 값의 뒤쪽 절반과 앞쪽 절반의 XOR다. HTTP 서버 프로그램이 스스로 쓰는 header인 `Date`, `Connection`, `Keep-Alive`, `Content-Length`, `Transfer-Encoding`과 PHP 내장 서버의 `Host`, `X-Powered-By`는 비교하지 않는다. header는 이름과 값 쌍의 집합으로 비교하고, `Set-Cookie`는 값마다 비교한다. 같은 실행에서 PHP 서버에 대한 `make parity`의 브라우저 비교도 수행한다.
 
-- **HY-61** npm package `@polyspec/hyper-client`와 `@polyspec/hyper-server`는 type 선언을 가진 JavaScript module을 배포하며, `make packages`가 이를 각 package의 `dist` 디렉터리에 쓴다. 각 package의 `exports`는 entry로 `dist/index.js`와 `dist/index.d.ts`를 가리키고, package는 build 출력 중 `dist`만 담는다. `@polyspec/hyper-client`는 선언 `templates-index.d.ts`(HY-34)와, build가 읽는 예약 템플릿 `hyper/data.tpl`의 source인 data 파일 `data-template.json`(HY-96)도 export한다. 따라서 Node는 type을 제거하지 않는 `node_modules`에서 bundler 없이 이를 실행한다. TypeScript 소스는 지울 수 있는 문법(`erasableSyntaxOnly`)만 쓰며, 선언은 `erasableSyntaxOnly`를 켠 package에서 type 검사를 통과한다. `make package-check`는 두 package를 그 `package-lock.json`에서 `npm ci --offline --install-links`로 `tests/package-install`에 설치하고(HY-89), 그 test를 선언에 대해 type 검사한 뒤 `node`로 실행한다. TypeScript 소스를 export하는 package는 `ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING`으로 실패한다.
+- **HY-61** npm package `@polyspec/hyper-client`와 `@polyspec/hyper-server`는 type 선언을 가진 JavaScript module을 배포하며, `make packages`가 이를 각 package의 `dist` 디렉터리에 쓴다. 각 package의 `exports`는 entry로 `dist/index.js`와 `dist/index.d.ts`를 가리키고, package는 build 출력 중 `dist`만 담는다. `@polyspec/hyper-client`는 선언 `templates-index.d.ts`(HY-34)와, build가 읽는 예약 템플릿 `hyper/data.tpl`의 source인 data 파일 `data-template.json`(HY-96)도 export한다. 따라서 Node는 type을 제거하지 않는 `node_modules`에서 bundler 없이 이를 실행한다. TypeScript 소스는 지울 수 있는 문법(`erasableSyntaxOnly`)만 쓰며, 선언은 `erasableSyntaxOnly`를 켠 package에서 type 검사를 통과한다. `make package-check`는 두 package를 그 `package-lock.json`에서 `npm ci --offline`으로 `tests/package-install`에 설치하고(HY-89) 이 저장소의 그 디렉터리에 link하며, 그 test를 선언에 대해 type 검사한 뒤 `node`로 실행한다. test는 각 package가 `dist/index.js`를 export하는지, `npm pack`이 나열하는 archive가 build와 선언을 담고 `src`는 담지 않는지 확인한다.
 
 ## 오류
 

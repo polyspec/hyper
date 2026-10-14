@@ -108,7 +108,7 @@ hyper-server-php-copy: ## Write the copy of packages/hyper-server-php that the b
 	node scripts/publish.mjs composer-copy $(HYPER_PHP_COPY) $(BOARD)/vendor/polyspec/hyper-server
 
 package-check: packages node-fixtures ## Install the npm packages into tests/package-install, type-check its test against their declarations and run it under node (HY-61)
-	cd tests/package-install && node ../../$(KIT)/holder-lock.$(KIT_EXT) run ../../$(INSTALL_LOCK) -- $(NPM) ci --offline --install-links --allow-remote=root --no-audit --no-fund
+	cd tests/package-install && node ../../$(KIT)/holder-lock.$(KIT_EXT) run ../../$(INSTALL_LOCK) -- $(NPM) ci --offline --allow-remote=root --no-audit --no-fund
 	$(TSC) -p tests/package-install/tsconfig.json
 	node $(KIT)/run-tests.$(KIT_EXT) node --cwd tests/package-install -- package-install.test.ts
 

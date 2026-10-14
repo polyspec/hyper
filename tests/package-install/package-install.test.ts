@@ -1,8 +1,9 @@
 // Runs the installed hyper packages under node without a bundler, as a package that depends on them does (HY-61).
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { test } from 'node:test';
 import { Router, stripBasePath } from '@polyspec/hyper-client';
 import { App, Forbidden, MemorySessionStore, Request, Result, type Handlers, type Reply, type Response } from '@polyspec/hyper-server';
@@ -23,20 +24,35 @@ const EXPORTS: Record<string, unknown> = {
   '@polyspec/hyper-server': { '.': { types: './dist/index.d.ts', default: './dist/index.js' } },
 };
 
-test('the installed packages are JavaScript with declarations', () => {
+// The directory of each package in this repository, which the lock links into node_modules.
+const DIRECTORIES: Record<string, string> = {
+  '@polyspec/hyper-client': 'hyper-client',
+  '@polyspec/hyper-server': 'hyper-server-node',
+};
+const PACKAGES = fileURLToPath(new URL('../../packages/', import.meta.url));
+const NPM = fileURLToPath(new URL('../../var/tools/bin/npm', import.meta.url));
+
+test('the installed packages are the packages of this repository, JavaScript with declarations', () => {
   for (const name of ['@polyspec/hyper-client', '@polyspec/hyper-server']) {
-    const entry = import.meta.resolve(name);
-    assert.ok(entry.endsWith(`/tests/package-install/node_modules/${name}/dist/index.js`), entry);
-    const directory = fileURLToPath(new URL('..', entry));
+    const directory = join(PACKAGES, DIRECTORIES[name]);
+    assert.equal(import.meta.resolve(name), pathToFileURL(join(directory, 'dist', 'index.js')).href);
     const manifest = JSON.parse(readFileSync(join(directory, 'package.json'), 'utf8')) as { exports: unknown };
     assert.deepEqual(manifest.exports, EXPORTS[name]);
-    assert.ok(existsSync(join(directory, 'dist', 'index.d.ts')));
     if (name === '@polyspec/hyper-client') {
-      assert.ok(existsSync(join(directory, 'templates-index.d.ts')));
       const dataTemplate = JSON.parse(readFileSync(join(directory, 'data-template.json'), 'utf8')) as { name: string };
       assert.equal(dataTemplate.name, 'hyper/data.tpl');
     }
-    assert.ok(!existsSync(join(directory, 'src')), `${name} contains its source`);
+  }
+});
+
+test('each package publishes its build and declarations without its source', () => {
+  for (const name of ['@polyspec/hyper-client', '@polyspec/hyper-server']) {
+    // npm pack --dry-run lists the files that the published archive holds; npm 12 keys its JSON by the package name.
+    const pack = execFileSync(NPM, ['pack', '--dry-run', '--json', '--ignore-scripts'], { cwd: join(PACKAGES, DIRECTORIES[name]), encoding: 'utf8' });
+    const files = (JSON.parse(pack) as Record<string, { files: { path: string }[] }>)[name].files.map((file) => file.path);
+    const expected = ['package.json', 'dist/index.js', 'dist/index.d.ts', ...(name === '@polyspec/hyper-client' ? ['templates-index.d.ts', 'data-template.json'] : [])];
+    for (const file of expected) assert.ok(files.includes(file), `${name} publishes ${file}`);
+    assert.deepEqual(files.filter((file) => file.startsWith('src/')), [], `${name} publishes its source`);
   }
 });
 
