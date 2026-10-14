@@ -14,7 +14,7 @@
   ],
   "devDependencies": {
     "@playwright/test": "1.64.0",
-    "@polyspec/kit": "https://github.com/polyspec/kit/releases/download/v0.0.41/polyspec-kit-npm-0.0.41.tgz",
+    "@polyspec/kit": "https://github.com/polyspec/kit/releases/download/v0.0.42/polyspec-kit-npm-0.0.42.tgz",
     "@types/node": "26.6.5",
     "esbuild": "0.28.2",
     "typescript": "7.0.2",

@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: b72b5ef25dccd62982f0a588ffebc4073e27569702e804dcd6e30116566a982e -->
+<!-- source-sha256: b3678fbe0daad8300551be521430d9c92a7d2c22a7cbd56fdbfe2c1147bf65de -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H23.10: hyper는 게시된 파일의 integrity로 `@polyspec/kit` 0.0.42를 pin한다. 그 bootstrap은 `var/tools/go.mod`를 쓰므로 mise가 `var/tools` 아래에 설치하는 Go는 독립된 module이다(kit K135).
 - H23.3: 공유 도구는 release asset의 URL과 integrity로 pin한 npm 패키지 `@polyspec/kit`이다. vendored `scripts/kit/`, `tests/kit/`, `.kit/kit.lock.json`, `kit.json`과 함께 `make kit-test`를 없앴다. Makefile은 `scripts/kit/kit-bootstrap.mk`를 include하여 패키지의 build된 도구를 실행하고, checkout은 `make install-tools TOOLS=npm`과 `make install-packages`로 시작하며, 모든 CI job이 이 둘을 먼저 실행한다. `make kit-sync`는 `kit.copies`의 복사본을 쓰고, `config/layout.yml`은 `make layout-check`의 폴더 지도를 정하며, `config/toolchain.json`은 uv와 alint를 선언하고, `.npmrc`는 `npm ci`의 audit을 끄며, pre-push hook은 `make push-gate-hook`을 실행한다. 이 저장소에는 `go.mod`도 중첩 ruff 설정도 없다.
 - H23.5: `packages/hyper-server-python/pyproject.toml`은 `polyspec-template`을 git tag와 subdirectory 대신 template release v0.0.6의 wheel asset과 그 asset의 sha256으로 밝힌다.
 - H23.2: npm은 자기 기본값으로 설치한다. `.npmrc`는 더 이상 `install-links=true`와 `bin-links=false`를 설정하지 않는다. root `package.json`은 npm workspace `packages/*`(`packages/hyper-client`, `packages/hyper-server-node`, `packages/hyper-build`)를 선언하고, package는 npm의 bin link인 `tsc`로 build하며, recipe는 TypeScript와 Playwright를 `node_modules/.bin`으로 실행한다. `scripts/tsc.mjs`와 `scripts/publish.mjs`의 `npm-copy` action을 없앴고, `tests/scripts/no-symlinks.test.mjs`는 Composer `vendor` 디렉터리만 검사한다.

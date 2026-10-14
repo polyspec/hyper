@@ -1,5 +1,5 @@
 <!-- doc-id: execution-checklist -->
-<!-- source-sha256: b155f5b3a1416cede806192f1fa3af9ec1c5640d63e8be18b7070c24d95a54b6 -->
+<!-- source-sha256: b9589876862eaef3bf93a20b1c3a8dee8dfb2593f68de2d04b0976338f789717 -->
 # 실행 체크리스트
 
 ## [웨이브 1](waves.ko.md#wave-1) — 애플리케이션이 약하게 만들 수 없는 CSRF 방어
@@ -315,3 +315,4 @@
 | H23.7 | release에 필요한 template checkout으로 릴리스한다(kit 0.0.38에서 K79가 기록한 red): `.github/workflows/release.yml`은 이제 kit이 vendor한 release workflow이고 template 저장소를 checkout하지 않으며, `tests/scripts/template-version.test.mjs`가 `.github/workflows/release.yml checks out the template repository`로 실패한다. release는 vendor된 workflow가 실행하는 단계(`make release-tools`)로 `TEMPLATE_TAG`의 template을 받거나, kit의 workflow가 이를 선언한 모든 저장소를 위한 단계를 갖춘다. | `node node_modules/@polyspec/kit/dist/run-tests.mjs node -- tests/scripts/template-version.test.mjs`, `make release-proof` | [o] |
 | H23.8 | `tests/package-install`에서 이 저장소의 package를 link한다(kit 0.0.38에서 K79가 기록한 red): `make dependency-policy-check`가 `tests/package-install/package.json @polyspec/hyper-client: tests/package-install/package-lock.json links it to no package of this repository`를 보고하고, `@polyspec/hyper-server`도 같다. | `make dependency-policy-check` | [ ] |
 | H23.9 | kit 0.0.41과 그 mise toolchain으로 옮긴다(kit K127, K134). H23.7은 release-prepare를, ARM runner는 linux-arm64의 lock을 위해 이것이 필요하다: 게시된 파일의 integrity로 pin하고, `mise.toml`은 uv를 가진 Python, Composer, alint를 선언하며 `mise.lock`이 모든 플랫폼에 대해 잠그고, config/toolchain.json은 mise의 release만 두며, `.python-version`을 지우고, Makefile은 Python과 Composer를 shim으로 실행하며, test는 `mise.toml`의 python을 읽는다. | `make kit-check`, `make toolchain-check`, `make documents-check`, `make owner-validate`, `node node_modules/@polyspec/kit/dist/run-tests.mjs node -- tests/scripts` | [o] |
+| H23.10 | kit 0.0.42로 옮긴다(kit K135): 게시된 파일의 integrity로 pin하고, `make kit-sync`가 `var/tools/go.mod`를 쓰는 bootstrap을 복사하므로 mise가 `var/tools` 아래에 설치할 수 있는 Go는 독립된 module이 된다. | `make kit-check`, `make toolchain-check` | [ ] |
