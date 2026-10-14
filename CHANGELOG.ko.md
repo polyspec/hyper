@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 299be3fd70f4306c8b6deecbdfd7535da06b10b39de75c6b6fe8709e3bdcb712 -->
+<!-- source-sha256: 19bce21e328475a4b97bb98d93550875cce73ea1050e7347b8b156785b23dd76 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H23.6: `scripts/check-parity.mts`가 `@polyspec/hyper-client`의 dist에서 선언을 import하므로 `make typecheck`는 먼저 npm 패키지를 build한다. 패키지를 build하지 않는 CI의 docs job은 TS2307로 실패했다.
 - H23.12: hyper는 게시된 파일의 integrity로 `@polyspec/kit` 0.0.43을 pin한다. 그 복사본으로 oxlint는 node:test 등록을 허용하고, knip은 scripts, benchmarks, test 파일을 entry로 받으며, API Extractor의 `ae-missing-release-tag`는 꺼진다(kit K138, K139, K142).
 - H23.6: 폴더는 kit layout의 S5, S7, S9를 따르고 `make layout-check`가 통과한다. package는 공개 이름을 그대로 두고 `packages/client`, `packages/build`, `packages/server/{ts,php,python}`으로 옮겼다. `conformance/`는 `contracts/`이고, `playwright.config.ts`는 `tests/e2e`에, benchmark는 `benchmarks/`에 있다. script와 도구 test는 root `tsconfig.json`으로 `make typecheck`가 검사하는 TypeScript(`.mts`)다. 어떤 recipe도 `PYTHONPATH`를 두지 않는다. `make install-python`은 `uv.lock`에서 `uv sync --locked`로 Python 서버 package의 venv를 만들고, board Python 서버는 Makefile이 `HYPER_PYTHON`으로 export하는 그 Python으로 실행한다. Composer는 PHP 서버 package를 `symlink: false`인 path repository `packages/server/php`에서 설치하고, `make hyper-server-php-install`이 그것을 board에 다시 mirror한다. `scripts/copy-package.mjs`는 없어졌다.
 - H23.11: Composer는 root `composer.json`과 `examples/board/composer.json`의 artifact repository `var/products/template-php`에서 `polyspec/template`을 설치하며, template metadata의 복사본을 가진 inline `package` repository는 없어졌다. `config/template-ext.json`을 대신하는 `config/template-assets.json`이 release의 php-ext·php zip을 `{ url, sha256, destination }`으로 나열한다. `make install`은 `scripts/template-ext.mjs`를 대신하는 `scripts/template-assets.mjs fetch`를 실행해 각 zip을 확인하고 그 destination에 쓰며(php zip은 artifact repository에), `unpack`으로 php-ext asset을 푼다. `composer.lock`은 Composer가 설치 때 확인하는 sha1과 함께 그 dist를 기록한다.

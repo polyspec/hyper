@@ -180,8 +180,9 @@ templates-check: toolchain-check ## Check hx- attributes (HC-6) and region place
 	node scripts/check-templates.mts --app $(BOARD)
 
 # The TypeScript of scripts/, tests/ and benchmarks/ (tsconfig.json), which Node runs by type stripping and so never checks
-# itself (S9 of kit).
-typecheck: ## Check the types of the TypeScript of scripts/, tests/ and benchmarks/ with the tsc of node_modules (tsconfig.json)
+# itself (S9 of kit). scripts/check-parity.mts imports the types of @polyspec/hyper-client, which the package's build writes
+# to its dist, so packages runs first.
+typecheck: packages ## Check the types of the TypeScript of scripts/, tests/ and benchmarks/ with the tsc of node_modules (tsconfig.json)
 	$(TSC) -p tsconfig.json
 
 test-scripts: packages ## Run the tests of the check scripts, or only the files of TESTS
