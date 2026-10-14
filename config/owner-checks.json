@@ -320,14 +320,14 @@
     },
     {
       "paths": [
-        "scripts/template-ext.mjs",
-        "config/template-ext.json"
+        "scripts/template-assets.mjs",
+        "config/template-assets.json"
       ],
       "targets": [
         "ext"
       ],
       "tests": [
-        "tests/scripts/template-ext.test.mjs"
+        "tests/scripts/template-assets.test.mjs"
       ]
     },
     {
@@ -525,7 +525,7 @@
         "composer.lock",
         "examples/board/composer.json",
         "examples/board/composer.lock",
-        "config/template-ext.json",
+        "config/template-assets.json",
         ".github/workflows/*.yml",
         "packages/*/package.json",
         "packages/*/composer.json",

@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: 6309b510eee754f10b23962d7a326a204954c89fd59cf8b5163520040c10afb8 -->
+<!-- source-sha256: c0c6eb63271126138dbf290843c5f7153d1f022db27de92982b558ce7f9275a9 -->
 # 개발
 
 [English](development.md).
@@ -9,7 +9,7 @@
 - pin한 도구(HY-81): `.node-version`의 Node.js, `pdo_sqlite`가 있는 `.php-version`의 PHP, `mise.toml`의 Python(`make install-tools`가 mise로 `mise.lock`의 digest에 맞춰 설치한다), GNU Make 3.81 이상, 네이티브 확장을 위한 그 PHP의 phpize, php-config와 C compiler. `make install`은 `packageManager`의 npm과 `config/toolchain.json`의 Composer를 `var/tools`에 설치한다(`make install-tools`). `make toolchain-check`는 pin과 다른 모든 도구를 밝힌다.
 - 공유 도구: npm 패키지 `@polyspec/kit`이며, `package.json`은 그 release asset의 URL로, `package-lock.json`은 integrity로 pin하고 `config/*.json`이 이를 설정한다. checkout은 `scripts/kit/bootstrap/`의 복사된 installer로 `packageManager`의 npm을 설치하는 `make install-tools TOOLS=npm`과, 그 npm으로 `package-lock.json`을 설치하는 `make install-packages`로 시작한다. Makefile은 패키지의 `kit.mk`를 include하는 `scripts/kit/kit-bootstrap.mk`를 include한다. `make kit-sync`는 설치된 패키지에서 `kit.copies`의 복사본을 쓰고, `make kit-check`는 패키지가 lock과 다르거나 복사본이 패키지와 다르거나 `config/*.json`이 schema를 어기면 실패한다.
 - template package: npm은 `@polyspec/template`과 `@polyspec/template-compiler`를 template release의 tarball에서, Composer는 `polyspec/template`을 그 zip에서 `package.json`, `composer.json`과 그 lock이 고정한 대로 설치한다(HY-70). `make install`이 이를 download한다.
-- 네이티브 template 확장: release `v0.0.6`(`TEMPLATE_TAG`)의 php-ext asset `polyspec-template-php-ext-php-0.0.6.zip`이며, `config/template-ext.json`이 sha256으로 pin한다(H14.1-7). `make install`이 `$(ONLINE)`으로 내려받아 `var/products/template-ext`에 풀고, `make ext`가 offline으로 build한다. `../template`(`TEMPLATE_REPOSITORY`)의 template 저장소는 full-run key가 밝히는 tag의 commit을 읽을 때만 쓰며, tag가 없으면 `make template-tag`가 실패한다.
+- 네이티브 template 확장: release `v0.0.6`(`TEMPLATE_TAG`)의 php-ext asset `polyspec-template-php-ext-php-0.0.6.zip`이며, `config/template-assets.json`이 sha256으로 pin한다(H14.1-7). `make install`이 `$(ONLINE)`으로 내려받아 `var/products/template-ext`에 풀고, `make ext`가 offline으로 build한다. 같은 파일이 php zip `polyspec-template-php-0.0.6.zip`을 pin하며, `make install`은 Composer가 설치하기 전에 그것을 확인해 Composer artifact repository `var/products/template-php`에 둔다(H23.11). `../template`(`TEMPLATE_REPOSITORY`)의 template 저장소는 full-run key가 밝히는 tag의 commit을 읽을 때만 쓰며, tag가 없으면 `make template-tag`가 실패한다.
 - network: `make install-tools`, `make install-packages`, `make install`, `make install-browser`만 download한다. 다른 모든 recipe는 npm, Composer를 offline으로 실행하므로(`npm_config_offline`, `COMPOSER_DISABLE_NETWORK`) 없는 download는 바로 실패하고 그것을 만드는 설치 target을 밝힌다(HY-89).
 - Playwright용 Chromium: `make install-browser`. pin한 Playwright의 Chromium과, Linux에서는 그 system library를 설치한다.
 
@@ -119,7 +119,7 @@ npm 12.2.0은 `allow-remote=root`에서 npm consumer 프로젝트의 lock을 쓰
 
 ### 개발 구성
 
-private root는 checkout 안의 패키지를 찾아 주며 공개되지 않는다. root `package.json`은 `@polyspec/hyper-client`, `@polyspec/hyper-server`, `@polyspec/hyper-build`를 `packages/hyper-client`, `packages/hyper-server-node`, `packages/hyper-build`의 `file:` 사본으로, `@polyspec/template`과 `@polyspec/template-compiler`를 template release의 tarball URL로 선언하고, 패키지의 정확한 버전이 이 사본과 template tarball로 풀리게 하는 `overrides`를 둔다. npm 12는 기본으로 URL 의존성을 설치하지 않으므로 `.npmrc`가 `allow-remote=root`를 둔다. npm은 workspace를 언제나 link하므로 npm workspace는 두지 않는다(HY-79). root `composer.json`은 path repository `var/products/hyper-server-php`와, sha1 `shasum`을 가진 template release의 zip의 `package` repository에서 root `vendor`로 설치하고 `packages/hyper-server-php`의 namespace를 tree에 연결한다. `composer.lock`이 그 lock이다. 두 root는 template release v0.0.6을 받는다(HY-70). 그 tag는 `make template`이 네이티브 확장 소스를 복사하는 Makefile의 `TEMPLATE_TAG`이다(HY-80).
+private root는 checkout 안의 패키지를 찾아 주며 공개되지 않는다. root `package.json`은 `@polyspec/hyper-client`, `@polyspec/hyper-server`, `@polyspec/hyper-build`를 `packages/hyper-client`, `packages/hyper-server-node`, `packages/hyper-build`의 `file:` 사본으로, `@polyspec/template`과 `@polyspec/template-compiler`를 template release의 tarball URL로 선언하고, 패키지의 정확한 버전이 이 사본과 template tarball로 풀리게 하는 `overrides`를 둔다. npm 12는 기본으로 URL 의존성을 설치하지 않으므로 `.npmrc`가 `allow-remote=root`를 둔다. npm은 workspace를 언제나 link하므로 npm workspace는 두지 않는다(HY-79). root `composer.json`은 path repository `var/products/hyper-server-php`와, 확인된 template release zip의 artifact repository `var/products/template-php`에서 root `vendor`로 설치하고 `packages/hyper-server-php`의 namespace를 tree에 연결한다. `composer.lock`이 그 lock이다. 두 root는 template release v0.0.6을 받는다(HY-70). 그 tag는 `make template`이 네이티브 확장 소스를 복사하는 Makefile의 `TEMPLATE_TAG`이다(HY-80).
 
 ### 릴리스 에셋 설치
 

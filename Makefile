@@ -16,9 +16,11 @@ PYTHON_PACKAGE := packages/hyper-server-python
 # and its shim runs (HY-81, kit K127). requires-python >= 3.14 states the tested minor of the package (H20.12).
 # The absolute path, as NPM and COMPOSER have, because make looks up a recipe line on its own PATH.
 PYTHON := $(CURDIR)/var/tools/mise/shims/python3
-# npm installs the template packages @polyspec/template and @polyspec/template-compiler and Composer installs
-# polyspec/template from the assets of the template release that package.json and composer.json name (HY-70). The
-# native template extension is the php-ext asset of the same release, which config/template-ext.json pins (H14.1-7).
+# npm installs the template packages @polyspec/template and @polyspec/template-compiler from the tarballs of the template
+# release that package.json names (HY-70). config/template-assets.json pins the php zip and the php-ext asset of the same
+# release with their sha256: make install verifies both, puts the php zip into the Composer artifact repository
+# var/products/template-php, from which Composer installs polyspec/template (H23.11), and unpacks the native template
+# extension (H14.1-7).
 # The template repository of TEMPLATE_REPOSITORY is read only for the commit of TEMPLATE_TAG in the full-run key (HY-80).
 TEMPLATE_REPOSITORY := ../template
 TEMPLATE_TAG := v0.0.6
@@ -71,9 +73,9 @@ checks_result = test -z "$$failed" || { echo "failed checks:$$failed"; exit 1; }
 help: ## List the targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
 
-install: install-tools ## Install the pinned tools, fetch the php-ext asset of the template tag and install the Composer dependencies; make install-packages installs the npm packages (HY-89, H14.1-7)
+install: install-tools ## Install the pinned tools, fetch the assets of the template tag and install the Composer dependencies; make install-packages installs the npm packages (HY-89, H14.1-7)
 	node $(KIT)/check-toolchain.$(KIT_EXT)
-	$(ONLINE) node scripts/template-ext.mjs fetch
+	$(ONLINE) node scripts/template-assets.mjs fetch
 	node scripts/copy-package.mjs --path $(PHP_PACKAGE) --output $(HYPER_PHP_COPY)
 	$(ONLINE) node $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(COMPOSER) install
 	$(ONLINE) node $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(COMPOSER) install --working-dir=$(BOARD)
@@ -93,11 +95,11 @@ template-tag: ## Fail when the template repository TEMPLATE_REPOSITORY has no ta
 	  echo "template-tag: fetch the tags of the template repository with git -C $(TEMPLATE_REPOSITORY) fetch --tags" >&2; \
 	  exit 1; }
 
-# The build (scripts/template-ext.mjs) runs phpize, configure and make of the unpacked asset with the php-config of PATH in
+# The build (scripts/template-assets.mjs) runs phpize, configure and make of the unpacked asset with the php-config of PATH in
 # a temporary directory, builds again only when the sources or the PHP build changed, and publishes the library with a
 # rename (HY-82). It runs offline: `make install` fetched the asset.
 ext: toolchain-check ## Build the native template extension from the unpacked php-ext asset with phpize of the PHP of PATH into build/ext (HY-48, H14.1-7)
-	node scripts/template-ext.mjs build $(CURDIR)/$(EXT)
+	node scripts/template-assets.mjs build $(CURDIR)/$(EXT)
 
 packages: toolchain-check ## Build the JavaScript modules and type declarations of the npm packages into their dist directories; npm links the workspaces (HY-61, HY-79, HY-96)
 	cd $(JS_PACKAGE) && $(NPM) run --silent build -- --outDir dist.next-$$$$ && node ../../scripts/publish.mjs directory dist.next-$$$$ dist

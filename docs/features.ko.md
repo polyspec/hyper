@@ -1,5 +1,5 @@
 <!-- doc-id: features -->
-<!-- source-sha256: 822f168d807168b2f1935539160dfeeb3a600101aa1400f9cf47b0b41495dda5 -->
+<!-- source-sha256: b78cc63fa33c01cdc7b61b31bcda910a745d39cf340197d81dd3b25cdcf689a1 -->
 # 기능 상태
 
 [English](features.md).
@@ -51,7 +51,7 @@
 | build-package | `@polyspec/hyper-build`는 bin `hyper-build-server`와 `hyper-build-assets`를 배포하고, 그 모듈은 배포하는 파일, Node, manifest가 요구하는 패키지만 import한다. consumer는 릴리스 tarball에서 이것을 설치하고 두 bin을 실행한다(HY-96) | implemented; CI run pending | `tests/scripts/package-source.test.mjs`, `make release-consumer` |
 | output-files | asset build와 server build는 복사한 출력 파일에 어떤 umask에서도 mode 0644를, 디렉터리에 0755를 주어 다른 사용자가 읽을 수 있게 하며, Linux container의 virtiofs bind mount는 이를 받아들인다(HY-68) | implemented; Darwin run pending | `make test-scripts`, Darwin에서 `make virtiofs-check` |
 | template-dir | asset build, template build, server build는 npm이 template release의 tarball에서 설치하는 template package `@polyspec/template`과 `@polyspec/template-compiler`를 package 이름으로 읽고, Composer는 `polyspec/template`을 template release의 zip에서 설치하며, 공개 manifest는 정확한 template version을 요구한다(HY-70) | implemented; CI run pending | `make test-scripts` |
-| template-ext | 네이티브 template 확장은 `config/template-ext.json`이 sha256으로 pin한 tag `TEMPLATE_TAG`(`v0.0.6`)의 php-ext release asset에서 build한다. `make install`이 가져와 검증하고, `make ext`가 offline으로 build하며, PHPStan은 그 stub을 읽는다. 어떤 recipe도 확장을 위해 template 저장소를 읽거나 복사하지 않는다(H14.1-7) | implemented; CI run pending | `tests/scripts/template-ext.test.mjs`, `tests/scripts/template-pins.test.mjs`, `make ext`, `make test-php` |
+| template-ext | 네이티브 template 확장은 `config/template-assets.json`이 sha256으로 pin한 tag `TEMPLATE_TAG`(`v0.0.6`)의 php-ext release asset에서 build한다. `make install`이 가져와 검증하고, `make ext`가 offline으로 build하며, PHPStan은 그 stub을 읽는다. 어떤 recipe도 확장을 위해 template 저장소를 읽거나 복사하지 않는다(H14.1-7) | implemented; CI run pending | `tests/scripts/template-ext.test.mjs`, `tests/scripts/template-pins.test.mjs`, `make ext`, `make test-php` |
 | ci-suite | 전체 suite는 `main`의 push와 모든 수동 실행에 대해 GitHub에서 CI group마다 job 하나로 모든 target을 끝까지 실행하고, job summary와 각 target의 상태, 시간, 첫 실패 줄, 전체 log를 담은 보고서를 upload한다(HY-91) | implemented; CI run pending | `tests/scripts/ci-workflow.test.mjs` |
 | ci-steps | 모든 GitHub workflow는 commit으로 pin한 action으로 시간 제한 없이 `ubuntu-26.04-arm`에서 실행하고, 모든 step은 make target 하나를 실행한다(HY-90) | implemented; CI run pending | `tests/scripts/ci-workflow.test.mjs` |
 | publish-main | 버전 0.1 전까지 변경은 pull request, merge queue, ruleset 없이 checklist의 모든 작업이 끝났을 때 `main`에 한 번 push한다. pre-push hook은 작업이 진행 중이면 push를 거부하고, `main`의 push는 CI workflow를 실행하며, 그 마지막 job `ci-passed`는 workflow의 다른 모든 job이 통과했을 때만 통과한다(HY-94) | implemented; CI run pending | `tests/scripts/ci-workflow.test.mjs` |
