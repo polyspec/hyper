@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- H23.6-1: `config/layout.yml` names only the root files of hyper, `composer.json`, `composer.lock` and `.npmrc`, in `vars.root_files` of `layout-root-files`, in place of an override that repeated the whole list of kit (kit K145).
 - H23.14: hyper pins `@polyspec/kit` 0.0.44 with the integrity of the published file; its copies keep the cache of ruff in `var/ruff`, give the bootstrap bytes as `Uint8Array` and let `config/layout.yml` add root files to the list of kit, and `make install-tools` removes the wrappers of `var/tools/bin` that kit no longer writes (kit K145, K147, K149, K150).
 - H23.13: `valueToJson` of `@polyspec/hyper-client` writes a safe string as its text, where it wrote `"[object Object]"`, and an application object fails as on the server; the `fetch` option of the client is the exported type `Fetch`, which takes the URL as a string, as the client calls it. The findings of `make lint-ts` in this repository are fixed; the check stays out of the full suite until the kit release with K145 and K150.
 - H23.12: `make dependency-review UPDATE=1` reviewed the lock of kit 0.0.43 and raised `@playwright/test` to 1.64.1 with its lock.
