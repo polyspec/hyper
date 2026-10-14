@@ -334,15 +334,15 @@
     },
     {
       "paths": [
-        "scripts/template-assets.mts",
-        "config/template-assets.json"
+        "scripts/build-template-ext.mts",
+        "config/release-assets.json"
       ],
       "targets": [
         "ext",
         "typecheck"
       ],
       "tests": [
-        "tests/scripts/template-assets.test.mts"
+        "tests/scripts/release-assets.test.mts"
       ]
     },
     {
@@ -546,7 +546,7 @@
         "composer.lock",
         "examples/board/composer.json",
         "examples/board/composer.lock",
-        "config/template-assets.json",
+        "config/release-assets.json",
         ".github/workflows/*.yml",
         "packages/**/{package.json,composer.json,pyproject.toml}",
         "tests/package-install/package.json",

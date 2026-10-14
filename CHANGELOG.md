@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- H23.11-2: `config/release-assets.json` of kit pins the php-ext and php zips of the template release, and `make install` fetches them with `make release-assets-fetch`, which checks their sha256, puts the php zip into the Composer artifact repository and unpacks the php-ext zip (kit K140); `scripts/template-assets.mts` and `config/template-assets.json` are removed, the build of the extension is `scripts/build-template-ext.mts`, and `TEMPLATE_TAG` of the Makefile reads the version of the entry `template-php`.
 - H23.6-1: `config/layout.yml` names only the root files of hyper, `composer.json`, `composer.lock` and `.npmrc`, in `vars.root_files` of `layout-root-files`, in place of an override that repeated the whole list of kit (kit K145).
 - H23.14: hyper pins `@polyspec/kit` 0.0.44 with the integrity of the published file; its copies keep the cache of ruff in `var/ruff`, give the bootstrap bytes as `Uint8Array` and let `config/layout.yml` add root files to the list of kit, and `make install-tools` removes the wrappers of `var/tools/bin` that kit no longer writes (kit K145, K147, K149, K150).
 - H23.13: `valueToJson` of `@polyspec/hyper-client` writes a safe string as its text, where it wrote `"[object Object]"`, and an application object fails as on the server; the `fetch` option of the client is the exported type `Fetch`, which takes the URL as a string, as the client calls it. The findings of `make lint-ts` in this repository are fixed; the check stays out of the full suite until the kit release with K145 and K150.

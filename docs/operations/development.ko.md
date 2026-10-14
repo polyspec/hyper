@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: d713077195f6122fd5e7785af4f7973e083159e80e22976355e3c8a98e25ba85 -->
+<!-- source-sha256: e6bec5f223848f1b51fe65ee5dede7cd538df6948efbe69e3d1f3082530ffa50 -->
 # 개발
 
 [English](development.md).
@@ -9,7 +9,7 @@
 - pin한 도구(HY-81): `.node-version`의 Node.js, `pdo_sqlite`가 있는 `.php-version`의 PHP, `mise.toml`의 Python(`make install-tools`가 mise로 `mise.lock`의 digest에 맞춰 설치한다), GNU Make 3.81 이상, 네이티브 확장을 위한 그 PHP의 phpize, php-config와 C compiler. `make install`은 `packageManager`의 npm과 `config/toolchain.json`의 Composer를 `var/tools`에 설치한다(`make install-tools`). `make toolchain-check`는 pin과 다른 모든 도구를 밝힌다.
 - 공유 도구: npm 패키지 `@polyspec/kit`이며, `package.json`은 그 release asset의 URL로, `package-lock.json`은 integrity로 pin하고 `config/*.json`이 이를 설정한다. checkout은 `scripts/kit/bootstrap/`의 복사된 installer로 `packageManager`의 npm을 설치하는 `make install-tools TOOLS=npm`과, 그 npm으로 `package-lock.json`을 설치하는 `make install-packages`로 시작한다. Makefile은 패키지의 `kit.mk`를 include하는 `scripts/kit/kit-bootstrap.mk`를 include한다. `make kit-sync`는 설치된 패키지에서 `kit.copies`의 복사본을 쓰고, `make kit-check`는 패키지가 lock과 다르거나 복사본이 패키지와 다르거나 `config/*.json`이 schema를 어기면 실패한다.
 - template package: npm은 `@polyspec/template`과 `@polyspec/template-compiler`를 template release의 tarball에서, Composer는 `polyspec/template`을 그 zip에서 `package.json`, `composer.json`과 그 lock이 고정한 대로 설치한다(HY-70). `make install`이 이를 download한다.
-- 네이티브 template 확장: release `v0.0.6`(`TEMPLATE_TAG`)의 php-ext asset `polyspec-template-php-ext-php-0.0.6.zip`이며, `config/template-assets.json`이 sha256으로 pin한다(H14.1-7). `make install`이 `$(ONLINE)`으로 내려받아 `var/products/template-ext`에 풀고, `make ext`가 offline으로 build한다. 같은 파일이 php zip `polyspec-template-php-0.0.6.zip`을 pin하며, `make install`은 Composer가 설치하기 전에 그것을 확인해 Composer artifact repository `var/products/template-php`에 둔다(H23.11). `../template`(`TEMPLATE_REPOSITORY`)의 template 저장소는 full-run key가 밝히는 tag의 commit을 읽을 때만 쓰며, tag가 없으면 `make template-tag`가 실패한다.
+- 네이티브 template 확장: release `v0.0.6`(`TEMPLATE_TAG`)의 php-ext archive `polyspec-template-php-ext-php-0.0.6.zip`이며, `config/release-assets.json`이 sha256으로 pin한다(H14.1-7). `make install`이 kit의 `make release-assets-fetch`로 `$(ONLINE)`을 거쳐 내려받아 `var/products/template-ext`에 풀고, `make ext`가 offline으로 build한다. 같은 파일이 php zip `polyspec-template-php-0.0.6.zip`을 pin하며, `make install`은 Composer가 설치하기 전에 그것을 확인해 Composer artifact repository `var/products/template-php`에 둔다(H23.11). `../template`(`TEMPLATE_REPOSITORY`)의 template 저장소는 full-run key가 밝히는 tag의 commit을 읽을 때만 쓰며, tag가 없으면 `make template-tag`가 실패한다.
 - network: `make install-tools`, `make install-packages`, `make install`, `make install-browser`만 download한다. 다른 모든 recipe는 npm, Composer를 offline으로 실행하므로(`npm_config_offline`, `COMPOSER_DISABLE_NETWORK`) 없는 download는 바로 실패하고 그것을 만드는 설치 target을 밝힌다(HY-89).
 - Playwright용 Chromium: `make install-browser`. pin한 Playwright의 Chromium과, Linux에서는 그 system library를 설치한다.
 
@@ -23,7 +23,7 @@
 | `make kit-sync` | 설치된 `@polyspec/kit`에서 `kit.copies`의 복사본을 쓴다. offline이며 두 번째 실행은 아무것도 바꾸지 않는다 |
 | `make kit-check` | 설치된 `@polyspec/kit`이 `package-lock.json`과 다르거나, 복사본이 패키지와 다르거나, `config/*.json`이 schema를 어기면 실패한다 |
 | `make layout-check` | `config/layout.kit.yml`을 extend하는 `config/layout.yml`에 대해 `var/tools`의 alint로 폴더 배치를 검사한다 |
-| `make install` | pin한 도구를 설치하고, `config/template-assets.json`의 template asset을 `$(ONLINE)`으로 pin한 sha256과 함께 가져와 php-ext asset을 `var/products/template-ext`에 풀며(H14.1-7, H23.11), `make install-python`을 실행하고, template release의 template package를 포함한 Composer 의존성을 설치한다(HY-70) |
+| `make install` | pin한 도구를 설치하고, `config/release-assets.json`의 template archive를 `$(ONLINE)`으로 pin한 sha256과 함께 가져와 php-ext archive를 `var/products/template-ext`에 풀며(kit의 `make release-assets-fetch`; H14.1-7, H23.11, H23.11-2), `make install-python`을 실행하고, template release의 template package를 포함한 Composer 의존성을 설치한다(HY-70) |
 | `make install-python` | kit의 `python-venv`로 `mise.toml`의 Python에서 Python 서버 package의 venv `.venv`를 만들고, release의 template wheel을 포함한 의존성과 함께 package를 editable mode로 설치한다. Python test와 board Python 서버는 그 Python을 실행하며 source 경로를 읽지 않는다(S5) |
 | `make hyper-server-php-install` | `symlink: false`인 path repository에서 `composer reinstall`로 `packages/server/php`를 board의 vendor에 다시 mirror한다(HY-79). `make server`가 먼저 실행한다 |
 | `make template-tag` | 템플릿 저장소 `TEMPLATE_REPOSITORY`에 tag `TEMPLATE_TAG`가 없으면 기대한 tag와 저장소가 가진 tag를 밝히며 실패한다. `make check`의 full-run key가 그 commit을 밝힌다(HY-80) |
