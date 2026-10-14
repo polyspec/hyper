@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: d83fd35fae8de62335e33527752c90fb58a3f7d0ef7dcb0f4748d66c48566ff9 -->
+<!-- source-sha256: eac820b3acedb8ef1a4f75914adb7e14ae1577ca0895c323b3eb383315bc9e37 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H23.15: Python 서버 패키지 `polyspec-hyper-server`는 kit의 package kind `wheel`로 릴리스하며, template 의존성의 `packages/server/python/pylock.toml`을 `make python-lock`이 쓰고 `make python-lock-check`가 비교한다. kit가 없앤 `proof.gitTag`의 proof kind `python` 때문에 `config/release.json`을 읽는 모든 릴리스 단계가 실패했다. `config/release.json`은 `make release-coverage`가 요구한 대로 `config/php-lint/composer.json`도 릴리스하지 않는 파일로 분류한다.
 - H23.11-2: kit의 `config/release-assets.json`이 template release의 php-ext·php zip을 pin하고, `make install`은 `make release-assets-fetch`로 그것을 가져온다. 이 target은 sha256을 확인하고, php zip을 Composer artifact repository에 두며, php-ext zip을 푼다(kit K140). `scripts/template-assets.mts`와 `config/template-assets.json`은 없어졌고, 확장의 build는 `scripts/build-template-ext.mts`이며, Makefile의 `TEMPLATE_TAG`는 entry `template-php`의 version을 읽는다.
 - H23.6-1: `config/layout.yml`은 kit의 목록 전체를 반복하던 override 대신 `layout-root-files`의 `vars.root_files`에 hyper의 root 파일 `composer.json`, `composer.lock`, `.npmrc`만 적는다(kit K145).
 - H23.14: hyper는 게시된 파일의 integrity로 `@polyspec/kit` 0.0.44를 pin한다. 그 복사본으로 ruff는 cache를 `var/ruff`에 두고, bootstrap은 byte를 `Uint8Array`로 받으며, `config/layout.yml`은 kit의 목록에 root 파일을 더한다. `make install-tools`는 kit가 더 쓰지 않는 `var/tools/bin`의 wrapper를 없앤다(kit K145, K147, K149, K150).
