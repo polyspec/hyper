@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 5e270997f009b8add4af7da6e51a2c0cdd58b184152f82d1a5bae159804b24e1 -->
+<!-- source-sha256: c809d9854b08f8785a62a113b0e828165833bad82dfcc9fa604fcf2c649abfa1 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H23.17: `config/toolchain.json`이 wheel build backend `setuptools==84.0.0`을 그 sha256과 함께 `pythonBackend`로 선언하므로, 릴리스 workflow가 `make release-tools`로 실행하는 `make install-tools`가 그것을 `var/tools/wheels`에 설치한다. tag v0.0.14의 릴리스 workflow는 그 wheel이 없어서 실패했다.
 
 ## 0.0.14
 - H23.15: `tests/release-install`의 consumer 프로젝트는 0.0.14의 archive가 요구하는 template 0.0.6을 요구하며(H21.4), Composer consumer는 `config/release-assets.json`의 entry `template-php`의 template zip을 받는다(`consumers.composer.polyspec`, H23.11-1). entry `template-php-consumer`는 없어져 archive마다 entry가 하나다.

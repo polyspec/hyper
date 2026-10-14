@@ -1,5 +1,5 @@
 <!-- doc-id: execution-checklist -->
-<!-- source-sha256: 9141d969d05a42015dbeeb794768a680d8de2a9624609d8cd9f6527ec6ac9a3a -->
+<!-- source-sha256: 48f6af462e1a9c1d0376febcca4ead3da411aece7c0ed06fce2478078a189622 -->
 # 실행 체크리스트
 
 ## [웨이브 1](waves.ko.md#wave-1) — 애플리케이션이 약하게 만들 수 없는 CSRF 방어
@@ -325,3 +325,4 @@
 | H23.14 | kit 0.0.44로 옮긴다(kit K140, K144, K145, K147, K149–K151): 게시된 파일의 integrity로 pin하고, `make kit-sync`가 digest·file helper가 `Uint8Array`를 받는 bootstrap, cache를 `var/ruff`에 두는 `ruff.toml`, 주석 없는 `knip.json`, 추가형 root 파일을 가진 `config/layout.kit.yml`을 복사한다. `make install-tools`는 kit가 더 쓰지 않는 `var/tools/bin`의 wrapper를 없애고, `make dependency-review RECORD=1`의 검토가 새 lock을 기록한다. | `make kit-check`, `make toolchain-check`, `make dependency-policy-check` | [o] |
 | H23.15 | Python 서버 패키지 `packages/server/python`을 kit가 없앤 `proof.gitTag`의 proof kind `python` 대신 kit의 package kind `wheel`(K29, K49)로 릴리스한다. wheel consumer는 `polyspec.hyper`를 import하고, template wheel은 그 lock `pylock.toml`의 polyspec archive다. Red: kit 0.0.44에서 `make release-consumer TAG=v0.0.13`이 `config/release.json: proof.gitTag.packages/server/python/pyproject.toml.kind is "python", the allowed values are rust`로 실패했다. 조건: 다음 hyper 릴리스(v0.0.14)의 release-consumer로 증명한다. | `make release-consumer TAG=v0.0.14`, `make release-consumer-lock TAG=v0.0.14`, `make python-lock-check`, `make release-coverage` | [ ] |
 | H23.16 | kit 0.0.45로 옮긴다(kit K152–K154): 게시된 파일의 integrity로 pin하고, `make kit-sync`가 pin된 런타임의 binary를 무시하는 `knip.json`을 복사하며, `config/knip-entries.json`은 H23.13이 필요로 하는 `binaries`와 `workspaces`를 받는다. `make dependency-review RECORD=1`의 검토가 새 lock을 기록한다. | `make kit-check`, `make dependency-policy-check` | [o] |
+| H23.17 | 릴리스 workflow가 wheel build backend를 설치한다. `config/toolchain.json`이 `config/release.json`의 `buildBackend`와 같은 requirement와 sha256으로 `pythonBackend`를 선언한다. `make release-tools`가 실행하는 `make install-tools`는 `pythonBackend`에서만 backend를 `var/tools/wheels`에 설치하기 때문이다(kit K166이 선언을 하나로 만든다). Red: tag v0.0.14의 릴리스 workflow(run 38636777866)가 asset을 build하는 단계에서 `var/tools/wheels/setuptools-84.0.0-py3-none-any.whl is missing; make release-backend fetches it`로 실패했고, GitHub Release는 만들어지지 않았다. | `var/tools/wheels/setuptools-84.0.0-py3-none-any.whl`을 지운 상태에서 `make install-tools`가 그것을 쓰고 `make release-tools`가 그것을 보고한다. `make toolchain-check` | [ ] |
