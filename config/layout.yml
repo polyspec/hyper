@@ -1,0 +1,14 @@
+# The folder layout of hyper (S5, S7, S9), checked by make layout-check with the alint of var/tools: the common rules of
+# config/layout.kit.yml, a copy of @polyspec/kit that make kit-sync writes, and the map of this repository.
+version: 1
+extends:
+  - layout.kit.yml
+
+rules:
+  - extends_template: no-repository-prefix
+    id: layout-no-repository-prefix
+    vars: { repo: hyper }
+
+  - extends_template: go-module-path
+    id: layout-go-module-path
+    vars: { repo: hyper }

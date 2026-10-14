@@ -9,10 +9,12 @@
 # ubuntu-26.04-arm, the actions are pinned by commit and no step has a time limit (HY-90).
 #
 # The toolchain comes from the pinned files: Node.js from .node-version, PHP from .php-version, and Python from
-# config/toolchain.json pythonBuild (.python-version names its minor release). Every job runs `make install-tools`, which
-# installs the Python and the npm of the checkout into var/tools, so CI runs the Python of a local run. npm and Composer
-# also come from `make install` into var/tools of the checkout. `make install` installs the
-# template packages from the assets of the template release with npm and Composer (HY-70). The template repository is
+# config/toolchain.json pythonBuild (.python-version names its minor release). Every job, ci-passed too, first runs the
+# bootstrap of the shared tools @polyspec/kit: `make install-tools TOOLS=npm` installs the npm of packageManager into
+# var/tools and `make install-packages` installs package-lock.json with it, the package included, whose kit.mk has the
+# other targets. Every check job then runs `make install-tools`, which installs the Python and Composer of the checkout
+# into var/tools, so CI runs the tools of a local run. npm installs the template packages from the assets of the template
+# release, and `make install` installs them with Composer (HY-70). The template repository is
 # checked out next to this repository at its tag v0.0.6 (TEMPLATE_TAG of the Makefile, HY-80), as ../template of the
 # Makefile, and `make install` copies the native extension sources of the commit of that tag (HY-78). `make ext` builds
 # the native extension with phpize and php-config of the PHP of setup-php, and only the group board installs Chromium.
@@ -35,7 +37,7 @@ jobs:
       matrix:
         include:
           - name: docs
-            targets: kit-check kit-test documents-check hooks-check push-gate-commit commits-check owner-validate
+            targets: kit-check toolchain-check layout-check documents-check hooks-check push-gate-commit commits-check owner-validate
           - name: php
             install: true
             targets: dependency-policy-check dependency-policy-mutation-check bench-server-smoke lint analyse-php test-php
@@ -66,6 +68,12 @@ jobs:
         if: ${{ !cancelled() }}
         with:
           node-version-file: hyper/.node-version
+      - id: npm
+        if: ${{ !cancelled() }}
+        run: make install-tools TOOLS=npm
+      - id: packages
+        if: ${{ !cancelled() }}
+        run: make install-packages
       - id: tools
         if: ${{ !cancelled() }}
         run: make install-tools
@@ -107,7 +115,8 @@ jobs:
           if-no-files-found: error
   # The check that a release tag requires on the tagged commit (HY-95). It runs after every other job, also after a
   # failed, skipped or cancelled one (if: always()), and make ci-passed fails unless every job of needs has the result
-  # success, so a new job of this workflow is required once it is listed in needs. Each step needs the step before it.
+  # success, so a new job of this workflow is required once it is listed in needs. Each step needs the step before it, and the
+  # bootstrap installs the package whose kit.mk has the target ci-passed.
   ci-passed:
     if: ${{ always() }}
     needs: [check]
@@ -117,5 +126,9 @@ jobs:
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version-file: .node-version
+      - name: make install-tools TOOLS=npm
+        run: make install-tools TOOLS=npm
+      - name: make install-packages
+        run: make install-packages
       - name: make ci-passed
         run: make ci-passed RESULTS='${{ toJSON(needs) }}'

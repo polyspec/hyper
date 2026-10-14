@@ -1,6 +1,6 @@
-// Tests the holder lock of `make serve-demo` (scripts/kit/holder-lock.mjs): the demo holds its lock while it runs, a
+// Tests the holder lock of `make serve-demo` (the holder-lock tool of @polyspec/kit): the demo holds its lock while it runs, a
 // second demo fails with the checkout, the process ID and the start time of the first, and the demo releases the lock
-// when it stops. The rules of the lock itself are tested in tests/kit/holder-lock.test.mjs. The demos of the
+// when it stops. The rules of the lock itself are tested in @polyspec/kit. The demos of the
 // test listen on ports that the system assigns.
 import assert from 'node:assert/strict';
 import { spawn, spawnSync } from 'node:child_process';

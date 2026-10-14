@@ -1,9 +1,0 @@
-{
-  "schema": 1,
-  "version": "0.0.17",
-  "repository": "https://github.com/polyspec/kit",
-  "vendored": [
-    "scripts/kit",
-    "tests/kit"
-  ]
-}

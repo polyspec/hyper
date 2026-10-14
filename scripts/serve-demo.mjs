@@ -5,7 +5,7 @@
 //   compare http://127.0.0.1:<edge>/compare?ssr=http://127.0.0.1:<ssr>
 //
 // The ports are fixed so that the addresses stay the same between sessions, so the demo exists once: it holds the
-// lock --lock of scripts/kit/holder-lock.mjs while it runs, and a second demo fails with the checkout, the process ID and
+// lock --lock of the holder-lock tool of @polyspec/kit while it runs, and a second demo fails with the checkout, the process ID and
 // the start time of the first. A lock of an ended demo is reported and stays until `make serve-demo-unlock` removes
 // it. The servers start with scripts/board-servers.mjs, which prints their output; SIGINT and SIGTERM stop them.
 //
