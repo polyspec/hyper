@@ -8,7 +8,7 @@ import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { test } from 'node:test';
 import { build } from 'esbuild';
-import { templatePlugin } from '../../packages/hyper-build/lib/template-files.mjs';
+import { templatePlugin } from '../../packages/build/lib/template-files.mjs';
 import { requireBuilt } from './requires.mts';
 
 const repository = resolve('.');
@@ -36,10 +36,10 @@ test('npm installs the template packages from the tarballs of the template relea
   requireBuilt('install', ...PACKAGES.map((name) => `node_modules/${name}/package.json`));
   const root = read('package.json');
   const lock = read('package-lock.json');
-  const version = read('packages/hyper-client/package.json').dependencies['@polyspec/template'];
-  assert.match(version, /^\d+\.\d+\.\d+$/, 'packages/hyper-client requires an exact template version');
-  assert.equal(read('packages/hyper-server-node/package.json').dependencies['@polyspec/template'], version);
-  for (const name of PACKAGES) assert.equal(read('packages/hyper-build/package.json').dependencies[name], version, name);
+  const version = read('packages/client/package.json').dependencies['@polyspec/template'];
+  assert.match(version, /^\d+\.\d+\.\d+$/, 'packages/client requires an exact template version');
+  assert.equal(read('packages/server/ts/package.json').dependencies['@polyspec/template'], version);
+  for (const name of PACKAGES) assert.equal(read('packages/build/package.json').dependencies[name], version, name);
   for (const name of PACKAGES) {
     const tarball = `https://github.com/polyspec/template/releases/download/v${version}/${name.slice(1).replace('/', '-')}-npm-${version}.tgz`;
     assert.equal(root.dependencies[name], tarball, name);
@@ -56,9 +56,9 @@ test('npm installs the template packages from the tarballs of the template relea
 
 test('the asset build, the template build and the server build take no template directory', () => {
   const runs = {
-    'packages/hyper-build/bin/hyper-build-assets.mjs': ['--app', 'examples/board', '--api', '/api', '--output', '/nonexistent'],
+    'packages/build/bin/hyper-build-assets.mjs': ['--app', 'examples/board', '--api', '/api', '--output', '/nonexistent'],
     'scripts/build-templates.mts': ['--templates', 'examples/board/templates', '--output', '/nonexistent'],
-    'packages/hyper-build/bin/hyper-build-server.mjs': ['--manifest', 'examples/board/app/app.json', '--templates', 'examples/board/templates', '--output', '/nonexistent', '--php-namespace', 'X'],
+    'packages/build/bin/hyper-build-server.mjs': ['--manifest', 'examples/board/app/app.json', '--templates', 'examples/board/templates', '--output', '/nonexistent', '--php-namespace', 'X'],
   };
   for (const [script, options] of Object.entries(runs)) {
     const result = spawnSync(process.execPath, [join(repository, script), ...options, '--template-dir', 'var/products/template'], { encoding: 'utf8' });

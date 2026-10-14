@@ -1,5 +1,5 @@
 <!-- doc-id: readme -->
-<!-- source-sha256: e3c8ccf85a2ee4f7389a092f08198bfa298e59b041cf64398ea5eac85c7ee8f6 -->
+<!-- source-sha256: a2115c66a2f4fa1d7d49b5f7e26cfcddb7f9f791f211dc6eb377c8ebe5cddd55 -->
 # hyper
 
 [English](README.md).
@@ -30,10 +30,10 @@ hyper는 애플리케이션 하나에서 template 언어 템플릿으로 두 가
 
 | 경로 | 이름 | 역할 |
 |---|---|---|
-| `packages/hyper-client` | `@polyspec/hyper-client` | 브라우저 코드. 매니페스트, 라우터, 영역과 문서 렌더, htmx 확장, 클라이언트 렌더 |
-| `packages/hyper-server-php` | `polyspec/hyper-server` | 서버. 매니페스트, 라우터, 액션, 영역 선택, 문서와 JSON |
-| `packages/hyper-server-node` | `@polyspec/hyper-server` | server protocol의 Node.js 구현. 문서를 브라우저 코드로 렌더한다([README](packages/hyper-server-node/README.ko.md)) |
-| `packages/hyper-server-python` | `polyspec-hyper-server` | server protocol의 Python 구현. template Python package로 렌더하고 `http.server`로 서비스한다 ([README](packages/hyper-server-python/README.ko.md)) |
+| `packages/client` | `@polyspec/hyper-client` | 브라우저 코드. 매니페스트, 라우터, 영역과 문서 렌더, htmx 확장, 클라이언트 렌더 |
+| `packages/server/php` | `polyspec/hyper-server` | 서버. 매니페스트, 라우터, 액션, 영역 선택, 문서와 JSON |
+| `packages/server/ts` | `@polyspec/hyper-server` | server protocol의 Node.js 구현. 문서를 브라우저 코드로 렌더한다([README](packages/server/ts/README.ko.md)) |
+| `packages/server/python` | `polyspec-hyper-server` | server protocol의 Python 구현. template Python package로 렌더하고 `http.server`로 서비스한다 ([README](packages/server/python/README.ko.md)) |
 | `examples/board` | | 게시판 예제. 레이아웃, 레프트, 컨텐츠 영역. 목록, 상세, 글쓰기, 검증 |
 | `contracts/routes.json` | | 두 라우터가 함께 통과하는 라우터 사례 |
 | `contracts/json.json` | | PHP·Node.js·Python 서버가 통과하는 JSON encode와 decode 사례 |

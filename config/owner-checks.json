@@ -7,7 +7,7 @@
       "paths": [
         "docs/**",
         "*.md",
-        "packages/*/README*.md"
+        "packages/**/README*.md"
       ],
       "targets": [
         "documents-check"
@@ -15,8 +15,8 @@
     },
     {
       "paths": [
-        "packages/hyper-server-php/{src,tests}/**",
-        "packages/hyper-server-php/{composer.json,phpstan.neon,phpunit.xml,pint.json}",
+        "packages/server/php/{src,tests}/**",
+        "packages/server/php/{composer.json,phpstan.neon,phpunit.xml,pint.json}",
         "composer.json",
         "composer.lock"
       ],
@@ -28,7 +28,7 @@
     },
     {
       "paths": [
-        "packages/hyper-client/**"
+        "packages/client/**"
       ],
       "targets": [
         "test-js",
@@ -38,7 +38,7 @@
     },
     {
       "paths": [
-        "packages/hyper-server-node/**"
+        "packages/server/ts/**"
       ],
       "targets": [
         "test-node",
@@ -47,7 +47,7 @@
     },
     {
       "paths": [
-        "packages/hyper-server-python/**"
+        "packages/server/python/**"
       ],
       "targets": [
         "test-python",
@@ -239,8 +239,8 @@
     },
     {
       "paths": [
-        "packages/hyper-build/bin/hyper-build-assets.mjs",
-        "packages/hyper-build/lib/template-files.mjs",
+        "packages/build/bin/hyper-build-assets.mjs",
+        "packages/build/lib/template-files.mjs",
         "scripts/build-templates.mts"
       ],
       "targets": [
@@ -255,8 +255,8 @@
     },
     {
       "paths": [
-        "packages/hyper-build/bin/hyper-build-server.mjs",
-        "packages/hyper-build/lib/template-rules.mjs",
+        "packages/build/bin/hyper-build-server.mjs",
+        "packages/build/lib/template-rules.mjs",
         "scripts/check-templates.mts"
       ],
       "targets": [
@@ -271,7 +271,7 @@
     },
     {
       "paths": [
-        "packages/hyper-build/lib/output-files.mjs"
+        "packages/build/lib/output-files.mjs"
       ],
       "tests": [
         "tests/scripts/publish.test.mts",
@@ -281,7 +281,7 @@
     },
     {
       "paths": [
-        "packages/hyper-build/package.json"
+        "packages/build/package.json"
       ],
       "targets": [
         "package-check"
@@ -319,7 +319,7 @@
     {
       "paths": [
         "scripts/publish.mts",
-        "packages/hyper-build/lib/publish.mjs",
+        "packages/build/lib/publish.mjs",
         "scripts/tracked-files.mts"
       ],
       "targets": [
@@ -390,10 +390,10 @@
       "paths": [
         "CHANGELOG.md",
         "package.json",
-        "packages/hyper-client/package.json",
-        "packages/hyper-server-node/package.json",
-        "packages/hyper-build/package.json",
-        "packages/hyper-server-php/composer.json",
+        "packages/client/package.json",
+        "packages/server/ts/package.json",
+        "packages/build/package.json",
+        "packages/server/php/composer.json",
         "tests/package-install/package.json",
         "examples/board/composer.json",
         "composer.json",
@@ -531,9 +531,7 @@
     {
       "paths": [
         "config/release.json",
-        "packages/*/package.json",
-        "packages/*/composer.json",
-        "packages/*/pyproject.toml"
+        "packages/**/{package.json,composer.json,pyproject.toml}"
       ],
       "tests": [
         "tests/scripts/package-names.test.mts"
@@ -550,9 +548,7 @@
         "examples/board/composer.lock",
         "config/template-assets.json",
         ".github/workflows/*.yml",
-        "packages/*/package.json",
-        "packages/*/composer.json",
-        "packages/*/pyproject.toml",
+        "packages/**/{package.json,composer.json,pyproject.toml}",
         "tests/package-install/package.json",
         "tests/package-install/package-lock.json",
         "tests/release-install/**"

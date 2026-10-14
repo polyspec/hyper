@@ -128,6 +128,6 @@ test('only make install-tools, make install-packages, make install and make inst
 
 test('the venv of the Python server package installs its committed uv.lock and nothing that the index serves now', () => {
   const lines = dryRun('install-python');
-  assert.ok(lines.some((line) => line.endsWith('uv sync --quiet --locked --project packages/hyper-server-python')), lines.join('\n'));
-  assert.equal(spawnSync('git', ['ls-files', '--error-unmatch', 'packages/hyper-server-python/uv.lock'], { encoding: 'utf8' }).status, 0, 'packages/hyper-server-python/uv.lock is not tracked');
+  assert.ok(lines.some((line) => line.endsWith('uv sync --quiet --locked --project packages/server/python')), lines.join('\n'));
+  assert.equal(spawnSync('git', ['ls-files', '--error-unmatch', 'packages/server/python/uv.lock'], { encoding: 'utf8' }).status, 0, 'packages/server/python/uv.lock is not tracked');
 });

@@ -15,7 +15,7 @@ import { copyTracked } from '../../scripts/tracked-files.mts';
 const fixture = (name: string, target: string) => copyTracked({ repository: resolve('.'), path: `tests/scripts/fixtures/${name}`, target, base: `tests/scripts/fixtures/${name}` });
 
 function buildAssets(app: string, ...options: string[]) {
-  return spawnSync(process.execPath, ['packages/hyper-build/bin/hyper-build-assets.mjs', '--app', app, '--api', '/api', '--output', join(app, 'out'), ...options], { encoding: 'utf8' });
+  return spawnSync(process.execPath, ['packages/build/bin/hyper-build-assets.mjs', '--app', app, '--api', '/api', '--output', join(app, 'out'), ...options], { encoding: 'utf8' });
 }
 
 test('rejects an invalid manifest and writes nothing', () => {

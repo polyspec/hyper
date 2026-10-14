@@ -1,5 +1,5 @@
 // Tests that outputs which other processes read are published without a missing or partly written file (HY-82,
-// packages/hyper-build/lib/publish.mjs, writeFileAtomic of packages/hyper-build/lib/output-files.mjs): a reader polls an output while scripts write it
+// packages/build/lib/publish.mjs, writeFileAtomic of packages/build/lib/output-files.mjs): a reader polls an output while scripts write it
 // again, and concurrent writers of one output both succeed.
 import assert from 'node:assert/strict';
 import { spawn, spawnSync, type SpawnSyncOptionsWithStringEncoding } from 'node:child_process';
@@ -9,7 +9,7 @@ import path from 'node:path';
 import { test, type TestContext } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
-import { files } from '../../packages/hyper-build/lib/publish.mjs';
+import { files } from '../../packages/build/lib/publish.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 
@@ -106,7 +106,7 @@ test('a reader of a file never reads a partial content while the file is written
   const contents = path.join(temporary(t, 'hyper-publish-contents-'), 'contents.json');
   writeFileSync(contents, JSON.stringify(['a'.repeat(200_000), 'b'.repeat(10)]));
   const script = `import { readFileSync } from 'node:fs';
-    import { writeFileAtomic } from ${JSON.stringify(path.join(ROOT, 'packages/hyper-build/lib/output-files.mjs'))};
+    import { writeFileAtomic } from ${JSON.stringify(path.join(ROOT, 'packages/build/lib/output-files.mjs'))};
     const contents = JSON.parse(readFileSync(${JSON.stringify(contents)}, 'utf8'));
     for (let index = 0; index < 300; index++) writeFileAtomic(${JSON.stringify(file)}, contents[index % 2]);`;
   node(['--input-type=module', '-e', script]);

@@ -290,7 +290,7 @@ async function loadBrowserCode(): Promise<BrowserCode> {
   const result = await build({
     stdin: {
       contents: "export { createApplication, decodeResponse, renderDocument, renderParts } from '@polyspec/hyper-client'; export { parseJson } from '@polyspec/template/render';",
-      resolveDir: resolve('packages', 'hyper-client'),
+      resolveDir: resolve('packages', 'client'),
       sourcefile: 'parity-entry.ts',
       loader: 'ts',
     },

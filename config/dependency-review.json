@@ -1,11 +1,11 @@
 {
   "schema": 1,
   "comment": "Written by make dependency-review RECORD=1 (scripts/kit/dependency-review.mts) from the registries; make dependency-policy-check compares the checkout with it without a network.",
-  "reviewed": "2026-10-14T08:29:22.253Z",
+  "reviewed": "2026-10-14T09:15:05.365Z",
   "locks": [
     {
       "lock": "package-lock.json",
-      "sha256": "e6a99cac8d74f34b7b00b6f732eb162fb09a1088dcc8d2c1de29c5e5bc3291da",
+      "sha256": "fd7284e0c015c03470d87ae00581cfaab316a45a6fc2d55b19e1e3e6e39c3702",
       "advisories": [
         {
           "package": "sprintf-js",
@@ -19,17 +19,17 @@
     },
     {
       "lock": "tests/package-install/package-lock.json",
-      "sha256": "e756b18a538c3327b234afd434578db36c68877bad81f36a8e5fcb980b646a27",
+      "sha256": "2eadb8f39df94c9973db8d2b8e62f1fee458bd7c9be9d8a002a215a9c0a3c601",
       "advisories": []
     },
     {
       "lock": "composer.lock",
-      "sha256": "99ea4606d02a688ca245c246f288f60a6bb3994b7740687c675875eb3ae06617",
+      "sha256": "ef9256ddc133686076dfb4b1cd179d3f0847f82f5914715a6445d6928f532b78",
       "advisories": []
     },
     {
       "lock": "examples/board/composer.lock",
-      "sha256": "5bf60a709d7a395e70ff23331a775785cdbfdaee582fab6a65dbf424141d5f58",
+      "sha256": "f9e2ce1f92c0184326d92123dd6e604e9eaa45e7c6a8781768c83fd3d8a34b27",
       "advisories": []
     }
   ],
@@ -71,35 +71,35 @@
     },
     {
       "ecosystem": "npm",
-      "manifest": "packages/hyper-build/package.json",
+      "manifest": "packages/build/package.json",
       "package": "@tailwindcss/node",
       "version": "4.3.3",
       "latest": "4.3.3"
     },
     {
       "ecosystem": "npm",
-      "manifest": "packages/hyper-build/package.json",
+      "manifest": "packages/build/package.json",
       "package": "@tailwindcss/oxide",
       "version": "4.3.3",
       "latest": "4.3.3"
     },
     {
       "ecosystem": "npm",
-      "manifest": "packages/hyper-build/package.json",
+      "manifest": "packages/build/package.json",
       "package": "esbuild",
       "version": "0.28.2",
       "latest": "0.28.2"
     },
     {
       "ecosystem": "npm",
-      "manifest": "packages/hyper-build/package.json",
+      "manifest": "packages/build/package.json",
       "package": "tailwindcss",
       "version": "4.3.3",
       "latest": "4.3.3"
     },
     {
       "ecosystem": "npm",
-      "manifest": "packages/hyper-client/package.json",
+      "manifest": "packages/client/package.json",
       "package": "htmx.org",
       "version": "4.0.0",
       "latest": "2.0.11"
@@ -148,7 +148,7 @@
     },
     {
       "ecosystem": "pypi",
-      "manifest": "packages/hyper-server-python/pyproject.toml",
+      "manifest": "packages/server/python/pyproject.toml",
       "package": "setuptools",
       "version": "84.0.0",
       "latest": "84.0.0"
