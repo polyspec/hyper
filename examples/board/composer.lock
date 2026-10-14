@@ -4,24 +4,24 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9f64578501a439d21123433320f650f1",
+    "content-hash": "8968a02755e0a4cc7fa0846eb91dc57b",
     "packages": [
         {
             "name": "polyspec/hyper-server",
             "version": "0.0.13",
             "dist": {
                 "type": "path",
-                "url": "../../var/products/hyper-server-php",
-                "reference": "dd01b7469e0669802c5c340bb2edcb3b7ecdafdd"
+                "url": "../../packages/hyper-server-php",
+                "reference": "d7dff2b7679a0400abc10bf3f28e5e8b41760268"
             },
             "require": {
                 "php": ">=8.5",
                 "polyspec/template": "0.0.6"
             },
             "require-dev": {
-                "laravel/pint": "^1.0",
+                "laravel/pint": "^1.32.1",
                 "phpstan/phpstan": "^2.2.16",
-                "phpunit/phpunit": "^11.5"
+                "phpunit/phpunit": "^13.4.2"
             },
             "type": "library",
             "autoload": {

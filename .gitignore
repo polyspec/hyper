@@ -15,3 +15,4 @@ packages/hyper-server-node/dist/
 __pycache__/
 /var/
 *.next-*
+.venv/

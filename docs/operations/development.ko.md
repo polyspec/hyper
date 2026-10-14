@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: 2a61248957920fcd4dfae2c993dda924987c5cc9ce50c3d46e83a14fb57437a2 -->
+<!-- source-sha256: c938816f44372fe2938074aa8834c1c5e9efafef8a41fb26adebcfedccbbd3f5 -->
 # 개발
 
 [English](development.md).
@@ -23,8 +23,9 @@
 | `make kit-sync` | 설치된 `@polyspec/kit`에서 `kit.copies`의 복사본을 쓴다. offline이며 두 번째 실행은 아무것도 바꾸지 않는다 |
 | `make kit-check` | 설치된 `@polyspec/kit`이 `package-lock.json`과 다르거나, 복사본이 패키지와 다르거나, `config/*.json`이 schema를 어기면 실패한다 |
 | `make layout-check` | `config/layout.kit.yml`을 extend하는 `config/layout.yml`에 대해 `var/tools`의 alint로 폴더 배치를 검사한다 |
-| `make install` | pin한 도구를 설치하고, `packages/hyper-server-php`의 복사본을 쓰며, template tag의 php-ext asset을 `$(ONLINE)`으로 `var/products/template-ext`에 pin한 sha256과 함께 가져오고(H14.1-7), template release의 template package를 포함한 npm과 Composer 의존성을 lock대로 설치한다(HY-70, HY-79) |
-| `make hyper-server-php-copy` | `packages/hyper-server-php`의 추적 파일 사본 `var/products/hyper-server-php`를 쓰고 board의 Composer 사본에 publish한다(HY-79, HY-82). `make server`가 먼저 실행한다 |
+| `make install` | pin한 도구를 설치하고, `config/template-assets.json`의 template asset을 `$(ONLINE)`으로 pin한 sha256과 함께 가져와 php-ext asset을 `var/products/template-ext`에 풀며(H14.1-7, H23.11), `make install-python`을 실행하고, template release의 template package를 포함한 Composer 의존성을 설치한다(HY-70) |
+| `make install-python` | kit의 `python-venv`로 `mise.toml`의 Python에서 Python 서버 package의 venv `.venv`를 만들고, release의 template wheel을 포함한 의존성과 함께 package를 editable mode로 설치한다. Python test와 board Python 서버는 그 Python을 실행하며 source 경로를 읽지 않는다(S5) |
+| `make hyper-server-php-install` | `symlink: false`인 path repository에서 `composer reinstall`로 `packages/hyper-server-php`를 board의 vendor에 다시 mirror한다(HY-79). `make server`가 먼저 실행한다 |
 | `make template-tag` | 템플릿 저장소 `TEMPLATE_REPOSITORY`에 tag `TEMPLATE_TAG`가 없으면 기대한 tag와 저장소가 가진 tag를 밝히며 실패한다. `make check`의 full-run key가 그 commit을 밝힌다(HY-80) |
 | `make ext` | `var/products/template-ext`에 풀린 php-ext asset의 소스를 `PATH`의 php-config로 phpize, configure, make해 `build/ext/polyspec_template.so`를 build한다. offline으로 실행하며, 소스나 PHP build가 바뀔 때만 다시 build한다(HY-48, H14.1-7) |
 | `make packages` | `@polyspec/hyper-client`와 `@polyspec/hyper-server`의 JavaScript module과 type 선언을 각 package가 선언한 build(npm의 bin link인 `tsc`를 실행하는 `npm run build`)로 각자의 `dist` 디렉터리에 build하고 각 build를 파일 단위로 publish한다. npm은 workspace를 link하므로 `node_modules`는 build를 바로 보여 준다(HY-79, HY-82). Node 서버 test, board 에셋 build, `make package-check`, `make test-scripts`는 package를 exports로 가져오므로 이것을 먼저 실행한다(HY-61). build script는 `data-template.json`, `checkManifest`, `templateReferences`를 script 옆 `packages/hyper-client`의 소스에서 읽으므로 `dist`가 필요 없고 어느 작업 디렉터리에서도 실행된다 |
@@ -119,7 +120,7 @@ npm 12.2.0은 `allow-remote=root`에서 npm consumer 프로젝트의 lock을 쓰
 
 ### 개발 구성
 
-private root는 checkout 안의 패키지를 찾아 주며 공개되지 않는다. root `package.json`은 `@polyspec/hyper-client`, `@polyspec/hyper-server`, `@polyspec/hyper-build`를 `packages/hyper-client`, `packages/hyper-server-node`, `packages/hyper-build`의 `file:` 사본으로, `@polyspec/template`과 `@polyspec/template-compiler`를 template release의 tarball URL로 선언하고, 패키지의 정확한 버전이 이 사본과 template tarball로 풀리게 하는 `overrides`를 둔다. npm 12는 기본으로 URL 의존성을 설치하지 않으므로 `.npmrc`가 `allow-remote=root`를 둔다. npm은 workspace를 언제나 link하므로 npm workspace는 두지 않는다(HY-79). root `composer.json`은 path repository `var/products/hyper-server-php`와, 확인된 template release zip의 artifact repository `var/products/template-php`에서 root `vendor`로 설치하고 `packages/hyper-server-php`의 namespace를 tree에 연결한다. `composer.lock`이 그 lock이다. 두 root는 template release v0.0.6을 받는다(HY-70). 그 tag는 `make template`이 네이티브 확장 소스를 복사하는 Makefile의 `TEMPLATE_TAG`이다(HY-80).
+private root는 checkout 안의 패키지를 찾아 주며 공개되지 않는다. root `package.json`은 npm이 link하는 npm workspace `packages/*`(HY-79)와, `@polyspec/template`과 `@polyspec/template-compiler`를 template release의 tarball URL로 선언하고, 그 정확한 버전이 이 tarball로 풀리게 하는 `overrides`를 둔다. npm 12는 기본으로 URL 의존성을 설치하지 않으므로 `.npmrc`가 `allow-remote=root`를 둔다. root `composer.json`은 path repository `packages/hyper-server-php`와, 확인된 template release zip의 artifact repository `var/products/template-php`에서 root `vendor`로 설치하고 `packages/hyper-server-php`의 namespace를 tree에 연결한다. `composer.lock`이 그 lock이다. 두 root는 template release v0.0.6을 받는다(HY-70). 그 tag는 `make template`이 네이티브 확장 소스를 복사하는 Makefile의 `TEMPLATE_TAG`이다(HY-80).
 
 ### 릴리스 에셋 설치
 
@@ -158,8 +159,8 @@ workflow `.github/workflows/ci.yml`은 `main`의 push와 모든 수동 실행(`w
 | `php` | `dependency-policy-check`, `dependency-policy-mutation-check`, `bench-server-smoke`, `lint`, `analyse-php`, `test-php` | Node.js, Python, PHP, template checkout, `make install` |
 | `node` | `templates-check`, `test-scripts`, `test-js`, `test-node`, `package-check` | Node.js, Python, PHP, template checkout, `make install` |
 | `board` | `parity`, `server-parity`, `bundle-size`, `e2e` | Node.js, Python, PHP, template checkout, `make install`, `make install-browser` |
-| `python` | `test-python` | Node.js와 `make install-tools`의 Python |
-| `python-render` | `test-python-render`, `server-parity-python` | Node.js, Python, PHP, template checkout, `make install`, `make install-browser` |
+| `python` | `test-python` | Node.js, `make install-tools`의 Python, `make install-python`의 venv |
+| `python-render` | `test-python-render`, `server-parity-python` | Node.js, Python, PHP, `make install`, `make install-browser` |
 
 각 step은 make target 하나를 실행하고(HY-90), 첫 step 뒤의 모든 step은 실패한 step 뒤에도 실행한다. workflow는 `.node-version`과 `.php-version`에서 Node.js와 PHP를 준비하고, 모든 job은 `config/toolchain.json`의 Python을 `make install-tools`로 설치하며 template 저장소를 Makefile의 tag `TEMPLATE_TAG`로 `../template`에 checkout하며, `make install`은 그곳에서 네이티브 확장 소스를 복사한다. `make ci-targets TARGETS="<targets>" CI_REPORT=var/ci/<name>`은 항목의 모든 target을 자기 `make -k <target>`으로 끝까지 실행하고 보고서를 쓴다. `make ci-summary CI_REPORT=var/ci/<name>`은 job summary를 쓴다. job은 artifact `ci-<name>-<run id>-<attempt>`, 곧 디렉터리 `var/ci/<name>/`을 upload한다.
 
