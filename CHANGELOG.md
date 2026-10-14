@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- H23.18: hyper pins `@polyspec/kit` 0.0.46. The wheel build backend is declared once, as `pythonBackend` of `config/toolchain.json` (kit K166), and kit covers the root `composer.json` and `composer.lock` in the layout and `config/php-lint/composer.json` in the release coverage (K167).
 
 ## 0.0.15
 - H23.17: the tag v0.0.14 has no GitHub Release, because its release workflow failed before it published: the wheel build backend was missing from `var/tools/wheels`. Release 0.0.15 contains the changes of 0.0.14 and the declaration of the backend below.

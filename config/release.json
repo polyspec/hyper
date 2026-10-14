@@ -48,14 +48,9 @@
     "tests/release-install/npm/package.json": "the npm consumer project that installs the release tarballs",
     "tests/release-install/composer/composer.json": "the Composer consumer project that installs the release zips",
     "examples/board/composer.json": "the example application, which installs the packages from the checkout",
-    "composer.json": "the private development root of packages/server/php, which resolves the packages from the checkout",
-    "config/php-lint/composer.json": "the Composer project of the PHP lint tools of kit (phpcs, PHPStan), which make install-tools installs into var/tools/php-lint"
+    "composer.json": "the private development root of packages/server/php, which resolves the packages from the checkout"
   },
   "goModules": {},
-  "buildBackend": {
-    "requirement": "setuptools==84.0.0",
-    "sha256": "51a52592b3b99e102b609654876bd65f19f999935166d1352678931132b0c670"
-  },
   "consumers": {
     "npm": {
       "directory": "tests/release-install/npm",
