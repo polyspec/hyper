@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "comment": "The toolchains of hyper that no other file declares. mise is the release that make install-tools TOOLS=npm installs with the sha256 of each platform; mise.toml declares the tools it installs (the Python of the checks with uv, Composer, and alint of make layout-check) and mise.lock locks them for every platform of the bootstrap (HY-81).",
+  "comment": "The toolchains of hyper that no other file declares. mise is the release that make install-tools TOOLS=npm installs with the sha256 of each platform; mise.toml declares the tools it installs (the Python of the checks with uv, Composer, and alint of make layout-check) and mise.lock locks them for every platform of the bootstrap (HY-81). pythonBackend repeats buildBackend of config/release.json, because install-tools, which release-tools runs, installs the wheel build backend only from this file (H23.17; kit K166 makes it one declaration).",
   "mise": {
     "version": "2026.10.8",
     "sha256": {
@@ -9,5 +9,9 @@
       "linux-x64": "e908ea27810ae358c9a9a7d897ea10197bdc38d39839243e1b36acc31cbef868",
       "linux-arm64": "88aea77e41c2a3c45a9cbd64df9516ba887017442846213b3de178acbd3c9a46"
     }
+  },
+  "pythonBackend": {
+    "requirement": "setuptools==84.0.0",
+    "sha256": "51a52592b3b99e102b609654876bd65f19f999935166d1352678931132b0c670"
   }
 }

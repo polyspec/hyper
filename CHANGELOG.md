@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- H23.17: `config/toolchain.json` declares the wheel build backend `setuptools==84.0.0` with its sha256 as `pythonBackend`, so `make install-tools`, which the release workflow runs through `make release-tools`, installs it into `var/tools/wheels`; the release workflow of the tag v0.0.14 failed because the wheel was missing.
 
 ## 0.0.14
 - H23.15: the consumer projects of `tests/release-install` require template 0.0.6, which the archives of 0.0.14 require (H21.4), and the Composer consumer takes the template zip of the entry `template-php` of `config/release-assets.json` (`consumers.composer.polyspec`, H23.11-1); the entry `template-php-consumer` is removed, so each archive has one entry.
