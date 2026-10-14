@@ -5,8 +5,8 @@ Environment: BOARD_DB (the SQLite database file), BOARD_SESSIONS (an absolute se
 lets the system assign the port; the server prints the port that it listens on), and as for PHP BOARD_BASE_PATH,
 BOARD_HTTPS=1, BOARD_FRAME_ANCESTORS (HY-45) and BOARD_TIME.
 
-Usage: python3 examples/board/python/main.py   (the working directory holds packages/hyper-server-python/src on
-PYTHONPATH, which `make server-parity-python` sets)."""
+Usage: <venv>/bin/python examples/board/python/main.py, with the Python of the venv of `make install-python`, which
+holds the server package and the template package (HYPER_PYTHON of the Makefile)."""
 
 from __future__ import annotations
 

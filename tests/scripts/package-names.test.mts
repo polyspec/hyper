@@ -14,11 +14,11 @@ const release = JSON.parse(readFileSync(join(repository, 'config/release.json'),
 
 // The packages of HY-98: the directory, the kind of its manifest and the name.
 const PACKAGES: { directory: string; kind: Kind; name: string }[] = [
-  { directory: 'packages/hyper-client', kind: 'npm', name: '@polyspec/hyper-client' },
-  { directory: 'packages/hyper-server-node', kind: 'npm', name: '@polyspec/hyper-server' },
-  { directory: 'packages/hyper-server-php', kind: 'composer', name: 'polyspec/hyper-server' },
-  { directory: 'packages/hyper-server-python', kind: 'python', name: 'polyspec-hyper-server' },
-  { directory: 'packages/hyper-build', kind: 'npm', name: '@polyspec/hyper-build' },
+  { directory: 'packages/client', kind: 'npm', name: '@polyspec/hyper-client' },
+  { directory: 'packages/server/ts', kind: 'npm', name: '@polyspec/hyper-server' },
+  { directory: 'packages/server/php', kind: 'composer', name: 'polyspec/hyper-server' },
+  { directory: 'packages/server/python', kind: 'python', name: 'polyspec-hyper-server' },
+  { directory: 'packages/build', kind: 'npm', name: '@polyspec/hyper-build' },
 ];
 
 const MANIFEST: Record<Kind, string> = { npm: 'package.json', composer: 'composer.json', python: 'pyproject.toml' };
@@ -45,8 +45,8 @@ for (const { directory, kind, name } of PACKAGES) {
   });
 }
 
-test('packages/ holds only the tracked directories of HY-98', () => {
-  const tracked = execFileSync('git', ['ls-files', '-z', 'packages'], { cwd: repository, encoding: 'utf8' })
-    .split('\0').filter(Boolean).map(path => path.split('/').slice(0, 2).join('/'));
-  assert.deepEqual([...new Set(tracked)].sort(), PACKAGES.map(item => item.directory).sort());
+test('packages/ holds only the packages of HY-98', () => {
+  const manifests = execFileSync('git', ['ls-files', '-z', 'packages'], { cwd: repository, encoding: 'utf8' })
+    .split('\0').filter((path) => /\/(package\.json|composer\.json|pyproject\.toml)$/.test(path)).map((path) => path.slice(0, path.lastIndexOf('/')));
+  assert.deepEqual([...new Set(manifests)].sort(), PACKAGES.map(item => item.directory).sort());
 });

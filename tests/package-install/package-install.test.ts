@@ -9,8 +9,8 @@ import { Router, stripBasePath } from '@polyspec/hyper-client';
 import { App, Forbidden, MemorySessionStore, Request, Result, type Handlers, type Reply, type Response } from '@polyspec/hyper-server';
 
 // The fixtures of the server tests: the manifest and the template files that `make node-fixtures` builds.
-const FIXTURES = fileURLToPath(new URL('../../packages/hyper-server-php/tests/fixtures/', import.meta.url));
-const BUILD = fileURLToPath(new URL('../../packages/hyper-server-node/tests/build/', import.meta.url));
+const FIXTURES = fileURLToPath(new URL('../../packages/server/php/tests/fixtures/', import.meta.url));
+const BUILD = fileURLToPath(new URL('../../packages/server/ts/tests/build/', import.meta.url));
 
 // The exports of each package; the browser package also exports the declaration of the template index, which an
 // application build resolves to the index of its own asset build (HY-34), and the source of the reserved template

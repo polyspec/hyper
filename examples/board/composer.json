@@ -4,7 +4,7 @@
     "type": "project",
     "license": "MIT",
     "repositories": [
-        { "type": "path", "url": "../../packages/hyper-server-php", "options": { "symlink": false, "reference": "config" } },
+        { "type": "path", "url": "../../packages/server/php", "options": { "symlink": false, "reference": "config" } },
         { "type": "artifact", "url": "../../var/products/template-php" }
     ],
     "require": {

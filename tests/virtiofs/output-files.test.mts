@@ -25,7 +25,7 @@ function run(t: TestContext, args: string[]) {
   requireBuilt('install', 'node_modules/@polyspec/template/package.json');
   // The template packages that the build loads by their names lie inside this checkout, which the bind mount of the
   // root covers (HY-70, HY-78). The template is the one that the build resolves from its package.
-  const template = createRequire(join(root, 'packages', 'hyper-build', 'package.json')).resolve('@polyspec/template');
+  const template = createRequire(join(root, 'packages', 'build', 'package.json')).resolve('@polyspec/template');
   if (!template.startsWith(`${root}/`)) throw new Error(`${template} is not inside ${root}`);
   const output = mkdtempSync(join(tmpdir(), 'hyper-virtiofs-'));
   t.after(() => rmSync(output, { recursive: true, force: true }));
@@ -48,7 +48,7 @@ function files(directory: string, prefix = ''): string[] {
 test('the server build writes the templates on a virtiofs bind mount', { timeout: 120000 }, (t) => {
   const templates = join(root, 'examples', 'board', 'templates');
   const result = run(t, [
-    join(root, 'packages', 'hyper-build', 'bin', 'hyper-build-server.mjs'),
+    join(root, 'packages', 'build', 'bin', 'hyper-build-server.mjs'),
     '--manifest', join(root, 'examples', 'board', 'app', 'app.json'),
     '--templates', templates,
     '--output', '/output/server',
@@ -70,7 +70,7 @@ test('the server build writes the templates on a virtiofs bind mount', { timeout
 test('the output copies write a directory and a file on a virtiofs bind mount', { timeout: 120000 }, (t) => {
   const source = join(root, 'examples', 'board', 'templates');
   const script = [
-    `import { copyDirectory, copyFile } from ${JSON.stringify(join(root, 'packages', 'hyper-build', 'lib', 'output-files.mjs'))};`,
+    `import { copyDirectory, copyFile } from ${JSON.stringify(join(root, 'packages', 'build', 'lib', 'output-files.mjs'))};`,
     `copyDirectory(${JSON.stringify(source)}, '/output/directory');`,
     `copyFile(${JSON.stringify(join(source, 'layout.tpl'))}, '/output/file/layout.tpl');`,
   ].join('\n');

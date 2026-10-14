@@ -10,7 +10,7 @@ import { test } from 'node:test';
 import { requireBuilt } from './requires.mts';
 
 const repository = resolve('.');
-const build = join(repository, 'packages', 'hyper-build');
+const build = join(repository, 'packages', 'build');
 
 // The module specifiers of a source: static imports and exports, dynamic imports and URLs relative to the module.
 function specifiers(source: string): string[] {

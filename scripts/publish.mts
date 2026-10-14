@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 // Publishes a staging directory that a build wrote, such as the dist of an npm package, with `publish` of
-// packages/hyper-build/lib/publish.mjs (HY-82): each file moves into the target with one rename, so a reader never finds a
+// packages/build/lib/publish.mjs (HY-82): each file moves into the target with one rename, so a reader never finds a
 // file missing.
 //
 //   node scripts/publish.mts directory <staging directory> <target>
 import { fileURLToPath } from 'node:url';
-import { publish } from '../packages/hyper-build/lib/publish.mjs';
+import { publish } from '../packages/build/lib/publish.mjs';
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const [action, source, target] = process.argv.slice(2);

@@ -11,7 +11,7 @@
     }
   ],
   "pythonManifests": [
-    "packages/hyper-server-python/pyproject.toml"
+    "packages/server/python/pyproject.toml"
   ],
   "pythonLocks": [],
   "npmLocks": [

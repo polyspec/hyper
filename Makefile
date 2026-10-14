@@ -7,11 +7,11 @@
 include scripts/kit/kit-bootstrap.mk
 
 BOARD := examples/board
-PHP_PACKAGE := packages/hyper-server-php
-JS_PACKAGE := packages/hyper-client
-NODE_PACKAGE := packages/hyper-server-node
-BUILD_PACKAGE := packages/hyper-build
-PYTHON_PACKAGE := packages/hyper-server-python
+PHP_PACKAGE := packages/server/php
+JS_PACKAGE := packages/client
+NODE_PACKAGE := packages/server/ts
+BUILD_PACKAGE := packages/build
+PYTHON_PACKAGE := packages/server/python
 # The Python of the checks is the python of mise.toml, which `make install-tools` installs with mise at the digest of mise.lock
 # and its shim runs (HY-81, kit K127). requires-python >= 3.14 states the tested minor of the package (H20.12).
 # The absolute path, as NPM and COMPOSER have, because make looks up a recipe line on its own PATH.
@@ -31,7 +31,7 @@ export HYPER_PYTHON := $(PYTHON_VENV)/bin/python
 TEMPLATE_REPOSITORY := ../template
 TEMPLATE_TAG := v0.0.6
 FIXTURES := $(PHP_PACKAGE)/tests/fixtures
-# The Composer vendor directory of the private root composer.json, which installs packages/hyper-server-php for development.
+# The Composer vendor directory of the private root composer.json, which installs packages/server/php for development.
 PHP_VENDOR := $(CURDIR)/vendor
 # The native template extension, built from the unpacked php-ext asset (HY-48, H14.1-7).
 # The lock of `make serve-demo`, whose fixed ports exist once on this machine (holder-lock of @polyspec/kit).
@@ -40,7 +40,7 @@ SERVE_DEMO_LOCK := /tmp/hyper-serve-demo.lock
 TSC := $(CURDIR)/node_modules/.bin/tsc
 # The esbuild package replaces bin/esbuild with the executable of the platform when it installs.
 ESBUILD := node_modules/esbuild/bin/esbuild
-# The copy of packages/hyper-server-php that the board installs with Composer (HY-79).
+# The copy of packages/server/php that the board installs with Composer (HY-79).
 # The PHP memory limit of PHPStan: a run without its result cache (build/phpstan) needs 132 MB in its worker, above
 # the default limit of 128M.
 PHPSTAN_MEMORY := 256M
@@ -112,12 +112,12 @@ ext: toolchain-check ## Build the native template extension from the unpacked ph
 	node scripts/template-assets.mts build $(CURDIR)/$(EXT)
 
 packages: toolchain-check ## Build the JavaScript modules and type declarations of the npm packages into their dist directories; npm links the workspaces (HY-61, HY-79, HY-96)
-	cd $(JS_PACKAGE) && $(NPM) run --silent build -- --outDir dist.next-$$$$ && node ../../scripts/publish.mts directory dist.next-$$$$ dist
-	cd $(NODE_PACKAGE) && $(NPM) run --silent build -- --outDir dist.next-$$$$ && node ../../scripts/publish.mts directory dist.next-$$$$ dist
+	cd $(JS_PACKAGE) && $(NPM) run --silent build -- --outDir dist.next-$$$$ && node $(CURDIR)/scripts/publish.mts directory dist.next-$$$$ dist
+	cd $(NODE_PACKAGE) && $(NPM) run --silent build -- --outDir dist.next-$$$$ && node $(CURDIR)/scripts/publish.mts directory dist.next-$$$$ dist
 
 # The path repository of the board mirrors the PHP server package (symlink false, HY-79); composer reinstall mirrors the
 # working tree of the package again, so the board runs the current source. It reads no registry.
-hyper-server-php-install: ## Mirror packages/hyper-server-php into the vendor of the board again with composer reinstall (HY-79)
+hyper-server-php-install: ## Mirror packages/server/php into the vendor of the board again with composer reinstall (HY-79)
 	node $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(COMPOSER) reinstall --no-interaction polyspec/hyper-server --working-dir=$(BOARD)
 
 package-check: packages node-fixtures ## Install the npm packages into tests/package-install, type-check its test against their declarations and run it under node (HY-61)

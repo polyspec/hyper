@@ -61,15 +61,15 @@ test('npm installs the template package as one copy inside this checkout', () =>
   assert.equal(lstatSync(join(repository, path)).isDirectory(), true, path);
   assert.ok(realpathSync(join(repository, path)).startsWith(`${repository}/`), path);
   // The packages of the workspace resolve the root package through the overrides, so they hold no copy of their own.
-  for (const nested of ['packages/hyper-client/node_modules/@polyspec/template', 'packages/hyper-server-node/node_modules/@polyspec/template']) {
+  for (const nested of ['packages/client/node_modules/@polyspec/template', 'packages/server/ts/node_modules/@polyspec/template']) {
     assert.equal(existsSync(join(repository, nested)), false, nested);
   }
 });
 
 test('Composer installs the template PHP package from the zip of the template release, and PHPStan reads the stub of the unpacked php-ext asset', () => {
-  const version = (JSON.parse(readFileSync('packages/hyper-server-php/composer.json', 'utf8')) as { require: Record<string, string> }).require['polyspec/template'];
-  assert.ok(version !== undefined, 'packages/hyper-server-php requires no polyspec/template');
-  assert.match(version, /^\d+\.\d+\.\d+$/, 'packages/hyper-server-php requires an exact template version');
+  const version = (JSON.parse(readFileSync('packages/server/php/composer.json', 'utf8')) as { require: Record<string, string> }).require['polyspec/template'];
+  assert.ok(version !== undefined, 'packages/server/php requires no polyspec/template');
+  assert.match(version, /^\d+\.\d+\.\d+$/, 'packages/server/php requires an exact template version');
   // config/template-assets.json pins the zip; make install verifies it by its sha256 and writes it into var/products/template-php,
   // the artifact repository of both Composer projects, so no manifest copies the metadata of the template package.
   const zip = `polyspec-template-php-${version}.zip`;
@@ -88,7 +88,7 @@ test('Composer installs the template PHP package from the zip of the template re
     assert.equal(entry.dist.url, `${directory}/${zip}`, manifest);
     assert.match(entry.dist.shasum, /^[0-9a-f]{40}$/, `${manifest}: the lock pins the zip by its sha1`);
   }
-  const scanned = /scanFiles:\n\s+- (\S+)/.exec(readFileSync('packages/hyper-server-php/phpstan.neon', 'utf8'))?.[1];
-  assert.ok(scanned !== undefined, 'packages/hyper-server-php/phpstan.neon scans no file');
-  assert.equal(resolve('packages/hyper-server-php', scanned), join(repository, 'var/products/template-ext/src/polyspec_template.stub.php'));
+  const scanned = /scanFiles:\n\s+- (\S+)/.exec(readFileSync('packages/server/php/phpstan.neon', 'utf8'))?.[1];
+  assert.ok(scanned !== undefined, 'packages/server/php/phpstan.neon scans no file');
+  assert.equal(resolve('packages/server/php', scanned), join(repository, 'var/products/template-ext/src/polyspec_template.stub.php'));
 });

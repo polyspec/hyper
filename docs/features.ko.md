@@ -1,5 +1,5 @@
 <!-- doc-id: features -->
-<!-- source-sha256: 6fa078413776130ad18d499a9a0674016d9688d1c8ceffc00c9c2d21f5098f70 -->
+<!-- source-sha256: e0a8cd06f90b4894cc61abcbfe35bdf86733e749049b9a62b58141ab96c65360 -->
 # 기능 상태
 
 [English](features.md).
@@ -55,7 +55,7 @@
 | ci-suite | 전체 suite는 `main`의 push와 모든 수동 실행에 대해 GitHub에서 CI group마다 job 하나로 모든 target을 끝까지 실행하고, job summary와 각 target의 상태, 시간, 첫 실패 줄, 전체 log를 담은 보고서를 upload한다(HY-91) | implemented; CI run pending | `tests/scripts/ci-workflow.test.mts` |
 | ci-steps | 모든 GitHub workflow는 commit으로 pin한 action으로 시간 제한 없이 `ubuntu-26.04-arm`에서 실행하고, 모든 step은 make target 하나를 실행한다(HY-90) | implemented; CI run pending | `tests/scripts/ci-workflow.test.mts` |
 | publish-main | 버전 0.1 전까지 변경은 pull request, merge queue, ruleset 없이 checklist의 모든 작업이 끝났을 때 `main`에 한 번 push한다. pre-push hook은 작업이 진행 중이면 push를 거부하고, `main`의 push는 CI workflow를 실행하며, 그 마지막 job `ci-passed`는 workflow의 다른 모든 job이 통과했을 때만 통과한다(HY-94) | implemented; CI run pending | `tests/scripts/ci-workflow.test.mts` |
-| no-live-inputs | 어떤 recipe도 registry에 질의하지 않고, 모든 recipe는 npm, Composer를 offline으로 실행하며 설치 target만 download하고, 없는 download는 그것을 만드는 설치 target을 밝히며, `tests/package-install`은 lock에서 offline 설치하며, test는 event로 순서를 정하고, test 서버는 system이 정한 port에서 listen하며, 서버 시작은 진행을 출력하고, 빈 목록은 검사를 실패시킨다(HY-89) | implemented | `tests/scripts/toolchain.test.mts`, `tests/scripts/board-servers.test.mts`, `tests/scripts/check-bundle-size.test.mts`, `packages/hyper-server-node/tests/http.test.ts` |
+| no-live-inputs | 어떤 recipe도 registry에 질의하지 않고, 모든 recipe는 npm, Composer를 offline으로 실행하며 설치 target만 download하고, 없는 download는 그것을 만드는 설치 target을 밝히며, `tests/package-install`은 lock에서 offline 설치하며, test는 event로 순서를 정하고, test 서버는 system이 정한 port에서 listen하며, 서버 시작은 진행을 출력하고, 빈 목록은 검사를 실패시킨다(HY-89) | implemented | `tests/scripts/toolchain.test.mts`, `tests/scripts/board-servers.test.mts`, `tests/scripts/check-bundle-size.test.mts`, `packages/server/ts/tests/http.test.ts` |
 | owner-check | 추적하는 모든 경로는 `config/owner-checks.json`에 owner를 가지고, `make owner-validate`가 이를 검사하며, `make owner-check`는 바뀐 경로의 owner를 실행한다(HY-88) | implemented; CI run pending | `tests/scripts/ignored-files.test.mts` |
 | run-resources | run의 서버와 임시 디렉터리는 run이 끝날 때, 실패할 때, SIGINT와 SIGTERM에서 멈추고 지워지며, test는 process가 끝난 뒤에만 디렉터리를 지운다(HY-87) | implemented | `tests/scripts/board-servers.test.mts`, `tests/scripts/check-parity.test.mts`, `tests/scripts/serve-demo.test.mts` |
 | all-checks | 여러 검사를 가진 recipe는 각 검사를 끝까지 실행하고 실패한 모든 검사를 밝힌다(HY-86) | implemented | `tests/scripts/check-recipes.test.mts` |

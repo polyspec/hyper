@@ -11,39 +11,39 @@
   "packages": [
     {
       "kind": "npm",
-      "directory": "packages/hyper-client",
+      "directory": "packages/client",
       "name": "@polyspec/hyper-client"
     },
     {
       "kind": "npm",
-      "directory": "packages/hyper-server-node",
+      "directory": "packages/server/ts",
       "name": "@polyspec/hyper-server"
     },
     {
       "kind": "npm",
-      "directory": "packages/hyper-build",
+      "directory": "packages/build",
       "name": "@polyspec/hyper-build"
     },
     {
       "kind": "composer",
-      "directory": "packages/hyper-server-php",
+      "directory": "packages/server/php",
       "name": "polyspec/hyper-server"
     }
   ],
   "manifests": {
     "package.json": "version",
-    "packages/hyper-client/package.json": "archive",
-    "packages/hyper-server-node/package.json": "archive",
-    "packages/hyper-build/package.json": "archive",
-    "packages/hyper-server-php/composer.json": "archive",
-    "packages/hyper-server-python/pyproject.toml": "git-tag"
+    "packages/client/package.json": "archive",
+    "packages/server/ts/package.json": "archive",
+    "packages/build/package.json": "archive",
+    "packages/server/php/composer.json": "archive",
+    "packages/server/python/pyproject.toml": "git-tag"
   },
   "notReleased": {
     "tests/package-install/package.json": "the test package that installs the npm archives of the packages",
     "tests/release-install/npm/package.json": "the npm consumer project that installs the release tarballs",
     "tests/release-install/composer/composer.json": "the Composer consumer project that installs the release zips",
     "examples/board/composer.json": "the example application, which installs the packages from the checkout",
-    "composer.json": "the private development root of packages/hyper-server-php, which resolves the packages from the checkout"
+    "composer.json": "the private development root of packages/server/php, which resolves the packages from the checkout"
   },
   "goModules": {},
   "consumers": {
@@ -82,7 +82,7 @@
   },
   "proof": {
     "gitTag": {
-      "packages/hyper-server-python/pyproject.toml": {
+      "packages/server/python/pyproject.toml": {
         "kind": "python",
         "name": "polyspec-hyper-server",
         "smoke": [

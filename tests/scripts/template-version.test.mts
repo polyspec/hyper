@@ -1,6 +1,6 @@
 // Tests that hyper depends on one template release, 0.0.6 (H21.4): the tag TEMPLATE_TAG of the Makefile, the npm packages
 // and their locks, the Composer packages and their locks, the php-ext and php assets of config/template-assets.json, the Python package
-// of packages/hyper-server-python, and the checkouts of the template repository in the workflows name that release and no
+// of packages/server/python, and the checkouts of the template repository in the workflows name that release and no
 // other. A mixed version fails here before any install runs.
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -35,7 +35,7 @@ test('the npm manifests name the template tarballs of the release, and their dep
     assert.equal(root.dependencies[name], tarball, `package.json dependencies ${name}`);
     assert.equal(root.overrides[name], tarball, `package.json overrides ${name}`);
   }
-  for (const manifest of ['packages/hyper-client/package.json', 'packages/hyper-server-node/package.json', 'packages/hyper-build/package.json']) {
+  for (const manifest of ['packages/client/package.json', 'packages/server/ts/package.json', 'packages/build/package.json']) {
     const dependencies = json(manifest).dependencies ?? {};
     for (const name of NPM_PACKAGES.filter((name) => name in dependencies)) assert.equal(dependencies[name], VERSION, `${manifest} ${name}`);
   }
@@ -64,7 +64,7 @@ test('the npm locks record the template tarballs of the release (H21.4)', () => 
 });
 
 test('the Composer manifests and locks name the template zip of the release (H21.4, H23.11)', () => {
-  const manifests = ['composer.json', 'packages/hyper-server-php/composer.json', 'examples/board/composer.json'];
+  const manifests = ['composer.json', 'packages/server/php/composer.json', 'examples/board/composer.json'];
   for (const manifest of manifests) {
     const { require } = json(manifest);
     if (require?.['polyspec/template']) assert.equal(require['polyspec/template'], VERSION, `${manifest} require`);
@@ -92,7 +92,7 @@ test('config/template-assets.json names the php-ext and the php assets of the re
 });
 
 test('the Python package of the server names the wheel asset of the release with its sha256 (H21.4, H23.5)', () => {
-  const pyproject = read('packages/hyper-server-python/pyproject.toml');
+  const pyproject = read('packages/server/python/pyproject.toml');
   const requirements = [...pyproject.matchAll(/"(polyspec-template @ [^"]*)"/g)].map((match) => {
     const requirement = match[1];
     if (requirement === undefined) throw new Error(`${match[0]} has no requirement`);

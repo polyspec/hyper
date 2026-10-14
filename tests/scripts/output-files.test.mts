@@ -12,7 +12,7 @@ import { test, type TestContext } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
-const OUTPUT_FILES = join(root, 'packages', 'hyper-build', 'lib', 'output-files.mjs');
+const OUTPUT_FILES = join(root, 'packages', 'build', 'lib', 'output-files.mjs');
 
 function temporary(t: TestContext) {
   const directory = mkdtempSync(join(tmpdir(), 'hyper-output-modes-'));

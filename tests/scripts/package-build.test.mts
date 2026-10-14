@@ -14,7 +14,7 @@ import { requireBuilt } from './requires.mts';
 const NPM = resolve('var/tools/bin/npm');
 requireBuilt('install', 'node_modules/typescript/package.json', 'var/tools/bin/npm');
 
-for (const directory of ['packages/hyper-client', 'packages/hyper-server-node']) {
+for (const directory of ['packages/client', 'packages/server/ts']) {
   test(`npm exec finds the tsc of the bin link of npm in ${directory}`, { timeout: 60_000 }, () => {
     const exec = spawnSync(NPM, ['exec', '--offline', '--no', '--', 'tsc', '--version'], { cwd: resolve(directory), encoding: 'utf8' });
     assert.equal(exec.status, 0, `${exec.stdout}${exec.stderr}`);

@@ -5,13 +5,13 @@
 //
 // The template ASTs come from the template package `@polyspec/template` that `@polyspec/hyper-build` depends on (HY-70).
 //
-// Usage: node scripts/build-templates.mts --templates packages/hyper-server-php/tests/fixtures/templates --output packages/hyper-server-node/tests/build
+// Usage: node scripts/build-templates.mts --templates packages/server/php/tests/fixtures/templates --output packages/server/ts/tests/build
 
 
 import { join } from 'node:path';
 import { parseArgs } from 'node:util';
-import { writeFileAtomic } from '../packages/hyper-build/lib/output-files.mjs';
-import { writeTemplateFiles } from '../packages/hyper-build/lib/template-files.mjs';
+import { writeFileAtomic } from '../packages/build/lib/output-files.mjs';
+import { writeTemplateFiles } from '../packages/build/lib/template-files.mjs';
 
 const { values } = parseArgs({ options: { templates: { type: 'string' }, output: { type: 'string' } } });
 if (!values.templates || !values.output) throw new Error('--templates and --output are required');
