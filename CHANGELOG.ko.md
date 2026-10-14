@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 92b0c9165e4acaf1e58d344e33fe87db44648cac3e31ed07af4618d9a9e0406f -->
+<!-- source-sha256: ecc5b189bb304a957628fcb18642ff257cd29ed7655d88c295ae28e6d4031ce9 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H23.18: hyper는 `@polyspec/kit` 0.0.46을 pin한다. wheel build backend는 `config/toolchain.json`의 `pythonBackend`로 한 번만 선언하며(kit K166), layout의 root `composer.json`과 `composer.lock`, release coverage의 `config/php-lint/composer.json`은 kit이 다룬다(K167).
 
 ## 0.0.15
 - H23.17: tag v0.0.14에는 GitHub Release가 없다. 그 릴리스 workflow가 게시 전에 실패했기 때문이다. `var/tools/wheels`에 wheel build backend가 없었다. 릴리스 0.0.15는 0.0.14의 변경과 아래의 backend 선언을 담는다.

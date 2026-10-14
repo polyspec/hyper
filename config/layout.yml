@@ -30,12 +30,9 @@ rules:
       - "!tests/virtiofs"
 
   # S5: the root files of hyper beyond the list of kit (K145).
-  # composer.json and composer.lock: the private development root of the PHP server package, which resolves the published
-  # manifest of the package with the template zip and the development tools (config/release.json); a published Composer
-  # manifest has no lock.
   # .npmrc: the npm configuration of the root project; npm reads a project .npmrc only from the root of the project.
   - id: layout-root-files
-    vars: { root_files: "{composer.json,composer.lock,.npmrc}" }
+    vars: { root_files: "{.npmrc}" }
 
   # S5: hyper has three components. The browser package and the build package are TypeScript packages without ports; the
   # server of the region protocol has its ports in packages/server/<runtime>/ (ts for Node.js, php, python).
