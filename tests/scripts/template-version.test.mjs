@@ -86,10 +86,8 @@ test('the Composer consumer project of tests/release-install names the template 
 });
 
 test('config/template-assets.json names the php-ext and the php assets of the release (H21.4, H23.11)', () => {
-  const config = json('config/template-assets.json');
-  assert.equal(config.tag, TAG);
-  assert.equal(config.assets['php-ext'].name, `polyspec-template-php-ext-php-${VERSION}.zip`);
-  assert.equal(config.assets.php.name, `polyspec-template-php-${VERSION}.zip`);
+  const urls = json('config/template-assets.json').assets.map(({ url }) => url);
+  assert.deepEqual(urls, [`${RELEASE}/polyspec-template-php-ext-php-${VERSION}.zip`, `${RELEASE}/polyspec-template-php-${VERSION}.zip`]);
 });
 
 test('the Python package of the server names the wheel asset of the release with its sha256 (H21.4, H23.5)', () => {

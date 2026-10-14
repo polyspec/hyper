@@ -1,16 +1,15 @@
 #!/usr/bin/env node
-// The release assets of the template tag that config/template-assets.json pins, each with the sha256 of the asset (H14.1-7,
-// H23.11):
+// The release assets of the template tag that config/template-assets.json pins, each as { url, sha256, destination }
+// (H14.1-7, H23.11):
 //
-//   node scripts/template-assets.mjs fetch             download each asset, verify its sha256, unpack the php-ext asset into
-//                                                      var/products/template-ext and put the php zip alone into the Composer
+//   node scripts/template-assets.mjs fetch             download each asset that its destination lacks, verify its sha256
+//                                                      and write it to its destination; the php zip lands in the Composer
 //                                                      artifact repository var/products/template-php
+//   node scripts/template-assets.mjs unpack            unpack the php-ext asset into var/products/template-ext
 //   node scripts/template-assets.mjs build <library>   build the unpacked php-ext sources with phpize, configure and make into <library>
 //
-// `fetch` downloads, so `make install` runs it through $(ONLINE) before Composer reads the artifact repository; `build` reads
-// only the unpacked asset and the PHP of PATH, so `make ext` runs offline. The assets have the names that the kit scheme gives
-// them (polyspec-template-php-ext-php-<version>.zip, polyspec-template-php-<version>.zip); no step needs a file of the
-// template repository.
+// `fetch` downloads, so `make install` runs it through $(ONLINE) before Composer reads the artifact repository; it is the
+// generic step that the fetch tool of kit K140 replaces (H23.11-2). `unpack` and `build` read only the files of the checkout.
 import { execFileSync, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
@@ -20,90 +19,66 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const CONFIG = path.join(ROOT, 'config/template-assets.json');
-const PRODUCTS = path.join(ROOT, 'var/products');
-const DIR = path.join(PRODUCTS, 'template-ext');
-const ARTIFACTS = path.join(PRODUCTS, 'template-php');
+const DIR = path.join(ROOT, 'var/products/template-ext');
 const MARKER = path.join(DIR, '.sha256');
-const USAGE = 'usage: node scripts/template-assets.mjs fetch | build <library>';
-const KINDS = ['php-ext', 'php'];
+const EXT_ZIP = /\/polyspec-template-php-ext-php-\d+\.\d+\.\d+\.zip$/;
+const USAGE = 'usage: node scripts/template-assets.mjs fetch | unpack | build <library>';
 
-/** The pinned assets of config/template-assets.json by kind; fails with the fix when the file does not name them. */
+/** The pinned assets of config/template-assets.json; fails with the fix when an entry is not { url, sha256, destination }. */
 export function pinned(config = JSON.parse(readFileSync(CONFIG, 'utf8'))) {
-  const assets = config.assets ?? {};
-  const valid = config.schema === 1 && /^v\d+\.\d+\.\d+$/.test(config.tag ?? '') && Object.keys(assets).sort().join() === [...KINDS].sort().join()
-    && KINDS.every((kind) => /^[\w.-]+\.zip$/.test(assets[kind]?.name ?? '') && /^[0-9a-f]{64}$/.test(assets[kind]?.sha256 ?? ''));
-  if (!valid) {
-    throw new Error(`${path.relative(ROOT, CONFIG)} must name schema 1, a tag vX.Y.Z and, for each of ${KINDS.join(' and ')}, the zip name and the sha256 of the asset; it names ${JSON.stringify(config)}`);
-  }
-  return Object.fromEntries(KINDS.map((kind) => {
-    const { name, sha256 } = assets[kind];
-    return [kind, { name, sha256, url: `https://github.com/polyspec/template/releases/download/${config.tag}/${name}`, zip: path.join(PRODUCTS, name) }];
-  }));
+  const valid = config.schema === 1 && Array.isArray(config.assets) && config.assets.every((asset) => /^https:\/\//.test(asset.url ?? '')
+    && /^[0-9a-f]{64}$/.test(asset.sha256 ?? '') && /^var\/[\w./-]+$/.test(asset.destination ?? '') && !asset.destination.split('/').includes('..'));
+  if (!valid) throw new Error(`${path.relative(ROOT, CONFIG)} must name schema 1 and assets of { url, sha256, destination under var/ }; it names ${JSON.stringify(config)}`);
+  return config.assets.map((asset) => ({ ...asset, file: path.join(ROOT, asset.destination) }));
 }
 
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
 
-/** The verified bytes of `asset`: the downloaded zip in var/products when its sha256 is the pin, else a new download. */
-async function verifiedZip(asset) {
-  if (existsSync(asset.zip)) {
-    const bytes = readFileSync(asset.zip);
-    if (sha256(bytes) === asset.sha256) return bytes;
+/** Writes each asset whose destination does not hold its sha256: downloaded, verified, then renamed into place. */
+export async function fetchAssets(assets = pinned()) {
+  for (const asset of assets) {
+    if (existsSync(asset.file) && sha256(readFileSync(asset.file)) === asset.sha256) {
+      console.log(`template-assets: ${asset.destination} holds sha256 ${asset.sha256}`);
+      continue;
+    }
+    console.log(`template-assets: downloading ${asset.url}`);
+    const response = await fetch(asset.url);
+    if (!response.ok) throw new Error(`download of ${asset.url} failed with HTTP ${response.status}`);
+    const bytes = Buffer.from(await response.arrayBuffer());
+    const actual = sha256(bytes);
+    if (actual !== asset.sha256) throw new Error(`${asset.url} has the sha256 ${actual}, expected the pinned ${asset.sha256} of config/template-assets.json`);
+    mkdirSync(path.dirname(asset.file), { recursive: true });
+    const next = `${asset.file}.next-${process.pid}`;
+    writeFileSync(next, bytes);
+    renameSync(next, asset.file);
+    console.log(`template-assets: wrote ${asset.destination}`);
   }
-  console.log(`template-assets: downloading ${asset.url}`);
-  const response = await fetch(asset.url);
-  if (!response.ok) throw new Error(`download of ${asset.url} failed with HTTP ${response.status}`);
-  const bytes = Buffer.from(await response.arrayBuffer());
-  const actual = sha256(bytes);
-  if (actual !== asset.sha256) throw new Error(`${asset.name} has the sha256 ${actual}, expected the pinned ${asset.sha256}; config/template-assets.json names the digest of the release asset`);
-  mkdirSync(PRODUCTS, { recursive: true });
-  const next = `${asset.zip}.next-${process.pid}`;
-  writeFileSync(next, bytes);
-  renameSync(next, asset.zip);
-  return bytes;
 }
 
-/** Replaces `target` with the directory that `fill` writes, staged beside it, so a reader never sees a partial tree. */
-function publishDirectory(target, fill) {
-  const staging = `${target}.next-${process.pid}`;
+/** The pinned php-ext asset; fails when config/template-assets.json names none or more than one. */
+function extensionAsset(assets = pinned()) {
+  const found = assets.filter((asset) => EXT_ZIP.test(asset.url));
+  if (found.length !== 1) throw new Error(`config/template-assets.json names ${found.length} php-ext assets; it must name one`);
+  return found[0];
+}
+
+/** Unpacks the fetched php-ext asset into var/products/template-ext through a staging directory; a current tree is kept. */
+export function unpackExtension(asset = extensionAsset()) {
+  if (existsSync(MARKER) && readFileSync(MARKER, 'utf8').trim() === asset.sha256) {
+    console.log(`template-assets: ${path.relative(ROOT, DIR)} holds the asset of sha256 ${asset.sha256}`);
+    return;
+  }
+  if (!existsSync(asset.file) || sha256(readFileSync(asset.file)) !== asset.sha256) throw new Error(`${asset.destination} does not hold the pinned asset; run make install, which fetches it`);
+  const staging = `${DIR}.next-${process.pid}`;
   rmSync(staging, { recursive: true, force: true });
   mkdirSync(staging, { recursive: true });
-  fill(staging);
-  const old = `${target}.old-${process.pid}`;
-  if (existsSync(target)) renameSync(target, old);
-  renameSync(staging, target);
+  execFileSync('unzip', ['-q', asset.file, '-d', staging], { stdio: 'inherit' });
+  writeFileSync(path.join(staging, '.sha256'), `${asset.sha256}\n`);
+  const old = `${DIR}.old-${process.pid}`;
+  if (existsSync(DIR)) renameSync(DIR, old);
+  renameSync(staging, DIR);
   rmSync(old, { recursive: true, force: true });
-}
-
-/** Unpacks the php-ext asset into var/products/template-ext and records its digest; a current unpacked asset is kept. */
-async function fetchExtension(asset) {
-  if (existsSync(MARKER) && readFileSync(MARKER, 'utf8').trim() === asset.sha256) {
-    console.log(`template-assets: ${path.relative(ROOT, DIR)} holds the asset ${asset.name}, sha256 ${asset.sha256}`);
-    return;
-  }
-  await verifiedZip(asset);
-  publishDirectory(DIR, (staging) => {
-    execFileSync('unzip', ['-q', asset.zip, '-d', staging], { stdio: 'inherit' });
-    writeFileSync(path.join(staging, '.sha256'), `${asset.sha256}\n`);
-  });
-  console.log(`template-assets: unpacked ${asset.name} into ${path.relative(ROOT, DIR)}`);
-}
-
-/** Puts the verified php zip alone into the artifact repository var/products/template-php, which Composer reads. */
-async function fetchComposerZip(asset) {
-  const target = path.join(ARTIFACTS, asset.name);
-  if (existsSync(target) && readdirSync(ARTIFACTS).join() === asset.name && sha256(readFileSync(target)) === asset.sha256) {
-    console.log(`template-assets: ${path.relative(ROOT, ARTIFACTS)} holds the asset ${asset.name}, sha256 ${asset.sha256}`);
-    return;
-  }
-  const bytes = await verifiedZip(asset);
-  publishDirectory(ARTIFACTS, (staging) => writeFileSync(path.join(staging, asset.name), bytes));
-  console.log(`template-assets: ${path.relative(ROOT, ARTIFACTS)} holds ${asset.name}`);
-}
-
-/** Fetches every pinned asset. */
-export async function fetchAssets(assets = pinned()) {
-  await fetchExtension(assets['php-ext']);
-  await fetchComposerZip(assets.php);
+  console.log(`template-assets: unpacked ${asset.destination} into ${path.relative(ROOT, DIR)}`);
 }
 
 // The sources that the build reads: the C files, the headers, config.m4 and the stub.
@@ -119,7 +94,7 @@ const capture = (command, args) => execFileSync(command, args, { encoding: 'utf8
 /** Builds the unpacked asset into `library` when its sources or the PHP build changed, publishing it with a rename. */
 export function buildExtension(library) {
   const marker = path.join(DIR, '.sha256');
-  if (!existsSync(marker)) throw new Error(`${path.relative(ROOT, DIR)} holds no unpacked asset; run make install, which fetches ${pinned()['php-ext'].name}`);
+  if (!existsSync(marker)) throw new Error(`${path.relative(ROOT, DIR)} holds no unpacked asset; run make install, which fetches and unpacks ${extensionAsset().destination}`);
   const source = path.join(DIR, 'src');
   const php = capture('php', ['-r', 'echo PHP_VERSION;']);
   const config = capture('php-config', ['--version']);
@@ -149,7 +124,7 @@ export function buildExtension(library) {
     copyFileSync(path.join(directory, 'modules', `${name}.so`), next);
     renameSync(next, library);
     writeFileSync(stamp, `${JSON.stringify({ hash: digest, php }, null, 2)}\n`);
-    console.log(`template-assets: ${library} now holds the build of ${pinned()['php-ext'].name} for PHP ${php}`);
+    console.log(`template-assets: ${library} now holds the build of ${extensionAsset().destination} for PHP ${php}`);
   } finally {
     rmSync(directory, { recursive: true, force: true });
   }
@@ -159,6 +134,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   const [command, library] = process.argv.slice(2);
   try {
     if (command === 'fetch' && process.argv.length === 3) await fetchAssets();
+    else if (command === 'unpack' && process.argv.length === 3) unpackExtension();
     else if (command === 'build' && library) buildExtension(path.resolve(library));
     else { console.error(USAGE); process.exit(2); }
   } catch (error) {

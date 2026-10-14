@@ -1,11 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: a83f6be671c844336259b4f07f54cca845a39ad79ca6b3c77e8e0d6f05be6952 -->
+<!-- source-sha256: e03ad1866575a328ed1528bf80f7ae30cf2b4cd40e6e43bef2e7e6c1f6e5ac58 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
-- H23.11: Composer는 root `composer.json`과 `examples/board/composer.json`의 artifact repository `var/products/template-php`에서 `polyspec/template`을 설치하며, template metadata의 복사본을 가진 inline `package` repository는 없어졌다. `config/template-ext.json`을 대신하는 `config/template-assets.json`이 tag와 php-ext·php zip을 그 sha256과 함께 pin한다. `make install`은 `scripts/template-ext.mjs`를 대신하는 `scripts/template-assets.mjs fetch`를 실행해 둘을 확인하고 php zip만 artifact repository에 둔다. `composer.lock`은 Composer가 설치 때 확인하는 sha1과 함께 그 dist를 기록한다.
+- H23.11: Composer는 root `composer.json`과 `examples/board/composer.json`의 artifact repository `var/products/template-php`에서 `polyspec/template`을 설치하며, template metadata의 복사본을 가진 inline `package` repository는 없어졌다. `config/template-ext.json`을 대신하는 `config/template-assets.json`이 release의 php-ext·php zip을 `{ url, sha256, destination }`으로 나열한다. `make install`은 `scripts/template-ext.mjs`를 대신하는 `scripts/template-assets.mjs fetch`를 실행해 각 zip을 확인하고 그 destination에 쓰며(php zip은 artifact repository에), `unpack`으로 php-ext asset을 푼다. `composer.lock`은 Composer가 설치 때 확인하는 sha1과 함께 그 dist를 기록한다.
 - H23.8: kit의 dependency policy가 요구하는 대로 `tests/package-install/package-lock.json`은 `@polyspec/hyper-client`와 `@polyspec/hyper-server`를 이 저장소의 그 디렉터리에 link하고, `make package-check`는 `--install-links` 없이 `npm ci --offline`으로 설치한다. 설치된 복사본에 `src`가 없다는 test는 `npm pack --dry-run`이 각 package에 대해 나열하는 파일의 test가 되었다. 릴리스된 archive는 계속 `make release-consumer`가 다룬다.
 - H23.4: 개발 의존성은 최신 안정 release다: `vitest` 5.0.4, 루트 `composer.json`, `packages/hyper-server-php/composer.json`, `examples/board/composer.json`의 `laravel/pint` 1.32.1과 `phpunit/phpunit` 13.4.2. PHP 8.3을 요구하는 release 아래의 pin은 없어졌다. PHPUnit 13은 빈 location의 빈 key를 거부하므로 `ResultTest`의 data set 이름은 `0x`와 location의 hex다.
 - H23.10: hyper는 게시된 파일의 integrity로 `@polyspec/kit` 0.0.42를 pin한다. 그 bootstrap은 `var/tools/go.mod`를 쓰므로 mise가 `var/tools` 아래에 설치하는 Go는 독립된 module이다(kit K135).

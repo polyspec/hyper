@@ -76,6 +76,7 @@ help: ## List the targets
 install: install-tools ## Install the pinned tools, fetch the assets of the template tag and install the Composer dependencies; make install-packages installs the npm packages (HY-89, H14.1-7)
 	node $(KIT)/check-toolchain.$(KIT_EXT)
 	$(ONLINE) node scripts/template-assets.mjs fetch
+	node scripts/template-assets.mjs unpack
 	node scripts/copy-package.mjs --path $(PHP_PACKAGE) --output $(HYPER_PHP_COPY)
 	$(ONLINE) node $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(COMPOSER) install
 	$(ONLINE) node $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(COMPOSER) install --working-dir=$(BOARD)

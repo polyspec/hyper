@@ -66,8 +66,9 @@ test('Composer installs the template PHP package from the zip of the template re
   assert.match(version, /^\d+\.\d+\.\d+$/, 'packages/hyper-server-php requires an exact template version');
   // config/template-assets.json pins the zip; make install verifies it by its sha256 and writes it into var/products/template-php,
   // the artifact repository of both Composer projects, so no manifest copies the metadata of the template package.
+  const zip = `polyspec-template-php-${version}.zip`;
   const { assets } = JSON.parse(readFileSync('config/template-assets.json', 'utf8'));
-  assert.equal(assets.php.name, `polyspec-template-php-${version}.zip`);
+  assert.deepEqual(assets.filter(({ destination }) => destination.startsWith('var/products/template-php/')).map(({ destination }) => destination), [`var/products/template-php/${zip}`]);
   for (const manifest of ['composer.json', 'examples/board/composer.json']) {
     const { repositories, require } = JSON.parse(readFileSync(manifest, 'utf8'));
     assert.equal(require['polyspec/template'], version, manifest);
@@ -76,7 +77,7 @@ test('Composer installs the template PHP package from the zip of the template re
     const entry = JSON.parse(readFileSync(manifest.replace(/\.json$/, '.lock'), 'utf8')).packages.find(({ name }) => name === 'polyspec/template');
     assert.equal(entry.version, version, manifest);
     assert.equal(entry.dist.type, 'zip', manifest);
-    assert.equal(entry.dist.url, `${directory}/${assets.php.name}`, manifest);
+    assert.equal(entry.dist.url, `${directory}/${zip}`, manifest);
     assert.match(entry.dist.shasum, /^[0-9a-f]{40}$/, `${manifest}: the lock pins the zip by its sha1`);
   }
   const scanned = /scanFiles:\n\s+- (\S+)/.exec(readFileSync('packages/hyper-server-php/phpstan.neon', 'utf8'))[1];
