@@ -9,7 +9,7 @@ interface Case {
   result: { name: string; params: Record<string, string> } | null;
 }
 
-const read = (name: string) => JSON.parse(readFileSync(new URL(`../../../conformance/${name}`, import.meta.url), 'utf8')) as {
+const read = (name: string) => JSON.parse(readFileSync(new URL(`../../../contracts/${name}`, import.meta.url), 'utf8')) as {
   routes: { name: string; path: string }[];
   cases: Case[];
   basePath?: string;

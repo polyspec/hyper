@@ -1,16 +1,16 @@
 # Kept values of the conformance cases (HY-37, HY-38, HY-41). The PHP and the JavaScript implementation pass the
-# same cases of conformance/keep.json; the applied data is compared as JSON text, so an empty map stays a map.
+# same cases of contracts/keep.json; the applied data is compared as JSON text, so an empty map stays a map.
 import json
 import unittest
 from pathlib import Path
 
 from polyspec.hyper.kept import apply, select
 
-CONFORMANCE = Path(__file__).resolve().parents[3] / 'conformance'
+CONTRACTS = Path(__file__).resolve().parents[3] / 'contracts'
 
 
 def file(name: str) -> dict:
-    return json.loads((CONFORMANCE / name).read_text(encoding='utf-8'))
+    return json.loads((CONTRACTS / name).read_text(encoding='utf-8'))
 
 
 def cases() -> list[dict]:

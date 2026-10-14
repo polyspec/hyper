@@ -10,13 +10,13 @@ use Polyspec\Hyper\DataModel;
 use Polyspec\Hyper\JsonEncoder;
 use Polyspec\Hyper\Tests\Support\Json;
 
-/** HY-54: the JSON cases of conformance/json.json, which the Node server passes with the same bytes. */
+/** HY-54: the JSON cases of contracts/json.json, which the Node server passes with the same bytes. */
 final class JsonTest extends TestCase
 {
     /** @return list<\stdClass> */
     private static function fixture(string $part): array
     {
-        return Json::objects(Json::objectFile(__DIR__ . '/../../../conformance/json.json')->{$part});
+        return Json::objects(Json::objectFile(__DIR__ . '/../../../contracts/json.json')->{$part});
     }
 
     /** @return iterable<string, array{string, string}> */

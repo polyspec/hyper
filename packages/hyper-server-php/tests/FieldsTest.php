@@ -10,7 +10,7 @@ use Polyspec\Hyper\Fields;
 use Polyspec\Hyper\Tests\Support\Json;
 
 /**
- * HY-56, HY-57: the cases of conformance/fields.json, which the Node server passes as well. A urlencoded text is the
+ * HY-56, HY-57: the cases of contracts/fields.json, which the Node server passes as well. A urlencoded text is the
  * UTF-8 encoding of its JSON string; a multipart body is text whose characters are its bytes.
  */
 final class FieldsTest extends TestCase
@@ -34,7 +34,7 @@ final class FieldsTest extends TestCase
     /** @return array<array-key, mixed> */
     private static function fixture(): array
     {
-        return Json::file(__DIR__ . '/../../../conformance/fields.json');
+        return Json::file(__DIR__ . '/../../../contracts/fields.json');
     }
 
     /** @return ?list<array{string, list<string>}> */

@@ -1,5 +1,5 @@
 # The client rendering of the conformance cases (HY-62). The PHP and the Node server pass the same cases of
-# conformance/client.json against the same fixtures.
+# contracts/client.json against the same fixtures.
 import json
 import unittest
 from pathlib import Path
@@ -16,7 +16,7 @@ TESTS = Path(__file__).resolve().parents[2]
 FIXTURES = TESTS.parent / 'hyper-server-php' / 'tests' / 'fixtures'
 PROGRAM = FIXTURES.parent / 'build' / 'server'
 SHELL = FIXTURES / 'shell' / 'index.html'
-CONFORMANCE = Path(__file__).resolve().parents[4] / 'conformance'
+CONTRACTS = Path(__file__).resolve().parents[4] / 'contracts'
 # A session token of HY-24; the form carries a masked value of it.
 TOKEN = '00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff'
 
@@ -30,7 +30,7 @@ class Counter:
 
 
 def conformance() -> dict:
-    return json.loads((CONFORMANCE / 'client.json').read_text(encoding='utf-8'))
+    return json.loads((CONTRACTS / 'client.json').read_text(encoding='utf-8'))
 
 
 def _handlers() -> dict:

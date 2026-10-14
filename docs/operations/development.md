@@ -34,7 +34,7 @@
 | `make node-server` | Type-checks and bundles the board Node server into `examples/board/build/node/server.mjs` (see below) |
 | `make assets` | Builds the board client bundle and the CSR shell (see below) |
 | `make test-js` | Runs the browser code tests, including the router conformance cases, and the type check |
-| `make test-node` | Runs the Node server tests: the cases of the PHP server tests against the same fixtures, the JSON cases of `conformance/json.json`, sessions, the HTTP server, and the type check |
+| `make test-node` | Runs the Node server tests: the cases of the PHP server tests against the same fixtures, the JSON cases of `contracts/json.json`, sessions, the HTTP server, and the type check |
 | `make test-php` | Runs the server package tests, including the router conformance cases, once with the generated program and once with the native extension |
 | `make lint` | Checks PHP formatting |
 | `make analyse-php` | Runs PHPStan at level `max` on the source and the tests of `packages/hyper-server-php` with `packages/hyper-server-php/phpstan.neon`, without a baseline and without ignored errors. PHPStan reads the signatures of the native template extension from the stub of the unpacked php-ext asset `var/products/template-ext/src/polyspec_template.stub.php` (H14.1-7) and writes its cache to `build/phpstan`. It runs with `--memory-limit=256M`, because a run without that cache needs 132 MB in its worker, above the default PHP limit of 128M. It runs `make ext` first |
@@ -217,9 +217,9 @@ The build replaces earlier outputs, so repeated builds leave one file per output
 
 | Behavior | Evidence |
 |---|---|
-| Kept values | `conformance/keep.json` runs in `make test-php` and `make test-js` (HY-38). |
-| JSON text | `conformance/json.json` runs in `make test-php` and `make test-node`: the Node server writes the bytes of PHP `json_encode` and reads kept values as PHP `json_decode` does (HY-54). |
-| Routing | `conformance/routes.json` runs in `make test-php` and `make test-js`. During rendering, the browser also requires that its route equals the route that the server reported (HY-20). |
+| Kept values | `contracts/keep.json` runs in `make test-php` and `make test-js` (HY-38). |
+| JSON text | `contracts/json.json` runs in `make test-php` and `make test-node`: the Node server writes the bytes of PHP `json_encode` and reads kept values as PHP `json_decode` does (HY-54). |
+| Routing | `contracts/routes.json` runs in `make test-php` and `make test-js`. During rendering, the browser also requires that its route equals the route that the server reported (HY-20). |
 | Document rendering | `make parity` requests every compare step as an HTML document, as document JSON and as region JSON in one session. The browser rendering of the document JSON, including route regions, the embedded data and `server` and `cookie` kept values (HY-30, HY-31, HY-38), must equal the PHP document byte for byte after the masked CSRF token of each response, which differs per response (HY-24), is replaced by `<csrf>`, and every part of the region JSON must appear in it. The check prints a line when a step starts and its result with the elapsed milliseconds; a request without a response within 10 seconds fails by the name of its step and ends the check. |
 | Node server | `make server-parity` sends every request of the parity steps to the PHP server and the board Node server, each with its own database and session, and requires equal statuses, headers and bodies after it replaces the session identifier, the masked CSRF token of each response and the `ETag` value with placeholders (HY-55). |
 | Behavior in a browser | `make e2e` runs the same flows on SSR and CSR: navigation, actions, `hy-set` changes without a data request, the four kept kinds across a reload and a new tab, loading only the templates of a route, the stylesheet links of the layout loaded before a page is shown and removed when another page does not link them (HY-64), and the comparison page that requires equal SSR and CSR bodies. |

@@ -1,11 +1,11 @@
 // JSON text with the bytes of PHP json_encode and kept values decoded as PHP json_decode reads them (HY-17,
-// HY-38, HY-40, HY-54). PHP passes the same cases of conformance/json.json in JsonTest.
+// HY-38, HY-40, HY-54). PHP passes the same cases of contracts/json.json in JsonTest.
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import type { Value } from '@polyspec/template/render';
 import { decodeJson, encodeJson, inDataModel, JsonDecodeError, OutsideNumber, type DecodedValue } from '../src/index.js';
 
-const fixture = JSON.parse(readFileSync(new URL('../../../conformance/json.json', import.meta.url), 'utf8')) as {
+const fixture = JSON.parse(readFileSync(new URL('../../../contracts/json.json', import.meta.url), 'utf8')) as {
   encode: { label: string; json: string; expected: string }[];
   decode: { label: string; json: string; result: 'value' | 'outside' | 'error' }[];
 };

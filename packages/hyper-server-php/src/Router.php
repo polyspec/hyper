@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Polyspec\Hyper;
 
-/** Route matching (HY-4 to HY-8, HY-49). The JavaScript router implements the same rules; both pass conformance/routes.json and conformance/rest.json. */
+/** Route matching (HY-4 to HY-8, HY-49). The JavaScript router implements the same rules; both pass contracts/routes.json and contracts/rest.json. */
 final class Router
 {
     /** @var list<array{name: string, segments: list<array{0: 'literal'|'param'|'rest', 1: string}>}> */

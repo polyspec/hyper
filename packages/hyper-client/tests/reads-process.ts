@@ -1,4 +1,4 @@
-// Computes the read paths of one case of conformance/reads.json in its own process and writes them as JSON, so that
+// Computes the read paths of one case of contracts/reads.json in its own process and writes them as JSON, so that
 // tests/reads.test.ts stops an analysis that does not finish within its time limit (HY-73).
 import { parse, type Template } from '@polyspec/template';
 import { resolvePath } from '@polyspec/template/render';

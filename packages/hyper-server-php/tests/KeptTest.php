@@ -19,7 +19,7 @@ final class KeptTest extends TestCase
     /** @return iterable<string, array{array<array-key, mixed>, list<array{0: string, 1: mixed}>, string}> */
     public static function cases(): iterable
     {
-        $fixture = Json::objectFile(__DIR__ . '/../../../conformance/keep.json');
+        $fixture = Json::objectFile(__DIR__ . '/../../../contracts/keep.json');
         foreach (Json::objects($fixture->cases) as $case) {
             $kept = array_map(fn (array $pair): array => [Json::string($pair[0] ?? null), $pair[1] ?? null], Json::arrays($case->kept));
             yield Json::string($case->label) => [Json::array(self::loaderData($case->data)), $kept, json_encode($case->expected, JSON_THROW_ON_ERROR)];

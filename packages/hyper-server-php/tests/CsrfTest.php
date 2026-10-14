@@ -8,13 +8,13 @@ use PHPUnit\Framework\TestCase;
 use Polyspec\Hyper\Csrf;
 use Polyspec\Hyper\Tests\Support\Json;
 
-/** HY-24: the cases of conformance/csrf.json, which the Node server passes as well. */
+/** HY-24: the cases of contracts/csrf.json, which the Node server passes as well. */
 final class CsrfTest extends TestCase
 {
     /** @return list<array<array-key, mixed>> */
     private static function fixture(string $part): array
     {
-        return Json::arrays(Json::file(__DIR__ . '/../../../conformance/csrf.json')[$part] ?? null);
+        return Json::arrays(Json::file(__DIR__ . '/../../../contracts/csrf.json')[$part] ?? null);
     }
 
     public function testMasksTheTokenWithAMask(): void

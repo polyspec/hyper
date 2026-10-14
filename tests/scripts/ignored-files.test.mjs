@@ -35,7 +35,7 @@ const OUTPUTS = [
   'var/full-run.json',
   'var/full-run.lock',
   'var/install.lock',
-  'test-results/.last-run.json',
+  'tests/e2e/test-results/.last-run.json',
   'playwright-report/index.html',
   'packages/hyper-server-php/.phpunit.result.cache',
 ];

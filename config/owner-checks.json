@@ -56,7 +56,7 @@
     },
     {
       "paths": [
-        "conformance/**"
+        "contracts/**"
       ],
       "targets": [
         "test-js",
@@ -127,8 +127,7 @@
     },
     {
       "paths": [
-        "tests/e2e/**",
-        "playwright.config.ts"
+        "tests/e2e/**"
       ],
       "targets": [
         "e2e"

@@ -12,3 +12,62 @@ rules:
   - extends_template: go-module-path
     id: layout-go-module-path
     vars: { repo: hyper }
+
+  # S7: the cross-language runners and the tool tests of the root tests/.
+  - id: layout-root-tests
+    paths:
+      - "tests/*"
+      - "!tests/kit"
+      # The browser end-to-end cases, which run one board against the Node, PHP and Python servers (make e2e).
+      - "!tests/e2e"
+      # The project that installs the npm packages of packages/ together, links them and runs them under node (make package-check).
+      - "!tests/package-install"
+      # The consumer projects in which make release-consumer installs the release archives (config/release.json).
+      - "!tests/release-install"
+      # The tool tests of scripts/, the Makefile, the workflows and the configuration (make test-scripts).
+      - "!tests/scripts"
+      # The tool test of the build copies on the virtiofs mounts of a Linux container (make virtiofs-check).
+      - "!tests/virtiofs"
+
+  - id: layout-root-files
+    paths:
+      - "*"
+      - "!README.md"
+      - "!README.ko.md"
+      - "!AGENTS.md"
+      - "!AGENTS.ko.md"
+      - "!PRINCIPLES.md"
+      - "!PRINCIPLES.ko.md"
+      - "!CHANGELOG.md"
+      - "!CHANGELOG.ko.md"
+      - "!LICENSE"
+      - "!Makefile"
+      - "!kit.json"
+      - "!package.json"
+      - "!package-lock.json"
+      - "!tsconfig.json"
+      - "!.gitignore"
+      - "!.gitattributes"
+      - "!.node-version"
+      - "!.python-version"
+      - "!.php-version"
+      - "!rust-toolchain.toml"
+      - "!mise.toml"
+      - "!mise.lock"
+      - "!ruff.toml"
+      - "!phpcs.xml.dist"
+      - "!phpstan.dist.neon"
+      - "!Cargo.toml"
+      - "!Cargo.lock"
+      - "!go.work"
+      - "!go.work.sum"
+      - "!.golangci.yml"
+      - "!.oxlintrc.json"
+      - "!knip.json"
+      - "!.editorconfig"
+      # The private development root of the PHP server package, which resolves the published manifest of the package with
+      # the template zip and the development tools (config/release.json); a published Composer manifest has no lock.
+      - "!composer.json"
+      - "!composer.lock"
+      # The npm configuration of the root project: npm reads a project .npmrc only from the root of the project.
+      - "!.npmrc"

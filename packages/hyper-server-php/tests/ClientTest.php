@@ -33,7 +33,7 @@ final class ClientTest extends TestCase
     /** @return array<array-key, mixed> */
     private static function conformance(): array
     {
-        return Json::file(__DIR__ . '/../../../conformance/client.json');
+        return Json::file(__DIR__ . '/../../../contracts/client.json');
     }
 
     /**

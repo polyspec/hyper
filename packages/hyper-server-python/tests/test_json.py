@@ -1,5 +1,5 @@
 # JSON text with the bytes of the PHP server and kept values decoded as PHP json_decode reads them (HY-17, HY-38,
-# HY-40, HY-54). The PHP and the JavaScript server pass the same cases of conformance/json.json.
+# HY-40, HY-54). The PHP and the JavaScript server pass the same cases of contracts/json.json.
 import json
 import math
 import unittest
@@ -7,11 +7,11 @@ from pathlib import Path
 
 from polyspec.hyper.json_codec import JsonDecodeError, decode, encode, in_data_model
 
-CONFORMANCE = Path(__file__).resolve().parents[3] / 'conformance'
+CONTRACTS = Path(__file__).resolve().parents[3] / 'contracts'
 
 
 def file(name: str) -> dict:
-    return json.loads((CONFORMANCE / name).read_text(encoding='utf-8'))
+    return json.loads((CONTRACTS / name).read_text(encoding='utf-8'))
 
 
 def finite(value):

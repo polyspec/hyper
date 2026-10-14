@@ -9,12 +9,12 @@ use Polyspec\Hyper\JsonEncoder;
 use Polyspec\Hyper\Reads;
 use Polyspec\Hyper\Tests\Support\Json;
 
-/** HY-73: the cases of conformance/reads.json, which the browser package and the Node server pass as well. */
+/** HY-73: the cases of contracts/reads.json, which the browser package and the Node server pass as well. */
 final class ReadsTest extends TestCase
 {
     public function testKeepsTheReadPathsOfEveryCase(): void
     {
-        $fixture = Json::objectFile(__DIR__ . '/../../../conformance/reads.json');
+        $fixture = Json::objectFile(__DIR__ . '/../../../contracts/reads.json');
         foreach (Json::objects($fixture->cases) as $case) {
             // A read node is true or a map, which the server reads from reads.json with objects as arrays.
             $reads = $case->reads === true ? true : Json::decode(json_encode($case->reads, JSON_THROW_ON_ERROR));

@@ -1,6 +1,6 @@
 """The masked session token (HY-24). A masked value is 32 mask bytes followed by the mask XOR the token, as 128
 lowercase hexadecimal digits, so no response contains the token. The PHP and the JavaScript implementation pass the
-same cases of conformance/csrf.json."""
+same cases of contracts/csrf.json."""
 
 from __future__ import annotations
 
