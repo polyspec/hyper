@@ -1,8 +1,7 @@
 // Tests how the recipes of the Makefile use the toolchain (HY-81, HY-89): the recipes that run tools check the
 // toolchain first, npm and Composer of this checkout are started by the absolute paths of var/tools/bin, every recipe
 // runs npm and Composer offline, only the install targets download, and the package manager installs hold the install
-// lock. The tools themselves (scripts/kit/install-tools.mjs, scripts/kit/check-toolchain.mjs) are tested in
-// tests/kit.
+// lock. The tools themselves (install-tools and check-toolchain of @polyspec/kit) are tested in kit.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -16,20 +15,22 @@ import { dryRun } from './make-dry-run.mjs';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const NPM = path.join(ROOT, 'var/tools/bin/npm');
 const COMPOSER = path.join(ROOT, 'var/tools/bin/composer');
+// The built tools of @polyspec/kit, which the kit.mk of the package runs.
+const KIT = 'node_modules/@polyspec/kit/dist';
 
 test('the recipes that run npm, Composer or PHP check the toolchain first, and install installs the tools first', () => {
   for (const target of ['ext', 'lint', 'templates-check']) {
-    assert.equal(dryRun(target)[0].trim(), 'node scripts/kit/check-toolchain.mjs', target);
+    assert.equal(dryRun(target)[0].trim(), `node ${KIT}/check-toolchain.mjs`, target);
   }
   const install = dryRun('install');
-  assert.deepEqual(install.slice(0, 2).map((line) => line.trim()), ['env -u npm_config_offline -u COMPOSER_DISABLE_NETWORK node scripts/kit/install-tools.mjs', 'node scripts/kit/check-toolchain.mjs']);
+  assert.deepEqual(install.slice(0, 2).map((line) => line.trim()), [`env -u npm_config_offline -u COMPOSER_DISABLE_NETWORK node ${KIT}/install-tools.mjs`, `node ${KIT}/check-toolchain.mjs`]);
 });
 
 test('the package manager installs of make install run under the install lock', () => {
   const lines = dryRun('install', { variables: ['TEMPLATE_DIR=var/products/template-dry-run'] });
   const installs = lines.filter((line) => / ci | install( |$)/.test(line) && /(npm|composer) /.test(line));
-  assert.equal(installs.length, 3, lines.join('\n'));
-  assert.deepEqual(installs.filter((line) => !line.includes('node scripts/kit/holder-lock.mjs run var/install.lock -- ')), []);
+  assert.equal(installs.length, 2, lines.join('\n'));
+  assert.deepEqual(installs.filter((line) => !line.includes(`node ${KIT}/holder-lock.mjs run var/install.lock -- `)), []);
 });
 
 // The make of the pin looks up the program of a recipe line without shell syntax on the PATH of its own process: an
@@ -73,6 +74,8 @@ test('no recipe queries a registry: installs follow their lock without an audit,
   assert.deepEqual(npm.filter((command) => !/^\S+ (ci|run) /.test(command)), [], 'an npm command other than ci or run');
   assert.deepEqual(npm.filter((command) => / ci /.test(command) && !command.includes('--no-audit')), []);
   assert.ok(npm.some((command) => / ci --offline /.test(command)), 'the package install test installs offline');
+  // The npm ci of make install-packages is the recipe of @polyspec/kit, so the .npmrc of the checkout turns its audit off.
+  assert.match(readFileSync(path.join(ROOT, '.npmrc'), 'utf8'), /^audit=false$/m, '.npmrc does not set audit=false');
   const composer = commands.filter((command) => command.startsWith(`${COMPOSER} `));
   assert.deepEqual(composer.filter((command) => !/^\S+ install(?: |$)/.test(command)), [], 'a Composer command other than install');
   assert.equal(spawnSync('git', ['ls-files', '--error-unmatch', 'tests/package-install/package-lock.json'], { encoding: 'utf8' }).status, 0, 'tests/package-install/package-lock.json is not tracked');
@@ -101,10 +104,11 @@ test('every recipe runs npm and Composer offline, and $(ONLINE) lifts it (HY-89)
   for (const name of Object.keys(OFFLINE)) assert.equal(online[name], undefined, `${name} under $(ONLINE)`);
 });
 
-test('only make install-tools, make install and make install-browser download, each download through $(ONLINE), and no check target downloads (HY-89)', (t) => {
+test('only make install-tools, make install-packages, make install and make install-browser download, each download through $(ONLINE), and no check target downloads (HY-89)', (t) => {
   const directory = mkdtempSync(path.join(tmpdir(), 'hyper-downloads-'));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
-  assert.deepEqual(dryRun('install-tools').map((line) => line.trim()), [`${ONLINE}node scripts/kit/install-tools.mjs`]);
+  assert.deepEqual(dryRun('install-tools').map((line) => line.trim()), [`${ONLINE}node ${KIT}/install-tools.mjs`]);
+  assert.deepEqual(dryRun('install-packages'), [`${ONLINE}var/tools/bin/npm ci --allow-remote=root`]);
   assert.deepEqual(dryRun('install-browser'), [`${ONLINE}node node_modules/@playwright/test/cli.js install --with-deps chromium`]);
   const install = dryRun('install', { variables: [`TEMPLATE_DIR=${directory}`] });
   const downloads = install.filter((line) => / ci |composer install|install-tools\.mjs/.test(line.replace(/ -- /, ' ')));

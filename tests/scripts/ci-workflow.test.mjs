@@ -22,6 +22,8 @@ const RUNNER = 'ubuntu-26.04-arm';
 const STOPPING = { 'ci.yml': ['ci-passed'], 'release.yml': ['release'] };
 const CI_PASSED = 'ci-passed';
 const CI_PASSED_RUN = "make ci-passed RESULTS='${{ toJSON(needs) }}'";
+// The bootstrap of @polyspec/kit in a fresh checkout: the npm of packageManager, then the packages of package-lock.json.
+const BOOTSTRAP_RUNS = ['make install-tools TOOLS=npm', 'make install-packages'];
 
 /**
  * The jobs of a workflow file, read from the block layout that the workflows of this repository use: a job is a key
@@ -101,7 +103,7 @@ const TRIGGERS = {
   'ci.yml': 'on:\n  push:\n    branches: [main]\n  workflow_dispatch:\n',
   'release.yml': "on:\n  push:\n    tags: ['v*', '**/v*']\n",
 };
-// The steps of release.yml in their order (scripts/kit/release.mjs): verify the tagged commit, check the versions, build
+// The steps of release.yml in their order (the release tool of @polyspec/kit): verify the tagged commit, check the versions, build
 // the archives, create the release.
 const RELEASE_STEPS = ['make release-verify', 'make release-versions', 'make release-assets', 'make release-publish'];
 
@@ -208,10 +210,13 @@ test('the workflow ci runs every matrix entry in a job that runs to its end and 
     for (const entry of matrixEntries(text)) {
       assert.equal(entry.browser, entry.targets.some((target) => ['parity', 'server-parity', 'server-parity-python', 'e2e'].includes(target)), `${entry.name}: browser flag`);
     }
-    // The recipes run the Python of var/tools, so every job runs make install-tools before its first check.
-    const tools = job.steps.findIndex((step) => step.run === 'make install-tools');
-    const checks = job.steps.findIndex((step) => step.run?.startsWith('make ci-targets'));
-    assert.ok(tools >= 0 && tools < checks, `${job.name}: make install-tools runs before the checks`);
+    // The Makefile includes the kit.mk of @polyspec/kit only after the bootstrap installs the npm of packageManager and the
+    // packages, and the recipes run the Python of var/tools, so every job runs the bootstrap and make install-tools in this
+    // order before its first check.
+    const runs = job.steps.map((step) => step.run);
+    const order = [...BOOTSTRAP_RUNS, 'make install-tools'].map((run) => runs.indexOf(run));
+    const checks = runs.findIndex((run) => run?.startsWith('make ci-targets'));
+    assert.ok(order.every((at, index) => at >= 0 && (index === 0 || order[index - 1] < at)) && order.at(-1) < checks, `${job.name}: ${[...BOOTSTRAP_RUNS, 'make install-tools'].join(', ')} run in order before the checks`);
     assert.ok(!job.steps.some((step) => /^actions\/setup-python@/.test(step.uses ?? '')), `${job.name}: no setup-python step`);
   }
 });
@@ -238,9 +243,9 @@ test('a target declared for Darwin is in the full suite exactly on Darwin and sk
   const check = checkTargets();
   assert.deepEqual(darwin.filter((target) => check.includes(target)), [], 'a Darwin target in the CHECK_TARGETS of every platform');
   const commit = '0'.repeat(40);
-  const line = dryRun('check', { variables: [`TEMPLATE_COMMIT=${commit}`] }).find((entry) => entry.includes(' scripts/kit/full-run.mjs run '));
-  assert.ok(line, 'make check does not run scripts/kit/full-run.mjs');
-  const suite = line.split(` scripts/kit/full-run.mjs run --key template=${commit} `)[1].split(' ');
+  const line = dryRun('check', { variables: [`TEMPLATE_COMMIT=${commit}`] }).find((entry) => entry.includes(' node_modules/@polyspec/kit/dist/full-run.mjs run '));
+  assert.ok(line, 'make check does not run the full-run of @polyspec/kit');
+  const suite = line.split(` node_modules/@polyspec/kit/dist/full-run.mjs run --key template=${commit} `)[1].split(' ');
   assert.deepEqual(suite, process.platform === 'darwin' ? [...check, ...darwin] : check);
   const virtiofs = readdirSync(path.join(ROOT, 'tests/virtiofs')).filter((name) => name.endsWith('.test.mjs'));
   assert.ok(virtiofs.length > 0);
@@ -266,7 +271,8 @@ function ciPassedProblems(text) {
   const runners = [...new Set(read.filter((entry) => entry.name !== CI_PASSED).map((entry) => key(entry, 'runs-on')))];
   if (runners.length !== 1 || key(job, 'runs-on') !== runners[0]) found.push(`the job ${CI_PASSED} runs on ${key(job, 'runs-on')}, not on the runner of the other jobs ${runners.join(', ')}`);
   const runs = job.steps.filter((step) => step.run !== undefined).map((step) => step.run);
-  if (runs.length !== 1 || runs[0] !== CI_PASSED_RUN || job.steps.at(-1).run !== CI_PASSED_RUN) found.push(`the job ${CI_PASSED} runs [${runs.join(', ')}], not the last step ${CI_PASSED_RUN}`);
+  const expected = [...BOOTSTRAP_RUNS, CI_PASSED_RUN];
+  if (runs.join('\n') !== expected.join('\n') || job.steps.at(-1).run !== CI_PASSED_RUN) found.push(`the job ${CI_PASSED} runs [${runs.join(', ')}], not the bootstrap and the last step ${CI_PASSED_RUN}`);
   return found;
 }
 
@@ -280,7 +286,8 @@ test('ci-passed is the last job of ci.yml, runs always, needs every other job an
     'not always': [text.replace('    if: ${{ always() }}\n', '    if: ${{ success() }}\n'), 'the job ci-passed has if: ${{ success() }}'],
     'needs no job': [text.replace('    needs: [check]\n', '    needs: []\n'), 'the job ci-passed needs [], not every other job [check]'],
     'another runner': [text.replace('    needs: [check]\n    runs-on: ubuntu-26.04-arm\n', '    needs: [check]\n    runs-on: ubuntu-24.04\n'), 'the job ci-passed runs on ubuntu-24.04, not on the runner of the other jobs'],
-    'another step': [text.replace(CI_PASSED_RUN, 'make ci-passed'), 'the job ci-passed runs [make ci-passed], not the last step'],
+    'another step': [text.replace(CI_PASSED_RUN, 'make ci-passed'), 'the job ci-passed runs [make install-tools TOOLS=npm, make install-packages, make ci-passed], not the bootstrap'],
+    'no bootstrap': [text.replace('        run: make install-packages\n      - name: make ci-passed', '      - name: make ci-passed'), 'the job ci-passed runs [make install-tools TOOLS=npm, make ci-passed'],
   };
   for (const [name, [changed, message]] of Object.entries(broken)) {
     assert.notEqual(changed, text, name);

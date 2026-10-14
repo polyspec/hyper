@@ -1,8 +1,10 @@
-# The shared tools of polyspec/kit (kit.json, scripts/kit, tests/kit): a vendored copy that `make kit-sync KIT_TAG=<tag>`
-# writes and that is never edited here. kit.mk defines the targets of the toolchain, the Git hooks, the push gate, the
-# documents, the owner checks, the CI report, the release and the dependency review; this repository differs from another
-# only in config/*.json and in the targets below.
-include scripts/kit/kit.mk
+# The shared tools are the npm package @polyspec/kit, which package.json pins by the URL of its release asset and
+# package-lock.json by its integrity. scripts/kit/kit-bootstrap.mk is a copy that `make kit-sync` writes from the package
+# and that is never edited here; it includes the kit.mk of the package, which defines the targets of the toolchain, the
+# Git hooks, the push gate, the documents, the owner checks, the CI report, the release and the dependency review, and
+# sets KIT to the dist of the package and KIT_EXT to mjs. A checkout starts with `make install-tools TOOLS=npm` and
+# `make install-packages`. This repository differs from another only in config/*.json and in the targets below.
+include scripts/kit/kit-bootstrap.mk
 
 BOARD := examples/board
 PHP_PACKAGE := packages/hyper-server-php
@@ -38,7 +40,7 @@ PHPSTAN_MEMORY := 256M
 # The library that `make ext` builds from the unpacked php-ext asset, which `make install` fetches (H14.1-7).
 EXT := build/ext/polyspec_template.so
 
-# The toolchain (HY-81, scripts/kit/install-tools.mjs): npm and Composer of this checkout, which `make install-tools`
+# The toolchain (HY-81, install-tools of @polyspec/kit): npm and Composer of this checkout, which `make install-tools`
 # installs into var/tools, come first on PATH for every recipe and the programs that it starts.
 export PATH := $(CURDIR)/var/tools/bin:$(PATH)
 # A check reads no network (HY-89): `make install` downloads everything that the checks read, and every other recipe
@@ -69,13 +71,12 @@ checks_result = test -z "$$failed" || { echo "failed checks:$$failed"; exit 1; }
 help: ## List the targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
 
-install: install-tools ## Install the pinned tools, fetch the php-ext asset of the template tag and install the npm and Composer dependencies (HY-89, H14.1-7)
-	node scripts/kit/check-toolchain.mjs
+install: install-tools ## Install the pinned tools, fetch the php-ext asset of the template tag and install the Composer dependencies; make install-packages installs the npm packages (HY-89, H14.1-7)
+	node $(KIT)/check-toolchain.$(KIT_EXT)
 	$(ONLINE) node scripts/template-ext.mjs fetch
 	node scripts/copy-package.mjs --path $(PHP_PACKAGE) --output $(HYPER_PHP_COPY)
-	$(ONLINE) node scripts/kit/holder-lock.mjs run $(INSTALL_LOCK) -- $(NPM) ci --no-audit --no-fund
-	$(ONLINE) node scripts/kit/holder-lock.mjs run $(INSTALL_LOCK) -- $(COMPOSER) install
-	$(ONLINE) node scripts/kit/holder-lock.mjs run $(INSTALL_LOCK) -- $(COMPOSER) install --working-dir=$(BOARD)
+	$(ONLINE) node $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(COMPOSER) install
+	$(ONLINE) node $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(COMPOSER) install --working-dir=$(BOARD)
 
 # Fails when the template checkout has no tag TEMPLATE_TAG; the full-run key names that commit (HY-80).
 template-tag: ## Fail when the template repository TEMPLATE_REPOSITORY has no tag TEMPLATE_TAG, naming the expected tag and the tags it has (HY-80)
@@ -99,9 +100,9 @@ hyper-server-php-copy: ## Write the copy of packages/hyper-server-php that the b
 	node scripts/publish.mjs composer-copy $(HYPER_PHP_COPY) $(BOARD)/vendor/polyspec/hyper-server
 
 package-check: packages node-fixtures ## Install the npm packages into tests/package-install, type-check its test against their declarations and run it under node (HY-61)
-	cd tests/package-install && node ../../scripts/kit/holder-lock.mjs run ../../$(INSTALL_LOCK) -- $(NPM) ci --offline --install-links --allow-remote=root --no-audit --no-fund
+	cd tests/package-install && node ../../$(KIT)/holder-lock.$(KIT_EXT) run ../../$(INSTALL_LOCK) -- $(NPM) ci --offline --install-links --allow-remote=root --no-audit --no-fund
 	$(TSC) -p tests/package-install/tsconfig.json
-	node scripts/kit/run-tests.mjs node --cwd tests/package-install -- package-install.test.ts
+	node $(KIT)/run-tests.$(KIT_EXT) node --cwd tests/package-install -- package-install.test.ts
 
 server: packages hyper-server-php-copy ## Build the board server program: its templates and the generated PHP program (HY-48)
 	node $(BUILD_PACKAGE)/bin/hyper-build-server.mjs --manifest $(BOARD)/app/app.json --templates $(BOARD)/templates --output $(BOARD)/build/server --php-namespace 'Polyspec\Hyper\Examples\Board\Program'
@@ -121,20 +122,20 @@ assets: packages ## Build the board client bundle (SSR) and the single-file stat
 
 test-js: toolchain-check ## Run the browser code tests, including the router conformance cases, and the type check
 	@failed=; \
-	$(call check,the tests of $(JS_PACKAGE),node scripts/kit/run-tests.mjs vitest --cwd $(JS_PACKAGE)) \
+	$(call check,the tests of $(JS_PACKAGE),node $(KIT)/run-tests.$(KIT_EXT) vitest --cwd $(JS_PACKAGE)) \
 	$(call check,the type check of $(JS_PACKAGE),$(TSC) --noEmit -p $(JS_PACKAGE)/tsconfig.json) \
 	$(checks_result)
 
 test-node: packages node-fixtures ## Run the Node server tests, including the PHP AppTest cases and the JSON conformance cases, and the type check
 	@failed=; \
-	$(call check,the tests of $(NODE_PACKAGE),node scripts/kit/run-tests.mjs vitest --cwd $(NODE_PACKAGE)) \
+	$(call check,the tests of $(NODE_PACKAGE),node $(KIT)/run-tests.$(KIT_EXT) vitest --cwd $(NODE_PACKAGE)) \
 	$(call check,the type check of $(NODE_PACKAGE),$(TSC) --noEmit -p $(NODE_PACKAGE)/tsconfig.json) \
 	$(checks_result)
 
 test-php: server-fixtures ext ## Run the server package tests with the generated program and with the native extension
 	@failed=; \
-	$(call check,PHPUnit with the generated program,COMPOSER_VENDOR_DIR=$(PHP_VENDOR) node scripts/kit/run-tests.mjs phpunit --cwd $(PHP_PACKAGE)) \
-	$(call check,PHPUnit with the native extension,COMPOSER_VENDOR_DIR=$(PHP_VENDOR) node scripts/kit/run-tests.mjs phpunit --cwd $(PHP_PACKAGE) --php-extension $(EXT)) \
+	$(call check,PHPUnit with the generated program,COMPOSER_VENDOR_DIR=$(PHP_VENDOR) node $(KIT)/run-tests.$(KIT_EXT) phpunit --cwd $(PHP_PACKAGE)) \
+	$(call check,PHPUnit with the native extension,COMPOSER_VENDOR_DIR=$(PHP_VENDOR) node $(KIT)/run-tests.$(KIT_EXT) phpunit --cwd $(PHP_PACKAGE) --php-extension $(EXT)) \
 	$(checks_result)
 
 test-python: toolchain-check ## Run the Python server package tests, which read the conformance cases of routes, rest, csrf, fields and json
@@ -158,7 +159,7 @@ templates-check: toolchain-check ## Check hx- attributes (HC-6) and region place
 	node scripts/check-templates.mjs --app $(BOARD)
 
 test-scripts: packages ## Run the tests of the check scripts, or only the files of TESTS
-	node scripts/kit/run-tests.mjs node -- $(or $(TESTS),tests/scripts/)
+	node $(KIT)/run-tests.$(KIT_EXT) node -- $(or $(TESTS),tests/scripts/)
 
 parity: assets server ext ## Compare PHP documents (generated program and native extension) with browser renders of document and region JSON
 	@failed=; \
@@ -181,13 +182,13 @@ e2e: assets server ## Run the SSR, CSR, no-JavaScript and comparison flows in Ch
 	node scripts/run-e2e.mjs
 
 virtiofs-check: toolchain-check ## Write the outputs of the server build and of the output copies on a virtiofs bind mount of Apple container (HY-68); a target of the full suite on Darwin
-	node scripts/kit/run-tests.mjs node -- tests/virtiofs/
+	node $(KIT)/run-tests.$(KIT_EXT) node -- tests/virtiofs/
 
 serve-demo: assets server ## Serve SSR on :8080, CSR on :8081 and the comparison page on :8081/compare; fails with the holder while another demo runs
 	node scripts/serve-demo.mjs --db $(BOARD)/var/board.db --ssr 8080 --edge 8081 --api 8082 --lock $(SERVE_DEMO_LOCK)
 
 serve-demo-unlock: ## Remove the lock of a demo whose process has ended
-	node scripts/kit/holder-lock.mjs clear $(SERVE_DEMO_LOCK)
+	node $(KIT)/holder-lock.$(KIT_EXT) clear $(SERVE_DEMO_LOCK)
 
 bench-server: server ext ## Measure PHP request handling and rendering cost per row count, with the generated program and with the native extension
 	@failed=; \
@@ -203,11 +204,11 @@ bench-server-smoke: assets server ## Run the PHP benchmark once per measurement 
 
 bench: bench-server bench-browser ## Run both measurements; results are reports, not pass or fail checks
 
-# The targets of the full suite. `make check` runs them through the guard scripts/kit/full-run.mjs, which refuses while a
+# The targets of the full suite. `make check` runs them through the guard full-run of @polyspec/kit, which refuses while a
 # checklist task is [~], while tracked changes are uncommitted or when var/full-run.json records a run of the current tree
 # and the commit of the template tag, runs each target with `make <target>` to its end and records its result;
 # `make rerun-failed` reruns the targets of the current tree that did not pass.
-CHECK_TARGETS := kit-check kit-test documents-check hooks-check push-gate-commit commits-check owner-validate dependency-policy-check dependency-policy-mutation-check bench-server-smoke lint analyse-php templates-check test-scripts test-js test-node test-python test-python-render package-check test-php parity server-parity server-parity-python bundle-size e2e
+CHECK_TARGETS := kit-check toolchain-check layout-check documents-check hooks-check push-gate-commit commits-check owner-validate dependency-policy-check dependency-policy-mutation-check bench-server-smoke lint analyse-php templates-check test-scripts test-js test-node test-python test-python-render package-check test-php parity server-parity server-parity-python bundle-size e2e
 
 # The CI groups of the full suite (HY-91) are the entries of the matrix of .github/workflows/ci.yml: each entry runs its
 # `targets` with `make ci-targets`, so the entries together run every target of CHECK_TARGETS once
@@ -226,17 +227,17 @@ TEMPLATE_COMMIT = $(shell git -C $(TEMPLATE_REPOSITORY) rev-parse --verify --qui
 FULL_RUN_KEYS = --key template=$(TEMPLATE_COMMIT)
 
 check: template-tag ## Run every check through the guard: once per tree, when no checklist task is [~]
-	node scripts/kit/full-run.mjs run $(FULL_RUN_KEYS) $(CHECK_TARGETS)
+	node $(KIT)/full-run.$(KIT_EXT) run $(FULL_RUN_KEYS) $(CHECK_TARGETS)
 
 rerun-failed: template-tag
 
 install-browser: ## Install Chromium of the pinned Playwright and its system libraries; the CI group board runs it (HY-91)
 	$(ONLINE) node node_modules/@playwright/test/cli.js install --with-deps chromium
 
-# The steps of .github/workflows/release.yml for the tag TAG (scripts/kit/release.mjs, config/release.json), in this order:
+# The steps of .github/workflows/release.yml for the tag TAG (release of @polyspec/kit, config/release.json), in this order:
 # release-verify requires the tagged commit on origin/main with the check ci-passed passed, release-versions the version of
 # the tag in every manifest and its section in CHANGELOG.md, release-assets builds the packages and their archives into
-# var/release/assets, and release-publish creates the GitHub Release. The targets are those of scripts/kit/kit.mk; the
+# var/release/assets, and release-publish creates the GitHub Release. The targets are those of the kit.mk of @polyspec/kit; the
 # archives are built from the built packages, so release-assets builds them first.
 release-assets: packages
 

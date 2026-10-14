@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "comment": "The owner checks of the repository paths (HY-88), read by scripts/kit/owner-check.mjs: make owner-check runs the targets and node test files of the rules whose globs match a changed path, and make owner-validate fails for a tracked path without an owner. A rule with variable passes the matched paths to its targets in that make variable. Globs: * within one path segment, ** across segments, {a,b} either alternative.",
+  "comment": "The owner checks of the repository paths (HY-88), read by owner-check of @polyspec/kit: make owner-check runs the targets and node test files of the rules whose globs match a changed path, and make owner-validate fails for a tracked path without an owner. A rule with variable passes the matched paths to its targets in that make variable. Globs: * within one path segment, ** across segments, {a,b} either alternative.",
   "testTarget": "test-scripts",
   "owners": [
     {
@@ -439,13 +439,25 @@
     {
       "paths": [
         "scripts/kit/**",
-        "tests/kit/**",
-        "kit.json",
-        ".kit/**"
+        ".github/workflows/release.yml",
+        "PRINCIPLES.md",
+        "PRINCIPLES.ko.md",
+        "config/layout.kit.yml",
+        "ruff.toml",
+        "phpcs.xml.dist",
+        "phpstan.dist.neon",
+        ".golangci.yml",
+        ".oxlintrc.json",
+        "knip.json",
+        ".editorconfig",
+        "config/api-extractor.kit.json",
+        "config/pyproject.schema.json",
+        "config/composer.schema.json",
+        "config/cargo.schema.json",
+        "config/php-lint/**"
       ],
       "targets": [
-        "kit-check",
-        "kit-test"
+        "kit-check"
       ]
     },
     {
@@ -523,6 +535,14 @@
       ],
       "tests": [
         "tests/scripts/template-version.test.mjs"
+      ]
+    },
+    {
+      "paths": [
+        "config/layout.yml"
+      ],
+      "targets": [
+        "layout-check"
       ]
     }
   ]
