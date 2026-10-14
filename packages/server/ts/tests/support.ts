@@ -7,7 +7,7 @@ import { App, BadRequest, Forbidden, MemorySessionStore, NotFound, Redirect, Req
 
 export const FIXTURES = fileURLToPath(new URL('../../php/tests/fixtures/', import.meta.url));
 // The template files of the fixtures, which `make test-node` builds with scripts/build-templates.mts.
-export const BUILD = fileURLToPath(new URL('./build/', import.meta.url));
+const BUILD = fileURLToPath(new URL('./build/', import.meta.url));
 export const TEMPLATES = { index: `${BUILD}templates.index.json`, root: BUILD };
 export const JSON_REGION = { Accept: 'application/json', 'HX-Request': 'true' };
 

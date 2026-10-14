@@ -10,7 +10,7 @@ import { writeFileAtomic } from './output-files.mjs';
 
 // The file of a module of the template package `@polyspec/template` that this package depends on, such as
 // `@polyspec/template` or `@polyspec/template/render`, by the `import` condition of its `exports` (HY-70).
-export function templateExport(specifier) {
+function templateExport(specifier) {
   return fileURLToPath(import.meta.resolve(specifier));
 }
 

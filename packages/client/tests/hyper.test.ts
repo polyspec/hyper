@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { applyKept, decodeResponse, Hyper, parseAssignments, renderDocument, StylesheetError, valueToJson, type KeepStorage, type RequestContext } from '../src/index.js';
+import { applyKept, decodeResponse, Hyper, parseAssignments, renderDocument, StylesheetError, valueToJson, type Fetch, type KeepStorage, type RequestContext } from '../src/index.js';
 import { parseJson } from '@polyspec/template';
+import { NativeObject, SafeString } from '@polyspec/template/render';
 import { sources, testApplication, testApplicationFailing } from './application.js';
 
 interface Swap { region: string; text: string; swap: string }
@@ -257,6 +258,11 @@ describe('kept data', () => {
   it('writes JSON with map keys in their order', () => {
     expect(valueToJson(parseJson('{"2":1,"1":[true,null,"x"],"a":{"b":1.5}}'))).toBe('{"2":1,"1":[true,null,"x"],"a":{"b":1.5}}');
   });
+
+  it('writes a safe string as its text and refuses an application object, as the server does', () => {
+    expect(valueToJson(new Map([['html', new SafeString('<b>x</b>')]]))).toBe('{"html":"<b>x</b>"}');
+    expect(() => valueToJson(new NativeObject({}))).toThrow(TypeError);
+  });
 });
 
 describe('held data, restorations and kept values', () => {
@@ -268,7 +274,7 @@ describe('held data, restorations and kept values', () => {
     const hyper = new Hyper(testApplication(), htmx, {
       basePath: '', element, storage: new FakeStorage(), document: new FakeDocument(), currentUrl: () => 'http://localhost/items/7',
       fetch: async (input) => {
-        requested.push(String(input));
+        requested.push(input);
         return jsonResponse('http://localhost/items/7', '{}');
       },
     });
@@ -305,7 +311,7 @@ describe('held data, restorations and kept values', () => {
     const hyper = new Hyper(app, { process: () => undefined, config: { defaultTimeout: 60000 }, parseInterval: Number, swap: async () => undefined }, {
       basePath: '/api',
       storage: new FakeStorage(),
-      fetch: (input) => respond(String(input).includes('/list') ? listJson.replace('"heading":"H"', '"heading":"LIST"').replace('"regions":{', '"regions":{"side":{"count":1},') : '{"env":{"timezone":"Z"},"route":"item","params":{"id":"7"},"shared":{"title":"T","csrf":"t"},"regions":{"side":{"count":1},"content":{"id":"7"}},"kept":{}}'),
+      fetch: (input) => respond(input.includes('/list') ? listJson.replace('"heading":"H"', '"heading":"LIST"').replace('"regions":{', '"regions":{"side":{"count":1},') : '{"env":{"timezone":"Z"},"route":"item","params":{"id":"7"},"shared":{"title":"T","csrf":"t"},"regions":{"side":{"count":1},"content":{"id":"7"}},"kept":{}}'),
       document: page,
     });
     const first = hyper.renderLocation('/list');
@@ -633,7 +639,6 @@ describe('concurrent changes, saves and timeouts', () => {
 });
 
 describe('swaps, storage order and client-side documents', () => {
-  const homeJson = '{"env":{"timezone":"Z"},"route":"home","params":{},"shared":{"title":"T","csrf":"token"},"regions":{"content":{"name":"n"},"side":{"count":1}},"kept":{}}';
 
   it('renders the region again from held data when a response replaced it during the swap (HY-33)', async () => {
     const swaps: string[] = [];
@@ -760,7 +765,7 @@ describe('extension', () => {
       storage: new FakeStorage(),
       document: page,
       fetch: async (input) => {
-        requested.push(String(input));
+        requested.push(input);
         return jsonResponse('', itemJson);
       },
     });
@@ -774,7 +779,7 @@ describe('extension', () => {
 describe('stylesheet links (HY-64)', () => {
   const itemJson = '{"env":{"timezone":"Z"},"route":"item","params":{"id":"7"},"shared":{"title":"T","csrf":"t"},"regions":{"side":{"count":1},"content":{"id":"7"}},"kept":{}}';
   const htmx = { process: () => undefined, config: { defaultTimeout: 60000 }, parseInterval: Number, swap: async () => undefined };
-  const client = (page: FakeDocument, fetch: typeof globalThis.fetch) => new Hyper(testApplication(), htmx, { basePath: '/api', storage: new FakeStorage(), document: page, fetch, currentUrl: () => 'http://localhost/items/7' });
+  const client = (page: FakeDocument, fetch: Fetch) => new Hyper(testApplication(), htmx, { basePath: '/api', storage: new FakeStorage(), document: page, fetch, currentUrl: () => 'http://localhost/items/7' });
   // A promise with its resolve and reject functions.
   const deferred = () => {
     let resolve!: () => void;
@@ -803,7 +808,7 @@ describe('stylesheet links (HY-64)', () => {
     const page = new FakeDocument();
     const held = deferred();
     page.load = (html) => (html.includes('<i>7</i>') ? held.promise : Promise.resolve());
-    const hyper = client(page, async (input) => jsonResponse('', String(input).includes('/items/') ? itemJson : listJson.replace('"regions":{', '"regions":{"side":{"count":1},')));
+    const hyper = client(page, async (input) => jsonResponse('', input.includes('/items/') ? itemJson : listJson.replace('"regions":{', '"regions":{"side":{"count":1},')));
     const first = hyper.renderLocation('/items/7');
     await vi.waitFor(() => expect(page.sources).toHaveLength(1));
     await hyper.renderLocation('/list');
@@ -945,9 +950,8 @@ function obtaining(options: { storage?: FakeStorage; url?: string; answer?: (url
   const answer = options.answer ?? (async () => jsonResponse('http://localhost/list', listJson));
   const hyper = new Hyper(testApplication(), htmx, {
     basePath: '', element, storage: options.storage ?? new FakeStorage(), document: page, currentUrl: () => options.url ?? 'http://localhost/list?page=2',
-    fetch: async (input, init) => {
-      const url = String(input);
-      requests.push({ url, headers: { ...((init?.headers ?? {}) as Record<string, string>) } });
+    fetch: async (url, init) => {
+      requests.push({ url, headers: { ...((init.headers ?? {}) as Record<string, string>) } });
       return answer(url);
     },
   });
@@ -1065,7 +1069,7 @@ describe('obtaining the data of a page without embedded data (HY-93)', () => {
     const htmx = { process: () => undefined, config: { defaultTimeout: 60000 }, parseInterval: Number, swap: async (ctx: { text: string; target: Element; swap: string }) => { swaps.push({ region: '', text: ctx.text, swap: ctx.swap }); } };
     const hyper = new Hyper(testApplication(), htmx, {
       basePath: '', element: (id) => (id === 'hy-data' ? embedded : ({ id } as unknown as Element)), storage: new FakeStorage(), document: new FakeDocument(),
-      currentUrl: () => 'http://localhost/list', fetch: async (input) => { requests.push(String(input)); return jsonResponse('', listJson); },
+      currentUrl: () => 'http://localhost/list', fetch: async (input) => { requests.push(input); return jsonResponse('', listJson); },
     });
     await hyper.open();
     await hyper.set('rows', 'flag', true);

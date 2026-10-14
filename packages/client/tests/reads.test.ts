@@ -1,7 +1,7 @@
 // The cases of contracts/reads.json (HY-73): the browser package computes the read paths of every case, keeps the
 // expected data, and the kept data renders the same bytes as the data. PHP and Node keep the data in ReadsTest and
 // reads.test.ts.
-import { parse, parseJson, type Template } from '@polyspec/template';
+import { parse, parseJson } from '@polyspec/template';
 import { MapLoader, resolvePath } from '@polyspec/template/render';
 import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';

@@ -1,6 +1,6 @@
 import { bindValue, parseJson, type ListValue, type MapValue, type Value } from '@polyspec/template/render';
 import { applyRegionKept, copyValue, decodeResponse, presentRouteRegions, renderDocument, renderLayout, renderRegionOf, requireMap, toHtml, type Application, type DecodedResponse } from './response.js';
-import { ObtainError, requestDocument } from './obtain.js';
+import { ObtainError, requestDocument, type Fetch } from './obtain.js';
 import { PageStylesheets, StylesheetError } from './stylesheets.js';
 import { stripBasePath } from './router.js';
 import { routeTemplates } from './templates.js';
@@ -81,7 +81,7 @@ export interface HyperOptions {
   // Returns the element with an id; the default reads the document.
   element?: (id: string) => Element | null;
   // Performs the requests of client-side rendering and the document requests of HY-93; the default is the global fetch.
-  fetch?: typeof fetch;
+  fetch?: Fetch;
   // Stores kept values (HY-37); the default uses the browser document.
   storage?: KeepStorage;
   // Mounts client-side rendered documents; the default uses the browser document.
@@ -113,7 +113,7 @@ export class Hyper {
   private holds = 0;
   private obtaining: Promise<void> | null = null;
   private readonly element: (id: string) => Element | null;
-  private readonly request: typeof fetch;
+  private readonly request: Fetch;
   private readonly page: DocumentAdapter;
   private readonly currentUrl: () => string;
   readonly app: Application;

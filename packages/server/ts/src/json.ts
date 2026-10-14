@@ -19,7 +19,7 @@ export function encodeJson(value: Value): string {
 // PHP writes an integer in decimal and a float with the shortest digits that read back as the same float:
 // positional when the decimal point position is between -3 and 17, and otherwise d.ddde±x with at least one
 // fraction digit. A float with an integer value has no fraction, and negative zero is -0.
-export function encodeNumber(value: number): string {
+function encodeNumber(value: number): string {
   if (!Number.isFinite(value)) throw new RangeError('hyper: a number that is not finite has no JSON text');
   if (Object.is(value, -0)) return '-0';
   if (Number.isInteger(value) && Math.abs(value) <= MAX_SAFE_INTEGER) return String(value);
@@ -44,9 +44,9 @@ const ESCAPES: Record<string, string> = { '"': '\\"', '\\': '\\\\', '\b': '\\b',
 
 // PHP escapes the quote, the backslash, the control characters below U+0020 and the line and paragraph
 // separators U+2028 and U+2029; every other character, including / and DEL, stays as it is.
-export function encodeString(text: string): string {
+function encodeString(text: string): string {
   if (!text.isWellFormed()) throw new TypeError('hyper: a string with a lone surrogate is not UTF-8');
-  return `"${text.replace(/["\\\u0000-\u001f\u2028\u2029]/g, (char) => ESCAPES[char] ?? `\\u${char.charCodeAt(0).toString(16).padStart(4, '0')}`)}"`;
+  return `"${text.replace(/["\\\u2028\u2029[\p{Cc}--[\x7f-\x9f]]]/gv, (char) => ESCAPES[char] ?? `\\u${char.charCodeAt(0).toString(16).padStart(4, '0')}`)}"`;
 }
 
 // A number of a JSON text that has no value in the data model: a number outside ±(2^53 − 1) or one that is not

@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- H23.13: `valueToJson` of `@polyspec/hyper-client` writes a safe string as its text, where it wrote `"[object Object]"`, and an application object fails as on the server; the `fetch` option of the client is the exported type `Fetch`, which takes the URL as a string, as the client calls it. The findings of `make lint-ts` in this repository are fixed; the check stays out of the full suite until the kit release with K145 and K150.
 - H23.12: `make dependency-review UPDATE=1` reviewed the lock of kit 0.0.43 and raised `@playwright/test` to 1.64.1 with its lock.
 - H23.6: `make typecheck` builds the npm packages first, since `scripts/check-parity.mts` imports the declarations of `@polyspec/hyper-client` from its dist; the docs job of CI, which builds no package, failed with TS2307.
 - H23.12: hyper pins `@polyspec/kit` 0.0.43 with the integrity of the published file; its copies let oxlint allow the registrations of node:test, give knip the scripts, benchmarks and test files as entries, and turn `ae-missing-release-tag` of API Extractor off (kit K138, K139, K142).
