@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: e764a81d6e108c9e3d895b9d3d3f8e6a7efc2d0fe3d8642531bcf8f270766f43 -->
+<!-- source-sha256: bc621a3af5d3609e5079a75f1e8ec7d226f53fee2986a8133d5dbc1707637a94 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H23.8: kit의 dependency policy가 요구하는 대로 `tests/package-install/package-lock.json`은 `@polyspec/hyper-client`와 `@polyspec/hyper-server`를 이 저장소의 그 디렉터리에 link하고, `make package-check`는 `--install-links` 없이 `npm ci --offline`으로 설치한다. 설치된 복사본에 `src`가 없다는 test는 `npm pack --dry-run`이 각 package에 대해 나열하는 파일의 test가 되었다. 릴리스된 archive는 계속 `make release-consumer`가 다룬다.
 - H23.4: 개발 의존성은 최신 안정 release다: `vitest` 5.0.4, 루트 `composer.json`, `packages/hyper-server-php/composer.json`, `examples/board/composer.json`의 `laravel/pint` 1.32.1과 `phpunit/phpunit` 13.4.2. PHP 8.3을 요구하는 release 아래의 pin은 없어졌다. PHPUnit 13은 빈 location의 빈 key를 거부하므로 `ResultTest`의 data set 이름은 `0x`와 location의 hex다.
 - H23.10: hyper는 게시된 파일의 integrity로 `@polyspec/kit` 0.0.42를 pin한다. 그 bootstrap은 `var/tools/go.mod`를 쓰므로 mise가 `var/tools` 아래에 설치하는 Go는 독립된 module이다(kit K135).
 - H23.3: 공유 도구는 release asset의 URL과 integrity로 pin한 npm 패키지 `@polyspec/kit`이다. vendored `scripts/kit/`, `tests/kit/`, `.kit/kit.lock.json`, `kit.json`과 함께 `make kit-test`를 없앴다. Makefile은 `scripts/kit/kit-bootstrap.mk`를 include하여 패키지의 build된 도구를 실행하고, checkout은 `make install-tools TOOLS=npm`과 `make install-packages`로 시작하며, 모든 CI job이 이 둘을 먼저 실행한다. `make kit-sync`는 `kit.copies`의 복사본을 쓰고, `config/layout.yml`은 `make layout-check`의 폴더 지도를 정하며, `config/toolchain.json`은 uv와 alint를 선언하고, `.npmrc`는 `npm ci`의 audit을 끄며, pre-push hook은 `make push-gate-hook`을 실행한다. 이 저장소에는 `go.mod`도 중첩 ruff 설정도 없다.
