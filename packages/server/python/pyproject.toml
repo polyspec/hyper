@@ -9,8 +9,9 @@ description = "Server for the polyspec region protocol: manifest, routing, docum
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
-    # The wheel asset of the template release v0.0.6 with the sha256 of that asset (H21.4, H23.5). No Python lock exists
-    # for this package; `make install-python` installs this declaration into the venv of the package.
+    # The wheel asset of the template release v0.0.6 with the sha256 of that asset (H21.4, H23.5). `make install-python`
+    # installs this declaration into the venv of the package; pylock.toml, which make python-lock writes from it and
+    # constraints.txt, is the lock that the release consumer installs with the wheel of this package (H23.15).
     "polyspec-template @ https://github.com/polyspec/template/releases/download/v0.0.6/polyspec_template-0.0.6-py3-none-any.whl#sha256=9fd57fe2f08e8b6aaf110bb7cbba51b0661db172176214d3120ca7ae1626d662",
 ]
 
