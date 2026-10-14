@@ -78,6 +78,14 @@ install: install-tools ## Install the pinned tools, fetch the php-ext asset of t
 	$(ONLINE) node $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(COMPOSER) install
 	$(ONLINE) node $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(COMPOSER) install --working-dir=$(BOARD)
 
+# The release of hyper reads the template repository at TEMPLATE_TAG next to this checkout, and the installed dependencies:
+# the release workflow that kit vendors runs make release-prepare before release-tools (kit K132), and this rule checks the
+# template out where CI checks it out, fails on a checkout without the tag, and installs (H23.7).
+release-prepare:: ## Check out the template repository at TEMPLATE_TAG into TEMPLATE_REPOSITORY and install, for a release; ONLINE
+	test -d $(TEMPLATE_REPOSITORY) || $(ONLINE) git clone --quiet --depth 1 --branch $(TEMPLATE_TAG) https://github.com/polyspec/template.git $(TEMPLATE_REPOSITORY)
+	$(MAKE) template-tag
+	$(ONLINE) $(MAKE) install
+
 # Fails when the template checkout has no tag TEMPLATE_TAG; the full-run key names that commit (HY-80).
 template-tag: ## Fail when the template repository TEMPLATE_REPOSITORY has no tag TEMPLATE_TAG, naming the expected tag and the tags it has (HY-80)
 	@git -C $(TEMPLATE_REPOSITORY) rev-parse --verify --quiet 'refs/tags/$(TEMPLATE_TAG)^{commit}' >/dev/null || { \

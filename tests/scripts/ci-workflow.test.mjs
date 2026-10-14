@@ -59,7 +59,10 @@ function jobs(text) {
   }));
 }
 
-const workflows = () => readdirSync(WORKFLOWS).filter((name) => name.endsWith('.yml')).map((name) => ({ name, text: readFileSync(path.join(WORKFLOWS, name), 'utf8') }));
+// The workflows of this repository; release.yml is the copy of the release workflow of @polyspec/kit (kit.copies), whose
+// rules kit tests and make kit-check holds it to, so the rules of this file read the other workflows.
+const allWorkflows = () => readdirSync(WORKFLOWS).filter((name) => name.endsWith('.yml')).map((name) => ({ name, text: readFileSync(path.join(WORKFLOWS, name), 'utf8') }));
+const workflows = () => allWorkflows().filter((workflow) => workflow.name !== 'release.yml');
 
 test('the reader finds the jobs and the steps of a workflow', () => {
   const read = jobs('on:\n  push:\njobs:\n  first:\n    runs-on: x\n    steps:\n      - uses: a/b@c\n        with:\n          d: e\n      - run: make one\n        if: ${{ !cancelled() }}\n  second:\n    steps:\n      - id: s\n        run: make two\n');
@@ -103,9 +106,6 @@ const TRIGGERS = {
   'ci.yml': 'on:\n  push:\n    branches: [main]\n  workflow_dispatch:\n',
   'release.yml': "on:\n  push:\n    tags: ['v*', '**/v*']\n",
 };
-// The steps of release.yml in their order (the release tool of @polyspec/kit): verify the tagged commit, check the versions, build
-// the archives, create the release.
-const RELEASE_STEPS = ['make release-verify', 'make release-versions', 'make release-assets', 'make release-publish'];
 
 /**
  * The ways in which a workflow starts on a tag push. A tag push starts every workflow whose `push:` has no `branches:`
@@ -139,14 +139,14 @@ test('only release.yml starts on a tag, and no check of config/release.json come
 });
 
 test('each workflow declares exactly its triggers (HY-91, HY-95)', () => {
-  assert.deepEqual(workflows().map(workflow => workflow.name).sort(), Object.keys(TRIGGERS).sort());
-  for (const workflow of workflows()) {
+  assert.deepEqual(allWorkflows().map(workflow => workflow.name).sort(), Object.keys(TRIGGERS).sort());
+  for (const workflow of allWorkflows()) {
     const declared = /^(on:\n(?: {2}.*\n)+)/m.exec(workflow.text)?.[1] ?? '';
     assert.equal(declared, TRIGGERS[workflow.name], `${workflow.name} declares other triggers`);
   }
   // The trigger */v* matches a tag with one / only, so it misses a Go module tag deeper in the tree.
   assert.notEqual("on:\n  push:\n    tags: ['v*', '*/v*']\n", TRIGGERS['release.yml']);
-  for (const workflow of workflows()) assert.doesNotMatch(workflow.text, /pull_request|merge_group|gh-readonly-queue/, `${workflow.name} names a pull request or a merge group`);
+  for (const workflow of allWorkflows()) assert.doesNotMatch(workflow.text, /pull_request|merge_group|gh-readonly-queue/, `${workflow.name} names a pull request or a merge group`);
 });
 
 /**
@@ -296,38 +296,9 @@ test('ci-passed is the last job of ci.yml, runs always, needs every other job an
   }
 });
 
-/** Each broken rule of release.yml: one job with the permission to create a release, the tag in its environment, the
- * whole history checked out, the template repository at TEMPLATE_TAG and the release steps last and in order. */
-function releaseProblems(text) {
-  const found = [];
-  if (!/^permissions:\n {2}contents: write\n(?! )/m.test(text)) found.push('the permissions are not exactly contents: write, which gh release create needs');
-  const read = jobs(text);
-  if (read.map((job) => job.name).join() !== 'release') return [...found, `the jobs are ${read.map((job) => job.name).join(', ')}, not the one job release`];
-  const [job] = read;
-  if (!/^ {6}TAG: \$\{\{ github\.ref_name \}\}$/m.test(job.text)) found.push('the job release does not set TAG: ${{ github.ref_name }} in its environment');
-  if (!/^actions\/checkout@/.test(job.steps[0].uses ?? '') || !/^ {10}fetch-depth: 0$/m.test(job.steps[0].text)) found.push('the first step is not actions/checkout with fetch-depth: 0; the ancestry check needs origin/main');
-  const tag = /^TEMPLATE_TAG := (\S+)$/m.exec(readFileSync(path.join(ROOT, 'Makefile'), 'utf8'))?.[1];
-  const template = job.steps.filter((step) => /^ {10}repository: polyspec\/template$/m.test(step.text));
-  if (template.length !== 1 || !template[0].text.includes(`\n          ref: ${tag}\n`)) found.push(`the job release does not check out polyspec/template once at TEMPLATE_TAG ${tag}`);
-  const runs = job.steps.filter((step) => step.run !== undefined).map((step) => step.run);
-  if (runs.slice(-RELEASE_STEPS.length).join('\n') !== RELEASE_STEPS.join('\n')) found.push(`the steps run [${runs.join(', ')}], not the release steps [${RELEASE_STEPS.join(', ')}] last and in order`);
-  return found;
-}
-
-test('release runs its steps in order with the tag, the template tag and the permission to release', () => {
-  const text = readFileSync(path.join(WORKFLOWS, 'release.yml'), 'utf8');
-  assert.deepEqual(releaseProblems(text), []);
-  assert.deepEqual(jobs(text)[0].steps.filter((step) => step.run !== undefined).map((step) => step.run), ['make install-tools', 'make install', ...RELEASE_STEPS]);
-  const broken = {
-    order: [text.replace('run: make release-versions', 'run: make release-swap').replace('run: make release-verify', 'run: make release-versions').replace('run: make release-swap', 'run: make release-verify'), 'the steps run'],
-    'read only': [text.replace('  contents: write\n', '  contents: read\n'), 'the permissions are not exactly contents: write'],
-    'no tag': [text.replace('      TAG: ${{ github.ref_name }}\n', ''), 'the job release does not set TAG'],
-    shallow: [text.replace('          fetch-depth: 0\n', '          fetch-depth: 1\n'), 'the first step is not actions/checkout with fetch-depth: 0'],
-    'template ref': [text.replace(/^ {10}ref: v\d+\.\d+\.\d+\n/m, '          ref: main\n'), 'the job release does not check out polyspec/template once at TEMPLATE_TAG'],
-  };
-  for (const [name, [changed, message]] of Object.entries(broken)) {
-    assert.notEqual(changed, text, name);
-    const problems = releaseProblems(changed);
-    assert.ok(problems.some((problem) => problem.startsWith(message)), `${name}: ${problems.join('; ')}`);
-  }
+// release.yml is the release workflow of kit, byte for byte: kit runs make release-prepare before release-tools, and the
+// release-prepare:: rule of the Makefile checks out the template repository at TEMPLATE_TAG (H23.7,
+// tests/scripts/template-version.test.mjs).
+test('release.yml is the release workflow of @polyspec/kit (H23.7)', () => {
+  assert.equal(readFileSync(path.join(WORKFLOWS, 'release.yml'), 'utf8'), readFileSync(path.join(ROOT, 'node_modules/@polyspec/kit/workflows/release.yml'), 'utf8'));
 });
