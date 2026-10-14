@@ -4,6 +4,9 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+
+## 0.0.14
+- H23.15: the consumer projects of `tests/release-install` require template 0.0.6, which the archives of 0.0.14 require (H21.4), and the Composer consumer takes the template zip of the entry `template-php` of `config/release-assets.json` (`consumers.composer.polyspec`, H23.11-1); the entry `template-php-consumer` is removed, so each archive has one entry.
 - H23.13: `htmx.org` is a development dependency of the private root, which builds the board example, and no dependency of the published `@polyspec/hyper-client`, which types the htmx that an application passes to it; `config/knip-entries.json` declares the files that make runs outside the layout entries, Apple `container` of make virtiofs-check, and `tailwindcss` of `packages/build`, which a CSS text of `hyper-build-assets` imports.
 - H23.16: hyper pins `@polyspec/kit` 0.0.45, whose knip ignores the binaries of the pinned runtimes and reads `binaries` and `workspaces` of `config/knip-entries.json` (kit K152, K154).
 - H23.11-1: the Composer consumer project `tests/release-install/composer` takes the template zip from its artifact repository, into which release-consumer puts the zip of the entry `template-php-consumer` of `config/release-assets.json` (`consumers.composer.polyspec`, kit K140); its inline `package` repository is removed. The lock of the project moves to the artifact repository when the next release writes it.

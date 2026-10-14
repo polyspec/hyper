@@ -1,10 +1,13 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: d6b2c22567bc5d15117ca8f38998ec51ce1edfad4548d9ec8ab170635b741efb -->
+<!-- source-sha256: 5e270997f009b8add4af7da6e51a2c0cdd58b184152f82d1a5bae159804b24e1 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+## 0.0.14
+- H23.15: `tests/release-install`의 consumer 프로젝트는 0.0.14의 archive가 요구하는 template 0.0.6을 요구하며(H21.4), Composer consumer는 `config/release-assets.json`의 entry `template-php`의 template zip을 받는다(`consumers.composer.polyspec`, H23.11-1). entry `template-php-consumer`는 없어져 archive마다 entry가 하나다.
 - H23.13: `htmx.org`는 board 예제를 build하는 private root의 개발 의존성이며, 애플리케이션이 넘기는 htmx의 타입만 적는 공개 `@polyspec/hyper-client`의 의존성이 아니다. `config/knip-entries.json`은 make가 layout entry 밖에서 실행하는 파일, make virtiofs-check의 Apple `container`, `hyper-build-assets`의 CSS text가 import하는 `packages/build`의 `tailwindcss`를 선언한다.
 - H23.16: hyper는 `@polyspec/kit` 0.0.45를 pin한다. 그 knip은 pin된 런타임의 binary를 무시하고 `config/knip-entries.json`의 `binaries`와 `workspaces`를 읽는다(kit K152, K154).
 - H23.11-1: Composer consumer 프로젝트 `tests/release-install/composer`는 template zip을 그 artifact repository에서 받으며, release-consumer가 `config/release-assets.json`의 entry `template-php-consumer`의 zip을 거기에 둔다(`consumers.composer.polyspec`, kit K140). inline `package` repository는 없어졌다. 프로젝트의 lock은 다음 릴리스가 쓸 때 artifact repository로 옮겨간다.

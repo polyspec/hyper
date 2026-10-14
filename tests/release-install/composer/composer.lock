@@ -4,24 +4,24 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "be323e91e9bd87fd731abb0c1b5b9f69",
+    "content-hash": "8cb5bd35be6bcd65a807c64450923477",
     "packages": [
         {
             "name": "polyspec/hyper-server",
-            "version": "0.0.13",
+            "version": "0.0.14",
             "dist": {
                 "type": "zip",
-                "url": "artifacts/polyspec-hyper-server-php-0.0.13.zip",
+                "url": "artifacts/polyspec-hyper-server-php-0.0.14.zip",
                 "shasum": ""
             },
             "require": {
-                "php": "^8.2",
-                "polyspec/template": "0.0.5"
+                "php": ">=8.5",
+                "polyspec/template": "0.0.6"
             },
             "require-dev": {
-                "laravel/pint": "^1.0",
+                "laravel/pint": "^1.32.1",
                 "phpstan/phpstan": "^2.2.16",
-                "phpunit/phpunit": "^11.5"
+                "phpunit/phpunit": "^13.4.2"
             },
             "type": "library",
             "autoload": {
@@ -49,15 +49,19 @@
         },
         {
             "name": "polyspec/template",
-            "version": "0.0.5",
+            "version": "0.0.6",
             "dist": {
                 "type": "zip",
-                "url": "https://github.com/polyspec/template/releases/download/v0.0.5/polyspec-template-php-0.0.5.zip",
-                "shasum": "0e0f1b690ab394175a7999ef071c2c0780dcfa93"
+                "url": "artifacts/polyspec-template-php-0.0.6.zip",
+                "shasum": "02f0244bd3fd663b68576d0c740284306b3f8320"
             },
             "require": {
                 "ext-mbstring": "*",
                 "php": "^8.2"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.0",
+                "phpunit/phpunit": "^11.5"
             },
             "bin": [
                 "bin/template.php"
@@ -67,6 +71,19 @@
                 "psr-4": {
                     "Polyspec\\Template\\": "src/"
                 }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Polyspec\\Template\\Tests\\": "tests/"
+                }
+            },
+            "scripts": {
+                "test": [
+                    "phpunit"
+                ],
+                "lint": [
+                    "pint --test"
+                ]
             },
             "license": [
                 "MIT"

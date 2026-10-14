@@ -17,10 +17,9 @@ const VERSION = '0.0.6';
 const TAG = `v${VERSION}`;
 const RELEASE = `https://github.com/polyspec/template/releases/download/${TAG}`;
 const NPM_PACKAGES = ['@polyspec/template', '@polyspec/template-compiler'];
-// The consumer projects of tests/release-install install the published archives of the hyper release 0.0.13, and those
-// archives require template 0.0.5 exactly (npm and Composer). They keep that version until a release whose archives
-// require VERSION is published and its consumer locks are written from it (H21.3 procedure).
-const CONSUMER_VERSION = '0.0.5';
+// The consumer projects of tests/release-install install the archives of the hyper release 0.0.14, and those archives
+// require template 0.0.6 exactly (npm and Composer); the consumer locks are written from them on the release commit.
+const CONSUMER_VERSION = '0.0.6';
 const CONSUMER_RELEASE = `https://github.com/polyspec/template/releases/download/v${CONSUMER_VERSION}`;
 
 test('TEMPLATE_TAG of the Makefile is the tag of the single template release (H21.4, H23.11-2)', () => {
