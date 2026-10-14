@@ -35,7 +35,7 @@ interface Config { schema?: unknown; assets?: unknown }
 function isAsset(value: unknown): value is Asset {
   if (typeof value !== 'object' || value === null) return false;
   const { url, sha256, destination } = value as Record<string, unknown>;
-  return typeof url === 'string' && /^https:\/\//.test(url) && typeof sha256 === 'string' && /^[0-9a-f]{64}$/.test(sha256)
+  return typeof url === 'string' && url.startsWith('https://') && typeof sha256 === 'string' && /^[0-9a-f]{64}$/.test(sha256)
     && typeof destination === 'string' && /^var\/[\w./-]+$/.test(destination) && !destination.split('/').includes('..');
 }
 

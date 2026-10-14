@@ -3,7 +3,7 @@
 // again, and concurrent writers of one output both succeed.
 import assert from 'node:assert/strict';
 import { spawn, spawnSync, type SpawnSyncOptionsWithStringEncoding } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { test, type TestContext } from 'node:test';

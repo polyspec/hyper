@@ -119,5 +119,5 @@ test('the release prepares the template repository at the tag of the release thr
   const lines = dryRun('release-prepare', { variables: [`TEMPLATE_REPOSITORY=${repository}`] });
   assert.ok(lines.some((line) => line.includes(`git clone --quiet --depth 1 --branch ${TAG} https://github.com/polyspec/template.git ${repository}`)), lines.join('\n'));
   assert.ok(lines.some((line) => line.startsWith(`git -C ${repository} rev-parse --verify --quiet 'refs/tags/${TAG}^{commit}'`)), lines.join('\n'));
-  assert.ok(lines.some((line) => /make install$/.test(line)), lines.join('\n'));
+  assert.ok(lines.some((line) => line.endsWith('make install')), lines.join('\n'));
 });

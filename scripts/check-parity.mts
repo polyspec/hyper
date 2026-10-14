@@ -93,7 +93,6 @@ console.log(`template program: ${loaded ? 'native extension' : 'generated PHP'}`
 const run = serverRun('hyper-parity-');
 console.log(`run directory: ${run.directory}`);
 const { children } = run;
-let php: ServerClient | null = null;
 let node: ServerClient | null = null;
 let python: ServerClient | null = null;
 let failures = 0;
@@ -101,7 +100,6 @@ let compared = 0;
 try {
   const phpServer = await startPhp({ name: 'php', app, port: 0, ...(values.extension === undefined ? {} : { extension: values.extension }), env: { BOARD_DB: join(run.directory, 'php.db'), BOARD_BASE_PATH: '', BOARD_TIME }, children });
   const phpClient = client(phpServer.url);
-  php = phpClient;
   if (values.node) {
     const nodeServer = await startNode({ name: 'node', app, port: 0, env: { BOARD_DB: join(run.directory, 'node.db'), BOARD_SESSIONS: join(run.directory, 'sessions'), BOARD_BASE_PATH: '', BOARD_TIME }, children });
     node = client(nodeServer.url);

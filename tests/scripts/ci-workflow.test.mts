@@ -221,7 +221,7 @@ test('the workflow ci runs every matrix entry in a job that runs to its end and 
     };
     const check = index((step) => step.run === 'make ci-targets TARGETS="${{ matrix.targets }}" CI_REPORT=var/ci/${{ matrix.name }}', 'make ci-targets');
     const summary = index((step) => step.run === 'make ci-summary CI_REPORT=var/ci/${{ matrix.name }}', 'make ci-summary');
-    const report = index((step) => /^actions\/upload-artifact@/.test(step.uses ?? ''), 'report upload');
+    const report = index((step) => (step.uses ?? '').startsWith('actions/upload-artifact@'), 'report upload');
     assert.ok(check < summary && summary < report, `${job.name}: the report steps follow make ci-targets`);
     assert.match(item(job.steps, summary, job.name).text, /CI_STEPS: \$\{\{ toJSON\(steps\) \}\}/);
     const reportStep = item(job.steps, report, job.name);
@@ -241,7 +241,7 @@ test('the workflow ci runs every matrix entry in a job that runs to its end and 
     const order = [...BOOTSTRAP_RUNS, 'make install-tools'].map((run) => runs.indexOf(run));
     const checks = runs.findIndex((run) => run?.startsWith('make ci-targets'));
     assert.ok(order.every((at, index) => at >= 0 && (index === 0 || item(order, index - 1, 'the bootstrap steps') < at)) && item(order, -1, 'the bootstrap steps') < checks, `${job.name}: ${[...BOOTSTRAP_RUNS, 'make install-tools'].join(', ')} run in order before the checks`);
-    assert.ok(!job.steps.some((step) => /^actions\/setup-python@/.test(step.uses ?? '')), `${job.name}: no setup-python step`);
+    assert.ok(!job.steps.some((step) => (step.uses ?? '').startsWith('actions/setup-python@')), `${job.name}: no setup-python step`);
   }
 });
 
