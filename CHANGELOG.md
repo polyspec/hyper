@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- H23.19: hyper pins `@polyspec/kit` 0.0.47, whose oxlint fails every non-null assertion and applies the type-checked rules to the TypeScript files only (kit K156, K170).
 - H23.13: the TypeScript passes the type-checked rules of kit 0.0.46 and 0.0.47 (K155, K156, K157) without casts, `any` or non-null assertions. `@polyspec/hyper-client`: `checkManifest` takes the manifest as `unknown` and returns the declarations that it checked, and the new `checkTemplateIndex` checks a template index the same way; `Hyper`, `HtmxApi` and `HyperOptions` are generic over the region element (`Element` by default), `HtmxApi` has `find`, which the default `element` option uses, and `parseInterval` returns `number | undefined`, where undefined is no timeout, so the htmx of the page fits `HtmxApi` as it is; the types `RegionElement` and `AssignmentElement` are exported. `@polyspec/hyper-server`: `Services` binds only own keys, so a key of `Object.prototype` such as `constructor` has no factory; a session whose stored flash or kept values are not a map of values, or whose file holds a key that is not a string, fails with the file instead of passing the values on.
 - H23.18: hyper pins `@polyspec/kit` 0.0.46. The wheel build backend is declared once, as `pythonBackend` of `config/toolchain.json` (kit K166), and kit covers the root `composer.json` and `composer.lock` in the layout and `config/php-lint/composer.json` in the release coverage (K167).
 

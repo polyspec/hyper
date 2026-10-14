@@ -1,5 +1,5 @@
 <!-- doc-id: execution-checklist -->
-<!-- source-sha256: c20ea79685251e7bc6229788c0e23135c14d60b858ca2a1e1b4a3cc1ee0b9f5c -->
+<!-- source-sha256: e9deb865b84160e08aa205c892ce3d8fbe0e65469a9caade469022e75e953c13 -->
 # 실행 체크리스트
 
 ## [웨이브 1](waves.ko.md#wave-1) — 애플리케이션이 약하게 만들 수 없는 CSRF 방어
@@ -327,3 +327,4 @@
 | H23.16 | kit 0.0.45로 옮긴다(kit K152–K154): 게시된 파일의 integrity로 pin하고, `make kit-sync`가 pin된 런타임의 binary를 무시하는 `knip.json`을 복사하며, `config/knip-entries.json`은 H23.13이 필요로 하는 `binaries`와 `workspaces`를 받는다. `make dependency-review RECORD=1`의 검토가 새 lock을 기록한다. | `make kit-check`, `make dependency-policy-check` | [o] |
 | H23.17 | 릴리스 workflow가 wheel build backend를 설치한다. `config/toolchain.json`이 `config/release.json`의 `buildBackend`와 같은 requirement와 sha256으로 `pythonBackend`를 선언한다. `make release-tools`가 실행하는 `make install-tools`는 `pythonBackend`에서만 backend를 `var/tools/wheels`에 설치하기 때문이다(kit K166이 선언을 하나로 만든다). Red: tag v0.0.14의 릴리스 workflow(run 38636777866)가 asset을 build하는 단계에서 `var/tools/wheels/setuptools-84.0.0-py3-none-any.whl is missing; make release-backend fetches it`로 실패했고, GitHub Release는 만들어지지 않았다. | `var/tools/wheels/setuptools-84.0.0-py3-none-any.whl`을 지운 상태에서 `make install-tools`가 그것을 쓰고 `make release-tools`가 그것을 보고한다. `make toolchain-check` | [o] |
 | H23.18 | kit 0.0.46으로 옮긴다(kit K155, K157–K168). 게시된 파일의 integrity로 pin하고, `make kit-sync`가 `.oxlintrc.json`, `.golangci.yml`, bootstrap, 그리고 root의 `composer.json`과 `composer.lock`을 허용하는 `config/layout.kit.yml`을 복사한다. wheel build backend의 선언은 `config/toolchain.json`의 `pythonBackend` 하나이므로 `config/release.json`의 `buildBackend`를 없앤다(K166). kit이 다루게 된 `notReleased`의 `config/php-lint/composer.json`과 `config/layout.yml`의 `vars.root_files`의 `composer.json`, `composer.lock`도 없앤다(K167). `make dependency-review RECORD=1`의 검토가 새 lock과 게시된 Composer 패키지의 requirement를 기록한다(K168). | `make kit-check`, `make layout-check`, `make release-coverage`, `make dependency-policy-check` | [o] |
+| H23.19 | kit 0.0.47로 옮긴다(kit K156, K170). 게시된 파일의 integrity로 pin하고, `make kit-sync`가 모든 non-null assertion을 실패시키고 type-checked rule을 TypeScript 파일에만 적용하는 `.oxlintrc.json`을 복사하므로 0.0.46의 JavaScript finding은 없어진다. `make dependency-review RECORD=1`의 검토가 새 lock을 기록한다. | `make kit-check`, `make dependency-policy-check` | [ ] |
