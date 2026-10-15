@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- H23.22: hyper pins `@polyspec/kit` 0.0.50. knip reads the binaries that the scripts and tests run from `binaries` of `config/knip-entries.json`, and kit's `knip.json` ignores no binary (kit K176); the bootstrap defines `$(NODE)` before kit is installed (K185).
 
 ## 0.0.16
 - H23.20: hyper pins `@polyspec/kit` 0.0.48. Each checkout runs the Node.js 26.12.0 of `mise.toml`, which the bootstrap installs into `var/tools`, in place of `.node-version`; `engines.node` of the packages is `>=26.12.0`, and the workflows pin their actions by SHA (kit K169, K171).
