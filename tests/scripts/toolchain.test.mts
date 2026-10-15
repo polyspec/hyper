@@ -14,6 +14,8 @@ import { dryRun } from './make-dry-run.mts';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const NPM = path.join(ROOT, 'var/tools/bin/npm');
+// The node of mise.toml, which the bootstrap wraps in var/tools/bin and kit.mk names $(NODE) (kit K171).
+const NODE = path.join(ROOT, 'var/tools/bin/node');
 // Composer is a tool of mise.toml, run by its shim (kit K127).
 const COMPOSER = path.join(ROOT, 'var/tools/mise/shims/composer');
 // The built tools of @polyspec/kit, which the kit.mk of the package runs.
@@ -21,17 +23,17 @@ const KIT = 'node_modules/@polyspec/kit/dist';
 
 test('the recipes that run npm, Composer or PHP check the toolchain first, and install installs the tools first', () => {
   for (const target of ['ext', 'lint', 'templates-check']) {
-    assert.equal(dryRun(target)[0]?.trim(), `node ${KIT}/check-toolchain.mjs`, target);
+    assert.equal(dryRun(target)[0]?.trim(), `${NODE} ${KIT}/check-toolchain.mjs`, target);
   }
   const install = dryRun('install');
-  assert.deepEqual(install.slice(0, 2).map((line) => line.trim()), [`env -u npm_config_offline -u COMPOSER_DISABLE_NETWORK node ${KIT}/install-tools.mjs`, `node ${KIT}/check-toolchain.mjs`]);
+  assert.deepEqual(install.slice(0, 2).map((line) => line.trim()), [`env -u npm_config_offline -u COMPOSER_DISABLE_NETWORK ${NODE} ${KIT}/install-tools.mjs`, `${NODE} ${KIT}/check-toolchain.mjs`]);
 });
 
 test('the package manager installs of make install run under the install lock', () => {
   const lines = dryRun('install', { variables: ['TEMPLATE_DIR=var/products/template-dry-run'] });
   const installs = lines.filter((line) => / ci | install( |$)/.test(line) && /(npm|composer) /.test(line));
   assert.equal(installs.length, 2, lines.join('\n'));
-  assert.deepEqual(installs.filter((line) => !line.includes(`node ${KIT}/holder-lock.mjs run var/install.lock -- `)), []);
+  assert.deepEqual(installs.filter((line) => !line.includes(`${NODE} ${KIT}/holder-lock.mjs run var/install.lock -- `)), []);
 });
 
 // The make of the pin looks up the program of a recipe line without shell syntax on the PATH of its own process: an
@@ -108,9 +110,9 @@ test('every recipe runs npm and Composer offline, and $(ONLINE) lifts it (HY-89)
 test('only make install-tools, make install-packages, make install and make install-browser download, each download through $(ONLINE), and no check target downloads (HY-89)', (t) => {
   const directory = mkdtempSync(path.join(tmpdir(), 'hyper-downloads-'));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
-  assert.deepEqual(dryRun('install-tools').map((line) => line.trim()), [`${ONLINE}node ${KIT}/install-tools.mjs`]);
-  assert.deepEqual(dryRun('install-packages'), [`${ONLINE}var/tools/bin/npm ci --allow-remote=root`]);
-  assert.deepEqual(dryRun('install-browser'), [`${ONLINE}node node_modules/@playwright/test/cli.js install --with-deps chromium`]);
+  assert.deepEqual(dryRun('install-tools').map((line) => line.trim()), [`${ONLINE}${NODE} ${KIT}/install-tools.mjs`]);
+  assert.deepEqual(dryRun('install-packages'), [`${ONLINE}${NPM} ci --allow-remote=root`]);
+  assert.deepEqual(dryRun('install-browser'), [`${ONLINE}${NODE} node_modules/@playwright/test/cli.js install --with-deps chromium`]);
   const install = dryRun('install', { variables: [`TEMPLATE_DIR=${directory}`] });
   const downloads = install.filter((line) => / ci |composer install|install-tools\.mjs/.test(line.replace(/ -- /, ' ')));
   assert.ok(downloads.length > 0, install.join('\n'));

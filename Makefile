@@ -69,7 +69,7 @@ INSTALL_LOCK := var/install.lock
 # runs it through scripts/line-end.mts, which ends its output with a newline so the next line starts at column 0
 # (HY-84), and records the name when it fails, and `$(checks_result)` then fails and names every failed
 # check. A recipe that uses them starts with `@failed=; \` and joins its checks with `\`.
-check = echo '$(2)'; node scripts/line-end.mts '$(2)' || failed="$$failed $(1);";
+check = echo '$(2)'; $(NODE) scripts/line-end.mts '$(2)' || failed="$$failed $(1);";
 checks_result = test -z "$$failed" || { echo "failed checks:$$failed"; exit 1; }
 
 .DEFAULT_GOAL := help
@@ -80,11 +80,11 @@ help: ## List the targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
 
 install: install-tools ## Install the pinned tools, fetch the archives of the template release and install the Composer dependencies; make install-packages installs the npm packages (HY-89, H14.1-7)
-	node $(KIT)/check-toolchain.$(KIT_EXT)
+	$(NODE) $(KIT)/check-toolchain.$(KIT_EXT)
 	$(MAKE) --no-print-directory release-assets-fetch
 	$(MAKE) --no-print-directory install-python
-	$(ONLINE) node $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(COMPOSER) install
-	$(ONLINE) node $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(COMPOSER) install --working-dir=$(BOARD)
+	$(ONLINE) $(NODE) $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(COMPOSER) install
+	$(ONLINE) $(NODE) $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(COMPOSER) install --working-dir=$(BOARD)
 
 install-python: ## Make the venv of the Python server package and install the package into it in editable mode with its dependencies (S5)
 	$(MAKE) --no-print-directory python-venv DIR=$(PYTHON_VENV)
@@ -109,37 +109,37 @@ template-tag: ## Fail when the template repository TEMPLATE_REPOSITORY has no ta
 # a temporary directory, builds again only when the sources or the PHP build changed, and publishes the library with a
 # rename (HY-82). It runs offline: `make install` fetched the asset.
 ext: toolchain-check ## Build the native template extension from the unpacked php-ext asset with phpize of the PHP of PATH into build/ext (HY-48, H14.1-7)
-	node scripts/build-template-ext.mts $(CURDIR)/$(EXT)
+	$(NODE) scripts/build-template-ext.mts $(CURDIR)/$(EXT)
 
 packages: toolchain-check ## Build the JavaScript modules and type declarations of the npm packages into their dist directories; npm links the workspaces (HY-61, HY-79, HY-96)
-	cd $(JS_PACKAGE) && $(NPM) run --silent build -- --outDir dist.next-$$$$ && node $(CURDIR)/scripts/publish.mts directory dist.next-$$$$ dist
-	cd $(NODE_PACKAGE) && $(NPM) run --silent build -- --outDir dist.next-$$$$ && node $(CURDIR)/scripts/publish.mts directory dist.next-$$$$ dist
+	cd $(JS_PACKAGE) && $(NPM) run --silent build -- --outDir dist.next-$$$$ && $(NODE) $(CURDIR)/scripts/publish.mts directory dist.next-$$$$ dist
+	cd $(NODE_PACKAGE) && $(NPM) run --silent build -- --outDir dist.next-$$$$ && $(NODE) $(CURDIR)/scripts/publish.mts directory dist.next-$$$$ dist
 
 # The path repository of the board mirrors the PHP server package (symlink false, HY-79); composer reinstall mirrors the
 # working tree of the package again, so the board runs the current source. It reads no registry.
 hyper-server-php-install: ## Mirror packages/server/php into the vendor of the board again with composer reinstall (HY-79)
-	node $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(COMPOSER) reinstall --no-interaction polyspec/hyper-server --working-dir=$(BOARD)
+	$(NODE) $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(COMPOSER) reinstall --no-interaction polyspec/hyper-server --working-dir=$(BOARD)
 
 package-check: packages node-fixtures ## Install the npm packages into tests/package-install, type-check its test against their declarations and run it under node (HY-61)
-	cd tests/package-install && node ../../$(KIT)/holder-lock.$(KIT_EXT) run ../../$(INSTALL_LOCK) -- $(NPM) ci --offline --allow-remote=root --no-audit --no-fund
+	cd tests/package-install && $(NODE) ../../$(KIT)/holder-lock.$(KIT_EXT) run ../../$(INSTALL_LOCK) -- $(NPM) ci --offline --allow-remote=root --no-audit --no-fund
 	$(TSC) -p tests/package-install/tsconfig.json
-	node $(KIT)/run-tests.$(KIT_EXT) node --cwd tests/package-install -- package-install.test.ts
+	$(NODE) $(KIT)/run-tests.$(KIT_EXT) node --cwd tests/package-install -- package-install.test.ts
 
 server: packages hyper-server-php-install ## Build the board server program: its templates and the generated PHP program (HY-48)
-	node $(BUILD_PACKAGE)/bin/hyper-build-server.mjs --manifest $(BOARD)/app/app.json --templates $(BOARD)/templates --output $(BOARD)/build/server --php-namespace 'Polyspec\Hyper\Examples\Board\Program'
+	$(NODE) $(BUILD_PACKAGE)/bin/hyper-build-server.mjs --manifest $(BOARD)/app/app.json --templates $(BOARD)/templates --output $(BOARD)/build/server --php-namespace 'Polyspec\Hyper\Examples\Board\Program'
 
 server-fixtures: packages ## Build the server program of the PHP test fixtures
-	node $(BUILD_PACKAGE)/bin/hyper-build-server.mjs --manifest $(FIXTURES)/app.json --templates $(FIXTURES)/templates --output $(PHP_PACKAGE)/tests/build/server --php-namespace 'Polyspec\Hyper\Tests\Program'
+	$(NODE) $(BUILD_PACKAGE)/bin/hyper-build-server.mjs --manifest $(FIXTURES)/app.json --templates $(FIXTURES)/templates --output $(PHP_PACKAGE)/tests/build/server --php-namespace 'Polyspec\Hyper\Tests\Program'
 
 node-server: assets ## Build the board Node server into examples/board/build/node/server.mjs (HY-54)
 	$(TSC) -p $(BOARD)/node/tsconfig.json
 	$(ESBUILD) $(BOARD)/node/main.ts --bundle --platform=node --format=esm --target=node26 --log-level=warning --outfile=$(BOARD)/build/node/server.mjs
 
 node-fixtures: packages ## Build the template files of the PHP test fixtures for the Node server tests
-	node scripts/build-templates.mts --templates $(FIXTURES)/templates --output $(NODE_PACKAGE)/tests/build
+	$(NODE) scripts/build-templates.mts --templates $(FIXTURES)/templates --output $(NODE_PACKAGE)/tests/build
 
 assets: packages ## Build the board client bundle (SSR) and the single-file static shell (CSR)
-	node $(BUILD_PACKAGE)/bin/hyper-build-assets.mjs --app $(BOARD) --api /api --output $(BOARD)/build --static public/assets/app.css --static public/assets/reader.css
+	$(NODE) $(BUILD_PACKAGE)/bin/hyper-build-assets.mjs --app $(BOARD) --api /api --output $(BOARD)/build --static public/assets/app.css --static public/assets/reader.css
 
 test-js: toolchain-check ## Run the browser code tests, including the router conformance cases, and the type check
 	@failed=; \
@@ -177,7 +177,7 @@ analyse-php: ext ## Run PHPStan at level max on the source and the tests of the 
 	cd $(PHP_PACKAGE) && $(PHP_VENDOR)/bin/phpstan analyse --no-progress --memory-limit=$(PHPSTAN_MEMORY)
 
 templates-check: toolchain-check ## Check hx- attributes (HC-6) and region placements (HY-3, HY-30) of the board templates
-	node scripts/check-templates.mts --app $(BOARD)
+	$(NODE) scripts/check-templates.mts --app $(BOARD)
 
 # The TypeScript of scripts/, tests/ and benchmarks/ (tsconfig.json), which Node runs by type stripping and so never checks
 # itself (S9 of kit). scripts/check-parity.mts imports the types of @polyspec/hyper-client, which the package's build writes
@@ -186,7 +186,7 @@ typecheck: packages ## Check the types of the TypeScript of scripts/, tests/ and
 	$(TSC) -p tsconfig.json
 
 test-scripts: packages ## Run the tests of the check scripts, or only the files of TESTS
-	node $(KIT)/run-tests.$(KIT_EXT) node -- $(or $(TESTS),tests/scripts/)
+	$(NODE) $(KIT)/run-tests.$(KIT_EXT) node -- $(or $(TESTS),tests/scripts/)
 
 parity: assets server ext ## Compare PHP documents (generated program and native extension) with browser renders of document and region JSON
 	@failed=; \
@@ -195,27 +195,27 @@ parity: assets server ext ## Compare PHP documents (generated program and native
 	$(checks_result)
 
 server-parity: node-server server ## Compare the Node server responses with the PHP responses, with the browser comparison of parity (HY-55)
-	node scripts/check-parity.mts --app $(BOARD) --requests $(BOARD)/tests/parity/requests.json --node
+	$(NODE) scripts/check-parity.mts --app $(BOARD) --requests $(BOARD)/tests/parity/requests.json --node
 
 # The Python server renders with the template Python package of the template checkout (H15.3-3), so this comparison
 # runs where that checkout exists.
 server-parity-python: assets server ## Compare the Python server responses with the PHP responses, with the browser comparison of parity (HY-55)
-	node scripts/check-parity.mts --app $(BOARD) --requests $(BOARD)/tests/parity/requests.json --python
+	$(NODE) scripts/check-parity.mts --app $(BOARD) --requests $(BOARD)/tests/parity/requests.json --python
 
 bundle-size: assets ## Print the sizes of the SSR script, the CSR shell and the largest template with their gzip limits; a size above its limit is a warning, never a failure
-	node scripts/check-bundle-size.mts --app $(BOARD) --output $(BOARD)/build --limits config/bundle-size.json
+	$(NODE) scripts/check-bundle-size.mts --app $(BOARD) --output $(BOARD)/build --limits config/bundle-size.json
 
 e2e: assets server ## Run the SSR, CSR, no-JavaScript and comparison flows in Chromium on servers of the run
-	node scripts/run-e2e.mts
+	$(NODE) scripts/run-e2e.mts
 
 virtiofs-check: toolchain-check ## Write the outputs of the server build and of the output copies on a virtiofs bind mount of Apple container (HY-68); a target of the full suite on Darwin
-	node $(KIT)/run-tests.$(KIT_EXT) node -- tests/virtiofs/
+	$(NODE) $(KIT)/run-tests.$(KIT_EXT) node -- tests/virtiofs/
 
 serve-demo: assets server ## Serve SSR on :8080, CSR on :8081 and the comparison page on :8081/compare; fails with the holder while another demo runs
-	node scripts/serve-demo.mts --db $(BOARD)/var/board.db --ssr 8080 --edge 8081 --api 8082 --lock $(SERVE_DEMO_LOCK)
+	$(NODE) scripts/serve-demo.mts --db $(BOARD)/var/board.db --ssr 8080 --edge 8081 --api 8082 --lock $(SERVE_DEMO_LOCK)
 
 serve-demo-unlock: ## Remove the lock of a demo whose process has ended
-	node $(KIT)/holder-lock.$(KIT_EXT) clear $(SERVE_DEMO_LOCK)
+	$(NODE) $(KIT)/holder-lock.$(KIT_EXT) clear $(SERVE_DEMO_LOCK)
 
 bench-server: server ext ## Measure PHP request handling and rendering cost per row count, with the generated program and with the native extension
 	@failed=; \
@@ -224,7 +224,7 @@ bench-server: server ext ## Measure PHP request handling and rendering cost per 
 	$(checks_result)
 
 bench-browser: assets server ## Measure first screens, navigation, hy-set phases and load, and memory in Chromium
-	node benchmarks/browser.mts --runs 15
+	$(NODE) benchmarks/browser.mts --runs 15
 
 bench-server-smoke: assets server ## Run the PHP benchmark once per measurement so that a change that breaks it fails make check
 	php benchmarks/server.php --app $(BOARD) --iterations 1 > /dev/null
@@ -254,12 +254,12 @@ TEMPLATE_COMMIT = $(shell git -C $(TEMPLATE_REPOSITORY) rev-parse --verify --qui
 FULL_RUN_KEYS = --key template=$(TEMPLATE_COMMIT)
 
 check: template-tag ## Run every check through the guard: once per tree, when no checklist task is [~]
-	node $(KIT)/full-run.$(KIT_EXT) run $(FULL_RUN_KEYS) $(CHECK_TARGETS)
+	$(NODE) $(KIT)/full-run.$(KIT_EXT) run $(FULL_RUN_KEYS) $(CHECK_TARGETS)
 
 rerun-failed: template-tag
 
 install-browser: ## Install Chromium of the pinned Playwright and its system libraries; the CI group board runs it (HY-91)
-	$(ONLINE) node node_modules/@playwright/test/cli.js install --with-deps chromium
+	$(ONLINE) $(NODE) node_modules/@playwright/test/cli.js install --with-deps chromium
 
 # The steps of .github/workflows/release.yml for the tag TAG (release of @polyspec/kit, config/release.json), in this order:
 # release-verify requires the tagged commit on origin/main with the check ci-passed passed, release-versions the version of

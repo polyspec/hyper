@@ -1,16 +1,16 @@
 <!-- doc-id: dependencies -->
-<!-- source-sha256: b283bf4f2985f514a9513993687367f237b13290d4318f8fd5f448abcdb0a69b -->
+<!-- source-sha256: b47d4571e28ded1d4dee25314749d3f2116b51012ebb1d500d9add4ab0938978 -->
 # 의존성
 
 [English](dependencies.md).
 
-모든 의존성은 선언한 런타임 범위(`make toolchain-check`가 요구하는 하한인 Node.js 26.11.1, PHP 8.5)를 지원하는 최신 안정 버전을 사용한다. 정확한 버전 고정은 그 이유와 고정을 해제하는 조건을 기록한다.
+모든 의존성은 선언한 런타임 범위(`make toolchain-check`가 요구하는 하한인 Node.js 26.12.0, PHP 8.5)를 지원하는 최신 안정 버전을 사용한다. 정확한 버전 고정은 그 이유와 고정을 해제하는 조건을 기록한다.
 
 2026-10-14의 검토(`make dependency-review UPDATE=1`)는 PHP 하한 8.5가 허용하는 대로 `vitest`를 5.0.4로, `laravel/pint`를 1.32.1로, `phpunit/phpunit`을 13.4.2로 올렸다(H23.4). `packages/server/php/composer.json`도 같은 범위를 요구한다. `config/dependency-policy.json`은 검토가 읽는 Composer와 Python manifest를 밝히고, `make dependency-review RECORD=1`은 검토 기록 `config/dependency-review.json`을 쓴다.
 
 | 의존성 | 버전 | 종류 | 이유 | 해제 조건 |
 |---|---|---|---|---|
-| Node.js, npm, PHP, Composer | `.node-version` 26.11.1, `packageManager` npm 12.2.0, `config/toolchain.json`의 정확한 Composer 2.10.3과 `.php-version`의 minor인 PHP 8.5. make는 pin하지 않는다 | 도구 | 같은 도구로만 build와 검사가 같은 결과를 낸다(HY-81). npm 12는 `npm pack --json`을 npm 11과 다르게 출력한다. | 없음. 새 release는 pin을 바꾸는 commit이 된다. PHP patch release는 통과하고 full run이 그것을 기록한다. |
+| Node.js, npm, PHP, Composer | `mise.toml`의 `node` 26.12.0, `packageManager` npm 12.2.0, `config/toolchain.json`의 정확한 Composer 2.10.3과 `.php-version`의 minor인 PHP 8.5. make는 pin하지 않는다 | 도구 | 같은 도구로만 build와 검사가 같은 결과를 낸다(HY-81). npm 12는 `npm pack --json`을 npm 11과 다르게 출력한다. | 없음. 새 release는 pin을 바꾸는 commit이 된다. PHP patch release는 통과하고 full run이 그것을 기록한다. |
 | Python | `mise.toml`의 `python` 3.14.8, `packages/server/python`의 `requires-python >= 3.14` | 도구 | Python 서버 package는 고정된 minor 3.14를 요구한다. CI가 그 build만 테스트하므로 그렇다(H20.12). | 없음. 새 안정 release는 `mise.toml`을 바꾸는 commit이 된다. |
 | `packages/server/python/pyproject.toml`의 `setuptools` | `84.0.0` 정확히 고정 | build | `polyspec-hyper-server`의 build backend다. 같은 backend release로 build하도록 정확히 고정한다. 다른 저장소의 Python 패키지 `polyspec-ordered-json`과 `polyspec-template`이 고정한 release와 같아서, Python 패키지들이 build backend를 공유한다 (H15.3-13). | 더 새로운 stable setuptools release를 채택하는 dependency 검토에서 pin을 바꾸고, 그 pin을 고정한 형제 Python 패키지도 같은 변경에서 바꾼다. |
 | `pyproject.toml`의 `polyspec-template` (`packages/server/python`) | `polyspec/template`의 release `v0.0.6`의 wheel asset과 그 sha256 (`https://github.com/polyspec/template/releases/download/v0.0.6/polyspec_template-0.0.6-py3-none-any.whl#sha256=9fd57fe2f08e8b6aaf110bb7cbba51b0661db172176214d3120ca7ae1626d662`) | runtime | 0.1 전에는 polyspec package를 registry에 올리지 않으므로 GitHub Release의 wheel asset에서 설치하고, 그 asset의 sha256으로 검증한다(H23.5). | polyspec가 Python 패키지를 registry에 올릴 때 기록을 지웁니다. |

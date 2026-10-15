@@ -5,7 +5,7 @@
 
 The build commands of the region protocol (HY-96). An application installs the package and runs its two bins from `node_modules/.bin`; the package reads the browser package `@polyspec/hyper-client` and the template packages `@polyspec/template` and `@polyspec/template-compiler` at the exact versions that it requires (HY-70).
 
-Node.js 26.11.1 or later. The package publishes its JavaScript modules as they are, without a build step.
+Node.js 26.12.0 or later. The package publishes its JavaScript modules as they are, without a build step.
 
 ## Server program
 
