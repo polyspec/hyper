@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- H23.31: `AGENTS.md` points to the local links of 0.0.x development that kit `docs/plans/local-links.md` describes; links are never committed.
 
 ## 0.0.18
 - H23.29: hyper pins `@polyspec/kit` 0.0.53.

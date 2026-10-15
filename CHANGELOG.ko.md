@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: dbf34677e9e2a0dd55647b6a25270cf5879fd5023cec58441b7e5bdd50207b81 -->
+<!-- source-sha256: 8e6d4a4332da51493bbb41bb1e52003af7db0a7c3e30acca52fa6d3157c42582 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H23.31: `AGENTS.md`는 kit `docs/plans/local-links.md`가 설명하는 0.0.x 개발의 local link를 가리킨다. link는 커밋하지 않는다.
 
 ## 0.0.18
 - H23.29: hyper는 `@polyspec/kit` 0.0.53을 pin한다.
