@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: f527229fd8c2c1fc0d843e67d6033d48859822881a7f5d947696841a6279ea9c -->
+<!-- source-sha256: e618001200e4d8e1d4ad8299835a48bd4864a717ec7b3fe8f4091701633aac21 -->
 # 개발
 
 [English](development.md).
@@ -9,7 +9,7 @@
 - pin한 도구(HY-81): `mise.toml`의 Node.js와 Python(mise가 `mise.lock`의 digest에 맞춰 설치한다. Node.js는 `make install-tools TOOLS=npm`이, Python은 `make install-tools`가 설치한다), `pdo_sqlite`가 있는 `.php-version`의 PHP, GNU Make 3.81 이상, 네이티브 확장을 위한 그 PHP의 phpize, php-config와 C compiler. `make install`은 `packageManager`의 npm과 `config/toolchain.json`의 Composer를 `var/tools`에 설치한다(`make install-tools`). `make toolchain-check`는 pin과 다른 모든 도구를 밝힌다.
 - 공유 도구: npm 패키지 `@polyspec/kit`이며, `package.json`은 그 release asset의 URL로, `package-lock.json`은 integrity로 pin하고 `config/*.json`이 이를 설정한다. checkout은 `scripts/kit/bootstrap/`의 복사된 installer로 `packageManager`의 npm을 설치하는 `make install-tools TOOLS=npm`과, 그 npm으로 `package-lock.json`을 설치하는 `make install-packages`로 시작한다. Makefile은 패키지의 `kit.mk`를 include하는 `scripts/kit/kit-bootstrap.mk`를 include한다. `make kit-sync`는 설치된 패키지에서 `kit.copies`의 복사본을 쓰고, `make kit-check`는 패키지가 lock과 다르거나 복사본이 패키지와 다르거나 `config/*.json`이 schema를 어기면 실패한다.
 - template package: npm은 `@polyspec/template`과 `@polyspec/template-compiler`를 template release의 tarball에서, Composer는 `polyspec/template`을 그 zip에서 `package.json`, `composer.json`과 그 lock이 고정한 대로 설치한다(HY-70). `make install`이 이를 download한다.
-- 네이티브 template 확장: release `v0.0.6`(`TEMPLATE_TAG`)의 php-ext archive `polyspec-template-php-ext-php-0.0.6.zip`이며, `config/release-assets.json`이 sha256으로 pin한다(H14.1-7). `make install`이 kit의 `make release-assets-fetch`로 `$(ONLINE)`을 거쳐 내려받아 `var/products/template-ext`에 풀고, `make ext`가 offline으로 build한다. 같은 파일이 php zip `polyspec-template-php-0.0.6.zip`을 pin하며, `make install`은 Composer가 설치하기 전에 그것을 확인해 Composer artifact repository `var/products/template-php`에 둔다(H23.11). `../template`(`TEMPLATE_REPOSITORY`)의 template 저장소는 full-run key가 밝히는 tag의 commit을 읽을 때만 쓰며, tag가 없으면 `make template-tag`가 실패한다.
+- 네이티브 template 확장: release `v0.0.8`(`TEMPLATE_TAG`)의 php-ext archive `polyspec-template-php-ext-php-0.0.8.zip`이며, `config/release-assets.json`이 sha256으로 pin한다(H14.1-7). `make install`이 kit의 `make release-assets-fetch`로 `$(ONLINE)`을 거쳐 내려받아 `var/products/template-ext`에 풀고, `make ext`가 offline으로 build한다. 같은 파일이 php zip `polyspec-template-php-0.0.8.zip`을 pin하며, `make install`은 Composer가 설치하기 전에 그것을 확인해 Composer artifact repository `var/products/template-php`에 둔다(H23.11). `../template`(`TEMPLATE_REPOSITORY`)의 template 저장소는 full-run key가 밝히는 tag의 commit을 읽을 때만 쓰며, tag가 없으면 `make template-tag`가 실패한다.
 - network: `make install-tools`, `make install-packages`, `make install`, `make install-browser`만 download한다. 다른 모든 recipe는 npm, Composer를 offline으로 실행하므로(`npm_config_offline`, `COMPOSER_DISABLE_NETWORK`) 없는 download는 바로 실패하고 그것을 만드는 설치 target을 밝힌다(HY-89).
 - Playwright용 Chromium: `make install-browser`. pin한 Playwright의 Chromium과, Linux에서는 그 system library를 설치한다.
 
@@ -121,7 +121,7 @@ npm 12.2.0은 `allow-remote=root`에서 npm consumer 프로젝트의 lock을 쓰
 
 ### 개발 구성
 
-private root는 checkout 안의 패키지를 찾아 주며 공개되지 않는다. root `package.json`은 npm이 link하는 npm workspace `packages/client`, `packages/build`, `packages/server/ts`(HY-79)와, `@polyspec/template`과 `@polyspec/template-compiler`를 template release의 tarball URL로 선언하고, 그 정확한 버전이 이 tarball로 풀리게 하는 `overrides`를 둔다. npm 12는 기본으로 URL 의존성을 설치하지 않으므로 `.npmrc`가 `allow-remote=root`를 둔다. root `composer.json`은 path repository `packages/server/php`와, 확인된 template release zip의 artifact repository `var/products/template-php`에서 root `vendor`로 설치하고 `packages/server/php`의 namespace를 tree에 연결한다. `composer.lock`이 그 lock이다. 두 root는 template release v0.0.6을 받는다(HY-70). 그 tag는 `make template`이 네이티브 확장 소스를 복사하는 Makefile의 `TEMPLATE_TAG`이다(HY-80).
+private root는 checkout 안의 패키지를 찾아 주며 공개되지 않는다. root `package.json`은 npm이 link하는 npm workspace `packages/client`, `packages/build`, `packages/server/ts`(HY-79)와, `@polyspec/template`과 `@polyspec/template-compiler`를 template release의 tarball URL로 선언하고, 그 정확한 버전이 이 tarball로 풀리게 하는 `overrides`를 둔다. npm 12는 기본으로 URL 의존성을 설치하지 않으므로 `.npmrc`가 `allow-remote=root`를 둔다. root `composer.json`은 path repository `packages/server/php`와, 확인된 template release zip의 artifact repository `var/products/template-php`에서 root `vendor`로 설치하고 `packages/server/php`의 namespace를 tree에 연결한다. `composer.lock`이 그 lock이다. 두 root는 template release v0.0.8을 받는다(HY-70). 그 tag는 `make template`이 네이티브 확장 소스를 복사하는 Makefile의 `TEMPLATE_TAG`이다(HY-80).
 
 ### 릴리스 에셋 설치
 
@@ -188,10 +188,10 @@ workflow `.github/workflows/ci.yml`은 `main`의 push와 모든 수동 실행(`w
 build 패키지 `@polyspec/hyper-build`의 bin `hyper-build-server --manifest <app.json> --templates <directory> --output <directory> --php-namespace <namespace>`는 서버 프로그램을 만든다(HY-48, HY-96). `make server`는 checkout에서 `node packages/build/bin/hyper-build-server.mjs`로 실행한다.
 
 1. `templates/`: 애플리케이션의 모든 템플릿과 예약 템플릿 `hyper/data.tpl`. 네이티브 확장이 이 파일을 읽는다.
-2. `program.php`: 같은 템플릿을 `@polyspec/hyper-build`가 요구하는 compiler package `@polyspec/template-compiler`로(HY-70), 주어진 PHP 네임스페이스(게시판은 `Polyspec\Hyper\Examples\Board\Program`)에 컴파일한 generated PHP 프로그램. `program.json`은 그 네임스페이스를 기록하며, 렌더러가 이 파일을 읽는다. 서버가 각 영역을 단독으로 렌더하므로, 모든 템플릿은 대상으로 렌더되고 모든 정의는 HTML이다.
+2. `php/`: 같은 템플릿을 `@polyspec/hyper-build`가 요구하는 compiler package `@polyspec/template-compiler`로(HY-70), 주어진 PHP 네임스페이스(게시판은 `Polyspec\Hyper\Examples\Board\Program`)에 클래스마다 파일 하나인 PSR-4 파일로 컴파일한 generated PHP 프로그램. `program.json`은 그 네임스페이스를 기록하며, 렌더러가 이 파일을 읽는다. 애플리케이션은 `composer.json`의 `autoload.psr-4`에서 그 네임스페이스를 이 디렉터리에 연결한다. `examples/board/composer.json`은 `Polyspec\Hyper\Examples\Board\Program\`을 `build/server/php/`에, root `composer.json`은 테스트 fixture의 네임스페이스를 `packages/server/php/tests/build/server/php/`에 연결하며, 렌더러는 클래스 `GeneratedProgram`을 Composer의 autoload로 불러온다. 서버가 각 영역을 단독으로 렌더하므로, 모든 템플릿은 대상으로 렌더되고 모든 정의는 HTML이다.
 3. `reads.json`: `@polyspec/hyper-client`의 `routeReads`로 계산한 모든 라우트의 read path(HY-73).
 
-PHP가 `polyspec_template`을 불러왔으면 네이티브 확장으로, 그렇지 않으면 `program.php`로 렌더한다. 두 출력은 같은 원본에서 만들어지므로, 서버는 확장을 불러오는지 여부만으로 엔진을 바꿀 수 있다.
+PHP가 `polyspec_template`을 불러왔으면 네이티브 확장으로, 그렇지 않으면 `php/`의 generated 프로그램으로 렌더한다. 두 출력은 같은 원본에서 만들어지므로, 서버는 확장을 불러오는지 여부만으로 엔진을 바꿀 수 있다.
 
 ## Node 서버
 

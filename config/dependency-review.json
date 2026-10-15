@@ -1,11 +1,11 @@
 {
   "schema": 1,
   "comment": "Written by make dependency-review RECORD=1 (scripts/kit/dependency-review.mts) from the registries; make dependency-policy-check compares the checkout with it without a network.",
-  "reviewed": "2026-10-15T03:22:37.412Z",
+  "reviewed": "2026-10-15T05:07:39.152Z",
   "locks": [
     {
       "lock": "package-lock.json",
-      "sha256": "fb41ae0ac625f1c3b05a1898d91e7530021c903a7dbbb47bd0399552c0ee39e8",
+      "sha256": "0674ab5cffe75886e0a36f1c312b9826f7bb27f4f534fdbc7b54d5b8ac118525",
       "advisories": [
         {
           "package": "sprintf-js",
@@ -19,22 +19,22 @@
     },
     {
       "lock": "tests/package-install/package-lock.json",
-      "sha256": "a9428d59143a909ff0f7a9613e4bee4dec50524169e5abad983bd66f2bf0295a",
+      "sha256": "fbb1d89152fa3b517da43bcdbeb1445e2b72dd65842888a439edac993de6bc40",
       "advisories": []
     },
     {
       "lock": "composer.lock",
-      "sha256": "254fd3b9999627a0b80890ef8873dab987844b8c7ab99fa3edb085840312fd88",
+      "sha256": "649ca4d6908c0c4503754826df42d3c4e2d60171677a90dce73ce99462c58b13",
       "advisories": []
     },
     {
       "lock": "examples/board/composer.lock",
-      "sha256": "5438394faab16fe3f1d780dcd346261047a6be9387309cb3e215bf5eb7f3724a",
+      "sha256": "7645858a262ee5aaafec9ce205651d5439f4f63a5b046d065e4131627c5f02a9",
       "advisories": []
     },
     {
       "lock": "packages/server/python/pylock.toml",
-      "sha256": "8b604294f6a7b907b2a5158772576cc879543b9e0fcd0e1d70af66574ef37e0d",
+      "sha256": "d60d8857cc1a603caf41822f549aa3cb094756d00a816d7bd9417551c358d4d2",
       "advisories": []
     }
   ],
@@ -113,8 +113,8 @@
       "ecosystem": "composer",
       "manifest": "composer.json",
       "package": "polyspec/template",
-      "version": "0.0.6",
-      "latest": "0.0.6"
+      "version": "0.0.8",
+      "latest": "0.0.8"
     },
     {
       "ecosystem": "composer",
@@ -141,15 +141,15 @@
       "ecosystem": "composer",
       "manifest": "packages/server/php/composer.json",
       "package": "polyspec/template",
-      "version": "0.0.6",
-      "latest": "0.0.6"
+      "version": "0.0.8",
+      "latest": "0.0.8"
     },
     {
       "ecosystem": "composer",
       "manifest": "examples/board/composer.json",
       "package": "polyspec/template",
-      "version": "0.0.6",
-      "latest": "0.0.6"
+      "version": "0.0.8",
+      "latest": "0.0.8"
     },
     {
       "ecosystem": "composer",
@@ -162,8 +162,43 @@
       "ecosystem": "composer",
       "manifest": "packages/server/php/composer.json",
       "package": "polyspec/template",
-      "version": "0.0.6",
-      "latest": "0.0.6"
+      "version": "0.0.8",
+      "latest": "0.0.8"
+    },
+    {
+      "ecosystem": "pypi",
+      "manifest": "packages/server/python/pylock.toml",
+      "package": "attrs",
+      "version": "26.1.0",
+      "latest": "26.1.0"
+    },
+    {
+      "ecosystem": "pypi",
+      "manifest": "packages/server/python/pylock.toml",
+      "package": "jsonschema",
+      "version": "4.26.0",
+      "latest": "4.26.0"
+    },
+    {
+      "ecosystem": "pypi",
+      "manifest": "packages/server/python/pylock.toml",
+      "package": "jsonschema-specifications",
+      "version": "2025.9.1",
+      "latest": "2025.9.1"
+    },
+    {
+      "ecosystem": "pypi",
+      "manifest": "packages/server/python/pylock.toml",
+      "package": "referencing",
+      "version": "0.37.0",
+      "latest": "0.37.0"
+    },
+    {
+      "ecosystem": "pypi",
+      "manifest": "packages/server/python/pylock.toml",
+      "package": "rpds-py",
+      "version": "2026.9.1",
+      "latest": "2026.9.1"
     },
     {
       "ecosystem": "pypi",

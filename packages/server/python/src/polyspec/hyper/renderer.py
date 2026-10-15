@@ -1,7 +1,7 @@
 """Renders documents and single regions with the template package `polyspec-template` (HY-12, HY-13, HY-30, HY-31,
 HY-48). The server program that `hyper-build-server` of `@polyspec/hyper-build` built holds the templates and the
-read paths; the Python server reads its `templates` directory and its `reads.json` and needs neither `program.php`
-nor `program.json`, which the generated PHP program of the same templates uses. The caller binds each root of a
+read paths; the Python server reads its `templates` directory and its `reads.json` and needs neither the directory
+`php` nor `program.json`, which the generated PHP program of the same templates uses. The caller binds each root of a
 document once with `bind`, and every render merges the bound roots, so the renders of a document check no value
 again (VAL-22)."""
 

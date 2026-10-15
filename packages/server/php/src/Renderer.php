@@ -27,7 +27,7 @@ final class Renderer
     public static function open(string $program, string $timezone): self
     {
         // A missing build fails here and names the missing file (HY-48).
-        foreach (["{$program}/program.php" => is_file(...), "{$program}/program.json" => is_file(...), "{$program}/reads.json" => is_file(...), "{$program}/templates" => is_dir(...)] as $path => $exists) {
+        foreach (["{$program}/php" => is_dir(...), "{$program}/program.json" => is_file(...), "{$program}/reads.json" => is_file(...), "{$program}/templates" => is_dir(...)] as $path => $exists) {
             if (!$exists($path)) {
                 throw new \InvalidArgumentException("{$path} of the server program {$program} is missing; hyper-build-server of @polyspec/hyper-build builds it");
             }
@@ -35,14 +35,17 @@ final class Renderer
         if (extension_loaded('polyspec_template')) {
             return new self(new NativeEngine("{$program}/templates"), 'native', $timezone);
         }
-        // The generated program is declared in the namespace that the build chose (HY-48).
+        // The generated program is the PSR-4 files of the namespace that the build chose, in the directory php, and the
+        // autoload of Composer loads them through autoload.psr-4 of the application (HY-48).
         $declaration = json_decode((string) file_get_contents("{$program}/program.json"), true, flags: JSON_THROW_ON_ERROR);
         $namespace = is_array($declaration) ? $declaration['namespace'] ?? null : null;
         if (!is_string($namespace)) {
             throw new \InvalidArgumentException("{$program}/program.json names no namespace");
         }
-        require_once "{$program}/program.php";
-        $class = "\\{$namespace}\\GeneratedProgram";
+        $class = "{$namespace}\\GeneratedProgram";
+        if (!class_exists($class)) {
+            throw new \InvalidArgumentException("the autoload loads no class {$class} of the server program {$program}; map the namespace {$namespace} to {$program}/php in autoload.psr-4 of composer.json");
+        }
         $generated = new $class();
         if (!$generated instanceof Program) {
             throw new \InvalidArgumentException("{$class} of the server program {$program} is not a template program");

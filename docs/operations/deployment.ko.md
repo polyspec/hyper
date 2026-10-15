@@ -1,5 +1,5 @@
 <!-- doc-id: deployment -->
-<!-- source-sha256: be56b856c599ffa0be371d7b4d114ede4d5adda7002338334df135bfe43570e8 -->
+<!-- source-sha256: 4050a800ed9473418a1e1ad8032831c0c3d4fdc7de3a61b64922d5246fd0b3f0 -->
 # 배포
 
 [English](deployment.md).
@@ -26,7 +26,7 @@
 
 PHP는 기본 경로 없이 실행한다. 응답에는 `Vary: Accept, HX-Request, HX-Current-URL`이 붙는다.
 
-`make server`가 만든 `build/server`를 PHP 코드와 함께 배포한다. 애플리케이션은 `App::open(program: ...)`으로 이 디렉터리를 연다. 가장 빠르게 렌더하려면 서버의 PHP 버전에 맞춰 `make ext`로 네이티브 템플릿 확장을 빌드하고, `php.ini`의 `extension` 설정으로 불러온다. 확장이 없으면 PHP는 `build/server/program.php`의 generated 프로그램으로 렌더한다(HY-48).
+`make server`가 만든 `build/server`를 PHP 코드와 함께 배포한다. 애플리케이션은 `App::open(program: ...)`으로 이 디렉터리를 연다. 가장 빠르게 렌더하려면 서버의 PHP 버전에 맞춰 `make ext`로 네이티브 템플릿 확장을 빌드하고, `php.ini`의 `extension` 설정으로 불러온다. 확장이 없으면 PHP는 `build/server/php/`의 generated 프로그램으로 렌더하며, 애플리케이션은 Composer의 autoload가 그것을 불러오도록 `composer.json`의 `autoload.psr-4`에서 그 네임스페이스를 그 디렉터리에 연결한다(HY-48).
 
 ## 정적 셸
 
