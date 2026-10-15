@@ -7,15 +7,12 @@
         {
             "type": "artifact",
             "url": "artifacts"
-        },
-        {
-            "packagist.org": false
         }
     ],
     "require": {
         "php": ">=8.5",
-        "polyspec/hyper-server": "0.0.16",
-        "polyspec/template": "0.0.6"
+        "polyspec/hyper-server": "0.0.17",
+        "polyspec/template": "0.0.9"
     },
     "config": {
         "platform": {
