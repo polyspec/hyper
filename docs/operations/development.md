@@ -46,7 +46,7 @@
 | `make virtiofs-check` | Runs the server build and the output copies in Apple `container` with the output on a virtiofs bind mount (HY-68); a target of `make check` on Darwin only (`DARWIN_TARGETS`), which fails when `container` is missing. It runs only on Darwin because the virtiofs bind mount that it tests exists only in Apple `container`, and no Linux target of CI checks that symptom. The cause is tested on every platform by `tests/scripts/output-files.test.mts` |
 | `make parity` | Compares PHP documents with browser renders of document and region JSON, once with the generated program and once with the native extension |
 | `make server-parity` | Runs the parity steps against the PHP server and the board Node server and compares the status, the headers and the body of every response, with the browser comparison of `make parity` (HY-55) |
-| `make bundle-size` | Prints the sizes of the SSR script, the CSR shell and the largest template with their gzip limits in `config/bundle-size.json`; a size above its limit prints a `WARNING` line, on GitHub also an annotation `::warning::` and a warning in the CI summary, and the target passes |
+| `make bundle-size` | Prints the sizes of the SSR script, the CSR shell, the chunk files of the static deployment together and the largest template with their gzip limits in `config/bundle-size.json`; a size above its limit prints a `WARNING` line, on GitHub also an annotation `::warning::` and a warning in the CI summary, and the target passes |
 | `make e2e` | Runs the SSR, CSR, no-JavaScript and comparison flows in Chromium on servers and a database of the run (`scripts/run-e2e.mts`) |
 | `make owner-check` | Runs the owners of the changed paths that `config/owner-checks.json` declares; `PATHS` names the paths and `BASE` takes the changes since a revision (HY-88) |
 | `make owner-validate` | Fails when a tracked path has no owner or `config/owner-checks.json` names a missing target or test file (HY-88) |
@@ -229,15 +229,21 @@ The build replaces earlier outputs, so repeated builds leave one file per output
 
 ## Measured sizes
 
-Measured on 2026-10-05 with `make bundle-size` (htmx 4.0.0, esbuild 0.28.2, ten board templates and `hyper/data.tpl`):
+Measured on 2026-10-15 with `make bundle-size` (htmx 4.0.0, esbuild 0.28.2, template 0.0.11, ten board templates and `hyper/data.tpl`):
 
 | Output | Raw bytes | gzip bytes | brotli bytes | gzip limit |
 |---|---:|---:|---:|---:|
-| SSR script `hyper-<hash>.js` | 99,580 | 33,080 | 29,549 | 33,500 |
-| CSR shell `build/csr/index.html` | 99,819 | 33,224 | 29,551 | 33,600 |
-| Largest template file (`board/rows.tpl`) | 5,583 | 1,334 | 1,084 | 4,096 |
-| All eleven template files | | 5,818 | | |
+| SSR script `hyper-<hash>.js` | 108,828 | 35,488 | 31,568 | 35,900 |
+| CSR shell `build/csr/index.html` | 109,067 | 35,623 | 31,649 | 36,000 |
+| Chunks `hyper-chunk-<hash>.js` (the template decoder), each compressed alone | 86,654 | 7,610 | 5,894 | 7,700 |
+| Largest template file (`board/rows.tpl`) | 5,583 | 1,337 | 1,084 | 4,096 |
+| All eleven template files | | 5,898 | | |
 
-The limits of the SSR script and the CSR shell in `config/bundle-size.json` are the measured gzip sizes plus about 1 %, rounded up to 100 bytes. A size above its limit is a warning, not a failure (AGENTS); a change that makes an output larger than its limit changes the limit in the same change and states why the growth is needed; a change that makes an output smaller lowers the limit by the same rule.
+The limits of the SSR script, the CSR shell and the chunks in `config/bundle-size.json` are the measured gzip sizes plus about 1 %, rounded up to 100 bytes. The limits of 2026-10-05 were 33,500 and 33,600 for a script of 33,080 gzip bytes (99,580 raw); the growth is needed (H23.24):
+
+- The board decodes each template file that it fetches with `decodeTemplate` of `@polyspec/template/decode`, because the JSON crosses a trust boundary at run time and the type-checked lint of kit forbids reading it with a cast (H23.13). The decoder is 86,639 raw bytes and about 7,600 gzip bytes. The board imports it with `import()` in its template fetcher, so it is a chunk (HY-76): a server-rendered page, which loads no template (HY-35), never loads it, and the static shell loads it with its first template.
+- The protocol code of the entry grew between 2026-10-05 and the release 0.0.16, by about 1,800 gzip bytes with the same htmx: the region rendering, the response decoding, the kept values, the stylesheets and the routing of `@polyspec/hyper-client`, and the render runtime of template 0.0.11 is about 500 gzip bytes larger than that of 0.0.6. The entry holds, in raw bytes after minification, the render runtime of `@polyspec/template` 40,623, `htmx.org` 36,592, `@polyspec/hyper-client` 28,703 (`hyper.js` 13,737, `response.js` 4,385, `manifest.js` 3,224, `keep.js` 2,044, `router.js` 1,948, `stylesheets.js` 1,605, `templates.js` 1,065, `obtain.js` 699) and the board 2,098 with the index 771; alone, htmx compresses to 13,240 gzip bytes and the render runtime to 12,734.
+
+A size above its limit is a warning, not a failure (AGENTS); a change that makes an output larger than its limit changes the limit in the same change and states why the growth is needed; a change that makes an output smaller lowers the limit by the same rule.
 
 The browser loads only the templates that its rendering reaches (HY-35), and a template file is cached by its hashed name. The AST of a template is about twice the size of its source after compression, because every node records its source span. `config/bundle-size.json` limits a template file to 4,096 gzip bytes, so a template that grows past it is split into blocks.

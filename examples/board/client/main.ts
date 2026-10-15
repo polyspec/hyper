@@ -2,13 +2,15 @@
 // rendered by the server (SSR); with it the page is a static shell that renders in the browser (CSR).
 import htmx from 'htmx.org';
 import { checkManifest, createApplication, Hyper } from '@polyspec/hyper-client';
-import { decodeTemplate } from '@polyspec/template/render';
 import manifest from '../app/app.json';
 import index from '@polyspec/hyper-client/templates-index';
 
 const app = createApplication(checkManifest(manifest), index, async (url) => {
   const response = await fetch(url);
   if (!response.ok) throw new Error(`template ${url}: status ${response.status}`);
+  // The decoder checks the fetched JSON against the AST schema; import() makes it a chunk that a server-rendered page,
+  // which loads no template, never loads (HY-35, HY-76).
+  const { decodeTemplate } = await import('@polyspec/template/decode');
   return decodeTemplate(await response.json());
 });
 const basePath = document.querySelector('meta[name="hyper-api"]')?.getAttribute('content') ?? null;

@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- H23.24: the board example loads the template decoder with `import()` when it fetches its first template, so a server-rendered page does not load it, and `make bundle-size` measures the chunk files of the static deployment as the output `chunks`. The limits of `config/bundle-size.json` are measured again with the template decoder and the protocol code of the client: 35,900 gzip bytes for the SSR script, 36,000 for the CSR shell and 7,700 for the chunks.
 - H23.28: hyper depends on template 0.0.11, which adds the entry `@polyspec/template/decode` with a smaller browser decoder; a generated PHP program renders a block whose argument has no root value and fails on a `define` option that is not an object with the argument error of the language.
 - H23.27: hyper pins `@polyspec/kit` 0.0.52. `.php-version` declares the PHP 8.5 that every workflow sets up, and the release workflow runs `make kit-check` before any release step (kit K193).
 

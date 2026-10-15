@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: 8fcc707a63334d088e0a627315b1116a34e388647d2ece1ea6202840efc60777 -->
+<!-- source-sha256: d6edefae94d7f2b2226d4ef2c9b4e7dbcac688e3cab57879216a9b303073f3ae -->
 # 개발
 
 [English](development.md).
@@ -47,7 +47,7 @@
 | `make virtiofs-check` | 출력이 virtiofs bind mount에 있는 Apple `container`에서 server build와 출력 복사를 실행한다(HY-68). Darwin에서만 `make check`의 target이며(`DARWIN_TARGETS`), `container`가 없으면 실패한다. Darwin에서만 실행하는 이유는, 시험하는 virtiofs bind mount가 Apple `container`에만 있고 CI의 Linux target 중 이 증상을 검사하는 것이 없기 때문이다. 원인은 모든 platform에서 `tests/scripts/output-files.test.mts`가 시험한다 |
 | `make parity` | PHP 문서와, 문서 JSON과 영역 JSON의 브라우저 렌더 결과를 비교한다. generated 프로그램으로 한 번, 네이티브 확장으로 한 번 실행한다 |
 | `make server-parity` | parity 단계를 PHP 서버와 board Node 서버에 실행해 모든 응답의 상태, header, body를 비교하고, `make parity`의 브라우저 비교도 수행한다(HY-55) |
-| `make bundle-size` | SSR 스크립트, CSR 셸, 가장 큰 템플릿의 크기를 `config/bundle-size.json`의 gzip 상한과 함께 출력한다. 상한을 넘는 크기는 `WARNING` 줄을, GitHub에서는 annotation `::warning::`과 CI 요약의 warning도 내고, target은 통과한다 |
+| `make bundle-size` | SSR 스크립트, CSR 셸, static 배포의 chunk 파일 합계, 가장 큰 템플릿의 크기를 `config/bundle-size.json`의 gzip 상한과 함께 출력한다. 상한을 넘는 크기는 `WARNING` 줄을, GitHub에서는 annotation `::warning::`과 CI 요약의 warning도 내고, target은 통과한다 |
 | `make e2e` | SSR, CSR, JavaScript 없는 흐름, 비교 흐름을 Chromium에서 실행한다(실행의 서버와 database에서, `scripts/run-e2e.mts`) |
 | `make owner-check` | `config/owner-checks.json`이 선언한 바뀐 경로의 owner를 실행한다. `PATHS`는 경로를 밝히고 `BASE`는 그 revision 이후의 변경을 가져온다(HY-88) |
 | `make owner-validate` | 추적 경로에 owner가 없거나 `config/owner-checks.json`이 없는 target이나 test 파일을 밝히면 실패한다(HY-88) |
@@ -238,16 +238,22 @@ BOARD_DB=$PWD/examples/board/var/node.db BOARD_SESSIONS=$PWD/examples/board/var/
 
 ## 측정한 크기
 
-2026-10-05에 `make bundle-size`로 측정했다(htmx 4.0.0, esbuild 0.28.2, 게시판 템플릿 10개와 `hyper/data.tpl`).
+2026-10-15에 `make bundle-size`로 측정했다(htmx 4.0.0, esbuild 0.28.2, template 0.0.11, 게시판 템플릿 10개와 `hyper/data.tpl`).
 
 | 출력 | 원본 바이트 | gzip 바이트 | brotli 바이트 | gzip 상한 |
 |---|---:|---:|---:|---:|
-| SSR 스크립트 `hyper-<hash>.js` | 99,580 | 33,080 | 29,549 | 33,500 |
-| CSR 셸 `build/csr/index.html` | 99,819 | 33,224 | 29,551 | 33,600 |
-| 가장 큰 템플릿 파일(`board/rows.tpl`) | 5,583 | 1,334 | 1,084 | 4,096 |
-| 템플릿 파일 11개 합계 | | 5,818 | | |
+| SSR 스크립트 `hyper-<hash>.js` | 108,828 | 35,488 | 31,568 | 35,900 |
+| CSR 셸 `build/csr/index.html` | 109,067 | 35,623 | 31,649 | 36,000 |
+| chunk `hyper-chunk-<hash>.js`(template decoder), 각각 따로 압축 | 86,654 | 7,610 | 5,894 | 7,700 |
+| 가장 큰 템플릿 파일(`board/rows.tpl`) | 5,583 | 1,337 | 1,084 | 4,096 |
+| 템플릿 파일 11개 합계 | | 5,898 | | |
 
-`config/bundle-size.json`의 SSR 스크립트와 CSR 셸 상한은 측정한 gzip 크기에 약 1%를 더하고 100바이트 단위로 올린 값이다. 상한을 넘는 크기는 실패가 아니라 warning이다(AGENTS). 출력이 상한보다 커지는 변경은 같은 변경 안에서 상한을 고치고 그 증가가 필요한 이유를 적는다. 출력이 작아지는 변경은 같은 규칙으로 상한을 낮춘다.
+`config/bundle-size.json`의 SSR 스크립트, CSR 셸, chunk 상한은 측정한 gzip 크기에 약 1%를 더하고 100바이트 단위로 올린 값이다. 2026-10-05의 상한은 gzip 33,080 바이트(원본 99,580)인 script에 대해 33,500과 33,600이었으며, 증가가 필요한 이유는 다음과 같다(H23.24).
+
+- board는 가져오는 각 템플릿 파일을 `@polyspec/template/decode`의 `decodeTemplate`으로 decode한다. JSON이 실행 시 신뢰 경계를 넘고, kit의 type-checked lint가 cast로 읽는 것을 금지하기 때문이다(H23.13). decoder는 원본 86,639 바이트, gzip 약 7,600 바이트이다. board는 템플릿 fetcher에서 그것을 `import()`로 불러오므로 chunk이다(HY-76). 템플릿을 불러오지 않는 서버 렌더 페이지(HY-35)는 그것을 불러오지 않고, static shell은 첫 템플릿과 함께 불러온다.
+- entry의 프로토콜 코드는 2026-10-05와 릴리스 0.0.16 사이에 같은 htmx로 gzip 약 1,800 바이트 커졌다. `@polyspec/hyper-client`의 영역 렌더, 응답 decode, 유지 값, stylesheet, 라우팅이며, template 0.0.11의 render runtime은 0.0.6보다 gzip 약 500 바이트 크다. entry는 minify 뒤 원본 바이트로 `@polyspec/template`의 render runtime 40,623, `htmx.org` 36,592, `@polyspec/hyper-client` 28,703(`hyper.js` 13,737, `response.js` 4,385, `manifest.js` 3,224, `keep.js` 2,044, `router.js` 1,948, `stylesheets.js` 1,605, `templates.js` 1,065, `obtain.js` 699), board 2,098과 index 771을 담는다. 따로 압축하면 htmx는 gzip 13,240 바이트, render runtime은 12,734 바이트이다.
+
+상한을 넘는 크기는 실패가 아니라 warning이다(AGENTS). 출력이 상한보다 커지는 변경은 같은 변경 안에서 상한을 고치고 그 증가가 필요한 이유를 적는다. 출력이 작아지는 변경은 같은 규칙으로 상한을 낮춘다.
 
 브라우저는 렌더가 닿는 템플릿만 불러오고(HY-35), 템플릿 파일은 해시가 붙은 이름으로 캐시된다.
 - 템플릿 AST는 노드마다 소스 위치를 기록하므로 압축 후 크기가 소스의 약 2배다.
