@@ -6,7 +6,7 @@
     "license": "MIT",
     "require": {
         "php": ">=8.5",
-        "polyspec/template": "0.0.6"
+        "polyspec/template": "0.0.8"
     },
     "require-dev": {
         "laravel/pint": "^1.32.1",
@@ -20,7 +20,8 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Polyspec\\Hyper\\Tests\\": "tests/"
+            "Polyspec\\Hyper\\Tests\\": "tests/",
+            "Polyspec\\Hyper\\Tests\\Program\\": "tests/build/server/php/"
         }
     },
     "scripts": {

@@ -1,1 +1,6 @@
-polyspec-template @ https://github.com/polyspec/template/releases/download/v0.0.6/polyspec_template-0.0.6-py3-none-any.whl#sha256=9fd57fe2f08e8b6aaf110bb7cbba51b0661db172176214d3120ca7ae1626d662
+attrs==26.1.0
+jsonschema==4.26.0
+jsonschema-specifications==2025.9.1
+polyspec-template @ https://github.com/polyspec/template/releases/download/v0.0.8/polyspec_template-0.0.8-py3-none-any.whl#sha256=346be03077ded0c9c02001774bb41410234293a370af9f9d32be729ca710e10e
+referencing==0.37.0
+rpds-py==2026.9.1

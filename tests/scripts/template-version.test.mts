@@ -1,4 +1,4 @@
-// Tests that hyper depends on one template release, 0.0.6 (H21.4): the tag TEMPLATE_TAG of the Makefile, the npm packages
+// Tests that hyper depends on one template release, 0.0.8 (H21.4, H23.23): the tag TEMPLATE_TAG of the Makefile, the npm packages
 // and their locks, the Composer packages and their locks, the php-ext and php archives of config/release-assets.json, the Python package
 // of packages/server/python, and the checkouts of the template repository in the workflows name that release and no
 // other. A mixed version fails here before any install runs.
@@ -19,8 +19,8 @@ const optionalMember = (object: JsonObject, key: string, where: string): JsonObj
 // The entry of the package `name` of the `packages` list of a Composer lock.
 const composerPackage = (lock: string, name: string): JsonObject | undefined => jsonObjects(json(lock).packages, `${lock} packages`).find((entry) => entry.name === name);
 
-// The template release that hyper depends on (H21.4). Every pin below names this version.
-const VERSION = '0.0.6';
+// The template release that hyper depends on (H21.4, H23.23). Every pin below names this version.
+const VERSION = '0.0.8';
 const TAG = `v${VERSION}`;
 const RELEASE = `https://github.com/polyspec/template/releases/download/${TAG}`;
 const NPM_PACKAGES = ['@polyspec/template', '@polyspec/template-compiler'];
@@ -95,11 +95,12 @@ test('the Composer consumer project of tests/release-install takes the template 
   assert.equal(member(manifest, 'require', consumer)['polyspec/template'], CONSUMER_VERSION, `${consumer} require polyspec/template`);
   assert.deepEqual(jsonObjects(manifest.repositories, `${consumer} repositories`).filter((item) => item.type === 'package'), [], 'the consumer keeps an inline package repository');
   // kit K140: consumers.composer.polyspec names the entries of config/release-assets.json whose zips release-consumer puts
-  // into the artifact repository of the project beside the archives of the tag.
+  // into the artifact repository of the project beside the archives of the tag. It runs for the next release, whose
+  // archives require the template release of this tree, so it names the zip of that release (H23.23).
   const composer = member(member(json('config/release.json'), 'consumers', 'config/release.json'), 'composer', 'config/release.json consumers');
   const names = jsonArray(composer.polyspec, 'config/release.json consumers.composer.polyspec');
   const entries = assets().filter(({ name }) => names.includes(name));
-  assert.deepEqual(entries.map(assetUrl), [`${CONSUMER_RELEASE}/polyspec-template-php-${CONSUMER_VERSION}.zip`]);
+  assert.deepEqual(entries.map(assetUrl), [`${RELEASE}/polyspec-template-php-${VERSION}.zip`]);
   const entry = composerPackage('tests/release-install/composer/composer.lock', 'polyspec/template');
   assert.ok(entry, 'tests/release-install/composer/composer.lock locks polyspec/template');
   // make release-consumer-lock writes the lock on the release commit (kit release-consumer.mts), so the lock of the last

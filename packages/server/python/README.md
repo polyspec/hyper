@@ -44,7 +44,7 @@ fields = Fields.parse(b'page=2&sort=title')  # names ['page', 'sort'], get('page
 
 - `App.open` creates an application from its manifest, the server program that `hyper-build-server` of
   `@polyspec/hyper-build` built (the `templates` directory and `reads.json` of it; the Python server needs neither
-  `program.php` nor `program.json`, which the generated PHP program uses) and the handlers that load data and run
+  the directory `php` nor `program.json`, which the generated PHP program uses) and the handlers that load data and run
   actions; `App.handle` answers one request (HY-8, HY-15 to HY-19, HY-24 to HY-27, HY-40, HY-50 to HY-62,
   HY-65 to HY-67). A handler parameter receives the request or the reply by its type, and an application service
   of the class that `App.bind` registered. `App.respond` answers a request as `App.handle` does and returns the

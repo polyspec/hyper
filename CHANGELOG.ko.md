@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 1ae5d2e31b902bb43a7830e33f8235269aefb9b9c668b8fface45cfd1c4dc59a -->
+<!-- source-sha256: 7256404bab790c52c6d71a0f3411217bfa65324c2b098c944ef420c332c10b88 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H23.23: hyper는 template 0.0.8에 의존한다. template 0.0.8의 compiler가 PHP target을 그렇게만 쓰므로, `@polyspec/hyper-build`의 `hyper-build-server`는 generated PHP 프로그램을 `program.php` 대신 클래스마다 파일 하나인 PSR-4 파일로 서버 프로그램의 디렉터리 `php`에 쓴다. PHP 서버는 `program.json`의 namespace의 클래스 `GeneratedProgram`을 Composer의 autoload로 불러온다. 애플리케이션은 `composer.json`의 `autoload.psr-4`에서 그 namespace를 디렉터리 `php`에 연결하며, autoload가 그 클래스를 불러오지 못하면 `App::open`은 그 클래스와 연결할 디렉터리를 밝히며 실패하고, 디렉터리 `php`가 없으면 그 경로와 함께 실패한다(HY-48). Python 서버 package는 template wheel을 통해 `jsonschema` 4.26.0을 요구하며, `polyspec/template` 0.0.8은 Composer 설치에 `opis/json-schema`와 `symfony/console`을 더한다.
 - H23.22: hyper는 `@polyspec/kit` 0.0.50을 pin한다. knip은 script와 테스트가 실행하는 binary를 `config/knip-entries.json`의 `binaries`에서 읽으며, kit의 `knip.json`은 어떤 binary도 무시하지 않는다(kit K176). bootstrap은 kit이 설치되기 전에 `$(NODE)`를 정의한다(K185).
 
 ## 0.0.16

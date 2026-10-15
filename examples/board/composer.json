@@ -11,14 +11,15 @@
         "php": ">=8.5",
         "ext-pdo_sqlite": "*",
         "polyspec/hyper-server": "0.0.16",
-        "polyspec/template": "0.0.6"
+        "polyspec/template": "0.0.8"
     },
     "require-dev": {
         "laravel/pint": "^1.32.1"
     },
     "autoload": {
         "psr-4": {
-            "Polyspec\\Hyper\\Examples\\Board\\": "src/Board/"
+            "Polyspec\\Hyper\\Examples\\Board\\": "src/Board/",
+            "Polyspec\\Hyper\\Examples\\Board\\Program\\": "build/server/php/"
         }
     },
     "config": {

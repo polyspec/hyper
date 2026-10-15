@@ -3,7 +3,7 @@
 // package that a consumer installs runs as the repository runs it; and the builds run from any working directory.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, relative, resolve, sep } from 'node:path';
 import { test } from 'node:test';
@@ -62,6 +62,14 @@ test('builds the templates and the server program from another working directory
       '--output', join(output, 'server'), '--php-namespace', 'Polyspec\\Hyper\\Examples\\Board\\Program',
     ], { cwd: output, encoding: 'utf8' });
     assert.equal(server.status, 0, server.stderr);
+    // HY-48: the generated program is the PSR-4 files of the namespace in the directory php, which the autoload of
+    // Composer loads, and program.json names the namespace.
+    const php = readdirSync(join(output, 'server', 'php')).sort();
+    assert.ok(php.includes('GeneratedProgram.php') && php.includes('GeneratedTemplates.php'), `server/php holds ${php.join(', ')}`);
+    assert.ok(php.every((file) => file.endsWith('.php')), `server/php holds ${php.join(', ')}`);
+    assert.ok(!existsSync(join(output, 'server', 'program.php')), 'the build writes program.php');
+    const declaration = parseJsonObject(readFileSync(join(output, 'server', 'program.json'), 'utf8'), 'server/program.json');
+    assert.equal(declaration.namespace, 'Polyspec\\Hyper\\Examples\\Board\\Program');
   } finally {
     rmSync(output, { recursive: true, force: true });
   }
