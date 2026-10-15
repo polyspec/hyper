@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "319a2819f69e778cdd68d5e3660d2974",
+    "content-hash": "c1630bf80be371df8a8358e191552bad",
     "packages": [
         {
             "name": "opis/json-schema",
@@ -202,11 +202,11 @@
             "dist": {
                 "type": "path",
                 "url": "../../packages/server/php",
-                "reference": "66bc1d6e99eb10919781336e6d88df49ae43964c"
+                "reference": "647fa78b710039c6405b6cb4a624478277a7d1e7"
             },
             "require": {
                 "php": ">=8.5",
-                "polyspec/template": "0.0.9"
+                "polyspec/template": "0.0.11"
             },
             "require-dev": {
                 "laravel/pint": "^1.32.1",
@@ -244,11 +244,11 @@
         },
         {
             "name": "polyspec/template",
-            "version": "0.0.9",
+            "version": "0.0.11",
             "dist": {
                 "type": "zip",
-                "url": "../../var/products/template-php/polyspec-template-php-0.0.9.zip",
-                "shasum": "636ac6731e235c42459e23a74b5961a04b55b27e"
+                "url": "../../var/products/template-php/polyspec-template-php-0.0.11.zip",
+                "shasum": "2b5e993c1d53c9869ea4c4ab50f02835d06c9e22"
             },
             "require": {
                 "ext-mbstring": "*",
