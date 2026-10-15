@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { inspect } from 'node:util';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { checkManifest, createApplication, decodeResponse, renderParts, type TemplateIndex } from '@polyspec/hyper-client';
-import { parseJson, type Template } from '@polyspec/template/render';
+import { decodeTemplate, parseJson } from '@polyspec/template/render';
 import { verifyToken } from '../src/csrf.js';
 import { App, Reply as ReplyClass, Request, Result, type Handlers, type Loader, type Reply, type Response } from '../src/index.js';
 import { cookie, Fixture, FIXTURES, handlers, json, JSON_REGION, parsed, present, record, TEMPLATES, text, type Services } from './support.js';
@@ -24,7 +24,7 @@ describe('App', () => {
   it('renders parts alone that match the document (HY-13)', async () => {
     const manifest = checkManifest(JSON.parse(readFileSync(`${FIXTURES}app.json`, 'utf8')));
     const index: TemplateIndex = Object.fromEntries(Object.entries(record(parsed(readFileSync(TEMPLATES.index, 'utf8')))).map(([name, entry]) => [name, { url: text(record(entry).url) }]));
-    const application = createApplication(manifest, index, async (url) => JSON.parse(readFileSync(`${TEMPLATES.root}${url}`, 'utf8')) as Template);
+    const application = createApplication(manifest, index, async (url) => decodeTemplate(JSON.parse(readFileSync(`${TEMPLATES.root}${url}`, 'utf8'))));
     await application.templates.ensure(Object.keys(index));
     const document = (await fixture.get('/')).body;
     const parts = renderParts(application, decodeResponse(application, parseJson((await fixture.get('/', { Accept: 'application/json' })).body), '/'));
