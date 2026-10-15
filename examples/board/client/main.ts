@@ -2,14 +2,14 @@
 // rendered by the server (SSR); with it the page is a static shell that renders in the browser (CSR).
 import htmx from 'htmx.org';
 import { checkManifest, createApplication, Hyper } from '@polyspec/hyper-client';
-import type { Template } from '@polyspec/template/render';
+import { decodeTemplate } from '@polyspec/template/render';
 import manifest from '../app/app.json';
 import index from '@polyspec/hyper-client/templates-index';
 
 const app = createApplication(checkManifest(manifest), index, async (url) => {
   const response = await fetch(url);
   if (!response.ok) throw new Error(`template ${url}: status ${response.status}`);
-  return (await response.json()) as Template;
+  return decodeTemplate(await response.json());
 });
 const basePath = document.querySelector('meta[name="hyper-api"]')?.getAttribute('content') ?? null;
 const hyper = new Hyper<Element>(app, htmx, { basePath: basePath ?? '' });

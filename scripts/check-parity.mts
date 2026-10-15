@@ -32,7 +32,7 @@ import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { build } from 'esbuild';
 import type * as Client from '@polyspec/hyper-client';
-import type { parseJson } from '@polyspec/template/render';
+import { decodeTemplate, type parseJson } from '@polyspec/template/render';
 import { serverRun, startNode, startPhp, startPython } from './board-servers.mts';
 import { isJsonObject, jsonNumber, jsonObject, jsonObjects, jsonString, parseJsonObject } from './json.mts';
 
@@ -87,7 +87,7 @@ const manifest: unknown = JSON.parse(readFileSync(join(app, 'app', 'app.json'), 
 const application = browser.createApplication(
   browser.checkManifest(manifest),
   index,
-  async (url: string) => JSON.parse(readFileSync(join(app, 'public', url), 'utf8')) as Awaited<ReturnType<Client.TemplateFetcher>>,
+  async (url: string) => decodeTemplate(JSON.parse(readFileSync(join(app, 'public', url), 'utf8'))),
 );
 await application.templates.ensure(Object.keys(index));
 

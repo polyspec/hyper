@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { isAbsolute, join } from 'node:path';
 import type { Server } from 'node:http';
 import { checkManifest, checkTemplateIndex, createApplication, DATA_TEMPLATE_NAME, keptPaths, routeReads, routeTemplates, stripBasePath, type Application, type Manifest, type RouteDeclaration, type RouteReads } from '@polyspec/hyper-client';
-import { resolvePath, type Template } from '@polyspec/template/render';
+import { decodeTemplate, resolvePath, type Template } from '@polyspec/template/render';
 import { maskedToken, verifyToken } from './csrf.js';
 import type { FileSessions } from './file-sessions.js';
 import { createListener, createServer, type Listener, type ServerOptions } from './http.js';
@@ -178,7 +178,7 @@ export class App<S extends object = Record<string, never>> {
     }
     const manifest = checkManifest(JSON.parse(readFileSync(options.manifest, 'utf8')));
     const index = checkTemplateIndex(JSON.parse(readFileSync(options.templates.index, 'utf8')), `the template index ${options.templates.index}`);
-    const fetcher = async (url: string): Promise<Template> => JSON.parse(readFileSync(join(options.templates.root, url), 'utf8')) as Template;
+    const fetcher = async (url: string): Promise<Template> => decodeTemplate(JSON.parse(readFileSync(join(options.templates.root, url), 'utf8')));
     const application = createApplication(manifest, index, fetcher);
     checkHandlers(manifest, options.handlers);
     const client = options.clientRendering === undefined ? null : checkClient(options.clientRendering, manifest);

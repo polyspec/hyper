@@ -41,6 +41,7 @@
 | `make analyse-php` | Runs PHPStan at level `max` on the source and the tests of `packages/server/php` with `packages/server/php/phpstan.neon`, without a baseline and without ignored errors. PHPStan reads the signatures of the native template extension from the stub of the unpacked php-ext asset `var/products/template-ext/src/polyspec_template.stub.php` (H14.1-7) and writes its cache to `build/phpstan`. It runs with `--memory-limit=256M`, because a run without that cache needs 132 MB in its worker, above the default PHP limit of 128M. It runs `make ext` first |
 | `make templates-check` | Checks that only the layout template carries `hx-` attributes (HC-6), that the layout places `{# title}` and `{# data}` once, and that every region of the layout and of each route template is placed once, directly inside an element whose `id` is the region name, without block arguments (HY-3, HY-30) |
 | `make typecheck` | Checks the types of the TypeScript of `scripts/`, `tests/` and `benchmarks/` with the tsc of `node_modules` and the root `tsconfig.json` (strict, `erasableSyntaxOnly`); Node runs these `.mts` files by type stripping and never checks them (S9). It runs `make packages` first, since `scripts/check-parity.mts` imports the types that the build of `@polyspec/hyper-client` writes |
+| `make lint-ts` | Lints the TypeScript with the oxlint of kit (`.oxlintrc.json`, type-aware) and its unused files, dependencies and exports with knip (`knip.json` and `config/knip-entries.json`); a target of `make check` and of the CI job `docs` (H23.13) |
 | `make test-scripts` | Runs the tests of the check scripts, such as the region placement check with a broken fixture application |
 | `make virtiofs-check` | Runs the server build and the output copies in Apple `container` with the output on a virtiofs bind mount (HY-68); a target of `make check` on Darwin only (`DARWIN_TARGETS`), which fails when `container` is missing. It runs only on Darwin because the virtiofs bind mount that it tests exists only in Apple `container`, and no Linux target of CI checks that symptom. The cause is tested on every platform by `tests/scripts/output-files.test.mts` |
 | `make parity` | Compares PHP documents with browser renders of document and region JSON, once with the generated program and once with the native extension |
@@ -155,7 +156,7 @@ The workflow `.github/workflows/ci.yml` runs the full suite for the push of `mai
 
 | Entry | Targets | Setup |
 |---|---|---|
-| `docs` | `kit-check`, `toolchain-check`, `layout-check`, `documents-check`, `hooks-check`, `push-gate-commit`, `commits-check`, `owner-validate` | Node.js, Python |
+| `docs` | `kit-check`, `toolchain-check`, `layout-check`, `typecheck`, `lint-ts`, `documents-check`, `hooks-check`, `push-gate-commit`, `commits-check`, `owner-validate` | Node.js, Python |
 | `php` | `dependency-policy-check`, `dependency-policy-mutation-check`, `bench-server-smoke`, `lint`, `analyse-php`, `test-php` | Node.js, Python, PHP, the template checkout, `make install` |
 | `node` | `templates-check`, `test-scripts`, `test-js`, `test-node`, `package-check` | Node.js, Python, PHP, the template checkout, `make install` |
 | `board` | `parity`, `server-parity`, `bundle-size`, `e2e` | Node.js, Python, PHP, the template checkout, `make install`, `make install-browser` |
