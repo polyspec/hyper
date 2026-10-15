@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 68ae1526f63c5daa839b3c0deda66f48ed27fe8e3ab8a6a49c2f21c5af462a48 -->
+<!-- source-sha256: dbf34677e9e2a0dd55647b6a25270cf5879fd5023cec58441b7e5bdd50207b81 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+## 0.0.18
 - H23.29: hyper는 `@polyspec/kit` 0.0.53을 pin한다.
 - H23.24: board 예제는 첫 template을 가져올 때 template decoder를 `import()`로 불러오므로 서버 렌더 페이지는 그것을 불러오지 않으며, `make bundle-size`는 static 배포의 chunk 파일을 출력 `chunks`로 측정한다. `config/bundle-size.json`의 한도는 template decoder와 client의 프로토콜 코드로 다시 측정했다. SSR script는 gzip 35,900 byte, CSR shell은 36,000, chunk는 7,700이다.
 - H23.28: hyper는 더 작은 브라우저 decoder를 가진 entry `@polyspec/template/decode`를 더하는 template 0.0.11에 의존한다. generated PHP 프로그램은 인자에 root 값이 없는 block을 렌더하고, 객체가 아닌 `define` option에는 언어의 인자 오류로 실패한다.
