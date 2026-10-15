@@ -141,9 +141,12 @@ async function dataFlow(page: Page, origin: string, documents: string[], loaded:
   await expect(page.locator('#notice .notice p')).toContainText('서버 요청 없이');
 
   // The page sends no other request to the application and loads only the template files of the regions that it
-  // renders (HY-30, HY-35, HY-93).
+  // renders (HY-30, HY-35, HY-93). The chunk files, such as the template decoder of the board, are static assets that
+  // the page loads at most once, when it first runs their code (HY-76).
   const templates = requests.filter((url) => new URL(url).pathname.includes('/assets/templates/'));
-  expect(requests.filter((url) => !templates.includes(url)).map((url) => new URL(url).pathname)).toEqual(documents);
+  const chunks = requests.filter((url) => /^\/assets\/hyper-chunk-[A-Z0-9]+\.js$/.test(new URL(url).pathname));
+  expect(chunks).toEqual([...new Set(chunks)]);
+  expect(requests.filter((url) => !templates.includes(url) && !chunks.includes(url)).map((url) => new URL(url).pathname)).toEqual(documents);
   expect(templates.map((url) => { const path = new URL(url).pathname; return path.slice(path.lastIndexOf('/') + 1); }).map((file) => file.replace(/\.[0-9a-f]+\.json$/, '')).sort()).toEqual(loaded);
   expect(errors).toEqual([]);
 }

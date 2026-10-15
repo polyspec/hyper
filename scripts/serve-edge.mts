@@ -27,7 +27,7 @@ for (const [name, value] of Object.entries({ root, compare, port, 'api-prefix': 
   if (!value) throw new Error(`--${name} is required`);
 }
 if (!root || !compare || !port || !prefix || !apiOrigin) throw new Error('--root, --compare, --port, --api-prefix and --api-origin are required');
-const CONTENT_TYPES: Record<string, string> = { '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.html': 'text/html; charset=utf-8' };
+const CONTENT_TYPES: Record<string, string> = { '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.json': 'application/json; charset=utf-8', '.html': 'text/html; charset=utf-8' };
 const api = new URL(apiOrigin);
 
 const server = createServer((incoming, outgoing) => {
@@ -54,8 +54,11 @@ const server = createServer((incoming, outgoing) => {
   }
   const file = join(root, normalize(path).replace(/^([.][.][/\\])+/, ''));
   if (path !== '/' && existsSync(file) && statSync(file).isFile()) {
-    // Template files carry a content hash in their names and never change; the stylesheets and the shell change with every deployment.
-    const cache = path.startsWith('/assets/templates/') ? 'public, max-age=31536000, immutable' : 'no-cache';
+    // Template files and chunk files carry a content hash in their names and never change; the stylesheets and the shell
+    // change with every deployment (docs/operations/deployment.md). A chunk is a module script, which the browser runs
+    // only with a JavaScript media type (HY-76).
+    const hashed = path.startsWith('/assets/templates/') || /^\/assets\/hyper-chunk-[A-Z0-9]+\.js$/.test(path);
+    const cache = hashed ? 'public, max-age=31536000, immutable' : 'no-cache';
     outgoing.writeHead(200, { 'Content-Type': CONTENT_TYPES[file.slice(file.lastIndexOf('.'))] ?? 'application/octet-stream', 'Cache-Control': cache });
     outgoing.end(readFileSync(file));
     return;
