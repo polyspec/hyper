@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- H23.27: hyper pins `@polyspec/kit` 0.0.52. `.php-version` declares the PHP 8.5 that every workflow sets up, and the release workflow runs `make kit-check` before any release step (kit K193).
 
 ## 0.0.17
 - H23.24: the board example builds a client script whose gzip size, 43,933 bytes, and a static shell, 44,081 bytes, exceed the limits 33,500 and 33,600 of `config/bundle-size.json`, which `make bundle-size` reports as warnings: the browser checks every template that it fetches with `decodeTemplate`, whose validator `@polyspec/template` 0.0.9 bundles whole. They stay over the limits until a template release gives the browser a smaller decoder.

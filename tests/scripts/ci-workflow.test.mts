@@ -325,3 +325,33 @@ test('ci-passed is the last job of ci.yml, runs always, needs every other job an
   }
 });
 
+
+/**
+ * The problems of the PHP that the workflows set up: `.php-version` holds one minor release, and every setup-php step
+ * reads it by `php-version-file` (a path that ends in `.php-version`, such as that of a checkout into a folder) instead
+ * of naming a PHP itself, so the release workflow of kit and the jobs of CI start the same PHP (kit K193).
+ */
+function phpVersionProblems(phpVersion: string, files: { name: string; text: string }[]): string[] {
+  const found: string[] = [];
+  if (!/^\d+\.\d+\n$/.test(phpVersion)) found.push(`.php-version holds ${JSON.stringify(phpVersion)}, not one minor release such as 8.5`);
+  for (const workflow of files) {
+    for (const job of jobs(workflow.text)) {
+      for (const step of job.steps) {
+        if (!step.uses?.startsWith('shivammathur/setup-php@')) continue;
+        if (!/^ {10}php-version-file: (?:[\w.-]+\/)?\.php-version$/m.test(step.text)) found.push(`${workflow.name} ${job.name}: a setup-php step does not read php-version-file: .php-version`);
+        if (/^ {10}php-version:/m.test(step.text)) found.push(`${workflow.name} ${job.name}: a setup-php step names php-version itself`);
+      }
+    }
+  }
+  return found;
+}
+
+test('.php-version holds the PHP minor release, and every setup-php step reads it (kit K193)', () => {
+  const phpVersion = readFileSync(path.join(ROOT, '.php-version'), 'utf8');
+  const files = allWorkflows();
+  assert.ok(files.some((workflow) => workflow.text.includes('shivammathur/setup-php@')), 'no workflow sets up PHP');
+  assert.deepEqual(phpVersionProblems(phpVersion, files), []);
+  const named = files.map((workflow) => ({ ...workflow, text: workflow.text.replace(/php-version-file: \S*\.php-version/g, "php-version: '8.5'") }));
+  assert.ok(phpVersionProblems(phpVersion, named).some((problem) => problem.endsWith('names php-version itself')));
+  assert.ok(phpVersionProblems('8.5.10\n', files).some((problem) => problem.startsWith('.php-version holds')));
+});

@@ -111,7 +111,7 @@ test('only make install-tools, make install-packages, make install and make inst
   const directory = mkdtempSync(path.join(tmpdir(), 'hyper-downloads-'));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   assert.deepEqual(dryRun('install-tools').map((line) => line.trim()), [`${ONLINE}${NODE} ${KIT}/install-tools.mjs`]);
-  assert.deepEqual(dryRun('install-packages'), [`${ONLINE}${NPM} ci --allow-remote=root`]);
+  assert.deepEqual(dryRun('install-packages'), [`${ONLINE}${NPM} ci`]);
   assert.deepEqual(dryRun('install-browser'), [`${ONLINE}${NODE} node_modules/@playwright/test/cli.js install --with-deps chromium`]);
   const install = dryRun('install', { variables: [`TEMPLATE_DIR=${directory}`] });
   const downloads = install.filter((line) => / ci |composer install|install-tools\.mjs/.test(line.replace(/ -- /, ' ')));
