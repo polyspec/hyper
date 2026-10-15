@@ -4,14 +4,14 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "dc0f85b3e8028e32a11542dbfd468f4d",
+    "content-hash": "0e5155396f9346acd09bdf92bc7400f2",
     "packages": [
         {
             "name": "polyspec/hyper-server",
-            "version": "0.0.15",
+            "version": "0.0.16",
             "dist": {
                 "type": "zip",
-                "url": "artifacts/polyspec-hyper-server-php-0.0.15.zip",
+                "url": "artifacts/polyspec-hyper-server-php-0.0.16.zip",
                 "shasum": ""
             },
             "require": {

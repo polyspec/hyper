@@ -7,9 +7,9 @@
     "node": ">=26.12.0"
   },
   "dependencies": {
-    "@polyspec/hyper-client": "file:polyspec-hyper-client-npm-0.0.15.tgz",
-    "@polyspec/hyper-build": "file:polyspec-hyper-build-npm-0.0.15.tgz",
-    "@polyspec/hyper-server": "file:polyspec-hyper-server-npm-0.0.15.tgz",
+    "@polyspec/hyper-client": "file:polyspec-hyper-client-npm-0.0.16.tgz",
+    "@polyspec/hyper-build": "file:polyspec-hyper-build-npm-0.0.16.tgz",
+    "@polyspec/hyper-server": "file:polyspec-hyper-server-npm-0.0.16.tgz",
     "@polyspec/template": "https://github.com/polyspec/template/releases/download/v0.0.6/polyspec-template-npm-0.0.6.tgz",
     "@polyspec/template-compiler": "https://github.com/polyspec/template/releases/download/v0.0.6/polyspec-template-compiler-npm-0.0.6.tgz",
     "htmx.org": "4.0.0"

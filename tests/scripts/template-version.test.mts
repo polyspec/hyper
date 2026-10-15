@@ -24,7 +24,7 @@ const VERSION = '0.0.6';
 const TAG = `v${VERSION}`;
 const RELEASE = `https://github.com/polyspec/template/releases/download/${TAG}`;
 const NPM_PACKAGES = ['@polyspec/template', '@polyspec/template-compiler'];
-// The consumer projects of tests/release-install install the archives of the hyper release 0.0.15, and those archives
+// The consumer projects of tests/release-install install the archives of the hyper release 0.0.16, and those archives
 // require template 0.0.6 exactly (npm and Composer); the consumer locks are written from them on the release commit.
 const CONSUMER_VERSION = '0.0.6';
 const CONSUMER_RELEASE = `https://github.com/polyspec/template/releases/download/v${CONSUMER_VERSION}`;
