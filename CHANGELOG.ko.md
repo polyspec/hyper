@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 95088b6349d4684bf2e417895159871a05916b693b0b971f88fdde198a8d1476 -->
+<!-- source-sha256: 79fad3193a54ae1162a41d1c2a88486bf6e370797f07106dbcd938a1bcd8bb5f -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+## 0.0.16
 - H23.20: hyper는 `@polyspec/kit` 0.0.48을 pin한다. 각 checkout은 `.node-version` 대신 bootstrap이 `var/tools`에 설치하는 `mise.toml`의 Node.js 26.12.0을 실행한다. 패키지의 `engines.node`는 `>=26.12.0`이며, workflow는 action을 SHA로 pin한다(kit K169, K171).
 - H23.19: hyper는 `@polyspec/kit` 0.0.47을 pin한다. 그 oxlint는 모든 non-null assertion을 실패시키고 type-checked rule을 TypeScript 파일에만 적용한다(kit K156, K170).
 - H23.13: TypeScript가 kit 0.0.46과 0.0.47의 type-checked rule(K155, K156, K157)을 cast, `any`, non-null assertion 없이 통과한다. `@polyspec/hyper-client`: `checkManifest`는 manifest를 `unknown`으로 받아 검사한 선언을 돌려주며, 새 `checkTemplateIndex`는 template index를 같은 방식으로 검사한다. `Hyper`, `HtmxApi`, `HyperOptions`는 region element에 대해 generic이며(기본값 `Element`), `HtmxApi`는 기본 `element` option이 쓰는 `find`를 가지고, `parseInterval`은 `number | undefined`를 돌려주며 undefined는 timeout이 없다는 뜻이다. 그래서 페이지의 htmx가 그대로 `HtmxApi`에 맞는다. `RegionElement`와 `AssignmentElement` type을 export한다. `@polyspec/hyper-server`: `Services`는 자기 key만 bind하므로 `constructor` 같은 `Object.prototype`의 key에는 factory가 없다. 저장된 flash나 kept 값이 값의 map이 아니거나 파일에 문자열이 아닌 key가 있는 session은 값을 넘기지 않고 그 파일과 함께 실패한다.

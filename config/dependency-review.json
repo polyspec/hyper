@@ -1,11 +1,11 @@
 {
   "schema": 1,
   "comment": "Written by make dependency-review RECORD=1 (scripts/kit/dependency-review.mts) from the registries; make dependency-policy-check compares the checkout with it without a network.",
-  "reviewed": "2026-10-15T00:23:59.592Z",
+  "reviewed": "2026-10-15T00:36:28.263Z",
   "locks": [
     {
       "lock": "package-lock.json",
-      "sha256": "3245f49a6a6e45ec934a34585e7b59f11f0be40a12fb63b1c77ac0051c18ba5c",
+      "sha256": "a8073e2ba2b9e902fc0b6cac82c16dd7ca5c22e5f02336adb638c95fb7951ee3",
       "advisories": [
         {
           "package": "sprintf-js",
@@ -19,17 +19,17 @@
     },
     {
       "lock": "tests/package-install/package-lock.json",
-      "sha256": "6557de2f01c21b451feadc4a12d10a1220ec821ca413beff31f909e4d0944902",
+      "sha256": "a9428d59143a909ff0f7a9613e4bee4dec50524169e5abad983bd66f2bf0295a",
       "advisories": []
     },
     {
       "lock": "composer.lock",
-      "sha256": "7cf7ec1bbfb84090e693d60f0e9c1325c6ab8db7080a866948cec7d733835a30",
+      "sha256": "254fd3b9999627a0b80890ef8873dab987844b8c7ab99fa3edb085840312fd88",
       "advisories": []
     },
     {
       "lock": "examples/board/composer.lock",
-      "sha256": "f45244e7c9f8fbebe9003eb490dc871a738dd376c351f7597508c4dcdb0818c5",
+      "sha256": "5438394faab16fe3f1d780dcd346261047a6be9387309cb3e215bf5eb7f3724a",
       "advisories": []
     },
     {
