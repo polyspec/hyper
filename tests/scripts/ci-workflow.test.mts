@@ -97,7 +97,7 @@ test('every job runs on the declared runner without a time limit, and every acti
       if (!new RegExp(`^ {4}runs-on: ${RUNNER}$`, 'm').test(job.text)) found.push(`${workflow.name} ${job.name}: runs-on is not ${RUNNER}`);
       for (const step of job.steps) {
         if (step.uses === undefined || step.uses === '') continue;
-        if (!/^[\w.-]+\/[\w./-]+@[0-9a-f]{40} # v\d/.test(step.uses)) found.push(`${workflow.name} ${job.name}: ${step.uses} is not pinned by a commit with its release`);
+        if (!/^[\w.-]+\/[\w./-]+@[0-9a-f]{40} # v?\d/.test(step.uses)) found.push(`${workflow.name} ${job.name}: ${step.uses} is not pinned by a commit with its release`);
       }
     }
   }

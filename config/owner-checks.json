@@ -432,7 +432,6 @@
     {
       "paths": [
         "config/toolchain.json",
-        ".node-version",
         ".php-version",
         "mise.toml",
         "mise.lock"

@@ -86,7 +86,7 @@ test('every option that a recipe passes to a script of scripts/ is declared by t
   const makefile = readFileSync(path.join(ROOT, 'Makefile'), 'utf8');
   const found: string[] = [];
   let checked = 0;
-  for (const [, script, rest] of makefile.matchAll(/node scripts\/([\w-]+\.mts)([^\n]*)/g)) {
+  for (const [, script, rest] of makefile.matchAll(/\$\(NODE\) scripts\/([\w-]+\.mts)([^\n]*)/g)) {
     if (script === undefined || rest === undefined) throw new Error('the pattern of a script recipe matched without its groups');
     const source = readFileSync(path.join(ROOT, 'scripts', script), 'utf8');
     if (!source.includes('parseArgs(')) continue;
