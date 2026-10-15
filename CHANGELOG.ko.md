@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 8251e4e69a2475e2911567102958f183c085942abd88e58f1cf1c897ef92b72f -->
+<!-- source-sha256: 512253d3ad41d572b85b380e3303192eb72ee030c4b82de7067a93a8be5aaddd -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H23.27: hyper는 `@polyspec/kit` 0.0.52를 pin한다. `.php-version`이 모든 workflow가 설정하는 PHP 8.5를 선언하며, release workflow는 모든 release 단계 앞에서 `make kit-check`를 실행한다(kit K193).
 
 ## 0.0.17
 - H23.24: board 예제가 build하는 client script의 gzip 크기 43,933 byte와 static shell의 44,081 byte는 `make bundle-size`가 경고로 보고하는 `config/bundle-size.json`의 한도 33,500과 33,600을 넘는다. 브라우저는 가져오는 모든 template을 `decodeTemplate`으로 검사하며, `@polyspec/template` 0.0.9는 그 validator를 통째로 bundle한다. template release가 브라우저에 더 작은 decoder를 줄 때까지 한도를 넘는다.

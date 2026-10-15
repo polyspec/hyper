@@ -438,7 +438,8 @@
       ],
       "tests": [
         "tests/scripts/toolchain.test.mts",
-        "tests/scripts/package-build.test.mts"
+        "tests/scripts/package-build.test.mts",
+        "tests/scripts/ci-workflow.test.mts"
       ],
       "targets": [
         "toolchain-check"
