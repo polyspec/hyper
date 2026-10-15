@@ -469,7 +469,8 @@
         "tests/scripts/toolchain.test.mts",
         "tests/scripts/template-pins.test.mts",
         "tests/scripts/check-recipes.test.mts",
-        "tests/scripts/ci-workflow.test.mts"
+        "tests/scripts/ci-workflow.test.mts",
+        "tests/scripts/release-assets.test.mts"
       ]
     },
     {

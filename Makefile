@@ -30,7 +30,7 @@ export HYPER_PYTHON := $(PYTHON_VENV)/bin/python
 # The template repository of TEMPLATE_REPOSITORY is read only for the commit of TEMPLATE_TAG in the full-run key (HY-80);
 # TEMPLATE_TAG is the tag of the version of the entry template-php, its one declaration.
 TEMPLATE_REPOSITORY := ../template
-TEMPLATE_TAG = v$(shell node $(KIT)/release-assets.$(KIT_EXT) version template-php)
+TEMPLATE_TAG = v$(shell $(NODE) $(KIT)/release-assets.$(KIT_EXT) version template-php)
 FIXTURES := $(PHP_PACKAGE)/tests/fixtures
 # The Composer vendor directory of the private root composer.json, which installs packages/server/php for development.
 PHP_VENDOR := $(CURDIR)/vendor
