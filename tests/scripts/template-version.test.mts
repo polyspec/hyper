@@ -1,4 +1,4 @@
-// Tests that hyper depends on one template release, 0.0.8 (H21.4, H23.23): the tag TEMPLATE_TAG of the Makefile, the npm packages
+// Tests that hyper depends on one template release, 0.0.9 (H21.4, H23.23, H23.25): the tag TEMPLATE_TAG of the Makefile, the npm packages
 // and their locks, the Composer packages and their locks, the php-ext and php archives of config/release-assets.json, the Python package
 // of packages/server/python, and the checkouts of the template repository in the workflows name that release and no
 // other. A mixed version fails here before any install runs.
@@ -20,7 +20,7 @@ const optionalMember = (object: JsonObject, key: string, where: string): JsonObj
 const composerPackage = (lock: string, name: string): JsonObject | undefined => jsonObjects(json(lock).packages, `${lock} packages`).find((entry) => entry.name === name);
 
 // The template release that hyper depends on (H21.4, H23.23). Every pin below names this version.
-const VERSION = '0.0.8';
+const VERSION = '0.0.9';
 const TAG = `v${VERSION}`;
 const RELEASE = `https://github.com/polyspec/template/releases/download/${TAG}`;
 const NPM_PACKAGES = ['@polyspec/template', '@polyspec/template-compiler'];
