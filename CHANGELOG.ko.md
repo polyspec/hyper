@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 512253d3ad41d572b85b380e3303192eb72ee030c4b82de7067a93a8be5aaddd -->
+<!-- source-sha256: 9eafca688041313ce0a019f4330fcbbcab13384ef6c6326d3e79c3309069c675 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H23.28: hyper는 더 작은 브라우저 decoder를 가진 entry `@polyspec/template/decode`를 더하는 template 0.0.11에 의존한다. generated PHP 프로그램은 인자에 root 값이 없는 block을 렌더하고, 객체가 아닌 `define` option에는 언어의 인자 오류로 실패한다.
 - H23.27: hyper는 `@polyspec/kit` 0.0.52를 pin한다. `.php-version`이 모든 workflow가 설정하는 PHP 8.5를 선언하며, release workflow는 모든 release 단계 앞에서 `make kit-check`를 실행한다(kit K193).
 
 ## 0.0.17

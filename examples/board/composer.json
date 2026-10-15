@@ -11,7 +11,7 @@
         "php": ">=8.5",
         "ext-pdo_sqlite": "*",
         "polyspec/hyper-server": "0.0.17",
-        "polyspec/template": "0.0.9"
+        "polyspec/template": "0.0.11"
     },
     "require-dev": {
         "laravel/pint": "^1.32.1"

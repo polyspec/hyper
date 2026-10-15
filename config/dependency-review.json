@@ -1,11 +1,11 @@
 {
   "schema": 1,
   "comment": "Written by make dependency-review RECORD=1 (scripts/kit/dependency-review.mts) from the registries; make dependency-policy-check compares the checkout with it without a network.",
-  "reviewed": "2026-10-15T06:40:46.187Z",
+  "reviewed": "2026-10-15T07:26:02.353Z",
   "locks": [
     {
       "lock": "package-lock.json",
-      "sha256": "15edce368ff96cc03f922dabfb5a4b89856534f0492c5dfbe47cdb3db8641879",
+      "sha256": "e88df8746ddfe4d5ea3a320182b15229415c7d297b0aefa7c7dc479184370167",
       "advisories": [
         {
           "package": "sprintf-js",
@@ -19,22 +19,22 @@
     },
     {
       "lock": "tests/package-install/package-lock.json",
-      "sha256": "170833058be66639e0804a581af6131050eebe55e9c23148c1b081615f7a9503",
+      "sha256": "92b057d8336a17d7d30b56d7948ea7b87ee74c6f0d3565671f3ee2cbc0c97b0f",
       "advisories": []
     },
     {
       "lock": "composer.lock",
-      "sha256": "0ef75cb11b84be627bc54e154e4fe44ed3977cd96cc8dd8f4e8531419a95d87a",
+      "sha256": "6d6535b0eeb1dc9dc022096f76380296bef293aa4ae3d2938e7ce056a4b65e29",
       "advisories": []
     },
     {
       "lock": "examples/board/composer.lock",
-      "sha256": "d5371558ca066a78ea09454a99ef8cd4488ab57f56d2ea2630900813c167d3e4",
+      "sha256": "a2474d7fae3c7451044d596c2ffca164e1b047f356bf756965153ddb5328e2ce",
       "advisories": []
     },
     {
       "lock": "packages/server/python/pylock.toml",
-      "sha256": "4a6cb5e65ffd9d0de9f3c9ecfd65bd3fbe55c5a5acddff76b783c8166ba1e39b",
+      "sha256": "3a79f1482b2c0466f098961c6a0c1373f33604d0023abe362117e8364b2969e1",
       "advisories": []
     }
   ],
@@ -113,8 +113,8 @@
       "ecosystem": "composer",
       "manifest": "composer.json",
       "package": "polyspec/template",
-      "version": "0.0.9",
-      "latest": "0.0.9"
+      "version": "0.0.11",
+      "latest": "0.0.11"
     },
     {
       "ecosystem": "composer",
@@ -141,15 +141,15 @@
       "ecosystem": "composer",
       "manifest": "packages/server/php/composer.json",
       "package": "polyspec/template",
-      "version": "0.0.9",
-      "latest": "0.0.9"
+      "version": "0.0.11",
+      "latest": "0.0.11"
     },
     {
       "ecosystem": "composer",
       "manifest": "examples/board/composer.json",
       "package": "polyspec/template",
-      "version": "0.0.9",
-      "latest": "0.0.9"
+      "version": "0.0.11",
+      "latest": "0.0.11"
     },
     {
       "ecosystem": "composer",
@@ -162,8 +162,8 @@
       "ecosystem": "composer",
       "manifest": "packages/server/php/composer.json",
       "package": "polyspec/template",
-      "version": "0.0.9",
-      "latest": "0.0.9"
+      "version": "0.0.11",
+      "latest": "0.0.11"
     },
     {
       "ecosystem": "pypi",

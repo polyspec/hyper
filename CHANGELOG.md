@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- H23.28: hyper depends on template 0.0.11, which adds the entry `@polyspec/template/decode` with a smaller browser decoder; a generated PHP program renders a block whose argument has no root value and fails on a `define` option that is not an object with the argument error of the language.
 - H23.27: hyper pins `@polyspec/kit` 0.0.52. `.php-version` declares the PHP 8.5 that every workflow sets up, and the release workflow runs `make kit-check` before any release step (kit K193).
 
 ## 0.0.17
