@@ -34,7 +34,7 @@ test('the own downloader of the template assets is gone (H23.11-2)', () => {
 
 test('TEMPLATE_TAG of the Makefile reads the version of the template-php entry, its one declaration (H23.11-2)', () => {
   const version = jsonString(entries().find(({ name }) => name === 'template-php')?.version, 'the version of template-php');
-  assert.match(read('Makefile'), /^TEMPLATE_TAG = v\$\(shell node \$\(KIT\)\/release-assets\.\$\(KIT_EXT\) version template-php\)$/m);
+  assert.match(read('Makefile'), /^TEMPLATE_TAG = v\$\(shell \$\(NODE\) \$\(KIT\)\/release-assets\.\$\(KIT_EXT\) version template-php\)$/m);
   const lines = dryRun('template-tag', { variables: ['TEMPLATE_REPOSITORY=/nonexistent/hyper-template'] });
   assert.ok(lines.some((line) => line.includes(`'refs/tags/v${version}^{commit}'`)), lines.join('\n'));
 });
@@ -49,7 +49,7 @@ test('make ext builds the unpacked php-ext archive offline and runs no copy of t
 test('make install fetches the release archives through $(ONLINE) before Composer reads the artifact repository (H23.11-2)', () => {
   const lines = dryRun('install');
   const fetches = lines.filter((line) => line.includes('release-assets.mjs'));
-  assert.deepEqual(fetches, ['env -u npm_config_offline -u COMPOSER_DISABLE_NETWORK node node_modules/@polyspec/kit/dist/release-assets.mjs fetch'], lines.join('\n'));
+  assert.deepEqual(fetches, [`env -u npm_config_offline -u COMPOSER_DISABLE_NETWORK ${path.join(ROOT, 'var/tools/bin/node')} node_modules/@polyspec/kit/dist/release-assets.mjs fetch`], lines.join('\n'));
   const [fetch] = fetches;
   assert.ok(fetch !== undefined && lines.indexOf(fetch) < lines.findIndex((line) => /composer install/.test(line)), 'Composer reads the artifact repository before make install fetched it');
 });
