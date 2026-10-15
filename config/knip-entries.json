@@ -7,7 +7,9 @@
     "tests/scripts/fixtures/chunks/client/main.ts": "The fixture app of the chunk tests of hyper-build-assets, which tests/scripts bundle by its directory."
   },
   "binaries": {
-    "container": "Apple container, whose bind mounts are virtiofs: make virtiofs-check (tests/virtiofs) runs it on Darwin."
+    "container": "Apple container, whose bind mounts are virtiofs: make virtiofs-check (tests/virtiofs) runs it on Darwin.",
+    "make": "The tests of the recipes (tests/scripts/make-dry-run.mts, check-recipes, template-pins and toolchain tests) run make -n on the Makefile of the repository.",
+    "php": "scripts/check-parity.mts (make parity) asks the php of the PATH whether the polyspec_template extension loads before it starts the PHP board server."
   },
   "ignoreDependencies": {
     "@polyspec/template-compiler": "The root names the tarball URL of the template release, which npm installs only from the root with allow-remote=root (H21.4); packages/build depends on it by version, and make server and make server-fixtures run packages/build/bin/hyper-build-server.mjs, which imports it. No JavaScript of the root imports it, and knip does not read the Makefile."

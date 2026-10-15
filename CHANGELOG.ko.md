@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 79fad3193a54ae1162a41d1c2a88486bf6e370797f07106dbcd938a1bcd8bb5f -->
+<!-- source-sha256: 1ae5d2e31b902bb43a7830e33f8235269aefb9b9c668b8fface45cfd1c4dc59a -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H23.22: hyper는 `@polyspec/kit` 0.0.50을 pin한다. knip은 script와 테스트가 실행하는 binary를 `config/knip-entries.json`의 `binaries`에서 읽으며, kit의 `knip.json`은 어떤 binary도 무시하지 않는다(kit K176). bootstrap은 kit이 설치되기 전에 `$(NODE)`를 정의한다(K185).
 
 ## 0.0.16
 - H23.20: hyper는 `@polyspec/kit` 0.0.48을 pin한다. 각 checkout은 `.node-version` 대신 bootstrap이 `var/tools`에 설치하는 `mise.toml`의 Node.js 26.12.0을 실행한다. 패키지의 `engines.node`는 `>=26.12.0`이며, workflow는 action을 SHA로 pin한다(kit K169, K171).
