@@ -21,3 +21,17 @@ __pycache__/
 *.next-*
 .venv/
 *.egg-info/
+
+# Generated files of the install, build, cache and test runs (AGENTS.md, Generated files)
+target/
+dist/
+dist.next/
+dist.old/
+*.tsbuildinfo
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.cache/
+.phpunit.cache/
+coverage/

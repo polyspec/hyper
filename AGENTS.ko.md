@@ -1,5 +1,5 @@
 <!-- doc-id: agents -->
-<!-- source-sha256: a4015d6a2ef4caffecaebf4adf56a05037bb1e67eb8c713f4754a40b2d2a63dc -->
+<!-- source-sha256: dd490f772b0d584c1e1eefdfd17cf1bcfa3fc1e5c6a4767d7063f569e1790b69 -->
 # 개발
 
 [English](AGENTS.md).
@@ -79,6 +79,10 @@
 - 모든 변경은 항목을 `CHANGELOG.md`와 `CHANGELOG.ko.md` 맨 위의 `## Unreleased` 아래에 추가한다.
 - 버전 올림 commit `chore(release): Release X.Y.Z (#<task>)`는 `package.json`, `packages/client/package.json`, `packages/server/ts/package.json`, `packages/build/package.json`, `packages/server/php/composer.json`, `packages/server/python/pyproject.toml`의 버전과, `packages/server/ts/package.json`과 `packages/build/package.json`의 `@polyspec/hyper-client` requirement와 private root `composer.json`과 `examples/board/composer.json`(과 그 lock)의 `polyspec/hyper-server` requirement와, `make release-assets TAG=vX.Y.Z` 뒤에 `make release-consumer-lock TAG=vX.Y.Z`가 manifest와 lock을 쓰는 `tests/release-install`의 consumer 프로젝트를 X.Y.Z로 정하고, 두 changelog의 `## Unreleased`를 `## X.Y.Z`로 바꾸고 그 위에 비어 있는 새 `## Unreleased`를 둔다. private test package인 `tests/package-install`은 아무것도 배포하지 않으므로 자기 version을 유지하고(`config/release.json`의 `notReleased`), bump commit은 그 lock을 다시 써서 lock이 local package의 version을 기록하게 한다.
 - 메인테이너는 CI 실행이 `ci-passed` 성공으로 끝난 `main`의 commit에 `vX.Y.Z` tag를 붙이고 push한다. push는 `.github/workflows/release.yml`을 실행한다. 이 workflow는 tag된 commit이 `main`에 있고 check `ci-passed`를 통과했는지, 모든 manifest에 버전이 있고 `CHANGELOG.md`와 `CHANGELOG.ko.md`에 section `## X.Y.Z`가 있는지 확인하고, 이름이 `<package>-<language>-<version>.<ext>`인 패키지 archive를 만들어 GitHub Release를 생성한다(`docs/operations/development.ko.md`).
+
+## 생성 파일
+
+생성 파일은 Git에 추적하지 않습니다. 여기에는 의존성 설치(`node_modules/`, `vendor/`, 가상 환경), 빌드 산출물(`dist/`, `target/`, `*.tsbuildinfo`), 캐시(`.cache/`, `__pycache__/`, `.pytest_cache/`), 테스트 실행 산출물(`test-results/`, `playwright-report/`, PHPUnit 캐시), 도구 다운로드(`var/`)가 포함됩니다. 예외는 저장소가 의도적으로 필요로 하는 파일뿐이며 이것만 추적합니다: lock 파일(`package-lock.json`, `composer.lock`, `Cargo.lock`, uv lock, `mise.lock`), 이 문서가 밝히는 커밋된 생성 문서, 테스트 fixture. 각 `.gitignore`가 이 경로를 덮으며, 새 생성기는 같은 commit에서 ignore 항목을 추가합니다.
 
 ## Checklist
 
