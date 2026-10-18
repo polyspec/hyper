@@ -1,5 +1,5 @@
 <!-- doc-id: execution-checklist -->
-<!-- source-sha256: fd137a5ba0a4adc6f53f583b23e8b053ce217320e9166ce836c120304fa697a6 -->
+<!-- source-sha256: cae5004bfe0c73c42f412d9fd52aa95b1d3ba964b84fa884fda9b24f5e53d3b9 -->
 # 실행 체크리스트
 
 ## [웨이브 1](waves.ko.md#wave-1) — 애플리케이션이 약하게 만들 수 없는 CSRF 방어
@@ -340,3 +340,9 @@
 | H23.29 | kit 0.0.53으로 옮긴다(release-proof가 draft URL을 비교하는 대신 release가 각 sibling wheel을 나열하는지 검사하는 kit K195). 게시된 파일의 integrity로 pin하며, `make kit-sync`는 복사한 파일을 바꾸지 않고 옮길 것은 없다. `make dependency-review RECORD=1`의 검토가 새 lock을 기록한다. | `make kit-check`, `make toolchain-check`, `make layout-check`, `make dependency-policy-check` || [o] |
 | H23.30 | consumer가 template 0.0.11과 함께 hyper 패키지를 설치하도록 template 0.0.11(H23.28), 다시 측정한 한도와 함께 chunk인 board decoder(H23.24), kit 0.0.52와 0.0.53(H23.27, H23.29)을 담아 0.0.18을 릴리스한다. `config/release.json`의 모든 manifest와 `@polyspec/hyper-client`, `polyspec/hyper-server`의 requirement에 버전 0.0.18을 쓰고, 그 lock은 Composer가 `composer update --lock`으로 다시 쓴다(kit K180). 두 changelog에 `## 0.0.18`을 둔다. `tests/release-install`의 consumer 프로젝트는 archive가 요구하는 0.0.11로 template pin을 옮기고, `make release-assets TAG=v0.0.18`의 archive에서 `make release-consumer-lock TAG=v0.0.18`이 manifest와 lock을 쓰며, `make dependency-review RECORD=1`의 검토가 새 lock을 기록한다. 조건: npm, Composer, wheel에 대한 `make release-consumer TAG=v0.0.18`, 릴리스 commit의 CI run, 게시된 release로 증명한다. | `make release-versions TAG=v0.0.18`, `make release-consumer TAG=v0.0.18`, `make dependency-policy-check` | [o] |
 | H23.31 | 0.0.x 개발의 local link를 가리킨다(kit K198). `AGENTS.md`와 `AGENTS.ko.md`는 polyspec 버전이 0.0.x인 동안 개발 checkout이 kit `docs/plans/local-links.md`가 설명하는 대로 설치된 polyspec 패키지를 그 source에 link하며 link는 커밋하지 않는다는 것을 한 문장으로 적는다. | `make documents-check` | [o] |
+
+## [웨이브 24](waves.ko.md#wave-24) — 여러 process가 쓰는 session 파일
+
+| ID | 작업 | 검증 | 상태 |
+|---|---|---|---|
+| H24.1 | 같은 session 파일을 동시에 쓰는 두 process가 실패하지 않는다(HY-104). session을 쓸 때마다 자기만의 임시 파일을 배타적으로 만들고 rename 한 번으로 게시한다. Python 서버는 `os.replace`(`tempfile.mkstemp`)를, Node 서버는 `renameSync`(플래그 `wx`의 `<id>.<uuid>.tmp`)를 쓴다. Red: 변경 전 코드에서 `packages/server/python/tests/test_file_sessions.py`는 두 process가 각각 400번 쓰는 동안 181, 198, 187, 208번의 쓰기가 `FileNotFoundError: ... .tmp -> ...`로 실패했고, `packages/server/ts/tests/sessions-race.test.ts`는 `ENOENT: no such file or directory, rename ... .tmp`로 실패했다. Green: 변경 후 두 테스트가 통과하고, owner 검사 `make test-python`과 `make test-node`가 통과한다. | `make test-python`, `make test-node`, `make documents-check` | [o] |

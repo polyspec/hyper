@@ -1,5 +1,5 @@
 <!-- doc-id: waves -->
-<!-- source-sha256: 21b5d0516ee1e35310f085951d18a73f01ed086c85fc5edbccace15ed37bb1b5 -->
+<!-- source-sha256: 8d81da9f9bfc68af16b277db7ca66bf45f7cf29726cd51d633d0e468989d3ec3 -->
 # 웨이브 배경
 
 [English](waves.md).
@@ -97,3 +97,7 @@
 ## Wave 23
 
 의존: wave 22. 공유 도구는 `scripts/kit`과 `tests/kit`에 둔 kit 저장소 tag의 vendored 복사본이었고, npm은 모든 dependency를 bin link 없이 복사본으로 설치해서 `scripts/tsc.mjs`와 `node_modules`의 npm 패키지 복사본이 필요했다. 이제 kit은 npm 패키지 `@polyspec/kit`이다. 이 저장소는 release asset에서 그것을 설치하고, `kit.copies`의 파일만 복사본으로 가지며, kit이 pin하는 toolchain 하한을 선언한다. npm은 자기 기본값으로 설치한다. 이 저장소의 npm 패키지는 npm workspace이고 도구는 npm의 bin link로 실행한다.
+
+## Wave 24
+
+의존: wave 23. 같은 session 파일을 동시에 쓰는 두 process가 실패했다. Python과 Node의 session store는 session을 쓸 때마다 하나의 임시 파일 `<id>.tmp`에 쓰고 그것을 rename했다. 두 process가 겹치면 한쪽의 rename은 다른 쪽이 이미 옮긴 임시 파일을 찾아 `FileNotFoundError`를 던졌다. 이제 쓰기마다 자기 임시 파일을 만들고 rename한다(HY-104).

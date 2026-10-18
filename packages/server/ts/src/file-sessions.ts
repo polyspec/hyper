@@ -1,5 +1,5 @@
 // Sessions in files of one absolute directory, for a server process (HY-45).
-import { randomBytes } from 'node:crypto';
+import { randomBytes, randomUUID } from 'node:crypto';
 import { readdirSync, readFileSync, renameSync, rmSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
 import { isAbsolute, join } from 'node:path';
 import { deserialize, serialize } from 'node:v8';
@@ -136,8 +136,16 @@ export class FileSession implements SessionStore {
       if (this.renewedId !== null) rmSync(join(this.sessions.directory, this.renewedId), { force: true });
       if (this.values !== null && this.id !== null) {
         const file = join(this.sessions.directory, this.id);
-        writeFileSync(`${file}.tmp`, serialize(this.values), { mode: 0o600 });
-        renameSync(`${file}.tmp`, file);
+        // Each write has its own temporary file, created exclusively, so two writers of one session never share a
+        // name (HY-104). One rename publishes the file (HY-82).
+        const writing = `${file}.${randomUUID()}.tmp`;
+        try {
+          writeFileSync(writing, serialize(this.values), { mode: 0o600, flag: 'wx' });
+          renameSync(writing, file);
+        } catch (error) {
+          rmSync(writing, { force: true });
+          throw error;
+        }
       }
     } finally {
       this.release();

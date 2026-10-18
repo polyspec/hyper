@@ -5,9 +5,12 @@ uses it creates no session. The values are values of the template data model, wr
 
 from __future__ import annotations
 
+import contextlib
 import json
+import os
 import re
 import secrets
+import tempfile
 import threading
 import time
 from pathlib import Path
@@ -106,10 +109,18 @@ class FileSession:
                 (self._sessions.directory / self._renewed).unlink(missing_ok=True)
             if self._values is not None and self._id is not None:
                 file = self._sessions.directory / self._id
-                # One rename publishes the file, so a reader finds the previous or the new session (HY-82).
-                writing = self._sessions.directory / f'{self._id}.tmp'
-                writing.write_text(json.dumps(self._values), encoding='utf-8')
-                writing.replace(file)
+                # Each write has its own temporary file, so two writers of one session never share a name (HY-104).
+                # One rename publishes the file, so a reader finds the previous or the new session (HY-82). The
+                # file of mkstemp has the mode 0600, as the session file of the TypeScript server has (HY-104).
+                descriptor, writing = tempfile.mkstemp(dir=self._sessions.directory, prefix=f'{self._id}.', suffix='.tmp')
+                try:
+                    with os.fdopen(descriptor, 'w', encoding='utf-8') as stream:
+                        stream.write(json.dumps(self._values))
+                    os.replace(writing, file)
+                except BaseException:
+                    with contextlib.suppress(FileNotFoundError):
+                        os.unlink(writing)
+                    raise
         finally:
             if self._lock is not None:
                 self._lock.release()

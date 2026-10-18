@@ -96,3 +96,7 @@ Depends on: wave 21. The rules of `AGENTS.md` read as if the path and symbolic l
 ## Wave 23
 
 Depends on: wave 22. The shared tools were a vendored copy of the tag of the kit repository in `scripts/kit` and `tests/kit`, and npm installed every dependency as a copy and without bin links, which forced `scripts/tsc.mjs` and the copies of the npm packages in `node_modules`. kit is now the npm package `@polyspec/kit`: this repository installs it from the asset of its release, holds only the files of `kit.copies` as copies, and declares the toolchain floors that kit pins. npm installs with its own defaults: the npm packages of this repository are npm workspaces and the tools run through the bin links of npm.
+
+## Wave 24
+
+Depends on: wave 23. Two processes that wrote one session file at the same time failed. The Python and the Node session stores wrote each write of a session to one temporary file `<id>.tmp` and renamed it into place; when two processes overlapped, the rename of one found the temporary file already moved by the other and raised `FileNotFoundError`. Each write now creates its own temporary file and renames it (HY-104).

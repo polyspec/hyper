@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 7bcaebb31916bbee3932dadefc60a88a3ebcb50956d19e9dc14cb40ed33daed1 -->
+<!-- source-sha256: b79f5bb05b0463704882c70d41b44ff802b3c8c87796004e51f0abf0af080c37 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H24.1: session 파일을 쓸 때마다 자기만의 임시 파일을 만들고 rename으로 제자리에 옮긴다. Python 서버는 `tempfile.mkstemp`와 `os.replace`를, Node 서버는 플래그 `wx`로 만든 `<id>.<uuid>.tmp`와 `renameSync`를 쓴다. 같은 session을 쓰는 두 process가 `FileNotFoundError`로 실패하지 않는다(HY-104). Red: `packages/server/python/tests/test_file_sessions.py`에서 process마다 400번 중 181번에서 208번의 쓰기가 실패했고, `packages/server/ts/tests/sessions-race.test.ts`는 ENOENT로 실패했다. Green: 두 테스트가 모두 통과한다.
 - HY-79: Composer는 root와 board에서 `polyspec/hyper-server`를 사본 대신 `packages/server/php`를 가리키는 link로 설치한다(`symlink: false`를 제거했다). `make hyper-server-php-install`은 `var/install.lock` 아래에서 board의 `composer install`을 실행하고, `tests/scripts/no-symlinks.test.mts`는 `vendor` 아래의 각 polyspec package가 source 디렉터리를 가리키는 symbolic link일 것을 요구한다.
 - H23.31: `AGENTS.md`는 kit `docs/plans/local-links.md`가 설명하는 0.0.x 개발의 local link를 가리킨다. link는 커밋하지 않는다.
 
