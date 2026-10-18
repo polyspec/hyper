@@ -131,6 +131,20 @@ const absentJson = '{"env":{"timezone":"Z"},"route":"list","params":{},"shared":
 
 afterEach(() => vi.unstubAllGlobals());
 
+describe('render errors of a region response', () => {
+  it('rejects the fetch with the render error of the response instead of dropping it', async () => {
+    const { hyper } = setup('', []);
+    const extension = hyper.extension();
+    const ctx = context('/items/7');
+    extension.htmx_config_request(null, { ctx });
+    extension.htmx_before_request(null, { ctx });
+    // The response has no page region `content`, so rendering it fails (toHtml).
+    vi.stubGlobal('fetch', async () => jsonResponse('http://localhost/items/7', '{"env":{"timezone":"Z"},"route":"item","params":{"id":"7"},"shared":{"title":"T"},"regions":{},"kept":{}}'));
+    const error = await defined(ctx.fetch, 'the fetch of the request context')(ctx.request.action, {}).then(() => null, (failure: unknown) => failure);
+    expect(String(error)).toContain('has no region content');
+  });
+});
+
 describe('template delivery', () => {
   it('loads only the templates of the requested route (HY-35)', async () => {
     const fetched: string[] = [];

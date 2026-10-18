@@ -465,7 +465,7 @@ export class Hyper<E extends RegionElement = Element> {
             if (path !== null) {
               const decoded = decodeResponse(this.app, root, path);
               this.applyBrowserKept(decoded);
-              await this.app.templates.render(() => toHtml(this.app, decoded)).catch(() => undefined);
+              await this.app.templates.render(() => toHtml(this.app, decoded));
             }
           }
           return response;
