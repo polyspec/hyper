@@ -131,6 +131,33 @@ const absentJson = '{"env":{"timezone":"Z"},"route":"list","params":{},"shared":
 
 afterEach(() => vi.unstubAllGlobals());
 
+describe('superseded region requests', () => {
+  it('does not swap the response of a region request that a later region request superseded (HY-23)', async () => {
+    const { hyper } = setup('', []);
+    const extension = hyper.extension();
+    const item = (id: string) => `{"env":{"timezone":"Z"},"route":"item","params":{"id":"${id}"},"shared":{"title":"T${id}"},"regions":{"content":{"id":"${id}"}},"kept":{}}`;
+    const older = context('/items/1');
+    let aborted = 0;
+    older.request.abort = () => { aborted++; };
+    extension.htmx_config_request(null, { ctx: older });
+    extension.htmx_before_request(null, { ctx: older });
+    const newer = context('/items/2');
+    extension.htmx_config_request(null, { ctx: newer });
+    extension.htmx_before_request(null, { ctx: newer });
+    for (const [ctx, id] of [[newer, '2'], [older, '1']] as const) {
+      vi.stubGlobal('fetch', async () => jsonResponse(`http://localhost/items/${id}`, item(id)));
+      const response = await defined(ctx.fetch, 'the fetch of the request context')(ctx.request.action, {});
+      ctx.response = { raw: { url: response.url }, headers: response.headers };
+      ctx.text = await response.text();
+    }
+    expect(extension.htmx_after_request(null, { ctx: newer })).not.toBe(false);
+    // The older response arrives last: its swap is refused, so it cannot replace the page of the newer navigation.
+    expect(extension.htmx_after_request(null, { ctx: older })).toBe(false);
+    // The newer region request aborted the older one when it started.
+    expect(aborted).toBe(1);
+  });
+});
+
 describe('render errors of a region response', () => {
   it('rejects the fetch with the render error of the response instead of dropping it', async () => {
     const { hyper } = setup('', []);

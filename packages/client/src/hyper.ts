@@ -29,6 +29,8 @@ export interface RequestContext {
   // when the region request was configured and when it was aborted (HY-47)
   hyperStart?: number;
   hyperAborted?: number;
+  // The navigation number of a region request; a later region request supersedes it (HY-23).
+  hyperLocation?: number;
   // removes the stylesheet links that the shown content does not have, after the swap (HY-64)
   hyperStylesheets?: () => void;
 }
@@ -116,6 +118,8 @@ export class Hyper<E extends RegionElement = Element> {
   private queue: Promise<void> = Promise.resolve();
   private location = 0;
   private locationAbort: AbortController | null = null;
+  // Aborts the region request of the latest navigation, which the next region request supersedes (HY-23).
+  private regionAbort: (() => void) | null = null;
   // the number of times that held data was replaced or forgotten, and the pending document request (HY-93)
   private holds = 0;
   private obtaining: Promise<void> | null = null;
@@ -438,8 +442,10 @@ export class Hyper<E extends RegionElement = Element> {
           }
           return;
         }
-        // A region request is the latest navigation; a client-side restoration still loading is cancelled (HY-23).
-        this.location++;
+        // A region request is the latest navigation: the region request and the client-side restoration that it
+        // supersedes are aborted (HY-23).
+        this.regionAbort?.();
+        ctx.hyperLocation = ++this.location;
         this.locationAbort?.abort();
         // htmx aborts through this function on its timeout and on cancellation; the time tells them apart (HY-47).
         const abort = ctx.request.abort;
@@ -447,6 +453,7 @@ export class Hyper<E extends RegionElement = Element> {
           ctx.hyperAborted ??= performance.now();
           abort?.();
         };
+        this.regionAbort = ctx.request.abort;
         const requested = this.routeOf(ctx.request.action);
         const loading = requested === null ? Promise.resolve() : this.app.templates.ensure(routeTemplates(this.app.manifest, requested));
         loading.catch(() => undefined);
@@ -473,6 +480,8 @@ export class Hyper<E extends RegionElement = Element> {
       },
       htmx_after_request: (_elt, { ctx }) => {
         if (ctx.hyperRegion === undefined || ctx.text === undefined) return;
+        // A response that arrived before the abort of its superseded request does not swap over the newer navigation.
+        if (ctx.hyperLocation !== undefined && ctx.hyperLocation !== this.location) return false;
         if (!(ctx.response?.headers.get('content-type') ?? '').startsWith('application/json')) {
           markError(ctx.target, String(ctx.response?.status ?? 0));
           return false;
