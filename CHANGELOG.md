@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- HY-79: Composer links `polyspec/hyper-server` to `packages/server/php` in the root and in the board, as Composer does by default, in place of a copy (`symlink: false` is removed). `make hyper-server-php-install` runs `composer install` of the board under `var/install.lock`, and `tests/scripts/no-symlinks.test.mts` requires each polyspec package below a `vendor` to be a symbolic link to its source directory.
 - H23.31: `AGENTS.md` points to the local links of 0.0.x development that kit `docs/plans/local-links.md` describes; links are never committed.
 
 ## 0.0.18

@@ -41,7 +41,7 @@ SERVE_DEMO_LOCK := /tmp/hyper-serve-demo.lock
 TSC := $(CURDIR)/node_modules/.bin/tsc
 # The esbuild package replaces bin/esbuild with the executable of the platform when it installs.
 ESBUILD := node_modules/esbuild/bin/esbuild
-# The copy of packages/server/php that the board installs with Composer (HY-79).
+# The path repository packages/server/php, which the board links with Composer (HY-79).
 # The PHP memory limit of PHPStan: a run without its result cache (build/phpstan) needs 132 MB in its worker, above
 # the default limit of 128M.
 PHPSTAN_MEMORY := 256M
@@ -115,10 +115,10 @@ packages: toolchain-check ## Build the JavaScript modules and type declarations 
 	cd $(JS_PACKAGE) && $(NPM) run --silent build -- --outDir dist.next-$$$$ && $(NODE) $(CURDIR)/scripts/publish.mts directory dist.next-$$$$ dist
 	cd $(NODE_PACKAGE) && $(NPM) run --silent build -- --outDir dist.next-$$$$ && $(NODE) $(CURDIR)/scripts/publish.mts directory dist.next-$$$$ dist
 
-# The path repository of the board mirrors the PHP server package (symlink false, HY-79); composer reinstall mirrors the
-# working tree of the package again, so the board runs the current source. It reads no registry.
-hyper-server-php-install: ## Mirror packages/server/php into the vendor of the board again with composer reinstall (HY-79)
-	$(NODE) $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(COMPOSER) reinstall --no-interaction polyspec/hyper-server --working-dir=$(BOARD)
+# The path repository of the board links the PHP server package to packages/server/php (Composer's default, HY-79), so the
+# board runs the current source without a copy. The install reads no registry.
+hyper-server-php-install: ## Install the Composer dependencies of the board, which link polyspec/hyper-server to packages/server/php (HY-79)
+	$(NODE) $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(COMPOSER) install --no-interaction --working-dir=$(BOARD)
 
 package-check: packages node-fixtures ## Install the npm packages into tests/package-install, type-check its test against their declarations and run it under node (HY-61)
 	cd tests/package-install && $(NODE) ../../$(KIT)/holder-lock.$(KIT_EXT) run ../../$(INSTALL_LOCK) -- $(NPM) ci --offline --allow-remote=root --no-audit --no-fund
