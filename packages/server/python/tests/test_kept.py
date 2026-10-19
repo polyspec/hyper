@@ -17,18 +17,32 @@ def cases() -> list[dict]:
     return file("keep.json")["cases"]
 
 
+def add_cases(test_class, cases, check):
+    """Adds the test method test_<id> of each case, which runs check(self, case) for it (S6)."""
+    for case in cases:
+
+        def test(self, case=case):
+            check(self, case)
+
+        setattr(test_class, f"test_{case['id']}", test)
+
+
 def text(value) -> str:
     return json.dumps(value, ensure_ascii=False, separators=(",", ":"))
 
 
 class ApplyTest(unittest.TestCase):
-    def test_applies_the_kept_values_of_every_case(self) -> None:
-        for case in cases():
-            with self.subTest(case["label"]):
-                kept = [(pair[0], pair[1]) for pair in case["kept"]]
-                self.assertEqual(
-                    text(case["expected"]), text(apply(case["data"], kept))
-                )
+    pass
+
+
+add_cases(
+    ApplyTest,
+    cases(),
+    lambda self, case: self.assertEqual(
+        text(case["expected"]),
+        text(apply(case["data"], [(pair[0], pair[1]) for pair in case["kept"]])),
+    ),
+)
 
 
 class SelectTest(unittest.TestCase):

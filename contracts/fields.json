@@ -1,27 +1,27 @@
 {
   "urlencoded": [
-    { "label": "empty text", "text": "", "fields": [] },
-    { "label": "one value", "text": "page=2", "fields": [["page", ["2"]]] },
-    { "label": "repeated name keeps every value in order", "text": "a=1&b=2&a=3", "fields": [["a", ["1", "3"]], ["b", ["2"]]] },
-    { "label": "brackets are part of the name", "text": "roles%5B%5D=admin&roles[]=editor&a[b][c]=d", "fields": [["roles[]", ["admin", "editor"]], ["a[b][c]", ["d"]]] },
-    { "label": "names keep the order of their first occurrence", "text": "z=1&y=2&x=3&y=4", "fields": [["z", ["1"]], ["y", ["2", "4"]], ["x", ["3"]]] },
-    { "label": "decimal names stay names", "text": "1=a&0=b&1=c", "fields": [["1", ["a", "c"]], ["0", ["b"]]] },
-    { "label": "plus is a space and percent sequences are bytes", "text": "q=a+b%20c&t=%ED%95%9C+%EA%B8%80", "fields": [["q", ["a b c"]], ["t", ["한 글"]]] },
-    { "label": "a percent without two hexadecimal digits stays", "text": "p=100%&r=%zz%4", "fields": [["p", ["100%"]], ["r", ["%zz%4"]]] },
-    { "label": "a part without an equals sign has an empty value", "text": "flag&x=", "fields": [["flag", [""]], ["x", [""]]] },
-    { "label": "the first equals sign separates the name", "text": "e=a=b", "fields": [["e", ["a=b"]]] },
-    { "label": "empty parts are skipped", "text": "&a=1&&b=2&", "fields": [["a", ["1"]], ["b", ["2"]]] },
-    { "label": "an empty name is a name", "text": "=x&=y", "fields": [["", ["x", "y"]]] },
-    { "label": "raw UTF-8 bytes are read as they are", "text": "t=한", "fields": [["t", ["한"]]] },
-    { "label": "a semicolon does not separate", "text": "a=1;b=2", "fields": [["a", ["1;b=2"]]] },
-    { "label": "a value that is not UTF-8 fails", "text": "a=%E2%82", "fields": null },
-    { "label": "a name that is not UTF-8 fails", "text": "a%FF=1", "fields": null },
-    { "label": "a bracketed name that is not UTF-8 fails", "text": "a[%C3]=v", "fields": null }
+    { "id": "empty_text", "label": "empty text", "text": "", "fields": [] },
+    { "id": "one_value", "label": "one value", "text": "page=2", "fields": [["page", ["2"]]] },
+    { "id": "repeated_name_keeps_every_value_in_order", "label": "repeated name keeps every value in order", "text": "a=1&b=2&a=3", "fields": [["a", ["1", "3"]], ["b", ["2"]]] },
+    { "id": "brackets_are_part_of_the_name", "label": "brackets are part of the name", "text": "roles%5B%5D=admin&roles[]=editor&a[b][c]=d", "fields": [["roles[]", ["admin", "editor"]], ["a[b][c]", ["d"]]] },
+    { "id": "names_keep_the_order_of_their_first_occurrence", "label": "names keep the order of their first occurrence", "text": "z=1&y=2&x=3&y=4", "fields": [["z", ["1"]], ["y", ["2", "4"]], ["x", ["3"]]] },
+    { "id": "decimal_names_stay_names", "label": "decimal names stay names", "text": "1=a&0=b&1=c", "fields": [["1", ["a", "c"]], ["0", ["b"]]] },
+    { "id": "plus_is_a_space_and_percent_sequences_are_bytes", "label": "plus is a space and percent sequences are bytes", "text": "q=a+b%20c&t=%ED%95%9C+%EA%B8%80", "fields": [["q", ["a b c"]], ["t", ["한 글"]]] },
+    { "id": "a_percent_without_two_hexadecimal_digits_stays", "label": "a percent without two hexadecimal digits stays", "text": "p=100%&r=%zz%4", "fields": [["p", ["100%"]], ["r", ["%zz%4"]]] },
+    { "id": "a_part_without_an_equals_sign_has_an_empty_value", "label": "a part without an equals sign has an empty value", "text": "flag&x=", "fields": [["flag", [""]], ["x", [""]]] },
+    { "id": "the_first_equals_sign_separates_the_name", "label": "the first equals sign separates the name", "text": "e=a=b", "fields": [["e", ["a=b"]]] },
+    { "id": "empty_parts_are_skipped", "label": "empty parts are skipped", "text": "&a=1&&b=2&", "fields": [["a", ["1"]], ["b", ["2"]]] },
+    { "id": "an_empty_name_is_a_name", "label": "an empty name is a name", "text": "=x&=y", "fields": [["", ["x", "y"]]] },
+    { "id": "raw_utf_8_bytes_are_read_as_they_are", "label": "raw UTF-8 bytes are read as they are", "text": "t=한", "fields": [["t", ["한"]]] },
+    { "id": "a_semicolon_does_not_separate", "label": "a semicolon does not separate", "text": "a=1;b=2", "fields": [["a", ["1;b=2"]]] },
+    { "id": "a_value_that_is_not_utf_8_fails", "label": "a value that is not UTF-8 fails", "text": "a=%E2%82", "fields": null },
+    { "id": "a_name_that_is_not_utf_8_fails", "label": "a name that is not UTF-8 fails", "text": "a%FF=1", "fields": null },
+    { "id": "a_bracketed_name_that_is_not_utf_8_fails", "label": "a bracketed name that is not UTF-8 fails", "text": "a[%C3]=v", "fields": null }
   ],
   "multipart": [
-    {"label": "text fields in order with repeated and bracketed names", "type": "multipart/form-data; boundary=XyZ", "body": "--XyZ\r\nContent-Disposition: form-data; name=\"roles[]\"\r\n\r\nadmin\r\n--XyZ\r\nContent-Disposition: form-data; name=\"title\"\r\n\r\n\u00ed\u0095\u009c \u00ea\u00b8\u0080\r\n--XyZ\r\nContent-Disposition: form-data; name=\"roles[]\"\r\n\r\neditor\r\n--XyZ--\r\n", "fields": [["roles[]", ["admin", "editor"]], ["title", ["\ud55c \uae00"]]]},
-    {"label": "a file field is not a form value", "type": "multipart/form-data; boundary=\"XyZ\"", "body": "--XyZ\r\nContent-Disposition: form-data; name=\"a\"\r\n\r\n1\r\n--XyZ\r\nContent-Disposition: form-data; name=\"file\"; filename=\"a.txt\"\r\nContent-Type: text/plain\r\n\r\nfile body\r\n--XyZ--\r\n", "fields": [["a", ["1"]]]},
-    {"label": "a value keeps its line breaks and percent signs", "type": "multipart/form-data; boundary=XyZ", "body": "--XyZ\r\nContent-Disposition: form-data; name=\"body\"\r\n\r\nline 1\r\nline+2 %41\r\n--XyZ--\r\n", "fields": [["body", ["line 1\r\nline+2 %41"]]]},
-    {"label": "a value that is not UTF-8 fails", "type": "multipart/form-data; boundary=XyZ", "body": "--XyZ\r\nContent-Disposition: form-data; name=\"a\"\r\n\r\n\u00ff\r\n--XyZ--\r\n", "fields": null}
+    {"id": "text_fields_in_order_with_repeated_and_bracketed_names", "label": "text fields in order with repeated and bracketed names", "type": "multipart/form-data; boundary=XyZ", "body": "--XyZ\r\nContent-Disposition: form-data; name=\"roles[]\"\r\n\r\nadmin\r\n--XyZ\r\nContent-Disposition: form-data; name=\"title\"\r\n\r\n\u00ed\u0095\u009c \u00ea\u00b8\u0080\r\n--XyZ\r\nContent-Disposition: form-data; name=\"roles[]\"\r\n\r\neditor\r\n--XyZ--\r\n", "fields": [["roles[]", ["admin", "editor"]], ["title", ["\ud55c \uae00"]]]},
+    {"id": "a_file_field_is_not_a_form_value", "label": "a file field is not a form value", "type": "multipart/form-data; boundary=\"XyZ\"", "body": "--XyZ\r\nContent-Disposition: form-data; name=\"a\"\r\n\r\n1\r\n--XyZ\r\nContent-Disposition: form-data; name=\"file\"; filename=\"a.txt\"\r\nContent-Type: text/plain\r\n\r\nfile body\r\n--XyZ--\r\n", "fields": [["a", ["1"]]]},
+    {"id": "a_value_keeps_its_line_breaks_and_percent_signs", "label": "a value keeps its line breaks and percent signs", "type": "multipart/form-data; boundary=XyZ", "body": "--XyZ\r\nContent-Disposition: form-data; name=\"body\"\r\n\r\nline 1\r\nline+2 %41\r\n--XyZ--\r\n", "fields": [["body", ["line 1\r\nline+2 %41"]]]},
+    {"id": "a_value_that_is_not_utf_8_fails_2", "label": "a value that is not UTF-8 fails", "type": "multipart/form-data; boundary=XyZ", "body": "--XyZ\r\nContent-Disposition: form-data; name=\"a\"\r\n\r\n\u00ff\r\n--XyZ--\r\n", "fields": null}
   ]
 }

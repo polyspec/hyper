@@ -22,8 +22,8 @@ function string(value: Value | undefined, label: string): string {
   return value;
 }
 
-describe('selectKept conformance', () => {
-  it.each(cases.map((item) => [string(item.get('label'), 'label'), item] as const))('%s', (_label, item) => {
+// Each case is a top-level test named by its id (S6).
+it.each(cases.map((item) => [string(item.get('id'), 'id'), item] as const))('%s', (_id, item) => {
     const data = requireMap(item.get('data') ?? null, 'data');
     const kept = list(item.get('kept'), 'kept').map((entry): [string, Value] => {
       const [path, value] = list(entry, 'a kept pair');
@@ -34,11 +34,10 @@ describe('selectKept conformance', () => {
     const applied = requireMap(copyValue(data), 'data');
     applyKept(applied, [...selected]);
     expect(applied).toEqual(item.get('expected'));
-  });
+});
 
-  it('walks into maps and leaves the loader data unchanged', () => {
+it('walks into maps and leaves the loader data unchanged', () => {
     const data: MapValue = new Map([['notice', new Map<string, Value>([['closed', false]])]]);
     expect(selectKept(data, [['notice.closed', true]])).toEqual(new Map([['notice.closed', true]]));
     expect(data).toEqual(new Map([['notice', new Map([['closed', false]])]]));
-  });
 });

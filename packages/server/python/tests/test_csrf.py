@@ -13,12 +13,17 @@ def file(name: str) -> dict:
     return json.loads((CONTRACTS / name).read_text(encoding="utf-8"))
 
 
-class MaskTest(unittest.TestCase):
-    def test_every_case(self) -> None:
-        for case in file("csrf.json")["mask"]:
-            with self.subTest(case["label"]):
-                self.assertEqual(case["value"], mask(case["token"], case["mask"]))
+def add_cases(test_class, cases, check):
+    """Adds the test method test_<id> of each case, which runs check(self, case) for it (S6)."""
+    for case in cases:
 
+        def test(self, case=case):
+            check(self, case)
+
+        setattr(test_class, f"test_{case['id']}", test)
+
+
+class MaskTest(unittest.TestCase):
     def test_a_new_mask_has_128_lowercase_digits(self) -> None:
         token = "ab" * 32
         value = masked(token)
@@ -28,10 +33,11 @@ class MaskTest(unittest.TestCase):
 
 
 class VerifyTest(unittest.TestCase):
-    def test_every_case(self) -> None:
-        for case in file("csrf.json")["verify"]:
-            with self.subTest(case["label"]):
-                self.assertEqual(case["valid"], verify(case["token"], case["value"]))
+    pass
+
+
+add_cases(MaskTest, file("csrf.json")["mask"], lambda self, case: self.assertEqual(case["value"], mask(case["token"], case["mask"])))
+add_cases(VerifyTest, file("csrf.json")["verify"], lambda self, case: self.assertEqual(case["valid"], verify(case["token"], case["value"])))
 
 
 if __name__ == "__main__":

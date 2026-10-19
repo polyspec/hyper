@@ -7,18 +7,16 @@ import { listOf, mapOf, stringOf } from './values.js';
 const fixture = mapOf(parseJson(readFileSync(new URL('../../../contracts/keep.json', import.meta.url), 'utf8')));
 const cases = listOf(fixture.get('cases')).map((value) => mapOf(value));
 
-// HY-41: these are the same cases that the PHP implementation passes.
-describe('applyKept conformance', () => {
-  it.each(cases.map((item) => [stringOf(item.get('label')), item] as const))('%s', (_label, item) => {
-    const data = mapOf(item.get('data'));
-    const kept = listOf(item.get('kept')).map((entry) => {
-      const [path, value] = listOf(entry);
-      if (value === undefined) throw new Error('a kept entry has no value');
-      return [stringOf(path), value] as const;
-    });
-    applyKept(data, kept);
-    expect(data).toEqual(item.get('expected'));
+// HY-41: these are the same cases that the PHP implementation passes. Each case is a top-level test named by its id (S6).
+it.each(cases.map((item) => [stringOf(item.get('id')), item] as const))('%s', (_id, item) => {
+  const data = mapOf(item.get('data'));
+  const kept = listOf(item.get('kept')).map((entry) => {
+    const [path, value] = listOf(entry);
+    if (value === undefined) throw new Error('a kept entry has no value');
+    return [stringOf(path), value] as const;
   });
+  applyKept(data, kept);
+  expect(data).toEqual(item.get('expected'));
 });
 
 describe('kept cookie name', () => {

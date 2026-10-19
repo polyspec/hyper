@@ -15,14 +15,14 @@
   ],
   "cases": [
     {
-      "path": "/",
+      "id": "empty", "path": "/",
       "result": {
         "name": "home",
         "params": {}
       }
     },
     {
-      "path": "/files",
+      "id": "files", "path": "/files",
       "result": {
         "name": "files",
         "params": {
@@ -31,7 +31,7 @@
       }
     },
     {
-      "path": "/files/a/b",
+      "id": "files_a_b", "path": "/files/a/b",
       "result": {
         "name": "files",
         "params": {
@@ -40,7 +40,7 @@
       }
     },
     {
-      "path": "/files/a%2Fb/c",
+      "id": "files_a_2fb_c", "path": "/files/a%2Fb/c",
       "result": {
         "name": "files",
         "params": {
@@ -49,7 +49,7 @@
       }
     },
     {
-      "path": "/files/%EA%B0%80",
+      "id": "files_ea_b0_80", "path": "/files/%EA%B0%80",
       "result": {
         "name": "files",
         "params": {
@@ -58,7 +58,7 @@
       }
     },
     {
-      "path": "/files/a//b",
+      "id": "files_a_b_2", "path": "/files/a//b",
       "result": {
         "name": "files",
         "params": {
@@ -67,7 +67,7 @@
       }
     },
     {
-      "path": "/files/",
+      "id": "files_2", "path": "/files/",
       "result": {
         "name": "files",
         "params": {
@@ -76,7 +76,7 @@
       }
     },
     {
-      "path": "/news/2026/10",
+      "id": "news_2026_10", "path": "/news/2026/10",
       "result": {
         "name": "all",
         "params": {
@@ -85,15 +85,15 @@
       }
     },
     {
-      "path": "/files/%zz",
+      "id": "files_zz", "path": "/files/%zz",
       "result": null
     },
     {
-      "path": "/news/%FF",
+      "id": "news_ff", "path": "/news/%FF",
       "result": null
     },
     {
-      "path": "news",
+      "id": "news", "path": "news",
       "result": null
     }
   ],

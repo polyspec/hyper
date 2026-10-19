@@ -14,6 +14,16 @@ def file(name: str) -> dict:
     return json.loads((CONTRACTS / name).read_text(encoding="utf-8"))
 
 
+def add_cases(test_class, cases, check):
+    """Adds the test method test_<id> of each case, which runs check(self, case) for it (S6)."""
+    for case in cases:
+
+        def test(self, case=case):
+            check(self, case)
+
+        setattr(test_class, f"test_{case['id']}", test)
+
+
 def entries(fields: Fields | None) -> list | None:
     if fields is None:
         return None
@@ -21,24 +31,40 @@ def entries(fields: Fields | None) -> list | None:
 
 
 class UrlEncodedTest(unittest.TestCase):
-    def test_every_case(self) -> None:
-        for case in file("fields.json")["urlencoded"]:
-            with self.subTest(case["label"]):
-                self.assertEqual(
-                    case["fields"], entries(Fields.parse(case["text"].encode("utf-8")))
-                )
+    pass
+
+
+add_cases(
+    UrlEncodedTest,
+    file("fields.json")["urlencoded"],
+    lambda self, case: self.assertEqual(
+        case["fields"], entries(Fields.parse(case["text"].encode("utf-8")))
+    ),
+)
 
 
 class MultipartTest(unittest.TestCase):
-    def test_every_case(self) -> None:
-        for case in file("fields.json")["multipart"]:
-            with self.subTest(case["label"]):
-                self.assertEqual(
-                    case["fields"],
-                    entries(
-                        Fields.from_body(case["type"], case["body"].encode("latin-1"))
-                    ),
-                )
+    pass
+
+
+add_cases(
+    MultipartTest,
+    file("fields.json")["multipart"],
+    lambda self, case: self.assertEqual(
+        case["fields"],
+        entries(Fields.from_body(case["type"], case["body"].encode("latin-1"))),
+    ),
+)
+
+
+class HasTest(unittest.TestCase):
+    def test_absent_name_has_no_values(self) -> None:
+        """Fields.has tells a name with values from an absent name, as PHP Fields::has does (HY-56)."""
+        fields = Fields.parse(b"1=x")
+        self.assertIsNotNone(fields)
+        self.assertTrue(fields.has("1"))
+        self.assertFalse(fields.has("2"))
+        self.assertEqual([], fields.get("2"))
 
 
 class BodyTypeTest(unittest.TestCase):

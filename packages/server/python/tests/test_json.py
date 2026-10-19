@@ -14,6 +14,16 @@ def file(name: str) -> dict:
     return json.loads((CONTRACTS / name).read_text(encoding="utf-8"))
 
 
+def add_cases(test_class, cases, check):
+    """Adds the test method test_<id> of each case, which runs check(self, case) for it (S6)."""
+    for case in cases:
+
+        def test(self, case=case):
+            check(self, case)
+
+        setattr(test_class, f"test_{case['id']}", test)
+
+
 def finite(value):
     """A decoded value with the numbers outside the data model as floats, which encoding also writes."""
     if isinstance(value, list):
@@ -23,24 +33,33 @@ def finite(value):
     return float(value.literal) if hasattr(value, "literal") else value
 
 
+def decode_result(text: str) -> str:
+    try:
+        return "value" if in_data_model(decode(text)) else "outside"
+    except JsonDecodeError:
+        return "error"
+
+
 class EncodeTest(unittest.TestCase):
-    def test_every_case(self) -> None:
-        for case in file("json.json")["encode"]:
-            with self.subTest(case["label"]):
-                self.assertEqual(case["expected"], encode(finite(decode(case["json"]))))
+    pass
 
 
 class DecodeTest(unittest.TestCase):
-    def test_every_case(self) -> None:
-        for case in file("json.json")["decode"]:
-            with self.subTest(case["label"]):
-                try:
-                    result = (
-                        "value" if in_data_model(decode(case["json"])) else "outside"
-                    )
-                except JsonDecodeError:
-                    result = "error"
-                self.assertEqual(case["result"], result)
+    pass
+
+
+add_cases(
+    EncodeTest,
+    file("json.json")["encode"],
+    lambda self, case: self.assertEqual(
+        case["expected"], encode(finite(decode(case["json"])))
+    ),
+)
+add_cases(
+    DecodeTest,
+    file("json.json")["decode"],
+    lambda self, case: self.assertEqual(case["result"], decode_result(case["json"])),
+)
 
 
 class NumberTest(unittest.TestCase):

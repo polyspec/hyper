@@ -12,7 +12,7 @@ import { manifest, sources } from './application.js';
 import { defined, isRecord, isStringRecord } from './values.js';
 
 interface Case {
-  label: string;
+  id: string;
   templates: Record<string, string>;
   template: string;
   data: unknown;
@@ -25,7 +25,7 @@ if (!isRecord(fixture) || !Array.isArray(fixture.cases) || !fixture.cases.every(
 const cases: Case[] = fixture.cases;
 
 function isCase(value: unknown): value is Case {
-  return isRecord(value) && typeof value.label === 'string' && isStringRecord(value.templates) && typeof value.template === 'string' && isReadNode(value.reads);
+  return isRecord(value) && typeof value.id === 'string' && isStringRecord(value.templates) && typeof value.template === 'string' && isReadNode(value.reads);
 }
 
 function isReadNode(value: unknown): value is ReadNode {
@@ -44,29 +44,30 @@ function readsWithin(item: Case): unknown {
     encoding: 'utf8',
     timeout: READS_LIMIT_MS,
   });
-  if (child.error !== undefined) throw new Error(`the read paths of "${item.label}" did not finish within ${READS_LIMIT_MS} ms: ${child.error.message}`);
-  if (child.status !== 0) throw new Error(`the read paths of "${item.label}" failed: ${child.stderr}`);
+  if (child.error !== undefined) throw new Error(`the read paths of "${item.id}" did not finish within ${READS_LIMIT_MS} ms: ${child.error.message}`);
+  if (child.status !== 0) throw new Error(`the read paths of "${item.id}" failed: ${child.stderr}`);
   const reads: unknown = JSON.parse(child.stdout);
   return reads;
 }
 
+// Each case of contracts/reads.json is a top-level test named by its id, which the parity check reads (S6).
+for (const item of cases) {
+  it(item.id, () => {
+    const parsed = new Map(Object.entries(item.templates).map(([name, source]) => [name, parse(source, name)]));
+    expect(readsWithin(item)).toEqual(item.reads);
+
+    const data = parseJson(JSON.stringify(item.data));
+    const kept = keepRead(data, item.reads);
+    expect(kept).toEqual(parseJson(JSON.stringify(item.kept)));
+
+    const loader = new MapLoader();
+    for (const [name, template] of parsed) loader.set(name, template);
+    const engine = createEngine(loader);
+    expect(engine.render(item.template, kept)).toBe(engine.render(item.template, data));
+  });
+}
+
 describe('read paths (HY-73)', () => {
-  for (const item of cases) {
-    it(item.label, () => {
-      const parsed = new Map(Object.entries(item.templates).map(([name, source]) => [name, parse(source, name)]));
-      expect(readsWithin(item)).toEqual(item.reads);
-
-      const data = parseJson(JSON.stringify(item.data));
-      const kept = keepRead(data, item.reads);
-      expect(kept).toEqual(parseJson(JSON.stringify(item.kept)));
-
-      const loader = new MapLoader();
-      for (const [name, template] of parsed) loader.set(name, template);
-      const engine = createEngine(loader);
-      expect(engine.render(item.template, kept)).toBe(engine.render(item.template, data));
-    });
-  }
-
   it('reads the shared data of every template of a route and the data of each region from its template', () => {
     const parsed = new Map(Object.entries(sources).map(([name, source]) => [name, parse(source, name)]));
     const reads = routeReads(manifest, (name) => defined(parsed.get(name), `the template ${name}`), resolvePath);

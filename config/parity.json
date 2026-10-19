@@ -1,0 +1,461 @@
+{
+  "schema": 1,
+  "comment": "The language parity of hyper: the implementations of the server (PHP, Python, Node), the browser package, the profiles that group them, and the units that every implementation of a profile holds. The server implementations run the shared vectors of contracts/ and the public functions they have in common; the browser package is the one browser implementation (HY-98).",
+  "implementations": [
+    {
+      "name": "php",
+      "runner": "php",
+      "prose": [
+        "PHP",
+        "PHP server"
+      ],
+      "roots": [
+        "packages/server/php"
+      ],
+      "symbols": {
+        "extractor": "php",
+        "entry": "packages/server/php/src"
+      }
+    },
+    {
+      "name": "python",
+      "runner": "python",
+      "prose": [
+        "Python",
+        "Python server"
+      ],
+      "roots": [
+        "packages/server/python"
+      ],
+      "command": "packages/server/python/.venv/bin/python",
+      "symbols": {
+        "extractor": "python",
+        "entry": "packages/server/python/src/polyspec/hyper"
+      }
+    },
+    {
+      "name": "ts",
+      "runner": "vitest",
+      "prose": [
+        "TypeScript",
+        "Node",
+        "Node server"
+      ],
+      "roots": [
+        "packages/server/ts"
+      ],
+      "symbols": {
+        "extractor": "ts",
+        "entry": "packages/server/ts/dist/index.d.ts"
+      }
+    },
+    {
+      "name": "client",
+      "runner": "vitest",
+      "prose": [
+        "browser package",
+        "browser code"
+      ],
+      "roots": [
+        "packages/client"
+      ],
+      "symbols": {
+        "extractor": "ts",
+        "entry": "packages/client/dist/index.d.ts"
+      }
+    }
+  ],
+  "profiles": [
+    {
+      "name": "server",
+      "implementations": [
+        "php",
+        "python",
+        "ts"
+      ],
+      "reason": "The browser package is the one browser implementation of the protocol (HY-98), so the server implementations hold the server units, which the browser package does not hold.",
+      "spec": [
+        "docs/spec/protocol.md#browser"
+      ]
+    },
+    {
+      "name": "browser",
+      "implementations": [
+        "client"
+      ],
+      "reason": "Only the browser package runs in the browser; PHP, Python and Node serve the protocol and hold no browser code (HY-98).",
+      "spec": [
+        "docs/spec/protocol.md#browser"
+      ]
+    },
+    {
+      "name": "file-sessions",
+      "implementations": [
+        "python",
+        "ts"
+      ],
+      "reason": "PHP keeps its sessions in its own session handler, while the Node and Python servers keep each session in a file of one directory (HY-54, HY-104).",
+      "spec": [
+        "docs/spec/protocol.md#node-server"
+      ]
+    }
+  ],
+  "suites": [
+    "contracts/*.json"
+  ],
+  "comparators": [],
+  "tools": [
+    {
+      "root": "tests/scripts",
+      "reason": "the node tests of the repository tools of scripts/ (the verifier, the build, the publish and the check scripts), which implement no contract"
+    },
+    {
+      "root": "tests/e2e",
+      "reason": "the browser tests of the example board, which run the example application and implement no contract"
+    },
+    {
+      "root": "tests/package-install",
+      "reason": "the install test of the published packages, which consumes them and implements no contract"
+    },
+    {
+      "root": "tests/virtiofs",
+      "reason": "the output-file test of the virtiofs check of the repository tools, which implements no contract"
+    }
+  ],
+  "testPatterns": [
+    {
+      "runner": "python",
+      "globs": [
+        "packages/server/python/tests/render/render_*.py"
+      ]
+    }
+  ],
+  "units": [
+    {
+      "id": "fields-urlencoded",
+      "kind": "suite",
+      "profile": "server",
+      "file": "contracts/fields.json",
+      "cases": "$.urlencoded[*].id",
+      "bindings": [
+        {
+          "implementation": "php",
+          "test": "packages/server/php/tests/FieldsTest.php",
+          "symbol": "Polyspec\\Hyper\\Tests\\FieldsTest::testParsesTheTextWithoutNesting"
+        },
+        {
+          "implementation": "python",
+          "test": "packages/server/python/tests/test_fields.py"
+        },
+        {
+          "implementation": "ts",
+          "test": "packages/server/ts/tests/fields.test.ts"
+        }
+      ],
+      "requirements": [
+        "HY-56",
+        "HY-57"
+      ]
+    },
+    {
+      "id": "fields-multipart",
+      "kind": "suite",
+      "profile": "server",
+      "file": "contracts/fields.json",
+      "cases": "$.multipart[*].id",
+      "bindings": [
+        {
+          "implementation": "php",
+          "test": "packages/server/php/tests/FieldsTest.php",
+          "symbol": "Polyspec\\Hyper\\Tests\\FieldsTest::testReadsTheTextFieldsOfAMultipartBody"
+        },
+        {
+          "implementation": "python",
+          "test": "packages/server/python/tests/test_fields.py"
+        },
+        {
+          "implementation": "ts",
+          "test": "packages/server/ts/tests/fields.test.ts"
+        }
+      ],
+      "requirements": [
+        "HY-56",
+        "HY-57"
+      ]
+    },
+    {
+      "id": "json-encode",
+      "kind": "suite",
+      "profile": "server",
+      "file": "contracts/json.json",
+      "cases": "$.encode[*].id",
+      "bindings": [
+        {
+          "implementation": "php",
+          "test": "packages/server/php/tests/JsonTest.php",
+          "symbol": "Polyspec\\Hyper\\Tests\\JsonTest::testEncodesTheDecodedValue"
+        },
+        {
+          "implementation": "python",
+          "test": "packages/server/python/tests/test_json.py"
+        },
+        {
+          "implementation": "ts",
+          "test": "packages/server/ts/tests/json.test.ts"
+        }
+      ],
+      "requirements": [
+        "HY-17",
+        "HY-38",
+        "HY-40",
+        "HY-44",
+        "HY-54"
+      ]
+    },
+    {
+      "id": "json-decode",
+      "kind": "suite",
+      "profile": "server",
+      "file": "contracts/json.json",
+      "cases": "$.decode[*].id",
+      "bindings": [
+        {
+          "implementation": "php",
+          "test": "packages/server/php/tests/JsonTest.php",
+          "symbol": "Polyspec\\Hyper\\Tests\\JsonTest::testDecodesKeptValues"
+        },
+        {
+          "implementation": "python",
+          "test": "packages/server/python/tests/test_json.py"
+        },
+        {
+          "implementation": "ts",
+          "test": "packages/server/ts/tests/json.test.ts"
+        }
+      ],
+      "requirements": [
+        "HY-17",
+        "HY-38",
+        "HY-40",
+        "HY-44",
+        "HY-54"
+      ]
+    },
+    {
+      "id": "csrf-mask",
+      "kind": "suite",
+      "profile": "server",
+      "file": "contracts/csrf.json",
+      "cases": "$.mask[*].id",
+      "bindings": [
+        {
+          "implementation": "php",
+          "test": "packages/server/php/tests/CsrfTest.php",
+          "symbol": "Polyspec\\Hyper\\Tests\\CsrfTest::testMasksTheTokenWithAMask"
+        },
+        {
+          "implementation": "python",
+          "test": "packages/server/python/tests/test_csrf.py"
+        },
+        {
+          "implementation": "ts",
+          "test": "packages/server/ts/tests/csrf.test.ts"
+        }
+      ],
+      "requirements": [
+        "HY-24"
+      ]
+    },
+    {
+      "id": "csrf-verify",
+      "kind": "suite",
+      "profile": "server",
+      "file": "contracts/csrf.json",
+      "cases": "$.verify[*].id",
+      "bindings": [
+        {
+          "implementation": "php",
+          "test": "packages/server/php/tests/CsrfTest.php",
+          "symbol": "Polyspec\\Hyper\\Tests\\CsrfTest::testVerifiesAFormValue"
+        },
+        {
+          "implementation": "python",
+          "test": "packages/server/python/tests/test_csrf.py"
+        },
+        {
+          "implementation": "ts",
+          "test": "packages/server/ts/tests/csrf.test.ts"
+        }
+      ],
+      "requirements": [
+        "HY-24"
+      ]
+    },
+    {
+      "id": "routes",
+      "kind": "suite",
+      "profile": "server",
+      "file": "contracts/routes.json",
+      "cases": "$.cases[*].id",
+      "bindings": [
+        {
+          "implementation": "php",
+          "test": "packages/server/php/tests/RouterTest.php",
+          "symbol": "Polyspec\\Hyper\\Tests\\RouterTest::testRoutesThePath"
+        },
+        {
+          "implementation": "python",
+          "test": "packages/server/python/tests/test_router.py"
+        },
+        {
+          "implementation": "ts",
+          "test": "packages/server/ts/tests/router.test.ts"
+        }
+      ],
+      "requirements": [
+        "HY-4",
+        "HY-8",
+        "HY-9",
+        "HY-49"
+      ]
+    },
+    {
+      "id": "routes-base-path",
+      "kind": "suite",
+      "profile": "server",
+      "file": "contracts/routes.json",
+      "cases": "$.baseCases[*].id",
+      "bindings": [
+        {
+          "implementation": "php",
+          "test": "packages/server/php/tests/RouterTest.php",
+          "symbol": "Polyspec\\Hyper\\Tests\\RouterTest::testRoutesThePathUnderTheBasePath"
+        },
+        {
+          "implementation": "python",
+          "test": "packages/server/python/tests/test_router.py"
+        },
+        {
+          "implementation": "ts",
+          "test": "packages/server/ts/tests/router.test.ts"
+        }
+      ],
+      "requirements": [
+        "HY-4",
+        "HY-8",
+        "HY-9",
+        "HY-49"
+      ]
+    },
+    {
+      "id": "rest",
+      "kind": "suite",
+      "profile": "server",
+      "file": "contracts/rest.json",
+      "cases": "$.cases[*].id",
+      "bindings": [
+        {
+          "implementation": "php",
+          "test": "packages/server/php/tests/RouterTest.php",
+          "symbol": "Polyspec\\Hyper\\Tests\\RouterTest::testRoutesTheRestOfThePath"
+        },
+        {
+          "implementation": "python",
+          "test": "packages/server/python/tests/test_router.py"
+        },
+        {
+          "implementation": "ts",
+          "test": "packages/server/ts/tests/rest.test.ts"
+        }
+      ],
+      "requirements": [
+        "HY-4",
+        "HY-8",
+        "HY-9",
+        "HY-49"
+      ]
+    },
+    {
+      "id": "keep",
+      "kind": "suite",
+      "profile": "server",
+      "file": "contracts/keep.json",
+      "cases": "$.cases[*].id",
+      "bindings": [
+        {
+          "implementation": "php",
+          "test": "packages/server/php/tests/KeptTest.php",
+          "symbol": "Polyspec\\Hyper\\Tests\\KeptTest::testAppliesKeptValues"
+        },
+        {
+          "implementation": "python",
+          "test": "packages/server/python/tests/test_kept.py"
+        },
+        {
+          "implementation": "ts",
+          "test": "packages/server/ts/tests/kept.test.ts"
+        }
+      ],
+      "requirements": [
+        "HY-37",
+        "HY-38",
+        "HY-41"
+      ]
+    },
+    {
+      "id": "reads",
+      "kind": "suite",
+      "profile": "server",
+      "file": "contracts/reads.json",
+      "cases": "$.cases[*].id",
+      "bindings": [
+        {
+          "implementation": "php",
+          "test": "packages/server/php/tests/ReadsTest.php",
+          "symbol": "Polyspec\\Hyper\\Tests\\ReadsTest::testKeepsTheReadPathsOfEveryCase"
+        },
+        {
+          "implementation": "python",
+          "test": "packages/server/python/tests/test_reads.py"
+        },
+        {
+          "implementation": "ts",
+          "test": "packages/server/ts/tests/reads.test.ts"
+        }
+      ],
+      "requirements": [
+        "HY-73"
+      ]
+    },
+    {
+      "id": "client-requests",
+      "kind": "suite",
+      "profile": "server",
+      "file": "contracts/client.json",
+      "cases": "$.cases[*].id",
+      "bindings": [
+        {
+          "implementation": "php",
+          "test": "packages/server/php/tests/ClientTest.php",
+          "symbol": "Polyspec\\Hyper\\Tests\\ClientTest::testConformance"
+        },
+        {
+          "implementation": "ts",
+          "test": "packages/server/ts/tests/client.test.ts"
+        }
+      ],
+      "requirements": [
+        "HY-24",
+        "HY-43",
+        "HY-45",
+        "HY-60",
+        "HY-62"
+      ]
+    }
+  ],
+  "nativeOnly": [],
+  "exclusions": [],
+  "requirements": {
+    "pattern": "HY-[0-9]+"
+  }
+}

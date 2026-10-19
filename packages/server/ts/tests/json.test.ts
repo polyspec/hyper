@@ -18,23 +18,20 @@ function finite(value: DecodedValue): Value {
   return value;
 }
 
-describe('encodeJson conformance', () => {
-  it.each(encode.map((item) => [text(item.label), item] as const))('%s', (_label, item) => {
-    expect(encodeJson(finite(decodeJson(text(item.json))))).toBe(item.expected);
-  });
+// Each case of contracts/json.json is a top-level test named by its id (S6).
+it.each(encode.map((item) => [text(item.id), item] as const))('%s', (_id, item) => {
+  expect(encodeJson(finite(decodeJson(text(item.json))))).toBe(item.expected);
 });
 
-describe('decodeJson conformance', () => {
-  it.each(decode.map((item) => [text(item.label), item] as const))('%s', (_label, item) => {
-    let result: string;
-    try {
-      result = inDataModel(decodeJson(text(item.json))) ? 'value' : 'outside';
-    } catch (error) {
-      if (!(error instanceof JsonDecodeError)) throw error;
-      result = 'error';
-    }
-    expect(result).toBe(item.result);
-  });
+it.each(decode.map((item) => [text(item.id), item] as const))('%s', (_id, item) => {
+  let result: string;
+  try {
+    result = inDataModel(decodeJson(text(item.json))) ? 'value' : 'outside';
+  } catch (error) {
+    if (!(error instanceof JsonDecodeError)) throw error;
+    result = 'error';
+  }
+  expect(result).toBe(item.result);
 });
 
 describe('PHP json_encode bytes', () => {
