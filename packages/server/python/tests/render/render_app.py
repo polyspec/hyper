@@ -82,7 +82,7 @@ class PageTest(unittest.TestCase):
     def test_a_region_request_receives_the_page_and_the_changed_regions(self) -> None:
         store = ArraySession()
         app = opened()
-        first = app.handle(get("/list", {"Accept": "application/json"}), store)
+        app.handle(get("/list", {"Accept": "application/json"}), store)
         # The action of the next request stores the changed topic `rows`; the region request selects the regions
         # that use it.
         app.handle(

@@ -31,9 +31,9 @@ from .json_codec import (
     encode_string,
     in_data_model,
 )
-from .kept import KINDS, apply, select
+from .kept import KINDS
 from .manifest import Manifest
-from .planner import changed_topics, select
+from .planner import changed_topics
 from .region import Region
 from .reply import Reply
 from .request import Request
@@ -87,7 +87,6 @@ __all__ = [
     "response",
     "result",
     "router",
-    "select",
     "session",
     "strip_base_path",
     "verify",

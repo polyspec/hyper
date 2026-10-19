@@ -9,6 +9,7 @@ built-in server serves its document root."""
 
 from __future__ import annotations
 
+import logging
 import sys
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -23,14 +24,16 @@ from .pipeline import (
     answer_with,
     cookie_values,
     declared_length,
-    escape,
     head_request,
+    plain_500,
     public_file,
     read_limited,
     validate,
 )
 from .request import Request
 from .response import Response
+
+logger = logging.getLogger(__name__)
 
 
 def create_server(
@@ -125,6 +128,9 @@ def create_server(
                 )
                 response = answer_with(application, session_store, around, exchange)
             except Exception as error:
+                # HY-60: an error that escapes the answer gets the plain 500. The answer runs the hooks of the
+                # application and the session store, which are user code, so no narrower type can name every error.
+                logger.exception("hyper: %s: %s", type(error).__name__, error)
                 self.escape_error(application, error, exchange, None)
                 return
             try:
@@ -136,7 +142,10 @@ def create_server(
                 exchange.report(response, False)
                 exchange.disconnect(application)
                 return
-            except Exception as error:
+            except (OSError, ValueError) as error:
+                # HY-60: a write that fails after the answer, or a header or body that cannot be encoded (a
+                # UnicodeError is a ValueError), is an escaped error.
+                logger.exception("hyper: %s: %s", type(error).__name__, error)
                 self.escape_error(application, error, exchange, response)
                 return
             exchange.report(response, True)
@@ -148,11 +157,11 @@ def create_server(
             exchange: Exchange,
             started: Optional[Response],
         ) -> None:
-            """Logs an error that escapes the answer of a request (HY-60) and writes hyper's plain 500 when no write
-            has started. `started` is the response whose write started, or None. When the headers have left the
+            """Writes hyper's plain 500 for an error that escapes the answer of a request (HY-60) when no write has
+            started; the caller has logged the error. `started` is the response whose write started, or None. When the headers have left the
             server, the 500 cannot be written: the connection closes and the write hook receives `started` with
             ended false. The write hook receives the plain 500 once, with the failure of the error (HY-99)."""
-            response = escape(application, error)
+            response = plain_500(application)
             failure = str(error)
             if self.headers_started:
                 self.close_connection = True
@@ -162,7 +171,7 @@ def create_server(
                 return
             try:
                 self.send(response)
-            except Exception as write_error:
+            except OSError as write_error:
                 sys.stderr.write(
                     f"hyper: {type(write_error).__name__}: {write_error}\n"
                 )

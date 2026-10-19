@@ -256,7 +256,6 @@ class WsgiTest(unittest.TestCase):
                 request
             ),
         )
-        started: list = []
         stderr = io.StringIO()
         with contextlib.redirect_stderr(stderr):
             status, headers, body = call(
