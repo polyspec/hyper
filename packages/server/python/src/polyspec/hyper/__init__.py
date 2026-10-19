@@ -62,8 +62,6 @@ __all__ = [
     "Router",
     "Session",
     "SessionStore",
-    "KINDS",
-    "changed_topics",
     "check",
     "container",
     "contains",
