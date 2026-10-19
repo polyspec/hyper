@@ -7,13 +7,15 @@ from __future__ import annotations
 import re
 from typing import Iterator, Optional
 
-_URLENCODED = re.compile(r'application/x-www-form-urlencoded\s*(;|$)', re.IGNORECASE)
-_MULTIPART = re.compile(r'multipart/form-data\s*;', re.IGNORECASE)
+_URLENCODED = re.compile(r"application/x-www-form-urlencoded\s*(;|$)", re.IGNORECASE)
+_MULTIPART = re.compile(r"multipart/form-data\s*;", re.IGNORECASE)
 _BOUNDARY = re.compile(r';\s*boundary=(?:"([^"]*)"|([^;\s]+))', re.IGNORECASE)
-_DISPOSITION = re.compile(r'^content-disposition:\s*form-data(.*)$', re.IGNORECASE | re.MULTILINE)
+_DISPOSITION = re.compile(
+    r"^content-disposition:\s*form-data(.*)$", re.IGNORECASE | re.MULTILINE
+)
 _NAME = re.compile(r';\s*name="([^"]*)"', re.IGNORECASE)
-_FILENAME = re.compile(r';\s*filename=', re.IGNORECASE)
-_HEX = re.compile(rb'[0-9A-Fa-f]{2}')
+_FILENAME = re.compile(r";\s*filename=", re.IGNORECASE)
+_HEX = re.compile(rb"[0-9A-Fa-f]{2}")
 
 
 class Fields:
@@ -24,22 +26,22 @@ class Fields:
         self._values = values
 
     @staticmethod
-    def empty() -> 'Fields':
+    def empty() -> "Fields":
         """Returns fields without names."""
         return Fields([], {})
 
     @staticmethod
-    def parse(text: bytes) -> Optional['Fields']:
+    def parse(text: bytes) -> Optional["Fields"]:
         """Parses ``name=value&name=value``: ``+`` is a space, ``%XX`` is its byte and another ``%`` stays. Returns
         None when a name or a value is not UTF-8 (HY-42, HY-56)."""
         names: list[str] = []
         values: dict[str, list[str]] = {}
-        for part in text.split(b'&'):
-            if part == b'':
+        for part in text.split(b"&"):
+            if part == b"":
                 continue
-            equals = part.find(b'=')
+            equals = part.find(b"=")
             name = _decode(part if equals < 0 else part[:equals])
-            value = _decode(b'' if equals < 0 else part[equals + 1:])
+            value = _decode(b"" if equals < 0 else part[equals + 1 :])
             if name is None or value is None:
                 return None
             if name not in values:
@@ -49,7 +51,7 @@ class Fields:
         return Fields(names, values)
 
     @staticmethod
-    def from_body(content_type: str, body: bytes) -> Optional['Fields']:
+    def from_body(content_type: str, body: bytes) -> Optional["Fields"]:
         """Returns the fields of a request body: of an ``application/x-www-form-urlencoded`` body, or the text fields
         of a ``multipart/form-data`` body; a body of another type has none (HY-57). Returns None when a name or a
         value is not UTF-8 (HY-42)."""
@@ -94,41 +96,43 @@ def _decode(text: bytes) -> Optional[str]:
         if byte == 0x2B:  # '+'
             decoded.append(0x20)
             index += 1
-        elif byte == 0x25 and _HEX.fullmatch(text[index + 1:index + 3]) is not None:  # '%'
-            decoded.append(int(text[index + 1:index + 3], 16))
+        elif (
+            byte == 0x25 and _HEX.fullmatch(text[index + 1 : index + 3]) is not None
+        ):  # '%'
+            decoded.append(int(text[index + 1 : index + 3], 16))
             index += 3
         else:
             decoded.append(byte)
             index += 1
     try:
-        return bytes(decoded).decode('utf-8')
+        return bytes(decoded).decode("utf-8")
     except UnicodeDecodeError:
         return None
 
 
 def _multipart(body: bytes, boundary: str) -> Optional[Fields]:
     """Reads the text fields of a multipart/form-data body; a file field is not a form value (HY-57)."""
-    delimiter = b'--' + boundary.encode('latin-1')
+    delimiter = b"--" + boundary.encode("latin-1")
     names: list[str] = []
     values: dict[str, list[str]] = {}
     start = body.find(delimiter)
     while start >= 0:
         part_start = start + len(delimiter)
-        if body[part_start:part_start + 2] == b'--':
+        if body[part_start : part_start + 2] == b"--":
             break
         next_start = body.find(delimiter, part_start)
         if next_start < 0:
             break
-        part = body[part_start + 2:next_start - 2]
-        header_end = part.find(b'\r\n\r\n')
+        part = body[part_start + 2 : next_start - 2]
+        header_end = part.find(b"\r\n\r\n")
         if header_end >= 0:
-            headers = part[:header_end].decode('latin-1')
+            headers = part[:header_end].decode("latin-1")
             found = _DISPOSITION.search(headers)
-            disposition = found.group(1).rstrip('\r') if found else ''
+            disposition = found.group(1).rstrip("\r") if found else ""
             name = _NAME.search(disposition)
             if name is not None and _FILENAME.search(disposition) is None:
-                value = _as_utf8(part[header_end + 4:])
-                key = _as_utf8(name.group(1).encode('latin-1'))
+                value = _as_utf8(part[header_end + 4 :])
+                key = _as_utf8(name.group(1).encode("latin-1"))
                 if value is None or key is None:
                     return None
                 if key not in values:
@@ -141,6 +145,6 @@ def _multipart(body: bytes, boundary: str) -> Optional[Fields]:
 
 def _as_utf8(text: bytes) -> Optional[str]:
     try:
-        return text.decode('utf-8')
+        return text.decode("utf-8")
     except UnicodeDecodeError:
         return None

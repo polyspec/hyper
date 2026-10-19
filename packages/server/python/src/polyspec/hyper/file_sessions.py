@@ -16,17 +16,17 @@ import time
 from pathlib import Path
 from typing import Optional
 
-_IDENTIFIER = re.compile(r'[0-9a-f]{64}\Z')
+_IDENTIFIER = re.compile(r"[0-9a-f]{64}\Z")
 
 
 def cookie_name(secure: bool) -> str:
     """Returns the session cookie name: `__Host-hy-session` over HTTPS and `hy-session` otherwise (HY-45)."""
-    return '__Host-hy-session' if secure else 'hy-session'
+    return "__Host-hy-session" if secure else "hy-session"
 
 
 def cookie_header(identifier: str, secure: bool) -> str:
     """Returns the Set-Cookie value of a new session, with the attributes of the PHP session cookie (HY-45)."""
-    return f'{cookie_name(secure)}={identifier}; path=/{"; secure" if secure else ""}; HttpOnly; SameSite=Lax'
+    return f"{cookie_name(secure)}={identifier}; path=/{'; secure' if secure else ''}; HttpOnly; SameSite=Lax"
 
 
 class FileSessions:
@@ -35,17 +35,23 @@ class FileSessions:
     def __init__(self, directory: str, lifetime: int = 1440):
         path = Path(directory)
         if not path.is_absolute() or not path.is_dir():
-            raise ValueError(f'session directory {directory} must be an existing absolute directory')
+            raise ValueError(
+                f"session directory {directory} must be an existing absolute directory"
+            )
         if lifetime <= 0:
-            raise ValueError('session lifetime must be a positive number of seconds')
+            raise ValueError("session lifetime must be a positive number of seconds")
         self.directory = path
         self.lifetime = lifetime
         self._locks: dict[str, threading.Lock] = {}
 
-    def open(self, cookie: Optional[str]) -> 'FileSession':
+    def open(self, cookie: Optional[str]) -> "FileSession":
         """Returns the store of a request with the value of its session cookie; it holds the turn of the session
         until `close`, so the requests of one session run one after another."""
-        identifier = cookie if cookie is not None and _IDENTIFIER.fullmatch(cookie) is not None else None
+        identifier = (
+            cookie
+            if cookie is not None and _IDENTIFIER.fullmatch(cookie) is not None
+            else None
+        )
         lock = None
         if identifier is not None:
             lock = self._locks.setdefault(identifier, threading.Lock())
@@ -69,7 +75,12 @@ class FileSessions:
 class FileSession:
     """The session store of one request (HY-24, HY-45, HY-72)."""
 
-    def __init__(self, sessions: FileSessions, identifier: Optional[str], lock: Optional[threading.Lock]):
+    def __init__(
+        self,
+        sessions: FileSessions,
+        identifier: Optional[str],
+        lock: Optional[threading.Lock],
+    ):
         self._sessions = sessions
         self._cookie_id = identifier
         self._lock = lock
@@ -112,9 +123,11 @@ class FileSession:
                 # Each write has its own temporary file, so two writers of one session never share a name (HY-104).
                 # One rename publishes the file, so a reader finds the previous or the new session (HY-82). The
                 # file of mkstemp has the mode 0600, as the session file of the TypeScript server has (HY-104).
-                descriptor, writing = tempfile.mkstemp(dir=self._sessions.directory, prefix=f'{self._id}.', suffix='.tmp')
+                descriptor, writing = tempfile.mkstemp(
+                    dir=self._sessions.directory, prefix=f"{self._id}.", suffix=".tmp"
+                )
                 try:
-                    with os.fdopen(descriptor, 'w', encoding='utf-8') as stream:
+                    with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
                         stream.write(json.dumps(self._values))
                     os.replace(writing, file)
                 except BaseException:
@@ -133,8 +146,8 @@ class FileSession:
             content = None
             try:
                 if not self._sessions.expired(file):
-                    content = json.loads(file.read_text(encoding='utf-8'))
-            except (FileNotFoundError, json.JSONDecodeError):
+                    content = json.loads(file.read_text(encoding="utf-8"))
+            except FileNotFoundError, json.JSONDecodeError:
                 content = None
             if content is not None:
                 self._id = self._cookie_id

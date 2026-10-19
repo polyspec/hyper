@@ -35,11 +35,14 @@ class Application:
         self.requests.append(request)
         self.threads.append(threading.get_ident())
         if self.opens_session:
-            session.set('count', 1)
+            session.set("count", 1)
         reply = Reply()
         self.replies.append(reply)
-        return Response(200, {'Content-Type': ['text/plain; charset=utf-8'],
-                              'X-Answer': 'given'}, f'{request.method} {request.path()}'), reply
+        return Response(
+            200,
+            {"Content-Type": ["text/plain; charset=utf-8"], "X-Answer": "given"},
+            f"{request.method} {request.path()}",
+        ), reply
 
     def disconnected(self, request: Request, started: int, reply) -> None:
         self.disconnected_calls.append((request, reply))
@@ -55,7 +58,7 @@ class Sends:
 
     async def __call__(self, event: dict) -> None:
         if self.broken:
-            raise OSError('the client closed the connection')
+            raise OSError("the client closed the connection")
         self.events.append(event)
 
 
@@ -67,14 +70,20 @@ class Receives:
 
     async def __call__(self) -> dict:
         if self.data is None:
-            return {'type': 'http.disconnect'}
+            return {"type": "http.disconnect"}
         part, self.data = self.data[:65536], self.data[65536:]
-        return {'type': 'http.request', 'body': part, 'more_body': bool(self.data)}
+        return {"type": "http.request", "body": part, "more_body": bool(self.data)}
 
 
 def scope(**changes) -> dict:
-    values = {'type': 'http', 'method': 'GET', 'path': '/', 'raw_path': b'/', 'query_string': b'',
-              'headers': []}
+    values = {
+        "type": "http",
+        "method": "GET",
+        "path": "/",
+        "raw_path": b"/",
+        "query_string": b"",
+        "headers": [],
+    }
     values.update(changes)
     return values
 
@@ -92,24 +101,48 @@ class AsgiTest(unittest.TestCase):
 
     def test_the_request_reaches_the_application(self) -> None:
         written = []
-        application = create_asgi(self.app, self.sessions,
-                                  written=lambda request, response, ended, elapsed, failure: written.append(
-                                      (request, ended)))
+        application = create_asgi(
+            self.app,
+            self.sessions,
+            written=lambda request, response, ended, elapsed, failure: written.append(
+                (request, ended)
+            ),
+        )
         sends = Sends()
-        run(application, scope(method='POST', path='/news', raw_path=b'/news', query_string=b'page=2',
-                               headers=[(b'x-name', b'one'), (b'cookie', b'a=1; hy-session=s')]),
-            sends, Receives(b'hello'))
+        run(
+            application,
+            scope(
+                method="POST",
+                path="/news",
+                raw_path=b"/news",
+                query_string=b"page=2",
+                headers=[(b"x-name", b"one"), (b"cookie", b"a=1; hy-session=s")],
+            ),
+            sends,
+            Receives(b"hello"),
+        )
         request = self.app.requests[0]
-        self.assertEqual('POST', request.method)
-        self.assertEqual('/news', request.path())
-        self.assertEqual('page=2', request.raw_query())
-        self.assertEqual('one', request.header('x-name'))
-        self.assertEqual('s', request.cookie('hy-session'))
+        self.assertEqual("POST", request.method)
+        self.assertEqual("/news", request.path())
+        self.assertEqual("page=2", request.raw_query())
+        self.assertEqual("one", request.header("x-name"))
+        self.assertEqual("s", request.cookie("hy-session"))
         self.assertEqual(5, request.body_size())
-        self.assertEqual({'type': 'http.response.start', 'status': 200,
-                          'headers': [(b'content-type', b'text/plain; charset=utf-8'),
-                                      (b'x-answer', b'given'), (b'content-length', b'10')]}, sends.events[0])
-        self.assertEqual({'type': 'http.response.body', 'body': b'POST /news'}, sends.events[1])
+        self.assertEqual(
+            {
+                "type": "http.response.start",
+                "status": 200,
+                "headers": [
+                    (b"content-type", b"text/plain; charset=utf-8"),
+                    (b"x-answer", b"given"),
+                    (b"content-length", b"10"),
+                ],
+            },
+            sends.events[0],
+        )
+        self.assertEqual(
+            {"type": "http.response.body", "body": b"POST /news"}, sends.events[1]
+        )
         self.assertEqual([(request, True)], written)
 
     def test_the_pipeline_runs_in_a_worker_thread(self) -> None:
@@ -119,7 +152,7 @@ class AsgiTest(unittest.TestCase):
 
         async def call() -> None:
             loop_thread.append(threading.get_ident())
-            await application(scope(), Receives(b''), sends)
+            await application(scope(), Receives(b""), sends)
 
         asyncio.run(call())
         self.assertNotEqual(loop_thread[0], self.app.threads[0])
@@ -128,107 +161,165 @@ class AsgiTest(unittest.TestCase):
         self.app.opens_session = True
         application = create_asgi(self.app, self.sessions)
         sends = Sends()
-        run(application, scope(), sends, Receives(b''))
-        values = [value for name, value in sends.events[0]['headers'] if name == b'set-cookie']
+        run(application, scope(), sends, Receives(b""))
+        values = [
+            value for name, value in sends.events[0]["headers"] if name == b"set-cookie"
+        ]
         self.assertEqual(1, len(values))
-        self.assertTrue(values[0].startswith(b'hy-session='))
+        self.assertTrue(values[0].startswith(b"hy-session="))
 
     def test_a_body_over_the_limit_reads_no_more(self) -> None:
         application = create_asgi(self.app, self.sessions)
         sends = Sends()
-        run(application, scope(method='POST', headers=[(b'content-length', b'25')]),
-            sends, Receives(b'0123456789abcdef012345678'))
+        run(
+            application,
+            scope(method="POST", headers=[(b"content-length", b"25")]),
+            sends,
+            Receives(b"0123456789abcdef012345678"),
+        )
         self.assertEqual(25, self.app.requests[0].body_size())
 
     def test_a_public_file_is_served_before_around(self) -> None:
-        files = Path(self.directory.name) / 'public'
+        files = Path(self.directory.name) / "public"
         files.mkdir()
-        (files / 'a.css').write_text('body{}', encoding='utf-8')
+        (files / "a.css").write_text("body{}", encoding="utf-8")
         around_calls = []
-        application = create_asgi(self.app, self.sessions, files=str(files),
-                                  around=lambda request, answer: around_calls.append(request))
+        application = create_asgi(
+            self.app,
+            self.sessions,
+            files=str(files),
+            around=lambda request, answer: around_calls.append(request),
+        )
         sends = Sends()
-        run(application, scope(path='/a.css', raw_path=b'/a.css'), sends, Receives(b''))
-        self.assertEqual(200, sends.events[0]['status'])
-        self.assertEqual([(b'content-type', b'text/css; charset=utf-8'), (b'content-length', b'6')],
-                         sends.events[0]['headers'])
-        self.assertEqual(b'body{}', sends.events[1]['body'])
+        run(application, scope(path="/a.css", raw_path=b"/a.css"), sends, Receives(b""))
+        self.assertEqual(200, sends.events[0]["status"])
+        self.assertEqual(
+            [(b"content-type", b"text/css; charset=utf-8"), (b"content-length", b"6")],
+            sends.events[0]["headers"],
+        )
+        self.assertEqual(b"body{}", sends.events[1]["body"])
         self.assertEqual([], self.app.requests)
         self.assertEqual([], around_calls)
 
     def test_a_failed_send_reports_and_disconnects(self) -> None:
         written = []
-        application = create_asgi(self.app, self.sessions,
-                                  written=lambda request, response, ended, elapsed, failure: written.append(
-                                      (request, ended)))
+        application = create_asgi(
+            self.app,
+            self.sessions,
+            written=lambda request, response, ended, elapsed, failure: written.append(
+                (request, ended)
+            ),
+        )
         with self.assertRaises(OSError):
-            run(application, scope(), Sends(broken=True), Receives(b''))
+            run(application, scope(), Sends(broken=True), Receives(b""))
         self.assertEqual([(self.app.requests[0], False)], written)
-        self.assertEqual([(self.app.requests[0], self.app.replies[0])], self.app.disconnected_calls)
+        self.assertEqual(
+            [(self.app.requests[0], self.app.replies[0])], self.app.disconnected_calls
+        )
 
     def test_around_answers_without_the_application(self) -> None:
         written = []
         captured = []
-        application = create_asgi(self.app, self.sessions,
-                                  around=lambda request, answer: captured.append(request)
-                                  or Response(204, {}, ''),
-                                  written=lambda request, response, ended, elapsed, failure: written.append(
-                                      (request, ended)))
+        application = create_asgi(
+            self.app,
+            self.sessions,
+            around=lambda request, answer: (
+                captured.append(request) or Response(204, {}, "")
+            ),
+            written=lambda request, response, ended, elapsed, failure: written.append(
+                (request, ended)
+            ),
+        )
         sends = Sends()
-        run(application, scope(), sends, Receives(b''))
-        self.assertEqual(204, sends.events[0]['status'])
-        self.assertEqual([], sends.events[0]['headers'])
-        self.assertEqual(b'', sends.events[1]['body'])
+        run(application, scope(), sends, Receives(b""))
+        self.assertEqual(204, sends.events[0]["status"])
+        self.assertEqual([], sends.events[0]["headers"])
+        self.assertEqual(b"", sends.events[1]["body"])
         self.assertEqual([], self.app.requests)
         self.assertEqual([(captured[0], True)], written)
 
     def test_the_raw_path_is_used_and_not_the_decoded_path(self) -> None:
         # HY-101: `path` is percent-decoded by the server; the path is `raw_path` as sent.
-        cases = [(b'/notes/a%20b', '/notes/a b', '/notes/a%20b', ''),
-                 (b'/notes/a%2Fb', '/notes/a/b', '/notes/a%2Fb', ''),
-                 (b'/caf%C3%A9', '/caf\xc3\xa9', '/caf%C3%A9', 'q=%E2%82%AC')]
+        cases = [
+            (b"/notes/a%20b", "/notes/a b", "/notes/a%20b", ""),
+            (b"/notes/a%2Fb", "/notes/a/b", "/notes/a%2Fb", ""),
+            (b"/caf%C3%A9", "/caf\xc3\xa9", "/caf%C3%A9", "q=%E2%82%AC"),
+        ]
         for raw, decoded, path, query in cases:
             with self.subTest(raw=raw):
-                run(create_asgi(self.app, self.sessions),
-                    scope(path=decoded, raw_path=raw, query_string=query.encode('latin-1')),
-                    Sends(), Receives(b''))
+                run(
+                    create_asgi(self.app, self.sessions),
+                    scope(
+                        path=decoded, raw_path=raw, query_string=query.encode("latin-1")
+                    ),
+                    Sends(),
+                    Receives(b""),
+                )
                 request = self.app.requests[-1]
                 self.assertEqual((path, query), (request.path(), request.raw_query()))
 
     def test_a_missing_raw_path_answers_the_plain_500_and_reports_nothing(self) -> None:
         # HY-101: the path is never built from the decoded `path`; the request has no target, so it is not reported.
-        without = {key: value for key, value in scope(path='/notes/a b').items() if key != 'raw_path'}
-        for values in (without, scope(path='/notes/a b', raw_path=None)):
+        without = {
+            key: value
+            for key, value in scope(path="/notes/a b").items()
+            if key != "raw_path"
+        }
+        for values in (without, scope(path="/notes/a b", raw_path=None)):
             with self.subTest(values=values):
                 written = []
                 sends = Sends()
-                application = create_asgi(self.app, self.sessions,
-                                          written=lambda request, response, ended, elapsed, failure: written.append(request))
+                application = create_asgi(
+                    self.app,
+                    self.sessions,
+                    written=lambda request, response, ended, elapsed, failure: (
+                        written.append(request)
+                    ),
+                )
                 with contextlib.redirect_stderr(io.StringIO()) as stderr:
-                    run(application, values, sends, Receives(b''))
-                self.assertIn('raw_path', stderr.getvalue())
-                self.assertEqual(500, sends.events[0]['status'])
-                self.assertIn((b'cache-control', b'no-store'), sends.events[0]['headers'])
-                self.assertEqual({'type': 'http.response.body', 'body': b'Internal Server Error'}, sends.events[1])
+                    run(application, values, sends, Receives(b""))
+                self.assertIn("raw_path", stderr.getvalue())
+                self.assertEqual(500, sends.events[0]["status"])
+                self.assertIn(
+                    (b"cache-control", b"no-store"), sends.events[0]["headers"]
+                )
+                self.assertEqual(
+                    {"type": "http.response.body", "body": b"Internal Server Error"},
+                    sends.events[1],
+                )
                 self.assertEqual([], self.app.requests)
                 self.assertEqual([], written)
 
-    def test_a_failed_body_read_answers_the_plain_500_and_reports_the_request(self) -> None:
+    def test_a_failed_body_read_answers_the_plain_500_and_reports_the_request(
+        self,
+    ) -> None:
         # HY-60, HY-101: a body that cannot be received is an escaped error before `around`; the write hook receives
         # the request as received, with an empty body and the Content-Length that the client declared.
         written = []
-        application = create_asgi(self.app, self.sessions,
-                                  written=lambda request, response, ended, elapsed, failure: written.append(
-                                      (request, response.status, ended)))
+        application = create_asgi(
+            self.app,
+            self.sessions,
+            written=lambda request, response, ended, elapsed, failure: written.append(
+                (request, response.status, ended)
+            ),
+        )
         sends = Sends()
         with contextlib.redirect_stderr(io.StringIO()):
-            run(application, scope(method='POST', headers=[(b'content-length', b'5')]), sends, BrokenReceives())
-        self.assertEqual(500, sends.events[0]['status'])
-        self.assertEqual({'type': 'http.response.body', 'body': b'Internal Server Error'}, sends.events[1])
+            run(
+                application,
+                scope(method="POST", headers=[(b"content-length", b"5")]),
+                sends,
+                BrokenReceives(),
+            )
+        self.assertEqual(500, sends.events[0]["status"])
+        self.assertEqual(
+            {"type": "http.response.body", "body": b"Internal Server Error"},
+            sends.events[1],
+        )
         self.assertEqual([], self.app.requests)
         self.assertEqual(1, len(written))
         request, status, ended = written[0]
-        self.assertEqual('POST', request.method)
+        self.assertEqual("POST", request.method)
         self.assertEqual((5, 500, True), (request.body_size(), status, ended))
 
     def test_a_failed_send_of_the_plain_500_reports_it_and_propagates(self) -> None:
@@ -236,50 +327,83 @@ class AsgiTest(unittest.TestCase):
         written = []
 
         def around(request, answer):
-            raise RuntimeError('around boom')
+            raise RuntimeError("around boom")
 
-        application = create_asgi(self.app, self.sessions, around=around,
-                                  written=lambda request, response, ended, elapsed, failure: written.append(
-                                      (request.path(), response.status, ended)))
+        application = create_asgi(
+            self.app,
+            self.sessions,
+            around=around,
+            written=lambda request, response, ended, elapsed, failure: written.append(
+                (request.path(), response.status, ended)
+            ),
+        )
         with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(OSError):
-            run(application, scope(path='/list', raw_path=b'/list'), Sends(broken=True), Receives(b''))
-        self.assertEqual([('/list', 500, False)], written)
+            run(
+                application,
+                scope(path="/list", raw_path=b"/list"),
+                Sends(broken=True),
+                Receives(b""),
+            )
+        self.assertEqual([("/list", 500, False)], written)
 
-
-    def test_a_cancelled_send_reports_an_unended_write_and_propagates_the_cancellation(self) -> None:
+    def test_a_cancelled_send_reports_an_unended_write_and_propagates_the_cancellation(
+        self,
+    ) -> None:
         # HY-99, HY-101: a cancellation of the task ends the write without an ended write; the cancellation propagates,
         # and the disconnect hook does not run, because a cancellation does not state that the client closed.
         written = []
-        application = create_asgi(self.app, self.sessions,
-                                  written=lambda request, response, ended, elapsed, failure: written.append(
-                                      (request.path(), response.status, ended, failure)))
+        application = create_asgi(
+            self.app,
+            self.sessions,
+            written=lambda request, response, ended, elapsed, failure: written.append(
+                (request.path(), response.status, ended, failure)
+            ),
+        )
 
         class CancelledSends(Sends):
             async def __call__(self, event: dict) -> None:
-                if event['type'] == 'http.response.body':
+                if event["type"] == "http.response.body":
                     raise asyncio.CancelledError()
                 self.events.append(event)
 
         with self.assertRaises(asyncio.CancelledError):
-            run(application, scope(path='/list', raw_path=b'/list'), CancelledSends(), Receives(b''))
-        self.assertEqual([('/list', 200, False, None)], written)
+            run(
+                application,
+                scope(path="/list", raw_path=b"/list"),
+                CancelledSends(),
+                Receives(b""),
+            )
+        self.assertEqual([("/list", 200, False, None)], written)
         self.assertEqual([], self.app.disconnected_calls)
-
 
     def test_a_cancellation_before_the_answer_reports_a_null_response(self) -> None:
         # HY-99, HY-101: a task cancelled while it reads the body ends before a response started; the write hook
         # receives a null response with ended false, and the cancellation propagates.
         written = []
-        application = create_asgi(self.app, self.sessions,
-                                  written=lambda request, response, ended, elapsed, failure: written.append(
-                                      (request.path(), None if response is None else response.status, ended, failure)))
+        application = create_asgi(
+            self.app,
+            self.sessions,
+            written=lambda request, response, ended, elapsed, failure: written.append(
+                (
+                    request.path(),
+                    None if response is None else response.status,
+                    ended,
+                    failure,
+                )
+            ),
+        )
 
         async def cancelled_receive() -> dict:
             raise asyncio.CancelledError()
 
         with self.assertRaises(asyncio.CancelledError):
-            run(application, scope(path='/list', raw_path=b'/list'), Sends(), cancelled_receive)
-        self.assertEqual([('/list', None, False, None)], written)
+            run(
+                application,
+                scope(path="/list", raw_path=b"/list"),
+                Sends(),
+                cancelled_receive,
+            )
+        self.assertEqual([("/list", None, False, None)], written)
         self.assertEqual([], self.app.requests)
 
 
@@ -287,4 +411,4 @@ class BrokenReceives:
     """The `receive` of an ASGI server whose client closed the connection while it sent the body."""
 
     async def __call__(self) -> dict:
-        raise OSError('the client closed the connection')
+        raise OSError("the client closed the connection")

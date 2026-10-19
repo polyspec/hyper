@@ -18,11 +18,11 @@ def write_rounds(directory: str, identifier: str, queue) -> None:
         sessions = FileSessions(directory)
         for number in range(ROUNDS):
             session = sessions.open(identifier)
-            session.set('number', number)
+            session.set("number", number)
             try:
                 session.close()
             except OSError as error:
-                errors.append(f'{type(error).__name__}: {error}')
+                errors.append(f"{type(error).__name__}: {error}")
     finally:
         queue.put(errors)
 
@@ -32,17 +32,26 @@ class ConcurrentSessionWrites(unittest.TestCase):
         directory = tempfile.TemporaryDirectory()
         self.addCleanup(directory.cleanup)
         identifier = secrets.token_bytes(32).hex()
-        (Path(directory.name) / identifier).write_text('{}', encoding='utf-8')
-        context = multiprocessing.get_context('spawn')
+        (Path(directory.name) / identifier).write_text("{}", encoding="utf-8")
+        context = multiprocessing.get_context("spawn")
         queue = context.Queue()
-        processes = [context.Process(target=write_rounds, args=(directory.name, identifier, queue)) for _ in range(2)]
+        processes = [
+            context.Process(
+                target=write_rounds, args=(directory.name, identifier, queue)
+            )
+            for _ in range(2)
+        ]
         for process in processes:
             process.start()
         errors = [queue.get() for _ in processes]
         for process in processes:
             process.join()
-        self.assertEqual([[], []], errors, 'expected no failed write, actual the failed writes of each process above')
+        self.assertEqual(
+            [[], []],
+            errors,
+            "expected no failed write, actual the failed writes of each process above",
+        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

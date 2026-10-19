@@ -1,6 +1,6 @@
 // Tests the release archives of the template release that config/release-assets.json pins (H14.1-7, H23.11, H23.11-2): the
 // native template extension is built from the php-ext archive, not from a copy of the template repository, and Composer
-// reads the php zip from an artifact repository. `make install` downloads both with `make release-assets-fetch` of kit
+// reads the php zip from an artifact repository. `make hyper-install` downloads both with `make release-assets-fetch` of kit
 // (K140), which checks their sha256 and unpacks the php-ext archive, and `make ext` builds the unpacked sources offline
 // with phpize, configure and make, so no build reads scripts or sources of the template repository.
 import assert from 'node:assert/strict';
@@ -43,15 +43,15 @@ test('make ext builds the unpacked php-ext archive offline and runs no copy of t
   const lines = dryRun('ext');
   assert.ok(lines.some((line) => /node scripts\/build-template-ext\.mts /.test(line)), `ext does not build the archive: ${lines.join('\n')}`);
   assert.deepEqual(lines.filter((line) => /copy-template|products\/template|template-tag/.test(line)), [], 'ext reads the template repository');
-  assert.deepEqual(lines.filter((line) => /\b(curl|fetch)\b|gh release/.test(line)), [], 'ext downloads: only make install downloads (HY-89)');
+  assert.deepEqual(lines.filter((line) => /\b(curl|fetch)\b|gh release/.test(line)), [], 'ext downloads: only make hyper-install downloads (HY-89)');
 });
 
-test('make install fetches the release archives through $(ONLINE) before Composer reads the artifact repository (H23.11-2)', () => {
-  const lines = dryRun('install');
+test('make hyper-install fetches the release archives through $(ONLINE) before Composer reads the artifact repository (H23.11-2)', () => {
+  const lines = dryRun('hyper-install');
   const fetches = lines.filter((line) => line.includes('release-assets.mjs'));
   assert.deepEqual(fetches, [`env -u npm_config_offline -u COMPOSER_DISABLE_NETWORK ${path.join(ROOT, 'var/tools/bin/node')} node_modules/@polyspec/kit/dist/release-assets.mjs fetch`], lines.join('\n'));
   const [fetch] = fetches;
-  assert.ok(fetch !== undefined && lines.indexOf(fetch) < lines.findIndex((line) => /composer install/.test(line)), 'Composer reads the artifact repository before make install fetched it');
+  assert.ok(fetch !== undefined && lines.indexOf(fetch) < lines.findIndex((line) => /composer install/.test(line)), 'Composer reads the artifact repository before make hyper-install fetched it');
 });
 
 test('the template repository is not copied any more, and the stub of PHPStan reads the unpacked archive (H14.1-7)', () => {

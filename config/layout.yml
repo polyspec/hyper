@@ -24,7 +24,7 @@ rules:
       - "!tests/package-install"
       # The consumer projects in which make release-consumer installs the release archives (config/release.json).
       - "!tests/release-install"
-      # The tool tests of scripts/, the Makefile, the workflows and the configuration (make test-scripts).
+      # The tool tests of scripts/, the Makefile, the workflows and the configuration (make hyper-test-scripts).
       - "!tests/scripts"
       # The tool test of the build copies on the virtiofs mounts of a Linux container (make virtiofs-check).
       - "!tests/virtiofs"

@@ -11,15 +11,15 @@ class Container:
     """Calls a function with arguments chosen by parameter type (HY-62)."""
 
     def __init__(self):
-        self._factories: dict[type, 'callable[[], object]'] = {}
+        self._factories: dict[type, "callable[[], object]"] = {}
         self._instances: dict[type, object] = {}
 
-    def bind(self, cls: type, factory: 'callable[[], object]') -> None:
+    def bind(self, cls: type, factory: "callable[[], object]") -> None:
         """Registers the factory that creates the service of a class."""
         self._factories[cls] = factory
         self._instances.pop(cls, None)
 
-    def call(self, function: 'callable', provided: dict[object, object]) -> object:
+    def call(self, function: "callable", provided: dict[object, object]) -> object:
         """Calls a function with an argument for every parameter: a parameter whose annotation names a class
         receives a provided object of this call or the service of the class that `bind` registered, and a parameter
         without an annotation receives the provided object of its name, which is how a lambda names the request
@@ -30,26 +30,41 @@ class Container:
             # the classes.
             hints = typing.get_type_hints(function)
         except Exception as error:  # noqa: BLE001 - a hint that no import resolves names no class type
-            raise TypeError(f'the parameter types of the handler cannot be resolved: {error}') from None
+            raise TypeError(
+                f"the parameter types of the handler cannot be resolved: {error}"
+            ) from None
         for parameter in inspect.signature(function).parameters.values():
             annotation = hints.get(parameter.name, parameter.annotation)
             if annotation is inspect.Parameter.empty:
                 if parameter.name not in provided:
-                    raise TypeError(f'parameter {parameter.name} has no class type')
+                    raise TypeError(f"parameter {parameter.name} has no class type")
                 arguments.append(provided[parameter.name])
                 continue
-            if not isinstance(annotation, type) or annotation in (str, int, float, bool, bytes, object):
-                raise TypeError(f'parameter {parameter.name} has no class type')
-            arguments.append(provided[annotation] if annotation in provided else self._service(annotation))
+            if not isinstance(annotation, type) or annotation in (
+                str,
+                int,
+                float,
+                bool,
+                bytes,
+                object,
+            ):
+                raise TypeError(f"parameter {parameter.name} has no class type")
+            arguments.append(
+                provided[annotation]
+                if annotation in provided
+                else self._service(annotation)
+            )
         return function(*arguments)
 
     def _service(self, cls: type) -> object:
         if cls not in self._instances:
             factory = self._factories.get(cls)
             if factory is None:
-                raise TypeError(f'no factory is bound for {cls.__name__}')
+                raise TypeError(f"no factory is bound for {cls.__name__}")
             instance = factory()
             if not isinstance(instance, cls):
-                raise TypeError(f'the factory of {cls.__name__} did not return an instance of it')
+                raise TypeError(
+                    f"the factory of {cls.__name__} did not return an instance of it"
+                )
             self._instances[cls] = instance
         return self._instances[cls]

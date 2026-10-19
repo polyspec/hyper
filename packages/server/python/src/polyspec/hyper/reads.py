@@ -18,27 +18,29 @@ class Reads:
         self._routes = routes
 
     @staticmethod
-    def open(program: str) -> 'Reads':
+    def open(program: str) -> "Reads":
         """Reads ``reads.json`` of a server program directory."""
-        file = Path(program) / 'reads.json'
+        file = Path(program) / "reads.json"
         try:
-            reads = json.loads(file.read_text(encoding='utf-8'))
+            reads = json.loads(file.read_text(encoding="utf-8"))
         except FileNotFoundError:
-            raise ValueError(f'{file} of the server program {program} is missing; '
-                             'hyper-build-server of @polyspec/hyper-build builds it') from None
-        if not isinstance(reads, dict) or not isinstance(reads.get('routes'), dict):
-            raise ValueError(f'{file} has no routes')
-        return Reads(reads['routes'])
+            raise ValueError(
+                f"{file} of the server program {program} is missing; "
+                "hyper-build-server of @polyspec/hyper-build builds it"
+            ) from None
+        if not isinstance(reads, dict) or not isinstance(reads.get("routes"), dict):
+            raise ValueError(f"{file} has no routes")
+        return Reads(reads["routes"])
 
     def shared(self, route: str, shared: dict) -> dict:
         """Returns the shared data that a route keeps."""
         entry = self._routes.get(route)
-        return _keep_map(shared, _node(_entry_node(entry, 'shared')))
+        return _keep_map(shared, _node(_entry_node(entry, "shared")))
 
     def region(self, route: str, region: str, data: dict) -> dict:
         """Returns the data of a region that a route keeps."""
         entry = self._routes.get(route)
-        regions = _entry_node(entry, 'regions')
+        regions = _entry_node(entry, "regions")
         node = None
         if isinstance(regions, dict):
             node = regions.get(region)
@@ -74,8 +76,10 @@ def _keep_dict(value: dict, node: dict) -> dict:
 
 
 def _keep_list(value: list, node: dict) -> list:
-    return [None if (child := _child(node, str(index))) is None else Reads.keep(item, child)
-            for index, item in enumerate(value)]
+    return [
+        None if (child := _child(node, str(index))) is None else Reads.keep(item, child)
+        for index, item in enumerate(value)
+    ]
 
 
 def _keep_map(data: dict, node: Node) -> dict:
@@ -88,18 +92,18 @@ def _node(node: object) -> Node:
     """Returns a read node of `reads.json`, which is True or a map; another value fails."""
     if isinstance(node, bool) or isinstance(node, dict):
         return node
-    raise ValueError('reads.json has a read node that is neither true nor a map')
+    raise ValueError("reads.json has a read node that is neither true nor a map")
 
 
 def _keys(node: dict) -> Optional[dict]:
-    keys = node.get('keys')
+    keys = node.get("keys")
     if keys is not None and not isinstance(keys, dict):
-        raise ValueError('reads.json has keys that are not a map')
+        raise ValueError("reads.json has keys that are not a map")
     return keys
 
 
 def _each(node: dict) -> Optional[Node]:
-    each = node.get('each')
+    each = node.get("each")
     return None if each is None else _node(each)
 
 
@@ -122,8 +126,12 @@ def _merge(a: Node, b: Node) -> Node:
         for key, node in (b_keys or {}).items():
             node = _node(node)
             keys[key] = _merge(_node(keys[key]), node) if key in keys else node
-        merged['keys'] = keys
+        merged["keys"] = keys
     a_each, b_each = _each(a), _each(b)
     if a_each is not None or b_each is not None:
-        merged['each'] = _merge(a_each, b_each) if a_each is not None and b_each is not None else (a_each or b_each)
+        merged["each"] = (
+            _merge(a_each, b_each)
+            if a_each is not None and b_each is not None
+            else (a_each or b_each)
+        )
     return merged

@@ -18,7 +18,9 @@ class Choice:
 class ClientRendering:
     """Declares the client-rendered pages of an application (HY-62)."""
 
-    def __init__(self, shell: str, base_path: str, selects: 'callable[[Request], Choice]'):
+    def __init__(
+        self, shell: str, base_path: str, selects: "callable[[Request], Choice]"
+    ):
         self.shell = shell
         """The absolute path of the static shell, which declares the base path with `<meta name="hyper-api">`
         (HY-22)."""

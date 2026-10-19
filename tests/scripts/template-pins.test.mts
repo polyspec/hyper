@@ -66,7 +66,7 @@ test('make template-tag fails for a template checkout without the tag TEMPLATE_T
 });
 
 test('npm installs the template package as one copy inside this checkout', () => {
-  requireBuilt('install', 'node_modules/@polyspec/template/package.json');
+  requireBuilt('hyper-install', 'node_modules/@polyspec/template/package.json');
   const path = 'node_modules/@polyspec/template';
   assert.equal(lstatSync(join(repository, path)).isSymbolicLink(), false, path);
   assert.equal(lstatSync(join(repository, path)).isDirectory(), true, path);
@@ -82,7 +82,7 @@ test('Composer installs the template PHP package from the zip of the template re
   assert.ok(required !== undefined, 'packages/server/php requires no polyspec/template');
   const version = jsonString(required, 'packages/server/php/composer.json require polyspec/template');
   assert.match(version, /^\d+\.\d+\.\d+$/, 'packages/server/php requires an exact template version');
-  // config/release-assets.json pins the zip; make install checks it by its sha256 and writes it into var/products/template-php,
+  // config/release-assets.json pins the zip; make hyper-install checks it by its sha256 and writes it into var/products/template-php,
   // the artifact repository of both Composer projects, so no manifest copies the metadata of the template package.
   const zip = `polyspec-template-php-${version}.zip`;
   const pinned = entries().filter(({ directory }) => directory === 'var/products/template-php');

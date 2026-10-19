@@ -3,7 +3,7 @@
 //
 //   node scripts/build-template-ext.mts <library>   build the unpacked php-ext sources with phpize, configure and make into <library>
 //
-// config/release-assets.json pins the archive, and `make install` downloads it and unpacks it into var/products/template-ext
+// config/release-assets.json pins the archive, and `make hyper-install` downloads it and unpacks it into var/products/template-ext
 // with make release-assets-fetch of kit (K140). The build reads only that directory and the PHP of PATH: it builds again
 // only when the sources or the PHP build changed, and publishes the library with a rename (HY-82).
 import { execFileSync, spawnSync } from 'node:child_process';
@@ -38,7 +38,7 @@ const capture = (command: string, args: string[]): string => execFileSync(comman
 /** Builds the unpacked asset into `library` when its sources or the PHP build changed, publishing it with a rename. */
 export function buildExtension(library: string): void {
   const source = path.join(unpacked(), 'src');
-  if (!existsSync(path.join(source, 'config.m4'))) throw new Error(`${path.relative(ROOT, source)} holds no unpacked php-ext sources; run make install, which fetches and unpacks the archive template-php-ext of config/release-assets.json`);
+  if (!existsSync(path.join(source, 'config.m4'))) throw new Error(`${path.relative(ROOT, source)} holds no unpacked php-ext sources; run make hyper-install, which fetches and unpacks the archive template-php-ext of config/release-assets.json`);
   const php = capture('php', ['-r', 'echo PHP_VERSION;']);
   const config = capture('php-config', ['--version']);
   if (php !== config) throw new Error(`php-config of PATH is PHP ${config}, but php of PATH is PHP ${php}; the tests load the extension into php, so both must be one PHP`);

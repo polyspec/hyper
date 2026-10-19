@@ -22,15 +22,15 @@ const COMPOSER = path.join(ROOT, 'var/tools/mise/shims/composer');
 const KIT = 'node_modules/@polyspec/kit/dist';
 
 test('the recipes that run npm, Composer or PHP check the toolchain first, and install installs the tools first', () => {
-  for (const target of ['ext', 'lint', 'templates-check']) {
+  for (const target of ['ext', 'hyper-lint', 'templates-check']) {
     assert.equal(dryRun(target)[0]?.trim(), `${NODE} ${KIT}/check-toolchain.mjs`, target);
   }
-  const install = dryRun('install');
+  const install = dryRun('hyper-install');
   assert.deepEqual(install.slice(0, 2).map((line) => line.trim()), [`env -u npm_config_offline -u COMPOSER_DISABLE_NETWORK ${NODE} ${KIT}/install-tools.mjs`, `${NODE} ${KIT}/check-toolchain.mjs`]);
 });
 
-test('the package manager installs of make install run under the install lock', () => {
-  const lines = dryRun('install', { variables: ['TEMPLATE_DIR=var/products/template-dry-run'] });
+test('the package manager installs of make hyper-install run under the install lock', () => {
+  const lines = dryRun('hyper-install', { variables: ['TEMPLATE_DIR=var/products/template-dry-run'] });
   const installs = lines.filter((line) => / ci | install( |$)/.test(line) && /(npm|composer) /.test(line));
   assert.equal(installs.length, 2, lines.join('\n'));
   assert.deepEqual(installs.filter((line) => !line.includes(`${NODE} ${KIT}/holder-lock.mjs run var/install.lock -- `)), []);
@@ -55,7 +55,7 @@ test('make starts a recipe line without shell syntax from its own PATH, so a rec
 test('every recipe starts npm and Composer by the absolute paths of var/tools/bin and of the shims of mise', (t) => {
   const directory = mkdtempSync(path.join(tmpdir(), 'hyper-recipes-'));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
-  const targets = ['install', 'ext', 'packages', 'hyper-server-php-install', 'package-check', 'test-scripts', 'test-node', 'test-php', 'lint', 'analyse-php', 'parity', 'server-parity', 'e2e', 'bundle-size'];
+  const targets = ['hyper-install', 'ext', 'packages', 'hyper-server-php-install', 'package-check', 'hyper-test-scripts', 'hyper-test-node', 'hyper-test-php', 'hyper-lint', 'analyse-php', 'parity', 'server-parity', 'e2e', 'bundle-size'];
   const lines = [];
   for (const target of targets) {
     // An empty template directory makes the dry run print the recipe of the template copy.
@@ -69,7 +69,7 @@ test('every recipe starts npm and Composer by the absolute paths of var/tools/bi
 });
 
 test('no recipe queries a registry: installs follow their lock without an audit, and the package install test installs offline (HY-89)', () => {
-  const targets = ['install', 'ext', 'packages', 'hyper-server-php-install', 'package-check', 'test-scripts', 'test-js', 'test-node', 'test-php', 'lint', 'analyse-php', 'parity', 'server-parity', 'e2e', 'bundle-size', 'templates-check', 'documents-check'];
+  const targets = ['hyper-install', 'ext', 'packages', 'hyper-server-php-install', 'package-check', 'hyper-test-scripts', 'hyper-test-js', 'hyper-test-node', 'hyper-test-php', 'hyper-lint', 'analyse-php', 'parity', 'server-parity', 'e2e', 'bundle-size', 'templates-check', 'docs-check'];
   const lines = targets.flatMap((target) => dryRun(target, { variables: ['TEMPLATE_DIR=var/products/template-dry-run'] }));
   const commands = lines.flatMap((line) => line.split(/&&|;|\|\||\s--\s/).map((part) => part.trim()));
   const npm = commands.filter((command) => command.startsWith(`${NPM} `));
@@ -107,16 +107,16 @@ test('every recipe runs npm and Composer offline, and $(ONLINE) lifts it (HY-89)
   for (const name of Object.keys(OFFLINE)) assert.equal(online[name], undefined, `${name} under $(ONLINE)`);
 });
 
-test('only make install-tools, make install-packages, make install and make install-browser download, each download through $(ONLINE), and no check target downloads (HY-89)', (t) => {
+test('only make install-tools, make install-packages, make hyper-install and make hyper-install-browser download, each download through $(ONLINE), and no check target downloads (HY-89)', (t) => {
   const directory = mkdtempSync(path.join(tmpdir(), 'hyper-downloads-'));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   assert.deepEqual(dryRun('install-tools').map((line) => line.trim()), [`${ONLINE}${NODE} ${KIT}/install-tools.mjs`]);
   assert.deepEqual(dryRun('install-packages'), [`${ONLINE}${NPM} ci`]);
-  assert.deepEqual(dryRun('install-browser'), [`${ONLINE}${NODE} node_modules/@playwright/test/cli.js install --with-deps chromium`]);
-  const install = dryRun('install', { variables: [`TEMPLATE_DIR=${directory}`] });
+  assert.deepEqual(dryRun('hyper-install-browser'), [`${ONLINE}${NODE} node_modules/@playwright/test/cli.js install --with-deps chromium`]);
+  const install = dryRun('hyper-install', { variables: [`TEMPLATE_DIR=${directory}`] });
   const downloads = install.filter((line) => / ci |composer install|install-tools\.mjs/.test(line.replace(/ -- /, ' ')));
   assert.ok(downloads.length > 0, install.join('\n'));
-  assert.deepEqual(downloads.filter((line) => !line.includes(ONLINE)), [], 'a download of make install without $(ONLINE)');
+  assert.deepEqual(downloads.filter((line) => !line.includes(ONLINE)), [], 'a download of make hyper-install without $(ONLINE)');
   // An empty template directory makes each dry run print the recipe of the template copy as well.
   const declared = /^CHECK_TARGETS := (.+)$/m.exec(readFileSync('Makefile', 'utf8'))?.[1];
   assert.ok(declared !== undefined, 'the Makefile declares no CHECK_TARGETS');
@@ -129,7 +129,7 @@ test('only make install-tools, make install-packages, make install and make inst
 });
 
 test('the venv of the Python server package installs its committed uv.lock and nothing that the index serves now', () => {
-  const lines = dryRun('install-python');
+  const lines = dryRun('hyper-install-python');
   assert.ok(lines.some((line) => line.endsWith('uv sync --quiet --locked --project packages/server/python')), lines.join('\n'));
   assert.equal(spawnSync('git', ['ls-files', '--error-unmatch', 'packages/server/python/uv.lock'], { encoding: 'utf8' }).status, 0, 'packages/server/python/uv.lock is not tracked');
 });

@@ -23,7 +23,7 @@ const image = 'docker.io/library/node:26.8.1-trixie-slim@sha256:c0753125a3789977
 
 // Runs node with `args` in the container with a temporary output directory of the test mounted as /output.
 function run(t: TestContext, args: string[]) {
-  requireBuilt('install', 'node_modules/@polyspec/template/package.json');
+  requireBuilt('hyper-install', 'node_modules/@polyspec/template/package.json');
   // The template packages that the build loads by their names lie inside this checkout, which the bind mount of the
   // root covers (HY-70, HY-78). The template is the one that the build resolves from its package.
   const template = createRequire(join(root, 'packages', 'build', 'package.json')).resolve('@polyspec/template');

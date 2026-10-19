@@ -31,18 +31,21 @@ class Application:
     def respond(self, request: Request, session, started: int):
         self.requests.append(request)
         if self.opens_session:
-            session.set('count', 1)
+            session.set("count", 1)
         reply = Reply()
         self.replies.append(reply)
-        return Response(200, {'Content-Type': ['text/plain; charset=utf-8'],
-                              'X-Answer': 'given'}, f'{request.method} {request.path()}'), reply
+        return Response(
+            200,
+            {"Content-Type": ["text/plain; charset=utf-8"], "X-Answer": "given"},
+            f"{request.method} {request.path()}",
+        ), reply
 
     def disconnected(self, request: Request, started: int, reply) -> None:
         self.disconnected_calls.append((request, reply))
 
 
 def environ(**changes) -> dict:
-    values = {'REQUEST_METHOD': 'GET', 'RAW_URI': '/', 'wsgi.input': Input(b'')}
+    values = {"REQUEST_METHOD": "GET", "RAW_URI": "/", "wsgi.input": Input(b"")}
     values.update(changes)
     return values
 
@@ -67,7 +70,7 @@ def call(application, values: dict) -> tuple[str, list[tuple[str, str]], bytes]:
     def start(status, headers, exc_info=None):
         head[:] = [status, headers]
 
-    body = b''.join(application(values, start))
+    body = b"".join(application(values, start))
     return head[0], head[1], body
 
 
@@ -88,235 +91,362 @@ class WsgiTest(unittest.TestCase):
 
     def test_the_request_reaches_the_application(self) -> None:
         written = []
-        application = create_wsgi(self.app, self.sessions, around=None,
-                                  written=lambda request, response, ended, elapsed, failure: written.append(
-                                      (request, response, ended)))
-        status, _, body = call(application, environ(
-            REQUEST_METHOD='POST', RAW_URI='/news?page=2', CONTENT_LENGTH='5',
-            CONTENT_TYPE='application/x-www-form-urlencoded',
-            HTTP_COOKIE='a=1; consumer=s', HTTP_X_NAME='one',
-            **{'wsgi.input': Input(b'a=hey')}))
-        self.assertEqual('200 OK', status)
-        self.assertEqual(b'POST /news', body)
+        application = create_wsgi(
+            self.app,
+            self.sessions,
+            around=None,
+            written=lambda request, response, ended, elapsed, failure: written.append(
+                (request, response, ended)
+            ),
+        )
+        status, _, body = call(
+            application,
+            environ(
+                REQUEST_METHOD="POST",
+                RAW_URI="/news?page=2",
+                CONTENT_LENGTH="5",
+                CONTENT_TYPE="application/x-www-form-urlencoded",
+                HTTP_COOKIE="a=1; consumer=s",
+                HTTP_X_NAME="one",
+                **{"wsgi.input": Input(b"a=hey")},
+            ),
+        )
+        self.assertEqual("200 OK", status)
+        self.assertEqual(b"POST /news", body)
         request = self.app.requests[0]
-        self.assertEqual('POST', request.method)
-        self.assertEqual('/news', request.path())
-        self.assertEqual('page=2', request.raw_query())
-        self.assertEqual('one', request.header('x-name'))
-        self.assertEqual('s', request.cookie('consumer'))
+        self.assertEqual("POST", request.method)
+        self.assertEqual("/news", request.path())
+        self.assertEqual("page=2", request.raw_query())
+        self.assertEqual("one", request.header("x-name"))
+        self.assertEqual("s", request.cookie("consumer"))
         self.assertEqual(5, request.body_size())
-        self.assertEqual('hey', request.form_string('a'))
+        self.assertEqual("hey", request.form_string("a"))
 
     def test_a_new_session_sets_its_cookie_first(self) -> None:
         self.app.opens_session = True
         application = create_wsgi(self.app, self.sessions)
         _, headers, _ = call(application, environ())
-        self.assertEqual([('Content-Type', 'text/plain; charset=utf-8'), ('X-Answer', 'given'),
-                          ('Set-Cookie', self.cookie(headers)),
-                          ('Content-Length', '5')], headers)
+        self.assertEqual(
+            [
+                ("Content-Type", "text/plain; charset=utf-8"),
+                ("X-Answer", "given"),
+                ("Set-Cookie", self.cookie(headers)),
+                ("Content-Length", "5"),
+            ],
+            headers,
+        )
 
     def cookie(self, headers: list) -> str:
-        set_cookies = [value for name, value in headers if name == 'Set-Cookie']
+        set_cookies = [value for name, value in headers if name == "Set-Cookie"]
         self.assertEqual(1, len(set_cookies))
-        self.assertTrue(set_cookies[0].startswith('hy-session='))
+        self.assertTrue(set_cookies[0].startswith("hy-session="))
         return set_cookies[0]
 
     def test_a_body_over_the_limit_reads_no_more(self) -> None:
         # HY-100: the callable reads the body up to the body limit of the application and no more (HY-59).
         application = create_wsgi(self.app, self.sessions)
-        input = Input(b'0123456789abcdef0123456789')
-        call(application, environ(REQUEST_METHOD='POST', CONTENT_LENGTH='25', **{'wsgi.input': input}))
+        input = Input(b"0123456789abcdef0123456789")
+        call(
+            application,
+            environ(
+                REQUEST_METHOD="POST", CONTENT_LENGTH="25", **{"wsgi.input": input}
+            ),
+        )
         request = self.app.requests[0]
         self.assertEqual(25, request.body_size())
         self.assertLessEqual(sum(input.reads), self.app.body_limit)
 
     def test_a_public_file_is_served_before_around(self) -> None:
-        files = Path(self.directory.name) / 'public'
+        files = Path(self.directory.name) / "public"
         files.mkdir()
-        (files / 'a.css').write_text('body{}', encoding='utf-8')
+        (files / "a.css").write_text("body{}", encoding="utf-8")
         around_calls = []
-        application = create_wsgi(self.app, self.sessions, files=str(files),
-                                  around=lambda request, answer: around_calls.append(request))
-        status, headers, body = call(application, environ(RAW_URI='/a.css'))
-        self.assertEqual('200 OK', status)
-        self.assertEqual('text/css; charset=utf-8', dict(headers)['Content-Type'])
-        self.assertEqual(b'body{}', body)
+        application = create_wsgi(
+            self.app,
+            self.sessions,
+            files=str(files),
+            around=lambda request, answer: around_calls.append(request),
+        )
+        status, headers, body = call(application, environ(RAW_URI="/a.css"))
+        self.assertEqual("200 OK", status)
+        self.assertEqual("text/css; charset=utf-8", dict(headers)["Content-Type"])
+        self.assertEqual(b"body{}", body)
         self.assertEqual([], self.app.requests)
         self.assertEqual([], around_calls)
 
     def test_the_write_hook_reports_the_end(self) -> None:
         written = []
-        application = create_wsgi(self.app, self.sessions,
-                                  written=lambda request, response, ended, elapsed, failure: written.append(
-                                      (request, ended, elapsed >= 0.0)))
+        application = create_wsgi(
+            self.app,
+            self.sessions,
+            written=lambda request, response, ended, elapsed, failure: written.append(
+                (request, ended, elapsed >= 0.0)
+            ),
+        )
         call(application, environ())
         self.assertEqual([(self.app.requests[0], True, True)], written)
 
     def test_the_write_hook_reports_a_premature_close_and_disconnects(self) -> None:
         written = []
-        application = create_wsgi(self.app, self.sessions,
-                                  written=lambda request, response, ended, elapsed, failure: written.append(
-                                      (request, ended)))
+        application = create_wsgi(
+            self.app,
+            self.sessions,
+            written=lambda request, response, ended, elapsed, failure: written.append(
+                (request, ended)
+            ),
+        )
         half_call(application, environ())
         self.assertEqual([(self.app.requests[0], False)], written)
-        self.assertEqual([(self.app.requests[0], self.app.replies[0])], self.app.disconnected_calls)
+        self.assertEqual(
+            [(self.app.requests[0], self.app.replies[0])], self.app.disconnected_calls
+        )
 
     def test_around_answers_without_the_application(self) -> None:
-        application = create_wsgi(self.app, self.sessions,
-                                  around=lambda request, answer: Response(204, {}, ''))
+        application = create_wsgi(
+            self.app,
+            self.sessions,
+            around=lambda request, answer: Response(204, {}, ""),
+        )
         status, headers, body = call(application, environ())
-        self.assertEqual('204 No Content', status)
+        self.assertEqual("204 No Content", status)
         self.assertEqual([], headers)
-        self.assertEqual(b'', body)
+        self.assertEqual(b"", body)
         self.assertEqual([], self.app.requests)
 
     def test_the_raw_target_is_used_and_not_the_decoded_path_info(self) -> None:
         # HY-100: PATH_INFO is percent-decoded by the server; the path is the target as sent.
-        cases = [('/notes/a%20b', '/notes/a b', '/notes/a%20b', ''),
-                 ('/notes/a%2Fb', '/notes/a/b', '/notes/a%2Fb', ''),
-                 ('/caf%C3%A9?q=%E2%82%AC', '/caf\xc3\xa9', '/caf%C3%A9', 'q=%E2%82%AC')]
+        cases = [
+            ("/notes/a%20b", "/notes/a b", "/notes/a%20b", ""),
+            ("/notes/a%2Fb", "/notes/a/b", "/notes/a%2Fb", ""),
+            ("/caf%C3%A9?q=%E2%82%AC", "/caf\xc3\xa9", "/caf%C3%A9", "q=%E2%82%AC"),
+        ]
         application = create_wsgi(self.app, self.sessions)
         for target, decoded, path, query in cases:
             with self.subTest(target=target):
                 call(application, environ(RAW_URI=target, PATH_INFO=decoded))
-                self.assertEqual((path, query), (self.app.requests[-1].path(), self.app.requests[-1].raw_query()))
+                self.assertEqual(
+                    (path, query),
+                    (self.app.requests[-1].path(), self.app.requests[-1].raw_query()),
+                )
 
     def test_request_uri_is_read_when_raw_uri_is_absent(self) -> None:
         # HY-100: uWSGI and mod_wsgi give REQUEST_URI.
         application = create_wsgi(self.app, self.sessions)
-        call(application, {'REQUEST_METHOD': 'GET', 'REQUEST_URI': '/notes/a%20b?x=1',
-                           'PATH_INFO': '/notes/a b', 'wsgi.input': Input(b'')})
-        self.assertEqual(('/notes/a%20b', 'x=1'), (self.app.requests[0].path(), self.app.requests[0].raw_query()))
+        call(
+            application,
+            {
+                "REQUEST_METHOD": "GET",
+                "REQUEST_URI": "/notes/a%20b?x=1",
+                "PATH_INFO": "/notes/a b",
+                "wsgi.input": Input(b""),
+            },
+        )
+        self.assertEqual(
+            ("/notes/a%20b", "x=1"),
+            (self.app.requests[0].path(), self.app.requests[0].raw_query()),
+        )
 
     def test_a_missing_target_answers_the_plain_500_and_reports_nothing(self) -> None:
         # HY-100: PATH_INFO is never re-encoded into a path; the request has no target, so no request is reported.
         written = []
-        application = create_wsgi(self.app, self.sessions,
-                                  written=lambda request, response, ended, elapsed, failure: written.append(request))
+        application = create_wsgi(
+            self.app,
+            self.sessions,
+            written=lambda request, response, ended, elapsed, failure: written.append(
+                request
+            ),
+        )
         started: list = []
         stderr = io.StringIO()
         with contextlib.redirect_stderr(stderr):
-            status, headers, body = call(application, {'REQUEST_METHOD': 'GET', 'PATH_INFO': '/notes/a b',
-                                                       'wsgi.input': Input(b'')})
-        self.assertEqual('500 Internal Server Error', status)
-        self.assertEqual(b'Internal Server Error', body)
-        self.assertIn(('Cache-Control', 'no-store'), headers)
+            status, headers, body = call(
+                application,
+                {
+                    "REQUEST_METHOD": "GET",
+                    "PATH_INFO": "/notes/a b",
+                    "wsgi.input": Input(b""),
+                },
+            )
+        self.assertEqual("500 Internal Server Error", status)
+        self.assertEqual(b"Internal Server Error", body)
+        self.assertIn(("Cache-Control", "no-store"), headers)
         self.assertIn(("Content-Security-Policy", "frame-ancestors 'self'"), headers)
-        self.assertIn('RAW_URI', stderr.getvalue())
-        self.assertIn('REQUEST_URI', stderr.getvalue())
+        self.assertIn("RAW_URI", stderr.getvalue())
+        self.assertIn("REQUEST_URI", stderr.getvalue())
         self.assertEqual([], self.app.requests)
         self.assertEqual([], written)
 
-    def test_a_failed_body_read_answers_the_plain_500_and_reports_the_request(self) -> None:
+    def test_a_failed_body_read_answers_the_plain_500_and_reports_the_request(
+        self,
+    ) -> None:
         # HY-60: a body that cannot be read is an escaped error before `around`; the write hook receives the request
         # as the server received it, with an empty body and the size that the client declared.
         written = []
-        application = create_wsgi(self.app, self.sessions,
-                                  written=lambda request, response, ended, elapsed, failure: written.append(
-                                      (request, response, ended)))
+        application = create_wsgi(
+            self.app,
+            self.sessions,
+            written=lambda request, response, ended, elapsed, failure: written.append(
+                (request, response, ended)
+            ),
+        )
         with contextlib.redirect_stderr(io.StringIO()):
-            status, headers, body = call(application, environ(
-                REQUEST_METHOD='POST', RAW_URI='/news', CONTENT_LENGTH='5', **{'wsgi.input': BrokenInput()}))
-        self.assertEqual('500 Internal Server Error', status)
-        self.assertEqual(b'Internal Server Error', body)
+            status, headers, body = call(
+                application,
+                environ(
+                    REQUEST_METHOD="POST",
+                    RAW_URI="/news",
+                    CONTENT_LENGTH="5",
+                    **{"wsgi.input": BrokenInput()},
+                ),
+            )
+        self.assertEqual("500 Internal Server Error", status)
+        self.assertEqual(b"Internal Server Error", body)
         self.assertEqual([], self.app.requests)
         self.assertEqual(1, len(written))
         request, response, ended = written[0]
-        self.assertEqual(('POST', '/news'), (request.method, request.path()))
+        self.assertEqual(("POST", "/news"), (request.method, request.path()))
         self.assertEqual(5, request.body_size())
         self.assertEqual(500, response.status)
         self.assertTrue(ended)
 
-    def test_an_around_error_answers_the_plain_500_and_reports_the_request(self) -> None:
+    def test_an_around_error_answers_the_plain_500_and_reports_the_request(
+        self,
+    ) -> None:
         # HY-97, HY-60: an error that `around` raises outside `answer` is an escaped error.
         written = []
 
         def around(request, answer):
-            raise RuntimeError('around boom')
+            raise RuntimeError("around boom")
 
-        application = create_wsgi(self.app, self.sessions, around=around,
-                                  written=lambda request, response, ended, elapsed, failure: written.append(
-                                      (request.path(), response.status, ended)))
+        application = create_wsgi(
+            self.app,
+            self.sessions,
+            around=around,
+            written=lambda request, response, ended, elapsed, failure: written.append(
+                (request.path(), response.status, ended)
+            ),
+        )
         with contextlib.redirect_stderr(io.StringIO()) as stderr:
-            status, _, body = call(application, environ(RAW_URI='/list'))
-        self.assertEqual('500 Internal Server Error', status)
-        self.assertEqual(b'Internal Server Error', body)
-        self.assertIn('around boom', stderr.getvalue())
-        self.assertEqual([('/list', 500, True)], written)
+            status, _, body = call(application, environ(RAW_URI="/list"))
+        self.assertEqual("500 Internal Server Error", status)
+        self.assertEqual(b"Internal Server Error", body)
+        self.assertIn("around boom", stderr.getvalue())
+        self.assertEqual([("/list", 500, True)], written)
 
     def test_a_premature_close_of_the_plain_500_reports_a_failed_write(self) -> None:
         # HY-60, HY-99: the server closes the iterable of the 500 before its end; the write failed and is reported once.
         written = []
 
         def around(request, answer):
-            raise RuntimeError('around boom')
+            raise RuntimeError("around boom")
 
-        application = create_wsgi(self.app, self.sessions, around=around,
-                                  written=lambda request, response, ended, elapsed, failure: written.append((response.status, ended)))
+        application = create_wsgi(
+            self.app,
+            self.sessions,
+            around=around,
+            written=lambda request, response, ended, elapsed, failure: written.append(
+                (response.status, ended)
+            ),
+        )
         with contextlib.redirect_stderr(io.StringIO()):
-            half_call(application, environ(RAW_URI='/list'))
+            half_call(application, environ(RAW_URI="/list"))
         self.assertEqual([(500, False)], written)
         self.assertEqual([], self.app.disconnected_calls)
 
-
-    def test_closing_the_body_before_its_first_item_reports_an_unended_write(self) -> None:
+    def test_closing_the_body_before_its_first_item_reports_an_unended_write(
+        self,
+    ) -> None:
         # HY-99: a server that closes the iterable before its first item ends the write before it started.
         written = []
-        application = create_wsgi(self.app, self.sessions,
-                                  written=lambda request, response, ended, elapsed, failure: written.append((response.status, ended, failure)))
-        body = application(environ(RAW_URI='/'), lambda status, headers, exc_info=None: None)
+        application = create_wsgi(
+            self.app,
+            self.sessions,
+            written=lambda request, response, ended, elapsed, failure: written.append(
+                (response.status, ended, failure)
+            ),
+        )
+        body = application(
+            environ(RAW_URI="/"), lambda status, headers, exc_info=None: None
+        )
         body.close()
         self.assertEqual([(200, False, None)], written)
 
-    def test_a_body_that_cannot_be_encoded_is_an_escape_answered_with_the_plain_500(self) -> None:
+    def test_a_body_that_cannot_be_encoded_is_an_escape_answered_with_the_plain_500(
+        self,
+    ) -> None:
         # HY-60, HY-99: the body encode error is an escape; the plain 500 goes through start_response, and the write
         # hook receives it with the failure.
         written = []
         app = Application()
-        app.respond = lambda request, session, started: (Response(200, {}, '\ud800'), Reply())
-        application = create_wsgi(app, self.sessions,
-                                  written=lambda request, response, ended, elapsed, failure: written.append((response.status, ended, failure)))
+        app.respond = lambda request, session, started: (
+            Response(200, {}, "\ud800"),
+            Reply(),
+        )
+        application = create_wsgi(
+            app,
+            self.sessions,
+            written=lambda request, response, ended, elapsed, failure: written.append(
+                (response.status, ended, failure)
+            ),
+        )
         with contextlib.redirect_stderr(io.StringIO()):
-            status, _, body = call(application, environ(RAW_URI='/'))
-        self.assertEqual('500 Internal Server Error', status)
-        self.assertEqual(b'Internal Server Error', body)
+            status, _, body = call(application, environ(RAW_URI="/"))
+        self.assertEqual("500 Internal Server Error", status)
+        self.assertEqual(b"Internal Server Error", body)
         self.assertEqual(1, len(written))
         self.assertEqual((500, True), written[0][:2])
-        self.assertIn('surrogates', written[0][2])
+        self.assertIn("surrogates", written[0][2])
 
-    def test_a_status_that_cannot_be_written_is_an_escape_answered_with_the_plain_500(self) -> None:
+    def test_a_status_that_cannot_be_written_is_an_escape_answered_with_the_plain_500(
+        self,
+    ) -> None:
         # HY-60, HY-99: a status that PEP 3333 cannot write is an escape; the plain 500 goes through start_response.
         written = []
         app = Application()
-        app.respond = lambda request, session, started: (Response(1000, {}, 'x'), Reply())
-        application = create_wsgi(app, self.sessions,
-                                  written=lambda request, response, ended, elapsed, failure: written.append((response.status, ended, failure)))
+        app.respond = lambda request, session, started: (
+            Response(1000, {}, "x"),
+            Reply(),
+        )
+        application = create_wsgi(
+            app,
+            self.sessions,
+            written=lambda request, response, ended, elapsed, failure: written.append(
+                (response.status, ended, failure)
+            ),
+        )
         with contextlib.redirect_stderr(io.StringIO()):
-            status, _, body = call(application, environ(RAW_URI='/'))
-        self.assertEqual('500 Internal Server Error', status)
-        self.assertEqual(b'Internal Server Error', body)
+            status, _, body = call(application, environ(RAW_URI="/"))
+        self.assertEqual("500 Internal Server Error", status)
+        self.assertEqual(b"Internal Server Error", body)
         self.assertEqual(1, len(written))
         self.assertEqual((500, True), written[0][:2])
         self.assertTrue(written[0][2])
 
-    def test_a_header_that_cannot_be_encoded_is_an_escape_answered_with_the_plain_500(self) -> None:
+    def test_a_header_that_cannot_be_encoded_is_an_escape_answered_with_the_plain_500(
+        self,
+    ) -> None:
         # HY-60, HY-99: a header value that PEP 3333 cannot write as latin-1 is an escape, and no other header reaches
         # start_response.
         heads = []
         app = Application()
-        app.respond = lambda request, session, started: (Response(200, {'X-Euro': 'a\u20ac'}, 'x'), Reply())
+        app.respond = lambda request, session, started: (
+            Response(200, {"X-Euro": "a\u20ac"}, "x"),
+            Reply(),
+        )
         application = create_wsgi(app, self.sessions)
 
         def start(status, headers, exc_info=None):
             heads.append((status, headers))
 
         with contextlib.redirect_stderr(io.StringIO()):
-            b''.join(application(environ(RAW_URI='/'), start))
+            b"".join(application(environ(RAW_URI="/"), start))
         self.assertEqual(1, len(heads))
-        self.assertEqual('500 Internal Server Error', heads[0][0])
-        self.assertNotIn('X-Euro', [name for name, _ in heads[0][1]])
+        self.assertEqual("500 Internal Server Error", heads[0][0])
+        self.assertNotIn("X-Euro", [name for name, _ in heads[0][1]])
 
-    def test_a_start_response_that_raises_is_an_escape_answered_through_start_response_again(self) -> None:
+    def test_a_start_response_that_raises_is_an_escape_answered_through_start_response_again(
+        self,
+    ) -> None:
         # HY-60, HY-99: a start_response that raises is an escape; the callable passes the plain 500 to start_response
         # with the exception information, and the write hook receives the failure.
         written = []
@@ -325,30 +455,44 @@ class WsgiTest(unittest.TestCase):
         def start(status, headers, exc_info=None):
             calls.append((status, exc_info))
             if len(calls) == 1:
-                raise ValueError('the server refuses the headers')
+                raise ValueError("the server refuses the headers")
 
-        application = create_wsgi(self.app, self.sessions,
-                                  written=lambda request, response, ended, elapsed, failure: written.append((response.status, ended, failure)))
+        application = create_wsgi(
+            self.app,
+            self.sessions,
+            written=lambda request, response, ended, elapsed, failure: written.append(
+                (response.status, ended, failure)
+            ),
+        )
         with contextlib.redirect_stderr(io.StringIO()):
-            body = b''.join(application(environ(RAW_URI='/'), start))
-        self.assertEqual(b'Internal Server Error', body)
+            body = b"".join(application(environ(RAW_URI="/"), start))
+        self.assertEqual(b"Internal Server Error", body)
         self.assertEqual(2, len(calls))
-        self.assertEqual('500 Internal Server Error', calls[1][0])
+        self.assertEqual("500 Internal Server Error", calls[1][0])
         self.assertIsNotNone(calls[1][1])
-        self.assertEqual([(500, True, 'the server refuses the headers')], written)
+        self.assertEqual([(500, True, "the server refuses the headers")], written)
 
-    def test_an_empty_response_reports_its_write_at_the_end_of_the_iterable(self) -> None:
+    def test_an_empty_response_reports_its_write_at_the_end_of_the_iterable(
+        self,
+    ) -> None:
         # HY-99: a 204 response has an empty body; its write ends when the server consumes the iterable, not at return.
         class NoContent(Application):
             def respond(self, request, session, started):
-                return Response(204, {}, ''), Reply()
+                return Response(204, {}, ""), Reply()
 
         written = []
-        application = create_wsgi(NoContent(), self.sessions,
-                                  written=lambda request, response, ended, elapsed, failure: written.append((response.status, ended, failure)))
-        body = application(environ(RAW_URI='/'), lambda status, headers, exc_info=None: None)
+        application = create_wsgi(
+            NoContent(),
+            self.sessions,
+            written=lambda request, response, ended, elapsed, failure: written.append(
+                (response.status, ended, failure)
+            ),
+        )
+        body = application(
+            environ(RAW_URI="/"), lambda status, headers, exc_info=None: None
+        )
         self.assertEqual([], written)
-        self.assertEqual([b''], list(body))
+        self.assertEqual([b""], list(body))
         self.assertEqual([(204, True, None)], written)
 
 
@@ -356,4 +500,4 @@ class BrokenInput:
     """A `wsgi.input` whose read fails, as a client that closed the connection makes it."""
 
     def read(self, size: int) -> bytes:
-        raise OSError('the client closed the connection')
+        raise OSError("the client closed the connection")

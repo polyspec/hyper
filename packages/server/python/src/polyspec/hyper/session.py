@@ -7,10 +7,10 @@ import re
 import secrets
 from typing import Protocol
 
-_TOKEN = re.compile(r'[0-9a-f]{64}\Z')
-_TOKEN_KEY = '_hyper_csrf'
-_FLASH_KEY = '_hyper_flash'
-_KEEP_KEY = '_hyper_keep'
+_TOKEN = re.compile(r"[0-9a-f]{64}\Z")
+_TOKEN_KEY = "_hyper_csrf"
+_FLASH_KEY = "_hyper_flash"
+_KEEP_KEY = "_hyper_keep"
 
 
 class SessionStore(Protocol):
@@ -85,18 +85,22 @@ class Session:
         self._store.remove(_FLASH_KEY)
         if not isinstance(flash, dict):
             return Flash({}, [])
-        values = flash.get('values', {})
-        changed = flash.get('changed', [])
+        values = flash.get("values", {})
+        changed = flash.get("changed", [])
         if not isinstance(values, dict) or not isinstance(changed, list):
-            raise ValueError('the session holds flash data that is not values and a list of topics')
+            raise ValueError(
+                "the session holds flash data that is not values and a list of topics"
+            )
         for topic in changed:
             if not isinstance(topic, str):
-                raise ValueError('the session holds a changed topic that is not a string')
+                raise ValueError(
+                    "the session holds a changed topic that is not a string"
+                )
         return Flash(dict(values), list(changed))
 
     def put_flash(self, flash: Flash) -> None:
         """Stores flash data for the next request."""
-        self._store.set(_FLASH_KEY, {'values': flash.values, 'changed': flash.changed})
+        self._store.set(_FLASH_KEY, {"values": flash.values, "changed": flash.changed})
 
     def keep(self, region: str, path: str, value: object) -> None:
         """Stores a kept value of a region (HY-39, HY-40)."""

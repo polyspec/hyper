@@ -7,11 +7,11 @@ from pathlib import Path
 
 from polyspec.hyper.fields import Fields
 
-CONTRACTS = Path(__file__).resolve().parents[4] / 'contracts'
+CONTRACTS = Path(__file__).resolve().parents[4] / "contracts"
 
 
 def file(name: str) -> dict:
-    return json.loads((CONTRACTS / name).read_text(encoding='utf-8'))
+    return json.loads((CONTRACTS / name).read_text(encoding="utf-8"))
 
 
 def entries(fields: Fields | None) -> list | None:
@@ -22,32 +22,50 @@ def entries(fields: Fields | None) -> list | None:
 
 class UrlEncodedTest(unittest.TestCase):
     def test_every_case(self) -> None:
-        for case in file('fields.json')['urlencoded']:
-            with self.subTest(case['label']):
-                self.assertEqual(case['fields'], entries(Fields.parse(case['text'].encode('utf-8'))))
+        for case in file("fields.json")["urlencoded"]:
+            with self.subTest(case["label"]):
+                self.assertEqual(
+                    case["fields"], entries(Fields.parse(case["text"].encode("utf-8")))
+                )
 
 
 class MultipartTest(unittest.TestCase):
     def test_every_case(self) -> None:
-        for case in file('fields.json')['multipart']:
-            with self.subTest(case['label']):
-                self.assertEqual(case['fields'], entries(Fields.from_body(case['type'], case['body'].encode('latin-1'))))
+        for case in file("fields.json")["multipart"]:
+            with self.subTest(case["label"]):
+                self.assertEqual(
+                    case["fields"],
+                    entries(
+                        Fields.from_body(case["type"], case["body"].encode("latin-1"))
+                    ),
+                )
 
 
 class BodyTypeTest(unittest.TestCase):
     def test_an_urlencoded_body_with_parameters_and_case_reads_its_fields(self) -> None:
-        self.assertEqual([['roles[]', ['a', 'b']]], entries(Fields.from_body('application/x-www-form-urlencoded; charset=UTF-8', b'roles%5B%5D=a&roles[]=b')))
+        self.assertEqual(
+            [["roles[]", ["a", "b"]]],
+            entries(
+                Fields.from_body(
+                    "application/x-www-form-urlencoded; charset=UTF-8",
+                    b"roles%5B%5D=a&roles[]=b",
+                )
+            ),
+        )
 
     def test_an_urlencoded_body_of_another_case_reads_its_fields(self) -> None:
-        self.assertEqual([['a', ['1']]], entries(Fields.from_body('Application/X-WWW-Form-Urlencoded', b'a=1')))
+        self.assertEqual(
+            [["a", ["1"]]],
+            entries(Fields.from_body("Application/X-WWW-Form-Urlencoded", b"a=1")),
+        )
 
     def test_a_body_of_another_type_has_no_fields(self) -> None:
-        self.assertEqual([], entries(Fields.from_body('text/plain', b'a=1')))
-        self.assertEqual([], entries(Fields.from_body('', b'a=1')))
+        self.assertEqual([], entries(Fields.from_body("text/plain", b"a=1")))
+        self.assertEqual([], entries(Fields.from_body("", b"a=1")))
 
     def test_a_multipart_body_without_a_boundary_has_no_fields(self) -> None:
-        self.assertEqual([], entries(Fields.from_body('multipart/form-data', b'--x--')))
+        self.assertEqual([], entries(Fields.from_body("multipart/form-data", b"--x--")))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

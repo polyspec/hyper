@@ -4,5 +4,7 @@
 node = "26.12.0"
 python = "3.14.8"
 uv = "0.12.24"
+ruff = "0.17.1"
 "github:asamarts/alint" = "0.18.2"
+"pypi:vulture" = "2.16"
 "http:composer" = { version = "2.10.3", url = "https://getcomposer.org/download/{{ version }}/composer.phar", checksum = "sha256:7a2d379d5b8ffdaa028580ef26494c36d2feef4b178d3dd1473a4dbc5e17c8d6", bin = "composer" }

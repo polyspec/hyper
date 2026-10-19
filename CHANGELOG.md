@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- H25.1: The repository follows the kit standard 0.0.54. The Makefile names the repository targets `hyper-install`, `hyper-install-python`, `hyper-install-browser`, `hyper-test-*` and `hyper-lint`, and `install` runs the bootstrap of kit first; the checklists are the plans `docs/plans/execution/` and `docs/plans/kit-standard/`; AGENTS.md states only the rules of this repository; language-check reads the raw strings of Go and Rust as data (H25.1).
 - H24.1: Each write of a session file creates its own temporary file and renames it into place: `tempfile.mkstemp` and `os.replace` in the Python server, and `<id>.<uuid>.tmp` created with the flag `wx` and `renameSync` in the Node server. Two processes that write one session no longer fail with `FileNotFoundError` (HY-104). Red: 181 to 208 of 400 writes failed per process in `packages/server/python/tests/test_file_sessions.py`, and `packages/server/ts/tests/sessions-race.test.ts` failed with ENOENT. Green: both pass.
 - HY-79: Composer links `polyspec/hyper-server` to `packages/server/php` in the root and in the board, as Composer does by default, in place of a copy (`symlink: false` is removed). `make hyper-server-php-install` runs `composer install` of the board under `var/install.lock`, and `tests/scripts/no-symlinks.test.mts` requires each polyspec package below a `vendor` to be a symbolic link to its source directory.
 - H23.31: `AGENTS.md` points to the local links of 0.0.x development that kit `docs/plans/local-links.md` describes; links are never committed.

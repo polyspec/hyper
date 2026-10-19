@@ -16,16 +16,36 @@ from typing import Callable, Optional
 
 from .app import App
 from .file_sessions import FileSessions
-from .pipeline import CLOSED, CONTENT_TYPES, Exchange, answer_with, cookie_values, declared_length, escape, head_request, public_file, read_limited, validate
+from .pipeline import (
+    CLOSED,
+    CONTENT_TYPES,
+    Exchange,
+    answer_with,
+    cookie_values,
+    declared_length,
+    escape,
+    head_request,
+    public_file,
+    read_limited,
+    validate,
+)
 from .request import Request
 from .response import Response
 
 
-def create_server(app: App, sessions: FileSessions, files: Optional[str] = None, host: str = '127.0.0.1',
-                  port: int = 0,
-                  around: Optional[Callable[[Request, Callable[[Request], Response]], Response]] = None,
-                  written: Optional[Callable[[Request, Optional[Response], bool, float, Optional[str]], None]] = None
-                  ) -> ThreadingHTTPServer:
+def create_server(
+    app: App,
+    sessions: FileSessions,
+    files: Optional[str] = None,
+    host: str = "127.0.0.1",
+    port: int = 0,
+    around: Optional[
+        Callable[[Request, Callable[[Request], Response]], Response]
+    ] = None,
+    written: Optional[
+        Callable[[Request, Optional[Response], bool, float, Optional[str]], None]
+    ] = None,
+) -> ThreadingHTTPServer:
     """Returns a server that answers every request with the application. `files` names an absolute directory of
     public files: a GET or HEAD request whose path names a file in it receives the file.
 
@@ -76,16 +96,33 @@ def create_server(app: App, sessions: FileSessions, files: Optional[str] = None,
             exchange = Exchange(written, started)
             try:
                 # The request as received so far: an unread body is empty and its size is the declared one (HY-60).
-                exchange.request = head_request(self.command, self.path, _headers(self.headers), self.headers.get('Cookie'),
-                                                application.https, declared_length(self.headers.get('Content-Length')))
-                file = None if public is None else public_file(public, self.command, self.path)
+                exchange.request = head_request(
+                    self.command,
+                    self.path,
+                    _headers(self.headers),
+                    self.headers.get("Cookie"),
+                    application.https,
+                    declared_length(self.headers.get("Content-Length")),
+                )
+                file = (
+                    None
+                    if public is None
+                    else public_file(public, self.command, self.path)
+                )
                 if file is not None:
                     self.send_file(file)
                     return
                 body, size = self.read_body(application.body_limit)
-                exchange.request = Request(self.command, Request.target_path(self.path), _headers(self.headers),
-                                           Request.target_query(self.path), body, cookies=cookie_values(self.headers.get('Cookie')),
-                                           https=application.https, body_size=size)
+                exchange.request = Request(
+                    self.command,
+                    Request.target_path(self.path),
+                    _headers(self.headers),
+                    Request.target_query(self.path),
+                    body,
+                    cookies=cookie_values(self.headers.get("Cookie")),
+                    https=application.https,
+                    body_size=size,
+                )
                 response = answer_with(application, session_store, around, exchange)
             except Exception as error:
                 self.escape_error(application, error, exchange, None)
@@ -104,7 +141,13 @@ def create_server(app: App, sessions: FileSessions, files: Optional[str] = None,
                 return
             exchange.report(response, True)
 
-        def escape_error(self, application, error: Exception, exchange: Exchange, started: Optional[Response]) -> None:
+        def escape_error(
+            self,
+            application,
+            error: Exception,
+            exchange: Exchange,
+            started: Optional[Response],
+        ) -> None:
             """Logs an error that escapes the answer of a request (HY-60) and writes hyper's plain 500 when no write
             has started. `started` is the response whose write started, or None. When the headers have left the
             server, the 500 cannot be written: the connection closes and the write hook receives `started` with
@@ -113,12 +156,16 @@ def create_server(app: App, sessions: FileSessions, files: Optional[str] = None,
             failure = str(error)
             if self.headers_started:
                 self.close_connection = True
-                exchange.report(started if started is not None else response, False, failure)
+                exchange.report(
+                    started if started is not None else response, False, failure
+                )
                 return
             try:
                 self.send(response)
             except Exception as write_error:
-                sys.stderr.write(f'hyper: {type(write_error).__name__}: {write_error}\n')
+                sys.stderr.write(
+                    f"hyper: {type(write_error).__name__}: {write_error}\n"
+                )
                 self.close_connection = True
                 exchange.report(response, False, failure)
                 return
@@ -132,19 +179,26 @@ def create_server(app: App, sessions: FileSessions, files: Optional[str] = None,
         def read_body(self, limit: int) -> tuple[bytes, int]:
             """Reads the request body and its size. A body larger than the limit gives no bytes and the size read
             so far; the rest of it is read and discarded, so that the response can be sent (HY-59)."""
-            return read_limited(self.rfile.read, limit, declared_length(self.headers.get('Content-Length')))
+            return read_limited(
+                self.rfile.read,
+                limit,
+                declared_length(self.headers.get("Content-Length")),
+            )
 
         def send(self, response: Response) -> None:
             empty = response.status in (204, 304)
-            body = b'' if empty else response.body.encode('utf-8')
-            headers = [(name, item) for name, value in response.headers.items()
-                       for item in (value if isinstance(value, list) else [value])]
+            body = b"" if empty else response.body.encode("utf-8")
+            headers = [
+                (name, item)
+                for name, value in response.headers.items()
+                for item in (value if isinstance(value, list) else [value])
+            ]
             if not empty:
-                headers.append(('Content-Length', str(len(body))))
+                headers.append(("Content-Length", str(len(body))))
             # Every header is encoded before the status line is buffered, so that a header that cannot be sent leaves
             # no partial response in the buffer of the handler (HY-60).
             for name, value in headers:
-                f'{name}: {value}'.encode('latin-1')
+                f"{name}: {value}".encode("latin-1")
             self.send_response(response.status)
             for name, value in headers:
                 self.send_header(name, value)
@@ -155,10 +209,13 @@ def create_server(app: App, sessions: FileSessions, files: Optional[str] = None,
         def send_file(self, file) -> None:
             size = file.stat().st_size
             self.send_response(200)
-            self.send_header('Content-Type', CONTENT_TYPES.get(file.suffix, 'application/octet-stream'))
-            self.send_header('Content-Length', str(size))
+            self.send_header(
+                "Content-Type",
+                CONTENT_TYPES.get(file.suffix, "application/octet-stream"),
+            )
+            self.send_header("Content-Length", str(size))
             self.end_headers()
-            if self.command != 'HEAD':
+            if self.command != "HEAD":
                 self.wfile.write(file.read_bytes())
 
     return ThreadingHTTPServer((host, port), Handler)
@@ -169,7 +226,7 @@ def _headers(headers) -> dict[str, str]:
     joined: dict[str, list[str]] = {}
     for name, value in headers.items():
         joined.setdefault(name.lower(), []).append(value)
-    return {name: ', '.join(values) for name, values in joined.items()}
+    return {name: ", ".join(values) for name, values in joined.items()}
 
 
 def _now_ns() -> int:

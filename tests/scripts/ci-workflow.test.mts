@@ -231,7 +231,7 @@ test('the workflow ci runs every matrix entry in a job that runs to its end and 
     assert.match(reportStep.text, /if-no-files-found: error/);
     assert.match(reportStep.text, /name: ci-\$\{\{ matrix\.name \}\}-/);
     // Chromium is installed only in the entries whose targets run a browser.
-    const browser = job.steps.find((step) => step.run === 'make install-browser');
+    const browser = job.steps.find((step) => step.run === 'make hyper-install-browser');
     assert.match(browser?.if ?? '', /matrix\.browser/);
     for (const entry of matrixEntries(text)) {
       assert.equal(entry.browser, entry.targets.some((target) => ['parity', 'server-parity', 'server-parity-python', 'e2e'].includes(target)), `${entry.name}: browser flag`);
@@ -248,7 +248,7 @@ test('the workflow ci runs every matrix entry in a job that runs to its end and 
 });
 
 // The workflow ci checks out the template repository at the tag TEMPLATE_TAG of the Makefile, the one declaration of
-// the template release (HY-80), so the copy of `make install` finds that tag and CI checks the same template commit as
+// the template release (HY-80), so the copy of `make hyper-install` finds that tag and CI checks the same template commit as
 // a local run.
 test('the workflow ci checks out the template repository at the tag TEMPLATE_TAG of the Makefile (HY-80)', () => {
   // TEMPLATE_TAG reads the version of the entry template-php of config/release-assets.json (H23.11-2); make template-tag names it.

@@ -11,5 +11,5 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 /** Fails unless every path of `paths`, relative to the checkout, exists; names the make target that writes them. */
 export function requireBuilt(target: string, ...paths: string[]): void {
   const missing = paths.filter((file) => !existsSync(path.resolve(ROOT, file)));
-  assert.deepEqual(missing, [], `${missing.join(', ')} ${missing.length === 1 ? 'is' : 'are'} missing; \`make ${target}\` writes ${missing.length === 1 ? 'it' : 'them'}, and \`make test-scripts\` runs it first`);
+  assert.deepEqual(missing, [], `${missing.join(', ')} ${missing.length === 1 ? 'is' : 'are'} missing; \`make ${target}\` writes ${missing.length === 1 ? 'it' : 'them'}, and \`make hyper-test-scripts\` runs it first`);
 }

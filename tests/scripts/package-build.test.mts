@@ -1,7 +1,7 @@
 // Tests that each npm package of this repository builds with the TypeScript compiler that npm links into node_modules/.bin
 // (HY-79): npm installs with its own defaults, so `npm exec tsc` finds the compiler, and a package is built with
 // `npm run build` in its directory. The test builds each package into a temporary directory and leaves dist unchanged.
-// Run it after `make install`.
+// Run it after `make hyper-install`.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdtempSync, rmSync } from 'node:fs';
@@ -12,7 +12,7 @@ import { requireBuilt } from './requires.mts';
 
 // The npm of this checkout, which `make install-tools` writes (HY-81).
 const NPM = resolve('var/tools/bin/npm');
-requireBuilt('install', 'node_modules/typescript/package.json', 'var/tools/bin/npm');
+requireBuilt('hyper-install', 'node_modules/typescript/package.json', 'var/tools/bin/npm');
 
 for (const directory of ['packages/client', 'packages/server/ts']) {
   test(`npm exec finds the tsc of the bin link of npm in ${directory}`, { timeout: 60_000 }, () => {

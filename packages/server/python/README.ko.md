@@ -1,5 +1,5 @@
 <!-- doc-id: hyper-server-python-readme -->
-<!-- source-sha256: 286bfaaa4f291b3b07d5564f6301d1ebbfeee95c4041cb33cbc428cf862b04b1 -->
+<!-- source-sha256: a3746622fe8f3b08703b4ebb42282788241375a815de4ae5a249473339908583 -->
 # polyspec-hyper-server
 
 [English](README.md).
@@ -7,7 +7,7 @@
 [Region protocol](../../../docs/spec/protocol.md)의 Python 서버: routing, query와 form 값, mask된 CSRF token,
 PHP 서버와 같은 바이트의 JSON text를 같은 규칙의 독립 구현으로 제공한다. `contracts/routes.json`,
 `rest.json`, `csrf.json`, `fields.json`, `json.json`의 conformance 사례가 `unittest` test로 돌아간다
-(`make test-python`).
+(`make hyper-test-python`).
 
 `vX.Y.Z`를 `packages/server/python`을 담은 첫 release tag로 바꾼다. 아직 package를 담은 release tag가 없다.
 
@@ -18,9 +18,9 @@ pip install "polyspec-hyper-server @ git+https://github.com/polyspec/hyper@vX.Y.
 ```python
 from polyspec.hyper import Fields, Router
 
-router = Router([{'name': 'board.show', 'path': '/board/{id}'}])
-match = router.match('/board/7')          # {'name': 'board.show', 'params': {'id': '7'}}
-fields = Fields.parse(b'page=2&sort=title')  # names ['page', 'sort'], get('page') ['2']
+router = Router([{"name": "board.show", "path": "/board/{id}"}])
+match = router.match("/board/7")  # {'name': 'board.show', 'params': {'id': '7'}}
+fields = Fields.parse(b"page=2&sort=title")  # names ['page', 'sort'], get('page') ['2']
 ```
 
 - `Router`는 요청 경로를 route 경로와 대조한다: literal, parameter, rest parameter `{name*}`, `%XX` decoding과
@@ -58,7 +58,12 @@ fields = Fields.parse(b'page=2&sort=title')  # names ['page', 'sort'], get('page
 from polyspec.hyper.app import App
 from polyspec.hyper.session import ArraySession
 
-app = App.open(manifest='app/app.json', program='build/server', handlers=handlers(), timezone='+09:00')
+app = App.open(
+    manifest="app/app.json",
+    program="build/server",
+    handlers=handlers(),
+    timezone="+09:00",
+)
 response = app.handle(request, ArraySession())
 ```
 
@@ -76,7 +81,9 @@ response = app.handle(request, ArraySession())
 from polyspec.hyper.file_sessions import FileSessions
 from polyspec.hyper.server import create_server
 
-server = create_server(app, FileSessions('/var/lib/board/sessions'), files='public', port=8080)
+server = create_server(
+    app, FileSessions("/var/lib/board/sessions"), files="public", port=8080
+)
 server.serve_forever()
 ```
 
@@ -97,13 +104,16 @@ from polyspec.hyper.response import Response
 
 
 def around(request, answer):
-    if request.header('X-Web-Server') != 'front':
-        return Response.text(400, 'Bad Request')
+    if request.header("X-Web-Server") != "front":
+        return Response.text(400, "Bad Request")
     request_id = secrets.token_hex(8)
-    response = answer(request.with_header('X-Request-Id', request_id))
-    return response.with_header('X-Request-Id', request_id)
+    response = answer(request.with_header("X-Request-Id", request_id))
+    return response.with_header("X-Request-Id", request_id)
 
-server = create_server(app, FileSessions('/var/lib/board/sessions'), around=around, port=8080)
+
+server = create_server(
+    app, FileSessions("/var/lib/board/sessions"), around=around, port=8080
+)
 ```
 
 

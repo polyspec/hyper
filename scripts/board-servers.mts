@@ -21,10 +21,10 @@ const PHP_READY = /Development Server \((http:\/\/127\.0\.0\.1:\d+)\) started/;
 const NODE_READY = /^board on (http:\/\/127\.0\.0\.1:\d+)$/m;
 const EDGE_READY = /^edge (http:\/\/127\.0\.0\.1:\d+) /m;
 // The Python of the venv of the Python server package (PYTHON_VENV of the Makefile, which exports it as HYPER_PYTHON): make
-// install-python installs the package and the template wheel into it, and the board Python server imports them from it.
+// hyper-install-python installs the package and the template wheel into it, and the board Python server imports them from it.
 function python(): string {
   const command = process.env['HYPER_PYTHON'];
-  if (command === undefined || command === '') throw new Error('HYPER_PYTHON is not set: run the board Python server through make, which exports the Python of the venv of make install-python');
+  if (command === undefined || command === '') throw new Error('HYPER_PYTHON is not set: run the board Python server through make, which exports the Python of the venv of make hyper-install-python');
   return command;
 }
 
@@ -111,7 +111,7 @@ export function startNode({ name, app, port, env, children }: StartOptions): Pro
   });
 }
 
-/** Starts the board Python server of examples/board/python on `port` with the Python of the venv of make install. */
+/** Starts the board Python server of examples/board/python on `port` with the Python of the venv of make hyper-install. */
 export function startPython({ name, app, port, env, children }: StartOptions): Promise<Server> {
   return startServer({
     name,

@@ -7,19 +7,22 @@ from pathlib import Path
 from polyspec.hyper.json_codec import encode
 from polyspec.hyper.reads import Reads
 
-CONTRACTS = Path(__file__).resolve().parents[4] / 'contracts'
+CONTRACTS = Path(__file__).resolve().parents[4] / "contracts"
 
 
 def file(name: str) -> dict:
-    return json.loads((CONTRACTS / name).read_text(encoding='utf-8'))
+    return json.loads((CONTRACTS / name).read_text(encoding="utf-8"))
 
 
 class ReadsTest(unittest.TestCase):
     def test_keeps_the_read_paths_of_every_case(self) -> None:
-        for case in file('reads.json')['cases']:
-            with self.subTest(case['label']):
-                self.assertEqual(encode({'kept': case['kept']}), encode({'kept': Reads.keep(case['data'], case['reads'])}))
+        for case in file("reads.json")["cases"]:
+            with self.subTest(case["label"]):
+                self.assertEqual(
+                    encode({"kept": case["kept"]}),
+                    encode({"kept": Reads.keep(case["data"], case["reads"])}),
+                )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

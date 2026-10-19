@@ -8,7 +8,7 @@
         { "type": "artifact", "url": "../../var/products/template-php" }
     ],
     "require": {
-        "php": ">=8.5",
+        "php": ">=8.4",
         "ext-pdo_sqlite": "*",
         "polyspec/hyper-server": "0.0.18",
         "polyspec/template": "0.0.11"
@@ -24,7 +24,7 @@
     },
     "config": {
         "platform": {
-            "php": "8.5.0"
+            "php": "8.4.0"
         },
         "sort-packages": true
     }

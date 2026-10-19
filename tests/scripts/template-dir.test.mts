@@ -20,7 +20,7 @@ const read = (file: string): JsonObject => parseJsonObject(readFileSync(join(rep
 const member = (file: string, key: string): JsonObject => jsonObject(read(file)[key], `${file} ${key}`);
 
 test('bundles the template render runtime of a client from the installed template package', async () => {
-  requireBuilt('install', 'node_modules/@polyspec/template/package.json');
+  requireBuilt('hyper-install', 'node_modules/@polyspec/template/package.json');
   const result = await build({
     stdin: { contents: "export { Engine } from '@polyspec/template/render';", resolveDir: repository, sourcefile: 'client.ts', loader: 'ts' },
     bundle: true,
@@ -36,7 +36,7 @@ test('bundles the template render runtime of a client from the installed templat
 });
 
 test('npm installs the template packages from the tarballs of the template release that the lock pins', () => {
-  requireBuilt('install', ...PACKAGES.map((name) => `node_modules/${name}/package.json`));
+  requireBuilt('hyper-install', ...PACKAGES.map((name) => `node_modules/${name}/package.json`));
   const dependencies = member('package.json', 'dependencies');
   const overrides = member('package.json', 'overrides');
   const packages = member('package-lock.json', 'packages');

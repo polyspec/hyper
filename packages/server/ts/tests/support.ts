@@ -7,7 +7,7 @@ import { verifyToken } from '../src/csrf.js';
 import { App, BadRequest, Forbidden, MemorySessionStore, NotFound, Redirect, Request, Result, type AppOptions, type Handlers, type Response } from '../src/index.js';
 
 export const FIXTURES = fileURLToPath(new URL('../../php/tests/fixtures/', import.meta.url));
-// The template files of the fixtures, which `make test-node` builds with scripts/build-templates.mts.
+// The template files of the fixtures, which `make hyper-test-node` builds with scripts/build-templates.mts.
 const BUILD = fileURLToPath(new URL('./build/', import.meta.url));
 export const TEMPLATES = { index: `${BUILD}templates.index.json`, root: BUILD };
 export const JSON_REGION = { Accept: 'application/json', 'HX-Request': 'true' };

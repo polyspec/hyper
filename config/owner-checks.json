@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "comment": "The owner checks of the repository paths (HY-88), read by owner-check of @polyspec/kit: make owner-check runs the targets and node test files of the rules whose globs match a changed path, and make owner-validate fails for a tracked path without an owner. A rule with variable passes the matched paths to its targets in that make variable. Globs: * within one path segment, ** across segments, {a,b} either alternative.",
-  "testTarget": "test-scripts",
+  "testTarget": "hyper-test-scripts",
   "owners": [
     {
       "paths": [
@@ -10,7 +10,7 @@
         "packages/**/README*.md"
       ],
       "targets": [
-        "documents-check"
+        "docs-check"
       ]
     },
     {
@@ -21,9 +21,9 @@
         "composer.lock"
       ],
       "targets": [
-        "test-php",
+        "hyper-test-php",
         "analyse-php",
-        "lint"
+        "hyper-lint"
       ]
     },
     {
@@ -31,7 +31,7 @@
         "packages/client/**"
       ],
       "targets": [
-        "test-js",
+        "hyper-test-js",
         "package-check",
         "bundle-size"
       ]
@@ -41,7 +41,7 @@
         "packages/server/ts/**"
       ],
       "targets": [
-        "test-node",
+        "hyper-test-node",
         "package-check"
       ]
     },
@@ -50,8 +50,8 @@
         "packages/server/python/**"
       ],
       "targets": [
-        "test-python",
-        "test-python-render"
+        "hyper-test-python",
+        "hyper-test-python-render"
       ]
     },
     {
@@ -59,9 +59,9 @@
         "contracts/**"
       ],
       "targets": [
-        "test-js",
-        "test-node",
-        "test-php"
+        "hyper-test-js",
+        "hyper-test-node",
+        "hyper-test-php"
       ]
     },
     {
@@ -94,7 +94,7 @@
         "examples/board/var/**"
       ],
       "targets": [
-        "lint",
+        "hyper-lint",
         "parity",
         "server-parity",
         "e2e"
@@ -261,7 +261,7 @@
       ],
       "targets": [
         "templates-check",
-        "test-php",
+        "hyper-test-php",
         "typecheck"
       ],
       "tests": [
@@ -337,7 +337,7 @@
         "scripts/tracked-files.mts"
       ],
       "targets": [
-        "test-php",
+        "hyper-test-php",
         "typecheck"
       ],
       "tests": [
@@ -452,8 +452,8 @@
         ".npmrc"
       ],
       "targets": [
-        "test-js",
-        "test-node",
+        "hyper-test-js",
+        "hyper-test-node",
         "package-check"
       ],
       "tests": [
@@ -521,15 +521,7 @@
         "config/documents.json"
       ],
       "targets": [
-        "documents-check"
-      ]
-    },
-    {
-      "paths": [
-        "config/commits.json"
-      ],
-      "targets": [
-        "commits-check"
+        "docs-check"
       ]
     },
     {

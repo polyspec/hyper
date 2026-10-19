@@ -15,7 +15,7 @@ PYTHON_PACKAGE := packages/server/python
 # The Python of the checks is the python of mise.toml, which `make install-tools` installs with mise at the digest of mise.lock
 # and its shim runs (HY-81, kit K127). requires-python >= 3.14 states the tested minor of the package (H20.12).
 # The absolute path, as NPM and COMPOSER have, because make looks up a recipe line on its own PATH.
-# The virtual environment of the Python server package: make install makes it from the Python of mise.toml with kit's
+# The virtual environment of the Python server package: make hyper-install makes it from the Python of mise.toml with kit's
 # python-venv and installs the package into it in editable mode with its dependencies, the template wheel of the release
 # included, so the tests and the board Python server import the installed packages and read no source path (S5).
 PYTHON_VENV := $(CURDIR)/$(PYTHON_PACKAGE)/.venv
@@ -24,7 +24,7 @@ UV := $(CURDIR)/var/tools/mise/shims/uv
 export HYPER_PYTHON := $(PYTHON_VENV)/bin/python
 # npm installs the template packages @polyspec/template and @polyspec/template-compiler from the tarballs of the template
 # release that package.json names (HY-70). config/release-assets.json pins the php zip and the php-ext archive of the same
-# release with their sha256: make install fetches both with make release-assets-fetch of kit (K140), which puts the php zip
+# release with their sha256: make hyper-install fetches both with make release-assets-fetch of kit (K140), which puts the php zip
 # into the Composer artifact repository var/products/template-php, from which Composer installs polyspec/template (H23.11),
 # and unpacks the native template extension (H14.1-7, H23.11-2).
 # The template repository of TEMPLATE_REPOSITORY is read only for the commit of TEMPLATE_TAG in the full-run key (HY-80);
@@ -45,16 +45,16 @@ ESBUILD := node_modules/esbuild/bin/esbuild
 # The PHP memory limit of PHPStan: a run without its result cache (build/phpstan) needs 132 MB in its worker, above
 # the default limit of 128M.
 PHPSTAN_MEMORY := 256M
-# The library that `make ext` builds from the unpacked php-ext asset, which `make install` fetches (H14.1-7).
+# The library that `make ext` builds from the unpacked php-ext asset, which `make hyper-install` fetches (H14.1-7).
 EXT := build/ext/polyspec_template.so
 
 # The toolchain (HY-81, install-tools of @polyspec/kit): npm and Composer of this checkout, which `make install-tools`
 # installs into var/tools, come first on PATH for every recipe and the programs that it starts.
 export PATH := $(CURDIR)/var/tools/bin:$(PATH)
-# A check reads no network (HY-89): `make install` downloads everything that the checks read, and every other recipe
+# A check reads no network (HY-89): `make hyper-install` downloads everything that the checks read, and every other recipe
 # and the programs that it starts run npm and Composer offline, so a missing download fails at once instead of
-# reaching a registry in one run and not in another. The downloads of `make install-tools`, `make install` and
-# `make install-browser` lift the settings with $(ONLINE).
+# reaching a registry in one run and not in another. The downloads of `make install-tools`, `make hyper-install` and
+# `make hyper-install-browser` lift the settings with $(ONLINE).
 export npm_config_offline := true
 export COMPOSER_DISABLE_NETWORK := 1
 ONLINE := env -u npm_config_offline -u COMPOSER_DISABLE_NETWORK
@@ -74,21 +74,30 @@ checks_result = test -z "$$failed" || { echo "failed checks:$$failed"; exit 1; }
 
 .DEFAULT_GOAL := help
 
-.PHONY: help install install-python typecheck hyper-server-php-install template-tag ext packages package-check server server-fixtures node-server node-fixtures assets test-js test-node test-php test-python test-python-render lint analyse-php templates-check test-scripts virtiofs-check parity server-parity server-parity-python bundle-size e2e serve-demo bench-server bench-server-smoke bench-browser bench check serve-demo-unlock install-browser
+.PHONY: help hyper-install hyper-install-python hyper-install-browser hyper-test-node hyper-test-python-render hyper-test-scripts check typecheck hyper-server-php-install template-tag ext packages package-check server server-fixtures node-server node-fixtures assets hyper-test-js hyper-test-php hyper-test-python hyper-lint analyse-php templates-check virtiofs-check parity server-parity server-parity-python bundle-size e2e serve-demo bench-server bench-server-smoke bench-browser bench serve-demo-unlock
 
 help: ## List the targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
 
-install: install-tools ## Install the pinned tools, fetch the archives of the template release and install the Composer dependencies; make install-packages installs the npm packages (HY-89, H14.1-7)
+hyper-install: install-kit ## Install the pinned tools, fetch the archives of the template release and install the Composer dependencies; make install-packages installs the npm packages (HY-89, H14.1-7)
 	$(NODE) $(KIT)/check-toolchain.$(KIT_EXT)
 	$(MAKE) --no-print-directory release-assets-fetch
-	$(MAKE) --no-print-directory install-python
+	$(MAKE) --no-print-directory hyper-install-python
 	$(ONLINE) $(NODE) $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(COMPOSER) install
 	$(ONLINE) $(NODE) $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(COMPOSER) install --working-dir=$(BOARD)
 
-install-python: ## Make the venv of the Python server package and install the package into it in editable mode with its dependencies (S5)
+hyper-install-python: ## Make the venv of the Python server package and install the package into it in editable mode with its dependencies (S5)
 	$(MAKE) --no-print-directory python-venv DIR=$(PYTHON_VENV)
 	$(ONLINE) $(UV) sync --quiet --locked --project $(PYTHON_PACKAGE)
+
+hyper-install-browser: ## Install Chromium of the pinned Playwright and its system libraries; the CI group board runs it (HY-91)
+	$(ONLINE) $(NODE) node_modules/@playwright/test/cli.js install --with-deps chromium
+
+install: hyper-install
+
+test: hyper-test-js hyper-test-node hyper-test-php hyper-test-python hyper-test-python-render hyper-test-scripts
+
+lint: hyper-lint
 
 # The release of hyper reads the template repository at TEMPLATE_TAG next to this checkout, and the installed dependencies:
 # the release workflow that kit vendors runs make release-prepare before release-tools (kit K132), and this rule checks the
@@ -96,7 +105,7 @@ install-python: ## Make the venv of the Python server package and install the pa
 release-prepare:: ## Check out the template repository at TEMPLATE_TAG into TEMPLATE_REPOSITORY and install, for a release; ONLINE
 	test -d $(TEMPLATE_REPOSITORY) || $(ONLINE) git clone --quiet --depth 1 --branch $(TEMPLATE_TAG) https://github.com/polyspec/template.git $(TEMPLATE_REPOSITORY)
 	$(MAKE) template-tag
-	$(ONLINE) $(MAKE) install
+	$(ONLINE) $(MAKE) hyper-install
 
 # Fails when the template checkout has no tag TEMPLATE_TAG; the full-run key names that commit (HY-80).
 template-tag: ## Fail when the template repository TEMPLATE_REPOSITORY has no tag TEMPLATE_TAG, naming the expected tag and the tags it has (HY-80)
@@ -107,7 +116,7 @@ template-tag: ## Fail when the template repository TEMPLATE_REPOSITORY has no ta
 
 # The build (scripts/build-template-ext.mts) runs phpize, configure and make of the unpacked asset with the php-config of PATH in
 # a temporary directory, builds again only when the sources or the PHP build changed, and publishes the library with a
-# rename (HY-82). It runs offline: `make install` fetched the asset.
+# rename (HY-82). It runs offline: `make hyper-install` fetched the asset.
 ext: toolchain-check ## Build the native template extension from the unpacked php-ext asset with phpize of the PHP of PATH into build/ext (HY-48, H14.1-7)
 	$(NODE) scripts/build-template-ext.mts $(CURDIR)/$(EXT)
 
@@ -141,33 +150,33 @@ node-fixtures: packages ## Build the template files of the PHP test fixtures for
 assets: packages ## Build the board client bundle (SSR) and the single-file static shell (CSR)
 	$(NODE) $(BUILD_PACKAGE)/bin/hyper-build-assets.mjs --app $(BOARD) --api /api --output $(BOARD)/build --static public/assets/app.css --static public/assets/reader.css
 
-test-js: toolchain-check ## Run the browser code tests, including the router conformance cases, and the type check
+hyper-test-js: toolchain-check ## Run the browser code tests, including the router conformance cases, and the type check
 	@failed=; \
 	$(call check,the tests of $(JS_PACKAGE),node $(KIT)/run-tests.$(KIT_EXT) vitest --cwd $(JS_PACKAGE)) \
 	$(call check,the type check of $(JS_PACKAGE),$(TSC) --noEmit -p $(JS_PACKAGE)/tsconfig.json) \
 	$(checks_result)
 
-test-node: packages node-fixtures ## Run the Node server tests, including the PHP AppTest cases and the JSON conformance cases, and the type check
+hyper-test-node: packages node-fixtures ## Run the Node server tests, including the PHP AppTest cases and the JSON conformance cases, and the type check
 	@failed=; \
 	$(call check,the tests of $(NODE_PACKAGE),node $(KIT)/run-tests.$(KIT_EXT) vitest --cwd $(NODE_PACKAGE)) \
 	$(call check,the type check of $(NODE_PACKAGE),$(TSC) --noEmit -p $(NODE_PACKAGE)/tsconfig.json) \
 	$(checks_result)
 
-test-php: server-fixtures ext ## Run the server package tests with the generated program and with the native extension
+hyper-test-php: server-fixtures ext ## Run the server package tests with the generated program and with the native extension
 	@failed=; \
 	$(call check,PHPUnit with the generated program,COMPOSER_VENDOR_DIR=$(PHP_VENDOR) node $(KIT)/run-tests.$(KIT_EXT) phpunit --cwd $(PHP_PACKAGE)) \
 	$(call check,PHPUnit with the native extension,COMPOSER_VENDOR_DIR=$(PHP_VENDOR) node $(KIT)/run-tests.$(KIT_EXT) phpunit --cwd $(PHP_PACKAGE) --php-extension $(EXT)) \
 	$(checks_result)
 
-test-python: toolchain-check ## Run the Python server package tests, which read the conformance cases of routes, rest, csrf, fields and json
+hyper-test-python: toolchain-check ## Run the Python server package tests, which read the conformance cases of routes, rest, csrf, fields and json
 	$(PYTHON_VENV)/bin/python $(PYTHON_PACKAGE)/tests/run.py; unit=$$?; $(PYTHON_VENV)/bin/python $(PYTHON_PACKAGE)/tests/run.py $(PYTHON_PACKAGE)/tests/package 'test_*.py'; package=$$?; test $$unit -eq 0 -a $$package -eq 0
 
 # The rendering tests need the template Python package (H15.3-3), the wheel of the template release that the venv of make
 # install holds, and `make server-fixtures` writes the server program they open.
-test-python-render: server-fixtures toolchain-check ## Run the Python rendering tests with the template package of the venv (H15.3-3)
+hyper-test-python-render: server-fixtures toolchain-check ## Run the Python rendering tests with the template package of the venv (H15.3-3)
 	$(PYTHON_VENV)/bin/python $(PYTHON_PACKAGE)/tests/run.py $(PYTHON_PACKAGE)/tests/render 'render_*.py'
 
-lint: toolchain-check ## Check PHP formatting
+hyper-lint: toolchain-check ## Check PHP formatting
 	@failed=; \
 	$(call check,Pint of $(PHP_PACKAGE),cd $(PHP_PACKAGE) && $(PHP_VENDOR)/bin/pint --test) \
 	$(call check,Pint of $(BOARD),cd $(BOARD) && vendor/bin/pint --test app src public) \
@@ -185,7 +194,7 @@ templates-check: toolchain-check ## Check hx- attributes (HC-6) and region place
 typecheck: packages ## Check the types of the TypeScript of scripts/, tests/ and benchmarks/ with the tsc of node_modules (tsconfig.json)
 	$(TSC) -p tsconfig.json
 
-test-scripts: packages ## Run the tests of the check scripts, or only the files of TESTS
+hyper-test-scripts: packages ## Run the tests of the check scripts, or only the files of TESTS
 	$(NODE) $(KIT)/run-tests.$(KIT_EXT) node -- $(or $(TESTS),tests/scripts/)
 
 parity: assets server ext ## Compare PHP documents (generated program and native extension) with browser renders of document and region JSON
@@ -235,7 +244,7 @@ bench: bench-server bench-browser ## Run both measurements; results are reports,
 # checklist task is [~], while tracked changes are uncommitted or when var/full-run.json records a run of the current tree
 # and the commit of the template tag, runs each target with `make <target>` to its end and records its result;
 # `make rerun-failed` reruns the targets of the current tree that did not pass.
-CHECK_TARGETS := kit-check toolchain-check layout-check typecheck lint-ts documents-check hooks-check push-gate-commit commits-check owner-validate dependency-policy-check dependency-policy-mutation-check bench-server-smoke lint analyse-php templates-check test-scripts test-js test-node test-python test-python-render package-check test-php parity server-parity server-parity-python bundle-size e2e
+CHECK_TARGETS := kit-check toolchain-check layout-check typecheck lint-ts docs-check hooks-check push-gate-commit commits-check owner-validate dependency-policy-check dependency-policy-mutation-check bench-server-smoke hyper-lint analyse-php templates-check hyper-test-scripts hyper-test-js hyper-test-node hyper-test-python hyper-test-python-render package-check hyper-test-php parity server-parity server-parity-python bundle-size e2e
 
 # The CI groups of the full suite (HY-91) are the entries of the matrix of .github/workflows/ci.yml: each entry runs its
 # `targets` with `make ci-targets`, so the entries together run every target of CHECK_TARGETS once
@@ -258,8 +267,6 @@ check: template-tag ## Run every check through the guard: once per tree, when no
 
 rerun-failed: template-tag
 
-install-browser: ## Install Chromium of the pinned Playwright and its system libraries; the CI group board runs it (HY-91)
-	$(ONLINE) $(NODE) node_modules/@playwright/test/cli.js install --with-deps chromium
 
 # The steps of .github/workflows/release.yml for the tag TAG (release of @polyspec/kit, config/release.json), in this order:
 # release-verify requires the tagged commit on origin/main with the check ci-passed passed, release-versions the version of

@@ -8,7 +8,7 @@ import hmac
 import re
 import secrets
 
-_MASKED = re.compile(r'[0-9a-f]{128}\Z')
+_MASKED = re.compile(r"[0-9a-f]{128}\Z")
 
 
 def masked(token: str) -> str:

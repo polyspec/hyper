@@ -1,5 +1,5 @@
 // Tests that a recipe with several checks runs every check to its end and then fails, naming each failed check
-// (HY-86): `make lint` and `make test-js` run on directories whose checks all fail, and the dry runs of the other
+// (HY-86): `make hyper-lint` and `make hyper-test-js` run on directories whose checks all fail, and the dry runs of the other
 // recipes with several checks show one accumulating command.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
@@ -28,7 +28,7 @@ function make(target: string, variables: string[]) {
   return spawnSync('make', ['--no-print-directory', target, ...variables], { cwd: ROOT, env, encoding: 'utf8' });
 }
 
-test('make lint runs both formatting checks when the first fails and names both', (t) => {
+test('make hyper-lint runs both formatting checks when the first fails and names both', (t) => {
   const directory = temporary(t);
   const stub = (name: string) => {
     const project = path.join(directory, name);
@@ -40,7 +40,7 @@ test('make lint runs both formatting checks when the first fails and names both'
   };
   const packageProject = stub('package');
   const boardProject = stub('board');
-  const run = make('lint', [`PHP_PACKAGE=${packageProject}`, `PHP_VENDOR=${path.join(packageProject, 'vendor')}`, `BOARD=${boardProject}`]);
+  const run = make('hyper-lint', [`PHP_PACKAGE=${packageProject}`, `PHP_VENDOR=${path.join(packageProject, 'vendor')}`, `BOARD=${boardProject}`]);
   assert.notEqual(run.status, 0);
   assert.ok(existsSync(path.join(directory, 'package.ran')) && existsSync(path.join(directory, 'board.ran')), run.stdout + run.stderr);
   assert.match(run.stdout, new RegExp(`failed checks: Pint of ${packageProject}; Pint of ${boardProject};`));
@@ -52,13 +52,13 @@ test('make lint runs both formatting checks when the first fails and names both'
   assert.ok(lines.some((line) => line.startsWith('failed checks:')), run.stdout);
 });
 
-test('make test-js runs the type check when the tests fail and names both', (t) => {
-  requireBuilt('install', 'node_modules/@polyspec/template/package.json');
+test('make hyper-test-js runs the type check when the tests fail and names both', (t) => {
+  requireBuilt('hyper-install', 'node_modules/@polyspec/template/package.json');
   const directory = temporary(t);
   writeFileSync(path.join(directory, 'fails.test.mjs'), "import { test, expect } from 'vitest';\ntest('fails', () => expect(1).toBe(2));\n");
   writeFileSync(path.join(directory, 'wrong.ts'), "export const value: number = 'text';\n");
   writeFileSync(path.join(directory, 'tsconfig.json'), JSON.stringify({ compilerOptions: { strict: true, noEmit: true }, files: ['wrong.ts'] }));
-  const run = make('test-js', [`JS_PACKAGE=${directory}`]);
+  const run = make('hyper-test-js', [`JS_PACKAGE=${directory}`]);
   assert.notEqual(run.status, 0);
   assert.match(run.stdout, /✖ vitest: 0 passed, 1 failed/);
   assert.match(`${run.stdout}${run.stderr}`, /wrong\.ts\(1,14\): error TS2322/);
@@ -66,7 +66,7 @@ test('make test-js runs the type check when the tests fail and names both', (t) 
 });
 
 test('every other recipe with several checks runs them in one accumulating command', () => {
-  const recipes: [string, number][] = [['test-node', 2], ['test-php', 2], ['parity', 2], ['bench-server', 2]];
+  const recipes: [string, number][] = [['hyper-test-node', 2], ['hyper-test-php', 2], ['parity', 2], ['bench-server', 2]];
   for (const [target, checks] of recipes) {
     const lines = dryRun(target, { variables: ['TEMPLATE_DIR=var/products/template'] });
     const start = lines.findLastIndex((line) => line === 'failed=; \\');

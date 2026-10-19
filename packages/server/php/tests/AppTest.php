@@ -27,7 +27,7 @@ use Polyspec\Hyper\Tests\Support\Json;
 final class AppTest extends TestCase
 {
     private const JSON = ['Accept' => 'application/json', 'HX-Request' => 'true'];
-    // The server program of the fixtures, which `make test-php` builds (HY-48).
+    // The server program of the fixtures, which `make hyper-test-php` builds (HY-48).
     private const PROGRAM = __DIR__ . '/build/server';
 
     private ArraySession $session;

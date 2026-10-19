@@ -31,13 +31,13 @@ def _check(value, level: int) -> None:
         return
     if isinstance(value, int):
         if abs(value) > MAX_SAFE:
-            raise ValueError(f'integer {value} is outside the safe range')
+            raise ValueError(f"integer {value} is outside the safe range")
         return
     if isinstance(value, float):
         if not math.isfinite(value):
-            raise ValueError('number is not finite')
+            raise ValueError("number is not finite")
         if abs(value) > MAX_SAFE:
-            raise ValueError(f'number {value} is outside the safe range')
+            raise ValueError(f"number {value} is outside the safe range")
         return
     if isinstance(value, str):
         _check_text(value)
@@ -51,11 +51,11 @@ def _check(value, level: int) -> None:
         _check_level(level + 1)
         for key, item in value.items():
             if not isinstance(key, str):
-                raise ValueError('map key is not a string')
+                raise ValueError("map key is not a string")
             _check_text(key)
             _check(item, level + 1)
         return
-    raise ValueError(f'a {type(value).__name__} value has no binding')
+    raise ValueError(f"a {type(value).__name__} value has no binding")
 
 
 def _check_text(text: str) -> None:
@@ -63,10 +63,10 @@ def _check_text(text: str) -> None:
     while index < len(text):
         code = ord(text[index])
         if 0xD800 <= code <= 0xDFFF:
-            raise ValueError('string contains an unpaired surrogate')
+            raise ValueError("string contains an unpaired surrogate")
         index += 1
 
 
 def _check_level(level: int) -> None:
     if level > MAX_DEPTH:
-        raise ValueError(f'lists and dictionaries nest deeper than {MAX_DEPTH} levels')
+        raise ValueError(f"lists and dictionaries nest deeper than {MAX_DEPTH} levels")

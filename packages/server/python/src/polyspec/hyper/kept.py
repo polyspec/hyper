@@ -4,11 +4,10 @@ implementation follow the same rules; all three pass the cases of contracts/keep
 from __future__ import annotations
 
 import re
-from typing import Optional
 
 from .data_model import contains
 
-KINDS = ('server', 'cookie', 'localStorage', 'sessionStorage')
+KINDS = ("server", "cookie", "localStorage", "sessionStorage")
 
 # One kept value: its path and the value (HY-33).
 Pair = tuple[str, object]
@@ -18,7 +17,7 @@ def apply(data: dict, kept: list[Pair]) -> dict:
     """Replaces values at kept paths when the path exists and the kept value conforms to its value."""
     for path, value in kept:
         if contains(value):
-            data = _replace(data, path.split('.'), value)[0]
+            data = _replace(data, path.split("."), value)[0]
     return data
 
 
@@ -27,7 +26,9 @@ def select(data: dict, kept: list[Pair]) -> dict:
     next."""
     selected: dict = {}
     for path, value in kept:
-        replaced, applied = _replace(data, path.split('.'), value) if contains(value) else (data, False)
+        replaced, applied = (
+            _replace(data, path.split("."), value) if contains(value) else (data, False)
+        )
         if applied:
             selected[path] = value
         data = replaced
@@ -51,7 +52,7 @@ def _replace(container, keys: list[str], value) -> tuple[object, bool]:
         copy[key], applied = _replace(copy[key], rest, value)
         return copy, applied
     if isinstance(container, list):
-        if re.fullmatch(r'\d+', keys[0]) is None:
+        if re.fullmatch(r"\d+", keys[0]) is None:
             return container, False
         index = int(keys[0])
         if index >= len(container):
@@ -79,7 +80,10 @@ def _conforms(value, current) -> bool:
             return True
         if len(value) != len(current):
             return False
-        return all(key in value and _conforms(value[key], item) for key, item in current.items())
+        return all(
+            key in value and _conforms(value[key], item)
+            for key, item in current.items()
+        )
     if isinstance(current, list) and current != [] and isinstance(value, list):
         return all(_conforms(item, current[0]) for item in value)
     return True
@@ -88,15 +92,15 @@ def _conforms(value, current) -> bool:
 def _kind(value) -> str:
     """Returns the value type of the data model: null, bool, number, string, list or map."""
     if value is None:
-        return 'null'
+        return "null"
     if isinstance(value, bool):
-        return 'bool'
+        return "bool"
     if isinstance(value, (int, float)):
-        return 'number'
+        return "number"
     if isinstance(value, str):
-        return 'string'
+        return "string"
     if isinstance(value, list):
-        return 'list'
+        return "list"
     if isinstance(value, dict):
-        return 'map'
-    return 'other'
+        return "map"
+    return "other"

@@ -5,12 +5,20 @@ from __future__ import annotations
 
 import re
 
-_COOKIE_NAME = re.compile(r'[a-z][a-z0-9_-]*\Z')
-_COOKIE_VALUE = re.compile(r'[A-Za-z0-9._~-]+\Z')
-_CACHE_CONTROL = re.compile(r'[\x20-\x7e]+\Z')
+_COOKIE_NAME = re.compile(r"[a-z][a-z0-9_-]*\Z")
+_COOKIE_VALUE = re.compile(r"[A-Za-z0-9._~-]+\Z")
+_CACHE_CONTROL = re.compile(r"[\x20-\x7e]+\Z")
 # The tokens of the Referrer-Policy specification that a reply may set (HY-103).
-_REFERRER_POLICIES = ('no-referrer', 'no-referrer-when-downgrade', 'origin', 'origin-when-cross-origin',
-                      'same-origin', 'strict-origin', 'strict-origin-when-cross-origin', 'unsafe-url')
+_REFERRER_POLICIES = (
+    "no-referrer",
+    "no-referrer-when-downgrade",
+    "origin",
+    "origin-when-cross-origin",
+    "same-origin",
+    "strict-origin",
+    "strict-origin-when-cross-origin",
+    "unsafe-url",
+)
 
 
 class Reply:
@@ -26,7 +34,7 @@ class Reply:
         self._embed = False
         self._notes: dict[str, object] = {}
 
-    def note(self, name: str, value: object) -> 'Reply':
+    def note(self, name: str, value: object) -> "Reply":
         """Records a value of the request for the response hook; a later note of the same name replaces the value
         and keeps its position. The notes are not part of the response (HY-60)."""
         self._notes[name] = value
@@ -36,38 +44,45 @@ class Reply:
         """Returns the notes in the order of their first names."""
         return dict(self._notes)
 
-    def cookie(self, name: str, value: str, max_age: int | None = None) -> 'Reply':
+    def cookie(self, name: str, value: str, max_age: int | None = None) -> "Reply":
         """Adds a cookie; a name or value outside HY-52 fails."""
-        if _COOKIE_NAME.fullmatch(name) is None or name.startswith('hy-'):
-            raise ValueError(f'cookie name {name} is not allowed')
+        if _COOKIE_NAME.fullmatch(name) is None or name.startswith("hy-"):
+            raise ValueError(f"cookie name {name} is not allowed")
         if _COOKIE_VALUE.fullmatch(value) is None:
-            raise ValueError(f'cookie value of {name} has a character that is not allowed')
+            raise ValueError(
+                f"cookie value of {name} has a character that is not allowed"
+            )
         if max_age is not None and max_age < 0:
-            raise ValueError(f'cookie {name} has a negative Max-Age')
+            raise ValueError(f"cookie {name} has a negative Max-Age")
         self._cookies.append((name, value, max_age))
         return self
 
-    def remove_cookie(self, name: str) -> 'Reply':
+    def remove_cookie(self, name: str) -> "Reply":
         """Removes a cookie with Max-Age=0."""
-        self.cookie(name, 'x')
-        self._cookies[-1] = (name, '', 0)
+        self.cookie(name, "x")
+        self._cookies[-1] = (name, "", 0)
         return self
 
-    def cache_control(self, value: str) -> 'Reply':
+    def cache_control(self, value: str) -> "Reply":
         """Sets the Cache-Control of a page response with status 200. A page carries the session token of its
         visitor, so the value keeps it out of shared caches: it has `private` or `no-store` and neither `public` nor
         `s-maxage` (HY-52)."""
         if _CACHE_CONTROL.fullmatch(value) is None:
-            raise ValueError('Cache-Control has a character that is not allowed')
-        directives = [part.split('=', 1)[0].strip().lower() for part in value.split(',')]
-        if not any(name in ('private', 'no-store') for name in directives) \
-                or any(name in ('public', 's-maxage') for name in directives):
-            raise ValueError(f'Cache-Control {value} lets a shared cache store the page; '
-                             'it needs private or no-store and neither public nor s-maxage')
+            raise ValueError("Cache-Control has a character that is not allowed")
+        directives = [
+            part.split("=", 1)[0].strip().lower() for part in value.split(",")
+        ]
+        if not any(name in ("private", "no-store") for name in directives) or any(
+            name in ("public", "s-maxage") for name in directives
+        ):
+            raise ValueError(
+                f"Cache-Control {value} lets a shared cache store the page; "
+                "it needs private or no-store and neither public nor s-maxage"
+            )
         self._cache_control = value
         return self
 
-    def renew_session(self) -> 'Reply':
+    def renew_session(self) -> "Reply":
         """Renews the session after the action of the request returns (HY-72)."""
         self._renewal = True
         return self
@@ -82,11 +97,13 @@ class Reply:
         """Returns the Cache-Control that the reply sets, or None."""
         return self._cache_control
 
-    def referrer_policy(self, value: str) -> 'Reply':
+    def referrer_policy(self, value: str) -> "Reply":
         """Sets the Referrer-Policy of the page and JSON answers of the request, whatever their status; a value that is
         not a token of the Referrer-Policy specification fails (HY-103)."""
         if value not in _REFERRER_POLICIES:
-            raise ValueError(f'Referrer-Policy {value} is not a token of the Referrer-Policy specification')
+            raise ValueError(
+                f"Referrer-Policy {value} is not a token of the Referrer-Policy specification"
+            )
         self._referrer_policy = value
         return self
 
@@ -96,13 +113,17 @@ class Reply:
 
     def referrer_policy_headers(self) -> dict[str, str]:
         """Returns the Referrer-Policy header of the reply, or no header (HY-103)."""
-        return {} if self._referrer_policy is None else {'Referrer-Policy': self._referrer_policy}
+        return (
+            {}
+            if self._referrer_policy is None
+            else {"Referrer-Policy": self._referrer_policy}
+        )
 
-    def status(self, status: int) -> 'Reply':
+    def status(self, status: int) -> "Reply":
         """Gives a page response that has status 200 otherwise the status 403, for a page that shows other data in
         place of the data that the request may not see; another status fails (HY-69)."""
         if status != 403:
-            raise ValueError(f'page status {status} of a reply is not 403')
+            raise ValueError(f"page status {status} of a reply is not 403")
         self._status = status
         return self
 
@@ -110,7 +131,7 @@ class Reply:
         """Returns the page status that the reply sets, or None."""
         return self._status
 
-    def embed_data(self) -> 'Reply':
+    def embed_data(self) -> "Reply":
         """Makes the HTML document of the response embed its data (HY-31, HY-92)."""
         self._embed = True
         return self
@@ -121,6 +142,8 @@ class Reply:
 
     def cookie_headers(self, secure: bool) -> list[str]:
         """Returns the Set-Cookie values of the cookies of the reply (HY-52)."""
-        return [f'{name}={value}; Path=/; HttpOnly; SameSite=Lax'
-                f"{'; Secure' if secure else ''}{'' if max_age is None else f'; Max-Age={max_age}'}"
-                for name, value, max_age in self._cookies]
+        return [
+            f"{name}={value}; Path=/; HttpOnly; SameSite=Lax"
+            f"{'; Secure' if secure else ''}{'' if max_age is None else f'; Max-Age={max_age}'}"
+            for name, value, max_age in self._cookies
+        ]
