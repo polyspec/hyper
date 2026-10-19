@@ -1,4 +1,4 @@
-// Proves that the browser code renders the same bytes as the PHP server (HY-12, HY-13, HY-20, HY-30, HY-31), and
+// Proves that the browser code renders the same bytes as the PHP server (HY-12, HY-13, HYC-1, HY-30, HY-31), and
 // with --node or --python that the Node or the Python server answers every request as the PHP server does
 // (HY-55).
 // It starts the application with an empty database and runs the steps of a request file in one

@@ -54,7 +54,7 @@ async function boardFlow(page: Page, origin: string, dataPrefix: string, title: 
   await expect(page.locator('#left .badge')).toHaveText(String(expectedCount - 1));
   await markDocument(page);
 
-  // HY-20, HY-21: the link requests JSON for the content region and the browser renders it.
+  // HYC-1, HYC-2: the link requests JSON for the content region and the browser renders it.
   const createPage = fetchResponse(page, `${dataPrefix}/board/create`);
   await page.getByRole('link', { name: '글쓰기' }).click();
   expect((await createPage).headers()['content-type']).toContain('application/json');
@@ -87,7 +87,7 @@ async function boardFlow(page: Page, origin: string, dataPrefix: string, title: 
   await expect(page.locator('.post-body')).toContainText('둘째 줄');
   expect(await documentWasKept(page)).toBe(true);
 
-  // HY-23: history restoration renders the restored path.
+  // HYC-3: history restoration renders the restored path.
   await page.goBack();
   await expect(page).toHaveURL(`${origin}/board`);
   await expect(page.locator('#content h1')).toHaveText('게시판');
@@ -102,7 +102,7 @@ test('CSR: a static shell renders every document from /api JSON', async ({ page 
   const shell = await page.request.get(`${csr}/board`);
   expect(await shell.text()).toContain('<html>\n');
   expect(await shell.text()).toContain('<body></body>');
-  // HY-63: the html element takes the attributes of the rendered layout, as the server-rendered document has them.
+  // HYC-6: the html element takes the attributes of the rendered layout, as the server-rendered document has them.
   await page.goto(`${ssr}/board`);
   const rendered = await page.evaluate(() => document.documentElement.outerHTML.slice(0, document.documentElement.outerHTML.indexOf('>') + 1));
   await page.goto(`${csr}/board`);
@@ -112,10 +112,10 @@ test('CSR: a static shell renders every document from /api JSON', async ({ page 
   await boardFlow(page, csr, '/api', 'CSR 글', 2);
 });
 
-// HY-33, HY-36: hy-set changes region data and renders the region. Template files are static assets; the page starts
-// loading them when it holds the data (HY-32, HY-35). Saving a server kept value is a background request that rendering
+// HY-33, HYC-5: hy-set changes region data and renders the region. Template files are static assets; the page starts
+// loading them when it holds the data (HYC-4, HY-35). Saving a server kept value is a background request that rendering
 // does not wait for (HY-39). `documents` names the paths of the document requests of the changes: a server-rendered
-// list embeds no data, so its first change requests the document JSON of the page once (HY-93). `loaded` names the
+// list embeds no data, so its first change requests the document JSON of the page once (HYC-7). `loaded` names the
 // template files that the changes load: a server-rendered page loads the templates of a region when it first renders
 // it, and a client-rendered page has loaded them when it rendered the page.
 async function dataFlow(page: Page, origin: string, documents: string[], loaded: string[]): Promise<void> {
@@ -141,7 +141,7 @@ async function dataFlow(page: Page, origin: string, documents: string[], loaded:
   await expect(page.locator('#notice .notice p')).toContainText('서버 요청 없이');
 
   // The page sends no other request to the application and loads only the template files of the regions that it
-  // renders (HY-30, HY-35, HY-93). The chunk files, such as the template decoder of the board, are static assets that
+  // renders (HY-30, HY-35, HYC-7). The chunk files, such as the template decoder of the board, are static assets that
   // the page loads at most once, when it first runs their code (HY-76).
   const templates = requests.filter((url) => new URL(url).pathname.includes('/assets/templates/'));
   const chunks = requests.filter((url) => /^\/assets\/hyper-chunk-[A-Z0-9]+\.js$/.test(new URL(url).pathname));
@@ -235,7 +235,7 @@ test('CSR loads only the templates that a route needs', async ({ page }) => {
   expect(templates).toEqual(['board-create']);
 });
 
-test('SSR: after a history restore the list holds its own data (HY-32)', async ({ page }) => {
+test('SSR: after a history restore the list holds its own data (HYC-4)', async ({ page }) => {
   const errors = collectErrors(page);
   await page.goto(`${ssr}/board`);
   await page.locator('#rows tbody a').first().click();

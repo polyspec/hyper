@@ -14,7 +14,7 @@ export interface Application {
   page: string;
 }
 
-// A JSON response after its shape and its route were checked (HY-17, HY-20).
+// A JSON response after its shape and its route were checked (HY-17, HYC-1).
 export interface DecodedResponse {
   value: MapValue;
   route: RouteDeclaration;
@@ -52,7 +52,7 @@ export function createApplication(manifest: Manifest, index: TemplateIndex, fetc
   };
 }
 
-// Checks the response shape and that the browser router selects the route that the server reported (HY-17, HY-20).
+// Checks the response shape and that the browser router selects the route that the server reported (HY-17, HYC-1).
 export function decodeResponse(app: Application, response: Value, path: string): DecodedResponse {
   const root = requireMap(response, 'response');
   const timezone = requireMap(root.get('env') ?? null, 'env').get('timezone');
@@ -186,7 +186,7 @@ export function renderParts(app: Application, decoded: DecodedResponse): Rendere
   return { route: decoded.route, title, regions };
 }
 
-// Converts a decoded region response into the HTML that htmx swaps (HY-21). Route regions are inside the page region.
+// Converts a decoded region response into the HTML that htmx swaps (HYC-2). Route regions are inside the page region.
 export function toHtml(app: Application, decoded: DecodedResponse): string {
   const { title, regions } = renderParts(app, decoded);
   const page = regions.get(app.page);

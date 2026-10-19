@@ -193,7 +193,7 @@ try {
   await cdp.send('Performance.enable');
   await page.goto(`${ssr}/board`);
   // The rows element exists once the server or the browser rendered the list; a server-rendered list holds no data
-  // until it needs it (HY-93).
+  // until it needs it (HYC-7).
   await page.waitForFunction(() => document.getElementById('rows') !== null);
   await page.waitForLoadState('networkidle');
   const load: string[] = [];
@@ -404,7 +404,7 @@ async function navigationMemory(browser: Browser, origin: string, cycles: number
   await cdp.send('Performance.enable');
   await page.goto(`${origin}/board`);
   // The rows element exists once the server or the browser rendered the list; a server-rendered list holds no data
-  // until it needs it (HY-93).
+  // until it needs it (HYC-7).
   await page.waitForFunction(() => document.getElementById('rows') !== null);
   await page.waitForLoadState('networkidle');
   const visit = async (selector: string): Promise<void> => {

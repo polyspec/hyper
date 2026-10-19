@@ -1,4 +1,4 @@
-// The html element of a client-rendered document (HY-63).
+// The html element of a client-rendered document (HYC-6).
 import { describe, expect, it } from 'vitest';
 import { replaceAttributes, type AttributeElement } from '../src/index.js';
 
@@ -26,7 +26,7 @@ class Element implements AttributeElement {
   }
 }
 
-describe('replaceAttributes (HY-63)', () => {
+describe('replaceAttributes (HYC-6)', () => {
   it('gives the html element the language of the rendered document', () => {
     const page = new Element([['lang', 'ko']]);
     replaceAttributes(page, new Element([['lang', 'en'], ['dir', 'ltr']]));

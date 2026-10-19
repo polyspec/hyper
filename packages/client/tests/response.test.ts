@@ -11,7 +11,7 @@ function response(route: string, regions: string, shared = '{"title":"T","shared
 }
 
 describe('toHtml', () => {
-  it('renders the title, the page region and partials in response order (HY-21)', () => {
+  it('renders the title, the page region and partials in response order (HYC-2)', () => {
     const html = toHtml(app, decodeResponse(app, response('home', '{"side":{"count":3},"content":{"name":"n"}}'), '/'));
     expect(html).toBe('<title>T - Site</title><p>T|n|s</p><hx-partial hx-target="#side" hx-swap="innerMorph"><b>3</b></hx-partial>');
   });
@@ -31,7 +31,7 @@ describe('toHtml', () => {
     expect(html).toBe('<title>T - Site</title><h1>H</h1><ul id="rows"><li class="open">a</li><li>b</li></ul>');
   });
 
-  it('fails when the browser route differs from the server route (HY-20)', () => {
+  it('fails when the browser route differs from the server route (HYC-1)', () => {
     expect(() => decodeResponse(app, response('home', '{"content":{}}'), '/items/7')).toThrow('differs from server route');
     expect(() => decodeResponse(app, response('home', '{"content":{}}'), '/missing')).toThrow('differs from server route');
   });

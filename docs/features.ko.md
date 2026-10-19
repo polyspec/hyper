@@ -1,5 +1,5 @@
 <!-- doc-id: features -->
-<!-- source-sha256: 70a143a3fa370f10609d1815b3dbf839253fd5f451bedf6130b5b88fa8d9ebdc -->
+<!-- source-sha256: 592a40fb8303914b3d90abb823d816d4ac1cfe0d23e4e7256f4cbb748ac89367 -->
 # 기능 상태
 
 [English](features.md).
@@ -21,7 +21,7 @@
 | response-hook | 모든 응답마다 요청, 응답, 경과 시간, note를 가진 요청의 reply, 500의 실패로 한 번 호출하는 응답 hook(HY-60) | implemented | `make test-php`, `make hyper-test-node` |
 | escaped-error | 요청의 answer를 벗어난 오류의 평범한 500은 모든 adapter에서 같다. PHP와 Node에서는 호출자가 hyper가 요청을 받기 전에 설정한 header를 유지한다. 받은 그대로의 요청과 오류의 failure와 함께 쓰기 hook에 한 번 보고되며, 어떤 응답 hook에도 보고되지 않는다(HY-60, HY-99, HY-100, HY-101) | implemented; CI run pending | `make test-python`, `make hyper-test-node`, `make test-php`, `make hyper-test-python-render` |
 | write-hook | 모든 서버의 쓰기 hook `written`은 애플리케이션이 답한 요청마다 한 번 호출되며, 요청, 쓰기를 시작한 응답, 쓰기가 끝났는지, 경과 시간과 탈출 오류의 failure를 받는다. Node의 `App.listener`가 반환하는 listener는 그 뒤에 settle된다(HY-99, HY-102) | implemented; CI run pending | `make test-php`, `make hyper-test-node`, `make test-python`, `make hyper-test-python-render` |
-| client-shell | 한 서버가 요청마다의 선택(요청의 모든 handler가 그 값을 읽는다)에 따라 클라이언트 렌더 페이지에는 정적 셸과 데이터 기본 경로 아래의 JSON으로, 서버 렌더 페이지에는 그 경로 없이 응답하며, 브라우저는 `html` 요소에 렌더한 layout의 속성을 준다(HY-62, HY-63) | implemented | `make test-php`, `make hyper-test-node`, `make test-js`, `make e2e` |
+| client-shell | 한 서버가 요청마다의 선택(요청의 모든 handler가 그 값을 읽는다)에 따라 클라이언트 렌더 페이지에는 정적 셸과 데이터 기본 경로 아래의 JSON으로, 서버 렌더 페이지에는 그 경로 없이 응답하며, 브라우저는 `html` 요소에 렌더한 layout의 속성을 준다(HY-62, HYC-6) | implemented | `make test-php`, `make hyper-test-node`, `make test-js`, `make e2e` |
 | stylesheet-links | 브라우저는 클라이언트 렌더 문서, 영역 응답의 layout, 히스토리 복원 문서의 head에 있는 stylesheet link를 적용한다. 있는 link는 유지하고, 없는 link는 내용을 보이기 전에 불러오며, 그 뒤 나머지를 제거한다(HY-64) | implemented | `make test-js`, `make e2e` |
 | reply | loader와 action의 응답 cookie와 cache control, JSON tag와 304(HY-52, HY-53) | implemented | `make test-php` |
 | referrer-policy | page와 JSON 응답의 `Referrer-Policy` header를 정하는 명명된 reply 메서드 `referrerPolicy`, Referrer-Policy 명세의 토큰만 받는다(HY-103) | implemented | `make test-php`, `make hyper-test-node`, `make test-python`, `make hyper-test-python-render` |
@@ -36,7 +36,7 @@
 | python-request-hook | Python 서버 `create_server`의 요청 hook `around`. 요청과 `answer`를 받고, `Request.with_header`로 요청을 바꾸거나 응답을 바꾸며, session과 애플리케이션의 hook 없이 혼자 응답할 수 있다 (HY-97) | implemented; CI run pending | `make test-python`, `make hyper-test-python-render` |
 | hyper-server-python | server protocol의 Python 구현 `polyspec-hyper-server`. template Python package로 렌더하고 file session(HY-104)과 `http.server` 서버, WSGI application callable(H19.1), ASGI application callable(H19.2), board 예제 서버를 둔다 (H15.3) | implemented; CI run pending | `make test-python`, `make hyper-test-python-render`, `make server-parity-python` |
 | route-regions | 자기 로더를 가진 페이지 안의 라우트 영역(HY-30) | implemented | `make test-php`, `make parity` |
-| region-data | 라우트 영역의 내장 데이터, 요청 없이 라우트 영역에서 동작하는 `data`, `render`, `set`, `hy-set`, 데이터 공개 규칙(HY-29 ~ HY-33, HY-36, HY-71) | implemented | `make test-js`, `make e2e` |
+| region-data | 라우트 영역의 내장 데이터, 요청 없이 라우트 영역에서 동작하는 `data`, `render`, `set`, `hy-set`, 데이터 공개 규칙(HY-29 ~ HY-33, HYC-5, HY-71) | implemented | `make test-js`, `make e2e` |
 | kept-data | 서버 세션, 쿠키, localStorage, sessionStorage의 유지 경로(HY-37 ~ HY-41) | implemented | `make test-php`, `make test-js`, `make parity`, `make e2e` |
 | template-delivery | 템플릿마다 파일 하나, 렌더가 닿는 템플릿만 불러오기(HY-34, HY-35) | implemented | `make test-js`, `make e2e`, `make bundle-size` |
 | tailwind-build | `--tailwind <source>=<output>`은 application stylesheet를 Tailwind theme과 template이 쓰는 utility로 compile한다(HY-77) | implemented | `make hyper-test-scripts` |
@@ -71,6 +71,6 @@
 | request-boundary | UTF-8 검사, 상세 없는 500 오류, 데이터 모델 검사, 강화한 세션 쿠키, 리다이렉트 검사, 실패 표시(HY-42 ~ HY-47) | implemented | `make test-php`, `make test-js`, `make e2e` |
 | benchmark | 서버와 브라우저 성능 측정: 요청 비용, 행 수별 렌더, 첫 화면, `hy-set` 메인 스레드 부하, 이동 중 메모리 | implemented | `make bench`, [성능 측정](operations/benchmark.ko.md) |
 | server-program | 네이티브 템플릿 확장, 또는 같은 템플릿의 generated PHP 프로그램으로 하는 PHP 렌더(HY-48) | implemented | `make test-php`, `make parity` |
-| embedded-data | 문서는 reply가 요청할 때만 데이터를 내장하고, 브라우저는 내장 데이터가 없는 페이지의 데이터를 처음 필요할 때 문서 요청 하나로 얻는다(HY-31, HY-92, HY-93) | implemented; CI run pending | `make test-php`, `make hyper-test-node`, `make test-js` |
+| embedded-data | 문서는 reply가 요청할 때만 데이터를 내장하고, 브라우저는 내장 데이터가 없는 페이지의 데이터를 처음 필요할 때 문서 요청 하나로 얻는다(HY-31, HY-92, HYC-7) | implemented; CI run pending | `make test-php`, `make hyper-test-node`, `make test-js` |
 | cdn-deployment | 서버와 CDN 배포(권장)와 정적 셸 배포 | 문서화, 배포 안 함 | [배포](operations/deployment.ko.md) |
 | publication | 패키지의 레지스트리 배포 | not started | |

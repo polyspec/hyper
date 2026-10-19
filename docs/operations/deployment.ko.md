@@ -1,5 +1,5 @@
 <!-- doc-id: deployment -->
-<!-- source-sha256: 4050a800ed9473418a1e1ad8032831c0c3d4fdc7de3a61b64922d5246fd0b3f0 -->
+<!-- source-sha256: 5016b56ba49d588a16f0d2a0add06f67884d71a48670bd5d69918ed2d6a50f00 -->
 # 배포
 
 [English](deployment.md).
@@ -55,7 +55,7 @@ PHP는 기본 경로 없이 실행한다. 응답에는 `Vary: Accept, HX-Request
 | `/_props` 아래의 JSON 요청이나 액션 | 서버 형태와 같은 JSON과 액션, `/_props` 아래의 `Location` |
 | `/_props` 아래의 HTML 요청, 그 밖의 JSON 요청 | 406 |
 
-선택이 고르지 않은 요청은 서버 형태처럼 응답한다. 셸 응답은 `frame-ancestors`(HY-45)를 가지며 응답 hook(HY-60)에 보고된다. 브라우저는 `html` 요소에 렌더한 layout의 `lang` 같은 속성을 준다(HY-63).
+선택이 고르지 않은 요청은 서버 형태처럼 응답한다. 셸 응답은 `frame-ancestors`(HY-45)를 가지며 응답 hook(HY-60)에 보고된다. 브라우저는 `html` 요소에 렌더한 layout의 `lang` 같은 속성을 준다(HYC-6).
 
 ## 서버 설정
 

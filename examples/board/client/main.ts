@@ -19,7 +19,7 @@ window.hyper = hyper;
 
 htmx.registerExtension('hyper', hyper.extension());
 
-// HY-36: a click on an element with hy-set changes region data and renders the region without a request.
+// HYC-5: a click on an element with hy-set changes region data and renders the region without a request.
 document.addEventListener('click', (event) => {
   const element = event.target instanceof Element ? event.target.closest('[hy-set]') : null;
   if (!element) return;
@@ -50,6 +50,6 @@ document.addEventListener('htmx:after:process', (event) => {
   if (event.target === document.body) void report();
 });
 
-// HY-22, HY-32, HY-93: a client-rendered page renders its document; a server-rendered page holds its embedded data, or
+// HY-22, HYC-4, HYC-7: a client-rendered page renders its document; a server-rendered page holds its embedded data, or
 // obtains the data when it first needs it.
 void hyper.open();

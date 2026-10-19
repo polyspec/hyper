@@ -1,6 +1,6 @@
 import { parseJson, type Value } from '@polyspec/template/render';
 
-// A failed document request of HY-93, with the status that marks the region of the call or the body (HY-47).
+// A failed document request of HYC-7, with the status that marks the region of the call or the body (HY-47).
 export class ObtainError extends Error {
   readonly status: string;
 
@@ -11,10 +11,10 @@ export class ObtainError extends Error {
   }
 }
 
-// The fetch that the client calls with the URL of a request as a string (HY-15, HY-93).
+// The fetch that the client calls with the URL of a request as a string (HY-15, HYC-7).
 export type Fetch = (url: string, init: RequestInit) => Promise<Response>;
 
-// Sends the document request of a URL (HY-15, HY-93) and returns the JSON value of a response with status 200 and the
+// Sends the document request of a URL (HY-15, HYC-7) and returns the JSON value of a response with status 200 and the
 // URL of the response after redirects. Another response, a network failure or a body that is not JSON fails with the
 // status of the response, or `0` without one.
 export async function requestDocument(request: Fetch, url: string): Promise<{ value: Value; url: string }> {

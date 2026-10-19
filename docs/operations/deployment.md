@@ -44,7 +44,7 @@ One server of either implementation can answer the server-rendered pages and the
 | JSON request or action under `/_props` | JSON and actions as in the server form, with `Location` under `/_props` |
 | HTML request under `/_props`, JSON request outside it | 406 |
 
-A request that the selection does not choose is answered as in the server form. The shell response carries `frame-ancestors` (HY-45) and is reported to the response hook (HY-60). The browser gives the `html` element the attributes of the rendered layout, such as its `lang` (HY-63).
+A request that the selection does not choose is answered as in the server form. The shell response carries `frame-ancestors` (HY-45) and is reported to the response hook (HY-60). The browser gives the `html` element the attributes of the rendered layout, such as its `lang` (HYC-6).
 
 ## Server settings
 

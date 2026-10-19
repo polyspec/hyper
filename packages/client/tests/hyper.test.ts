@@ -132,7 +132,7 @@ const absentJson = '{"env":{"timezone":"Z"},"route":"list","params":{},"shared":
 afterEach(() => vi.unstubAllGlobals());
 
 describe('superseded region requests', () => {
-  it('does not swap the response of a region request that a later region request superseded (HY-23)', async () => {
+  it('does not swap the response of a region request that a later region request superseded (HYC-3)', async () => {
     const { hyper } = setup('', []);
     const extension = hyper.extension();
     const item = (id: string) => `{"env":{"timezone":"Z"},"route":"item","params":{"id":"${id}"},"shared":{"title":"T${id}"},"regions":{"content":{"id":"${id}"}},"kept":{}}`;
@@ -218,7 +218,7 @@ describe('template delivery', () => {
 });
 
 describe('held data', () => {
-  it('holds the data of the route regions of a rendered response and no other region (HY-32)', async () => {
+  it('holds the data of the route regions of a rendered response and no other region (HYC-4)', async () => {
     const { hyper } = setup();
     await request(hyper, '/list', 'http://localhost/list', listJson);
     expect(mapOf(await hyper.data('rows')).has('items')).toBe(true);
@@ -244,11 +244,11 @@ describe('held data', () => {
     expect(swaps).toEqual([]);
   });
 
-  it('runs hy-set assignments in the region that contains the element (HY-36)', async () => {
+  it('runs hy-set assignments in the region that contains the element (HYC-5)', async () => {
     const { hyper, swaps } = setup();
     await request(hyper, '/list', 'http://localhost/list', listJson);
     const button = {
-      // The closest element whose id is a route region of the held route (HY-36).
+      // The closest element whose id is a route region of the held route (HYC-5).
       closest: (selector: string) => (selector === '[id="rows"]' ? { id: 'rows' } : null),
       getAttribute: () => 'items.0.open=false; items.0.name="x;y"',
     };
@@ -263,7 +263,7 @@ describe('held data', () => {
     await expect(hyper.set('rows', 'missing.flag', 1)).rejects.toThrow('does not exist');
   });
 
-  it('fails without a request when nothing is held and the region is not a route region of the current page (HY-93)', async () => {
+  it('fails without a request when nothing is held and the region is not a route region of the current page (HYC-7)', async () => {
     await expect(setup().hyper.set('rows', 'a', 1)).rejects.toThrow('region rows is not a route region of the route home of the current page');
   });
 });
@@ -318,7 +318,7 @@ describe('kept data', () => {
 });
 
 describe('held data, restorations and kept values', () => {
-  it('forgets the held data after an SSR history restore of a document without #hy-data (HY-32)', async () => {
+  it('forgets the held data after an SSR history restore of a document without #hy-data (HYC-4)', async () => {
     const swaps: Swap[] = [];
     const element = (id: string) => (id === 'hy-data' ? null : ({ id }));
     const htmx = fakeHtmx(async (ctx) => { swaps.push({ region: '', text: ctx.text, swap: ctx.swap }); });
@@ -355,7 +355,7 @@ describe('held data, restorations and kept values', () => {
     expect(html).toContain('{"name":"b","open":false}');
   });
 
-  it('renders only the latest of overlapping client-side restorations (HY-23)', async () => {
+  it('renders only the latest of overlapping client-side restorations (HYC-3)', async () => {
     const releases: (() => void)[] = [];
     const page = new FakeDocument();
     const respond = (body: string) => new Promise<Response>((resolve) => releases.push(() => resolve(jsonResponse('', body))));
@@ -395,7 +395,7 @@ describe('held data, restorations and kept values', () => {
     expect(storage.writes).toEqual(['localStorage:rows:items.1.open=true']);
   });
 
-  it('prefixes every same-origin region request with the base path (HY-23)', () => {
+  it('prefixes every same-origin region request with the base path (HYC-3)', () => {
     const extension = setup('/api').hyper.extension();
     const ctx = context('/api/7');
     extension.htmx_config_request(null, { ctx });
@@ -450,7 +450,7 @@ describe('held data, restorations and kept values', () => {
 });
 
 describe('restorations, saves and failure marks', () => {
-  it('cancels a pending client-side restoration when a region request starts (HY-23)', async () => {
+  it('cancels a pending client-side restoration when a region request starts (HYC-3)', async () => {
     let release: () => void = () => undefined;
     const page = new FakeDocument();
     const hyper = new Hyper(testApplication(), fakeHtmx(), {
@@ -519,7 +519,7 @@ describe('restorations, saves and failure marks', () => {
     expect(side.attributes.has('hy-error')).toBe(false);
   });
 
-  it('prefixes absolute same-origin and relative region request URLs (HY-23)', () => {
+  it('prefixes absolute same-origin and relative region request URLs (HYC-3)', () => {
     const hyper = new Hyper(testApplication(), fakeHtmx(), {
       basePath: '/api',
       storage: new FakeStorage(),
@@ -692,7 +692,7 @@ describe('concurrent changes, saves and timeouts', () => {
     expect(storage.sent).toHaveLength(2);
   });
 
-  it('treats every same-origin action as an application path under a base path (HY-23)', () => {
+  it('treats every same-origin action as an application path under a base path (HYC-3)', () => {
     const hyper = new Hyper(testApplication(), fakeHtmx(), {
       basePath: '/api',
       storage: new FakeStorage(),
@@ -786,7 +786,7 @@ describe('parseAssignments', () => {
 });
 
 describe('extension', () => {
-  it('requests JSON only when the target is the page region element (HY-21)', () => {
+  it('requests JSON only when the target is the page region element (HYC-2)', () => {
     const extension = setup().hyper.extension();
     for (const id of ['x', 'side', 'rows']) {
       const plain = context('/', { id });
@@ -808,7 +808,7 @@ describe('extension', () => {
     expect(ctx.text).toBe('Not Found');
   });
 
-  it('prefixes requests, strips history paths and replaces restoration under a base path (HY-23)', async () => {
+  it('prefixes requests, strips history paths and replaces restoration under a base path (HYC-3)', async () => {
     const { hyper } = setup('/api');
     const extension = hyper.extension();
     const ctx = context('/items/7?x=1');
@@ -993,7 +993,7 @@ describe('absent route regions (HY-75)', () => {
 });
 
 // A page of the list route whose server-rendered document embeds no data, with a document request that the test
-// answers (HY-93).
+// answers (HYC-7).
 function obtaining(options: { storage?: FakeStorage; url?: string; answer?: (url: string) => Promise<Response> } = {}) {
   const swaps: Swap[] = [];
   const requests: { url: string; headers: Record<string, string> }[] = [];
@@ -1022,8 +1022,8 @@ function obtaining(options: { storage?: FakeStorage; url?: string; answer?: (url
   return { hyper, swaps, requests, page, elements };
 }
 
-describe('obtaining the data of a page without embedded data (HY-93)', () => {
-  it('sends no request when the page opens without a stored browser kept value (HY-32)', async () => {
+describe('obtaining the data of a page without embedded data (HYC-7)', () => {
+  it('sends no request when the page opens without a stored browser kept value (HYC-4)', async () => {
     const { hyper, requests, swaps, page } = obtaining();
     await hyper.open();
     expect(requests).toEqual([]);
@@ -1031,7 +1031,7 @@ describe('obtaining the data of a page without embedded data (HY-93)', () => {
     expect(page.mounted).toEqual([]);
   });
 
-  it('obtains the data when the page opens with a stored browser kept value and renders the kept value (HY-32, HY-38)', async () => {
+  it('obtains the data when the page opens with a stored browser kept value and renders the kept value (HYC-4, HY-38)', async () => {
     const { hyper, requests, swaps } = obtaining({ storage: new FakeStorage({ 'localStorage:rows:items.1.open': 'true' }) });
     await hyper.open();
     expect(requests).toEqual([{ url: '/list?page=2', headers: { Accept: 'application/json' } }]);
@@ -1052,7 +1052,7 @@ describe('obtaining the data of a page without embedded data (HY-93)', () => {
     ]);
   });
 
-  it('sends one request for calls that need the data while it is pending (HY-93)', async () => {
+  it('sends one request for calls that need the data while it is pending (HYC-7)', async () => {
     let release: () => void = () => undefined;
     const { hyper, requests } = obtaining({ answer: () => new Promise((resolve) => { release = () => resolve(jsonResponse('http://localhost/list', listJson)); }) });
     const reading = hyper.data('rows');
@@ -1091,7 +1091,7 @@ describe('obtaining the data of a page without embedded data (HY-93)', () => {
     expect(mapOf(await hyper.data('rows')).get('flag')).toBe(true);
   });
 
-  it('fails with 0 when the response routes to another route than the current page (HY-20)', async () => {
+  it('fails with 0 when the response routes to another route than the current page (HYC-1)', async () => {
     const item = '{"env":{"timezone":"Z"},"route":"item","params":{"id":"7"},"shared":{"title":"T"},"regions":{"side":{"count":1},"content":{"id":"7"}},"kept":{}}';
     const { hyper, elements } = obtaining({ answer: async () => jsonResponse('http://localhost/items/7', item) });
     await expect(hyper.set('rows', 'flag', true)).rejects.toThrow('routes to item');
@@ -1108,7 +1108,7 @@ describe('obtaining the data of a page without embedded data (HY-93)', () => {
     expect(page.mounted).toEqual(['fail:0']);
   });
 
-  it('runs hy-set in a route region of the current page while nothing is held (HY-36)', async () => {
+  it('runs hy-set in a route region of the current page while nothing is held (HYC-5)', async () => {
     const { hyper, swaps, requests } = obtaining();
     const button = {
       closest: (selector: string) => (selector === '[id="rows"]' ? { id: 'rows' } : null),
@@ -1119,14 +1119,14 @@ describe('obtaining the data of a page without embedded data (HY-93)', () => {
     expect(defined(swaps.at(-1), 'the last swap').text).toBe('<li class="open">x</li><li>b</li>');
   });
 
-  it('holds the data of a region response without any request of its own, so the server needs no signal (HY-18, HY-32)', async () => {
+  it('holds the data of a region response without any request of its own, so the server needs no signal (HY-18, HYC-4)', async () => {
     const { hyper, requests } = obtaining();
     await request(hyper, '/list', 'http://localhost/list', listJson);
     await hyper.set('rows', 'flag', true);
     expect(requests).toEqual([]);
   });
 
-  it('holds the embedded data when the document has #hy-data and sends no request (HY-31, HY-32)', async () => {
+  it('holds the embedded data when the document has #hy-data and sends no request (HY-31, HYC-4)', async () => {
     const swaps: Swap[] = [];
     const requests: string[] = [];
     const embedded = { id: 'hy-data', textContent: listJson };
