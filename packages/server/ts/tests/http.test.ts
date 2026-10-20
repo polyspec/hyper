@@ -279,11 +279,11 @@ describe('App.server', () => {
   });
 });
 
-// The write hook of the Node server (HY-99) and the listener that App.listener returns (HY-102).
+// The write hook of the Node server (HY-99) and the listener that App.listener returns (HY-100).
 describe('the write hook and App.listener', () => {
   type Written = [string, number | null, boolean, string | null];
 
-  it('App.listener returns the request listener of the application (HY-102)', async () => {
+  it('App.listener returns the request listener of the application (HY-100)', async () => {
     const app = await new Fixture().app();
     const listener = app.listener(new FileSessions({ directory }));
     expect(typeof listener).toBe('function');
@@ -336,13 +336,13 @@ describe('the write hook and App.listener', () => {
       written: (request, response, ended, _elapsed, failure) => events.push(`written ${request.method} ${request.path()} ${response === null ? 'null' : response.status} ${ended} ${failure}`),
     });
     await dropClient(server, running, release);
-    // The listener settles after the write hook and the disconnect hook (HY-102).
+    // The listener settles after the write hook and the disconnect hook (HY-100).
     await vi.waitFor(() => expect(events).toHaveLength(2));
     // HY-99: a request whose connection closed before its answer started has no response.
     expect(events).toEqual(['written GET / null false null', 'disconnect GET /']);
   });
 
-  it('settles the promise of the listener after the write hook and the disconnect hook (HY-102)', async () => {
+  it('settles the promise of the listener after the write hook and the disconnect hook (HY-100)', async () => {
     const events: string[] = [];
     const { app, running, release } = await waitingApp(events);
     const sessions = new FileSessions({ directory });

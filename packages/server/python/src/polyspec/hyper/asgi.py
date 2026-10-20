@@ -1,4 +1,4 @@
-"""An ASGI application callable of the server pipeline (HY-101): an ASGI server runs the callable
+"""An ASGI application callable of the server pipeline (HY-100): an ASGI server runs the callable
 and the pipeline answers every request of the scope type `http` as `create_server` does (HY-97,
 HY-99) — the public files, the body limit (HY-59), the session cookie of a new session first
 (HY-45), the hooks and the plain 500 of an escaped error (HY-60) — and runs the pipeline of a request
@@ -34,7 +34,7 @@ from .response import Response
 
 @dataclass
 class FileResponse:
-    """A file of the public directory that the callable sends before `around` (HY-101)."""
+    """A file of the public directory that the callable sends before `around` (HY-100)."""
 
     headers: list[tuple[bytes, bytes]]
     data: bytes
@@ -48,7 +48,7 @@ def create_asgi(
     written: Optional[Written] = None,
 ) -> Callable:
     """Returns an ASGI 3 application callable that answers every request with the application, as
-    `create_server` does (HY-101). `files`, `around` and `written` mean what they mean there (HY-97,
+    `create_server` does (HY-100). `files`, `around` and `written` mean what they mean there (HY-97,
     HY-99): the callable sends one `http.response.start` and one `http.response.body` with the
     complete body, `written` reports that the write ended when both sends return, and that it failed
     when a send raises, which an ASGI server does for a connection that the client closed; when the
@@ -101,7 +101,7 @@ def create_asgi(
             )
             await send({"type": "http.response.body", "body": body})
         except Exception:
-            # HY-101 and HY-67: a send raised, which an ASGI server does for a connection that the client
+            # HY-100 and HY-67: a send raised, which an ASGI server does for a connection that the client
             # closed; the write hook runs before the disconnect hook, and the error propagates.
             exchange.report(result, False, failure)
             exchange.disconnect(app)
@@ -116,7 +116,7 @@ def create_asgi(
 
 
 def _messages(response: Response) -> tuple[list[tuple[bytes, bytes]], bytes]:
-    """Returns the headers and the body of a response as the ASGI messages carry them (HY-101). A 204 or 304 response
+    """Returns the headers and the body of a response as the ASGI messages carry them (HY-100). A 204 or 304 response
     has no body and no Content-Length."""
     empty = response.status in (204, 304)
     body = b"" if empty else response.body.encode("utf-8")
@@ -139,7 +139,7 @@ async def _answer(
     exchange: Exchange,
 ) -> Union[Response, FileResponse]:
     """Answers the request of the scope: a file of the public directory, or the application through `around` in a
-    worker thread (HY-101). The request as received is kept in the exchange before the body is read (HY-60)."""
+    worker thread (HY-100). The request as received is kept in the exchange before the body is read (HY-60)."""
     method = scope["method"]
     target = _raw_path(scope)
     declared = declared_length(_header(scope, b"content-length"))
@@ -153,7 +153,7 @@ async def _answer(
     )
     served = None if files is None else public_file(files, method, target)
     if served is not None:
-        # HY-101: the files of the public directory are served before `around`; no hook runs.
+        # HY-100: the files of the public directory are served before `around`; no hook runs.
         data = served.read_bytes()
         return FileResponse(
             [
@@ -178,7 +178,7 @@ async def _answer(
         https=app.https,
         body_size=size,
     )
-    # HY-101: the pipeline of a request runs in a worker thread, so the event loop answers other requests while a
+    # HY-100: the pipeline of a request runs in a worker thread, so the event loop answers other requests while a
     # request responds.
     loop = asyncio.get_running_loop()
     return await loop.run_in_executor(
@@ -206,13 +206,13 @@ async def _read_body(receive: Callable, limit: int) -> tuple[bytes, int]:
 
 
 def _raw_path(scope: dict) -> str:
-    """Returns the raw request path of the scope, the bytes of `raw_path` decoded as latin-1 (HY-101). The path
+    """Returns the raw request path of the scope, the bytes of `raw_path` decoded as latin-1 (HY-100). The path
     is never built from `path`, which the server percent-decodes; a scope without `raw_path` has no target, and
     the request is answered with the plain 500 (HY-60)."""
     raw = scope.get("raw_path")
     if raw is None:
         raise RuntimeError(
-            "the ASGI scope has no raw_path, so the request path is unknown (HY-101)"
+            "the ASGI scope has no raw_path, so the request path is unknown (HY-100)"
         )
     return raw.decode("latin-1")
 

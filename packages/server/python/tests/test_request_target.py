@@ -1,4 +1,4 @@
-# The request target of the three transports (HY-42, HY-56, HY-97, HY-100, HY-101): `create_server`, the WSGI
+# The request target of the three transports (HY-42, HY-56, HY-97, HY-100, HY-100): `create_server`, the WSGI
 # callable and the ASGI callable give the same request and the same response for one target, and the
 # percent sequences of the target reach the application as the client sent them.
 import asyncio

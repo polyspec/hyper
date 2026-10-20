@@ -1,4 +1,4 @@
-# The ASGI application callable (HY-101): the pipeline of the Python server as a callable that an
+# The ASGI application callable (HY-100): the pipeline of the Python server as a callable that an
 # ASGI server runs, with the public files, the body limit (HY-59), the session cookie of a new
 # session (HY-45), the request hook `around` (HY-97), the write hook `written` (HY-99), the
 # disconnect hook on a failed send (HY-67) and the pipeline of a request in a worker thread.
@@ -184,7 +184,7 @@ class AsgiTest(TransportCase):
         self.assertEqual([(captured[0], True)], written)
 
     def test_the_raw_path_is_used_and_not_the_decoded_path(self) -> None:
-        # HY-101: `path` is percent-decoded by the server; the path is `raw_path` as sent.
+        # HY-100: `path` is percent-decoded by the server; the path is `raw_path` as sent.
         cases = [
             (b"/notes/a%20b", "/notes/a b", "/notes/a%20b", ""),
             (b"/notes/a%2Fb", "/notes/a/b", "/notes/a%2Fb", ""),
@@ -204,7 +204,7 @@ class AsgiTest(TransportCase):
                 self.assertEqual((path, query), (request.path(), request.raw_query()))
 
     def test_a_missing_raw_path_answers_the_plain_500_and_reports_nothing(self) -> None:
-        # HY-101: the path is never built from the decoded `path`; the request has no target, so it is not reported.
+        # HY-100: the path is never built from the decoded `path`; the request has no target, so it is not reported.
         without = {
             key: value
             for key, value in scope(path="/notes/a b").items()
@@ -238,7 +238,7 @@ class AsgiTest(TransportCase):
     def test_a_failed_body_read_answers_the_plain_500_and_reports_the_request(
         self,
     ) -> None:
-        # HY-60, HY-101: a body that cannot be received is an escaped error before `around`; the write hook receives
+        # HY-60, HY-100: a body that cannot be received is an escaped error before `around`; the write hook receives
         # the request as received, with an empty body and the Content-Length that the client declared.
         written = []
         application = create_asgi(
@@ -268,7 +268,7 @@ class AsgiTest(TransportCase):
         self.assertEqual((5, 500, True), (request.body_size(), status, ended))
 
     def test_a_failed_send_of_the_plain_500_reports_it_and_propagates(self) -> None:
-        # HY-60, HY-101: when the send of the plain 500 fails, the write failed; the error propagates to the server.
+        # HY-60, HY-100: when the send of the plain 500 fails, the write failed; the error propagates to the server.
         written = []
 
         def around(request, answer):
@@ -292,7 +292,7 @@ class AsgiTest(TransportCase):
     def test_a_cancelled_send_reports_an_unended_write_and_propagates_the_cancellation(
         self,
     ) -> None:
-        # HY-99, HY-101: a cancellation of the task ends the write without an ended write; the cancellation propagates,
+        # HY-99, HY-100: a cancellation of the task ends the write without an ended write; the cancellation propagates,
         # and the disconnect hook does not run, because a cancellation does not state that the client closed.
         written = []
         application = create_asgi(
@@ -320,7 +320,7 @@ class AsgiTest(TransportCase):
         self.assertEqual([], self.app.disconnected_calls)
 
     def test_a_cancellation_before_the_answer_reports_a_null_response(self) -> None:
-        # HY-99, HY-101: a task cancelled while it reads the body ends before a response started; the write hook
+        # HY-99, HY-100: a task cancelled while it reads the body ends before a response started; the write hook
         # receives a null response with ended false, and the cancellation propagates.
         written = []
         application = create_asgi(

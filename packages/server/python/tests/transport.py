@@ -1,4 +1,4 @@
-"""What the tests of the ASGI callable (HY-101) and of the WSGI callable (HY-100) share: the application that they run,
+"""What the tests of the ASGI callable (HY-100) and of the WSGI callable (HY-100) share: the application that they run,
 the set-up of a test, the hooks that record what the write hook reports and the checks of a request that reached the
 application."""
 

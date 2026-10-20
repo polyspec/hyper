@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-kit-standard -->
-<!-- source-sha256: bb44b071779af12b39a44c1ec2b09e8d137173731079620b4c0d553e86509b73 -->
+<!-- source-sha256: da1cb467f29de9f3cc28b67a32b722915b5b7a02de3a46376c6e14a5cde0d4c4 -->
 # kit 표준 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -27,3 +27,4 @@
 | H25.20 | client-requests는 Python에서 성립한다. contracts/client.json의 case는 id로 이름 붙은 test method이고 binding에 묶인다 | config/parity.json and packages/server/python/tests/render/render_client.py | `packages/server/python/.venv/bin/python -m unittest packages/server/python/tests/render/render_client.py`, `make parity-declarations-check` | [o] |
 | H25.21 | R13: 저장소 규칙은 docs/spec에서 docs/operations로 옮기고 자신의 id를 가진다 | docs/operations/repository-rules.md and its Korean twin, docs/spec/protocol.md and its twin, and the citations of the moved rules | `make docs-check`, `make parity-declarations-check` | [o] |
 | H25.22 | R13: browser 요구사항은 HYC id이며 각각 browser test가 인용하고, 그것이 품은 서버 규칙은 HY로 남는다 | docs/spec/protocol.md and its twin, the citations of the renamed ids and packages/client/tests/hyper.test.ts | `make docs-check`, `make parity-declarations-check`, `var/tools/bin/node node_modules/vitest/vitest.mjs run --dir packages/client` | [o] |
+| H25.23 | R13: HY-48, HY-74, HY-97, HY-100은 한 언어가 아니라 모든 서버의 규칙을 적는다 | docs/spec/protocol.md and its Korean twin, and the citations of HY-101 and HY-102 | `make docs-check` | [o] |

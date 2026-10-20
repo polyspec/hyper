@@ -24,7 +24,7 @@ export interface ServerOptions {
 // The write hook of a server (HY-99).
 export type WriteHook = (request: Request, response: Response | null, ended: boolean, elapsed: number, failure: string | null) => void;
 
-// The request listener of node:http that an application runs for every request (HY-102).
+// The request listener of node:http that an application runs for every request (HY-100).
 export type Listener = (incoming: IncomingMessage, outgoing: ServerResponse) => Promise<void>;
 
 const CONTENT_TYPES: Record<string, string> = {
@@ -56,7 +56,7 @@ export function createServer<S extends object>(app: App<S>, sessions: FileSessio
 }
 
 // Returns the request listener that answers every request of node:http with the application and sessions in files
-// (HY-102). It settles after the write hook and the disconnect hook of the request have run (HY-99, HY-67).
+// (HY-100). It settles after the write hook and the disconnect hook of the request have run (HY-99, HY-67).
 export function createListener<S extends object>(app: App<S>, sessions: FileSessions, options: ServerOptions = {}): Listener {
   const files = options.files;
   if (files !== undefined && (!isAbsolute(files) || !statSync(files).isDirectory())) throw new Error(`hyper: ${files} is not an absolute directory`);

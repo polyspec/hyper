@@ -211,7 +211,7 @@ export class App<S extends object = Record<string, never>> {
     return createServer(this, sessions, options);
   }
 
-  // Returns the node:http request listener that `server` installs (HY-102).
+  // Returns the node:http request listener that `server` installs (HY-100).
   listener(sessions: FileSessions, options: ServerOptions = {}): Listener {
     return createListener(this, sessions, options);
   }
