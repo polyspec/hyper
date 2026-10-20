@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-kit-standard -->
-<!-- source-sha256: bc7ea8ff47e1df6bfc08071cb72b271be042fab936d0acce86fe30ac7c533c45 -->
+<!-- source-sha256: d0d1a74bea30c97697091bc2078b97a2d24488c3273295adbcd0b9df93ccf568 -->
 # kit 표준 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -81,3 +81,4 @@
 | H25.65 | 영문 CHANGELOG.md와 kit-standard 체크리스트의 한국어 쌍이 원문과 다시 일치한다. 원인: af1b700 이후 영문 문서가 바뀌었으나 한국어 쌍은 이전 source-sha256을 유지하여 make docs-check가 실패한다 | CHANGELOG.ko.md, docs/plans/kit-standard/checklist.ko.md | `make docs-check` | [o] |
 | H25.67 | hyper는 kit f9eb43dd의 kit copy(K348 K385 K384 K360-1 K383 K380 K382 K375)를 받는다 | the kit copies that kit.copies lists, PRINCIPLES.md, PRINCIPLES.ko.md, scripts/kit/kit-bootstrap.mk, config/layout.kit.yml, ruff.toml, .golangci.yml, .github/workflows/release.yml | `make kit-check` | [o] |
 | H25.68 | 의존성 문서는 PHP 플랫폼을 8.5 하한이 아니라 .php-version과 K322의 8.4.1로 적는다. 원인: docs/operations/dependencies.md 8행과 그 한국어 짝이 플랫폼에 없는 PHP 하한 8.5를 적는다 | docs/operations/dependencies.md, docs/operations/dependencies.ko.md | `make docs-check` | [o] |
+| H25.66 | phpunit/phpunit은 최신 안정 릴리스 13.4.3을 따른다. 원인: config/dependency-review.json은 13.4.3을 latest로 기록하는데 composer.json은 13.4.2를 고정하여, main에서 make dependency-policy-check가 실패한다 | composer.json, composer.lock, packages/server/php/composer.json, packages/server/php/composer.lock, config/dependency-review.json | `make dependency-policy-check` and `make hyper-test-php` | [ ] |
