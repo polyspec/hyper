@@ -1,11 +1,6 @@
 {
   "schema": 1,
-  "comment": "The class of each tool of hyper (S1): ecosystem names the tool it uses, policy the reason no ecosystem tool applies. The tools below scripts/kit are copies of kit and are classed in kit.",
-  "paths": [
-    "scripts/*.mts",
-    "packages/build/bin/*.mjs",
-    "packages/build/lib/*.mjs"
-  ],
+  "comment": "The class of each tool of hyper (S1), found by the layout of the repository (K286): ecosystem names the tool it uses, policy the reason no ecosystem tool applies. The tools below scripts/kit are copies of kit and are classed in kit too.",
   "tools": {
     "scripts/board-servers.mts": {
       "kind": "ecosystem",
@@ -82,6 +77,94 @@
     "packages/build/lib/template-rules.mjs": {
       "kind": "policy",
       "reason": "the template rules of hyper (HC-6, HY-3, HY-30, HY-75) over the AST that @polyspec/template parses; no ecosystem tool states the rules of this protocol"
+    },
+    "scripts/kit/bootstrap/bootstrap.mts": {
+      "kind": "policy",
+      "reason": "a copy of the bootstrap of @polyspec/kit, which classes and records it in its own config/rebuild.json and docs/rebuild/toolchain.md; this repository changes it only in kit"
+    },
+    "scripts/kit/bootstrap/install-mise.mts": {
+      "kind": "policy",
+      "reason": "a copy of the bootstrap of @polyspec/kit, which classes and records it in its own config/rebuild.json and docs/rebuild/toolchain.md; this repository changes it only in kit"
+    },
+    "scripts/kit/bootstrap/install-npm.mts": {
+      "kind": "policy",
+      "reason": "a copy of the bootstrap of @polyspec/kit, which classes and records it in its own config/rebuild.json and docs/rebuild/toolchain.md; this repository changes it only in kit"
+    },
+    "scripts/kit/bootstrap/install-tool.mts": {
+      "kind": "policy",
+      "reason": "a copy of the bootstrap of @polyspec/kit, which classes and records it in its own config/rebuild.json and docs/rebuild/toolchain.md; this repository changes it only in kit"
+    },
+    "scripts/kit/bootstrap/tool-wrappers.mts": {
+      "kind": "policy",
+      "reason": "a copy of the bootstrap of @polyspec/kit, which classes and records it in its own config/rebuild.json and docs/rebuild/toolchain.md; this repository changes it only in kit"
+    },
+    "scripts/kit/bootstrap/toolchain-declared.mts": {
+      "kind": "policy",
+      "reason": "a copy of the bootstrap of @polyspec/kit, which classes and records it in its own config/rebuild.json and docs/rebuild/toolchain.md; this repository changes it only in kit"
+    },
+    "scripts/kit/bootstrap/digest.mts": {
+      "kind": "ecosystem",
+      "tool": "node:crypto"
+    },
+    "scripts/kit/bootstrap/files.mts": {
+      "kind": "ecosystem",
+      "tool": "node:fs"
+    },
+    "scripts/kit/kit-bootstrap.mk": {
+      "kind": "policy",
+      "reason": "the bootstrap order of a repository before the package @polyspec/kit is installed (K71-2), a copy that kit writes"
+    },
+    "benchmarks/browser.mts": {
+      "kind": "ecosystem",
+      "tool": "Playwright drives Chromium and measures the board example; node:perf_hooks times the steps"
+    },
+    "benchmarks/server.php": {
+      "kind": "ecosystem",
+      "tool": "hrtime(true) of PHP times App::handle and the template program on the board example"
+    },
+    "examples/board/app/handlers.php": {
+      "kind": "policy",
+      "reason": "the handlers of the board example, an application of the PHP server; it implements no tool of an ecosystem"
+    },
+    "examples/board/node/handlers.ts": {
+      "kind": "policy",
+      "reason": "the handlers of the board example, an application of the Node server; it implements no tool of an ecosystem"
+    },
+    "examples/board/python/handlers.py": {
+      "kind": "policy",
+      "reason": "the handlers of the board example, an application of the Python server; it implements no tool of an ecosystem"
+    },
+    "examples/board/client/main.ts": {
+      "kind": "ecosystem",
+      "tool": "htmx.org and @polyspec/hyper-client run the page of the board example in the browser"
+    },
+    "examples/board/node/main.ts": {
+      "kind": "ecosystem",
+      "tool": "node:http through App.server of @polyspec/hyper-server serves the board example"
+    },
+    "examples/board/python/main.py": {
+      "kind": "ecosystem",
+      "tool": "the standard library http.server through create_server of polyspec.hyper serves the board example"
+    },
+    "examples/board/public/index.php": {
+      "kind": "ecosystem",
+      "tool": "the front controller of the PHP SAPI (the built-in server or php-fpm) calls App::run of polyspec/hyper-server"
+    },
+    "examples/board/node/posts.ts": {
+      "kind": "ecosystem",
+      "tool": "node:sqlite stores the posts of the board example"
+    },
+    "examples/board/python/posts.py": {
+      "kind": "ecosystem",
+      "tool": "sqlite3 of the standard library stores the posts of the board example"
+    },
+    "examples/board/src/Board/Posts.php": {
+      "kind": "ecosystem",
+      "tool": "PDO with the SQLite driver stores the posts of the board example"
+    },
+    "examples/board/src/Board/Assets.php": {
+      "kind": "policy",
+      "reason": "reads the manifest.json that hyper-build-assets writes (HR-34) for the layout of the board example; no ecosystem tool names the assets of this build"
     }
   }
 }

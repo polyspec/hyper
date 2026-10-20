@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-kit-standard -->
-<!-- source-sha256: 71e58514f66cee473d46ba9da285f0db8413006dce21ab69d463f24b49ee7ec8 -->
+<!-- source-sha256: d62249b2f9e5936581636a3e53565b4e3d79942bf6bf7cf9675ccd5c53c6bf70 -->
 # kit 표준 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -32,3 +32,4 @@
 | H25.25 | Node 서버는 요청 hook around를 받고(HY-97) process 경고를 내는 요청을 실패시킨다(HY-74) | packages/server/ts/src/http.ts, request.ts, warnings.ts, app.ts, index.ts, the tests http.test.ts and app.test.ts and the specification | `var/tools/bin/node node_modules/vitest/vitest.mjs run --dir packages/server/ts` | [o] |
 | H25.26 | PHP 서버는 요청 hook around를 받는다(HY-97) | packages/server/php/src/App.php, Request.php, Delivery.php, the tests AppTest.php and RunTest.php with the front controllers, and the specification | `var/tools/bin/node node_modules/@polyspec/kit/dist/run-tests.mjs phpunit --cwd packages/server/php -- --exclude-group native tests/RunTest.php` | [o] |
 | H25.27 | R13: handler의 서비스와 session 동시 쓰기는 모든 서버의 규칙이다 | docs/spec/protocol.md and its Korean twin | `make docs-check` | [o] |
+| H25.28 | config/rebuild.json은 paths가 없고 kit이 layout으로 찾는 모든 tool 원본을 분류한다 | config/rebuild.json | `make rebuild-check` | [o] |
