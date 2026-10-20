@@ -89,9 +89,18 @@ final class Reply
         if (preg_match('/^[\x20-\x7e]+$/D', $value) !== 1) {
             throw new \InvalidArgumentException('Cache-Control has a character that is not allowed');
         }
-        $directives = array_map(fn (string $part): string => strtolower(trim(explode('=', $part, 2)[0])), explode(',', $value));
-        if (array_intersect($directives, ['private', 'no-store']) === [] || array_intersect($directives, ['public', 's-maxage']) !== []) {
-            throw new \InvalidArgumentException("Cache-Control {$value} lets a shared cache store the page; it needs private or no-store and neither public nor s-maxage");
+        $directives = array_map(
+            fn (string $part): string => strtolower(trim(explode('=', $part, 2)[0])),
+            explode(',', $value),
+        );
+        if (
+            array_intersect($directives, ['private', 'no-store']) === []
+            || array_intersect($directives, ['public', 's-maxage']) !== []
+        ) {
+            throw new \InvalidArgumentException(
+                "Cache-Control {$value} lets a shared cache store the page; "
+                . 'it needs private or no-store and neither public nor s-maxage',
+            );
         }
         $this->cacheControl = $value;
 
@@ -121,13 +130,15 @@ final class Reply
     }
 
     /**
-     * Sets the Referrer-Policy of the page and JSON answers of the request, whatever their status; a value that is not a
-     * token of the Referrer-Policy specification fails (HY-103).
+     * Sets the Referrer-Policy of the page and JSON answers of the request, whatever their status; a value that is not
+     * a token of the Referrer-Policy specification fails (HY-103).
      */
     public function referrerPolicy(string $value): self
     {
         if (!in_array($value, self::REFERRER_POLICIES, true)) {
-            throw new \InvalidArgumentException("Referrer-Policy {$value} is not a token of the Referrer-Policy specification");
+            throw new \InvalidArgumentException(
+                "Referrer-Policy {$value} is not a token of the Referrer-Policy specification",
+            );
         }
         $this->referrerPolicy = $value;
 

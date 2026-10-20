@@ -41,7 +41,13 @@ final class ClientTest extends TestCase
      */
     private static function app(Counter $counter, ?ClientRendering $client = null, array $options = []): App
     {
-        $client ??= new ClientRendering(self::SHELL, Json::string(self::conformance()['basePath'] ?? null), fn (Request $request): Choice => new Choice($request->header('Host') === self::conformance()['chosenHost'], null));
+        $client ??= new ClientRendering(
+            self::SHELL,
+            Json::string(self::conformance()['basePath'] ?? null),
+            fn (
+                Request $request,
+            ): Choice => new Choice($request->header('Host') === self::conformance()['chosenHost'], null),
+        );
         $app = App::open(...[
             'manifest' => __DIR__ . '/fixtures/app.json',
             'program' => self::PROGRAM,
@@ -58,7 +64,14 @@ final class ClientTest extends TestCase
 
                         return Result::redirect('/');
                     }],
-                    'list' => ['regions' => ['rows' => fn (): array => ['items' => [], 'open' => false, 'mode' => 'a', 'view' => 'x', 'filter' => ['a' => 1], 'tags' => []]]],
+                    'list' => ['regions' => ['rows' => fn (): array => [
+                        'items' => [],
+                        'open' => false,
+                        'mode' => 'a',
+                        'view' => 'x',
+                        'filter' => ['a' => 1],
+                        'tags' => [],
+                    ]]],
                     'item' => ['load' => fn (Request $request): array => ['id' => $request->param('id')]],
                 ],
             ],
@@ -99,7 +112,16 @@ final class ClientTest extends TestCase
         $question = strpos($target, '?');
         $query = $question === false ? '' : substr($target, $question + 1);
         $path = $question === false ? $target : substr($target, 0, $question);
-        $response = self::app($counter)->handle(new Request(Json::string($request['method'] ?? null), $path, $headers, $query, $form === null ? '' : http_build_query($form)), $session);
+        $response = self::app($counter)->handle(
+            new Request(
+                Json::string($request['method'] ?? null),
+                $path,
+                $headers,
+                $query,
+                $form === null ? '' : http_build_query($form),
+            ),
+            $session,
+        );
 
         self::assertSame($case['status'] ?? null, $response->status);
         foreach (Json::stringMap($case['headers'] ?? null) as $name => $value) {
@@ -131,8 +153,18 @@ final class ClientTest extends TestCase
         $reports = [];
         $app = self::app(new Counter(), null, [
             'frameAncestors' => "'self' https://frame.test",
-            'onResponse' => function (Request $request, Response $response, float $elapsed, Reply $reply) use (&$reports): void {
-                $reports[] = [$request->path, $response->status, $response->headers['Content-Security-Policy'] ?? null, $reply->notes()];
+            'onResponse' => function (
+                Request $request,
+                Response $response,
+                float $elapsed,
+                Reply $reply,
+            ) use (&$reports): void {
+                $reports[] = [
+                    $request->path,
+                    $response->status,
+                    $response->headers['Content-Security-Policy'] ?? null,
+                    $reply->notes(),
+                ];
             },
         ]);
         $app->handle(new Request('GET', '/list', ['Host' => 'client.test']), new ArraySession());
@@ -149,6 +181,12 @@ final class ClientTest extends TestCase
         // action of the request, whether the selection chose the request or not.
         $selections = 0;
         $seen = [];
+        $choose = function (Request $request) use (&$selections): Choice {
+            $selections++;
+            $host = (string) $request->header('Host');
+
+            return new Choice($host === 'client.test', ['host' => $host]);
+        };
         $app = App::open(
             manifest: __DIR__ . '/fixtures/app.json',
             program: self::PROGRAM,
@@ -177,25 +215,46 @@ final class ClientTest extends TestCase
                 ],
             ],
             timezone: '+09:00',
-            clientRendering: new ClientRendering(self::SHELL, '/_props', function (Request $request) use (&$selections): Choice {
-                $selections++;
-                $host = (string) $request->header('Host');
-
-                return new Choice($host === 'client.test', ['host' => $host]);
-            }),
+            clientRendering: new ClientRendering(self::SHELL, '/_props', $choose),
         );
         $app->handle(new Request('GET', '/items/7', ['Host' => 'server.test']), new ArraySession());
         self::assertSame(1, $selections);
-        self::assertSame([['shared', ['host' => 'server.test']], ['side', ['host' => 'server.test']], ['item', ['host' => 'server.test']]], $seen);
+        self::assertSame(
+            [
+                ['shared', ['host' => 'server.test']],
+                ['side', ['host' => 'server.test']],
+                ['item', ['host' => 'server.test']],
+            ],
+            $seen,
+        );
         $seen = [];
-        $app->handle(new Request('GET', '/_props/items/7', ['Host' => 'client.test', 'Accept' => 'application/json']), new ArraySession());
+        $app->handle(
+            new Request('GET', '/_props/items/7', ['Host' => 'client.test', 'Accept' => 'application/json']),
+            new ArraySession(),
+        );
         self::assertSame(2, $selections);
-        self::assertSame([['shared', ['host' => 'client.test']], ['side', ['host' => 'client.test']], ['item', ['host' => 'client.test']]], $seen);
+        self::assertSame(
+            [
+                ['shared', ['host' => 'client.test']],
+                ['side', ['host' => 'client.test']],
+                ['item', ['host' => 'client.test']],
+            ],
+            $seen,
+        );
         $seen = [];
         $session = new ArraySession();
         $session->set('_hyper_csrf', self::TOKEN);
         $form = http_build_query(['_csrf' => Csrf::masked(self::TOKEN), 'name' => 'x']);
-        $response = $app->handle(new Request('POST', '/add', ['Host' => 'server.test', 'Content-Type' => 'application/x-www-form-urlencoded'], '', $form), $session);
+        $response = $app->handle(
+            new Request(
+                'POST',
+                '/add',
+                ['Host' => 'server.test', 'Content-Type' => 'application/x-www-form-urlencoded'],
+                '',
+                $form,
+            ),
+            $session,
+        );
         self::assertSame(303, $response->status);
         self::assertSame(3, $selections);
         self::assertSame([['add', ['host' => 'server.test']]], $seen);
@@ -227,7 +286,12 @@ final class ClientTest extends TestCase
         // HY-43, HY-62
         $logged = ini_set('error_log', '/dev/null');
         try {
-            foreach ([fn (): string => 'csr', fn (): bool => true, fn (): Choice => throw new \RuntimeException('selection')] as $selects) {
+            $selectors = [
+                fn (): string => 'csr',
+                fn (): bool => true,
+                fn (): Choice => throw new \RuntimeException('selection'),
+            ];
+            foreach ($selectors as $selects) {
                 $app = self::app(new Counter(), new ClientRendering(self::SHELL, '/_props', $selects));
                 $response = $app->handle(new Request('GET', '/'), new ArraySession());
                 self::assertSame(500, $response->status);
@@ -245,7 +309,11 @@ final class ClientTest extends TestCase
         $invalid = [
             'relative shell' => new ClientRendering('tests/fixtures/shell/index.html', '/_props', $selects),
             'missing shell' => new ClientRendering(__DIR__ . '/fixtures/shell/missing.html', '/_props', $selects),
-            'shell of another base path' => new ClientRendering(__DIR__ . '/fixtures/shell/other-base.html', '/_props', $selects),
+            'shell of another base path' => new ClientRendering(
+                __DIR__ . '/fixtures/shell/other-base.html',
+                '/_props',
+                $selects,
+            ),
             'empty base path' => new ClientRendering(self::SHELL, '', $selects),
             'base path ending with /' => new ClientRendering(self::SHELL, '/_props/', $selects),
             'route under the base path' => new ClientRendering(self::SHELL, '/items', $selects),

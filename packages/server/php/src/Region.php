@@ -19,7 +19,10 @@ final class Region
         public readonly array $keep = [],
     ) {
         foreach ($keep as $path => $kind) {
-            if (preg_match('/^[A-Za-z_][A-Za-z0-9_]*(\.([A-Za-z_][A-Za-z0-9_]*|\d+))*$/D', (string) $path) !== 1 || !in_array($kind, Kept::KINDS, true)) {
+            if (
+                preg_match('/^[A-Za-z_][A-Za-z0-9_]*(\.([A-Za-z_][A-Za-z0-9_]*|\d+))*$/D', (string) $path) !== 1
+                || !in_array($kind, Kept::KINDS, true)
+            ) {
                 throw new \InvalidArgumentException("region {$name} has an invalid kept path {$path}");
             }
         }

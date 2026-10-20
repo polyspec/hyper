@@ -19,7 +19,10 @@ final class FieldsTest extends TestCase
     public static function cases(): iterable
     {
         foreach (Json::arrays(self::fixture()['urlencoded'] ?? null) as $case) {
-            yield Json::string($case['label'] ?? null) => [Json::string($case['text'] ?? null), self::expected($case['fields'] ?? null)];
+            yield Json::string($case['label'] ?? null) => [
+                Json::string($case['text'] ?? null),
+                self::expected($case['fields'] ?? null),
+            ];
         }
     }
 
@@ -27,7 +30,11 @@ final class FieldsTest extends TestCase
     public static function multipartCases(): iterable
     {
         foreach (Json::arrays(self::fixture()['multipart'] ?? null) as $case) {
-            yield Json::string($case['label'] ?? null) => [Json::string($case['type'] ?? null), (string) mb_convert_encoding(Json::string($case['body'] ?? null), 'ISO-8859-1', 'UTF-8'), self::expected($case['fields'] ?? null)];
+            yield Json::string($case['label'] ?? null) => [
+                Json::string($case['type'] ?? null),
+                (string) mb_convert_encoding(Json::string($case['body'] ?? null), 'ISO-8859-1', 'UTF-8'),
+                self::expected($case['fields'] ?? null),
+            ];
         }
     }
 
@@ -44,7 +51,10 @@ final class FieldsTest extends TestCase
             return null;
         }
 
-        return array_map(fn (array $pair): array => [Json::string($pair[0] ?? null), Json::strings($pair[1] ?? null)], Json::arrays($fields));
+        return array_map(
+            fn (array $pair): array => [Json::string($pair[0] ?? null), Json::strings($pair[1] ?? null)],
+            Json::arrays($fields),
+        );
     }
 
     /** @param ?list<array{string, list<string>}> $expected */
@@ -70,7 +80,12 @@ final class FieldsTest extends TestCase
 
     public function testReadsAUrlencodedBodyAndNoOtherType(): void
     {
-        self::assertSame([['roles[]', ['a', 'b']]], self::pairs(Fields::fromBody('application/x-www-form-urlencoded; charset=UTF-8', 'roles%5B%5D=a&roles[]=b')));
+        self::assertSame(
+            [['roles[]', ['a', 'b']]],
+            self::pairs(
+                Fields::fromBody('application/x-www-form-urlencoded; charset=UTF-8', 'roles%5B%5D=a&roles[]=b'),
+            ),
+        );
         self::assertSame([['a', ['1']]], self::pairs(Fields::fromBody('Application/X-WWW-Form-Urlencoded', 'a=1')));
         self::assertSame([], self::pairs(Fields::fromBody('text/plain', 'a=1')));
         self::assertSame([], self::pairs(Fields::fromBody('', 'a=1')));

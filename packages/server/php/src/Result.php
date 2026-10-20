@@ -24,7 +24,10 @@ final class Result
     /** Returns a redirect to a path of this application (HY-46). */
     public static function redirect(string $location): self
     {
-        if (preg_match('#^/(?![/\\\\])[^\x{00}-\x{20}\x{7F}-\x{9F}\\\\]*$#Du', $location) !== 1 || self::hasDotSegment($location)) {
+        if (
+            preg_match('#^/(?![/\\\\])[^\x{00}-\x{20}\x{7F}-\x{9F}\\\\]*$#Du', $location) !== 1
+            || self::hasDotSegment($location)
+        ) {
             throw new \InvalidArgumentException("redirect location {$location} is not an application path");
         }
 
@@ -71,13 +74,25 @@ final class Result
     /** Returns a copy that stores a flash value for the next request. */
     public function flash(string $name, mixed $value): self
     {
-        return new self($this->location, $this->status, $this->data, [...$this->flash, $name => $value], $this->changed);
+        return new self(
+            $this->location,
+            $this->status,
+            $this->data,
+            [...$this->flash, $name => $value],
+            $this->changed,
+        );
     }
 
     /** Returns a copy that records changed topics for the next request. */
     public function changed(string ...$topics): self
     {
-        return new self($this->location, $this->status, $this->data, $this->flash, array_values(array_unique([...$this->changed, ...$topics])));
+        return new self(
+            $this->location,
+            $this->status,
+            $this->data,
+            $this->flash,
+            array_values(array_unique([...$this->changed, ...$topics])),
+        );
     }
 
     /** Returns true for a redirect. */

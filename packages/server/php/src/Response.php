@@ -26,7 +26,11 @@ final class Response
     {
         $cookies = $reply->cookieHeaders($secure);
 
-        return $cookies === [] ? $this : new self($this->status, [...$this->headers, 'Set-Cookie' => $cookies], $this->body);
+        return $cookies === [] ? $this : new self(
+            $this->status,
+            [...$this->headers, 'Set-Cookie' => $cookies],
+            $this->body,
+        );
     }
 
     /** Returns a plain text response. */
@@ -48,10 +52,10 @@ final class Response
     }
 
     /**
-     * Writes this response in place of a failed one (HY-60): the queued headers are dropped, then the `$kept` header lines
-     * of the caller are added again, and the status line is set with header(), because a fatal error makes PHP queue its
-     * own status line, which http_response_code() refuses to replace. `$statusLine` is the whole status line, such as
-     * `HTTP/1.1 500 Internal Server Error`.
+     * Writes this response in place of a failed one (HY-60): the queued headers are dropped, then the `$kept` header
+     * lines of the caller are added again, and the status line is set with header(), because a fatal error makes PHP
+     * queue its own status line, which http_response_code() refuses to replace. `$statusLine` is the whole status line,
+     * such as `HTTP/1.1 500 Internal Server Error`.
      *
      * @param list<string> $kept
      */

@@ -33,9 +33,34 @@ App::open(
         file_put_contents($log, "response {$response->status}\n", FILE_APPEND);
     },
     onDisconnect: function (Request $request, float $elapsed, Reply $reply) use ($log): void {
-        file_put_contents($log, sprintf("disconnect %s %s %d %s\n", $request->method, $request->path, $elapsed >= 300.0 ? 1 : 0, json_encode($reply->notes())), FILE_APPEND);
+        file_put_contents(
+            $log,
+            sprintf(
+                "disconnect %s %s %d %s\n",
+                $request->method,
+                $request->path,
+                $elapsed >= 300.0 ? 1 : 0,
+                json_encode($reply->notes()),
+            ),
+            FILE_APPEND,
+        );
     },
-    written: function (Request $request, ?Response $response, bool $ended, float $elapsed, ?string $failure) use ($log): void {
-        file_put_contents($log, sprintf("written %s %s %s\n", $response === null ? 'null' : $response->status, $ended ? 'true' : 'false', json_encode($failure)), FILE_APPEND);
+    written: function (
+        Request $request,
+        ?Response $response,
+        bool $ended,
+        float $elapsed,
+        ?string $failure,
+    ) use ($log): void {
+        file_put_contents(
+            $log,
+            sprintf(
+                "written %s %s %s\n",
+                $response === null ? 'null' : $response->status,
+                $ended ? 'true' : 'false',
+                json_encode($failure),
+            ),
+            FILE_APPEND,
+        );
     },
 )->run();

@@ -44,7 +44,9 @@ final class DataModel
                 self::noNativeObject($item);
             }
         } elseif (is_object($value) && !$value instanceof SafeString) {
-            throw new \UnexpectedValueException('an application object of class ' . $value::class . ' is not a value of the data model');
+            throw new \UnexpectedValueException(
+                'an application object of class ' . $value::class . ' is not a value of the data model',
+            );
         }
     }
 }

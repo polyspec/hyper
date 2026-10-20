@@ -20,14 +20,22 @@ final class CsrfTest extends TestCase
     public function testMasksTheTokenWithAMask(): void
     {
         foreach (self::fixture('mask') as $case) {
-            self::assertSame($case['value'] ?? null, Csrf::mask(Json::string($case['token'] ?? null), Json::string($case['mask'] ?? null)), Json::string($case['label'] ?? null));
+            self::assertSame(
+                $case['value'] ?? null,
+                Csrf::mask(Json::string($case['token'] ?? null), Json::string($case['mask'] ?? null)),
+                Json::string($case['label'] ?? null),
+            );
         }
     }
 
     public function testVerifiesAFormValue(): void
     {
         foreach (self::fixture('verify') as $case) {
-            self::assertSame($case['valid'] ?? null, Csrf::verify(Json::string($case['token'] ?? null), Json::string($case['value'] ?? null)), Json::string($case['label'] ?? null));
+            self::assertSame(
+                $case['valid'] ?? null,
+                Csrf::verify(Json::string($case['token'] ?? null), Json::string($case['value'] ?? null)),
+                Json::string($case['label'] ?? null),
+            );
         }
     }
 

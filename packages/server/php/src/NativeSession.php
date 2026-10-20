@@ -37,11 +37,22 @@ final class NativeSession implements SessionStore
      * Secure on HTTPS, only identifiers that the server created, and no caching headers, because the application
      * sets Cache-Control (HY-52).
      *
-     * @return array{name: string, cookie_path: '/', cookie_domain: '', cookie_httponly: true, cookie_samesite: 'Lax', cookie_secure: bool, use_strict_mode: true, use_only_cookies: true, cache_limiter: ''}
+     * @return array{name: string, cookie_path: '/', cookie_domain: '', cookie_httponly: true, cookie_samesite: 'Lax',
+     *     cookie_secure: bool, use_strict_mode: true, use_only_cookies: true, cache_limiter: ''}
      */
     public static function options(bool $https): array
     {
-        return ['name' => self::name($https), 'cookie_path' => '/', 'cookie_domain' => '', 'cookie_httponly' => true, 'cookie_samesite' => 'Lax', 'cookie_secure' => $https, 'use_strict_mode' => true, 'use_only_cookies' => true, 'cache_limiter' => ''];
+        return [
+            'name' => self::name($https),
+            'cookie_path' => '/',
+            'cookie_domain' => '',
+            'cookie_httponly' => true,
+            'cookie_samesite' => 'Lax',
+            'cookie_secure' => $https,
+            'use_strict_mode' => true,
+            'use_only_cookies' => true,
+            'cache_limiter' => '',
+        ];
     }
 
     public function get(string $key): mixed

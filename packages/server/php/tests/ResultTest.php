@@ -14,7 +14,26 @@ final class ResultTest extends TestCase
     /** @return iterable<string, array{string}> */
     public static function rejected(): iterable
     {
-        foreach (['', 'board', '//evil.example', '/\\evil.example', "/\t/evil.example", "/ok\r\nX-Injected: 1", '/a b', "/a\x00", "/a\u{85}", "/a\xFF", '/a\\b', '/.//evil.example', '/a/..//evil.example', '/%2E//evil.example', '/a/%2e%2E/b', '/a/.', '/./b?x=1'] as $location) {
+        $locations = [
+            '',
+            'board',
+            '//evil.example',
+            '/\\evil.example',
+            "/\t/evil.example",
+            "/ok\r\nX-Injected: 1",
+            '/a b',
+            "/a\x00",
+            "/a\u{85}",
+            "/a\xFF",
+            '/a\\b',
+            '/.//evil.example',
+            '/a/..//evil.example',
+            '/%2E//evil.example',
+            '/a/%2e%2E/b',
+            '/a/.',
+            '/./b?x=1',
+        ];
+        foreach ($locations as $location) {
             yield '0x' . bin2hex($location) => [$location];
         }
     }

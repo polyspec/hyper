@@ -19,17 +19,29 @@ final class Renderer
 {
     public const DATA_NAME = 'hyper/data.tpl';
 
-    private function __construct(private readonly Program|NativeEngine $program, public readonly string $engine, private readonly string $timezone)
-    {
+    private function __construct(
+        private readonly Program|NativeEngine $program,
+        public readonly string $engine,
+        private readonly string $timezone,
+    ) {
     }
 
     /** Opens the program that `hyper-build-server` of `@polyspec/hyper-build` wrote to a directory. */
     public static function open(string $program, string $timezone): self
     {
         // A missing build fails here and names the missing file (HY-48).
-        foreach (["{$program}/php" => is_dir(...), "{$program}/program.json" => is_file(...), "{$program}/reads.json" => is_file(...), "{$program}/templates" => is_dir(...)] as $path => $exists) {
+        $required = [
+            "{$program}/php" => is_dir(...),
+            "{$program}/program.json" => is_file(...),
+            "{$program}/reads.json" => is_file(...),
+            "{$program}/templates" => is_dir(...),
+        ];
+        foreach ($required as $path => $exists) {
             if (!$exists($path)) {
-                throw new \InvalidArgumentException("{$path} of the server program {$program} is missing; hyper-build-server of @polyspec/hyper-build builds it");
+                throw new \InvalidArgumentException(
+                    "{$path} of the server program {$program} is missing; "
+                    . 'hyper-build-server of @polyspec/hyper-build builds it',
+                );
             }
         }
         if (extension_loaded('polyspec_template')) {
@@ -37,14 +49,21 @@ final class Renderer
         }
         // The generated program is the PSR-4 files of the namespace that the build chose, in the directory php, and the
         // autoload of Composer loads them through autoload.psr-4 of the application (HY-48).
-        $declaration = json_decode((string) file_get_contents("{$program}/program.json"), true, flags: JSON_THROW_ON_ERROR);
+        $declaration = json_decode(
+            (string) file_get_contents("{$program}/program.json"),
+            true,
+            flags: JSON_THROW_ON_ERROR,
+        );
         $namespace = is_array($declaration) ? $declaration['namespace'] ?? null : null;
         if (!is_string($namespace)) {
             throw new \InvalidArgumentException("{$program}/program.json names no namespace");
         }
         $class = "{$namespace}\\GeneratedProgram";
         if (!class_exists($class)) {
-            throw new \InvalidArgumentException("the autoload loads no class {$class} of the server program {$program}; map the namespace {$namespace} to {$program}/php in autoload.psr-4 of composer.json");
+            throw new \InvalidArgumentException(
+                "the autoload loads no class {$class} of the server program {$program}; "
+                . "map the namespace {$namespace} to {$program}/php in autoload.psr-4 of composer.json",
+            );
         }
         $generated = new $class();
         if (!$generated instanceof Program) {
@@ -70,17 +89,33 @@ final class Renderer
      * alone as HTML definitions; the page region receives its route regions the same way.
      *
      * @param array<string, array{template: string, data: BoundMap|NativeBoundMap}> $regions manifest regions
-     * @param array<string, array{template: string, data: BoundMap|NativeBoundMap}> $routeRegions route regions of the page region
-     * @param BoundMap|NativeBoundMap|null $data the bound root of `{# data}`, the map with the member `response` (HY-31), or null when the document embeds no data (HY-92)
+     * @param array<string, array{template: string, data: BoundMap|NativeBoundMap}> $routeRegions route regions of the
+     *     page region
+     * @param BoundMap|NativeBoundMap|null $data the bound root of `{# data}`, the map with the member `response`
+     *     (HY-31), or null when the document embeds no data (HY-92)
      */
-    public function document(string $layout, string $title, BoundMap|NativeBoundMap $shared, array $regions, string $page, array $routeRegions, BoundMap|NativeBoundMap|null $data): string
-    {
+    public function document(
+        string $layout,
+        string $title,
+        BoundMap|NativeBoundMap $shared,
+        array $regions,
+        string $page,
+        array $routeRegions,
+        BoundMap|NativeBoundMap|null $data,
+    ): string {
         $define = [
             'title' => ['html' => $this->render($title, $shared, [])],
             'data' => ['html' => $data === null ? '' : $this->render(self::DATA_NAME, $data, [])],
         ];
         foreach ($regions as $name => $region) {
-            $define[$name] = ['html' => $this->alone($region['template'], $shared, $region['data'], $name === $page ? $routeRegions : [])];
+            $define[$name] = [
+                'html' => $this->alone(
+                    $region['template'],
+                    $shared,
+                    $region['data'],
+                    $name === $page ? $routeRegions : [],
+                ),
+            ];
         }
 
         return $this->render($layout, $shared, $define);
@@ -92,14 +127,25 @@ final class Renderer
      *
      * @param array<string, array{template: string, data: BoundMap|NativeBoundMap}> $routeRegions
      */
-    public function alone(string $template, BoundMap|NativeBoundMap $shared, BoundMap|NativeBoundMap $data, array $routeRegions = []): string
-    {
+    public function alone(
+        string $template,
+        BoundMap|NativeBoundMap $shared,
+        BoundMap|NativeBoundMap $data,
+        array $routeRegions = [],
+    ): string {
         $define = [];
         foreach ($routeRegions as $name => $region) {
             $define[$name] = ['html' => $this->alone($region['template'], $shared, $region['data'])];
         }
 
-        return $this->render($template, $this->program instanceof NativeEngine ? NativeBoundMap::merge($shared, $data) : BoundMap::merge($shared, $data), $define);
+        return $this->render(
+            $template,
+            $this->program instanceof NativeEngine ? NativeBoundMap::merge(
+                $shared,
+                $data,
+            ) : BoundMap::merge($shared, $data),
+            $define,
+        );
     }
 
     /** @param array<string, array{html: string}> $define */

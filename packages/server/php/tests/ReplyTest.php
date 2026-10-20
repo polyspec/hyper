@@ -19,7 +19,17 @@ final class ReplyTest extends TestCase
 
     public function testRefusesACacheControlThatAllowsASharedCache(): void
     {
-        foreach (['public, max-age=60', 'max-age=60', 'no-cache', 'private, s-maxage=60', 'private, public', 'PUBLIC, private', 'privateer', ''] as $value) {
+        $directives = [
+            'public, max-age=60',
+            'max-age=60',
+            'no-cache',
+            'private, s-maxage=60',
+            'private, public',
+            'PUBLIC, private',
+            'privateer',
+            '',
+        ];
+        foreach ($directives as $value) {
             try {
                 (new Reply())->cacheControl($value);
                 self::fail("{$value} is accepted");
@@ -32,7 +42,17 @@ final class ReplyTest extends TestCase
     public function testAcceptsEachTokenOfTheReferrerPolicySpecification(): void
     {
         // HY-103
-        foreach (['no-referrer', 'no-referrer-when-downgrade', 'origin', 'origin-when-cross-origin', 'same-origin', 'strict-origin', 'strict-origin-when-cross-origin', 'unsafe-url'] as $value) {
+        $policies = [
+            'no-referrer',
+            'no-referrer-when-downgrade',
+            'origin',
+            'origin-when-cross-origin',
+            'same-origin',
+            'strict-origin',
+            'strict-origin-when-cross-origin',
+            'unsafe-url',
+        ];
+        foreach ($policies as $value) {
             self::assertSame($value, (new Reply())->referrerPolicy($value)->referrerPolicyValue(), $value);
         }
         self::assertNull((new Reply())->referrerPolicyValue());

@@ -73,10 +73,17 @@ final class Router
         foreach ($parts as $index => $part) {
             if (preg_match('/^[A-Za-z0-9._~-]+$/D', $part) === 1) {
                 $segments[] = ['literal', $part];
-            } elseif (preg_match('/^\{([A-Za-z_][A-Za-z0-9_]*)\}$/D', $part, $found) === 1 && !isset($names[$found[1]])) {
+            } elseif (
+                preg_match('/^\{([A-Za-z_][A-Za-z0-9_]*)\}$/D', $part, $found) === 1
+                && !isset($names[$found[1]])
+            ) {
                 $names[$found[1]] = true;
                 $segments[] = ['param', $found[1]];
-            } elseif ($index === count($parts) - 1 && preg_match('/^\{([A-Za-z_][A-Za-z0-9_]*)\*\}$/D', $part, $found) === 1 && !isset($names[$found[1]])) {
+            } elseif (
+                $index === count($parts) - 1
+                && preg_match('/^\{([A-Za-z_][A-Za-z0-9_]*)\*\}$/D', $part, $found) === 1
+                && !isset($names[$found[1]])
+            ) {
                 $segments[] = ['rest', $found[1]];
             } else {
                 throw new \InvalidArgumentException("route path {$path} has an invalid segment {$part}");

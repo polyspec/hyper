@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-// Measures the CPU time of the PHP server without network, with the template program that PHP selects (HY-48): App::handle per request kind, and the
-// template, data model and JSON costs as the number of rows grows. It uses its own database file,
-// which it recreates on every run.
+// Measures the CPU time of the PHP server without network, with the template program that PHP selects (HY-48):
+// App::handle per request kind, and the template, data model and JSON costs as the number of rows grows. It uses its
+// own database file, which it recreates on every run.
 //
 // Usage: php benchmarks/server.php --app examples/board --iterations 300
 
@@ -53,8 +53,7 @@ $region = ['Accept' => 'application/json', 'HX-Request' => 'true', 'HX-Current-U
  *
  * @return array{mean: float, p50: float, p95: float, bytes: int}
  */
-function measure(int $iterations, Closure $run): array
-{
+$measure = static function (int $iterations, Closure $run): array {
     $bytes = 0;
     // $run returns the size of its output.
     for ($index = 0; $index < 20; $index++) {
@@ -74,7 +73,7 @@ function measure(int $iterations, Closure $run): array
         'p95' => $times[(int) floor(count($times) * 0.95)],
         'bytes' => $bytes,
     ];
-}
+};
 
 $requests = [
     'GET /board, document HTML' => fn (): Request => new Request('GET', '/board'),
@@ -82,40 +81,79 @@ $requests = [
     'GET /board, region JSON with left' => fn (): Request => new Request('GET', '/board', $region),
     'GET /board/1, document HTML' => fn (): Request => new Request('GET', '/board/1'),
     'GET /board/1, region JSON' => fn (): Request => new Request('GET', '/board/1', $region),
-    'POST /board/create, 422 region JSON' => fn (): Request => new Request('POST', '/board/create', [...$region, 'Content-Type' => 'application/x-www-form-urlencoded'], '', http_build_query(['_csrf' => $token, 'title' => '', 'author' => 'a', 'body' => 'b'])),
+    'POST /board/create, 422 region JSON' => fn (): Request => new Request(
+        'POST',
+        '/board/create',
+        [...$region, 'Content-Type' => 'application/x-www-form-urlencoded'],
+        '',
+        http_build_query(['_csrf' => $token, 'title' => '', 'author' => 'a', 'body' => 'b']),
+    ),
 ];
-echo "## Requests (App::handle, 10 rows per page)\n\n| Request | status | mean ms | p50 ms | p95 ms | bytes |\n|---|---:|---:|---:|---:|---:|\n";
+echo "## Requests (App::handle, 10 rows per page)\n\n";
+echo "| Request | status | mean ms | p50 ms | p95 ms | bytes |\n|---|---:|---:|---:|---:|---:|\n";
 foreach ($requests as $label => $request) {
     $status = $application->handle($request(), $session)->status;
-    $result = measure($iterations, function () use ($application, $request, $session): int {
+    $result = $measure($iterations, function () use ($application, $request, $session): int {
         $response = $application->handle($request(), $session);
 
         return strlen($response->body);
     });
-    printf("| %s | %d | %.3f | %.3f | %.3f | %d |\n", $label, $status, $result['mean'], $result['p50'], $result['p95'], $result['bytes']);
+    printf(
+        "| %s | %d | %.3f | %.3f | %.3f | %d |\n",
+        $label,
+        $status,
+        $result['mean'],
+        $result['p50'],
+        $result['p95'],
+        $result['bytes'],
+    );
 }
 
 $renderer = Renderer::open("{$app}/build/server", '+09:00');
 $shared = ['title' => '게시판', 'csrf' => $token];
-echo "\n## Scaling with rows (board/rows.tpl)\n\n| Rows | render ms | Bind::value ms | json_encode ms | HTML bytes | JSON bytes |\n|---:|---:|---:|---:|---:|---:|\n";
+echo "\n## Scaling with rows (board/rows.tpl)\n\n";
+echo "| Rows | render ms | Bind::value ms | json_encode ms | HTML bytes | JSON bytes |\n";
+echo "|---:|---:|---:|---:|---:|---:|\n";
 foreach ([10, 100, 1000] as $count) {
     $rows = [];
     for ($index = 1; $index <= $count; $index++) {
-        $rows[] = ['id' => $index, 'title' => "게시글 {$index} <제목>", 'author' => "작성자 {$index}", 'created_at' => 1790000000 + $index];
+        $rows[] = [
+            'id' => $index,
+            'title' => "게시글 {$index} <제목>",
+            'author' => "작성자 {$index}",
+            'created_at' => 1790000000 + $index,
+        ];
     }
     $data = ['posts' => $rows, 'sort' => 'title', 'compact' => false, 'highlight' => null];
     $value = JsonEncoder::value('+09:00', 'board.list', [], $shared, ['rows' => $data]);
     // The render measures one render of roots that the document binds once (H10.4).
     $boundShared = $renderer->bind($shared);
     $boundData = $renderer->bind($data);
-    $render = measure(max(20, intdiv($iterations, 10)), fn (): int => strlen($renderer->alone('board/rows.tpl', $boundShared, $boundData)));
-    $bind = measure(max(20, intdiv($iterations, 10)), function () use ($value): int {
+    $render = $measure(
+        max(20, intdiv($iterations, 10)),
+        fn (): int => strlen($renderer->alone('board/rows.tpl', $boundShared, $boundData)),
+    );
+    $bind = $measure(max(20, intdiv($iterations, 10)), function () use ($value): int {
         Bind::value($value);
 
         return 0;
     });
-    $encode = measure(max(20, intdiv($iterations, 10)), fn (): int => strlen(JsonEncoder::encode($value)));
-    printf("| %d | %.3f | %.3f | %.3f | %d | %d |\n", $count, $render['mean'], $bind['mean'], $encode['mean'], $render['bytes'], $encode['bytes']);
+    $encode = $measure(max(20, intdiv($iterations, 10)), fn (): int => strlen(JsonEncoder::encode($value)));
+    printf(
+        "| %d | %.3f | %.3f | %.3f | %d | %d |\n",
+        $count,
+        $render['mean'],
+        $bind['mean'],
+        $encode['mean'],
+        $render['bytes'],
+        $encode['bytes'],
+    );
 }
-printf("\nPHP %s, %s template program, %d iterations per request, %s\n", PHP_VERSION, $renderer->engine, $iterations, php_uname('s') . ' ' . php_uname('m'));
+printf(
+    "\nPHP %s, %s template program, %d iterations per request, %s\n",
+    PHP_VERSION,
+    $renderer->engine,
+    $iterations,
+    php_uname('s') . ' ' . php_uname('m'),
+);
 @unlink($database);

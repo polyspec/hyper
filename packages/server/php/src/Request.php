@@ -45,7 +45,19 @@ final class Request
     /** Returns a copy that carries the flash values and the CSRF token of the session. */
     public function withSession(Flash $flash, string $csrfToken): self
     {
-        return new self($this->method, $this->path, $this->headers, $this->query, $this->body, $flash->values, $csrfToken, $this->params, $this->cookies, $this->https, $this->selection);
+        return new self(
+            $this->method,
+            $this->path,
+            $this->headers,
+            $this->query,
+            $this->body,
+            $flash->values,
+            $csrfToken,
+            $this->params,
+            $this->cookies,
+            $this->https,
+            $this->selection,
+        );
     }
 
     /**
@@ -55,13 +67,37 @@ final class Request
      */
     public function withRoute(string $path, array $params): self
     {
-        return new self($this->method, $path, $this->headers, $this->query, $this->body, $this->flash, $this->csrfToken, $params, $this->cookies, $this->https, $this->selection);
+        return new self(
+            $this->method,
+            $path,
+            $this->headers,
+            $this->query,
+            $this->body,
+            $this->flash,
+            $this->csrfToken,
+            $params,
+            $this->cookies,
+            $this->https,
+            $this->selection,
+        );
     }
 
     /** Returns a copy that carries the value of the choice of the client rendering selection (HY-62). */
     public function withSelection(mixed $value): self
     {
-        return new self($this->method, $this->path, $this->headers, $this->query, $this->body, $this->flash, $this->csrfToken, $this->params, $this->cookies, $this->https, $value);
+        return new self(
+            $this->method,
+            $this->path,
+            $this->headers,
+            $this->query,
+            $this->body,
+            $this->flash,
+            $this->csrfToken,
+            $this->params,
+            $this->cookies,
+            $this->https,
+            $value,
+        );
     }
 
     /**
@@ -101,7 +137,10 @@ final class Request
      */
     public function validInput(): bool
     {
-        return preg_match('/^[\x21-\x7E]*$/D', $this->path) === 1 && self::utf8($this->header('HX-Current-URL') ?? '') && $this->queryFields !== null && $this->formFields !== null;
+        return preg_match('/^[\x21-\x7E]*$/D', $this->path) === 1
+            && self::utf8($this->header('HX-Current-URL') ?? '')
+            && $this->queryFields !== null
+            && $this->formFields !== null;
     }
 
     private static function utf8(string $value): bool

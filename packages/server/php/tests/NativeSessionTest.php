@@ -28,7 +28,13 @@ final class NativeSessionTest extends TestCase
         (new NativeSession(false))->set('a', 1);
 
         self::assertSame('hy-session', session_name());
-        self::assertSame(['path' => '/', 'domain' => '', 'secure' => false, 'httponly' => true, 'samesite' => 'Lax'], array_intersect_key(session_get_cookie_params(), array_flip(['path', 'domain', 'secure', 'httponly', 'samesite'])));
+        self::assertSame(
+            ['path' => '/', 'domain' => '', 'secure' => false, 'httponly' => true, 'samesite' => 'Lax'],
+            array_intersect_key(
+                session_get_cookie_params(),
+                array_flip(['path', 'domain', 'secure', 'httponly', 'samesite']),
+            ),
+        );
     }
 
     #[RunInSeparateProcess]
@@ -37,7 +43,10 @@ final class NativeSessionTest extends TestCase
         (new NativeSession(true))->set('a', 1);
 
         self::assertSame('__Host-hy-session', session_name());
-        self::assertSame(['path' => '/', 'domain' => '', 'secure' => true], array_intersect_key(session_get_cookie_params(), array_flip(['path', 'domain', 'secure'])));
+        self::assertSame(
+            ['path' => '/', 'domain' => '', 'secure' => true],
+            array_intersect_key(session_get_cookie_params(), array_flip(['path', 'domain', 'secure'])),
+        );
     }
 
     #[RunInSeparateProcess]

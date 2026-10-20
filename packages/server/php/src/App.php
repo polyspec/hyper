@@ -8,10 +8,12 @@ use Polyspec\Template\BoundMap;
 use Polyspec\Template\Native\BoundMap as NativeBoundMap;
 
 /**
- * Answers requests with documents, JSON, action redirects and the static shell (HY-8, HY-10 to HY-19, HY-24 to HY-27, HY-58 to HY-60, HY-62).
+ * Answers requests with documents, JSON, action redirects and the static shell (HY-8, HY-10 to HY-19, HY-24 to HY-27,
+ * HY-58 to HY-60, HY-62).
  *
  * @phpstan-type RouteHandler array{load?: \Closure, post?: \Closure, regions?: array<string, \Closure>}
- * @phpstan-type Handlers array{shared?: \Closure, regions?: array<string, \Closure>, routes?: array<string, RouteHandler>}
+ * @phpstan-type Handlers array{shared?: \Closure, regions?: array<string, \Closure>, routes?: array<string,
+ *     RouteHandler>}
  */
 final class App
 {
@@ -74,9 +76,9 @@ final class App
      *     milliseconds and the reply of a request whose client closed the connection, which PHP reports at the
      *     first failed write of the response (HY-67)
      * @param ?\Closure(Request, ?Response, bool, float, ?string): void $written called once for every request that the
-     *     run answers, with the response whose write started, the plain 500 of an escaped error, or null when the request
-     *     ended before a response started; whether the write ended, the elapsed milliseconds and the failure of an
-     *     escaped error (HY-99)
+     *     run answers, with the response whose write started, the plain 500 of an escaped error, or null when the
+     *     request ended before a response started; whether the write ended, the elapsed milliseconds and the failure of
+     *     an escaped error (HY-99)
      */
     public static function open(
         string $manifest,
@@ -100,8 +102,14 @@ final class App
         if ($responseLimit < 1) {
             throw new \InvalidArgumentException("response limit {$responseLimit} is not a positive number of bytes");
         }
-        if ($formTypes === [] || array_values(array_unique($formTypes)) !== $formTypes || array_diff($formTypes, ['application/x-www-form-urlencoded', 'multipart/form-data']) !== []) {
-            throw new \InvalidArgumentException('form types must be distinct values of application/x-www-form-urlencoded and multipart/form-data');
+        if (
+            $formTypes === []
+            || array_values(array_unique($formTypes)) !== $formTypes
+            || array_diff($formTypes, ['application/x-www-form-urlencoded', 'multipart/form-data']) !== []
+        ) {
+            throw new \InvalidArgumentException(
+                'form types must be distinct values of application/x-www-form-urlencoded and multipart/form-data',
+            );
         }
         if ($basePath !== '' && (!str_starts_with($basePath, '/') || str_ends_with($basePath, '/'))) {
             throw new \InvalidArgumentException("base path {$basePath} must start with / and must not end with /");
@@ -110,7 +118,9 @@ final class App
 
         $regionLoaders = $handlers['regions'] ?? [];
         foreach (array_keys($regionLoaders) as $name) {
-            $region = array_values(array_filter($declared->regions, fn (Region $region): bool => $region->name === $name))[0] ?? null;
+            $region = array_values(
+                array_filter($declared->regions, fn (Region $region): bool => $region->name === $name),
+            )[0] ?? null;
             if ($region === null || $region->page) {
                 throw new \InvalidArgumentException("region loader {$name} has no non-page region in the manifest");
             }
@@ -121,12 +131,19 @@ final class App
                 throw new \InvalidArgumentException("route handler {$name} has no route in the manifest");
             }
             if (isset($handler['post']) !== $declared->routes[$name]['post']) {
-                throw new \InvalidArgumentException("route {$name} must have a POST action exactly when the manifest declares post");
+                throw new \InvalidArgumentException(
+                    "route {$name} must have a POST action exactly when the manifest declares post",
+                );
             }
-            $routeRegions = array_map(fn (Region $region): string => $region->name, $declared->routes[$name]['regions']);
+            $routeRegions = array_map(
+                fn (Region $region): string => $region->name,
+                $declared->routes[$name]['regions'],
+            );
             foreach (array_keys($handler['regions'] ?? []) as $regionName) {
                 if (!in_array($regionName, $routeRegions, true)) {
-                    throw new \InvalidArgumentException("route {$name} has a loader for undeclared region {$regionName}");
+                    throw new \InvalidArgumentException(
+                        "route {$name} has a loader for undeclared region {$regionName}",
+                    );
                 }
             }
         }
@@ -138,7 +155,25 @@ final class App
 
         $shell = $clientRendering === null ? '' : self::shell($clientRendering, $declared);
 
-        return new self($declared, $handlers['shared'] ?? null, $regionLoaders, $routeHandlers, $timezone, $basePath, $https, $frameAncestors, $bodyLimit, $responseLimit, $formTypes, $onResponse, $clientRendering, $onDisconnect, $written, $shell, $program);
+        return new self(
+            $declared,
+            $handlers['shared'] ?? null,
+            $regionLoaders,
+            $routeHandlers,
+            $timezone,
+            $basePath,
+            $https,
+            $frameAncestors,
+            $bodyLimit,
+            $responseLimit,
+            $formTypes,
+            $onResponse,
+            $clientRendering,
+            $onDisconnect,
+            $written,
+            $shell,
+            $program,
+        );
     }
 
     /** Reads the static shell after checking the declaration of the client rendering against the manifest (HY-62). */
@@ -154,11 +189,15 @@ final class App
             }
         }
         if (!str_starts_with($client->shell, '/') || !is_file($client->shell) || !is_readable($client->shell)) {
-            throw new \InvalidArgumentException("static shell {$client->shell} is not a readable file at an absolute path");
+            throw new \InvalidArgumentException(
+                "static shell {$client->shell} is not a readable file at an absolute path",
+            );
         }
         $shell = (string) file_get_contents($client->shell);
         if (!str_contains($shell, '<meta name="hyper-api" content="' . htmlspecialchars($base, ENT_QUOTES) . '">')) {
-            throw new \InvalidArgumentException("static shell {$client->shell} does not declare the data base path {$base}");
+            throw new \InvalidArgumentException(
+                "static shell {$client->shell} does not declare the data base path {$base}",
+            );
         }
 
         return $shell;
@@ -201,7 +240,15 @@ final class App
         try {
             $response = $this->answer($request, $store, $reply);
         } catch (\Throwable $error) {
-            error_log(sprintf('hyper: %s: %s in %s:%d', $error::class, $error->getMessage(), $error->getFile(), $error->getLine()));
+            error_log(
+                sprintf(
+                    'hyper: %s: %s in %s:%d',
+                    $error::class,
+                    $error->getMessage(),
+                    $error->getFile(),
+                    $error->getLine(),
+                ),
+            );
             $failure = $error->getMessage();
             $response = Response::text(500, 'Internal Server Error');
         } finally {
@@ -209,7 +256,8 @@ final class App
         }
         $size = strlen($response->body);
         if ($size > $this->responseLimit) {
-            $failure = "the response to {$request->method} {$request->path} has {$size} bytes, more than the response limit of {$this->responseLimit} bytes";
+            $failure = "the response to {$request->method} {$request->path} has {$size} bytes, "
+                . "more than the response limit of {$this->responseLimit} bytes";
             error_log("hyper: {$failure}");
             $response = Response::text(500, 'Internal Server Error');
         }
@@ -248,8 +296,8 @@ final class App
             return;
         }
         $response = $this->framed(Response::text(500, 'Internal Server Error'));
-        // The output that the response buffered is dropped, so that the body of the response that it replaces does not leave
-        // the server with the plain 500 (HY-60, HY-99).
+        // The output that the response buffered is dropped, so that the body of the response that it replaces does not
+        // leave the server with the plain 500 (HY-60, HY-99).
         while (ob_get_level() > 0) {
             ob_end_clean();
         }
@@ -295,9 +343,15 @@ final class App
         }
         $session = new Session($store);
         $flash = $session->takeFlash();
-        $request = $request->withRoute((string) $path, $match['params'])->withSession($flash, Csrf::masked($session->csrfToken()));
+        $request = $request->withRoute((string) $path, $match['params'])->withSession(
+            $flash,
+            Csrf::masked($session->csrfToken()),
+        );
 
-        return $this->routed($request, $route, $handler, $session, $flash, $reply, $basePath)->withCookies($reply, $this->https || $request->https);
+        return $this->routed($request, $route, $handler, $session, $flash, $reply, $basePath)->withCookies(
+            $reply,
+            $this->https || $request->https,
+        );
     }
 
     /** Returns the choice of the client rendering selection for the request, or null without client rendering (HY-62). */
@@ -327,20 +381,35 @@ final class App
             return Response::text(406, 'Not Acceptable');
         }
 
-        return new Response(200, ['Content-Type' => 'text/html; charset=utf-8', 'Cache-Control' => 'no-cache', 'Vary' => 'Accept'], $this->shell);
+        return new Response(
+            200,
+            ['Content-Type' => 'text/html; charset=utf-8', 'Cache-Control' => 'no-cache', 'Vary' => 'Accept'],
+            $this->shell,
+        );
     }
 
     /**
      * Answers a routed request with its page, action result or stop result.
      *
-     * @param array{name: string, path: string, title: string, template: string, post: bool, regions: list<Region>} $route
+     * @param array{name: string, path: string, title: string, template: string, post: bool, regions: list<Region>}
+     *     $route
      * @param RouteHandler $handler
      */
-    private function routed(Request $request, array $route, array $handler, Session $session, Flash $flash, Reply $reply, string $basePath): Response
-    {
+    private function routed(
+        Request $request,
+        array $route,
+        array $handler,
+        Session $session,
+        Flash $flash,
+        Reply $reply,
+        string $basePath,
+    ): Response {
         try {
             if ($request->method === 'GET') {
-                return self::withoutRenewal($reply, $this->page($request, $route, $handler, $session, $flash, 200, [], $reply, $basePath));
+                return self::withoutRenewal(
+                    $reply,
+                    $this->page($request, $route, $handler, $session, $flash, 200, [], $reply, $basePath),
+                );
             }
             if ($request->method !== 'POST' || !isset($handler['post'])) {
                 return Response::text(405, 'Method Not Allowed');
@@ -364,7 +433,20 @@ final class App
                 return $this->redirect($session, $result, $basePath);
             }
 
-            return self::withoutRenewal($reply, $this->page($request, $route, $handler, $session, $flash, $result->status, $result->data, $reply, $basePath));
+            return self::withoutRenewal(
+                $reply,
+                $this->page(
+                    $request,
+                    $route,
+                    $handler,
+                    $session,
+                    $flash,
+                    $result->status,
+                    $result->data,
+                    $reply,
+                    $basePath,
+                ),
+            );
         } catch (NotFound) {
             return Response::text(404, 'Not Found');
         } catch (Redirect $redirect) {
@@ -380,7 +462,9 @@ final class App
     private static function withoutRenewal(Reply $reply, Response $response): Response
     {
         if ($reply->takeRenewal()) {
-            throw new \LogicException('a loader or the shared handler called renewSession; only an action renews the session');
+            throw new \LogicException(
+                'a loader or the shared handler called renewSession; only an action renews the session',
+            );
         }
 
         return $response;
@@ -397,17 +481,30 @@ final class App
     /**
      * Renders the route page as a document or as JSON.
      *
-     * @param array{name: string, path: string, title: string, template: string, post: bool, regions: list<Region>} $route
+     * @param array{name: string, path: string, title: string, template: string, post: bool, regions: list<Region>}
+     *     $route
      * @param RouteHandler $handler
      * @param array<string, mixed> $invalid
      */
-    private function page(Request $request, array $route, array $handler, Session $session, Flash $flash, int $status, array $invalid, Reply $reply, string $basePath): Response
-    {
+    private function page(
+        Request $request,
+        array $route,
+        array $handler,
+        Session $session,
+        Flash $flash,
+        int $status,
+        array $invalid,
+        Reply $reply,
+        string $basePath,
+    ): Response {
         $json = $request->wantsJson();
         $provided = [Request::class => $request, Reply::class => $reply];
         $shared = ['title' => $route['title'], 'csrf' => $request->csrfToken()];
         if ($this->shared !== null) {
-            $shared = array_replace($shared, self::map($this->container->call($this->shared, $provided), 'the shared handler'));
+            $shared = array_replace(
+                $shared,
+                self::map($this->container->call($this->shared, $provided), 'the shared handler'),
+            );
         }
 
         $changed = RegionPlanner::changedTopics($request, $flash, $basePath);
@@ -415,7 +512,10 @@ final class App
         $templates = [];
         foreach (RegionPlanner::select($this->manifest, !$request->isRegionRequest(), $changed) as $selected) {
             if ($selected->page) {
-                $loaded = isset($handler['load']) ? self::map($this->container->call($handler['load'], $provided), "the loader of route {$route['name']}") : [];
+                $loaded = isset($handler['load']) ? self::map(
+                    $this->container->call($handler['load'], $provided),
+                    "the loader of route {$route['name']}",
+                ) : [];
                 $data[$selected->name] = array_replace($loaded, $invalid);
                 $templates[$selected->name] = $route['template'];
                 foreach ($route['regions'] as $routeRegion) {
@@ -430,7 +530,10 @@ final class App
                 }
             } else {
                 $loader = $this->regionLoaders[$selected->name] ?? null;
-                $data[$selected->name] = $loader === null ? [] : self::map($this->container->call($loader, $provided), "the loader of region {$selected->name}");
+                $data[$selected->name] = $loader === null ? [] : self::map(
+                    $this->container->call($loader, $provided),
+                    "the loader of region {$selected->name}",
+                );
                 $templates[$selected->name] = (string) $selected->template;
             }
         }
@@ -467,7 +570,8 @@ final class App
             // HY-53: a weak tag of the body with the masked token replaced by the session token, so the mask does not
             // change it; a matching GET request receives 304 without a body and without `Content-Type`, because a
             // 304 carries no representation.
-            $tag = 'W/"' . substr(hash('sha256', str_replace($request->csrfToken(), $session->csrfToken(), $body)), 0, 32) . '"';
+            $hash = hash('sha256', str_replace($request->csrfToken(), $session->csrfToken(), $body));
+            $tag = 'W/"' . substr($hash, 0, 32) . '"';
             $headers['ETag'] = $tag;
             if ($request->method !== 'GET' || $request->header('If-None-Match') !== $tag) {
                 return new Response(200, $headers, $body);
@@ -484,7 +588,11 @@ final class App
             ...$reply->referrerPolicyHeaders(),
         ];
 
-        return new Response($status, $headers, $this->document($request, $route, $shared, $data, $templates, $kept, $reply->embedsData()));
+        return new Response(
+            $status,
+            $headers,
+            $this->document($request, $route, $shared, $data, $templates, $kept, $reply->embedsData()),
+        );
     }
 
     /**
@@ -523,7 +631,9 @@ final class App
             foreach ($region->keep as $keptPath => $kind) {
                 $source = match ($kind) {
                     'server' => $stored,
-                    'cookie' => $cookie instanceof \stdClass && ($cookie->{$name} ?? null) instanceof \stdClass ? get_object_vars($cookie->{$name}) : [],
+                    'cookie' => $cookie instanceof \stdClass && ($cookie->{$name} ?? null) instanceof \stdClass
+                        ? get_object_vars($cookie->{$name})
+                        : [],
                     default => [],
                 };
                 if (array_key_exists($keptPath, $source)) {
@@ -544,14 +654,22 @@ final class App
      * fails with its kept values renders with its loader data, route regions first, and its kept values leave
      * the embedded data (HY-31, HY-38). The document embeds its data only when `$embed` is true (HY-92).
      *
-     * @param array{name: string, path: string, title: string, template: string, post: bool, regions: list<Region>} $route
+     * @param array{name: string, path: string, title: string, template: string, post: bool, regions: list<Region>}
+     *     $route
      * @param array<array-key, mixed> $shared
      * @param array<string, array<array-key, mixed>> $data
      * @param array<string, string> $templates
      * @param array<string, array<string, mixed>> $kept
      */
-    private function document(Request $request, array $route, array $shared, array $data, array $templates, array $kept, bool $embed): string
-    {
+    private function document(
+        Request $request,
+        array $route,
+        array $shared,
+        array $data,
+        array $templates,
+        array $kept,
+        bool $embed,
+    ): string {
         // H10.4: each root of the document is bound once, and every render merges the bound roots (VAL-22).
         $boundShared = $this->renderer->bind($shared);
         $applied = [];
@@ -563,7 +681,17 @@ final class App
             $applied[$name] = $this->renderer->bind(Kept::apply($regionData, $pairs));
         }
         try {
-            return $this->renderDocument($request, $route, $shared, $boundShared, $data, $applied, $templates, $kept, $embed);
+            return $this->renderDocument(
+                $request,
+                $route,
+                $shared,
+                $boundShared,
+                $data,
+                $applied,
+                $templates,
+                $kept,
+                $embed,
+            );
         } catch (\Throwable $error) {
             if ($kept === []) {
                 throw $error;
@@ -580,7 +708,10 @@ final class App
                 $define = [];
                 if ($name === $page) {
                     foreach ($routeRegions as $routeRegion) {
-                        $define[$routeRegion] = ['template' => $templates[$routeRegion], 'data' => $applied[$routeRegion]];
+                        $define[$routeRegion] = [
+                            'template' => $templates[$routeRegion],
+                            'data' => $applied[$routeRegion],
+                        ];
                     }
                 }
                 $this->renderer->alone($templates[$name], $boundShared, $applied[$name], $define);
@@ -590,32 +721,59 @@ final class App
             }
         }
 
-        return $this->renderDocument($request, $route, $shared, $boundShared, $data, $applied, $templates, $kept, $embed);
+        return $this->renderDocument(
+            $request,
+            $route,
+            $shared,
+            $boundShared,
+            $data,
+            $applied,
+            $templates,
+            $kept,
+            $embed,
+        );
     }
 
     /**
      * Returns the names of the route regions of a route that are present in the data (HY-75).
      *
-     * @param array{name: string, path: string, title: string, template: string, post: bool, regions: list<Region>} $route
+     * @param array{name: string, path: string, title: string, template: string, post: bool, regions: list<Region>}
+     *     $route
      * @param array<string, array<array-key, mixed>> $data
      * @return list<string>
      */
     private static function present(array $route, array $data): array
     {
-        return array_values(array_filter(array_map(fn (Region $region): string => $region->name, $route['regions']), fn (string $name): bool => array_key_exists($name, $data)));
+        return array_values(
+            array_filter(
+                array_map(fn (Region $region): string => $region->name, $route['regions']),
+                fn (string $name): bool => array_key_exists($name, $data),
+            ),
+        );
     }
 
     /**
-     * @param array{name: string, path: string, title: string, template: string, post: bool, regions: list<Region>} $route
+     * @param array{name: string, path: string, title: string, template: string, post: bool, regions: list<Region>}
+     *     $route
      * @param array<array-key, mixed> $shared shared data, which the embedded data carries
      * @param array<string, array<array-key, mixed>> $data loader data, which the embedded data carries
-     * @param array<string, BoundMap|NativeBoundMap> $applied bound region data with kept values applied, which the regions render
+     * @param array<string, BoundMap|NativeBoundMap> $applied bound region data with kept values applied, which the
+     *     regions render
      * @param array<string, string> $templates
      * @param array<string, array<string, mixed>> $kept
      * @param bool $embed whether the reply asked the document to embed its data (HY-92)
      */
-    private function renderDocument(Request $request, array $route, array $shared, BoundMap|NativeBoundMap $boundShared, array $data, array $applied, array $templates, array $kept, bool $embed): string
-    {
+    private function renderDocument(
+        Request $request,
+        array $route,
+        array $shared,
+        BoundMap|NativeBoundMap $boundShared,
+        array $data,
+        array $applied,
+        array $templates,
+        array $kept,
+        bool $embed,
+    ): string {
         // HY-31, HY-75, HY-92: a document embeds its data only when the reply asks for it, and then only the present
         // route regions and their kept entries, the data that the browser can change; a response without a present
         // route region embeds none. The embedded data is one more root, bound once (H10.4).
@@ -623,7 +781,14 @@ final class App
         $response = null;
         if ($embed && $routeRegionNames !== []) {
             $embedded = array_intersect_key($data, array_flip($routeRegionNames));
-            $response = JsonEncoder::value($this->timezone, $route['name'], $request->params(), $shared, $embedded, array_intersect_key($kept, $embedded));
+            $response = JsonEncoder::value(
+                $this->timezone,
+                $route['name'],
+                $request->params(),
+                $shared,
+                $embedded,
+                array_intersect_key($kept, $embedded),
+            );
         }
         $regions = [];
         $routeRegions = [];
@@ -636,7 +801,15 @@ final class App
             }
         }
 
-        return $this->renderer->document($this->manifest->layout, $this->manifest->title, $boundShared, $regions, $this->manifest->page->name, $routeRegions, $response === null ? null : $this->renderer->bind(['response' => $response]));
+        return $this->renderer->document(
+            $this->manifest->layout,
+            $this->manifest->title,
+            $boundShared,
+            $regions,
+            $this->manifest->page->name,
+            $routeRegions,
+            $response === null ? null : $this->renderer->bind(['response' => $response]),
+        );
     }
 
     /** Stores a kept value of a `server` path in the session (HY-40). */
@@ -693,7 +866,10 @@ final class App
         if ($postMaxSize > 0 && $postMaxSize < $this->bodyLimit) {
             throw new \LogicException("body limit {$this->bodyLimit} is larger than post_max_size {$postMaxSize}");
         }
-        if (in_array('multipart/form-data', $this->formTypes, true) && filter_var(ini_get('enable_post_data_reading'), FILTER_VALIDATE_BOOL)) {
+        if (
+            in_array('multipart/form-data', $this->formTypes, true)
+            && filter_var(ini_get('enable_post_data_reading'), FILTER_VALIDATE_BOOL)
+        ) {
             throw new \LogicException('multipart/form-data is accepted, so enable_post_data_reading must be off');
         }
         ini_set('display_errors', '0');
@@ -707,12 +883,22 @@ final class App
         // HY-60: an uncaught exception and a fatal error of the request write the plain 500 of hyper, the same as the
         // other servers, instead of the web server's 500. The request is known once it is built.
         set_exception_handler(function (\Throwable $error) use ($delivery, $kept): void {
-            $this->escaped(sprintf('%s: %s in %s:%d', $error::class, $error->getMessage(), $error->getFile(), $error->getLine()), $error->getMessage(), $delivery, $kept);
+            $this->escaped(
+                sprintf('%s: %s in %s:%d', $error::class, $error->getMessage(), $error->getFile(), $error->getLine()),
+                $error->getMessage(),
+                $delivery,
+                $kept,
+            );
         });
         register_shutdown_function(function () use ($delivery, $kept): void {
             $error = error_get_last();
             if ($error !== null && in_array($error['type'], self::FATAL, true)) {
-                $this->escaped("fatal error: {$error['message']} in {$error['file']}:{$error['line']}", $error['message'], $delivery, $kept);
+                $this->escaped(
+                    "fatal error: {$error['message']} in {$error['file']}:{$error['line']}",
+                    $error['message'],
+                    $delivery,
+                    $kept,
+                );
             }
         });
         $request = Request::fromGlobals();

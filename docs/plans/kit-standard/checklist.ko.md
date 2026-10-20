@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-kit-standard -->
-<!-- source-sha256: 4d1c56760d8b72e9f01d2a8c9a95c972a53c8435290fe5e0a8faa7937ddff1de -->
+<!-- source-sha256: d70e78b6fb8082ab34179d69c5d85da49b25b22affda3afa73ba168050fb7bb9 -->
 # kit 표준 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -11,3 +11,4 @@
 | H25.5 | 한국어 체크리스트의 revision marker가 영어 체크리스트와 일치한다 | The source-sha256 marker of docs/plans/kit-standard/checklist.ko.md | `make docs-check` | [o] |
 | H25.6 | 저장소의 각 tool은 config/rebuild.json에서 class를 가진다 | config/rebuild.json | `make rebuild-check` | [o] |
 | H25.7 | Node 서버 test가 lint-ts를 통과한다 | packages/server/ts/tests/rest.test.ts, kept.test.ts and reads.test.ts | `make lint-ts`, `var/tools/bin/node node_modules/vitest/vitest.mjs run --dir packages/server/ts packages/server/ts/tests/rest.test.ts packages/server/ts/tests/kept.test.ts packages/server/ts/tests/reads.test.ts` | [o] |
+| H25.8 | PHP 원본, test, benchmark와 board 예제가 lint-php를 통과한다 | The PHP files of packages/server/php, benchmarks/server.php and examples/board/app/handlers.php | `make lint-php`, `var/tools/bin/node node_modules/@polyspec/kit/dist/run-tests.mjs phpunit --cwd packages/server/php -- --exclude-group native tests/AppTest.php`, `var/tools/bin/node node_modules/@polyspec/kit/dist/run-tests.mjs phpunit --cwd packages/server/php -- --exclude-group native tests/RunTest.php` | [o] |

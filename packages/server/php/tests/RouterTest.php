@@ -21,7 +21,13 @@ final class RouterTest extends TestCase
     /** @return list<array{name: string, path: string}> */
     private static function routes(mixed $routes): array
     {
-        return array_map(fn (array $route): array => ['name' => Json::string($route['name'] ?? null), 'path' => Json::string($route['path'] ?? null)], Json::arrays($routes));
+        return array_map(
+            fn (array $route): array => [
+                'name' => Json::string($route['name'] ?? null),
+                'path' => Json::string($route['path'] ?? null),
+            ],
+            Json::arrays($routes),
+        );
     }
 
     /**
@@ -33,7 +39,10 @@ final class RouterTest extends TestCase
         $result = $case['result'] ?? null;
         if ($result !== null) {
             $result = Json::array($result);
-            $result = ['name' => Json::string($result['name'] ?? null), 'params' => Json::stringMap($result['params'] ?? null)];
+            $result = [
+                'name' => Json::string($result['name'] ?? null),
+                'params' => Json::stringMap($result['params'] ?? null),
+            ];
         }
 
         return [Json::string($case['path'] ?? null), $result];
@@ -69,7 +78,10 @@ final class RouterTest extends TestCase
     #[DataProvider('cases')]
     public function testRoutesThePath(string $path, ?array $expected): void
     {
-        self::assertSame(self::normalize($expected), self::normalize((new Router(self::routes(self::fixture()['routes'] ?? null)))->match($path)));
+        self::assertSame(
+            self::normalize($expected),
+            self::normalize((new Router(self::routes(self::fixture()['routes'] ?? null)))->match($path)),
+        );
     }
 
     /** @param array{name: string, params: array<string, string>}|null $expected */
@@ -96,7 +108,10 @@ final class RouterTest extends TestCase
      */
     private static function normalize(?array $result): ?string
     {
-        return $result === null ? null : json_encode(['name' => $result['name'], 'params' => (object) $result['params']], JSON_THROW_ON_ERROR);
+        return $result === null ? null : json_encode(
+            ['name' => $result['name'], 'params' => (object) $result['params']],
+            JSON_THROW_ON_ERROR,
+        );
     }
 
     /** @return array<array-key, mixed> */
@@ -130,7 +145,10 @@ final class RouterTest extends TestCase
     #[DataProvider('restCases')]
     public function testRoutesTheRestOfThePath(string $path, ?array $expected): void
     {
-        self::assertSame(self::normalize($expected), self::normalize((new Router(self::routes(self::rest()['routes'] ?? null)))->match($path)));
+        self::assertSame(
+            self::normalize($expected),
+            self::normalize((new Router(self::routes(self::rest()['routes'] ?? null)))->match($path)),
+        );
     }
 
     #[DataProvider('invalidRestPaths')]

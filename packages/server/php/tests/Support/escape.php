@@ -6,9 +6,10 @@ declare(strict_types=1);
 // the memory limit in the shared loader, before the response hook runs; `time-limit` exceeds max_execution_time in the
 // shared loader; `hook-fatal` raises E_USER_ERROR in the response hook; `hook-throws` throws from the response hook;
 // `after-send` raises E_USER_ERROR after App::run sent the response, `after-send-flushed` flushes the output first;
-// `exit` ends the script with exit() in the shared loader, before any output; `normal` fails nothing. Every response hook call
-// appends a `response` line and every write hook call appends a `written` line to the file of HYPER_ESCAPE_LOG, so a
-// test reads how often each hook ran and in which order. HYPER_ESCAPE_HEADER=1 sets the header X-Before before App::run.
+// `exit` ends the script with exit() in the shared loader, before any output; `normal` fails nothing. Every response
+// hook call appends a `response` line and every write hook call appends a `written` line to the file of
+// HYPER_ESCAPE_LOG, so a test reads how often each hook ran and in which order. HYPER_ESCAPE_HEADER=1 sets the header
+// X-Before before App::run.
 
 require __DIR__ . '/../../../../../vendor/autoload.php';
 
@@ -56,8 +57,23 @@ $app = App::open(
             throw new RuntimeException('a response hook that throws');
         }
     },
-    written: function (Request $request, ?Response $response, bool $ended, float $elapsed, ?string $failure) use ($log): void {
-        file_put_contents($log, sprintf("written %s %s %s\n", $response === null ? 'null' : $response->status, $ended ? 'true' : 'false', json_encode($failure)), FILE_APPEND);
+    written: function (
+        Request $request,
+        ?Response $response,
+        bool $ended,
+        float $elapsed,
+        ?string $failure,
+    ) use ($log): void {
+        file_put_contents(
+            $log,
+            sprintf(
+                "written %s %s %s\n",
+                $response === null ? 'null' : $response->status,
+                $ended ? 'true' : 'false',
+                json_encode($failure),
+            ),
+            FILE_APPEND,
+        );
     },
 );
 $app->run();

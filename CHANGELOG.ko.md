@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 9ae1a05179937db5315e52f558f0d010fbae5e349dcd216c17db6fe55889cffa -->
+<!-- source-sha256: a3f625624ea5d244cff324744e53bd673ab23a8d410dbe3f068cf652a45bf393 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H25.8: `make lint-php`가 통과한다. `benchmarks/server.php`와 `examples/board/app/handlers.php`는 문장 옆에 함수나 상수를 선언하지 않고(measure 함수와 page helper는 closure다), PHP 원본과 test에서 120자를 넘던 237줄을 동작 변경 없이 줄바꿈했다. Red: `make lint-php` exit 2, phpcs 경고 240건(`Generic.Files.LineLength.TooLong` 238건, `PSR1.Files.SideEffects.FoundWithSymbols` 2건). Green: `make lint-php` exit 0, phpcs와 phpstan 통과, `packages/server/php/tests`의 PHPUnit 파일이 generated group에서 통과하고 AppTest, RunTest, RendererTest는 native group에서도 통과 (H25.8)
 - H25.7: Node 서버 test `rest.test.ts`, `kept.test.ts`, `reads.test.ts`가 `make lint-ts`를 통과한다. 쓰지 않는 import 두 개를 지웠고, `reads.test.ts`는 fixture 값을 `ReadNode`로 cast하는 대신 `templateReads`가 돌려준 read tree를 `keepRead`에 넘긴다. test는 이미 둘이 같음을 요구한다. Red: `make lint-ts` exit 2, oxlint 문제 3건(`no-unused-vars` 두 번, `no-unsafe-type-assertion`). Green: `make lint-ts` exit 0, 세 파일의 test 71개 통과 (H25.7)
 - H25.6: `config/rebuild.json`은 `scripts/*.mts`, `packages/build/bin`과 `packages/build/lib`의 각 tool을 사용하는 도구를 적은 `ecosystem` 또는 이유를 적은 `policy`로 분류하고, `config/owner-checks.json`은 `rebuild-check`를 이 선언의 owner로 둔다. Red: `make rebuild-check` exit 2, `config/rebuild.json does not exist`. Green: `make rebuild-check` exit 0, `every tool that config/rebuild.json selects has its class`(H25.6).
 - H25.5: `docs/plans/kit-standard/checklist.ko.md`의 source-sha256 marker는 번역을 검토한 뒤 현재 영어 체크리스트의 sha256을 기록한다. Red: `make docs-check` exit 2, `revision: the source-sha256 is dd2343c8...; the sha256 of docs/plans/kit-standard/checklist.md is dc876ef4...`. Green: `make docs-check` exit 0, `18 document pairs, 2 checklists, 0 status tables and 1 changelogs passed`(H25.5).

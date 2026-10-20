@@ -18,7 +18,10 @@ final class RendererTest extends TestCase
         $renderer = Renderer::open(self::PROGRAM, 'Z');
 
         self::assertSame(extension_loaded('polyspec_template') ? 'native' : 'generated', $renderer->engine);
-        self::assertSame("<b>3</b>\n", $renderer->alone('side.tpl', $renderer->bind([]), $renderer->bind(['count' => 3])));
+        self::assertSame(
+            "<b>3</b>\n",
+            $renderer->alone('side.tpl', $renderer->bind([]), $renderer->bind(['count' => 3])),
+        );
     }
 
     /** The generated run: the native extension loads no generated program, so the native run excludes this test. */
@@ -34,7 +37,10 @@ final class RendererTest extends TestCase
 
         self::assertTrue(class_exists('Polyspec\\Hyper\\Tests\\Program\\GeneratedProgram', false));
         self::assertFalse(class_exists('GeneratedProgram', false));
-        self::assertSame($first->alone('side.tpl', $first->bind([]), $first->bind(['count' => 1])), $second->alone('side.tpl', $second->bind([]), $second->bind(['count' => 1])));
+        self::assertSame(
+            $first->alone('side.tpl', $first->bind([]), $first->bind(['count' => 1])),
+            $second->alone('side.tpl', $second->bind([]), $second->bind(['count' => 1])),
+        );
     }
 
     public function testRejectsADirectoryWithoutAProgram(): void
@@ -91,7 +97,10 @@ final class RendererTest extends TestCase
                 Renderer::open($program, 'Z');
                 self::fail('opened a program whose class the autoload does not load');
             } catch (\InvalidArgumentException $error) {
-                self::assertStringContainsString('Polyspec\\Hyper\\Tests\\Unmapped\\GeneratedProgram', $error->getMessage());
+                self::assertStringContainsString(
+                    'Polyspec\\Hyper\\Tests\\Unmapped\\GeneratedProgram',
+                    $error->getMessage(),
+                );
                 self::assertStringContainsString("{$program}/php", $error->getMessage());
             }
         } finally {

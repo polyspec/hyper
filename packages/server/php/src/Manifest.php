@@ -9,7 +9,8 @@ final class Manifest
 {
     /**
      * @param list<Region> $regions
-     * @param array<string, array{name: string, path: string, title: string, template: string, post: bool, regions: list<Region>}> $routes
+     * @param array<string, array{name: string, path: string, title: string, template: string, post: bool, regions:
+     *     list<Region>}> $routes
      */
     private function __construct(
         public readonly string $layout,
@@ -42,7 +43,9 @@ final class Manifest
             $isPage = ($region['page'] ?? false) === true;
             $template = $region['template'] ?? null;
             if ($isPage === is_string($template)) {
-                throw new \InvalidArgumentException("manifest region {$name} must have a template unless it is the page region");
+                throw new \InvalidArgumentException(
+                    "manifest region {$name} must have a template unless it is the page region",
+                );
             }
             $declaredUses = $region['uses'] ?? [];
             if (!is_array($declaredUses)) {
@@ -57,7 +60,9 @@ final class Manifest
             }
             // HY-37: only route regions change in the browser, so only they keep values.
             if (array_key_exists('keep', $region)) {
-                throw new \InvalidArgumentException("manifest region {$name} cannot keep values; only route regions keep values");
+                throw new \InvalidArgumentException(
+                    "manifest region {$name} cannot keep values; only route regions keep values",
+                );
             }
             $regions[$name] = new Region($name, $isPage, is_string($template) ? $template : null, $uses);
             if ($isPage) {
@@ -78,7 +83,13 @@ final class Manifest
             $title = $route['title'] ?? null;
             $template = $route['template'] ?? null;
             $path = $route['path'] ?? null;
-            if ($name === '' || isset($routes[$name]) || !is_string($title) || !is_string($template) || !is_string($path)) {
+            if (
+                $name === ''
+                || isset($routes[$name])
+                || !is_string($title)
+                || !is_string($template)
+                || !is_string($path)
+            ) {
                 throw new \InvalidArgumentException("manifest route {$name} is duplicated or incomplete");
             }
             if (str_starts_with($path, '/_hyper')) {
@@ -89,7 +100,9 @@ final class Manifest
                 $regionName = is_string($region['name'] ?? null) ? $region['name'] : '';
                 $regionTemplate = $region['template'] ?? null;
                 if (!self::regionName($regionName) || isset($regionNames[$regionName]) || !is_string($regionTemplate)) {
-                    throw new \InvalidArgumentException("manifest route {$name} has an invalid or duplicated region {$regionName}");
+                    throw new \InvalidArgumentException(
+                        "manifest route {$name} has an invalid or duplicated region {$regionName}",
+                    );
                 }
                 $regionNames[$regionName] = true;
                 $routeRegions[] = new Region($regionName, false, $regionTemplate, [], self::keep($region, $regionName));
@@ -104,7 +117,14 @@ final class Manifest
             ];
         }
 
-        return new self($data['layout'], $data['title'], array_values($regions), $page, $routes, new Router(array_values($routes)));
+        return new self(
+            $data['layout'],
+            $data['title'],
+            array_values($regions),
+            $page,
+            $routes,
+            new Router(array_values($routes)),
+        );
     }
 
     /**
@@ -175,6 +195,10 @@ final class Manifest
     /** Returns true for an allowed region name (HY-2). */
     private static function regionName(string $name): bool
     {
-        return preg_match('/^[A-Za-z][A-Za-z0-9_-]*$/D', $name) === 1 && !in_array($name, ['layout', 'title', 'data'], true);
+        return preg_match('/^[A-Za-z][A-Za-z0-9_-]*$/D', $name) === 1 && !in_array(
+            $name,
+            ['layout', 'title', 'data'],
+            true,
+        );
     }
 }

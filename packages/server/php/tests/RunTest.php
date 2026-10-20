@@ -18,7 +18,12 @@ final class RunTest extends TestCase
     #[RunInSeparateProcess]
     public function testRunTurnsOffErrorOutputAndTheDefaultContentType(): void
     {
-        $app = App::open(__DIR__ . '/fixtures/app.json', __DIR__ . '/build/server', ['routes' => ['add' => ['post' => fn (): Result => Result::redirect('/')]]], 'Z');
+        $app = App::open(
+            __DIR__ . '/fixtures/app.json',
+            __DIR__ . '/build/server',
+            ['routes' => ['add' => ['post' => fn (): Result => Result::redirect('/')]]],
+            'Z',
+        );
         $_SERVER['REQUEST_METHOD'] = 'GET';
         $_SERVER['REQUEST_URI'] = '/missing';
 
@@ -35,14 +40,25 @@ final class RunTest extends TestCase
     /** HY-74: a warning, notice or deprecation of a request fails it with the plain 500 of HY-43; `@` stays silent. */
     public function testWarningsNoticesAndDeprecationsFailTheRequest(): void
     {
-        exec(escapeshellarg(PHP_BINARY) . ' -d error_log=/dev/null -d display_errors=0 ' . escapeshellarg(__DIR__ . '/Support/warnings.php'), $lines, $status);
+        exec(
+            escapeshellarg(PHP_BINARY) . ' -d error_log=/dev/null -d display_errors=0 ' . escapeshellarg(
+                __DIR__ . '/Support/warnings.php',
+            ),
+            $lines,
+            $status,
+        );
 
         self::assertSame(0, $status, implode("\n", $lines));
         self::assertSame([
             ['undefined-key', 500, 'Internal Server Error'],
             ['user-notice', 500, 'Internal Server Error'],
             ['deprecation', 500, 'Internal Server Error'],
-            ['silenced', 200, '{"env":{"timezone":"Z"},"route":"item","params":{"id":"silenced"},"shared":{"title":"Item"},"regions":{"side":{},"content":{"id":"silenced"}},"kept":{}}'],
+            [
+                'silenced',
+                200,
+                '{"env":{"timezone":"Z"},"route":"item","params":{"id":"silenced"},"shared":{"title":"Item"},'
+                . '"regions":{"side":{},"content":{"id":"silenced"}},"kept":{}}',
+            ],
             ['handler', true],
         ], array_map(Json::decode(...), $lines));
     }
@@ -57,8 +73,20 @@ final class RunTest extends TestCase
         self::assertSame('8M', ini_get('post_max_size'));
         self::assertSame('1', ini_get('enable_post_data_reading'));
         $apps = [
-            'bodyLimit' => App::open(__DIR__ . '/fixtures/app.json', __DIR__ . '/build/server', $handlers, 'Z', bodyLimit: 8 * 1024 * 1024 + 1),
-            'formTypes' => App::open(__DIR__ . '/fixtures/app.json', __DIR__ . '/build/server', $handlers, 'Z', formTypes: ['multipart/form-data']),
+            'bodyLimit' => App::open(
+                __DIR__ . '/fixtures/app.json',
+                __DIR__ . '/build/server',
+                $handlers,
+                'Z',
+                bodyLimit: 8 * 1024 * 1024 + 1,
+            ),
+            'formTypes' => App::open(
+                __DIR__ . '/fixtures/app.json',
+                __DIR__ . '/build/server',
+                $handlers,
+                'Z',
+                formTypes: ['multipart/form-data'],
+            ),
         ];
         foreach ($apps as $option => $app) {
             try {
@@ -69,7 +97,13 @@ final class RunTest extends TestCase
             }
         }
         ob_start();
-        App::open(__DIR__ . '/fixtures/app.json', __DIR__ . '/build/server', $handlers, 'Z', bodyLimit: 8 * 1024 * 1024)->run();
+        App::open(
+            __DIR__ . '/fixtures/app.json',
+            __DIR__ . '/build/server',
+            $handlers,
+            'Z',
+            bodyLimit: 8 * 1024 * 1024,
+        )->run();
         self::assertSame('Not Found', ob_get_clean());
     }
 
@@ -78,9 +112,15 @@ final class RunTest extends TestCase
     public function testRunReportsTheElapsedTimeSinceTheRequestStarted(): void
     {
         $reports = [];
-        $app = App::open(__DIR__ . '/fixtures/app.json', __DIR__ . '/build/server', ['routes' => ['add' => ['post' => fn (): Result => Result::redirect('/')]]], 'Z', onResponse: function (Request $request, Response $response, float $elapsed) use (&$reports): void {
-            $reports[] = [$request->path(), $response->status, $elapsed];
-        });
+        $app = App::open(
+            __DIR__ . '/fixtures/app.json',
+            __DIR__ . '/build/server',
+            ['routes' => ['add' => ['post' => fn (): Result => Result::redirect('/')]]],
+            'Z',
+            onResponse: function (Request $request, Response $response, float $elapsed) use (&$reports): void {
+                $reports[] = [$request->path(), $response->status, $elapsed];
+            },
+        );
         $_SERVER['REQUEST_METHOD'] = 'GET';
         $_SERVER['REQUEST_URI'] = '/missing';
 
@@ -102,9 +142,15 @@ final class RunTest extends TestCase
     public function testRunReportsNoNegativeElapsedTimeWhenTheWallClockMovesBackwards(): void
     {
         $reports = [];
-        $app = App::open(__DIR__ . '/fixtures/app.json', __DIR__ . '/build/server', ['routes' => ['add' => ['post' => fn (): Result => Result::redirect('/')]]], 'Z', onResponse: function (Request $request, Response $response, float $elapsed) use (&$reports): void {
-            $reports[] = $elapsed;
-        });
+        $app = App::open(
+            __DIR__ . '/fixtures/app.json',
+            __DIR__ . '/build/server',
+            ['routes' => ['add' => ['post' => fn (): Result => Result::redirect('/')]]],
+            'Z',
+            onResponse: function (Request $request, Response $response, float $elapsed) use (&$reports): void {
+                $reports[] = $elapsed;
+            },
+        );
         $_SERVER['REQUEST_METHOD'] = 'GET';
         $_SERVER['REQUEST_URI'] = '/missing';
         $_SERVER['REQUEST_TIME_FLOAT'] = microtime(true) + 10.0;
@@ -127,7 +173,13 @@ final class RunTest extends TestCase
         try {
             // The server listens on a port that the system assigns and reports it, so no other process can take the
             // port between its choice and its use (HY-89). ignore_user_abort is on here, so App::run must turn it off.
-            $server = proc_open([PHP_BINARY, '-d', 'ignore_user_abort=1', '-S', '127.0.0.1:0', __DIR__ . '/Support/disconnect.php'], [0 => ['file', '/dev/null', 'r'], 1 => ['file', '/dev/null', 'w'], 2 => ['pipe', 'w']], $pipes, null, [...getenv(), 'HYPER_DISCONNECT_LOG' => $log]);
+            $server = proc_open(
+                [PHP_BINARY, '-d', 'ignore_user_abort=1', '-S', '127.0.0.1:0', __DIR__ . '/Support/disconnect.php'],
+                [0 => ['file', '/dev/null', 'r'], 1 => ['file', '/dev/null', 'w'], 2 => ['pipe', 'w']],
+                $pipes,
+                null,
+                [...getenv(), 'HYPER_DISCONNECT_LOG' => $log],
+            );
             if ($server === false) {
                 self::fail('the PHP built-in server did not start');
             }
@@ -164,7 +216,10 @@ final class RunTest extends TestCase
         self::assertSame('Internal Server Error', $body);
         self::assertContains('Cache-Control: no-store', $headers);
         self::assertContains("Content-Security-Policy: frame-ancestors 'self'", $headers);
-        self::assertMatchesRegularExpression('/\Awritten 500 true "Allowed memory size of 8388608 bytes exhausted/', $lines);
+        self::assertMatchesRegularExpression(
+            '/\Awritten 500 true "Allowed memory size of 8388608 bytes exhausted/',
+            $lines,
+        );
     }
 
     /** HY-60, HY-99: a fatal error after the response hook ran writes the plain 500 and reports it to the write hook. */
@@ -254,13 +309,17 @@ final class RunTest extends TestCase
 
         self::assertSame(500, $status);
         self::assertSame('Internal Server Error', $body);
-        self::assertMatchesRegularExpression('/\Awritten 500 true "Maximum execution time of 1 second exceeded"\n\z/', $lines);
+        self::assertMatchesRegularExpression(
+            '/\Awritten 500 true "Maximum execution time of 1 second exceeded"\n\z/',
+            $lines,
+        );
     }
 
     /**
      * Serves the escape front controller in the given mode with the PHP built-in server, which writes the response when
-     * the output reaches the server (`output_buffering` off, so that `headers_sent()` tells whether the headers left), and returns the status, the
-     * headers, the body of the response and the lines that the response hook appended to the log.
+     * the output reaches the server (`output_buffering` off, so that `headers_sent()` tells whether the headers left),
+     * and returns the status, the headers, the body of the response and the lines that the response hook appended to
+     * the log.
      *
      * @param array<string, string> $env the environment of the server that the case adds to its own
      * @param string $outputBuffering the output_buffering setting of the server
@@ -271,7 +330,24 @@ final class RunTest extends TestCase
         $log = (string) tempnam(sys_get_temp_dir(), 'hyper-escape-');
         $server = false;
         try {
-            $server = proc_open([PHP_BINARY, '-d', 'display_errors=0', '-d', 'error_log=/dev/null', '-d', 'output_buffering=' . $outputBuffering, '-S', '127.0.0.1:0', __DIR__ . '/Support/escape.php'], [0 => ['file', '/dev/null', 'r'], 1 => ['file', '/dev/null', 'w'], 2 => ['pipe', 'w']], $pipes, null, [...getenv(), ...$env, 'HYPER_ESCAPE_MODE' => $mode, 'HYPER_ESCAPE_LOG' => $log]);
+            $server = proc_open(
+                [
+                    PHP_BINARY,
+                    '-d',
+                    'display_errors=0',
+                    '-d',
+                    'error_log=/dev/null',
+                    '-d',
+                    'output_buffering=' . $outputBuffering,
+                    '-S',
+                    '127.0.0.1:0',
+                    __DIR__ . '/Support/escape.php',
+                ],
+                [0 => ['file', '/dev/null', 'r'], 1 => ['file', '/dev/null', 'w'], 2 => ['pipe', 'w']],
+                $pipes,
+                null,
+                [...getenv(), ...$env, 'HYPER_ESCAPE_MODE' => $mode, 'HYPER_ESCAPE_LOG' => $log],
+            );
             if ($server === false) {
                 self::fail('the PHP built-in server did not start');
             }

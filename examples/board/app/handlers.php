@@ -9,37 +9,38 @@ use Polyspec\Hyper\Reply;
 use Polyspec\Hyper\Request;
 use Polyspec\Hyper\Result;
 
-const POSTS_PER_PAGE = 10;
+$postsPerPage = 10;
 
 /**
  * Returns the requested page number limited to the existing pages, and the page count.
  *
  * @return array{int, int}
  */
-function currentPage(Request $request, Posts $posts): array
-{
-    $pages = max(1, $posts->pageCount(POSTS_PER_PAGE));
+$currentPage = static function (Request $request, Posts $posts) use ($postsPerPage): array {
+    $pages = max(1, $posts->pageCount($postsPerPage));
 
     return [min($pages, max(1, $request->queryInt('page', 1))), $pages];
-}
+};
 
 /**
  * Returns the post of the route parameter `id`, or reports a missing resource.
  *
  * @return array{id: int, title: string, author: string, body: string, created_at: int}
  */
-function findPost(Request $request, Posts $posts): array
-{
+$findPost = static function (Request $request, Posts $posts): array {
     $id = (string) $request->param('id');
     $post = preg_match('/^[1-9]\d{0,15}$/D', $id) === 1 ? $posts->find((int) $id) : null;
 
     return $post ?? throw new NotFound();
-}
+};
 
 // Loaders and actions of the regions and routes that app.json declares.
 return [
     // The post page, the one route with the parameter `id`, links the reader stylesheet (HY-64).
-    'shared' => fn (Assets $assets, Request $request): array => ['assets' => $assets->urls(), 'reader' => $request->param('id') !== null],
+    'shared' => fn (Assets $assets, Request $request): array => [
+        'assets' => $assets->urls(),
+        'reader' => $request->param('id') !== null,
+    ],
 
     'regions' => [
         'left' => fn (Request $request, Posts $posts): array => [
@@ -50,21 +51,21 @@ return [
 
     'routes' => [
         'board.list' => [
-            'load' => function (Request $request, Posts $posts): array {
-                [$page, $pages] = currentPage($request, $posts);
+            'load' => function (Request $request, Posts $posts) use ($currentPage): array {
+                [$page, $pages] = $currentPage($request, $posts);
 
                 return ['page' => $page, 'pages' => $pages];
             },
             'regions' => [
                 // The notice is on the first page only; another page has no notice region (HY-75).
-                'notice' => fn (Request $request, Posts $posts): ?array => currentPage($request, $posts)[0] === 1 ? [
+                'notice' => fn (Request $request, Posts $posts): ?array => $currentPage($request, $posts)[0] === 1 ? [
                     'notice' => ['text' => '게시판 예제입니다. 정렬과 공지 닫기는 서버 요청 없이 처리됩니다.', 'closed' => false],
                 ] : null,
-                'rows' => function (Request $request, Posts $posts): array {
-                    [$page] = currentPage($request, $posts);
+                'rows' => function (Request $request, Posts $posts) use ($currentPage, $postsPerPage): array {
+                    [$page] = $currentPage($request, $posts);
 
                     return [
-                        'posts' => $posts->page($page, POSTS_PER_PAGE),
+                        'posts' => $posts->page($page, $postsPerPage),
                         'sort' => '',
                         'compact' => false,
                         'highlight' => $request->flash('created'),
@@ -74,14 +75,14 @@ return [
         ],
 
         'board.show' => [
-            'load' => fn (Request $request, Posts $posts): array => ['post' => findPost($request, $posts)],
+            'load' => fn (Request $request, Posts $posts): array => ['post' => $findPost($request, $posts)],
             'regions' => [
                 // The post page embeds its data, so the reader changes without a request; the list embeds none and
                 // the browser requests its data when it first changes a region (HY-31, HY-92).
-                'reader' => function (Request $request, Reply $reply, Posts $posts): array {
+                'reader' => function (Request $request, Reply $reply, Posts $posts) use ($findPost): array {
                     $reply->embedData();
 
-                    return ['post' => findPost($request, $posts), 'large' => false];
+                    return ['post' => $findPost($request, $posts), 'large' => false];
                 },
             ],
         ],

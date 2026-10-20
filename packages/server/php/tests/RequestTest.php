@@ -45,7 +45,17 @@ final class RequestTest extends TestCase
     public function testSessionCookieOptions(): void
     {
         self::assertSame(
-            ['name' => 'hy-session', 'cookie_path' => '/', 'cookie_domain' => '', 'cookie_httponly' => true, 'cookie_samesite' => 'Lax', 'cookie_secure' => false, 'use_strict_mode' => true, 'use_only_cookies' => true, 'cache_limiter' => ''],
+            [
+                'name' => 'hy-session',
+                'cookie_path' => '/',
+                'cookie_domain' => '',
+                'cookie_httponly' => true,
+                'cookie_samesite' => 'Lax',
+                'cookie_secure' => false,
+                'use_strict_mode' => true,
+                'use_only_cookies' => true,
+                'cache_limiter' => '',
+            ],
             NativeSession::options(false),
         );
         self::assertTrue(NativeSession::options(true)['cookie_secure']);
@@ -90,7 +100,13 @@ final class RequestTest extends TestCase
     /** HY-57: every form value of the body in order, without nesting, whatever PHP put into $_POST. */
     public function testFormValuesAreReadFromTheBodyInOrderWithoutNesting(): void
     {
-        $request = new Request('POST', '/', self::FORM, '', 'title=%ED%95%9C+%EA%B8%80&roles[]=a&empty&roles%5B%5D=b&x=1&x=2');
+        $request = new Request(
+            'POST',
+            '/',
+            self::FORM,
+            '',
+            'title=%ED%95%9C+%EA%B8%80&roles[]=a&empty&roles%5B%5D=b&x=1&x=2',
+        );
         $form = [];
         foreach ($request->form() as $name => $values) {
             $form[] = [$name, $values];
@@ -117,6 +133,8 @@ final class RequestTest extends TestCase
     public function testCookiesAreNotChecked(): void
     {
         // HY-42: an invalid hy-keep is ignored and an invalid session cookie starts a new session.
-        self::assertTrue((new Request('GET', '/', cookies: ['hy-keep' => "\xFF", 'hy-session' => "\xFF"]))->validInput());
+        self::assertTrue(
+            (new Request('GET', '/', cookies: ['hy-keep' => "\xFF", 'hy-session' => "\xFF"]))->validInput(),
+        );
     }
 }
