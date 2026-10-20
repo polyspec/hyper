@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 40e372d2233aef1fd9c7e90c4f8501f6cf1c2920a934938365373cf49a902ee5 -->
+<!-- source-sha256: 9ae1a05179937db5315e52f558f0d010fbae5e349dcd216c17db6fe55889cffa -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H25.7: Node 서버 test `rest.test.ts`, `kept.test.ts`, `reads.test.ts`가 `make lint-ts`를 통과한다. 쓰지 않는 import 두 개를 지웠고, `reads.test.ts`는 fixture 값을 `ReadNode`로 cast하는 대신 `templateReads`가 돌려준 read tree를 `keepRead`에 넘긴다. test는 이미 둘이 같음을 요구한다. Red: `make lint-ts` exit 2, oxlint 문제 3건(`no-unused-vars` 두 번, `no-unsafe-type-assertion`). Green: `make lint-ts` exit 0, 세 파일의 test 71개 통과 (H25.7)
 - H25.6: `config/rebuild.json`은 `scripts/*.mts`, `packages/build/bin`과 `packages/build/lib`의 각 tool을 사용하는 도구를 적은 `ecosystem` 또는 이유를 적은 `policy`로 분류하고, `config/owner-checks.json`은 `rebuild-check`를 이 선언의 owner로 둔다. Red: `make rebuild-check` exit 2, `config/rebuild.json does not exist`. Green: `make rebuild-check` exit 0, `every tool that config/rebuild.json selects has its class`(H25.6).
 - H25.5: `docs/plans/kit-standard/checklist.ko.md`의 source-sha256 marker는 번역을 검토한 뒤 현재 영어 체크리스트의 sha256을 기록한다. Red: `make docs-check` exit 2, `revision: the source-sha256 is dd2343c8...; the sha256 of docs/plans/kit-standard/checklist.md is dc876ef4...`. Green: `make docs-check` exit 0, `18 document pairs, 2 checklists, 0 status tables and 1 changelogs passed`(H25.5).
 - H25.3: The language parity of the server implementations (PHP, Python, Node) and the browser package is declared in `config/parity.json`. The shared vectors of `contracts/*.json` have a case `id` without whitespace, which the parity check names each case by; the Node, browser and Python conformance tests name each case by its id, and Python gains tests of `Fields.has` and `FileSessions.collect`. The declaration check still fails on the tests of the PHP and Python packages that have no unit yet.

@@ -4,7 +4,7 @@
 import { readFileSync } from 'node:fs';
 import { parse, parseJson } from '@polyspec/template';
 import { MapLoader, resolvePath } from '@polyspec/template/render';
-import { createEngine, keepRead, templateReads, type ReadNode } from '@polyspec/hyper-client';
+import { createEngine, keepRead, templateReads } from '@polyspec/hyper-client';
 import { expect, it } from 'vitest';
 import { list, parsed, record, text } from './support.js';
 
@@ -22,7 +22,7 @@ it.each(list(fixture.cases).map(record).map((item) => [text(item.id), item] as c
   expect(reads).toEqual(item.reads);
 
   const data = parseJson(JSON.stringify(item.data));
-  const kept = keepRead(data, item.reads as ReadNode);
+  const kept = keepRead(data, reads);
   expect(kept).toEqual(parseJson(JSON.stringify(item.kept)));
 
   const loader = new MapLoader();

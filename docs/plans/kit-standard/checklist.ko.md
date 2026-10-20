@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-kit-standard -->
-<!-- source-sha256: f9879173431da7ad2675f91c2ea1443a48ba93cbdaf3c0f6a2175dcb19f7a362 -->
+<!-- source-sha256: 4d1c56760d8b72e9f01d2a8c9a95c972a53c8435290fe5e0a8faa7937ddff1de -->
 # kit 표준 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -10,3 +10,4 @@
 | H25.4 | config/parity.json의 모든 unit은 모든 구현에서 성립하고, test가 이름으로 적은 spec requirement를 인용한다 (kit K273, K275, K276) | config/parity.json, docs/spec, the tests of every implementation | `make parity-declarations-check` | [!] 원인: 선언에는 profile, native 전용 symbol과 exclusion이 없고 browser 패키지는 선언 밖에 있다. 검사는 아직 실패한다: 77개 spec 요구사항을 인용하는 unit이 없고(R13), 29개 test 파일에 unit이 없으며(R5), 24개 인용은 test가 이름으로 적지 않은 id를 가리키고(R15), client-requests에는 Python 바인딩이 없다(R2). Browser 전용 요구사항 7개는 client 접두사 HYC-n으로 옮겼고, 서버 코드도 인용하는 세 요구사항(HY-22, HY-33, HY-64)은 아직 결정하지 않았다.; 재시도: 모든 test 파일에 unit이 생기고, 모든 요구사항을 php, python, ts의 서버 test가 이름으로 적고 실제로 검증하며, client-requests가 Python에서 성립하고, 공유 요구사항 세 개의 결정이 나면 재개한다. |
 | H25.5 | 한국어 체크리스트의 revision marker가 영어 체크리스트와 일치한다 | The source-sha256 marker of docs/plans/kit-standard/checklist.ko.md | `make docs-check` | [o] |
 | H25.6 | 저장소의 각 tool은 config/rebuild.json에서 class를 가진다 | config/rebuild.json | `make rebuild-check` | [o] |
+| H25.7 | Node 서버 test가 lint-ts를 통과한다 | packages/server/ts/tests/rest.test.ts, kept.test.ts and reads.test.ts | `make lint-ts`, `var/tools/bin/node node_modules/vitest/vitest.mjs run --dir packages/server/ts packages/server/ts/tests/rest.test.ts packages/server/ts/tests/kept.test.ts packages/server/ts/tests/reads.test.ts` | [o] |

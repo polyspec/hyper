@@ -1,7 +1,7 @@
 // The cases of packages/server/php/tests/KeptTest.php: the server selects kept values that conform, and the
 // selected values applied to the data give the expected data (HY-38, HY-41).
 import { readFileSync } from 'node:fs';
-import { describe, expect, it } from 'vitest';
+import { expect, it } from 'vitest';
 import { applyKept, copyValue } from '@polyspec/hyper-client';
 import { parseJson, type MapValue, type Value } from '@polyspec/template/render';
 import { selectKept } from '../src/kept.js';

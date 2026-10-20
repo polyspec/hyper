@@ -2,7 +2,7 @@
 // package (HY-9, HY-49). Each case of contracts/rest.json is a top-level test named by its id (S6).
 import { readFileSync } from 'node:fs';
 import { expect, it } from 'vitest';
-import { Router, stripBasePath } from '@polyspec/hyper-client';
+import { Router } from '@polyspec/hyper-client';
 import { list, parsed, record, text } from './support.js';
 
 interface Case {
