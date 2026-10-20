@@ -19,14 +19,14 @@ from typing import Optional
 _IDENTIFIER = re.compile(r"[0-9a-f]{64}\Z")
 
 
-def cookie_name(secure: bool) -> str:
+def _cookie_name(secure: bool) -> str:
     """Returns the session cookie name: `__Host-hy-session` over HTTPS and `hy-session` otherwise (HY-45)."""
     return "__Host-hy-session" if secure else "hy-session"
 
 
-def cookie_header(identifier: str, secure: bool) -> str:
+def _cookie_header(identifier: str, secure: bool) -> str:
     """Returns the Set-Cookie value of a new session, with the attributes of the PHP session cookie (HY-45)."""
-    return f"{cookie_name(secure)}={identifier}; path=/{'; secure' if secure else ''}; HttpOnly; SameSite=Lax"
+    return f"{_cookie_name(secure)}={identifier}; path=/{'; secure' if secure else ''}; HttpOnly; SameSite=Lax"
 
 
 class FileSessions:
@@ -44,7 +44,7 @@ class FileSessions:
         self.lifetime = lifetime
         self._locks: dict[str, threading.Lock] = {}
 
-    def open(self, cookie: Optional[str]) -> "FileSession":
+    def _open(self, cookie: Optional[str]) -> "FileSession":
         """Returns the store of a request with the value of its session cookie; it holds the turn of the session
         until `close`, so the requests of one session run one after another."""
         identifier = (
@@ -58,16 +58,16 @@ class FileSessions:
             lock.acquire()
         return FileSession(self, identifier, lock)
 
-    def collect(self) -> int:
+    def _collect(self) -> int:
         """Removes the files of sessions whose lifetime has passed and returns how many it removed."""
         removed = 0
         for file in self.directory.iterdir():
-            if _IDENTIFIER.fullmatch(file.name) is not None and self.expired(file):
+            if _IDENTIFIER.fullmatch(file.name) is not None and self._expired(file):
                 file.unlink()
                 removed += 1
         return removed
 
-    def expired(self, file: Path) -> bool:
+    def _expired(self, file: Path) -> bool:
         """Returns True when a session file is older than the lifetime."""
         return time.time() - file.stat().st_mtime > self.lifetime
 
@@ -86,13 +86,13 @@ class FileSession:
         self._lock = lock
         self._values: Optional[dict] = None
         self._id: Optional[str] = None
-        self._created = False
+        self._made = False
         self._renewed: Optional[str] = None
 
     @property
-    def created(self) -> Optional[str]:
+    def _created(self) -> Optional[str]:
         """The identifier that this request created, which the response sets as the session cookie, or None."""
-        return self._id if self._created else None
+        return self._id if self._made else None
 
     def get(self, key: str) -> object:
         return self._start().get(key)
@@ -107,12 +107,12 @@ class FileSession:
         """Gives the values a new identifier, which the response sets as the session cookie; closing deletes the
         file of the old identifier (HY-72)."""
         self._start()
-        if not self._created:
+        if not self._made:
             self._renewed = self._id
         self._id = secrets.token_bytes(32).hex()
-        self._created = True
+        self._made = True
 
-    def close(self) -> None:
+    def _close(self) -> None:
         """Writes a started session to its file, removes the file of a renewed identifier, and lets the next
         request of the session start."""
         try:
@@ -145,7 +145,7 @@ class FileSession:
             file = self._sessions.directory / self._cookie_id
             content = None
             try:
-                if not self._sessions.expired(file):
+                if not self._sessions._expired(file):
                     content = json.loads(file.read_text(encoding="utf-8"))
             except FileNotFoundError, json.JSONDecodeError:
                 content = None
@@ -154,6 +154,6 @@ class FileSession:
                 self._values = content
                 return self._values
         self._id = secrets.token_bytes(32).hex()
-        self._created = True
+        self._made = True
         self._values = {}
         return self._values

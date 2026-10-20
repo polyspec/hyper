@@ -87,13 +87,13 @@ class Reply:
         self._renewal = True
         return self
 
-    def take_renewal(self) -> bool:
+    def _take_renewal(self) -> bool:
         """Returns whether a renewal was requested since the last call, and clears the request."""
         renewal = self._renewal
         self._renewal = False
         return renewal
 
-    def cache_control_value(self) -> str | None:
+    def _cache_control_value(self) -> str | None:
         """Returns the Cache-Control that the reply sets, or None."""
         return self._cache_control
 
@@ -107,11 +107,11 @@ class Reply:
         self._referrer_policy = value
         return self
 
-    def referrer_policy_value(self) -> str | None:
+    def _referrer_policy_value(self) -> str | None:
         """Returns the Referrer-Policy that the reply sets, or None."""
         return self._referrer_policy
 
-    def referrer_policy_headers(self) -> dict[str, str]:
+    def _referrer_policy_headers(self) -> dict[str, str]:
         """Returns the Referrer-Policy header of the reply, or no header (HY-103)."""
         return (
             {}
@@ -127,7 +127,7 @@ class Reply:
         self._status = status
         return self
 
-    def status_value(self) -> int | None:
+    def _status_value(self) -> int | None:
         """Returns the page status that the reply sets, or None."""
         return self._status
 
@@ -136,11 +136,11 @@ class Reply:
         self._embed = True
         return self
 
-    def embeds_data(self) -> bool:
+    def _embeds_data(self) -> bool:
         """Returns whether the HTML document of the response embeds its data (HY-92)."""
         return self._embed
 
-    def cookie_headers(self, secure: bool) -> list[str]:
+    def _cookie_headers(self, secure: bool) -> list[str]:
         """Returns the Set-Cookie values of the cookies of the reply (HY-52)."""
         return [
             f"{name}={value}; Path=/; HttpOnly; SameSite=Lax"

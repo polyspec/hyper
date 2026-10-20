@@ -61,3 +61,4 @@
 | H25.49 | R11: the Node server declares only its public API (HY-106) | packages/server/ts/src, packages/server/ts/tsconfig.build.json, packages/server/ts/tests | `make hyper-test-node` | [o] |
 | H25.50 | R11: the PHP server declares only its public API (HY-106) | packages/server/php/src | `make hyper-test-php` | [o] |
 | H25.51 | Request.withHeader is public in the PHP and Node servers (HY-97, HY-106) | packages/server/php/src/Request.php, packages/server/ts/src/request.ts | `make hyper-test-node` | [o] |
+| H25.52 | R11: the Python server declares only its public API (HY-106) | packages/server/python/src, packages/server/python/tests, packages/server/python/README.md | `make hyper-test-python` | [o] |

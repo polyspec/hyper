@@ -2,7 +2,7 @@
 # server pass the same cases. Each case is a test method test_<id> (S6).
 import unittest
 
-from polyspec.hyper.csrf import verify
+from polyspec.hyper._csrf import verify
 
 from .contracts import add_cases, file
 

@@ -2,7 +2,7 @@
 # cases. Each case is a test method test_<id> (S6).
 import unittest
 
-from polyspec.hyper.csrf import mask
+from polyspec.hyper._csrf import mask
 
 from .contracts import add_cases, file
 

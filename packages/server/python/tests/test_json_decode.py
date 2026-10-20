@@ -2,7 +2,7 @@
 # PHP and the Node server pass the same cases. Each case is a test method test_<id> (S6).
 import unittest
 
-from polyspec.hyper.json_codec import JsonDecodeError, decode, in_data_model
+from polyspec.hyper._json_codec import JsonDecodeError, decode, in_data_model
 
 from .contracts import add_cases, file
 

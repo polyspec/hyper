@@ -1,5 +1,5 @@
 <!-- doc-id: hyper-server-python-readme -->
-<!-- source-sha256: a3746622fe8f3b08703b4ebb42282788241375a815de4ae5a249473339908583 -->
+<!-- source-sha256: 74f72e0fc761c0c784c95fe3196473849ec0c4ce9ae55f432b0e72b69b8450e8 -->
 # polyspec-hyper-server
 
 [English](README.md).
@@ -16,37 +16,26 @@ pip install "polyspec-hyper-server @ git+https://github.com/polyspec/hyper@vX.Y.
 ```
 
 ```python
-from polyspec.hyper import Fields, Router
+from polyspec.hyper.request import Request
+from polyspec.hyper.result import Result
 
-router = Router([{"name": "board.show", "path": "/board/{id}"}])
-match = router.match("/board/7")  # {'name': 'board.show', 'params': {'id': '7'}}
-fields = Fields.parse(b"page=2&sort=title")  # names ['page', 'sort'], get('page') ['2']
+request = Request("GET", "/board/7", {}, "page=2")
+request.path(), request.query().get("page")  # ('/board/7', ['2'])
+Result.redirect("/board/7")  # the outcome of an action that succeeded (HY-25)
 ```
 
-- `Router`는 요청 경로를 route 경로와 대조한다: literal, parameter, rest parameter `{name*}`, `%XX` decoding과
-  UTF-8 검사 포함 (HY-4 to HY-8, HY-49). `strip_base_path`가 base path를 제거한다 (HY-8).
-- `Fields`는 nesting 없이 query 값과 body의 form 값을 보관한다: 이름이 처음 나온 순서의 순서 있는 map에 각
-  이름이 요청 순서의 값을 가진다 (HY-56, HY-57).
-- `mask`, `masked`, `verify`는 응답용 session token을 mask하고 mask된 form 값을 검증한다 (HY-24).
-- `encode`와 `decode`는 PHP `json_encode`와 `json_decode`의 바이트로 JSON을 쓰고 읽는다 (HY-17, HY-54).
-  `in_data_model`은 decode된 값이 template data model에 속하는지 알려준다.
 - `Request`는 route parameter, flash 값, cookie, selection 값을 가진 HTTP 요청 하나를 보관한다 (HY-15, HY-42,
   HY-56, HY-57, HY-62). `target_path`와 `target_query`가 요청 target을 나누고,
   `with_header(name, value)`는 대소문자를 구분하지 않고 비교한 그 이름의 header가 값을 가진 사본을 반환한다 (HY-97).
-- `Manifest.from_file`이 application manifest를 읽고 검사한다 (HY-1, HY-2). `Region`은 kept 경로를 가진 manifest
-  영역 또는 라우트 영역 하나다 (HY-37).
-- `polyspec.hyper.kept.apply`와 `polyspec.hyper.kept.select`는 데이터에 맞는 kept 값을 적용한다 (HY-38). `Reads.keep`은 데이터에서 read 경로가
-  읽는 부분만 남긴다 (HY-73).
 - `Result`는 action의 결과다 (HY-25, HY-26, HY-46, HY-58). `Reply`는 응답의 cookie, cache control, page 상태,
   데이터 내장 선택이다 (HY-52, HY-69, HY-92). `NotFound`, `Forbidden`, `BadRequest`, `Redirect`는 loader와 action의
   stop이다 (HY-27, HY-50, HY-51, HY-58).
-- `Session`과 `ArraySession`이 세션 하나의 CSRF token, flash 값, kept 값을 관리한다 (HY-24, HY-25, HY-40, HY-72).
 
 - `App.open`이 manifest, `hyper-build-server`가 만든 서버 program(그중 `templates` 디렉터리와 `reads.json`. Python
   서버는 생성된 PHP program이 쓰는 디렉터리 `php`와 `program.json`이 필요 없다), 데이터를 읽고 action을 실행하는
   handler로 application을 만든다. `App.handle`이 요청 하나에 답한다 (HY-8, HY-15 to HY-19, HY-24 to HY-27, HY-40,
   HY-50 to HY-62, HY-65 to HY-67). handler parameter는 타입으로 request나 reply를 받고, `App.bind`가 등록한
-  application service는 그 클래스로 받는다. `App.respond`는 `App.handle`처럼 요청에 답하고 응답과 요청의 reply를
+  application service는 그 클래스로 받는다. `App.handle`의 응답는 `App.handle`처럼 요청에 답하고 응답과 요청의 reply를
   반환한다.
 - `App.open`의 `on_response`는 모든 응답마다 한 번 요청, 응답, 밀리초 단위의 경과 시간, 요청의 reply, 500의 실패로
   호출된다 (HY-60). `on_disconnect`는 client가 연결을 닫아 서버가 응답을 쓰지 못한 요청에 대해 요청, 밀리초 단위의
@@ -71,7 +60,7 @@ response = app.handle(request, ArraySession())
   path, 요청마다의 selection.
 
 - server module가 표준 라이브러리 `http.server`로 file session과 함께 application을 서비스한다.
-  `create_server(app, sessions)`가 모든 요청을 `App.respond`에 보내는 thread HTTP server를 반환한다. body limit보다
+  `create_server(app, sessions)`가 모든 요청을 `App.handle`의 응답에 보내는 thread HTTP server를 반환한다. body limit보다
   큰 body를 더 읽지 않고(HY-59), 새 session의 cookie를 가장 먼저 설정하며(HY-45), 응답의 쓰기가 `BrokenPipeError`,
   `ConnectionResetError`, `ConnectionAbortedError`로 실패하면 연결 끊김 hook을 호출하고(HY-67), 선택의 public
   디렉터리 파일을 PHP built-in server가 document root를 서비스하듯이 서비스한다. `FileSessions`는 세션마다 자신이 만든 64자리 16진수

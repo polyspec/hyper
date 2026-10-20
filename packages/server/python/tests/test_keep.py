@@ -4,7 +4,7 @@
 import json
 import unittest
 
-from polyspec.hyper.kept import apply
+from polyspec.hyper._kept import apply
 
 from .contracts import add_cases, file
 

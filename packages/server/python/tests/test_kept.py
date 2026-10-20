@@ -1,7 +1,7 @@
 # The selection of kept values beyond the cases of contracts/keep.json (HY-38).
 import unittest
 
-from polyspec.hyper.kept import apply, select
+from polyspec.hyper._kept import apply, select
 
 
 class SelectTest(unittest.TestCase):

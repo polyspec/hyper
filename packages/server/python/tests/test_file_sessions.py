@@ -8,7 +8,7 @@ import time
 import unittest
 from pathlib import Path
 
-from polyspec.hyper.file_sessions import FileSessions, cookie_header, cookie_name
+from polyspec.hyper.file_sessions import FileSessions, _cookie_header, _cookie_name
 
 ROUNDS = 400
 
@@ -19,10 +19,10 @@ def write_rounds(directory: str, identifier: str, queue) -> None:
     try:
         sessions = FileSessions(directory)
         for number in range(ROUNDS):
-            session = sessions.open(identifier)
+            session = sessions._open(identifier)
             session.set("number", number)
             try:
-                session.close()
+                session._close()
             except OSError as error:
                 errors.append(f"{type(error).__name__}: {error}")
     finally:
@@ -63,56 +63,56 @@ class FileSessionsTest(unittest.TestCase):
         self.sessions = FileSessions(directory.name)
 
     def test_ends_a_session_after_its_lifetime_and_removes_expired_files(self) -> None:
-        first = self.sessions.open(None)
+        first = self.sessions._open(None)
         first.set("a", 1)
-        first.close()
-        identifier = first.created
+        first._close()
+        identifier = first._created
         old = time.time() - 1441
         os.utime(self.directory / identifier, (old, old))
-        later = self.sessions.open(identifier)
+        later = self.sessions._open(identifier)
         self.assertIsNone(later.get("a"))
-        self.assertNotEqual(identifier, later.created)
-        later.close()
-        self.assertEqual(1, self.sessions.collect())
+        self.assertNotEqual(identifier, later._created)
+        later._close()
+        self.assertEqual(1, self.sessions._collect())
         self.assertFalse((self.directory / identifier).exists())
 
     def test_names_the_session_cookie_hy_session_over_http_and_host_prefixed_over_https(
         self,
     ) -> None:
         identifier = "a" * 64
-        self.assertEqual("hy-session", cookie_name(False))
-        self.assertEqual("__Host-hy-session", cookie_name(True))
+        self.assertEqual("hy-session", _cookie_name(False))
+        self.assertEqual("__Host-hy-session", _cookie_name(True))
         self.assertEqual(
             f"hy-session={identifier}; path=/; HttpOnly; SameSite=Lax",
-            cookie_header(identifier, False),
+            _cookie_header(identifier, False),
         )
         self.assertEqual(
             f"__Host-hy-session={identifier}; path=/; secure; HttpOnly; SameSite=Lax",
-            cookie_header(identifier, True),
+            _cookie_header(identifier, True),
         )
 
     def test_accepts_only_identifiers_that_it_created(self) -> None:
         for cookie in ["abc", "../../etc/passwd", "f" * 64, "F" * 64]:
-            session = self.sessions.open(cookie)
+            session = self.sessions._open(cookie)
             self.assertIsNone(session.get("a"), cookie)
-            self.assertNotEqual(cookie, session.created, cookie)
-            session.close()
+            self.assertNotEqual(cookie, session._created, cookie)
+            session._close()
 
     def test_renews_a_session_with_the_same_values_and_no_file_of_the_old_one(
         self,
     ) -> None:
-        first = self.sessions.open(None)
+        first = self.sessions._open(None)
         first.set("a", 1)
-        first.close()
-        old = first.created
-        session = self.sessions.open(old)
+        first._close()
+        old = first._created
+        session = self.sessions._open(old)
         session.renew()
-        session.close()
-        self.assertNotEqual(old, session.created)
+        session._close()
+        self.assertNotEqual(old, session._created)
         self.assertEqual(
-            [session.created], [file.name for file in self.directory.iterdir()]
+            [session._created], [file.name for file in self.directory.iterdir()]
         )
-        self.assertEqual(1, self.sessions.open(session.created).get("a"))
+        self.assertEqual(1, self.sessions._open(session._created).get("a"))
 
     def test_requires_an_existing_absolute_directory_and_a_positive_lifetime(
         self,

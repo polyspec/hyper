@@ -5,7 +5,7 @@ from __future__ import annotations
 from ._manifest import Manifest
 from .request import Request
 from ._router import strip_base_path
-from .session import Flash
+from ._session import Flash
 
 
 def changed_topics(request: Request, flash: Flash, base_path: str) -> list[str]:

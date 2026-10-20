@@ -2,7 +2,7 @@
 # Node server pass the same cases. Each case is a test method test_<id> (S6).
 import unittest
 
-from polyspec.hyper.json_codec import decode, encode
+from polyspec.hyper._json_codec import decode, encode
 
 from .contracts import add_cases, file
 

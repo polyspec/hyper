@@ -2,7 +2,7 @@
 import math
 import unittest
 
-from polyspec.hyper.json_codec import decode, encode
+from polyspec.hyper._json_codec import decode, encode
 
 
 class NumberTest(unittest.TestCase):

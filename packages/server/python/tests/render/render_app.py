@@ -8,7 +8,7 @@ from urllib.parse import urlencode
 
 from .fixture_app import FIXTURES, PROGRAM
 from polyspec.hyper.app import App
-from polyspec.hyper.csrf import masked
+from polyspec.hyper._csrf import masked
 from polyspec.hyper.reply import Reply
 from polyspec.hyper.request import Request
 from polyspec.hyper.response import Response
@@ -452,13 +452,13 @@ def post_keep(store: ArraySession, fields: dict) -> Response:
 
 
 def _token(app: App, store: ArraySession) -> str:
-    from polyspec.hyper.session import Session
+    from polyspec.hyper._session import Session
 
     return Session(store).csrf_token()
 
 
 def session_kept(store: ArraySession) -> dict:
-    from polyspec.hyper.session import Session
+    from polyspec.hyper._session import Session
 
     return Session(store).kept("rows")
 

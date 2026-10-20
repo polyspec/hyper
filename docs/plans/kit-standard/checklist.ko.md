@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-kit-standard -->
-<!-- source-sha256: a1811e0d171bb68b428270ef01fe7ad828b9603f1028a71e4f0ab18eee4450f8 -->
+<!-- source-sha256: 72b3dba32989c91c6f276dfe60fdca886a0fb09392e4cfc6ddf6b1b8f623dad1 -->
 # kit 표준 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -62,3 +62,4 @@
 | H25.49 | R11: Node 서버는 public API만 선언한다(HY-106) | packages/server/ts/src, packages/server/ts/tsconfig.build.json, packages/server/ts/tests | `make hyper-test-node` | [o] |
 | H25.50 | R11: PHP 서버는 public API만 선언한다(HY-106) | packages/server/php/src | `make hyper-test-php` | [o] |
 | H25.51 | Request.withHeader는 PHP와 Node 서버에서 public이다(HY-97, HY-106) | packages/server/php/src/Request.php, packages/server/ts/src/request.ts | `make hyper-test-node` | [o] |
+| H25.52 | R11: Python 서버는 public API만 선언한다(HY-106) | packages/server/python/src, packages/server/python/tests, packages/server/python/README.md | `make hyper-test-python` | [o] |

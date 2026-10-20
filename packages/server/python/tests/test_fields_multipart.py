@@ -2,7 +2,7 @@
 # The PHP and the Node server pass the same cases. Each case is a test method test_<id> (S6).
 import unittest
 
-from polyspec.hyper.fields import Fields
+from polyspec.hyper._fields import Fields
 
 from .contracts import add_cases, file
 from .field_entries import entries

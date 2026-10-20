@@ -193,7 +193,7 @@ def answer_with(
 ) -> Response:
     """Answers the request of the exchange through the request hook `around` (HY-97) and the application:
     `around` is None or it receives the request and an `answer` function; `answer` opens the session of the
-    request by its session cookie, answers with `App.respond`, closes the session and returns the response
+    request by its session cookie, answers with `App._respond`, closes the session and returns the response
     with the cookie of a new session first (HY-45). The reply of the last call of `answer` is kept in the
     exchange for the disconnect hook (HY-67, HY-97)."""
 

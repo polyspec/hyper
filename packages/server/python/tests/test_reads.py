@@ -4,8 +4,8 @@
 import unittest
 
 from .contracts import add_cases, file
-from polyspec.hyper.json_codec import encode
-from polyspec.hyper.reads import Reads
+from polyspec.hyper._json_codec import encode
+from polyspec.hyper._reads import Reads
 
 
 class ReadsTest(unittest.TestCase):

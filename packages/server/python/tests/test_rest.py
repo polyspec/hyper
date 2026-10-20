@@ -2,7 +2,7 @@
 # the same cases. Each case is a test method test_<id> (S6).
 import unittest
 
-from polyspec.hyper.router import Router
+from polyspec.hyper._router import Router
 
 from .contracts import add_cases, file
 

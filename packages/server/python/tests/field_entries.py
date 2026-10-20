@@ -1,6 +1,6 @@
 """The fields of a request as the conformance cases of contracts/fields.json state them."""
 
-from polyspec.hyper.fields import Fields
+from polyspec.hyper._fields import Fields
 
 
 def entries(fields: Fields | None) -> list | None:

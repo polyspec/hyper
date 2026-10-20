@@ -30,7 +30,7 @@ class Application:
     def __init__(self):
         self.seen: list[tuple[str, str]] = []
 
-    def respond(self, request, session, started):
+    def _respond(self, request, session, started):
         self.seen.append((request.path(), request.raw_query()))
         return Response(
             200,
@@ -38,7 +38,7 @@ class Application:
             f"{request.path()} {request.raw_query()}",
         ), Reply()
 
-    def disconnected(self, request, started, reply) -> None:
+    def _disconnected(self, request, started, reply) -> None:
         pass
 
 

@@ -10,23 +10,24 @@ import time
 from pathlib import Path
 from typing import Callable, Optional
 
-from . import data_model, json_codec
+from . import _data_model, _json_codec
 from .client import Choice, ClientRendering
 from .container import Container
-from .csrf import masked, verify
-from .data_model import check
-from .kept import apply, select
-from .manifest import Manifest
-from .planner import changed_topics, select as select_regions
+from ._csrf import masked, verify
+from ._data_model import check
+from ._kept import apply, select
+from ._manifest import Manifest
+from ._planner import changed_topics, select as select_regions
 from .reply import Reply
 from .request import Request
 from .response import Response
 from .result import BadRequest, Forbidden, NotFound, Redirect, Result
-from .router import strip_base_path
-from .session import Flash, Session, SessionStore
-from .warnings_guard import warnings_as_errors
+from ._router import strip_base_path
+from ._session import Flash, Session
+from .session import SessionStore
+from ._warnings_guard import warnings_as_errors
 
-FORM_TYPES = ("application/x-www-form-urlencoded", "multipart/form-data")
+_FORM_TYPES = ("application/x-www-form-urlencoded", "multipart/form-data")
 _COOKIE_KEPT = re.compile(r"[a-z][a-z0-9_-]*")
 _KEEP_VALUE_LIMIT = 4096
 
@@ -69,10 +70,10 @@ class App:
         self._client = client
         self._shell = shell
         self.container = Container()
-        from .renderer import Renderer
+        from ._renderer import Renderer
 
         self.renderer = Renderer.open(program, timezone)
-        from .reads import Reads
+        from ._reads import Reads
 
         self.reads = Reads.open(program)
 
@@ -116,7 +117,7 @@ class App:
         if (
             types == []
             or len(set(types)) != len(types)
-            or any(kind not in FORM_TYPES for kind in types)
+            or any(kind not in _FORM_TYPES for kind in types)
         ):
             raise ValueError(
                 "form types must be distinct values of application/x-www-form-urlencoded "
@@ -191,9 +192,9 @@ class App:
         and are logged (HY-43, HY-66). Every response limits framing (HY-45), every failure is not cacheable
         (HY-65), and every response is reported to `on_response` with the milliseconds since `started`, a
         `perf_counter_ns` value of the monotonic clock that defaults to now (HY-60)."""
-        return self.respond(request, store, started)[0]
+        return self._respond(request, store, started)[0]
 
-    def respond(
+    def _respond(
         self, request: Request, store: SessionStore, started: Optional[int] = None
     ) -> tuple[Response, Reply]:
         """Answers one request as `handle` does and returns the response with the reply of the request, which the
@@ -235,7 +236,7 @@ class App:
             )
         return response, reply
 
-    def disconnected(self, request: Request, started: int, reply: Reply) -> None:
+    def _disconnected(self, request: Request, started: int, reply: Reply) -> None:
         """Reports a request whose response could not be written because the client closed the connection to
         `on_disconnect`, with the milliseconds since `started`, a `perf_counter_ns` value (HY-67)."""
         if self._on_disconnect is not None:
@@ -251,7 +252,7 @@ class App:
             return Response.text(400, "Bad Request")
         choice = self._choice(request)
         client = self._client if choice is not None and choice.chosen is True else None
-        request = request.with_selection(None if choice is None else choice.value)
+        request = request._with_selection(None if choice is None else choice.value)
         base_path = self.base_path if client is None else client.base_path
         path = strip_base_path(request.path(), base_path)
         if client is not None and path is None:
@@ -273,13 +274,13 @@ class App:
                 return Response.text(406, "Not Acceptable")
         session = Session(store)
         flash = session.take_flash()
-        request = request.with_route(path, match["params"]).with_session(
+        request = request._with_route(path, match["params"])._with_session(
             flash, masked(session.csrf_token())
         )
 
         return self._routed(
             request, route, handler, session, flash, reply, base_path
-        ).with_cookies(reply, self.https or request.https)
+        )._with_cookies(reply, self.https or request.https)
 
     def _choice(self, request: Request) -> Optional[Choice]:
         """Returns the choice of the client rendering selection for the request, or None without client rendering
@@ -352,10 +353,10 @@ class App:
                 )
             # HY-72: the action renews the session after it returns, and a page that it renders carries the new
             # token.
-            if reply.take_renewal():
+            if reply._take_renewal():
                 session.renew()
-                request = request.with_session(flash, masked(session.csrf_token()))
-            if result.is_redirect():
+                request = request._with_session(flash, masked(session.csrf_token()))
+            if result._is_redirect():
                 return self._redirect(session, result, base_path)
             return _without_renewal(
                 reply,
@@ -471,24 +472,24 @@ class App:
             data[name] = self.reads.region(route["name"], name, region_data)
         kept = self._kept(request, session, data)
         # HY-69: the reply gives a page with status 200 the status 403.
-        if status == 200 and reply.status_value() is not None:
-            status = reply.status_value()
+        if status == 200 and reply._status_value() is not None:
+            status = reply._status_value()
         vary = "Accept, HX-Request, HX-Current-URL"
         if json_request:
-            value = json_codec.value(
+            value = _json_codec.value(
                 self.timezone, route["name"], request.params(), shared, data, kept
             )
             # HY-44: the check above covered the handler data, and a kept value enters only when it belongs to the
             # data model, so only the parameters of the request are checked here.
             check(request.params())
-            body = json_codec.encode(value)
+            body = _json_codec.encode(value)
             headers = {
                 "Content-Type": "application/json; charset=utf-8",
-                "Cache-Control": (reply.cache_control_value() or "no-store")
+                "Cache-Control": (reply._cache_control_value() or "no-store")
                 if status == 200
                 else "no-store",
                 "Vary": vary,
-                **reply.referrer_policy_headers(),
+                **reply._referrer_policy_headers(),
             }
             if status != 200:
                 return Response(status, headers, body)
@@ -512,17 +513,17 @@ class App:
 
         headers = {
             "Content-Type": "text/html; charset=utf-8",
-            "Cache-Control": (reply.cache_control_value() or "no-store")
+            "Cache-Control": (reply._cache_control_value() or "no-store")
             if status == 200
             else "no-store",
             "Vary": vary,
-            **reply.referrer_policy_headers(),
+            **reply._referrer_policy_headers(),
         }
         return Response(
             status,
             headers,
             self._document(
-                request, route, shared, data, templates, kept, reply.embeds_data()
+                request, route, shared, data, templates, kept, reply._embeds_data()
             ),
         )
 
@@ -640,7 +641,7 @@ class App:
         response = None
         if embed and route_region_names != []:
             embedded = {name: data[name] for name in route_region_names}
-            response = json_codec.value(
+            response = _json_codec.value(
                 self.timezone,
                 route["name"],
                 request.params(),
@@ -691,10 +692,10 @@ class App:
         if len(text.encode("utf-8")) > _KEEP_VALUE_LIMIT:
             return Response.text(400, "Bad Request")
         try:
-            decoded = json_codec.decode(text)
-        except json_codec.JsonDecodeError:
+            decoded = _json_codec.decode(text)
+        except _json_codec.JsonDecodeError:
             return Response.text(400, "Bad Request")
-        if not json_codec.in_data_model(decoded) or not data_model.contains(decoded):
+        if not _json_codec.in_data_model(decoded) or not _data_model.contains(decoded):
             return Response.text(400, "Bad Request")
         session.keep(name, path, decoded)
         return Response(204, {}, "")
@@ -755,7 +756,7 @@ def _orm_code(error: Exception) -> str | None:
 def _without_renewal(reply: Reply, response: Response) -> Response:
     """Fails when a loader or the shared handler renewed the session, because the page carries the old token
     (HY-72)."""
-    if reply.take_renewal():
+    if reply._take_renewal():
         raise TypeError(
             "a loader or the shared handler called renewSession; only an action renews the session"
         )
@@ -770,6 +771,6 @@ def _present(route: dict, data: dict) -> list[str]:
 def _decoded_cookie(text: str) -> object:
     """Returns the decoded hy-keep cookie, or None for a cookie that is not JSON (HY-42)."""
     try:
-        return json_codec.decode(text)
-    except json_codec.JsonDecodeError:
+        return _json_codec.decode(text)
+    except _json_codec.JsonDecodeError:
         return None

@@ -1,5 +1,5 @@
 """Serves an application over `http.server` with sessions in files: every request of the socket server goes to
-`App.respond`, as the Node server serves an application over `node:http` (HY-54), through the request hook `around`
+`App._respond`, as the Node server serves an application over `node:http` (HY-54), through the request hook `around`
 when the application gives one (HY-97), and the write hook `written` reports every response whose write ended or
 failed (HY-99). A request that answers a body larger than the body limit reads no more of
 it (HY-59), a new session sets its cookie first (HY-45), a response whose write fails because the client closed the
@@ -17,7 +17,7 @@ from typing import Optional
 
 from .app import App
 from .file_sessions import FileSessions
-from .pipeline import (
+from ._pipeline import (
     Around,
     Written,
     CLOSED,
@@ -36,7 +36,7 @@ from .pipeline import (
 from .request import Request
 from .response import Response
 
-logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
 
 def create_server(
@@ -129,7 +129,7 @@ def create_server(
             except Exception as error:
                 # HY-60: an error that escapes the answer gets the plain 500. The answer runs the hooks of the
                 # application and the session store, which are user code, so no narrower type can name every error.
-                logger.exception("hyper: %s: %s", type(error).__name__, error)
+                _logger.exception("hyper: %s: %s", type(error).__name__, error)
                 self.escape_error(application, error, exchange, None)
                 return
             try:
@@ -144,7 +144,7 @@ def create_server(
             except (OSError, ValueError) as error:
                 # HY-60: a write that fails after the answer, or a header or body that cannot be encoded (a
                 # UnicodeError is a ValueError), is an escaped error.
-                logger.exception("hyper: %s: %s", type(error).__name__, error)
+                _logger.exception("hyper: %s: %s", type(error).__name__, error)
                 self.escape_error(application, error, exchange, response)
                 return
             exchange.report(response, True)

@@ -1,7 +1,7 @@
 # The masked session token beyond the cases of contracts/csrf.json (HY-24).
 import unittest
 
-from polyspec.hyper.csrf import masked, verify
+from polyspec.hyper._csrf import masked, verify
 
 
 class MaskTest(unittest.TestCase):

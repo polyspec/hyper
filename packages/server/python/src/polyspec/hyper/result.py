@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import re
 
-from .data_model import check
+from ._data_model import check
 
 _PATH = re.compile(r"/(?![/\\])[^\x00-\x20\x7f-\x9f\\]*\Z", re.DOTALL)
 
@@ -67,7 +67,7 @@ class Result:
             list(dict.fromkeys([*self.changed_topics, *topics])),
         )
 
-    def is_redirect(self) -> bool:
+    def _is_redirect(self) -> bool:
         """Returns True for a redirect."""
         return self.location is not None
 
@@ -97,7 +97,7 @@ class Redirect(Exception):
     """A loader or an action raises this error to answer the request with the redirect of a result (HY-50)."""
 
     def __init__(self, result: Result):
-        if not result.is_redirect():
+        if not result._is_redirect():
             raise ValueError("a redirect needs a redirect result")
         super().__init__(f"redirect to {result.location}")
         self.result = result

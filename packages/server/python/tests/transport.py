@@ -28,7 +28,7 @@ class Application:
         self.threads: list[int] = []
         self.opens_session = opens_session
 
-    def respond(self, request: Request, session, started: int):
+    def _respond(self, request: Request, session, started: int):
         self.requests.append(request)
         self.threads.append(threading.get_ident())
         if self.opens_session:
@@ -41,7 +41,7 @@ class Application:
             f"{request.method} {request.path()}",
         ), reply
 
-    def disconnected(self, request: Request, started: int, reply) -> None:
+    def _disconnected(self, request: Request, started: int, reply) -> None:
         self.disconnected_calls.append((request, reply))
 
 

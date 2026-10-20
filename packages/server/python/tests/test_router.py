@@ -1,7 +1,7 @@
 # The route paths that a router refuses, beyond the cases of contracts/routes.json and contracts/rest.json (HY-4, HY-49).
 import unittest
 
-from polyspec.hyper.router import Router
+from polyspec.hyper._router import Router
 
 from .contracts import file
 

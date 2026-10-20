@@ -11,7 +11,7 @@ import warnings
 from urllib.parse import urlencode
 
 from polyspec.hyper.app import App
-from polyspec.hyper.csrf import verify
+from polyspec.hyper._csrf import verify
 from polyspec.hyper.reply import Reply
 from polyspec.hyper.request import Request
 from polyspec.hyper.response import Response
@@ -116,7 +116,7 @@ class DocumentTest(FixtureTest):
 
     def test_a_region_rendered_alone_matches_its_part_of_the_document(self) -> None:
         # HY-13
-        from polyspec.hyper.renderer import Renderer
+        from polyspec.hyper._renderer import Renderer
 
         renderer = Renderer.open(str(PROGRAM), "+09:00")
         shared = renderer.bind({"title": "T", "name": "shared"})
@@ -225,7 +225,7 @@ class DocumentTest(FixtureTest):
         self,
     ) -> None:
         # HY-13, HY-30
-        from polyspec.hyper.renderer import Renderer
+        from polyspec.hyper._renderer import Renderer
 
         renderer = Renderer.open(str(PROGRAM), "Z")
         shared = renderer.bind({"title": "T"})

@@ -3,15 +3,11 @@
 import unittest
 from pathlib import Path
 
-from polyspec.hyper import (
-    ArraySession,
-    Flash,
-    Redirect,
-    Reply,
-    Request,
-    Result,
-    Session,
-)
+from polyspec.hyper.reply import Reply
+from polyspec.hyper.request import Request
+from polyspec.hyper.result import Redirect, Result
+from polyspec.hyper._session import Flash, Session
+from polyspec.hyper.session import ArraySession
 
 FIXTURES = Path(__file__).resolve().parents[2] / "php" / "tests" / "fixtures"
 
@@ -98,7 +94,7 @@ class RequestValuesTest(unittest.TestCase):
             b"name=n",
             cookies={"c": "v"},
             https=True,
-        ).with_selection("s")
+        )._with_selection("s")
         copy = request.with_header("accept", "application/json").with_header(
             "X-Request-Id", "r1"
         )
@@ -120,7 +116,7 @@ class RequestValuesTest(unittest.TestCase):
         )
 
     def test_the_selection_of_a_request(self) -> None:
-        request = Request("GET", "/x").with_selection({"host": "a.test"})
+        request = Request("GET", "/x")._with_selection({"host": "a.test"})
         self.assertEqual({"host": "a.test"}, request.selection())
         self.assertIsNone(Request("GET", "/x").selection())
 
@@ -169,18 +165,18 @@ class ReplyTest(unittest.TestCase):
         reply.cookie("session", "v", 60)
         self.assertEqual(
             ["session=v; Path=/; HttpOnly; SameSite=Lax; Max-Age=60"],
-            reply.cookie_headers(False),
+            reply._cookie_headers(False),
         )
         self.assertEqual(
             ["session=v; Path=/; HttpOnly; SameSite=Lax; Secure; Max-Age=60"],
-            reply.cookie_headers(True),
+            reply._cookie_headers(True),
         )
 
     def test_a_removed_cookie_has_an_empty_value_and_max_age_zero(self) -> None:
         reply = Reply().remove_cookie("session")
         self.assertEqual(
             ["session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0"],
-            reply.cookie_headers(False),
+            reply._cookie_headers(False),
         )
 
     def test_a_cache_control_that_a_shared_cache_may_store_fails(self) -> None:
@@ -192,7 +188,7 @@ class ReplyTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             reply.cache_control("private, s-maxage=60")
         reply.cache_control("private, max-age=60")
-        self.assertEqual("private, max-age=60", reply.cache_control_value())
+        self.assertEqual("private, max-age=60", reply._cache_control_value())
 
     def test_a_referrer_policy_is_a_token_of_the_specification(self) -> None:
         for value in [
@@ -206,9 +202,9 @@ class ReplyTest(unittest.TestCase):
             "unsafe-url",
         ]:
             self.assertEqual(
-                value, Reply().referrer_policy(value).referrer_policy_value(), value
+                value, Reply().referrer_policy(value)._referrer_policy_value(), value
             )
-        self.assertIsNone(Reply().referrer_policy_value())
+        self.assertIsNone(Reply()._referrer_policy_value())
         for value in [
             "",
             "none",
@@ -225,12 +221,12 @@ class ReplyTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             reply.status(401)
         reply.status(403)
-        self.assertEqual(403, reply.status_value())
+        self.assertEqual(403, reply._status_value())
 
     def test_a_renewal_is_taken_once(self) -> None:
         reply = Reply().renew_session()
-        self.assertTrue(reply.take_renewal())
-        self.assertFalse(reply.take_renewal())
+        self.assertTrue(reply._take_renewal())
+        self.assertFalse(reply._take_renewal())
 
     def test_a_note_of_the_same_name_replaces_its_value(self) -> None:
         reply = Reply().note("a", 1).note("b", 2).note("a", 3)
@@ -250,7 +246,7 @@ class SessionTest(unittest.TestCase):
         token = session.csrf_token()
         session.renew()
         self.assertNotEqual(token, session.csrf_token())
-        self.assertEqual(1, store.renewals())
+        self.assertEqual(1, store._renewal_count())
 
     def test_flash_values_are_taken_once(self) -> None:
         session = Session(ArraySession())

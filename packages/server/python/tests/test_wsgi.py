@@ -62,7 +62,7 @@ class WsgiTest(TransportCase):
         once to the write hook, and returns the failure that the hook received."""
         written = []
         app = Application()
-        app.respond = lambda request, session, started: (response, Reply())
+        app._respond = lambda request, session, started: (response, Reply())
         application = create_wsgi(
             app,
             self.sessions,
@@ -364,7 +364,7 @@ class WsgiTest(TransportCase):
         # start_response.
         heads = []
         app = Application()
-        app.respond = lambda request, session, started: (
+        app._respond = lambda request, session, started: (
             Response(200, {"X-Euro": "a\u20ac"}, "x"),
             Reply(),
         )
@@ -410,7 +410,7 @@ class WsgiTest(TransportCase):
     ) -> None:
         # HY-99: a 204 response has an empty body; its write ends when the server consumes the iterable, not at return.
         class NoContent(Application):
-            def respond(self, request, session, started):
+            def _respond(self, request, session, started):
                 return Response(204, {}, ""), Reply()
 
         written = []

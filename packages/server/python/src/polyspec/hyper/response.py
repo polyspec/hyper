@@ -22,9 +22,9 @@ class Response:
         """Returns a copy with one more header."""
         return Response(self.status, {**self.headers, name: value}, self.body)
 
-    def with_cookies(self, reply: Reply, secure: bool) -> "Response":
+    def _with_cookies(self, reply: Reply, secure: bool) -> "Response":
         """Returns a copy with the cookies of a reply, when it has any (HY-52)."""
-        cookies = reply.cookie_headers(secure)
+        cookies = reply._cookie_headers(secure)
         return (
             self
             if cookies == []

@@ -4,7 +4,7 @@ import json
 import unittest
 from urllib.parse import urlencode
 
-from polyspec.hyper.csrf import masked
+from polyspec.hyper._csrf import masked
 from polyspec.hyper.request import Request
 from polyspec.hyper.session import ArraySession
 

@@ -14,7 +14,7 @@ from typing import Callable, Optional, Union
 
 from .app import App
 from .file_sessions import FileSessions
-from .pipeline import (
+from ._pipeline import (
     CONTENT_TYPES,
     Around,
     Written,
@@ -33,7 +33,7 @@ from .response import Response
 
 
 @dataclass
-class FileResponse:
+class _FileResponse:
     """A file of the public directory that the callable sends before `around` (HY-100)."""
 
     headers: list[tuple[bytes, bytes]]
@@ -65,7 +65,7 @@ def create_asgi(
         exchange = Exchange(written, started)
         failure: Optional[str] = None
         try:
-            result: Union[Response, FileResponse] = await _answer(
+            result: Union[Response, _FileResponse] = await _answer(
                 app, sessions, around, files, scope, receive, exchange
             )
         except Exception as error:  # noqa: BLE001 - HY-60: an error that escapes the answer gets the plain 500
@@ -75,7 +75,7 @@ def create_asgi(
             # HY-99: a cancellation before the answer ends the request before a response started: a null response.
             exchange.report(None, False)
             raise
-        if isinstance(result, FileResponse):
+        if isinstance(result, _FileResponse):
             await send(
                 {
                     "type": "http.response.start",
@@ -137,7 +137,7 @@ async def _answer(
     scope: dict,
     receive: Callable,
     exchange: Exchange,
-) -> Union[Response, FileResponse]:
+) -> Union[Response, _FileResponse]:
     """Answers the request of the scope: a file of the public directory, or the application through `around` in a
     worker thread (HY-100). The request as received is kept in the exchange before the body is read (HY-60)."""
     method = scope["method"]
@@ -155,7 +155,7 @@ async def _answer(
     if served is not None:
         # HY-100: the files of the public directory are served before `around`; no hook runs.
         data = served.read_bytes()
-        return FileResponse(
+        return _FileResponse(
             [
                 (
                     b"content-type",

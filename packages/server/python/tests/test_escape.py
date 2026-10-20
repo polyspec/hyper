@@ -20,11 +20,11 @@ class FailingApplication:
     def __init__(self):
         self.responds = 0
 
-    def respond(self, request, session, started):
+    def _respond(self, request, session, started):
         self.responds += 1
         raise RuntimeError("hook boom")
 
-    def disconnected(self, request, started, reply) -> None:
+    def _disconnected(self, request, started, reply) -> None:
         pass
 
 
@@ -35,19 +35,19 @@ class AnsweringApplication:
     frame_ancestors = "'self'"
     body_limit = 1024
 
-    def respond(self, request, session, started):
+    def _respond(self, request, session, started):
         return Response(
             200, {"Content-Type": ["text/plain; charset=utf-8"]}, "page"
         ), Reply()
 
-    def disconnected(self, request, started, reply) -> None:
+    def _disconnected(self, request, started, reply) -> None:
         pass
 
 
 class BrokenSessions:
     """A session store that fails to open, before the application and `around` run (HY-60)."""
 
-    def open(self, identifier):
+    def _open(self, identifier):
         raise OSError("the session directory is gone")
 
 

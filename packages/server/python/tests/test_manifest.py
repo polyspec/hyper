@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from polyspec.hyper.manifest import Manifest
+from polyspec.hyper._manifest import Manifest
 
 FIXTURES = Path(__file__).resolve().parents[2] / "php" / "tests" / "fixtures"
 

@@ -14,7 +14,7 @@ from typing import Callable, Optional, Union
 
 from .app import App
 from .file_sessions import FileSessions
-from .pipeline import (
+from ._pipeline import (
     Around,
     Written,
     CONTENT_TYPES,
@@ -34,7 +34,7 @@ from .response import Response
 
 
 @dataclass
-class FileResponse:
+class _FileResponse:
     """A file of the public directory that the callable serves before `around` (HY-100)."""
 
     headers: list[tuple[str, str]]
@@ -62,13 +62,13 @@ def create_wsgi(
         started = time.perf_counter_ns()
         exchange = Exchange(written, started)
         try:
-            result: Union[Response, FileResponse] = _answer(
+            result: Union[Response, _FileResponse] = _answer(
                 app, sessions, around, files, environ, exchange
             )
         except Exception as error:  # noqa: BLE001 - HY-60: an error that escapes the answer gets the plain 500
             return _escape(app, exchange, error, start_response)
-        if isinstance(result, FileResponse):
-            start_response(status(200), result.headers)
+        if isinstance(result, _FileResponse):
+            start_response(_status(200), result.headers)
             return [result.data]
         try:
             line, headers, encoded = _encode(result)
@@ -130,7 +130,7 @@ def _encode(response: Response) -> tuple[str, list[tuple[str, str]], bytes]:
         f"{name}: {value}".encode("latin-1")
     if not empty:
         headers.append(("Content-Length", str(len(encoded))))
-    return status(response.status), headers, encoded
+    return _status(response.status), headers, encoded
 
 
 def _escape(
@@ -161,7 +161,7 @@ def _answer(
     files: Optional[str],
     environ: dict,
     exchange: Exchange,
-) -> Union[Response, FileResponse]:
+) -> Union[Response, _FileResponse]:
     """Answers the request of the environ: a file of the public directory, or the application through `around`.
     The request as received is kept in the exchange before the body is read (HY-60)."""
     method = environ["REQUEST_METHOD"]
@@ -179,7 +179,7 @@ def _answer(
     if served is not None:
         # HY-100: the files of the public directory are served before `around`; no hook runs.
         data = served.read_bytes()
-        return FileResponse(
+        return _FileResponse(
             [
                 (
                     "Content-Type",
@@ -219,7 +219,7 @@ def _request_target(environ: dict) -> str:
     )
 
 
-def status(code: int) -> str:
+def _status(code: int) -> str:
     """The status line of a response code, as PEP 3333 writes it."""
     return f"{code} {HTTPStatus(code).phrase}"
 

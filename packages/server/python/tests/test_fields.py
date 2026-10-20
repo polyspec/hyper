@@ -1,7 +1,7 @@
 # Query and form values beyond the conformance cases of contracts/fields.json (HY-56, HY-57).
 import unittest
 
-from polyspec.hyper.fields import Fields
+from polyspec.hyper._fields import Fields
 
 from .field_entries import entries
 

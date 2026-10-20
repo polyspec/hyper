@@ -7,8 +7,8 @@ from __future__ import annotations
 import re
 from typing import Optional
 
-from .fields import Fields
-from .session import Flash
+from ._fields import Fields
+from ._session import Flash
 
 _PRINTABLE = re.compile(r"[\x21-\x7e]*\Z")
 _AUTHORITY = re.compile(r"^([A-Za-z][A-Za-z0-9+.-]*:)?//[^/?#]*")
@@ -52,11 +52,11 @@ class Request:
         # The form values of the body, or None when a name or a value is not UTF-8 (HY-42, HY-57).
         self._form_fields = Fields.from_body(self.header("Content-Type") or "", body)
 
-    def with_session(self, flash: Flash, csrf_token: str) -> "Request":
+    def _with_session(self, flash: Flash, csrf_token: str) -> "Request":
         """Returns a copy that carries the flash values and the CSRF token of the session."""
         return self._copy(flash=flash.values, csrf_token=csrf_token)
 
-    def with_route(self, path: str, params: dict[str, str]) -> "Request":
+    def _with_route(self, path: str, params: dict[str, str]) -> "Request":
         """Returns a copy with the routed path (base path removed) and the route parameters."""
         return self._copy(path=path, params=params)
 
@@ -65,7 +65,7 @@ class Request:
         (HY-97)."""
         return self._copy(headers={**self._headers, name.lower(): value})
 
-    def with_selection(self, value: object) -> "Request":
+    def _with_selection(self, value: object) -> "Request":
         """Returns a copy that carries the value of the choice of the client rendering selection (HY-62)."""
         return self._copy(selection=value)
 
