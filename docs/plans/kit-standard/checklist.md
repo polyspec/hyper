@@ -38,3 +38,4 @@
 | H25.31 | R3: fields-urlencoded and fields-multipart hold in every server | The test files of the fields cases of the three servers, config/parity.json | `make parity-check UNITS="fields-urlencoded fields-multipart fields-values"` | [o] |
 | H25.32 | R3: json-encode and json-decode hold in every server | The test files of the json cases of the three servers, config/parity.json | `make parity-check UNITS="json-encode json-decode json-values"` | [o] |
 | H25.33 | Every PHP platform of hyper is 8.4.1 | composer.json, examples/board/composer.json, packages/server/php/composer.json, tests/release-install/composer/composer.json and config/dependency-policy.json | `make dependency-policy-check` | [o] |
+| H25.34 | R3: csrf-mask and csrf-verify hold in every server | The test files of the csrf cases of the three servers, config/parity.json | `make parity-check UNITS="csrf-mask csrf-verify csrf-values"` | [o] |

@@ -208,11 +208,11 @@
         },
         {
           "implementation": "python",
-          "test": "packages/server/python/tests/test_csrf.py"
+          "test": "packages/server/python/tests/test_csrf_mask.py"
         },
         {
           "implementation": "ts",
-          "test": "packages/server/ts/tests/csrf.test.ts"
+          "test": "packages/server/ts/tests/csrf-mask.test.ts"
         }
       ],
       "requirements": [
@@ -232,11 +232,11 @@
         },
         {
           "implementation": "python",
-          "test": "packages/server/python/tests/test_csrf.py"
+          "test": "packages/server/python/tests/test_csrf_verify.py"
         },
         {
           "implementation": "ts",
-          "test": "packages/server/ts/tests/csrf.test.ts"
+          "test": "packages/server/ts/tests/csrf-verify.test.ts"
         }
       ],
       "requirements": [
@@ -1008,6 +1008,30 @@
       "requirements": [
         "HY-17",
         "HY-44"
+      ]
+    },
+    {
+      "id": "csrf-values",
+      "kind": "feature",
+      "bindings": [
+        {
+          "implementation": "php",
+          "test": "packages/server/php/tests/CsrfTest.php",
+          "id": "CsrfTest::testDrawsANewMaskForEveryValue"
+        },
+        {
+          "implementation": "python",
+          "test": "packages/server/python/tests/test_csrf.py",
+          "id": "test_a_new_mask_has_128_lowercase_digits"
+        },
+        {
+          "implementation": "ts",
+          "test": "packages/server/ts/tests/csrf.test.ts",
+          "id": "draws a new mask for every value (HY-24)"
+        }
+      ],
+      "requirements": [
+        "HY-24"
       ]
     }
   ],
