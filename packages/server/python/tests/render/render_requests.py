@@ -159,6 +159,15 @@ class DocumentTest(FixtureTest):
             {"timezone": "+09:00"}, self.body(self.get("/items/7", JSON))["env"]
         )
 
+    def test_the_session_token_itself_is_never_sent(self) -> None:
+        # HY-71: the masked token is shared data, but the session token is not part of any answer.
+        document = self.get("/list")
+        as_json = self.get("/list", JSON)
+        token = self.session_token()
+        self.assertNotIn(token, document.body)
+        self.assertNotIn(token, as_json.body)
+        self.assertRegex(as_json.body, r"[0-9a-f]{128}")
+
     def test_a_region_request_returns_the_protocol_shape(self) -> None:
         # HY-17, HY-18, HY-73: no template of the route reads csrf and no route region keeps a value on the server.
         response = self.get("/items/a%20b", JSON)

@@ -8,7 +8,7 @@ use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
 use Polyspec\Hyper\NativeSession;
 
-/** HY-45, HY-72: the PHP session starts only when a request reads or writes session data, under the name that hyper sets. */
+/** HY-45, HY-72, HY-104: the PHP session starts only when a request reads or writes session data, under the name that hyper sets. */
 final class NativeSessionTest extends TestCase
 {
     #[RunInSeparateProcess]
@@ -60,5 +60,56 @@ final class NativeSessionTest extends TestCase
 
         self::assertNotSame($old, session_id());
         self::assertSame(1, $store->get('a'));
+    }
+
+    /** HY-104: the lock of the session file serializes the requests of one session, so no update is lost. */
+    public function testProcessesThatWriteOneSessionLoseNoUpdate(): void
+    {
+        $directory = sys_get_temp_dir() . '/hyper-session-' . bin2hex(random_bytes(6));
+        mkdir($directory);
+        try {
+            $created = self::writers($directory, null, 1);
+            $identifier = $created[0];
+            self::writers($directory, $identifier, 4);
+
+            self::assertStringContainsString('n|i:5;', (string) file_get_contents("{$directory}/sess_{$identifier}"));
+        } finally {
+            array_map('unlink', glob("{$directory}/*") ?: []);
+            rmdir($directory);
+        }
+    }
+
+    /**
+     * Runs `$count` processes of the session writer at the same time and returns the session identifier that each
+     * printed.
+     *
+     * @return list<string>
+     */
+    private static function writers(string $directory, ?string $identifier, int $count): array
+    {
+        $env = [...getenv(), 'HYPER_SESSION_DIRECTORY' => $directory];
+        if ($identifier !== null) {
+            $env['HYPER_SESSION_ID'] = $identifier;
+        }
+        $processes = [];
+        for ($index = 0; $index < $count; $index++) {
+            $process = proc_open(
+                [PHP_BINARY, __DIR__ . '/Support/session-writer.php'],
+                [0 => ['file', '/dev/null', 'r'], 1 => ['pipe', 'w'], 2 => ['file', '/dev/null', 'w']],
+                $pipes,
+                null,
+                $env,
+            );
+            self::assertIsResource($process);
+            $processes[] = [$process, $pipes[1]];
+        }
+        $identifiers = [];
+        foreach ($processes as [$process, $output]) {
+            $identifiers[] = (string) stream_get_contents($output);
+            fclose($output);
+            proc_close($process);
+        }
+
+        return $identifiers;
     }
 }

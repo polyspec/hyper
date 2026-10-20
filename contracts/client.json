@@ -1,4 +1,5 @@
 {
+  "requirements": ["HY-24", "HY-43", "HY-62"],
   "basePath": "/_props",
   "chosenHost": "client.test",
   "cases": [

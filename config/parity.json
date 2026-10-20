@@ -74,6 +74,10 @@
     {
       "root": "packages/client/tests",
       "reason": "the tests of the browser package, which is a separate component and not an implementation of the server spec (HR-98); they belong to the package itself"
+    },
+    {
+      "root": "tests/python_package",
+      "reason": "the package-data test of the Python distribution polyspec-hyper-server, which checks its pyproject.toml and its py.typed marker and implements no contract of the protocol"
     }
   ],
   "testPatterns": [
@@ -261,6 +265,9 @@
       ],
       "requirements": [
         "HY-4",
+        "HY-5",
+        "HY-6",
+        "HY-7",
         "HY-8",
         "HY-9",
         "HY-49"
@@ -288,6 +295,9 @@
       ],
       "requirements": [
         "HY-4",
+        "HY-5",
+        "HY-6",
+        "HY-7",
         "HY-8",
         "HY-9",
         "HY-49"
@@ -306,7 +316,7 @@
         },
         {
           "implementation": "python",
-          "test": "packages/server/python/tests/test_router.py"
+          "test": "packages/server/python/tests/test_rest.py"
         },
         {
           "implementation": "ts",
@@ -315,7 +325,7 @@
       ],
       "requirements": [
         "HY-4",
-        "HY-8",
+        "HY-5",
         "HY-9",
         "HY-49"
       ]
@@ -341,7 +351,6 @@
         }
       ],
       "requirements": [
-        "HY-37",
         "HY-38",
         "HY-41"
       ]
@@ -393,9 +402,562 @@
       "requirements": [
         "HY-24",
         "HY-43",
-        "HY-45",
-        "HY-60",
         "HY-62"
+      ]
+    },
+    {
+      "id": "manifest",
+      "kind": "feature",
+      "bindings": [
+        {
+          "implementation": "php",
+          "test": "packages/server/php/tests/AppTest.php",
+          "id": "AppTest::testManifestRejectsInvalidKeep"
+        },
+        {
+          "implementation": "python",
+          "test": "packages/server/python/tests/test_manifest.py",
+          "id": "test_a_manifest_region_cannot_keep_values"
+        },
+        {
+          "implementation": "ts",
+          "test": "packages/server/ts/tests/app.test.ts",
+          "id": "App › rejects manifests with invalid keep declarations (HY-37, HY-40)"
+        }
+      ],
+      "requirements": [
+        "HY-1",
+        "HY-2",
+        "HY-37"
+      ]
+    },
+    {
+      "id": "document",
+      "kind": "feature",
+      "bindings": [
+        {
+          "implementation": "php",
+          "test": "packages/server/php/tests/AppTest.php",
+          "id": "AppTest::testHtmlRequestRendersTheDocument"
+        },
+        {
+          "implementation": "python",
+          "test": "packages/server/python/tests/render/render_requests.py",
+          "id": "test_an_html_request_renders_the_document"
+        },
+        {
+          "implementation": "ts",
+          "test": "packages/server/ts/tests/app.test.ts",
+          "id": "App › renders the document for an HTML request without embedded data when the route has no route region (HY-3, HY-12, HY-15, HY-31)"
+        }
+      ],
+      "requirements": [
+        "HY-3",
+        "HY-10",
+        "HY-11",
+        "HY-12",
+        "HY-13",
+        "HY-14",
+        "HY-15",
+        "HY-18",
+        "HY-19",
+        "HY-30",
+        "HY-31",
+        "HY-75",
+        "HY-92"
+      ]
+    },
+    {
+      "id": "actions",
+      "kind": "feature",
+      "bindings": [
+        {
+          "implementation": "php",
+          "test": "packages/server/php/tests/AppTest.php",
+          "id": "AppTest::testSuccessfulActionRedirectsAndPassesFlashAndTopicsOnce"
+        },
+        {
+          "implementation": "python",
+          "test": "packages/server/python/tests/render/render_requests.py",
+          "id": "test_a_successful_action_redirects_and_passes_flash_and_topics_once"
+        },
+        {
+          "implementation": "ts",
+          "test": "packages/server/ts/tests/app.test.ts",
+          "id": "App › redirects after a successful action and passes flash values and topics once (HY-25)"
+        }
+      ],
+      "requirements": [
+        "HY-25",
+        "HY-26",
+        "HY-27",
+        "HY-50",
+        "HY-51",
+        "HY-58",
+        "HY-69"
+      ]
+    },
+    {
+      "id": "response-headers",
+      "kind": "feature",
+      "bindings": [
+        {
+          "implementation": "php",
+          "test": "packages/server/php/tests/AppTest.php",
+          "id": "AppTest::testJsonResponsesHaveATagAndMatchingRequestsGet304"
+        },
+        {
+          "implementation": "python",
+          "test": "packages/server/python/tests/render/render_requests.py",
+          "id": "test_a_json_response_has_a_tag_and_a_matching_request_gets_304"
+        },
+        {
+          "implementation": "ts",
+          "test": "packages/server/ts/tests/app.test.ts",
+          "id": "App › tags JSON responses and answers a matching request with 304 (HY-53)"
+        }
+      ],
+      "requirements": [
+        "HY-52",
+        "HY-53",
+        "HY-65",
+        "HY-103"
+      ]
+    },
+    {
+      "id": "limits",
+      "kind": "feature",
+      "bindings": [
+        {
+          "implementation": "php",
+          "test": "packages/server/php/tests/AppTest.php",
+          "id": "AppTest::testBodyLimitMediaTypeAndTokenAreCheckedInThisOrder"
+        },
+        {
+          "implementation": "python",
+          "test": "packages/server/python/tests/render/render_requests.py",
+          "id": "test_the_body_limit_the_media_type_and_the_token_are_checked_in_order"
+        },
+        {
+          "implementation": "ts",
+          "test": "packages/server/ts/tests/app.test.ts",
+          "id": "App › checks the body limit, the media type and the token in this order (HY-59)"
+        }
+      ],
+      "requirements": [
+        "HY-59",
+        "HY-66"
+      ]
+    },
+    {
+      "id": "data-public",
+      "kind": "feature",
+      "bindings": [
+        {
+          "implementation": "php",
+          "test": "packages/server/php/tests/AppTest.php",
+          "id": "AppTest::testTheSessionTokenItselfIsNeverSent"
+        },
+        {
+          "implementation": "python",
+          "test": "packages/server/python/tests/render/render_requests.py",
+          "id": "test_the_session_token_itself_is_never_sent"
+        },
+        {
+          "implementation": "ts",
+          "test": "packages/server/ts/tests/app.test.ts",
+          "id": "App › sends the masked token and never the session token itself (HY-71)"
+        }
+      ],
+      "requirements": [
+        "HY-71"
+      ]
+    },
+    {
+      "id": "runtime-warnings",
+      "kind": "feature",
+      "bindings": [
+        {
+          "implementation": "php",
+          "test": "packages/server/php/tests/RunTest.php",
+          "id": "RunTest::testWarningsNoticesAndDeprecationsFailTheRequest"
+        },
+        {
+          "implementation": "python",
+          "test": "packages/server/python/tests/render/render_requests.py",
+          "id": "test_a_warning_of_the_runtime_fails_the_request"
+        },
+        {
+          "implementation": "ts",
+          "test": "packages/server/ts/tests/app.test.ts",
+          "id": "App › fails a request that emits a process warning with the warning, and emits the warning as before outside of a request (HY-74, HY-43)"
+        }
+      ],
+      "requirements": [
+        "HY-74"
+      ]
+    },
+    {
+      "id": "build-outputs",
+      "kind": "feature",
+      "bindings": [
+        {
+          "implementation": "php",
+          "test": "packages/server/php/tests/RendererTest.php",
+          "id": "RendererTest::testNamesTheFirstMissingFileOfAProgram"
+        },
+        {
+          "implementation": "python",
+          "test": "packages/server/python/tests/render/render_app.py",
+          "id": "test_a_missing_program_names_the_missing_file"
+        },
+        {
+          "implementation": "ts",
+          "test": "packages/server/ts/tests/app.test.ts",
+          "id": "App › opens only when every output of the build exists and names the first missing one (HY-48)"
+        }
+      ],
+      "requirements": [
+        "HY-48"
+      ]
+    },
+    {
+      "id": "request-values",
+      "kind": "feature",
+      "bindings": [
+        {
+          "implementation": "php",
+          "test": "packages/server/php/tests/RequestTest.php",
+          "id": "RequestTest::testInvalidUtf8KeysAreRejectedAtAnyDepth"
+        },
+        {
+          "implementation": "python",
+          "test": "packages/server/python/tests/test_modules.py",
+          "id": "test_a_query_that_is_not_utf8_is_invalid_input"
+        },
+        {
+          "implementation": "ts",
+          "test": "packages/server/ts/tests/request.test.ts",
+          "id": "Request › rejects names and values that are not UTF-8 (HY-42)"
+        }
+      ],
+      "requirements": [
+        "HY-42"
+      ]
+    },
+    {
+      "id": "request-target-hosts",
+      "kind": "feature",
+      "bindings": [
+        {
+          "implementation": "php",
+          "test": "packages/server/php/tests/AppTest.php",
+          "id": "AppTest::testInvalidUtf8IsRejectedBeforeLoadersAndActions"
+        },
+        {
+          "implementation": "python",
+          "test": "packages/server/python/tests/test_request_target.py",
+          "id": "test_the_three_transports_give_equal_requests_and_responses"
+        },
+        {
+          "implementation": "ts",
+          "test": "packages/server/ts/tests/http.test.ts",
+          "id": "App.server › answers a request target with a byte outside ASCII with a plain 400 (HY-42)"
+        }
+      ],
+      "requirements": [
+        "HY-42"
+      ]
+    },
+    {
+      "id": "result-values",
+      "kind": "feature",
+      "bindings": [
+        {
+          "implementation": "php",
+          "test": "packages/server/php/tests/ResultTest.php",
+          "id": "ResultTest::testAcceptsApplicationPaths"
+        },
+        {
+          "implementation": "python",
+          "test": "packages/server/python/tests/test_modules.py",
+          "id": "test_a_redirect_location_must_be_an_application_path"
+        },
+        {
+          "implementation": "ts",
+          "test": "packages/server/ts/tests/result.test.ts",
+          "id": "Result › accepts application paths"
+        }
+      ],
+      "requirements": [
+        "HY-46"
+      ]
+    },
+    {
+      "id": "reply-values",
+      "kind": "feature",
+      "bindings": [
+        {
+          "implementation": "php",
+          "test": "packages/server/php/tests/ReplyTest.php",
+          "id": "ReplyTest::testAcceptsEachTokenOfTheReferrerPolicySpecification"
+        },
+        {
+          "implementation": "python",
+          "test": "packages/server/python/tests/test_modules.py",
+          "id": "test_a_referrer_policy_is_a_token_of_the_specification"
+        },
+        {
+          "implementation": "ts",
+          "test": "packages/server/ts/tests/reply.test.ts",
+          "id": "Reply › accepts each token of the Referrer-Policy specification (HY-103)"
+        }
+      ],
+      "requirements": [
+        "HY-52",
+        "HY-103"
+      ]
+    },
+    {
+      "id": "services",
+      "kind": "feature",
+      "bindings": [
+        {
+          "implementation": "php",
+          "test": "packages/server/php/tests/ContainerTest.php",
+          "id": "ContainerTest::testCreatesAServiceOnceOnItsFirstUse"
+        },
+        {
+          "implementation": "python",
+          "test": "packages/server/python/tests/test_container.py",
+          "id": "test_creates_a_service_once_on_its_first_use"
+        },
+        {
+          "implementation": "ts",
+          "test": "packages/server/ts/tests/services.test.ts",
+          "id": "Services › creates a service once, on its first use"
+        }
+      ],
+      "requirements": [
+        "HY-105"
+      ]
+    },
+    {
+      "id": "session-cookie",
+      "kind": "feature",
+      "bindings": [
+        {
+          "implementation": "php",
+          "test": "packages/server/php/tests/NativeSessionTest.php",
+          "id": "NativeSessionTest::testNamesTheCookieHySessionOverHttp"
+        },
+        {
+          "implementation": "python",
+          "test": "packages/server/python/tests/test_file_sessions.py",
+          "id": "test_names_the_session_cookie_hy_session_over_http_and_host_prefixed_over_https"
+        },
+        {
+          "implementation": "ts",
+          "test": "packages/server/ts/tests/sessions.test.ts",
+          "id": "FileSessions › names the session cookie hy-session over HTTP and __Host-hy-session over HTTPS (HY-45)"
+        }
+      ],
+      "requirements": [
+        "HY-45"
+      ]
+    },
+    {
+      "id": "session-renewal",
+      "kind": "feature",
+      "bindings": [
+        {
+          "implementation": "php",
+          "test": "packages/server/php/tests/NativeSessionTest.php",
+          "id": "NativeSessionTest::testRenewsTheIdentifierAndKeepsTheValues"
+        },
+        {
+          "implementation": "python",
+          "test": "packages/server/python/tests/test_file_sessions.py",
+          "id": "test_renews_a_session_with_the_same_values_and_no_file_of_the_old_one"
+        },
+        {
+          "implementation": "ts",
+          "test": "packages/server/ts/tests/sessions.test.ts",
+          "id": "FileSessions › renews a session: a new identifier with the same values, and no file of the old one (HY-72)"
+        }
+      ],
+      "requirements": [
+        "HY-72"
+      ]
+    },
+    {
+      "id": "session-writes",
+      "kind": "feature",
+      "bindings": [
+        {
+          "implementation": "php",
+          "test": "packages/server/php/tests/NativeSessionTest.php",
+          "id": "NativeSessionTest::testProcessesThatWriteOneSessionLoseNoUpdate"
+        },
+        {
+          "implementation": "python",
+          "test": "packages/server/python/tests/test_file_sessions.py",
+          "id": "test_two_processes_writing_one_session_do_not_fail"
+        },
+        {
+          "implementation": "ts",
+          "test": "packages/server/ts/tests/sessions-race.test.ts",
+          "id": "FileSessions with two writers of one session › does not fail the write of one session when the other write renames its file first (HY-104)"
+        }
+      ],
+      "requirements": [
+        "HY-104"
+      ]
+    },
+    {
+      "id": "request-hook",
+      "kind": "feature",
+      "bindings": [
+        {
+          "implementation": "php",
+          "test": "packages/server/php/tests/RunTest.php",
+          "id": "RunTest::testAroundAloneWritesItsResponse"
+        },
+        {
+          "implementation": "python",
+          "test": "packages/server/python/tests/render/render_server.py",
+          "id": "test_around_changes_the_request_and_the_response"
+        },
+        {
+          "implementation": "ts",
+          "test": "packages/server/ts/tests/http.test.ts",
+          "id": "the request hook around › runs the application for the request that around passes to answer, and sends the response that around returns (HY-97)"
+        }
+      ],
+      "requirements": [
+        "HY-97"
+      ]
+    },
+    {
+      "id": "write-hook",
+      "kind": "feature",
+      "bindings": [
+        {
+          "implementation": "php",
+          "test": "packages/server/php/tests/RunTest.php",
+          "id": "RunTest::testTheWriteHookReportsAnAnsweredRequestAsEnded"
+        },
+        {
+          "implementation": "python",
+          "test": "packages/server/python/tests/test_asgi.py",
+          "id": "test_the_request_reaches_the_application"
+        },
+        {
+          "implementation": "ts",
+          "test": "packages/server/ts/tests/http.test.ts",
+          "id": "the write hook and App.listener › calls the write hook once after the close of the response, with the response that it wrote and ended true (HY-99)"
+        }
+      ],
+      "requirements": [
+        "HY-99"
+      ]
+    },
+    {
+      "id": "disconnect-hook",
+      "kind": "feature",
+      "bindings": [
+        {
+          "implementation": "php",
+          "test": "packages/server/php/tests/RunTest.php",
+          "id": "RunTest::testRunCallsTheDisconnectHookWhenTheClientClosedTheConnection"
+        },
+        {
+          "implementation": "python",
+          "test": "packages/server/python/tests/render/render_server.py",
+          "id": "test_a_client_that_closed_the_connection_is_reported_once_after_the_response_hook"
+        },
+        {
+          "implementation": "ts",
+          "test": "packages/server/ts/tests/http.test.ts",
+          "id": "App.server › stops a request whose client closes the connection and calls the disconnect hook (HY-67)"
+        }
+      ],
+      "requirements": [
+        "HY-67"
+      ]
+    },
+    {
+      "id": "host-interface",
+      "kind": "feature",
+      "bindings": [
+        {
+          "implementation": "php",
+          "test": "packages/server/php/tests/RunTest.php",
+          "id": "RunTest::testRunTurnsOffErrorOutputAndTheDefaultContentType"
+        },
+        {
+          "implementation": "python",
+          "test": "packages/server/python/tests/test_wsgi.py",
+          "id": "test_the_request_reaches_the_application"
+        },
+        {
+          "implementation": "ts",
+          "test": "packages/server/ts/tests/http.test.ts",
+          "id": "the write hook and App.listener › App.listener returns the request listener of the application (HY-100)"
+        }
+      ],
+      "requirements": [
+        "HY-100"
+      ]
+    },
+    {
+      "id": "escaped-error",
+      "kind": "feature",
+      "bindings": [
+        {
+          "implementation": "php",
+          "test": "packages/server/php/tests/RunTest.php",
+          "id": "RunTest::testAnUncaughtExceptionAfterTheResponseHookWritesThePlain500AndReportsItToTheWriteHook"
+        },
+        {
+          "implementation": "python",
+          "test": "packages/server/python/tests/test_escape.py",
+          "id": "test_an_error_that_escapes_the_answer_gets_the_plain_500_and_one_write_report"
+        },
+        {
+          "implementation": "ts",
+          "test": "packages/server/ts/tests/http.test.ts",
+          "id": "App.server › answers a plain 500 for an error that the response hook throws, logs it and calls no further hook (HY-60)"
+        }
+      ],
+      "requirements": [
+        "HY-60"
+      ]
+    },
+    {
+      "id": "session-values",
+      "kind": "feature",
+      "bindings": [
+        {
+          "implementation": "php",
+          "test": "packages/server/php/tests/SessionTest.php",
+          "id": "SessionTest::testFlashValuesAreTakenOnce"
+        },
+        {
+          "implementation": "python",
+          "test": "packages/server/python/tests/test_modules.py",
+          "id": "test_flash_values_are_taken_once"
+        },
+        {
+          "implementation": "ts",
+          "test": "packages/server/ts/tests/session.test.ts",
+          "id": "Session › returns the flash values and the kept values that it stored"
+        }
+      ],
+      "requirements": [
+        "HY-24",
+        "HY-25",
+        "HY-40"
       ]
     }
   ],

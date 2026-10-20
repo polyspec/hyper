@@ -12,7 +12,7 @@ use Polyspec\Hyper\Response;
 use Polyspec\Hyper\Result;
 use Polyspec\Hyper\Tests\Support\Json;
 
-/** HY-43, HY-52: the PHP settings that `App::run` applies before it answers the request. */
+/** HY-43, HY-52, HY-100: the PHP settings that `App::run` applies before it answers the request. */
 final class RunTest extends TestCase
 {
     #[RunInSeparateProcess]

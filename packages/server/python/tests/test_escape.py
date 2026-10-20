@@ -53,7 +53,9 @@ class BrokenSessions:
 
 class EscapeTest(TransportCase):
     def get(self, server, path: str):
-        return get_once(server, path)
+        # The server logs an escaped error to the standard error, which would interrupt the line of the verbose runner.
+        with contextlib.redirect_stderr(io.StringIO()):
+            return get_once(server, path)
 
     def test_an_error_that_escapes_the_answer_gets_the_plain_500_and_one_write_report(
         self,

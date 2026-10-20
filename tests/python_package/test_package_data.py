@@ -4,7 +4,7 @@ import tomllib
 import unittest
 from pathlib import Path
 
-PACKAGE = Path(__file__).resolve().parents[2]
+PACKAGE = Path(__file__).resolve().parents[2] / "packages" / "server" / "python"
 SRC = PACKAGE / "src"
 
 

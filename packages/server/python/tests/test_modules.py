@@ -1,5 +1,5 @@
-# The request target, the query values, the stops and results, the reply and the manifest (HY-15, HY-42, HY-46,
-# HY-50 to HY-52, HY-56 to HY-58, HY-62, HY-69, HY-72, HY-92).
+# The request target, the query values, the stops and results, the reply, the session values and the manifest (HY-15,
+# HY-24, HY-25, HY-40, HY-42, HY-46, HY-50 to HY-52, HY-56 to HY-58, HY-62, HY-69, HY-72, HY-92, HY-103).
 import unittest
 from pathlib import Path
 

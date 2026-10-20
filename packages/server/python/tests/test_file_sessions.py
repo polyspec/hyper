@@ -1,4 +1,4 @@
-# Two processes that write one session file at the same time (HY-104). Each process has its own session store, so the
+# The session files (HY-45, HY-72) and two processes that write one session file at the same time (HY-104). Each process has its own session store, so the
 # lock of a store does not hold the other process back, as two worker processes of one server do not.
 import multiprocessing
 import os

@@ -56,6 +56,14 @@
     },
     {
       "paths": [
+        "tests/python_package/**"
+      ],
+      "targets": [
+        "hyper-test-python"
+      ]
+    },
+    {
+      "paths": [
         "contracts/**"
       ],
       "targets": [

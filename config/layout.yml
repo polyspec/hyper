@@ -28,6 +28,10 @@ rules:
       - "!tests/scripts"
       # The tool test of the build copies on the virtiofs mounts of a Linux container (make virtiofs-check).
       - "!tests/virtiofs"
+      # The package-data test of the Python distribution (make hyper-test-python): it checks pyproject.toml and the marker py.typed
+      # and implements no contract, so the parity declaration lists it as a tool, which cannot lie in the root of the Python
+      # implementation.
+      - "!tests/python_package"
 
   # S5: the root files of hyper beyond the list of kit (K145).
   # .npmrc: the npm configuration of the root project; npm reads a project .npmrc only from the root of the project.
@@ -53,3 +57,14 @@ rules:
   - extends_template: component-ports
     id: layout-server-ports
     vars: { component: server }
+
+  # S9: the infrastructure under scripts/ and tests/ is TypeScript (the list of kit, with one exception). tests/python_package is
+  # the package-data test of the Python distribution: it reads pyproject.toml with tomllib, the TOML parser of the Python
+  # standard library, and runs under unittest, the runner of its language; a harness that drives one language is a test of that
+  # language.
+  - id: layout-infrastructure-typescript
+    paths:
+      - "scripts/**/*.{js,mjs,cjs,py,sh,bash,zsh,rb,pl,php,go,rs,ps1,bat,cmd}"
+      - "tests/**/*.{js,mjs,cjs,py,sh,bash,zsh,rb,pl,php,go,rs,ps1,bat,cmd}"
+      - "!tests/kit/fixture/**"
+      - "!tests/python_package/**"

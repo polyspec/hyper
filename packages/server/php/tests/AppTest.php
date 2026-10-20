@@ -342,7 +342,8 @@ final class AppTest extends TestCase
 
     public function testHtmlRequestRendersTheDocument(): void
     {
-        // HY-12, HY-15, HY-31: a route without route regions embeds no data.
+        // HY-3, HY-12, HY-15, HY-31: the layout places the title, the data and the regions; a route without route
+        // regions embeds no data.
         $response = $this->get('/');
 
         self::assertSame(200, $response->status);
@@ -608,7 +609,7 @@ final class AppTest extends TestCase
 
     public function testManifestRejectsListsAndNamesOfAnotherType(): void
     {
-        // HY-2: `regions` and `routes` are lists, and region and route names are strings.
+        // HY-1, HY-2: `regions` and `routes` are lists, and region and route names are strings.
         $this->assertManifestsRejected(['routes-text', 'route-name-number', 'region-name-list']);
     }
 
@@ -843,7 +844,7 @@ final class AppTest extends TestCase
 
     public function testRegionRequestReturnsTheProtocolShape(): void
     {
-        // HY-17, HY-18
+        // HY-14, HY-17, HY-18: every JSON response carries the time zone of the environment.
         $response = $this->get('/items/a%20b', self::JSON);
 
         self::assertSame(200, $response->status);
@@ -999,7 +1000,8 @@ final class AppTest extends TestCase
 
     public function testServerSendsOnlyTheReadPaths(): void
     {
-        // HY-73: values that no template of the route reads are not sent, in JSON or in the document.
+        // HY-10, HY-73: shared data starts with the title and the token; values that no template of the route reads are
+        // not sent, in JSON or in the document.
         $json = self::json($this->get('/items/secret', self::JSON));
         self::assertSame(['id' => 's'], Json::at($json, 'regions', 'content'));
         self::assertSame(['title' => 'Item'], $json['shared']);
@@ -1586,6 +1588,18 @@ final class AppTest extends TestCase
             200,
             $this->get('/items/plain', ['Accept' => 'application/json', 'If-None-Match' => '"other"'])->status,
         );
+    }
+
+    public function testTheSessionTokenItselfIsNeverSent(): void
+    {
+        // HY-71: the masked token is shared data, but the session token is not part of any answer.
+        $document = $this->get('/list');
+        $json = $this->get('/list', self::JSON);
+        $token = $this->sessionToken();
+
+        self::assertStringNotContainsString($token, $document->body);
+        self::assertStringNotContainsString($token, $json->body);
+        self::assertMatchesRegularExpression('/[0-9a-f]{128}/', $json->body);
     }
 
     public function testAroundAnswersTheRequestThatItPassesAndSendsItsResponse(): void

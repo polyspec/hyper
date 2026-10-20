@@ -14,7 +14,7 @@ beforeEach(() => {
 });
 
 describe('App', () => {
-  it('renders the document for an HTML request without embedded data when the route has no route region (HY-12, HY-15, HY-31)', async () => {
+  it('renders the document for an HTML request without embedded data when the route has no route region (HY-3, HY-12, HY-15, HY-31)', async () => {
     const response = await fixture.get('/');
     expect(response.status).toBe(200);
     expect(response.headers['Content-Type']).toBe('text/html; charset=utf-8');
@@ -145,13 +145,30 @@ describe('App', () => {
     expect(await emitted).toBe('outside');
   });
 
+  it('opens only when every output of the build exists and names the first missing one (HY-48)', async () => {
+    const missing = `${TEMPLATES.root}without/templates.index.json`;
+    await expect(App.open({ manifest: `${FIXTURES}app.json`, templates: { index: missing, root: TEMPLATES.root }, handlers: handlers(), timezone: 'Z' })).rejects.toThrow(missing);
+    const absent = `${FIXTURES}without-app.json`;
+    await expect(App.open({ manifest: absent, templates: TEMPLATES, handlers: handlers(), timezone: 'Z' })).rejects.toThrow(absent);
+    await expect(App.open({ manifest: `${FIXTURES}app.json`, templates: { index: 'templates.index.json', root: TEMPLATES.root }, handlers: handlers(), timezone: 'Z' })).rejects.toThrow('not an absolute path');
+  });
+
+  it('sends the masked token and never the session token itself (HY-71)', async () => {
+    const document = await fixture.get('/list');
+    const response = await fixture.get('/list', JSON_REGION);
+    const token = text(fixture.session.get('_hyper_csrf'));
+    expect(document.body).not.toContain(token);
+    expect(response.body).not.toContain(token);
+    expect(response.body).toMatch(/[0-9a-f]{128}/);
+  });
+
   it('rejects manifests with invalid keep declarations (HY-37, HY-40)', async () => {
     for (const name of ['keep-kind', 'keep-page', 'keep-manifest', 'keep-reserved', 'uses-topic']) {
       await expect(App.open({ manifest: `${FIXTURES}invalid/${name}.json`, templates: TEMPLATES, handlers: {}, timezone: 'Z' }), name).rejects.toThrow();
     }
   });
 
-  it('rejects manifests whose lists or names have another type (HY-2)', async () => {
+  it('rejects manifests whose lists or names have another type (HY-1, HY-2)', async () => {
     for (const name of ['routes-text', 'route-name-number', 'region-name-list']) {
       await expect(App.open({ manifest: `${FIXTURES}invalid/${name}.json`, templates: TEMPLATES, handlers: {}, timezone: 'Z' }), name).rejects.toThrow();
     }
@@ -268,7 +285,7 @@ describe('App', () => {
     }
   });
 
-  it('returns the protocol shape for a region request (HY-17, HY-18)', async () => {
+  it('returns the protocol shape for a region request, with the time zone of the environment (HY-14, HY-17, HY-18)', async () => {
     const response = await fixture.get('/items/a%20b', JSON_REGION);
     expect(response.status).toBe(200);
     expect(response.headers['Content-Type']).toBe('application/json; charset=utf-8');
@@ -357,7 +374,7 @@ describe('App', () => {
     expect(verifyToken(text(fixture.session.get('_hyper_csrf')), text(page.shared.csrf))).toBe(true);
   });
 
-  it('sends only the paths that the templates of the route read (HY-73)', async () => {
+  it('sends only the paths that the templates of the route read, after the title and the token of the shared data (HY-10, HY-73)', async () => {
     const page = json(await fixture.get('/items/secret', JSON_REGION));
     expect(page.regions.content).toEqual({ id: 's' });
     expect(page.shared).toEqual({ title: 'Item' });

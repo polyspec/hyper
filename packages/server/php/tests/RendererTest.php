@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Polyspec\Hyper\Tests;
 
-use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use Polyspec\Hyper\Renderer;
 
@@ -24,18 +23,20 @@ final class RendererTest extends TestCase
         );
     }
 
-    /** The generated run: the native extension loads no generated program, so the native run excludes this test. */
-    #[Group('generated')]
-    public function testLoadsTheGeneratedProgramFromItsNamespace(): void
+    public function testTheGeneratedProgramIsLoadedExactlyWhenTheExtensionIsMissing(): void
     {
         // HY-48: the build writes the generated program into the directory php as PSR-4 files of the namespace that
-        // the application chooses, and the autoload of Composer loads its classes.
+        // the application chooses, and the autoload of Composer loads its classes; the native extension renders the
+        // templates of the program instead and loads no generated class.
         self::assertFileExists(self::PROGRAM . '/php/GeneratedProgram.php');
         self::assertFileDoesNotExist(self::PROGRAM . '/program.php');
         $first = Renderer::open(self::PROGRAM, 'Z');
         $second = Renderer::open(self::PROGRAM, 'Z');
 
-        self::assertTrue(class_exists('Polyspec\\Hyper\\Tests\\Program\\GeneratedProgram', false));
+        self::assertSame(
+            !extension_loaded('polyspec_template'),
+            class_exists('Polyspec\\Hyper\\Tests\\Program\\GeneratedProgram', false),
+        );
         self::assertFalse(class_exists('GeneratedProgram', false));
         self::assertSame(
             $first->alone('side.tpl', $first->bind([]), $first->bind(['count' => 1])),
@@ -81,18 +82,22 @@ final class RendererTest extends TestCase
         }
     }
 
-    /** The generated run, as testLoadsTheGeneratedProgramFromItsNamespace. */
-    #[Group('generated')]
-    public function testNamesTheClassThatTheAutoloadDoesNotLoad(): void
+    public function testAProgramWhoseNamespaceIsNotMappedOpensOnlyWithTheNativeExtension(): void
     {
         // HY-48: the server takes the generated program only through the autoload of Composer, so a namespace that
-        // autoload.psr-4 of the application does not map fails with the class and the directory to map.
+        // autoload.psr-4 of the application does not map fails with the class and the directory to map; the native
+        // extension takes the templates of the program and never loads the class, so the same program opens.
         $program = sys_get_temp_dir() . '/hyper-renderer-' . bin2hex(random_bytes(6));
         try {
             mkdir("{$program}/php", 0o700, true);
             mkdir("{$program}/templates");
             file_put_contents("{$program}/reads.json", '{"routes":{}}');
             file_put_contents("{$program}/program.json", '{"namespace":"Polyspec\\\\Hyper\\\\Tests\\\\Unmapped"}');
+            if (extension_loaded('polyspec_template')) {
+                self::assertSame('native', Renderer::open($program, 'Z')->engine);
+
+                return;
+            }
             try {
                 Renderer::open($program, 'Z');
                 self::fail('opened a program whose class the autoload does not load');
@@ -103,35 +108,6 @@ final class RendererTest extends TestCase
                 );
                 self::assertStringContainsString("{$program}/php", $error->getMessage());
             }
-        } finally {
-            exec('rm -rf ' . escapeshellarg($program));
-        }
-    }
-
-    /** The native run: the extension renders the templates of the program, so PHP loads no generated class. */
-    #[Group('native')]
-    public function testTheNativeExtensionLoadsNoGeneratedProgram(): void
-    {
-        $renderer = Renderer::open(self::PROGRAM, 'Z');
-
-        self::assertSame('native', $renderer->engine);
-        self::assertFalse(class_exists('Polyspec\\Hyper\\Tests\\Program\\GeneratedProgram', false));
-    }
-
-    /** The native run, as testNamesTheClassThatTheAutoloadDoesNotLoad: the extension never reads the namespace. */
-    #[Group('native')]
-    public function testTheNativeExtensionOpensAProgramWhoseNamespaceIsNotMapped(): void
-    {
-        // HY-48: the native extension takes the templates of the program and never loads the class of its namespace,
-        // so a namespace that autoload.psr-4 does not map opens.
-        $program = sys_get_temp_dir() . '/hyper-renderer-' . bin2hex(random_bytes(6));
-        try {
-            mkdir("{$program}/php", 0o700, true);
-            mkdir("{$program}/templates");
-            file_put_contents("{$program}/reads.json", '{"routes":{}}');
-            file_put_contents("{$program}/program.json", '{"namespace":"Polyspec\\\\Hyper\\\\Tests\\\\Unmapped"}');
-
-            self::assertSame('native', Renderer::open($program, 'Z')->engine);
         } finally {
             exec('rm -rf ' . escapeshellarg($program));
         }

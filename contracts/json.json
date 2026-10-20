@@ -1,4 +1,5 @@
 {
+  "requirements": ["HY-17", "HY-38", "HY-40", "HY-44", "HY-54"],
   "encode": [
     { "id": "integer", "label": "integer", "json": "42", "expected": "42" },
     { "id": "negative_integer", "label": "negative integer", "json": "-7", "expected": "-7" },

@@ -1,4 +1,5 @@
 {
+  "requirements": ["HY-4", "HY-5", "HY-9", "HY-49"],
   "routes": [
     {
       "name": "home",

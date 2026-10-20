@@ -3,6 +3,7 @@ import { Services } from '../src/services.js';
 
 interface Bound { clock: { now: number }; constructor: string; __proto__: string }
 
+// The services of the handlers (HY-105): created once on their first use, and a service without a factory fails.
 describe('Services', () => {
   it('creates a service once, on its first use', () => {
     const services = new Services<Bound>();
