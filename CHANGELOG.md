@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- H25.54-1: config/generated.json is owned by kit-check in config/owner-checks.json and the Korean changelog is stamped to the English one; red: owner-validate reported the path without an owner and docs-check the stale revision of CHANGELOG.ko.md, green: both pass. (H25.54-1)
 - H25.54: The copies of PRINCIPLES.md (P31), config/php-lint and the hook .githooks/pre-commit match the kit after K308, config/generated.json declares no generated path and no exception for the pre-commit hook, and bypass-check joins CHECK_TARGETS and the docs group of ci.yml; red: kit-check reported two differing copies and CHECK_TARGETS without bypass-check, and hooks-check the missing pre-commit hook, green: kit-check and hooks-check pass. (H25.54)
 - H25.53-2: tests/test_public_api.py of the Python server is formatted as ruff format writes it; red: make lint-python failed on ruff format --check, green: it passes. (H25.53-2)
 - H25.53-1: The ORM error test of the Python server keeps the logs of the two escaped errors off stderr, where they broke the result line of the verbose unittest output; red: make parity-check UNITS=orm-errors reported R3 not-executed for the Python binding, green: every unit holds in every implementation (public-api and orm-errors, 5 of 5 ids). (H25.53-1)

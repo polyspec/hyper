@@ -534,6 +534,14 @@
     },
     {
       "paths": [
+        "config/generated.json"
+      ],
+      "targets": [
+        "kit-check"
+      ]
+    },
+    {
+      "paths": [
         "config/rebuild.json"
       ],
       "targets": [

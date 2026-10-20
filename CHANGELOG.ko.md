@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: e29e5f4d3a8baf4a1c83203c4b67a78ca2bdce2f44e97afb3c260b182c5838f5 -->
+<!-- source-sha256: 5424b827e99b4f265b3c59cbb3fee5d80da51d390619a5cf6472f8bd64dbab0f -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H25.54-1: config/generated.json은 config/owner-checks.json에서 kit-check가 맡고, 한국어 changelog는 영어 changelog에 맞게 stamp된다. red: owner-validate가 owner 없는 경로를, docs-check가 CHANGELOG.ko.md의 낡은 revision을 보고했고, green: 둘 다 통과한다. (H25.54-1)
 - H25.54: PRINCIPLES.md(P31), config/php-lint, hook .githooks/pre-commit 사본이 K308 이후의 kit와 같고, config/generated.json은 pre-commit hook에 generated 경로도 예외도 선언하지 않으며, bypass-check가 CHECK_TARGETS와 ci.yml의 docs 그룹에 들어간다. red: kit-check가 다른 사본 두 개와 bypass-check 없는 CHECK_TARGETS를, hooks-check가 없는 pre-commit hook을 보고했고, green: kit-check와 hooks-check가 통과한다. (H25.54)
 - H25.53-2: Python 서버의 tests/test_public_api.py는 ruff format이 쓰는 형태다. red: make lint-python이 ruff format --check에서 실패했고, green: 통과한다. (H25.53-2)
 - H25.53-1: Python 서버의 ORM 오류 test는 이스케이프된 오류 두 건의 log를 stderr로 내보내지 않는다. 그 log가 verbose unittest 출력의 결과 줄을 끊었다. red: make parity-check UNITS=orm-errors가 Python binding에 R3 not-executed를 보고했고, green: 모든 구현에서 모든 unit이 성립한다(public-api와 orm-errors, id 5개 중 5개). (H25.53-1)
