@@ -3,10 +3,15 @@ import { toValue, type Data, type Value } from './values.js';
 
 // The outcome of an action: a redirect (HY-25) or a page with a status (HY-26, HY-58).
 export class Result {
+  /** @internal */
   readonly location: string | null;
+  /** @internal */
   readonly status: number;
+  /** @internal */
   readonly data: Data;
+  /** @internal */
   readonly flashValues: ReadonlyMap<string, Value>;
+  /** @internal */
   readonly changedTopics: readonly string[];
 
   private constructor(location: string | null, status: number, data: Data, flashValues: ReadonlyMap<string, Value>, changedTopics: readonly string[]) {
@@ -47,6 +52,7 @@ export class Result {
   }
 
   // Returns true for a redirect.
+  /** @internal */
   isRedirect(): boolean {
     return this.location !== null;
   }

@@ -21,6 +21,7 @@ export class Response {
   }
 
   // Returns a copy with the cookies of a reply, when it has any (HY-52).
+  /** @internal */
   withCookies(reply: Reply, secure: boolean): Response {
     const cookies = reply.cookieHeaders(secure);
     return cookies.length === 0 ? this : new Response(this.status, { ...this.headers, 'Set-Cookie': cookies }, this.body);

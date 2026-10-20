@@ -1,7 +1,7 @@
 // The JSON codec beyond the cases of contracts/json.json (HY-17, HY-44): the bytes of numbers and strings, and the limits.
 import { describe, expect, it } from 'vitest';
 import type { Value } from '@polyspec/template/render';
-import { decodeJson, encodeJson, inDataModel, JsonDecodeError } from '../src/index.js';
+import { decodeJson, encodeJson, inDataModel, JsonDecodeError } from '../src/json.js';
 
 describe('PHP json_encode bytes', () => {
   it('escapes U+2028 and U+2029, which JSON.stringify writes unescaped', () => {

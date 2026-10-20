@@ -2,7 +2,7 @@
 // Python pass the same cases. Each case is a top-level test named by its id (S6).
 import { readFileSync } from 'node:fs';
 import { expect, it } from 'vitest';
-import { decodeJson, inDataModel, JsonDecodeError } from '../src/index.js';
+import { decodeJson, inDataModel, JsonDecodeError } from '../src/json.js';
 import { list, parsed, record, text } from './support.js';
 
 const fixture = record(parsed(readFileSync(new URL('../../../../contracts/json.json', import.meta.url), 'utf8')));

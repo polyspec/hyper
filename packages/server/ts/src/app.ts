@@ -109,14 +109,20 @@ export interface AppOptions<S extends object> {
 export type Answer = { stopped: false; response: Response; reply: Reply } | { stopped: true; reply: Reply };
 
 export class App<S extends object = Record<string, never>> {
+  /** @internal */
   readonly services = new Services<S>();
   private readonly routes: Map<string, RouteDeclaration>;
   private readonly application: Application;
   private readonly handlers: Handlers<S>;
+  /** @internal */
   readonly timezone: string;
+  /** @internal */
   readonly basePath: string;
+  /** @internal */
   readonly https: boolean;
+  /** @internal */
   readonly frameAncestors: string;
+  /** @internal */
   readonly bodyLimit: number;
   private readonly responseLimit: number;
   private readonly formTypes: readonly string[];
@@ -230,6 +236,7 @@ export class App<S extends object = Record<string, never>> {
   // Answers one request for the transport of a server, which gives the signal of the connection (HY-67). A request
   // whose client closed the connection stops and gives no response; the transport then calls `disconnected` after its
   // write hook (HY-99). The loaders and actions of a routed request receive the reply of the answer (HY-52, HY-60).
+  /** @internal */
   async respond(request: Request, store: SessionStore, started: number, signal: AbortSignal | undefined): Promise<Answer> {
     const reply = new Reply();
     let response: Response;
@@ -253,12 +260,14 @@ export class App<S extends object = Record<string, never>> {
   }
 
   // Calls onDisconnect with the request, the elapsed milliseconds since `started` and the reply of a stopped request (HY-67).
+  /** @internal */
   disconnected(request: Request, started: number, reply: Reply): void {
     this.onDisconnect?.(request, performance.now() - started, reply);
   }
 
   // Calls onResponse with a response, the milliseconds since `started`, the reply of the request and the failure of a
   // 500 of HY-43 or HY-66, and returns the response (HY-60).
+  /** @internal */
   report(request: Request | null, response: Response, started: number, reply: Reply, failure: string | null = null): Response {
     this.onResponse?.(request, response, performance.now() - started, reply, failure);
     return response;
@@ -266,6 +275,7 @@ export class App<S extends object = Record<string, never>> {
 
   // Adds the frame-ancestors policy of the application to a response (HY-45), and to a failure the header that no
   // cache stores it (HY-65).
+  /** @internal */
   frame(response: Response): Response {
     const framed = response.withHeader('Content-Security-Policy', `frame-ancestors ${this.frameAncestors}`);
     return framed.status >= 400 ? framed.withHeader('Cache-Control', 'no-store') : framed;
@@ -273,6 +283,7 @@ export class App<S extends object = Record<string, never>> {
 
   // Writes the log line of an unhandled error (HY-43) and returns its failure for the response hook (HY-60): the
   // message of an Error, or the text of another thrown value.
+  /** @internal */
   fail(error: unknown): string {
     this.log(`hyper: ${error instanceof Error ? (error.stack ?? `${error.name}: ${error.message}`) : String(error)}`);
     return error instanceof Error ? error.message : String(error);

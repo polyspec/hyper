@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-kit-standard -->
-<!-- source-sha256: e13ca1a62fa56b31ce17dea7ae69bcb9cf2bb61dcb65d1aa51865d75408c5270 -->
+<!-- source-sha256: c5c58ae4046530afb10f41da194de8b6374d9d64d6f8ca1aa6f3cecb60ea40db -->
 # kit 표준 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -59,3 +59,4 @@
 | H25.47 | Node 서버: ORM 오류 NO_ROWS와 REVISION_CHANGED는 not found와 409 page로 응답한다(HY-107) | packages/server/ts/src/app.ts, packages/server/ts/tests/app.test.ts | `make hyper-test-node` | [o] |
 | H25.47-1 | package의 vitest는 연결된 polyspec package를 한 번만 load한다 | packages/client/vitest.config.mts and packages/server/ts/vitest.config.mts | `make hyper-test-node` | [o] |
 | H25.48 | PRINCIPLES.md 사본이 K305 이후의 kit와 같다 | PRINCIPLES.md and PRINCIPLES.ko.md | `make kit-check` | [o] |
+| H25.49 | R11: Node 서버는 public API만 선언한다(HY-106) | packages/server/ts/src, packages/server/ts/tsconfig.build.json, packages/server/ts/tests | `make hyper-test-node` | [o] |

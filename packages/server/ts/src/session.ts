@@ -39,6 +39,7 @@ export class MemorySessionStore implements SessionStore {
   }
 
   // The number of renewals.
+  /** @internal */
   get renewals(): number {
     return this.renewed;
   }

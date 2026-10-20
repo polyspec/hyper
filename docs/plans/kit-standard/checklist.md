@@ -58,3 +58,4 @@
 | H25.47 | Node server: ORM errors NO_ROWS and REVISION_CHANGED are answered as a not found and a 409 page (HY-107) | packages/server/ts/src/app.ts, packages/server/ts/tests/app.test.ts | `make hyper-test-node` | [o] |
 | H25.47-1 | vitest of a package loads a linked polyspec package once | packages/client/vitest.config.mts and packages/server/ts/vitest.config.mts | `make hyper-test-node` | [o] |
 | H25.48 | The copies of PRINCIPLES.md match the kit after K305 | PRINCIPLES.md and PRINCIPLES.ko.md | `make kit-check` | [o] |
+| H25.49 | R11: the Node server declares only its public API (HY-106) | packages/server/ts/src, packages/server/ts/tsconfig.build.json, packages/server/ts/tests | `make hyper-test-node` | [o] |

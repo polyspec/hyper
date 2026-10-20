@@ -93,21 +93,25 @@ export class Request {
   }
 
   // Returns a copy that holds the flash values and the CSRF token of the session.
+  /** @internal */
   withSession(flash: Flash, csrfToken: string): Request {
     return new Request({ ...this.state, flash: flash.values, csrfToken });
   }
 
   // Returns a copy with the routed path (base path removed) and the route parameters.
+  /** @internal */
   withRoute(path: string, params: Record<string, string>): Request {
     return new Request({ ...this.state, path, params });
   }
 
   // Returns a copy whose header of the name, compared without case as `header` reads it, has the value (HY-97).
+  /** @internal */
   withHeader(name: string, value: string): Request {
     return new Request({ ...this.state, headers: new Map(this.state.headers).set(name.toLowerCase(), value) });
   }
 
   // Returns a copy that holds the value of the choice of the client rendering selection (HY-62).
+  /** @internal */
   withSelection(value: unknown): Request {
     return new Request({ ...this.state, selection: value });
   }

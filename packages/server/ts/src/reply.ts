@@ -62,12 +62,14 @@ export class Reply {
   }
 
   // Returns whether a renewal was requested since the last call, and clears the request.
+  /** @internal */
   takeRenewal(): boolean {
     const renewal = this.renewal;
     this.renewal = false;
     return renewal;
   }
 
+  /** @internal */
   cacheControlValue(): string | null {
     return this.cacheControlText;
   }
@@ -80,10 +82,12 @@ export class Reply {
     return this;
   }
 
+  /** @internal */
   referrerPolicyValue(): string | null {
     return this.referrerPolicyText;
   }
 
+  /** @internal */
   referrerPolicyHeaders(): Record<string, string> {
     return this.referrerPolicyText === null ? {} : { 'Referrer-Policy': this.referrerPolicyText };
   }
@@ -96,6 +100,7 @@ export class Reply {
     return this;
   }
 
+  /** @internal */
   statusValue(): number | null {
     return this.pageStatus;
   }
@@ -107,10 +112,12 @@ export class Reply {
   }
 
   // Returns whether the HTML document of the response embeds its data (HY-92).
+  /** @internal */
   embedsData(): boolean {
     return this.embed;
   }
 
+  /** @internal */
   cookieHeaders(secure: boolean): string[] {
     return this.cookies.map(([name, value, maxAge]) => `${name}=${value}; Path=/; HttpOnly; SameSite=Lax${secure ? '; Secure' : ''}${maxAge === null ? '' : `; Max-Age=${maxAge}`}`);
   }

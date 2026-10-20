@@ -21,7 +21,9 @@ const IDENTIFIER = /^[0-9a-f]{64}$/;
 // creates no session. Requests of one session run one after another, because each one reads the file when it
 // starts and writes it when it ends.
 export class FileSessions {
+  /** @internal */
   readonly directory: string;
+  /** @internal */
   readonly lifetime: number;
   private readonly queues = new Map<string, Promise<void>>();
 
@@ -37,6 +39,7 @@ export class FileSessions {
 
   // Opens the store of a request with the value of its session cookie, after the earlier requests of the same
   // session have ended. The caller calls `close` of the store when the response is complete.
+  /** @internal */
   async open(cookie: string | null): Promise<FileSession> {
     const id = cookie !== null && IDENTIFIER.test(cookie) ? cookie : null;
     if (id === null) return new FileSession(this, null, () => {});
@@ -55,6 +58,7 @@ export class FileSessions {
   }
 
   // Removes the files of sessions whose lifetime has passed and returns how many it removed.
+  /** @internal */
   collect(): number {
     let removed = 0;
     for (const name of readdirSync(this.directory)) {
@@ -67,16 +71,19 @@ export class FileSessions {
   }
 
   // Returns true when a session file is older than the lifetime.
+  /** @internal */
   expired(file: string): boolean {
     return Date.now() - statSync(file).mtimeMs > this.lifetime * 1000;
   }
 
   // Returns the session cookie name: `__Host-hy-session` over HTTPS and `hy-session` otherwise (HY-45).
+  /** @internal */
   static cookieName(secure: boolean): string {
     return secure ? '__Host-hy-session' : 'hy-session';
   }
 
   // Returns the Set-Cookie value of a new session, with the attributes of the PHP session cookie (HY-45).
+  /** @internal */
   cookie(id: string, secure: boolean): string {
     return `${FileSessions.cookieName(secure)}=${id}; path=/${secure ? '; secure' : ''}; HttpOnly; SameSite=Lax`;
   }
@@ -99,11 +106,13 @@ export class FileSession implements SessionStore {
   }
 
   // True when the request read or wrote session data.
+  /** @internal */
   get started(): boolean {
     return this.values !== null;
   }
 
   // The identifier that this request created, which the response sets as the session cookie, or null.
+  /** @internal */
   get created(): string | null {
     return this.createdId ? this.id : null;
   }
@@ -131,6 +140,7 @@ export class FileSession implements SessionStore {
 
   // Writes a started session to its file, removes the file of a renewed identifier, and lets the next request of the
   // session start.
+  /** @internal */
   close(): void {
     try {
       if (this.renewedId !== null) rmSync(join(this.sessions.directory, this.renewedId), { force: true });
