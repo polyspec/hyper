@@ -595,7 +595,7 @@ class App:
                 kept,
                 embed,
             )
-        except Exception:  # noqa: BLE001 - HY-38: kept values come from the client and may break a template; without them the error is raised again
+        except Exception:  # HY-38: kept values come from the client and may break a template; without them the error is raised again
             if kept == {}:
                 raise
         page = self.manifest.page.name

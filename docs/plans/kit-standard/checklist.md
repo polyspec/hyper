@@ -76,4 +76,4 @@
 | H25.61 | Every copy of kit the repository holds has an owner rule | config/owner-checks.json with clippy.toml in the kit copies rule | `make owner-validate` | [o] |
 | H25.63 | The dev dependencies vitest and setuptools are bumped to their latest stable releases | package.json, package-lock.json, packages/server/python/pyproject.toml, config/dependency-review.json | `var/tools/bin/node node_modules/vitest/vitest.mjs run --dir packages/client`, `packages/server/python/.venv/bin/python -m unittest packages/server/python/tests/test_csrf.py` | [o] |
 | H25.64 | The copies of kit match the installed kit after K364 | PRINCIPLES.md, PRINCIPLES.ko.md, ruff.toml, .golangci.yml, scripts/kit/kit-bootstrap.mk, clippy.toml | `make kit-check` | [o] |
-| H25.62 | The Python server states its fallback without a noqa that ruff does not need | the except clause of the render fallback in app.py | `make lint-python` | [ ] |
+| H25.62 | The Python server states its fallback without a noqa that ruff does not need | the except clause of the render fallback in app.py | `make lint-python` | [o] |
