@@ -47,6 +47,15 @@ it.each(list(conformance.cases).map(record).map((item) => [text(item.id), item] 
   expect(fixture.counter.actions).toBe(item.actions);
 });
 
+// Requires that a request whose selection is `selects` is answered with the plain 500 and logs one error (HY-43).
+async function expectPlain500(selects: ClientRendering['selects']): Promise<void> {
+  const fixture = new Fixture();
+  const response = await fixture.handle({ target: '/' }, { clientRendering: client(selects) });
+  expect(response.status).toBe(500);
+  expect(response.body).toBe('Internal Server Error');
+  expect(fixture.log).toHaveLength(1);
+}
+
 describe('client rendering (HY-62)', () => {
   it('reports the shell response with the frame policy and an empty reply (HY-45, HY-60)', async () => {
     const reports: [string, number, string | string[] | undefined, number][] = [];
@@ -86,13 +95,7 @@ describe('client rendering (HY-62)', () => {
         throw new Error('selection');
       },
     ];
-    for (const selects of selections) {
-      const fixture = new Fixture();
-      const response = await fixture.handle({ target: '/' }, { clientRendering: client(selects) });
-      expect(response.status).toBe(500);
-      expect(response.body).toBe('Internal Server Error');
-      expect(fixture.log).toHaveLength(1);
-    }
+    for (const selects of selections) await expectPlain500(selects);
   });
 
   it('answers 500 for a selection that throws or returns another value (HY-43)', async () => {
@@ -109,13 +112,7 @@ describe('client rendering (HY-62)', () => {
         throw new Error('selection');
       },
     ];
-    for (const selects of selections) {
-      const fixture = new Fixture();
-      const response = await fixture.handle({ target: '/' }, { clientRendering: client(selects) });
-      expect(response.status).toBe(500);
-      expect(response.body).toBe('Internal Server Error');
-      expect(fixture.log).toHaveLength(1);
-    }
+    for (const selects of selections) await expectPlain500(selects);
   });
 
   it('gives the value of the choice to every handler of the request (HY-62)', async () => {

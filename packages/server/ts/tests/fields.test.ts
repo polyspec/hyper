@@ -8,24 +8,24 @@ import { list, parsed, record, text } from './support.js';
 
 const fixture = record(parsed(readFileSync(new URL('../../../../contracts/fields.json', import.meta.url), 'utf8')));
 
-it.each(list(fixture.urlencoded).map(record).map((item) => [text(item.id), item] as const))('%s', (_id, item) => {
-  const fields = parseUrlEncoded(Buffer.from(text(item.text), 'utf8').toString('latin1'));
-  if (item.fields === null) {
+// Requires that `fields` is invalid when the contract expects null, and otherwise valid with the expected values.
+function expectFields(fields: { valid: boolean; values: Iterable<unknown> }, expected: unknown): void {
+  if (expected === null) {
     expect(fields.valid).toBe(false);
     return;
   }
   expect(fields.valid).toBe(true);
-  expect([...fields.values]).toEqual(item.fields);
+  expect([...fields.values]).toEqual(expected);
+}
+
+it.each(list(fixture.urlencoded).map(record).map((item) => [text(item.id), item] as const))('%s', (_id, item) => {
+  const fields = parseUrlEncoded(Buffer.from(text(item.text), 'utf8').toString('latin1'));
+  expectFields(fields, item.fields);
 });
 
 it.each(list(fixture.multipart).map(record).map((item) => [text(item.id), item] as const))('%s', (_id, item) => {
   const fields = formFields(text(item.type), Buffer.from(text(item.body), 'latin1'));
-  if (item.fields === null) {
-    expect(fields.valid).toBe(false);
-    return;
-  }
-  expect(fields.valid).toBe(true);
-  expect([...fields.values]).toEqual(item.fields);
+  expectFields(fields, item.fields);
 });
 
 describe('formFields', () => {

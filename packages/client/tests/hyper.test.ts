@@ -104,6 +104,21 @@ function context(action: string, target: unknown = region('content')): RequestCo
   return { target, request: { action, method: 'GET', headers: { Accept: 'text/html' }, abort: () => undefined } };
 }
 
+// Starts the request of `action` on the extension of `hyper`, as htmx does, and answers it with the JSON `body`.
+function startRequest(hyper: Hyper<RegionElement>, action: string, body: string): { extension: ReturnType<Hyper<RegionElement>['extension']>; ctx: RequestContext } {
+  const extension = hyper.extension();
+  const ctx = context(action);
+  extension.htmx_config_request(null, { ctx });
+  extension.htmx_before_request(null, { ctx });
+  vi.stubGlobal('fetch', async () => jsonResponse(`http://localhost${action}`, body));
+  return { extension, ctx };
+}
+
+// A client-side rendering application on the base path /api that mounts its documents into `page` and fetches with `fetch`.
+function clientRendering(page: FakeDocument, fetch: Fetch): Hyper<RegionElement> {
+  return new Hyper(testApplication(), fakeHtmx(), { basePath: '/api', storage: new FakeStorage(), document: page, fetch });
+}
+
 function jsonResponse(url: string, body: string): Response {
   const response = new Response(body, { headers: { 'content-type': 'application/json' } });
   Object.defineProperty(response, 'url', { value: url });
@@ -161,12 +176,8 @@ describe('superseded region requests', () => {
 describe('render errors of a region response', () => {
   it('rejects the fetch with the render error of the response instead of dropping it', async () => {
     const { hyper } = setup('', []);
-    const extension = hyper.extension();
-    const ctx = context('/items/7');
-    extension.htmx_config_request(null, { ctx });
-    extension.htmx_before_request(null, { ctx });
     // The response has no page region `content`, so rendering it fails (toHtml).
-    vi.stubGlobal('fetch', async () => jsonResponse('http://localhost/items/7', '{"env":{"timezone":"Z"},"route":"item","params":{"id":"7"},"shared":{"title":"T"},"regions":{},"kept":{}}'));
+    const { ctx } = startRequest(hyper, '/items/7', '{"env":{"timezone":"Z"},"route":"item","params":{"id":"7"},"shared":{"title":"T"},"regions":{},"kept":{}}');
     const error = await defined(ctx.fetch, 'the fetch of the request context')(ctx.request.action, {}).then(() => null, (failure: unknown) => failure);
     expect(String(error)).toContain('has no region content');
   });
@@ -548,12 +559,7 @@ describe('restorations, saves and failure marks', () => {
 
   it('marks the body when client-side rendering of a document fails (HY-47)', async () => {
     const page = new FakeDocument();
-    const hyper = new Hyper(testApplication(), fakeHtmx(), {
-      basePath: '/api',
-      storage: new FakeStorage(),
-      document: page,
-      fetch: async () => { throw new TypeError('network'); },
-    });
+    const hyper = clientRendering(page, async () => { throw new TypeError('network'); });
     await hyper.renderLocation('/list');
     expect(page.mounted).toEqual(['fail:0']);
   });
@@ -737,12 +743,7 @@ describe('swaps, storage order and client-side documents', () => {
 
   it('mounts a client-rendered document without embedded data (HY-22, HY-31)', async () => {
     const page = new FakeDocument();
-    const hyper = new Hyper(testApplication(), fakeHtmx(), {
-      basePath: '/api',
-      storage: new FakeStorage(),
-      document: page,
-      fetch: async () => jsonResponse('http://localhost/api/list', listJson.replace('"regions":{', '"regions":{"side":{"count":1},')),
-    });
+    const hyper = clientRendering(page, async () => jsonResponse('http://localhost/api/list', listJson.replace('"regions":{', '"regions":{"side":{"count":1},')));
     await hyper.renderLocation('/list');
     expect(page.mounted).toHaveLength(1);
     expect(page.mounted[0]).toContain('id="rows"');
@@ -887,11 +888,7 @@ describe('stylesheet links (HY-64)', () => {
     const held = deferred();
     page.load = () => held.promise;
     const { hyper } = setup('', [], new FakeStorage(), page);
-    const extension = hyper.extension();
-    const ctx = context('/items/7');
-    extension.htmx_config_request(null, { ctx });
-    extension.htmx_before_request(null, { ctx });
-    vi.stubGlobal('fetch', async () => jsonResponse('http://localhost/items/7', itemJson));
+    const { extension, ctx } = startRequest(hyper, '/items/7', itemJson);
     let received = false;
     const fetching = defined(ctx.fetch, 'the fetch of the request context')(ctx.request.action, {}).then((response) => { received = true; return response; });
     await vi.waitFor(() => expect(page.sources).toHaveLength(1));

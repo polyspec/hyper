@@ -5,7 +5,7 @@ import { connect } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { FileSessions } from '../src/index.js';
+import { FileSessions, type App } from '../src/index.js';
 import { Fixture, FIXTURES, handlers, parsed, port, present, record, text } from './support.js';
 
 let directory: string;
@@ -22,8 +22,50 @@ async function start(options: { https?: boolean; bodyLimit?: number } = {}): Pro
     onResponse: (request, response, elapsed, reply) => reports.push([request === null ? null : `${request.method} ${request.path()}`, response.status, elapsed, reply.notes().size]),
   });
   server = app.server(new FileSessions({ directory }));
-  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
-  base = `http://127.0.0.1:${port(server)}`;
+  base = await listen(server);
+}
+
+// A promise that a test settles from outside: `open()` settles `opened`.
+function latch(): { opened: Promise<void>; open: () => void } {
+  let open: () => void = () => undefined;
+  const opened = new Promise<void>((resolve) => (open = resolve));
+  return { opened, open };
+}
+
+// Listens with `target` on a port that the system assigns and returns the base URL of that port.
+async function listen(target: Server): Promise<string> {
+  await new Promise<void>((resolve) => target.listen(0, '127.0.0.1', resolve));
+  return `http://127.0.0.1:${port(target)}`;
+}
+
+// An application whose shared handler waits until `release()` is called, and whose disconnect hook records into
+// `events`; `running` settles when the shared handler has started.
+async function waitingApp(events: string[]): Promise<{ app: App; running: Promise<void>; release: () => void }> {
+  const entered = latch();
+  const released = latch();
+  const app = await new Fixture().app({
+    handlers: {
+      ...handlers(),
+      shared: async () => {
+        entered.open();
+        await released.opened;
+        return {};
+      },
+    },
+    onDisconnect: (request) => events.push(`disconnect ${request.method} ${request.path()}`),
+  });
+  return { app, running: entered.opened, release: released.open };
+}
+
+// Listens with `target`, sends a request over a socket and destroys the socket once `running` settles; `release` runs
+// when the server has seen the connection close. The server registers its own listeners of a connection first, so it has
+// seen the close when this one runs.
+async function dropClient(target: Server, running: Promise<void>, release: () => void): Promise<void> {
+  target.once('connection', (connection) => connection.once('close', () => release()));
+  await listen(target);
+  const socket = connect(port(target), '127.0.0.1', () => socket.write('GET / HTTP/1.1\r\nHost: x\r\n\r\n'));
+  await running;
+  socket.destroy();
 }
 
 beforeEach(() => {
@@ -123,8 +165,7 @@ describe('App.server', () => {
   it('serves the files of a public directory and sends other paths to the application', async () => {
     const app = await new Fixture().app();
     server = app.server(new FileSessions({ directory }), { files: FIXTURES });
-    await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
-    base = `http://127.0.0.1:${port(server)}`;
+    base = await listen(server);
     const file = await fetch(`${base}/app.json`);
     expect(file.status).toBe(200);
     expect(file.headers.get('content-type')).toBe('application/json; charset=utf-8');
@@ -159,8 +200,7 @@ describe('App.server', () => {
       },
     });
     server = app.server(new FileSessions({ directory }));
-    await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
-    base = `http://127.0.0.1:${port(server)}`;
+    base = await listen(server);
     // The plain 500 of an escaped error is hyper's own response (HY-60); the response hook does not receive it.
     const response = await fetch(`${base}/list`);
     expect(response.status).toBe(500);
@@ -184,8 +224,7 @@ describe('App.server', () => {
     server.prependListener('request', (incoming, outgoing) => {
       writes.push(new Promise((resolve) => outgoing.on('finish', () => resolve(`${incoming.method} ${incoming.url} ${outgoing.statusCode}`))));
     });
-    await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
-    base = `http://127.0.0.1:${port(server)}`;
+    base = await listen(server);
     expect((await fetch(`${base}/list`)).status).toBe(500);
     expect(await Promise.all(writes)).toEqual(['GET /list 500']);
   });
@@ -201,14 +240,11 @@ describe('App.server', () => {
     const calls: string[] = [];
     const responses: number[] = [];
     const disconnects: [string, boolean, Record<string, unknown>][] = [];
-    let closed: () => void = () => undefined;
-    const done = new Promise<void>((resolve) => (closed = resolve));
+    const closed = latch();
     // The first request waits inside its shared handler until the server has seen its connection close, so the
     // order of the events does not depend on the time that any step takes.
-    let entered: () => void = () => undefined;
-    const running = new Promise<void>((resolve) => (entered = resolve));
-    let release: () => void = () => undefined;
-    const released = new Promise<void>((resolve) => (release = resolve));
+    const entered = latch();
+    const released = latch();
     const app = await new Fixture().app({
       handlers: {
         ...handlers(),
@@ -216,8 +252,8 @@ describe('App.server', () => {
           calls.push('shared');
           reply.note('stage', 'shared');
           if (calls.length === 1) {
-            entered();
-            await released;
+            entered.open();
+            await released.opened;
           }
           return {};
         },
@@ -226,17 +262,12 @@ describe('App.server', () => {
       onResponse: (_request, response) => responses.push(response.status),
       onDisconnect: (request, elapsed, reply) => {
         disconnects.push([`${request.method} ${request.path()}`, elapsed > 0, Object.fromEntries(reply.notes())]);
-        closed();
+        closed.open();
       },
     });
     server = app.server(new FileSessions({ directory }));
-    // The server registers its own listeners of a connection first, so it has seen the close when this one runs.
-    server.once('connection', (connection) => connection.once('close', () => release()));
-    await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
-    const socket = connect(port(server), '127.0.0.1', () => socket.write('GET / HTTP/1.1\r\nHost: x\r\n\r\n'));
-    await running;
-    socket.destroy();
-    await done;
+    await dropClient(server, entered.opened, released.open);
+    await closed.opened;
     expect(disconnects).toEqual([['GET /', true, { stage: 'shared' }]]);
     expect(calls).toEqual(['shared']);
     expect(responses).toEqual([]);
@@ -258,8 +289,8 @@ describe('the write hook and App.listener', () => {
     expect(typeof listener).toBe('function');
     // A node:http server that installs only this listener answers the application.
     const plain = createHttpServer(listener);
-    await new Promise<void>((resolve) => plain.listen(0, '127.0.0.1', resolve));
-    const response = await fetch(`http://127.0.0.1:${port(plain)}/`);
+    const plainBase = await listen(plain);
+    const response = await fetch(`${plainBase}/`);
     await new Promise((resolve) => plain.close(resolve));
     expect(response.status).toBe(200);
   });
@@ -273,8 +304,7 @@ describe('the write hook and App.listener', () => {
         written.push([`${request.method} ${request.path()}`, response?.status ?? null, ended, failure]);
       },
     });
-    await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
-    base = `http://127.0.0.1:${port(server)}`;
+    base = await listen(server);
     expect((await fetch(`${base}/`)).status).toBe(200);
     // The hook runs after the close of the response, which may come after the client has read the response.
     await vi.waitFor(() => expect(written).toEqual([['GET /', 200, true, null]]));
@@ -292,8 +322,7 @@ describe('the write hook and App.listener', () => {
     });
     // A header that the caller sets before the listener of hyper runs stays on the plain 500 (HY-60).
     server.prependListener('request', (_incoming, outgoing) => outgoing.setHeader('X-Before', 'kept'));
-    await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
-    base = `http://127.0.0.1:${port(server)}`;
+    base = await listen(server);
     const response = await fetch(`${base}/list`);
     expect(response.status).toBe(500);
     expect(response.headers.get('x-before')).toBe('kept');
@@ -302,29 +331,11 @@ describe('the write hook and App.listener', () => {
 
   it('calls the write hook with ended false before the disconnect hook when the client closes the connection (HY-67, HY-99)', async () => {
     const events: string[] = [];
-    let entered: () => void = () => undefined;
-    const running = new Promise<void>((resolve) => (entered = resolve));
-    let release: () => void = () => undefined;
-    const released = new Promise<void>((resolve) => (release = resolve));
-    const app = await new Fixture().app({
-      handlers: {
-        ...handlers(),
-        shared: async () => {
-          entered();
-          await released;
-          return {};
-        },
-      },
-      onDisconnect: (request) => events.push(`disconnect ${request.method} ${request.path()}`),
-    });
+    const { app, running, release } = await waitingApp(events);
     server = app.server(new FileSessions({ directory }), {
       written: (request, response, ended, _elapsed, failure) => events.push(`written ${request.method} ${request.path()} ${response === null ? 'null' : response.status} ${ended} ${failure}`),
     });
-    server.once('connection', (connection) => connection.once('close', () => release()));
-    await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
-    const socket = connect(port(server), '127.0.0.1', () => socket.write('GET / HTTP/1.1\r\nHost: x\r\n\r\n'));
-    await running;
-    socket.destroy();
+    await dropClient(server, running, release);
     // The listener settles after the write hook and the disconnect hook (HY-102).
     await vi.waitFor(() => expect(events).toHaveLength(2));
     // HY-99: a request whose connection closed before its answer started has no response.
@@ -333,21 +344,7 @@ describe('the write hook and App.listener', () => {
 
   it('settles the promise of the listener after the write hook and the disconnect hook (HY-102)', async () => {
     const events: string[] = [];
-    let entered: () => void = () => undefined;
-    const running = new Promise<void>((resolve) => (entered = resolve));
-    let release: () => void = () => undefined;
-    const released = new Promise<void>((resolve) => (release = resolve));
-    const app = await new Fixture().app({
-      handlers: {
-        ...handlers(),
-        shared: async () => {
-          entered();
-          await released;
-          return {};
-        },
-      },
-      onDisconnect: (request) => events.push(`disconnect ${request.method} ${request.path()}`),
-    });
+    const { app, running, release } = await waitingApp(events);
     const sessions = new FileSessions({ directory });
     const listener = app.listener(sessions, {
       written: (request, response, ended) => events.push(`written ${request.method} ${request.path()} ${response === null ? 'null' : response.status} ${ended}`),
@@ -356,11 +353,7 @@ describe('the write hook and App.listener', () => {
     const plain = createHttpServer((incoming, outgoing) => {
       settled.push(listener(incoming, outgoing).then(() => void events.push('settled')));
     });
-    plain.once('connection', (connection) => connection.once('close', () => release()));
-    await new Promise<void>((resolve) => plain.listen(0, '127.0.0.1', resolve));
-    const socket = connect(port(plain), '127.0.0.1', () => socket.write('GET / HTTP/1.1\r\nHost: x\r\n\r\n'));
-    await running;
-    socket.destroy();
+    await dropClient(plain, running, release);
     await Promise.all(settled);
     await new Promise((resolve) => plain.close(resolve));
     expect(events).toEqual(['written GET / null false', 'disconnect GET /', 'settled']);
