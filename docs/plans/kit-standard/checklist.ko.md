@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-kit-standard -->
-<!-- source-sha256: 1bd3ff1f59898e9b9040fb01edf4b7a5d88ea85d63c37fbf9a32ba5859b3cfb1 -->
+<!-- source-sha256: d4dc47174622ae64af178219aebab5b8d98951c66163a50f84c19e6aaef4ce66 -->
 # kit 표준 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -73,3 +73,4 @@
 | H25.57 | 사본이 K329 이후의 kit와 같고, divergence-check가 저장소의 gate이며, config/parity.json의 예외가 종류를 밝힌다 | PRINCIPLES.md, Makefile, .github/workflows/ci.yml, config/parity.json | `make kit-check` | [o] |
 | H25.58 | changelog가 home 디렉터리 경로를 담지 않는다 | CHANGELOG.md and CHANGELOG.ko.md | `make docs-check` | [o] |
 | H25.59 | 다른 사용자로 output을 읽는 test를 제거한다. mode test가 이미 모든 output을 다른 사용자가 읽을 수 있음을 증명하고, sudo가 없으면 건너뛰는 test는 좁혀진 test다 | tests/scripts/output-files.test.mts | `make test-markers-check` | [o] |
+| H25.60 | PHP 서버는 template 확장에 대한 분기를 두지 않는다(HY-48, P32) | packages/server/php/src/Renderer.php, packages/server/php/src/App.php, packages/server/php/tests/RendererTest.php, docs/spec/protocol.md | `make divergence-check` | [o] |

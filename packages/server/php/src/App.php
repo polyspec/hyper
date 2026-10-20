@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Polyspec\Hyper;
 
 use Polyspec\Template\BoundMap;
-use Polyspec\Template\Native\BoundMap as NativeBoundMap;
 
 /**
  * Answers requests with documents, JSON, action redirects and the static shell (HY-8, HY-10 to HY-19, HY-24 to HY-27,
@@ -813,7 +812,7 @@ final class App
      *     $route
      * @param array<array-key, mixed> $shared shared data, which the embedded data carries
      * @param array<string, array<array-key, mixed>> $data loader data, which the embedded data carries
-     * @param array<string, BoundMap|NativeBoundMap> $applied bound region data with kept values applied, which the
+     * @param array<string, BoundMap> $applied bound region data with kept values applied, which the
      *     regions render
      * @param array<string, string> $templates
      * @param array<string, array<string, mixed>> $kept
@@ -823,7 +822,7 @@ final class App
         Request $request,
         array $route,
         array $shared,
-        BoundMap|NativeBoundMap $boundShared,
+        BoundMap $boundShared,
         array $data,
         array $applied,
         array $templates,
