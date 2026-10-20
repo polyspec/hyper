@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- H26.4: The row is done. The declarations of the file-part units hold with the HYC rules of H26.5, so parity-declarations-check exits 0. (H26.4)
 - H26.5: The row is done; the check that closes it is the one that holds on the commit of H26.4, which lands with it. (H26.5)
 - H26.5: The row is done. Its renumbering and its citations are the entry of the commit that renames the rules to HYC, and the parity check holds with H26.4. (H26.5)
 - H26.5: The client stream rules are HYC rules. HY-108 to HY-112 became HYC-17 to HYC-21 in protocol.md, because they bind only the TypeScript client of packages/client (HR-98), which the server parity declaration does not cover. The citations in packages/client/src and the rows H26.1-1 to H26.1-3 name the new ids; the earlier lines of this file that name HY-108 to HY-112 mean HYC-17 to HYC-21. Red: make parity-declarations-check named HY-108 to HY-112 as untraced (R13). Green: those five findings are gone. (H26.5)
