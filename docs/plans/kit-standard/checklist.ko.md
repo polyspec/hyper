@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-kit-standard -->
-<!-- source-sha256: 282300f91fd3f92954409ae8d6aa3781e44cb6a6cb4ab7718020032e29660f0d -->
+<!-- source-sha256: 982276fa0593a7a6d53741baac336b77d9ce246b394b81f926a3db3732f13962 -->
 # kit 표준 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -18,3 +18,4 @@
 | H25.12 | PHP test는 각 test code 조각을 한 곳에만 둔다 | packages/server/php/tests/AppTest.php, RouterTest.php, RunTest.php and Support/FrontController.php, disconnect.php, escape.php | `var/tools/bin/node node_modules/@polyspec/kit/dist/run-tests.mjs phpunit --cwd packages/server/php -- --exclude-group native tests/AppTest.php`, `var/tools/bin/node node_modules/@polyspec/kit/dist/run-tests.mjs phpunit --cwd packages/server/php -- --exclude-group native tests/RunTest.php` | [o] |
 | H25.13 | Python test는 각 test code 조각을 한 곳에만 둔다 | packages/server/python/tests/contracts.py, transport.py, render/fixture_app.py and the test files that use them | `packages/server/python/.venv/bin/python packages/server/python/tests/run.py`, `packages/server/python/.venv/bin/python packages/server/python/tests/run.py packages/server/python/tests/render render_*.py` | [o] |
 | H25.14 | hyper의 모든 composer.json은 platform PHP 8.4.1을 두고, lock과 vendor 디렉터리가 이를 따른다 | composer.json, examples/board/composer.json, packages/server/php/composer.json, tests/release-install/composer/composer.json, their locks and config/dependency-policy.json | `make dependency-policy-check`, `make lint-php`, `make toolchain-check` | [!] 원인: 배포된 polyspec/template 0.0.11 archive가 php >=8.5를 요구하므로 composer update --lock이 platform 8.4.1에서 root와 board를 해석하지 못한다(template 원본은 이미 >=8.4를 요구한다); 재시도: 고정한 template 릴리스가 php >=8.4를 요구할 때 |
+| H25.15 | 의존성 검토 기록이 lock과 mise.toml의 tool과 일치한다 | config/dependency-review.json | `make dependency-policy-check` | [!] 원인: 기록된 검토는 각 composer.json의 platform PHP에서 최신 안정 릴리스를 해석하므로 H25.14가 끝나기 전에는 polyspec/template 0.0.6과 phpunit 12.5.40을 최신으로 기록하고, 정책이 요구하거나 예외로 두어야 하는 더 새로운 릴리스 vitest 5.0.5와 setuptools 84.2.0도 기록한다; 재시도: H25.14가 끝나고 vitest와 setuptools를 올리거나 예외로 둔 뒤 |
