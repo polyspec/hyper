@@ -43,3 +43,4 @@
 | H25.35-1 | The route units cite only what their tests name | config/parity.json and packages/server/php/tests/RouterTest.php | `make parity-declarations-check` | [o] |
 | H25.36 | R3: keep holds in every server | The test files of the keep cases of the three servers, config/parity.json | `make parity-check UNITS="keep kept-values"` | [o] |
 | H25.37 | R3: reads holds in every server | packages/server/php/tests/ReadsTest.php | `make parity-check UNITS=reads` | [o] |
+| H25.38 | R3: client-requests holds in every server | The test files of the client cases of the three servers, config/parity.json | `make parity-check UNITS="client-requests client-selection"` | [o] |

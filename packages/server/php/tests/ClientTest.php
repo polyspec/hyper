@@ -88,7 +88,7 @@ final class ClientTest extends TestCase
     public static function cases(): iterable
     {
         foreach (Json::arrays(self::conformance()['cases'] ?? null) as $case) {
-            yield Json::string($case['label'] ?? null) => [$case];
+            yield Json::string($case['id'] ?? null) => [$case];
         }
     }
 

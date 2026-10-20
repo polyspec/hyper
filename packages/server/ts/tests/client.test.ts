@@ -1,51 +1,11 @@
-// The cases of contracts/client.json (HY-62), which PHP passes in ClientTest: one server answers the client-rendered
-// and the server-rendered pages of the fixture manifest.
+// The client rendering beyond the cases of contracts/client.json (HY-62): the selection and the declaration.
 import { mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { maskedToken } from '../src/csrf.js';
 import { FileSessions, Request, Result, type Choice, type ClientRendering } from '../src/index.js';
-import { Fixture, FIXTURES, list, parsed, port, present, record, strings, text } from './support.js';
-
-const conformance = record(parsed(readFileSync(new URL('../../../../contracts/client.json', import.meta.url), 'utf8')));
-const BASE_PATH = text(conformance.basePath);
-const CHOSEN_HOST = text(conformance.chosenHost);
-const SHELL = `${FIXTURES}shell/index.html`;
-// A session token of HY-24; the form carries a masked value of it.
-const TOKEN = '00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff';
-const client = (selects: ClientRendering['selects'] = (request) => ({ chosen: request.header('Host') === CHOSEN_HOST, value: null })): ClientRendering => ({ shell: SHELL, basePath: BASE_PATH, selects });
-
-// Each case of contracts/client.json is a top-level test named by its id (S6).
-it.each(list(conformance.cases).map(record).map((item) => [text(item.id), item] as const))('%s', async (_id, item) => {
-  const fixture = new Fixture();
-  const request = record(item.request);
-  let form = request.form === undefined ? undefined : strings(request.form);
-  if (request.csrf === true) {
-    fixture.session.set('_hyper_csrf', TOKEN);
-    form = { _csrf: maskedToken(TOKEN), ...form };
-  }
-  const response = await fixture.handle(
-    { method: text(request.method), target: text(request.target), headers: strings(request.headers), body: form === undefined ? undefined : new URLSearchParams(form).toString() },
-    { clientRendering: client() },
-  );
-  expect(response.status).toBe(item.status);
-  for (const [name, value] of Object.entries(record(item.headers))) expect(response.headers[name], name).toBe(value);
-  if (item.shell === true) {
-    expect(response.body).toBe(readFileSync(SHELL, 'utf8'));
-    expect(response.headers).toEqual(item.headers);
-  }
-  if (item.body !== undefined) expect(response.body).toBe(item.body);
-  if (item.json !== undefined) {
-    const json = record(parsed(response.body));
-    const expected = record(item.json);
-    expect(json.route).toBe(expected.route);
-    expect(json.params).toEqual(expected.params);
-    expect(Object.keys(record(json.regions))).toEqual(expected.regions);
-  }
-  if (item.session === false) expect(fixture.session.get('_hyper_csrf')).toBeUndefined();
-  expect(fixture.counter.actions).toBe(item.actions);
-});
+import { client, Fixture, FIXTURES, port, present, SHELL, TOKEN } from './support.js';
 
 // Requires that a request whose selection is `selects` is answered with the plain 500 and logs one error (HY-43).
 async function expectPlain500(selects: ClientRendering['selects']): Promise<void> {

@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { expect } from 'vitest';
 import { Router } from '@polyspec/hyper-client';
 import { verifyToken } from '../src/csrf.js';
-import { App, BadRequest, Forbidden, MemorySessionStore, NotFound, Redirect, Request, Result, type AppOptions, type Handlers, type Response } from '../src/index.js';
+import { App, BadRequest, Forbidden, MemorySessionStore, NotFound, Redirect, Request, Result, type AppOptions, type ClientRendering, type Handlers, type Response } from '../src/index.js';
 
 export const FIXTURES = fileURLToPath(new URL('../../php/tests/fixtures/', import.meta.url));
 // The template files of the fixtures, which `make hyper-test-node` builds with scripts/build-templates.mts.
@@ -274,3 +274,12 @@ export function expectFields(fields: { valid: boolean; values: Iterable<unknown>
   expect(fields.valid).toBe(true);
   expect([...fields.values]).toEqual(expected);
 }
+
+// The contract of the client rendering (HY-62) and the declaration that its cases run against.
+export const conformance = record(parsed(readFileSync(new URL('../../../../contracts/client.json', import.meta.url), 'utf8')));
+const BASE_PATH = text(conformance.basePath);
+const CHOSEN_HOST = text(conformance.chosenHost);
+export const SHELL = `${FIXTURES}shell/index.html`;
+// A session token of HY-24; the form carries a masked value of it.
+export const TOKEN = '00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff';
+export const client = (selects: ClientRendering['selects'] = (request) => ({ chosen: request.header('Host') === CHOSEN_HOST, value: null })): ClientRendering => ({ shell: SHELL, basePath: BASE_PATH, selects });

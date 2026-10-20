@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: ff8316827b318319a8ea004d4c116024542098b63779ca007bf17d871fe2a576 -->
+<!-- source-sha256: 1fb6721a8f71f50478c8a555a3ee7b96018a15c4b661894afd57602a523d57e4 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H25.38: `contracts/client.json`의 case는 모든 서버에서 suite로 실행된다(R3). PHP provider는 data set을 `id`로 부르고, Python과 Node는 case를 각자의 test 파일(`render_client_requests.py`, `client-requests.test.ts`)에 둔다. Node의 contract와 fixture는 `support.ts`로 옮긴다. selection과 선언 test는 `render_client.py`, `client.test.ts`, `ClientTest.php`에 unit `client-selection`(HY-62)으로 남는다. Red: `make parity-check UNITS=client-requests`가 세 서버에 R3을 보고했다. Green: `client-requests`와 `client-selection`이 성립한다. binding 6개를 두 번 실행해 case 75개가 통과했다(PHP는 Homebrew PHP 8.5) (H25.38)
 - H25.37: `contracts/reads.json`의 case는 PHP에서 suite로 실행된다(R3). `ReadsTest`는 test 안의 loop 하나 대신 각 case의 `id`로 이름 붙은 data provider를 둔다. Python과 Node의 test는 이미 case만 담고 있었다. Red: `make parity-check UNITS=reads`가 PHP에 R3을 보고했다(`not executed`: loop가 이름을 붙이지 않은 case 23개). Green: `reads`가 세 서버에서 성립한다. binding 3개를 두 번 실행해 case 69개가 통과했다(PHP는 Homebrew PHP 8.5) (H25.37)
 - H25.36: `contracts/keep.json`의 case는 모든 서버에서 suite로 실행된다(R3). PHP provider는 data set을 `id`로 부르고, Python과 Node는 case를 각자의 test 파일(`test_keep.py`, `keep.test.ts`)에 둔다. 선택 test는 `test_kept.py`, `kept.test.ts`, `KeptTest.php`에 unit `kept-values`(HY-38)로 남는다. Red: `make parity-check UNITS=keep`이 세 서버에 R3을 보고했다(PHP data set은 label로 이름 붙었고, Python과 Node는 선택 test를 'not in the suite'로 실행했다). Green: `keep`과 `kept-values`가 성립한다. binding 6개를 두 번 실행해 case 96개가 통과했다(PHP는 Homebrew PHP 8.5) (H25.36)
 - H25.35-1: unit `routes`와 `routes-base-path`는 `rest`만 시험하는 rest parameter HY-49를 더 이상 인용하지 않고, `RouterTest.php`는 unit `route-paths`를 위해 HY-4를 이름으로 적는다. Red: route test 파일을 나눈 뒤(H25.35) `make parity-declarations-check` exit 2, R15 지적 5건. Green: exit 0 (H25.35-1)

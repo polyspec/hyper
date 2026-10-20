@@ -390,11 +390,11 @@
         },
         {
           "implementation": "python",
-          "test": "packages/server/python/tests/render/render_client.py"
+          "test": "packages/server/python/tests/render/render_client_requests.py"
         },
         {
           "implementation": "ts",
-          "test": "packages/server/ts/tests/client.test.ts"
+          "test": "packages/server/ts/tests/client-requests.test.ts"
         }
       ],
       "requirements": [
@@ -1078,6 +1078,30 @@
       ],
       "requirements": [
         "HY-38"
+      ]
+    },
+    {
+      "id": "client-selection",
+      "kind": "feature",
+      "bindings": [
+        {
+          "implementation": "php",
+          "test": "packages/server/php/tests/ClientTest.php",
+          "id": "ClientTest::testEveryHandlerOfARequestReadsTheValueOfTheChoice"
+        },
+        {
+          "implementation": "python",
+          "test": "packages/server/python/tests/render/render_client.py",
+          "id": "test_every_handler_of_a_request_reads_the_value_of_the_choice"
+        },
+        {
+          "implementation": "ts",
+          "test": "packages/server/ts/tests/client.test.ts",
+          "id": "client rendering (HY-62) › gives the value of the choice to every handler of the request (HY-62)"
+        }
+      ],
+      "requirements": [
+        "HY-62"
       ]
     }
   ],
