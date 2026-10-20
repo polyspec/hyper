@@ -5,47 +5,12 @@
 import asyncio
 import contextlib
 import io
-import tempfile
 import threading
-import unittest
 from pathlib import Path
 
+from transport import TransportCase, record_ended, record_status
 from polyspec.hyper.asgi import create_asgi
-from polyspec.hyper.file_sessions import FileSessions
-from polyspec.hyper.reply import Reply
-from polyspec.hyper.request import Request
 from polyspec.hyper.response import Response
-
-
-class Application:
-    """An application that answers with what the request gave, and records it and its replies."""
-
-    https = False
-    frame_ancestors = "'self'"
-    body_limit = 16
-
-    def __init__(self):
-        self.requests: list[Request] = []
-        self.replies: list[object] = []
-        self.disconnected_calls: list[tuple[Request, object]] = []
-        self.threads: list[int] = []
-        self.opens_session = False
-
-    def respond(self, request: Request, session, started: int):
-        self.requests.append(request)
-        self.threads.append(threading.get_ident())
-        if self.opens_session:
-            session.set("count", 1)
-        reply = Reply()
-        self.replies.append(reply)
-        return Response(
-            200,
-            {"Content-Type": ["text/plain; charset=utf-8"], "X-Answer": "given"},
-            f"{request.method} {request.path()}",
-        ), reply
-
-    def disconnected(self, request: Request, started: int, reply) -> None:
-        self.disconnected_calls.append((request, reply))
 
 
 class Sends:
@@ -92,21 +57,13 @@ def run(application, values: dict, sends: Sends, receives: Receives) -> None:
     asyncio.run(application(values, receives, sends))
 
 
-class AsgiTest(unittest.TestCase):
-    def setUp(self) -> None:
-        self.directory = tempfile.TemporaryDirectory()
-        self.addCleanup(self.directory.cleanup)
-        self.sessions = FileSessions(str(Path(self.directory.name).resolve()))
-        self.app = Application()
-
+class AsgiTest(TransportCase):
     def test_the_request_reaches_the_application(self) -> None:
         written = []
         application = create_asgi(
             self.app,
             self.sessions,
-            written=lambda request, response, ended, elapsed, failure: written.append(
-                (request, ended)
-            ),
+            written=record_ended(written),
         )
         sends = Sends()
         run(
@@ -121,13 +78,8 @@ class AsgiTest(unittest.TestCase):
             sends,
             Receives(b"hello"),
         )
+        self.assert_request_reached("hy-session")
         request = self.app.requests[0]
-        self.assertEqual("POST", request.method)
-        self.assertEqual("/news", request.path())
-        self.assertEqual("page=2", request.raw_query())
-        self.assertEqual("one", request.header("x-name"))
-        self.assertEqual("s", request.cookie("hy-session"))
-        self.assertEqual(5, request.body_size())
         self.assertEqual(
             {
                 "type": "http.response.start",
@@ -206,16 +158,11 @@ class AsgiTest(unittest.TestCase):
         application = create_asgi(
             self.app,
             self.sessions,
-            written=lambda request, response, ended, elapsed, failure: written.append(
-                (request, ended)
-            ),
+            written=record_ended(written),
         )
         with self.assertRaises(OSError):
             run(application, scope(), Sends(broken=True), Receives(b""))
-        self.assertEqual([(self.app.requests[0], False)], written)
-        self.assertEqual(
-            [(self.app.requests[0], self.app.replies[0])], self.app.disconnected_calls
-        )
+        self.assert_disconnected(written)
 
     def test_around_answers_without_the_application(self) -> None:
         written = []
@@ -226,9 +173,7 @@ class AsgiTest(unittest.TestCase):
             around=lambda request, answer: (
                 captured.append(request) or Response(204, {}, "")
             ),
-            written=lambda request, response, ended, elapsed, failure: written.append(
-                (request, ended)
-            ),
+            written=record_ended(written),
         )
         sends = Sends()
         run(application, scope(), sends, Receives(b""))
@@ -333,9 +278,7 @@ class AsgiTest(unittest.TestCase):
             self.app,
             self.sessions,
             around=around,
-            written=lambda request, response, ended, elapsed, failure: written.append(
-                (request.path(), response.status, ended)
-            ),
+            written=record_status(written),
         )
         with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(OSError):
             run(

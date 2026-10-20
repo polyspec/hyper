@@ -1,14 +1,10 @@
 # An error that escapes the answer of a request (HY-60, HY-97, HY-99): the server writes the plain 500 of hyper and reports
 # it once to the write hook with the request as the server received it, also when `around` never ran.
 import contextlib
-import http.client
 import io
-import tempfile
-import threading
 import unittest
-from pathlib import Path
 
-from polyspec.hyper.file_sessions import FileSessions
+from transport import TransportCase, get_once, record_all
 from polyspec.hyper.reply import Reply
 from polyspec.hyper.response import Response
 from polyspec.hyper.server import create_server
@@ -55,28 +51,9 @@ class BrokenSessions:
         raise OSError("the session directory is gone")
 
 
-class EscapeTest(unittest.TestCase):
-    def setUp(self) -> None:
-        self.directory = tempfile.TemporaryDirectory()
-        self.addCleanup(self.directory.cleanup)
-        self.sessions = FileSessions(str(Path(self.directory.name).resolve()))
-
+class EscapeTest(TransportCase):
     def get(self, server, path: str):
-        worker = threading.Thread(target=server.serve_forever, daemon=True)
-        worker.start()
-        try:
-            connection = http.client.HTTPConnection(
-                "127.0.0.1", server.server_address[1], timeout=10
-            )
-            connection.request("GET", path)
-            reply = connection.getresponse()
-            body = reply.read()
-            connection.close()
-        finally:
-            server.shutdown()
-            server.server_close()
-            worker.join(timeout=10)
-        return reply, body
+        return get_once(server, path)
 
     def test_an_error_that_escapes_the_answer_gets_the_plain_500_and_one_write_report(
         self,
@@ -88,9 +65,7 @@ class EscapeTest(unittest.TestCase):
             self.sessions,
             host="127.0.0.1",
             port=0,
-            written=lambda request, response, ended, elapsed, failure: written.append(
-                (request.method, request.path(), response.status, ended, failure)
-            ),
+            written=record_all(written),
         )
         reply, body = self.get(server, "/list")
         # HY-60: the plain 500 of an escaped error is hyper's own response, the same in every adapter.
@@ -117,9 +92,7 @@ class EscapeTest(unittest.TestCase):
             BrokenSessions(),
             host="127.0.0.1",
             port=0,
-            written=lambda request, response, ended, elapsed, failure: written.append(
-                (request.method, request.path(), response.status, ended, failure)
-            ),
+            written=record_all(written),
         )
         reply, body = self.get(server, "/list")
         self.assertEqual(500, reply.status)
@@ -141,9 +114,7 @@ class EscapeTest(unittest.TestCase):
             self.sessions,
             host="127.0.0.1",
             port=0,
-            written=lambda request, response, ended, elapsed, failure: written.append(
-                (request.method, request.path(), response.status, ended, failure)
-            ),
+            written=record_all(written),
         )
         broken_send = server.RequestHandlerClass.send
 

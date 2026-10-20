@@ -1,27 +1,10 @@
 # Query and form values of the conformance cases (HY-56, HY-57). The PHP and the JavaScript implementation pass the
 # same cases of contracts/fields.json: a urlencoded text is the UTF-8 encoding of its JSON string, and a multipart
 # body is text whose characters are its bytes.
-import json
 import unittest
-from pathlib import Path
 
+from contracts import add_cases, file
 from polyspec.hyper.fields import Fields
-
-CONTRACTS = Path(__file__).resolve().parents[4] / "contracts"
-
-
-def file(name: str) -> dict:
-    return json.loads((CONTRACTS / name).read_text(encoding="utf-8"))
-
-
-def add_cases(test_class, cases, check):
-    """Adds the test method test_<id> of each case, which runs check(self, case) for it (S6)."""
-    for case in cases:
-
-        def test(self, case=case):
-            check(self, case)
-
-        setattr(test_class, f"test_{case['id']}", test)
 
 
 def entries(fields: Fields | None) -> list | None:

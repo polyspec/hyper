@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-kit-standard -->
-<!-- source-sha256: c6cd157bc54dfad6b7a4cc87908cd7565f1342fba991a2f7fb7316badf4ca8a5 -->
+<!-- source-sha256: 878a45aeb543252537178a01d52c018de213d00945a344654d7e1eb49b4c0bf8 -->
 # kit 표준 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -16,3 +16,4 @@
 | H25.10 | PHP와 Python 서버 원본은 각 code 조각을 한 곳에만 둔다 | packages/server/php/src/App.php, Response.php, BadRequest.php, Forbidden.php, Redirect.php and packages/server/python/src/polyspec/hyper/app.py, pipeline.py, asgi.py, wsgi.py, server.py | `var/tools/bin/node node_modules/@polyspec/kit/dist/run-tests.mjs phpunit --cwd packages/server/php -- --exclude-group native tests/AppTest.php`, `packages/server/python/.venv/bin/python packages/server/python/tests/run.py` | [o] |
 | H25.11 | TypeScript test는 각 test code 조각을 한 곳에만 둔다 | packages/client/tests/hyper.test.ts and packages/server/ts/tests/support.ts, client.test.ts, fields.test.ts, http.test.ts, rest.test.ts, router.test.ts | `var/tools/bin/node node_modules/vitest/vitest.mjs run --dir packages/client`, `var/tools/bin/node node_modules/vitest/vitest.mjs run --dir packages/server/ts` | [o] |
 | H25.12 | PHP test는 각 test code 조각을 한 곳에만 둔다 | packages/server/php/tests/AppTest.php, RouterTest.php, RunTest.php and Support/FrontController.php, disconnect.php, escape.php | `var/tools/bin/node node_modules/@polyspec/kit/dist/run-tests.mjs phpunit --cwd packages/server/php -- --exclude-group native tests/AppTest.php`, `var/tools/bin/node node_modules/@polyspec/kit/dist/run-tests.mjs phpunit --cwd packages/server/php -- --exclude-group native tests/RunTest.php` | [o] |
+| H25.13 | Python test는 각 test code 조각을 한 곳에만 둔다 | packages/server/python/tests/contracts.py, transport.py, render/fixture_app.py and the test files that use them | `packages/server/python/.venv/bin/python packages/server/python/tests/run.py`, `packages/server/python/.venv/bin/python packages/server/python/tests/run.py packages/server/python/tests/render render_*.py` | [o] |

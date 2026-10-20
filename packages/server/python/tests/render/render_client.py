@@ -5,6 +5,7 @@ import unittest
 from pathlib import Path
 from urllib.parse import urlencode
 
+from fixture_app import FIXTURES, PROGRAM
 from polyspec.hyper.app import App
 from polyspec.hyper.client import Choice, ClientRendering
 from polyspec.hyper.csrf import masked
@@ -12,9 +13,6 @@ from polyspec.hyper.request import Request
 from polyspec.hyper.result import Result
 from polyspec.hyper.session import ArraySession
 
-TESTS = Path(__file__).resolve().parents[2]
-FIXTURES = TESTS.parent / "php" / "tests" / "fixtures"
-PROGRAM = FIXTURES.parent / "build" / "server"
 SHELL = FIXTURES / "shell" / "index.html"
 CONTRACTS = Path(__file__).resolve().parents[5] / "contracts"
 # A session token of HY-24; the form carries a masked value of it.

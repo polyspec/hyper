@@ -2,29 +2,13 @@
 # same cases of contracts/keep.json; the applied data is compared as JSON text, so an empty map stays a map.
 import json
 import unittest
-from pathlib import Path
 
+from contracts import add_cases, file
 from polyspec.hyper.kept import apply, select
-
-CONTRACTS = Path(__file__).resolve().parents[4] / "contracts"
-
-
-def file(name: str) -> dict:
-    return json.loads((CONTRACTS / name).read_text(encoding="utf-8"))
 
 
 def cases() -> list[dict]:
     return file("keep.json")["cases"]
-
-
-def add_cases(test_class, cases, check):
-    """Adds the test method test_<id> of each case, which runs check(self, case) for it (S6)."""
-    for case in cases:
-
-        def test(self, case=case):
-            check(self, case)
-
-        setattr(test_class, f"test_{case['id']}", test)
 
 
 def text(value) -> str:

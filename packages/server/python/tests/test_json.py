@@ -1,27 +1,10 @@
 # JSON text with the bytes of the PHP server and kept values decoded as PHP json_decode reads them (HY-17, HY-38,
 # HY-40, HY-54). The PHP and the JavaScript server pass the same cases of contracts/json.json.
-import json
 import math
 import unittest
-from pathlib import Path
 
+from contracts import add_cases, file
 from polyspec.hyper.json_codec import JsonDecodeError, decode, encode, in_data_model
-
-CONTRACTS = Path(__file__).resolve().parents[4] / "contracts"
-
-
-def file(name: str) -> dict:
-    return json.loads((CONTRACTS / name).read_text(encoding="utf-8"))
-
-
-def add_cases(test_class, cases, check):
-    """Adds the test method test_<id> of each case, which runs check(self, case) for it (S6)."""
-    for case in cases:
-
-        def test(self, case=case):
-            check(self, case)
-
-        setattr(test_class, f"test_{case['id']}", test)
 
 
 def finite(value):

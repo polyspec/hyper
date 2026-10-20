@@ -6,16 +6,15 @@ import unittest
 from pathlib import Path
 from urllib.parse import urlencode
 
+from fixture_app import FIXTURES, PROGRAM
 from polyspec.hyper.app import App
 from polyspec.hyper.csrf import masked
 from polyspec.hyper.reply import Reply
 from polyspec.hyper.request import Request
+from polyspec.hyper.response import Response
 from polyspec.hyper.result import Result
 from polyspec.hyper.session import ArraySession
 
-TESTS = Path(__file__).resolve().parents[2]
-FIXTURES = TESTS.parent / "php" / "tests" / "fixtures"
-PROGRAM = FIXTURES.parent / "build" / "server"
 TOKEN = "00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff"
 
 
@@ -55,6 +54,16 @@ def opened(**options) -> App:
         handlers=handlers(),
         timezone="+09:00",
         **options,
+    )
+
+
+def opened_with(shared_loader) -> App:
+    """The application whose shared handler is `shared_loader`."""
+    return App.open(
+        manifest=str(FIXTURES / "app.json"),
+        program=str(PROGRAM),
+        handlers={**handlers(), "shared": shared_loader},
+        timezone="+09:00",
     )
 
 
@@ -227,13 +236,9 @@ class ActionTest(unittest.TestCase):
             reply.status(403)
             return {}
 
-        app = App.open(
-            manifest=str(FIXTURES / "app.json"),
-            program=str(PROGRAM),
-            handlers={**handlers(), "shared": shared_loader},
-            timezone="+09:00",
+        response = opened_with(shared_loader).handle(
+            get("/", {"Accept": "application/json"}), ArraySession()
         )
-        response = app.handle(get("/", {"Accept": "application/json"}), ArraySession())
         self.assertEqual(403, response.status)
         self.assertEqual("no-store", response.headers["Cache-Control"])
 
@@ -247,12 +252,7 @@ class ReferrerPolicyTest(unittest.TestCase):
             reply.referrer_policy("strict-origin-when-cross-origin")
             return {"site": "fixture"}
 
-        app = App.open(
-            manifest=str(FIXTURES / "app.json"),
-            program=str(PROGRAM),
-            handlers={**handlers(), "shared": shared_loader},
-            timezone="+09:00",
-        )
+        app = opened_with(shared_loader)
         store = ArraySession()
         document = app.handle(get("/"), store)
         self.assertEqual(
@@ -282,13 +282,9 @@ class ReferrerPolicyTest(unittest.TestCase):
             reply.status(403).referrer_policy("origin")
             return {}
 
-        app = App.open(
-            manifest=str(FIXTURES / "app.json"),
-            program=str(PROGRAM),
-            handlers={**handlers(), "shared": shared_loader},
-            timezone="+09:00",
+        response = opened_with(shared_loader).handle(
+            get("/", {"Accept": "application/json"}), ArraySession()
         )
-        response = app.handle(get("/", {"Accept": "application/json"}), ArraySession())
         self.assertEqual(403, response.status)
         self.assertEqual("origin", response.headers["Referrer-Policy"])
 
@@ -304,47 +300,13 @@ class KeepTest(unittest.TestCase):
 
     def test_the_keep_endpoint_stores_a_server_value(self) -> None:
         store = ArraySession()
-        app = opened()
-        token = _token(app, store)
-        response = app.handle(
-            Request(
-                "POST",
-                "/_hyper/keep",
-                {"Content-Type": "application/x-www-form-urlencoded"},
-                body=urlencode(
-                    {
-                        "_csrf": masked(token),
-                        "region": "rows",
-                        "path": "open",
-                        "value": "true",
-                    }
-                ).encode(),
-            ),
-            store,
-        )
+        response = post_keep(store, {"region": "rows", "path": "open", "value": "true"})
         self.assertEqual(204, response.status)
         self.assertEqual({"open": True}, session_kept(store))
 
     def test_the_keep_endpoint_rejects_a_path_that_is_not_server(self) -> None:
         store = ArraySession()
-        app = opened()
-        token = _token(app, store)
-        response = app.handle(
-            Request(
-                "POST",
-                "/_hyper/keep",
-                {"Content-Type": "application/x-www-form-urlencoded"},
-                body=urlencode(
-                    {
-                        "_csrf": masked(token),
-                        "region": "rows",
-                        "path": "view",
-                        "value": '"x"',
-                    }
-                ).encode(),
-            ),
-            store,
-        )
+        response = post_keep(store, {"region": "rows", "path": "view", "value": '"x"'})
         self.assertEqual(400, response.status)
 
 
@@ -370,6 +332,21 @@ class ProgramTest(unittest.TestCase):
                     timezone="+09:00",
                 )
             self.assertIn("templates", str(missing.exception))
+
+
+def post_keep(store: ArraySession, fields: dict) -> Response:
+    """Posts the form `fields` with the CSRF value of the session `store` to the keep endpoint of a new application."""
+    app = opened()
+    token = _token(app, store)
+    return app.handle(
+        Request(
+            "POST",
+            "/_hyper/keep",
+            {"Content-Type": "application/x-www-form-urlencoded"},
+            body=urlencode({"_csrf": masked(token), **fields}).encode(),
+        ),
+        store,
+    )
 
 
 def _token(app: App, store: ArraySession) -> str:

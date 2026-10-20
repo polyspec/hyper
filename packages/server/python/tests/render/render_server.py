@@ -54,6 +54,20 @@ def open_app(load: Callable, **options) -> App:
         shutil.rmtree(program)
 
 
+def waiting_around() -> tuple[threading.Event, threading.Event, Callable]:
+    """Returns the events `rendered` and `closed` and an `around` hook that sets `rendered`, waits for `closed` and
+    answers with a page that is larger than a write that a closed connection accepts."""
+    rendered = threading.Event()
+    closed = threading.Event()
+
+    def around(request: Request, answer: Callable) -> Response:
+        rendered.set()
+        closed.wait()
+        return Response.text(200, "x" * LARGE)
+
+    return rendered, closed, around
+
+
 class Served:
     """Serves an application in a thread; leaving the block stops the server and awaits every request thread, so a
     test reads the calls of the hooks after every request ended (HY-87)."""
@@ -315,13 +329,7 @@ class AroundTest(unittest.TestCase):
     ) -> None:
         # HY-97: without a call of `answer`, no hook of the application runs, also when the write fails (HY-67).
         events: list = []
-        rendered = threading.Event()
-        closed = threading.Event()
-
-        def around(request: Request, answer: Callable) -> Response:
-            rendered.set()
-            closed.wait()
-            return Response.text(200, "x" * LARGE)
+        rendered, closed, around = waiting_around()
 
         app = open_app(
             loader([]),
@@ -423,13 +431,7 @@ class WrittenTest(unittest.TestCase):
         # HY-99, HY-67: the failed write of a response of `around` alone reports False, and without a call of
         # `answer` the disconnect hook does not run (HY-97).
         events: list = []
-        rendered = threading.Event()
-        closed = threading.Event()
-
-        def around(request: Request, answer: Callable) -> Response:
-            rendered.set()
-            closed.wait()
-            return Response.text(200, "x" * LARGE)
+        rendered, closed, around = waiting_around()
 
         app = open_app(
             loader([]), on_disconnect=lambda *_args: events.append("disconnect")

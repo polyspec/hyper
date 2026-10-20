@@ -2,16 +2,11 @@
 # callable and the ASGI callable give the same request and the same response for one target, and the
 # percent sequences of the target reach the application as the client sent them.
 import asyncio
-import http.client
 import io
-import tempfile
-import threading
-import unittest
-from pathlib import Path
 from urllib.parse import unquote
 
+from transport import TransportCase, get_once
 from polyspec.hyper.asgi import create_asgi
-from polyspec.hyper.file_sessions import FileSessions
 from polyspec.hyper.reply import Reply
 from polyspec.hyper.response import Response
 from polyspec.hyper.server import create_server
@@ -54,22 +49,10 @@ def split(target: str) -> tuple[str, str]:
 
 
 def via_create_server(app, sessions, target: str) -> tuple[int, bytes]:
-    server = create_server(app, sessions, host="127.0.0.1", port=0)
-    worker = threading.Thread(target=server.serve_forever, daemon=True)
-    worker.start()
-    try:
-        connection = http.client.HTTPConnection(
-            "127.0.0.1", server.server_address[1], timeout=10
-        )
-        connection.request("GET", target)
-        reply = connection.getresponse()
-        body = reply.read()
-        connection.close()
-        return reply.status, body
-    finally:
-        server.shutdown()
-        server.server_close()
-        worker.join(timeout=10)
+    reply, body = get_once(
+        create_server(app, sessions, host="127.0.0.1", port=0), target
+    )
+    return reply.status, body
 
 
 def via_wsgi(app, sessions, target: str) -> tuple[int, bytes]:
@@ -112,12 +95,7 @@ def via_asgi(app, sessions, target: str) -> tuple[int, bytes]:
     return events[0]["status"], events[1]["body"]
 
 
-class RequestTargetTest(unittest.TestCase):
-    def setUp(self) -> None:
-        self.directory = tempfile.TemporaryDirectory()
-        self.addCleanup(self.directory.cleanup)
-        self.sessions = FileSessions(str(Path(self.directory.name).resolve()))
-
+class RequestTargetTest(TransportCase):
     def test_the_three_transports_give_equal_requests_and_responses(self) -> None:
         transports = [
             ("create_server", via_create_server),

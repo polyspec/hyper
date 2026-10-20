@@ -1,26 +1,9 @@
 # The masked session token of the conformance cases (HY-24). The PHP and the JavaScript implementation pass the same
 # cases of contracts/csrf.json.
-import json
 import unittest
-from pathlib import Path
 
+from contracts import add_cases, file
 from polyspec.hyper.csrf import mask, masked, verify
-
-CONTRACTS = Path(__file__).resolve().parents[4] / "contracts"
-
-
-def file(name: str) -> dict:
-    return json.loads((CONTRACTS / name).read_text(encoding="utf-8"))
-
-
-def add_cases(test_class, cases, check):
-    """Adds the test method test_<id> of each case, which runs check(self, case) for it (S6)."""
-    for case in cases:
-
-        def test(self, case=case):
-            check(self, case)
-
-        setattr(test_class, f"test_{case['id']}", test)
 
 
 class MaskTest(unittest.TestCase):
