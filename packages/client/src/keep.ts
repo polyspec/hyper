@@ -23,7 +23,8 @@ export function applyKept(data: MapValue, kept: readonly (readonly [string, Valu
   return applied;
 }
 
-function childOf(container: Value | undefined, key: string): Value | undefined {
+/** The member `key` of a map, or the item of a list at an index `key`; undefined when the container has none. */
+export function childOf(container: Value | undefined, key: string): Value | undefined {
   if (container instanceof Map) return container.get(key);
   if (Array.isArray(container) && /^\d+$/.test(key)) return container[Number(key)];
   return undefined;

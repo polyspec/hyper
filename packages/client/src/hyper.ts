@@ -5,7 +5,7 @@ import { PageStylesheets, StylesheetError } from './stylesheets.js';
 import { stripBasePath } from './router.js';
 import { routeTemplates } from './templates.js';
 import { keptPaths, type RouteDeclaration } from './manifest.js';
-import { browserStorage, valueToJson, type KeepStorage } from './keep.js';
+import { browserStorage, childOf, valueToJson, type KeepStorage } from './keep.js';
 
 // The htmx operations that the browser code uses. E is the element of a region: a DOM Element in the browser, where
 // htmx itself is the HtmxApi, and a RegionElement of a test. find reads the element of a region by its id selector;
@@ -699,12 +699,6 @@ function valueAt(data: Value | undefined, path: string): Value | undefined {
   let value = data;
   for (const key of path.split('.')) value = childOf(value, key);
   return value;
-}
-
-function childOf(container: Value | undefined, key: string): Value | undefined {
-  if (container instanceof Map) return container.get(key);
-  if (Array.isArray(container) && /^\d+$/.test(key)) return container[Number(key)];
-  return undefined;
 }
 
 // Marks a region element as failed with a status, or clears the mark (HY-47).

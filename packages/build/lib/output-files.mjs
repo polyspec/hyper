@@ -38,6 +38,14 @@ export function writeFileAtomic(file, content) {
   renameSync(next, file);
 }
 
+/** The paths of the files below `dir`, each with `dir` as its prefix, directory by directory. */
+export function listFiles(dir) {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const path = join(dir, entry.name);
+    return entry.isDirectory() ? listFiles(path) : [path];
+  });
+}
+
 /** Copies the file `source` to `target` and creates the directories of `target`. */
 export function copyFile(source, target) {
   makeDirectory(dirname(target));

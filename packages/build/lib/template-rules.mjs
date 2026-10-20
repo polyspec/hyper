@@ -5,8 +5,9 @@
 // template includes or places by path (HY-75). `make templates-check` and the server build use it, so a
 // server program never serves templates that break these rules.
 
-import { readdirSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
+import { listFiles } from './output-files.mjs';
 
 // Returns the problems of the templates below `templatesDir` for the manifest, and the number of templates. The
 // parser and the path resolution of the template package are passed in, because the server build loads them from
@@ -93,11 +94,4 @@ function nodeLists(value, lists = []) {
     for (const item of Object.values(value)) nodeLists(item, lists);
   }
   return lists;
-}
-
-function listFiles(dir) {
-  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-    const path = join(dir, entry.name);
-    return entry.isDirectory() ? listFiles(path) : [path];
-  });
 }
