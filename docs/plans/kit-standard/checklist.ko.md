@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-kit-standard -->
-<!-- source-sha256: 320e116de0b61a8182d6aa06ff89a113e3ea42094ad48a683929758fa14aa429 -->
+<!-- source-sha256: da9f9244c2c70b42de8e250f8849703eb03ff04b5a485f7d431872aac2c276c7 -->
 # kit 표준 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -79,4 +79,4 @@
 | H25.64 | K364 이후 kit 복사본이 설치된 kit과 일치한다 | PRINCIPLES.md, PRINCIPLES.ko.md, ruff.toml, .golangci.yml, scripts/kit/kit-bootstrap.mk, clippy.toml | `make kit-check` | [o] |
 | H25.62 | Python 서버는 ruff가 필요로 하지 않는 noqa 없이 fallback의 이유를 적는다 | the except clause of the render fallback in app.py | `make lint-python` | [o] |
 | H25.65 | 영문 CHANGELOG.md와 kit-standard 체크리스트의 한국어 쌍이 원문과 다시 일치한다. 원인: af1b700 이후 영문 문서가 바뀌었으나 한국어 쌍은 이전 source-sha256을 유지하여 make docs-check가 실패한다 | CHANGELOG.ko.md, docs/plans/kit-standard/checklist.ko.md | `make docs-check` | [o] |
-| H25.67 | hyper는 kit f9eb43dd의 kit copy(K348 K385 K384 K360-1 K383 K380 K382 K375)를 받는다 | the kit copies that kit.copies lists, PRINCIPLES.md, PRINCIPLES.ko.md, scripts/kit/kit-bootstrap.mk, config/layout.kit.yml, ruff.toml, .golangci.yml, .github/workflows/release.yml | `make kit-check` | [ ] |
+| H25.67 | hyper는 kit f9eb43dd의 kit copy(K348 K385 K384 K360-1 K383 K380 K382 K375)를 받는다 | the kit copies that kit.copies lists, PRINCIPLES.md, PRINCIPLES.ko.md, scripts/kit/kit-bootstrap.mk, config/layout.kit.yml, ruff.toml, .golangci.yml, .github/workflows/release.yml | `make kit-check` | [o] |
