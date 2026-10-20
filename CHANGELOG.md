@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- H25.44: HY-107 states that a loader or an action may let the ORM errors NO_ROWS and REVISION_CHANGED escape: the server answers NO_ROWS as NotFound (404) and REVISION_CHANGED as the route page with status 409 and no data, and identifies the error by its class name and code without a dependency on the ORM. (H25.44)
 - H25.43: HY-106 states the public API of a server (application, host entries, request, reply, response, result and its stops, session stores, services, client rendering) and that every other symbol is internal, marked @internal in PHP and Node, with a leading underscore in Python. (H25.43)
 - H25.25-1: The package @polyspec/hyper-server builds again: warnings.ts replaces process.emitWarning by a function typed to the signature of Node (Reflect.apply, no cast), and the around cases of tests/http.test.ts type-check; red: tsc -p packages/server/ts/tsconfig.build.json failed with TS2322 at warnings.ts(13,9), green: tsc passes for the build and the test configuration and the HY-74 case passes. (H25.25-1)
 - H25.41-1: H25.41 is undone: the recipe tests of tests/scripts/check-recipes.test.mts run make without -o toolchain-check and without GITHUB_ACTIONS, and the hyper-test-js case selects its test file with the new JS_TESTS variable of the recipe, as the runner of the kit requires; the tests depend on toolchain-check and stay red on this machine until kit K304 lands. (H25.41-1)

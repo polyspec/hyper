@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: eac7567dc73ebb056c0302665c363450a41bac0aaabf08f6898c7158f46add81 -->
+<!-- source-sha256: c0c45a5a3381737fc956c339ad73133b692523cd4fb63ea7177ec993c3dbe7cc -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H25.44: HY-107은 loader나 action이 ORM 오류 NO_ROWS와 REVISION_CHANGED를 밖으로 나가게 둘 수 있다고 정한다. 서버는 NO_ROWS를 NotFound(404)로, REVISION_CHANGED를 status 409이고 data가 없는 route page로 응답하며, ORM에 대한 의존 없이 클래스 이름과 code로 오류를 알아본다. (H25.44)
 - H25.43: HY-106은 서버의 public API(애플리케이션, host 진입점, 요청, reply, response, result와 그 중단, session store, 서비스, 클라이언트 렌더링)를 정하고, 그 밖의 모든 symbol은 내부 요소이며 PHP와 Node에서는 @internal로, Python에서는 밑줄로 표시한다고 정한다. (H25.43)
 - H25.25-1: @polyspec/hyper-server package가 다시 build된다. warnings.ts는 process.emitWarning을 Node의 signature에 맞춘 함수로 바꾸고(Reflect.apply, cast 없음), tests/http.test.ts의 around 사례는 type check를 통과한다. red: tsc -p packages/server/ts/tsconfig.build.json이 warnings.ts(13,9)에서 TS2322로 실패했고, green: build와 test 설정의 tsc가 통과하며 HY-74 사례가 통과한다. (H25.25-1)
 - H25.41-1: H25.41을 되돌렸다. tests/scripts/check-recipes.test.mts의 recipe test는 -o toolchain-check와 GITHUB_ACTIONS 없이 make를 실행하고, hyper-test-js 사례는 kit의 runner가 요구하는 대로 recipe의 새 변수 JS_TESTS로 test 파일을 선택한다. 이 test는 toolchain-check에 의존하므로 kit K304가 반영될 때까지 이 machine에서 실패한다. (H25.41-1)
