@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 4313a6cdf6f37dde72300716d4065c53c145cfeae82d995513bf269d3a530428 -->
+<!-- source-sha256: a6d8978747b547279add00b413fdbbf35c2752e4e3ac7efe3defabb880eb7238 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H25.51: around hook이 변경한 요청을 answer에 넘길 때 쓰는 Request.withHeader(HY-97)는 세 서버 모두에서 다시 public API다. H25.49와 H25.50의 @internal 표시를 PHP와 Node 선언에서 제거했다. red: Python 서버는 나열하는데 PHP와 Node 선언에는 없었고, green: 세 서버 모두 public이다. (H25.51)
 - H25.50: PHP 서버는 symbol extractor에 public API(HY-106)만 알린다. engine class(Csrf, DataModel, Delivery, Fields, Flash, JsonEncoder, Kept, Manifest, Reads, Region, RegionPlanner, Renderer, Router, Session)와 서버가 class 사이에서 쓰는 멤버는 @internal(K307)을 단다. red: public symbol 179개, green: 88개이며 모두 HY-106이 정한 API다. AppTest, RequestTest, ReplyTest, ResultTest는 PHP 8.4.26에서 통과한다. (H25.50)
 - H25.49: Node 서버의 선언(dist/index.d.ts)은 public API(HY-106)만 담는다. 서버가 module 사이에서 쓰는 멤버는 @internal을 달고 tsconfig.build.json의 stripInternal이 선언에서 제거하며, JSON helper, Answer, Headers, Flash는 index에서 더 이상 export하지 않는다. red: entry의 public symbol 190개, green: 137개이며 모두 HY-106이 정한 API다. (H25.49)
 - H25.14-1: hyper의 vendor 디렉터리는 make link(kit K304-1)로 template 폴더에 연결되어 platform check가 PHP 8.4.1을 요구한다. green: toolchain-check와 lint-php가 통과하고, packages/server/php의 PHPUnit 파일 17개가 var/tools/bin/php 8.4.26에서 통과하여 Homebrew PHP 8.5에서 실행했던 PHP item을 다시 검증한다. (H25.14-1)

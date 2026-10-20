@@ -105,7 +105,6 @@ export class Request {
   }
 
   // Returns a copy whose header of the name, compared without case as `header` reads it, has the value (HY-97).
-  /** @internal */
   withHeader(name: string, value: string): Request {
     return new Request({ ...this.state, headers: new Map(this.state.headers).set(name.toLowerCase(), value) });
   }

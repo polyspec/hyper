@@ -66,8 +66,6 @@ final class Request
 
     /**
      * Returns a copy whose header of the name, compared without case as `header` reads it, has the value (HY-97).
-     *
-     * @internal
      */
     public function withHeader(string $name, string $value): self
     {

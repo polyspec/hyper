@@ -60,3 +60,4 @@
 | H25.48 | The copies of PRINCIPLES.md match the kit after K305 | PRINCIPLES.md and PRINCIPLES.ko.md | `make kit-check` | [o] |
 | H25.49 | R11: the Node server declares only its public API (HY-106) | packages/server/ts/src, packages/server/ts/tsconfig.build.json, packages/server/ts/tests | `make hyper-test-node` | [o] |
 | H25.50 | R11: the PHP server declares only its public API (HY-106) | packages/server/php/src | `make hyper-test-php` | [o] |
+| H25.51 | Request.withHeader is public in the PHP and Node servers (HY-97, HY-106) | packages/server/php/src/Request.php, packages/server/ts/src/request.ts | `make hyper-test-node` | [o] |
