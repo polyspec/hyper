@@ -207,6 +207,23 @@ final class AppTest extends TestCase
     }
 
     /** @param array<string, string> $headers */
+    /**
+     * The application whose shared handler gives `$shared` and whose region `rows` of the route `list` gives `$rows`.
+     *
+     * @param array<string, mixed> $shared
+     * @param array<string, mixed> $rows
+     */
+    private function appWithRows(array $shared, array $rows): App
+    {
+        return $this->app(options: ['handlers' => [
+            'shared' => fn (): array => $shared,
+            'routes' => [
+                'add' => ['post' => fn (): Result => Result::redirect('/')],
+                'list' => ['regions' => ['rows' => fn (): array => $rows]],
+            ],
+        ]]);
+    }
+
     private function get(string $path, array $headers = [], string $basePath = ''): Response
     {
         return $this->app($basePath)->handle(new Request('GET', $path, $headers), $this->session);
@@ -568,20 +585,14 @@ final class AppTest extends TestCase
     {
         // HY-38, HY-43: the loader data of the region itself breaks the template (a tag list holds a number), so
         // dropping the kept values does not help and rendering fails with the plain 500.
-        $app = $this->app(options: ['handlers' => [
-            'shared' => fn (): array => ['site' => 'x'],
-            'routes' => [
-                'add' => ['post' => fn (): Result => Result::redirect('/')],
-                'list' => ['regions' => ['rows' => fn (): array => [
-                    'items' => ['a'],
-                    'open' => false,
-                    'mode' => 'a',
-                    'view' => 'x',
-                    'filter' => ['a' => 1],
-                    'tags' => [1],
-                ]]],
-            ],
-        ]]);
+        $app = $this->appWithRows(['site' => 'x'], [
+            'items' => ['a'],
+            'open' => false,
+            'mode' => 'a',
+            'view' => 'x',
+            'filter' => ['a' => 1],
+            'tags' => [1],
+        ]);
         $request = new Request('GET', '/list', [], 'embed=1', cookies: ['hy-keep' => '{"rows":{"mode":"b"}}']);
         $response = $app->handle($request, $this->session);
 
@@ -994,21 +1005,15 @@ final class AppTest extends TestCase
         self::assertSame(['title' => 'Item'], $json['shared']);
         self::assertStringNotContainsString('"p"', $this->get('/items/secret', ['Accept' => 'application/json'])->body);
 
-        $app = $this->app(options: ['handlers' => [
-            'shared' => fn (): array => ['site' => 'x', 'name' => 'shared name'],
-            'routes' => [
-                'add' => ['post' => fn (): Result => Result::redirect('/')],
-                'list' => ['regions' => ['rows' => fn (): array => [
-                    'items' => ['a'],
-                    'open' => false,
-                    'mode' => 'a',
-                    'view' => 'x',
-                    'filter' => [],
-                    'tags' => [],
-                    'unread' => 1,
-                ]]],
-            ],
-        ]]);
+        $app = $this->appWithRows(['site' => 'x', 'name' => 'shared name'], [
+            'items' => ['a'],
+            'open' => false,
+            'mode' => 'a',
+            'view' => 'x',
+            'filter' => [],
+            'tags' => [],
+            'unread' => 1,
+        ]);
         $list = self::json($app->handle(new Request('GET', '/list', self::JSON), $this->session));
         // The shared handler value name is read by the page template of another route, not by any template of /list.
         self::assertSame(['title', 'csrf'], array_keys(Json::array($list['shared'])));
