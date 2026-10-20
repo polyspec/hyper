@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-kit-standard -->
-<!-- source-sha256: 44196f760f7afd936055f7c6d302073424cb7a064d4eec92ca2f73c6d1b4ae32 -->
+<!-- source-sha256: 8e701ff659d093516c6a1225817a90a5002f4ece9cc59770930da89c017106ab -->
 # kit 표준 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -46,3 +46,4 @@
 | H25.37 | R3: reads는 모든 서버에서 성립한다 | packages/server/php/tests/ReadsTest.php | `make parity-check UNITS=reads` | [o] |
 | H25.38 | R3: client-requests는 모든 서버에서 성립한다 | The test files of the client cases of the three servers, config/parity.json | `make parity-check UNITS="client-requests client-selection"` | [o] |
 | H25.39 | kit 사본이 K294와 K297 이후의 kit과 일치한다 | PRINCIPLES.md and PRINCIPLES.ko.md | `make kit-check` | [o] |
+| H25.40 | AGENTS.md의 모든 규칙은 Own이거나 PRINCIPLES.md의 규칙을 Refines한다 | AGENTS.md and AGENTS.ko.md | `make rules-check` | [o] |

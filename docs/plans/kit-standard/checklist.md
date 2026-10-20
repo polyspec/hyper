@@ -45,3 +45,4 @@
 | H25.37 | R3: reads holds in every server | packages/server/php/tests/ReadsTest.php | `make parity-check UNITS=reads` | [o] |
 | H25.38 | R3: client-requests holds in every server | The test files of the client cases of the three servers, config/parity.json | `make parity-check UNITS="client-requests client-selection"` | [o] |
 | H25.39 | The copies of kit match the kit after K294 and K297 | PRINCIPLES.md and PRINCIPLES.ko.md | `make kit-check` | [o] |
+| H25.40 | Every rule of AGENTS.md is Own or Refines a rule of PRINCIPLES.md | AGENTS.md and AGENTS.ko.md | `make rules-check` | [o] |
