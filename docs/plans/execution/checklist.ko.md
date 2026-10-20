@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 49c400ce72a207930d40b4cb8f0b93b9793a77a44957c244bd7048c56e8e816c -->
+<!-- source-sha256: 6ed558738bd0d85df4ad1011b9a93bbcf7763e632f5ff2499f8d54d16379d4cf -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -241,3 +241,4 @@
 | H26.2-3 | Node 서버는 multipart 요청의 file part를 files()와 file()로 제공하고, HY-114의 파일 제한을 적용한다(HY-113, HY-114) | packages/server/ts/src/request.ts, packages/server/ts/src/app.ts, packages/server/ts/src/uploaded-file.ts, packages/server/ts/tests/files.test.ts, config/parity.json | `var/tools/bin/node node_modules/vitest/vitest.mjs run packages/server/ts/tests/files.test.ts -t "file parts"` and `var/tools/bin/node node_modules/vitest/vitest.mjs run packages/server/ts/tests/app.test.ts -t "file parts"` | [o] |
 | H26.2-4 | contracts/fields.json는 각 서버가 통과하는 file case를 가진다. 이는 case의 기대 file을 스키마가 정한 뒤다. 스키마에는 아직 그 필드가 없으므로 이 row는 스키마 변경으로 시작한다(HY-113) | contracts/fields.json, packages/server/python/tests/test_fields_multipart.py | `packages/server/python/.venv/bin/python -m unittest packages/server/python/tests/test_fields_multipart.py` | [o] |
 | H26.3 | 모든 서버는 multipart 본문을 그 생태계의 관리되는 파서로 읽거나, 못 쓰는 이유를 기록한다. 후보 세 개(PHP의 riverline/multipart-parser, Python의 python-multipart, Node의 busboy)는 각각 HY-57 또는 HY-113을 어기므로 각 서버는 자신의 파서를 유지하고, docs/operations/dependencies.md가 근거를 기록한다. 원인: PHP 파서(packages/server/php/src/Multipart.php)는 자체 구현이며 그 이유를 적은 기록이 없다 | docs/operations/dependencies.md, docs/operations/dependencies.ko.md | `var/tools/bin/php vendor/bin/phpunit packages/server/php/tests/FieldsTest.php` and `packages/server/python/.venv/bin/python -m unittest packages/server/python/tests/test_fields_multipart.py` and `var/tools/bin/node node_modules/vitest/vitest.mjs run packages/server/ts/tests/fields-multipart.test.ts` | [o] |
+| H26.3-1 | multipart 기록은 PHP 8.4의 기본 request_parse_body()도 검토했고, /usr/bin/makePOST처럼 괄호 이름을 중첩하므로 HY-57이 거절하여 채택하지 않았다고 적는다. 원인: H26.3의 기록이 이 후보를 적지 않았다 | docs/operations/dependencies.md, docs/operations/dependencies.ko.md | `make docs-check` | [o] |

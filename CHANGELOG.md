@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- H26.3-1: The multipart record of docs/operations/dependencies.md names PHP 8.4's native `request_parse_body()` as considered and refused, because it nests bracketed names like `$_POST`, which HY-57 refuses. Red: the record did not name the candidate; green: `make docs-check` exits 0 with the line. (H26.3-1)
 - H25.66: Its Deliverables drop `packages/server/php/composer.lock`, which the repository does not have (kit K388 item-edit). Red: the row named a file that does not exist; green: the deliverables name only existing files. (H25.66)
 - H25.66: The row of the phpunit/phpunit latest stable version is held until kit K392 is done, because the link-mode update of the tracked manifest waits on it. The change of composer.json is not landed on main. Red: `make dependency-policy-check` passes on the commit that holds the row, so no red is recorded for the check. (H25.66)
 - H26.3: docs/operations/dependencies.md records the check of the maintained multipart parsers against HY-57, HY-113 and HY-42: riverline/multipart-parser 2.2.2 (PHP), python-multipart 0.0.32 (Python) and busboy 1.6.0 (Node). Each candidate fails one of those rules (its source is named there), so the three servers keep their parsers and the reasons are recorded. No code or lock changed; the contract suites of the three servers pass unchanged. (H26.3)

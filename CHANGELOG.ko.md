@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 400e71169200fd2a3280a5c3be46be79f977382e3b5e5105db921e296b9e4506 -->
+<!-- source-sha256: cbfdcfdd30d75646c4c18a013d96dec51da6fb776431935d906762367ceae575 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H26.3-1: dependencies.md의 multipart 기록은 PHP 8.4의 기본 `request_parse_body()`도 검토했으나 `$_POST`처럼 괄호 이름을 중첩하므로 HY-57이 거절하여 채택하지 않았다고 적는다. red: 기록이 이 후보를 적지 않았고, green: 그 줄을 넣은 뒤 `make docs-check`가 exit 0을 낸다. (H26.3-1)
 - H25.66: Deliverables에서 저장소에 없는 `packages/server/php/composer.lock`을 뺀다(kit K388 item-edit). red: row가 존재하지 않는 파일을 적었고, green: Deliverables가 존재하는 파일만 적는다. (H25.66)
 - H25.66: phpunit/phpunit 최신 안정 버전 row는 kit K392가 끝날 때까지 보류한다. link 모드의 추적 manifest 갱신이 K392를 기다리기 때문이다. composer.json의 변경은 main에 들이지 않는다. red: row를 가진 커밋에서 `make dependency-policy-check`가 통과하므로 이 검사의 red는 기록되지 않는다. (H25.66)
 - H26.3: docs/operations/dependencies.ko.md는 관리되는 multipart 파서를 HY-57, HY-113, HY-42에 대조한 기록을 가진다: riverline/multipart-parser 2.2.2(PHP), python-multipart 0.0.32(Python), busboy 1.6.0(Node). 후보마다 이 규칙 중 하나를 어기므로(근거 소스는 그 문서에 있다) 세 서버는 자신의 파서를 유지하고 이유를 기록한다. 코드와 lock은 바뀌지 않았고, 세 서버의 계약 테스트 묶음은 그대로 통과한다. (H26.3)
