@@ -78,3 +78,4 @@
 | H25.63 | 개발 의존성 vitest와 setuptools를 최신 안정 릴리스로 올린다 | package.json, package-lock.json, packages/server/python/pyproject.toml, config/dependency-review.json | `var/tools/bin/node node_modules/vitest/vitest.mjs run --dir packages/client`, `packages/server/python/.venv/bin/python -m unittest packages/server/python/tests/test_csrf.py` | [o] |
 | H25.64 | K364 이후 kit 복사본이 설치된 kit과 일치한다 | PRINCIPLES.md, PRINCIPLES.ko.md, ruff.toml, .golangci.yml, scripts/kit/kit-bootstrap.mk, clippy.toml | `make kit-check` | [o] |
 | H25.62 | Python 서버는 ruff가 필요로 하지 않는 noqa 없이 fallback의 이유를 적는다 | the except clause of the render fallback in app.py | `make lint-python` | [o] |
+| H25.65 | 영문 CHANGELOG.md와 kit-standard 체크리스트의 한국어 쌍이 원문과 다시 일치한다. 원인: af1b700 이후 영문 문서가 바뀌었으나 한국어 쌍은 이전 source-sha256을 유지하여 make docs-check가 실패한다 | CHANGELOG.ko.md, docs/plans/kit-standard/checklist.ko.md | `make docs-check` | [ ] |
