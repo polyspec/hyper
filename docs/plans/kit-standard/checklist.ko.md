@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-kit-standard -->
-<!-- source-sha256: 610d41dc51130b16bc8eb9e52812208477103c5f8db463c4fa80ec03fec11207 -->
+<!-- source-sha256: 087ba1f4ef2af04b446fb85cc4c5e4aaed341fe9b55f9abd20cea5b340223896 -->
 # kit 표준 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -21,3 +21,4 @@
 | H25.15 | 의존성 검토 기록이 lock과 mise.toml의 tool과 일치한다 | config/dependency-review.json | `make dependency-policy-check` | [!] 원인: 기록된 검토는 각 composer.json의 platform PHP에서 최신 안정 릴리스를 해석하므로 H25.14가 끝나기 전에는 polyspec/template 0.0.6과 phpunit 12.5.40을 최신으로 기록하고, 정책이 요구하거나 예외로 두어야 하는 더 새로운 릴리스 vitest 5.0.5와 setuptools 84.2.0도 기록한다; 재시도: H25.14가 끝나고 vitest와 setuptools를 올리거나 예외로 둔 뒤 |
 | H25.16 | kept 값이 원인이 아닌 render 실패는 모든 서버에서 드러난다 | The tests of AppTest.php, app.test.ts and render_app.py, and the stated need of the two fallbacks in app.py | `var/tools/bin/node node_modules/vitest/vitest.mjs run --dir packages/server/ts packages/server/ts/tests/app.test.ts`, `packages/server/python/.venv/bin/python packages/server/python/tests/run.py packages/server/python/tests/render render_app.py` | [o] |
 | H25.16-1 | rows data를 쓰는 PHP test 두 개는 응용 프로그램을 한 곳에서 만든다 | packages/server/php/tests/AppTest.php | `var/tools/bin/node node_modules/@polyspec/kit/dist/run-tests.mjs phpunit --cwd packages/server/php -- --exclude-group native tests/AppTest.php` | [o] |
+| H25.17 | 추적하는 모든 경로는 config/owner-checks.json에 owner를 가진다 | config/owner-checks.json | `make owner-validate` | [o] |

@@ -534,6 +534,30 @@
     },
     {
       "paths": [
+        "config/parity.json"
+      ],
+      "targets": [
+        "parity-declarations-check"
+      ]
+    },
+    {
+      "paths": [
+        ".mise/locks/**"
+      ],
+      "targets": [
+        "toolchain-check"
+      ]
+    },
+    {
+      "paths": [
+        ".claude/settings.json"
+      ],
+      "targets": [
+        "rules-check"
+      ]
+    },
+    {
+      "paths": [
         "config/owner-checks.json"
       ],
       "targets": [
