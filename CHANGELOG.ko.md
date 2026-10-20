@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: a458086d74f2aa42e3729d3c6ec576bfdfdf1a5bdf1c3a627dfd5aaf812ff97b -->
+<!-- source-sha256: 3d19b68bd9886e9c981fb42a1ead37ece485b662206be607199a2003168a9165 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H25.41-1: H25.41을 되돌렸다. tests/scripts/check-recipes.test.mts의 recipe test는 -o toolchain-check와 GITHUB_ACTIONS 없이 make를 실행하고, hyper-test-js 사례는 kit의 runner가 요구하는 대로 recipe의 새 변수 JS_TESTS로 test 파일을 선택한다. 이 test는 toolchain-check에 의존하므로 kit K304가 반영될 때까지 이 machine에서 실패한다. (H25.41-1)
 - H25.42: config/toolchain.json이 symbolExtractors에 php를 적고 make install-tools가 php symbol extractor를 설치하여 packages/server/php/src의 symbol을 나열한다(red: R1이 var/tools/symbols-php/vendor/autoload.php 없음을 보고). python extractor는 kit가 mise 환경 없이 실행하므로(scripts/kit/parity.mts:113, :61, parity-symbols.mts:210) 아직 실패한다. (H25.42)
 - H25.14-1: H25.14의 vendor와 runtime 부분은 별도 item H25.14-1이다(kit K304로 막힘: link가 installed.json에 polyspec/template의 >=8.5를 남긴다). H25.14는 lock 재해석을, H25.15는 review 기록을 맡는다. (H25.14-1)
 - H25.41: tests/scripts/check-recipes.test.mts의 recipe test 두 개는 어느 machine에서나 통과한다. make를 -o toolchain-check로 실행하고(이 machine에서는 phpstan이 PHP 8.4에서 시작하지 못해 그 선행 target이 실패했으며, 그것은 환경 문제(H25.14)이고 자기 gate의 몫이다), hyper-test-js 사례는 kit의 runner가 CI 밖에서 선택 없는 vitest 실행을 거부하므로 GITHUB_ACTIONS=true를 설정한다. red: 5개 중 2개 실패, green: 5개 모두 통과. (H25.41)

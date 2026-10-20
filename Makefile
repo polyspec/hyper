@@ -152,7 +152,7 @@ assets: packages ## Build the board client bundle (SSR) and the single-file stat
 
 hyper-test-js: toolchain-check ## Run the browser code tests, including the router conformance cases, and the type check
 	@failed=; \
-	$(call check,the tests of $(JS_PACKAGE),node $(KIT)/run-tests.$(KIT_EXT) vitest --cwd $(JS_PACKAGE)) \
+	$(call check,the tests of $(JS_PACKAGE),node $(KIT)/run-tests.$(KIT_EXT) vitest --cwd $(JS_PACKAGE)$(if $(JS_TESTS), -- $(JS_TESTS))) \
 	$(call check,the type check of $(JS_PACKAGE),$(TSC) --noEmit -p $(JS_PACKAGE)/tsconfig.json) \
 	$(checks_result)
 

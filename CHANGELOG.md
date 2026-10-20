@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- H25.41-1: H25.41 is undone: the recipe tests of tests/scripts/check-recipes.test.mts run make without -o toolchain-check and without GITHUB_ACTIONS, and the hyper-test-js case selects its test file with the new JS_TESTS variable of the recipe, as the runner of the kit requires; the tests depend on toolchain-check and stay red on this machine until kit K304 lands. (H25.41-1)
 - H25.42: config/toolchain.json names php in symbolExtractors and make install-tools installs the php symbol extractor, which lists the symbols of packages/server/php/src (red: R1 reported var/tools/symbols-php/vendor/autoload.php missing); the python extractor still fails because kit runs it without the mise environment (scripts/kit/parity.mts:113, :61 and parity-symbols.mts:210). (H25.42)
 - H25.14-1: The vendor and runtime part of H25.14 is its own item H25.14-1 (blocked by kit K304, the link leaves the >=8.5 of polyspec/template in installed.json); H25.14 keeps the lock re-resolution and H25.15 the review record. (H25.14-1)
 - H25.41: The two recipe tests of tests/scripts/check-recipes.test.mts pass on every machine: make runs with -o toolchain-check, whose prerequisite failed here because phpstan cannot start under PHP 8.4 (environment, H25.14) and is the job of its own gate, and the hyper-test-js case sets GITHUB_ACTIONS=true because the runner of the kit refuses a vitest run without a selection outside CI; red: 2 of 5 failed, green: 5 of 5 pass. (H25.41)
