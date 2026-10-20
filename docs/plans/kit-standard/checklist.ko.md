@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-kit-standard -->
-<!-- source-sha256: 4171b8932ced89bb2c5a736d3994d072219cf87242a144927eeb72c3eee62f5f -->
+<!-- source-sha256: 53df0c89f5a6af395d8b1df82597abff00ff395cc8f67410f18f25db9157c885 -->
 # kit 표준 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -52,4 +52,4 @@
 | H25.41 | check-recipes.test.mts의 recipe test는 machine의 toolchain에 의존하지 않는다 | tests/scripts/check-recipes.test.mts | `var/tools/bin/node --test tests/scripts/check-recipes.test.mts` | [o] |
 | H25.41-1 | hyper-test-js recipe test는 자기 소유 case를 선택하며 toolchain-check를 건너뛰지 않고 CI를 가장하지 않는다 | tests/scripts/check-recipes.test.mts, Makefile | `var/tools/bin/node --test tests/scripts/check-recipes.test.mts` | [!] 원인: 두 recipe test는 toolchain-check에 의존하며, 이 machine에서는 kit K304가 반영될 때까지 실패한다(platform_check.php가 PHP 8.5를 요구해 phpstan이 PHP 8.4.26에서 시작하지 못한다); 재시도: K304가 반영되면 var/tools/bin/node --test tests/scripts/check-recipes.test.mts를 실행한다 |
 | H25.42 | R1: parity check의 symbol extractor가 php와 python server에서 실행된다 | config/toolchain.json | `make parity-check UNITS=manifest` | [!] 원인: kit 결함: scripts/kit/parity.mts:113이 env 없이 checkParity를 호출해 env가 process.env가 되고(parity.mts:61), python extractor(parity-symbols.mts:210)가 toolsEnvironment의 mise 환경 없이 mise shim을 실행하여 mise가 "Config files in mise.toml are not trusted"로 실패한다; 재시도: kit가 extractor에 toolsEnvironment(root)를 전달하면; php extractor는 설치되어 symbol을 나열한다 |
-| H25.43 | R11: HY-106이 서버의 public API와 내부 요소를 정한다 | docs/spec/protocol.md and docs/spec/protocol.ko.md | `make docs-check` | [~] |
+| H25.43 | R11: HY-106이 서버의 public API와 내부 요소를 정한다 | docs/spec/protocol.md and docs/spec/protocol.ko.md | `make docs-check` | [o] |
