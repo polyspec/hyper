@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-kit-standard -->
-<!-- source-sha256: d6ff176d32b7829c3b2065d605e64d496d4bb3856f7821a9b24897589ee502c5 -->
+<!-- source-sha256: 90cbd4006064b91a92a58944acd8c6762ad9c6d3bf9fba492fa3c0c94dd6486e -->
 # kit 표준 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -7,7 +7,7 @@
 | H25.1 | 이 저장소는 kit 표준 0.0.54를 따른다 | kit 0.0.54의 복사본, AGENTS.md와 그 한국어 짝, config/*.json, Makefile, workflow, plan과 changelog | `make kit-check` | [o] |
 | H25.2 | PHP 렌더러 테스트가 각 모드에서 생략 없이 끝까지 실행되고, Python 서버가 blind except 없이 ruff를 통과한다 | RendererTest.php의 native와 generated group, 다른 group을 제외하는 `hyper-test-php`의 PHPUnit 실행, Python 원본의 ruff 지적 8건 | `make hyper-test-php`, `make hyper-test-python`, `make lint-python` | [o] |
 | H25.3 | hyper 언어 parity를 config/parity.json에 선언하고 공유 벡터의 각 case를 id로 부른다 | config/parity.json; id on each case of contracts/*.json; conformance tests of TypeScript, Python and the browser package named by id; Python tests of Fields.has and FileSessions.collect | `make parity-declarations-check`; `make parity-check UNITS="fields-urlencoded json-encode csrf-verify routes keep"`; `var/tools/bin/node node_modules/vitest/vitest.mjs run --dir packages/server/ts packages/server/ts/tests/fields.test.ts` | [!] 원인: parity 선언 검사가 아직 실패한다: PHP, Python, Node 서버 test 파일 다수에 unit이 없고, Python client 적합성에는 template 패키지가 필요하며, R13은 모든 spec 요구사항이 unit에 인용되기를 요구한다; 재시도: 모든 test 파일에 unit이 생기고 모든 요구사항이 인용되며 Python client 바인딩용 template 패키지가 설치될 때 재개한다 |
-| H25.4 | config/parity.json의 모든 unit은 모든 구현에서 성립하고, test가 이름으로 적은 spec requirement를 인용한다 (kit K273, K275, K276) | config/parity.json, docs/spec, the tests of every implementation | `make parity-declarations-check` | [~] |
+| H25.4 | config/parity.json의 모든 unit은 모든 구현에서 성립하고, test가 이름으로 적은 spec requirement를 인용한다 (kit K273, K275, K276) | config/parity.json, docs/spec, the tests of every implementation | `make parity-declarations-check` | [o] |
 | H25.5 | 한국어 체크리스트의 revision marker가 영어 체크리스트와 일치한다 | The source-sha256 marker of docs/plans/kit-standard/checklist.ko.md | `make docs-check` | [o] |
 | H25.6 | 저장소의 각 tool은 config/rebuild.json에서 class를 가진다 | config/rebuild.json | `make rebuild-check` | [o] |
 | H25.7 | Node 서버 test가 lint-ts를 통과한다 | packages/server/ts/tests/rest.test.ts, kept.test.ts and reads.test.ts | `make lint-ts`, `var/tools/bin/node node_modules/vitest/vitest.mjs run --dir packages/server/ts packages/server/ts/tests/rest.test.ts packages/server/ts/tests/kept.test.ts packages/server/ts/tests/reads.test.ts` | [o] |
