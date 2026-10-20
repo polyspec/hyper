@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: cb799e2bf33e1af5c4793ba8765ea0df7551d3342a23be8f3c7667156e739307 -->
+<!-- source-sha256: 0bdeeb503ee8de83057a89c68594bb7e59e5e42ea73f1f4762ed6f786148a3af -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H25.65: 영문 CHANGELOG.md와 kit-standard 체크리스트의 한국어 쌍이 영문 원문의 source-sha256을 다시 기록한다. red: make docs-check가 af1b700 이후 두 marker가 낡았다고 보고했고, green: 통과한다. (H25.65)
 - H25.61: config/owner-checks.json은 kit 복사본인 Rust lint 설정 clippy.toml에 kit 복사본의 소유 규칙을 준다. red: owner-validate가 clippy.toml을 어떤 소유자와도 맞지 않는 경로로 보고했고, green: 추적되는 모든 경로가 소유된다고 보고한다. (H25.61)
 - H25.62: packages/server/python/src/polyspec/hyper/app.py의 render fallback은 필요한 이유(HY-38)를 주석으로 남기고 noqa BLE001을 뺐다. ruff가 이 handler를 지적하지 않으며, kept 값이 없으면 다시 raise하기 때문이다. red: lint-python이 app.py:598의 쓰이지 않는 noqa에 대해 RUF100을 보고했고, green: ruff check가 통과한다. (H25.62)
 - H25.64: kit 복사본(PRINCIPLES.md와 PRINCIPLES.ko.md, ruff.toml, .golangci.yml, config/layout.kit.yml, scripts/kit/kit-bootstrap.mk)이 K364 이후 설치된 kit 0.0.54와 일치한다(kit-check는 Rust 소스가 있을 때만 lint-rust를 요구한다). red: make kit-check가 다른 복사본 여섯 개를 보고했고, green: 설정과 복사본이 kit과 일치한다고 보고한다. (H25.64)

@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- H25.65: The Korean twins of CHANGELOG.md and of the kit-standard checklist carry the source-sha256 of their English files again; red: make docs-check reported both stamps stale since af1b700, green: it passes. (H25.65)
 - H25.61: config/owner-checks.json gives clippy.toml, the kit copy of Rust lint settings, the owner rule of the kit copies; red: owner-validate reported clippy.toml as a path that matches no owner, green: it reports every tracked path owned. (H25.61)
 - H25.62: The render fallback of packages/server/python/src/polyspec/hyper/app.py keeps its stated need (HY-38) as a comment and drops the noqa BLE001, because ruff does not flag its handler, which re-raises when no kept value is given; red: lint-python reported RUF100 for the unused noqa at app.py:598, green: ruff check passes. (H25.62)
 - H25.64: The copies of kit (PRINCIPLES.md and PRINCIPLES.ko.md, ruff.toml, .golangci.yml, config/layout.kit.yml, scripts/kit/kit-bootstrap.mk) match the installed kit 0.0.54 after K364 (kit-check requires lint-rust only with Rust sources); red: make kit-check reported six copies that differ, green: it reports the configuration and the copies match. (H25.64)
