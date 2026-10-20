@@ -24,6 +24,7 @@ from .response import Response
 from .result import BadRequest, Forbidden, NotFound, Redirect, Result
 from .router import strip_base_path
 from .session import Flash, Session, SessionStore
+from .warnings_guard import warnings_as_errors
 
 FORM_TYPES = ("application/x-www-form-urlencoded", "multipart/form-data")
 _COOKIE_KEPT = re.compile(r"[a-z][a-z0-9_-]*")
@@ -109,7 +110,9 @@ class App:
             raise ValueError(
                 f"response limit {response_limit} is not a positive number of bytes"
             )
-        types = list(form_types or ["application/x-www-form-urlencoded"])
+        types = list(
+            ["application/x-www-form-urlencoded"] if form_types is None else form_types
+        )
         if (
             types == []
             or len(set(types)) != len(types)
@@ -201,7 +204,9 @@ class App:
         # The failure of a 500 of HY-43 or HY-66, which the hook receives (HY-60).
         failure = None
         try:
-            response = self._answer(request, store, reply)
+            # HY-74: a warning of the runtime fails the request instead of leaving a wrong page with status 200.
+            with warnings_as_errors():
+                response = self._answer(request, store, reply)
         except Exception as error:  # noqa: BLE001 - HY-43: every error of the application answers a plain 500
             print(f"hyper: {type(error).__name__}: {error}", file=sys.stderr)
             failure = str(error)

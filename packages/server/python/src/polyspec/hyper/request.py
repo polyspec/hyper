@@ -130,7 +130,7 @@ class Request:
         if url is None:
             return None
         rest = _AUTHORITY.sub("", url)
-        path = re.split(r"[?#]", rest, 1)[0]
+        path = re.split(r"[?#]", rest, maxsplit=1)[0]
         return path or None
 
     def path(self) -> str:
@@ -173,7 +173,7 @@ class Request:
     def target_path(target: str) -> str:
         """Returns the path of a request target: the target before `?` or `#`, after the authority of an
         absolute-form target, without decoding (HY-42)."""
-        path = re.split(r"[?#]", target, 1)[0]
+        path = re.split(r"[?#]", target, maxsplit=1)[0]
         found = re.match(r"^[A-Za-z][A-Za-z0-9+.-]*://[^/]*", path)
         if found is not None:
             path = path[len(found.group(0)) :]

@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-kit-standard -->
-<!-- source-sha256: da1cb467f29de9f3cc28b67a32b722915b5b7a02de3a46376c6e14a5cde0d4c4 -->
+<!-- source-sha256: 2b9f1c6a4692f8a29fd5e6df22a761af5496f12ae64aa0c64c299bbc9258e449 -->
 # kit 표준 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -28,3 +28,4 @@
 | H25.21 | R13: 저장소 규칙은 docs/spec에서 docs/operations로 옮기고 자신의 id를 가진다 | docs/operations/repository-rules.md and its Korean twin, docs/spec/protocol.md and its twin, and the citations of the moved rules | `make docs-check`, `make parity-declarations-check` | [o] |
 | H25.22 | R13: browser 요구사항은 HYC id이며 각각 browser test가 인용하고, 그것이 품은 서버 규칙은 HY로 남는다 | docs/spec/protocol.md and its twin, the citations of the renamed ids and packages/client/tests/hyper.test.ts | `make docs-check`, `make parity-declarations-check`, `var/tools/bin/node node_modules/vitest/vitest.mjs run --dir packages/client` | [o] |
 | H25.23 | R13: HY-48, HY-74, HY-97, HY-100은 한 언어가 아니라 모든 서버의 규칙을 적는다 | docs/spec/protocol.md and its Korean twin, and the citations of HY-101 and HY-102 | `make docs-check` | [o] |
+| H25.24 | Python 서버는 PHP AppTest의 case를 시험하고, Python 런타임의 경고는 요청을 실패시킨다(HY-74) | packages/server/python/tests/render/render_requests.py, fixture_handlers.py, src/polyspec/hyper/warnings_guard.py, app.py, request.py and result.py | `packages/server/python/.venv/bin/python -m unittest packages/server/python/tests/render/render_requests.py` | [o] |

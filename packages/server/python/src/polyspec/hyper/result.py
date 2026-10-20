@@ -74,7 +74,7 @@ class Result:
 
 def _has_dot_segment(location: str) -> bool:
     """Returns True when the path of a location has a `.` or `..` segment, also with a percent-encoded dot."""
-    path = re.split(r"[?#]", location, 1)[0]
+    path = re.split(r"[?#]", location, maxsplit=1)[0]
     return any(
         re.sub("%2e", ".", segment, flags=re.IGNORECASE) in (".", "..")
         for segment in path.split("/")
