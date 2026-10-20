@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-kit-standard -->
-<!-- source-sha256: 878a45aeb543252537178a01d52c018de213d00945a344654d7e1eb49b4c0bf8 -->
+<!-- source-sha256: e1405901faa5ed1599f13f930af4d6941a3a29199b8a6f1b18874ef4957e8a80 -->
 # kit 표준 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -17,3 +17,4 @@
 | H25.11 | TypeScript test는 각 test code 조각을 한 곳에만 둔다 | packages/client/tests/hyper.test.ts and packages/server/ts/tests/support.ts, client.test.ts, fields.test.ts, http.test.ts, rest.test.ts, router.test.ts | `var/tools/bin/node node_modules/vitest/vitest.mjs run --dir packages/client`, `var/tools/bin/node node_modules/vitest/vitest.mjs run --dir packages/server/ts` | [o] |
 | H25.12 | PHP test는 각 test code 조각을 한 곳에만 둔다 | packages/server/php/tests/AppTest.php, RouterTest.php, RunTest.php and Support/FrontController.php, disconnect.php, escape.php | `var/tools/bin/node node_modules/@polyspec/kit/dist/run-tests.mjs phpunit --cwd packages/server/php -- --exclude-group native tests/AppTest.php`, `var/tools/bin/node node_modules/@polyspec/kit/dist/run-tests.mjs phpunit --cwd packages/server/php -- --exclude-group native tests/RunTest.php` | [o] |
 | H25.13 | Python test는 각 test code 조각을 한 곳에만 둔다 | packages/server/python/tests/contracts.py, transport.py, render/fixture_app.py and the test files that use them | `packages/server/python/.venv/bin/python packages/server/python/tests/run.py`, `packages/server/python/.venv/bin/python packages/server/python/tests/run.py packages/server/python/tests/render render_*.py` | [o] |
+| H25.14 | hyper의 모든 composer.json은 platform PHP 8.4.1을 두고, lock과 vendor 디렉터리가 이를 따른다 | composer.json, examples/board/composer.json, packages/server/php/composer.json, tests/release-install/composer/composer.json, their locks and config/dependency-policy.json | `make dependency-policy-check`, `make lint-php`, `make toolchain-check` | [~] |
