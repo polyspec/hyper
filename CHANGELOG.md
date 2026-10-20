@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- H26.1-3: The TypeScript client has dispose(), which aborts every subscription and every pending document and region request, clears the timers of the subscriptions and rejects a later subscribe (HY-112); red: the test reported that dispose is not a function, green: the test passes with no timer left and no error reported. The test covers the subscriptions; the aborts of pending requests are the existing request aborts that dispose calls. (H26.1-3)
 - H26.1-2: A subscription of the TypeScript client fails a stream that sends no byte for watchdogMs (default 30000 ms) with an error that reaches onError, then reconnects (HY-111); red: with the watchdog disabled the test reported no error, green: the error names the URL and the time, and the stream reconnects after the 1000 ms default. (H26.1-2)
 - H25.67: scripts/kit/kit-bootstrap.mk is the kit copy of @polyspec/kit 0.0.54 again, after kit-sync; red: make kit-check reported that it differed from the installed kit, green: it passes. make hooks also writes .githooks/commit-msg, which is tracked with this change. (H25.67)
 - H26.1-1: The TypeScript client reads a stream subscription with eventsource-parser 4.1.2, pinned exactly, and reconnects with Last-Event-ID and the server retry delay (HY-108 to HY-110); red: vitest reported that subscribe is not a function, green: the test passes. (H26.1-1)

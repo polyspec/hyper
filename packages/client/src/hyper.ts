@@ -115,6 +115,9 @@ export class Hyper<E extends RegionElement = Element> {
   // server kept values whose saving has not completed, by region and path (HY-38, HYC-13)
   private readonly pending = new Map<string, Map<string, Pending>>();
   private changes = 0;
+  // the subscriptions that are open, which dispose closes (HY-112)
+  private readonly streams = new Set<StreamSubscription>();
+  private disposed = false;
   // the end of the last queued render, set or hy-set call (HYC-11)
   private queue: Promise<void> = Promise.resolve();
   private location = 0;
@@ -145,11 +148,31 @@ export class Hyper<E extends RegionElement = Element> {
   // Opens the event stream of `url` with the request function of the client and returns its subscription (HY-108).
   // A watchdog of the stream fails it after `watchdogMs` without a byte (HY-111), and the stream reconnects (HY-110).
   subscribe(url: string, listener: StreamListener, options: SubscribeOptions = {}): Subscription {
+    if (this.disposed) throw new Error('the client is disposed; it starts no subscription (HY-112)');
     const watchdogMs = options.watchdogMs ?? DEFAULT_WATCHDOG_MS;
     if (!Number.isFinite(watchdogMs) || watchdogMs <= 0) throw new RangeError(`watchdogMs must be a positive finite number, not ${watchdogMs}`);
     const stream = new StreamSubscription(url, this.request, listener, watchdogMs);
+    this.streams.add(stream);
     stream.start();
-    return stream;
+    return {
+      close: () => {
+        stream.close();
+        this.streams.delete(stream);
+      },
+    };
+  }
+
+  // Aborts every subscription and every pending document and region request, and clears their timers (HY-112).
+  // Responses that arrive later are discarded; a later call has no effect.
+  dispose(): void {
+    if (this.disposed) return;
+    this.disposed = true;
+    for (const stream of this.streams) stream.close();
+    this.streams.clear();
+    this.locationAbort?.abort();
+    this.locationAbort = null;
+    this.regionAbort?.();
+    this.regionAbort = null;
   }
 
   // Holds the data of a rendered response: its route, environment and shared data and the data of the route regions

@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: ffeae32b5c67a9a9c9bd19f3966c7e66b82d1f52b8364541a47af355cfaa1aca -->
+<!-- source-sha256: c1c0864d43097709975ed26853bbed53d97eb272d0b98e5a79e7bbf172577b07 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H26.1-3: TypeScript 클라이언트는 dispose()를 가진다. 이는 모든 구독과 모든 대기 중인 문서 및 영역 요청을 중단하고, 구독의 timer를 지우며, 이후의 subscribe를 거절한다(HY-112). red: 테스트가 dispose is not a function을 보고했고, green: timer가 남지 않고 오류가 보고되지 않는 상태로 테스트가 통과한다. 테스트는 구독을 검사하며, 대기 요청의 중단은 dispose가 호출하는 기존 요청 중단이다. (H26.1-3)
 - H26.1-2: TypeScript 클라이언트의 구독은 watchdogMs(기본 30000 ms) 동안 byte가 없는 stream을 onError에 도달하는 오류로 실패시키고, 이어서 재연결한다(HY-111). red: watchdog을 끈 상태에서 테스트가 오류를 보고하지 않았고, green: 오류가 URL과 시간을 담고, stream은 기본 1000 ms 뒤 재연결한다. (H26.1-2)
 - H25.67: scripts/kit/kit-bootstrap.mk는 kit-sync 뒤 다시 @polyspec/kit 0.0.54의 kit copy다. red: make kit-check가 설치된 kit과 다르다고 보고했고, green: 통과한다. make hooks가 쓰는 .githooks/commit-msg도 이 변경과 함께 추적된다. (H25.67)
 - H26.1-1: TypeScript 클라이언트는 구독 stream을 eventsource-parser 4.1.2(정확한 버전)로 읽고, Last-Event-ID와 서버의 retry 지연으로 재연결한다(HY-108부터 HY-110까지). red: vitest가 subscribe is not a function을 보고했고, green: 테스트가 통과한다. (H26.1-1)

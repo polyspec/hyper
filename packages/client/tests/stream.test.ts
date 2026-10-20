@@ -84,6 +84,38 @@ describe('client stream subscription', () => {
     expect(events).toEqual([{ event: 'message', data: 'after', id: '' }]);
   });
 
+  it('dispose aborts subscriptions and pending requests', async () => {
+    vi.useFakeTimers();
+    const silent = new ReadableStream<Uint8Array>({ start() {} });
+    const signals: AbortSignal[] = [];
+    const fetch: Fetch = async (_url, init) => {
+      signals.push(init.signal as AbortSignal);
+      // The first response is silent, so its watchdog timer is running when the client is disposed.
+      if (signals.length === 1) return new Response(silent, { status: 200 });
+      return new Promise<Response>(() => undefined);
+    };
+    const events: unknown[] = [];
+    const errors: Error[] = [];
+    const listener = { onEvent: (event: unknown) => events.push(event), onError: (error: Error) => errors.push(error) };
+    const hyper = client(fetch);
+    hyper.subscribe('/api/events', listener, { watchdogMs: 1000 });
+    hyper.subscribe('/api/other', listener);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(signals).toHaveLength(2);
+    expect(vi.getTimerCount()).toBeGreaterThan(0);
+
+    hyper.dispose();
+    expect(signals.map((signal) => signal.aborted)).toEqual([true, true]);
+    expect(vi.getTimerCount()).toBe(0);
+    expect(() => hyper.subscribe('/api/events', listener)).toThrow();
+    hyper.dispose();
+
+    await vi.advanceTimersByTimeAsync(60000);
+    expect(errors).toHaveLength(0);
+    expect(events).toHaveLength(0);
+    expect(signals).toHaveLength(2);
+  });
+
   it('fails a silent stream after the default watchdog of 30000 ms', async () => {
     vi.useFakeTimers();
     const silent = new ReadableStream<Uint8Array>({ start() {} });
