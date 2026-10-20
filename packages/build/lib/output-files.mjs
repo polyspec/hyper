@@ -1,4 +1,4 @@
-// Copies the output files of the build scripts (HY-68). Every file gets the mode 0644 and the bytes of its source, and
+// Copies the output files of the build scripts (HR-68). Every file gets the mode 0644 and the bytes of its source, and
 // every directory that a copy creates the mode 0755, whatever the umask of the process: the mode of a creation is
 // reduced by the umask, so each file and created directory is set to its mode after its creation, and a process of
 // another user can read it. A file is never created with a mode that its owner cannot read: `fs.cpSync` of Node creates
@@ -29,7 +29,7 @@ function writeFile(file, content) {
 /**
  * Writes `content` to `file` with the mode 0644: the bytes go to a file of this process next to it, which then
  * replaces `file` with one rename, so a reader finds the previous or the new content and never a partial file
- * (HY-82).
+ * (HR-82).
  */
 export function writeFileAtomic(file, content) {
   makeDirectory(dirname(file));

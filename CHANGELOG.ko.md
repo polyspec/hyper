@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 49bd27606462a06bd4aa931b03319eebd3aa9e2001e1461651d1009d2d77c90f -->
+<!-- source-sha256: 364ded356320799b93a77ae1b1dc60f5e2f4c0244dabe90c82c3576d8a52f7be -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H25.21: 저장소 규칙 24개(HY-34, 55, 61, 68, 70, 77, 78, 79, 80부터 91, 94, 95, 96, 98. build 명령, package, 도구와 검사, workflow와 릴리스)는 모든 서버가 구현하는 region protocol에 속하지 않는다. 이 규칙은 `docs/spec/protocol.md`에서 `docs/operations/repository-rules.md`와 그 한국어 짝으로 `HR-n` id를 달고 옮겨지며 번호는 그대로다. `packages/build`와 `tests/scripts`의 test, AGENTS.md와 이를 인용하는 문서는 새 id를 부르고, changelog와 plan 기록은 옛 id를 유지한다. Red: `make parity-declarations-check`가 R13 지적 77건을 보고했고 그중 24건이 어떤 서버 구현도 시험할 수 없는 이 규칙이었다. Green: R13 지적 53건이 남고, `make docs-check`가 19쌍으로 통과하며, `make owner-validate`, `make layout-check`, `make rules-check`가 통과한다. `tests/scripts`의 test 7개는 이 변경과 무관하게 실패한다(H25.1의 workflow `gates.yml`이 `ci-workflow.test.mts`를 깨고, toolchain recipe 검사) (H25.21)
 - H25.20: `config/parity.json`의 unit `client-requests`는 Python에서 성립한다(R2). `render_client.py`는 subtest를 쓰는 method 하나 대신 `add_cases`로 `contracts/client.json`의 각 case마다 test method `test_<id>`를 만들고, unit이 이를 binding한다. Red: `make parity-declarations-check`가 `R2 missing-binding client-requests python contracts/client.json`을 보고했다. Green: R2가 사라진다(새 binding을 읽은 뒤 지적 131건은 R13 77, R15 26, R5 28건이 된다). `render_client.py`의 test 27개가 파일 단위 `python -m unittest`로 통과한다 (H25.20)
 - H25.19: Python test는 `contracts`, `transport`, `fixture_app`을 상대 import로 불러온다. `tests`, `tests/render`, `tests/package`는 package이고, parity 검사가 test 파일을 `python -m unittest`에 지정하는 방식과 같게 `run.py`는 `tests`의 상위 디렉터리를 top level로 삼아 찾는다. Red: checkout root에서 `python -m unittest packages/server/python/tests/test_csrf.py`가 `contracts` import 오류로 실패했다(H25.13이 helper를 이웃 module로 옮겼다). Green: 같은 명령이 test 15개를 OK로 실행하고, `run.py`가 test 286개, render test 36개, package test 2개를 OK로 실행하며, `make lint-python`과 `make duplication-check`이 통과한다 (H25.19)
 - H25.18: 사본 `PRINCIPLES.md`와 `PRINCIPLES.ko.md`는 설치된 kit에서 `make kit-sync`로 쓴다(S6에 directory suite의 case.json requirement가 더해졌다. K277). Red: `make kit-check` exit 2, `PRINCIPLES.ko.md: differs from node_modules/@polyspec/kit/PRINCIPLES.ko.md`(지적 2건). Green: `make kit-check` exit 0 (H25.18)

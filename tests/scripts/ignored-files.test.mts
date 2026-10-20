@@ -1,4 +1,4 @@
-// Tests `.gitignore` (HY-88): it ignores no tracked file, and it ignores every output that the installs, the builds,
+// Tests `.gitignore` (HR-88): it ignores no tracked file, and it ignores every output that the installs, the builds,
 // the test runs and the guards write into the checkout, so that a run leaves the tracked tree unchanged.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';

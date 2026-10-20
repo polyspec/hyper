@@ -1,4 +1,4 @@
-// Writes one AST file per template and the template index (HY-34). The asset build and the template build of
+// Writes one AST file per template and the template index (HR-34). The asset build and the template build of
 // test fixtures use it, so the browser and the Node server read the same template files.
 
 import { createHash } from 'node:crypto';
@@ -9,13 +9,13 @@ import dataTemplate from '@polyspec/hyper-client/data-template.json' with { type
 import { listFiles, writeFileAtomic } from './output-files.mjs';
 
 // The file of a module of the template package `@polyspec/template` that this package depends on, such as
-// `@polyspec/template` or `@polyspec/template/render`, by the `import` condition of its `exports` (HY-70).
+// `@polyspec/template` or `@polyspec/template/render`, by the `import` condition of its `exports` (HR-70).
 function templateExport(specifier) {
   return fileURLToPath(import.meta.resolve(specifier));
 }
 
 // Parses every template of a directory and the reserved template hyper/data.tpl of the browser package with the
-// template package of this package (HY-70), adds each AST as <output>/<name>.<hash>.json and returns the index:
+// template package of this package (HR-70), adds each AST as <output>/<name>.<hash>.json and returns the index:
 // template name -> { url: <urlPrefix>/<file> }.
 export async function writeTemplateFiles({ templates, output, urlPrefix }) {
   const { parse } = await import('@polyspec/template');
@@ -37,7 +37,7 @@ export async function writeTemplateFiles({ templates, output, urlPrefix }) {
 }
 
 // The esbuild plugin that resolves `@polyspec/template` and its subpaths to the template package that this package
-// depends on, whatever template package the application installed (HY-70).
+// depends on, whatever template package the application installed (HR-70).
 export function templatePlugin() {
   return {
     name: 'template-package',

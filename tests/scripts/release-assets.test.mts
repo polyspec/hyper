@@ -43,7 +43,7 @@ test('make ext builds the unpacked php-ext archive offline and runs no copy of t
   const lines = dryRun('ext');
   assert.ok(lines.some((line) => /node scripts\/build-template-ext\.mts /.test(line)), `ext does not build the archive: ${lines.join('\n')}`);
   assert.deepEqual(lines.filter((line) => /copy-template|products\/template|template-tag/.test(line)), [], 'ext reads the template repository');
-  assert.deepEqual(lines.filter((line) => /\b(curl|fetch)\b|gh release/.test(line)), [], 'ext downloads: only make hyper-install downloads (HY-89)');
+  assert.deepEqual(lines.filter((line) => /\b(curl|fetch)\b|gh release/.test(line)), [], 'ext downloads: only make hyper-install downloads (HR-89)');
 });
 
 test('make hyper-install fetches the release archives through $(ONLINE) before Composer reads the artifact repository (H23.11-2)', () => {

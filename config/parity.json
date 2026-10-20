@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "comment": "The language parity of hyper: the implementations of the server (PHP, Python, Node), and the units that every one of them holds. The server implementations run the shared vectors of contracts/ and the public functions they have in common. The browser package is a separate component, not an implementation of the server spec (HY-98); its tests belong to the package itself and are outside this declaration.",
+  "comment": "The language parity of hyper: the implementations of the server (PHP, Python, Node), and the units that every one of them holds. The server implementations run the shared vectors of contracts/ and the public functions they have in common. The browser package is a separate component, not an implementation of the server spec (HR-98); its tests belong to the package itself and are outside this declaration.",
   "implementations": [
     {
       "name": "php",
@@ -73,7 +73,7 @@
     },
     {
       "root": "packages/client/tests",
-      "reason": "the tests of the browser package, which is a separate component and not an implementation of the server spec (HY-98); they belong to the package itself"
+      "reason": "the tests of the browser package, which is a separate component and not an implementation of the server spec (HR-98); they belong to the package itself"
     }
   ],
   "testPatterns": [

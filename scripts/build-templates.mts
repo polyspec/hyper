@@ -1,9 +1,9 @@
 // Builds the template files of a template directory without an application bundle, for the tests of the Node
-// server package (HY-34):
+// server package (HR-34):
 //   <output>/templates/<name>.<hash>.json  one AST file per template, including hyper/data.tpl
 //   <output>/templates.index.json          template name -> file URL (/templates/<file>)
 //
-// The template ASTs come from the template package `@polyspec/template` that `@polyspec/hyper-build` depends on (HY-70).
+// The template ASTs come from the template package `@polyspec/template` that `@polyspec/hyper-build` depends on (HR-70).
 //
 // Usage: node scripts/build-templates.mts --templates packages/server/php/tests/fixtures/templates --output packages/server/ts/tests/build
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Runs a shell command, passes its standard output and standard error through as they come, and ends each stream
-// that the command left without a final newline with one, so the next line of a log starts at column 0 (HY-84): a
+// that the command left without a final newline with one, so the next line of a log starts at column 0 (HR-84): a
 // line-based reader, such as the last lines of a failed target in the full run, never finds two lines joined. Ends
 // with the status of the command.
 //

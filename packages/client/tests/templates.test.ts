@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { checkTemplateIndex } from '../src/index.js';
 
-// HY-34: the template index names the URL of each template.
+// HR-34: the template index names the URL of each template.
 describe('checkTemplateIndex', () => {
   it('returns the URL of each template by its name', () => {
     expect(checkTemplateIndex({ 'home.tpl': { url: '/t/home.json' }, 'rows.tpl': { url: '/t/rows.json' } })).toEqual({ 'home.tpl': { url: '/t/home.json' }, 'rows.tpl': { url: '/t/rows.json' } });

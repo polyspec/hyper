@@ -1,5 +1,5 @@
 // The entry of a page loads the form code only on a page that has a form (HY-76), and reads the template index
-// of its build (HY-34).
+// of its build (HR-34).
 import index from '@polyspec/hyper-client/templates-index';
 
 console.log(index['home.tpl']?.url);

@@ -1,5 +1,5 @@
 // Tests that the asset build, the template build and the server build read the template packages that
-// @polyspec/hyper-build requires, @polyspec/template and @polyspec/template-compiler, by their package names (HY-70): npm
+// @polyspec/hyper-build requires, @polyspec/template and @polyspec/template-compiler, by their package names (HR-70): npm
 // installs them from the tarballs of the template release that the root package.json names by their URLs and
 // package-lock.json pins by their integrity, and no build takes a template directory.
 import assert from 'node:assert/strict';

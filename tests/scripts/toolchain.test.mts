@@ -1,4 +1,4 @@
-// Tests how the recipes of the Makefile use the toolchain (HY-81, HY-89): the recipes that run tools check the
+// Tests how the recipes of the Makefile use the toolchain (HR-81, HR-89): the recipes that run tools check the
 // toolchain first, npm and Composer of this checkout are started by the absolute paths of var/tools/bin, every recipe
 // runs npm and Composer offline, only the install targets download, and the package manager installs hold the install
 // lock. The tools themselves (install-tools and check-toolchain of @polyspec/kit) are tested in kit.
@@ -68,7 +68,7 @@ test('every recipe starts npm and Composer by the absolute paths of var/tools/bi
   assert.deepEqual(tools.filter((command) => !command.startsWith(`${NPM} `) && !command.startsWith(`${COMPOSER} `)), []);
 });
 
-test('no recipe queries a registry: installs follow their lock without an audit, and the package install test installs offline (HY-89)', () => {
+test('no recipe queries a registry: installs follow their lock without an audit, and the package install test installs offline (HR-89)', () => {
   const targets = ['hyper-install', 'ext', 'packages', 'hyper-server-php-install', 'package-check', 'hyper-test-scripts', 'hyper-test-js', 'hyper-test-node', 'hyper-test-php', 'hyper-lint', 'analyse-php', 'parity', 'server-parity', 'e2e', 'bundle-size', 'templates-check', 'docs-check'];
   const lines = targets.flatMap((target) => dryRun(target, { variables: ['TEMPLATE_DIR=var/products/template-dry-run'] }));
   const commands = lines.flatMap((line) => line.split(/&&|;|\|\||\s--\s/).map((part) => part.trim()));
@@ -85,11 +85,11 @@ test('no recipe queries a registry: installs follow their lock without an audit,
 });
 
 // The settings that keep npm and Composer from reading the network, and the prefix of the downloads that lift
-// them (HY-89).
+// them (HR-89).
 const OFFLINE = { npm_config_offline: 'true', COMPOSER_DISABLE_NETWORK: '1' };
 const ONLINE = `env ${Object.keys(OFFLINE).map((name) => `-u ${name}`).join(' ')} `;
 
-test('every recipe runs npm and Composer offline, and $(ONLINE) lifts it (HY-89)', (t) => {
+test('every recipe runs npm and Composer offline, and $(ONLINE) lifts it (HR-89)', (t) => {
   const directory = mkdtempSync(path.join(tmpdir(), 'hyper-offline-'));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   const extra = path.join(directory, 'env.mk');
@@ -107,7 +107,7 @@ test('every recipe runs npm and Composer offline, and $(ONLINE) lifts it (HY-89)
   for (const name of Object.keys(OFFLINE)) assert.equal(online[name], undefined, `${name} under $(ONLINE)`);
 });
 
-test('only make install-tools, make install-packages, make hyper-install and make hyper-install-browser download, each download through $(ONLINE), and no check target downloads (HY-89)', (t) => {
+test('only make install-tools, make install-packages, make hyper-install and make hyper-install-browser download, each download through $(ONLINE), and no check target downloads (HR-89)', (t) => {
   const directory = mkdtempSync(path.join(tmpdir(), 'hyper-downloads-'));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   assert.deepEqual(dryRun('install-tools').map((line) => line.trim()), [`${ONLINE}${NODE} ${KIT}/install-tools.mjs`]);

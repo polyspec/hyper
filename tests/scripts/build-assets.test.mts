@@ -1,7 +1,7 @@
 // Tests the outputs of hyper-build-assets: it checks the manifest before it writes any output (HY-2), and it
 // writes the client entry, a chunk file for code that the entry imports with import(), the manifest with the entry
 // URL only and a static shell without a stylesheet (HY-76); it only adds files with a hash in their names below
-// public/assets and writes its other outputs into the directory of --output (HY-34, HY-76).
+// public/assets and writes its other outputs into the directory of --output (HR-34, HY-76).
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -12,7 +12,7 @@ import { jsonObject, jsonString, parseJsonObject } from '../../scripts/json.mts'
 import { copyTracked } from '../../scripts/tracked-files.mts';
 
 // Copies the tracked files of a fixture application, so a file that an earlier run left in the fixture cannot decide
-// the result (HY-85).
+// the result (HR-85).
 const fixture = (name: string, target: string) => copyTracked({ repository: resolve('.'), path: `tests/scripts/fixtures/${name}`, target, base: `tests/scripts/fixtures/${name}` });
 
 function buildAssets(app: string, ...options: string[]) {
@@ -20,7 +20,7 @@ function buildAssets(app: string, ...options: string[]) {
 }
 
 test('rejects an invalid manifest and writes nothing', () => {
-  // A copy of the fixture, so an output of an earlier run cannot decide the result (HY-85).
+  // A copy of the fixture, so an output of an earlier run cannot decide the result (HR-85).
   const app = mkdtempSync(join(tmpdir(), 'hyper-invalid-manifest-'));
   try {
     fixture('invalid-manifest', app);
@@ -54,7 +54,7 @@ test('writes the entry, a chunk for code that the entry imports with import(), t
     assert.ok(code.includes(`import("/assets/${chunk}")`), code);
     assert.ok(!code.includes('chunk: bind the forms'), code);
     assert.ok(readFileSync(join(assets, chunk), 'utf8').includes('chunk: bind the forms'));
-    // The manifest, the index and the static shell lie in the directory of --output, not below public (HY-34).
+    // The manifest, the index and the static shell lie in the directory of --output, not below public (HR-34).
     assert.deepEqual(JSON.parse(readFileSync(join(output, 'manifest.json'), 'utf8')), { hyper: `/assets/${entry}` });
     const indexFile = join(output, 'templates.index.json');
     const homeUrl = jsonString(jsonObject(parseJsonObject(readFileSync(indexFile, 'utf8'), indexFile)['home.tpl'], `${indexFile} home.tpl`).url, `${indexFile} home.tpl url`);
@@ -88,7 +88,7 @@ test('writes the entry, a chunk for code that the entry imports with import(), t
   }
 });
 
-test('compiles a stylesheet with the Tailwind utilities that the templates use (HY-77)', () => {
+test('compiles a stylesheet with the Tailwind utilities that the templates use (HR-77)', () => {
   const app = mkdtempSync(join(tmpdir(), 'hyper-tailwind-'));
   try {
     fixture('chunks', app);

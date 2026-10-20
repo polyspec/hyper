@@ -1,4 +1,4 @@
-// Publishes outputs that other processes read while they are written again (HY-82). An output is written completely
+// Publishes outputs that other processes read while they are written again (HR-82). An output is written completely
 // into a staging directory of its own process (`<target>.next-<pid>`) next to its target; each file then moves into
 // the target with rename(2), which replaces a path in one step on one file system, the files of `last` after all
 // others, and then the files and directories of the target that the new output does not have are removed. A reader

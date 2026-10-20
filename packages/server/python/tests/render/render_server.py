@@ -70,7 +70,7 @@ def waiting_around() -> tuple[threading.Event, threading.Event, Callable]:
 
 class Served:
     """Serves an application in a thread; leaving the block stops the server and awaits every request thread, so a
-    test reads the calls of the hooks after every request ended (HY-87)."""
+    test reads the calls of the hooks after every request ended (HR-87)."""
 
     def __init__(self, app: App, **options):
         self._sessions = tempfile.TemporaryDirectory(prefix="hyper-server-sessions-")

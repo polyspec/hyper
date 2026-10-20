@@ -155,12 +155,12 @@ final class RunTest extends TestCase
     /** HY-67, HY-99: PHP ends the script at the first failed write of the response, reports the write before the disconnect hook. */
     public function testRunCallsTheDisconnectHookWhenTheClientClosedTheConnection(): void
     {
-        // The log and the server are released when the case ends, also when it fails (HY-87).
+        // The log and the server are released when the case ends, also when it fails (HR-87).
         $log = (string) tempnam(sys_get_temp_dir(), 'hyper-disconnect-');
         $server = false;
         try {
             // The server listens on a port that the system assigns and reports it, so no other process can take the
-            // port between its choice and its use (HY-89). ignore_user_abort is on here, so App::run must turn it off.
+            // port between its choice and its use (HR-89). ignore_user_abort is on here, so App::run must turn it off.
             [$stderr, $port] = self::startServer(
                 [PHP_BINARY, '-d', 'ignore_user_abort=1', '-S', '127.0.0.1:0', __DIR__ . '/Support/disconnect.php'],
                 [...getenv(), 'HYPER_DISCONNECT_LOG' => $log],

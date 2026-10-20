@@ -1,4 +1,4 @@
-// Runs the installed hyper packages under node without a bundler, as a package that depends on them does (HY-61).
+// Runs the installed hyper packages under node without a bundler, as a package that depends on them does (HR-61).
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
@@ -13,8 +13,8 @@ const FIXTURES = fileURLToPath(new URL('../../packages/server/php/tests/fixtures
 const BUILD = fileURLToPath(new URL('../../packages/server/ts/tests/build/', import.meta.url));
 
 // The exports of each package; the browser package also exports the declaration of the template index, which an
-// application build resolves to the index of its own asset build (HY-34), and the source of the reserved template
-// hyper/data.tpl, which the builds of @polyspec/hyper-build read (HY-96).
+// application build resolves to the index of its own asset build (HR-34), and the source of the reserved template
+// hyper/data.tpl, which the builds of @polyspec/hyper-build read (HR-96).
 const EXPORTS: Record<string, unknown> = {
   '@polyspec/hyper-client': {
     '.': { types: './dist/index.d.ts', default: './dist/index.js' },

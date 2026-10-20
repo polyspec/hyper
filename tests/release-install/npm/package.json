@@ -1,7 +1,7 @@
 {
   "name": "release-install-npm",
   "private": true,
-  "description": "A consumer that installs the release tarballs of this repository and the tarballs of the template release (HY-95, HY-96)",
+  "description": "A consumer that installs the release tarballs of this repository and the tarballs of the template release (HR-95, HR-96)",
   "type": "module",
   "engines": {
     "node": ">=26.12.0"

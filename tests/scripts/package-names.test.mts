@@ -1,5 +1,5 @@
 // Tests that the name of every package of this repository states its role and that its directory below packages/
-// states the role and the language of a server (HY-98): the manifest in the directory declares the name, and
+// states the role and the language of a server (HR-98): the manifest in the directory declares the name, and
 // config/release.json releases the package from that directory, the Python package as a wheel (H23.15).
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
@@ -13,7 +13,7 @@ type Kind = 'npm' | 'composer' | 'python';
 // The packages that config/release.json releases.
 const released = jsonObjects(parseJsonObject(readFileSync(join(repository, 'config/release.json'), 'utf8'), 'config/release.json').packages, 'config/release.json packages');
 
-// The packages of HY-98: the directory, the kind of its manifest and the name.
+// The packages of HR-98: the directory, the kind of its manifest and the name.
 const PACKAGES: { directory: string; kind: Kind; name: string }[] = [
   { directory: 'packages/client', kind: 'npm', name: '@polyspec/hyper-client' },
   { directory: 'packages/server/ts', kind: 'npm', name: '@polyspec/hyper-server' },
@@ -34,7 +34,7 @@ function manifestName(kind: Kind, text: string): string | null {
 }
 
 for (const { directory, kind, name } of PACKAGES) {
-  test(`${directory} holds the ${kind} package ${name} and config/release.json releases it from there (HY-98)`, () => {
+  test(`${directory} holds the ${kind} package ${name} and config/release.json releases it from there (HR-98)`, () => {
     const manifest = join(repository, directory, MANIFEST[kind]);
     assert.ok(existsSync(manifest), `${directory}/${MANIFEST[kind]} is missing`);
     assert.equal(manifestName(kind, readFileSync(manifest, 'utf8')), name, `the name of ${directory}/${MANIFEST[kind]}`);
@@ -43,7 +43,7 @@ for (const { directory, kind, name } of PACKAGES) {
   });
 }
 
-test('packages/ holds only the packages of HY-98', () => {
+test('packages/ holds only the packages of HR-98', () => {
   const manifests = execFileSync('git', ['ls-files', '-z', 'packages'], { cwd: repository, encoding: 'utf8' })
     .split('\0').filter((path) => /\/(package\.json|composer\.json|pyproject\.toml)$/.test(path)).map((path) => path.slice(0, path.lastIndexOf('/')));
   assert.deepEqual([...new Set(manifests)].sort(), PACKAGES.map(item => item.directory).sort());

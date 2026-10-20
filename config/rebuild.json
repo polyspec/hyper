@@ -9,7 +9,7 @@
   "tools": {
     "scripts/board-servers.mts": {
       "kind": "ecosystem",
-      "tool": "node:child_process starts the servers of a run and node:fs and node:os give each run its temporary directory (HY-87, HY-89)"
+      "tool": "node:child_process starts the servers of a run and node:fs and node:os give each run its temporary directory (HR-87, HR-89)"
     },
     "scripts/build-template-ext.mts": {
       "kind": "ecosystem",
@@ -25,7 +25,7 @@
     },
     "scripts/check-parity.mts": {
       "kind": "policy",
-      "reason": "proves that the browser code and the PHP, Node and Python servers render the same bytes for the requests of one file (HY-12, HY-13, HY-55); no ecosystem tool compares the renderings of this protocol; esbuild bundles the browser code and @polyspec/template renders"
+      "reason": "proves that the browser code and the PHP, Node and Python servers render the same bytes for the requests of one file (HY-12, HY-13, HR-55); no ecosystem tool compares the renderings of this protocol; esbuild bundles the browser code and @polyspec/template renders"
     },
     "scripts/check-templates.mts": {
       "kind": "policy",
@@ -37,15 +37,15 @@
     },
     "scripts/line-end.mts": {
       "kind": "policy",
-      "reason": "HY-84: a log line never joins the next line; the script ends each stream of a command that left no final newline, which no ecosystem tool does"
+      "reason": "HR-84: a log line never joins the next line; the script ends each stream of a command that left no final newline, which no ecosystem tool does"
     },
     "scripts/publish.mts": {
       "kind": "ecosystem",
-      "tool": "node:fs renames, through publish of packages/build/lib/publish.mjs (HY-82)"
+      "tool": "node:fs renames, through publish of packages/build/lib/publish.mjs (HR-82)"
     },
     "scripts/run-e2e.mts": {
       "kind": "ecosystem",
-      "tool": "Playwright runs the browser tests on the servers that scripts/board-servers.mts starts (HY-87)"
+      "tool": "Playwright runs the browser tests on the servers that scripts/board-servers.mts starts (HR-87)"
     },
     "scripts/serve-demo.mts": {
       "kind": "policy",
@@ -69,11 +69,11 @@
     },
     "packages/build/lib/output-files.mjs": {
       "kind": "ecosystem",
-      "tool": "node:fs writes and copies the files, and sets the modes 0644 and 0755 that HY-68 requires whatever the umask"
+      "tool": "node:fs writes and copies the files, and sets the modes 0644 and 0755 that HR-68 requires whatever the umask"
     },
     "packages/build/lib/publish.mjs": {
       "kind": "ecosystem",
-      "tool": "node:fs rename(2) moves each staged file into its target (HY-82)"
+      "tool": "node:fs rename(2) moves each staged file into its target (HR-82)"
     },
     "packages/build/lib/template-files.mjs": {
       "kind": "ecosystem",

@@ -1,5 +1,5 @@
 // Tests scripts/check-bundle-size.mts: a build whose index names no template file fails with the expected and the
-// actual count instead of passing or failing with a TypeError (HY-84).
+// actual count instead of passing or failing with a TypeError (HR-84).
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';

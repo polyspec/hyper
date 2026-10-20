@@ -1,5 +1,5 @@
 // Tests that Composer installs each polyspec package of this checkout that its path repository provides as a symbolic
-// link to the source directory of that package (HY-79). The root and the board are the Composer projects that declare
+// link to the source directory of that package (HR-79). The root and the board are the Composer projects that declare
 // such a path repository. A real directory copy of such a package fails and is named. Third-party packages of a vendor
 // are not checked. Run it after `make hyper-install`.
 import assert from 'node:assert/strict';
@@ -9,7 +9,7 @@ import { test } from 'node:test';
 import { requireBuilt } from './requires.mts';
 
 const repository = resolve('.');
-// The Composer projects of the checkout that declare a path repository of a polyspec package (HY-79).
+// The Composer projects of the checkout that declare a path repository of a polyspec package (HR-79).
 const projects = ['.', 'examples/board'];
 
 interface PathPackage {

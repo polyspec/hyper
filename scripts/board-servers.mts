@@ -6,9 +6,9 @@
 // Starting a server is a step without a time limit: it prints its start, every output line of the server with the
 // prefix [<name>], a progress line every 5 seconds while it waits that names the line it waits for and the last line
 // that the server printed, and its result with the elapsed time; it ends when the server reports its address and
-// fails when the server exits first (HY-89).
+// fails when the server exits first (HR-89).
 //
-// A run owns its servers and its temporary directory (HY-87): `serverRun` creates the directory, every server joins
+// A run owns its servers and its temporary directory (HR-87): `serverRun` creates the directory, every server joins
 // the children of the run when it is spawned, before it reports its address, and `close` stops every child, waits
 // until each has exited and then removes the directory. A run closes on its end, on its failure and on SIGINT and
 // SIGTERM, so no server outlives the run and no server holds a file of a removed directory.

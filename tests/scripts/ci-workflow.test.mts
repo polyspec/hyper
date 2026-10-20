@@ -1,9 +1,9 @@
-// Tests the rules of the GitHub workflows (HY-86, HY-90, HY-91): every job runs on the declared runner ubuntu-26.04-arm,
+// Tests the rules of the GitHub workflows (HR-86, HR-90, HR-91): every job runs on the declared runner ubuntu-26.04-arm,
 // every action is pinned by its commit, no step or job has a time limit, every step after the first of a job runs after a
 // failed step (`if: ${{ !cancelled() }}`), except in the jobs whose every step needs the earlier one (STOPPING), and
 // every step that runs a command runs one make target, so the exported settings and the checks of the Makefile, such
 // as the offline settings and the toolchain check, apply to it. The entries of the matrix of ci.yml run the targets of
-// CHECK_TARGETS, each once. The last job of ci.yml is ci-passed, the check that a release tag requires (HY-95): it runs
+// CHECK_TARGETS, each once. The last job of ci.yml is ci-passed, the check that a release tag requires (HR-95): it runs
 // after every other job (`if: ${{ always() }}`), needs every other job of the workflow, runs on their runner and runs
 // `make ci-passed` with the JSON of `needs`.
 import assert from 'node:assert/strict';
@@ -104,7 +104,7 @@ test('every job runs on the declared runner without a time limit, and every acti
   assert.deepEqual(found, []);
 });
 
-test('every step that runs a command runs make, and every step after the first runs after a failed step (HY-86)', () => {
+test('every step that runs a command runs make, and every step after the first runs after a failed step (HR-86)', () => {
   const found: string[] = [];
   for (const workflow of workflows()) {
     for (const job of jobs(workflow.text)) {
@@ -120,7 +120,7 @@ test('every step that runs a command runs make, and every step after the first r
 
 // The on: block of each workflow, exactly: the checks run on the push of main and on every manual run; the release on
 // the push of a tag vX.Y.Z or <directory>/vX.Y.Z at any depth (in a tag filter * does not match /, so **/v* covers a Go
-// module tag). No other workflow exists, and none runs on a pull request or a merge group (HY-91, HY-95).
+// module tag). No other workflow exists, and none runs on a pull request or a merge group (HR-91, HR-95).
 const TRIGGERS: Record<string, string> = {
   'ci.yml': 'on:\n  push:\n    branches: [main]\n  workflow_dispatch:\n',
   'release.yml': "on:\n  push:\n    tags: ['v*', '**/v*']\n",
@@ -129,7 +129,7 @@ const TRIGGERS: Record<string, string> = {
 /**
  * The ways in which a workflow starts on a tag push. A tag push starts every workflow whose `push:` has no `branches:`
  * filter, and the check runs of that workflow then stand on the tagged commit, where `make release-verify` requires the
- * checks of config/release.json to be successful (HY-95). Only release.yml may run on a tag.
+ * checks of config/release.json to be successful (HR-95). Only release.yml may run on a tag.
  */
 function tagStartProblems(name: string, text: string): string[] {
   const trigger = /^on:\n((?: {2}.*\n)+)/m.exec(text)?.[1] ?? '';
@@ -139,7 +139,7 @@ function tagStartProblems(name: string, text: string): string[] {
   return tagged ? [`${name}: the push trigger starts on a tag; it needs branches: [main]`] : [];
 }
 
-test('only release.yml starts on a tag, and no check of config/release.json comes from a workflow that a tag starts (HY-95)', () => {
+test('only release.yml starts on a tag, and no check of config/release.json comes from a workflow that a tag starts (HR-95)', () => {
   const read = workflows();
   assert.deepEqual(read.flatMap((workflow) => tagStartProblems(workflow.name, workflow.text)), []);
   const checks = jsonArray(parseJsonObject(readFileSync(path.join(ROOT, 'config/release.json'), 'utf8'), 'config/release.json').checks, 'config/release.json checks')
@@ -158,7 +158,7 @@ test('only release.yml starts on a tag, and no check of config/release.json come
   assert.equal(tagStartProblems('release.yml', "on:\n  push:\n    tags: ['v*']\n").length, 0);
 });
 
-test('each workflow declares exactly its triggers (HY-91, HY-95)', () => {
+test('each workflow declares exactly its triggers (HR-91, HR-95)', () => {
   assert.deepEqual(allWorkflows().map(workflow => workflow.name).sort(), Object.keys(TRIGGERS).sort());
   for (const workflow of allWorkflows()) {
     const declared = /^(on:\n(?: {2}.*\n)+)/m.exec(workflow.text)?.[1] ?? '';
@@ -195,7 +195,7 @@ function checkTargets(): string[] {
   return targets.split(' ').filter(Boolean);
 }
 
-test('the matrix entries of ci.yml run every target of the full suite once (HY-91)', () => {
+test('the matrix entries of ci.yml run every target of the full suite once (HR-91)', () => {
   const entries = matrixEntries(readFileSync(path.join(WORKFLOWS, 'ci.yml'), 'utf8'));
   assert.ok(entries.length > 1, JSON.stringify(entries));
   assert.equal(new Set(entries.map(entry => entry.name)).size, entries.length, 'a matrix name repeats; the reports of two entries would share one artifact');
@@ -209,7 +209,7 @@ test('the matrix entries of ci.yml run every target of the full suite once (HY-9
   assert.deepEqual([...all].sort(), [...checkTargets()].sort(), 'the targets of the matrix entries are not the targets of CHECK_TARGETS, each once');
 });
 
-test('the workflow ci runs every matrix entry in a job that runs to its end and uploads its report (HY-91)', () => {
+test('the workflow ci runs every matrix entry in a job that runs to its end and uploads its report (HR-91)', () => {
   const text = readFileSync(path.join(WORKFLOWS, 'ci.yml'), 'utf8');
   const read = jobs(text).filter((job) => job.name !== CI_PASSED);
   assert.ok(read.length > 0);
@@ -248,9 +248,9 @@ test('the workflow ci runs every matrix entry in a job that runs to its end and 
 });
 
 // The workflow ci checks out the template repository at the tag TEMPLATE_TAG of the Makefile, the one declaration of
-// the template release (HY-80), so the copy of `make hyper-install` finds that tag and CI checks the same template commit as
+// the template release (HR-80), so the copy of `make hyper-install` finds that tag and CI checks the same template commit as
 // a local run.
-test('the workflow ci checks out the template repository at the tag TEMPLATE_TAG of the Makefile (HY-80)', () => {
+test('the workflow ci checks out the template repository at the tag TEMPLATE_TAG of the Makefile (HR-80)', () => {
   // TEMPLATE_TAG reads the version of the entry template-php of config/release-assets.json (H23.11-2); make template-tag names it.
   const lines = dryRun('template-tag', { variables: ['TEMPLATE_REPOSITORY=/nonexistent/hyper-template'] });
   const tag = lines.map((line) => /'refs\/tags\/(v\d+\.\d+\.\d+)\^\{commit\}'/.exec(line)?.[1]).find((found) => found !== undefined);
@@ -262,7 +262,7 @@ test('the workflow ci checks out the template repository at the tag TEMPLATE_TAG
   }
 });
 
-// A target of the full suite declared for one platform runs there and is never skipped there (HY-68): the full suite of
+// A target of the full suite declared for one platform runs there and is never skipped there (HR-68): the full suite of
 // Darwin runs DARWIN_TARGETS, which no CI group of Linux runs, and their tests skip no case and fail without their tool.
 test('a target declared for Darwin is in the full suite exactly on Darwin and skips nothing there', () => {
   const makefile = readFileSync(path.join(ROOT, 'Makefile'), 'utf8');
@@ -304,7 +304,7 @@ function ciPassedProblems(text: string): string[] {
   return found;
 }
 
-test('ci-passed is the last job of ci.yml, runs always, needs every other job and runs make ci-passed (HY-95)', () => {
+test('ci-passed is the last job of ci.yml, runs always, needs every other job and runs make ci-passed (HR-95)', () => {
   const text = readFileSync(path.join(WORKFLOWS, 'ci.yml'), 'utf8');
   assert.deepEqual(ciPassedProblems(text), []);
   const [head, tail] = text.split('\n  ci-passed:\n');

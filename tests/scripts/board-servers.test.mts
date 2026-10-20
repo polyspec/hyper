@@ -1,4 +1,4 @@
-// Tests that the servers of a run never outlive it (HY-87, scripts/board-servers.mts): when a server of the board
+// Tests that the servers of a run never outlive it (HR-87, scripts/board-servers.mts): when a server of the board
 // fails to start, the servers that started have exited before the start rejects, and a run that ends on a signal stops
 // its servers and removes its directory.
 import assert from 'node:assert/strict';
@@ -81,7 +81,7 @@ test('a run that ends on SIGTERM stops its servers and removes its directory', a
   await assert.rejects(fetch(url, { signal: AbortSignal.timeout(2000) }), refused);
 });
 
-test('a server start that waits prints its progress with the line it waits for and the last line of the server (HY-89)', async () => {
+test('a server start that waits prints its progress with the line it waits for and the last line of the server (HR-89)', async () => {
   const script = `
     import { serverRun, startServer } from ${JSON.stringify(path.join(ROOT, 'scripts/board-servers.mts'))};
     const run = serverRun('hyper-board-servers-slow-');

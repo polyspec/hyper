@@ -48,7 +48,7 @@ function fixture(t: TestContext, steps: Step[]): string {
 }
 
 // Runs the check in a process group of its own and resolves its exit status and output; when it has not ended within
-// 20 s the whole group is killed, so its servers end with it (HY-87). `whenOutput(text, act)` acts once the output
+// 20 s the whole group is killed, so its servers end with it (HR-87). `whenOutput(text, act)` acts once the output
 // holds `text`.
 async function check(app: string, { whenOutput }: { whenOutput?: WhenOutput } = {}): Promise<{ status: number | NodeJS.Signals | 'killed' | null; output: string }> {
   const child = spawn(process.execPath, ['scripts/check-parity.mts', '--app', app, '--requests', join(app, 'requests.json')], { stdio: ['ignore', 'pipe', 'pipe'], detached: true });
@@ -107,7 +107,7 @@ test('the check tests its own server while another server answers on the port of
   assert.equal(existsSync(join(app, 'var')), false);
 });
 
-test('a request file without a status or a compare step fails before any server starts (HY-84)', async (t) => {
+test('a request file without a status or a compare step fails before any server starts (HR-84)', async (t) => {
   const app = fixture(t, [{ action: 'send', method: 'GET', path: '/' }]);
   const { status, output } = await check(app);
   assert.equal(status, 1, output);
@@ -115,7 +115,7 @@ test('a request file without a status or a compare step fails before any server 
   assert.doesNotMatch(output, /start php/);
 });
 
-test('a check that receives SIGTERM stops its server and removes its run directory before it ends (HY-87)', async (t) => {
+test('a check that receives SIGTERM stops its server and removes its run directory before it ends (HR-87)', async (t) => {
   const app = fixture(t, [{ action: 'send', method: 'GET', path: '/' }, { action: 'compare', method: 'GET', path: '/slow', currentPath: '/' }]);
   const { status, output } = await check(app, { whenOutput: { text: '▶ compare GET /slow', act: (child) => child.kill('SIGTERM') } });
   assert.equal(status, 143, output);

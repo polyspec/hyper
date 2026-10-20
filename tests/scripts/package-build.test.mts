@@ -1,5 +1,5 @@
 // Tests that each npm package of this repository builds with the TypeScript compiler that npm links into node_modules/.bin
-// (HY-79): npm installs with its own defaults, so `npm exec tsc` finds the compiler, and a package is built with
+// (HR-79): npm installs with its own defaults, so `npm exec tsc` finds the compiler, and a package is built with
 // `npm run build` in its directory. The test builds each package into a temporary directory and leaves dist unchanged.
 // Run it after `make hyper-install`.
 import assert from 'node:assert/strict';
@@ -10,7 +10,7 @@ import { join, resolve } from 'node:path';
 import { test } from 'node:test';
 import { requireBuilt } from './requires.mts';
 
-// The npm of this checkout, which `make install-tools` writes (HY-81).
+// The npm of this checkout, which `make install-tools` writes (HR-81).
 const NPM = resolve('var/tools/bin/npm');
 requireBuilt('hyper-install', 'node_modules/typescript/package.json', 'var/tools/bin/npm');
 

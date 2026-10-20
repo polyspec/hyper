@@ -1,4 +1,4 @@
-// Tests that the build package @polyspec/hyper-build holds everything that its bins run (HY-96): its modules import
+// Tests that the build package @polyspec/hyper-build holds everything that its bins run (HR-96): its modules import
 // only their own published files, built-in modules of Node and the packages that its manifest requires, so the
 // package that a consumer installs runs as the repository runs it; and the builds run from any working directory.
 import assert from 'node:assert/strict';

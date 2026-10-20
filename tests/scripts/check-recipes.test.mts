@@ -1,5 +1,5 @@
 // Tests that a recipe with several checks runs every check to its end and then fails, naming each failed check
-// (HY-86): `make hyper-lint` and `make hyper-test-js` run on directories whose checks all fail, and the dry runs of the other
+// (HR-86): `make hyper-lint` and `make hyper-test-js` run on directories whose checks all fail, and the dry runs of the other
 // recipes with several checks show one accumulating command.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
@@ -44,7 +44,7 @@ test('make hyper-lint runs both formatting checks when the first fails and names
   assert.notEqual(run.status, 0);
   assert.ok(existsSync(path.join(directory, 'package.ran')) && existsSync(path.join(directory, 'board.ran')), run.stdout + run.stderr);
   assert.match(run.stdout, new RegExp(`failed checks: Pint of ${packageProject}; Pint of ${boardProject};`));
-  // Every line of the recipe starts at column 0, after output without a final newline too (HY-84).
+  // Every line of the recipe starts at column 0, after output without a final newline too (HR-84).
   const lines = run.stdout.split('\n');
   assert.ok(lines.includes('package is not formatted'), run.stdout);
   assert.ok(lines.includes(`cd ${boardProject} && vendor/bin/pint --test app src public`), run.stdout);

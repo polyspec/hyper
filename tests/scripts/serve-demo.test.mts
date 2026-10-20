@@ -15,7 +15,7 @@ const HOLDER = /held by process (\d+) \(started ([^)]+)\) of the checkout (\S+),
 
 // A temporary directory with the demos of a test. One hook ends every demo that still runs, waits for its exit and
 // checks that it released its lock, and only then removes the directory, which holds the lock and the database of the
-// demos (HY-87); node:test runs the hooks of a test in the order of their registration.
+// demos (HR-87); node:test runs the hooks of a test in the order of their registration.
 // A started demo: its process and the output that it printed so far.
 interface Demo { child: ChildProcess; output: () => string }
 

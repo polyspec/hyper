@@ -1,4 +1,4 @@
-// The inputs that a test reads and does not create (HY-85): a build or an install of another target. A test names
+// The inputs that a test reads and does not create (HR-85): a build or an install of another target. A test names
 // them with requireBuilt before it reads them, so a missing input fails with its path and the target that makes it,
 // not with an error of the tool that reads it.
 import assert from 'node:assert/strict';

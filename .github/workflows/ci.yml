@@ -1,12 +1,12 @@
-# The full suite on GitHub (HY-91): the push of main and every manual run (workflow_dispatch) run one job per entry of
+# The full suite on GitHub (HR-91): the push of main and every manual run (workflow_dispatch) run one job per entry of
 # the matrix, and each entry runs its `targets` with `make ci-targets`. The targets of the entries together are the
 # targets of CHECK_TARGETS of the Makefile, each once (tests/scripts/ci-workflow.test.mts). A failure never stops the run: the matrix does not cancel the other
 # entries (fail-fast: false), every step after the first runs after a failed step (`if: ${{ !cancelled() }}`), and
 # `make ci-targets` runs every target to its end. Each job writes the job summary and uploads its report var/ci/<name>/:
 # the record with the status, the time and the first failure lines of each target, the full log of each target and the
 # summary. The last job, ci-passed, passes only when every other job of this workflow passed; a release tag requires
-# it on the tagged commit (HY-94, HY-95). Every step that runs a command runs one make target, the jobs run on
-# ubuntu-26.04-arm, the actions are pinned by commit and no step has a time limit (HY-90).
+# it on the tagged commit (HR-94, HR-95). Every step that runs a command runs one make target, the jobs run on
+# ubuntu-26.04-arm, the actions are pinned by commit and no step has a time limit (HR-90).
 #
 # The toolchain comes from the pinned files: Node.js, Python and the other tools from mise.toml, which mise installs at
 # the digests of mise.lock, and PHP from .php-version. setup-node reads mise.toml only for the node that starts the
@@ -15,9 +15,9 @@
 # var/tools and `make install-packages` installs package-lock.json with it, the package included, whose kit.mk has the
 # other targets. Every check job then runs `make install-tools`, which installs the Python and Composer of the checkout
 # into var/tools, so CI runs the tools of a local run. npm installs the template packages from the assets of the template
-# release, and `make hyper-install` installs them with Composer (HY-70). The template repository is
-# checked out next to this repository at its tag v0.0.11 (TEMPLATE_TAG of the Makefile, HY-80), as ../template of the
-# Makefile, and `make hyper-install` copies the native extension sources of the commit of that tag (HY-78). `make ext` builds
+# release, and `make hyper-install` installs them with Composer (HR-70). The template repository is
+# checked out next to this repository at its tag v0.0.11 (TEMPLATE_TAG of the Makefile, HR-80), as ../template of the
+# Makefile, and `make hyper-install` copies the native extension sources of the commit of that tag (HR-78). `make ext` builds
 # the native extension with phpize and php-config of the PHP of setup-php, and only the group board installs Chromium.
 name: ci
 
@@ -119,7 +119,7 @@ jobs:
           name: ci-${{ matrix.name }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: hyper/var/ci/${{ matrix.name }}/
           if-no-files-found: error
-  # The check that a release tag requires on the tagged commit (HY-95). It runs after every other job, also after a
+  # The check that a release tag requires on the tagged commit (HR-95). It runs after every other job, also after a
   # failed, skipped or cancelled one (if: always()), and make ci-passed fails unless every job of needs has the result
   # success, so a new job of this workflow is required once it is listed in needs. Each step needs the step before it, and the
   # bootstrap installs the package whose kit.mk has the target ci-passed.

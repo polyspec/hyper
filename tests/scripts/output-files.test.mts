@@ -1,4 +1,4 @@
-// Tests the cause that HY-68 guards against, on every platform: the output copies give every file the mode 0644 and
+// Tests the cause that HR-68 guards against, on every platform: the output copies give every file the mode 0644 and
 // every directory the mode 0755 whatever the umask of the process, also over an existing file of another mode, so a
 // process of another user can read them. A virtiofs bind mount of a Linux container refused a file that its owner
 // could not read; that symptom is tested where it exists, with Apple `container` on Darwin
@@ -56,7 +56,7 @@ function writeOutputs(t: TestContext) {
   return output;
 }
 
-test('the output copies give files the mode 0644 and directories 0755 under the umask 077 (HY-68)', (t) => {
+test('the output copies give files the mode 0644 and directories 0755 under the umask 077 (HR-68)', (t) => {
   const output = writeOutputs(t);
   const found = modes(output);
   assert.deepEqual(found.map(([name]) => name).sort(), ['atomic/', 'atomic/manifest.json', 'directory/', 'directory/deep/', 'directory/deep/a.tpl', 'directory/deep/nested/', 'directory/deep/nested/b.tpl', 'file/', 'file/a.tpl', 'new/', 'new/path/', 'new/path/a.tpl']);
@@ -66,7 +66,7 @@ test('the output copies give files the mode 0644 and directories 0755 under the 
 
 // A process of another user reads every output. It runs where sudo starts a process as nobody without a password, as
 // on the GitHub runner, whose CI=true makes the case required there.
-test('a process of another user reads every output (HY-68)', (t) => {
+test('a process of another user reads every output (HR-68)', (t) => {
   const allowed = spawnSync('sudo', ['-n', '-u', 'nobody', 'true']).status === 0;
   if (!allowed) {
     assert.notEqual(process.env.CI, 'true', 'sudo -n -u nobody is not allowed on CI, where this case is required');

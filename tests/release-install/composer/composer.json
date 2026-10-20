@@ -1,6 +1,6 @@
 {
     "name": "polyspec/release-install-composer",
-    "description": "A consumer that installs the release zip of this repository and the zip of the template release that it requires from an artifact repository (HY-95, H23.11-1)",
+    "description": "A consumer that installs the release zip of this repository and the zip of the template release that it requires from an artifact repository (HR-95, H23.11-1)",
     "type": "project",
     "license": "MIT",
     "repositories": [

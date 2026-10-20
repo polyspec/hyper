@@ -1,10 +1,10 @@
 import { MapLoader, type Loader, type LoadResult, type Template } from '@polyspec/template/render';
 import type { Manifest, RouteDeclaration } from './manifest.js';
 
-// Template name to its file URL (HY-34).
+// Template name to its file URL (HR-34).
 export type TemplateIndex = Record<string, { url: string }>;
 
-// Returns the template index of a JSON value, the URL of each template by its name (HY-34); another value fails. source
+// Returns the template index of a JSON value, the URL of each template by its name (HR-34); another value fails. source
 // names the value in the error, such as the file that held it.
 export function checkTemplateIndex(value: unknown, source = 'the template index'): TemplateIndex {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) throw new Error(`hyper: ${source} is not an object of templates`);

@@ -1,6 +1,6 @@
 // Proves that the browser code renders the same bytes as the PHP server (HY-12, HY-13, HYC-1, HY-30, HY-31), and
 // with --node or --python that the Node or the Python server answers every request as the PHP server does
-// (HY-55).
+// (HR-55).
 // It starts the application with an empty database and runs the steps of a request file in one
 // session; a cookie step sets the hy-keep cookie of HY-39. For every compare step it requests:
 //   1. the HTML document, rendered by PHP,
@@ -70,13 +70,13 @@ const requests = values.requests;
 const SESSION_COOKIE = 'hy-session';
 // The creation time of every post: 2026-10-01 12:00:00 UTC.
 const BOARD_TIME = '1790856000';
-// Headers that the HTTP server program writes by itself and that the comparison leaves out (HY-55): the
+// Headers that the HTTP server program writes by itself and that the comparison leaves out (HR-55): the
 // X-Powered-By of the PHP built-in server and the Server of the Python http.server.
 const TRANSPORT_HEADERS = new Set(['date', 'connection', 'keep-alive', 'content-length', 'transfer-encoding', 'host', 'x-powered-by', 'server']);
 // The time in which a server answers a request of a step, its whole body included.
 const REQUEST_TIMEOUT_MS = 10_000;
 const steps = readSteps(requests);
-// A request file without a status or a compare step would pass without checking anything (HY-84).
+// A request file without a status or a compare step would pass without checking anything (HR-84).
 const checks = steps.filter((step) => step.action === 'status' || step.action === 'compare').length;
 if (checks === 0) throw new Error(`${requests} holds no status or compare step; expected at least 1, actual 0 of ${steps.length} steps`);
 
@@ -238,7 +238,7 @@ function client(base: string): ServerClient {
   return { base, send };
 }
 
-// Compares a PHP response and a Node response after the placeholders of HY-55 replace the values that differ by
+// Compares a PHP response and a Node response after the placeholders of HR-55 replace the values that differ by
 // session.
 function compare(label: string, expected: Answer, actual: Answer, server: string): void {
   compared++;

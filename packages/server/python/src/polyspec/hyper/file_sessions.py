@@ -121,7 +121,7 @@ class FileSession:
             if self._values is not None and self._id is not None:
                 file = self._sessions.directory / self._id
                 # Each write has its own temporary file, so two writers of one session never share a name (HY-104).
-                # One rename publishes the file, so a reader finds the previous or the new session (HY-82). The
+                # One rename publishes the file, so a reader finds the previous or the new session (HR-82). The
                 # file of mkstemp has the mode 0600, as the session file of the TypeScript server has (HY-104).
                 descriptor, writing = tempfile.mkstemp(
                     dir=self._sessions.directory, prefix=f"{self._id}.", suffix=".tmp"

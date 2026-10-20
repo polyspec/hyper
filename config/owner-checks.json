@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "comment": "The owner checks of the repository paths (HY-88), read by owner-check of @polyspec/kit: make owner-check runs the targets and node test files of the rules whose globs match a changed path, and make owner-validate fails for a tracked path without an owner. A rule with variable passes the matched paths to its targets in that make variable. Globs: * within one path segment, ** across segments, {a,b} either alternative.",
+  "comment": "The owner checks of the repository paths (HR-88), read by owner-check of @polyspec/kit: make owner-check runs the targets and node test files of the rules whose globs match a changed path, and make owner-validate fails for a tracked path without an owner. A rule with variable passes the matched paths to its targets in that make variable. Globs: * within one path segment, ** across segments, {a,b} either alternative.",
   "testTarget": "hyper-test-scripts",
   "owners": [
     {

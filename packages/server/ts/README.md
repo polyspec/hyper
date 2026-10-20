@@ -5,7 +5,7 @@
 
 The Node.js server of the region protocol. It implements the same rules as the PHP server `polyspec/hyper-server` (see [Region protocol](../../../docs/spec/protocol.md), HY-54 lists the differences): routes with a base path, shared, region and route loaders, `POST` actions with CSRF, redirect and invalid results, `Redirect`, `Forbidden` and `NotFound`, reply cookies and cache control, JSON tags and 304, flash values and changed topics, kept values with `/_hyper/keep`, request checks, plain error responses, the data model check and sessions in files. It renders documents with the browser code of `@polyspec/hyper-client` and the template files of the asset build, so its documents are the browser renders of the same JSON.
 
-Node.js 26.12.0 or later. The package publishes JavaScript modules with type declarations in `dist`, as `@polyspec/hyper-client` does; `npm run build` (`make packages` for both packages) writes them. Node runs the package from `node_modules` without a bundler, and its declarations type-check with `erasableSyntaxOnly` (HY-61). `make node-server` bundles the board example with esbuild into one file.
+Node.js 26.12.0 or later. The package publishes JavaScript modules with type declarations in `dist`, as `@polyspec/hyper-client` does; `npm run build` (`make packages` for both packages) writes them. Node runs the package from `node_modules` without a bundler, and its declarations type-check with `erasableSyntaxOnly` (HR-61). `make node-server` bundles the board example with esbuild into one file.
 
 ## Open an application
 
@@ -50,7 +50,7 @@ app.bind('posts', () => new Posts('/srv/board/var/board.db'));
 | Option | Meaning |
 |---|---|
 | `manifest` | Absolute path of `app.json` (HY-1). |
-| `templates` | `index`: absolute path of the template index that the asset build writes; `root`: the absolute directory that the file URLs of the index are relative to (HY-34). |
+| `templates` | `index`: absolute path of the template index that the asset build writes; `root`: the absolute directory that the file URLs of the index are relative to (HR-34). |
 | `handlers` | `shared`, `regions` (non-page regions) and `routes` (`load`, `post`, `regions` for route regions). A route has `post` exactly when the manifest declares `"post": true`. |
 | `timezone` | The time zone of the rendering environment (HY-14). |
 | `basePath` | A base path such as `/api` (HY-8); the default is none. |

@@ -1,4 +1,4 @@
-"""Runs every test of a directory with `unittest` and fails when no test ran (HY-84).
+"""Runs every test of a directory with `unittest` and fails when no test ran (HR-84).
 
 Usage: run.py [directory] [pattern]   the directory defaults to the one of this file and the pattern to test_*.py;
 `make hyper-test-python-render` passes the directory of the rendering tests and their pattern render_*.py, so that the

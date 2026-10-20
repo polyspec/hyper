@@ -5,7 +5,7 @@
 //
 // config/release-assets.json pins the archive, and `make hyper-install` downloads it and unpacks it into var/products/template-ext
 // with make release-assets-fetch of kit (K140). The build reads only that directory and the PHP of PATH: it builds again
-// only when the sources or the PHP build changed, and publishes the library with a rename (HY-82).
+// only when the sources or the PHP build changed, and publishes the library with a rename (HR-82).
 import { execFileSync, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';

@@ -1,8 +1,8 @@
 #!/usr/bin/env node
-// Builds the browser outputs of an application directory (HY-76, HY-96). Below public/assets it only adds files whose names
+// Builds the browser outputs of an application directory (HY-76, HR-96). Below public/assets it only adds files whose names
 // hold a hash of their content, so a server or an open page of an earlier build still loads its files; the outputs
-// without a hash lie in the directory of --output (HY-34):
-//   public/assets/templates/<name>.<hash>.json  one AST file per template, including hyper/data.tpl (HY-34)
+// without a hash lie in the directory of --output (HR-34):
+//   public/assets/templates/<name>.<hash>.json  one AST file per template, including hyper/data.tpl (HR-34)
 //   public/assets/hyper-<hash>.js               the client entry: htmx, the hyper browser code, the template render
 //                                                runtime, the manifest and the index
 //   public/assets/hyper-chunk-<hash>.js         one chunk file per code that the entry imports with import() only,
@@ -12,19 +12,19 @@
 //   <output>/manifest.json                      the URL of the entry, which the server passes to the layout
 //   <output> of --tailwind <source>=<output>     the source stylesheet compiled with the Tailwind theme and the
 //                                                utilities that templates/ and client/ use, its rules in the
-//                                                layer components (HY-77)
+//                                                layer components (HR-77)
 //   <output>/csr/                               the static deployment for client-side rendering: index.html with the
 //                                                entry inlined and no stylesheet, assets/templates/ with the template
 //                                                files of this build and its chunk files, and the files that
 //                                                --static names: the application names the stylesheets that its
 //                                                rendered layouts link (HY-64, HY-76). The deployment is published
-//                                                file by file (HY-82).
+//                                                file by file (HR-82).
 //
 // Every output file is written with one rename (lib/output-files.mjs, lib/publish.mjs), so a server of an earlier
-// build or a reader of the outputs never finds a file missing or partly written (HY-82).
+// build or a reader of the outputs never finds a file missing or partly written (HR-82).
 //
 // The template ASTs and the template render runtime of the bundle come from the template package `@polyspec/template`
-// that this package depends on, whatever template package the application installed (HY-70); the manifest check
+// that this package depends on, whatever template package the application installed (HR-70); the manifest check
 // comes from the browser package `@polyspec/hyper-client`.
 //
 // Usage: hyper-build-assets --app . --api /api --output build [--tailwind <source>=<output>]
@@ -80,7 +80,7 @@ if (/<\/script/i.test(entry.code)) throw new Error('the client entry contains </
 for (const script of scripts) writeFileAtomic(join(assetsDir, script.name), script.code);
 writeFileAtomic(join(output, 'manifest.json'), `${JSON.stringify({ hyper: `/assets/${entry.name}` }, null, 2)}\n`);
 
-// The compiled stylesheet lies in public/assets before the static deployment copies the stylesheets (HY-77).
+// The compiled stylesheet lies in public/assets before the static deployment copies the stylesheets (HR-77).
 if (values.tailwind !== undefined) {
   const [source, output, ...rest] = values.tailwind.split('=');
   if (!source || !output || rest.length > 0) throw new Error(`--tailwind ${values.tailwind} is not <source>=<output>`);
@@ -103,7 +103,7 @@ const shell = [
   '',
 ].join('\n');
 // The static deployment is written into a staging directory of this process and published file by file, the shell
-// last, so a server of the deployment never finds a file missing (HY-82).
+// last, so a server of the deployment never finds a file missing (HR-82).
 const csrNext = staging(csrDir);
 rmSync(csrNext, { recursive: true, force: true });
 writeFileAtomic(join(csrNext, 'index.html'), shell);
@@ -120,7 +120,7 @@ for (const file of values.static ?? []) {
 publish(csrNext, csrDir, { last: ['index.html'] });
 
 
-// The esbuild plugin that resolves @polyspec/hyper-client/templates-index to the template index of this build (HY-34).
+// The esbuild plugin that resolves @polyspec/hyper-client/templates-index to the template index of this build (HR-34).
 function indexPlugin(templateIndex) {
   return {
     name: 'templates-index',
@@ -133,7 +133,7 @@ function indexPlugin(templateIndex) {
 
 // Compiles the rules of an application stylesheet with the theme and the utilities of Tailwind CSS that the
 // templates and the client code use; the rules lie in the layer components and no rule of the layer base exists
-// (HY-77). Tailwind CSS resolves from the dependencies of this package.
+// (HR-77). Tailwind CSS resolves from the dependencies of this package.
 async function tailwind(rules) {
   const input = [
     '@layer theme, base, components, utilities;',

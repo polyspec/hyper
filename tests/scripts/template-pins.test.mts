@@ -1,4 +1,4 @@
-// Tests the template pins of this repository (HY-70, HY-80, H14.1-7): `make template-tag` fails for a template checkout
+// Tests the template pins of this repository (HR-70, HR-80, H14.1-7): `make template-tag` fails for a template checkout
 // without the tag TEMPLATE_TAG, which the full-run key names; npm installs the template package as one copy inside the
 // checkout; Composer installs the template PHP package from the verified zip of the template release in an artifact repository; and PHPStan reads the stub
 // of the unpacked php-ext archive (config/release-assets.json), not a copy of the template repository.
@@ -22,7 +22,7 @@ const entries = (): Entry[] => jsonObjects(parseJsonObject(readFileSync(join(rep
 // The JSON object of the file `file`.
 const readObject = (file: string) => parseJsonObject(readFileSync(file, 'utf8'), file);
 // The tag TEMPLATE_TAG of the Makefile, the tag of the version of the entry template-php of config/release-assets.json,
-// the one declaration of the template release (HY-80, H23.11-2).
+// the one declaration of the template release (HR-80, H23.11-2).
 function templateTag(): string {
   const version = entries().find(({ name }) => name === 'template-php')?.version;
   if (version === undefined) throw new Error('config/release-assets.json declares no entry template-php');

@@ -1,4 +1,4 @@
-// Tests that outputs which other processes read are published without a missing or partly written file (HY-82,
+// Tests that outputs which other processes read are published without a missing or partly written file (HR-82,
 // packages/build/lib/publish.mjs, writeFileAtomic of packages/build/lib/output-files.mjs): a reader polls an output while scripts write it
 // again, and concurrent writers of one output both succeed.
 import assert from 'node:assert/strict';

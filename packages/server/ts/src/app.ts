@@ -72,7 +72,7 @@ export interface AppOptions<S extends object> {
   // The absolute path of the manifest (HY-1).
   manifest: string;
   // The template index that the asset build writes, and the absolute directory that its file URLs are relative to
-  // (HY-34). The server renders with these template files, as the browser does.
+  // (HR-34). The server renders with these template files, as the browser does.
   templates: { index: string; root: string };
   handlers: Handlers<S>;
   timezone: string;
@@ -182,7 +182,7 @@ export class App<S extends object = Record<string, never>> {
     const application = createApplication(manifest, index, fetcher);
     checkHandlers(manifest, options.handlers);
     const client = options.clientRendering === undefined ? null : checkClient(options.clientRendering, manifest);
-    // Every entry template of every route and the template of the embedded data are in the index (HY-31, HY-34), and the
+    // Every entry template of every route and the template of the embedded data are in the index (HY-31, HR-34), and the
     // server renders every page, so it reads every template of the index (HY-35).
     for (const route of manifest.routes) {
       for (const name of [...routeTemplates(manifest, route), DATA_TEMPLATE_NAME]) {

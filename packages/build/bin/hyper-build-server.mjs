@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Builds the server outputs of an application from its manifest and templates (HY-48, HY-96), after the template
+// Builds the server outputs of an application from its manifest and templates (HY-48, HR-96), after the template
 // rules of lib/template-rules.mjs pass:
 //   <output>/templates/   every template and the reserved template hyper/data.tpl, which the native
 //                         template extension reads
@@ -38,7 +38,7 @@ if (problems.length > 0) {
 }
 // The output is written into a staging directory of this process and published file by file, the program files last
 // and the class GeneratedProgram, which the server loads first, after the classes that it uses, so a server that reads
-// the output never finds a file missing (HY-82).
+// the output never finds a file missing (HR-82).
 const target = resolve(values.output);
 const output = staging(target);
 const templates = join(output, 'templates');

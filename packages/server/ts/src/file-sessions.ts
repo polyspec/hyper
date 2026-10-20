@@ -137,7 +137,7 @@ export class FileSession implements SessionStore {
       if (this.values !== null && this.id !== null) {
         const file = join(this.sessions.directory, this.id);
         // Each write has its own temporary file, created exclusively, so two writers of one session never share a
-        // name (HY-104). One rename publishes the file (HY-82).
+        // name (HY-104). One rename publishes the file (HR-82).
         const writing = `${file}.${randomUUID()}.tmp`;
         try {
           writeFileSync(writing, serialize(this.values), { mode: 0o600, flag: 'wx' });

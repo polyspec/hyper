@@ -1,4 +1,4 @@
-// The commands that make would run for a target, read without the context of the calling process (HY-83): a make
+// The commands that make would run for a target, read without the context of the calling process (HR-83): a make
 // that runs inside another make, or with -w or -C, prints the lines "make: Entering directory" and "Leaving directory"
 // around the commands, so the dry run starts make without the variables of a calling make and with
 // --no-print-directory, and returns only the command lines.

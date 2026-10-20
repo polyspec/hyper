@@ -773,7 +773,7 @@ describe('Node handlers', () => {
     expect((await app.handle(request, fixture.session)).status).toBe(500);
   });
 
-  it('requires absolute paths and a template for every route (HY-34, HY-54)', async () => {
+  it('requires absolute paths and a template for every route (HR-34, HY-54)', async () => {
     await expect(App.open({ manifest: 'app.json', templates: TEMPLATES, timezone: 'Z', handlers: {} })).rejects.toThrow('absolute');
     await expect(App.open({ manifest: `${FIXTURES}app.json`, templates: { index: `${FIXTURES}app.json`, root: TEMPLATES.root }, timezone: 'Z', handlers: { routes: { add: { post: () => Result.redirect('/') } } } })).rejects.toThrow('template index');
   });

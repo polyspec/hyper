@@ -1,12 +1,12 @@
 <!-- doc-id: features -->
-<!-- source-sha256: 592a40fb8303914b3d90abb823d816d4ac1cfe0d23e4e7256f4cbb748ac89367 -->
+<!-- source-sha256: 3f144b7146bb07aa2158201a01412b7aaa70b19e0f1fb49b778ee93bf4a1b985 -->
 # 기능 상태
 
 [English](features.md).
 
 | ID | 기능 | 상태 | 근거 |
 |---|---|---|---|
-| protocol | 영역 프로토콜 명세(HY-1 ~ HY-94) | implemented | [프로토콜](spec/protocol.ko.md) |
+| protocol | 영역 프로토콜 명세(HY-1 ~ HR-94) | implemented | [프로토콜](spec/protocol.ko.md) |
 | composition | 화면 구성 규칙(HC-1 ~ HC-7)과 HC-6 템플릿 검사 | implemented | [화면 구성](spec/composition.ko.md), `make templates-check` |
 | manifest | PHP와 브라우저가 읽는 애플리케이션 매니페스트 | implemented | `make test-php`, `make test-js` |
 | router | 적합성 사례를 공유하는 PHP 라우터와 브라우저 라우터 | implemented | `make test-php`, `make test-js` |
@@ -38,34 +38,34 @@
 | route-regions | 자기 로더를 가진 페이지 안의 라우트 영역(HY-30) | implemented | `make test-php`, `make parity` |
 | region-data | 라우트 영역의 내장 데이터, 요청 없이 라우트 영역에서 동작하는 `data`, `render`, `set`, `hy-set`, 데이터 공개 규칙(HY-29 ~ HY-33, HYC-5, HY-71) | implemented | `make test-js`, `make e2e` |
 | kept-data | 서버 세션, 쿠키, localStorage, sessionStorage의 유지 경로(HY-37 ~ HY-41) | implemented | `make test-php`, `make test-js`, `make parity`, `make e2e` |
-| template-delivery | 템플릿마다 파일 하나, 렌더가 닿는 템플릿만 불러오기(HY-34, HY-35) | implemented | `make test-js`, `make e2e`, `make bundle-size` |
-| tailwind-build | `--tailwind <source>=<output>`은 application stylesheet를 Tailwind theme과 template이 쓰는 utility로 compile한다(HY-77) | implemented | `make hyper-test-scripts` |
+| template-delivery | 템플릿마다 파일 하나, 렌더가 닿는 템플릿만 불러오기(HR-34, HY-35) | implemented | `make test-js`, `make e2e`, `make bundle-size` |
+| tailwind-build | `--tailwind <source>=<output>`은 application stylesheet를 Tailwind theme과 template이 쓰는 utility로 compile한다(HR-77) | implemented | `make hyper-test-scripts` |
 | asset-delivery | 페이지는 자기가 쓰는 자원만 요청한다. `import()`로 불러오는 클라이언트 조각, 진입 파일 URL만 담은 매니페스트, 스타일시트 없는 정적 셸(HY-76) | implemented | `make hyper-test-scripts`, `make e2e` |
 | parity | 브라우저의 문서와 영역이 PHP 문서와 바이트 단위로 같음 | implemented | `make parity` |
-| server-parity | 모든 parity 단계에서 Node 서버 응답이 상태, header, body까지 PHP 응답과 같음(HY-55) | implemented | `make server-parity` |
+| server-parity | 모든 parity 단계에서 Node 서버 응답이 상태, header, body까지 PHP 응답과 같음(HR-55) | implemented | `make server-parity` |
 | ssr | JSON 이동과 JavaScript 없는 동작을 갖춘 서버 렌더 | implemented | `make e2e` |
 | csr | 정적 `index.html` 하나와 `/api` JSON을 쓰는 클라이언트 렌더 | implemented | `make e2e` |
 | comparison | SSR과 CSR 프레임을 담은 비교 페이지 | implemented | `make e2e` |
 | bundle-size | SSR 스크립트, CSR 셸, 템플릿 파일 크기를 상한과 비교해 측정하며, 상한을 넘는 크기는 실패가 아니라 warning이다 | implemented | `make bundle-size`, `tests/scripts/check-bundle-size.test.mts` |
-| npm-packages | `@polyspec/hyper-client`와 `@polyspec/hyper-server`는 Node가 `node_modules`에서 실행하는 JavaScript와 type 선언을 배포하며, 소스는 `erasableSyntaxOnly`를 통과한다(HY-61) | implemented | `make package-check` |
-| build-package | `@polyspec/hyper-build`는 bin `hyper-build-server`와 `hyper-build-assets`를 배포하고, 그 모듈은 배포하는 파일, Node, manifest가 요구하는 패키지만 import한다. consumer는 릴리스 tarball에서 이것을 설치하고 두 bin을 실행한다(HY-96) | implemented; CI run pending | `tests/scripts/package-source.test.mts`, `make release-consumer` |
-| output-files | asset build와 server build는 복사한 출력 파일에 어떤 umask에서도 mode 0644를, 디렉터리에 0755를 주어 다른 사용자가 읽을 수 있게 하며, Linux container의 virtiofs bind mount는 이를 받아들인다(HY-68) | implemented; Darwin run pending | `make hyper-test-scripts`, Darwin에서 `make virtiofs-check` |
-| template-dir | asset build, template build, server build는 npm이 template release의 tarball에서 설치하는 template package `@polyspec/template`과 `@polyspec/template-compiler`를 package 이름으로 읽고, Composer는 `polyspec/template`을 template release의 zip에서 설치하며, 공개 manifest는 정확한 template version을 요구한다(HY-70) | implemented; CI run pending | `make hyper-test-scripts` |
+| npm-packages | `@polyspec/hyper-client`와 `@polyspec/hyper-server`는 Node가 `node_modules`에서 실행하는 JavaScript와 type 선언을 배포하며, 소스는 `erasableSyntaxOnly`를 통과한다(HR-61) | implemented | `make package-check` |
+| build-package | `@polyspec/hyper-build`는 bin `hyper-build-server`와 `hyper-build-assets`를 배포하고, 그 모듈은 배포하는 파일, Node, manifest가 요구하는 패키지만 import한다. consumer는 릴리스 tarball에서 이것을 설치하고 두 bin을 실행한다(HR-96) | implemented; CI run pending | `tests/scripts/package-source.test.mts`, `make release-consumer` |
+| output-files | asset build와 server build는 복사한 출력 파일에 어떤 umask에서도 mode 0644를, 디렉터리에 0755를 주어 다른 사용자가 읽을 수 있게 하며, Linux container의 virtiofs bind mount는 이를 받아들인다(HR-68) | implemented; Darwin run pending | `make hyper-test-scripts`, Darwin에서 `make virtiofs-check` |
+| template-dir | asset build, template build, server build는 npm이 template release의 tarball에서 설치하는 template package `@polyspec/template`과 `@polyspec/template-compiler`를 package 이름으로 읽고, Composer는 `polyspec/template`을 template release의 zip에서 설치하며, 공개 manifest는 정확한 template version을 요구한다(HR-70) | implemented; CI run pending | `make hyper-test-scripts` |
 | template-ext | 네이티브 template 확장은 `config/release-assets.json`이 sha256으로 pin한 tag `TEMPLATE_TAG`(`v0.0.11`)의 php-ext release archive에서 build한다. `make hyper-install`이 kit의 `make release-assets-fetch`로 가져와 확인하고, `make ext`가 offline으로 build하며, PHPStan은 그 stub을 읽는다. 어떤 recipe도 확장을 위해 template 저장소를 읽거나 복사하지 않는다(H14.1-7) | implemented; CI run pending | `tests/scripts/release-assets.test.mts`, `tests/scripts/template-pins.test.mts`, `make ext`, `make test-php` |
-| ci-suite | 전체 suite는 `main`의 push와 모든 수동 실행에 대해 GitHub에서 CI group마다 job 하나로 모든 target을 끝까지 실행하고, job summary와 각 target의 상태, 시간, 첫 실패 줄, 전체 log를 담은 보고서를 upload한다(HY-91) | implemented; CI run pending | `tests/scripts/ci-workflow.test.mts` |
-| ci-steps | 모든 GitHub workflow는 commit으로 pin한 action으로 시간 제한 없이 `ubuntu-26.04-arm`에서 실행하고, 모든 step은 make target 하나를 실행한다(HY-90) | implemented; CI run pending | `tests/scripts/ci-workflow.test.mts` |
-| publish-main | 버전 0.1 전까지 변경은 pull request, merge queue, ruleset 없이 checklist의 모든 작업이 끝났을 때 `main`에 한 번 push한다. pre-push hook은 작업이 진행 중이면 push를 거부하고, `main`의 push는 CI workflow를 실행하며, 그 마지막 job `ci-passed`는 workflow의 다른 모든 job이 통과했을 때만 통과한다(HY-94) | implemented; CI run pending | `tests/scripts/ci-workflow.test.mts` |
-| no-live-inputs | 어떤 recipe도 registry에 질의하지 않고, 모든 recipe는 npm, Composer를 offline으로 실행하며 설치 target만 download하고, 없는 download는 그것을 만드는 설치 target을 밝히며, `tests/package-install`은 lock에서 offline 설치하며, test는 event로 순서를 정하고, test 서버는 system이 정한 port에서 listen하며, 서버 시작은 진행을 출력하고, 빈 목록은 검사를 실패시킨다(HY-89) | implemented | `tests/scripts/toolchain.test.mts`, `tests/scripts/board-servers.test.mts`, `tests/scripts/check-bundle-size.test.mts`, `packages/server/ts/tests/http.test.ts` |
-| owner-check | 추적하는 모든 경로는 `config/owner-checks.json`에 owner를 가지고, `make owner-validate`가 이를 검사하며, `make owner-check`는 바뀐 경로의 owner를 실행한다(HY-88) | implemented; CI run pending | `tests/scripts/ignored-files.test.mts` |
-| run-resources | run의 서버와 임시 디렉터리는 run이 끝날 때, 실패할 때, SIGINT와 SIGTERM에서 멈추고 지워지며, test는 process가 끝난 뒤에만 디렉터리를 지운다(HY-87) | implemented | `tests/scripts/board-servers.test.mts`, `tests/scripts/check-parity.test.mts`, `tests/scripts/serve-demo.test.mts` |
-| all-checks | 여러 검사를 가진 recipe는 각 검사를 끝까지 실행하고 실패한 모든 검사를 밝힌다(HY-86) | implemented | `tests/scripts/check-recipes.test.mts` |
-| own-inputs | test는 fixture의 추적 파일을 복사하고, 설치한 template package를 읽으며, 다른 target의 각 입력을 그것을 쓰는 target과 함께 밝힌다(HY-85) | implemented; CI run pending | `tests/scripts/build-assets.test.mts`, `tests/scripts/template-dir.test.mts` |
-| checked-results | 실행된 test가 없는 test run, top level에서 await하는 node test 파일, 검사한 step이 없는 parity 검사는 실패하고, full run은 실패한 각 target의 마지막 20줄을 기록하고 출력한다(HY-84) | implemented; CI run pending | `tests/scripts/check-parity.test.mts` |
-| tool-output | 검사는 run 맥락이나 pin하지 않은 release에 따라 바뀌지 않는 형태로 tool 출력을 읽는다. 호출한 make의 변수 없는 make dry run, machine이 읽는 형태, pin한 도구의 text만 읽는다(HY-83) | implemented; CI run pending | `tests/scripts/template-copy.test.mjs` |
-| atomic-outputs | 다른 process가 읽는 출력은 rename으로 파일 단위 publish하고, 파일 하나는 rename 한 번으로 쓰며, 설치한 사본은 의존성 tree가 같을 때만 publish하고, package manager 설치와 full run은 lock을 잡는다(HY-82) | implemented; CI run pending | `tests/scripts/publish.test.mts`, `tests/scripts/toolchain.test.mts` |
-| toolchain-pin | Node.js, npm, Composer는 정확한 release로, PHP와 Python은 minor release로 추적 파일에 pin한다. npm과 Composer는 digest로 확인해 checkout의 `var/tools`에 설치하고 `PATH`의 맨 앞에 둔다. `make toolchain-check`는 pin과 다른 모든 도구를 밝히고 CI 보고서는 실행 중인 release를 기록한다(HY-81) | implemented; CI run pending | `tests/scripts/toolchain.test.mts`, `tests/scripts/template-copy.test.mjs` |
+| ci-suite | 전체 suite는 `main`의 push와 모든 수동 실행에 대해 GitHub에서 CI group마다 job 하나로 모든 target을 끝까지 실행하고, job summary와 각 target의 상태, 시간, 첫 실패 줄, 전체 log를 담은 보고서를 upload한다(HR-91) | implemented; CI run pending | `tests/scripts/ci-workflow.test.mts` |
+| ci-steps | 모든 GitHub workflow는 commit으로 pin한 action으로 시간 제한 없이 `ubuntu-26.04-arm`에서 실행하고, 모든 step은 make target 하나를 실행한다(HR-90) | implemented; CI run pending | `tests/scripts/ci-workflow.test.mts` |
+| publish-main | 버전 0.1 전까지 변경은 pull request, merge queue, ruleset 없이 checklist의 모든 작업이 끝났을 때 `main`에 한 번 push한다. pre-push hook은 작업이 진행 중이면 push를 거부하고, `main`의 push는 CI workflow를 실행하며, 그 마지막 job `ci-passed`는 workflow의 다른 모든 job이 통과했을 때만 통과한다(HR-94) | implemented; CI run pending | `tests/scripts/ci-workflow.test.mts` |
+| no-live-inputs | 어떤 recipe도 registry에 질의하지 않고, 모든 recipe는 npm, Composer를 offline으로 실행하며 설치 target만 download하고, 없는 download는 그것을 만드는 설치 target을 밝히며, `tests/package-install`은 lock에서 offline 설치하며, test는 event로 순서를 정하고, test 서버는 system이 정한 port에서 listen하며, 서버 시작은 진행을 출력하고, 빈 목록은 검사를 실패시킨다(HR-89) | implemented | `tests/scripts/toolchain.test.mts`, `tests/scripts/board-servers.test.mts`, `tests/scripts/check-bundle-size.test.mts`, `packages/server/ts/tests/http.test.ts` |
+| owner-check | 추적하는 모든 경로는 `config/owner-checks.json`에 owner를 가지고, `make owner-validate`가 이를 검사하며, `make owner-check`는 바뀐 경로의 owner를 실행한다(HR-88) | implemented; CI run pending | `tests/scripts/ignored-files.test.mts` |
+| run-resources | run의 서버와 임시 디렉터리는 run이 끝날 때, 실패할 때, SIGINT와 SIGTERM에서 멈추고 지워지며, test는 process가 끝난 뒤에만 디렉터리를 지운다(HR-87) | implemented | `tests/scripts/board-servers.test.mts`, `tests/scripts/check-parity.test.mts`, `tests/scripts/serve-demo.test.mts` |
+| all-checks | 여러 검사를 가진 recipe는 각 검사를 끝까지 실행하고 실패한 모든 검사를 밝힌다(HR-86) | implemented | `tests/scripts/check-recipes.test.mts` |
+| own-inputs | test는 fixture의 추적 파일을 복사하고, 설치한 template package를 읽으며, 다른 target의 각 입력을 그것을 쓰는 target과 함께 밝힌다(HR-85) | implemented; CI run pending | `tests/scripts/build-assets.test.mts`, `tests/scripts/template-dir.test.mts` |
+| checked-results | 실행된 test가 없는 test run, top level에서 await하는 node test 파일, 검사한 step이 없는 parity 검사는 실패하고, full run은 실패한 각 target의 마지막 20줄을 기록하고 출력한다(HR-84) | implemented; CI run pending | `tests/scripts/check-parity.test.mts` |
+| tool-output | 검사는 run 맥락이나 pin하지 않은 release에 따라 바뀌지 않는 형태로 tool 출력을 읽는다. 호출한 make의 변수 없는 make dry run, machine이 읽는 형태, pin한 도구의 text만 읽는다(HR-83) | implemented; CI run pending | `tests/scripts/template-copy.test.mjs` |
+| atomic-outputs | 다른 process가 읽는 출력은 rename으로 파일 단위 publish하고, 파일 하나는 rename 한 번으로 쓰며, 설치한 사본은 의존성 tree가 같을 때만 publish하고, package manager 설치와 full run은 lock을 잡는다(HR-82) | implemented; CI run pending | `tests/scripts/publish.test.mts`, `tests/scripts/toolchain.test.mts` |
+| toolchain-pin | Node.js, npm, Composer는 정확한 release로, PHP와 Python은 minor release로 추적 파일에 pin한다. npm과 Composer는 digest로 확인해 checkout의 `var/tools`에 설치하고 `PATH`의 맨 앞에 둔다. `make toolchain-check`는 pin과 다른 모든 도구를 밝히고 CI 보고서는 실행 중인 release를 기록한다(HR-81) | implemented; CI run pending | `tests/scripts/toolchain.test.mts`, `tests/scripts/template-copy.test.mjs` |
 | kit-tools | push gate, 전체 실행 guard, Git hook, holder lock, 문서와 commit 검사, owner 검사, test runner, CI 보고서, toolchain 설치와 검사, release는 release asset의 URL과 integrity로 pin한 npm 패키지 `@polyspec/kit`이며 `config/*.json`이 이를 설정한다. `package-lock.json`과 다른 패키지, 패키지와 다른 `kit.copies`의 복사본, schema를 어기는 설정은 실패한다 | implemented; CI run pending | `make kit-check` |
-| template-tag | full-run key는 branch `main`이 어느 commit에 있든 template 저장소의 tag `TEMPLATE_TAG`(`v0.0.11`)의 commit이다. 없는 tag는 `make template-tag`를 기대값과 실제값을 밝히며 실패시킨다(HY-80) | implemented; CI run pending | `tests/scripts/template-pins.test.mts`, `tests/scripts/template-version.test.mts` |
+| template-tag | full-run key는 branch `main`이 어느 commit에 있든 template 저장소의 tag `TEMPLATE_TAG`(`v0.0.11`)의 commit이다. 없는 tag는 `make template-tag`를 기대값과 실제값을 밝히며 실패시킨다(HR-80) | implemented; CI run pending | `tests/scripts/template-pins.test.mts`, `tests/scripts/template-version.test.mts` |
 | query-values | 중첩 없이 순서대로 읽는 모든 쿼리 값과 원본 쿼리(HY-56) | implemented | `make test-php`, `make hyper-test-node` |
 | form-values | urlencoded body나 multipart body에서 중첩 없이 순서대로 읽는 모든 폼 값(HY-57) | implemented | `make test-php`, `make hyper-test-node` |
 | request-boundary | UTF-8 검사, 상세 없는 500 오류, 데이터 모델 검사, 강화한 세션 쿠키, 리다이렉트 검사, 실패 표시(HY-42 ~ HY-47) | implemented | `make test-php`, `make test-js`, `make e2e` |
