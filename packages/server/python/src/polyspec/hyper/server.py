@@ -68,7 +68,7 @@ def create_server(
 
     class Handler(BaseHTTPRequestHandler):
         # A long operation prints its progress; the access log of http.server would repeat every request line.
-        def log_message(self, format: str, *args: object) -> None:  # noqa: A002 - the signature of the base class
+        def log_message(self, _format: str, *_args: object) -> None:
             pass
 
         def do_GET(self) -> None:

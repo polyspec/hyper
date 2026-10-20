@@ -75,7 +75,7 @@ class Served:
         self._thread.start()
         return self
 
-    def __exit__(self, *exc: object) -> None:
+    def __exit__(self, *_exc: object) -> None:
         self.server.shutdown()
         self._thread.join()
         self.server.server_close()
@@ -188,8 +188,8 @@ class DisconnectTest(unittest.TestCase):
         events: list = []
         app = open_app(
             loader([]),
-            on_response=lambda *args: events.append("response"),
-            on_disconnect=lambda *args: events.append("disconnect"),
+            on_response=lambda *_args: events.append("response"),
+            on_disconnect=lambda *_args: events.append("disconnect"),
         )
         with Served(app) as served:
             response = read_all(served.connect())
@@ -216,8 +216,8 @@ class AroundTest(unittest.TestCase):
 
         app = open_app(
             lambda: events.append("load") or {"name": "n"},
-            on_response=lambda *args: events.append("response"),
-            on_disconnect=lambda *args: events.append("disconnect"),
+            on_response=lambda *_args: events.append("response"),
+            on_disconnect=lambda *_args: events.append("disconnect"),
         )
         with Served(app, around=around) as served:
             status, headers, body = parse(read_all(served.connect()))
@@ -245,7 +245,7 @@ class AroundTest(unittest.TestCase):
 
         app = open_app(
             load,
-            on_response=lambda request, *args: seen.append(
+            on_response=lambda request, *_args: seen.append(
                 request.header("X-Request-Id")
             ),
         )
@@ -325,8 +325,8 @@ class AroundTest(unittest.TestCase):
 
         app = open_app(
             loader([]),
-            on_response=lambda *args: events.append("response"),
-            on_disconnect=lambda *args: events.append("disconnect"),
+            on_response=lambda *_args: events.append("response"),
+            on_disconnect=lambda *_args: events.append("disconnect"),
         )
         with Served(app, around=around) as served:
             client = served.connect()
@@ -432,7 +432,7 @@ class WrittenTest(unittest.TestCase):
             return Response.text(200, "x" * LARGE)
 
         app = open_app(
-            loader([]), on_disconnect=lambda *args: events.append("disconnect")
+            loader([]), on_disconnect=lambda *_args: events.append("disconnect")
         )
         with Served(
             app,

@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: a3f625624ea5d244cff324744e53bd673ab23a8d410dbe3f068cf652a45bf393 -->
+<!-- source-sha256: bdd28c504f2f1b033b6d7c78585e5310bcbadb7aff9ef92d6bb6d696fd38bf92 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H25.2: `make lint-python`이 통과한다. `polyspec.hyper`는 `__all__`이 내보내지 않는 `KINDS`와 `changed_topics`를 더 이상 import하지 않고(F401), `test_csrf.py`와 `test_file_sessions.py`는 ruff로 format했으며, `log_message`와 test lambda의 쓰지 않는 parameter는 밑줄로 시작하는 이름을 쓰고, `packages/server/python/vulture_whitelist.py`는 `http.server`와 `unittest`가 이름으로 부르는 code를 이유와 함께 둔다. PHP 렌더러 test는 `native`와 `generated` group으로 나뉘어 있다(2c8374b). Red: `make lint-python` exit 2, ruff check 2건(F401), ruff format 2개 파일, vulture 24건. Green: `make lint-python` exit 0. `packages/server/php/tests`의 PHPUnit 파일이 generated group에서 통과하고 RendererTest, AppTest, RunTest는 native group에서도 통과하며, `packages/server/python/tests/run.py`는 286개, render test는 34개가 모두 OK다(make target `hyper-test-php`와 `hyper-test-python`은 이 machine의 PHP 8.5가 pin 8.4와 달라 toolchain-check에서 멈추므로 명령을 직접 실행했다) (H25.2)
 - H25.8: `make lint-php`가 통과한다. `benchmarks/server.php`와 `examples/board/app/handlers.php`는 문장 옆에 함수나 상수를 선언하지 않고(measure 함수와 page helper는 closure다), PHP 원본과 test에서 120자를 넘던 237줄을 동작 변경 없이 줄바꿈했다. Red: `make lint-php` exit 2, phpcs 경고 240건(`Generic.Files.LineLength.TooLong` 238건, `PSR1.Files.SideEffects.FoundWithSymbols` 2건). Green: `make lint-php` exit 0, phpcs와 phpstan 통과, `packages/server/php/tests`의 PHPUnit 파일이 generated group에서 통과하고 AppTest, RunTest, RendererTest는 native group에서도 통과 (H25.8)
 - H25.7: Node 서버 test `rest.test.ts`, `kept.test.ts`, `reads.test.ts`가 `make lint-ts`를 통과한다. 쓰지 않는 import 두 개를 지웠고, `reads.test.ts`는 fixture 값을 `ReadNode`로 cast하는 대신 `templateReads`가 돌려준 read tree를 `keepRead`에 넘긴다. test는 이미 둘이 같음을 요구한다. Red: `make lint-ts` exit 2, oxlint 문제 3건(`no-unused-vars` 두 번, `no-unsafe-type-assertion`). Green: `make lint-ts` exit 0, 세 파일의 test 71개 통과 (H25.7)
 - H25.6: `config/rebuild.json`은 `scripts/*.mts`, `packages/build/bin`과 `packages/build/lib`의 각 tool을 사용하는 도구를 적은 `ecosystem` 또는 이유를 적은 `policy`로 분류하고, `config/owner-checks.json`은 `rebuild-check`를 이 선언의 owner로 둔다. Red: `make rebuild-check` exit 2, `config/rebuild.json does not exist`. Green: `make rebuild-check` exit 0, `every tool that config/rebuild.json selects has its class`(H25.6).

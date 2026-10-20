@@ -31,9 +31,7 @@ from .json_codec import (
     encode_string,
     in_data_model,
 )
-from .kept import KINDS
 from .manifest import Manifest
-from .planner import changed_topics
 from .region import Region
 from .reply import Reply
 from .request import Request

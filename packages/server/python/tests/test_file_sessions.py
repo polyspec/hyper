@@ -109,7 +109,9 @@ class FileSessionsTest(unittest.TestCase):
         session.renew()
         session.close()
         self.assertNotEqual(old, session.created)
-        self.assertEqual([session.created], [file.name for file in self.directory.iterdir()])
+        self.assertEqual(
+            [session.created], [file.name for file in self.directory.iterdir()]
+        )
         self.assertEqual(1, self.sessions.open(session.created).get("a"))
 
     def test_requires_an_existing_absolute_directory_and_a_positive_lifetime(

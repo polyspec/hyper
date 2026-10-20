@@ -36,8 +36,20 @@ class VerifyTest(unittest.TestCase):
     pass
 
 
-add_cases(MaskTest, file("csrf.json")["mask"], lambda self, case: self.assertEqual(case["value"], mask(case["token"], case["mask"])))
-add_cases(VerifyTest, file("csrf.json")["verify"], lambda self, case: self.assertEqual(case["valid"], verify(case["token"], case["value"])))
+add_cases(
+    MaskTest,
+    file("csrf.json")["mask"],
+    lambda self, case: self.assertEqual(
+        case["value"], mask(case["token"], case["mask"])
+    ),
+)
+add_cases(
+    VerifyTest,
+    file("csrf.json")["verify"],
+    lambda self, case: self.assertEqual(
+        case["valid"], verify(case["token"], case["value"])
+    ),
+)
 
 
 if __name__ == "__main__":
