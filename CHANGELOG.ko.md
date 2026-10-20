@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 7b2e7b7e5a6cff5001cb01f429b0636416910b016ec157873b6b54267c8a32d1 -->
+<!-- source-sha256: 9e635d428c042de063aaaf23036a07662dfb08057007ec96054b5badfc74159a -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H25.68: 의존성 문서는 검토 문단에서 PHP 하한 8.5 대신 PHP 플랫폼 8.4.1(`.php-version` 8.4)을 적는다. 이는 2026-10-14 검토를 인용하는 `docs/operations/dependencies.md`의 줄이다. red: 문단이 플랫폼에 없는 PHP 하한 8.5를 적었고, green: 고친 문단으로 `make docs-check`가 exit 0을 낸다. (H25.68)
 - H26.2-3: Node 서버는 multipart 요청의 file part를 `files()`와 `file()`로 준다(HY-113). class `UploadedFile`을 쓴다. `fileLimit` 옵션(기본 8 MiB, HY-114)을 넘는 file은 action이나 유지 값이 실행되기 전에 413으로 거절하고, UTF-8이 아닌 파일 이름은 400으로 거절한다(HY-42). `config/parity.json`은 세 서버의 unit `request-files`, `request-file`, `uploaded-file`을 가진다. red: files.test.ts가 `fileParts is not a function`으로 실패했고, app.test.ts의 제한 테스트는 구현 뒤에 쓰였고 자체 red 실행이 없다. green: 두 파일의 file part 테스트가 통과하며(각 14개와 2개 case), 기존 field와 request 테스트도 통과한다. (H26.2-3)
 - H26.2-1: PHP 서버는 multipart 요청의 file part를 `Request::files()`와 `Request::file()`로 준다(HY-113). `fileLimit` 옵션(기본 8 MiB, HY-114)을 넘는 file은 action이 실행되기 전에 413으로 거절하고, UTF-8이 아닌 파일 이름은 400으로 거절한다. body는 `Multipart` class가 읽는다. 이 저장소에는 잠긴 PHP multipart 패키지가 없기 때문이다. red: 제한 검사를 끈 상태에서 애플리케이션 테스트가 413 대신 303을 보고했고, green: FilePartsTest와 제한 테스트가 통과하며, 기존 FieldsTest와 RequestTest도 통과한다. (H26.2-1)
 - H26.2-2: Python 서버는 multipart 요청의 file part를 `files()`와 `file()`로 준다(HY-113). 각 file의 이름, 파일 이름, content type, bytes를 준다. `file_limit` 옵션(기본 8 MiB, HY-114)을 넘는 file은 action이 실행되기 전에 413으로 거절하며, UTF-8이 아닌 파일 이름은 400으로 거절한다(HY-42). red: test_files.py가 Files에 대한 ImportError로 실패했고, green: file part의 세 테스트가 통과하며 test_fields_multipart의 계약 case도 통과한다. (H26.2-2)

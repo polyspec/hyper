@@ -5,7 +5,7 @@
 
 Every dependency uses the latest stable release that supports the declared runtime range: Node.js 26.12.0 and PHP 8.4, the floors that `make toolchain-check` requires. An exact pin records its reason and the condition that removes it.
 
-The review of 2026-10-14 (`make dependency-review UPDATE=1`) raised `vitest` to 5.0.4, `laravel/pint` to 1.32.1 and `phpunit/phpunit` to 13.4.2, which the PHP floor 8.5 allows (H23.4); `packages/server/php/composer.json` requires the same ranges. `config/dependency-policy.json` names the Composer and Python manifests that the review reads, and `make dependency-review RECORD=1` writes the review record `config/dependency-review.json`.
+The review of 2026-10-14 (`make dependency-review UPDATE=1`) raised `vitest` to 5.0.4, `laravel/pint` to 1.32.1 and `phpunit/phpunit` to 13.4.2, which the PHP platform 8.4.1 of `config/dependency-policy.json` allows (`.php-version` 8.4, H23.4); `packages/server/php/composer.json` requires the same ranges. `config/dependency-policy.json` names the Composer and Python manifests that the review reads, and `make dependency-review RECORD=1` writes the review record `config/dependency-review.json`.
 
 | Dependency | Version | Kind | Reason | Removal condition |
 |---|---|---|---|---|

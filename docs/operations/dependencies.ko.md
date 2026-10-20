@@ -1,12 +1,12 @@
 <!-- doc-id: dependencies -->
-<!-- source-sha256: 3344ee527e17ec5a6fadb9ff999e28ff913f2811ee9de1e4ff06ee7e8ce3a987 -->
+<!-- source-sha256: 30e0e4129656e63b2b002d95c9a236d3f4e5fb76f3f7601119ce45ccbd6ee86a -->
 # 의존성
 
 [English](dependencies.md).
 
 모든 의존성은 선언한 런타임 범위(`make toolchain-check`가 요구하는 하한인 Node.js 26.12.0, PHP 8.4)를 지원하는 최신 안정 버전을 사용한다. 정확한 버전 고정은 그 이유와 고정을 해제하는 조건을 기록한다.
 
-2026-10-14의 검토(`make dependency-review UPDATE=1`)는 PHP 하한 8.5가 허용하는 대로 `vitest`를 5.0.4로, `laravel/pint`를 1.32.1로, `phpunit/phpunit`을 13.4.2로 올렸다(H23.4). `packages/server/php/composer.json`도 같은 범위를 요구한다. `config/dependency-policy.json`은 검토가 읽는 Composer와 Python manifest를 밝히고, `make dependency-review RECORD=1`은 검토 기록 `config/dependency-review.json`을 쓴다.
+2026-10-14의 검토(`make dependency-review UPDATE=1`)는 `config/dependency-policy.json`의 PHP 플랫폼 8.4.1(`.php-version` 8.4, H23.4)이 허용하는 대로 `vitest`를 5.0.4로, `laravel/pint`를 1.32.1로, `phpunit/phpunit`을 13.4.2로 올렸다(H23.4). `packages/server/php/composer.json`도 같은 범위를 요구한다. `config/dependency-policy.json`은 검토가 읽는 Composer와 Python manifest를 밝히고, `make dependency-review RECORD=1`은 검토 기록 `config/dependency-review.json`을 쓴다.
 
 | 의존성 | 버전 | 종류 | 이유 | 해제 조건 |
 |---|---|---|---|---|
