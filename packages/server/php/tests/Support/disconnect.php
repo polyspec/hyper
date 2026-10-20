@@ -8,29 +8,20 @@ declare(strict_types=1);
 // to the file of HYPER_DISCONNECT_LOG, in the order that the server calls them (HY-99).
 
 require __DIR__ . '/../../../../../vendor/autoload.php';
+require_once __DIR__ . '/FrontController.php';
 
-use Polyspec\Hyper\App;
 use Polyspec\Hyper\Reply;
 use Polyspec\Hyper\Request;
-use Polyspec\Hyper\Response;
-use Polyspec\Hyper\Result;
+use Polyspec\Hyper\Tests\Support\FrontController;
 
 $log = (string) getenv('HYPER_DISCONNECT_LOG');
-App::open(
-    __DIR__ . '/../fixtures/app.json',
-    __DIR__ . '/../build/server',
-    [
-        'shared' => function (Reply $reply): array {
-            $reply->note('stage', 'shared');
-            usleep(300_000);
+FrontController::open(
+    $log,
+    function (Reply $reply): array {
+        $reply->note('stage', 'shared');
+        usleep(300_000);
 
-            return ['title' => str_repeat('x', 1 << 20)];
-        },
-        'routes' => ['add' => ['post' => fn (): Result => Result::redirect('/')]],
-    ],
-    'Z',
-    onResponse: function (Request $request, Response $response) use ($log): void {
-        file_put_contents($log, "response {$response->status}\n", FILE_APPEND);
+        return ['title' => str_repeat('x', 1 << 20)];
     },
     onDisconnect: function (Request $request, float $elapsed, Reply $reply) use ($log): void {
         file_put_contents(
@@ -41,24 +32,6 @@ App::open(
                 $request->path,
                 $elapsed >= 300.0 ? 1 : 0,
                 json_encode($reply->notes()),
-            ),
-            FILE_APPEND,
-        );
-    },
-    written: function (
-        Request $request,
-        ?Response $response,
-        bool $ended,
-        float $elapsed,
-        ?string $failure,
-    ) use ($log): void {
-        file_put_contents(
-            $log,
-            sprintf(
-                "written %s %s %s\n",
-                $response === null ? 'null' : $response->status,
-                $ended ? 'true' : 'false',
-                json_encode($failure),
             ),
             FILE_APPEND,
         );

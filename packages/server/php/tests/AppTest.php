@@ -27,6 +27,16 @@ use Polyspec\Hyper\Tests\Support\Json;
  */
 final class AppTest extends TestCase
 {
+    /** The data of the region `rows` of the route `list` before any kept value applies. */
+    private const ROWS = [
+        'items' => ['a<', 'b0'],
+        'open' => false,
+        'mode' => 'a',
+        'view' => 'x',
+        'filter' => ['a' => 1],
+        'tags' => [],
+    ];
+
     private const JSON = ['Accept' => 'application/json', 'HX-Request' => 'true'];
     // The server program of the fixtures, which `make hyper-test-php` builds (HY-48).
     private const PROGRAM = __DIR__ . '/build/server';
@@ -278,6 +288,41 @@ final class AppTest extends TestCase
         return $value;
     }
 
+    /**
+     * Requires that opening the application with each manifest of `tests/fixtures/invalid` fails.
+     *
+     * @param list<string> $fixtures
+     */
+    private function assertManifestsRejected(array $fixtures): void
+    {
+        foreach ($fixtures as $fixture) {
+            try {
+                App::open(__DIR__ . "/fixtures/invalid/{$fixture}.json", self::PROGRAM, [], 'Z');
+                self::fail("{$fixture} was accepted");
+            } catch (\InvalidArgumentException) {
+                $this->addToAssertionCount(1);
+            }
+        }
+    }
+
+    /**
+     * The response hook that appends the status, the notes of the reply and the failure of each response to `$reports`.
+     *
+     * @param list<array{int, array<string, mixed>, ?string}> $reports
+     */
+    private static function reportTo(array &$reports): \Closure
+    {
+        return function (
+            Request $request,
+            Response $response,
+            float $elapsed,
+            Reply $reply,
+            ?string $failure,
+        ) use (&$reports): void {
+            $reports[] = [$response->status, $reply->notes(), $failure];
+        };
+    }
+
     public function testHtmlRequestRendersTheDocument(): void
     {
         // HY-12, HY-15, HY-31: a route without route regions embeds no data.
@@ -370,14 +415,7 @@ final class AppTest extends TestCase
         self::assertSame(['content', 'rows'], array_keys(Json::array($region['regions'])));
         self::assertSame(['side', 'content', 'rows'], array_keys(Json::array($document['regions'])));
         self::assertSame(
-            [
-                'items' => ['a<', 'b0'],
-                'open' => false,
-                'mode' => 'a',
-                'view' => 'x',
-                'filter' => ['a' => 1],
-                'tags' => [],
-            ],
+            self::ROWS,
             Json::at($region, 'regions', 'rows'),
         );
         self::assertStringContainsString('<ul id="rows"><li>a&lt;</li><li>b0</li></ul>', $this->get('/list')->body);
@@ -486,14 +524,7 @@ final class AppTest extends TestCase
         $request = new Request('GET', '/list', self::JSON, cookies: ['hy-keep' => $cookie]);
         $json = self::json($this->app()->handle($request, $this->session));
         self::assertSame(
-            [
-                'items' => ['a<', 'b0'],
-                'open' => false,
-                'mode' => 'a',
-                'view' => 'x',
-                'filter' => ['a' => 1],
-                'tags' => [],
-            ],
+            self::ROWS,
             Json::at($json, 'regions', 'rows'),
         );
         self::assertSame(['rows' => ['mode' => 'b']], $json['kept']);
@@ -536,27 +567,13 @@ final class AppTest extends TestCase
     public function testManifestRejectsInvalidKeep(): void
     {
         // HY-37, HY-40
-        foreach (['keep-kind', 'keep-page', 'keep-manifest', 'keep-reserved', 'uses-topic'] as $fixture) {
-            try {
-                App::open(__DIR__ . "/fixtures/invalid/{$fixture}.json", self::PROGRAM, [], 'Z');
-                self::fail("{$fixture} was accepted");
-            } catch (\InvalidArgumentException) {
-                self::addToAssertionCount(1);
-            }
-        }
+        $this->assertManifestsRejected(['keep-kind', 'keep-page', 'keep-manifest', 'keep-reserved', 'uses-topic']);
     }
 
     public function testManifestRejectsListsAndNamesOfAnotherType(): void
     {
         // HY-2: `regions` and `routes` are lists, and region and route names are strings.
-        foreach (['routes-text', 'route-name-number', 'region-name-list'] as $fixture) {
-            try {
-                App::open(__DIR__ . "/fixtures/invalid/{$fixture}.json", self::PROGRAM, [], 'Z');
-                self::fail("{$fixture} was accepted");
-            } catch (\InvalidArgumentException) {
-                self::addToAssertionCount(1);
-            }
-        }
+        $this->assertManifestsRejected(['routes-text', 'route-name-number', 'region-name-list']);
     }
 
     public function testInvalidUtf8IsRejectedBeforeLoadersAndActions(): void
@@ -1258,15 +1275,7 @@ final class AppTest extends TestCase
         // HY-60: the reply of the request, also after a stop or an error, and an empty reply before routing.
         $reports = [];
         $options = [
-            'onResponse' => function (
-                Request $request,
-                Response $response,
-                float $elapsed,
-                Reply $reply,
-                ?string $failure,
-            ) use (&$reports): void {
-                $reports[] = [$response->status, $reply->notes(), $failure];
-            },
+            'onResponse' => self::reportTo($reports),
         ];
         $token = $this->token();
         $form = ['Content-Type' => 'application/x-www-form-urlencoded'];
@@ -1335,15 +1344,7 @@ final class AppTest extends TestCase
         $reports = [];
         $options = [
             'responseLimit' => 64,
-            'onResponse' => function (
-                Request $request,
-                Response $response,
-                float $elapsed,
-                Reply $reply,
-                ?string $failure,
-            ) use (&$reports): void {
-                $reports[] = [$response->status, $reply->notes(), $failure];
-            },
+            'onResponse' => self::reportTo($reports),
         ];
         $log = tempnam(sys_get_temp_dir(), 'hyper-log-');
         $logged = ini_set('error_log', $log);

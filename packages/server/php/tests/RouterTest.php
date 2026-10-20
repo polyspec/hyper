@@ -48,22 +48,29 @@ final class RouterTest extends TestCase
         return [Json::string($case['path'] ?? null), $result];
     }
 
-    /** @return iterable<string, array{string, array{name: string, params: array<string, string>}|null}> */
-    public static function cases(): iterable
+    /**
+     * The cases of a list of a contract of routes, each named by its JSON.
+     *
+     * @return iterable<string, array{string, array{name: string, params: array<string, string>}|null}>
+     */
+    private static function routeCases(mixed $cases): iterable
     {
-        foreach (Json::arrays(self::fixture()['cases'] ?? null) as $case) {
+        foreach (Json::arrays($cases ?? null) as $case) {
             $routeCase = self::routeCase($case);
             yield json_encode($routeCase[0], JSON_THROW_ON_ERROR) => $routeCase;
         }
     }
 
     /** @return iterable<string, array{string, array{name: string, params: array<string, string>}|null}> */
+    public static function cases(): iterable
+    {
+        yield from self::routeCases(self::fixture()['cases']);
+    }
+
+    /** @return iterable<string, array{string, array{name: string, params: array<string, string>}|null}> */
     public static function baseCases(): iterable
     {
-        foreach (Json::arrays(self::fixture()['baseCases'] ?? null) as $case) {
-            $routeCase = self::routeCase($case);
-            yield json_encode($routeCase[0], JSON_THROW_ON_ERROR) => $routeCase;
-        }
+        yield from self::routeCases(self::fixture()['baseCases']);
     }
 
     /** @return iterable<string, array{string}> */
@@ -123,10 +130,7 @@ final class RouterTest extends TestCase
     /** @return iterable<string, array{string, array{name: string, params: array<string, string>}|null}> */
     public static function restCases(): iterable
     {
-        foreach (Json::arrays(self::rest()['cases'] ?? null) as $case) {
-            $routeCase = self::routeCase($case);
-            yield json_encode($routeCase[0], JSON_THROW_ON_ERROR) => $routeCase;
-        }
+        yield from self::routeCases(self::rest()['cases']);
     }
 
     /** @return iterable<string, array{string}> */

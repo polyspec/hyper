@@ -12,68 +12,42 @@ declare(strict_types=1);
 // X-Before before App::run.
 
 require __DIR__ . '/../../../../../vendor/autoload.php';
+require_once __DIR__ . '/FrontController.php';
 
-use Polyspec\Hyper\App;
 use Polyspec\Hyper\Reply;
-use Polyspec\Hyper\Request;
-use Polyspec\Hyper\Response;
-use Polyspec\Hyper\Result;
+use Polyspec\Hyper\Tests\Support\FrontController;
 
 $mode = (string) getenv('HYPER_ESCAPE_MODE');
 $log = (string) getenv('HYPER_ESCAPE_LOG');
 if (getenv('HYPER_ESCAPE_HEADER') === '1') {
     header('X-Before: kept');
 }
-$app = App::open(
-    __DIR__ . '/../fixtures/app.json',
-    __DIR__ . '/../build/server',
-    [
-        'shared' => function (Reply $reply) use ($mode): array {
-            if ($mode === 'fatal') {
-                ini_set('memory_limit', '8M');
-                $memory = str_repeat('x', 16 * 1024 * 1024);
+$app = FrontController::open(
+    $log,
+    function (Reply $reply) use ($mode): array {
+        if ($mode === 'fatal') {
+            ini_set('memory_limit', '8M');
+            $memory = str_repeat('x', 16 * 1024 * 1024);
+        }
+        if ($mode === 'exit') {
+            exit;
+        }
+        if ($mode === 'time-limit') {
+            set_time_limit(1);
+            while (microtime(true) > 0.0) {
+                $spin = 1;
             }
-            if ($mode === 'exit') {
-                exit;
-            }
-            if ($mode === 'time-limit') {
-                set_time_limit(1);
-                while (microtime(true) > 0.0) {
-                    $spin = 1;
-                }
-            }
+        }
 
-            return ['title' => 'Home'];
-        },
-        'routes' => ['add' => ['post' => fn (): Result => Result::redirect('/')]],
-    ],
-    'Z',
-    onResponse: function (Request $request, Response $response) use ($mode, $log): void {
-        file_put_contents($log, "response {$response->status}\n", FILE_APPEND);
+        return ['title' => 'Home'];
+    },
+    function () use ($mode): void {
         if ($mode === 'hook-fatal') {
             trigger_error('a fatal error of the response hook', E_USER_ERROR);
         }
         if ($mode === 'hook-throws') {
             throw new RuntimeException('a response hook that throws');
         }
-    },
-    written: function (
-        Request $request,
-        ?Response $response,
-        bool $ended,
-        float $elapsed,
-        ?string $failure,
-    ) use ($log): void {
-        file_put_contents(
-            $log,
-            sprintf(
-                "written %s %s %s\n",
-                $response === null ? 'null' : $response->status,
-                $ended ? 'true' : 'false',
-                json_encode($failure),
-            ),
-            FILE_APPEND,
-        );
     },
 );
 $app->run();

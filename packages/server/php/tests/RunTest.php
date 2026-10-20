@@ -112,15 +112,9 @@ final class RunTest extends TestCase
     public function testRunReportsTheElapsedTimeSinceTheRequestStarted(): void
     {
         $reports = [];
-        $app = App::open(
-            __DIR__ . '/fixtures/app.json',
-            __DIR__ . '/build/server',
-            ['routes' => ['add' => ['post' => fn (): Result => Result::redirect('/')]]],
-            'Z',
-            onResponse: function (Request $request, Response $response, float $elapsed) use (&$reports): void {
-                $reports[] = [$request->path(), $response->status, $elapsed];
-            },
-        );
+        $app = self::openApp(function (Request $request, Response $response, float $elapsed) use (&$reports): void {
+            $reports[] = [$request->path(), $response->status, $elapsed];
+        });
         $_SERVER['REQUEST_METHOD'] = 'GET';
         $_SERVER['REQUEST_URI'] = '/missing';
 
@@ -142,15 +136,9 @@ final class RunTest extends TestCase
     public function testRunReportsNoNegativeElapsedTimeWhenTheWallClockMovesBackwards(): void
     {
         $reports = [];
-        $app = App::open(
-            __DIR__ . '/fixtures/app.json',
-            __DIR__ . '/build/server',
-            ['routes' => ['add' => ['post' => fn (): Result => Result::redirect('/')]]],
-            'Z',
-            onResponse: function (Request $request, Response $response, float $elapsed) use (&$reports): void {
-                $reports[] = $elapsed;
-            },
-        );
+        $app = self::openApp(function (Request $request, Response $response, float $elapsed) use (&$reports): void {
+            $reports[] = $elapsed;
+        });
         $_SERVER['REQUEST_METHOD'] = 'GET';
         $_SERVER['REQUEST_URI'] = '/missing';
         $_SERVER['REQUEST_TIME_FLOAT'] = microtime(true) + 10.0;
@@ -173,21 +161,11 @@ final class RunTest extends TestCase
         try {
             // The server listens on a port that the system assigns and reports it, so no other process can take the
             // port between its choice and its use (HY-89). ignore_user_abort is on here, so App::run must turn it off.
-            $server = proc_open(
+            [$stderr, $port] = self::startServer(
                 [PHP_BINARY, '-d', 'ignore_user_abort=1', '-S', '127.0.0.1:0', __DIR__ . '/Support/disconnect.php'],
-                [0 => ['file', '/dev/null', 'r'], 1 => ['file', '/dev/null', 'w'], 2 => ['pipe', 'w']],
-                $pipes,
-                null,
                 [...getenv(), 'HYPER_DISCONNECT_LOG' => $log],
+                $server,
             );
-            if ($server === false) {
-                self::fail('the PHP built-in server did not start');
-            }
-            $started = self::waitFor($pipes[2], 'started');
-            if (preg_match('/\(http:\/\/127\.0\.0\.1:(\d+)\) started/', $started, $address) !== 1) {
-                self::fail("the server reported no address: {$started}");
-            }
-            $port = (int) $address[1];
             $client = stream_socket_client("tcp://127.0.0.1:{$port}");
             if ($client === false) {
                 self::fail("no connection to port {$port}");
@@ -195,7 +173,7 @@ final class RunTest extends TestCase
             fwrite($client, "GET / HTTP/1.1\r\nHost: x\r\nConnection: close\r\n\r\n");
             usleep(50_000);
             fclose($client);
-            self::waitFor($pipes[2], 'Closing');
+            self::waitFor($stderr, 'Closing');
             $lines = (string) file_get_contents($log);
         } finally {
             if ($server !== false) {
@@ -330,7 +308,7 @@ final class RunTest extends TestCase
         $log = (string) tempnam(sys_get_temp_dir(), 'hyper-escape-');
         $server = false;
         try {
-            $server = proc_open(
+            [, $port] = self::startServer(
                 [
                     PHP_BINARY,
                     '-d',
@@ -343,20 +321,11 @@ final class RunTest extends TestCase
                     '127.0.0.1:0',
                     __DIR__ . '/Support/escape.php',
                 ],
-                [0 => ['file', '/dev/null', 'r'], 1 => ['file', '/dev/null', 'w'], 2 => ['pipe', 'w']],
-                $pipes,
-                null,
                 [...getenv(), ...$env, 'HYPER_ESCAPE_MODE' => $mode, 'HYPER_ESCAPE_LOG' => $log],
+                $server,
             );
-            if ($server === false) {
-                self::fail('the PHP built-in server did not start');
-            }
-            $started = self::waitFor($pipes[2], 'started');
-            if (preg_match('/\(http:\/\/127\.0\.0\.1:(\d+)\) started/', $started, $address) !== 1) {
-                self::fail("the server reported no address: {$started}");
-            }
             $context = stream_context_create(['http' => ['ignore_errors' => true, 'timeout' => 10]]);
-            $stream = fopen("http://127.0.0.1:{$address[1]}/", 'r', false, $context);
+            $stream = fopen("http://127.0.0.1:{$port}/", 'r', false, $context);
             if ($stream === false) {
                 self::fail('the PHP built-in server gave no response');
             }
@@ -384,6 +353,50 @@ final class RunTest extends TestCase
             }
             unlink($log);
         }
+    }
+
+    /**
+     * Starts the PHP built-in server with `$command` and `$env` on a port that the system assigns, and returns its
+     * standard error and the port that it reports. `$server` receives the process as soon as it exists, so that the
+     * caller stops it also when this method fails.
+     *
+     * @param list<string> $command
+     * @param array<string, string> $env
+     * @param resource|false $server
+     * @return array{resource, int}
+     */
+    private static function startServer(array $command, array $env, mixed &$server): array
+    {
+        $server = proc_open(
+            $command,
+            [0 => ['file', '/dev/null', 'r'], 1 => ['file', '/dev/null', 'w'], 2 => ['pipe', 'w']],
+            $pipes,
+            null,
+            $env,
+        );
+        if ($server === false) {
+            self::fail('the PHP built-in server did not start');
+        }
+        $started = self::waitFor($pipes[2], 'started');
+        if (preg_match('/\(http:\/\/127\.0\.0\.1:(\d+)\) started/', $started, $address) !== 1) {
+            self::fail("the server reported no address: {$started}");
+        }
+
+        return [$pipes[2], (int) $address[1]];
+    }
+
+    /**
+     * Opens the application of the fixtures with a route `add` and the response hook `$onResponse`.
+     */
+    private static function openApp(\Closure $onResponse): App
+    {
+        return App::open(
+            __DIR__ . '/fixtures/app.json',
+            __DIR__ . '/build/server',
+            ['routes' => ['add' => ['post' => fn (): Result => Result::redirect('/')]]],
+            'Z',
+            onResponse: $onResponse,
+        );
     }
 
     /**
