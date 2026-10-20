@@ -487,7 +487,31 @@ final class App
             return Response::text(403, 'Forbidden');
         } catch (BadRequest) {
             return Response::text(400, 'Bad Request');
+        } catch (\Throwable $error) {
+            // HY-107: an error of the ORM is answered as the stop of its meaning; every other error escapes (HY-43).
+            return match (self::ormCode($error)) {
+                'NO_ROWS' => Response::text(404, 'Not Found'),
+                'REVISION_CHANGED' => $request->method === 'POST'
+                    ? $this->page($request, $route, $handler, $session, $flash, 409, [], $reply, $basePath)
+                    : throw $error,
+                default => throw $error,
+            };
         }
+    }
+
+    /**
+     * The code of an error of the ORM, which hyper knows by the name of its class and by its property `code_`,
+     * because it does not depend on the ORM (HY-107), or null for every other error.
+     */
+    private static function ormCode(\Throwable $error): ?string
+    {
+        $class = new \ReflectionClass($error);
+        if ($class->getShortName() !== 'OrmException' || !$class->hasProperty('code_')) {
+            return null;
+        }
+        $code = $class->getProperty('code_')->getValue($error);
+
+        return is_string($code) ? $code : null;
     }
 
     /** Fails when a loader or the shared handler renewed the session, because the page carries the old token (HY-72). */

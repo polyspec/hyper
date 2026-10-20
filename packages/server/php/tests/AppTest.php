@@ -19,6 +19,7 @@ use Polyspec\Hyper\Response;
 use Polyspec\Hyper\Result;
 use Polyspec\Hyper\Tests\Support\Counter;
 use Polyspec\Hyper\Tests\Support\Json;
+use Polyspec\Hyper\Tests\Support\OrmException;
 
 /**
  * @phpstan-import-type Handlers from App
@@ -75,6 +76,15 @@ final class AppTest extends TestCase
                         }
                         if ($request->formString('name') === 'unreadable') {
                             throw new BadRequest();
+                        }
+                        if ($request->formString('name') === 'orm-stale') {
+                            throw new OrmException('REVISION_CHANGED');
+                        }
+                        if ($request->formString('name') === 'orm-missing') {
+                            throw new OrmException('NO_ROWS');
+                        }
+                        if ($request->formString('name') === 'orm-other') {
+                            throw new OrmException('DRIVER');
                         }
                         if ($request->formString('name') === 'taken') {
                             return Result::page(409, ['name' => 'taken', 'error' => 'conflict']);
@@ -156,6 +166,8 @@ final class AppTest extends TestCase
                                 return ['id' => 'referrer-in-place'];
                             })(),
                             'missing' => throw new NotFound(),
+                            'orm-missing' => throw new OrmException('NO_ROWS'),
+                            'orm-stale' => throw new OrmException('REVISION_CHANGED'),
                             'private' => (function () use ($reply): array {
                                 $reply->note('refusal', 'private');
 
@@ -1159,6 +1171,24 @@ final class AppTest extends TestCase
             Json::at(self::json($this->get('/', ['Accept' => 'application/json'])), 'regions', 'side', 'note'),
         );
         self::assertSame('/api/items/new', $this->get('/api/items/moved', [], '/api')->headers['Location']);
+    }
+
+    public function testOrmErrorsAreAnsweredAsTheirStops(): void
+    {
+        // HY-107: NO_ROWS is a not found, REVISION_CHANGED is the route page with status 409, and no data of its own.
+        $missing = $this->get('/items/orm-missing');
+        self::assertSame(404, $missing->status);
+        self::assertSame('Not Found', $missing->body);
+        $action = $this->post('/add', ['_csrf' => $this->token(), 'name' => 'orm-missing']);
+        self::assertSame(404, $action->status);
+        self::assertSame('Not Found', $action->body);
+        $stale = $this->post('/add', ['_csrf' => $this->token(), 'name' => 'orm-stale']);
+        self::assertSame(409, $stale->status);
+        self::assertSame('no-store', $stale->headers['Cache-Control']);
+        // A loader cannot answer with the page that it fails to load, so its REVISION_CHANGED fails with HY-43.
+        self::assertSame(500, $this->get('/items/orm-stale')->status);
+        // Another code is not handled by the rule and fails with HY-43.
+        self::assertSame(500, $this->post('/add', ['_csrf' => $this->token(), 'name' => 'orm-other'])->status);
     }
 
     public function testForbiddenLoaderAndActionAnswerWith403(): void

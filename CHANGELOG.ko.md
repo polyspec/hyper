@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: c0c45a5a3381737fc956c339ad73133b692523cd4fb63ea7177ec993c3dbe7cc -->
+<!-- source-sha256: 5ec6a6ae65498b0d25539d4c4efbc13a442e5dcc4fafcadc5126c69a90497e17 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H25.45: PHP 서버는 ORM 오류 NO_ROWS를 not found로, action이 일으킨 REVISION_CHANGED를 status 409인 route page로 응답한다(HY-107. HY-107은 loader가 REVISION_CHANGED를 일으키면 HY-43으로 실패한다는 것도 정한다). red: AppTest::testOrmErrorsAreAnsweredAsTheirStops가 404 대신 500을 받았고, green: AppTest가 통과한다(Homebrew PHP 8.5에서 실행, H25.14-1의 환경 문제). (H25.45)
 - H25.44: HY-107은 loader나 action이 ORM 오류 NO_ROWS와 REVISION_CHANGED를 밖으로 나가게 둘 수 있다고 정한다. 서버는 NO_ROWS를 NotFound(404)로, REVISION_CHANGED를 status 409이고 data가 없는 route page로 응답하며, ORM에 대한 의존 없이 클래스 이름과 code로 오류를 알아본다. (H25.44)
 - H25.43: HY-106은 서버의 public API(애플리케이션, host 진입점, 요청, reply, response, result와 그 중단, session store, 서비스, 클라이언트 렌더링)를 정하고, 그 밖의 모든 symbol은 내부 요소이며 PHP와 Node에서는 @internal로, Python에서는 밑줄로 표시한다고 정한다. (H25.43)
 - H25.25-1: @polyspec/hyper-server package가 다시 build된다. warnings.ts는 process.emitWarning을 Node의 signature에 맞춘 함수로 바꾸고(Reflect.apply, cast 없음), tests/http.test.ts의 around 사례는 type check를 통과한다. red: tsc -p packages/server/ts/tsconfig.build.json이 warnings.ts(13,9)에서 TS2322로 실패했고, green: build와 test 설정의 tsc가 통과하며 HY-74 사례가 통과한다. (H25.25-1)

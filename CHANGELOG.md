@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- H25.45: The PHP server answers the ORM error NO_ROWS as a not found and REVISION_CHANGED raised by an action as the route page with status 409 (HY-107; HY-107 now also says that a loader raising REVISION_CHANGED fails with HY-43); red: AppTest::testOrmErrorsAreAnsweredAsTheirStops got 500 for 404, green: AppTest passes, run under Homebrew PHP 8.5 (the environment of H25.14-1). (H25.45)
 - H25.44: HY-107 states that a loader or an action may let the ORM errors NO_ROWS and REVISION_CHANGED escape: the server answers NO_ROWS as NotFound (404) and REVISION_CHANGED as the route page with status 409 and no data, and identifies the error by its class name and code without a dependency on the ORM. (H25.44)
 - H25.43: HY-106 states the public API of a server (application, host entries, request, reply, response, result and its stops, session stores, services, client rendering) and that every other symbol is internal, marked @internal in PHP and Node, with a leading underscore in Python. (H25.43)
 - H25.25-1: The package @polyspec/hyper-server builds again: warnings.ts replaces process.emitWarning by a function typed to the signature of Node (Reflect.apply, no cast), and the around cases of tests/http.test.ts type-check; red: tsc -p packages/server/ts/tsconfig.build.json failed with TS2322 at warnings.ts(13,9), green: tsc passes for the build and the test configuration and the HY-74 case passes. (H25.25-1)

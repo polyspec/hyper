@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-kit-standard -->
-<!-- source-sha256: 0645747ba82251255e334becd9e09a92d86bba29a783fb7c7e820d9882a0406b -->
+<!-- source-sha256: 67dba2be2b38c7e8374c36aaa30ca28e5407655c8a63c650c562c2adba203156 -->
 # kit 표준 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -54,3 +54,4 @@
 | H25.42 | R1: parity check의 symbol extractor가 php와 python server에서 실행된다 | config/toolchain.json | `make parity-check UNITS=manifest` | [!] 원인: kit 결함: scripts/kit/parity.mts:113이 env 없이 checkParity를 호출해 env가 process.env가 되고(parity.mts:61), python extractor(parity-symbols.mts:210)가 toolsEnvironment의 mise 환경 없이 mise shim을 실행하여 mise가 "Config files in mise.toml are not trusted"로 실패한다; 재시도: kit가 extractor에 toolsEnvironment(root)를 전달하면; php extractor는 설치되어 symbol을 나열한다 |
 | H25.43 | R11: HY-106이 서버의 public API와 내부 요소를 정한다 | docs/spec/protocol.md and docs/spec/protocol.ko.md | `make docs-check` | [o] |
 | H25.44 | HY-107이 ORM 오류 NO_ROWS와 REVISION_CHANGED에 대한 응답을 정한다 | docs/spec/protocol.md and docs/spec/protocol.ko.md | `make docs-check` | [o] |
+| H25.45 | PHP 서버: ORM 오류 NO_ROWS와 REVISION_CHANGED는 not found와 409 page로 응답한다(HY-107) | packages/server/php/src/App.php, packages/server/php/tests/AppTest.php | `make hyper-test-php TESTS=packages/server/php/tests/AppTest.php` | [o] |
