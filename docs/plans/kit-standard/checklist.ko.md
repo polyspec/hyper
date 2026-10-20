@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-kit-standard -->
-<!-- source-sha256: 8e701ff659d093516c6a1225817a90a5002f4ece9cc59770930da89c017106ab -->
+<!-- source-sha256: a7d76fa73bbab24357f34add4353ee00c2d264cc4255c36a5f71203d86508df3 -->
 # kit 표준 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -47,3 +47,4 @@
 | H25.38 | R3: client-requests는 모든 서버에서 성립한다 | The test files of the client cases of the three servers, config/parity.json | `make parity-check UNITS="client-requests client-selection"` | [o] |
 | H25.39 | kit 사본이 K294와 K297 이후의 kit과 일치한다 | PRINCIPLES.md and PRINCIPLES.ko.md | `make kit-check` | [o] |
 | H25.40 | AGENTS.md의 모든 규칙은 Own이거나 PRINCIPLES.md의 규칙을 Refines한다 | AGENTS.md and AGENTS.ko.md | `make rules-check` | [o] |
+| H25.41 | check-recipes.test.mts의 recipe test는 machine의 toolchain에 의존하지 않는다 | tests/scripts/check-recipes.test.mts | `var/tools/bin/node --test tests/scripts/check-recipes.test.mts` | [o] |

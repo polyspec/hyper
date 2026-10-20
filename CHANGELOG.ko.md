@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 04659fa843a8a1dd9f02e3d0b1174d6423689f9394d12359103025179812a825 -->
+<!-- source-sha256: 946685b467d0322139018d33dc873adcbfd1c7d7db2f2ef9590344af2c892fad -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H25.41: tests/scripts/check-recipes.test.mts의 recipe test 두 개는 어느 machine에서나 통과한다. make를 -o toolchain-check로 실행하고(이 machine에서는 phpstan이 PHP 8.4에서 시작하지 못해 그 선행 target이 실패했으며, 그것은 환경 문제(H25.14)이고 자기 gate의 몫이다), hyper-test-js 사례는 kit의 runner가 CI 밖에서 선택 없는 vitest 실행을 거부하므로 GITHUB_ACTIONS=true를 설정한다. red: 5개 중 2개 실패, green: 5개 모두 통과. (H25.41)
 - H25.40: AGENTS.md의 모든 규칙은 Own: 또는 Refines <id>:로 시작하고, PRINCIPLES.md를 되풀이하던 두 규칙(수락 조건, task 순서)은 삭제했다. red: make rules-check가 44건을 보고했고, green: 0건이다. (H25.40)
 - H25.39: 사본 `PRINCIPLES.md`와 `PRINCIPLES.ko.md`를 K294와 K297 이후의 설치된 kit에서 `make kit-sync`로 다시 쓴다. Red: `make kit-check` exit 2, `@polyspec/kit`과 다른 사본 2개. Green: `make kit-check` exit 0. `make rules-check`는 이제 `Own:`이나 `Refines <id>:`로 시작하지 않는 `AGENTS.md` 규칙 44개를 보고하며, 이는 다음 item이다 (H25.39)
 - H25.38: `contracts/client.json`의 case는 모든 서버에서 suite로 실행된다(R3). PHP provider는 data set을 `id`로 부르고, Python과 Node는 case를 각자의 test 파일(`render_client_requests.py`, `client-requests.test.ts`)에 둔다. Node의 contract와 fixture는 `support.ts`로 옮긴다. selection과 선언 test는 `render_client.py`, `client.test.ts`, `ClientTest.php`에 unit `client-selection`(HY-62)으로 남는다. Red: `make parity-check UNITS=client-requests`가 세 서버에 R3을 보고했다. Green: `client-requests`와 `client-selection`이 성립한다. binding 6개를 두 번 실행해 case 75개가 통과했다(PHP는 Homebrew PHP 8.5) (H25.38)
