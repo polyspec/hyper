@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 2b77355f2fb42ff0e2dfa06c008ca236dd3ac92819a7b862e24748a90a78b1ef -->
+<!-- source-sha256: 6e28a71fcbf3ce70259a8c03513f0861857c5630bd025386d8aee64a7ec83193 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H25.31: `contracts/fields.json`의 case는 모든 서버에서 suite로 실행된다(R3). PHP는 case의 data set을 `id`로 부르고(provider가 `label`로 불렀다), Python과 Node는 urlencoded case와 multipart case를 각자의 test 파일(`test_fields_urlencoded.py`, `test_fields_multipart.py`, `fields-urlencoded.test.ts`, `fields-multipart.test.ts`)에 두어 suite 파일이 자기 unit의 case만 담는다. form field의 다른 test는 `test_fields.py`, `fields.test.ts`, `FieldsTest.php`에 unit `fields-values`로 남는다. Red: `make parity-check UNITS="fields-urlencoded fields-multipart"`가 세 서버에 R3을 보고했다(PHP는 case 17개와 4개 중 0개를 이름으로 맞췄고, Python과 Node는 다른 unit의 case와 손으로 쓴 test를 'not in the suite'로 보고했다). Green: 두 suite와 `fields-values`가 PHP(Homebrew PHP 8.5), Python, Node에서 성립한다. binding 9개를 두 번 실행해 case 66개가 통과했다 (H25.31)
 - H25.28-1: H25.28의 changelog 줄은 이미 분류한 원본을 19개라고 적었다. kit이 찾은 tool 원본은 37개이고 15개를 분류했으며 22개를 분류하지 않았고, 줄은 이제 이 수를 적는다. Red: 줄이 `make rebuild-check`가 찾은 37개와 달리 19개와 22개를 적었다. Green: 줄이 37, 15, 22를 적고 `make docs-check`가 통과한다 (H25.28-1)
 - H25.30: Makefile의 `CHECK_TARGETS`가 kit이 요구하는 gate 9개(rules-check, rebuild-check, language-check, test-markers-check, duplication-check, parity-declarations-check, parity-check, lint-php, lint-python)를 실행하고, `ci.yml`의 CI matrix가 각각 한 번 실행한다. 앞의 여섯 가벼운 검사는 `docs` group에, `lint-php`는 `php`에, `lint-python`은 `python`에, 전체 `parity-check`는 모든 runtime을 가진 `python-render`에 둔다. `tests/scripts/ci-workflow.test.mts`는 kit의 사본(`release.yml`, `gates.yml`)이 아니라 이 저장소의 workflow를 읽고, 새 `release.yml`의 `workflow_dispatch`를 포함한 trigger를 적으며, HR-90과 HR-91은 `gates.yml`을 이름으로 적는다. Red: `make kit-check` exit 2, 지적 9건(`CHECK_TARGETS runs no ...`)과 `ci-workflow.test.mts`의 실패 test 3개(`gates.yml`을 저장소의 workflow로 읽었다). Green: `make kit-check` exit 0, `ci-workflow.test.mts`의 test 11개 통과. `make kit-check`에는 H25.14의 지적이 나타나지 않는다 (H25.30)
 - H25.29: 사본 `PRINCIPLES.md`와 `PRINCIPLES.ko.md`를 설치된 kit에서 `make kit-sync`로 다시 쓴다. Red: `make kit-check` exit 2, 지적 11건 가운데 `@polyspec/kit`과 다른 사본 2개. Green: 사본 지적 2건이 사라진다. 나머지 9건은 Makefile의 `CHECK_TARGETS`가 아직 실행하지 않는 gate(rules-check, rebuild-check, language-check, test-markers-check, duplication-check, parity-declarations-check, parity-check, lint-php, lint-python)이며, gate를 `make check`에 연결하는 것은 kit의 결정이다 (H25.29)

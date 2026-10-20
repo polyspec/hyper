@@ -1,32 +1,6 @@
-// The cases of packages/server/php/tests/FieldsTest.php and packages/server/python/tests/test_fields.py (HY-56, HY-57):
-// a urlencoded text is the UTF-8 encoding of its JSON string, which node:http gives as characters that are bytes; a
-// multipart body is text whose characters are its bytes. Each case is a top-level test named by its id (S6).
-import { readFileSync } from 'node:fs';
+// The form fields beyond the conformance cases of contracts/fields.json (HY-56, HY-57).
 import { describe, expect, it } from 'vitest';
-import { formFields, parseUrlEncoded } from '../src/form.js';
-import { list, parsed, record, text } from './support.js';
-
-const fixture = record(parsed(readFileSync(new URL('../../../../contracts/fields.json', import.meta.url), 'utf8')));
-
-// Requires that `fields` is invalid when the contract expects null, and otherwise valid with the expected values.
-function expectFields(fields: { valid: boolean; values: Iterable<unknown> }, expected: unknown): void {
-  if (expected === null) {
-    expect(fields.valid).toBe(false);
-    return;
-  }
-  expect(fields.valid).toBe(true);
-  expect([...fields.values]).toEqual(expected);
-}
-
-it.each(list(fixture.urlencoded).map(record).map((item) => [text(item.id), item] as const))('%s', (_id, item) => {
-  const fields = parseUrlEncoded(Buffer.from(text(item.text), 'utf8').toString('latin1'));
-  expectFields(fields, item.fields);
-});
-
-it.each(list(fixture.multipart).map(record).map((item) => [text(item.id), item] as const))('%s', (_id, item) => {
-  const fields = formFields(text(item.type), Buffer.from(text(item.body), 'latin1'));
-  expectFields(fields, item.fields);
-});
+import { formFields } from '../src/form.js';
 
 describe('formFields', () => {
   it('reads a urlencoded body and no other type (HY-57)', () => {

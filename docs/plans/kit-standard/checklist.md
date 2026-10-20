@@ -35,3 +35,4 @@
 | H25.28-1 | The changelog of H25.28 states the numbers of the tool sources as kit found them | CHANGELOG.md and CHANGELOG.ko.md | `make docs-check` | [o] |
 | H25.29 | The copies of kit match the kit after K286 | PRINCIPLES.md and PRINCIPLES.ko.md | `make kit-check` | [o] |
 | H25.30 | The gates of kit run in make check and in the CI groups, and the workflow test reads the workflows of this repository only | Makefile, .github/workflows/ci.yml, tests/scripts/ci-workflow.test.mts and docs/operations/repository-rules.md with its twin | `var/tools/bin/node --test tests/scripts/ci-workflow.test.mts`, `make kit-check` | [o] |
+| H25.31 | R3: fields-urlencoded and fields-multipart hold in every server | The test files of the fields cases of the three servers, config/parity.json | `make parity-check UNITS="fields-urlencoded fields-multipart fields-values"` | [o] |

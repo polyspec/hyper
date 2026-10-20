@@ -264,3 +264,13 @@ export function routeContract(file: string): { fixture: Record<string, unknown>;
   const router = new Router(list(fixture.routes).map(record).map((route) => ({ name: text(route.name), path: text(route.path) })));
   return { fixture, router };
 }
+
+// Requires that `fields` is invalid when the contract expects null, and otherwise valid with the expected values.
+export function expectFields(fields: { valid: boolean; values: Iterable<unknown> }, expected: unknown): void {
+  if (expected === null) {
+    expect(fields.valid).toBe(false);
+    return;
+  }
+  expect(fields.valid).toBe(true);
+  expect([...fields.values]).toEqual(expected);
+}

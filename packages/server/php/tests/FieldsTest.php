@@ -19,7 +19,7 @@ final class FieldsTest extends TestCase
     public static function cases(): iterable
     {
         foreach (Json::arrays(self::fixture()['urlencoded'] ?? null) as $case) {
-            yield Json::string($case['label'] ?? null) => [
+            yield Json::string($case['id'] ?? null) => [
                 Json::string($case['text'] ?? null),
                 self::expected($case['fields'] ?? null),
             ];
@@ -30,7 +30,7 @@ final class FieldsTest extends TestCase
     public static function multipartCases(): iterable
     {
         foreach (Json::arrays(self::fixture()['multipart'] ?? null) as $case) {
-            yield Json::string($case['label'] ?? null) => [
+            yield Json::string($case['id'] ?? null) => [
                 Json::string($case['type'] ?? null),
                 (string) mb_convert_encoding(Json::string($case['body'] ?? null), 'ISO-8859-1', 'UTF-8'),
                 self::expected($case['fields'] ?? null),

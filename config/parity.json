@@ -102,11 +102,11 @@
         },
         {
           "implementation": "python",
-          "test": "packages/server/python/tests/test_fields.py"
+          "test": "packages/server/python/tests/test_fields_urlencoded.py"
         },
         {
           "implementation": "ts",
-          "test": "packages/server/ts/tests/fields.test.ts"
+          "test": "packages/server/ts/tests/fields-urlencoded.test.ts"
         }
       ],
       "requirements": [
@@ -127,11 +127,11 @@
         },
         {
           "implementation": "python",
-          "test": "packages/server/python/tests/test_fields.py"
+          "test": "packages/server/python/tests/test_fields_multipart.py"
         },
         {
           "implementation": "ts",
-          "test": "packages/server/ts/tests/fields.test.ts"
+          "test": "packages/server/ts/tests/fields-multipart.test.ts"
         }
       ],
       "requirements": [
@@ -958,6 +958,31 @@
         "HY-24",
         "HY-25",
         "HY-40"
+      ]
+    },
+    {
+      "id": "fields-values",
+      "kind": "feature",
+      "bindings": [
+        {
+          "implementation": "php",
+          "test": "packages/server/php/tests/FieldsTest.php",
+          "id": "FieldsTest::testAbsentNameHasNoValues"
+        },
+        {
+          "implementation": "python",
+          "test": "packages/server/python/tests/test_fields.py",
+          "id": "test_absent_name_has_no_values"
+        },
+        {
+          "implementation": "ts",
+          "test": "packages/server/ts/tests/fields.test.ts",
+          "id": "formFields › a name that is absent has no values (HY-56)"
+        }
+      ],
+      "requirements": [
+        "HY-56",
+        "HY-57"
       ]
     }
   ],

@@ -1,43 +1,9 @@
-# Query and form values of the conformance cases (HY-56, HY-57). The PHP and the JavaScript implementation pass the
-# same cases of contracts/fields.json: a urlencoded text is the UTF-8 encoding of its JSON string, and a multipart
-# body is text whose characters are its bytes.
+# Query and form values beyond the conformance cases of contracts/fields.json (HY-56, HY-57).
 import unittest
 
-from .contracts import add_cases, file
 from polyspec.hyper.fields import Fields
 
-
-def entries(fields: Fields | None) -> list | None:
-    if fields is None:
-        return None
-    return [[name, fields.get(name)] for name in fields.names()]
-
-
-class UrlEncodedTest(unittest.TestCase):
-    pass
-
-
-add_cases(
-    UrlEncodedTest,
-    file("fields.json")["urlencoded"],
-    lambda self, case: self.assertEqual(
-        case["fields"], entries(Fields.parse(case["text"].encode("utf-8")))
-    ),
-)
-
-
-class MultipartTest(unittest.TestCase):
-    pass
-
-
-add_cases(
-    MultipartTest,
-    file("fields.json")["multipart"],
-    lambda self, case: self.assertEqual(
-        case["fields"],
-        entries(Fields.from_body(case["type"], case["body"].encode("latin-1"))),
-    ),
-)
+from .field_entries import entries
 
 
 class HasTest(unittest.TestCase):
