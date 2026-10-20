@@ -152,11 +152,11 @@
         },
         {
           "implementation": "python",
-          "test": "packages/server/python/tests/test_json.py"
+          "test": "packages/server/python/tests/test_json_encode.py"
         },
         {
           "implementation": "ts",
-          "test": "packages/server/ts/tests/json.test.ts"
+          "test": "packages/server/ts/tests/json-encode.test.ts"
         }
       ],
       "requirements": [
@@ -180,11 +180,11 @@
         },
         {
           "implementation": "python",
-          "test": "packages/server/python/tests/test_json.py"
+          "test": "packages/server/python/tests/test_json_decode.py"
         },
         {
           "implementation": "ts",
-          "test": "packages/server/ts/tests/json.test.ts"
+          "test": "packages/server/ts/tests/json-decode.test.ts"
         }
       ],
       "requirements": [
@@ -983,6 +983,31 @@
       "requirements": [
         "HY-56",
         "HY-57"
+      ]
+    },
+    {
+      "id": "json-values",
+      "kind": "feature",
+      "bindings": [
+        {
+          "implementation": "php",
+          "test": "packages/server/php/tests/JsonEncoderTest.php",
+          "id": "JsonEncoderTest::testNegativeZeroKeepsItsSign"
+        },
+        {
+          "implementation": "python",
+          "test": "packages/server/python/tests/test_json.py",
+          "id": "test_negative_zero_keeps_its_sign"
+        },
+        {
+          "implementation": "ts",
+          "test": "packages/server/ts/tests/json.test.ts",
+          "id": "PHP json_encode bytes › writes floats as PHP does where JSON.stringify differs"
+        }
+      ],
+      "requirements": [
+        "HY-17",
+        "HY-44"
       ]
     }
   ],

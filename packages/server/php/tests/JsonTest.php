@@ -23,7 +23,7 @@ final class JsonTest extends TestCase
     public static function encodeCases(): iterable
     {
         foreach (self::fixture('encode') as $case) {
-            yield Json::string($case->label) => [Json::string($case->json), Json::string($case->expected)];
+            yield Json::string($case->id) => [Json::string($case->json), Json::string($case->expected)];
         }
     }
 
@@ -31,7 +31,7 @@ final class JsonTest extends TestCase
     public static function decodeCases(): iterable
     {
         foreach (self::fixture('decode') as $case) {
-            yield Json::string($case->label) => [Json::string($case->json), Json::string($case->result)];
+            yield Json::string($case->id) => [Json::string($case->json), Json::string($case->result)];
         }
     }
 

@@ -1,38 +1,7 @@
-// JSON text with the bytes of PHP json_encode and kept values decoded as PHP json_decode reads them (HY-17,
-// HY-38, HY-40, HY-54). PHP passes the same cases of contracts/json.json in JsonTest.
-import { readFileSync } from 'node:fs';
+// The JSON codec beyond the cases of contracts/json.json (HY-17, HY-44): the bytes of numbers and strings, and the limits.
 import { describe, expect, it } from 'vitest';
 import type { Value } from '@polyspec/template/render';
-import { decodeJson, encodeJson, inDataModel, JsonDecodeError, OutsideNumber, type DecodedValue } from '../src/index.js';
-import { list, parsed, record, text } from './support.js';
-
-const fixture = record(parsed(readFileSync(new URL('../../../../contracts/json.json', import.meta.url), 'utf8')));
-const encode = list(fixture.encode).map(record);
-const decode = list(fixture.decode).map(record);
-
-// Encoding writes every finite number, also one outside the data model, as PHP json_encode does.
-function finite(value: DecodedValue): Value {
-  if (value instanceof OutsideNumber) return Number(value.literal);
-  if (Array.isArray(value)) return value.map(finite);
-  if (value instanceof Map) return new Map([...value].map(([key, item]) => [key, finite(item)]));
-  return value;
-}
-
-// Each case of contracts/json.json is a top-level test named by its id (S6).
-it.each(encode.map((item) => [text(item.id), item] as const))('%s', (_id, item) => {
-  expect(encodeJson(finite(decodeJson(text(item.json))))).toBe(item.expected);
-});
-
-it.each(decode.map((item) => [text(item.id), item] as const))('%s', (_id, item) => {
-  let result: string;
-  try {
-    result = inDataModel(decodeJson(text(item.json))) ? 'value' : 'outside';
-  } catch (error) {
-    if (!(error instanceof JsonDecodeError)) throw error;
-    result = 'error';
-  }
-  expect(result).toBe(item.result);
-});
+import { decodeJson, encodeJson, inDataModel, JsonDecodeError } from '../src/index.js';
 
 describe('PHP json_encode bytes', () => {
   it('escapes U+2028 and U+2029, which JSON.stringify writes unescaped', () => {

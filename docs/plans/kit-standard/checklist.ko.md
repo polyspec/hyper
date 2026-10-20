@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-kit-standard -->
-<!-- source-sha256: c1d2958c0ac5b3de1cdf76d32f81c2438f567b911b107794ea436f392c6ad3b3 -->
+<!-- source-sha256: 1e2853c9810d9222016aa34406e2bf28e6d621175f2c563799ea6d04f2ac73b8 -->
 # kit 표준 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -37,3 +37,4 @@
 | H25.29 | kit 사본이 K286 이후의 kit과 일치한다 | PRINCIPLES.md and PRINCIPLES.ko.md | `make kit-check` | [o] |
 | H25.30 | kit의 gate는 make check와 CI group에서 실행되고, workflow test는 이 저장소의 workflow만 읽는다 | Makefile, .github/workflows/ci.yml, tests/scripts/ci-workflow.test.mts and docs/operations/repository-rules.md with its twin | `var/tools/bin/node --test tests/scripts/ci-workflow.test.mts`, `make kit-check` | [o] |
 | H25.31 | R3: fields-urlencoded와 fields-multipart는 모든 서버에서 성립한다 | The test files of the fields cases of the three servers, config/parity.json | `make parity-check UNITS="fields-urlencoded fields-multipart fields-values"` | [o] |
+| H25.32 | R3: json-encode와 json-decode는 모든 서버에서 성립한다 | The test files of the json cases of the three servers, config/parity.json | `make parity-check UNITS="json-encode json-decode json-values"` | [o] |
