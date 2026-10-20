@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: cfcbb6beab8dddc6ee51a5cad507a52a5d71c57a396067bdbf16a4e2b772140d -->
+<!-- source-sha256: da56188225c50b57d0caf57f8aae6c3b4546c2c25edc15575f46c21131a0c94c -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -232,3 +232,4 @@
 | H24.2 | region 응답의 client fetch는 응답의 렌더링 오류를 버리지 않고 그 오류로 거절된다. htmx swap 전에 template을 불러오는 사전 렌더링이 오류를 잡아 버리지 않는다. 변경 전 `vitest run packages/client/tests/hyper.test.ts -t "render errors of a region response"`가 `AssertionError: expected 'null' to contain 'has no region content'`를 출력했다(fetch가 정상으로 끝남). 변경 후 client hyper test가 `Tests 148 passed (148)`를 출력한다. | — | `vitest run packages/client/tests/hyper.test.ts` | [o] |
 | H24.3 | 나중 region 요청이 대체한 region 요청은 나중 요청이 시작될 때 abort되고, abort 전에 도착한 응답도 교체하지 않는다(HY-23). 오래된 탐색이 새 탐색의 page와 title을 더는 덮어쓰지 못한다. 변경 전 `vitest run packages/client/tests/hyper.test.ts -t "superseded region requests"`가 `AssertionError: expected undefined to be false`를 출력했다(오래된 응답이 교체됨). 변경 후 client test가 `Tests 474 passed (474)`를 출력한다. | — | `vitest run packages/client/tests` | [o] |
 | H26.1 | 소비자(limepie)를 위한 클라이언트 스트림 구독을 명세한다: options.fetch 위의 server-sent events 판독기, 마지막 커서를 가지고 다시 연결하기, 조용한 스트림을 실패시키는 바이트 감시, 모든 구독과 대기 중인 요청을 정리하는 클라이언트 dispose. 그다음 구현과 테스트 항목을 등록한다. 원인: 클라이언트에 스트림 판독기와 dispose가 없고, 영역 중단(packages/client/src/hyper.ts:447-449)은 영역 요청만 다룬다 | docs/spec/protocol.md (+ko), docs/plans/execution | `make docs-check` | [ ] |
+| H26.2 | 소비자(limepie 스토리 업로드)를 위해 파일 part를 요청 값으로 명세한다(HY-57): filename이 있는 multipart part는 이름, content type, 바이트를 가진 파일을 요청에 주고, 모든 서버가 같은 파일 API를 제공하며, contracts/fields.json이 두 서버가 통과하는 파일 사례를 담는다. 그다음 구현과 테스트 항목을 등록한다. 원인: HY-57은 filename이 있는 part를 폼 값이 아닌 파일이라고만 하고, 애플리케이션에 파일을 주는 규칙이 없다 | docs/spec/protocol.md (+ko), contracts/fields.json, docs/plans/execution | `make docs-check` | [ ] |
