@@ -18,13 +18,14 @@ final class FrontController
 {
     /**
      * Opens the application with the shared handler `$shared`; `$afterResponse` runs after the response line was
-     * appended, and `$onDisconnect` is the disconnect hook.
+     * appended, `$onDisconnect` is the disconnect hook and `$around` the request hook (HY-97).
      */
     public static function open(
         string $log,
         \Closure $shared,
         ?\Closure $afterResponse = null,
         ?\Closure $onDisconnect = null,
+        ?\Closure $around = null,
     ): App {
         return App::open(
             __DIR__ . '/../fixtures/app.json',
@@ -41,6 +42,7 @@ final class FrontController
                 }
             },
             onDisconnect: $onDisconnect,
+            around: $around,
             written: function (
                 Request $request,
                 ?Response $response,

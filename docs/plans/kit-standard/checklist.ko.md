@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-kit-standard -->
-<!-- source-sha256: d9da9b66e76074aebd487fb4b9b72baa9be63346a338ace8e2dede7ad93fd2cc -->
+<!-- source-sha256: adec8af2707d675f6e4d32b0a2b9534808a1daeca1f78cc9a201151daa04ef24 -->
 # kit 표준 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -30,3 +30,4 @@
 | H25.23 | R13: HY-48, HY-74, HY-97, HY-100은 한 언어가 아니라 모든 서버의 규칙을 적는다 | docs/spec/protocol.md and its Korean twin, and the citations of HY-101 and HY-102 | `make docs-check` | [o] |
 | H25.24 | Python 서버는 PHP AppTest의 case를 시험하고, Python 런타임의 경고는 요청을 실패시킨다(HY-74) | packages/server/python/tests/render/render_requests.py, fixture_handlers.py, src/polyspec/hyper/warnings_guard.py, app.py, request.py and result.py | `packages/server/python/.venv/bin/python -m unittest packages/server/python/tests/render/render_requests.py` | [o] |
 | H25.25 | Node 서버는 요청 hook around를 받고(HY-97) process 경고를 내는 요청을 실패시킨다(HY-74) | packages/server/ts/src/http.ts, request.ts, warnings.ts, app.ts, index.ts, the tests http.test.ts and app.test.ts and the specification | `var/tools/bin/node node_modules/vitest/vitest.mjs run --dir packages/server/ts` | [o] |
+| H25.26 | PHP 서버는 요청 hook around를 받는다(HY-97) | packages/server/php/src/App.php, Request.php, Delivery.php, the tests AppTest.php and RunTest.php with the front controllers, and the specification | `var/tools/bin/node node_modules/@polyspec/kit/dist/run-tests.mjs phpunit --cwd packages/server/php -- --exclude-group native tests/RunTest.php` | [o] |

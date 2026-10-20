@@ -155,6 +155,26 @@ final class RunTest extends TestCase
     /** HY-67, HY-99: PHP ends the script at the first failed write of the response, reports the write before the disconnect hook. */
     public function testRunCallsTheDisconnectHookWhenTheClientClosedTheConnection(): void
     {
+        self::assertSame(
+            "response 200\nwritten 200 false null\ndisconnect GET / 1 {\"stage\":\"shared\"}\n",
+            self::closedClient([]),
+        );
+    }
+
+    /** HY-97, HY-67: the disconnect hook is not called when `around` never called `answer`. */
+    public function testTheDisconnectHookIsNotCalledWhenAroundNeverCalledAnswer(): void
+    {
+        self::assertSame("written 200 false null\n", self::closedClient(['HYPER_DISCONNECT_AROUND' => 'alone']));
+    }
+
+    /**
+     * Serves the disconnect front controller with the PHP built-in server, sends a request, closes the connection
+     * before the response and returns the lines that the hooks appended to the log.
+     *
+     * @param array<string, string> $env the environment of the server that the case adds to its own
+     */
+    private static function closedClient(array $env): string
+    {
         // The log and the server are released when the case ends, also when it fails (HR-87).
         $log = (string) tempnam(sys_get_temp_dir(), 'hyper-disconnect-');
         $server = false;
@@ -163,7 +183,7 @@ final class RunTest extends TestCase
             // port between its choice and its use (HR-89). ignore_user_abort is on here, so App::run must turn it off.
             [$stderr, $port] = self::startServer(
                 [PHP_BINARY, '-d', 'ignore_user_abort=1', '-S', '127.0.0.1:0', __DIR__ . '/Support/disconnect.php'],
-                [...getenv(), 'HYPER_DISCONNECT_LOG' => $log],
+                [...getenv(), ...$env, 'HYPER_DISCONNECT_LOG' => $log],
                 $server,
             );
             $client = stream_socket_client("tcp://127.0.0.1:{$port}");
@@ -182,7 +202,7 @@ final class RunTest extends TestCase
             }
             unlink($log);
         }
-        self::assertSame("response 200\nwritten 200 false null\ndisconnect GET / 1 {\"stage\":\"shared\"}\n", $lines);
+        return $lines;
     }
 
     /** HY-60, HY-99: a fatal error before the response hook runs writes the plain 500 and no response hook runs. */
@@ -220,6 +240,35 @@ final class RunTest extends TestCase
         self::assertSame('Internal Server Error', $body);
         self::assertContains('Cache-Control: no-store', $headers);
         self::assertSame("response 200\nwritten 500 true \"a response hook that throws\"\n", $lines);
+    }
+
+    /** HY-97, HY-60: an error of `around` writes the plain 500 and reaches the write hook; no response hook runs. */
+    public function testAnErrorOfAroundWritesThePlain500AndReportsItToTheWriteHook(): void
+    {
+        [$status, , $body, $lines] = self::escape('around-throws');
+
+        self::assertSame(500, $status);
+        self::assertSame('Internal Server Error', $body);
+        self::assertSame("written 500 true \"around boom\"\n", $lines);
+    }
+
+    /** HY-97: a response of `around` alone is written, and no hook of the application runs. */
+    public function testAroundAloneWritesItsResponse(): void
+    {
+        [$status, , $body, $lines] = self::escape('around-alone');
+
+        self::assertSame(418, $status);
+        self::assertSame('alone', $body);
+        self::assertSame("written 418 true null\n", $lines);
+    }
+
+    /** HY-97: `answer` runs the application for a changed copy of the request. */
+    public function testAroundAnswersTheApplicationThroughAnswer(): void
+    {
+        [$status, , , $lines] = self::escape('around-answer');
+
+        self::assertSame(200, $status);
+        self::assertSame("response 200\nwritten 200 true null\n", $lines);
     }
 
     /** HY-60: the plain 500 of an escaped error keeps the headers that the caller set before App::run, and no other header. */

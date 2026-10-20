@@ -45,19 +45,7 @@ final class Request
     /** Returns a copy that carries the flash values and the CSRF token of the session. */
     public function withSession(Flash $flash, string $csrfToken): self
     {
-        return new self(
-            $this->method,
-            $this->path,
-            $this->headers,
-            $this->query,
-            $this->body,
-            $flash->values,
-            $csrfToken,
-            $this->params,
-            $this->cookies,
-            $this->https,
-            $this->selection,
-        );
+        return $this->copy(['flash' => $flash->values, 'csrfToken' => $csrfToken]);
     }
 
     /**
@@ -67,37 +55,42 @@ final class Request
      */
     public function withRoute(string $path, array $params): self
     {
-        return new self(
-            $this->method,
-            $path,
-            $this->headers,
-            $this->query,
-            $this->body,
-            $this->flash,
-            $this->csrfToken,
-            $params,
-            $this->cookies,
-            $this->https,
-            $this->selection,
-        );
+        return $this->copy(['path' => $path, 'params' => $params]);
+    }
+
+    /** Returns a copy whose header of the name, compared without case as `header` reads it, has the value (HY-97). */
+    public function withHeader(string $name, string $value): self
+    {
+        return $this->copy(['headers' => [...$this->headers, strtolower($name) => $value]]);
     }
 
     /** Returns a copy that carries the value of the choice of the client rendering selection (HY-62). */
     public function withSelection(mixed $value): self
     {
-        return new self(
-            $this->method,
-            $this->path,
-            $this->headers,
-            $this->query,
-            $this->body,
-            $this->flash,
-            $this->csrfToken,
-            $this->params,
-            $this->cookies,
-            $this->https,
-            $value,
-        );
+        return $this->copy(['selection' => $value]);
+    }
+
+    /**
+     * Returns a copy of this request with the given constructor arguments replaced.
+     *
+     * @param array<string, mixed> $changes
+     */
+    private function copy(array $changes): self
+    {
+        return new self(...[
+            'method' => $this->method,
+            'path' => $this->path,
+            'headers' => $this->headers,
+            'query' => $this->query,
+            'body' => $this->body,
+            'flash' => $this->flash,
+            'csrfToken' => $this->csrfToken,
+            'params' => $this->params,
+            'cookies' => $this->cookies,
+            'https' => $this->https,
+            'selection' => $this->selection,
+            ...$changes,
+        ]);
     }
 
     /**

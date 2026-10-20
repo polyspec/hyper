@@ -16,6 +16,12 @@ final class Delivery
     /** The message of an escaped error (HY-43), or null. */
     public ?string $failure = null;
 
+    /** The request of the last call of `answer`, or null while `answer` has not been called (HY-67, HY-97). */
+    public ?Request $request = null;
+
+    /** The reply of the last call of `answer`, or null while `answer` has not been called (HY-67, HY-97). */
+    public ?Reply $reply = null;
+
     /** False when the write of the response cannot be complete, because headers were sent before a failure. */
     public bool $complete = true;
 }

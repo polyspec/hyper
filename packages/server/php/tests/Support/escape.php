@@ -22,6 +22,15 @@ $log = (string) getenv('HYPER_ESCAPE_LOG');
 if (getenv('HYPER_ESCAPE_HEADER') === '1') {
     header('X-Before: kept');
 }
+// HY-97: the request hook of the modes that test it.
+$around = match ($mode) {
+    'around-throws' => function (): never {
+        throw new RuntimeException('around boom');
+    },
+    'around-alone' => fn (): \Polyspec\Hyper\Response => \Polyspec\Hyper\Response::text(418, 'alone'),
+    'around-answer' => fn ($request, Closure $answer) => $answer($request->withHeader('X-Around', 'set')),
+    default => null,
+};
 $app = FrontController::open(
     $log,
     function (Reply $reply) use ($mode): array {
@@ -49,6 +58,7 @@ $app = FrontController::open(
             throw new RuntimeException('a response hook that throws');
         }
     },
+    around: $around,
 );
 $app->run();
 if ($mode === 'after-send-flushed') {

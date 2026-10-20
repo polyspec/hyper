@@ -15,6 +15,14 @@ use Polyspec\Hyper\Request;
 use Polyspec\Hyper\Tests\Support\FrontController;
 
 $log = (string) getenv('HYPER_DISCONNECT_LOG');
+// HY-97: with `alone` the request hook answers a large page itself, so the application never runs.
+$around = getenv('HYPER_DISCONNECT_AROUND') === 'alone'
+    ? function (): \Polyspec\Hyper\Response {
+        usleep(300_000);
+
+        return \Polyspec\Hyper\Response::text(200, str_repeat('x', 1 << 20));
+    }
+    : null;
 FrontController::open(
     $log,
     function (Reply $reply): array {
@@ -36,4 +44,5 @@ FrontController::open(
             FILE_APPEND,
         );
     },
+    around: $around,
 )->run();

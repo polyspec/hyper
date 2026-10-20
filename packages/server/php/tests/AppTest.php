@@ -23,7 +23,7 @@ use Polyspec\Hyper\Tests\Support\Json;
 /**
  * @phpstan-import-type Handlers from App
  * @phpstan-type Options array{handlers?: Handlers, basePath?: string, bodyLimit?: int, formTypes?: list<string>,
- *     responseLimit?: int, onResponse?: \Closure}
+ *     responseLimit?: int, onResponse?: \Closure, around?: \Closure}
  */
 final class AppTest extends TestCase
 {
@@ -1586,6 +1586,58 @@ final class AppTest extends TestCase
             200,
             $this->get('/items/plain', ['Accept' => 'application/json', 'If-None-Match' => '"other"'])->status,
         );
+    }
+
+    public function testAroundAnswersTheRequestThatItPassesAndSendsItsResponse(): void
+    {
+        // HY-97: around receives the request and `answer`, which runs the application for a request or a changed copy.
+        $calls = [];
+        $around = function (Request $request, \Closure $answer) use (&$calls): Response {
+            $calls[] = $request->method . ' ' . $request->path;
+
+            return $answer($request->withHeader('Accept', 'application/json'))->withHeader('X-Around', 'yes');
+        };
+        $response = $this->app(options: ['around' => $around])->handle(new Request('GET', '/items/7'), $this->session);
+
+        self::assertSame(200, $response->status);
+        self::assertSame('yes', $response->headers['X-Around']);
+        self::assertSame('application/json; charset=utf-8', $response->headers['Content-Type']);
+        self::assertSame('item', self::json($response)['route']);
+        self::assertSame(['GET /items/7'], $calls);
+    }
+
+    public function testAroundAloneRunsNoLoaderActionOrHook(): void
+    {
+        // HY-97: without a call of `answer` the session stays untouched and no hook of the application runs.
+        $reports = [];
+        $app = $this->app(options: [
+            'around' => fn (): Response => Response::text(418, 'alone'),
+            'onResponse' => self::reportTo($reports),
+        ]);
+        $response = $app->handle(new Request('GET', '/'), $this->session);
+
+        self::assertSame(418, $response->status);
+        self::assertSame('alone', $response->body);
+        self::assertNull($this->session->get('_hyper_csrf'));
+        self::assertSame([], $reports);
+        self::assertSame(0, $this->counter->actions);
+    }
+
+    public function testAnErrorOfAroundAndAValueThatIsNoResponseEscape(): void
+    {
+        // HY-97, HY-60: they are not answered by the application (HY-43); App::run writes the plain 500 for them.
+        $throws = $this->app(options: ['around' => function (): Response {
+            throw new \RuntimeException('around boom');
+        }]);
+        try {
+            $throws->handle(new Request('GET', '/'), $this->session);
+            self::fail('the error of around was answered');
+        } catch (\RuntimeException $error) {
+            self::assertSame('around boom', $error->getMessage());
+        }
+        $returns = $this->app(options: ['around' => fn (): string => 'not a response']);
+        $this->expectException(\UnexpectedValueException::class);
+        $returns->handle(new Request('GET', '/'), $this->session);
     }
 
     public function testHandlersMustMatchTheManifest(): void

@@ -48,6 +48,7 @@ final class App
         private readonly ?ClientRendering $client,
         private readonly ?\Closure $onDisconnect,
         private readonly ?\Closure $written,
+        private readonly ?\Closure $around,
         /** The bytes of the static shell of the client rendering (HY-62). */
         private readonly string $shell,
         string $program,
@@ -79,6 +80,9 @@ final class App
      *     run answers, with the response whose write started, the plain 500 of an escaped error, or null when the
      *     request ended before a response started; whether the write ended, the elapsed milliseconds and the failure of
      *     an escaped error (HY-99)
+     * @param ?\Closure(Request, \Closure(Request): Response): Response $around called once for every request with the
+     *     request and the function `answer`, which runs the application for a request; the server sends the response
+     *     that `around` returns (HY-97)
      */
     public static function open(
         string $manifest,
@@ -95,6 +99,7 @@ final class App
         ?ClientRendering $clientRendering = null,
         ?\Closure $onDisconnect = null,
         ?\Closure $written = null,
+        ?\Closure $around = null,
     ): self {
         if ($bodyLimit < 1) {
             throw new \InvalidArgumentException("body limit {$bodyLimit} is not a positive number of bytes");
@@ -171,6 +176,7 @@ final class App
             $clientRendering,
             $onDisconnect,
             $written,
+            $around,
             $shell,
             $program,
         );
@@ -217,7 +223,35 @@ final class App
      */
     public function handle(Request $request, SessionStore $store, ?int $started = null): Response
     {
-        return $this->respond($request, $store, $started ?? hrtime(true), new Reply());
+        return $this->through($request, $store, $started ?? hrtime(true), null);
+    }
+
+    /**
+     * Answers a request through the request hook `around` (HY-97) and the application: `around` is null or it receives
+     * the request and an `answer` function; each call of `answer` answers its request with a reply of its own, which
+     * `$delivery` keeps with that request for the disconnect hook (HY-67). An error of `around` and a return value that
+     * is no response are escaped errors (HY-60).
+     */
+    private function through(Request $request, SessionStore $store, int|float $started, ?Delivery $delivery): Response
+    {
+        $answer = function (Request $given) use ($store, $started, $delivery): Response {
+            $reply = new Reply();
+            if ($delivery !== null) {
+                $delivery->request = $given;
+                $delivery->reply = $reply;
+            }
+
+            return $this->respond($given, $store, $started, $reply);
+        };
+        if ($this->around === null) {
+            return $answer($request);
+        }
+        $response = ($this->around)($request, $answer);
+        if (!$response instanceof Response) {
+            throw new \UnexpectedValueException('around returned ' . get_debug_type($response) . ', not a Response');
+        }
+
+        return $response;
     }
 
     /**
@@ -887,7 +921,6 @@ final class App
         // HY-67: PHP reports a closed connection only at a failed write; with ignore_user_abort off it ends the
         // script there, and the shutdown function calls the disconnect hook.
         ignore_user_abort(false);
-        $reply = new Reply();
         $delivery = new Delivery();
         // HY-60: an uncaught exception and a fatal error of the request write the plain 500 of hyper, the same as the
         // other servers, instead of the web server's 500. The request is known once it is built.
@@ -923,13 +956,14 @@ final class App
         }
         if ($this->onDisconnect !== null) {
             $hook = $this->onDisconnect;
-            register_shutdown_function(static function () use ($hook, $request, $started, $reply): void {
-                if (connection_aborted() === 1) {
-                    $hook($request, (hrtime(true) - $started) / 1e6, $reply);
+            register_shutdown_function(static function () use ($hook, $started, $delivery): void {
+                // HY-97: the request and the reply of the last call of `answer`; none when `around` never called it.
+                if ($delivery->request !== null && $delivery->reply !== null && connection_aborted() === 1) {
+                    $hook($delivery->request, (hrtime(true) - $started) / 1e6, $delivery->reply);
                 }
             });
         }
-        $response = $this->respond($request, new NativeSession($this->https), $started, $reply);
+        $response = $this->through($request, new NativeSession($this->https), $started, $delivery);
         $delivery->response = $response;
         $response->send();
     }
