@@ -3,7 +3,7 @@
 import json
 import unittest
 
-from contracts import add_cases, file
+from .contracts import add_cases, file
 from polyspec.hyper.kept import apply, select
 
 

@@ -3,7 +3,7 @@
 import math
 import unittest
 
-from contracts import add_cases, file
+from .contracts import add_cases, file
 from polyspec.hyper.json_codec import JsonDecodeError, decode, encode, in_data_model
 
 

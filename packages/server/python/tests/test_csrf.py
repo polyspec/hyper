@@ -2,7 +2,7 @@
 # cases of contracts/csrf.json.
 import unittest
 
-from contracts import add_cases, file
+from .contracts import add_cases, file
 from polyspec.hyper.csrf import mask, masked, verify
 
 

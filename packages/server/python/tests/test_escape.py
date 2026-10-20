@@ -4,7 +4,7 @@ import contextlib
 import io
 import unittest
 
-from transport import TransportCase, get_once, record_all
+from .transport import TransportCase, get_once, record_all
 from polyspec.hyper.reply import Reply
 from polyspec.hyper.response import Response
 from polyspec.hyper.server import create_server

@@ -22,3 +22,4 @@
 | H25.16-1 | The two PHP tests with rows data build their application once | packages/server/php/tests/AppTest.php | `var/tools/bin/node node_modules/@polyspec/kit/dist/run-tests.mjs phpunit --cwd packages/server/php -- --exclude-group native tests/AppTest.php` | [o] |
 | H25.17 | Every tracked path has an owner in config/owner-checks.json | config/owner-checks.json | `make owner-validate` | [o] |
 | H25.18 | The copies of kit match the kit with K277 | PRINCIPLES.md and PRINCIPLES.ko.md | `make kit-check` | [o] |
+| H25.19 | The Python tests load their helpers with a relative import under the unittest of a test file | packages/server/python/tests/__init__.py, render/__init__.py, package/__init__.py, run.py and the imports of the tests | `packages/server/python/.venv/bin/python -m unittest packages/server/python/tests/test_csrf.py`, `packages/server/python/.venv/bin/python packages/server/python/tests/run.py` | [o] |

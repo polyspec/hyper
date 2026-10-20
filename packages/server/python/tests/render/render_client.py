@@ -5,7 +5,7 @@ import unittest
 from pathlib import Path
 from urllib.parse import urlencode
 
-from fixture_app import FIXTURES, PROGRAM
+from .fixture_app import FIXTURES, PROGRAM
 from polyspec.hyper.app import App
 from polyspec.hyper.client import Choice, ClientRendering
 from polyspec.hyper.csrf import masked

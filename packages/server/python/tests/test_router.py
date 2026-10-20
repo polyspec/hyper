@@ -2,7 +2,7 @@
 # router pass the same cases. Each case is a test method test_<id> that the parity check reads by its id (S6).
 import unittest
 
-from contracts import add_cases, file
+from .contracts import add_cases, file
 from polyspec.hyper.router import Router, strip_base_path
 
 

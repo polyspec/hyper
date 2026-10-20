@@ -3,7 +3,7 @@
 # body is text whose characters are its bytes.
 import unittest
 
-from contracts import add_cases, file
+from .contracts import add_cases, file
 from polyspec.hyper.fields import Fields
 
 

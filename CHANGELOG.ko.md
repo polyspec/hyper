@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 82e7b8b325a3bdf24bbb1ca0f05411b11f6c445d33ec3337fcb6fd00ba94b0c2 -->
+<!-- source-sha256: 689f60929a455997a6870d47546915bc7adfe41eba84ae48e6c933e6bb7d5862 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H25.19: Python test는 `contracts`, `transport`, `fixture_app`을 상대 import로 불러온다. `tests`, `tests/render`, `tests/package`는 package이고, parity 검사가 test 파일을 `python -m unittest`에 지정하는 방식과 같게 `run.py`는 `tests`의 상위 디렉터리를 top level로 삼아 찾는다. Red: checkout root에서 `python -m unittest packages/server/python/tests/test_csrf.py`가 `contracts` import 오류로 실패했다(H25.13이 helper를 이웃 module로 옮겼다). Green: 같은 명령이 test 15개를 OK로 실행하고, `run.py`가 test 286개, render test 36개, package test 2개를 OK로 실행하며, `make lint-python`과 `make duplication-check`이 통과한다 (H25.19)
 - H25.18: 사본 `PRINCIPLES.md`와 `PRINCIPLES.ko.md`는 설치된 kit에서 `make kit-sync`로 쓴다(S6에 directory suite의 case.json requirement가 더해졌다. K277). Red: `make kit-check` exit 2, `PRINCIPLES.ko.md: differs from node_modules/@polyspec/kit/PRINCIPLES.ko.md`(지적 2건). Green: `make kit-check` exit 0 (H25.18)
 - H25.17: `config/owner-checks.json`은 owner가 없던 경로 4개를 소유한다. `config/parity.json`은 `parity-declarations-check`가, mise의 vulture tool의 lock 파일인 `.mise/locks/**`는 `toolchain-check`가, `.claude/settings.json`은 이를 읽는 유일한 검사인 `rules-check`(이 파일을 이름으로 적은 규칙이 있어야 한다고 요구한다)가 확인한다. Red: `make owner-validate` exit 2, 경로 4개가 owner와 맞지 않았다. Green: `make owner-validate` exit 0, `owns every tracked path` (H25.17)
 - H25.16-1: `AppTest`는 shared 값과 rows data를 가진 test의 응용 프로그램을 `appWithRows`로 만든다. Red: `make duplication-check` exit 2, H25.16의 새 test와 `testServerSendsOnlyTheReadPaths` 사이에 clone 1개. Green: `make duplication-check` exit 0, `AppTest`의 test 64개 통과 (H25.16-1)

@@ -3,7 +3,7 @@
 # case is a test method test_<id> that the parity check reads by its id (S6).
 import unittest
 
-from contracts import add_cases, file
+from .contracts import add_cases, file
 from polyspec.hyper.json_codec import encode
 from polyspec.hyper.reads import Reads
 

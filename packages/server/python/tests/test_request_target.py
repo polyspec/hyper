@@ -5,7 +5,7 @@ import asyncio
 import io
 from urllib.parse import unquote
 
-from transport import TransportCase, get_once
+from .transport import TransportCase, get_once
 from polyspec.hyper.asgi import create_asgi
 from polyspec.hyper.reply import Reply
 from polyspec.hyper.response import Response

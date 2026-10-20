@@ -8,7 +8,7 @@ import io
 import threading
 from pathlib import Path
 
-from transport import TransportCase, record_ended, record_status
+from .transport import TransportCase, record_ended, record_status
 from polyspec.hyper.asgi import create_asgi
 from polyspec.hyper.response import Response
 

@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-kit-standard -->
-<!-- source-sha256: 3b6d86c2548dc3c8e6f1313073069c4df94b3a14695200677203a0b523775b87 -->
+<!-- source-sha256: 056d965de6e3885fb2ac23b3f40f19cd16f5f0da7fad5104227fb5bf738bbc06 -->
 # kit 표준 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -23,3 +23,4 @@
 | H25.16-1 | rows data를 쓰는 PHP test 두 개는 응용 프로그램을 한 곳에서 만든다 | packages/server/php/tests/AppTest.php | `var/tools/bin/node node_modules/@polyspec/kit/dist/run-tests.mjs phpunit --cwd packages/server/php -- --exclude-group native tests/AppTest.php` | [o] |
 | H25.17 | 추적하는 모든 경로는 config/owner-checks.json에 owner를 가진다 | config/owner-checks.json | `make owner-validate` | [o] |
 | H25.18 | kit 사본이 K277을 포함한 kit과 일치한다 | PRINCIPLES.md and PRINCIPLES.ko.md | `make kit-check` | [o] |
+| H25.19 | Python test는 test 파일을 지정한 unittest에서도 helper를 상대 import로 불러온다 | packages/server/python/tests/__init__.py, render/__init__.py, package/__init__.py, run.py and the imports of the tests | `packages/server/python/.venv/bin/python -m unittest packages/server/python/tests/test_csrf.py`, `packages/server/python/.venv/bin/python packages/server/python/tests/run.py` | [o] |

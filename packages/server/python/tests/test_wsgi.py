@@ -6,7 +6,7 @@ import contextlib
 import io
 from pathlib import Path
 
-from transport import (
+from .transport import (
     Application,
     TransportCase,
     record_ended,
