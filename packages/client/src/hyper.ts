@@ -6,6 +6,7 @@ import { stripBasePath } from './router.js';
 import { routeTemplates } from './templates.js';
 import { keptPaths, type RouteDeclaration } from './manifest.js';
 import { browserStorage, childOf, valueToJson, type KeepStorage } from './keep.js';
+import { DEFAULT_WATCHDOG_MS, StreamSubscription, type StreamListener, type SubscribeOptions, type Subscription } from './stream.js';
 
 // The htmx operations that the browser code uses. E is the element of a region: a DOM Element in the browser, where
 // htmx itself is the HtmxApi, and a RegionElement of a test. find reads the element of a region by its id selector;
@@ -139,6 +140,16 @@ export class Hyper<E extends RegionElement = Element> {
     this.request = options.fetch ?? ((input, init) => fetch(input, init));
     this.page = options.document ?? browserDocument(htmx);
     this.currentUrl = options.currentUrl ?? (() => window.location.href);
+  }
+
+  // Opens the event stream of `url` with the request function of the client and returns its subscription (HY-108).
+  // A watchdog of the stream fails it after `watchdogMs` without a byte (HY-111), and the stream reconnects (HY-110).
+  subscribe(url: string, listener: StreamListener, options: SubscribeOptions = {}): Subscription {
+    const watchdogMs = options.watchdogMs ?? DEFAULT_WATCHDOG_MS;
+    if (!Number.isFinite(watchdogMs) || watchdogMs <= 0) throw new RangeError(`watchdogMs must be a positive finite number, not ${watchdogMs}`);
+    const stream = new StreamSubscription(url, this.request, listener, watchdogMs);
+    stream.start();
+    return stream;
   }
 
   // Holds the data of a rendered response: its route, environment and shared data and the data of the route regions

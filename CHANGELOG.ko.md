@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: fff2f75d4b9efebfa243ec854074b87d25c8895e01519add380f4f65d24e07dd -->
+<!-- source-sha256: 12487d0ef6ffe7b9478025777258c6dfaa56aa73c0e345c1a7416f431f9cd382 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H26.1-1: TypeScript 클라이언트는 구독 stream을 eventsource-parser 4.1.2(정확한 버전)로 읽고, Last-Event-ID와 서버의 retry 지연으로 재연결한다(HY-108부터 HY-110까지). red: vitest가 subscribe is not a function을 보고했고, green: 테스트가 통과한다. (H26.1-1)
 - H26.2: docs/spec/protocol.md는 multipart 요청의 file part에 이름, 파일 이름, content type, bytes를 `files()`와 `file()`로 준다(HY-113). 또한 기본값 8 MiB의 파일 제한을 정한다(HY-114). 구현 row H26.2-1부터 H26.2-4까지를 등록했다. 원인: HY-57은 filename이 있는 part가 file이라고 정하지만, 애플리케이션에 그 file을 주는 규칙이 없었다. contracts/fields.json 스키마에는 기대 file을 적는 필드가 없으므로, contract case는 스키마 변경을 기다린다(H26.2-4). 검증: make docs-check가 통과한다. (H26.2)
 - H26.1: docs/spec/protocol.md는 TypeScript 클라이언트의 클라이언트 stream 구독을 명시한다(HY-108부터 HY-112까지). WHATWG 표준의 event stream을 eventsource-parser로 읽고, Last-Event-ID와 retry 지연으로 재연결하며, 기본값 30000 ms의 byte watchdog을 두고, 클라이언트의 dispose를 정한다. 구현 row H26.1-1부터 H26.1-3까지를 등록했다. 원인: 클라이언트에는 stream reader와 dispose가 없고, 영역 중단 코드(packages/client/src/hyper.ts:446-456)는 영역 요청만 덮는다. 이 명세는 구현 row가 따를 규칙을 정한다. 검증: make docs-check가 통과한다. (H26.1)
 - H25.65: 영문 CHANGELOG.md와 kit-standard 체크리스트의 한국어 쌍이 영문 원문의 source-sha256을 다시 기록한다. red: make docs-check가 af1b700 이후 두 marker가 낡았다고 보고했고, green: 통과한다. (H25.65)
