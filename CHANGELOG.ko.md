@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 345bf6ec95de9c8a72b3d1443b6ee49ca0c360b18fac567105e3b63817822e6e -->
+<!-- source-sha256: 856940d58a0e3f0221c0898cb4f3d67f94e3ad7a8e4c6c21b8cbfe3f91e779d6 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H26.5: 항목을 마쳤다. 이를 닫는 검사는 H26.4 커밋에서 통과하는 검사이며, H26.4와 함께 들어간다. (H26.5)
 - H26.5: 항목을 마쳤다. 이름 바꿈과 인용은 규칙을 HYC로 바꾼 커밋의 항목이며, parity 검사는 H26.4와 함께 통과한다. (H26.5)
 - H26.5: 클라이언트 stream 규칙은 HYC 규칙이다. HY-108부터 HY-112까지는 protocol.md에서 HYC-17부터 HYC-21이 되었다. 이 규칙들은 packages/client의 TypeScript 클라이언트만 규정하므로(HR-98) 서버 parity 선언이 다룰 수 없다. packages/client/src의 인용과 H26.1-1부터 H26.1-3까지의 row는 새 id를 쓴다. 이 파일의 앞선 줄에서 HY-108부터 HY-112까지를 말하는 곳은 HYC-17부터 HYC-21을 뜻한다. red: `make parity-declarations-check`가 HY-108부터 HY-112까지를 추적되지 않음(R13)으로 지적했다. green: 그 다섯 지적이 없어졌다. (H26.5)
 - H26.4: config/parity.json은 HY-113과 HY-114를 feature unit file-parts와 file-limit에 연결하고, 각각을 검사하는 PHP, Python, TypeScript 테스트를 바인딩한다. FilePartsTest.php, test_files.py, files.test.ts가 선언된다. red: `make parity-declarations-check`가 지적 10건(R5 3건, R13 7건)으로 exit 2였다. 지금은 지적 5건이며 모두 HY-108부터 HY-112까지의 R13이다. 클라이언트 스트림이고 parity 구현이 없다. (H26.4)
