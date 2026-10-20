@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: a15f9bc068e7d7e2a06863ef7a74c95adf7bf8194835efcd63f11db73ddaf1f3 -->
+<!-- source-sha256: cfcbb6beab8dddc6ee51a5cad507a52a5d71c57a396067bdbf16a4e2b772140d -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -231,3 +231,4 @@
 | H24.1 | 같은 session 파일을 동시에 쓰는 두 process가 실패하지 않는다(HY-104). session을 쓸 때마다 자기만의 임시 파일을 배타적으로 만들고 rename 한 번으로 게시한다. Python 서버는 `os.replace`(`tempfile.mkstemp`)를, Node 서버는 `renameSync`(플래그 `wx`의 `<id>.<uuid>.tmp`)를 쓴다. Red: 변경 전 코드에서 `packages/server/python/tests/test_file_sessions.py`는 두 process가 각각 400번 쓰는 동안 181, 198, 187, 208번의 쓰기가 `FileNotFoundError: ... .tmp -> ...`로 실패했고, `packages/server/ts/tests/sessions-race.test.ts`는 `ENOENT: no such file or directory, rename ... .tmp`로 실패했다. Green: 변경 후 두 테스트가 통과하고, owner 검사 `make test-python`과 `make test-node`가 통과한다. | — | `make test-python`, `make test-node`, `make documents-check` | [o] |
 | H24.2 | region 응답의 client fetch는 응답의 렌더링 오류를 버리지 않고 그 오류로 거절된다. htmx swap 전에 template을 불러오는 사전 렌더링이 오류를 잡아 버리지 않는다. 변경 전 `vitest run packages/client/tests/hyper.test.ts -t "render errors of a region response"`가 `AssertionError: expected 'null' to contain 'has no region content'`를 출력했다(fetch가 정상으로 끝남). 변경 후 client hyper test가 `Tests 148 passed (148)`를 출력한다. | — | `vitest run packages/client/tests/hyper.test.ts` | [o] |
 | H24.3 | 나중 region 요청이 대체한 region 요청은 나중 요청이 시작될 때 abort되고, abort 전에 도착한 응답도 교체하지 않는다(HY-23). 오래된 탐색이 새 탐색의 page와 title을 더는 덮어쓰지 못한다. 변경 전 `vitest run packages/client/tests/hyper.test.ts -t "superseded region requests"`가 `AssertionError: expected undefined to be false`를 출력했다(오래된 응답이 교체됨). 변경 후 client test가 `Tests 474 passed (474)`를 출력한다. | — | `vitest run packages/client/tests` | [o] |
+| H26.1 | 소비자(limepie)를 위한 클라이언트 스트림 구독을 명세한다: options.fetch 위의 server-sent events 판독기, 마지막 커서를 가지고 다시 연결하기, 조용한 스트림을 실패시키는 바이트 감시, 모든 구독과 대기 중인 요청을 정리하는 클라이언트 dispose. 그다음 구현과 테스트 항목을 등록한다. 원인: 클라이언트에 스트림 판독기와 dispose가 없고, 영역 중단(packages/client/src/hyper.ts:447-449)은 영역 요청만 다룬다 | docs/spec/protocol.md (+ko), docs/plans/execution | `make docs-check` | [ ] |
