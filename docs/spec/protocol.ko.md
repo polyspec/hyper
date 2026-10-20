@@ -1,5 +1,5 @@
 <!-- doc-id: protocol -->
-<!-- source-sha256: 31e204a24496c68c71298d802e4bde25e066a1365025f5a60f3d95316ed79a88 -->
+<!-- source-sha256: 92ce7954ecda954722541c28a5d07a5d595d6884550a9b0ecf71c4c28ca2368d -->
 # 영역 프로토콜
 
 [English](protocol.md).
@@ -232,6 +232,14 @@
   - 요소나 그 안의 요소를 클릭하면, `id`가 보관한 라우트의, 데이터를 보관하지 않은 동안에는 현재 페이지 라우트의(HYC-7) 라우트 영역 이름인 가장 가까운 상위 요소의 보관 데이터에서 모든 대입을 실행하고 그 영역을 한 번 렌더한다.
   - 대입할 값은 템플릿이 계산한다. 예: `hy-set="service.close.flag={? service.close.flag}0{:}1{/}"`.
   - `hy-set`은 JavaScript가 있을 때만 동작한다.
+
+## 클라이언트 stream 구독
+
+- **HY-108** `packages/client`의 TypeScript 클라이언트 `Hyper`는 `subscribe(url, listener, options)`를 제공한다. 이 함수는 `url`의 event stream을 열고 `close()`를 가진 구독을 돌려준다. 요청은 클라이언트의 `options.fetch`(HyperOptions의 `fetch`, 옵션이 없으면 전역 `fetch`)로 `GET` 메서드, 헤더 `Accept: text/event-stream`, `credentials: 'same-origin'`을 써서 보내며, 이는 HYC-7의 문서 요청과 같다. listener는 `onEvent(event)`와 `onError(error)`를 가진다. `onEvent`는 각 event를 `event`, `data`, `id`와 함께 받고(HY-109), `onError`는 HY-111의 각 실패를 받는다. 옵션은 `watchdogMs`다(HY-111). 클라이언트가 dispose되었으면(HY-112) `subscribe`는 throw하며, `watchdogMs`가 양의 유한한 수가 아니어도 throw한다. 이 구독은 TypeScript 클라이언트만 가진다. PHP, Python, Node 서버에는 클라이언트가 없고, 이 저장소의 다른 클라이언트에는 stream이 없다.
+- **HY-109** 응답 본문은 WHATWG HTML의 "server-sent events" event stream으로 읽는다. 필드는 `data`, `event`, `id`, `retry`이고, 줄은 CRLF, LF 또는 CR로 끝나며, `:`로 시작하는 줄은 주석이고, 빈 줄마다 event를 발생시킨다. event의 `event`는 그 `event` 필드이고 필드가 없으면 `message`이며, 그 `data`는 event의 `data` 필드들을 LF로 이어 붙인 값이다. 구현은 이 stream을 npm 패키지 `eventsource-parser`로 파싱하며, 손으로 쓴 파서로 파싱하지 않는다. 줄 끝, byte order mark, 마지막 줄이 완성되지 않은 경우는 표준이 정하고 그 유지보수되는 파서가 이미 구현하고 있다(S1). 이 규칙의 TypeScript 클라이언트에서 이 패키지가 선택이며, 정확한 버전과 그 이유는 HY-108의 구현 row가 끝날 때 `docs/operations/dependencies.md`에 기록한다. 파서가 보고한 파싱 실패는 HY-111의 오류다.
+- **HY-110** 구독은 표준이 정한 대로 마지막 event ID와 재연결 지연을 보관한다. 마지막 event ID는 `id` 필드를 가진 마지막 event의 `id`이며 재연결 사이에도 보관한다. 재연결 지연은 마지막 `retry` 필드의 값(밀리초)이고, 서버가 보내지 않았으면 1000이다. stream이 끝나거나, HY-111의 오류로 실패하거나, 2xx가 아닌 상태로 응답하면, 클라이언트는 실패를 `onError`에 보고한 뒤 재연결 지연만큼 기다렸다가 다시 연결한다. 재연결 요청은 마지막 event ID가 비어 있지 않을 때 헤더 `Last-Event-ID`에 그 값을 담으며, 다른 커서는 보내지 않는다. 즉 stream의 위치를 나타내는 query parameter나 다른 헤더를 두지 않는다. 1000 ms 기본값은 서버가 지연을 정하지 않은 클라이언트의 재연결 빈도를 제한한다. 클라이언트는 `close()` 또는 `dispose()`(HY-112)가 호출될 때까지 재연결한다.
+- **HY-111** 구독에는 byte watchdog이 있다. 본문의 byte가 `watchdogMs` 밀리초 동안 하나도 도착하지 않으면, stream은 원인에 URL과 시간이 담긴 오류로 실패하고, 클라이언트는 이어서 재연결한다(HY-110). watchdog은 byte가 도착할 때마다 다시 시작하며, event가 아니라 byte를 센다. 따라서 완성된 event 없이 byte만 보내는 stream은 실패하지 않는다. `watchdogMs`의 기본값은 30000이다. 이렇게 하면 침묵하는 연결은 일반적인 역방향 proxy가 기본으로 적용하는 60초 idle timeout보다 먼저 실패하고, 그 전에 proxy가 클라이언트에 알리지 않고 연결을 닫는 일을 피한다. 구독의 모든 실패는 원인과 함께 `onError`에 보고한다. 여기에는 watchdog timeout, 2xx가 아닌 응답(상태와 URL을 담음), 네트워크 실패, HY-109의 파싱 실패가 포함된다. 어떤 실패도 조용히 버리지 않는다(P8). close와 dispose는 실패가 아니며 아무것도 보고하지 않는다.
+- **HY-112** 클라이언트의 `dispose()`는 모든 구독과 모든 대기 요청을 중단한다. 각 구독에 대해 요청을 중단하고, watchdog timer와 재연결 timer를 지우며, 구독을 닫힘으로 표시한다. 클라이언트의 모든 대기 중인 영역 요청과 문서 요청을 중단한다(HYC-3, HYC-7). `dispose()`가 반환된 뒤에는 클라이언트에 실행 중인 timer가 없고 listener를 호출하지 않으며, 나중에 도착하는 응답은 버린다. `dispose()`는 여러 번 호출할 수 있고, 첫 호출 뒤의 호출은 효과가 없다. `dispose()` 뒤의 `subscribe`는 throw하여, 클라이언트가 dispose된 뒤에 구독이 시작되지 않게 한다.
 
 ## 템플릿 전달
 

@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- H26.1: docs/spec/protocol.md specifies the client stream subscription of the TypeScript client (HY-108 to HY-112): the event stream of the WHATWG standard read with eventsource-parser, reconnection with Last-Event-ID and the retry delay, a byte watchdog with a 30000 ms default, and dispose of the client; the implementation rows H26.1-1 to H26.1-3 are registered. Cause: the client has no stream reader and no dispose, and its region aborts (packages/client/src/hyper.ts:446-456) cover only region requests; the spec states the rules that the implementation rows will meet. Verification: make docs-check passes. (H26.1)
 - H25.65: The Korean twins of CHANGELOG.md and of the kit-standard checklist carry the source-sha256 of their English files again; red: make docs-check reported both stamps stale since af1b700, green: it passes. (H25.65)
 - H25.61: config/owner-checks.json gives clippy.toml, the kit copy of Rust lint settings, the owner rule of the kit copies; red: owner-validate reported clippy.toml as a path that matches no owner, green: it reports every tracked path owned. (H25.61)
 - H25.62: The render fallback of packages/server/python/src/polyspec/hyper/app.py keeps its stated need (HY-38) as a comment and drops the noqa BLE001, because ruff does not flag its handler, which re-raises when no kept value is given; red: lint-python reported RUF100 for the unused noqa at app.py:598, green: ruff check passes. (H25.62)
