@@ -579,7 +579,7 @@ class App:
                 kept,
                 embed,
             )
-        except Exception:  # noqa: BLE001 - a region that renders with no kept value renders with its loader data
+        except Exception:  # noqa: BLE001 - HY-38: kept values come from the client and may break a template; without them the error is raised again
             if kept == {}:
                 raise
         page = self.manifest.page.name
@@ -599,7 +599,7 @@ class App:
                 self.renderer.alone(
                     templates[name], bound_shared, applied[name], define
                 )
-            except Exception:  # noqa: BLE001 - the region renders with its loader data instead
+            except Exception:  # noqa: BLE001 - HY-38: the region renders with its loader data, and a failure there is raised by the next render
                 applied[name] = self.renderer.bind(data[name])
                 del kept[name]
         return self._render_document(

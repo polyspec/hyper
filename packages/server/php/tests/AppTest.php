@@ -564,6 +564,31 @@ final class AppTest extends TestCase
         self::assertSame(['rows' => ['mode' => 'b', 'tags' => [1]]], $json['kept']);
     }
 
+    public function testRenderFailureOfTheLoaderDataIsNotHiddenByKeptValues(): void
+    {
+        // HY-38, HY-43: the loader data of the region itself breaks the template (a tag list holds a number), so
+        // dropping the kept values does not help and rendering fails with the plain 500.
+        $app = $this->app(options: ['handlers' => [
+            'shared' => fn (): array => ['site' => 'x'],
+            'routes' => [
+                'add' => ['post' => fn (): Result => Result::redirect('/')],
+                'list' => ['regions' => ['rows' => fn (): array => [
+                    'items' => ['a'],
+                    'open' => false,
+                    'mode' => 'a',
+                    'view' => 'x',
+                    'filter' => ['a' => 1],
+                    'tags' => [1],
+                ]]],
+            ],
+        ]]);
+        $request = new Request('GET', '/list', [], 'embed=1', cookies: ['hy-keep' => '{"rows":{"mode":"b"}}']);
+        $response = $app->handle($request, $this->session);
+
+        self::assertSame(500, $response->status);
+        self::assertSame('Internal Server Error', $response->body);
+    }
+
     public function testManifestRejectsInvalidKeep(): void
     {
         // HY-37, HY-40

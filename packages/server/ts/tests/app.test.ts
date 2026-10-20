@@ -118,6 +118,15 @@ describe('App', () => {
     expect(json(await fixture.get('/list', { ...JSON_REGION, ...headers })).kept).toEqual({ rows: { mode: 'b', tags: [1] } });
   });
 
+  it('does not hide a render failure of the loader data behind kept values (HY-38, HY-43)', async () => {
+    // The loader data of the region itself breaks the template (a tag list holds a number), so dropping the kept values
+    // does not help and rendering fails with the plain 500.
+    const broken: Handlers<Services> = { ...handlers(), routes: { ...handlers().routes, list: { regions: { rows: () => ({ items: ['a'], open: false, mode: 'a', view: 'x', filter: { a: 1 }, tags: [1] }) } } } };
+    const response = await new Fixture().handle({ target: '/list?embed=1', headers: cookie('hy-keep', '{"rows":{"mode":"b"}}') }, { handlers: broken });
+    expect(response.status).toBe(500);
+    expect(response.body).toBe('Internal Server Error');
+  });
+
   it('rejects manifests with invalid keep declarations (HY-37, HY-40)', async () => {
     for (const name of ['keep-kind', 'keep-page', 'keep-manifest', 'keep-reserved', 'uses-topic']) {
       await expect(App.open({ manifest: `${FIXTURES}invalid/${name}.json`, templates: TEMPLATES, handlers: {}, timezone: 'Z' }), name).rejects.toThrow();

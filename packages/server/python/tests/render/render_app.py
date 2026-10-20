@@ -67,6 +67,32 @@ def opened_with(shared_loader) -> App:
     )
 
 
+def rows_app(tags: list) -> App:
+    """The application whose region `rows` has the data of the fixtures of the PHP tests with the given `tags`."""
+    loaded = handlers()
+
+    def rows(request: Request, reply: Reply) -> dict:
+        # HY-92: the query embed=1 makes the document embed its data.
+        if request.query_int("embed", 0) == 1:
+            reply.embed_data()
+        return {
+            "items": ["a<"],
+            "open": False,
+            "mode": "a",
+            "view": "x",
+            "filter": {"a": 1},
+            "tags": tags,
+        }
+
+    loaded["routes"]["list"]["regions"]["rows"] = rows
+    return App.open(
+        manifest=str(FIXTURES / "app.json"),
+        program=str(PROGRAM),
+        handlers=loaded,
+        timezone="+09:00",
+    )
+
+
 def get(
     path: str, headers: dict | None = None, query: str = "", body: bytes = b""
 ) -> Request:
@@ -297,6 +323,30 @@ class KeepTest(unittest.TestCase):
         answered = json.loads(response.body)
         self.assertEqual({"open": True}, answered["kept"]["rows"])
         self.assertEqual(True, answered["kept"]["rows"]["open"])
+
+    def test_a_region_whose_kept_values_break_rendering_renders_without_them(
+        self,
+    ) -> None:
+        # HY-38: a conforming value can still fail in the template; the document drops the kept values of that region.
+        cookies = {"hy-keep": '{"rows":{"mode":"b","tags":[1]}}'}
+        document = rows_app(tags=[]).handle(
+            Request("GET", "/list", {}, "embed=1", cookies=cookies), ArraySession()
+        )
+        self.assertEqual(200, document.status)
+        self.assertIn("<li>a&lt;</li>", document.body)
+        self.assertIn('"kept":{}', document.body)
+
+    def test_a_render_failure_of_the_loader_data_is_not_hidden_by_kept_values(
+        self,
+    ) -> None:
+        # HY-38, HY-43: the loader data breaks the template itself, so dropping the kept values does not help and
+        # rendering fails with the plain 500.
+        cookies = {"hy-keep": '{"rows":{"mode":"b"}}'}
+        response = rows_app(tags=[1]).handle(
+            Request("GET", "/list", {}, "embed=1", cookies=cookies), ArraySession()
+        )
+        self.assertEqual(500, response.status)
+        self.assertEqual("Internal Server Error", response.body)
 
     def test_the_keep_endpoint_stores_a_server_value(self) -> None:
         store = ArraySession()
