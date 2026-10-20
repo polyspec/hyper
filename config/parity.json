@@ -4559,6 +4559,54 @@
           "symbol": "@polyspec/hyper-server!SessionStore:interface"
         }
       ]
+    },
+    {
+      "id": "file-parts",
+      "kind": "feature",
+      "bindings": [
+        {
+          "implementation": "php",
+          "test": "packages/server/php/tests/FilePartsTest.php",
+          "id": "FilePartsTest::testFilePartsOfTheContractCasesAreTheFilesOfTheRequest"
+        },
+        {
+          "implementation": "python",
+          "test": "packages/server/python/tests/test_files.py",
+          "id": "test_file_parts_of_the_contract_cases_are_the_files_of_the_request"
+        },
+        {
+          "implementation": "ts",
+          "test": "packages/server/ts/tests/files.test.ts",
+          "id": "file parts of the contract case %s are its files"
+        }
+      ],
+      "requirements": [
+        "HY-113"
+      ]
+    },
+    {
+      "id": "file-limit",
+      "kind": "feature",
+      "bindings": [
+        {
+          "implementation": "php",
+          "test": "packages/server/php/tests/AppTest.php",
+          "id": "AppTest::testFilePartsOverTheFileLimitAreRefusedBeforeTheAction"
+        },
+        {
+          "implementation": "python",
+          "test": "packages/server/python/tests/test_files.py",
+          "id": "test_file_parts_over_the_file_limit_are_refused_before_the_action"
+        },
+        {
+          "implementation": "ts",
+          "test": "packages/server/ts/tests/app.test.ts",
+          "id": "App › file parts over the file limit are refused before the action (HY-114)"
+        }
+      ],
+      "requirements": [
+        "HY-114"
+      ]
     }
   ],
   "requirements": {
