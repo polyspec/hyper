@@ -8,7 +8,9 @@ from .contracts import file
 from .render.render_requests import FixtureTest
 
 MULTIPART = {"Content-Type": "multipart/form-data; boundary=x"}
-FORM_TYPES = {"form_types": ["application/x-www-form-urlencoded", "multipart/form-data"]}
+FORM_TYPES = {
+    "form_types": ["application/x-www-form-urlencoded", "multipart/form-data"]
+}
 
 
 def upload(token: str, content: bytes, filename: bytes = b"a.txt") -> bytes:
@@ -25,7 +27,9 @@ def upload(token: str, content: bytes, filename: bytes = b"a.txt") -> bytes:
 
 
 class FileParts(FixtureTest):
-    def test_file_parts_of_the_contract_cases_are_the_files_of_the_request(self) -> None:
+    def test_file_parts_of_the_contract_cases_are_the_files_of_the_request(
+        self,
+    ) -> None:
         for case in file("fields.json")["multipart"]:
             if "files" not in case:
                 continue
@@ -48,18 +52,33 @@ class FileParts(FixtureTest):
         # HY-114: 413 with the text of HY-59, and no action runs, when a file is larger than the file limit.
         token = self.token()
         large = upload(token, b"a" * 40)
-        refused = self.send("POST", "/add", MULTIPART, large, file_limit=32, **FORM_TYPES)
+        refused = self.send(
+            "POST", "/add", MULTIPART, large, file_limit=32, **FORM_TYPES
+        )
         self.assertEqual(413, refused.status)
         self.assertEqual("Content Too Large", refused.body)
         self.assertEqual(0, self.counter.actions)
-        accepted = self.send("POST", "/add", MULTIPART, upload(token, b"a" * 32), file_limit=32, **FORM_TYPES)
+        accepted = self.send(
+            "POST",
+            "/add",
+            MULTIPART,
+            upload(token, b"a" * 32),
+            file_limit=32,
+            **FORM_TYPES,
+        )
         self.assertEqual(303, accepted.status)
         self.assertEqual(1, self.counter.actions)
 
     def test_file_parts_whose_name_is_not_utf_8_get_400(self) -> None:
         # HY-42 and HY-113: a file name that is not UTF-8 is refused like a name that is not UTF-8.
         token = self.token()
-        response = self.send("POST", "/add", MULTIPART, upload(token, b"a", filename=b"\xff.txt"), **FORM_TYPES)
+        response = self.send(
+            "POST",
+            "/add",
+            MULTIPART,
+            upload(token, b"a", filename=b"\xff.txt"),
+            **FORM_TYPES,
+        )
         self.assertEqual(400, response.status)
         self.assertEqual(0, self.counter.actions)
 

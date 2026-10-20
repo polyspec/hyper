@@ -21,7 +21,9 @@ _FILENAME = re.compile(r";\s*filename=", re.IGNORECASE)
 _FILENAME_VALUE = re.compile(
     r';\s*filename=(?:"((?:[^"\\]|\\.)*)"|([^;\s]*))', re.IGNORECASE
 )
-_CONTENT_TYPE = re.compile(r"^content-type:[ \t]*(.*?)\r?$", re.IGNORECASE | re.MULTILINE)
+_CONTENT_TYPE = re.compile(
+    r"^content-type:[ \t]*(.*?)\r?$", re.IGNORECASE | re.MULTILINE
+)
 _HEX = re.compile(rb"[0-9A-Fa-f]{2}")
 
 
@@ -118,9 +120,7 @@ def _decode(text: bytes) -> Optional[str]:
         return None
 
 
-def _multipart(
-    body: bytes, boundary: str
-) -> Optional[tuple["Fields", "Files"]]:
+def _multipart(body: bytes, boundary: str) -> Optional[tuple["Fields", "Files"]]:
     """Reads the text fields and the file parts of a multipart/form-data body (HY-57, HY-113). A part with a name and
     a filename is a file; a part without a name is neither. Returns None when a name, a value, a filename or a content
     type is not UTF-8."""
@@ -226,7 +226,10 @@ class Files:
 
     def largest(self) -> int:
         """Returns the size in bytes of the largest file, or 0 when there is none."""
-        return max((len(item.content) for values in self._values.values() for item in values), default=0)
+        return max(
+            (len(item.content) for values in self._values.values() for item in values),
+            default=0,
+        )
 
 
 def _as_utf8(text: bytes) -> Optional[str]:

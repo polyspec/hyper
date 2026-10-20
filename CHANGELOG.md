@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- H26.3-4: The Python sources and tests meet the ruff format rules of the gate, and FileParts of test_files.py joins the vulture whitelist with its reason: unittest runs its three tests through the base FixtureTest, which `python -m unittest -v` shows. The values and the code are unchanged. Red: make lint-python exited 2 with the format findings and the FileParts finding. Green: make lint-python exits 0. (H26.3-4)
 - H26.3-3: The PHP sources and tests meet the phpcs rules of the gate: the spacing after the assignment operator in App.php, the long lines of the HY-114 message in App.php, the filename pattern of Multipart.php, and the upload fixture of AppTest.php. The values and the regular expression are unchanged. Red: make lint-php exited 2 with 5 findings. Green: make lint-php exits 0. (H26.3-3)
 - H26.3-2: The stream test of the client types its fakes without assertions that narrow (the document, the htmx API, the headers and the abort signal), and stream.ts stops exporting DEFAULT_RETRY_MS and StreamEvent, which no other file uses. Red: make lint-ts exited 2 with 4 oxlint and 2 knip findings. Green: make lint-ts exits 0 and the stream test passes 4 of 4. (H26.3-2)
 - H26.3-1: The multipart record of docs/operations/dependencies.md names PHP 8.4's native `request_parse_body()` as considered and refused, because it nests bracketed names like `$_POST`, which HY-57 refuses. Red: the record did not name the candidate; green: `make docs-check` exits 0 with the line. (H26.3-1)
