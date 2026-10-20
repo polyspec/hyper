@@ -282,7 +282,7 @@ describe('App', () => {
     expect((await fixture.get('/', JSON_REGION)).headers.Vary).toBe('Accept, HX-Request, HX-Current-URL');
   });
 
-  it('reads only the host-only kept cookie on HTTPS (HY-39, HY-45)', async () => {
+  it('reads only the host-only kept cookie on HTTPS (HY-38, HY-45)', async () => {
     const options = { https: true, handlers: { routes: { add: { post: () => Result.redirect('/') }, list: { regions: { rows: () => ({ items: [], mode: 'a' }) } } } } };
     const read = async (headers: Record<string, string>) => json(await fixture.handle({ target: '/list', headers: { ...JSON_REGION, ...headers } }, options)).kept;
     expect(await read(cookie('__Host-hy-keep', '{"rows":{"mode":"b"}}'))).toEqual({ rows: { mode: 'b' } });

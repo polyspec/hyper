@@ -103,7 +103,7 @@ class Session:
         self._store.set(_FLASH_KEY, {"values": flash.values, "changed": flash.changed})
 
     def keep(self, region: str, path: str, value: object) -> None:
-        """Stores a kept value of a region (HY-39, HY-40)."""
+        """Stores a kept value of a region (HY-38, HY-40)."""
         stored = self._store.get(_KEEP_KEY)
         kept = stored if isinstance(stored, dict) else {}
         region_kept = kept.get(region)

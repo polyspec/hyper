@@ -101,7 +101,7 @@ function withKeptCheck<T>(app: Application, decoded: DecodedResponse, parts: Bou
   try {
     return render();
   } catch (error) {
-    // A template that is not loaded yet is not a failure of kept values; the caller loads it and renders again (HY-35).
+    // A template that is not loaded yet is not a failure of kept values; the caller loads it and renders again (HYC-12).
     if (decoded.kept.size === 0 || missingTemplate(error)) throw error;
   }
   const routeRegions = presentRouteRegions(decoded.route, decoded.regions);
@@ -164,7 +164,7 @@ export function renderRegion(app: Application, route: RouteDeclaration, name: st
   return app.engine.render(regionTemplate(app, route, name), merge(parts.shared, data), { define, env: { timezone } });
 }
 
-// Renders one region of held data alone (HY-33): binds the shared data, the region and, for the page region, its
+// Renders one region of held data alone (HYC-11): binds the shared data, the region and, for the page region, its
 // present route regions once, and renders the region with them.
 export function renderRegionOf(app: Application, route: RouteDeclaration, name: string, shared: MapValue, regions: MapValue, timezone: string): string {
   const names = name === app.page ? [name, ...presentRouteRegions(route, regions)] : [name];
@@ -201,7 +201,7 @@ export function toHtml(app: Application, decoded: DecodedResponse): string {
 
 // Renders the document of a decoded document response. With `embed` the document embeds its data, which carries the
 // loader data and the server kept values of the route regions; without it the definition `data` is empty (HY-12,
-// HY-22, HY-31, HY-38, HY-92).
+// HYC-8, HY-31, HY-38, HY-92).
 export function renderDocument(app: Application, decoded: DecodedResponse, options: { embed: boolean }): string {
   for (const { name } of app.manifest.regions) {
     if (!decoded.regions.has(name)) throw new Error(`hyper: document response has no region ${name}`);
@@ -221,7 +221,7 @@ export function renderDocument(app: Application, decoded: DecodedResponse, optio
 
 // Renders the layout of a region response for its stylesheet links: the layout with the shared data as root data,
 // the title rendered alone as the definition `title`, and an empty definition `data` and an empty definition for every
-// manifest region (HY-64).
+// manifest region (HYC-15).
 export function renderLayout(app: Application, shared: MapValue, timezone: string): string {
   const env = { timezone };
   const define: Record<string, { html: string }> = { title: { html: app.engine.render(app.manifest.title, shared, { env }) }, data: { html: '' } };
@@ -255,7 +255,7 @@ export function presentRouteRegions(route: RouteDeclaration, regions: ReadonlyMa
   return (route.regions ?? []).map((region) => region.name).filter((name) => regions.has(name));
 }
 
-// Returns true for the failure of a rendering that requested a template that the loader does not hold (HY-35).
+// Returns true for the failure of a rendering that requested a template that the loader does not hold (HYC-12).
 function missingTemplate(error: unknown): boolean {
   return typeof error === 'object' && error !== null && 'code' in error && error.code === 'E_LOAD_NOT_FOUND';
 }

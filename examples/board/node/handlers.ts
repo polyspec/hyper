@@ -34,7 +34,7 @@ function length(text: string): number {
 }
 
 export const handlers: Handlers<Services> = {
-  // The post page, the one route with the parameter `id`, links the reader stylesheet (HY-64).
+  // The post page, the one route with the parameter `id`, links the reader stylesheet (HYC-15).
   shared: ({ request, services }) => ({ assets: services.get('assets'), reader: request.param('id') !== null }),
 
   regions: {

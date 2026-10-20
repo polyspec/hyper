@@ -56,7 +56,7 @@ const server = createServer((incoming, outgoing) => {
   if (path !== '/' && existsSync(file) && statSync(file).isFile()) {
     // Template files and chunk files carry a content hash in their names and never change; the stylesheets and the shell
     // change with every deployment (docs/operations/deployment.md). A chunk is a module script, which the browser runs
-    // only with a JavaScript media type (HY-76).
+    // only with a JavaScript media type (HYC-16).
     const hashed = path.startsWith('/assets/templates/') || /^\/assets\/hyper-chunk-[A-Z0-9]+\.js$/.test(path);
     const cache = hashed ? 'public, max-age=31536000, immutable' : 'no-cache';
     outgoing.writeHead(200, { 'Content-Type': CONTENT_TYPES[file.slice(file.lastIndexOf('.'))] ?? 'application/octet-stream', 'Cache-Control': cache });

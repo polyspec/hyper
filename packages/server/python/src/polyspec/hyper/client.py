@@ -23,7 +23,7 @@ class ClientRendering:
     ):
         self.shell = shell
         """The absolute path of the static shell, which declares the base path with `<meta name="hyper-api">`
-        (HY-22)."""
+        (HYC-8)."""
         self.base_path = base_path
         """The data base path, such as `/_props` (HY-8)."""
         self.selects = selects

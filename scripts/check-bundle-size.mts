@@ -1,5 +1,5 @@
 // Measures the browser outputs of an application: the server-side rendering script, the client-side rendering shell,
-// the chunk files that the entry loads with import() when that code first runs (HY-76), together, and the largest
+// the chunk files that the entry loads with import() when that code first runs (HYC-16), together, and the largest
 // template file. It prints each size with its gzip limit, and a size above its limit is a warning, never
 // a failure, because performance is measured and reported (AGENTS): a line `WARNING <name> ...`, and on GitHub Actions
 // an annotation `::warning::`, which the CI summary lists (make ci-summary of @polyspec/kit). A missing input fails.

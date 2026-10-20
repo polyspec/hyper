@@ -616,7 +616,7 @@ final class App
      */
     private function kept(Request $request, Session $session, array $data): array
     {
-        // On HTTPS only the host-only cookie counts, which another host cannot set (HY-39).
+        // On HTTPS only the host-only cookie counts, which another host cannot set (HY-38).
         $cookie = json_decode($request->cookie($this->https || $request->https ? '__Host-hy-keep' : 'hy-keep') ?? '');
         $kept = [];
         foreach ($data as $name => $regionData) {

@@ -2,7 +2,7 @@
 // with --node or --python that the Node or the Python server answers every request as the PHP server does
 // (HR-55).
 // It starts the application with an empty database and runs the steps of a request file in one
-// session; a cookie step sets the hy-keep cookie of HY-39. For every compare step it requests:
+// session; a cookie step sets the hy-keep cookie of HYC-13. For every compare step it requests:
 //   1. the HTML document, rendered by PHP,
 //   2. the document JSON, rendered by the browser code into a document,
 //   3. the region JSON, rendered by the browser code into a title and regions,

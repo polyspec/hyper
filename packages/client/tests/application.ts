@@ -18,7 +18,7 @@ export const manifest: Manifest = {
     { name: 'when', path: '/when', title: 'When', template: 'when.tpl' },
     { name: 'list', path: '/list', title: 'List', template: 'list.tpl', regions: [{ name: 'rows', template: 'rows.tpl', keep: { 'items.0.open': 'server', 'items.1.open': 'localStorage', flag: 'cookie', tab: 'sessionStorage', tags: 'cookie', marks: 'localStorage', filter: 'server', 'filter.a': 'localStorage' } }] },
     { name: 'leak', path: '/leak', title: 'Leak', template: 'leak.tpl', regions: [{ name: 'inner', template: 'inner.tpl' }] },
-    // A route template that selects one of two views by its data, as a page that places views at request time (HY-35).
+    // A route template that selects one of two views by its data, as a page that places views at request time (HYC-12).
     { name: 'pick', path: '/pick', title: 'Pick', template: 'pick.tpl' },
   ],
 };

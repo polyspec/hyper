@@ -9,7 +9,7 @@ const app = createApplication(checkManifest(manifest), index, async (url) => {
   const response = await fetch(url);
   if (!response.ok) throw new Error(`template ${url}: status ${response.status}`);
   // The decoder checks the fetched JSON against the AST schema; import() makes it a chunk that a server-rendered page,
-  // which loads no template, never loads (HY-35, HY-76).
+  // which loads no template, never loads (HYC-12, HYC-16).
   const { decodeTemplate } = await import('@polyspec/template/decode');
   return decodeTemplate(await response.json());
 });
@@ -25,7 +25,7 @@ document.addEventListener('click', (event) => {
   if (!element) return;
   event.preventDefault();
   event.stopPropagation();
-  // A failure leaves the data unchanged and marks the region with hy-error (HY-47).
+  // A failure leaves the data unchanged and marks the region with hy-error (HYC-14).
   hyper.setFrom(element).then(report, (error: unknown) => console.error(error));
 }, true);
 
@@ -50,6 +50,6 @@ document.addEventListener('htmx:after:process', (event) => {
   if (event.target === document.body) void report();
 });
 
-// HY-22, HYC-4, HYC-7: a client-rendered page renders its document; a server-rendered page holds its embedded data, or
+// HYC-8, HYC-4, HYC-7: a client-rendered page renders its document; a server-rendered page holds its embedded data, or
 // obtains the data when it first needs it.
 void hyper.open();

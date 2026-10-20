@@ -1,7 +1,7 @@
 // Tests the outputs of hyper-build-assets: it checks the manifest before it writes any output (HY-2), and it
 // writes the client entry, a chunk file for code that the entry imports with import(), the manifest with the entry
-// URL only and a static shell without a stylesheet (HY-76); it only adds files with a hash in their names below
-// public/assets and writes its other outputs into the directory of --output (HR-34, HY-76).
+// URL only and a static shell without a stylesheet (HYC-16); it only adds files with a hash in their names below
+// public/assets and writes its other outputs into the directory of --output (HR-34, HYC-16).
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -34,7 +34,7 @@ test('rejects an invalid manifest and writes nothing', () => {
   }
 });
 
-test('writes the entry, a chunk for code that the entry imports with import(), the manifest and the shell (HY-76)', () => {
+test('writes the entry, a chunk for code that the entry imports with import(), the manifest and the shell (HYC-16)', () => {
   const app = mkdtempSync(join(tmpdir(), 'hyper-chunks-'));
   try {
     fixture('chunks', app);
@@ -107,7 +107,7 @@ test('compiles a stylesheet with the Tailwind utilities that the templates use (
     assert.doesNotMatch(css, /@layer base\s*{/);
     // The static deployment holds no stylesheet: the application copies the stylesheets that its layouts link.
     assert.equal(existsSync(join(app, 'out', 'csr', 'assets', 'app.css')), false);
-    // The static deployment holds the files that --static names, at their paths below public/ (HY-76).
+    // The static deployment holds the files that --static names, at their paths below public/ (HYC-16).
     const named = buildAssets(app, '--tailwind', 'styles.css=public/assets/app.css', '--static', 'public/assets/app.css');
     assert.equal(named.status, 0, named.stderr);
     assert.equal(readFileSync(join(app, 'out', 'csr', 'assets', 'app.css'), 'utf8'), readFileSync(join(app, 'public', 'assets', 'app.css'), 'utf8'));

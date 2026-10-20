@@ -46,7 +46,7 @@ def handlers(services: Services) -> dict:
     """Returns the handlers of the board, as app/handlers.php defines them."""
 
     def shared(request: Request) -> dict:
-        # The post page, the one route with the parameter `id`, links the reader stylesheet (HY-64).
+        # The post page, the one route with the parameter `id`, links the reader stylesheet (HYC-15).
         return {
             "assets": {"hyper": services.hyper},
             "reader": request.param("id") is not None,

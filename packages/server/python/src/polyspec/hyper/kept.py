@@ -9,7 +9,7 @@ from .data_model import contains
 
 KINDS = ("server", "cookie", "localStorage", "sessionStorage")
 
-# One kept value: its path and the value (HY-33).
+# One kept value: its path and the value (HY-37).
 Pair = tuple[str, object]
 
 

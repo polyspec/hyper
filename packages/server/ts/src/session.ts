@@ -95,7 +95,7 @@ export class Session {
     this.store.set(FLASH, new Map<string, unknown>([['values', new Map(flash.values)], ['changed', [...flash.changed]]]));
   }
 
-  // Stores a kept value of a region (HY-39, HY-40).
+  // Stores a kept value of a region (HY-38, HY-40).
   keep(region: string, path: string, value: Value): void {
     const stored = this.store.get(KEEP);
     const kept = new Map<string, MapValue>();

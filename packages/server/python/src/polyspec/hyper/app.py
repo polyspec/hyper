@@ -514,7 +514,7 @@ class App:
     def _kept(self, request: Request, session: Session, data: dict) -> dict:
         """Returns the conforming `server` and `cookie` kept values of the regions, by region and path (HY-17,
         HY-38)."""
-        # On HTTPS only the host-only cookie counts, which another host cannot set (HY-39).
+        # On HTTPS only the host-only cookie counts, which another host cannot set (HY-38).
         cookie_text = (
             request.cookie(
                 "__Host-hy-keep" if self.https or request.https else "hy-keep"

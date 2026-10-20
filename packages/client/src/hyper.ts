@@ -26,12 +26,12 @@ export interface RequestContext {
   text?: string;
   fetch?: (url: string, init: RequestInit) => Promise<Response>;
   hyperRegion?: string;
-  // when the region request was configured and when it was aborted (HY-47)
+  // when the region request was configured and when it was aborted (HYC-14)
   hyperStart?: number;
   hyperAborted?: number;
   // The navigation number of a region request; a later region request supersedes it (HYC-3).
   hyperLocation?: number;
-  // removes the stylesheet links that the shown content does not have, after the swap (HY-64)
+  // removes the stylesheet links that the shown content does not have, after the swap (HYC-15)
   hyperStylesheets?: () => void;
 }
 
@@ -53,14 +53,14 @@ export interface HyperExtension {
 // Mounts documents that client-side rendering produces.
 export interface DocumentAdapter {
   // Inserts the missing stylesheet links of the head of an HTML document and waits until they load; the returned
-  // function removes the other stylesheet links after the content is shown (HY-64).
+  // function removes the other stylesheet links after the content is shown (HYC-15).
   stylesheets(html: string): Promise<() => void>;
   // Replaces the attributes of the html element (HYC-6), the title and the body with those of a rendered document and
-  // lets htmx process the body. The stylesheet links of the document are applied before (HY-64).
+  // lets htmx process the body. The stylesheet links of the document are applied before (HYC-15).
   mount(html: string): void;
   // Replaces the body with text, for a path without a route or a response that is not JSON.
   text(text: string): void;
-  // Marks the body as failed when a document cannot be rendered (HY-47).
+  // Marks the body as failed when a document cannot be rendered (HYC-14).
   fail(status: string): void;
   // Returns the number of elements with an id in the page (HY-75).
   elements(id: string): number;
@@ -76,7 +76,7 @@ interface Held {
 }
 
 // The element of a region that Hyper reads by its id: the embedded data, the target of a swap and the element whose
-// hy-error attribute marks a failure (HY-47). A DOM Element is one.
+// hy-error attribute marks a failure (HYC-14). A DOM Element is one.
 export interface RegionElement {
   readonly id: string;
   readonly textContent?: string | null;
@@ -85,7 +85,7 @@ export interface RegionElement {
 }
 
 export interface HyperOptions<E extends RegionElement = Element> {
-  // The base path of the server for client-side rendering; empty for server-side rendering (HY-22, HYC-3).
+  // The base path of the server for client-side rendering; empty for server-side rendering (HYC-8, HYC-3).
   basePath: string;
   // Returns the element with an id; the default finds it with htmx in the document.
   element?: (id: string) => E | null;
@@ -100,21 +100,21 @@ export interface HyperOptions<E extends RegionElement = Element> {
 }
 
 // A server kept value whose saving has not completed, with the number of its change and the number of
-// the change whose save is in flight (HY-39).
+// the change whose save is in flight (HYC-13).
 interface Pending {
   value: Value;
   change: number;
   sending: number | null;
 }
 
-// Holds region data and renders regions from it (HY-29 to HY-39, HY-47).
+// Holds region data and renders regions from it (HYC-10 to HYC-13, HYC-14).
 export class Hyper<E extends RegionElement = Element> {
   private held: Held | null = null;
   private browserStorage: KeepStorage | null = null;
-  // server kept values whose saving has not completed, by region and path (HY-38, HY-39)
+  // server kept values whose saving has not completed, by region and path (HY-38, HYC-13)
   private readonly pending = new Map<string, Map<string, Pending>>();
   private changes = 0;
-  // the end of the last queued render, set or hy-set call (HY-33)
+  // the end of the last queued render, set or hy-set call (HYC-11)
   private queue: Promise<void> = Promise.resolve();
   private location = 0;
   private locationAbort: AbortController | null = null;
@@ -162,9 +162,9 @@ export class Hyper<E extends RegionElement = Element> {
     this.holds++;
   }
 
-  // Starts the page. Client-side rendering renders the document of the current URL (HY-22). A server-rendered page
+  // Starts the page. Client-side rendering renders the document of the current URL (HYC-8). A server-rendered page
   // holds its embedded data; without it the page holds nothing and obtains the data only when a browser kept value is
-  // stored for a route region of its route (HYC-4, HYC-7). A failure marks the body and does not reject (HY-47).
+  // stored for a route region of its route (HYC-4, HYC-7). A failure marks the body and does not reject (HYC-14).
   async open(): Promise<void> {
     const url = new URL(this.currentUrl());
     if (this.options.basePath !== '') return this.renderLocation(url.pathname + url.search);
@@ -194,14 +194,14 @@ export class Hyper<E extends RegionElement = Element> {
     return false;
   }
 
-  // Returns the route of the current page, whose URL holds no base path (HY-22, HYC-3).
+  // Returns the route of the current page, whose URL holds no base path (HYC-8, HYC-3).
   private pageRoute(): RouteDeclaration | null {
     const match = this.app.router.match(new URL(this.currentUrl()).pathname);
     return match === null ? null : this.routeNamed(match.name);
   }
 
   // Returns the held data, obtained with a document request when the browser holds none; a region that is not a route
-  // region of the route of the current page fails without a request, and a failed request marks the region (HY-47, HYC-7).
+  // region of the route of the current page fails without a request, and a failed request marks the region (HYC-14, HYC-7).
   private async heldFor(region: string): Promise<Held> {
     if (this.held !== null) return this.held;
     const route = this.pageRoute();
@@ -254,7 +254,7 @@ export class Hyper<E extends RegionElement = Element> {
   // Holds the data that the server embedded in the document, replacing all held data, starts loading
   // the templates of its route, and renders regions that browser kept values change. A region that does
   // not render with its kept values renders with its loader data. A failure marks the region, or the body
-  // when the embedded data cannot be read, and does not reject (HY-31, HYC-4, HY-38, HY-47).
+  // when the embedded data cannot be read, and does not reject (HY-31, HYC-4, HY-38, HYC-14).
   async holdEmbedded(text: string, path: string): Promise<void> {
     let decoded: DecodedResponse;
     try {
@@ -270,7 +270,7 @@ export class Hyper<E extends RegionElement = Element> {
   }
 
   // Renders regions from the held data. A region that does not render with its kept values renders with its loader
-  // data, and a region that fails then is marked (HY-38, HY-47). A response that replaces the held data ends the loop.
+  // data, and a region that fails then is marked (HY-38, HYC-14). A response that replaces the held data ends the loop.
   private async renderHeldRegions(regions: readonly string[]): Promise<void> {
     const held = this.requireHeld();
     for (const region of regions) {
@@ -290,18 +290,18 @@ export class Hyper<E extends RegionElement = Element> {
   }
 
   // Returns the held data of a region, obtained first while the browser holds no data and the region is a route region
-  // of the route of the current page (HY-33, HYC-7).
+  // of the route of the current page (HYC-11, HYC-7).
   async data(region: string): Promise<Value | undefined> {
     if (this.held === null && (this.pageRoute()?.regions ?? []).some((item) => item.name === region)) await this.heldFor(region);
     return this.held?.regions.get(region);
   }
 
-  // Replaces the held data of a region and renders the region (HY-33).
+  // Replaces the held data of a region and renders the region (HYC-11).
   async render(region: string, data: unknown): Promise<void> {
     await this.change(region, () => requireMap(bindValue(data), `data of region ${region}`), Object.keys(keptPaths(this.app.manifest, region)));
   }
 
-  // Sets one value in the held data of a region by a dotted path and renders the region (HY-33).
+  // Sets one value in the held data of a region by a dotted path and renders the region (HYC-11).
   async set(region: string, path: string, value: unknown): Promise<void> {
     await this.change(region, (data) => {
       assignPath(data, path, bindValue(value));
@@ -325,7 +325,7 @@ export class Hyper<E extends RegionElement = Element> {
   }
 
   // Queues a change; calls run one after another in call order, and the first obtains the data while the browser holds
-  // none (HY-33, HYC-7).
+  // none (HYC-11, HYC-7).
   private change(region: string, update: (data: Value | undefined) => MapValue, paths: readonly string[]): Promise<void> {
     const run = this.queue.then(async () => {
       await this.heldFor(region);
@@ -339,7 +339,7 @@ export class Hyper<E extends RegionElement = Element> {
   // Changes a copy of the held data of a region, renders the region with it, and only then holds it
   // and stores the changed kept paths. The change ends without swapping, holding or storing when a
   // response replaced the data of its region before the swap; when that happened during the swap, the
-  // region renders again from held data. A failure leaves held data unchanged and marks the region (HY-33, HY-47).
+  // region renders again from held data. A failure leaves held data unchanged and marks the region (HYC-11, HYC-14).
   private async applyChange(region: string, update: (data: Value | undefined) => MapValue, paths: readonly string[]): Promise<void> {
     const before = this.requireHeld().regions.get(region);
     const replaced = (): boolean => this.requireHeld().regions.get(region) !== before;
@@ -368,7 +368,7 @@ export class Hyper<E extends RegionElement = Element> {
   }
 
   // Renders the document of a path in the browser. A later call cancels an earlier one that is
-  // still loading, and only the latest is mounted (HY-22, HYC-3, HY-35).
+  // still loading, and only the latest is mounted (HYC-8, HYC-3, HYC-12).
   async renderLocation(location: string): Promise<void> {
     const generation = ++this.location;
     this.locationAbort?.abort();
@@ -392,7 +392,7 @@ export class Hyper<E extends RegionElement = Element> {
         this.page.text(text);
         return;
       }
-      // The document belongs to the URL after redirects (HYC-1, HY-22).
+      // The document belongs to the URL after redirects (HYC-1, HYC-8).
       const path = response.url ? stripBasePath(pathOf(response.url), this.options.basePath) : url.pathname;
       if (path === null) throw new Error(`hyper: response URL ${response.url} is outside the base path ${this.options.basePath}`);
       const final = this.routeOf(this.options.basePath + path);
@@ -414,7 +414,7 @@ export class Hyper<E extends RegionElement = Element> {
     }
   }
 
-  // Returns the htmx extension (HYC-2, HYC-3, HYC-4, HY-35, HY-47).
+  // Returns the htmx extension (HYC-2, HYC-3, HYC-4, HYC-12, HYC-14).
   extension(): HyperExtension {
     const basePath = this.options.basePath;
     return {
@@ -432,7 +432,7 @@ export class Hyper<E extends RegionElement = Element> {
       },
       htmx_before_request: (_elt, { ctx }) => {
         if (ctx.hyperRegion === undefined) {
-          // The HTML document of a history restoration in server-side rendering brings its stylesheet links (HY-64).
+          // The HTML document of a history restoration in server-side rendering brings its stylesheet links (HYC-15).
           if (basePath === '' && ctx.request.headers['HX-History-Restore-Request'] === 'true') {
             ctx.fetch = async (url, init) => {
               const response = await fetch(url, init);
@@ -447,7 +447,7 @@ export class Hyper<E extends RegionElement = Element> {
         this.regionAbort?.();
         ctx.hyperLocation = ++this.location;
         this.locationAbort?.abort();
-        // htmx aborts through this function on its timeout and on cancellation; the time tells them apart (HY-47).
+        // htmx aborts through this function on its timeout and on cancellation; the time tells them apart (HYC-14).
         const abort = ctx.request.abort;
         ctx.request.abort = () => {
           ctx.hyperAborted ??= performance.now();
@@ -461,13 +461,13 @@ export class Hyper<E extends RegionElement = Element> {
           const [response] = await Promise.all([fetch(url, init), loading]);
           const final = this.routeOf(response.url || url);
           if (final !== null && final !== requested) await this.app.templates.ensure(routeTemplates(this.app.manifest, final));
-          // The stylesheet links of the layout of the response load before htmx swaps (HY-64).
+          // The stylesheet links of the layout of the response load before htmx swaps (HYC-15).
           if ((response.headers.get('content-type') ?? '').startsWith('application/json')) {
             const root = requireMap(parseJson(await response.clone().text()), 'response');
             const timezone = requireMap(root.get('env') ?? null, 'env').get('timezone');
             if (typeof timezone !== 'string') throw new Error('hyper: env.timezone is not a string');
             ctx.hyperStylesheets = await this.page.stylesheets(await this.app.templates.render(() => renderLayout(this.app, requireMap(root.get('shared') ?? null, 'shared'), timezone)));
-            // Load the templates that the rendering of the response reaches before htmx renders it synchronously (HY-35).
+            // Load the templates that the rendering of the response reaches before htmx renders it synchronously (HYC-12).
             const path = stripBasePath(pathOf(response.url || url), basePath);
             if (path !== null) {
               const decoded = decodeResponse(this.app, root, path);
@@ -509,7 +509,7 @@ export class Hyper<E extends RegionElement = Element> {
       },
       htmx_error: (_elt, detail) => {
         const ctx = detail.ctx;
-        // A stylesheet of a history restoration in server-side rendering failed to load: the target is the body (HY-47, HY-64).
+        // A stylesheet of a history restoration in server-side rendering failed to load: the target is the body (HYC-14, HYC-15).
         if (ctx !== undefined && ctx.hyperRegion === undefined && detail.error instanceof StylesheetError) markError(ctx.target, '0');
         if (ctx?.hyperRegion === undefined) return;
         if (detail.error instanceof Error && detail.error.name === 'AbortError' && !this.timedOut(ctx)) return;
@@ -529,7 +529,7 @@ export class Hyper<E extends RegionElement = Element> {
     };
   }
 
-  // Returns true when htmx aborted a region request after its timeout passed (HY-47).
+  // Returns true when htmx aborted a region request after its timeout passed (HYC-14).
   private timedOut(ctx: RequestContext): boolean {
     const timeout = ctx.request.timeout != null ? this.htmx.parseInterval(String(ctx.request.timeout)) : this.htmx.config.defaultTimeout;
     return timeout !== undefined && timeout > 0 && ctx.hyperStart !== undefined && ctx.hyperAborted !== undefined && ctx.hyperAborted - ctx.hyperStart >= timeout;
@@ -565,7 +565,7 @@ export class Hyper<E extends RegionElement = Element> {
   }
 
   // Stores every kept path that equals a changed path, lies under it or contains it, with the value in
-  // the committed region data (HY-39).
+  // the committed region data (HYC-13).
   private store(region: string, changed: readonly string[], data: MapValue): void {
     for (const [path, kind] of Object.entries(keptPaths(this.app.manifest, region))) {
       if (!changed.some((item) => item === path || path.startsWith(`${item}.`) || item.startsWith(`${path}.`))) continue;
@@ -584,7 +584,7 @@ export class Hyper<E extends RegionElement = Element> {
   }
 
   // Sends the pending value of a server path. When the save settles and a later change exists, the latest
-  // value is sent next; otherwise a success clears the pending value and a failure marks the region (HY-39).
+  // value is sent next; otherwise a success clears the pending value and a failure marks the region (HYC-13).
   private save(region: string, path: string): void {
     const pending = this.pending.get(region)?.get(path);
     if (pending === undefined) throw new Error(`hyper: region ${region} has no pending value at ${path}`);
@@ -628,7 +628,7 @@ export class Hyper<E extends RegionElement = Element> {
     return this.held;
   }
 
-  // Only the present route regions of the held route change in the browser (HY-33, HY-75).
+  // Only the present route regions of the held route change in the browser (HYC-11, HY-75).
   private requireRouteRegion(region: string): void {
     if (!this.requireHeld().regions.has(region)) {
       throw new Error(`hyper: region ${region} is not a present route region of the held route`);
@@ -680,7 +680,7 @@ export function parseAssignments(text: string): { path: string; value: unknown }
   return assignments;
 }
 
-// Replaces the value at an existing path; a missing map key or list index fails (HY-33).
+// Replaces the value at an existing path; a missing map key or list index fails (HYC-11).
 function assignPath(data: Value | undefined, path: string, value: Value): void {
   // The key after the last dot names the value, and the keys before it its container.
   const dot = path.lastIndexOf('.');
@@ -701,7 +701,7 @@ function valueAt(data: Value | undefined, path: string): Value | undefined {
   return value;
 }
 
-// Marks a region element as failed with a status, or clears the mark (HY-47).
+// Marks a region element as failed with a status, or clears the mark (HYC-14).
 function markError(target: unknown, status: string): void {
   if (hasSetAttribute(target)) target.setAttribute('hy-error', status);
 }

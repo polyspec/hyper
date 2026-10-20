@@ -47,7 +47,7 @@ test('a size above its limit is a warning with the size and the limit, and the m
   assert.doesNotMatch(run.stdout, /::warning::/);
 });
 
-// HY-76: the chunk files of the build, which the browser loads together when the entry first runs the code that it
+// HYC-16: the chunk files of the build, which the browser loads together when the entry first runs the code that it
 // imports with import(), are one output whose size sums the sizes of its files, each compressed alone.
 test('the chunk files of the static deployment are measured together as the output chunks', (t) => {
   const directory = oversized(t);

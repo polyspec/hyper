@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: d1ee9fd276e4a221b44f5b4ea025583aade25cdf5b3471eca8a4610d5814b92d -->
+<!-- source-sha256: fc15c399592e38f57f881dafd454666a6bedf8f4b855e4722f766f0046f90454 -->
 # 개발
 
 [English](development.md).
@@ -211,14 +211,14 @@ BOARD_DB=$PWD/examples/board/var/node.db BOARD_SESSIONS=$PWD/examples/board/var/
 
 1. `public/assets/templates/<name>.<hash>.json`: `templates/` 아래 템플릿마다 AST 파일 하나, 그리고 예약 템플릿 `hyper/data.tpl`의 파일 하나(HR-34).
 2. `<output>/templates.index.json`: 각 템플릿 이름과 그 파일 URL(HR-34). 클라이언트는 이를 `@polyspec/hyper-client/templates-index`로 import한다.
-3. `public/assets/hyper-<hash>.js`, `public/assets/hyper-chunk-<hash>.js`, `<output>/manifest.json`(HY-76).
+3. `public/assets/hyper-<hash>.js`, `public/assets/hyper-chunk-<hash>.js`, `<output>/manifest.json`(HYC-16).
    - 클라이언트 진입 파일. htmx, hyper 브라우저 코드, template 렌더 런타임, `app/app.json`, 색인이 들어 있고 템플릿은 없다.
    - 진입 파일이 `import()`로만 불러오는 코드마다 조각 파일 하나. 브라우저는 그 코드가 처음 실행될 때 조각을 불러온다.
    - 진입 파일의 URL을 `hyper`로 담은 매니페스트. 서버가 레이아웃에 넘긴다.
    - 빌드는 애플리케이션이 이름을 정하는 파일을 쓰지 않는다. 애플리케이션은 자기 스타일시트를 직접 두고 링크한다.
 4. `--tailwind <source>=<output>`이 있으면 output stylesheet. source를 Tailwind CSS의 theme과, `templates/`와 `client/` 아래 file이 쓰는 utility class로 compile하고, source의 rule은 layer `components`에 두며 layer `base`의 rule은 두지 않는다(HR-77). Tailwind CSS는 `@polyspec/hyper-build`의 의존성이므로, npm 12.2.0으로 기본값 `allow-remote=none`에서 lock을 쓰는 애플리케이션은 Tag 릴리스 절의 npm 결함을 만난다. npm 릴리스가 수정을 담을 때까지 npm은 `@tailwindcss/oxide-wasm32-wasi`의 tarball을 `EALLOWREMOTE`로 거부한다([npm/cli#9818](https://github.com/npm/cli/pull/9818)).
 5. `<output>/csr/`: CSR 배포물.
-   - `index.html`은 `<meta name="hyper-api">`와 인라인한 진입 파일을 담고 스타일시트는 담지 않는다. 브라우저가 렌더한 레이아웃의 스타일시트 링크를 적용하기 때문이다(HY-64, HY-76).
+   - `index.html`은 `<meta name="hyper-api">`와 인라인한 진입 파일을 담고 스타일시트는 담지 않는다. 브라우저가 렌더한 레이아웃의 스타일시트 링크를 적용하기 때문이다(HYC-15, HYC-16).
    - `assets/templates/`는 이 build의 템플릿 파일을 담는다.
    - `assets/`는 이 build의 조각 파일을 담는다. 배포물은 `--static`이 밝히는 `public/` 아래 파일을 같은 경로에 담는다. 애플리케이션은 렌더한 layout이 link하는 스타일시트를 밝히며, `make assets`는 board 예제의 `public/assets/app.css`와 `public/assets/reader.css`를 밝힌다. 배포물은 파일 단위로, `index.html`을 마지막으로 publish한다(HR-82).
    - 진입 파일에 `</script`가 들어 있으면 빌드는 실패한다. 빌드는 인라인한 진입 파일의 해시를 담은 Content Security Policy를 출력한다.
@@ -234,7 +234,7 @@ BOARD_DB=$PWD/examples/board/var/node.db BOARD_SESSIONS=$PWD/examples/board/var/
 | 라우팅 | `contracts/routes.json`을 `make test-php`와 `make test-js`가 실행한다. 렌더할 때 브라우저는 자기 라우트가 서버가 보고한 라우트와 같은지도 확인한다(HYC-1). |
 | Node 서버 | `make server-parity`는 parity 단계의 모든 요청을 각자 데이터베이스와 session을 가진 PHP 서버와 board Node 서버에 보내고, session 식별자, 응답마다 가린 CSRF token, `ETag` 값을 placeholder로 바꾼 뒤 상태, header, body가 같은지 확인한다(HR-55). |
 | 문서 렌더 | `make parity`는 비교 단계마다 같은 세션에서 HTML 문서, 문서 JSON, 영역 JSON을 요청한다. 라우트 영역, 내장 데이터, `server`와 `cookie` 유지 값(HY-30, HY-31, HY-38)을 포함한 문서 JSON의 브라우저 렌더 결과는 응답마다 다른 가린 CSRF 토큰(HY-24)을 각 응답에서 `<csrf>`로 바꾼 뒤 PHP 문서와 바이트 단위로 같아야 하고, 영역 JSON의 모든 부분이 그 문서에 나타나야 한다. 검사는 단계가 시작할 때 한 줄을, 끝나면 결과와 경과 밀리초를 출력한다. 10초 안에 응답이 없는 요청은 그 단계의 이름으로 실패하고 검사를 끝낸다. |
-| 브라우저에서의 동작 | `make e2e`는 SSR과 CSR에서 같은 흐름을 실행한다. 이동, 액션, 데이터 요청 없는 `hy-set` 변경, 새로고침과 새 탭에서의 유지 종류 네 가지, 라우트에 필요한 템플릿만 불러오기, 페이지를 보이기 전에 불러오고 다른 페이지가 link하지 않으면 제거하는 layout의 stylesheet link(HY-64), SSR body와 CSR body가 같은지 확인하는 비교 페이지를 포함한다. |
+| 브라우저에서의 동작 | `make e2e`는 SSR과 CSR에서 같은 흐름을 실행한다. 이동, 액션, 데이터 요청 없는 `hy-set` 변경, 새로고침과 새 탭에서의 유지 종류 네 가지, 라우트에 필요한 템플릿만 불러오기, 페이지를 보이기 전에 불러오고 다른 페이지가 link하지 않으면 제거하는 layout의 stylesheet link(HYC-15), SSR body와 CSR body가 같은지 확인하는 비교 페이지를 포함한다. |
 
 ## 측정한 크기
 
@@ -250,11 +250,11 @@ BOARD_DB=$PWD/examples/board/var/node.db BOARD_SESSIONS=$PWD/examples/board/var/
 
 `config/bundle-size.json`의 SSR 스크립트, CSR 셸, chunk 상한은 측정한 gzip 크기에 약 1%를 더하고 100바이트 단위로 올린 값이다. 2026-10-05의 상한은 gzip 33,080 바이트(원본 99,580)인 script에 대해 33,500과 33,600이었으며, 증가가 필요한 이유는 다음과 같다(H23.24).
 
-- board는 가져오는 각 템플릿 파일을 `@polyspec/template/decode`의 `decodeTemplate`으로 decode한다. JSON이 실행 시 신뢰 경계를 넘고, kit의 type-checked lint가 cast로 읽는 것을 금지하기 때문이다(H23.13). decoder는 원본 86,639 바이트, gzip 약 7,600 바이트이다. board는 템플릿 fetcher에서 그것을 `import()`로 불러오므로 chunk이다(HY-76). 템플릿을 불러오지 않는 서버 렌더 페이지(HY-35)는 그것을 불러오지 않고, static shell은 첫 템플릿과 함께 불러온다.
+- board는 가져오는 각 템플릿 파일을 `@polyspec/template/decode`의 `decodeTemplate`으로 decode한다. JSON이 실행 시 신뢰 경계를 넘고, kit의 type-checked lint가 cast로 읽는 것을 금지하기 때문이다(H23.13). decoder는 원본 86,639 바이트, gzip 약 7,600 바이트이다. board는 템플릿 fetcher에서 그것을 `import()`로 불러오므로 chunk이다(HYC-16). 템플릿을 불러오지 않는 서버 렌더 페이지(HYC-12)는 그것을 불러오지 않고, static shell은 첫 템플릿과 함께 불러온다.
 - entry의 프로토콜 코드는 2026-10-05와 릴리스 0.0.16 사이에 같은 htmx로 gzip 약 1,800 바이트 커졌다. `@polyspec/hyper-client`의 영역 렌더, 응답 decode, 유지 값, stylesheet, 라우팅이며, template 0.0.11의 render runtime은 0.0.6보다 gzip 약 500 바이트 크다. entry는 minify 뒤 원본 바이트로 `@polyspec/template`의 render runtime 40,623, `htmx.org` 36,592, `@polyspec/hyper-client` 28,703(`hyper.js` 13,737, `response.js` 4,385, `manifest.js` 3,224, `keep.js` 2,044, `router.js` 1,948, `stylesheets.js` 1,605, `templates.js` 1,065, `obtain.js` 699), board 2,098과 index 771을 담는다. 따로 압축하면 htmx는 gzip 13,240 바이트, render runtime은 12,734 바이트이다.
 
 상한을 넘는 크기는 실패가 아니라 warning이다(AGENTS). 출력이 상한보다 커지는 변경은 같은 변경 안에서 상한을 고치고 그 증가가 필요한 이유를 적는다. 출력이 작아지는 변경은 같은 규칙으로 상한을 낮춘다.
 
-브라우저는 렌더가 닿는 템플릿만 불러오고(HY-35), 템플릿 파일은 해시가 붙은 이름으로 캐시된다.
+브라우저는 렌더가 닿는 템플릿만 불러오고(HYC-12), 템플릿 파일은 해시가 붙은 이름으로 캐시된다.
 - 템플릿 AST는 노드마다 소스 위치를 기록하므로 압축 후 크기가 소스의 약 2배다.
 - `config/bundle-size.json`은 템플릿 파일 하나를 4,096 gzip 바이트로 제한한다. 이보다 커지는 템플릿은 블록으로 나눈다.

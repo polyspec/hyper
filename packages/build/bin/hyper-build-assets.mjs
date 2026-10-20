@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Builds the browser outputs of an application directory (HY-76, HR-96). Below public/assets it only adds files whose names
+// Builds the browser outputs of an application directory (HYC-16, HR-96). Below public/assets it only adds files whose names
 // hold a hash of their content, so a server or an open page of an earlier build still loads its files; the outputs
 // without a hash lie in the directory of --output (HR-34):
 //   public/assets/templates/<name>.<hash>.json  one AST file per template, including hyper/data.tpl (HR-34)
@@ -17,7 +17,7 @@
 //                                                entry inlined and no stylesheet, assets/templates/ with the template
 //                                                files of this build and its chunk files, and the files that
 //                                                --static names: the application names the stylesheets that its
-//                                                rendered layouts link (HY-64, HY-76). The deployment is published
+//                                                rendered layouts link (HYC-15, HYC-16). The deployment is published
 //                                                file by file (HR-82).
 //
 // Every output file is written with one rename (lib/output-files.mjs, lib/publish.mjs), so a server of an earlier

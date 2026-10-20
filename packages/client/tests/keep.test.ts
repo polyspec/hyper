@@ -20,7 +20,7 @@ it.each(cases.map((item) => [stringOf(item.get('id')), item] as const))('%s', (_
 });
 
 describe('kept cookie name', () => {
-  it('uses the __Host- prefix on HTTPS so that another host cannot set it (HY-39)', () => {
+  it('uses the __Host- prefix on HTTPS so that another host cannot set it (HYC-13)', () => {
     expect(keepCookieName(true)).toBe('__Host-hy-keep');
     expect(keepCookieName(false)).toBe('hy-keep');
   });

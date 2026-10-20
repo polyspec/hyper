@@ -897,7 +897,7 @@ final class AppTest extends TestCase
 
     public function testKeptCookieIsHostOnlyOnHttps(): void
     {
-        // HY-39, HY-45: on HTTPS the server reads only __Host-hy-keep, which another host cannot set.
+        // HY-38, HY-45: on HTTPS the server reads only __Host-hy-keep, which another host cannot set.
         $https = App::open(__DIR__ . '/fixtures/app.json', self::PROGRAM, [
             'routes' => [
                 'add' => ['post' => fn (): Result => Result::redirect('/')],

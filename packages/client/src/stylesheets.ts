@@ -1,4 +1,4 @@
-// Applies the stylesheet links of the head of a source document to the head of the page (HY-64).
+// Applies the stylesheet links of the head of a source document to the head of the page (HYC-15).
 
 // One step of an application: the index of a source link, and the index of the page link that is kept for it, or
 // null when a copy of the source link is inserted.
@@ -8,7 +8,7 @@ export interface StylesheetStep {
 }
 
 // Returns the key of a stylesheet link: its href resolved against the page URL, or null when the element is not a
-// stylesheet link because it has no href or its rel has no token `stylesheet` in any ASCII case (HY-64).
+// stylesheet link because it has no href or its rel has no token `stylesheet` in any ASCII case (HYC-15).
 export function stylesheetKey(rel: string | null, href: string | null, base: string): string | null {
   if (href === null || rel === null) return null;
   if (!rel.split(/[\t\n\f\r ]+/).some((token) => token.toLowerCase() === 'stylesheet')) return null;
@@ -17,7 +17,7 @@ export function stylesheetKey(rel: string | null, href: string | null, base: str
 
 // Plans an application from the keys of the page links and the source links, in order. A key that appears again in
 // the source counts only at its first link. For each source link the first page link with its key after the last kept
-// link is kept; otherwise a copy of the source link is inserted (HY-64).
+// link is kept; otherwise a copy of the source link is inserted (HYC-15).
 export function planStylesheets(page: readonly string[], source: readonly string[]): StylesheetStep[] {
   const steps: StylesheetStep[] = [];
   const seen = new Set<string>();
@@ -32,7 +32,7 @@ export function planStylesheets(page: readonly string[], source: readonly string
   return steps;
 }
 
-// A stylesheet link that failed to load (HY-47, HY-64).
+// A stylesheet link that failed to load (HYC-14, HYC-15).
 export class StylesheetError extends Error {
   constructor(href: string) {
     super(`hyper: stylesheet ${href} failed to load`);
@@ -59,7 +59,7 @@ export class PageStylesheets {
   // Inserts the missing stylesheet links of the head of a source document in its order and waits until every inserted
   // link and every kept link that is still loading has loaded. The returned function removes every other stylesheet
   // link of the page; it removes nothing when a later application has started. When a link fails to load, the links
-  // that this application inserted are removed and the promise rejects (HY-64).
+  // that this application inserted are removed and the promise rejects (HYC-15).
   async apply(source: Document): Promise<() => void> {
     const generation = ++this.generation;
     const present = this.links(this.page);

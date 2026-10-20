@@ -1,5 +1,5 @@
 <!-- doc-id: hyper-build-readme -->
-<!-- source-sha256: 7675a9b224a40b1483370b926ff866d04a89154048a2820abd00620ee048cdd0 -->
+<!-- source-sha256: 652f4fbabca5303d6367b2b71952c24c3f3b689c92d5508f32cbf6bbff2d6219 -->
 # @polyspec/hyper-build
 
 [English](README.md).
@@ -28,7 +28,7 @@ npx hyper-build-server --manifest app/app.json --templates templates --output bu
 
 ## 브라우저 asset
 
-`hyper-build-assets`는 `app/app.json`, `templates/`, `client/main.ts`를 가진 애플리케이션 디렉터리 `--app`을 build한다. `public/assets` 아래에 템플릿 파일과 client entry와 그 chunk를 쓰고, `--output`에 `templates.index.json`, `manifest.json`, static shell `csr/`를 쓴다(HR-34, HY-76). `--api`는 static shell의 데이터 base path이고, `--tailwind <source>=<output>`은 stylesheet를 Tailwind CSS로 컴파일하며(HR-77), `public/` 아래의 각 `--static` 파일은 static 배포에 들어간다.
+`hyper-build-assets`는 `app/app.json`, `templates/`, `client/main.ts`를 가진 애플리케이션 디렉터리 `--app`을 build한다. `public/assets` 아래에 템플릿 파일과 client entry와 그 chunk를 쓰고, `--output`에 `templates.index.json`, `manifest.json`, static shell `csr/`를 쓴다(HR-34, HYC-16). `--api`는 static shell의 데이터 base path이고, `--tailwind <source>=<output>`은 stylesheet를 Tailwind CSS로 컴파일하며(HR-77), `public/` 아래의 각 `--static` 파일은 static 배포에 들어간다.
 
 ```sh
 npx hyper-build-assets --app . --api /api --output build --tailwind styles.css=public/assets/app.css --static public/assets/app.css

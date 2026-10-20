@@ -59,7 +59,7 @@ final class Session
         return new Flash($values, $topics);
     }
 
-    /** Stores a kept value of a region (HY-39, HY-40). */
+    /** Stores a kept value of a region (HY-38, HY-40). */
     public function keep(string $region, string $path, mixed $value): void
     {
         $kept = $this->store->get(self::KEEP);

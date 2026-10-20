@@ -1,10 +1,10 @@
-// The stylesheet links of a source head applied to the head of the page (HY-64).
+// The stylesheet links of a source head applied to the head of the page (HYC-15).
 import { describe, expect, it } from 'vitest';
 import { planStylesheets, stylesheetKey } from '../src/stylesheets.js';
 
 const base = 'http://site.test/board/7';
 
-describe('stylesheetKey (HY-64)', () => {
+describe('stylesheetKey (HYC-15)', () => {
   it('resolves the href of a stylesheet link against the page URL', () => {
     expect(stylesheetKey('stylesheet', '/assets/app.css', base)).toBe('http://site.test/assets/app.css');
     expect(stylesheetKey('stylesheet', 'reader.css', base)).toBe('http://site.test/board/reader.css');
@@ -24,7 +24,7 @@ describe('stylesheetKey (HY-64)', () => {
   });
 });
 
-describe('planStylesheets (HY-64)', () => {
+describe('planStylesheets (HYC-15)', () => {
   it('keeps every present link that the source has and inserts the missing ones in order', () => {
     expect(planStylesheets(['app', 'board'], ['app', 'board', 'reader'])).toEqual([
       { source: 0, kept: 0 },

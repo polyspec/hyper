@@ -46,7 +46,7 @@ export interface Handlers<S extends object> {
 // The client-rendered pages of an application (HY-62): their HTML requests receive the static shell, and their JSON
 // requests and actions use the data base path.
 export interface ClientRendering {
-  // The absolute path of the static shell, which declares the data base path with <meta name="hyper-api"> (HY-22).
+  // The absolute path of the static shell, which declares the data base path with <meta name="hyper-api"> (HYC-8).
   shell: string;
   // The data base path, such as /_props (HY-8).
   basePath: string;
@@ -183,7 +183,7 @@ export class App<S extends object = Record<string, never>> {
     checkHandlers(manifest, options.handlers);
     const client = options.clientRendering === undefined ? null : checkClient(options.clientRendering, manifest);
     // Every entry template of every route and the template of the embedded data are in the index (HY-31, HR-34), and the
-    // server renders every page, so it reads every template of the index (HY-35).
+    // server renders every page, so it reads every template of the index (HYC-12).
     for (const route of manifest.routes) {
       for (const name of [...routeTemplates(manifest, route), DATA_TEMPLATE_NAME]) {
         if (typeof index[name]?.url !== 'string') throw new Error(`hyper: template ${name} is not in the template index`);

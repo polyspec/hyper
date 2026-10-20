@@ -36,7 +36,7 @@ $findPost = static function (Request $request, Posts $posts): array {
 
 // Loaders and actions of the regions and routes that app.json declares.
 return [
-    // The post page, the one route with the parameter `id`, links the reader stylesheet (HY-64).
+    // The post page, the one route with the parameter `id`, links the reader stylesheet (HYC-15).
     'shared' => fn (Assets $assets, Request $request): array => [
         'assets' => $assets->urls(),
         'reader' => $request->param('id') !== null,

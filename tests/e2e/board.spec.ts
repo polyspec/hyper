@@ -112,9 +112,9 @@ test('CSR: a static shell renders every document from /api JSON', async ({ page 
   await boardFlow(page, csr, '/api', 'CSR 글', 2);
 });
 
-// HY-33, HYC-5: hy-set changes region data and renders the region. Template files are static assets; the page starts
-// loading them when it holds the data (HYC-4, HY-35). Saving a server kept value is a background request that rendering
-// does not wait for (HY-39). `documents` names the paths of the document requests of the changes: a server-rendered
+// HYC-11, HYC-5: hy-set changes region data and renders the region. Template files are static assets; the page starts
+// loading them when it holds the data (HYC-4, HYC-12). Saving a server kept value is a background request that rendering
+// does not wait for (HYC-13). `documents` names the paths of the document requests of the changes: a server-rendered
 // list embeds no data, so its first change requests the document JSON of the page once (HYC-7). `loaded` names the
 // template files that the changes load: a server-rendered page loads the templates of a region when it first renders
 // it, and a client-rendered page has loaded them when it rendered the page.
@@ -141,8 +141,8 @@ async function dataFlow(page: Page, origin: string, documents: string[], loaded:
   await expect(page.locator('#notice .notice p')).toContainText('서버 요청 없이');
 
   // The page sends no other request to the application and loads only the template files of the regions that it
-  // renders (HY-30, HY-35, HYC-7). The chunk files, such as the template decoder of the board, are static assets that
-  // the page loads at most once, when it first runs their code (HY-76).
+  // renders (HY-30, HYC-12, HYC-7). The chunk files, such as the template decoder of the board, are static assets that
+  // the page loads at most once, when it first runs their code (HYC-16).
   const templates = requests.filter((url) => new URL(url).pathname.includes('/assets/templates/'));
   const chunks = requests.filter((url) => /^\/assets\/hyper-chunk-[A-Z0-9]+\.js$/.test(new URL(url).pathname));
   expect(chunks).toEqual([...new Set(chunks)]);
@@ -260,7 +260,7 @@ test('SSR embeds only the data of the route regions, and only when the reply ask
   expect(isJsonObject(regions) ? Object.keys(regions) : regions).toEqual(['reader']);
 });
 
-test('a failed region request keeps the page and marks the region (HY-47)', async ({ page }) => {
+test('a failed region request keeps the page and marks the region (HYC-14)', async ({ page }) => {
   for (const origin of [ssr, csr]) {
     await page.goto(`${origin}/board`);
     await page.waitForLoadState('networkidle');
@@ -281,7 +281,7 @@ function stylesheets(page: Page): Promise<string[]> {
   return page.evaluate(() => Array.from(document.head.querySelectorAll<HTMLLinkElement>('link[rel~="stylesheet"]'), (link) => new URL(link.href).pathname));
 }
 
-// HY-64: the post page links the reader stylesheet. It loads before the post is shown, also when its response is
+// HYC-15: the post page links the reader stylesheet. It loads before the post is shown, also when its response is
 // slow, and the list removes it. Each page records the max-width of the post body when the body first appears.
 async function stylesheetFlow(page: Page, origin: string): Promise<void> {
   const errors = collectErrors(page);
@@ -305,7 +305,7 @@ async function stylesheetFlow(page: Page, origin: string): Promise<void> {
   await page.goto(`${origin}/board`);
   await expect(page.locator('#content h1')).toHaveText('게시판');
   expect(await stylesheets(page)).toEqual(['/assets/app.css']);
-  // The page holds each stylesheet once, as a link of the rendered layout, and requested it once (HY-76).
+  // The page holds each stylesheet once, as a link of the rendered layout, and requested it once (HYC-16).
   expect(await page.locator('style').count()).toBe(0);
   expect(requested).toEqual(['/assets/app.css']);
   await page.locator('#rows tbody a').first().click();
@@ -335,15 +335,15 @@ async function stylesheetFlow(page: Page, origin: string): Promise<void> {
   expect(errors).toEqual([]);
 }
 
-test('SSR applies the stylesheet links of the layout on navigation and history restoration (HY-64)', async ({ page }) => {
+test('SSR applies the stylesheet links of the layout on navigation and history restoration (HYC-15)', async ({ page }) => {
   await stylesheetFlow(page, ssr);
 });
 
-test('CSR applies the stylesheet links of the rendered layout before it shows a page (HY-64)', async ({ page }) => {
+test('CSR applies the stylesheet links of the rendered layout before it shows a page (HYC-15)', async ({ page }) => {
   await stylesheetFlow(page, csr);
 });
 
-test('a stylesheet that fails to load keeps the page and marks the region (HY-47, HY-64)', async ({ page }) => {
+test('a stylesheet that fails to load keeps the page and marks the region (HYC-14, HYC-15)', async ({ page }) => {
   await page.route('**/assets/reader.css', (route) => route.fulfill({ status: 404, body: '' }));
   for (const origin of [ssr, csr]) {
     await page.goto(`${origin}/board`);

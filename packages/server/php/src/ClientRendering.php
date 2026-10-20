@@ -12,7 +12,7 @@ final class ClientRendering
 {
     /**
      * @param string $shell the absolute path of the static shell, which declares the base path with
-     *     `<meta name="hyper-api">` (HY-22)
+     *     `<meta name="hyper-api">` (HYC-8)
      * @param string $basePath the data base path, such as `/_props` (HY-8)
      * @param \Closure(Request): mixed $selects returns a Choice: whether the request is of a client-rendered page, and
      *     the value that every loader and action of the request reads with `Request::selection()`; another value

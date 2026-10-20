@@ -1,4 +1,4 @@
-// Kept values that the server reads from the session and the hy-keep cookie (HY-17, HY-37 to HY-39).
+// Kept values that the server reads from the session and the hy-keep cookie (HY-17, HY-37 to HY-38).
 import { applyKept, copyValue, keptPaths, type Application } from '@polyspec/hyper-client';
 import { decodeJson, inDataModel, JsonDecodeError, type DecodedValue } from './json.js';
 import type { Request } from './request.js';
@@ -7,7 +7,7 @@ import { requireMap, type MapValue, type Value } from './values.js';
 
 // Returns the conforming `server` and `cookie` kept values of the regions, by region and path (HY-17, HY-38).
 export function keptValues(request: Request, session: Session, data: Map<string, MapValue>, application: Application, https: boolean): MapValue {
-  // On HTTPS only the host-only cookie counts, which another host cannot set (HY-39).
+  // On HTTPS only the host-only cookie counts, which another host cannot set (HY-38).
   const cookie = decodeCookie(request.cookie(https || request.https ? '__Host-hy-keep' : 'hy-keep'));
   const kept: MapValue = new Map();
   for (const [name, regionData] of data) {

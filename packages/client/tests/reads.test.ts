@@ -75,7 +75,7 @@ describe('read paths (HY-73)', () => {
       shared: { keys: { title: true, count: true, name: true, shared_only: true } },
       regions: { side: { keys: { count: true } }, content: { keys: { title: true, name: true, shared_only: true } } },
     });
-    // The route region keeps a value on the server, so csrf is read whole (HY-39); its kept paths are read whole.
+    // The route region keeps a value on the server, so csrf is read whole (HYC-13); its kept paths are read whole.
     expect(defined(reads.list, 'the reads of list').shared).toMatchObject({ keys: { csrf: true } });
     expect(defined(reads.list, 'the reads of list').regions.rows).toEqual({
       keys: {

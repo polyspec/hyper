@@ -1,6 +1,6 @@
 import { parseJson, type Value } from '@polyspec/template/render';
 
-// A failed document request of HYC-7, with the status that marks the region of the call or the body (HY-47).
+// A failed document request of HYC-7, with the status that marks the region of the call or the body (HYC-14).
 export class ObtainError extends Error {
   readonly status: string;
 

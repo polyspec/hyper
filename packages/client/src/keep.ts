@@ -69,7 +69,7 @@ export function valueToJson(value: Value): string {
   return JSON.stringify(value);
 }
 
-// Reads and writes kept values as JSON text and sends server values (HY-37, HY-39).
+// Reads and writes kept values as JSON text and sends server values (HY-37, HYC-13).
 export interface KeepStorage {
   read(kind: 'localStorage' | 'sessionStorage', region: string, path: string): string | null;
   write(kind: Exclude<KeepKind, 'server'>, region: string, path: string, json: string): void;
@@ -79,7 +79,7 @@ export interface KeepStorage {
 const YEAR = 365 * 24 * 60 * 60;
 
 // Returns the name of the kept cookie: on HTTPS the __Host- prefix makes browsers accept the cookie only
-// from this host with Secure and Path=/, so a sibling subdomain cannot set it (HY-39).
+// from this host with Secure and Path=/, so a sibling subdomain cannot set it (HYC-13).
 export function keepCookieName(https: boolean): string {
   return https ? '__Host-hy-keep' : 'hy-keep';
 }
