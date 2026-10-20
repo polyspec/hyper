@@ -76,3 +76,4 @@
 | H25.60 | PHP 서버는 template 확장에 대한 분기를 두지 않는다(HY-48, P32) | packages/server/php/src/Renderer.php, packages/server/php/src/App.php, packages/server/php/tests/RendererTest.php, docs/spec/protocol.md | `make divergence-check` | [o] |
 | H25.61 | 저장소가 가진 kit 복사본마다 소유 규칙을 둔다 | config/owner-checks.json with clippy.toml in the kit copies rule | `make owner-validate` | [o] |
 | H25.63 | 개발 의존성 vitest와 setuptools를 최신 안정 릴리스로 올린다 | package.json, package-lock.json, packages/server/python/pyproject.toml, config/dependency-review.json | `var/tools/bin/node node_modules/vitest/vitest.mjs run --dir packages/client`, `packages/server/python/.venv/bin/python -m unittest packages/server/python/tests/test_csrf.py` | [o] |
+| H25.64 | K364 이후 kit 복사본이 설치된 kit과 일치한다 | PRINCIPLES.md, PRINCIPLES.ko.md, ruff.toml, .golangci.yml, scripts/kit/kit-bootstrap.mk, clippy.toml | `make kit-check` | [o] |
