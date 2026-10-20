@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 8a95d87621fb95293abce562522e589391180d9844d3e029ed636acf8214d947 -->
+<!-- source-sha256: b85975e12d149bb0d7d0bcbb23a0e81f711c4dfd9304263d0a4dab7b6ce169bd -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -239,4 +239,4 @@
 | H26.2-1 | PHP 서버는 multipart 요청의 file part를 Request::files()와 Request::file()로 제공하고, HY-114의 파일 제한을 적용한다(HY-113, HY-114) | packages/server/php/src/Request.php, packages/server/php/src/App.php, packages/server/php/src/UploadedFile.php, packages/server/php/tests/RequestFilesTest.php, config/parity.json | `vendor/bin/phpunit --filter file_parts packages/server/php/tests/RequestFilesTest.php` | [ ] |
 | H26.2-2 | Python 서버는 multipart 요청의 file part를 files()와 file()로 제공하고, HY-114의 파일 제한을 적용한다(HY-113, HY-114) | packages/server/python/src/polyspec/hyper/request.py, packages/server/python/src/polyspec/hyper/app.py, packages/server/python/src/polyspec/hyper/uploaded_file.py, packages/server/python/tests/test_files.py, config/parity.json | `packages/server/python/.venv/bin/python -m unittest packages/server/python/tests/test_files.py -k file_parts` | [ ] |
 | H26.2-3 | Node 서버는 multipart 요청의 file part를 files()와 file()로 제공하고, HY-114의 파일 제한을 적용한다(HY-113, HY-114) | packages/server/ts/src/request.ts, packages/server/ts/src/app.ts, packages/server/ts/src/uploaded-file.ts, packages/server/ts/tests/files.test.ts, config/parity.json | `vitest run packages/server/ts/tests/files.test.ts -t "file parts keep their order and the file limit refuses a large file"` | [ ] |
-| H26.2-4 | contracts/fields.json는 각 서버가 통과하는 file case를 가진다. 이는 case의 기대 file을 스키마가 정한 뒤다. 스키마에는 아직 그 필드가 없으므로 이 row는 스키마 변경으로 시작한다(HY-113) | contracts/fields.json, packages/server/python/tests/test_fields_multipart.py | `packages/server/python/.venv/bin/python -m unittest packages/server/python/tests/test_fields_multipart.py` | [ ] |
+| H26.2-4 | contracts/fields.json는 각 서버가 통과하는 file case를 가진다. 이는 case의 기대 file을 스키마가 정한 뒤다. 스키마에는 아직 그 필드가 없으므로 이 row는 스키마 변경으로 시작한다(HY-113) | contracts/fields.json, packages/server/python/tests/test_fields_multipart.py | `packages/server/python/.venv/bin/python -m unittest packages/server/python/tests/test_fields_multipart.py` | [o] |
