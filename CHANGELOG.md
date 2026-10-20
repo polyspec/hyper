@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- H25.41-1: Both recipe tests of tests/scripts/check-recipes.test.mts pass with toolchain-check as their prerequisite now that the toolchain runs at the declared versions (kit K304); green: 5 of 5 pass. (H25.41-1)
 - H25.47: The 409 page of the ORM error REVISION_CHANGED renders in the Node tests now that the vitest run loads the linked template once (H25.47-1); green: tests/app.test.ts passes 74 of 74 with the ORM case. (H25.47)
 - H25.47-1: The vitest runs of packages/client and packages/server/ts, started with the package as their folder as the recipes do, load a linked polyspec package once: each package has a vitest.config.mts that inlines @polyspec/ packages, because a link resolved by Node and by the transform of vitest gave two instances of the template and every page render failed with "assign is not a map"; red: 15 of 18 tests of response.test.ts and 21 of 74 of app.test.ts failed, green: they pass. (H25.47-1)
 - H25.48: The copies of PRINCIPLES.md and PRINCIPLES.ko.md match the kit with P30 (links only), and link-state-check joins CHECK_TARGETS and the docs group of ci.yml; red: kit-check reported CHECK_TARGETS without link-state-check, green: kit-check passes and link-state-check passes. (H25.48)
