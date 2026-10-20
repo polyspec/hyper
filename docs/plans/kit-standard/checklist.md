@@ -65,3 +65,4 @@
 | H25.53 | R11: every public symbol of the three servers belongs to an API unit (HY-106) | config/parity.json, packages/server/python/src, three public API tests | `make parity-declarations-check` | [o] |
 | H25.53-1 | The ORM error test of the Python server runs under the parity ledger | packages/server/python/tests/render/render_app.py | `make parity-check UNITS=orm-errors` | [o] |
 | H25.53-2 | The public API test of the Python server is formatted | packages/server/python/tests/test_public_api.py | `make lint-python` | [o] |
+| H25.54 | The copies of the kit match it after K308 and bypass-check is a gate of the repository | PRINCIPLES.md, config/php-lint, .githooks/pre-commit, Makefile, .github/workflows/ci.yml | `make kit-check` | [o] |

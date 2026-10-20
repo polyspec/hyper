@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- H25.54: The copies of PRINCIPLES.md (P31), config/php-lint and the hook .githooks/pre-commit match the kit after K308, config/generated.json declares no generated path and no exception for the pre-commit hook, and bypass-check joins CHECK_TARGETS and the docs group of ci.yml; red: kit-check reported two differing copies and CHECK_TARGETS without bypass-check, and hooks-check the missing pre-commit hook, green: kit-check and hooks-check pass. (H25.54)
 - H25.53-2: tests/test_public_api.py of the Python server is formatted as ruff format writes it; red: make lint-python failed on ruff format --check, green: it passes. (H25.53-2)
 - H25.53-1: The ORM error test of the Python server keeps the logs of the two escaped errors off stderr, where they broke the result line of the verbose unittest output; red: make parity-check UNITS=orm-errors reported R3 not-executed for the Python binding, green: every unit holds in every implementation (public-api and orm-errors, 5 of 5 ids). (H25.53-1)
 - H25.15: config/dependency-review.json records the review of the locks as they are with make dependency-review RECORD=1 (25 registry dependencies, 5 locks, and the ruff entry); red: dependency-policy-check reported the changed lock hashes and the missing ruff entry, green: those findings are gone; the findings that remain are newer stable releases (vitest, phpunit, setuptools, sprintf-js) and the lock platform of H25.14, which belong to the upgrade step and to the re-resolution of the tracked locks of kit local-links.md. (H25.15)

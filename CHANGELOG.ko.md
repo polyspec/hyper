@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 731d7c213a31d4c35770f22f19f94c32321f45c729b496d4b3978a259f269966 -->
+<!-- source-sha256: e29e5f4d3a8baf4a1c83203c4b67a78ca2bdce2f44e97afb3c260b182c5838f5 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H25.54: PRINCIPLES.md(P31), config/php-lint, hook .githooks/pre-commit 사본이 K308 이후의 kit와 같고, config/generated.json은 pre-commit hook에 generated 경로도 예외도 선언하지 않으며, bypass-check가 CHECK_TARGETS와 ci.yml의 docs 그룹에 들어간다. red: kit-check가 다른 사본 두 개와 bypass-check 없는 CHECK_TARGETS를, hooks-check가 없는 pre-commit hook을 보고했고, green: kit-check와 hooks-check가 통과한다. (H25.54)
 - H25.53-2: Python 서버의 tests/test_public_api.py는 ruff format이 쓰는 형태다. red: make lint-python이 ruff format --check에서 실패했고, green: 통과한다. (H25.53-2)
 - H25.53-1: Python 서버의 ORM 오류 test는 이스케이프된 오류 두 건의 log를 stderr로 내보내지 않는다. 그 log가 verbose unittest 출력의 결과 줄을 끊었다. red: make parity-check UNITS=orm-errors가 Python binding에 R3 not-executed를 보고했고, green: 모든 구현에서 모든 unit이 성립한다(public-api와 orm-errors, id 5개 중 5개). (H25.53-1)
 - H25.15: config/dependency-review.json은 make dependency-review RECORD=1로 lock을 있는 그대로 검토한 기록을 담는다(registry 의존성 25개, lock 5개, ruff 항목). red: dependency-policy-check가 바뀐 lock hash와 없는 ruff 항목을 보고했고, green: 그 항목들이 사라졌다. 남은 항목은 더 새로운 안정 release(vitest, phpunit, setuptools, sprintf-js)와 H25.14의 lock platform이며, 업그레이드 단계와 kit local-links.md의 추적 lock 재해석에 속한다. (H25.15)

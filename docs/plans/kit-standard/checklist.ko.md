@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-kit-standard -->
-<!-- source-sha256: 6416f4c4c15b8a1a7a4e49f5c77f16cb637f8c05e753121700e35d5061722c1b -->
+<!-- source-sha256: ec92156e75e5700e53fd418c58e03acb1c59b74040ea82811013b075c5d406fb -->
 # kit 표준 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -66,3 +66,4 @@
 | H25.53 | R11: 세 서버의 모든 public symbol은 API unit에 속한다(HY-106) | config/parity.json, packages/server/python/src, three public API tests | `make parity-declarations-check` | [o] |
 | H25.53-1 | Python 서버의 ORM 오류 test는 parity ledger에서 실행된다 | packages/server/python/tests/render/render_app.py | `make parity-check UNITS=orm-errors` | [o] |
 | H25.53-2 | Python 서버의 public API test가 format되어 있다 | packages/server/python/tests/test_public_api.py | `make lint-python` | [o] |
+| H25.54 | kit 사본이 K308 이후의 kit와 같고 bypass-check가 저장소의 gate다 | PRINCIPLES.md, config/php-lint, .githooks/pre-commit, Makefile, .github/workflows/ci.yml | `make kit-check` | [o] |
