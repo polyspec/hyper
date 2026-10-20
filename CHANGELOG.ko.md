@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: e580836a22a851f7075eb2fa381c8de3c01e72cdfff02e27af7574d764fa0868 -->
+<!-- source-sha256: bbc41fd61d61b1ccd793e04bc4cff0d9438f5d2b154c37f37c6a4335ac55fe77 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H25.14-1: hyper의 vendor 디렉터리는 make link(kit K304-1)로 template 폴더에 연결되어 platform check가 PHP 8.4.1을 요구한다. green: toolchain-check와 lint-php가 통과하고, packages/server/php의 PHPUnit 파일 17개가 var/tools/bin/php 8.4.26에서 통과하여 Homebrew PHP 8.5에서 실행했던 PHP item을 다시 검증한다. (H25.14-1)
 - H25.41-1: tests/scripts/check-recipes.test.mts의 두 recipe test는 toolchain이 선언한 버전으로 실행되므로(kit K304) toolchain-check를 선행 target으로 둔 채 통과한다. green: 5개 모두 통과. (H25.41-1)
 - H25.47: vitest 실행이 연결된 template을 한 번만 load하게 되어(H25.47-1) ORM 오류 REVISION_CHANGED의 409 page가 Node test에서 render된다. green: tests/app.test.ts가 ORM 사례를 포함해 74개 중 74개 통과한다. (H25.47)
 - H25.47-1: recipe처럼 package 폴더에서 시작하는 packages/client와 packages/server/ts의 vitest 실행은 연결된 polyspec package를 한 번만 load한다. 각 package의 vitest.config.mts가 @polyspec/ package를 inline하는데, Node와 vitest의 transform이 각각 해석한 link가 template의 인스턴스를 둘로 만들어 모든 page render가 "assign is not a map"으로 실패했기 때문이다. red: response.test.ts 18개 중 15개, app.test.ts 74개 중 21개 실패, green: 모두 통과. (H25.47-1)
