@@ -55,4 +55,45 @@ describe('client stream subscription', () => {
     await vi.advanceTimersByTimeAsync(0);
     expect(events[1]).toEqual({ event: 'message', data: 'b', id: '7' });
   });
+
+  it('reports a silent stream and reconnects', async () => {
+    vi.useFakeTimers();
+    const sent: string[] = [];
+    const silent = new ReadableStream<Uint8Array>({ start() {} });
+    const responses = [new Response(silent, { status: 200 }), eventStream(['data: after\n\n'], true)];
+    const fetch: Fetch = async (url) => {
+      sent.push(url);
+      return responses.shift() ?? eventStream([], true);
+    };
+    const events: unknown[] = [];
+    const errors: Error[] = [];
+    client(fetch).subscribe('/api/events', { onEvent: (event) => events.push(event), onError: (error) => errors.push(error) }, { watchdogMs: 1000 });
+
+    await vi.advanceTimersByTimeAsync(999);
+    expect(errors).toHaveLength(0);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(errors.map((error) => error.message)).toEqual([expect.stringContaining('no byte of /api/events arrived for 1000 ms')]);
+    expect(sent).toHaveLength(1);
+
+    // The retry delay of the stream is the default of 1000 ms, since the server sent none.
+    await vi.advanceTimersByTimeAsync(999);
+    expect(sent).toHaveLength(1);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(sent).toHaveLength(2);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(events).toEqual([{ event: 'message', data: 'after', id: '' }]);
+  });
+
+  it('fails a silent stream after the default watchdog of 30000 ms', async () => {
+    vi.useFakeTimers();
+    const silent = new ReadableStream<Uint8Array>({ start() {} });
+    const fetch: Fetch = async () => new Response(silent, { status: 200 });
+    const errors: Error[] = [];
+    client(fetch).subscribe('/api/events', { onEvent: () => undefined, onError: (error) => errors.push(error) });
+
+    await vi.advanceTimersByTimeAsync(29999);
+    expect(errors).toHaveLength(0);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(errors.map((error) => error.message)).toEqual([expect.stringContaining('arrived for 30000 ms')]);
+  });
 });

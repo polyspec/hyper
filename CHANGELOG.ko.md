@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 8419af4d4a4d5f5e596c148760679092e62873b2f7ed808e9f2aafb1a0144b73 -->
+<!-- source-sha256: ffeae32b5c67a9a9c9bd19f3966c7e66b82d1f52b8364541a47af355cfaa1aca -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H26.1-2: TypeScript 클라이언트의 구독은 watchdogMs(기본 30000 ms) 동안 byte가 없는 stream을 onError에 도달하는 오류로 실패시키고, 이어서 재연결한다(HY-111). red: watchdog을 끈 상태에서 테스트가 오류를 보고하지 않았고, green: 오류가 URL과 시간을 담고, stream은 기본 1000 ms 뒤 재연결한다. (H26.1-2)
 - H25.67: scripts/kit/kit-bootstrap.mk는 kit-sync 뒤 다시 @polyspec/kit 0.0.54의 kit copy다. red: make kit-check가 설치된 kit과 다르다고 보고했고, green: 통과한다. make hooks가 쓰는 .githooks/commit-msg도 이 변경과 함께 추적된다. (H25.67)
 - H26.1-1: TypeScript 클라이언트는 구독 stream을 eventsource-parser 4.1.2(정확한 버전)로 읽고, Last-Event-ID와 서버의 retry 지연으로 재연결한다(HY-108부터 HY-110까지). red: vitest가 subscribe is not a function을 보고했고, green: 테스트가 통과한다. (H26.1-1)
 - H26.2: docs/spec/protocol.md는 multipart 요청의 file part에 이름, 파일 이름, content type, bytes를 `files()`와 `file()`로 준다(HY-113). 또한 기본값 8 MiB의 파일 제한을 정한다(HY-114). 구현 row H26.2-1부터 H26.2-4까지를 등록했다. 원인: HY-57은 filename이 있는 part가 file이라고 정하지만, 애플리케이션에 그 file을 주는 규칙이 없었다. contracts/fields.json 스키마에는 기대 file을 적는 필드가 없으므로, contract case는 스키마 변경을 기다린다(H26.2-4). 검증: make docs-check가 통과한다. (H26.2)

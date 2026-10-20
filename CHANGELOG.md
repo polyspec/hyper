@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- H26.1-2: A subscription of the TypeScript client fails a stream that sends no byte for watchdogMs (default 30000 ms) with an error that reaches onError, then reconnects (HY-111); red: with the watchdog disabled the test reported no error, green: the error names the URL and the time, and the stream reconnects after the 1000 ms default. (H26.1-2)
 - H25.67: scripts/kit/kit-bootstrap.mk is the kit copy of @polyspec/kit 0.0.54 again, after kit-sync; red: make kit-check reported that it differed from the installed kit, green: it passes. make hooks also writes .githooks/commit-msg, which is tracked with this change. (H25.67)
 - H26.1-1: The TypeScript client reads a stream subscription with eventsource-parser 4.1.2, pinned exactly, and reconnects with Last-Event-ID and the server retry delay (HY-108 to HY-110); red: vitest reported that subscribe is not a function, green: the test passes. (H26.1-1)
 - H26.2: docs/spec/protocol.md gives a file part of a multipart request its name, filename, content type and bytes through `files()` and `file()` (HY-113), and states the file limit with its 8 MiB default (HY-114); the implementation rows H26.2-1 to H26.2-4 are registered. Cause: HY-57 states that a part with a filename is a file, and no rule gave the application that file. The contracts/fields.json schema has no field for expected files, so the contract cases wait for its schema change (H26.2-4). Verification: make docs-check passes. (H26.2)
