@@ -77,10 +77,11 @@ function jobs(text: string): Job[] {
   }));
 }
 
-// The workflows of this repository; release.yml is the copy of the release workflow of @polyspec/kit (kit.copies), whose
-// rules kit tests and make kit-check holds it to, so the rules of this file read the other workflows.
+// The workflows of this repository; release.yml and gates.yml are copies of workflows of @polyspec/kit (kit.copies), whose
+// rules kit tests and make kit-check holds them to, so the rules of this file read the other workflows.
 const allWorkflows = () => readdirSync(WORKFLOWS).filter((name) => name.endsWith('.yml')).map((name) => ({ name, text: readFileSync(path.join(WORKFLOWS, name), 'utf8') }));
-const workflows = () => allWorkflows().filter((workflow) => workflow.name !== 'release.yml');
+const KIT_COPIES = ['release.yml', 'gates.yml'];
+const workflows = () => allWorkflows().filter((workflow) => !KIT_COPIES.includes(workflow.name));
 
 test('the reader finds the jobs and the steps of a workflow', () => {
   const read = jobs('on:\n  push:\njobs:\n  first:\n    runs-on: x\n    steps:\n      - uses: a/b@c\n        with:\n          d: e\n      - run: make one\n        if: ${{ !cancelled() }}\n  second:\n    steps:\n      - id: s\n        run: make two\n');
@@ -123,7 +124,9 @@ test('every step that runs a command runs make, and every step after the first r
 // module tag). No other workflow exists, and none runs on a pull request or a merge group (HR-91, HR-95).
 const TRIGGERS: Record<string, string> = {
   'ci.yml': 'on:\n  push:\n    branches: [main]\n  workflow_dispatch:\n',
-  'release.yml': "on:\n  push:\n    tags: ['v*', '**/v*']\n",
+  'release.yml': "on:\n  push:\n    tags: ['v*', '**/v*']\n  workflow_dispatch:\n    inputs:\n      tag:\n        description: The tag of the release, such as v0.0.1\n        required: true\n        type: string\n",
+  // The gates workflow of @polyspec/kit (K270), a copy that make kit-check holds to the package; this repository has no pull request.
+  'gates.yml': 'on:\n  pull_request:\n  push:\n    branches: [main]\n  workflow_dispatch:\n',
 };
 
 /**
@@ -165,8 +168,9 @@ test('each workflow declares exactly its triggers (HR-91, HR-95)', () => {
     assert.equal(declared, TRIGGERS[workflow.name], `${workflow.name} declares other triggers`);
   }
   // The trigger */v* matches a tag with one / only, so it misses a Go module tag deeper in the tree.
-  assert.notEqual("on:\n  push:\n    tags: ['v*', '*/v*']\n", TRIGGERS['release.yml']);
-  for (const workflow of allWorkflows()) assert.doesNotMatch(workflow.text, /pull_request|merge_group|gh-readonly-queue/, `${workflow.name} names a pull request or a merge group`);
+  assert.doesNotMatch(TRIGGERS['release.yml'] ?? '', /'\*\/v\*'/);
+  // gates.yml of kit names a pull request, which this repository never opens, so it never starts there.
+  for (const workflow of workflows()) assert.doesNotMatch(workflow.text, /pull_request|merge_group|gh-readonly-queue/, `${workflow.name} names a pull request or a merge group`);
 });
 
 /**

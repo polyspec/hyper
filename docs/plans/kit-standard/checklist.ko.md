@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-kit-standard -->
-<!-- source-sha256: 7619e7c85d21514d71e65fd45ca630ff806e657829711a59b2ff0411bafb84b9 -->
+<!-- source-sha256: 156df022b425c997e6198b884337945197310f93d9873c11eb6cc68fc3910cda -->
 # kit 표준 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -34,3 +34,4 @@
 | H25.27 | R13: handler의 서비스와 session 동시 쓰기는 모든 서버의 규칙이다 | docs/spec/protocol.md and its Korean twin | `make docs-check` | [o] |
 | H25.28 | config/rebuild.json은 paths가 없고 kit이 layout으로 찾는 모든 tool 원본을 분류한다 | config/rebuild.json | `make rebuild-check` | [o] |
 | H25.29 | kit 사본이 K286 이후의 kit과 일치한다 | PRINCIPLES.md and PRINCIPLES.ko.md | `make kit-check` | [o] |
+| H25.30 | kit의 gate는 make check와 CI group에서 실행되고, workflow test는 이 저장소의 workflow만 읽는다 | Makefile, .github/workflows/ci.yml, tests/scripts/ci-workflow.test.mts and docs/operations/repository-rules.md with its twin | `var/tools/bin/node --test tests/scripts/ci-workflow.test.mts`, `make kit-check` | [o] |

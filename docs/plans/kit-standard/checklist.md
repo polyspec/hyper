@@ -33,3 +33,4 @@
 | H25.27 | R13: the services of the handlers and the concurrent session writes are rules of every server | docs/spec/protocol.md and its Korean twin | `make docs-check` | [o] |
 | H25.28 | config/rebuild.json has no paths and classes every tool source that kit finds by layout | config/rebuild.json | `make rebuild-check` | [o] |
 | H25.29 | The copies of kit match the kit after K286 | PRINCIPLES.md and PRINCIPLES.ko.md | `make kit-check` | [o] |
+| H25.30 | The gates of kit run in make check and in the CI groups, and the workflow test reads the workflows of this repository only | Makefile, .github/workflows/ci.yml, tests/scripts/ci-workflow.test.mts and docs/operations/repository-rules.md with its twin | `var/tools/bin/node --test tests/scripts/ci-workflow.test.mts`, `make kit-check` | [o] |
