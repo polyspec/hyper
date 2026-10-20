@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 946685b467d0322139018d33dc873adcbfd1c7d7db2f2ef9590344af2c892fad -->
+<!-- source-sha256: cec8e912a5f625e6c6f8560a637dad5a18a54180ddd01af4b7ef2f85d8f634aa -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H25.14-1: H25.14의 vendor와 runtime 부분은 별도 item H25.14-1이다(kit K304로 막힘: link가 installed.json에 polyspec/template의 >=8.5를 남긴다). H25.14는 lock 재해석을, H25.15는 review 기록을 맡는다. (H25.14-1)
 - H25.41: tests/scripts/check-recipes.test.mts의 recipe test 두 개는 어느 machine에서나 통과한다. make를 -o toolchain-check로 실행하고(이 machine에서는 phpstan이 PHP 8.4에서 시작하지 못해 그 선행 target이 실패했으며, 그것은 환경 문제(H25.14)이고 자기 gate의 몫이다), hyper-test-js 사례는 kit의 runner가 CI 밖에서 선택 없는 vitest 실행을 거부하므로 GITHUB_ACTIONS=true를 설정한다. red: 5개 중 2개 실패, green: 5개 모두 통과. (H25.41)
 - H25.40: AGENTS.md의 모든 규칙은 Own: 또는 Refines <id>:로 시작하고, PRINCIPLES.md를 되풀이하던 두 규칙(수락 조건, task 순서)은 삭제했다. red: make rules-check가 44건을 보고했고, green: 0건이다. (H25.40)
 - H25.39: 사본 `PRINCIPLES.md`와 `PRINCIPLES.ko.md`를 K294와 K297 이후의 설치된 kit에서 `make kit-sync`로 다시 쓴다. Red: `make kit-check` exit 2, `@polyspec/kit`과 다른 사본 2개. Green: `make kit-check` exit 0. `make rules-check`는 이제 `Own:`이나 `Refines <id>:`로 시작하지 않는 `AGENTS.md` 규칙 44개를 보고하며, 이는 다음 item이다 (H25.39)

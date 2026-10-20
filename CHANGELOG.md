@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- H25.14-1: The vendor and runtime part of H25.14 is its own item H25.14-1 (blocked by kit K304, the link leaves the >=8.5 of polyspec/template in installed.json); H25.14 keeps the lock re-resolution and H25.15 the review record. (H25.14-1)
 - H25.41: The two recipe tests of tests/scripts/check-recipes.test.mts pass on every machine: make runs with -o toolchain-check, whose prerequisite failed here because phpstan cannot start under PHP 8.4 (environment, H25.14) and is the job of its own gate, and the hyper-test-js case sets GITHUB_ACTIONS=true because the runner of the kit refuses a vitest run without a selection outside CI; red: 2 of 5 failed, green: 5 of 5 pass. (H25.41)
 - H25.40: Every rule of AGENTS.md begins with Own: or Refines <id>: and the two rules that restated PRINCIPLES.md (accepted conditions, order of tasks) are deleted; red: make rules-check reported 44 findings, green: it reports none. (H25.40)
 - H25.39: The copies `PRINCIPLES.md` and `PRINCIPLES.ko.md` are written by `make kit-sync` from the installed kit after K294 and K297. Red: `make kit-check` exit 2, two copies that differ from `@polyspec/kit`. Green: `make kit-check` exit 0. `make rules-check` now reports 44 rules of `AGENTS.md` that begin with neither `Own:` nor `Refines <id>:`, which is the next item (H25.39)
