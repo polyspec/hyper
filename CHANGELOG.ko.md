@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: ecfec2fdf575d4b5572c9a8d620387c8c63a2253a64c4300386e2bf51b046bc6 -->
+<!-- source-sha256: 731d7c213a31d4c35770f22f19f94c32321f45c729b496d4b3978a259f269966 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H25.53-2: Python 서버의 tests/test_public_api.py는 ruff format이 쓰는 형태다. red: make lint-python이 ruff format --check에서 실패했고, green: 통과한다. (H25.53-2)
 - H25.53-1: Python 서버의 ORM 오류 test는 이스케이프된 오류 두 건의 log를 stderr로 내보내지 않는다. 그 log가 verbose unittest 출력의 결과 줄을 끊었다. red: make parity-check UNITS=orm-errors가 Python binding에 R3 not-executed를 보고했고, green: 모든 구현에서 모든 unit이 성립한다(public-api와 orm-errors, id 5개 중 5개). (H25.53-1)
 - H25.15: config/dependency-review.json은 make dependency-review RECORD=1로 lock을 있는 그대로 검토한 기록을 담는다(registry 의존성 25개, lock 5개, ruff 항목). red: dependency-policy-check가 바뀐 lock hash와 없는 ruff 항목을 보고했고, green: 그 항목들이 사라졌다. 남은 항목은 더 새로운 안정 release(vitest, phpunit, setuptools, sprintf-js)와 H25.14의 lock platform이며, 업그레이드 단계와 kit local-links.md의 추적 lock 재해석에 속한다. (H25.15)
 - H25.53: config/parity.json은 세 서버의 public symbol에 대한 API unit 155개를 담는다(HY-106). application 옵션, handler, HY-100의 host는 각 런타임의 형태를 따른다. public API(서버마다 export하는 것을 확인하는 test)와 ORM 오류(HY-107)에는 feature unit이 하나씩 있다. Python의 Request, Response, Redirect, Choice, ClientRendering은 extractor가 나열하도록 값을 property로 노출한다. red: API unit이 선언하지 않은 public symbol 155개와 R1 11건, green: 세 서버의 extractor가 선언되지 않은 public symbol도 R1도 찾지 못하고 parity 선언이 성립한다. (H25.53)

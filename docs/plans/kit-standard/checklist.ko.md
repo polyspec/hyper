@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-kit-standard -->
-<!-- source-sha256: 826b4ba2309afdb84daceb923a797a910c1fb6f855754e65bc0d7044f0db08f5 -->
+<!-- source-sha256: 6416f4c4c15b8a1a7a4e49f5c77f16cb637f8c05e753121700e35d5061722c1b -->
 # kit 표준 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -65,3 +65,4 @@
 | H25.52 | R11: Python 서버는 public API만 선언한다(HY-106) | packages/server/python/src, packages/server/python/tests, packages/server/python/README.md | `make hyper-test-python` | [o] |
 | H25.53 | R11: 세 서버의 모든 public symbol은 API unit에 속한다(HY-106) | config/parity.json, packages/server/python/src, three public API tests | `make parity-declarations-check` | [o] |
 | H25.53-1 | Python 서버의 ORM 오류 test는 parity ledger에서 실행된다 | packages/server/python/tests/render/render_app.py | `make parity-check UNITS=orm-errors` | [o] |
+| H25.53-2 | Python 서버의 public API test가 format되어 있다 | packages/server/python/tests/test_public_api.py | `make lint-python` | [o] |

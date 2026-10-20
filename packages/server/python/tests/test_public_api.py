@@ -26,9 +26,7 @@ class PublicApiTest(unittest.TestCase):
     ) -> None:
         folder = Path(polyspec.hyper.__file__).parent
         found = sorted(
-            file.stem
-            for file in folder.glob("*.py")
-            if not file.stem.startswith("_")
+            file.stem for file in folder.glob("*.py") if not file.stem.startswith("_")
         )
         self.assertEqual(PUBLIC_MODULES, found)
         self.assertEqual(
