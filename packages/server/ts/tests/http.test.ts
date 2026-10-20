@@ -5,7 +5,7 @@ import { connect } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { FileSessions, Response, type App } from '../src/index.js';
+import { FileSessions, Response } from '../src/index.js';
 import { Fixture, FIXTURES, handlers, parsed, port, present, record, text } from './support.js';
 
 let directory: string;

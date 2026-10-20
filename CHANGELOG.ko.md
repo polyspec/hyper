@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 6ce1a37e1c99b933f20a06929eda545adb665b2bb4f890f00f408e8072029172 -->
+<!-- source-sha256: b652dcc6d91416cbdad262fecf6ec4d5c02787b12332b19f3049db4fee1f48ea -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H25.47: Node 서버는 ORM 오류 NO_ROWS를 not found로, action이 일으킨 REVISION_CHANGED를 status 409인 route page로 응답한다(HY-107). red: test가 NO_ROWS의 404 대신 500을 받았고, green: NO_ROWS 응답은 통과한다. 409 page는 연결된 template이 모든 page render를 "assign is not a map"으로 실패시키는 동안 render할 수 없다. (H25.47)
 - H25.46: Python 서버는 ORM 오류 NO_ROWS를 not found로, action이 일으킨 REVISION_CHANGED를 status 409인 route page로 응답한다(HY-107). red: test_orm_errors_are_answered_as_their_stops가 404 대신 page 200을 받았고, green: render_app이 통과한다. (H25.46)
 - H25.45: PHP 서버는 ORM 오류 NO_ROWS를 not found로, action이 일으킨 REVISION_CHANGED를 status 409인 route page로 응답한다(HY-107. HY-107은 loader가 REVISION_CHANGED를 일으키면 HY-43으로 실패한다는 것도 정한다). red: AppTest::testOrmErrorsAreAnsweredAsTheirStops가 404 대신 500을 받았고, green: AppTest가 통과한다(Homebrew PHP 8.5에서 실행, H25.14-1의 환경 문제). (H25.45)
 - H25.44: HY-107은 loader나 action이 ORM 오류 NO_ROWS와 REVISION_CHANGED를 밖으로 나가게 둘 수 있다고 정한다. 서버는 NO_ROWS를 NotFound(404)로, REVISION_CHANGED를 status 409이고 data가 없는 route page로 응답하며, ORM에 대한 의존 없이 클래스 이름과 code로 오류를 알아본다. (H25.44)

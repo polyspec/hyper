@@ -505,6 +505,18 @@ describe('App', () => {
     expect((await fixture.handle({ method: 'DELETE', target: '/add' })).status).toBe(405);
   });
 
+  it('answers the ORM errors NO_ROWS and REVISION_CHANGED as their stops (HY-107)', async () => {
+    expect((await fixture.get('/items/orm-missing')).status).toBe(404);
+    const missing = await fixture.post('/add', { _csrf: await fixture.token(), name: 'orm-missing' });
+    expect([missing.status, missing.body]).toEqual([404, 'Not Found']);
+    const stale = await fixture.post('/add', { _csrf: await fixture.token(), name: 'orm-stale' });
+    expect(stale.status).toBe(409);
+    expect(stale.headers['Cache-Control']).toBe('no-store');
+    // A loader cannot answer with the page that it fails to load, and another code is not handled: HY-43.
+    expect((await fixture.get('/items/orm-stale')).status).toBe(500);
+    expect((await fixture.post('/add', { _csrf: await fixture.token(), name: 'orm-other' })).status).toBe(500);
+  });
+
   it('answers a loader redirect with 303 and passes its flash values (HY-50)', async () => {
     const response = await fixture.get('/items/moved', JSON_REGION);
     expect(response.status).toBe(303);

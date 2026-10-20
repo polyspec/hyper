@@ -349,6 +349,10 @@ export class App<S extends object = Record<string, never>> {
       if (error instanceof Redirect) return this.redirect(session, error.result, input.basePath);
       if (error instanceof Forbidden) return Response.text(403, 'Forbidden');
       if (error instanceof BadRequest) return Response.text(400, 'Bad Request');
+      // HY-107: an error of the ORM is answered as the stop of its meaning; every other error escapes (HY-43).
+      const code = ormCode(error);
+      if (code === 'NO_ROWS') return Response.text(404, 'Not Found');
+      if (code === 'REVISION_CHANGED' && request.method === 'POST') return withoutRenewal(reply, await this.page({ ...input, status: 409, invalid: {} }));
       throw error;
     }
   }
@@ -413,6 +417,13 @@ function checkClient(client: ClientRendering, manifest: Manifest): Client {
 // Escapes a value as PHP htmlspecialchars with ENT_QUOTES does.
 function escapeAttribute(value: string): string {
   return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#039;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// The code of an error of the ORM, which hyper knows by the name of its class and by its property `code`, because it does not
+// depend on the ORM (HY-107), or undefined for every other error.
+function ormCode(error: unknown): string | undefined {
+  if (!(error instanceof Error) || error.name !== 'OrmError' || !('code' in error)) return undefined;
+  return typeof error.code === 'string' ? error.code : undefined;
 }
 
 // Fails when a loader or the shared handler renewed the session, because the page carries the old token (HY-72).

@@ -39,6 +39,9 @@ export function handlers(): Handlers<Services> {
             throw new Forbidden();
           }
           if (request.formString('name') === 'unreadable') throw new BadRequest();
+          if (request.formString('name') === 'orm-stale') throw new OrmError('REVISION_CHANGED');
+          if (request.formString('name') === 'orm-missing') throw new OrmError('NO_ROWS');
+          if (request.formString('name') === 'orm-other') throw new OrmError('DRIVER');
           if (request.formString('name') === 'taken') return Result.page(409, { name: 'taken', error: 'conflict' });
           if (request.formString('name') === 'preview') return Result.page(200, { name: 'preview' });
           if (request.formString('name') === 'in-place') {
@@ -91,6 +94,10 @@ export function handlers(): Handlers<Services> {
               return { id: 'referrer-in-place' };
             case 'missing':
               throw new NotFound();
+            case 'orm-missing':
+              throw new OrmError('NO_ROWS');
+            case 'orm-stale':
+              throw new OrmError('REVISION_CHANGED');
             case 'private':
               reply.note('refusal', 'private');
               throw new Forbidden();
@@ -129,6 +136,17 @@ export function handlers(): Handlers<Services> {
 }
 
 // A fixture application with one session and one counter, as the PHP AppTest sets them up.
+/** An error shaped like the OrmError of @polyspec/orm, which hyper identifies by its class name and its code (HY-107). */
+class OrmError extends Error {
+  public readonly code: string;
+
+  public constructor(code: string) {
+    super(`${code}: a failure of the ORM`);
+    this.name = 'OrmError';
+    this.code = code;
+  }
+}
+
 export class Fixture {
   readonly session = new MemorySessionStore();
   readonly counter: Counter = { count: 0, actions: 0 };
