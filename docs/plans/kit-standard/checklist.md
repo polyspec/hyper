@@ -63,3 +63,4 @@
 | H25.51 | Request.withHeader is public in the PHP and Node servers (HY-97, HY-106) | packages/server/php/src/Request.php, packages/server/ts/src/request.ts | `make hyper-test-node` | [o] |
 | H25.52 | R11: the Python server declares only its public API (HY-106) | packages/server/python/src, packages/server/python/tests, packages/server/python/README.md | `make hyper-test-python` | [o] |
 | H25.53 | R11: every public symbol of the three servers belongs to an API unit (HY-106) | config/parity.json, packages/server/python/src, three public API tests | `make parity-declarations-check` | [o] |
+| H25.53-1 | The ORM error test of the Python server runs under the parity ledger | packages/server/python/tests/render/render_app.py | `make parity-check UNITS=orm-errors` | [o] |

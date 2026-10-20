@@ -1,5 +1,7 @@
 # The application answers document requests, JSON requests, region requests and actions with the rules of the PHP
 # server (HY-15 to HY-19, HY-24 to HY-26, HY-40, HY-50 to HY-53, HY-58, HY-69, HY-73, HY-92).
+import contextlib
+import io
 import json
 import tempfile
 import unittest
@@ -292,9 +294,11 @@ class ActionTest(unittest.TestCase):
         stale = add("orm-stale")
         self.assertEqual(409, stale.status)
         self.assertEqual("no-store", stale.headers["Cache-Control"])
-        # A loader cannot answer with the page that it fails to load, and another code is not handled: HY-43.
-        self.assertEqual(500, app.handle(get("/items/orm-stale"), store).status)
-        self.assertEqual(500, add("orm-other").status)
+        # A loader cannot answer with the page that it fails to load, and another code is not handled: HY-43. The server
+        # logs these two on stderr, which the verbose output of unittest would interleave with its result lines.
+        with contextlib.redirect_stderr(io.StringIO()):
+            self.assertEqual(500, app.handle(get("/items/orm-stale"), store).status)
+            self.assertEqual(500, add("orm-other").status)
 
     def test_the_etag_of_a_json_page_and_the_304_of_a_matching_request(self) -> None:
         store = ArraySession()
