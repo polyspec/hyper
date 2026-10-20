@@ -10,10 +10,10 @@ let installed = false;
 function install(): void {
   if (installed) return;
   installed = true;
-  const emit: (warning: string | Error, ...rest: unknown[]) => void = process.emitWarning.bind(process);
-  process.emitWarning = (warning: string | Error, ...rest: unknown[]): void => {
+  const emit = process.emitWarning;
+  process.emitWarning = (warning: string | Error, ...rest: [unknown?, unknown?, unknown?]): void => {
     if (answering.getStore() === true) throw warning instanceof Error ? warning : new Error(warning);
-    emit(warning, ...rest);
+    Reflect.apply(emit, process, [warning, ...rest]);
   };
 }
 

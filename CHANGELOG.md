@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- H25.25-1: The package @polyspec/hyper-server builds again: warnings.ts replaces process.emitWarning by a function typed to the signature of Node (Reflect.apply, no cast), and the around cases of tests/http.test.ts type-check; red: tsc -p packages/server/ts/tsconfig.build.json failed with TS2322 at warnings.ts(13,9), green: tsc passes for the build and the test configuration and the HY-74 case passes. (H25.25-1)
 - H25.41-1: H25.41 is undone: the recipe tests of tests/scripts/check-recipes.test.mts run make without -o toolchain-check and without GITHUB_ACTIONS, and the hyper-test-js case selects its test file with the new JS_TESTS variable of the recipe, as the runner of the kit requires; the tests depend on toolchain-check and stay red on this machine until kit K304 lands. (H25.41-1)
 - H25.42: config/toolchain.json names php in symbolExtractors and make install-tools installs the php symbol extractor, which lists the symbols of packages/server/php/src (red: R1 reported var/tools/symbols-php/vendor/autoload.php missing); the python extractor still fails because kit runs it without the mise environment (scripts/kit/parity.mts:113, :61 and parity-symbols.mts:210). (H25.42)
 - H25.14-1: The vendor and runtime part of H25.14 is its own item H25.14-1 (blocked by kit K304, the link leaves the >=8.5 of polyspec/template in installed.json); H25.14 keeps the lock re-resolution and H25.15 the review record. (H25.14-1)

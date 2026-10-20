@@ -40,7 +40,7 @@ async function listen(target: Server): Promise<string> {
 
 // An application whose shared handler waits until `release()` is called, and whose disconnect hook records into
 // `events`; `running` settles when the shared handler has started.
-async function waitingApp(events: string[]): Promise<{ app: App; running: Promise<void>; release: () => void }> {
+async function waitingApp(events: string[]): Promise<{ app: Awaited<ReturnType<Fixture['app']>>; running: Promise<void>; release: () => void }> {
   const entered = latch();
   const released = latch();
   const app = await new Fixture().app({
@@ -411,9 +411,9 @@ describe('the request hook around', () => {
       () => {
         throw new Error('around boom');
       },
-      // @ts-expect-error: the hook returns a value that is no Response, which the server checks at run time.
       () => 'not a response',
     ]) {
+      // @ts-expect-error: one hook returns a value that is no Response, which the server checks at run time.
       server = app.server(new FileSessions({ directory }), { around, written: (_request, response, ended, _elapsed, failure) => written.push([response?.status ?? null, ended, failure]) });
       base = await listen(server);
       const response = await fetch(`${base}/`);

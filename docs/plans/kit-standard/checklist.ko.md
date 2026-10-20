@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-kit-standard -->
-<!-- source-sha256: 21af3ee6796279aea07a932c5b6ebb30f73f4777d366439d3d48b536ed8c6630 -->
+<!-- source-sha256: 4171b8932ced89bb2c5a736d3994d072219cf87242a144927eeb72c3eee62f5f -->
 # kit 표준 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -31,6 +31,7 @@
 | H25.23 | R13: HY-48, HY-74, HY-97, HY-100은 한 언어가 아니라 모든 서버의 규칙을 적는다 | docs/spec/protocol.md and its Korean twin, and the citations of HY-101 and HY-102 | `make docs-check` | [o] |
 | H25.24 | Python 서버는 PHP AppTest의 case를 시험하고, Python 런타임의 경고는 요청을 실패시킨다(HY-74) | packages/server/python/tests/render/render_requests.py, fixture_handlers.py, src/polyspec/hyper/warnings_guard.py, app.py, request.py and result.py | `packages/server/python/.venv/bin/python -m unittest packages/server/python/tests/render/render_requests.py` | [o] |
 | H25.25 | Node 서버는 요청 hook around를 받고(HY-97) process 경고를 내는 요청을 실패시킨다(HY-74) | packages/server/ts/src/http.ts, request.ts, warnings.ts, app.ts, index.ts, the tests http.test.ts and app.test.ts and the specification | `var/tools/bin/node node_modules/vitest/vitest.mjs run --dir packages/server/ts` | [o] |
+| H25.25-1 | TypeScript 서버 package가 build된다: warnings.ts는 process.emitWarning에 맞게 type을 갖는다 | packages/server/ts/src/warnings.ts and packages/server/ts/tests/http.test.ts | `make hyper-test-node` | [o] |
 | H25.26 | PHP 서버는 요청 hook around를 받는다(HY-97) | packages/server/php/src/App.php, Request.php, Delivery.php, the tests AppTest.php and RunTest.php with the front controllers, and the specification | `var/tools/bin/node node_modules/@polyspec/kit/dist/run-tests.mjs phpunit --cwd packages/server/php -- --exclude-group native tests/RunTest.php` | [o] |
 | H25.27 | R13: handler의 서비스와 session 동시 쓰기는 모든 서버의 규칙이다 | docs/spec/protocol.md and its Korean twin | `make docs-check` | [o] |
 | H25.28 | config/rebuild.json은 paths가 없고 kit이 layout으로 찾는 모든 tool 원본을 분류한다 | config/rebuild.json | `make rebuild-check` | [o] |
@@ -51,3 +52,4 @@
 | H25.41 | check-recipes.test.mts의 recipe test는 machine의 toolchain에 의존하지 않는다 | tests/scripts/check-recipes.test.mts | `var/tools/bin/node --test tests/scripts/check-recipes.test.mts` | [o] |
 | H25.41-1 | hyper-test-js recipe test는 자기 소유 case를 선택하며 toolchain-check를 건너뛰지 않고 CI를 가장하지 않는다 | tests/scripts/check-recipes.test.mts, Makefile | `var/tools/bin/node --test tests/scripts/check-recipes.test.mts` | [!] 원인: 두 recipe test는 toolchain-check에 의존하며, 이 machine에서는 kit K304가 반영될 때까지 실패한다(platform_check.php가 PHP 8.5를 요구해 phpstan이 PHP 8.4.26에서 시작하지 못한다); 재시도: K304가 반영되면 var/tools/bin/node --test tests/scripts/check-recipes.test.mts를 실행한다 |
 | H25.42 | R1: parity check의 symbol extractor가 php와 python server에서 실행된다 | config/toolchain.json | `make parity-check UNITS=manifest` | [!] 원인: kit 결함: scripts/kit/parity.mts:113이 env 없이 checkParity를 호출해 env가 process.env가 되고(parity.mts:61), python extractor(parity-symbols.mts:210)가 toolsEnvironment의 mise 환경 없이 mise shim을 실행하여 mise가 "Config files in mise.toml are not trusted"로 실패한다; 재시도: kit가 extractor에 toolsEnvironment(root)를 전달하면; php extractor는 설치되어 symbol을 나열한다 |
+| H25.43 | R11: HY-106이 서버의 public API와 내부 요소를 정한다 | docs/spec/protocol.md and docs/spec/protocol.ko.md | `make docs-check` | [~] |
