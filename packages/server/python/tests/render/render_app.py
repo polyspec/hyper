@@ -18,11 +18,34 @@ from polyspec.hyper.session import ArraySession
 TOKEN = "00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff"
 
 
+class OrmError(Exception):
+    """An error shaped like the OrmError of polyspec.orm, which hyper identifies by its class name and its code (HY-107)."""
+
+    def __init__(self, code: str):
+        super().__init__(f"{code}: a failure of the ORM")
+        self.code = code
+
+
 def handlers() -> dict:
     def add(request: Request) -> Result:
         if request.form_string("name") == "taken":
             return Result.page(409, {"name": "taken"})
+        if request.form_string("name").startswith("orm-"):
+            raise OrmError(
+                {"orm-stale": "REVISION_CHANGED", "orm-missing": "NO_ROWS"}.get(
+                    request.form_string("name"), "DRIVER"
+                )
+            )
         return Result.redirect("/list").flash_value("created", 3).changed("rows")
+
+    def item(request: Request) -> dict:
+        if request.param("id") in ("orm-missing", "orm-stale"):
+            raise OrmError(
+                "NO_ROWS"
+                if request.param("id") == "orm-missing"
+                else "REVISION_CHANGED"
+            )
+        return {"id": request.param("id")}
 
     return {
         "shared": lambda request: {"site": "fixture"},
@@ -30,7 +53,7 @@ def handlers() -> dict:
         "routes": {
             "home": {"load": lambda request: {"name": "n"}},
             "add": {"post": add},
-            "item": {"load": lambda request: {"id": request.param("id")}},
+            "item": {"load": item},
             "list": {
                 "load": lambda request: {"rows": 2},
                 "regions": {
@@ -243,6 +266,35 @@ class ActionTest(unittest.TestCase):
         answered = json.loads(response.body)
         self.assertEqual("add", answered["route"])
         self.assertEqual("taken", answered["regions"]["content"]["name"])
+
+    def test_orm_errors_are_answered_as_their_stops(self) -> None:
+        # HY-107: NO_ROWS is a not found, REVISION_CHANGED is the route page with status 409 and no data of its own.
+        store = ArraySession()
+        app = opened()
+
+        def add(name: str):
+            return app.handle(
+                Request(
+                    "POST",
+                    "/add",
+                    {"Content-Type": "application/x-www-form-urlencoded"},
+                    body=urlencode(
+                        {"_csrf": masked(_token(app, store)), "name": name}
+                    ).encode(),
+                ),
+                store,
+            )
+
+        missing = app.handle(get("/items/orm-missing"), store)
+        self.assertEqual((404, "Not Found"), (missing.status, missing.body))
+        action = add("orm-missing")
+        self.assertEqual((404, "Not Found"), (action.status, action.body))
+        stale = add("orm-stale")
+        self.assertEqual(409, stale.status)
+        self.assertEqual("no-store", stale.headers["Cache-Control"])
+        # A loader cannot answer with the page that it fails to load, and another code is not handled: HY-43.
+        self.assertEqual(500, app.handle(get("/items/orm-stale"), store).status)
+        self.assertEqual(500, add("orm-other").status)
 
     def test_the_etag_of_a_json_page_and_the_304_of_a_matching_request(self) -> None:
         store = ArraySession()

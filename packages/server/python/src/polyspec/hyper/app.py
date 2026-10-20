@@ -379,6 +379,16 @@ class App:
             return Response.text(403, "Forbidden")
         except BadRequest:
             return Response.text(400, "Bad Request")
+        except Exception as error:
+            # HY-107: an error of the ORM is answered as the stop of its meaning; every other error escapes (HY-43).
+            code = _orm_code(error)
+            if code == "NO_ROWS":
+                return Response.text(404, "Not Found")
+            if code == "REVISION_CHANGED" and request.method == "POST":
+                return self._page(
+                    request, route, handler, session, flash, 409, {}, reply, base_path
+                )
+            raise
 
     def _redirect(self, session: Session, result: Result, base_path: str) -> Response:
         """Stores the flash values and changed topics of a redirect result and answers 303 (HY-25, HY-50)."""
@@ -731,6 +741,15 @@ def _escape_attribute(value: str) -> str:
         .replace("<", "&lt;")
         .replace(">", "&gt;")
     )
+
+
+def _orm_code(error: Exception) -> str | None:
+    """The code of an error of the ORM, which hyper knows by the name of its class and by its attribute `code`, because
+    it does not depend on the ORM (HY-107), or None for every other error."""
+    code = getattr(error, "code", None)
+    if type(error).__name__ != "OrmError" or not isinstance(code, str):
+        return None
+    return code
 
 
 def _without_renewal(reply: Reply, response: Response) -> Response:

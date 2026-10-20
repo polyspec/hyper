@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-kit-standard -->
-<!-- source-sha256: 67dba2be2b38c7e8374c36aaa30ca28e5407655c8a63c650c562c2adba203156 -->
+<!-- source-sha256: 29f44c34cd7eb02815551f7061aae5a6439971780dafb7e079d27ece8d3b208e -->
 # kit 표준 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -55,3 +55,4 @@
 | H25.43 | R11: HY-106이 서버의 public API와 내부 요소를 정한다 | docs/spec/protocol.md and docs/spec/protocol.ko.md | `make docs-check` | [o] |
 | H25.44 | HY-107이 ORM 오류 NO_ROWS와 REVISION_CHANGED에 대한 응답을 정한다 | docs/spec/protocol.md and docs/spec/protocol.ko.md | `make docs-check` | [o] |
 | H25.45 | PHP 서버: ORM 오류 NO_ROWS와 REVISION_CHANGED는 not found와 409 page로 응답한다(HY-107) | packages/server/php/src/App.php, packages/server/php/tests/AppTest.php | `make hyper-test-php TESTS=packages/server/php/tests/AppTest.php` | [o] |
+| H25.46 | Python 서버: ORM 오류 NO_ROWS와 REVISION_CHANGED는 not found와 409 page로 응답한다(HY-107) | packages/server/python/src/polyspec/hyper/app.py, packages/server/python/tests/render/render_app.py | `python -m unittest packages/server/python/tests/render/render_app.py` | [o] |

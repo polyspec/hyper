@@ -54,3 +54,4 @@
 | H25.43 | R11: HY-106 states the public API of a server and what is internal | docs/spec/protocol.md and docs/spec/protocol.ko.md | `make docs-check` | [o] |
 | H25.44 | HY-107 states the answers to the ORM errors NO_ROWS and REVISION_CHANGED | docs/spec/protocol.md and docs/spec/protocol.ko.md | `make docs-check` | [o] |
 | H25.45 | PHP server: ORM errors NO_ROWS and REVISION_CHANGED are answered as a not found and a 409 page (HY-107) | packages/server/php/src/App.php, packages/server/php/tests/AppTest.php | `make hyper-test-php TESTS=packages/server/php/tests/AppTest.php` | [o] |
+| H25.46 | Python server: ORM errors NO_ROWS and REVISION_CHANGED are answered as a not found and a 409 page (HY-107) | packages/server/python/src/polyspec/hyper/app.py, packages/server/python/tests/render/render_app.py | `python -m unittest packages/server/python/tests/render/render_app.py` | [o] |

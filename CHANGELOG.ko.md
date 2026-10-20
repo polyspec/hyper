@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 5ec6a6ae65498b0d25539d4c4efbc13a442e5dcc4fafcadc5126c69a90497e17 -->
+<!-- source-sha256: 6ce1a37e1c99b933f20a06929eda545adb665b2bb4f890f00f408e8072029172 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H25.46: Python 서버는 ORM 오류 NO_ROWS를 not found로, action이 일으킨 REVISION_CHANGED를 status 409인 route page로 응답한다(HY-107). red: test_orm_errors_are_answered_as_their_stops가 404 대신 page 200을 받았고, green: render_app이 통과한다. (H25.46)
 - H25.45: PHP 서버는 ORM 오류 NO_ROWS를 not found로, action이 일으킨 REVISION_CHANGED를 status 409인 route page로 응답한다(HY-107. HY-107은 loader가 REVISION_CHANGED를 일으키면 HY-43으로 실패한다는 것도 정한다). red: AppTest::testOrmErrorsAreAnsweredAsTheirStops가 404 대신 500을 받았고, green: AppTest가 통과한다(Homebrew PHP 8.5에서 실행, H25.14-1의 환경 문제). (H25.45)
 - H25.44: HY-107은 loader나 action이 ORM 오류 NO_ROWS와 REVISION_CHANGED를 밖으로 나가게 둘 수 있다고 정한다. 서버는 NO_ROWS를 NotFound(404)로, REVISION_CHANGED를 status 409이고 data가 없는 route page로 응답하며, ORM에 대한 의존 없이 클래스 이름과 code로 오류를 알아본다. (H25.44)
 - H25.43: HY-106은 서버의 public API(애플리케이션, host 진입점, 요청, reply, response, result와 그 중단, session store, 서비스, 클라이언트 렌더링)를 정하고, 그 밖의 모든 symbol은 내부 요소이며 PHP와 Node에서는 @internal로, Python에서는 밑줄로 표시한다고 정한다. (H25.43)
