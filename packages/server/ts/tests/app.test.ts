@@ -559,6 +559,22 @@ describe('App', () => {
     expect((await send('POST', '/add', { 'Content-Type': 'Application/X-WWW-Form-Urlencoded; charset=UTF-8' }, `_csrf=${token}&name=a`, {})).status).toBe(303);
   });
 
+  it('file parts over the file limit are refused before the action (HY-114)', async () => {
+    const token = await fixture.token();
+    const multipart = { 'Content-Type': 'multipart/form-data; boundary=x' };
+    const upload = (content: string) =>
+      `--x\r\nContent-Disposition: form-data; name="_csrf"\r\n\r\n${token}\r\n--x\r\nContent-Disposition: form-data; name="name"\r\n\r\na\r\n--x\r\nContent-Disposition: form-data; name="upload"; filename="a.txt"\r\n\r\n${content}\r\n--x--\r\n`;
+    const options = { formTypes: ['application/x-www-form-urlencoded', 'multipart/form-data'], fileLimit: 32 };
+    const refused = await fixture.handle({ method: 'POST', target: '/add', headers: multipart, body: upload('a'.repeat(40)) }, options);
+    expect(refused.status).toBe(413);
+    expect(refused.body).toBe('Content Too Large');
+    expect(fixture.counter.actions).toBe(0);
+    const accepted = await fixture.handle({ method: 'POST', target: '/add', headers: multipart, body: upload('a'.repeat(32)) }, options);
+    expect(accepted.status).toBe(303);
+    expect(fixture.counter.actions).toBe(1);
+    await expect(fixture.app({ bodyLimit: 16, fileLimit: 32 })).rejects.toThrow('hyper:');
+  });
+
   it('takes the accepted form types as an option (HY-59)', async () => {
     const token = await fixture.token();
     const body = `--x\r\nContent-Disposition: form-data; name="_csrf"\r\n\r\n${token}\r\n--x\r\nContent-Disposition: form-data; name="name"\r\n\r\na\r\n--x--\r\n`;

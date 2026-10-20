@@ -1,3 +1,5 @@
+import { UploadedFile } from './uploaded-file.js';
+
 // Query strings, form bodies and cookies. Query and form fields are read without nesting: each name, in the order
 // of its first occurrence, has its values in request order, and a bracketed name is the name as written (HY-56).
 // The first cookie of a name counts, as PHP reads $_COOKIE. Names and values must be UTF-8 (HY-42).
@@ -7,6 +9,13 @@ const strict = new TextDecoder('utf-8', { fatal: true });
 // The fields of a query string or a form body; `valid` is false when a name or a value is not UTF-8.
 export interface Fields {
   values: Map<string, string[]>;
+  valid: boolean;
+}
+
+// The file parts of a multipart body: each name, in the order of its first occurrence, has its files in request
+// order; `valid` is false when a name, a filename or a content type is not UTF-8 (HY-113).
+export interface FileParts {
+  values: Map<string, UploadedFile[]>;
   valid: boolean;
 }
 
@@ -56,14 +65,26 @@ export function parseUrlEncoded(text: string): Fields {
 // multipart/form-data body; a body of another type has none (HY-57).
 export function formFields(type: string, body: Uint8Array): Fields {
   if (/^application\/x-www-form-urlencoded\s*(;|$)/i.test(type)) return parseUrlEncoded(Buffer.from(body.buffer, body.byteOffset, body.byteLength).toString('latin1'));
-  const boundary = /^multipart\/form-data\s*;/i.test(type) ? /;\s*boundary=(?:"([^"]+)"|([^;\s]+))/i.exec(type) : null;
-  const value = boundary?.[1] ?? boundary?.[2];
-  return value === undefined ? { values: new Map(), valid: true } : parseMultipart(body, value);
+  const value = multipartBoundary(type);
+  return value === undefined ? { values: new Map(), valid: true } : parseMultipart(body, value).fields;
 }
 
-// Parses the text fields of a multipart/form-data body; file fields are not form values.
-function parseMultipart(body: Uint8Array, boundary: string): Fields {
+// Returns the file parts of a request body: the files of a multipart/form-data body, and none for another type (HY-113).
+export function fileParts(type: string, body: Uint8Array): FileParts {
+  const value = multipartBoundary(type);
+  return value === undefined ? { values: new Map(), valid: true } : parseMultipart(body, value).files;
+}
+
+function multipartBoundary(type: string): string | undefined {
+  const boundary = /^multipart\/form-data\s*;/i.test(type) ? /;\s*boundary=(?:"([^"]+)"|([^;\s]+))/i.exec(type) : null;
+  return boundary?.[1] ?? boundary?.[2];
+}
+
+// Reads a multipart/form-data body into its text fields and its files (HY-57, HY-113). A part with a name and no
+// filename is a text field; a part with a name and a filename is a file; a part without a name is neither.
+function parseMultipart(body: Uint8Array, boundary: string): { fields: Fields; files: FileParts } {
   const fields: Fields = { values: new Map(), valid: true };
+  const files: FileParts = { values: new Map(), valid: true };
   const buffer = Buffer.from(body.buffer, body.byteOffset, body.byteLength);
   const delimiter = Buffer.from(`--${boundary}`, 'latin1');
   let start = buffer.indexOf(delimiter);
@@ -75,13 +96,34 @@ function parseMultipart(body: Uint8Array, boundary: string): Fields {
     const part = buffer.subarray(partStart + 2, next - 2);
     const headerEnd = part.indexOf('\r\n\r\n');
     if (headerEnd >= 0) {
-      const disposition = /^content-disposition:\s*form-data(.*)$/im.exec(part.subarray(0, headerEnd).toString('latin1'))?.[1] ?? '';
+      const headers = part.subarray(0, headerEnd).toString('latin1');
+      const disposition = /^content-disposition:\s*form-data(.*)$/im.exec(headers)?.[1] ?? '';
       const name = /;\s*name="([^"]*)"/i.exec(disposition)?.[1];
-      if (name !== undefined && !/;\s*filename=/i.test(disposition)) add(fields, bytesOf(name), part.subarray(headerEnd + 4));
+      const content = part.subarray(headerEnd + 4);
+      if (name !== undefined && !/;\s*filename=/i.test(disposition)) add(fields, bytesOf(name), content);
+      else if (name !== undefined) addFile(files, bytesOf(name), disposition, headers, content);
     }
     start = next;
   }
-  return fields;
+  return { fields, files };
+}
+
+// Adds a file part: its filename is the filename parameter with the backslash escapes of its quoted string undone, or
+// a token as it is; its content type is the Content-Type header as sent, or empty text (HY-113).
+function addFile(files: FileParts, nameBytes: Uint8Array, disposition: string, headers: string, content: Uint8Array): void {
+  const name = utf8(nameBytes);
+  const found = /;\s*filename=(?:"((?:[^"\\]|\\.)*)"|([^;\s]*))/i.exec(disposition);
+  const raw = found === null ? null : (found[1] ?? found[2] ?? '').replace(/\\(.)/gs, '$1');
+  const filename = raw === null ? null : utf8(bytesOf(raw));
+  const kind = utf8(bytesOf(/^content-type:[ \t]*(.*?)\r?$/im.exec(headers)?.[1]?.trim() ?? ''));
+  if (name === null || filename === null || kind === null) {
+    files.valid = false;
+    return;
+  }
+  const values = files.values.get(name);
+  const file = new UploadedFile(name, filename, kind, content);
+  if (values === undefined) files.values.set(name, [file]);
+  else values.push(file);
 }
 
 function add(fields: Fields, nameBytes: Uint8Array, valueBytes: Uint8Array): void {

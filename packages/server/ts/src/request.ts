@@ -1,6 +1,7 @@
 // One HTTP request with the session values that the application reads.
-import { bytesOf, formFields, parseCookies, parseUrlEncoded, utf8, type Fields } from './form.js';
+import { bytesOf, fileParts, formFields, parseCookies, parseUrlEncoded, utf8, type Fields, type FileParts } from './form.js';
 import type { Flash } from './session.js';
+import type { UploadedFile } from './uploaded-file.js';
 import type { Value } from './values.js';
 
 // The parts of an HTTP request as node:http gives them: the request target and the header values are text
@@ -24,6 +25,8 @@ interface State {
   rawQuery: string;
   query: Fields;
   form: Fields;
+  // The file parts of the body (HY-113).
+  files: FileParts;
   cookies: Map<string, string>;
   https: boolean;
   params: Record<string, string>;
@@ -50,6 +53,7 @@ export class Request {
     const rawQuery = Request.targetQuery(init.target);
     const body = init.body ?? new Uint8Array();
     const form = formFields(headers.get('content-type') ?? '', body);
+    const files = fileParts(headers.get('content-type') ?? '', body);
     const declared = headers.get('content-length') ?? '';
     return new Request({
       method: init.method.toUpperCase(),
@@ -59,6 +63,7 @@ export class Request {
       rawQuery,
       query: parseUrlEncoded(rawQuery),
       form,
+      files,
       cookies: parseCookies(headers.get('cookie') ?? ''),
       https: init.https ?? false,
       params: {},
@@ -140,7 +145,22 @@ export class Request {
   // and HX-Current-URL are UTF-8 (HY-42). Cookies are not checked; hyper ignores invalid ones.
   validInput(): boolean {
     const current = this.state.headers.get('hx-current-url');
-    return /^[\x21-\x7e]*$/.test(this.state.path) && (current === undefined || utf8(bytesOf(current)) !== null) && this.state.query.valid && this.state.form.valid;
+    return /^[\x21-\x7e]*$/.test(this.state.path) && (current === undefined || utf8(bytesOf(current)) !== null) && this.state.query.valid && this.state.form.valid && this.state.files.valid;
+  }
+
+  // Returns the file parts of the body, an ordered map from each name to its files in request order (HY-113).
+  files(): ReadonlyMap<string, readonly UploadedFile[]> {
+    return new Map([...this.state.files.values].map(([name, files]) => [name, [...files]]));
+  }
+
+  // Returns the last file of a name, or undefined (HY-113).
+  file(name: string): UploadedFile | undefined {
+    return this.state.files.values.get(name)?.at(-1);
+  }
+
+  // Returns true when a file of the body is larger than `limit` bytes (HY-114).
+  fileOver(limit: number): boolean {
+    return [...this.state.files.values.values()].some((files) => files.some((file) => file.content.byteLength > limit));
   }
 
   // Returns the size of the body in bytes: its length, or the Content-Length header when that is larger (HY-59).

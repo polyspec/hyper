@@ -3,6 +3,7 @@ export { FileSession, FileSessions, type FileSessionsOptions } from './file-sess
 export { type AroundHook, type Listener, type ServerOptions, type WriteHook } from './http.js';
 export { Reply } from './reply.js';
 export { Request, type RequestInit } from './request.js';
+export { UploadedFile } from './uploaded-file.js';
 export { Response } from './response.js';
 export { BadRequest, Forbidden, NotFound, Redirect, Result } from './result.js';
 export { Services } from './services.js';

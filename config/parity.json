@@ -2462,6 +2462,72 @@
       ]
     },
     {
+      "id": "request-files",
+      "kind": "api",
+      "requirements": [
+        "HY-106",
+        "HY-113"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Request::files"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.request.Request.files"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Request_2#files:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "request-file",
+      "kind": "api",
+      "requirements": [
+        "HY-106",
+        "HY-113"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Request::file"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.request.Request.file"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Request_2#file:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "uploaded-file",
+      "kind": "api",
+      "requirements": [
+        "HY-106",
+        "HY-113"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\UploadedFile"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.uploaded_file.UploadedFile"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!UploadedFile:class"
+        }
+      ]
+    },
+    {
       "id": "request-header",
       "kind": "api",
       "requirements": [

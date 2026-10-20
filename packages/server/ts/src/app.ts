@@ -83,6 +83,9 @@ export interface AppOptions<S extends object> {
   frameAncestors?: string;
   // The largest request body in bytes; a larger body receives 413. The default is 8 MiB, PHP's post_max_size (HY-59).
   bodyLimit?: number;
+  // The largest file in bytes of a request body, a file part of it (HY-113): a larger file receives 413 before the
+  // action or the kept value runs. The default is 8 MiB, the default body limit, so that the body limit refuses first.
+  fileLimit?: number;
   // The media types of the request bodies that actions and /_hyper/keep accept: application/x-www-form-urlencoded
   // and multipart/form-data. The default is application/x-www-form-urlencoded (HY-59).
   formTypes?: string[];
@@ -124,6 +127,7 @@ export class App<S extends object = Record<string, never>> {
   readonly frameAncestors: string;
   /** @internal */
   readonly bodyLimit: number;
+  private readonly fileLimit: number;
   private readonly responseLimit: number;
   private readonly formTypes: readonly string[];
   private readonly onResponse: AppOptions<S>['onResponse'];
@@ -140,6 +144,7 @@ export class App<S extends object = Record<string, never>> {
     https: boolean,
     frameAncestors: string,
     bodyLimit: number,
+    fileLimit: number,
     responseLimit: number,
     formTypes: readonly string[],
     onResponse: AppOptions<S>['onResponse'],
@@ -157,6 +162,7 @@ export class App<S extends object = Record<string, never>> {
     this.https = https;
     this.frameAncestors = frameAncestors;
     this.bodyLimit = bodyLimit;
+    this.fileLimit = fileLimit;
     this.responseLimit = responseLimit;
     this.formTypes = formTypes;
     this.onResponse = onResponse;
@@ -174,6 +180,10 @@ export class App<S extends object = Record<string, never>> {
     }
     const bodyLimit = options.bodyLimit ?? 8 * 1024 * 1024;
     if (!Number.isSafeInteger(bodyLimit) || bodyLimit < 1) throw new Error(`hyper: body limit ${bodyLimit} is not a positive number of bytes`);
+    const fileLimit = options.fileLimit ?? 8 * 1024 * 1024;
+    if (!Number.isSafeInteger(fileLimit) || fileLimit < 1 || fileLimit > bodyLimit) {
+      throw new Error(`hyper: file limit ${fileLimit} is not a positive number of bytes no larger than the body limit ${bodyLimit} (HY-114)`);
+    }
     const responseLimit = options.responseLimit ?? 8 * 1024 * 1024;
     if (!Number.isSafeInteger(responseLimit) || responseLimit < 1) throw new Error(`hyper: response limit ${responseLimit} is not a positive number of bytes`);
     const formTypes = options.formTypes ?? ['application/x-www-form-urlencoded'];
@@ -205,7 +215,7 @@ export class App<S extends object = Record<string, never>> {
       if (template === undefined) throw new Error(`hyper: template ${name} is not in the template index`);
       return template;
     }, resolvePath);
-    return new App(application, options.handlers, options.timezone, basePath, options.https ?? false, options.frameAncestors ?? "'self'", bodyLimit, responseLimit, [...formTypes], options.onResponse, options.onDisconnect, options.log ?? ((message) => process.stderr.write(`${message}\n`)), client, reads);
+    return new App(application, options.handlers, options.timezone, basePath, options.https ?? false, options.frameAncestors ?? "'self'", bodyLimit, fileLimit, responseLimit, [...formTypes], options.onResponse, options.onDisconnect, options.log ?? ((message) => process.stderr.write(`${message}\n`)), client, reads);
   }
 
   // Registers the factory of an application service.
@@ -344,6 +354,8 @@ export class App<S extends object = Record<string, never>> {
       if (request.method !== 'POST' || handler.post === undefined) return Response.text(405, 'Method Not Allowed');
       if (!this.formTypes.includes(request.mediaType())) return Response.text(415, 'Unsupported Media Type');
       if (!verifyToken(session.csrfToken(), request.formString('_csrf'))) return Response.text(403, 'Forbidden');
+      // HY-114: a file over the file limit is refused before the action runs, as HY-59 refuses a large body.
+      if (request.fileOver(this.fileLimit)) return Response.text(413, 'Content Too Large');
       const result = await handler.post({ request, reply, services: this.services });
       stopClosed(input.signal);
       if (!(result instanceof Result)) throw new Error(`hyper: POST action of route ${input.route.name} did not return a Result`);
@@ -390,6 +402,7 @@ export class App<S extends object = Record<string, never>> {
     if (request.method !== 'POST') return Response.text(405, 'Method Not Allowed');
     if (!this.formTypes.includes(request.mediaType())) return Response.text(415, 'Unsupported Media Type');
     if (!verifyToken(session.csrfToken(), request.formString('_csrf'))) return Response.text(403, 'Forbidden');
+    if (request.fileOver(this.fileLimit)) return Response.text(413, 'Content Too Large');
     const name = request.formString('region');
     const path = request.formString('path');
     if (!Object.hasOwn(keptPaths(this.application.manifest, name), path) || keptPaths(this.application.manifest, name)[path] !== 'server') {
