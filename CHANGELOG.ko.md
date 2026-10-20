@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: bdf42c4c3e9a35241252f3a22b53b4f0b96183b432826509c47026e0ee1acb37 -->
+<!-- source-sha256: a98bd03253e974b4d79e1daa7ea48de94db507b7486944d60376c87c040cb83b -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H25.47: vitest 실행이 연결된 template을 한 번만 load하게 되어(H25.47-1) ORM 오류 REVISION_CHANGED의 409 page가 Node test에서 render된다. green: tests/app.test.ts가 ORM 사례를 포함해 74개 중 74개 통과한다. (H25.47)
 - H25.47-1: recipe처럼 package 폴더에서 시작하는 packages/client와 packages/server/ts의 vitest 실행은 연결된 polyspec package를 한 번만 load한다. 각 package의 vitest.config.mts가 @polyspec/ package를 inline하는데, Node와 vitest의 transform이 각각 해석한 link가 template의 인스턴스를 둘로 만들어 모든 page render가 "assign is not a map"으로 실패했기 때문이다. red: response.test.ts 18개 중 15개, app.test.ts 74개 중 21개 실패, green: 모두 통과. (H25.47-1)
 - H25.48: PRINCIPLES.md와 PRINCIPLES.ko.md 사본이 P30(link만 사용)을 담은 kit와 같고, link-state-check가 CHECK_TARGETS와 ci.yml의 docs 그룹에 들어간다. red: kit-check가 link-state-check 없는 CHECK_TARGETS를 보고했고, green: kit-check와 link-state-check가 통과한다. (H25.48)
 - H25.47: Node 서버는 ORM 오류 NO_ROWS를 not found로, action이 일으킨 REVISION_CHANGED를 status 409인 route page로 응답한다(HY-107). red: test가 NO_ROWS의 404 대신 500을 받았고, green: NO_ROWS 응답은 통과한다. 409 page는 연결된 template이 모든 page render를 "assign is not a map"으로 실패시키는 동안 render할 수 없다. (H25.47)
