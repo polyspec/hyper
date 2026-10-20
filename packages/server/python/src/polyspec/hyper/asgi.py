@@ -16,12 +16,15 @@ from .app import App
 from .file_sessions import FileSessions
 from .pipeline import (
     CONTENT_TYPES,
+    Around,
+    Written,
     Exchange,
     answer_with,
     cookie_values,
     declared_length,
     escape,
     head_request,
+    header_lines,
     public_file,
     validate,
 )
@@ -41,12 +44,8 @@ def create_asgi(
     app: App,
     sessions: FileSessions,
     files: Optional[str] = None,
-    around: Optional[
-        Callable[[Request, Callable[[Request], Response]], Response]
-    ] = None,
-    written: Optional[
-        Callable[[Request, Optional[Response], bool, float, Optional[str]], None]
-    ] = None,
+    around: Optional[Around] = None,
+    written: Optional[Written] = None,
 ) -> Callable:
     """Returns an ASGI 3 application callable that answers every request with the application, as
     `create_server` does (HY-101). `files`, `around` and `written` mean what they mean there (HY-97,
@@ -123,8 +122,7 @@ def _messages(response: Response) -> tuple[list[tuple[bytes, bytes]], bytes]:
     body = b"" if empty else response.body.encode("utf-8")
     headers = [
         (name.lower().encode("ascii"), item.encode("utf-8"))
-        for name, value in response.headers.items()
-        for item in (value if isinstance(value, list) else [value])
+        for name, item in header_lines(response)
     ]
     if not empty:
         headers.append((b"content-length", str(len(body)).encode("ascii")))

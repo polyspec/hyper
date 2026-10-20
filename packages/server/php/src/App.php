@@ -414,11 +414,9 @@ final class App
             if ($request->method !== 'POST' || !isset($handler['post'])) {
                 return Response::text(405, 'Method Not Allowed');
             }
-            if (!in_array($request->mediaType(), $this->formTypes, true)) {
-                return Response::text(415, 'Unsupported Media Type');
-            }
-            if (!Csrf::verify($session->csrfToken(), $request->formString('_csrf'))) {
-                return Response::text(403, 'Forbidden');
+            $refused = $this->refusedForm($request, $session);
+            if ($refused !== null) {
+                return $refused;
             }
             $result = $this->container->call($handler['post'], [Request::class => $request, Reply::class => $reply]);
             if (!$result instanceof Result) {
@@ -812,17 +810,28 @@ final class App
         );
     }
 
+    /** The response that refuses a form request of an unsupported media type or with a wrong CSRF token, or null. */
+    private function refusedForm(Request $request, Session $session): ?Response
+    {
+        if (!in_array($request->mediaType(), $this->formTypes, true)) {
+            return Response::text(415, 'Unsupported Media Type');
+        }
+        if (!Csrf::verify($session->csrfToken(), $request->formString('_csrf'))) {
+            return Response::text(403, 'Forbidden');
+        }
+
+        return null;
+    }
+
     /** Stores a kept value of a `server` path in the session (HY-40). */
     private function keep(Request $request, Session $session): Response
     {
         if ($request->method !== 'POST') {
             return Response::text(405, 'Method Not Allowed');
         }
-        if (!in_array($request->mediaType(), $this->formTypes, true)) {
-            return Response::text(415, 'Unsupported Media Type');
-        }
-        if (!Csrf::verify($session->csrfToken(), $request->formString('_csrf'))) {
-            return Response::text(403, 'Forbidden');
+        $refused = $this->refusedForm($request, $session);
+        if ($refused !== null) {
+            return $refused;
         }
         $name = $request->formString('region');
         $path = $request->formString('path');

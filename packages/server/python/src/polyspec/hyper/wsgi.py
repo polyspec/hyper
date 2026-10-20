@@ -15,6 +15,8 @@ from typing import Callable, Optional, Union
 from .app import App
 from .file_sessions import FileSessions
 from .pipeline import (
+    Around,
+    Written,
     CONTENT_TYPES,
     Exchange,
     answer_with,
@@ -22,6 +24,7 @@ from .pipeline import (
     declared_length,
     escape,
     head_request,
+    header_lines,
     public_file,
     read_limited,
     validate,
@@ -42,12 +45,8 @@ def create_wsgi(
     app: App,
     sessions: FileSessions,
     files: Optional[str] = None,
-    around: Optional[
-        Callable[[Request, Callable[[Request], Response]], Response]
-    ] = None,
-    written: Optional[
-        Callable[[Request, Optional[Response], bool, float, Optional[str]], None]
-    ] = None,
+    around: Optional[Around] = None,
+    written: Optional[Written] = None,
 ) -> Callable[[dict, Callable], object]:
     """Returns a WSGI application callable (PEP 3333) that answers every request with the
     application, as `create_server` does (HY-100). `files`, `around` and `written` mean what they
@@ -126,11 +125,7 @@ def _encode(response: Response) -> tuple[str, list[tuple[str, str]], bytes]:
     UTF-8 (HY-60)."""
     empty = response.status in (204, 304)
     encoded = b"" if empty else response.body.encode("utf-8")
-    headers = [
-        (name, item)
-        for name, value in response.headers.items()
-        for item in (value if isinstance(value, list) else [value])
-    ]
+    headers = header_lines(response)
     for name, value in headers:
         f"{name}: {value}".encode("latin-1")
     if not empty:

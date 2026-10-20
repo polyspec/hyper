@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Polyspec\Hyper;
 
-/** A loader or an action throws this exception to answer the request with the redirect of a result (HY-50). */
+/** A redirect: a loader or an action throws this exception to answer with the redirect of a result (HY-50). */
 final class Redirect extends \RuntimeException
 {
     public function __construct(public readonly Result $result)

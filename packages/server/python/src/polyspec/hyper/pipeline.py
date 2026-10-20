@@ -19,6 +19,11 @@ from .request import Request
 from .response import Response
 
 # The errors of a write to a connection that the client closed (HY-67).
+# The hook `around` (HY-97) gets the request and the function that answers it; the hook `written` (HY-99) gets the
+# request, the response, whether the write ended, the elapsed milliseconds and the failure.
+Around = Callable[[Request, Callable[[Request], Response]], Response]
+Written = Callable[[Request, Optional[Response], bool, float, Optional[str]], None]
+
 CLOSED = (BrokenPipeError, ConnectionResetError, ConnectionAbortedError)
 
 CONTENT_TYPES = {
@@ -34,7 +39,7 @@ _PUBLIC_PATH = re.compile(r"^(\/[A-Za-z0-9_-][A-Za-z0-9._-]*)+$")
 
 
 def validate(
-    files: Optional[str], around: Optional[Callable], written: Optional[Callable]
+    files: Optional[str], around: Optional[Around], written: Optional[Written]
 ) -> None:
     """Fails for the arguments that the transports refuse: `files` names an absolute directory that
     exists, and `around` (HY-97) and `written` (HY-99) are callable or None."""
@@ -46,6 +51,15 @@ def validate(
         raise ValueError("around must be a callable or None")
     if written is not None and not callable(written):
         raise ValueError("written must be a callable or None")
+
+
+def header_lines(response: Response) -> list[tuple[str, str]]:
+    """Returns the headers of a response as (name, value) pairs, one for each value of a header with several."""
+    return [
+        (name, item)
+        for name, value in response.headers.items()
+        for item in (value if isinstance(value, list) else [value])
+    ]
 
 
 def cookie_values(header: Optional[str]) -> dict[str, str]:

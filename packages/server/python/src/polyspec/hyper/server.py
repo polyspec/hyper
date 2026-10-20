@@ -13,11 +13,13 @@ import logging
 import sys
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from typing import Callable, Optional
+from typing import Optional
 
 from .app import App
 from .file_sessions import FileSessions
 from .pipeline import (
+    Around,
+    Written,
     CLOSED,
     CONTENT_TYPES,
     Exchange,
@@ -25,6 +27,7 @@ from .pipeline import (
     cookie_values,
     declared_length,
     head_request,
+    header_lines,
     plain_500,
     public_file,
     read_limited,
@@ -42,12 +45,8 @@ def create_server(
     files: Optional[str] = None,
     host: str = "127.0.0.1",
     port: int = 0,
-    around: Optional[
-        Callable[[Request, Callable[[Request], Response]], Response]
-    ] = None,
-    written: Optional[
-        Callable[[Request, Optional[Response], bool, float, Optional[str]], None]
-    ] = None,
+    around: Optional[Around] = None,
+    written: Optional[Written] = None,
 ) -> ThreadingHTTPServer:
     """Returns a server that answers every request with the application. `files` names an absolute directory of
     public files: a GET or HEAD request whose path names a file in it receives the file.
@@ -197,11 +196,7 @@ def create_server(
         def send(self, response: Response) -> None:
             empty = response.status in (204, 304)
             body = b"" if empty else response.body.encode("utf-8")
-            headers = [
-                (name, item)
-                for name, value in response.headers.items()
-                for item in (value if isinstance(value, list) else [value])
-            ]
+            headers = header_lines(response)
             if not empty:
                 headers.append(("Content-Length", str(len(body))))
             # Every header is encoded before the status line is buffered, so that a header that cannot be sent leaves

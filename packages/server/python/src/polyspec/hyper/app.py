@@ -335,10 +335,9 @@ class App:
                 )
             if request.method != "POST" or "post" not in handler:
                 return Response.text(405, "Method Not Allowed")
-            if request.media_type() not in self._form_types:
-                return Response.text(415, "Unsupported Media Type")
-            if not verify(session.csrf_token(), request.form_string("_csrf")):
-                return Response.text(403, "Forbidden")
+            refused = self._refused_form(request, session)
+            if refused is not None:
+                return refused
             result = self.container.call(
                 handler["post"], {Request: request, Reply: reply}
             )
@@ -652,14 +651,22 @@ class App:
             None if response is None else self.renderer.bind({"response": response}),
         )
 
-    def _keep(self, request: Request, session: Session) -> Response:
-        """Stores a kept value of a `server` path in the session (HY-40)."""
-        if request.method != "POST":
-            return Response.text(405, "Method Not Allowed")
+    def _refused_form(self, request: Request, session: Session) -> Optional[Response]:
+        """Returns the response that refuses a form request of an unsupported media type or with a wrong CSRF token,
+        or None."""
         if request.media_type() not in self._form_types:
             return Response.text(415, "Unsupported Media Type")
         if not verify(session.csrf_token(), request.form_string("_csrf")):
             return Response.text(403, "Forbidden")
+        return None
+
+    def _keep(self, request: Request, session: Session) -> Response:
+        """Stores a kept value of a `server` path in the session (HY-40)."""
+        if request.method != "POST":
+            return Response.text(405, "Method Not Allowed")
+        refused = self._refused_form(request, session)
+        if refused is not None:
+            return refused
         name = request.form_string("region")
         path = request.form_string("path")
         region = self.manifest.region(name)

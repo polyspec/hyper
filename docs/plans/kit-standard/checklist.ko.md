@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-kit-standard -->
-<!-- source-sha256: 9f8b1ffa33f6622603bb5a350af33e18fa9feb9660adb08b47ca6c106986486f -->
+<!-- source-sha256: 0d5c574305236940008cf5a40e2252c7c1a6795b2e82b1ff152c04627b11500d -->
 # kit 표준 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -13,3 +13,4 @@
 | H25.7 | Node 서버 test가 lint-ts를 통과한다 | packages/server/ts/tests/rest.test.ts, kept.test.ts and reads.test.ts | `make lint-ts`, `var/tools/bin/node node_modules/vitest/vitest.mjs run --dir packages/server/ts packages/server/ts/tests/rest.test.ts packages/server/ts/tests/kept.test.ts packages/server/ts/tests/reads.test.ts` | [o] |
 | H25.8 | PHP 원본, test, benchmark와 board 예제가 lint-php를 통과한다 | The PHP files of packages/server/php, benchmarks/server.php and examples/board/app/handlers.php | `make lint-php`, `var/tools/bin/node node_modules/@polyspec/kit/dist/run-tests.mjs phpunit --cwd packages/server/php -- --exclude-group native tests/AppTest.php`, `var/tools/bin/node node_modules/@polyspec/kit/dist/run-tests.mjs phpunit --cwd packages/server/php -- --exclude-group native tests/RunTest.php` | [o] |
 | H25.9 | build 라이브러리와 browser client는 listFiles와 childOf를 한 곳에만 둔다 | packages/build/lib/output-files.mjs, template-files.mjs, template-rules.mjs and packages/client/src/keep.ts, hyper.ts | `var/tools/bin/node --test tests/scripts/output-files.test.mts tests/scripts/build-assets.test.mts`, `var/tools/bin/node node_modules/vitest/vitest.mjs run --dir packages/client` | [o] |
+| H25.10 | PHP와 Python 서버 원본은 각 code 조각을 한 곳에만 둔다 | packages/server/php/src/App.php, Response.php, BadRequest.php, Forbidden.php, Redirect.php and packages/server/python/src/polyspec/hyper/app.py, pipeline.py, asgi.py, wsgi.py, server.py | `var/tools/bin/node node_modules/@polyspec/kit/dist/run-tests.mjs phpunit --cwd packages/server/php -- --exclude-group native tests/AppTest.php`, `packages/server/python/.venv/bin/python packages/server/python/tests/run.py` | [o] |

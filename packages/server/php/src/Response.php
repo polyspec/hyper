@@ -43,11 +43,7 @@ final class Response
     public function send(): void
     {
         http_response_code($this->status);
-        foreach ($this->headers as $name => $value) {
-            foreach ((array) $value as $item) {
-                header("{$name}: {$item}", false);
-            }
-        }
+        $this->writeHeaders();
         echo $this->body;
     }
 
@@ -66,11 +62,17 @@ final class Response
             header($line, false);
         }
         header($statusLine, true, $this->status);
+        $this->writeHeaders();
+        echo $this->body;
+    }
+
+    /** Adds the headers of this response to the PHP output, each value as a line of its own. */
+    private function writeHeaders(): void
+    {
         foreach ($this->headers as $name => $value) {
             foreach ((array) $value as $item) {
                 header("{$name}: {$item}", false);
             }
         }
-        echo $this->body;
     }
 }
