@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- H25.42: The row is done. The extractors of the parity check run with the mise environment that kit passes, and the manifest unit holds with the HY-114 fix of H25.42-1. Red: make parity-check UNITS=manifest failed on the environment and then on HY-114; green: it exits 0. (H25.42)
 - H26.4: The row is done. The declarations of the file-part units hold with the HYC rules of H26.5, so parity-declarations-check exits 0. (H26.4)
 - H26.5: The row is done; the check that closes it is the one that holds on the commit of H26.4, which lands with it. (H26.5)
 - H26.5: The row is done. Its renumbering and its citations are the entry of the commit that renames the rules to HYC, and the parity check holds with H26.4. (H26.5)

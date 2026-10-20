@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: fe96d411ceb807748efc9f261990cf3edac7f004f300d899bb1dfe63619c69cd -->
+<!-- source-sha256: 07f8c26ce5b335ea80a66eb29f2f450acf346710b140817b4b5cf30b2abc7c9e -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H25.42: 항목을 마쳤다. parity 검사의 추출기는 kit가 넘기는 mise 환경으로 돌고, manifest unit은 H25.42-1의 HY-114 수정과 함께 통과한다. red: `make parity-check UNITS=manifest`가 환경에서, 이어서 HY-114에서 실패했다. green: exit 0이다. (H25.42)
 - H26.4: 항목을 마쳤다. 파일 부분 unit의 선언은 H26.5의 HYC 규칙과 함께 통과하며 parity-declarations-check가 exit 0이다. (H26.4)
 - H26.5: 항목을 마쳤다. 이를 닫는 검사는 H26.4 커밋에서 통과하는 검사이며, H26.4와 함께 들어간다. (H26.5)
 - H26.5: 항목을 마쳤다. 이름 바꿈과 인용은 규칙을 HYC로 바꾼 커밋의 항목이며, parity 검사는 H26.4와 함께 통과한다. (H26.5)

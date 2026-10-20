@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-kit-standard -->
-<!-- source-sha256: 7cdb1ad68f08dadace161d486c6f891cc288568a8e095c0d3c906c404c505782 -->
+<!-- source-sha256: f6990bbec960337d4097d6d52e8524171707fe58d1e03ea1ab28db1cf70c0662 -->
 # kit 표준 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -51,7 +51,7 @@
 | H25.40 | AGENTS.md의 모든 규칙은 Own이거나 PRINCIPLES.md의 규칙을 Refines한다 | AGENTS.md and AGENTS.ko.md | `make rules-check` | [o] |
 | H25.41 | check-recipes.test.mts의 recipe test는 machine의 toolchain에 의존하지 않는다 | tests/scripts/check-recipes.test.mts | `var/tools/bin/node --test tests/scripts/check-recipes.test.mts` | [o] |
 | H25.41-1 | hyper-test-js recipe test는 자기 소유 case를 선택하며 toolchain-check를 건너뛰지 않고 CI를 가장하지 않는다 | tests/scripts/check-recipes.test.mts, Makefile | `var/tools/bin/node --test tests/scripts/check-recipes.test.mts` | [o] |
-| H25.42 | R1: parity check의 symbol extractor가 php와 python server에서 실행된다 | config/toolchain.json | `make parity-check UNITS=manifest` | [~] |
+| H25.42 | R1: parity check의 symbol extractor가 php와 python server에서 실행된다 | config/toolchain.json | `make parity-check UNITS=manifest` | [o] |
 | H25.42-1 | HY-114: 파일 제한을 선언하지 않은 애플리케이션은 min(8 MiB, body 제한)을 파일 제한으로 써서, 8 MiB보다 작은 body 제한으로도 열린다 | docs/spec/protocol.md; docs/spec/protocol.ko.md; packages/server/php/src/App.php; packages/server/ts/src/app.ts; packages/server/python/src/polyspec/hyper/app.py; the tests of each server that name HY-114 | `php vendor/bin/phpunit --configuration packages/server/php/phpunit.xml packages/server/php/tests/AppTest.php`; `var/tools/bin/node node_modules/vitest/vitest.mjs run --dir packages/server/ts packages/server/ts/tests/app.test.ts`; `make parity-check UNITS=manifest` | [o] |
 | H25.43 | R11: HY-106이 서버의 public API와 내부 요소를 정한다 | docs/spec/protocol.md and docs/spec/protocol.ko.md | `make docs-check` | [o] |
 | H25.44 | HY-107이 ORM 오류 NO_ROWS와 REVISION_CHANGED에 대한 응답을 정한다 | docs/spec/protocol.md and docs/spec/protocol.ko.md | `make docs-check` | [o] |
