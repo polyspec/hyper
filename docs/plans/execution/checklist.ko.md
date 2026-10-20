@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 7b0430e4eff569400bb61fe0d96675af6dba8b8e6d679a8d36ddd5ffb407fe38 -->
+<!-- source-sha256: 7429d55bb2f997e6960f0bf52b375800538ccda7ba943253fa55f08924aab952 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -245,3 +245,4 @@
 | H26.3-2 | main의 make lint-ts가 exit 0이 되게 한다. packages/client/tests/stream.test.ts의 oxlint no-unsafe-type-assertion 4건과 packages/client/src/stream.ts의 knip 미사용 export 2건(DEFAULT_RETRY_MS, StreamEvent)을 고친다. H26.1에서 들어왔고 정적 게이트 규칙보다 먼저 land했다 | packages/client/tests/stream.test.ts; packages/client/src/stream.ts; CHANGELOG.md; CHANGELOG.ko.md | `make lint-ts` | [o] |
 | H26.3-3 | main의 make lint-php가 exit 0이 되게 한다. phpcs가 App.php 467, 909의 연산자 간격, Multipart.php 48과 AppTest.php 248, 250의 줄 길이를 보고한다. H26.2와 H26.3에서 들어왔고 정적 게이트 규칙보다 먼저 land했다 | packages/server/php/src/App.php; packages/server/php/src/Multipart.php; packages/server/php/tests/AppTest.php; CHANGELOG.md; CHANGELOG.ko.md | `make lint-php` | [o] |
 | H26.3-4 | main의 make lint-python이 exit 0이 되게 한다. ruff format이 _fields.py와 test_files.py(H26.2, H26.3 테스트 줄)를, vulture가 test_files.py의 FileParts를 지적한다. FileParts는 기반 클래스 FixtureTest를 통해 unittest가 실행하므로(3건 통과 확인) vulture 화이트리스트에 그 이유와 함께 넣는다 | packages/server/python/src/polyspec/hyper/_fields.py; packages/server/python/tests/test_files.py; packages/server/python/vulture_whitelist.py; CHANGELOG.md; CHANGELOG.ko.md | `make lint-python` | [o] |
+| H26.5 | 클라이언트 stream 규칙은 HYC 규칙이다. HY-108부터 HY-112까지는 docs/spec/protocol.md와 한국어 짝에서 HYC-17부터 HYC-21이 된다. 이 규칙들은 packages/client의 TypeScript 클라이언트만 규정하므로(HR-98) 서버 parity 선언이 다루지 못한다. 인용과 H26.1-1부터 H26.1-3까지의 row는 새 id를 쓴다 | docs/spec/protocol.md; docs/spec/protocol.ko.md; packages/client/src/stream.ts; packages/client/src/hyper.ts; docs/plans/execution/checklist.md; docs/plans/execution/checklist.ko.md; CHANGELOG.md; CHANGELOG.ko.md | `make parity-declarations-check` | [ ] |
