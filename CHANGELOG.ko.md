@@ -13,6 +13,7 @@
 - H26.3-4: Python 소스와 테스트를 게이트의 ruff format 규칙에 맞추고, test_files.py의 FileParts를 이유와 함께 vulture 화이트리스트에 넣는다. unittest가 기반 클래스 FixtureTest를 거쳐 세 테스트를 실행함을 `python -m unittest -v`로 확인했다. 값과 코드는 그대로 둔다. red: `make lint-python`이 format 지적과 FileParts 지적으로 exit 2였다. green: `make lint-python`이 exit 0이다. (H26.3-4)
 - H26.3-3: PHP 소스와 테스트를 게이트의 phpcs 규칙에 맞춘다. App.php의 대입 연산자 뒤 간격, App.php의 HY-114 메시지 긴 줄, Multipart.php의 파일 이름 패턴, AppTest.php의 업로드 fixture를 고친다. 값과 정규식은 그대로 둔다. red: `make lint-php`가 지적 5건으로 exit 2였다. green: `make lint-php`가 exit 0이다. (H26.3-3)
 - H26.3-2: stream 테스트는 가짜 document, htmx API, headers, abort signal을 좁히는 단언 없이 타입으로 만든다. stream.ts는 다른 파일이 쓰지 않는 DEFAULT_RETRY_MS와 StreamEvent의 export를 멈춘다. red: `make lint-ts`가 oxlint 4건과 knip 2건으로 exit 2였다. green: `make lint-ts`가 exit 0이고 stream 테스트가 4건 중 4건 통과한다. (H26.3-2)
+- H25.42-1: 항목을 마쳤다. 수정과 검사는 파일 제한 기본값을 추가한 커밋의 항목에 적었다. (H25.42-1)
 - H25.42-1: 파일 제한을 선언하지 않은 애플리케이션은 8 MiB와 body 제한 중 작은 값을 파일 제한으로 쓴다(HY-114). PHP, TypeScript, Python 서버는 body 제한이 8 MiB보다 작은 애플리케이션을 열지 못했다. red: 새 케이스와 AppTest, app.test.ts의 기존 케이스가 실패했고, test_files.py의 새 케이스가 실패했다. green: 그 테스트들과 `make parity-check UNITS=manifest`가 통과한다. (H25.42-1)
 - H26.3-1: dependencies.md의 multipart 기록은 PHP 8.4의 기본 `request_parse_body()`도 검토했으나 `$_POST`처럼 괄호 이름을 중첩하므로 HY-57이 거절하여 채택하지 않았다고 적는다. red: 기록이 이 후보를 적지 않았고, green: 그 줄을 넣은 뒤 `make docs-check`가 exit 0을 낸다. (H26.3-1)
 - H25.66: Deliverables에서 저장소에 없는 `packages/server/php/composer.lock`을 뺀다(kit K388 item-edit). red: row가 존재하지 않는 파일을 적었고, green: Deliverables가 존재하는 파일만 적는다. (H25.66)
