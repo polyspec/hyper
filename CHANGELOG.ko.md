@@ -5,6 +5,7 @@
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H25.61: config/owner-checks.json은 kit 복사본인 Rust lint 설정 clippy.toml에 kit 복사본의 소유 규칙을 준다. red: owner-validate가 clippy.toml을 어떤 소유자와도 맞지 않는 경로로 보고했고, green: 추적되는 모든 경로가 소유된다고 보고한다. (H25.61)
 - H25.60: HY-48은 PHP 서버가 generated 프로그램을 template package의 API로 렌더한다고 정한다. 그 API는 template 확장이 같은 이름으로 등록한다. 그래서 Renderer.php와 App.php는 더 이상 Polyspec\Template\Native나 extension_loaded를 참조하지 않고, engine 속성은 없어졌으며, RendererTest.php는 모든 PHP 실행에서 같은 것을 단언한다. red: divergence-check가 divergence 네 건(Renderer.php:49, RendererTest.php:19, 37, 96의 extension_loaded)을 보고했고, green: 보고하지 않으며 RendererTest, AppTest, ReadsTest, KeptTest가 PHP 8.4.26에서 통과한다. template 확장은 아직 S10이 요구하는 library 이름이 아니라 Polyspec\Template\Native 아래에 클래스를 등록한다. 이는 template의 결함이며, 고쳐질 때까지 서버는 library API만 쓴다. (H25.60)
 - H25.59: tests/scripts/output-files.test.mts에서 nobody 사용자로 모든 output을 읽던 test를 제거했다. sudo가 허용되지 않는 곳에서 건너뛰었기 때문이다. 같은 파일의 다른 test가 이미 mode 0644와 0755를 단언하며, 그 mode로 모든 사용자가 output을 읽는다. red: test-markers-check가 건너뜀을 보고했고, green: 보고하지 않는다. (H25.59)
 - H25.58: H25.14의 줄은 home 디렉터리 경로 대신 checkout 기준의 template checkout 폴더를 적는다. red: docs-check가 changelog의 private-path를 보고했고, green: 통과한다. (H25.58)

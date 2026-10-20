@@ -73,3 +73,4 @@
 | H25.58 | The changelogs hold no path into a home directory | CHANGELOG.md and CHANGELOG.ko.md | `make docs-check` | [o] |
 | H25.59 | The test that reads the outputs as another user is removed: the mode test already proves that every output is readable by others, and a test that skips without sudo is a narrowed test | tests/scripts/output-files.test.mts | `make test-markers-check` | [o] |
 | H25.60 | The PHP server holds no branch on the template extension (HY-48, P32) | packages/server/php/src/Renderer.php, packages/server/php/src/App.php, packages/server/php/tests/RendererTest.php, docs/spec/protocol.md | `make divergence-check` | [o] |
+| H25.61 | Every copy of kit the repository holds has an owner rule | config/owner-checks.json with clippy.toml in the kit copies rule | `make owner-validate` | [o] |
