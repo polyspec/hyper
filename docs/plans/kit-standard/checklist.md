@@ -21,3 +21,4 @@
 | H25.16 | A render failure that kept values do not cause surfaces in every server | The tests of AppTest.php, app.test.ts and render_app.py, and the stated need of the two fallbacks in app.py | `var/tools/bin/node node_modules/vitest/vitest.mjs run --dir packages/server/ts packages/server/ts/tests/app.test.ts`, `packages/server/python/.venv/bin/python packages/server/python/tests/run.py packages/server/python/tests/render render_app.py` | [o] |
 | H25.16-1 | The two PHP tests with rows data build their application once | packages/server/php/tests/AppTest.php | `var/tools/bin/node node_modules/@polyspec/kit/dist/run-tests.mjs phpunit --cwd packages/server/php -- --exclude-group native tests/AppTest.php` | [o] |
 | H25.17 | Every tracked path has an owner in config/owner-checks.json | config/owner-checks.json | `make owner-validate` | [o] |
+| H25.18 | The copies of kit match the kit with K277 | PRINCIPLES.md and PRINCIPLES.ko.md | `make kit-check` | [o] |

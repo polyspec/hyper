@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 4bbc6960ae5c0650eeb42733b387d237112d6e9c92521eca01d2ebd9daaba65e -->
+<!-- source-sha256: 82e7b8b325a3bdf24bbb1ca0f05411b11f6c445d33ec3337fcb6fd00ba94b0c2 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H25.18: 사본 `PRINCIPLES.md`와 `PRINCIPLES.ko.md`는 설치된 kit에서 `make kit-sync`로 쓴다(S6에 directory suite의 case.json requirement가 더해졌다. K277). Red: `make kit-check` exit 2, `PRINCIPLES.ko.md: differs from node_modules/@polyspec/kit/PRINCIPLES.ko.md`(지적 2건). Green: `make kit-check` exit 0 (H25.18)
 - H25.17: `config/owner-checks.json`은 owner가 없던 경로 4개를 소유한다. `config/parity.json`은 `parity-declarations-check`가, mise의 vulture tool의 lock 파일인 `.mise/locks/**`는 `toolchain-check`가, `.claude/settings.json`은 이를 읽는 유일한 검사인 `rules-check`(이 파일을 이름으로 적은 규칙이 있어야 한다고 요구한다)가 확인한다. Red: `make owner-validate` exit 2, 경로 4개가 owner와 맞지 않았다. Green: `make owner-validate` exit 0, `owns every tracked path` (H25.17)
 - H25.16-1: `AppTest`는 shared 값과 rows data를 가진 test의 응용 프로그램을 `appWithRows`로 만든다. Red: `make duplication-check` exit 2, H25.16의 새 test와 `testServerSendsOnlyTheReadPaths` 사이에 clone 1개. Green: `make duplication-check` exit 0, `AppTest`의 test 64개 통과 (H25.16-1)
 - H25.16: kept 값 없이 region을 render하는 서버의 fallback(HY-38)은 필요를 밝힌 명세의 규칙이다. kept 값은 cookie나 session에서 오며 조건에 맞아도 template을 깨뜨릴 수 있고, fallback은 실패한 region의 kept 값만 제거한다. 다른 오류는 숨기지 않는다. 새 test `testRenderFailureOfTheLoaderDataIsNotHiddenByKeptValues`(PHP), 'does not hide a render failure of the loader data behind kept values'(Node), `test_a_render_failure_of_the_loader_data_is_not_hidden_by_kept_values`(Python)는 template 자체를 깨뜨리는 loader data와 조건에 맞는 kept 값을 함께 주고 plain 500을 요구한다. Python test `test_a_region_whose_kept_values_break_rendering_renders_without_them`는 PHP와 Node가 이미 시험하던 fallback을 시험하고, `app.py`의 두 `except Exception`은 HY-38을 필요로 적는다. 요청한 loader 오류도 확인했다. loader는 이 code보다 먼저 실행되고 그 오류는 plain 500으로 실패한다(HY-43). Red: kept 값이 오류를 숨기는지 묻는 test가 어느 서버에도 없었다. test를 써서 동작 변경 없이 통과했으므로 결함은 없다. Green: 새 실패 test 3개가 통과한다(PHP 1개, Node app.test.ts 70개, Python render test 36개) (H25.16)

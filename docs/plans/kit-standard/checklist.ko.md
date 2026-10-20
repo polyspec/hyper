@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-kit-standard -->
-<!-- source-sha256: 087ba1f4ef2af04b446fb85cc4c5e4aaed341fe9b55f9abd20cea5b340223896 -->
+<!-- source-sha256: 3b6d86c2548dc3c8e6f1313073069c4df94b3a14695200677203a0b523775b87 -->
 # kit 표준 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -22,3 +22,4 @@
 | H25.16 | kept 값이 원인이 아닌 render 실패는 모든 서버에서 드러난다 | The tests of AppTest.php, app.test.ts and render_app.py, and the stated need of the two fallbacks in app.py | `var/tools/bin/node node_modules/vitest/vitest.mjs run --dir packages/server/ts packages/server/ts/tests/app.test.ts`, `packages/server/python/.venv/bin/python packages/server/python/tests/run.py packages/server/python/tests/render render_app.py` | [o] |
 | H25.16-1 | rows data를 쓰는 PHP test 두 개는 응용 프로그램을 한 곳에서 만든다 | packages/server/php/tests/AppTest.php | `var/tools/bin/node node_modules/@polyspec/kit/dist/run-tests.mjs phpunit --cwd packages/server/php -- --exclude-group native tests/AppTest.php` | [o] |
 | H25.17 | 추적하는 모든 경로는 config/owner-checks.json에 owner를 가진다 | config/owner-checks.json | `make owner-validate` | [o] |
+| H25.18 | kit 사본이 K277을 포함한 kit과 일치한다 | PRINCIPLES.md and PRINCIPLES.ko.md | `make kit-check` | [o] |
