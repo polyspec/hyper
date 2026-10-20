@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- H25.47-1: The vitest runs of packages/client and packages/server/ts, started with the package as their folder as the recipes do, load a linked polyspec package once: each package has a vitest.config.mts that inlines @polyspec/ packages, because a link resolved by Node and by the transform of vitest gave two instances of the template and every page render failed with "assign is not a map"; red: 15 of 18 tests of response.test.ts and 21 of 74 of app.test.ts failed, green: they pass. (H25.47-1)
 - H25.48: The copies of PRINCIPLES.md and PRINCIPLES.ko.md match the kit with P30 (links only), and link-state-check joins CHECK_TARGETS and the docs group of ci.yml; red: kit-check reported CHECK_TARGETS without link-state-check, green: kit-check passes and link-state-check passes. (H25.48)
 - H25.47: The Node server answers the ORM error NO_ROWS as a not found and REVISION_CHANGED raised by an action as the route page with status 409 (HY-107); red: the test got 500 for the 404 of NO_ROWS, green: the NO_ROWS answers pass; the 409 page cannot render while the linked template fails every page render with "assign is not a map". (H25.47)
 - H25.46: The Python server answers the ORM error NO_ROWS as a not found and REVISION_CHANGED raised by an action as the route page with status 409 (HY-107); red: test_orm_errors_are_answered_as_their_stops got the page 200 for the 404, green: render_app passes. (H25.46)
