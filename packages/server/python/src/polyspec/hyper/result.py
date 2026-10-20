@@ -100,4 +100,9 @@ class Redirect(Exception):
         if not result._is_redirect():
             raise ValueError("a redirect needs a redirect result")
         super().__init__(f"redirect to {result.location}")
-        self.result = result
+        self._result = result
+
+    @property
+    def result(self) -> Result:
+        """The redirect result of the stop."""
+        return self._result

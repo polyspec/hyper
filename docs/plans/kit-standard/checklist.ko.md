@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-kit-standard -->
-<!-- source-sha256: 72b3dba32989c91c6f276dfe60fdca886a0fb09392e4cfc6ddf6b1b8f623dad1 -->
+<!-- source-sha256: 859087dc90b07ac5dcab1eef7308eddc0e6f411d61960434f354af41d803a72b -->
 # kit 표준 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -63,3 +63,4 @@
 | H25.50 | R11: PHP 서버는 public API만 선언한다(HY-106) | packages/server/php/src | `make hyper-test-php` | [o] |
 | H25.51 | Request.withHeader는 PHP와 Node 서버에서 public이다(HY-97, HY-106) | packages/server/php/src/Request.php, packages/server/ts/src/request.ts | `make hyper-test-node` | [o] |
 | H25.52 | R11: Python 서버는 public API만 선언한다(HY-106) | packages/server/python/src, packages/server/python/tests, packages/server/python/README.md | `make hyper-test-python` | [o] |
+| H25.53 | R11: 세 서버의 모든 public symbol은 API unit에 속한다(HY-106) | config/parity.json, packages/server/python/src, three public API tests | `make parity-declarations-check` | [o] |

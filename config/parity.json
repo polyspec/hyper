@@ -90,6 +90,54 @@
   ],
   "units": [
     {
+      "id": "public-api",
+      "kind": "feature",
+      "bindings": [
+        {
+          "implementation": "php",
+          "test": "packages/server/php/tests/PublicApiTest.php",
+          "id": "PublicApiTest::testTheClassesWithoutTheInternalTagAreThePublicApi"
+        },
+        {
+          "implementation": "python",
+          "test": "packages/server/python/tests/test_public_api.py",
+          "id": "test_the_modules_without_an_underscore_and_the_package_exports_are_the_public_api"
+        },
+        {
+          "implementation": "ts",
+          "test": "packages/server/ts/tests/public-api.test.ts",
+          "id": "The public API › is what the index exports (HY-106)"
+        }
+      ],
+      "requirements": [
+        "HY-106"
+      ]
+    },
+    {
+      "id": "orm-errors",
+      "kind": "feature",
+      "bindings": [
+        {
+          "implementation": "php",
+          "test": "packages/server/php/tests/AppTest.php",
+          "id": "AppTest::testOrmErrorsAreAnsweredAsTheirStops"
+        },
+        {
+          "implementation": "python",
+          "test": "packages/server/python/tests/render/render_app.py",
+          "id": "test_orm_errors_are_answered_as_their_stops"
+        },
+        {
+          "implementation": "ts",
+          "test": "packages/server/ts/tests/app.test.ts",
+          "id": "App › answers the ORM errors NO_ROWS and REVISION_CHANGED as their stops (HY-107)"
+        }
+      ],
+      "requirements": [
+        "HY-107"
+      ]
+    },
+    {
       "id": "fields-urlencoded",
       "kind": "suite",
       "file": "contracts/fields.json",
@@ -1102,6 +1150,3348 @@
       ],
       "requirements": [
         "HY-62"
+      ]
+    },
+    {
+      "id": "app",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\App"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.app.App"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!App:class"
+        }
+      ]
+    },
+    {
+      "id": "app-open",
+      "kind": "api",
+      "requirements": [
+        "HY-48",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\App::open"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.app.App.open"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!App.open:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "app-bind",
+      "kind": "api",
+      "requirements": [
+        "HY-105",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\App::bind"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.app.App.bind"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!App#bind:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "app-handle",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\App::handle"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.app.App.handle"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!App#handle:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "host-server",
+      "kind": "api",
+      "requirements": [
+        "HY-100",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\App::run"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.server.create_server"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!App#server:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "host-callable",
+      "kind": "api",
+      "requirements": [
+        "HY-100",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\App::run"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.wsgi.create_wsgi"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!App#listener:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "host-async-callable",
+      "kind": "api",
+      "requirements": [
+        "HY-100",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\App::run"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.asgi.create_asgi"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!App#listener:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "app-option-manifest",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\App::open"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.app.App.open"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!AppOptions#manifest:member"
+        }
+      ]
+    },
+    {
+      "id": "app-option-templates",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\App::open"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.app.App.open"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!AppOptions#templates:member"
+        }
+      ]
+    },
+    {
+      "id": "app-option-handlers",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\App::open"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.app.App.open"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!AppOptions#handlers:member"
+        }
+      ]
+    },
+    {
+      "id": "app-option-timezone",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\App::open"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.app.App.open"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!AppOptions#timezone:member"
+        }
+      ]
+    },
+    {
+      "id": "app-option-basepath",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\App::open"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.app.App.open"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!AppOptions#basePath:member"
+        }
+      ]
+    },
+    {
+      "id": "app-option-https",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\App::open"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.app.App.open"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!AppOptions#https:member"
+        }
+      ]
+    },
+    {
+      "id": "app-option-frameancestors",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\App::open"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.app.App.open"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!AppOptions#frameAncestors:member"
+        }
+      ]
+    },
+    {
+      "id": "app-option-bodylimit",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\App::open"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.app.App.open"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!AppOptions#bodyLimit:member"
+        }
+      ]
+    },
+    {
+      "id": "app-option-formtypes",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\App::open"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.app.App.open"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!AppOptions#formTypes:member"
+        }
+      ]
+    },
+    {
+      "id": "app-option-responselimit",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\App::open"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.app.App.open"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!AppOptions#responseLimit:member"
+        }
+      ]
+    },
+    {
+      "id": "app-option-onresponse",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\App::open"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.app.App.open"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!AppOptions#onResponse:member"
+        }
+      ]
+    },
+    {
+      "id": "app-option-ondisconnect",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\App::open"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.app.App.open"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!AppOptions#onDisconnect:member"
+        }
+      ]
+    },
+    {
+      "id": "app-option-clientrendering",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\App::open"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.app.App.open"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!AppOptions#clientRendering:member"
+        }
+      ]
+    },
+    {
+      "id": "app-option-log",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\App::open"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.app.App.open"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!AppOptions#log:member"
+        }
+      ]
+    },
+    {
+      "id": "app-options",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\App::open"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.app.App.open"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!AppOptions:interface"
+        }
+      ]
+    },
+    {
+      "id": "server-option-around",
+      "kind": "api",
+      "requirements": [
+        "HY-97",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\App::open"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.server.create_server"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!ServerOptions#around:member"
+        }
+      ]
+    },
+    {
+      "id": "server-option-written",
+      "kind": "api",
+      "requirements": [
+        "HY-99",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\App::open"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.server.create_server"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!ServerOptions#written:member"
+        }
+      ]
+    },
+    {
+      "id": "server-option-files",
+      "kind": "api",
+      "requirements": [
+        "HY-100",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\App::run"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.server.create_server"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!ServerOptions#files:member"
+        }
+      ]
+    },
+    {
+      "id": "server-options",
+      "kind": "api",
+      "requirements": [
+        "HY-100",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\App::run"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.server.create_server"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!ServerOptions:interface"
+        }
+      ]
+    },
+    {
+      "id": "around-hook",
+      "kind": "api",
+      "requirements": [
+        "HY-97",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\App::open"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.server.create_server"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!AroundHook:type"
+        }
+      ]
+    },
+    {
+      "id": "write-hook-type",
+      "kind": "api",
+      "requirements": [
+        "HY-99",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\App::open"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.server.create_server"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!WriteHook:type"
+        }
+      ]
+    },
+    {
+      "id": "request-listener",
+      "kind": "api",
+      "requirements": [
+        "HY-100",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\App::run"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.wsgi.create_wsgi"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Listener:type"
+        }
+      ]
+    },
+    {
+      "id": "handler-handlers",
+      "kind": "api",
+      "requirements": [
+        "HY-105",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\App::open"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.app.App.open"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Handlers:interface"
+        }
+      ]
+    },
+    {
+      "id": "handler-handlers-shared",
+      "kind": "api",
+      "requirements": [
+        "HY-105",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\App::open"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.app.App.open"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Handlers#shared:member"
+        }
+      ]
+    },
+    {
+      "id": "handler-handlers-regions",
+      "kind": "api",
+      "requirements": [
+        "HY-105",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\App::open"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.app.App.open"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Handlers#regions:member"
+        }
+      ]
+    },
+    {
+      "id": "handler-handlers-routes",
+      "kind": "api",
+      "requirements": [
+        "HY-105",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\App::open"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.app.App.open"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Handlers#routes:member"
+        }
+      ]
+    },
+    {
+      "id": "handler-routehandlers",
+      "kind": "api",
+      "requirements": [
+        "HY-105",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\App::open"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.app.App.open"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!RouteHandlers:interface"
+        }
+      ]
+    },
+    {
+      "id": "handler-routehandlers-load",
+      "kind": "api",
+      "requirements": [
+        "HY-105",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\App::open"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.app.App.open"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!RouteHandlers#load:member"
+        }
+      ]
+    },
+    {
+      "id": "handler-routehandlers-post",
+      "kind": "api",
+      "requirements": [
+        "HY-105",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\App::open"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.app.App.open"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!RouteHandlers#post:member"
+        }
+      ]
+    },
+    {
+      "id": "handler-routehandlers-regions",
+      "kind": "api",
+      "requirements": [
+        "HY-105",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\App::open"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.app.App.open"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!RouteHandlers#regions:member"
+        }
+      ]
+    },
+    {
+      "id": "handler-loader",
+      "kind": "api",
+      "requirements": [
+        "HY-105",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\App::open"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.app.App.open"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Loader:type"
+        }
+      ]
+    },
+    {
+      "id": "handler-action",
+      "kind": "api",
+      "requirements": [
+        "HY-105",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\App::open"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.app.App.open"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Action:type"
+        }
+      ]
+    },
+    {
+      "id": "handler-routeregionloader",
+      "kind": "api",
+      "requirements": [
+        "HY-105",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\App::open"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.app.App.open"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!RouteRegionLoader:type"
+        }
+      ]
+    },
+    {
+      "id": "handler-context",
+      "kind": "api",
+      "requirements": [
+        "HY-105",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\App::open"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.app.App.open"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Context:interface"
+        }
+      ]
+    },
+    {
+      "id": "handler-context-request",
+      "kind": "api",
+      "requirements": [
+        "HY-105",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\App::open"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.app.App.open"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Context#request:member"
+        }
+      ]
+    },
+    {
+      "id": "handler-context-reply",
+      "kind": "api",
+      "requirements": [
+        "HY-105",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\App::open"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.app.App.open"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Context#reply:member"
+        }
+      ]
+    },
+    {
+      "id": "handler-context-services",
+      "kind": "api",
+      "requirements": [
+        "HY-105",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\App::open"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.app.App.open"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Context#services:member"
+        }
+      ]
+    },
+    {
+      "id": "handler-data",
+      "kind": "api",
+      "requirements": [
+        "HY-105",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\App::open"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.app.App.open"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Data:type"
+        }
+      ]
+    },
+    {
+      "id": "request",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Request"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.request.Request"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Request_2:class"
+        }
+      ]
+    },
+    {
+      "id": "request-construct",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Request::__construct"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.request.Request"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Request_2.from:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "request-init",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Request::__construct"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.request.Request"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!RequestInit_2:interface"
+        }
+      ]
+    },
+    {
+      "id": "request-init-method",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Request::__construct"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.request.Request"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!RequestInit_2#method:member"
+        }
+      ]
+    },
+    {
+      "id": "request-init-target",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Request::__construct"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.request.Request"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!RequestInit_2#target:member"
+        }
+      ]
+    },
+    {
+      "id": "request-init-headers",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Request::__construct"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.request.Request"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!RequestInit_2#headers:member"
+        }
+      ]
+    },
+    {
+      "id": "request-init-body",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Request::__construct"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.request.Request"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!RequestInit_2#body:member"
+        }
+      ]
+    },
+    {
+      "id": "request-init-bodysize",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Request::__construct"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.request.Request"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!RequestInit_2#bodySize:member"
+        }
+      ]
+    },
+    {
+      "id": "request-init-https",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Request::__construct"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.request.Request"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!RequestInit_2#https:member"
+        }
+      ]
+    },
+    {
+      "id": "request-bodysize",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Request::bodySize"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.request.Request.body_size"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Request_2#bodySize:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "request-cookie",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Request::cookie"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.request.Request.cookie"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Request_2#cookie:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "request-csrftoken",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Request::csrfToken"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.request.Request.csrf_token"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Request_2#csrfToken:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "request-currentpath",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Request::currentPath"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.request.Request.current_path"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Request_2#currentPath:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "request-flash",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Request::flash"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.request.Request.flash"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Request_2#flash:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "request-form",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Request::form"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.request.Request.form"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Request_2#form:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "request-formstring",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Request::formString"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.request.Request.form_string"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Request_2#formString:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "request-header",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Request::header"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.request.Request.header"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Request_2#header:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "request-isregionrequest",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Request::isRegionRequest"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.request.Request.is_region_request"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Request_2#isRegionRequest:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "request-mediatype",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Request::mediaType"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.request.Request.media_type"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Request_2#mediaType:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "request-param",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Request::param"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.request.Request.param"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Request_2#param:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "request-params",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Request::params"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.request.Request.params"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Request_2#params:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "request-path",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Request::path"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.request.Request.path"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Request_2#path:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "request-query",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Request::query"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.request.Request.query"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Request_2#query:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "request-queryint",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Request::queryInt"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.request.Request.query_int"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Request_2#queryInt:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "request-rawquery",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Request::rawQuery"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.request.Request.raw_query"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Request_2#rawQuery:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "request-selection",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Request::selection"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.request.Request.selection"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Request_2#selection:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "request-validinput",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Request::validInput"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.request.Request.valid_input"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Request_2#validInput:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "request-wantsjson",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Request::wantsJson"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.request.Request.wants_json"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Request_2#wantsJson:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "request-withheader",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Request::withHeader"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.request.Request.with_header"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Request_2#withHeader:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "request-targetpath",
+      "kind": "api",
+      "requirements": [
+        "HY-56",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Request::targetPath"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.request.Request.target_path"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Request_2.targetPath:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "request-targetquery",
+      "kind": "api",
+      "requirements": [
+        "HY-56",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Request::targetQuery"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.request.Request.target_query"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Request_2.targetQuery:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "request-https",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Request::$https"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.request.Request.https"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Request_2#https:member"
+        }
+      ]
+    },
+    {
+      "id": "request-method",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Request::$method"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.request.Request.method"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Request_2#method:member"
+        }
+      ]
+    },
+    {
+      "id": "request-pathvalue",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Request::$path"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.request.Request.path"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Request_2#path:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "reply",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Reply"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.reply.Reply"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Reply:class"
+        }
+      ]
+    },
+    {
+      "id": "reply-note",
+      "kind": "api",
+      "requirements": [
+        "HY-52",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Reply::note"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.reply.Reply.note"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Reply#note:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "reply-notes",
+      "kind": "api",
+      "requirements": [
+        "HY-52",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Reply::notes"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.reply.Reply.notes"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Reply#notes:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "reply-cookie",
+      "kind": "api",
+      "requirements": [
+        "HY-52",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Reply::cookie"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.reply.Reply.cookie"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Reply#cookie:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "reply-removecookie",
+      "kind": "api",
+      "requirements": [
+        "HY-52",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Reply::removeCookie"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.reply.Reply.remove_cookie"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Reply#removeCookie:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "reply-cachecontrol",
+      "kind": "api",
+      "requirements": [
+        "HY-52",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Reply::cacheControl"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.reply.Reply.cache_control"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Reply#cacheControl:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "reply-renewsession",
+      "kind": "api",
+      "requirements": [
+        "HY-52",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Reply::renewSession"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.reply.Reply.renew_session"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Reply#renewSession:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "reply-referrerpolicy",
+      "kind": "api",
+      "requirements": [
+        "HY-52",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Reply::referrerPolicy"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.reply.Reply.referrer_policy"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Reply#referrerPolicy:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "reply-status",
+      "kind": "api",
+      "requirements": [
+        "HY-52",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Reply::status"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.reply.Reply.status"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Reply#status:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "reply-embeddata",
+      "kind": "api",
+      "requirements": [
+        "HY-52",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Reply::embedData"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.reply.Reply.embed_data"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Reply#embedData:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "response",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Response"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.response.Response"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Response_2:class"
+        }
+      ]
+    },
+    {
+      "id": "response-construct",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Response::__construct"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.response.Response"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Response_2:constructor(1)"
+        }
+      ]
+    },
+    {
+      "id": "response-status-property",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Response::$status"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.response.Response.status"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Response_2#status:member"
+        }
+      ]
+    },
+    {
+      "id": "response-headers-property",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Response::$headers"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.response.Response.headers"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Response_2#headers:member"
+        }
+      ]
+    },
+    {
+      "id": "response-body-property",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Response::$body"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.response.Response.body"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Response_2#body:member"
+        }
+      ]
+    },
+    {
+      "id": "response-text",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Response::text"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.response.Response.text"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Response_2.text:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "response-withheader",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Response::withHeader"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.response.Response.with_header"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Response_2#withHeader:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "result",
+      "kind": "api",
+      "requirements": [
+        "HY-25",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Result"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.result.Result"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Result:class"
+        }
+      ]
+    },
+    {
+      "id": "result-redirect",
+      "kind": "api",
+      "requirements": [
+        "HY-25",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Result::redirect"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.result.Result.redirect"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Result.redirect:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "result-page",
+      "kind": "api",
+      "requirements": [
+        "HY-25",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Result::page"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.result.Result.page"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Result.page:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "result-invalid",
+      "kind": "api",
+      "requirements": [
+        "HY-25",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Result::invalid"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.result.Result.invalid"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Result.invalid:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "result-flash",
+      "kind": "api",
+      "requirements": [
+        "HY-25",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Result::flash"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.result.Result.flash_value"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Result#flash:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "result-changed",
+      "kind": "api",
+      "requirements": [
+        "HY-25",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Result::changed"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.result.Result.changed"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Result#changed:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "badrequest",
+      "kind": "api",
+      "requirements": [
+        "HY-58",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\BadRequest"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.result.BadRequest"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!BadRequest:class"
+        }
+      ]
+    },
+    {
+      "id": "badrequest-construct",
+      "kind": "api",
+      "requirements": [
+        "HY-58",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\BadRequest"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.result.BadRequest"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!BadRequest:constructor(1)"
+        }
+      ]
+    },
+    {
+      "id": "forbidden",
+      "kind": "api",
+      "requirements": [
+        "HY-51",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Forbidden"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.result.Forbidden"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Forbidden:class"
+        }
+      ]
+    },
+    {
+      "id": "forbidden-construct",
+      "kind": "api",
+      "requirements": [
+        "HY-51",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Forbidden"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.result.Forbidden"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Forbidden:constructor(1)"
+        }
+      ]
+    },
+    {
+      "id": "notfound",
+      "kind": "api",
+      "requirements": [
+        "HY-27",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\NotFound"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.result.NotFound"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!NotFound:class"
+        }
+      ]
+    },
+    {
+      "id": "notfound-construct",
+      "kind": "api",
+      "requirements": [
+        "HY-27",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\NotFound"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.result.NotFound"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!NotFound:constructor(1)"
+        }
+      ]
+    },
+    {
+      "id": "redirect",
+      "kind": "api",
+      "requirements": [
+        "HY-50",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Redirect"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.result.Redirect"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Redirect:class"
+        }
+      ]
+    },
+    {
+      "id": "redirect-construct",
+      "kind": "api",
+      "requirements": [
+        "HY-50",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Redirect::__construct"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.result.Redirect"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Redirect:constructor(1)"
+        }
+      ]
+    },
+    {
+      "id": "redirect-result",
+      "kind": "api",
+      "requirements": [
+        "HY-50",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Redirect::$result"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.result.Redirect.result"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Redirect#result:member"
+        }
+      ]
+    },
+    {
+      "id": "session-store",
+      "kind": "api",
+      "requirements": [
+        "HY-104",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\SessionStore"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.session.SessionStore"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!SessionStore:interface"
+        }
+      ]
+    },
+    {
+      "id": "session-store-get",
+      "kind": "api",
+      "requirements": [
+        "HY-104",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\SessionStore::get"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.session.SessionStore.get"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!SessionStore#get:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "session-store-set",
+      "kind": "api",
+      "requirements": [
+        "HY-104",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\SessionStore::set"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.session.SessionStore.set"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!SessionStore#set:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "session-store-remove",
+      "kind": "api",
+      "requirements": [
+        "HY-104",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\SessionStore::remove"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.session.SessionStore.remove"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!SessionStore#remove:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "session-store-renew",
+      "kind": "api",
+      "requirements": [
+        "HY-104",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\SessionStore::renew"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.session.SessionStore.renew"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!SessionStore#renew:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "memory-session-store",
+      "kind": "api",
+      "requirements": [
+        "HY-104",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\ArraySession"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.session.ArraySession"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!MemorySessionStore:class"
+        }
+      ]
+    },
+    {
+      "id": "memory-session-store-get",
+      "kind": "api",
+      "requirements": [
+        "HY-104",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\ArraySession::get"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.session.ArraySession.get"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!MemorySessionStore#get:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "memory-session-store-set",
+      "kind": "api",
+      "requirements": [
+        "HY-104",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\ArraySession::set"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.session.ArraySession.set"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!MemorySessionStore#set:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "memory-session-store-remove",
+      "kind": "api",
+      "requirements": [
+        "HY-104",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\ArraySession::remove"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.session.ArraySession.remove"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!MemorySessionStore#remove:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "memory-session-store-renew",
+      "kind": "api",
+      "requirements": [
+        "HY-104",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\ArraySession::renew"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.session.ArraySession.renew"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!MemorySessionStore#renew:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "durable-sessions",
+      "kind": "api",
+      "requirements": [
+        "HY-104",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\NativeSession"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.file_sessions.FileSessions"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!FileSessions:class"
+        }
+      ]
+    },
+    {
+      "id": "durable-sessions-construct",
+      "kind": "api",
+      "requirements": [
+        "HY-104",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\NativeSession::__construct"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.file_sessions.FileSessions"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!FileSessions:constructor(1)"
+        }
+      ]
+    },
+    {
+      "id": "durable-sessions-options",
+      "kind": "api",
+      "requirements": [
+        "HY-104",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\NativeSession::__construct"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.file_sessions.FileSessions"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!FileSessionsOptions:interface"
+        }
+      ]
+    },
+    {
+      "id": "durable-sessions-option-directory",
+      "kind": "api",
+      "requirements": [
+        "HY-104",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\NativeSession::__construct"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.file_sessions.FileSessions"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!FileSessionsOptions#directory:member"
+        }
+      ]
+    },
+    {
+      "id": "durable-sessions-option-lifetime",
+      "kind": "api",
+      "requirements": [
+        "HY-104",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\NativeSession::__construct"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.file_sessions.FileSessions"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!FileSessionsOptions#lifetime:member"
+        }
+      ]
+    },
+    {
+      "id": "durable-session",
+      "kind": "api",
+      "requirements": [
+        "HY-104",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\NativeSession"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.file_sessions.FileSession"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!FileSession:class"
+        }
+      ]
+    },
+    {
+      "id": "durable-session-construct",
+      "kind": "api",
+      "requirements": [
+        "HY-104",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\NativeSession::__construct"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.file_sessions.FileSession"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!FileSession:constructor(1)"
+        }
+      ]
+    },
+    {
+      "id": "durable-session-get",
+      "kind": "api",
+      "requirements": [
+        "HY-104",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\NativeSession::get"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.file_sessions.FileSession.get"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!FileSession#get:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "durable-session-set",
+      "kind": "api",
+      "requirements": [
+        "HY-104",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\NativeSession::set"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.file_sessions.FileSession.set"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!FileSession#set:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "durable-session-remove",
+      "kind": "api",
+      "requirements": [
+        "HY-104",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\NativeSession::remove"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.file_sessions.FileSession.remove"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!FileSession#remove:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "durable-session-renew",
+      "kind": "api",
+      "requirements": [
+        "HY-104",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\NativeSession::renew"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.file_sessions.FileSession.renew"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!FileSession#renew:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "services-class",
+      "kind": "api",
+      "requirements": [
+        "HY-105",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Container"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.container.Container"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Services:class"
+        }
+      ]
+    },
+    {
+      "id": "services-bind",
+      "kind": "api",
+      "requirements": [
+        "HY-105",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Container::bind"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.container.Container.bind"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Services#bind:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "services-resolve",
+      "kind": "api",
+      "requirements": [
+        "HY-105",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Container::call"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.container.Container.call"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Services#get:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "client-rendering",
+      "kind": "api",
+      "requirements": [
+        "HY-62",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\ClientRendering"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.client.ClientRendering"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!ClientRendering:interface"
+        }
+      ]
+    },
+    {
+      "id": "client-rendering-construct",
+      "kind": "api",
+      "requirements": [
+        "HY-62",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\ClientRendering::__construct"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.client.ClientRendering"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!ClientRendering:interface"
+        }
+      ]
+    },
+    {
+      "id": "client-rendering-shell",
+      "kind": "api",
+      "requirements": [
+        "HY-62",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\ClientRendering::$shell"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.client.ClientRendering.shell"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!ClientRendering#shell:member"
+        }
+      ]
+    },
+    {
+      "id": "client-rendering-basepath",
+      "kind": "api",
+      "requirements": [
+        "HY-62",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\ClientRendering::$basePath"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.client.ClientRendering.base_path"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!ClientRendering#basePath:member"
+        }
+      ]
+    },
+    {
+      "id": "client-rendering-selects",
+      "kind": "api",
+      "requirements": [
+        "HY-62",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\ClientRendering::$selects"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.client.ClientRendering.selects"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!ClientRendering#selects:member"
+        }
+      ]
+    },
+    {
+      "id": "choice",
+      "kind": "api",
+      "requirements": [
+        "HY-62",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Choice"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.client.Choice"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Choice:interface"
+        }
+      ]
+    },
+    {
+      "id": "choice-construct",
+      "kind": "api",
+      "requirements": [
+        "HY-62",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Choice::__construct"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.client.Choice"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Choice:interface"
+        }
+      ]
+    },
+    {
+      "id": "choice-chosen",
+      "kind": "api",
+      "requirements": [
+        "HY-62",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Choice::$chosen"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.client.Choice.chosen"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Choice#chosen:member"
+        }
+      ]
+    },
+    {
+      "id": "choice-value",
+      "kind": "api",
+      "requirements": [
+        "HY-62",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Choice::$value"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.client.Choice.value"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Choice#value:member"
+        }
+      ]
+    },
+    {
+      "id": "package-array-session",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\ArraySession"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.ArraySession"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!MemorySessionStore:class"
+        }
+      ]
+    },
+    {
+      "id": "package-bad-request",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\BadRequest"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.BadRequest"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!BadRequest:class"
+        }
+      ]
+    },
+    {
+      "id": "package-container",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Container"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.Container"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Services:class"
+        }
+      ]
+    },
+    {
+      "id": "package-forbidden",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Forbidden"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.Forbidden"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Forbidden:class"
+        }
+      ]
+    },
+    {
+      "id": "package-not-found",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\NotFound"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.NotFound"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!NotFound:class"
+        }
+      ]
+    },
+    {
+      "id": "package-redirect",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Redirect"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.Redirect"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Redirect:class"
+        }
+      ]
+    },
+    {
+      "id": "package-reply",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Reply"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.Reply"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Reply:class"
+        }
+      ]
+    },
+    {
+      "id": "package-request",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Request"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.Request"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Request_2:class"
+        }
+      ]
+    },
+    {
+      "id": "package-response",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Response"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.Response"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Response_2:class"
+        }
+      ]
+    },
+    {
+      "id": "package-result",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Result"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.Result"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Result:class"
+        }
+      ]
+    },
+    {
+      "id": "package-session-store",
+      "kind": "api",
+      "requirements": [
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\SessionStore"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.SessionStore"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!SessionStore:interface"
+        }
       ]
     }
   ],

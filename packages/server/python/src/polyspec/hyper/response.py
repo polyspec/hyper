@@ -14,9 +14,24 @@ class Response:
     def __init__(
         self, status: int, headers: dict[str, Union[str, list[str]]], body: str
     ):
-        self.status = status
-        self.headers = headers
-        self.body = body
+        self._status = status
+        self._headers = headers
+        self._body = body
+
+    @property
+    def status(self) -> int:
+        """The status of the response."""
+        return self._status
+
+    @property
+    def headers(self) -> dict[str, Union[str, list[str]]]:
+        """The headers of the response."""
+        return self._headers
+
+    @property
+    def body(self) -> str:
+        """The body of the response."""
+        return self._body
 
     def with_header(self, name: str, value: str) -> "Response":
         """Returns a copy with one more header."""

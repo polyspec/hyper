@@ -33,7 +33,7 @@ class Request:
         selection: object = None,
         body_size: Optional[int] = None,
     ):
-        self.method = method
+        self._method = method
         # The size of the body that the server received, when it stopped reading a body larger than the limit
         # (HY-59); None counts the body itself.
         self._given_body_size = body_size
@@ -45,12 +45,22 @@ class Request:
         self._csrf_token = csrf_token
         self._params = params or {}
         self._cookies = cookies or {}
-        self.https = https
+        self._https = https
         self._selection = selection
         # The query values, or None when a name or a value is not UTF-8 (HY-42, HY-56).
         self._query_fields = Fields.parse(query.encode("latin-1"))
         # The form values of the body, or None when a name or a value is not UTF-8 (HY-42, HY-57).
         self._form_fields = Fields.from_body(self.header("Content-Type") or "", body)
+
+    @property
+    def method(self) -> str:
+        """The method of the request."""
+        return self._method
+
+    @property
+    def https(self) -> bool:
+        """Whether the request arrived over HTTPS."""
+        return self._https
 
     def _with_session(self, flash: Flash, csrf_token: str) -> "Request":
         """Returns a copy that carries the flash values and the CSRF token of the session."""
@@ -199,7 +209,7 @@ class Request:
         }
         state.update(changes)
         return Request(
-            self.method,
+            self._method,
             state["path"],
             state["headers"],
             self._query,
@@ -208,7 +218,7 @@ class Request:
             state["csrf_token"],
             state["params"],
             self._cookies,
-            self.https,
+            self._https,
             state["selection"],
             state["body_size"],
         )
