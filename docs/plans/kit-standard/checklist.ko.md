@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-kit-standard -->
-<!-- source-sha256: 1e2853c9810d9222016aa34406e2bf28e6d621175f2c563799ea6d04f2ac73b8 -->
+<!-- source-sha256: a4ac3200736c2bc62ca4f08b69ce192d32d5b109b695b89b74efeaed49ec8e15 -->
 # kit 표준 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -38,3 +38,4 @@
 | H25.30 | kit의 gate는 make check와 CI group에서 실행되고, workflow test는 이 저장소의 workflow만 읽는다 | Makefile, .github/workflows/ci.yml, tests/scripts/ci-workflow.test.mts and docs/operations/repository-rules.md with its twin | `var/tools/bin/node --test tests/scripts/ci-workflow.test.mts`, `make kit-check` | [o] |
 | H25.31 | R3: fields-urlencoded와 fields-multipart는 모든 서버에서 성립한다 | The test files of the fields cases of the three servers, config/parity.json | `make parity-check UNITS="fields-urlencoded fields-multipart fields-values"` | [o] |
 | H25.32 | R3: json-encode와 json-decode는 모든 서버에서 성립한다 | The test files of the json cases of the three servers, config/parity.json | `make parity-check UNITS="json-encode json-decode json-values"` | [o] |
+| H25.33 | hyper의 모든 PHP platform은 8.4.1이다 | composer.json, examples/board/composer.json, packages/server/php/composer.json, tests/release-install/composer/composer.json and config/dependency-policy.json | `make dependency-policy-check` | [o] |

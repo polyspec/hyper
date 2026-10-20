@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 860a7964c91a32f38e3da61def82a609448ec27d8e59984a1ab834193fe4b622 -->
+<!-- source-sha256: 07b0dfbcaa94c2b624306209a1b52c8324ef160d1f78fdc29c7dd254e837f607 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H25.33: 저장소의 모든 Composer manifest와 정책의 `composerPlatforms`에서 PHP platform은 kit이 요구하는 유일한 platform인 8.4.1이다(`.php-version`의 minor에 patch 1을 붙인 값이며 PHPUnit 13이 필요로 한다). 대상은 `composer.json`, `examples/board/composer.json`, `packages/server/php/composer.json`, `tests/release-install/composer/composer.json`, `config/dependency-policy.json`이다. 배포된 template 0.0.11이 PHP 8.5를 요구하므로 lock은 아직 이 platform으로 해석할 수 없다(H25.14). Red: `make dependency-policy-check`가 `the PHP platform is 8.4.0, the one platform of this repository is 8.4.1` 지적 6건을 보고했다. Green: 그 6건이 사라지고, lock과 검토의 지적 8건은 H25.14와 H25.15에 남는다 (H25.33)
 - H25.32: `contracts/json.json`의 case는 모든 서버에서 suite로 실행된다(R3). PHP는 data set을 `id`로 부르고, Python과 Node는 encode case와 decode case를 각자의 test 파일(`test_json_encode.py`, `test_json_decode.py`, `json-encode.test.ts`, `json-decode.test.ts`)에 둔다. codec의 다른 test는 `test_json.py`와 `json.test.ts`에 남고, PHP는 숫자의 byte를 시험하는 `JsonEncoderTest.php`를 얻어 unit `json-values`(HY-17, HY-44)가 된다. Red: `make parity-check UNITS="json-encode json-decode"`가 세 서버에 R3을 보고했다(PHP는 data set을 label로 불렀고, Python과 Node는 다른 unit의 case와 손으로 쓴 test를 'not in the suite'로 실행했다). Green: 두 suite와 `json-values`가 성립한다. binding 9개를 두 번 실행해 case 161개가 통과했다(PHP는 Homebrew PHP 8.5) (H25.32)
 - H25.31: `contracts/fields.json`의 case는 모든 서버에서 suite로 실행된다(R3). PHP는 case의 data set을 `id`로 부르고(provider가 `label`로 불렀다), Python과 Node는 urlencoded case와 multipart case를 각자의 test 파일(`test_fields_urlencoded.py`, `test_fields_multipart.py`, `fields-urlencoded.test.ts`, `fields-multipart.test.ts`)에 두어 suite 파일이 자기 unit의 case만 담는다. form field의 다른 test는 `test_fields.py`, `fields.test.ts`, `FieldsTest.php`에 unit `fields-values`로 남는다. Red: `make parity-check UNITS="fields-urlencoded fields-multipart"`가 세 서버에 R3을 보고했다(PHP는 case 17개와 4개 중 0개를 이름으로 맞췄고, Python과 Node는 다른 unit의 case와 손으로 쓴 test를 'not in the suite'로 보고했다). Green: 두 suite와 `fields-values`가 PHP(Homebrew PHP 8.5), Python, Node에서 성립한다. binding 9개를 두 번 실행해 case 66개가 통과했다 (H25.31)
 - H25.28-1: H25.28의 changelog 줄은 이미 분류한 원본을 19개라고 적었다. kit이 찾은 tool 원본은 37개이고 15개를 분류했으며 22개를 분류하지 않았고, 줄은 이제 이 수를 적는다. Red: 줄이 `make rebuild-check`가 찾은 37개와 달리 19개와 22개를 적었다. Green: 줄이 37, 15, 22를 적고 `make docs-check`가 통과한다 (H25.28-1)
