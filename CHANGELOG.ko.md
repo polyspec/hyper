@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 2ffb6486d5db6c28e8694e875ff6e7cbe52cd9a5f176449883a23cf76d4a3a6f -->
+<!-- source-sha256: 400e71169200fd2a3280a5c3be46be79f977382e3b5e5105db921e296b9e4506 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H25.66: Deliverables에서 저장소에 없는 `packages/server/php/composer.lock`을 뺀다(kit K388 item-edit). red: row가 존재하지 않는 파일을 적었고, green: Deliverables가 존재하는 파일만 적는다. (H25.66)
 - H25.66: phpunit/phpunit 최신 안정 버전 row는 kit K392가 끝날 때까지 보류한다. link 모드의 추적 manifest 갱신이 K392를 기다리기 때문이다. composer.json의 변경은 main에 들이지 않는다. red: row를 가진 커밋에서 `make dependency-policy-check`가 통과하므로 이 검사의 red는 기록되지 않는다. (H25.66)
 - H26.3: docs/operations/dependencies.ko.md는 관리되는 multipart 파서를 HY-57, HY-113, HY-42에 대조한 기록을 가진다: riverline/multipart-parser 2.2.2(PHP), python-multipart 0.0.32(Python), busboy 1.6.0(Node). 후보마다 이 규칙 중 하나를 어기므로(근거 소스는 그 문서에 있다) 세 서버는 자신의 파서를 유지하고 이유를 기록한다. 코드와 lock은 바뀌지 않았고, 세 서버의 계약 테스트 묶음은 그대로 통과한다. (H26.3)
 - H25.68: 의존성 문서는 검토 문단에서 PHP 하한 8.5 대신 PHP 플랫폼 8.4.1(`.php-version` 8.4)을 적는다. 이는 2026-10-14 검토를 인용하는 `docs/operations/dependencies.md`의 줄이다. red: 문단이 플랫폼에 없는 PHP 하한 8.5를 적었고, green: 고친 문단으로 `make docs-check`가 exit 0을 낸다. (H25.68)
