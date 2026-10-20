@@ -10,6 +10,9 @@
       "linux-arm64": "88aea77e41c2a3c45a9cbd64df9516ba887017442846213b3de178acbd3c9a46"
     }
   },
+  "symbolExtractors": [
+    "php"
+  ],
   "pythonBackend": {
     "requirement": "setuptools==84.0.0",
     "sha256": "51a52592b3b99e102b609654876bd65f19f999935166d1352678931132b0c670"

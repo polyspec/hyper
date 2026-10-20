@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-kit-standard -->
-<!-- source-sha256: bbf743612bee8e58cb980731ec437a58454cb17f68bfe5049b6e8ab969db9aef -->
+<!-- source-sha256: 9a0d455d1b6d932c3cd49d32145860d79982d1b4d433ae4aba7811238ddcd9af -->
 # kit 표준 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -49,3 +49,4 @@
 | H25.39 | kit 사본이 K294와 K297 이후의 kit과 일치한다 | PRINCIPLES.md and PRINCIPLES.ko.md | `make kit-check` | [o] |
 | H25.40 | AGENTS.md의 모든 규칙은 Own이거나 PRINCIPLES.md의 규칙을 Refines한다 | AGENTS.md and AGENTS.ko.md | `make rules-check` | [o] |
 | H25.41 | check-recipes.test.mts의 recipe test는 machine의 toolchain에 의존하지 않는다 | tests/scripts/check-recipes.test.mts | `var/tools/bin/node --test tests/scripts/check-recipes.test.mts` | [o] |
+| H25.42 | R1: parity check의 symbol extractor가 php와 python server에서 실행된다 | config/toolchain.json | `make parity-check UNITS=manifest` | [!] 원인: kit 결함: scripts/kit/parity.mts:113이 env 없이 checkParity를 호출해 env가 process.env가 되고(parity.mts:61), python extractor(parity-symbols.mts:210)가 toolsEnvironment의 mise 환경 없이 mise shim을 실행하여 mise가 "Config files in mise.toml are not trusted"로 실패한다; 재시도: kit가 extractor에 toolsEnvironment(root)를 전달하면; php extractor는 설치되어 symbol을 나열한다 |
