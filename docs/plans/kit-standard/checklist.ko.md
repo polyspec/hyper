@@ -75,3 +75,4 @@
 | H25.59 | 다른 사용자로 output을 읽는 test를 제거한다. mode test가 이미 모든 output을 다른 사용자가 읽을 수 있음을 증명하고, sudo가 없으면 건너뛰는 test는 좁혀진 test다 | tests/scripts/output-files.test.mts | `make test-markers-check` | [o] |
 | H25.60 | PHP 서버는 template 확장에 대한 분기를 두지 않는다(HY-48, P32) | packages/server/php/src/Renderer.php, packages/server/php/src/App.php, packages/server/php/tests/RendererTest.php, docs/spec/protocol.md | `make divergence-check` | [o] |
 | H25.61 | 저장소가 가진 kit 복사본마다 소유 규칙을 둔다 | config/owner-checks.json with clippy.toml in the kit copies rule | `make owner-validate` | [o] |
+| H25.63 | 개발 의존성 vitest와 setuptools를 최신 안정 릴리스로 올린다 | package.json, package-lock.json, packages/server/python/pyproject.toml, config/dependency-review.json | `var/tools/bin/node node_modules/vitest/vitest.mjs run --dir packages/client`, `packages/server/python/.venv/bin/python -m unittest packages/server/python/tests/test_csrf.py` | [o] |

@@ -1,11 +1,11 @@
 {
   "schema": 1,
   "comment": "Written by make dependency-review RECORD=1 (scripts/kit/dependency-review.mts) from the registries; make dependency-policy-check compares the checkout with it without a network.",
-  "reviewed": "2026-10-20T06:22:29.161Z",
+  "reviewed": "2026-10-20T09:19:46.187Z",
   "locks": [
     {
       "lock": "package-lock.json",
-      "sha256": "c75b070a52454580ed028f566ca3761539d26ef9117f1ffff84089e4fd69ede9",
+      "sha256": "86e0d198fc337a69a8bacab416a1644da8f620f71cd5fa6e9880bc6e6aead82f",
       "advisories": [
         {
           "package": "sprintf-js",
@@ -78,7 +78,7 @@
       "ecosystem": "npm",
       "manifest": "package.json",
       "package": "vitest",
-      "version": "5.0.4",
+      "version": "5.0.5",
       "latest": "5.0.5"
     },
     {
@@ -114,7 +114,7 @@
       "manifest": "composer.json",
       "package": "polyspec/template",
       "version": "0.0.11",
-      "latest": "0.0.6"
+      "latest": "0.0.11"
     },
     {
       "ecosystem": "composer",
@@ -142,14 +142,14 @@
       "manifest": "packages/server/php/composer.json",
       "package": "polyspec/template",
       "version": "0.0.11",
-      "latest": "0.0.6"
+      "latest": "0.0.11"
     },
     {
       "ecosystem": "composer",
       "manifest": "examples/board/composer.json",
       "package": "polyspec/template",
       "version": "0.0.11",
-      "latest": "0.0.6"
+      "latest": "0.0.11"
     },
     {
       "ecosystem": "composer",
@@ -163,7 +163,7 @@
       "manifest": "packages/server/php/composer.json",
       "package": "polyspec/template",
       "version": "0.0.11",
-      "latest": "0.0.6"
+      "latest": "0.0.11"
     },
     {
       "ecosystem": "pypi",
@@ -204,7 +204,7 @@
       "ecosystem": "pypi",
       "manifest": "packages/server/python/pyproject.toml",
       "package": "setuptools",
-      "version": "84.0.0",
+      "version": "84.2.0",
       "latest": "84.2.0"
     },
     {
