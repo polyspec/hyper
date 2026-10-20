@@ -139,7 +139,7 @@ repository.
   runtime-native integration is written once as a neutral rule in docs/spec, and each implementation binds its native form
   to it. An implementation-internal test is a plain test of its package, not a parity unit, and it cites no requirement; a
   symbol that is public by accident becomes non-public.
-  Enforced by: `make parity-declarations-check`, `make parity-check`
+  Enforced by: `make parity-declarations-check`, `make parity-check`, `make divergence-check`, `make test-markers-check`
 - P33 A rule that the work needs and docs/spec lacks is written in docs/spec first. A requirement is cited only by a test that
   tests it, a unit is never dropped to pass, and nothing is renamed to escape a check.
   Enforced by: `make parity-declarations-check`
@@ -207,6 +207,7 @@ tool lands, a standard binds the work as written here.
   php-ext-arginfo` writes with the gen_stub.php of the PHP, is that of the stub, in a copy that keeps `composer.json` beside
   `src/`, so that `config.m4` takes the version of the extension from `../composer.json`; `make test-php-ext` compares by
   Reflection what it registers with the libraries, each name with the library that declares it, before its unit tests, which
-  are the PHPUnit files of every library run with the extension loaded, and those of `packages/php-ext` when it holds any; its
+  are the PHPUnit files of every library run with the extension loaded and none of the sources of the library (its dependencies and
+  autoload-dev are loaded, its own autoload is not, so the library has no guard against the extension), and those of `packages/php-ext` when it holds any; its
   parity implementation shares the tests of the libraries by this layout, with no relative path in a configuration.
   Enforced by: `make lint-php-ext`, `make test-php-ext`, `make layout-check`

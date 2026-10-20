@@ -57,27 +57,27 @@
   "tools": [
     {
       "root": "tests/scripts",
-      "reason": "the node tests of the repository tools of scripts/ (the verifier, the build, the publish and the check scripts), which implement no contract"
+      "reason": "test: the node tests of the repository tools of scripts/ (the verifier, the build, the publish and the check scripts), which implement no contract"
     },
     {
       "root": "tests/e2e",
-      "reason": "the browser tests of the example board, which run the example application and implement no contract"
+      "reason": "test: the browser tests of the example board, which run the example application and implement no contract"
     },
     {
       "root": "tests/package-install",
-      "reason": "the install test of the published packages, which consumes them and implements no contract"
+      "reason": "test: the install test of the published packages, which consumes them and implements no contract"
     },
     {
       "root": "tests/virtiofs",
-      "reason": "the output-file test of the virtiofs check of the repository tools, which implements no contract"
+      "reason": "test: the output-file test of the virtiofs check of the repository tools, which implements no contract"
     },
     {
       "root": "packages/client/tests",
-      "reason": "the tests of the browser package, which is a separate component and not an implementation of the server spec (HR-98); they belong to the package itself"
+      "reason": "test: the tests of the browser package, which is a separate component and not an implementation of the server spec (HR-98); they belong to the package itself"
     },
     {
       "root": "tests/python_package",
-      "reason": "the package-data test of the Python distribution polyspec-hyper-server, which checks its pyproject.toml and its py.typed marker and implements no contract of the protocol"
+      "reason": "test: the package-data test of the Python distribution polyspec-hyper-server, which checks its pyproject.toml and its py.typed marker and implements no contract of the protocol"
     }
   ],
   "testPatterns": [

@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-kit-standard -->
-<!-- source-sha256: c3997d31cb644011a84dd5a442d3816896e891145cae615dab7ef742380def79 -->
+<!-- source-sha256: ae010836aba55a9cd26019af194fe9411bf80e31614649e3c34fdef81bb6ea75 -->
 # kit 표준 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -70,3 +70,4 @@
 | H25.54-1 | config/generated.json에 owner가 있고 한국어 changelog가 일치한다 | config/owner-checks.json, CHANGELOG.ko.md | `make owner-validate`, `make docs-check` | [o] |
 | H25.55 | bundle size script는 option으로 GitHub 주석을 달고 어떤 test도 CI 신원을 설정하지 않는다(P31) | scripts/check-bundle-size.mts, tests/scripts/check-bundle-size.test.mts, Makefile | `node --test tests/scripts/check-bundle-size.test.mts` | [o] |
 | H25.56 | PRINCIPLES.md 사본이 K326 이후의 kit와 같다 | PRINCIPLES.md and PRINCIPLES.ko.md | `make kit-check` | [o] |
+| H25.57 | 사본이 K329 이후의 kit와 같고, divergence-check가 저장소의 gate이며, config/parity.json의 예외가 종류를 밝힌다 | PRINCIPLES.md, Makefile, .github/workflows/ci.yml, config/parity.json | `make kit-check` | [o] |

@@ -69,3 +69,4 @@
 | H25.54-1 | config/generated.json has an owner and the Korean changelog matches | config/owner-checks.json, CHANGELOG.ko.md | `make owner-validate`, `make docs-check` | [o] |
 | H25.55 | The bundle size script annotates on GitHub by an option, and no test sets the CI identity (P31) | scripts/check-bundle-size.mts, tests/scripts/check-bundle-size.test.mts, Makefile | `node --test tests/scripts/check-bundle-size.test.mts` | [o] |
 | H25.56 | The copies of PRINCIPLES.md match the kit after K326 | PRINCIPLES.md and PRINCIPLES.ko.md | `make kit-check` | [o] |
+| H25.57 | The copies match the kit after K329, divergence-check is a gate of the repository and the exceptions of config/parity.json name their kind | PRINCIPLES.md, Makefile, .github/workflows/ci.yml, config/parity.json | `make kit-check` | [o] |
