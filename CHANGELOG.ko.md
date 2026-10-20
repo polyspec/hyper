@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 1850a0823c2dd7add7f43eba8613eedd1666f6aca18376d71b18b45c2b47a1ad -->
+<!-- source-sha256: b86ec9861e8b524ad26e751c5024b2dbb0667c58eaf355c17346a4e5eccc68a3 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H25.15: config/dependency-review.json은 make dependency-review RECORD=1로 lock을 있는 그대로 검토한 기록을 담는다(registry 의존성 25개, lock 5개, ruff 항목). red: dependency-policy-check가 바뀐 lock hash와 없는 ruff 항목을 보고했고, green: 그 항목들이 사라졌다. 남은 항목은 더 새로운 안정 release(vitest, phpunit, setuptools, sprintf-js)와 H25.14의 lock platform이며, 업그레이드 단계와 kit local-links.md의 추적 lock 재해석에 속한다. (H25.15)
 - H25.53: config/parity.json은 세 서버의 public symbol에 대한 API unit 155개를 담는다(HY-106). application 옵션, handler, HY-100의 host는 각 런타임의 형태를 따른다. public API(서버마다 export하는 것을 확인하는 test)와 ORM 오류(HY-107)에는 feature unit이 하나씩 있다. Python의 Request, Response, Redirect, Choice, ClientRendering은 extractor가 나열하도록 값을 property로 노출한다. red: API unit이 선언하지 않은 public symbol 155개와 R1 11건, green: 세 서버의 extractor가 선언되지 않은 public symbol도 R1도 찾지 못하고 parity 선언이 성립한다. (H25.53)
 - H25.52: Python 서버는 symbol extractor에 public API(HY-106)만 알린다. engine module(csrf, data_model, fields, json_codec, kept, manifest, pipeline, planner, reads, region, renderer, router, Session과 Flash의 session, warnings_guard)과 서버가 module 사이에서 쓰는 멤버는 밑줄로 시작하고, package는 Container, Reply, Request, Response, Result, 중단, ArraySession, SessionStore만 export하며, README는 public API를 설명한다. red: public symbol 226개, green: 87개이며 모두 HY-106이 정한 API다. run.py는 286개 test를, render test는 모두 통과한다. (H25.52)
 - H25.51: around hook이 변경한 요청을 answer에 넘길 때 쓰는 Request.withHeader(HY-97)는 세 서버 모두에서 다시 public API다. H25.49와 H25.50의 @internal 표시를 PHP와 Node 선언에서 제거했다. red: Python 서버는 나열하는데 PHP와 Node 선언에는 없었고, green: 세 서버 모두 public이다. (H25.51)

@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-kit-standard -->
-<!-- source-sha256: 859087dc90b07ac5dcab1eef7308eddc0e6f411d61960434f354af41d803a72b -->
+<!-- source-sha256: f53b53c68b31caba666405ef6d18fe7c5c5be7161e734b990c046c86087ce5f8 -->
 # kit 표준 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -19,7 +19,7 @@
 | H25.13 | Python test는 각 test code 조각을 한 곳에만 둔다 | packages/server/python/tests/contracts.py, transport.py, render/fixture_app.py and the test files that use them | `packages/server/python/.venv/bin/python packages/server/python/tests/run.py`, `packages/server/python/.venv/bin/python packages/server/python/tests/run.py packages/server/python/tests/render render_*.py` | [o] |
 | H25.14 | hyper의 모든 composer.json은 platform PHP 8.4.1을 두고, lock과 vendor 디렉터리가 이를 따른다 | composer.json, examples/board/composer.json, packages/server/php/composer.json, tests/release-install/composer/composer.json, their locks and config/dependency-policy.json | `make dependency-policy-check`, `make lint-php`, `make toolchain-check` | [!] 원인: 배포된 polyspec/template 0.0.11 archive가 php >=8.5를 요구하므로 composer update --lock이 platform 8.4.1에서 root와 board를 해석하지 못한다(template 원본은 이미 >=8.4를 요구한다); 재시도: 고정한 template 릴리스가 php >=8.4를 요구할 때 |
 | H25.14-1 | hyper의 vendor 디렉터리와 PHP 검사는 source에서 연결한 template(>=8.4)으로 PHP 8.4.26에서 실행되며 "8.5에서 실행" 단서가 없다 | vendor/composer/installed.json and platform_check.php through the link of kit | `make toolchain-check`, `make lint-php` | [o] |
-| H25.15 | 의존성 검토 기록이 lock과 mise.toml의 tool과 일치한다 | config/dependency-review.json | `make dependency-policy-check` | [!] 원인: 기록된 검토는 각 composer.json의 platform PHP에서 최신 안정 릴리스를 해석하므로 H25.14가 끝나기 전에는 polyspec/template 0.0.6과 phpunit 12.5.40을 최신으로 기록하고, 정책이 요구하거나 예외로 두어야 하는 더 새로운 릴리스 vitest 5.0.5와 setuptools 84.2.0도 기록한다; 재시도: H25.14가 끝나고 vitest와 setuptools를 올리거나 예외로 둔 뒤 |
+| H25.15 | 의존성 검토 기록이 lock과 mise.toml의 tool과 일치한다 | config/dependency-review.json | `make dependency-policy-check` | [o] |
 | H25.16 | kept 값이 원인이 아닌 render 실패는 모든 서버에서 드러난다 | The tests of AppTest.php, app.test.ts and render_app.py, and the stated need of the two fallbacks in app.py | `var/tools/bin/node node_modules/vitest/vitest.mjs run --dir packages/server/ts packages/server/ts/tests/app.test.ts`, `packages/server/python/.venv/bin/python packages/server/python/tests/run.py packages/server/python/tests/render render_app.py` | [o] |
 | H25.16-1 | rows data를 쓰는 PHP test 두 개는 응용 프로그램을 한 곳에서 만든다 | packages/server/php/tests/AppTest.php | `var/tools/bin/node node_modules/@polyspec/kit/dist/run-tests.mjs phpunit --cwd packages/server/php -- --exclude-group native tests/AppTest.php` | [o] |
 | H25.17 | 추적하는 모든 경로는 config/owner-checks.json에 owner를 가진다 | config/owner-checks.json | `make owner-validate` | [o] |
