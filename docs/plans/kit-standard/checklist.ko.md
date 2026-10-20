@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-kit-standard -->
-<!-- source-sha256: 5b00ed817a19e077be5db420a99b5aca6a7de43b2f4075a95882ae0c078682a2 -->
+<!-- source-sha256: 44196f760f7afd936055f7c6d302073424cb7a064d4eec92ca2f73c6d1b4ae32 -->
 # kit 표준 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -45,3 +45,4 @@
 | H25.36 | R3: keep은 모든 서버에서 성립한다 | The test files of the keep cases of the three servers, config/parity.json | `make parity-check UNITS="keep kept-values"` | [o] |
 | H25.37 | R3: reads는 모든 서버에서 성립한다 | packages/server/php/tests/ReadsTest.php | `make parity-check UNITS=reads` | [o] |
 | H25.38 | R3: client-requests는 모든 서버에서 성립한다 | The test files of the client cases of the three servers, config/parity.json | `make parity-check UNITS="client-requests client-selection"` | [o] |
+| H25.39 | kit 사본이 K294와 K297 이후의 kit과 일치한다 | PRINCIPLES.md and PRINCIPLES.ko.md | `make kit-check` | [o] |
