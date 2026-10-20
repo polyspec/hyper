@@ -38,7 +38,7 @@ jobs:
       matrix:
         include:
           - name: docs
-            targets: kit-check toolchain-check layout-check typecheck lint-ts docs-check hooks-check push-gate-commit commits-check owner-validate rules-check rebuild-check language-check test-markers-check duplication-check parity-declarations-check
+            targets: kit-check toolchain-check layout-check typecheck lint-ts docs-check hooks-check push-gate-commit commits-check owner-validate rules-check rebuild-check language-check test-markers-check duplication-check parity-declarations-check link-state-check
           - name: php
             install: true
             targets: dependency-policy-check dependency-policy-mutation-check bench-server-smoke hyper-lint analyse-php hyper-test-php lint-php

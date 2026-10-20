@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: b652dcc6d91416cbdad262fecf6ec4d5c02787b12332b19f3049db4fee1f48ea -->
+<!-- source-sha256: 7d59ae1c0bee529e5c4f525a6e478e66cb9c6e19093c6df885a8f5b21c83d443 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H25.48: PRINCIPLES.md와 PRINCIPLES.ko.md 사본이 P30(link만 사용)을 담은 kit와 같고, link-state-check가 CHECK_TARGETS와 ci.yml의 docs 그룹에 들어간다. red: kit-check가 link-state-check 없는 CHECK_TARGETS를 보고했고, green: kit-check와 link-state-check가 통과한다. (H25.48)
 - H25.47: Node 서버는 ORM 오류 NO_ROWS를 not found로, action이 일으킨 REVISION_CHANGED를 status 409인 route page로 응답한다(HY-107). red: test가 NO_ROWS의 404 대신 500을 받았고, green: NO_ROWS 응답은 통과한다. 409 page는 연결된 template이 모든 page render를 "assign is not a map"으로 실패시키는 동안 render할 수 없다. (H25.47)
 - H25.46: Python 서버는 ORM 오류 NO_ROWS를 not found로, action이 일으킨 REVISION_CHANGED를 status 409인 route page로 응답한다(HY-107). red: test_orm_errors_are_answered_as_their_stops가 404 대신 page 200을 받았고, green: render_app이 통과한다. (H25.46)
 - H25.45: PHP 서버는 ORM 오류 NO_ROWS를 not found로, action이 일으킨 REVISION_CHANGED를 status 409인 route page로 응답한다(HY-107. HY-107은 loader가 REVISION_CHANGED를 일으키면 HY-43으로 실패한다는 것도 정한다). red: AppTest::testOrmErrorsAreAnsweredAsTheirStops가 404 대신 500을 받았고, green: AppTest가 통과한다(Homebrew PHP 8.5에서 실행, H25.14-1의 환경 문제). (H25.45)

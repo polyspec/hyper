@@ -1,5 +1,5 @@
 <!-- doc-id: principles -->
-<!-- source-sha256: 91b88fa596381bf7a93ed9162d83e1cc6ecc361668ef7aaaf53cf44346ebb6a6 -->
+<!-- source-sha256: c91d82072995fd4e82d99ae2bbda77be1f3e614ad90d9f572b6c0538d7a61466 -->
 # 원칙
 
 [English](PRINCIPLES.md)
@@ -121,6 +121,9 @@ vendor하므로, 모든 repository가 같은 text를 가지며 `make kit-check`�
   `build-<runtime>`, `test-<runtime>`, `lint-<runtime>`이며, 모두 kit이 정의한다. 저장소는 `build: kit-build`처럼 자기
   prerequisite로 작업에 합류하고, 작업 이름으로 시작하는 다른 target으로 합류하지 않는다 (K246).
   Enforced by: `make kit-check`
+- P30 0.0.x 개발 중 저장소는 다른 저장소의 package를 link로만 쓴다. 설치된 polyspec package 폴더는 제공자 폴더를 가리키는
+  심볼릭 링크이며 사본이 아니고, link는 설치된 릴리스 버전으로 간주한다. 버전은 설치할 때만 검사한다 (K305-1).
+  Enforced by: `make link-state-check`
 
 ## Repository 기준
 

@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-kit-standard -->
-<!-- source-sha256: c690d211772b023e6ae5fe5472ca473066efc248e7dc1207934b11f03f5fbaf4 -->
+<!-- source-sha256: b54928f42cce9845bcb333f5e515f0458c4d0fa731c80215d24ad32a2ca92781 -->
 # kit 표준 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -57,3 +57,4 @@
 | H25.45 | PHP 서버: ORM 오류 NO_ROWS와 REVISION_CHANGED는 not found와 409 page로 응답한다(HY-107) | packages/server/php/src/App.php, packages/server/php/tests/AppTest.php | `make hyper-test-php TESTS=packages/server/php/tests/AppTest.php` | [o] |
 | H25.46 | Python 서버: ORM 오류 NO_ROWS와 REVISION_CHANGED는 not found와 409 page로 응답한다(HY-107) | packages/server/python/src/polyspec/hyper/app.py, packages/server/python/tests/render/render_app.py | `python -m unittest packages/server/python/tests/render/render_app.py` | [o] |
 | H25.47 | Node 서버: ORM 오류 NO_ROWS와 REVISION_CHANGED는 not found와 409 page로 응답한다(HY-107) | packages/server/ts/src/app.ts, packages/server/ts/tests/app.test.ts | `make hyper-test-node` | [!] 원인: 이 machine에서는 모든 page render가 "TemplateError: assign is not a map"으로 실패하므로(packages/client/dist/response.js:180에서 template packages/ts/dist/chunk-5AG7CLCQ.mjs:1963 bindMap으로 들어감) test의 409 page를 render할 수 없다. 이 item 없이도 packages/client tests/response.test.ts는 18개 중 15개, packages/server/ts tests/app.test.ts는 74개 중 20개가 실패하며, template item T26.7-18은 재현되지 않는다고 보고한다; 재시도: 연결된 template에서 merge(shared, data) root의 render가 동작하면 tests/app.test.ts를 실행한다 |
+| H25.48 | PRINCIPLES.md 사본이 K305 이후의 kit와 같다 | PRINCIPLES.md and PRINCIPLES.ko.md | `make kit-check` | [o] |
