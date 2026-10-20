@@ -42,7 +42,11 @@ final class Request
         $this->formFields = Fields::fromBody($this->header('Content-Type') ?? '', $body);
     }
 
-    /** Returns a copy that carries the flash values and the CSRF token of the session. */
+    /**
+     * Returns a copy that carries the flash values and the CSRF token of the session.
+     *
+     * @internal
+     */
     public function withSession(Flash $flash, string $csrfToken): self
     {
         return $this->copy(['flash' => $flash->values, 'csrfToken' => $csrfToken]);
@@ -52,19 +56,29 @@ final class Request
      * Returns a copy with the routed path (base path removed) and the route parameters.
      *
      * @param array<string, string> $params
+     *
+     * @internal
      */
     public function withRoute(string $path, array $params): self
     {
         return $this->copy(['path' => $path, 'params' => $params]);
     }
 
-    /** Returns a copy whose header of the name, compared without case as `header` reads it, has the value (HY-97). */
+    /**
+     * Returns a copy whose header of the name, compared without case as `header` reads it, has the value (HY-97).
+     *
+     * @internal
+     */
     public function withHeader(string $name, string $value): self
     {
         return $this->copy(['headers' => [...$this->headers, strtolower($name) => $value]]);
     }
 
-    /** Returns a copy that carries the value of the choice of the client rendering selection (HY-62). */
+    /**
+     * Returns a copy that carries the value of the choice of the client rendering selection (HY-62).
+     *
+     * @internal
+     */
     public function withSelection(mixed $value): self
     {
         return $this->copy(['selection' => $value]);
@@ -266,7 +280,11 @@ final class Request
         return $question === false ? '' : substr($target, $question + 1);
     }
 
-    /** Creates a request from the PHP request globals. */
+    /**
+     * Creates a request from the PHP request globals.
+     *
+     * @internal
+     */
     public static function fromGlobals(): self
     {
         $headers = [];

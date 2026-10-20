@@ -4,7 +4,12 @@ declare(strict_types=1);
 
 namespace Polyspec\Hyper;
 
-/** Kept values (HY-37, HY-38). Values outside the template data model are ignored. The JavaScript implementation follows the same rules; both pass contracts/keep.json. */
+/**
+ * Kept values (HY-37, HY-38). Values outside the template data model are ignored. The JavaScript implementation
+ * follows the same rules; both pass contracts/keep.json.
+ *
+ * @internal
+ */
 final class Kept
 {
     public const KINDS = ['server', 'cookie', 'localStorage', 'sessionStorage'];

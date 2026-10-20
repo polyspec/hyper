@@ -26,7 +26,11 @@ final class NativeSession implements SessionStore
         session_start(self::options($https));
     }
 
-    /** Returns the session cookie name: `__Host-hy-session` over HTTPS and `hy-session` otherwise (HY-45). */
+    /**
+     * Returns the session cookie name: `__Host-hy-session` over HTTPS and `hy-session` otherwise (HY-45).
+     *
+     * @internal
+     */
     public static function name(bool $https): string
     {
         return $https ? '__Host-hy-session' : 'hy-session';
@@ -39,6 +43,8 @@ final class NativeSession implements SessionStore
      *
      * @return array{name: string, cookie_path: '/', cookie_domain: '', cookie_httponly: true, cookie_samesite: 'Lax',
      *     cookie_secure: bool, use_strict_mode: true, use_only_cookies: true, cache_limiter: ''}
+     *
+     * @internal
      */
     public static function options(bool $https): array
     {

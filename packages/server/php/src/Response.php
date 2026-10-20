@@ -21,7 +21,11 @@ final class Response
         return new self($this->status, [...$this->headers, $name => $value], $this->body);
     }
 
-    /** Returns a copy with the cookies of a reply, when it has any (HY-52). */
+    /**
+     * Returns a copy with the cookies of a reply, when it has any (HY-52).
+     *
+     * @internal
+     */
     public function withCookies(Reply $reply, bool $secure): self
     {
         $cookies = $reply->cookieHeaders($secure);
@@ -39,7 +43,11 @@ final class Response
         return new self($status, ['Content-Type' => 'text/plain; charset=utf-8'], $body);
     }
 
-    /** Writes the status, the headers and the body to the PHP output. */
+    /**
+     * Writes the status, the headers and the body to the PHP output.
+     *
+     * @internal
+     */
     public function send(): void
     {
         http_response_code($this->status);
@@ -54,6 +62,8 @@ final class Response
      * such as `HTTP/1.1 500 Internal Server Error`.
      *
      * @param list<string> $kept
+     *
+     * @internal
      */
     public function sendReplacing(array $kept, string $statusLine): void
     {

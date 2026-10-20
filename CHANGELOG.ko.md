@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 6cfcd0adc0332b5b126dd50dcc187fa6f80d746cfde75d9e365fa9eadc578b79 -->
+<!-- source-sha256: 4313a6cdf6f37dde72300716d4065c53c145cfeae82d995513bf269d3a530428 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H25.50: PHP 서버는 symbol extractor에 public API(HY-106)만 알린다. engine class(Csrf, DataModel, Delivery, Fields, Flash, JsonEncoder, Kept, Manifest, Reads, Region, RegionPlanner, Renderer, Router, Session)와 서버가 class 사이에서 쓰는 멤버는 @internal(K307)을 단다. red: public symbol 179개, green: 88개이며 모두 HY-106이 정한 API다. AppTest, RequestTest, ReplyTest, ResultTest는 PHP 8.4.26에서 통과한다. (H25.50)
 - H25.49: Node 서버의 선언(dist/index.d.ts)은 public API(HY-106)만 담는다. 서버가 module 사이에서 쓰는 멤버는 @internal을 달고 tsconfig.build.json의 stripInternal이 선언에서 제거하며, JSON helper, Answer, Headers, Flash는 index에서 더 이상 export하지 않는다. red: entry의 public symbol 190개, green: 137개이며 모두 HY-106이 정한 API다. (H25.49)
 - H25.14-1: hyper의 vendor 디렉터리는 make link(kit K304-1)로 template 폴더에 연결되어 platform check가 PHP 8.4.1을 요구한다. green: toolchain-check와 lint-php가 통과하고, packages/server/php의 PHPUnit 파일 17개가 var/tools/bin/php 8.4.26에서 통과하여 Homebrew PHP 8.5에서 실행했던 PHP item을 다시 검증한다. (H25.14-1)
 - H25.41-1: tests/scripts/check-recipes.test.mts의 두 recipe test는 toolchain이 선언한 버전으로 실행되므로(kit K304) toolchain-check를 선행 target으로 둔 채 통과한다. green: 5개 모두 통과. (H25.41-1)

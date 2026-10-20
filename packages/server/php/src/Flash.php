@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Polyspec\Hyper;
 
-/** Values and changed topics that an action passes to the next request (HY-17). */
+/**
+ * Values and changed topics that an action passes to the next request (HY-17).
+ *
+ * @internal
+ */
 final class Flash
 {
     /**

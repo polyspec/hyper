@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Polyspec\Hyper;
 
-/** Selects the regions that a response contains (HY-18, HY-19). */
+/**
+ * Selects the regions that a response contains (HY-18, HY-19).
+ *
+ * @internal
+ */
 final class RegionPlanner
 {
     /**

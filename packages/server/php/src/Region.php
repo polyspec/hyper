@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Polyspec\Hyper;
 
-/** One manifest region: the page region, or a region with its own template and used topics (HY-2). */
+/**
+ * One manifest region: the page region, or a region with its own template and used topics (HY-2).
+ *
+ * @internal
+ */
 final class Region
 {
     /**

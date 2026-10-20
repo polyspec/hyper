@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Polyspec\Hyper;
 
-/** Owns the CSRF token, the flash data and the kept values of one session (HY-24, HY-25, HY-40). */
+/**
+ * Owns the CSRF token, the flash data and the kept values of one session (HY-24, HY-25, HY-40).
+ *
+ * @internal
+ */
 final class Session
 {
     private const TOKEN = '_hyper_csrf';

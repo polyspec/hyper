@@ -14,6 +14,8 @@ use Polyspec\Template\Program;
  * extension when PHP has loaded it, and otherwise the generated PHP program (HY-12, HY-13, HY-30, HY-31, HY-48).
  * The caller binds each root of a document once with `bind`, and every render merges the bound roots, so the
  * renders of a document check no value again (HY-13, VAL-22).
+ *
+ * @internal
  */
 final class Renderer
 {

@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- H25.50: The PHP server lists only its public API (HY-106) to the symbol extractor: the engine classes (Csrf, DataModel, Delivery, Fields, Flash, JsonEncoder, Kept, Manifest, Reads, Region, RegionPlanner, Renderer, Router, Session) and the members that the server uses between its classes carry @internal (K307); red: 179 public symbols, green: 88, every one of them part of the API that HY-106 names; AppTest, RequestTest, ReplyTest and ResultTest pass under PHP 8.4.26. (H25.50)
 - H25.49: The declarations of the Node server (dist/index.d.ts) hold only its public API (HY-106): members that the server uses between its modules carry @internal, which stripInternal of tsconfig.build.json removes from the declarations, and the JSON helpers, Answer, Headers and Flash are no longer exported from the index; red: 190 public symbols of the entry, green: 137, every one of them part of the API that HY-106 names. (H25.49)
 - H25.14-1: The vendor directories of hyper are linked to the template folder by make link (kit K304-1), so their platform check requires PHP 8.4.1; green: toolchain-check and lint-php pass, and the 17 PHPUnit files of packages/server/php pass under var/tools/bin/php 8.4.26, which re-verifies the PHP items that ran under Homebrew PHP 8.5. (H25.14-1)
 - H25.41-1: Both recipe tests of tests/scripts/check-recipes.test.mts pass with toolchain-check as their prerequisite now that the toolchain runs at the declared versions (kit K304); green: 5 of 5 pass. (H25.41-1)

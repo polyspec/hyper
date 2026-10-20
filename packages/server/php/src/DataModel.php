@@ -12,6 +12,8 @@ use Polyspec\Template\Value\SafeString;
  * The values of the template data model that handlers give the server (HY-44): host binding (VAL-13, VAL-14),
  * then a check that the bound value holds no native object (VAL-19). Binding keeps an application object as it
  * is, and such an object is not a value of the data model.
+ *
+ * @internal
  */
 final class DataModel
 {

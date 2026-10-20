@@ -10,6 +10,8 @@ namespace Polyspec\Hyper;
  * one.
  *
  * @implements \IteratorAggregate<string, list<string>>
+ *
+ * @internal
  */
 final class Fields implements \IteratorAggregate, \Countable
 {

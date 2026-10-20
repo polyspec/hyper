@@ -7,6 +7,8 @@ namespace Polyspec\Hyper;
 /**
  * The write of the response of one PHP request, which `App::run` keeps for the write hook (HY-99): the response whose
  * write started, or the plain 500 of an escaped error, the failure of that error, and whether the write was complete.
+ *
+ * @internal
  */
 final class Delivery
 {

@@ -115,7 +115,11 @@ final class Reply
         return $this;
     }
 
-    /** Returns whether a renewal was requested since the last call, and clears the request. */
+    /**
+     * Returns whether a renewal was requested since the last call, and clears the request.
+     *
+     * @internal
+     */
     public function takeRenewal(): bool
     {
         $renewal = $this->renewal;
@@ -124,6 +128,7 @@ final class Reply
         return $renewal;
     }
 
+    /** @internal */
     public function cacheControlValue(): ?string
     {
         return $this->cacheControl;
@@ -145,12 +150,17 @@ final class Reply
         return $this;
     }
 
+    /** @internal */
     public function referrerPolicyValue(): ?string
     {
         return $this->referrerPolicy;
     }
 
-    /** @return array<string, string> */
+    /**
+     * @return array<string, string>
+     *
+     * @internal
+     */
     public function referrerPolicyHeaders(): array
     {
         return $this->referrerPolicy === null ? [] : ['Referrer-Policy' => $this->referrerPolicy];
@@ -170,6 +180,7 @@ final class Reply
         return $this;
     }
 
+    /** @internal */
     public function statusValue(): ?int
     {
         return $this->status;
@@ -183,13 +194,21 @@ final class Reply
         return $this;
     }
 
-    /** Returns whether the HTML document of the response embeds its data (HY-92). */
+    /**
+     * Returns whether the HTML document of the response embeds its data (HY-92).
+     *
+     * @internal
+     */
     public function embedsData(): bool
     {
         return $this->embed;
     }
 
-    /** @return list<string> */
+    /**
+     * @return list<string>
+     *
+     * @internal
+     */
     public function cookieHeaders(bool $secure): array
     {
         return array_map(

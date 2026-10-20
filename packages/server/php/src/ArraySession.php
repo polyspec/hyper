@@ -33,7 +33,11 @@ final class ArraySession implements SessionStore
         $this->renewals++;
     }
 
-    /** Returns how many times the session was renewed. */
+    /**
+     * Returns how many times the session was renewed.
+     *
+     * @internal
+     */
     public function renewals(): int
     {
         return $this->renewals;

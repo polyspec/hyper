@@ -59,3 +59,4 @@
 | H25.47-1 | vitest of a package loads a linked polyspec package once | packages/client/vitest.config.mts and packages/server/ts/vitest.config.mts | `make hyper-test-node` | [o] |
 | H25.48 | The copies of PRINCIPLES.md match the kit after K305 | PRINCIPLES.md and PRINCIPLES.ko.md | `make kit-check` | [o] |
 | H25.49 | R11: the Node server declares only its public API (HY-106) | packages/server/ts/src, packages/server/ts/tsconfig.build.json, packages/server/ts/tests | `make hyper-test-node` | [o] |
+| H25.50 | R11: the PHP server declares only its public API (HY-106) | packages/server/php/src | `make hyper-test-php` | [o] |

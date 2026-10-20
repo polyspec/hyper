@@ -95,7 +95,11 @@ final class Result
         );
     }
 
-    /** Returns true for a redirect. */
+    /**
+     * Returns true for a redirect.
+     *
+     * @internal
+     */
     public function isRedirect(): bool
     {
         return $this->location !== null;

@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Polyspec\Hyper;
 
-/** Builds and encodes the JSON response value (HY-17). */
+/**
+ * Builds and encodes the JSON response value (HY-17).
+ *
+ * @internal
+ */
 final class JsonEncoder
 {
     /**
