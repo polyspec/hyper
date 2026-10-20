@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 50202537172c78207bad8de88a03d30a3080987aaa29e53c6110f24c72727dbd -->
+<!-- source-sha256: 2ffb6486d5db6c28e8694e875ff6e7cbe52cd9a5f176449883a23cf76d4a3a6f -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H25.66: phpunit/phpunit 최신 안정 버전 row는 kit K392가 끝날 때까지 보류한다. link 모드의 추적 manifest 갱신이 K392를 기다리기 때문이다. composer.json의 변경은 main에 들이지 않는다. red: row를 가진 커밋에서 `make dependency-policy-check`가 통과하므로 이 검사의 red는 기록되지 않는다. (H25.66)
 - H26.3: docs/operations/dependencies.ko.md는 관리되는 multipart 파서를 HY-57, HY-113, HY-42에 대조한 기록을 가진다: riverline/multipart-parser 2.2.2(PHP), python-multipart 0.0.32(Python), busboy 1.6.0(Node). 후보마다 이 규칙 중 하나를 어기므로(근거 소스는 그 문서에 있다) 세 서버는 자신의 파서를 유지하고 이유를 기록한다. 코드와 lock은 바뀌지 않았고, 세 서버의 계약 테스트 묶음은 그대로 통과한다. (H26.3)
 - H25.68: 의존성 문서는 검토 문단에서 PHP 하한 8.5 대신 PHP 플랫폼 8.4.1(`.php-version` 8.4)을 적는다. 이는 2026-10-14 검토를 인용하는 `docs/operations/dependencies.md`의 줄이다. red: 문단이 플랫폼에 없는 PHP 하한 8.5를 적었고, green: 고친 문단으로 `make docs-check`가 exit 0을 낸다. (H25.68)
 - H26.2-3: Node 서버는 multipart 요청의 file part를 `files()`와 `file()`로 준다(HY-113). class `UploadedFile`을 쓴다. `fileLimit` 옵션(기본 8 MiB, HY-114)을 넘는 file은 action이나 유지 값이 실행되기 전에 413으로 거절하고, UTF-8이 아닌 파일 이름은 400으로 거절한다(HY-42). `config/parity.json`은 세 서버의 unit `request-files`, `request-file`, `uploaded-file`을 가진다. red: files.test.ts가 `fileParts is not a function`으로 실패했고, app.test.ts의 제한 테스트는 구현 뒤에 쓰였고 자체 red 실행이 없다. green: 두 파일의 file part 테스트가 통과하며(각 14개와 2개 case), 기존 field와 request 테스트도 통과한다. (H26.2-3)
