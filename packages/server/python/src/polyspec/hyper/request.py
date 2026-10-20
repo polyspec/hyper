@@ -7,7 +7,8 @@ from __future__ import annotations
 import re
 from typing import Optional
 
-from ._fields import Fields
+from ._fields import Fields, Files
+from .uploaded_file import UploadedFile
 from ._session import Flash
 
 _PRINTABLE = re.compile(r"[\x21-\x7e]*\Z")
@@ -51,6 +52,8 @@ class Request:
         self._query_fields = Fields.parse(query.encode("latin-1"))
         # The form values of the body, or None when a name or a value is not UTF-8 (HY-42, HY-57).
         self._form_fields = Fields.from_body(self.header("Content-Type") or "", body)
+        # The file parts of the body, or None when a name, a filename or a content type is not UTF-8 (HY-113).
+        self._file_parts = Files.from_body(self.header("Content-Type") or "", body)
 
     @property
     def method(self) -> str:
@@ -105,6 +108,7 @@ class Request:
             and (current is None or _is_utf8(current))
             and self._query_fields is not None
             and self._form_fields is not None
+            and self._file_parts is not None
         )
 
     def body_size(self) -> int:
@@ -170,6 +174,18 @@ class Request:
     def form_string(self, name: str) -> str:
         """Returns the last form value of a name; an absent name gives the empty string."""
         return self.form().last(name) or ""
+
+    def files(self) -> Files:
+        """Returns the file parts of the body, an ordered map from each name to its files in request order (HY-113)."""
+        return self._file_parts or Files.empty()
+
+    def file(self, name: str) -> Optional[UploadedFile]:
+        """Returns the last file of a name, or None (HY-113)."""
+        return self.files().last(name)
+
+    def file_over(self, limit: int) -> bool:
+        """Returns True when a file of the body is larger than `limit` bytes (HY-114)."""
+        return self.files().largest() > limit
 
     def flash(self, name: str) -> object:
         """Returns a flash value stored by the previous action, or None."""

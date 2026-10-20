@@ -46,6 +46,7 @@ class App:
         https: bool,
         frame_ancestors: str,
         body_limit: int,
+        file_limit: int,
         response_limit: int,
         form_types: list[str],
         on_response: Optional[Callable],
@@ -60,6 +61,7 @@ class App:
         self.https = https
         self.frame_ancestors = frame_ancestors
         self.body_limit = body_limit
+        self.file_limit = file_limit
         self._shared = shared
         self._region_loaders = region_loaders
         self._route_handlers = route_handlers
@@ -88,6 +90,7 @@ class App:
         frame_ancestors: str = "'self'",
         body_limit: int = 8 * 1024 * 1024,
         form_types: Optional[list[str]] = None,
+        file_limit: int = 8 * 1024 * 1024,
         response_limit: int = 8 * 1024 * 1024,
         on_response: Optional[Callable] = None,
         on_disconnect: Optional[Callable] = None,
@@ -106,6 +109,10 @@ class App:
         if body_limit < 1:
             raise ValueError(
                 f"body limit {body_limit} is not a positive number of bytes"
+            )
+        if file_limit < 1 or file_limit > body_limit:
+            raise ValueError(
+                f"file limit {file_limit} is not a positive number of bytes no larger than the body limit {body_limit} (HY-114)"
             )
         if response_limit < 1:
             raise ValueError(
@@ -172,6 +179,7 @@ class App:
             https,
             frame_ancestors,
             body_limit,
+            file_limit,
             response_limit,
             types,
             on_response,
@@ -344,6 +352,9 @@ class App:
             refused = self._refused_form(request, session)
             if refused is not None:
                 return refused
+            # HY-114: a file over the file limit is refused before the action runs, as HY-59 refuses a large body.
+            if request.file_over(self.file_limit):
+                return Response.text(413, "Content Too Large")
             result = self.container.call(
                 handler["post"], {Request: request, Reply: reply}
             )
@@ -683,6 +694,8 @@ class App:
         refused = self._refused_form(request, session)
         if refused is not None:
             return refused
+        if request.file_over(self.file_limit):
+            return Response.text(413, "Content Too Large")
         name = request.form_string("region")
         path = request.form_string("path")
         region = self.manifest.region(name)
