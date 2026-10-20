@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 07f8c26ce5b335ea80a66eb29f2f450acf346710b140817b4b5cf30b2abc7c9e -->
+<!-- source-sha256: 5099756cdf0861cdd26aabff4a77f70b2b606de40b75649f3bb05f58167cef25 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H26.6: scripts/kit/kit-bootstrap.mk와 scripts/kit/bootstrap/install-mise.mts는 설치된 @polyspec/kit를 따른다(make kit-sync). make hooks는 hook을 설정한다. red: `make kit-check`가 지적 2건으로 exit 2였다. green: `make kit-check`와 `make link-check`가 exit 0이다. (H26.6)
 - H25.42: 항목을 마쳤다. parity 검사의 추출기는 kit가 넘기는 mise 환경으로 돌고, manifest unit은 H25.42-1의 HY-114 수정과 함께 통과한다. red: `make parity-check UNITS=manifest`가 환경에서, 이어서 HY-114에서 실패했다. green: exit 0이다. (H25.42)
 - H26.4: 항목을 마쳤다. 파일 부분 unit의 선언은 H26.5의 HYC 규칙과 함께 통과하며 parity-declarations-check가 exit 0이다. (H26.4)
 - H26.5: 항목을 마쳤다. 이를 닫는 검사는 H26.4 커밋에서 통과하는 검사이며, H26.4와 함께 들어간다. (H26.5)
