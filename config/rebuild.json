@@ -1,0 +1,87 @@
+{
+  "schema": 1,
+  "comment": "The class of each tool of hyper (S1): ecosystem names the tool it uses, policy the reason no ecosystem tool applies. The tools below scripts/kit are copies of kit and are classed in kit.",
+  "paths": [
+    "scripts/*.mts",
+    "packages/build/bin/*.mjs",
+    "packages/build/lib/*.mjs"
+  ],
+  "tools": {
+    "scripts/board-servers.mts": {
+      "kind": "ecosystem",
+      "tool": "node:child_process starts the servers of a run and node:fs and node:os give each run its temporary directory (HY-87, HY-89)"
+    },
+    "scripts/build-template-ext.mts": {
+      "kind": "ecosystem",
+      "tool": "phpize, configure and make build the native template extension from the php-ext archive of the template release"
+    },
+    "scripts/build-templates.mts": {
+      "kind": "ecosystem",
+      "tool": "@polyspec/template parses the templates, through writeTemplateFiles of packages/build/lib/template-files.mjs"
+    },
+    "scripts/check-bundle-size.mts": {
+      "kind": "ecosystem",
+      "tool": "node:zlib measures the gzip and brotli sizes against the limits of config/bundle-size.json"
+    },
+    "scripts/check-parity.mts": {
+      "kind": "policy",
+      "reason": "proves that the browser code and the PHP, Node and Python servers render the same bytes for the requests of one file (HY-12, HY-13, HY-55); no ecosystem tool compares the renderings of this protocol; esbuild bundles the browser code and @polyspec/template renders"
+    },
+    "scripts/check-templates.mts": {
+      "kind": "policy",
+      "reason": "the template rules of hyper (HC-6, HY-3, HY-30, HY-75) in packages/build/lib/template-rules.mjs; @polyspec/template parses the templates"
+    },
+    "scripts/json.mts": {
+      "kind": "policy",
+      "reason": "polyspec's rule that code reads a JSON value with what it expects and a failure that names its place, instead of asserting the type away (K157)"
+    },
+    "scripts/line-end.mts": {
+      "kind": "policy",
+      "reason": "HY-84: a log line never joins the next line; the script ends each stream of a command that left no final newline, which no ecosystem tool does"
+    },
+    "scripts/publish.mts": {
+      "kind": "ecosystem",
+      "tool": "node:fs renames, through publish of packages/build/lib/publish.mjs (HY-82)"
+    },
+    "scripts/run-e2e.mts": {
+      "kind": "ecosystem",
+      "tool": "Playwright runs the browser tests on the servers that scripts/board-servers.mts starts (HY-87)"
+    },
+    "scripts/serve-demo.mts": {
+      "kind": "policy",
+      "reason": "the interactive demo of the board example in both rendering modes on fixed ports, held by the holder-lock of @polyspec/kit so that it exists once; no ecosystem tool starts the servers of this repository"
+    },
+    "scripts/serve-edge.mts": {
+      "kind": "policy",
+      "reason": "the local counterpart of the CDN in front of the client-side rendering deployment: the API prefix goes to the API origin, /compare returns the comparison page, a file of the deployment is returned and every other path returns index.html; it runs on node:http"
+    },
+    "scripts/tracked-files.mts": {
+      "kind": "ecosystem",
+      "tool": "git ls-files lists the tracked files of a path; the copy keeps their modification time and executable bits through packages/build/lib/output-files.mjs"
+    },
+    "packages/build/bin/hyper-build-assets.mjs": {
+      "kind": "ecosystem",
+      "tool": "esbuild bundles the client, @tailwindcss/node and @tailwindcss/oxide build the stylesheet, and @polyspec/template parses the templates"
+    },
+    "packages/build/bin/hyper-build-server.mjs": {
+      "kind": "ecosystem",
+      "tool": "@polyspec/template-compiler compiles the templates into the PHP program and the type manifest"
+    },
+    "packages/build/lib/output-files.mjs": {
+      "kind": "ecosystem",
+      "tool": "node:fs writes and copies the files, and sets the modes 0644 and 0755 that HY-68 requires whatever the umask"
+    },
+    "packages/build/lib/publish.mjs": {
+      "kind": "ecosystem",
+      "tool": "node:fs rename(2) moves each staged file into its target (HY-82)"
+    },
+    "packages/build/lib/template-files.mjs": {
+      "kind": "ecosystem",
+      "tool": "node:crypto hashes the template files and @polyspec/template parses them"
+    },
+    "packages/build/lib/template-rules.mjs": {
+      "kind": "policy",
+      "reason": "the template rules of hyper (HC-6, HY-3, HY-30, HY-75) over the AST that @polyspec/template parses; no ecosystem tool states the rules of this protocol"
+    }
+  }
+}

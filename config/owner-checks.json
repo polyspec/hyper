@@ -526,6 +526,14 @@
     },
     {
       "paths": [
+        "config/rebuild.json"
+      ],
+      "targets": [
+        "rebuild-check"
+      ]
+    },
+    {
+      "paths": [
         "config/owner-checks.json"
       ],
       "targets": [
