@@ -40,3 +40,4 @@
 | H25.33 | Every PHP platform of hyper is 8.4.1 | composer.json, examples/board/composer.json, packages/server/php/composer.json, tests/release-install/composer/composer.json and config/dependency-policy.json | `make dependency-policy-check` | [o] |
 | H25.34 | R3: csrf-mask and csrf-verify hold in every server | The test files of the csrf cases of the three servers, config/parity.json | `make parity-check UNITS="csrf-mask csrf-verify csrf-values"` | [o] |
 | H25.35 | R3: routes, routes-base-path and rest hold in every server | The test files of the route cases of the three servers, config/parity.json | `make parity-check UNITS="routes routes-base-path rest route-paths"` | [o] |
+| H25.35-1 | The route units cite only what their tests name | config/parity.json and packages/server/php/tests/RouterTest.php | `make parity-declarations-check` | [o] |

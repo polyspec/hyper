@@ -9,7 +9,7 @@ use PHPUnit\Framework\TestCase;
 use Polyspec\Hyper\Router;
 use Polyspec\Hyper\Tests\Support\Json;
 
-/** HY-9: these are the same cases that the JavaScript router passes. */
+/** HY-4, HY-9: these are the same cases that the JavaScript router passes. */
 final class RouterTest extends TestCase
 {
     /** @return array<array-key, mixed> */

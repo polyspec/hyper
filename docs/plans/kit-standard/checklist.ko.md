@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-kit-standard -->
-<!-- source-sha256: 9ddcec8cd4a91998215a5690ab6ff8a156a760d529a19f1057e5de86c078435b -->
+<!-- source-sha256: ef508418b40b4ddb315aed3f8bfed71134684818de3d874013e085bf68e06bda -->
 # kit 표준 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -41,3 +41,4 @@
 | H25.33 | hyper의 모든 PHP platform은 8.4.1이다 | composer.json, examples/board/composer.json, packages/server/php/composer.json, tests/release-install/composer/composer.json and config/dependency-policy.json | `make dependency-policy-check` | [o] |
 | H25.34 | R3: csrf-mask와 csrf-verify는 모든 서버에서 성립한다 | The test files of the csrf cases of the three servers, config/parity.json | `make parity-check UNITS="csrf-mask csrf-verify csrf-values"` | [o] |
 | H25.35 | R3: routes, routes-base-path, rest는 모든 서버에서 성립한다 | The test files of the route cases of the three servers, config/parity.json | `make parity-check UNITS="routes routes-base-path rest route-paths"` | [o] |
+| H25.35-1 | route unit은 자기 test가 이름으로 적은 것만 인용한다 | config/parity.json and packages/server/php/tests/RouterTest.php | `make parity-declarations-check` | [o] |
