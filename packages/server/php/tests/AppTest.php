@@ -269,6 +269,23 @@ final class AppTest extends TestCase
         self::assertSame(1, $this->counter->actions);
     }
 
+    /** HY-114: an application that declares no file limit opens with a body limit below 8 MiB. */
+    public function testUndeclaredFileLimitOpensWithASmallerBodyLimit(): void
+    {
+        $token = $this->token();
+        $upload = "--x\r\nContent-Disposition: form-data; name=\"_csrf\"\r\n\r\n{$token}"
+            . "\r\n--x\r\nContent-Disposition: form-data; name=\"name\"\r\n\r\na\r\n"
+            . "--x\r\nContent-Disposition: form-data; name=\"upload\"; filename=\"a.txt\"\r\n\r\n"
+            . str_repeat('a', 32) . "\r\n--x--\r\n";
+        $options = ['bodyLimit' => 1024, 'formTypes' => ['application/x-www-form-urlencoded', 'multipart/form-data']];
+        $response = $this->app('', $options)->handle(
+            new Request('POST', '/add', ['Content-Type' => 'multipart/form-data; boundary=x'], '', $upload),
+            $this->session,
+        );
+        self::assertSame(303, $response->status);
+        self::assertSame(1, $this->counter->actions);
+    }
+
     /**
      * @param array<string, string> $form
      * @param array<string, string> $headers

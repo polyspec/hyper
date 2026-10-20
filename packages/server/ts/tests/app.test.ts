@@ -575,6 +575,16 @@ describe('App', () => {
     await expect(fixture.app({ bodyLimit: 16, fileLimit: 32 })).rejects.toThrow('hyper:');
   });
 
+  it('an application without a declared file limit opens with a smaller body limit (HY-114)', async () => {
+    const token = await fixture.token();
+    const multipart = { 'Content-Type': 'multipart/form-data; boundary=x' };
+    const body = `--x\r\nContent-Disposition: form-data; name="_csrf"\r\n\r\n${token}\r\n--x\r\nContent-Disposition: form-data; name="name"\r\n\r\na\r\n--x\r\nContent-Disposition: form-data; name="upload"; filename="a.txt"\r\n\r\n${"a".repeat(32)}\r\n--x--\r\n`;
+    const options = { bodyLimit: 1024, formTypes: ['application/x-www-form-urlencoded', 'multipart/form-data'] };
+    const accepted = await fixture.handle({ method: 'POST', target: '/add', headers: multipart, body }, options);
+    expect(accepted.status).toBe(303);
+    expect(fixture.counter.actions).toBe(1);
+  });
+
   it('takes the accepted form types as an option (HY-59)', async () => {
     const token = await fixture.token();
     const body = `--x\r\nContent-Disposition: form-data; name="_csrf"\r\n\r\n${token}\r\n--x\r\nContent-Disposition: form-data; name="name"\r\n\r\na\r\n--x--\r\n`;

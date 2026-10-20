@@ -84,7 +84,7 @@ export interface AppOptions<S extends object> {
   // The largest request body in bytes; a larger body receives 413. The default is 8 MiB, PHP's post_max_size (HY-59).
   bodyLimit?: number;
   // The largest file in bytes of a request body, a file part of it (HY-113): a larger file receives 413 before the
-  // action or the kept value runs. The default is 8 MiB, the default body limit, so that the body limit refuses first.
+  // action or the kept value runs. The default is the smaller of 8 MiB and the body limit, so that the body limit refuses first.
   fileLimit?: number;
   // The media types of the request bodies that actions and /_hyper/keep accept: application/x-www-form-urlencoded
   // and multipart/form-data. The default is application/x-www-form-urlencoded (HY-59).
@@ -180,7 +180,7 @@ export class App<S extends object = Record<string, never>> {
     }
     const bodyLimit = options.bodyLimit ?? 8 * 1024 * 1024;
     if (!Number.isSafeInteger(bodyLimit) || bodyLimit < 1) throw new Error(`hyper: body limit ${bodyLimit} is not a positive number of bytes`);
-    const fileLimit = options.fileLimit ?? 8 * 1024 * 1024;
+    const fileLimit = options.fileLimit ?? Math.min(8 * 1024 * 1024, bodyLimit);
     if (!Number.isSafeInteger(fileLimit) || fileLimit < 1 || fileLimit > bodyLimit) {
       throw new Error(`hyper: file limit ${fileLimit} is not a positive number of bytes no larger than the body limit ${bodyLimit} (HY-114)`);
     }

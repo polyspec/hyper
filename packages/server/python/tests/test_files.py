@@ -69,6 +69,22 @@ class FileParts(FixtureTest):
         self.assertEqual(303, accepted.status)
         self.assertEqual(1, self.counter.actions)
 
+    def test_an_application_without_a_declared_file_limit_opens_with_a_smaller_body_limit(
+        self,
+    ) -> None:
+        # HY-114: the file limit of an undeclared application is the smaller of 8 MiB and its body limit.
+        token = self.token()
+        accepted = self.send(
+            "POST",
+            "/add",
+            MULTIPART,
+            upload(token, b"a" * 32),
+            body_limit=1024,
+            **FORM_TYPES,
+        )
+        self.assertEqual(303, accepted.status)
+        self.assertEqual(1, self.counter.actions)
+
     def test_file_parts_whose_name_is_not_utf_8_get_400(self) -> None:
         # HY-42 and HY-113: a file name that is not UTF-8 is refused like a name that is not UTF-8.
         token = self.token()

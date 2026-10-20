@@ -90,7 +90,7 @@ class App:
         frame_ancestors: str = "'self'",
         body_limit: int = 8 * 1024 * 1024,
         form_types: Optional[list[str]] = None,
-        file_limit: int = 8 * 1024 * 1024,
+        file_limit: Optional[int] = None,
         response_limit: int = 8 * 1024 * 1024,
         on_response: Optional[Callable] = None,
         on_disconnect: Optional[Callable] = None,
@@ -110,6 +110,8 @@ class App:
             raise ValueError(
                 f"body limit {body_limit} is not a positive number of bytes"
             )
+        if file_limit is None:
+            file_limit = min(8 * 1024 * 1024, body_limit)
         if file_limit < 1 or file_limit > body_limit:
             raise ValueError(
                 f"file limit {file_limit} is not a positive number of bytes no larger than the body limit {body_limit} (HY-114)"

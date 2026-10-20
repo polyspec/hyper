@@ -94,7 +94,7 @@ final class App
         string $frameAncestors = "'self'",
         int $bodyLimit = 8 * 1024 * 1024,
         array $formTypes = ['application/x-www-form-urlencoded'],
-        int $fileLimit = 8 * 1024 * 1024,
+        ?int $fileLimit = null,
         int $responseLimit = 8 * 1024 * 1024,
         ?\Closure $onResponse = null,
         ?ClientRendering $clientRendering = null,
@@ -105,6 +105,7 @@ final class App
         if ($bodyLimit < 1) {
             throw new \InvalidArgumentException("body limit {$bodyLimit} is not a positive number of bytes");
         }
+        $fileLimit ??= min(8 * 1024 * 1024, $bodyLimit);
         if ($fileLimit < 1 || $fileLimit > $bodyLimit) {
             throw new \InvalidArgumentException(
                 "file limit {$fileLimit} is not a positive number of bytes no larger than the body limit "
