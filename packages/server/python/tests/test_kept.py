@@ -1,32 +1,7 @@
-# Kept values of the conformance cases (HY-37, HY-38, HY-41). The PHP and the JavaScript implementation pass the
-# same cases of contracts/keep.json; the applied data is compared as JSON text, so an empty map stays a map.
-import json
+# The selection of kept values beyond the cases of contracts/keep.json (HY-38).
 import unittest
 
-from .contracts import add_cases, file
 from polyspec.hyper.kept import apply, select
-
-
-def cases() -> list[dict]:
-    return file("keep.json")["cases"]
-
-
-def text(value) -> str:
-    return json.dumps(value, ensure_ascii=False, separators=(",", ":"))
-
-
-class ApplyTest(unittest.TestCase):
-    pass
-
-
-add_cases(
-    ApplyTest,
-    cases(),
-    lambda self, case: self.assertEqual(
-        text(case["expected"]),
-        text(apply(case["data"], [(pair[0], pair[1]) for pair in case["kept"]])),
-    ),
-)
 
 
 class SelectTest(unittest.TestCase):

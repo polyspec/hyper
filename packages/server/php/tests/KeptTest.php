@@ -10,7 +10,7 @@ use Polyspec\Hyper\Kept;
 use Polyspec\Hyper\Tests\Support\Json;
 
 /**
- * HY-41: these are the same cases that the JavaScript implementation passes. The fixture is decoded
+ * HY-38, HY-41: these are the same cases that the JavaScript implementation passes. The fixture is decoded
  * with objects, so an empty map stays a map; region data is converted the way loaders return it:
  * arrays for lists and non-empty maps, `stdClass` for empty maps.
  */
@@ -25,7 +25,7 @@ final class KeptTest extends TestCase
                 fn (array $pair): array => [Json::string($pair[0] ?? null), $pair[1] ?? null],
                 Json::arrays($case->kept),
             );
-            yield Json::string($case->label) => [
+            yield Json::string($case->id) => [
                 Json::array(self::loaderData($case->data)),
                 $kept,
                 json_encode($case->expected, JSON_THROW_ON_ERROR),

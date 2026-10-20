@@ -341,11 +341,11 @@
         },
         {
           "implementation": "python",
-          "test": "packages/server/python/tests/test_kept.py"
+          "test": "packages/server/python/tests/test_keep.py"
         },
         {
           "implementation": "ts",
-          "test": "packages/server/ts/tests/kept.test.ts"
+          "test": "packages/server/ts/tests/keep.test.ts"
         }
       ],
       "requirements": [
@@ -1054,6 +1054,30 @@
       ],
       "requirements": [
         "HY-4"
+      ]
+    },
+    {
+      "id": "kept-values",
+      "kind": "feature",
+      "bindings": [
+        {
+          "implementation": "php",
+          "test": "packages/server/php/tests/KeptTest.php",
+          "id": "KeptTest::testWalksIntoStdClassMaps"
+        },
+        {
+          "implementation": "python",
+          "test": "packages/server/python/tests/test_kept.py",
+          "id": "test_returns_the_conforming_values_by_path"
+        },
+        {
+          "implementation": "ts",
+          "test": "packages/server/ts/tests/kept.test.ts",
+          "id": "walks into maps and leaves the loader data unchanged"
+        }
+      ],
+      "requirements": [
+        "HY-38"
       ]
     }
   ],
