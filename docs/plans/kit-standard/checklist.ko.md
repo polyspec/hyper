@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-kit-standard -->
-<!-- source-sha256: 6db370a2a1b9622bf2f4ca56712467c916000ba5c137c4a7f4575c60e2964af6 -->
+<!-- source-sha256: 0d7d36dfacb023216126ff824bc6fb1fe529d00fcac62fdc466fb6b431ec9035 -->
 # kit 표준 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -69,3 +69,4 @@
 | H25.54 | kit 사본이 K308 이후의 kit와 같고 bypass-check가 저장소의 gate다 | PRINCIPLES.md, config/php-lint, .githooks/pre-commit, Makefile, .github/workflows/ci.yml | `make kit-check` | [o] |
 | H25.54-1 | config/generated.json에 owner가 있고 한국어 changelog가 일치한다 | config/owner-checks.json, CHANGELOG.ko.md | `make owner-validate`, `make docs-check` | [o] |
 | H25.55 | bundle size script는 option으로 GitHub 주석을 달고 어떤 test도 CI 신원을 설정하지 않는다(P31) | scripts/check-bundle-size.mts, tests/scripts/check-bundle-size.test.mts, Makefile | `node --test tests/scripts/check-bundle-size.test.mts` | [o] |
+| H25.56 | PRINCIPLES.md 사본이 K326 이후의 kit와 같다 | PRINCIPLES.md and PRINCIPLES.ko.md | `make kit-check` | [o] |

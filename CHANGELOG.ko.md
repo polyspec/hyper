@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 611ac2298dc58dc30eaf0ec48deec5d7f86db24d2a7e3f4cb6523d947dcde4b8 -->
+<!-- source-sha256: d25a7ce98910c74d365a32898d985f4b81b8e4a8210aed84e32d4bd57b1d815a -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H25.56: PRINCIPLES.md와 PRINCIPLES.ko.md 사본이 연결된 project가 link lock을 판단한다고 정한 K326 이후의 kit와 같다. red: kit 사본과의 git diff, green: kit-check가 통과한다. (H25.56)
 - H25.55: scripts/check-bundle-size.mts는 --annotations를 받으면 GitHub 주석을 출력하고, bundle-size recipe는 GITHUB_ACTIONS가 true일 때 그 option을 넘긴다. 그래서 test는 option을 넘기며 어떤 test도 CI 신원을 설정하지 않는다(P31). red: bypass-check가 GITHUB_ACTIONS를 설정하는 test를 보고했고, green: bypass-check가 통과하고 test 6개가 통과한다. (H25.55)
 - H25.54-1: config/generated.json은 config/owner-checks.json에서 kit-check가 맡고, 한국어 changelog는 영어 changelog에 맞게 stamp된다. red: owner-validate가 owner 없는 경로를, docs-check가 CHANGELOG.ko.md의 낡은 revision을 보고했고, green: 둘 다 통과한다. (H25.54-1)
 - H25.54: PRINCIPLES.md(P31), config/php-lint, hook .githooks/pre-commit 사본이 K308 이후의 kit와 같고, config/generated.json은 pre-commit hook에 generated 경로도 예외도 선언하지 않으며, bypass-check가 CHECK_TARGETS와 ci.yml의 docs 그룹에 들어간다. red: kit-check가 다른 사본 두 개와 bypass-check 없는 CHECK_TARGETS를, hooks-check가 없는 pre-commit hook을 보고했고, green: kit-check와 hooks-check가 통과한다. (H25.54)
