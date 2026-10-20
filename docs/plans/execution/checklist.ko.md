@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 8fdf1b8e3c109a90de92e61ad924071c86f96b5a4f4b939dcda1eaa18d9f03ed -->
+<!-- source-sha256: af1e27f6848d968b8e97ebe4435b6b94312a491ed0d3a7b234511bda793acc9d -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -244,3 +244,4 @@
 | H26.3-1 | multipart 기록은 PHP 8.4의 기본 request_parse_body()도 검토했고, /usr/bin/makePOST처럼 괄호 이름을 중첩하므로 HY-57이 거절하여 채택하지 않았다고 적는다. 원인: H26.3의 기록이 이 후보를 적지 않았다 | docs/operations/dependencies.md, docs/operations/dependencies.ko.md | `make docs-check` | [o] |
 | H26.3-2 | main의 make lint-ts가 exit 0이 되게 한다. packages/client/tests/stream.test.ts의 oxlint no-unsafe-type-assertion 4건과 packages/client/src/stream.ts의 knip 미사용 export 2건(DEFAULT_RETRY_MS, StreamEvent)을 고친다. H26.1에서 들어왔고 정적 게이트 규칙보다 먼저 land했다 | packages/client/tests/stream.test.ts; packages/client/src/stream.ts; CHANGELOG.md; CHANGELOG.ko.md | `make lint-ts` | [o] |
 | H26.3-3 | main의 make lint-php가 exit 0이 되게 한다. phpcs가 App.php 467, 909의 연산자 간격, Multipart.php 48과 AppTest.php 248, 250의 줄 길이를 보고한다. H26.2와 H26.3에서 들어왔고 정적 게이트 규칙보다 먼저 land했다 | packages/server/php/src/App.php; packages/server/php/src/Multipart.php; packages/server/php/tests/AppTest.php; CHANGELOG.md; CHANGELOG.ko.md | `make lint-php` | [o] |
+| H26.3-4 | main의 make lint-python이 exit 0이 되게 한다. ruff format이 _fields.py와 test_files.py(H26.2, H26.3 테스트 줄)를, vulture가 test_files.py의 FileParts를 지적한다. FileParts는 기반 클래스 FixtureTest를 통해 unittest가 실행하므로(3건 통과 확인) vulture 화이트리스트에 그 이유와 함께 넣는다 | packages/server/python/src/polyspec/hyper/_fields.py; packages/server/python/tests/test_files.py; packages/server/python/vulture_whitelist.py; CHANGELOG.md; CHANGELOG.ko.md | `make lint-python` | [ ] |
