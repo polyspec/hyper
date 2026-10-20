@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-kit-standard -->
-<!-- source-sha256: 056d965de6e3885fb2ac23b3f40f19cd16f5f0da7fad5104227fb5bf738bbc06 -->
+<!-- source-sha256: fea3025a6ffd86d795af1c837ec8bc67897304fbe291d32a4fcc1fb8ad2b3b24 -->
 # kit 표준 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -24,3 +24,4 @@
 | H25.17 | 추적하는 모든 경로는 config/owner-checks.json에 owner를 가진다 | config/owner-checks.json | `make owner-validate` | [o] |
 | H25.18 | kit 사본이 K277을 포함한 kit과 일치한다 | PRINCIPLES.md and PRINCIPLES.ko.md | `make kit-check` | [o] |
 | H25.19 | Python test는 test 파일을 지정한 unittest에서도 helper를 상대 import로 불러온다 | packages/server/python/tests/__init__.py, render/__init__.py, package/__init__.py, run.py and the imports of the tests | `packages/server/python/.venv/bin/python -m unittest packages/server/python/tests/test_csrf.py`, `packages/server/python/.venv/bin/python packages/server/python/tests/run.py` | [o] |
+| H25.20 | client-requests는 Python에서 성립한다. contracts/client.json의 case는 id로 이름 붙은 test method이고 binding에 묶인다 | config/parity.json and packages/server/python/tests/render/render_client.py | `packages/server/python/.venv/bin/python -m unittest packages/server/python/tests/render/render_client.py`, `make parity-declarations-check` | [o] |

@@ -5,6 +5,7 @@ import unittest
 from pathlib import Path
 from urllib.parse import urlencode
 
+from ..contracts import add_cases
 from .fixture_app import FIXTURES, PROGRAM
 from polyspec.hyper.app import App
 from polyspec.hyper.client import Choice, ClientRendering
@@ -89,11 +90,6 @@ def app(counter: Counter, client: ClientRendering | None = None, **options) -> A
 
 
 class ClientConformanceTest(unittest.TestCase):
-    def test_every_case(self) -> None:
-        for case in conformance()["cases"]:
-            with self.subTest(case["label"]):
-                self._check(case)
-
     def _check(self, case: dict) -> None:
         counter = Counter()
         session = ArraySession()
@@ -132,6 +128,13 @@ class ClientConformanceTest(unittest.TestCase):
         if case.get("session") is False:
             self.assertIsNone(session.get("_hyper_csrf"))
         self.assertEqual(case["actions"], counter.actions)
+
+
+add_cases(
+    ClientConformanceTest,
+    conformance()["cases"],
+    lambda self, case: self._check(case),
+)
 
 
 class SelectionTest(unittest.TestCase):

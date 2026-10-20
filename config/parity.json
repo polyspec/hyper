@@ -382,6 +382,10 @@
           "symbol": "Polyspec\\Hyper\\Tests\\ClientTest::testConformance"
         },
         {
+          "implementation": "python",
+          "test": "packages/server/python/tests/render/render_client.py"
+        },
+        {
           "implementation": "ts",
           "test": "packages/server/ts/tests/client.test.ts"
         }
