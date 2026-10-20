@@ -241,6 +241,32 @@ final class AppTest extends TestCase
         return $this->app($basePath)->handle(new Request('GET', $path, $headers), $this->session);
     }
 
+    /** HY-114: a file over the file limit is refused with 413 before the action runs; a file within it runs the action. */
+    public function testFilePartsOverTheFileLimitAreRefusedBeforeTheAction(): void
+    {
+        $token = $this->token();
+        $upload = static fn (string $content): string => "--x\r\nContent-Disposition: form-data; name=\"_csrf\"\r\n\r\n{$token}"
+            . "\r\n--x\r\nContent-Disposition: form-data; name=\"name\"\r\n\r\na\r\n"
+            . "--x\r\nContent-Disposition: form-data; name=\"upload\"; filename=\"a.txt\"\r\n\r\n{$content}\r\n--x--\r\n";
+        $options = ['formTypes' => ['application/x-www-form-urlencoded', 'multipart/form-data'], 'fileLimit' => 32];
+        $headers = ['Content-Type' => 'multipart/form-data; boundary=x'];
+
+        $refused = $this->app('', $options)->handle(
+            new Request('POST', '/add', $headers, '', $upload(str_repeat('a', 40))),
+            $this->session,
+        );
+        self::assertSame(413, $refused->status);
+        self::assertSame('Content Too Large', $refused->body);
+        self::assertSame(0, $this->counter->actions);
+
+        $accepted = $this->app('', $options)->handle(
+            new Request('POST', '/add', $headers, '', $upload(str_repeat('a', 32))),
+            $this->session,
+        );
+        self::assertSame(303, $accepted->status);
+        self::assertSame(1, $this->counter->actions);
+    }
+
     /**
      * @param array<string, string> $form
      * @param array<string, string> $headers

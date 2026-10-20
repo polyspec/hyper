@@ -19,7 +19,7 @@ final class Fields implements \IteratorAggregate, \Countable
      * @param list<string> $names
      * @param array<array-key, list<string>> $values values by name
      */
-    private function __construct(
+    public function __construct(
         private readonly array $names,
         private readonly array $values,
     ) {
@@ -73,55 +73,13 @@ final class Fields implements \IteratorAggregate, \Countable
             preg_match('#^multipart/form-data\s*;#i', $type) === 1
             && preg_match('#;\s*boundary=(?:"([^"]+)"|([^;\s]+))#i', $type, $found) === 1
         ) {
-            return self::multipart($body, $found[1] !== '' ? $found[1] : $found[2]);
+            // The text fields of the body; its file parts are read by Files (HY-113).
+            $parts = Multipart::read($body, $found[1] !== '' ? $found[1] : $found[2]);
+
+            return $parts === null ? null : $parts[0];
         }
 
         return self::empty();
-    }
-
-    /** Reads the text fields of a multipart/form-data body; a file field is not a form value. */
-    private static function multipart(string $body, string $boundary): ?self
-    {
-        $delimiter = "--{$boundary}";
-        $names = [];
-        $values = [];
-        $start = strpos($body, $delimiter);
-        while ($start !== false) {
-            $partStart = $start + strlen($delimiter);
-            if (substr($body, $partStart, 2) === '--') {
-                break;
-            }
-            $next = strpos($body, $delimiter, $partStart);
-            if ($next === false) {
-                break;
-            }
-            $part = substr($body, $partStart + 2, $next - 2 - ($partStart + 2));
-            $headerEnd = strpos($part, "\r\n\r\n");
-            if ($headerEnd !== false) {
-                $disposition = preg_match(
-                    '/^content-disposition:\s*form-data(.*)$/im',
-                    substr($part, 0, $headerEnd),
-                    $found,
-                ) === 1 ? rtrim($found[1], "\r") : '';
-                if (
-                    preg_match('/;\s*name="([^"]*)"/i', $disposition, $name) === 1
-                    && preg_match('/;\s*filename=/i', $disposition) !== 1
-                ) {
-                    $value = substr($part, $headerEnd + 4);
-                    if (preg_match('//u', $name[1]) !== 1 || preg_match('//u', $value) !== 1) {
-                        return null;
-                    }
-                    if (!array_key_exists($name[1], $values)) {
-                        $names[] = $name[1];
-                        $values[$name[1]] = [];
-                    }
-                    $values[$name[1]][] = $value;
-                }
-            }
-            $start = $next;
-        }
-
-        return new self($names, $values);
     }
 
     /**

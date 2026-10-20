@@ -16,6 +16,9 @@ final class Request
     /** The form values of the body, or null when a name or a value is not UTF-8 (HY-42, HY-57). */
     private readonly ?Fields $formFields;
 
+    /** The file parts of the body, or null when a name, a filename or a content type is not UTF-8 (HY-42, HY-113). */
+    private readonly ?Files $fileParts;
+
     /**
      * @param array<string, string> $headers header names in any case
      * @param string $query the raw query: the request target after its first `?` up to its first `#`
@@ -40,6 +43,7 @@ final class Request
         $this->headers = array_change_key_case($headers, CASE_LOWER);
         $this->queryFields = Fields::parse($query);
         $this->formFields = Fields::fromBody($this->header('Content-Type') ?? '', $body);
+        $this->fileParts = Files::fromBody($this->header('Content-Type') ?? '', $body);
     }
 
     /**
@@ -145,7 +149,8 @@ final class Request
         return preg_match('/^[\x21-\x7E]*$/D', $this->path) === 1
             && self::utf8($this->header('HX-Current-URL') ?? '')
             && $this->queryFields !== null
-            && $this->formFields !== null;
+            && $this->formFields !== null
+            && $this->fileParts !== null;
     }
 
     private static function utf8(string $value): bool
@@ -241,6 +246,24 @@ final class Request
     public function formString(string $name): string
     {
         return $this->form()->last($name) ?? '';
+    }
+
+    /** Returns the file parts of the body, an ordered map from each name to its files in request order (HY-113). */
+    public function files(): Files
+    {
+        return $this->fileParts ?? Files::empty();
+    }
+
+    /** Returns the last file of a name, or null (HY-113). */
+    public function file(string $name): ?UploadedFile
+    {
+        return $this->files()->last($name);
+    }
+
+    /** Returns true when a file of the body is larger than `$limit` bytes (HY-114). */
+    public function fileOver(int $limit): bool
+    {
+        return $this->files()->largest() > $limit;
     }
 
     /** Returns a flash value stored by the previous action, or null. */

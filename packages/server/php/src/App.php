@@ -40,6 +40,7 @@ final class App
         private readonly bool $https,
         private readonly string $frameAncestors,
         private readonly int $bodyLimit,
+        private readonly int $fileLimit,
         private readonly int $responseLimit,
         /** @var list<string> */
         private readonly array $formTypes,
@@ -93,6 +94,7 @@ final class App
         string $frameAncestors = "'self'",
         int $bodyLimit = 8 * 1024 * 1024,
         array $formTypes = ['application/x-www-form-urlencoded'],
+        int $fileLimit = 8 * 1024 * 1024,
         int $responseLimit = 8 * 1024 * 1024,
         ?\Closure $onResponse = null,
         ?ClientRendering $clientRendering = null,
@@ -102,6 +104,11 @@ final class App
     ): self {
         if ($bodyLimit < 1) {
             throw new \InvalidArgumentException("body limit {$bodyLimit} is not a positive number of bytes");
+        }
+        if ($fileLimit < 1 || $fileLimit > $bodyLimit) {
+            throw new \InvalidArgumentException(
+                "file limit {$fileLimit} is not a positive number of bytes no larger than the body limit {$bodyLimit} (HY-114)",
+            );
         }
         if ($responseLimit < 1) {
             throw new \InvalidArgumentException("response limit {$responseLimit} is not a positive number of bytes");
@@ -169,6 +176,7 @@ final class App
             $https,
             $frameAncestors,
             $bodyLimit,
+            $fileLimit,
             $responseLimit,
             $formTypes,
             $onResponse,
@@ -451,7 +459,11 @@ final class App
             if ($refused !== null) {
                 return $refused;
             }
-            $result = $this->container->call($handler['post'], [Request::class => $request, Reply::class => $reply]);
+            // HY-114: a file over the file limit is refused before the action runs, as HY-59 refuses a large body.
+            if ($request->fileOver($this->fileLimit)) {
+                return Response::text(413, 'Content Too Large');
+            }
+            $result =$this->container->call($handler['post'], [Request::class => $request, Reply::class => $reply]);
             if (!$result instanceof Result) {
                 throw new \LogicException("POST action of route {$route['name']} did not return a Result");
             }
@@ -890,7 +902,10 @@ final class App
         if ($refused !== null) {
             return $refused;
         }
-        $name = $request->formString('region');
+        if ($request->fileOver($this->fileLimit)) {
+            return Response::text(413, 'Content Too Large');
+        }
+        $name =$request->formString('region');
         $path = $request->formString('path');
         $region = $this->manifest->region($name);
         if ($region === null || ($region->keep[$path] ?? null) !== 'server') {
