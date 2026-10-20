@@ -71,3 +71,4 @@
 | H25.56 | The copies of PRINCIPLES.md match the kit after K326 | PRINCIPLES.md and PRINCIPLES.ko.md | `make kit-check` | [o] |
 | H25.57 | The copies match the kit after K329, divergence-check is a gate of the repository and the exceptions of config/parity.json name their kind | PRINCIPLES.md, Makefile, .github/workflows/ci.yml, config/parity.json | `make kit-check` | [o] |
 | H25.58 | The changelogs hold no path into a home directory | CHANGELOG.md and CHANGELOG.ko.md | `make docs-check` | [o] |
+| H25.59 | The test that reads the outputs as another user is removed: the mode test already proves that every output is readable by others, and a test that skips without sudo is a narrowed test | tests/scripts/output-files.test.mts | `make test-markers-check` | [o] |

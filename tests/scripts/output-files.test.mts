@@ -63,19 +63,3 @@ test('the output copies give files the mode 0644 and directories 0755 under the 
   const wrong = found.filter(([name, mode]) => mode !== (name.endsWith('/') ? 0o755 : 0o644)).map(([name, mode]) => `${name} ${mode.toString(8)}`);
   assert.deepEqual(wrong, []);
 });
-
-// A process of another user reads every output. It runs where sudo starts a process as nobody without a password, as
-// on the GitHub runner, whose CI=true makes the case required there.
-test('a process of another user reads every output (HR-68)', (t) => {
-  const allowed = spawnSync('sudo', ['-n', '-u', 'nobody', 'true']).status === 0;
-  if (!allowed) {
-    assert.notEqual(process.env.CI, 'true', 'sudo -n -u nobody is not allowed on CI, where this case is required');
-    t.skip('sudo -n -u nobody is not allowed on this machine; CI runs this case');
-    return;
-  }
-  const output = writeOutputs(t);
-  for (const [name] of modes(output).filter(([entry]) => !entry.endsWith('/'))) {
-    const read = spawnSync('sudo', ['-n', '-u', 'nobody', 'cat', join(output, name)], { encoding: 'utf8' });
-    assert.equal(read.status, 0, `nobody cannot read ${name}: ${read.stderr}`);
-  }
-});

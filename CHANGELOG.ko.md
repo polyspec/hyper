@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: bf1a933fa22118b3211a029377638478ba3c9acafc2b8924cb7d1da95a90a864 -->
+<!-- source-sha256: 28943899e97846f15bd1a88dd92070b6c1f81d00477a17900c53871cdcaee663 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H25.59: tests/scripts/output-files.test.mts에서 nobody 사용자로 모든 output을 읽던 test를 제거했다. sudo가 허용되지 않는 곳에서 건너뛰었기 때문이다. 같은 파일의 다른 test가 이미 mode 0644와 0755를 단언하며, 그 mode로 모든 사용자가 output을 읽는다. red: test-markers-check가 건너뜀을 보고했고, green: 보고하지 않는다. (H25.59)
 - H25.58: H25.14의 줄은 home 디렉터리 경로 대신 checkout 기준의 template checkout 폴더를 적는다. red: docs-check가 changelog의 private-path를 보고했고, green: 통과한다. (H25.58)
 - H25.57: PRINCIPLES.md 사본이 K329 이후의 kit와 같고(P32), divergence-check가 CHECK_TARGETS와 ci.yml의 docs 그룹에 들어가며, config/parity.json의 tools root 여섯 개는 reason을 종류 test:로 시작한다. red: kit-check가 divergence-check 없는 CHECK_TARGETS를, divergence-check가 종류 없는 예외 여섯 개를 보고했고, green: kit-check가 통과하고 그 여섯 건이 사라졌다. Renderer.php와 RendererTest.php의 divergence 네 건은 남는다(HY-48). (H25.57)
 - H25.14: hyper의 모든 composer.json은 platform PHP 8.4.1을 정하고, project가 연결된 동안 dependency policy는 link lock을 판단한다(kit K326). composer.link.lock과 examples/board/composer.link.lock은 platform 8.4.1에서 polyspec/template을 path dist(template checkout의 packages/php)로 해석한다. red: dependency-policy-check가 composer validate --strict 오류 둘과 PHP 8.5.0으로 해석된 lock 둘을 보고했고, green: 그 네 건이 사라졌다. 남은 항목은 업그레이드 단계의 더 새로운 안정 release다. (H25.14)
