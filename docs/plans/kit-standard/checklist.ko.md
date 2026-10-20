@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-kit-standard -->
-<!-- source-sha256: 35784a2accf54e917406653a9280662b2e1059be35223f7169ac2ba21bb830a2 -->
+<!-- source-sha256: 11a47ffb4eadeeb9b9f4a5910cf2d86810c1a8b5df7f20ef35edc3bc10b1ad2f -->
 # kit 표준 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -82,4 +82,4 @@
 | H25.65 | 영문 CHANGELOG.md와 kit-standard 체크리스트의 한국어 쌍이 원문과 다시 일치한다. 원인: af1b700 이후 영문 문서가 바뀌었으나 한국어 쌍은 이전 source-sha256을 유지하여 make docs-check가 실패한다 | CHANGELOG.ko.md, docs/plans/kit-standard/checklist.ko.md | `make docs-check` | [o] |
 | H25.67 | hyper는 kit f9eb43dd의 kit copy(K348 K385 K384 K360-1 K383 K380 K382 K375)를 받는다 | the kit copies that kit.copies lists, PRINCIPLES.md, PRINCIPLES.ko.md, scripts/kit/kit-bootstrap.mk, config/layout.kit.yml, ruff.toml, .golangci.yml, .github/workflows/release.yml | `make kit-check` | [o] |
 | H25.68 | 의존성 문서는 PHP 플랫폼을 8.5 하한이 아니라 .php-version과 K322의 8.4.1로 적는다. 원인: docs/operations/dependencies.md 8행과 그 한국어 짝이 플랫폼에 없는 PHP 하한 8.5를 적는다 | docs/operations/dependencies.md, docs/operations/dependencies.ko.md | `make docs-check` | [o] |
-| H25.66 | phpunit/phpunit은 최신 안정 릴리스 13.4.3을 따른다. kit K392이 끝날 때까지 보류한다. link 모드의 추적 manifest 갱신이 K392를 기다린다. 원인: config/dependency-review.json은 13.4.3을 latest로 기록하는데 composer.json은 13.4.2를 고정한다 | composer.json, composer.lock, packages/server/php/composer.json, config/dependency-review.json | `make dependency-policy-check` and `make hyper-test-php` | [!] 원인: link 모드에서 link를 실행할 때마다 composer.lock이 composer.link.lock 위로 복사되어 dependency-review UPDATE=1이 link lock에 적용한 갱신이 사라진다(kit K392). 그래서 추적 manifest의 갱신을 재연결 뒤에도 유지할 수 없다.; 재시도: K392가 끝나면 composer.json과 packages/server/php/composer.json의 phpunit/phpunit을 13.4.3으로 고치고 두 lock을 쓴 뒤, make dependency-policy-check와 make hyper-test-php가 exit 0을 내는지 확인한다. |
+| H25.66 | phpunit/phpunit은 최신 안정 릴리스 13.4.3을 따른다. kit K392이 끝날 때까지 보류한다. link 모드의 추적 manifest 갱신이 K392를 기다린다. 원인: config/dependency-review.json은 13.4.3을 latest로 기록하는데 composer.json은 13.4.2를 고정한다 | composer.json, composer.lock, packages/server/php/composer.json, config/dependency-review.json | `make dependency-policy-check` and `make hyper-test-php` | [!] 원인: link 모드에서 dependency-review UPDATE=1은 link lock만 갱신한다. 그래서 추적되는 composer.lock은 여전히 phpunit/phpunit 13.4.2를 고정하고 composer.json은 ^13.4.2를 쓴다. 이는 13.4.3의 검토 기록과 모순된다(kit K392-2, 아직 들어오지 않음).; 재시도: kit K392-2가 들어오면 make dependency-review UPDATE=1과 RECORD=1을 실행하고, 두 composer.json의 phpunit/phpunit을 13.4.3으로 올려 lock과 함께 고친다. 그 뒤 make dependency-policy-check와 make hyper-test-php가 exit 0이어야 한다. |
