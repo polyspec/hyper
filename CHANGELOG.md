@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- H25.14: Every composer.json of hyper sets the platform PHP 8.4.1, and the dependency policy judges the link lock while the projects are linked (kit K326): composer.link.lock and examples/board/composer.link.lock resolve polyspec/template as a path dist (/Users/maxkwon/Projects/polyspec/template/packages/php) under the platform 8.4.1; red: dependency-policy-check reported the two composer validate --strict errors and the two locks resolved for PHP 8.5.0, green: those four findings are gone; the findings that remain are newer stable releases for the upgrade step. (H25.14)
 - H25.56: The copies of PRINCIPLES.md and PRINCIPLES.ko.md match the kit after K326, which states that the linked project judges its link lock; red: git diff against the kit copy, green: kit-check passes. (H25.56)
 - H25.55: scripts/check-bundle-size.mts prints the GitHub annotation when it gets --annotations, which the bundle-size recipe passes while GITHUB_ACTIONS is true, so the test passes the option and no test sets the CI identity (P31); red: bypass-check reported the test that sets GITHUB_ACTIONS, green: bypass-check passes and the 6 tests pass. (H25.55)
 - H25.54-1: config/generated.json is owned by kit-check in config/owner-checks.json and the Korean changelog is stamped to the English one; red: owner-validate reported the path without an owner and docs-check the stale revision of CHANGELOG.ko.md, green: both pass. (H25.54-1)

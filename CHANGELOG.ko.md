@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: d25a7ce98910c74d365a32898d985f4b81b8e4a8210aed84e32d4bd57b1d815a -->
+<!-- source-sha256: 09cbe81ca82563bf962ca9bdf53cbf8d9e4307f2b1089b53acb82fce6a6605bc -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H25.14: hyper의 모든 composer.json은 platform PHP 8.4.1을 정하고, project가 연결된 동안 dependency policy는 link lock을 판단한다(kit K326). composer.link.lock과 examples/board/composer.link.lock은 platform 8.4.1에서 polyspec/template을 path dist(/Users/maxkwon/Projects/polyspec/template/packages/php)로 해석한다. red: dependency-policy-check가 composer validate --strict 오류 둘과 PHP 8.5.0으로 해석된 lock 둘을 보고했고, green: 그 네 건이 사라졌다. 남은 항목은 업그레이드 단계의 더 새로운 안정 release다. (H25.14)
 - H25.56: PRINCIPLES.md와 PRINCIPLES.ko.md 사본이 연결된 project가 link lock을 판단한다고 정한 K326 이후의 kit와 같다. red: kit 사본과의 git diff, green: kit-check가 통과한다. (H25.56)
 - H25.55: scripts/check-bundle-size.mts는 --annotations를 받으면 GitHub 주석을 출력하고, bundle-size recipe는 GITHUB_ACTIONS가 true일 때 그 option을 넘긴다. 그래서 test는 option을 넘기며 어떤 test도 CI 신원을 설정하지 않는다(P31). red: bypass-check가 GITHUB_ACTIONS를 설정하는 test를 보고했고, green: bypass-check가 통과하고 test 6개가 통과한다. (H25.55)
 - H25.54-1: config/generated.json은 config/owner-checks.json에서 kit-check가 맡고, 한국어 changelog는 영어 changelog에 맞게 stamp된다. red: owner-validate가 owner 없는 경로를, docs-check가 CHANGELOG.ko.md의 낡은 revision을 보고했고, green: 둘 다 통과한다. (H25.54-1)
