@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 6f1689be5ccfca822dca9a01d7d129dcea96fbdb90051828a5236c8a5ac06e87 -->
+<!-- source-sha256: 070b3dc7e01c616daf22043fb8227d4efc66e2d533dc3924b325092ba3522cfe -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H25.5: `docs/plans/kit-standard/checklist.ko.md`의 source-sha256 marker는 번역을 검토한 뒤 현재 영어 체크리스트의 sha256을 기록한다. Red: `make docs-check` exit 2, `revision: the source-sha256 is dd2343c8...; the sha256 of docs/plans/kit-standard/checklist.md is dc876ef4...`. Green: `make docs-check` exit 0, `18 document pairs, 2 checklists, 0 status tables and 1 changelogs passed`(H25.5).
 - H25.3: The language parity of the server implementations (PHP, Python, Node) and the browser package is declared in `config/parity.json`. The shared vectors of `contracts/*.json` have a case `id` without whitespace, which the parity check names each case by; the Node, browser and Python conformance tests name each case by its id, and Python gains tests of `Fields.has` and `FileSessions.collect`. The declaration check still fails on the tests of the PHP and Python packages that have no unit yet.
 - H25.1: 이 저장소는 kit 표준 0.0.54를 따른다. Makefile은 저장소의 target을 `hyper-install`, `hyper-install-python`, `hyper-install-browser`, `hyper-test-*`와 `hyper-lint`로 부르며, `install`은 kit의 bootstrap을 먼저 실행한다. checklist는 plan `docs/plans/execution/`과 `docs/plans/kit-standard/`에 있다. AGENTS.md는 이 저장소의 규칙만 적는다. language-check는 Go와 Rust의 raw string을 data로 읽는다(H25.1).
 - H24.1: session 파일을 쓸 때마다 자기만의 임시 파일을 만들고 rename으로 제자리에 옮긴다. Python 서버는 `tempfile.mkstemp`와 `os.replace`를, Node 서버는 플래그 `wx`로 만든 `<id>.<uuid>.tmp`와 `renameSync`를 쓴다. 같은 session을 쓰는 두 process가 `FileNotFoundError`로 실패하지 않는다(HY-104). Red: `packages/server/python/tests/test_file_sessions.py`에서 process마다 400번 중 181번에서 208번의 쓰기가 실패했고, `packages/server/ts/tests/sessions-race.test.ts`는 ENOENT로 실패했다. Green: 두 테스트가 모두 통과한다.
