@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { Hyper, type HtmxApi, type HyperOptions } from '../src/hyper.js';
+import { Hyper, type DocumentAdapter, type HtmxApi, type HyperOptions } from '../src/hyper.js';
 import type { Fetch } from '../src/obtain.js';
 import { testApplication } from './application.js';
 
@@ -18,9 +18,18 @@ function eventStream(chunks: string[], end: boolean): Response {
   return new Response(body(chunks, end), { status: 200, headers: { 'content-type': 'text/event-stream' } });
 }
 
+const idlePage: DocumentAdapter = {
+  stylesheets: async () => () => undefined,
+  mount: () => undefined,
+  text: () => undefined,
+  fail: () => undefined,
+  elements: () => 0,
+};
+const idleHtmx: HtmxApi = { process: () => undefined, swap: async () => undefined, find: () => null, config: { defaultTimeout: 60000 }, parseInterval: Number };
+
 function client(fetch: Fetch): Hyper {
-  const options: HyperOptions = { basePath: '/api', fetch, document: {} as never, currentUrl: () => 'http://localhost/' };
-  return new Hyper(testApplication(), {} as HtmxApi, options);
+  const options: HyperOptions = { basePath: '/api', fetch, document: idlePage, currentUrl: () => 'http://localhost/' };
+  return new Hyper(testApplication(), idleHtmx, options);
 }
 
 describe('client stream subscription', () => {
@@ -33,7 +42,7 @@ describe('client stream subscription', () => {
     const sent: { url: string; headers: Record<string, string> }[] = [];
     const responses = [eventStream(['retry: 250\nid: 7\nevent: tick\ndata: a\n\n'], true), eventStream(['data: b\n\n'], true)];
     const fetch: Fetch = async (url, init) => {
-      sent.push({ url, headers: { ...(init.headers as Record<string, string>) } });
+      sent.push({ url, headers: Object.fromEntries(new Headers(init.headers)) });
       return responses.shift() ?? eventStream([], true);
     };
     const events: unknown[] = [];
@@ -44,14 +53,14 @@ describe('client stream subscription', () => {
     expect(events).toEqual([{ event: 'tick', data: 'a', id: '7' }]);
     expect(errors.map((error) => error.message)).toEqual([expect.stringContaining('ended')]);
     expect(sent).toHaveLength(1);
-    expect(sent[0]?.headers['Last-Event-ID']).toBeUndefined();
+    expect(sent[0]?.headers['last-event-id']).toBeUndefined();
 
     await vi.advanceTimersByTimeAsync(249);
     expect(sent).toHaveLength(1);
     await vi.advanceTimersByTimeAsync(1);
     expect(sent).toHaveLength(2);
     expect(sent[1]?.url).toBe('/api/events');
-    expect(sent[1]?.headers['Last-Event-ID']).toBe('7');
+    expect(sent[1]?.headers['last-event-id']).toBe('7');
     await vi.advanceTimersByTimeAsync(0);
     expect(events[1]).toEqual({ event: 'message', data: 'b', id: '7' });
   });
@@ -89,7 +98,7 @@ describe('client stream subscription', () => {
     const silent = new ReadableStream<Uint8Array>({ start() {} });
     const signals: AbortSignal[] = [];
     const fetch: Fetch = async (_url, init) => {
-      signals.push(init.signal as AbortSignal);
+      if (init.signal) signals.push(init.signal);
       // The first response is silent, so its watchdog timer is running when the client is disposed.
       if (signals.length === 1) return new Response(silent, { status: 200 });
       return new Promise<Response>(() => undefined);

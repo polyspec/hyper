@@ -2,12 +2,12 @@ import { createParser } from 'eventsource-parser';
 import type { Fetch } from './obtain.js';
 
 // The reconnection delay when the server sent no retry field (HY-110).
-export const DEFAULT_RETRY_MS = 1000;
+const DEFAULT_RETRY_MS = 1000;
 // The longest silence of the body before the stream fails (HY-111).
 export const DEFAULT_WATCHDOG_MS = 30000;
 
 // One event of a subscription: its type, its data and the last event ID (HY-109).
-export interface StreamEvent {
+interface StreamEvent {
   event: string;
   data: string;
   id: string;

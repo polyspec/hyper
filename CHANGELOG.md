@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- H26.3-2: The stream test of the client types its fakes without assertions that narrow (the document, the htmx API, the headers and the abort signal), and stream.ts stops exporting DEFAULT_RETRY_MS and StreamEvent, which no other file uses. Red: make lint-ts exited 2 with 4 oxlint and 2 knip findings. Green: make lint-ts exits 0 and the stream test passes 4 of 4. (H26.3-2)
 - H26.3-1: The multipart record of docs/operations/dependencies.md names PHP 8.4's native `request_parse_body()` as considered and refused, because it nests bracketed names like `$_POST`, which HY-57 refuses. Red: the record did not name the candidate; green: `make docs-check` exits 0 with the line. (H26.3-1)
 - H25.66: Its Deliverables drop `packages/server/php/composer.lock`, which the repository does not have (kit K388 item-edit). Red: the row named a file that does not exist; green: the deliverables name only existing files. (H25.66)
 - H25.66: The row of the phpunit/phpunit latest stable version is held until kit K392 is done, because the link-mode update of the tracked manifest waits on it. The change of composer.json is not landed on main. Red: `make dependency-policy-check` passes on the commit that holds the row, so no red is recorded for the check. (H25.66)

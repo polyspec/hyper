@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: cbfdcfdd30d75646c4c18a013d96dec51da6fb776431935d906762367ceae575 -->
+<!-- source-sha256: ebd14caa99b31323c0037d1da8e3116bb01d3d9a448a9f4ff4e5d5bec0e06b6a -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H26.3-2: stream 테스트는 가짜 document, htmx API, headers, abort signal을 좁히는 단언 없이 타입으로 만든다. stream.ts는 다른 파일이 쓰지 않는 DEFAULT_RETRY_MS와 StreamEvent의 export를 멈춘다. red: `make lint-ts`가 oxlint 4건과 knip 2건으로 exit 2였다. green: `make lint-ts`가 exit 0이고 stream 테스트가 4건 중 4건 통과한다. (H26.3-2)
 - H26.3-1: dependencies.md의 multipart 기록은 PHP 8.4의 기본 `request_parse_body()`도 검토했으나 `$_POST`처럼 괄호 이름을 중첩하므로 HY-57이 거절하여 채택하지 않았다고 적는다. red: 기록이 이 후보를 적지 않았고, green: 그 줄을 넣은 뒤 `make docs-check`가 exit 0을 낸다. (H26.3-1)
 - H25.66: Deliverables에서 저장소에 없는 `packages/server/php/composer.lock`을 뺀다(kit K388 item-edit). red: row가 존재하지 않는 파일을 적었고, green: Deliverables가 존재하는 파일만 적는다. (H25.66)
 - H25.66: phpunit/phpunit 최신 안정 버전 row는 kit K392가 끝날 때까지 보류한다. link 모드의 추적 manifest 갱신이 K392를 기다리기 때문이다. composer.json의 변경은 main에 들이지 않는다. red: row를 가진 커밋에서 `make dependency-policy-check`가 통과하므로 이 검사의 red는 기록되지 않는다. (H25.66)
