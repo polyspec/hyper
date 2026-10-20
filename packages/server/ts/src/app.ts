@@ -9,6 +9,7 @@ import { maskedToken, verifyToken } from './csrf.js';
 import type { FileSessions } from './file-sessions.js';
 import { createListener, createServer, type Listener, type ServerOptions } from './http.js';
 import { decodeJson, inDataModel, JsonDecodeError } from './json.js';
+import { warningsAsErrors } from './warnings.js';
 import { Disconnected, renderPage, stopClosed, type PageInput } from './page.js';
 import { Reply } from './reply.js';
 import type { Request } from './request.js';
@@ -235,7 +236,8 @@ export class App<S extends object = Record<string, never>> {
     // The failure of a 500 of HY-43 or HY-66, which the hook receives (HY-60).
     let failure: string | null = null;
     try {
-      response = await this.answer(request, store, reply, signal);
+      // HY-74: a warning of the runtime fails the request instead of leaving a wrong page with status 200.
+      response = await warningsAsErrors(() => this.answer(request, store, reply, signal));
     } catch (error) {
       if (error instanceof Disconnected) return { stopped: true, reply };
       failure = this.fail(error);

@@ -5,7 +5,7 @@ import { connect } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { FileSessions, type App } from '../src/index.js';
+import { FileSessions, Response, type App } from '../src/index.js';
 import { Fixture, FIXTURES, handlers, parsed, port, present, record, text } from './support.js';
 
 let directory: string;
@@ -357,5 +357,100 @@ describe('the write hook and App.listener', () => {
     await Promise.all(settled);
     await new Promise((resolve) => plain.close(resolve));
     expect(events).toEqual(['written GET / null false', 'disconnect GET /', 'settled']);
+  });
+});
+
+// The request hook around (HY-97), the same cases as the Python server.
+describe('the request hook around', () => {
+  it('runs the application for the request that around passes to answer, and sends the response that around returns (HY-97)', async () => {
+    const calls: string[] = [];
+    const app = await new Fixture().app();
+    server = app.server(new FileSessions({ directory }), {
+      around: async (request, answer) => {
+        calls.push(`${request.method} ${request.path()}`);
+        const response = await answer(request);
+        return response.withHeader('X-Around', 'yes');
+      },
+    });
+    base = await listen(server);
+    const response = await fetch(`${base}/items/7`);
+    expect(response.status).toBe(200);
+    expect(response.headers.get('x-around')).toBe('yes');
+    expect(await response.text()).toContain('<i>7</i>');
+    expect(calls).toEqual(['GET /items/7']);
+  });
+
+  it('answers a changed copy of the request, such as a copy with a header (HY-97)', async () => {
+    const app = await new Fixture().app();
+    server = app.server(new FileSessions({ directory }), { around: (request, answer) => answer(request.withHeader('Accept', 'application/json')) });
+    base = await listen(server);
+    const response = await fetch(`${base}/items/7`);
+    expect(response.headers.get('content-type')).toBe('application/json; charset=utf-8');
+    expect(record(parsed(await response.text())).route).toBe('item');
+  });
+
+  it('sends the response of around alone and opens no session and runs no loader, action or hook of the application (HY-97)', async () => {
+    const fixture = new Fixture();
+    const reports: number[] = [];
+    const app = await fixture.app({ onResponse: (_request, response) => reports.push(response.status) });
+    server = app.server(new FileSessions({ directory }), { around: () => Response.text(418, 'alone') });
+    base = await listen(server);
+    const response = await fetch(`${base}/`);
+    expect(response.status).toBe(418);
+    expect(await response.text()).toBe('alone');
+    expect(response.headers.get('set-cookie')).toBeNull();
+    expect(readdirSync(directory)).toEqual([]);
+    expect(reports).toEqual([]);
+  });
+
+  it('answers the plain 500 for an error of around and for a return value that is no response, and reports it to the write hook (HY-97, HY-60)', async () => {
+    const written: [number | null, boolean, string | null][] = [];
+    const fixture = new Fixture();
+    const app = await fixture.app();
+    for (const around of [
+      () => {
+        throw new Error('around boom');
+      },
+      // @ts-expect-error: the hook returns a value that is no Response, which the server checks at run time.
+      () => 'not a response',
+    ]) {
+      server = app.server(new FileSessions({ directory }), { around, written: (_request, response, ended, _elapsed, failure) => written.push([response?.status ?? null, ended, failure]) });
+      base = await listen(server);
+      const response = await fetch(`${base}/`);
+      expect(response.status).toBe(500);
+      expect(await response.text()).toBe('Internal Server Error');
+      await new Promise((resolve) => server.close(resolve));
+    }
+    await vi.waitFor(() => expect(written).toHaveLength(2));
+    expect(written[0]).toEqual([500, true, 'around boom']);
+    expect(written[1]?.slice(0, 2)).toEqual([500, true]);
+    // The next afterEach closes the server of the last case; start one that it can close.
+    server = createHttpServer();
+    await listen(server);
+  });
+
+  it('fails when the hook is not a function (HY-97)', async () => {
+    const app = await new Fixture().app();
+    // @ts-expect-error: a string is no hook, which the server checks at run time.
+    expect(() => app.server(new FileSessions({ directory }), { around: 'hook' })).toThrow('the request hook must be a function');
+    server = createHttpServer();
+    await listen(server);
+  });
+
+  it('calls the disconnect hook with the request and the reply of the last call of answer, and not when around never called answer (HY-97, HY-67)', async () => {
+    const events: string[] = [];
+    const { app, running, release } = await waitingApp(events);
+    const seen: string[] = [];
+    server = app.server(new FileSessions({ directory }), {
+      around: (request, answer) => {
+        seen.push(request.header('X-Mark') ?? 'none');
+        return answer(request.withHeader('X-Mark', 'changed'));
+      },
+      written: (request, _response, ended) => events.push(`written ${request.header('X-Mark') ?? 'none'} ${ended}`),
+    });
+    await dropClient(server, running, release);
+    await vi.waitFor(() => expect(events).toHaveLength(2));
+    expect(events).toEqual(['written none false', 'disconnect GET /']);
+    expect(seen).toEqual(['none']);
   });
 });

@@ -102,6 +102,11 @@ export class Request {
     return new Request({ ...this.state, path, params });
   }
 
+  // Returns a copy whose header of the name, compared without case as `header` reads it, has the value (HY-97).
+  withHeader(name: string, value: string): Request {
+    return new Request({ ...this.state, headers: new Map(this.state.headers).set(name.toLowerCase(), value) });
+  }
+
   // Returns a copy that holds the value of the choice of the client rendering selection (HY-62).
   withSelection(value: unknown): Request {
     return new Request({ ...this.state, selection: value });

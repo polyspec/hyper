@@ -8,6 +8,7 @@ import type { App } from './app.js';
 import { errorCode } from './error-code.js';
 import { FileSessions } from './file-sessions.js';
 import { Reply } from './reply.js';
+import { Disconnected } from './page.js';
 import { Request } from './request.js';
 import { Response } from './response.js';
 
@@ -19,7 +20,14 @@ export interface ServerOptions {
   // whose write started or the plain 500 of an escaped error, whether the write ended, the elapsed milliseconds and the
   // failure of an escaped error.
   written?: WriteHook;
+  // The request hook (HY-97): called once for every request that the application answers, with the request as the server
+  // built it and the function `answer`, which runs the application for a request; the server writes the response that
+  // the hook returns.
+  around?: AroundHook;
 }
+
+// The request hook of a server (HY-97).
+export type AroundHook = (request: Request, answer: (request: Request) => Promise<Response>) => Response | Promise<Response>;
 
 // The write hook of a server (HY-99).
 export type WriteHook = (request: Request, response: Response | null, ended: boolean, elapsed: number, failure: string | null) => void;
@@ -62,6 +70,8 @@ export function createListener<S extends object>(app: App<S>, sessions: FileSess
   if (files !== undefined && (!isAbsolute(files) || !statSync(files).isDirectory())) throw new Error(`hyper: ${files} is not an absolute directory`);
   const written = options.written;
   if (written !== undefined && typeof written !== 'function') throw new Error('hyper: the write hook must be a function');
+  const around = options.around;
+  if (around !== undefined && typeof around !== 'function') throw new Error('hyper: the request hook must be a function');
   return async (incoming, outgoing) => {
     const started = performance.now();
     // The connection closed before the response was written (HY-67).
@@ -79,6 +89,8 @@ export function createListener<S extends object>(app: App<S>, sessions: FileSess
     let response: Response | null = null;
     let failure: string | null = null;
     let stopped = false;
+    // The request of the last call of `answer`, which the disconnect hook receives (HY-97).
+    let disconnectedRequest: Request | null = null;
     try {
       const file = files === undefined ? null : publicFile(files, incoming);
       if (file !== null) {
@@ -89,21 +101,36 @@ export function createListener<S extends object>(app: App<S>, sessions: FileSess
       // The application answers a body larger than its limit with 413 (HY-59); the server reads no more of it.
       const { body, size } = await readBody(incoming, app.bodyLimit);
       request = Request.from({ method: incoming.method ?? 'GET', target: incoming.url ?? '/', headers: incoming.headers, body, bodySize: size, https });
-      const session = await sessions.open(request.cookie(FileSessions.cookieName(app.https || https)));
-      let answer;
+      // The last call of `answer`: its request and its reply, which the disconnect hook receives (HY-67, HY-97).
+      const last: { request?: Request; reply?: Reply } = {};
+      // Opens the session of the request by its session cookie, answers with the application, closes the session and
+      // adds the cookie of a new session first (HY-45).
+      const answerWith = async (given: Request): Promise<Response> => {
+        const session = await sessions.open(given.cookie(FileSessions.cookieName(app.https || https)));
+        let answer;
+        try {
+          answer = await app.respond(given, session, started, closed.signal);
+        } finally {
+          session.close();
+        }
+        last.request = given;
+        last.reply = answer.reply;
+        // A request whose client closed the connection has no response to write (HY-67).
+        if (answer.stopped) throw new Disconnected();
+        return withSessionCookie(app, sessions, answer.response, session.created, https);
+      };
       try {
-        answer = await app.respond(request, session, started, closed.signal);
-      } finally {
-        session.close();
-      }
-      reply = answer.reply;
-      if (answer.stopped) {
-        // A request whose client closed the connection has no response to write (HY-67); the write hook receives null (HY-99).
-        stopped = true;
-      } else {
-        response = withSessionCookie(app, sessions, answer.response, session.created, https);
+        const given = around === undefined ? await answerWith(request) : await around(request, answerWith);
+        if (!(given instanceof Response)) throw new TypeError(`hyper: the request hook returned ${typeof given}, not a Response`);
+        response = given;
         write(outgoing, response);
+      } catch (error) {
+        // The write hook receives null for a stopped request (HY-99).
+        if (!(error instanceof Disconnected) || last.reply === undefined) throw error;
+        stopped = true;
       }
+      reply = last.reply ?? null;
+      disconnectedRequest = last.request ?? null;
     } catch (error) {
       // An error that escapes the answer of a request is logged with the message of HY-43 and answered with a plain 500
       // that hyper writes; when the response has started or the 500 cannot be written, the connection closes (HY-60).
@@ -128,7 +155,7 @@ export function createListener<S extends object>(app: App<S>, sessions: FileSess
     try {
       written?.(request, response, outgoing.writableFinished, performance.now() - started, failure);
     } finally {
-      if (stopped && reply !== null) app.disconnected(request, started, reply);
+      if (stopped && reply !== null) app.disconnected(disconnectedRequest ?? request, started, reply);
     }
   };
 }

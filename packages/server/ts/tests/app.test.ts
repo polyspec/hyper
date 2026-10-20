@@ -127,6 +127,24 @@ describe('App', () => {
     expect(response.body).toBe('Internal Server Error');
   });
 
+  it('fails a request that emits a process warning with the warning, and emits the warning as before outside of a request (HY-74, HY-43)', async () => {
+    const reports: [number, string | null][] = [];
+    const warned: Handlers<Services> = {
+      ...handlers(),
+      shared: () => {
+        process.emitWarning('beware');
+        return { site: 'x' };
+      },
+    };
+    const response = await new Fixture().handle({ target: '/' }, { handlers: warned, onResponse: (_request, answered, _elapsed, _reply, failure) => reports.push([answered.status, failure]) });
+    expect(response.status).toBe(500);
+    expect(response.body).toBe('Internal Server Error');
+    expect(reports).toEqual([[500, 'beware']]);
+    const emitted = new Promise<string>((resolve) => process.once('warning', (warning) => resolve(warning.message)));
+    process.emitWarning('outside');
+    expect(await emitted).toBe('outside');
+  });
+
   it('rejects manifests with invalid keep declarations (HY-37, HY-40)', async () => {
     for (const name of ['keep-kind', 'keep-page', 'keep-manifest', 'keep-reserved', 'uses-topic']) {
       await expect(App.open({ manifest: `${FIXTURES}invalid/${name}.json`, templates: TEMPLATES, handlers: {}, timezone: 'Z' }), name).rejects.toThrow();
