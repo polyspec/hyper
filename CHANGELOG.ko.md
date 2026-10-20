@@ -1,13 +1,13 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 598ae9be87732e1999dcc621bf634e4f1f80fbfad65c3ee947365e5b8b740a53 -->
+<!-- source-sha256: fff2f75d4b9efebfa243ec854074b87d25c8895e01519add380f4f65d24e07dd -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H26.2: docs/spec/protocol.md는 multipart 요청의 file part에 이름, 파일 이름, content type, bytes를 `files()`와 `file()`로 준다(HY-113). 또한 기본값 8 MiB의 파일 제한을 정한다(HY-114). 구현 row H26.2-1부터 H26.2-4까지를 등록했다. 원인: HY-57은 filename이 있는 part가 file이라고 정하지만, 애플리케이션에 그 file을 주는 규칙이 없었다. contracts/fields.json 스키마에는 기대 file을 적는 필드가 없으므로, contract case는 스키마 변경을 기다린다(H26.2-4). 검증: make docs-check가 통과한다. (H26.2)
 - H26.1: docs/spec/protocol.md는 TypeScript 클라이언트의 클라이언트 stream 구독을 명시한다(HY-108부터 HY-112까지). WHATWG 표준의 event stream을 eventsource-parser로 읽고, Last-Event-ID와 retry 지연으로 재연결하며, 기본값 30000 ms의 byte watchdog을 두고, 클라이언트의 dispose를 정한다. 구현 row H26.1-1부터 H26.1-3까지를 등록했다. 원인: 클라이언트에는 stream reader와 dispose가 없고, 영역 중단 코드(packages/client/src/hyper.ts:446-456)는 영역 요청만 덮는다. 이 명세는 구현 row가 따를 규칙을 정한다. 검증: make docs-check가 통과한다. (H26.1)
 - H25.65: 영문 CHANGELOG.md와 kit-standard 체크리스트의 한국어 쌍이 영문 원문의 source-sha256을 다시 기록한다. red: make docs-check가 af1b700 이후 두 marker가 낡았다고 보고했고, green: 통과한다. (H25.65)
- 영문 CHANGELOG.md와 kit-standard 체크리스트의 한국어 쌍이 영문 원문의 source-sha256을 다시 기록한다. red: make docs-check가 af1b700 이후 두 marker가 낡았다고 보고했고, green: 통과한다. (H25.65)
 - H25.61: config/owner-checks.json은 kit 복사본인 Rust lint 설정 clippy.toml에 kit 복사본의 소유 규칙을 준다. red: owner-validate가 clippy.toml을 어떤 소유자와도 맞지 않는 경로로 보고했고, green: 추적되는 모든 경로가 소유된다고 보고한다. (H25.61)
 - H25.62: packages/server/python/src/polyspec/hyper/app.py의 render fallback은 필요한 이유(HY-38)를 주석으로 남기고 noqa BLE001을 뺐다. ruff가 이 handler를 지적하지 않으며, kept 값이 없으면 다시 raise하기 때문이다. red: lint-python이 app.py:598의 쓰이지 않는 noqa에 대해 RUF100을 보고했고, green: ruff check가 통과한다. (H25.62)
 - H25.64: kit 복사본(PRINCIPLES.md와 PRINCIPLES.ko.md, ruff.toml, .golangci.yml, config/layout.kit.yml, scripts/kit/kit-bootstrap.mk)이 K364 이후 설치된 kit 0.0.54와 일치한다(kit-check는 Rust 소스가 있을 때만 lint-rust를 요구한다). red: make kit-check가 다른 복사본 여섯 개를 보고했고, green: 설정과 복사본이 kit과 일치한다고 보고한다. (H25.64)

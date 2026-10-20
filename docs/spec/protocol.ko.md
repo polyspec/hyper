@@ -1,5 +1,5 @@
 <!-- doc-id: protocol -->
-<!-- source-sha256: 92ce7954ecda954722541c28a5d07a5d595d6884550a9b0ecf71c4c28ca2368d -->
+<!-- source-sha256: e307f7359752c853e671387fe85dfe88917bad6db3394dbd6bfb20cf0516921e -->
 # 영역 프로토콜
 
 [English](protocol.md).
@@ -95,6 +95,9 @@
 
 - **HY-56** 요청의 원본 쿼리는 요청 대상에서 첫 `?` 뒤부터 첫 `#` 앞까지이며, `?`가 없으면 빈 텍스트다. 그 값은 중첩 없이 읽는다. 원본 쿼리를 모든 `&`에서 나누고 빈 부분은 건너뛴다. 부분의 이름은 첫 `=` 앞의 텍스트이고 값은 그 나머지이며, `=`가 없으면 값은 빈 텍스트다. 둘 다 `+`는 공백이고, 16진수 두 자리가 붙은 `%XX`는 그 바이트이며, 그 밖의 `%`는 그대로 둔다. `roles[]`나 `a[b]`처럼 괄호가 있는 이름은 쓴 그대로의 이름이고, 빈 이름도 이름이다. 쿼리 값은 각 이름을 처음 나온 순서대로 그 값들의 요청 순서 목록에 대응시키는 순서 있는 map이다. 유효한 UTF-8이 아닌 이름이나 값은 HY-42로 실패한다. `Request`는 원본 쿼리와 쿼리 값을 제공하고, `queryInt`는 이름의 마지막 값을 읽는다. `contracts/fields.json`은 텍스트와 그 값을 담으며, 두 서버는 모든 사례를 통과한다.
 - **HY-57** 요청의 폼 값은 원본 body에서 중첩 없이 읽으며, HY-56의 쿼리 값처럼 순서 있는 map이다. `application/x-www-form-urlencoded` body는 원본 쿼리처럼 읽는다. `multipart/form-data` body는 `Content-Disposition`이 `form-data`이고 `name` 매개변수가 있으며 `filename` 매개변수가 없는 part마다 값 하나를 준다. 이름은 그 매개변수이고 값은 part의 내용 그대로다. `filename`이 있는 part는 파일이며 폼 값이 아니다. 다른 type의 body에는 폼 값이 없다. 유효한 UTF-8이 아닌 이름이나 값은 HY-42로 실패한다. PHP 서버는 대괄호 이름을 중첩하는 `$_POST`가 아니라 `php://input`에서 body를 읽는다. PHP는 `enable_post_data_reading`이 꺼져 있을 때만 `multipart/form-data` 요청의 body를 준다. `Request`는 폼 값을 제공하고, `formString`은 이름의 마지막 값을 읽는다. `contracts/fields.json`은 urlencoded 사례와 multipart 사례를 담으며, 두 서버는 모든 사례를 통과한다.
+
+- **HY-113** `multipart/form-data` body의 file part는 `Content-Disposition`이 `form-data`이고 `name` parameter와 `filename` parameter를 모두 가진 part다(HY-57). 요청은 그 file들을 `files()`로 제공한다. 이는 각 이름에서 그 file들의 목록으로 가는 순서 있는 map이며, 요청 순서를 HY-57이 폼 값의 순서를 정하듯 따른다. `file(name)`은 이름의 마지막 file을 돌려주고, 없으면 아무것도 돌려주지 않는다. `formString`이 마지막 값을 읽는 것과 같다. file은 네 부분을 가진다. 이름은 `name` parameter다. 파일 이름은 `filename` parameter이며, 그 quoted string의 백슬래시 escape를 풀고 더 decode하지 않는다. content type은 part의 `Content-Type` 헤더 값을 보낸 그대로이며, 헤더가 없으면 빈 텍스트다. bytes는 part의 내용을 그대로다. filename이 빈 file도 file이다. 이름, 파일 이름, content type은 valid UTF-8이어야 하며, 그렇지 않은 part는 HY-42가 이름에 주는 것과 같이 status 400을 받는다. `name` parameter가 없는 part는 폼 값도 file도 아니며, 어떤 규칙도 이를 애플리케이션에 주지 않는다. `filename*`(RFC 5987)는 읽지 않는다. file API는 HY-106의 공개 API의 일부이며, 각 runtime의 형태로 제공한다. PHP는 `Request::files()`와 `Request::file()`을 파일 클래스 `UploadedFile`과 함께, Python은 `files()`와 `file()`을 클래스 `UploadedFile`과 함께, Node는 `files()`와 `file()`을 타입 `UploadedFile`과 함께 제공한다. `config/parity.json`은 각각에 대해 `api` 종류의 unit 하나를 가진다.
+- **HY-114** 애플리케이션은 파일 제한, 즉 한 file(HY-113)의 최대 바이트 수를 선언할 수 있다. 이는 body 제한(HY-59) 옆에 있는 애플리케이션의 옵션이다. 기본값은 8 MiB로 기본 body 제한과 같다. 그래서 파일 제한을 선언하지 않은 애플리케이션은 body 제한이 요청을 거절할 때에만 파일을 거절한다. 제한의 이유는 모든 runtime이 file 하나를 값 하나로 메모리에 담기 때문이다. 양의 정수가 아니거나 body 제한보다 큰 파일 제한은 애플리케이션을 열 때 실패하며, 이는 HY-59가 다른 제한에 대해 정하는 것과 같다. HY-59의 1단계와 2단계 검사 뒤, action이나 `/_hyper/keep` handler가 실행되기 전에, 서버는 요청의 file part마다 bytes를 검사한다. bytes가 파일 제한보다 많은 file은 요청을 status 413과 텍스트 `Content Too Large`로 실패시키며, HY-59의 1단계가 하는 것과 같이 어떤 action도 실행하지 않는다. 서버는 file을 자르지 않으며 file의 일부를 넘기지도 않는다. 제한 안의 file은 전부 넘긴다.
 
 ## JSON 응답
 
