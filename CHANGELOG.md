@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- H25.55: scripts/check-bundle-size.mts prints the GitHub annotation when it gets --annotations, which the bundle-size recipe passes while GITHUB_ACTIONS is true, so the test passes the option and no test sets the CI identity (P31); red: bypass-check reported the test that sets GITHUB_ACTIONS, green: bypass-check passes and the 6 tests pass. (H25.55)
 - H25.54-1: config/generated.json is owned by kit-check in config/owner-checks.json and the Korean changelog is stamped to the English one; red: owner-validate reported the path without an owner and docs-check the stale revision of CHANGELOG.ko.md, green: both pass. (H25.54-1)
 - H25.54: The copies of PRINCIPLES.md (P31), config/php-lint and the hook .githooks/pre-commit match the kit after K308, config/generated.json declares no generated path and no exception for the pre-commit hook, and bypass-check joins CHECK_TARGETS and the docs group of ci.yml; red: kit-check reported two differing copies and CHECK_TARGETS without bypass-check, and hooks-check the missing pre-commit hook, green: kit-check and hooks-check pass. (H25.54)
 - H25.53-2: tests/test_public_api.py of the Python server is formatted as ruff format writes it; red: make lint-python failed on ruff format --check, green: it passes. (H25.53-2)

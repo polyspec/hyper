@@ -13,7 +13,7 @@ import { brotliCompressSync, constants, gzipSync } from 'node:zlib';
 import { checkTemplateIndex } from '@polyspec/hyper-client';
 import { jsonObject, jsonString, parseJsonObject } from './json.mts';
 
-const { values } = parseArgs({ options: { app: { type: 'string' }, output: { type: 'string' }, limits: { type: 'string' } } });
+const { values } = parseArgs({ options: { app: { type: 'string' }, output: { type: 'string' }, limits: { type: 'string' }, annotations: { type: 'boolean' } } });
 const { app, output, limits: limitsFile } = values;
 if (!app || !output || !limitsFile) throw new Error('--app, --output and --limits are required');
 const manifestFile = join(output, 'manifest.json');
@@ -54,7 +54,7 @@ for (const [name, paths] of Object.entries(files)) {
     continue;
   }
   console.log(`WARNING ${name} ${file}: gzip ${gzip} bytes exceed the limit ${limit}; raw ${raw}, brotli ${brotli}`);
-  if (process.env.GITHUB_ACTIONS === 'true') console.log(`::warning title=bundle size::${name}: gzip ${gzip} bytes exceed the limit ${limit}`);
+  if (values.annotations) console.log(`::warning title=bundle size::${name}: gzip ${gzip} bytes exceed the limit ${limit}`);
 }
 const templatesGzip = templates.reduce((total, file) => total + gzipSync(readFileSync(file), { level: 9 }).length, 0);
 console.log(`templates: ${templates.length} files, ${templatesGzip} gzip bytes in total, loaded when rendering reaches them`);

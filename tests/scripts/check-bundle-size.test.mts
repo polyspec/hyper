@@ -36,7 +36,7 @@ function oversized(t: TestContext): string {
   return directory;
 }
 
-const measure = (directory: string, env: Record<string, string> = {}) => spawnSync(process.execPath, ['scripts/check-bundle-size.mts', '--app', directory, '--output', directory, '--limits', path.join(directory, 'limits.json')], { encoding: 'utf8', env: { ...process.env, GITHUB_ACTIONS: '', ...env } });
+const measure = (directory: string, extra: string[] = []) => spawnSync(process.execPath, ['scripts/check-bundle-size.mts', '--app', directory, '--output', directory, '--limits', path.join(directory, 'limits.json'), ...extra], { encoding: 'utf8' });
 
 test('a size above its limit is a warning with the size and the limit, and the measurement passes', (t) => {
   const run = measure(oversized(t));
@@ -70,8 +70,8 @@ test('a build without chunk files fails with the expected and the actual count',
   assert.match(run.stderr, /holds no chunk file hyper-chunk-<hash>\.js; expected at least 1, actual 0/);
 });
 
-test('on GitHub Actions a size above its limit is also a warning annotation', (t) => {
-  const run = measure(oversized(t), { GITHUB_ACTIONS: 'true' });
+test('with --annotations a size above its limit is also a warning annotation', (t) => {
+  const run = measure(oversized(t), ['--annotations']);
   assert.equal(run.status, 0, run.stdout + run.stderr);
   assert.match(run.stdout, /^::warning title=bundle size::ssrScript: gzip \d+ bytes exceed the limit 1$/m);
 });

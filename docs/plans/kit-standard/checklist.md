@@ -67,3 +67,4 @@
 | H25.53-2 | The public API test of the Python server is formatted | packages/server/python/tests/test_public_api.py | `make lint-python` | [o] |
 | H25.54 | The copies of the kit match it after K308 and bypass-check is a gate of the repository | PRINCIPLES.md, config/php-lint, .githooks/pre-commit, Makefile, .github/workflows/ci.yml | `make kit-check` | [o] |
 | H25.54-1 | config/generated.json has an owner and the Korean changelog matches | config/owner-checks.json, CHANGELOG.ko.md | `make owner-validate`, `make docs-check` | [o] |
+| H25.55 | The bundle size script annotates on GitHub by an option, and no test sets the CI identity (P31) | scripts/check-bundle-size.mts, tests/scripts/check-bundle-size.test.mts, Makefile | `node --test tests/scripts/check-bundle-size.test.mts` | [o] |
