@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-kit-standard -->
-<!-- source-sha256: 0b1ed7a8b651e598efaba740657bdd875bb1b6f446d63751ad5350a090c15d8e -->
+<!-- source-sha256: 30e743ccf07ac5dfaa22cf612c6719104ca577a32b580ec7d4b60b2a7fc6bc47 -->
 # kit 표준 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -43,3 +43,4 @@
 | H25.35 | R3: routes, routes-base-path, rest는 모든 서버에서 성립한다 | The test files of the route cases of the three servers, config/parity.json | `make parity-check UNITS="routes routes-base-path rest route-paths"` | [o] |
 | H25.35-1 | route unit은 자기 test가 이름으로 적은 것만 인용한다 | config/parity.json and packages/server/php/tests/RouterTest.php | `make parity-declarations-check` | [o] |
 | H25.36 | R3: keep은 모든 서버에서 성립한다 | The test files of the keep cases of the three servers, config/parity.json | `make parity-check UNITS="keep kept-values"` | [o] |
+| H25.37 | R3: reads는 모든 서버에서 성립한다 | packages/server/php/tests/ReadsTest.php | `make parity-check UNITS=reads` | [o] |
