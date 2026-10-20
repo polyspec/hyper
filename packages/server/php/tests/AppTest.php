@@ -245,9 +245,11 @@ final class AppTest extends TestCase
     public function testFilePartsOverTheFileLimitAreRefusedBeforeTheAction(): void
     {
         $token = $this->token();
-        $upload = static fn (string $content): string => "--x\r\nContent-Disposition: form-data; name=\"_csrf\"\r\n\r\n{$token}"
+        $upload = static fn (string $content): string =>
+            "--x\r\nContent-Disposition: form-data; name=\"_csrf\"\r\n\r\n{$token}"
             . "\r\n--x\r\nContent-Disposition: form-data; name=\"name\"\r\n\r\na\r\n"
-            . "--x\r\nContent-Disposition: form-data; name=\"upload\"; filename=\"a.txt\"\r\n\r\n{$content}\r\n--x--\r\n";
+            . "--x\r\nContent-Disposition: form-data; name=\"upload\"; filename=\"a.txt\"\r\n\r\n"
+            . "{$content}\r\n--x--\r\n";
         $options = ['formTypes' => ['application/x-www-form-urlencoded', 'multipart/form-data'], 'fileLimit' => 32];
         $headers = ['Content-Type' => 'multipart/form-data; boundary=x'];
 

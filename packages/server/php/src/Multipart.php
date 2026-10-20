@@ -45,7 +45,8 @@ final class Multipart
                     ? rtrim($found[1], "\r")
                     : '';
                 if (preg_match('/;\s*name="([^"]*)"/i', $disposition, $name) === 1) {
-                    if (preg_match('/;\s*filename=(?:"((?:[^"\\\\]|\\\\.)*)"|([^;\s]*))/i', $disposition, $filename) !== 1) {
+                    $filenamePattern = '/;\s*filename=(?:"((?:[^"\\\\]|\\\\.)*)"|([^;\s]*))/i';
+                    if (preg_match($filenamePattern, $disposition, $filename) !== 1) {
                         if (preg_match('//u', $name[1]) !== 1 || preg_match('//u', $content) !== 1) {
                             return null;
                         }

@@ -107,7 +107,8 @@ final class App
         }
         if ($fileLimit < 1 || $fileLimit > $bodyLimit) {
             throw new \InvalidArgumentException(
-                "file limit {$fileLimit} is not a positive number of bytes no larger than the body limit {$bodyLimit} (HY-114)",
+                "file limit {$fileLimit} is not a positive number of bytes no larger than the body limit "
+                . "{$bodyLimit} (HY-114)",
             );
         }
         if ($responseLimit < 1) {
@@ -463,7 +464,7 @@ final class App
             if ($request->fileOver($this->fileLimit)) {
                 return Response::text(413, 'Content Too Large');
             }
-            $result =$this->container->call($handler['post'], [Request::class => $request, Reply::class => $reply]);
+            $result = $this->container->call($handler['post'], [Request::class => $request, Reply::class => $reply]);
             if (!$result instanceof Result) {
                 throw new \LogicException("POST action of route {$route['name']} did not return a Result");
             }
@@ -905,7 +906,7 @@ final class App
         if ($request->fileOver($this->fileLimit)) {
             return Response::text(413, 'Content Too Large');
         }
-        $name =$request->formString('region');
+        $name = $request->formString('region');
         $path = $request->formString('path');
         $region = $this->manifest->region($name);
         if ($region === null || ($region->keep[$path] ?? null) !== 'server') {

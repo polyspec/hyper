@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: ebd14caa99b31323c0037d1da8e3116bb01d3d9a448a9f4ff4e5d5bec0e06b6a -->
+<!-- source-sha256: e7fdc783e1782e7329f55e0bf4649fdc43c0904899b47afb442dbf493517bad6 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H26.3-3: PHP 소스와 테스트를 게이트의 phpcs 규칙에 맞춘다. App.php의 대입 연산자 뒤 간격, App.php의 HY-114 메시지 긴 줄, Multipart.php의 파일 이름 패턴, AppTest.php의 업로드 fixture를 고친다. 값과 정규식은 그대로 둔다. red: `make lint-php`가 지적 5건으로 exit 2였다. green: `make lint-php`가 exit 0이다. (H26.3-3)
 - H26.3-2: stream 테스트는 가짜 document, htmx API, headers, abort signal을 좁히는 단언 없이 타입으로 만든다. stream.ts는 다른 파일이 쓰지 않는 DEFAULT_RETRY_MS와 StreamEvent의 export를 멈춘다. red: `make lint-ts`가 oxlint 4건과 knip 2건으로 exit 2였다. green: `make lint-ts`가 exit 0이고 stream 테스트가 4건 중 4건 통과한다. (H26.3-2)
 - H26.3-1: dependencies.md의 multipart 기록은 PHP 8.4의 기본 `request_parse_body()`도 검토했으나 `$_POST`처럼 괄호 이름을 중첩하므로 HY-57이 거절하여 채택하지 않았다고 적는다. red: 기록이 이 후보를 적지 않았고, green: 그 줄을 넣은 뒤 `make docs-check`가 exit 0을 낸다. (H26.3-1)
 - H25.66: Deliverables에서 저장소에 없는 `packages/server/php/composer.lock`을 뺀다(kit K388 item-edit). red: row가 존재하지 않는 파일을 적었고, green: Deliverables가 존재하는 파일만 적는다. (H25.66)
