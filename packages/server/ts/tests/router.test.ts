@@ -1,20 +1,12 @@
-// The router cases of packages/server/php/tests/RouterTest.php: the server routes with the router of the browser
-// package (HY-9, HY-49). Each case of contracts/routes.json is a top-level test named by its id (S6).
+// The route paths that a router refuses, beyond the cases of contracts/routes.json and contracts/rest.json (HY-4, HY-49).
 import { expect, it } from 'vitest';
-import { Router, stripBasePath } from '@polyspec/hyper-client';
-import { list, routeCases, routeContract, text } from './support.js';
+import { Router } from '@polyspec/hyper-client';
+import { list, routeContract, text } from './support.js';
 
-const { fixture, router } = routeContract('routes.json');
-
-it.each(routeCases(fixture.cases))('%s', (_id, { path, result }) => {
-  expect(router.match(path)).toEqual(result);
-});
-
-it.each(routeCases(fixture.baseCases))('%s', (_id, { path, result }) => {
-  const stripped = stripBasePath(path, text(fixture.basePath));
-  expect(stripped === null ? null : router.match(stripped)).toEqual(result);
-});
-
-it.each(list(fixture.invalidPaths).map(text))('rejects the route path %j', (path) => {
-  expect(() => new Router([{ name: 'invalid', path }])).toThrow();
+it('rejects every invalid route path (HY-4)', () => {
+  for (const contract of ['routes.json', 'rest.json']) {
+    for (const path of list(routeContract(contract).fixture.invalidPaths).map(text)) {
+      expect(() => new Router([{ name: 'invalid', path }]), path).toThrow();
+    }
+  }
 });

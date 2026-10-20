@@ -256,11 +256,11 @@
         },
         {
           "implementation": "python",
-          "test": "packages/server/python/tests/test_router.py"
+          "test": "packages/server/python/tests/test_routes.py"
         },
         {
           "implementation": "ts",
-          "test": "packages/server/ts/tests/router.test.ts"
+          "test": "packages/server/ts/tests/routes.test.ts"
         }
       ],
       "requirements": [
@@ -286,11 +286,11 @@
         },
         {
           "implementation": "python",
-          "test": "packages/server/python/tests/test_router.py"
+          "test": "packages/server/python/tests/test_routes_base_path.py"
         },
         {
           "implementation": "ts",
-          "test": "packages/server/ts/tests/router.test.ts"
+          "test": "packages/server/ts/tests/routes-base-path.test.ts"
         }
       ],
       "requirements": [
@@ -1032,6 +1032,30 @@
       ],
       "requirements": [
         "HY-24"
+      ]
+    },
+    {
+      "id": "route-paths",
+      "kind": "feature",
+      "bindings": [
+        {
+          "implementation": "php",
+          "test": "packages/server/php/tests/RouterTest.php",
+          "id": "RouterTest::testRejectsTheRoutePath"
+        },
+        {
+          "implementation": "python",
+          "test": "packages/server/python/tests/test_router.py",
+          "id": "test_every_invalid_path_fails"
+        },
+        {
+          "implementation": "ts",
+          "test": "packages/server/ts/tests/router.test.ts",
+          "id": "rejects every invalid route path (HY-4)"
+        }
+      ],
+      "requirements": [
+        "HY-4"
       ]
     }
   ],

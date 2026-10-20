@@ -49,15 +49,14 @@ final class RouterTest extends TestCase
     }
 
     /**
-     * The cases of a list of a contract of routes, each named by its JSON.
+     * The cases of a list of a contract of routes, each named by its id.
      *
      * @return iterable<string, array{string, array{name: string, params: array<string, string>}|null}>
      */
     private static function routeCases(mixed $cases): iterable
     {
         foreach (Json::arrays($cases ?? null) as $case) {
-            $routeCase = self::routeCase($case);
-            yield json_encode($routeCase[0], JSON_THROW_ON_ERROR) => $routeCase;
+            yield Json::string($case['id'] ?? null) => self::routeCase($case);
         }
     }
 

@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-kit-standard -->
-<!-- source-sha256: 3838fc2986ef23c0e044e3925d7d00f87e119cac611da70da369f9e1f3641e38 -->
+<!-- source-sha256: 9ddcec8cd4a91998215a5690ab6ff8a156a760d529a19f1057e5de86c078435b -->
 # kit 표준 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -40,3 +40,4 @@
 | H25.32 | R3: json-encode와 json-decode는 모든 서버에서 성립한다 | The test files of the json cases of the three servers, config/parity.json | `make parity-check UNITS="json-encode json-decode json-values"` | [o] |
 | H25.33 | hyper의 모든 PHP platform은 8.4.1이다 | composer.json, examples/board/composer.json, packages/server/php/composer.json, tests/release-install/composer/composer.json and config/dependency-policy.json | `make dependency-policy-check` | [o] |
 | H25.34 | R3: csrf-mask와 csrf-verify는 모든 서버에서 성립한다 | The test files of the csrf cases of the three servers, config/parity.json | `make parity-check UNITS="csrf-mask csrf-verify csrf-values"` | [o] |
+| H25.35 | R3: routes, routes-base-path, rest는 모든 서버에서 성립한다 | The test files of the route cases of the three servers, config/parity.json | `make parity-check UNITS="routes routes-base-path rest route-paths"` | [o] |

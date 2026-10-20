@@ -1,40 +1,18 @@
-# Router matching of the conformance cases of contracts/routes.json (HY-4 to HY-8, HY-49). The PHP and the JavaScript
-# router pass the same cases. Each case is a test method test_<id> that the parity check reads by its id (S6).
+# The route paths that a router refuses, beyond the cases of contracts/routes.json and contracts/rest.json (HY-4, HY-49).
 import unittest
 
-from .contracts import add_cases, file
-from polyspec.hyper.router import Router, strip_base_path
+from polyspec.hyper.router import Router
+
+from .contracts import file
 
 
-class RoutesTest(unittest.TestCase):
+class InvalidPathsTest(unittest.TestCase):
     def test_every_invalid_path_fails(self) -> None:
-        for path in file("routes.json")["invalidPaths"]:
-            with self.subTest(path):
-                with self.assertRaises(ValueError):
-                    Router([{"name": "x", "path": path}])
-
-
-add_cases(
-    RoutesTest,
-    file("routes.json")["cases"],
-    lambda self, case: self.assertEqual(
-        case["result"], Router(file("routes.json")["routes"]).match(case["path"])
-    ),
-)
-
-
-class BasePathRoutesTest(unittest.TestCase):
-    pass
-
-
-def _under_base_path(self, case) -> None:
-    fixture = file("routes.json")
-    path = strip_base_path(case["path"], fixture["basePath"])
-    router = Router(fixture["routes"])
-    self.assertEqual(case["result"], None if path is None else router.match(path))
-
-
-add_cases(BasePathRoutesTest, file("routes.json")["baseCases"], _under_base_path)
+        for contract in ("routes.json", "rest.json"):
+            for path in file(contract)["invalidPaths"]:
+                with self.subTest(path):
+                    with self.assertRaises(ValueError):
+                        Router([{"name": "x", "path": path}])
 
 
 if __name__ == "__main__":
