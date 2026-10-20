@@ -1,19 +1,19 @@
 import { createParser } from 'eventsource-parser';
 import type { Fetch } from './obtain.js';
 
-// The reconnection delay when the server sent no retry field (HY-110).
+// The reconnection delay when the server sent no retry field (HYC-19).
 const DEFAULT_RETRY_MS = 1000;
-// The longest silence of the body before the stream fails (HY-111).
+// The longest silence of the body before the stream fails (HYC-20).
 export const DEFAULT_WATCHDOG_MS = 30000;
 
-// One event of a subscription: its type, its data and the last event ID (HY-109).
+// One event of a subscription: its type, its data and the last event ID (HYC-18).
 interface StreamEvent {
   event: string;
   data: string;
   id: string;
 }
 
-// Receives the events of a subscription and every failure of it (HY-108, HY-111).
+// Receives the events of a subscription and every failure of it (HYC-17, HYC-20).
 export interface StreamListener {
   onEvent(event: StreamEvent): void;
   onError(error: Error): void;
@@ -27,7 +27,7 @@ export interface Subscription {
   close(): void;
 }
 
-// The state of one subscription (HY-108 to HY-111). Each connection has its own AbortController, and a callback
+// The state of one subscription (HYC-17 to HYC-20). Each connection has its own AbortController, and a callback
 // of a connection that is no longer the current one does nothing, so that an aborted connection reports nothing.
 export class StreamSubscription {
   private lastEventId = '';
@@ -89,9 +89,9 @@ export class StreamSubscription {
       this.fail(attempt, new Error(`the stream of ${this.url} has no body`));
       return;
     }
-    // The fatal decoder turns a body that is not UTF-8 into a parse failure (HY-109).
+    // The fatal decoder turns a body that is not UTF-8 into a parse failure (HYC-18).
     const decoder = new TextDecoder('utf-8', { fatal: true });
-    // The parser ignores an unknown field and an invalid retry value, which the standard says are not failures (HY-109).
+    // The parser ignores an unknown field and an invalid retry value, which the standard says are not failures (HYC-18).
     const parser = createParser({
       onId: (id) => {
         this.lastEventId = id;
@@ -124,7 +124,7 @@ export class StreamSubscription {
     }
   }
 
-  // Restarts the watchdog timer with each byte of the body (HY-111).
+  // Restarts the watchdog timer with each byte of the body (HYC-20).
   private arm(attempt: AbortController): void {
     if (this.watchdog !== null) clearTimeout(this.watchdog);
     this.watchdog = setTimeout(() => {
@@ -136,7 +136,7 @@ export class StreamSubscription {
     return !this.closed && this.attempt === attempt && !attempt.signal.aborted;
   }
 
-  // Reports a failure of the current connection and reconnects after the retry delay (HY-110, HY-111).
+  // Reports a failure of the current connection and reconnects after the retry delay (HYC-19, HYC-20).
   private fail(attempt: AbortController, cause: unknown): void {
     if (!this.isCurrent(attempt)) return;
     if (this.watchdog !== null) clearTimeout(this.watchdog);
