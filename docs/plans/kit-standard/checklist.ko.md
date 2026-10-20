@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-kit-standard -->
-<!-- source-sha256: 90cbd4006064b91a92a58944acd8c6762ad9c6d3bf9fba492fa3c0c94dd6486e -->
+<!-- source-sha256: 7619e7c85d21514d71e65fd45ca630ff806e657829711a59b2ff0411bafb84b9 -->
 # kit 표준 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -33,3 +33,4 @@
 | H25.26 | PHP 서버는 요청 hook around를 받는다(HY-97) | packages/server/php/src/App.php, Request.php, Delivery.php, the tests AppTest.php and RunTest.php with the front controllers, and the specification | `var/tools/bin/node node_modules/@polyspec/kit/dist/run-tests.mjs phpunit --cwd packages/server/php -- --exclude-group native tests/RunTest.php` | [o] |
 | H25.27 | R13: handler의 서비스와 session 동시 쓰기는 모든 서버의 규칙이다 | docs/spec/protocol.md and its Korean twin | `make docs-check` | [o] |
 | H25.28 | config/rebuild.json은 paths가 없고 kit이 layout으로 찾는 모든 tool 원본을 분류한다 | config/rebuild.json | `make rebuild-check` | [o] |
+| H25.29 | kit 사본이 K286 이후의 kit과 일치한다 | PRINCIPLES.md and PRINCIPLES.ko.md | `make kit-check` | [o] |

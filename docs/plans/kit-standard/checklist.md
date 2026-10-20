@@ -32,3 +32,4 @@
 | H25.26 | The PHP server takes the request hook around (HY-97) | packages/server/php/src/App.php, Request.php, Delivery.php, the tests AppTest.php and RunTest.php with the front controllers, and the specification | `var/tools/bin/node node_modules/@polyspec/kit/dist/run-tests.mjs phpunit --cwd packages/server/php -- --exclude-group native tests/RunTest.php` | [o] |
 | H25.27 | R13: the services of the handlers and the concurrent session writes are rules of every server | docs/spec/protocol.md and its Korean twin | `make docs-check` | [o] |
 | H25.28 | config/rebuild.json has no paths and classes every tool source that kit finds by layout | config/rebuild.json | `make rebuild-check` | [o] |
+| H25.29 | The copies of kit match the kit after K286 | PRINCIPLES.md and PRINCIPLES.ko.md | `make kit-check` | [o] |
