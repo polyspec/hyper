@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 7c5814b6d94fedf98fd5730d6ec24a0222b01f73ce600e0f9f2f69965ac054d7 -->
+<!-- source-sha256: e9003e29c890ae34d477db0070b94929506238ab176ef7c9e23a37d325f8fa39 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -248,3 +248,4 @@
 | H26.5 | 클라이언트 stream 규칙은 HYC 규칙이다. HY-108부터 HY-112까지는 docs/spec/protocol.md와 한국어 짝에서 HYC-17부터 HYC-21이 된다. 이 규칙들은 packages/client의 TypeScript 클라이언트만 규정하므로(HR-98) 서버 parity 선언이 다루지 못한다. 인용과 H26.1-1부터 H26.1-3까지의 row는 새 id를 쓴다 | docs/spec/protocol.md; docs/spec/protocol.ko.md; packages/client/src/stream.ts; packages/client/src/hyper.ts; docs/plans/execution/checklist.md; docs/plans/execution/checklist.ko.md; CHANGELOG.md; CHANGELOG.ko.md | `make parity-declarations-check` | [o] |
 | H26.4 | docs/spec/protocol.md의 모든 요구사항을 parity unit에 연결한다. 파일 부분 요구사항 HY-113, HY-114를 unit file-parts, file-limit로 연결하고 세 언어의 테스트를 바인딩한다. 그러면 FilePartsTest.php, test_files.py, files.test.ts가 선언된다. 클라이언트 스트림 요구사항 HY-108에서 HY-112는 parity 구현이 없어서 클라이언트 프로필이 정해질 때까지 열어 둔다 | config/parity.json; CHANGELOG.md; CHANGELOG.ko.md | `make parity-declarations-check` | [o] |
 | H26.6 | hyper의 kit 복사본을 kit main f7c1f10c의 @polyspec/kit에 맞춘다. kit-bootstrap.mk와 install-mise.mts가 설치된 패키지와 달라 make kit-check가 실패한다. make kit-sync, make hooks, make kit-check, make link-check 뒤에 다음 row부터 make land로 들인다 | scripts/kit/kit-bootstrap.mk; scripts/kit/bootstrap/install-mise.mts; CHANGELOG.md; CHANGELOG.ko.md | `make kit-check`; `make link-check` | [o] |
+| H26.7 | lock에서 설치하는 모든 레시피 바로 다음에 kit link 단계를 실행한다: hyper-server-php-install(Makefile:130)과 package-check(Makefile:133)의 설치 줄 뒤에 `/Applications/Xcode.app/Contents/Developer/usr/bin/make link`를 추가하여 make link-state-check가 Makefile 지적을 보고하지 않게 한다. | Makefile | `make link-state-check` | [!] 원인: make link-state-check는 아직 템플릿 릴리스에서 복사된 board vendor와 PHP 8.5 platform 검사를 보고한다. 이는 kit K432와 K439가 제거한다.; 재시도: kit K432와 K439가 kit main에 있을 때 make link를 실행한 뒤 make link-state-check를 실행한다. |
