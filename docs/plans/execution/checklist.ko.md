@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 67e0897f11b7cac46f21218ecc03ef6ca958211dfbfa670bf18274608f68c59b -->
+<!-- source-sha256: 4bf593e0077f91e6b0197a7383739ea5e492747f21e4f62e7bfe9b8bb5aebcfb -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -250,3 +250,4 @@
 | H26.6 | hyper의 kit 복사본을 kit main f7c1f10c의 @polyspec/kit에 맞춘다. kit-bootstrap.mk와 install-mise.mts가 설치된 패키지와 달라 make kit-check가 실패한다. make kit-sync, make hooks, make kit-check, make link-check 뒤에 다음 row부터 make land로 들인다 | scripts/kit/kit-bootstrap.mk; scripts/kit/bootstrap/install-mise.mts; CHANGELOG.md; CHANGELOG.ko.md | `make kit-check`; `make link-check` | [o] |
 | H26.7 | lock에서 설치하는 모든 레시피 바로 다음에 kit link 단계를 실행한다: hyper-server-php-install(Makefile:130)과 package-check(Makefile:133)의 설치 줄 뒤에 `/Applications/Xcode.app/Contents/Developer/usr/bin/make link`를 추가하여 make link-state-check가 Makefile 지적을 보고하지 않게 한다. | Makefile | `make link-state-check` | [!] 원인: make link-state-check는 아직 템플릿 릴리스에서 복사된 board vendor와 PHP 8.5 platform 검사를 보고한다. 이는 kit K432와 K439가 제거한다.; 재시도: kit K432와 K439가 kit main에 있을 때 make link를 실행한 뒤 make link-state-check를 실행한다. |
 | H26.8 | Composer의 update 경로로 composer.lock과 examples/board/composer.lock을 연결된 provider 매니페스트에서 다시 생성하여 PHP 8.5가 남지 않게 한다(8.4 결정). | composer.lock, examples/board/composer.lock | `make dependency-policy-check` | [!] 원인: kit K439와 K432를 기다린다(추적되는 lock이 연결된 provider 매니페스트를 받는다).; 재시도: K439와 K432가 kit main에 있을 때. |
+| H26.9 | docs/operations/benchmark.md와 benchmark.ko.md를 유휴 머신에서 PHP 8.4로 다시 측정하고, 2026-10-02 PHP 8.5.10 기록을 새 실행의 기록으로 바꾼다. | docs/operations/benchmark.md, docs/operations/benchmark.ko.md | `make bench`, `make docs-check` | [!] 원인: link-owner가 모든 개발 행을 닫은 뒤 순서를 정하는 유휴 벤치마크 단계다.; 재시도: link-owner가 유휴 벤치마크 단계를 지시할 때. |
