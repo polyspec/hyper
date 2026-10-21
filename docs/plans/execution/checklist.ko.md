@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: e9003e29c890ae34d477db0070b94929506238ab176ef7c9e23a37d325f8fa39 -->
+<!-- source-sha256: 67e0897f11b7cac46f21218ecc03ef6ca958211dfbfa670bf18274608f68c59b -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -249,3 +249,4 @@
 | H26.4 | docs/spec/protocol.md의 모든 요구사항을 parity unit에 연결한다. 파일 부분 요구사항 HY-113, HY-114를 unit file-parts, file-limit로 연결하고 세 언어의 테스트를 바인딩한다. 그러면 FilePartsTest.php, test_files.py, files.test.ts가 선언된다. 클라이언트 스트림 요구사항 HY-108에서 HY-112는 parity 구현이 없어서 클라이언트 프로필이 정해질 때까지 열어 둔다 | config/parity.json; CHANGELOG.md; CHANGELOG.ko.md | `make parity-declarations-check` | [o] |
 | H26.6 | hyper의 kit 복사본을 kit main f7c1f10c의 @polyspec/kit에 맞춘다. kit-bootstrap.mk와 install-mise.mts가 설치된 패키지와 달라 make kit-check가 실패한다. make kit-sync, make hooks, make kit-check, make link-check 뒤에 다음 row부터 make land로 들인다 | scripts/kit/kit-bootstrap.mk; scripts/kit/bootstrap/install-mise.mts; CHANGELOG.md; CHANGELOG.ko.md | `make kit-check`; `make link-check` | [o] |
 | H26.7 | lock에서 설치하는 모든 레시피 바로 다음에 kit link 단계를 실행한다: hyper-server-php-install(Makefile:130)과 package-check(Makefile:133)의 설치 줄 뒤에 `/Applications/Xcode.app/Contents/Developer/usr/bin/make link`를 추가하여 make link-state-check가 Makefile 지적을 보고하지 않게 한다. | Makefile | `make link-state-check` | [!] 원인: make link-state-check는 아직 템플릿 릴리스에서 복사된 board vendor와 PHP 8.5 platform 검사를 보고한다. 이는 kit K432와 K439가 제거한다.; 재시도: kit K432와 K439가 kit main에 있을 때 make link를 실행한 뒤 make link-state-check를 실행한다. |
+| H26.8 | Composer의 update 경로로 composer.lock과 examples/board/composer.lock을 연결된 provider 매니페스트에서 다시 생성하여 PHP 8.5가 남지 않게 한다(8.4 결정). | composer.lock, examples/board/composer.lock | `make dependency-policy-check` | [!] 원인: kit K439와 K432를 기다린다(추적되는 lock이 연결된 provider 매니페스트를 받는다).; 재시도: K439와 K432가 kit main에 있을 때. |
