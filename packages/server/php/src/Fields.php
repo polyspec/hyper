@@ -15,6 +15,9 @@ namespace Polyspec\Hyper;
  */
 final class Fields implements \IteratorAggregate, \Countable
 {
+    /** @use NamedValues<string> */
+    use NamedValues;
+
     /**
      * @param list<string> $names
      * @param array<array-key, list<string>> $values values by name
@@ -69,27 +72,15 @@ final class Fields implements \IteratorAggregate, \Countable
         if (preg_match('#^application/x-www-form-urlencoded\s*(;|$)#i', $type) === 1) {
             return self::parse($body);
         }
-        if (
-            preg_match('#^multipart/form-data\s*;#i', $type) === 1
-            && preg_match('#;\s*boundary=(?:"([^"]+)"|([^;\s]+))#i', $type, $found) === 1
-        ) {
+        $boundary = Multipart::boundary($type);
+        if ($boundary !== null) {
             // The text fields of the body; its file parts are read by Files (HY-113).
-            $parts = Multipart::read($body, $found[1] !== '' ? $found[1] : $found[2]);
+            $parts = Multipart::read($body, $boundary);
 
             return $parts === null ? null : $parts[0];
         }
 
         return self::empty();
-    }
-
-    /**
-     * Returns the names in the order of their first occurrence.
-     *
-     * @return list<string>
-     */
-    public function names(): array
-    {
-        return $this->names;
     }
 
     /** Returns true when the name has a value. */
@@ -98,22 +89,10 @@ final class Fields implements \IteratorAggregate, \Countable
         return array_key_exists($name, $this->values);
     }
 
-    /**
-     * Returns the values of a name in request order; an absent name has none.
-     *
-     * @return list<string>
-     */
-    public function get(string $name): array
-    {
-        return $this->values[$name] ?? [];
-    }
-
     /** Returns the last value of a name, or null. */
     public function last(string $name): ?string
     {
-        $values = $this->get($name);
-
-        return $values === [] ? null : $values[count($values) - 1];
+        return $this->lastOf($name);
     }
 
     /** @return \Generator<string, list<string>> */

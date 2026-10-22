@@ -13,6 +13,19 @@ namespace Polyspec\Hyper;
  */
 final class Multipart
 {
+    /** Returns the boundary of a `multipart/form-data` content type, or null for another type (HY-57, HY-113). */
+    public static function boundary(string $type): ?string
+    {
+        if (
+            preg_match('#^multipart/form-data\s*;#i', $type) !== 1
+            || preg_match('#;\s*boundary=(?:"([^"]+)"|([^;\s]+))#i', $type, $found) !== 1
+        ) {
+            return null;
+        }
+
+        return $found[1] !== '' ? $found[1] : $found[2];
+    }
+
     /**
      * Returns the text fields and the files of the body, or null when a name, a value, a filename or a content type is
      * not UTF-8 (HY-42, HY-113).

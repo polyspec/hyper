@@ -12,6 +12,9 @@ namespace Polyspec\Hyper;
  */
 final class Files
 {
+    /** @use NamedValues<UploadedFile> */
+    use NamedValues;
+
     /**
      * @param list<string> $names
      * @param array<array-key, list<UploadedFile>> $values files by name
@@ -34,11 +37,9 @@ final class Files
      */
     public static function fromBody(string $type, string $body): ?self
     {
-        if (
-            preg_match('#^multipart/form-data\s*;#i', $type) === 1
-            && preg_match('#;\s*boundary=(?:"([^"]+)"|([^;\s]+))#i', $type, $found) === 1
-        ) {
-            $parts = Multipart::read($body, $found[1] !== '' ? $found[1] : $found[2]);
+        $boundary = Multipart::boundary($type);
+        if ($boundary !== null) {
+            $parts = Multipart::read($body, $boundary);
 
             return $parts === null ? null : $parts[1];
         }
@@ -46,32 +47,10 @@ final class Files
         return self::empty();
     }
 
-    /**
-     * Returns the names in the order of their first occurrence.
-     *
-     * @return list<string>
-     */
-    public function names(): array
-    {
-        return $this->names;
-    }
-
-    /**
-     * Returns the files of a name in request order; an absent name has none.
-     *
-     * @return list<UploadedFile>
-     */
-    public function get(string $name): array
-    {
-        return $this->values[$name] ?? [];
-    }
-
     /** Returns the last file of a name, or null. */
     public function last(string $name): ?UploadedFile
     {
-        $files = $this->get($name);
-
-        return $files === [] ? null : $files[count($files) - 1];
+        return $this->lastOf($name);
     }
 
     /** Returns the size in bytes of the largest file, or 0 when there is none (HY-114). */
