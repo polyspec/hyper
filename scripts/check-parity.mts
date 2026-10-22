@@ -223,7 +223,7 @@ function client(base: string): ServerClient {
       });
       text = await response.text();
     } catch (error) {
-      if (error instanceof Error && error.name === 'TimeoutError') throw new Error(`${step.method} ${step.path} to ${base} got no response within ${REQUEST_TIMEOUT_MS} ms`);
+      if (error instanceof Error && error.name === 'TimeoutError') throw new Error(`${step.method} ${step.path} to ${base} got no response within ${REQUEST_TIMEOUT_MS} ms`, { cause: error });
       throw error;
     }
     const session = response.headers.getSetCookie().find((item) => item.startsWith(`${SESSION_COOKIE}=`));

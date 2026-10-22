@@ -11,7 +11,7 @@ import { writeAtomic } from './files.mts';
 import path from 'node:path';
 import { fileDigest } from './digest.mts';
 import { installOnce } from './install-tool.mts';
-import { bootstrapEnvironment, printedRelease, quote, run, toolsPath, wrapperText, writeWrapper } from './tool-wrappers.mts';
+import { bootstrapEnvironment, printedRelease, quote, run, toolsPath, toolsRoot, wrapperText, writeWrapper } from './tool-wrappers.mts';
 
 // The asset of the mise archive of each platform key (process.platform-process.arch) that the declaration may name.
 export const MISE_ASSETS: Readonly<Record<string, string>> = {
@@ -50,7 +50,8 @@ export function removeForeignTrusts(root: string): void {
 export function foreignTrusts(root: string): { name: string; target: string }[] {
   const directory = toolsPath(root, 'mise', 'state', 'trusted-configs');
   if (!existsSync(directory)) return [];
-  const own = new Set([path.resolve(root), realpathSync(root)]);
+  // K532: a linked worktree runs the trust store of its main checkout (K519), whose trust of the main checkout is its own.
+  const own = new Set([root, toolsRoot(root)].flatMap(checkout => [path.resolve(checkout), realpathSync(checkout)]));
   const found: { name: string; target: string }[] = [];
   for (const name of readdirSync(directory)) {
     const entry = path.join(directory, name);
@@ -70,7 +71,9 @@ export const miseArchiveUrl = (version: string, asset: string): string => `https
  * mise.lock pins and no install on its own (a
  * missing tool is an error until make install-tools), and no uv that downloads a Python or reads a uv.toml of the home or the
  * system; uv keeps its cache in var/tools/mise. A tool that mise runs from uv gets the Python of mise from mise; the uv of a check gets it from UV_PYTHON
- * (toolsEnvironment of mise-tools.mts).
+ * (toolsEnvironment of mise-tools.mts). var/tools is that of the main checkout (toolsPath, K519): a linked worktree runs the data,
+ * the installs and the shims that the main checkout installed and keeps only its own mise.toml as the global configuration, which
+ * mise reads without a trust, so a uv tool such as vulture, whose install mise keys by its data dir, is the one of the main checkout.
  */
 export function miseEnvironment(root: string): Record<string, string> {
   return {
@@ -79,6 +82,8 @@ export function miseEnvironment(root: string): Record<string, string> {
     MISE_STATE_DIR: toolsPath(root, 'mise', 'state'),
     MISE_CONFIG_DIR: toolsPath(root, 'mise', 'config'),
     MISE_GLOBAL_CONFIG_FILE: path.join(root, 'mise.toml'),
+    // mise install records the trust of the root of the global config, the home directory unless this names the checkout (K397-1).
+    MISE_GLOBAL_CONFIG_ROOT: root,
     MISE_LOCKED: '1',
     MISE_AUTO_INSTALL: '0',
     UV_PYTHON_DOWNLOADS: 'never',
@@ -188,7 +193,7 @@ export function installNode({ root, print = () => {} }: { root: string; print?: 
     run(mise, ['install', '--locked', 'node'], { cwd: root, env: bootstrapEnvironment(root) }, print);
   } catch (error) {
     if (!(error instanceof Error)) throw error;
-    throw new Error(`${error.message}; mise.toml must declare node, the Node.js release of the checkout, and mise.lock must pin it (make toolchain-lock)`);
+    throw new Error(`${error.message}; mise.toml must declare node, the Node.js release of the checkout, and mise.lock must pin it (make toolchain-lock)`, { cause: error });
   }
   const directory = miseWhere(root, 'node');
   writeWrapper(root, NODE_WRAPPER, wrapperText('the Node.js of mise.toml of this checkout', `exec ${quote(path.join(directory, 'bin', 'node'))} "$@"`), print);

@@ -137,7 +137,7 @@ class Manifest:
                 "path": route_path,
                 "title": title,
                 "template": template,
-                "post": route.get("post") == True,  # noqa: E712
+                "post": route.get("post") == True,  # noqa: E712 - only the JSON value true marks a post route, not any truthy value
                 "regions": route_regions,
             }
 

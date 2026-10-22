@@ -175,7 +175,7 @@ class SelectionTest(unittest.TestCase):
 
     def test_an_invalid_declaration_fails_when_the_application_opens(self) -> None:
         # HY-62
-        selects = lambda request: Choice(True, None)  # noqa: E731
+        selects = lambda request: Choice(True, None)  # noqa: E731 - the declaration takes its selector as a value
         invalid = [
             (
                 "relative shell",

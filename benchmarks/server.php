@@ -27,7 +27,9 @@ $iterations = (int) $options['iterations'];
 require "{$app}/vendor/autoload.php";
 
 $database = "{$app}/var/bench-server.db";
-@unlink($database);
+if (is_file($database) && !unlink($database)) {
+    throw new RuntimeException("{$database} cannot be removed before the run");
+}
 // A fixed clock keeps the created_at values, and so the output sizes, the same in every run.
 $posts = new Posts($database, static fn (): int => 1790000000);
 for ($index = 1; $index <= 30; $index++) {
@@ -156,4 +158,6 @@ printf(
     $iterations,
     php_uname('s') . ' ' . php_uname('m'),
 );
-@unlink($database);
+if (is_file($database) && !unlink($database)) {
+    throw new RuntimeException("{$database} cannot be removed after the run");
+}

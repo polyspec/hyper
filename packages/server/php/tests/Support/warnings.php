@@ -34,6 +34,7 @@ $app = App::open(
 
                         return ['id' => 'deprecation'];
                     })(),
+                    // phpcs:ignore Generic.PHP.NoSilencedErrors.Discouraged -- the case is the warning that the @ operator silences
                     default => ['id' => @$read([], 'missing') ?? 'silenced'],
                 };
             }],
