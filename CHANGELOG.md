@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- H26.7: The installs of the board and of tests/package-install link the sibling polyspec packages from the start, with no release installed locally: Makefile:130 runs make composer-install DIR=$(BOARD) and Makefile:133 runs make npm-install DIR=tests/package-install. Red: make link-state-check exited 2 with 4 findings (both recipes, the 0.0.11 template copy in the board vendor and its PHP 8.5 platform check). Green: make link-state-check reports every polyspec package linked, and make package-check passes 4 of 4. (H26.7)
 - H25.3: The row is done. The parity declarations of hyper hold (make parity-declarations-check exits 0 once H26.4 and H26.5 land), and the units of fields-urlencoded, json-encode, csrf-verify, routes and keep, with the vitest run of the fields test, exit 0. Red: the declarations failed with 10 findings, then 5. Green: exit 0. (H25.3)
 - H26.6: The copies scripts/kit/kit-bootstrap.mk and scripts/kit/bootstrap/install-mise.mts follow the installed @polyspec/kit (make kit-sync), and make hooks sets the hooks. Red: make kit-check exited 2 with 2 findings. Green: make kit-check and make link-check exit 0. (H26.6)
 - H25.42: The row is done. The extractors of the parity check run with the mise environment that kit passes, and the manifest unit holds with the HY-114 fix of H25.42-1. Red: make parity-check UNITS=manifest failed on the environment and then on HY-114; green: it exits 0. (H25.42)

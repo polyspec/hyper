@@ -127,10 +127,10 @@ packages: toolchain-check ## Build the JavaScript modules and type declarations 
 # The path repository of the board links the PHP server package to packages/server/php (Composer's default, HR-79), so the
 # board runs the current source without a copy. The install reads no registry.
 hyper-server-php-install: ## Install the Composer dependencies of the board, which link polyspec/hyper-server to packages/server/php (HR-79)
-	$(NODE) $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(COMPOSER) install --no-interaction --working-dir=$(BOARD)
+	$(NODE) $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(MAKE) --no-print-directory composer-install DIR=$(BOARD)
 
 package-check: packages node-fixtures ## Install the npm packages into tests/package-install, type-check its test against their declarations and run it under node (HR-61)
-	cd tests/package-install && $(NODE) ../../$(KIT)/holder-lock.$(KIT_EXT) run ../../$(INSTALL_LOCK) -- $(NPM) ci --offline --allow-remote=root --no-audit --no-fund
+	$(NODE) $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(MAKE) --no-print-directory npm-install DIR=tests/package-install
 	$(TSC) -p tests/package-install/tsconfig.json
 	$(NODE) $(KIT)/run-tests.$(KIT_EXT) node --cwd tests/package-install -- package-install.test.ts
 
