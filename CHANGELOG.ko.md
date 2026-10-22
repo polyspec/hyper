@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 7224777369194ede1fc0e230dce82c8c9ee01a256e3aeda389d489a2e2646108 -->
+<!-- source-sha256: fedaa430dfe2b954a9d726ade0ee2e8605117079e0e349070b05bdb70899b590 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H25.70: Fields와 Files는 multipart boundary를 Multipart::boundary로 읽고, 이름과 이름별 값을 trait NamedValues로 공유하므로 duplication-check가 clone을 찾지 않는다. red: make duplication-check가 clone 2개를 보고했고, 변경 뒤 green(H25.70).
 - H25.69: make kit-sync가 kit의 바뀐 사본을 가져오고 은퇴한 lint 설정을 지운다(kit K514). CHECK_TARGETS가 suppression-check를 실행하고, owner 규칙이 TypeScript, Python, PHP source를 그 lint와 duplication-check로 보내며(kit K534), 침묵시킨 PHP 오류, cause 없는 재던짐, 이유 없는 noqa 둘을 고친다. red: make kit-check가 실패했고, 변경 뒤 green(H25.69).
 - H26.7: board와 tests/package-install의 설치는 형제 polyspec 패키지를 처음부터 link하며 로컬에 릴리스를 설치하지 않는다. Makefile:130은 make composer-install DIR=$(BOARD)를, Makefile:133은 make npm-install DIR=tests/package-install을 실행한다. Red: make link-state-check가 finding 4개(두 recipe, board vendor의 0.0.11 template 복사본과 그 PHP 8.5 platform 검사)로 exit 2였다. Green: make link-state-check는 모든 polyspec 패키지가 link되었다고 보고하고 make package-check는 4개 중 4개를 통과한다. (H26.7)
 - H25.3: 항목을 마쳤다. hyper의 parity 선언이 통과한다(H26.4와 H26.5가 들어오면 `make parity-declarations-check`가 exit 0). fields-urlencoded, json-encode, csrf-verify, routes, keep unit과 fields 테스트의 vitest 실행도 exit 0이다. red: 선언 검사가 10건, 그다음 5건으로 실패했다. green: exit 0이다. (H25.3)
