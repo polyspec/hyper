@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 349505d08f9f154d08e2302963a941e40cf5e017964479574ff3f90a3f6ec104 -->
+<!-- source-sha256: 8e422cb47f13a473e1983bfdb86a0c7fe174b25c62f32a58f0cd23b50630673c -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -249,5 +249,5 @@
 | H26.4 | docs/spec/protocol.md의 모든 요구사항을 parity unit에 연결한다. 파일 부분 요구사항 HY-113, HY-114를 unit file-parts, file-limit로 연결하고 세 언어의 테스트를 바인딩한다. 그러면 FilePartsTest.php, test_files.py, files.test.ts가 선언된다. 클라이언트 스트림 요구사항 HY-108에서 HY-112는 parity 구현이 없어서 클라이언트 프로필이 정해질 때까지 열어 둔다 | config/parity.json; CHANGELOG.md; CHANGELOG.ko.md | `make parity-declarations-check` | [o] |
 | H26.6 | hyper의 kit 복사본을 kit main f7c1f10c의 @polyspec/kit에 맞춘다. kit-bootstrap.mk와 install-mise.mts가 설치된 패키지와 달라 make kit-check가 실패한다. make kit-sync, make hooks, make kit-check, make link-check 뒤에 다음 row부터 make land로 들인다 | scripts/kit/kit-bootstrap.mk; scripts/kit/bootstrap/install-mise.mts; CHANGELOG.md; CHANGELOG.ko.md | `make kit-check`; `make link-check` | [o] |
 | H26.7 | 2026-10-21 사용자 규칙(로컬에서 릴리스를 설치하지 않는다)에 따라 board와 tests/package-install의 lock 설치를 형제 polyspec 제공자를 처음부터 링크하는 kit 설치로 바꾼다. Makefile:130 hyper-server-php-install은 추적 lock의 composer install 대신 `/Applications/Xcode.app/Contents/Developer/usr/bin/make composer-install DIR=examples/board`(K432)를 실행하고, Makefile:133 package-check는 npm ci 대신 kit K448-2의 처음부터 링크하는 npm 설치를 쓴다. 그러면 link-state-check는 examples/board/vendor의 polyspec/template 0.0.11 복사본도, tests/package-install의 릴리스 tarball도 보고하지 않는다 | Makefile | `make link-state-check` | [o] |
-| H26.8 | Composer의 update 경로로 composer.lock과 examples/board/composer.lock을 연결된 provider 매니페스트에서 다시 생성하여 PHP 8.5가 남지 않게 한다(8.4 결정). | composer.lock, examples/board/composer.lock | `make dependency-policy-check` | [!] 원인: make composer-provider-entries가 php >=8.5로 lock된 hyper 자체 경로 패키지 polyspec/hyper-server에서 멈춘다. 갱신이 저장소 자체의 경로 패키지를 요청하지 않기 때문이다(kit K439-3-2); 재시도: kit K439-3-2가 kit main과 dist에 들어오면 make composer-provider-entries를 다시 실행한다 |
+| H26.8 | Composer의 update 경로로 composer.lock과 examples/board/composer.lock을 연결된 provider 매니페스트에서 다시 생성하여 PHP 8.5가 남지 않게 한다(8.4 결정). | composer.lock, examples/board/composer.lock | `make dependency-policy-check` | [-] 원인: 사용자 링크 규칙 2026-10-22: 추적 lock은 release 기록을 유지하고, polyspec 설치 폴더는 형제 checkout을 link하며, 추적 lock은 다시 생성하지 않는다. kit K448이 이 규칙을 담는다 |
 | H26.9 | docs/operations/benchmark.md와 benchmark.ko.md를 유휴 머신에서 PHP 8.4로 다시 측정하고, 2026-10-02 PHP 8.5.10 기록을 새 실행의 기록으로 바꾼다. | docs/operations/benchmark.md, docs/operations/benchmark.ko.md | `make bench`, `make docs-check` | [!] 원인: link-owner가 모든 개발 행을 닫은 뒤 순서를 정하는 유휴 벤치마크 단계다.; 재시도: link-owner가 유휴 벤치마크 단계를 지시할 때. |
