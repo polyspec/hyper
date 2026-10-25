@@ -2,7 +2,7 @@
 # package-lock.json by its integrity. The kit-bootstrap.mk of the kit checkout beside the repository, no copy (kit K614),
 # includes the kit.mk of the kit, which defines the targets of the toolchain, the
 # Git hooks, the push gate, the documents, the owner checks, the CI report, the release and the dependency review, and
-# sets KIT to the dist of the package and KIT_EXT to mjs. A checkout starts with `make install-tools TOOLS=npm` and
+# sets KIT to the scripts/kit of the kit checkout and KIT_EXT to mts, so the sources of kit run (kit K613). A checkout starts with `make install-tools TOOLS=npm` and
 # `make install-packages`. This repository differs from another only in config/*.json and in the targets below.
 include ../kit/scripts/kit/kit-bootstrap.mk
 

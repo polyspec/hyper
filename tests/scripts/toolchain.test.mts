@@ -4,7 +4,7 @@
 // lock. The tools themselves (install-tools and check-toolchain of @polyspec/kit) are tested in kit.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { test } from 'node:test';
@@ -24,24 +24,23 @@ const NPM = path.join(TOOLS, 'bin/npm');
 const NODE = path.join(TOOLS, 'bin/node');
 // Composer is a tool of mise.toml, run by its shim (kit K127).
 const COMPOSER = path.join(TOOLS, 'mise/shims/composer');
-// The built tools of @polyspec/kit, which the kit.mk of the package runs: the kit checkout beside the repository when there is one,
-// which the link installs (the kit-bootstrap.mk of ../kit, K448), else the installed package.
-const KIT = existsSync(path.join(ROOT, '../kit/.git')) ? '../kit/dist' : 'node_modules/@polyspec/kit/dist';
+// The tools of @polyspec/kit, which the kit.mk of the kit checkout beside the repository runs as its sources (kit K613).
+const KIT = '../kit/scripts/kit';
 // The commands of recipe lines: a command that a lock runs follows its --, and the variable assignments before a command, as
 // NPM_BIN=<npm> of the recipe npm-install of kit, are its environment, not the command.
 const commandsOf = (lines: string[]) => lines.flatMap((line) => line.split(/&&|;|\|\||\s--\s/).map((part) => part.trim().replace(/^(?:[A-Za-z_][A-Za-z0-9_]*=\S*\s+)+/, '')));
 
 test('the recipes that run npm, Composer or PHP check the toolchain first, and install installs the tools first', () => {
   for (const target of ['ext', 'hyper-lint', 'templates-check']) {
-    assert.equal(dryRun(target)[0]?.trim(), `${NODE} ${KIT}/check-toolchain.mjs`, target);
+    assert.equal(dryRun(target)[0]?.trim(), `${NODE} ${KIT}/check-toolchain.mts`, target);
   }
   // make hyper-install is judged as the main checkout runs it: a worktree installs no tools and runs those of the main
   // checkout (kit K519), so its install-kit prints the refusal of K519; the dry run of the main checkout reads only.
   const install = dryRun('hyper-install', { cwd: MAIN });
   // install-kit of kit installs npm, the packages and then the tools; the tools come before the first check of the toolchain.
   const lines = install.map((line) => line.trim());
-  const tools = lines.indexOf(`env -u npm_config_offline -u COMPOSER_DISABLE_NETWORK ${NODE} ${KIT}/install-tools.mjs`);
-  const check = lines.indexOf(`${NODE} ${KIT}/check-toolchain.mjs`);
+  const tools = lines.indexOf(`env -u npm_config_offline -u COMPOSER_DISABLE_NETWORK ${NODE} ${KIT}/install-tools.mts`);
+  const check = lines.indexOf(`${NODE} ${KIT}/check-toolchain.mts`);
   assert.ok(tools >= 0 && check > tools, install.join('\n'));
 });
 
@@ -49,7 +48,7 @@ test('the package manager installs of make hyper-install run under the install l
   const lines = dryRun('hyper-install', { variables: ['TEMPLATE_DIR=var/products/template-dry-run'] });
   const installs = lines.filter((line) => / ci | install( |$)/.test(line) && /(npm|composer) /.test(line));
   assert.equal(installs.length, 2, lines.join('\n'));
-  assert.deepEqual(installs.filter((line) => !line.includes(`${NODE} ${KIT}/holder-lock.mjs run var/install.lock -- `)), []);
+  assert.deepEqual(installs.filter((line) => !line.includes(`${NODE} ${KIT}/holder-lock.mts run var/install.lock -- `)), []);
 });
 
 // The make of the pin looks up the program of a recipe line without shell syntax on the PATH of its own process: an
@@ -126,11 +125,11 @@ test('only make install-tools, make install-packages, make hyper-install and mak
   const directory = mkdtempSync(path.join(tmpdir(), 'hyper-downloads-'));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   // A worktree installs no tools, so its install-tools prints the refusal of kit K519; the main checkout downloads them.
-  if (!WORKTREE) assert.deepEqual(dryRun('install-tools').map((line) => line.trim()), [`${ONLINE}${NODE} ${KIT}/install-tools.mjs`]);
+  if (!WORKTREE) assert.deepEqual(dryRun('install-tools').map((line) => line.trim()), [`${ONLINE}${NODE} ${KIT}/install-tools.mts`]);
   assert.deepEqual(dryRun('install-packages'), [`${ONLINE}${NPM} ci`]);
   assert.deepEqual(dryRun('hyper-install-browser'), [`${ONLINE}${NODE} node_modules/@playwright/test/cli.js install --with-deps chromium`]);
   const install = dryRun('hyper-install', { variables: [`TEMPLATE_DIR=${directory}`] });
-  const downloads = install.filter((line) => / ci |composer install|install-tools\.mjs/.test(line.replace(/ -- /, ' ')));
+  const downloads = install.filter((line) => / ci |composer install|install-tools\.mts/.test(line.replace(/ -- /, ' ')));
   assert.ok(downloads.length > 0, install.join('\n'));
   assert.deepEqual(downloads.filter((line) => !line.includes(ONLINE)), [], 'a download of make hyper-install without $(ONLINE)');
   // An empty template directory makes each dry run print the recipe of the template copy as well.
