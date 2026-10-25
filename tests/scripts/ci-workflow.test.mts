@@ -275,9 +275,9 @@ test('a target declared for Darwin is in the full suite exactly on Darwin and sk
   const check = checkTargets();
   assert.deepEqual(darwin.filter((target) => check.includes(target)), [], 'a Darwin target in the CHECK_TARGETS of every platform');
   const commit = '0'.repeat(40);
-  const line = dryRun('check', { variables: [`TEMPLATE_COMMIT=${commit}`] }).find((entry) => entry.includes(' node_modules/@polyspec/kit/dist/full-run.mjs run '));
+  const line = dryRun('check', { variables: [`TEMPLATE_COMMIT=${commit}`] }).find((entry) => entry.includes(' ../kit/scripts/kit/full-run.mts run '));
   assert.ok(line, 'make check does not run the full-run of @polyspec/kit');
-  const suite = item(line.split(` node_modules/@polyspec/kit/dist/full-run.mjs run --key template=${commit} `), 1, 'the full-run command').split(' ');
+  const suite = item(line.split(` ../kit/scripts/kit/full-run.mts run --key template=${commit} `), 1, 'the full-run command').split(' ');
   assert.deepEqual(suite, process.platform === 'darwin' ? [...check, ...darwin] : check);
   const virtiofs = readdirSync(path.join(ROOT, 'tests/virtiofs')).filter((name) => name.endsWith('.test.mts'));
   assert.ok(virtiofs.length > 0);

@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- The CI workflow and release assets tests expect the kit sources that hyper runs since kit K613 (H25.79).
 - The toolchain test expects the sources of ../kit that hyper runs since kit K613, and the gates workflow installs the sibling kit without a build (H25.78).
 - The repository holds no copy of the kit bootstrap or of PRINCIPLES: the Makefile includes the kit-bootstrap.mk of ../kit, scripts/kit and config/php-lint are gone, and PRINCIPLES.md, its twin, .editorconfig and .claude/settings.json are links to ../kit (kit K614) (H25.77).
 - The Git hooks of kit are tracked and installed, pre-merge-commit, prepare-commit-msg and reference-transaction among them, so the hooks that PRINCIPLES names exist, and the copies of kit follow the linked kit (H25.75).

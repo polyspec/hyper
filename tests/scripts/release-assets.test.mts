@@ -48,8 +48,8 @@ test('make ext builds the unpacked php-ext archive offline and runs no copy of t
 
 test('make hyper-install fetches the release archives through $(ONLINE) before Composer reads the artifact repository (H23.11-2)', () => {
   const lines = dryRun('hyper-install');
-  const fetches = lines.filter((line) => line.includes('release-assets.mjs'));
-  assert.deepEqual(fetches, [`env -u npm_config_offline -u COMPOSER_DISABLE_NETWORK ${path.join(ROOT, 'var/tools/bin/node')} node_modules/@polyspec/kit/dist/release-assets.mjs fetch`], lines.join('\n'));
+  const fetches = lines.filter((line) => line.includes('release-assets.mts'));
+  assert.deepEqual(fetches, [`env -u npm_config_offline -u COMPOSER_DISABLE_NETWORK ${path.join(ROOT, 'var/tools/bin/node')} ../kit/scripts/kit/release-assets.mts fetch`], lines.join('\n'));
   const [fetch] = fetches;
   assert.ok(fetch !== undefined && lines.indexOf(fetch) < lines.findIndex((line) => /composer install/.test(line)), 'Composer reads the artifact repository before make hyper-install fetched it');
 });
