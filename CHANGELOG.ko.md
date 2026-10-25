@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 034ec96d98e017417603d0a3638c15ae6992f91adc29620b7c5bdf9815b35a46 -->
+<!-- source-sha256: 77bbba77aa3ef9d862b0127abc235da760ed9477701f58eadc894a352df3ee96 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H25.72-2: worktree는 도구를 설치하지 않으므로(kit K519) tests/scripts/toolchain.test.mts는 main에서처럼 worktree에서도 make hyper-install을 main checkout의 dry run으로 판정하고, kit install-kit의 순서대로 install-tools.mjs가 첫 toolchain 검사보다 앞에 오기를 기대한다. red: worktree에서 테스트가 main에서처럼 8개 중 1개에서 실패했다. main에서 make hyper-install은 make install-tools TOOLS=npm과 bootstrap으로 시작한다. green: 8개 모두 통과한다(H25.72-2).
 - H25.72: check target가 닿는 package-check와 hyper-server-php-install은 make hyper-install의 cache에서 offline으로 설치한 뒤 make link로 sibling polyspec 패키지를 link한다(HR-89, K448). tests/scripts/toolchain.test.mts는 link 배치를 따른다(../kit/dist의 kit, 환경으로 읽는 NPM_BIN=<npm> 접두, worktree에서 main checkout의 도구, kit이 CI 밖에서 거절하는 dry run은 CI에 맡김). red: main에서 node --test tests/scripts/toolchain.test.mts가 8개 중 5개 테스트에서 실패했고, 테스트가 link 배치를 따른 뒤 8개 중 2개에서 실패했다(package-check와 bench-server-smoke가 다운로드했다). green: 8개 모두 통과한다(H25.72).
 - H25.72-1: Makefile은 npm, Composer, uv, PATH의 첫 항목을 main checkout의 var/tools인 $(KIT_TOOLS)로 이름 붙이므로(kit K519), link된 worktree에서 make packages가 build한다. red: worktree에서 node --test tests/scripts/main-tools.test.mts가 exit 1이었고 make packages가 <worktree>/var/tools/bin/npm: No such file or directory로 exit 2였다. green: 둘 다 exit 0이다(H25.72-1).
 - H25.70: Fields와 Files는 multipart boundary를 Multipart::boundary로 읽고, 이름과 이름별 값을 trait NamedValues로 공유하므로 duplication-check가 clone을 찾지 않는다. red: make duplication-check가 clone 2개를 보고했고, 변경 뒤 green(H25.70).
