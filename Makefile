@@ -19,7 +19,7 @@ PYTHON_PACKAGE := packages/server/python
 # python-venv and installs the package into it in editable mode with its dependencies, the template wheel of the release
 # included, so the tests and the board Python server import the installed packages and read no source path (S5).
 PYTHON_VENV := $(CURDIR)/$(PYTHON_PACKAGE)/.venv
-UV := $(CURDIR)/var/tools/mise/shims/uv
+UV := $(KIT_TOOLS)/mise/shims/uv
 # The Python of that venv, which scripts/board-servers.mts starts the board Python server with.
 export HYPER_PYTHON := $(PYTHON_VENV)/bin/python
 # npm installs the template packages @polyspec/template and @polyspec/template-compiler from the tarballs of the template
@@ -48,9 +48,10 @@ PHPSTAN_MEMORY := 256M
 # The library that `make ext` builds from the unpacked php-ext asset, which `make hyper-install` fetches (H14.1-7).
 EXT := build/ext/polyspec_template.so
 
-# The toolchain (HR-81, install-tools of @polyspec/kit): npm and Composer of this checkout, which `make install-tools`
-# installs into var/tools, come first on PATH for every recipe and the programs that it starts.
-export PATH := $(CURDIR)/var/tools/bin:$(PATH)
+# The toolchain (HR-81, install-tools of @polyspec/kit): npm and Composer of the main checkout ($(KIT_TOOLS) of kit.mk, which a
+# linked worktree runs, kit K519), which `make install-tools` installs into its var/tools, come first on PATH for every recipe
+# and the programs that it starts.
+export PATH := $(KIT_TOOLS)/bin:$(PATH)
 # A check reads no network (HR-89): `make hyper-install` downloads everything that the checks read, and every other recipe
 # and the programs that it starts run npm and Composer offline, so a missing download fails at once instead of
 # reaching a registry in one run and not in another. The downloads of `make install-tools`, `make hyper-install` and
@@ -59,9 +60,9 @@ export npm_config_offline := true
 export COMPOSER_DISABLE_NETWORK := 1
 ONLINE := env -u npm_config_offline -u COMPOSER_DISABLE_NETWORK
 # make 3.81 looks up the program of a recipe line without shell syntax on its own PATH, not on the exported one, so the
-# recipes start npm by the absolute path of var/tools/bin and Composer, a tool of mise.toml, by that of its shim.
-NPM := $(CURDIR)/var/tools/bin/npm
-COMPOSER := $(CURDIR)/var/tools/mise/shims/composer
+# recipes start npm by the absolute path of $(KIT_TOOLS)/bin and Composer, a tool of mise.toml, by that of its shim.
+NPM := $(KIT_TOOLS)/bin/npm
+COMPOSER := $(KIT_TOOLS)/mise/shims/composer
 # The lock of the package manager installs of this checkout: one npm or Composer install at a time (HR-82).
 INSTALL_LOCK := var/install.lock
 
