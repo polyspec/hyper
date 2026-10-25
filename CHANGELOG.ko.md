@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 697a6c9b7e9bdae0ebb6ed3ee8c1974404d6025e5708371c80f23ae19d13d4ea -->
+<!-- source-sha256: 45cf7e146a20e9e9a9e6faf0e63616c4576b2f053d851ea2fa3d2f8a4e648470 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- release assets test는 H25.60이 남긴 대로 PHPStan이 template extension의 stub을 읽지 않는지 검사한다(H25.82).
 - setup-php test는 gates workflow의 checkout 폴더의 .php-version을 받는다(H25.81).
 - ci.yml의 matrix가 suppression-check를 실행하므로, 전체 모음의 CI 실행이 CHECK_TARGETS의 모든 target을 한 번씩 실행한다(H25.80).
 - CI workflow test와 release assets test는 kit K613 이후 hyper가 실행하는 kit source를 기대한다(H25.79).

@@ -54,7 +54,8 @@ test('make hyper-install fetches the release archives through $(ONLINE) before C
   assert.ok(fetch !== undefined && lines.indexOf(fetch) < lines.findIndex((line) => /composer install/.test(line)), 'Composer reads the artifact repository before make hyper-install fetched it');
 });
 
-test('the template repository is not copied any more, and the stub of PHPStan reads the unpacked archive (H14.1-7)', () => {
+test('the template repository is not copied any more, and PHPStan reads no stub of the template extension (H14.1-7, H25.60)', () => {
   assert.doesNotMatch(read('Makefile'), /copy-template/);
-  assert.match(read('packages/server/php/phpstan.neon'), /var\/products\/template-ext\/src\/polyspec_template\.stub\.php/);
+  // H25.60: the PHP server holds no branch on the template extension, so PHPStan scans no stub of it.
+  assert.doesNotMatch(read('packages/server/php/phpstan.neon'), /template-ext|polyspec_template\.stub/);
 });
