@@ -126,12 +126,18 @@ packages: toolchain-check ## Build the JavaScript modules and type declarations 
 	cd $(NODE_PACKAGE) && $(NPM) run --silent build -- --outDir dist.next-$$$$ && $(NODE) $(CURDIR)/scripts/publish.mts directory dist.next-$$$$ dist
 
 # The path repository of the board links the PHP server package to packages/server/php (Composer's default, HR-79), so the
-# board runs the current source without a copy. The install reads no registry.
-hyper-server-php-install: ## Install the Composer dependencies of the board, which link polyspec/hyper-server to packages/server/php (HR-79)
-	$(NODE) $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(MAKE) --no-print-directory composer-install DIR=$(BOARD)
+# board runs the current source without a copy. The install reads no registry: the targets of the checks reach it, so Composer
+# installs offline from the cache that make hyper-install filled (HR-89), and make link then links the polyspec packages that a
+# sibling checkout provides (K448).
+hyper-server-php-install: ## Install the Composer dependencies of the board offline, which link polyspec/hyper-server to packages/server/php (HR-79), and link the sibling polyspec packages
+	$(NODE) $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(COMPOSER) install --no-interaction --working-dir=$(BOARD)
+	$(MAKE) --no-print-directory link PROJECT=$(BOARD)
 
-package-check: packages node-fixtures ## Install the npm packages into tests/package-install, type-check its test against their declarations and run it under node (HR-61)
-	$(NODE) $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(MAKE) --no-print-directory npm-install DIR=tests/package-install
+# package-check is a check, so it installs offline from the npm cache that make hyper-install filled and fails by the name of a
+# package that the cache lacks (HR-89); make link then links the polyspec packages that a sibling checkout provides (K448).
+package-check: packages node-fixtures ## Install the npm packages into tests/package-install offline, link them, type-check its test against their declarations and run it under node (HR-61)
+	cd tests/package-install && $(NODE) $(abspath $(KIT))/holder-lock.$(KIT_EXT) run $(abspath $(INSTALL_LOCK)) -- $(NPM) ci --offline --allow-remote=root --no-audit --no-fund
+	$(MAKE) --no-print-directory link PROJECT=tests/package-install
 	$(TSC) -p tests/package-install/tsconfig.json
 	$(NODE) $(KIT)/run-tests.$(KIT_EXT) node --cwd tests/package-install -- package-install.test.ts
 

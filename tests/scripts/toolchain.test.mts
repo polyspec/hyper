@@ -1,10 +1,10 @@
 // Tests how the recipes of the Makefile use the toolchain (HR-81, HR-89): the recipes that run tools check the
-// toolchain first, npm and Composer of this checkout are started by the absolute paths of var/tools/bin, every recipe
+// toolchain first, npm and Composer of the main checkout are started by the absolute paths of its var/tools, every recipe
 // runs npm and Composer offline, only the install targets download, and the package manager installs hold the install
 // lock. The tools themselves (install-tools and check-toolchain of @polyspec/kit) are tested in kit.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { test } from 'node:test';
@@ -13,18 +13,30 @@ import { fileURLToPath } from 'node:url';
 import { dryRun } from './make-dry-run.mts';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
-const NPM = path.join(ROOT, 'var/tools/bin/npm');
+// The main checkout of ROOT, the folder of the common Git directory: a linked worktree runs its tools and installs none (kit K519).
+const commonDir = spawnSync('git', ['rev-parse', '--path-format=absolute', '--git-common-dir'], { cwd: ROOT, encoding: 'utf8' });
+if (commonDir.status !== 0) throw new Error(`git rev-parse --git-common-dir in ${ROOT}: ${commonDir.stderr}`);
+const MAIN = realpathSync(path.dirname(commonDir.stdout.trim()));
+const WORKTREE = realpathSync(ROOT) !== MAIN;
+const TOOLS = path.join(MAIN, 'var/tools');
+const NPM = path.join(TOOLS, 'bin/npm');
 // The node of mise.toml, which the bootstrap wraps in var/tools/bin and kit.mk names $(NODE) (kit K171).
-const NODE = path.join(ROOT, 'var/tools/bin/node');
+const NODE = path.join(TOOLS, 'bin/node');
 // Composer is a tool of mise.toml, run by its shim (kit K127).
-const COMPOSER = path.join(ROOT, 'var/tools/mise/shims/composer');
-// The built tools of @polyspec/kit, which the kit.mk of the package runs.
-const KIT = 'node_modules/@polyspec/kit/dist';
+const COMPOSER = path.join(TOOLS, 'mise/shims/composer');
+// The built tools of @polyspec/kit, which the kit.mk of the package runs: the kit checkout beside the repository when there is one,
+// which the link installs (scripts/kit/kit-bootstrap.mk, K448), else the installed package.
+const KIT = existsSync(path.join(ROOT, '../kit/.git')) ? '../kit/dist' : 'node_modules/@polyspec/kit/dist';
+// The commands of recipe lines: a command that a lock runs follows its --, and the variable assignments before a command, as
+// NPM_BIN=<npm> of the recipe npm-install of kit, are its environment, not the command.
+const commandsOf = (lines: string[]) => lines.flatMap((line) => line.split(/&&|;|\|\||\s--\s/).map((part) => part.trim().replace(/^(?:[A-Za-z_][A-Za-z0-9_]*=\S*\s+)+/, '')));
 
 test('the recipes that run npm, Composer or PHP check the toolchain first, and install installs the tools first', () => {
   for (const target of ['ext', 'hyper-lint', 'templates-check']) {
     assert.equal(dryRun(target)[0]?.trim(), `${NODE} ${KIT}/check-toolchain.mjs`, target);
   }
+  // A worktree installs no tools, so its install-tools prints the refusal of kit K519.
+  if (WORKTREE) return;
   const install = dryRun('hyper-install');
   assert.deepEqual(install.slice(0, 2).map((line) => line.trim()), [`env -u npm_config_offline -u COMPOSER_DISABLE_NETWORK ${NODE} ${KIT}/install-tools.mjs`, `${NODE} ${KIT}/check-toolchain.mjs`]);
 });
@@ -61,8 +73,7 @@ test('every recipe starts npm and Composer by the absolute paths of var/tools/bi
     // An empty template directory makes the dry run print the recipe of the template copy.
     lines.push(...dryRun(target, { variables: [`TEMPLATE_DIR=${directory}`] }));
   }
-  // A command that a lock runs follows its --.
-  const commands = lines.flatMap((line) => line.split(/&&|;|\|\||\s--\s/).map((part) => part.trim()));
+  const commands = commandsOf(lines);
   const tools = commands.filter((command) => /^(\S*\/)?(npm|npx|composer)( |$)/.test(command));
   assert.ok(tools.some((command) => command.startsWith(`${NPM} `)) && tools.some((command) => command.startsWith(`${COMPOSER} `)), lines.join('\n'));
   assert.deepEqual(tools.filter((command) => !command.startsWith(`${NPM} `) && !command.startsWith(`${COMPOSER} `)), []);
@@ -71,7 +82,7 @@ test('every recipe starts npm and Composer by the absolute paths of var/tools/bi
 test('no recipe queries a registry: installs follow their lock without an audit, and the package install test installs offline (HR-89)', () => {
   const targets = ['hyper-install', 'ext', 'packages', 'hyper-server-php-install', 'package-check', 'hyper-test-scripts', 'hyper-test-js', 'hyper-test-node', 'hyper-test-php', 'hyper-lint', 'analyse-php', 'parity', 'server-parity', 'e2e', 'bundle-size', 'templates-check', 'docs-check'];
   const lines = targets.flatMap((target) => dryRun(target, { variables: ['TEMPLATE_DIR=var/products/template-dry-run'] }));
-  const commands = lines.flatMap((line) => line.split(/&&|;|\|\||\s--\s/).map((part) => part.trim()));
+  const commands = commandsOf(lines);
   const npm = commands.filter((command) => command.startsWith(`${NPM} `));
   assert.ok(npm.length > 0, lines.join('\n'));
   assert.deepEqual(npm.filter((command) => !/^\S+ (ci|run) /.test(command)), [], 'an npm command other than ci or run');
@@ -110,7 +121,8 @@ test('every recipe runs npm and Composer offline, and $(ONLINE) lifts it (HR-89)
 test('only make install-tools, make install-packages, make hyper-install and make hyper-install-browser download, each download through $(ONLINE), and no check target downloads (HR-89)', (t) => {
   const directory = mkdtempSync(path.join(tmpdir(), 'hyper-downloads-'));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
-  assert.deepEqual(dryRun('install-tools').map((line) => line.trim()), [`${ONLINE}${NODE} ${KIT}/install-tools.mjs`]);
+  // A worktree installs no tools, so its install-tools prints the refusal of kit K519; the main checkout downloads them.
+  if (!WORKTREE) assert.deepEqual(dryRun('install-tools').map((line) => line.trim()), [`${ONLINE}${NODE} ${KIT}/install-tools.mjs`]);
   assert.deepEqual(dryRun('install-packages'), [`${ONLINE}${NPM} ci`]);
   assert.deepEqual(dryRun('hyper-install-browser'), [`${ONLINE}${NODE} node_modules/@playwright/test/cli.js install --with-deps chromium`]);
   const install = dryRun('hyper-install', { variables: [`TEMPLATE_DIR=${directory}`] });
@@ -122,7 +134,16 @@ test('only make install-tools, make install-packages, make hyper-install and mak
   assert.ok(declared !== undefined, 'the Makefile declares no CHECK_TARGETS');
   const checks = declared.split(' ');
   assert.ok(checks.length > 10, checks.join(' '));
-  for (const target of [...checks, 'ext']) {
+  // kit refuses even a dry run of a target that runs only in CI outside CI, with [ci-only]; CI dry-runs those targets as well.
+  const caller = ['MAKEFLAGS', 'MFLAGS', 'MAKELEVEL', 'MAKEOVERRIDES'];
+  const env = Object.fromEntries(Object.entries(process.env).filter(([name]) => !caller.includes(name)));
+  const ciOnly = (target: string) => {
+    const result = spawnSync('make', ['--no-print-directory', '-n', target, `TEMPLATE_DIR=${directory}`], { encoding: 'utf8', env });
+    return result.status !== 0 && result.stderr.includes('[ci-only] refuse');
+  };
+  const checked = [...checks, 'ext'].filter((target) => !ciOnly(target));
+  assert.ok(checked.length > 10, checked.join(' '));
+  for (const target of checked) {
     const lines = dryRun(target, { variables: [`TEMPLATE_DIR=${directory}`] });
     assert.deepEqual(lines.filter((line) => /env -u/.test(line)), [], `${target} downloads`);
   }
