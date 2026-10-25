@@ -35,10 +35,14 @@ test('the recipes that run npm, Composer or PHP check the toolchain first, and i
   for (const target of ['ext', 'hyper-lint', 'templates-check']) {
     assert.equal(dryRun(target)[0]?.trim(), `${NODE} ${KIT}/check-toolchain.mjs`, target);
   }
-  // A worktree installs no tools, so its install-tools prints the refusal of kit K519.
-  if (WORKTREE) return;
-  const install = dryRun('hyper-install');
-  assert.deepEqual(install.slice(0, 2).map((line) => line.trim()), [`env -u npm_config_offline -u COMPOSER_DISABLE_NETWORK ${NODE} ${KIT}/install-tools.mjs`, `${NODE} ${KIT}/check-toolchain.mjs`]);
+  // make hyper-install is judged as the main checkout runs it: a worktree installs no tools and runs those of the main
+  // checkout (kit K519), so its install-kit prints the refusal of K519; the dry run of the main checkout reads only.
+  const install = dryRun('hyper-install', { cwd: MAIN });
+  // install-kit of kit installs npm, the packages and then the tools; the tools come before the first check of the toolchain.
+  const lines = install.map((line) => line.trim());
+  const tools = lines.indexOf(`env -u npm_config_offline -u COMPOSER_DISABLE_NETWORK ${NODE} ${KIT}/install-tools.mjs`);
+  const check = lines.indexOf(`${NODE} ${KIT}/check-toolchain.mjs`);
+  assert.ok(tools >= 0 && check > tools, install.join('\n'));
 });
 
 test('the package manager installs of make hyper-install run under the install lock', () => {
