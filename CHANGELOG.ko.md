@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 30bdeff340d37d78437dbdbfb65ac0ba0abcd8e2744b10a16c302e6ae73ecf19 -->
+<!-- source-sha256: 034ec96d98e017417603d0a3638c15ae6992f91adc29620b7c5bdf9815b35a46 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H25.72: check target가 닿는 package-check와 hyper-server-php-install은 make hyper-install의 cache에서 offline으로 설치한 뒤 make link로 sibling polyspec 패키지를 link한다(HR-89, K448). tests/scripts/toolchain.test.mts는 link 배치를 따른다(../kit/dist의 kit, 환경으로 읽는 NPM_BIN=<npm> 접두, worktree에서 main checkout의 도구, kit이 CI 밖에서 거절하는 dry run은 CI에 맡김). red: main에서 node --test tests/scripts/toolchain.test.mts가 8개 중 5개 테스트에서 실패했고, 테스트가 link 배치를 따른 뒤 8개 중 2개에서 실패했다(package-check와 bench-server-smoke가 다운로드했다). green: 8개 모두 통과한다(H25.72).
 - H25.72-1: Makefile은 npm, Composer, uv, PATH의 첫 항목을 main checkout의 var/tools인 $(KIT_TOOLS)로 이름 붙이므로(kit K519), link된 worktree에서 make packages가 build한다. red: worktree에서 node --test tests/scripts/main-tools.test.mts가 exit 1이었고 make packages가 <worktree>/var/tools/bin/npm: No such file or directory로 exit 2였다. green: 둘 다 exit 0이다(H25.72-1).
 - H25.70: Fields와 Files는 multipart boundary를 Multipart::boundary로 읽고, 이름과 이름별 값을 trait NamedValues로 공유하므로 duplication-check가 clone을 찾지 않는다. red: make duplication-check가 clone 2개를 보고했고, 변경 뒤 green(H25.70).
 - H25.69: make kit-sync가 kit의 바뀐 사본을 가져오고 은퇴한 lint 설정을 지운다(kit K514). CHECK_TARGETS가 suppression-check를 실행하고, owner 규칙이 TypeScript, Python, PHP source를 그 lint와 duplication-check로 보내며(kit K534), 침묵시킨 PHP 오류, cause 없는 재던짐, 이유 없는 noqa 둘을 고친다. red: make kit-check가 실패했고, 변경 뒤 green(H25.69).
