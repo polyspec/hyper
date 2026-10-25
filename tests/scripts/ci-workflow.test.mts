@@ -342,7 +342,7 @@ function phpVersionProblems(phpVersion: string, files: { name: string; text: str
     for (const job of jobs(workflow.text)) {
       for (const step of job.steps) {
         if (!step.uses?.startsWith('shivammathur/setup-php@')) continue;
-        if (!/^ {10}php-version-file: (?:[\w.-]+\/)?\.php-version$/m.test(step.text)) found.push(`${workflow.name} ${job.name}: a setup-php step does not read php-version-file: .php-version`);
+        if (!/^ {10}php-version-file: (?:[\w.-]+\/|\$\{\{ github\.event\.repository\.name \}\}\/)?\.php-version$/m.test(step.text)) found.push(`${workflow.name} ${job.name}: a setup-php step does not read php-version-file: .php-version`);
         if (/^ {10}php-version:/m.test(step.text)) found.push(`${workflow.name} ${job.name}: a setup-php step names php-version itself`);
       }
     }

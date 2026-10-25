@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- The setup-php test accepts the .php-version of the checkout folder of the gates workflow (H25.81).
 - The matrix of ci.yml runs suppression-check, so the CI run of the full suite runs every target of CHECK_TARGETS once (H25.80).
 - The CI workflow and release assets tests expect the kit sources that hyper runs since kit K613 (H25.79).
 - The toolchain test expects the sources of ../kit that hyper runs since kit K613, and the gates workflow installs the sibling kit without a build (H25.78).
