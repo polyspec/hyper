@@ -1,4 +1,4 @@
-import { NativeObject, parseJson, SafeString, type MapValue, type Value } from '@polyspec/template/render';
+import { BindError, NativeObject, parseJson, SafeString, type MapValue, type Value } from '@polyspec/template/render';
 
 // The storage of a kept path (HY-37).
 export type KeepKind = 'server' | 'cookie' | 'localStorage' | 'sessionStorage';
@@ -94,8 +94,10 @@ export function browserStorage(): KeepStorage {
     try {
       const value = entry === undefined ? null : parseJson(decodeURIComponent(entry.slice(cookie.length + 1)));
       return value instanceof Map ? value : new Map();
-    } catch {
-      return new Map();
+    } catch (error) {
+      // A cookie value that is no percent-encoded JSON text keeps nothing; any other failure propagates.
+      if (error instanceof URIError || error instanceof BindError) return new Map();
+      throw error;
     }
   };
   return {

@@ -112,7 +112,9 @@ function decodeSegment(part: string): string | null {
   }
   try {
     return decoder.decode(new Uint8Array(bytes));
-  } catch {
-    return null;
+  } catch (error) {
+    // The fatal decoder fails bytes that are no UTF-8 with a TypeError; any other failure propagates.
+    if (error instanceof TypeError) return null;
+    throw error;
   }
 }

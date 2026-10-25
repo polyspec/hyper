@@ -28,8 +28,10 @@ export function bytesOf(text: string): Uint8Array {
 export function utf8(bytes: Uint8Array): string | null {
   try {
     return strict.decode(bytes);
-  } catch {
-    return null;
+  } catch (error) {
+    // The fatal decoder fails bytes that are no UTF-8 with a TypeError; any other failure propagates.
+    if (error instanceof TypeError) return null;
+    throw error;
   }
 }
 

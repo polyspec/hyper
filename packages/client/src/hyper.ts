@@ -1,4 +1,4 @@
-import { bindValue, parseJson, type MapValue, type Value } from '@polyspec/template/render';
+import { BindError, bindValue, parseJson, type MapValue, type Value } from '@polyspec/template/render';
 import { applyRegionKept, copyValue, decodeResponse, presentRouteRegions, renderDocument, renderLayout, renderRegionOf, requireMap, toHtml, type Application, type DecodedResponse } from './response.js';
 import { ObtainError, requestDocument, type Fetch } from './obtain.js';
 import { PageStylesheets, StylesheetError } from './stylesheets.js';
@@ -293,7 +293,8 @@ export class Hyper<E extends RegionElement = Element> {
     let decoded: DecodedResponse;
     try {
       decoded = decodeResponse(this.app, parseJson(text), path);
-    } catch {
+    } catch (error) {
+      failure(error);
       this.page.fail('0');
       return;
     }
@@ -311,12 +312,14 @@ export class Hyper<E extends RegionElement = Element> {
       if (this.held !== held) return;
       try {
         await this.renderHeld(region);
-      } catch {
+      } catch (error) {
+        failure(error);
         if (this.held !== held) return;
         held.regions.set(region, copyValue(held.loader.get(region) ?? null));
         try {
           await this.renderHeld(region);
-        } catch {
+        } catch (again) {
+          failure(again);
           if (this.held === held) markError(this.element(region), '0');
         }
       }
@@ -442,7 +445,8 @@ export class Hyper<E extends RegionElement = Element> {
       this.page.mount(html);
       this.checkElements();
       settle();
-    } catch {
+    } catch (error) {
+      failure(error);
       if (abort.signal.aborted || generation !== this.location) return;
       this.page.fail('0');
     }
@@ -588,7 +592,9 @@ export class Hyper<E extends RegionElement = Element> {
         if (text === null) continue;
         try {
           stored.push([path, parseJson(text)]);
-        } catch {
+        } catch (error) {
+          // A stored text that is no JSON value is no kept value (HY-38); any other failure of the read propagates.
+          if (!(error instanceof BindError)) throw error;
           continue;
         }
       }
@@ -736,6 +742,15 @@ function valueAt(data: Value | undefined, path: string): Value | undefined {
 }
 
 // Marks a region element as failed with a status, or clears the mark (HYC-14).
+/**
+ * Takes the failure of a render, a decode or a load that HYC-14 marks with hy-error instead of rejecting: any Error, since a template,
+ * a kept value (a TypeError for an application object, HY-44), an obtain and a stylesheet each fail with one. A thrown value that is
+ * no Error is no such failure and propagates.
+ */
+function failure(error: unknown): void {
+  if (!(error instanceof Error)) throw error;
+}
+
 function markError(target: unknown, status: string): void {
   if (hasSetAttribute(target)) target.setAttribute('hy-error', status);
 }
