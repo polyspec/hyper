@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 6a2ae366dbad684b228ffd0f7d9ef53e535bf39b47d3eb9ac50686ed2e60055d -->
+<!-- source-sha256: 29a7c7821f4c0fa968b32cfd6a9f57527e07270d228fd81d05036566a050ff5c -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- toolchain test는 kit K613 이후 hyper가 실행하는 ../kit의 source를 기대하고, gates workflow는 옆의 kit을 build 없이 설치한다(H25.78).
 - 저장소는 kit bootstrap이나 PRINCIPLES의 복사본을 두지 않는다. Makefile은 ../kit의 kit-bootstrap.mk를 include하고, scripts/kit과 config/php-lint는 없어졌으며, PRINCIPLES.md, 그 짝, .editorconfig, .claude/settings.json은 ../kit로 가는 link다(kit K614)(H25.77).
 - kit의 Git hook이 tracked되고 설치되며 그중 pre-merge-commit, prepare-commit-msg, reference-transaction도 있으므로 PRINCIPLES가 이름 붙인 hook이 존재하고, kit 복사본이 link된 kit을 따른다(H25.75).
 - hyper의 어떤 catch도 모든 실패를 받지 않는다. binding 없던 catch 여덟 개가 오류를 bind하고, render는 모든 Error를 hy-error로 표시하며(HYC-14) Error가 아닌 값은 전파하고, kept text, keep cookie, strict UTF-8의 읽기는 자기 실패(BindError, URIError, TypeError)만 받는다(H25.74).
