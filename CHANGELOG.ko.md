@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: e262fda4a4d6ba188b229bbe0a3f83d09ec9c3820014d41fb3c7350702544bd7 -->
+<!-- source-sha256: 83326ba343f86cb21d65f5d62cb48e094477d103862efaadbd54de6885c93413 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- ci.yml의 matrix가 suppression-check를 실행하므로, 전체 모음의 CI 실행이 CHECK_TARGETS의 모든 target을 한 번씩 실행한다(H25.80).
 - CI workflow test와 release assets test는 kit K613 이후 hyper가 실행하는 kit source를 기대한다(H25.79).
 - toolchain test는 kit K613 이후 hyper가 실행하는 ../kit의 source를 기대하고, gates workflow는 옆의 kit을 build 없이 설치한다(H25.78).
 - 저장소는 kit bootstrap이나 PRINCIPLES의 복사본을 두지 않는다. Makefile은 ../kit의 kit-bootstrap.mk를 include하고, scripts/kit과 config/php-lint는 없어졌으며, PRINCIPLES.md, 그 짝, .editorconfig, .claude/settings.json은 ../kit로 가는 link다(kit K614)(H25.77).
