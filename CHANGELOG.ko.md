@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 47a5673de1c53c179a9fa04cfab90a374e249f5093977ce2d068fc8dff6ec33e -->
+<!-- source-sha256: 6a2ae366dbad684b228ffd0f7d9ef53e535bf39b47d3eb9ac50686ed2e60055d -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- 저장소는 kit bootstrap이나 PRINCIPLES의 복사본을 두지 않는다. Makefile은 ../kit의 kit-bootstrap.mk를 include하고, scripts/kit과 config/php-lint는 없어졌으며, PRINCIPLES.md, 그 짝, .editorconfig, .claude/settings.json은 ../kit로 가는 link다(kit K614)(H25.77).
 - kit의 Git hook이 tracked되고 설치되며 그중 pre-merge-commit, prepare-commit-msg, reference-transaction도 있으므로 PRINCIPLES가 이름 붙인 hook이 존재하고, kit 복사본이 link된 kit을 따른다(H25.75).
 - hyper의 어떤 catch도 모든 실패를 받지 않는다. binding 없던 catch 여덟 개가 오류를 bind하고, render는 모든 Error를 hy-error로 표시하며(HYC-14) Error가 아닌 값은 전파하고, kept text, keep cookie, strict UTF-8의 읽기는 자기 실패(BindError, URIError, TypeError)만 받는다(H25.74).
 - H25.72-2: worktree는 도구를 설치하지 않으므로(kit K519) tests/scripts/toolchain.test.mts는 main에서처럼 worktree에서도 make hyper-install을 main checkout의 dry run으로 판정하고, kit install-kit의 순서대로 install-tools.mjs가 첫 toolchain 검사보다 앞에 오기를 기대한다. red: worktree에서 테스트가 main에서처럼 8개 중 1개에서 실패했다. main에서 make hyper-install은 make install-tools TOOLS=npm과 bootstrap으로 시작한다. green: 8개 모두 통과한다(H25.72-2).

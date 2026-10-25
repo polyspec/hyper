@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- The repository holds no copy of the kit bootstrap or of PRINCIPLES: the Makefile includes the kit-bootstrap.mk of ../kit, scripts/kit and config/php-lint are gone, and PRINCIPLES.md, its twin, .editorconfig and .claude/settings.json are links to ../kit (kit K614) (H25.77).
 - The Git hooks of kit are tracked and installed, pre-merge-commit, prepare-commit-msg and reference-transaction among them, so the hooks that PRINCIPLES names exist, and the copies of kit follow the linked kit (H25.75).
 - No catch of hyper accepts every failure: the eight catches without a binding bind their error, the renders mark any Error with hy-error (HYC-14) and let a value that is no Error propagate, and the reads of a kept text, of the keep cookie and of strict UTF-8 take only their own failure (BindError, URIError, TypeError) (H25.74).
 - H25.72-2: tests/scripts/toolchain.test.mts judges make hyper-install by the dry run of the main checkout, in a worktree as on main, since a worktree installs no tools (kit K519), and expects install-tools.mjs before the first check of the toolchain, the order of install-kit of kit. Red: in a worktree the test failed 1 of 8, as it did on main, where make hyper-install starts with make install-tools TOOLS=npm and the bootstrap; green: 8 of 8 pass (H25.72-2).
