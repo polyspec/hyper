@@ -25,7 +25,7 @@ const NODE = path.join(TOOLS, 'bin/node');
 // Composer is a tool of mise.toml, run by its shim (kit K127).
 const COMPOSER = path.join(TOOLS, 'mise/shims/composer');
 // The built tools of @polyspec/kit, which the kit.mk of the package runs: the kit checkout beside the repository when there is one,
-// which the link installs (scripts/kit/kit-bootstrap.mk, K448), else the installed package.
+// which the link installs (the kit-bootstrap.mk of ../kit, K448), else the installed package.
 const KIT = existsSync(path.join(ROOT, '../kit/.git')) ? '../kit/dist' : 'node_modules/@polyspec/kit/dist';
 // The commands of recipe lines: a command that a lock runs follows its --, and the variable assignments before a command, as
 // NPM_BIN=<npm> of the recipe npm-install of kit, are its environment, not the command.

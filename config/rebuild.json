@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "comment": "The class of each tool of hyper (S1), found by the layout of the repository (K286): ecosystem names the tool it uses, policy the reason no ecosystem tool applies. The tools below scripts/kit are copies of kit and are classed in kit too.",
+  "comment": "The class of each tool of hyper (S1), found by the layout of the repository (K286): ecosystem names the tool it uses, policy the reason no ecosystem tool applies.",
   "tools": {
     "scripts/board-servers.mts": {
       "kind": "ecosystem",
@@ -77,42 +77,6 @@
     "packages/build/lib/template-rules.mjs": {
       "kind": "policy",
       "reason": "the template rules of hyper (HC-6, HY-3, HY-30, HY-75) over the AST that @polyspec/template parses; no ecosystem tool states the rules of this protocol"
-    },
-    "scripts/kit/bootstrap/bootstrap.mts": {
-      "kind": "policy",
-      "reason": "a copy of the bootstrap of @polyspec/kit, which classes and records it in its own config/rebuild.json and docs/rebuild/toolchain.md; this repository changes it only in kit"
-    },
-    "scripts/kit/bootstrap/install-mise.mts": {
-      "kind": "policy",
-      "reason": "a copy of the bootstrap of @polyspec/kit, which classes and records it in its own config/rebuild.json and docs/rebuild/toolchain.md; this repository changes it only in kit"
-    },
-    "scripts/kit/bootstrap/install-npm.mts": {
-      "kind": "policy",
-      "reason": "a copy of the bootstrap of @polyspec/kit, which classes and records it in its own config/rebuild.json and docs/rebuild/toolchain.md; this repository changes it only in kit"
-    },
-    "scripts/kit/bootstrap/install-tool.mts": {
-      "kind": "policy",
-      "reason": "a copy of the bootstrap of @polyspec/kit, which classes and records it in its own config/rebuild.json and docs/rebuild/toolchain.md; this repository changes it only in kit"
-    },
-    "scripts/kit/bootstrap/tool-wrappers.mts": {
-      "kind": "policy",
-      "reason": "a copy of the bootstrap of @polyspec/kit, which classes and records it in its own config/rebuild.json and docs/rebuild/toolchain.md; this repository changes it only in kit"
-    },
-    "scripts/kit/bootstrap/toolchain-declared.mts": {
-      "kind": "policy",
-      "reason": "a copy of the bootstrap of @polyspec/kit, which classes and records it in its own config/rebuild.json and docs/rebuild/toolchain.md; this repository changes it only in kit"
-    },
-    "scripts/kit/bootstrap/digest.mts": {
-      "kind": "ecosystem",
-      "tool": "node:crypto"
-    },
-    "scripts/kit/bootstrap/files.mts": {
-      "kind": "ecosystem",
-      "tool": "node:fs"
-    },
-    "scripts/kit/kit-bootstrap.mk": {
-      "kind": "policy",
-      "reason": "the bootstrap order of a repository before the package @polyspec/kit is installed (K71-2), a copy that kit writes"
     },
     "benchmarks/browser.mts": {
       "kind": "ecosystem",

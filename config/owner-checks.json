@@ -484,7 +484,6 @@
     },
     {
       "paths": [
-        "scripts/kit/**",
         ".github/workflows/release.yml",
         "PRINCIPLES.md",
         "PRINCIPLES.ko.md",
@@ -492,8 +491,7 @@
         ".editorconfig",
         "config/pyproject.schema.json",
         "config/composer.schema.json",
-        "config/cargo.schema.json",
-        "config/php-lint/**"
+        "config/cargo.schema.json"
       ],
       "targets": [
         "kit-check",

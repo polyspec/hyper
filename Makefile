@@ -1,10 +1,10 @@
 # The shared tools are the npm package @polyspec/kit, which package.json pins by the URL of its release asset and
-# package-lock.json by its integrity. scripts/kit/kit-bootstrap.mk is a copy that `make kit-sync` writes from the package
-# and that is never edited here; it includes the kit.mk of the package, which defines the targets of the toolchain, the
+# package-lock.json by its integrity. The kit-bootstrap.mk of the kit checkout beside the repository, no copy (kit K614),
+# includes the kit.mk of the kit, which defines the targets of the toolchain, the
 # Git hooks, the push gate, the documents, the owner checks, the CI report, the release and the dependency review, and
 # sets KIT to the dist of the package and KIT_EXT to mjs. A checkout starts with `make install-tools TOOLS=npm` and
 # `make install-packages`. This repository differs from another only in config/*.json and in the targets below.
-include scripts/kit/kit-bootstrap.mk
+include ../kit/scripts/kit/kit-bootstrap.mk
 
 BOARD := examples/board
 PHP_PACKAGE := packages/server/php
