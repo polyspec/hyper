@@ -4,6 +4,9 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+
+## 0.0.19
+- Prepare the 0.0.19 candidate manifests. Archive installation verification remains open until the PHP 8.4 dependency graph is available (H27.3).
 - Composer resolution of the PHP 8.4 release graph is blocked by the verified template PHP archive 0.0.11 requiring PHP >=8.5. Record the compatible-archive prerequisite; PHP and locks remain unchanged (H27.2).
 - The release-readiness audit retains the four withdrawn rows as history, restores Composer resolution and lock validation in H27.2, adds clean archive verification in H27.3, and keeps the idle benchmark H26.9 open (H27.1).
 - H25.73 is withdrawn because reconciling tracked locks with linked development manifests contradicts H26.8. PHP 8.4 remains the runtime target, and the locks are unchanged (H25.73).
