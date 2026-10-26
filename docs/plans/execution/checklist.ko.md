@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: f71b280b6d028b576985b71041f2af5b64595d52731e8f0533183cb8e6b6b824 -->
+<!-- source-sha256: 3dcac2b05803cee8642e02e3635f16ab7511cb632b0e21e5ec40206d93829d06 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -262,7 +262,7 @@
 | H27.6-1 | HY-106과 HY-113의 기존 PHP UploadedFile 클래스를 정확한 공개 클래스 목록에 반영하며 예상 밖 공개 클래스 검사를 유지한다. | packages/server/php/tests/PublicApiTest.php | `var/tools/bin/php vendor/bin/phpunit packages/server/php/tests/PublicApiTest.php` and `make analyse-php` | [o] |
 | H27.7 | 삭제된 Renderer.engine을 읽지 않고 서버 벤치마크 프로그램을 보고하며 PHP 경고가 없는 보고를 회귀 검사로 검증한다. | benchmarks/server.php, tests/scripts, docs/operations/benchmark.md, docs/operations/benchmark.ko.md | `node ../kit/scripts/kit/run-tests.mts node -- tests/scripts/benchmark-server.test.mts` and `make bench-server-smoke` | [o] |
 | H27.8 | 릴리스 선언 검사와 로컬 설치 소스 검사를 구분한다. 소스 링크와 더 최신 provider 버전을 허용하고 오래된 dist 구조 대신 해석된 render 진입점으로 번들을 검증한다. | tests/scripts/template-dir.test.mts, tests/scripts/template-pins.test.mts, tests/scripts/no-symlinks.test.mts | `node ../kit/scripts/kit/run-tests.mts node -- tests/scripts/template-dir.test.mts tests/scripts/template-pins.test.mts tests/scripts/no-symlinks.test.mts` | [o] |
-| H27.8-1 | 설치 소스 검증 수정에서 남은 미사용 파일 시스템 import를 제거한다. | tests/scripts/template-pins.test.mts | `make lint-ts` | [ ] |
+| H27.8-1 | 설치 소스 검증 수정에서 남은 미사용 파일 시스템 import를 제거한다. | tests/scripts/template-pins.test.mts | `make lint-ts` | [~] |
 | H27.9 | 호스트 절전 기록과 SIGTERM 정리 시간 초과를 대조하고 재개 후 변경하지 않은 프로세스 종료와 실행 디렉터리 정리 검증을 확인한다. | docs/operations/development.md, docs/operations/development.ko.md | `node ../kit/scripts/kit/run-tests.mts node -- tests/scripts/check-parity.test.mts` | [o] |
 | H27.10 | kit-sync와 hooks로 저장소 복사본과 hook을 연결된 kit 소스에 맞추고 패키지 소스 링크를 유지하며 오래된 공유 파일 설명을 갱신한다. | shared kit copies, .githooks, AGENTS.md, AGENTS.ko.md, docs/operations/development.md, docs/operations/development.ko.md | `make kit-check` and `make hooks-check` | [o] |
 | H27.11 | Makefile과 workflow 검사에서 제거된 full-run 진입점 대신 현재 최종 검증 실행기를 사용하고 전체 target 집합과 최종 1회 검증 절차를 유지한다. | Makefile, tests/scripts/ci-workflow.test.mts, current procedure documents and their Korean twins | `node ../kit/scripts/kit/run-tests.mts node -- --test-name-pattern="declared for Darwin" tests/scripts/ci-workflow.test.mts` | [o] |
