@@ -3,7 +3,7 @@
 
 [한국어](composition.ko.md).
 
-This document defines which mechanism a screen part uses. A part is chosen by what differs between its uses. The template language and the region protocol already provide every mechanism below; a new mechanism is added only when a part fits none of them.
+These application authoring rules define which mechanism a screen part uses. They remain mandatory when writing application templates; the runtime contract is [the protocol](../spec/protocol.md), and HY-48 defines the build checks. A part is chosen by what differs between its uses. The template language and the region protocol already provide every mechanism below; a new mechanism is added only when a part fits none of them.
 
 ## Mechanisms
 

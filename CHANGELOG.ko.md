@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: f79e90644365561dada30af8eaf2ebf9165830dcd518421f400b51e4c1433df5 -->
+<!-- source-sha256: 80c6335d7a28aabbf886f3dfb3928f4da450e27efd8ce514616216ade7849b9a -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- 애플리케이션 작성 규칙 HC-1부터 HC-7은 docs/operations/composition.md에서 계속 적용한다. HY-48은 레이아웃 밖 hx-* 속성의 거부를 명시하며, 프로토콜 요구사항 추적 검사를 통과한다(H25.76).
 - H26.4는 서버 파일 부분 parity와 클라이언트 stream 요구사항 HYC-17부터 HYC-21을 구분하며, 오래된 클라이언트 미결정 설명을 제거한다(H26.4-1).
 - 커밋된 H26.4 수정에서 오래된 문구 부재 검사를 통과한다(H26.4-1).
 - release assets test는 H25.60이 남긴 대로 PHPStan이 template extension의 stub을 읽지 않는지 검사한다(H25.82).

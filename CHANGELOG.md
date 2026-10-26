@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- Application authoring rules HC-1 to HC-7 remain mandatory in docs/operations/composition.md. HY-48 states the rejection of hx-* attributes outside the layout explicitly; protocol requirement tracing passes (H25.76).
 - H26.4 records server file-part parity separately from the client stream requirements HYC-17 to HYC-21; its stale pending-client clause is removed (H26.4-1).
 - The stale-text check passes on the committed H26.4 correction (H26.4-1).
 - The release assets test checks that PHPStan reads no stub of the template extension, as H25.60 left it (H25.82).

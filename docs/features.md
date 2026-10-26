@@ -6,7 +6,7 @@
 | ID | Feature | Status | Evidence |
 |---|---|---|---|
 | protocol | Region protocol specification (HY-1 to HR-94) | implemented | [Protocol](spec/protocol.md) |
-| composition | Screen composition rules (HC-1 to HC-7) and the template check for HC-6 | implemented | [Composition](spec/composition.md), `make templates-check` |
+| composition | Application authoring rules (HC-1 to HC-7) and the template check of HY-48 for HC-6 | documented; template check implemented | [Composition](operations/composition.md), `make templates-check` |
 | manifest | Application manifest read by PHP and the browser | implemented | `make test-php`, `make test-js` |
 | router | PHP and browser routers with shared conformance cases | implemented | `make test-php`, `make test-js` |
 | rest-routes | Rest parameters `{name*}` at the end of route paths (HY-49) | implemented | `make test-php`, `make test-js` |

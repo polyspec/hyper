@@ -1,5 +1,5 @@
 <!-- doc-id: features -->
-<!-- source-sha256: 6282d0db13f5051c8c3c00b4c26c46299690c85e2aea30a17cfc1540da613cd5 -->
+<!-- source-sha256: 3e2837d0832d6c3ab6f7475016390c2b218e1f1dd1c94b1be47a1783bd2b2b99 -->
 # 기능 상태
 
 [English](features.md).
@@ -7,7 +7,7 @@
 | ID | 기능 | 상태 | 근거 |
 |---|---|---|---|
 | protocol | 영역 프로토콜 명세(HY-1 ~ HR-94) | implemented | [프로토콜](spec/protocol.ko.md) |
-| composition | 화면 구성 규칙(HC-1 ~ HC-7)과 HC-6 템플릿 검사 | implemented | [화면 구성](spec/composition.ko.md), `make templates-check` |
+| composition | 애플리케이션 작성 규칙(HC-1 ~ HC-7)과 HC-6에 대한 HY-48 템플릿 검사 | documented; template check implemented | [화면 구성](operations/composition.ko.md), `make templates-check` |
 | manifest | PHP와 브라우저가 읽는 애플리케이션 매니페스트 | implemented | `make test-php`, `make test-js` |
 | router | 적합성 사례를 공유하는 PHP 라우터와 브라우저 라우터 | implemented | `make test-php`, `make test-js` |
 | rest-routes | 라우트 경로 끝의 나머지 매개변수 `{name*}`(HY-49) | implemented | `make test-php`, `make test-js` |
