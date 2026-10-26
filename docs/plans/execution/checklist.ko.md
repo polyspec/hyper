@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 250e9fcb5991057273603bf0232dec5335db472aad5128f8822cdd398ad33a3c -->
+<!-- source-sha256: a5f5adb766141aae38388db4cba2e17263d6cbf6c20a0734f92f4d4f31f665c0 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -260,3 +260,4 @@
 | H27.5 | 최종 검증에서 발견한 PHP 애플리케이션과 fixture의 타입 오류 및 포맷 문제를 suppression이나 계약 완화 없이 수정한다. | packages/server/php/src, packages/server/php/tests | `make analyse-php` and `make hyper-lint` | [ ] |
 | H27.6 | TypeScript와 Python의 public API 검사에 파일 업로드 API를 반영하며 정확한 export 검사를 유지한다. | packages/server/ts/tests/public-api.test.ts, packages/server/python/tests/test_public_api.py | `node ../kit/scripts/kit/run-tests.mts vitest --cwd packages/server/ts -- tests/public-api.test.ts` and `packages/server/python/.venv/bin/python -m unittest packages/server/python/tests/test_public_api.py` | [ ] |
 | H27.7 | 삭제된 Renderer.engine을 읽지 않고 서버 벤치마크 프로그램을 보고하며 PHP 경고가 없는 보고를 회귀 검사로 검증한다. | benchmarks/server.php, tests/scripts, docs/operations/benchmark.md, docs/operations/benchmark.ko.md | `make bench-server-smoke` | [ ] |
+| H27.8 | 릴리스 선언 검사와 로컬 설치 소스 검사를 구분한다. 소스 링크와 더 최신 provider 버전을 허용하고 오래된 dist 구조 대신 해석된 render 진입점으로 번들을 검증한다. | tests/scripts/template-dir.test.mts, tests/scripts/template-pins.test.mts, tests/scripts/no-symlinks.test.mts | `node ../kit/scripts/kit/run-tests.mts node -- tests/scripts/template-dir.test.mts tests/scripts/template-pins.test.mts tests/scripts/no-symlinks.test.mts` | [ ] |
