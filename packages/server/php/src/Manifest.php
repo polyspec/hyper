@@ -8,13 +8,20 @@ namespace Polyspec\Hyper;
  * The application manifest: layout, title, regions and routes (HY-1, HY-2).
  *
  * @internal
+ * @phpstan-type RouteDefinition array{
+ *     name: string,
+ *     path: string,
+ *     title: string,
+ *     template: string,
+ *     post: bool,
+ *     regions: list<Region>
+ * }
  */
 final class Manifest
 {
     /**
      * @param list<Region> $regions
-     * @param array<string, array{name: string, path: string, title: string, template: string, post: bool, regions:
-     *     list<Region>}> $routes
+     * @param array<string, RouteDefinition> $routes
      */
     private function __construct(
         public readonly string $layout,

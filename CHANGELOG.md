@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- PHP route and request-copy contracts retain their precise types with valid PHPDocs. Fixtures validate JSON input and callback responses, and server startup transfers ownership only after success while cleaning up failures. PHPStan reports no errors, formatting checks pass, and 116 related tests pass.
 - Exact public API checks include the existing TypeScript UploadedFile export and Python uploaded_file module of HY-113. The Python root exports stay unchanged; both native API checks pass (H27.6).
 - Native npm source linking uses direct-dependency override references without EOVERRIDE. The package fixture receives the pinned npm path, its generated link state is ignored, and the ignore check verifies Git succeeded and checked every output. Package installation, source links and the targeted regressions pass (H27.4).
 - Separate the prepared local candidate from pending archive-consumer proof: the latter awaits compatible distribution inputs and the archive target tag, while local final verification can proceed (H27.3).

@@ -13,7 +13,7 @@ use Polyspec\Hyper\Tests\Support\Json;
 /** HY-73: the cases of contracts/reads.json, which the browser package and the Node server pass as well. */
 final class ReadsTest extends TestCase
 {
-    /** @return iterable<string, array{mixed, mixed, mixed}> */
+    /** @return iterable<string, array{mixed, array<array-key, mixed>|true, mixed}> */
     public static function cases(): iterable
     {
         $fixture = Json::objectFile(__DIR__ . '/../../../../contracts/reads.json');
@@ -24,8 +24,9 @@ final class ReadsTest extends TestCase
         }
     }
 
+    /** @param array<array-key, mixed>|true $reads */
     #[DataProvider('cases')]
-    public function testKeepsTheReadPathsOfEveryCase(mixed $data, mixed $reads, mixed $kept): void
+    public function testKeepsTheReadPathsOfEveryCase(mixed $data, array|true $reads, mixed $kept): void
     {
         self::assertSame(
             JsonEncoder::encode(['kept' => $kept]),

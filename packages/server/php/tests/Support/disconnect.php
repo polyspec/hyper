@@ -22,7 +22,7 @@ $around = getenv('HYPER_DISCONNECT_AROUND') === 'alone'
 
         return \Polyspec\Hyper\Response::text(200, str_repeat('x', 1 << 20));
     }
-    : null;
+: null;
 FrontController::open(
     $log,
     function (Reply $reply): array {

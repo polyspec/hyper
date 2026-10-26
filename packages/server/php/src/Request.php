@@ -89,7 +89,14 @@ final class Request
     /**
      * Returns a copy of this request with the given constructor arguments replaced.
      *
-     * @param array<string, mixed> $changes
+     * @param array{
+     *     flash?: array<array-key, mixed>,
+     *     csrfToken?: string,
+     *     path?: string,
+     *     params?: array<string, string>,
+     *     headers?: array<string, string>,
+     *     selection?: mixed
+     * } $changes
      */
     private function copy(array $changes): self
     {

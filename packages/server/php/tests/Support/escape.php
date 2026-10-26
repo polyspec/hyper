@@ -28,7 +28,7 @@ $around = match ($mode) {
         throw new RuntimeException('around boom');
     },
     'around-alone' => fn (): \Polyspec\Hyper\Response => \Polyspec\Hyper\Response::text(418, 'alone'),
-    'around-answer' => fn ($request, Closure $answer) => $answer($request->withHeader('X-Around', 'set')),
+    'around-answer' => fn (\Polyspec\Hyper\Request $request, Closure $answer) => $answer($request->withHeader('X-Around', 'set')),
     default => null,
 };
 $app = FrontController::open(

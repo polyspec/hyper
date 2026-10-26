@@ -177,14 +177,13 @@ final class RunTest extends TestCase
     {
         // The log and the server are released when the case ends, also when it fails (HR-87).
         $log = (string) tempnam(sys_get_temp_dir(), 'hyper-disconnect-');
-        $server = false;
+        $server = null;
         try {
             // The server listens on a port that the system assigns and reports it, so no other process can take the
             // port between its choice and its use (HR-89). ignore_user_abort is on here, so App::run must turn it off.
-            [$stderr, $port] = self::startServer(
+            [$server, $stderr, $port] = self::startServer(
                 [PHP_BINARY, '-d', 'ignore_user_abort=1', '-S', '127.0.0.1:0', __DIR__ . '/Support/disconnect.php'],
                 [...getenv(), ...$env, 'HYPER_DISCONNECT_LOG' => $log],
-                $server,
             );
             $client = stream_socket_client("tcp://127.0.0.1:{$port}");
             if ($client === false) {
@@ -196,7 +195,7 @@ final class RunTest extends TestCase
             self::waitFor($stderr, 'Closing');
             $lines = (string) file_get_contents($log);
         } finally {
-            if ($server !== false) {
+            if ($server !== null) {
                 proc_terminate($server);
                 proc_close($server);
             }
@@ -355,9 +354,9 @@ final class RunTest extends TestCase
     private static function escape(string $mode, array $env = [], string $outputBuffering = '0'): array
     {
         $log = (string) tempnam(sys_get_temp_dir(), 'hyper-escape-');
-        $server = false;
+        $server = null;
         try {
-            [, $port] = self::startServer(
+            [$server, , $port] = self::startServer(
                 [
                     PHP_BINARY,
                     '-d',
@@ -371,7 +370,6 @@ final class RunTest extends TestCase
                     __DIR__ . '/Support/escape.php',
                 ],
                 [...getenv(), ...$env, 'HYPER_ESCAPE_MODE' => $mode, 'HYPER_ESCAPE_LOG' => $log],
-                $server,
             );
             $context = stream_context_create(['http' => ['ignore_errors' => true, 'timeout' => 10]]);
             $stream = fopen("http://127.0.0.1:{$port}/", 'r', false, $context);
@@ -396,7 +394,7 @@ final class RunTest extends TestCase
 
             return [$status, array_slice($headers, 1), $body, (string) file_get_contents($log)];
         } finally {
-            if ($server !== false) {
+            if ($server !== null) {
                 proc_terminate($server);
                 proc_close($server);
             }
@@ -406,15 +404,14 @@ final class RunTest extends TestCase
 
     /**
      * Starts the PHP built-in server with `$command` and `$env` on a port that the system assigns, and returns its
-     * standard error and the port that it reports. `$server` receives the process as soon as it exists, so that the
-     * caller stops it also when this method fails.
+     * process, standard error and reported port. This method owns the process until it returns and stops it if
+     * startup fails; after it returns the caller owns it.
      *
      * @param list<string> $command
      * @param array<string, string> $env
-     * @param resource|false $server
-     * @return array{resource, int}
+     * @return array{resource, resource, int}
      */
-    private static function startServer(array $command, array $env, mixed &$server): array
+    private static function startServer(array $command, array $env): array
     {
         $server = proc_open(
             $command,
@@ -426,12 +423,22 @@ final class RunTest extends TestCase
         if ($server === false) {
             self::fail('the PHP built-in server did not start');
         }
-        $started = self::waitFor($pipes[2], 'started');
-        if (preg_match('/\(http:\/\/127\.0\.0\.1:(\d+)\) started/', $started, $address) !== 1) {
-            self::fail("the server reported no address: {$started}");
-        }
+        $ready = false;
+        try {
+            $started = self::waitFor($pipes[2], 'started');
+            if (preg_match('/\(http:\/\/127\.0\.0\.1:(\d+)\) started/', $started, $address) !== 1) {
+                self::fail("the server reported no address: {$started}");
+            }
+            $ready = true;
 
-        return [$pipes[2], (int) $address[1]];
+            return [$server, $pipes[2], (int) $address[1]];
+        } finally {
+            if (!$ready) {
+                proc_terminate($server);
+                fclose($pipes[2]);
+                proc_close($server);
+            }
+        }
     }
 
     /**

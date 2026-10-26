@@ -6,7 +6,6 @@ namespace Polyspec\Hyper\Tests\Support;
 
 use Polyspec\Hyper\App;
 use Polyspec\Hyper\Request;
-use Polyspec\Hyper\Reply;
 use Polyspec\Hyper\Response;
 use Polyspec\Hyper\Result;
 

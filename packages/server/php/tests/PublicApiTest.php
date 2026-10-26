@@ -13,7 +13,11 @@ final class PublicApiTest extends TestCase
     {
         $public = [];
         foreach (glob(__DIR__ . '/../src/*.php') ?: [] as $file) {
-            $class = new \ReflectionClass('Polyspec\\Hyper\\' . basename($file, '.php'));
+            $name = 'Polyspec\\Hyper\\' . basename($file, '.php');
+            if (!class_exists($name) && !interface_exists($name)) {
+                self::fail("{$file} declares no autoloadable class or interface {$name}");
+            }
+            $class = new \ReflectionClass($name);
             if (!str_contains((string) $class->getDocComment(), '@internal')) {
                 $public[] = $class->getShortName();
             }

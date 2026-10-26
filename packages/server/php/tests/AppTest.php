@@ -236,6 +236,7 @@ final class AppTest extends TestCase
         ]]);
     }
 
+    /** @param array<string, string> $headers */
     private function get(string $path, array $headers = [], string $basePath = ''): Response
     {
         return $this->app($basePath)->handle(new Request('GET', $path, $headers), $this->session);
@@ -1684,7 +1685,10 @@ final class AppTest extends TestCase
         $around = function (Request $request, \Closure $answer) use (&$calls): Response {
             $calls[] = $request->method . ' ' . $request->path;
 
-            return $answer($request->withHeader('Accept', 'application/json'))->withHeader('X-Around', 'yes');
+            $answered = $answer($request->withHeader('Accept', 'application/json'));
+            self::assertInstanceOf(Response::class, $answered);
+
+            return $answered->withHeader('X-Around', 'yes');
         };
         $response = $this->app(options: ['around' => $around])->handle(new Request('GET', '/items/7'), $this->session);
 

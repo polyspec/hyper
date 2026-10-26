@@ -10,6 +10,7 @@ use Polyspec\Template\BoundMap;
  * Answers requests with documents, JSON, action redirects and the static shell (HY-8, HY-10 to HY-19, HY-24 to HY-27,
  * HY-58 to HY-60, HY-62).
  *
+ * @phpstan-import-type RouteDefinition from Manifest
  * @phpstan-type RouteHandler array{load?: \Closure, post?: \Closure, regions?: array<string, \Closure>}
  * @phpstan-type Handlers array{shared?: \Closure, regions?: array<string, \Closure>, routes?: array<string,
  *     RouteHandler>}
@@ -434,8 +435,7 @@ final class App
     /**
      * Answers a routed request with its page, action result or stop result.
      *
-     * @param array{name: string, path: string, title: string, template: string, post: bool, regions: list<Region>}
-     *     $route
+     * @param RouteDefinition $route
      * @param RouteHandler $handler
      */
     private function routed(
@@ -550,8 +550,7 @@ final class App
     /**
      * Renders the route page as a document or as JSON.
      *
-     * @param array{name: string, path: string, title: string, template: string, post: bool, regions: list<Region>}
-     *     $route
+     * @param RouteDefinition $route
      * @param RouteHandler $handler
      * @param array<string, mixed> $invalid
      */
@@ -723,8 +722,7 @@ final class App
      * fails with its kept values renders with its loader data, route regions first, and its kept values leave
      * the embedded data (HY-31, HY-38). The document embeds its data only when `$embed` is true (HY-92).
      *
-     * @param array{name: string, path: string, title: string, template: string, post: bool, regions: list<Region>}
-     *     $route
+     * @param RouteDefinition $route
      * @param array<array-key, mixed> $shared
      * @param array<string, array<array-key, mixed>> $data
      * @param array<string, string> $templates
@@ -806,8 +804,7 @@ final class App
     /**
      * Returns the names of the route regions of a route that are present in the data (HY-75).
      *
-     * @param array{name: string, path: string, title: string, template: string, post: bool, regions: list<Region>}
-     *     $route
+     * @param RouteDefinition $route
      * @param array<string, array<array-key, mixed>> $data
      * @return list<string>
      */
@@ -822,8 +819,7 @@ final class App
     }
 
     /**
-     * @param array{name: string, path: string, title: string, template: string, post: bool, regions: list<Region>}
-     *     $route
+     * @param RouteDefinition $route
      * @param array<array-key, mixed> $shared shared data, which the embedded data carries
      * @param array<string, array<array-key, mixed>> $data loader data, which the embedded data carries
      * @param array<string, BoundMap> $applied bound region data with kept values applied, which the

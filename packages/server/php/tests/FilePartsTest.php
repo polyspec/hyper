@@ -17,12 +17,12 @@ final class FilePartsTest extends TestCase
     public function testFilePartsOfTheContractCasesAreTheFilesOfTheRequest(): void
     {
         $cases = 0;
-        foreach (Json::file(__DIR__ . '/../../../../contracts/fields.json')['multipart'] as $case) {
+        foreach (Json::arrays(Json::at(Json::file(__DIR__ . '/../../../../contracts/fields.json'), 'multipart')) as $case) {
             if (!isset($case['files'])) {
                 continue;
             }
             ++$cases;
-            $request = new Request('POST', '/', ['Content-Type' => $case['type']], '', $case['body']);
+            $request = new Request('POST', '/', ['Content-Type' => Json::string(Json::at($case, 'type'))], '', Json::string(Json::at($case, 'body')));
             $got = [];
             foreach ($request->files()->names() as $name) {
                 foreach ($request->files()->get($name) as $file) {
@@ -34,7 +34,7 @@ final class FilePartsTest extends TestCase
                     ];
                 }
             }
-            self::assertSame($case['files'], $got, $case['id']);
+            self::assertSame($case['files'], $got, Json::string(Json::at($case, 'id')));
         }
         self::assertGreaterThan(0, $cases);
     }
