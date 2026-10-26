@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: 401b527178c1ed1af36bce86d058a722a925cdeb4301ae7f13df58c18bfd6fcc -->
+<!-- source-sha256: 0cc8f1e42b7e0418af6b515067f3f503ac018fb3528fe58819605b6c8d577e47 -->
 # 개발
 
 [English](development.md).
@@ -73,6 +73,8 @@
 `make check`는 `TEMPLATE_TAG`를 확인하고 `FINAL_RUN=1`, 모든 `CHECK_TARGETS`, Darwin에서는 `DARWIN_TARGETS`를 더해 kit의 기본 `ci-targets` 실행기를 호출한다. 실행기는 활성 `[~]` 체크리스트 항목과 변경되었거나 commit되지 않은 tree를 거부하고 `var/report/full-run.lock`을 잡으며 실패해도 모든 target을 끝까지 실행한다. `hooks-check`도 이 모음의 target이다. Darwin은 `virtiofs-check`를 포함하고 Linux CI는 포함하지 않는다.
 
 실행기는 tree, runtime version, target 상태와 시간을 `var/report/full-run/record.json`에, 요약을 `summary.md`에, 전체 log를 `targets/<target>.log`에 쓴다. 요약에는 실패 target의 근거를 포함한다. 실행기는 tree당 한 번 제한을 강제하지 않으며, 위의 한 번 실행 절차가 작업 규칙이다. 설치된 소스 link는 개발 입력으로 유지하고 `make link-state-check`로 선언한 상태를 확인한다.
+
+호스트가 절전하면 실행이 멈춘 동안 test 제한 시간을 넘길 수 있다. 실패와 겹치는 절전 구간을 보존하고 재개 후 영향받은 소유 검사만 다시 실행한다. 제한 시간을 늘리거나 코드 결함을 재현하지 않고 코드 수정으로 보고하지 않는다.
 
 보고서에서 실패 target 이름을 읽는다. 소유 검사를 직접 실행하거나, 수정을 commit하고 활성 항목이 없을 때 `make ci-targets FINAL_RUN=1 TARGETS="<failed targets>" CI_REPORT=var/report/failed-owners`로 그 target만 묶어 실행한다. 원본 보고서를 보존하고 수정 검사는 별도 보고서에 기록한다. 소유 검사 재실행은 해당 수정의 근거이며 원본 전체 실행을 다른 tree의 성공으로 바꾸지 않는다.
 

@@ -73,6 +73,8 @@ The full suite runs on GitHub after the push of `main`. A local full run is not 
 
 The runner writes the tree, runtime versions, target status and times to `var/report/full-run/record.json`, a summary to `summary.md`, and full logs to `targets/<target>.log`. Its summary includes failed-target evidence. The runner does not enforce a once-per-tree limit; the once-only procedure above is the working rule. Installed source links remain development inputs and `make link-state-check` verifies their declared state.
 
+Host suspension can exceed a test deadline while execution is stopped. Preserve that failure and the matching suspension interval, then rerun only the affected owner after resume; do not increase its deadline or claim a code repair without a reproduced code defect.
+
 Read the failed target names from that report. Run their owner checks directly, or group only those targets with `make ci-targets FINAL_RUN=1 TARGETS="<failed targets>" CI_REPORT=var/report/failed-owners` once the repair is committed and no item is active. Preserve the original report and use a separate report for repairs. Owner reruns are evidence for those repairs; they do not turn the original full run into a passing run of another tree.
 
 ## Push
