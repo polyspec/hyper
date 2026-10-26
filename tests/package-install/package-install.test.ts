@@ -41,7 +41,6 @@ function linkedDirectory(name: string): string {
   if (entry?.link !== true || typeof entry.resolved !== 'string') throw new Error(`package-lock.json links ${name} to no directory`);
   return fileURLToPath(new URL(`${entry.resolved}/`, import.meta.url));
 }
-const NPM = fileURLToPath(new URL('../../var/tools/bin/npm', import.meta.url));
 
 test('the installed packages are the packages of this repository, JavaScript with declarations', () => {
   for (const name of ['@polyspec/hyper-client', '@polyspec/hyper-server']) {
@@ -55,9 +54,11 @@ test('the installed packages are the packages of this repository, JavaScript wit
 });
 
 test('each package publishes its build and declarations without its source', () => {
+  const npm = process.env.NPM_BIN;
+  assert.ok(npm, 'make package-check must supply the pinned NPM_BIN');
   for (const name of ['@polyspec/hyper-client', '@polyspec/hyper-server']) {
     // npm pack --dry-run lists the files that the published archive holds; npm 12 keys its JSON by the package name.
-    const pack = execFileSync(NPM, ['pack', '--dry-run', '--json', '--ignore-scripts'], { cwd: linkedDirectory(name), encoding: 'utf8' });
+    const pack = execFileSync(npm, ['pack', '--dry-run', '--json', '--ignore-scripts'], { cwd: linkedDirectory(name), encoding: 'utf8' });
     const packed: unknown = jsonObject(jsonObject(JSON.parse(pack), 'the output of npm pack')[name], `the output of npm pack ${name}`).files;
     if (!Array.isArray(packed)) throw new TypeError(`npm pack lists no files of ${name}`);
     const files = packed.map((file: unknown) => {

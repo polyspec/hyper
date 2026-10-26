@@ -44,7 +44,7 @@ test('the npm manifests name the template tarballs of the release, and their dep
   for (const name of NPM_PACKAGES) {
     const tarball = `${RELEASE}/${name.slice(1).replace('/', '-')}-npm-${VERSION}.tgz`;
     assert.equal(member(root, 'dependencies', 'package.json')[name], tarball, `package.json dependencies ${name}`);
-    assert.equal(member(root, 'overrides', 'package.json')[name], tarball, `package.json overrides ${name}`);
+    assert.equal(member(root, 'overrides', 'package.json')[name], `$${name}`, `package.json overrides ${name} through its direct dependency`);
   }
   for (const manifest of ['packages/client/package.json', 'packages/server/ts/package.json', 'packages/build/package.json']) {
     const dependencies = optionalMember(json(manifest), 'dependencies', manifest);

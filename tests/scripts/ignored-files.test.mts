@@ -2,6 +2,7 @@
 // the test runs and the guards write into the checkout, so that a run leaves the tracked tree unchanged.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
+import { lstatSync } from 'node:fs';
 import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
@@ -15,6 +16,8 @@ const OUTPUTS = [
   'vendor/autoload.php',
   'examples/board/vendor/autoload.php',
   'tests/package-install/node_modules/@polyspec/hyper-client/package.json',
+  'tests/package-install/var/link/npm/bin/template',
+  'tests/package-install/var/link/npm/cache/_logs/install.log',
   'packages/client/dist/index.js',
   'packages/client/dist.next-12345/index.js',
   'packages/server/ts/dist/index.js',
@@ -50,7 +53,18 @@ test('.gitignore ignores no tracked file', () => {
 });
 
 test('.gitignore ignores every output of the installs, the builds, the test runs and the guards', () => {
-  const result = git('check-ignore', '--no-index', '--verbose', '--non-matching', ...OUTPUTS);
+  // Git refuses paths below a directory symlink. Check that installed directory itself in a linked worktree.
+  const outputs = OUTPUTS.map((file) => {
+    const parts = file.split('/');
+    for (let length = 1; length < parts.length; length++) {
+      const prefix = parts.slice(0, length).join('/');
+      if (lstatSync(path.join(ROOT, prefix), { throwIfNoEntry: false })?.isSymbolicLink()) return prefix;
+    }
+    return file;
+  });
+  const result = git('check-ignore', '--no-index', '--verbose', '--non-matching', ...outputs);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.equal(result.stdout.trimEnd().split('\n').length, outputs.length, result.stdout);
   const notIgnored = result.stdout.split('\n').filter((line) => line.startsWith('::')).map((line) => line.split('\t')[1]);
   assert.deepEqual(notIgnored, [], `outputs that .gitignore does not ignore: ${notIgnored.join(' ')}`);
 });

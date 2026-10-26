@@ -18,6 +18,7 @@ packages/client/dist/
 packages/server/ts/dist/
 __pycache__/
 /var/
+/tests/package-install/var/
 *.next-*
 .venv/
 *.egg-info/

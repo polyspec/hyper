@@ -54,7 +54,7 @@ test('npm installs the template packages from the tarballs of the template relea
     assert.equal(read(`node_modules/${name}/package.json`).version, version, name);
   }
   // The packages of the workspace require the exact version, which the root resolves to the same tarball.
-  for (const name of PACKAGES) assert.equal(overrides[name], dependencies[name], name);
+  for (const name of PACKAGES) assert.equal(overrides[name], `$${name}`, name);
   assert.match(readFileSync(join(repository, '.npmrc'), 'utf8'), /^allow-remote=root$/m);
 });
 

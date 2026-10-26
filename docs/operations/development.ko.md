@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: 127622964e4a018cf3f8ed3c88733af08153389a13fa35648130c1081c460f07 -->
+<!-- source-sha256: d58781703613b353d37a6049a61835ee5090ce49a5db88f195bd4524dadfe029 -->
 # 개발
 
 [English](development.md).
@@ -29,7 +29,7 @@
 | `make template-tag` | 템플릿 저장소 `TEMPLATE_REPOSITORY`에 tag `TEMPLATE_TAG`가 없으면 기대한 tag와 저장소가 가진 tag를 밝히며 실패한다. `make check`의 full-run key가 그 commit을 밝힌다(HR-80) |
 | `make ext` | `var/products/template-ext`에 풀린 php-ext asset의 소스를 `PATH`의 php-config로 phpize, configure, make해 `build/ext/polyspec_template.so`를 build한다. offline으로 실행하며, 소스나 PHP build가 바뀔 때만 다시 build한다(HY-48, H14.1-7) |
 | `make packages` | `@polyspec/hyper-client`와 `@polyspec/hyper-server`의 JavaScript module과 type 선언을 각 package가 선언한 build(npm의 bin link인 `tsc`를 실행하는 `npm run build`)로 각자의 `dist` 디렉터리에 build하고 각 build를 파일 단위로 publish한다. npm은 workspace를 link하므로 `node_modules`는 build를 바로 보여 준다(HR-79, HR-82). Node 서버 test, board 에셋 build, `make package-check`, `make hyper-test-scripts`는 package를 exports로 가져오므로 이것을 먼저 실행한다(HR-61). build script는 `data-template.json`, `checkManifest`, `templateReferences`를 script 옆 `packages/client`의 소스에서 읽으므로 `dist`가 필요 없고 어느 작업 디렉터리에서도 실행된다 |
-| `make package-check` | 두 package를 그 `package-lock.json`에서 `npm ci --offline`으로 `tests/package-install`에 offline 설치해 그 디렉터리에 link하고(HR-89), `npm pack`이 publish하는 파일을 확인하며, 그 test를 `erasableSyntaxOnly`로 선언에 대해 type 검사한 뒤 `node`로 실행한다(HR-61) |
+| `make package-check` | 두 package를 그 `package-lock.json`에서 `npm ci --offline`으로 `tests/package-install`에 offline 설치해 그 디렉터리에 link하고(HR-89), `npm pack`이 publish하는 파일을 확인하며, 그 test를 `erasableSyntaxOnly`로 선언에 대해 type 검사한 뒤 `node`로 실행한다(HR-61) 테스트는 `NPM_BIN`으로 고정된 npm을 받으며 `tests/package-install/var/`에는 ignore된 기본 링크 상태를 저장한다. |
 | `make server` | 설치된 소스 패키지로 게시판 서버 프로그램을 `examples/board/build/server`에 빌드한다. 의존성을 설치하거나 링크를 다시 연결하지 않는다(아래 참조) |
 | `make server-fixtures` | PHP 테스트 픽스처의 서버 프로그램을 빌드한다 |
 | `make node-fixtures` | `scripts/build-templates.mts`와 설치한 template package로 Node 서버 test에 쓸 PHP test fixture의 템플릿 파일을 빌드한다(HR-70) |

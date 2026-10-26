@@ -139,7 +139,7 @@ package-check: packages node-fixtures ## Install the npm packages into tests/pac
 	cd tests/package-install && $(NODE) $(abspath $(KIT))/holder-lock.$(KIT_EXT) run $(abspath $(INSTALL_LOCK)) -- $(NPM) ci --offline --allow-remote=root --no-audit --no-fund
 	$(MAKE) --no-print-directory link PROJECT=tests/package-install
 	$(TSC) -p tests/package-install/tsconfig.json
-	$(NODE) $(KIT)/run-tests.$(KIT_EXT) node --cwd tests/package-install -- package-install.test.ts
+	NPM_BIN=$(NPM) $(NODE) $(KIT)/run-tests.$(KIT_EXT) node --cwd tests/package-install -- package-install.test.ts
 
 server: packages ## Build the board server program from installed dependencies: its templates and generated PHP program (HY-48)
 	$(NODE) $(BUILD_PACKAGE)/bin/hyper-build-server.mjs --manifest $(BOARD)/app/app.json --templates $(BOARD)/templates --output $(BOARD)/build/server --php-namespace 'Polyspec\Hyper\Examples\Board\Program'
