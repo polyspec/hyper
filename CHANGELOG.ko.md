@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: b5f833b9dc660f3fc164edd40c0640826f811e8ed5deb2f430e0ca5ee608b157 -->
+<!-- source-sha256: c361b145cc27842b2f929bd59d9ed039dadc524c6bd385514d7881f857f2e44e -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- 정확한 public API 검사는 HY-113의 기존 TypeScript UploadedFile export와 Python uploaded_file 모듈을 포함한다. Python 루트 export는 유지하며 두 언어의 API 검사를 통과한다.
 - 기본 npm 소스 링크는 direct dependency override 참조로 EOVERRIDE 없이 연결한다. 패키지 fixture는 고정된 npm 경로를 받고 생성된 링크 상태는 ignore한다. ignore 검사는 Git의 성공과 모든 출력 경로 검사를 확인한다. 패키지 설치, 소스 링크, 해당 회귀 검사를 통과한다(H27.4).
 - 준비된 로컬 후보와 미완료 아카이브 consumer 검증을 구분한다. 후자는 호환 배포 입력과 아카이브 target의 tag를 기다리며 최종 로컬 검증은 진행할 수 있다(H27.3).
 - board 서버 빌드는 Composer 설치나 링크 재연결 없이 설치된 소스 패키지를 사용한다. 명시적인 의존성 설치는 유지한다. 회귀 테스트와 템플릿 11개의 서버 빌드가 통과한다(H27.3-1).

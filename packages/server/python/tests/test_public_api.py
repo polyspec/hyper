@@ -16,6 +16,7 @@ PUBLIC_MODULES = [
     "result",
     "server",
     "session",
+    "uploaded_file",  # HY-113: the uploaded file class belongs to the public API.
     "wsgi",
 ]
 
