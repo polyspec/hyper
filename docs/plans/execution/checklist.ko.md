@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: b454fe9c50c731bf8f0ded3acf5408eb922473466266cd38bba01e85ae617bb4 -->
+<!-- source-sha256: ff36663566706a2ca95edd17837854907e6a6c8d7aebae5850078a82fa6edae5 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -254,4 +254,4 @@
 | H26.9 | docs/operations/benchmark.md와 benchmark.ko.md를 유휴 머신에서 PHP 8.4로 다시 측정하고, 2026-10-02 PHP 8.5.10 기록을 새 실행의 기록으로 바꾼다. | docs/operations/benchmark.md, docs/operations/benchmark.ko.md | `make bench`, `make docs-check` | [!] 원인: link-owner가 모든 개발 행을 닫은 뒤 순서를 정하는 유휴 벤치마크 단계다.; 재시도: link-owner가 유휴 벤치마크 단계를 지시할 때. |
 | H27.1 | H25.66, H25.71, H25.73, H26.8, H26.9를 릴리스 준비 기준으로 검토한다. 기존 이력을 유지하고 PHP 8.4를 변경하지 않는 릴리스 후속 작업을 등록한다. | docs/plans/execution/plan.md, docs/plans/execution/plan.ko.md, docs/plans/execution/checklist.md, docs/plans/execution/checklist.ko.md | `make docs-check` | [o] |
 | H27.2 | Composer로 PHP 8.4 릴리스 의존성 그래프를 해결한다. H25.66의 PHPUnit 선택과 H25.73, H26.8의 lock 의무를 재검토하고 PHP 8.4를 지원하는 패키지 릴리스를 선택해 소스 링크, alias, 플랫폼 요구사항 무시 없이 두 추적 lock을 다시 생성한다. | composer.json, composer.lock, examples/board/composer.json, examples/board/composer.lock, packages/server/php/composer.json, docs/operations/dependencies.md, docs/operations/dependencies.ko.md | `var/tools/mise/shims/composer validate --strict` and `var/tools/mise/shims/composer validate --strict --working-dir=examples/board` and `var/tools/mise/shims/composer check-platform-reqs --lock` and `var/tools/mise/shims/composer check-platform-reqs --lock --working-dir=examples/board` | [!] 원인: 고정된 template PHP 아카이브 0.0.11이 PHP >=8.5를 요구한다. PHP 8.4.26의 Composer가 PHP 8.4.1 플랫폼에서 이를 거부한다. 설치 검증에 앞서 H27.3의 후보 버전 준비는 진행할 수 있다.; 재시도: PHP 8.4를 지원하는 template PHP 아카이브가 준비되면 버전과 검증한 digest를 고정하고 Composer로 두 lock을 해결한다. |
-| H27.3 | 다음 패치 릴리스 후보 0.0.19를 로컬 개발 링크 없이 아카이브에서 설치하고 PHP 8.4에서 실행함을 검증한다. H25.71의 빌드 의존성 해석을 검증하며 링크 소스에서만 동작하는 릴리스는 거부한다. 선언된 릴리스 target으로 후보 asset과 consumer lock을 생성하며 tag는 생성하거나 push하지 않는다. | tests/release-install, config/release.json, package manifests and locks, CHANGELOG.md, CHANGELOG.ko.md | `make release-versions TAG=v0.0.19` and `make release-consumer TAG=v0.0.19` | [ ] |
+| H27.3 | 다음 패치 릴리스 후보 0.0.19를 로컬 개발 링크 없이 아카이브에서 설치하고 PHP 8.4에서 실행함을 검증한다. H25.71의 빌드 의존성 해석을 검증하며 링크 소스에서만 동작하는 릴리스는 거부한다. 선언된 릴리스 target으로 후보 asset과 consumer lock을 생성하며 tag는 생성하거나 push하지 않는다. | tests/release-install, config/release.json, package manifests and locks, CHANGELOG.md, CHANGELOG.ko.md | `make release-versions TAG=v0.0.19` and `make release-consumer TAG=v0.0.19` | [~] |
