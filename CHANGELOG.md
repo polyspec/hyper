@@ -4,7 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
-- The release-readiness audit retains the four withdrawn rows as history, restores Composer resolution and lock validation in H27.2, adds clean archive verification in H27.3, and keeps the idle benchmark H26.9 open.
+- The release-readiness audit retains the four withdrawn rows as history, restores Composer resolution and lock validation in H27.2, adds clean archive verification in H27.3, and keeps the idle benchmark H26.9 open (H27.1).
 - H25.73 is withdrawn because reconciling tracked locks with linked development manifests contradicts H26.8. PHP 8.4 remains the runtime target, and the locks are unchanged (H25.73).
 - The committed composition documentation passes parity-declarations-check and docs-check (H25.76).
 - Application authoring rules HC-1 to HC-7 remain mandatory in docs/operations/composition.md. HY-48 states the rejection of hx-* attributes outside the layout explicitly; protocol requirement tracing passes (H25.76).
