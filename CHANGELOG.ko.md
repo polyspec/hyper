@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 45cf7e146a20e9e9a9e6faf0e63616c4576b2f053d851ea2fa3d2f8a4e648470 -->
+<!-- source-sha256: fae16455c951b13c3ed8d6b4c8c8f09c2e3adcff9072d21934d97cc8619e64ce -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- H26.4는 서버 파일 부분 parity와 클라이언트 stream 요구사항 HYC-17부터 HYC-21을 구분하며, 오래된 클라이언트 미결정 설명을 제거한다(H26.4-1).
 - release assets test는 H25.60이 남긴 대로 PHPStan이 template extension의 stub을 읽지 않는지 검사한다(H25.82).
 - setup-php test는 gates workflow의 checkout 폴더의 .php-version을 받는다(H25.81).
 - ci.yml의 matrix가 suppression-check를 실행하므로, 전체 모음의 CI 실행이 CHECK_TARGETS의 모든 target을 한 번씩 실행한다(H25.80).

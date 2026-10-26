@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- H26.4 records server file-part parity separately from the client stream requirements HYC-17 to HYC-21; its stale pending-client clause is removed (H26.4-1).
 - The release assets test checks that PHPStan reads no stub of the template extension, as H25.60 left it (H25.82).
 - The setup-php test accepts the .php-version of the checkout folder of the gates workflow (H25.81).
 - The matrix of ci.yml runs suppression-check, so the CI run of the full suite runs every target of CHECK_TARGETS once (H25.80).
