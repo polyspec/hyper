@@ -4,7 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
-- The cleanup-timeout audit found a 55-second host suspension overlapping the 30-second SIGTERM test deadline. The unchanged four cleanup tests pass after resume; preserve the original failure and power-event evidence without claiming a code repair or extending the deadline.
+- The cleanup-timeout audit found a 55-second host suspension overlapping the 30-second SIGTERM test deadline. The unchanged four cleanup tests pass after resume; preserve the original failure and power-event evidence without claiming a code repair or extending the deadline (H27.9).
 - Final verification invokes the current native kit report runner with the complete platform target set. Procedures preserve the single final attempt and separate failed-owner reports instead of calling a removed entry point (H27.11).
 - Synchronize tracked shared files and workflows as regular installed-package copies and refresh the repository hooks. Installed package source links remain in place; shared-copy and hook checks pass (H27.10).
 - The server benchmark reports the generated PHP program and template extension state without reading a removed Renderer property. An isolated benchmark regression rejects PHP warnings and verifies database removal (H27.7).
