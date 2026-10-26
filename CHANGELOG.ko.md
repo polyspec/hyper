@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: dcbb51852d9d3453400218bcf8286249f1bd68aa944d45c2cad481ae1927ff43 -->
+<!-- source-sha256: 6a018f04f3b9acf0f099694662280cedef2d9f0f4143d318a28b86ea192c612e -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- PHP 8.4 릴리스 그래프의 Composer 해결은 검증된 template PHP 아카이브 0.0.11의 PHP >=8.5 요구로 차단된다. 호환 아카이브 선행 조건을 기록하며 PHP와 lock은 변경하지 않는다(H27.2).
 - 릴리스 준비 검토는 철회된 네 행을 이력으로 유지하고 Composer 의존성 해결과 lock 검증을 H27.2에 복원하며, 깨끗한 아카이브 검증을 H27.3에 추가하고 유휴 환경 벤치마크 H26.9를 미완료로 유지한다(H27.1).
 - H25.73은 추적 lock을 링크된 개발 manifest에 맞추는 작업이 H26.8과 모순되어 철회한다. 런타임 기준은 PHP 8.4이며 lock은 변경하지 않는다(H25.73).
 - 커밋된 화면 구성 문서가 parity-declarations-check와 docs-check를 통과한다(H25.76).

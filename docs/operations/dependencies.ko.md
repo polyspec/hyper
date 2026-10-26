@@ -1,5 +1,5 @@
 <!-- doc-id: dependencies -->
-<!-- source-sha256: bb9a7cabb8fa7e05551b364d588291d493a15e02880be259541e5b3e2ca1242c -->
+<!-- source-sha256: 7d7d07c72d3e624b60fb9f4cdc862a6fc4e07134fcdfaaafb652b2f619f8a8fb -->
 # 의존성
 
 [English](dependencies.md).
@@ -22,6 +22,12 @@
 | `@polyspec/hyper-build`의 `esbuild`, `tailwindcss`, `@tailwindcss/node`, `@tailwindcss/oxide` | 정확히 고정 | build | build package는 client entry를 esbuild로 bundle하고 `--tailwind`의 stylesheet를 Tailwind CSS로 compile하므로(HR-77, HR-96), consumer는 이 저장소의 test가 실행한 릴리스로 빌드한다. root package는 Tailwind CSS 패키지를 `@polyspec/hyper-build`를 통해 설치하고, esbuild는 `make node-server`를 위해 직접 요구한다. | 각 도구를 최신 안정 버전으로 올리고 `make check`를 다시 실행한다. |
 | `@polyspec/template`, `@polyspec/template-compiler`, `polyspec/template` | tag `v0.0.11`의 release asset | 런타임, build | template 패키지가 npm과 Packagist에 없으므로, npm은 `@polyspec/template`과 `@polyspec/template-compiler`를 template 저장소의 GitHub Release `v0.0.11`의 tarball에서 URL로 설치하고 `package-lock.json`이 그 integrity로 고정한다(`.npmrc`의 `allow-remote=root`, root 의존성, workspace package의 override). Composer는 private root `composer.json`과 `examples/board/composer.json`의 artifact repository `var/products/template-php`로 그 release의 zip에서 `polyspec/template`을 설치한다. `make hyper-install`은 `config/release-assets.json`이 pin한 zip을 kit의 `make release-assets-fetch`로 내려받아 sha256을 확인하고 무시되는 그 디렉터리에 쓰며, `composer.lock`은 Composer가 설치 때 확인하는 sha1과 함께 그 dist를 기록한다(HR-70, H23.11). `tests/release-install/composer`의 consumer 프로젝트는 template zip을 그 artifact repository에서 받으며, release-consumer가 `config/release-assets.json`의 entry `template-php`의 zip을 거기에 둔다(`config/release.json`의 `consumers.composer.polyspec`, kit K140, H23.11-1). 이 저장소의 manifest는 정확한 version `0.0.11`을 요구한다(H23.23, H23.25, H23.28). `tests/release-install`의 consumer 프로젝트는 hyper release 0.0.18의 archive가 요구하는 `0.0.11`을 요구하며, release commit이 그 archive에서 consumer manifest와 lock을 쓴다(H21.4). `polyspec/template` 0.0.11은 `opis/json-schema`와 `symfony/console`을 요구하며 Composer가 Packagist에서 함께 설치하고, `@polyspec/template-compiler` 0.0.11은 실행 시 `ajv`를 요구한다. 네이티브 확장은 `make hyper-install`이 가져오고 `config/release-assets.json`이 sha256으로 pin한 tag `TEMPLATE_TAG`(`v0.0.11`)의 php-ext archive에서 온다(HR-78, H14.1-7). | template 패키지가 npm과 Packagist에 배포될 때. |
 | `docker.io/library/node:26.8.1-trixie-slim` | digest `sha256:c0753125a3789977aefe869cbebccf70e3cfd7ea84ca48547458f02e4f1d7146` | 테스트 | `tests/virtiofs/output-files.test.mts`(`make virtiofs-check`, Darwin에서만)는 bind mount가 virtiofs인 Apple `container`의 Linux container에서 workspace의 Node 버전으로 build 복사를 실행한다(HR-68). digest는 테스트가 실행된 image를 고정한다. | Node 26.8.1이 더 이상 선언된 Node 버전이 아닐 때. 그때 새 버전의 image를 고정한다. |
+
+## PHP 8.4 아카이브 호환성
+
+고정된 template PHP 아카이브 0.0.11의 SHA-256은 `118bb3edd1977cf2e8115355972ffca2cb2c1d9f77f0d98226a7a0f598044ce2`이며 config/release-assets.json과 일치한다. 아카이브의 composer.json은 PHP >=8.5를 요구하지만 이 저장소의 기준은 PHP 8.4다. PHP 8.4.26에서 Composer update dry-run은 config.platform.php 8.4.1에 대해 해당 아카이브를 거부한다. 로컬에 링크된 template 소스는 PHP >=8.4를 요구하지만, 이것이 아카이브 메타데이터를 바꾸거나 아카이브 설치를 증명하지는 않는다.
+
+H27.2는 호환되는 template 아카이브를 기다린다. Composer로 루트와 board lock을 해결하기 전에 해당 버전과 digest를 기록해야 한다. 이 비호환성을 우회하려고 PHP나 아카이브 메타데이터를 바꾸지 않는다. H27.3의 후보 버전 준비는 진행할 수 있지만, 깨끗한 설치 검증에는 H27.2가 먼저 필요하다.
 
 ## multipart 파서
 
