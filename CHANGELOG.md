@@ -4,7 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
-- Remove the unused filesystem import from the installed-source assertions; TypeScript lint checks pass.
+- Remove the unused filesystem import from the installed-source assertions; TypeScript lint checks pass (H27.8-1).
 - The cleanup-timeout audit found a 55-second host suspension overlapping the 30-second SIGTERM test deadline. The unchanged four cleanup tests pass after resume; preserve the original failure and power-event evidence without claiming a code repair or extending the deadline (H27.9).
 - Final verification invokes the current native kit report runner with the complete platform target set. Procedures preserve the single final attempt and separate failed-owner reports instead of calling a removed entry point (H27.11).
 - Synchronize tracked shared files and workflows as regular installed-package copies and refresh the repository hooks. Installed package source links remain in place; shared-copy and hook checks pass (H27.10).
