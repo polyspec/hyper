@@ -8,9 +8,11 @@ namespace Polyspec\Hyper;
  * The file parts of a multipart body: an ordered map from each name, in the order of its first occurrence, to its
  * files in request order (HY-113).
  *
+ * @implements \IteratorAggregate<string, list<UploadedFile>>
+ *
  * @internal
  */
-final class Files
+final class Files implements \IteratorAggregate
 {
     /** @use NamedValues<UploadedFile> */
     use NamedValues;

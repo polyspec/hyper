@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- PHP request maps expose native iteration without internal storage return types; uploaded files now appear in foreach, retaining request order. Public upload metadata and file-limit declarations match every server, response header signatures expose no private alias, and the file-parts binding executes its actual contract test. Native API symbol checks, PHP regressions and scoped file-parts parity pass.
 - Remove the unused filesystem import from the installed-source assertions; TypeScript lint checks pass (H27.8-1).
 - The cleanup-timeout audit found a 55-second host suspension overlapping the 30-second SIGTERM test deadline. The unchanged four cleanup tests pass after resume; preserve the original failure and power-event evidence without claiming a code repair or extending the deadline (H27.9).
 - Final verification invokes the current native kit report runner with the complete platform target set. Procedures preserve the single final attempt and separate failed-owner reports instead of calling a removed entry point (H27.11).

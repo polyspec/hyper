@@ -4577,7 +4577,7 @@
         {
           "implementation": "ts",
           "test": "packages/server/ts/tests/files.test.ts",
-          "id": "file parts of the contract case %s are its files"
+          "id": "file parts of the contract cases are their files (HY-113)"
         }
       ],
       "requirements": [
@@ -4606,6 +4606,160 @@
       ],
       "requirements": [
         "HY-114"
+      ]
+    },
+    {
+      "id": "uploaded-file-construct",
+      "kind": "api",
+      "requirements": [
+        "HY-106",
+        "HY-113"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\UploadedFile::__construct"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.uploaded_file.UploadedFile"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!UploadedFile:constructor(1)"
+        }
+      ]
+    },
+    {
+      "id": "uploaded-file-name",
+      "kind": "api",
+      "requirements": [
+        "HY-106",
+        "HY-113"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\UploadedFile::name"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.uploaded_file.UploadedFile.name"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!UploadedFile#name:member"
+        }
+      ]
+    },
+    {
+      "id": "uploaded-file-filename",
+      "kind": "api",
+      "requirements": [
+        "HY-106",
+        "HY-113"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\UploadedFile::filename"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.uploaded_file.UploadedFile.filename"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!UploadedFile#filename:member"
+        }
+      ]
+    },
+    {
+      "id": "uploaded-file-content-type",
+      "kind": "api",
+      "requirements": [
+        "HY-106",
+        "HY-113"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\UploadedFile::contentType"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.uploaded_file.UploadedFile.content_type"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!UploadedFile#contentType:member"
+        }
+      ]
+    },
+    {
+      "id": "uploaded-file-content",
+      "kind": "api",
+      "requirements": [
+        "HY-106",
+        "HY-113"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\UploadedFile::content"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.uploaded_file.UploadedFile.content"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!UploadedFile#content:member"
+        }
+      ]
+    },
+    {
+      "id": "request-fileover",
+      "kind": "api",
+      "requirements": [
+        "HY-106",
+        "HY-114"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\Request::fileOver"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.request.Request.file_over"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!Request_2#fileOver:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "app-option-filelimit",
+      "kind": "api",
+      "requirements": [
+        "HY-106",
+        "HY-114"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\App::open"
+        },
+        {
+          "implementation": "python",
+          "symbol": "hyper.app.App.open"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!AppOptions#fileLimit:member"
+        }
       ]
     }
   ],

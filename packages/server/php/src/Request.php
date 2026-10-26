@@ -226,8 +226,12 @@ final class Request
         return $this->query;
     }
 
-    /** Returns every query value in order, without nesting (HY-56). */
-    public function query(): Fields
+    /**
+     * Returns every query value in order, without nesting (HY-56).
+     *
+     * @return \IteratorAggregate<string, list<string>>
+     */
+    public function query(): \IteratorAggregate
     {
         return $this->queryFields ?? Fields::empty();
     }
@@ -235,7 +239,7 @@ final class Request
     /** Returns the last query value of a name as an integer, or the default when it is absent or not an integer. */
     public function queryInt(string $name, int $default): int
     {
-        $value = $this->query()->last($name);
+        $value = $this->queryFields?->last($name);
         if ($value !== null && preg_match('/^-?\d{1,15}$/', $value) === 1) {
             return (int) $value;
         }
@@ -243,8 +247,12 @@ final class Request
         return $default;
     }
 
-    /** Returns every form value of the body in order, without nesting (HY-57). */
-    public function form(): Fields
+    /**
+     * Returns every form value of the body in order, without nesting (HY-57).
+     *
+     * @return \IteratorAggregate<string, list<string>>
+     */
+    public function form(): \IteratorAggregate
     {
         return $this->formFields ?? Fields::empty();
     }
@@ -252,11 +260,15 @@ final class Request
     /** Returns the last form value of a name; an absent name gives the empty string. */
     public function formString(string $name): string
     {
-        return $this->form()->last($name) ?? '';
+        return $this->formFields?->last($name) ?? '';
     }
 
-    /** Returns the file parts of the body, an ordered map from each name to its files in request order (HY-113). */
-    public function files(): Files
+    /**
+     * Returns the file parts of the body, an ordered map from each name to its files in request order (HY-113).
+     *
+     * @return \IteratorAggregate<string, list<UploadedFile>>
+     */
+    public function files(): \IteratorAggregate
     {
         return $this->fileParts ?? Files::empty();
     }
@@ -264,13 +276,13 @@ final class Request
     /** Returns the last file of a name, or null (HY-113). */
     public function file(string $name): ?UploadedFile
     {
-        return $this->files()->last($name);
+        return $this->fileParts?->last($name);
     }
 
     /** Returns true when a file of the body is larger than `$limit` bytes (HY-114). */
     public function fileOver(int $limit): bool
     {
-        return $this->files()->largest() > $limit;
+        return ($this->fileParts?->largest() ?? 0) > $limit;
     }
 
     /** Returns a flash value stored by the previous action, or null. */

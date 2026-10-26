@@ -95,14 +95,6 @@ final class Fields implements \IteratorAggregate, \Countable
         return $this->lastOf($name);
     }
 
-    /** @return \Generator<string, list<string>> */
-    public function getIterator(): \Generator
-    {
-        foreach ($this->names as $name) {
-            yield $name => $this->values[$name];
-        }
-    }
-
     public function count(): int
     {
         return count($this->names);

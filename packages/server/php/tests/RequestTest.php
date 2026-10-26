@@ -94,7 +94,7 @@ final class RequestTest extends TestCase
         self::assertSame([['b', ['1', '2']], ['roles[]', ['a', 'b']], ['1', ['x']], ['q', ['a b']]], $query);
         self::assertSame(2, $request->queryInt('b', 7));
         self::assertSame('', (new Request('GET', '/'))->rawQuery());
-        self::assertSame([], (new Request('GET', '/'))->query()->names());
+        self::assertSame([], iterator_to_array((new Request('GET', '/'))->query()));
     }
 
     /** HY-57: every form value of the body in order, without nesting, whatever PHP put into $_POST. */
@@ -114,7 +114,7 @@ final class RequestTest extends TestCase
         self::assertSame([['title', ['한 글']], ['roles[]', ['a', 'b']], ['empty', ['']], ['x', ['1', '2']]], $form);
         self::assertSame('2', $request->formString('x'));
         self::assertSame('', $request->formString('missing'));
-        self::assertSame([], (new Request('POST', '/', ['Content-Type' => 'text/plain'], '', 'a=1'))->form()->names());
+        self::assertSame([], iterator_to_array((new Request('POST', '/', ['Content-Type' => 'text/plain'], '', 'a=1'))->form()));
 
         $server = $_SERVER;
         $post = $_POST;
@@ -123,7 +123,7 @@ final class RequestTest extends TestCase
         $_SERVER['CONTENT_TYPE'] = 'application/x-www-form-urlencoded';
         $_POST = ['ignored' => '1'];
         try {
-            self::assertSame([], Request::fromGlobals()->form()->names());
+            self::assertSame([], iterator_to_array(Request::fromGlobals()->form()));
         } finally {
             $_SERVER = $server;
             $_POST = $post;

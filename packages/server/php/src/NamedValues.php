@@ -34,6 +34,14 @@ trait NamedValues
         return $this->values[$name] ?? [];
     }
 
+    /** @return \Generator<string, list<T>> */
+    public function getIterator(): \Generator
+    {
+        foreach ($this->names as $name) {
+            yield $name => $this->values[$name];
+        }
+    }
+
     /**
      * Returns the last value of a name, or null.
      *

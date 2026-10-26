@@ -8,17 +8,18 @@ import { list, parsed, record, text } from './support.js';
 
 const fixture = record(parsed(readFileSync(new URL('../../../../contracts/fields.json', import.meta.url), 'utf8')));
 
-it.each(list(fixture.multipart).map(record).filter((item) => item.files !== undefined).map((item) => [text(item.id), item] as const))(
-  'file parts of the contract case %s are its files',
-  (_id, item) => {
+it('file parts of the contract cases are their files (HY-113)', () => {
+  const cases = list(fixture.multipart).map(record).filter((item) => item.files !== undefined);
+  expect(cases.length).toBeGreaterThan(0);
+  for (const item of cases) {
     const files = fileParts(text(item.type), Buffer.from(text(item.body), 'latin1'));
-    expect(files.valid).toBe(true);
+    expect(files.valid, text(item.id)).toBe(true);
     const got = [...files.values].flatMap(([, values]) =>
       values.map((file) => ({ name: file.name, filename: file.filename, contentType: file.contentType, content: Buffer.from(file.content).toString('latin1') })),
     );
-    expect(got).toEqual(item.files);
-  },
-);
+    expect(got, text(item.id)).toEqual(item.files);
+  }
+});
 
 it('file parts whose name is not UTF-8 are refused like a name that is not UTF-8 (HY-42)', () => {
   const body = bytesOf('--x\r\nContent-Disposition: form-data; name="f"; filename="\xff.txt"\r\n\r\nQ\r\n--x--\r\n');

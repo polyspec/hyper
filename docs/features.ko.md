@@ -1,5 +1,5 @@
 <!-- doc-id: features -->
-<!-- source-sha256: a3ad765987b0ce1ba626b318622053e62d23940d66c48092f05ad0d0d840cf13 -->
+<!-- source-sha256: b72867c6a6397803188a804937244607246f59f15344c7693a37b2e0f3bc5f8b -->
 # 기능 상태
 
 [English](features.md).
@@ -68,6 +68,7 @@
 | kit-tools | push gate, 최종 검증 실행기, Git hook, holder lock, 문서와 commit 검사, owner 검사, test runner, CI 보고서, toolchain 설치와 검사, release는 release asset의 URL과 integrity로 pin한 npm 패키지 `@polyspec/kit`이며 `config/*.json`이 이를 설정한다. `package-lock.json`과 다른 패키지, 패키지와 다른 `kit.copies`의 복사본, schema를 어기는 설정은 실패한다 | implemented; CI run pending | `make kit-check` |
 | template-tag | 릴리즈 선언은 `TEMPLATE_TAG`(`v0.0.11`)를 고정하며 없는 tag는 기대값과 실제값을 밝히고 `make template-tag`를 실패시킨다(HR-80) | implemented; CI run pending | `tests/scripts/template-pins.test.mts`, `tests/scripts/template-version.test.mts` |
 | query-values | 중첩 없이 순서대로 읽는 모든 쿼리 값과 원본 쿼리(HY-56) | implemented | `make test-php`, `make hyper-test-node` |
+| file-parts | 공개 업로드 metadata와 파일 제한은 기본 API 선언을 가지며 PHP 요청 map은 내부 저장형 없이 순서가 있는 iterable 항목을 노출한다(HY-106, HY-113, HY-114) | unit verified; CI run pending | `tests/scripts/public-symbols.test.mts`, `make parity-check UNITS=file-parts`, `packages/server/php/tests/FilePartsTest.php` |
 | form-values | urlencoded body나 multipart body에서 중첩 없이 순서대로 읽는 모든 폼 값(HY-57) | implemented | `make test-php`, `make hyper-test-node` |
 | request-boundary | UTF-8 검사, 상세 없는 500 오류, 데이터 모델 검사, 강화한 세션 쿠키, 리다이렉트 검사, 실패 표시(HY-42 ~ HYC-14) | implemented | `make test-php`, `make test-js`, `make e2e` |
 | benchmark | 서버와 브라우저 성능 측정: 요청 비용, generated 프로그램과 확장 상태 보고, 행 수별 렌더, 첫 화면, `hy-set` 메인 스레드 부하, 이동 중 메모리 | implemented | `make bench`, [성능 측정](operations/benchmark.ko.md) |

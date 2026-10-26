@@ -1,15 +1,12 @@
 import type { Reply } from './reply.js';
 
-// Response headers; Set-Cookie holds a list and every other header holds one value.
-export type Headers = Record<string, string | string[]>;
-
 // One HTTP response.
 export class Response {
   readonly status: number;
-  readonly headers: Headers;
+  readonly headers: Record<string, string | string[]>;
   readonly body: string;
 
-  constructor(status: number, headers: Headers, body: string) {
+  constructor(status: number, headers: Record<string, string | string[]>, body: string) {
     this.status = status;
     this.headers = headers;
     this.body = body;
