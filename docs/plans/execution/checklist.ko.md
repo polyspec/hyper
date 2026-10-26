@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: d7eb65771a5a28cc333aa62afac35a144e8fb58e9567aa8f42f2b332c0a14f53 -->
+<!-- source-sha256: a5db6ca2af0e7c3c602d76dbb4844f2cb6f5446e88c72e7ae9b5a09d709eeec1 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -271,4 +271,4 @@
 | H27.14 | 공개된 공유 도구 archive 0.0.56을 기본 npm 해석과 릴리즈 무결성 확인으로 반영하고 복사본과 hook 및 보안 검토 기록을 갱신하며 로컬 소스 link를 유지한다. | package.json, package-lock.json, config/dependency-review.json, shared copies and hooks, docs/operations/dependencies.md and Korean twin | `make kit-check` and `make hooks-check` and `make dependency-policy-check` and `make link-state-check` | [o] |
 | H27.15 | bootstrap, CI와 소유 검사에서 필수 형제 도구 경로를 제거하고 선언된 기본 npm으로 깨끗한 checkout을 준비하며 소스 link와 packed 모드 모두 설치 package를 사용한다. | Makefile, .github/workflows/ci.yml, tests/scripts, AGENTS.md and twin, docs/operations/development.md and twin | `node node_modules/@polyspec/kit/scripts/kit/run-tests.mts node -- tests/scripts/installed-kit.test.mts tests/scripts/toolchain.test.mts tests/scripts/ci-workflow.test.mts tests/scripts/release-assets.test.mts tests/scripts/public-symbols.test.mts` | [o] |
 | H27.16 | 기본 Composer 개발 manifest와 호환 로컬 제공 package 제약을 선언하고 COMPOSER manifest 선택을 보존하며 릴리즈 lock을 덮어쓰지 않고 기본 개발 lock과 설치 기록을 생성한다. | composer.local.json and board twin, PHP dependency requirement, scripts/check-composer-development.mts, Makefile, native fixture and tool-path tests, dependency and development procedures | `make composer-development-check` and `make link-state-check` and `make analyse-php` and `node node_modules/@polyspec/kit/scripts/kit/run-tests.mts node -- tests/scripts/composer-development.test.mts` | [o] |
-| H27.17 | 기본 소스 link 뒤 공유 lint 실행기를 복구한다. 실행 파일 해석은 소비자 root의 전이 의존성 bin을 강제하지 않고 도구 package의 의존성 설치를 사용해야 한다. | Shared lint executable lookup; no application-created bin links | `make lint-ts` | [!] 원인: lint 실행기가 소비자의 node_modules/.bin으로 lintCommands를 호출한다. 기본 소스 link는 root oxlint를 제거하지만 제공 package 설치에는 실행 파일이 남아 있어 make lint-ts가 코드 검사 전에 실패한다.; 재시도: lintCommands가 link와 packed 형태 모두에서 설치 도구 package의 실행 파일을 해석하면 앱 bin link를 추가하지 않고 make lint-ts를 다시 실행한다. |
+| H27.17 | 기본 소스 link 뒤 공유 lint 실행기를 복구한다. 실행 파일 해석은 소비자 root의 전이 의존성 bin을 강제하지 않고 도구 package의 의존성 설치를 사용해야 한다. | Shared lint executable lookup; no application-created bin links | `make lint-ts` | [o] |
