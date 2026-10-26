@@ -1,11 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 4323e14273ba6e226ae0c3fff31bb18a4bc02eff9099775c7cd029b4581934d7 -->
+<!-- source-sha256: 46f502a4543eb7829bcf06b4ffce916abfd588f2d1848ccda9b1492974b05ad0 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
-- Darwin virtiofs 검사는 해석된 설치 소스 제공 checkout을 원래 경로에 읽기 전용으로 mount한다. image는 digest로 고정하고 hyper-install-virtiofs로 명시적으로 설치한다. 검사는 컨테이너 실행 전에 누락된 로컬 image를 거부한다. 기본 virtiofs 검사 두 개가 통과한다.
+- Darwin virtiofs 검사는 해석된 설치 소스 제공 checkout을 원래 경로에 읽기 전용으로 mount한다. image는 digest로 고정하고 hyper-install-virtiofs로 명시적으로 설치한다. 검사는 컨테이너 실행 전에 누락된 로컬 image를 거부한다. 기본 virtiofs 검사 두 개가 통과한다 (H27.13).
 - PHP 요청 map은 내부 저장 반환형 없이 기본 순회를 노출한다. 업로드 파일이 요청 순서대로 foreach에 나타난다. 공개 업로드 metadata와 파일 제한 선언은 모든 서버와 일치하고 응답 헤더 서명은 비공개 별칭을 노출하지 않으며 file-parts 연결은 실제 계약 검사를 실행한다. 기본 API symbol 검사, PHP 회귀 검사와 범위를 지정한 file-parts parity가 통과한다 그룹 검증은 정확한 추론형을 유지한다 (H27.12).
 - 설치 소스 검증에서 미사용 파일 시스템 import를 제거한다. TypeScript lint 검사가 통과한다 (H27.8-1).
 - 정리 시간 초과 감사에서 SIGTERM 검사의 30초 제한과 겹치는 55초 호스트 절전을 확인했다. 재개 후 변경하지 않은 정리 검사 4개가 통과한다. 코드 수정으로 보고하거나 제한 시간을 늘리지 않고 원래 실패와 전원 이벤트 근거를 보존한다 (H27.9).
