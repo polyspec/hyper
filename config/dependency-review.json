@@ -1,11 +1,11 @@
 {
   "schema": 1,
-  "comment": "Advisory records of the exact lock contents. The two npm lock records were refreshed with native npm audit --json --package-lock-only; the existing review timestamp and other records are retained.",
-  "reviewed": "2026-10-20T10:38:00.233Z",
+  "comment": "Written by make dependency-review RECORD=1 (scripts/kit/dependency-review.mts) from the registries; make dependency-policy-check compares the checkout with it without a network.",
+  "reviewed": "2026-10-26T20:32:02.621Z",
   "locks": [
     {
       "lock": "package-lock.json",
-      "sha256": "9f8496d97a0c39310ac1c2b2283ba80045e247e346bc90d689e920f9600177da",
+      "sha256": "291e8ee6e7ad848e099eadfac688240663ec77bbded74f999a8fbf39838ef25b",
       "advisories": []
     },
     {
@@ -105,7 +105,7 @@
       "manifest": "packages/client/package.json",
       "package": "eventsource-parser",
       "version": "4.1.2",
-      "latest": "4.1.2"
+      "latest": "4.1.3"
     },
     {
       "ecosystem": "composer",
@@ -126,13 +126,13 @@
       "manifest": "composer.json",
       "package": "phpstan/phpstan",
       "version": "2.3.1",
-      "latest": "2.3.1"
+      "latest": "2.3.2"
     },
     {
       "ecosystem": "composer",
       "manifest": "composer.json",
       "package": "phpunit/phpunit",
-      "version": "13.4.3",
+      "version": "13.4.2",
       "latest": "13.4.3"
     },
     {
@@ -203,14 +203,14 @@
       "manifest": "packages/server/python/pyproject.toml",
       "package": "setuptools",
       "version": "84.2.0",
-      "latest": "84.2.0"
+      "latest": "84.2.1"
     },
     {
       "ecosystem": "pypi",
       "manifest": "mise.toml",
       "package": "ruff",
       "version": "0.17.1",
-      "latest": "0.17.1"
+      "latest": "0.17.2"
     }
   ],
   "vcs": []

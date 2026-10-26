@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: f97accffeb8fc7290082ffc6fc2b2111cdc89de9620d7bea74a51845365f42c0 -->
+<!-- source-sha256: 868a56feb7765ffabe825036066a8673e07c4db223edb9bc78ff99fde32878b9 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -268,4 +268,4 @@
 | H27.11 | Makefile과 workflow 검사에서 제거된 full-run 진입점 대신 현재 최종 검증 실행기를 사용하고 전체 target 집합과 최종 1회 검증 절차를 유지한다. | Makefile, tests/scripts/ci-workflow.test.mts, current procedure documents and their Korean twins | `node ../kit/scripts/kit/run-tests.mts node -- --test-name-pattern="declared for Darwin" tests/scripts/ci-workflow.test.mts` | [o] |
 | H27.12 | 업로드 파일 API parity 선언을 완성하고 내부 반환형 없이 PHP 요청 컬렉션을 기본 iterable로 노출하며 응답 헤더형과 실행된 파일 part 검사를 연결한다. | config/parity.json, PHP request collections and tests, TypeScript response declarations, docs/spec/protocol.md and Korean twin | `node ../kit/scripts/kit/run-tests.mts node -- tests/scripts/public-symbols.test.mts` and `make parity-check UNITS=file-parts` and `var/tools/bin/php vendor/bin/phpunit packages/server/php/tests/RequestTest.php packages/server/php/tests/FilePartsTest.php packages/server/php/tests/FieldsTest.php` and `make analyse-php` | [o] |
 | H27.13 | checkout 외부의 기본 소스 link를 거부하지 않고 해석된 설치 template 소스 package를 virtiofs 검사에 mount한다. | tests/virtiofs/output-files.test.mts, Makefile, tests/scripts/toolchain.test.mts, AGENTS.md and twin, docs/operations/development.md and twin | `node ../kit/scripts/kit/run-tests.mts node -- tests/virtiofs/output-files.test.mts` and `node ../kit/scripts/kit/run-tests.mts node -- --test-name-pattern="explicit install" tests/scripts/toolchain.test.mts` | [o] |
-| H27.14 | 공개된 공유 도구 archive 0.0.56을 기본 npm 해석과 릴리즈 무결성 확인으로 반영하고 복사본과 hook 및 보안 검토 기록을 갱신하며 로컬 소스 link를 유지한다. | package.json, package-lock.json, config/dependency-review.json, shared copies and hooks, docs/operations/dependencies.md and Korean twin | `make kit-check` and `make hooks-check` and `make dependency-policy-check` and `make link-state-check` | [ ] |
+| H27.14 | 공개된 공유 도구 archive 0.0.56을 기본 npm 해석과 릴리즈 무결성 확인으로 반영하고 복사본과 hook 및 보안 검토 기록을 갱신하며 로컬 소스 link를 유지한다. | package.json, package-lock.json, config/dependency-review.json, shared copies and hooks, docs/operations/dependencies.md and Korean twin | `make kit-check` and `make hooks-check` and `make dependency-policy-check` and `make link-state-check` | [~] |

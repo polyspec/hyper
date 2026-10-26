@@ -1,5 +1,5 @@
 <!-- doc-id: dependencies -->
-<!-- source-sha256: 0eb282a083fbb0764b42508b454f8e210748215195a0e6bed6f91240d6a0a565 -->
+<!-- source-sha256: 9568860ce1f833f09e80417dc974ed1abc82f56286561a7fb18379c252403540 -->
 # 의존성
 
 [English](dependencies.md).
@@ -10,6 +10,7 @@
 
 | 의존성 | 버전 | 종류 | 이유 | 해제 조건 |
 |---|---|---|---|---|
+| `@polyspec/kit` | npm integrity로 고정한 release asset `v0.0.56` | build, verification | 릴리즈와 CI는 공개 archive에서 공유 도구를 설치한다. 개발은 제공 checkout의 기본 소스 link를 유지한다. npm이 릴리즈 manifest와 그 lock을 관리한다. | npm으로 이후 호환 공유 도구 릴리즈를 반영하고 소유 검사를 실행한다. |
 | Node.js, npm, PHP, Composer | `mise.toml`의 `node` 26.12.0, `packageManager` npm 12.2.0, `config/toolchain.json`의 정확한 Composer 2.10.3과 `.php-version`의 minor인 PHP 8.4. make는 pin하지 않는다 | 도구 | 같은 도구로만 build와 검사가 같은 결과를 낸다(HR-81). npm 12는 `npm pack --json`을 npm 11과 다르게 출력한다. | 없음. 새 release는 pin을 바꾸는 commit이 된다. PHP patch release는 통과하고 full run이 그것을 기록한다. |
 | Python | `mise.toml`의 `python` 3.14.8, `packages/server/python`의 `requires-python >= 3.14` | 도구 | Python 서버 package는 고정된 minor 3.14를 요구한다. CI가 그 build만 테스트하므로 그렇다(H20.12). | 없음. 새 안정 release는 `mise.toml`을 바꾸는 commit이 된다. |
 | `packages/server/python/pyproject.toml`의 `setuptools` | `84.0.0` 정확히 고정 | build | `polyspec-hyper-server`의 build backend다. 같은 backend release로 build하도록 정확히 고정한다. 다른 저장소의 Python 패키지 `polyspec-template`이 고정한 release와 같아서, 두 Python 패키지가 build backend를 공유한다 (H15.3-13). | 더 새로운 stable setuptools release를 채택하는 dependency 검토에서 pin을 바꾸고, 그 pin을 고정한 형제 Python 패키지도 같은 변경에서 바꾼다. |

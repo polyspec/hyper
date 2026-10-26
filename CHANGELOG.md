@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- Adopt the shared-tool archive 0.0.56 through npm with its release URL and integrity. Refresh the native dependency review and synchronized shared copy while preserving installed source links. The shared-tool, hook, dependency-policy and link checks pass.
 - The PHP 8.4 benchmark retry depends on an idle host rather than a separate phase instruction. The current host sample is 55.41 percent idle, so the idle-run requirement remains open (H26.9).
 - The Darwin virtiofs tests mount resolved installed-source provider checkouts read-only at their native paths. The image remains digest-pinned and is installed explicitly with hyper-install-virtiofs; checks reject a missing local image before running a container. Both native virtiofs tests pass (H27.13).
 - PHP request maps expose native iteration without internal storage return types; uploaded files now appear in foreach, retaining request order. Public upload metadata and file-limit declarations match every server, response header signatures expose no private alias, and the file-parts binding executes its actual contract test. Native API symbol checks, PHP regressions and scoped file-parts parity pass Grouping assertions retain their precise inferred types (H27.12).
