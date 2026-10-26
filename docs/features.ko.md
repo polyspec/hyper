@@ -1,5 +1,5 @@
 <!-- doc-id: features -->
-<!-- source-sha256: 0b52aeb3e4da9df516b070d265e7a3bcad28078c8eb9bf1d523ec70f2b25f95d -->
+<!-- source-sha256: 672eed9a11de9fc9df96c11819be906433a656a278556c974476a6904036413a -->
 # 기능 상태
 
 [English](features.md).
@@ -70,7 +70,7 @@
 | query-values | 중첩 없이 순서대로 읽는 모든 쿼리 값과 원본 쿼리(HY-56) | implemented | `make test-php`, `make hyper-test-node` |
 | form-values | urlencoded body나 multipart body에서 중첩 없이 순서대로 읽는 모든 폼 값(HY-57) | implemented | `make test-php`, `make hyper-test-node` |
 | request-boundary | UTF-8 검사, 상세 없는 500 오류, 데이터 모델 검사, 강화한 세션 쿠키, 리다이렉트 검사, 실패 표시(HY-42 ~ HYC-14) | implemented | `make test-php`, `make test-js`, `make e2e` |
-| benchmark | 서버와 브라우저 성능 측정: 요청 비용, 행 수별 렌더, 첫 화면, `hy-set` 메인 스레드 부하, 이동 중 메모리 | implemented | `make bench`, [성능 측정](operations/benchmark.ko.md) |
+| benchmark | 서버와 브라우저 성능 측정: 요청 비용, generated 프로그램과 확장 상태 보고, 행 수별 렌더, 첫 화면, `hy-set` 메인 스레드 부하, 이동 중 메모리 | implemented | `make bench`, [성능 측정](operations/benchmark.ko.md) |
 | server-program | 같은 템플릿의 generated PHP 프로그램으로 template package의 API를 통해, 네이티브 템플릿 확장이 있을 때와 없을 때 하는 PHP 렌더(HY-48) | implemented | `make test-php`, `make parity` |
 | embedded-data | 문서는 reply가 요청할 때만 데이터를 내장하고, 브라우저는 내장 데이터가 없는 페이지의 데이터를 처음 필요할 때 문서 요청 하나로 얻는다(HY-31, HY-92, HYC-7) | implemented; CI run pending | `make test-php`, `make hyper-test-node`, `make test-js` |
 | cdn-deployment | 서버와 CDN 배포(권장)와 정적 셸 배포 | 문서화, 배포 안 함 | [배포](operations/deployment.ko.md) |

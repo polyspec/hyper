@@ -14,7 +14,7 @@
 
 ## Method
 
-- **Server:** the PHP process renders with the native extension when it has loaded it and otherwise with the generated program; the last line of each table names the program. Every request runs 20 times as warm-up and then the given number of times in one process with an in-memory session. The time is `hrtime` around `App::handle`. It includes routing, loaders on SQLite, rendering and encoding, and excludes network and PHP startup.
+- **Server:** the PHP process always renders the generated program. The last line names that program and separately reports whether the template extension is loaded; the extension provides the template API under the same names (HY-48). Every request runs 20 times as warm-up and then the given number of times in one process with an in-memory session. The time is `hrtime` around `App::handle`. It includes routing, loaders on SQLite, rendering and encoding, and excludes network and PHP startup.
 - **First screen:** a `MutationObserver` added before the page loads records when the list heading `게시판` appears, measured from navigation start. Each run uses a new browser context, so nothing is cached.
 - **Region navigation:** the time from the click on the create link to the appearance of the heading `글쓰기`.
 - **`hy-set` change:** `window.hyper.set('rows', …)` from the call to the end of the swap. After every change the page renders one frame, as after a click. Two changes are measured:

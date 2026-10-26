@@ -225,6 +225,7 @@
       "paths": [
         "benchmarks/server.php"
       ],
+      "tests": ["tests/scripts/benchmark-server.test.mts"],
       "targets": [
         "bench-server-smoke"
       ]

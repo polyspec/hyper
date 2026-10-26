@@ -69,7 +69,7 @@
 | query-values | Every query value in order without nesting, and the raw query (HY-56) | implemented | `make test-php`, `make hyper-test-node` |
 | form-values | Every form value of an urlencoded or multipart body in order without nesting (HY-57) | implemented | `make test-php`, `make hyper-test-node` |
 | request-boundary | UTF-8 checks, plain 500 errors, data model checks, hardened session cookie, redirect checks, failure marks (HY-42 to HYC-14) | implemented | `make test-php`, `make test-js`, `make e2e` |
-| benchmark | Server and browser performance measurement: request cost, rendering per row count, first screens, `hy-set` main thread load and memory over navigation | implemented | `make bench`, [Benchmark](operations/benchmark.md) |
+| benchmark | Server and browser performance measurement: request cost, generated program and extension-state reporting, rendering per row count, first screens, `hy-set` main thread load and memory over navigation | implemented | `make bench`, [Benchmark](operations/benchmark.md) |
 | server-program | PHP rendering with the generated PHP program of the same templates, through the API of the template package, with and without the native template extension (HY-48) | implemented | `make test-php`, `make parity` |
 | embedded-data | A document embeds its data only when the reply asks for it, and the browser obtains the data of a page without embedded data with one document request when it first needs it (HY-31, HY-92, HYC-7) | implemented; CI run pending | `make test-php`, `make hyper-test-node`, `make test-js` |
 | cdn-deployment | Server and CDN deployment (recommended) and static shell deployment | documented, not deployed | [Deployment](operations/deployment.md) |

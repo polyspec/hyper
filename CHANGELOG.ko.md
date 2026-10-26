@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 8383f6e80c2f03a67404946cb7039fb8cdf95e8d93d034e46fbf973fea401cec -->
+<!-- source-sha256: bbad7e17acc6f4730652300d0774fea43a96401bda2112825da15601f96f4824 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- 서버 벤치마크는 삭제된 Renderer 속성을 읽지 않고 generated PHP 프로그램과 템플릿 확장 상태를 보고한다. 격리된 회귀 검사가 PHP 경고를 거부하고 데이터베이스 제거를 확인한다.
 - 설치 소스 검사는 해석된 템플릿 진입점과 공유 모듈 식별자를 확인하고 릴리즈 선언의 아카이브 고정을 유지한다. PHP 분석 검사는 확장 스텁을 거부하며 관련 검사 7개가 통과한다 (H27.8).
 - PHP의 정확한 public API 검사는 UploadedFile을 포함하고 자동 로드 가능한 선언 확인에서 기본 trait을 인식한다. API 테스트와 PHP 정적 분석을 통과한다(H27.6-1).
 - PHP 라우트와 요청 복사 계약은 올바른 PHPDoc으로 정확한 타입을 유지한다. fixture는 JSON 입력과 콜백 응답을 검증하고 서버 시작은 성공 후에만 소유권을 넘기며 실패 시 정리한다. PHPStan 오류가 없고 포맷 검사와 관련 테스트 116건을 통과한다(H27.5).

@@ -152,9 +152,9 @@ foreach ([10, 100, 1000] as $count) {
     );
 }
 printf(
-    "\nPHP %s, %s template program, %d iterations per request, %s\n",
+    "\nPHP %s, generated PHP template program, template extension %s, %d iterations per request, %s\n",
     PHP_VERSION,
-    $renderer->engine,
+    extension_loaded('polyspec_template') ? 'loaded' : 'not loaded',
     $iterations,
     php_uname('s') . ' ' . php_uname('m'),
 );
