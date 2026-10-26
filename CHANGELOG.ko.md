@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 80c6335d7a28aabbf886f3dfb3928f4da450e27efd8ce514616216ade7849b9a -->
+<!-- source-sha256: 8a5cd5b1e71f11b2cb0fd155e87b7f22d0880b107c0cfb9c5d45c8a2fbbe356a -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- 커밋된 화면 구성 문서가 parity-declarations-check와 docs-check를 통과한다(H25.76).
 - 애플리케이션 작성 규칙 HC-1부터 HC-7은 docs/operations/composition.md에서 계속 적용한다. HY-48은 레이아웃 밖 hx-* 속성의 거부를 명시하며, 프로토콜 요구사항 추적 검사를 통과한다(H25.76).
 - H26.4는 서버 파일 부분 parity와 클라이언트 stream 요구사항 HYC-17부터 HYC-21을 구분하며, 오래된 클라이언트 미결정 설명을 제거한다(H26.4-1).
 - 커밋된 H26.4 수정에서 오래된 문구 부재 검사를 통과한다(H26.4-1).
