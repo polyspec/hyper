@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 58784820e930519c7fd98f620ab89bf48815563d2e4640b9fdb5c76a0b2d248e -->
+<!-- source-sha256: 7450d243dcbb68b798de76f31383628236a649cc4a8b1259a52162e2b930ba16 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -253,3 +253,4 @@
 | H26.8 | Composer의 update 경로로 composer.lock과 examples/board/composer.lock을 연결된 provider 매니페스트에서 다시 생성하여 PHP 8.5가 남지 않게 한다(8.4 결정). | composer.lock, examples/board/composer.lock | `make dependency-policy-check` | [-] 원인: 사용자 링크 규칙 2026-10-22: 추적 lock은 release 기록을 유지하고, polyspec 설치 폴더는 형제 checkout을 link하며, 추적 lock은 다시 생성하지 않는다. kit K448이 이 규칙을 담는다 |
 | H26.9 | docs/operations/benchmark.md와 benchmark.ko.md를 유휴 머신에서 PHP 8.4로 다시 측정하고, 2026-10-02 PHP 8.5.10 기록을 새 실행의 기록으로 바꾼다. | docs/operations/benchmark.md, docs/operations/benchmark.ko.md | `make bench`, `make docs-check` | [!] 원인: link-owner가 모든 개발 행을 닫은 뒤 순서를 정하는 유휴 벤치마크 단계다.; 재시도: link-owner가 유휴 벤치마크 단계를 지시할 때. |
 | H27.1 | H25.66, H25.71, H25.73, H26.8, H26.9를 릴리스 준비 기준으로 검토한다. 기존 이력을 유지하고 PHP 8.4를 변경하지 않는 릴리스 후속 작업을 등록한다. | docs/plans/execution/plan.md, docs/plans/execution/plan.ko.md, docs/plans/execution/checklist.md, docs/plans/execution/checklist.ko.md | `make docs-check` | [ ] |
+| H27.2 | Composer로 PHP 8.4 릴리스 의존성 그래프를 해결한다. H25.66의 PHPUnit 선택과 H25.73, H26.8의 lock 의무를 재검토하고 PHP 8.4를 지원하는 패키지 릴리스를 선택해 소스 링크, alias, 플랫폼 요구사항 무시 없이 두 추적 lock을 다시 생성한다. | composer.json, composer.lock, examples/board/composer.json, examples/board/composer.lock, packages/server/php/composer.json, docs/operations/dependencies.md, docs/operations/dependencies.ko.md | `var/tools/mise/shims/composer validate --strict` and `var/tools/mise/shims/composer validate --strict --working-dir=examples/board` and `var/tools/mise/shims/composer check-platform-reqs --lock` and `var/tools/mise/shims/composer check-platform-reqs --lock --working-dir=examples/board` | [ ] |
