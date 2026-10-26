@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: cbb7b5f9d50adb421b89d4314b63a14d7fb08b4b2baa69df6b4ccf7baad6adb6 -->
+<!-- source-sha256: da693284c97cb4a7ff7ea77594c1349bbbdb377b9be170024538a3a3de086d58 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -258,3 +258,4 @@
 | H27.3-1 | 설치된 소스 의존성으로 board 서버를 빌드하며 Composer install을 실행하지 않는다. make server가 항상 hyper-server-php-install을 실행해 현재 로컬 소스 연결 대신 기록된 의존성 그래프를 다시 설치하는 문제를 수정한다. 명시적인 의존성 설치는 유지한다. | Makefile, tests/scripts/check-recipes.test.mts, docs/operations/development.md, docs/operations/development.ko.md, docs/features.md, docs/features.ko.md | `node --test --test-name-pattern="server build uses installed packages" tests/scripts/check-recipes.test.mts` | [o] |
 | H27.4 | npm 로컬 링크의 EOVERRIDE를 direct dependency override 참조로 해결하고 중첩 var 출력을 ignore하여 설치 후 작업 트리를 깨끗하게 유지한다. | package.json, tests/package-install/package.json, package locks, .gitignore, tests/scripts/ignored-files.test.mts | `make package-check` and `make link-state-check` | [ ] |
 | H27.5 | 최종 검증에서 발견한 PHP 애플리케이션과 fixture의 타입 오류 및 포맷 문제를 suppression이나 계약 완화 없이 수정한다. | packages/server/php/src, packages/server/php/tests | `make analyse-php` and `make hyper-lint` | [ ] |
+| H27.6 | TypeScript와 Python의 public API 검사에 파일 업로드 API를 반영하며 정확한 export 검사를 유지한다. | packages/server/ts/tests/public-api.test.ts, packages/server/python/tests/test_public_api.py | `node ../kit/scripts/kit/run-tests.mts vitest --cwd packages/server/ts -- tests/public-api.test.ts` and `packages/server/python/.venv/bin/python -m unittest packages/server/python/tests/test_public_api.py` | [ ] |
