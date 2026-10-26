@@ -1,5 +1,5 @@
 <!-- doc-id: features -->
-<!-- source-sha256: 672eed9a11de9fc9df96c11819be906433a656a278556c974476a6904036413a -->
+<!-- source-sha256: a3ad765987b0ce1ba626b318622053e62d23940d66c48092f05ad0d0d840cf13 -->
 # 기능 상태
 
 [English](features.md).
@@ -61,12 +61,12 @@
 | run-resources | run의 서버와 임시 디렉터리는 run이 끝날 때, 실패할 때, SIGINT와 SIGTERM에서 멈추고 지워지며, test는 process가 끝난 뒤에만 디렉터리를 지운다(HR-87) | implemented | `tests/scripts/board-servers.test.mts`, `tests/scripts/check-parity.test.mts`, `tests/scripts/serve-demo.test.mts` |
 | all-checks | 여러 검사를 가진 recipe는 각 검사를 끝까지 실행하고 실패한 모든 검사를 밝힌다(HR-86) | implemented | `tests/scripts/check-recipes.test.mts` |
 | own-inputs | test는 fixture의 추적 파일을 복사하고, 설치한 template package를 읽으며, 다른 target의 각 입력을 그것을 쓰는 target과 함께 밝힌다(HR-85) | implemented; CI run pending | `tests/scripts/build-assets.test.mts`, `tests/scripts/template-dir.test.mts` |
-| checked-results | 실행된 test가 없는 test run, top level에서 await하는 node test 파일, 검사한 step이 없는 parity 검사는 실패하고, full run은 실패한 각 target의 마지막 20줄을 기록하고 출력한다(HR-84) | implemented; CI run pending | `tests/scripts/check-parity.test.mts` |
+| checked-results | 실행된 test가 없는 test run, top level에서 await하는 node test 파일, 검사한 step이 없는 parity 검사는 실패하고, 기본 최종 보고서는 실패 근거와 각 target log를 보존한다(HR-84) | implemented; CI run pending | `tests/scripts/check-parity.test.mts` |
 | tool-output | 검사는 run 맥락이나 pin하지 않은 release에 따라 바뀌지 않는 형태로 tool 출력을 읽는다. 호출한 make의 변수 없는 make dry run, machine이 읽는 형태, pin한 도구의 text만 읽는다(HR-83) | implemented; CI run pending | `tests/scripts/template-copy.test.mjs` |
 | atomic-outputs | 다른 process가 읽는 출력은 rename으로 파일 단위 publish하고, 파일 하나는 rename 한 번으로 쓰며, 설치한 사본은 의존성 tree가 같을 때만 publish하고, package manager 설치와 full run은 lock을 잡는다(HR-82) | implemented; CI run pending | `tests/scripts/publish.test.mts`, `tests/scripts/toolchain.test.mts` |
 | toolchain-pin | Node.js, npm, Composer는 정확한 release로, PHP와 Python은 minor release로 추적 파일에 pin한다. npm과 Composer는 digest로 확인해 checkout의 `var/tools`에 설치하고 `PATH`의 맨 앞에 둔다. `make toolchain-check`는 pin과 다른 모든 도구를 밝히고 CI 보고서는 실행 중인 release를 기록한다(HR-81) | implemented; CI run pending | `tests/scripts/toolchain.test.mts`, `tests/scripts/template-copy.test.mjs` |
-| kit-tools | push gate, 전체 실행 guard, Git hook, holder lock, 문서와 commit 검사, owner 검사, test runner, CI 보고서, toolchain 설치와 검사, release는 release asset의 URL과 integrity로 pin한 npm 패키지 `@polyspec/kit`이며 `config/*.json`이 이를 설정한다. `package-lock.json`과 다른 패키지, 패키지와 다른 `kit.copies`의 복사본, schema를 어기는 설정은 실패한다 | implemented; CI run pending | `make kit-check` |
-| template-tag | full-run key는 branch `main`이 어느 commit에 있든 template 저장소의 tag `TEMPLATE_TAG`(`v0.0.11`)의 commit이다. 없는 tag는 `make template-tag`를 기대값과 실제값을 밝히며 실패시킨다(HR-80) | implemented; CI run pending | `tests/scripts/template-pins.test.mts`, `tests/scripts/template-version.test.mts` |
+| kit-tools | push gate, 최종 검증 실행기, Git hook, holder lock, 문서와 commit 검사, owner 검사, test runner, CI 보고서, toolchain 설치와 검사, release는 release asset의 URL과 integrity로 pin한 npm 패키지 `@polyspec/kit`이며 `config/*.json`이 이를 설정한다. `package-lock.json`과 다른 패키지, 패키지와 다른 `kit.copies`의 복사본, schema를 어기는 설정은 실패한다 | implemented; CI run pending | `make kit-check` |
+| template-tag | 릴리즈 선언은 `TEMPLATE_TAG`(`v0.0.11`)를 고정하며 없는 tag는 기대값과 실제값을 밝히고 `make template-tag`를 실패시킨다(HR-80) | implemented; CI run pending | `tests/scripts/template-pins.test.mts`, `tests/scripts/template-version.test.mts` |
 | query-values | 중첩 없이 순서대로 읽는 모든 쿼리 값과 원본 쿼리(HY-56) | implemented | `make test-php`, `make hyper-test-node` |
 | form-values | urlencoded body나 multipart body에서 중첩 없이 순서대로 읽는 모든 폼 값(HY-57) | implemented | `make test-php`, `make hyper-test-node` |
 | request-boundary | UTF-8 검사, 상세 없는 500 오류, 데이터 모델 검사, 강화한 세션 쿠키, 리다이렉트 검사, 실패 표시(HY-42 ~ HYC-14) | implemented | `make test-php`, `make test-js`, `make e2e` |

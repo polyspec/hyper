@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: 9bbe7ea394de308f7f673241fe4728c4a452013a6cca09c44ddfff96a90a35d7 -->
+<!-- source-sha256: 401b527178c1ed1af36bce86d058a722a925cdeb4301ae7f13df58c18bfd6fcc -->
 # 개발
 
 [English](development.md).
@@ -9,7 +9,7 @@
 - pin한 도구(HR-81): `mise.toml`의 Node.js와 Python(mise가 `mise.lock`의 digest에 맞춰 설치한다. Node.js는 `make install-tools TOOLS=npm`이, Python은 `make install-tools`가 설치한다), `pdo_sqlite`가 있는 `.php-version`의 PHP, GNU Make 3.81 이상, 네이티브 확장을 위한 그 PHP의 phpize, php-config와 C compiler. `make hyper-install`은 `packageManager`의 npm과 `config/toolchain.json`의 Composer를 `var/tools`에 설치한다(`make install-tools`). `make toolchain-check`는 pin과 다른 모든 도구를 밝힌다.
 - 공유 도구: npm 패키지 `@polyspec/kit`이며, `package.json`은 그 release asset의 URL로, `package-lock.json`은 integrity로 pin하고 `config/*.json`이 이를 설정한다. checkout은 `../kit/scripts/kit/bootstrap/`의 installer로 `packageManager`의 npm을 설치하는 `make install-tools TOOLS=npm`과, 그 npm으로 `package-lock.json`을 설치하는 `make install-packages`로 시작한다. Makefile은 kit의 `kit.mk`를 include하는, 옆의 kit checkout의 파일이자 복사본이 아닌 `../kit/scripts/kit/kit-bootstrap.mk`를 include한다(kit K614). `make kit-sync`는 설치된 패키지에서 공유 원칙과 editor 및 agent 설정을 포함한 `kit.copies`의 일반 파일 복사본을 원자적으로 쓴다. 설치된 package의 소스 link는 유지한다. 또한 `make kit-check`는 패키지가 lock과 다르거나 복사본이 패키지와 다르거나 `config/*.json`이 schema를 어기면 실패한다.
 - template package: npm은 `@polyspec/template`과 `@polyspec/template-compiler`를 template release의 tarball에서, Composer는 `polyspec/template`을 그 zip에서 `package.json`, `composer.json`과 그 lock이 고정한 대로 설치한다(HR-70). `make hyper-install`이 이를 download한다.
-- 네이티브 template 확장: release `v0.0.11`(`TEMPLATE_TAG`)의 php-ext archive `polyspec-template-php-ext-php-0.0.11.zip`이며, `config/release-assets.json`이 sha256으로 pin한다(H14.1-7). `make hyper-install`이 kit의 `make release-assets-fetch`로 `$(ONLINE)`을 거쳐 내려받아 `var/products/template-ext`에 풀고, `make ext`가 offline으로 build한다. 같은 파일이 php zip `polyspec-template-php-0.0.11.zip`을 pin하며, `make hyper-install`은 Composer가 설치하기 전에 그것을 확인해 Composer artifact repository `var/products/template-php`에 둔다(H23.11). `../template`(`TEMPLATE_REPOSITORY`)의 template 저장소는 full-run key가 밝히는 tag의 commit을 읽을 때만 쓰며, tag가 없으면 `make template-tag`가 실패한다.
+- 네이티브 template 확장: release `v0.0.11`(`TEMPLATE_TAG`)의 php-ext archive `polyspec-template-php-ext-php-0.0.11.zip`이며, `config/release-assets.json`이 sha256으로 pin한다(H14.1-7). `make hyper-install`이 kit의 `make release-assets-fetch`로 `$(ONLINE)`을 거쳐 내려받아 `var/products/template-ext`에 풀고, `make ext`가 offline으로 build한다. 같은 파일이 php zip `polyspec-template-php-0.0.11.zip`을 pin하며, `make hyper-install`은 Composer가 설치하기 전에 그것을 확인해 Composer artifact repository `var/products/template-php`에 둔다(H23.11). `../template`(`TEMPLATE_REPOSITORY`)의 template 저장소는 선언한 release tag을 읽을 때만 쓰며, tag가 없으면 `make template-tag`가 실패한다.
 - network: `make install-tools`, `make install-packages`, `make hyper-install`, `make hyper-install-browser`만 download한다. 다른 모든 recipe는 npm, Composer를 offline으로 실행하므로(`npm_config_offline`, `COMPOSER_DISABLE_NETWORK`) 없는 download는 바로 실패하고 그것을 만드는 설치 target을 밝힌다(HR-89).
 - Playwright용 Chromium: `make hyper-install-browser`. pin한 Playwright의 Chromium과, Linux에서는 그 system library를 설치한다.
 
@@ -26,7 +26,7 @@
 | `make hyper-install` | pin한 도구를 설치하고, `config/release-assets.json`의 template archive를 `$(ONLINE)`으로 pin한 sha256과 함께 가져와 php-ext archive를 `var/products/template-ext`에 풀며(kit의 `make release-assets-fetch`; H14.1-7, H23.11, H23.11-2), `make hyper-install-python`을 실행하고, template release의 template package를 포함한 Composer 의존성을 설치한다(HR-70) |
 | `make hyper-install-python` | kit의 `python-venv`로 `mise.toml`의 Python에서 Python 서버 package의 venv `.venv`를 만들고, release의 template wheel을 포함한 의존성과 함께 package를 editable mode로 설치한다. Python test와 board Python 서버는 그 Python을 실행하며 source 경로를 읽지 않는다(S5) |
 | `make hyper-server-php-install` | `packages/server/php`를 가리키는 symbolic link로 `polyspec/hyper-server`를 설치하는 board의 Composer 의존성을 설치한다(HR-79). 의존성을 설치할 때 이 target을 명시적으로 실행한다 |
-| `make template-tag` | 템플릿 저장소 `TEMPLATE_REPOSITORY`에 tag `TEMPLATE_TAG`가 없으면 기대한 tag와 저장소가 가진 tag를 밝히며 실패한다. `make check`의 full-run key가 그 commit을 밝힌다(HR-80) |
+| `make template-tag` | 템플릿 저장소 `TEMPLATE_REPOSITORY`에 tag `TEMPLATE_TAG`가 없으면 기대한 tag와 저장소가 가진 tag를 밝히며 실패한다. HR-80의 release 선언을 확인한다. |
 | `make ext` | `var/products/template-ext`에 풀린 php-ext asset의 소스를 `PATH`의 php-config로 phpize, configure, make해 `build/ext/polyspec_template.so`를 build한다. offline으로 실행하며, 소스나 PHP build가 바뀔 때만 다시 build한다(HY-48, H14.1-7) |
 | `make packages` | `@polyspec/hyper-client`와 `@polyspec/hyper-server`의 JavaScript module과 type 선언을 각 package가 선언한 build(npm의 bin link인 `tsc`를 실행하는 `npm run build`)로 각자의 `dist` 디렉터리에 build하고 각 build를 파일 단위로 publish한다. npm은 workspace를 link하므로 `node_modules`는 build를 바로 보여 준다(HR-79, HR-82). Node 서버 test, board 에셋 build, `make package-check`, `make hyper-test-scripts`는 package를 exports로 가져오므로 이것을 먼저 실행한다(HR-61). build script는 `data-template.json`, `checkManifest`, `templateReferences`를 script 옆 `packages/client`의 소스에서 읽으므로 `dist`가 필요 없고 어느 작업 디렉터리에서도 실행된다 |
 | `make package-check` | 두 package를 그 `package-lock.json`에서 `npm ci --offline`으로 `tests/package-install`에 offline 설치해 그 디렉터리에 link하고(HR-89), `npm pack`이 publish하는 파일을 확인하며, 그 test를 `erasableSyntaxOnly`로 선언에 대해 type 검사한 뒤 `node`로 실행한다(HR-61) 테스트는 `NPM_BIN`으로 고정된 npm을 받으며 `tests/package-install/var/`에는 ignore된 기본 링크 상태를 저장한다. |
@@ -64,32 +64,23 @@
 | `make serve-demo-unlock` | process가 끝난 demo의 lock을 지운다. demo가 실행 중이면 실패한다 |
 | `make bench-server-smoke` | PHP 측정기를 측정마다 한 번씩 실행한다. 측정기를 깨는 변경이 실패하도록 `make check`에 들어 있다 |
 | `make bench` | 서버와 브라우저 성능을 보고하는 `make bench-server`와 `make bench-browser`를 실행한다([성능 측정](benchmark.ko.md) 참조). `make check`에는 포함하지 않는다 |
-| `make check` | 위의 모든 검사를 전체 실행의 guard를 거쳐 실행한다(아래 참조) |
-| `make rerun-failed` | 현재 tree에서 통과하지 못한 `make check`의 target만 다시 실행한다(아래 참조) |
+| `make check` | 위의 모든 검사를 기본 최종 검증 실행기를 거쳐 실행한다(아래 참조) |
 
 ## 전체 실행
 
-전체 suite는 `main`의 push 뒤에 GitHub에서 실행하며([CI](#ci) 참고), 커밋이나 push 전에 local 전체 실행은 필요하지 않다. Darwin에서만 full suite에 속하는 `make virtiofs-check`는 local `make check`에서만 실행되므로, HR-68의 virtiofs case는 누군가 Mac에서 `make check`를 실행할 때만 실행된다. CI는 이를 실행하지 않으며, HR-68의 원인은 모든 platform에서 `tests/scripts/output-files.test.mts`가 시험한다.
+전체 모음은 `main` push 뒤 GitHub에서 실행한다. commit이나 push 전에 로컬 전체 실행은 필요하지 않다. 체크리스트 개발 중에는 변경을 소유한 unit 검사만 실행한다. 체크리스트 개발이 끝나면 `make check`를 정확히 한 번 실행한다. 실패하면 그 소유 부분만 수정하고 다시 검사한다. 새 commit이 생겼다고 전체를 다시 실행하지 않는다.
 
-`make check`는 `docs/plans/execution/checklist.md`의 작업 중 `[~]`인 것이 없을 때, 커밋된 tree와, 그 실행이 네이티브 확장 소스를 build하는 template tag `TEMPLATE_TAG`의 commit마다 한 번 실행된다(HR-80). 어떤 단계보다 먼저 `node_modules/@polyspec/kit/dist/full-run.mjs run --key template=<tag의 commit> <targets>`를 시작하며, 이 guard는 판단을 이유와 함께 출력하고(`[full-run] run: ...` 또는 `[full-run] refuse: ...`) 상태 1로 거부한다.
+`make check`는 `TEMPLATE_TAG`를 확인하고 `FINAL_RUN=1`, 모든 `CHECK_TARGETS`, Darwin에서는 `DARWIN_TARGETS`를 더해 kit의 기본 `ci-targets` 실행기를 호출한다. 실행기는 활성 `[~]` 체크리스트 항목과 변경되었거나 commit되지 않은 tree를 거부하고 `var/report/full-run.lock`을 잡으며 실패해도 모든 target을 끝까지 실행한다. `hooks-check`도 이 모음의 target이다. Darwin은 `virtiofs-check`를 포함하고 Linux CI는 포함하지 않는다.
 
-- checklist(`config/checklist.json`)의 작업 행이 `[~]`일 때. 거부 메시지는 활성 ID를 작업과 함께 나열한다.
-- 추적 파일에 커밋되지 않은 변경이 있거나 무시되지 않는 untracked 파일이 있을 때(`git status --porcelain --untracked-files=all`). 전체 실행은 커밋된 tree를 검증하기 때문이다.
-- `var/full-run.json`이 현재 tree(`git rev-parse HEAD^{tree}`)와 같은 key `template`, 곧 Makefile이 `TEMPLATE_REPOSITORY`와 `TEMPLATE_TAG`에서 읽는 template tag의 commit의 전체 실행을 기록하고 있을 때. 거부 메시지는 그 실행을 tree, key, 시작 시각, 결과와 함께 밝힌다.
-- pre-push hook이 설치되지 않았을 때(`make hooks-check`). 거부 메시지는 `make hooks`를 밝힌다.
-- `incomplete` record의 process가 아직 실행 중이거나 다른 전체 실행이 `var/full-run.lock`을 잡고 있을 때.
+실행기는 tree, runtime version, target 상태와 시간을 `var/report/full-run/record.json`에, 요약을 `summary.md`에, 전체 log를 `targets/<target>.log`에 쓴다. 요약에는 실패 target의 근거를 포함한다. 실행기는 tree당 한 번 제한을 강제하지 않으며, 위의 한 번 실행 절차가 작업 규칙이다. 설치된 소스 link는 개발 입력으로 유지하고 `make link-state-check`로 선언한 상태를 확인한다.
 
-guard는 `CHECK_TARGETS`의 각 target을 `make -k <target>`으로 끝까지 실행하며, target이 실패한 뒤에도 계속하고, `[full-run] start <target> (<n>/<total>)`와 `[full-run] <target> passed|failed in <seconds>`를 출력한다. 어떤 target에도 시간 제한이 없다. 각 target의 출력은 `var/report/full-run/targets/<target>.log`에도 쓴다. guard는 각 target 앞뒤에 `var/full-run.json`을 쓴다: tree, commit, key, process, 시작과 끝 시각, 결과(마지막 target이 끝날 때까지 `incomplete`, 그다음 `passed` 또는 `failed`), 실패한 target, 각 target의 상태(`pending`, `running`, `passed`, `failed`), 시각, 경과 밀리초, 실패한 target은 마지막 20줄의 출력(`lastLines`)이며, guard는 이를 결과 전에 실패한 target과 함께 출력한다(HR-84). 그래서 멈춘 실행은 실행 중이던 target과 함께 `incomplete`로 기록된 채 남는다. `var/`는 Git이 무시하므로 checkout과 worktree마다 자기 record를 가진다. tree를 바꾸는 commit이나 다른 commit의 template tag는 `[~]` 작업이 없을 때 새 전체 실행을 허용한다.
-
-`make rerun-failed`는 현재 tree와 template commit에서 통과하지 못한 target, 즉 실패한 target과 `incomplete` 실행이 끝내지 못한 target만 다시 실행한다. 진행 중인 작업, 커밋되지 않은 변경, 실행 중인 process에 대해서는 `make check`와 같이 거부되고, record가 없을 때, record가 다른 tree나 template commit의 것일 때, 그 tree의 전체 실행이 통과했을 때도 거부된다. 다시 실행한 결과는 record의 `reruns`에 쓰고, 모든 target이 통과하면 tree의 결과가 `passed`가 된다.
-
-새 checkout에는 record가 없으므로, 그곳에서 `make check`는 `[~]` 작업이 없고 tree가 깨끗하면 실행된다.
+보고서에서 실패 target 이름을 읽는다. 소유 검사를 직접 실행하거나, 수정을 commit하고 활성 항목이 없을 때 `make ci-targets FINAL_RUN=1 TARGETS="<failed targets>" CI_REPORT=var/report/failed-owners`로 그 target만 묶어 실행한다. 원본 보고서를 보존하고 수정 검사는 별도 보고서에 기록한다. 소유 검사 재실행은 해당 수정의 근거이며 원본 전체 실행을 다른 tree의 성공으로 바꾸지 않는다.
 
 ## Push
 
 push는 push하는 commit에도 working tree에도 checklist의 `[~]` 작업이 없을 때만 한다. 추적하는 pre-push hook `.githooks/pre-push`는 `make hooks`가 쓰며 `@polyspec/kit`의 push gate인 `make push-gate-hook`을 실행한다. 이 script는 입력에서 push의 ref를 읽고, push하는 모든 commit의 checklist(`git show <sha>:docs/plans/execution/checklist.md`)와 working tree의 checklist를 `config/checklist.json`의 tracker로 파싱하고, 상태 1로 push를 거부한다. push가 보내는 각 commit의 message도 `make commits-check`와 같이 `config/commits.json`으로 검사하고, finding이 있으면 push된 commit은 다시 쓰지 않으므로 push를 거부한다. 거부 메시지는 활성 ID를 작업, ref와 commit 또는 그것을 가진 working tree와 함께 밝히고, 규칙을 말하며, 각 작업을 완료하거나 원인과 재시도 조건과 함께 `[!]`로 표시하라고 알린다. checklist가 없는 push된 commit과 파싱할 수 없는 checklist도 push를 거부한다.
 
-Git은 clone에서 hook을 설치하지 않는다. 그래서 `.githooks/pre-push`를 추적하는 checkout에서는 모든 `make` 실행이 `core.hooksPath`를 `.githooks`로 설정하고, `make hooks`는 이를 명시적으로 설정하며 hook을 쓴다. `make hooks-check`와 전체 실행의 guard는 `core.hooksPath`가 `.githooks`가 아니거나 hook이 없거나 실행할 수 없거나 도구의 hook과 다르면 실패한다. `make push-gate-commit COMMIT=<sha>`는 hook을 건너뛴 push를 위해 같은 gate를 commit에 실행하고, CI group `docs`가 push된 commit에 이를 실행한다.
+Git은 clone에서 hook을 설치하지 않는다. 그래서 `.githooks/pre-push`를 추적하는 checkout에서는 모든 `make` 실행이 `core.hooksPath`를 `.githooks`로 설정하고, `make hooks`는 이를 명시적으로 설정하며 hook을 쓴다. `make hooks-check`는 `core.hooksPath`가 `.githooks`가 아니거나 hook이 없거나 실행할 수 없거나 도구의 hook과 다르면 실패한다. `make push-gate-commit COMMIT=<sha>`는 hook을 건너뛴 push를 위해 같은 gate를 commit에 실행하고, CI group `docs`가 push된 commit에 이를 실행한다.
 
 ## main 공개
 

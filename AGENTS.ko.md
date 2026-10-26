@@ -1,5 +1,5 @@
 <!-- doc-id: agents -->
-<!-- source-sha256: 9acf7b03f5ce984d5c800fe324046281eae5aa382cb1a210fcd1f5f28b4be57f -->
+<!-- source-sha256: 54464dec8636f81a07584d159fbfe21b2bad14057b5c1bc269e795cd6e950455 -->
 # 개발
 
 [English](AGENTS.md).
@@ -23,7 +23,7 @@
 
 - Own: 임시 script나 임시 폴더를 쓰지 않는다. 모든 검사는 Makefile target, `scripts/` 아래의 script 또는 커밋된 test이며, 멱등하다.
   Enforced by: none, script가 임시인지는 판단이다.
-- Own: 결과는 tree, manifest와 그 lock이 고정한 template release, 그리고 template 저장소 tag `TEMPLATE_TAG`(`v0.0.11`)의 commit에만 의존한다. 또한 `config/release-assets.json`이 sha256으로 고정하고 `make hyper-install`이 가져와 `make ext`가 build하는, 그 tag의 php-ext release archive에도 의존한다. 저장소 밖의 모든 입력은 추적 파일에 이름이 적히고 쓰기 전에 확인한다. package는 정확한 version과 lock의 integrity 또는 shasum으로, template 저장소는 tag로(Makefile의 `TEMPLATE_TAG`, `config/release-assets.json`의 항목 `template-php`의 version, HR-80), build 출력은 입력의 hash로 확인한다. 의존성은 `package.json`이나 `composer.json`에 선언하고 npm이나 Composer가 lock대로 설치한다(HR-70). Version 0.1 전까지 다른 polyspec 저장소에 대한 의존성은 그 저장소의 GitHub tag나 GitHub Release의 asset이며, branch나 commit이 아니다. 추적 파일은 Git commit을, 이 저장소의 것이든 다른 저장소의 것이든, 이름으로 적지 않는다. 전체 실행의 guard는 실행을 tree와 key `template`(Makefile이 template 저장소에서 읽는 tag `TEMPLATE_TAG`의 commit)으로 구분하며, 두 값을 무시되는 `var/full-run.json`에만 기록한다. 맞지 않으면 기대값과 실제값을 적고 실패한다. 어떤 검사도 다른 checkout의 working tree를 그때 있는 그대로 읽지 않는다.
+- Own: 결과는 tree, manifest와 그 lock이 고정한 template release, 그리고 template 저장소 tag `TEMPLATE_TAG`(`v0.0.11`)의 commit에만 의존한다. 또한 `config/release-assets.json`이 sha256으로 고정하고 `make hyper-install`이 가져와 `make ext`가 build하는, 그 tag의 php-ext release archive에도 의존한다. 저장소 밖의 모든 입력은 추적 파일에 이름이 적히고 쓰기 전에 확인한다. package는 정확한 version과 lock의 integrity 또는 shasum으로, template 저장소는 tag로(Makefile의 `TEMPLATE_TAG`, `config/release-assets.json`의 항목 `template-php`의 version, HR-80), build 출력은 입력의 hash로 확인한다. 의존성은 `package.json`이나 `composer.json`에 선언하고 npm이나 Composer가 lock대로 설치한다(HR-70). Version 0.1 전까지 다른 polyspec 저장소에 대한 의존성은 그 저장소의 GitHub tag나 GitHub Release의 asset이며, branch나 commit이 아니다. 추적 파일은 Git commit을, 이 저장소의 것이든 다른 저장소의 것이든, 이름으로 적지 않는다. 최종 검증은 무시되는 `var/report/` 아래에 tree와 결과를 기록하고 release archive의 선언된 integrity 고정은 유지한다. 어떤 검사도 다른 checkout의 working tree를 그때 있는 그대로 읽지 않는다.
   Enforced by: `make dependency-policy-check`, `make toolchain-check`
 - Own: polyspec 버전이 0.0.x인 동안 개발 checkout은 설치된 polyspec package를 kit의 `docs/operations/local-links.md`가 설명하는 대로 그 source에 연결한다. 연결은 commit하지 않는다.
   Enforced by: none, 연결이 commit에서 빠지는지는 review로 판단한다.
@@ -82,7 +82,7 @@
   Enforced by: `make docs-check`, `make check`(checklist의 작업이 끝나기 전에는 guard가 실행을 거부한다)
 - Refines P26: `docs/plans/execution/checklist.md`에서 task를 `[o]`로 표시하기 전에, 커밋된 tree에서 그 task의 검증 명령을 실행한다. Verification 열은 `make check`가 아니라 task를 맡는 명령을 적는다. 이미 `[o]`인 행은 명령을 그대로 둔다.
   Enforced by: `make docs-check`
-- Own: commit이나 push 전에 local `make check`는 필요하지 않다. 실행하면 활성 task가 모두 끝났을 때, tree와 template commit마다 한 번만 실행하며, 수정이나 task마다 실행하지 않는다. `@polyspec/kit`의 guard `full-run`이 어떤 단계보다 먼저 이것을 강제한다. `[~]` task가 있으면 `make check`를 거부하고, 추적 파일에 커밋되지 않은 변경이 있어도 거부하며, `var/full-run.json`이 현재 tree와 template commit의 전체 실행을 기록하고 있어도 거부한다. `make rerun-failed`는 현재 tree와 template commit에서 통과하지 못한 target만 다시 실행한다(`docs/operations/development.md`). `docs/features.md`의 기능은 그 target들의 전체 실행이 통과한 뒤에만 implemented로 표시한다. `.github/workflows/ci.yml`의 실행이나 local `make check`가 그 실행이다.
+- Own: commit이나 push 전에 local `make check`는 필요하지 않다. 체크리스트 개발이 끝나면 요청된 로컬 최종 모음을 정확히 한 번 실행하며, 수정이나 task마다 실행하지 않는다. `make check`는 `FINAL_RUN=1`로 kit 기본 보고 실행기를 사용한다. 실행기는 활성 `[~]` 항목과 변경되었거나 commit되지 않은 tree를 거부한다. 한 번 실행 절차는 작업 규칙이며 실행기 guard가 아니다. 보고서를 보존하고 수정 후 실패한 소유 부분만 다시 검사한다(`docs/operations/development.md`). 기능은 CI나 로컬 최종 모음에서 그 target 전체 실행이 통과한 뒤에만 implemented로 표시한다.
   Enforced by: `make check`
 - Own: `main`의 push와 모든 수동 실행(`workflow_dispatch`)에 대해 GitHub은 `.github/workflows/ci.yml`의 job에서 CI group마다 하나씩 전체 suite를 각 target 끝까지 실행한다. 각 job은 job summary를 쓰고, 상태, 시간, 처음 실패한 줄과 각 target의 전체 로그를 담은 보고서 `var/ci/<name>/`을 올린다(HR-91). 전체 suite와 end-to-end 검사는 여기서 실행한다. 다음 push 전에 그것이 적는 실패를 모두 고친다. 알려진 한계: CI runner는 Linux라서, Darwin에서만 full suite에 속하는 `make virtiofs-check`(`DARWIN_TARGETS`, HR-68)는 Mac에서 local `make check`를 실행할 때만 실행된다.
   Enforced by: `make ci-passed`

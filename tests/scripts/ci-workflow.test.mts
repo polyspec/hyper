@@ -274,10 +274,10 @@ test('a target declared for Darwin is in the full suite exactly on Darwin and sk
   assert.deepEqual(darwin, ['virtiofs-check']);
   const check = checkTargets();
   assert.deepEqual(darwin.filter((target) => check.includes(target)), [], 'a Darwin target in the CHECK_TARGETS of every platform');
-  const commit = '0'.repeat(40);
-  const line = dryRun('check', { variables: [`TEMPLATE_COMMIT=${commit}`] }).find((entry) => entry.includes(' ../kit/scripts/kit/full-run.mts run '));
-  assert.ok(line, 'make check does not run the full-run of @polyspec/kit');
-  const suite = item(line.split(` ../kit/scripts/kit/full-run.mts run --key template=${commit} `), 1, 'the full-run command').split(' ');
+  const line = dryRun('check').find((entry) => entry.includes(' ../kit/scripts/kit/ci-targets.mts var/report/full-run '));
+  assert.ok(line, 'make check does not run ci-targets of @polyspec/kit');
+  assert.ok(line.startsWith('FINAL_RUN=1 '), 'make check requires an explicit local final verification mode');
+  const suite = item(line.split(' ../kit/scripts/kit/ci-targets.mts var/report/full-run '), 1, 'the final verification command').split(' ');
   assert.deepEqual(suite, process.platform === 'darwin' ? [...check, ...darwin] : check);
   const virtiofs = readdirSync(path.join(ROOT, 'tests/virtiofs')).filter((name) => name.endsWith('.test.mts'));
   assert.ok(virtiofs.length > 0);

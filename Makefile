@@ -27,7 +27,7 @@ export HYPER_PYTHON := $(PYTHON_VENV)/bin/python
 # release with their sha256: make hyper-install fetches both with make release-assets-fetch of kit (K140), which puts the php zip
 # into the Composer artifact repository var/products/template-php, from which Composer installs polyspec/template (H23.11),
 # and unpacks the native template extension (H14.1-7, H23.11-2).
-# The template repository of TEMPLATE_REPOSITORY is read only for the commit of TEMPLATE_TAG in the full-run key (HR-80);
+# The template repository of TEMPLATE_REPOSITORY supplies the tag checked before final verification (HR-80);
 # TEMPLATE_TAG is the tag of the version of the entry template-php, its one declaration.
 TEMPLATE_REPOSITORY := ../template
 TEMPLATE_TAG = v$(shell $(NODE) $(KIT)/release-assets.$(KIT_EXT) version template-php)
@@ -108,7 +108,7 @@ release-prepare:: ## Check out the template repository at TEMPLATE_TAG into TEMP
 	$(MAKE) template-tag
 	$(ONLINE) $(MAKE) hyper-install
 
-# Fails when the template checkout has no tag TEMPLATE_TAG; the full-run key names that commit (HR-80).
+# Fails when the template checkout has no tag TEMPLATE_TAG (HR-80).
 template-tag: ## Fail when the template repository TEMPLATE_REPOSITORY has no tag TEMPLATE_TAG, naming the expected tag and the tags it has (HR-80)
 	@git -C $(TEMPLATE_REPOSITORY) rev-parse --verify --quiet 'refs/tags/$(TEMPLATE_TAG)^{commit}' >/dev/null || { \
 	  echo "template-tag: $(TEMPLATE_REPOSITORY) has no tag $(TEMPLATE_TAG): expected the tag $(TEMPLATE_TAG), actual tags: $$(git -C $(TEMPLATE_REPOSITORY) tag --list 2>/dev/null | tr '\n' ' ')" >&2; \
@@ -247,10 +247,8 @@ bench-server-smoke: assets server ## Run the PHP benchmark once per measurement 
 
 bench: bench-server bench-browser ## Run both measurements; results are reports, not pass or fail checks
 
-# The targets of the full suite. `make check` runs them through the guard full-run of @polyspec/kit, which refuses while a
-# checklist task is [~], while tracked changes are uncommitted or when var/full-run.json records a run of the current tree
-# and the commit of the template tag, runs each target with `make <target>` to its end and records its result;
-# `make rerun-failed` reruns the targets of the current tree that did not pass.
+# The final suite runs through the native kit report runner on a clean committed tree.
+# Run it once after checklist development, then rerun only failed owners.
 CHECK_TARGETS := kit-check suppression-check toolchain-check layout-check typecheck lint-ts docs-check hooks-check push-gate-commit commits-check owner-validate dependency-policy-check dependency-policy-mutation-check bench-server-smoke hyper-lint analyse-php templates-check hyper-test-scripts hyper-test-js hyper-test-node hyper-test-python hyper-test-python-render package-check hyper-test-php parity server-parity server-parity-python bundle-size e2e rules-check rebuild-check language-check test-markers-check duplication-check parity-declarations-check parity-check lint-php lint-python link-state-check bypass-check divergence-check
 
 # The CI groups of the full suite (HR-91) are the entries of the matrix of .github/workflows/ci.yml: each entry runs its
@@ -264,15 +262,9 @@ CHECK_TARGETS := kit-check suppression-check toolchain-check layout-check typech
 DARWIN_TARGETS := virtiofs-check
 CHECK_TARGETS += $(if $(filter Darwin,$(shell uname)),$(DARWIN_TARGETS))
 
-# The full run is keyed by the tree and by the commit of the template tag, whose native extension sources the targets
-# build (HR-80): a run of the same tree with another template commit is another run.
-TEMPLATE_COMMIT = $(shell git -C $(TEMPLATE_REPOSITORY) rev-parse --verify --quiet 'refs/tags/$(TEMPLATE_TAG)^{commit}')
-FULL_RUN_KEYS = --key template=$(TEMPLATE_COMMIT)
+check: template-tag ## Run final verification once after checklist development, on a clean committed tree
+	FINAL_RUN=1 $(NODE) $(KIT)/ci-targets.$(KIT_EXT) var/report/full-run $(CHECK_TARGETS)
 
-check: template-tag ## Run every check through the guard: once per tree, when no checklist task is [~]
-	$(NODE) $(KIT)/full-run.$(KIT_EXT) run $(FULL_RUN_KEYS) $(CHECK_TARGETS)
-
-rerun-failed: template-tag
 
 
 # The steps of .github/workflows/release.yml for the tag TAG (release of @polyspec/kit, config/release.json), in this order:
