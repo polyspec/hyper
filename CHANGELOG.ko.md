@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 523f689203d4b946d2d07b2ffbfcb9c4d40dcde91c028002f66f263ef22a53a4 -->
+<!-- source-sha256: 980280d28bc1afff6f43bba8890d5dc9182234954ad1b67911e296393e2f08fc -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- 추적하는 공유 파일과 workflow를 설치 package의 일반 파일 복사본으로 동기화하고 저장소 hook을 갱신한다. 설치 package의 소스 link는 유지하며 공유 복사본 검사와 hook 검사가 통과한다.
 - 서버 벤치마크는 삭제된 Renderer 속성을 읽지 않고 generated PHP 프로그램과 템플릿 확장 상태를 보고한다. 격리된 회귀 검사가 PHP 경고를 거부하고 데이터베이스 제거를 확인한다 (H27.7).
 - 설치 소스 검사는 해석된 템플릿 진입점과 공유 모듈 식별자를 확인하고 릴리즈 선언의 아카이브 고정을 유지한다. PHP 분석 검사는 확장 스텁을 거부하며 관련 검사 7개가 통과한다 (H27.8).
 - PHP의 정확한 public API 검사는 UploadedFile을 포함하고 자동 로드 가능한 선언 확인에서 기본 trait을 인식한다. API 테스트와 PHP 정적 분석을 통과한다(H27.6-1).

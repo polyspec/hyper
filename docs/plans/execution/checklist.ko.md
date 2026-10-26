@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 2f4a477958bcd5829bdadb47514bc5836d4998ec4d7a5edd5e506981ed6f7268 -->
+<!-- source-sha256: 671d756b64e15c6481da1233cf72c3dc5b856f05760d3d3eccdccbb2310a21da -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -263,5 +263,5 @@
 | H27.7 | 삭제된 Renderer.engine을 읽지 않고 서버 벤치마크 프로그램을 보고하며 PHP 경고가 없는 보고를 회귀 검사로 검증한다. | benchmarks/server.php, tests/scripts, docs/operations/benchmark.md, docs/operations/benchmark.ko.md | `node ../kit/scripts/kit/run-tests.mts node -- tests/scripts/benchmark-server.test.mts` and `make bench-server-smoke` | [o] |
 | H27.8 | 릴리스 선언 검사와 로컬 설치 소스 검사를 구분한다. 소스 링크와 더 최신 provider 버전을 허용하고 오래된 dist 구조 대신 해석된 render 진입점으로 번들을 검증한다. | tests/scripts/template-dir.test.mts, tests/scripts/template-pins.test.mts, tests/scripts/no-symlinks.test.mts | `node ../kit/scripts/kit/run-tests.mts node -- tests/scripts/template-dir.test.mts tests/scripts/template-pins.test.mts tests/scripts/no-symlinks.test.mts` | [o] |
 | H27.9 | SIGTERM 정리 검사의 timeout을 재현하고 서버 종료 및 실행 디렉터리 정리 검증을 유지하면서 수정한다. | tests/scripts/check-parity.test.mts, scripts/check-parity.mts, scripts/run-resources.mts | `node ../kit/scripts/kit/run-tests.mts node -- --test-name-pattern="receives SIGTERM" tests/scripts/check-parity.test.mts` | [ ] |
-| H27.10 | kit-sync와 hooks로 저장소 복사본과 hook을 연결된 kit 소스에 맞추고 패키지 소스 링크를 유지하며 오래된 공유 파일 설명을 갱신한다. | shared kit copies, .githooks, AGENTS.md, AGENTS.ko.md, docs/operations/development.md, docs/operations/development.ko.md | `make kit-check` and `make hooks-check` | [ ] |
+| H27.10 | kit-sync와 hooks로 저장소 복사본과 hook을 연결된 kit 소스에 맞추고 패키지 소스 링크를 유지하며 오래된 공유 파일 설명을 갱신한다. | shared kit copies, .githooks, AGENTS.md, AGENTS.ko.md, docs/operations/development.md, docs/operations/development.ko.md | `make kit-check` and `make hooks-check` | [~] |
 | H27.11 | Makefile과 workflow 검사에서 제거된 full-run 진입점 대신 현재 최종 검증 실행기를 사용하고 전체 target 집합과 최종 1회 검증 절차를 유지한다. | Makefile, tests/scripts/ci-workflow.test.mts, current procedure documents and their Korean twins | `node ../kit/scripts/kit/run-tests.mts node -- --test-name-pattern="declared for Darwin" tests/scripts/ci-workflow.test.mts` | [ ] |

@@ -1,5 +1,5 @@
 <!-- doc-id: agents -->
-<!-- source-sha256: a238232fd3518cd44d704598eb6da4493fc46878c04bb6dd4b907f2a85cfabdf -->
+<!-- source-sha256: 9acf7b03f5ce984d5c800fe324046281eae5aa382cb1a210fcd1f5f28b4be57f -->
 # 개발
 
 [English](AGENTS.md).
@@ -49,7 +49,7 @@
   Enforced by: none, 실행보다 오래 남는 process는 코드를 읽어 찾는다.
 - Own: 추적하는 모든 경로는 `config/owner-checks.json`에 owner를 가진다(HR-88). 경로를 추가하는 변경은 그 owner 규칙도 추가하며, 저장소의 일부를 복사하는 test는 그 일부가 import하는 것을 함께 복사한다.
   Enforced by: `make owner-validate`
-- Own: 공유 도구는 npm package `@polyspec/kit`이며, `package.json`은 그것을 release asset의 URL로, `package-lock.json`은 integrity로 고정한다. checkout은 `make install-tools TOOLS=npm`과 `make install-packages`로 설치한다. Makefile은 옆의 kit checkout의 파일인 `../kit/scripts/kit/kit-bootstrap.mk`를 include하며, package의 `kit.copies`에 있는 파일들(`config/layout.kit.yml`과 그것이 이름 붙인 schema 세 개)은 설치된 package에서 `make kit-sync`가 쓰는 복사본이다. `PRINCIPLES.md`, 그 짝, `.editorconfig`, `.claude/settings.json`은 `../kit`의 파일로 가는 link다(kit K614). 복사본은 kit에서만 바꾼다. 이 저장소는 `config/*.json`과 자기 script에서만 다른 저장소와 다르다. 공유 도구의 결함이나 빠진 기능은 여기서 우회하지 않고 kit에 보고한다.
+- Own: 공유 도구는 npm package `@polyspec/kit`이며, `package.json`은 그것을 release asset의 URL로, `package-lock.json`은 integrity로 고정한다. checkout은 `make install-tools TOOLS=npm`과 `make install-packages`로 설치한다. Makefile은 옆의 kit checkout의 파일인 `../kit/scripts/kit/kit-bootstrap.mk`를 include하며, `PRINCIPLES.md`, 그 짝, `.editorconfig`, `.claude/settings.json`을 포함한 package의 `kit.copies` 파일은 설치된 package에서 `make kit-sync`가 원자적으로 쓰는 일반 파일 복사본이다. 설치 package의 소스 link는 로컬 개발 상태로 유지한다. 복사본은 kit에서만 바꾼다. 이 저장소는 `config/*.json`과 자기 script에서만 다른 저장소와 다르다. 공유 도구의 결함이나 빠진 기능은 여기서 우회하지 않고 kit에 보고한다.
   Enforced by: `make kit-check`
 - Own: 코드와 test는 각 package 안에서 서로 다른 디렉터리에 둔다.
   Enforced by: `make layout-check`
