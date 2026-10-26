@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: a97b84a941e415804da6926c4daab3401b3f4960a1ef7a0680fc42f2c518fe87 -->
+<!-- source-sha256: 58784820e930519c7fd98f620ab89bf48815563d2e4640b9fdb5c76a0b2d248e -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -252,3 +252,4 @@
 | H26.7 | 2026-10-21 사용자 규칙(로컬에서 릴리스를 설치하지 않는다)에 따라 board와 tests/package-install의 lock 설치를 형제 polyspec 제공자를 처음부터 링크하는 kit 설치로 바꾼다. Makefile:130 hyper-server-php-install은 추적 lock의 composer install 대신 `/Applications/Xcode.app/Contents/Developer/usr/bin/make composer-install DIR=examples/board`(K432)를 실행하고, Makefile:133 package-check는 npm ci 대신 kit K448-2의 처음부터 링크하는 npm 설치를 쓴다. 그러면 link-state-check는 examples/board/vendor의 polyspec/template 0.0.11 복사본도, tests/package-install의 릴리스 tarball도 보고하지 않는다 | Makefile | `make link-state-check` | [o] |
 | H26.8 | Composer의 update 경로로 composer.lock과 examples/board/composer.lock을 연결된 provider 매니페스트에서 다시 생성하여 PHP 8.5가 남지 않게 한다(8.4 결정). | composer.lock, examples/board/composer.lock | `make dependency-policy-check` | [-] 원인: 사용자 링크 규칙 2026-10-22: 추적 lock은 release 기록을 유지하고, polyspec 설치 폴더는 형제 checkout을 link하며, 추적 lock은 다시 생성하지 않는다. kit K448이 이 규칙을 담는다 |
 | H26.9 | docs/operations/benchmark.md와 benchmark.ko.md를 유휴 머신에서 PHP 8.4로 다시 측정하고, 2026-10-02 PHP 8.5.10 기록을 새 실행의 기록으로 바꾼다. | docs/operations/benchmark.md, docs/operations/benchmark.ko.md | `make bench`, `make docs-check` | [!] 원인: link-owner가 모든 개발 행을 닫은 뒤 순서를 정하는 유휴 벤치마크 단계다.; 재시도: link-owner가 유휴 벤치마크 단계를 지시할 때. |
+| H27.1 | H25.66, H25.71, H25.73, H26.8, H26.9를 릴리스 준비 기준으로 검토한다. 기존 이력을 유지하고 PHP 8.4를 변경하지 않는 릴리스 후속 작업을 등록한다. | docs/plans/execution/plan.md, docs/plans/execution/plan.ko.md, docs/plans/execution/checklist.md, docs/plans/execution/checklist.ko.md | `make docs-check` | [ ] |
