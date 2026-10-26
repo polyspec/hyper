@@ -100,3 +100,21 @@ Depends on: wave 22. The shared tools were a vendored copy of the tag of the kit
 ## Wave 24 — Session files that several processes write
 
 Depends on: wave 23. Two processes that wrote one session file at the same time failed. The Python and the Node session stores wrote each write of a session to one temporary file `<id>.tmp` and renamed it into place; when two processes overlapped, the rename of one found the temporary file already moved by the other and raised `FileNotFoundError`. Each write now creates its own temporary file and renames it (HY-104).
+
+## Wave 27 — Release readiness after linked development
+
+Depends on: the completed development rows. H27.1 audits earlier decisions; H27.2 resolves the PHP dependency graph before H27.3 builds and verifies the candidate. H26.9 remains a separate measurement task.
+
+A terminal checklist state does not establish release readiness. The four withdrawn rows describe decisions made during local development; each release obligation is judged separately. PHP 8.4 remains the runtime target. A source link proves neither the compatibility of a published dependency nor a clean archive installation.
+
+| Earlier item | Release disposition | Evidence still required |
+|---|---|---|
+| H25.66 | Keep the obsolete version-update task withdrawn; revisit PHPUnit selection in H27.2 through Composer under the PHP 8.4 platform. The recorded candidate 13.4.3 is not a current compatibility or version-selection result. | Native Composer resolution, valid locks and platform checks. |
+| H25.71 | Keep the preserveSymlinks implementation withdrawn. A direct source link uses the provider's dependency resolution; the release must also build from its installed archives, which H27.3 verifies. | Clean release-consumer installation and successful build bins, without development links. |
+| H25.73 | Keep the historical row withdrawn and restore its release lock-consistency obligation in H27.2. Development's retained release records do not exempt the next release from valid manifests and locks. | composer validate --strict for the root and board projects. |
+| H26.8 | Keep the development lock rewrite withdrawn; H27.2 selects actual dependency releases supporting PHP 8.4 and regenerates the release records through Composer. PHP is not raised to match old PHP 8.5 records. | Composer platform checks of both locks under PHP 8.4, with no platform requirement ignored. |
+| H26.9 | Keep the measurement open. PHP 8.4 extension preparation does not complete an idle-machine benchmark. | The complete make bench output, idle-machine conditions and updated English and Korean results. |
+
+The next patch candidate is 0.0.19, following 0.0.18. H27.3 prepares the version, archives and consumer locks with the declared release targets and verifies their installation. No tag is created or pushed by these tasks. The private root's own package path repository remains Composer-managed; a sibling source override is not evidence that a released dependency supports PHP 8.4.
+
+After the active checklist work is complete, run the final full verification once, then only the owning checks of any failures. The release commit must have successful CI evidence, including ci-passed. The existing full-run record from PHP 8.5 and a different tree does not prove this candidate. Only the maintainer creates or pushes the release tag after the release checks pass.

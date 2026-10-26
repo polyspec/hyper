@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 63a797f7f32a83561f55d30cea185e6d8f4bc336abd9c9757c21069288084845 -->
+<!-- source-sha256: e6b97eadde4041289319751ab6a8bb381ef9b68a260ce8acc5ea5e8e39b3d741 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- 릴리스 준비 검토는 철회된 네 행을 이력으로 유지하고 Composer 의존성 해결과 lock 검증을 H27.2에 복원하며, 깨끗한 아카이브 검증을 H27.3에 추가하고 유휴 환경 벤치마크 H26.9를 미완료로 유지한다.
 - H25.73은 추적 lock을 링크된 개발 manifest에 맞추는 작업이 H26.8과 모순되어 철회한다. 런타임 기준은 PHP 8.4이며 lock은 변경하지 않는다(H25.73).
 - 커밋된 화면 구성 문서가 parity-declarations-check와 docs-check를 통과한다(H25.76).
 - 애플리케이션 작성 규칙 HC-1부터 HC-7은 docs/operations/composition.md에서 계속 적용한다. HY-48은 레이아웃 밖 hx-* 속성의 거부를 명시하며, 프로토콜 요구사항 추적 검사를 통과한다(H25.76).
