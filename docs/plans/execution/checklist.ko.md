@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: b59151b3b0238d5a8f7ab9044b2743a1cb921d8ecd0c642248c8f9fdfdce1780 -->
+<!-- source-sha256: afe9a4c017190d60d6b1f06f871e91d0ccb5d19d8c0c6f40e50c640302b0dc3c -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -266,3 +266,4 @@
 | H27.9 | 호스트 절전 기록과 SIGTERM 정리 시간 초과를 대조하고 재개 후 변경하지 않은 프로세스 종료와 실행 디렉터리 정리 검증을 확인한다. | docs/operations/development.md, docs/operations/development.ko.md | `node ../kit/scripts/kit/run-tests.mts node -- tests/scripts/check-parity.test.mts` | [o] |
 | H27.10 | kit-sync와 hooks로 저장소 복사본과 hook을 연결된 kit 소스에 맞추고 패키지 소스 링크를 유지하며 오래된 공유 파일 설명을 갱신한다. | shared kit copies, .githooks, AGENTS.md, AGENTS.ko.md, docs/operations/development.md, docs/operations/development.ko.md | `make kit-check` and `make hooks-check` | [o] |
 | H27.11 | Makefile과 workflow 검사에서 제거된 full-run 진입점 대신 현재 최종 검증 실행기를 사용하고 전체 target 집합과 최종 1회 검증 절차를 유지한다. | Makefile, tests/scripts/ci-workflow.test.mts, current procedure documents and their Korean twins | `node ../kit/scripts/kit/run-tests.mts node -- --test-name-pattern="declared for Darwin" tests/scripts/ci-workflow.test.mts` | [o] |
+| H27.12 | 업로드 파일 API parity 선언을 완성하고 내부 반환형 없이 PHP 요청 컬렉션을 기본 iterable로 노출하며 응답 헤더형과 실행된 파일 part 검사를 연결한다. | config/parity.json, PHP request collections and tests, TypeScript response declarations, docs/spec/protocol.md and Korean twin | `node ../kit/scripts/kit/run-tests.mts node -- tests/scripts/public-symbols.test.mts` and `make parity-check UNITS=file-parts` | [ ] |
