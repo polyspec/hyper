@@ -4,7 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
-- Final verification invokes the current native kit report runner with the complete platform target set. Procedures preserve the single final attempt and separate failed-owner reports instead of calling a removed entry point.
+- Final verification invokes the current native kit report runner with the complete platform target set. Procedures preserve the single final attempt and separate failed-owner reports instead of calling a removed entry point (H27.11).
 - Synchronize tracked shared files and workflows as regular installed-package copies and refresh the repository hooks. Installed package source links remain in place; shared-copy and hook checks pass (H27.10).
 - The server benchmark reports the generated PHP program and template extension state without reading a removed Renderer property. An isolated benchmark regression rejects PHP warnings and verifies database removal (H27.7).
 - Installed-source tests verify the resolved template entry and shared module identity while release declarations retain their archive pins. PHP analysis assertions reject extension stubs; all seven targeted tests pass (H27.8).
