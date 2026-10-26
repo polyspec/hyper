@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 5f5911195517eb66a76afb8fc594480d7efa08539243487d34fde74838d53bad -->
+<!-- source-sha256: 3659dbf6d76481a272827e43df802970a049bfa29a8d7b63df2bc3460cf8d26f -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- PHP의 정확한 public API 검사는 UploadedFile을 포함하고 자동 로드 가능한 선언 확인에서 기본 trait을 인식한다. API 테스트와 PHP 정적 분석을 통과한다.
 - PHP 라우트와 요청 복사 계약은 올바른 PHPDoc으로 정확한 타입을 유지한다. fixture는 JSON 입력과 콜백 응답을 검증하고 서버 시작은 성공 후에만 소유권을 넘기며 실패 시 정리한다. PHPStan 오류가 없고 포맷 검사와 관련 테스트 116건을 통과한다(H27.5).
 - 정확한 public API 검사는 HY-113의 기존 TypeScript UploadedFile export와 Python uploaded_file 모듈을 포함한다. Python 루트 export는 유지하며 두 언어의 API 검사를 통과한다(H27.6).
 - 기본 npm 소스 링크는 direct dependency override 참조로 EOVERRIDE 없이 연결한다. 패키지 fixture는 고정된 npm 경로를 받고 생성된 링크 상태는 ignore한다. ignore 검사는 Git의 성공과 모든 출력 경로 검사를 확인한다. 패키지 설치, 소스 링크, 해당 회귀 검사를 통과한다(H27.4).
