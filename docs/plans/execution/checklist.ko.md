@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: d93530803ef0ca8a3ddc181aaf66ea7a819ec95063072b161dc59b65bae52b57 -->
+<!-- source-sha256: 08a12f02254ba820876bd05be240b0a59327dcd11386a5aad4e6c8b41a306ae0 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -270,3 +270,4 @@
 | H27.13 | checkout 외부의 기본 소스 link를 거부하지 않고 해석된 설치 template 소스 package를 virtiofs 검사에 mount한다. | tests/virtiofs/output-files.test.mts, Makefile, tests/scripts/toolchain.test.mts, AGENTS.md and twin, docs/operations/development.md and twin | `node ../kit/scripts/kit/run-tests.mts node -- tests/virtiofs/output-files.test.mts` and `node ../kit/scripts/kit/run-tests.mts node -- --test-name-pattern="explicit install" tests/scripts/toolchain.test.mts` | [o] |
 | H27.14 | 공개된 공유 도구 archive 0.0.56을 기본 npm 해석과 릴리즈 무결성 확인으로 반영하고 복사본과 hook 및 보안 검토 기록을 갱신하며 로컬 소스 link를 유지한다. | package.json, package-lock.json, config/dependency-review.json, shared copies and hooks, docs/operations/dependencies.md and Korean twin | `make kit-check` and `make hooks-check` and `make dependency-policy-check` and `make link-state-check` | [o] |
 | H27.15 | bootstrap, CI와 소유 검사에서 필수 형제 도구 경로를 제거하고 선언된 기본 npm으로 깨끗한 checkout을 준비하며 소스 link와 packed 모드 모두 설치 package를 사용한다. | Makefile, .github/workflows/ci.yml, tests/scripts, AGENTS.md and twin, docs/operations/development.md and twin | `node node_modules/@polyspec/kit/scripts/kit/run-tests.mts node -- tests/scripts/installed-kit.test.mts tests/scripts/toolchain.test.mts tests/scripts/ci-workflow.test.mts tests/scripts/release-assets.test.mts tests/scripts/public-symbols.test.mts` | [ ] |
+| H27.16 | 기본 Composer 개발 manifest와 호환 로컬 제공 package 제약을 선언하고 COMPOSER manifest 선택을 보존하며 릴리즈 lock을 덮어쓰지 않고 기본 개발 lock과 설치 기록을 생성한다. | Composer development manifests, PHP dependency requirement, Makefile, tests/scripts, dependency and development procedures | `make link-state-check` and `make analyse-php` and `node node_modules/@polyspec/kit/scripts/kit/run-tests.mts node -- tests/scripts/composer-development.test.mts` | [ ] |
