@@ -25,7 +25,6 @@ final class FilePartsTest extends TestCase
             $request = new Request('POST', '/', ['Content-Type' => Json::string(Json::at($case, 'type'))], '', Json::string(Json::at($case, 'body')));
             $got = [];
             foreach ($request->files() as $name => $files) {
-                self::assertIsString($name);
                 foreach ($files as $file) {
                     self::assertSame($name, $file->name());
                     $got[] = [
