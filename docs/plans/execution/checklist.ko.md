@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 9901045c71374c0b56edaca1b0fe0d78b2a5f36b973eb6b3a964de13feaf4039 -->
+<!-- source-sha256: de82ec775aa520378285a847982ab3d2f27430f5c1b650e096dffb2490c36e7a -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -261,7 +261,7 @@
 | H27.6 | TypeScript와 Python의 public API 검사에 파일 업로드 API를 반영하며 정확한 export 검사를 유지한다. | packages/server/ts/tests/public-api.test.ts, packages/server/python/tests/test_public_api.py, packages/server/python/src/polyspec/hyper/__init__.py | `node ../kit/scripts/kit/run-tests.mts vitest --cwd packages/server/ts -- tests/public-api.test.ts` and `packages/server/python/.venv/bin/python -m unittest packages/server/python/tests/test_public_api.py` | [o] |
 | H27.6-1 | HY-106과 HY-113의 기존 PHP UploadedFile 클래스를 정확한 공개 클래스 목록에 반영하며 예상 밖 공개 클래스 검사를 유지한다. | packages/server/php/tests/PublicApiTest.php | `var/tools/bin/php vendor/bin/phpunit packages/server/php/tests/PublicApiTest.php` and `make analyse-php` | [o] |
 | H27.7 | 삭제된 Renderer.engine을 읽지 않고 서버 벤치마크 프로그램을 보고하며 PHP 경고가 없는 보고를 회귀 검사로 검증한다. | benchmarks/server.php, tests/scripts, docs/operations/benchmark.md, docs/operations/benchmark.ko.md | `make bench-server-smoke` | [ ] |
-| H27.8 | 릴리스 선언 검사와 로컬 설치 소스 검사를 구분한다. 소스 링크와 더 최신 provider 버전을 허용하고 오래된 dist 구조 대신 해석된 render 진입점으로 번들을 검증한다. | tests/scripts/template-dir.test.mts, tests/scripts/template-pins.test.mts, tests/scripts/no-symlinks.test.mts | `node ../kit/scripts/kit/run-tests.mts node -- tests/scripts/template-dir.test.mts tests/scripts/template-pins.test.mts tests/scripts/no-symlinks.test.mts` | [ ] |
+| H27.8 | 릴리스 선언 검사와 로컬 설치 소스 검사를 구분한다. 소스 링크와 더 최신 provider 버전을 허용하고 오래된 dist 구조 대신 해석된 render 진입점으로 번들을 검증한다. | tests/scripts/template-dir.test.mts, tests/scripts/template-pins.test.mts, tests/scripts/no-symlinks.test.mts | `node ../kit/scripts/kit/run-tests.mts node -- tests/scripts/template-dir.test.mts tests/scripts/template-pins.test.mts tests/scripts/no-symlinks.test.mts` | [~] |
 | H27.9 | SIGTERM 정리 검사의 timeout을 재현하고 서버 종료 및 실행 디렉터리 정리 검증을 유지하면서 수정한다. | tests/scripts/check-parity.test.mts, scripts/check-parity.mts, scripts/run-resources.mts | `node ../kit/scripts/kit/run-tests.mts node -- --test-name-pattern="receives SIGTERM" tests/scripts/check-parity.test.mts` | [ ] |
 | H27.10 | kit-sync와 hooks로 저장소 복사본과 hook을 연결된 kit 소스에 맞추고 패키지 소스 링크를 유지하며 오래된 공유 파일 설명을 갱신한다. | shared kit copies, .githooks, AGENTS.md, AGENTS.ko.md, docs/operations/development.md, docs/operations/development.ko.md | `make kit-check` and `make hooks-check` | [ ] |
 | H27.11 | Makefile과 workflow 검사에서 제거된 full-run 진입점 대신 현재 최종 검증 실행기를 사용하고 전체 target 집합과 최종 1회 검증 절차를 유지한다. | Makefile, tests/scripts/ci-workflow.test.mts, current procedure documents and their Korean twins | `node ../kit/scripts/kit/run-tests.mts node -- --test-name-pattern="declared for Darwin" tests/scripts/ci-workflow.test.mts` | [ ] |

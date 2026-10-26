@@ -1,10 +1,10 @@
 // Tests the template pins of this repository (HR-70, HR-80, H14.1-7): `make template-tag` fails for a template checkout
-// without the tag TEMPLATE_TAG, which the full-run key names; npm installs the template package as one copy inside the
-// checkout; Composer installs the template PHP package from the verified zip of the template release in an artifact repository; and PHPStan reads the stub
-// of the unpacked php-ext archive (config/release-assets.json), not a copy of the template repository.
+// without the tag TEMPLATE_TAG; workspaces resolve the same installed template package, including a source link.
+// Composer release declarations name the verified PHP zip and PHPStan reads the PHP library without an extension stub.
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
 import { test, type TestContext } from 'node:test';
@@ -65,19 +65,16 @@ test('make template-tag fails for a template checkout without the tag TEMPLATE_T
   assert.equal(found.status, 0, found.stderr);
 });
 
-test('npm installs the template package as one copy inside this checkout', () => {
+test('workspaces resolve the same installed template package through native source links or an installation', () => {
   requireBuilt('hyper-install', 'node_modules/@polyspec/template/package.json');
-  const path = 'node_modules/@polyspec/template';
-  assert.equal(lstatSync(join(repository, path)).isSymbolicLink(), false, path);
-  assert.equal(lstatSync(join(repository, path)).isDirectory(), true, path);
-  assert.ok(realpathSync(join(repository, path)).startsWith(`${repository}/`), path);
-  // The packages of the workspace resolve the root package through the overrides, so they hold no copy of their own.
-  for (const nested of ['packages/client/node_modules/@polyspec/template', 'packages/server/ts/node_modules/@polyspec/template']) {
-    assert.equal(existsSync(join(repository, nested)), false, nested);
+  assert.equal(readObject('node_modules/@polyspec/template/package.json').name, '@polyspec/template');
+  const render = createRequire(join(repository, 'package.json')).resolve('@polyspec/template/render');
+  for (const workspace of ['packages/client', 'packages/server/ts', 'packages/build']) {
+    assert.equal(createRequire(join(repository, workspace, 'package.json')).resolve('@polyspec/template/render'), render, workspace);
   }
 });
 
-test('Composer installs the template PHP package from the zip of the template release, and PHPStan reads the stub of the unpacked php-ext asset', () => {
+test('Composer release declarations pin the PHP zip and PHPStan reads no extension stub', () => {
   const required = jsonObject(readObject('packages/server/php/composer.json').require, 'packages/server/php/composer.json require')['polyspec/template'];
   assert.ok(required !== undefined, 'packages/server/php requires no polyspec/template');
   const version = jsonString(required, 'packages/server/php/composer.json require polyspec/template');
@@ -101,7 +98,5 @@ test('Composer installs the template PHP package from the zip of the template re
     assert.equal(dist.url, `${directory}/${zip}`, manifest);
     assert.match(jsonString(dist.shasum, `${lockFile} polyspec/template dist shasum`), /^[0-9a-f]{40}$/, `${manifest}: the lock pins the zip by its sha1`);
   }
-  const scanned = /scanFiles:\n\s+- (\S+)/.exec(readFileSync('packages/server/php/phpstan.neon', 'utf8'))?.[1];
-  assert.ok(scanned !== undefined, 'packages/server/php/phpstan.neon scans no file');
-  assert.equal(resolve('packages/server/php', scanned), join(repository, 'var/products/template-ext/src/polyspec_template.stub.php'));
+  assert.doesNotMatch(readFileSync('packages/server/php/phpstan.neon', 'utf8'), /polyspec_template\.stub\.php/);
 });

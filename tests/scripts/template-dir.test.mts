@@ -4,16 +4,16 @@
 // package-lock.json pins by their integrity, and no build takes a template directory.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { readFileSync, realpathSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { test } from 'node:test';
+import { fileURLToPath } from 'node:url';
 import { build } from 'esbuild';
 import { templatePlugin } from '../../packages/build/lib/template-files.mjs';
 import { type JsonObject, jsonObject, jsonString, parseJsonObject } from '../../scripts/json.mts';
 import { requireBuilt } from './requires.mts';
 
 const repository = resolve('.');
-const installed = resolve('node_modules', '@polyspec', 'template');
 const PACKAGES = ['@polyspec/template', '@polyspec/template-compiler'];
 const read = (file: string): JsonObject => parseJsonObject(readFileSync(join(repository, file), 'utf8'), file);
 // The object `key` of the JSON object of `file`.
@@ -31,11 +31,12 @@ test('bundles the template render runtime of a client from the installed templat
     plugins: [templatePlugin()],
   });
   const inputs = Object.keys(result.metafile.inputs).map((input) => resolve(input));
-  assert.ok(inputs.some((input) => input.startsWith(`${installed}/dist/`)), inputs.join('\n'));
+  const render = realpathSync(fileURLToPath(import.meta.resolve('@polyspec/template/render')));
+  assert.ok(inputs.includes(render), inputs.join('\n'));
   assert.deepEqual(inputs.filter((input) => input.includes('/var/products/')), []);
 });
 
-test('npm installs the template packages from the tarballs of the template release that the lock pins', () => {
+test('release declarations pin template tarballs while installed source packages keep their identity', () => {
   requireBuilt('hyper-install', ...PACKAGES.map((name) => `node_modules/${name}/package.json`));
   const dependencies = member('package.json', 'dependencies');
   const overrides = member('package.json', 'overrides');
@@ -51,7 +52,7 @@ test('npm installs the template packages from the tarballs of the template relea
     assert.equal(entry.resolved, tarball, name);
     assert.equal(entry.version, version, name);
     assert.match(jsonString(entry.integrity, `${name} integrity`), /^sha512-/, `${name} is pinned by its integrity`);
-    assert.equal(read(`node_modules/${name}/package.json`).version, version, name);
+    assert.equal(read(`node_modules/${name}/package.json`).name, name, name);
   }
   // The packages of the workspace require the exact version, which the root resolves to the same tarball.
   for (const name of PACKAGES) assert.equal(overrides[name], `$${name}`, name);
