@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: c4f716e1915286a105a2918a7c8af61f6a18e997177d024fe1773bdb7da1b943 -->
+<!-- source-sha256: 072c59e2c85ff95941a6dda2256323d461791326d3f07ad18f2c25ae864fccef -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- 0.0.19 후보는 링크된 소스의 단위 검사를 통과한다. 패키지 소스·이름 8건, PHP 8.4.26에서 template 확장을 로드하지 않은 경우와 로드한 경우의 애플리케이션 검사 각각 71건, TypeScript 애플리케이션 76건, 클라이언트 stream 4건, Python 애플리케이션 19건과 multipart 9건이다. 이 근거는 로컬 소스 사용 범위이며 아카이브 설치와 전체 모음 검증은 미완료다(H27.3).
 - 후보 lock에서 npm audit가 fast-uri를 3.1.9로, markdown-it을 14.3.3으로 갱신한다. audit에 더 이상 없는 advisory의 예외를 제거한다(H27.3).
 
 ## 0.0.19
