@@ -4,7 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
-- Native npm source linking uses direct-dependency override references without EOVERRIDE. The package fixture receives the pinned npm path, its generated link state is ignored, and the ignore check verifies Git succeeded and checked every output. Package installation, source links and the targeted regressions pass.
+- Native npm source linking uses direct-dependency override references without EOVERRIDE. The package fixture receives the pinned npm path, its generated link state is ignored, and the ignore check verifies Git succeeded and checked every output. Package installation, source links and the targeted regressions pass (H27.4).
 - Separate the prepared local candidate from pending archive-consumer proof: the latter awaits compatible distribution inputs and the archive target tag, while local final verification can proceed (H27.3).
 - The board server build uses installed source packages without Composer installation or relinking. Explicit dependency installation remains available. The regression test and the 11-template server build pass (H27.3-1).
 - The 0.0.19 candidate passes linked-source unit checks: 8 package-source/name tests, 71 PHP application tests on PHP 8.4.26 both without and with the template extension loaded, 76 TypeScript application tests, 4 client stream tests, and 19 Python application plus 9 multipart tests. This evidence covers local source use; archive installation and full-suite verification remain open (H27.3).
