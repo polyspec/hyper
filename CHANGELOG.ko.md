@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 9d873210cea7c92bdf4f9458ded29097bae6dcbe5ca5f3cf9afd38cfe20b98dc -->
+<!-- source-sha256: 65cff73204103830c91e922521de632b6338179b6a5bc962bda0289d10d947aa -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- 깨끗한 checkout은 설치 package에서 공유 도구를 읽기 전에 선언된 기본 npm으로 lock을 준비한다. CI도 이 진입점을 사용하며 소유 검사는 필수 형제 경로 없이 설치 export에서 소스 또는 packed 도구를 해석한다. 독립된 lock 기반 archive fixture와 관련 통합 검사가 통과한다.
 - npm으로 공유 도구 archive 0.0.56의 릴리즈 URL과 integrity를 반영한다. 설치 소스 link를 유지하고 기본 의존성 검토와 공유 복사본을 갱신한다. 공유 도구, hook, 의존성 정책, link 검사가 통과한다 (H27.14).
 - PHP 8.4 벤치마크 재개 조건은 별도 단계 지시가 아니라 유휴 호스트다. 현재 호스트 표본은 유휴 55.41%이므로 유휴 실행 요구는 미완료로 유지한다(H26.9).
 - Darwin virtiofs 검사는 해석된 설치 소스 제공 checkout을 원래 경로에 읽기 전용으로 mount한다. image는 digest로 고정하고 hyper-install-virtiofs로 명시적으로 설치한다. 검사는 컨테이너 실행 전에 누락된 로컬 image를 거부한다. 기본 virtiofs 검사 두 개가 통과한다 (H27.13).

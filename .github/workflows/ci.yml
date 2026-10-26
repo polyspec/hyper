@@ -11,6 +11,7 @@
 # The toolchain comes from the pinned files: Node.js, Python and the other tools from mise.toml, which mise installs at
 # the digests of mise.lock, and PHP from .php-version. setup-node reads mise.toml only for the node that starts the
 # bootstrap (kit K171). Every job, ci-passed too, first runs the bootstrap of the shared tools @polyspec/kit:
+# `make bootstrap` first installs the lock with native npm of packageManager; then
 # `make install-tools TOOLS=npm` installs mise, the node of mise.toml and the npm of packageManager into
 # var/tools and `make install-packages` installs package-lock.json with it, the package included, whose kit.mk has the
 # other targets. Every check job then runs `make install-tools`, which installs the Python and Composer of the checkout
@@ -71,6 +72,9 @@ jobs:
         with:
           node-version-file: hyper/mise.toml
           package-manager-cache: false
+      - id: bootstrap
+        if: ${{ !cancelled() }}
+        run: make bootstrap
       - id: npm
         if: ${{ !cancelled() }}
         run: make install-tools TOOLS=npm
@@ -133,6 +137,8 @@ jobs:
         with:
           node-version-file: mise.toml
           package-manager-cache: false
+      - name: make bootstrap
+        run: make bootstrap
       - name: make install-tools TOOLS=npm
         run: make install-tools TOOLS=npm
       - name: make install-packages

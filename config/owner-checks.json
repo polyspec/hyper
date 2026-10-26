@@ -4,6 +4,11 @@
   "testTarget": "hyper-test-scripts",
   "owners": [
     {
+      "paths": ["tests/scripts/kit-tools.mts"],
+      "tests": ["tests/scripts/toolchain.test.mts", "tests/scripts/ci-workflow.test.mts", "tests/scripts/release-assets.test.mts", "tests/scripts/public-symbols.test.mts"],
+      "targets": ["typecheck"]
+    },
+    {
       "paths": [
         "docs/**",
         "*.md",

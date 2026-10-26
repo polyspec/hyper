@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: f1b83f7b34b4278094dae6c854f67c1071f28a9d46e7b6853a5c607c08641cf8 -->
+<!-- source-sha256: 8ec8972b702192537c0657831c72aaeb47ab42d47599536398942a3f384f24f3 -->
 # 개발
 
 [English](development.md).
@@ -7,7 +7,7 @@
 ## 도구
 
 - pin한 도구(HR-81): `mise.toml`의 Node.js와 Python(mise가 `mise.lock`의 digest에 맞춰 설치한다. Node.js는 `make install-tools TOOLS=npm`이, Python은 `make install-tools`가 설치한다), `pdo_sqlite`가 있는 `.php-version`의 PHP, GNU Make 3.81 이상, 네이티브 확장을 위한 그 PHP의 phpize, php-config와 C compiler. `make hyper-install`은 `packageManager`의 npm과 `config/toolchain.json`의 Composer를 `var/tools`에 설치한다(`make install-tools`). `make toolchain-check`는 pin과 다른 모든 도구를 밝힌다.
-- 공유 도구: npm 패키지 `@polyspec/kit`이며, `package.json`은 그 release asset의 URL로, `package-lock.json`은 integrity로 pin하고 `config/*.json`이 이를 설정한다. checkout은 `../kit/scripts/kit/bootstrap/`의 installer로 `packageManager`의 npm을 설치하는 `make install-tools TOOLS=npm`과, 그 npm으로 `package-lock.json`을 설치하는 `make install-packages`로 시작한다. Makefile은 kit의 `kit.mk`를 include하는, 옆의 kit checkout의 파일이자 복사본이 아닌 `../kit/scripts/kit/kit-bootstrap.mk`를 include한다(kit K614). `make kit-sync`는 설치된 패키지에서 공유 원칙과 editor 및 agent 설정을 포함한 `kit.copies`의 일반 파일 복사본을 원자적으로 쓴다. 설치된 package의 소스 link는 유지한다. 또한 `make kit-check`는 패키지가 lock과 다르거나 복사본이 패키지와 다르거나 `config/*.json`이 schema를 어기면 실패한다.
+- 공유 도구: `@polyspec/kit`은 `package.json`의 릴리즈 URL과 `package-lock.json`의 integrity로 고정한다. 깨끗한 checkout은 `make bootstrap`으로 정확한 `packageManager` version의 기본 npm을 사용해 `npm ci --ignore-scripts`를 실행한다. 이어 `make install-tools TOOLS=npm`, `make install-packages`, `make install-tools`로 checkout 도구를 준비한다. Makefile은 설치된 `node_modules/@polyspec/kit/scripts/kit/kit-bootstrap.mk`를 include한다. 기본 로컬 package link도 같은 경로를 사용하고 형제 checkout을 필수로 요구하지 않는다. 설치 bootstrap은 link에서는 소스 도구를, archive에서는 packed 도구를 선택한다. `make kit-sync`는 일반 공유 복사본을 원자적으로 쓰고 `make kit-check`는 복사본과 설정 schema를 확인한다.
 - template package: npm은 `@polyspec/template`과 `@polyspec/template-compiler`를 template release의 tarball에서, Composer는 `polyspec/template`을 그 zip에서 `package.json`, `composer.json`과 그 lock이 고정한 대로 설치한다(HR-70). `make hyper-install`이 이를 download한다.
 - 네이티브 template 확장: release `v0.0.11`(`TEMPLATE_TAG`)의 php-ext archive `polyspec-template-php-ext-php-0.0.11.zip`이며, `config/release-assets.json`이 sha256으로 pin한다(H14.1-7). `make hyper-install`이 kit의 `make release-assets-fetch`로 `$(ONLINE)`을 거쳐 내려받아 `var/products/template-ext`에 풀고, `make ext`가 offline으로 build한다. 같은 파일이 php zip `polyspec-template-php-0.0.11.zip`을 pin하며, `make hyper-install`은 Composer가 설치하기 전에 그것을 확인해 Composer artifact repository `var/products/template-php`에 둔다(H23.11). `../template`(`TEMPLATE_REPOSITORY`)의 template 저장소는 선언한 release tag을 읽을 때만 쓰며, tag가 없으면 `make template-tag`가 실패한다.
 - network: `make install-tools`, `make install-packages`, `make hyper-install`, `make hyper-install-browser`만 download한다. 다른 모든 recipe는 npm, Composer를 offline으로 실행하므로(`npm_config_offline`, `COMPOSER_DISABLE_NETWORK`) 없는 download는 바로 실패하고 그것을 만드는 설치 target을 밝힌다(HR-89).

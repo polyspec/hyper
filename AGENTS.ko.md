@@ -1,5 +1,5 @@
 <!-- doc-id: agents -->
-<!-- source-sha256: 25abec9a91332ef1b62b6868ea2e55c7d4e91c44f30bb210b2b18c7d8f782be2 -->
+<!-- source-sha256: 6f45b311168090d18f2d7b920405fca88ba3cf27a37e427779a83cfeeac4ca42 -->
 # 개발
 
 [English](AGENTS.md).
@@ -29,7 +29,7 @@
   Enforced by: none, 연결이 commit에서 빠지는지는 review로 판단한다.
 - Own: release가 결과를 바꾸는 모든 도구는 추적 파일에 고정하고 쓰기 전에 확인한다(HR-81): `.php-version`, `packageManager`, `mise.toml`과 `mise.lock`, 그리고 `config/toolchain.json`. 도구는 결과가 요구하는 만큼 정확히 고정한다. PHP는 minor로, mise의 도구는 정확한 release로, make는 고정하지 않는다. 도구는 기계가 아니라 checkout(`var/tools`)에 설치하며, 다운로드는 고정된 digest가 있을 때만 쓰고, 처음 쓸 때 다른 도구가 도구를 설치하지 않는다. recipe나 script는 checkout의 도구를 절대 경로로 시작한다. make는 shell 문법이 없는 recipe 줄을 자기 `PATH`에서 찾기 때문이다.
   Enforced by: `make toolchain-check`, `make kit-check`
-- Own: 어떤 결과도 live service나 시간에 의존하지 않는다(HR-89). 결과가 시간에 따라 달라지는 registry 조회, 예컨대 latest 조회, version 범위의 해석, outdated package나 새 release의 조회를 하는 검사는 없으며, 다른 live service를 조회하는 검사도 없다. lock이 정확한 version과 integrity로 고정한 package의 다운로드는 설치이므로 허용한다. `npm ci`와 `composer install`이 그렇게 한다. 설치는 audit 없이 lock을 따른다. Test는 사건을 사건이나 주입된 clock으로 정렬하며, 경쟁하는 timer로 정렬하지 않는다. 실행의 server는 시스템이 배정하고 알리는 port에서 듣는다. 모든 recipe는 npm과 Composer를 오프라인으로 실행한다(Makefile의 `npm_config_offline`과 `COMPOSER_DISABLE_NETWORK`). `make install-tools`, `make install-packages`, `make hyper-install`, `make hyper-install-browser`, `make hyper-install-virtiofs`만 `$(ONLINE)`으로 다운로드하며, 빠진 다운로드는 그것을 만드는 설치 target과 함께 실패하고, 도구에게 온라인으로 다시 시도하라는 안내로 실패하지 않는다. server 시작처럼 오래 걸리는 작업은 시간 제한 없이 기다리며 진행을 출력한다.
+- Own: 어떤 결과도 live service나 시간에 의존하지 않는다(HR-89). 결과가 시간에 따라 달라지는 registry 조회, 예컨대 latest 조회, version 범위의 해석, outdated package나 새 release의 조회를 하는 검사는 없으며, 다른 live service를 조회하는 검사도 없다. lock이 정확한 version과 integrity로 고정한 package의 다운로드는 설치이므로 허용한다. `npm ci`와 `composer install`이 그렇게 한다. 설치는 audit 없이 lock을 따른다. Test는 사건을 사건이나 주입된 clock으로 정렬하며, 경쟁하는 timer로 정렬하지 않는다. 실행의 server는 시스템이 배정하고 알리는 port에서 듣는다. 모든 recipe는 npm과 Composer를 오프라인으로 실행한다(Makefile의 `npm_config_offline`과 `COMPOSER_DISABLE_NETWORK`). `make bootstrap`, `make install-tools`, `make install-packages`, `make hyper-install`, `make hyper-install-browser`, `make hyper-install-virtiofs`만 `$(ONLINE)`으로 다운로드하며, 빠진 다운로드는 그것을 만드는 설치 target과 함께 실패하고, 도구에게 온라인으로 다시 시도하라는 안내로 실패하지 않는다. server 시작처럼 오래 걸리는 작업은 시간 제한 없이 기다리며 진행을 출력한다.
   Enforced by: `make kit-check`, `make hyper-test-scripts`
 - Own: 성능은 측정하고 보고하며 검사를 실패시키지 않는다. 크기나 시간이 한도를 넘으면 값과 한도를 적은 `WARNING` 줄을 출력하고, GitHub에서는 `::warning::` annotation과 CI 요약의 경고를 남기며, 검사는 통과한다(`make bundle-size`, `make bench`). 측정 script는 사용법 오류나 빠진 입력에서만 실패한다.
   Enforced by: `make hyper-test-scripts`
@@ -49,7 +49,7 @@
   Enforced by: none, 실행보다 오래 남는 process는 코드를 읽어 찾는다.
 - Own: 추적하는 모든 경로는 `config/owner-checks.json`에 owner를 가진다(HR-88). 경로를 추가하는 변경은 그 owner 규칙도 추가하며, 저장소의 일부를 복사하는 test는 그 일부가 import하는 것을 함께 복사한다.
   Enforced by: `make owner-validate`
-- Own: 공유 도구는 npm package `@polyspec/kit`이며, `package.json`은 그것을 release asset의 URL로, `package-lock.json`은 integrity로 고정한다. checkout은 `make install-tools TOOLS=npm`과 `make install-packages`로 설치한다. Makefile은 옆의 kit checkout의 파일인 `../kit/scripts/kit/kit-bootstrap.mk`를 include하며, `PRINCIPLES.md`, 그 짝, `.editorconfig`, `.claude/settings.json`을 포함한 package의 `kit.copies` 파일은 설치된 package에서 `make kit-sync`가 원자적으로 쓰는 일반 파일 복사본이다. 설치 package의 소스 link는 로컬 개발 상태로 유지한다. 복사본은 kit에서만 바꾼다. 이 저장소는 `config/*.json`과 자기 script에서만 다른 저장소와 다르다. 공유 도구의 결함이나 빠진 기능은 여기서 우회하지 않고 kit에 보고한다.
+- Own: 공유 도구는 npm package `@polyspec/kit`이며 `package.json`의 release asset URL과 `package-lock.json`의 integrity로 고정한다. 깨끗한 checkout은 `make bootstrap`으로 `packageManager` version의 기본 npm을 호출해 lock을 설치한 뒤 `make install-tools TOOLS=npm`과 `make install-packages`를 실행한다. Makefile은 설치 package의 `node_modules/@polyspec/kit/scripts/kit/kit-bootstrap.mk`를 include하고 기본 로컬 package link는 선택 사항이다. `PRINCIPLES.md`, 그 짝, `.editorconfig`, `.claude/settings.json`을 포함한 package의 `kit.copies` 파일은 설치 package에서 `make kit-sync`가 원자적으로 쓰는 일반 파일 복사본이다. 설치 package의 소스 link는 로컬 개발 상태로 유지한다. 복사본은 kit에서만 바꾼다. 이 저장소는 `config/*.json`과 자기 script에서만 다른 저장소와 다르다. 공유 도구의 결함이나 빠진 기능은 여기서 우회하지 않고 kit에 보고한다.
   Enforced by: `make kit-check`
 - Own: 코드와 test는 각 package 안에서 서로 다른 디렉터리에 둔다.
   Enforced by: `make layout-check`

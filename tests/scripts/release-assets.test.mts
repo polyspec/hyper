@@ -3,6 +3,7 @@
 // reads the php zip from an artifact repository. `make hyper-install` downloads both with `make release-assets-fetch` of kit
 // (K140), which checks their sha256 and unpacks the php-ext archive, and `make ext` builds the unpacked sources offline
 // with phpize, configure and make, so no build reads scripts or sources of the template repository.
+import { kitTool } from './kit-tools.mts';
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
@@ -49,7 +50,7 @@ test('make ext builds the unpacked php-ext archive offline and runs no copy of t
 test('make hyper-install fetches the release archives through $(ONLINE) before Composer reads the artifact repository (H23.11-2)', () => {
   const lines = dryRun('hyper-install');
   const fetches = lines.filter((line) => line.includes('release-assets.mts'));
-  assert.deepEqual(fetches, [`env -u npm_config_offline -u COMPOSER_DISABLE_NETWORK ${path.join(ROOT, 'var/tools/bin/node')} ../kit/scripts/kit/release-assets.mts fetch`], lines.join('\n'));
+  assert.deepEqual(fetches, [`env -u npm_config_offline -u COMPOSER_DISABLE_NETWORK ${path.join(ROOT, 'var/tools/bin/node')} ${kitTool('release-assets')} fetch`], lines.join('\n'));
   const [fetch] = fetches;
   assert.ok(fetch !== undefined && lines.indexOf(fetch) < lines.findIndex((line) => /composer install/.test(line)), 'Composer reads the artifact repository before make hyper-install fetched it');
 });

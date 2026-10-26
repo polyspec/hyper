@@ -1,10 +1,17 @@
-# The shared tools are the npm package @polyspec/kit, which package.json pins by the URL of its release asset and
-# package-lock.json by its integrity. The kit-bootstrap.mk of the kit checkout beside the repository, no copy (kit K614),
-# includes the kit.mk of the kit, which defines the targets of the toolchain, the
-# Git hooks, the push gate, the documents, the owner checks, the CI report, the release and the dependency review, and
-# sets KIT to the scripts/kit of the kit checkout and KIT_EXT to mts, so the sources of kit run (kit K613). A checkout starts with `make install-tools TOOLS=npm` and
-# `make install-packages`. This repository differs from another only in config/*.json and in the targets below.
-include ../kit/scripts/kit/kit-bootstrap.mk
+# Native npm installs the declared shared-tool package before make reads its installed bootstrap.
+# A native local package link uses this same path; a sibling checkout is optional.
+.PHONY: bootstrap
+BOOTSTRAP_NPM := $(abspath $(shell command -v npm))
+bootstrap: ## Bootstrap the lock with the declared native npm before installed tools exist
+	npm_config_cache="$$PWD/var/bootstrap/npm-cache" "$(BOOTSTRAP_NPM)" exec --yes --package="$$(node -p 'require("./package.json").packageManager.split("+")[0]')" -- npm ci --ignore-scripts --allow-remote=root
+
+ifneq ($(filter bootstrap,$(MAKECMDGOALS)),)
+ifneq ($(words $(MAKECMDGOALS)),1)
+$(error Run make bootstrap alone before other goals)
+endif
+else
+include node_modules/@polyspec/kit/scripts/kit/kit-bootstrap.mk
+endif
 
 BOARD := examples/board
 PHP_PACKAGE := packages/server/php

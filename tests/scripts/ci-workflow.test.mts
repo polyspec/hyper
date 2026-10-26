@@ -14,6 +14,7 @@ import { fileURLToPath } from 'node:url';
 
 import { jsonArray, jsonString, parseJsonObject } from '../../scripts/json.mts';
 import { dryRun } from './make-dry-run.mts';
+import { kitTool } from './kit-tools.mts';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const WORKFLOWS = path.join(ROOT, '.github/workflows');
@@ -24,7 +25,7 @@ const STOPPING: Record<string, string[]> = { 'ci.yml': ['ci-passed'], 'release.y
 const CI_PASSED = 'ci-passed';
 const CI_PASSED_RUN = "make ci-passed RESULTS='${{ toJSON(needs) }}'";
 // The bootstrap of @polyspec/kit in a fresh checkout: the npm of packageManager, then the packages of package-lock.json.
-const BOOTSTRAP_RUNS = ['make install-tools TOOLS=npm', 'make install-packages'];
+const BOOTSTRAP_RUNS = ['make bootstrap', 'make install-tools TOOLS=npm', 'make install-packages'];
 
 interface Step { text: string; run: string | undefined; uses: string | undefined; if: string | undefined }
 interface Job { name: string; text: string; steps: Step[] }
@@ -274,10 +275,11 @@ test('a target declared for Darwin is in the full suite exactly on Darwin and sk
   assert.deepEqual(darwin, ['virtiofs-check']);
   const check = checkTargets();
   assert.deepEqual(darwin.filter((target) => check.includes(target)), [], 'a Darwin target in the CHECK_TARGETS of every platform');
-  const line = dryRun('check').find((entry) => entry.includes(' ../kit/scripts/kit/ci-targets.mts var/report/full-run '));
+  const command = ` ${kitTool('ci-targets')} var/report/full-run `;
+  const line = dryRun('check').find((entry) => entry.includes(command));
   assert.ok(line, 'make check does not run ci-targets of @polyspec/kit');
   assert.ok(line.startsWith('FINAL_RUN=1 '), 'make check requires an explicit local final verification mode');
-  const suite = item(line.split(' ../kit/scripts/kit/ci-targets.mts var/report/full-run '), 1, 'the final verification command').split(' ');
+  const suite = item(line.split(command), 1, 'the final verification command').split(' ');
   assert.deepEqual(suite, process.platform === 'darwin' ? [...check, ...darwin] : check);
   const virtiofs = readdirSync(path.join(ROOT, 'tests/virtiofs')).filter((name) => name.endsWith('.test.mts'));
   assert.ok(virtiofs.length > 0);
@@ -319,8 +321,8 @@ test('ci-passed is the last job of ci.yml, runs always, needs every other job an
     'not always': [text.replace('    if: ${{ always() }}\n', '    if: ${{ success() }}\n'), 'the job ci-passed has if: ${{ success() }}'],
     'needs no job': [text.replace('    needs: [check]\n', '    needs: []\n'), 'the job ci-passed needs [], not every other job [check]'],
     'another runner': [text.replace('    needs: [check]\n    runs-on: ubuntu-26.04-arm\n', '    needs: [check]\n    runs-on: ubuntu-24.04\n'), 'the job ci-passed runs on ubuntu-24.04, not on the runner of the other jobs'],
-    'another step': [text.replace(CI_PASSED_RUN, 'make ci-passed'), 'the job ci-passed runs [make install-tools TOOLS=npm, make install-packages, make ci-passed], not the bootstrap'],
-    'no bootstrap': [text.replace('        run: make install-packages\n      - name: make ci-passed', '      - name: make ci-passed'), 'the job ci-passed runs [make install-tools TOOLS=npm, make ci-passed'],
+    'another step': [text.replace(CI_PASSED_RUN, 'make ci-passed'), 'the job ci-passed runs [make bootstrap, make install-tools TOOLS=npm, make install-packages, make ci-passed], not the bootstrap'],
+    'no bootstrap': [text.replace('        run: make install-packages\n      - name: make ci-passed', '      - name: make ci-passed'), 'the job ci-passed runs [make bootstrap, make install-tools TOOLS=npm, make ci-passed'],
   };
   for (const [name, [changed, message]] of Object.entries(broken)) {
     assert.notEqual(changed, text, name);
