@@ -1,0 +1,54 @@
+{
+    "name": "polyspec/hyper-board-example",
+    "description": "Native source dependency installation for development",
+    "type": "project",
+    "license": "MIT",
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../../packages/server/php",
+            "options": {
+                "reference": "config",
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "../../../template/packages/php",
+            "options": {
+                "symlink": true,
+                "reference": "config"
+            }
+        },
+        {
+            "type": "path",
+            "url": "../../../forks/json-schema",
+            "options": {
+                "symlink": true,
+                "reference": "config"
+            }
+        }
+    ],
+    "require": {
+        "php": ">=8.4",
+        "ext-pdo_sqlite": "*",
+        "polyspec/hyper-server": "0.0.19",
+        "polyspec/template": "0.0.12",
+        "opis/json-schema": "^2.6@dev"
+    },
+    "require-dev": {
+        "laravel/pint": "1.32.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Polyspec\\Hyper\\Examples\\Board\\": "src/Board/",
+            "Polyspec\\Hyper\\Examples\\Board\\Program\\": "build/server/php/"
+        }
+    },
+    "config": {
+        "platform": {
+            "php": "8.4.1"
+        },
+        "sort-packages": true
+    }
+}

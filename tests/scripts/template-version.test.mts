@@ -76,7 +76,8 @@ test('the npm locks record the template tarballs of the release (H21.4)', () => 
 });
 
 test('the Composer manifests and locks name the template zip of the release (H21.4, H23.11)', () => {
-  const manifests = ['composer.json', 'packages/server/php/composer.json', 'examples/board/composer.json'];
+  // Release applications pin the archive; native development compatibility is checked by composer-development.test.mts.
+  const manifests = ['composer.json', 'examples/board/composer.json'];
   for (const manifest of manifests) {
     const require = member(json(manifest), 'require', manifest);
     if (require['polyspec/template']) assert.equal(require['polyspec/template'], VERSION, `${manifest} require`);

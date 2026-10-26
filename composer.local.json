@@ -1,0 +1,60 @@
+{
+    "name": "polyspec/hyper-workspace",
+    "description": "Native source dependency installation for development",
+    "type": "project",
+    "license": "MIT",
+    "repositories": [
+        {
+            "type": "path",
+            "url": "packages/server/php",
+            "options": {
+                "reference": "config",
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "../template/packages/php",
+            "options": {
+                "symlink": true,
+                "reference": "config"
+            }
+        },
+        {
+            "type": "path",
+            "url": "../forks/json-schema",
+            "options": {
+                "symlink": true,
+                "reference": "config"
+            }
+        }
+    ],
+    "require": {
+        "php": ">=8.4",
+        "polyspec/hyper-server": "0.0.19",
+        "polyspec/template": "0.0.12",
+        "opis/json-schema": "^2.6@dev"
+    },
+    "require-dev": {
+        "laravel/pint": "1.32.1",
+        "phpstan/phpstan": "2.3.1",
+        "phpunit/phpunit": "13.4.3"
+    },
+    "autoload": {
+        "psr-4": {
+            "Polyspec\\Hyper\\": "packages/server/php/src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Polyspec\\Hyper\\Tests\\": "packages/server/php/tests/",
+            "Polyspec\\Hyper\\Tests\\Program\\": "packages/server/php/tests/build/server/php/"
+        }
+    },
+    "config": {
+        "platform": {
+            "php": "8.4.1"
+        },
+        "sort-packages": true
+    }
+}

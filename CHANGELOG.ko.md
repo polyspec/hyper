@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 971855b87ae30a7101331a5276a3d685e9381573f814a20e68bd61e20772d065 -->
+<!-- source-sha256: 98dea06925b00c6efc70bdc6d41154a0407c27816d5cc024daf51c7bf05e64fc -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- 명시적 Composer 개발 manifest가 기본 path repository로 template 소스 0.0.12와 기존 JSON Schema fork를 해석하고 별도 로컬 lock과 정확한 설치 기록을 생성한다. 기본 COMPOSER 선택자를 보존하고 library 호환 대안을 선언하며 PHP 8.4에서 두 개발 graph를 검증한다. 기본 graph 검사, 관련 도구 검사 18개와 PHP 애플리케이션 검사 87개가 통과하며 릴리즈 lock은 변경하지 않는다.
 - 기본 소스 link는 소비자 root의 oxlint 실행 파일을 제거하지만 제공 package 설치에는 실행 파일이 남아 있다. 공유 lint 실행기는 소비자 root만 검색해 코드 검사 전에 실패한다. 앱 bin link를 추가하지 않고 실행 파일 해석의 선행 조건을 기록한다(H27.17).
 - 깨끗한 checkout은 설치 package에서 공유 도구를 읽기 전에 선언된 기본 npm으로 lock을 준비한다. CI도 이 진입점을 사용하며 소유 검사는 필수 형제 경로 없이 설치 export에서 소스 또는 packed 도구를 해석한다. 독립된 lock 기반 archive fixture와 관련 통합 검사가 통과한다(H27.15).
 - npm으로 공유 도구 archive 0.0.56의 릴리즈 URL과 integrity를 반영한다. 설치 소스 link를 유지하고 기본 의존성 검토와 공유 복사본을 갱신한다. 공유 도구, hook, 의존성 정책, link 검사가 통과한다 (H27.14).

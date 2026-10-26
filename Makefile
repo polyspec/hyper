@@ -21,7 +21,7 @@ BUILD_PACKAGE := packages/build
 PYTHON_PACKAGE := packages/server/python
 # The Python of the checks is the python of mise.toml, which `make install-tools` installs with mise at the digest of mise.lock
 # and its shim runs (HR-81, kit K127). requires-python >= 3.14 states the tested minor of the package (H20.12).
-# The absolute path, as NPM and COMPOSER have, because make looks up a recipe line on its own PATH.
+# The absolute path, as NPM and COMPOSER_BIN have, because make looks up a recipe line on its own PATH.
 # The virtual environment of the Python server package: make hyper-install makes it from the Python of mise.toml with kit's
 # python-venv and installs the package into it in editable mode with its dependencies, the template wheel of the release
 # included, so the tests and the board Python server import the installed packages and read no source path (S5).
@@ -44,7 +44,7 @@ PHP_VENDOR := $(CURDIR)/vendor
 # The native template extension, built from the unpacked php-ext asset (HY-48, H14.1-7).
 # The lock of `make serve-demo`, whose fixed ports exist once on this machine (holder-lock of @polyspec/kit).
 SERVE_DEMO_LOCK := /tmp/hyper-serve-demo.lock
-# The TypeScript compiler of the bin link that npm writes (HR-79), by its absolute path, as NPM and COMPOSER.
+# The TypeScript compiler of the bin link that npm writes (HR-79), by its absolute path, as NPM and COMPOSER_BIN.
 TSC := $(CURDIR)/node_modules/.bin/tsc
 # The esbuild package replaces bin/esbuild with the executable of the platform when it installs.
 ESBUILD := node_modules/esbuild/bin/esbuild
@@ -69,7 +69,7 @@ ONLINE := env -u npm_config_offline -u COMPOSER_DISABLE_NETWORK
 # make 3.81 looks up the program of a recipe line without shell syntax on its own PATH, not on the exported one, so the
 # recipes start npm by the absolute path of $(KIT_TOOLS)/bin and Composer, a tool of mise.toml, by that of its shim.
 NPM := $(KIT_TOOLS)/bin/npm
-COMPOSER := $(KIT_TOOLS)/mise/shims/composer
+export COMPOSER_BIN := $(KIT_TOOLS)/mise/shims/composer
 # The lock of the package manager installs of this checkout: one npm or Composer install at a time (HR-82).
 INSTALL_LOCK := var/install.lock
 
@@ -91,8 +91,8 @@ hyper-install: install-kit ## Install the pinned tools, fetch the archives of th
 	$(NODE) $(KIT)/check-toolchain.$(KIT_EXT)
 	$(MAKE) --no-print-directory release-assets-fetch
 	$(MAKE) --no-print-directory hyper-install-python
-	$(ONLINE) $(NODE) $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(COMPOSER) install
-	$(ONLINE) $(NODE) $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(COMPOSER) install --working-dir=$(BOARD)
+	$(ONLINE) $(NODE) $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(COMPOSER_BIN) install
+	$(ONLINE) $(NODE) $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(COMPOSER_BIN) install --working-dir=$(BOARD)
 
 hyper-install-python: ## Make the venv of the Python server package and install the package into it in editable mode with its dependencies (S5)
 	$(MAKE) --no-print-directory python-venv DIR=$(PYTHON_VENV)
@@ -103,6 +103,23 @@ hyper-install-browser: ## Install Chromium of the pinned Playwright and its syst
 
 hyper-install-virtiofs: ## Install the digest-pinned image for Darwin virtiofs verification
 	$(ONLINE) container image pull --platform linux/arm64 $(VIRTIOFS_IMAGE)
+
+# Native development graphs have their own manifests and locks; release declarations remain separate.
+.PHONY: composer-development
+composer-development: ## Resolve declared PHP development sources through native Composer
+	COMPOSER=composer.local.json $(NODE) $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(MAKE) --no-print-directory composer-install DIR=. CHECKOUTS="$(CURDIR) $(abspath ../template) $(abspath ../forks/json-schema)"
+	COMPOSER=composer.local.json $(NODE) $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(MAKE) --no-print-directory composer-install DIR=$(BOARD) CHECKOUTS="$(CURDIR) $(abspath ../template) $(abspath ../forks/json-schema)"
+
+.PHONY: composer-development-check
+composer-development-check: ## Validate selected native PHP development locks and their actual runtime requirements
+	@test -f composer.local.lock -a -f $(BOARD)/composer.local.lock || { echo "composer-development-check: make composer-development creates both development locks" >&2; exit 1; }
+	@failed=; \
+	$(call check,root development lock,COMPOSER=composer.local.json $(COMPOSER_BIN) validate --strict) \
+	$(call check,board development lock,COMPOSER=composer.local.json $(COMPOSER_BIN) validate --strict --working-dir=$(BOARD)) \
+	$(call check,root development platform,COMPOSER=composer.local.json $(COMPOSER_BIN) check-platform-reqs --lock) \
+	$(call check,board development platform,COMPOSER=composer.local.json $(COMPOSER_BIN) check-platform-reqs --lock --working-dir=$(BOARD)) \
+	$(call check,development source records,$(NODE) scripts/check-composer-development.mts --root .) \
+	$(checks_result)
 
 install: hyper-install
 
@@ -140,7 +157,7 @@ packages: toolchain-check ## Build the JavaScript modules and type declarations 
 # installs offline from the cache that make hyper-install filled (HR-89), and make link then links the polyspec packages that a
 # sibling checkout provides (K448).
 hyper-server-php-install: ## Install the Composer dependencies of the board offline, which link polyspec/hyper-server to packages/server/php (HR-79), and link the sibling polyspec packages
-	$(NODE) $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(COMPOSER) install --no-interaction --working-dir=$(BOARD)
+	$(NODE) $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(COMPOSER_BIN) install --no-interaction --working-dir=$(BOARD)
 	$(MAKE) --no-print-directory link PROJECT=$(BOARD)
 
 # package-check is a check, so it installs offline from the npm cache that make hyper-install filled and fails by the name of a

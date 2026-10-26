@@ -3,9 +3,10 @@ import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, join } from 'node:path';
 import { test, type TestContext } from 'node:test';
 import { jsonString, parseJsonObject } from '../../scripts/json.mts';
+import { mainTools } from './main-tools.mts';
 
 function checkout(t: TestContext): string {
   const directory = mkdtempSync(join(tmpdir(), 'hyper-installed-kit-'));
@@ -32,7 +33,7 @@ test('a fresh checkout can bootstrap the declared native npm without installed t
 
 test('a native locked archive install reads the installed bootstrap with no sibling checkout', { timeout: 120000 }, (t) => {
   const root = checkout(t);
-  const result = spawnSync(resolve('var/tools/bin/npm'), ['ci', '--offline', '--ignore-scripts', '--no-audit'], { cwd: root, encoding: 'utf8' });
+  const result = spawnSync(join(mainTools(), 'bin/npm'), ['ci', '--offline', '--ignore-scripts', '--no-audit'], { cwd: root, encoding: 'utf8' });
   assert.equal(result.status, 0, `make install-packages prepares the native package cache:\n${result.stdout}${result.stderr}`);
   const manifest = parseJsonObject(readFileSync(join(root, 'node_modules/@polyspec/kit/package.json'), 'utf8'), 'installed kit package.json');
   assert.equal(jsonString(manifest.name, 'installed package name'), '@polyspec/kit');
@@ -40,4 +41,17 @@ test('a native locked archive install reads the installed bootstrap with no sibl
   assert.equal(run.status, 0, run.stderr);
   assert.match(run.stdout, /node_modules\/@polyspec\/kit\/dist\/kit-check\.mjs/);
   assert.doesNotMatch(run.stdout, /\.\.\/kit/);
+  const modules = spawnSync(process.execPath, ['--input-type=module', '--eval', `
+    import assert from 'node:assert/strict';
+    import { createRequire } from 'node:module';
+    import { pathToFileURL } from 'node:url';
+    const entry = pathToFileURL(createRequire(process.cwd() + '/package.json').resolve('@polyspec/kit/run-tests'));
+    const declaration = await import(new URL('./parity-declaration.mjs', entry));
+    const symbols = await import(new URL('./parity-symbols.mjs', entry));
+    const units = await import(new URL('./parity-units.mjs', entry));
+    assert.equal(typeof declaration.readDeclaration, 'function');
+    assert.equal(typeof symbols.extractSymbols, 'function');
+    assert.equal(typeof units.undeclaredPublic, 'function');
+  `], { cwd: root, encoding: 'utf8' });
+  assert.equal(modules.status, 0, `${modules.stdout}${modules.stderr}`);
 });

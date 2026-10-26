@@ -4,9 +4,54 @@
   "testTarget": "hyper-test-scripts",
   "owners": [
     {
-      "paths": ["tests/scripts/kit-tools.mts"],
-      "tests": ["tests/scripts/toolchain.test.mts", "tests/scripts/ci-workflow.test.mts", "tests/scripts/release-assets.test.mts", "tests/scripts/public-symbols.test.mts"],
-      "targets": ["typecheck"]
+      "paths": [
+        "scripts/check-composer-development.mts"
+      ],
+      "tests": [
+        "tests/scripts/composer-development.test.mts"
+      ],
+      "targets": [
+        "typecheck"
+      ]
+    },
+    {
+      "paths": [
+        "composer.local.json",
+        "examples/board/composer.local.json"
+      ],
+      "tests": [
+        "tests/scripts/composer-development.test.mts"
+      ],
+      "targets": [
+        "docs-check"
+      ]
+    },
+    {
+      "paths": [
+        "tests/scripts/main-tools.mts"
+      ],
+      "tests": [
+        "tests/scripts/main-tools.test.mts",
+        "tests/scripts/installed-kit.test.mts",
+        "tests/scripts/composer-development.test.mts"
+      ],
+      "targets": [
+        "typecheck"
+      ]
+    },
+    {
+      "paths": [
+        "tests/scripts/kit-tools.mts"
+      ],
+      "tests": [
+        "tests/scripts/toolchain.test.mts",
+        "tests/scripts/ci-workflow.test.mts",
+        "tests/scripts/release-assets.test.mts",
+        "tests/scripts/public-symbols.test.mts"
+      ],
+      "targets": [
+        "typecheck"
+      ]
     },
     {
       "paths": [
@@ -230,7 +275,9 @@
       "paths": [
         "benchmarks/server.php"
       ],
-      "tests": ["tests/scripts/benchmark-server.test.mts"],
+      "tests": [
+        "tests/scripts/benchmark-server.test.mts"
+      ],
       "targets": [
         "bench-server-smoke"
       ]

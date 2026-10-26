@@ -36,3 +36,7 @@ dist.old/
 .cache/
 .phpunit.cache/
 coverage/
+
+# Composer owns the selected development locks as local installation state.
+/composer.local.lock
+/examples/board/composer.local.lock

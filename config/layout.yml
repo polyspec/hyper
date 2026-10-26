@@ -36,7 +36,7 @@ rules:
   # S5: the root files of hyper beyond the list of kit (K145).
   # .npmrc: the npm configuration of the root project; npm reads a project .npmrc only from the root of the project.
   - id: layout-root-files
-    vars: { root_files: "{.npmrc}" }
+    vars: { root_files: "{.npmrc,composer.local.json}" }
 
   # S5: hyper has three components. The browser package and the build package are TypeScript packages without ports; the
   # server of the region protocol has its ports in packages/server/<runtime>/ (ts for Node.js, php, python).

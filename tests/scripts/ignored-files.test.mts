@@ -14,6 +14,8 @@ const git = (...args: string[]) => spawnSync('git', args, { cwd: ROOT, encoding:
 const OUTPUTS = [
   'node_modules/vitest/package.json',
   'vendor/autoload.php',
+  'composer.local.lock',
+  'examples/board/composer.local.lock',
   'examples/board/vendor/autoload.php',
   'tests/package-install/node_modules/@polyspec/hyper-client/package.json',
   'tests/package-install/var/link/npm/bin/template',

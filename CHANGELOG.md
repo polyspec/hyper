@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- Explicit Composer development manifests resolve source template 0.0.12 and the existing JSON Schema fork through native path repositories, with separate local locks and accurate installed records. Preserve the native COMPOSER selector, declare the library compatibility alternatives and validate both development graphs on PHP 8.4. Native graph checks, 18 related tool tests and 87 PHP application tests pass; release locks remain unchanged.
 - Native source linking removes the consumer-root oxlint executable while the provider installation retains it. The shared lint runner only searches the consumer root and fails before checking code. Record its executable-resolution prerequisite without adding application bin links (H27.17).
 - Fresh checkouts bootstrap the lock through the declared native npm before reading shared tools from the installed package. CI uses that entry, and owner tests resolve source or packed tools from installed exports without mandatory sibling paths. A standalone locked archive fixture and the scoped integration checks pass (H27.15).
 - Adopt the shared-tool archive 0.0.56 through npm with its release URL and integrity. Refresh the native dependency review and synchronized shared copy while preserving installed source links. The shared-tool, hook, dependency-policy and link checks pass (H27.14).

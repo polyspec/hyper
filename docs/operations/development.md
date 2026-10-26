@@ -12,6 +12,12 @@
 - The network: only `make install-tools`, `make install-packages`, `make hyper-install` and `make hyper-install-browser` download. Every other recipe runs npm and Composer offline (`npm_config_offline`, `COMPOSER_DISABLE_NETWORK`), so a missing download fails at once and names the install target that makes it (HR-89).
 - Chromium for Playwright: `make hyper-install-browser`, which installs the Chromium of the pinned Playwright and, on Linux, its system libraries.
 
+## Native Composer development
+
+`make composer-development` explicitly selects the tracked `composer.local.json` of the root and board. Native Composer creates and updates each ignored `composer.local.lock`, source links, installed records and autoload under the installation lock. `make composer-development-check` runs native strict validation and platform checks for both selected locks on PHP 8.4. The unchanged release manifests and locks continue to describe the distribution graph; they are not the development installation record.
+
+The declarations name the source PHP package, template 0.0.12 and the existing JSON Schema fork by path. The fork retains its own native branch metadata; the application assigns it no substitute version. The PHP library accepts the explicit template versions 0.0.11 and 0.0.12. Native resolution tests accept both and reject 0.0.13, so the source connection uses a declared compatible requirement rather than a version alias. `COMPOSER` selects the manifest and `COMPOSER_BIN` names the checkout executable. Worktrees and fixtures discover shared tool paths through Git's common directory while keeping their installed dependencies private.
+
 ## Targets
 
 | Target | Action |

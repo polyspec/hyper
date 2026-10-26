@@ -75,10 +75,10 @@ test('workspaces resolve the same installed template package through native sour
 });
 
 test('Composer release declarations pin the PHP zip and PHPStan reads no extension stub', () => {
-  const required = jsonObject(readObject('packages/server/php/composer.json').require, 'packages/server/php/composer.json require')['polyspec/template'];
-  assert.ok(required !== undefined, 'packages/server/php requires no polyspec/template');
-  const version = jsonString(required, 'packages/server/php/composer.json require polyspec/template');
-  assert.match(version, /^\d+\.\d+\.\d+$/, 'packages/server/php requires an exact template version');
+  const required = jsonObject(readObject('composer.json').require, 'composer.json require')['polyspec/template'];
+  assert.ok(required !== undefined, 'composer.json requires no polyspec/template');
+  const version = jsonString(required, 'composer.json require polyspec/template');
+  assert.match(version, /^\d+\.\d+\.\d+$/, 'composer.json requires an exact template version');
   // config/release-assets.json pins the zip; make hyper-install checks it by its sha256 and writes it into var/products/template-php,
   // the artifact repository of both Composer projects, so no manifest copies the metadata of the template package.
   const zip = `polyspec-template-php-${version}.zip`;
