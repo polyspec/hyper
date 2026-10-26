@@ -1,5 +1,5 @@
 <!-- doc-id: features -->
-<!-- source-sha256: 3e2837d0832d6c3ab6f7475016390c2b218e1f1dd1c94b1be47a1783bd2b2b99 -->
+<!-- source-sha256: 0b52aeb3e4da9df516b070d265e7a3bcad28078c8eb9bf1d523ec70f2b25f95d -->
 # 기능 상태
 
 [English](features.md).
@@ -49,6 +49,7 @@
 | bundle-size | SSR 스크립트, CSR 셸, 템플릿 파일 크기를 상한과 비교해 측정하며, 상한을 넘는 크기는 실패가 아니라 warning이다 | implemented | `make bundle-size`, `tests/scripts/check-bundle-size.test.mts` |
 | npm-packages | `@polyspec/hyper-client`와 `@polyspec/hyper-server`는 Node가 `node_modules`에서 실행하는 JavaScript와 type 선언을 배포하며, 소스는 `erasableSyntaxOnly`를 통과한다(HR-61) | implemented | `make package-check` |
 | build-package | `@polyspec/hyper-build`는 bin `hyper-build-server`와 `hyper-build-assets`를 배포하고, 그 모듈은 배포하는 파일, Node, manifest가 요구하는 패키지만 import한다. consumer는 릴리스 tarball에서 이것을 설치하고 두 bin을 실행한다(HR-96) | implemented; CI run pending | `tests/scripts/package-source.test.mts`, `make release-consumer` |
+| server-build-inputs | board 서버 빌드는 설치된 소스 의존성을 사용하며 Composer 설치는 명시적인 작업으로 유지한다(HR-79) | unit verified; CI run pending | `tests/scripts/check-recipes.test.mts`, `make server` |
 | output-files | asset build와 server build는 복사한 출력 파일에 어떤 umask에서도 mode 0644를, 디렉터리에 0755를 주어 다른 사용자가 읽을 수 있게 하며, Linux container의 virtiofs bind mount는 이를 받아들인다(HR-68) | implemented; Darwin run pending | `make hyper-test-scripts`, Darwin에서 `make virtiofs-check` |
 | template-dir | asset build, template build, server build는 npm이 template release의 tarball에서 설치하는 template package `@polyspec/template`과 `@polyspec/template-compiler`를 package 이름으로 읽고, Composer는 `polyspec/template`을 template release의 zip에서 설치하며, 공개 manifest는 정확한 template version을 요구한다(HR-70) | implemented; CI run pending | `make hyper-test-scripts` |
 | template-ext | 네이티브 template 확장은 `config/release-assets.json`이 sha256으로 pin한 tag `TEMPLATE_TAG`(`v0.0.11`)의 php-ext release archive에서 build한다. `make hyper-install`이 kit의 `make release-assets-fetch`로 가져와 확인하고, `make ext`가 offline으로 build하며, PHPStan은 그 stub을 읽는다. 어떤 recipe도 확장을 위해 template 저장소를 읽거나 복사하지 않는다(H14.1-7) | implemented; CI run pending | `tests/scripts/release-assets.test.mts`, `tests/scripts/template-pins.test.mts`, `make ext`, `make test-php` |

@@ -14,6 +14,15 @@ import { requireBuilt } from './requires.mts';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 
+test('server build uses installed packages without Composer install (HR-79)', () => {
+  const build = dryRun('server').join('\n');
+  assert.match(build, /hyper-build-server\.mjs --manifest/);
+  assert.doesNotMatch(build, /\bcomposer install\b/);
+  assert.doesNotMatch(build, /composer-install\.(?:mts|mjs)/);
+  const install = dryRun('hyper-server-php-install').join('\n');
+  assert.match(install, /\bcomposer install\b/);
+});
+
 function temporary(t: TestContext) {
   const directory = mkdtempSync(path.join(tmpdir(), 'hyper-check-recipes-'));
   t.after(() => rmSync(directory, { recursive: true, force: true }));

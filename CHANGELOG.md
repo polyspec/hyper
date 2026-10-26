@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- The board server build uses installed source packages without Composer installation or relinking. Explicit dependency installation remains available. The regression test and the 11-template server build pass.
 - The 0.0.19 candidate passes linked-source unit checks: 8 package-source/name tests, 71 PHP application tests on PHP 8.4.26 both without and with the template extension loaded, 76 TypeScript application tests, 4 client stream tests, and 19 Python application plus 9 multipart tests. This evidence covers local source use; archive installation and full-suite verification remain open (H27.3).
 - Native npm audit updates fast-uri to 3.1.9 and markdown-it to 14.3.3 in the candidate lock; remove the advisory exception no longer present in the audit (H27.3).
 

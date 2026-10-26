@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 072c59e2c85ff95941a6dda2256323d461791326d3f07ad18f2c25ae864fccef -->
+<!-- source-sha256: 7b4bd612ae6bc35ac96f00af3bbf85704858be59dcc41fd503f796919dcca634 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- board 서버 빌드는 Composer 설치나 링크 재연결 없이 설치된 소스 패키지를 사용한다. 명시적인 의존성 설치는 유지한다. 회귀 테스트와 템플릿 11개의 서버 빌드가 통과한다.
 - 0.0.19 후보는 링크된 소스의 단위 검사를 통과한다. 패키지 소스·이름 8건, PHP 8.4.26에서 template 확장을 로드하지 않은 경우와 로드한 경우의 애플리케이션 검사 각각 71건, TypeScript 애플리케이션 76건, 클라이언트 stream 4건, Python 애플리케이션 19건과 multipart 9건이다. 이 근거는 로컬 소스 사용 범위이며 아카이브 설치와 전체 모음 검증은 미완료다(H27.3).
 - 후보 lock에서 npm audit가 fast-uri를 3.1.9로, markdown-it을 14.3.3으로 갱신한다. audit에 더 이상 없는 advisory의 예외를 제거한다(H27.3).
 

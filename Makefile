@@ -141,7 +141,7 @@ package-check: packages node-fixtures ## Install the npm packages into tests/pac
 	$(TSC) -p tests/package-install/tsconfig.json
 	$(NODE) $(KIT)/run-tests.$(KIT_EXT) node --cwd tests/package-install -- package-install.test.ts
 
-server: packages hyper-server-php-install ## Build the board server program: its templates and the generated PHP program (HY-48)
+server: packages ## Build the board server program from installed dependencies: its templates and generated PHP program (HY-48)
 	$(NODE) $(BUILD_PACKAGE)/bin/hyper-build-server.mjs --manifest $(BOARD)/app/app.json --templates $(BOARD)/templates --output $(BOARD)/build/server --php-namespace 'Polyspec\Hyper\Examples\Board\Program'
 
 server-fixtures: packages ## Build the server program of the PHP test fixtures
