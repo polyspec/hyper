@@ -4,7 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
-- Installed-source tests verify the resolved template entry and shared module identity while release declarations retain their archive pins. PHP analysis assertions reject extension stubs; all seven targeted tests pass.
+- Installed-source tests verify the resolved template entry and shared module identity while release declarations retain their archive pins. PHP analysis assertions reject extension stubs; all seven targeted tests pass (H27.8).
 - The PHP exact public API assertion includes UploadedFile and recognizes native traits when checking autoloadable declarations. The API test and PHP static analysis pass (H27.6-1).
 - PHP route and request-copy contracts retain their precise types with valid PHPDocs. Fixtures validate JSON input and callback responses, and server startup transfers ownership only after success while cleaning up failures. PHPStan reports no errors, formatting checks pass, and 116 related tests pass (H27.5).
 - Exact public API checks include the existing TypeScript UploadedFile export and Python uploaded_file module of HY-113. The Python root exports stay unchanged; both native API checks pass (H27.6).

@@ -1,11 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 6bfcc07362455dff8432ba5785efcfe888d2743f4604d0ba05baec9d9447954e -->
+<!-- source-sha256: 8383f6e80c2f03a67404946cb7039fb8cdf95e8d93d034e46fbf973fea401cec -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
-- 설치 소스 검사는 해석된 템플릿 진입점과 공유 모듈 식별자를 확인하고 릴리즈 선언의 아카이브 고정을 유지한다. PHP 분석 검사는 확장 스텁을 거부하며 관련 검사 7개가 통과한다.
+- 설치 소스 검사는 해석된 템플릿 진입점과 공유 모듈 식별자를 확인하고 릴리즈 선언의 아카이브 고정을 유지한다. PHP 분석 검사는 확장 스텁을 거부하며 관련 검사 7개가 통과한다 (H27.8).
 - PHP의 정확한 public API 검사는 UploadedFile을 포함하고 자동 로드 가능한 선언 확인에서 기본 trait을 인식한다. API 테스트와 PHP 정적 분석을 통과한다(H27.6-1).
 - PHP 라우트와 요청 복사 계약은 올바른 PHPDoc으로 정확한 타입을 유지한다. fixture는 JSON 입력과 콜백 응답을 검증하고 서버 시작은 성공 후에만 소유권을 넘기며 실패 시 정리한다. PHPStan 오류가 없고 포맷 검사와 관련 테스트 116건을 통과한다(H27.5).
 - 정확한 public API 검사는 HY-113의 기존 TypeScript UploadedFile export와 Python uploaded_file 모듈을 포함한다. Python 루트 export는 유지하며 두 언어의 API 검사를 통과한다(H27.6).
