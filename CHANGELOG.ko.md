@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 007323dfed7630cd54ebcd2bbd9bc12d3c03aa32f1d6cb393b5d606e3b775437 -->
+<!-- source-sha256: 00d13e988d5531705ea7b84a4bf1f28d9b168181bae902cbee6432ef9752aa61 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- 준비된 로컬 후보와 미완료 아카이브 consumer 검증을 구분한다. 후자는 호환 배포 입력과 아카이브 target의 tag를 기다리며 최종 로컬 검증은 진행할 수 있다(H27.3).
 - board 서버 빌드는 Composer 설치나 링크 재연결 없이 설치된 소스 패키지를 사용한다. 명시적인 의존성 설치는 유지한다. 회귀 테스트와 템플릿 11개의 서버 빌드가 통과한다(H27.3-1).
 - 0.0.19 후보는 링크된 소스의 단위 검사를 통과한다. 패키지 소스·이름 8건, PHP 8.4.26에서 template 확장을 로드하지 않은 경우와 로드한 경우의 애플리케이션 검사 각각 71건, TypeScript 애플리케이션 76건, 클라이언트 stream 4건, Python 애플리케이션 19건과 multipart 9건이다. 이 근거는 로컬 소스 사용 범위이며 아카이브 설치와 전체 모음 검증은 미완료다(H27.3).
 - 후보 lock에서 npm audit가 fast-uri를 3.1.9로, markdown-it을 14.3.3으로 갱신한다. audit에 더 이상 없는 advisory의 예외를 제거한다(H27.3).
