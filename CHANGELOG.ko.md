@@ -1,11 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: ae739cc9a2315956d6f24600b3f346fde2749118e1a74990c90e175ee7683845 -->
+<!-- source-sha256: 9d873210cea7c92bdf4f9458ded29097bae6dcbe5ca5f3cf9afd38cfe20b98dc -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
-- npm으로 공유 도구 archive 0.0.56의 릴리즈 URL과 integrity를 반영한다. 설치 소스 link를 유지하고 기본 의존성 검토와 공유 복사본을 갱신한다. 공유 도구, hook, 의존성 정책, link 검사가 통과한다.
+- npm으로 공유 도구 archive 0.0.56의 릴리즈 URL과 integrity를 반영한다. 설치 소스 link를 유지하고 기본 의존성 검토와 공유 복사본을 갱신한다. 공유 도구, hook, 의존성 정책, link 검사가 통과한다 (H27.14).
 - PHP 8.4 벤치마크 재개 조건은 별도 단계 지시가 아니라 유휴 호스트다. 현재 호스트 표본은 유휴 55.41%이므로 유휴 실행 요구는 미완료로 유지한다(H26.9).
 - Darwin virtiofs 검사는 해석된 설치 소스 제공 checkout을 원래 경로에 읽기 전용으로 mount한다. image는 digest로 고정하고 hyper-install-virtiofs로 명시적으로 설치한다. 검사는 컨테이너 실행 전에 누락된 로컬 image를 거부한다. 기본 virtiofs 검사 두 개가 통과한다 (H27.13).
 - PHP 요청 map은 내부 저장 반환형 없이 기본 순회를 노출한다. 업로드 파일이 요청 순서대로 foreach에 나타난다. 공개 업로드 metadata와 파일 제한 선언은 모든 서버와 일치하고 응답 헤더 서명은 비공개 별칭을 노출하지 않으며 file-parts 연결은 실제 계약 검사를 실행한다. 기본 API symbol 검사, PHP 회귀 검사와 범위를 지정한 file-parts parity가 통과한다 그룹 검증은 정확한 추론형을 유지한다 (H27.12).
