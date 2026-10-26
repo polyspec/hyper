@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 46ec489c71a3bc4a8377a6a29b5c6a3944ab1cf792ba1807ea7064fc4c341c2e -->
+<!-- source-sha256: 2f4a477958bcd5829bdadb47514bc5836d4998ec4d7a5edd5e506981ed6f7268 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -260,7 +260,7 @@
 | H27.5 | 최종 검증에서 발견한 PHP 애플리케이션과 fixture의 타입 오류 및 포맷 문제를 suppression이나 계약 완화 없이 수정한다. | packages/server/php/src, packages/server/php/tests | `make analyse-php` and `make hyper-lint` and `var/tools/bin/php vendor/bin/phpunit packages/server/php/tests/AppTest.php packages/server/php/tests/RunTest.php packages/server/php/tests/FilePartsTest.php packages/server/php/tests/ReadsTest.php` | [o] |
 | H27.6 | TypeScript와 Python의 public API 검사에 파일 업로드 API를 반영하며 정확한 export 검사를 유지한다. | packages/server/ts/tests/public-api.test.ts, packages/server/python/tests/test_public_api.py, packages/server/python/src/polyspec/hyper/__init__.py | `node ../kit/scripts/kit/run-tests.mts vitest --cwd packages/server/ts -- tests/public-api.test.ts` and `packages/server/python/.venv/bin/python -m unittest packages/server/python/tests/test_public_api.py` | [o] |
 | H27.6-1 | HY-106과 HY-113의 기존 PHP UploadedFile 클래스를 정확한 공개 클래스 목록에 반영하며 예상 밖 공개 클래스 검사를 유지한다. | packages/server/php/tests/PublicApiTest.php | `var/tools/bin/php vendor/bin/phpunit packages/server/php/tests/PublicApiTest.php` and `make analyse-php` | [o] |
-| H27.7 | 삭제된 Renderer.engine을 읽지 않고 서버 벤치마크 프로그램을 보고하며 PHP 경고가 없는 보고를 회귀 검사로 검증한다. | benchmarks/server.php, tests/scripts, docs/operations/benchmark.md, docs/operations/benchmark.ko.md | `node ../kit/scripts/kit/run-tests.mts node -- tests/scripts/benchmark-server.test.mts` and `make bench-server-smoke` | [~] |
+| H27.7 | 삭제된 Renderer.engine을 읽지 않고 서버 벤치마크 프로그램을 보고하며 PHP 경고가 없는 보고를 회귀 검사로 검증한다. | benchmarks/server.php, tests/scripts, docs/operations/benchmark.md, docs/operations/benchmark.ko.md | `node ../kit/scripts/kit/run-tests.mts node -- tests/scripts/benchmark-server.test.mts` and `make bench-server-smoke` | [o] |
 | H27.8 | 릴리스 선언 검사와 로컬 설치 소스 검사를 구분한다. 소스 링크와 더 최신 provider 버전을 허용하고 오래된 dist 구조 대신 해석된 render 진입점으로 번들을 검증한다. | tests/scripts/template-dir.test.mts, tests/scripts/template-pins.test.mts, tests/scripts/no-symlinks.test.mts | `node ../kit/scripts/kit/run-tests.mts node -- tests/scripts/template-dir.test.mts tests/scripts/template-pins.test.mts tests/scripts/no-symlinks.test.mts` | [o] |
 | H27.9 | SIGTERM 정리 검사의 timeout을 재현하고 서버 종료 및 실행 디렉터리 정리 검증을 유지하면서 수정한다. | tests/scripts/check-parity.test.mts, scripts/check-parity.mts, scripts/run-resources.mts | `node ../kit/scripts/kit/run-tests.mts node -- --test-name-pattern="receives SIGTERM" tests/scripts/check-parity.test.mts` | [ ] |
 | H27.10 | kit-sync와 hooks로 저장소 복사본과 hook을 연결된 kit 소스에 맞추고 패키지 소스 링크를 유지하며 오래된 공유 파일 설명을 갱신한다. | shared kit copies, .githooks, AGENTS.md, AGENTS.ko.md, docs/operations/development.md, docs/operations/development.ko.md | `make kit-check` and `make hooks-check` | [ ] |
