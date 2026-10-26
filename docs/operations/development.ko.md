@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: 0cc8f1e42b7e0418af6b515067f3f503ac018fb3528fe58819605b6c8d577e47 -->
+<!-- source-sha256: f1b83f7b34b4278094dae6c854f67c1071f28a9d46e7b6853a5c607c08641cf8 -->
 # 개발
 
 [English](development.md).
@@ -65,6 +65,8 @@
 | `make bench-server-smoke` | PHP 측정기를 측정마다 한 번씩 실행한다. 측정기를 깨는 변경이 실패하도록 `make check`에 들어 있다 |
 | `make bench` | 서버와 브라우저 성능을 보고하는 `make bench-server`와 `make bench-browser`를 실행한다([성능 측정](benchmark.ko.md) 참조). `make check`에는 포함하지 않는다 |
 | `make check` | 위의 모든 검사를 기본 최종 검증 실행기를 거쳐 실행한다(아래 참조) |
+
+Darwin virtiofs 검사는 Makefile의 digest로 고정한 `VIRTIOFS_IMAGE`를 읽는다. `make hyper-install-virtiofs`가 그 image를 명시적으로 설치한다. 검사는 로컬 image를 먼저 확인하고 없으면 해당 설치 target을 밝히고 실패한다. 검사는 이 checkout과 외부 소스 제공 저장소를 원래 경로에 읽기 전용으로 mount한다. 제공 저장소 root는 설치된 template과 compiler 모듈 진입점에서 `git rev-parse --show-toplevel`로 찾는다. 컨테이너 안에서도 기본 package 소스 link와 그 의존성 해석을 유지한다.
 
 ## 전체 실행
 

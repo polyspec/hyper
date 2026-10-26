@@ -65,6 +65,8 @@
 | `make bench` | Runs `make bench-server` and `make bench-browser`, which report server and browser performance (see [Benchmark](benchmark.md)); they are not part of `make check` |
 | `make check` | Runs every check above through the native final-verification runner (see below) |
 
+The Darwin virtiofs tests read the digest-pinned `VIRTIOFS_IMAGE` of the Makefile. `make hyper-install-virtiofs` installs that image explicitly; the tests inspect the local image first and fail with that install target when it is missing. The tests mount this checkout and any external source providers read-only at their original paths. Provider roots are discovered with `git rev-parse --show-toplevel` from the installed template and compiler module entries; this preserves native package source links and their dependency resolution inside the container.
+
 ## Full run
 
 The full suite runs on GitHub after the push of `main`. A local full run is not required before a commit or push. During checklist development, run only the unit checks that own the change. Run `make check` exactly once after checklist development finishes; after a failure, fix and rerun only its owners. A new commit does not call for another full run.

@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 70881048ac5389eea2e9dca2e4b3e9a48afffa06015c366870518450d41b9c55 -->
+<!-- source-sha256: 753a7f6e9b9d25285ee71bca0f14c8b746e9ec348c397b0db97ed79abbd297c0 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -267,4 +267,4 @@
 | H27.10 | kit-sync와 hooks로 저장소 복사본과 hook을 연결된 kit 소스에 맞추고 패키지 소스 링크를 유지하며 오래된 공유 파일 설명을 갱신한다. | shared kit copies, .githooks, AGENTS.md, AGENTS.ko.md, docs/operations/development.md, docs/operations/development.ko.md | `make kit-check` and `make hooks-check` | [o] |
 | H27.11 | Makefile과 workflow 검사에서 제거된 full-run 진입점 대신 현재 최종 검증 실행기를 사용하고 전체 target 집합과 최종 1회 검증 절차를 유지한다. | Makefile, tests/scripts/ci-workflow.test.mts, current procedure documents and their Korean twins | `node ../kit/scripts/kit/run-tests.mts node -- --test-name-pattern="declared for Darwin" tests/scripts/ci-workflow.test.mts` | [o] |
 | H27.12 | 업로드 파일 API parity 선언을 완성하고 내부 반환형 없이 PHP 요청 컬렉션을 기본 iterable로 노출하며 응답 헤더형과 실행된 파일 part 검사를 연결한다. | config/parity.json, PHP request collections and tests, TypeScript response declarations, docs/spec/protocol.md and Korean twin | `node ../kit/scripts/kit/run-tests.mts node -- tests/scripts/public-symbols.test.mts` and `make parity-check UNITS=file-parts` and `var/tools/bin/php vendor/bin/phpunit packages/server/php/tests/RequestTest.php packages/server/php/tests/FilePartsTest.php packages/server/php/tests/FieldsTest.php` and `make analyse-php` | [o] |
-| H27.13 | checkout 외부의 기본 소스 link를 거부하지 않고 해석된 설치 template 소스 package를 virtiofs 검사에 mount한다. | tests/virtiofs/output-files.test.mts | `node ../kit/scripts/kit/run-tests.mts node -- tests/virtiofs/output-files.test.mts` | [ ] |
+| H27.13 | checkout 외부의 기본 소스 link를 거부하지 않고 해석된 설치 template 소스 package를 virtiofs 검사에 mount한다. | tests/virtiofs/output-files.test.mts, Makefile, tests/scripts/toolchain.test.mts, AGENTS.md and twin, docs/operations/development.md and twin | `node ../kit/scripts/kit/run-tests.mts node -- tests/virtiofs/output-files.test.mts` and `node ../kit/scripts/kit/run-tests.mts node -- --test-name-pattern="explicit install" tests/scripts/toolchain.test.mts` | [~] |

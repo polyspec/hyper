@@ -121,13 +121,17 @@ test('every recipe runs npm and Composer offline, and $(ONLINE) lifts it (HR-89)
   for (const name of Object.keys(OFFLINE)) assert.equal(online[name], undefined, `${name} under $(ONLINE)`);
 });
 
-test('only make install-tools, make install-packages, make hyper-install and make hyper-install-browser download, each download through $(ONLINE), and no check target downloads (HR-89)', (t) => {
+test('only explicit install targets download through $(ONLINE), and no check target downloads (HR-89)', (t) => {
   const directory = mkdtempSync(path.join(tmpdir(), 'hyper-downloads-'));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   // A worktree installs no tools, so its install-tools prints the refusal of kit K519; the main checkout downloads them.
   if (!WORKTREE) assert.deepEqual(dryRun('install-tools').map((line) => line.trim()), [`${ONLINE}${NODE} ${KIT}/install-tools.mts`]);
   assert.deepEqual(dryRun('install-packages'), [`${ONLINE}${NPM} ci`]);
   assert.deepEqual(dryRun('hyper-install-browser'), [`${ONLINE}${NODE} node_modules/@playwright/test/cli.js install --with-deps chromium`]);
+  const image = /^VIRTIOFS_IMAGE := (\S+)$/m.exec(readFileSync('Makefile', 'utf8'))?.[1];
+  assert.ok(image);
+  assert.match(image, /@sha256:[a-f0-9]{64}$/);
+  assert.deepEqual(dryRun('hyper-install-virtiofs'), [`${ONLINE}container image pull --platform linux/arm64 ${image}`]);
   const install = dryRun('hyper-install', { variables: [`TEMPLATE_DIR=${directory}`] });
   const downloads = install.filter((line) => / ci |composer install|install-tools\.mts/.test(line.replace(/ -- /, ' ')));
   assert.ok(downloads.length > 0, install.join('\n'));

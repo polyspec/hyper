@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- The Darwin virtiofs tests mount resolved installed-source provider checkouts read-only at their native paths. The image remains digest-pinned and is installed explicitly with hyper-install-virtiofs; checks reject a missing local image before running a container. Both native virtiofs tests pass.
 - PHP request maps expose native iteration without internal storage return types; uploaded files now appear in foreach, retaining request order. Public upload metadata and file-limit declarations match every server, response header signatures expose no private alias, and the file-parts binding executes its actual contract test. Native API symbol checks, PHP regressions and scoped file-parts parity pass Grouping assertions retain their precise inferred types (H27.12).
 - Remove the unused filesystem import from the installed-source assertions; TypeScript lint checks pass (H27.8-1).
 - The cleanup-timeout audit found a 55-second host suspension overlapping the 30-second SIGTERM test deadline. The unchanged four cleanup tests pass after resume; preserve the original failure and power-event evidence without claiming a code repair or extending the deadline (H27.9).

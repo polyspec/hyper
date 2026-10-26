@@ -6,7 +6,7 @@
 // a temporary output directory of the test mounted writable, which the test removes; a missing
 // `container` command fails the test.
 import assert from 'node:assert/strict';
-import { spawnSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { mkdtempSync, readdirSync, readFileSync, rmSync, statSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
@@ -19,22 +19,33 @@ import { requireBuilt } from '../scripts/requires.mts';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
-const image = 'docker.io/library/node:26.8.1-trixie-slim@sha256:c0753125a3789977aefe869cbebccf70e3cfd7ea84ca48547458f02e4f1d7146';
+const image = /^VIRTIOFS_IMAGE := (\S+)$/m.exec(readFileSync(join(root, 'Makefile'), 'utf8'))?.[1];
 
 // Runs node with `args` in the container with a temporary output directory of the test mounted as /output.
 function run(t: TestContext, args: string[]) {
+  assert.ok(image, 'Makefile declares no VIRTIOFS_IMAGE');
   requireBuilt('hyper-install', 'node_modules/@polyspec/template/package.json');
-  // The template packages that the build loads by their names lie inside this checkout, which the bind mount of the
-  // root covers (HR-70, HR-78). The template is the one that the build resolves from its package.
-  const template = createRequire(join(root, 'packages', 'build', 'package.json')).resolve('@polyspec/template');
-  if (!template.startsWith(`${root}/`)) throw new Error(`${template} is not inside ${root}`);
+  // Native package source links retain their absolute targets in the container. Discover the provider checkout
+  // from each resolved package entry with Git, and mount it read-only at the same path (HR-70, HR-78).
+  const entries = [
+    createRequire(join(root, 'packages/build/package.json')).resolve('@polyspec/template'),
+    fileURLToPath(import.meta.resolve('@polyspec/template-compiler/compiler.mjs')),
+  ];
+  const sources = new Set([root]);
+  for (const entry of entries) {
+    if (entry.startsWith(`${root}/`)) continue;
+    sources.add(execFileSync('git', ['-C', dirname(entry), 'rev-parse', '--show-toplevel'], { encoding: 'utf8' }).trim());
+  }
+  const installed = spawnSync('container', ['image', 'inspect', image], { encoding: 'utf8' });
+  if (installed.error) throw new Error(`container cannot run: ${installed.error.message}`);
+  assert.equal(installed.status, 0, `${image} is missing; make hyper-install-virtiofs installs it:\n${installed.stdout}${installed.stderr}`);
   const output = mkdtempSync(join(tmpdir(), 'hyper-virtiofs-'));
   t.after(() => rmSync(output, { recursive: true, force: true }));
   const mounts = [
-    ['--mount', `type=bind,source=${root},target=${root},readonly`],
+    ...[...sources].map((source) => ['--mount', `type=bind,source=${source},target=${source},readonly`]),
     ['--mount', `type=bind,source=${output},target=/output`],
   ].flat();
-  const result = spawnSync('container', ['run', '--rm', ...mounts, image, 'node', ...args], { encoding: 'utf8' });
+  const result = spawnSync('container', ['run', '--rm', '--arch', 'arm64', ...mounts, image, 'node', ...args], { encoding: 'utf8' });
   if (result.error) throw new Error(`container cannot run: ${result.error.message}`);
   return { ...result, output };
 }

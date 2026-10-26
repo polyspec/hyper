@@ -1,5 +1,5 @@
 <!-- doc-id: features -->
-<!-- source-sha256: b72867c6a6397803188a804937244607246f59f15344c7693a37b2e0f3bc5f8b -->
+<!-- source-sha256: 6076c7ea714eb26cacc87304635465f6c01c3d3a122067057edd31c5aa68937b -->
 # 기능 상태
 
 [English](features.md).
@@ -50,7 +50,7 @@
 | npm-packages | `@polyspec/hyper-client`와 `@polyspec/hyper-server`는 Node가 `node_modules`에서 실행하는 JavaScript와 type 선언을 배포하며, 소스는 `erasableSyntaxOnly`를 통과한다(HR-61) | implemented | `make package-check` |
 | build-package | `@polyspec/hyper-build`는 bin `hyper-build-server`와 `hyper-build-assets`를 배포하고, 그 모듈은 배포하는 파일, Node, manifest가 요구하는 패키지만 import한다. consumer는 릴리스 tarball에서 이것을 설치하고 두 bin을 실행한다(HR-96) | implemented; CI run pending | `tests/scripts/package-source.test.mts`, `make release-consumer` |
 | server-build-inputs | board 서버 빌드는 설치된 소스 의존성을 사용하며 Composer 설치는 명시적인 작업으로 유지한다(HR-79) | unit verified; CI run pending | `tests/scripts/check-recipes.test.mts`, `make server` |
-| output-files | asset build와 server build는 복사한 출력 파일에 어떤 umask에서도 mode 0644를, 디렉터리에 0755를 주어 다른 사용자가 읽을 수 있게 하며, Linux container의 virtiofs bind mount는 이를 받아들인다(HR-68) | implemented; Darwin run pending | `make hyper-test-scripts`, Darwin에서 `make virtiofs-check` |
+| output-files | asset build와 server build는 복사한 출력 파일에 어떤 umask에서도 mode 0644를, 디렉터리에 0755를 주어 다른 사용자가 읽을 수 있게 하며, Linux container의 virtiofs bind mount는 이를 받아들인다(HR-68) | unit and Darwin verified; CI run pending | `make hyper-test-scripts`, Darwin에서 `make virtiofs-check` |
 | template-dir | asset build, template build, server build는 npm이 template release의 tarball에서 설치하는 template package `@polyspec/template`과 `@polyspec/template-compiler`를 package 이름으로 읽고, Composer는 `polyspec/template`을 template release의 zip에서 설치하며, 공개 manifest는 정확한 template version을 요구한다(HR-70) | implemented; CI run pending | `make hyper-test-scripts` |
 | template-ext | 네이티브 template 확장은 `config/release-assets.json`이 sha256으로 pin한 tag `TEMPLATE_TAG`(`v0.0.11`)의 php-ext release archive에서 build한다. `make hyper-install`이 kit의 `make release-assets-fetch`로 가져와 확인하고, `make ext`가 offline으로 build하며, PHPStan은 그 stub을 읽는다. 어떤 recipe도 확장을 위해 template 저장소를 읽거나 복사하지 않는다(H14.1-7) | implemented; CI run pending | `tests/scripts/release-assets.test.mts`, `tests/scripts/template-pins.test.mts`, `make ext`, `make test-php` |
 | ci-suite | 전체 suite는 `main`의 push와 모든 수동 실행에 대해 GitHub에서 CI group마다 job 하나로 모든 target을 끝까지 실행하고, job summary와 각 target의 상태, 시간, 첫 실패 줄, 전체 log를 담은 보고서를 upload한다(HR-91) | implemented; CI run pending | `tests/scripts/ci-workflow.test.mts` |

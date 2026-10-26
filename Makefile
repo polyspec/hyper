@@ -75,7 +75,7 @@ checks_result = test -z "$$failed" || { echo "failed checks:$$failed"; exit 1; }
 
 .DEFAULT_GOAL := help
 
-.PHONY: help hyper-install hyper-install-python hyper-install-browser hyper-test-node hyper-test-python-render hyper-test-scripts check typecheck hyper-server-php-install template-tag ext packages package-check server server-fixtures node-server node-fixtures assets hyper-test-js hyper-test-php hyper-test-python hyper-lint analyse-php templates-check virtiofs-check parity server-parity server-parity-python bundle-size e2e serve-demo bench-server bench-server-smoke bench-browser bench serve-demo-unlock
+.PHONY: help hyper-install hyper-install-python hyper-install-browser hyper-install-virtiofs hyper-test-node hyper-test-python-render hyper-test-scripts check typecheck hyper-server-php-install template-tag ext packages package-check server server-fixtures node-server node-fixtures assets hyper-test-js hyper-test-php hyper-test-python hyper-lint analyse-php templates-check virtiofs-check parity server-parity server-parity-python bundle-size e2e serve-demo bench-server bench-server-smoke bench-browser bench serve-demo-unlock
 
 help: ## List the targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
@@ -93,6 +93,9 @@ hyper-install-python: ## Make the venv of the Python server package and install 
 
 hyper-install-browser: ## Install Chromium of the pinned Playwright and its system libraries; the CI group board runs it (HR-91)
 	$(ONLINE) $(NODE) node_modules/@playwright/test/cli.js install --with-deps chromium
+
+hyper-install-virtiofs: ## Install the digest-pinned image for Darwin virtiofs verification
+	$(ONLINE) container image pull --platform linux/arm64 $(VIRTIOFS_IMAGE)
 
 install: hyper-install
 
@@ -260,6 +263,7 @@ CHECK_TARGETS := kit-check suppression-check toolchain-check layout-check typech
 # exists on Darwin, so `make virtiofs-check` belongs to the full suite there and nowhere else; on Darwin a missing
 # `container` fails it (tests/scripts/ci-workflow.test.mts). The CI groups run CHECK_TARGETS of Linux.
 DARWIN_TARGETS := virtiofs-check
+VIRTIOFS_IMAGE := docker.io/library/node:26.8.1-trixie-slim@sha256:c0753125a3789977aefe869cbebccf70e3cfd7ea84ca48547458f02e4f1d7146
 CHECK_TARGETS += $(if $(filter Darwin,$(shell uname)),$(DARWIN_TARGETS))
 
 check: template-tag ## Run final verification once after checklist development, on a clean committed tree
