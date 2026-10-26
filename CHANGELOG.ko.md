@@ -1,11 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 2f9523773a1cfd490f1a70a03a6093a072e71e1f445435857229ea71f682847c -->
+<!-- source-sha256: 5f5911195517eb66a76afb8fc594480d7efa08539243487d34fde74838d53bad -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
-- PHP 라우트와 요청 복사 계약은 올바른 PHPDoc으로 정확한 타입을 유지한다. fixture는 JSON 입력과 콜백 응답을 검증하고 서버 시작은 성공 후에만 소유권을 넘기며 실패 시 정리한다. PHPStan 오류가 없고 포맷 검사와 관련 테스트 116건을 통과한다.
+- PHP 라우트와 요청 복사 계약은 올바른 PHPDoc으로 정확한 타입을 유지한다. fixture는 JSON 입력과 콜백 응답을 검증하고 서버 시작은 성공 후에만 소유권을 넘기며 실패 시 정리한다. PHPStan 오류가 없고 포맷 검사와 관련 테스트 116건을 통과한다(H27.5).
 - 정확한 public API 검사는 HY-113의 기존 TypeScript UploadedFile export와 Python uploaded_file 모듈을 포함한다. Python 루트 export는 유지하며 두 언어의 API 검사를 통과한다(H27.6).
 - 기본 npm 소스 링크는 direct dependency override 참조로 EOVERRIDE 없이 연결한다. 패키지 fixture는 고정된 npm 경로를 받고 생성된 링크 상태는 ignore한다. ignore 검사는 Git의 성공과 모든 출력 경로 검사를 확인한다. 패키지 설치, 소스 링크, 해당 회귀 검사를 통과한다(H27.4).
 - 준비된 로컬 후보와 미완료 아카이브 consumer 검증을 구분한다. 후자는 호환 배포 입력과 아카이브 target의 tag를 기다리며 최종 로컬 검증은 진행할 수 있다(H27.3).
