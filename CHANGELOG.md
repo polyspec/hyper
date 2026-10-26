@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- Native npm audit updates fast-uri to 3.1.9 and markdown-it to 14.3.3 in the candidate lock; remove the advisory exception no longer present in the audit (H27.3).
 
 ## 0.0.19
 - Prepare the 0.0.19 candidate manifests. Archive installation verification remains open until the PHP 8.4 dependency graph is available (H27.3).

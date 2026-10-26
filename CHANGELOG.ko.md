@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 0c0dbf9f8f2ca4a9b47966e533b82fdc9a1f87132d37e35bd6eea3d1e066da6a -->
+<!-- source-sha256: c4f716e1915286a105a2918a7c8af61f6a18e997177d024fe1773bdb7da1b943 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- 후보 lock에서 npm audit가 fast-uri를 3.1.9로, markdown-it을 14.3.3으로 갱신한다. audit에 더 이상 없는 advisory의 예외를 제거한다(H27.3).
 
 ## 0.0.19
 - 0.0.19 후보 manifest를 준비한다. PHP 8.4 의존성 그래프가 준비될 때까지 아카이브 설치 검증은 미완료로 유지한다(H27.3).

@@ -1,25 +1,16 @@
 {
   "schema": 1,
-  "comment": "Written by make dependency-review RECORD=1 (scripts/kit/dependency-review.mts) from the registries; make dependency-policy-check compares the checkout with it without a network.",
+  "comment": "Advisory records of the exact lock contents. The two npm lock records were refreshed with native npm audit --json --package-lock-only; the existing review timestamp and other records are retained.",
   "reviewed": "2026-10-20T10:38:00.233Z",
   "locks": [
     {
       "lock": "package-lock.json",
-      "sha256": "da781cfe8721afe5ebdf138e6d97a72493f8aee1862744f562962e0eab86ca08",
-      "advisories": [
-        {
-          "package": "sprintf-js",
-          "version": "1.0.3",
-          "id": "1241202",
-          "severity": "moderate",
-          "title": "sprintf-js vulnerable to denial of service through unbounded precision specifiers",
-          "url": "https://github.com/advisories/GHSA-hp3w-g68c-fv3c"
-        }
-      ]
+      "sha256": "9f8496d97a0c39310ac1c2b2283ba80045e247e346bc90d689e920f9600177da",
+      "advisories": []
     },
     {
       "lock": "tests/package-install/package-lock.json",
-      "sha256": "9545da645644f009c7e48395d383c72492a0614f9eb873cb266e1a143e3a261d",
+      "sha256": "9f48a6d3cc6b44a8419da67e4cd0382965ecd6b5ae274ad2f4debfc12f91b645",
       "advisories": []
     },
     {
