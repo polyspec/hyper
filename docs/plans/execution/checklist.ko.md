@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 086a1ce36ef681dc33db1ece0de43b79922e24d49cf59e8647b0783557320b56 -->
+<!-- source-sha256: cbb7b5f9d50adb421b89d4314b63a14d7fb08b4b2baa69df6b4ccf7baad6adb6 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -257,3 +257,4 @@
 | H27.3 | 다음 패치 릴리스 후보 0.0.19를 로컬 개발 링크 없이 아카이브에서 설치하고 PHP 8.4에서 실행함을 검증한다. H25.71의 빌드 의존성 해석을 검증하며 링크 소스에서만 동작하는 릴리스는 거부한다. 선언된 릴리스 target으로 후보 asset과 consumer lock을 생성하며 tag는 생성하거나 push하지 않는다. | tests/release-install, config/release.json, package manifests and locks, CHANGELOG.md, CHANGELOG.ko.md | `make release-versions TAG=v0.0.19` and `make release-consumer TAG=v0.0.19` | [!] 원인: 아카이브 consumer 검증에는 H27.2의 호환 배포 입력과 아카이브 target의 후보 tag가 필요하다. 후보 메타데이터, 로컬 소스 단위 검사, 설치된 소스를 사용하는 서버 빌드 준비는 끝났으며 최종 로컬 검증은 진행할 수 있다.; 재시도: H27.2의 호환 배포 입력과 maintainer의 후보 tag가 준비되면 아카이브와 consumer lock을 생성하고 선언된 설치 검증을 실행한다. |
 | H27.3-1 | 설치된 소스 의존성으로 board 서버를 빌드하며 Composer install을 실행하지 않는다. make server가 항상 hyper-server-php-install을 실행해 현재 로컬 소스 연결 대신 기록된 의존성 그래프를 다시 설치하는 문제를 수정한다. 명시적인 의존성 설치는 유지한다. | Makefile, tests/scripts/check-recipes.test.mts, docs/operations/development.md, docs/operations/development.ko.md, docs/features.md, docs/features.ko.md | `node --test --test-name-pattern="server build uses installed packages" tests/scripts/check-recipes.test.mts` | [o] |
 | H27.4 | npm 로컬 링크의 EOVERRIDE를 direct dependency override 참조로 해결하고 중첩 var 출력을 ignore하여 설치 후 작업 트리를 깨끗하게 유지한다. | package.json, tests/package-install/package.json, package locks, .gitignore, tests/scripts/ignored-files.test.mts | `make package-check` and `make link-state-check` | [ ] |
+| H27.5 | 최종 검증에서 발견한 PHP 애플리케이션과 fixture의 타입 오류 및 포맷 문제를 suppression이나 계약 완화 없이 수정한다. | packages/server/php/src, packages/server/php/tests | `make analyse-php` and `make hyper-lint` | [ ] |
