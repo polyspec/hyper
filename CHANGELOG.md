@@ -4,9 +4,9 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
-- Explicit bootstrap installation enables its declared downloads even when the caller exports npm offline mode; the remaining checks retain their offline environment.
 
 ## 0.0.19
+- Explicit bootstrap installation enables its declared downloads even when the caller exports npm offline mode; the remaining checks retain their offline environment. (H27.15-1)
 - Verify the 0.0.19 npm, Composer and wheel archives in isolated consumers without development links (H27.3).
 - Resolve the published template 0.0.12 archives and shared tools 0.0.60 through native package managers, regenerate the release locks for PHP 8.4 and align the Python wheel lock. Keep the PHP library minimum >=8.4 and source development declarations separate. (H27.2)
 - Explicit Composer development manifests resolve source template 0.0.12 and the existing JSON Schema fork through native path repositories, with separate local locks and accurate installed records. Preserve the native COMPOSER selector, declare the library compatibility alternatives and validate both development graphs on PHP 8.4. Native graph checks, 18 related tool tests and 87 PHP application tests pass; release locks remain unchanged (H27.16).
