@@ -1,13 +1,13 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 8d70b5029e9831309095fadcabcd4bfc46f3285074af5655d9289d34662b36e5 -->
+<!-- source-sha256: 25b24446e3455f2b19741058eecffcc86589907f3394ec6f1f02dc95d42a97c7 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
-- Script 검사는 asset과 server 입력을 명시적으로 build하고 설치된 export로 archive fetch tool을 선택한다. Package 검사는 editor hook 설정 없이 고정 설치와 source link를 native npm에 맡긴다.
 
 ## 0.0.19
+- Script 검사는 asset과 server 입력을 명시적으로 build하고 설치된 export로 archive fetch tool을 선택한다. Package 검사는 editor hook 설정 없이 고정 설치와 source link를 native npm에 맡긴다. (H27.21)
 - 모든 CI 검사 group이 도구 탐색 전에 선언된 PHP를 준비하고 검증 전에 native Git hook 설정을 설치한다. (H27.20)
 - Native gate는 공개 workspace 선언과 runtime fixture를 읽기 전에 build한다. PHP test fixture는 동작을 유지하면서 설정된 줄 길이 제한을 만족한다. (H27.19)
 - 호출자가 npm offline mode를 export해도 명시적 bootstrap 설치는 선언된 다운로드를 허용하며 나머지 검사는 offline 환경을 유지한다. (H27.15-1)
