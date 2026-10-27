@@ -4,17 +4,17 @@
   "assets": [
     {
       "name": "template-php-ext",
-      "version": "0.0.11",
+      "version": "0.0.12",
       "url": "https://github.com/polyspec/template/releases/download/v{version}/polyspec-template-php-ext-php-{version}.zip",
-      "sha256": "f3bdc8541418dff12a816fd8354ff20ed0a42d5349178be22a4b2d79ee9e8ca4",
+      "sha256": "4824b63aa94ade8b675eadc4616de24757d6f8a9d96c32a3f47b68f9fe393323",
       "directory": "var/products",
       "unpack": "var/products/template-ext"
     },
     {
       "name": "template-php",
-      "version": "0.0.11",
+      "version": "0.0.12",
       "url": "https://github.com/polyspec/template/releases/download/v{version}/polyspec-template-php-{version}.zip",
-      "sha256": "118bb3edd1977cf2e8115355972ffca2cb2c1d9f77f0d98226a7a0f598044ce2",
+      "sha256": "4f672233e3d7ec3dfe05d28b62fed7da8ab71d29d6f2fb8170dd65b5c9dee6f6",
       "directory": "var/products/template-php"
     }
   ]

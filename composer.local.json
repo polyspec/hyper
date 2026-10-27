@@ -37,8 +37,8 @@
     },
     "require-dev": {
         "laravel/pint": "1.32.1",
-        "phpstan/phpstan": "2.3.1",
-        "phpunit/phpunit": "13.4.3"
+        "phpstan/phpstan": "2.3.2",
+        "phpunit/phpunit": "13.4.5"
     },
     "autoload": {
         "psr-4": {

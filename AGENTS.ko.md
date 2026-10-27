@@ -1,5 +1,5 @@
 <!-- doc-id: agents -->
-<!-- source-sha256: d1daa2ff62c5696945b2fac0fe10e749d4e5e44521ef5577ad61094616c9f4da -->
+<!-- source-sha256: e3634642d89593ebb3dc79ab152e5537f0d7207f95431f8283d6fdbe28d2a078 -->
 # 개발
 
 [English](AGENTS.md).
@@ -23,7 +23,7 @@
 
 - Own: 임시 script나 임시 폴더를 쓰지 않는다. 모든 검사는 Makefile target, `scripts/` 아래의 script 또는 커밋된 test이며, 멱등하다.
   Enforced by: none, script가 임시인지는 판단이다.
-- Own: 릴리즈 결과는 tree, manifest와 그 lock이 고정한 template release, 그리고 template 저장소 tag `TEMPLATE_TAG`(`v0.0.11`)의 commit에만 의존한다. 또한 `config/release-assets.json`이 sha256으로 고정하고 `make hyper-install`이 가져와 `make ext`가 build하는, 그 tag의 php-ext release archive에도 의존한다. 저장소 밖의 모든 입력은 추적 파일에 이름이 적히고 쓰기 전에 확인한다. package는 정확한 version과 lock의 integrity 또는 shasum으로, template 저장소는 tag로(Makefile의 `TEMPLATE_TAG`, `config/release-assets.json`의 항목 `template-php`의 version, HR-80), build 출력은 입력의 hash로 확인한다. 의존성은 `package.json`이나 `composer.json`에 선언하고 npm이나 Composer가 lock대로 설치한다(HR-70). Version 0.1 전까지 다른 polyspec 저장소에 대한 의존성은 그 저장소의 GitHub tag나 GitHub Release의 asset이며, branch나 commit이 아니다. 추적 파일은 Git commit을, 이 저장소의 것이든 다른 저장소의 것이든, 이름으로 적지 않는다. 최종 검증은 무시되는 `var/report/` 아래에 tree와 결과를 기록하고 release archive의 선언된 integrity 고정은 유지한다. 어떤 검사도 다른 checkout의 working tree를 그때 있는 그대로 읽지 않는다.
+- Own: 릴리즈 결과는 tree, manifest와 그 lock이 고정한 template release, 그리고 template 저장소 tag `TEMPLATE_TAG`(`v0.0.12`)의 commit에만 의존한다. 또한 `config/release-assets.json`이 sha256으로 고정하고 `make hyper-install`이 가져와 `make ext`가 build하는, 그 tag의 php-ext release archive에도 의존한다. 저장소 밖의 모든 입력은 추적 파일에 이름이 적히고 쓰기 전에 확인한다. package는 정확한 version과 lock의 integrity 또는 shasum으로, template 저장소는 tag로(Makefile의 `TEMPLATE_TAG`, `config/release-assets.json`의 항목 `template-php`의 version, HR-80), build 출력은 입력의 hash로 확인한다. 의존성은 `package.json`이나 `composer.json`에 선언하고 npm이나 Composer가 lock대로 설치한다(HR-70). Version 0.1 전까지 다른 polyspec 저장소에 대한 의존성은 그 저장소의 GitHub tag나 GitHub Release의 asset이며, branch나 commit이 아니다. 추적 파일은 Git commit을, 이 저장소의 것이든 다른 저장소의 것이든, 이름으로 적지 않는다. 최종 검증은 무시되는 `var/report/` 아래에 tree와 결과를 기록하고 release archive의 선언된 integrity 고정은 유지한다. 어떤 검사도 다른 checkout의 working tree를 그때 있는 그대로 읽지 않는다.
   Enforced by: `make dependency-policy-check`, `make toolchain-check`
 - Own: polyspec 버전이 0.0.x인 동안 개발 checkout은 설치된 polyspec package를 kit의 `docs/operations/local-links.md`가 설명하는 대로 그 source에 연결한다. 연결은 commit하지 않는다.
   Enforced by: none, 연결이 commit에서 빠지는지는 review로 판단한다.

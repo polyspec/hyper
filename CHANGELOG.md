@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- Resolve the published template 0.0.12 archives and shared tools 0.0.60 through native package managers, regenerate the release locks for PHP 8.4 and align the Python wheel lock. Keep the PHP library minimum >=8.4 and source development declarations separate.
 - Explicit Composer development manifests resolve source template 0.0.12 and the existing JSON Schema fork through native path repositories, with separate local locks and accurate installed records. Preserve the native COMPOSER selector, declare the library compatibility alternatives and validate both development graphs on PHP 8.4. Native graph checks, 18 related tool tests and 87 PHP application tests pass; release locks remain unchanged (H27.16).
 - TypeScript lint resolves its tool executables from the installed provider dependency packages and locates the native type-aware backend without application-created bin links (H27.17).
 - The native source-linked TypeScript lint passes oxlint, knip, six TypeScript projects and catch-check; all nine steps execute successfully (H27.17).

@@ -39,11 +39,11 @@ test('native Composer accepts the supported provider versions and refuses an unv
       config: { platform: { php: '8.4.1' } },
     }));
     const result = spawnSync(composer, ['update', '--no-install', '--no-scripts', '--no-plugins', '--no-interaction', '--no-audit'], { cwd: directory, encoding: 'utf8', env: { ...process.env, COMPOSER: 'composer.json', COMPOSER_DISABLE_NETWORK: '1' } });
-    if (version === '0.0.13') {
+    if (version !== '0.0.12') {
       assert.notEqual(result.status, 0, result.stdout + result.stderr);
       assert.match(result.stderr, /polyspec\/template/);
-      assert.match(result.stderr, /0\.0\.13/);
-      assert.match(result.stderr, /0\.0\.11 \|\| 0\.0\.12/);
+      assert.ok(result.stderr.includes(version), result.stderr);
+      assert.match(result.stderr, /0\.0\.12/);
     } else {
       assert.equal(result.status, 0, `${version}: ${result.stdout}${result.stderr}`);
       const packages = jsonObjects(object(join(directory, 'composer.lock')).packages, 'resolved packages');
