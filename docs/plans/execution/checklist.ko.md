@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 73f533d62eebe0ebf64cf5ca9b1f8f228b12b47f0aec7e8d44ac680e0e270260 -->
+<!-- source-sha256: 204c8c3baa2a7c23f9feaf59d6429f73d88168a487e40c220ed1d3945ddc4ab2 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -279,3 +279,4 @@
 | H27.21 | Script test build 입력과 packed tool 경로를 선언하고 editor hook 설정 없이 package consumer를 native npm source 설치로 준비한다. | Makefile, tests/scripts/check-recipes.test.mts, tests/scripts/release-assets.test.mts, tests/scripts/installed-kit.test.mts | `node --test tests/scripts/check-recipes.test.mts tests/scripts/release-assets.test.mts tests/scripts/installed-kit.test.mts` and `make -k package-check link-state-check docs-check` | [o] |
 | H27.21-1 | Offline 정책에서 native package 설치를 검증한다. | Makefile, tests/scripts/toolchain.test.mts | `make toolchain-policy-test` and `make docs-check` | [o] |
 | H27.22 | Multipart 렌더링 검사를 순수 Python 검사와 분리한다. | Makefile, packages/server/python/tests/test_files.py, packages/server/python/tests/render/render_files.py | `make -k python-file-parts-test lint-python docs-check` | [o] |
+| H27.22-1 | 이동한 test 선언과 offline 정책 값의 타입을 보완한다. | config/parity.json, tests/scripts/toolchain.test.mts | `make -k typecheck parity-declarations-check toolchain-policy-test docs-check` | [ ] |
