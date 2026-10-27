@@ -1,13 +1,13 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 733a9fc8aef43c98571a2eeea2e6c9cd60b54a91f064a68e640a2b5878099fb8 -->
+<!-- source-sha256: 169c74bc344d1d5a05eb41edbe5d4febc7e5359da0a6716c06dc3f44856f942b -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
-- 읽기 전용 Composer source 일관성 검사기를 앱 정책으로 분류하고 필수 CI unit test target을 강제 경로로 명시한다.
 
 ## 0.0.19
+- 읽기 전용 Composer source 일관성 검사기를 앱 정책으로 분류하고 필수 CI unit test target을 강제 경로로 명시한다. (H27.16-1)
 - Script 검사는 asset과 server 입력을 명시적으로 build하고 설치된 export로 archive fetch tool을 선택한다. Package 검사는 editor hook 설정 없이 고정 설치와 source link를 native npm에 맡긴다. (H27.21)
 - 모든 CI 검사 group이 도구 탐색 전에 선언된 PHP를 준비하고 검증 전에 native Git hook 설정을 설치한다. (H27.20)
 - Native gate는 공개 workspace 선언과 runtime fixture를 읽기 전에 build한다. PHP test fixture는 동작을 유지하면서 설정된 줄 길이 제한을 만족한다. (H27.19)

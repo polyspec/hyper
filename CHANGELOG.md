@@ -4,9 +4,9 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
-- Classify the read-only Composer source-consistency checker as application policy and declare its mandatory CI unit-test target as the enforcement path.
 
 ## 0.0.19
+- Classify the read-only Composer source-consistency checker as application policy and declare its mandatory CI unit-test target as the enforcement path. (H27.16-1)
 - Script checks build their asset and server inputs explicitly and select archive-fetch tools through installed exports. Package checks delegate locked installation and source links to native npm without editor-hook setup. (H27.21)
 - Every CI check group prepares the declared PHP before tool discovery and installs its native Git hook configuration before validation. (H27.20)
 - Native gates build published workspace declarations and runtime fixtures before reading them. PHP test fixtures retain their behavior while satisfying the configured line-length limit. (H27.19)
