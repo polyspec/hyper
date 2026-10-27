@@ -4,9 +4,9 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
-- Native gates build published workspace declarations and runtime fixtures before reading them. PHP test fixtures retain their behavior while satisfying the configured line-length limit.
 
 ## 0.0.19
+- Native gates build published workspace declarations and runtime fixtures before reading them. PHP test fixtures retain their behavior while satisfying the configured line-length limit. (H27.19)
 - Explicit bootstrap installation enables its declared downloads even when the caller exports npm offline mode; the remaining checks retain their offline environment. (H27.15-1)
 - Verify the 0.0.19 npm, Composer and wheel archives in isolated consumers without development links (H27.3).
 - Resolve the published template 0.0.12 archives and shared tools 0.0.60 through native package managers, regenerate the release locks for PHP 8.4 and align the Python wheel lock. Keep the PHP library minimum >=8.4 and source development declarations separate. (H27.2)

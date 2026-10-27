@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: da8f9394d934fcd847052a310f69d0fb99448c8a262db1934176c1f9653574bd -->
+<!-- source-sha256: 14c12cb33edc7fa4b9b682a8dd64a9b350ff0cb3d0ec1f02edfe87ca441e947a -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -273,4 +273,4 @@
 | H27.15-1 | 상속된 offline 설정이 있어도 명시적 bootstrap 설치가 빈 cache에서 고정 npm을 내려받게 한다. | Makefile, tests/scripts/installed-kit.test.mts | `node --test tests/scripts/installed-kit.test.mts` and `make docs-check` | [o] |
 | H27.16 | 기본 Composer 개발 manifest와 호환 로컬 제공 package 제약을 선언하고 COMPOSER manifest 선택을 보존하며 릴리즈 lock을 덮어쓰지 않고 기본 개발 lock과 설치 기록을 생성한다. | composer.local.json and board twin, PHP dependency requirement, scripts/check-composer-development.mts, Makefile, native fixture and tool-path tests, dependency and development procedures | `make composer-development-check` and `make link-state-check` and `make analyse-php` and `node node_modules/@polyspec/kit/scripts/kit/run-tests.mts node -- tests/scripts/composer-development.test.mts` | [o] |
 | H27.17 | 기본 소스 link 뒤 공유 lint 실행기를 복구한다. 실행 파일 해석은 소비자 root의 전이 의존성 bin을 강제하지 않고 도구 package의 의존성 설치를 사용해야 한다. | Shared lint executable lookup; no application-created bin links | `make lint-ts` | [o] |
-| H27.19 | 깨끗한 checkout의 gate 전에 공개 선언과 runtime fixture를 build하고 PHP test format을 맞춘다. | Makefile, tests/scripts/check-recipes.test.mts, packages/server/php/tests | `node --test tests/scripts/check-recipes.test.mts` and `make lint-php docs-check` | [~] |
+| H27.19 | 깨끗한 checkout의 gate 전에 공개 선언과 runtime fixture를 build하고 PHP test format을 맞춘다. | Makefile, tests/scripts/check-recipes.test.mts, packages/server/php/tests | `node --test tests/scripts/check-recipes.test.mts` and `make lint-php docs-check` | [o] |

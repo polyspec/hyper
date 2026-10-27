@@ -1,13 +1,13 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 5e7d0b3c4443584b0dd6c5514d018262e9890e7fcb31f35e373e1bab0ca8f7da -->
+<!-- source-sha256: f7850d1b1afe47b99a1835f583133eeeef0ed53f49ed8f28d0232a08ef333963 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
-- Native gate는 공개 workspace 선언과 runtime fixture를 읽기 전에 build한다. PHP test fixture는 동작을 유지하면서 설정된 줄 길이 제한을 만족한다.
 
 ## 0.0.19
+- Native gate는 공개 workspace 선언과 runtime fixture를 읽기 전에 build한다. PHP test fixture는 동작을 유지하면서 설정된 줄 길이 제한을 만족한다. (H27.19)
 - 호출자가 npm offline mode를 export해도 명시적 bootstrap 설치는 선언된 다운로드를 허용하며 나머지 검사는 offline 환경을 유지한다. (H27.15-1)
 - 개발 link가 없는 독립 consumer에서 0.0.19 npm, Composer와 wheel archive를 검증한다(H27.3).
 - Native package manager로 공개된 template 0.0.12 archive와 공유 도구 0.0.60을 해석하고 PHP 8.4 release lock 및 Python wheel lock을 갱신한다. PHP library 최소 요구사항 >=8.4와 별도 source 개발 선언을 유지한다. (H27.2)
