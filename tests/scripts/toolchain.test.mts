@@ -89,7 +89,11 @@ test('no recipe queries a registry: installs follow their lock without an audit,
   assert.ok(npm.length > 0, lines.join('\n'));
   assert.deepEqual(npm.filter((command) => !/^\S+ (ci|run) /.test(command)), [], 'an npm command other than ci or run');
   assert.deepEqual(npm.filter((command) => / ci /.test(command) && !command.includes('--no-audit')), []);
-  assert.ok(npm.some((command) => / ci --offline /.test(command)), 'the package install test installs offline');
+  // Native installation inherits the offline recipe environment, verified below.
+  const consumer = dryRun('package-check').filter((line) => line.includes(kitTool('npm-install')));
+  assert.equal(consumer.length, 1, 'the package check delegates its locked install to native npm');
+  assert.ok(consumer[0].includes('tests/package-install'), consumer[0]);
+  assert.ok(!consumer[0].includes('env -u'), 'the consumer must retain the offline environment');
   // The npm ci of make install-packages is the recipe of @polyspec/kit, so the .npmrc of the checkout turns its audit off.
   assert.match(readFileSync(path.join(ROOT, '.npmrc'), 'utf8'), /^audit=false$/m, '.npmrc does not set audit=false');
   const composer = commands.filter((command) => command.startsWith(`${COMPOSER} `));

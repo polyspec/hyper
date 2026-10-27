@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: c9875efc128bd72b3b373887260bf45e3adb098207ba3bdf4a9650646d41f4a1 -->
+<!-- source-sha256: b8bafa81d55a98ac06f813141e90625a6cfeb18e45166198d3e53bd40b4882bd -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- Package consumer가 inline npm 명령을 요구하는 대신 offline recipe 환경을 유지하면서 native npm에 설치를 위임하는지 검증한다.
 
 ## 0.0.19
 - 순수 Python 모음은 multipart 계약 사례를, 렌더링 모음은 앱 제한 사례를 선택하며 렌더링 target이 server program을 먼저 build한다. (H27.22)

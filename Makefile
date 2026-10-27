@@ -238,6 +238,10 @@ templates-check: toolchain-check ## Check hx- attributes (HC-6) and region place
 typecheck: packages ## Check the types of the TypeScript of scripts/, tests/ and benchmarks/ with the tsc of node_modules (tsconfig.json)
 	$(TSC) -p tsconfig.json
 
+.PHONY: toolchain-policy-test
+toolchain-policy-test: ## Verify the declared toolchain and offline recipe policy
+	$(NODE) $(KIT)/run-tests.$(KIT_EXT) node -- tests/scripts/toolchain.test.mts
+
 hyper-test-scripts: packages assets server ## Run the tests of the check scripts, or only the files of TESTS
 	$(NODE) $(KIT)/run-tests.$(KIT_EXT) node -- $(or $(TESTS),tests/scripts/)
 

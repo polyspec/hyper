@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- Verify that the package consumer delegates installation to native npm while retaining the offline recipe environment, rather than requiring an inline npm command.
 
 ## 0.0.19
 - Discover multipart contract cases in the pure Python suite and application limits in the rendering suite, whose target builds the server program first. (H27.22)
