@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 6391a404bc529b2163730c6b2e5b7c48165418323867bb5cdff1fed456cca325 -->
+<!-- source-sha256: c1edb7400e47f622a0887561ee3b149d35524e30ea2b920843df2fabd37b0dfb -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -280,3 +280,4 @@
 | H27.21-1 | Offline 정책에서 native package 설치를 검증한다. | Makefile, tests/scripts/toolchain.test.mts | `make toolchain-policy-test` and `make docs-check` | [o] |
 | H27.22 | Multipart 렌더링 검사를 순수 Python 검사와 분리한다. | Makefile, packages/server/python/tests/test_files.py, packages/server/python/tests/render/render_files.py | `make -k python-file-parts-test lint-python docs-check` | [o] |
 | H27.22-1 | 이동한 test 선언과 offline 정책 값의 타입을 보완한다. | config/parity.json, tests/scripts/toolchain.test.mts | `make -k typecheck parity-declarations-check toolchain-policy-test docs-check` | [o] |
+| H27.23 | 릴리즈 후보의 CI 성공을 기능 상태에 기록한다. | docs/features.md, docs/features.ko.md | `make docs-check` | [ ] |
