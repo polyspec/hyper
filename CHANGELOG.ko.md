@@ -1,13 +1,13 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 0321db45313b97da96027240fb89c947dc4cf07ee42abcf9784591690f511916 -->
+<!-- source-sha256: 944ef2fd1d1102509d5467c9da713367f8d4fc42f30426acf42beaa8588a8f0c -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
-- Python file-limit parity 사례를 렌더링 test에 연결하고 offline 정책 검사 전에 native install 명령의 존재를 확인한다.
 
 ## 0.0.19
+- Python file-limit parity 사례를 렌더링 test에 연결하고 offline 정책 검사 전에 native install 명령의 존재를 확인한다. (H27.22-1)
 - Package consumer가 inline npm 명령을 요구하는 대신 offline recipe 환경을 유지하면서 native npm에 설치를 위임하는지 검증한다. (H27.21-1)
 - 순수 Python 모음은 multipart 계약 사례를, 렌더링 모음은 앱 제한 사례를 선택하며 렌더링 target이 server program을 먼저 build한다. (H27.22)
 - 읽기 전용 Composer source 일관성 검사기를 앱 정책으로 분류하고 필수 CI unit test target을 강제 경로로 명시한다. (H27.16-1)
