@@ -1,13 +1,13 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: b8bafa81d55a98ac06f813141e90625a6cfeb18e45166198d3e53bd40b4882bd -->
+<!-- source-sha256: f9b913d1e6514822a3047f04d394a8f4c126561c41c457837b01a4c1b9bf9014 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
-- Package consumer가 inline npm 명령을 요구하는 대신 offline recipe 환경을 유지하면서 native npm에 설치를 위임하는지 검증한다.
 
 ## 0.0.19
+- Package consumer가 inline npm 명령을 요구하는 대신 offline recipe 환경을 유지하면서 native npm에 설치를 위임하는지 검증한다. (H27.21-1)
 - 순수 Python 모음은 multipart 계약 사례를, 렌더링 모음은 앱 제한 사례를 선택하며 렌더링 target이 server program을 먼저 build한다. (H27.22)
 - 읽기 전용 Composer source 일관성 검사기를 앱 정책으로 분류하고 필수 CI unit test target을 강제 경로로 명시한다. (H27.16-1)
 - Script 검사는 asset과 server 입력을 명시적으로 build하고 설치된 export로 archive fetch tool을 선택한다. Package 검사는 editor hook 설정 없이 고정 설치와 source link를 native npm에 맡긴다. (H27.21)
