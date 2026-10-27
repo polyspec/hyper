@@ -1,13 +1,13 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: d52713c684b841815203dd00165a04ecedfa0941c406b5d6c86f3d9eb57a86d4 -->
+<!-- source-sha256: ed8552de0d286a36750dc843a1147520e293babfe02dd7d21d65ee9752ea185c -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
-- 모든 CI 검사 group이 도구 탐색 전에 선언된 PHP를 준비하고 검증 전에 native Git hook 설정을 설치한다.
 
 ## 0.0.19
+- 모든 CI 검사 group이 도구 탐색 전에 선언된 PHP를 준비하고 검증 전에 native Git hook 설정을 설치한다. (H27.20)
 - Native gate는 공개 workspace 선언과 runtime fixture를 읽기 전에 build한다. PHP test fixture는 동작을 유지하면서 설정된 줄 길이 제한을 만족한다. (H27.19)
 - 호출자가 npm offline mode를 export해도 명시적 bootstrap 설치는 선언된 다운로드를 허용하며 나머지 검사는 offline 환경을 유지한다. (H27.15-1)
 - 개발 link가 없는 독립 consumer에서 0.0.19 npm, Composer와 wheel archive를 검증한다(H27.3).

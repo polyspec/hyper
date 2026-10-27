@@ -4,9 +4,9 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
-- Every CI check group prepares the declared PHP before tool discovery and installs its native Git hook configuration before validation.
 
 ## 0.0.19
+- Every CI check group prepares the declared PHP before tool discovery and installs its native Git hook configuration before validation. (H27.20)
 - Native gates build published workspace declarations and runtime fixtures before reading them. PHP test fixtures retain their behavior while satisfying the configured line-length limit. (H27.19)
 - Explicit bootstrap installation enables its declared downloads even when the caller exports npm offline mode; the remaining checks retain their offline environment. (H27.15-1)
 - Verify the 0.0.19 npm, Composer and wheel archives in isolated consumers without development links (H27.3).
