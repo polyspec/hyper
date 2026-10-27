@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- Script checks build their asset and server inputs explicitly and select archive-fetch tools through installed exports. Package checks delegate locked installation and source links to native npm without editor-hook setup.
 
 ## 0.0.19
 - Every CI check group prepares the declared PHP before tool discovery and installs its native Git hook configuration before validation. (H27.20)

@@ -144,3 +144,20 @@ test('H27.19 parity-check declares both runtime fixture producers without runnin
     assert.ok(steps.some(step => step.includes('cd packages/server/ts &&') && step.includes('build')), `${target} does not build workspace declarations`);
   }
 });
+
+
+test('H27.21 script checks build their asset and server inputs before the runner', () => {
+  const steps = dryRun('hyper-test-scripts');
+  const runner = steps.findIndex(step => step.includes(kitTool('run-tests')));
+  for (const producer of ['hyper-build-assets.mjs', 'hyper-build-server.mjs']) {
+    const built = steps.findIndex(step => step.includes(producer));
+    assert.ok(built >= 0 && built < runner, `${producer} is not built before script checks`);
+  }
+});
+
+test('H27.21 package consumers use their native locked graph without editor-hook setup', () => {
+  const steps = dryRun('package-check');
+  assert.ok(steps.some(step => step.includes(kitTool('npm-install')) && step.includes('tests/package-install')));
+  assert.ok(steps.some(step => step.includes('package-install.test.ts')));
+  assert.deepEqual(steps.filter(step => step.includes(kitTool('link')) && step.includes('--project tests/package-install')), []);
+});

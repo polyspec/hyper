@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: ed8552de0d286a36750dc843a1147520e293babfe02dd7d21d65ee9752ea185c -->
+<!-- source-sha256: 8d70b5029e9831309095fadcabcd4bfc46f3285074af5655d9289d34662b36e5 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- Script 검사는 asset과 server 입력을 명시적으로 build하고 설치된 export로 archive fetch tool을 선택한다. Package 검사는 editor hook 설정 없이 고정 설치와 source link를 native npm에 맡긴다.
 
 ## 0.0.19
 - 모든 CI 검사 group이 도구 탐색 전에 선언된 PHP를 준비하고 검증 전에 native Git hook 설정을 설치한다. (H27.20)

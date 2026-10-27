@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 31b2baf50f4a3eb1e855b2fa346b863e8e46071400e777c5978820bd90058508 -->
+<!-- source-sha256: b1fc65e3b0f8ae1b67bc1b589b94fd5f7b8622d4dbb57dc528bec29216fa151b -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -275,4 +275,4 @@
 | H27.17 | 기본 소스 link 뒤 공유 lint 실행기를 복구한다. 실행 파일 해석은 소비자 root의 전이 의존성 bin을 강제하지 않고 도구 package의 의존성 설치를 사용해야 한다. | Shared lint executable lookup; no application-created bin links | `make lint-ts` | [o] |
 | H27.19 | 깨끗한 checkout의 gate 전에 공개 선언과 runtime fixture를 build하고 PHP test format을 맞춘다. | Makefile, tests/scripts/check-recipes.test.mts, packages/server/php/tests | `node --test tests/scripts/check-recipes.test.mts` and `make lint-php docs-check` | [o] |
 | H27.20 | 모든 CI 검사 group에서 도구 설치 전에 선언한 PHP를 준비하고 검증 전에 checkout별 Git hook을 설치한다. | .github/workflows/ci.yml, tests/scripts/ci-workflow.test.mts | `node --test tests/scripts/ci-workflow.test.mts` and `make docs-check` | [o] |
-| H27.21 | Script test의 build 입력과 packed tool 경로를 선언하고 native package consumer graph에서 무관한 개발 link 설정을 제거한다. | Makefile, tests/scripts/check-recipes.test.mts, tests/scripts/release-assets.test.mts | `node --test tests/scripts/check-recipes.test.mts tests/scripts/release-assets.test.mts` and `make package-check docs-check` | [ ] |
+| H27.21 | Script test build 입력과 packed tool 경로를 선언하고 editor hook 설정 없이 package consumer를 native npm source 설치로 준비한다. | Makefile, tests/scripts/check-recipes.test.mts, tests/scripts/release-assets.test.mts, tests/scripts/installed-kit.test.mts | `node --test tests/scripts/check-recipes.test.mts tests/scripts/release-assets.test.mts tests/scripts/installed-kit.test.mts` and `make -k package-check link-state-check docs-check` | [~] |

@@ -1,5 +1,5 @@
 <!-- doc-id: features -->
-<!-- source-sha256: 6a32aeca59039ff4c30ea2e6b84b2fdeaabfc9e9bec2e7fa69590f43b9b57cb2 -->
+<!-- source-sha256: 72d2d273a1f6a2dfd3f297ea939b32379efea9d40a4aa01a75b09e185ca9c824 -->
 # 기능 상태
 
 [English](features.md).
@@ -79,3 +79,4 @@
 | publication | 패키지의 레지스트리 배포 | not started | |
 | gate-inputs | Native gate가 읽기 전에 workspace 선언과 runtime fixture를 build한다(HR-85) | unit verified; CI run pending | `tests/scripts/check-recipes.test.mts`, `make lint-ts`, `make parity-check` |
 | ci-setup | 모든 CI 검사 group이 검증 전에 선언된 PHP와 checkout hook을 준비한다 | unit verified; CI run pending | `tests/scripts/ci-workflow.test.mts` |
+| consumer-check-inputs | Script 검사가 build를 소유하고 package 검사가 editor 설정 없이 native source 연결을 위임한다 | unit verified; CI run pending | `tests/scripts/check-recipes.test.mts`, `tests/scripts/release-assets.test.mts`, `make package-check` |

@@ -1,7 +1,7 @@
 // HR-70, HR-81: a fresh checkout bootstraps native npm before reading installed shared tools, without a sibling kit.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { test, type TestContext } from 'node:test';
@@ -68,4 +68,23 @@ test('H27.15-1 explicit bootstrap enables downloads under an inherited offline s
   const call = parseJsonObject(readFileSync(report, 'utf8'), 'bootstrap invocation');
   assert.equal(call.offline, 'false', 'explicit installation must permit its declared downloads');
   assert.ok(Array.isArray(call.args) && call.args.includes('ci'), 'bootstrap must retain the native locked install');
+});
+
+
+test('H27.21 a packed installer links a native consumer to its installed dependency without editor tools', { timeout: 120000 }, (t) => {
+  const root = checkout(t);
+  const npm = join(mainTools(), 'bin/npm');
+  const env = { ...process.env, npm_config_offline: 'true', NPM_BIN: npm };
+  const installed = spawnSync(npm, ['ci', '--offline', '--ignore-scripts', '--no-audit'], { cwd: root, encoding: 'utf8', env });
+  assert.equal(installed.status, 0, `${installed.stdout}${installed.stderr}`);
+  const project = join(root, 'tests/package-install');
+  mkdirSync(project, { recursive: true });
+  for (const file of ['package.json', 'package-lock.json']) cpSync(join('tests/package-install', file), join(project, file));
+  const lock = readFileSync(join(project, 'package-lock.json'), 'utf8');
+  const linked = spawnSync(process.execPath, [join(root, 'node_modules/@polyspec/kit/dist/npm-install.mjs'), project, root, join(root, 'node_modules/@polyspec/template')], { cwd: root, encoding: 'utf8', env });
+  assert.equal(linked.status, 0, `${linked.stdout}${linked.stderr}`);
+  assert.equal(realpathSync(join(project, 'node_modules/@polyspec/template')), realpathSync(join(root, 'node_modules/@polyspec/template')));
+  assert.equal(realpathSync(join(project, 'node_modules/@polyspec/hyper-client')), realpathSync(join(root, 'packages/client')));
+  assert.equal(readFileSync(join(project, 'package-lock.json'), 'utf8'), lock);
+  assert.equal(existsSync(join(project, '.claude/settings.local.json')), false);
 });

@@ -161,10 +161,9 @@ hyper-server-php-install: ## Install the Composer dependencies of the board offl
 	$(MAKE) --no-print-directory link PROJECT=$(BOARD)
 
 # package-check is a check, so it installs offline from the npm cache that make hyper-install filled and fails by the name of a
-# package that the cache lacks (HR-89); make link then links the polyspec packages that a sibling checkout provides (K448).
+# package that the cache lacks (HR-89); npm alone owns the links and installed records of this declared consumer graph.
 package-check: packages node-fixtures ## Install the npm packages into tests/package-install offline, link them, type-check its test against their declarations and run it under node (HR-61)
-	cd tests/package-install && $(NODE) $(abspath $(KIT))/holder-lock.$(KIT_EXT) run $(abspath $(INSTALL_LOCK)) -- $(NPM) ci --offline --allow-remote=root --no-audit --no-fund
-	$(MAKE) --no-print-directory link PROJECT=tests/package-install
+	NPM_BIN=$(NPM) $(NODE) $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(NODE) $(KIT)/npm-install.$(KIT_EXT) tests/package-install "$(CURDIR)" "$(realpath node_modules/@polyspec/template)"
 	$(TSC) -p tests/package-install/tsconfig.json
 	NPM_BIN=$(NPM) $(NODE) $(KIT)/run-tests.$(KIT_EXT) node --cwd tests/package-install -- package-install.test.ts
 
@@ -232,7 +231,7 @@ templates-check: toolchain-check ## Check hx- attributes (HC-6) and region place
 typecheck: packages ## Check the types of the TypeScript of scripts/, tests/ and benchmarks/ with the tsc of node_modules (tsconfig.json)
 	$(TSC) -p tsconfig.json
 
-hyper-test-scripts: packages ## Run the tests of the check scripts, or only the files of TESTS
+hyper-test-scripts: packages assets server ## Run the tests of the check scripts, or only the files of TESTS
 	$(NODE) $(KIT)/run-tests.$(KIT_EXT) node -- $(or $(TESTS),tests/scripts/)
 
 parity: assets server ext ## Compare PHP documents (generated program and native extension) with browser renders of document and region JSON

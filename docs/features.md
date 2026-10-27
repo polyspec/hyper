@@ -78,3 +78,4 @@
 | publication | Registry publication of the packages | not started | |
 | gate-inputs | Native gates build their workspace declarations and runtime fixtures before reading them (HR-85) | unit verified; CI run pending | `tests/scripts/check-recipes.test.mts`, `make lint-ts`, `make parity-check` |
 | ci-setup | Every CI check group prepares declared PHP and checkout hooks before validation | unit verified; CI run pending | `tests/scripts/ci-workflow.test.mts` |
+| consumer-check-inputs | Script checks own their builds and package checks delegate native source connections without editor setup | unit verified; CI run pending | `tests/scripts/check-recipes.test.mts`, `tests/scripts/release-assets.test.mts`, `make package-check` |

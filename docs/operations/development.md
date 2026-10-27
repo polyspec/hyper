@@ -75,6 +75,8 @@ The Darwin virtiofs tests read the digest-pinned `VIRTIOFS_IMAGE` of the Makefil
 
 `lint-ts` and `parity-declarations-check` build workspace declarations through `packages` before inspecting them. `parity-check` also builds the PHP server and Node template fixtures through `server-fixtures` and `node-fixtures`; a cold checkout supplies the same inputs as an existing development installation.
 
+Script checks require `assets` and `server` before the runner. `package-check` delegates locked installation and compatible source links to native npm, then checks types and executes the installed packages without setting up editor hooks.
+
 ## Full run
 
 The full suite runs on GitHub after the push of `main`. A local full run is not required before a commit or push. During checklist development, run only the unit checks that own the change. Run `make check` exactly once after checklist development finishes; after a failure, fix and rerun only its owners. A new commit does not call for another full run.
