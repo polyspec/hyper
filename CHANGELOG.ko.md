@@ -1,13 +1,13 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 07970b2646f7dcff3c4f7a73519baea8e6f37b6ec5e3e41f574bfe01231469c7 -->
+<!-- source-sha256: c9875efc128bd72b3b373887260bf45e3adb098207ba3bdf4a9650646d41f4a1 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
-- 순수 Python 모음은 multipart 계약 사례를, 렌더링 모음은 앱 제한 사례를 선택하며 렌더링 target이 server program을 먼저 build한다.
 
 ## 0.0.19
+- 순수 Python 모음은 multipart 계약 사례를, 렌더링 모음은 앱 제한 사례를 선택하며 렌더링 target이 server program을 먼저 build한다. (H27.22)
 - 읽기 전용 Composer source 일관성 검사기를 앱 정책으로 분류하고 필수 CI unit test target을 강제 경로로 명시한다. (H27.16-1)
 - Script 검사는 asset과 server 입력을 명시적으로 build하고 설치된 export로 archive fetch tool을 선택한다. Package 검사는 editor hook 설정 없이 고정 설치와 source link를 native npm에 맡긴다. (H27.21)
 - 모든 CI 검사 group이 도구 탐색 전에 선언된 PHP를 준비하고 검증 전에 native Git hook 설정을 설치한다. (H27.20)
