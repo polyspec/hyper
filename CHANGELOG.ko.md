@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: f7850d1b1afe47b99a1835f583133eeeef0ed53f49ed8f28d0232a08ef333963 -->
+<!-- source-sha256: d52713c684b841815203dd00165a04ecedfa0941c406b5d6c86f3d9eb57a86d4 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- 모든 CI 검사 group이 도구 탐색 전에 선언된 PHP를 준비하고 검증 전에 native Git hook 설정을 설치한다.
 
 ## 0.0.19
 - Native gate는 공개 workspace 선언과 runtime fixture를 읽기 전에 build한다. PHP test fixture는 동작을 유지하면서 설정된 줄 길이 제한을 만족한다. (H27.19)

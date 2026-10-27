@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- Every CI check group prepares the declared PHP before tool discovery and installs its native Git hook configuration before validation.
 
 ## 0.0.19
 - Native gates build published workspace declarations and runtime fixtures before reading them. PHP test fixtures retain their behavior while satisfying the configured line-length limit. (H27.19)

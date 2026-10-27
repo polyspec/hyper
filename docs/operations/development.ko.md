@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: 4d58f3216381702bdd041020b5edbd03c1403d303d261c1a5c3480c1600bfe82 -->
+<!-- source-sha256: 29d28d63ad55a933ac67476532e0a9f10e6210921148a54ef68ceeb9a4b9be8c -->
 # 개발
 
 [English](development.md).
@@ -156,15 +156,18 @@ T.T.T는 그 릴리스의 `packages/client/package.json`이 요구하는 `@polys
 
 ## CI
 
+모든 검사 group은 `make install-tools` 전에 PHP를 준비한다. 다른 runtime만 검사하는 group에서도 도구 탐색이 `.php-version`을 읽기 때문이다. Package 설치 후에는 `make hooks`가 checkout별 Git merge driver attribute와 hook 설정을 검증 전에 만든다.
+
+
 workflow `.github/workflows/ci.yml`은 `main`의 push와 모든 수동 실행(`workflow_dispatch`)에 대해 전체 suite를 실행한다(HR-91, [main 공개](#main-공개) 참고). 그 job `check`는 CI group마다 matrix 항목 하나를 `fail-fast: false`로 가지며, 각 항목은 자기가 실행하는 target을 밝힌다.
 
 | 항목 | Target | 준비 |
 |---|---|---|
-| `docs` | `kit-check`, `toolchain-check`, `layout-check`, `typecheck`, `lint-ts`, `docs-check`, `hooks-check`, `push-gate-commit`, `commits-check`, `owner-validate` | Node.js, Python |
+| `docs` | `kit-check`, `toolchain-check`, `layout-check`, `typecheck`, `lint-ts`, `docs-check`, `hooks-check`, `push-gate-commit`, `commits-check`, `owner-validate` | Node.js, Python, PHP |
 | `php` | `dependency-policy-check`, `dependency-policy-mutation-check`, `bench-server-smoke`, `lint`, `analyse-php`, `test-php` | Node.js, Python, PHP, template checkout, `make hyper-install` |
 | `node` | `templates-check`, `hyper-test-scripts`, `test-js`, `hyper-test-node`, `package-check` | Node.js, Python, PHP, template checkout, `make hyper-install` |
 | `board` | `parity`, `server-parity`, `bundle-size`, `e2e` | Node.js, Python, PHP, template checkout, `make hyper-install`, `make hyper-install-browser` |
-| `python` | `test-python` | Node.js, `make install-tools`의 Python, `make hyper-install-python`의 venv |
+| `python` | `test-python` | Node.js, `make install-tools`의 Python, `make hyper-install-python`의 venv, PHP |
 | `python-render` | `hyper-test-python-render`, `server-parity-python` | Node.js, Python, PHP, `make hyper-install`, `make hyper-install-browser` |
 
 각 step은 make target 하나를 실행하고(HR-90), 첫 step 뒤의 모든 step은 실패한 step 뒤에도 실행한다. workflow는 `mise.toml`의 Node.js로 bootstrap을 시작하고 `.php-version`에서 PHP를 준비하며, 모든 job은 `config/toolchain.json`의 Python을 `make install-tools`로 설치하며 template 저장소를 Makefile의 tag `TEMPLATE_TAG`로 `../template`에 checkout하며, `make hyper-install`은 그곳에서 네이티브 확장 소스를 복사한다. `make ci-targets TARGETS="<targets>" CI_REPORT=var/ci/<name>`은 항목의 모든 target을 자기 `make -k <target>`으로 끝까지 실행하고 보고서를 쓴다. `make ci-summary CI_REPORT=var/ci/<name>`은 job summary를 쓴다. job은 artifact `ci-<name>-<run id>-<attempt>`, 곧 디렉터리 `var/ci/<name>/`을 upload한다.

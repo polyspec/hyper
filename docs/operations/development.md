@@ -155,15 +155,18 @@ T.T.T is the version of `@polyspec/template` that `packages/client/package.json`
 
 ## CI
 
+Every check group sets up PHP before `make install-tools`, because tool discovery reads `.php-version` even for a group that tests another runtime. After package installation, `make hooks` creates the per-checkout Git merge-driver attributes and hook configuration before validation.
+
+
 The workflow `.github/workflows/ci.yml` runs the full suite for the push of `main` and every manual run (`workflow_dispatch`) (HR-91, see [Publishing main](#publishing-main)). Its job `check` has one matrix entry per CI group, with `fail-fast: false`, and each entry names the targets that it runs:
 
 | Entry | Targets | Setup |
 |---|---|---|
-| `docs` | `kit-check`, `toolchain-check`, `layout-check`, `typecheck`, `lint-ts`, `docs-check`, `hooks-check`, `push-gate-commit`, `commits-check`, `owner-validate` | Node.js, Python |
+| `docs` | `kit-check`, `toolchain-check`, `layout-check`, `typecheck`, `lint-ts`, `docs-check`, `hooks-check`, `push-gate-commit`, `commits-check`, `owner-validate` | Node.js, Python, PHP |
 | `php` | `dependency-policy-check`, `dependency-policy-mutation-check`, `bench-server-smoke`, `lint`, `analyse-php`, `test-php` | Node.js, Python, PHP, the template checkout, `make hyper-install` |
 | `node` | `templates-check`, `hyper-test-scripts`, `test-js`, `hyper-test-node`, `package-check` | Node.js, Python, PHP, the template checkout, `make hyper-install` |
 | `board` | `parity`, `server-parity`, `bundle-size`, `e2e` | Node.js, Python, PHP, the template checkout, `make hyper-install`, `make hyper-install-browser` |
-| `python` | `test-python` | Node.js, the Python of `make install-tools` and the venv of `make hyper-install-python` |
+| `python` | `test-python` | Node.js, the Python of `make install-tools` and the venv of `make hyper-install-python`, PHP |
 | `python-render` | `hyper-test-python-render`, `server-parity-python` | Node.js, Python, PHP, `make hyper-install`, `make hyper-install-browser` |
 
 Each step runs one make target (HR-90) and every step after the first runs after a failed step. The workflow starts the bootstrap with the Node.js of `mise.toml` and sets up PHP from `.php-version`, and every job runs `make install-tools` for the Python of `config/toolchain.json` and checks out the template repository at the tag `TEMPLATE_TAG` of the Makefile as `../template`, from which `make hyper-install` copies the native extension sources. `make ci-targets TARGETS="<targets>" CI_REPORT=var/ci/<name>` runs every target of the entry with its own `make -k <target>` to its end and writes the report. `make ci-summary CI_REPORT=var/ci/<name>` writes the job summary. The job uploads the artifact `ci-<name>-<run id>-<attempt>`, the directory `var/ci/<name>/`:

@@ -1,5 +1,5 @@
 <!-- doc-id: features -->
-<!-- source-sha256: 28388c08fe67c0f0a72553ebd0feba0dbf79db637d9a636f20791bb930e31ce5 -->
+<!-- source-sha256: 6a32aeca59039ff4c30ea2e6b84b2fdeaabfc9e9bec2e7fa69590f43b9b57cb2 -->
 # 기능 상태
 
 [English](features.md).
@@ -78,3 +78,4 @@
 | cdn-deployment | 서버와 CDN 배포(권장)와 정적 셸 배포 | 문서화, 배포 안 함 | [배포](operations/deployment.ko.md) |
 | publication | 패키지의 레지스트리 배포 | not started | |
 | gate-inputs | Native gate가 읽기 전에 workspace 선언과 runtime fixture를 build한다(HR-85) | unit verified; CI run pending | `tests/scripts/check-recipes.test.mts`, `make lint-ts`, `make parity-check` |
+| ci-setup | 모든 CI 검사 group이 검증 전에 선언된 PHP와 checkout hook을 준비한다 | unit verified; CI run pending | `tests/scripts/ci-workflow.test.mts` |

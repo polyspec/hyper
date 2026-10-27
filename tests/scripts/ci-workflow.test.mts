@@ -361,3 +361,22 @@ test('.php-version holds the PHP minor release, and every setup-php step reads i
   assert.ok(phpVersionProblems(phpVersion, named).some((problem) => problem.endsWith('names php-version itself')));
   assert.ok(phpVersionProblems('8.5.10\n', files).some((problem) => problem.startsWith('.php-version holds')));
 });
+
+
+test('H27.20 every CI check group prepares PHP before installing the checkout tools', () => {
+  for (const job of jobs(readFileSync(path.join(WORKFLOWS, 'ci.yml'), 'utf8')).filter(job => job.name !== CI_PASSED)) {
+    const php = job.steps.findIndex(step => step.uses?.startsWith('shivammathur/setup-php@'));
+    const tools = job.steps.findIndex(step => step.run === 'make install-tools');
+    assert.ok(php >= 0 && php < tools, `${job.name}: declared PHP must exist before tool discovery`);
+    assert.equal(job.steps[php]?.if, '${{ !cancelled() }}', `${job.name}: PHP is required by every check group`);
+  }
+});
+
+test('H27.20 every CI check group installs per-checkout hook configuration before checks', () => {
+  for (const job of jobs(readFileSync(path.join(WORKFLOWS, 'ci.yml'), 'utf8')).filter(job => job.name !== CI_PASSED)) {
+    const installed = job.steps.findIndex(step => step.run === 'make install-packages');
+    const hooks = job.steps.findIndex(step => step.run === 'make hooks');
+    const check = job.steps.findIndex(step => step.run?.startsWith('make ci-targets'));
+    assert.ok(installed < hooks && hooks < check, `${job.name}: native hook setup must follow installation and precede checks`);
+  }
+});
