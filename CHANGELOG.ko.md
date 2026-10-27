@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 34e4dfd20977f54ffc8fec9b79f8f40eae3b6b884ea3a785d913bbd7941d3abc -->
+<!-- source-sha256: 08578453eced798a04a5ba8a0f2a3732707e1ca97360f3aaf2f010e72329e2e3 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+## 0.0.19
 - Native package manager로 공개된 template 0.0.12 archive와 공유 도구 0.0.60을 해석하고 PHP 8.4 release lock 및 Python wheel lock을 갱신한다. PHP library 최소 요구사항 >=8.4와 별도 source 개발 선언을 유지한다. (H27.2)
 - 명시적 Composer 개발 manifest가 기본 path repository로 template 소스 0.0.12와 기존 JSON Schema fork를 해석하고 별도 로컬 lock과 정확한 설치 기록을 생성한다. 기본 COMPOSER 선택자를 보존하고 library 호환 대안을 선언하며 PHP 8.4에서 두 개발 graph를 검증한다. 기본 graph 검사, 관련 도구 검사 18개와 PHP 애플리케이션 검사 87개가 통과하며 릴리즈 lock은 변경하지 않는다(H27.16).
 - TypeScript lint는 설치된 provider dependency package에서 tool 실행 파일과 native type-aware backend를 찾으며 앱이 bin link를 만들지 않는다(H27.17).
@@ -28,10 +30,7 @@
 - board 서버 빌드는 Composer 설치나 링크 재연결 없이 설치된 소스 패키지를 사용한다. 명시적인 의존성 설치는 유지한다. 회귀 테스트와 템플릿 11개의 서버 빌드가 통과한다(H27.3-1).
 - 0.0.19 후보는 링크된 소스의 단위 검사를 통과한다. 패키지 소스·이름 8건, PHP 8.4.26에서 template 확장을 로드하지 않은 경우와 로드한 경우의 애플리케이션 검사 각각 71건, TypeScript 애플리케이션 76건, 클라이언트 stream 4건, Python 애플리케이션 19건과 multipart 9건이다. 이 근거는 로컬 소스 사용 범위이며 아카이브 설치와 전체 모음 검증은 미완료다(H27.3).
 - 후보 lock에서 npm audit가 fast-uri를 3.1.9로, markdown-it을 14.3.3으로 갱신한다. audit에 더 이상 없는 advisory의 예외를 제거한다(H27.3).
-
-## 0.0.19
-- 0.0.19 후보 manifest를 준비한다. PHP 8.4 의존성 그래프가 준비될 때까지 아카이브 설치 검증은 미완료로 유지한다(H27.3).
-- PHP 8.4 릴리스 그래프의 Composer 해결은 검증된 template PHP 아카이브 0.0.11의 PHP >=8.5 요구로 차단된다. 호환 아카이브 선행 조건을 기록하며 PHP와 lock은 변경하지 않는다(H27.2).
+- 0.0.19 manifest, 후보 archive 5개와 native consumer 설치 lock을 준비한다(H27.3).
 - 릴리스 준비 검토는 철회된 네 행을 이력으로 유지하고 Composer 의존성 해결과 lock 검증을 H27.2에 복원하며, 깨끗한 아카이브 검증을 H27.3에 추가하고 유휴 환경 벤치마크 H26.9를 미완료로 유지한다(H27.1).
 - H25.73은 추적 lock을 링크된 개발 manifest에 맞추는 작업이 H26.8과 모순되어 철회한다. 런타임 기준은 PHP 8.4이며 lock은 변경하지 않는다(H25.73).
 - 커밋된 화면 구성 문서가 parity-declarations-check와 docs-check를 통과한다(H25.76).

@@ -4,6 +4,8 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+
+## 0.0.19
 - Resolve the published template 0.0.12 archives and shared tools 0.0.60 through native package managers, regenerate the release locks for PHP 8.4 and align the Python wheel lock. Keep the PHP library minimum >=8.4 and source development declarations separate. (H27.2)
 - Explicit Composer development manifests resolve source template 0.0.12 and the existing JSON Schema fork through native path repositories, with separate local locks and accurate installed records. Preserve the native COMPOSER selector, declare the library compatibility alternatives and validate both development graphs on PHP 8.4. Native graph checks, 18 related tool tests and 87 PHP application tests pass; release locks remain unchanged (H27.16).
 - TypeScript lint resolves its tool executables from the installed provider dependency packages and locates the native type-aware backend without application-created bin links (H27.17).
@@ -27,10 +29,7 @@
 - The board server build uses installed source packages without Composer installation or relinking. Explicit dependency installation remains available. The regression test and the 11-template server build pass (H27.3-1).
 - The 0.0.19 candidate passes linked-source unit checks: 8 package-source/name tests, 71 PHP application tests on PHP 8.4.26 both without and with the template extension loaded, 76 TypeScript application tests, 4 client stream tests, and 19 Python application plus 9 multipart tests. This evidence covers local source use; archive installation and full-suite verification remain open (H27.3).
 - Native npm audit updates fast-uri to 3.1.9 and markdown-it to 14.3.3 in the candidate lock; remove the advisory exception no longer present in the audit (H27.3).
-
-## 0.0.19
-- Prepare the 0.0.19 candidate manifests. Archive installation verification remains open until the PHP 8.4 dependency graph is available (H27.3).
-- Composer resolution of the PHP 8.4 release graph is blocked by the verified template PHP archive 0.0.11 requiring PHP >=8.5. Record the compatible-archive prerequisite; PHP and locks remain unchanged (H27.2).
+- Prepare the 0.0.19 manifests, five candidate archives and native consumer installation locks (H27.3).
 - The release-readiness audit retains the four withdrawn rows as history, restores Composer resolution and lock validation in H27.2, adds clean archive verification in H27.3, and keeps the idle benchmark H26.9 open (H27.1).
 - H25.73 is withdrawn because reconciling tracked locks with linked development manifests contradicts H26.8. PHP 8.4 remains the runtime target, and the locks are unchanged (H25.73).
 - The committed composition documentation passes parity-declarations-check and docs-check (H25.76).
