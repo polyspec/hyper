@@ -181,6 +181,10 @@ node-server: assets ## Build the board Node server into examples/board/build/nod
 node-fixtures: packages ## Build the template files of the PHP test fixtures for the Node server tests
 	$(NODE) scripts/build-templates.mts --templates $(FIXTURES)/templates --output $(NODE_PACKAGE)/tests/build
 
+# Shared gates read the declarations and runtime fixtures built by this checkout.
+lint-ts parity-declarations-check: packages
+parity-check: server-fixtures node-fixtures
+
 assets: packages ## Build the board client bundle (SSR) and the single-file static shell (CSR)
 	$(NODE) $(BUILD_PACKAGE)/bin/hyper-build-assets.mjs --app $(BOARD) --api /api --output $(BOARD)/build --static public/assets/app.css --static public/assets/reader.css
 

@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 53f76e3ddb2a69645c9ba91fbec3e96f914074134c4808b0a4362088c666a1c4 -->
+<!-- source-sha256: 5e7d0b3c4443584b0dd6c5514d018262e9890e7fcb31f35e373e1bab0ca8f7da -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- Native gate는 공개 workspace 선언과 runtime fixture를 읽기 전에 build한다. PHP test fixture는 동작을 유지하면서 설정된 줄 길이 제한을 만족한다.
 
 ## 0.0.19
 - 호출자가 npm offline mode를 export해도 명시적 bootstrap 설치는 선언된 다운로드를 허용하며 나머지 검사는 offline 환경을 유지한다. (H27.15-1)

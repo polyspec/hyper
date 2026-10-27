@@ -76,3 +76,4 @@
 | embedded-data | A document embeds its data only when the reply asks for it, and the browser obtains the data of a page without embedded data with one document request when it first needs it (HY-31, HY-92, HYC-7) | implemented; CI run pending | `make test-php`, `make hyper-test-node`, `make test-js` |
 | cdn-deployment | Server and CDN deployment (recommended) and static shell deployment | documented, not deployed | [Deployment](operations/deployment.md) |
 | publication | Registry publication of the packages | not started | |
+| gate-inputs | Native gates build their workspace declarations and runtime fixtures before reading them (HR-85) | unit verified; CI run pending | `tests/scripts/check-recipes.test.mts`, `make lint-ts`, `make parity-check` |

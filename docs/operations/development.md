@@ -73,6 +73,8 @@ The declarations name the source PHP package, template 0.0.12 and the existing J
 
 The Darwin virtiofs tests read the digest-pinned `VIRTIOFS_IMAGE` of the Makefile. `make hyper-install-virtiofs` installs that image explicitly; the tests inspect the local image first and fail with that install target when it is missing. The tests mount this checkout and any external source providers read-only at their original paths. Provider roots are discovered with `git rev-parse --show-toplevel` from the installed template and compiler module entries; this preserves native package source links and their dependency resolution inside the container.
 
+`lint-ts` and `parity-declarations-check` build workspace declarations through `packages` before inspecting them. `parity-check` also builds the PHP server and Node template fixtures through `server-fixtures` and `node-fixtures`; a cold checkout supplies the same inputs as an existing development installation.
+
 ## Full run
 
 The full suite runs on GitHub after the push of `main`. A local full run is not required before a commit or push. During checklist development, run only the unit checks that own the change. Run `make check` exactly once after checklist development finishes; after a failure, fix and rerun only its owners. A new commit does not call for another full run.

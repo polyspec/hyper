@@ -114,7 +114,10 @@ final class RequestTest extends TestCase
         self::assertSame([['title', ['한 글']], ['roles[]', ['a', 'b']], ['empty', ['']], ['x', ['1', '2']]], $form);
         self::assertSame('2', $request->formString('x'));
         self::assertSame('', $request->formString('missing'));
-        self::assertSame([], iterator_to_array((new Request('POST', '/', ['Content-Type' => 'text/plain'], '', 'a=1'))->form()));
+        self::assertSame(
+            [],
+            iterator_to_array((new Request('POST', '/', ['Content-Type' => 'text/plain'], '', 'a=1'))->form()),
+        );
 
         $server = $_SERVER;
         $post = $_POST;

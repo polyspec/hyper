@@ -11,6 +11,7 @@ import { fileURLToPath } from 'node:url';
 
 import { dryRun } from './make-dry-run.mts';
 import { requireBuilt } from './requires.mts';
+import { kitTool } from './kit-tools.mts';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 
@@ -118,4 +119,28 @@ test('every target that runs npm in the release consumer projects exports npm_co
   const expected = { 'release-consumer': 'root', 'release-proof': 'root', 'release-consumer-lock': 'all' };
   const actual = Object.fromEntries(Object.keys(expected).map((target) => [target, new RegExp(`^${target}: export npm_config_allow_remote := (\\w+)$`, 'm').exec(makefile)?.[1]]));
   assert.deepEqual(actual, expected);
+});
+
+
+for (const target of ['lint-ts', 'parity-declarations-check']) {
+  test(`H27.19 ${target} builds its workspace declarations before reading them`, () => {
+    const steps = dryRun(target);
+    const checker = steps.findIndex(step => step.includes(kitTool(target === 'lint-ts' ? 'lint-ts' : 'parity')));
+    assert.ok(checker >= 0, `${target}: no native checker was selected`);
+    for (const folder of ['packages/client', 'packages/server/ts']) {
+      const build = steps.findIndex(step => step.includes(`cd ${folder} &&`) && step.includes('build'));
+      assert.ok(build >= 0 && build < checker, `${target}: ${folder} declarations are not built before the check`);
+    }
+  });
+}
+
+test('H27.19 parity-check declares both runtime fixture producers without running a CI-only goal locally', () => {
+  const database = dryRun('parity-declarations-check', { variables: ['-p'] });
+  const prerequisites = database.find(line => line.startsWith('parity-check:'));
+  assert.ok(prerequisites, 'the native Make database has no parity-check target');
+  for (const target of ['server-fixtures', 'node-fixtures']) {
+    assert.ok(prerequisites.split(/\s+/).includes(target), `parity-check does not declare ${target}`);
+    const steps = dryRun(target);
+    assert.ok(steps.some(step => step.includes('cd packages/server/ts &&') && step.includes('build')), `${target} does not build workspace declarations`);
+  }
 });

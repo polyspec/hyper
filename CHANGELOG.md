@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- Native gates build published workspace declarations and runtime fixtures before reading them. PHP test fixtures retain their behavior while satisfying the configured line-length limit.
 
 ## 0.0.19
 - Explicit bootstrap installation enables its declared downloads even when the caller exports npm offline mode; the remaining checks retain their offline environment. (H27.15-1)

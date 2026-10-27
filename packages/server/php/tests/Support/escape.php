@@ -15,6 +15,7 @@ require __DIR__ . '/../../../../../vendor/autoload.php';
 require_once __DIR__ . '/FrontController.php';
 
 use Polyspec\Hyper\Reply;
+use Polyspec\Hyper\Request;
 use Polyspec\Hyper\Tests\Support\FrontController;
 
 $mode = (string) getenv('HYPER_ESCAPE_MODE');
@@ -28,7 +29,7 @@ $around = match ($mode) {
         throw new RuntimeException('around boom');
     },
     'around-alone' => fn (): \Polyspec\Hyper\Response => \Polyspec\Hyper\Response::text(418, 'alone'),
-    'around-answer' => fn (\Polyspec\Hyper\Request $request, Closure $answer) => $answer($request->withHeader('X-Around', 'set')),
+    'around-answer' => fn (Request $request, Closure $answer) => $answer($request->withHeader('X-Around', 'set')),
     default => null,
 };
 $app = FrontController::open(

@@ -1,5 +1,5 @@
 <!-- doc-id: features -->
-<!-- source-sha256: 1fdd7d293e28e8024d473e070bf4d932ffef4019f13fb4f850eaedafc06dcc03 -->
+<!-- source-sha256: 28388c08fe67c0f0a72553ebd0feba0dbf79db637d9a636f20791bb930e31ce5 -->
 # 기능 상태
 
 [English](features.md).
@@ -77,3 +77,4 @@
 | embedded-data | 문서는 reply가 요청할 때만 데이터를 내장하고, 브라우저는 내장 데이터가 없는 페이지의 데이터를 처음 필요할 때 문서 요청 하나로 얻는다(HY-31, HY-92, HYC-7) | implemented; CI run pending | `make test-php`, `make hyper-test-node`, `make test-js` |
 | cdn-deployment | 서버와 CDN 배포(권장)와 정적 셸 배포 | 문서화, 배포 안 함 | [배포](operations/deployment.ko.md) |
 | publication | 패키지의 레지스트리 배포 | not started | |
+| gate-inputs | Native gate가 읽기 전에 workspace 선언과 runtime fixture를 build한다(HR-85) | unit verified; CI run pending | `tests/scripts/check-recipes.test.mts`, `make lint-ts`, `make parity-check` |

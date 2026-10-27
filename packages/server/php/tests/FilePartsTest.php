@@ -17,12 +17,19 @@ final class FilePartsTest extends TestCase
     public function testFilePartsOfTheContractCasesAreTheFilesOfTheRequest(): void
     {
         $cases = 0;
-        foreach (Json::arrays(Json::at(Json::file(__DIR__ . '/../../../../contracts/fields.json'), 'multipart')) as $case) {
+        $contracts = Json::arrays(Json::at(Json::file(__DIR__ . '/../../../../contracts/fields.json'), 'multipart'));
+        foreach ($contracts as $case) {
             if (!isset($case['files'])) {
                 continue;
             }
             ++$cases;
-            $request = new Request('POST', '/', ['Content-Type' => Json::string(Json::at($case, 'type'))], '', Json::string(Json::at($case, 'body')));
+            $request = new Request(
+                'POST',
+                '/',
+                ['Content-Type' => Json::string(Json::at($case, 'type'))],
+                '',
+                Json::string(Json::at($case, 'body')),
+            );
             $got = [];
             foreach ($request->files() as $name => $files) {
                 foreach ($files as $file) {

@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: e0591d0f884521cc48e444a85f8192bff7d3267743b5c27f322c5cc299b968ab -->
+<!-- source-sha256: 4d58f3216381702bdd041020b5edbd03c1403d303d261c1a5c3480c1600bfe82 -->
 # 개발
 
 [English](development.md).
@@ -73,6 +73,8 @@
 | `make check` | 위의 모든 검사를 기본 최종 검증 실행기를 거쳐 실행한다(아래 참조) |
 
 Darwin virtiofs 검사는 Makefile의 digest로 고정한 `VIRTIOFS_IMAGE`를 읽는다. `make hyper-install-virtiofs`가 그 image를 명시적으로 설치한다. 검사는 로컬 image를 먼저 확인하고 없으면 해당 설치 target을 밝히고 실패한다. 검사는 이 checkout과 외부 소스 제공 저장소를 원래 경로에 읽기 전용으로 mount한다. 제공 저장소 root는 설치된 template과 compiler 모듈 진입점에서 `git rev-parse --show-toplevel`로 찾는다. 컨테이너 안에서도 기본 package 소스 link와 그 의존성 해석을 유지한다.
+
+`lint-ts`와 `parity-declarations-check`는 검사 전에 `packages`로 workspace 선언을 build한다. `parity-check`는 `server-fixtures`와 `node-fixtures`로 PHP server와 Node template fixture도 build하며 깨끗한 checkout에서도 기존 개발 설치와 같은 입력을 제공한다.
 
 ## 전체 실행
 
