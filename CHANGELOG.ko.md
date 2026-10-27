@@ -1,11 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 5919c9bf2babf27ab1f47f5e3863035a8a65723688b805bf07b80e1dab9587c8 -->
+<!-- source-sha256: 34e4dfd20977f54ffc8fec9b79f8f40eae3b6b884ea3a785d913bbd7941d3abc -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
-- Native package manager로 공개된 template 0.0.12 archive와 공유 도구 0.0.60을 해석하고 PHP 8.4 release lock 및 Python wheel lock을 갱신한다. PHP library 최소 요구사항 >=8.4와 별도 source 개발 선언을 유지한다.
+- Native package manager로 공개된 template 0.0.12 archive와 공유 도구 0.0.60을 해석하고 PHP 8.4 release lock 및 Python wheel lock을 갱신한다. PHP library 최소 요구사항 >=8.4와 별도 source 개발 선언을 유지한다. (H27.2)
 - 명시적 Composer 개발 manifest가 기본 path repository로 template 소스 0.0.12와 기존 JSON Schema fork를 해석하고 별도 로컬 lock과 정확한 설치 기록을 생성한다. 기본 COMPOSER 선택자를 보존하고 library 호환 대안을 선언하며 PHP 8.4에서 두 개발 graph를 검증한다. 기본 graph 검사, 관련 도구 검사 18개와 PHP 애플리케이션 검사 87개가 통과하며 릴리즈 lock은 변경하지 않는다(H27.16).
 - TypeScript lint는 설치된 provider dependency package에서 tool 실행 파일과 native type-aware backend를 찾으며 앱이 bin link를 만들지 않는다(H27.17).
 - Native source-linked TypeScript lint에서 oxlint, knip, TypeScript project 6개와 catch-check의 9개 단계가 모두 실행되어 통과한다(H27.17).
