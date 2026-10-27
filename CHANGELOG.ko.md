@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 169c74bc344d1d5a05eb41edbe5d4febc7e5359da0a6716c06dc3f44856f942b -->
+<!-- source-sha256: 07970b2646f7dcff3c4f7a73519baea8e6f37b6ec5e3e41f574bfe01231469c7 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- 순수 Python 모음은 multipart 계약 사례를, 렌더링 모음은 앱 제한 사례를 선택하며 렌더링 target이 server program을 먼저 build한다.
 
 ## 0.0.19
 - 읽기 전용 Composer source 일관성 검사기를 앱 정책으로 분류하고 필수 CI unit test target을 강제 경로로 명시한다. (H27.16-1)

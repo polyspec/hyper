@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- Discover multipart contract cases in the pure Python suite and application limits in the rendering suite, whose target builds the server program first.
 
 ## 0.0.19
 - Classify the read-only Composer source-consistency checker as application policy and declare its mandatory CI unit-test target as the enforcement path. (H27.16-1)

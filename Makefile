@@ -205,6 +205,13 @@ hyper-test-php: server-fixtures ext ## Run the server package tests with the gen
 	$(call check,PHPUnit with the native extension,COMPOSER_VENDOR_DIR=$(PHP_VENDOR) node $(KIT)/run-tests.$(KIT_EXT) phpunit --cwd $(PHP_PACKAGE) --php-extension $(EXT)) \
 	$(checks_result)
 
+.PHONY: python-file-parts-test
+python-file-parts-test: server-fixtures toolchain-check ## Run Python multipart unit and rendering cases (HY-113, HY-114)
+	@failed=; \
+	$(call check,multipart contract cases,$(PYTHON_VENV)/bin/python $(PYTHON_PACKAGE)/tests/run.py $(PYTHON_PACKAGE)/tests test_files.py) \
+	$(call check,multipart application cases,$(PYTHON_VENV)/bin/python $(PYTHON_PACKAGE)/tests/run.py $(PYTHON_PACKAGE)/tests/render render_files.py) \
+	$(checks_result)
+
 hyper-test-python: toolchain-check ## Run the Python server package tests, which read the conformance cases of routes, rest, csrf, fields and json
 	$(PYTHON_VENV)/bin/python $(PYTHON_PACKAGE)/tests/run.py; unit=$$?; $(PYTHON_VENV)/bin/python -m unittest discover -s tests/python_package -p 'test_*.py'; package=$$?; test $$unit -eq 0 -a $$package -eq 0
 
