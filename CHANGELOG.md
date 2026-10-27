@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- Explicit bootstrap installation enables its declared downloads even when the caller exports npm offline mode; the remaining checks retain their offline environment.
 
 ## 0.0.19
 - Verify the 0.0.19 npm, Composer and wheel archives in isolated consumers without development links (H27.3).

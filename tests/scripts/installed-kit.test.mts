@@ -1,7 +1,7 @@
 // HR-70, HR-81: a fresh checkout bootstraps native npm before reading installed shared tools, without a sibling kit.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { test, type TestContext } from 'node:test';
@@ -54,4 +54,18 @@ test('a native locked archive install reads the installed bootstrap with no sibl
     assert.equal(typeof units.undeclaredPublic, 'function');
   `], { cwd: root, encoding: 'utf8' });
   assert.equal(modules.status, 0, `${modules.stdout}${modules.stderr}`);
+});
+
+
+test('H27.15-1 explicit bootstrap enables downloads under an inherited offline setting', (t) => {
+  const root = checkout(t);
+  const npm = join(root, 'bootstrap-npm.mjs');
+  const report = join(root, 'bootstrap-call.json');
+  writeFileSync(npm, `#!${process.execPath}\nimport { writeFileSync } from 'node:fs';\nwriteFileSync(${JSON.stringify(report)}, JSON.stringify({ offline: process.env.npm_config_offline, args: process.argv.slice(2) }));\n`);
+  chmodSync(npm, 0o755);
+  const result = spawnSync('make', ['--no-print-directory', 'bootstrap', `BOOTSTRAP_NPM=${npm}`], { cwd: root, encoding: 'utf8', env: { ...process.env, npm_config_offline: 'true' } });
+  assert.equal(result.status, 0, `${result.stdout}${result.stderr}`);
+  const call = parseJsonObject(readFileSync(report, 'utf8'), 'bootstrap invocation');
+  assert.equal(call.offline, 'false', 'explicit installation must permit its declared downloads');
+  assert.ok(Array.isArray(call.args) && call.args.includes('ci'), 'bootstrap must retain the native locked install');
 });

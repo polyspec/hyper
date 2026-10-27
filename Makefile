@@ -3,7 +3,7 @@
 .PHONY: bootstrap
 BOOTSTRAP_NPM := $(abspath $(shell command -v npm))
 bootstrap: ## Bootstrap the lock with the declared native npm before installed tools exist
-	npm_config_cache="$$PWD/var/bootstrap/npm-cache" "$(BOOTSTRAP_NPM)" exec --yes --package="$$(node -p 'require("./package.json").packageManager.split("+")[0]')" -- npm ci --ignore-scripts --allow-remote=root
+	npm_config_offline=false npm_config_cache="$$PWD/var/bootstrap/npm-cache" "$(BOOTSTRAP_NPM)" exec --yes --package="$$(node -p 'require("./package.json").packageManager.split("+")[0]')" -- npm ci --ignore-scripts --allow-remote=root
 
 ifneq ($(filter bootstrap,$(MAKECMDGOALS)),)
 ifneq ($(words $(MAKECMDGOALS)),1)

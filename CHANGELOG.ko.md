@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: b68de30d09c111b18e08de96f12cff936320921e8a881e55d1a086cd6c9ce84a -->
+<!-- source-sha256: 20edaceeeeb81834a22cc2b0d8efdeafd0bbd098d1783cdbb8f97d4a396fc3e1 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- 호출자가 npm offline mode를 export해도 명시적 bootstrap 설치는 선언된 다운로드를 허용하며 나머지 검사는 offline 환경을 유지한다.
 
 ## 0.0.19
 - 개발 link가 없는 독립 consumer에서 0.0.19 npm, Composer와 wheel archive를 검증한다(H27.3).

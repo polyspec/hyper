@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 19e11bade4f3c1d1f55a3bf6349d3e61940c913b1de00f9765a8cc0ca9e8803d -->
+<!-- source-sha256: efbc8b38f41587d841ffbf65110f6df49942c9d70d7be4c9e92dbf75323c2da6 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -270,6 +270,6 @@
 | H27.13 | checkout 외부의 기본 소스 link를 거부하지 않고 해석된 설치 template 소스 package를 virtiofs 검사에 mount한다. | tests/virtiofs/output-files.test.mts, Makefile, tests/scripts/toolchain.test.mts, AGENTS.md and twin, docs/operations/development.md and twin | `node ../kit/scripts/kit/run-tests.mts node -- tests/virtiofs/output-files.test.mts` and `node ../kit/scripts/kit/run-tests.mts node -- --test-name-pattern="explicit install" tests/scripts/toolchain.test.mts` | [o] |
 | H27.14 | 공개된 공유 도구 archive 0.0.56을 기본 npm 해석과 릴리즈 무결성 확인으로 반영하고 복사본과 hook 및 보안 검토 기록을 갱신하며 로컬 소스 link를 유지한다. | package.json, package-lock.json, config/dependency-review.json, shared copies and hooks, docs/operations/dependencies.md and Korean twin | `make kit-check` and `make hooks-check` and `make dependency-policy-check` and `make link-state-check` | [o] |
 | H27.15 | bootstrap, CI와 소유 검사에서 필수 형제 도구 경로를 제거하고 선언된 기본 npm으로 깨끗한 checkout을 준비하며 소스 link와 packed 모드 모두 설치 package를 사용한다. | Makefile, .github/workflows/ci.yml, tests/scripts, AGENTS.md and twin, docs/operations/development.md and twin | `node node_modules/@polyspec/kit/scripts/kit/run-tests.mts node -- tests/scripts/installed-kit.test.mts tests/scripts/toolchain.test.mts tests/scripts/ci-workflow.test.mts tests/scripts/release-assets.test.mts tests/scripts/public-symbols.test.mts` | [o] |
-| H27.15-1 | 상속된 offline 설정이 있어도 명시적 bootstrap 설치가 빈 cache에서 고정 npm을 내려받게 한다. | Makefile, tests/scripts/installed-kit.test.mts | `node --test tests/scripts/installed-kit.test.mts` and `make docs-check` | [ ] |
+| H27.15-1 | 상속된 offline 설정이 있어도 명시적 bootstrap 설치가 빈 cache에서 고정 npm을 내려받게 한다. | Makefile, tests/scripts/installed-kit.test.mts | `node --test tests/scripts/installed-kit.test.mts` and `make docs-check` | [~] |
 | H27.16 | 기본 Composer 개발 manifest와 호환 로컬 제공 package 제약을 선언하고 COMPOSER manifest 선택을 보존하며 릴리즈 lock을 덮어쓰지 않고 기본 개발 lock과 설치 기록을 생성한다. | composer.local.json and board twin, PHP dependency requirement, scripts/check-composer-development.mts, Makefile, native fixture and tool-path tests, dependency and development procedures | `make composer-development-check` and `make link-state-check` and `make analyse-php` and `node node_modules/@polyspec/kit/scripts/kit/run-tests.mts node -- tests/scripts/composer-development.test.mts` | [o] |
 | H27.17 | 기본 소스 link 뒤 공유 lint 실행기를 복구한다. 실행 파일 해석은 소비자 root의 전이 의존성 bin을 강제하지 않고 도구 package의 의존성 설치를 사용해야 한다. | Shared lint executable lookup; no application-created bin links | `make lint-ts` | [o] |
