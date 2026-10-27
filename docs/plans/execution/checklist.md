@@ -279,4 +279,4 @@
 | H27.21-1 | Verify native package installation under the offline policy. | Makefile, tests/scripts/toolchain.test.mts | `make toolchain-policy-test` and `make docs-check` | [o] |
 | H27.22 | Separate multipart rendering tests from pure Python tests. | Makefile, packages/server/python/tests/test_files.py, packages/server/python/tests/render/render_files.py | `make -k python-file-parts-test lint-python docs-check` | [o] |
 | H27.22-1 | Align moved test declarations and narrow offline policy values. | config/parity.json, tests/scripts/toolchain.test.mts | `make -k typecheck parity-declarations-check toolchain-policy-test docs-check` | [o] |
-| H27.23 | Record successful release-candidate CI in feature status. | docs/features.md, docs/features.ko.md | `make docs-check` | [ ] |
+| H27.23 | Record successful release-candidate CI in feature status. | docs/features.md, docs/features.ko.md | `make docs-check` | [~] |

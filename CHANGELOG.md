@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- Record all six passing application CI groups on PHP 8.4.27 and the passing policy gates in feature status; distinguish application CI runners from shared workflow configuration.
 
 ## 0.0.19
 - Bind the Python file-limit parity case to its rendering test and require a present native-install command before inspecting its offline policy. (H27.22-1)

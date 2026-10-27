@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 944ef2fd1d1102509d5467c9da713367f8d4fc42f30426acf42beaa8588a8f0c -->
+<!-- source-sha256: 9883bdc4ee97e8867ce5e9921a3d5f178b3c9091d429f0bc9604fc6d4cac12c9 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- PHP 8.4.27에서 통과한 애플리케이션 CI group 6개와 정책 gate 결과를 기능 상태에 기록하고 애플리케이션 CI runner와 공유 workflow 설정을 구분한다.
 
 ## 0.0.19
 - Python file-limit parity 사례를 렌더링 test에 연결하고 offline 정책 검사 전에 native install 명령의 존재를 확인한다. (H27.22-1)
