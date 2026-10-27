@@ -4595,7 +4595,7 @@
         },
         {
           "implementation": "python",
-          "test": "packages/server/python/tests/test_files.py",
+          "test": "packages/server/python/tests/render/render_files.py",
           "id": "test_file_parts_over_the_file_limit_are_refused_before_the_action"
         },
         {

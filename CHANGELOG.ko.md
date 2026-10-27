@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: f9b913d1e6514822a3047f04d394a8f4c126561c41c457837b01a4c1b9bf9014 -->
+<!-- source-sha256: 0321db45313b97da96027240fb89c947dc4cf07ee42abcf9784591690f511916 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- Python file-limit parity 사례를 렌더링 test에 연결하고 offline 정책 검사 전에 native install 명령의 존재를 확인한다.
 
 ## 0.0.19
 - Package consumer가 inline npm 명령을 요구하는 대신 offline recipe 환경을 유지하면서 native npm에 설치를 위임하는지 검증한다. (H27.21-1)

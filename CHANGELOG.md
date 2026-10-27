@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- Bind the Python file-limit parity case to its rendering test and require a present native-install command before inspecting its offline policy.
 
 ## 0.0.19
 - Verify that the package consumer delegates installation to native npm while retaining the offline recipe environment, rather than requiring an inline npm command. (H27.21-1)
