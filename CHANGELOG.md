@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- Classify the read-only Composer source-consistency checker as application policy and declare its mandatory CI unit-test target as the enforcement path.
 
 ## 0.0.19
 - Script checks build their asset and server inputs explicitly and select archive-fetch tools through installed exports. Package checks delegate locked installation and source links to native npm without editor-hook setup. (H27.21)

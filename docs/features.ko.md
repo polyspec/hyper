@@ -1,5 +1,5 @@
 <!-- doc-id: features -->
-<!-- source-sha256: 72d2d273a1f6a2dfd3f297ea939b32379efea9d40a4aa01a75b09e185ca9c824 -->
+<!-- source-sha256: ce8b80c0bfb46113b9e03daba267152cfb0514e914721648da676b3745804f86 -->
 # 기능 상태
 
 [English](features.md).
@@ -65,7 +65,7 @@
 | tool-output | 검사는 run 맥락이나 pin하지 않은 release에 따라 바뀌지 않는 형태로 tool 출력을 읽는다. 호출한 make의 변수 없는 make dry run, machine이 읽는 형태, pin한 도구의 text만 읽는다(HR-83) | implemented; CI run pending | `tests/scripts/template-copy.test.mjs` |
 | atomic-outputs | 다른 process가 읽는 출력은 rename으로 파일 단위 publish하고, 파일 하나는 rename 한 번으로 쓰며, 설치한 사본은 의존성 tree가 같을 때만 publish하고, package manager 설치와 full run은 lock을 잡는다(HR-82) | implemented; CI run pending | `tests/scripts/publish.test.mts`, `tests/scripts/toolchain.test.mts` |
 | toolchain-pin | Node.js, npm, Composer는 정확한 release로, PHP와 Python은 minor release로 추적 파일에 pin한다. npm과 Composer는 digest로 확인해 checkout의 `var/tools`에 설치하고 `PATH`의 맨 앞에 둔다. `make toolchain-check`는 pin과 다른 모든 도구를 밝히고 CI 보고서는 실행 중인 release를 기록한다(HR-81) | implemented; CI run pending | `tests/scripts/toolchain.test.mts`, `tests/scripts/template-copy.test.mjs` |
-| composer-development | 명시적 기본 개발 manifest와 별도 lock으로 소스 package version, link, 설치 기록과 PHP 8.4 요구를 일치시킨다(HR-70, HR-79) | unit verified; CI run pending | `make composer-development-check`, `tests/scripts/composer-development.test.mts` |
+| composer-development | 명시적 기본 개발 manifest와 별도 lock으로 소스 package version, link, 설치 기록과 PHP 8.4 요구를 일치시킨다(HR-70, HR-79) | unit verified; CI run pending | `make composer-development-check`, `tests/scripts/composer-development.test.mts`, `make hyper-test-scripts` |
 | kit-tools | 상속된 offline 설정에서도 명시적 bootstrap은 선언된 다운로드를 허용한다. 선택적인 기본 로컬 소스 link를 지원하는 설치된 공유 도구 release 0.0.60의 push gate, 최종 검증 실행기, Git hook, holder lock, 문서와 commit 검사, owner 검사, test runner, CI 보고서, toolchain 설치와 검사, release는 release asset의 URL과 integrity로 pin한 npm 패키지 `@polyspec/kit`이며 `config/*.json`이 이를 설정한다. `package-lock.json`과 다른 패키지, 패키지와 다른 `kit.copies`의 복사본, schema를 어기는 설정은 실패한다 | implemented; CI run pending | `make kit-check` |
 | template-tag | 릴리즈 선언은 `TEMPLATE_TAG`(`v0.0.12`)를 고정하며 없는 tag는 기대값과 실제값을 밝히고 `make template-tag`를 실패시킨다(HR-80) | implemented; CI run pending | `tests/scripts/template-pins.test.mts`, `tests/scripts/template-version.test.mts` |
 | query-values | 중첩 없이 순서대로 읽는 모든 쿼리 값과 원본 쿼리(HY-56) | implemented | `make test-php`, `make hyper-test-node` |

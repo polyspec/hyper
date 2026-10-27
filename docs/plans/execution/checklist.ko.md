@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 73286fb37c152957fa9212728d6c11808a35e8a303b16f1cd8745a3c166ed0c0 -->
+<!-- source-sha256: 6df4e696b681cfeeb68cb03c64b3513e5733acfd5043e6a683c032fb5ffc40ea -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -272,7 +272,7 @@
 | H27.15 | bootstrap, CI와 소유 검사에서 필수 형제 도구 경로를 제거하고 선언된 기본 npm으로 깨끗한 checkout을 준비하며 소스 link와 packed 모드 모두 설치 package를 사용한다. | Makefile, .github/workflows/ci.yml, tests/scripts, AGENTS.md and twin, docs/operations/development.md and twin | `node node_modules/@polyspec/kit/scripts/kit/run-tests.mts node -- tests/scripts/installed-kit.test.mts tests/scripts/toolchain.test.mts tests/scripts/ci-workflow.test.mts tests/scripts/release-assets.test.mts tests/scripts/public-symbols.test.mts` | [o] |
 | H27.15-1 | 상속된 offline 설정이 있어도 명시적 bootstrap 설치가 빈 cache에서 고정 npm을 내려받게 한다. | Makefile, tests/scripts/installed-kit.test.mts | `node --test tests/scripts/installed-kit.test.mts` and `make docs-check` | [o] |
 | H27.16 | 기본 Composer 개발 manifest와 호환 로컬 제공 package 제약을 선언하고 COMPOSER manifest 선택을 보존하며 릴리즈 lock을 덮어쓰지 않고 기본 개발 lock과 설치 기록을 생성한다. | composer.local.json and board twin, PHP dependency requirement, scripts/check-composer-development.mts, Makefile, native fixture and tool-path tests, dependency and development procedures | `make composer-development-check` and `make link-state-check` and `make analyse-php` and `node node_modules/@polyspec/kit/scripts/kit/run-tests.mts node -- tests/scripts/composer-development.test.mts` | [o] |
-| H27.16-1 | 읽기 전용 Composer 일관성 정책을 분류하고 필수 CI test target을 강제 경로로 명시한다. | AGENTS.md, AGENTS.ko.md, config/rebuild.json | `make -k rules-check rebuild-check docs-check` | [ ] |
+| H27.16-1 | 읽기 전용 Composer 일관성 정책을 분류하고 필수 CI test target을 강제 경로로 명시한다. | AGENTS.md, AGENTS.ko.md, config/rebuild.json | `make -k rules-check rebuild-check docs-check` | [~] |
 | H27.17 | 기본 소스 link 뒤 공유 lint 실행기를 복구한다. 실행 파일 해석은 소비자 root의 전이 의존성 bin을 강제하지 않고 도구 package의 의존성 설치를 사용해야 한다. | Shared lint executable lookup; no application-created bin links | `make lint-ts` | [o] |
 | H27.19 | 깨끗한 checkout의 gate 전에 공개 선언과 runtime fixture를 build하고 PHP test format을 맞춘다. | Makefile, tests/scripts/check-recipes.test.mts, packages/server/php/tests | `node --test tests/scripts/check-recipes.test.mts` and `make lint-php docs-check` | [o] |
 | H27.20 | 모든 CI 검사 group에서 도구 설치 전에 선언한 PHP를 준비하고 검증 전에 checkout별 Git hook을 설치한다. | .github/workflows/ci.yml, tests/scripts/ci-workflow.test.mts | `node --test tests/scripts/ci-workflow.test.mts` and `make docs-check` | [o] |

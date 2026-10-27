@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 25b24446e3455f2b19741058eecffcc86589907f3394ec6f1f02dc95d42a97c7 -->
+<!-- source-sha256: 733a9fc8aef43c98571a2eeea2e6c9cd60b54a91f064a68e640a2b5878099fb8 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- 읽기 전용 Composer source 일관성 검사기를 앱 정책으로 분류하고 필수 CI unit test target을 강제 경로로 명시한다.
 
 ## 0.0.19
 - Script 검사는 asset과 server 입력을 명시적으로 build하고 설치된 export로 archive fetch tool을 선택한다. Package 검사는 editor hook 설정 없이 고정 설치와 source link를 native npm에 맡긴다. (H27.21)

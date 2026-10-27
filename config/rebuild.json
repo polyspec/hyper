@@ -2,6 +2,82 @@
   "schema": 1,
   "comment": "The class of each tool of hyper (S1), found by the layout of the repository (K286): ecosystem names the tool it uses, policy the reason no ecosystem tool applies.",
   "tools": {
+    "benchmarks/browser.mts": {
+      "kind": "ecosystem",
+      "tool": "Playwright drives Chromium and measures the board example; node:perf_hooks times the steps"
+    },
+    "benchmarks/server.php": {
+      "kind": "ecosystem",
+      "tool": "hrtime(true) of PHP times App::handle and the template program on the board example"
+    },
+    "examples/board/app/handlers.php": {
+      "kind": "policy",
+      "reason": "the handlers of the board example, an application of the PHP server; it implements no tool of an ecosystem"
+    },
+    "examples/board/client/main.ts": {
+      "kind": "ecosystem",
+      "tool": "htmx.org and @polyspec/hyper-client run the page of the board example in the browser"
+    },
+    "examples/board/node/handlers.ts": {
+      "kind": "policy",
+      "reason": "the handlers of the board example, an application of the Node server; it implements no tool of an ecosystem"
+    },
+    "examples/board/node/main.ts": {
+      "kind": "ecosystem",
+      "tool": "node:http through App.server of @polyspec/hyper-server serves the board example"
+    },
+    "examples/board/node/posts.ts": {
+      "kind": "ecosystem",
+      "tool": "node:sqlite stores the posts of the board example"
+    },
+    "examples/board/public/index.php": {
+      "kind": "ecosystem",
+      "tool": "the front controller of the PHP SAPI (the built-in server or php-fpm) calls App::run of polyspec/hyper-server"
+    },
+    "examples/board/python/handlers.py": {
+      "kind": "policy",
+      "reason": "the handlers of the board example, an application of the Python server; it implements no tool of an ecosystem"
+    },
+    "examples/board/python/main.py": {
+      "kind": "ecosystem",
+      "tool": "the standard library http.server through create_server of polyspec.hyper serves the board example"
+    },
+    "examples/board/python/posts.py": {
+      "kind": "ecosystem",
+      "tool": "sqlite3 of the standard library stores the posts of the board example"
+    },
+    "examples/board/src/Board/Assets.php": {
+      "kind": "policy",
+      "reason": "reads the manifest.json that hyper-build-assets writes (HR-34) for the layout of the board example; no ecosystem tool names the assets of this build"
+    },
+    "examples/board/src/Board/Posts.php": {
+      "kind": "ecosystem",
+      "tool": "PDO with the SQLite driver stores the posts of the board example"
+    },
+    "packages/build/bin/hyper-build-assets.mjs": {
+      "kind": "ecosystem",
+      "tool": "esbuild bundles the client, @tailwindcss/node and @tailwindcss/oxide build the stylesheet, and @polyspec/template parses the templates"
+    },
+    "packages/build/bin/hyper-build-server.mjs": {
+      "kind": "ecosystem",
+      "tool": "@polyspec/template-compiler compiles the templates into the PHP program and the type manifest"
+    },
+    "packages/build/lib/output-files.mjs": {
+      "kind": "ecosystem",
+      "tool": "node:fs writes and copies the files, and sets the modes 0644 and 0755 that HR-68 requires whatever the umask"
+    },
+    "packages/build/lib/publish.mjs": {
+      "kind": "ecosystem",
+      "tool": "node:fs rename(2) moves each staged file into its target (HR-82)"
+    },
+    "packages/build/lib/template-files.mjs": {
+      "kind": "ecosystem",
+      "tool": "node:crypto hashes the template files and @polyspec/template parses them"
+    },
+    "packages/build/lib/template-rules.mjs": {
+      "kind": "policy",
+      "reason": "the template rules of hyper (HC-6, HY-3, HY-30, HY-75) over the AST that @polyspec/template parses; no ecosystem tool states the rules of this protocol"
+    },
     "scripts/board-servers.mts": {
       "kind": "ecosystem",
       "tool": "node:child_process starts the servers of a run and node:fs and node:os give each run its temporary directory (HR-87, HR-89)"
@@ -17,6 +93,10 @@
     "scripts/check-bundle-size.mts": {
       "kind": "ecosystem",
       "tool": "node:zlib measures the gzip and brotli sizes against the limits of config/bundle-size.json"
+    },
+    "scripts/check-composer-development.mts": {
+      "kind": "policy",
+      "reason": "Checks selected development declarations against native Composer paths, source requirement fields and autoload records to enforce the checkout source-consistency policy."
     },
     "scripts/check-parity.mts": {
       "kind": "policy",
@@ -53,82 +133,6 @@
     "scripts/tracked-files.mts": {
       "kind": "ecosystem",
       "tool": "git ls-files lists the tracked files of a path; the copy keeps their modification time and executable bits through packages/build/lib/output-files.mjs"
-    },
-    "packages/build/bin/hyper-build-assets.mjs": {
-      "kind": "ecosystem",
-      "tool": "esbuild bundles the client, @tailwindcss/node and @tailwindcss/oxide build the stylesheet, and @polyspec/template parses the templates"
-    },
-    "packages/build/bin/hyper-build-server.mjs": {
-      "kind": "ecosystem",
-      "tool": "@polyspec/template-compiler compiles the templates into the PHP program and the type manifest"
-    },
-    "packages/build/lib/output-files.mjs": {
-      "kind": "ecosystem",
-      "tool": "node:fs writes and copies the files, and sets the modes 0644 and 0755 that HR-68 requires whatever the umask"
-    },
-    "packages/build/lib/publish.mjs": {
-      "kind": "ecosystem",
-      "tool": "node:fs rename(2) moves each staged file into its target (HR-82)"
-    },
-    "packages/build/lib/template-files.mjs": {
-      "kind": "ecosystem",
-      "tool": "node:crypto hashes the template files and @polyspec/template parses them"
-    },
-    "packages/build/lib/template-rules.mjs": {
-      "kind": "policy",
-      "reason": "the template rules of hyper (HC-6, HY-3, HY-30, HY-75) over the AST that @polyspec/template parses; no ecosystem tool states the rules of this protocol"
-    },
-    "benchmarks/browser.mts": {
-      "kind": "ecosystem",
-      "tool": "Playwright drives Chromium and measures the board example; node:perf_hooks times the steps"
-    },
-    "benchmarks/server.php": {
-      "kind": "ecosystem",
-      "tool": "hrtime(true) of PHP times App::handle and the template program on the board example"
-    },
-    "examples/board/app/handlers.php": {
-      "kind": "policy",
-      "reason": "the handlers of the board example, an application of the PHP server; it implements no tool of an ecosystem"
-    },
-    "examples/board/node/handlers.ts": {
-      "kind": "policy",
-      "reason": "the handlers of the board example, an application of the Node server; it implements no tool of an ecosystem"
-    },
-    "examples/board/python/handlers.py": {
-      "kind": "policy",
-      "reason": "the handlers of the board example, an application of the Python server; it implements no tool of an ecosystem"
-    },
-    "examples/board/client/main.ts": {
-      "kind": "ecosystem",
-      "tool": "htmx.org and @polyspec/hyper-client run the page of the board example in the browser"
-    },
-    "examples/board/node/main.ts": {
-      "kind": "ecosystem",
-      "tool": "node:http through App.server of @polyspec/hyper-server serves the board example"
-    },
-    "examples/board/python/main.py": {
-      "kind": "ecosystem",
-      "tool": "the standard library http.server through create_server of polyspec.hyper serves the board example"
-    },
-    "examples/board/public/index.php": {
-      "kind": "ecosystem",
-      "tool": "the front controller of the PHP SAPI (the built-in server or php-fpm) calls App::run of polyspec/hyper-server"
-    },
-    "examples/board/node/posts.ts": {
-      "kind": "ecosystem",
-      "tool": "node:sqlite stores the posts of the board example"
-    },
-    "examples/board/python/posts.py": {
-      "kind": "ecosystem",
-      "tool": "sqlite3 of the standard library stores the posts of the board example"
-    },
-    "examples/board/src/Board/Posts.php": {
-      "kind": "ecosystem",
-      "tool": "PDO with the SQLite driver stores the posts of the board example"
-    },
-    "examples/board/src/Board/Assets.php": {
-      "kind": "policy",
-      "reason": "reads the manifest.json that hyper-build-assets writes (HR-34) for the layout of the board example; no ecosystem tool names the assets of this build"
     }
   }
 }
