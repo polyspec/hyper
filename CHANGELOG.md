@@ -4,9 +4,9 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
-- Record all six passing application CI groups on PHP 8.4.27 and the passing policy gates in feature status; distinguish application CI runners from shared workflow configuration.
 
 ## 0.0.19
+- Record all six passing application CI groups on PHP 8.4.27 and the passing policy gates in feature status; distinguish application CI runners from shared workflow configuration. (H27.23)
 - Bind the Python file-limit parity case to its rendering test and require a present native-install command before inspecting its offline policy. (H27.22-1)
 - Verify that the package consumer delegates installation to native npm while retaining the offline recipe environment, rather than requiring an inline npm command. (H27.21-1)
 - Discover multipart contract cases in the pure Python suite and application limits in the rendering suite, whose target builds the server program first. (H27.22)

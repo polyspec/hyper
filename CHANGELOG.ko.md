@@ -1,13 +1,13 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 9883bdc4ee97e8867ce5e9921a3d5f178b3c9091d429f0bc9604fc6d4cac12c9 -->
+<!-- source-sha256: 6aeda6820ae24bd8a5ddafc1e6bce8794a259b3f9353f714e3a4c9301bde77d2 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
-- PHP 8.4.27에서 통과한 애플리케이션 CI group 6개와 정책 gate 결과를 기능 상태에 기록하고 애플리케이션 CI runner와 공유 workflow 설정을 구분한다.
 
 ## 0.0.19
+- PHP 8.4.27에서 통과한 애플리케이션 CI group 6개와 정책 gate 결과를 기능 상태에 기록하고 애플리케이션 CI runner와 공유 workflow 설정을 구분한다. (H27.23)
 - Python file-limit parity 사례를 렌더링 test에 연결하고 offline 정책 검사 전에 native install 명령의 존재를 확인한다. (H27.22-1)
 - Package consumer가 inline npm 명령을 요구하는 대신 offline recipe 환경을 유지하면서 native npm에 설치를 위임하는지 검증한다. (H27.21-1)
 - 순수 Python 모음은 multipart 계약 사례를, 렌더링 모음은 앱 제한 사례를 선택하며 렌더링 target이 server program을 먼저 build한다. (H27.22)
