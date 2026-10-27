@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: f46905a2b884ab347a433f7ca463cf4ad08fa1ffe072318f4124e5fd077d390e -->
+<!-- source-sha256: b3eeeba8861075ed753715db397754848f7208ec43979c819bf376c5cec8ff9f -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -277,3 +277,4 @@
 | H27.19 | 깨끗한 checkout의 gate 전에 공개 선언과 runtime fixture를 build하고 PHP test format을 맞춘다. | Makefile, tests/scripts/check-recipes.test.mts, packages/server/php/tests | `node --test tests/scripts/check-recipes.test.mts` and `make lint-php docs-check` | [o] |
 | H27.20 | 모든 CI 검사 group에서 도구 설치 전에 선언한 PHP를 준비하고 검증 전에 checkout별 Git hook을 설치한다. | .github/workflows/ci.yml, tests/scripts/ci-workflow.test.mts | `node --test tests/scripts/ci-workflow.test.mts` and `make docs-check` | [o] |
 | H27.21 | Script test build 입력과 packed tool 경로를 선언하고 editor hook 설정 없이 package consumer를 native npm source 설치로 준비한다. | Makefile, tests/scripts/check-recipes.test.mts, tests/scripts/release-assets.test.mts, tests/scripts/installed-kit.test.mts | `node --test tests/scripts/check-recipes.test.mts tests/scripts/release-assets.test.mts tests/scripts/installed-kit.test.mts` and `make -k package-check link-state-check docs-check` | [o] |
+| H27.22 | Multipart 렌더링 검사를 순수 Python 검사와 분리한다. | Makefile, packages/server/python/tests/test_files.py, packages/server/python/tests/render/render_files.py | `make -k python-file-parts-test lint-python docs-check` | [ ] |
