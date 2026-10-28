@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: d36d5d089017d33a1ce5718840e307d5ca91d1ffddac74e72bb1bb8b740c627b -->
+<!-- source-sha256: 33e1667bf127e977975cddf35fa3f8b98d400d3d8198be2fe301f10ae17287ef -->
 # 개발
 
 [English](development.md).
@@ -172,7 +172,7 @@ workflow `.github/workflows/ci.yml`은 `main`의 push와 모든 수동 실행(`w
 | `python` | Node/npm, Python/uv, ruff/vulture | Root npm과 Python uv lock | Python unit, rendering과 lint |
 | `language-parity` | Node/npm, PHP/Composer, Python/uv | Root npm, root와 board Composer, Python uv lock | Protocol 선언과 언어 간 동등 검사 |
 
-각 group은 `make install-tools TOOLS="${{ matrix.tools }}"`를 호출한다. Kit은 선택, 필수 도구 의존성, version과 hash 검증, 일치하는 설치 도구 재사용을 소유한다. Hyper는 별도 도구 설치기를 선언하지 않는다. 고정된 0.0.62 설치기는 이 selector를 지원한다. npm은 별도 bootstrap을 사용하고 `docs`, `php`, `language-parity` group은 `make kit-install-symbols EXTRACTORS="php"`로 선언된 PHP symbol extractor를 명시적으로 설치한다.
+각 group은 `make install-tools TOOLS="${{ matrix.tools }}"`를 호출한다. Kit은 선택, 필수 도구 의존성, version과 hash 검증, 일치하는 설치 도구 재사용을 소유한다. Hyper는 별도 도구 설치기를 선언하지 않는다. 고정된 0.0.63 설치기는 이 selector를 지원한다. npm은 별도 bootstrap을 사용하고 `docs`, `php`, `language-parity` group은 `make kit-install-symbols EXTRACTORS="php"`로 선언된 PHP symbol extractor를 명시적으로 설치한다.
 
 `make hyper-install-php`는 기존 설치 lock 안에서 고정 PHP archive와 root 및 board Composer lock만 설치한다. `make hyper-install-python`은 `uv sync --locked`로 Python 환경만 설치한다. Node 의존성은 기존 npm lock 설치를 사용한다. Native source 개발 link는 별도 로컬 설치 선택으로 유지한다.
 
@@ -277,4 +277,4 @@ BOARD_DB=$PWD/examples/board/var/node.db BOARD_SESSIONS=$PWD/examples/board/var/
 
 Package virtual environment를 사용하는 Python discovery를 포함해 모든 runtime test target은 설치된 Kit runner를 사용한다. 범위를 제한한 Python 검사는 정확한 discovery 파일명 또는 `--cwd`와 dotted module 이름을 사용하며 앱 전용 unittest harness는 없다. 지원하지 않거나 잘못된 runner 동작은 runner를 교체하거나 CI 식별을 바꾸는 대신 Kit GitHub issue로 보고한다. 완료된 과거 검증 기록의 원래 명령은 유지하며 현재 실행 지침으로 사용하지 않는다.
 
-Kit 0.0.62 provider gate 분할은 `config/ci.json`에서 native lock 설치와 fixture build를 선언한다. 전체 parity mode는 필수로 유지하고 PHP, Python과 TypeScript provider job은 자신의 입력을 준비한다. 공유 workflow 복사본은 로컬에서 편집하지 않는다.
+Kit 0.0.63 provider gate 분할은 `config/ci.json`에서 native lock 설치와 fixture build를 선언한다. 전체 parity mode는 필수로 유지하고 PHP, Python과 TypeScript provider job은 자신의 입력을 준비한다. 공유 workflow 복사본은 로컬에서 편집하지 않는다.

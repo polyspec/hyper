@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: b939357f32dafa9b1ff7bce750b9671882eb077d10d9dc45bf14662132e77308 -->
+<!-- source-sha256: 7116839a3fa5319938665699bc916678aa1a0acf4f32aeed70837fc5d70b2cd5 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- Native bootstrap과 runtime 범위를 제한한 source link를 위해 공유 도구를 0.0.63으로 고정한다. 대기 중인 browser runner 연결은 릴리즈 검증 완료로 판정하지 않는다. (H27.26)
 
 ## 0.0.21
 - 공개 전에 tag commit의 애플리케이션 CI와 provider gate 집계가 모두 성공해야 한다.

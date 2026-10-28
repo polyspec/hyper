@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- Pin shared tools 0.0.63 for native bootstrap and runtime-scoped source linking. Keep the pending browser-runner integration outside release verification. (H27.26)
 
 ## 0.0.21
 - Require both application CI and the provider gate aggregate to succeed on the tagged commit before publication.

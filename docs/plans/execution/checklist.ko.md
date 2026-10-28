@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: b5f0421b848edf21187ad6e6dd6b2679dff142bb7cad19475149352c4021d06a -->
+<!-- source-sha256: daae36541891a0ae22978213b3c0c90552aced81272b5f59768d44b3486cfc46 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -284,4 +284,4 @@
 | H27.24 | 언어 간 동등 검사를 독립 CI matrix job에서 실행한다. | .github/workflows/ci.yml, tests/scripts/ci-workflow.test.mts, docs/spec/protocol.md and twin, docs/operations/development.md and twin, docs/features.md and twin | `node --test tests/scripts/ci-workflow.test.mts` and `make -k typecheck docs-check` | [o] |
 | H27.25 | Kit 0.0.61을 연결하고 CI 환경을 분리하며 Hyper 0.0.20을 준비한다. | CI configuration, native install and toolchain targets, owning tests, pinned Kit dependency, release manifests and locks, version 0.0.20 archives and consumer locks, paired documentation | `node --test tests/scripts/ci-workflow.test.mts tests/scripts/toolchain.test.mts tests/scripts/check-recipes.test.mts tests/scripts/installed-kit.test.mts` and `make -k typecheck docs-check kit-check dependency-policy-check release-versions TAG=v0.0.20` and `make release-consumer TAG=v0.0.20` | [o] |
 | H27.25-1 | 공통 CI 정책 group에서 불필요한 sibling source를 제외한다. | .github/workflows/ci.yml, tests/scripts/ci-workflow.test.mts, docs/features.md and twin, docs/operations/development.md and twin | `node --test tests/scripts/ci-workflow.test.mts` and `make -k typecheck docs-check` | [o] |
-| H27.26 | Native test runner를 연결하고 Playwright runner 지원 전까지 0.0.21 릴리즈를 보류한다. | Makefile, Python harness removal, native runner regression tests, config/ci.json and ownership, Kit 0.0.62 manifests and lock, shared workflow copies, paired repository rules and documents, 0.0.21 release metadata and consumers | `make hyper-runner-owner-check` and `make python-file-parts-test` and `make -k typecheck docs-check kit-check kit-ci-plan release-versions TAG=v0.0.21` and `make release-consumer TAG=v0.0.21` | [~] |
+| H27.26 | Native test runner를 연결하고 Playwright runner 지원 전까지 0.0.21 릴리즈를 보류한다. | Makefile, Python harness removal, native runner regression tests, config/ci.json and ownership, Kit 0.0.63 manifests and lock, shared workflow copies, paired repository rules and documents, 0.0.21 release metadata and consumers | `make hyper-runner-owner-check` and `make python-file-parts-test` and `make -k typecheck docs-check kit-check kit-ci-plan release-versions TAG=v0.0.21` and `make release-consumer TAG=v0.0.21` | [~] |
