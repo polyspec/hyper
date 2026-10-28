@@ -6,6 +6,7 @@
 ## Unreleased
 
 ## 0.0.20
+- Verify all five 0.0.20 archives in isolated native consumers without development links, alongside the selective-install workflow owner checks. (H27.25)
 - Adopt the published Kit 0.0.61 selective installer. Bootstrap npm separately, select only each CI group’s native tools, explicitly install required PHP symbol extractors, and keep language and comparison environments independent.
 - Declare per-job tool selections and separate locked Composer and Python installations. Language builds validate only their own tools; common script checks and cross-server comparisons execute in the groups that own all required environments.
 - Run protocol declaration validation and cross-language equivalence in an independent language-parity CI job, with its own report and required final result, without browser installation. (H27.24) (H27.25)
