@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: af2b93a808212247b097a34db6d40195e3e46ac285c285c949274082c7d2ac4b -->
+<!-- source-sha256: 61e6a29d7a9b0fe7ad4ba3c6a44603660678bc7ca6f9231c8616d7c4a76352c9 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -284,3 +284,4 @@
 | H27.24 | 언어 간 동등 검사를 독립 CI matrix job에서 실행한다. | .github/workflows/ci.yml, tests/scripts/ci-workflow.test.mts, docs/spec/protocol.md and twin, docs/operations/development.md and twin, docs/features.md and twin | `node --test tests/scripts/ci-workflow.test.mts` and `make -k typecheck docs-check` | [o] |
 | H27.25 | Kit 0.0.61을 연결하고 CI 환경을 분리하며 Hyper 0.0.20을 준비한다. | CI configuration, native install and toolchain targets, owning tests, pinned Kit dependency, release manifests and locks, version 0.0.20 archives and consumer locks, paired documentation | `node --test tests/scripts/ci-workflow.test.mts tests/scripts/toolchain.test.mts tests/scripts/check-recipes.test.mts tests/scripts/installed-kit.test.mts` and `make -k typecheck docs-check kit-check dependency-policy-check release-versions TAG=v0.0.20` and `make release-consumer TAG=v0.0.20` | [o] |
 | H27.25-1 | 공통 CI 정책 group에서 불필요한 sibling source를 제외한다. | .github/workflows/ci.yml, tests/scripts/ci-workflow.test.mts, docs/features.md and twin, docs/operations/development.md and twin | `node --test tests/scripts/ci-workflow.test.mts` and `make -k typecheck docs-check` | [o] |
+| H27.26 | 모든 Python 검사에 공유 test runner를 사용하고 검증된 patch 릴리즈를 준비한다. | Makefile, Python test entry removal, tests/scripts/check-recipes.test.mts, AGENTS.md and twin, paired development and feature documents, changelogs and release metadata | `make test-runner-owner-test` and `make python-file-parts-test` and `make -k typecheck docs-check` | [ ] |
