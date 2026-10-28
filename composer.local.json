@@ -31,13 +31,13 @@
     ],
     "require": {
         "php": ">=8.4",
-        "polyspec/hyper-server": "0.0.19",
+        "polyspec/hyper-server": "0.0.20",
         "polyspec/template": "0.0.12",
         "opis/json-schema": "^2.6@dev"
     },
     "require-dev": {
         "laravel/pint": "1.32.1",
-        "phpstan/phpstan": "2.3.2",
+        "phpstan/phpstan": "2.3.3",
         "phpunit/phpunit": "13.4.5"
     },
     "autoload": {

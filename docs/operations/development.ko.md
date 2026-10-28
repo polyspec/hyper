@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: 7426ea4eac1a14e5cb72989c0b33cff396051c6d6db7581b57c00a1bb252ac2f -->
+<!-- source-sha256: 9f2dfca31b5c02481deafa1ea6e533e06142fcc282ce6dd84b8e02867c5d72dc -->
 # 개발
 
 [English](development.md).
@@ -172,7 +172,7 @@ workflow `.github/workflows/ci.yml`은 `main`의 push와 모든 수동 실행(`w
 | `python` | Node/npm, Python/uv, ruff/vulture | Root npm과 Python uv lock | Python unit, rendering과 lint |
 | `language-parity` | Node/npm, PHP/Composer, Python/uv | Root npm, root와 board Composer, Python uv lock | Protocol 선언과 언어 간 동등 검사 |
 
-각 group은 `make install-tools TOOLS="${{ matrix.tools }}"`를 호출한다. Kit은 선택, 필수 도구 의존성, version과 hash 검증, 일치하는 설치 도구 재사용을 소유한다. Hyper는 별도 도구 설치기를 선언하지 않는다. 현재 0.0.60 pin은 이 선택을 지원하지 않으므로 준비된 workflow는 릴리즈된 인터페이스 연결과 검증 전까지 main에 넣지 않는다.
+각 group은 `make install-tools TOOLS="${{ matrix.tools }}"`를 호출한다. Kit은 선택, 필수 도구 의존성, version과 hash 검증, 일치하는 설치 도구 재사용을 소유한다. Hyper는 별도 도구 설치기를 선언하지 않는다. 고정된 0.0.61 설치기는 이 selector를 지원한다. npm은 별도 bootstrap을 사용하고 `docs`, `php`, `language-parity` group은 `make kit-install-symbols EXTRACTORS="php"`로 선언된 PHP symbol extractor를 명시적으로 설치한다.
 
 `make hyper-install-php`는 기존 설치 lock 안에서 고정 PHP archive와 root 및 board Composer lock만 설치한다. `make hyper-install-python`은 `uv sync --locked`로 Python 환경만 설치한다. Node 의존성은 기존 npm lock 설치를 사용한다. Native source 개발 link는 별도 로컬 설치 선택으로 유지한다.
 

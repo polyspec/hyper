@@ -32,33 +32,36 @@ jobs:
       matrix:
         include:
           - name: docs
-            tools: node npm php composer phpcs phpstan python uv ruff alint vulture
+            tools: node php composer phpcs phpstan python uv ruff alint vulture
             php: true
+            symbols: php
             composer: true
             targets: kit-check toolchain-check layout-check typecheck lint-ts docs-check hooks-check push-gate-commit commits-check owner-validate rules-check rebuild-check language-check test-markers-check duplication-check link-state-check bypass-check divergence-check suppression-check hyper-test-scripts
           - name: php
-            tools: node npm php composer phpcs phpstan
+            tools: node php composer phpcs phpstan
             php: true
+            symbols: php
             composer: true
             targets: dependency-policy-check dependency-policy-mutation-check bench-server-smoke hyper-lint analyse-php hyper-test-php lint-php
           - name: node
-            tools: node npm
+            tools: node
             targets: templates-check hyper-test-js hyper-test-node package-check
           - name: board
-            tools: node npm php composer python uv
+            tools: node php composer python uv
             php: true
             composer: true
             python: true
             browser: true
             targets: parity server-parity server-parity-python bundle-size e2e
           - name: python
-            tools: node npm python uv ruff vulture
+            tools: node python uv ruff vulture
             python: true
             targets: hyper-test-python hyper-test-python-render lint-python
           # Every compared implementation is installed and built in this job.
           - name: language-parity
-            tools: node npm php composer python uv
+            tools: node php composer python uv
             php: true
+            symbols: php
             composer: true
             python: true
             targets: parity-declarations-check parity-check
@@ -96,6 +99,9 @@ jobs:
       - id: tools
         if: ${{ !cancelled() }}
         run: make install-tools TOOLS="${{ matrix.tools }}"
+      - id: symbols
+        if: ${{ !cancelled() && matrix.symbols }}
+        run: make kit-install-symbols EXTRACTORS="${{ matrix.symbols }}"
       - id: hooks
         if: ${{ !cancelled() }}
         run: make hooks

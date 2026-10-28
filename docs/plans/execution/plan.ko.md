@@ -1,5 +1,5 @@
 <!-- doc-id: plan-execution -->
-<!-- source-sha256: 1af087b569751dad537fc034a7a453982d856418389792dea6da6f1032df2660 -->
+<!-- source-sha256: 9631b8963d2fc680b9a71a0f31f5aaf97aede9b592daf988b37b26cad8353d66 -->
 # 실행
 
 [English](plan.md).
@@ -120,4 +120,4 @@
 
 활성 체크리스트 작업이 완료되면 최종 전체 검증을 한 번 실행하고, 이후 실패는 소유 검사만 실행한다. 릴리스 커밋에는 ci-passed를 포함한 CI 성공 근거가 있어야 한다. PHP 8.5와 다른 트리의 기존 전체 실행 기록은 이 후보를 증명하지 않는다. 릴리스 검사를 통과한 뒤 maintainer만 릴리스 tag를 생성하거나 push한다.
 
-H27.25는 native package manager와 공유 선택 도구 인터페이스를 사용한 독립 CI 환경을 준비한다. 고정된 kit 0.0.60에는 선택 설치기가 없다. 격리 worktree에서 앱 선언, 범위를 제한한 toolchain 검증과 소유 검사를 준비하고, 릴리즈된 선택 설치기를 연결해 필수 의존성 설치와 소유 검사를 검증한 뒤 병합하고 한 번 push하여 CI 근거를 수집한다. 앱 전용 도구 설치기는 추가하지 않는다.
+H27.25는 native package manager와 공유 선택 도구 인터페이스를 사용한 독립 CI 환경을 준비한다. 고정된 kit 0.0.61이 선택 설치기를 제공한다. 격리 worktree에서 앱 선언, 범위를 제한한 toolchain 검증, 명시적인 PHP symbol extractor와 소유 검사를 검증한 뒤 병합하고 한 번 push하여 CI 근거를 수집한다. 앱 전용 도구 설치기는 추가하지 않는다.

@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 9ccb35e1a5f1a7d197cb64e9f0f289a66897ddf3369ceb373881d855a54b7a2a -->
+<!-- source-sha256: 868896d17cbaca2c4874e7e74e4f8129f43b0a29b1da9a83d1b9817fe4a4186f -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -282,4 +282,4 @@
 | H27.22-1 | 이동한 test 선언과 offline 정책 값의 타입을 보완한다. | config/parity.json, tests/scripts/toolchain.test.mts | `make -k typecheck parity-declarations-check toolchain-policy-test docs-check` | [o] |
 | H27.23 | 릴리즈 후보의 CI 성공을 기능 상태에 기록한다. | docs/features.md, docs/features.ko.md | `make docs-check` | [o] |
 | H27.24 | 언어 간 동등 검사를 독립 CI matrix job에서 실행한다. | .github/workflows/ci.yml, tests/scripts/ci-workflow.test.mts, docs/spec/protocol.md and twin, docs/operations/development.md and twin, docs/features.md and twin | `node --test tests/scripts/ci-workflow.test.mts` and `make -k typecheck docs-check` | [o] |
-| H27.25 | Job별 잠긴 환경을 준비하고 릴리즈된 선택 도구 설치기를 연결한다. | Makefile, .github/workflows/ci.yml, tests/scripts/ci-workflow.test.mts, tests/scripts/toolchain.test.mts, AGENTS.md and twin, docs/spec/protocol.md and twin, docs/operations/development.md and twin, docs/features.md and twin, docs/plans/execution/plan.md and twin | `node --test tests/scripts/ci-workflow.test.mts tests/scripts/toolchain.test.mts tests/scripts/check-recipes.test.mts` and `make -k typecheck docs-check` | [~] |
+| H27.25 | Kit 0.0.61을 연결하고 CI 환경을 분리하며 Hyper 0.0.20을 준비한다. | CI configuration, native install and toolchain targets, owning tests, pinned Kit dependency, release manifests and locks, version 0.0.20 archives and consumer locks, paired documentation | `node --test tests/scripts/ci-workflow.test.mts tests/scripts/toolchain.test.mts tests/scripts/check-recipes.test.mts tests/scripts/installed-kit.test.mts` and `make -k typecheck docs-check kit-check dependency-policy-check release-versions TAG=v0.0.20` and `make release-consumer TAG=v0.0.20` | [~] |

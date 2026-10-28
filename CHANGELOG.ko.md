@@ -1,11 +1,14 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: d89ff0dad823c62c095a3dae6ff0b1b577c6177eb031846f6d0fd4e7275f5f91 -->
+<!-- source-sha256: 6f443edb1c17e0a129808545524f71bafb434c4a384eab7e24d539d79e18f81f -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
-- Job별 도구 선택과 잠긴 Composer 및 Python 설치 분리를 준비한다. 언어 build는 자신의 도구만 검증하며 공통 script 검사와 server 간 비교는 필요한 모든 환경을 소유하는 group으로 옮긴다. 릴리즈된 선택 도구 설치기 연결은 대기 상태다.
+
+## 0.0.20
+- 공개된 Kit 0.0.61 선택 설치기를 연결한다. npm은 별도로 bootstrap하고 CI group별 native 도구만 선택하며 필요한 PHP symbol extractor를 명시적으로 설치하고 언어별 환경과 비교 환경의 독립성을 유지한다.
+- Job별 도구 선택과 잠긴 Composer 및 Python 설치를 분리한다. 언어 build는 자신의 도구만 검증하며 공통 script 검사와 server 간 비교는 필요한 모든 환경을 소유하는 group에서 실행한다.
 - Protocol 선언 검증과 언어 간 동등 검사를 browser 설치 없이 별도 보고서 및 필수 최종 결과를 갖는 독립 language-parity CI job에서 실행한다. (H27.24) (H27.25)
 
 ## 0.0.19

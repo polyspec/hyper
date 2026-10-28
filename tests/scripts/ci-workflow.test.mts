@@ -403,18 +403,20 @@ test('H27.25 CI declares job-owned tools and locked package environments (HR-81,
   const text = readFileSync(path.join(WORKFLOWS, 'ci.yml'), 'utf8');
   const entries = matrixEntries(text);
   const expected: Record<string, { tools: string; php?: boolean; composer?: boolean; python?: boolean }> = {
-    docs: { tools: 'node npm php composer phpcs phpstan python uv ruff alint vulture', php: true, composer: true },
-    php: { tools: 'node npm php composer phpcs phpstan', php: true, composer: true },
-    node: { tools: 'node npm' },
-    board: { tools: 'node npm php composer python uv', php: true, composer: true, python: true },
-    python: { tools: 'node npm python uv ruff vulture', python: true },
-    'language-parity': { tools: 'node npm php composer python uv', php: true, composer: true, python: true },
+    docs: { tools: 'node php composer phpcs phpstan python uv ruff alint vulture', php: true, composer: true },
+    php: { tools: 'node php composer phpcs phpstan', php: true, composer: true },
+    node: { tools: 'node' },
+    board: { tools: 'node php composer python uv', php: true, composer: true, python: true },
+    python: { tools: 'node python uv ruff vulture', python: true },
+    'language-parity': { tools: 'node php composer python uv', php: true, composer: true, python: true },
   };
   assert.deepEqual(entries.map(entry => entry.name).sort(), Object.keys(expected).sort());
   for (const entry of entries) {
     const profile = expected[entry.name];
     assert.ok(profile !== undefined);
     assert.equal(entry.keys['tools'], profile.tools, `${entry.name}: declared tool selection`);
+    assert.ok(!profile.tools.split(' ').includes('npm'), 'npm belongs to the separate bootstrap selector');
+    assert.equal(entry.keys['symbols'], ['docs', 'php', 'language-parity'].includes(entry.name) ? 'php' : undefined, `${entry.name}: explicit extractor selection`);
     for (const key of ['php', 'composer', 'python'] as const) assert.equal(entry.keys[key] === 'true', profile[key] === true, `${entry.name}: ${key} environment`);
   }
   const checks = jobs(text).find(job => job.name === 'check');
@@ -422,6 +424,8 @@ test('H27.25 CI declares job-owned tools and locked package environments (HR-81,
   assert.ok(checks.steps.some(step => step.run === 'make install-tools TOOLS="${{ matrix.tools }}"'));
   assert.ok(!checks.steps.some(step => step.run === 'make install-tools' || step.run === 'make hyper-install' || step.run === 'make install'));
   assert.doesNotMatch(checks.text, /actions\/download-artifact@|^ {4}needs:/m);
+  const symbols = checks.steps.find(step => step.run === 'make kit-install-symbols EXTRACTORS="${{ matrix.symbols }}"');
+  assert.equal(symbols?.if, '${{ !cancelled() && matrix.symbols }}');
   const php = checks.steps.find(step => step.run === 'make hyper-install-php');
   const python = checks.steps.find(step => step.run === 'make hyper-install-python');
   assert.equal(php?.if, '${{ !cancelled() && matrix.composer }}');
