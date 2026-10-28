@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- Select template source checkouts independently from Composer installation. Common policy checks retain their locked release packages without discovering an unrelated development source.
 
 ## 0.0.20
 - Verify all five 0.0.20 archives in isolated native consumers without development links, alongside the selective-install workflow owner checks. (H27.25)

@@ -1,5 +1,5 @@
 <!-- doc-id: features -->
-<!-- source-sha256: beb093189a3bcce8bf69d8a8ae8e13a899afb3badc20e953109a239d792ddb6c -->
+<!-- source-sha256: 1e51fc65cb61ff6f16369ef42cb9e4c577e23aa09565b31e1290dc1e6c0747fd -->
 # 기능 상태
 
 [English](features.md).
@@ -83,4 +83,4 @@
 | ci-setup | 모든 CI 검사 group이 검증 전에 선언된 PHP와 checkout hook을 준비한다 | implemented | `tests/scripts/ci-workflow.test.mts` |
 | consumer-check-inputs | Script 검사가 build를 소유하고 package 검사가 editor 설정 없이 native source 연결을 위임한다 | implemented | `tests/scripts/check-recipes.test.mts`, `tests/scripts/release-assets.test.mts`, `make package-check` |
 | language-parity-ci | 언어 간 protocol 동등 검사는 독립 `language-parity` CI group에서 선언을 한 번 검증하고 browser를 설치하지 않으며 별도 보고서와 최종 집계에 결과를 제공한다 | configured | `tests/scripts/ci-workflow.test.mts`, `check (language-parity)` |
-| ci-environment-ownership | 각 CI group은 Kit으로 고정 도구를 선택하고 native lock graph를 설치하며 다른 언어 job의 산출물 없이 build 입력을 소유한다 | configured; native selector owner checks | `tests/scripts/ci-workflow.test.mts`, `tests/scripts/toolchain.test.mts` |
+| ci-environment-ownership | 각 CI group은 Kit으로 고정 도구를 선택하고 native lock graph를 설치하며 다른 언어 job의 산출물 없이 build 입력을 소유한다. 공통 정책 group은 sibling template source를 선언하지 않는다 | configured; native selector owner checks | `tests/scripts/ci-workflow.test.mts`, `tests/scripts/toolchain.test.mts` |

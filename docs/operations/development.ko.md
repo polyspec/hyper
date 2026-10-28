@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: 9f2dfca31b5c02481deafa1ea6e533e06142fcc282ce6dd84b8e02867c5d72dc -->
+<!-- source-sha256: 9814893ff0516782d5b2cef0c0e3a0be8367fbf9e5ba3a5341523853ca9c97b2 -->
 # 개발
 
 [English](development.md).
@@ -180,7 +180,7 @@ Build 선행 조건은 각 job의 검사가 소유한다. `node-toolchain-check`
 
 Protocol `language-parity` group은 세 구현을 모두 직접 설치하고 Chromium을 요구하지 않는다. Browser가 필요한 server 간 비교는 세 구현과 Chromium을 직접 설치하는 `board`가 소유한다. Python 렌더링 검사는 Python job이 소유한다. Matrix 집계는 `ci-passed`에 모든 group 결과를 요구한다.
 
-각 명령 step은 make target 하나를 실행하고(HR-90), 이전 단계가 실패해도 보고서를 모두 수집한다. Bootstrap은 `mise.toml`의 Node를 사용하고 matrix가 나머지 고정 도구를 선택하며 PHP, Composer, Python과 Chromium을 조건에 따라 준비한다. PHP group은 선언된 template tag를 checkout하고 고정 release asset에서 확장 소스를 얻는다. `make ci-targets TARGETS="<targets>" CI_REPORT=var/ci/<name>`은 항목의 모든 target을 자기 `make -k <target>`으로 끝까지 실행하고 보고서를 쓴다. `make ci-summary CI_REPORT=var/ci/<name>`은 job summary를 쓴다. job은 artifact `ci-<name>-<run id>-<attempt>`, 곧 디렉터리 `var/ci/<name>/`을 upload한다.
+각 명령 step은 make target 하나를 실행하고(HR-90), 이전 단계가 실패해도 보고서를 모두 수집한다. Bootstrap은 `mise.toml`의 Node를 사용하고 matrix가 나머지 고정 도구를 선택하며 PHP, Composer, Python과 Chromium을 조건에 따라 준비한다. `php`, `board`, `language-parity` group은 선언된 template tag checkout을 명시적으로 선택하고 고정 release asset에서 확장 소스를 얻는다. 공통 정책 group은 잠긴 release package를 사용하고 sibling template checkout을 선언하지 않으므로 source link 탐색이 설치 계약을 바꾸지 않는다. `make ci-targets TARGETS="<targets>" CI_REPORT=var/ci/<name>`은 항목의 모든 target을 자기 `make -k <target>`으로 끝까지 실행하고 보고서를 쓴다. `make ci-summary CI_REPORT=var/ci/<name>`은 job summary를 쓴다. job은 artifact `ci-<name>-<run id>-<attempt>`, 곧 디렉터리 `var/ci/<name>/`을 upload한다.
 
 - `summary.md`: tree, Node.js, npm, patch를 포함한 PHP, Composer, make의 실행 중인 release, 각 setup step의 결과, target의 상태, 시간, 첫 실패 줄의 표, 그리고 실패한 각 target의 첫 실패 줄;
 - `record.json`: 같은 내용의 data이며 각 target 앞뒤에 쓰므로, 멈춘 runner는 실행 중이던 target을 남긴다;

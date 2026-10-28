@@ -434,3 +434,17 @@ test('H27.25 CI declares job-owned tools and locked package environments (HR-81,
   assert.ok(entries.find(entry => entry.name === 'python')?.targets.includes('hyper-test-python-render'));
   assert.ok(entries.find(entry => entry.name === 'board')?.targets.includes('server-parity-python'));
 });
+
+
+test('H27.25-1 common CI policy checks use locked releases without sibling template sources (HR-70, HR-79, HR-91)', () => {
+  const text = readFileSync(path.join(WORKFLOWS, 'ci.yml'), 'utf8');
+  const entries = matrixEntries(text);
+  const policy = entries.find(entry => entry.name === 'docs');
+  assert.ok(policy !== undefined);
+  assert.notEqual(policy.keys['template'], 'true');
+  const check = jobs(text).find(job => job.name === 'check');
+  assert.ok(check !== undefined);
+  const template = check.steps.find(step => step.text.includes('repository: polyspec/template'));
+  assert.equal(template?.if, '${{ !cancelled() && matrix.template }}', 'source checkout must have its own explicit selection');
+  assert.deepEqual(entries.filter(entry => entry.keys['template'] === 'true').map(entry => entry.name).sort(), ['board', 'language-parity', 'php']);
+});

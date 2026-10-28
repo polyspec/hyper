@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 22807adb228e7bbe91f116dd0424159f564396684d8bcc40bdade1f19680c4d2 -->
+<!-- source-sha256: ffb05a5a580856057f3b253eafdd30128a0fd291321cdef24394640a1e3bfe80 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- Composer 설치와 template source checkout을 별도로 선택한다. 공통 정책 검사는 불필요한 개발 source를 탐색하지 않고 잠긴 release package를 유지한다.
 
 ## 0.0.20
 - 선택 설치 workflow 소유 검사와 함께 개발 link가 없는 독립 native consumer에서 0.0.20 archive 5개를 모두 검증한다. (H27.25)

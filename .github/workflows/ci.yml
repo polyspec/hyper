@@ -40,6 +40,7 @@ jobs:
           - name: php
             tools: node php composer phpcs phpstan
             php: true
+            template: true
             symbols: php
             composer: true
             targets: dependency-policy-check dependency-policy-mutation-check bench-server-smoke hyper-lint analyse-php hyper-test-php lint-php
@@ -49,6 +50,7 @@ jobs:
           - name: board
             tools: node php composer python uv
             php: true
+            template: true
             composer: true
             python: true
             browser: true
@@ -61,6 +63,7 @@ jobs:
           - name: language-parity
             tools: node php composer python uv
             php: true
+            template: true
             symbols: php
             composer: true
             python: true
@@ -107,7 +110,7 @@ jobs:
         run: make hooks
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         id: template
-        if: ${{ !cancelled() && matrix.composer }}
+        if: ${{ !cancelled() && matrix.template }}
         with:
           repository: polyspec/template
           ref: v0.0.12
