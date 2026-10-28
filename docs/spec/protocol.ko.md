@@ -1,5 +1,5 @@
 <!-- doc-id: protocol -->
-<!-- source-sha256: 97313aae87806176417d93b76c3ee2804bec4595ac53cdf7b5a88ef1ada8c8be -->
+<!-- source-sha256: 5ab27d58b9afb0cb8e2e8afc6340ec533d53d8586df2f46c1c9c9a923b2ac80d -->
 # 영역 프로토콜
 
 [English](protocol.md).
@@ -366,4 +366,4 @@
 
 PHP, Python과 TypeScript는 manifest, request, file-limit 규칙(HY-1, HY-27, HY-114)을 포함한 동일한 protocol unit을 만족해야 한다. CI는 선언 검증과 언어 간 동등 검사를 언어별, 렌더링, 브라우저 job과 독립적인 전용 `language-parity` matrix job에서 실행한다. 각 parity target은 정확히 한 번 실행되고 별도 group 보고서를 게시하며 `ci-passed`에 반영된다. Parity target이 실패하면 최종 검사도 실패한다.
 
-각 CI group은 자신의 고정 도구, 잠긴 의존성과 build 입력을 소유한다. 언어별 job은 실제로 실행하는 환경만 설치한다. Protocol 동등 검사와 browser 통합 group은 비교하는 모든 구현을 독립적으로 준비하고 다른 언어 job의 설치나 build 산출물을 사용하지 않는다. 도구 선택은 공유 `make install-tools TOOLS="..."` 인터페이스를 사용하며 package 설치는 npm, Composer와 uv가 맡는다. 설치는 잠긴 입력을 다운로드할 수 있고 build와 검사는 offline으로 실행한다. 선택 설치기는 고정된 0.0.61 릴리즈가 제공한다. npm은 별도 bootstrap selector로 준비하고 PHP symbol extractor는 실행하는 group에서 `make kit-install-symbols EXTRACTORS="php"`로 명시적으로 설치한다.
+각 CI group은 자신의 고정 도구, 잠긴 의존성과 build 입력을 소유한다. 언어별 job은 실제로 실행하는 환경만 설치한다. Protocol 동등 검사와 browser 통합 group은 비교하는 모든 구현을 독립적으로 준비하고 다른 언어 job의 설치나 build 산출물을 사용하지 않는다. 도구 선택은 공유 `make install-tools TOOLS="..."` 인터페이스를 사용하며 package 설치는 npm, Composer와 uv가 맡는다. 설치는 잠긴 입력을 다운로드할 수 있고 build와 검사는 offline으로 실행한다. 선택 설치기는 고정된 0.0.62 릴리즈가 제공한다. npm은 별도 bootstrap selector로 준비하고 PHP symbol extractor는 실행하는 group에서 `make kit-install-symbols EXTRACTORS="php"`로 명시적으로 설치한다.

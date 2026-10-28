@@ -161,3 +161,15 @@ test('H27.21 package consumers use their native locked graph without editor-hook
   assert.ok(steps.some(step => step.includes('package-install.test.ts')));
   assert.deepEqual(steps.filter(step => step.includes(kitTool('link')) && step.includes('--project tests/package-install')), []);
 });
+
+
+test('H27.26 every Python checking target delegates discovery and execution to Kit (HR-84, HR-87)', () => {
+  for (const target of ['hyper-test-python', 'hyper-test-python-render', 'python-file-parts-test']) {
+    const lines = dryRun(target);
+    const python = lines.filter(line => line.includes(`${kitTool('run-tests')} python`));
+    assert.ok(python.length > 0, `${target}: shared Python runner is missing`);
+    for (const line of python) assert.ok(line.includes('--venv ') && (line.includes(' discover ') || line.includes(' -- tests.')), line);
+    assert.doesNotMatch(lines.join('\n'), /tests\/run\.py|python -m unittest/);
+  }
+  assert.equal(existsSync(path.join(ROOT, 'packages/server/python/tests/run.py')), false, 'a private Python runner must not remain');
+});

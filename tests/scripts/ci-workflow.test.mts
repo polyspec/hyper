@@ -144,7 +144,7 @@ function tagStartProblems(name: string, text: string): string[] {
 }
 
 test('only release.yml starts on a tag, and no check of config/release.json comes from a workflow that a tag starts (HR-95)', () => {
-  const read = workflows();
+  const read = allWorkflows();
   assert.deepEqual(read.flatMap((workflow) => tagStartProblems(workflow.name, workflow.text)), []);
   const checks = jsonArray(parseJsonObject(readFileSync(path.join(ROOT, 'config/release.json'), 'utf8'), 'config/release.json').checks, 'config/release.json checks')
     .map((check, index) => jsonString(check, `config/release.json checks[${index}]`));
@@ -447,4 +447,15 @@ test('H27.25-1 common CI policy checks use locked releases without sibling templ
   const template = check.steps.find(step => step.text.includes('repository: polyspec/template'));
   assert.equal(template?.if, '${{ !cancelled() && matrix.template }}', 'source checkout must have its own explicit selection');
   assert.deepEqual(entries.filter(entry => entry.keys['template'] === 'true').map(entry => entry.name).sort(), ['board', 'language-parity', 'php']);
+});
+
+
+test('H27.26 provider gate setup declares every native runtime and full parity coverage (HR-81, HR-91)', () => {
+  const ci = parseJsonObject(readFileSync(path.join(ROOT, 'config/ci.json'), 'utf8'), 'config/ci.json');
+  assert.equal(ci.parityMode, 'full');
+  const setup = ci.setup;
+  assert.ok(typeof setup === 'object' && setup !== null && !Array.isArray(setup));
+  const text = JSON.stringify(setup);
+  assert.ok(text.includes('hyper-install-php') && text.includes('hyper-install-python') && text.includes('server-fixtures') && text.includes('node-fixtures'));
+  assert.doesNotMatch(text, /"(?:install|install-kit|parity-check|kit-gates)"/);
 });

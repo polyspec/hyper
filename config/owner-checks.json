@@ -5,6 +5,18 @@
   "owners": [
     {
       "paths": [
+        "config/ci.json"
+      ],
+      "tests": [
+        "tests/scripts/ci-workflow.test.mts"
+      ],
+      "targets": [
+        "kit-check",
+        "typecheck"
+      ]
+    },
+    {
+      "paths": [
         "scripts/check-composer-development.mts"
       ],
       "tests": [

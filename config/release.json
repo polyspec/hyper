@@ -6,7 +6,8 @@
     "CHANGELOG.ko.md"
   ],
   "checks": [
-    "ci-passed"
+    "ci-passed",
+    "required"
   ],
   "packages": [
     {

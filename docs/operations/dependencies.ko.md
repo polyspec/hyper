@@ -1,5 +1,5 @@
 <!-- doc-id: dependencies -->
-<!-- source-sha256: 0dd4f30d31b057135baca1d49a83af4b2dda7fad60f42f6b013af5f70a05abdc -->
+<!-- source-sha256: 311b1d6215a8042b2b0e9d7c2dbae6ee147e3fc712277118352b769eaf209330 -->
 # 의존성
 
 [English](dependencies.md).
@@ -10,7 +10,7 @@
 
 | 의존성 | 버전 | 종류 | 이유 | 해제 조건 |
 |---|---|---|---|---|
-| `@polyspec/kit` | npm integrity로 고정한 release asset `v0.0.61` | build, verification | 릴리즈와 CI는 공개 archive에서 공유 도구를 설치한다. 개발은 제공 checkout의 기본 소스 link를 유지한다. npm이 릴리즈 manifest와 그 lock을 관리한다. | npm으로 이후 호환 공유 도구 릴리즈를 반영하고 소유 검사를 실행한다. |
+| `@polyspec/kit` | npm integrity로 고정한 release asset `v0.0.62` | build, verification | 릴리즈와 CI는 공개 archive에서 공유 도구를 설치한다. 개발은 제공 checkout의 기본 소스 link를 유지한다. npm이 릴리즈 manifest와 그 lock을 관리한다. | npm으로 이후 호환 공유 도구 릴리즈를 반영하고 소유 검사를 실행한다. |
 | Node.js, npm, PHP, Composer | `mise.toml`의 `node` 26.12.0, `packageManager` npm 12.2.0, `config/toolchain.json`의 정확한 Composer 2.10.3과 `.php-version`의 minor인 PHP 8.4. make는 pin하지 않는다 | 도구 | 같은 도구로만 build와 검사가 같은 결과를 낸다(HR-81). npm 12는 `npm pack --json`을 npm 11과 다르게 출력한다. | 없음. 새 release는 pin을 바꾸는 commit이 된다. PHP patch release는 통과하고 full run이 그것을 기록한다. |
 | Python | `mise.toml`의 `python` 3.14.8, `packages/server/python`의 `requires-python >= 3.14` | 도구 | Python 서버 package는 고정된 minor 3.14를 요구한다. CI가 그 build만 테스트하므로 그렇다(H20.12). | 없음. 새 안정 release는 `mise.toml`을 바꾸는 commit이 된다. |
 | `packages/server/python/pyproject.toml`의 `setuptools` | 정확한 `84.2.1` | build | Package manifest와 `config/toolchain.json`이 같은 wheel backend를 선언하며 다운로드 digest가 build 입력을 고정한다. | 두 선언에서 더 새로운 호환 backend를 채택하고 wheel build를 검증한다. |

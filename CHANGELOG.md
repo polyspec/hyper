@@ -5,6 +5,11 @@
 
 ## Unreleased
 
+## 0.0.21
+- Require both application CI and the provider gate aggregate to succeed on the tagged commit before publication.
+- Adopt Kit 0.0.62 and declare native shared, runtime and full-parity gate setup. Keep the copied provider workflow unchanged and preserve every mandatory gate.
+- Delegate Python unit, package-data, rendering and scoped multipart checks to the installed shared runner. Remove the private unittest harness; native reporting, per-test timeouts and empty-selection failures cover each execution.
+
 ## 0.0.20
 - Select template source checkouts independently from Composer installation. Common policy checks retain their locked release packages without discovering an unrelated development source. (H27.25-1)
 - Verify all five 0.0.20 archives in isolated native consumers without development links, alongside the selective-install workflow owner checks. (H27.25)

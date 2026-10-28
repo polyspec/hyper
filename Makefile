@@ -221,17 +221,20 @@ hyper-test-php: server-fixtures ext ## Run the server package tests with the gen
 .PHONY: python-file-parts-test
 python-file-parts-test: server-fixtures python-toolchain-check ## Run Python multipart unit and rendering cases (HY-113, HY-114)
 	@failed=; \
-	$(call check,multipart contract cases,$(PYTHON_VENV)/bin/python $(PYTHON_PACKAGE)/tests/run.py $(PYTHON_PACKAGE)/tests test_files.py) \
-	$(call check,multipart application cases,$(PYTHON_VENV)/bin/python $(PYTHON_PACKAGE)/tests/run.py $(PYTHON_PACKAGE)/tests/render render_files.py) \
+	$(call check,multipart contract cases,$(NODE) $(KIT)/run-tests.$(KIT_EXT) python --venv $(PYTHON_VENV) -- discover -s $(PYTHON_PACKAGE)/tests -t $(PYTHON_PACKAGE) -p test_files.py) \
+	$(call check,multipart application cases,$(NODE) $(KIT)/run-tests.$(KIT_EXT) python --venv $(PYTHON_VENV) -- discover -s $(PYTHON_PACKAGE)/tests/render -t $(PYTHON_PACKAGE) -p render_files.py) \
 	$(checks_result)
 
 hyper-test-python: python-toolchain-check ## Run the Python server package tests, which read the conformance cases of routes, rest, csrf, fields and json
-	$(PYTHON_VENV)/bin/python $(PYTHON_PACKAGE)/tests/run.py; unit=$$?; $(PYTHON_VENV)/bin/python -m unittest discover -s tests/python_package -p 'test_*.py'; package=$$?; test $$unit -eq 0 -a $$package -eq 0
+	@failed=; \
+	$(call check,Python protocol unit tests,$(NODE) $(KIT)/run-tests.$(KIT_EXT) python --venv $(PYTHON_VENV) -- discover -s $(PYTHON_PACKAGE)/tests -t $(PYTHON_PACKAGE) -p 'test_*.py') \
+	$(call check,Python package data tests,$(NODE) $(KIT)/run-tests.$(KIT_EXT) python --venv $(PYTHON_VENV) -- discover -s tests/python_package -p 'test_*.py') \
+	$(checks_result)
 
 # The rendering tests need the template Python package (H15.3-3), the wheel of the template release that the venv of make
 # install holds, and `make server-fixtures` writes the server program they open.
 hyper-test-python-render: server-fixtures python-toolchain-check ## Run the Python rendering tests with the template package of the venv (H15.3-3)
-	$(PYTHON_VENV)/bin/python $(PYTHON_PACKAGE)/tests/run.py $(PYTHON_PACKAGE)/tests/render 'render_*.py'
+	$(NODE) $(KIT)/run-tests.$(KIT_EXT) python --venv $(PYTHON_VENV) -- discover -s $(PYTHON_PACKAGE)/tests/render -t $(PYTHON_PACKAGE) -p 'render_*.py'
 
 hyper-lint: php-toolchain-check ## Check PHP formatting
 	@failed=; \
@@ -337,3 +340,7 @@ release-assets: packages
 release-consumer-lock: export npm_config_allow_remote := all
 release-consumer: export npm_config_allow_remote := root
 release-proof: export npm_config_allow_remote := root
+
+.PHONY: hyper-runner-owner-check
+hyper-runner-owner-check: ## Verify application test entry points through the shared test runner
+	$(NODE) $(KIT)/run-tests.$(KIT_EXT) node -- tests/scripts/check-recipes.test.mts tests/scripts/ci-workflow.test.mts

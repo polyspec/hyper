@@ -1,10 +1,15 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: a91c47da66669b222f1d34088d56579341bc9aa5aa0af0f8ac0489e68c7d4106 -->
+<!-- source-sha256: b939357f32dafa9b1ff7bce750b9671882eb077d10d9dc45bf14662132e77308 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+## 0.0.21
+- 공개 전에 tag commit의 애플리케이션 CI와 provider gate 집계가 모두 성공해야 한다.
+- Kit 0.0.62를 연결하고 native shared, runtime과 전체 parity gate 준비를 선언한다. 복사한 provider workflow는 직접 변경하지 않고 모든 필수 gate를 유지한다.
+- Python unit, package data, rendering과 범위를 제한한 multipart 검사를 설치된 공유 runner에 위임한다. 자체 unittest harness를 제거하고 각 실행에 native 보고, test별 timeout과 빈 선택 실패 판정을 적용한다.
 
 ## 0.0.20
 - Composer 설치와 template source checkout을 별도로 선택한다. 공통 정책 검사는 불필요한 개발 source를 탐색하지 않고 잠긴 release package를 유지한다. (H27.25-1)
