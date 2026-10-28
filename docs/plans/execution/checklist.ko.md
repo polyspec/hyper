@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 7374be90462a1f98d74425f305f6eb94095218f1e5c57dcf70b460ec3199c6d9 -->
+<!-- source-sha256: f7de355f235015674d93523d329f6a94ad5428986012898823ea3df8027be665 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -281,4 +281,4 @@
 | H27.22 | Multipart 렌더링 검사를 순수 Python 검사와 분리한다. | Makefile, packages/server/python/tests/test_files.py, packages/server/python/tests/render/render_files.py | `make -k python-file-parts-test lint-python docs-check` | [o] |
 | H27.22-1 | 이동한 test 선언과 offline 정책 값의 타입을 보완한다. | config/parity.json, tests/scripts/toolchain.test.mts | `make -k typecheck parity-declarations-check toolchain-policy-test docs-check` | [o] |
 | H27.23 | 릴리즈 후보의 CI 성공을 기능 상태에 기록한다. | docs/features.md, docs/features.ko.md | `make docs-check` | [o] |
-| H27.24 | 언어 간 동등 검사를 독립 CI matrix job에서 실행한다. | .github/workflows/ci.yml, tests/scripts/ci-workflow.test.mts, docs/spec/protocol.md and twin, docs/operations/development.md and twin, docs/features.md and twin | `node --test tests/scripts/ci-workflow.test.mts` and `make -k typecheck docs-check` | [ ] |
+| H27.24 | 언어 간 동등 검사를 독립 CI matrix job에서 실행한다. | .github/workflows/ci.yml, tests/scripts/ci-workflow.test.mts, docs/spec/protocol.md and twin, docs/operations/development.md and twin, docs/features.md and twin | `node --test tests/scripts/ci-workflow.test.mts` and `make -k typecheck docs-check` | [~] |

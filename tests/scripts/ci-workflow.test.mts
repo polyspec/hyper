@@ -380,3 +380,19 @@ test('H27.20 every CI check group installs per-checkout hook configuration befor
     assert.ok(installed < hooks && hooks < check, `${job.name}: native hook setup must follow installation and precede checks`);
   }
 });
+
+
+test('H27.24 cross-language protocol parity has an independent matrix job (HY-1, HY-27, HY-114, HR-91)', () => {
+  const entries = matrixEntries(readFileSync(path.join(WORKFLOWS, 'ci.yml'), 'utf8'));
+  const parity = entries.find(entry => entry.name === 'language-parity');
+  assert.ok(parity !== undefined, 'cross-language parity requires its own CI group');
+  assert.deepEqual(parity.targets, ['parity-declarations-check', 'parity-check']);
+  assert.equal(parity.install, true, 'parity requires the installed runtime dependencies');
+  assert.equal(parity.browser, false, 'protocol equivalence needs no browser');
+  for (const entry of entries.filter(entry => entry !== parity)) {
+    assert.ok(!entry.targets.includes('parity-check') && !entry.targets.includes('parity-declarations-check'), `${entry.name}: cross-language parity belongs only to its independent group`);
+  }
+  const check = jobs(readFileSync(path.join(WORKFLOWS, 'ci.yml'), 'utf8')).find(job => job.name === 'check');
+  assert.ok(check !== undefined);
+  assert.doesNotMatch(check.text, /^ {4}needs:/m, 'matrix checks must start independently');
+});

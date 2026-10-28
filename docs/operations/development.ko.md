@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: ade85a2ff3e4a78717e48a28c6284be5f2eea82f8b1789e1bc309fac680ae2cb -->
+<!-- source-sha256: 2cfc84f6400a34249df21049944049781aaaa7b3dc225946e725e011b4b727e9 -->
 # 개발
 
 [English](development.md).
@@ -171,6 +171,9 @@ workflow `.github/workflows/ci.yml`은 `main`의 push와 모든 수동 실행(`w
 | `board` | `parity`, `server-parity`, `bundle-size`, `e2e` | Node.js, Python, PHP, template checkout, `make hyper-install`, `make hyper-install-browser` |
 | `python` | `test-python` | Node.js, `make install-tools`의 Python, `make hyper-install-python`의 venv, PHP |
 | `python-render` | `hyper-test-python-render`, `server-parity-python` | Node.js, Python, PHP, `make hyper-install`, `make hyper-install-browser` |
+| `language-parity` | `parity-declarations-check`, `parity-check` | Node.js, Python, PHP, `make hyper-install` |
+
+`language-parity` group은 `parity-declarations-check`와 `parity-check`를 소유한다. 언어별, 렌더링, 브라우저 group과 독립적으로 시작하고 Chromium 없이 runtime 의존성을 설치하며 `var/ci/language-parity/`를 게시한다. Matrix 집계는 `ci-passed`에 이 group의 결과를 요구한다.
 
 각 step은 make target 하나를 실행하고(HR-90), 첫 step 뒤의 모든 step은 실패한 step 뒤에도 실행한다. workflow는 `mise.toml`의 Node.js로 bootstrap을 시작하고 `.php-version`에서 PHP를 준비하며, 모든 job은 `config/toolchain.json`의 Python을 `make install-tools`로 설치하며 template 저장소를 Makefile의 tag `TEMPLATE_TAG`로 `../template`에 checkout하며, `make hyper-install`은 그곳에서 네이티브 확장 소스를 복사한다. `make ci-targets TARGETS="<targets>" CI_REPORT=var/ci/<name>`은 항목의 모든 target을 자기 `make -k <target>`으로 끝까지 실행하고 보고서를 쓴다. `make ci-summary CI_REPORT=var/ci/<name>`은 job summary를 쓴다. job은 artifact `ci-<name>-<run id>-<attempt>`, 곧 디렉터리 `var/ci/<name>/`을 upload한다.
 

@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 6aeda6820ae24bd8a5ddafc1e6bce8794a259b3f9353f714e3a4c9301bde77d2 -->
+<!-- source-sha256: fe568c87b5e915f9dba96e2a47ffd6cd4378ba32fd4093c28d1d83e0fbf580d2 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- Protocol 선언 검증과 언어 간 동등 검사를 browser 설치 없이 별도 보고서 및 필수 최종 결과를 갖는 독립 language-parity CI job에서 실행한다.
 
 ## 0.0.19
 - PHP 8.4.27에서 통과한 애플리케이션 CI group 6개와 정책 gate 결과를 기능 상태에 기록하고 애플리케이션 CI runner와 공유 workflow 설정을 구분한다. (H27.23)

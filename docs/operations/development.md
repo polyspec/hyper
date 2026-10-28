@@ -170,6 +170,9 @@ The workflow `.github/workflows/ci.yml` runs the full suite for the push of `mai
 | `board` | `parity`, `server-parity`, `bundle-size`, `e2e` | Node.js, Python, PHP, the template checkout, `make hyper-install`, `make hyper-install-browser` |
 | `python` | `test-python` | Node.js, the Python of `make install-tools` and the venv of `make hyper-install-python`, PHP |
 | `python-render` | `hyper-test-python-render`, `server-parity-python` | Node.js, Python, PHP, `make hyper-install`, `make hyper-install-browser` |
+| `language-parity` | `parity-declarations-check`, `parity-check` | Node.js, Python, PHP, `make hyper-install` |
+
+The `language-parity` group owns `parity-declarations-check` and `parity-check`. It starts independently of the language, rendering and browser groups, installs the runtime dependencies without Chromium, and publishes `var/ci/language-parity/`. The matrix aggregate requires its result for `ci-passed`.
 
 Each step runs one make target (HR-90) and every step after the first runs after a failed step. The workflow starts the bootstrap with the Node.js of `mise.toml` and sets up PHP from `.php-version`, and every job runs `make install-tools` for the Python of `config/toolchain.json` and checks out the template repository at the tag `TEMPLATE_TAG` of the Makefile as `../template`, from which `make hyper-install` copies the native extension sources. `make ci-targets TARGETS="<targets>" CI_REPORT=var/ci/<name>` runs every target of the entry with its own `make -k <target>` to its end and writes the report. `make ci-summary CI_REPORT=var/ci/<name>` writes the job summary. The job uploads the artifact `ci-<name>-<run id>-<attempt>`, the directory `var/ci/<name>/`:
 

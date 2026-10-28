@@ -1,5 +1,5 @@
 <!-- doc-id: features -->
-<!-- source-sha256: c179cf86e502569508362d8933bd82ff12cd661cdf6db6d7b6ffb6f0e4b644eb -->
+<!-- source-sha256: ff1c8220eeeaadaad97a4966afe9247a3e2489c626f1c9340d0cb022b9650d55 -->
 # 기능 상태
 
 [English](features.md).
@@ -82,3 +82,4 @@
 | gate-inputs | Native gate가 읽기 전에 workspace 선언과 runtime fixture를 build한다(HR-85) | implemented | `tests/scripts/check-recipes.test.mts`, `make lint-ts`, `make parity-check` |
 | ci-setup | 모든 CI 검사 group이 검증 전에 선언된 PHP와 checkout hook을 준비한다 | implemented | `tests/scripts/ci-workflow.test.mts` |
 | consumer-check-inputs | Script 검사가 build를 소유하고 package 검사가 editor 설정 없이 native source 연결을 위임한다 | implemented | `tests/scripts/check-recipes.test.mts`, `tests/scripts/release-assets.test.mts`, `make package-check` |
+| language-parity-ci | 언어 간 protocol 동등 검사는 독립 `language-parity` CI group에서 선언을 한 번 검증하고 browser를 설치하지 않으며 별도 보고서와 최종 집계에 결과를 제공한다 | configured | `tests/scripts/ci-workflow.test.mts`, `check (language-parity)` |

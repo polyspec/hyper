@@ -1,5 +1,5 @@
 <!-- doc-id: protocol -->
-<!-- source-sha256: 52cdd464c28aaea4e8da3cd60050722229209bc2b60b90c61bafb2e50f3c1cb0 -->
+<!-- source-sha256: 7710c957abed7fd9729533ad5c26eb3652998504dfa8671ef7f800473a360898 -->
 # 영역 프로토콜
 
 [English](protocol.md).
@@ -361,3 +361,7 @@
   - PHP는 닫힌 연결을 그 연결에 쓰기가 실패할 때만 알리며, 닫힌 연결에 작은 응답을 쓰는 것은 성공할 수 있다. `App::run`은 `ignore_user_abort`를 끄므로 PHP는 응답의 첫 실패한 쓰기에서 script를 끝내고, shutdown 함수가 `connection_aborted()`가 1이면 연결 끊김 hook을 호출한다. 그래서 PHP 서버는 닫힘을 알기 전에 응답을 끝까지 렌더하고 응답 hook(HY-60)을 호출하며, 응답의 모든 쓰기가 성공하면 닫힘을 알지 못한다.
   - `polyspec-hyper-server`의 Python 서버(`polyspec.hyper.server`의 `create_server`)는 PHP처럼 응답의 쓰기가 실패할 때만 닫힌 연결을 안다. `http.server`는 client가 닫은 연결에 쓰면 `BrokenPipeError`, `ConnectionResetError`, `ConnectionAbortedError`를 발생시킨다. 서버는 먼저 응답을 끝까지 렌더하고 응답 hook(HY-60)을 호출한 뒤 응답을 쓴다. 쓰기가 이 오류 중 하나로 실패하면 응답의 나머지를 쓰지 않고, 받은 그대로의 요청, 밀리초 단위의 경과 시간, 요청의 reply로 연결 끊김 hook을 한 번 호출한다. 경과 시간은 응답 hook과 같게, 요청 handler가 요청을 시작한 시각부터 단조 시계인 `time.perf_counter_ns()`로 센다. 응답의 모든 쓰기가 성공하면 닫힘을 알지 못한다. `App.respond`는 `App.handle`처럼 요청에 응답하고 응답과 요청의 reply를 반환하므로, 서버는 연결 끊김 hook이 받는 reply를 가진다. `App.handle`은 응답만 반환한다.
 - **HYC-9** 브라우저 코드의 오류는 htmx 응답 훅에서 던져진다. htmx는 이를 `htmx:error` 이벤트로 보고하고 스왑하지 않는다.
+
+## 구현 동등성
+
+PHP, Python과 TypeScript는 manifest, request, file-limit 규칙(HY-1, HY-27, HY-114)을 포함한 동일한 protocol unit을 만족해야 한다. CI는 선언 검증과 언어 간 동등 검사를 언어별, 렌더링, 브라우저 job과 독립적인 전용 `language-parity` matrix job에서 실행한다. 각 parity target은 정확히 한 번 실행되고 별도 group 보고서를 게시하며 `ci-passed`에 반영된다. Parity target이 실패하면 최종 검사도 실패한다.

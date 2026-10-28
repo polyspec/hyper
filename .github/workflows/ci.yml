@@ -39,7 +39,7 @@ jobs:
       matrix:
         include:
           - name: docs
-            targets: kit-check toolchain-check layout-check typecheck lint-ts docs-check hooks-check push-gate-commit commits-check owner-validate rules-check rebuild-check language-check test-markers-check duplication-check parity-declarations-check link-state-check bypass-check divergence-check suppression-check
+            targets: kit-check toolchain-check layout-check typecheck lint-ts docs-check hooks-check push-gate-commit commits-check owner-validate rules-check rebuild-check language-check test-markers-check duplication-check link-state-check bypass-check divergence-check suppression-check
           - name: php
             install: true
             targets: dependency-policy-check dependency-policy-mutation-check bench-server-smoke hyper-lint analyse-php hyper-test-php lint-php
@@ -57,7 +57,11 @@ jobs:
           - name: python-render
             install: true
             browser: true
-            targets: hyper-test-python-render server-parity-python parity-check
+            targets: hyper-test-python-render server-parity-python
+          # Protocol equivalence runs independently and needs no browser.
+          - name: language-parity
+            install: true
+            targets: parity-declarations-check parity-check
     defaults:
       run:
         working-directory: hyper

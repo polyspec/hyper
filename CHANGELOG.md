@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- Run protocol declaration validation and cross-language equivalence in an independent language-parity CI job, with its own report and required final result, without browser installation.
 
 ## 0.0.19
 - Record all six passing application CI groups on PHP 8.4.27 and the passing policy gates in feature status; distinguish application CI runners from shared workflow configuration. (H27.23)
