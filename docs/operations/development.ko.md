@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: 2cfc84f6400a34249df21049944049781aaaa7b3dc225946e725e011b4b727e9 -->
+<!-- source-sha256: 7426ea4eac1a14e5cb72989c0b33cff396051c6d6db7581b57c00a1bb252ac2f -->
 # 개발
 
 [English](development.md).
@@ -163,19 +163,24 @@ T.T.T는 그 릴리스의 `packages/client/package.json`이 요구하는 `@polys
 
 workflow `.github/workflows/ci.yml`은 `main`의 push와 모든 수동 실행(`workflow_dispatch`)에 대해 전체 suite를 실행한다(HR-91, [main 공개](#main-공개) 참고). 그 job `check`는 CI group마다 matrix 항목 하나를 `fail-fast: false`로 가지며, 각 항목은 자기가 실행하는 target을 밝힌다.
 
-| 항목 | Target | 준비 |
-|---|---|---|
-| `docs` | `kit-check`, `toolchain-check`, `layout-check`, `typecheck`, `lint-ts`, `docs-check`, `hooks-check`, `push-gate-commit`, `commits-check`, `owner-validate` | Node.js, Python, PHP |
-| `php` | `dependency-policy-check`, `dependency-policy-mutation-check`, `bench-server-smoke`, `lint`, `analyse-php`, `test-php` | Node.js, Python, PHP, template checkout, `make hyper-install` |
-| `node` | `templates-check`, `hyper-test-scripts`, `test-js`, `hyper-test-node`, `package-check` | Node.js, Python, PHP, template checkout, `make hyper-install` |
-| `board` | `parity`, `server-parity`, `bundle-size`, `e2e` | Node.js, Python, PHP, template checkout, `make hyper-install`, `make hyper-install-browser` |
-| `python` | `test-python` | Node.js, `make install-tools`의 Python, `make hyper-install-python`의 venv, PHP |
-| `python-render` | `hyper-test-python-render`, `server-parity-python` | Node.js, Python, PHP, `make hyper-install`, `make hyper-install-browser` |
-| `language-parity` | `parity-declarations-check`, `parity-check` | Node.js, Python, PHP, `make hyper-install` |
+| 항목 | Bootstrap 이후 선택 도구 | 잠긴 package 환경 | 검사 |
+|---|---|---|---|
+| `docs` | Node/npm, PHP/Composer와 PHP lint, Python/uv/ruff/vulture, alint | Root와 board Composer lock | 공통 정책, TypeScript lint, 문서와 script |
+| `php` | Node/npm, PHP/Composer, phpcs/phpstan | Root와 board Composer lock | PHP 정책, benchmark smoke, formatting, analysis와 test |
+| `node` | Node/npm | Root npm lock | Template, browser unit, Node server와 npm consumer |
+| `board` | Node/npm, PHP/Composer, Python/uv | Root npm, root와 board Composer, Python uv lock | Browser parity, Node/Python server 비교, bundle 크기와 E2E |
+| `python` | Node/npm, Python/uv, ruff/vulture | Root npm과 Python uv lock | Python unit, rendering과 lint |
+| `language-parity` | Node/npm, PHP/Composer, Python/uv | Root npm, root와 board Composer, Python uv lock | Protocol 선언과 언어 간 동등 검사 |
 
-`language-parity` group은 `parity-declarations-check`와 `parity-check`를 소유한다. 언어별, 렌더링, 브라우저 group과 독립적으로 시작하고 Chromium 없이 runtime 의존성을 설치하며 `var/ci/language-parity/`를 게시한다. Matrix 집계는 `ci-passed`에 이 group의 결과를 요구한다.
+각 group은 `make install-tools TOOLS="${{ matrix.tools }}"`를 호출한다. Kit은 선택, 필수 도구 의존성, version과 hash 검증, 일치하는 설치 도구 재사용을 소유한다. Hyper는 별도 도구 설치기를 선언하지 않는다. 현재 0.0.60 pin은 이 선택을 지원하지 않으므로 준비된 workflow는 릴리즈된 인터페이스 연결과 검증 전까지 main에 넣지 않는다.
 
-각 step은 make target 하나를 실행하고(HR-90), 첫 step 뒤의 모든 step은 실패한 step 뒤에도 실행한다. workflow는 `mise.toml`의 Node.js로 bootstrap을 시작하고 `.php-version`에서 PHP를 준비하며, 모든 job은 `config/toolchain.json`의 Python을 `make install-tools`로 설치하며 template 저장소를 Makefile의 tag `TEMPLATE_TAG`로 `../template`에 checkout하며, `make hyper-install`은 그곳에서 네이티브 확장 소스를 복사한다. `make ci-targets TARGETS="<targets>" CI_REPORT=var/ci/<name>`은 항목의 모든 target을 자기 `make -k <target>`으로 끝까지 실행하고 보고서를 쓴다. `make ci-summary CI_REPORT=var/ci/<name>`은 job summary를 쓴다. job은 artifact `ci-<name>-<run id>-<attempt>`, 곧 디렉터리 `var/ci/<name>/`을 upload한다.
+`make hyper-install-php`는 기존 설치 lock 안에서 고정 PHP archive와 root 및 board Composer lock만 설치한다. `make hyper-install-python`은 `uv sync --locked`로 Python 환경만 설치한다. Node 의존성은 기존 npm lock 설치를 사용한다. Native source 개발 link는 별도 로컬 설치 선택으로 유지한다.
+
+Build 선행 조건은 각 job의 검사가 소유한다. `node-toolchain-check`, `php-toolchain-check`, `python-toolchain-check`는 target이 실행하는 toolchain만 검증한다. 공통 정책 group은 전체 선언 toolchain도 검증한다. 언어 job은 다른 언어 job을 기다리거나 설치 환경 또는 build 산출물을 다운로드하지 않는다. 설치는 online이고 build와 검사는 offline 환경을 유지한다.
+
+Protocol `language-parity` group은 세 구현을 모두 직접 설치하고 Chromium을 요구하지 않는다. Browser가 필요한 server 간 비교는 세 구현과 Chromium을 직접 설치하는 `board`가 소유한다. Python 렌더링 검사는 Python job이 소유한다. Matrix 집계는 `ci-passed`에 모든 group 결과를 요구한다.
+
+각 명령 step은 make target 하나를 실행하고(HR-90), 이전 단계가 실패해도 보고서를 모두 수집한다. Bootstrap은 `mise.toml`의 Node를 사용하고 matrix가 나머지 고정 도구를 선택하며 PHP, Composer, Python과 Chromium을 조건에 따라 준비한다. PHP group은 선언된 template tag를 checkout하고 고정 release asset에서 확장 소스를 얻는다. `make ci-targets TARGETS="<targets>" CI_REPORT=var/ci/<name>`은 항목의 모든 target을 자기 `make -k <target>`으로 끝까지 실행하고 보고서를 쓴다. `make ci-summary CI_REPORT=var/ci/<name>`은 job summary를 쓴다. job은 artifact `ci-<name>-<run id>-<attempt>`, 곧 디렉터리 `var/ci/<name>/`을 upload한다.
 
 - `summary.md`: tree, Node.js, npm, patch를 포함한 PHP, Composer, make의 실행 중인 release, 각 setup step의 결과, target의 상태, 시간, 첫 실패 줄의 표, 그리고 실패한 각 target의 첫 실패 줄;
 - `record.json`: 같은 내용의 data이며 각 target 앞뒤에 쓰므로, 멈춘 runner는 실행 중이던 target을 남긴다;

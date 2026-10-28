@@ -1,5 +1,5 @@
 <!-- doc-id: protocol -->
-<!-- source-sha256: 7710c957abed7fd9729533ad5c26eb3652998504dfa8671ef7f800473a360898 -->
+<!-- source-sha256: e1036c5941f77a2824fac9061a52fb92782bfea474aaf5073820cc59b9d8f209 -->
 # 영역 프로토콜
 
 [English](protocol.md).
@@ -365,3 +365,5 @@
 ## 구현 동등성
 
 PHP, Python과 TypeScript는 manifest, request, file-limit 규칙(HY-1, HY-27, HY-114)을 포함한 동일한 protocol unit을 만족해야 한다. CI는 선언 검증과 언어 간 동등 검사를 언어별, 렌더링, 브라우저 job과 독립적인 전용 `language-parity` matrix job에서 실행한다. 각 parity target은 정확히 한 번 실행되고 별도 group 보고서를 게시하며 `ci-passed`에 반영된다. Parity target이 실패하면 최종 검사도 실패한다.
+
+각 CI group은 자신의 고정 도구, 잠긴 의존성과 build 입력을 소유한다. 언어별 job은 실제로 실행하는 환경만 설치한다. Protocol 동등 검사와 browser 통합 group은 비교하는 모든 구현을 독립적으로 준비하고 다른 언어 job의 설치나 build 산출물을 사용하지 않는다. 도구 선택은 공유 `make install-tools TOOLS="..."` 인터페이스를 사용하며 package 설치는 npm, Composer와 uv가 맡는다. 설치는 잠긴 입력을 다운로드할 수 있고 build와 검사는 offline으로 실행한다. 이 환경 분리는 준비 상태이며 선택 도구 설치기의 릴리즈를 기다린다. 의존성 pin은 0.0.60으로 유지한다.

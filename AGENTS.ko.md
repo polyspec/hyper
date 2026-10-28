@@ -1,5 +1,5 @@
 <!-- doc-id: agents -->
-<!-- source-sha256: 33c5360e255cef14dc348b35b2b7f5590908957dc21f80ad4d8a6fb2f06b98c6 -->
+<!-- source-sha256: 150bf2aba7bea8c016137774697954286fac434bd7b0c86c38c01ce54b766c4b -->
 # 개발
 
 [English](AGENTS.md).
@@ -34,7 +34,7 @@
 - Own: PHP 개발, test와 release 검증은 PHP 8.4.27을 기준으로 한다. Windows는 8.4.27-1 package rebuild를 쓰며 runtime version은 8.4.27이다. `.php-version`은 native tool 탐색을 위해 8.4 minor를 선택한다. 검증 결과에는 실제 runtime version을 기록하며 이전 patch의 결과를 이 기준에서의 검증으로 취급하지 않는다.
   Enforced by: none, 검증 근거를 검토할 때 기준과 기록된 runtime을 확인한다.
 
-- Own: 어떤 결과도 live service나 시간에 의존하지 않는다(HR-89). 결과가 시간에 따라 달라지는 registry 조회, 예컨대 latest 조회, version 범위의 해석, outdated package나 새 release의 조회를 하는 검사는 없으며, 다른 live service를 조회하는 검사도 없다. lock이 정확한 version과 integrity로 고정한 package의 다운로드는 설치이므로 허용한다. `npm ci`와 `composer install`이 그렇게 한다. 설치는 audit 없이 lock을 따른다. Test는 사건을 사건이나 주입된 clock으로 정렬하며, 경쟁하는 timer로 정렬하지 않는다. 실행의 server는 시스템이 배정하고 알리는 port에서 듣는다. 모든 recipe는 npm과 Composer를 오프라인으로 실행한다(Makefile의 `npm_config_offline`과 `COMPOSER_DISABLE_NETWORK`). `make composer-development`와 기본 소스 helper를 포함한 명시적 설치 target, `make bootstrap`, `make install-tools`, `make install-packages`, `make hyper-install`, `make hyper-install-browser`, `make hyper-install-virtiofs`만 `$(ONLINE)`으로 다운로드하며, 빠진 다운로드는 그것을 만드는 설치 target과 함께 실패하고, 도구에게 온라인으로 다시 시도하라는 안내로 실패하지 않는다. server 시작처럼 오래 걸리는 작업은 시간 제한 없이 기다리며 진행을 출력한다.
+- Own: 어떤 결과도 live service나 시간에 의존하지 않는다(HR-89). 결과가 시간에 따라 달라지는 registry 조회, 예컨대 latest 조회, version 범위의 해석, outdated package나 새 release의 조회를 하는 검사는 없으며, 다른 live service를 조회하는 검사도 없다. lock이 정확한 version과 integrity로 고정한 package의 다운로드는 설치이므로 허용한다. `npm ci`와 `composer install`이 그렇게 한다. 설치는 audit 없이 lock을 따른다. Test는 사건을 사건이나 주입된 clock으로 정렬하며, 경쟁하는 timer로 정렬하지 않는다. 실행의 server는 시스템이 배정하고 알리는 port에서 듣는다. 모든 recipe는 npm과 Composer를 오프라인으로 실행한다(Makefile의 `npm_config_offline`과 `COMPOSER_DISABLE_NETWORK`). `make composer-development`와 기본 소스 helper를 포함한 명시적 설치 target, `make bootstrap`, `make install-tools`, `make install-packages`, `make hyper-install`, `make hyper-install-php`, `make hyper-install-browser`, `make hyper-install-virtiofs`만 `$(ONLINE)`으로 다운로드하며, 빠진 다운로드는 그것을 만드는 설치 target과 함께 실패하고, 도구에게 온라인으로 다시 시도하라는 안내로 실패하지 않는다. server 시작처럼 오래 걸리는 작업은 시간 제한 없이 기다리며 진행을 출력한다.
   Enforced by: `make kit-check`, `make hyper-test-scripts`
 - Own: 성능은 측정하고 보고하며 검사를 실패시키지 않는다. 크기나 시간이 한도를 넘으면 값과 한도를 적은 `WARNING` 줄을 출력하고, GitHub에서는 `::warning::` annotation과 CI 요약의 경고를 남기며, 검사는 통과한다(`make bundle-size`, `make bench`). 측정 script는 사용법 오류나 빠진 입력에서만 실패한다.
   Enforced by: `make hyper-test-scripts`
@@ -95,6 +95,9 @@
   Enforced by: `make push-gate-hook`, `make hooks-check`
 - Own: Version 0.1 전까지 변경은 그것을 소유한 unit test로 검사하고, checklist의 모든 task가 `[o]`일 때 `main`을 한 번 push한다(HR-94). Pull request, merge queue, GitHub ruleset은 없으며, push는 `git push origin main`이다. `main`의 push는 `.github/workflows/ci.yml`을 실행하고, 그 마지막 job `ci-passed`는 workflow의 다른 모든 job이 통과했을 때만 통과한다. 그 push의 CI 실행이 commit의 근거이며, release tag는 태그된 commit에 대해 `ci-passed`가 성공한 뒤에만 정한다(`docs/operations/development.md`).
   Enforced by: `make ci-passed`
+
+- Own: 각 애플리케이션 CI group은 실행할 도구와 잠긴 package 환경을 선언하고 공유 도구 선택 및 native package manager로 자신의 job에 설치하며 build 입력도 직접 준비한다. Parity group은 비교하는 모든 구현을 독립적으로 준비하고 다른 언어 job의 설치 환경이나 build 산출물을 사용하지 않는다. 최종 job은 필수 job의 결과만 판정한다.
+  Enforced by: `make hyper-test-scripts`
 
 ## 릴리스
 

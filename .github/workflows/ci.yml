@@ -8,18 +8,11 @@
 # it on the tagged commit (HR-94, HR-95). Every step that runs a command runs one make target, the jobs run on
 # ubuntu-26.04-arm, the actions are pinned by commit and no step has a time limit (HR-90).
 #
-# The toolchain comes from the pinned files: Node.js, Python and the other tools from mise.toml, which mise installs at
-# the digests of mise.lock, and PHP from .php-version. setup-node reads mise.toml only for the node that starts the
-# bootstrap (kit K171). Every job, ci-passed too, first runs the bootstrap of the shared tools @polyspec/kit:
-# `make bootstrap` first installs the lock with native npm of packageManager; then
-# `make install-tools TOOLS=npm` installs mise, the node of mise.toml and the npm of packageManager into
-# var/tools and `make install-packages` installs package-lock.json with it, the package included, whose kit.mk has the
-# other targets. Every check job then runs `make install-tools`, which installs the Python and Composer of the checkout
-# into var/tools, so CI runs the tools of a local run. npm installs the template packages from the assets of the template
-# release, and `make hyper-install` installs them with Composer (HR-70). The template repository is
-# checked out next to this repository at its tag v0.0.12 (TEMPLATE_TAG of the Makefile, HR-80), as ../template of the
-# Makefile, and `make hyper-install` copies the native extension sources of the commit of that tag (HR-78). `make ext` builds
-# the native extension with phpize and php-config of the PHP of setup-php, and only the group board installs Chromium.
+# Each matrix entry declares its own selected tools and native package environments. The Node/npm bootstrap loads
+# the shared control tools; selected installation then uses the versions and hashes already declared by this checkout.
+# PHP setup and Composer projects run only for entries that execute PHP. Python packages are installed from uv.lock
+# only where Python code is executed. Build prerequisites remain owned by each checking target and run in that job.
+# No check job waits for another job or downloads its installed dependencies or build artifacts.
 name: ci
 
 on:
@@ -39,28 +32,35 @@ jobs:
       matrix:
         include:
           - name: docs
-            targets: kit-check toolchain-check layout-check typecheck lint-ts docs-check hooks-check push-gate-commit commits-check owner-validate rules-check rebuild-check language-check test-markers-check duplication-check link-state-check bypass-check divergence-check suppression-check
+            tools: node npm php composer phpcs phpstan python uv ruff alint vulture
+            php: true
+            composer: true
+            targets: kit-check toolchain-check layout-check typecheck lint-ts docs-check hooks-check push-gate-commit commits-check owner-validate rules-check rebuild-check language-check test-markers-check duplication-check link-state-check bypass-check divergence-check suppression-check hyper-test-scripts
           - name: php
-            install: true
+            tools: node npm php composer phpcs phpstan
+            php: true
+            composer: true
             targets: dependency-policy-check dependency-policy-mutation-check bench-server-smoke hyper-lint analyse-php hyper-test-php lint-php
           - name: node
-            install: true
-            targets: templates-check hyper-test-scripts hyper-test-js hyper-test-node package-check
+            tools: node npm
+            targets: templates-check hyper-test-js hyper-test-node package-check
           - name: board
-            install: true
-            browser: true
-            targets: parity server-parity bundle-size e2e
-          - name: python
+            tools: node npm php composer python uv
+            php: true
+            composer: true
             python: true
-            targets: hyper-test-python lint-python
-          # The render tests and the Python server comparison need PHP and the browser.
-          - name: python-render
-            install: true
             browser: true
-            targets: hyper-test-python-render server-parity-python
-          # Protocol equivalence runs independently and needs no browser.
+            targets: parity server-parity server-parity-python bundle-size e2e
+          - name: python
+            tools: node npm python uv ruff vulture
+            python: true
+            targets: hyper-test-python hyper-test-python-render lint-python
+          # Every compared implementation is installed and built in this job.
           - name: language-parity
-            install: true
+            tools: node npm php composer python uv
+            php: true
+            composer: true
+            python: true
             targets: parity-declarations-check parity-check
     defaults:
       run:
@@ -87,7 +87,7 @@ jobs:
         run: make install-packages
       - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
         id: php
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && matrix.php }}
         with:
           php-version-file: hyper/.php-version
           extensions: pdo_sqlite
@@ -95,20 +95,20 @@ jobs:
           coverage: none
       - id: tools
         if: ${{ !cancelled() }}
-        run: make install-tools
+        run: make install-tools TOOLS="${{ matrix.tools }}"
       - id: hooks
         if: ${{ !cancelled() }}
         run: make hooks
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         id: template
-        if: ${{ !cancelled() && matrix.install }}
+        if: ${{ !cancelled() && matrix.composer }}
         with:
           repository: polyspec/template
           ref: v0.0.12
           path: template
       - id: install
-        if: ${{ !cancelled() && matrix.install }}
-        run: make hyper-install
+        if: ${{ !cancelled() && matrix.composer }}
+        run: make hyper-install-php
       - id: python
         if: ${{ !cancelled() && matrix.python }}
         run: make hyper-install-python

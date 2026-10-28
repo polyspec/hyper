@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 70fef1f8d15bb5e9c92ccc7f7187b0f846a92421f8401cd6baf3fb2434c3d677 -->
+<!-- source-sha256: d89ff0dad823c62c095a3dae6ff0b1b577c6177eb031846f6d0fd4e7275f5f91 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
-- Protocol 선언 검증과 언어 간 동등 검사를 browser 설치 없이 별도 보고서 및 필수 최종 결과를 갖는 독립 language-parity CI job에서 실행한다. (H27.24)
+- Job별 도구 선택과 잠긴 Composer 및 Python 설치 분리를 준비한다. 언어 build는 자신의 도구만 검증하며 공통 script 검사와 server 간 비교는 필요한 모든 환경을 소유하는 group으로 옮긴다. 릴리즈된 선택 도구 설치기 연결은 대기 상태다.
+- Protocol 선언 검증과 언어 간 동등 검사를 browser 설치 없이 별도 보고서 및 필수 최종 결과를 갖는 독립 language-parity CI job에서 실행한다. (H27.24) (H27.25)
 
 ## 0.0.19
 - PHP 8.4.27에서 통과한 애플리케이션 CI group 6개와 정책 gate 결과를 기능 상태에 기록하고 애플리케이션 CI runner와 공유 workflow 설정을 구분한다. (H27.23)

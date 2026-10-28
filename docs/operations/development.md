@@ -162,19 +162,24 @@ Every check group sets up PHP before `make install-tools`, because tool discover
 
 The workflow `.github/workflows/ci.yml` runs the full suite for the push of `main` and every manual run (`workflow_dispatch`) (HR-91, see [Publishing main](#publishing-main)). Its job `check` has one matrix entry per CI group, with `fail-fast: false`, and each entry names the targets that it runs:
 
-| Entry | Targets | Setup |
-|---|---|---|
-| `docs` | `kit-check`, `toolchain-check`, `layout-check`, `typecheck`, `lint-ts`, `docs-check`, `hooks-check`, `push-gate-commit`, `commits-check`, `owner-validate` | Node.js, Python, PHP |
-| `php` | `dependency-policy-check`, `dependency-policy-mutation-check`, `bench-server-smoke`, `lint`, `analyse-php`, `test-php` | Node.js, Python, PHP, the template checkout, `make hyper-install` |
-| `node` | `templates-check`, `hyper-test-scripts`, `test-js`, `hyper-test-node`, `package-check` | Node.js, Python, PHP, the template checkout, `make hyper-install` |
-| `board` | `parity`, `server-parity`, `bundle-size`, `e2e` | Node.js, Python, PHP, the template checkout, `make hyper-install`, `make hyper-install-browser` |
-| `python` | `test-python` | Node.js, the Python of `make install-tools` and the venv of `make hyper-install-python`, PHP |
-| `python-render` | `hyper-test-python-render`, `server-parity-python` | Node.js, Python, PHP, `make hyper-install`, `make hyper-install-browser` |
-| `language-parity` | `parity-declarations-check`, `parity-check` | Node.js, Python, PHP, `make hyper-install` |
+| Entry | Tools selected after bootstrap | Locked package environments | Targets |
+|---|---|---|---|
+| `docs` | Node/npm, PHP/Composer and PHP lint, Python/uv/ruff/vulture, alint | Root and board Composer locks | Common policy, TypeScript lint, document and script checks |
+| `php` | Node/npm, PHP/Composer, phpcs/phpstan | Root and board Composer locks | PHP policy, benchmark smoke, formatting, analysis and tests |
+| `node` | Node/npm | Root npm lock | Template, browser-unit, Node-server and npm consumer checks |
+| `board` | Node/npm, PHP/Composer, Python/uv | Root npm, root and board Composer, Python uv locks | Browser parity, Node/Python server comparisons, bundle sizes and E2E |
+| `python` | Node/npm, Python/uv, ruff/vulture | Root npm and Python uv locks | Python unit, rendering and lint checks |
+| `language-parity` | Node/npm, PHP/Composer, Python/uv | Root npm, root and board Composer, Python uv locks | Protocol declaration and cross-language parity checks |
 
-The `language-parity` group owns `parity-declarations-check` and `parity-check`. It starts independently of the language, rendering and browser groups, installs the runtime dependencies without Chromium, and publishes `var/ci/language-parity/`. The matrix aggregate requires its result for `ci-passed`.
+Each group calls `make install-tools TOOLS="${{ matrix.tools }}"`; Kit owns selection, mandatory tool dependencies, version and hash validation, and reuse of matching installed tools. Hyper declares no alternate tool installer. The current 0.0.60 pin does not support this selection, so the prepared workflow must remain outside main until the released interface is integrated and verified.
 
-Each step runs one make target (HR-90) and every step after the first runs after a failed step. The workflow starts the bootstrap with the Node.js of `mise.toml` and sets up PHP from `.php-version`, and every job runs `make install-tools` for the Python of `config/toolchain.json` and checks out the template repository at the tag `TEMPLATE_TAG` of the Makefile as `../template`, from which `make hyper-install` copies the native extension sources. `make ci-targets TARGETS="<targets>" CI_REPORT=var/ci/<name>` runs every target of the entry with its own `make -k <target>` to its end and writes the report. `make ci-summary CI_REPORT=var/ci/<name>` writes the job summary. The job uploads the artifact `ci-<name>-<run id>-<attempt>`, the directory `var/ci/<name>/`:
+`make hyper-install-php` installs only the pinned PHP archives and the root and board Composer locks, under the existing installation lock. `make hyper-install-python` installs only the Python environment through `uv sync --locked`. Node dependencies use the existing npm lock installation. Native source development links remain a separate local installation choice.
+
+Build prerequisites belong to the checks in their own job: `node-toolchain-check`, `php-toolchain-check` and `python-toolchain-check` validate only the toolchain that the target runs. The common policy group still validates the entire declared toolchain. No language job waits for another language job or downloads its environment or build artifacts. Installation is online; builds and checks retain the offline environment.
+
+The protocol `language-parity` group installs all three implementations itself and requires no Chromium. Browser-dependent cross-server comparisons belong to `board`, which installs all three implementations and Chromium itself. Python rendering tests belong to the Python job. The matrix aggregate requires every group result for `ci-passed`.
+
+Each command step runs one make target (HR-90), and steps continue after an earlier failure to collect all reports. The bootstrap uses Node from `mise.toml`; the matrix selects the remaining pinned tools and conditionally prepares PHP, Composer, Python and Chromium. PHP-enabled groups check out the declared template tag; pinned release assets provide extension sources. `make ci-targets TARGETS="<targets>" CI_REPORT=var/ci/<name>` runs every target of the entry with its own `make -k <target>` to its end and writes the report. `make ci-summary CI_REPORT=var/ci/<name>` writes the job summary. The job uploads the artifact `ci-<name>-<run id>-<attempt>`, the directory `var/ci/<name>/`:
 
 - `summary.md`: the tree, the running releases of Node.js, npm, PHP with its patch, Composer and make, the outcome of each setup step, and a table of the targets with their status, time and first failure lines, followed by the first failure lines of each failed target;
 - `record.json`: the same as data, written before and after each target, so a runner that stopped leaves the target that was running;

@@ -30,8 +30,9 @@ const COMPOSER = path.join(TOOLS, 'mise/shims/composer');
 const commandsOf = (lines: string[]) => lines.flatMap((line) => line.split(/&&|;|\|\||\s--\s/).map((part) => part.trim().replace(/^(?:[A-Za-z_][A-Za-z0-9_]*=\S*\s+)+/, '')));
 
 test('the recipes that run npm, Composer or PHP check the toolchain first, and install installs the tools first', () => {
-  for (const target of ['ext', 'hyper-lint', 'templates-check']) {
-    assert.equal(dryRun(target)[0]?.trim(), `${NODE} ${kitTool('check-toolchain')}`, target);
+  for (const [target, tools] of [['ext', 'php composer'], ['hyper-lint', 'php composer'], ['templates-check', 'node npm']]) {
+    assert.ok(target !== undefined && tools !== undefined);
+    assert.equal(dryRun(target)[0]?.trim(), `${NODE} ${kitTool('check-toolchain')} ${tools}`, target);
   }
   // make hyper-install is judged as the main checkout runs it: a worktree installs no tools and runs those of the main
   // checkout (kit K519), so its install-kit prints the refusal of K519; the dry run of the main checkout reads only.
@@ -165,4 +166,18 @@ test('the venv of the Python server package installs its committed uv.lock and n
   const lines = dryRun('hyper-install-python');
   assert.ok(lines.some((line) => line.endsWith('uv sync --quiet --locked --project packages/server/python')), lines.join('\n'));
   assert.equal(spawnSync('git', ['ls-files', '--error-unmatch', 'packages/server/python/uv.lock'], { encoding: 'utf8' }).status, 0, 'packages/server/python/uv.lock is not tracked');
+});
+
+
+test('H27.25 language builds validate only their own offline toolchain (HR-81, HR-89)', () => {
+  for (const [target, tools] of [['node-toolchain-check', 'node npm'], ['php-toolchain-check', 'php composer'], ['python-toolchain-check', 'python uv']]) {
+    assert.ok(target !== undefined && tools !== undefined);
+    assert.deepEqual(dryRun(target), [`${NODE} ${kitTool('check-toolchain')} ${tools}`]);
+  }
+  const php = dryRun('hyper-install-php').join('\n');
+  assert.match(php, /composer install --no-interaction/);
+  assert.doesNotMatch(php, /uv sync|python-venv|install-tools\.(?:mts|mjs)|npm ci/);
+  const python = dryRun('hyper-install-python').join('\n');
+  assert.match(python, /uv sync --quiet --locked/);
+  assert.doesNotMatch(python, /composer install|release-assets\.(?:mts|mjs)|install-tools\.(?:mts|mjs)/);
 });

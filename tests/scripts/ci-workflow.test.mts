@@ -176,9 +176,9 @@ test('each workflow declares exactly its triggers (HR-91, HR-95)', () => {
 
 /**
  * The entries of the matrix of ci.yml, read from the block layout: an entry is an item `- name: <name>` at indent 10 and its
- * keys are at indent 12. Returns [{ name, targets: [...], install, browser, python }].
+ * keys are at indent 12. Returns the targets, browser flag and remaining declared keys.
  */
-interface MatrixEntry { name: string; targets: string[]; install: boolean; browser: boolean; keys: Record<string, string> }
+interface MatrixEntry { name: string; targets: string[]; browser: boolean; keys: Record<string, string> }
 
 function matrixEntries(text: string): MatrixEntry[] {
   const entries: { name: string; keys: Record<string, string> }[] = [];
@@ -189,7 +189,7 @@ function matrixEntries(text: string): MatrixEntry[] {
     const last = entries.at(-1);
     if (key && last) last.keys[group(key, 1)] = group(key, 2).replace(/^'(.*)'$/, '$1');
   }
-  return entries.map(entry => ({ name: entry.name, keys: entry.keys, targets: (entry.keys['targets'] ?? '').split(' ').filter(Boolean), install: entry.keys['install'] === 'true', browser: entry.keys['browser'] === 'true' }));
+  return entries.map(entry => ({ name: entry.name, keys: entry.keys, targets: (entry.keys['targets'] ?? '').split(' ').filter(Boolean), browser: entry.keys['browser'] === 'true' }));
 }
 
 // CHECK_TARGETS of the Makefile without the targets of one platform.
@@ -245,9 +245,9 @@ test('the workflow ci runs every matrix entry in a job that runs to its end and 
     // packages, and the recipes run the Python of var/tools, so every job runs the bootstrap and make install-tools in this
     // order before its first check.
     const runs = job.steps.map((step) => step.run);
-    const order = [...BOOTSTRAP_RUNS, 'make install-tools'].map((run) => runs.indexOf(run));
+    const order = [...BOOTSTRAP_RUNS, 'make install-tools TOOLS="${{ matrix.tools }}"'].map((run) => runs.indexOf(run));
     const checks = runs.findIndex((run) => run?.startsWith('make ci-targets'));
-    assert.ok(order.every((at, index) => at >= 0 && (index === 0 || item(order, index - 1, 'the bootstrap steps') < at)) && item(order, -1, 'the bootstrap steps') < checks, `${job.name}: ${[...BOOTSTRAP_RUNS, 'make install-tools'].join(', ')} run in order before the checks`);
+    assert.ok(order.every((at, index) => at >= 0 && (index === 0 || item(order, index - 1, 'the bootstrap steps') < at)) && item(order, -1, 'the bootstrap steps') < checks, `${job.name}: ${[...BOOTSTRAP_RUNS, 'make install-tools TOOLS="${{ matrix.tools }}"'].join(', ')} run in order before the checks`);
     assert.ok(!job.steps.some((step) => (step.uses ?? '').startsWith('actions/setup-python@')), `${job.name}: no setup-python step`);
   }
 });
@@ -363,12 +363,12 @@ test('.php-version holds the PHP minor release, and every setup-php step reads i
 });
 
 
-test('H27.20 every CI check group prepares PHP before installing the checkout tools', () => {
+test('H27.20 PHP-enabled CI groups prepare PHP before selected tool installation', () => {
   for (const job of jobs(readFileSync(path.join(WORKFLOWS, 'ci.yml'), 'utf8')).filter(job => job.name !== CI_PASSED)) {
     const php = job.steps.findIndex(step => step.uses?.startsWith('shivammathur/setup-php@'));
-    const tools = job.steps.findIndex(step => step.run === 'make install-tools');
+    const tools = job.steps.findIndex(step => step.run === 'make install-tools TOOLS="${{ matrix.tools }}"');
     assert.ok(php >= 0 && php < tools, `${job.name}: declared PHP must exist before tool discovery`);
-    assert.equal(job.steps[php]?.if, '${{ !cancelled() }}', `${job.name}: PHP is required by every check group`);
+    assert.equal(job.steps[php]?.if, '${{ !cancelled() && matrix.php }}', `${job.name}: PHP setup follows the declared environment`);
   }
 });
 
@@ -387,7 +387,8 @@ test('H27.24 cross-language protocol parity has an independent matrix job (HY-1,
   const parity = entries.find(entry => entry.name === 'language-parity');
   assert.ok(parity !== undefined, 'cross-language parity requires its own CI group');
   assert.deepEqual(parity.targets, ['parity-declarations-check', 'parity-check']);
-  assert.equal(parity.install, true, 'parity requires the installed runtime dependencies');
+  assert.equal(parity.keys['composer'], 'true', 'parity requires the locked PHP dependencies');
+  assert.equal(parity.keys['python'], 'true', 'parity requires the locked Python dependencies');
   assert.equal(parity.browser, false, 'protocol equivalence needs no browser');
   for (const entry of entries.filter(entry => entry !== parity)) {
     assert.ok(!entry.targets.includes('parity-check') && !entry.targets.includes('parity-declarations-check'), `${entry.name}: cross-language parity belongs only to its independent group`);
@@ -395,4 +396,37 @@ test('H27.24 cross-language protocol parity has an independent matrix job (HY-1,
   const check = jobs(readFileSync(path.join(WORKFLOWS, 'ci.yml'), 'utf8')).find(job => job.name === 'check');
   assert.ok(check !== undefined);
   assert.doesNotMatch(check.text, /^ {4}needs:/m, 'matrix checks must start independently');
+});
+
+
+test('H27.25 CI declares job-owned tools and locked package environments (HR-81, HR-89, HR-91)', () => {
+  const text = readFileSync(path.join(WORKFLOWS, 'ci.yml'), 'utf8');
+  const entries = matrixEntries(text);
+  const expected: Record<string, { tools: string; php?: boolean; composer?: boolean; python?: boolean }> = {
+    docs: { tools: 'node npm php composer phpcs phpstan python uv ruff alint vulture', php: true, composer: true },
+    php: { tools: 'node npm php composer phpcs phpstan', php: true, composer: true },
+    node: { tools: 'node npm' },
+    board: { tools: 'node npm php composer python uv', php: true, composer: true, python: true },
+    python: { tools: 'node npm python uv ruff vulture', python: true },
+    'language-parity': { tools: 'node npm php composer python uv', php: true, composer: true, python: true },
+  };
+  assert.deepEqual(entries.map(entry => entry.name).sort(), Object.keys(expected).sort());
+  for (const entry of entries) {
+    const profile = expected[entry.name];
+    assert.ok(profile !== undefined);
+    assert.equal(entry.keys['tools'], profile.tools, `${entry.name}: declared tool selection`);
+    for (const key of ['php', 'composer', 'python'] as const) assert.equal(entry.keys[key] === 'true', profile[key] === true, `${entry.name}: ${key} environment`);
+  }
+  const checks = jobs(text).find(job => job.name === 'check');
+  assert.ok(checks !== undefined);
+  assert.ok(checks.steps.some(step => step.run === 'make install-tools TOOLS="${{ matrix.tools }}"'));
+  assert.ok(!checks.steps.some(step => step.run === 'make install-tools' || step.run === 'make hyper-install' || step.run === 'make install'));
+  assert.doesNotMatch(checks.text, /actions\/download-artifact@|^ {4}needs:/m);
+  const php = checks.steps.find(step => step.run === 'make hyper-install-php');
+  const python = checks.steps.find(step => step.run === 'make hyper-install-python');
+  assert.equal(php?.if, '${{ !cancelled() && matrix.composer }}');
+  assert.equal(python?.if, '${{ !cancelled() && matrix.python }}');
+  assert.ok(entries.find(entry => entry.name === 'docs')?.targets.includes('hyper-test-scripts'));
+  assert.ok(entries.find(entry => entry.name === 'python')?.targets.includes('hyper-test-python-render'));
+  assert.ok(entries.find(entry => entry.name === 'board')?.targets.includes('server-parity-python'));
 });
