@@ -4,9 +4,9 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
-- Select template source checkouts independently from Composer installation. Common policy checks retain their locked release packages without discovering an unrelated development source.
 
 ## 0.0.20
+- Select template source checkouts independently from Composer installation. Common policy checks retain their locked release packages without discovering an unrelated development source. (H27.25-1)
 - Verify all five 0.0.20 archives in isolated native consumers without development links, alongside the selective-install workflow owner checks. (H27.25)
 - Adopt the published Kit 0.0.61 selective installer. Bootstrap npm separately, select only each CI group’s native tools, explicitly install required PHP symbol extractors, and keep language and comparison environments independent.
 - Declare per-job tool selections and separate locked Composer and Python installations. Language builds validate only their own tools; common script checks and cross-server comparisons execute in the groups that own all required environments.

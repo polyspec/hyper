@@ -1,13 +1,13 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: ffb05a5a580856057f3b253eafdd30128a0fd291321cdef24394640a1e3bfe80 -->
+<!-- source-sha256: a91c47da66669b222f1d34088d56579341bc9aa5aa0af0f8ac0489e68c7d4106 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
-- Composer 설치와 template source checkout을 별도로 선택한다. 공통 정책 검사는 불필요한 개발 source를 탐색하지 않고 잠긴 release package를 유지한다.
 
 ## 0.0.20
+- Composer 설치와 template source checkout을 별도로 선택한다. 공통 정책 검사는 불필요한 개발 source를 탐색하지 않고 잠긴 release package를 유지한다. (H27.25-1)
 - 선택 설치 workflow 소유 검사와 함께 개발 link가 없는 독립 native consumer에서 0.0.20 archive 5개를 모두 검증한다. (H27.25)
 - 공개된 Kit 0.0.61 선택 설치기를 연결한다. npm은 별도로 bootstrap하고 CI group별 native 도구만 선택하며 필요한 PHP symbol extractor를 명시적으로 설치하고 언어별 환경과 비교 환경의 독립성을 유지한다.
 - Job별 도구 선택과 잠긴 Composer 및 Python 설치를 분리한다. 언어 build는 자신의 도구만 검증하며 공통 script 검사와 server 간 비교는 필요한 모든 환경을 소유하는 group에서 실행한다.
