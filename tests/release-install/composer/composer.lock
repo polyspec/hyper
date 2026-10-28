@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "812c02f6be1dd9c7affde85dcf684659",
+    "content-hash": "003d683160c872c8eb6778b97921677a",
     "packages": [
         {
             "name": "opis/json-schema",
@@ -198,10 +198,10 @@
         },
         {
             "name": "polyspec/hyper-server",
-            "version": "0.0.19",
+            "version": "0.0.20",
             "dist": {
                 "type": "zip",
-                "url": "artifacts/polyspec-hyper-server-php-0.0.19.zip",
+                "url": "artifacts/polyspec-hyper-server-php-0.0.20.zip",
                 "shasum": ""
             },
             "require": {
