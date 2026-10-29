@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- The owner tests name each kit tool by the real path of the installed kit, from which make runs it in a linked checkout and a packed install alike. (H27.27-1)
 - Pin shared tools 0.0.63 for native bootstrap and runtime-scoped source linking. Keep the pending browser-runner integration outside release verification. (H27.26)
 
 ## 0.0.21
