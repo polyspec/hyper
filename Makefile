@@ -278,8 +278,8 @@ server-parity-python: assets server ## Compare the Python server responses with 
 bundle-size: assets ## Print the sizes of the SSR script, the CSR shell, the chunks and the largest template with their gzip limits; a size above its limit is a warning, never a failure
 	$(NODE) scripts/check-bundle-size.mts --app $(BOARD) --output $(BOARD)/build --limits config/bundle-size.json$(if $(filter true,$(GITHUB_ACTIONS)), --annotations)
 
-e2e: assets server ## Run the SSR, CSR, no-JavaScript and comparison flows in Chromium on servers of the run
-	$(NODE) scripts/run-e2e.mts
+e2e: assets server ## Run the SSR, CSR, no-JavaScript and comparison flows in Chromium on servers of the run; CASES=<pattern> runs the cases whose title matches
+	$(NODE) scripts/run-e2e.mts -- $(NODE) $(KIT)/run-tests.$(KIT_EXT) playwright -- --config tests/e2e/playwright.config.ts$(if $(CASES), --grep '$(CASES)')
 
 virtiofs-check: toolchain-check ## Write the outputs of the server build and of the output copies on a virtiofs bind mount of Apple container (HR-68); a target of the full suite on Darwin
 	$(NODE) $(KIT)/run-tests.$(KIT_EXT) node -- tests/virtiofs/
@@ -343,4 +343,4 @@ release-proof: export npm_config_allow_remote := root
 
 .PHONY: hyper-runner-owner-check
 hyper-runner-owner-check: ## Verify application test entry points through the shared test runner
-	$(NODE) $(KIT)/run-tests.$(KIT_EXT) node -- tests/scripts/check-recipes.test.mts tests/scripts/ci-workflow.test.mts
+	$(NODE) $(KIT)/run-tests.$(KIT_EXT) node -- tests/scripts/check-recipes.test.mts tests/scripts/ci-workflow.test.mts tests/scripts/run-e2e.test.mts

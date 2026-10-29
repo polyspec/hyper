@@ -1,7 +1,7 @@
 // Tests that `make e2e` runs the browser tests on servers of its own run (scripts/run-e2e.mts): the servers listen on
 // ports that the system assigns while another server holds a port of an earlier run, Playwright receives their
 // addresses, and the database of the run is removed with its temporary directory. The test lists the cases and
-// runs none of them.
+// runs none of them; `make e2e` runs them through the shared test runner (H27.26).
 import assert from 'node:assert/strict';
 import { spawn, spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
@@ -19,7 +19,7 @@ test('the browser tests run on servers of the run while another server holds a p
     foreign.listen(8091, '127.0.0.1', () => resolve(true));
   });
   t.after(() => new Promise<void>((resolve) => (held ? foreign.close(() => resolve()) : resolve())));
-  const child = spawn(process.execPath, ['scripts/run-e2e.mts', '--list'], { stdio: ['ignore', 'pipe', 'pipe'] });
+  const child = spawn(process.execPath, ['scripts/run-e2e.mts', '--', process.execPath, 'node_modules/@playwright/test/cli.js', 'test', '--config', 'tests/e2e/playwright.config.ts', '--list'], { stdio: ['ignore', 'pipe', 'pipe'] });
   let output = '';
   child.stdout.on('data', (data) => { output += data; });
   child.stderr.on('data', (data) => { output += data; });
@@ -39,4 +39,10 @@ test('Playwright without the runner fails and names the missing address', () => 
   const result = spawnSync(process.execPath, ['node_modules/@playwright/test/cli.js', 'test', '--config', 'tests/e2e/playwright.config.ts', '--list'], { env, encoding: 'utf8' });
   assert.notEqual(result.status, 0);
   assert.match(`${result.stdout}${result.stderr}`, /HYPER_E2E_SSR is required; run the browser tests with make e2e/);
+});
+
+test('the browser tests need the command that runs them', () => {
+  const result = spawnSync(process.execPath, ['scripts/run-e2e.mts'], { encoding: 'utf8' });
+  assert.equal(result.status, 2);
+  assert.match(result.stderr, /Usage: node scripts\/run-e2e\.mts -- <command>/);
 });

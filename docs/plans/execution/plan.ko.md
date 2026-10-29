@@ -1,5 +1,5 @@
 <!-- doc-id: plan-execution -->
-<!-- source-sha256: 6dae7b160e266573c4d805846ad20465f1f39645a715296fa954e3fd59b21057 -->
+<!-- source-sha256: 7b330fd70f09c0f33bd3b87f391a21d8c421467cb8e6cedbb5c38b538dd9cc1a -->
 # 실행
 
 [English](plan.md).
@@ -122,6 +122,6 @@
 
 H27.25는 native package manager와 공유 선택 도구 인터페이스를 사용한 독립 CI 환경을 준비한다. 고정된 kit 0.0.61이 선택 설치기를 제공한다. 격리 worktree에서 앱 선언, 범위를 제한한 toolchain 검증, 명시적인 PHP symbol extractor와 소유 검사를 검증한 뒤 병합하고 한 번 push하여 CI 근거를 수집한다. 앱 전용 도구 설치기는 추가하지 않는다.
 
-H27.26은 모든 runtime test가 provider runner를 사용할 때까지 0.0.21 후보를 공개하지 않는다. Python은 지원되는 Kit 인터페이스를 사용하고 자체 unittest harness를 제거했다. Browser E2E는 [Kit issue 13](https://github.com/polyspec/kit/issues/13)으로 요청한 native Playwright adapter가 필요하다. Browser 사례를 모두 유지하며 suite를 하나의 합성 test로 감싸거나 릴리즈 검사를 약화하는 대신 provider 구현을 기다린다. 실행 경로가 직접 실행으로 남아 있는 동안 릴리즈 tag와 새 CI 실행을 만들지 않는다.
+H27.26은 모든 runtime test가 provider runner를 사용할 때까지 0.0.21 후보를 공개하지 않는다. Python은 지원되는 Kit 인터페이스를 사용하고 자체 unittest harness를 제거했다. `make e2e`는 `scripts/run-e2e.mts`로 실행의 서버를 띄우고 모든 browser 사례를 Kit test runner의 Playwright 실행(K747)으로 돌리며, 이 실행은 사례마다 자체 timeout과 결과를 보고한다. 로컬에서는 `CASES=<pattern>`으로 사례를 선택한다. 개발 중에는 릴리즈 tag를 만들지 않는다.
 
 고정된 0.0.65(H27.27)는 깨끗한 checkout의 bootstrap과 runtime 범위를 제한한 native link에 대한 0.0.63의 수정을 유지하고, H27.26에 필요한 공유 test runner의 Playwright 실행(K747)을 포함하며, rules check가 gates matrix의 모든 runtime에 닿게 한다(K757). 개발 중에는 0.0.21 후보의 릴리즈 tag를 만들지 않는다.

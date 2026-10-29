@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: 3843232115a9f0b0b9f657fc4c92eb9d54927f76e9867f174677f6e2c50cc251 -->
+<!-- source-sha256: 4e44388ea4c633183cfcd80f02c575e5f0bca691d018f39a5c7934f2bc6017c2 -->
 # 개발
 
 [English](development.md).
@@ -198,7 +198,7 @@ Protocol `language-parity` group은 세 구현을 모두 직접 설치하고 Chr
 
 `make parity`와 `make server-parity`는 `scripts/board-servers.mts`로 자기 서버를 띄운다. 모든 서버는 system이 배정하는 port에서 listen하고, 검사는 서버가 출력에 알리는 주소로 요청을 보낸다(PHP의 `Development Server (http://127.0.0.1:<port>) started`, board Node 서버의 `board on http://127.0.0.1:<port>`, `scripts/serve-edge.mts`의 `edge http://127.0.0.1:<port>`). 따라서 다른 checkout이나 session의 실행이 도는 동안에도 요청은 같은 실행의 서버에 닿는다. 서버를 띄우는 일은 시간 제한이 없는 단계다. 시작, `[<name>]`을 붙인 서버의 모든 출력 줄, 경과 시간이 붙은 주소를 출력하고, 서버가 먼저 종료하면 실패한다. 한 실행의 database와 session 디렉터리는 임시 디렉터리에 있으며, `scripts/check-parity.mts`는 그 디렉터리를 `run directory: <path>`로 출력하고 지운다.
 
-`make e2e`도 같은 방식으로 `scripts/run-e2e.mts`를 실행한다. 이 script는 board 예제를 두 rendering 방식(API origin, edge, SSR origin)으로 실행 디렉터리의 빈 database 위에 띄우고, `tests/e2e/origins.ts`가 요구하는 `HYPER_E2E_SSR`과 `HYPER_E2E_CSR`에 주소를 담아 `playwright test`를 실행한다. 인자는 Playwright에 넘긴다. 예: `node scripts/run-e2e.mts -g 'stylesheet'`. Playwright는 서버를 직접 띄우지 않는다. `make bench-browser`도 같은 방식으로 서버와 데이터베이스를 띄운다.
+`make e2e`도 같은 방식으로 `scripts/run-e2e.mts`를 실행한다. 이 script는 board 예제를 두 rendering 방식(API origin, edge, SSR origin)으로 실행 디렉터리의 빈 database 위에 띄우고, `tests/e2e/origins.ts`가 요구하는 `HYPER_E2E_SSR`과 `HYPER_E2E_CSR`에 주소를 담아 `--` 뒤의 명령을 실행한다. `make e2e`는 공유 test runner의 Playwright 실행을 넘기며, 이 실행은 사례마다 자체 timeout과 결과를 보고한다(H27.26). `make e2e CASES=stylesheet`는 제목이 맞는 사례를 실행하고, 선택 없는 실행은 CI에서만 한다. Playwright는 서버를 직접 띄우지 않는다. `make bench-browser`도 같은 방식으로 서버와 데이터베이스를 띄운다.
 
 ## 서버 빌드
 

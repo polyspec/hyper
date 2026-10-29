@@ -173,3 +173,13 @@ test('H27.26 every Python checking target delegates discovery and execution to K
   }
   assert.equal(existsSync(path.join(ROOT, 'packages/server/python/tests/run.py')), false, 'a private Python runner must not remain');
 });
+
+test('H27.26 the browser cases run through the Playwright run of Kit', () => {
+  const e2e = dryRun('e2e').filter(line => line.includes('scripts/run-e2e.mts'));
+  const [line] = e2e;
+  assert.ok(e2e.length === 1 && line !== undefined, e2e.join('\n'));
+  assert.ok(line.includes(`scripts/run-e2e.mts -- `) && line.endsWith(`${kitTool('run-tests')} playwright -- --config tests/e2e/playwright.config.ts`), line);
+  assert.doesNotMatch(line, /node_modules\/\.bin\/playwright|@playwright\/test\/cli\.js/);
+  const selected = dryRun('e2e', { variables: ['CASES=stylesheet'] }).find(entry => entry.includes('scripts/run-e2e.mts')) ?? '';
+  assert.ok(selected.endsWith("--config tests/e2e/playwright.config.ts --grep 'stylesheet'"), selected);
+});

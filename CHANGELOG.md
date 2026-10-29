@@ -6,7 +6,8 @@
 ## Unreleased
 - Adopt the published integrity-locked Kit 0.0.65, which carries the Playwright run of the shared test runner and whose rules check reaches every runtime of the gates matrix, and synchronize its copies. (H27.27)
 - The owner tests name each kit tool by the real path of the installed kit, from which make runs it in a linked checkout and a packed install alike. (H27.27-1)
-- Pin shared tools 0.0.63 for native bootstrap and runtime-scoped source linking. Keep the pending browser-runner integration outside release verification. (H27.26)
+- Pin shared tools 0.0.63 for native bootstrap and runtime-scoped source linking. (H27.26)
+- Run every browser case of `make e2e` on servers of the run through the Playwright run of the shared test runner, which reports each case with its own timeout; `CASES=<pattern>` selects cases. (H27.26)
 
 ## 0.0.21
 - Require both application CI and the provider gate aggregate to succeed on the tagged commit before publication.

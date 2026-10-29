@@ -1,5 +1,5 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: ca7594c11a680df74c3bad748e78f80a7e89e8caff2c4fff88dd5cc3ca24cd51 -->
+<!-- source-sha256: 3d86dc97bf5cd65a2216d8c1242af2b98b5919aafcc30bf233927472d9031e18 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
@@ -7,7 +7,8 @@
 ## Unreleased
 - 공유 test runner의 Playwright 실행을 포함하고 rules check가 gates matrix의 모든 runtime에 닿는 공개 Kit 0.0.65를 무결성으로 잠가 적용하고 그 사본을 동기화한다. (H27.27)
 - 소유 테스트는 각 kit 도구를 설치된 kit의 실제 경로로 찾는다. link된 checkout과 packed 설치 모두 make가 이 경로에서 도구를 실행한다. (H27.27-1)
-- Native bootstrap과 runtime 범위를 제한한 source link를 위해 공유 도구를 0.0.63으로 고정한다. 대기 중인 browser runner 연결은 릴리즈 검증 완료로 판정하지 않는다. (H27.26)
+- Native bootstrap과 runtime 범위를 제한한 source link를 위해 공유 도구를 0.0.63으로 고정한다. (H27.26)
+- `make e2e`의 모든 browser 사례를 실행의 서버에서 공유 test runner의 Playwright 실행으로 돌리며, 이 실행은 사례마다 자체 timeout과 결과를 보고한다. `CASES=<pattern>`으로 사례를 선택한다. (H27.26)
 
 ## 0.0.21
 - 공개 전에 tag commit의 애플리케이션 CI와 provider gate 집계가 모두 성공해야 한다.
