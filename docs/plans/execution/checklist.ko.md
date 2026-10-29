@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 60787d6101105485551f77544cca4569efc423c3f1c38ce0a26dfc18e62deab5 -->
+<!-- source-sha256: 2769f7dfd987929a9bc315d8a5c683c6ba4f7ad5882fe9fcf0dfe37010347eed -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -291,3 +291,4 @@
 | H27.29 | hyper 0.0.21을 릴리스한다: release metadata와 0.0.21의 archive 다섯 개 | release metadata and the 0.0.21 candidate archives | `make release-candidate-assets VERSION=0.0.21` | [v] |
 | H27.30 | release-prepare의 recursive make를 $(MAKE)가 더하는 variable과 무관하게 target으로 match | tests/scripts/template-version.test.mts | `node node_modules/@polyspec/kit/scripts/kit/run-tests.mts node -- tests/scripts/template-version.test.mts` | [o] |
 | H27.31 | kit이 삭제하는 Python build backend pin과 dependency policy를 제거한다(K788, K789) | config/toolchain.json, config/release.json, config/dependency-policy.json, config/owner-checks.json, docs/operations, packages/server/python/pyproject.toml | `make owner-validate` and `node node_modules/@polyspec/kit/scripts/kit/run-tests.mts node -- tests/scripts/template-version.test.mts` | [ ] |
+| H27.32 | kit이 삭제하는 reference-transaction hook을 제거한다(K801) | .githooks/reference-transaction | `make hooks-check` | [ ] |
