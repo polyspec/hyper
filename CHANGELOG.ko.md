@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: b9214a8a849494d56035acd0aa472fb197d1a69d9afed2e9638bf84e2d8d41a5 -->
+<!-- source-sha256: ee656857d6117cb482bee01af97a7b77200303bc409a4bd1d3af276bb7ae3d1b -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- CI의 docs job은 서버 package의 Python 환경을 설치한다. hyper-test-scripts의 public-symbols가 kit의 python extractor로 설치된 distribution을 읽기 때문이다(kit K788). 세 구현 중 두 구현의 symbol만 추출했다. (H27.42)
 - toolchain test는 H27.39가 바꾼 대로 make hyper-install-python이 venv를 새로 만들고 uv sync --no-editable을 실행하기를 기대한다. (H27.41)
 - config/parity.json은 각 Python symbol을 import 경로 polyspec.hyper.<module>.<name>으로 선언한다. kit K788부터 kit의 python extractor가 이 경로를 읽는다. (H27.40)
 - make hyper-install-python은 venv를 새로 만들고 Python 서버 package를 non-editable로 설치하며, kit의 link가 그 package 폴더를 checkout에 link한다. editable 설치에서는 kit의 python extractor가 symbol을 내지 않았고(kit K788), link-state-check는 설치된 package 폴더를 찾지 못했다. (H27.39)

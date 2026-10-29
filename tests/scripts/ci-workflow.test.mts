@@ -403,7 +403,7 @@ test('H27.25 CI declares job-owned tools and locked package environments (HR-81,
   const text = readFileSync(path.join(WORKFLOWS, 'ci.yml'), 'utf8');
   const entries = matrixEntries(text);
   const expected: Record<string, { tools: string; php?: boolean; composer?: boolean; python?: boolean }> = {
-    docs: { tools: 'node php composer phpcs phpstan python uv ruff alint vulture', php: true, composer: true },
+    docs: { tools: 'node php composer phpcs phpstan python uv ruff alint vulture', php: true, composer: true, python: true },
     php: { tools: 'node php composer phpcs phpstan', php: true, composer: true },
     node: { tools: 'node' },
     board: { tools: 'node php composer python uv', php: true, composer: true, python: true },
