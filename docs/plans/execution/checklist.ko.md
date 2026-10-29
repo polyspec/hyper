@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 4257715aab2d67b30eed07437ffcec7c881b28655134be44fd38faca735c670e -->
+<!-- source-sha256: ddd3732ee9e34d83c97e6fd4c387468ca5501a0761e9e3b84c7e506039660aee -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -298,4 +298,4 @@
 | H27.36 | kit이 삭제하는 make release-versions를 제거한다(K812) | .github/workflows/release.yml, AGENTS.md, Makefile, docs/operations/development.md, docs/operations/repository-rules.md | `make rules-check`, `make kit-check` | [o] |
 | H27.37 | kit 복사본은 make kit-sync가 갱신한다고 명시한다(K799) | AGENTS.md, tests/scripts/template-version.test.mts | `make rules-check`, `make docs-check` | [o] |
 | H27.38 | Kit 0.0.70을 채택한다 | package.json, package-lock.json, kit copies, AGENTS.md | `make kit-check`, `make rules-check`, `make docs-check` | [o] |
-| H27.39 | parity extractor를 위해 Python 서버 package를 non-editable로 설치한다(K788) | Makefile, docs/operations/development.md | `make hyper-install-python`, `make link-state-check` | [ ] |
+| H27.39 | parity extractor를 위해 Python 서버 package를 non-editable로 설치한다(K788) | Makefile, docs/operations/development.md | `make hyper-install-python`, `make link-state-check` | [~] |
