@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- The release-prepare case of the template version tests matches the recursive make of hyper-install by the target that ends its line, since $(MAKE) of kit-bootstrap.mk adds KIT and KIT_EXT to every recursive make. (H27.30)
 - Remove dependency-policy-check, dependency-policy-mutation-check and the review record config/dependency-review.json from the suite, the CI matrix, the owners and the rules; config/dependency-policy.json stays for the Python lock that make python-lock writes. (H27.28)
 - Adopt the published integrity-locked Kit 0.0.65, which carries the Playwright run of the shared test runner and whose rules check reaches every runtime of the gates matrix, and synchronize its copies. (H27.27)
 - The owner tests name each kit tool by the real path of the installed kit, from which make runs it in a linked checkout and a packed install alike. (H27.27-1)

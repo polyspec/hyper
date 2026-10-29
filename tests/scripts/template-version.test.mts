@@ -142,5 +142,6 @@ test('the release prepares the template repository at the tag of the release thr
   const lines = dryRun('release-prepare', { variables: [`TEMPLATE_REPOSITORY=${repository}`] });
   assert.ok(lines.some((line) => line.includes(`git clone --quiet --depth 1 --branch ${TAG} https://github.com/polyspec/template.git ${repository}`)), lines.join('\n'));
   assert.ok(lines.some((line) => line.startsWith(`git -C ${repository} rev-parse --verify --quiet 'refs/tags/${TAG}^{commit}'`)), lines.join('\n'));
-  assert.ok(lines.some((line) => line.endsWith('make hyper-install')), lines.join('\n'));
+  // $(MAKE) of kit-bootstrap.mk adds KIT and KIT_EXT to every recursive make, so the case compares only the target that ends the line.
+  assert.ok(lines.some((line) => line.split(' ').at(-1) === 'hyper-install'), lines.join('\n'));
 });
