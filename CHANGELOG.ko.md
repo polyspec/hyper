@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: ee656857d6117cb482bee01af97a7b77200303bc409a4bd1d3af276bb7ae3d1b -->
+<!-- source-sha256: fc7057b6a09c2ff01311d161c56a6b9207745ee8fec648c9b9e0fd2bbc5544d2 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- 고정한 release는 Kit 0.0.72다. CI는 아무것도 link하지 않으므로(kit K824) gates workflow는 make link를 실행하지 않고, link-state-check는 CI suite에서 빠진다. 이 검사는 개발 checkout의 link를 검사한다. (H27.43)
 - CI의 docs job은 서버 package의 Python 환경을 설치한다. hyper-test-scripts의 public-symbols가 kit의 python extractor로 설치된 distribution을 읽기 때문이다(kit K788). 세 구현 중 두 구현의 symbol만 추출했다. (H27.42)
 - toolchain test는 H27.39가 바꾼 대로 make hyper-install-python이 venv를 새로 만들고 uv sync --no-editable을 실행하기를 기대한다. (H27.41)
 - config/parity.json은 각 Python symbol을 import 경로 polyspec.hyper.<module>.<name>으로 선언한다. kit K788부터 kit의 python extractor가 이 경로를 읽는다. (H27.40)

@@ -37,7 +37,7 @@ jobs:
             symbols: php
             composer: true
             python: true
-            targets: kit-check toolchain-check layout-check typecheck lint-ts docs-check hooks-check owner-validate rules-check rebuild-check language-check test-markers-check duplication-check link-state-check bypass-check divergence-check suppression-check hyper-test-scripts
+            targets: kit-check toolchain-check layout-check typecheck lint-ts docs-check hooks-check owner-validate rules-check rebuild-check language-check test-markers-check duplication-check bypass-check divergence-check suppression-check hyper-test-scripts
           - name: php
             tools: node php composer phpcs phpstan
             php: true

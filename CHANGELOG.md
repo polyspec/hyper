@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- Kit 0.0.72 is the pinned release: CI links nothing (kit K824), so the gates workflow runs no make link and link-state-check leaves the CI suite; it checks the links of a development checkout. (H27.43)
 - The docs job of CI installs the Python environment of the server package, since public-symbols of hyper-test-scripts reads the installed distribution with the python extractor of kit (kit K788); it extracted the symbols of two of the three implementations. (H27.42)
 - The toolchain test expects make hyper-install-python to make the venv anew and run uv sync --no-editable, as H27.39 changed it. (H27.41)
 - config/parity.json declares each Python symbol by its import path, polyspec.hyper.<module>.<name>, which the python extractor of kit reads since kit K788. (H27.40)
