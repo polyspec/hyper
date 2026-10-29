@@ -1,5 +1,5 @@
 <!-- doc-id: agents -->
-<!-- source-sha256: 045d96c25fc7b82b298d02493ba5441a10fa89e400fad77cb549e56a2db515f6 -->
+<!-- source-sha256: 5df83af3e9bca7092dd913adda2e2c1b914d4ec21d7a408ba0ede084c05fac99 -->
 # 개발
 
 [English](AGENTS.md).
@@ -16,7 +16,7 @@
   Enforced by: none, 문서가 현재 동작을 설명하는지는 판단이다.
 - Own: 동작 변경, 그 문서, `docs/features.md`의 기능 상태 행과 `CHANGELOG.md`의 항목은 한 변경이다.
   Enforced by: none, 네 가지가 한 변경에 있는지는 어떤 도구도 보지 않는다.
-- Own: `make docs-check`는 `config/documents.json`이 선언한 대로 문서 쌍, 표지 `doc-id`(두 파일에서 같음)와 `source-sha256`(한국어 파일에서는 영어 파일의 sha256), 링크와 같은 코드 블록을 검증한다. 내용의 정확성은 코드와 test를 읽어 검증한다.
+- Own: `make docs-check`는 `config/documents.json`이 선언한 대로 각 문서를 따로 읽어 링크, anchor, fence, checklist를 검증한다. 영어 파일과 한국어 짝은 같은 표지 `doc-id`를 가지고, 한국어 파일은 영어 파일의 sha256인 `source-sha256`을 가지며, `make documents-stamp`가 번역을 검토한 뒤에 그 값을 쓴다. 두 짝을 비교하는 검사는 없다(kit K809). 내용의 정확성은 코드와 test를 읽어 검증한다.
   Enforced by: `make docs-check`
 
 ## 구현
@@ -84,7 +84,7 @@
 ## 필수 검사
 
 - Own: commit 전에는 `make docs-check`를 실행한다. `make owner-check`, `make check`나 end-to-end 검사(Apple `container`, browser, parity, run의 server 등)는 commit이나 push 전에 local에서 실행하지 않는다. CI가 push 뒤에 실행한다.
-  Enforced by: `make docs-check`, `make check`(checklist의 작업이 끝나기 전에는 guard가 실행을 거부한다)
+  Enforced by: none, local 실행은 어떤 도구도 관찰하지 않는다.
 - Refines P26: `docs/plans/execution/checklist.md`에서 task를 `[o]`로 표시하기 전에, 커밋된 tree에서 그 task의 검증 명령을 실행한다. Verification 열은 `make check`가 아니라 task를 맡는 명령을 적는다. 이미 `[o]`인 행은 명령을 그대로 둔다.
   Enforced by: `make docs-check`
 - Own: commit이나 push 전에 local `make check`는 필요하지 않다. 체크리스트 개발이 끝나면 요청된 로컬 최종 모음을 정확히 한 번 실행하며, 수정이나 task마다 실행하지 않는다. `make check`는 `FINAL_RUN=1`로 kit 기본 보고 실행기를 사용한다. 실행기는 활성 `[~]` 항목과 변경되었거나 commit되지 않은 tree를 거부한다. 한 번 실행 절차는 작업 규칙이며 실행기 guard가 아니다. 보고서를 보존하고 수정 후 실패한 소유 부분만 다시 검사한다(`docs/operations/development.md`). 기능은 CI나 로컬 최종 모음에서 그 target 전체 실행이 통과한 뒤에만 implemented로 표시한다.

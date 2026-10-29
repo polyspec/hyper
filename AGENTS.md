@@ -16,7 +16,7 @@ The working principles of every polyspec repository, and the rules of work that 
   Enforced by: none, whether a document describes the current behavior is a judgement.
 - Own: A behavior change, its documents, its feature status row in `docs/features.md` and its entry in `CHANGELOG.md` are one change.
   Enforced by: none, no tool sees whether the four are in one change.
-- Own: `make docs-check` verifies, as `config/documents.json` declares, the document pairs, the markers `doc-id` (the same in both files) and `source-sha256` (in the Korean file, the sha256 of its English file), the links and the identical code blocks. Content accuracy is verified by reading the code and the tests.
+- Own: `make docs-check` reads each document on its own, as `config/documents.json` declares, and verifies its links, anchors, fences and checklist. The English file and its Korean twin hold the same marker `doc-id`, and the Korean file holds `source-sha256`, the sha256 of its English file, which `make documents-stamp` writes after the translation is reviewed; no check compares the twins (kit K809). Content accuracy is verified by reading the code and the tests.
   Enforced by: `make docs-check`
 
 ## Implementation
@@ -84,7 +84,7 @@ The working principles of every polyspec repository, and the rules of work that 
 ## Required checks
 
 - Own: Before a commit, run `make docs-check`. Do not run `make owner-check`, `make check` or an end-to-end check, such as Apple `container`, a browser, parity or a server of a run, locally before a commit or a push: CI runs them after the push.
-  Enforced by: `make docs-check`, `make check` (its guard refuses a run before the work of the checklist is done)
+  Enforced by: none, a local run is not observed by a tool.
 - Refines P26: Before marking a task `[o]` in `docs/plans/execution/checklist.md`, run the verification command of the task on the committed tree. The Verification column names the command that owns the task, not `make check`. Rows that are already `[o]` keep their command.
   Enforced by: `make docs-check`
 - Own: No local `make check` is required before a commit or push. After checklist development finishes, a requested local final suite runs exactly once, never per fix or per task. `make check` uses the native kit report runner with `FINAL_RUN=1`, which refuses active `[~]` items and a dirty or uncommitted tree. The once-only procedure is a working rule, not a runner guard. Preserve its report and rerun only failed owners after repairs (`docs/operations/development.md`). A feature is marked implemented only after its full target run passes in CI or the local final suite.

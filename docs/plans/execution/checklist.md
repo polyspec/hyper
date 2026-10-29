@@ -296,4 +296,4 @@
 | H27.35 | The ignored-files test names no output of the full-run guard that kit deleted (K240) | tests/scripts/ignored-files.test.mts | `node --test tests/scripts/ignored-files.test.mts` | [o] |
 | H27.36 | Remove make release-versions, which kit deletes (K812) | .github/workflows/release.yml, AGENTS.md, Makefile, docs/operations/development.md, docs/operations/repository-rules.md | `make rules-check`, `make kit-check` | [o] |
 | H27.37 | State that make kit-sync refreshes the copies of kit (K799) | AGENTS.md, tests/scripts/template-version.test.mts | `make rules-check`, `make docs-check` | [o] |
-| H27.38 | Adopt Kit 0.0.70 | package.json, package-lock.json, kit copies, AGENTS.md | `make kit-check`, `make rules-check`, `make docs-check` | [~] |
+| H27.38 | Adopt Kit 0.0.70 | package.json, package-lock.json, kit copies, AGENTS.md | `make kit-check`, `make rules-check`, `make docs-check` | [o] |

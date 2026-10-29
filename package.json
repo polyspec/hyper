@@ -16,7 +16,7 @@
   ],
   "devDependencies": {
     "@playwright/test": "1.64.1",
-    "@polyspec/kit": "https://github.com/polyspec/kit/releases/download/v0.0.65/polyspec-kit-npm-0.0.65.tgz",
+    "@polyspec/kit": "https://github.com/polyspec/kit/releases/download/v0.0.70/polyspec-kit-npm-0.0.70.tgz",
     "@types/node": "26.6.5",
     "esbuild": "0.28.2",
     "htmx.org": "4.0.0",

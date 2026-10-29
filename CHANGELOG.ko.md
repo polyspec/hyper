@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 3cea2ecee715d971910397a02b1bdaeefe53e12cf9ca7ad959904781211260fa -->
+<!-- source-sha256: c3b62e8fffb36ff6029fe934476b0f05770645700c04e2343848025bafaafe18 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- 고정한 release는 Kit 0.0.70이다. 그 gates workflow는 commit 범위를 넘기지 않고, AGENTS와 문서는 make docs-check가 각 문서를 따로 읽으며 두 짝을 비교하지 않고(kit K809), make kit-sync가 복사본을 쓰며, local make check를 거부하는 guard가 없다고 적는다. (H27.38)
 - AGENTS는 make kit-check를 kit 복사본의 검사로 더 이상 지정하지 않고, test 주석은 그 비교를 더 이상 서술하지 않는다. kit은 그 비교를 삭제했다(kit K799). make kit-sync가 설치 package에서 복사본을 갱신한다. (H27.37)
 - kit-sync가 쓰는 release workflow에는 make release-versions step이 없고, 규칙과 문서는 kit이 삭제하는 release의 버전과 manifest 검사(kit K812)를 더 이상 설명하지 않는다. package manager가 버전을 해석한다. (H27.36)
 - ignored-files test는 kit이 삭제한 full-run guard(kit K240)의 출력 var/full-run.json과 var/full-run.lock을 더 이상 적지 않는다. (H27.35)

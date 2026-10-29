@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: fb0f5ff6e53dd29062d64f6109b5b344cfd3d6f96bab6276b0f6b8086b1e5cbe -->
+<!-- source-sha256: f4075af830860e6424f581b8836207fe4d2179ac1908b67287abd5fffa1f7a10 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -297,4 +297,4 @@
 | H27.35 | ignored-files test는 kit이 삭제한 full-run guard(K240)의 출력을 적지 않는다 | tests/scripts/ignored-files.test.mts | `node --test tests/scripts/ignored-files.test.mts` | [o] |
 | H27.36 | kit이 삭제하는 make release-versions를 제거한다(K812) | .github/workflows/release.yml, AGENTS.md, Makefile, docs/operations/development.md, docs/operations/repository-rules.md | `make rules-check`, `make kit-check` | [o] |
 | H27.37 | kit 복사본은 make kit-sync가 갱신한다고 명시한다(K799) | AGENTS.md, tests/scripts/template-version.test.mts | `make rules-check`, `make docs-check` | [o] |
-| H27.38 | Kit 0.0.70을 채택한다 | package.json, package-lock.json, kit copies, AGENTS.md | `make kit-check`, `make rules-check`, `make docs-check` | [~] |
+| H27.38 | Kit 0.0.70을 채택한다 | package.json, package-lock.json, kit copies, AGENTS.md | `make kit-check`, `make rules-check`, `make docs-check` | [o] |
