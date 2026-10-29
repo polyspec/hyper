@@ -326,8 +326,7 @@ check: template-tag ## Run final verification once after checklist development, 
 
 
 # The steps of .github/workflows/release.yml for the tag TAG (release of @polyspec/kit, config/release.json), in this order:
-# release-verify requires the tagged commit on origin/main with the check ci-passed passed, release-versions the version of
-# the tag in every manifest and its section in CHANGELOG.md, release-assets builds the packages and their archives into
+# release-verify requires the tagged commit on origin/main with the check ci-passed passed, release-assets builds the packages and their archives into
 # var/release/assets, and release-publish creates the GitHub Release. The targets are those of the kit.mk of @polyspec/kit; the
 # archives are built from the built packages, so release-assets builds them first.
 release-assets: packages

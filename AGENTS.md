@@ -104,9 +104,9 @@ The working principles of every polyspec repository, and the rules of work that 
 - Own: Until version 0.1 `main` is pushed once, when every task is done, and the CI run of that push is the evidence of its commits. A release is a tag of a commit of `main` whose CI run concluded `ci-passed` success (HR-95). Only the maintainer creates, moves or pushes a tag.
   Enforced by: `make release-verify`
 - Own: The version-bump commit `chore(release): Release X.Y.Z (#<task>)` sets the version X.Y.Z in `package.json`, `packages/client/package.json`, `packages/server/ts/package.json`, `packages/build/package.json`, `packages/server/php/composer.json` and `packages/server/python/pyproject.toml`. It sets the requirement of `@polyspec/hyper-client` in `packages/server/ts/package.json` and `packages/build/package.json`, and the requirement of `polyspec/hyper-server` in the private root `composer.json` and `examples/board/composer.json`, with its lock. It renames `## Unreleased` of both changelogs to `## X.Y.Z`, with a new empty `## Unreleased` above it. The private test package `tests/package-install` keeps its own version, because it publishes nothing (`config/release.json`, `notReleased`), and the bump commit writes its lock again, so that the lock records the versions of the local packages.
-  Enforced by: `make release-versions`
-- Own: The maintainer tags the commit of `main` `vX.Y.Z` after its CI run concluded `ci-passed` success, and pushes the tag. The push runs `.github/workflows/release.yml`, which requires the tagged commit on `main` with the check `ci-passed` passed, the version in every manifest and the section `## X.Y.Z` in `CHANGELOG.md` and `CHANGELOG.ko.md`. It builds the package archives, named `<package>-<language>-<version>.<ext>`, and creates the GitHub Release (`docs/operations/development.md`).
-  Enforced by: `make release-verify`, `make release-versions`
+  Enforced by: none, the version-bump commit is a judgement; the package managers resolve the versions.
+- Own: The maintainer tags the commit of `main` `vX.Y.Z` after its CI run concluded `ci-passed` success, and pushes the tag. The push runs `.github/workflows/release.yml`, which requires the tagged commit on `main` with the check `ci-passed` passed. It builds the package archives, named `<package>-<language>-<version>.<ext>`, and creates the GitHub Release (`docs/operations/development.md`).
+  Enforced by: `make release-verify`
 
 ## Generated files
 
