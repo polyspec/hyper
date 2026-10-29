@@ -299,3 +299,4 @@
 | H27.37 | kit 복사본은 make kit-sync가 갱신한다고 명시한다(K799) | AGENTS.md, tests/scripts/template-version.test.mts | `make rules-check`, `make docs-check` | [o] |
 | H27.38 | Kit 0.0.70을 채택한다 | package.json, package-lock.json, kit copies, AGENTS.md | `make kit-check`, `make rules-check`, `make docs-check` | [o] |
 | H27.39 | parity extractor를 위해 Python 서버 package를 non-editable로 설치한다(K788) | Makefile, docs/operations/development.md | `make hyper-install-python`, `make install-link`, `make link-state-check` | [o] |
+| H27.40 | Python symbol을 import 경로로 선언한다(K788) | config/parity.json, tests/scripts | `node --test tests/scripts/public-symbols.test.mts` | [ ] |
