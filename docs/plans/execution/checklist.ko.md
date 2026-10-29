@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 13025bf978e8f81e88d04b87cefc3f3629a845c8121e0e28d5d84a175f3a16e1 -->
+<!-- source-sha256: babbfd8373011235aaa692593d5ffda5325b9203d912895a2e723f67ae4fc620 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -301,3 +301,4 @@
 | H27.39 | parity extractor를 위해 Python 서버 package를 non-editable로 설치한다(K788) | Makefile, docs/operations/development.md | `make hyper-install-python`, `make install-link`, `make link-state-check` | [o] |
 | H27.40 | Python symbol을 import 경로로 선언한다(K788) | config/parity.json, tests/scripts | `node --test tests/scripts/public-symbols.test.mts` | [o] |
 | H27.41 | toolchain test는 새 venv의 non-editable 설치를 기대한다 | tests/scripts/toolchain.test.mts | `node --test tests/scripts/toolchain.test.mts` | [ ] |
+| H27.42 | docs CI job은 public-symbols가 읽는 Python 환경을 설치한다(K788) | .github/workflows/ci.yml, tests/scripts | `node --test tests/scripts/ci-workflow.test.mts` | [ ] |
