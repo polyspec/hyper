@@ -1,5 +1,5 @@
 <!-- doc-id: plan-execution -->
-<!-- source-sha256: 7b330fd70f09c0f33bd3b87f391a21d8c421467cb8e6cedbb5c38b538dd9cc1a -->
+<!-- source-sha256: c15ec11951b4dea51bb0896a159f028196d2996ddcf84e8c7c912f258679a6ad -->
 # 실행
 
 [English](plan.md).
@@ -122,6 +122,6 @@
 
 H27.25는 native package manager와 공유 선택 도구 인터페이스를 사용한 독립 CI 환경을 준비한다. 고정된 kit 0.0.61이 선택 설치기를 제공한다. 격리 worktree에서 앱 선언, 범위를 제한한 toolchain 검증, 명시적인 PHP symbol extractor와 소유 검사를 검증한 뒤 병합하고 한 번 push하여 CI 근거를 수집한다. 앱 전용 도구 설치기는 추가하지 않는다.
 
-H27.26은 모든 runtime test가 provider runner를 사용할 때까지 0.0.21 후보를 공개하지 않는다. Python은 지원되는 Kit 인터페이스를 사용하고 자체 unittest harness를 제거했다. `make e2e`는 `scripts/run-e2e.mts`로 실행의 서버를 띄우고 모든 browser 사례를 Kit test runner의 Playwright 실행(K747)으로 돌리며, 이 실행은 사례마다 자체 timeout과 결과를 보고한다. 로컬에서는 `CASES=<pattern>`으로 사례를 선택한다. 개발 중에는 릴리즈 tag를 만들지 않는다.
+H27.26은 모든 runtime test가 provider runner를 사용할 때까지 0.0.21 후보를 공개하지 않는다. Python은 지원되는 Kit 인터페이스를 사용하고 자체 unittest harness를 제거했다. `make e2e`는 `scripts/run-e2e.mts`로 실행의 서버를 띄우고 모든 browser 사례를 Kit test runner의 Playwright 실행(K747)으로 돌리며, 이 실행은 사례마다 자체 timeout과 결과를 보고한다. 로컬에서는 `CASES=<pattern>`으로 사례를 선택한다. 개발 중에는 릴리즈 tag를 만들지 않는다. H27.26은 Verification에서 `make release-consumer TAG=v0.0.21`이 빠진 뒤 e42ac3c에서 잘못 [o]로 닫혔다. runner 작업은 끝났고, 릴리스 부분은 H27.29로 옮긴다.
 
 고정된 0.0.65(H27.27)는 깨끗한 checkout의 bootstrap과 runtime 범위를 제한한 native link에 대한 0.0.63의 수정을 유지하고, H27.26에 필요한 공유 test runner의 Playwright 실행(K747)을 포함하며, rules check가 gates matrix의 모든 runtime에 닿게 한다(K757). 개발 중에는 0.0.21 후보의 릴리즈 tag를 만들지 않는다.
