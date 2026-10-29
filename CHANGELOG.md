@@ -4,6 +4,9 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+
+## 0.0.21
+- Release 0.0.21: every manifest of config/release.json holds 0.0.21, and the entries of ## Unreleased move into ## 0.0.21, with a new empty ## Unreleased above it. (H27.29)
 - Template 0.0.13 is the pinned release of the npm, Composer, Python and php-ext dependencies, the template tag and the CI checkout. Composer fetches the php zip itself from a package repository of composer.json and examples/board/composer.json that names its URL and sha1, so config/release-assets.json pins only the php-ext archive and TEMPLATE_TAG reads its version; the package restates the metadata of the zip, which no check compares with the release. The test of the hyper-install recipe reads the recipe of the main checkout and its tools, so it gives the same result in a worktree. (H27.44)
 - Kit 0.0.72 is the pinned release: CI links nothing (kit K824), so the gates workflow runs no make link and link-state-check leaves the CI suite; it checks the links of a development checkout. (H27.43)
 - The docs job of CI installs the Python environment of the server package, since public-symbols of hyper-test-scripts reads the installed distribution with the python extractor of kit (kit K788); it extracted the symbols of two of the three implementations. (H27.42)
@@ -25,8 +28,6 @@
 - The owner tests name each kit tool by the real path of the installed kit, from which make runs it in a linked checkout and a packed install alike. (H27.27-1)
 - Pin shared tools 0.0.63 for native bootstrap and runtime-scoped source linking. (H27.26)
 - Run every browser case of `make e2e` on servers of the run through the Playwright run of the shared test runner, which reports each case with its own timeout; `CASES=<pattern>` selects cases. (H27.26)
-
-## 0.0.21
 - Require both application CI and the provider gate aggregate to succeed on the tagged commit before publication.
 - Adopt Kit 0.0.62 and declare native shared, runtime and full-parity gate setup. Keep the copied provider workflow unchanged and preserve every mandatory gate.
 - Delegate Python unit, package-data, rendering and scoped multipart checks to the installed shared runner. Remove the private unittest harness; native reporting, per-test timeouts and empty-selection failures cover each execution.

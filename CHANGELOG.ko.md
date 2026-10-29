@@ -1,10 +1,13 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 2e2467a11cc9f3735edfb86d198f3886268ddc33207ed97e333933cd8f4b18fd -->
+<!-- source-sha256: e45e4d29ef791b8bd95ad9f6bedf0472a29cd81a79188c4d6362f862b4fdda70 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+## 0.0.21
+- 0.0.21을 릴리스한다. config/release.json의 모든 manifest가 0.0.21이며, ## Unreleased의 항목은 ## 0.0.21로 옮기고 그 위에 비어 있는 새 ## Unreleased를 둔다. (H27.29)
 - npm, Composer, Python, php-ext 의존성과 template tag, CI checkout이 고정한 release는 template 0.0.13이다. Composer는 composer.json과 examples/board/composer.json의 package repository가 URL과 sha1로 지정한 php zip을 직접 가져오므로, config/release-assets.json은 php-ext archive만 pin하고 TEMPLATE_TAG는 그 version을 읽는다. package는 zip의 metadata를 다시 적으며, 이를 release와 비교하는 검사는 없다. hyper-install recipe의 test는 main checkout의 recipe와 그 도구를 읽으므로 worktree에서도 같은 결과를 낸다. (H27.44)
 - 고정한 release는 Kit 0.0.72다. CI는 아무것도 link하지 않으므로(kit K824) gates workflow는 make link를 실행하지 않고, link-state-check는 CI suite에서 빠진다. 이 검사는 개발 checkout의 link를 검사한다. (H27.43)
 - CI의 docs job은 서버 package의 Python 환경을 설치한다. hyper-test-scripts의 public-symbols가 kit의 python extractor로 설치된 distribution을 읽기 때문이다(kit K788). 세 구현 중 두 구현의 symbol만 추출했다. (H27.42)
@@ -26,8 +29,6 @@
 - 소유 테스트는 각 kit 도구를 설치된 kit의 실제 경로로 찾는다. link된 checkout과 packed 설치 모두 make가 이 경로에서 도구를 실행한다. (H27.27-1)
 - Native bootstrap과 runtime 범위를 제한한 source link를 위해 공유 도구를 0.0.63으로 고정한다. (H27.26)
 - `make e2e`의 모든 browser 사례를 실행의 서버에서 공유 test runner의 Playwright 실행으로 돌리며, 이 실행은 사례마다 자체 timeout과 결과를 보고한다. `CASES=<pattern>`으로 사례를 선택한다. (H27.26)
-
-## 0.0.21
 - 공개 전에 tag commit의 애플리케이션 CI와 provider gate 집계가 모두 성공해야 한다.
 - Kit 0.0.62를 연결하고 native shared, runtime과 전체 parity gate 준비를 선언한다. 복사한 provider workflow는 직접 변경하지 않고 모든 필수 gate를 유지한다.
 - Python unit, package data, rendering과 범위를 제한한 multipart 검사를 설치된 공유 runner에 위임한다. 자체 unittest harness를 제거하고 각 실행에 native 보고, test별 timeout과 빈 선택 실패 판정을 적용한다.
