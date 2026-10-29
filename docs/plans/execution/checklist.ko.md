@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 4154861cfd690779ece7d27f567783f03e72d2dd5fd1c8244ebeb8df3d175511 -->
+<!-- source-sha256: a3a642fd35600a9ff35894a6fbedd55954ed74995a5481943b3a0116b28b744d -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -302,3 +302,4 @@
 | H27.40 | Python symbol을 import 경로로 선언한다(K788) | config/parity.json, tests/scripts | `node --test tests/scripts/public-symbols.test.mts` | [o] |
 | H27.41 | toolchain test는 새 venv의 non-editable 설치를 기대한다 | tests/scripts/toolchain.test.mts | `node --test tests/scripts/toolchain.test.mts` | [o] |
 | H27.42 | docs CI job은 public-symbols가 읽는 Python 환경을 설치한다(K788) | .github/workflows/ci.yml, tests/scripts/ci-workflow.test.mts | `node --test tests/scripts/ci-workflow.test.mts` | [o] |
+| H27.43 | Kit 0.0.72를 채택한다 | package.json, package-lock.json, kit copies, .github/workflows/ci.yml | `make kit-check`, `make rules-check`, `make docs-check` | [ ] |
