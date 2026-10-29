@@ -13,6 +13,7 @@ tests/scripts/build/
 /build/
 tests/scripts/build/
 packages/server/ts/tests/build/
+packages/server/python/build/
 tests/scripts/build/
 packages/client/dist/
 packages/server/ts/dist/

@@ -23,8 +23,11 @@ PYTHON_PACKAGE := packages/server/python
 # and its shim runs (HR-81, kit K127). requires-python >= 3.14 states the tested minor of the package (H20.12).
 # The absolute path, as NPM and COMPOSER_BIN have, because make looks up a recipe line on its own PATH.
 # The virtual environment of the Python server package: make hyper-install makes it from the Python of mise.toml with kit's
-# python-venv and installs the package into it in editable mode with its dependencies, the template wheel of the release
-# included, so the tests and the board Python server import the installed packages and read no source path (S5).
+# python-venv and installs the package into it non-editable with its dependencies, the template wheel of the release
+# included, so the tests and the board Python server import the installed packages and read no source path (S5). The python
+# extractor of kit reads the modules from the file list of the installed distribution, which an editable install does not
+# hold (kit K788); the link of kit then makes the installed package folder a link to the checkout (kit K765). The venv is made
+# anew, so uv writes no file through a link of the venv that it replaces.
 PYTHON_VENV := $(CURDIR)/$(PYTHON_PACKAGE)/.venv
 UV := $(KIT_TOOLS)/mise/shims/uv
 # The Python of that venv, which scripts/board-servers.mts starts the board Python server with.
@@ -107,9 +110,10 @@ php-toolchain-check: ## Verify the PHP tools used by Composer and PHP checks
 python-toolchain-check: ## Verify the Python tools used by locked Python environments
 	$(NODE) $(KIT)/check-toolchain.$(KIT_EXT) python uv
 
-hyper-install-python: python-toolchain-check ## Make the venv of the Python server package and install the package into it in editable mode with its dependencies (S5)
+hyper-install-python: python-toolchain-check ## Make the venv of the Python server package anew and install the package into it non-editable with its dependencies (S5)
+	rm -rf $(PYTHON_VENV)
 	$(MAKE) --no-print-directory python-venv DIR=$(PYTHON_VENV)
-	$(ONLINE) $(UV) sync --quiet --locked --project $(PYTHON_PACKAGE)
+	$(ONLINE) $(UV) sync --quiet --locked --no-editable --project $(PYTHON_PACKAGE)
 
 hyper-install-browser: ## Install Chromium of the pinned Playwright and its system libraries; the CI group board runs it (HR-91)
 	$(ONLINE) $(NODE) node_modules/@playwright/test/cli.js install --with-deps chromium
