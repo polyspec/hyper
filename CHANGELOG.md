@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- make hooks writes the pre-commit hook of kit again, and the pre-merge-commit hook, config/commit-identity.json and commits-check of the suite, which kit deletes (K805), are gone. (H27.34)
 
 - Remove pythonBackend of config/toolchain.json, consumers.wheel.polyspec of config/release.json and config/dependency-policy.json with its owner; the wheel builds with the build backend of build-system.requires, and uv pip compile writes pylock.toml. (H27.31)
 - make hooks writes the hooks of kit again and the reference-transaction hook, which kit deletes (K801), leaves .githooks: main moves through make land and through a commit whose hooks passed. (H27.32)

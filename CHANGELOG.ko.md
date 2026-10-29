@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 7ecc5998ee5c91d744ac8da6f1b5693a6ddadd7c705ce51e579ef979ec6c54fe -->
+<!-- source-sha256: effd676cd287a6de5169494899f8fabeeac7b36cb2271f7771898a44c88b2d81 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- make hooks는 kit의 pre-commit hook을 다시 쓰고, kit이 삭제하는 pre-merge-commit hook, config/commit-identity.json, suite의 commits-check(K805)는 사라졌다. (H27.34)
 
 - config/toolchain.json의 pythonBackend, config/release.json의 consumers.wheel.polyspec, config/dependency-policy.json과 그 owner를 제거한다. wheel은 build-system.requires의 build backend로 build하고, uv pip compile이 pylock.toml을 쓴다. (H27.31)
 - make hooks는 kit의 hook을 다시 쓰고, kit이 삭제하는 reference-transaction hook(K801)은 .githooks에서 빠진다. main은 make land와 hook이 통과한 commit으로 움직인다. (H27.32)

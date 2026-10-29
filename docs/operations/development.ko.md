@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: 10ef20a22212c0c6f6e245d942aace55f7d3e5e93bd3fafa0ab2d0fdaa9e2237 -->
+<!-- source-sha256: 4b0358ef6f8021f3bc52d45e0221538ca31be185cbb9f3caa22e62c2aa93f02a -->
 # 개발
 
 [English](development.md).
@@ -58,7 +58,6 @@
 | `make owner-check` | `config/owner-checks.json`이 선언한 바뀐 경로의 owner를 실행한다. `PATHS`는 경로를 밝히고 `BASE`는 그 revision 이후의 변경을 가져온다(HR-88) |
 | `make owner-validate` | 추적 경로에 owner가 없거나 `config/owner-checks.json`이 없는 target이나 test 파일을 밝히면 실패한다(HR-88) |
 | `make docs-check` | `config/documents.json`의 문서를 검사한다: 문서 쌍, marker `doc-id`와 `source-sha256`, 링크, 코드 블록, changelog, checklist |
-| `make commits-check` | `RANGE`(기본은 마지막 commit)의 commit message를 `config/commits.json`으로 검사한다 |
 | `make hooks` | `core.hooksPath`를 `.githooks`로 설정하고 pre-push hook을 쓰며 `make hooks-check`를 실행한다([Push](#push) 참조) |
 | `make hooks-check` | `core.hooksPath`가 `.githooks`가 아니거나 `.githooks/pre-push`가 없거나 실행할 수 없거나 바뀌었으면 실패한다 |
 | `make push-gate-commit` | commit `COMMIT`(기본 `HEAD`)에 진행 중인 checklist 작업이 있거나 그 commit이 `.githooks/pre-push`를 mode 100755로 추적하지 않으면 실패한다([Push](#push) 참고) |

@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 6d97d8c3c4d1379b7fb7d55839b54e7ae824cfa4ad279746e9bab0f240eb3c9c -->
+<!-- source-sha256: c8a0de6281ce44e48e5cb1b224c96866a24111c43c511d89fb22dae69e84fbce -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -293,4 +293,4 @@
 | H27.31 | kit이 삭제하는 Python build backend pin과 dependency policy를 제거한다(K788, K789) | config/toolchain.json, config/release.json, config/dependency-policy.json, config/owner-checks.json, docs/operations, packages/server/python/pyproject.toml | `make owner-validate` and `node node_modules/@polyspec/kit/scripts/kit/run-tests.mts node -- tests/scripts/template-version.test.mts` | [o] |
 | H27.32 | kit이 삭제하는 reference-transaction hook을 제거한다(K801) | .githooks/reference-transaction | `make hooks-check` | [o] |
 | H27.33 | kit이 삭제하는 release의 consumer install과 proof(K798), push gate와 그 pre-push hook(K804)을 제거한다 | config/release.json, tests/release-consumer, .githooks/pre-push, config/checklist.json, Makefile, .github/workflows/ci.yml, the copies of kit | `make kit-check`, `make hooks-check` | [ ] |
-| H27.34 | kit이 삭제하는 commits-check와 pre-merge-commit hook을 제거한다(K805) | .githooks, Makefile, .github/workflows/ci.yml | `make hooks-check`, `make kit-check` | [~] |
+| H27.34 | kit이 삭제하는 commits-check와 pre-merge-commit hook을 제거한다(K805) | .githooks, config/commit-identity.json, Makefile, .github/workflows/ci.yml | `make hooks-check` | [o] |

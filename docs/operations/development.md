@@ -57,7 +57,6 @@ The declarations name the source PHP package, template 0.0.12 and the existing J
 | `make owner-check` | Runs the owners of the changed paths that `config/owner-checks.json` declares; `PATHS` names the paths and `BASE` takes the changes since a revision (HR-88) |
 | `make owner-validate` | Fails when a tracked path has no owner or `config/owner-checks.json` names a missing target or test file (HR-88) |
 | `make docs-check` | Checks the documents of `config/documents.json`: translation pairs, the `doc-id` and `source-sha256` markers, links, code blocks, the changelog and the checklist |
-| `make commits-check` | Checks the commit messages of `RANGE` (the last commit by default) against `config/commits.json` |
 | `make hooks` | Sets `core.hooksPath` to `.githooks`, writes the pre-push hook and runs `make hooks-check` (see [Push](#push)) |
 | `make hooks-check` | Fails while `core.hooksPath` is not `.githooks` or `.githooks/pre-push` is missing, not executable or changed |
 | `make push-gate-commit` | Fails when the commit `COMMIT` (`HEAD` by default) has a checklist task in progress or does not track `.githooks/pre-push` with mode 100755 (see [Push](#push)) |
