@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 76f19012360253e8d93aa7d529b806b329e525fb2b54590d16db259ed2001496 -->
+<!-- source-sha256: 10d408f1b68b9b0800e19d4d3b9d2680dd28a3c46e5f80455d4b276b7133eeeb -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -296,4 +296,4 @@
 | H27.34 | kit이 삭제하는 commits-check와 pre-merge-commit hook을 제거한다(K805) | .githooks, config/commit-identity.json, Makefile, .github/workflows/ci.yml | `make hooks-check` | [o] |
 | H27.35 | ignored-files test는 kit이 삭제한 full-run guard(K240)의 출력을 적지 않는다 | tests/scripts/ignored-files.test.mts | `node --test tests/scripts/ignored-files.test.mts` | [o] |
 | H27.36 | kit이 삭제하는 make release-versions를 제거한다(K812) | .github/workflows/release.yml, AGENTS.md, Makefile, docs/operations/development.md, docs/operations/repository-rules.md | `make rules-check`, `make kit-check` | [o] |
-| H27.37 | kit 복사본은 make kit-sync가 갱신한다고 명시한다(K799) | AGENTS.md, tests/scripts/template-version.test.mts | `make rules-check`, `make docs-check` | [ ] |
+| H27.37 | kit 복사본은 make kit-sync가 갱신한다고 명시한다(K799) | AGENTS.md, tests/scripts/template-version.test.mts | `make rules-check`, `make docs-check` | [~] |
