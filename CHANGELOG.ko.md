@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 2165e50f70884d29dbbab9b87e3431b43b9a1c3cfd5abbde1268eac4534098a7 -->
+<!-- source-sha256: ca7594c11a680df74c3bad748e78f80a7e89e8caff2c4fff88dd5cc3ca24cd51 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- 공유 test runner의 Playwright 실행을 포함하고 rules check가 gates matrix의 모든 runtime에 닿는 공개 Kit 0.0.65를 무결성으로 잠가 적용하고 그 사본을 동기화한다. (H27.27)
 - 소유 테스트는 각 kit 도구를 설치된 kit의 실제 경로로 찾는다. link된 checkout과 packed 설치 모두 make가 이 경로에서 도구를 실행한다. (H27.27-1)
 - Native bootstrap과 runtime 범위를 제한한 source link를 위해 공유 도구를 0.0.63으로 고정한다. 대기 중인 browser runner 연결은 릴리즈 검증 완료로 판정하지 않는다. (H27.26)
 

@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: f4cd7329ee5316239b0885a9f54145300775dd07122f0a1223ffbec28cd874bd -->
+<!-- source-sha256: a2c57118a98db2b61e7af22bf905765018633fb44d0e4cd6a4750ca3df4df9c9 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -285,5 +285,5 @@
 | H27.25 | Kit 0.0.61을 연결하고 CI 환경을 분리하며 Hyper 0.0.20을 준비한다. | CI configuration, native install and toolchain targets, owning tests, pinned Kit dependency, release manifests and locks, version 0.0.20 archives and consumer locks, paired documentation | `node --test tests/scripts/ci-workflow.test.mts tests/scripts/toolchain.test.mts tests/scripts/check-recipes.test.mts tests/scripts/installed-kit.test.mts` and `make -k typecheck docs-check kit-check dependency-policy-check release-versions TAG=v0.0.20` and `make release-consumer TAG=v0.0.20` | [o] |
 | H27.25-1 | 공통 CI 정책 group에서 불필요한 sibling source를 제외한다. | .github/workflows/ci.yml, tests/scripts/ci-workflow.test.mts, docs/features.md and twin, docs/operations/development.md and twin | `node --test tests/scripts/ci-workflow.test.mts` and `make -k typecheck docs-check` | [o] |
 | H27.26 | Native test runner를 연결하고 Playwright runner 지원 전까지 0.0.21 릴리즈를 보류한다. | Makefile, Python harness removal, native runner regression tests, config/ci.json and ownership, Kit 0.0.63 manifests and lock, shared workflow copies, paired repository rules and documents, 0.0.21 release metadata and consumers | `make hyper-runner-owner-check` and `make python-file-parts-test` and `make -k typecheck docs-check kit-check kit-ci-plan release-versions TAG=v0.0.21` and `make release-consumer TAG=v0.0.21` | [!] 원인: kit의 테스트 runner에 네이티브 Playwright adapter가 없어서(kit 이슈 13) 브라우저 E2E 사례를 공급자 runner로 실행할 수 없다; 재시도: kit이 이슈 13의 Playwright adapter를 내놓으면 이 항목을 다시 진행한다 |
-| H27.27 | 배포된 Kit 0.0.65를 도입한다. release asset을 integrity와 함께 고정하고 make kit-sync로 소유 사본을 쓰며 dependency review를 갱신한다 | package.json, package-lock.json, config/dependency-review.json and the kit copies | `make kit-check` and `make rules-check` and `make hyper-runner-owner-check` | [~] |
+| H27.27 | 배포된 Kit 0.0.65를 도입한다. release asset을 integrity와 함께 고정하고 make kit-sync로 소유 사본을 쓰며 dependency review를 갱신한다 | package.json, package-lock.json, config/dependency-review.json and the kit copies | `make kit-check` and `make rules-check` and `make hyper-runner-owner-check` | [o] |
 | H27.27-1 | 소유 테스트가 make가 실행하는 실제 경로로 kit 도구를 찾는다(kit K762) | tests/scripts/kit-tools.mts | `make hyper-runner-owner-check` and `var/tools/bin/node --test tests/scripts/toolchain.test.mts` | [o] |

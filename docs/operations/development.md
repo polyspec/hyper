@@ -171,7 +171,7 @@ The workflow `.github/workflows/ci.yml` runs the full suite for the push of `mai
 | `python` | Node/npm, Python/uv, ruff/vulture | Root npm and Python uv locks | Python unit, rendering and lint checks |
 | `language-parity` | Node/npm, PHP/Composer, Python/uv | Root npm, root and board Composer, Python uv locks | Protocol declaration and cross-language parity checks |
 
-Each group calls `make install-tools TOOLS="${{ matrix.tools }}"`; Kit owns selection, mandatory tool dependencies, version and hash validation, and reuse of matching installed tools. Hyper declares no alternate tool installer. The pinned 0.0.63 installer supports these selectors. npm uses its separate bootstrap; the `docs`, `php` and `language-parity` groups explicitly install the declared PHP symbol extractor through `make kit-install-symbols EXTRACTORS="php"`.
+Each group calls `make install-tools TOOLS="${{ matrix.tools }}"`; Kit owns selection, mandatory tool dependencies, version and hash validation, and reuse of matching installed tools. Hyper declares no alternate tool installer. The pinned 0.0.65 installer supports these selectors. npm uses its separate bootstrap; the `docs`, `php` and `language-parity` groups explicitly install the declared PHP symbol extractor through `make kit-install-symbols EXTRACTORS="php"`.
 
 `make hyper-install-php` installs only the pinned PHP archives and the root and board Composer locks, under the existing installation lock. `make hyper-install-python` installs only the Python environment through `uv sync --locked`. Node dependencies use the existing npm lock installation. Native source development links remain a separate local installation choice.
 
@@ -266,4 +266,4 @@ The browser loads only the templates that its rendering reaches (HYC-12), and a 
 
 All runtime test targets use the installed Kit runner, including Python discovery with the package virtual environment. Scoped Python checks use exact discovery filenames or dotted module names through `--cwd`; the application has no private unittest harness. Report unsupported or defective runner behavior to the Kit GitHub issue tracker rather than replacing the runner or changing CI identity. Completed historical verification records retain their original commands and are not current execution instructions.
 
-The Kit 0.0.63 provider gate partitions use `config/ci.json` for declared native lock installs and fixture builds. The full parity mode remains mandatory; PHP, Python and TypeScript provider jobs prepare their own inputs. No shared workflow copy is edited locally.
+The Kit 0.0.65 provider gate partitions use `config/ci.json` for declared native lock installs and fixture builds. The full parity mode remains mandatory; PHP, Python and TypeScript provider jobs prepare their own inputs. No shared workflow copy is edited locally.

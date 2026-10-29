@@ -1,5 +1,5 @@
 <!-- doc-id: plan-execution -->
-<!-- source-sha256: b6e53984dd86c2f2ed74d06c289b711e35139510434de647f0c9bfe5190e3bc7 -->
+<!-- source-sha256: 6dae7b160e266573c4d805846ad20465f1f39645a715296fa954e3fd59b21057 -->
 # 실행
 
 [English](plan.md).
@@ -124,4 +124,4 @@ H27.25는 native package manager와 공유 선택 도구 인터페이스를 사�
 
 H27.26은 모든 runtime test가 provider runner를 사용할 때까지 0.0.21 후보를 공개하지 않는다. Python은 지원되는 Kit 인터페이스를 사용하고 자체 unittest harness를 제거했다. Browser E2E는 [Kit issue 13](https://github.com/polyspec/kit/issues/13)으로 요청한 native Playwright adapter가 필요하다. Browser 사례를 모두 유지하며 suite를 하나의 합성 test로 감싸거나 릴리즈 검사를 약화하는 대신 provider 구현을 기다린다. 실행 경로가 직접 실행으로 남아 있는 동안 릴리즈 tag와 새 CI 실행을 만들지 않는다.
 
-고정된 0.0.63은 깨끗한 checkout의 bootstrap과 runtime 범위를 제한한 native link를 수정한다. Playwright runner adapter는 여전히 없으므로 H27.26은 진행 상태로 유지하고 0.0.21 후보의 릴리즈 tag는 만들지 않는다. Provider issue의 인수 조건은 test별 보고, 빈 선택 판정, deadline과 process 정리다.
+고정된 0.0.65(H27.27)는 깨끗한 checkout의 bootstrap과 runtime 범위를 제한한 native link에 대한 0.0.63의 수정을 유지하고, H27.26에 필요한 공유 test runner의 Playwright 실행(K747)을 포함하며, rules check가 gates matrix의 모든 runtime에 닿게 한다(K757). 개발 중에는 0.0.21 후보의 릴리즈 tag를 만들지 않는다.
