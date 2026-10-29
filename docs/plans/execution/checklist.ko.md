@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 77be6f92148504efc1ff97d98aea9eb535ead11c5dabf5cb49c2a31db7ae3d83 -->
+<!-- source-sha256: 13025bf978e8f81e88d04b87cefc3f3629a845c8121e0e28d5d84a175f3a16e1 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -300,3 +300,4 @@
 | H27.38 | Kit 0.0.70을 채택한다 | package.json, package-lock.json, kit copies, AGENTS.md | `make kit-check`, `make rules-check`, `make docs-check` | [o] |
 | H27.39 | parity extractor를 위해 Python 서버 package를 non-editable로 설치한다(K788) | Makefile, docs/operations/development.md | `make hyper-install-python`, `make install-link`, `make link-state-check` | [o] |
 | H27.40 | Python symbol을 import 경로로 선언한다(K788) | config/parity.json, tests/scripts | `node --test tests/scripts/public-symbols.test.mts` | [o] |
+| H27.41 | toolchain test는 새 venv의 non-editable 설치를 기대한다 | tests/scripts/toolchain.test.mts | `node --test tests/scripts/toolchain.test.mts` | [ ] |
