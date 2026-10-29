@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 19e7faf65a007f3a8986f6d310135cce0b7dd46f563e5dff822c2eef61e81d0b -->
+<!-- source-sha256: c73065dd99e6b66a329961017ef1a811c9b5d5255221cdd6f49f920e45e75e59 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- ignored-files test는 kit이 삭제한 full-run guard(kit K240)의 출력 var/full-run.json과 var/full-run.lock을 더 이상 적지 않는다. (H27.35)
 - release는 consumer install이나 proof 없이 archive를 build하고 게시한다. config/release.json에는 consumers와 proof가 없고, tests/release-install과 release-consumer의 npm allow-remote 설정은 사라졌으며, consumer는 자기 package manager로 release를 확인한다(kit K798). push는 검사하지 않는다. .githooks/pre-push, config/checklist.json의 그 hook, suite의 push-gate-commit은 사라졌다(kit K804). (H27.33)
 - make hooks는 kit의 pre-commit hook을 다시 쓰고, kit이 삭제하는 pre-merge-commit hook, config/commit-identity.json, suite의 commits-check(K805)는 사라졌다. (H27.34)
 

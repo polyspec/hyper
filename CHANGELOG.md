@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- The ignored-files test no longer names var/full-run.json and var/full-run.lock, the outputs of the full-run guard that kit deleted (kit K240). (H27.35)
 - A release builds and publishes its archives without a consumer install or a proof: config/release.json has no consumers or proof, tests/release-install and the npm allow-remote settings of release-consumer are gone, and a consumer checks a release with its own package manager (kit K798). A push is not checked: .githooks/pre-push, the hook of config/checklist.json and push-gate-commit of the suite are gone (kit K804). (H27.33)
 - make hooks writes the pre-commit hook of kit again, and the pre-merge-commit hook, config/commit-identity.json and commits-check of the suite, which kit deletes (K805), are gone. (H27.34)
 

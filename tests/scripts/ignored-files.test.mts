@@ -37,8 +37,6 @@ const OUTPUTS = [
   'var/products/template-ext/src/polyspec_template.stub.php',
   'var/products/template-ext.next-12345/src/config.m4',
   'var/tools/bin/npm',
-  'var/full-run.json',
-  'var/full-run.lock',
   'var/install.lock',
   'tests/e2e/test-results/.last-run.json',
   'tests/scripts/build/virtiofs/file/layout.tpl',

@@ -293,4 +293,4 @@
 | H27.32 | Remove the reference-transaction hook that kit deletes (K801) | .githooks/reference-transaction | `make hooks-check` | [o] |
 | H27.33 | Remove the consumer install and the proof of a release (K798) and the push gate with its pre-push hook (K804), which kit deletes | config/release.json, tests/release-consumer, .githooks/pre-push, config/checklist.json, Makefile, .github/workflows/ci.yml, the copies of kit | `make kit-check`, `make hooks-check` | [o] |
 | H27.34 | Remove commits-check and the pre-merge-commit hook that kit deletes (K805) | .githooks, config/commit-identity.json, Makefile, .github/workflows/ci.yml | `make hooks-check` | [o] |
-| H27.35 | The ignored-files test names no output of the full-run guard that kit deleted (K240) | tests/scripts/ignored-files.test.mts | `node --test tests/scripts/ignored-files.test.mts` | [~] |
+| H27.35 | The ignored-files test names no output of the full-run guard that kit deleted (K240) | tests/scripts/ignored-files.test.mts | `node --test tests/scripts/ignored-files.test.mts` | [o] |
