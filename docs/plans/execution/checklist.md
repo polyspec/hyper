@@ -294,3 +294,4 @@
 | H27.33 | Remove the consumer install and the proof of a release (K798) and the push gate with its pre-push hook (K804), which kit deletes | config/release.json, tests/release-consumer, .githooks/pre-push, config/checklist.json, Makefile, .github/workflows/ci.yml, the copies of kit | `make kit-check`, `make hooks-check` | [o] |
 | H27.34 | Remove commits-check and the pre-merge-commit hook that kit deletes (K805) | .githooks, config/commit-identity.json, Makefile, .github/workflows/ci.yml | `make hooks-check` | [o] |
 | H27.35 | The ignored-files test names no output of the full-run guard that kit deleted (K240) | tests/scripts/ignored-files.test.mts | `node --test tests/scripts/ignored-files.test.mts` | [o] |
+| H27.36 | Remove make release-versions, which kit deletes (K812) | .github/workflows/release.yml, AGENTS.md, Makefile, docs/operations/development.md, docs/operations/repository-rules.md | `make rules-check`, `make kit-check` | [ ] |

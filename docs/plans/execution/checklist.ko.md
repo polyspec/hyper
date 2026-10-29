@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: d38b3a5331868833691645c86ff092a1ab29c96acd90fd70b500b3fe36e5fff0 -->
+<!-- source-sha256: 1b3215452b298bf747aa50f48edc6b455b54aefe4442f927a12510f43956477f -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -295,3 +295,4 @@
 | H27.33 | kit이 삭제하는 release의 consumer install과 proof(K798), push gate와 그 pre-push hook(K804)을 제거한다 | config/release.json, tests/release-consumer, .githooks/pre-push, config/checklist.json, Makefile, .github/workflows/ci.yml, the copies of kit | `make kit-check`, `make hooks-check` | [o] |
 | H27.34 | kit이 삭제하는 commits-check와 pre-merge-commit hook을 제거한다(K805) | .githooks, config/commit-identity.json, Makefile, .github/workflows/ci.yml | `make hooks-check` | [o] |
 | H27.35 | ignored-files test는 kit이 삭제한 full-run guard(K240)의 출력을 적지 않는다 | tests/scripts/ignored-files.test.mts | `node --test tests/scripts/ignored-files.test.mts` | [o] |
+| H27.36 | kit이 삭제하는 make release-versions를 제거한다(K812) | .github/workflows/release.yml, AGENTS.md, Makefile, docs/operations/development.md, docs/operations/repository-rules.md | `make rules-check`, `make kit-check` | [ ] |
