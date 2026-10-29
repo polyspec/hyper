@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { test } from 'node:test';
-import { type JsonObject, jsonArray, jsonObject, jsonObjects, jsonString, parseJsonObject } from '../../scripts/json.mts';
+import { type JsonObject, jsonObject, jsonObjects, jsonString, parseJsonObject } from '../../scripts/json.mts';
 import { dryRun } from './make-dry-run.mts';
 
 const repository = resolve('.');
@@ -24,10 +24,6 @@ const VERSION = '0.0.12';
 const TAG = `v${VERSION}`;
 const RELEASE = `https://github.com/polyspec/template/releases/download/${TAG}`;
 const NPM_PACKAGES = ['@polyspec/template', '@polyspec/template-compiler'];
-// The consumer projects of tests/release-install install the archives of the hyper release 0.0.19, and those archives
-// require template 0.0.12 exactly (npm and Composer); the consumer locks are written from them on the release commit.
-const CONSUMER_VERSION = '0.0.12';
-const CONSUMER_RELEASE = `https://github.com/polyspec/template/releases/download/v${CONSUMER_VERSION}`;
 
 // The entries of config/release-assets.json, and the URL of an entry with its version.
 const assets = (): JsonObject[] => jsonObjects(json('config/release-assets.json').assets, 'config/release-assets.json assets');
@@ -54,10 +50,6 @@ test('the npm manifests name the template tarballs of the release, and their dep
   assert.ok(NPM_PACKAGES.some((name) => name in installed), 'tests/package-install installs a template package');
   for (const name of NPM_PACKAGES.filter((name) => name in installed)) {
     assert.equal(installed[name], `${RELEASE}/${name.slice(1).replace('/', '-')}-npm-${VERSION}.tgz`, `tests/package-install/package.json ${name}`);
-  }
-  const consumer = optionalMember(json('tests/release-install/npm/package.json'), 'dependencies', 'tests/release-install/npm/package.json');
-  for (const name of NPM_PACKAGES.filter((name) => name in consumer)) {
-    assert.equal(consumer[name], `${CONSUMER_RELEASE}/${name.slice(1).replace('/', '-')}-npm-${CONSUMER_VERSION}.tgz`, `tests/release-install/npm/package.json ${name}`);
   }
 });
 
@@ -88,25 +80,6 @@ test('the Composer manifests and locks name the template zip of the release (H21
     assert.equal(entry.version, VERSION, `${lock} version`);
     assert.match(jsonString(member(entry, 'dist', lock).url, `${lock} dist url`), new RegExp(`(^|/)var/products/template-php/polyspec-template-php-${VERSION.replaceAll('.', '\\.')}\\.zip$`), `${lock} dist url`);
   }
-});
-
-test('the Composer consumer project of tests/release-install takes the template zip of the archives it installs from its artifact repository (H21.4, H23.11-1)', () => {
-  const consumer = 'tests/release-install/composer/composer.json';
-  const manifest = json(consumer);
-  assert.equal(member(manifest, 'require', consumer)['polyspec/template'], CONSUMER_VERSION, `${consumer} require polyspec/template`);
-  assert.deepEqual(jsonObjects(manifest.repositories, `${consumer} repositories`).filter((item) => item.type === 'package'), [], 'the consumer keeps an inline package repository');
-  // kit K140: consumers.composer.polyspec names the entries of config/release-assets.json whose zips release-consumer puts
-  // into the artifact repository of the project beside the archives of the tag. It runs for the next release, whose
-  // archives require the template release of this tree, so it names the zip of that release (H23.23).
-  const composer = member(member(json('config/release.json'), 'consumers', 'config/release.json'), 'composer', 'config/release.json consumers');
-  const names = jsonArray(composer.polyspec, 'config/release.json consumers.composer.polyspec');
-  const entries = assets().filter(({ name }) => names.includes(name));
-  assert.deepEqual(entries.map(assetUrl), [`${RELEASE}/polyspec-template-php-${VERSION}.zip`]);
-  const entry = composerPackage('tests/release-install/composer/composer.lock', 'polyspec/template');
-  assert.ok(entry, 'tests/release-install/composer/composer.lock locks polyspec/template');
-  // make release-consumer-lock writes the lock on the release commit (kit release-consumer.mts), so the lock of the last
-  // release names its version; its dist moves to the artifact repository with the next release.
-  assert.equal(entry.version, CONSUMER_VERSION);
 });
 
 test('config/release-assets.json names the php-ext and the php archives of the release (H21.4, H23.11-2)', () => {

@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "comment": "The release archives of the template release that hyper uses (kit K140, H23.11-2): the php-ext zip, which make hyper-install unpacks into var/products/template-ext for make ext, and the php zip in the Composer artifact repository var/products/template-php of composer.json and examples/board/composer.json. TEMPLATE_TAG of the Makefile reads the version of template-php. The archives of the release require the same template release (H21.4), so release-consumer puts the zip of template-php into the artifact repository of the Composer consumer of tests/release-install (consumers.composer.polyspec of config/release.json, H23.11-1); each archive has one entry.",
+  "comment": "The release archives of the template release that hyper uses (kit K140, H23.11-2): the php-ext zip, which make hyper-install unpacks into var/products/template-ext for make ext, and the php zip in the Composer artifact repository var/products/template-php of composer.json and examples/board/composer.json. TEMPLATE_TAG of the Makefile reads the version of template-php. Each archive has one entry.",
   "assets": [
     {
       "name": "template-php-ext",

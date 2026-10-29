@@ -1,5 +1,5 @@
 <!-- doc-id: agents -->
-<!-- source-sha256: be87db38e941d61a02cfe7382d6372d7f7a9fd82c0b450e3e88d1ce2cd6e0197 -->
+<!-- source-sha256: 83e360dfe6fabb97346a62944de6d197e11efc7df837ee5487b040d87f04b1d3 -->
 # 개발
 
 [English](AGENTS.md).
@@ -91,8 +91,8 @@
   Enforced by: `make check`
 - Own: `main`의 push와 모든 수동 실행(`workflow_dispatch`)에 대해 GitHub은 `.github/workflows/ci.yml`의 job에서 CI group마다 하나씩 전체 suite를 각 target 끝까지 실행한다. 각 job은 job summary를 쓰고, 상태, 시간, 처음 실패한 줄과 각 target의 전체 로그를 담은 보고서 `var/ci/<name>/`을 올린다(HR-91). 전체 suite와 end-to-end 검사는 여기서 실행한다. 다음 push 전에 그것이 적는 실패를 모두 고친다. 알려진 한계: CI runner는 Linux라서, Darwin에서만 full suite에 속하는 `make virtiofs-check`(`DARWIN_TARGETS`, HR-68)는 Mac에서 local `make check`를 실행할 때만 실행된다.
   Enforced by: `make ci-passed`
-- Own: push는 `docs/plans/execution/checklist.md`에 `[~]` task가 없을 때만 하며, push하는 commit에도 working tree에도 test를 실행하지 않는다. `make hooks`가 쓰는 추적 pre-push hook `.githooks/pre-push`는 `@polyspec/kit`의 push gate인 `make push-gate-hook`을 실행한다. 그 gate는 그런 push를 거부하고, 활성 ID와 task를 각각 적는다. 모든 `make` 실행은 `core.hooksPath`를 `.githooks`로 설정한다. `make hooks-check`는 그것이 설정되지 않았거나 hook이 다르면 실패한다. hook을 건너뛴 push의 commit에는 `make push-gate-commit COMMIT=<sha>`가 같은 gate를 실행하며, CI group `docs`가 그것을 실행한다(`docs/operations/development.md`).
-  Enforced by: `make push-gate-hook`, `make hooks-check`
+- Own: 모든 `make` 실행은 `core.hooksPath`를 `make hooks`가 쓰는 hook인 `.githooks`로 설정한다. `make hooks-check`는 그것이 설정되지 않았거나 hook이 다르면 실패한다. push는 검사하지 않는다. message 규칙은 commit에서 실행되고, CI는 release에서 읽는다(`docs/operations/development.md`).
+  Enforced by: `make hooks-check`
 - Own: Version 0.1 전까지 변경은 그것을 소유한 unit test로 검사하고, checklist의 모든 task가 `[o]`일 때 `main`을 한 번 push한다(HR-94). Pull request, merge queue, GitHub ruleset은 없으며, push는 `git push origin main`이다. `main`의 push는 `.github/workflows/ci.yml`을 실행하고, 그 마지막 job `ci-passed`는 workflow의 다른 모든 job이 통과했을 때만 통과한다. 그 push의 CI 실행이 commit의 근거이며, release tag는 태그된 commit에 대해 `ci-passed`가 성공한 뒤에만 정한다(`docs/operations/development.md`).
   Enforced by: `make ci-passed`
 
@@ -103,7 +103,7 @@
 
 - Own: Version 0.1 전까지 `main`은 모든 task가 끝났을 때 한 번 push하며, 그 push의 CI 실행이 commit들의 근거다. release는 CI 실행이 `ci-passed` 성공으로 끝난 `main`의 commit에 붙인 tag다(HR-95). tag를 만들고, 옮기고, push하는 것은 maintainer만 한다.
   Enforced by: `make release-verify`
-- Own: 버전을 올리는 commit `chore(release): Release X.Y.Z (#<task>)`는 `package.json`, `packages/client/package.json`, `packages/server/ts/package.json`, `packages/build/package.json`, `packages/server/php/composer.json`과 `packages/server/python/pyproject.toml`의 버전을 X.Y.Z로 정한다. `packages/server/ts/package.json`과 `packages/build/package.json`의 `@polyspec/hyper-client` 요구와, private root `composer.json`과 `examples/board/composer.json`의 `polyspec/hyper-server` 요구를 정하며, 그 lock도 쓴다. `make release-assets TAG=vX.Y.Z` 뒤에 `make release-consumer-lock TAG=vX.Y.Z`가 manifest와 lock을 쓰는 `tests/release-install`의 소비 project도 정한다. 두 changelog의 `## Unreleased`를 `## X.Y.Z`로 바꾸고, 그 위에 빈 `## Unreleased`를 새로 둔다. private test package `tests/package-install`은 자기 버전을 유지한다. 그것은 아무것도 공개하지 않기 때문이다(`config/release.json`의 `notReleased`). 버전 올림 commit은 그 lock을 다시 쓰므로, lock이 로컬 package의 버전을 기록한다.
+- Own: 버전을 올리는 commit `chore(release): Release X.Y.Z (#<task>)`는 `package.json`, `packages/client/package.json`, `packages/server/ts/package.json`, `packages/build/package.json`, `packages/server/php/composer.json`과 `packages/server/python/pyproject.toml`의 버전을 X.Y.Z로 정한다. `packages/server/ts/package.json`과 `packages/build/package.json`의 `@polyspec/hyper-client` 요구와, private root `composer.json`과 `examples/board/composer.json`의 `polyspec/hyper-server` 요구를 정하며, 그 lock도 쓴다. 두 changelog의 `## Unreleased`를 `## X.Y.Z`로 바꾸고, 그 위에 빈 `## Unreleased`를 새로 둔다. private test package `tests/package-install`은 자기 버전을 유지한다. 그것은 아무것도 공개하지 않기 때문이다(`config/release.json`의 `notReleased`). 버전 올림 commit은 그 lock을 다시 쓰므로, lock이 로컬 package의 버전을 기록한다.
   Enforced by: `make release-versions`
 - Own: maintainer는 CI 실행이 `ci-passed` 성공으로 끝난 뒤 `main`의 commit에 `vX.Y.Z` tag를 붙이고 push한다. 그 push는 `.github/workflows/release.yml`을 실행하며, 그 workflow는 `main`에 태그된 commit이 있고 `ci-passed` 검사가 통과했는지, 모든 manifest의 버전과 `CHANGELOG.md`, `CHANGELOG.ko.md`의 `## X.Y.Z` 절이 있는지 확인한다. 그다음 `<package>-<language>-<version>.<ext>` 이름의 package 아카이브를 만들고 GitHub Release를 만든다(`docs/operations/development.md`).
   Enforced by: `make release-verify`, `make release-versions`

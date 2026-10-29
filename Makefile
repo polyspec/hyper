@@ -306,7 +306,7 @@ bench: bench-server bench-browser ## Run both measurements; results are reports,
 
 # The final suite runs through the native kit report runner on a clean committed tree.
 # Run it once after checklist development, then rerun only failed owners.
-CHECK_TARGETS := kit-check suppression-check toolchain-check layout-check typecheck lint-ts docs-check hooks-check push-gate-commit owner-validate bench-server-smoke hyper-lint analyse-php templates-check hyper-test-scripts hyper-test-js hyper-test-node hyper-test-python hyper-test-python-render package-check hyper-test-php parity server-parity server-parity-python bundle-size e2e rules-check rebuild-check language-check test-markers-check duplication-check parity-declarations-check parity-check lint-php lint-python link-state-check bypass-check divergence-check
+CHECK_TARGETS := kit-check suppression-check toolchain-check layout-check typecheck lint-ts docs-check hooks-check owner-validate bench-server-smoke hyper-lint analyse-php templates-check hyper-test-scripts hyper-test-js hyper-test-node hyper-test-python hyper-test-python-render package-check hyper-test-php parity server-parity server-parity-python bundle-size e2e rules-check rebuild-check language-check test-markers-check duplication-check parity-declarations-check parity-check lint-php lint-python link-state-check bypass-check divergence-check
 
 # The CI groups of the full suite (HR-91) are the entries of the matrix of .github/workflows/ci.yml: each entry runs its
 # `targets` with `make ci-targets`, so the entries together run every target of CHECK_TARGETS once
@@ -331,15 +331,6 @@ check: template-tag ## Run final verification once after checklist development, 
 # var/release/assets, and release-publish creates the GitHub Release. The targets are those of the kit.mk of @polyspec/kit; the
 # archives are built from the built packages, so release-assets builds them first.
 release-assets: packages
-
-# npm 12.2.0 counts the registry tarball of a package with bundleDependencies, here @tailwindcss/oxide-wasm32-wasi below
-# @polyspec/hyper-build, as a remote package while it writes a lock and refuses it under allow-remote=root with
-# EALLOWREMOTE (https://github.com/npm/cli/pull/9818), so the lock of the npm consumer project is written with
-# allow-remote=all. The install of the consumer projects, in release-consumer and in release-proof, uses allow-remote=root,
-# which npm 12 needs for the template tarballs that the lock pins by their integrity (H13.5-14).
-release-consumer-lock: export npm_config_allow_remote := all
-release-consumer: export npm_config_allow_remote := root
-release-proof: export npm_config_allow_remote := root
 
 .PHONY: hyper-runner-owner-check
 hyper-runner-owner-check: ## Verify application test entry points through the shared test runner

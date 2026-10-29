@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: e42ac945c8cda045bbdb9ffc19af6082f67f3c8db70dc0dc5a679d0201a0aaa5 -->
+<!-- source-sha256: e284ddb9bf4e1106d4a933aeaebd0fe15f79d5e73bded4931c6134931aedd548 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -292,5 +292,5 @@
 | H27.30 | release-prepare의 recursive make를 $(MAKE)가 더하는 variable과 무관하게 target으로 match | tests/scripts/template-version.test.mts | `node node_modules/@polyspec/kit/scripts/kit/run-tests.mts node -- tests/scripts/template-version.test.mts` | [o] |
 | H27.31 | kit이 삭제하는 Python build backend pin과 dependency policy를 제거한다(K788, K789) | config/toolchain.json, config/release.json, config/dependency-policy.json, config/owner-checks.json, docs/operations, packages/server/python/pyproject.toml | `make owner-validate` and `node node_modules/@polyspec/kit/scripts/kit/run-tests.mts node -- tests/scripts/template-version.test.mts` | [o] |
 | H27.32 | kit이 삭제하는 reference-transaction hook을 제거한다(K801) | .githooks/reference-transaction | `make hooks-check` | [o] |
-| H27.33 | kit이 삭제하는 release의 consumer install과 proof(K798), push gate와 그 pre-push hook(K804)을 제거한다 | config/release.json, tests/release-consumer, .githooks/pre-push, config/checklist.json, Makefile, .github/workflows/ci.yml, the copies of kit | `make kit-check`, `make hooks-check` | [~] |
+| H27.33 | kit이 삭제하는 release의 consumer install과 proof(K798), push gate와 그 pre-push hook(K804)을 제거한다 | config/release.json, tests/release-consumer, .githooks/pre-push, config/checklist.json, Makefile, .github/workflows/ci.yml, the copies of kit | `make kit-check`, `make hooks-check` | [o] |
 | H27.34 | kit이 삭제하는 commits-check와 pre-merge-commit hook을 제거한다(K805) | .githooks, config/commit-identity.json, Makefile, .github/workflows/ci.yml | `make hooks-check` | [o] |

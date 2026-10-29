@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- A release builds and publishes its archives without a consumer install or a proof: config/release.json has no consumers or proof, tests/release-install and the npm allow-remote settings of release-consumer are gone, and a consumer checks a release with its own package manager (kit K798). A push is not checked: .githooks/pre-push, the hook of config/checklist.json and push-gate-commit of the suite are gone (kit K804). (H27.33)
 - make hooks writes the pre-commit hook of kit again, and the pre-merge-commit hook, config/commit-identity.json and commits-check of the suite, which kit deletes (K805), are gone. (H27.34)
 
 - Remove pythonBackend of config/toolchain.json, consumers.wheel.polyspec of config/release.json and config/dependency-policy.json with its owner; the wheel builds with the build backend of build-system.requires, and uv pip compile writes pylock.toml. (H27.31)

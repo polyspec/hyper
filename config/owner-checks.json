@@ -446,8 +446,7 @@
         "config/checklist.json"
       ],
       "targets": [
-        "hooks-check",
-        "push-gate-commit"
+        "hooks-check"
       ]
     },
     {
@@ -484,8 +483,7 @@
         "tests/package-install/package.json",
         "examples/board/composer.json",
         "composer.json",
-        "config/release.json",
-        "tests/release-install/**"
+        "config/release.json"
       ],
       "targets": [
         "release-coverage"
@@ -658,8 +656,7 @@
         ".github/workflows/*.yml",
         "packages/**/{package.json,composer.json,pyproject.toml}",
         "tests/package-install/package.json",
-        "tests/package-install/package-lock.json",
-        "tests/release-install/**"
+        "tests/package-install/package-lock.json"
       ],
       "tests": [
         "tests/scripts/template-version.test.mts"
