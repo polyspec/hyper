@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 76413f000707c13ce92e9773ef6f245fcdb58ca9ae0cc6fbe800ae8b23bd14ee -->
+<!-- source-sha256: f6e5cfb9378443c31249b102f25f8ff0d24f8db84826c4eba31a33a97e88e2e0 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -288,3 +288,4 @@
 | H27.27 | 배포된 Kit 0.0.65를 도입한다. release asset을 integrity와 함께 고정하고 make kit-sync로 소유 사본을 쓰며 dependency review를 갱신한다 | package.json, package-lock.json, config/dependency-review.json and the kit copies | `make kit-check` and `make rules-check` and `make hyper-runner-owner-check` | [o] |
 | H27.27-1 | 소유 테스트가 make가 실행하는 실제 경로로 kit 도구를 찾는다(kit K762) | tests/scripts/kit-tools.mts | `make hyper-runner-owner-check` and `var/tools/bin/node --test tests/scripts/toolchain.test.mts` | [o] |
 | H27.28 | kit가 삭제하는 dependency policy와 review target을 그 기록, CI target, owner, 규칙과 함께 제거한다 | Makefile, .github/workflows/ci.yml, config/owner-checks.json, config/dependency-review.json, AGENTS.md, docs/operations/dependencies.md | `make owner-validate` and `make hyper-runner-owner-check` | [o] |
+| H27.29 | hyper 0.0.21을 릴리스한다: release metadata와 0.0.21 archive의 consumer | release metadata and consumers | `make release-consumer TAG=v0.0.21` | [ ] |
