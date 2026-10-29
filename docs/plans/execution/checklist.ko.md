@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: a3cff156945924e0cfde6ec91020d700eb52d97bd5485e466d16dc971e47fbe8 -->
+<!-- source-sha256: 5c46ec13bfffbc6c975dc578fbd64b01fa6d8e60a6d3d7aafd57f909f62c8a2d -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -305,3 +305,4 @@
 | H27.43 | Kit 0.0.72를 채택한다 | package.json, package-lock.json, kit copies, .github/workflows/ci.yml | `make kit-check`, `make rules-check`, `make docs-check` | [o] |
 | H27.44 | template 0.0.13을 채택한다 | Package manifests and native locks, the Composer package repository of the template zip, release asset pins, template tag, current dependency documentation and their tests | `node --test tests/scripts/template-version.test.mts tests/scripts/template-pins.test.mts tests/scripts/release-assets.test.mts tests/scripts/composer-development.test.mts tests/scripts/ci-workflow.test.mts tests/scripts/toolchain.test.mts` | [o] |
 | H27.45 | P0: template release의 packages.json asset이 주는 composer repository에서 template package를 읽고 PIE로 그로부터 template 확장을 설치한다. composer.json과 examples/board/composer.json의 임시 package repository, 그 pin test, config/release-assets.json의 entry, release-assets-fetch, scripts/build-template-ext.mts를 지운다(kit plan kit-harness, Decision 6; template T27.1-31 이후) | composer.json examples/board/composer.json and their locks, Makefile, config/release-assets.json, scripts/build-template-ext.mts, tests/scripts/, current dependency documentation, CHANGELOG.md CHANGELOG.ko.md | `node --test tests/scripts/template-version.test.mts tests/scripts/template-pins.test.mts tests/scripts/release-assets.test.mts` | [ ] |
+| H27.46 | P0: H27.45 이후 hyper 0.0.21을 릴리스한다: release commit이 ## Unreleased의 항목을 ## 0.0.21로 옮기고, main CI, tag, release workflow를 진행한다. H27.29의 commit은 임시 package repository를 담고 있어 tag하지 않는다 | CHANGELOG.md CHANGELOG.ko.md | `node --test tests/scripts/package-names.test.mts`; CI of main before the tags | [ ] |
