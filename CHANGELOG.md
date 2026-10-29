@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- make hooks writes the hooks of kit again and the reference-transaction hook, which kit deletes (K801), leaves .githooks: main moves through make land and through a commit whose hooks passed. (H27.32)
 - The release-prepare case of the template version tests matches the recursive make of hyper-install by the target that ends its line, since $(MAKE) of kit-bootstrap.mk adds KIT and KIT_EXT to every recursive make. (H27.30)
 - Remove dependency-policy-check, dependency-policy-mutation-check and the review record config/dependency-review.json from the suite, the CI matrix, the owners and the rules; config/dependency-policy.json stays for the Python lock that make python-lock writes. (H27.28)
 - Adopt the published integrity-locked Kit 0.0.65, which carries the Playwright run of the shared test runner and whose rules check reaches every runtime of the gates matrix, and synchronize its copies. (H27.27)

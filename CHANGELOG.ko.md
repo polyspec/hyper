@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: aea9c71f17387997bc3dab2c2969625d4b1960645c60cf92e425b01f7c3aacc0 -->
+<!-- source-sha256: cf3ba6799b9f09e2306d1f45c9c8ce9e0c2c8f0294d55e92ff30f926ed4f1735 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- make hooks는 kit의 hook을 다시 쓰고, kit이 삭제하는 reference-transaction hook(K801)은 .githooks에서 빠진다. main은 make land와 hook이 통과한 commit으로 움직인다. (H27.32)
 - template version test의 release-prepare 사례는 hyper-install의 recursive make를 그 line 끝의 target으로 match한다. kit-bootstrap.mk의 $(MAKE)가 모든 recursive make에 KIT과 KIT_EXT를 더하기 때문이다. (H27.30)
 - dependency-policy-check, dependency-policy-mutation-check와 review 기록 config/dependency-review.json을 suite, CI matrix, owner, 규칙에서 제거한다. config/dependency-policy.json은 make python-lock이 쓰는 Python lock을 위해 남는다. (H27.28)
 - 공유 test runner의 Playwright 실행을 포함하고 rules check가 gates matrix의 모든 runtime에 닿는 공개 Kit 0.0.65를 무결성으로 잠가 적용하고 그 사본을 동기화한다. (H27.27)
