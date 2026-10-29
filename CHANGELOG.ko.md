@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 530c9cbc5c335dfa4ce1e2352546f5a07fed618709bebb13cc83bd0f65311f3b -->
+<!-- source-sha256: b9214a8a849494d56035acd0aa472fb197d1a69d9afed2e9638bf84e2d8d41a5 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- toolchain test는 H27.39가 바꾼 대로 make hyper-install-python이 venv를 새로 만들고 uv sync --no-editable을 실행하기를 기대한다. (H27.41)
 - config/parity.json은 각 Python symbol을 import 경로 polyspec.hyper.<module>.<name>으로 선언한다. kit K788부터 kit의 python extractor가 이 경로를 읽는다. (H27.40)
 - make hyper-install-python은 venv를 새로 만들고 Python 서버 package를 non-editable로 설치하며, kit의 link가 그 package 폴더를 checkout에 link한다. editable 설치에서는 kit의 python extractor가 symbol을 내지 않았고(kit K788), link-state-check는 설치된 package 폴더를 찾지 못했다. (H27.39)
 - 고정한 release는 Kit 0.0.70이다. 그 gates workflow는 commit 범위를 넘기지 않고, AGENTS와 문서는 make docs-check가 각 문서를 따로 읽으며 두 짝을 비교하지 않고(kit K809), make kit-sync가 복사본을 쓰며, local make check를 거부하는 guard가 없다고 적는다. (H27.38)

@@ -162,9 +162,14 @@ test('only explicit install targets download through $(ONLINE), and no check tar
   }
 });
 
+// H27.39: the venv is made anew, so uv writes no file through a link of the venv that it replaces, and the package is installed
+// non-editable, since the python extractor of kit reads the modules of the installed distribution (kit K788).
 test('the venv of the Python server package installs its committed uv.lock and nothing that the index serves now', () => {
   const lines = dryRun('hyper-install-python');
-  assert.ok(lines.some((line) => line.endsWith('uv sync --quiet --locked --project packages/server/python')), lines.join('\n'));
+  const removed = lines.findIndex((line) => line === `rm -rf ${path.join(ROOT, 'packages/server/python/.venv')}`);
+  const made = lines.findIndex((line) => line.includes('python-venv DIR='));
+  assert.ok(removed !== -1 && made > removed, lines.join('\n'));
+  assert.ok(lines.some((line) => line.endsWith('uv sync --quiet --locked --no-editable --project packages/server/python')), lines.join('\n'));
   assert.equal(spawnSync('git', ['ls-files', '--error-unmatch', 'packages/server/python/uv.lock'], { encoding: 'utf8' }).status, 0, 'packages/server/python/uv.lock is not tracked');
 });
 

@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- The toolchain test expects make hyper-install-python to make the venv anew and run uv sync --no-editable, as H27.39 changed it. (H27.41)
 - config/parity.json declares each Python symbol by its import path, polyspec.hyper.<module>.<name>, which the python extractor of kit reads since kit K788. (H27.40)
 - make hyper-install-python makes the venv anew and installs the Python server package non-editable, and the link of kit makes its package folder a link to the checkout: the python extractor of kit gave no symbols for the editable install (kit K788), and link-state-check found no installed package folder. (H27.39)
 - Kit 0.0.70 is the pinned release: its gates workflow passes no commit range, and AGENTS and the documents state that make docs-check reads each document on its own, with no comparison of the twins (kit K809), that make kit-sync writes the copies and that no guard refuses a local make check. (H27.38)
