@@ -290,4 +290,4 @@
 | H27.29 | Release hyper 0.0.21: the release metadata and the five archives of 0.0.21 | release metadata and the 0.0.21 candidate archives | `make release-candidate-assets VERSION=0.0.21` | [v] |
 | H27.30 | Match the recursive make of release-prepare by its target, whatever variables $(MAKE) adds | tests/scripts/template-version.test.mts | `node node_modules/@polyspec/kit/scripts/kit/run-tests.mts node -- tests/scripts/template-version.test.mts` | [o] |
 | H27.31 | Remove the Python build backend pin and the dependency policy that kit deletes (K788, K789) | config/toolchain.json, config/release.json, config/dependency-policy.json, config/owner-checks.json, docs/operations, packages/server/python/pyproject.toml | `make owner-validate` and `node node_modules/@polyspec/kit/scripts/kit/run-tests.mts node -- tests/scripts/template-version.test.mts` | [ ] |
-| H27.32 | Remove the reference-transaction hook that kit deletes (K801) | .githooks/reference-transaction | `make hooks-check` | [ ] |
+| H27.32 | Remove the reference-transaction hook that kit deletes (K801) | .githooks/reference-transaction | `make hooks-check` | [~] |
