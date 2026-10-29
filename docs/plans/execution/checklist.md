@@ -298,4 +298,4 @@
 | H27.37 | State that make kit-sync refreshes the copies of kit (K799) | AGENTS.md, tests/scripts/template-version.test.mts | `make rules-check`, `make docs-check` | [o] |
 | H27.38 | Adopt Kit 0.0.70 | package.json, package-lock.json, kit copies, AGENTS.md | `make kit-check`, `make rules-check`, `make docs-check` | [o] |
 | H27.39 | Install the Python server package non-editable for the parity extractor (K788) | Makefile, docs/operations/development.md | `make hyper-install-python`, `make install-link`, `make link-state-check` | [o] |
-| H27.40 | Declare the Python symbols by their import path (K788) | config/parity.json, tests/scripts | `node --test tests/scripts/public-symbols.test.mts` | [~] |
+| H27.40 | Declare the Python symbols by their import path (K788) | config/parity.json, tests/scripts | `node --test tests/scripts/public-symbols.test.mts` | [o] |

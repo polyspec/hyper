@@ -1165,7 +1165,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.app.App"
+          "symbol": "polyspec.hyper.app.App"
         },
         {
           "implementation": "ts",
@@ -1187,7 +1187,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.app.App.open"
+          "symbol": "polyspec.hyper.app.App.open"
         },
         {
           "implementation": "ts",
@@ -1209,7 +1209,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.app.App.bind"
+          "symbol": "polyspec.hyper.app.App.bind"
         },
         {
           "implementation": "ts",
@@ -1230,7 +1230,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.app.App.handle"
+          "symbol": "polyspec.hyper.app.App.handle"
         },
         {
           "implementation": "ts",
@@ -1252,7 +1252,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.server.create_server"
+          "symbol": "polyspec.hyper.server.create_server"
         },
         {
           "implementation": "ts",
@@ -1274,7 +1274,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.wsgi.create_wsgi"
+          "symbol": "polyspec.hyper.wsgi.create_wsgi"
         },
         {
           "implementation": "ts",
@@ -1296,7 +1296,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.asgi.create_asgi"
+          "symbol": "polyspec.hyper.asgi.create_asgi"
         },
         {
           "implementation": "ts",
@@ -1317,7 +1317,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.app.App.open"
+          "symbol": "polyspec.hyper.app.App.open"
         },
         {
           "implementation": "ts",
@@ -1338,7 +1338,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.app.App.open"
+          "symbol": "polyspec.hyper.app.App.open"
         },
         {
           "implementation": "ts",
@@ -1359,7 +1359,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.app.App.open"
+          "symbol": "polyspec.hyper.app.App.open"
         },
         {
           "implementation": "ts",
@@ -1380,7 +1380,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.app.App.open"
+          "symbol": "polyspec.hyper.app.App.open"
         },
         {
           "implementation": "ts",
@@ -1401,7 +1401,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.app.App.open"
+          "symbol": "polyspec.hyper.app.App.open"
         },
         {
           "implementation": "ts",
@@ -1422,7 +1422,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.app.App.open"
+          "symbol": "polyspec.hyper.app.App.open"
         },
         {
           "implementation": "ts",
@@ -1443,7 +1443,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.app.App.open"
+          "symbol": "polyspec.hyper.app.App.open"
         },
         {
           "implementation": "ts",
@@ -1464,7 +1464,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.app.App.open"
+          "symbol": "polyspec.hyper.app.App.open"
         },
         {
           "implementation": "ts",
@@ -1485,7 +1485,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.app.App.open"
+          "symbol": "polyspec.hyper.app.App.open"
         },
         {
           "implementation": "ts",
@@ -1506,7 +1506,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.app.App.open"
+          "symbol": "polyspec.hyper.app.App.open"
         },
         {
           "implementation": "ts",
@@ -1527,7 +1527,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.app.App.open"
+          "symbol": "polyspec.hyper.app.App.open"
         },
         {
           "implementation": "ts",
@@ -1548,7 +1548,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.app.App.open"
+          "symbol": "polyspec.hyper.app.App.open"
         },
         {
           "implementation": "ts",
@@ -1569,7 +1569,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.app.App.open"
+          "symbol": "polyspec.hyper.app.App.open"
         },
         {
           "implementation": "ts",
@@ -1590,7 +1590,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.app.App.open"
+          "symbol": "polyspec.hyper.app.App.open"
         },
         {
           "implementation": "ts",
@@ -1611,7 +1611,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.app.App.open"
+          "symbol": "polyspec.hyper.app.App.open"
         },
         {
           "implementation": "ts",
@@ -1633,7 +1633,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.server.create_server"
+          "symbol": "polyspec.hyper.server.create_server"
         },
         {
           "implementation": "ts",
@@ -1655,7 +1655,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.server.create_server"
+          "symbol": "polyspec.hyper.server.create_server"
         },
         {
           "implementation": "ts",
@@ -1677,7 +1677,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.server.create_server"
+          "symbol": "polyspec.hyper.server.create_server"
         },
         {
           "implementation": "ts",
@@ -1699,7 +1699,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.server.create_server"
+          "symbol": "polyspec.hyper.server.create_server"
         },
         {
           "implementation": "ts",
@@ -1721,7 +1721,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.server.create_server"
+          "symbol": "polyspec.hyper.server.create_server"
         },
         {
           "implementation": "ts",
@@ -1743,7 +1743,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.server.create_server"
+          "symbol": "polyspec.hyper.server.create_server"
         },
         {
           "implementation": "ts",
@@ -1765,7 +1765,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.wsgi.create_wsgi"
+          "symbol": "polyspec.hyper.wsgi.create_wsgi"
         },
         {
           "implementation": "ts",
@@ -1787,7 +1787,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.app.App.open"
+          "symbol": "polyspec.hyper.app.App.open"
         },
         {
           "implementation": "ts",
@@ -1809,7 +1809,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.app.App.open"
+          "symbol": "polyspec.hyper.app.App.open"
         },
         {
           "implementation": "ts",
@@ -1831,7 +1831,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.app.App.open"
+          "symbol": "polyspec.hyper.app.App.open"
         },
         {
           "implementation": "ts",
@@ -1853,7 +1853,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.app.App.open"
+          "symbol": "polyspec.hyper.app.App.open"
         },
         {
           "implementation": "ts",
@@ -1875,7 +1875,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.app.App.open"
+          "symbol": "polyspec.hyper.app.App.open"
         },
         {
           "implementation": "ts",
@@ -1897,7 +1897,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.app.App.open"
+          "symbol": "polyspec.hyper.app.App.open"
         },
         {
           "implementation": "ts",
@@ -1919,7 +1919,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.app.App.open"
+          "symbol": "polyspec.hyper.app.App.open"
         },
         {
           "implementation": "ts",
@@ -1941,7 +1941,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.app.App.open"
+          "symbol": "polyspec.hyper.app.App.open"
         },
         {
           "implementation": "ts",
@@ -1963,7 +1963,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.app.App.open"
+          "symbol": "polyspec.hyper.app.App.open"
         },
         {
           "implementation": "ts",
@@ -1985,7 +1985,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.app.App.open"
+          "symbol": "polyspec.hyper.app.App.open"
         },
         {
           "implementation": "ts",
@@ -2007,7 +2007,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.app.App.open"
+          "symbol": "polyspec.hyper.app.App.open"
         },
         {
           "implementation": "ts",
@@ -2029,7 +2029,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.app.App.open"
+          "symbol": "polyspec.hyper.app.App.open"
         },
         {
           "implementation": "ts",
@@ -2051,7 +2051,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.app.App.open"
+          "symbol": "polyspec.hyper.app.App.open"
         },
         {
           "implementation": "ts",
@@ -2073,7 +2073,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.app.App.open"
+          "symbol": "polyspec.hyper.app.App.open"
         },
         {
           "implementation": "ts",
@@ -2095,7 +2095,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.app.App.open"
+          "symbol": "polyspec.hyper.app.App.open"
         },
         {
           "implementation": "ts",
@@ -2117,7 +2117,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.app.App.open"
+          "symbol": "polyspec.hyper.app.App.open"
         },
         {
           "implementation": "ts",
@@ -2138,7 +2138,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.request.Request"
+          "symbol": "polyspec.hyper.request.Request"
         },
         {
           "implementation": "ts",
@@ -2159,7 +2159,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.request.Request"
+          "symbol": "polyspec.hyper.request.Request"
         },
         {
           "implementation": "ts",
@@ -2180,7 +2180,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.request.Request"
+          "symbol": "polyspec.hyper.request.Request"
         },
         {
           "implementation": "ts",
@@ -2201,7 +2201,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.request.Request"
+          "symbol": "polyspec.hyper.request.Request"
         },
         {
           "implementation": "ts",
@@ -2222,7 +2222,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.request.Request"
+          "symbol": "polyspec.hyper.request.Request"
         },
         {
           "implementation": "ts",
@@ -2243,7 +2243,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.request.Request"
+          "symbol": "polyspec.hyper.request.Request"
         },
         {
           "implementation": "ts",
@@ -2264,7 +2264,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.request.Request"
+          "symbol": "polyspec.hyper.request.Request"
         },
         {
           "implementation": "ts",
@@ -2285,7 +2285,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.request.Request"
+          "symbol": "polyspec.hyper.request.Request"
         },
         {
           "implementation": "ts",
@@ -2306,7 +2306,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.request.Request"
+          "symbol": "polyspec.hyper.request.Request"
         },
         {
           "implementation": "ts",
@@ -2327,7 +2327,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.request.Request.body_size"
+          "symbol": "polyspec.hyper.request.Request.body_size"
         },
         {
           "implementation": "ts",
@@ -2348,7 +2348,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.request.Request.cookie"
+          "symbol": "polyspec.hyper.request.Request.cookie"
         },
         {
           "implementation": "ts",
@@ -2369,7 +2369,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.request.Request.csrf_token"
+          "symbol": "polyspec.hyper.request.Request.csrf_token"
         },
         {
           "implementation": "ts",
@@ -2390,7 +2390,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.request.Request.current_path"
+          "symbol": "polyspec.hyper.request.Request.current_path"
         },
         {
           "implementation": "ts",
@@ -2411,7 +2411,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.request.Request.flash"
+          "symbol": "polyspec.hyper.request.Request.flash"
         },
         {
           "implementation": "ts",
@@ -2432,7 +2432,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.request.Request.form"
+          "symbol": "polyspec.hyper.request.Request.form"
         },
         {
           "implementation": "ts",
@@ -2453,7 +2453,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.request.Request.form_string"
+          "symbol": "polyspec.hyper.request.Request.form_string"
         },
         {
           "implementation": "ts",
@@ -2475,7 +2475,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.request.Request.files"
+          "symbol": "polyspec.hyper.request.Request.files"
         },
         {
           "implementation": "ts",
@@ -2497,7 +2497,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.request.Request.file"
+          "symbol": "polyspec.hyper.request.Request.file"
         },
         {
           "implementation": "ts",
@@ -2519,7 +2519,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.uploaded_file.UploadedFile"
+          "symbol": "polyspec.hyper.uploaded_file.UploadedFile"
         },
         {
           "implementation": "ts",
@@ -2540,7 +2540,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.request.Request.header"
+          "symbol": "polyspec.hyper.request.Request.header"
         },
         {
           "implementation": "ts",
@@ -2561,7 +2561,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.request.Request.is_region_request"
+          "symbol": "polyspec.hyper.request.Request.is_region_request"
         },
         {
           "implementation": "ts",
@@ -2582,7 +2582,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.request.Request.media_type"
+          "symbol": "polyspec.hyper.request.Request.media_type"
         },
         {
           "implementation": "ts",
@@ -2603,7 +2603,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.request.Request.param"
+          "symbol": "polyspec.hyper.request.Request.param"
         },
         {
           "implementation": "ts",
@@ -2624,7 +2624,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.request.Request.params"
+          "symbol": "polyspec.hyper.request.Request.params"
         },
         {
           "implementation": "ts",
@@ -2645,7 +2645,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.request.Request.path"
+          "symbol": "polyspec.hyper.request.Request.path"
         },
         {
           "implementation": "ts",
@@ -2666,7 +2666,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.request.Request.query"
+          "symbol": "polyspec.hyper.request.Request.query"
         },
         {
           "implementation": "ts",
@@ -2687,7 +2687,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.request.Request.query_int"
+          "symbol": "polyspec.hyper.request.Request.query_int"
         },
         {
           "implementation": "ts",
@@ -2708,7 +2708,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.request.Request.raw_query"
+          "symbol": "polyspec.hyper.request.Request.raw_query"
         },
         {
           "implementation": "ts",
@@ -2729,7 +2729,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.request.Request.selection"
+          "symbol": "polyspec.hyper.request.Request.selection"
         },
         {
           "implementation": "ts",
@@ -2750,7 +2750,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.request.Request.valid_input"
+          "symbol": "polyspec.hyper.request.Request.valid_input"
         },
         {
           "implementation": "ts",
@@ -2771,7 +2771,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.request.Request.wants_json"
+          "symbol": "polyspec.hyper.request.Request.wants_json"
         },
         {
           "implementation": "ts",
@@ -2792,7 +2792,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.request.Request.with_header"
+          "symbol": "polyspec.hyper.request.Request.with_header"
         },
         {
           "implementation": "ts",
@@ -2814,7 +2814,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.request.Request.target_path"
+          "symbol": "polyspec.hyper.request.Request.target_path"
         },
         {
           "implementation": "ts",
@@ -2836,7 +2836,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.request.Request.target_query"
+          "symbol": "polyspec.hyper.request.Request.target_query"
         },
         {
           "implementation": "ts",
@@ -2857,7 +2857,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.request.Request.https"
+          "symbol": "polyspec.hyper.request.Request.https"
         },
         {
           "implementation": "ts",
@@ -2878,7 +2878,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.request.Request.method"
+          "symbol": "polyspec.hyper.request.Request.method"
         },
         {
           "implementation": "ts",
@@ -2899,7 +2899,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.request.Request.path"
+          "symbol": "polyspec.hyper.request.Request.path"
         },
         {
           "implementation": "ts",
@@ -2920,7 +2920,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.reply.Reply"
+          "symbol": "polyspec.hyper.reply.Reply"
         },
         {
           "implementation": "ts",
@@ -2942,7 +2942,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.reply.Reply.note"
+          "symbol": "polyspec.hyper.reply.Reply.note"
         },
         {
           "implementation": "ts",
@@ -2964,7 +2964,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.reply.Reply.notes"
+          "symbol": "polyspec.hyper.reply.Reply.notes"
         },
         {
           "implementation": "ts",
@@ -2986,7 +2986,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.reply.Reply.cookie"
+          "symbol": "polyspec.hyper.reply.Reply.cookie"
         },
         {
           "implementation": "ts",
@@ -3008,7 +3008,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.reply.Reply.remove_cookie"
+          "symbol": "polyspec.hyper.reply.Reply.remove_cookie"
         },
         {
           "implementation": "ts",
@@ -3030,7 +3030,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.reply.Reply.cache_control"
+          "symbol": "polyspec.hyper.reply.Reply.cache_control"
         },
         {
           "implementation": "ts",
@@ -3052,7 +3052,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.reply.Reply.renew_session"
+          "symbol": "polyspec.hyper.reply.Reply.renew_session"
         },
         {
           "implementation": "ts",
@@ -3074,7 +3074,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.reply.Reply.referrer_policy"
+          "symbol": "polyspec.hyper.reply.Reply.referrer_policy"
         },
         {
           "implementation": "ts",
@@ -3096,7 +3096,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.reply.Reply.status"
+          "symbol": "polyspec.hyper.reply.Reply.status"
         },
         {
           "implementation": "ts",
@@ -3118,7 +3118,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.reply.Reply.embed_data"
+          "symbol": "polyspec.hyper.reply.Reply.embed_data"
         },
         {
           "implementation": "ts",
@@ -3139,7 +3139,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.response.Response"
+          "symbol": "polyspec.hyper.response.Response"
         },
         {
           "implementation": "ts",
@@ -3160,7 +3160,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.response.Response"
+          "symbol": "polyspec.hyper.response.Response"
         },
         {
           "implementation": "ts",
@@ -3181,7 +3181,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.response.Response.status"
+          "symbol": "polyspec.hyper.response.Response.status"
         },
         {
           "implementation": "ts",
@@ -3202,7 +3202,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.response.Response.headers"
+          "symbol": "polyspec.hyper.response.Response.headers"
         },
         {
           "implementation": "ts",
@@ -3223,7 +3223,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.response.Response.body"
+          "symbol": "polyspec.hyper.response.Response.body"
         },
         {
           "implementation": "ts",
@@ -3244,7 +3244,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.response.Response.text"
+          "symbol": "polyspec.hyper.response.Response.text"
         },
         {
           "implementation": "ts",
@@ -3265,7 +3265,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.response.Response.with_header"
+          "symbol": "polyspec.hyper.response.Response.with_header"
         },
         {
           "implementation": "ts",
@@ -3287,7 +3287,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.result.Result"
+          "symbol": "polyspec.hyper.result.Result"
         },
         {
           "implementation": "ts",
@@ -3309,7 +3309,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.result.Result.redirect"
+          "symbol": "polyspec.hyper.result.Result.redirect"
         },
         {
           "implementation": "ts",
@@ -3331,7 +3331,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.result.Result.page"
+          "symbol": "polyspec.hyper.result.Result.page"
         },
         {
           "implementation": "ts",
@@ -3353,7 +3353,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.result.Result.invalid"
+          "symbol": "polyspec.hyper.result.Result.invalid"
         },
         {
           "implementation": "ts",
@@ -3375,7 +3375,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.result.Result.flash_value"
+          "symbol": "polyspec.hyper.result.Result.flash_value"
         },
         {
           "implementation": "ts",
@@ -3397,7 +3397,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.result.Result.changed"
+          "symbol": "polyspec.hyper.result.Result.changed"
         },
         {
           "implementation": "ts",
@@ -3419,7 +3419,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.result.BadRequest"
+          "symbol": "polyspec.hyper.result.BadRequest"
         },
         {
           "implementation": "ts",
@@ -3441,7 +3441,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.result.BadRequest"
+          "symbol": "polyspec.hyper.result.BadRequest"
         },
         {
           "implementation": "ts",
@@ -3463,7 +3463,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.result.Forbidden"
+          "symbol": "polyspec.hyper.result.Forbidden"
         },
         {
           "implementation": "ts",
@@ -3485,7 +3485,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.result.Forbidden"
+          "symbol": "polyspec.hyper.result.Forbidden"
         },
         {
           "implementation": "ts",
@@ -3507,7 +3507,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.result.NotFound"
+          "symbol": "polyspec.hyper.result.NotFound"
         },
         {
           "implementation": "ts",
@@ -3529,7 +3529,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.result.NotFound"
+          "symbol": "polyspec.hyper.result.NotFound"
         },
         {
           "implementation": "ts",
@@ -3551,7 +3551,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.result.Redirect"
+          "symbol": "polyspec.hyper.result.Redirect"
         },
         {
           "implementation": "ts",
@@ -3573,7 +3573,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.result.Redirect"
+          "symbol": "polyspec.hyper.result.Redirect"
         },
         {
           "implementation": "ts",
@@ -3595,7 +3595,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.result.Redirect.result"
+          "symbol": "polyspec.hyper.result.Redirect.result"
         },
         {
           "implementation": "ts",
@@ -3617,7 +3617,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.session.SessionStore"
+          "symbol": "polyspec.hyper.session.SessionStore"
         },
         {
           "implementation": "ts",
@@ -3639,7 +3639,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.session.SessionStore.get"
+          "symbol": "polyspec.hyper.session.SessionStore.get"
         },
         {
           "implementation": "ts",
@@ -3661,7 +3661,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.session.SessionStore.set"
+          "symbol": "polyspec.hyper.session.SessionStore.set"
         },
         {
           "implementation": "ts",
@@ -3683,7 +3683,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.session.SessionStore.remove"
+          "symbol": "polyspec.hyper.session.SessionStore.remove"
         },
         {
           "implementation": "ts",
@@ -3705,7 +3705,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.session.SessionStore.renew"
+          "symbol": "polyspec.hyper.session.SessionStore.renew"
         },
         {
           "implementation": "ts",
@@ -3727,7 +3727,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.session.ArraySession"
+          "symbol": "polyspec.hyper.session.ArraySession"
         },
         {
           "implementation": "ts",
@@ -3749,7 +3749,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.session.ArraySession.get"
+          "symbol": "polyspec.hyper.session.ArraySession.get"
         },
         {
           "implementation": "ts",
@@ -3771,7 +3771,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.session.ArraySession.set"
+          "symbol": "polyspec.hyper.session.ArraySession.set"
         },
         {
           "implementation": "ts",
@@ -3793,7 +3793,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.session.ArraySession.remove"
+          "symbol": "polyspec.hyper.session.ArraySession.remove"
         },
         {
           "implementation": "ts",
@@ -3815,7 +3815,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.session.ArraySession.renew"
+          "symbol": "polyspec.hyper.session.ArraySession.renew"
         },
         {
           "implementation": "ts",
@@ -3837,7 +3837,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.file_sessions.FileSessions"
+          "symbol": "polyspec.hyper.file_sessions.FileSessions"
         },
         {
           "implementation": "ts",
@@ -3859,7 +3859,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.file_sessions.FileSessions"
+          "symbol": "polyspec.hyper.file_sessions.FileSessions"
         },
         {
           "implementation": "ts",
@@ -3881,7 +3881,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.file_sessions.FileSessions"
+          "symbol": "polyspec.hyper.file_sessions.FileSessions"
         },
         {
           "implementation": "ts",
@@ -3903,7 +3903,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.file_sessions.FileSessions"
+          "symbol": "polyspec.hyper.file_sessions.FileSessions"
         },
         {
           "implementation": "ts",
@@ -3925,7 +3925,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.file_sessions.FileSessions"
+          "symbol": "polyspec.hyper.file_sessions.FileSessions"
         },
         {
           "implementation": "ts",
@@ -3947,7 +3947,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.file_sessions.FileSession"
+          "symbol": "polyspec.hyper.file_sessions.FileSession"
         },
         {
           "implementation": "ts",
@@ -3969,7 +3969,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.file_sessions.FileSession"
+          "symbol": "polyspec.hyper.file_sessions.FileSession"
         },
         {
           "implementation": "ts",
@@ -3991,7 +3991,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.file_sessions.FileSession.get"
+          "symbol": "polyspec.hyper.file_sessions.FileSession.get"
         },
         {
           "implementation": "ts",
@@ -4013,7 +4013,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.file_sessions.FileSession.set"
+          "symbol": "polyspec.hyper.file_sessions.FileSession.set"
         },
         {
           "implementation": "ts",
@@ -4035,7 +4035,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.file_sessions.FileSession.remove"
+          "symbol": "polyspec.hyper.file_sessions.FileSession.remove"
         },
         {
           "implementation": "ts",
@@ -4057,7 +4057,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.file_sessions.FileSession.renew"
+          "symbol": "polyspec.hyper.file_sessions.FileSession.renew"
         },
         {
           "implementation": "ts",
@@ -4079,7 +4079,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.container.Container"
+          "symbol": "polyspec.hyper.container.Container"
         },
         {
           "implementation": "ts",
@@ -4101,7 +4101,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.container.Container.bind"
+          "symbol": "polyspec.hyper.container.Container.bind"
         },
         {
           "implementation": "ts",
@@ -4123,7 +4123,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.container.Container.call"
+          "symbol": "polyspec.hyper.container.Container.call"
         },
         {
           "implementation": "ts",
@@ -4145,7 +4145,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.client.ClientRendering"
+          "symbol": "polyspec.hyper.client.ClientRendering"
         },
         {
           "implementation": "ts",
@@ -4167,7 +4167,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.client.ClientRendering"
+          "symbol": "polyspec.hyper.client.ClientRendering"
         },
         {
           "implementation": "ts",
@@ -4189,7 +4189,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.client.ClientRendering.shell"
+          "symbol": "polyspec.hyper.client.ClientRendering.shell"
         },
         {
           "implementation": "ts",
@@ -4211,7 +4211,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.client.ClientRendering.base_path"
+          "symbol": "polyspec.hyper.client.ClientRendering.base_path"
         },
         {
           "implementation": "ts",
@@ -4233,7 +4233,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.client.ClientRendering.selects"
+          "symbol": "polyspec.hyper.client.ClientRendering.selects"
         },
         {
           "implementation": "ts",
@@ -4255,7 +4255,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.client.Choice"
+          "symbol": "polyspec.hyper.client.Choice"
         },
         {
           "implementation": "ts",
@@ -4277,7 +4277,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.client.Choice"
+          "symbol": "polyspec.hyper.client.Choice"
         },
         {
           "implementation": "ts",
@@ -4299,7 +4299,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.client.Choice.chosen"
+          "symbol": "polyspec.hyper.client.Choice.chosen"
         },
         {
           "implementation": "ts",
@@ -4321,7 +4321,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.client.Choice.value"
+          "symbol": "polyspec.hyper.client.Choice.value"
         },
         {
           "implementation": "ts",
@@ -4342,7 +4342,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.ArraySession"
+          "symbol": "polyspec.hyper.ArraySession"
         },
         {
           "implementation": "ts",
@@ -4363,7 +4363,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.BadRequest"
+          "symbol": "polyspec.hyper.BadRequest"
         },
         {
           "implementation": "ts",
@@ -4384,7 +4384,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.Container"
+          "symbol": "polyspec.hyper.Container"
         },
         {
           "implementation": "ts",
@@ -4405,7 +4405,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.Forbidden"
+          "symbol": "polyspec.hyper.Forbidden"
         },
         {
           "implementation": "ts",
@@ -4426,7 +4426,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.NotFound"
+          "symbol": "polyspec.hyper.NotFound"
         },
         {
           "implementation": "ts",
@@ -4447,7 +4447,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.Redirect"
+          "symbol": "polyspec.hyper.Redirect"
         },
         {
           "implementation": "ts",
@@ -4468,7 +4468,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.Reply"
+          "symbol": "polyspec.hyper.Reply"
         },
         {
           "implementation": "ts",
@@ -4489,7 +4489,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.Request"
+          "symbol": "polyspec.hyper.Request"
         },
         {
           "implementation": "ts",
@@ -4510,7 +4510,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.Response"
+          "symbol": "polyspec.hyper.Response"
         },
         {
           "implementation": "ts",
@@ -4531,7 +4531,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.Result"
+          "symbol": "polyspec.hyper.Result"
         },
         {
           "implementation": "ts",
@@ -4552,7 +4552,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.SessionStore"
+          "symbol": "polyspec.hyper.SessionStore"
         },
         {
           "implementation": "ts",
@@ -4622,7 +4622,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.uploaded_file.UploadedFile"
+          "symbol": "polyspec.hyper.uploaded_file.UploadedFile"
         },
         {
           "implementation": "ts",
@@ -4644,7 +4644,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.uploaded_file.UploadedFile.name"
+          "symbol": "polyspec.hyper.uploaded_file.UploadedFile.name"
         },
         {
           "implementation": "ts",
@@ -4666,7 +4666,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.uploaded_file.UploadedFile.filename"
+          "symbol": "polyspec.hyper.uploaded_file.UploadedFile.filename"
         },
         {
           "implementation": "ts",
@@ -4688,7 +4688,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.uploaded_file.UploadedFile.content_type"
+          "symbol": "polyspec.hyper.uploaded_file.UploadedFile.content_type"
         },
         {
           "implementation": "ts",
@@ -4710,7 +4710,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.uploaded_file.UploadedFile.content"
+          "symbol": "polyspec.hyper.uploaded_file.UploadedFile.content"
         },
         {
           "implementation": "ts",
@@ -4732,7 +4732,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.request.Request.file_over"
+          "symbol": "polyspec.hyper.request.Request.file_over"
         },
         {
           "implementation": "ts",
@@ -4754,7 +4754,7 @@
         },
         {
           "implementation": "python",
-          "symbol": "hyper.app.App.open"
+          "symbol": "polyspec.hyper.app.App.open"
         },
         {
           "implementation": "ts",
