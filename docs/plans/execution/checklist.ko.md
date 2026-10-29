@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: e7f1b4b0e22e50a10bc538e55049107cc386efac2b9a4852894666d188d4f7af -->
+<!-- source-sha256: 5bf81d77d083d57e5d90bb3790421c7c197f64640ae2557c40cde9ffad376180 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -287,4 +287,4 @@
 | H27.26 | Native test runner를 연결하고 Playwright runner 지원 전까지 0.0.21 릴리즈를 보류한다. | Makefile, Python harness removal, native runner regression tests, config/ci.json and ownership, Kit 0.0.63 manifests and lock, shared workflow copies, paired repository rules and documents, 0.0.21 release metadata and consumers | `make hyper-runner-owner-check` and `make python-file-parts-test` and `make -k typecheck lint-ts docs-check kit-check kit-ci-plan release-versions TAG=v0.0.21` | [o] |
 | H27.27 | 배포된 Kit 0.0.65를 도입한다. release asset을 integrity와 함께 고정하고 make kit-sync로 소유 사본을 쓰며 dependency review를 갱신한다 | package.json, package-lock.json, config/dependency-review.json and the kit copies | `make kit-check` and `make rules-check` and `make hyper-runner-owner-check` | [o] |
 | H27.27-1 | 소유 테스트가 make가 실행하는 실제 경로로 kit 도구를 찾는다(kit K762) | tests/scripts/kit-tools.mts | `make hyper-runner-owner-check` and `var/tools/bin/node --test tests/scripts/toolchain.test.mts` | [o] |
-| H27.28 | kit가 삭제하는 dependency policy와 review target을 그 기록, CI target, owner, 규칙과 함께 제거한다 | Makefile, .github/workflows/ci.yml, config/owner-checks.json, config/dependency-review.json, AGENTS.md | `make owner-validate` and `make hyper-runner-owner-check` | [ ] |
+| H27.28 | kit가 삭제하는 dependency policy와 review target을 그 기록, CI target, owner, 규칙과 함께 제거한다 | Makefile, .github/workflows/ci.yml, config/owner-checks.json, config/dependency-review.json, AGENTS.md | `make owner-validate` and `make hyper-runner-owner-check` | [~] |
