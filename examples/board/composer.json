@@ -5,13 +5,22 @@
     "license": "MIT",
     "repositories": [
         { "type": "path", "url": "../../packages/server/php", "options": { "reference": "config" } },
-        { "type": "artifact", "url": "../../var/products/template-php" }
+        {
+            "type": "package",
+            "package": {
+                "name": "polyspec/template", "version": "0.0.13", "type": "library", "license": "MIT",
+                "description": "Template language implementation: lexer, parser, renderer, functions and CLI",
+                "require": { "php": ">=8.4", "ext-mbstring": "*", "opis/json-schema": "^2.6" },
+                "autoload": { "psr-4": { "Polyspec\\Template\\": "src/" } },
+                "dist": { "type": "zip", "url": "https://github.com/polyspec/template/releases/download/v0.0.13/polyspec-template-php-0.0.13.zip", "shasum": "0b803ca719042a61c543c22c572b44d66ce5d639" }
+            }
+        }
     ],
     "require": {
         "php": ">=8.4",
         "ext-pdo_sqlite": "*",
         "polyspec/hyper-server": "0.0.21",
-        "polyspec/template": "0.0.12"
+        "polyspec/template": "0.0.13"
     },
     "require-dev": {
         "laravel/pint": "^1.32.1"

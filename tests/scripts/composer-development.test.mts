@@ -25,7 +25,7 @@ test('make preserves the native COMPOSER manifest selector', (t) => {
 });
 
 test('native Composer accepts the supported provider versions and refuses an unverified one', (t) => {
-  for (const version of ['0.0.11', '0.0.12', '0.0.13']) {
+  for (const version of ['0.0.12', '0.0.13', '0.0.14']) {
     const directory = mkdtempSync(join(tmpdir(), 'hyper-composer-constraint-'));
     t.after(() => rmSync(directory, { recursive: true, force: true }));
     mkdirSync(join(directory, 'server'));
@@ -39,11 +39,11 @@ test('native Composer accepts the supported provider versions and refuses an unv
       config: { platform: { php: '8.4.1' } },
     }));
     const result = spawnSync(composer, ['update', '--no-install', '--no-scripts', '--no-plugins', '--no-interaction', '--no-audit'], { cwd: directory, encoding: 'utf8', env: { ...process.env, COMPOSER: 'composer.json', COMPOSER_DISABLE_NETWORK: '1' } });
-    if (version !== '0.0.12') {
+    if (version !== '0.0.13') {
       assert.notEqual(result.status, 0, result.stdout + result.stderr);
       assert.match(result.stderr, /polyspec\/template/);
       assert.ok(result.stderr.includes(version), result.stderr);
-      assert.match(result.stderr, /0\.0\.12/);
+      assert.match(result.stderr, /0\.0\.13/);
     } else {
       assert.equal(result.status, 0, `${version}: ${result.stdout}${result.stderr}`);
       const packages = jsonObjects(object(join(directory, 'composer.lock')).packages, 'resolved packages');
@@ -56,14 +56,14 @@ test('native development records are checked in an isolated fixture, including s
   const directory = mkdtempSync(join(tmpdir(), 'hyper-composer-records-'));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   mkdirSync(join(directory, 'provider'));
-  writeFileSync(join(directory, 'provider/composer.json'), JSON.stringify({ name: 'polyspec/template', version: '0.0.12', require: { php: '>=8.4' } }));
+  writeFileSync(join(directory, 'provider/composer.json'), JSON.stringify({ name: 'polyspec/template', version: '0.0.13', require: { php: '>=8.4' } }));
   for (const [project, source] of [[directory, 'provider'], [join(directory, 'examples/board'), '../../provider']]) {
     assert.ok(project && source);
     mkdirSync(project, { recursive: true });
     writeFileSync(join(project, 'composer.local.json'), JSON.stringify({
       name: 'polyspec/hyper-records-test', version: '0.0.1',
       repositories: [{ type: 'path', url: source, options: { symlink: true, reference: 'config' } }, { 'packagist.org': false }],
-      require: { 'polyspec/template': '0.0.12' },
+      require: { 'polyspec/template': '0.0.13' },
     }));
     const result = spawnSync(composer, ['update', '--no-scripts', '--no-plugins', '--no-interaction', '--no-audit'], { cwd: project, encoding: 'utf8', env: { ...process.env, COMPOSER: 'composer.local.json', COMPOSER_DISABLE_NETWORK: '1' } });
     assert.equal(result.status, 0, result.stdout + result.stderr);

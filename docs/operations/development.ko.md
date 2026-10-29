@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: 00d5aef3cf3751e1200c9c53c3f1a5da080df4eb7e17db1d8bc41dc959a78ab8 -->
+<!-- source-sha256: b32ff7c15b49a6b4393b84c3eea4c641144a2a3ead82b529711a04022cc86229 -->
 # 개발
 
 [English](development.md).
@@ -9,7 +9,7 @@
 - pin한 도구(HR-81): `mise.toml`의 Node.js와 Python(mise가 `mise.lock`의 digest에 맞춰 설치한다. Node.js는 `make install-tools TOOLS=npm`이, Python은 `make install-tools`가 설치한다), `pdo_sqlite`가 있는 `.php-version`의 PHP, GNU Make 3.81 이상, 네이티브 확장을 위한 그 PHP의 phpize, php-config와 C compiler. `make hyper-install`은 `packageManager`의 npm과 `config/toolchain.json`의 Composer를 `var/tools`에 설치한다(`make install-tools`). `make toolchain-check`는 pin과 다른 모든 도구를 밝힌다.
 - 공유 도구: `@polyspec/kit`은 `package.json`의 릴리즈 URL과 `package-lock.json`의 integrity로 고정한다. 깨끗한 checkout은 `make bootstrap`으로 정확한 `packageManager` version의 기본 npm을 사용해 `npm ci --ignore-scripts`를 실행한다. 이어 `make install-tools TOOLS=npm`, `make install-packages`, `make install-tools`로 checkout 도구를 준비한다. Makefile은 설치된 `node_modules/@polyspec/kit/scripts/kit/kit-bootstrap.mk`를 include한다. 기본 로컬 package link도 같은 경로를 사용하고 형제 checkout을 필수로 요구하지 않는다. 설치 bootstrap은 link에서는 소스 도구를, archive에서는 packed 도구를 선택한다. `make kit-sync`는 일반 공유 복사본을 원자적으로 쓰고 `make kit-check`는 복사본과 설정 schema를 확인한다.
 - template package: npm은 `@polyspec/template`과 `@polyspec/template-compiler`를 template release의 tarball에서, Composer는 `polyspec/template`을 그 zip에서 `package.json`, `composer.json`과 그 lock이 고정한 대로 설치한다(HR-70). `make hyper-install`이 이를 download한다.
-- 네이티브 template 확장: release `v0.0.12`(`TEMPLATE_TAG`)의 php-ext archive `polyspec-template-php-ext-php-0.0.12.zip`이며, `config/release-assets.json`이 sha256으로 pin한다(H14.1-7). `make hyper-install`이 kit의 `make release-assets-fetch`로 `$(ONLINE)`을 거쳐 내려받아 `var/products/template-ext`에 풀고, `make ext`가 offline으로 build한다. 같은 파일이 php zip `polyspec-template-php-0.0.12.zip`을 pin하며, `make hyper-install`은 Composer가 설치하기 전에 그것을 확인해 Composer artifact repository `var/products/template-php`에 둔다(H23.11). `../template`(`TEMPLATE_REPOSITORY`)의 template 저장소는 선언한 release tag을 읽을 때만 쓰며, tag가 없으면 `make template-tag`가 실패한다.
+- 네이티브 template 확장: release `v0.0.13`(`TEMPLATE_TAG`)의 php-ext archive `polyspec-template-php-ext-php-0.0.13.zip`이며, `config/release-assets.json`이 sha256으로 pin한다(H14.1-7). `make hyper-install`이 kit의 `make release-assets-fetch`로 `$(ONLINE)`을 거쳐 내려받아 `var/products/template-ext`에 풀고, `make ext`가 offline으로 build한다. Composer는 php zip `polyspec-template-php-0.0.13.zip`을 `composer.json`의 package repository에서 직접 가져오며, 그 repository가 zip을 URL과 sha1로 지정한다(H23.11, H27.44). `../template`(`TEMPLATE_REPOSITORY`)의 template 저장소는 선언한 release tag을 읽을 때만 쓰며, tag가 없으면 `make template-tag`가 실패한다.
 - network: `make install-tools`, `make install-packages`, `make hyper-install`, `make hyper-install-browser`만 download한다. 다른 모든 recipe는 npm, Composer를 offline으로 실행하므로(`npm_config_offline`, `COMPOSER_DISABLE_NETWORK`) 없는 download는 바로 실패하고 그것을 만드는 설치 target을 밝힌다(HR-89).
 - Playwright용 Chromium: `make hyper-install-browser`. pin한 Playwright의 Chromium과, Linux에서는 그 system library를 설치한다.
 
@@ -17,7 +17,7 @@
 
 `make composer-development`는 root와 board의 추적된 `composer.local.json`을 명시적으로 선택한다. 기본 Composer가 설치 lock 아래에서 무시되는 각 `composer.local.lock`, 소스 link, 설치 기록과 autoload를 만들고 갱신한다. `make composer-development-check`는 PHP 8.4에서 선택한 두 lock의 기본 strict 검증과 platform 검사를 실행한다. 별도 릴리즈 manifest와 lock은 배포 graph를 계속 나타내며 개발 설치 기록으로 사용하지 않는다.
 
-선언은 PHP package 소스, template 0.0.12와 기존 JSON Schema fork의 path를 지정한다. fork는 자체 기본 branch metadata를 유지하며 앱이 대체 version을 부여하지 않는다. PHP library는 공개된 template 0.0.12를 요구한다. 기본 해석 검사는 이 version을 허용하고 0.0.11과 0.0.13을 거부하므로 소스 연결은 version alias 대신 선언된 호환 요구를 사용한다. `COMPOSER`는 manifest를 선택하고 `COMPOSER_BIN`은 checkout 실행 파일을 가리킨다. Worktree와 fixture는 Git common directory로 공유 도구 경로를 찾고 설치 의존성은 독립적으로 유지한다.
+선언은 PHP package 소스, template 0.0.13와 기존 JSON Schema fork의 path를 지정한다. fork는 자체 기본 branch metadata를 유지하며 앱이 대체 version을 부여하지 않는다. PHP library는 공개된 template 0.0.13를 요구한다. 기본 해석 검사는 이 version을 허용하고 0.0.11과 0.0.13을 거부하므로 소스 연결은 version alias 대신 선언된 호환 요구를 사용한다. `COMPOSER`는 manifest를 선택하고 `COMPOSER_BIN`은 checkout 실행 파일을 가리킨다. Worktree와 fixture는 Git common directory로 공유 도구 경로를 찾고 설치 의존성은 독립적으로 유지한다.
 
 ## 타깃
 
@@ -120,7 +120,7 @@ consumer는 자기 package manager로 archive를 설치해 릴리스를 확인�
 
 ### 개발 구성
 
-private root는 checkout 안의 패키지를 찾아 주며 공개되지 않는다. root `package.json`은 npm이 link하는 npm workspace `packages/client`, `packages/build`, `packages/server/ts`(HR-79)와, `@polyspec/template`과 `@polyspec/template-compiler`를 template release의 tarball URL로 선언하고, 그 정확한 버전이 이 tarball로 풀리게 하는 `overrides`를 둔다. npm 12는 기본으로 URL 의존성을 설치하지 않으므로 `.npmrc`가 `allow-remote=root`를 둔다. root `composer.json`은 path repository `packages/server/php`와, 확인된 template release zip의 artifact repository `var/products/template-php`에서 root `vendor`로 설치하고 `packages/server/php`의 namespace를 tree에 연결한다. `composer.lock`이 그 lock이다. 두 root는 template release v0.0.12을 받는다(HR-70). 그 tag는 `make template`이 네이티브 확장 소스를 복사하는 Makefile의 `TEMPLATE_TAG`이다(HR-80).
+private root는 checkout 안의 패키지를 찾아 주며 공개되지 않는다. root `package.json`은 npm이 link하는 npm workspace `packages/client`, `packages/build`, `packages/server/ts`(HR-79)와, `@polyspec/template`과 `@polyspec/template-compiler`를 template release의 tarball URL로 선언하고, 그 정확한 버전이 이 tarball로 풀리게 하는 `overrides`를 둔다. npm 12는 기본으로 URL 의존성을 설치하지 않으므로 `.npmrc`가 `allow-remote=root`를 둔다. root `composer.json`은 path repository `packages/server/php`와, template release zip을 URL과 sha1로 지정하는 package repository에서 root `vendor`로 설치하고 `packages/server/php`의 namespace를 tree에 연결한다. `composer.lock`이 그 lock이다. 두 root는 template release v0.0.13을 받는다(HR-70). 그 tag는 `make template`이 네이티브 확장 소스를 복사하는 Makefile의 `TEMPLATE_TAG`이다(HR-80).
 
 ### 릴리스 에셋 설치
 

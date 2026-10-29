@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: fc7057b6a09c2ff01311d161c56a6b9207745ee8fec648c9b9e0fd2bbc5544d2 -->
+<!-- source-sha256: 2e2467a11cc9f3735edfb86d198f3886268ddc33207ed97e333933cd8f4b18fd -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- npm, Composer, Python, php-ext 의존성과 template tag, CI checkout이 고정한 release는 template 0.0.13이다. Composer는 composer.json과 examples/board/composer.json의 package repository가 URL과 sha1로 지정한 php zip을 직접 가져오므로, config/release-assets.json은 php-ext archive만 pin하고 TEMPLATE_TAG는 그 version을 읽는다. package는 zip의 metadata를 다시 적으며, 이를 release와 비교하는 검사는 없다. hyper-install recipe의 test는 main checkout의 recipe와 그 도구를 읽으므로 worktree에서도 같은 결과를 낸다. (H27.44)
 - 고정한 release는 Kit 0.0.72다. CI는 아무것도 link하지 않으므로(kit K824) gates workflow는 make link를 실행하지 않고, link-state-check는 CI suite에서 빠진다. 이 검사는 개발 checkout의 link를 검사한다. (H27.43)
 - CI의 docs job은 서버 package의 Python 환경을 설치한다. hyper-test-scripts의 public-symbols가 kit의 python extractor로 설치된 distribution을 읽기 때문이다(kit K788). 세 구현 중 두 구현의 symbol만 추출했다. (H27.42)
 - toolchain test는 H27.39가 바꾼 대로 make hyper-install-python이 venv를 새로 만들고 uv sync --no-editable을 실행하기를 기대한다. (H27.41)

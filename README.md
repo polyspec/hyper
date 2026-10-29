@@ -36,7 +36,7 @@ Pages and regions contain no `hx-*` attributes. Links and forms are plain HTML a
 
 ## Start
 
-npm installs the template packages `@polyspec/template` and `@polyspec/template-compiler` from the tarballs of the template release v0.0.12 as `package.json` and its lock pin them, and Composer installs `polyspec/template` from its zip (HR-70). `config/release-assets.json` pins the php zip `polyspec-template-php-0.0.12.zip` and the php-ext archive `polyspec-template-php-ext-php-0.0.12.zip` of that release with their sha256: `make hyper-install` fetches both with `make release-assets-fetch` of kit, which checks them, puts the php zip into the Composer artifact repository `var/products/template-php`, which `composer.json` declares and from which `composer.lock` records the zip with its sha1 (H23.11), and unpacks the php-ext archive into `var/products/template-ext`, from which `make ext` builds the native extension and PHPStan reads the stub (H14.1-7).
+npm installs the template packages `@polyspec/template` and `@polyspec/template-compiler` from the tarballs of the template release v0.0.13 as `package.json` and its lock pin them, and Composer installs `polyspec/template` from its zip `polyspec-template-php-0.0.13.zip`, which the package repository of `composer.json` names by its URL and sha1 and `composer.lock` records (HR-70, H27.44). `config/release-assets.json` pins the php-ext archive `polyspec-template-php-ext-php-0.0.13.zip` of that release with its sha256: `make hyper-install` fetches it with `make release-assets-fetch` of kit, which checks it and unpacks it into `var/products/template-ext`, from which `make ext` builds the native extension and PHPStan reads the stub (H14.1-7).
 
 ```sh
 make hyper-install

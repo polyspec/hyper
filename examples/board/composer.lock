@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6d04d2669cc48b16b9f1ee392a22adb7",
+    "content-hash": "fc0ba67c73390803b7aa7a68d03c5295",
     "packages": [
         {
             "name": "opis/json-schema",
@@ -202,11 +202,11 @@
             "dist": {
                 "type": "path",
                 "url": "../../packages/server/php",
-                "reference": "5464f7073a0678db0db3afd6b3f71cdce1ee3976"
+                "reference": "d3a9b324259e8e40c432530a1d89b97dbfce965f"
             },
             "require": {
                 "php": ">=8.4",
-                "polyspec/template": "0.0.12"
+                "polyspec/template": "0.0.13"
             },
             "require-dev": {
                 "laravel/pint": "^1.32.1",
@@ -243,30 +243,21 @@
         },
         {
             "name": "polyspec/template",
-            "version": "0.0.12",
+            "version": "0.0.13",
             "dist": {
                 "type": "zip",
-                "url": "../../var/products/template-php/polyspec-template-php-0.0.12.zip",
-                "shasum": "36137897e3e16cdc06d4da3cc4b035121dbca5ae"
+                "url": "https://github.com/polyspec/template/releases/download/v0.0.13/polyspec-template-php-0.0.13.zip",
+                "shasum": "0b803ca719042a61c543c22c572b44d66ce5d639"
             },
             "require": {
                 "ext-mbstring": "*",
                 "opis/json-schema": "^2.6",
                 "php": ">=8.4"
             },
-            "require-dev": {
-                "laravel/pint": "^1.0",
-                "phpunit/phpunit": "^13.4"
-            },
             "type": "library",
             "autoload": {
                 "psr-4": {
                     "Polyspec\\Template\\": "src/"
-                }
-            },
-            "autoload-dev": {
-                "psr-4": {
-                    "Polyspec\\Template\\Tests\\": "tests/"
                 }
             },
             "license": [

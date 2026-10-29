@@ -1,5 +1,5 @@
 <!-- doc-id: readme -->
-<!-- source-sha256: 7c218d61c9f192b99911541501bf6b426c53c98b2a295ceac5498dc41bd88d34 -->
+<!-- source-sha256: 63635728d0efd127ffed3f123d4c59d598221c4d041a19b8aaf63f5372e7c0e2 -->
 # hyper
 
 [English](README.md).
@@ -40,7 +40,7 @@ hyper는 애플리케이션 하나에서 template 언어 템플릿으로 두 가
 
 ## 시작
 
-npm은 template package `@polyspec/template`과 `@polyspec/template-compiler`를 template release v0.0.12의 tarball에서, `package.json`과 그 lock이 고정한 대로 설치하고, Composer는 `polyspec/template`을 그 zip에서 설치한다(HR-70). `config/release-assets.json`은 그 release의 php zip `polyspec-template-php-0.0.12.zip`과 php-ext archive `polyspec-template-php-ext-php-0.0.12.zip`을 sha256으로 pin한다. `make hyper-install`은 kit의 `make release-assets-fetch`로 둘을 가져와 확인하고, php zip을 `composer.json`이 선언하는 Composer artifact repository `var/products/template-php`에 두며 `composer.lock`은 그 zip을 sha1과 함께 기록한다(H23.11). php-ext archive는 `var/products/template-ext`에 풀며, `make ext`가 그것으로 네이티브 확장을 build하고 PHPStan이 stub을 읽는다(H14.1-7).
+npm은 template package `@polyspec/template`과 `@polyspec/template-compiler`를 template release v0.0.13의 tarball에서, `package.json`과 그 lock이 고정한 대로 설치하고, Composer는 `polyspec/template`을 zip `polyspec-template-php-0.0.13.zip`에서 설치한다. `composer.json`의 package repository가 그 zip을 URL과 sha1로 지정하고 `composer.lock`이 기록한다(HR-70, H27.44). `config/release-assets.json`은 그 release의 php-ext archive `polyspec-template-php-ext-php-0.0.13.zip`을 sha256으로 pin한다. `make hyper-install`은 kit의 `make release-assets-fetch`로 그것을 가져와 확인하고 `var/products/template-ext`에 풀며, `make ext`가 그것으로 네이티브 확장을 build하고 PHPStan이 stub을 읽는다(H14.1-7).
 
 ```sh
 make hyper-install

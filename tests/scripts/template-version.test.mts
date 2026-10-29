@@ -1,5 +1,5 @@
-// Tests that hyper depends on one template release, 0.0.12 (H21.4, H23.23, H23.25, H23.28): the tag TEMPLATE_TAG of the Makefile, the npm packages
-// and their locks, the Composer packages and their locks, the php-ext and php archives of config/release-assets.json, the Python package
+// Tests that hyper depends on one template release, 0.0.13 (H21.4, H23.23, H23.25, H23.28): the tag TEMPLATE_TAG of the Makefile, the npm packages
+// and their locks, the Composer packages and their locks, the php-ext archive of config/release-assets.json, the Python package
 // of packages/server/python, and the checkouts of the template repository in the workflows name that release and no
 // other. A mixed version fails here before any install runs.
 import assert from 'node:assert/strict';
@@ -20,7 +20,7 @@ const optionalMember = (object: JsonObject, key: string, where: string): JsonObj
 const composerPackage = (lock: string, name: string): JsonObject | undefined => jsonObjects(json(lock).packages, `${lock} packages`).find((entry) => entry.name === name);
 
 // The template release that hyper depends on (H21.4, H23.23). Every pin below names this version.
-const VERSION = '0.0.12';
+const VERSION = '0.0.13';
 const TAG = `v${VERSION}`;
 const RELEASE = `https://github.com/polyspec/template/releases/download/${TAG}`;
 const NPM_PACKAGES = ['@polyspec/template', '@polyspec/template-compiler'];
@@ -67,7 +67,7 @@ test('the npm locks record the template tarballs of the release (H21.4)', () => 
   assert.ok(member(json('package-lock.json'), 'packages', 'package-lock.json')['node_modules/@polyspec/template'], 'the root lock pins @polyspec/template');
 });
 
-test('the Composer manifests and locks name the template zip of the release (H21.4, H23.11)', () => {
+test('the Composer manifests and locks name the template zip of the release (H21.4, H23.11, H27.44)', () => {
   // Release applications pin the archive; native development compatibility is checked by composer-development.test.mts.
   const manifests = ['composer.json', 'examples/board/composer.json'];
   for (const manifest of manifests) {
@@ -78,13 +78,13 @@ test('the Composer manifests and locks name the template zip of the release (H21
     const entry = composerPackage(lock, 'polyspec/template');
     assert.ok(entry, `${lock} locks polyspec/template`);
     assert.equal(entry.version, VERSION, `${lock} version`);
-    assert.match(jsonString(member(entry, 'dist', lock).url, `${lock} dist url`), new RegExp(`(^|/)var/products/template-php/polyspec-template-php-${VERSION.replaceAll('.', '\\.')}\\.zip$`), `${lock} dist url`);
+    assert.equal(jsonString(member(entry, 'dist', lock).url, `${lock} dist url`), `${RELEASE}/polyspec-template-php-${VERSION}.zip`, `${lock} dist url`);
   }
 });
 
-test('config/release-assets.json names the php-ext and the php archives of the release (H21.4, H23.11-2)', () => {
-  const urls = assets().filter(({ name }) => name === 'template-php-ext' || name === 'template-php').map(assetUrl);
-  assert.deepEqual(urls, [`${RELEASE}/polyspec-template-php-ext-php-${VERSION}.zip`, `${RELEASE}/polyspec-template-php-${VERSION}.zip`]);
+test('config/release-assets.json names the php-ext archive of the release (H21.4, H23.11-2, H27.44)', () => {
+  const urls = assets().filter(({ name }) => name === 'template-php-ext').map(assetUrl);
+  assert.deepEqual(urls, [`${RELEASE}/polyspec-template-php-ext-php-${VERSION}.zip`]);
 });
 
 test('the Python package of the server names the wheel asset of the release with its sha256 (H21.4, H23.5)', () => {

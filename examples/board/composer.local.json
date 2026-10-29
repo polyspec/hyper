@@ -33,7 +33,7 @@
         "php": ">=8.4",
         "ext-pdo_sqlite": "*",
         "polyspec/hyper-server": "0.0.21",
-        "polyspec/template": "0.0.12",
+        "polyspec/template": "0.0.13",
         "opis/json-schema": "^2.6@dev"
     },
     "require-dev": {

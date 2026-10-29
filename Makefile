@@ -33,14 +33,14 @@ UV := $(KIT_TOOLS)/mise/shims/uv
 # The Python of that venv, which scripts/board-servers.mts starts the board Python server with.
 export HYPER_PYTHON := $(PYTHON_VENV)/bin/python
 # npm installs the template packages @polyspec/template and @polyspec/template-compiler from the tarballs of the template
-# release that package.json names (HR-70). config/release-assets.json pins the php zip and the php-ext archive of the same
-# release with their sha256: make hyper-install fetches both with make release-assets-fetch of kit (K140), which puts the php zip
-# into the Composer artifact repository var/products/template-php, from which Composer installs polyspec/template (H23.11),
-# and unpacks the native template extension (H14.1-7, H23.11-2).
+# release that package.json names (HR-70), and Composer installs polyspec/template from the php zip of the same release, which
+# the package repository of composer.json and examples/board/composer.json names with its sha1 (H23.11, H27.44).
+# config/release-assets.json pins the php-ext archive of that release with its sha256: make hyper-install fetches it with make
+# release-assets-fetch of kit (K140) and unpacks the native template extension (H14.1-7, H23.11-2).
 # The template repository of TEMPLATE_REPOSITORY supplies the tag checked before final verification (HR-80);
-# TEMPLATE_TAG is the tag of the version of the entry template-php, its one declaration.
+# TEMPLATE_TAG is the tag of the version of the entry template-php-ext, its one declaration.
 TEMPLATE_REPOSITORY := ../template
-TEMPLATE_TAG = v$(shell $(NODE) $(KIT)/release-assets.$(KIT_EXT) version template-php)
+TEMPLATE_TAG = v$(shell $(NODE) $(KIT)/release-assets.$(KIT_EXT) version template-php-ext)
 FIXTURES := $(PHP_PACKAGE)/tests/fixtures
 # The Composer vendor directory of the private root composer.json, which installs packages/server/php for development.
 PHP_VENDOR := $(CURDIR)/vendor
