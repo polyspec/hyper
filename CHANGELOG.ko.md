@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: cf3ba6799b9f09e2306d1f45c9c8ce9e0c2c8f0294d55e92ff30f926ed4f1735 -->
+<!-- source-sha256: 7ecc5998ee5c91d744ac8da6f1b5693a6ddadd7c705ce51e579ef979ec6c54fe -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- config/toolchain.json의 pythonBackend, config/release.json의 consumers.wheel.polyspec, config/dependency-policy.json과 그 owner를 제거한다. wheel은 build-system.requires의 build backend로 build하고, uv pip compile이 pylock.toml을 쓴다. (H27.31)
 - make hooks는 kit의 hook을 다시 쓰고, kit이 삭제하는 reference-transaction hook(K801)은 .githooks에서 빠진다. main은 make land와 hook이 통과한 commit으로 움직인다. (H27.32)
 - template version test의 release-prepare 사례는 hyper-install의 recursive make를 그 line 끝의 target으로 match한다. kit-bootstrap.mk의 $(MAKE)가 모든 recursive make에 KIT과 KIT_EXT를 더하기 때문이다. (H27.30)
 - dependency-policy-check, dependency-policy-mutation-check와 review 기록 config/dependency-review.json을 suite, CI matrix, owner, 규칙에서 제거한다. config/dependency-policy.json은 make python-lock이 쓰는 Python lock을 위해 남는다. (H27.28)

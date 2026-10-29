@@ -98,9 +98,6 @@
       },
       "lock": {
         "polyspec-hyper-server": "packages/server/python/pylock.toml"
-      },
-      "polyspec": {
-        "polyspec-template": "https://github.com/polyspec/template"
       }
     }
   },

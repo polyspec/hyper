@@ -4,6 +4,8 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+
+- Remove pythonBackend of config/toolchain.json, consumers.wheel.polyspec of config/release.json and config/dependency-policy.json with its owner; the wheel builds with the build backend of build-system.requires, and uv pip compile writes pylock.toml. (H27.31)
 - make hooks writes the hooks of kit again and the reference-transaction hook, which kit deletes (K801), leaves .githooks: main moves through make land and through a commit whose hooks passed. (H27.32)
 - The release-prepare case of the template version tests matches the recursive make of hyper-install by the target that ends its line, since $(MAKE) of kit-bootstrap.mk adds KIT and KIT_EXT to every recursive make. (H27.30)
 - Remove dependency-policy-check, dependency-policy-mutation-check and the review record config/dependency-review.json from the suite, the CI matrix, the owners and the rules; config/dependency-policy.json stays for the Python lock that make python-lock writes. (H27.28)
