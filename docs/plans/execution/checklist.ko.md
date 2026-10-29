@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 44fe3e369510271d863931270c9c7104475feb1223f15c3e4dd3e40770f9546d -->
+<!-- source-sha256: bbbd52ca7c4d869d29816064750047f07d9ba86646bf98800d3d56ac76095412 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -288,7 +288,7 @@
 | H27.27 | 배포된 Kit 0.0.65를 도입한다. release asset을 integrity와 함께 고정하고 make kit-sync로 소유 사본을 쓰며 dependency review를 갱신한다 | package.json, package-lock.json, config/dependency-review.json and the kit copies | `make kit-check` and `make rules-check` and `make hyper-runner-owner-check` | [o] |
 | H27.27-1 | 소유 테스트가 make가 실행하는 실제 경로로 kit 도구를 찾는다(kit K762) | tests/scripts/kit-tools.mts | `make hyper-runner-owner-check` and `var/tools/bin/node --test tests/scripts/toolchain.test.mts` | [o] |
 | H27.28 | kit가 삭제하는 dependency policy와 review target을 그 기록, CI target, owner, 규칙과 함께 제거한다 | Makefile, .github/workflows/ci.yml, config/owner-checks.json, config/dependency-review.json, AGENTS.md, docs/operations/dependencies.md | `make owner-validate` and `make hyper-runner-owner-check` | [o] |
-| H27.29 | hyper 0.0.21을 릴리스한다: release metadata와 0.0.21의 archive 다섯 개 | release metadata and the 0.0.21 candidate archives | `make release-candidate-assets VERSION=0.0.21` | [v] |
+| H27.29 | hyper 0.0.21을 릴리스한다: release metadata와 0.0.21의 archive 다섯 개 | CHANGELOG.md CHANGELOG.ko.md | `node --test tests/scripts/package-names.test.mts`; CI of main before the tags | [~] |
 | H27.30 | release-prepare의 recursive make를 $(MAKE)가 더하는 variable과 무관하게 target으로 match | tests/scripts/template-version.test.mts | `node node_modules/@polyspec/kit/scripts/kit/run-tests.mts node -- tests/scripts/template-version.test.mts` | [o] |
 | H27.31 | kit이 삭제하는 Python build backend pin과 dependency policy를 제거한다(K788, K789) | config/toolchain.json, config/release.json, config/dependency-policy.json, config/owner-checks.json, docs/operations, packages/server/python/pyproject.toml | `make owner-validate` and `node node_modules/@polyspec/kit/scripts/kit/run-tests.mts node -- tests/scripts/template-version.test.mts` | [o] |
 | H27.32 | kit이 삭제하는 reference-transaction hook을 제거한다(K801) | .githooks/reference-transaction | `make hooks-check` | [o] |
