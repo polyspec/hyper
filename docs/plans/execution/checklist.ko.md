@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: e284ddb9bf4e1106d4a933aeaebd0fe15f79d5e73bded4931c6134931aedd548 -->
+<!-- source-sha256: e8e3c15e22af084a179c44706b1f71596f30d88fdeebaada69ec9b17d4c6b9d4 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -294,3 +294,4 @@
 | H27.32 | kit이 삭제하는 reference-transaction hook을 제거한다(K801) | .githooks/reference-transaction | `make hooks-check` | [o] |
 | H27.33 | kit이 삭제하는 release의 consumer install과 proof(K798), push gate와 그 pre-push hook(K804)을 제거한다 | config/release.json, tests/release-consumer, .githooks/pre-push, config/checklist.json, Makefile, .github/workflows/ci.yml, the copies of kit | `make kit-check`, `make hooks-check` | [o] |
 | H27.34 | kit이 삭제하는 commits-check와 pre-merge-commit hook을 제거한다(K805) | .githooks, config/commit-identity.json, Makefile, .github/workflows/ci.yml | `make hooks-check` | [o] |
+| H27.35 | ignored-files test는 kit이 삭제한 full-run guard(K240)의 출력을 적지 않는다 | tests/scripts/ignored-files.test.mts | `node --test tests/scripts/ignored-files.test.mts` | [ ] |
