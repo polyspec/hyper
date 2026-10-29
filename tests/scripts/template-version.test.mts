@@ -107,7 +107,7 @@ test('CI checks out the template repository at the tag of the release (H21.4)', 
   assert.deepEqual([...new Set(refs)], [TAG], 'ci.yml template ref');
 });
 
-// The release workflow of kit runs make release-prepare before release-tools (kit K132; make kit-check compares the
+// The release workflow of kit runs make release-prepare before release-tools (kit K132; make kit-sync refreshes the
 // copy): its dry run with an absent template repository clones the template at the tag of the release, checks the tag
 // and installs (H23.7).
 test('the release prepares the template repository at the tag of the release through release-prepare (H23.7)', () => {

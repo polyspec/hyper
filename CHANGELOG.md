@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- AGENTS no longer names make kit-check as the check of the copies of kit, and a test comment no longer states that it compares them; kit deleted that comparison (kit K799), and make kit-sync refreshes the copies from the installed package. (H27.37)
 - The release workflow, which kit-sync writes, has no make release-versions step, and the rules and documents no longer describe the version and manifest checks of a release that kit deletes (kit K812); the package managers resolve the versions. (H27.36)
 - The ignored-files test no longer names var/full-run.json and var/full-run.lock, the outputs of the full-run guard that kit deleted (kit K240). (H27.35)
 - A release builds and publishes its archives without a consumer install or a proof: config/release.json has no consumers or proof, tests/release-install and the npm allow-remote settings of release-consumer are gone, and a consumer checks a release with its own package manager (kit K798). A push is not checked: .githooks/pre-push, the hook of config/checklist.json and push-gate-commit of the suite are gone (kit K804). (H27.33)

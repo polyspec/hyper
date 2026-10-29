@@ -1,5 +1,5 @@
 <!-- doc-id: agents -->
-<!-- source-sha256: c19a8ebe3b7e56a5de049124d6cfd9c35001ed1f10aae887ca3bf04015128ef0 -->
+<!-- source-sha256: 045d96c25fc7b82b298d02493ba5441a10fa89e400fad77cb549e56a2db515f6 -->
 # 개발
 
 [English](AGENTS.md).
@@ -55,7 +55,7 @@
 - Own: 추적하는 모든 경로는 `config/owner-checks.json`에 owner를 가진다(HR-88). 경로를 추가하는 변경은 그 owner 규칙도 추가하며, 저장소의 일부를 복사하는 test는 그 일부가 import하는 것을 함께 복사한다.
   Enforced by: `make owner-validate`
 - Own: 공유 도구는 npm package `@polyspec/kit`이며 `package.json`의 release asset URL과 `package-lock.json`의 integrity로 고정한다. 깨끗한 checkout은 `make bootstrap`으로 `packageManager` version의 기본 npm을 호출해 lock을 설치한 뒤 `make install-tools TOOLS=npm`과 `make install-packages`를 실행한다. Makefile은 설치 package의 `node_modules/@polyspec/kit/scripts/kit/kit-bootstrap.mk`를 include하고 기본 로컬 package link는 선택 사항이다. `PRINCIPLES.md`, 그 짝, `.editorconfig`, `.claude/settings.json`을 포함한 package의 `kit.copies` 파일은 설치 package에서 `make kit-sync`가 원자적으로 쓰는 일반 파일 복사본이다. 설치 package의 소스 link는 로컬 개발 상태로 유지한다. 복사본은 kit에서만 바꾼다. 이 저장소는 `config/*.json`과 자기 script에서만 다른 저장소와 다르다. 앱 작업을 완료하기 위해 Kit checkout을 직접 수정하지 않는다. 공유 도구 결함이나 빠진 기능은 재현 방법, 기대 동작, 실제 동작과 앱 영향을 담아 polyspec/kit GitHub issue로 등록하고 개선을 요구한다. 모든 로컬 및 CI runtime test는 설치된 Kit runner를 사용한다. 이를 대체하거나 guard를 끄거나 필수 coverage를 줄이거나 우회 결과를 릴리즈 근거로 삼지 않는다. 별도 결함은 보고하면서 지원되는 Kit 선택 방식을 사용할 수 있다. 릴리즈 공개에는 Kit을 통한 필수 CI와 native archive 증명의 성공이 필요하다.
-  Enforced by: `make kit-check`
+  Enforced by: none, `make kit-sync`가 설치 package에서 복사본을 갱신한다.
 - Own: 코드와 test는 각 package 안에서 서로 다른 디렉터리에 둔다.
   Enforced by: `make layout-check`
 - Own: 이 저장소가 만드는 경로와 추적 파일에 이름을 적는 경로에는 저장소 상대 경로를 쓴다. 경로는 선언적으로, 추적 파일의 이름으로, 또는 문서나 script가 밝힌 탐색 규칙에 따른 탐색으로 해석한다. 외부 입력에는 명시적인 경로를 요구한다.

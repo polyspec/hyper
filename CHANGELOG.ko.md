@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 30794e90fb95a5babd7e4278514f1a3ba98fb3170f67bc73cff713eb5b793b21 -->
+<!-- source-sha256: 3cea2ecee715d971910397a02b1bdaeefe53e12cf9ca7ad959904781211260fa -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- AGENTS는 make kit-check를 kit 복사본의 검사로 더 이상 지정하지 않고, test 주석은 그 비교를 더 이상 서술하지 않는다. kit은 그 비교를 삭제했다(kit K799). make kit-sync가 설치 package에서 복사본을 갱신한다. (H27.37)
 - kit-sync가 쓰는 release workflow에는 make release-versions step이 없고, 규칙과 문서는 kit이 삭제하는 release의 버전과 manifest 검사(kit K812)를 더 이상 설명하지 않는다. package manager가 버전을 해석한다. (H27.36)
 - ignored-files test는 kit이 삭제한 full-run guard(kit K240)의 출력 var/full-run.json과 var/full-run.lock을 더 이상 적지 않는다. (H27.35)
 - release는 consumer install이나 proof 없이 archive를 build하고 게시한다. config/release.json에는 consumers와 proof가 없고, tests/release-install과 release-consumer의 npm allow-remote 설정은 사라졌으며, consumer는 자기 package manager로 release를 확인한다(kit K798). push는 검사하지 않는다. .githooks/pre-push, config/checklist.json의 그 hook, suite의 push-gate-commit은 사라졌다(kit K804). (H27.33)

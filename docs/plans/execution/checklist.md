@@ -295,4 +295,4 @@
 | H27.34 | Remove commits-check and the pre-merge-commit hook that kit deletes (K805) | .githooks, config/commit-identity.json, Makefile, .github/workflows/ci.yml | `make hooks-check` | [o] |
 | H27.35 | The ignored-files test names no output of the full-run guard that kit deleted (K240) | tests/scripts/ignored-files.test.mts | `node --test tests/scripts/ignored-files.test.mts` | [o] |
 | H27.36 | Remove make release-versions, which kit deletes (K812) | .github/workflows/release.yml, AGENTS.md, Makefile, docs/operations/development.md, docs/operations/repository-rules.md | `make rules-check`, `make kit-check` | [o] |
-| H27.37 | State that make kit-sync refreshes the copies of kit (K799) | AGENTS.md, tests/scripts/template-version.test.mts | `make rules-check`, `make docs-check` | [~] |
+| H27.37 | State that make kit-sync refreshes the copies of kit (K799) | AGENTS.md, tests/scripts/template-version.test.mts | `make rules-check`, `make docs-check` | [o] |
