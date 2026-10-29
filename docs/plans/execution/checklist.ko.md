@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 7ba09ffe5554b2a92a6c6da4e4a758b62b6c9c219b94f9862bf0d07b58f90ca5 -->
+<!-- source-sha256: 087bedc36f645069945f1285a3bfab6ccb34672cc73a7fcd10415bb6bcdde517 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -303,3 +303,4 @@
 | H27.41 | toolchain test는 새 venv의 non-editable 설치를 기대한다 | tests/scripts/toolchain.test.mts | `node --test tests/scripts/toolchain.test.mts` | [o] |
 | H27.42 | docs CI job은 public-symbols가 읽는 Python 환경을 설치한다(K788) | .github/workflows/ci.yml, tests/scripts/ci-workflow.test.mts | `node --test tests/scripts/ci-workflow.test.mts` | [o] |
 | H27.43 | Kit 0.0.72를 채택한다 | package.json, package-lock.json, kit copies, .github/workflows/ci.yml | `make kit-check`, `make rules-check`, `make docs-check` | [o] |
+| H27.44 | template 0.0.13을 채택한다 | Package manifests and native locks, release asset pins, template tag, current dependency documentation | `node --test tests/scripts/template-version.test.mts tests/scripts/composer-development.test.mts`, `make python-lock-check` | [ ] |
