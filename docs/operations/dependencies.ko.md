@@ -1,12 +1,12 @@
 <!-- doc-id: dependencies -->
-<!-- source-sha256: f422c83f4dd56d30b3396b19205c3a577b367cb639970d1ab9bec24cfcdaae8f -->
+<!-- source-sha256: 4e8cda488dc6e7e64a2179045c183dde474271a1f05f260cc46ca4c630d7ddad -->
 # 의존성
 
 [English](dependencies.md).
 
 모든 의존성은 선언한 런타임 범위(`make toolchain-check`가 요구하는 하한인 Node.js 26.12.0, PHP 8.4)를 지원하는 최신 안정 버전을 사용한다. 정확한 버전 고정은 그 이유와 고정을 해제하는 조건을 기록한다.
 
-2026-10-28 검토는 `eventsource-parser` 4.1.3, `phpstan/phpstan` 2.3.3, `phpunit/phpunit` 13.4.5, `setuptools` 84.2.1과 ruff 0.17.3을 해석한다. Composer release lock은 PHP 8.4.1 platform을 사용하고 검증은 PHP 8.4.27에서 실행한다. `make dependency-review RECORD=1`은 검토한 의존성과 lock을 `config/dependency-review.json`에 기록한다.
+2026-10-28 검토는 `eventsource-parser` 4.1.3, `phpstan/phpstan` 2.3.3, `phpunit/phpunit` 13.4.5, `setuptools` 84.2.1과 ruff 0.17.3을 해석한다. Composer release lock은 PHP 8.4.1 platform을 사용하고 검증은 PHP 8.4.27에서 실행한다.
 
 | 의존성 | 버전 | 종류 | 이유 | 해제 조건 |
 |---|---|---|---|---|

@@ -5,7 +5,7 @@
 
 Every dependency uses the latest stable release that supports the declared runtime range: Node.js 26.12.0 and PHP 8.4, the floors that `make toolchain-check` requires. An exact pin records its reason and the condition that removes it.
 
-The review of 2026-10-28 resolves `eventsource-parser` 4.1.3, `phpstan/phpstan` 2.3.3, `phpunit/phpunit` 13.4.5, `setuptools` 84.2.1 and ruff 0.17.3. The Composer release locks use the PHP 8.4.1 platform and verification runs on PHP 8.4.27. `make dependency-review RECORD=1` writes the reviewed dependencies and locks to `config/dependency-review.json`.
+The review of 2026-10-28 resolves `eventsource-parser` 4.1.3, `phpstan/phpstan` 2.3.3, `phpunit/phpunit` 13.4.5, `setuptools` 84.2.1 and ruff 0.17.3. The Composer release locks use the PHP 8.4.1 platform and verification runs on PHP 8.4.27.
 
 | Dependency | Version | Kind | Reason | Removal condition |
 |---|---|---|---|---|

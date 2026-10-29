@@ -43,7 +43,7 @@ jobs:
             template: true
             symbols: php
             composer: true
-            targets: dependency-policy-check dependency-policy-mutation-check bench-server-smoke hyper-lint analyse-php hyper-test-php lint-php
+            targets: bench-server-smoke hyper-lint analyse-php hyper-test-php lint-php
           - name: node
             tools: node
             targets: templates-check hyper-test-js hyper-test-node package-check

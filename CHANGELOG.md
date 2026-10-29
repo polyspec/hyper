@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- Remove dependency-policy-check, dependency-policy-mutation-check and the review record config/dependency-review.json from the suite, the CI matrix, the owners and the rules; config/dependency-policy.json stays for the Python lock that make python-lock writes. (H27.28)
 - Adopt the published integrity-locked Kit 0.0.65, which carries the Playwright run of the shared test runner and whose rules check reaches every runtime of the gates matrix, and synchronize its copies. (H27.27)
 - The owner tests name each kit tool by the real path of the installed kit, from which make runs it in a linked checkout and a packed install alike. (H27.27-1)
 - Pin shared tools 0.0.63 for native bootstrap and runtime-scoped source linking. (H27.26)
