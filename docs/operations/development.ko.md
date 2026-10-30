@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: 26443f48aafec88b78d25b0e15d7b5ea9fca874e5e08bc12e4cf09b40a4f4503 -->
+<!-- source-sha256: 2a0d26adbc4b0f4f0d7cce6952b1866a20a7b9abad6df6e16934b564ea0443a2 -->
 # 개발
 
 [English](development.md).
@@ -160,13 +160,13 @@ workflow `.github/workflows/ci.yml`은 `main`의 push와 모든 수동 실행(`w
 
 | 항목 | Bootstrap 이후 선택 도구 | 잠긴 package 환경 | 검사 |
 |---|---|---|---|
-| `docs` | Node/npm, PHP/Composer와 PHP lint, Python/uv/ruff/vulture, alint | Root와 board Composer lock | 공통 정책, TypeScript lint, 문서와 script |
-| `php` | Node/npm, PHP/Composer, phpcs/phpstan | Root와 board Composer lock | PHP 정책, benchmark smoke, formatting, analysis와 test |
+| `docs` | Node/npm, PHP/Composer, Python/uv | Root와 board Composer lock | 타입 검사, hook과 script 검사 |
+| `php` | Node/npm, PHP/Composer | Root와 board Composer lock | PHP 정책, benchmark smoke, formatting, analysis와 test |
 | `node` | Node/npm | Root npm lock | Template, browser unit, Node server와 npm consumer |
 | `board` | Node/npm, PHP/Composer, Python/uv | Root npm, root와 board Composer, Python uv lock | Browser parity, Node/Python server 비교, bundle 크기와 E2E |
-| `python` | Node/npm, Python/uv, ruff/vulture | Root npm과 Python uv lock | Python unit, rendering과 lint |
+| `python` | Node/npm, Python/uv | Root npm과 Python uv lock | Python unit과 rendering |
 
-각 group은 `make install-tools TOOLS="${{ matrix.tools }}"`를 호출한다. Kit은 선택, 필수 도구 의존성, version과 hash 검증, 일치하는 설치 도구 재사용을 소유한다. Hyper는 별도 도구 설치기를 선언하지 않는다. 고정된 Kit 설치기는 이 selector를 지원한다. npm은 별도 bootstrap을 사용하고 `docs`, `php` group은 `make kit-install-symbols EXTRACTORS="php"`로 선언된 PHP symbol extractor를 명시적으로 설치한다.
+각 group은 `make install-tools TOOLS="${{ matrix.tools }}"`를 호출한다. Kit은 선택, 필수 도구 의존성, version과 hash 검증, 일치하는 설치 도구 재사용을 소유한다. Hyper는 별도 도구 설치기를 선언하지 않는다. 고정된 Kit 설치기는 이 selector를 지원한다. npm은 별도 bootstrap을 사용하고 `docs` group은 `make hyper-test-scripts`의 `tests/scripts/public-symbols.test.mts`가 실행하는 선언된 PHP symbol extractor를 `make kit-install-symbols EXTRACTORS="php"`로 명시적으로 설치한다. 어떤 group도 kit의 lint 도구(phpcs, phpstan, ruff, alint, vulture)를 설치하지 않는다. 그 도구는 `.github/workflows/gates.yml`이 실행하는 kit의 gate만 실행하고(kit K870), `make hyper-lint`와 `make analyse-php`는 `vendor`의 pint와 PHPStan을 실행한다.
 
 `make hyper-install-php`는 기존 설치 lock 안에서 고정 PHP archive와 root 및 board Composer lock만 설치한다. `make hyper-install-python`은 `uv sync --locked`를 실행하는 `make uv-install`로 Python 환경만 설치한다(kit K850). Node 의존성은 기존 npm lock 설치를 사용한다. Native source 개발 link는 별도 로컬 설치 선택으로 유지한다.
 

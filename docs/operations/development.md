@@ -159,13 +159,13 @@ The workflow `.github/workflows/ci.yml` runs the full suite for the push of `mai
 
 | Entry | Tools selected after bootstrap | Locked package environments | Targets |
 |---|---|---|---|
-| `docs` | Node/npm, PHP/Composer and PHP lint, Python/uv/ruff/vulture, alint | Root and board Composer locks | Common policy, TypeScript lint, document and script checks |
-| `php` | Node/npm, PHP/Composer, phpcs/phpstan | Root and board Composer locks | PHP policy, benchmark smoke, formatting, analysis and tests |
+| `docs` | Node/npm, PHP/Composer, Python/uv | Root and board Composer locks | Type check, hooks and script checks |
+| `php` | Node/npm, PHP/Composer | Root and board Composer locks | PHP policy, benchmark smoke, formatting, analysis and tests |
 | `node` | Node/npm | Root npm lock | Template, browser-unit, Node-server and npm consumer checks |
 | `board` | Node/npm, PHP/Composer, Python/uv | Root npm, root and board Composer, Python uv locks | Browser parity, Node/Python server comparisons, bundle sizes and E2E |
-| `python` | Node/npm, Python/uv, ruff/vulture | Root npm and Python uv locks | Python unit, rendering and lint checks |
+| `python` | Node/npm, Python/uv | Root npm and Python uv locks | Python unit and rendering checks |
 
-Each group calls `make install-tools TOOLS="${{ matrix.tools }}"`; Kit owns selection, mandatory tool dependencies, version and hash validation, and reuse of matching installed tools. Hyper declares no alternate tool installer. The pinned Kit installer supports these selectors. npm uses its separate bootstrap; the `docs` and `php` groups explicitly install the declared PHP symbol extractor through `make kit-install-symbols EXTRACTORS="php"`.
+Each group calls `make install-tools TOOLS="${{ matrix.tools }}"`; Kit owns selection, mandatory tool dependencies, version and hash validation, and reuse of matching installed tools. Hyper declares no alternate tool installer. The pinned Kit installer supports these selectors. npm uses its separate bootstrap; the `docs` group explicitly installs the declared PHP symbol extractor through `make kit-install-symbols EXTRACTORS="php"`, which `tests/scripts/public-symbols.test.mts` of `make hyper-test-scripts` runs. No group installs a lint tool of kit (phpcs, phpstan, ruff, alint, vulture): only the gates of kit start them, which `.github/workflows/gates.yml` runs (kit K870), and `make hyper-lint` and `make analyse-php` run the pint and PHPStan of `vendor`.
 
 `make hyper-install-php` installs only the pinned PHP archives and the root and board Composer locks, under the existing installation lock. `make hyper-install-python` installs only the Python environment through `make uv-install`, which runs `uv sync --locked` (kit K850). Node dependencies use the existing npm lock installation. Native source development links remain a separate local installation choice.
 

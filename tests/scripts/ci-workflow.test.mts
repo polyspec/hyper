@@ -396,15 +396,27 @@ test('H27.24 no matrix entry of ci.yml runs a gate of kit, which gates.yml runs 
 });
 
 
+// H27.47-3: the lint tools of kit, which only the lint gates of kit start from their own scripts; gates.yml runs those gates
+// (kit K870), and hyper-lint and analyse-php run the pint and PHPStan of vendor, so no CI job of hyper installs them.
+const KIT_LINT_TOOLS = ['ruff', 'vulture', 'alint', 'phpcs', 'phpstan', 'golangciLint', 'deadcode', 'govulncheck', 'cargoAudit', 'cargoDeny'];
+
+test('H27.47-3 no matrix entry of ci.yml installs a lint tool of kit, which only the gates of gates.yml start', () => {
+  for (const entry of matrixEntries(readFileSync(path.join(WORKFLOWS, 'ci.yml'), 'utf8'))) {
+    const tools = (entry.keys['tools'] ?? '').split(' ');
+    assert.deepEqual(tools.filter(tool => KIT_LINT_TOOLS.includes(tool)), [], `${entry.name} installs lint tools of kit that none of its targets starts`);
+  }
+});
+
+
 test('H27.25 CI declares job-owned tools and locked package environments (HR-81, HR-89, HR-91)', () => {
   const text = readFileSync(path.join(WORKFLOWS, 'ci.yml'), 'utf8');
   const entries = matrixEntries(text);
   const expected: Record<string, { tools: string; php?: boolean; composer?: boolean; python?: boolean }> = {
-    docs: { tools: 'node php composer phpcs phpstan python uv ruff alint vulture', php: true, composer: true, python: true },
-    php: { tools: 'node php composer phpcs phpstan', php: true, composer: true },
+    docs: { tools: 'node php composer python uv', php: true, composer: true, python: true },
+    php: { tools: 'node php composer', php: true, composer: true },
     node: { tools: 'node' },
     board: { tools: 'node php composer python uv', php: true, composer: true, python: true },
-    python: { tools: 'node python uv ruff vulture', python: true },
+    python: { tools: 'node python uv', python: true },
   };
   assert.deepEqual(entries.map(entry => entry.name).sort(), Object.keys(expected).sort());
   for (const entry of entries) {
@@ -412,7 +424,7 @@ test('H27.25 CI declares job-owned tools and locked package environments (HR-81,
     assert.ok(profile !== undefined);
     assert.equal(entry.keys['tools'], profile.tools, `${entry.name}: declared tool selection`);
     assert.ok(!profile.tools.split(' ').includes('npm'), 'npm belongs to the separate bootstrap selector');
-    assert.equal(entry.keys['symbols'], ['docs', 'php'].includes(entry.name) ? 'php' : undefined, `${entry.name}: explicit extractor selection`);
+    assert.equal(entry.keys['symbols'], entry.name === 'docs' ? 'php' : undefined, `${entry.name}: explicit extractor selection, which public-symbols of hyper-test-scripts reads`);
     for (const key of ['php', 'composer', 'python'] as const) assert.equal(entry.keys[key] === 'true', profile[key] === true, `${entry.name}: ${key} environment`);
   }
   const checks = jobs(text).find(job => job.name === 'check');
