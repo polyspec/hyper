@@ -43,7 +43,13 @@ test('make template-ext builds polyspec/template-php-ext of TEMPLATE_VERSION wit
 
 test('make hyper-install builds the extension through make template-ext once (H27.45)', () => {
   const lines = dryRun('hyper-install', { variables: ['KIT_WORKTREE='] });
-  assert.equal(lines.filter((line) => /\/make .*--no-print-directory template-ext$/.test(line)).length, 1, lines.join('\n'));
+  // A recursive make prints $(MAKE) as it was started, a bare make or its path, and kit-bootstrap.mk adds KIT and KIT_EXT to
+  // it, so the case judges the words of the command: a make by its base name, and template-ext as its last word.
+  const recursive = lines.filter((line) => {
+    const words = line.trim().split(/\s+/);
+    return path.basename(words[0] ?? '') === 'make' && words.at(-1) === 'template-ext';
+  });
+  assert.equal(recursive.length, 1, lines.join('\n'));
 });
 
 test('make ext of the checks builds and downloads nothing (H14.1-7, HR-89)', () => {

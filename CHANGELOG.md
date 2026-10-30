@@ -6,6 +6,7 @@
 ## Unreleased
 
 ## 0.0.21
+- The hyper-install case of the template-ext test judges the recursive make of template-ext by its words, a make by its base name and template-ext as its last word: it matched a slash before make, which only a make started by its path prints, and failed in CI, which prints the bare name make. (H27.45-2)
 - make template-ext installs http:pie of mise.toml with mise install --locked before it runs PIE: a CI job installs only the TOOLS of its matrix and install-tools of kit has no pie selector, so make hyper-install-php found no shim of PIE in CI. The template-ext test asserts the install and judges a pie install by the PIE command only, not by the path of the checkout. (H27.45-1)
 - Release 0.0.21 after H27.45: the entries of ## Unreleased since the release commit of H27.29 move into ## 0.0.21, with a new empty ## Unreleased above it, so the release carries template 0.0.14 from its Composer repository and Kit 0.0.75. (H27.46)
 - Kit 0.0.75 is the pinned release: a worktree installs its own tools and packages online with make install, and make worktree-setup installs and builds nothing itself (kit K857, K858); the release writes packages.json of the Composer packages beside the archives (kit K871). The tests judge the tools of every checkout by its own var/tools (tests/scripts/checkout-tools.mts replaces main-tools.mts), and the toolchain case judges make template-ext, which runs PHP and Composer, in place of make ext, which since H27.45 only requires the built library. (H27.47-1)
