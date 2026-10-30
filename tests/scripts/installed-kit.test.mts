@@ -71,20 +71,23 @@ test('H27.15-1 explicit bootstrap enables downloads under an inherited offline s
 });
 
 
-test('H27.21 a packed installer links a native consumer to its installed dependency without editor tools', { timeout: 120000 }, (t) => {
+// H27.21, kit K859: the consumer of make package-check installs its own lock with npm ci, as its recipe does, since kit
+// ships no install wrapper of npm; make link connects the checkouts of .links afterwards.
+test('H27.21 the native consumer installs its lock with npm ci offline without editor tools', { timeout: 120000 }, (t) => {
   const root = checkout(t);
   const npm = join(checkoutTools(), 'bin/npm');
-  const env = { ...process.env, npm_config_offline: 'true', NPM_BIN: npm };
+  const env = { ...process.env, npm_config_offline: 'true' };
   const installed = spawnSync(npm, ['ci', '--offline', '--ignore-scripts', '--no-audit'], { cwd: root, encoding: 'utf8', env });
   assert.equal(installed.status, 0, `${installed.stdout}${installed.stderr}`);
   const project = join(root, 'tests/package-install');
   mkdirSync(project, { recursive: true });
   for (const file of ['package.json', 'package-lock.json']) cpSync(join('tests/package-install', file), join(project, file));
   const lock = readFileSync(join(project, 'package-lock.json'), 'utf8');
-  const linked = spawnSync(process.execPath, [join(root, 'node_modules/@polyspec/kit/dist/npm-install.mjs'), project, root, join(root, 'node_modules/@polyspec/template')], { cwd: root, encoding: 'utf8', env });
-  assert.equal(linked.status, 0, `${linked.stdout}${linked.stderr}`);
-  assert.equal(realpathSync(join(project, 'node_modules/@polyspec/template')), realpathSync(join(root, 'node_modules/@polyspec/template')));
+  const consumer = spawnSync(npm, ['ci', '--no-audit', '--allow-remote=root'], { cwd: project, encoding: 'utf8', env });
+  assert.equal(consumer.status, 0, `${consumer.stdout}${consumer.stderr}`);
   assert.equal(realpathSync(join(project, 'node_modules/@polyspec/hyper-client')), realpathSync(join(root, 'packages/client')));
+  const template = parseJsonObject(readFileSync(join(project, 'node_modules/@polyspec/template/package.json'), 'utf8'), 'installed template package.json');
+  assert.equal(jsonString(template.name, 'installed template name'), '@polyspec/template');
   assert.equal(readFileSync(join(project, 'package-lock.json'), 'utf8'), lock);
   assert.equal(existsSync(join(project, '.claude/settings.local.json')), false);
 });

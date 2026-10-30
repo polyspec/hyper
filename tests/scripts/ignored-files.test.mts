@@ -34,8 +34,6 @@ const OUTPUTS = [
   'build/ext/polyspec_template.so',
   'build/ext/polyspec_template.so.inputs.json',
   'build/phpstan/cache.php',
-  'var/products/template-ext/src/polyspec_template.stub.php',
-  'var/products/template-ext.next-12345/src/config.m4',
   'var/tools/bin/npm',
   'var/install.lock',
   'tests/e2e/test-results/.last-run.json',

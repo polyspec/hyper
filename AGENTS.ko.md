@@ -1,5 +1,5 @@
 <!-- doc-id: agents -->
-<!-- source-sha256: 2bb9e15ab9a6e713b66e5c33ffd0cb973fc52a401b7a40bf879fc0ac9c1a0807 -->
+<!-- source-sha256: d22aaa82325f14247e9aff6dde88af861df8314a88c330997333c052b99182c3 -->
 # 개발
 
 [English](AGENTS.md).
@@ -24,13 +24,13 @@
 - Own: 임시 script나 임시 폴더를 쓰지 않는다. 모든 검사는 Makefile target, `scripts/` 아래의 script 또는 커밋된 test이며, 멱등하다.
   Enforced by: none, script가 임시인지는 판단이다.
 - Own: 릴리즈 결과는 tree, manifest와 그 lock이 고정한 template release, 그리고 template 저장소 tag `TEMPLATE_TAG`(`v0.0.14`)의 commit에만 의존한다. 또한 `make hyper-install`이 그 release의 Composer repository(`packages.json`)에서 PIE로 build하는, 그 release의 package `polyspec/template-php-ext`에도 의존한다. 저장소 밖의 모든 입력은 추적 파일에 이름이 적히고 쓰기 전에 확인한다. package는 정확한 version과 lock의 integrity 또는 shasum으로, template 저장소는 tag로(Makefile의 `TEMPLATE_TAG`, `v$(TEMPLATE_VERSION)`, HR-80), build 출력은 입력의 hash로 확인한다. 의존성은 `package.json`이나 `composer.json`에 선언하고 npm이나 Composer가 lock대로 설치한다(HR-70). Version 0.1 전까지 다른 polyspec 저장소에 대한 의존성은 그 저장소의 GitHub tag나 GitHub Release의 asset이며, branch나 commit이 아니다. 추적 파일은 Git commit을, 이 저장소의 것이든 다른 저장소의 것이든, 이름으로 적지 않는다. 최종 검증은 무시되는 `var/report/` 아래에 tree와 결과를 기록하고 release archive의 선언된 integrity 고정은 유지한다. 어떤 검사도 다른 checkout의 working tree를 그때 있는 그대로 읽지 않는다.
-  Enforced by: `make toolchain-check`
+  Enforced by: `make hyper-test-scripts`
 - Own: polyspec 버전이 0.0.x인 동안 개발 checkout은 설치된 polyspec package를 kit의 `docs/operations/local-links.md`가 설명하는 대로 그 source에 연결한다. 연결은 commit하지 않는다.
   Enforced by: none, 연결이 commit에서 빠지는지는 review로 판단한다.
 - Own: Composer 소스 개발은 root와 board의 추적된 `composer.local.json` manifest를 선택한다. Composer가 무시되는 각 `composer.local.lock`, 소스 link, 설치 기록과 autoload를 관리한다. `COMPOSER`는 기본 manifest 선택자로 유지하고 `COMPOSER_BIN`은 실행 파일을 가리킨다. `make composer-development`는 설치 lock 아래에서 이 graph를 해석하며 `make composer-development-check`는 lock과 PHP 요구를 검증한다. 릴리즈 manifest와 lock은 분리해 유지한다.
   Enforced by: `make hyper-test-scripts`
 - Own: release가 결과를 바꾸는 모든 도구는 추적 파일에 고정하고 쓰기 전에 확인한다(HR-81): `.php-version`, `packageManager`, `mise.toml`과 `mise.lock`, 그리고 `config/toolchain.json`. 도구는 결과가 요구하는 만큼 정확히 고정한다. PHP는 minor로, mise의 도구는 정확한 release로, make는 고정하지 않는다. 도구는 기계가 아니라 checkout(`var/tools`)에 설치하며, 다운로드는 고정된 digest가 있을 때만 쓰고, 처음 쓸 때 다른 도구가 도구를 설치하지 않는다. recipe나 script는 checkout의 도구를 절대 경로로 시작한다. make는 shell 문법이 없는 recipe 줄을 자기 `PATH`에서 찾기 때문이다.
-  Enforced by: `make toolchain-check`, `make kit-check`
+  Enforced by: `make hyper-test-scripts`, `make kit-check`
 - Own: PHP 개발, test와 release 검증은 PHP 8.4.27을 기준으로 한다. Windows는 8.4.27-1 package rebuild를 쓰며 runtime version은 8.4.27이다. `.php-version`은 native tool 탐색을 위해 8.4 minor를 선택한다. 검증 결과에는 실제 runtime version을 기록하며 이전 patch의 결과를 이 기준에서의 검증으로 취급하지 않는다.
   Enforced by: none, 검증 근거를 검토할 때 기준과 기록된 runtime을 확인한다.
 

@@ -19,7 +19,6 @@ test('server build uses installed packages without Composer install (HR-79)', ()
   const build = dryRun('server').join('\n');
   assert.match(build, /hyper-build-server\.mjs --manifest/);
   assert.doesNotMatch(build, /\bcomposer install\b/);
-  assert.doesNotMatch(build, /composer-install\.(?:mts|mjs)/);
   const install = dryRun('hyper-server-php-install').join('\n');
   assert.match(install, /\bcomposer install\b/);
 });
@@ -78,7 +77,7 @@ test('make hyper-test-js runs the type check when the tests fail and names both'
 test('every other recipe with several checks runs them in one accumulating command', () => {
   const recipes: [string, number][] = [['hyper-test-node', 2], ['hyper-test-php', 2], ['parity', 2], ['bench-server', 2]];
   for (const [target, checks] of recipes) {
-    const lines = dryRun(target, { variables: ['TEMPLATE_DIR=var/products/template'] });
+    const lines = dryRun(target);
     const start = lines.findLastIndex((line) => line === 'failed=; \\');
     assert.ok(start >= 0, `${target}:\n${lines.join('\n')}`);
     const recipe = lines.slice(start);
@@ -143,11 +142,13 @@ test('H27.21 script checks build their asset and server inputs before the runner
   }
 });
 
-test('H27.21 package consumers use their native locked graph without editor-hook setup', () => {
+// kit K859: npm ci installs the lock of the consumer, and make link then connects the checkouts that .links declares.
+test('H27.21 package consumers install their native locked graph with npm ci and then make link', () => {
   const steps = dryRun('package-check');
-  assert.ok(steps.some(step => step.includes(kitTool('npm-install')) && step.includes('tests/package-install')));
+  const install = steps.findIndex(step => step.startsWith('cd tests/package-install && ') && / ci /.test(step));
+  const link = steps.findIndex(step => step.includes(kitTool('link')) && step.endsWith('link --project tests/package-install'));
+  assert.ok(install >= 0 && link > install, steps.join('\n'));
   assert.ok(steps.some(step => step.includes('package-install.test.ts')));
-  assert.deepEqual(steps.filter(step => step.includes(kitTool('link')) && step.includes('--project tests/package-install')), []);
 });
 
 

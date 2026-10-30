@@ -382,17 +382,14 @@ test('H27.20 every CI check group installs per-checkout hook configuration befor
 });
 
 
-test('H27.24 cross-language protocol parity has an independent matrix job (HY-1, HY-27, HY-114, HR-91)', () => {
+// kit K870: .github/workflows/gates.yml runs the gates of kit, cross-language parity among them, so no entry of ci.yml runs one
+// again; the gates are the prerequisites of the kit-gates-* targets of the installed kit.mk.
+test('H27.24 no matrix entry of ci.yml runs a gate of kit, which gates.yml runs (HY-1, HY-27, HY-114, HR-91)', () => {
+  const kit = readFileSync(path.join(path.dirname(kitTool('run-tests')), 'kit.mk'), 'utf8');
+  const gates = [...kit.matchAll(/^kit-gates-[\w-]+: ([^#\n]+)/gm)].flatMap(match => (match[1] ?? '').trim().split(/\s+/));
+  assert.ok(gates.includes('parity-check') && gates.includes('parity-declarations-check'), gates.join(' '));
   const entries = matrixEntries(readFileSync(path.join(WORKFLOWS, 'ci.yml'), 'utf8'));
-  const parity = entries.find(entry => entry.name === 'language-parity');
-  assert.ok(parity !== undefined, 'cross-language parity requires its own CI group');
-  assert.deepEqual(parity.targets, ['parity-declarations-check', 'parity-check']);
-  assert.equal(parity.keys['composer'], 'true', 'parity requires the locked PHP dependencies');
-  assert.equal(parity.keys['python'], 'true', 'parity requires the locked Python dependencies');
-  assert.equal(parity.browser, false, 'protocol equivalence needs no browser');
-  for (const entry of entries.filter(entry => entry !== parity)) {
-    assert.ok(!entry.targets.includes('parity-check') && !entry.targets.includes('parity-declarations-check'), `${entry.name}: cross-language parity belongs only to its independent group`);
-  }
+  for (const entry of entries) assert.deepEqual(entry.targets.filter(target => gates.includes(target)), [], `${entry.name} runs gates of kit`);
   const check = jobs(readFileSync(path.join(WORKFLOWS, 'ci.yml'), 'utf8')).find(job => job.name === 'check');
   assert.ok(check !== undefined);
   assert.doesNotMatch(check.text, /^ {4}needs:/m, 'matrix checks must start independently');
@@ -408,7 +405,6 @@ test('H27.25 CI declares job-owned tools and locked package environments (HR-81,
     node: { tools: 'node' },
     board: { tools: 'node php composer python uv', php: true, composer: true, python: true },
     python: { tools: 'node python uv ruff vulture', python: true },
-    'language-parity': { tools: 'node php composer python uv', php: true, composer: true, python: true },
   };
   assert.deepEqual(entries.map(entry => entry.name).sort(), Object.keys(expected).sort());
   for (const entry of entries) {
@@ -416,7 +412,7 @@ test('H27.25 CI declares job-owned tools and locked package environments (HR-81,
     assert.ok(profile !== undefined);
     assert.equal(entry.keys['tools'], profile.tools, `${entry.name}: declared tool selection`);
     assert.ok(!profile.tools.split(' ').includes('npm'), 'npm belongs to the separate bootstrap selector');
-    assert.equal(entry.keys['symbols'], ['docs', 'php', 'language-parity'].includes(entry.name) ? 'php' : undefined, `${entry.name}: explicit extractor selection`);
+    assert.equal(entry.keys['symbols'], ['docs', 'php'].includes(entry.name) ? 'php' : undefined, `${entry.name}: explicit extractor selection`);
     for (const key of ['php', 'composer', 'python'] as const) assert.equal(entry.keys[key] === 'true', profile[key] === true, `${entry.name}: ${key} environment`);
   }
   const checks = jobs(text).find(job => job.name === 'check');
@@ -446,7 +442,7 @@ test('H27.25-1 common CI policy checks use locked releases without sibling templ
   assert.ok(check !== undefined);
   const template = check.steps.find(step => step.text.includes('repository: polyspec/template'));
   assert.equal(template?.if, '${{ !cancelled() && matrix.template }}', 'source checkout must have its own explicit selection');
-  assert.deepEqual(entries.filter(entry => entry.keys['template'] === 'true').map(entry => entry.name).sort(), ['board', 'language-parity', 'php']);
+  assert.deepEqual(entries.filter(entry => entry.keys['template'] === 'true').map(entry => entry.name).sort(), ['board', 'php']);
 });
 
 

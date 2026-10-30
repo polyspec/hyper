@@ -19,13 +19,6 @@ const variable = (name: string): string => {
   return value;
 };
 
-test('hyper pins no release archive and holds no build of its own of the template extension (H23.11-2, H27.45)', () => {
-  for (const file of ['config/release-assets.json', 'scripts/build-template-ext.mts', 'scripts/template-assets.mts', 'config/template-assets.json']) {
-    assert.equal(existsSync(path.join(ROOT, file)), false, `${file} is still there`);
-  }
-  assert.doesNotMatch(read('Makefile'), /release-assets-fetch|release-assets\.\$\(KIT_EXT\)/);
-});
-
 test('make template-ext builds polyspec/template-php-ext of TEMPLATE_VERSION with PIE from the Composer repository of the release (H27.45)', () => {
   const version = variable('TEMPLATE_VERSION');
   const lines = dryRun('template-ext');

@@ -41,3 +41,6 @@ coverage/
 # Composer owns the selected development locks as local installation state.
 /composer.local.lock
 /examples/board/composer.local.lock
+
+# The link declaration of this checkout, its own development state (kit K869)
+/.links

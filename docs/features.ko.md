@@ -1,5 +1,5 @@
 <!-- doc-id: features -->
-<!-- source-sha256: df3510bb20a57ca0e8c6cf1a4bd689ba672e759fbd1b1c6b20c515d9631191c4 -->
+<!-- source-sha256: bf26f27ddd9984baab37cc3bf3f83844d781f5feb5e79716841425224009b4d0 -->
 # 기능 상태
 
 [English](features.md).
@@ -66,7 +66,7 @@
 | checked-results | 실행된 test가 없는 test run, top level에서 await하는 node test 파일, 검사한 step이 없는 parity 검사는 실패하고, 기본 최종 보고서는 실패 근거와 각 target log를 보존한다(HR-84) | implemented | `tests/scripts/check-parity.test.mts` |
 | tool-output | 검사는 run 맥락이나 pin하지 않은 release에 따라 바뀌지 않는 형태로 tool 출력을 읽는다. 호출한 make의 변수 없는 make dry run, machine이 읽는 형태, pin한 도구의 text만 읽는다(HR-83) | implemented | `tests/scripts/template-copy.test.mjs` |
 | atomic-outputs | 다른 process가 읽는 출력은 rename으로 파일 단위 publish하고, 파일 하나는 rename 한 번으로 쓰며, 설치한 사본은 의존성 tree가 같을 때만 publish하고, package manager 설치와 full run은 lock을 잡는다(HR-82) | implemented | `tests/scripts/publish.test.mts`, `tests/scripts/toolchain.test.mts` |
-| toolchain-pin | Node.js, npm, Composer는 정확한 release로, PHP와 Python은 minor release로 추적 파일에 pin한다. npm과 Composer는 digest로 확인해 checkout의 `var/tools`에 설치하고 `PATH`의 맨 앞에 둔다. `make toolchain-check`는 pin과 다른 모든 도구를 밝히고 CI 보고서는 실행 중인 release를 기록한다(HR-81) | implemented | `tests/scripts/toolchain.test.mts`, `tests/scripts/template-copy.test.mjs` |
+| toolchain-pin | Node.js, npm, Composer는 정확한 release로, PHP와 Python은 minor release로 추적 파일에 pin한다. npm과 Composer는 digest로 확인해 checkout의 `var/tools`에 설치하고 `PATH`의 맨 앞에 둔다. 없는 도구는 그것을 실행하는 target을 실패시키고(kit K854), CI 보고서는 실행 중인 release를 기록한다(HR-81) | implemented | `tests/scripts/toolchain.test.mts`, `tests/scripts/template-copy.test.mjs` |
 | composer-development | 명시적 기본 개발 manifest와 별도 lock으로 소스 package version, link, 설치 기록과 PHP 8.4 요구를 일치시킨다(HR-70, HR-79) | implemented | `make composer-development-check`, `tests/scripts/composer-development.test.mts`, `make hyper-test-scripts` |
 | kit-tools | 상속된 offline 설정에서도 명시적 bootstrap은 선언된 다운로드를 허용한다. 선택적인 기본 로컬 소스 link를 지원하는 설치된 공유 도구 release 0.0.75의 Git hook, 문서 검사, commit message 규칙, owner 검사, test runner, CI 보고서, toolchain 설치와 검사, release는 release asset의 URL과 integrity로 pin한 npm 패키지 `@polyspec/kit`이며 `config/*.json`이 이를 설정한다. `make kit-sync`가 설치 패키지에서 `kit.copies`의 복사본을 쓰고, schema를 어기는 설정은 실패한다 | implemented | `make kit-check` |
 | template-tag | 릴리즈 선언은 `TEMPLATE_TAG`(`v0.0.14`, `v$(TEMPLATE_VERSION)`)를 고정하며 없는 tag는 기대값과 실제값을 밝히고 `make template-tag`를 실패시킨다(HR-80) | implemented | `tests/scripts/template-pins.test.mts`, `tests/scripts/template-version.test.mts` |
@@ -82,7 +82,7 @@
 | gate-inputs | Native gate가 읽기 전에 workspace 선언과 runtime fixture를 build한다(HR-85) | implemented | `tests/scripts/check-recipes.test.mts`, `make lint-ts`, `make parity-check` |
 | ci-setup | 모든 CI 검사 group이 검증 전에 선언된 PHP와 checkout hook을 준비한다 | implemented | `tests/scripts/ci-workflow.test.mts` |
 | consumer-check-inputs | Script 검사가 build를 소유하고 package 검사가 editor 설정 없이 native source 연결을 위임한다 | implemented | `tests/scripts/check-recipes.test.mts`, `tests/scripts/template-ext.test.mts`, `make package-check` |
-| language-parity-ci | 언어 간 protocol 동등 검사는 독립 `language-parity` CI group에서 선언을 한 번 검증하고 browser를 설치하지 않으며 별도 보고서와 최종 집계에 결과를 제공한다 | configured | `tests/scripts/ci-workflow.test.mts`, `check (language-parity)` |
+| language-parity-ci | 언어 간 protocol 동등 검사는 kit의 gates workflow인 `.github/workflows/gates.yml`의 parity job에서 실행하고(kit K870), 선언을 한 번 검증하며 browser를 설치하지 않고, 그 결과는 release가 요구하는 check `required`이다 | configured | `tests/scripts/ci-workflow.test.mts`, `gates.yml`의 `parity` |
 | ci-environment-ownership | 각 CI group은 Kit으로 고정 도구를 선택하고 native lock graph를 설치하며 다른 언어 job의 산출물 없이 build 입력을 소유한다. 공통 정책 group은 sibling template source를 선언하지 않는다 | configured; native selector owner checks | `tests/scripts/ci-workflow.test.mts`, `tests/scripts/toolchain.test.mts` |
 | shared-runtime-runner | 모든 Python 검사 target은 native Kit runner와 virtual environment 선택을 사용하며 앱 unittest harness를 제거한다 | configured | `make hyper-runner-owner-check`, `make python-file-parts-test` |
 | native-browser-runner | 앱 server의 준비와 정리 소유권을 유지하면서 browser E2E 실행에 provider 소유 Playwright adapter를 사용해야 한다 | pending provider support; release held | [Kit issue 13](https://github.com/polyspec/kit/issues/13) |

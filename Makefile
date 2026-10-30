@@ -95,29 +95,19 @@ help: ## List the targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
 
 hyper-install: install-kit ## Install the pinned tools, fetch the archives of the template release and install the Composer dependencies; make install-packages installs the npm packages (HR-89, H14.1-7)
-	$(NODE) $(KIT)/check-toolchain.$(KIT_EXT)
 	$(MAKE) --no-print-directory hyper-install-php
 	$(MAKE) --no-print-directory hyper-install-python
 
-.PHONY: hyper-install-php node-toolchain-check php-toolchain-check python-toolchain-check
-hyper-install-php: php-toolchain-check ## Install only the locked root and board Composer projects and their pinned PHP archives
+.PHONY: hyper-install-php
+hyper-install-php: ## Install only the locked root and board Composer projects and their pinned PHP archives
 	$(MAKE) --no-print-directory template-ext
 	$(ONLINE) $(NODE) $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(COMPOSER_BIN) install --no-interaction
 	$(ONLINE) $(NODE) $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(COMPOSER_BIN) install --no-interaction --working-dir=$(BOARD)
 
-node-toolchain-check: ## Verify the Node tools used by workspace builds and checks
-	$(NODE) $(KIT)/check-toolchain.$(KIT_EXT) node npm
-
-php-toolchain-check: ## Verify the PHP tools used by Composer and PHP checks
-	$(NODE) $(KIT)/check-toolchain.$(KIT_EXT) php composer
-
-python-toolchain-check: ## Verify the Python tools used by locked Python environments
-	$(NODE) $(KIT)/check-toolchain.$(KIT_EXT) python uv
-
-hyper-install-python: python-toolchain-check ## Make the venv of the Python server package anew and install the package into it non-editable with its dependencies (S5)
+hyper-install-python: ## Make the venv of the Python server package anew and install the package into it non-editable with its dependencies (S5)
 	rm -rf $(PYTHON_VENV)
 	$(MAKE) --no-print-directory python-venv DIR=$(PYTHON_VENV)
-	$(ONLINE) $(UV) sync --quiet --locked --no-editable --project $(PYTHON_PACKAGE)
+	$(MAKE) --no-print-directory uv-install DIR=. SYNC='--quiet --no-editable --project $(PYTHON_PACKAGE)'
 
 hyper-install-browser: ## Install Chromium of the pinned Playwright and its system libraries; the CI group board runs it (HR-91)
 	$(ONLINE) $(NODE) node_modules/@playwright/test/cli.js install --with-deps chromium
@@ -128,8 +118,9 @@ hyper-install-virtiofs: ## Install the digest-pinned image for Darwin virtiofs v
 # Native development graphs have their own manifests and locks; release declarations remain separate.
 .PHONY: composer-development
 composer-development: ## Resolve declared PHP development sources through native Composer
-	COMPOSER=composer.local.json $(NODE) $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(MAKE) --no-print-directory composer-install DIR=. CHECKOUTS="$(CURDIR) $(abspath ../template) $(abspath ../forks/json-schema)"
-	COMPOSER=composer.local.json $(NODE) $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(MAKE) --no-print-directory composer-install DIR=$(BOARD) CHECKOUTS="$(CURDIR) $(abspath ../template) $(abspath ../forks/json-schema)"
+	COMPOSER=composer.local.json $(NODE) $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(COMPOSER_BIN) install --no-interaction
+	COMPOSER=composer.local.json $(NODE) $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(COMPOSER_BIN) install --no-interaction --working-dir=$(BOARD)
+	$(MAKE) --no-print-directory link
 
 .PHONY: composer-development-check
 composer-development-check: ## Validate selected native PHP development locks and their actual runtime requirements
@@ -170,7 +161,7 @@ template-tag: ## Fail when the template repository TEMPLATE_REPOSITORY has no ta
 # The recipe installs http:pie of mise.toml itself, with its locked checksum: a CI job installs only the TOOLS of its matrix,
 # and install-tools of kit has no pie selector, so no TOOLS list can name it (H27.45-1).
 .PHONY: template-ext
-template-ext: php-toolchain-check ## Build the native template extension of TEMPLATE_TAG with PIE from the Composer repository of the template release into build/ext (H27.45); ONLINE
+template-ext: ## Build the native template extension of TEMPLATE_TAG with PIE from the Composer repository of the template release into build/ext (H27.45); ONLINE
 	$(ONLINE) $(KIT_TOOLS)/bin/mise install --locked http:pie
 	PIE_WORKING_DIRECTORY=$(PIE_WORK) $(ONLINE) $(PIE) repository:add composer $(TEMPLATE_PACKAGES) --no-interaction
 	PIE_WORKING_DIRECTORY=$(PIE_WORK) $(ONLINE) $(PIE) build polyspec/template-php-ext:$(TEMPLATE_VERSION) --no-interaction
@@ -182,7 +173,7 @@ template-ext: php-toolchain-check ## Build the native template extension of TEMP
 ext: ## Fail unless the native template extension of make template-ext is in build/ext (HY-48, H14.1-7, H27.45)
 	@test -f $(EXT) || { echo "ext: $(EXT) does not exist; run make hyper-install, which builds it with PIE (make template-ext)" >&2; exit 1; }
 
-packages: node-toolchain-check ## Build the JavaScript modules and type declarations of the npm packages into their dist directories; npm links the workspaces (HR-61, HR-79, HR-96)
+packages: ## Build the JavaScript modules and type declarations of the npm packages into their dist directories; npm links the workspaces (HR-61, HR-79, HR-96)
 	cd $(JS_PACKAGE) && $(NPM) run --silent build -- --outDir dist.next-$$$$ && $(NODE) $(CURDIR)/scripts/publish.mts directory dist.next-$$$$ dist
 	cd $(NODE_PACKAGE) && $(NPM) run --silent build -- --outDir dist.next-$$$$ && $(NODE) $(CURDIR)/scripts/publish.mts directory dist.next-$$$$ dist
 
@@ -197,7 +188,8 @@ hyper-server-php-install: ## Install the Composer dependencies of the board offl
 # package-check is a check, so it installs offline from the npm cache that make hyper-install filled and fails by the name of a
 # package that the cache lacks (HR-89); npm alone owns the links and installed records of this declared consumer graph.
 package-check: packages node-fixtures ## Install the npm packages into tests/package-install offline, link them, type-check its test against their declarations and run it under node (HR-61)
-	NPM_BIN=$(NPM) $(NODE) $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(NODE) $(KIT)/npm-install.$(KIT_EXT) tests/package-install "$(CURDIR)" "$(realpath node_modules/@polyspec/template)"
+	cd tests/package-install && $(NODE) $(KIT)/holder-lock.$(KIT_EXT) run $(abspath $(INSTALL_LOCK)) -- $(NPM) ci --no-audit --allow-remote=root
+	$(MAKE) --no-print-directory link PROJECT=tests/package-install
 	$(TSC) -p tests/package-install/tsconfig.json
 	NPM_BIN=$(NPM) $(NODE) $(KIT)/run-tests.$(KIT_EXT) node --cwd tests/package-install -- package-install.test.ts
 
@@ -221,7 +213,7 @@ parity-check: server-fixtures node-fixtures
 assets: packages ## Build the board client bundle (SSR) and the single-file static shell (CSR)
 	$(NODE) $(BUILD_PACKAGE)/bin/hyper-build-assets.mjs --app $(BOARD) --api /api --output $(BOARD)/build --static public/assets/app.css --static public/assets/reader.css
 
-hyper-test-js: node-toolchain-check ## Run the browser code tests, including the router conformance cases, and the type check
+hyper-test-js: ## Run the browser code tests, including the router conformance cases, and the type check
 	@failed=; \
 	$(call check,the tests of $(JS_PACKAGE),node $(KIT)/run-tests.$(KIT_EXT) vitest --cwd $(JS_PACKAGE)$(if $(JS_TESTS), -- $(JS_TESTS))) \
 	$(call check,the type check of $(JS_PACKAGE),$(TSC) --noEmit -p $(JS_PACKAGE)/tsconfig.json) \
@@ -240,13 +232,13 @@ hyper-test-php: server-fixtures ext ## Run the server package tests with the gen
 	$(checks_result)
 
 .PHONY: python-file-parts-test
-python-file-parts-test: server-fixtures python-toolchain-check ## Run Python multipart unit and rendering cases (HY-113, HY-114)
+python-file-parts-test: server-fixtures ## Run Python multipart unit and rendering cases (HY-113, HY-114)
 	@failed=; \
 	$(call check,multipart contract cases,$(NODE) $(KIT)/run-tests.$(KIT_EXT) python --venv $(PYTHON_VENV) -- discover -s $(PYTHON_PACKAGE)/tests -t $(PYTHON_PACKAGE) -p test_files.py) \
 	$(call check,multipart application cases,$(NODE) $(KIT)/run-tests.$(KIT_EXT) python --venv $(PYTHON_VENV) -- discover -s $(PYTHON_PACKAGE)/tests/render -t $(PYTHON_PACKAGE) -p render_files.py) \
 	$(checks_result)
 
-hyper-test-python: python-toolchain-check ## Run the Python server package tests, which read the conformance cases of routes, rest, csrf, fields and json
+hyper-test-python: ## Run the Python server package tests, which read the conformance cases of routes, rest, csrf, fields and json
 	@failed=; \
 	$(call check,Python protocol unit tests,$(NODE) $(KIT)/run-tests.$(KIT_EXT) python --venv $(PYTHON_VENV) -- discover -s $(PYTHON_PACKAGE)/tests -t $(PYTHON_PACKAGE) -p 'test_*.py') \
 	$(call check,Python package data tests,$(NODE) $(KIT)/run-tests.$(KIT_EXT) python --venv $(PYTHON_VENV) -- discover -s tests/python_package -p 'test_*.py') \
@@ -254,10 +246,10 @@ hyper-test-python: python-toolchain-check ## Run the Python server package tests
 
 # The rendering tests need the template Python package (H15.3-3), the wheel of the template release that the venv of make
 # install holds, and `make server-fixtures` writes the server program they open.
-hyper-test-python-render: server-fixtures python-toolchain-check ## Run the Python rendering tests with the template package of the venv (H15.3-3)
+hyper-test-python-render: server-fixtures ## Run the Python rendering tests with the template package of the venv (H15.3-3)
 	$(NODE) $(KIT)/run-tests.$(KIT_EXT) python --venv $(PYTHON_VENV) -- discover -s $(PYTHON_PACKAGE)/tests/render -t $(PYTHON_PACKAGE) -p 'render_*.py'
 
-hyper-lint: php-toolchain-check ## Check PHP formatting
+hyper-lint: ## Check PHP formatting
 	@failed=; \
 	$(call check,Pint of $(PHP_PACKAGE),cd $(PHP_PACKAGE) && $(PHP_VENDOR)/bin/pint --test) \
 	$(call check,Pint of $(BOARD),cd $(BOARD) && vendor/bin/pint --test app src public) \
@@ -266,7 +258,7 @@ hyper-lint: php-toolchain-check ## Check PHP formatting
 analyse-php: ext ## Run PHPStan at level max on the source and the tests of the server package
 	cd $(PHP_PACKAGE) && $(PHP_VENDOR)/bin/phpstan analyse --no-progress --memory-limit=$(PHPSTAN_MEMORY)
 
-templates-check: node-toolchain-check ## Check hx- attributes (HC-6) and region placements (HY-3, HY-30) of the board templates
+templates-check: ## Check hx- attributes (HC-6) and region placements (HY-3, HY-30) of the board templates
 	$(NODE) scripts/check-templates.mts --app $(BOARD)
 
 # The TypeScript of scripts/, tests/ and benchmarks/ (tsconfig.json), which Node runs by type stripping and so never checks
@@ -302,7 +294,7 @@ bundle-size: assets ## Print the sizes of the SSR script, the CSR shell, the chu
 e2e: assets server ## Run the SSR, CSR, no-JavaScript and comparison flows in Chromium on servers of the run; CASES=<pattern> runs the cases whose title matches
 	$(NODE) scripts/run-e2e.mts -- $(NODE) $(KIT)/run-tests.$(KIT_EXT) playwright -- --config tests/e2e/playwright.config.ts$(if $(CASES), --grep '$(CASES)')
 
-virtiofs-check: toolchain-check ## Write the outputs of the server build and of the output copies on a virtiofs bind mount of Apple container (HR-68); a target of the full suite on Darwin
+virtiofs-check: ## Write the outputs of the server build and of the output copies on a virtiofs bind mount of Apple container (HR-68); a target of the full suite on Darwin
 	$(NODE) $(KIT)/run-tests.$(KIT_EXT) node -- tests/virtiofs/
 
 serve-demo: assets server ## Serve SSR on :8080, CSR on :8081 and the comparison page on :8081/compare; fails with the holder while another demo runs
@@ -326,8 +318,9 @@ bench-server-smoke: assets server ## Run the PHP benchmark once per measurement 
 bench: bench-server bench-browser ## Run both measurements; results are reports, not pass or fail checks
 
 # The final suite runs through the native kit report runner on a clean committed tree.
-# Run it once after checklist development, then rerun only failed owners.
-CHECK_TARGETS := kit-check suppression-check toolchain-check layout-check typecheck lint-ts docs-check hooks-check owner-validate bench-server-smoke hyper-lint analyse-php templates-check hyper-test-scripts hyper-test-js hyper-test-node hyper-test-python hyper-test-python-render package-check hyper-test-php parity server-parity server-parity-python bundle-size e2e rules-check rebuild-check language-check test-markers-check duplication-check parity-declarations-check parity-check lint-php lint-python bypass-check divergence-check
+# Run it once after checklist development, then rerun only failed owners. The gates of kit are not in it:
+# .github/workflows/gates.yml runs them (kit K870).
+CHECK_TARGETS := typecheck hooks-check bench-server-smoke hyper-lint analyse-php templates-check hyper-test-scripts hyper-test-js hyper-test-node hyper-test-python hyper-test-python-render package-check hyper-test-php parity server-parity server-parity-python bundle-size e2e
 
 # The CI groups of the full suite (HR-91) are the entries of the matrix of .github/workflows/ci.yml: each entry runs its
 # `targets` with `make ci-targets`, so the entries together run every target of CHECK_TARGETS once

@@ -37,14 +37,14 @@ jobs:
             symbols: php
             composer: true
             python: true
-            targets: kit-check toolchain-check layout-check typecheck lint-ts docs-check hooks-check owner-validate rules-check rebuild-check language-check test-markers-check duplication-check bypass-check divergence-check suppression-check hyper-test-scripts
+            targets: typecheck hooks-check hyper-test-scripts
           - name: php
             tools: node php composer phpcs phpstan
             php: true
             template: true
             symbols: php
             composer: true
-            targets: bench-server-smoke hyper-lint analyse-php hyper-test-php lint-php
+            targets: bench-server-smoke hyper-lint analyse-php hyper-test-php
           - name: node
             tools: node
             targets: templates-check hyper-test-js hyper-test-node package-check
@@ -59,16 +59,7 @@ jobs:
           - name: python
             tools: node python uv ruff vulture
             python: true
-            targets: hyper-test-python hyper-test-python-render lint-python
-          # Every compared implementation is installed and built in this job.
-          - name: language-parity
-            tools: node php composer python uv
-            php: true
-            template: true
-            symbols: php
-            composer: true
-            python: true
-            targets: parity-declarations-check parity-check
+            targets: hyper-test-python hyper-test-python-render
     defaults:
       run:
         working-directory: hyper

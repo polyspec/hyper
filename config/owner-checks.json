@@ -511,7 +511,7 @@
         "tests/scripts/ci-workflow.test.mts"
       ],
       "targets": [
-        "toolchain-check"
+        "hyper-test-scripts"
       ]
     },
     {
@@ -613,7 +613,7 @@
         ".mise/locks/**"
       ],
       "targets": [
-        "toolchain-check"
+        "hyper-test-scripts"
       ]
     },
     {

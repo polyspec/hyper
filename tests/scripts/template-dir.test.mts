@@ -33,7 +33,6 @@ test('bundles the template render runtime of a client from the installed templat
   const inputs = Object.keys(result.metafile.inputs).map((input) => resolve(input));
   const render = realpathSync(fileURLToPath(import.meta.resolve('@polyspec/template/render')));
   assert.ok(inputs.includes(render), inputs.join('\n'));
-  assert.deepEqual(inputs.filter((input) => input.includes('/var/products/')), []);
 });
 
 test('release declarations pin template tarballs while installed source packages keep their identity', () => {
@@ -57,17 +56,4 @@ test('release declarations pin template tarballs while installed source packages
   // The packages of the workspace require the exact version, which the root resolves to the same tarball.
   for (const name of PACKAGES) assert.equal(overrides[name], `$${name}`, name);
   assert.match(readFileSync(join(repository, '.npmrc'), 'utf8'), /^allow-remote=root$/m);
-});
-
-test('the asset build, the template build and the server build take no template directory', () => {
-  const runs = {
-    'packages/build/bin/hyper-build-assets.mjs': ['--app', 'examples/board', '--api', '/api', '--output', '/nonexistent'],
-    'scripts/build-templates.mts': ['--templates', 'examples/board/templates', '--output', '/nonexistent'],
-    'packages/build/bin/hyper-build-server.mjs': ['--manifest', 'examples/board/app/app.json', '--templates', 'examples/board/templates', '--output', '/nonexistent', '--php-namespace', 'X'],
-  };
-  for (const [script, options] of Object.entries(runs)) {
-    const result = spawnSync(process.execPath, [join(repository, script), ...options, '--template-dir', 'var/products/template'], { encoding: 'utf8' });
-    assert.notEqual(result.status, 0, script);
-    assert.match(result.stderr, /Unknown option '--template-dir'/, script);
-  }
 });

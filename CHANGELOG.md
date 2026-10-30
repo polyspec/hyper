@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- Kit 0.0.77 is the pinned release (H27.47-2). The recipes run no toolchain check, since kit deleted it (K854): a missing tool fails the target that runs it. make hyper-install-python installs through make uv-install (K850); make composer-development runs composer install with COMPOSER=composer.local.json and make package-check runs npm ci of tests/package-install, each followed by make link, since kit deleted its install wrappers (K859). The git-ignored .links declares the provider checkouts (K869), and the prepare-commit-msg hook, whose target kit deleted, is gone (K892). `.github/workflows/ci.yml` and `CHECK_TARGETS` no longer run the gates of kit, which `.github/workflows/gates.yml` runs (K870): the language-parity job goes, and protocol parity runs in the parity job of gates.yml. The documents describe make ext as the check of the library that PIE built and the Composer repositories of the releases as the install of a consumer (K865).
 
 ## 0.0.21
 - The hyper-install case of the template-ext test judges the recursive make of template-ext by its words, a make by its base name and template-ext as its last word: it matched a slash before make, which only a make started by its path prints, and failed in CI, which prints the bare name make. (H27.45-2)
