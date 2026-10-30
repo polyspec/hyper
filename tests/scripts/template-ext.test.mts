@@ -32,9 +32,13 @@ test('make template-ext builds polyspec/template-php-ext of TEMPLATE_VERSION wit
   const pie = lines.filter((line) => line.includes('mise/shims/pie '));
   const packages = `https://github.com/polyspec/template/releases/download/v${version}/packages.json`;
   assert.equal(pie.length, 2, lines.join('\n'));
+  // The recipe installs http:pie of mise.toml with its locked checksum before it runs PIE, since a CI job installs only the
+  // TOOLS of its matrix and install-tools of kit has no pie selector (H27.45-1).
+  const install = lines.findIndex((line) => /^env -u npm_config_offline -u COMPOSER_DISABLE_NETWORK \S+\/var\/tools\/bin\/mise install --locked http:pie$/.test(line));
+  assert.ok(install >= 0 && install < lines.indexOf(pie[0] ?? ''), lines.join('\n'));
   assert.match(pie[0] ?? '', new RegExp(`^PIE_WORKING_DIRECTORY=\\S+/var/pie env -u npm_config_offline -u COMPOSER_DISABLE_NETWORK \\S+ repository:add composer ${packages.replaceAll('.', '\\.')} --no-interaction$`));
   assert.match(pie[1] ?? '', new RegExp(`^PIE_WORKING_DIRECTORY=\\S+/var/pie env -u npm_config_offline -u COMPOSER_DISABLE_NETWORK \\S+ build polyspec/template-php-ext:${version.replaceAll('.', '\\.')} --no-interaction$`));
-  assert.deepEqual(lines.filter((line) => /\bpie\b.*\binstall\b/.test(line)), [], 'pie install would install the library into the PHP of the machine');
+  assert.deepEqual(lines.filter((line) => /\/mise\/shims\/pie install\b/.test(line)), [], 'pie install would install the library into the PHP of the machine');
 });
 
 test('make hyper-install builds the extension through make template-ext once (H27.45)', () => {

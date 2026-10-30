@@ -167,8 +167,11 @@ template-tag: ## Fail when the template repository TEMPLATE_REPOSITORY has no ta
 # its zip, and builds it with phpize and the php-config of the PHP of PATH into the vendor directory of PIE_WORK: the folder
 # of the package, its build-path src and the modules folder of phpize. The library is published into build/ext with a rename
 # (scripts/publish.mts, HR-82). `pie build` installs nothing into the PHP; the checks load the library with -d extension.
+# The recipe installs http:pie of mise.toml itself, with its locked checksum: a CI job installs only the TOOLS of its matrix,
+# and install-tools of kit has no pie selector, so no TOOLS list can name it (H27.45-1).
 .PHONY: template-ext
 template-ext: php-toolchain-check ## Build the native template extension of TEMPLATE_TAG with PIE from the Composer repository of the template release into build/ext (H27.45); ONLINE
+	$(ONLINE) $(KIT_TOOLS)/bin/mise install --locked http:pie
 	PIE_WORKING_DIRECTORY=$(PIE_WORK) $(ONLINE) $(PIE) repository:add composer $(TEMPLATE_PACKAGES) --no-interaction
 	PIE_WORKING_DIRECTORY=$(PIE_WORK) $(ONLINE) $(PIE) build polyspec/template-php-ext:$(TEMPLATE_VERSION) --no-interaction
 	@set -- $(PIE_WORK)/*/vendor/polyspec/template-php-ext/src/modules/polyspec_template.so; \

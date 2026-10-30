@@ -1,5 +1,5 @@
 <!-- doc-id: dependencies -->
-<!-- source-sha256: 3121af4950c3603416be9012377abd67420090bfb5629b42420249d293135b9b -->
+<!-- source-sha256: e905e65ef30b1d9df63046c2d04f7bbcd0de57ed332b5abca7471cf4ae34d032 -->
 # 의존성
 
 [English](dependencies.md).
@@ -12,7 +12,7 @@
 |---|---|---|---|---|
 | `@polyspec/kit` | npm integrity로 고정한 release asset `v0.0.75` | build, verification | 릴리즈와 CI는 공개 archive에서 공유 도구를 설치한다. 개발은 제공 checkout의 기본 소스 link를 유지한다. npm이 릴리즈 manifest와 그 lock을 관리한다. | npm으로 이후 호환 공유 도구 릴리즈를 반영하고 소유 검사를 실행한다. |
 | Node.js, npm, PHP, Composer | `mise.toml`의 `node` 26.12.0, `packageManager` npm 12.2.0, `config/toolchain.json`의 정확한 Composer 2.10.3과 `.php-version`의 minor인 PHP 8.4. make는 pin하지 않는다 | 도구 | 같은 도구로만 build와 검사가 같은 결과를 낸다(HR-81). npm 12는 `npm pack --json`을 npm 11과 다르게 출력한다. | 없음. 새 release는 pin을 바꾸는 commit이 된다. PHP patch release는 통과하고 full run이 그것을 기록한다. |
-| PIE | `mise.toml`의 `http:pie` 1.4.10, `php/pie`의 GitHub Release `1.4.10`의 phar와 `mise.toml`과 `mise.lock`의 그 sha256 | build | PIE는 template release의 Composer repository에서 네이티브 template 확장을 build한다(`make template-ext`, H27.45). `pie build`는 `var/pie`에 build하며 기기의 PHP를 바꾸지 않는다. | 없음. 새 PIE release는 `mise.toml`과 `mise.lock`을 바꾸는 commit이 된다. |
+| PIE | `mise.toml`의 `http:pie` 1.4.10, `php/pie`의 GitHub Release `1.4.10`의 phar와 `mise.toml`과 `mise.lock`의 그 sha256 | build | PIE는 template release의 Composer repository에서 네이티브 template 확장을 build한다(`make template-ext`, H27.45). `pie build`는 `var/pie`에 build하며 기기의 PHP를 바꾸지 않는다. CI job은 matrix의 `TOOLS`만 설치하고 kit의 install-tools에는 `pie` selector가 없으므로 `make template-ext`가 `mise install --locked http:pie`로 그것을 설치한다(H27.45-1). | 없음. 새 PIE release는 `mise.toml`과 `mise.lock`을 바꾸는 commit이 된다. |
 | Python | `mise.toml`의 `python` 3.14.8, `packages/server/python`의 `requires-python >= 3.14` | 도구 | Python 서버 package는 고정된 minor 3.14를 요구한다. CI가 그 build만 테스트하므로 그렇다(H20.12). | 없음. 새 안정 release는 `mise.toml`을 바꾸는 commit이 된다. |
 | `packages/server/python/pyproject.toml`의 `setuptools` | 정확한 `84.2.1` | build | Package manifest와 `config/toolchain.json`이 같은 wheel backend를 선언하며 다운로드 digest가 build 입력을 고정한다. | 두 선언에서 더 새로운 호환 backend를 채택하고 wheel build를 검증한다. |
 | `pyproject.toml`의 `polyspec-template` (`packages/server/python`) | `polyspec/template`의 release `v0.0.14`의 wheel asset과 그 sha256 (`https://github.com/polyspec/template/releases/download/v0.0.14/polyspec_template-0.0.14-py3-none-any.whl#sha256=4f7e3e0003c21bc209c2e47c5a11dc5f86d05e2ed4218a52c6fd5866e75ca1b4`) | runtime | 0.1 전에는 polyspec package를 registry에 올리지 않으므로 GitHub Release의 wheel asset에서 설치하고, 그 asset의 sha256으로 검증한다(H23.5). | polyspec가 Python 패키지를 registry에 올릴 때 기록을 지웁니다. |
