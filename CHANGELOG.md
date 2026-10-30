@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- Hyper 0.0.22 is released at 51d8cbb after CI 41039924973 and gates 41039924928: the release run 41041100350 published the six assets, and the release carries template 0.0.15 and Kit 0.0.78 (H27.48).
 
 ## 0.0.22
 - Kit 0.0.78 is the pinned release (H27.48-1): make link of an installed kit writes no Claude Code hook (K916), so `make link PROJECT=tests/package-install` of package-check passes in CI, where the installed kit has no node of its own var/tools and no `.links` names a provider.

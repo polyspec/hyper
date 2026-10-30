@@ -3,7 +3,7 @@
 
 [한국어](features.ko.md).
 
-[Release 0.0.21](https://github.com/polyspec/hyper/releases/tag/v0.0.21) is public at b95d425: all six application CI groups passed in the [CI run](https://github.com/polyspec/hyper/actions/runs/40983016356), with PHP 8.4.27, the [policy gates](https://github.com/polyspec/hyper/actions/runs/40983016346) passed, and the [release run](https://github.com/polyspec/hyper/actions/runs/40983816897) published six assets: `polyspec-hyper-client-npm-0.0.21.tgz`, `polyspec-hyper-server-npm-0.0.21.tgz`, `polyspec-hyper-build-npm-0.0.21.tgz`, `polyspec-hyper-server-php-0.0.21.zip`, `polyspec_hyper_server-0.0.21-py3-none-any.whl` and `packages.json`, the Composer repository of `polyspec/hyper-server` (kit K871). It depends on template 0.0.14 and Kit 0.0.75.
+[Release 0.0.22](https://github.com/polyspec/hyper/releases/tag/v0.0.22) is public at 51d8cbb: the five check groups and `ci-passed` passed in the [CI run](https://github.com/polyspec/hyper/actions/runs/41039924973), with PHP 8.4.27, the [policy gates](https://github.com/polyspec/hyper/actions/runs/41039924928) passed, and the [release run](https://github.com/polyspec/hyper/actions/runs/41041100350) published six assets: `polyspec-hyper-client-npm-0.0.22.tgz`, `polyspec-hyper-server-npm-0.0.22.tgz`, `polyspec-hyper-build-npm-0.0.22.tgz`, `polyspec-hyper-server-php-0.0.22.zip`, `polyspec_hyper_server-0.0.22-py3-none-any.whl` and `packages.json`, the Composer repository of `polyspec/hyper-server` (kit K871). It depends on template 0.0.15 and Kit 0.0.78.
 
 | ID | Feature | Status | Evidence |
 |---|---|---|---|

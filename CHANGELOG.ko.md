@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 02250227980a57a3ff522104639d252d14aa05a5687a04c7d84ae3089caf70d5 -->
+<!-- source-sha256: cd4ba2d797008dde678e32a985ee024eee260e9d523b9cb53e82ceab8aa4f410 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- Hyper 0.0.22를 CI 41039924973과 gates 41039924928을 거쳐 51d8cbb에서 릴리스했다. 릴리스 실행 41041100350이 asset 여섯 개를 게시했고, 릴리스는 template 0.0.15와 Kit 0.0.78을 담는다. (H27.48)
 
 ## 0.0.22
 - Kit 0.0.78이 pin한 release다(H27.48-1). 설치된 kit의 make link는 Claude Code hook을 쓰지 않으므로(K916), 설치된 kit에 자신의 var/tools node가 없고 `.links`가 provider를 적지 않는 CI에서 package-check의 `make link PROJECT=tests/package-install`이 통과한다.

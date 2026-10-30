@@ -1,10 +1,10 @@
 <!-- doc-id: features -->
-<!-- source-sha256: 4d5d6b8134e5c971a4181f8a7e2d5a3cf62414d3787da2dfaaead58a426a8018 -->
+<!-- source-sha256: dc5171c0cd99ca8e03c2098c57d69709e07b52e0fa328851fe1b5ce25ccd4e46 -->
 # 기능 상태
 
 [English](features.md).
 
-[릴리스 0.0.21](https://github.com/polyspec/hyper/releases/tag/v0.0.21)은 b95d425에서 공개되었다. PHP 8.4.27을 사용한 애플리케이션 CI group 6개가 [CI 실행](https://github.com/polyspec/hyper/actions/runs/40983016356)에서 모두 통과했고 [정책 gate](https://github.com/polyspec/hyper/actions/runs/40983016346)도 통과했으며, [릴리스 실행](https://github.com/polyspec/hyper/actions/runs/40983816897)이 `polyspec-hyper-client-npm-0.0.21.tgz`, `polyspec-hyper-server-npm-0.0.21.tgz`, `polyspec-hyper-build-npm-0.0.21.tgz`, `polyspec-hyper-server-php-0.0.21.zip`, `polyspec_hyper_server-0.0.21-py3-none-any.whl`와 `polyspec/hyper-server`의 Composer repository인 `packages.json`(kit K871), asset 여섯 개를 게시했다. template 0.0.14와 Kit 0.0.75에 의존한다.
+[릴리스 0.0.22](https://github.com/polyspec/hyper/releases/tag/v0.0.22)는 51d8cbb에서 공개되었다. PHP 8.4.27을 사용한 check group 5개와 `ci-passed`가 [CI 실행](https://github.com/polyspec/hyper/actions/runs/41039924973)에서 통과했고 [정책 gate](https://github.com/polyspec/hyper/actions/runs/41039924928)도 통과했으며, [릴리스 실행](https://github.com/polyspec/hyper/actions/runs/41041100350)이 `polyspec-hyper-client-npm-0.0.22.tgz`, `polyspec-hyper-server-npm-0.0.22.tgz`, `polyspec-hyper-build-npm-0.0.22.tgz`, `polyspec-hyper-server-php-0.0.22.zip`, `polyspec_hyper_server-0.0.22-py3-none-any.whl`와 `polyspec/hyper-server`의 Composer repository인 `packages.json`(kit K871), asset 여섯 개를 게시했다. template 0.0.15와 Kit 0.0.78에 의존한다.
 
 | ID | 기능 | 상태 | 근거 |
 |---|---|---|---|
