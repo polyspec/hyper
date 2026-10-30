@@ -62,8 +62,8 @@ EXT := build/ext/polyspec_template.so
 PIE := $(KIT_TOOLS)/mise/shims/pie
 PIE_WORK := $(CURDIR)/var/pie
 
-# The toolchain (HR-81, install-tools of @polyspec/kit): npm and Composer of the main checkout ($(KIT_TOOLS) of kit.mk, which a
-# linked worktree runs, kit K519), which `make install-tools` installs into its var/tools, come first on PATH for every recipe
+# The toolchain (HR-81, install-tools of @polyspec/kit): npm and Composer of the checkout ($(KIT_TOOLS) of kit.mk, its own var/tools in a
+# linked worktree too, kit K858), which `make install-tools` installs into its var/tools, come first on PATH for every recipe
 # and the programs that it starts.
 export PATH := $(KIT_TOOLS)/bin:$(PATH)
 # A check reads no network (HR-89): `make hyper-install` downloads everything that the checks read, and every other recipe

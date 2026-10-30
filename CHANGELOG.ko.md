@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: ed9d0f2c5db31faee0c3b3ccb1c7c876e7fbd0e347e350b287e2c45a420338c7 -->
+<!-- source-sha256: f070b144d52334ecd43145b9a4dbe9c12f06442b7f0dd2e875f531239c658b2d -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- 고정한 release는 Kit 0.0.75다. worktree는 make install로 자기 도구와 package를 online으로 설치하고, make worktree-setup은 스스로 아무것도 설치하거나 build하지 않는다(kit K857, K858). release는 archive 옆에 Composer package의 packages.json을 쓴다(kit K871). test는 모든 checkout의 도구를 그 checkout의 var/tools로 판단하고(tests/scripts/checkout-tools.mts가 main-tools.mts를 대신한다), toolchain case는 H27.45 이후 build된 library만 요구하는 make ext 대신 PHP와 Composer를 실행하는 make template-ext를 판단한다. (H27.47-1)
 - 고정한 release는 template 0.0.14이며, hyper는 그 release의 Composer repository인 packages.json에서 읽는다. composer.json과 examples/board/composer.json은 zip을 다시 적던 package repository 대신 그것을 선언하고, make hyper-install은 mise.toml의 PIE 1.4.10으로 그 네이티브 확장 polyspec/template-php-ext를 var/pie에서 build한다(make template-ext). 그래서 config/release-assets.json, release-assets-fetch와 scripts/build-template-ext.mts가 없어지고 make ext는 build된 library만 요구한다. 기본 Composer test는 지원 version을 packages/server/php/composer.json에서 읽는다. (H27.45)
 
 ## 0.0.21

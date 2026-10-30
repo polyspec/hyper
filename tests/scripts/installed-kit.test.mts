@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { test, type TestContext } from 'node:test';
 import { jsonString, parseJsonObject } from '../../scripts/json.mts';
-import { mainTools } from './main-tools.mts';
+import { checkoutTools } from './checkout-tools.mts';
 
 function checkout(t: TestContext): string {
   const directory = mkdtempSync(join(tmpdir(), 'hyper-installed-kit-'));
@@ -33,7 +33,7 @@ test('a fresh checkout can bootstrap the declared native npm without installed t
 
 test('a native locked archive install reads the installed bootstrap with no sibling checkout', { timeout: 120000 }, (t) => {
   const root = checkout(t);
-  const result = spawnSync(join(mainTools(), 'bin/npm'), ['ci', '--offline', '--ignore-scripts', '--no-audit'], { cwd: root, encoding: 'utf8' });
+  const result = spawnSync(join(checkoutTools(), 'bin/npm'), ['ci', '--offline', '--ignore-scripts', '--no-audit'], { cwd: root, encoding: 'utf8' });
   assert.equal(result.status, 0, `make install-packages prepares the native package cache:\n${result.stdout}${result.stderr}`);
   const manifest = parseJsonObject(readFileSync(join(root, 'node_modules/@polyspec/kit/package.json'), 'utf8'), 'installed kit package.json');
   assert.equal(jsonString(manifest.name, 'installed package name'), '@polyspec/kit');
@@ -73,7 +73,7 @@ test('H27.15-1 explicit bootstrap enables downloads under an inherited offline s
 
 test('H27.21 a packed installer links a native consumer to its installed dependency without editor tools', { timeout: 120000 }, (t) => {
   const root = checkout(t);
-  const npm = join(mainTools(), 'bin/npm');
+  const npm = join(checkoutTools(), 'bin/npm');
   const env = { ...process.env, npm_config_offline: 'true', NPM_BIN: npm };
   const installed = spawnSync(npm, ['ci', '--offline', '--ignore-scripts', '--no-audit'], { cwd: root, encoding: 'utf8', env });
   assert.equal(installed.status, 0, `${installed.stdout}${installed.stderr}`);

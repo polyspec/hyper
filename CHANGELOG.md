@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- Kit 0.0.75 is the pinned release: a worktree installs its own tools and packages online with make install, and make worktree-setup installs and builds nothing itself (kit K857, K858); the release writes packages.json of the Composer packages beside the archives (kit K871). The tests judge the tools of every checkout by its own var/tools (tests/scripts/checkout-tools.mts replaces main-tools.mts), and the toolchain case judges make template-ext, which runs PHP and Composer, in place of make ext, which since H27.45 only requires the built library. (H27.47-1)
 - Template 0.0.14 is the pinned release, and hyper reads it from the Composer repository of the release, its packages.json: composer.json and examples/board/composer.json declare it in place of the package repository that restated the zip, and make hyper-install builds the native extension polyspec/template-php-ext of it with PIE 1.4.10 of mise.toml (make template-ext) in var/pie, so config/release-assets.json, release-assets-fetch and scripts/build-template-ext.mts are gone and make ext only requires the built library; the native Composer test reads the supported version from packages/server/php/composer.json. (H27.45)
 
 ## 0.0.21

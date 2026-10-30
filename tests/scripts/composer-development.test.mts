@@ -6,10 +6,10 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { test } from 'node:test';
 import { jsonObject, jsonObjects, jsonString, parseJsonObject } from '../../scripts/json.mts';
-import { mainTools } from './main-tools.mts';
+import { checkoutTools } from './checkout-tools.mts';
 
 const root = resolve('.');
-const composer = join(mainTools(), 'mise/shims/composer');
+const composer = join(checkoutTools(), 'mise/shims/composer');
 const object = (file: string) => parseJsonObject(readFileSync(file, 'utf8'), file);
 
 test('make preserves the native COMPOSER manifest selector', (t) => {

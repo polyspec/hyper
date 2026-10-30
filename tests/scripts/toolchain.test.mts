@@ -1,5 +1,5 @@
 // Tests how the recipes of the Makefile use the toolchain (HR-81, HR-89): the recipes that run tools check the
-// toolchain first, npm and Composer of the main checkout are started by the absolute paths of its var/tools, every recipe
+// toolchain first, npm and Composer of the checkout are started by the absolute paths of its var/tools, every recipe
 // runs npm and Composer offline, only the install targets download, and the package manager installs hold the install
 // lock. The tools themselves (install-tools and check-toolchain of @polyspec/kit) are tested in kit.
 import assert from 'node:assert/strict';
@@ -14,12 +14,8 @@ import { dryRun } from './make-dry-run.mts';
 import { kitTool } from './kit-tools.mts';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
-// The main checkout of ROOT, the folder of the common Git directory: a linked worktree runs its tools and installs none (kit K519).
-const commonDir = spawnSync('git', ['rev-parse', '--path-format=absolute', '--git-common-dir'], { cwd: ROOT, encoding: 'utf8' });
-if (commonDir.status !== 0) throw new Error(`git rev-parse --git-common-dir in ${ROOT}: ${commonDir.stderr}`);
-const MAIN = realpathSync(path.dirname(commonDir.stdout.trim()));
-const WORKTREE = realpathSync(ROOT) !== MAIN;
-const TOOLS = path.join(MAIN, 'var/tools');
+// The tools of the checkout: every checkout, a linked worktree too, installs and runs its own var/tools (kit K858).
+const TOOLS = path.join(realpathSync(ROOT), 'var/tools');
 const NPM = path.join(TOOLS, 'bin/npm');
 // The node of mise.toml, which the bootstrap wraps in var/tools/bin and kit.mk names $(NODE) (kit K171).
 const NODE = path.join(TOOLS, 'bin/node');
@@ -30,13 +26,12 @@ const COMPOSER = path.join(TOOLS, 'mise/shims/composer');
 const commandsOf = (lines: string[]) => lines.flatMap((line) => line.split(/&&|;|\|\||\s--\s/).map((part) => part.trim().replace(/^(?:[A-Za-z_][A-Za-z0-9_]*=\S*\s+)+/, '')));
 
 test('the recipes that run npm, Composer or PHP check the toolchain first, and install installs the tools first', () => {
-  for (const [target, tools] of [['ext', 'php composer'], ['hyper-lint', 'php composer'], ['templates-check', 'node npm']]) {
+  for (const [target, tools] of [['template-ext', 'php composer'], ['hyper-lint', 'php composer'], ['templates-check', 'node npm']]) {
     assert.ok(target !== undefined && tools !== undefined);
     assert.equal(dryRun(target)[0]?.trim(), `${NODE} ${kitTool('check-toolchain')} ${tools}`, target);
   }
-  // make hyper-install is judged as the main checkout runs it: a worktree installs no tools and runs those of the main
-  // checkout (kit K519), so its install-kit prints the refusal of K519; the dry run of the main checkout reads only.
-  const install = dryRun('hyper-install', { cwd: MAIN });
+  // make hyper-install of every checkout installs its own tools (kit K858).
+  const install = dryRun('hyper-install');
   // install-kit of kit installs npm, the packages and then the tools; the tools come before the first check of the toolchain.
   const lines = install.map((line) => line.trim());
   const tools = lines.indexOf(`env -u npm_config_offline -u COMPOSER_DISABLE_NETWORK ${NODE} ${kitTool('install-tools')}`);
@@ -130,8 +125,8 @@ test('every recipe runs npm and Composer offline, and $(ONLINE) lifts it (HR-89)
 test('only explicit install targets download through $(ONLINE), and no check target downloads (HR-89)', (t) => {
   const directory = mkdtempSync(path.join(tmpdir(), 'hyper-downloads-'));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
-  // A worktree installs no tools, so its install-tools prints the refusal of kit K519; the main checkout downloads them.
-  if (!WORKTREE) assert.deepEqual(dryRun('install-tools').map((line) => line.trim()), [`${ONLINE}${NODE} ${kitTool('install-tools')}`]);
+  // Every checkout downloads its own tools (kit K858).
+  assert.deepEqual(dryRun('install-tools').map((line) => line.trim()), [`${ONLINE}${NODE} ${kitTool('install-tools')}`]);
   assert.deepEqual(dryRun('install-packages'), [`${ONLINE}${NPM} ci`]);
   assert.deepEqual(dryRun('hyper-install-browser'), [`${ONLINE}${NODE} node_modules/@playwright/test/cli.js install --with-deps chromium`]);
   const image = /^VIRTIOFS_IMAGE := (\S+)$/m.exec(readFileSync('Makefile', 'utf8'))?.[1];

@@ -40,10 +40,10 @@
     },
     {
       "paths": [
-        "tests/scripts/main-tools.mts"
+        "tests/scripts/checkout-tools.mts"
       ],
       "tests": [
-        "tests/scripts/main-tools.test.mts",
+        "tests/scripts/checkout-tools.test.mts",
         "tests/scripts/installed-kit.test.mts",
         "tests/scripts/composer-development.test.mts"
       ],
