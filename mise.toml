@@ -8,3 +8,6 @@ ruff = "0.17.3"
 "github:asamarts/alint" = "0.18.2"
 "pypi:vulture" = "2.16"
 "http:composer" = { version = "2.10.3", url = "https://getcomposer.org/download/{{ version }}/composer.phar", checksum = "sha256:7a2d379d5b8ffdaa028580ef26494c36d2feef4b178d3dd1473a4dbc5e17c8d6", bin = "composer" }
+# The PIE PHAR builds and installs the template extension from the Composer repository of the template release (H27.45); its
+# sha256 is that of the release asset pie.phar.
+"http:pie" = { version = "1.4.10", url = "https://github.com/php/pie/releases/download/{{version}}/pie.phar", checksum = "sha256:b88792235c8e80be568436d4cb043b49fd1869c89b64e83d23e2882ae19d70a8", bin = "pie" }

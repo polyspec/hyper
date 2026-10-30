@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: e45e4d29ef791b8bd95ad9f6bedf0472a29cd81a79188c4d6362f862b4fdda70 -->
+<!-- source-sha256: ed9d0f2c5db31faee0c3b3ccb1c7c876e7fbd0e347e350b287e2c45a420338c7 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- 고정한 release는 template 0.0.14이며, hyper는 그 release의 Composer repository인 packages.json에서 읽는다. composer.json과 examples/board/composer.json은 zip을 다시 적던 package repository 대신 그것을 선언하고, make hyper-install은 mise.toml의 PIE 1.4.10으로 그 네이티브 확장 polyspec/template-php-ext를 var/pie에서 build한다(make template-ext). 그래서 config/release-assets.json, release-assets-fetch와 scripts/build-template-ext.mts가 없어지고 make ext는 build된 library만 요구한다. 기본 Composer test는 지원 version을 packages/server/php/composer.json에서 읽는다. (H27.45)
 
 ## 0.0.21
 - 0.0.21을 릴리스한다. config/release.json의 모든 manifest가 0.0.21이며, ## Unreleased의 항목은 ## 0.0.21로 옮기고 그 위에 비어 있는 새 ## Unreleased를 둔다. (H27.29)

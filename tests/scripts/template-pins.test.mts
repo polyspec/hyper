@@ -1,6 +1,7 @@
 // Tests the template pins of this repository (HR-70, HR-80, H14.1-7): `make template-tag` fails for a template checkout
 // without the tag TEMPLATE_TAG; workspaces resolve the same installed template package, including a source link.
-// Composer release declarations name the PHP zip of the release with its sha1 and PHPStan reads the PHP library without an extension stub.
+// Composer release declarations name the Composer repository of the release, whose lock pins the PHP zip with its sha1, and
+// PHPStan reads the PHP library without an extension stub.
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -12,20 +13,12 @@ import { jsonObject, jsonObjects, jsonString, parseJsonObject } from '../../scri
 import { requireBuilt } from './requires.mts';
 
 const repository = resolve('.');
-/** An entry of config/release-assets.json. */
-interface Entry { name: string; version: string; url: string; directory: string }
-const ASSETS = 'config/release-assets.json';
-const entries = (): Entry[] => jsonObjects(parseJsonObject(readFileSync(join(repository, ASSETS), 'utf8'), ASSETS).assets, `${ASSETS} assets`).map((entry, index) => {
-  const field = (key: string): string => jsonString(entry[key], `${ASSETS} assets[${index}] ${key}`);
-  return { name: field('name'), version: field('version'), url: field('url'), directory: field('directory') };
-});
 // The JSON object of the file `file`.
 const readObject = (file: string) => parseJsonObject(readFileSync(file, 'utf8'), file);
-// The tag TEMPLATE_TAG of the Makefile, the tag of the version of the entry template-php-ext of config/release-assets.json,
-// the one declaration of the template release (HR-80, H23.11-2, H27.44).
+// The tag TEMPLATE_TAG of the Makefile, v$(TEMPLATE_VERSION), the one declaration of the template release (HR-80, H27.45).
 function templateTag(): string {
-  const version = entries().find(({ name }) => name === 'template-php-ext')?.version;
-  if (version === undefined) throw new Error('config/release-assets.json declares no entry template-php-ext');
+  const version = /^TEMPLATE_VERSION := (\d+\.\d+\.\d+)$/m.exec(readFileSync(join(repository, 'Makefile'), 'utf8'))?.[1];
+  if (version === undefined) throw new Error('the Makefile declares no TEMPLATE_VERSION := <version>');
   return `v${version}`;
 }
 const TAG = templateTag();
@@ -74,34 +67,29 @@ test('workspaces resolve the same installed template package through native sour
   }
 });
 
-test('Composer release declarations pin the PHP zip and PHPStan reads no extension stub', () => {
+test('Composer release declarations name the Composer repository of the release and PHPStan reads no extension stub', () => {
   const required = jsonObject(readObject('composer.json').require, 'composer.json require')['polyspec/template'];
   assert.ok(required !== undefined, 'composer.json requires no polyspec/template');
   const version = jsonString(required, 'composer.json require polyspec/template');
   assert.match(version, /^\d+\.\d+\.\d+$/, 'composer.json requires an exact template version');
-  // Both Composer projects declare one package repository whose dist is the php zip of the template release with its sha1, so
-  // Composer fetches it itself (H27.44). A package repository does not read the composer.json of the zip, so the package holds
-  // its metadata, and both manifests hold the same package.
-  const url = `https://github.com/polyspec/template/releases/download/v${version}/polyspec-template-php-${version}.zip`;
-  const packages = ['composer.json', 'examples/board/composer.json'].map((manifest) => {
+  // Both Composer projects declare the Composer repository of the template release, its packages.json, whose dist names the
+  // php zip of the release with its sha1; the lock records that dist, so Composer fetches and checks the zip itself (H27.45).
+  const release = `https://github.com/polyspec/template/releases/download/v${version}`;
+  const dists = ['composer.json', 'examples/board/composer.json'].map((manifest) => {
     const { repositories, require } = readObject(manifest);
     assert.equal(jsonObject(require, `${manifest} require`)['polyspec/template'], version, manifest);
     const declared = jsonObjects(repositories, `${manifest} repositories`).filter((item) => item.type !== 'path');
-    assert.deepEqual(declared.map(({ type }) => type), ['package'], `${manifest}: the template zip comes from one package repository`);
-    const pkg = jsonObject(declared[0]?.package, `${manifest} package`);
-    assert.equal(pkg.name, 'polyspec/template', manifest);
-    assert.equal(pkg.version, version, manifest);
-    const declaredDist = jsonObject(pkg.dist, `${manifest} package dist`);
-    assert.equal(declaredDist.type, 'zip', manifest);
-    assert.equal(declaredDist.url, url, manifest);
-    assert.match(jsonString(declaredDist.shasum, `${manifest} package dist shasum`), /^[0-9a-f]{40}$/, `${manifest}: the package pins the zip by its sha1`);
+    assert.deepEqual(declared, [{ type: 'composer', url: `${release}/packages.json` }], `${manifest}: the template comes from the Composer repository of the release`);
     const lockFile = manifest.replace(/\.json$/, '.lock');
     const entry = jsonObjects(readObject(lockFile).packages, `${lockFile} packages`).find(({ name }) => name === 'polyspec/template');
     assert.ok(entry !== undefined, `${manifest}: the lock has no polyspec/template`);
     assert.equal(entry.version, version, manifest);
-    assert.deepEqual(jsonObject(entry.dist, `${lockFile} polyspec/template dist`), declaredDist, `${manifest}: the lock pins the declared dist`);
-    return pkg;
+    const dist = jsonObject(entry.dist, `${lockFile} polyspec/template dist`);
+    assert.equal(dist.type, 'zip', lockFile);
+    assert.equal(dist.url, `${release}/polyspec-template-php-${version}.zip`, lockFile);
+    assert.match(jsonString(dist.shasum, `${lockFile} polyspec/template dist shasum`), /^[0-9a-f]{40}$/, `${lockFile}: the lock pins the zip by its sha1`);
+    return dist;
   });
-  assert.deepEqual(packages[1], packages[0], 'the two Composer projects declare different template packages');
+  assert.deepEqual(dists[1], dists[0], 'the two Composer locks pin different template zips');
   assert.doesNotMatch(readFileSync('packages/server/php/phpstan.neon', 'utf8'), /polyspec_template\.stub\.php/);
 });

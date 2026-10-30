@@ -52,6 +52,26 @@ url = "https://getcomposer.org/download/2.10.3/composer.phar"
 checksum = "sha256:7a2d379d5b8ffdaa028580ef26494c36d2feef4b178d3dd1473a4dbc5e17c8d6"
 url = "https://getcomposer.org/download/2.10.3/composer.phar"
 
+[[tools."http:pie"]]
+version = "1.4.10"
+backend = "http:pie"
+specifiers = ["1.4.10"]
+
+[tools."http:pie"."platforms.linux-arm64"]
+checksum = "sha256:b88792235c8e80be568436d4cb043b49fd1869c89b64e83d23e2882ae19d70a8"
+url = "https://github.com/php/pie/releases/download/1.4.10/pie.phar"
+
+[tools."http:pie"."platforms.linux-x64"]
+checksum = "sha256:b88792235c8e80be568436d4cb043b49fd1869c89b64e83d23e2882ae19d70a8"
+url = "https://github.com/php/pie/releases/download/1.4.10/pie.phar"
+
+[tools."http:pie"."platforms.macos-arm64"]
+checksum = "sha256:b88792235c8e80be568436d4cb043b49fd1869c89b64e83d23e2882ae19d70a8"
+url = "https://github.com/php/pie/releases/download/1.4.10/pie.phar"
+
+[tools."http:pie"."platforms.macos-x64"]
+checksum = "sha256:b88792235c8e80be568436d4cb043b49fd1869c89b64e83d23e2882ae19d70a8"
+url = "https://github.com/php/pie/releases/download/1.4.10/pie.phar"
 [[tools.node]]
 version = "26.12.0"
 backend = "core:node"

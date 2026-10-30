@@ -32,15 +32,16 @@ PYTHON_VENV := $(CURDIR)/$(PYTHON_PACKAGE)/.venv
 UV := $(KIT_TOOLS)/mise/shims/uv
 # The Python of that venv, which scripts/board-servers.mts starts the board Python server with.
 export HYPER_PYTHON := $(PYTHON_VENV)/bin/python
-# npm installs the template packages @polyspec/template and @polyspec/template-compiler from the tarballs of the template
-# release that package.json names (HR-70), and Composer installs polyspec/template from the php zip of the same release, which
-# the package repository of composer.json and examples/board/composer.json names with its sha1 (H23.11, H27.44).
-# config/release-assets.json pins the php-ext archive of that release with its sha256: make hyper-install fetches it with make
-# release-assets-fetch of kit (K140) and unpacks the native template extension (H14.1-7, H23.11-2).
-# The template repository of TEMPLATE_REPOSITORY supplies the tag checked before final verification (HR-80);
-# TEMPLATE_TAG is the tag of the version of the entry template-php-ext, its one declaration.
+# TEMPLATE_VERSION is the one declaration of the template release that hyper uses; every pin of the manifests and their locks
+# names it (H21.4). npm installs @polyspec/template and @polyspec/template-compiler from the tarballs of that release that
+# package.json names (HR-70). Composer installs polyspec/template from TEMPLATE_PACKAGES, the Composer repository of the
+# release (packages.json), which composer.json and examples/board/composer.json declare and whose dist carries the sha1 of the
+# php zip; PIE builds the native template extension polyspec/template-php-ext from the same repository (H27.45).
+# The template repository of TEMPLATE_REPOSITORY supplies the tag checked before final verification (HR-80).
+TEMPLATE_VERSION := 0.0.14
+TEMPLATE_TAG := v$(TEMPLATE_VERSION)
+TEMPLATE_PACKAGES := https://github.com/polyspec/template/releases/download/$(TEMPLATE_TAG)/packages.json
 TEMPLATE_REPOSITORY := ../template
-TEMPLATE_TAG = v$(shell $(NODE) $(KIT)/release-assets.$(KIT_EXT) version template-php-ext)
 FIXTURES := $(PHP_PACKAGE)/tests/fixtures
 # The Composer vendor directory of the private root composer.json, which installs packages/server/php for development.
 PHP_VENDOR := $(CURDIR)/vendor
@@ -55,8 +56,11 @@ ESBUILD := node_modules/esbuild/bin/esbuild
 # The PHP memory limit of PHPStan: a run without its result cache (build/phpstan) needs 132 MB in its worker, above
 # the default limit of 128M.
 PHPSTAN_MEMORY := 256M
-# The library that `make ext` builds from the unpacked php-ext asset, which `make hyper-install` fetches (H14.1-7).
+# The library of the native template extension that `make hyper-install` builds with PIE (H14.1-7, H27.45); PIE_WORK is the
+# working directory of PIE, which holds the package that it fetched and its build.
 EXT := build/ext/polyspec_template.so
+PIE := $(KIT_TOOLS)/mise/shims/pie
+PIE_WORK := $(CURDIR)/var/pie
 
 # The toolchain (HR-81, install-tools of @polyspec/kit): npm and Composer of the main checkout ($(KIT_TOOLS) of kit.mk, which a
 # linked worktree runs, kit K519), which `make install-tools` installs into its var/tools, come first on PATH for every recipe
@@ -97,7 +101,7 @@ hyper-install: install-kit ## Install the pinned tools, fetch the archives of th
 
 .PHONY: hyper-install-php node-toolchain-check php-toolchain-check python-toolchain-check
 hyper-install-php: php-toolchain-check ## Install only the locked root and board Composer projects and their pinned PHP archives
-	$(MAKE) --no-print-directory release-assets-fetch
+	$(MAKE) --no-print-directory template-ext
 	$(ONLINE) $(NODE) $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(COMPOSER_BIN) install --no-interaction
 	$(ONLINE) $(NODE) $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(COMPOSER_BIN) install --no-interaction --working-dir=$(BOARD)
 
@@ -159,11 +163,21 @@ template-tag: ## Fail when the template repository TEMPLATE_REPOSITORY has no ta
 	  echo "template-tag: fetch the tags of the template repository with git -C $(TEMPLATE_REPOSITORY) fetch --tags" >&2; \
 	  exit 1; }
 
-# The build (scripts/build-template-ext.mts) runs phpize, configure and make of the unpacked asset with the php-config of PATH in
-# a temporary directory, builds again only when the sources or the PHP build changed, and publishes the library with a
-# rename (HR-82). It runs offline: `make hyper-install` fetched the asset.
-ext: php-toolchain-check ## Build the native template extension from the unpacked php-ext asset with phpize of the PHP of PATH into build/ext (HY-48, H14.1-7)
-	$(NODE) scripts/build-template-ext.mts $(CURDIR)/$(EXT)
+# PIE resolves polyspec/template-php-ext TEMPLATE_VERSION in the Composer repository TEMPLATE_PACKAGES, which checks the sha1 of
+# its zip, and builds it with phpize and the php-config of the PHP of PATH into the vendor directory of PIE_WORK: the folder
+# of the package, its build-path src and the modules folder of phpize. The library is published into build/ext with a rename
+# (scripts/publish.mts, HR-82). `pie build` installs nothing into the PHP; the checks load the library with -d extension.
+.PHONY: template-ext
+template-ext: php-toolchain-check ## Build the native template extension of TEMPLATE_TAG with PIE from the Composer repository of the template release into build/ext (H27.45); ONLINE
+	PIE_WORKING_DIRECTORY=$(PIE_WORK) $(ONLINE) $(PIE) repository:add composer $(TEMPLATE_PACKAGES) --no-interaction
+	PIE_WORKING_DIRECTORY=$(PIE_WORK) $(ONLINE) $(PIE) build polyspec/template-php-ext:$(TEMPLATE_VERSION) --no-interaction
+	@set -- $(PIE_WORK)/*/vendor/polyspec/template-php-ext/src/modules/polyspec_template.so; \
+	  test $$# -eq 1 && test -f "$$1" || { echo "template-ext: expected one library polyspec_template.so of PIE in $(PIE_WORK), found: $$*" >&2; exit 1; }; \
+	  mkdir -p build/ext.next-$$$$ && cp "$$1" build/ext.next-$$$$/polyspec_template.so && $(NODE) scripts/publish.mts directory build/ext.next-$$$$ build/ext
+
+# The checks load the library that `make hyper-install` built with PIE (template-ext); they run offline and build nothing.
+ext: ## Fail unless the native template extension of make template-ext is in build/ext (HY-48, H14.1-7, H27.45)
+	@test -f $(EXT) || { echo "ext: $(EXT) does not exist; run make hyper-install, which builds it with PIE (make template-ext)" >&2; exit 1; }
 
 packages: node-toolchain-check ## Build the JavaScript modules and type declarations of the npm packages into their dist directories; npm links the workspaces (HR-61, HR-79, HR-96)
 	cd $(JS_PACKAGE) && $(NPM) run --silent build -- --outDir dist.next-$$$$ && $(NODE) $(CURDIR)/scripts/publish.mts directory dist.next-$$$$ dist

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "fc0ba67c73390803b7aa7a68d03c5295",
+    "content-hash": "6d49b61b55faad295798332d1ebc6c8c",
     "packages": [
         {
             "name": "opis/json-schema",
@@ -202,11 +202,11 @@
             "dist": {
                 "type": "path",
                 "url": "../../packages/server/php",
-                "reference": "d3a9b324259e8e40c432530a1d89b97dbfce965f"
+                "reference": "0e95a6e4bd529eacd6208aef5f6f4e416d3f463a"
             },
             "require": {
                 "php": ">=8.4",
-                "polyspec/template": "0.0.13"
+                "polyspec/template": "0.0.14"
             },
             "require-dev": {
                 "laravel/pint": "^1.32.1",
@@ -243,21 +243,30 @@
         },
         {
             "name": "polyspec/template",
-            "version": "0.0.13",
+            "version": "0.0.14",
             "dist": {
                 "type": "zip",
-                "url": "https://github.com/polyspec/template/releases/download/v0.0.13/polyspec-template-php-0.0.13.zip",
-                "shasum": "0b803ca719042a61c543c22c572b44d66ce5d639"
+                "url": "https://github.com/polyspec/template/releases/download/v0.0.14/polyspec-template-php-0.0.14.zip",
+                "shasum": "fc1993089cdba9667caccd77c7feb660e4574227"
             },
             "require": {
                 "ext-mbstring": "*",
                 "opis/json-schema": "^2.6",
                 "php": ">=8.4"
             },
+            "require-dev": {
+                "laravel/pint": "^1.0",
+                "phpunit/phpunit": "^13.4"
+            },
             "type": "library",
             "autoload": {
                 "psr-4": {
                     "Polyspec\\Template\\": "src/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Polyspec\\Template\\Tests\\": "tests/"
                 }
             },
             "license": [

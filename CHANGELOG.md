@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- Template 0.0.14 is the pinned release, and hyper reads it from the Composer repository of the release, its packages.json: composer.json and examples/board/composer.json declare it in place of the package repository that restated the zip, and make hyper-install builds the native extension polyspec/template-php-ext of it with PIE 1.4.10 of mise.toml (make template-ext) in var/pie, so config/release-assets.json, release-assets-fetch and scripts/build-template-ext.mts are gone and make ext only requires the built library; the native Composer test reads the supported version from packages/server/php/composer.json. (H27.45)
 
 ## 0.0.21
 - Release 0.0.21: every manifest of config/release.json holds 0.0.21, and the entries of ## Unreleased move into ## 0.0.21, with a new empty ## Unreleased above it. (H27.29)

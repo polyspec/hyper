@@ -58,7 +58,7 @@
       "tests": [
         "tests/scripts/toolchain.test.mts",
         "tests/scripts/ci-workflow.test.mts",
-        "tests/scripts/release-assets.test.mts",
+        "tests/scripts/template-ext.test.mts",
         "tests/scripts/public-symbols.test.mts"
       ],
       "targets": [
@@ -421,15 +421,13 @@
     },
     {
       "paths": [
-        "scripts/build-template-ext.mts",
-        "config/release-assets.json"
+        "mise.toml"
       ],
       "targets": [
-        "ext",
-        "typecheck"
+        "ext"
       ],
       "tests": [
-        "tests/scripts/release-assets.test.mts"
+        "tests/scripts/template-ext.test.mts"
       ]
     },
     {
@@ -542,7 +540,7 @@
         "tests/scripts/template-pins.test.mts",
         "tests/scripts/check-recipes.test.mts",
         "tests/scripts/ci-workflow.test.mts",
-        "tests/scripts/release-assets.test.mts"
+        "tests/scripts/template-ext.test.mts"
       ]
     },
     {
@@ -652,7 +650,6 @@
         "composer.lock",
         "examples/board/composer.json",
         "examples/board/composer.lock",
-        "config/release-assets.json",
         ".github/workflows/*.yml",
         "packages/**/{package.json,composer.json,pyproject.toml}",
         "tests/package-install/package.json",

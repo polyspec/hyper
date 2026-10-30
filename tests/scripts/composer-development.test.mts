@@ -5,7 +5,7 @@ import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } f
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { test } from 'node:test';
-import { jsonObjects, jsonString, parseJsonObject } from '../../scripts/json.mts';
+import { jsonObject, jsonObjects, jsonString, parseJsonObject } from '../../scripts/json.mts';
 import { mainTools } from './main-tools.mts';
 
 const root = resolve('.');
@@ -25,7 +25,11 @@ test('make preserves the native COMPOSER manifest selector', (t) => {
 });
 
 test('native Composer accepts the supported provider versions and refuses an unverified one', (t) => {
-  for (const version of ['0.0.12', '0.0.13', '0.0.14']) {
+  // The template version that the PHP library requires; its neighbours are refused.
+  const supported = jsonString(jsonObject(object('packages/server/php/composer.json').require, 'server require')['polyspec/template'], 'server require polyspec/template');
+  const [major, minor, patch] = supported.split('.').map(Number);
+  assert.ok(major !== undefined && minor !== undefined && patch !== undefined && patch > 0, supported);
+  for (const version of [`${major}.${minor}.${patch - 1}`, supported, `${major}.${minor}.${patch + 1}`]) {
     const directory = mkdtempSync(join(tmpdir(), 'hyper-composer-constraint-'));
     t.after(() => rmSync(directory, { recursive: true, force: true }));
     mkdirSync(join(directory, 'server'));
@@ -39,11 +43,11 @@ test('native Composer accepts the supported provider versions and refuses an unv
       config: { platform: { php: '8.4.1' } },
     }));
     const result = spawnSync(composer, ['update', '--no-install', '--no-scripts', '--no-plugins', '--no-interaction', '--no-audit'], { cwd: directory, encoding: 'utf8', env: { ...process.env, COMPOSER: 'composer.json', COMPOSER_DISABLE_NETWORK: '1' } });
-    if (version !== '0.0.13') {
+    if (version !== supported) {
       assert.notEqual(result.status, 0, result.stdout + result.stderr);
       assert.match(result.stderr, /polyspec\/template/);
       assert.ok(result.stderr.includes(version), result.stderr);
-      assert.match(result.stderr, /0\.0\.13/);
+      assert.ok(result.stderr.includes(supported), result.stderr);
     } else {
       assert.equal(result.status, 0, `${version}: ${result.stdout}${result.stderr}`);
       const packages = jsonObjects(object(join(directory, 'composer.lock')).packages, 'resolved packages');

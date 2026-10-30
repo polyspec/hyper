@@ -82,10 +82,6 @@
       "kind": "ecosystem",
       "tool": "node:child_process starts the servers of a run and node:fs and node:os give each run its temporary directory (HR-87, HR-89)"
     },
-    "scripts/build-template-ext.mts": {
-      "kind": "ecosystem",
-      "tool": "phpize, configure and make build the native template extension from the php-ext archive of the template release"
-    },
     "scripts/build-templates.mts": {
       "kind": "ecosystem",
       "tool": "@polyspec/template parses the templates, through writeTemplateFiles of packages/build/lib/template-files.mjs"
