@@ -1,6 +1,6 @@
-// Tests the native template extension (H14.1-7, H27.45): the pie-build of kit (K915) builds polyspec/template-php-ext of the
-// template release with PIE from the Composer repository of that release (packages.json), whose dist carries the sha1 of the
-// php-ext zip, so hyper pins no release archive of its own and builds no copy of the template repository.
+// Tests the native template extension (H14.1-7, H27.45, H27.51): the recipe of template-ext builds polyspec/template-php-ext of
+// the template release with PIE from the Composer repository of that release (packages.json), whose dist carries the sha1 of
+// the php-ext zip, so hyper pins no release archive of its own and builds no copy of the template repository.
 // `make hyper-install` runs `make template-ext` under $(ONLINE); `make ext` of the checks only requires the built library and runs offline.
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -19,20 +19,28 @@ const variable = (name: string): string => {
   return value;
 };
 
-test('make template-ext builds polyspec/template-php-ext of TEMPLATE_VERSION with the pie-build of kit from the Composer repository of the release (H27.45, kit K915)', () => {
+test('make template-ext builds polyspec/template-php-ext of TEMPLATE_VERSION with PIE in an empty folder from the Composer repository of the release (H27.45, H27.51)', () => {
   const version = variable('TEMPLATE_VERSION');
   const lines = dryRun('template-ext');
+  const text = lines.join('\n');
   const packages = `https://github.com/polyspec/template/releases/download/v${version}/packages.json`;
-  // pie-build of kit builds in an empty var/pie/<vendor/name> with the http:pie that make install-tools TOOLS=pie installed, so
-  // the recipe names no working directory of PIE, installs no tool and runs PIE only through it.
-  const build = lines.filter((line) => line.includes('/pie-build.'));
-  assert.equal(build.length, 1, lines.join('\n'));
-  assert.match(build[0] ?? '', new RegExp(`env -u npm_config_offline -u COMPOSER_DISABLE_NETWORK \\S+ \\S+/pie-build\\.m?[jt]s ${packages.replaceAll('.', '\\.')} polyspec/template-php-ext ${version.replaceAll('.', '\\.')}\\)`));
-  assert.deepEqual(lines.filter((line) => /mise install|PIE_WORKING_DIRECTORY|var\/pie|\/mise\/shims\/pie\b/.test(line)), [], lines.join('\n'));
-  // The recipe fails with the status of pie-build, takes the library from its line binary <path> and publishes only a file.
-  assert.match(build[0] ?? '', /\) \|\| exit \$\?; \\$/, 'a failed pie-build does not end the recipe with its status');
-  assert.match(lines.join('\n'), /sed -n 's\/\^binary \/\/p'/, 'the recipe takes the library from the line binary <path> of pie-build');
-  assert.match(lines.join('\n'), /test -n "\$binary" && test -f "\$binary" \|\| \{[^}]*exit 1; \}; \\\n\s*mkdir -p build\/ext\.next-/, 'the recipe publishes the library only when pie-build named a file');
+  const escape = (value: string) => value.replaceAll(/[.*+?^${}()|[\]\\/]/g, '\\$&');
+  const work = `${ROOT}/var/pie/polyspec/template-php-ext`;
+  // PIE keeps one Composer project per target PHP in its working directory and never undoes repository:add, so each run
+  // starts in an empty folder of the package and names it as PIE_WORKING_DIRECTORY of both PIE commands.
+  assert.match(text, new RegExp(`rm -rf ${escape(work)} && mkdir -p ${escape(work)}`), text);
+  const pie = lines.filter((line) => /\/mise\/shims\/pie /.test(line));
+  assert.equal(pie.length, 2, text);
+  for (const line of pie) {
+    assert.match(line, new RegExp(`^env -u npm_config_offline -u COMPOSER_DISABLE_NETWORK env PIE_WORKING_DIRECTORY=${escape(work)} \\S+/var/tools/mise/shims/pie `), line);
+    assert.match(line, / --no-interaction$/, line);
+  }
+  assert.match(pie[0] ?? '', new RegExp(` repository:add composer ${escape(packages)} --no-interaction$`));
+  assert.match(pie[1] ?? '', new RegExp(` build polyspec/template-php-ext:${escape(version)} --no-interaction$`));
+  // pie install writes into the PHP of the machine, and kit has no pie-build any more (kit K931).
+  assert.deepEqual(lines.filter((line) => /\/pie-build\.|\bpie install\b|mise install/.test(line)), [], text);
+  // The recipe takes the one library that PIE recorded with scripts/pie-binary.mts, fails with its status and publishes a file.
+  assert.match(text, new RegExp(`binary=\\$\\(\\S+ scripts/pie-binary\\.mts ${escape(work)} polyspec/template-php-ext\\) \\|\\| exit \\$\\?; \\\\\n\\s*mkdir -p build/ext\\.next-`), text);
 });
 
 test('make hyper-install builds the extension through make template-ext once (H27.45)', () => {

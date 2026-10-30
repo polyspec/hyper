@@ -460,7 +460,7 @@ test('H27.26 provider gate setup declares every native runtime and full parity c
   const text = JSON.stringify(setup);
   assert.ok(text.includes('hyper-install-php') && text.includes('hyper-install-python') && text.includes('server-fixtures') && text.includes('node-fixtures'));
   assert.doesNotMatch(text, /"(?:install|install-kit|parity-check|kit-gates)"/);
-  // hyper-install-php runs template-ext, whose pie-build of kit runs the http:pie of mise.toml (kit K915); the pipeline installs
+  // hyper-install-php runs template-ext, whose recipe runs the http:pie of mise.toml (H27.51); the pipeline installs
   // the tools of the php runtime there and, since kit adds the tools of every runtime to the parity phase, in parity too.
   const tools = ci.tools;
   assert.ok(typeof tools === 'object' && tools !== null && !Array.isArray(tools));

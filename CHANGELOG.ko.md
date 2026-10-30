@@ -1,5 +1,5 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 35cda3c81a2fe27a6607484b1dab613dfcc7b4da74250531ebe9b6fd985d2f5f -->
+<!-- source-sha256: 9cb58a1c8c41ed5f59a91e56cf6a3b2fe0becb6e6ce8500adf6a9f7906ba509d -->
 # 변경 기록
 
 [English](CHANGELOG.md).
@@ -7,6 +7,7 @@
 ## Unreleased
 - Hyper 0.0.22를 CI 41039924973과 gates 41039924928을 거쳐 51d8cbb에서 릴리스했다. 릴리스 실행 41041100350이 asset 여섯 개를 게시했고, 릴리스는 template 0.0.15와 Kit 0.0.78을 담는다. (H27.48)
 - Kit 0.0.79가 pin한 release다(H27.49). `.github/workflows/ci.yml`의 job `kit`이 kit-sync가 지운 gates workflow 대신 복사하는 `.github/workflows/ci-pipeline.yml`을 호출하므로, CI 실행 하나가 kit의 gate와 hyper의 검사를 담고 `ci-passed`는 `kit`을 기다린다. `config/release.json`은 `checks`를 선언하지 않으며, 릴리스는 `gh workflow run release.yml -f run=<id> -f version=X.Y.Z`이고 그 `make release-tag`가 그 CI 실행의 commit에 `vX.Y.Z`를 만들어 push한다. `make template-ext`는 kit의 pie-build 도구로 빈 `var/pie/polyspec/template-php-ext`에서 네이티브 template 확장을 build하고(K915), `make hyper-install-php`를 실행하는 CI 항목과 pipeline phase는 `make install-tools`로 `pie`를 설치한다.
+- `make template-ext`가 자기 recipe에서 PIE를 실행한다. `var/pie/polyspec/template-php-ext`를 비우고, 그 폴더를 `PIE_WORKING_DIRECTORY`로 하고 `--no-interaction`을 붙여 template release의 Composer repository의 `pie repository:add composer`와 `pie build polyspec/template-php-ext:TEMPLATE_VERSION`을 실행하며, `scripts/pie-binary.mts`가 그 `installed.json`에서 package에 기록된 library 하나를 찾으면 게시하고, PIE가 하나도 기록하지 않았거나 둘 이상 기록했으면 실패한다. kit 0.0.81이 제거하는(K931) kit의 pie-build 도구는 더 이상 실행하지 않는다(H27.51).
 
 ## 0.0.22
 - Kit 0.0.78이 pin한 release다(H27.48-1). 설치된 kit의 make link는 Claude Code hook을 쓰지 않으므로(K916), 설치된 kit에 자신의 var/tools node가 없고 `.links`가 provider를 적지 않는 CI에서 package-check의 `make link PROJECT=tests/package-install`이 통과한다.

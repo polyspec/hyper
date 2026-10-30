@@ -405,6 +405,18 @@
     },
     {
       "paths": [
+        "scripts/pie-binary.mts"
+      ],
+      "targets": [
+        "typecheck"
+      ],
+      "tests": [
+        "tests/scripts/pie-binary.test.mts",
+        "tests/scripts/template-ext.test.mts"
+      ]
+    },
+    {
+      "paths": [
         "scripts/publish.mts",
         "packages/build/lib/publish.mjs",
         "scripts/tracked-files.mts"

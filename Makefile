@@ -56,7 +56,7 @@ ESBUILD := node_modules/esbuild/bin/esbuild
 # The PHP memory limit of PHPStan: a run without its result cache (build/phpstan) needs 132 MB in its worker, above
 # the default limit of 128M.
 PHPSTAN_MEMORY := 256M
-# The library of the native template extension that `make hyper-install` builds with PIE (H14.1-7, H27.45, kit K915).
+# The library of the native template extension that `make hyper-install` builds with PIE (H14.1-7, H27.45, H27.51).
 EXT := build/ext/polyspec_template.so
 
 # The toolchain (HR-81, install-tools of @polyspec/kit): npm and Composer of the checkout ($(KIT_TOOLS) of kit.mk, its own var/tools in a
@@ -151,17 +151,20 @@ template-tag: ## Fail when the template repository TEMPLATE_REPOSITORY has no ta
 	  echo "template-tag: fetch the tags of the template repository with git -C $(TEMPLATE_REPOSITORY) fetch --tags" >&2; \
 	  exit 1; }
 
-# The pie-build tool of kit (make pie-build, K915), which the recipe runs as kit.mk runs it, so that make -n prints it and runs
-# no recursive make, resolves polyspec/template-php-ext TEMPLATE_VERSION in the Composer repository TEMPLATE_PACKAGES, which
-# checks the sha1 of its zip, builds it with phpize and the php-config of the PHP of PATH in an empty var/pie, logs PIE on
-# stderr when each PIE command ends and prints the line `binary <path>` of the library that PIE recorded. The library is published into build/ext with a
-# rename (scripts/publish.mts, HR-82). `pie build` installs nothing into the PHP; the checks load the library with
-# -d extension. PIE is the http:pie of mise.toml, which `make install-tools TOOLS=pie` installs.
+# PIE resolves polyspec/template-php-ext TEMPLATE_VERSION in the Composer repository TEMPLATE_PACKAGES, which checks the sha1
+# of its zip, and builds it with phpize and the php-config of the PHP of PATH (H27.51). PIE keeps one Composer project per
+# target PHP in PIE_WORKING_DIRECTORY and never undoes repository:add, so each run starts in an empty PIE_WORK.
+# scripts/pie-binary.mts prints the one library that PIE recorded there, which is published into build/ext with a rename
+# (scripts/publish.mts, HR-82). `pie build` installs nothing into the PHP; the checks load the library with -d extension.
+# PIE is the http:pie of mise.toml, which `make install-tools TOOLS=pie` installs.
+PIE := $(KIT_TOOLS)/mise/shims/pie
+PIE_WORK := $(CURDIR)/var/pie/polyspec/template-php-ext
 .PHONY: template-ext
-template-ext: ## Build the native template extension of TEMPLATE_TAG with PIE from the Composer repository of the template release into build/ext (H27.45, kit K915); ONLINE
-	@built=$$($(ONLINE) $(NODE) $(KIT)/pie-build.$(KIT_EXT) $(TEMPLATE_PACKAGES) polyspec/template-php-ext $(TEMPLATE_VERSION)) || exit $$?; \
-	  binary=$$(printf '%s\n' "$$built" | sed -n 's/^binary //p'); \
-	  test -n "$$binary" && test -f "$$binary" || { echo "template-ext: pie-build named no library: $$built" >&2; exit 1; }; \
+template-ext: ## Build the native template extension of TEMPLATE_TAG with PIE from the Composer repository of the template release into build/ext (H27.45, H27.51); ONLINE
+	rm -rf $(PIE_WORK) && mkdir -p $(PIE_WORK)
+	$(ONLINE) env PIE_WORKING_DIRECTORY=$(PIE_WORK) $(PIE) repository:add composer $(TEMPLATE_PACKAGES) --no-interaction
+	$(ONLINE) env PIE_WORKING_DIRECTORY=$(PIE_WORK) $(PIE) build polyspec/template-php-ext:$(TEMPLATE_VERSION) --no-interaction
+	@binary=$$($(NODE) scripts/pie-binary.mts $(PIE_WORK) polyspec/template-php-ext) || exit $$?; \
 	  mkdir -p build/ext.next-$$$$ && cp "$$binary" build/ext.next-$$$$/polyspec_template.so && $(NODE) scripts/publish.mts directory build/ext.next-$$$$ build/ext
 
 # The checks load the library that `make hyper-install` built with PIE (template-ext); they run offline and build nothing.
