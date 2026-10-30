@@ -1,5 +1,5 @@
 <!-- doc-id: plan-execution -->
-<!-- source-sha256: fdcc9da50a69625c5b89475c7d7ba82816366d1e2f30a73f0bc784d4c0d55509 -->
+<!-- source-sha256: d6a5ee23c08ff62f65761d63e5607f63fc86ae2dd993b7e06fae2544db197df3 -->
 # 실행
 
 [English](plan.md).
@@ -125,3 +125,5 @@ H27.25는 native package manager와 공유 선택 도구 인터페이스를 사�
 H27.26은 모든 runtime test가 provider runner를 사용할 때까지 0.0.21 후보를 공개하지 않는다. Python은 지원되는 Kit 인터페이스를 사용하고 자체 unittest harness를 제거했다. `make e2e`는 `scripts/run-e2e.mts`로 실행의 서버를 띄우고 모든 browser 사례를 Kit test runner의 Playwright 실행(K747)으로 돌리며, 이 실행은 사례마다 자체 timeout과 결과를 보고한다. 로컬에서는 `CASES=<pattern>`으로 사례를 선택한다. 개발 중에는 릴리즈 tag를 만들지 않는다. H27.26은 Verification에서 `make release-consumer TAG=v0.0.21`이 빠진 뒤 e42ac3c에서 잘못 [o]로 닫혔다. runner 작업은 끝났고, 릴리스 부분은 H27.29로 옮긴다. kit이 release-consumer와 그 consumer lock을 삭제하고 consumer는 release된 archive를 자기 package manager로 검증하므로, `make release-consumer`는 H27.29의 Verification에서 빠진다. `make release-candidate-assets VERSION=0.0.21`은 76264f9e3baf에서 0.0.21의 archive 다섯 개를 만들었다. kit이 version 검사를 삭제하므로 `make release-versions`는 H27.29의 Verification에서 빠진다.
 
 고정된 0.0.65(H27.27)는 깨끗한 checkout의 bootstrap과 runtime 범위를 제한한 native link에 대한 0.0.63의 수정을 유지하고, H27.26에 필요한 공유 test runner의 Playwright 실행(K747)을 포함하며, rules check가 gates matrix의 모든 runtime에 닿게 한다(K757). 개발 중에는 0.0.21 후보의 릴리즈 tag를 만들지 않는다.
+
+릴리스 0.0.21(H27.46)은 CI 40983016356과 gates 40983016346을 거쳐 b95d425에서 공개되었고, 릴리스 실행은 40983816897이다. `@polyspec/hyper-client`, `@polyspec/hyper-server`, `@polyspec/hyper-build`의 npm tarball, `polyspec/hyper-server`의 zip, `polyspec-hyper-server`의 wheel과 packages.json(kit K871)을 담는다. template 0.0.14를 그 release의 Composer repository에서 읽고 네이티브 확장을 PIE로 build한다(H27.45). 그 앞의 두 실행은 CI에서 실패했다. dfa6f79는 어떤 TOOLS 목록도 http:pie를 이름 붙일 수 없어 PIE shim을 찾지 못했고(H27.45-1, polyspec/kit#22), dc0b6d0는 GNU make가 출력하지 않는 slash로 재귀 make를 찾았다(H27.45-2). Kit 0.0.75의 무결성을 잠갔으며(H27.47-1), H27.47은 K850-K870을 완성하는 Kit release를 기다린다.
