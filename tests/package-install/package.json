@@ -10,7 +10,7 @@
   "dependencies": {
     "@polyspec/hyper-client": "file:../../packages/client",
     "@polyspec/hyper-server": "file:../../packages/server/ts",
-    "@polyspec/template": "https://github.com/polyspec/template/releases/download/v0.0.14/polyspec-template-npm-0.0.14.tgz"
+    "@polyspec/template": "https://github.com/polyspec/template/releases/download/v0.0.15/polyspec-template-npm-0.0.15.tgz"
   },
   "overrides": {
     "@polyspec/template": "$@polyspec/template"

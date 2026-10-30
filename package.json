@@ -29,8 +29,8 @@
     "fsevents@2.3.3": true
   },
   "dependencies": {
-    "@polyspec/template": "https://github.com/polyspec/template/releases/download/v0.0.14/polyspec-template-npm-0.0.14.tgz",
-    "@polyspec/template-compiler": "https://github.com/polyspec/template/releases/download/v0.0.14/polyspec-template-compiler-npm-0.0.14.tgz"
+    "@polyspec/template": "https://github.com/polyspec/template/releases/download/v0.0.15/polyspec-template-npm-0.0.15.tgz",
+    "@polyspec/template-compiler": "https://github.com/polyspec/template/releases/download/v0.0.15/polyspec-template-compiler-npm-0.0.15.tgz"
   },
   "overrides": {
     "@polyspec/template": "$@polyspec/template",

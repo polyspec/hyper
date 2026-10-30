@@ -29,8 +29,11 @@ test('make template-ext builds polyspec/template-php-ext of TEMPLATE_VERSION wit
   // TOOLS of its matrix and install-tools of kit has no pie selector (H27.45-1).
   const install = lines.findIndex((line) => /^env -u npm_config_offline -u COMPOSER_DISABLE_NETWORK \S+\/var\/tools\/bin\/mise install --locked http:pie$/.test(line));
   assert.ok(install >= 0 && install < lines.indexOf(pie[0] ?? ''), lines.join('\n'));
-  assert.match(pie[0] ?? '', new RegExp(`^PIE_WORKING_DIRECTORY=\\S+/var/pie env -u npm_config_offline -u COMPOSER_DISABLE_NETWORK \\S+ repository:add composer ${packages.replaceAll('.', '\\.')} --no-interaction$`));
-  assert.match(pie[1] ?? '', new RegExp(`^PIE_WORKING_DIRECTORY=\\S+/var/pie env -u npm_config_offline -u COMPOSER_DISABLE_NETWORK \\S+ build polyspec/template-php-ext:${version.replaceAll('.', '\\.')} --no-interaction$`));
+  // PIE keeps the repositories that it adds in its working directory, and Composer takes a package from the first repository
+  // that has it, so the repository of an earlier release would hide TEMPLATE_VERSION: each release has its own directory.
+  const work = `/var/pie/${version.replaceAll('.', '\\.')}`;
+  assert.match(pie[0] ?? '', new RegExp(`^PIE_WORKING_DIRECTORY=\\S+${work} env -u npm_config_offline -u COMPOSER_DISABLE_NETWORK \\S+ repository:add composer ${packages.replaceAll('.', '\\.')} --no-interaction$`));
+  assert.match(pie[1] ?? '', new RegExp(`^PIE_WORKING_DIRECTORY=\\S+${work} env -u npm_config_offline -u COMPOSER_DISABLE_NETWORK \\S+ build polyspec/template-php-ext:${version.replaceAll('.', '\\.')} --no-interaction$`));
   assert.deepEqual(lines.filter((line) => /\/mise\/shims\/pie install\b/.test(line)), [], 'pie install would install the library into the PHP of the machine');
 });
 

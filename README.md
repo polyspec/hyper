@@ -36,7 +36,7 @@ Pages and regions contain no `hx-*` attributes. Links and forms are plain HTML a
 
 ## Start
 
-npm installs the template packages `@polyspec/template` and `@polyspec/template-compiler` from the tarballs of the template release v0.0.14 as `package.json` and its lock pin them, and Composer installs `polyspec/template` from the Composer repository of that release, its `packages.json`, whose dist names the zip `polyspec-template-php-0.0.14.zip` with its sha1 that `composer.lock` records (HR-70, H27.45). `make hyper-install` builds the native extension, the package `polyspec/template-php-ext` of the same Composer repository, with PIE (`make template-ext`) in `var/pie` and publishes the library to `build/ext/polyspec_template.so`; `make ext` only requires that library (H14.1-7).
+npm installs the template packages `@polyspec/template` and `@polyspec/template-compiler` from the tarballs of the template release v0.0.15 as `package.json` and its lock pin them, and Composer installs `polyspec/template` from the Composer repository of that release, its `packages.json`, whose dist names the zip `polyspec-template-php-0.0.15.zip` with its sha1 that `composer.lock` records (HR-70, H27.45). `make hyper-install` builds the native extension, the package `polyspec/template-php-ext` of the same Composer repository, with PIE (`make template-ext`) in `var/pie` and publishes the library to `build/ext/polyspec_template.so`; `make ext` only requires that library (H14.1-7).
 
 ```sh
 make hyper-install

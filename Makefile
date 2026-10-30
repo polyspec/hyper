@@ -38,7 +38,7 @@ export HYPER_PYTHON := $(PYTHON_VENV)/bin/python
 # release (packages.json), which composer.json and examples/board/composer.json declare and whose dist carries the sha1 of the
 # php zip; PIE builds the native template extension polyspec/template-php-ext from the same repository (H27.45).
 # The template repository of TEMPLATE_REPOSITORY supplies the tag checked before final verification (HR-80).
-TEMPLATE_VERSION := 0.0.14
+TEMPLATE_VERSION := 0.0.15
 TEMPLATE_TAG := v$(TEMPLATE_VERSION)
 TEMPLATE_PACKAGES := https://github.com/polyspec/template/releases/download/$(TEMPLATE_TAG)/packages.json
 TEMPLATE_REPOSITORY := ../template
@@ -57,10 +57,12 @@ ESBUILD := node_modules/esbuild/bin/esbuild
 # the default limit of 128M.
 PHPSTAN_MEMORY := 256M
 # The library of the native template extension that `make hyper-install` builds with PIE (H14.1-7, H27.45); PIE_WORK is the
-# working directory of PIE, which holds the package that it fetched and its build.
+# working directory of PIE, which holds the repositories that it added, the package that it fetched and its build. Composer
+# takes a package from the first repository that has it, so each template release has its own directory, and the repository
+# of an earlier release does not hide TEMPLATE_VERSION.
 EXT := build/ext/polyspec_template.so
 PIE := $(KIT_TOOLS)/mise/shims/pie
-PIE_WORK := $(CURDIR)/var/pie
+PIE_WORK := $(CURDIR)/var/pie/$(TEMPLATE_VERSION)
 
 # The toolchain (HR-81, install-tools of @polyspec/kit): npm and Composer of the checkout ($(KIT_TOOLS) of kit.mk, its own var/tools in a
 # linked worktree too, kit K858), which `make install-tools` installs into its var/tools, come first on PATH for every recipe

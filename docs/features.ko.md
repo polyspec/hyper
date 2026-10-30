@@ -1,5 +1,5 @@
 <!-- doc-id: features -->
-<!-- source-sha256: bf26f27ddd9984baab37cc3bf3f83844d781f5feb5e79716841425224009b4d0 -->
+<!-- source-sha256: 4d5d6b8134e5c971a4181f8a7e2d5a3cf62414d3787da2dfaaead58a426a8018 -->
 # 기능 상태
 
 [English](features.md).
@@ -54,7 +54,7 @@
 | server-build-inputs | board 서버 빌드는 설치된 소스 의존성을 사용하며 Composer 설치는 명시적인 작업으로 유지한다(HR-79) | implemented | `tests/scripts/check-recipes.test.mts`, `make server` |
 | output-files | asset build와 server build는 복사한 출력 파일에 어떤 umask에서도 mode 0644를, 디렉터리에 0755를 주어 다른 사용자가 읽을 수 있게 하며, Linux container의 virtiofs bind mount는 이를 받아들인다(HR-68) | implemented | `make hyper-test-scripts`, Darwin에서 `make virtiofs-check` |
 | template-dir | asset build, template build, server build는 npm이 template release의 tarball에서 설치하는 template package `@polyspec/template`과 `@polyspec/template-compiler`를 package 이름으로 읽고, Composer는 `polyspec/template`을 template release의 zip에서 설치하며, 공개 manifest는 정확한 template version을 요구한다(HR-70) | implemented | `make hyper-test-scripts` |
-| template-ext | 네이티브 template 확장은 template release `TEMPLATE_VERSION`(`0.0.14`)의 package `polyspec/template-php-ext`이다. `make hyper-install`이 `make template-ext`를 실행하고, 그것이 release의 Composer repository(`packages.json`, 그 dist가 php-ext zip을 sha1로 pin한다)에서 PIE로 `var/pie`에서 build해 `build/ext/polyspec_template.so`를 게시한다. `make ext`는 그 library만 요구하며 offline으로 실행된다. 어떤 recipe도 확장을 위해 template 저장소를 읽거나 복사하지 않는다(H14.1-7, H27.45) | implemented | `tests/scripts/template-ext.test.mts`, `tests/scripts/template-pins.test.mts`, `make ext`, `make test-php` |
+| template-ext | 네이티브 template 확장은 template release `TEMPLATE_VERSION`(`0.0.15`)의 package `polyspec/template-php-ext`이다. `make hyper-install`이 `make template-ext`를 실행하고, 그것이 release의 Composer repository(`packages.json`, 그 dist가 php-ext zip을 sha1로 pin한다)에서 PIE로 `var/pie`에서 build해 `build/ext/polyspec_template.so`를 게시한다. `make ext`는 그 library만 요구하며 offline으로 실행된다. 어떤 recipe도 확장을 위해 template 저장소를 읽거나 복사하지 않는다(H14.1-7, H27.45) | implemented | `tests/scripts/template-ext.test.mts`, `tests/scripts/template-pins.test.mts`, `make ext`, `make test-php` |
 | ci-suite | 전체 suite는 `main`의 push와 모든 수동 실행에 대해 GitHub에서 CI group마다 job 하나로 모든 target을 끝까지 실행하고, job summary와 각 target의 상태, 시간, 첫 실패 줄, 전체 log를 담은 보고서를 upload한다(HR-91) | implemented | `tests/scripts/ci-workflow.test.mts` |
 | ci-steps | 애플리케이션 CI job은 commit으로 pin한 action으로 시간 제한 없이 `ubuntu-26.04-arm`에서 실행하고 각 명령 step은 make target 하나를 실행한다(HR-90). 공유 release와 gate workflow는 설치된 공유 도구의 runner 설정을 사용한다 | implemented | `tests/scripts/ci-workflow.test.mts` |
 | publish-main | 버전 0.1 전까지 변경은 pull request, merge queue, ruleset 없이 checklist의 모든 작업이 끝났을 때 `main`에 한 번 push한다. `main`의 push는 CI workflow를 실행하며, 그 마지막 job `ci-passed`는 workflow의 다른 모든 job이 통과했을 때만 통과한다(HR-94) | implemented | `tests/scripts/ci-workflow.test.mts` |
@@ -69,7 +69,7 @@
 | toolchain-pin | Node.js, npm, Composer는 정확한 release로, PHP와 Python은 minor release로 추적 파일에 pin한다. npm과 Composer는 digest로 확인해 checkout의 `var/tools`에 설치하고 `PATH`의 맨 앞에 둔다. 없는 도구는 그것을 실행하는 target을 실패시키고(kit K854), CI 보고서는 실행 중인 release를 기록한다(HR-81) | implemented | `tests/scripts/toolchain.test.mts`, `tests/scripts/template-copy.test.mjs` |
 | composer-development | 명시적 기본 개발 manifest와 별도 lock으로 소스 package version, link, 설치 기록과 PHP 8.4 요구를 일치시킨다(HR-70, HR-79) | implemented | `make composer-development-check`, `tests/scripts/composer-development.test.mts`, `make hyper-test-scripts` |
 | kit-tools | 상속된 offline 설정에서도 명시적 bootstrap은 선언된 다운로드를 허용한다. 선택적인 기본 로컬 소스 link를 지원하는 설치된 공유 도구 release 0.0.75의 Git hook, 문서 검사, commit message 규칙, owner 검사, test runner, CI 보고서, toolchain 설치와 검사, release는 release asset의 URL과 integrity로 pin한 npm 패키지 `@polyspec/kit`이며 `config/*.json`이 이를 설정한다. `make kit-sync`가 설치 패키지에서 `kit.copies`의 복사본을 쓰고, schema를 어기는 설정은 실패한다 | implemented | `make kit-check` |
-| template-tag | 릴리즈 선언은 `TEMPLATE_TAG`(`v0.0.14`, `v$(TEMPLATE_VERSION)`)를 고정하며 없는 tag는 기대값과 실제값을 밝히고 `make template-tag`를 실패시킨다(HR-80) | implemented | `tests/scripts/template-pins.test.mts`, `tests/scripts/template-version.test.mts` |
+| template-tag | 릴리즈 선언은 `TEMPLATE_TAG`(`v0.0.15`, `v$(TEMPLATE_VERSION)`)를 고정하며 없는 tag는 기대값과 실제값을 밝히고 `make template-tag`를 실패시킨다(HR-80) | implemented | `tests/scripts/template-pins.test.mts`, `tests/scripts/template-version.test.mts` |
 | query-values | 중첩 없이 순서대로 읽는 모든 쿼리 값과 원본 쿼리(HY-56) | implemented | `make test-php`, `make hyper-test-node` |
 | file-parts | 공개 업로드 metadata와 파일 제한은 기본 API 선언을 가지며 PHP 요청 map은 내부 저장형 없이 순서가 있는 iterable 항목을 노출한다(HY-106, HY-113, HY-114) | implemented | `tests/scripts/public-symbols.test.mts`, `make parity-check UNITS=file-parts`, `packages/server/php/tests/FilePartsTest.php`, `make python-file-parts-test` |
 | form-values | urlencoded body나 multipart body에서 중첩 없이 순서대로 읽는 모든 폼 값(HY-57) | implemented | `make test-php`, `make hyper-test-node` |

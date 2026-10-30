@@ -47,17 +47,17 @@ dependencies = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "polyspec-template", url = "https://github.com/polyspec/template/releases/download/v0.0.14/polyspec_template-0.0.14-py3-none-any.whl" }]
+requires-dist = [{ name = "polyspec-template", url = "https://github.com/polyspec/template/releases/download/v0.0.15/polyspec_template-0.0.15-py3-none-any.whl" }]
 
 [[package]]
 name = "polyspec-template"
-version = "0.0.14"
-source = { url = "https://github.com/polyspec/template/releases/download/v0.0.14/polyspec_template-0.0.14-py3-none-any.whl" }
+version = "0.0.15"
+source = { url = "https://github.com/polyspec/template/releases/download/v0.0.15/polyspec_template-0.0.15-py3-none-any.whl" }
 dependencies = [
     { name = "jsonschema" },
 ]
 wheels = [
-    { url = "https://github.com/polyspec/template/releases/download/v0.0.14/polyspec_template-0.0.14-py3-none-any.whl", hash = "sha256:4f7e3e0003c21bc209c2e47c5a11dc5f86d05e2ed4218a52c6fd5866e75ca1b4" },
+    { url = "https://github.com/polyspec/template/releases/download/v0.0.15/polyspec_template-0.0.15-py3-none-any.whl", hash = "sha256:7421c621f58fa6adc273998b6b47742ed1fa49590c13f80610c25d488d3f1b9e" },
 ]
 
 [package.metadata]

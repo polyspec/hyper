@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 4837b4fe228bb035161a6ddd9a41d12798173d451c6a471ab9a0d1f1cf033a73 -->
+<!-- source-sha256: abb73f201861f5b8e54ae1479f13a61d9b705325b0ffae416c118cb9e5e43234 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- Template 0.0.15가 pin한 release다(H27.47-2). npm tarball, zip polyspec-template-php-0.0.15.zip을 가진 Composer repository packages.json, sha256을 가진 wheel, PIE가 build하는 네이티브 확장은 release v0.0.15에서 오고, npm, Composer, uv가 그 lock을 썼다. TEMPLATE_VERSION과 CI의 template 저장소 checkout이 그것을 지정한다. template release마다 PIE의 작업 디렉터리 var/pie/<TEMPLATE_VERSION>을 따로 둔다. PIE는 추가한 repository를 그 디렉터리에 두는데, v0.0.14의 repository가 0.0.15를 가려 pie build가 설치할 수 있는 polyspec/template-php-ext 0.0.15를 찾지 못했다.
 - Kit 0.0.77이 pin한 release다(H27.47-2). kit이 toolchain 검사를 지웠으므로(K854) recipe는 그것을 실행하지 않고, 없는 도구는 그것을 실행하는 target을 실패시킨다. make hyper-install-python은 make uv-install로 설치한다(K850). kit이 설치 wrapper를 지웠으므로(K859) make composer-development는 COMPOSER=composer.local.json으로 composer install을, make package-check는 tests/package-install의 npm ci를 실행하고, 각각 뒤에 make link를 실행한다. git이 무시하는 .links가 provider checkout을 선언하고(K869), kit이 target을 지운 prepare-commit-msg hook은 없어졌다(K892). `.github/workflows/ci.yml`과 `CHECK_TARGETS`는 `.github/workflows/gates.yml`이 실행하는 kit의 gate를 더 실행하지 않는다(K870). language-parity job은 없어지고 protocol parity는 gates.yml의 parity job에서 실행한다. 문서는 make ext를 PIE가 build한 library의 검사로, release의 Composer repository를 consumer의 설치로 설명한다(K865).
 
 ## 0.0.21
