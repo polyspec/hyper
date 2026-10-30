@@ -6,6 +6,7 @@
 ## Unreleased
 
 ## 0.0.22
+- The CI setup of every runtime is the one that `config/ci.json` declares in `setup`, so kit's ci-setup runs no default `deps-<runtime>` target and the Makefile defines none (H27.47).
 - Release 0.0.22 after H27.47-3: every manifest of config/release.json, the exact requirements of polyspec/hyper-server and @polyspec/hyper-client and their locks hold 0.0.22, so the release carries template 0.0.15 from its Composer repository and Kit 0.0.77. (H27.48)
 - The docs, php and python jobs of `.github/workflows/ci.yml` no longer install phpcs, phpstan, ruff, alint and vulture, which only the gates of kit start and `.github/workflows/gates.yml` runs (kit K870), and the php job no longer installs the PHP symbol extractor, which none of its targets reads; ci-workflow fails for a job that selects a lint tool of kit. (H27.47-3)
 - Template 0.0.15 is the pinned release (H27.47-2): the npm tarballs, the Composer repository packages.json with the zip polyspec-template-php-0.0.15.zip, the wheel with its sha256 and the native extension that PIE builds come from the release v0.0.15, and npm, Composer and uv wrote their locks; TEMPLATE_VERSION and the CI checkout of the template repository name it. Each template release has its own working directory of PIE, var/pie/<TEMPLATE_VERSION>: PIE keeps the repositories that it added in that directory, and the repository of v0.0.14 hid 0.0.15, so pie build found no installable polyspec/template-php-ext 0.0.15.
