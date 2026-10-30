@@ -3,7 +3,6 @@
 // installs them from the tarballs of the template release that the root package.json names by their URLs and
 // package-lock.json pins by their integrity, and no build takes a template directory.
 import assert from 'node:assert/strict';
-import { spawnSync } from 'node:child_process';
 import { readFileSync, realpathSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { test } from 'node:test';

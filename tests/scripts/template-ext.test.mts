@@ -3,7 +3,7 @@
 // release archive of its own and builds no copy of the template repository. `make hyper-install` runs `make template-ext`
 // under $(ONLINE); `make ext` of the checks only requires the built library and runs offline.
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
