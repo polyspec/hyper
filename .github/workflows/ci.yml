@@ -2,10 +2,12 @@
 # the matrix, and each entry runs its `targets` with `make ci-targets`. The targets of the entries together are the
 # targets of CHECK_TARGETS of the Makefile, each once (tests/scripts/ci-workflow.test.mts). A failure never stops the run: the matrix does not cancel the other
 # entries (fail-fast: false), every step after the first runs after a failed step (`if: ${{ !cancelled() }}`), and
-# `make ci-targets` runs every target to its end. Each job writes the job summary and uploads its report var/ci/<name>/:
-# the record with the status, the time and the first failure lines of each target, the full log of each target and the
-# summary. The last job, ci-passed, passes only when every other job of this workflow passed; a release tag requires
-# it on the tagged commit (HR-94, HR-95). Every step that runs a command runs one make target, the jobs run on
+# `make ci-targets` runs every target to its end. Each matrix job writes the job summary and uploads its report
+# var/ci/<name>/: the record with the status, the time and the first failure lines of each target, the full log of each
+# target and the summary. The gates of kit run in the job kit, which calls .github/workflows/ci-pipeline.yml of kit (kit
+# K910); its jobs run on the runner and upload the reports that kit declares. The last job, ci-passed, passes only when
+# every other job of this workflow passed, the job kit included; a release takes the id of such a run and tags its commit
+# (HR-94, HR-95). In the jobs of this file every step that runs a command runs one make target, the jobs run on
 # ubuntu-26.04-arm, the actions are pinned by commit and no step has a time limit (HR-90).
 #
 # Each matrix entry declares its own selected tools and native package environments. The Node/npm bootstrap loads
@@ -24,6 +26,11 @@ permissions:
   contents: read
 
 jobs:
+  # The gates of kit (kit S12): ci-pipeline.yml, which kit-sync copies, plans and runs the shared, parity and runtime gates.
+  # Only ci-passed needs it: the job check reads no output of the pipeline, so it runs beside it.
+  kit:
+    uses: ./.github/workflows/ci-pipeline.yml
+
   check:
     name: check (${{ matrix.name }})
     runs-on: ubuntu-26.04-arm
@@ -32,14 +39,14 @@ jobs:
       matrix:
         include:
           - name: docs
-            tools: node php composer python uv
+            tools: node php composer pie python uv
             php: true
             symbols: php
             composer: true
             python: true
             targets: typecheck hooks-check hyper-test-scripts
           - name: php
-            tools: node php composer
+            tools: node php composer pie
             php: true
             template: true
             composer: true
@@ -48,7 +55,7 @@ jobs:
             tools: node
             targets: templates-check hyper-test-js hyper-test-node package-check
           - name: board
-            tools: node php composer python uv
+            tools: node php composer pie python uv
             php: true
             template: true
             composer: true
@@ -130,13 +137,14 @@ jobs:
           name: ci-${{ matrix.name }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: hyper/var/ci/${{ matrix.name }}/
           if-no-files-found: error
-  # The check that a release tag requires on the tagged commit (HR-95). It runs after every other job, also after a
+  # The job that fails the run when any other job did not pass, so a release, which takes a successful run by its id,
+  # holds every job (HR-95). It runs after every other job, also after a
   # failed, skipped or cancelled one (if: always()), and make ci-passed fails unless every job of needs has the result
   # success, so a new job of this workflow is required once it is listed in needs. Each step needs the step before it, and the
   # bootstrap installs the package whose kit.mk has the target ci-passed.
   ci-passed:
     if: ${{ always() }}
-    needs: [check]
+    needs: [check, kit]
     runs-on: ubuntu-26.04-arm
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

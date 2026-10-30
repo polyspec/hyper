@@ -1,5 +1,5 @@
 <!-- doc-id: agents -->
-<!-- source-sha256: 212c3826aba912cd3024c788eb634bda9b8d6a261ef3ef451ec48cbd83d696cd -->
+<!-- source-sha256: 6e8a89701b38da596d1dcc2ca10cde620501578f54e0d9ec7dc045f68f47d5de -->
 # 개발
 
 [English](AGENTS.md).
@@ -101,12 +101,12 @@
 
 ## 릴리스
 
-- Own: Version 0.1 전까지 `main`은 모든 task가 끝났을 때 한 번 push하며, 그 push의 CI 실행이 commit들의 근거다. release는 CI 실행이 `ci-passed` 성공으로 끝난 `main`의 commit에 붙인 tag다(HR-95). tag를 만들고, 옮기고, push하는 것은 maintainer만 한다.
-  Enforced by: `make release-verify`
+- Own: Version 0.1 전까지 `main`은 모든 task가 끝났을 때 한 번 push하며, 그 push의 CI 실행이 commit들의 근거다. release는 `main`에서 `.github/workflows/ci.yml`의 push 또는 수동 실행이 성공한 commit이며, 그 job `ci-passed`는 그 실행의 다른 모든 job이, kit의 gate를 담은 job `kit`까지 통과해야만 통과한다(HR-95). release는 maintainer만 시작하고, 아무도 손으로 tag를 만들거나 옮기거나 push하지 않는다.
+  Enforced by: `make release-tag`, which tags only the commit of such a run; who dispatches the release is a permission of GitHub.
 - Own: 버전을 올리는 commit `chore(release): Release X.Y.Z (#<task>)`는 `package.json`, `packages/client/package.json`, `packages/server/ts/package.json`, `packages/build/package.json`, `packages/server/php/composer.json`과 `packages/server/python/pyproject.toml`의 버전을 X.Y.Z로 정한다. `packages/server/ts/package.json`과 `packages/build/package.json`의 `@polyspec/hyper-client` 요구와, private root `composer.json`과 `examples/board/composer.json`의 `polyspec/hyper-server` 요구를 정하며, 그 lock도 쓴다. 두 changelog의 `## Unreleased`를 `## X.Y.Z`로 바꾸고, 그 위에 빈 `## Unreleased`를 새로 둔다. private test package `tests/package-install`은 자기 버전을 유지한다. 그것은 아무것도 공개하지 않기 때문이다(`config/release.json`의 `notReleased`). 버전 올림 commit은 그 lock을 다시 쓰므로, lock이 로컬 package의 버전을 기록한다.
   Enforced by: none, the version-bump commit is a judgement; the package managers resolve the versions.
-- Own: maintainer는 CI 실행이 `ci-passed` 성공으로 끝난 뒤 `main`의 commit에 `vX.Y.Z` tag를 붙이고 push한다. 그 push는 `.github/workflows/release.yml`을 실행하며, 그 workflow는 `main`에 태그된 commit이 있고 `ci-passed` 검사가 통과했는지 확인한다. 그다음 `<package>-<language>-<version>.<ext>` 이름의 package 아카이브를 만들고 GitHub Release를 만든다(`docs/operations/development.md`).
-  Enforced by: `make release-verify`
+- Own: 버전 올림 commit을 `main`에 올린 push의 CI 실행이 성공한 뒤, maintainer는 그 실행의 id로 `gh workflow run release.yml -f run=<id> -f version=X.Y.Z`를 실행한다. 그 `make release-tag`는 `origin/main`에 commit이 있는, `main` 위 `.github/workflows/ci.yml`의 완료되고 성공한 push 또는 수동 실행을 요구하고, 그 commit에 annotated tag `vX.Y.Z`를 만들어 push한다. 그다음 workflow는 tag에서 `<package>-<language>-<version>.<ext>` 이름의 package 아카이브를 만들고 GitHub Release를 만든다(`docs/operations/development.md`).
+  Enforced by: `make release-tag`
 
 ## 생성 파일
 

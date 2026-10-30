@@ -546,6 +546,7 @@
     {
       "paths": [
         ".github/workflows/release.yml",
+        ".github/workflows/ci-pipeline.yml",
         "PRINCIPLES.md",
         "PRINCIPLES.ko.md",
         "config/layout.kit.yml",

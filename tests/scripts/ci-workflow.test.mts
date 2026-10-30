@@ -3,8 +3,8 @@
 // failed step (`if: ${{ !cancelled() }}`), except in the jobs whose every step needs the earlier one (STOPPING), and
 // every step that runs a command runs one make target, so the exported settings and the checks of the Makefile, such
 // as the offline settings and the toolchain check, apply to it. The entries of the matrix of ci.yml run the targets of
-// CHECK_TARGETS, each once. The last job of ci.yml is ci-passed, the check that a release tag requires (HR-95): it runs
-// after every other job (`if: ${{ always() }}`), needs every other job of the workflow, runs on their runner and runs
+// CHECK_TARGETS, each once. The job kit calls .github/workflows/ci-pipeline.yml, the gates of kit (kit K910). The last job of
+// ci.yml is ci-passed, which a release requires of the run whose id it takes (HR-95): it runs after every other job (`if: ${{ always() }}`), needs every other job of the workflow, runs on their runner and runs
 // `make ci-passed` with the JSON of `needs`.
 import assert from 'node:assert/strict';
 import { readdirSync, readFileSync } from 'node:fs';
@@ -12,7 +12,7 @@ import path from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
-import { jsonArray, jsonString, parseJsonObject } from '../../scripts/json.mts';
+import { parseJsonObject } from '../../scripts/json.mts';
 import { dryRun } from './make-dry-run.mts';
 import { kitTool } from './kit-tools.mts';
 
@@ -78,11 +78,16 @@ function jobs(text: string): Job[] {
   }));
 }
 
-// The workflows of this repository; release.yml and gates.yml are copies of workflows of @polyspec/kit (kit.copies), whose
-// rules kit tests and make kit-check holds them to, so the rules of this file read the other workflows.
+// The workflows of this repository; release.yml and ci-pipeline.yml are copies of workflows of @polyspec/kit (kit.copies),
+// whose rules kit tests and make kit-check holds them to, so the rules of this file read the other workflows.
 const allWorkflows = () => readdirSync(WORKFLOWS).filter((name) => name.endsWith('.yml')).map((name) => ({ name, text: readFileSync(path.join(WORKFLOWS, name), 'utf8') }));
-const KIT_COPIES = ['release.yml', 'gates.yml'];
+const KIT_COPIES = ['release.yml', 'ci-pipeline.yml'];
 const workflows = () => allWorkflows().filter((workflow) => !KIT_COPIES.includes(workflow.name));
+// The job of ci.yml that calls the gates workflow of kit (kit K910). A job with `uses:` runs the jobs of the workflow that it
+// calls, so it has no runner and no steps of its own; the rules of runners and steps read the jobs that run steps.
+const KIT_JOB = 'kit';
+const KIT_PIPELINE = './.github/workflows/ci-pipeline.yml';
+const calls = (job: Job) => /^ {4}uses: /m.test(job.text);
 
 test('the reader finds the jobs and the steps of a workflow', () => {
   const read = jobs('on:\n  push:\njobs:\n  first:\n    runs-on: x\n    steps:\n      - uses: a/b@c\n        with:\n          d: e\n      - run: make one\n        if: ${{ !cancelled() }}\n  second:\n    steps:\n      - id: s\n        run: make two\n');
@@ -95,7 +100,7 @@ test('every job runs on the declared runner without a time limit, and every acti
   const found: string[] = [];
   for (const workflow of workflows()) {
     if (/timeout-minutes/.test(workflow.text)) found.push(`${workflow.name}: timeout-minutes`);
-    for (const job of jobs(workflow.text)) {
+    for (const job of jobs(workflow.text).filter((job) => !calls(job))) {
       if (!new RegExp(`^ {4}runs-on: ${RUNNER}$`, 'm').test(job.text)) found.push(`${workflow.name} ${job.name}: runs-on is not ${RUNNER}`);
       for (const step of job.steps) {
         if (step.uses === undefined || step.uses === '') continue;
@@ -109,7 +114,7 @@ test('every job runs on the declared runner without a time limit, and every acti
 test('every step that runs a command runs make, and every step after the first runs after a failed step (HR-86)', () => {
   const found: string[] = [];
   for (const workflow of workflows()) {
-    for (const job of jobs(workflow.text)) {
+    for (const job of jobs(workflow.text).filter((job) => !calls(job))) {
       assert.ok(job.steps.length > 0, `${workflow.name} ${job.name} has no step`);
       job.steps.forEach((step, index) => {
         if (step.run !== undefined && !/^make [^|&;<>`$\n]*(\$\{\{ [^}]+ \}\}[^|&;<>`$\n]*)*$/.test(step.run)) found.push(`${workflow.name} ${job.name}: the step "${step.run}" runs a command other than one make`);
@@ -120,46 +125,36 @@ test('every step that runs a command runs make, and every step after the first r
   assert.deepEqual(found, []);
 });
 
-// The on: block of each workflow, exactly: the checks run on the push of main and on every manual run; the release on
-// the push of a tag vX.Y.Z or <directory>/vX.Y.Z at any depth (in a tag filter * does not match /, so **/v* covers a Go
-// module tag). No other workflow exists, and none runs on a pull request or a merge group (HR-91, HR-95).
+// The on: block of each workflow, exactly: the checks run on the push of main and on every manual run; the release on a
+// manual run with the id of a successful CI run and its version, and on no tag push; the gates of kit when ci.yml calls them.
+// No other workflow exists, and none runs on a pull request or a merge group (HR-91, HR-95).
 const TRIGGERS: Record<string, string> = {
   'ci.yml': 'on:\n  push:\n    branches: [main]\n  workflow_dispatch:\n',
-  'release.yml': "on:\n  push:\n    tags: ['v*', '**/v*']\n  workflow_dispatch:\n    inputs:\n      tag:\n        description: The tag of the release, such as v0.0.1\n        required: true\n        type: string\n",
-  // The gates workflow of @polyspec/kit (K270), a copy that make kit-check holds to the package; this repository has no pull request.
-  'gates.yml': 'on:\n  pull_request:\n  push:\n    branches: [main]\n  workflow_dispatch:\n',
+  'release.yml': 'on:\n  workflow_dispatch:\n    inputs:\n      run:\n        description: The id of the successful CI run of main whose commit is released\n        required: true\n        type: string\n      version:\n        description: The version of the release, X.Y.Z, such as 0.0.1\n        required: true\n        type: string\n',
+  // The gates workflow of @polyspec/kit (K910), a copy that make kit-check holds to the package, which only the job kit calls.
+  'ci-pipeline.yml': 'on:\n  workflow_call:\n',
 };
 
 /**
- * The ways in which a workflow starts on a tag push. A tag push starts every workflow whose `push:` has no `branches:`
- * filter, and the check runs of that workflow then stand on the tagged commit, where `make release-verify` requires the
- * checks of config/release.json to be successful (HR-95). Only release.yml may run on a tag.
+ * The ways in which a workflow starts on a tag push: a tag push starts every workflow whose `push:` has a `tags:` filter or no
+ * `branches:` filter. No workflow starts so: a release takes the id of a successful CI run of main and tags its commit with
+ * make release-tag, so no tag is pushed before a release and no run of a tag stands for one (HR-95).
  */
 function tagStartProblems(name: string, text: string): string[] {
   const trigger = /^on:\n((?: {2}.*\n)+)/m.exec(text)?.[1] ?? '';
   const push = /^ {2}push:\n((?: {4}.*\n)*)/m.exec(trigger)?.[1];
   const tagged = push !== undefined && (/^ {4}tags:/m.test(push) || !/^ {4}branches(-ignore)?:/m.test(push));
-  if (name === 'release.yml') return tagged && /^ {4}tags:/m.test(push) && !/^ {4}branches/m.test(push) ? [] : ['release.yml is not triggered by tags only'];
   return tagged ? [`${name}: the push trigger starts on a tag; it needs branches: [main]`] : [];
 }
 
-test('only release.yml starts on a tag, and no check of config/release.json comes from a workflow that a tag starts (HR-95)', () => {
-  const read = allWorkflows();
-  assert.deepEqual(read.flatMap((workflow) => tagStartProblems(workflow.name, workflow.text)), []);
-  const checks = jsonArray(parseJsonObject(readFileSync(path.join(ROOT, 'config/release.json'), 'utf8'), 'config/release.json').checks, 'config/release.json checks')
-    .map((check, index) => jsonString(check, `config/release.json checks[${index}]`));
-  assert.ok(checks.length > 0, 'config/release.json names no check');
-  for (const check of checks) {
-    const owners = read.filter((workflow) => jobs(workflow.text).some((job) => job.name === check)).map((workflow) => workflow.name);
-    assert.ok(owners.length > 0, `no workflow has the job ${check}`);
-    assert.deepEqual(owners.filter((name) => tagStartProblems(name, item(read.filter((workflow) => workflow.name === name), 0, `the workflows named ${name}`).text).length > 0 || name === 'release.yml'), [], `${check} is started by a tag`);
-  }
-  // A workflow with a push trigger that has no branch filter, or a tag filter, is found.
+test('no workflow starts on a tag push (HR-95)', () => {
+  assert.deepEqual(allWorkflows().flatMap((workflow) => tagStartProblems(workflow.name, workflow.text)), []);
+  // A workflow with a push trigger that has no branch filter, or a tag filter, is found, release.yml too.
   assert.equal(tagStartProblems('ci.yml', 'on:\n  push:\n  workflow_dispatch:\n').length, 1);
   assert.equal(tagStartProblems('ci.yml', "on:\n  push:\n    tags: ['v*']\n").length, 1);
+  assert.equal(tagStartProblems('release.yml', "on:\n  push:\n    tags: ['v*']\n").length, 1);
   assert.equal(tagStartProblems('ci.yml', 'on:\n  push:\n    branches: [main]\n  workflow_dispatch:\n').length, 0);
   assert.equal(tagStartProblems('push-gate.yml', "on:\n  push:\n    branches-ignore: ['gh-readonly-queue/**']\n").length, 0);
-  assert.equal(tagStartProblems('release.yml', "on:\n  push:\n    tags: ['v*']\n").length, 0);
 });
 
 test('each workflow declares exactly its triggers (HR-91, HR-95)', () => {
@@ -168,9 +163,7 @@ test('each workflow declares exactly its triggers (HR-91, HR-95)', () => {
     const declared = /^(on:\n(?: {2}.*\n)+)/m.exec(workflow.text)?.[1] ?? '';
     assert.equal(declared, TRIGGERS[workflow.name], `${workflow.name} declares other triggers`);
   }
-  // The trigger */v* matches a tag with one / only, so it misses a Go module tag deeper in the tree.
-  assert.doesNotMatch(TRIGGERS['release.yml'] ?? '', /'\*\/v\*'/);
-  // gates.yml of kit names a pull request, which this repository never opens, so it never starts there.
+  // No workflow of this repository names a pull request, which it never opens.
   for (const workflow of workflows()) assert.doesNotMatch(workflow.text, /pull_request|merge_group|gh-readonly-queue/, `${workflow.name} names a pull request or a merge group`);
 });
 
@@ -216,7 +209,7 @@ test('the matrix entries of ci.yml run every target of the full suite once (HR-9
 
 test('the workflow ci runs every matrix entry in a job that runs to its end and uploads its report (HR-91)', () => {
   const text = readFileSync(path.join(WORKFLOWS, 'ci.yml'), 'utf8');
-  const read = jobs(text).filter((job) => job.name !== CI_PASSED);
+  const read = jobs(text).filter((job) => job.name !== CI_PASSED && !calls(job));
   assert.ok(read.length > 0);
   for (const job of read) {
     assert.match(job.text, /^ {4}strategy:\n {6}fail-fast: false\n/m, `${job.name}: fail-fast`);
@@ -260,7 +253,7 @@ test('the workflow ci checks out the template repository at the tag TEMPLATE_TAG
   const lines = dryRun('template-tag', { variables: ['TEMPLATE_REPOSITORY=/nonexistent/hyper-template'] });
   const tag = lines.map((line) => /'refs\/tags\/(v\d+\.\d+\.\d+)\^\{commit\}'/.exec(line)?.[1]).find((found) => found !== undefined);
   assert.match(tag ?? '', /^v\d+\.\d+\.\d+$/, `make template-tag names no tag TEMPLATE_TAG: ${lines.join('\n')}`);
-  for (const job of jobs(readFileSync(path.join(WORKFLOWS, 'ci.yml'), 'utf8')).filter((job) => job.name !== CI_PASSED)) {
+  for (const job of jobs(readFileSync(path.join(WORKFLOWS, 'ci.yml'), 'utf8')).filter((job) => job.name !== CI_PASSED && !calls(job))) {
     const checkouts = job.steps.filter((step) => /^ {10}repository: polyspec\/template$/m.test(step.text));
     assert.equal(checkouts.length, 1, `${job.name}: one checkout of polyspec/template`);
     assert.deepEqual([...item(checkouts, 0, `${job.name}: the template checkouts`).text.matchAll(/^ {10}ref: (.*)$/gm)].map((match) => match[1]), [tag], `${job.name}: the ref of the template checkout is not TEMPLATE_TAG ${tag}`);
@@ -294,7 +287,7 @@ test('a target declared for Darwin is in the full suite exactly on Darwin and sk
 function ciPassedProblems(text: string): string[] {
   const read = jobs(text);
   const job = read.find((entry) => entry.name === CI_PASSED);
-  if (!job) return [`the job ${CI_PASSED} is missing; a release tag requires it as the check of ci.yml`];
+  if (!job) return [`the job ${CI_PASSED} is missing; a release requires it of the CI run whose id it takes`];
   const key = (entry: Job, name: string) => new RegExp(`^ {4}${name}: (.*)$`, 'm').exec(entry.text)?.[1];
   const others = read.filter((entry) => entry.name !== CI_PASSED).map((entry) => entry.name);
   const found: string[] = [];
@@ -302,7 +295,7 @@ function ciPassedProblems(text: string): string[] {
   if (key(job, 'if') !== '${{ always() }}') found.push(`the job ${CI_PASSED} has if: ${key(job, 'if')}, not \${{ always() }}; it must run after a failed, skipped or cancelled job too`);
   const needs = (key(job, 'needs') ?? '').replace(/^\[|\]$/g, '').split(',').map((name) => name.trim()).filter(Boolean);
   if ([...needs].sort().join() !== [...others].sort().join()) found.push(`the job ${CI_PASSED} needs [${needs.join(', ')}], not every other job [${others.join(', ')}]`);
-  const runners = [...new Set(read.filter((entry) => entry.name !== CI_PASSED).map((entry) => key(entry, 'runs-on')))];
+  const runners = [...new Set(read.filter((entry) => entry.name !== CI_PASSED && !calls(entry)).map((entry) => key(entry, 'runs-on')))];
   if (runners.length !== 1 || key(job, 'runs-on') !== runners[0]) found.push(`the job ${CI_PASSED} runs on ${key(job, 'runs-on')}, not on the runner of the other jobs ${runners.join(', ')}`);
   const runs = job.steps.filter((step) => step.run !== undefined).map((step) => step.run);
   const expected = [...BOOTSTRAP_RUNS, CI_PASSED_RUN];
@@ -319,8 +312,9 @@ test('ci-passed is the last job of ci.yml, runs always, needs every other job an
     missing: [head + '\n', 'the job ci-passed is missing'],
     'not last': [head.replace('\njobs:\n', `\njobs:\n  ci-passed:\n${tail.trimEnd()}\n`) + '\n', 'the job ci-passed is not the last job'],
     'not always': [text.replace('    if: ${{ always() }}\n', '    if: ${{ success() }}\n'), 'the job ci-passed has if: ${{ success() }}'],
-    'needs no job': [text.replace('    needs: [check]\n', '    needs: []\n'), 'the job ci-passed needs [], not every other job [check]'],
-    'another runner': [text.replace('    needs: [check]\n    runs-on: ubuntu-26.04-arm\n', '    needs: [check]\n    runs-on: ubuntu-24.04\n'), 'the job ci-passed runs on ubuntu-24.04, not on the runner of the other jobs'],
+    'needs no job': [text.replace('    needs: [check, kit]\n', '    needs: []\n'), 'the job ci-passed needs [], not every other job [kit, check]'],
+    'needs no kit': [text.replace('    needs: [check, kit]\n', '    needs: [check]\n'), 'the job ci-passed needs [check], not every other job [kit, check]'],
+    'another runner': [text.replace('    needs: [check, kit]\n    runs-on: ubuntu-26.04-arm\n', '    needs: [check, kit]\n    runs-on: ubuntu-24.04\n'), 'the job ci-passed runs on ubuntu-24.04, not on the runner of the other jobs'],
     'another step': [text.replace(CI_PASSED_RUN, 'make ci-passed'), 'the job ci-passed runs [make bootstrap, make install-tools TOOLS=npm, make install-packages, make ci-passed], not the bootstrap'],
     'no bootstrap': [text.replace('        run: make install-packages\n      - name: make ci-passed', '      - name: make ci-passed'), 'the job ci-passed runs [make bootstrap, make install-tools TOOLS=npm, make ci-passed'],
   };
@@ -364,7 +358,7 @@ test('.php-version holds the PHP minor release, and every setup-php step reads i
 
 
 test('H27.20 PHP-enabled CI groups prepare PHP before selected tool installation', () => {
-  for (const job of jobs(readFileSync(path.join(WORKFLOWS, 'ci.yml'), 'utf8')).filter(job => job.name !== CI_PASSED)) {
+  for (const job of jobs(readFileSync(path.join(WORKFLOWS, 'ci.yml'), 'utf8')).filter(job => job.name !== CI_PASSED && !calls(job))) {
     const php = job.steps.findIndex(step => step.uses?.startsWith('shivammathur/setup-php@'));
     const tools = job.steps.findIndex(step => step.run === 'make install-tools TOOLS="${{ matrix.tools }}"');
     assert.ok(php >= 0 && php < tools, `${job.name}: declared PHP must exist before tool discovery`);
@@ -373,7 +367,7 @@ test('H27.20 PHP-enabled CI groups prepare PHP before selected tool installation
 });
 
 test('H27.20 every CI check group installs per-checkout hook configuration before checks', () => {
-  for (const job of jobs(readFileSync(path.join(WORKFLOWS, 'ci.yml'), 'utf8')).filter(job => job.name !== CI_PASSED)) {
+  for (const job of jobs(readFileSync(path.join(WORKFLOWS, 'ci.yml'), 'utf8')).filter(job => job.name !== CI_PASSED && !calls(job))) {
     const installed = job.steps.findIndex(step => step.run === 'make install-packages');
     const hooks = job.steps.findIndex(step => step.run === 'make hooks');
     const check = job.steps.findIndex(step => step.run?.startsWith('make ci-targets'));
@@ -382,9 +376,9 @@ test('H27.20 every CI check group installs per-checkout hook configuration befor
 });
 
 
-// kit K870: .github/workflows/gates.yml runs the gates of kit, cross-language parity among them, so no entry of ci.yml runs one
-// again; the gates are the prerequisites of the kit-gates-* targets of the installed kit.mk.
-test('H27.24 no matrix entry of ci.yml runs a gate of kit, which gates.yml runs (HY-1, HY-27, HY-114, HR-91)', () => {
+// kit K870, K910: .github/workflows/ci-pipeline.yml, which the job kit calls, runs the gates of kit, cross-language parity among
+// them, so no entry of ci.yml runs one again; the gates are the prerequisites of the kit-gates-* targets of the installed kit.mk.
+test('H27.24 no matrix entry of ci.yml runs a gate of kit, which ci-pipeline.yml runs (HY-1, HY-27, HY-114, HR-91)', () => {
   const kit = readFileSync(path.join(path.dirname(kitTool('run-tests')), 'kit.mk'), 'utf8');
   const gates = [...kit.matchAll(/^kit-gates-[\w-]+: ([^#\n]+)/gm)].flatMap(match => (match[1] ?? '').trim().split(/\s+/));
   assert.ok(gates.includes('parity-check') && gates.includes('parity-declarations-check'), gates.join(' '));
@@ -396,11 +390,11 @@ test('H27.24 no matrix entry of ci.yml runs a gate of kit, which gates.yml runs 
 });
 
 
-// H27.47-3: the lint tools of kit, which only the lint gates of kit start from their own scripts; gates.yml runs those gates
+// H27.47-3: the lint tools of kit, which only the lint gates of kit start from their own scripts; ci-pipeline.yml runs those gates
 // (kit K870), and hyper-lint and analyse-php run the pint and PHPStan of vendor, so no CI job of hyper installs them.
 const KIT_LINT_TOOLS = ['ruff', 'vulture', 'alint', 'phpcs', 'phpstan', 'golangciLint', 'deadcode', 'govulncheck', 'cargoAudit', 'cargoDeny'];
 
-test('H27.47-3 no matrix entry of ci.yml installs a lint tool of kit, which only the gates of gates.yml start', () => {
+test('H27.47-3 no matrix entry of ci.yml installs a lint tool of kit, which only the gates of ci-pipeline.yml start', () => {
   for (const entry of matrixEntries(readFileSync(path.join(WORKFLOWS, 'ci.yml'), 'utf8'))) {
     const tools = (entry.keys['tools'] ?? '').split(' ');
     assert.deepEqual(tools.filter(tool => KIT_LINT_TOOLS.includes(tool)), [], `${entry.name} installs lint tools of kit that none of its targets starts`);
@@ -412,10 +406,10 @@ test('H27.25 CI declares job-owned tools and locked package environments (HR-81,
   const text = readFileSync(path.join(WORKFLOWS, 'ci.yml'), 'utf8');
   const entries = matrixEntries(text);
   const expected: Record<string, { tools: string; php?: boolean; composer?: boolean; python?: boolean }> = {
-    docs: { tools: 'node php composer python uv', php: true, composer: true, python: true },
-    php: { tools: 'node php composer', php: true, composer: true },
+    docs: { tools: 'node php composer pie python uv', php: true, composer: true, python: true },
+    php: { tools: 'node php composer pie', php: true, composer: true },
     node: { tools: 'node' },
-    board: { tools: 'node php composer python uv', php: true, composer: true, python: true },
+    board: { tools: 'node php composer pie python uv', php: true, composer: true, python: true },
     python: { tools: 'node python uv', python: true },
   };
   assert.deepEqual(entries.map(entry => entry.name).sort(), Object.keys(expected).sort());
@@ -466,4 +460,19 @@ test('H27.26 provider gate setup declares every native runtime and full parity c
   const text = JSON.stringify(setup);
   assert.ok(text.includes('hyper-install-php') && text.includes('hyper-install-python') && text.includes('server-fixtures') && text.includes('node-fixtures'));
   assert.doesNotMatch(text, /"(?:install|install-kit|parity-check|kit-gates)"/);
+  // hyper-install-php runs template-ext, whose pie-build of kit runs the http:pie of mise.toml (kit K915); the pipeline installs
+  // the tools of the php runtime there and, since kit adds the tools of every runtime to the parity phase, in parity too.
+  const tools = ci.tools;
+  assert.ok(typeof tools === 'object' && tools !== null && !Array.isArray(tools));
+  const php: unknown = new Map(Object.entries(tools)).get('php');
+  assert.ok(Array.isArray(php) && php.includes('pie'), 'config/ci.json tools.php installs no pie');
+});
+
+// kit K910: the job kit of ci.yml calls ci-pipeline.yml, the gates of kit, and is the only job that calls a workflow; ci-passed
+// needs it, so a release requires the gates of kit of its run.
+test('the job kit calls ci-pipeline.yml of kit, and ci-passed needs it (kit K910, HR-95)', () => {
+  const read = jobs(readFileSync(path.join(WORKFLOWS, 'ci.yml'), 'utf8'));
+  assert.deepEqual(read.filter(calls).map((job) => [job.name, job.text.trim()]), [[KIT_JOB, `uses: ${KIT_PIPELINE}`]]);
+  const passed = read.find((job) => job.name === CI_PASSED);
+  assert.match(passed?.text ?? '', new RegExp(`^ {4}needs: \\[[^\\]]*\\b${KIT_JOB}\\b[^\\]]*\\]$`, 'm'));
 });

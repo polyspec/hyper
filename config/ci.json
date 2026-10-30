@@ -29,6 +29,9 @@
     "shared": [
       "php",
       "composer"
+    ],
+    "php": [
+      "pie"
     ]
   }
 }

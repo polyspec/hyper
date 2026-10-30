@@ -5,6 +5,7 @@
 
 ## Unreleased
 - Hyper 0.0.22 is released at 51d8cbb after CI 41039924973 and gates 41039924928: the release run 41041100350 published the six assets, and the release carries template 0.0.15 and Kit 0.0.78 (H27.48).
+- Kit 0.0.79 is the pinned release (H27.49): the job `kit` of `.github/workflows/ci.yml` calls `.github/workflows/ci-pipeline.yml`, which kit-sync copies in place of the removed gates workflow, so one CI run holds the gates of kit and the checks of hyper, and `ci-passed` needs `kit`; `config/release.json` declares no `checks`, and a release is `gh workflow run release.yml -f run=<id> -f version=X.Y.Z`, whose `make release-tag` creates and pushes `vX.Y.Z` at the commit of that CI run; `make template-ext` builds the native template extension with the pie-build tool of kit in an empty `var/pie/polyspec/template-php-ext` (K915), and the CI entries and pipeline phases that run `make hyper-install-php` install `pie` with `make install-tools`.
 
 ## 0.0.22
 - Kit 0.0.78 is the pinned release (H27.48-1): make link of an installed kit writes no Claude Code hook (K916), so `make link PROJECT=tests/package-install` of package-check passes in CI, where the installed kit has no node of its own var/tools and no `.links` names a provider.

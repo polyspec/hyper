@@ -1,5 +1,5 @@
 <!-- doc-id: features -->
-<!-- source-sha256: dc5171c0cd99ca8e03c2098c57d69709e07b52e0fa328851fe1b5ce25ccd4e46 -->
+<!-- source-sha256: ac4948d547de02a66c321bce1aa136d1d73452fa01234ba7f823b1eedccbff1a -->
 # 기능 상태
 
 [English](features.md).
@@ -82,7 +82,7 @@
 | gate-inputs | Native gate가 읽기 전에 workspace 선언과 runtime fixture를 build한다(HR-85) | implemented | `tests/scripts/check-recipes.test.mts`, `make lint-ts`, `make parity-check` |
 | ci-setup | 모든 CI 검사 group이 검증 전에 선언된 PHP와 checkout hook을 준비한다 | implemented | `tests/scripts/ci-workflow.test.mts` |
 | consumer-check-inputs | Script 검사가 build를 소유하고 package 검사가 editor 설정 없이 native source 연결을 위임한다 | implemented | `tests/scripts/check-recipes.test.mts`, `tests/scripts/template-ext.test.mts`, `make package-check` |
-| language-parity-ci | 언어 간 protocol 동등 검사는 kit의 gates workflow인 `.github/workflows/gates.yml`의 parity job에서 실행하고(kit K870), 선언을 한 번 검증하며 browser를 설치하지 않고, 그 결과는 release가 요구하는 check `required`이다 | configured | `tests/scripts/ci-workflow.test.mts`, `gates.yml`의 `parity` |
+| language-parity-ci | 언어 간 protocol 동등 검사는 `ci.yml`의 job `kit`이 호출하는 kit의 gates workflow `.github/workflows/ci-pipeline.yml`의 parity job에서 실행하고(kit K870, K910), 선언을 한 번 검증하며 browser를 설치하지 않고, release가 자기 실행에 요구하는 `ci-passed`는 job `kit`을 기다린다 | configured | `tests/scripts/ci-workflow.test.mts`, `ci-pipeline.yml`의 `parity` |
 | ci-environment-ownership | 각 CI group은 Kit으로 고정 도구를 선택하고 native lock graph를 설치하며 다른 언어 job의 산출물 없이 build 입력을 소유한다. 공통 정책 group은 sibling template source를 선언하지 않는다 | configured; native selector owner checks | `tests/scripts/ci-workflow.test.mts`, `tests/scripts/toolchain.test.mts` |
 | shared-runtime-runner | 모든 Python 검사 target은 native Kit runner와 virtual environment 선택을 사용하며 앱 unittest harness를 제거한다 | configured | `make hyper-runner-owner-check`, `make python-file-parts-test` |
 | native-browser-runner | 앱 server의 준비와 정리 소유권을 유지하면서 browser E2E 실행에 provider 소유 Playwright adapter를 사용해야 한다 | pending provider support; release held | [Kit issue 13](https://github.com/polyspec/kit/issues/13) |

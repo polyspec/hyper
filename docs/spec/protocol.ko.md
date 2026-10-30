@@ -1,5 +1,5 @@
 <!-- doc-id: protocol -->
-<!-- source-sha256: 577205f5935d6ccb2e722dfc1616d25e576d4e91d32fec542927a2e1777911ed -->
+<!-- source-sha256: 1200392643fe6f25f23e27b248c2eab37a2220b02abb24dd8232e6739efdbe91 -->
 # 영역 프로토콜
 
 [English](protocol.md).
@@ -364,6 +364,6 @@
 
 ## 구현 동등성
 
-PHP, Python과 TypeScript는 manifest, request, file-limit 규칙(HY-1, HY-27, HY-114)을 포함한 동일한 protocol unit을 만족해야 한다. CI는 선언 검증과 언어 간 동등 검사를 언어별, 렌더링, 브라우저 job과 독립적인, kit의 gates workflow `.github/workflows/gates.yml`의 parity job에서 실행한다(kit K870). 각 parity target은 정확히 한 번 실행되고, 그 결과는 release가 요구하는 check `required`이다. Parity target이 실패하면 그 check도 실패한다.
+PHP, Python과 TypeScript는 manifest, request, file-limit 규칙(HY-1, HY-27, HY-114)을 포함한 동일한 protocol unit을 만족해야 한다. CI는 선언 검증과 언어 간 동등 검사를 언어별, 렌더링, 브라우저 job과 독립적인, `ci.yml`의 job `kit`이 호출하는 kit의 gates workflow `.github/workflows/ci-pipeline.yml`의 parity job에서 실행한다(kit K870, K910). 각 parity target은 정확히 한 번 실행된다. Parity target이 실패하면 job `kit`이, 그래서 release가 자기 실행에 요구하는 `ci-passed`가 실패한다.
 
 각 CI group은 자신의 고정 도구, 잠긴 의존성과 build 입력을 소유한다. 언어별 job은 실제로 실행하는 환경만 설치한다. Protocol 동등 검사와 browser 통합 group은 비교하는 모든 구현을 독립적으로 준비하고 다른 언어 job의 설치나 build 산출물을 사용하지 않는다. 도구 선택은 공유 `make install-tools TOOLS="..."` 인터페이스를 사용하며 package 설치는 npm, Composer와 uv가 맡는다. 설치는 잠긴 입력을 다운로드할 수 있고 build와 검사는 offline으로 실행한다. 선택 설치기는 고정된 Kit 릴리즈가 제공한다. npm은 별도 bootstrap selector로 준비하고 PHP symbol extractor는 실행하는 group에서 `make kit-install-symbols EXTRACTORS="php"`로 명시적으로 설치한다.

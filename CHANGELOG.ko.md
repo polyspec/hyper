@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: cd4ba2d797008dde678e32a985ee024eee260e9d523b9cb53e82ceab8aa4f410 -->
+<!-- source-sha256: 35cda3c81a2fe27a6607484b1dab613dfcc7b4da74250531ebe9b6fd985d2f5f -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 - Hyper 0.0.22를 CI 41039924973과 gates 41039924928을 거쳐 51d8cbb에서 릴리스했다. 릴리스 실행 41041100350이 asset 여섯 개를 게시했고, 릴리스는 template 0.0.15와 Kit 0.0.78을 담는다. (H27.48)
+- Kit 0.0.79가 pin한 release다(H27.49). `.github/workflows/ci.yml`의 job `kit`이 kit-sync가 지운 gates workflow 대신 복사하는 `.github/workflows/ci-pipeline.yml`을 호출하므로, CI 실행 하나가 kit의 gate와 hyper의 검사를 담고 `ci-passed`는 `kit`을 기다린다. `config/release.json`은 `checks`를 선언하지 않으며, 릴리스는 `gh workflow run release.yml -f run=<id> -f version=X.Y.Z`이고 그 `make release-tag`가 그 CI 실행의 commit에 `vX.Y.Z`를 만들어 push한다. `make template-ext`는 kit의 pie-build 도구로 빈 `var/pie/polyspec/template-php-ext`에서 네이티브 template 확장을 build하고(K915), `make hyper-install-php`를 실행하는 CI 항목과 pipeline phase는 `make install-tools`로 `pie`를 설치한다.
 
 ## 0.0.22
 - Kit 0.0.78이 pin한 release다(H27.48-1). 설치된 kit의 make link는 Claude Code hook을 쓰지 않으므로(K916), 설치된 kit에 자신의 var/tools node가 없고 `.links`가 provider를 적지 않는 CI에서 package-check의 `make link PROJECT=tests/package-install`이 통과한다.

@@ -56,13 +56,8 @@ ESBUILD := node_modules/esbuild/bin/esbuild
 # The PHP memory limit of PHPStan: a run without its result cache (build/phpstan) needs 132 MB in its worker, above
 # the default limit of 128M.
 PHPSTAN_MEMORY := 256M
-# The library of the native template extension that `make hyper-install` builds with PIE (H14.1-7, H27.45); PIE_WORK is the
-# working directory of PIE, which holds the repositories that it added, the package that it fetched and its build. Composer
-# takes a package from the first repository that has it, so each template release has its own directory, and the repository
-# of an earlier release does not hide TEMPLATE_VERSION.
+# The library of the native template extension that `make hyper-install` builds with PIE (H14.1-7, H27.45, kit K915).
 EXT := build/ext/polyspec_template.so
-PIE := $(KIT_TOOLS)/mise/shims/pie
-PIE_WORK := $(CURDIR)/var/pie/$(TEMPLATE_VERSION)
 
 # The toolchain (HR-81, install-tools of @polyspec/kit): npm and Composer of the checkout ($(KIT_TOOLS) of kit.mk, its own var/tools in a
 # linked worktree too, kit K858), which `make install-tools` installs into its var/tools, come first on PATH for every recipe
@@ -156,20 +151,18 @@ template-tag: ## Fail when the template repository TEMPLATE_REPOSITORY has no ta
 	  echo "template-tag: fetch the tags of the template repository with git -C $(TEMPLATE_REPOSITORY) fetch --tags" >&2; \
 	  exit 1; }
 
-# PIE resolves polyspec/template-php-ext TEMPLATE_VERSION in the Composer repository TEMPLATE_PACKAGES, which checks the sha1 of
-# its zip, and builds it with phpize and the php-config of the PHP of PATH into the vendor directory of PIE_WORK: the folder
-# of the package, its build-path src and the modules folder of phpize. The library is published into build/ext with a rename
-# (scripts/publish.mts, HR-82). `pie build` installs nothing into the PHP; the checks load the library with -d extension.
-# The recipe installs http:pie of mise.toml itself, with its locked checksum: a CI job installs only the TOOLS of its matrix,
-# and install-tools of kit has no pie selector, so no TOOLS list can name it (H27.45-1).
+# The pie-build tool of kit (make pie-build, K915), which the recipe runs as kit.mk runs it, so that make -n prints it and runs
+# no recursive make, resolves polyspec/template-php-ext TEMPLATE_VERSION in the Composer repository TEMPLATE_PACKAGES, which
+# checks the sha1 of its zip, builds it with phpize and the php-config of the PHP of PATH in an empty var/pie, logs PIE on
+# stderr when each PIE command ends and prints the line `binary <path>` of the library that PIE recorded. The library is published into build/ext with a
+# rename (scripts/publish.mts, HR-82). `pie build` installs nothing into the PHP; the checks load the library with
+# -d extension. PIE is the http:pie of mise.toml, which `make install-tools TOOLS=pie` installs.
 .PHONY: template-ext
-template-ext: ## Build the native template extension of TEMPLATE_TAG with PIE from the Composer repository of the template release into build/ext (H27.45); ONLINE
-	$(ONLINE) $(KIT_TOOLS)/bin/mise install --locked http:pie
-	PIE_WORKING_DIRECTORY=$(PIE_WORK) $(ONLINE) $(PIE) repository:add composer $(TEMPLATE_PACKAGES) --no-interaction
-	PIE_WORKING_DIRECTORY=$(PIE_WORK) $(ONLINE) $(PIE) build polyspec/template-php-ext:$(TEMPLATE_VERSION) --no-interaction
-	@set -- $(PIE_WORK)/*/vendor/polyspec/template-php-ext/src/modules/polyspec_template.so; \
-	  test $$# -eq 1 && test -f "$$1" || { echo "template-ext: expected one library polyspec_template.so of PIE in $(PIE_WORK), found: $$*" >&2; exit 1; }; \
-	  mkdir -p build/ext.next-$$$$ && cp "$$1" build/ext.next-$$$$/polyspec_template.so && $(NODE) scripts/publish.mts directory build/ext.next-$$$$ build/ext
+template-ext: ## Build the native template extension of TEMPLATE_TAG with PIE from the Composer repository of the template release into build/ext (H27.45, kit K915); ONLINE
+	@built=$$($(ONLINE) $(NODE) $(KIT)/pie-build.$(KIT_EXT) $(TEMPLATE_PACKAGES) polyspec/template-php-ext $(TEMPLATE_VERSION)) || exit $$?; \
+	  binary=$$(printf '%s\n' "$$built" | sed -n 's/^binary //p'); \
+	  test -n "$$binary" && test -f "$$binary" || { echo "template-ext: pie-build named no library: $$built" >&2; exit 1; }; \
+	  mkdir -p build/ext.next-$$$$ && cp "$$binary" build/ext.next-$$$$/polyspec_template.so && $(NODE) scripts/publish.mts directory build/ext.next-$$$$ build/ext
 
 # The checks load the library that `make hyper-install` built with PIE (template-ext); they run offline and build nothing.
 ext: ## Fail unless the native template extension of make template-ext is in build/ext (HY-48, H14.1-7, H27.45)
@@ -321,7 +314,7 @@ bench: bench-server bench-browser ## Run both measurements; results are reports,
 
 # The final suite runs through the native kit report runner on a clean committed tree.
 # Run it once after checklist development, then rerun only failed owners. The gates of kit are not in it:
-# .github/workflows/gates.yml runs them (kit K870).
+# .github/workflows/ci-pipeline.yml, which the job kit of ci.yml calls, runs them (kit K870, K910).
 CHECK_TARGETS := typecheck hooks-check bench-server-smoke hyper-lint analyse-php templates-check hyper-test-scripts hyper-test-js hyper-test-node hyper-test-python hyper-test-python-render package-check hyper-test-php parity server-parity server-parity-python bundle-size e2e
 
 # The CI groups of the full suite (HR-91) are the entries of the matrix of .github/workflows/ci.yml: each entry runs its
@@ -341,9 +334,10 @@ check: template-tag ## Run final verification once after checklist development, 
 
 
 
-# The steps of .github/workflows/release.yml for the tag TAG (release of @polyspec/kit, config/release.json), in this order:
-# release-verify requires the tagged commit on origin/main with the check ci-passed passed, release-assets builds the packages and their archives into
-# var/release/assets, and release-publish creates the GitHub Release. The targets are those of the kit.mk of @polyspec/kit; the
+# The steps of .github/workflows/release.yml (release of @polyspec/kit, config/release.json), in this order: release-tag
+# tags the commit of the successful CI run RUN of ci.yml on main; on that tag release-prepare installs as make hyper-install
+# does, release-tools installs the tools of the release, release-assets builds the packages and their archives into
+# var/release/assets, release-publish creates the draft GitHub Release and release-undraft makes it public. The targets are those of the kit.mk of @polyspec/kit; the
 # archives are built from the built packages, so release-assets builds them first.
 release-assets: packages
 
