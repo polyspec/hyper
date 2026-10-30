@@ -40,7 +40,7 @@ wheels = [
 
 [[package]]
 name = "polyspec-hyper-server"
-version = "0.0.21"
+version = "0.0.22"
 source = { editable = "." }
 dependencies = [
     { name = "polyspec-template" },

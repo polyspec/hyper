@@ -18,7 +18,7 @@
     ],
     "require": {
         "php": ">=8.4",
-        "polyspec/hyper-server": "0.0.21",
+        "polyspec/hyper-server": "0.0.22",
         "polyspec/template": "0.0.15"
     },
     "require-dev": {
