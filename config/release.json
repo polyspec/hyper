@@ -9,27 +9,37 @@
     {
       "kind": "npm",
       "directory": "packages/client",
-      "name": "@polyspec/hyper-client"
+      "name": "@polyspec/hyper-client",
+      "product": "hyper-client",
+      "runtime": "ts"
     },
     {
       "kind": "npm",
       "directory": "packages/server/ts",
-      "name": "@polyspec/hyper-server"
+      "name": "@polyspec/hyper-server",
+      "product": "hyper-server",
+      "runtime": "ts"
     },
     {
       "kind": "npm",
       "directory": "packages/build",
-      "name": "@polyspec/hyper-build"
+      "name": "@polyspec/hyper-build",
+      "product": "hyper-build",
+      "runtime": "ts"
     },
     {
       "kind": "composer",
       "directory": "packages/server/php",
-      "name": "polyspec/hyper-server"
+      "name": "polyspec/hyper-server",
+      "product": "hyper-server",
+      "runtime": "php"
     },
     {
       "kind": "wheel",
       "directory": "packages/server/python",
-      "name": "polyspec-hyper-server"
+      "name": "polyspec-hyper-server",
+      "product": "hyper-server",
+      "runtime": "python"
     }
   ],
   "manifests": {

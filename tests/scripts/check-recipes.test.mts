@@ -142,11 +142,12 @@ test('H27.21 script checks build their asset and server inputs before the runner
   }
 });
 
-// kit K859: npm ci installs the lock of the consumer, and make link then connects the checkouts that .links declares.
-test('H27.21 package consumers install their native locked graph with npm ci and then make link', () => {
+// kit K859: npm ci installs the lock of the consumer, and make install-link then connects the checkouts that .links declares
+// without the Claude Code hook of make link (kit K967), which an installed kit cannot run.
+test('H27.21 package consumers install their native locked graph with npm ci and then make install-link', () => {
   const steps = dryRun('package-check');
   const install = steps.findIndex(step => step.startsWith('cd tests/package-install && ') && / ci /.test(step));
-  const link = steps.findIndex(step => step.includes(kitTool('link')) && step.endsWith('link --project tests/package-install'));
+  const link = steps.findIndex(step => step.includes(kitTool('link')) && step.endsWith(' link'));
   assert.ok(install >= 0 && link > install, steps.join('\n'));
   assert.ok(steps.some(step => step.includes('package-install.test.ts')));
 });

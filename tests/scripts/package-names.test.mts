@@ -13,13 +13,14 @@ type Kind = 'npm' | 'composer' | 'python';
 // The packages that config/release.json releases.
 const released = jsonObjects(parseJsonObject(readFileSync(join(repository, 'config/release.json'), 'utf8'), 'config/release.json').packages, 'config/release.json packages');
 
-// The packages of HR-98: the directory, the kind of its manifest and the name.
-const PACKAGES: { directory: string; kind: Kind; name: string }[] = [
-  { directory: 'packages/client', kind: 'npm', name: '@polyspec/hyper-client' },
-  { directory: 'packages/server/ts', kind: 'npm', name: '@polyspec/hyper-server' },
-  { directory: 'packages/server/php', kind: 'composer', name: 'polyspec/hyper-server' },
-  { directory: 'packages/server/python', kind: 'python', name: 'polyspec-hyper-server' },
-  { directory: 'packages/build', kind: 'npm', name: '@polyspec/hyper-build' },
+// The packages of HR-98: the directory, the kind of its manifest, the name, and the product and the runtime of the label of
+// its release asset (kit P39).
+const PACKAGES: { directory: string; kind: Kind; name: string; product: string; runtime: string }[] = [
+  { directory: 'packages/client', kind: 'npm', name: '@polyspec/hyper-client', product: 'hyper-client', runtime: 'ts' },
+  { directory: 'packages/server/ts', kind: 'npm', name: '@polyspec/hyper-server', product: 'hyper-server', runtime: 'ts' },
+  { directory: 'packages/server/php', kind: 'composer', name: 'polyspec/hyper-server', product: 'hyper-server', runtime: 'php' },
+  { directory: 'packages/server/python', kind: 'python', name: 'polyspec-hyper-server', product: 'hyper-server', runtime: 'python' },
+  { directory: 'packages/build', kind: 'npm', name: '@polyspec/hyper-build', product: 'hyper-build', runtime: 'ts' },
 ];
 
 const MANIFEST: Record<Kind, string> = { npm: 'package.json', composer: 'composer.json', python: 'pyproject.toml' };
@@ -33,13 +34,13 @@ function manifestName(kind: Kind, text: string): string | null {
   return project === undefined ? null : /^name = "([^"]*)"$/m.exec(project)?.[1] ?? null;
 }
 
-for (const { directory, kind, name } of PACKAGES) {
+for (const { directory, kind, name, product, runtime } of PACKAGES) {
   test(`${directory} holds the ${kind} package ${name} and config/release.json releases it from there (HR-98)`, () => {
     const manifest = join(repository, directory, MANIFEST[kind]);
     assert.ok(existsSync(manifest), `${directory}/${MANIFEST[kind]} is missing`);
     assert.equal(manifestName(kind, readFileSync(manifest, 'utf8')), name, `the name of ${directory}/${MANIFEST[kind]}`);
     const entries = released.filter(item => item.name === name && item.kind === RELEASED_KIND[kind]);
-    assert.deepEqual(entries, [{ kind: RELEASED_KIND[kind], directory, name }], `the entry of ${name} in config/release.json`);
+    assert.deepEqual(entries, [{ kind: RELEASED_KIND[kind], directory, name, product, runtime }], `the entry of ${name} in config/release.json`);
   });
 }
 

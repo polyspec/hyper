@@ -26,8 +26,8 @@ test('a fresh checkout can bootstrap the declared native npm without installed t
   const result = spawnSync('make', ['--no-print-directory', '-n', 'bootstrap'], { cwd: root, encoding: 'utf8' });
   assert.equal(result.status, 0, result.stderr);
   assert.match(result.stdout, /\/npm" exec --yes --package=/);
-  assert.match(result.stdout, /packageManager/);
-  assert.match(result.stdout, /npm ci --ignore-scripts --allow-remote=root/);
+  assert.match(result.stdout, /devEngines\.packageManager\.version/);
+  assert.match(result.stdout, /npm --prefix "\$root" ci --ignore-scripts --allow-remote=root/);
   assert.doesNotMatch(result.stdout, /\.\.\/kit/);
 });
 
@@ -72,7 +72,7 @@ test('H27.15-1 explicit bootstrap enables downloads under an inherited offline s
 
 
 // H27.21, kit K859: the consumer of make package-check installs its own lock with npm ci, as its recipe does, since kit
-// ships no install wrapper of npm; make link connects the checkouts of .links afterwards.
+// ships no install wrapper of npm; make install-link connects the checkouts of .links afterwards.
 test('H27.21 the native consumer installs its lock with npm ci offline without editor tools', { timeout: 120000 }, (t) => {
   const root = checkout(t);
   const npm = join(checkoutTools(), 'bin/npm');
@@ -89,11 +89,11 @@ test('H27.21 the native consumer installs its lock with npm ci offline without e
   const template = parseJsonObject(readFileSync(join(project, 'node_modules/@polyspec/template/package.json'), 'utf8'), 'installed template package.json');
   assert.equal(jsonString(template.name, 'installed template name'), '@polyspec/template');
   assert.equal(readFileSync(join(project, 'package-lock.json'), 'utf8'), lock);
-  // H27.48-1, kit K916: with no .links, as in CI, make link of the installed kit links nothing and writes no Claude Code hook,
-  // whose node an installed kit lacks. link reads the checkout from git, so the copy is a work tree, as the CI checkout is.
+  // H27.48-1, H27.50: with no .links, as in CI, make install-link of the installed kit links nothing and writes no Claude Code
+  // hook, whose node an installed kit lacks; make link of development writes it (kit K967). link reads the checkout from git, so the copy is a work tree, as the CI checkout is.
   cpSync('.gitignore', join(root, '.gitignore'));
   for (const args of [['init', '--quiet'], ['add', '--all']]) assert.equal(spawnSync('git', args, { cwd: root, encoding: 'utf8' }).status, 0);
-  const linked = spawnSync('make', ['--no-print-directory', 'link', 'PROJECT=tests/package-install', `NODE=${process.execPath}`], { cwd: root, encoding: 'utf8', env });
+  const linked = spawnSync('make', ['--no-print-directory', 'install-link', `NODE=${process.execPath}`], { cwd: root, encoding: 'utf8', env });
   assert.equal(linked.status, 0, `${linked.stdout}${linked.stderr}`);
   assert.equal(realpathSync(join(project, 'node_modules/@polyspec/hyper-client')), realpathSync(join(root, 'packages/client')));
   assert.equal(existsSync(join(project, '.claude/settings.local.json')), false);

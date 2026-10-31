@@ -1,9 +1,12 @@
-# Native npm installs the declared shared-tool package before make reads its installed bootstrap.
+# The npm that devEngines of package.json names installs the declared shared-tool package before make reads its installed
+# bootstrap. It runs outside the checkout with --prefix, since an npm of another version refuses a folder whose devEngines
+# names npm 12.2.0 (EBADDEVENGINES, kit K938).
 # A native local package link uses this same path; a sibling checkout is optional.
 .PHONY: bootstrap
 BOOTSTRAP_NPM := $(abspath $(shell command -v npm))
 bootstrap: ## Bootstrap the lock with the declared native npm before installed tools exist
-	npm_config_offline=false npm_config_cache="$$PWD/var/bootstrap/npm-cache" "$(BOOTSTRAP_NPM)" exec --yes --package="$$(node -p 'require("./package.json").packageManager.split("+")[0]')" -- npm ci --ignore-scripts --allow-remote=root
+	root="$$PWD"; version="$$(node -p 'require("./package.json").devEngines.packageManager.version')"; \
+	cd "$${TMPDIR:-/tmp}" && npm_config_offline=false npm_config_cache="$$root/var/bootstrap/npm-cache" "$(BOOTSTRAP_NPM)" exec --yes --package="npm@$$version" -- npm --prefix "$$root" ci --ignore-scripts --allow-remote=root
 
 ifneq ($(filter bootstrap,$(MAKECMDGOALS)),)
 ifneq ($(words $(MAKECMDGOALS)),1)
@@ -177,17 +180,17 @@ packages: ## Build the JavaScript modules and type declarations of the npm packa
 
 # The path repository of the board links the PHP server package to packages/server/php (Composer's default, HR-79), so the
 # board runs the current source without a copy. The install reads no registry: the targets of the checks reach it, so Composer
-# installs offline from the cache that make hyper-install filled (HR-89), and make link then links the polyspec packages that a
-# sibling checkout provides (K448).
-hyper-server-php-install: ## Install the Composer dependencies of the board offline, which link polyspec/hyper-server to packages/server/php (HR-79), and link the sibling polyspec packages
+# installs offline from the cache that make hyper-install filled (HR-89), and make install-link then links the polyspec packages
+# that a checkout of .links provides (K448); it writes no Claude Code hook, which make link of development writes (kit K967).
+hyper-server-php-install: ## Install the Composer dependencies of the board offline, which link polyspec/hyper-server to packages/server/php (HR-79), and link the polyspec packages of .links
 	$(NODE) $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(COMPOSER_BIN) install --no-interaction --working-dir=$(BOARD)
-	$(MAKE) --no-print-directory link PROJECT=$(BOARD)
+	$(MAKE) --no-print-directory install-link
 
 # package-check is a check, so it installs offline from the npm cache that make hyper-install filled and fails by the name of a
 # package that the cache lacks (HR-89); npm alone owns the links and installed records of this declared consumer graph.
 package-check: packages node-fixtures ## Install the npm packages into tests/package-install offline, link them, type-check its test against their declarations and run it under node (HR-61)
 	cd tests/package-install && $(NODE) $(KIT)/holder-lock.$(KIT_EXT) run $(abspath $(INSTALL_LOCK)) -- $(NPM) ci --no-audit --allow-remote=root
-	$(MAKE) --no-print-directory link PROJECT=tests/package-install
+	$(MAKE) --no-print-directory install-link
 	$(TSC) -p tests/package-install/tsconfig.json
 	NPM_BIN=$(NPM) $(NODE) $(KIT)/run-tests.$(KIT_EXT) node --cwd tests/package-install -- package-install.test.ts
 

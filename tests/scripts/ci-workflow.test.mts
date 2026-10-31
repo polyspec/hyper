@@ -24,7 +24,7 @@ const RUNNER = 'ubuntu-26.04-arm';
 const STOPPING: Record<string, string[]> = { 'ci.yml': ['ci-passed'], 'release.yml': ['release'] };
 const CI_PASSED = 'ci-passed';
 const CI_PASSED_RUN = "make ci-passed RESULTS='${{ toJSON(needs) }}'";
-// The bootstrap of @polyspec/kit in a fresh checkout: the npm of packageManager, then the packages of package-lock.json.
+// The bootstrap of @polyspec/kit in a fresh checkout: the npm that devEngines names, then the packages of package-lock.json.
 const BOOTSTRAP_RUNS = ['make bootstrap', 'make install-tools TOOLS=npm', 'make install-packages'];
 
 interface Step { text: string; run: string | undefined; uses: string | undefined; if: string | undefined }
@@ -126,11 +126,12 @@ test('every step that runs a command runs make, and every step after the first r
 });
 
 // The on: block of each workflow, exactly: the checks run on the push of main and on every manual run; the release on a
-// manual run with the id of a successful CI run and its version, and on no tag push; the gates of kit when ci.yml calls them.
+// manual run with the id of a successful CI run alone, whose version is the first ## X.Y.Z of the change log (K924), and on no
+// tag push; the gates of kit when ci.yml calls them.
 // No other workflow exists, and none runs on a pull request or a merge group (HR-91, HR-95).
 const TRIGGERS: Record<string, string> = {
   'ci.yml': 'on:\n  push:\n    branches: [main]\n  workflow_dispatch:\n',
-  'release.yml': 'on:\n  workflow_dispatch:\n    inputs:\n      run:\n        description: The id of the successful CI run of main whose commit is released\n        required: true\n        type: string\n      version:\n        description: The version of the release, X.Y.Z, such as 0.0.1\n        required: true\n        type: string\n',
+  'release.yml': 'on:\n  workflow_dispatch:\n    inputs:\n      run:\n        description: The id of the successful CI run of main whose commit is released\n        required: true\n        type: string\n',
   // The gates workflow of @polyspec/kit (K910), a copy that make kit-check holds to the package, which only the job kit calls.
   'ci-pipeline.yml': 'on:\n  workflow_call:\n',
 };
@@ -234,7 +235,7 @@ test('the workflow ci runs every matrix entry in a job that runs to its end and 
     for (const entry of matrixEntries(text)) {
       assert.equal(entry.browser, entry.targets.some((target) => ['parity', 'server-parity', 'server-parity-python', 'e2e'].includes(target)), `${entry.name}: browser flag`);
     }
-    // The Makefile includes the kit.mk of @polyspec/kit only after the bootstrap installs the npm of packageManager and the
+    // The Makefile includes the kit.mk of @polyspec/kit only after the bootstrap installs the npm of devEngines and the
     // packages, and the recipes run the Python of var/tools, so every job runs the bootstrap and make install-tools in this
     // order before its first check.
     const runs = job.steps.map((step) => step.run);
