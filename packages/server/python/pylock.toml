@@ -24,8 +24,8 @@ wheels = [{ url = "https://files.pythonhosted.org/packages/41/45/1a4ed80516f0215
 
 [[packages]]
 name = "polyspec-template"
-version = "0.0.15"
-archive = { url = "https://github.com/polyspec/template/releases/download/v0.0.15/polyspec_template-0.0.15-py3-none-any.whl", hashes = { sha256 = "7421c621f58fa6adc273998b6b47742ed1fa49590c13f80610c25d488d3f1b9e" } }
+version = "0.0.17"
+archive = { url = "https://github.com/polyspec/template/releases/download/v0.0.17/polyspec_template-0.0.17-py3-none-any.whl", hashes = { sha256 = "f2ed215a7cfcb729a2d9a912026ee360e42573cd8845656fb1013879e3933066" } }
 
 [[packages]]
 name = "referencing"

@@ -1,4 +1,4 @@
-// Tests that hyper depends on one template release, 0.0.15 (H21.4, H23.23, H23.25, H23.28): the tag TEMPLATE_TAG of the Makefile, the npm packages
+// Tests that hyper depends on one template release, 0.0.17 (H21.4, H23.23, H23.25, H23.28): the tag TEMPLATE_TAG of the Makefile, the npm packages
 // and their locks, the Composer packages and their locks, the php-ext package that PIE builds, the Python package
 // of packages/server/python, and the checkouts of the template repository in the workflows name that release and no
 // other. A mixed version fails here before any install runs.
@@ -20,7 +20,7 @@ const optionalMember = (object: JsonObject, key: string, where: string): JsonObj
 const composerPackage = (lock: string, name: string): JsonObject | undefined => jsonObjects(json(lock).packages, `${lock} packages`).find((entry) => entry.name === name);
 
 // The template release that hyper depends on (H21.4, H23.23). Every pin below names this version.
-const VERSION = '0.0.15';
+const VERSION = '0.0.17';
 const TAG = `v${VERSION}`;
 const RELEASE = `https://github.com/polyspec/template/releases/download/${TAG}`;
 const NPM_PACKAGES = ['@polyspec/template', '@polyspec/template-compiler'];
@@ -33,7 +33,7 @@ test('TEMPLATE_TAG of the Makefile is the tag of the single template release (H2
 test('the npm manifests name the template tarballs of the release, and their dependencies name its version (H21.4)', () => {
   const root = json('package.json');
   for (const name of NPM_PACKAGES) {
-    const tarball = `${RELEASE}/${name.slice(1).replace('/', '-')}-npm-${VERSION}.tgz`;
+    const tarball = `${RELEASE}/${name.slice(1).replace('/', '-')}-${VERSION}.tgz`;
     assert.equal(member(root, 'dependencies', 'package.json')[name], tarball, `package.json dependencies ${name}`);
     assert.equal(member(root, 'overrides', 'package.json')[name], `$${name}`, `package.json overrides ${name} through its direct dependency`);
   }
@@ -44,7 +44,7 @@ test('the npm manifests name the template tarballs of the release, and their dep
   const installed = optionalMember(json('tests/package-install/package.json'), 'dependencies', 'tests/package-install/package.json');
   assert.ok(NPM_PACKAGES.some((name) => name in installed), 'tests/package-install installs a template package');
   for (const name of NPM_PACKAGES.filter((name) => name in installed)) {
-    assert.equal(installed[name], `${RELEASE}/${name.slice(1).replace('/', '-')}-npm-${VERSION}.tgz`, `tests/package-install/package.json ${name}`);
+    assert.equal(installed[name], `${RELEASE}/${name.slice(1).replace('/', '-')}-${VERSION}.tgz`, `tests/package-install/package.json ${name}`);
   }
 });
 
@@ -56,7 +56,7 @@ test('the npm locks record the template tarballs of the release (H21.4)', () => 
       if (value === undefined) continue;
       const entry = jsonObject(value, `${lock} node_modules/${name}`);
       assert.equal(entry.version, VERSION, `${lock} ${name} version`);
-      assert.equal(entry.resolved, `${RELEASE}/${name.slice(1).replace('/', '-')}-npm-${VERSION}.tgz`, `${lock} ${name} resolved`);
+      assert.equal(entry.resolved, `${RELEASE}/${name.slice(1).replace('/', '-')}-${VERSION}.tgz`, `${lock} ${name} resolved`);
     }
   }
   assert.ok(member(json('package-lock.json'), 'packages', 'package-lock.json')['node_modules/@polyspec/template'], 'the root lock pins @polyspec/template');

@@ -44,7 +44,7 @@ test('release declarations pin template tarballs while installed source packages
   assert.equal(member('packages/server/ts/package.json', 'dependencies')['@polyspec/template'], version);
   for (const name of PACKAGES) assert.equal(member('packages/build/package.json', 'dependencies')[name], version, name);
   for (const name of PACKAGES) {
-    const tarball = `https://github.com/polyspec/template/releases/download/v${version}/${name.slice(1).replace('/', '-')}-npm-${version}.tgz`;
+    const tarball = `https://github.com/polyspec/template/releases/download/v${version}/${name.slice(1).replace('/', '-')}-${version}.tgz`;
     assert.equal(dependencies[name], tarball, name);
     const entry = jsonObject(packages[`node_modules/${name}`], `package-lock.json node_modules/${name}`);
     assert.equal(entry.resolved, tarball, name);
