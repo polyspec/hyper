@@ -102,7 +102,7 @@ The push of `main` runs `.github/workflows/ci.yml`, the full suite (see [CI](#ci
 
 ## Tag releases
 
-A release is the commit of a successful run of `.github/workflows/ci.yml` on `main`, tagged `vX.Y.Z` (HR-95, the procedure in `AGENTS.md`). The maintainer dispatches `.github/workflows/release.yml` with the id of that run alone (`gh workflow run release.yml -f run=<id>`), and the version is the first section `## X.Y.Z` of `CHANGELOG.md` at the commit of that run (kit K924); no tag push starts it. Its steps run `release` of `@polyspec/kit`, configured by `config/release.json`, in this order and stop at the first failure:
+A release is the commit of a successful run of `.github/workflows/ci.yml` on `main`, tagged `vX.Y.Z` (HR-95, the procedure in `AGENTS.md`). `.github/workflows/release.yml` starts by itself when the CI run of a push whose tip is the version-bump commit succeeds (kit K987), and the maintainer can start it again with the id of that run alone (`gh workflow run release.yml -f run=<id>`); the version is the first section `## X.Y.Z` of `CHANGELOG.md` at the commit of that run (kit K924); no tag push starts it. Its steps run `release` of `@polyspec/kit`, configured by `config/release.json`, in this order and stop at the first failure:
 
 ```sh
 make release-tag

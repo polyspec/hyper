@@ -103,7 +103,7 @@ git push origin main
 
 ## Tag 릴리스
 
-릴리스는 `main`에서 `.github/workflows/ci.yml`의 실행이 성공한 commit에 붙인 tag `vX.Y.Z`이다(HR-95, 절차는 `AGENTS.md`). maintainer는 그 실행의 id만으로 `.github/workflows/release.yml`을 dispatch하고(`gh workflow run release.yml -f run=<id>`), 버전은 그 실행의 commit에 있는 `CHANGELOG.md`의 첫 section `## X.Y.Z`이며(kit K924), tag의 push는 그것을 시작하지 않는다. 그 step은 다음 순서로 `config/release.json`으로 설정한 `@polyspec/kit`의 `release`를 실행하고 첫 실패에서 멈춘다.
+릴리스는 `main`에서 `.github/workflows/ci.yml`의 실행이 성공한 commit에 붙인 tag `vX.Y.Z`이다(HR-95, 절차는 `AGENTS.md`). `.github/workflows/release.yml`은 맨 끝 commit이 버전 올림 commit인 push의 CI 실행이 성공하면 스스로 시작하고(kit K987), maintainer는 그 실행의 id만으로 그것을 다시 시작할 수 있으며(`gh workflow run release.yml -f run=<id>`), 버전은 그 실행의 commit에 있는 `CHANGELOG.md`의 첫 section `## X.Y.Z`이며(kit K924), tag의 push는 그것을 시작하지 않는다. 그 step은 다음 순서로 `config/release.json`으로 설정한 `@polyspec/kit`의 `release`를 실행하고 첫 실패에서 멈춘다.
 
 ```sh
 make release-tag

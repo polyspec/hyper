@@ -131,7 +131,8 @@ test('every step that runs a command runs make, and every step after the first r
 // No other workflow exists, and none runs on a pull request or a merge group (HR-91, HR-95).
 const TRIGGERS: Record<string, string> = {
   'ci.yml': 'on:\n  push:\n    branches: [main]\n  workflow_dispatch:\n',
-  'release.yml': 'on:\n  workflow_dispatch:\n    inputs:\n      run:\n        description: The id of the successful CI run of main whose commit is released\n        required: true\n        type: string\n',
+  // kit K987: the release starts by itself when a CI run of main succeeds, and a dispatch starts it again.
+  'release.yml': 'on:\n  workflow_run:\n    workflows: [ci]\n    types: [completed]\n    branches: [main]\n  workflow_dispatch:\n    inputs:\n      run:\n        description: The id of the successful CI run of main whose commit is released\n        required: true\n        type: string\n',
   // The gates workflow of @polyspec/kit (K910), a copy that make kit-check holds to the package, which only the job kit calls.
   'ci-pipeline.yml': 'on:\n  workflow_call:\n',
 };

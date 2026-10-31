@@ -180,17 +180,18 @@ packages: ## Build the JavaScript modules and type declarations of the npm packa
 
 # The path repository of the board links the PHP server package to packages/server/php (Composer's default, HR-79), so the
 # board runs the current source without a copy. The install reads no registry: the targets of the checks reach it, so Composer
-# installs offline from the cache that make hyper-install filled (HR-89), and make install-link then links the polyspec packages
-# that a checkout of .links provides (K448); it writes no Claude Code hook, which make link of development writes (kit K967).
+# installs offline from the cache that make hyper-install filled (HR-89), and make install-link PROJECT=$(BOARD) then links into the
+# board alone the polyspec packages that a checkout of .links provides (K448, kit K983); it writes no Claude Code hook, which make
+# link of development writes (kit K967).
 hyper-server-php-install: ## Install the Composer dependencies of the board offline, which link polyspec/hyper-server to packages/server/php (HR-79), and link the polyspec packages of .links
 	$(NODE) $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(COMPOSER_BIN) install --no-interaction --working-dir=$(BOARD)
-	$(MAKE) --no-print-directory install-link
+	$(MAKE) --no-print-directory install-link PROJECT=$(BOARD)
 
 # package-check is a check, so it installs offline from the npm cache that make hyper-install filled and fails by the name of a
 # package that the cache lacks (HR-89); npm alone owns the links and installed records of this declared consumer graph.
 package-check: packages node-fixtures ## Install the npm packages into tests/package-install offline, link them, type-check its test against their declarations and run it under node (HR-61)
 	cd tests/package-install && $(NODE) $(KIT)/holder-lock.$(KIT_EXT) run $(abspath $(INSTALL_LOCK)) -- $(NPM) ci --no-audit --allow-remote=root
-	$(MAKE) --no-print-directory install-link
+	$(MAKE) --no-print-directory install-link PROJECT=tests/package-install
 	$(TSC) -p tests/package-install/tsconfig.json
 	NPM_BIN=$(NPM) $(NODE) $(KIT)/run-tests.$(KIT_EXT) node --cwd tests/package-install -- package-install.test.ts
 

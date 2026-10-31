@@ -93,7 +93,7 @@ test('H27.21 the native consumer installs its lock with npm ci offline without e
   // hook, whose node an installed kit lacks; make link of development writes it (kit K967). link reads the checkout from git, so the copy is a work tree, as the CI checkout is.
   cpSync('.gitignore', join(root, '.gitignore'));
   for (const args of [['init', '--quiet'], ['add', '--all']]) assert.equal(spawnSync('git', args, { cwd: root, encoding: 'utf8' }).status, 0);
-  const linked = spawnSync('make', ['--no-print-directory', 'install-link', `NODE=${process.execPath}`], { cwd: root, encoding: 'utf8', env });
+  const linked = spawnSync('make', ['--no-print-directory', 'install-link', 'PROJECT=tests/package-install', `NODE=${process.execPath}`], { cwd: root, encoding: 'utf8', env });
   assert.equal(linked.status, 0, `${linked.stdout}${linked.stderr}`);
   assert.equal(realpathSync(join(project, 'node_modules/@polyspec/hyper-client')), realpathSync(join(root, 'packages/client')));
   assert.equal(existsSync(join(project, '.claude/settings.local.json')), false);
