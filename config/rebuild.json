@@ -110,6 +110,10 @@
       "kind": "policy",
       "reason": "HR-84: a log line never joins the next line; the script ends each stream of a command that left no final newline, which no ecosystem tool does"
     },
+    "scripts/pie-binary.mts": {
+      "kind": "ecosystem",
+      "tool": "node:fs reads the installed.json that PIE and Composer write for the package polyspec/template-php-ext, and its pie-built-binary entries (H27.51)"
+    },
     "scripts/publish.mts": {
       "kind": "ecosystem",
       "tool": "node:fs renames, through publish of packages/build/lib/publish.mjs (HR-82)"
