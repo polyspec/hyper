@@ -40,7 +40,7 @@ export HYPER_PYTHON := $(PYTHON_VENV)/bin/python
 # package.json names (HR-70). Composer installs polyspec/template from TEMPLATE_PACKAGES, the Composer repository of the
 # release (packages.json), which composer.json and examples/board/composer.json declare and whose dist carries the sha1 of the
 # php zip; PIE builds the native template extension polyspec/template-php-ext from the same repository (H27.45).
-TEMPLATE_VERSION := 0.0.18
+TEMPLATE_VERSION := 0.0.19
 TEMPLATE_TAG := v$(TEMPLATE_VERSION)
 TEMPLATE_PACKAGES := https://github.com/polyspec/template/releases/download/$(TEMPLATE_TAG)/packages.json
 FIXTURES := $(PHP_PACKAGE)/tests/fixtures

@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3eb43f2cbcafacde70fec2b9aeb52425",
+    "content-hash": "e8dfd2d4634a71ed63161b85265f7f8f",
     "packages": [
         {
-            "name": "opis/json-schema",
-            "version": "v2.6.0-p1",
+            "name": "min-0-max/json-schema",
+            "version": "dev-polyspec-origin-2.6.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/min-0-max/json-schema",
-                "reference": "d810833cd43de0ec2c367db6e812e12bf4440e47"
+                "reference": "5978fa780990500c5d85e08464b7d7a7391f93d0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/min-0-max/json-schema/zipball/d810833cd43de0ec2c367db6e812e12bf4440e47",
-                "reference": "d810833cd43de0ec2c367db6e812e12bf4440e47",
+                "url": "https://api.github.com/repos/min-0-max/json-schema/zipball/5978fa780990500c5d85e08464b7d7a7391f93d0",
+                "reference": "5978fa780990500c5d85e08464b7d7a7391f93d0",
                 "shasum": ""
             },
             "require": {
@@ -31,6 +31,7 @@
                 "ext-intl": "*",
                 "phpunit/phpunit": "^9.0"
             },
+            "default-branch": true,
             "type": "library",
             "extra": {
                 "branch-alias": {
@@ -74,7 +75,7 @@
                 "validation",
                 "validator"
             ],
-            "time": "2026-10-15T02:57:09+00:00"
+            "time": "2026-11-01T06:28:48+00:00"
         },
         {
             "name": "opis/string",
@@ -207,11 +208,11 @@
             "dist": {
                 "type": "path",
                 "url": "../../packages/server/php",
-                "reference": "c9aadd5e088d3c42fbb14abadf423cae45039362"
+                "reference": "1cb48796117ce10f002051ec7d368a1f59e8711c"
             },
             "require": {
                 "php": ">=8.4",
-                "polyspec/template": "0.0.18"
+                "polyspec/template": "0.0.19"
             },
             "require-dev": {
                 "laravel/pint": "^1.32.1",
@@ -248,15 +249,15 @@
         },
         {
             "name": "polyspec/template",
-            "version": "0.0.18",
+            "version": "0.0.19",
             "dist": {
                 "type": "zip",
-                "url": "https://github.com/polyspec/template/releases/download/v0.0.18/polyspec-template-php-0.0.18.zip",
-                "shasum": "a3ed7e9354eef2b03c17bfb523e1fa192fbba1c4"
+                "url": "https://github.com/polyspec/template/releases/download/v0.0.19/polyspec-template-php-0.0.19.zip",
+                "shasum": "a90524721b8308372ea5d8d26b8dfafb47655a02"
             },
             "require": {
                 "ext-mbstring": "*",
-                "opis/json-schema": "^2.6",
+                "min-0-max/json-schema": "*",
                 "php": ">=8.4"
             },
             "require-dev": {
@@ -354,7 +355,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": {
+        "min-0-max/json-schema": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

@@ -47,17 +47,17 @@ dependencies = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "polyspec-template", url = "https://github.com/polyspec/template/releases/download/v0.0.18/polyspec_template-0.0.18-py3-none-any.whl" }]
+requires-dist = [{ name = "polyspec-template", url = "https://github.com/polyspec/template/releases/download/v0.0.19/polyspec_template-0.0.19-py3-none-any.whl" }]
 
 [[package]]
 name = "polyspec-template"
-version = "0.0.18"
-source = { url = "https://github.com/polyspec/template/releases/download/v0.0.18/polyspec_template-0.0.18-py3-none-any.whl" }
+version = "0.0.19"
+source = { url = "https://github.com/polyspec/template/releases/download/v0.0.19/polyspec_template-0.0.19-py3-none-any.whl" }
 dependencies = [
     { name = "jsonschema" },
 ]
 wheels = [
-    { url = "https://github.com/polyspec/template/releases/download/v0.0.18/polyspec_template-0.0.18-py3-none-any.whl", hash = "sha256:903af4a3b142c79d8a16f9196ee5523a96ff60e241bbc10dd5b124ab85136e98" },
+    { url = "https://github.com/polyspec/template/releases/download/v0.0.19/polyspec_template-0.0.19-py3-none-any.whl", hash = "sha256:4743b7f9d1374a30a6e561759e0b8fa0002e325da377357ecf60018bfad413ca" },
 ]
 
 [package.metadata]

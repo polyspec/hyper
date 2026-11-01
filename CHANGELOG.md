@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- hyper pins template 0.0.19 by its asset names and digests, and both Composer roots require the json-schema fork by its own name, "min-0-max/json-schema": "dev-polyspec-origin-2.6.0", in place of "opis/json-schema": "2.6.0-p1", since template 0.0.19 requires that name; the locks pin the default branch polyspec-origin-2.6.0 of the fork and hold no opis/json-schema, and AGENTS.md and development.md name that branch (H27.62).
 - hyper adopts kit 0.0.88, whose make kit-gates-static runs every shared gate before a push and whose kit-check judges one CI pipeline (S12), no editable installs (S11) and no manifest path out of the repository (P30); make kit-sync writes its PRINCIPLES (H27.61).
 - The job check of ci.yml follows the job kit with needs: kit, as kit S12 requires, so it runs only after the gates of kit passed (H27.60); the tests H27.24 and H27.25 accept that needs and still rejects any other.
 - AGENTS.md names only checks that a target runs in the Enforced by line of its template pins rule, so rules-check passes, and the owner checks select rules-check for AGENTS.md and PRINCIPLES.md (H27.59). The line named the test file of template-pins in backticks, which rules-check reads as a check that no target reaches.
