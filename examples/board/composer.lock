@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "67f53b1a69520ed103ba42ae522ae035",
+    "content-hash": "3d2af35dcb598fb5f642a5c9d0d99e48",
     "packages": [
         {
             "name": "min-0-max/json-schema",
@@ -204,11 +204,11 @@
         },
         {
             "name": "polyspec/hyper-server",
-            "version": "0.0.25",
+            "version": "0.0.26",
             "dist": {
                 "type": "path",
                 "url": "../../packages/server/php",
-                "reference": "948f0287a80316ca3379058fa7517249adbd7bd0"
+                "reference": "64c985b7d4e1be7dcb29c381db7c96e6d842f1e0"
             },
             "require": {
                 "php": ">=8.4",

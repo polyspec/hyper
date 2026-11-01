@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+## 0.0.26
+- Release 0.0.26 after H27.64 and H27.65: every manifest of config/release.json, the exact requirements of polyspec/hyper-server and @polyspec/hyper-client and the locks that npm, Composer and uv wrote hold 0.0.26; the release carries template 0.0.20 and kit 0.0.92.
 - hyper pins template 0.0.20 by its asset names and digests: the wheel sha256 dbdeb77e...2e7b, the Composer zip polyspec-template-php-0.0.20.zip SHA-256 12c5eaf9...3da7 and SHA-1 a0e29731...68ff, and the npm tarballs by the sha512 of each released asset in package-lock.json and tests/package-install/package-lock.json (H27.65).
 - H27.64: hyper adopts Kit 0.0.92 (H27.64).
 ## 0.0.25
