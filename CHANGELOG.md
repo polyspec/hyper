@@ -5,6 +5,7 @@
 
 ## Unreleased
 
+- H27.64: hyper adopts Kit 0.0.92 (H27.64).
 ## 0.0.25
 - Release 0.0.25 after H27.57 to H27.62: every manifest of config/release.json, the exact requirements of polyspec/hyper-server and @polyspec/hyper-client and the locks that npm, Composer and uv wrote hold 0.0.25; the release carries template 0.0.19 and kit 0.0.88, and its Composer roots require the json-schema fork as min-0-max/json-schema.
 - tests/package-install/package-lock.json pins the template 0.0.19 tarball by its own sha512 in place of the integrity of the 0.0.18 tarball, which npm kept when the URL changed, so make package-check installs it offline; template-pins.test.mts requires one integrity per asset across the npm locks (H27.63).

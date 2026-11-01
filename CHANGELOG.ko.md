@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 1de179c383aeca14dea5dc49978b7150a7cd3806b217caedd01ea75fe679a26d -->
+<!-- source-sha256: db027c2185f289f31bc520792b6e224f89ee7e1bb2ec2e2e7b965eef868d643e -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- H27.64: hyper이 Kit 0.0.92를 채택한다 (H27.64).
 ## 0.0.25
 - H27.57부터 H27.62 뒤의 Release 0.0.25: config/release.json의 모든 manifest, polyspec/hyper-server와 @polyspec/hyper-client의 정확한 요구, npm, Composer, uv가 쓴 lock은 0.0.25를 담는다. 이 release는 template 0.0.19와 kit 0.0.88을 싣고, 그 Composer root는 json-schema fork를 min-0-max/json-schema로 요구한다.
 - tests/package-install/package-lock.json은 URL이 바뀔 때 npm이 남긴 0.0.18 tarball의 integrity 대신 template 0.0.19 tarball 자신의 sha512로 그것을 고정하므로, make package-check가 그것을 offline으로 설치한다. template-pins.test.mts는 npm lock 전체에서 asset 하나에 integrity 하나를 요구한다(H27.63).
