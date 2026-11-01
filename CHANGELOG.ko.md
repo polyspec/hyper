@@ -5,6 +5,9 @@
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+## 0.0.24
+- H27.55와 H27.56 다음의 릴리스 0.0.24: config/release.json의 모든 manifest, polyspec/hyper-server와 @polyspec/hyper-client의 정확한 요구 version, npm, Composer, uv가 쓴 lock이 0.0.24를 담는다. 이 릴리스는 template 0.0.18과 Kit 0.0.87을 담는다.
 - Kit 0.0.87이 pin한 release다(H27.55). make kit-sync가 그 bootstrap action .github/actions/kit-bootstrap/action.yml을 vendor하며, 복사한 ci-pipeline.yml과 release.yml이 모든 job에서 그것을 실행한다(K992). make 실행은 install-link가 packed kit을 link로 바꾼 뒤 link한 kit을 따른다(K993).
 - Template 0.0.18이 pin한 release다(H27.56). TEMPLATE_VERSION, CI checkout, manifest와 npm, Composer, uv가 쓴 lock이 그 wheel과 Composer zip의 digest와 함께 그것을 부른다.
 

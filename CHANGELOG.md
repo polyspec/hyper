@@ -4,6 +4,9 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+
+## 0.0.24
+- Release 0.0.24 after H27.55 and H27.56: every manifest of config/release.json, the exact requirements of polyspec/hyper-server and @polyspec/hyper-client and the locks that npm, Composer and uv wrote hold 0.0.24; the release carries template 0.0.18 and Kit 0.0.87.
 - Kit 0.0.87 is the pinned release (H27.55). make kit-sync vendors its bootstrap action .github/actions/kit-bootstrap/action.yml, which the copied ci-pipeline.yml and release.yml run in every job (K992); a make run follows the linked kit after install-link replaces the packed one (K993).
 - Template 0.0.18 is the pinned release (H27.56): TEMPLATE_VERSION, the CI checkout, the manifests and the locks that npm, Composer and uv wrote name it, with the digests of its wheel and its Composer zip.
 
