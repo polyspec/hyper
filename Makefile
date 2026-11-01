@@ -41,7 +41,7 @@ export HYPER_PYTHON := $(PYTHON_VENV)/bin/python
 # release (packages.json), which composer.json and examples/board/composer.json declare and whose dist carries the sha1 of the
 # php zip; PIE builds the native template extension polyspec/template-php-ext from the same repository (H27.45).
 # The template repository of TEMPLATE_REPOSITORY supplies the tag checked before final verification (HR-80).
-TEMPLATE_VERSION := 0.0.17
+TEMPLATE_VERSION := 0.0.18
 TEMPLATE_TAG := v$(TEMPLATE_VERSION)
 TEMPLATE_PACKAGES := https://github.com/polyspec/template/releases/download/$(TEMPLATE_TAG)/packages.json
 TEMPLATE_REPOSITORY := ../template

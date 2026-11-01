@@ -9,11 +9,11 @@ description = "Server for the polyspec region protocol: manifest, routing, docum
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
-    # The wheel asset of the template release v0.0.17 with the sha256 of that asset (H21.4, H23.5). `make hyper-install-python`
+    # The wheel asset of the template release v0.0.18 with the sha256 of that asset (H21.4, H23.5). `make hyper-install-python`
     # installs this declaration into the venv of the package; pylock.toml, which uv pip compile writes from it and
     # constraints.txt (its header names the command), is the lock that the release consumer installs with the wheel of
     # this package (H23.15).
-    "polyspec-template @ https://github.com/polyspec/template/releases/download/v0.0.17/polyspec_template-0.0.17-py3-none-any.whl#sha256=f2ed215a7cfcb729a2d9a912026ee360e42573cd8845656fb1013879e3933066",
+    "polyspec-template @ https://github.com/polyspec/template/releases/download/v0.0.18/polyspec_template-0.0.18-py3-none-any.whl#sha256=903af4a3b142c79d8a16f9196ee5523a96ff60e241bbc10dd5b124ab85136e98",
 ]
 
 [tool.setuptools]

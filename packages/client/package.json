@@ -27,7 +27,7 @@
     "build": "tsc -p tsconfig.build.json"
   },
   "dependencies": {
-    "@polyspec/template": "0.0.17",
+    "@polyspec/template": "0.0.18",
     "eventsource-parser": "4.1.3"
   }
 }

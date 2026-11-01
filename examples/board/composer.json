@@ -5,13 +5,13 @@
     "license": "MIT",
     "repositories": [
         { "type": "path", "url": "../../packages/server/php", "options": { "reference": "config" } },
-        { "type": "composer", "url": "https://github.com/polyspec/template/releases/download/v0.0.17/packages.json" }
+        { "type": "composer", "url": "https://github.com/polyspec/template/releases/download/v0.0.18/packages.json" }
     ],
     "require": {
         "php": ">=8.4",
         "ext-pdo_sqlite": "*",
         "polyspec/hyper-server": "0.0.23",
-        "polyspec/template": "0.0.17"
+        "polyspec/template": "0.0.18"
     },
     "require-dev": {
         "laravel/pint": "^1.32.1"

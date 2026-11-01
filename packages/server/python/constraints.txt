@@ -1,6 +1,6 @@
 attrs==26.1.0
 jsonschema==4.26.0
 jsonschema-specifications==2025.9.1
-polyspec-template @ https://github.com/polyspec/template/releases/download/v0.0.17/polyspec_template-0.0.17-py3-none-any.whl#sha256=f2ed215a7cfcb729a2d9a912026ee360e42573cd8845656fb1013879e3933066
+polyspec-template @ https://github.com/polyspec/template/releases/download/v0.0.18/polyspec_template-0.0.18-py3-none-any.whl#sha256=903af4a3b142c79d8a16f9196ee5523a96ff60e241bbc10dd5b124ab85136e98
 referencing==0.37.0
 rpds-py==2026.9.1

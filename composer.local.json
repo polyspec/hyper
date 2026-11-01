@@ -32,7 +32,7 @@
     "require": {
         "php": ">=8.4",
         "polyspec/hyper-server": "0.0.23",
-        "polyspec/template": "0.0.17",
+        "polyspec/template": "0.0.18",
         "opis/json-schema": "^2.6@dev"
     },
     "require-dev": {

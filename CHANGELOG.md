@@ -5,6 +5,7 @@
 
 ## Unreleased
 - Kit 0.0.87 is the pinned release (H27.55). make kit-sync vendors its bootstrap action .github/actions/kit-bootstrap/action.yml, which the copied ci-pipeline.yml and release.yml run in every job (K992); a make run follows the linked kit after install-link replaces the packed one (K993).
+- Template 0.0.18 is the pinned release (H27.56): TEMPLATE_VERSION, the CI checkout, the manifests and the locks that npm, Composer and uv wrote name it, with the digests of its wheel and its Composer zip.
 
 ## 0.0.23
 - Release 0.0.23 after H27.53 and H27.54: every manifest of config/release.json, the exact requirements of polyspec/hyper-server and @polyspec/hyper-client and their locks hold 0.0.23, so the release carries template 0.0.17 and Kit 0.0.86; its version commit is the tip of its push, whose green CI releases it (K987).
