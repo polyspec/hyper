@@ -5,6 +5,7 @@
 [English](CHANGELOG.md).
 
 ## Unreleased
+- Kit 0.0.87이 pin한 release다(H27.55). make kit-sync가 그 bootstrap action .github/actions/kit-bootstrap/action.yml을 vendor하며, 복사한 ci-pipeline.yml과 release.yml이 모든 job에서 그것을 실행한다(K992). make 실행은 install-link가 packed kit을 link로 바꾼 뒤 link한 kit을 따른다(K993).
 
 ## 0.0.23
 - H27.53과 H27.54 다음의 릴리스 0.0.23: config/release.json의 모든 manifest, polyspec/hyper-server와 @polyspec/hyper-client의 정확한 요구와 그 lock이 0.0.23을 담으므로, 릴리스는 template 0.0.17과 Kit 0.0.86을 담는다. 그 버전 commit은 push의 맨 끝 commit이고 그 green CI가 그것을 릴리스한다(K987).
