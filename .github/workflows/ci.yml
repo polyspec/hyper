@@ -30,12 +30,13 @@ permissions:
 
 jobs:
   # The gates of kit (kit S12): ci-pipeline.yml, which kit-sync copies, plans and runs the shared, parity and runtime gates.
-  # Only ci-passed needs it: the job check reads no output of the pipeline, so it runs beside it.
+  # Every other job needs it (kit S12), so the job check runs only after the gates of kit passed.
   kit:
     uses: ./.github/workflows/ci-pipeline.yml
 
   check:
     name: check (${{ matrix.name }})
+    needs: kit
     runs-on: ubuntu-26.04-arm
     strategy:
       fail-fast: false

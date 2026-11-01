@@ -369,7 +369,8 @@ test('H27.24 no matrix entry of ci.yml runs a gate of kit, which ci-pipeline.yml
   for (const entry of entries) assert.deepEqual(entry.targets.filter(target => gates.includes(target)), [], `${entry.name} runs gates of kit`);
   const check = jobs(readFileSync(path.join(WORKFLOWS, 'ci.yml'), 'utf8')).find(job => job.name === 'check');
   assert.ok(check !== undefined);
-  assert.doesNotMatch(check.text, /^ {4}needs:/m, 'matrix checks must start independently');
+  // The checks wait for no job of hyper; they need only the job kit, which kit S12 requires (H27.60).
+  assert.doesNotMatch(check.text, /^ {4}needs: (?!kit$)/m, 'matrix checks must need only the job kit');
 });
 
 
@@ -408,7 +409,9 @@ test('H27.25 CI declares job-owned tools and locked package environments (HR-81,
   assert.ok(checks !== undefined);
   assert.ok(checks.steps.some(step => step.run === 'make install-tools TOOLS="${{ matrix.tools }}"'));
   assert.ok(!checks.steps.some(step => step.run === 'make install-tools' || step.run === 'make hyper-install' || step.run === 'make install'));
-  assert.doesNotMatch(checks.text, /actions\/download-artifact@|^ {4}needs:/m);
+  // A check job builds what it tests and takes no artifact of another job; it needs only the job kit, which kit S12
+  // requires and kit-check judges (H27.60).
+  assert.doesNotMatch(checks.text, /actions\/download-artifact@|^ {4}needs: (?!kit$)/m);
   const symbols = checks.steps.find(step => step.run === 'make kit-install-symbols EXTRACTORS="${{ matrix.symbols }}"');
   assert.equal(symbols?.if, '${{ !cancelled() && matrix.symbols }}');
   const php = checks.steps.find(step => step.run === 'make hyper-install-php');
