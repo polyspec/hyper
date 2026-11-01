@@ -1,10 +1,13 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 045d1eecdc8a2008aec6c7098be14ef857ecd331d8fccef3bfefea208830c0b9 -->
+<!-- source-sha256: 9f96fdb8937bf3082864ca50a8677e0d92423be99122426ecf39ae7879c19bc1 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+## 0.0.25
+- H27.57부터 H27.62 뒤의 Release 0.0.25: config/release.json의 모든 manifest, polyspec/hyper-server와 @polyspec/hyper-client의 정확한 요구, npm, Composer, uv가 쓴 lock은 0.0.25를 담는다. 이 release는 template 0.0.19와 kit 0.0.88을 싣고, 그 Composer root는 json-schema fork를 min-0-max/json-schema로 요구한다.
 - hyper는 template 0.0.19를 asset 이름과 digest로 고정하고, template 0.0.19가 json-schema fork를 자신의 이름으로 요구하므로 두 Composer root는 "opis/json-schema": "2.6.0-p1" 대신 "min-0-max/json-schema": "dev-polyspec-origin-2.6.0"을 요구한다. lock은 fork의 기본 branch polyspec-origin-2.6.0을 고정하고 opis/json-schema를 담지 않으며, AGENTS.md와 development.md는 그 branch를 부른다(H27.62).
 - hyper는 kit 0.0.88을 채택한다. 그 make kit-gates-static은 push 전에 모든 공유 gate를 실행하고, 그 kit-check는 하나의 CI pipeline(S12), editable 설치 없음(S11), 저장소 밖을 가리키는 manifest 경로 없음(P30)을 판정한다. make kit-sync가 그 PRINCIPLES를 쓴다(H27.61).
 - ci.yml의 job check는 kit S12가 요구하는 대로 needs: kit으로 job kit을 따르므로, kit의 gate가 통과한 뒤에만 실행된다(H27.60). test H27.24와 H27.25는 그 needs를 받아들이고 다른 needs는 여전히 거부한다.
