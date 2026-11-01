@@ -113,24 +113,6 @@ hyper-install-browser: ## Install Chromium of the pinned Playwright and its syst
 hyper-install-virtiofs: ## Install the digest-pinned image for Darwin virtiofs verification
 	$(ONLINE) container image pull --platform linux/arm64 $(VIRTIOFS_IMAGE)
 
-# Native development graphs have their own manifests and locks; release declarations remain separate.
-.PHONY: composer-development
-composer-development: ## Resolve declared PHP development sources through native Composer
-	COMPOSER=composer.local.json $(NODE) $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(COMPOSER_BIN) install --no-interaction
-	COMPOSER=composer.local.json $(NODE) $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(COMPOSER_BIN) install --no-interaction --working-dir=$(BOARD)
-	$(MAKE) --no-print-directory link
-
-.PHONY: composer-development-check
-composer-development-check: ## Validate selected native PHP development locks and their actual runtime requirements
-	@test -f composer.local.lock -a -f $(BOARD)/composer.local.lock || { echo "composer-development-check: make composer-development creates both development locks" >&2; exit 1; }
-	@failed=; \
-	$(call check,root development lock,COMPOSER=composer.local.json $(COMPOSER_BIN) validate --strict) \
-	$(call check,board development lock,COMPOSER=composer.local.json $(COMPOSER_BIN) validate --strict --working-dir=$(BOARD)) \
-	$(call check,root development platform,COMPOSER=composer.local.json $(COMPOSER_BIN) check-platform-reqs --lock) \
-	$(call check,board development platform,COMPOSER=composer.local.json $(COMPOSER_BIN) check-platform-reqs --lock --working-dir=$(BOARD)) \
-	$(call check,development source records,$(NODE) scripts/check-composer-development.mts --root .) \
-	$(checks_result)
-
 install: hyper-install
 
 test: hyper-test-js hyper-test-node hyper-test-php hyper-test-python hyper-test-python-render hyper-test-scripts

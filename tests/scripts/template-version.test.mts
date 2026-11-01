@@ -64,7 +64,6 @@ test('the npm locks record the template tarballs of the release (H21.4)', () => 
 });
 
 test('the Composer manifests name the Composer repository of the release and their locks its template zip (H21.4, H23.11, H27.45)', () => {
-  // Release applications pin the archive; native development compatibility is checked by composer-development.test.mts.
   const manifests = ['composer.json', 'examples/board/composer.json'];
   for (const manifest of manifests) {
     const require = member(json(manifest), 'require', manifest);

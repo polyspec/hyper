@@ -90,10 +90,6 @@
       "kind": "ecosystem",
       "tool": "node:zlib measures the gzip and brotli sizes against the limits of config/bundle-size.json"
     },
-    "scripts/check-composer-development.mts": {
-      "kind": "policy",
-      "reason": "Checks selected development declarations against native Composer paths, source requirement fields and autoload records to enforce the checkout source-consistency policy."
-    },
     "scripts/check-parity.mts": {
       "kind": "policy",
       "reason": "proves that the browser code and the PHP, Node and Python servers render the same bytes for the requests of one file (HY-12, HY-13, HR-55); no ecosystem tool compares the renderings of this protocol; esbuild bundles the browser code and @polyspec/template renders"

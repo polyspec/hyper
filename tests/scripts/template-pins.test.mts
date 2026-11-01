@@ -58,8 +58,10 @@ test('Composer release declarations name the Composer repository of the release 
   const dists = ['composer.json', 'examples/board/composer.json'].map((manifest) => {
     const { repositories, require } = readObject(manifest);
     assert.equal(jsonObject(require, `${manifest} require`)['polyspec/template'], VERSION, manifest);
+    // Beside the Composer repository of the release, each root declares the VCS repository of the opis/json-schema fork, which
+    // the template decoder needs and which a library such as polyspec/template cannot declare for its consumer (H27.58).
     const declared = jsonObjects(repositories, `${manifest} repositories`).filter((item) => item.type !== 'path');
-    assert.deepEqual(declared, [{ type: 'composer', url: `${RELEASE}/packages.json` }], `${manifest}: the template comes from the Composer repository of the release`);
+    assert.deepEqual(declared, [{ type: 'composer', url: `${RELEASE}/packages.json` }, { type: 'vcs', url: 'https://github.com/min-0-max/json-schema', 'no-api': true }], `${manifest}: the template comes from the Composer repository of the release`);
     const lockFile = manifest.replace(/\.json$/, '.lock');
     const entry = jsonObjects(readObject(lockFile).packages, `${lockFile} packages`).find(({ name }) => name === 'polyspec/template');
     assert.ok(entry !== undefined, `${manifest}: the lock has no polyspec/template`);

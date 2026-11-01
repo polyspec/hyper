@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: 82376da4a06e0e76384452fff5159219ed197251214fda210df7f588ef04ae4b -->
+<!-- source-sha256: f97782e113464177c26631dc5c72fac226543e665ccbaa636d775afede3e7fd1 -->
 # 개발
 
 [English](development.md).
@@ -15,7 +15,7 @@
 
 ## 기본 Composer 개발
 
-`make composer-development`는 root와 board의 추적된 `composer.local.json`을 명시적으로 선택한다. 기본 Composer가 설치 lock 아래에서 무시되는 각 `composer.local.lock`, 소스 link, 설치 기록과 autoload를 만들고 갱신한다. `make composer-development-check`는 PHP 8.4에서 선택한 두 lock의 기본 strict 검증과 platform 검사를 실행한다. 별도 릴리즈 manifest와 lock은 배포 graph를 계속 나타내며 개발 설치 기록으로 사용하지 않는다.
+개발 checkout은 polyspec provider(kit, template)를 자기 `.links`의 항목과 `make link`로만 link한다. opis/json-schema는 tag `v2.6.0-p1`로 묶인 fork다. `composer.json`과 `examples/board/composer.json`은 그 VCS repository `https://github.com/min-0-max/json-schema`를 선언하고 `2.6.0-p1`을 요구하며, 두 lock은 그 tag를 dist와 함께 고정한다. tag는 이름 opis/json-schema를 유지한다. fork의 branch `master`는 이름 min-0-max/json-schema를 가지며, hyper는 template release가 그 이름을 요구하면 그것을 요구한다. `packages/server/php/composer.json`은 repository를 적지 않으므로 polyspec/hyper-server의 소비자는 자기 root에 fork를 선언한다. fork를 편집하는 checkout은 fork의 checkout을 가리키는 `.links` 항목과 `make link`로 provider처럼 그것을 link한다.
 
 선언은 PHP package 소스, template 0.0.18과 기존 JSON Schema fork의 path를 지정한다. fork는 자체 기본 branch metadata를 유지하며 앱이 대체 version을 부여하지 않는다. PHP library는 공개된 template 0.0.18을 요구한다. 기본 해석 검사는 이 version을 허용하고 0.0.17과 0.0.19를 거부하므로 소스 연결은 version alias 대신 선언된 호환 요구를 사용한다. `COMPOSER`는 manifest를 선택하고 `COMPOSER_BIN`은 checkout 실행 파일을 가리킨다. Worktree와 fixture는 Git common directory로 공유 도구 경로를 찾고 설치 의존성은 독립적으로 유지한다.
 

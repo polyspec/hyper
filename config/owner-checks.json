@@ -17,35 +17,11 @@
     },
     {
       "paths": [
-        "scripts/check-composer-development.mts"
-      ],
-      "tests": [
-        "tests/scripts/composer-development.test.mts"
-      ],
-      "targets": [
-        "typecheck"
-      ]
-    },
-    {
-      "paths": [
-        "composer.local.json",
-        "examples/board/composer.local.json"
-      ],
-      "tests": [
-        "tests/scripts/composer-development.test.mts"
-      ],
-      "targets": [
-        "docs-check"
-      ]
-    },
-    {
-      "paths": [
         "tests/scripts/checkout-tools.mts"
       ],
       "tests": [
         "tests/scripts/checkout-tools.test.mts",
-        "tests/scripts/installed-kit.test.mts",
-        "tests/scripts/composer-development.test.mts"
+        "tests/scripts/installed-kit.test.mts"
       ],
       "targets": [
         "typecheck"

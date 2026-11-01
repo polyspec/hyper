@@ -22,8 +22,8 @@ const NPM = path.join(TOOLS, 'bin/npm');
 const NODE = path.join(TOOLS, 'bin/node');
 // Composer is a tool of mise.toml, run by its shim (kit K127).
 const COMPOSER = path.join(TOOLS, 'mise/shims/composer');
-// The commands of recipe lines: a command that a lock runs follows its --, and the variable assignments before a command, as
-// COMPOSER=composer.local.json of make composer-development, are its environment, not the command.
+// The commands of recipe lines: a command that a lock runs follows its --, and the variable assignments before a command are
+// its environment, not the command.
 const commandsOf = (lines: string[]) => lines.flatMap((line) => line.split(/&&|;|\|\||\s--\s/).map((part) => part.trim().replace(/^(?:[A-Za-z_][A-Za-z0-9_]*=\S*\s+)+/, '')));
 
 // make hyper-install of every checkout installs its own tools (kit K858).

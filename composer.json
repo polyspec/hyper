@@ -14,10 +14,16 @@
         {
             "type": "composer",
             "url": "https://github.com/polyspec/template/releases/download/v0.0.18/packages.json"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/min-0-max/json-schema",
+            "no-api": true
         }
     ],
     "require": {
         "php": ">=8.4",
+        "opis/json-schema": "2.6.0-p1",
         "polyspec/hyper-server": "0.0.24",
         "polyspec/template": "0.0.18"
     },
