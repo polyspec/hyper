@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- CI checks hyper out at the workspace root and checks every template pin in place of a template checkout (H27.57). The jobs check and ci-passed of .github/workflows/ci.yml run uses: ./.github/actions/kit-bootstrap right after their checkout, in place of their own setup-node, make bootstrap, make install-tools TOOLS=npm and make install-packages, and no job checks out polyspec/template or runs in the path hyper. The Makefile has no TEMPLATE_REPOSITORY and no template-tag, make check no longer depends on it, and release-prepare runs only make hyper-install. tests/scripts/template-pins.test.mts checks the template release in each manifest and its integrity in each lock: the sha512 of the npm locks, the sha1 of the Composer locks and the sha256 of pyproject.toml and uv.lock. packages/server/python/pylock.toml and constraints.txt, which no recipe, test, workflow or release step read, are deleted; uv.lock is the lock of the Python package.
 
 ## 0.0.24
 - Release 0.0.24 after H27.55 and H27.56: every manifest of config/release.json, the exact requirements of polyspec/hyper-server and @polyspec/hyper-client and the locks that npm, Composer and uv wrote hold 0.0.24; the release carries template 0.0.18 and Kit 0.0.87.

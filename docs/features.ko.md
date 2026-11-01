@@ -1,5 +1,5 @@
 <!-- doc-id: features -->
-<!-- source-sha256: ac4948d547de02a66c321bce1aa136d1d73452fa01234ba7f823b1eedccbff1a -->
+<!-- source-sha256: 61c2f8ee379a9319d180057a5b61284091bad5c9b86562caf8878913f07d3ed2 -->
 # 기능 상태
 
 [English](features.md).
@@ -69,7 +69,7 @@
 | toolchain-pin | Node.js, npm, Composer는 정확한 release로, PHP와 Python은 minor release로 추적 파일에 pin한다. npm과 Composer는 digest로 확인해 checkout의 `var/tools`에 설치하고 `PATH`의 맨 앞에 둔다. 없는 도구는 그것을 실행하는 target을 실패시키고(kit K854), CI 보고서는 실행 중인 release를 기록한다(HR-81) | implemented | `tests/scripts/toolchain.test.mts`, `tests/scripts/template-copy.test.mjs` |
 | composer-development | 명시적 기본 개발 manifest와 별도 lock으로 소스 package version, link, 설치 기록과 PHP 8.4 요구를 일치시킨다(HR-70, HR-79) | implemented | `make composer-development-check`, `tests/scripts/composer-development.test.mts`, `make hyper-test-scripts` |
 | kit-tools | 상속된 offline 설정에서도 명시적 bootstrap은 선언된 다운로드를 허용한다. 선택적인 기본 로컬 소스 link를 지원하는 설치된 공유 도구 release 0.0.75의 Git hook, 문서 검사, commit message 규칙, owner 검사, test runner, CI 보고서, toolchain 설치와 검사, release는 release asset의 URL과 integrity로 pin한 npm 패키지 `@polyspec/kit`이며 `config/*.json`이 이를 설정한다. `make kit-sync`가 설치 패키지에서 `kit.copies`의 복사본을 쓰고, schema를 어기는 설정은 실패한다 | implemented | `make kit-check` |
-| template-tag | 릴리즈 선언은 `TEMPLATE_TAG`(`v0.0.18`, `v$(TEMPLATE_VERSION)`)를 고정하며 없는 tag는 기대값과 실제값을 밝히고 `make template-tag`를 실패시킨다(HR-80) | implemented | `tests/scripts/template-pins.test.mts`, `tests/scripts/template-version.test.mts` |
+| template-tag | 릴리즈 선언은 template release `v0.0.18`(`v$(TEMPLATE_VERSION)`)의 asset을 고정하고, 각 설치는 자기가 설치하는 모든 template asset을 그 integrity로 확인한다. npm lock의 sha512, Composer lock의 sha1, `pyproject.toml`과 `uv.lock`의 sha256이다. 어떤 검사도 template checkout을 읽지 않는다(HR-80) | implemented | `tests/scripts/template-pins.test.mts` |
 | query-values | 중첩 없이 순서대로 읽는 모든 쿼리 값과 원본 쿼리(HY-56) | implemented | `make test-php`, `make hyper-test-node` |
 | file-parts | 공개 업로드 metadata와 파일 제한은 기본 API 선언을 가지며 PHP 요청 map은 내부 저장형 없이 순서가 있는 iterable 항목을 노출한다(HY-106, HY-113, HY-114) | implemented | `tests/scripts/public-symbols.test.mts`, `make parity-check UNITS=file-parts`, `packages/server/php/tests/FilePartsTest.php`, `make python-file-parts-test` |
 | form-values | urlencoded body나 multipart body에서 중첩 없이 순서대로 읽는 모든 폼 값(HY-57) | implemented | `make test-php`, `make hyper-test-node` |

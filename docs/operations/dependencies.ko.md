@@ -1,5 +1,5 @@
 <!-- doc-id: dependencies -->
-<!-- source-sha256: 885dd519e666b4d8379d08de6d2218605967fa8b1c05c2770f74a958b2370b39 -->
+<!-- source-sha256: 09a6007b3564d6ca1caa34588949a9b054fda7678ba2fe76deabf8e212685307 -->
 # 의존성
 
 [English](dependencies.md).
@@ -16,7 +16,7 @@
 | Python | `mise.toml`의 `python` 3.14.8, `packages/server/python`의 `requires-python >= 3.14` | 도구 | Python 서버 package는 고정된 minor 3.14를 요구한다. CI가 그 build만 테스트하므로 그렇다(H20.12). | 없음. 새 안정 release는 `mise.toml`을 바꾸는 commit이 된다. |
 | `packages/server/python/pyproject.toml`의 `setuptools` | 정확한 `84.2.1` | build | Package manifest와 `config/toolchain.json`이 같은 wheel backend를 선언하며 다운로드 digest가 build 입력을 고정한다. | 두 선언에서 더 새로운 호환 backend를 채택하고 wheel build를 검증한다. |
 | `pyproject.toml`의 `polyspec-template` (`packages/server/python`) | `polyspec/template`의 release `v0.0.18`의 wheel asset과 그 sha256 (`https://github.com/polyspec/template/releases/download/v0.0.18/polyspec_template-0.0.18-py3-none-any.whl#sha256=903af4a3b142c79d8a16f9196ee5523a96ff60e241bbc10dd5b124ab85136e98`) | runtime | 0.1 전에는 polyspec package를 registry에 올리지 않으므로 GitHub Release의 wheel asset에서 설치하고, 그 asset의 sha256으로 검증한다(H23.5). | polyspec가 Python 패키지를 registry에 올릴 때 기록을 지웁니다. |
-| `packages/server/python/constraints.txt`의 `attrs`, `jsonschema`, `jsonschema-specifications`, `referencing`, `rpds-py` | 정확히 26.1.0, 4.26.0, 2025.9.1, 0.37.0, 2026.9.1 | 런타임 | template wheel 0.0.18는 `jsonschema==4.26.0`을 요구하고, `constraints.txt`가 `pylock.toml`의 모든 package를 pin하므로, release consumer는 테스트가 실행한 release를 설치한다(H23.23). 나머지는 검토 때 jsonschema 4.26.0이 받는 최신 release이다. | 없음: 다른 release를 요구하는 template release나 더 새 release를 채택하는 dependency review가 `constraints.txt`의 pin을 바꾸고 uv pip compile로 `pylock.toml`을 다시 쓴다. |
+| `packages/server/python/uv.lock`의 `attrs`, `jsonschema`, `jsonschema-specifications`, `referencing`, `rpds-py` | 정확히 26.1.0, 4.26.0, 2025.9.1, 0.37.0, 2026.9.1 | 런타임 | template wheel 0.0.18는 `jsonschema==4.26.0`을 요구하고, `uv.lock`이 모든 package를 그 hash와 함께 pin하므로 테스트와 release는 같은 release를 설치한다(H23.23). 나머지는 검토 때 jsonschema 4.26.0이 받는 최신 release이다. | 없음: 다른 release를 요구하는 template release나 더 새 release를 채택하는 dependency review가 uv lock으로 `uv.lock`을 다시 쓴다. |
 | `htmx.org` | `4.0.0` 정확히 고정 | 개발: board 예제, 그 클라이언트 스크립트에 번들 | board 예제가 htmx를 import하고 `@polyspec/hyper-client`의 확장을 등록한다. 클라이언트 패키지는 받은 htmx의 타입만 적고 어떤 htmx release에도 의존하지 않으므로, 공개 클라이언트 패키지가 아닌 private root `package.json`이 이를 선언한다. 영역 프로토콜은 htmx 4의 훅, 요청 컨텍스트 필드, 스왑 동작을 사용하며, 이를 4.0.0 소스로 확인했다. npm은 4.0.0에 `next` 태그를 붙이고 2.x를 `latest`로 유지하므로, 고정하지 않은 범위는 htmx 2를 선택한다. | npm이 htmx 4 릴리스에 `latest` 태그를 붙이면 `^4` 범위를 사용하고 `make check`를 다시 실행한다. |
 | `@playwright/test`, `@types/node`, `esbuild`, `typescript`, `vitest` | 정확히 고정 | 개발 | `npm ci`가 같은 도구를 설치하도록 root package가 개발 도구 버전을 정확히 고정한다. | 각 도구를 최신 안정 버전으로 올리고 `make check`를 다시 실행한다. |
 | `phpstan/phpstan` | `^2.3.1` | 개발 | 최신 안정 릴리스다. PHPStan 2.3은 PHP 7.4 이후를 지원하므로 이 범위에는 호환성 고정이 없다. | 없음. |

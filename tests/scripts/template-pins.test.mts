@@ -1,61 +1,29 @@
-// Tests the template pins of this repository (HR-70, HR-80, H14.1-7): `make template-tag` fails for a template checkout
-// without the tag TEMPLATE_TAG; workspaces resolve the same installed template package, including a source link.
-// Composer release declarations name the Composer repository of the release, whose lock pins the PHP zip with its sha1, and
-// PHPStan reads the PHP library without an extension stub.
+// Tests the template pins of this repository (HR-70, HR-80, H14.1-7, H27.57): every install verifies each template asset
+// that it installs by its integrity. Each manifest names the template release by its version or the URL of its asset, and
+// each lock pins that asset by its integrity: the sha512 of the npm locks, the sha1 of the Composer locks and the sha256 of
+// the Python wheel in pyproject.toml and uv.lock. Workspaces resolve the same installed template package, including a
+// source link, and PHPStan reads the PHP library without an extension stub.
 import assert from 'node:assert/strict';
-import { execFileSync, spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
-import { tmpdir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
-import { test, type TestContext } from 'node:test';
+import { join, resolve } from 'node:path';
+import { test } from 'node:test';
 import { jsonObject, jsonObjects, jsonString, parseJsonObject } from '../../scripts/json.mts';
 import { requireBuilt } from './requires.mts';
 
 const repository = resolve('.');
 // The JSON object of the file `file`.
 const readObject = (file: string) => parseJsonObject(readFileSync(file, 'utf8'), file);
-// The tag TEMPLATE_TAG of the Makefile, v$(TEMPLATE_VERSION), the one declaration of the template release (HR-80, H27.45).
-function templateTag(): string {
-  const version = /^TEMPLATE_VERSION := (\d+\.\d+\.\d+)$/m.exec(readFileSync(join(repository, 'Makefile'), 'utf8'))?.[1];
-  if (version === undefined) throw new Error('the Makefile declares no TEMPLATE_VERSION := <version>');
-  return `v${version}`;
-}
-const TAG = templateTag();
+// The template release: the exact version that the private root composer.json requires; every pin below names it.
+const VERSION = jsonString(jsonObject(readObject('composer.json').require, 'composer.json require')['polyspec/template'], 'composer.json require polyspec/template');
+const RELEASE = `https://github.com/polyspec/template/releases/download/v${VERSION}`;
+const NPM_PACKAGES = ['@polyspec/template', '@polyspec/template-compiler'];
+// The tarball asset of the npm package `name` of the release.
+const tarball = (name: string) => `${RELEASE}/${name.slice(1).replace('/', '-')}-${VERSION}.tgz`;
+const WHEEL = `${RELEASE}/polyspec_template-${VERSION}-py3-none-any.whl`;
 
-// A template repository with a tracked file, and the tag TAG at its commit unless `tagged` is false.
-function templateRepository(t: TestContext, tagged = true) {
-  const directory = mkdtempSync(join(tmpdir(), 'hyper-template-repository-'));
-  t.after(() => rmSync(directory, { recursive: true, force: true }));
-  const files = {
-    'packages/template-ts/package.json': JSON.stringify({ name: '@polyspec/template', version: '0.0.1' }),
-    'packages/template-php/composer.json': '{"name": "polyspec/template"}\n',
-    'packages/template-php-ext/src/polyspec_template.stub.php': '<?php\n',
-    'package-lock.json': '{}\n',
-  };
-  for (const [path, text] of Object.entries(files)) {
-    mkdirSync(dirname(join(directory, path)), { recursive: true });
-    writeFileSync(join(directory, path), text);
-  }
-  const git = (...args: string[]) => execFileSync('git', ['-c', 'user.name=hyper', '-c', 'user.email=hyper@localhost', '-C', directory, ...args], { encoding: 'utf8' });
-  git('init', '-q', '-b', 'main');
-  git('add', '-A');
-  git('commit', '-q', '-m', 'fixture');
-  if (tagged) git('tag', TAG);
-  return { directory };
-}
-
-test('make template-tag fails for a template checkout without the tag TEMPLATE_TAG and passes with it', (t) => {
-  const make = (template: { directory: string }) => spawnSync('make', ['--no-print-directory', 'template-tag', `TEMPLATE_REPOSITORY=${template.directory}`], {
-    cwd: repository, encoding: 'utf8', env: Object.fromEntries(Object.entries(process.env).filter(([name]) => !['MAKEFLAGS', 'MFLAGS', 'MAKELEVEL', 'MAKEOVERRIDES'].includes(name))),
-  });
-  const untagged = templateRepository(t, false);
-  const missing = make(untagged);
-  assert.notEqual(missing.status, 0);
-  assert.match(missing.stderr, new RegExp(`template-tag: \\S+ has no tag ${TAG.replaceAll('.', '\\.')}: expected the tag ${TAG.replaceAll('.', '\\.')}, actual tags: \\n`));
-  const tagged = templateRepository(t);
-  const found = make(tagged);
-  assert.equal(found.status, 0, found.stderr);
+test('the template release is one exact version', () => {
+  assert.match(VERSION, /^\d+\.\d+\.\d+$/, 'composer.json requires an exact template version');
 });
 
 test('workspaces resolve the same installed template package through native source links or an installation', () => {
@@ -67,29 +35,55 @@ test('workspaces resolve the same installed template package through native sour
   }
 });
 
+test('the npm manifests name the tarball assets of the release and their locks pin them by integrity', () => {
+  for (const [manifest, lock] of [['package.json', 'package-lock.json'], ['tests/package-install/package.json', 'tests/package-install/package-lock.json']] as const) {
+    const dependencies = jsonObject(readObject(manifest).dependencies, `${manifest} dependencies`);
+    const names = NPM_PACKAGES.filter((name) => name in dependencies);
+    assert.ok(names.length > 0, `${manifest} installs no template package`);
+    const packages = jsonObject(readObject(lock).packages, `${lock} packages`);
+    for (const name of names) {
+      assert.equal(dependencies[name], tarball(name), `${manifest} ${name}`);
+      const entry = jsonObject(packages[`node_modules/${name}`], `${lock} node_modules/${name}`);
+      assert.equal(entry.resolved, tarball(name), `${lock} ${name} resolved`);
+      assert.match(jsonString(entry.integrity, `${lock} ${name} integrity`), /^sha512-[A-Za-z0-9+/]{86}==$/, `${lock}: the lock pins ${name} by its sha512`);
+    }
+  }
+});
+
 test('Composer release declarations name the Composer repository of the release and PHPStan reads no extension stub', () => {
-  const required = jsonObject(readObject('composer.json').require, 'composer.json require')['polyspec/template'];
-  assert.ok(required !== undefined, 'composer.json requires no polyspec/template');
-  const version = jsonString(required, 'composer.json require polyspec/template');
-  assert.match(version, /^\d+\.\d+\.\d+$/, 'composer.json requires an exact template version');
+  // The released package names the release version; a consumer declares the Composer repository in its own root.
+  assert.equal(jsonObject(readObject('packages/server/php/composer.json').require, 'packages/server/php/composer.json require')['polyspec/template'], VERSION, 'packages/server/php/composer.json');
   // Both Composer projects declare the Composer repository of the template release, its packages.json, whose dist names the
   // php zip of the release with its sha1; the lock records that dist, so Composer fetches and checks the zip itself (H27.45).
-  const release = `https://github.com/polyspec/template/releases/download/v${version}`;
   const dists = ['composer.json', 'examples/board/composer.json'].map((manifest) => {
     const { repositories, require } = readObject(manifest);
-    assert.equal(jsonObject(require, `${manifest} require`)['polyspec/template'], version, manifest);
+    assert.equal(jsonObject(require, `${manifest} require`)['polyspec/template'], VERSION, manifest);
     const declared = jsonObjects(repositories, `${manifest} repositories`).filter((item) => item.type !== 'path');
-    assert.deepEqual(declared, [{ type: 'composer', url: `${release}/packages.json` }], `${manifest}: the template comes from the Composer repository of the release`);
+    assert.deepEqual(declared, [{ type: 'composer', url: `${RELEASE}/packages.json` }], `${manifest}: the template comes from the Composer repository of the release`);
     const lockFile = manifest.replace(/\.json$/, '.lock');
     const entry = jsonObjects(readObject(lockFile).packages, `${lockFile} packages`).find(({ name }) => name === 'polyspec/template');
     assert.ok(entry !== undefined, `${manifest}: the lock has no polyspec/template`);
-    assert.equal(entry.version, version, manifest);
+    assert.equal(entry.version, VERSION, manifest);
     const dist = jsonObject(entry.dist, `${lockFile} polyspec/template dist`);
     assert.equal(dist.type, 'zip', lockFile);
-    assert.equal(dist.url, `${release}/polyspec-template-php-${version}.zip`, lockFile);
+    assert.equal(dist.url, `${RELEASE}/polyspec-template-php-${VERSION}.zip`, lockFile);
     assert.match(jsonString(dist.shasum, `${lockFile} polyspec/template dist shasum`), /^[0-9a-f]{40}$/, `${lockFile}: the lock pins the zip by its sha1`);
     return dist;
   });
   assert.deepEqual(dists[1], dists[0], 'the two Composer locks pin different template zips');
   assert.doesNotMatch(readFileSync('packages/server/php/phpstan.neon', 'utf8'), /polyspec_template\.stub\.php/);
+});
+
+test('pyproject.toml and uv.lock name the wheel asset of the release and pin it by the same sha256', () => {
+  const pyproject = readFileSync('packages/server/python/pyproject.toml', 'utf8');
+  const requirements = [...pyproject.matchAll(/"polyspec-template @ ([^"#]*)#sha256=([0-9a-f]{64})"/g)];
+  assert.equal(requirements.length, 1, 'pyproject.toml names the template wheel once, with its sha256');
+  const [, url, sha256] = requirements[0] ?? [];
+  assert.equal(url, WHEEL, 'pyproject.toml template wheel');
+  const lock = readFileSync('packages/server/python/uv.lock', 'utf8');
+  // The requirement of the server package, the source of polyspec-template and its wheel name the same asset.
+  const urls = [...lock.matchAll(/url = "(https:\/\/github\.com\/polyspec\/template\/[^"]*)"/g)].map((match) => match[1]);
+  assert.deepEqual(urls, [WHEEL, WHEEL, WHEEL], 'uv.lock names the template wheel of the release in requires-dist, source and wheels');
+  const hashes = [...lock.matchAll(/\{ url = "https:\/\/github\.com\/polyspec\/template\/[^"]*", hash = "sha256:([0-9a-f]{64})" \}/g)].map((match) => match[1]);
+  assert.deepEqual(hashes, [sha256], 'uv.lock pins the template wheel by the sha256 of pyproject.toml');
 });

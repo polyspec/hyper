@@ -1,7 +1,7 @@
-// Tests that hyper depends on one template release, 0.0.18 (H21.4, H23.23, H23.25, H23.28): the tag TEMPLATE_TAG of the Makefile, the npm packages
-// and their locks, the Composer packages and their locks, the php-ext package that PIE builds, the Python package
-// of packages/server/python, and the checkouts of the template repository in the workflows name that release and no
-// other. A mixed version fails here before any install runs.
+// Tests that hyper depends on one template release, 0.0.18 (H21.4, H23.23, H23.25, H23.28): the npm packages and their
+// locks, the Composer packages and their locks, the php-ext package that PIE builds and the Python package of
+// packages/server/python name that release and no other, and no check or release step reads a template checkout. A mixed
+// version fails here before any install runs.
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
@@ -25,9 +25,10 @@ const TAG = `v${VERSION}`;
 const RELEASE = `https://github.com/polyspec/template/releases/download/${TAG}`;
 const NPM_PACKAGES = ['@polyspec/template', '@polyspec/template-compiler'];
 
-test('TEMPLATE_TAG of the Makefile is the tag of the single template release (H21.4, H23.11-2)', () => {
-  const lines = dryRun('template-tag', { variables: ['TEMPLATE_REPOSITORY=/nonexistent/hyper-template'] });
-  assert.ok(lines.some((line) => line.includes(`'refs/tags/${TAG}^{commit}'`)), `make template-tag does not check the tag ${TAG}: ${lines.join('\n')}`);
+test('the Makefile reads no template repository, and make check runs no template-tag (H27.57)', () => {
+  assert.doesNotMatch(read('Makefile'), /TEMPLATE_REPOSITORY/, 'the Makefile names a template repository');
+  const lines = dryRun('check');
+  assert.ok(!lines.some((line) => line.includes('template-tag')), `make check runs template-tag: ${lines.join('\n')}`);
 });
 
 test('the npm manifests name the template tarballs of the release, and their dependencies name its version (H21.4)', () => {
@@ -100,20 +101,15 @@ test('the Python package of the server names the wheel asset of the release with
   );
 });
 
-test('CI checks out the template repository at the tag of the release (H21.4)', () => {
-  const refs = [...read('.github/workflows/ci.yml').matchAll(/^ {10}ref: (v\d+\.\d+\.\d+)$/gm)].map((match) => match[1]);
-  assert.ok(refs.length > 0, 'ci.yml checks out the template repository');
-  assert.deepEqual([...new Set(refs)], [TAG], 'ci.yml template ref');
-});
-
 // The release workflow of kit runs make release-prepare before release-tools (kit K132; make kit-sync refreshes the
-// copy): its dry run with an absent template repository clones the template at the tag of the release, checks the tag
-// and installs (H23.7).
-test('the release prepares the template repository at the tag of the release through release-prepare (H23.7)', () => {
-  const repository = '/nonexistent/hyper-template';
-  const lines = dryRun('release-prepare', { variables: [`TEMPLATE_REPOSITORY=${repository}`] });
-  assert.ok(lines.some((line) => line.includes(`git clone --quiet --depth 1 --branch ${TAG} https://github.com/polyspec/template.git ${repository}`)), lines.join('\n'));
-  assert.ok(lines.some((line) => line.startsWith(`git -C ${repository} rev-parse --verify --quiet 'refs/tags/${TAG}^{commit}'`)), lines.join('\n'));
-  // $(MAKE) of kit-bootstrap.mk adds KIT and KIT_EXT to every recursive make, so the case compares only the target that ends the line.
-  assert.ok(lines.some((line) => line.split(' ').at(-1) === 'hyper-install'), lines.join('\n'));
+// copy): it installs as CI does and reads no template checkout (H23.7, H27.57).
+test('release-prepare runs only make hyper-install (H23.7, H27.57)', () => {
+  // kit.mk declares release-prepare:: with the empty recipe `@:` (kit K132), which the dry run prints as `:` first.
+  const [declared, ...lines] = dryRun('release-prepare');
+  assert.equal(declared, ':', 'the first rule of release-prepare is the empty rule of kit');
+  // make -n runs a recursive make too, so the dry run prints the line of make hyper-install and then the commands of its dry
+  // run. $(MAKE) of kit-bootstrap.mk adds KIT and KIT_EXT to every recursive make, so the case compares only the target that
+  // ends the first line.
+  assert.equal(lines[0]?.split(' ').at(-1), 'hyper-install', lines.join('\n'));
+  assert.deepEqual(lines.slice(1), dryRun('hyper-install'), 'release-prepare runs a command beside make hyper-install');
 });

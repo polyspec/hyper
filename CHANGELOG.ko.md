@@ -5,6 +5,7 @@
 [English](CHANGELOG.md).
 
 ## Unreleased
+- CI는 hyper를 workspace root에 checkout하고 template checkout 대신 모든 template pin을 검사한다(H27.57). .github/workflows/ci.yml의 job check와 ci-passed는 자기 setup-node, make bootstrap, make install-tools TOOLS=npm, make install-packages 대신 checkout 바로 다음에 uses: ./.github/actions/kit-bootstrap을 실행하며, 어떤 job도 polyspec/template을 checkout하거나 path hyper에서 실행하지 않는다. Makefile에는 TEMPLATE_REPOSITORY와 template-tag가 없고, make check는 그것에 의존하지 않으며, release-prepare는 make hyper-install만 실행한다. tests/scripts/template-pins.test.mts는 각 manifest의 template release와 각 lock의 integrity를 검사한다. npm lock의 sha512, Composer lock의 sha1, pyproject.toml과 uv.lock의 sha256이다. 어떤 recipe, test, workflow, release step도 읽지 않던 packages/server/python/pylock.toml과 constraints.txt는 지웠으며, uv.lock이 Python package의 lock이다.
 
 ## 0.0.24
 - H27.55와 H27.56 다음의 릴리스 0.0.24: config/release.json의 모든 manifest, polyspec/hyper-server와 @polyspec/hyper-client의 정확한 요구 version, npm, Composer, uv가 쓴 lock이 0.0.24를 담는다. 이 릴리스는 template 0.0.18과 Kit 0.0.87을 담는다.

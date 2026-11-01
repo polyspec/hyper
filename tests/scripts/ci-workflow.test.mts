@@ -24,8 +24,10 @@ const RUNNER = 'ubuntu-26.04-arm';
 const STOPPING: Record<string, string[]> = { 'ci.yml': ['ci-passed'], 'release.yml': ['release'] };
 const CI_PASSED = 'ci-passed';
 const CI_PASSED_RUN = "make ci-passed RESULTS='${{ toJSON(needs) }}'";
-// The bootstrap of @polyspec/kit in a fresh checkout: the npm that devEngines names, then the packages of package-lock.json.
-const BOOTSTRAP_RUNS = ['make bootstrap', 'make install-tools TOOLS=npm', 'make install-packages'];
+// The bootstrap of @polyspec/kit (kit K992): the action that kit-sync vendors, which sets up the Node.js of mise.toml and installs
+// the locked kit package, the npm of devEngines and the packages of package-lock.json. Every job of ci.yml that runs steps runs it
+// right after its checkout, at the workspace root.
+const BOOTSTRAP_ACTION = './.github/actions/kit-bootstrap';
 
 interface Step { text: string; run: string | undefined; uses: string | undefined; if: string | undefined }
 interface Job { name: string; text: string; steps: Step[] }
@@ -103,7 +105,8 @@ test('every job runs on the declared runner without a time limit, and every acti
     for (const job of jobs(workflow.text).filter((job) => !calls(job))) {
       if (!new RegExp(`^ {4}runs-on: ${RUNNER}$`, 'm').test(job.text)) found.push(`${workflow.name} ${job.name}: runs-on is not ${RUNNER}`);
       for (const step of job.steps) {
-        if (step.uses === undefined || step.uses === '') continue;
+        // A local action of the checkout (./) is a file of this commit, so no commit pin applies to it.
+        if (step.uses === undefined || step.uses === '' || step.uses.startsWith('./')) continue;
         if (!/^[\w.-]+\/[\w./-]+@[0-9a-f]{40} # v?\d/.test(step.uses)) found.push(`${workflow.name} ${job.name}: ${step.uses} is not pinned by a commit with its release`);
       }
     }
@@ -116,6 +119,8 @@ test('every step that runs a command runs make, and every step after the first r
   for (const workflow of workflows()) {
     for (const job of jobs(workflow.text).filter((job) => !calls(job))) {
       assert.ok(job.steps.length > 0, `${workflow.name} ${job.name} has no step`);
+      // The bootstrap action of kit runs right after the checkout of the job.
+      if (!(job.steps[0]?.uses ?? '').startsWith('actions/checkout@') || job.steps[1]?.uses !== BOOTSTRAP_ACTION) found.push(`${workflow.name} ${job.name}: the second step is not uses: ${BOOTSTRAP_ACTION} after the checkout`);
       job.steps.forEach((step, index) => {
         if (step.run !== undefined && !/^make [^|&;<>`$\n]*(\$\{\{ [^}]+ \}\}[^|&;<>`$\n]*)*$/.test(step.run)) found.push(`${workflow.name} ${job.name}: the step "${step.run}" runs a command other than one make`);
         if (index > 0 && !(STOPPING[workflow.name] ?? []).includes(job.name) && !(step.if ?? '').includes('!cancelled()')) found.push(`${workflow.name} ${job.name}: step ${index + 1} runs only while every earlier step passed`);
@@ -227,7 +232,7 @@ test('the workflow ci runs every matrix entry in a job that runs to its end and 
     assert.ok(check < summary && summary < report, `${job.name}: the report steps follow make ci-targets`);
     assert.match(item(job.steps, summary, job.name).text, /CI_STEPS: \$\{\{ toJSON\(steps\) \}\}/);
     const reportStep = item(job.steps, report, job.name);
-    assert.match(reportStep.text, /path: hyper\/var\/ci\/\$\{\{ matrix\.name \}\}\/\n/);
+    assert.match(reportStep.text, /path: var\/ci\/\$\{\{ matrix\.name \}\}\/\n/);
     assert.match(reportStep.text, /if-no-files-found: error/);
     assert.match(reportStep.text, /name: ci-\$\{\{ matrix\.name \}\}-/);
     // Chromium is installed only in the entries whose targets run a browser.
@@ -236,29 +241,7 @@ test('the workflow ci runs every matrix entry in a job that runs to its end and 
     for (const entry of matrixEntries(text)) {
       assert.equal(entry.browser, entry.targets.some((target) => ['parity', 'server-parity', 'server-parity-python', 'e2e'].includes(target)), `${entry.name}: browser flag`);
     }
-    // The Makefile includes the kit.mk of @polyspec/kit only after the bootstrap installs the npm of devEngines and the
-    // packages, and the recipes run the Python of var/tools, so every job runs the bootstrap and make install-tools in this
-    // order before its first check.
-    const runs = job.steps.map((step) => step.run);
-    const order = [...BOOTSTRAP_RUNS, 'make install-tools TOOLS="${{ matrix.tools }}"'].map((run) => runs.indexOf(run));
-    const checks = runs.findIndex((run) => run?.startsWith('make ci-targets'));
-    assert.ok(order.every((at, index) => at >= 0 && (index === 0 || item(order, index - 1, 'the bootstrap steps') < at)) && item(order, -1, 'the bootstrap steps') < checks, `${job.name}: ${[...BOOTSTRAP_RUNS, 'make install-tools TOOLS="${{ matrix.tools }}"'].join(', ')} run in order before the checks`);
     assert.ok(!job.steps.some((step) => (step.uses ?? '').startsWith('actions/setup-python@')), `${job.name}: no setup-python step`);
-  }
-});
-
-// The workflow ci checks out the template repository at the tag TEMPLATE_TAG of the Makefile, the one declaration of
-// the template release (HR-80), so the copy of `make hyper-install` finds that tag and CI checks the same template commit as
-// a local run.
-test('the workflow ci checks out the template repository at the tag TEMPLATE_TAG of the Makefile (HR-80)', () => {
-  // TEMPLATE_TAG is v$(TEMPLATE_VERSION) of the Makefile (H27.45); make template-tag names it.
-  const lines = dryRun('template-tag', { variables: ['TEMPLATE_REPOSITORY=/nonexistent/hyper-template'] });
-  const tag = lines.map((line) => /'refs\/tags\/(v\d+\.\d+\.\d+)\^\{commit\}'/.exec(line)?.[1]).find((found) => found !== undefined);
-  assert.match(tag ?? '', /^v\d+\.\d+\.\d+$/, `make template-tag names no tag TEMPLATE_TAG: ${lines.join('\n')}`);
-  for (const job of jobs(readFileSync(path.join(WORKFLOWS, 'ci.yml'), 'utf8')).filter((job) => job.name !== CI_PASSED && !calls(job))) {
-    const checkouts = job.steps.filter((step) => /^ {10}repository: polyspec\/template$/m.test(step.text));
-    assert.equal(checkouts.length, 1, `${job.name}: one checkout of polyspec/template`);
-    assert.deepEqual([...item(checkouts, 0, `${job.name}: the template checkouts`).text.matchAll(/^ {10}ref: (.*)$/gm)].map((match) => match[1]), [tag], `${job.name}: the ref of the template checkout is not TEMPLATE_TAG ${tag}`);
   }
 });
 
@@ -300,8 +283,7 @@ function ciPassedProblems(text: string): string[] {
   const runners = [...new Set(read.filter((entry) => entry.name !== CI_PASSED && !calls(entry)).map((entry) => key(entry, 'runs-on')))];
   if (runners.length !== 1 || key(job, 'runs-on') !== runners[0]) found.push(`the job ${CI_PASSED} runs on ${key(job, 'runs-on')}, not on the runner of the other jobs ${runners.join(', ')}`);
   const runs = job.steps.filter((step) => step.run !== undefined).map((step) => step.run);
-  const expected = [...BOOTSTRAP_RUNS, CI_PASSED_RUN];
-  if (runs.join('\n') !== expected.join('\n') || job.steps.at(-1)?.run !== CI_PASSED_RUN) found.push(`the job ${CI_PASSED} runs [${runs.join(', ')}], not the bootstrap and the last step ${CI_PASSED_RUN}`);
+  if (runs.join('\n') !== CI_PASSED_RUN || job.steps.at(-1)?.run !== CI_PASSED_RUN) found.push(`the job ${CI_PASSED} runs [${runs.join(', ')}], not the one last step ${CI_PASSED_RUN}`);
   return found;
 }
 
@@ -317,8 +299,7 @@ test('ci-passed is the last job of ci.yml, runs always, needs every other job an
     'needs no job': [text.replace('    needs: [check, kit]\n', '    needs: []\n'), 'the job ci-passed needs [], not every other job [kit, check]'],
     'needs no kit': [text.replace('    needs: [check, kit]\n', '    needs: [check]\n'), 'the job ci-passed needs [check], not every other job [kit, check]'],
     'another runner': [text.replace('    needs: [check, kit]\n    runs-on: ubuntu-26.04-arm\n', '    needs: [check, kit]\n    runs-on: ubuntu-24.04\n'), 'the job ci-passed runs on ubuntu-24.04, not on the runner of the other jobs'],
-    'another step': [text.replace(CI_PASSED_RUN, 'make ci-passed'), 'the job ci-passed runs [make bootstrap, make install-tools TOOLS=npm, make install-packages, make ci-passed], not the bootstrap'],
-    'no bootstrap': [text.replace('        run: make install-packages\n      - name: make ci-passed', '      - name: make ci-passed'), 'the job ci-passed runs [make bootstrap, make install-tools TOOLS=npm, make ci-passed'],
+    'another step': [text.replace(CI_PASSED_RUN, 'make ci-passed'), 'the job ci-passed runs [make ci-passed], not the one last step'],
   };
   for (const [name, [changed, message]] of Object.entries(broken)) {
     assert.notEqual(changed, text, name);
@@ -370,10 +351,10 @@ test('H27.20 PHP-enabled CI groups prepare PHP before selected tool installation
 
 test('H27.20 every CI check group installs per-checkout hook configuration before checks', () => {
   for (const job of jobs(readFileSync(path.join(WORKFLOWS, 'ci.yml'), 'utf8')).filter(job => job.name !== CI_PASSED && !calls(job))) {
-    const installed = job.steps.findIndex(step => step.run === 'make install-packages');
+    const installed = job.steps.findIndex(step => step.uses === BOOTSTRAP_ACTION);
     const hooks = job.steps.findIndex(step => step.run === 'make hooks');
     const check = job.steps.findIndex(step => step.run?.startsWith('make ci-targets'));
-    assert.ok(installed < hooks && hooks < check, `${job.name}: native hook setup must follow installation and precede checks`);
+    assert.ok(installed >= 0 && installed < hooks && hooks < check, `${job.name}: native hook setup must follow installation and precede checks`);
   }
 });
 
@@ -437,20 +418,6 @@ test('H27.25 CI declares job-owned tools and locked package environments (HR-81,
   assert.ok(entries.find(entry => entry.name === 'docs')?.targets.includes('hyper-test-scripts'));
   assert.ok(entries.find(entry => entry.name === 'python')?.targets.includes('hyper-test-python-render'));
   assert.ok(entries.find(entry => entry.name === 'board')?.targets.includes('server-parity-python'));
-});
-
-
-test('H27.25-1 common CI policy checks use locked releases without sibling template sources (HR-70, HR-79, HR-91)', () => {
-  const text = readFileSync(path.join(WORKFLOWS, 'ci.yml'), 'utf8');
-  const entries = matrixEntries(text);
-  const policy = entries.find(entry => entry.name === 'docs');
-  assert.ok(policy !== undefined);
-  assert.notEqual(policy.keys['template'], 'true');
-  const check = jobs(text).find(job => job.name === 'check');
-  assert.ok(check !== undefined);
-  const template = check.steps.find(step => step.text.includes('repository: polyspec/template'));
-  assert.equal(template?.if, '${{ !cancelled() && matrix.template }}', 'source checkout must have its own explicit selection');
-  assert.deepEqual(entries.filter(entry => entry.keys['template'] === 'true').map(entry => entry.name).sort(), ['board', 'php']);
 });
 
 

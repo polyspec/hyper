@@ -549,7 +549,6 @@
       ],
       "tests": [
         "tests/scripts/toolchain.test.mts",
-        "tests/scripts/template-pins.test.mts",
         "tests/scripts/check-recipes.test.mts",
         "tests/scripts/ci-workflow.test.mts",
         "tests/scripts/template-ext.test.mts"
@@ -670,6 +669,24 @@
       ],
       "tests": [
         "tests/scripts/template-version.test.mts"
+      ]
+    },
+    {
+      "paths": [
+        "package.json",
+        "package-lock.json",
+        "composer.json",
+        "composer.lock",
+        "examples/board/composer.json",
+        "examples/board/composer.lock",
+        "packages/server/php/composer.json",
+        "packages/server/python/pyproject.toml",
+        "packages/server/python/uv.lock",
+        "tests/package-install/package.json",
+        "tests/package-install/package-lock.json"
+      ],
+      "tests": [
+        "tests/scripts/template-pins.test.mts"
       ]
     },
     {

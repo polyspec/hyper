@@ -40,11 +40,9 @@ export HYPER_PYTHON := $(PYTHON_VENV)/bin/python
 # package.json names (HR-70). Composer installs polyspec/template from TEMPLATE_PACKAGES, the Composer repository of the
 # release (packages.json), which composer.json and examples/board/composer.json declare and whose dist carries the sha1 of the
 # php zip; PIE builds the native template extension polyspec/template-php-ext from the same repository (H27.45).
-# The template repository of TEMPLATE_REPOSITORY supplies the tag checked before final verification (HR-80).
 TEMPLATE_VERSION := 0.0.18
 TEMPLATE_TAG := v$(TEMPLATE_VERSION)
 TEMPLATE_PACKAGES := https://github.com/polyspec/template/releases/download/$(TEMPLATE_TAG)/packages.json
-TEMPLATE_REPOSITORY := ../template
 FIXTURES := $(PHP_PACKAGE)/tests/fixtures
 # The Composer vendor directory of the private root composer.json, which installs packages/server/php for development.
 PHP_VENDOR := $(CURDIR)/vendor
@@ -89,7 +87,7 @@ checks_result = test -z "$$failed" || { echo "failed checks:$$failed"; exit 1; }
 
 .DEFAULT_GOAL := help
 
-.PHONY: help hyper-install hyper-install-python hyper-install-browser hyper-install-virtiofs hyper-test-node hyper-test-python-render hyper-test-scripts check typecheck hyper-server-php-install template-tag ext packages package-check server server-fixtures node-server node-fixtures assets hyper-test-js hyper-test-php hyper-test-python hyper-lint analyse-php templates-check virtiofs-check parity server-parity server-parity-python bundle-size e2e serve-demo bench-server bench-server-smoke bench-browser bench serve-demo-unlock
+.PHONY: help hyper-install hyper-install-python hyper-install-browser hyper-install-virtiofs hyper-test-node hyper-test-python-render hyper-test-scripts check typecheck hyper-server-php-install ext packages package-check server server-fixtures node-server node-fixtures assets hyper-test-js hyper-test-php hyper-test-python hyper-lint analyse-php templates-check virtiofs-check parity server-parity server-parity-python bundle-size e2e serve-demo bench-server bench-server-smoke bench-browser bench serve-demo-unlock
 
 help: ## List the targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
@@ -139,20 +137,10 @@ test: hyper-test-js hyper-test-node hyper-test-php hyper-test-python hyper-test-
 
 lint: hyper-lint
 
-# The release of hyper reads the template repository at TEMPLATE_TAG next to this checkout, and the installed dependencies:
-# the release workflow that kit vendors runs make release-prepare before release-tools (kit K132), and this rule checks the
-# template out where CI checks it out, fails on a checkout without the tag, and installs (H23.7).
-release-prepare:: ## Check out the template repository at TEMPLATE_TAG into TEMPLATE_REPOSITORY and install, for a release; ONLINE
-	test -d $(TEMPLATE_REPOSITORY) || $(ONLINE) git clone --quiet --depth 1 --branch $(TEMPLATE_TAG) https://github.com/polyspec/template.git $(TEMPLATE_REPOSITORY)
-	$(MAKE) template-tag
+# The release workflow that kit vendors runs make release-prepare before release-tools (kit K132): the release installs as CI
+# does, each template asset verified by the integrity of its lock (HR-80, H23.7).
+release-prepare:: ## Install the locked dependencies, for a release; ONLINE
 	$(ONLINE) $(MAKE) hyper-install
-
-# Fails when the template checkout has no tag TEMPLATE_TAG (HR-80).
-template-tag: ## Fail when the template repository TEMPLATE_REPOSITORY has no tag TEMPLATE_TAG, naming the expected tag and the tags it has (HR-80)
-	@git -C $(TEMPLATE_REPOSITORY) rev-parse --verify --quiet 'refs/tags/$(TEMPLATE_TAG)^{commit}' >/dev/null || { \
-	  echo "template-tag: $(TEMPLATE_REPOSITORY) has no tag $(TEMPLATE_TAG): expected the tag $(TEMPLATE_TAG), actual tags: $$(git -C $(TEMPLATE_REPOSITORY) tag --list 2>/dev/null | tr '\n' ' ')" >&2; \
-	  echo "template-tag: fetch the tags of the template repository with git -C $(TEMPLATE_REPOSITORY) fetch --tags" >&2; \
-	  exit 1; }
 
 # PIE resolves polyspec/template-php-ext TEMPLATE_VERSION in the Composer repository TEMPLATE_PACKAGES, which checks the sha1
 # of its zip, and builds it with phpize and the php-config of the PHP of PATH (H27.51). PIE keeps one Composer project per
@@ -285,8 +273,6 @@ parity: assets server ext ## Compare PHP documents (generated program and native
 server-parity: node-server server ## Compare the Node server responses with the PHP responses, with the browser comparison of parity (HR-55)
 	$(NODE) scripts/check-parity.mts --app $(BOARD) --requests $(BOARD)/tests/parity/requests.json --node
 
-# The Python server renders with the template Python package of the template checkout (H15.3-3), so this comparison
-# runs where that checkout exists.
 server-parity-python: assets server ## Compare the Python server responses with the PHP responses, with the browser comparison of parity (HR-55)
 	$(NODE) scripts/check-parity.mts --app $(BOARD) --requests $(BOARD)/tests/parity/requests.json --python
 
@@ -336,7 +322,7 @@ DARWIN_TARGETS := virtiofs-check
 VIRTIOFS_IMAGE := docker.io/library/node:26.8.1-trixie-slim@sha256:c0753125a3789977aefe869cbebccf70e3cfd7ea84ca48547458f02e4f1d7146
 CHECK_TARGETS += $(if $(filter Darwin,$(shell uname)),$(DARWIN_TARGETS))
 
-check: template-tag ## Run final verification once after checklist development, on a clean committed tree
+check: ## Run final verification once after checklist development, on a clean committed tree
 	FINAL_RUN=1 $(NODE) $(KIT)/ci-targets.$(KIT_EXT) var/report/full-run $(CHECK_TARGETS)
 
 
