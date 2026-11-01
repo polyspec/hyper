@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: f8f5cf6b75a3886b6d45ef4bb87bedce549cf5702924af12596f5b6a17ab1da9 -->
+<!-- source-sha256: f80da01d741988d1a86cd9cef04db748efddaccd2cc555e6b40667d9971be15d -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- AGENTS.md는 template pin 규칙의 Enforced by 행에 target이 실행하는 검사만 부르므로 rules-check가 통과하고, owner 검사는 AGENTS.md와 PRINCIPLES.md에 rules-check를 고른다(H27.59). 그 행은 template-pins의 test 파일을 backtick으로 불렀는데, rules-check는 그것을 어떤 target도 닿지 않는 검사로 읽었다.
 - Composer 개발 소스는 kit의 .links와 make link로만 link하고, release graph는 opis/json-schema fork를 그 tag로 묶는다(H27.58). composer.local.json과 examples/board/composer.local.json은 ../template/packages/php와 ../forks/json-schema로 가는 Composer path repository를 선언했으며, 이는 kit의 local link가 금지하는 .links 옆의 두 번째 link 방식이었다. 그 파일들과 make composer-development, composer-development-check, scripts/check-composer-development.mts, tests/scripts/composer-development.test.mts를 지웠다. composer.json과 examples/board/composer.json은 VCS repository https://github.com/min-0-max/json-schema를 선언하고 opis/json-schema 2.6.0-p1을 요구하며, 두 lock은 upstream 2.6.0에서 fork의 tag v2.6.0-p1로 옮겨졌다. 그 tag는 이름 opis/json-schema를 유지하고, fork의 branch master는 이름 min-0-max/json-schema를 가진다. 그래서 CI와 release는 collect-all-errors 방식에서 유효한 property를 additionalProperties: false로 보고하지 않고 실패한 group 뒤에도 unevaluatedProperties를 실행하는 template decoder를 실행한다.
 - CI는 hyper를 workspace root에 checkout하고 template checkout 대신 모든 template pin을 검사한다(H27.57). .github/workflows/ci.yml의 job check와 ci-passed는 자기 setup-node, make bootstrap, make install-tools TOOLS=npm, make install-packages 대신 checkout 바로 다음에 uses: ./.github/actions/kit-bootstrap을 실행하며, 어떤 job도 polyspec/template을 checkout하거나 path hyper에서 실행하지 않는다. Makefile에는 TEMPLATE_REPOSITORY와 template-tag가 없고, make check는 그것에 의존하지 않으며, release-prepare는 make hyper-install만 실행한다. tests/scripts/template-pins.test.mts는 각 manifest의 template release와 각 lock의 integrity를 검사한다. npm lock의 sha512, Composer lock의 sha1, pyproject.toml과 uv.lock의 sha256이다. 어떤 recipe, test, workflow, release step도 읽지 않던 packages/server/python/pylock.toml과 constraints.txt는 지웠으며, uv.lock이 Python package의 lock이다.
 

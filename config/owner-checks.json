@@ -606,7 +606,9 @@
     },
     {
       "paths": [
-        ".claude/settings.json"
+        ".claude/settings.json",
+        "AGENTS.md",
+        "PRINCIPLES.md"
       ],
       "targets": [
         "rules-check"
