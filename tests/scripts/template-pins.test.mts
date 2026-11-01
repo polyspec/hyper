@@ -36,6 +36,9 @@ test('workspaces resolve the same installed template package through native sour
 });
 
 test('the npm manifests name the tarball assets of the release and their locks pin them by integrity', () => {
+  // One asset has one sha512: npm keeps the integrity of a lock entry when only its URL changes, and an offline install
+  // finds no cached tarball for a stale one (H27.63).
+  const integrities = new Map<string, string>();
   for (const [manifest, lock] of [['package.json', 'package-lock.json'], ['tests/package-install/package.json', 'tests/package-install/package-lock.json']] as const) {
     const dependencies = jsonObject(readObject(manifest).dependencies, `${manifest} dependencies`);
     const names = NPM_PACKAGES.filter((name) => name in dependencies);
@@ -46,6 +49,10 @@ test('the npm manifests name the tarball assets of the release and their locks p
       const entry = jsonObject(packages[`node_modules/${name}`], `${lock} node_modules/${name}`);
       assert.equal(entry.resolved, tarball(name), `${lock} ${name} resolved`);
       assert.match(jsonString(entry.integrity, `${lock} ${name} integrity`), /^sha512-[A-Za-z0-9+/]{86}==$/, `${lock}: the lock pins ${name} by its sha512`);
+      const integrity = jsonString(entry.integrity, `${lock} ${name} integrity`);
+      const pinned = integrities.get(tarball(name)) ?? integrity;
+      integrities.set(tarball(name), pinned);
+      assert.equal(integrity, pinned, `${lock}: ${tarball(name)} has another integrity than in the other npm lock`);
     }
   }
 });

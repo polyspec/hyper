@@ -7,6 +7,7 @@
 
 ## 0.0.25
 - Release 0.0.25 after H27.57 to H27.62: every manifest of config/release.json, the exact requirements of polyspec/hyper-server and @polyspec/hyper-client and the locks that npm, Composer and uv wrote hold 0.0.25; the release carries template 0.0.19 and kit 0.0.88, and its Composer roots require the json-schema fork as min-0-max/json-schema.
+- tests/package-install/package-lock.json pins the template 0.0.19 tarball by its own sha512 in place of the integrity of the 0.0.18 tarball, which npm kept when the URL changed, so make package-check installs it offline; template-pins.test.mts requires one integrity per asset across the npm locks (H27.63).
 - hyper pins template 0.0.19 by its asset names and digests, and both Composer roots require the json-schema fork by its own name, "min-0-max/json-schema": "dev-polyspec-origin-2.6.0", in place of "opis/json-schema": "2.6.0-p1", since template 0.0.19 requires that name; the locks pin the default branch polyspec-origin-2.6.0 of the fork and hold no opis/json-schema, and AGENTS.md and development.md name that branch (H27.62).
 - hyper adopts kit 0.0.88, whose make kit-gates-static runs every shared gate before a push and whose kit-check judges one CI pipeline (S12), no editable installs (S11) and no manifest path out of the repository (P30); make kit-sync writes its PRINCIPLES (H27.61).
 - The job check of ci.yml follows the job kit with needs: kit, as kit S12 requires, so it runs only after the gates of kit passed (H27.60); the tests H27.24 and H27.25 accept that needs and still rejects any other.
