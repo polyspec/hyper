@@ -5,7 +5,7 @@
     "license": "MIT",
     "repositories": [
         { "type": "path", "url": "../../packages/server/php", "options": { "reference": "config" } },
-        { "type": "composer", "url": "https://github.com/polyspec/template/releases/download/v0.0.19/packages.json" },
+        { "type": "composer", "url": "https://github.com/polyspec/template/releases/download/v0.0.20/packages.json" },
         { "type": "vcs", "url": "https://github.com/min-0-max/json-schema", "no-api": true }
     ],
     "require": {
@@ -13,7 +13,7 @@
         "ext-pdo_sqlite": "*",
         "min-0-max/json-schema": "dev-polyspec-origin-2.6.0",
         "polyspec/hyper-server": "0.0.25",
-        "polyspec/template": "0.0.19"
+        "polyspec/template": "0.0.20"
     },
     "require-dev": {
         "laravel/pint": "^1.32.1"

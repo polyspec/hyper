@@ -22,6 +22,6 @@
   },
   "dependencies": {
     "@polyspec/hyper-client": "0.0.25",
-    "@polyspec/template": "0.0.19"
+    "@polyspec/template": "0.0.20"
   }
 }

@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: db027c2185f289f31bc520792b6e224f89ee7e1bb2ec2e2e7b965eef868d643e -->
+<!-- source-sha256: 26cc95ac7decac81ad141d99c0c42d332562756a970dacc68fd16cea178888ea -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- hyper는 template 0.0.20을 그 asset 이름과 digest로 고정한다: wheel sha256 dbdeb77e...2e7b, Composer zip polyspec-template-php-0.0.20.zip의 SHA-256 12c5eaf9...3da7과 SHA-1 a0e29731...68ff, package-lock.json과 tests/package-install/package-lock.json의 npm tarball은 release된 각 asset의 sha512로 고정한다(H27.65).
 - H27.64: hyper이 Kit 0.0.92를 채택한다 (H27.64).
 ## 0.0.25
 - H27.57부터 H27.62 뒤의 Release 0.0.25: config/release.json의 모든 manifest, polyspec/hyper-server와 @polyspec/hyper-client의 정확한 요구, npm, Composer, uv가 쓴 lock은 0.0.25를 담는다. 이 release는 template 0.0.19와 kit 0.0.88을 싣고, 그 Composer root는 json-schema fork를 min-0-max/json-schema로 요구한다.
