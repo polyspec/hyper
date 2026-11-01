@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 2540e83a43dcb77b968e4ddcb0860f36b959ad87490e73ddb3030655685289a9 -->
+<!-- source-sha256: 85aa86bdb15f25528d3f29347c5adc8395354199e8d7cb4224cb72b85f285e32 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- hyper는 kit 0.0.88을 채택한다. 그 make kit-gates-static은 push 전에 모든 공유 gate를 실행하고, 그 kit-check는 하나의 CI pipeline(S12), editable 설치 없음(S11), 저장소 밖을 가리키는 manifest 경로 없음(P30)을 판정한다. make kit-sync가 그 PRINCIPLES를 쓴다(H27.61).
 - ci.yml의 job check는 kit S12가 요구하는 대로 needs: kit으로 job kit을 따르므로, kit의 gate가 통과한 뒤에만 실행된다(H27.60). test H27.24와 H27.25는 그 needs를 받아들이고 다른 needs는 여전히 거부한다.
 - AGENTS.md는 template pin 규칙의 Enforced by 행에 target이 실행하는 검사만 부르므로 rules-check가 통과하고, owner 검사는 AGENTS.md와 PRINCIPLES.md에 rules-check를 고른다(H27.59). 그 행은 template-pins의 test 파일을 backtick으로 불렀는데, rules-check는 그것을 어떤 target도 닿지 않는 검사로 읽었다.
 - Composer 개발 소스는 kit의 .links와 make link로만 link하고, release graph는 opis/json-schema fork를 그 tag로 묶는다(H27.58). composer.local.json과 examples/board/composer.local.json은 ../template/packages/php와 ../forks/json-schema로 가는 Composer path repository를 선언했으며, 이는 kit의 local link가 금지하는 .links 옆의 두 번째 link 방식이었다. 그 파일들과 make composer-development, composer-development-check, scripts/check-composer-development.mts, tests/scripts/composer-development.test.mts를 지웠다. composer.json과 examples/board/composer.json은 VCS repository https://github.com/min-0-max/json-schema를 선언하고 opis/json-schema 2.6.0-p1을 요구하며, 두 lock은 upstream 2.6.0에서 fork의 tag v2.6.0-p1로 옮겨졌다. 그 tag는 이름 opis/json-schema를 유지하고, fork의 branch master는 이름 min-0-max/json-schema를 가진다. 그래서 CI와 release는 collect-all-errors 방식에서 유효한 property를 additionalProperties: false로 보고하지 않고 실패한 group 뒤에도 unevaluatedProperties를 실행하는 template decoder를 실행한다.
