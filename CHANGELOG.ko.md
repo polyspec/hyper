@@ -1,10 +1,13 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 89a12d046fa3c80f20684c665a703027e14b3206ace862a8fb99c47c16e52b30 -->
+<!-- source-sha256: cf39026321cc77c0765fb47b31fa88738b9b57c510259ffecf0fdaabafd83785 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+## 0.0.27
+- H27.66 뒤의 Release 0.0.27: config/release.json의 모든 manifest, polyspec/hyper-server와 @polyspec/hyper-client의 정확한 요구, npm, Composer, uv가 쓴 lock은 0.0.27을 담는다(H27.67).
 - 한 session의 요청은 session 디렉터리를 공유하는 모든 서버 process에서 차례로 실행된다. Python 서버는 잠금 파일 <id>.lock에 fcntl.flock을, Node 서버는 proper-lockfile 4.1.2의 잠금 디렉터리 <id>.lock을 요청의 session을 열 때부터 닫을 때까지 잡는다. 전에는 둘 다 자기 process 안에서만 잠금을 잡아, 한 session의 count에 각각 200번 1을 더하는 네 process가 800 가운데 230(Python), 265(Node)를 남겼다. session 파일이 없을 때만 새 session을 시작한다. Python 서버는 해석하지 못한 session 파일에 대해 새 CSRF token을 가진 새 session을 시작했는데, 이제 그 오류로 요청을 실패시킨다. 만료된 session의 제거는 요청이 잠금을 잡고 있는 session을 건너뛰고, Node 서버의 FileSession.close는 promise를 돌려준다(H27.66).
 
 ## 0.0.26
