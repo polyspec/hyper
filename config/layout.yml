@@ -66,3 +66,6 @@ rules:
       - "tests/**/*.{js,mjs,cjs,py,sh,bash,zsh,rb,pl,php,go,rs,ps1,bat,cmd}"
       - "!tests/kit/fixture/**"
       - "!tests/python_package/**"
+      # One real process of the PHP, Python and Node server over one session (HY-104): the test drives each server in its
+      # own language, so a port to TypeScript would test no server.
+      - "!tests/scripts/fixtures/session-worker/**"
