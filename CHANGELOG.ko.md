@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: cf39026321cc77c0765fb47b31fa88738b9b57c510259ffecf0fdaabafd83785 -->
+<!-- source-sha256: ac93da766b742795ec88b38eb45f276df1641c28dba2edab1cd237c76e4877f2 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- make node-server는 board Node 서버를 esbuild --platform=node --packages=external로 묶어 Node가 node_modules의 package를 불러온다. 전에는 bundle이 proper-lockfile만 external로 두었다. Node 서버의 README는 애플리케이션의 Node 서버 bundle이 node_modules를 external로 둔다고 기술한다(H27.68).
 
 ## 0.0.27
 - H27.66 뒤의 Release 0.0.27: config/release.json의 모든 manifest, polyspec/hyper-server와 @polyspec/hyper-client의 정확한 요구, npm, Composer, uv가 쓴 lock은 0.0.27을 담는다(H27.67).

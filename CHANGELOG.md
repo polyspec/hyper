@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- make node-server bundles the board Node server with esbuild --platform=node --packages=external, so Node loads the packages of node_modules, where the bundle left only proper-lockfile external; the README of the Node server states that a Node server bundle of an application keeps its node_modules external (H27.68).
 
 ## 0.0.27
 - Release 0.0.27 after H27.66: every manifest of config/release.json, the exact requirements of polyspec/hyper-server and @polyspec/hyper-client and the locks that npm, Composer and uv wrote hold 0.0.27 (H27.67).
