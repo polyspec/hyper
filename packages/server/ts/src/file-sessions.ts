@@ -18,11 +18,6 @@ const IDENTIFIER = /^[0-9a-f]{64}$/;
 // The milliseconds after the last refresh of a lock directory until another process may take the lock (HY-104).
 const STALE = 10_000;
 
-// A lock that its holder lost, because another process took it after it had not been refreshed for STALE milliseconds.
-interface Lost {
-  error: Error | null;
-}
-
 // Opens one session store per request. A session file is named by its identifier, so the server accepts only
 // identifiers that it created: a cookie value that is not 64 lowercase hexadecimal digits or has no unexpired
 // file starts a new session. The session starts on the first read or write, so a request that never uses it
@@ -66,7 +61,9 @@ export class FileSessions {
       release();
       if (this.queues.get(id) === queued) this.queues.delete(id);
     };
-    const lost: Lost = { error: null };
+    // The error of a lock that its holder lost, because another process took it after it had not been refreshed for
+    // STALE milliseconds.
+    const lost: { error: Error | null } = { error: null };
     let unlock: () => Promise<void>;
     try {
       unlock = await lock(join(this.directory, id), {
@@ -159,10 +156,10 @@ export class FileSession implements SessionStore {
   private renewedId: string | null = null;
   private readonly sessions: FileSessions;
   private readonly cookieId: string | null;
-  private readonly lost: Lost;
+  private readonly lost: { error: Error | null };
   private readonly release: () => Promise<void>;
 
-  constructor(sessions: FileSessions, cookieId: string | null, lost: Lost, release: () => Promise<void>) {
+  constructor(sessions: FileSessions, cookieId: string | null, lost: { error: Error | null }, release: () => Promise<void>) {
     this.sessions = sessions;
     this.cookieId = cookieId;
     this.lost = lost;

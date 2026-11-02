@@ -848,12 +848,12 @@
         {
           "implementation": "python",
           "test": "packages/server/python/tests/test_file_sessions.py",
-          "id": "test_two_processes_writing_one_session_do_not_fail"
+          "id": "test_runs_the_requests_of_one_session_in_several_processes_one_after_another"
         },
         {
           "implementation": "ts",
           "test": "packages/server/ts/tests/sessions-race.test.ts",
-          "id": "FileSessions with two writers of one session › does not fail the write of one session when the other write renames its file first (HY-104)"
+          "id": "FileSessions in several processes › runs the requests of one session in several processes one after another (HY-104)"
         }
       ],
       "requirements": [
