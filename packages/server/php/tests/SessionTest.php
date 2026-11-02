@@ -22,6 +22,21 @@ final class SessionTest extends TestCase
         self::assertSame($token, $session->csrfToken());
     }
 
+    public function testReadsTheStdClassThatANodeOrPythonServerWritesForAMap(): void
+    {
+        // HY-104: a map that an array would read as a list arrives as a stdClass.
+        $store = new ArraySession();
+        $session = new Session($store);
+        $store->set('_hyper_flash', ['values' => new \stdClass(), 'changed' => []]);
+        self::assertSame([], $session->takeFlash()->values);
+        $store->set('_hyper_flash', ['values' => (object) ['0' => 'a'], 'changed' => ['t']]);
+        self::assertSame(['0' => 'a'], $session->takeFlash()->values);
+        $store->set('_hyper_keep', (object) ['0' => (object) ['0' => 'a', '1' => 'b']]);
+        self::assertSame(['0' => 'a', '1' => 'b'], $session->kept('0'));
+        $session->keep('0', 'sort', 'title');
+        self::assertSame(['0' => 'a', '1' => 'b', 'sort' => 'title'], $session->kept('0'));
+    }
+
     public function testARenewalReplacesTheToken(): void
     {
         // HY-72

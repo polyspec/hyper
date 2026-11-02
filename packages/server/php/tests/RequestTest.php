@@ -55,6 +55,7 @@ final class RequestTest extends TestCase
                 'use_strict_mode' => true,
                 'use_only_cookies' => true,
                 'cache_limiter' => '',
+                'serialize_handler' => 'php_serialize',
             ],
             NativeSession::options(false),
         );

@@ -66,7 +66,7 @@ final class Session
     /** Stores a kept value of a region (HY-38, HY-40). */
     public function keep(string $region, string $path, mixed $value): void
     {
-        $kept = $this->store->get(self::KEEP);
+        $kept = self::map($this->store->get(self::KEEP));
         $kept = is_array($kept) ? $kept : [];
         $regionKept = self::map($kept[$region] ?? []);
         $regionKept = is_array($regionKept) ? $regionKept : [];
@@ -82,8 +82,7 @@ final class Session
      */
     public function kept(string $region): array
     {
-        $kept = $this->store->get(self::KEEP);
-
+        $kept = self::map($this->store->get(self::KEEP));
         $regionKept = is_array($kept) ? self::map($kept[$region] ?? []) : [];
 
         return is_array($regionKept) ? $regionKept : [];
