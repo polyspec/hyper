@@ -67,7 +67,7 @@ response = app.handle(request, ArraySession())
   `ConnectionAbortedError` (HY-67) and serves the files of an optional public directory as the PHP built-in server
   serves its document root. `FileSessions` keeps
   each session in a JSON file named by an identifier of 64 hexadecimal digits that it created, writes the file with
-  one rename and runs the requests of one session one after another.
+  one rename and runs the requests of one session one after another, in every process of the directory (HY-104).
 
 ```python
 from polyspec.hyper.file_sessions import FileSessions

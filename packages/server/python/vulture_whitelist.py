@@ -18,5 +18,6 @@ _.daemon_threads
 
 # unittest discovers the TestCase classes of tests/test_*.py by their base class.
 ConcurrentSessionWrites
+ConcurrentSessionRequests
 # FileParts of test_files.py: unittest runs its three tests, as its base FixtureTest is a TestCase (proved by python -m unittest -v).
 FileParts

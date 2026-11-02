@@ -21,13 +21,13 @@ afterEach(() => {
 describe('FileSessions', () => {
   it('starts the session on first use and creates no file for a request that does not use it', async () => {
     const unused = await sessions.open(null);
-    unused.close();
+    await unused.close();
     expect(unused.started).toBe(false);
     expect(readdirSync(directory)).toEqual([]);
 
     const session = await sessions.open(null);
     session.set('a', new Map([['b', [1, -0, 'c']]]));
-    session.close();
+    await session.close();
     expect(session.started).toBe(true);
     expect(session.created).toMatch(/^[0-9a-f]{64}$/);
     expect(readdirSync(directory)).toEqual([session.created]);
@@ -36,29 +36,38 @@ describe('FileSessions', () => {
   it('fails for a session file that holds no map of values by name', async () => {
     const first = await sessions.open(null);
     first.set('a', 1);
-    first.close();
+    await first.close();
     const id = present(first.created);
     const file = join(directory, id);
     writeFileSync(file, serialize([1]));
     const list = await sessions.open(id);
     expect(() => list.get('a')).toThrow(`hyper: session file ${file} holds no map of values`);
-    list.close();
+    await list.close();
     writeFileSync(file, serialize(new Map([[1, 'a']])));
     const numbered = await sessions.open(id);
     expect(() => numbered.get('a')).toThrow(`hyper: session file ${file} holds a key that is not a string`);
-    numbered.close();
+    await numbered.close();
+  });
+
+  it('fails for a session file that it cannot read and starts no new session (HY-104)', async () => {
+    const id = 'e'.repeat(64);
+    writeFileSync(join(directory, id), serialize(new Map([['token', 't']])).subarray(0, 4));
+    const session = await sessions.open(id);
+    expect(() => session.get('token')).toThrow();
+    await session.close();
+    expect(session.created).toBeNull();
   });
 
   it('reads a session that it created and sets no new cookie for it', async () => {
     const first = await sessions.open(null);
     first.set('a', new Map([['b', [1, -0, 'c']]]));
-    first.close();
+    await first.close();
     const second = await sessions.open(first.created);
     expect(second.get('a')).toEqual(new Map([['b', [1, -0, 'c']]]));
     const stored = second.get('a');
     const numbers: unknown = stored instanceof Map ? stored.get('b') : undefined;
     expect(Array.isArray(numbers) && Object.is(numbers[1], -0)).toBe(true);
-    second.close();
+    await second.close();
     expect(second.created).toBeNull();
   });
 
@@ -68,21 +77,21 @@ describe('FileSessions', () => {
       expect(session.get('a'), cookie).toBeUndefined();
       expect(session.created, cookie).not.toBe(cookie);
       expect(session.created, cookie).toMatch(/^[0-9a-f]{64}$/);
-      session.close();
+      await session.close();
     }
   });
 
   it('ends a session after its lifetime and removes expired files', async () => {
     const first = await sessions.open(null);
     first.set('a', 1);
-    first.close();
+    await first.close();
     const id = present(first.created);
     const old = new Date(Date.now() - 1441 * 1000);
     utimesSync(join(directory, id), old, old);
     const later = await sessions.open(id);
     expect(later.get('a')).toBeUndefined();
     expect(later.created).not.toBe(id);
-    later.close();
+    await later.close();
     expect(sessions.collect()).toBe(1);
     expect(existsSync(join(directory, id))).toBe(false);
   });
@@ -90,18 +99,18 @@ describe('FileSessions', () => {
   it('runs the requests of one session one after another', async () => {
     const first = await sessions.open(null);
     first.set('n', 1);
-    first.close();
+    await first.close();
     const id = present(first.created);
     const order: string[] = [];
     const a = await sessions.open(id);
-    const opening = sessions.open(id).then((b) => {
+    const opening = sessions.open(id).then(async (b) => {
       order.push(`b reads ${String(b.get('n'))}`);
-      b.close();
+      await b.close();
     });
     await new Promise((resolve) => setImmediate(resolve));
     order.push('a writes 2');
     a.set('n', 2);
-    a.close();
+    await a.close();
     await opening;
     expect(order).toEqual(['a writes 2', 'b reads 2']);
   });
@@ -116,20 +125,20 @@ describe('FileSessions', () => {
   it('renews a session: a new identifier with the same values, and no file of the old one (HY-72)', async () => {
     const first = await sessions.open(null);
     first.set('a', 1);
-    first.close();
+    await first.close();
     const old = present(first.created);
     const session = await sessions.open(old);
     session.renew();
-    session.close();
+    await session.close();
     expect(session.created).toMatch(/^[0-9a-f]{64}$/);
     expect(session.created).not.toBe(old);
     expect(readdirSync(directory)).toEqual([session.created]);
     const next = await sessions.open(session.created);
     expect(next.get('a')).toBe(1);
-    next.close();
+    await next.close();
     const stale = await sessions.open(old);
     expect(stale.get('a')).toBeUndefined();
-    stale.close();
+    await stale.close();
   });
 
   it('requires an existing absolute directory and a positive lifetime', () => {

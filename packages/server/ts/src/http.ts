@@ -111,7 +111,7 @@ export function createListener<S extends object>(app: App<S>, sessions: FileSess
         try {
           answer = await app.respond(given, session, started, closed.signal);
         } finally {
-          session.close();
+          await session.close();
         }
         last.request = given;
         last.reply = answer.reply;

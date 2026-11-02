@@ -3,23 +3,34 @@ import { randomBytes, randomUUID } from 'node:crypto';
 import { readdirSync, readFileSync, renameSync, rmSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
 import { isAbsolute, join } from 'node:path';
 import { deserialize, serialize } from 'node:v8';
+import { lock, lockSync, type LockOptions } from 'proper-lockfile';
 import { errorCode } from './error-code.js';
 import type { SessionStore } from './session.js';
 
 export interface FileSessionsOptions {
-  // An existing absolute directory that only this server process writes.
+  // An existing absolute directory; the server processes that share it share its sessions (HY-104).
   directory: string;
   // Seconds after the last request of a session until the session ends; PHP's session.gc_maxlifetime is 1440.
   lifetime?: number;
 }
 
 const IDENTIFIER = /^[0-9a-f]{64}$/;
+// The milliseconds after the last refresh of a lock directory until another process may take the lock (HY-104).
+const STALE = 10_000;
+
+// A lock that its holder lost, because another process took it after it had not been refreshed for STALE milliseconds.
+interface Lost {
+  error: Error | null;
+}
 
 // Opens one session store per request. A session file is named by its identifier, so the server accepts only
 // identifiers that it created: a cookie value that is not 64 lowercase hexadecimal digits or has no unexpired
 // file starts a new session. The session starts on the first read or write, so a request that never uses it
 // creates no session. Requests of one session run one after another, because each one reads the file when it
-// starts and writes it when it ends.
+// starts and writes it when it ends, and holds the lock of the session in between: a queue orders the requests of
+// this process and the lock directory `<id>.lock` those of every process of the directory (HY-104). The holder
+// refreshes the modification time of the lock directory while it holds it, so the lock of a process that ended
+// without releasing it counts as released once it has not been refreshed for STALE milliseconds.
 export class FileSessions {
   /** @internal */
   readonly directory: string;
@@ -42,7 +53,7 @@ export class FileSessions {
   /** @internal */
   async open(cookie: string | null): Promise<FileSession> {
     const id = cookie !== null && IDENTIFIER.test(cookie) ? cookie : null;
-    if (id === null) return new FileSession(this, null, () => {});
+    if (id === null) return new FileSession(this, null, { error: null }, async () => {});
     const previous = this.queues.get(id) ?? Promise.resolve();
     let release!: () => void;
     const current = new Promise<void>((resolve) => {
@@ -51,23 +62,74 @@ export class FileSessions {
     const queued = previous.then(() => current);
     this.queues.set(id, queued);
     await previous;
-    return new FileSession(this, id, () => {
+    const leave = () => {
       release();
       if (this.queues.get(id) === queued) this.queues.delete(id);
+    };
+    const lost: Lost = { error: null };
+    let unlock: () => Promise<void>;
+    try {
+      unlock = await lock(join(this.directory, id), {
+        ...this.lockOptions(id),
+        retries: { forever: true, factor: 1.5, minTimeout: 5, maxTimeout: 100 },
+        onCompromised: (error) => {
+          lost.error = error;
+        },
+      });
+    } catch (error) {
+      leave();
+      throw error;
+    }
+    return new FileSession(this, id, lost, async () => {
+      try {
+        // proper-lockfile has released a lock that it lost.
+        if (lost.error === null) await unlock();
+      } finally {
+        leave();
+      }
     });
   }
 
-  // Removes the files of sessions whose lifetime has passed and returns how many it removed.
+  // The lock of the session of an identifier: the directory `<id>.lock` beside its session file, which need not exist.
+  private lockOptions(id: string): LockOptions {
+    return { realpath: false, lockfilePath: join(this.directory, `${id}.lock`), stale: STALE };
+  }
+
+  // Removes the files of sessions whose lifetime has passed and returns how many it removed. It skips a session whose
+  // lock a request holds.
   /** @internal */
   collect(): number {
     let removed = 0;
     for (const name of readdirSync(this.directory)) {
-      if (IDENTIFIER.test(name) && this.expired(join(this.directory, name))) {
-        unlinkSync(join(this.directory, name));
-        removed++;
+      if (!IDENTIFIER.test(name) || !this.ended(name)) continue;
+      let unlock: () => void;
+      try {
+        unlock = lockSync(join(this.directory, name), this.lockOptions(name));
+      } catch (error) {
+        if (errorCode(error) === 'ELOCKED') continue;
+        throw error;
+      }
+      try {
+        if (this.ended(name)) {
+          unlinkSync(join(this.directory, name));
+          removed++;
+        }
+      } finally {
+        unlock();
       }
     }
     return removed;
+  }
+
+  // Returns true when the session of an identifier has a file that is older than the lifetime; another process may have
+  // removed it.
+  private ended(id: string): boolean {
+    try {
+      return this.expired(join(this.directory, id));
+    } catch (error) {
+      if (errorCode(error) === 'ENOENT') return false;
+      throw error;
+    }
   }
 
   // Returns true when a session file is older than the lifetime.
@@ -97,11 +159,13 @@ export class FileSession implements SessionStore {
   private renewedId: string | null = null;
   private readonly sessions: FileSessions;
   private readonly cookieId: string | null;
-  private readonly release: () => void;
+  private readonly lost: Lost;
+  private readonly release: () => Promise<void>;
 
-  constructor(sessions: FileSessions, cookieId: string | null, release: () => void) {
+  constructor(sessions: FileSessions, cookieId: string | null, lost: Lost, release: () => Promise<void>) {
     this.sessions = sessions;
     this.cookieId = cookieId;
+    this.lost = lost;
     this.release = release;
   }
 
@@ -139,10 +203,11 @@ export class FileSession implements SessionStore {
   }
 
   // Writes a started session to its file, removes the file of a renewed identifier, and lets the next request of the
-  // session start.
+  // session start. A request that lost the lock of its session writes nothing and fails with the error of the loss.
   /** @internal */
-  close(): void {
+  async close(): Promise<void> {
     try {
+      if (this.lost.error !== null) throw this.lost.error;
       if (this.renewedId !== null) rmSync(join(this.sessions.directory, this.renewedId), { force: true });
       if (this.values !== null && this.id !== null) {
         const file = join(this.sessions.directory, this.id);
@@ -158,7 +223,7 @@ export class FileSession implements SessionStore {
         }
       }
     } finally {
-      this.release();
+      await this.release();
     }
   }
 

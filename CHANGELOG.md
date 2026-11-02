@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- The requests of one session run one after another in every server process that shares the session directory: the Python server holds fcntl.flock on the lock file <id>.lock and the Node server the lock directory <id>.lock of proper-lockfile 4.1.2 from the opening to the closing of the session of a request, where both held a lock of their own process only, and four processes of 200 requests that each add one to a count of one session left 230 (Python) and 265 (Node) of 800. Only a missing session file starts a new session: the Python server started a new session with a new CSRF token for a session file that it could not decode, and now fails the request with the error. The removal of expired sessions skips a session whose lock a request holds, and FileSession.close of the Node server returns a promise (H27.66).
 
 ## 0.0.26
 - Release 0.0.26 after H27.64 and H27.65: every manifest of config/release.json, the exact requirements of polyspec/hyper-server and @polyspec/hyper-client and the locks that npm, Composer and uv wrote hold 0.0.26; the release carries template 0.0.20 and kit 0.0.92.

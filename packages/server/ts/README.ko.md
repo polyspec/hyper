@@ -1,5 +1,5 @@
 <!-- doc-id: hyper-server-node-readme -->
-<!-- source-sha256: ca61ee03d950572ffd55b4f1096af570d5a53fd40fa243f705a612393207bc1a -->
+<!-- source-sha256: 31ec04a6a16bfe666f41c31366ef485d454235a765f737e21b9b3b9ec4a6496c -->
 # @polyspec/hyper-server
 
 [English](README.md).
@@ -98,7 +98,7 @@ app.server(sessions, { files: '/srv/board/public' }).listen(8080, '127.0.0.1');
 
 `app.listener(sessions, options)`는 `app.server`가 설치하는 request listener를 반환한다(HY-100). 그 promise는 요청의 쓰기 hook과 연결 끊김 hook이 실행된 뒤 settle된다. `options.written`은 쓰기 hook이다(HY-99). 애플리케이션이 답한 요청마다 응답이 닫힌 뒤 한 번 호출되며, 요청, 쓰기를 시작한 응답 또는 탈출 오류의 평범한 500, 쓰기가 끝났는지, 경과 밀리초와 탈출 오류의 failure를 받는다.
 
-`FileSessions({ directory, lifetime })`는 이 서버 process만 쓰는 기존 절대 디렉터리의 파일에 각 session을 저장한다. session cookie는 HTTPS에서 `__Host-hy-session`, 그렇지 않으면 `hy-session`이고(HY-45), `lifetime`은 session의 마지막 요청부터 session이 끝날 때까지의 초다(기본 1440, PHP `session.gc_maxlifetime`과 같다). store는 자기가 만든 식별자만 받아들이고, 요청이 session 데이터를 읽거나 쓸 때만 session을 시작하며, 한 session의 요청을 차례로 실행한다(HY-45). `sessions.collect()`는 끝난 session의 파일을 지운다. 서버는 원하는 주기로 이를 호출한다.
+`FileSessions({ directory, lifetime })`는 기존 절대 디렉터리의 파일에 각 session을 저장한다. 그 디렉터리를 공유하는 서버 process들은 그 session들을 공유한다. session cookie는 HTTPS에서 `__Host-hy-session`, 그렇지 않으면 `hy-session`이고(HY-45), `lifetime`은 session의 마지막 요청부터 session이 끝날 때까지의 초다(기본 1440, PHP `session.gc_maxlifetime`과 같다). store는 자기가 만든 식별자만 받아들이고, 요청이 session 데이터를 읽거나 쓸 때만 session을 시작하며, 한 session의 요청을 디렉터리의 모든 process에서 차례로 실행한다(HY-45, HY-104). `sessions.collect()`는 끝난 session의 파일을 지운다. 서버는 원하는 주기로 이를 호출한다.
 
 ## HTTP 없이 요청에 응답하기
 

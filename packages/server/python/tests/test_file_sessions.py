@@ -1,5 +1,6 @@
-# The session files (HY-45, HY-72) and two processes that write one session file at the same time (HY-104). Each process has its own session store, so the
-# lock of a store does not hold the other process back, as two worker processes of one server do not.
+# The session files (HY-45, HY-72) and several processes that use one session at the same time (HY-104). Each process has its own session store, as each
+# worker process of one server has, so only the lock file of the session holds the other processes back.
+import json
 import multiprocessing
 import os
 import secrets
@@ -11,6 +12,8 @@ from pathlib import Path
 from polyspec.hyper.file_sessions import FileSessions, _cookie_header, _cookie_name
 
 ROUNDS = 400
+PROCESSES = 4
+REQUESTS = 200
 
 
 def write_rounds(directory: str, identifier: str, queue) -> None:
@@ -27,6 +30,60 @@ def write_rounds(directory: str, identifier: str, queue) -> None:
                 errors.append(f"{type(error).__name__}: {error}")
     finally:
         queue.put(errors)
+
+
+def count_requests(directory: str, identifier: str, queue) -> None:
+    """Runs REQUESTS requests of the session of `identifier`; each reads the token and adds one to the count, as a form
+    post reads the CSRF token and writes a flash value. Reports the requests that found no session; an error ends the
+    process with a nonzero exit code."""
+    failures: list[str] = []
+    try:
+        sessions = FileSessions(directory)
+        for _ in range(REQUESTS):
+            session = sessions._open(identifier)
+            try:
+                if session.get("token") is None:
+                    failures.append(
+                        f"a request started the new session {session._created}"
+                    )
+                session.set("count", (session.get("count") or 0) + 1)
+            finally:
+                session._close()
+    finally:
+        queue.put(failures)
+
+
+class ConcurrentSessionRequests(unittest.TestCase):
+    def test_runs_the_requests_of_one_session_in_several_processes_one_after_another(
+        self,
+    ) -> None:
+        directory = tempfile.TemporaryDirectory()
+        self.addCleanup(directory.cleanup)
+        identifier = secrets.token_bytes(32).hex()
+        (Path(directory.name) / identifier).write_text(
+            json.dumps({"token": "t", "count": 0}), encoding="utf-8"
+        )
+        context = multiprocessing.get_context("spawn")
+        queue = context.Queue()
+        processes = [
+            context.Process(
+                target=count_requests, args=(directory.name, identifier, queue)
+            )
+            for _ in range(PROCESSES)
+        ]
+        for process in processes:
+            process.start()
+        failures = [queue.get() for _ in processes]
+        for process in processes:
+            process.join()
+        self.assertEqual([0] * PROCESSES, [process.exitcode for process in processes])
+        self.assertEqual([[]] * PROCESSES, failures)
+        stored = json.loads((Path(directory.name) / identifier).read_text("utf-8"))
+        self.assertEqual(
+            PROCESSES * REQUESTS,
+            stored["count"],
+            "expected every request to add one to the count, actual a count that lost the writes of some requests",
+        )
 
 
 class ConcurrentSessionWrites(unittest.TestCase):
@@ -74,7 +131,35 @@ class FileSessionsTest(unittest.TestCase):
         self.assertNotEqual(identifier, later._created)
         later._close()
         self.assertEqual(1, self.sessions._collect())
-        self.assertFalse((self.directory / identifier).exists())
+        self.assertEqual(
+            [later._created], [file.name for file in self.directory.iterdir()]
+        )
+
+    def test_raises_when_a_session_file_cannot_be_read_and_starts_no_new_session(
+        self,
+    ) -> None:
+        identifier = secrets.token_bytes(32).hex()
+        (self.directory / identifier).write_text('{"token": ', encoding="utf-8")
+        session = self.sessions._open(identifier)
+        with self.assertRaises(json.JSONDecodeError):
+            session.get("token")
+        session._close()
+        self.assertIsNone(session._created)
+
+    def test_keeps_a_lock_file_only_beside_its_session_file(self) -> None:
+        unknown = self.sessions._open("e" * 64)
+        unknown.get("a")
+        unknown._close()
+        first = self.sessions._open(None)
+        first.set("a", 1)
+        first._close()
+        kept = self.sessions._open(first._created)
+        kept.get("a")
+        kept._close()
+        self.assertEqual(
+            sorted([unknown._created, first._created, f"{first._created}.lock"]),
+            sorted(file.name for file in self.directory.iterdir()),
+        )
 
     def test_names_the_session_cookie_hy_session_over_http_and_host_prefixed_over_https(
         self,
