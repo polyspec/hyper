@@ -96,8 +96,11 @@ class Served:
         self._sessions.cleanup()
 
     def sessions(self) -> list[str]:
-        """Returns the names of the session files."""
-        return sorted(path.name for path in Path(self._sessions.name).iterdir())
+        """Returns the identifiers of the session files."""
+        return sorted(
+            path.name.removeprefix("sess_")
+            for path in Path(self._sessions.name).iterdir()
+        )
 
     def connect(
         self, target: str = "/", headers: Optional[dict] = None
