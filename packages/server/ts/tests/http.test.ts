@@ -98,7 +98,7 @@ describe('App.server', () => {
     expect(second.headers.get('set-cookie')).toBeNull();
     // HY-24: the second response masks the same session token anew.
     expect(record(record(parsed(await second.text())).shared).csrf).not.toBe(masked);
-    expect(readdirSync(directory)).toEqual([cookie.slice('hy-session='.length, cookie.indexOf(';'))]);
+    expect(readdirSync(directory)).toEqual([`sess_${cookie.slice('hy-session='.length, cookie.indexOf(';'))}`]);
   });
 
   it('creates no session for a path without a route (HY-45)', async () => {

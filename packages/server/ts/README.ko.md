@@ -1,5 +1,5 @@
 <!-- doc-id: hyper-server-node-readme -->
-<!-- source-sha256: 3f848800e614c0679493b31f9a949c418741bc393d14fc12b758b48231a8904f -->
+<!-- source-sha256: 91bd4da05c8bff70edaa66e00b4023640485baa5e9ef59d35821aaf32f147d5e -->
 # @polyspec/hyper-server
 
 [English](README.md).
@@ -98,7 +98,7 @@ app.server(sessions, { files: '/srv/board/public' }).listen(8080, '127.0.0.1');
 
 `app.listener(sessions, options)`는 `app.server`가 설치하는 request listener를 반환한다(HY-100). 그 promise는 요청의 쓰기 hook과 연결 끊김 hook이 실행된 뒤 settle된다. `options.written`은 쓰기 hook이다(HY-99). 애플리케이션이 답한 요청마다 응답이 닫힌 뒤 한 번 호출되며, 요청, 쓰기를 시작한 응답 또는 탈출 오류의 평범한 500, 쓰기가 끝났는지, 경과 밀리초와 탈출 오류의 failure를 받는다.
 
-`FileSessions({ directory, lifetime })`는 기존 절대 디렉터리의 파일에 각 session을 저장한다. 그 디렉터리를 공유하는 서버 process들은 그 session들을 공유한다. session cookie는 HTTPS에서 `__Host-hy-session`, 그렇지 않으면 `hy-session`이고(HY-45), `lifetime`은 session의 마지막 요청부터 session이 끝날 때까지의 초다(기본 1440, PHP `session.gc_maxlifetime`과 같다). store는 자기가 만든 식별자만 받아들이고, 요청이 session 데이터를 읽거나 쓸 때만 session을 시작하며, 한 session의 요청을 디렉터리의 모든 process에서 차례로 실행한다(HY-45, HY-104). session은 `proper-lockfile`로 잠그는데, 이 package는 Node module을 require하는 CommonJS package이므로 애플리케이션의 Node 서버 bundle은 `esbuild --platform=node --packages=external`처럼 node_modules를 external로 둔다. `sessions.collect()`는 끝난 session의 파일을 지운다. 서버는 원하는 주기로 이를 호출한다.
+`FileSessions({ directory, lifetime })`는 각 session을 기존 절대 디렉터리의 파일 `sess_<id>`에 PHP files handler의 형식으로 저장하므로, 그 디렉터리를 공유하는 PHP, Node, Python 서버와 그 process들은 그 session들을 공유한다(HY-104). session cookie는 HTTPS에서 `__Host-hy-session`, 그렇지 않으면 `hy-session`이고(HY-45), `lifetime`은 session의 마지막 요청부터 session이 끝날 때까지의 초다(기본 1440, PHP `session.gc_maxlifetime`과 같다). store는 파일이 있는 식별자만 받아들이고, 요청이 session 데이터를 읽거나 쓸 때만 session을 시작하며, 한 session의 요청을 디렉터리의 모든 process에서 차례로 실행한다(HY-45, HY-104). session 파일의 `flock`은 Node의 experimental module인 `node:ffi`로 잡으며, 이 module은 경고를 한 번 출력하고, `--permission`으로 시작한 process에는 `--allow-ffi`가 필요하다. `sessions.collect()`는 끝난 session의 파일을 지운다. 서버는 원하는 주기로 이를 호출한다.
 
 ## HTTP 없이 요청에 응답하기
 

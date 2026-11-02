@@ -20,7 +20,7 @@ final class NativeSession implements SessionStore
         $https = $this->https || (($_SERVER['HTTPS'] ?? '') !== '' && ($_SERVER['HTTPS'] ?? '') !== 'off');
         $name = self::name($https);
         $id = $_COOKIE[$name] ?? null;
-        if ($id !== null && (!is_string($id) || preg_match('/^[A-Za-z0-9,-]{22,256}$/D', $id) !== 1)) {
+        if ($id !== null && (!is_string($id) || preg_match('/^[A-Za-z0-9,-]{22,128}$/D', $id) !== 1)) {
             unset($_COOKIE[$name]);
         }
         session_start(self::options($https));
@@ -38,11 +38,12 @@ final class NativeSession implements SessionStore
 
     /**
      * Returns the session options: the cookie name of HY-45 with `Path=/` and no `Domain`, HttpOnly, SameSite=Lax,
-     * Secure on HTTPS, only identifiers that the server created, and no caching headers, because the application
-     * sets Cache-Control (HY-52).
+     * Secure on HTTPS, only identifiers that the server created, no caching headers, because the application sets
+     * Cache-Control (HY-52), and the record form that the other servers read (HY-104).
      *
      * @return array{name: string, cookie_path: '/', cookie_domain: '', cookie_httponly: true, cookie_samesite: 'Lax',
-     *     cookie_secure: bool, use_strict_mode: true, use_only_cookies: true, cache_limiter: ''}
+     *     cookie_secure: bool, use_strict_mode: true, use_only_cookies: true, cache_limiter: '',
+     *     serialize_handler: 'php_serialize'}
      *
      * @internal
      */
@@ -58,6 +59,7 @@ final class NativeSession implements SessionStore
             'use_strict_mode' => true,
             'use_only_cookies' => true,
             'cache_limiter' => '',
+            'serialize_handler' => 'php_serialize',
         ];
     }
 

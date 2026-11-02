@@ -86,7 +86,7 @@ export class Session {
     const values: unknown = flash.get('values');
     const changed: unknown = flash.get('changed');
     return {
-      values: values instanceof Map ? storedMap(values, 'flash values') : new Map<string, Value>(),
+      values: values instanceof Map || Array.isArray(values) ? storedMap(values, 'flash values') : new Map<string, Value>(),
       changed: Array.isArray(changed) ? changed.filter((topic): topic is string => typeof topic === 'string') : [],
     };
   }
@@ -114,12 +114,14 @@ export class Session {
   kept(region: string): MapValue {
     const stored = this.store.get(KEEP);
     const values: unknown = stored instanceof Map ? stored.get(region) : undefined;
-    return values instanceof Map ? storedMap(values, `kept values of region ${region}`) : new Map<string, Value>();
+    return values instanceof Map || Array.isArray(values) ? storedMap(values, `kept values of region ${region}`) : new Map<string, Value>();
   }
 }
 
-// A map of values that the session stored with toValue; another value fails, since the session holds only those.
+// A map of values that the session stored with toValue; another value fails, since the session holds only those. PHP keeps
+// a map as an array, and an array with the keys 0 to n-1 reads as a list, so a list here is that map.
 function storedMap(value: unknown, what: string): MapValue {
-  if (!isMapValue(value)) throw new Error(`hyper: the session holds ${what} that are not a map of values`);
-  return value;
+  const map = Array.isArray(value) ? new Map(value.map((item: unknown, index) => [String(index), item])) : value;
+  if (!isMapValue(map)) throw new Error(`hyper: the session holds ${what} that are not a map of values`);
+  return map;
 }

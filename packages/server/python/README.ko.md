@@ -1,5 +1,5 @@
 <!-- doc-id: hyper-server-python-readme -->
-<!-- source-sha256: 3906437ebccb0db9d1e8518fed9f6f859ce3c84b1c76ad4f92a4c6769de1df18 -->
+<!-- source-sha256: 836cac72f066f792141e7ef52e853948479120cfdba4dee0d157b25ce2efe72b -->
 # polyspec-hyper-server
 
 [English](README.md).
@@ -63,8 +63,9 @@ response = app.handle(request, ArraySession())
   `create_server(app, sessions)`가 모든 요청을 `App.handle`의 응답에 보내는 thread HTTP server를 반환한다. body limit보다
   큰 body를 더 읽지 않고(HY-59), 새 session의 cookie를 가장 먼저 설정하며(HY-45), 응답의 쓰기가 `BrokenPipeError`,
   `ConnectionResetError`, `ConnectionAbortedError`로 실패하면 연결 끊김 hook을 호출하고(HY-67), 선택의 public
-  디렉터리 파일을 PHP built-in server가 document root를 서비스하듯이 서비스한다. `FileSessions`는 세션마다 자신이 만든 64자리 16진수
-  identifier로 이름 붙은 JSON 파일을 두고, rename 한 번으로 파일을 쓰며, 한 세션의 요청을 디렉터리의 모든 process에서 순서대로 돌린다(HY-104).
+  디렉터리 파일을 PHP built-in server가 document root를 서비스하듯이 서비스한다. `FileSessions`는 세션마다
+  파일 `sess_<id>`에 PHP files handler의 형식으로 저장하고 그 파일에 `flock`을 잡으므로, 디렉터리를 공유하는 PHP, Node,
+  Python 서버와 그 process들은 session을 공유하고 한 session의 요청을 차례로 실행한다(HY-104).
 
 ```python
 from polyspec.hyper.file_sessions import FileSessions

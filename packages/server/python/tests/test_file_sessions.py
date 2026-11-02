@@ -1,6 +1,5 @@
 # The session files (HY-45, HY-72) and several processes that use one session at the same time (HY-104). Each process has its own session store, as each
-# worker process of one server has, so only the lock file of the session holds the other processes back.
-import json
+# worker process of one server has, so only the lock of the session file holds the other processes back.
 import multiprocessing
 import os
 import secrets
@@ -9,7 +8,10 @@ import time
 import unittest
 from pathlib import Path
 
+from polyspec.hyper._session import Session
 from polyspec.hyper.file_sessions import FileSessions, _cookie_header, _cookie_name
+from polyspec.hyper.session import ArraySession
+from polyspec.php_serialize import UnserializeError, serialize, unserialize
 
 ROUNDS = 400
 PROCESSES = 4
@@ -60,8 +62,8 @@ class ConcurrentSessionRequests(unittest.TestCase):
         directory = tempfile.TemporaryDirectory()
         self.addCleanup(directory.cleanup)
         identifier = secrets.token_bytes(32).hex()
-        (Path(directory.name) / identifier).write_text(
-            json.dumps({"token": "t", "count": 0}), encoding="utf-8"
+        (Path(directory.name) / f"sess_{identifier}").write_bytes(
+            serialize({"token": "t", "count": 0})
         )
         context = multiprocessing.get_context("spawn")
         queue = context.Queue()
@@ -78,7 +80,7 @@ class ConcurrentSessionRequests(unittest.TestCase):
             process.join()
         self.assertEqual([0] * PROCESSES, [process.exitcode for process in processes])
         self.assertEqual([[]] * PROCESSES, failures)
-        stored = json.loads((Path(directory.name) / identifier).read_text("utf-8"))
+        stored = unserialize((Path(directory.name) / f"sess_{identifier}").read_bytes())
         self.assertEqual(
             PROCESSES * REQUESTS,
             stored["count"],
@@ -91,7 +93,7 @@ class ConcurrentSessionWrites(unittest.TestCase):
         directory = tempfile.TemporaryDirectory()
         self.addCleanup(directory.cleanup)
         identifier = secrets.token_bytes(32).hex()
-        (Path(directory.name) / identifier).write_text("{}", encoding="utf-8")
+        (Path(directory.name) / f"sess_{identifier}").write_bytes(b"a:0:{}")
         context = multiprocessing.get_context("spawn")
         queue = context.Queue()
         processes = [
@@ -112,6 +114,24 @@ class ConcurrentSessionWrites(unittest.TestCase):
         )
 
 
+class StoredMapsTest(unittest.TestCase):
+    def test_reads_a_stored_list_as_the_map_that_a_php_array_keeps_as_a_list(
+        self,
+    ) -> None:
+        store = ArraySession()
+        session = Session(store)
+        store.set("_hyper_flash", {"values": [], "changed": []})
+        flash = session.take_flash()
+        self.assertEqual(({}, []), (flash.values, flash.changed))
+        store.set("_hyper_flash", {"values": ["a"], "changed": ["t"]})
+        flash = session.take_flash()
+        self.assertEqual(({"0": "a"}, ["t"]), (flash.values, flash.changed))
+        store.set("_hyper_keep", {"rows": ["a", "b"]})
+        self.assertEqual({"0": "a", "1": "b"}, session.kept("rows"))
+        session.keep("rows", "sort", "title")
+        self.assertEqual({"0": "a", "1": "b", "sort": "title"}, session.kept("rows"))
+
+
 class FileSessionsTest(unittest.TestCase):
     def setUp(self) -> None:
         directory = tempfile.TemporaryDirectory()
@@ -125,41 +145,117 @@ class FileSessionsTest(unittest.TestCase):
         first._close()
         identifier = first._created
         old = time.time() - 1441
-        os.utime(self.directory / identifier, (old, old))
+        os.utime(self.directory / f"sess_{identifier}", (old, old))
         later = self.sessions._open(identifier)
         self.assertIsNone(later.get("a"))
         self.assertNotEqual(identifier, later._created)
         later._close()
         self.assertEqual(1, self.sessions._collect())
         self.assertEqual(
-            [later._created], [file.name for file in self.directory.iterdir()]
+            [f"sess_{later._created}"], [file.name for file in self.directory.iterdir()]
         )
 
     def test_raises_when_a_session_file_cannot_be_read_and_starts_no_new_session(
         self,
     ) -> None:
         identifier = secrets.token_bytes(32).hex()
-        (self.directory / identifier).write_text('{"token": ', encoding="utf-8")
+        (self.directory / f"sess_{identifier}").write_bytes(b's:5:"token')
         session = self.sessions._open(identifier)
-        with self.assertRaises(json.JSONDecodeError):
+        with self.assertRaises(UnserializeError):
             session.get("token")
         session._close()
         self.assertIsNone(session._created)
 
-    def test_keeps_a_lock_file_only_beside_its_session_file(self) -> None:
+    def test_creates_no_file_for_an_identifier_without_a_session(self) -> None:
         unknown = self.sessions._open("e" * 64)
-        unknown.get("a")
+        self.assertEqual([], list(self.directory.iterdir()))
         unknown._close()
+        self.assertEqual([], list(self.directory.iterdir()))
+
+    def test_reads_a_session_file_without_bytes_as_an_empty_session(self) -> None:
+        identifier = "a" * 32
+        (self.directory / f"sess_{identifier}").write_bytes(b"")
+        session = self.sessions._open(identifier)
+        self.assertIsNone(session.get("a"))
+        session._close()
+        self.assertIsNone(session._created)
+        self.assertEqual(
+            b"a:0:{}", (self.directory / f"sess_{identifier}").read_bytes()
+        )
+
+    def test_a_request_that_changes_nothing_keeps_the_bytes_of_the_record(self) -> None:
+        identifier = "a" * 32
+        file = self.directory / f"sess_{identifier}"
+        record = (
+            b'a:3:{s:1:"f";d:1;s:1:"o";O:8:"stdClass":1:{s:1:"0";i:1;}'
+            b's:1:"r";a:2:{i:0;a:0:{}i:1;R:5;}}'
+        )
+        file.write_bytes(record)
+        old = time.time() - 100
+        os.utime(file, (old, old))
+        session = self.sessions._open(identifier)
+        self.assertEqual({"0": 1}, session.get("o"))
+        session._close()
+        self.assertEqual(record, file.read_bytes())
+        self.assertGreater(file.stat().st_mtime, old + 50)
+        changed = self.sessions._open(identifier)
+        changed.set("n", 1)
+        changed._close()
+        self.assertEqual(
+            record[:-1].replace(b"a:3:", b"a:4:", 1) + b's:1:"n";i:1;}',
+            file.read_bytes(),
+        )
+
+    def test_a_shorter_record_leaves_no_bytes_of_the_longer_one(self) -> None:
+        identifier = "a" * 32
+        file = self.directory / f"sess_{identifier}"
+        file.write_bytes(serialize({"a": "x" * 100}))
+        session = self.sessions._open(identifier)
+        session.remove("a")
+        session._close()
+        self.assertEqual(b"a:0:{}", file.read_bytes())
+
+    def test_reads_the_values_of_php_arrays_as_the_data_model(self) -> None:
+        identifier = "a" * 32
+        (self.directory / f"sess_{identifier}").write_bytes(
+            b'a:3:{i:0;s:1:"z";s:1:"m";a:2:{i:7;s:1:"x";s:1:"y";i:1;}'
+            b's:1:"o";O:8:"stdClass":0:{}}'
+        )
+        session = self.sessions._open(identifier)
+        self.assertEqual("z", session.get("0"))
+        self.assertEqual({"7": "x", "y": 1}, session.get("m"))
+        self.assertEqual({}, session.get("o"))
+        session._close()
+
+    def test_keeps_a_map_that_a_php_array_would_read_as_a_list(self) -> None:
+        first = self.sessions._open(None)
+        first.set("empty", {})
+        first.set("numbered", {"0": "a", "1": "b"})
+        first.set("list", ["a"])
+        first._close()
+        record = (self.directory / f"sess_{first._created}").read_bytes()
+        self.assertEqual(
+            b'a:3:{s:5:"empty";O:8:"stdClass":0:{}'
+            b's:8:"numbered";O:8:"stdClass":2:{s:1:"0";s:1:"a";s:1:"1";s:1:"b";}'
+            b's:4:"list";a:1:{i:0;s:1:"a";}}',
+            record,
+        )
+        later = self.sessions._open(first._created)
+        self.assertEqual({}, later.get("empty"))
+        self.assertEqual({"0": "a", "1": "b"}, later.get("numbered"))
+        self.assertEqual(["a"], later.get("list"))
+        later._close()
+
+    def test_an_identifier_that_a_renewal_removed_names_no_session(
+        self,
+    ) -> None:
         first = self.sessions._open(None)
         first.set("a", 1)
         first._close()
-        kept = self.sessions._open(first._created)
-        kept.get("a")
-        kept._close()
-        self.assertEqual(
-            sorted([unknown._created, first._created, f"{first._created}.lock"]),
-            sorted(file.name for file in self.directory.iterdir()),
-        )
+        holder = self.sessions._open(first._created)
+        holder.renew()
+        holder._close()
+        self.assertIsNone(self.sessions._hold(first._created, blocking=True))
 
     def test_names_the_session_cookie_hy_session_over_http_and_host_prefixed_over_https(
         self,
@@ -177,7 +273,7 @@ class FileSessionsTest(unittest.TestCase):
         )
 
     def test_accepts_only_identifiers_that_it_created(self) -> None:
-        for cookie in ["abc", "../../etc/passwd", "f" * 64, "F" * 64]:
+        for cookie in ["abc", "../../etc/passwd", "f" * 64, "F" * 64, "a" * 129]:
             session = self.sessions._open(cookie)
             self.assertIsNone(session.get("a"), cookie)
             self.assertNotEqual(cookie, session._created, cookie)
@@ -195,7 +291,8 @@ class FileSessionsTest(unittest.TestCase):
         session._close()
         self.assertNotEqual(old, session._created)
         self.assertEqual(
-            [session._created], [file.name for file in self.directory.iterdir()]
+            [f"sess_{session._created}"],
+            [file.name for file in self.directory.iterdir()],
         )
         self.assertEqual(1, self.sessions._open(session._created).get("a"))
 

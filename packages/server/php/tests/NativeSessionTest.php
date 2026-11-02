@@ -72,7 +72,7 @@ final class NativeSessionTest extends TestCase
             $identifier = $created[0];
             self::writers($directory, $identifier, 4);
 
-            self::assertStringContainsString('n|i:5;', (string) file_get_contents("{$directory}/sess_{$identifier}"));
+            self::assertSame('a:1:{s:1:"n";i:5;}', (string) file_get_contents("{$directory}/sess_{$identifier}"));
         } finally {
             array_map('unlink', glob("{$directory}/*") ?: []);
             rmdir($directory);

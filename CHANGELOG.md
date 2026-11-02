@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- The PHP, Node and Python servers share the sessions of one directory: a session is the file sess_<id> in the form php_serialize, each server holds flock on it from the opening of a session to its closing, the Node server through node:ffi and the Python and Node servers with the packages of the php-serialize release v0.0.1, and a value that a request did not set keeps its bytes (H27.69).
 - make node-server bundles the board Node server with esbuild --platform=node --packages=external, so Node loads the packages of node_modules, where the bundle left only proper-lockfile external; the README of the Node server states that a Node server bundle of an application keeps its node_modules external (H27.68).
 
 ## 0.0.27

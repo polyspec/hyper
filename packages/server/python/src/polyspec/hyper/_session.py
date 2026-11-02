@@ -14,6 +14,14 @@ _FLASH_KEY = "_hyper_flash"
 _KEEP_KEY = "_hyper_keep"
 
 
+def _as_map(value: object) -> object:
+    """Returns the map of a stored value: PHP keeps a map as an array, and an array with the keys 0 to n-1 reads as a
+    list, so a list here is that map."""
+    if isinstance(value, list):
+        return {str(index): item for index, item in enumerate(value)}
+    return value
+
+
 class Flash:
     """Values and changed topics that an action passes to the next request (HY-17, HY-25)."""
 
@@ -49,7 +57,7 @@ class Session:
         self._store.remove(_FLASH_KEY)
         if not isinstance(flash, dict):
             return Flash({}, [])
-        values = flash.get("values", {})
+        values = _as_map(flash.get("values", {}))
         changed = flash.get("changed", [])
         if not isinstance(values, dict) or not isinstance(changed, list):
             raise ValueError(
@@ -70,7 +78,7 @@ class Session:
         """Stores a kept value of a region (HY-38, HY-40)."""
         stored = self._store.get(_KEEP_KEY)
         kept = stored if isinstance(stored, dict) else {}
-        region_kept = kept.get(region)
+        region_kept = _as_map(kept.get(region))
         kept[region] = dict(region_kept if isinstance(region_kept, dict) else {})
         kept[region][path] = value
         self._store.set(_KEEP_KEY, kept)
@@ -78,5 +86,5 @@ class Session:
     def kept(self, region: str) -> dict:
         """Returns the kept values of a region by path in storing order."""
         stored = self._store.get(_KEEP_KEY)
-        kept = stored.get(region) if isinstance(stored, dict) else None
+        kept = _as_map(stored.get(region)) if isinstance(stored, dict) else None
         return dict(kept) if isinstance(kept, dict) else {}

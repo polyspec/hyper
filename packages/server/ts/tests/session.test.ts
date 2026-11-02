@@ -15,6 +15,19 @@ describe('Session', () => {
     expect(session.kept('notice')).toEqual(new Map());
   });
 
+  it('reads a stored list as the map that a PHP array keeps as a list (HY-104)', () => {
+    const store = new MemorySessionStore();
+    const session = new Session(store);
+    store.set('_hyper_flash', new Map<string, unknown>([['values', []], ['changed', []]]));
+    expect(session.takeFlash()).toEqual({ values: new Map(), changed: [] });
+    store.set('_hyper_flash', new Map<string, unknown>([['values', ['a']], ['changed', ['t']]]));
+    expect(session.takeFlash()).toEqual({ values: new Map([['0', 'a']]), changed: ['t'] });
+    store.set('_hyper_keep', new Map([['rows', ['a', 'b']]]));
+    expect(session.kept('rows')).toEqual(new Map([['0', 'a'], ['1', 'b']]));
+    session.keep('rows', 'sort', 'title');
+    expect(session.kept('rows')).toEqual(new Map([['0', 'a'], ['1', 'b'], ['sort', 'title']]));
+  });
+
   it('fails for stored flash values or kept values that are not a map of values', () => {
     const store = new MemorySessionStore();
     const session = new Session(store);

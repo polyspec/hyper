@@ -47,7 +47,7 @@ final class Session
             return new Flash([], []);
         }
 
-        $values = $flash['values'] ?? [];
+        $values = self::map($flash['values'] ?? []);
         $changed = $flash['changed'] ?? [];
         if (!is_array($values) || !is_array($changed) || !array_is_list($changed)) {
             throw new \UnexpectedValueException('the session holds flash data that is not values and a list of topics');
@@ -68,7 +68,8 @@ final class Session
     {
         $kept = $this->store->get(self::KEEP);
         $kept = is_array($kept) ? $kept : [];
-        $regionKept = is_array($kept[$region] ?? null) ? $kept[$region] : [];
+        $regionKept = self::map($kept[$region] ?? []);
+        $regionKept = is_array($regionKept) ? $regionKept : [];
         $regionKept[$path] = $value;
         $kept[$region] = $regionKept;
         $this->store->set(self::KEEP, $kept);
@@ -83,7 +84,15 @@ final class Session
     {
         $kept = $this->store->get(self::KEEP);
 
-        return is_array($kept) && is_array($kept[$region] ?? null) ? $kept[$region] : [];
+        $regionKept = is_array($kept) ? self::map($kept[$region] ?? []) : [];
+
+        return is_array($regionKept) ? $regionKept : [];
+    }
+
+    /** Returns the entries of a stored map: the Node and Python servers write a map that an array would read as a list as a `stdClass` (HY-104). */
+    private static function map(mixed $value): mixed
+    {
+        return $value instanceof \stdClass ? get_object_vars($value) : $value;
     }
 
     /** Stores flash data for the next request. */

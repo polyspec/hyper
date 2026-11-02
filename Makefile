@@ -172,7 +172,7 @@ server-fixtures: packages ## Build the server program of the PHP test fixtures
 	$(NODE) $(BUILD_PACKAGE)/bin/hyper-build-server.mjs --manifest $(FIXTURES)/app.json --templates $(FIXTURES)/templates --output $(PHP_PACKAGE)/tests/build/server --php-namespace 'Polyspec\Hyper\Tests\Program'
 
 # A Node server bundle keeps the packages of node_modules external, and Node loads them from there: a CommonJS package that
-# requires Node modules, such as proper-lockfile, the session lock of the Node server (HY-104), cannot run inside an ESM bundle.
+# requires Node modules cannot run inside an ESM bundle.
 node-server: assets ## Build the board Node server into examples/board/build/node/server.mjs (HY-54)
 	$(TSC) -p $(BOARD)/node/tsconfig.json
 	$(ESBUILD) $(BOARD)/node/main.ts --bundle --platform=node --format=esm --packages=external --target=node26 --log-level=warning --outfile=$(BOARD)/build/node/server.mjs

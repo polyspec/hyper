@@ -43,11 +43,23 @@ name = "polyspec-hyper-server"
 version = "0.0.27"
 source = { editable = "." }
 dependencies = [
+    { name = "polyspec-php-serialize" },
     { name = "polyspec-template" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "polyspec-template", url = "https://github.com/polyspec/template/releases/download/v0.0.20/polyspec_template-0.0.20-py3-none-any.whl" }]
+requires-dist = [
+    { name = "polyspec-php-serialize", url = "https://github.com/polyspec/php-serialize/releases/download/v0.0.1/polyspec_php_serialize-0.0.1-py3-none-any.whl" },
+    { name = "polyspec-template", url = "https://github.com/polyspec/template/releases/download/v0.0.20/polyspec_template-0.0.20-py3-none-any.whl" },
+]
+
+[[package]]
+name = "polyspec-php-serialize"
+version = "0.0.1"
+source = { url = "https://github.com/polyspec/php-serialize/releases/download/v0.0.1/polyspec_php_serialize-0.0.1-py3-none-any.whl" }
+wheels = [
+    { url = "https://github.com/polyspec/php-serialize/releases/download/v0.0.1/polyspec_php_serialize-0.0.1-py3-none-any.whl", hash = "sha256:0789bdf0ec9b84f856ec1613782fba17ec41b4b45c5cb6ba78cb97211844866e" },
+]
 
 [[package]]
 name = "polyspec-template"

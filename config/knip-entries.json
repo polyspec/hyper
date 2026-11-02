@@ -4,7 +4,8 @@
     "examples/board/client/main.ts": "The browser script of the board example: make assets bundles it with hyper-build-assets --app examples/board.",
     "examples/board/node/main.ts": "The board Node server: make node-server bundles it with esbuild into examples/board/build/node/server.mjs.",
     "tests/e2e/playwright.config.ts": "The Playwright configuration of make e2e: scripts/run-e2e.mts runs playwright test --config with it.",
-    "tests/scripts/fixtures/chunks/client/main.ts": "The fixture app of the chunk tests of hyper-build-assets, which tests/scripts bundle by its directory."
+    "tests/scripts/fixtures/chunks/client/main.ts": "The fixture app of the chunk tests of hyper-build-assets, which tests/scripts bundle by its directory.",
+    "tests/scripts/fixtures/session-worker/worker.mjs": "One Node server process of tests/scripts/session-shared.test.mts, which runs it by its path."
   },
   "binaries": {
     "container": "Apple container, whose bind mounts are virtiofs: make virtiofs-check (tests/virtiofs) runs it on Darwin.",
@@ -12,6 +13,7 @@
     "php": "scripts/check-parity.mts (make parity) asks the php of the PATH whether the polyspec_template extension loads before it starts the PHP board server."
   },
   "ignoreDependencies": {
+    "@polyspec/php-serialize": "The root names the tarball URL of the php-serialize release, which npm installs only from the root with allow-remote=root; packages/server/ts requires it by its version.",
     "@polyspec/template-compiler": "The root names the tarball URL of the template release, which npm installs only from the root with allow-remote=root (H21.4); packages/build depends on it by version, and make server and make server-fixtures run packages/build/bin/hyper-build-server.mjs, which imports it. No JavaScript of the root imports it, and knip does not read the Makefile."
   },
   "workspaces": {

@@ -66,8 +66,9 @@ response = app.handle(request, ArraySession())
   disconnect hook when a write of the response fails with `BrokenPipeError`, `ConnectionResetError` or
   `ConnectionAbortedError` (HY-67) and serves the files of an optional public directory as the PHP built-in server
   serves its document root. `FileSessions` keeps
-  each session in a JSON file named by an identifier of 64 hexadecimal digits that it created, writes the file with
-  one rename and runs the requests of one session one after another, in every process of the directory (HY-104).
+  each session in the file `sess_<id>` in the form of the files handler of PHP and holds `flock` on it, so the PHP,
+  Node and Python servers and their processes that share the directory share its sessions and run the requests of one
+  session one after another (HY-104).
 
 ```python
 from polyspec.hyper.file_sessions import FileSessions
