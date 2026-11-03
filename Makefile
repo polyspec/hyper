@@ -291,7 +291,7 @@ serve-demo: assets server ## Serve SSR on :8080, CSR on :8081 and the comparison
 serve-demo-unlock: ## Remove the lock of a demo whose process has ended
 	$(NODE) $(KIT)/holder-lock.$(KIT_EXT) clear $(SERVE_DEMO_LOCK)
 
-bench-server: server ext ## Measure PHP request handling and rendering cost per row count, with the generated program and with the native extension
+bench-server: assets server ext ## Measure PHP request handling and rendering cost per row count, with the generated program and with the native extension
 	@failed=; \
 	$(call check,the benchmark with the generated program,php benchmarks/server.php --app $(BOARD) --iterations 300) \
 	$(call check,the benchmark with the native extension,php -d extension=$(abspath $(EXT)) benchmarks/server.php --app $(BOARD) --iterations 300) \

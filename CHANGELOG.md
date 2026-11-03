@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- make bench-server builds the assets, which a clean checkout lacked, so every request answered status 500; the server benchmark fails when a request answers another status than the one it measures (H26.9-2).
 - `.github/workflows/bench.yml` runs make bench and make bench-sessions one after another in one job on a manual run and uploads the report of each target, outside the checks and the release. The server benchmark sends a CSRF token with `POST /board/create`, so the request answers status 422, and the browser benchmark prints page errors, console errors and failed requests (H26.9-1).
 
 ## 0.0.29

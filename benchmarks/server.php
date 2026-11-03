@@ -79,23 +79,31 @@ $measure = static function (int $iterations, Closure $run): array {
 };
 
 $requests = [
-    'GET /board, document HTML' => fn (): Request => new Request('GET', '/board'),
-    'GET /board, document JSON' => fn (): Request => new Request('GET', '/board', $json),
-    'GET /board, region JSON with left' => fn (): Request => new Request('GET', '/board', $region),
-    'GET /board/1, document HTML' => fn (): Request => new Request('GET', '/board/1'),
-    'GET /board/1, region JSON' => fn (): Request => new Request('GET', '/board/1', $region),
-    'POST /board/create, 422 region JSON' => fn (): Request => new Request(
+    'GET /board, document HTML' => [200, fn (): Request => new Request('GET', '/board')],
+    'GET /board, document JSON' => [200, fn (): Request => new Request('GET', '/board', $json)],
+    'GET /board, region JSON with left' => [200, fn (): Request => new Request('GET', '/board', $region)],
+    'GET /board/1, document HTML' => [200, fn (): Request => new Request('GET', '/board/1')],
+    'GET /board/1, region JSON' => [200, fn (): Request => new Request('GET', '/board/1', $region)],
+    'POST /board/create, 422 region JSON' => [422, fn (): Request => new Request(
         'POST',
         '/board/create',
         [...$region, 'Content-Type' => 'application/x-www-form-urlencoded'],
         '',
         http_build_query(['_csrf' => Csrf::masked($token), 'title' => '', 'author' => 'a', 'body' => 'b']),
-    ),
+    )],
 ];
 echo "## Requests (App::handle, 10 rows per page)\n\n";
 echo "| Request | status | mean ms | p50 ms | p95 ms | bytes |\n|---|---:|---:|---:|---:|---:|\n";
-foreach ($requests as $label => $request) {
+foreach ($requests as $label => [$expected, $request]) {
+    // The times of another response, such as an error, are not the times of this request, so the run fails.
     $status = $application->handle($request(), $session)->status;
+    if ($status !== $expected) {
+        fwrite(STDERR, "{$label} answers status {$status}, not {$expected}\n");
+        if (is_file($database)) {
+            unlink($database);
+        }
+        exit(1);
+    }
     $result = $measure($iterations, function () use ($application, $request, $session): int {
         $response = $application->handle($request(), $session);
 

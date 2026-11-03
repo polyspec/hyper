@@ -4,10 +4,13 @@ import { spawnSync } from 'node:child_process';
 import { cpSync, existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { test } from 'node:test';
+import { test, type TestContext } from 'node:test';
+
+import { dryRun } from './make-dry-run.mts';
 import { requireBuilt } from './requires.mts';
 
-test('the server benchmark reports its program without PHP warnings and removes its database', (t) => {
+/** A copy of the board with what the benchmark reads, removed after the test. */
+function boardCopy(t: TestContext): string {
   requireBuilt('assets', 'examples/board/build/manifest.json');
   requireBuilt('server', 'examples/board/build/server/program.json');
   requireBuilt('hyper-install', 'examples/board/vendor/autoload.php');
@@ -18,6 +21,11 @@ test('the server benchmark reports its program without PHP warnings and removes 
   mkdirSync(join(app, 'var'));
   mkdirSync(join(app, 'vendor'));
   writeFileSync(join(app, 'vendor/autoload.php'), `<?php require ${JSON.stringify(resolve('examples/board/vendor/autoload.php'))};\n`);
+  return app;
+}
+
+test('the server benchmark reports its program without PHP warnings and removes its database', (t) => {
+  const app = boardCopy(t);
   const result = spawnSync('php', ['-d', 'error_reporting=32767', '-d', 'display_errors=stderr', 'benchmarks/server.php', '--app', app, '--iterations', '1'], { encoding: 'utf8' });
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.stderr, '', result.stderr);
@@ -25,4 +33,16 @@ test('the server benchmark reports its program without PHP warnings and removes 
   assert.match(result.stdout, /GET \/board, document HTML \| 200/);
   assert.match(result.stdout, /POST \/board\/create, 422 region JSON \| 422/);
   assert.equal(existsSync(join(app, 'var/bench-server.db')), false);
+});
+
+test('the server benchmark fails, and removes its database, when a request answers another status', (t) => {
+  const app = boardCopy(t);
+  rmSync(join(app, 'build/manifest.json'));
+  const result = spawnSync('php', ['benchmarks/server.php', '--app', app, '--iterations', '1'], { encoding: 'utf8' });
+  assert.equal(result.status, 1, result.stdout);
+  assert.equal(existsSync(join(app, 'var/bench-server.db')), false);
+});
+
+test('make bench-server builds the assets that the board reads', () => {
+  assert.ok(dryRun('bench-server').some((line) => line.includes('hyper-build-assets')));
 });
