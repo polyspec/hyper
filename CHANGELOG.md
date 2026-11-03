@@ -4,6 +4,9 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+
+## 0.0.30
+- Release 0.0.30 after H26.9 and H27.77: every manifest of config/release.json, the exact requirements of polyspec/hyper-server and @polyspec/hyper-client and the locks that npm, Composer and uv wrote hold 0.0.30 (H27.78).
 - A Python server on Redis Sentinel no longer splits a session after a promotion: the `setup` option of RedisSessions asks Sentinel before the first command of a request that has a session, where a pooled connection of redis-py stayed on the former primary, which accepts writes until it becomes a replica, and answered status 403 for the sessions of the new primary. A test promotes the replica while the primary runs and shares new sessions across the three servers in that window (H27.77).
 - docs/operations/benchmark.md holds the record of two runs of `.github/workflows/bench.yml` on PHP 8.4.27 in place of the PHP 8.5.10 record of 2026-10-02: the native extension of template 0.0.20 renders 1,000 rows in 29.6 ms and the generated program in 15.2 ms, and the SSR script and the CSR shell exceed their size limits (H26.9).
 - make bench-server builds the assets, which a clean checkout lacked, so every request answered status 500; the server benchmark fails when a request answers another status than the one it measures (H26.9-2).
