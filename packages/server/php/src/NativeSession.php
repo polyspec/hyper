@@ -51,7 +51,8 @@ final class NativeSession implements SessionStore
     {
         $others = array_filter(
             headers_list(),
-            static fn (string $line): bool => stripos($line, 'Set-Cookie:') === 0 && !str_starts_with($line, "Set-Cookie: {$name}="),
+            static fn (string $line): bool => stripos($line, 'Set-Cookie:') === 0
+                && !str_starts_with($line, "Set-Cookie: {$name}="),
         );
         header_remove('Set-Cookie');
         foreach ($others as $line) {
