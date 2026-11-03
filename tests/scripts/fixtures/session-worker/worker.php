@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 // One PHP server process over one session (tests/scripts/session-workers.mts): the arguments are the session directory,
-// the identifier, and `count <requests> <name>`, `read <names as JSON>`, `write <values as JSON>` or `stale`, which writes a
-// value and closes after a line of its input. With
+// the identifier, and `count <requests> <name>`, `read <names as JSON>`, `write <values as JSON>` or `stale`, which
+// writes a value and closes after a line of its input. With
 // HYPER_SESSION_REDIS, the port of a Redis server, it keeps the session there through phpredis.
 
 require __DIR__ . '/../../../../vendor/autoload.php';

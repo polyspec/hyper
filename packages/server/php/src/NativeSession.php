@@ -24,7 +24,8 @@ final class NativeSession implements SessionStore
             unset($_COOKIE[$name]);
         }
         // A session that cannot start, such as one whose lock another request holds, fails the request whatever
-        // error_reporting() keeps: the request would otherwise answer with an empty session and lose what it stores (HY-115).
+        // error_reporting() keeps: the request would otherwise answer with an empty session and lose what it
+        // stores (HY-115).
         if (!session_start(self::options($https))) {
             throw new \RuntimeException('hyper: the session could not start');
         }
