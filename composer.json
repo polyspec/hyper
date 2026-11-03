@@ -24,7 +24,7 @@
     "require": {
         "php": ">=8.4",
         "min-0-max/json-schema": "dev-polyspec-origin-2.6.0",
-        "polyspec/hyper-server": "0.0.30",
+        "polyspec/hyper-server": "0.0.31",
         "polyspec/template": "0.0.20"
     },
     "require-dev": {

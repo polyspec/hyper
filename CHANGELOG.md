@@ -4,6 +4,9 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+
+## 0.0.31
+- Release 0.0.31 after H27.79: every manifest of config/release.json, the exact requirements of polyspec/hyper-server and @polyspec/hyper-client and the locks that npm, Composer and uv wrote hold 0.0.31 (H27.80).
 - A PHP request that cannot reach the Redis server no longer replaces the session cookie of the client: with a lost connection the session handler of phpredis fails to validate the identifier, so PHP queued the cookie of a new identifier before the read failed, and the answer of status 500 carried it, which ended the session and refused the next form with status 403. A session that cannot start now withdraws that cookie, and tests read the cookie of each answer of status 500 on the three servers (H27.79).
 
 ## 0.0.30
