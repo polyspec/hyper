@@ -14,7 +14,7 @@ import { COMMANDS, IDENTIFIER, ROOT, type Server } from './session-workers.mts';
 export const EXTENSION = `-dextension=${path.join(ROOT, 'var/redis/redis.so')}`;
 
 // Returns a TCP port that is free now.
-async function freePort(): Promise<string> {
+export async function freePort(): Promise<string> {
   const free = createServer();
   free.listen(0, '127.0.0.1');
   await once(free, 'listening');
@@ -27,8 +27,8 @@ async function freePort(): Promise<string> {
 
 // Starts a Redis server of the run that keeps its data with the append-only file in `directory`, and resolves when it
 // accepts connections.
-export async function startRedis(directory: string, port: string): Promise<ChildProcessWithoutNullStreams> {
-  const server = spawn(path.join(ROOT, 'var/redis/redis-server'), ['--port', port, '--bind', '127.0.0.1', '--save', '', '--appendonly', 'yes', '--dir', directory]);
+export async function startRedis(directory: string, port: string, settings: string[] = ['--port', port]): Promise<ChildProcessWithoutNullStreams> {
+  const server = spawn(path.join(ROOT, 'var/redis/redis-server'), [...settings, '--bind', '127.0.0.1', '--save', '', '--appendonly', 'yes', '--dir', directory]);
   await new Promise<void>((resolve, reject) => {
     server.once('exit', (code) => reject(new Error(`the Redis server ended with ${String(code)}`)));
     let output = '';

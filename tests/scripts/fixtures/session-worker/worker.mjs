@@ -1,18 +1,46 @@
 // One Node server process over one session (tests/scripts/session-workers.mts): the arguments are the session directory,
 // the identifier, and `count <requests> <name>`, `read <names as JSON>`, `write <values as JSON>`, or `stale`, which writes
 // after a line of its input, or `renew`. With HYPER_SESSION_REDIS, the port of a Redis server, it keeps the session there,
-// HYPER_SESSION_RETRIES is how often it tries a lock and HYPER_SESSION_EXPIRE when a lock expires.
+// HYPER_SESSION_RETRIES is how often it tries a lock and HYPER_SESSION_EXPIRE when a lock expires. HYPER_SESSION_SENTINEL
+// names the ports of Sentinels instead, and HYPER_SESSION_TLS_CA, HYPER_SESSION_USER and HYPER_SESSION_PASSWORD secure the connection.
 import { once } from 'node:events';
-import { createClient, RESP_TYPES } from 'redis';
+import { readFileSync } from 'node:fs';
+import { createClient, createSentinel, RESP_TYPES } from 'redis';
 import { FileSessions, RedisSessions } from '@polyspec/hyper-server';
 
 const [directory, id, command, first, second] = process.argv.slice(2);
 const port = process.env.HYPER_SESSION_REDIS;
-const client = port === undefined ? null : await createClient({ socket: { port: Number(port) }, disableOfflineQueue: true }).connect();
-const sessions = client === null
+const sentinels = process.env.HYPER_SESSION_SENTINEL;
+const ca = process.env.HYPER_SESSION_TLS_CA;
+const secure = {
+  ...(ca === undefined ? {} : { socket: { tls: true, ca: readFileSync(ca) } }),
+  username: process.env.HYPER_SESSION_USER,
+  password: process.env.HYPER_SESSION_PASSWORD,
+};
+const direct = async () => {
+  const client = await createClient({
+    socket: { host: '127.0.0.1', port: Number(port), reconnectStrategy: false, ...(ca === undefined ? {} : { tls: true, ca: readFileSync(ca) }) },
+    disableOfflineQueue: true,
+    username: secure.username,
+    password: secure.password,
+  }).connect();
+  return { client, command: (words) => client.withTypeMapping({ [RESP_TYPES.BLOB_STRING]: Buffer }).sendCommand(words.map((word) => Buffer.from(word))) };
+};
+const sentinel = async () => {
+  const client = await createSentinel({
+    name: 'hyper',
+    sentinelRootNodes: sentinels.split(',').map((item) => ({ host: '127.0.0.1', port: Number(item) })),
+    nodeClientOptions: { disableOfflineQueue: true, ...secure },
+    sentinelClientOptions: secure,
+  }).on('error', () => {}).connect();
+  return { client, command: (words) => client.withTypeMapping({ [RESP_TYPES.BLOB_STRING]: Buffer }).sendCommand(false, words.map((word) => Buffer.from(word))) };
+};
+const connection = sentinels !== undefined ? await sentinel() : port !== undefined ? await direct() : null;
+const client = connection?.client ?? null;
+const sessions = connection === null
   ? new FileSessions({ directory })
   : new RedisSessions({
-      command: (words) => client.withTypeMapping({ [RESP_TYPES.BLOB_STRING]: Buffer }).sendCommand(words.map((word) => Buffer.from(word))),
+      command: connection.command,
       lockRetries: Number(process.env.HYPER_SESSION_RETRIES ?? 1_000_000),
       lockWait: 2,
       lockExpire: Number(process.env.HYPER_SESSION_EXPIRE ?? 30),
@@ -73,4 +101,4 @@ if (command === 'count') {
     for (const [name, value] of mapped(first)) store.set(name, value);
   });
 }
-await client?.quit();
+await client?.close();

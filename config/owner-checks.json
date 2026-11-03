@@ -238,12 +238,17 @@
         "packages/server/ts/src/redis-sessions.ts",
         "scripts/install-redis.mts",
         "tests/scripts/session-workers.mts",
-        "tests/scripts/session-redis-server.mts"
+        "tests/scripts/session-redis-server.mts",
+        "tests/scripts/session-board.mts",
+        "packages/server/php/src/RedisSentinelSessions.php",
+        "benchmarks/sessions.mts"
       ],
       "tests": [
         "tests/scripts/session-shared.test.mts",
         "tests/scripts/session-shared-redis.test.mts",
-        "tests/scripts/session-redis-failure.test.mts"
+        "tests/scripts/session-redis-failure.test.mts",
+        "tests/scripts/session-redis-failover.test.mts",
+        "tests/scripts/benchmark-sessions.test.mts"
       ]
     },
     {

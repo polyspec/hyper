@@ -75,11 +75,79 @@ For Redis, the PHP server loads phpredis 6.3.0 and sets:
 
 ```ini
 session.save_handler = redis
-session.save_path = "tcp://redis:6379"
+session.save_path = "tcp://redis:6379?persistent=1"
 redis.session.locking_enabled = 1
 redis.session.lock_expire = 30
 redis.session.lock_retries = 100
 redis.session.lock_wait_time = 20000
 ```
 
+`persistent=1` keeps one connection in each PHP process. Without it each request opens a TCP connection, and the closed connections hold the ports of the client in TIME_WAIT: at a sustained rate the machine runs out of them and requests fail with `Redis connection not available`.
+
 The Node and Python servers give `RedisSessions` the command function of a client (Python `redis.Redis(...).execute_command` with `decode_responses=False`) and the same values: `lockExpire` 30, `lockRetries` 100 and `lockWait` 20 milliseconds (Python `lock_expire`, `lock_retries`, `lock_wait` 0.02 seconds). `lock_expire` must be longer than any request, and without it a process that ended holds its lock until `max_execution_time`, or for ever when that is 0. A request that waits longer than the retries allow fails, so raise them for requests of one session that hold the lock long. A client that queues commands while its connection is down holds requests until it reconnects, so a Node server creates node-redis with `disableOfflineQueue: true` and an `error` listener, and a Python server sets `socket_timeout` on `redis.Redis`; the request then answers status 500 until the Redis server is back. Keep the sessions with the append-only file when a restart must not end them. The values of a shared session are values of the template data model; a record that holds an object of a class other than `stdClass` fails the request in the Node and Python servers.
+
+### A primary with replicas and Sentinel
+
+Redis Sentinel names the primary and promotes a replica when the primary fails. The session handler of phpredis does not know Sentinel, so the PHP server passes `RedisSentinelSessions` as `sessionSetup` of `App::open`: just before a request starts its session it asks the Sentinels one after another and sets `session.save_path` to the primary, and phpredis keeps its locks. A request without a session asks nothing. Do not wrap phpredis with `session_set_save_handler` and `SessionHandler`: PHP then has no `validate_sid` and `session.use_strict_mode` accepts an identifier that nobody created. The `session.save_handler` and `redis.session.*` settings above stay.
+
+```php
+App::open(
+    // ...
+    sessionSetup: (new RedisSentinelSessions(
+        [['host' => 'sentinel-1', 'port' => 26379], ['host' => 'sentinel-2', 'port' => 26379], ['host' => 'sentinel-3', 'port' => 26379]],
+        'hyper',
+        '?persistent=1',
+    ))(...),
+);
+```
+
+The Node and Python servers give `RedisSessions` the command function of a Sentinel client:
+
+```ts
+const sentinel = await createSentinel({
+  name: 'hyper',
+  sentinelRootNodes: [{ host: 'sentinel-1', port: 26379 }, { host: 'sentinel-2', port: 26379 }, { host: 'sentinel-3', port: 26379 }],
+  nodeClientOptions: { disableOfflineQueue: true },
+}).on('error', report).connect();
+const bytes = sentinel.withTypeMapping({ [RESP_TYPES.BLOB_STRING]: Buffer });
+new RedisSessions({ command: (words) => bytes.sendCommand(false, words.map((word) => Buffer.from(word))) });
+```
+
+```python
+sentinel = Sentinel(
+    [("sentinel-1", 26379), ("sentinel-2", 26379), ("sentinel-3", 26379)],
+    socket_timeout=1,
+    socket_connect_timeout=1,
+)
+RedisSessions(sentinel.master_for("hyper").execute_command)
+```
+
+A request answers status 500 from the failure of the primary until the Sentinels have promoted a replica, and the session goes on after it. A request fails when no Sentinel names the primary. Use at least three Sentinels on separate failure domains.
+
+Replication is asynchronous, so a failover loses what the primary acknowledged and the replica had not received: such a session returns to an earlier record or, when it was new, is gone and the next request starts a new one. A lock can be lost the same way: the next request can then start while the holder still runs, and the holder writes nothing, because its lock no longer matches. `min-replicas-to-write` and `min-replicas-max-lag` of Redis make the primary refuse writes while no replica is current, which narrows the loss and answers status 500 instead; hyper does not test them. `tests/scripts/session-redis-failover.test.mts` kills the primary under the three servers and checks that what the replica acknowledged with `WAIT` survives.
+
+### TLS and an ACL user
+
+A connection that takes TLS and an ACL user sets these parameters. The certificate authority verifies the server; the address that the certificate names must be the address the client connects to.
+
+```ini
+session.save_path = "tls://redis:6379?persistent=1&auth[]=hyper&auth[]=secret&stream[cafile]=/etc/redis/ca.pem"
+```
+
+```ts
+createClient({ socket: { host: 'redis', port: 6379, tls: true, ca: readFileSync('/etc/redis/ca.pem') }, username: 'hyper', password: 'secret', disableOfflineQueue: true });
+```
+
+```python
+redis.Redis(
+    host="redis",
+    port=6379,
+    ssl=True,
+    ssl_ca_certs="/etc/redis/ca.pem",
+    username="hyper",
+    password="secret",
+    socket_timeout=1,
+)
+```
+
+With Sentinel, each Sentinel takes the same security, so every client states it for both the Sentinels and the primary. The PHP server gives each entry `'auth' => ['hyper', 'secret'], 'ssl' => ['cafile' => '/etc/redis/ca.pem']`, and the parameters and scheme of the primary as the arguments of `RedisSentinelSessions` after the name: `'?persistent=1&auth[]=hyper&auth[]=secret&stream[cafile]=/etc/redis/ca.pem', 'tls'`. The Node server gives `{ socket: { tls: true, ca }, username, password }` as `sentinelClientOptions` and in `nodeClientOptions`. The Python server gives `ssl=True, ssl_ca_certs=..., username=..., password=...` to `Sentinel` and again in `sentinel_kwargs`. The capacity of one Redis server is in [the benchmark](benchmark.md).

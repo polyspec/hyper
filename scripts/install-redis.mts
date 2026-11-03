@@ -1,5 +1,5 @@
 // Installs the Redis server and the phpredis extension that the session tests run against (HY-115) into var/redis: the
-// release archive of Redis by its sha256, built from its source. Usage: node scripts/install-redis.mts VERSION SHA256 DIRECTORY.
+// release archive of Redis by its sha256, built from its source with TLS. Usage: node scripts/install-redis.mts VERSION SHA256 DIRECTORY.
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { copyFileSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
@@ -32,7 +32,7 @@ writeFileSync(file, archive);
 process.stdout.write('[install-redis] extract\n');
 run('tar', ['-xzf', file, '--strip-components=1', '-C', work]);
 process.stdout.write('[install-redis] build redis-server\n');
-run('make', ['-C', 'src', 'redis-server', 'MALLOC=libc', 'BUILD_TLS=no', `-j${String(navigator.hardwareConcurrency)}`], work);
+run('make', ['-C', 'src', 'redis-server', 'MALLOC=libc', 'BUILD_TLS=yes', `-j${String(navigator.hardwareConcurrency)}`], work);
 copyFileSync(path.join(work, 'src/redis-server'), path.join(directory, 'redis-server'));
 rmSync(work, { recursive: true, force: true });
 process.stdout.write(`[install-redis] ${path.join(directory, 'redis-server')}\n`);

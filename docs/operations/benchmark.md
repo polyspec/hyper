@@ -9,12 +9,14 @@
 |---|---|---|
 | `make bench-server` | `benchmarks/server.php --app <directory> --iterations <n>` | `App::handle` per request kind without network, and the cost of `board/rows.tpl` rendering, `Bind::value` and `json_encode` for 10, 100 and 1,000 rows; it runs once with the generated PHP program and once with the native template extension (HY-48) |
 | `make bench-browser` | `benchmarks/browser.mts --ssr <port> --edge <port> --api <port> --runs <n>` | First screens, region navigation, one `hy-set` change for 10, 100 and 1,000 rows (time, phases, main thread load and long tasks), memory over repeated navigation with the growth between two heap snapshots, template loading, and transferred bytes |
+| `make bench-sessions` | `benchmarks/sessions.mts --requests <n>` | The requests per second of the PHP, Node and Python servers on one Redis server, with one and four processes, and the requests per second of Redis CPU |
 
 `bench-server` creates its own database under `examples/board/var/` and removes it when it finishes. `bench-browser` starts the board example with `scripts/board-servers.mts` on ports that the system assigns and its own database in a temporary directory of the run, which it prints as `run directory: <path>` and removes, so a run from another checkout or session uses other servers and another database. `make check` runs `make bench-server-smoke`, which runs the PHP benchmark once per measurement, so a change that breaks it fails the check; the browser benchmark takes several minutes and is not part of `make check`, so a change can break it unnoticed until the next `make bench`.
 
 ## Method
 
 - **Server:** the PHP process always renders the generated program. The last line names that program and separately reports whether the template extension is loaded; the extension provides the template API under the same names (HY-48). Every request runs 20 times as warm-up and then the given number of times in one process with an in-memory session. The time is `hrtime` around `App::handle`. It includes routing, loaders on SQLite, rendering and encoding, and excludes network and PHP startup.
+- **Redis sessions:** each process runs requests of a session of its own, which take the lock, read, write and release it, with a small record over a loopback connection. The PHP worker keeps one connection with `persistent=1`, as a deployment does. The clients share the machine with the Redis server, so requests per second show what the machine gives; requests per second of Redis CPU, from `used_cpu_user` and `used_cpu_sys` of `INFO`, show the cost to the Redis server, which runs commands on one thread.
 - **First screen:** a `MutationObserver` added before the page loads records when the list heading `게시판` appears, measured from navigation start. Each run uses a new browser context, so nothing is cached.
 - **Region navigation:** the time from the click on the create link to the appearance of the heading `글쓰기`.
 - **`hy-set` change:** `window.hyper.set('rows', …)` from the call to the end of the swap. After every change the page renders one frame, as after a click. Two changes are measured:
@@ -53,6 +55,21 @@ Measured on 2026-10-02 at commit "Check the manifest in the build and the server
 | 1,000 | 12.778 | 3.648 | 2.276 | 0.168 | 149,980 | 92,935 |
 
 The `Bind::value` and `json_encode` columns are from the generated run; the native run measured 2.404 ms and 0.190 ms for 1,000 rows. Since commit "Lower the bundle limits and drop the repeated data model check of documents" the server runs `Bind::value` only for JSON responses, because rendering binds every value of a document (HY-44); the request table above was measured before that change. A run after it (load average 15) gave a document HTML p50 for `/board` of 0.357 ms generated and 0.247 ms native; with a different machine load and 10-row pages, where the check cost about 0.02 ms, the difference cannot be attributed to the change.
+
+### Redis sessions
+
+Measured on 2026-11-03 with `make bench-sessions`, 20,000 requests per process, on an Apple M3 Pro with PHP 8.4.27, Node 26.12.0, Python 3.14, Redis 8.10.3 and phpredis 6.3.0. The other benchmarks of this machine were held, but it was not idle: the load average was 4.9 to 5.2 during the run.
+
+| Server | Processes | Requests/s | Requests per second of Redis CPU |
+|---|---:|---:|---:|
+| PHP | 1 | 5,672 | 13,999 |
+| PHP | 4 | 14,073 | 19,869 |
+| Python | 1 | 3,561 | 15,880 |
+| Python | 4 | 8,414 | 16,383 |
+| Node | 1 | 4,538 | 13,700 |
+| Node | 4 | 12,203 | 18,324 |
+
+A request takes the lock, reads, writes and releases it, five commands. The Redis server was not saturated: the clients share the machine and limit the requests per second. The last column, the requests that one second of Redis CPU serves, is about 14,000 to 20,000, so one Redis server, which runs commands on one thread, has that order of limit on this machine; it is derived from the CPU counters and not measured at saturation. No network is included. A deployment measures its own sizes and network before it relies on this.
 
 ### Browser
 

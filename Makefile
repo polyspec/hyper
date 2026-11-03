@@ -87,7 +87,7 @@ checks_result = test -z "$$failed" || { echo "failed checks:$$failed"; exit 1; }
 
 .DEFAULT_GOAL := help
 
-.PHONY: help hyper-install hyper-install-python hyper-install-browser hyper-install-virtiofs hyper-test-node hyper-test-python-render hyper-test-scripts check typecheck hyper-server-php-install ext packages package-check server server-fixtures node-server node-fixtures assets hyper-test-js hyper-test-php hyper-test-python hyper-lint analyse-php templates-check virtiofs-check parity server-parity server-parity-python bundle-size e2e serve-demo bench-server bench-server-smoke bench-browser bench serve-demo-unlock
+.PHONY: bench-sessions help hyper-install hyper-install-python hyper-install-browser hyper-install-virtiofs hyper-test-node hyper-test-python-render hyper-test-scripts check typecheck hyper-server-php-install ext packages package-check server server-fixtures node-server node-fixtures assets hyper-test-js hyper-test-php hyper-test-python hyper-lint analyse-php templates-check virtiofs-check parity server-parity server-parity-python bundle-size e2e serve-demo bench-server bench-server-smoke bench-browser bench serve-demo-unlock
 
 help: ## List the targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
@@ -299,6 +299,9 @@ bench-server: server ext ## Measure PHP request handling and rendering cost per 
 
 bench-browser: assets server ## Measure first screens, navigation, hy-set phases and load, and memory in Chromium
 	$(NODE) benchmarks/browser.mts --runs 15
+
+bench-sessions: packages ## Measure the requests per second of the three servers on one Redis server
+	$(NODE) benchmarks/sessions.mts --requests 20000
 
 bench-server-smoke: assets server ## Run the PHP benchmark once per measurement so that a change that breaks it fails make check
 	php benchmarks/server.php --app $(BOARD) --iterations 1 > /dev/null

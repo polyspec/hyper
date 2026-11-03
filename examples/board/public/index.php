@@ -9,6 +9,7 @@ ini_set('display_errors', '0');
 use Polyspec\Hyper\App;
 use Polyspec\Hyper\Examples\Board\Assets;
 use Polyspec\Hyper\Examples\Board\Posts;
+use Polyspec\Hyper\RedisSentinelSessions;
 
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -25,6 +26,19 @@ if (is_string($time) && $time !== '' && preg_match('/^[0-9]{1,15}$/D', $time) !=
     throw new RuntimeException('BOARD_TIME must be Unix seconds');
 }
 $now = is_string($time) && $time !== '' ? fn (): int => (int) $time : fn (): int => time();
+// BOARD_SENTINEL, `host:port` of each Sentinel separated by commas, keeps the sessions on the primary hyper that they
+// name.
+$sentinels = getenv('BOARD_SENTINEL');
+$sessionSetup = is_string($sentinels) && $sentinels !== ''
+    ? (new RedisSentinelSessions(array_map(
+        static function (string $item): array {
+            [$host, $port] = explode(':', $item);
+
+            return ['host' => $host, 'port' => (int) $port];
+        },
+        explode(',', $sentinels),
+    ), 'hyper', '?persistent=1'))(...)
+    : null;
 // BOARD_HTTPS=1 declares HTTPS behind a TLS-terminating proxy; BOARD_FRAME_ANCESTORS sets frame-ancestors (HY-45).
 $frameAncestors = getenv('BOARD_FRAME_ANCESTORS');
 
@@ -36,6 +50,7 @@ $app = App::open(
     timezone: '+09:00',
     basePath: is_string($basePath) ? $basePath : '',
     https: getenv('BOARD_HTTPS') === '1',
+    sessionSetup: $sessionSetup,
     frameAncestors: is_string($frameAncestors) && $frameAncestors !== '' ? $frameAncestors : "'self'",
 );
 $app->bind(Posts::class, fn (): Posts => new Posts($database, $now));

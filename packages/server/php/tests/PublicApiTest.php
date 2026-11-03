@@ -34,6 +34,7 @@ final class PublicApiTest extends TestCase
             'NativeSession',
             'NotFound',
             'Redirect',
+            'RedisSentinelSessions',
             'Reply',
             'Request',
             'Response',

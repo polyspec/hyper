@@ -1,5 +1,5 @@
 <!-- doc-id: benchmark -->
-<!-- source-sha256: 81761159aa6ccf8de873da881614b57f9f309ce52cc0a7ea8becc3c68cc1144d -->
+<!-- source-sha256: 3d3a7f8ad451830134aa5a405d4600cb648bcc3673954fa7bc1a7c6db8761930 -->
 # 성능 측정
 
 [English](benchmark.md).
@@ -10,12 +10,14 @@
 |---|---|---|
 | `make bench-server` | `benchmarks/server.php --app <directory> --iterations <n>` | 네트워크 없이 요청 종류별 `App::handle`, 그리고 10, 100, 1,000행에서 `board/rows.tpl` 렌더, `Bind::value`, `json_encode` 비용. generated PHP 프로그램으로 한 번, 네이티브 템플릿 확장으로 한 번 실행한다(HY-48) |
 | `make bench-browser` | `benchmarks/browser.mts --ssr <port> --edge <port> --api <port> --runs <n>` | 첫 화면, 영역 이동, 10, 100, 1,000행에서 `hy-set` 변경 1회(시간, 단계, 메인 스레드 부하, 긴 작업), 반복 이동 중 메모리와 두 힙 스냅샷 사이의 증가, 템플릿 로드, 전송 바이트 |
+| `make bench-sessions` | `benchmarks/sessions.mts --requests <n>` | Redis 서버 하나에서 process 하나와 넷으로 측정한 PHP, Node, Python 서버의 초당 요청 수와 Redis CPU 1초당 요청 수 |
 
 `bench-server`는 `examples/board/var/` 아래에 자체 데이터베이스를 만들고 끝나면 지운다. `bench-browser`는 `scripts/board-servers.mts`로 board 예제를 system이 배정하는 port와 실행의 임시 디렉터리에 있는 자체 데이터베이스로 띄우고, 그 디렉터리를 `run directory: <path>`로 출력하고 지운다. 따라서 다른 checkout이나 session의 실행은 다른 서버와 다른 데이터베이스를 쓴다. `make check`는 PHP 측정기를 측정마다 한 번씩 실행하는 `make bench-server-smoke`를 실행하므로, 측정기를 깨는 변경은 검사에서 실패한다. 브라우저 측정기는 몇 분이 걸려 `make check`에 넣지 않았으므로, 변경이 그것을 깨도 다음 `make bench`까지 드러나지 않을 수 있다.
 
 ## 방법
 
 - **서버:** PHP 프로세스는 항상 generated 프로그램을 렌더한다. 마지막 줄은 그 프로그램과 템플릿 확장의 로드 여부를 별도로 밝힌다. 확장은 같은 이름으로 template API를 제공한다(HY-48). 요청마다 20회 예열한 뒤 지정한 횟수만큼 한 프로세스 안에서 메모리 세션으로 실행한다. 시간은 `App::handle` 앞뒤의 `hrtime`이다. 라우팅, SQLite 로더, 렌더, 인코딩을 포함하고 네트워크와 PHP 시작은 제외한다.
+- **Redis session:** 각 process는 자기 session의 요청을 실행한다. 요청은 작은 record를 loopback 연결로 다루며 잠금을 얻고, 읽고, 쓰고, 잠금을 푼다. PHP worker는 배포 환경처럼 `persistent=1`로 연결 하나를 유지한다. Client가 Redis 서버와 머신을 공유하므로 초당 요청 수는 그 머신이 내는 값을 보여 주고, `INFO`의 `used_cpu_user`와 `used_cpu_sys`로 구한 Redis CPU 1초당 요청 수는 명령을 한 thread에서 실행하는 Redis 서버의 비용을 보여 준다.
 - **첫 화면:** 페이지 로드 전에 추가한 `MutationObserver`가 목록 제목 `게시판`이 나타난 시각을 내비게이션 시작부터 기록한다. 매 회 새 브라우저 컨텍스트를 쓰므로 캐시가 없다.
 - **영역 이동:** 글쓰기 링크 클릭부터 제목 `글쓰기`가 나타날 때까지의 시간이다.
 - **`hy-set` 변경:** 호출부터 스왑이 끝날 때까지의 `window.hyper.set('rows', …)` 시간이다. 클릭 뒤와 같게 변경마다 페이지가 프레임 하나를 렌더한다. 두 가지 변경을 잰다.
@@ -54,6 +56,21 @@
 | 1,000 | 12.778 | 3.648 | 2.276 | 0.168 | 149,980 | 92,935 |
 
 `Bind::value`와 `json_encode` 열은 generated 실행의 값이다. 네이티브 실행에서는 1,000행에 각각 2.404 ms와 0.190 ms였다. 커밋 "Lower the bundle limits and drop the repeated data model check of documents"부터 서버는 `Bind::value`를 JSON 응답에서만 실행한다. 렌더가 문서의 모든 값을 바인딩하기 때문이다(HY-44). 위 요청 표는 그 변경 전에 쟀다. 변경 뒤 측정(부하 평균 15)에서 `/board` 문서 HTML p50은 generated 0.357 ms, 네이티브 0.247 ms였다. 기계 부하가 다르고, 이 검사가 약 0.02 ms였던 10행 페이지이므로, 그 차이를 이 변경 때문이라고 볼 수 없다.
+
+### Redis session
+
+2026-11-03에 `make bench-sessions`로 process마다 20,000개 요청을 Apple M3 Pro, PHP 8.4.27, Node 26.12.0, Python 3.14, Redis 8.10.3, phpredis 6.3.0에서 측정했다. 이 머신의 다른 benchmark는 멈춰 두었지만 유휴 상태는 아니었다. 실행 중 load average는 4.9에서 5.2였다.
+
+| 서버 | Process | 초당 요청 | Redis CPU 1초당 요청 |
+|---|---:|---:|---:|
+| PHP | 1 | 5,672 | 13,999 |
+| PHP | 4 | 14,073 | 19,869 |
+| Python | 1 | 3,561 | 15,880 |
+| Python | 4 | 8,414 | 16,383 |
+| Node | 1 | 4,538 | 13,700 |
+| Node | 4 | 12,203 | 18,324 |
+
+요청은 잠금을 얻고, 읽고, 쓰고, 잠금을 풀며 명령 다섯 개를 쓴다. Redis 서버는 포화되지 않았다. Client가 머신을 공유하며 초당 요청 수를 제한한다. 마지막 열인 Redis CPU 1초가 처리하는 요청은 약 14,000에서 20,000이므로, 명령을 한 thread에서 실행하는 Redis 서버 하나의 한계는 이 머신에서 그 정도 규모다. 이 값은 CPU counter에서 구한 것이고 포화 상태에서 측정한 것이 아니다. Network는 포함되지 않는다. 배포 환경은 이 값에 기대기 전에 자기 크기와 network로 측정한다.
 
 ### 브라우저
 

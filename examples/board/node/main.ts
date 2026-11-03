@@ -20,9 +20,26 @@ const env = (name: string): string => {
 const database = env('BOARD_DB');
 const port = Number(env('BOARD_PORT'));
 
-// BOARD_REDIS, the URL of a Redis server, keeps the sessions there instead of in BOARD_SESSIONS. A command fails while the
+// BOARD_SENTINEL, `host:port` of each Sentinel separated by commas, keeps the sessions on the primary hyper that they name,
+// and BOARD_REDIS, the URL of a Redis server, keeps them there; otherwise they are files in BOARD_SESSIONS. A command fails while the
 // connection is down, instead of waiting in the queue of the client, so the request answers status 500 (HY-115).
 const sessionStore = async (): Promise<FileSessions | RedisSessions> => {
+  const sentinels = process.env.BOARD_SENTINEL;
+  if (sentinels !== undefined && sentinels !== '') {
+    const { createSentinel, RESP_TYPES } = await import('redis');
+    const sentinel = await createSentinel({
+      name: 'hyper',
+      sentinelRootNodes: sentinels.split(',').map((item) => {
+        const [host, port] = item.split(':');
+        return { host: host ?? '', port: Number(port) };
+      }),
+      nodeClientOptions: { disableOfflineQueue: true },
+    }).on('error', (error: unknown) => {
+      process.stderr.write(`board: redis: ${String(error)}\n`);
+    }).connect();
+    const bytes = sentinel.withTypeMapping({ [RESP_TYPES.BLOB_STRING]: Buffer });
+    return new RedisSessions({ command: (words) => bytes.sendCommand(false, words.map((word) => Buffer.from(word))) });
+  }
   const url = process.env.BOARD_REDIS;
   if (url === undefined || url === '') {
     const directory = env('BOARD_SESSIONS');

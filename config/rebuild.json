@@ -6,6 +6,10 @@
       "kind": "ecosystem",
       "tool": "Playwright drives Chromium and measures the board example; node:perf_hooks times the steps"
     },
+    "benchmarks/sessions.mts": {
+      "kind": "ecosystem",
+      "tool": "node:child_process runs the session workers and the CPU of INFO of Redis counts the cost; node:perf_hooks times them"
+    },
     "benchmarks/server.php": {
       "kind": "ecosystem",
       "tool": "hrtime(true) of PHP times App::handle and the template program on the board example"

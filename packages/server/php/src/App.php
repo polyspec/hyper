@@ -50,6 +50,7 @@ final class App
         private readonly ?\Closure $onDisconnect,
         private readonly ?\Closure $written,
         private readonly ?\Closure $around,
+        private readonly ?\Closure $sessionSetup,
         /** The bytes of the static shell of the client rendering (HY-62). */
         private readonly string $shell,
         string $program,
@@ -84,6 +85,8 @@ final class App
      * @param ?\Closure(Request, \Closure(Request): Response): Response $around called once for every request with the
      *     request and the function `answer`, which runs the application for a request; the server sends the response
      *     that `around` returns (HY-97)
+     * @param ?\Closure(): void $sessionSetup called just before a session starts, for the settings of the session
+     *     that a request reads, such as the primary of `RedisSentinelSessions`; an error fails the request (HY-115)
      */
     public static function open(
         string $manifest,
@@ -102,6 +105,7 @@ final class App
         ?\Closure $onDisconnect = null,
         ?\Closure $written = null,
         ?\Closure $around = null,
+        ?\Closure $sessionSetup = null,
     ): self {
         if ($bodyLimit < 1) {
             throw new \InvalidArgumentException("body limit {$bodyLimit} is not a positive number of bytes");
@@ -187,6 +191,7 @@ final class App
             $onDisconnect,
             $written,
             $around,
+            $sessionSetup,
             $shell,
             $program,
         );
@@ -999,7 +1004,7 @@ final class App
                 }
             });
         }
-        $response = $this->through($request, new NativeSession($this->https), $started, $delivery);
+        $response = $this->through($request, new NativeSession($this->https, $this->sessionSetup), $started, $delivery);
         $delivery->response = $response;
         $response->send();
     }

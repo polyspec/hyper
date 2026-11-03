@@ -56,7 +56,18 @@ port = int(env("BOARD_PORT"))
 
 
 def session_store() -> FileSessions | RedisSessions:
-    """Returns the sessions in the Redis server of the URL BOARD_REDIS, or else in the directory BOARD_SESSIONS."""
+    """Returns the sessions on the primary hyper of the Sentinels BOARD_SENTINEL, in the Redis server of the URL BOARD_REDIS,
+    or else in the directory BOARD_SESSIONS."""
+    sentinels = os.environ.get("BOARD_SENTINEL") or ""
+    if sentinels != "":
+        from redis.sentinel import Sentinel
+
+        nodes = [
+            (host, int(port))
+            for host, port in (item.split(":") for item in sentinels.split(","))
+        ]
+        sentinel = Sentinel(nodes, socket_timeout=1, socket_connect_timeout=1)
+        return RedisSessions(sentinel.master_for("hyper").execute_command)
     url = os.environ.get("BOARD_REDIS") or ""
     if url != "":
         import redis

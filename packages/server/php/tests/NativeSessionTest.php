@@ -22,6 +22,40 @@ final class NativeSessionTest extends TestCase
         self::assertSame(1, $store->get('a'));
     }
 
+    /** HY-115: the setup runs once just before the session starts, so its settings reach the session. */
+    #[RunInSeparateProcess]
+    public function testRunsTheSetupJustBeforeTheSessionStarts(): void
+    {
+        $directory = sys_get_temp_dir();
+        $calls = 0;
+        $session = new NativeSession(false, static function () use (&$calls, $directory): void {
+            $calls++;
+            self::assertSame(PHP_SESSION_NONE, session_status());
+            ini_set('session.save_path', $directory);
+        });
+        self::assertSame(0, $calls, 'a request that uses no session asks nothing');
+        $session->set('a', 1);
+        self::assertSame(1, $session->get('a'));
+        self::assertSame(1, $calls);
+        self::assertSame($directory, session_save_path());
+    }
+
+    /** HY-115: a request whose setup fails answers no empty session. */
+    #[RunInSeparateProcess]
+    public function testAnErrorOfTheSetupFailsTheRequest(): void
+    {
+        $session = new NativeSession(false, static function (): void {
+            throw new \RuntimeException('no primary');
+        });
+        try {
+            $session->set('a', 1);
+            self::fail('the request went on without its session');
+        } catch (\RuntimeException $failure) {
+            self::assertSame('no primary', $failure->getMessage());
+        }
+        self::assertSame(PHP_SESSION_NONE, session_status());
+    }
+
     /** HY-115: phpredis refuses a lock that another request holds, and PHP then starts no session. */
     #[RunInSeparateProcess]
     public function testFailsTheRequestWhenTheSessionCannotStart(): void

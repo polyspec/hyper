@@ -7,8 +7,8 @@ namespace Polyspec\Hyper;
 /** Stores session values in the PHP session. */
 final class NativeSession implements SessionStore
 {
-    /** Prepares the PHP session; it starts on the first read or write, so a request that never uses it creates no session (HY-45). */
-    public function __construct(private readonly bool $https)
+    /** Prepares the PHP session; it starts on the first read or write, so a request that never uses it creates no session (HY-45) and `setup` runs just before it starts (HY-115). */
+    public function __construct(private readonly bool $https, private readonly ?\Closure $setup = null)
     {
     }
 
@@ -22,6 +22,9 @@ final class NativeSession implements SessionStore
         $id = $_COOKIE[$name] ?? null;
         if ($id !== null && (!is_string($id) || preg_match('/^[A-Za-z0-9,-]{22,128}$/D', $id) !== 1)) {
             unset($_COOKIE[$name]);
+        }
+        if ($this->setup !== null) {
+            ($this->setup)();
         }
         // A session that cannot start, such as one whose lock another request holds, fails the request whatever
         // error_reporting() keeps: the request would otherwise answer with an empty session and lose what it
