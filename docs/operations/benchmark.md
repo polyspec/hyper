@@ -11,7 +11,7 @@
 | `make bench-browser` | `benchmarks/browser.mts --ssr <port> --edge <port> --api <port> --runs <n>` | First screens, region navigation, one `hy-set` change for 10, 100 and 1,000 rows (time, phases, main thread load and long tasks), memory over repeated navigation with the growth between two heap snapshots, template loading, and transferred bytes |
 | `make bench-sessions` | `benchmarks/sessions.mts --requests <n>` | The requests per second of the PHP, Node and Python servers on one Redis server, with one and four processes, and the requests per second of Redis CPU |
 
-`bench-server` creates its own database under `examples/board/var/` and removes it when it finishes. `bench-browser` starts the board example with `scripts/board-servers.mts` on ports that the system assigns and its own database in a temporary directory of the run, which it prints as `run directory: <path>` and removes, so a run from another checkout or session uses other servers and another database. `make check` runs `make bench-server-smoke`, which runs the PHP benchmark once per measurement, so a change that breaks it fails the check; the browser benchmark takes several minutes and is not part of `make check`, so a change can break it unnoticed until the next `make bench`.
+`bench-server` creates its own database under `examples/board/var/` and removes it when it finishes. `bench-browser` starts the board example with `scripts/board-servers.mts` on ports that the system assigns and its own database in a temporary directory of the run, which it prints as `run directory: <path>` and removes, so a run from another checkout or session uses other servers and another database. `make check` runs `make bench-server-smoke`, which runs the PHP benchmark once per measurement, so a change that breaks it fails the check; the browser benchmark is not part of `make check`, so a change can break it unnoticed until the next `make bench`.
 
 ## Method
 
@@ -35,91 +35,93 @@
 
 ## Results
 
-Measured on 2026-10-02 at commit "Check the manifest in the build and the servers, not in the browser", on an Apple M3 Pro with PHP 8.5.10, Chromium 153.0.8010.12 and Node 26.8.1. The machine was not idle: the load average was 7.8 to 8.5 during the run, so the means and p95 values are less reliable than the medians. The database has 30 posts, and a list page shows 10.
+Measured on 2026-11-03 by two manual runs of `.github/workflows/bench.yml` on the same commit of release 0.0.29 and its benchmark changes (runs 41591525587 and 41591529070), on `ubuntu-26.04-arm` image 20261025.167.1 with PHP 8.4.27, Chromium 156.0.8078.4, Node 26.12.0, Python 3.14.8, Redis 8.10.3, phpredis 6.3.0 and the native extension of template 0.0.20. The tables show the first run. A median of the second run differs from the first by at most about 15%, and most by under 8%; the row render times differ by under 1%. The database has 30 posts, and a list page shows 10.
 
 ### Server
 
 | Request | Status | Generated p50 ms | Generated p95 ms | Native p50 ms | Native p95 ms | Bytes |
 |---|---:|---:|---:|---:|---:|---:|
-| `GET /board`, document HTML | 200 | 0.384 | 0.592 | 0.291 | 0.382 | 5,228 |
-| `GET /board`, document JSON | 200 | 0.084 | 0.102 | 0.084 | 0.114 | 1,591 |
-| `GET /board`, region JSON with `left` | 200 | 0.087 | 0.225 | 0.088 | 0.129 | 1,591 |
-| `GET /board/1`, document HTML | 200 | 0.165 | 0.272 | 0.182 | 0.256 | 1,896 |
-| `GET /board/1`, region JSON | 200 | 0.048 | 0.059 | 0.054 | 0.103 | 687 |
-| `POST /board/create`, 422 region JSON | 422 | 0.025 | 0.031 | 0.028 | 0.051 | 415 |
+| `GET /board`, document HTML | 200 | 0.403 | 0.436 | 0.342 | 0.374 | 3,429 |
+| `GET /board`, document JSON | 200 | 0.153 | 0.181 | 0.136 | 0.166 | 1,642 |
+| `GET /board`, region JSON with `left` | 200 | 0.156 | 0.183 | 0.140 | 0.173 | 1,642 |
+| `GET /board/1`, document HTML | 200 | 0.233 | 0.268 | 0.182 | 0.220 | 1,503 |
+| `GET /board/1`, region JSON | 200 | 0.101 | 0.130 | 0.093 | 0.128 | 431 |
+| `POST /board/create`, 422 region JSON | 422 | 0.076 | 0.101 | 0.073 | 0.098 | 466 |
 
-| Rows | Generated render ms | Native render ms | `Bind::value` ms | `json_encode` ms | HTML bytes | JSON bytes |
-|---:|---:|---:|---:|---:|---:|---:|
-| 10 | 0.112 | 0.048 | 0.025 | 0.002 | 1,920 | 1,129 |
-| 100 | 1.163 | 0.315 | 0.220 | 0.016 | 14,975 | 9,232 |
-| 1,000 | 12.778 | 3.648 | 2.276 | 0.168 | 149,980 | 92,935 |
+| Rows | Generated render ms | Native render ms | Generated `Bind::value` ms | Native `Bind::value` ms | `json_encode` ms | HTML bytes | JSON bytes |
+|---:|---:|---:|---:|---:|---:|---:|---:|
+| 10 | 0.134 | 0.121 | 0.017 | 0.004 | 0.003 | 1,920 | 1,129 |
+| 100 | 1.388 | 1.257 | 0.123 | 0.032 | 0.021 | 14,975 | 9,232 |
+| 1,000 | 15.196 | 29.590 | 1.201 | 0.312 | 0.207 | 149,980 | 92,935 |
 
-The `Bind::value` and `json_encode` columns are from the generated run; the native run measured 2.404 ms and 0.190 ms for 1,000 rows. Since commit "Lower the bundle limits and drop the repeated data model check of documents" the server runs `Bind::value` only for JSON responses, because rendering binds every value of a document (HY-44); the request table above was measured before that change. A run after it (load average 15) gave a document HTML p50 for `/board` of 0.357 ms generated and 0.247 ms native; with a different machine load and 10-row pages, where the check cost about 0.02 ms, the difference cannot be attributed to the change.
+The server runs `Bind::value` only for JSON responses, because rendering binds every value of a document (HY-44).
 
 ### Redis sessions
 
-Measured on 2026-11-03 with `make bench-sessions`, 20,000 requests per process, on an Apple M3 Pro with PHP 8.4.27, Node 26.12.0, Python 3.14, Redis 8.10.3 and phpredis 6.3.0. The other benchmarks of this machine were held, but it was not idle: the load average was 4.9 to 5.2 during the run.
+Measured with `make bench-sessions`, 20,000 requests per process.
 
 | Server | Processes | Requests/s | Requests per second of Redis CPU |
 |---|---:|---:|---:|
-| PHP | 1 | 5,672 | 13,999 |
-| PHP | 4 | 14,073 | 19,869 |
-| Python | 1 | 3,561 | 15,880 |
-| Python | 4 | 8,414 | 16,383 |
-| Node | 1 | 4,538 | 13,700 |
-| Node | 4 | 12,203 | 18,324 |
+| PHP | 1 | 4,010 | 8,250 |
+| PHP | 4 | 11,816 | 13,089 |
+| Python | 1 | 1,643 | 9,379 |
+| Python | 4 | 4,161 | 9,834 |
+| Node | 1 | 1,594 | 8,796 |
+| Node | 4 | 3,960 | 9,191 |
 
-A request takes the lock, reads, writes and releases it, five commands. The Redis server was not saturated: the clients share the machine and limit the requests per second. The last column, the requests that one second of Redis CPU serves, is about 14,000 to 20,000, so one Redis server, which runs commands on one thread, has that order of limit on this machine; it is derived from the CPU counters and not measured at saturation. No network is included. A deployment measures its own sizes and network before it relies on this.
+A request takes the lock, reads, writes and releases it, five commands. The Redis server was not saturated: the clients share the runner and limit the requests per second. The last column, the requests that one second of Redis CPU serves, is about 8,000 to 13,000 on this runner over both runs, so one Redis server, which runs commands on one thread, has that order of limit here; it is derived from the CPU counters and not measured at saturation. No network is included. A deployment measures its own sizes and network before it relies on this.
 
 ### Browser
 
 | Measurement | Median ms | p95 ms |
 |---|---:|---:|
-| SSR first screen of `/board` | 6.7 | 23.2 |
-| SSR region navigation to `/board/create` | 7.8 | 13.4 |
-| CSR first screen of `/board` | 18.0 | 53.6 |
-| CSR region navigation to `/board/create` | 7.4 | 8.9 |
-| `hy-set` change, 10 rows | 0.8 | 2.9 |
-| `hy-set` change, 100 rows | 2.6 | 6.1 |
-| `hy-set` change, 1,000 rows | 26.8 | 34.0 |
-| Template engine alone, 1,000 rows | 3.3 | 4.7 |
+| SSR first screen of `/board` | 16.1 | 21.8 |
+| SSR region navigation to `/board/create` | 28.7 | 31.0 |
+| CSR first screen of `/board` | 67.4 | 74.4 |
+| CSR region navigation to `/board/create` | 18.0 | 19.4 |
+| `hy-set` change, 10 rows | 1.9 | 3.2 |
+| `hy-set` change, 100 rows | 7.2 | 10.5 |
+| `hy-set` change, 1,000 rows | 79.2 | 90.3 |
+| Template engine alone, 1,000 rows | 3.9 | 8.9 |
 
 Phases of one `hy-set` change, in milliseconds:
 
 | Rows | Change | Total | hyper | template | parse | morph | settle | process | events |
 |---:|---|---:|---:|---:|---:|---:|---:|---:|---:|
-| 100 | `sort` | 2.51 | 0.09 | 0.39 | 0.43 | 1.21 | 0.01 | 0.34 | 0.03 |
-| 100 | `compact` | 2.35 | 0.09 | 0.37 | 0.46 | 1.05 | 0.01 | 0.35 | 0.03 |
-| 1,000 | `sort` | 27.13 | 0.31 | 3.33 | 3.09 | 16.38 | 0.00 | 3.83 | 0.19 |
-| 1,000 | `compact` | 23.41 | 0.27 | 3.40 | 2.86 | 13.84 | 0.03 | 2.91 | 0.10 |
+| 100 | `sort` | 6.77 | 0.29 | 0.39 | 1.03 | 4.02 | 0.03 | 0.97 | 0.04 |
+| 100 | `compact` | 6.31 | 0.31 | 0.47 | 0.99 | 3.60 | 0.01 | 0.88 | 0.05 |
+| 1,000 | `sort` | 77.99 | 0.98 | 3.57 | 7.87 | 57.30 | 0.03 | 8.01 | 0.23 |
+| 1,000 | `compact` | 67.53 | 1.05 | 4.21 | 7.47 | 46.99 | 0.01 | 7.61 | 0.19 |
 
 Main thread load of one `sort` change and its frame, in milliseconds:
 
 | Rows | Total | Script | Style | Layout | Paint | GC | Other | Longest task | Tasks over 50 ms | DOM nodes |
 |---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 10 | 1.56 | 0.80 | 0.04 | 0.00 | 0.16 | 0.09 | 0.47 | 3.3 | 0 | 351 |
-| 100 | 5.91 | 2.40 | 0.38 | 0.82 | 1.05 | 0.28 | 0.98 | 6.2 | 0 | 2,061 |
-| 1,000 | 47.30 | 21.89 | 3.69 | 9.81 | 3.88 | 1.87 | 6.20 | 34.1 | 0 | 19,161 |
+| 10 | 2.90 | 1.79 | 0.08 | 0.00 | 0.28 | 0.08 | 0.68 | 3.6 | 0 | 346 |
+| 100 | 14.68 | 6.07 | 0.85 | 2.64 | 2.38 | 0.56 | 2.19 | 10.5 | 0 | 2,056 |
+| 1,000 | 137.70 | 64.83 | 9.67 | 33.63 | 9.30 | 3.14 | 17.13 | 114.3 | 23 | 19,156 |
 
 Memory over repeated navigation:
 
 | Cycles | JS heap KB | DOM nodes | Event listeners | Documents |
 |---:|---:|---:|---:|---:|
-| 0 | 1,406 | 341 | 33 | 1 |
-| 50 | 2,386 | 342 | 34 | 1 |
-| 100 | 2,453 | 342 | 34 | 1 |
-| 150 | 2,529 | 343 | 34 | 1 |
-| 200 | 2,550 | 342 | 34 | 1 |
+| 0 | 1,429 | 336 | 33 | 1 |
+| 50 | 2,809 | 337 | 34 | 1 |
+| 100 | 2,916 | 337 | 34 | 1 |
+| 150 | 2,999 | 337 | 34 | 1 |
+| 200 | 2,999 | 337 | 34 | 1 |
 
-From cycle 100 to cycle 200 the heap snapshots show the same three kinds of growth as before: 400 `blink::NetworkResourcesData::ResourceData` objects of the DevTools network recording, compiled V8 code, and 200 `blink::MediaQuerySet` objects that the document's `StyleEngine` keeps for each inserted `<thead>`.
+From cycle 100 to cycle 200 the heap snapshots show three kinds of growth: 500 `blink::NetworkResourcesData::ResourceData` objects of the DevTools network recording, compiled V8 code, and 200 `blink::MediaQuerySet` objects that the document's `StyleEngine` keeps for each inserted `<thead>`.
 
-CSR loads 7 template files for `/board`; the slowest took 3.6 ms from the local server. The `/board` document is 4,398 bytes (1,428 gzip), and its region JSON is 1,341 bytes (541 gzip). The SSR script is 31,586 gzip bytes and the CSR shell 32,892 (`make bundle-size`).
+CSR loads 6 template files for `/board`; the slowest took 11.7 ms from the local server in the first run and 5.1 ms in the second. The `/board` document is 2,999 bytes (1,030 gzip), and its region JSON is 1,392 bytes (587 gzip). The SSR script is 38,297 gzip bytes and the CSR shell 38,429 (`make bundle-size`).
 
 ## Findings
 
-- **Server:** a region JSON response costs about a quarter of a document with the generated program and about a third with the native extension, because the browser renders it.
-- **PHP rendering:** for 1,000 rows the generated program renders in 12.8 ms and the native extension in 3.6 ms, about the speed of the browser engine (3.3 ms). The earlier PHP AST interpreter took 16.7 ms on an idle machine (2026-10-01); this comparison crosses machine loads and is only indicative.
-- **Data model check:** `Bind::value` (HY-44) takes 2.3 to 2.4 ms for 1,000 rows, two thirds of the native rendering time. Rendering binds the same values, so for documents the check repeated work; commit "Lower the bundle limits and drop the repeated data model check of documents" removed it from the document path and kept it for JSON.
-- **First screen:** SSR shows it about 2.7 times as fast as CSR, because CSR requests JSON and template files after the shell.
-- **`hy-set` at 1,000 rows:** the change takes 23 to 27 ms of script. The htmx `innerMorph` swap takes 14 to 16 ms of it, `htmx.process` about 3 ms, the template engine and HTML parsing about 3 ms each, and hyper 0.3 ms. htmx is outside the scope of this project's changes. No task exceeded 50 ms in this run.
-- **Memory:** DOM nodes and event listeners stay constant over 200 cycles. The heap growth after the first 50 cycles consists of the DevTools network recording, compiled code and the `MediaQuerySet` objects that Chromium 153 keeps for inserted `<thead>` elements; it does not come from the application.
+- **Server:** a region JSON response costs about two fifths to a half of a document with the generated program and with the native extension, because the browser renders it.
+- **PHP rendering:** for 1,000 rows the generated program renders in 15.2 ms and the native extension in 29.6 ms, and the browser engine takes 3.9 ms. The native extension is faster at 10 and 100 rows; from 100 to 1,000 rows its time grows 23.5 times and that of the generated program 10.9 times (<https://github.com/polyspec/template/issues/7>).
+- **Data model check:** `Bind::value` (HY-44) takes 1.2 ms for 1,000 rows with the generated program and 0.31 ms with the native extension.
+- **First screen:** SSR shows it about 4.5 times as fast as CSR, because CSR requests JSON and template files after the shell.
+- **`hy-set` at 1,000 rows:** the change takes 68 to 78 ms of script. The htmx `innerMorph` swap takes 47 to 57 ms of it, `htmx.process` about 8 ms, HTML parsing about 8 ms, the template engine about 4 ms and hyper about 1 ms. htmx is outside the scope of this project's changes. In each run 23 tasks exceeded 50 ms, the longest 114 and 128 ms.
+- **Region navigation:** on an Apple M3 Pro, three runs of 2026-11-03 gave a median of 13.3 to 16.8 ms for SSR and 9.9 to 13.5 ms for CSR, with idle CPU at 51 to 76% and no other benchmark, build or test running. The record of 2026-10-02 on that machine gave 7.8 and 7.4 ms with Chromium 153. Chromium and the code both changed between them, and the cause is not established.
+- **Bundle size:** the SSR script (38,297 gzip bytes) and the CSR shell (38,429) exceed their limits of 35,900 and 36,000 in `config/bundle-size.json`, which `make bundle-size` reports as warnings and not as failures.
+- **Memory:** DOM nodes and event listeners stay constant over 200 cycles. The heap growth after the first 50 cycles consists of the DevTools network recording, compiled code and the `MediaQuerySet` objects that Chromium keeps for inserted `<thead>` elements; it does not come from the application.

@@ -1,5 +1,5 @@
 <!-- doc-id: plan-execution -->
-<!-- source-sha256: d6a5ee23c08ff62f65761d63e5607f63fc86ae2dd993b7e06fae2544db197df3 -->
+<!-- source-sha256: 47a59b9df9d644b1cf0c75565efd1b1abe6e3d494d241ac809619a2cf4c475fd -->
 # 실행
 
 [English](plan.md).
@@ -114,7 +114,7 @@
 | H25.71 | preserveSymlinks 구현은 철회 상태로 유지한다. 직접 소스 링크는 provider의 의존성 해석을 사용한다. 릴리스는 설치한 아카이브에서도 빌드되어야 하며 H27.3이 검증한다. | 개발 링크 없는 깨끗한 release consumer 설치와 build bin 실행 성공. |
 | H25.73 | 과거 행은 철회 상태로 유지하고 릴리스 lock 정합성 의무를 H27.2에 복원한다. 개발 중 이전 릴리스 기록을 유지했어도 다음 릴리스의 manifest와 lock은 유효해야 한다. | 루트와 board 프로젝트의 composer validate --strict. |
 | H26.8 | 개발 lock 재작성은 철회 상태로 유지한다. H27.2는 PHP 8.4를 지원하는 실제 의존성 릴리스를 선택하고 Composer로 릴리스 기록을 다시 생성한다. 과거 PHP 8.5 기록에 맞춰 PHP를 상향하지 않는다. | 플랫폼 요구사항을 무시하지 않고 PHP 8.4에서 두 lock의 Composer 플랫폼 검사. |
-| H26.9 | 측정은 미완료로 유지한다. PHP 8.4 확장 준비는 유휴 환경 벤치마크 완료가 아니다. | 전체 make bench 출력, 유휴 환경 조건, 갱신된 영어와 한국어 결과. |
+| H26.9 | `.github/workflows/bench.yml`이 기록을 낼 때까지 측정은 미완료로 유지한다. PHP 8.4 확장 준비는 그 완료가 아니다. | 한 커밋에서 workflow를 수동으로 두 번 실행한 결과, 그 편차, 갱신된 영어와 한국어 결과. |
 
 다음 패치 후보는 0.0.18에 이은 0.0.19다. H27.3은 선언된 릴리스 target으로 버전, 아카이브, consumer lock을 준비하고 설치를 검증한다. 이 작업들은 tag를 생성하거나 push하지 않는다. 비공개 루트의 자체 패키지 path repository는 Composer가 관리한다. 형제 소스 override는 배포된 의존성이 PHP 8.4를 지원한다는 근거가 아니다.
 

@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 26a67afbf73a339283af64f12192f81923c115b8293e5ce28e743a4c8c0797e6 -->
+<!-- source-sha256: c1f1cfd3c1f00baee75ff1d01a7a0634153aaca460b938742de010651b2a498c -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- docs/operations/benchmark.md는 2026-10-02의 PHP 8.5.10 기록 대신 PHP 8.4.27에서 `.github/workflows/bench.yml`을 두 번 실행한 기록을 담는다. template 0.0.20의 네이티브 확장은 1,000행을 29.6 ms에, generated 프로그램은 15.2 ms에 렌더하고, SSR 스크립트와 CSR 셸은 크기 한계를 넘는다(H26.9).
 - make bench-server가 깨끗한 checkout에 없던 asset을 build한다. 그전에는 모든 요청이 status 500으로 응답했다. 서버 benchmark는 요청이 측정 대상과 다른 status로 응답하면 실패한다(H26.9-2).
 - `.github/workflows/bench.yml`이 수동 실행에서 make bench와 make bench-sessions를 한 job에서 차례로 실행하고 각 target의 report를 upload하며, 이는 검사와 release 밖에 있다. 서버 benchmark는 `POST /board/create`에 CSRF token을 보내 요청이 status 422로 응답하고, 브라우저 benchmark는 페이지 오류, console 오류와 실패한 요청을 출력한다(H26.9-1).
 
