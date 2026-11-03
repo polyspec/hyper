@@ -3,7 +3,7 @@ directory, the identifier, and `count <requests> <name>`, `hold`, `read <names a
 `stale`, which writes after a line of its input, or `renew`. With HYPER_SESSION_REDIS, the port of a Redis server, it
 keeps the session there, HYPER_SESSION_RETRIES is how often it tries a lock and HYPER_SESSION_EXPIRE when a lock
 expires. HYPER_SESSION_SENTINEL names the ports of Sentinels instead, and HYPER_SESSION_TLS_CA, HYPER_SESSION_USER and
-HYPER_SESSION_PASSWORD secure the connection."""
+HYPER_SESSION_PASSWORD secure the connection; HYPER_SESSION_CLUSTER names the ports of nodes of a Redis Cluster."""
 
 import json
 import os
@@ -17,9 +17,11 @@ def stores(directory):
     """Returns the session stores of the process."""
     port = os.environ.get("HYPER_SESSION_REDIS")
     sentinels = os.environ.get("HYPER_SESSION_SENTINEL")
-    if port is None and sentinels is None:
+    nodes = os.environ.get("HYPER_SESSION_CLUSTER")
+    if port is None and sentinels is None and nodes is None:
         return FileSessions(directory)
     import redis
+    from redis.cluster import ClusterNode, RedisCluster
     from redis.sentinel import Sentinel
 
     ca = os.environ.get("HYPER_SESSION_TLS_CA")
@@ -28,6 +30,21 @@ def stores(directory):
         "password": os.environ.get("HYPER_SESSION_PASSWORD"),
         **({} if ca is None else {"ssl": True, "ssl_ca_certs": ca}),
     }
+    if nodes is not None:
+        return RedisSessions(
+            RedisCluster(
+                startup_nodes=[
+                    ClusterNode("127.0.0.1", int(item)) for item in nodes.split(",")
+                ],
+                socket_timeout=1,
+                socket_connect_timeout=1,
+                **secure,
+            ).execute_command,
+            lock_retries=int(os.environ.get("HYPER_SESSION_RETRIES", "1000000")),
+            lock_wait=0.002,
+            lock_expire=int(os.environ.get("HYPER_SESSION_EXPIRE", "30")),
+        )
+
     client = (
         Sentinel(
             [("127.0.0.1", int(item)) for item in sentinels.split(",")],

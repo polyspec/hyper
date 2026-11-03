@@ -1,5 +1,5 @@
 <!-- doc-id: deployment -->
-<!-- source-sha256: 9ce643ff7ca0ece7a342ccea929f9278936183ca41dab0e23aa0b525c13f1cfb -->
+<!-- source-sha256: cf6b80af55630be476feeac1382c6a68f8e704ecbed40ed0d71b4881dbf31c2b -->
 # 배포
 
 [English](deployment.md).
@@ -136,6 +136,50 @@ RedisSessions(sentinel.master_for("hyper").execute_command)
 Primary가 실패한 때부터 Sentinel이 replica를 승격할 때까지 요청은 status 500으로 답하고, 그 뒤 session은 이어진다. 어떤 Sentinel도 primary를 알려 주지 못하면 요청은 실패한다. Sentinel은 서로 다른 장애 영역에 셋 이상 둔다.
 
 복제는 비동기이므로, primary가 확인 응답했지만 replica가 받지 못한 것은 failover에서 사라진다. 그런 session은 이전 record로 돌아가거나, 새 session이었다면 사라져 다음 요청이 새로 시작한다. 잠금도 같은 방식으로 사라질 수 있다. 그러면 쥐고 있던 요청이 아직 실행되는 동안 다음 요청이 시작될 수 있고, 쥐고 있던 요청은 잠금이 맞지 않아 아무것도 쓰지 않는다. Redis의 `min-replicas-to-write`와 `min-replicas-max-lag`는 최신 replica가 없는 동안 primary가 쓰기를 거부하게 하여 손실을 줄이고 대신 status 500으로 답하게 한다. hyper는 이 설정을 테스트하지 않는다. `tests/scripts/session-redis-failover.test.mts`는 세 서버가 쓰는 도중 primary를 kill하고, replica가 `WAIT`로 확인 응답한 것이 남는지 확인한다.
+
+### Redis Cluster
+
+phpredis 6.3.0의 `rediscluster` session handler는 잠금을 잡지 않으므로, 한 session의 동시 요청이 갱신을 잃는다. PHP 서버는 이 handler를 쓰지 않는다. phpredis의 `RedisCluster`로 HY-115 protocol을 따르는 `RedisClusterSessions`를 `App::open`의 `sessionSetup`으로 넘기고, `session.save_handler`, `session.save_path`, `redis.session.*`는 설정하지 않는다.
+
+```php
+App::open(
+    // ...
+    sessionSetup: (new RedisClusterSessions(['redis-1:6379', 'redis-2:6379', 'redis-3:6379']))(...),
+);
+```
+
+Seed 다음 인자는 `lockExpire` 30, `lockRetries` 100, `lockWait` 20000마이크로초, `timeout` 1.0이고, TLS와 ACL 사용자를 쓰면 `auth`와 `context`다. Seed는 `tls://redis-1:6379`처럼 쓰고, 값은 `['hyper', 'secret']`와 `['cafile' => '/etc/redis/ca.pem']`이다. 연결은 persistent다.
+
+Node와 Python 서버는 `RedisSessions`에 cluster client의 command 함수를 준다. Protocol의 모든 명령은 key가 하나이므로 hash tag가 필요 없고, session과 잠금은 서로 다른 primary에 있어도 된다. node-redis는 첫 인자가 가리키는 key로 경로를 정한다.
+
+```ts
+const cluster = await createCluster({
+  rootNodes: [{ url: 'redis://redis-1:6379' }, { url: 'redis://redis-2:6379' }, { url: 'redis://redis-3:6379' }],
+  defaults: { disableOfflineQueue: true },
+}).on('error', report).connect();
+const bytes = cluster.withTypeMapping({ [RESP_TYPES.BLOB_STRING]: Buffer });
+new RedisSessions({
+  command: (words) => {
+    const args = words.map((word) => Buffer.from(word));
+    return bytes.sendCommand(args[words[0] === 'EVAL' ? 3 : 1], false, args);
+  },
+});
+```
+
+```python
+cluster = RedisCluster(
+    startup_nodes=[
+        ClusterNode("redis-1", 6379),
+        ClusterNode("redis-2", 6379),
+        ClusterNode("redis-3", 6379),
+    ],
+    socket_timeout=1,
+    socket_connect_timeout=1,
+)
+RedisSessions(cluster.execute_command)
+```
+
+TLS와 ACL 사용자를 쓰면 Node 서버는 `defaults`에 `{ socket: { tls: true, ca }, username, password }`를 주고, Python 서버는 `ssl=True, ssl_ca_certs=..., username=..., password=...`를 준다. Slot이 이동해도 client의 redirection으로 요청은 계속 동작한다. 넘겨받는 replica는 받은 것을 유지하고, 받지 못한 것은 Sentinel처럼 잃는다. `tests/scripts/session-redis-cluster.test.mts`는 primary 셋의 실제 cluster에서 이를 확인한다.
 
 ### TLS와 ACL 사용자
 

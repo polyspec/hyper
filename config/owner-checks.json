@@ -241,6 +241,7 @@
         "tests/scripts/session-redis-server.mts",
         "tests/scripts/session-board.mts",
         "packages/server/php/src/RedisSentinelSessions.php",
+        "packages/server/php/src/RedisClusterSessions.php",
         "benchmarks/sessions.mts"
       ],
       "tests": [
@@ -248,6 +249,7 @@
         "tests/scripts/session-shared-redis.test.mts",
         "tests/scripts/session-redis-failure.test.mts",
         "tests/scripts/session-redis-failover.test.mts",
+        "tests/scripts/session-redis-cluster.test.mts",
         "tests/scripts/benchmark-sessions.test.mts"
       ]
     },

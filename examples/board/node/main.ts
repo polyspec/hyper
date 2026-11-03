@@ -21,9 +21,28 @@ const database = env('BOARD_DB');
 const port = Number(env('BOARD_PORT'));
 
 // BOARD_SENTINEL, `host:port` of each Sentinel separated by commas, keeps the sessions on the primary hyper that they name,
-// and BOARD_REDIS, the URL of a Redis server, keeps them there; otherwise they are files in BOARD_SESSIONS. A command fails while the
+// BOARD_CLUSTER, `host:port` of nodes of a Redis Cluster separated by commas, keeps them on that cluster, and
+// BOARD_REDIS, the URL of a Redis server, keeps them there; otherwise they are files in BOARD_SESSIONS. A command fails while the
 // connection is down, instead of waiting in the queue of the client, so the request answers status 500 (HY-115).
 const sessionStore = async (): Promise<FileSessions | RedisSessions> => {
+  const nodes = process.env.BOARD_CLUSTER;
+  if (nodes !== undefined && nodes !== '') {
+    const { createCluster, RESP_TYPES } = await import('redis');
+    const cluster = await createCluster({
+      rootNodes: nodes.split(',').map((item) => ({ url: `redis://${item}` })),
+      defaults: { disableOfflineQueue: true },
+    }).on('error', (error: unknown) => {
+      process.stderr.write(`board: redis: ${String(error)}\n`);
+    }).connect();
+    const bytes = cluster.withTypeMapping({ [RESP_TYPES.BLOB_STRING]: Buffer });
+    // A cluster client routes a command by its key, the first argument, or the fourth of EVAL.
+    return new RedisSessions({
+      command: (words) => {
+        const args = words.map((word) => Buffer.from(word));
+        return bytes.sendCommand(args[words[0] === 'EVAL' ? 3 : 1], false, args);
+      },
+    });
+  }
   const sentinels = process.env.BOARD_SENTINEL;
   if (sentinels !== undefined && sentinels !== '') {
     const { createSentinel, RESP_TYPES } = await import('redis');

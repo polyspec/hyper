@@ -126,6 +126,50 @@ A request answers status 500 from the failure of the primary until the Sentinels
 
 Replication is asynchronous, so a failover loses what the primary acknowledged and the replica had not received: such a session returns to an earlier record or, when it was new, is gone and the next request starts a new one. A lock can be lost the same way: the next request can then start while the holder still runs, and the holder writes nothing, because its lock no longer matches. `min-replicas-to-write` and `min-replicas-max-lag` of Redis make the primary refuse writes while no replica is current, which narrows the loss and answers status 500 instead; hyper does not test them. `tests/scripts/session-redis-failover.test.mts` kills the primary under the three servers and checks that what the replica acknowledged with `WAIT` survives.
 
+### Redis Cluster
+
+The `rediscluster` session handler of phpredis 6.3.0 takes no lock, so concurrent requests of one session lose updates. The PHP server does not use it: it passes `RedisClusterSessions` as `sessionSetup` of `App::open`, which speaks the protocol of HY-115 through `RedisCluster` of phpredis, and sets no `session.save_handler`, `session.save_path` or `redis.session.*`.
+
+```php
+App::open(
+    // ...
+    sessionSetup: (new RedisClusterSessions(['redis-1:6379', 'redis-2:6379', 'redis-3:6379']))(...),
+);
+```
+
+The arguments after the seeds are `lockExpire` 30, `lockRetries` 100, `lockWait` 20000 microseconds, `timeout` 1.0 and, with TLS and an ACL user, `auth` and `context`: seeds such as `tls://redis-1:6379`, `['hyper', 'secret']` and `['cafile' => '/etc/redis/ca.pem']`. Connections are persistent.
+
+The Node and Python servers give `RedisSessions` the command function of a cluster client. Every command of the protocol has one key, so no hash tag is needed, and the session and its lock can live on different primaries. node-redis routes by the key that its first argument names:
+
+```ts
+const cluster = await createCluster({
+  rootNodes: [{ url: 'redis://redis-1:6379' }, { url: 'redis://redis-2:6379' }, { url: 'redis://redis-3:6379' }],
+  defaults: { disableOfflineQueue: true },
+}).on('error', report).connect();
+const bytes = cluster.withTypeMapping({ [RESP_TYPES.BLOB_STRING]: Buffer });
+new RedisSessions({
+  command: (words) => {
+    const args = words.map((word) => Buffer.from(word));
+    return bytes.sendCommand(args[words[0] === 'EVAL' ? 3 : 1], false, args);
+  },
+});
+```
+
+```python
+cluster = RedisCluster(
+    startup_nodes=[
+        ClusterNode("redis-1", 6379),
+        ClusterNode("redis-2", 6379),
+        ClusterNode("redis-3", 6379),
+    ],
+    socket_timeout=1,
+    socket_connect_timeout=1,
+)
+RedisSessions(cluster.execute_command)
+```
+
+With TLS and an ACL user the Node server gives `{ socket: { tls: true, ca }, username, password }` in `defaults`, and the Python server `ssl=True, ssl_ca_certs=..., username=..., password=...`. A slot that moves keeps the requests working through the redirections of the clients. A replica that takes over keeps what it had received, and what it had not received is lost, as with Sentinel. `tests/scripts/session-redis-cluster.test.mts` checks them on a real cluster of three primaries.
+
 ### TLS and an ACL user
 
 A connection that takes TLS and an ACL user sets these parameters. The certificate authority verifies the server; the address that the certificate names must be the address the client connects to.

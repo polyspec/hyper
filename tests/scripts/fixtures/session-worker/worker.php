@@ -3,26 +3,42 @@
 declare(strict_types=1);
 
 // One PHP server process over one session (tests/scripts/session-workers.mts): the arguments are the session directory,
-// the identifier, and `count <requests> <name>`, `read <names as JSON>`, `write <values as JSON>` or `stale`, which
-// writes a value and closes after a line of its input. With HYPER_SESSION_REDIS, the port of a Redis server, it keeps
-// the session there through phpredis; HYPER_SESSION_SENTINEL names the ports of Sentinels instead, and
-// HYPER_SESSION_TLS_CA, HYPER_SESSION_USER and HYPER_SESSION_PASSWORD secure the connection;
-// HYPER_SESSION_PERSISTENT keeps one connection for the requests of the process.
+// the identifier, and `count <requests> <name>`, `read <names as JSON>`, `write <values as JSON>`, `renew`, or `hold`
+// or `stale`, which reads or writes a value and closes after a line of its input. With HYPER_SESSION_REDIS, the port
+// of a Redis server, it keeps the session there through phpredis; HYPER_SESSION_SENTINEL names the ports of Sentinels
+// instead, and HYPER_SESSION_TLS_CA, HYPER_SESSION_USER and HYPER_SESSION_PASSWORD secure the connection;
+// HYPER_SESSION_PERSISTENT keeps one connection for the requests of the process, and HYPER_SESSION_CLUSTER names the
+// ports of nodes of a Redis Cluster.
 
 require __DIR__ . '/../../../../vendor/autoload.php';
 
 use Polyspec\Hyper\NativeSession;
+use Polyspec\Hyper\RedisClusterSessions;
 use Polyspec\Hyper\RedisSentinelSessions;
 
 [, $directory, $identifier, $command, $first, $second] = [...$argv, null, null];
 $port = getenv('HYPER_SESSION_REDIS');
 $sentinels = getenv('HYPER_SESSION_SENTINEL');
+$cluster = getenv('HYPER_SESSION_CLUSTER');
 $setup = null;
-if ($port !== false || $sentinels !== false) {
+$ca = getenv('HYPER_SESSION_TLS_CA');
+$user = getenv('HYPER_SESSION_USER');
+$password = getenv('HYPER_SESSION_PASSWORD');
+if ($cluster !== false) {
+    $setup = (new RedisClusterSessions(
+        array_map(
+            static fn (string $item): string => ($ca === false ? '' : 'tls://') . "127.0.0.1:{$item}",
+            explode(',', $cluster),
+        ),
+        (int) (getenv('HYPER_SESSION_EXPIRE') ?: 30),
+        (int) (getenv('HYPER_SESSION_RETRIES') ?: -1),
+        2000,
+        1.0,
+        $user === false ? null : [$user, (string) $password],
+        $ca === false ? null : ['cafile' => $ca],
+    ))(...);
+} elseif ($port !== false || $sentinels !== false) {
     ini_set('session.save_handler', 'redis');
-    $ca = getenv('HYPER_SESSION_TLS_CA');
-    $user = getenv('HYPER_SESSION_USER');
-    $password = getenv('HYPER_SESSION_PASSWORD');
     $parameters = [
         ...($user === false ? [] : ['auth[]=' . urlencode($user), 'auth[]=' . urlencode((string) $password)]),
         ...($ca === false ? [] : ['stream[cafile]=' . urlencode($ca)]),
@@ -91,6 +107,19 @@ if ($command === 'count') {
         $store->set('stale', 1);
         echo "holding\n";
         fgets(STDIN);
+    });
+} elseif ($command === 'hold') {
+    $request(static function (NativeSession $store): void {
+        $store->get('n');
+        echo "holding\n";
+        fgets(STDIN);
+    });
+} elseif ($command === 'renew') {
+    echo $request(static function (NativeSession $store): string {
+        $store->set('renewed', 1);
+        $store->renew();
+
+        return (string) session_id();
     });
 } elseif ($command === 'read') {
     $names = json_decode($first, true, 512, JSON_THROW_ON_ERROR);

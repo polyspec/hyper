@@ -9,6 +9,7 @@ ini_set('display_errors', '0');
 use Polyspec\Hyper\App;
 use Polyspec\Hyper\Examples\Board\Assets;
 use Polyspec\Hyper\Examples\Board\Posts;
+use Polyspec\Hyper\RedisClusterSessions;
 use Polyspec\Hyper\RedisSentinelSessions;
 
 require __DIR__ . '/../vendor/autoload.php';
@@ -27,9 +28,13 @@ if (is_string($time) && $time !== '' && preg_match('/^[0-9]{1,15}$/D', $time) !=
 }
 $now = is_string($time) && $time !== '' ? fn (): int => (int) $time : fn (): int => time();
 // BOARD_SENTINEL, `host:port` of each Sentinel separated by commas, keeps the sessions on the primary hyper that they
-// name.
+// name, and BOARD_CLUSTER, `host:port` of nodes of a Redis Cluster separated by commas, keeps them on that cluster.
 $sentinels = getenv('BOARD_SENTINEL');
-$sessionSetup = is_string($sentinels) && $sentinels !== ''
+$cluster = getenv('BOARD_CLUSTER');
+$sessionSetup = is_string($cluster) && $cluster !== ''
+    ? (new RedisClusterSessions(explode(',', $cluster)))(...)
+    : null;
+$sessionSetup ??= is_string($sentinels) && $sentinels !== ''
     ? (new RedisSentinelSessions(array_map(
         static function (string $item): array {
             [$host, $port] = explode(':', $item);

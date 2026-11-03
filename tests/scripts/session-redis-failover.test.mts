@@ -1,7 +1,7 @@
 // The Redis sessions on a primary with a replica that Redis Sentinel promotes, and over TLS with an ACL user (HY-115): real
 // Redis servers, real Sentinels, the PHP server through real phpredis and the HTTP servers of the board.
 import assert from 'node:assert/strict';
-import { execFileSync, spawn, type ChildProcess, type ChildProcessWithoutNullStreams } from 'node:child_process';
+import { spawn, type ChildProcess, type ChildProcessWithoutNullStreams } from 'node:child_process';
 import { once } from 'node:events';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -12,9 +12,8 @@ import { setTimeout as delay } from 'node:timers/promises';
 import { createClient } from 'redis';
 
 import { stopServers } from '../../scripts/board-servers.mts';
-import { requireBuilt } from './requires.mts';
-import { post, shareAcross, startBoards } from './session-board.mts';
-import { EXTENSION, freePort, startRedis, stopRedis } from './session-redis-server.mts';
+import { post, requireServers, shareAcross, startBoards } from './session-board.mts';
+import { ask, certificates, EXTENSION, freePort, startRedis, stopRedis, until, type Secure } from './session-redis-server.mts';
 import { COMMANDS, IDENTIFIER, NAMES, ROOT, run as runWorker, type Server } from './session-workers.mts';
 
 const KEY = `PHPREDIS_SESSION:${IDENTIFIER}`;
@@ -24,12 +23,7 @@ let directory = '';
 const processes: ChildProcess[] = [];
 
 before(() => {
-  requireBuilt('hyper-install-redis', 'var/redis/redis-server', 'var/redis/redis.so');
-  requireBuilt('packages', 'packages/server/ts/dist/index.js');
-  requireBuilt('hyper-install-python', 'packages/server/python/.venv/bin/python');
-  requireBuilt('hyper-install-php', 'vendor/autoload.php');
-  requireBuilt('node-server', 'examples/board/build/node/server.mjs');
-  requireBuilt('server', 'examples/board/build/server');
+  requireServers();
   directory = mkdtempSync(path.join(tmpdir(), 'hyper-session-failover-'));
 });
 
@@ -38,18 +32,7 @@ after(async () => {
   rmSync(directory, { recursive: true, force: true });
 });
 
-// Repeats a check until it holds; the timeout of the test ends a check that never holds.
-async function until(check: () => Promise<boolean>): Promise<void> {
-  for (;;) {
-    if (await check().catch(() => false)) return;
-    await delay(100);
-  }
-}
-
 interface Node { name: string; port: string; server: ChildProcessWithoutNullStreams }
-
-// A certificate authority, the certificate of the servers that it signed, and the password of the ACL user hyper.
-interface Secure { ca: string; certificate: string; key: string; password: string }
 
 // A primary, a replica and three Sentinels with a quorum of two, with or without TLS and the ACL user.
 class Topology {
@@ -64,19 +47,9 @@ class Topology {
     this.secure = secure;
   }
 
-  // Runs a command on a server of the topology and returns its reply; a connection that fails rejects at once.
-  async ask(port: string, ...words: string[]): Promise<unknown> {
-    const tls = this.secure === undefined ? {} : { host: '127.0.0.1', tls: true as const, ca: readFileSync(this.secure.ca) };
-    const client = await createClient({
-      socket: { port: Number(port), reconnectStrategy: false, ...tls },
-      disableOfflineQueue: true,
-      ...(this.secure === undefined ? {} : { username: 'hyper', password: this.secure.password }),
-    }).on('error', () => {}).connect();
-    try {
-      return await client.sendCommand(words);
-    } finally {
-      client.destroy();
-    }
+  // Runs a command on a server of the topology.
+  ask(port: string, ...words: string[]): Promise<unknown> {
+    return ask(port, this.secure, ...words);
   }
 
   // The settings of TLS, as words of a server and as lines of a Sentinel.
@@ -288,19 +261,8 @@ test('a failover while the three servers write one session keeps the acknowledge
   assert.equal(later, n + 30, 'requests after the failover lose no update');
 });
 
-// Writes a certificate authority and a certificate of 127.0.0.1 that it signs, valid for the run.
-function certificates(): Secure {
-  const file = (name: string): string => path.join(directory, name);
-  const openssl = (...args: string[]) => execFileSync('openssl', args, { stdio: 'ignore' });
-  openssl('req', '-x509', '-newkey', 'rsa:2048', '-nodes', '-days', '2', '-subj', '/CN=hyper test', '-addext', 'basicConstraints=critical,CA:TRUE', '-addext', 'keyUsage=critical,keyCertSign,cRLSign', '-keyout', file('ca.key'), '-out', file('ca.pem'));
-  openssl('req', '-newkey', 'rsa:2048', '-nodes', '-subj', '/CN=127.0.0.1', '-keyout', file('server.key'), '-out', file('server.csr'));
-  writeFileSync(file('san.ext'), 'authorityKeyIdentifier=keyid,issuer\nkeyUsage=critical,digitalSignature,keyEncipherment\nextendedKeyUsage=serverAuth,clientAuth\nsubjectAltName=IP:127.0.0.1\n');
-  openssl('x509', '-req', '-days', '2', '-in', file('server.csr'), '-CA', file('ca.pem'), '-CAkey', file('ca.key'), '-CAcreateserial', '-extfile', file('san.ext'), '-out', file('server.pem'));
-  return { ca: file('ca.pem'), certificate: file('server.pem'), key: file('server.key'), password: 'secret' };
-}
-
 test('the three servers share a session over TLS with an ACL user and no other client reaches it (HY-115)', { timeout: 120_000 }, async () => {
-  const { ca, certificate, key } = certificates();
+  const { ca, certificate, key } = certificates(directory);
   const port = await freePort();
   const own = path.join(directory, 'tls');
   mkdirSync(own);
@@ -327,7 +289,7 @@ test('the three servers share a session over TLS with an ACL user and no other c
 });
 
 test('the three servers go on through a failover with Sentinels and Redis servers that take only TLS and the ACL user (HY-115)', { timeout: 180_000 }, async () => {
-  const secure = certificates();
+  const secure = certificates(directory);
   const redis = await topology('secure', secure);
   const env = { HYPER_SESSION_SENTINEL: redis.sentinels.join(','), HYPER_SESSION_TLS_CA: secure.ca, HYPER_SESSION_USER: 'hyper', HYPER_SESSION_PASSWORD: secure.password, PHP_PREFIX: EXTENSION };
   await writeAcrossFailover(redis, env);

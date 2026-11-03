@@ -4,9 +4,20 @@ import type { ChildProcess } from 'node:child_process';
 import path from 'node:path';
 
 import { startNode, startPhp, startPython } from '../../scripts/board-servers.mts';
+import { requireBuilt } from './requires.mts';
 import { ROOT } from './session-workers.mts';
 
 const BOARD = path.join(ROOT, 'examples/board');
+
+// Fails unless the workers and the board of a session test are built.
+export function requireServers(): void {
+  requireBuilt('hyper-install-redis', 'var/redis/redis-server', 'var/redis/redis.so');
+  requireBuilt('packages', 'packages/server/ts/dist/index.js');
+  requireBuilt('hyper-install-python', 'packages/server/python/.venv/bin/python');
+  requireBuilt('hyper-install-php', 'vendor/autoload.php');
+  requireBuilt('node-server', 'examples/board/build/node/server.mjs');
+  requireBuilt('server', 'examples/board/build/server');
+}
 
 // One server of the board and its address.
 export interface Board { name: string; url: string }

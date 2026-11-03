@@ -1,15 +1,55 @@
 // The Redis server of a run of the session tests (HY-115) and a request of a server that holds its session until a line
 // of its input.
-import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
+import { execFileSync, spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
 import { once } from 'node:events';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { after, before } from 'node:test';
+import { setTimeout as delay } from 'node:timers/promises';
+
+import { createClient } from 'redis';
 
 import { requireBuilt } from './requires.mts';
 import { COMMANDS, IDENTIFIER, ROOT, type Server } from './session-workers.mts';
+
+// A certificate authority, the certificate of the servers that it signed, and the password of the ACL user hyper.
+export interface Secure { ca: string; certificate: string; key: string; password: string }
+
+// Writes a certificate authority and a certificate of 127.0.0.1 that it signs, valid for the run.
+export function certificates(directory: string): Secure {
+  const file = (name: string): string => path.join(directory, name);
+  const openssl = (...args: string[]) => execFileSync('openssl', args, { stdio: 'ignore' });
+  openssl('req', '-x509', '-newkey', 'rsa:2048', '-nodes', '-days', '2', '-subj', '/CN=hyper test', '-addext', 'basicConstraints=critical,CA:TRUE', '-addext', 'keyUsage=critical,keyCertSign,cRLSign', '-keyout', file('ca.key'), '-out', file('ca.pem'));
+  openssl('req', '-newkey', 'rsa:2048', '-nodes', '-subj', '/CN=127.0.0.1', '-keyout', file('server.key'), '-out', file('server.csr'));
+  writeFileSync(file('san.ext'), 'authorityKeyIdentifier=keyid,issuer\nkeyUsage=critical,digitalSignature,keyEncipherment\nextendedKeyUsage=serverAuth,clientAuth\nsubjectAltName=IP:127.0.0.1\n');
+  openssl('x509', '-req', '-days', '2', '-in', file('server.csr'), '-CA', file('ca.pem'), '-CAkey', file('ca.key'), '-CAcreateserial', '-extfile', file('san.ext'), '-out', file('server.pem'));
+  return { ca: file('ca.pem'), certificate: file('server.pem'), key: file('server.key'), password: 'secret' };
+}
+
+// Runs a command on one server and returns its reply; a connection that fails rejects at once, and a redirection is not followed.
+export async function ask(port: string, secure: Secure | undefined, ...words: string[]): Promise<unknown> {
+  const tls = secure === undefined ? {} : { host: '127.0.0.1', tls: true as const, ca: readFileSync(secure.ca) };
+  const client = await createClient({
+    socket: { port: Number(port), reconnectStrategy: false, ...tls },
+    disableOfflineQueue: true,
+    ...(secure === undefined ? {} : { username: 'hyper', password: secure.password }),
+  }).on('error', () => {}).connect();
+  try {
+    return await client.sendCommand(words);
+  } finally {
+    client.destroy();
+  }
+}
+
+// Repeats a check until it holds; the timeout of the test ends a check that never holds.
+export async function until(check: () => Promise<boolean>): Promise<void> {
+  for (;;) {
+    if (await check().catch(() => false)) return;
+    await delay(100);
+  }
+}
 
 export const EXTENSION = `-dextension=${path.join(ROOT, 'var/redis/redis.so')}`;
 
@@ -74,9 +114,9 @@ export function redisRun(prefix: string, started: () => Promise<void>, ending: (
 }
 
 // Starts a request of a server that has written a value, and resolves when it holds the lock and waits for a line.
-export async function holding(name: Server, directory: string, env: Record<string, string>): Promise<ChildProcessWithoutNullStreams> {
+export async function holding(name: Server, directory: string, env: Record<string, string>, command_ = 'stale'): Promise<ChildProcessWithoutNullStreams> {
   const { command, prefix } = COMMANDS[name];
-  const holder = spawn(command, [...(name === 'php' ? [EXTENSION] : []), ...prefix, directory, IDENTIFIER, 'stale'], { cwd: ROOT, env: { ...process.env, ...env } });
+  const holder = spawn(command, [...(name === 'php' ? [EXTENSION] : []), ...prefix, directory, IDENTIFIER, command_], { cwd: ROOT, env: { ...process.env, ...env } });
   await once(holder.stdout, 'data');
   return holder;
 }

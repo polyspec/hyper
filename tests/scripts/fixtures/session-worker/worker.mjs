@@ -2,10 +2,11 @@
 // the identifier, and `count <requests> <name>`, `read <names as JSON>`, `write <values as JSON>`, or `stale`, which writes
 // after a line of its input, or `renew`. With HYPER_SESSION_REDIS, the port of a Redis server, it keeps the session there,
 // HYPER_SESSION_RETRIES is how often it tries a lock and HYPER_SESSION_EXPIRE when a lock expires. HYPER_SESSION_SENTINEL
-// names the ports of Sentinels instead, and HYPER_SESSION_TLS_CA, HYPER_SESSION_USER and HYPER_SESSION_PASSWORD secure the connection.
+// names the ports of Sentinels instead, and HYPER_SESSION_TLS_CA, HYPER_SESSION_USER and HYPER_SESSION_PASSWORD secure the connection;
+// HYPER_SESSION_CLUSTER names the ports of nodes of a Redis Cluster.
 import { once } from 'node:events';
 import { readFileSync } from 'node:fs';
-import { createClient, createSentinel, RESP_TYPES } from 'redis';
+import { createClient, createCluster, createSentinel, RESP_TYPES } from 'redis';
 import { FileSessions, RedisSessions } from '@polyspec/hyper-server';
 
 const [directory, id, command, first, second] = process.argv.slice(2);
@@ -35,7 +36,18 @@ const sentinel = async () => {
   }).on('error', () => {}).connect();
   return { client, command: (words) => client.withTypeMapping({ [RESP_TYPES.BLOB_STRING]: Buffer }).sendCommand(false, words.map((word) => Buffer.from(word))) };
 };
-const connection = sentinels !== undefined ? await sentinel() : port !== undefined ? await direct() : null;
+const nodes = process.env.HYPER_SESSION_CLUSTER;
+// A cluster client routes a command by its key, the first argument, or the fourth of EVAL.
+const cluster = async () => {
+  const client = await createCluster({
+    rootNodes: nodes.split(',').map((item) => ({ socket: { host: '127.0.0.1', port: Number(item) } })),
+    defaults: { disableOfflineQueue: true, ...secure },
+  }).on('error', () => {}).connect();
+  const bytes = client.withTypeMapping({ [RESP_TYPES.BLOB_STRING]: Buffer });
+  const key = (words) => (words[0] === 'EVAL' ? words[3] : words[1]);
+  return { client, command: (words) => bytes.sendCommand(key(words), false, words.map((word) => Buffer.from(word))) };
+};
+const connection = nodes !== undefined ? await cluster() : sentinels !== undefined ? await sentinel() : port !== undefined ? await direct() : null;
 const client = connection?.client ?? null;
 const sessions = connection === null
   ? new FileSessions({ directory })

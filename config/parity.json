@@ -4228,6 +4228,248 @@
       ]
     },
     {
+      "id": "redis-cluster-sessions",
+      "kind": "api",
+      "requirements": [
+        "HY-115",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\RedisClusterSessions"
+        },
+        {
+          "implementation": "python",
+          "symbol": "polyspec.hyper.redis_sessions.RedisCommand"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!RedisCommand:type"
+        }
+      ]
+    },
+    {
+      "id": "redis-cluster-sessions-construct",
+      "kind": "api",
+      "requirements": [
+        "HY-115",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\RedisClusterSessions::__construct"
+        },
+        {
+          "implementation": "python",
+          "symbol": "polyspec.hyper.redis_sessions.RedisCommand"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!RedisCommand:type"
+        }
+      ]
+    },
+    {
+      "id": "redis-cluster-sessions-invoke",
+      "kind": "api",
+      "requirements": [
+        "HY-115",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\RedisClusterSessions::__invoke"
+        },
+        {
+          "implementation": "python",
+          "symbol": "polyspec.hyper.redis_sessions.RedisCommand"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!RedisCommand:type"
+        }
+      ]
+    },
+    {
+      "id": "redis-cluster-sessions-open",
+      "kind": "api",
+      "requirements": [
+        "HY-115",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\RedisClusterSessions::open"
+        },
+        {
+          "implementation": "python",
+          "symbol": "polyspec.hyper.redis_sessions.RedisCommand"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!RedisCommand:type"
+        }
+      ]
+    },
+    {
+      "id": "redis-cluster-sessions-close",
+      "kind": "api",
+      "requirements": [
+        "HY-115",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\RedisClusterSessions::close"
+        },
+        {
+          "implementation": "python",
+          "symbol": "polyspec.hyper.redis_sessions.RedisCommand"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!RedisCommand:type"
+        }
+      ]
+    },
+    {
+      "id": "redis-cluster-sessions-validateid",
+      "kind": "api",
+      "requirements": [
+        "HY-115",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\RedisClusterSessions::validateId"
+        },
+        {
+          "implementation": "python",
+          "symbol": "polyspec.hyper.redis_sessions.RedisCommand"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!RedisCommand:type"
+        }
+      ]
+    },
+    {
+      "id": "redis-cluster-sessions-updatetimestamp",
+      "kind": "api",
+      "requirements": [
+        "HY-115",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\RedisClusterSessions::updateTimestamp"
+        },
+        {
+          "implementation": "python",
+          "symbol": "polyspec.hyper.redis_sessions.RedisCommand"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!RedisCommand:type"
+        }
+      ]
+    },
+    {
+      "id": "redis-cluster-sessions-read",
+      "kind": "api",
+      "requirements": [
+        "HY-115",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\RedisClusterSessions::read"
+        },
+        {
+          "implementation": "python",
+          "symbol": "polyspec.hyper.redis_sessions.RedisCommand"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!RedisCommand:type"
+        }
+      ]
+    },
+    {
+      "id": "redis-cluster-sessions-write",
+      "kind": "api",
+      "requirements": [
+        "HY-115",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\RedisClusterSessions::write"
+        },
+        {
+          "implementation": "python",
+          "symbol": "polyspec.hyper.redis_sessions.RedisCommand"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!RedisCommand:type"
+        }
+      ]
+    },
+    {
+      "id": "redis-cluster-sessions-destroy",
+      "kind": "api",
+      "requirements": [
+        "HY-115",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\RedisClusterSessions::destroy"
+        },
+        {
+          "implementation": "python",
+          "symbol": "polyspec.hyper.redis_sessions.RedisCommand"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!RedisCommand:type"
+        }
+      ]
+    },
+    {
+      "id": "redis-cluster-sessions-gc",
+      "kind": "api",
+      "requirements": [
+        "HY-115",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\RedisClusterSessions::gc"
+        },
+        {
+          "implementation": "python",
+          "symbol": "polyspec.hyper.redis_sessions.RedisCommand"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!RedisCommand:type"
+        }
+      ]
+    },
+    {
       "id": "redis-sessions",
       "kind": "api",
       "requirements": [
