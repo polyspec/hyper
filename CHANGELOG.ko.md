@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 175457242c2b8d57355d4ffc58006da2dec924d0a3308637f5d98384ba0094e5 -->
+<!-- source-sha256: 56a61f1ae03a54b07ecb3378a6d6f645b052d0233e3f01b845cb5d149a701e51 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- Redis 서버에 닿지 못한 PHP 요청이 client의 session cookie를 바꾸지 않는다. 연결이 끊기면 phpredis의 session handler가 identifier 검증에 실패하고, PHP가 읽기 실패 전에 새 identifier의 cookie를 넣었다. status 500 응답이 이를 실어 session이 끝났고 다음 form은 status 403으로 거부됐다. 이제 시작하지 못한 session은 그 cookie를 거두고, 테스트가 세 서버의 status 500 응답마다 cookie를 읽는다(H27.79).
 
 ## 0.0.30
 - H26.9, H27.77 다음에 0.0.30을 릴리즈한다. config/release.json의 모든 manifest, polyspec/hyper-server와 @polyspec/hyper-client의 정확한 요구 버전, npm, Composer, uv가 쓴 lock이 0.0.30을 가진다(H27.78).

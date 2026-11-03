@@ -12,7 +12,7 @@ import { setTimeout as delay } from 'node:timers/promises';
 import { createClient } from 'redis';
 
 import { stopServers } from '../../scripts/board-servers.mts';
-import { cookieOf, post, requireServers, shareAcross, startBoards, tokenOf, type Board } from './session-board.mts';
+import { assertKeepsCookie, cookieOf, post, requireServers, shareAcross, startBoards, tokenOf, type Board } from './session-board.mts';
 import { ask, certificates, EXTENSION, freePort, startRedis, stopRedis, until, type Secure } from './session-redis-server.mts';
 import { COMMANDS, IDENTIFIER, NAMES, ROOT, run as runWorker, type Server } from './session-workers.mts';
 
@@ -235,6 +235,7 @@ test('the HTTP servers answer status 500 during a failover and go on with the se
     for (const board of boards) {
       let response: Response = await post(board, session.cookie, session.token, `after ${board.name}`);
       while (response.status === 500) {
+        assertKeepsCookie(response, `${board.name} during the failover`);
         await delay(200);
         response = await post(board, session.cookie, session.token, `after ${board.name}`);
       }

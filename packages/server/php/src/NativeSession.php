@@ -29,8 +29,33 @@ final class NativeSession implements SessionStore
         // A session that cannot start, such as one whose lock another request holds, fails the request whatever
         // error_reporting() keeps: the request would otherwise answer with an empty session and lose what it
         // stores (HY-115).
-        if (!session_start(self::options($https))) {
+        $started = false;
+        try {
+            $started = session_start(self::options($https));
+        } finally {
+            if (!$started) {
+                self::withdrawCookie($name);
+            }
+        }
+        if (!$started) {
             throw new \RuntimeException('hyper: the session could not start');
+        }
+    }
+
+    /**
+     * Removes the session cookie that a failed start queued. With strict mode PHP takes an identifier that the handler
+     * could not validate, also for a lost connection, as unknown: it queues the cookie of a new identifier before it
+     * reads, and the client would lose its session with the failed request (HY-115).
+     */
+    private static function withdrawCookie(string $name): void
+    {
+        $others = array_filter(
+            headers_list(),
+            static fn (string $line): bool => stripos($line, 'Set-Cookie:') === 0 && !str_starts_with($line, "Set-Cookie: {$name}="),
+        );
+        header_remove('Set-Cookie');
+        foreach ($others as $line) {
+            header($line, false);
         }
     }
 

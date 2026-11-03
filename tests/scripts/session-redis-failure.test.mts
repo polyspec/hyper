@@ -11,7 +11,7 @@ import { createClient } from 'redis';
 
 import { stopServers } from '../../scripts/board-servers.mts';
 import { requireBuilt } from './requires.mts';
-import { post, shareAcross, startBoards } from './session-board.mts';
+import { assertKeepsCookie, post, shareAcross, startBoards } from './session-board.mts';
 import { EXTENSION, holding, redisRun, startRedis, stopRedis } from './session-redis-server.mts';
 import { IDENTIFIER, NAMES, run as runWorker, type Server } from './session-workers.mts';
 
@@ -87,6 +87,10 @@ test('the three HTTP servers share a session by its cookie, answer status 500 wh
       const response: Response = await fetch(`${board.url}/board/create`, { headers: { cookie: session.cookie } });
       assert.equal(response.status, 500, `${board.name} answers 500 without Redis`);
       assert.equal(await response.text(), 'Internal Server Error', `${board.name} tells no detail`);
+      assertKeepsCookie(response, board.name);
+      const anonymous: Response = await fetch(`${board.url}/board/create`);
+      assert.equal(anonymous.status, 500, `${board.name} answers 500 to a new client without Redis`);
+      assertKeepsCookie(anonymous, `${board.name} to a new client`);
     }
 
     state.server = await startRedis(state.directory, state.port);

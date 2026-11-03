@@ -48,6 +48,12 @@ export const tokenOf = (body: string): string => {
   return String(token);
 };
 
+// Fails when a response sets the session cookie: an answer of status 500 must leave the session of the client as it is.
+export const assertKeepsCookie = (response: Response, who: string): void => {
+  const set = response.headers.getSetCookie().filter((line) => line.startsWith('hy-session='));
+  assert.deepEqual(set, [], `${who} answers status ${String(response.status)} without a new session cookie`);
+};
+
 // Posts the form of the board with the cookie and the token of a session.
 export const post = (board: Board, cookie: string, token: string, title: string): Promise<Response> => fetch(`${board.url}/board/create`, {
   method: 'POST',
