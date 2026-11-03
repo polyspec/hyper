@@ -80,6 +80,40 @@ class RedisSessionsTest(unittest.TestCase):
         )
         self.assertNotIn(LOCK, self.server.keys)
 
+    def test_setup_runs_before_the_first_command_of_an_opened_session(self) -> None:
+        calls: list[str] = []
+        sessions = RedisSessions(
+            self.server.command, setup=lambda: calls.append(str(self.server.commands))
+        )
+        sessions._open(IDENTIFIER)._close()
+        self.assertEqual(["[]"], calls)
+
+    def test_setup_runs_before_a_new_session_is_written(self) -> None:
+        calls: list[str] = []
+        sessions = RedisSessions(
+            self.server.command, setup=lambda: calls.append(str(self.server.commands))
+        )
+        session = sessions._open(None)
+        self.assertEqual([], calls)
+        session.set("n", 1)
+        session._close()
+        self.assertEqual(["[]"], calls)
+        self.assertEqual(["SETEX"], self.server.commands)
+
+    def test_a_request_without_a_session_does_not_run_setup(self) -> None:
+        calls: list[int] = []
+        sessions = RedisSessions(self.server.command, setup=lambda: calls.append(1))
+        sessions._open(None)._close()
+        self.assertEqual([], calls)
+
+    def test_a_setup_that_fails_fails_the_request_before_any_command(self) -> None:
+        def fails() -> None:
+            raise ConnectionError("no Sentinel names the primary")
+
+        with self.assertRaises(ConnectionError):
+            RedisSessions(self.server.command, setup=fails)._open(IDENTIFIER)
+        self.assertEqual([], self.server.commands)
+
     def test_a_reply_that_is_not_bytes_fails_and_releases_the_lock(self) -> None:
         def text(name: str, *args: object) -> object:
             reply = self.server.command(name, *args)

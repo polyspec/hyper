@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: c1f1cfd3c1f00baee75ff1d01a7a0634153aaca460b938742de010651b2a498c -->
+<!-- source-sha256: 84de4970a30b45462e83dc55e95b9f612241fec3b8d57b6cc6cb47ab83348efc -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- Redis Sentinel의 Python 서버가 승격 뒤 session을 나누지 않는다. `RedisSessions`의 `setup` 옵션이 session이 있는 요청의 첫 command 전에 Sentinel에 묻는다. 이전에는 redis-py의 pool에 있는 connection이 replica가 될 때까지 쓰기를 받는 former primary에 남아, 새 primary의 session에 status 403으로 답했다. 테스트는 primary가 실행되는 동안 replica를 승격하고 그 구간에 세 서버가 새 session을 공유하는지 확인한다(H27.77).
 - docs/operations/benchmark.md는 2026-10-02의 PHP 8.5.10 기록 대신 PHP 8.4.27에서 `.github/workflows/bench.yml`을 두 번 실행한 기록을 담는다. template 0.0.20의 네이티브 확장은 1,000행을 29.6 ms에, generated 프로그램은 15.2 ms에 렌더하고, SSR 스크립트와 CSR 셸은 크기 한계를 넘는다(H26.9).
 - make bench-server가 깨끗한 checkout에 없던 asset을 build한다. 그전에는 모든 요청이 status 500으로 응답했다. 서버 benchmark는 요청이 측정 대상과 다른 status로 응답하면 실패한다(H26.9-2).
 - `.github/workflows/bench.yml`이 수동 실행에서 make bench와 make bench-sessions를 한 job에서 차례로 실행하고 각 target의 report를 upload하며, 이는 검사와 release 밖에 있다. 서버 benchmark는 `POST /board/create`에 CSRF token을 보내 요청이 status 422로 응답하고, 브라우저 benchmark는 페이지 오류, console 오류와 실패한 요청을 출력한다(H26.9-1).

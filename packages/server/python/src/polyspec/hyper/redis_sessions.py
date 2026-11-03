@@ -32,7 +32,8 @@ class SessionLockError(RuntimeError):
 class RedisSessions:
     """Opens one session store per request (HY-115). `lock_expire`, `lock_retries` and `lock_wait` have the meaning of
     `redis.session.lock_expire`, `redis.session.lock_retries` and `redis.session.lock_wait_time` of phpredis, in seconds;
-    every server of one Redis server gives them the same values, and `lock_expire` is longer than any request."""
+    every server of one Redis server gives them the same values, and `lock_expire` is longer than any request. `setup`
+    runs before the first command of a request that has a session, so a client can find its server for that request."""
 
     def __init__(
         self,
@@ -42,6 +43,7 @@ class RedisSessions:
         lock_expire: int = 30,
         lock_retries: int = 100,
         lock_wait: float = 0.02,
+        setup: Optional[Callable[[], object]] = None,
     ):
         if lifetime <= 0:
             raise ValueError("session lifetime must be a positive number of seconds")
@@ -53,6 +55,12 @@ class RedisSessions:
         self.lock_expire = lock_expire
         self.lock_retries = lock_retries
         self.lock_wait = lock_wait
+        self.setup = setup
+
+    def _prepare(self) -> None:
+        """Runs the setup of a request that is about to send its first command."""
+        if self.setup is not None:
+            self.setup()
 
     def _open(self, cookie: Optional[str]) -> "RedisSession":
         """Returns the store of a request with the value of its session cookie; it holds the lock of the session until
@@ -60,6 +68,7 @@ class RedisSessions:
         identifier = _accepted(cookie)
         if identifier is None:
             return RedisSession(self, None, None, None)
+        self._prepare()
         key = self._key(identifier)
         if not self.command("EXISTS", key):
             return RedisSession(self, None, None, None)
@@ -132,6 +141,8 @@ class RedisSession(RecordSession):
             record = self._serialized()
             if record is None or self._id is None:
                 return
+            if held is None:
+                sessions._prepare()
             key = sessions._key(self._id)
             if not self._made and record == self._read:
                 sessions.command("EXPIRE", key, sessions.lifetime)

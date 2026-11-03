@@ -69,7 +69,7 @@ response = app.handle(request, ArraySession())
   each session in the file `sess_<id>` in the form of the files handler of PHP and holds `flock` on it, so the PHP,
   Node and Python servers and their processes that share the directory share its sessions and run the requests of one
   session one after another (HY-104). `redis_sessions.RedisSessions` keeps each
-  session in a Redis server with the protocol of phpredis, from a command function of a client of the application that returns bytes (HY-115).
+  session in a Redis server with the protocol of phpredis, from a command function of a client of the application that returns bytes (HY-115); its `setup` option runs before the first command of a request that has a session, which keeps a Sentinel client on the current primary.
 
 ```python
 from polyspec.hyper.file_sessions import FileSessions

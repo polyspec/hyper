@@ -37,12 +37,12 @@ export async function startBoards(children: ChildProcess[], env: Record<string, 
   return [{ name: 'php', url: php.url }, { name: 'node', url: node.url }, { name: 'python', url: python.url }];
 }
 
-const cookieOf = (response: Response): string => {
+export const cookieOf = (response: Response): string => {
   const cookie = response.headers.getSetCookie().find((line) => line.startsWith('hy-session='));
   assert.notEqual(cookie, undefined, 'the response sets the session cookie');
   return String(cookie).split(';')[0] ?? '';
 };
-const tokenOf = (body: string): string => {
+export const tokenOf = (body: string): string => {
   const token = /name="_csrf" value="([^"]+)"/.exec(body)?.[1];
   assert.notEqual(token, undefined, 'the form holds the CSRF token');
   return String(token);

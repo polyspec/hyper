@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- A Python server on Redis Sentinel no longer splits a session after a promotion: the `setup` option of RedisSessions asks Sentinel before the first command of a request that has a session, where a pooled connection of redis-py stayed on the former primary, which accepts writes until it becomes a replica, and answered status 403 for the sessions of the new primary. A test promotes the replica while the primary runs and shares new sessions across the three servers in that window (H27.77).
 - docs/operations/benchmark.md holds the record of two runs of `.github/workflows/bench.yml` on PHP 8.4.27 in place of the PHP 8.5.10 record of 2026-10-02: the native extension of template 0.0.20 renders 1,000 rows in 29.6 ms and the generated program in 15.2 ms, and the SSR script and the CSR shell exceed their size limits (H26.9).
 - make bench-server builds the assets, which a clean checkout lacked, so every request answered status 500; the server benchmark fails when a request answers another status than the one it measures (H26.9-2).
 - `.github/workflows/bench.yml` runs make bench and make bench-sessions one after another in one job on a manual run and uploads the report of each target, outside the checks and the release. The server benchmark sends a CSRF token with `POST /board/create`, so the request answers status 422, and the browser benchmark prints page errors, console errors and failed requests (H26.9-1).

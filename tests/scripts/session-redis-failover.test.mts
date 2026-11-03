@@ -12,7 +12,7 @@ import { setTimeout as delay } from 'node:timers/promises';
 import { createClient } from 'redis';
 
 import { stopServers } from '../../scripts/board-servers.mts';
-import { post, requireServers, shareAcross, startBoards } from './session-board.mts';
+import { cookieOf, post, requireServers, shareAcross, startBoards, tokenOf, type Board } from './session-board.mts';
 import { ask, certificates, EXTENSION, freePort, startRedis, stopRedis, until, type Secure } from './session-redis-server.mts';
 import { COMMANDS, IDENTIFIER, NAMES, ROOT, run as runWorker, type Server } from './session-workers.mts';
 
@@ -130,6 +130,26 @@ class Topology {
     return old;
   }
 
+  // Asks the Sentinels to promote the replica while the primary keeps running, and resolves when each of them names the replica.
+  // The Sentinels make the former primary a replica some seconds later, so until then it still accepts writes.
+  async switchOver(): Promise<Node> {
+    const old = await this.primary();
+    await until(async () => String(await this.ask(this.sentinels[0] ?? '', 'SENTINEL', 'FAILOVER', 'hyper')) === 'OK');
+    for (const port of this.sentinels) {
+      await until(async () => {
+        const named = await this.ask(port, 'SENTINEL', 'GET-MASTER-ADDR-BY-NAME', 'hyper');
+        return Array.isArray(named) && String(named[1]) !== old.port;
+      });
+    }
+    return old;
+  }
+
+  // Returns whether a server still answers as a primary.
+  async isPrimary(node: Node): Promise<boolean> {
+    const role = await this.ask(node.port, 'ROLE');
+    return Array.isArray(role) && role[0] === 'master';
+  }
+
   // Waits until the replica holds what the primary acknowledged.
   async replicated(node: Node): Promise<void> {
     assert.equal(await this.ask(node.port, 'WAIT', '1', '10000'), 1, 'the replica acknowledged');
@@ -221,6 +241,34 @@ test('the HTTP servers answer status 500 during a failover and go on with the se
       assert.equal(response.status, 303, `${board.name} goes on with the session and its token after the failover`);
     }
     await shareAcross(boards);
+  } finally {
+    await stopServers(children);
+  }
+});
+
+test('the servers share a new session on the new primary while the former primary still accepts writes (HY-115)', { timeout: 180_000 }, async () => {
+  const redis = await topology('switch');
+  const children: ChildProcess[] = [];
+  const addresses = redis.sentinels.map((port) => `127.0.0.1:${port}`).join(',');
+  try {
+    const boards = await startBoards(children, { BOARD_DB: path.join(directory, 'switch.sqlite'), BOARD_SENTINEL: addresses }, []);
+    // Each server holds connections to the primary before it is replaced.
+    await shareAcross(boards);
+    await redis.replicated(await redis.primary());
+    const old = await redis.switchOver();
+    const pairs: [Board, Board][] = boards.flatMap((first) => boards.filter((second) => second !== first).map((second): [Board, Board] => [first, second]));
+    for (const [first, second] of pairs) {
+      for (;;) {
+        const opened = await fetch(`${first.url}/board/create`);
+        assert.equal(opened.status, 200, `${first.name} opens the form`);
+        const cookie = cookieOf(opened);
+        const token = tokenOf(await opened.text());
+        const accepted = (await post(second, cookie, token, `${first.name} ${second.name}`)).status === 303;
+        assert.ok(await redis.isPrimary(old), `${second.name} ${accepted ? 'accepted' : 'refused'} the session of ${first.name} only after the former primary became a replica`);
+        if (accepted) break;
+        await delay(50);
+      }
+    }
   } finally {
     await stopServers(children);
   }

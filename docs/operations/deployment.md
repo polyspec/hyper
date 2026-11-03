@@ -119,12 +119,15 @@ sentinel = Sentinel(
     socket_timeout=1,
     socket_connect_timeout=1,
 )
-RedisSessions(sentinel.master_for("hyper").execute_command)
+primary = sentinel.master_for("hyper")
+RedisSessions(primary.execute_command, setup=primary.connection_pool.get_master_address)
 ```
+
+A connection of redis-py asks Sentinel only when it connects, so a pooled connection stays on the former primary, which accepts writes for some seconds after a promotion. `setup` asks Sentinel before the first command of each request that has a session and closes the idle connections when the answer changes, as `RedisSentinelSessions` does for the PHP server, and a request without a session asks nothing. Without `setup`, processes that use the former primary and processes that use the new one split a session until the former primary becomes a replica.
 
 A request answers status 500 from the failure of the primary until the Sentinels have promoted a replica, and the session goes on after it. A request fails when no Sentinel names the primary. Use at least three Sentinels on separate failure domains.
 
-Replication is asynchronous, so a failover loses what the primary acknowledged and the replica had not received: such a session returns to an earlier record or, when it was new, is gone and the next request starts a new one. A lock can be lost the same way: the next request can then start while the holder still runs, and the holder writes nothing, because its lock no longer matches. `min-replicas-to-write` and `min-replicas-max-lag` of Redis make the primary refuse writes while no replica is current, which narrows the loss and answers status 500 instead; hyper does not test them. `tests/scripts/session-redis-failover.test.mts` kills the primary under the three servers and checks that what the replica acknowledged with `WAIT` survives.
+Replication is asynchronous, so a failover loses what the primary acknowledged and the replica had not received: such a session returns to an earlier record or, when it was new, is gone and the next request starts a new one. A request that started on the former primary before the promotion can write there, and that write is lost in the same way. A lock can be lost the same way: the next request can then start while the holder still runs, and the holder writes nothing, because its lock no longer matches. `min-replicas-to-write` and `min-replicas-max-lag` of Redis make the primary refuse writes while no replica is current, which narrows the loss and answers status 500 instead; hyper does not test them. `tests/scripts/session-redis-failover.test.mts` kills the primary under the three servers and checks that what the replica acknowledged with `WAIT` survives, and promotes the replica while the primary runs and checks that the servers share a new session while the former primary still accepts writes.
 
 ### Redis Cluster
 

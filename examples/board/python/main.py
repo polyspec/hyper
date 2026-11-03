@@ -80,7 +80,10 @@ def session_store() -> FileSessions | RedisSessions:
             for host, port in (item.split(":") for item in sentinels.split(","))
         ]
         sentinel = Sentinel(nodes, socket_timeout=1, socket_connect_timeout=1)
-        return RedisSessions(sentinel.master_for("hyper").execute_command)
+        primary = sentinel.master_for("hyper")
+        return RedisSessions(
+            primary.execute_command, setup=primary.connection_pool.get_master_address
+        )
     url = os.environ.get("BOARD_REDIS") or ""
     if url != "":
         import redis

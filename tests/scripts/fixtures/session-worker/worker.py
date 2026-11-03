@@ -65,6 +65,7 @@ def stores(directory):
         lock_retries=int(os.environ.get("HYPER_SESSION_RETRIES", "1000000")),
         lock_wait=0.002,
         lock_expire=int(os.environ.get("HYPER_SESSION_EXPIRE", "30")),
+        setup=None if sentinels is None else client.connection_pool.get_master_address,
     )
 
 

@@ -1,5 +1,5 @@
 <!-- doc-id: deployment -->
-<!-- source-sha256: cf6b80af55630be476feeac1382c6a68f8e704ecbed40ed0d71b4881dbf31c2b -->
+<!-- source-sha256: 0a377daacea34ac7bf6dd391e26f1128e5cd144f49a3f3e19b86a316acea430c -->
 # 배포
 
 [English](deployment.md).
@@ -130,12 +130,15 @@ sentinel = Sentinel(
     socket_timeout=1,
     socket_connect_timeout=1,
 )
-RedisSessions(sentinel.master_for("hyper").execute_command)
+primary = sentinel.master_for("hyper")
+RedisSessions(primary.execute_command, setup=primary.connection_pool.get_master_address)
 ```
+
+redis-py의 connection은 연결할 때만 Sentinel에 묻는다. 그래서 pool에 있는 connection은 former primary에 남고, former primary는 승격 뒤 몇 초 동안 쓰기를 받는다. `setup`은 session이 있는 요청마다 첫 command 전에 Sentinel에 묻고, 답이 바뀌면 idle connection을 닫는다. PHP 서버의 `RedisSentinelSessions`와 같은 동작이며, session이 없는 요청은 아무것도 묻지 않는다. `setup`이 없으면 former primary를 쓰는 process와 새 primary를 쓰는 process가 former primary가 replica가 될 때까지 한 session을 나눠 갖는다.
 
 Primary가 실패한 때부터 Sentinel이 replica를 승격할 때까지 요청은 status 500으로 답하고, 그 뒤 session은 이어진다. 어떤 Sentinel도 primary를 알려 주지 못하면 요청은 실패한다. Sentinel은 서로 다른 장애 영역에 셋 이상 둔다.
 
-복제는 비동기이므로, primary가 확인 응답했지만 replica가 받지 못한 것은 failover에서 사라진다. 그런 session은 이전 record로 돌아가거나, 새 session이었다면 사라져 다음 요청이 새로 시작한다. 잠금도 같은 방식으로 사라질 수 있다. 그러면 쥐고 있던 요청이 아직 실행되는 동안 다음 요청이 시작될 수 있고, 쥐고 있던 요청은 잠금이 맞지 않아 아무것도 쓰지 않는다. Redis의 `min-replicas-to-write`와 `min-replicas-max-lag`는 최신 replica가 없는 동안 primary가 쓰기를 거부하게 하여 손실을 줄이고 대신 status 500으로 답하게 한다. hyper는 이 설정을 테스트하지 않는다. `tests/scripts/session-redis-failover.test.mts`는 세 서버가 쓰는 도중 primary를 kill하고, replica가 `WAIT`로 확인 응답한 것이 남는지 확인한다.
+복제는 비동기이므로, primary가 확인 응답했지만 replica가 받지 못한 것은 failover에서 사라진다. 그런 session은 이전 record로 돌아가거나, 새 session이었다면 사라져 다음 요청이 새로 시작한다. 승격 전에 former primary에서 시작한 요청이 그곳에 쓸 수 있으며, 그 쓰기도 같은 방식으로 사라진다. 잠금도 같은 방식으로 사라질 수 있다. 그러면 쥐고 있던 요청이 아직 실행되는 동안 다음 요청이 시작될 수 있고, 쥐고 있던 요청은 잠금이 맞지 않아 아무것도 쓰지 않는다. Redis의 `min-replicas-to-write`와 `min-replicas-max-lag`는 최신 replica가 없는 동안 primary가 쓰기를 거부하게 하여 손실을 줄이고 대신 status 500으로 답하게 한다. hyper는 이 설정을 테스트하지 않는다. `tests/scripts/session-redis-failover.test.mts`는 세 서버가 쓰는 도중 primary를 kill하고, replica가 `WAIT`로 확인 응답한 것이 남는지 확인하고, primary가 실행되는 동안 replica를 승격하여 former primary가 아직 쓰기를 받는 동안 서버들이 새 session을 공유하는지 확인한다.
 
 ### Redis Cluster
 
