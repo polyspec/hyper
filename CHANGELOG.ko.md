@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 81573b0bc44804d77a29f33d011bef9d06bbdf8ac1f17eaecdf6f4e97d95885e -->
+<!-- source-sha256: 8366089da5dbbe7d2ead04899e9832fe26708a74b357cd635a7b1075d1b6aed4 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- docs/operations/deployment.md에 phpredis의 persistent 연결은 TLS 인증서를 연결을 열 때만 검증하므로 바뀐 CA는 php-fpm reload 뒤에 적용되고, 실행 중인 worker는 잘못된 CA를 알아채지 못한다고 적는다(H27.81).
 
 ## 0.0.31
 - H27.79 다음에 0.0.31을 릴리즈한다. config/release.json의 모든 manifest, polyspec/hyper-server와 @polyspec/hyper-client의 정확한 요구 버전, npm, Composer, uv가 쓴 lock이 0.0.31을 가진다(H27.80).

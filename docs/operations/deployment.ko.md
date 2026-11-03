@@ -1,5 +1,5 @@
 <!-- doc-id: deployment -->
-<!-- source-sha256: 0a377daacea34ac7bf6dd391e26f1128e5cd144f49a3f3e19b86a316acea430c -->
+<!-- source-sha256: d61fe2e9843765a24b5c52b604aecb1edc2eced1e8dcab43d19ebeaf9f2eeb2d -->
 # 배포
 
 [English](deployment.md).
@@ -94,6 +94,8 @@ redis.session.lock_wait_time = 20000
 ```
 
 `persistent=1`은 PHP process마다 연결 하나를 유지한다. 이 값이 없으면 요청마다 TCP 연결을 열고, 닫힌 연결이 TIME_WAIT 동안 client의 port를 잡는다. 지속적인 부하에서는 port가 고갈되어 요청이 `Redis connection not available`로 실패한다.
+
+Persistent 연결은 PHP process가 살아 있는 동안 유지되고, phpredis 6.3.0은 scheme, host, port로 이를 재사용한다. 재사용할 때마다 AUTH를 다시 보내므로 잘못된 비밀번호는 실패하지만, TLS 인증서는 연결을 열 때만 검증한다. 따라서 바뀐 CA나 다른 stream 옵션은 새 연결에만 적용되므로, 이런 변경 뒤에는 php-fpm을 reload한다. Node나 Python 서버가 설정을 바꾸려고 재시작하는 것과 같다. 실행 중인 worker는 잘못된 CA를 알아채지 못하고, 새 연결을 열 때 실패가 드러난다. CA 변경은 reload 뒤에 확인한다.
 
 Node와 Python 서버는 `RedisSessions`에 client의 command 함수(Python은 `decode_responses=False`인 `redis.Redis(...).execute_command`)와 같은 값을 준다. `lockExpire` 30, `lockRetries` 100, `lockWait` 20밀리초다(Python은 `lock_expire`, `lock_retries`, `lock_wait` 0.02초). `lock_expire`는 어떤 요청보다 길어야 하고, 없으면 끝난 process가 `max_execution_time`까지, 그 값이 0이면 영원히 잠금을 잡는다. 재시도 허용보다 오래 기다린 요청은 실패하므로, 한 session의 요청이 잠금을 오래 잡으면 재시도 값을 올린다. 연결이 끊긴 동안 명령을 쌓아 두는 client는 다시 연결될 때까지 요청을 붙잡으므로, Node 서버는 node-redis를 `disableOfflineQueue: true`와 `error` listener로 만들고 Python 서버는 `redis.Redis`에 `socket_timeout`을 정한다. 그러면 Redis 서버가 돌아올 때까지 요청은 status 500으로 응답한다. 재시작으로 session이 끝나면 안 되면 append-only file로 보관한다. 공유 session의 값은 template data model의 값이며, `stdClass` 외의 class 객체를 담은 record는 Node와 Python 서버에서 요청을 실패시킨다.
 

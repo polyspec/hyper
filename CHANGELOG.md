@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- docs/operations/deployment.md states that a persistent connection of phpredis verifies the TLS certificate only when it opens, so a changed CA applies after php-fpm reloads, and that a running worker does not detect a wrong CA (H27.81).
 
 ## 0.0.31
 - Release 0.0.31 after H27.79: every manifest of config/release.json, the exact requirements of polyspec/hyper-server and @polyspec/hyper-client and the locks that npm, Composer and uv wrote hold 0.0.31 (H27.80).
