@@ -116,3 +116,21 @@ test('a process of the PHP server with a persistent connection runs its requests
   assert.deepEqual(JSON.parse(await runWorker('php', state.directory, environment(), 'read', '["n","php"]')), [100, 100]);
   assert.equal(await redis.exists(LOCK), 0);
 });
+
+test('a persistent connection of the PHP server authenticates again on each reuse, so a changed password fails while the connection stays open (HY-115)', { timeout: 120_000 }, async () => {
+  await redis.sendCommand(['ACL', 'SETUSER', 'hyper', 'on', '>before', '~*', '&*', '+@all']);
+  try {
+    const env = { ...environment(), HYPER_SESSION_PERSISTENT: '1', HYPER_SESSION_RETRIES: '5', HYPER_SESSION_USER: 'hyper', HYPER_SESSION_PASSWORD: 'before' };
+    const writer = runWorker('php', state.directory, env, 'count', '10000000', 'php');
+    const failed = assert.rejects(writer, 'the process fails once its password is refused');
+    for (;;) {
+      if (Number(/"n";i:(\d+);/.exec(String(await redis.get(KEY)))?.[1] ?? 0) >= 5) break;
+      await delay(20);
+    }
+    // Changing a password keeps the open connections of Redis, so only a new AUTH can notice it.
+    await redis.sendCommand(['ACL', 'SETUSER', 'hyper', 'resetpass', '>after']);
+    await failed;
+  } finally {
+    await redis.sendCommand(['ACL', 'DELUSER', 'hyper']);
+  }
+});
