@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 095daf27432e2a42d5e4c06561347fcd518281f66fb06ffd9b66e8641ce72053 -->
+<!-- source-sha256: 81f96516961aa8cf09c9eb153575da4b5973fbcd2a3709212413ac096dd7c11f -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- PHP, Node, Python 서버가 phpredis 6.3.0의 프로토콜로 한 Redis 서버의 session을 공유한다. Node와 Python 서버의 RedisSessions는 key PHPREDIS_SESSION:<id>를 잠금 <key>_LOCK 아래 두고, 잠금이 만료된 holder는 아무것도 쓰지 않는다 (H27.70).
 - PHP, Node, Python 서버가 한 디렉터리의 session을 공유한다. session은 php_serialize 형식의 파일 sess_<id>이고, 각 서버는 session을 열 때부터 닫을 때까지 그 파일에 flock을 잡는다. Node 서버는 node:ffi로 잡고, Python과 Node 서버는 php-serialize release v0.0.1의 package를 쓰며, 요청이 정하지 않은 값은 byte를 유지한다 (H27.69).
 - make node-server는 board Node 서버를 esbuild --platform=node --packages=external로 묶어 Node가 node_modules의 package를 불러온다. 전에는 bundle이 proper-lockfile만 external로 두었다. Node 서버의 README는 애플리케이션의 Node 서버 bundle이 node_modules를 external로 둔다고 기술한다(H27.68).
 

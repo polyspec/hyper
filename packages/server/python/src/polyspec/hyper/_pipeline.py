@@ -14,6 +14,7 @@ from typing import Callable, Optional
 
 from .app import App
 from .file_sessions import FileSessions, _cookie_header, _cookie_name
+from .redis_sessions import RedisSessions
 from .reply import Reply
 from .request import Request
 from .response import Response
@@ -189,7 +190,10 @@ def plain_500(app: App) -> Response:
 
 
 def answer_with(
-    app: App, sessions: FileSessions, around: Optional[Callable], exchange: Exchange
+    app: App,
+    sessions: FileSessions | RedisSessions,
+    around: Optional[Callable],
+    exchange: Exchange,
 ) -> Response:
     """Answers the request of the exchange through the request hook `around` (HY-97) and the application:
     `around` is None or it receives the request and an `answer` function; `answer` opens the session of the

@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import { serialize, UnserializeError } from '@polyspec/php-serialize';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { FileSessions } from '../src/index.js';
+import { sessionCookie, sessionCookieName } from '../src/session-record.js';
 import { present } from './support.js';
 
 let directory: string;
@@ -182,10 +183,10 @@ describe('FileSessions', () => {
   });
 
   it('names the session cookie hy-session over HTTP and __Host-hy-session over HTTPS (HY-45)', () => {
-    expect(FileSessions.cookieName(false)).toBe('hy-session');
-    expect(FileSessions.cookieName(true)).toBe('__Host-hy-session');
-    expect(sessions.cookie('a'.repeat(64), false)).toBe(`hy-session=${'a'.repeat(64)}; path=/; HttpOnly; SameSite=Lax`);
-    expect(sessions.cookie('a'.repeat(64), true)).toBe(`__Host-hy-session=${'a'.repeat(64)}; path=/; secure; HttpOnly; SameSite=Lax`);
+    expect(sessionCookieName(false)).toBe('hy-session');
+    expect(sessionCookieName(true)).toBe('__Host-hy-session');
+    expect(sessionCookie('a'.repeat(64), false)).toBe(`hy-session=${'a'.repeat(64)}; path=/; HttpOnly; SameSite=Lax`);
+    expect(sessionCookie('a'.repeat(64), true)).toBe(`__Host-hy-session=${'a'.repeat(64)}; path=/; secure; HttpOnly; SameSite=Lax`);
   });
 
   it('renews a session: a new identifier with the same values, and no file of the old one (HY-72)', async () => {

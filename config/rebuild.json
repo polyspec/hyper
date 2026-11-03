@@ -98,6 +98,10 @@
       "kind": "policy",
       "reason": "the template rules of hyper (HC-6, HY-3, HY-30, HY-75) in packages/build/lib/template-rules.mjs; @polyspec/template parses the templates"
     },
+    "scripts/install-redis.mts": {
+      "kind": "ecosystem",
+      "tool": "the make of the Redis release archive, checked by its sha256, and PIE build the Redis server and phpredis"
+    },
     "scripts/json.mts": {
       "kind": "policy",
       "reason": "polyspec's rule that code reads a JSON value with what it expects and a failure that names its place, instead of asserting the type away (K157)"

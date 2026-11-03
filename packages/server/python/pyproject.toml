@@ -16,6 +16,10 @@ dependencies = [
     "polyspec-template @ https://github.com/polyspec/template/releases/download/v0.0.20/polyspec_template-0.0.20-py3-none-any.whl#sha256=dbdeb77ee341c378c4b4262deca2860d30f805924d16274ed3341e73fe962e7b",
 ]
 
+# The client of the session tests against a real Redis server (HY-115); an application names its own client.
+[dependency-groups]
+dev = ["redis==8.1.0"]
+
 [tool.setuptools]
 package-dir = { "" = "src" }
 

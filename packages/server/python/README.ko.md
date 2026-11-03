@@ -1,5 +1,5 @@
 <!-- doc-id: hyper-server-python-readme -->
-<!-- source-sha256: 836cac72f066f792141e7ef52e853948479120cfdba4dee0d157b25ce2efe72b -->
+<!-- source-sha256: f8cfd1ac7942ec75b8a2f69195eecf49bf6c40924407419ae42f8f9fae3e26f9 -->
 # polyspec-hyper-server
 
 [English](README.md).
@@ -65,7 +65,8 @@ response = app.handle(request, ArraySession())
   `ConnectionResetError`, `ConnectionAbortedError`로 실패하면 연결 끊김 hook을 호출하고(HY-67), 선택의 public
   디렉터리 파일을 PHP built-in server가 document root를 서비스하듯이 서비스한다. `FileSessions`는 세션마다
   파일 `sess_<id>`에 PHP files handler의 형식으로 저장하고 그 파일에 `flock`을 잡으므로, 디렉터리를 공유하는 PHP, Node,
-  Python 서버와 그 process들은 session을 공유하고 한 session의 요청을 차례로 실행한다(HY-104).
+  Python 서버와 그 process들은 session을 공유하고 한 session의 요청을 차례로 실행한다(HY-104). `redis_sessions.RedisSessions`는 각 session을
+  byte를 돌려주는 애플리케이션 client의 command 함수로 phpredis의 프로토콜에 따라 Redis 서버에 저장한다(HY-115).
 
 ```python
 from polyspec.hyper.file_sessions import FileSessions

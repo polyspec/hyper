@@ -22,6 +22,52 @@ final class NativeSessionTest extends TestCase
         self::assertSame(1, $store->get('a'));
     }
 
+    /** HY-115: phpredis refuses a lock that another request holds, and PHP then starts no session. */
+    #[RunInSeparateProcess]
+    public function testFailsTheRequestWhenTheSessionCannotStart(): void
+    {
+        session_set_save_handler(new class () implements \SessionHandlerInterface {
+            public function open(string $path, string $name): bool
+            {
+                return true;
+            }
+
+            public function close(): bool
+            {
+                return true;
+            }
+
+            public function read(string $id): string|false
+            {
+                return false;
+            }
+
+            public function write(string $id, string $data): bool
+            {
+                return true;
+            }
+
+            public function destroy(string $id): bool
+            {
+                return true;
+            }
+
+            public function gc(int $max_lifetime): int
+            {
+                return 0;
+            }
+        });
+        set_error_handler(static fn (): bool => true);
+        try {
+            (new NativeSession(false))->set('a', 1);
+            self::fail('the request went on without its session');
+        } catch (\RuntimeException $failure) {
+            self::assertSame('hyper: the session could not start', $failure->getMessage());
+        } finally {
+            restore_error_handler();
+        }
+    }
+
     #[RunInSeparateProcess]
     public function testNamesTheCookieHySessionOverHttp(): void
     {

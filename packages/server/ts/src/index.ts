@@ -1,5 +1,7 @@
 export { App, type Action, type AppOptions, type Choice, type ClientRendering, type Context, type Handlers, type Loader, type RouteHandlers, type RouteRegionLoader } from './app.js';
 export { FileSession, FileSessions, type FileSessionsOptions } from './file-sessions.js';
+export { RecordSession } from './session-record.js';
+export { RedisSession, RedisSessions, SessionLockError, type RedisCommand, type RedisSessionsOptions } from './redis-sessions.js';
 export { type AroundHook, type Listener, type ServerOptions, type WriteHook } from './http.js';
 export { Reply } from './reply.js';
 export { Request, type RequestInit } from './request.js';

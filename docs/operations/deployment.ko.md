@@ -1,5 +1,5 @@
 <!-- doc-id: deployment -->
-<!-- source-sha256: f60a618856198970acdc3919d58246aaa5d39adfe1058d411b3aa8d2e7f337fb -->
+<!-- source-sha256: 7f99914ad51fdbc24354dd7f008da6dd571f489c06db3a45c9a43c95bc5b1899 -->
 # 배포
 
 [English](deployment.md).
@@ -75,3 +75,22 @@ PHP는 기본 경로 없이 실행한다. 응답에는 `Vary: Accept, HX-Request
 | `http://127.0.0.1:8082/api/board` | `BOARD_BASE_PATH=/api`로 실행한 PHP |
 | `http://127.0.0.1:8081/board` | 정적 셸: `scripts/serve-edge.mts`가 `build/csr/`의 파일을 반환하고, 그 밖의 모든 경로에는 셸을 반환하며, `/api/*`를 포트 8082로 전달한다 |
 | `http://127.0.0.1:8081/compare?ssr=http://127.0.0.1:8080` | 비교 페이지: 두 형태를 두 프레임에 띄우고 두 body의 비교 결과를 표시한다. 개발 도구이며 배포에 포함하지 않는다. |
+
+## 서버들이 공유하는 session
+
+PHP, Node, Python 서버는 한 디렉터리(HY-104) 또는 한 Redis 서버(HY-115)에서 session을 공유한다. 한 배포의 모든 서버는 같은 곳을 쓴다.
+
+디렉터리를 쓰면 PHP 서버는 `session.save_path`를 그 디렉터리로 정하며, 그 파일 시스템의 `flock`은 공유하는 모든 서버에 미쳐야 한다. Node와 Python 서버는 `FileSessions`에 그 디렉터리를 준다. Node 서버는 Node의 experimental module인 `node:ffi`로 `flock`을 호출하며, 이 module은 경고를 한 번 출력하고, `--permission`으로 시작한 process에는 `--allow-ffi`가 필요하다.
+
+Redis를 쓰면 PHP 서버는 phpredis 6.3.0을 불러오고 다음을 정한다.
+
+```ini
+session.save_handler = redis
+session.save_path = "tcp://redis:6379"
+redis.session.locking_enabled = 1
+redis.session.lock_expire = 30
+redis.session.lock_retries = 100
+redis.session.lock_wait_time = 20000
+```
+
+Node와 Python 서버는 `RedisSessions`에 client의 command 함수(Python은 `decode_responses=False`인 `redis.Redis(...).execute_command`)와 같은 값을 준다. `lockExpire` 30, `lockRetries` 100, `lockWait` 20밀리초다(Python은 `lock_expire`, `lock_retries`, `lock_wait` 0.02초). `lock_expire`는 어떤 요청보다 길어야 하고, 없으면 끝난 process가 `max_execution_time`까지, 그 값이 0이면 영원히 잠금을 잡는다. 재시도 허용보다 오래 기다린 요청은 실패하므로, 한 session의 요청이 잠금을 오래 잡으면 재시도 값을 올린다. 공유 session의 값은 template data model의 값이며, `stdClass` 외의 class 객체를 담은 record는 Node와 Python 서버에서 요청을 실패시킨다.

@@ -17,6 +17,7 @@ from typing import Optional
 
 from .app import App
 from .file_sessions import FileSessions
+from .redis_sessions import RedisSessions
 from ._pipeline import (
     Around,
     Written,
@@ -41,7 +42,7 @@ _logger = logging.getLogger(__name__)
 
 def create_server(
     app: App,
-    sessions: FileSessions,
+    sessions: FileSessions | RedisSessions,
     files: Optional[str] = None,
     host: str = "127.0.0.1",
     port: int = 0,

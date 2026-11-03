@@ -7,6 +7,7 @@ import { checkManifest, checkTemplateIndex, createApplication, DATA_TEMPLATE_NAM
 import { decodeTemplate, resolvePath, type Template } from '@polyspec/template/render';
 import { maskedToken, verifyToken } from './csrf.js';
 import type { FileSessions } from './file-sessions.js';
+import type { RedisSessions } from './redis-sessions.js';
 import { createListener, createServer, type Listener, type ServerOptions } from './http.js';
 import { decodeJson, inDataModel, JsonDecodeError } from './json.js';
 import { warningsAsErrors } from './warnings.js';
@@ -223,13 +224,13 @@ export class App<S extends object = Record<string, never>> {
     this.services.bind(key, factory);
   }
 
-  // Returns an HTTP server that answers every request with this application and sessions in files.
-  server(sessions: FileSessions, options: ServerOptions = {}): Server {
+  // Returns an HTTP server that answers every request with this application and its sessions.
+  server(sessions: FileSessions | RedisSessions, options: ServerOptions = {}): Server {
     return createServer(this, sessions, options);
   }
 
   // Returns the node:http request listener that `server` installs (HY-100).
-  listener(sessions: FileSessions, options: ServerOptions = {}): Listener {
+  listener(sessions: FileSessions | RedisSessions, options: ServerOptions = {}): Listener {
     return createListener(this, sessions, options);
   }
 

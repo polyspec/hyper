@@ -861,6 +861,30 @@
       ]
     },
     {
+      "id": "session-lock-refused",
+      "kind": "feature",
+      "bindings": [
+        {
+          "implementation": "php",
+          "test": "packages/server/php/tests/NativeSessionTest.php",
+          "id": "NativeSessionTest::testFailsTheRequestWhenTheSessionCannotStart"
+        },
+        {
+          "implementation": "python",
+          "test": "packages/server/python/tests/test_redis_sessions.py",
+          "id": "test_a_request_that_finds_the_lock_taken_fails_and_changes_nothing"
+        },
+        {
+          "implementation": "ts",
+          "test": "packages/server/ts/tests/redis-sessions.test.ts",
+          "id": "RedisSessions › a request that finds the lock taken fails and changes nothing (HY-115)"
+        }
+      ],
+      "requirements": [
+        "HY-115"
+      ]
+    },
+    {
       "id": "request-hook",
       "kind": "feature",
       "bindings": [
@@ -3978,11 +4002,58 @@
       ]
     },
     {
+      "id": "record-session",
+      "kind": "api",
+      "requirements": [
+        "HY-104",
+        "HY-106",
+        "HY-115"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\NativeSession"
+        },
+        {
+          "implementation": "python",
+          "symbol": "polyspec.hyper.session_record.RecordSession"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!RecordSession:class"
+        }
+      ]
+    },
+    {
+      "id": "record-session-construct",
+      "kind": "api",
+      "requirements": [
+        "HY-104",
+        "HY-106",
+        "HY-115"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\NativeSession::__construct"
+        },
+        {
+          "implementation": "python",
+          "symbol": "polyspec.hyper.session_record.RecordSession"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!RecordSession:constructor(1)"
+        }
+      ]
+    },
+    {
       "id": "durable-session-get",
       "kind": "api",
       "requirements": [
         "HY-104",
-        "HY-106"
+        "HY-106",
+        "HY-115"
       ],
       "symbols": [
         {
@@ -3991,11 +4062,11 @@
         },
         {
           "implementation": "python",
-          "symbol": "polyspec.hyper.file_sessions.FileSession.get"
+          "symbol": "polyspec.hyper.session_record.RecordSession.get"
         },
         {
           "implementation": "ts",
-          "symbol": "@polyspec/hyper-server!FileSession#get:member(1)"
+          "symbol": "@polyspec/hyper-server!RecordSession#get:member(1)"
         }
       ]
     },
@@ -4004,7 +4075,8 @@
       "kind": "api",
       "requirements": [
         "HY-104",
-        "HY-106"
+        "HY-106",
+        "HY-115"
       ],
       "symbols": [
         {
@@ -4013,11 +4085,11 @@
         },
         {
           "implementation": "python",
-          "symbol": "polyspec.hyper.file_sessions.FileSession.set"
+          "symbol": "polyspec.hyper.session_record.RecordSession.set"
         },
         {
           "implementation": "ts",
-          "symbol": "@polyspec/hyper-server!FileSession#set:member(1)"
+          "symbol": "@polyspec/hyper-server!RecordSession#set:member(1)"
         }
       ]
     },
@@ -4026,7 +4098,8 @@
       "kind": "api",
       "requirements": [
         "HY-104",
-        "HY-106"
+        "HY-106",
+        "HY-115"
       ],
       "symbols": [
         {
@@ -4035,11 +4108,11 @@
         },
         {
           "implementation": "python",
-          "symbol": "polyspec.hyper.file_sessions.FileSession.remove"
+          "symbol": "polyspec.hyper.session_record.RecordSession.remove"
         },
         {
           "implementation": "ts",
-          "symbol": "@polyspec/hyper-server!FileSession#remove:member(1)"
+          "symbol": "@polyspec/hyper-server!RecordSession#remove:member(1)"
         }
       ]
     },
@@ -4048,7 +4121,8 @@
       "kind": "api",
       "requirements": [
         "HY-104",
-        "HY-106"
+        "HY-106",
+        "HY-115"
       ],
       "symbols": [
         {
@@ -4057,11 +4131,297 @@
         },
         {
           "implementation": "python",
-          "symbol": "polyspec.hyper.file_sessions.FileSession.renew"
+          "symbol": "polyspec.hyper.session_record.RecordSession.renew"
         },
         {
           "implementation": "ts",
-          "symbol": "@polyspec/hyper-server!FileSession#renew:member(1)"
+          "symbol": "@polyspec/hyper-server!RecordSession#renew:member(1)"
+        }
+      ]
+    },
+    {
+      "id": "redis-sessions",
+      "kind": "api",
+      "requirements": [
+        "HY-115",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\NativeSession"
+        },
+        {
+          "implementation": "python",
+          "symbol": "polyspec.hyper.redis_sessions.RedisSessions"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!RedisSessions:class"
+        }
+      ]
+    },
+    {
+      "id": "redis-sessions-construct",
+      "kind": "api",
+      "requirements": [
+        "HY-115",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\NativeSession::__construct"
+        },
+        {
+          "implementation": "python",
+          "symbol": "polyspec.hyper.redis_sessions.RedisSessions"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!RedisSessions:constructor(1)"
+        }
+      ]
+    },
+    {
+      "id": "redis-sessions-options",
+      "kind": "api",
+      "requirements": [
+        "HY-115",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\NativeSession::__construct"
+        },
+        {
+          "implementation": "python",
+          "symbol": "polyspec.hyper.redis_sessions.RedisSessions"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!RedisSessionsOptions:interface"
+        }
+      ]
+    },
+    {
+      "id": "redis-sessions-option-command",
+      "kind": "api",
+      "requirements": [
+        "HY-115",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\NativeSession::__construct"
+        },
+        {
+          "implementation": "python",
+          "symbol": "polyspec.hyper.redis_sessions.RedisSessions"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!RedisSessionsOptions#command:member"
+        }
+      ]
+    },
+    {
+      "id": "redis-sessions-option-lifetime",
+      "kind": "api",
+      "requirements": [
+        "HY-115",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\NativeSession::__construct"
+        },
+        {
+          "implementation": "python",
+          "symbol": "polyspec.hyper.redis_sessions.RedisSessions"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!RedisSessionsOptions#lifetime:member"
+        }
+      ]
+    },
+    {
+      "id": "redis-sessions-option-prefix",
+      "kind": "api",
+      "requirements": [
+        "HY-115",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\NativeSession::__construct"
+        },
+        {
+          "implementation": "python",
+          "symbol": "polyspec.hyper.redis_sessions.RedisSessions"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!RedisSessionsOptions#prefix:member"
+        }
+      ]
+    },
+    {
+      "id": "redis-sessions-option-lock-expire",
+      "kind": "api",
+      "requirements": [
+        "HY-115",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\NativeSession::__construct"
+        },
+        {
+          "implementation": "python",
+          "symbol": "polyspec.hyper.redis_sessions.RedisSessions"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!RedisSessionsOptions#lockExpire:member"
+        }
+      ]
+    },
+    {
+      "id": "redis-sessions-option-lock-retries",
+      "kind": "api",
+      "requirements": [
+        "HY-115",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\NativeSession::__construct"
+        },
+        {
+          "implementation": "python",
+          "symbol": "polyspec.hyper.redis_sessions.RedisSessions"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!RedisSessionsOptions#lockRetries:member"
+        }
+      ]
+    },
+    {
+      "id": "redis-sessions-option-lock-wait",
+      "kind": "api",
+      "requirements": [
+        "HY-115",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\NativeSession::__construct"
+        },
+        {
+          "implementation": "python",
+          "symbol": "polyspec.hyper.redis_sessions.RedisSessions"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!RedisSessionsOptions#lockWait:member"
+        }
+      ]
+    },
+    {
+      "id": "redis-command",
+      "kind": "api",
+      "requirements": [
+        "HY-115",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\NativeSession::__construct"
+        },
+        {
+          "implementation": "python",
+          "symbol": "polyspec.hyper.redis_sessions.RedisCommand"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!RedisCommand:type"
+        }
+      ]
+    },
+    {
+      "id": "redis-session",
+      "kind": "api",
+      "requirements": [
+        "HY-115",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\NativeSession"
+        },
+        {
+          "implementation": "python",
+          "symbol": "polyspec.hyper.redis_sessions.RedisSession"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!RedisSession:class"
+        }
+      ]
+    },
+    {
+      "id": "redis-session-construct",
+      "kind": "api",
+      "requirements": [
+        "HY-115",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\NativeSession::__construct"
+        },
+        {
+          "implementation": "python",
+          "symbol": "polyspec.hyper.redis_sessions.RedisSession"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!RedisSession:constructor(1)"
+        }
+      ]
+    },
+    {
+      "id": "session-lock-error",
+      "kind": "api",
+      "requirements": [
+        "HY-115",
+        "HY-106"
+      ],
+      "symbols": [
+        {
+          "implementation": "php",
+          "symbol": "Polyspec\\Hyper\\NativeSession"
+        },
+        {
+          "implementation": "python",
+          "symbol": "polyspec.hyper.redis_sessions.SessionLockError"
+        },
+        {
+          "implementation": "ts",
+          "symbol": "@polyspec/hyper-server!SessionLockError:class"
         }
       ]
     },

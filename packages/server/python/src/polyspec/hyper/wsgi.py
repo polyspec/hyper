@@ -14,6 +14,7 @@ from typing import Callable, Optional, Union
 
 from .app import App
 from .file_sessions import FileSessions
+from .redis_sessions import RedisSessions
 from ._pipeline import (
     Around,
     Written,
@@ -43,7 +44,7 @@ class _FileResponse:
 
 def create_wsgi(
     app: App,
-    sessions: FileSessions,
+    sessions: FileSessions | RedisSessions,
     files: Optional[str] = None,
     around: Optional[Around] = None,
     written: Optional[Written] = None,
@@ -156,7 +157,7 @@ def _escape(
 
 def _answer(
     app: App,
-    sessions: FileSessions,
+    sessions: FileSessions | RedisSessions,
     around: Optional[Callable],
     files: Optional[str],
     environ: dict,

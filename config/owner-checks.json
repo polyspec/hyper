@@ -231,10 +231,17 @@
         "packages/server/php/src/NativeSession.php",
         "packages/server/python/src/polyspec/hyper/file_sessions.py",
         "packages/server/ts/src/file-sessions.ts",
-        "packages/server/ts/src/flock.ts"
+        "packages/server/ts/src/flock.ts",
+        "packages/server/python/src/polyspec/hyper/session_record.py",
+        "packages/server/python/src/polyspec/hyper/redis_sessions.py",
+        "packages/server/ts/src/session-record.ts",
+        "packages/server/ts/src/redis-sessions.ts",
+        "scripts/install-redis.mts",
+        "tests/scripts/session-workers.mts"
       ],
       "tests": [
-        "tests/scripts/session-shared.test.mts"
+        "tests/scripts/session-shared.test.mts",
+        "tests/scripts/session-shared-redis.test.mts"
       ]
     },
     {

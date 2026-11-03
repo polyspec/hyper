@@ -140,6 +140,22 @@ template-ext: ## Build the native template extension of TEMPLATE_TAG with PIE fr
 	@binary=$$($(NODE) scripts/pie-binary.mts $(PIE_WORK) polyspec/template-php-ext) || exit $$?; \
 	  mkdir -p build/ext.next-$$$$ && cp "$$binary" build/ext.next-$$$$/polyspec_template.so && $(NODE) scripts/publish.mts directory build/ext.next-$$$$ build/ext
 
+# The session tests of HY-115 run against a real Redis server and the real phpredis extension, at these versions. PIE builds
+# phpredis as it builds the template extension; `pie build` installs nothing into the PHP, and the tests load the library
+# with -d extension.
+REDIS_VERSION := 8.10.3
+REDIS_SHA256 := 5e0c00ed77f789fb1a4a30f1fbb58a793cc88c41c0f11f0e38e1b4f192991188
+PHPREDIS_VERSION := 6.3.0
+REDIS_DIR := $(CURDIR)/var/redis
+PHPREDIS_WORK := $(CURDIR)/var/pie/phpredis
+.PHONY: hyper-install-redis
+hyper-install-redis: ## Build the Redis server and the phpredis extension of the session tests into var/redis (HY-115); ONLINE
+	mkdir -p $(REDIS_DIR)
+	$(ONLINE) $(NODE) scripts/install-redis.mts $(REDIS_VERSION) $(REDIS_SHA256) $(REDIS_DIR)
+	rm -rf $(PHPREDIS_WORK) && mkdir -p $(PHPREDIS_WORK)
+	$(ONLINE) env PIE_WORKING_DIRECTORY=$(PHPREDIS_WORK) $(PIE) build phpredis/phpredis:$(PHPREDIS_VERSION) --no-interaction
+	@binary=$$($(NODE) scripts/pie-binary.mts $(PHPREDIS_WORK) phpredis/phpredis) || exit $$?; cp "$$binary" $(REDIS_DIR)/redis.so
+
 # The checks load the library that `make hyper-install` built with PIE (template-ext); they run offline and build nothing.
 ext: ## Fail unless the native template extension of make template-ext is in build/ext (HY-48, H14.1-7, H27.45)
 	@test -f $(EXT) || { echo "ext: $(EXT) does not exist; run make hyper-install, which builds it with PIE (make template-ext)" >&2; exit 1; }

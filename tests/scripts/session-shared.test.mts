@@ -2,27 +2,15 @@
 // session one after another, each reads what another wrote as the same values, and the lock of a process that ended is
 // released. Each server is one real process of its package over the session file.
 import assert from 'node:assert/strict';
-import { execFile, spawn } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import { mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { test, type TestContext } from 'node:test';
-import { fileURLToPath } from 'node:url';
-import { promisify } from 'node:util';
 
 import { requireBuilt } from './requires.mts';
+import { CANONICAL, COMMANDS, IDENTIFIER, NAMED, NAMES, PYTHON, ROOT, run as runWorker, VALUES, type Server } from './session-workers.mts';
 
-const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
-const WORKERS = path.join(ROOT, 'tests/scripts/fixtures/session-worker');
-type Server = 'php' | 'python' | 'node';
-const NAMES: Server[] = ['php', 'python', 'node'];
-const PYTHON = path.join(ROOT, 'packages/server/python/.venv/bin/python');
-const COMMANDS: Record<Server, { command: string; prefix: string[] }> = {
-  php: { command: 'php', prefix: [path.join(WORKERS, 'worker.php')] },
-  python: { command: PYTHON, prefix: [path.join(WORKERS, 'worker.py')] },
-  node: { command: process.execPath, prefix: ['--no-warnings', path.join(WORKERS, 'worker.mjs')] },
-};
-const IDENTIFIER = 'a'.repeat(32);
 const PROCESSES = 3;
 const REQUESTS = 300;
 
@@ -32,12 +20,7 @@ function directoryOf(t: TestContext): string {
   return directory;
 }
 
-// Runs one command of the worker of a server and returns what it printed.
-async function run(server: Server, directory: string, ...args: string[]): Promise<string> {
-  const { command, prefix } = COMMANDS[server];
-  const { stdout } = await promisify(execFile)(command, [...prefix, directory, IDENTIFIER, ...args], { cwd: ROOT, maxBuffer: 1 << 24 });
-  return stdout;
-}
+const run = (server: Server, directory: string, ...args: string[]) => runWorker(server, directory, {}, ...args);
 
 const file = (directory: string) => path.join(directory, `sess_${IDENTIFIER}`);
 
@@ -53,24 +36,6 @@ test('processes of the three servers that write one session at the same time los
   assert.deepEqual(read, [3 * total, total, total, total]);
   assert.deepEqual(readdirSync(directory), [path.basename(file(directory))], 'the servers leave only the session file');
 });
-
-// The values that each server writes and each server reads, with the forms that a PHP array cannot tell apart.
-const VALUES = String.raw`{"text":"h\u00e9llo","int":7,"negative":-3,"float":1.5,"yes":true,"no":false,"nothing":null,"list":[1,"a",[]],"map":{"a":{"b":[1]}},"numbered":{"0":"a","1":"b"},"mixed":{"5":"x","a":"y"},"empty":{}}`;
-const NAMED = ['text', 'int', 'negative', 'float', 'yes', 'no', 'nothing', 'list', 'map', 'numbered', 'mixed', 'empty'];
-const CANONICAL = [
-  'héllo',
-  7,
-  -3,
-  1.5,
-  true,
-  false,
-  null,
-  [1, 'a', []],
-  { map: [['a', { map: [['b', [1]]] }]] },
-  { map: [['0', 'a'], ['1', 'b']] },
-  { map: [['5', 'x'], ['a', 'y']] },
-  { map: [] },
-];
 
 for (const writer of NAMES) {
   test(`the values that the ${writer} server writes are the same values in every server (HY-104)`, { timeout: 60_000 }, async (t) => {

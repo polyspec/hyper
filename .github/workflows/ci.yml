@@ -48,6 +48,7 @@ jobs:
             symbols: php
             composer: true
             python: true
+            redis: true
             targets: typecheck hooks-check hyper-test-scripts
           - name: php
             tools: node php composer pie
@@ -97,6 +98,9 @@ jobs:
       - id: python
         if: ${{ !cancelled() && matrix.python }}
         run: make hyper-install-python
+      - id: redis
+        if: ${{ !cancelled() && matrix.redis }}
+        run: make hyper-install-redis
       - id: browser
         if: ${{ !cancelled() && matrix.browser }}
         run: make hyper-install-browser

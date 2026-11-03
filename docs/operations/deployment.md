@@ -64,3 +64,22 @@ A request that the selection does not choose is answered as in the server form. 
 | `http://127.0.0.1:8082/api/board` | PHP with `BOARD_BASE_PATH=/api` |
 | `http://127.0.0.1:8081/board` | Static shell: `scripts/serve-edge.mts` returns files of `build/csr/`, the shell for every other path, and forwards `/api/*` to port 8082 |
 | `http://127.0.0.1:8081/compare?ssr=http://127.0.0.1:8080` | The comparison page: both forms in two frames and the result of comparing their bodies. It is a development tool and is not part of a deployment. |
+
+## Sessions shared by the servers
+
+The PHP, Node and Python servers share sessions in one directory (HY-104) or in one Redis server (HY-115); every server of a deployment uses the same one.
+
+For a directory, the PHP server sets `session.save_path` to the directory, on a file system whose `flock` reaches every server that shares it. The Node and Python servers take the directory in `FileSessions`. The Node server calls `flock` through `node:ffi`, an experimental module of Node that prints one warning; a process started with `--permission` needs `--allow-ffi`.
+
+For Redis, the PHP server loads phpredis 6.3.0 and sets:
+
+```ini
+session.save_handler = redis
+session.save_path = "tcp://redis:6379"
+redis.session.locking_enabled = 1
+redis.session.lock_expire = 30
+redis.session.lock_retries = 100
+redis.session.lock_wait_time = 20000
+```
+
+The Node and Python servers give `RedisSessions` the command function of a client (Python `redis.Redis(...).execute_command` with `decode_responses=False`) and the same values: `lockExpire` 30, `lockRetries` 100 and `lockWait` 20 milliseconds (Python `lock_expire`, `lock_retries`, `lock_wait` 0.02 seconds). `lock_expire` must be longer than any request, and without it a process that ended holds its lock until `max_execution_time`, or for ever when that is 0. A request that waits longer than the retries allow fails, so raise them for requests of one session that hold the lock long. The values of a shared session are values of the template data model; a record that holds an object of a class other than `stdClass` fails the request in the Node and Python servers.

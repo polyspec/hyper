@@ -1,10 +1,28 @@
-"""One Python server process over one session (tests/scripts/session-shared.test.mts): the arguments are the session
-directory, the identifier, and `count <requests> <name>`, `hold`, `read <names as JSON>` or `write <values as JSON>`."""
+"""One Python server process over one session (tests/scripts/session-workers.mts): the arguments are the session
+directory, the identifier, and `count <requests> <name>`, `hold`, `read <names as JSON>`, `write <values as JSON>`, or
+`stale`, which writes after a line of its input, or `renew`. With HYPER_SESSION_REDIS, the port of a Redis server, it
+keeps the session there, and HYPER_SESSION_RETRIES is how often it tries a lock."""
 
 import json
+import os
 import sys
 
 from polyspec.hyper.file_sessions import FileSessions
+from polyspec.hyper.redis_sessions import RedisSessions
+
+
+def stores(directory):
+    """Returns the session stores of the process."""
+    port = os.environ.get("HYPER_SESSION_REDIS")
+    if port is None:
+        return FileSessions(directory)
+    import redis
+
+    return RedisSessions(
+        redis.Redis(port=int(port)).execute_command,
+        lock_retries=int(os.environ.get("HYPER_SESSION_RETRIES", "1000000")),
+        lock_wait=0.002,
+    )
 
 
 def canonical(value):
@@ -17,7 +35,7 @@ def canonical(value):
 
 
 def main(directory, identifier, command, first=None, second=None):
-    sessions = FileSessions(directory)
+    sessions = stores(directory)
     if command == "count":
         for _ in range(int(first)):
             session = sessions._open(identifier)
@@ -32,6 +50,12 @@ def main(directory, identifier, command, first=None, second=None):
         session.get("n")
         print("held", flush=True)
         sys.stdin.read()
+    if command == "stale":
+        session.set("stale", 1)
+        print("held", flush=True)
+        sys.stdin.readline()
+    if command == "renew":
+        session.renew()
     try:
         if command == "read":
             print(
@@ -42,6 +66,8 @@ def main(directory, identifier, command, first=None, second=None):
                 session.set(name, value)
     finally:
         session._close()
+    if command == "renew":
+        print(session._created)
 
 
 main(*sys.argv[1:])

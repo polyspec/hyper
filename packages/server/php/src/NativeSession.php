@@ -23,7 +23,11 @@ final class NativeSession implements SessionStore
         if ($id !== null && (!is_string($id) || preg_match('/^[A-Za-z0-9,-]{22,128}$/D', $id) !== 1)) {
             unset($_COOKIE[$name]);
         }
-        session_start(self::options($https));
+        // A session that cannot start, such as one whose lock another request holds, fails the request whatever
+        // error_reporting() keeps: the request would otherwise answer with an empty session and lose what it stores (HY-115).
+        if (!session_start(self::options($https))) {
+            throw new \RuntimeException('hyper: the session could not start');
+        }
     }
 
     /**
