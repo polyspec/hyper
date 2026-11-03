@@ -159,6 +159,15 @@ try {
     for (let run = 0; run < runs; run++) {
       const context = await launched.newContext();
       const page = await context.newPage();
+      page.on('pageerror', (error) => {
+        process.stderr.write(`${label} run ${String(run)}: page error: ${String(error)}\n`);
+      });
+      page.on('console', (message) => {
+        if (message.type() === 'error') process.stderr.write(`${label} run ${String(run)}: console: ${message.text()}\n`);
+      });
+      page.on('requestfailed', (request) => {
+        process.stderr.write(`${label} run ${String(run)}: failed: ${request.url()} ${String(request.failure()?.errorText)}\n`);
+      });
       await page.addInitScript(observer);
       await page.goto(`${origin}/board`);
       await page.waitForFunction(() => window.benchMarks['게시판'] !== undefined && document.getElementById('rows') !== null);

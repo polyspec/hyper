@@ -1,10 +1,10 @@
 <!-- doc-id: benchmark -->
-<!-- source-sha256: 3d3a7f8ad451830134aa5a405d4600cb648bcc3673954fa7bc1a7c6db8761930 -->
+<!-- source-sha256: 924bc94eea310d6d46b706bd5aa0865d348d6ee2e688c690540fcea817b4ff08 -->
 # 성능 측정
 
 [English](benchmark.md).
 
-`make bench`는 게시판 예제를 서버와 브라우저에서 측정한다. 결과는 보고용이며 통과나 실패를 판정하지 않는다. 측정은 한가한 기계에서 실행한다. 다른 바쁜 프로세스는 중앙값보다 평균과 p95를 더 크게 바꾼다.
+`make bench`는 게시판 예제를 서버와 브라우저에서 측정한다. 결과는 보고용이며 통과나 실패를 판정하지 않는다. 아래 기록은 `.github/workflows/bench.yml`의 수동 실행(`gh workflow run bench.yml`)에서 얻는다. 이 workflow는 전용 runner에서 `make bench`와 `make bench-sessions`를 차례로 실행하고 각 target의 report를 upload한다. 개발 기계는 다른 작업을 함께 실행하며, 다른 바쁜 프로세스는 중앙값보다 평균과 p95를 더 크게 바꾼다. runner는 공유 가상 기계이므로 기록에 두 번 실행한 편차를 적고, 같은 runner image의 기록끼리만 비교한다.
 
 | 타깃 | 스크립트 | 측정 대상 |
 |---|---|---|

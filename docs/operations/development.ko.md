@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: 5cd068e7eaba9fae22df1f33096ef487e6ae9444f65e7f02a63f6dc28c1fdc9c -->
+<!-- source-sha256: b28f95d501383d86c5cfab74f63685f0423a19f0a543404a441d16d6b67f8cc2 -->
 # 개발
 
 [English](development.md).
@@ -181,6 +181,8 @@ Protocol 선언과 언어 간 동등 검사(`parity-declarations-check`, `parity
 - `targets/<target>.log`: 각 target의 명령, 전체 출력, make가 끝난 방식.
 
 마지막 job `ci-passed`는 다른 모든 job 뒤에 실행되고 `make ci-passed RESULTS='<needs의 JSON>'`을 실행한다. 이 target은 필요한 모든 job의 결과를 출력하고 하나라도 `success`가 아니면 실패한다. `ci.yml`에 추가한 job은 `needs`에 나열한다. `tests/scripts/ci-workflow.test.mts`는 `ci-passed`가 없거나, 마지막 job이 아니거나, `if: ${{ always() }}`가 없거나, 다른 모든 job을 need하지 않거나, 다른 runner에서 실행하거나, 다른 step을 실행하면 실패한다.
+
+workflow `.github/workflows/bench.yml`은 수동 실행에서 benchmark를 실행한다. job 하나가 `make ci-targets TARGETS="bench bench-sessions"`를 실행하고 report를 upload한다. 그 결과는 어떤 검사도 통과시키거나 실패시키지 않으며, `ci-passed`와 release는 이를 읽지 않는다([성능 측정](benchmark.ko.md) 참고).
 
 ## Test 실행
 

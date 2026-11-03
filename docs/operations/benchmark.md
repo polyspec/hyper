@@ -3,7 +3,7 @@
 
 [한국어](benchmark.ko.md).
 
-`make bench` measures the board example on the server and in the browser. The results are reports and do not pass or fail. Run the measurement on an idle machine; another busy process changes the mean and p95 more than the median.
+`make bench` measures the board example on the server and in the browser. The results are reports and do not pass or fail. The record below comes from a manual run of `.github/workflows/bench.yml` (`gh workflow run bench.yml`), which runs `make bench` and `make bench-sessions` one after another on a runner of their own and uploads the report of each target. A development machine runs other work, and another busy process changes the mean and p95 more than the median. A runner is a shared virtual machine, so a record states the spread of two runs, and it compares only with records of the same runner image.
 
 | Target | Script | Measures |
 |---|---|---|

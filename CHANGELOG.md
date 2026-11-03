@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- `.github/workflows/bench.yml` runs make bench and make bench-sessions one after another in one job on a manual run and uploads the report of each target, outside the checks and the release. The server benchmark sends a CSRF token with `POST /board/create`, so the request answers status 422, and the browser benchmark prints page errors, console errors and failed requests (H26.9-1).
 
 ## 0.0.29
 - Release 0.0.29 after H27.72, H27.73, H27.74 and H27.76: every manifest of config/release.json, the exact requirements of polyspec/hyper-server and @polyspec/hyper-client and the locks that npm, Composer and uv wrote hold 0.0.29 (H27.75).

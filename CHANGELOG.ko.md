@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: e0dbaa2a0ed37940c84d0cfd092ba18fd5d892bd557604735929aab0aa8eaaf0 -->
+<!-- source-sha256: 13df44707cc2591de3902004cbc3b7ee3519f04a430eac64e747ae35a56c4055 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- `.github/workflows/bench.yml`이 수동 실행에서 make bench와 make bench-sessions를 한 job에서 차례로 실행하고 각 target의 report를 upload하며, 이는 검사와 release 밖에 있다. 서버 benchmark는 `POST /board/create`에 CSRF token을 보내 요청이 status 422로 응답하고, 브라우저 benchmark는 페이지 오류, console 오류와 실패한 요청을 출력한다(H26.9-1).
 
 ## 0.0.29
 - H27.72, H27.73, H27.74, H27.76 다음에 0.0.29를 릴리즈한다. config/release.json의 모든 manifest, polyspec/hyper-server와 @polyspec/hyper-client의 정확한 요구 버전, npm, Composer, uv가 쓴 lock이 0.0.29를 가진다 (H27.75).

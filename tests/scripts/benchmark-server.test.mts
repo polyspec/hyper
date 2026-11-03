@@ -23,5 +23,6 @@ test('the server benchmark reports its program without PHP warnings and removes 
   assert.equal(result.stderr, '', result.stderr);
   assert.match(result.stdout, /generated PHP template program, template extension (?:loaded|not loaded), 1 iterations per request/);
   assert.match(result.stdout, /GET \/board, document HTML \| 200/);
+  assert.match(result.stdout, /POST \/board\/create, 422 region JSON \| 422/);
   assert.equal(existsSync(join(app, 'var/bench-server.db')), false);
 });

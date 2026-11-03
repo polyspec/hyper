@@ -1,0 +1,59 @@
+# The benchmarks on a runner of their own (docs/operations/benchmark.md): a manual run on main runs make bench and
+# make bench-sessions one after another in one job, so nothing else of this repository runs on the machine while they
+# measure, and uploads the report of each target. The results are reports: they pass or fail no check, no target of
+# CHECK_TARGETS runs here, and neither ci-passed nor a release reads this workflow.
+name: bench
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  bench:
+    runs-on: ubuntu-26.04-arm
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        id: checkout
+      - uses: ./.github/actions/kit-bootstrap
+        id: bootstrap
+        if: ${{ !cancelled() }}
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        id: php
+        if: ${{ !cancelled() }}
+        with:
+          php-version-file: .php-version
+          extensions: pdo_sqlite
+          tools: none
+          coverage: none
+      - id: tools
+        if: ${{ !cancelled() }}
+        run: make install-tools TOOLS="node php composer pie python uv"
+      - id: install
+        if: ${{ !cancelled() }}
+        run: make hyper-install-php
+      - id: python
+        if: ${{ !cancelled() }}
+        run: make hyper-install-python
+      - id: redis
+        if: ${{ !cancelled() }}
+        run: make hyper-install-redis
+      - id: browser
+        if: ${{ !cancelled() }}
+        run: make hyper-install-browser
+      - id: check
+        if: ${{ !cancelled() }}
+        run: make ci-targets TARGETS="bench bench-sessions" CI_REPORT=var/ci/bench
+      - id: summary
+        if: ${{ !cancelled() }}
+        env:
+          CI_STEPS: ${{ toJSON(steps) }}
+        run: make ci-summary CI_REPORT=var/ci/bench
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        id: report
+        if: ${{ !cancelled() }}
+        with:
+          name: bench-${{ github.run_id }}-${{ github.run_attempt }}
+          path: var/ci/bench/
+          if-no-files-found: error

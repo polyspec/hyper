@@ -10,6 +10,7 @@ declare(strict_types=1);
 
 use Polyspec\Hyper\App;
 use Polyspec\Hyper\ArraySession;
+use Polyspec\Hyper\Csrf;
 use Polyspec\Hyper\Examples\Board\Assets;
 use Polyspec\Hyper\Examples\Board\Posts;
 use Polyspec\Hyper\JsonEncoder;
@@ -88,7 +89,7 @@ $requests = [
         '/board/create',
         [...$region, 'Content-Type' => 'application/x-www-form-urlencoded'],
         '',
-        http_build_query(['_csrf' => $token, 'title' => '', 'author' => 'a', 'body' => 'b']),
+        http_build_query(['_csrf' => Csrf::masked($token), 'title' => '', 'author' => 'a', 'body' => 'b']),
     ),
 ];
 echo "## Requests (App::handle, 10 rows per page)\n\n";
