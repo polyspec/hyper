@@ -1,10 +1,13 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: dd88ed2e93bff7e4561e05036541f1b3403c69e153b3b454d59729cc30305e55 -->
+<!-- source-sha256: e0dbaa2a0ed37940c84d0cfd092ba18fd5d892bd557604735929aab0aa8eaaf0 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+## 0.0.29
+- H27.72, H27.73, H27.74, H27.76 다음에 0.0.29를 릴리즈한다. config/release.json의 모든 manifest, polyspec/hyper-server와 @polyspec/hyper-client의 정확한 요구 버전, npm, Composer, uv가 쓴 lock이 0.0.29를 가진다 (H27.75).
 - Redis session에서 아무것도 바꾸지 않은 Node나 Python 요청은 phpredis처럼 잠금을 비교하지 않고 만료를 새로 정하므로, 읽기만 하는 긴 요청이 잠금 만료로 status 500이 되지 않는다. 실제로 만료되는 잠금, kill된 process, board의 HTTP 서버, Redis 서버의 중지와 시작을 테스트한다 (H27.72).
 - Redis session이 replica가 있는 primary에서 유지된다. RedisSentinelSessions와 App::open의 sessionSetup 옵션으로 PHP 서버는 phpredis의 session 모듈을 Redis Sentinel이 알려 주는 primary에 그대로 두고, Node와 Python 서버는 Sentinel client로 따라가며, 테스트는 세 서버가 쓰는 도중 primary를 kill한다. 연결은 Sentinel을 포함해 TLS와 ACL 사용자를 받아들이고, make bench-sessions는 Redis 서버 하나의 용량을 측정한다 (H27.73).
 - Redis session이 Redis Cluster에서 잠금과 함께 유지된다. RedisClusterSessions는 phpredis의 rediscluster handler에 없는 HY-115 protocol을 PHP 서버에 제공하고, 테스트는 primary 셋의 실제 cluster에서 slot 이동, 잠금 실패, session 갱신, HTTP 서버, 넘겨받는 replica, TLS와 ACL 사용자로 세 서버를 실행한다 (H27.74).
