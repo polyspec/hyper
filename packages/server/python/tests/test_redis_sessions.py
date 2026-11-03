@@ -76,7 +76,7 @@ class RedisSessionsTest(unittest.TestCase):
         self.assertEqual(0, session.get("n"))
         session._close()
         self.assertEqual(
-            ["EXISTS", "SET", "GET", "GET", "EXPIRE", "EVAL"], self.server.commands
+            ["EXISTS", "SET", "GET", "EXPIRE", "EVAL"], self.server.commands
         )
         self.assertNotIn(LOCK, self.server.keys)
 

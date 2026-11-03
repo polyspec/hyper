@@ -6,7 +6,7 @@
 import { mkdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { App, FileSessions } from '@polyspec/hyper-server';
+import { App, FileSessions, RedisSessions } from '@polyspec/hyper-server';
 import { handlers, type Services } from './handlers.js';
 import { Posts } from './posts.js';
 
@@ -19,8 +19,24 @@ const env = (name: string): string => {
 };
 const database = env('BOARD_DB');
 const port = Number(env('BOARD_PORT'));
-const sessionDirectory = env('BOARD_SESSIONS');
-mkdirSync(sessionDirectory, { recursive: true, mode: 0o700 });
+
+// BOARD_REDIS, the URL of a Redis server, keeps the sessions there instead of in BOARD_SESSIONS. A command fails while the
+// connection is down, instead of waiting in the queue of the client, so the request answers status 500 (HY-115).
+const sessionStore = async (): Promise<FileSessions | RedisSessions> => {
+  const url = process.env.BOARD_REDIS;
+  if (url === undefined || url === '') {
+    const directory = env('BOARD_SESSIONS');
+    mkdirSync(directory, { recursive: true, mode: 0o700 });
+    return new FileSessions({ directory });
+  }
+  const { createClient, RESP_TYPES } = await import('redis');
+  const client = createClient({ url, disableOfflineQueue: true }).on('error', (error: unknown) => {
+    process.stderr.write(`board: redis: ${String(error)}\n`);
+  });
+  await client.connect();
+  const bytes = client.withTypeMapping({ [RESP_TYPES.BLOB_STRING]: Buffer });
+  return new RedisSessions({ command: (words) => bytes.sendCommand(words.map((word) => Buffer.from(word))) });
+};
 
 const app = await App.open<Services>({
   manifest: join(board, 'app', 'app.json'),
@@ -43,7 +59,7 @@ app.bind('assets', () => {
   return { hyper: urls.hyper };
 });
 // The session cookie has the name that the PHP board uses, PHP's default session name.
-const server = app.server(new FileSessions({ directory: sessionDirectory }), { files: join(board, 'public') });
+const server = app.server(await sessionStore(), { files: join(board, 'public') });
 server.listen(port, '127.0.0.1', () => {
   // A server that listens on a TCP port has an AddressInfo; a pipe or a closed server has none.
   const address = server.address();

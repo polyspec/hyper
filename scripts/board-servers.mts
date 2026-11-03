@@ -86,9 +86,9 @@ export function startServer({ name, command, args, env, ready, children, progres
   });
 }
 
-/** Starts the PHP server of the application directory `app` on `port`; `extension` loads the native extension. */
-export function startPhp({ name, app, port, env, extension, children }: StartOptions & { extension?: string }): Promise<Server> {
-  const loaded = extension ? ['-d', `extension=${resolve(extension)}`] : [];
+/** Starts the PHP server of the application directory `app` on `port`; `extension` loads the native extension and `ini` holds further settings of PHP. */
+export function startPhp({ name, app, port, env, extension, ini = [], children }: StartOptions & { extension?: string; ini?: string[] }): Promise<Server> {
+  const loaded = [...(extension ? [`extension=${resolve(extension)}`] : []), ...ini].flatMap((setting) => ['-d', setting]);
   return startServer({
     name,
     command: 'php',

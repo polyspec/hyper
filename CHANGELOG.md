@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- A Node or Python request that changed nothing in a Redis session sets its new expiry without comparing the lock, as phpredis does, so a long request that only reads no longer answers status 500 when its lock expires; tests check a lock that really expires, a killed process, the HTTP servers of the board and a stop and a start of the Redis server (H27.72).
 
 ## 0.0.28
 - Release 0.0.28 after H27.70: every manifest of config/release.json, the exact requirements of polyspec/hyper-server and @polyspec/hyper-client and the locks that npm, Composer and uv wrote hold 0.0.28 (H27.71).

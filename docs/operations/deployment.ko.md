@@ -1,5 +1,5 @@
 <!-- doc-id: deployment -->
-<!-- source-sha256: 7f99914ad51fdbc24354dd7f008da6dd571f489c06db3a45c9a43c95bc5b1899 -->
+<!-- source-sha256: 1de5dcdebbec115fc38302b5fe885c21d97361038c5b922ad36c59e5ed0a759c -->
 # 배포
 
 [English](deployment.md).
@@ -93,4 +93,4 @@ redis.session.lock_retries = 100
 redis.session.lock_wait_time = 20000
 ```
 
-Node와 Python 서버는 `RedisSessions`에 client의 command 함수(Python은 `decode_responses=False`인 `redis.Redis(...).execute_command`)와 같은 값을 준다. `lockExpire` 30, `lockRetries` 100, `lockWait` 20밀리초다(Python은 `lock_expire`, `lock_retries`, `lock_wait` 0.02초). `lock_expire`는 어떤 요청보다 길어야 하고, 없으면 끝난 process가 `max_execution_time`까지, 그 값이 0이면 영원히 잠금을 잡는다. 재시도 허용보다 오래 기다린 요청은 실패하므로, 한 session의 요청이 잠금을 오래 잡으면 재시도 값을 올린다. 공유 session의 값은 template data model의 값이며, `stdClass` 외의 class 객체를 담은 record는 Node와 Python 서버에서 요청을 실패시킨다.
+Node와 Python 서버는 `RedisSessions`에 client의 command 함수(Python은 `decode_responses=False`인 `redis.Redis(...).execute_command`)와 같은 값을 준다. `lockExpire` 30, `lockRetries` 100, `lockWait` 20밀리초다(Python은 `lock_expire`, `lock_retries`, `lock_wait` 0.02초). `lock_expire`는 어떤 요청보다 길어야 하고, 없으면 끝난 process가 `max_execution_time`까지, 그 값이 0이면 영원히 잠금을 잡는다. 재시도 허용보다 오래 기다린 요청은 실패하므로, 한 session의 요청이 잠금을 오래 잡으면 재시도 값을 올린다. 연결이 끊긴 동안 명령을 쌓아 두는 client는 다시 연결될 때까지 요청을 붙잡으므로, Node 서버는 node-redis를 `disableOfflineQueue: true`와 `error` listener로 만들고 Python 서버는 `redis.Redis`에 `socket_timeout`을 정한다. 그러면 Redis 서버가 돌아올 때까지 요청은 status 500으로 응답한다. 재시작으로 session이 끝나면 안 되면 append-only file로 보관한다. 공유 session의 값은 template data model의 값이며, `stdClass` 외의 class 객체를 담은 record는 Node와 Python 서버에서 요청을 실패시킨다.

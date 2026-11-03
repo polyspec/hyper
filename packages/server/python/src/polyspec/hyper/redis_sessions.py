@@ -132,14 +132,14 @@ class RedisSession(RecordSession):
             record = self._serialized()
             if record is None or self._id is None:
                 return
-            if held is not None and self._secret is not None:
-                if not sessions._holds(held, self._secret):
-                    raise SessionLockError(f"the lock of the session {held} expired")
             key = sessions._key(self._id)
             if not self._made and record == self._read:
                 sessions.command("EXPIRE", key, sessions.lifetime)
-            else:
-                sessions.command("SETEX", key, sessions.lifetime, record)
+                return
+            if held is not None and self._secret is not None:
+                if not sessions._holds(held, self._secret):
+                    raise SessionLockError(f"the lock of the session {held} expired")
+            sessions.command("SETEX", key, sessions.lifetime, record)
             if self._renewed is not None:
                 sessions.command("DEL", sessions._key(self._renewed))
         finally:

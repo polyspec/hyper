@@ -150,13 +150,16 @@ export class RedisSession extends RecordSession {
     try {
       const pending = this.pending();
       if (pending === null) return;
+      const key = sessions.key(pending.id);
+      const lifetime = String(sessions.lifetime);
+      if (!pending.created && !pending.changed) {
+        await sessions.command(['EXPIRE', key, lifetime]);
+        return;
+      }
       if (held !== null && this.secret !== null && !(await sessions.holds(held, this.secret))) {
         throw new SessionLockError(`hyper: the lock of the session ${held} expired`);
       }
-      const key = sessions.key(pending.id);
-      const lifetime = String(sessions.lifetime);
-      if (!pending.created && !pending.changed) await sessions.command(['EXPIRE', key, lifetime]);
-      else await sessions.command(['SETEX', key, lifetime, pending.record]);
+      await sessions.command(['SETEX', key, lifetime, pending.record]);
       if (pending.renewed !== null) await sessions.command(['DEL', sessions.key(pending.renewed)]);
     } finally {
       try {

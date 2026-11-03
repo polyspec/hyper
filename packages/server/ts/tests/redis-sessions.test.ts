@@ -72,7 +72,7 @@ describe('RedisSessions', () => {
     const session = await sessions.open(IDENTIFIER);
     expect(session.get('n')).toBe(0);
     await session.close();
-    expect(commands).toEqual(['EXISTS', 'SET', 'GET', 'GET', 'EXPIRE', 'EVAL']);
+    expect(commands).toEqual(['EXISTS', 'SET', 'GET', 'EXPIRE', 'EVAL']);
     expect(keys.has(LOCK)).toBe(false);
   });
 

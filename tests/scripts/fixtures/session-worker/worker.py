@@ -1,7 +1,8 @@
 """One Python server process over one session (tests/scripts/session-workers.mts): the arguments are the session
 directory, the identifier, and `count <requests> <name>`, `hold`, `read <names as JSON>`, `write <values as JSON>`, or
 `stale`, which writes after a line of its input, or `renew`. With HYPER_SESSION_REDIS, the port of a Redis server, it
-keeps the session there, and HYPER_SESSION_RETRIES is how often it tries a lock."""
+keeps the session there, HYPER_SESSION_RETRIES is how often it tries a lock and HYPER_SESSION_EXPIRE when a lock
+expires."""
 
 import json
 import os
@@ -22,6 +23,7 @@ def stores(directory):
         redis.Redis(port=int(port)).execute_command,
         lock_retries=int(os.environ.get("HYPER_SESSION_RETRIES", "1000000")),
         lock_wait=0.002,
+        lock_expire=int(os.environ.get("HYPER_SESSION_EXPIRE", "30")),
     )
 
 

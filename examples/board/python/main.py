@@ -18,6 +18,7 @@ from pathlib import Path
 
 from polyspec.hyper.app import App
 from polyspec.hyper.file_sessions import FileSessions
+from polyspec.hyper.redis_sessions import RedisSessions
 from polyspec.hyper.server import create_server
 
 from handlers import Services, handlers
@@ -52,8 +53,19 @@ def _services() -> Services:
 
 database = env("BOARD_DB")
 port = int(env("BOARD_PORT"))
-session_directory = Path(env("BOARD_SESSIONS"))
-session_directory.mkdir(parents=True, exist_ok=True)
+
+
+def session_store() -> FileSessions | RedisSessions:
+    """Returns the sessions in the Redis server of the URL BOARD_REDIS, or else in the directory BOARD_SESSIONS."""
+    url = os.environ.get("BOARD_REDIS") or ""
+    if url != "":
+        import redis
+
+        return RedisSessions(redis.Redis.from_url(url).execute_command)
+    directory = Path(env("BOARD_SESSIONS"))
+    directory.mkdir(parents=True, exist_ok=True)
+    return FileSessions(str(directory))
+
 
 application = App.open(
     manifest=str(BOARD / "app" / "app.json"),
@@ -67,7 +79,7 @@ application = App.open(
 )
 server = create_server(
     application,
-    FileSessions(str(session_directory)),
+    session_store(),
     files=str(BOARD / "public"),
     port=port,
 )

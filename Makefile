@@ -261,7 +261,7 @@ typecheck: packages ## Check the types of the TypeScript of scripts/, tests/ and
 toolchain-policy-test: ## Verify the declared toolchain and offline recipe policy
 	$(NODE) $(KIT)/run-tests.$(KIT_EXT) node -- tests/scripts/toolchain.test.mts
 
-hyper-test-scripts: packages assets server ## Run the tests of the check scripts, or only the files of TESTS
+hyper-test-scripts: packages assets server node-server ## Run the tests of the check scripts, or only the files of TESTS
 	$(NODE) $(KIT)/run-tests.$(KIT_EXT) node -- $(or $(TESTS),tests/scripts/)
 
 parity: assets server ext ## Compare PHP documents (generated program and native extension) with browser renders of document and region JSON

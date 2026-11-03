@@ -237,11 +237,13 @@
         "packages/server/ts/src/session-record.ts",
         "packages/server/ts/src/redis-sessions.ts",
         "scripts/install-redis.mts",
-        "tests/scripts/session-workers.mts"
+        "tests/scripts/session-workers.mts",
+        "tests/scripts/session-redis-server.mts"
       ],
       "tests": [
         "tests/scripts/session-shared.test.mts",
-        "tests/scripts/session-shared-redis.test.mts"
+        "tests/scripts/session-shared-redis.test.mts",
+        "tests/scripts/session-redis-failure.test.mts"
       ]
     },
     {

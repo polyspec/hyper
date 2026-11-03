@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 1803913bb7056e8421e83a5c232a12ccf8ad216ca7d46794684c1e8f8167c6d3 -->
+<!-- source-sha256: 0863bfb3909a87d9037c7f855d683bbf7473698ab68637d8eacf00afbc5411b5 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- Redis session에서 아무것도 바꾸지 않은 Node나 Python 요청은 phpredis처럼 잠금을 비교하지 않고 만료를 새로 정하므로, 읽기만 하는 긴 요청이 잠금 만료로 status 500이 되지 않는다. 실제로 만료되는 잠금, kill된 process, board의 HTTP 서버, Redis 서버의 중지와 시작을 테스트한다 (H27.72).
 
 ## 0.0.28
 - H27.70에 이어 0.0.28을 release한다. config/release.json의 모든 manifest, polyspec/hyper-server와 @polyspec/hyper-client의 정확한 requirement, npm, Composer, uv가 쓴 lock이 0.0.28을 가진다 (H27.71).

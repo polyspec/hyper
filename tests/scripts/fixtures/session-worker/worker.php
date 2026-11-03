@@ -17,7 +17,7 @@ if ($port !== false) {
     ini_set('session.save_handler', 'redis');
     ini_set('session.save_path', "tcp://127.0.0.1:{$port}");
     ini_set('redis.session.locking_enabled', '1');
-    ini_set('redis.session.lock_expire', '30');
+    ini_set('redis.session.lock_expire', getenv('HYPER_SESSION_EXPIRE') ?: '30');
     ini_set('redis.session.lock_retries', getenv('HYPER_SESSION_RETRIES') ?: '-1');
     ini_set('redis.session.lock_wait_time', '2000');
 } else {

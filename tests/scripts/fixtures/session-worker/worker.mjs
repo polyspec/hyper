@@ -1,20 +1,21 @@
 // One Node server process over one session (tests/scripts/session-workers.mts): the arguments are the session directory,
 // the identifier, and `count <requests> <name>`, `read <names as JSON>`, `write <values as JSON>`, or `stale`, which writes
 // after a line of its input, or `renew`. With HYPER_SESSION_REDIS, the port of a Redis server, it keeps the session there,
-// and HYPER_SESSION_RETRIES is how often it tries a lock.
+// HYPER_SESSION_RETRIES is how often it tries a lock and HYPER_SESSION_EXPIRE when a lock expires.
 import { once } from 'node:events';
 import { createClient, RESP_TYPES } from 'redis';
 import { FileSessions, RedisSessions } from '@polyspec/hyper-server';
 
 const [directory, id, command, first, second] = process.argv.slice(2);
 const port = process.env.HYPER_SESSION_REDIS;
-const client = port === undefined ? null : await createClient({ socket: { port: Number(port) } }).connect();
+const client = port === undefined ? null : await createClient({ socket: { port: Number(port) }, disableOfflineQueue: true }).connect();
 const sessions = client === null
   ? new FileSessions({ directory })
   : new RedisSessions({
       command: (words) => client.withTypeMapping({ [RESP_TYPES.BLOB_STRING]: Buffer }).sendCommand(words.map((word) => Buffer.from(word))),
       lockRetries: Number(process.env.HYPER_SESSION_RETRIES ?? 1_000_000),
       lockWait: 2,
+      lockExpire: Number(process.env.HYPER_SESSION_EXPIRE ?? 30),
     });
 
 // Returns the value as JSON of the test: a map as {"map": [[key, value], ...]}, whatever server wrote it.
