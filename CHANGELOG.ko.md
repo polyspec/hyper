@@ -1,11 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: eff6a39d5e850370ccdf9bc87b9b942db17938eb95d06dbca0724df66ff62601 -->
+<!-- source-sha256: 088a2c01e47dd39aa90bf1d61bb5d04f28dd98848576a1ce3df1978d9e126663 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
-- hyper는 저장소에 레시피를 포함시키지 않고, 다른 도구의 설정을 정하지 않으며, 사본을 쓰지 않는 kit 0.0.98을 지원한다. Makefile은 kit의 파일을 include하지 않고 레시피와 workflow가 실행하는 모든 target을 담으며, 각 target은 설치된 kit의 유틸리티를 명시적 인자로 실행한다. mise.toml은 mise와 uv의 설정을, .npmrc와 tests/package-install/.npmrc는 allow-remote를, knip.json, .oxlintrc.json, ruff.toml, phpcs.xml.dist, phpstan.dist.neon은 린트 규칙을 적는다. ci.yml의 항목 gates가 사본 ci-pipeline.yml 대신 kit의 검사기를 실행한다. release.yml과 bootstrap action은 hyper의 파일이다. 사본 .githooks, .claude/settings.json, config/ci.json, config/cargo.schema.json, config/pyproject.schema.json은 제거한다(H27.83).
+- hyper는 저장소에 레시피를 포함시키지 않고, 다른 도구의 설정을 정하지 않으며, 사본을 쓰지 않는 kit 0.0.98을 지원한다. Makefile은 kit의 파일을 include하지 않고 레시피와 workflow가 실행하는 모든 target을 담으며, 각 target은 설치된 kit의 유틸리티를 명시적 인자로 실행한다. mise.toml은 mise와 uv의 설정을, .npmrc와 tests/package-install/.npmrc는 allow-remote를, knip.json, .oxlintrc.json, ruff.toml, phpcs.xml.dist, phpstan.dist.neon은 린트 규칙을 적는다. ci.yml의 항목 gates가 사본 ci-pipeline.yml 대신 kit의 검사기를 실행한다. release.yml과 bootstrap action은 hyper의 파일이다. 사본 .githooks, .claude/settings.json, config/ci.json, config/cargo.schema.json, config/pyproject.schema.json은 제거한다. PRINCIPLES는 kit의 사본이며 그 Enforced by 줄은 hyper가 실행하는 검사를 적고, 항목 gates는 make rules-check도 실행하며, make check와 test는 FINAL_RUN, ci-only 거부, Claude Code hook에 기대지 않는다(H27.83).
 - 두 Composer root는 json-schema fork를 branch polyspec-origin-2.6.0 대신 release 2.6.0-p2로 require하고, hyper는 kit 0.0.95를 채택한다. kit 0.0.95의 PRINCIPLES는 fork 규칙을 각 fork의 FORK.md와 각 root의 manifest와 lock에 맡긴다 (H27.82).
 - docs/operations/deployment.md에 phpredis의 persistent 연결은 TLS 인증서를 연결을 열 때만 검증하므로 바뀐 CA는 php-fpm reload 뒤에 적용되고, 실행 중인 worker는 잘못된 CA를 알아채지 못한다고 적는다(H27.81).
 

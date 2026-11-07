@@ -1,5 +1,5 @@
 <!-- doc-id: agents -->
-<!-- source-sha256: 6c8dfddb02ac3ea96a13b8f6d3c7e0798abebfc173e33dcc806efc76ab68a206 -->
+<!-- source-sha256: d2854bfa6bd631bbd584c3b6a478f1e2d34c583d7eab6d45b566cac3c8a12979 -->
 # 개발
 
 [English](AGENTS.md).
@@ -87,11 +87,11 @@
   Enforced by: none, local 실행은 어떤 도구도 관찰하지 않는다.
 - Refines P26: `docs/plans/execution/checklist.md`에서 task를 `[o]`로 표시하기 전에, 커밋된 tree에서 그 task의 검증 명령을 실행한다. Verification 열은 `make check`가 아니라 task를 맡는 명령을 적는다. 이미 `[o]`인 행은 명령을 그대로 둔다.
   Enforced by: `make docs-check`
-- Own: commit이나 push 전에 local `make check`는 필요하지 않다. 체크리스트 개발이 끝나면 요청된 로컬 최종 모음을 정확히 한 번 실행하며, 수정이나 task마다 실행하지 않는다. `make check`는 `FINAL_RUN=1`로 kit 기본 보고 실행기를 사용한다. 실행기는 활성 `[~]` 항목과 변경되었거나 commit되지 않은 tree를 거부한다. 한 번 실행 절차는 작업 규칙이며 실행기 guard가 아니다. 보고서를 보존하고 수정 후 실패한 소유 부분만 다시 검사한다(`docs/operations/development.md`). 기능은 CI나 로컬 최종 모음에서 그 target 전체 실행이 통과한 뒤에만 implemented로 표시한다.
-  Enforced by: `make check`
+- Own: commit이나 push 전에 local `make check`는 필요하지 않다. 체크리스트 개발이 끝나면 요청된 로컬 최종 모음을 정확히 한 번 실행하며, 수정이나 task마다 실행하지 않는다. `make check`는 kit 기본 보고 실행기를 사용하며, 실행기는 모든 target을 끝까지 실행하고 아무것도 거부하지 않는다(kit K1053). 활성 `[~]` 항목이 없는 commit된 tree에서 한 번 실행하는 절차는 작업 규칙이며 실행기 guard가 아니다. 보고서를 보존하고 수정 후 실패한 소유 부분만 다시 검사한다(`docs/operations/development.md`). 기능은 CI나 로컬 최종 모음에서 그 target 전체 실행이 통과한 뒤에만 implemented로 표시한다.
+  Enforced by: none, 안내 규칙: local 최종 실행은 어떤 도구도 관찰하지 않으며, CI가 같은 target을 실행한다.
 - Own: `main`의 push와 모든 수동 실행(`workflow_dispatch`)에 대해 GitHub은 `.github/workflows/ci.yml`의 job에서 CI group마다 하나씩 전체 suite를 각 target 끝까지 실행한다. 각 job은 job summary를 쓰고, 상태, 시간, 처음 실패한 줄과 각 target의 전체 로그를 담은 보고서 `var/ci/<name>/`을 올린다(HR-91). 전체 suite와 end-to-end 검사는 여기서 실행한다. 다음 push 전에 그것이 적는 실패를 모두 고친다. 알려진 한계: CI runner는 Linux라서, Darwin에서만 full suite에 속하는 `make virtiofs-check`(`DARWIN_TARGETS`, HR-68)는 Mac에서 local `make check`를 실행할 때만 실행된다.
   Enforced by: `make ci-passed`
-- Own: 이 저장소는 Git hook을 두지 않는다. `make hooks`는 changelog와 checklist의 merge driver를 선언하고, `make commit`은 commit message를 검사한다. push는 검사하지 않는다. CI는 release에서 읽는다(`docs/operations/development.md`).
+- Own: 이 저장소는 Git hook을 두지 않는다. `make hooks`는 changelog와 checklist의 merge driver를 선언하고, `make commit`은 commit message를 쓰며 그것을 판정하지 않는다(kit K1053). push는 검사하지 않는다. CI는 release에서 읽는다(`docs/operations/development.md`).
   Enforced by: none, `make commit` 없이 만든 commit은 review로 찾는다.
 - Own: Version 0.1 전까지 변경은 그것을 소유한 unit test로 검사하고, checklist의 모든 task가 `[o]`일 때 `main`을 한 번 push한다(HR-94). Pull request, merge queue, GitHub ruleset은 없으며, push는 `git push origin main`이다. `main`의 push는 `.github/workflows/ci.yml`을 실행하고, 그 마지막 job `ci-passed`는 workflow의 다른 모든 job이 통과했을 때만 통과한다. 그 push의 CI 실행이 commit의 근거이며, release tag는 태그된 commit에 대해 `ci-passed`가 성공한 뒤에만 정한다(`docs/operations/development.md`).
   Enforced by: `make ci-passed`

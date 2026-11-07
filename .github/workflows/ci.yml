@@ -41,7 +41,7 @@ jobs:
             symbols: php
             composer: true
             python: true
-            targets: kit-check layout-check docs-check owner-validate rebuild-check language-check test-markers-check duplication-check suppression-check divergence-check parity-declarations-check parity-check lint-ts lint-php lint-python
+            targets: kit-check layout-check docs-check owner-validate rebuild-check rules-check language-check test-markers-check duplication-check suppression-check divergence-check parity-declarations-check parity-check lint-ts lint-php lint-python
           - name: docs
             tools: node php composer pie python uv
             php: true

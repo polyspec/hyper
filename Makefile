@@ -334,10 +334,10 @@ bench-server-smoke: assets server ## Run the PHP benchmark once per measurement 
 
 bench: bench-server bench-browser ## Run both measurements; results are reports, not pass or fail checks
 
-# The final suite runs through the native kit report runner on a clean committed tree.
-# Run it once after checklist development, then rerun only failed owners. GATE_TARGETS are the checks of the configuration,
+# The final suite runs through the native kit report runner, which runs every target to its end and refuses nothing.
+# Run it once after checklist development on a committed tree, then rerun only failed owners. GATE_TARGETS are the checks of the configuration,
 # the layout, the documents, the owners, the parity declarations and the lint, which run the checkers of kit.
-GATE_TARGETS := kit-check layout-check docs-check owner-validate rebuild-check language-check test-markers-check duplication-check suppression-check divergence-check parity-declarations-check parity-check lint-ts lint-php lint-python
+GATE_TARGETS := kit-check layout-check docs-check owner-validate rebuild-check rules-check language-check test-markers-check duplication-check suppression-check divergence-check parity-declarations-check parity-check lint-ts lint-php lint-python
 CHECK_TARGETS := $(GATE_TARGETS) typecheck bench-server-smoke hyper-lint analyse-php templates-check hyper-test-scripts hyper-test-js hyper-test-node hyper-test-python hyper-test-python-render package-check hyper-test-php parity server-parity server-parity-python bundle-size e2e
 
 # The CI groups of the full suite (HR-91) are the entries of the matrix of .github/workflows/ci.yml: each entry runs its
@@ -352,8 +352,8 @@ DARWIN_TARGETS := virtiofs-check
 VIRTIOFS_IMAGE := docker.io/library/node:26.8.1-trixie-slim@sha256:c0753125a3789977aefe869cbebccf70e3cfd7ea84ca48547458f02e4f1d7146
 CHECK_TARGETS += $(if $(filter Darwin,$(shell uname)),$(DARWIN_TARGETS))
 
-check: ## Run final verification once after checklist development, on a clean committed tree
-	FINAL_RUN=1 $(NODE) $(KIT)/ci-targets.$(KIT_EXT) var/report/full-run $(CHECK_TARGETS)
+check: ## Run final verification once after checklist development, on a committed tree
+	$(NODE) $(KIT)/ci-targets.$(KIT_EXT) var/report/full-run $(CHECK_TARGETS)
 
 
 
@@ -452,7 +452,7 @@ docs-check: ## Check the documents of config/documents.json: translation pairs, 
 	$(NODE) $(KIT)/check-documents.$(KIT_EXT)
 
 # ---- Gates: the checkers of kit on this checkout (GATE_TARGETS) ------------------------------------------------------
-.PHONY: kit-check layout-check owner-check owner-validate rebuild-check language-check test-markers-check duplication-check suppression-check divergence-check parity-check parity-declarations-check lint-ts lint-php lint-python
+.PHONY: kit-check layout-check owner-check owner-validate rebuild-check rules-check language-check test-markers-check duplication-check suppression-check divergence-check parity-check parity-declarations-check lint-ts lint-php lint-python
 kit-check: ## Check config/*.json against the schemas of kit; offline
 	$(NODE) $(KIT)/kit-check.$(KIT_EXT)
 
@@ -469,6 +469,9 @@ owner-validate: ## Check that config/owner-checks.json owns every tracked path a
 
 rebuild-check: ## Check that every tool of config/rebuild.json has its class (S1); offline
 	$(NODE) $(KIT)/rebuild-check.$(KIT_EXT)
+
+rules-check: ## Check that every rule of PRINCIPLES.md and AGENTS.md names a check that a CI workflow runs (P3); offline
+	$(NODE) $(KIT)/check-rules.$(KIT_EXT)
 
 language-check: ## Fail on Hangul in a comment, an identifier, a message or a test name of the code; offline
 	$(NODE) $(KIT)/language-check.$(KIT_EXT)

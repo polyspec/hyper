@@ -103,12 +103,12 @@ rules:
     message: "S10: the stub of the PHP extension is packages/php-ext/src/polyspec_<repository>.stub.php"
   # S5: the root folders of every monorepo, and the dot folders of Git, GitHub, kit and Claude Code. .mise holds .mise/locks/,
   # the uv lock sidecars that make toolchain-lock writes and mise.lock names: lock data that is tracked with mise.lock (K192).
-  # .claude holds settings.json, the Claude Code settings, such as the example of kit with the hook of K240.
+  # .claude holds the local Claude Code settings of a checkout, which hyper tracks none of.
   - id: layout-root-folders
     kind: dir_absent
     level: error
     root_only: true
-    paths: ["*", "!packages", "!contracts", "!docs", "!scripts", "!tests", "!examples", "!benchmarks", "!config", "!.github", "!.githooks", "!.kit", "!.mise", "!.claude"]
+    paths: ["*", "!packages", "!contracts", "!docs", "!scripts", "!tests", "!examples", "!benchmarks", "!config", "!.github", "!.kit", "!.mise", "!.claude"]
     message: "S5: the root holds only packages/, contracts/, docs/, scripts/, tests/, examples/, benchmarks/ and config/"
 
   # K245: docs/ holds the spec, the operations, the plans, the rebuild records (S1), the examples (K1046) and features.md, and the files of a VitePress

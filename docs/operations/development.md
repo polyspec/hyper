@@ -22,7 +22,7 @@ A development checkout links its polyspec providers (kit, template) only through
 |---|---|
 | `make install-tools` | Installs npm of `mise.toml`, which `devEngines` names, and Composer of `config/toolchain.json` into `var/tools` and writes the commands of `var/tools/bin`, verifying each download by its pinned digest (HR-81) |
 | `make install-packages` | Installs `package-lock.json` with the npm of `var/tools`, `@polyspec/kit` and the npm workspaces included, through `$(ONLINE)` |
-| `make kit-check` | Fails when the installed `@polyspec/kit` differs from `package-lock.json`, a copy differs from the package, or a `config/*.json` file breaks its schema |
+| `make kit-check` | Fails when a `config/*.json` file breaks its schema of kit; it checks no recipe, workflow or copy (kit K1051) |
 | `make layout-check` | Checks the folder layout against `config/layout.yml`, which extends `config/layout.kit.yml`, with the alint of `var/tools` |
 | `make hyper-install` | Installs the pinned tools, builds the native extension with PIE from the Composer repository of the template release through `$(ONLINE)` (`make template-ext`; H14.1-7, H27.45), runs `make hyper-install-python`, and installs the Composer dependencies, among them the template package of the template release (HR-70) |
 | `make hyper-install-python` | Makes the venv `.venv` of the Python server package anew from the Python of `mise.toml` with the `python-venv` utility of kit and installs the package into it non-editable with its dependencies, the template wheel of the release included; the Python tests and the board Python server run its Python and read no source path (S5) |
@@ -51,6 +51,7 @@ A development checkout links its polyspec providers (kit, template) only through
 | `make e2e` | Runs the SSR, CSR, no-JavaScript and comparison flows in Chromium on servers and a database of the run (`scripts/run-e2e.mts`) |
 | `make owner-check` | Runs the owners of the changed paths that `config/owner-checks.json` declares; `PATHS` names the paths and `BASE` takes the changes since a revision (HR-88) |
 | `make owner-validate` | Fails when a tracked path has no owner or `config/owner-checks.json` names a missing target or test file (HR-88) |
+| `make rules-check` | Fails when a rule of `PRINCIPLES.md` or `AGENTS.md` names a check that no step of a workflow of `.github/workflows` reaches, or no check (P3) |
 | `make docs-check` | Checks the documents of `config/documents.json`: translation pairs, the `doc-id` and `source-sha256` markers, links, code blocks, the changelog and the checklist |
 | `make hooks` | Declares the merge drivers of the changelogs and the checklists (see [Hooks](#hooks)) |
 | `make hooks-check` | Fails while the merge drivers of `make hooks` are not declared |
@@ -74,17 +75,17 @@ Script checks require `assets` and `server` before the runner. `package-check` d
 
 The full suite runs on GitHub after the push of `main`. A local full run is not required before a commit or push. During checklist development, run only the unit checks that own the change. Run `make check` exactly once after checklist development finishes; after a failure, fix and rerun only its owners. A new commit does not call for another full run.
 
-`make check` invokes the native kit `ci-targets` runner with `FINAL_RUN=1`, all `CHECK_TARGETS`, and `DARWIN_TARGETS` on Darwin. The runner refuses active `[~]` checklist items and a dirty or uncommitted tree, holds `var/report/full-run.lock`, and runs every target to completion despite failures. `GATE_TARGETS`, the checkers of kit, are targets of this set. Darwin includes `virtiofs-check`; Linux CI does not.
+`make check` invokes the native kit `ci-targets` runner with all `CHECK_TARGETS`, and `DARWIN_TARGETS` on Darwin. Run it on a committed tree with no active `[~]` checklist item; the runner refuses nothing (kit K1053), holds `var/report/full-run.lock`, and runs every target to completion despite failures. `GATE_TARGETS`, the checkers of kit, are targets of this set. Darwin includes `virtiofs-check`; Linux CI does not.
 
 The runner writes the tree, runtime versions, target status and times to `var/report/full-run/record.json`, a summary to `summary.md`, and full logs to `targets/<target>.log`. Its summary includes failed-target evidence. The runner does not enforce a once-per-tree limit; the once-only procedure above is the working rule. Installed source links remain development inputs; `make link-check` compares them with the link declaration `.links` (kit K869).
 
 Host suspension can exceed a test deadline while execution is stopped. Preserve that failure and the matching suspension interval, then rerun only the affected owner after resume; do not increase its deadline or claim a code repair without a reproduced code defect.
 
-Read the failed target names from that report. Run their owner checks directly, or group only those targets with `make ci-targets FINAL_RUN=1 TARGETS="<failed targets>" CI_REPORT=var/report/failed-owners` once the repair is committed and no item is active. Preserve the original report and use a separate report for repairs. Owner reruns are evidence for those repairs; they do not turn the original full run into a passing run of another tree.
+Read the failed target names from that report. Run their owner checks directly, or group only those targets with `make ci-targets TARGETS="<failed targets>" CI_REPORT=var/report/failed-owners` once the repair is committed and no item is active. Preserve the original report and use a separate report for repairs. Owner reruns are evidence for those repairs; they do not turn the original full run into a passing run of another tree.
 
 ## Hooks
 
-hyper keeps no Git hook. `make hooks` declares the merge drivers of `CHANGELOG.md`, the checklists and their Korean twins in `.git/info/attributes` and the git configuration; git runs each driver as `make twin-merge`. `make commit` checks the message of a commit. A push is not checked: the CI run of a commit is read at release.
+hyper keeps no Git hook. `make hooks` declares the merge drivers of `CHANGELOG.md`, the checklists and their Korean twins in `.git/info/attributes` and the git configuration; git runs each driver as `make twin-merge`. `make commit` writes the message of a commit, which it does not judge (kit K1053). A push is not checked: the CI run of a commit is read at release.
 
 ## Publishing main
 

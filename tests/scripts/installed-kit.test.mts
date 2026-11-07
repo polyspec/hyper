@@ -91,12 +91,11 @@ test('H27.21 the native consumer installs its lock with npm ci offline without e
   const template = parseJsonObject(readFileSync(join(project, 'node_modules/@polyspec/template/package.json'), 'utf8'), 'installed template package.json');
   assert.equal(jsonString(template.name, 'installed template name'), '@polyspec/template');
   assert.equal(readFileSync(join(project, 'package-lock.json'), 'utf8'), lock);
-  // H27.48-1, H27.50: with no .links, as in CI, make install-link of the installed kit links nothing and writes no Claude Code
-  // hook, whose node an installed kit lacks; make link of development writes it (kit K967). link reads the checkout from git, so the copy is a work tree, as the CI checkout is.
+  // H27.48-1, H27.50: with no .links, as in CI, make install-link of the installed kit links nothing. link reads the checkout
+  // from git, so the copy is a work tree, as the CI checkout is.
   cpSync('.gitignore', join(root, '.gitignore'));
   for (const args of [['init', '--quiet'], ['add', '--all']]) assert.equal(spawnSync('git', args, { cwd: root, encoding: 'utf8' }).status, 0);
   const linked = spawnSync('make', ['--no-print-directory', 'install-link', 'PROJECT=tests/package-install', `NODE=${process.execPath}`], { cwd: root, encoding: 'utf8', env });
   assert.equal(linked.status, 0, `${linked.stdout}${linked.stderr}`);
   assert.equal(realpathSync(join(project, 'node_modules/@polyspec/hyper-client')), realpathSync(join(root, 'packages/client')));
-  assert.equal(existsSync(join(project, '.claude/settings.local.json')), false);
 });

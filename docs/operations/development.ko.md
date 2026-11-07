@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: 35e62c9bb505575b54140f76ffb3dbd3675c12e57888669e16761c24cc917519 -->
+<!-- source-sha256: c8b67d848a1d43d385552bd056171b1e85e3ba06261ef747285e641c89f8f2c0 -->
 # 개발
 
 [English](development.md).
@@ -23,7 +23,7 @@
 |---|---|
 | `make install-tools` | `devEngines`가 이름하는 `mise.toml`의 npm과 `config/toolchain.json`의 Composer를 `var/tools`에 설치하고 `var/tools/bin`의 명령을 쓰며, 각 download를 pin한 digest로 확인한다(HR-81) |
 | `make install-packages` | `var/tools`의 npm으로 `@polyspec/kit`과 npm workspace를 포함한 `package-lock.json`을 `$(ONLINE)`으로 설치한다 |
-| `make kit-check` | 설치된 `@polyspec/kit`이 `package-lock.json`과 다르거나, 복사본이 패키지와 다르거나, `config/*.json`이 schema를 어기면 실패한다 |
+| `make kit-check` | `config/*.json`이 kit의 schema를 어기면 실패한다. recipe, workflow, 복사본은 검사하지 않는다(kit K1051) |
 | `make layout-check` | `config/layout.kit.yml`을 extend하는 `config/layout.yml`에 대해 `var/tools`의 alint로 폴더 배치를 검사한다 |
 | `make hyper-install` | pin한 도구를 설치하고, `$(ONLINE)`을 거쳐 template release의 Composer repository에서 PIE로 네이티브 확장을 build하며(`make template-ext`; H14.1-7, H27.45), `make hyper-install-python`을 실행하고, template release의 template package를 포함한 Composer 의존성을 설치한다(HR-70) |
 | `make hyper-install-python` | kit의 `python-venv` 유틸리티로 `mise.toml`의 Python에서 Python 서버 package의 venv `.venv`를 새로 만들고, release의 template wheel을 포함한 의존성과 함께 package를 non-editable로 설치한다. Python test와 board Python 서버는 그 Python을 실행하며 source 경로를 읽지 않는다(S5) |
@@ -52,6 +52,7 @@
 | `make e2e` | SSR, CSR, JavaScript 없는 흐름, 비교 흐름을 Chromium에서 실행한다(실행의 서버와 database에서, `scripts/run-e2e.mts`) |
 | `make owner-check` | `config/owner-checks.json`이 선언한 바뀐 경로의 owner를 실행한다. `PATHS`는 경로를 밝히고 `BASE`는 그 revision 이후의 변경을 가져온다(HR-88) |
 | `make owner-validate` | 추적 경로에 owner가 없거나 `config/owner-checks.json`이 없는 target이나 test 파일을 밝히면 실패한다(HR-88) |
+| `make rules-check` | `PRINCIPLES.md`나 `AGENTS.md`의 규칙이 `.github/workflows`의 workflow step이 닿지 않는 검사를 적거나 검사를 적지 않으면 실패한다(P3) |
 | `make docs-check` | `config/documents.json`의 문서를 검사한다: 문서 쌍, marker `doc-id`와 `source-sha256`, 링크, 코드 블록, changelog, checklist |
 | `make hooks` | changelog와 checklist의 merge driver를 선언한다([Hooks](#hooks) 참조) |
 | `make hooks-check` | `make hooks`의 merge driver가 선언되지 않았으면 실패한다 |
@@ -75,17 +76,17 @@ Script 검사는 runner 전에 `assets`와 `server`를 요구한다. `package-ch
 
 전체 모음은 `main` push 뒤 GitHub에서 실행한다. commit이나 push 전에 로컬 전체 실행은 필요하지 않다. 체크리스트 개발 중에는 변경을 소유한 unit 검사만 실행한다. 체크리스트 개발이 끝나면 `make check`를 정확히 한 번 실행한다. 실패하면 그 소유 부분만 수정하고 다시 검사한다. 새 commit이 생겼다고 전체를 다시 실행하지 않는다.
 
-`make check`는 `FINAL_RUN=1`, 모든 `CHECK_TARGETS`, Darwin에서는 `DARWIN_TARGETS`를 더해 kit의 기본 `ci-targets` 실행기를 호출한다. 실행기는 활성 `[~]` 체크리스트 항목과 변경되었거나 commit되지 않은 tree를 거부하고 `var/report/full-run.lock`을 잡으며 실패해도 모든 target을 끝까지 실행한다. kit의 검사기 `GATE_TARGETS`도 이 모음의 target이다. Darwin은 `virtiofs-check`를 포함하고 Linux CI는 포함하지 않는다.
+`make check`는 모든 `CHECK_TARGETS`, Darwin에서는 `DARWIN_TARGETS`를 더해 kit의 기본 `ci-targets` 실행기를 호출한다. 활성 `[~]` 체크리스트 항목이 없는 commit된 tree에서 실행한다. 실행기는 아무것도 거부하지 않으며(kit K1053) `var/report/full-run.lock`을 잡고 실패해도 모든 target을 끝까지 실행한다. kit의 검사기 `GATE_TARGETS`도 이 모음의 target이다. Darwin은 `virtiofs-check`를 포함하고 Linux CI는 포함하지 않는다.
 
 실행기는 tree, runtime version, target 상태와 시간을 `var/report/full-run/record.json`에, 요약을 `summary.md`에, 전체 log를 `targets/<target>.log`에 쓴다. 요약에는 실패 target의 근거를 포함한다. 실행기는 tree당 한 번 제한을 강제하지 않으며, 위의 한 번 실행 절차가 작업 규칙이다. 설치된 소스 link는 개발 입력으로 유지하고, `make link-check`가 그것을 link 선언 `.links`와 비교한다(kit K869).
 
 호스트가 절전하면 실행이 멈춘 동안 test 제한 시간을 넘길 수 있다. 실패와 겹치는 절전 구간을 보존하고 재개 후 영향받은 소유 검사만 다시 실행한다. 제한 시간을 늘리거나 코드 결함을 재현하지 않고 코드 수정으로 보고하지 않는다.
 
-보고서에서 실패 target 이름을 읽는다. 소유 검사를 직접 실행하거나, 수정을 commit하고 활성 항목이 없을 때 `make ci-targets FINAL_RUN=1 TARGETS="<failed targets>" CI_REPORT=var/report/failed-owners`로 그 target만 묶어 실행한다. 원본 보고서를 보존하고 수정 검사는 별도 보고서에 기록한다. 소유 검사 재실행은 해당 수정의 근거이며 원본 전체 실행을 다른 tree의 성공으로 바꾸지 않는다.
+보고서에서 실패 target 이름을 읽는다. 소유 검사를 직접 실행하거나, 수정을 commit하고 활성 항목이 없을 때 `make ci-targets TARGETS="<failed targets>" CI_REPORT=var/report/failed-owners`로 그 target만 묶어 실행한다. 원본 보고서를 보존하고 수정 검사는 별도 보고서에 기록한다. 소유 검사 재실행은 해당 수정의 근거이며 원본 전체 실행을 다른 tree의 성공으로 바꾸지 않는다.
 
 ## Hooks
 
-hyper는 Git hook을 두지 않는다. `make hooks`는 `CHANGELOG.md`, checklist와 그 한국어 짝의 merge driver를 `.git/info/attributes`와 git 설정에 선언하고, git은 각 driver를 `make twin-merge`로 실행한다. `make commit`은 commit message를 검사한다. push는 검사하지 않는다. commit의 CI 실행은 release에서 읽는다.
+hyper는 Git hook을 두지 않는다. `make hooks`는 `CHANGELOG.md`, checklist와 그 한국어 짝의 merge driver를 `.git/info/attributes`와 git 설정에 선언하고, git은 각 driver를 `make twin-merge`로 실행한다. `make commit`은 commit message를 쓰며 그것을 판정하지 않는다(kit K1053). push는 검사하지 않는다. commit의 CI 실행은 release에서 읽는다.
 
 ## main 공개
 

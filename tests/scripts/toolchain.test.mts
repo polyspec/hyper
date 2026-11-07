@@ -138,16 +138,7 @@ test('only explicit install targets download through $(ONLINE), and no check tar
   assert.ok(declared !== undefined && gates !== undefined, 'the Makefile declares no CHECK_TARGETS or GATE_TARGETS');
   const checks = declared.split(' ').flatMap((word) => word === '$(GATE_TARGETS)' ? gates.split(' ') : [word]);
   assert.ok(checks.length > 10, checks.join(' '));
-  // kit refuses even a dry run of a target that runs only in CI outside CI, with [ci-only]; CI dry-runs those targets as well.
-  const caller = ['MAKEFLAGS', 'MFLAGS', 'MAKELEVEL', 'MAKEOVERRIDES'];
-  const env = Object.fromEntries(Object.entries(process.env).filter(([name]) => !caller.includes(name)));
-  const ciOnly = (target: string) => {
-    const result = spawnSync('make', ['--no-print-directory', '-n', target], { encoding: 'utf8', env });
-    return result.status !== 0 && result.stderr.includes('[ci-only] refuse');
-  };
-  const checked = [...checks, 'ext'].filter((target) => !ciOnly(target));
-  assert.ok(checked.length > 10, checked.join(' '));
-  for (const target of checked) {
+  for (const target of [...checks, 'ext']) {
     const lines = dryRun(target);
     assert.deepEqual(lines.filter((line) => /env -u/.test(line)), [], `${target} downloads`);
   }

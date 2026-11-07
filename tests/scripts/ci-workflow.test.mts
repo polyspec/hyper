@@ -267,7 +267,6 @@ test('a target declared for Darwin is in the full suite exactly on Darwin and sk
   const command = ` ${kitTool('ci-targets')} var/report/full-run `;
   const line = dryRun('check').find((entry) => entry.includes(command));
   assert.ok(line, 'make check does not run ci-targets of @polyspec/kit');
-  assert.ok(line.startsWith('FINAL_RUN=1 '), 'make check requires an explicit local final verification mode');
   const suite = item(line.split(command), 1, 'the final verification command').split(' ');
   assert.deepEqual(suite, process.platform === 'darwin' ? [...check, ...darwin] : check);
   const virtiofs = readdirSync(path.join(ROOT, 'tests/virtiofs')).filter((name) => name.endsWith('.test.mts'));
