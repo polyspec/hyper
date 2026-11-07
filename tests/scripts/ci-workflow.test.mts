@@ -12,7 +12,7 @@ import path from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
-import { parseJsonObject } from '../../scripts/json.mts';
+import { jsonObject, parseJsonObject } from '../../scripts/json.mts';
 import { dryRun } from './make-dry-run.mts';
 import { kitTool } from './kit-tools.mts';
 
@@ -80,10 +80,14 @@ function jobs(text: string): Job[] {
   }));
 }
 
-// The workflows of this repository; release.yml and ci-pipeline.yml are copies of workflows of @polyspec/kit (kit.copies),
-// whose rules kit tests and make kit-check holds them to, so the rules of this file read the other workflows.
+// The workflows of this repository. The workflows that the installed @polyspec/kit names in kit.copies of its package.json are
+// copies of kit: kit owns their text and tests their rules, and make kit-check holds each copy to the package, so the rules of
+// this file read the other workflows.
 const allWorkflows = () => readdirSync(WORKFLOWS).filter((name) => name.endsWith('.yml')).map((name) => ({ name, text: readFileSync(path.join(WORKFLOWS, name), 'utf8') }));
-const KIT_COPIES = ['release.yml', 'ci-pipeline.yml'];
+const KIT_MANIFEST = parseJsonObject(readFileSync(fileURLToPath(import.meta.resolve('@polyspec/kit/package.json')), 'utf8'), '@polyspec/kit/package.json');
+const KIT_COPIES = Object.keys(jsonObject(jsonObject(KIT_MANIFEST.kit, '@polyspec/kit kit').copies, '@polyspec/kit kit.copies'))
+  .filter((file) => path.dirname(file) === '.github/workflows')
+  .map((file) => path.basename(file));
 const workflows = () => allWorkflows().filter((workflow) => !KIT_COPIES.includes(workflow.name));
 // The job of ci.yml that calls the gates workflow of kit (kit K910). A job with `uses:` runs the jobs of the workflow that it
 // calls, so it has no runner and no steps of its own; the rules of runners and steps read the jobs that run steps.
@@ -130,18 +134,13 @@ test('every step that runs a command runs make, and every step after the first r
   assert.deepEqual(found, []);
 });
 
-// The on: block of each workflow, exactly: the checks run on the push of main and on every manual run; the release on a
-// manual run with the id of a successful CI run alone, whose version is the first ## X.Y.Z of the change log (K924), and on no
-// tag push; the gates of kit when ci.yml calls them.
-// No other workflow exists, and none runs on a pull request or a merge group (HR-91, HR-95).
+// The on: block of each workflow of this repository, exactly: the checks run on the push of main and on every manual run.
+// The copies of kit declare the triggers that kit gives them. No other workflow exists, and none runs on a pull request or a
+// merge group (HR-91, HR-95).
 const TRIGGERS: Record<string, string> = {
   'ci.yml': 'on:\n  push:\n    branches: [main]\n  workflow_dispatch:\n',
   // The benchmarks: a report on a manual run, which no check and no release reads.
   'bench.yml': 'on:\n  workflow_dispatch:\n',
-  // kit K987: the release starts by itself when a CI run of main succeeds, and a dispatch starts it again.
-  'release.yml': 'on:\n  workflow_run:\n    workflows: [ci]\n    types: [completed]\n    branches: [main]\n  workflow_dispatch:\n    inputs:\n      run:\n        description: The id of the successful CI run whose exact commit is released\n        required: true\n        type: string\n',
-  // The gates workflow of @polyspec/kit (K910), a copy that make kit-check holds to the package, which only the job kit calls.
-  'ci-pipeline.yml': 'on:\n  workflow_call:\n',
 };
 
 /**
@@ -167,8 +166,8 @@ test('no workflow starts on a tag push (HR-95)', () => {
 });
 
 test('each workflow declares exactly its triggers (HR-91, HR-95)', () => {
-  assert.deepEqual(allWorkflows().map(workflow => workflow.name).sort(), Object.keys(TRIGGERS).sort());
-  for (const workflow of allWorkflows()) {
+  assert.deepEqual(workflows().map(workflow => workflow.name).sort(), Object.keys(TRIGGERS).sort());
+  for (const workflow of workflows()) {
     const declared = /^(on:\n(?: {2}.*\n)+)/m.exec(workflow.text)?.[1] ?? '';
     assert.equal(declared, TRIGGERS[workflow.name], `${workflow.name} declares other triggers`);
   }
