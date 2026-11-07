@@ -12,7 +12,7 @@
         "php": ">=8.4",
         "ext-pdo_sqlite": "*",
         "min-0-max/json-schema": "2.6.0-p2",
-        "polyspec/hyper-server": "0.0.32",
+        "polyspec/hyper-server": "0.0.33",
         "polyspec/template": "0.0.21"
     },
     "require-dev": {

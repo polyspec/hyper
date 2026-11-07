@@ -1,10 +1,13 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 23938c91259eb6f4181faea6a00b1ca2b9c3415567fb827eae9be7e5ead8494d -->
+<!-- source-sha256: 018adf6d8af44e850568beb35d9ad7ffc20c7c8fde7efc29bac0fa40ce5a6cfc -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+## 0.0.33
+- H27.86 다음에 0.0.33을 릴리즈한다. config/release.json의 모든 manifest, polyspec/hyper-server와 @polyspec/hyper-client의 정확한 요구 버전, npm, Composer, uv가 쓴 lock이 0.0.33을 가진다(H27.87).
 - hyper가 제공 라이브러리의 최신 릴리스 php-serialize 0.0.2와 template 0.0.21을 받는다. npm, Composer, uv의 manifest와 lock이 그 릴리스 URL과 digest를 적고, packages build, client, server/ts가 그 버전을 요구한다(H27.86).
 
 ## 0.0.32
