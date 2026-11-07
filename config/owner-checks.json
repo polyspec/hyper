@@ -5,18 +5,6 @@
   "owners": [
     {
       "paths": [
-        "config/ci.json"
-      ],
-      "tests": [
-        "tests/scripts/ci-workflow.test.mts"
-      ],
-      "targets": [
-        "kit-check",
-        "typecheck"
-      ]
-    },
-    {
-      "paths": [
         "tests/scripts/checkout-tools.mts"
       ],
       "tests": [
@@ -456,11 +444,11 @@
     },
     {
       "paths": [
-        ".githooks/**",
         "config/checklist.json"
       ],
       "targets": [
-        "hooks-check"
+        "kit-check",
+        "docs-check"
       ]
     },
     {
@@ -534,7 +522,8 @@
       "paths": [
         "package.json",
         "package-lock.json",
-        ".npmrc"
+        ".npmrc",
+        "tests/package-install/.npmrc"
       ],
       "targets": [
         "hyper-test-js",
@@ -560,27 +549,20 @@
     },
     {
       "paths": [
-        ".github/workflows/release.yml",
-        ".github/workflows/ci-pipeline.yml",
-        "PRINCIPLES.md",
-        "PRINCIPLES.ko.md",
         "config/layout.kit.yml",
-        ".editorconfig",
-        "config/pyproject.schema.json",
         "config/composer.schema.json",
-        "config/cargo.schema.json"
+        ".editorconfig"
       ],
       "targets": [
-        "kit-check",
-        "typecheck"
+        "layout-check"
       ]
     },
     {
       "paths": [
-        "config/knip-entries.json"
+        "knip.json",
+        ".oxlintrc.json"
       ],
       "targets": [
-        "kit-check",
         "lint-ts"
       ]
     },
@@ -634,12 +616,44 @@
     },
     {
       "paths": [
-        ".claude/settings.json",
+        ".github/actions/**"
+      ],
+      "tests": [
+        "tests/scripts/ci-workflow.test.mts"
+      ]
+    },
+    {
+      "paths": [
+        "phpcs.xml.dist",
+        "phpstan.dist.neon"
+      ],
+      "targets": [
+        "lint-php"
+      ]
+    },
+    {
+      "paths": [
+        "ruff.toml"
+      ],
+      "targets": [
+        "lint-python"
+      ]
+    },
+    {
+      "paths": [
+        "PRINCIPLES.ko.md"
+      ],
+      "targets": [
+        "docs-check"
+      ]
+    },
+    {
+      "paths": [
         "AGENTS.md",
         "PRINCIPLES.md"
       ],
       "targets": [
-        "rules-check"
+        "docs-check"
       ]
     },
     {

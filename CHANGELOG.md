@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- hyper supports kit 0.0.98, which includes no recipe, sets no setting of another tool and writes no copy into a repository: the Makefile includes no file of kit and holds every target that its recipes and workflows run, each running a utility of the installed kit with explicit arguments; mise.toml states the settings of mise and uv, .npmrc and tests/package-install/.npmrc state allow-remote, and knip.json, .oxlintrc.json, ruff.toml, phpcs.xml.dist and phpstan.dist.neon state the lint rules; the entry gates of ci.yml runs the checkers of kit in place of the copy ci-pipeline.yml; release.yml and the bootstrap action are files of hyper; the copies .githooks, .claude/settings.json, config/ci.json, config/cargo.schema.json and config/pyproject.schema.json are removed (H27.83).
 - Both Composer roots require the json-schema fork by its release 2.6.0-p2 in place of its branch polyspec-origin-2.6.0, and hyper adopts kit 0.0.95, whose PRINCIPLES leave the rule of forks to the FORK.md of each fork and the manifest and lock of each root (H27.82).
 - docs/operations/deployment.md states that a persistent connection of phpredis verifies the TLS certificate only when it opens, so a changed CA applies after php-fpm reloads, and that a running worker does not detect a wrong CA (H27.81).
 

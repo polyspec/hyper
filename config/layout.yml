@@ -1,5 +1,5 @@
 # The folder layout of hyper (S5, S7, S9), checked by make layout-check with the alint of var/tools: the common rules of
-# config/layout.kit.yml, a copy of @polyspec/kit that make kit-sync writes, and the map of this repository.
+# config/layout.kit.yml, which hyper keeps from the example of kit, and the map of this repository.
 version: 1
 extends:
   - layout.kit.yml

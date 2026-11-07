@@ -1,5 +1,5 @@
 <!-- doc-id: features -->
-<!-- source-sha256: dd2dd501daa493afcd0beff820c59181c889cf403e219ec7031f6165a1d54815 -->
+<!-- source-sha256: b8492799d1f7777f51143eb9d5f876a8272c2cbe1de03553beeabbb9c308c0da -->
 # 기능 상태
 
 [English](features.md).
@@ -67,7 +67,7 @@
 | tool-output | 검사는 run 맥락이나 pin하지 않은 release에 따라 바뀌지 않는 형태로 tool 출력을 읽는다. 호출한 make의 변수 없는 make dry run, machine이 읽는 형태, pin한 도구의 text만 읽는다(HR-83) | implemented | `tests/scripts/template-copy.test.mjs` |
 | atomic-outputs | 다른 process가 읽는 출력은 rename으로 파일 단위 publish하고, 파일 하나는 rename 한 번으로 쓰며, 설치한 사본은 의존성 tree가 같을 때만 publish하고, package manager 설치와 full run은 lock을 잡는다(HR-82) | implemented | `tests/scripts/publish.test.mts`, `tests/scripts/toolchain.test.mts` |
 | toolchain-pin | Node.js, npm, Composer는 정확한 release로, PHP와 Python은 minor release로 추적 파일에 pin한다. npm과 Composer는 digest로 확인해 checkout의 `var/tools`에 설치하고 `PATH`의 맨 앞에 둔다. 없는 도구는 그것을 실행하는 target을 실패시키고(kit K854), CI 보고서는 실행 중인 release를 기록한다(HR-81) | implemented | `tests/scripts/toolchain.test.mts`, `tests/scripts/template-copy.test.mjs` |
-| kit-tools | 상속된 offline 설정에서도 명시적 bootstrap은 선언된 다운로드를 허용한다. 선택적인 기본 로컬 소스 link를 지원하는 설치된 공유 도구 release 0.0.75의 Git hook, 문서 검사, commit message 규칙, owner 검사, test runner, CI 보고서, toolchain 설치와 검사, release는 release asset의 URL과 integrity로 pin한 npm 패키지 `@polyspec/kit`이며 `config/*.json`이 이를 설정한다. `make kit-sync`가 설치 패키지에서 `kit.copies`의 복사본을 쓰고, schema를 어기는 설정은 실패한다 | implemented | `make kit-check` |
+| kit-tools | 상속된 offline 설정에서도 명시적 bootstrap은 선언된 다운로드를 허용한다. 문서 검사, commit message 규칙, owner 검사, test runner, CI 보고서, toolchain 설치, 린트, release는 release asset의 URL과 integrity로 pin하고 선택적인 기본 로컬 소스 link를 지원하는 npm 패키지 `@polyspec/kit`의 유틸리티이며 `config/*.json`이 이를 설정한다. hyper의 Makefile이 모든 레시피를 담고 각 유틸리티를 명시적 인자로 실행하며, 도구는 hyper의 기본 설정(`.npmrc`, `mise.toml`, 린트 설정)을 읽고, schema를 어기는 설정은 실패한다 | implemented | `make kit-check` |
 | template-tag | 릴리즈 선언은 template release `v0.0.20`(`v$(TEMPLATE_VERSION)`)의 asset을 고정하고, 각 설치는 자기가 설치하는 모든 template asset을 그 integrity로 확인한다. npm lock의 sha512, Composer lock의 sha1, `pyproject.toml`과 `uv.lock`의 sha256이다. 어떤 검사도 template checkout을 읽지 않는다(HR-80) | implemented | `tests/scripts/template-pins.test.mts` |
 | query-values | 중첩 없이 순서대로 읽는 모든 쿼리 값과 원본 쿼리(HY-56) | implemented | `make test-php`, `make hyper-test-node` |
 | file-parts | 공개 업로드 metadata와 파일 제한은 기본 API 선언을 가지며 PHP 요청 map은 내부 저장형 없이 순서가 있는 iterable 항목을 노출한다(HY-106, HY-113, HY-114) | implemented | `tests/scripts/public-symbols.test.mts`, `make parity-check UNITS=file-parts`, `packages/server/php/tests/FilePartsTest.php`, `make python-file-parts-test` |
@@ -81,7 +81,7 @@
 | gate-inputs | Native gate가 읽기 전에 workspace 선언과 runtime fixture를 build한다(HR-85) | implemented | `tests/scripts/check-recipes.test.mts`, `make lint-ts`, `make parity-check` |
 | ci-setup | 모든 CI 검사 group이 검증 전에 선언된 PHP와 checkout hook을 준비한다 | implemented | `tests/scripts/ci-workflow.test.mts` |
 | consumer-check-inputs | Script 검사가 build를 소유하고 package 검사가 editor 설정 없이 native source 연결을 위임한다 | implemented | `tests/scripts/check-recipes.test.mts`, `tests/scripts/template-ext.test.mts`, `make package-check` |
-| language-parity-ci | 언어 간 protocol 동등 검사는 `ci.yml`의 job `kit`이 호출하는 kit의 gates workflow `.github/workflows/ci-pipeline.yml`의 parity job에서 실행하고(kit K870, K910), 선언을 한 번 검증하며 browser를 설치하지 않고, release가 자기 실행에 요구하는 `ci-passed`는 job `kit`을 기다린다 | configured | `tests/scripts/ci-workflow.test.mts`, `ci-pipeline.yml`의 `parity` |
+| language-parity-ci | 언어 간 protocol 동등 검사는 `ci.yml`의 항목 `gates`에서 실행하고, 선언을 한 번 검증하며 browser를 설치하지 않고, release가 자기 실행에 요구하는 `ci-passed`는 그 항목의 job `check`를 기다린다 | configured | `tests/scripts/ci-workflow.test.mts`, `ci.yml`의 항목 `gates` |
 | ci-environment-ownership | 각 CI group은 Kit으로 고정 도구를 선택하고 native lock graph를 설치하며 다른 언어 job의 산출물 없이 build 입력을 소유한다. 공통 정책 group은 sibling template source를 선언하지 않는다 | configured; native selector owner checks | `tests/scripts/ci-workflow.test.mts`, `tests/scripts/toolchain.test.mts` |
 | shared-runtime-runner | 모든 Python 검사 target은 native Kit runner와 virtual environment 선택을 사용하며 앱 unittest harness를 제거한다 | configured | `make hyper-runner-owner-check`, `make python-file-parts-test` |
 | native-browser-runner | 앱 server의 준비와 정리 소유권을 유지하면서 browser E2E 실행에 provider 소유 Playwright adapter를 사용해야 한다 | pending provider support; release held | [Kit issue 13](https://github.com/polyspec/kit/issues/13) |

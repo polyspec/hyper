@@ -1,20 +1,37 @@
-# The npm that devEngines of package.json names installs the declared shared-tool package before make reads its installed
-# bootstrap. It runs outside the checkout with --prefix, since an npm of another version refuses a folder whose devEngines
-# names npm 12.2.0 (EBADDEVENGINES, kit K938).
+# The Makefile of hyper holds every recipe of this repository; it includes no file of @polyspec/kit (kit 0.0.98 ships no recipe).
+# The recipes run the utilities of the installed kit package, each with its arguments: a native local link to the kit
+# checkout runs its sources (scripts/kit/*.mts, which the exports of its package.json name), the packed release its dist
+# (dist/*.mjs). make reads the package again in every run, a recursive one too, so a run reads the kit that is installed.
+KIT_PACKAGE := $(realpath node_modules/@polyspec/kit)
+KIT_SOURCE := $(wildcard $(KIT_PACKAGE)/scripts/kit/run-tests.mts)
+KIT := $(if $(KIT_SOURCE),$(KIT_PACKAGE)/scripts/kit,$(KIT_PACKAGE)/dist)
+KIT_EXT := $(if $(KIT_SOURCE),mts,mjs)
+
+# The tools of the checkout, which make install-tools installs into var/tools of this checkout, a linked worktree too. The
+# shims of mise in var/tools/mise/shims read the folders of that mise and the mise.toml of the checkout from the
+# environment, as the installer of kit names them; mise.toml states the settings of mise and uv ([settings], [env]).
+KIT_TOOLS := $(CURDIR)/var/tools
+export MISE_DATA_DIR := $(KIT_TOOLS)/mise
+export MISE_CACHE_DIR := $(KIT_TOOLS)/mise/cache
+export MISE_STATE_DIR := $(KIT_TOOLS)/mise/state
+export MISE_CONFIG_DIR := $(KIT_TOOLS)/mise/config
+export MISE_GLOBAL_CONFIG_FILE := $(CURDIR)/mise.toml
+export MISE_GLOBAL_CONFIG_ROOT := $(CURDIR)
+MISE_ENVIRONMENT := MISE_DATA_DIR MISE_CACHE_DIR MISE_STATE_DIR MISE_CONFIG_DIR MISE_GLOBAL_CONFIG_FILE MISE_GLOBAL_CONFIG_ROOT
+# The node of mise.toml, which the bootstrap wraps in var/tools/bin; the bootstrap itself runs on the Node.js of the machine.
+NODE := $(KIT_TOOLS)/bin/node
+BOOTSTRAP_NODE := node
+ALINT := $(KIT_TOOLS)/mise/shims/alint
+
+# The npm that devEngines of package.json names installs the lock, @polyspec/kit included, before the tools of the checkout
+# exist. It runs outside the checkout with --prefix, since an npm of another version refuses a folder whose devEngines
+# names npm 12.2.0 (EBADDEVENGINES, kit K938); npm reads allow-remote of the .npmrc of the checkout (kit K1045).
 # A native local package link uses this same path; a sibling checkout is optional.
 .PHONY: bootstrap
 BOOTSTRAP_NPM := $(abspath $(shell command -v npm))
 bootstrap: ## Bootstrap the lock with the declared native npm before installed tools exist
 	root="$$PWD"; version="$$(node -p 'require("./package.json").devEngines.packageManager.version')"; \
-	cd "$${TMPDIR:-/tmp}" && npm_config_offline=false npm_config_cache="$$root/var/bootstrap/npm-cache" "$(BOOTSTRAP_NPM)" exec --yes --package="npm@$$version" -- npm --prefix "$$root" ci --ignore-scripts --allow-remote=root
-
-ifneq ($(filter bootstrap,$(MAKECMDGOALS)),)
-ifneq ($(words $(MAKECMDGOALS)),1)
-$(error Run make bootstrap alone before other goals)
-endif
-else
-include node_modules/@polyspec/kit/scripts/kit/kit-bootstrap.mk
-endif
+	cd "$${TMPDIR:-/tmp}" && npm_config_offline=false npm_config_cache="$$root/var/bootstrap/npm-cache" "$(BOOTSTRAP_NPM)" exec --yes --package="npm@$$version" -- npm --prefix "$$root" ci --ignore-scripts
 
 BOARD := examples/board
 PHP_PACKAGE := packages/server/php
@@ -60,10 +77,10 @@ PHPSTAN_MEMORY := 256M
 # The library of the native template extension that `make hyper-install` builds with PIE (H14.1-7, H27.45, H27.51).
 EXT := build/ext/polyspec_template.so
 
-# The toolchain (HR-81, install-tools of @polyspec/kit): npm and Composer of the checkout ($(KIT_TOOLS) of kit.mk, its own var/tools in a
+# The toolchain (HR-81, install-tools of @polyspec/kit): npm and Composer of the checkout ($(KIT_TOOLS), its own var/tools in a
 # linked worktree too, kit K858), which `make install-tools` installs into its var/tools, come first on PATH for every recipe
 # and the programs that it starts.
-export PATH := $(KIT_TOOLS)/bin:$(PATH)
+export PATH := $(KIT_TOOLS)/bin:$(KIT_TOOLS)/mise/shims:$(PATH)
 # A check reads no network (HR-89): `make hyper-install` downloads everything that the checks read, and every other recipe
 # and the programs that it starts run npm and Composer offline, so a missing download fails at once instead of
 # reaching a registry in one run and not in another. The downloads of `make install-tools`, `make hyper-install` and
@@ -92,7 +109,14 @@ checks_result = test -z "$$failed" || { echo "failed checks:$$failed"; exit 1; }
 help: ## List the targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
 
-hyper-install: install-kit ## Install the pinned tools, fetch the archives of the template release and install the Composer dependencies; make install-packages installs the npm packages (HR-89, H14.1-7)
+# The install order of a checkout: the mise, node and npm of mise.toml (the bootstrap of install-tools), the packages of
+# package-lock.json with that npm, then the other tools of mise.toml, the symbol extractor of PHP, which the parity
+# declarations read, and the Composer projects and the venv of hyper.
+hyper-install: ## Install the pinned tools and the npm packages, fetch the archives of the template release and install the Composer dependencies and the Python venv (HR-89, H14.1-7); ONLINE
+	$(MAKE) --no-print-directory install-tools TOOLS=npm
+	$(MAKE) --no-print-directory install-packages
+	$(MAKE) --no-print-directory install-tools
+	$(MAKE) --no-print-directory install-symbols EXTRACTORS=php
 	$(MAKE) --no-print-directory hyper-install-php
 	$(MAKE) --no-print-directory hyper-install-python
 
@@ -104,8 +128,8 @@ hyper-install-php: ## Install only the locked root and board Composer projects a
 
 hyper-install-python: ## Make the venv of the Python server package anew and install the package into it non-editable with its dependencies (S5)
 	rm -rf $(PYTHON_VENV)
-	$(MAKE) --no-print-directory python-venv DIR=$(PYTHON_VENV)
-	$(MAKE) --no-print-directory uv-install DIR=. SYNC='--quiet --no-editable --project $(PYTHON_PACKAGE)'
+	$(NODE) $(KIT)/python-venv.$(KIT_EXT) $(PYTHON_VENV)
+	UV_SYNC='--quiet --no-editable --project $(PYTHON_PACKAGE)' $(ONLINE) $(NODE) $(KIT)/uv-install.$(KIT_EXT) .
 
 hyper-install-browser: ## Install Chromium of the pinned Playwright and its system libraries; the CI group board runs it (HR-91)
 	$(ONLINE) $(NODE) node_modules/@playwright/test/cli.js install --with-deps chromium
@@ -113,15 +137,17 @@ hyper-install-browser: ## Install Chromium of the pinned Playwright and its syst
 hyper-install-virtiofs: ## Install the digest-pinned image for Darwin virtiofs verification
 	$(ONLINE) container image pull --platform linux/arm64 $(VIRTIOFS_IMAGE)
 
-install: hyper-install
+# make install of a checkout, which the worktree setup of kit runs too: hyper-install, then the links of .links (K869).
+install: hyper-install ## Install everything that the checks read, then link the packages of .links; ONLINE
+	$(MAKE) --no-print-directory install-link
 
-test: hyper-test-js hyper-test-node hyper-test-php hyper-test-python hyper-test-python-render hyper-test-scripts
+test: hyper-test-js hyper-test-node hyper-test-php hyper-test-python hyper-test-python-render hyper-test-scripts ## Run the tests of every package and of the scripts
 
-lint: hyper-lint
+lint: hyper-lint lint-ts lint-php lint-python ## Run the lint of every language of the checkout
 
-# The release workflow that kit vendors runs make release-prepare before release-tools (kit K132): the release installs as CI
-# does, each template asset verified by the integrity of its lock (HR-80, H23.7).
-release-prepare:: ## Install the locked dependencies, for a release; ONLINE
+# The release workflow runs make release-prepare before release-tools: the release installs as CI does, each template asset
+# verified by the integrity of its lock (HR-80, H23.7).
+release-prepare: ## Install the locked dependencies, for a release; ONLINE
 	$(ONLINE) $(MAKE) hyper-install
 
 # PIE resolves polyspec/template-php-ext TEMPLATE_VERSION in the Composer repository TEMPLATE_PACKAGES, which checks the sha1
@@ -176,7 +202,7 @@ hyper-server-php-install: ## Install the Composer dependencies of the board offl
 # package-check is a check, so it installs offline from the npm cache that make hyper-install filled and fails by the name of a
 # package that the cache lacks (HR-89); npm alone owns the links and installed records of this declared consumer graph.
 package-check: packages node-fixtures ## Install the npm packages into tests/package-install offline, link them, type-check its test against their declarations and run it under node (HR-61)
-	cd tests/package-install && $(NODE) $(KIT)/holder-lock.$(KIT_EXT) run $(abspath $(INSTALL_LOCK)) -- $(NPM) ci --no-audit --allow-remote=root
+	cd tests/package-install && $(NODE) $(KIT)/holder-lock.$(KIT_EXT) run $(abspath $(INSTALL_LOCK)) -- $(NPM) ci --no-audit
 	$(MAKE) --no-print-directory install-link PROJECT=tests/package-install
 	$(TSC) -p tests/package-install/tsconfig.json
 	NPM_BIN=$(NPM) $(NODE) $(KIT)/run-tests.$(KIT_EXT) node --cwd tests/package-install -- package-install.test.ts
@@ -309,9 +335,10 @@ bench-server-smoke: assets server ## Run the PHP benchmark once per measurement 
 bench: bench-server bench-browser ## Run both measurements; results are reports, not pass or fail checks
 
 # The final suite runs through the native kit report runner on a clean committed tree.
-# Run it once after checklist development, then rerun only failed owners. The gates of kit are not in it:
-# .github/workflows/ci-pipeline.yml, which the job kit of ci.yml calls, runs them (kit K870, K910).
-CHECK_TARGETS := typecheck hooks-check bench-server-smoke hyper-lint analyse-php templates-check hyper-test-scripts hyper-test-js hyper-test-node hyper-test-python hyper-test-python-render package-check hyper-test-php parity server-parity server-parity-python bundle-size e2e
+# Run it once after checklist development, then rerun only failed owners. GATE_TARGETS are the checks of the configuration,
+# the layout, the documents, the owners, the parity declarations and the lint, which run the checkers of kit.
+GATE_TARGETS := kit-check layout-check docs-check owner-validate rebuild-check language-check test-markers-check duplication-check suppression-check divergence-check parity-declarations-check parity-check lint-ts lint-php lint-python
+CHECK_TARGETS := $(GATE_TARGETS) typecheck bench-server-smoke hyper-lint analyse-php templates-check hyper-test-scripts hyper-test-js hyper-test-node hyper-test-python hyper-test-python-render package-check hyper-test-php parity server-parity server-parity-python bundle-size e2e
 
 # The CI groups of the full suite (HR-91) are the entries of the matrix of .github/workflows/ci.yml: each entry runs its
 # `targets` with `make ci-targets`, so the entries together run every target of CHECK_TARGETS once
@@ -330,13 +357,202 @@ check: ## Run final verification once after checklist development, on a clean co
 
 
 
-# The steps of .github/workflows/release.yml (release of @polyspec/kit, config/release.json), in this order: release-tag
-# tags the commit of the successful CI run RUN of ci.yml on main; on that tag release-prepare installs as make hyper-install
-# does, release-tools installs the tools of the release, release-assets builds the packages and their archives into
-# var/release/assets, release-publish creates the draft GitHub Release and release-undraft makes it public. The targets are those of the kit.mk of @polyspec/kit; the
-# archives are built from the built packages, so release-assets builds them first.
-release-assets: packages
-
 .PHONY: hyper-runner-owner-check
 hyper-runner-owner-check: ## Verify application test entry points through the shared test runner
 	$(NODE) $(KIT)/run-tests.$(KIT_EXT) node -- tests/scripts/check-recipes.test.mts tests/scripts/ci-workflow.test.mts tests/scripts/run-e2e.test.mts
+
+# ---- Tools and packages ----------------------------------------------------------------------------------------------
+# TOOLS=npm is the first step of a checkout, before the pinned npm installs the packages: it runs the bootstrap of kit, which
+# imports only Node.js built-ins, on the Node.js of the machine, and installs mise and the node and npm of mise.toml. Without
+# TOOLS, install-tools installs every tool of mise.toml at the digests of mise.lock and the Composer projects of the lint of
+# PHP; TOOLS="<name>..." installs only those tools.
+.PHONY: install-tools install-packages install-symbols install-link toolchain-lock
+install-tools: ## Install all locked tools or the tools of TOOLS; TOOLS=npm runs the bootstrap; ONLINE
+ifeq ($(TOOLS),npm)
+	$(ONLINE) $(BOOTSTRAP_NODE) $(KIT)/bootstrap/bootstrap.$(KIT_EXT)
+else
+	$(ONLINE) $(NODE) $(KIT)/install-tools.$(KIT_EXT) $(TOOLS)
+endif
+
+install-packages: ## Install the packages of package-lock.json, @polyspec/kit included, with the npm of var/tools; ONLINE
+	$(ONLINE) $(NPM) ci
+
+install-symbols: ## Install the symbol extractors of EXTRACTORS, such as php, which the parity declarations read; ONLINE
+	$(ONLINE) $(NODE) $(KIT)/install-symbols.$(KIT_EXT) $(EXTRACTORS)
+
+# install-link links the polyspec packages to the checkouts that the git-ignored .links names (K869); PROJECT selects one
+# consumer folder. It writes no Claude Code setting.
+install-link: ## Link the packages of .links after every install; PROJECT selects the consumer
+	$(NODE) $(KIT)/link.$(KIT_EXT) link$(if $(PROJECT), --project $(PROJECT))
+
+# mise lock locks uv and python first, then every tool with that Python as UV_PYTHON, for each platform that has its archive.
+TOOLCHAIN_LOCK_PLATFORMS := linux-x64,linux-arm64,macos-arm64,macos-x64,windows-x64,windows-arm64
+toolchain-lock: ## Write mise.lock with mise lock for linux, macOS and Windows on x64 and arm64; ONLINE
+	$(ONLINE) $(KIT_TOOLS)/bin/mise lock uv python --global --platform $(TOOLCHAIN_LOCK_PLATFORMS)
+	$(ONLINE) $(KIT_TOOLS)/bin/mise install --locked uv python
+	UV_PYTHON="$$($(KIT_TOOLS)/bin/mise which python3)" $(ONLINE) $(KIT_TOOLS)/bin/mise lock --global --platform $(TOOLCHAIN_LOCK_PLATFORMS)
+
+# ---- Development links and row worktrees (docs/operations/development.md) ---------------------------------------------
+.PHONY: link link-check unlink worktree-setup land hooks hooks-check twin-merge
+link: ## Link the polyspec packages to the checkouts of .links; PROJECT selects the consumer; offline
+	$(NODE) $(KIT)/link.$(KIT_EXT) link$(if $(PROJECT), --project $(PROJECT))
+
+link-check: ## Fail while the links differ from .links; offline
+	$(NODE) $(KIT)/link-check.$(KIT_EXT)$(if $(PROJECT), --project $(PROJECT))
+
+unlink: ## Remove the links of .links; make install restores the locked installs; offline
+	$(NODE) $(KIT)/link.$(KIT_EXT) unlink$(if $(PROJECT), --project $(PROJECT))
+
+worktree-setup: ## Create or reuse the worktree of the row ID named NAME from main and run make install in it; ONLINE
+	$(ONLINE) $(NODE) $(KIT)/worktree-setup.$(KIT_EXT) $(NAME) $(ID) $(or $(TYPE),fix)
+
+land: ## Land the branch BRANCH on main fast-forward and remove its worktree; offline
+	$(NODE) $(KIT)/land.$(KIT_EXT) $(BRANCH)
+
+# make hooks declares the merges of the changelogs and the checklists (K354) in .git/info/attributes and the git config;
+# git runs each driver as make twin-merge with MERGE="%O %A %B %P". hyper keeps no Git hook.
+hooks: ## Declare the merge drivers of the changelogs and the checklists; offline
+	$(NODE) $(KIT)/git-hooks.$(KIT_EXT) install
+
+hooks-check: ## Fail while the merge drivers of make hooks are not declared; offline
+	$(NODE) $(KIT)/git-hooks.$(KIT_EXT) check
+
+twin-merge: ## The merge driver of a changelog or a checklist, which git runs with MERGE="<base> <ours> <theirs> <path>"; offline
+	@$(NODE) $(KIT)/twin-merge.$(KIT_EXT) $(MERGE)
+
+# ---- Plans, commits and documents (PRINCIPLES P24-P28) ---------------------------------------------------------------
+# The texts of a row reach plan.mts unexpanded: each text that is set is passed as its raw value in single quotes (K457).
+raw_text = $(foreach v,$(1),$(if $(filter undefined,$(origin $(v))),,$(v)='$(subst ','\'',$(value $(v)))'))
+.PHONY: plan-new plan-split item-new item-edit item-state item-test commit documents-stamp docs-check
+plan-new: ## Write the plan NAME with TITLE and TITLE_KO; offline
+	$(NODE) $(KIT)/plan.$(KIT_EXT) plan-new
+
+plan-split: ## Move the items IDS from the plan FROM to the plan TO; offline
+	$(NODE) $(KIT)/plan.$(KIT_EXT) plan-split
+
+item-new: ## Add the item ID to the checklist of PLAN with TASK, TASK_KO, DELIVERABLES and VERIFICATION; on main it commits with BODY_FILE; offline
+	$(call raw_text,TASK TASK_KO DELIVERABLES VERIFICATION) $(NODE) $(KIT)/plan.$(KIT_EXT) item-new
+
+item-edit: ## Replace the cells of the item ID with TASK, TASK_KO, DELIVERABLES, VERIFICATION, or CAUSE, RETRY, CAUSE_KO and RETRY_KO; offline
+	$(call raw_text,TASK TASK_KO DELIVERABLES VERIFICATION CAUSE RETRY CAUSE_KO RETRY_KO) $(NODE) $(KIT)/plan.$(KIT_EXT) item-edit
+
+item-state: ## Move the item ID to STATE in both languages; offline
+	$(NODE) $(KIT)/plan.$(KIT_EXT) item-state
+
+item-test: ## Run the commands of the Verification cell of the item ID; offline
+	$(NODE) $(KIT)/plan.$(KIT_EXT) item-test
+
+commit: ## Commit the index for the item ID as TYPE(SCOPE): SUBJECT (#ID) with the body of BODY_FILE; offline
+	$(NODE) $(KIT)/plan.$(KIT_EXT) commit
+
+documents-stamp: ## Write the source-sha256 of each English document into the Korean twins of PATHS, or of every twin whose source moved; offline
+	$(NODE) $(KIT)/documents-stamp.$(KIT_EXT) $(PATHS)
+
+docs-check: ## Check the documents of config/documents.json: translation pairs, revisions, links and the checklists; offline
+	$(NODE) $(KIT)/check-documents.$(KIT_EXT)
+
+# ---- Gates: the checkers of kit on this checkout (GATE_TARGETS) ------------------------------------------------------
+.PHONY: kit-check layout-check owner-check owner-validate rebuild-check language-check test-markers-check duplication-check suppression-check divergence-check parity-check parity-declarations-check lint-ts lint-php lint-python
+kit-check: ## Check config/*.json against the schemas of kit; offline
+	$(NODE) $(KIT)/kit-check.$(KIT_EXT)
+
+layout-check: ## Check the folder layout against config/layout.yml with alint, that Git ignores each install directory and that no tracked file is generated; offline
+	$(ALINT) check --config config/layout.yml --color never --compact .
+	$(NODE) $(KIT)/generated-files.$(KIT_EXT) installs
+	$(NODE) $(KIT)/generated-files.$(KIT_EXT) tracked
+
+owner-check: ## Run the checks of config/owner-checks.json that own the changed paths; PATHS="a b" or BASE=<revision> selects the paths
+	$(NODE) $(KIT)/owner-check.$(KIT_EXT) $(if $(PATHS),--paths "$(PATHS)") $(if $(BASE),--base $(BASE))
+
+owner-validate: ## Check that config/owner-checks.json owns every tracked path and names only existing checks; offline
+	$(NODE) $(KIT)/owner-check.$(KIT_EXT) --validate
+
+rebuild-check: ## Check that every tool of config/rebuild.json has its class (S1); offline
+	$(NODE) $(KIT)/rebuild-check.$(KIT_EXT)
+
+language-check: ## Fail on Hangul in a comment, an identifier, a message or a test name of the code; offline
+	$(NODE) $(KIT)/language-check.$(KIT_EXT)
+
+test-markers-check: ## Fail on a test that a marker skips or narrows; offline
+	$(NODE) $(KIT)/test-markers.$(KIT_EXT)
+
+duplication-check: ## Fail while a piece of 6 lines or more of code exists twice outside the folders of config/duplication.json; offline
+	$(NODE) $(KIT)/duplication-check.$(KIT_EXT)
+
+suppression-check: ## Fail on a suppression of a lint finding that states no reason; offline
+	$(NODE) $(KIT)/suppression-check.$(KIT_EXT)
+
+divergence-check: ## Fail on an implementation that diverges by a branch on the runtime without a kind of reason; offline
+	$(NODE) $(KIT)/divergence-check.$(KIT_EXT)
+
+# The parity of config/parity.json: parity-check runs every binding, UNITS="<id>..." selects units; the declarations need no run.
+parity-check: ## Run every parity binding and check every rule of config/parity.json, or the units of UNITS; offline
+	$(NODE) $(KIT)/parity.$(KIT_EXT)$(foreach unit,$(UNITS), --unit $(unit))
+
+parity-declarations-check: ## Check the parity rules of config/parity.json that need no run, or the units of UNITS; offline
+	$(NODE) $(KIT)/parity.$(KIT_EXT) --declarations$(foreach unit,$(UNITS), --unit $(unit))
+
+# The lint of each language reads the configuration of this repository: knip.json and .oxlintrc.json, phpcs.xml.dist and
+# phpstan.dist.neon (packages/server/php reads its own phpstan.neon), ruff.toml and [tool.vulture] of each pyproject.toml.
+lint-ts: ## Lint the TypeScript: oxlint, knip and tsc of each project; offline
+	$(NODE) $(KIT)/lint-ts.$(KIT_EXT)
+
+lint-php: ## Lint the PHP: phpcs and PHPStan on each Composer package; offline
+	$(NODE) $(KIT)/lint-php.$(KIT_EXT)
+
+lint-python: ## Lint the Python: ruff and vulture on each package; offline
+	$(NODE) $(KIT)/lint-python.$(KIT_EXT)
+
+# ---- CI reports (HR-91, HR-95) ---------------------------------------------------------------------------------------
+.PHONY: ci-targets ci-summary ci-passed
+CI_REPORT ?= var/report/ci-targets
+ci-targets: ## Run TARGETS past failures and write CI_REPORT (logs, record.json, summary.md)
+	$(NODE) $(KIT)/ci-targets.$(KIT_EXT) $(CI_REPORT) $(TARGETS)
+
+ci-summary: ## Write summary.md of CI_REPORT again from its record, also for a run that stopped
+	$(NODE) $(KIT)/ci-targets.$(KIT_EXT) --summary $(CI_REPORT)
+
+ci-passed: ## Fail unless every job of RESULTS, the JSON of toJSON(needs), has the result success
+	$(NODE) $(KIT)/ci-passed.$(KIT_EXT)
+
+# ---- Release (config/release.json) -----------------------------------------------------------------------------------
+# The steps of .github/workflows/release.yml, in this order: release-tag tags the commit of the successful CI run RUN of ci.yml
+# on main and appends TAG and VERSION to GITHUB_ENV; release-checkout checks that tag out; release-prepare installs as make
+# hyper-install does; release-tools installs the tools of the release and release-tools-path puts them on the PATH of the
+# later steps; release-assets builds the packages and their archives into var/release/assets; release-publish creates the
+# draft GitHub Release and release-undraft makes it public.
+.PHONY: release-tag release-checkout release-archive-tool release-prepare release-tools release-tools-path release-assets release-publish release-undraft release-coverage
+release-tag: ## Tag the commit of the successful CI run RUN of ci.yml on main with vX.Y.Z of the change log; AUTO=1 releases only a version commit; reads the run with gh
+	@test -n "$$RUN" || { echo "release-tag: RUN is required, for example make release-tag RUN=123"; exit 1; }
+	$(NODE) $(KIT)/release-run.$(KIT_EXT) tag "$$RUN"$(if $(AUTO), --auto)
+
+release-checkout: ## Check out the tag TAG that release-tag created
+	git checkout --quiet "$$TAG"
+
+release-archive-tool: ## Fail unless Info-ZIP, which builds the Composer archives of the release, is on PATH
+	@command -v zip >/dev/null || { echo 'release-archive-tool: Info-ZIP is required for the Composer release archives; install the zip package'; exit 1; }
+
+release-tools: ## Install the tools that config/release.json needs for the release; ONLINE
+	$(ONLINE) $(NODE) $(KIT)/release-tools.$(KIT_EXT)
+
+release-tools-path: ## Append var/tools/bin and the shims of mise to GITHUB_PATH and the environment of mise to GITHUB_ENV
+	@test -n "$$GITHUB_PATH" && test -n "$$GITHUB_ENV" || { echo 'release-tools-path: GITHUB_PATH and GITHUB_ENV are set only between the steps of a workflow'; exit 1; }
+	@echo "$(KIT_TOOLS)/mise/shims" >> "$$GITHUB_PATH"
+	@echo "$(KIT_TOOLS)/bin" >> "$$GITHUB_PATH"
+	@for name in $(MISE_ENVIRONMENT); do echo "$$name=$$(printenv $$name)"; done >> "$$GITHUB_ENV"
+
+# The archives are built from the built packages, so release-assets builds them first.
+release-assets: packages ## Build the archive of every package of TAG and packages.json into var/release/assets; ONLINE
+	@test -n "$$TAG" || { echo "release-assets: TAG is required, for example make release-assets TAG=v0.0.1"; exit 1; }
+	$(ONLINE) $(NODE) $(KIT)/release.$(KIT_EXT) assets "$$TAG"
+
+release-publish: ## Create the GitHub Release of TAG as a draft with the archives of release-assets
+	@test -n "$$TAG" || { echo "release-publish: TAG is required, for example make release-publish TAG=v0.0.1"; exit 1; }
+	$(NODE) $(KIT)/release.$(KIT_EXT) publish "$$TAG"
+
+release-undraft: ## Make the draft release of TAG public
+	@test -n "$$TAG" || { echo "release-undraft: TAG is required, for example make release-undraft TAG=v0.0.1"; exit 1; }
+	$(NODE) $(KIT)/release.$(KIT_EXT) undraft "$$TAG"
+
+release-coverage: ## Require every package file of the checkout to be classified in config/release.json; offline
+	$(NODE) $(KIT)/release.$(KIT_EXT) coverage

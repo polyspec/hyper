@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: b28f95d501383d86c5cfab74f63685f0423a19f0a543404a441d16d6b67f8cc2 -->
+<!-- source-sha256: 35e62c9bb505575b54140f76ffb3dbd3675c12e57888669e16761c24cc917519 -->
 # 개발
 
 [English](development.md).
@@ -7,7 +7,7 @@
 ## 도구
 
 - pin한 도구(HR-81): `mise.toml`의 Node.js와 Python(mise가 `mise.lock`의 digest에 맞춰 설치한다. Node.js는 `make install-tools TOOLS=npm`이, Python은 `make install-tools`가 설치한다), `pdo_sqlite`가 있는 `.php-version`의 PHP, GNU Make 3.81 이상, 네이티브 확장을 위한 그 PHP의 phpize, php-config와 C compiler. `make hyper-install`은 `package.json`의 `devEngines`가 이름하는 `mise.toml`의 npm과 `config/toolchain.json`의 Composer를 `var/tools`에 설치한다(`make install-tools`). 없는 도구는 그것을 실행하는 target을 실패시킨다(kit K854).
-- 공유 도구: `@polyspec/kit`은 `package.json`의 릴리즈 URL과 `package-lock.json`의 integrity로 고정한다. 깨끗한 checkout은 `make bootstrap`으로 `devEngines`가 이름하는 정확한 version의 기본 npm을 checkout 밖에서 `--prefix`로 사용해(kit K938) `npm ci --ignore-scripts`를 실행한다. 이어 `make install-tools TOOLS=npm`, `make install-packages`, `make install-tools`로 checkout 도구를 준비한다. Makefile은 설치된 `node_modules/@polyspec/kit/scripts/kit/kit-bootstrap.mk`를 include한다. 기본 로컬 package link도 같은 경로를 사용하고 형제 checkout을 필수로 요구하지 않는다. 설치 bootstrap은 link에서는 소스 도구를, archive에서는 packed 도구를 선택한다. `make kit-sync`는 일반 공유 복사본을 원자적으로 쓰고 `make kit-check`는 복사본과 설정 schema를 확인한다.
+- 공유 도구: `@polyspec/kit`은 `package.json`의 릴리즈 URL과 `package-lock.json`의 integrity로 고정한다. 깨끗한 checkout은 `make bootstrap`으로 `devEngines`가 이름하는 정확한 version의 기본 npm을 checkout 밖에서 `--prefix`로 사용해(kit K938) `npm ci --ignore-scripts`를 실행한다. 이어 `make install-tools TOOLS=npm`, `make install-packages`, `make install-tools`로 checkout 도구를 준비한다. Makefile은 kit의 파일을 include하지 않고 hyper의 모든 레시피를 담는다. 각 레시피는 설치 package의 유틸리티를 명시적 인자로 실행한다. 기본 로컬 package link도 같은 경로를 사용하고 형제 checkout을 필수로 요구하지 않는다. Makefile은 link에서는 소스(`scripts/kit/*.mts`)를, pack된 archive에서는 dist(`dist/*.mjs`)를 실행한다. 도구의 설정은 hyper의 기본 파일이다: `.npmrc`(와 `tests/package-install/.npmrc`)의 `allow-remote=root`, mise와 uv를 위한 `mise.toml`의 `[settings]`와 `[env]`, 린트 설정 `knip.json`, `.oxlintrc.json`, `ruff.toml`, `phpcs.xml.dist`, `phpstan.dist.neon`. `make kit-check`는 `config/*.json`의 설정을 kit의 schema로 확인한다.
 - template package: npm은 `@polyspec/template`과 `@polyspec/template-compiler`를 template release의 tarball에서, Composer는 `polyspec/template`을 그 zip에서 `package.json`, `composer.json`과 그 lock이 고정한 대로 설치한다(HR-70). `make hyper-install`이 이를 download한다.
 - 네이티브 template 확장: template release 0.0.20(`TEMPLATE_VERSION`, tag `TEMPLATE_TAG`)의 package `polyspec/template-php-ext`이며, PIE(`make install-tools TOOLS=pie`가 설치하는 `mise.toml`의 `http:pie`)가 release의 Composer repository `https://github.com/polyspec/template/releases/download/v0.0.20/packages.json`에서 build한다(H14.1-7, H27.45). `make hyper-install`이 `$(ONLINE)`을 거쳐 `make template-ext`를 실행한다. 그 recipe가 빈 `var/pie/polyspec/template-php-ext`에서 `pie repository:add`와 `pie build`를 직접 실행하고, PIE가 거기에 기록한 library 하나를 `scripts/pie-binary.mts`로 가져와 `build/ext/polyspec_template.so`에 게시한다(H27.51). `pie install`은 기기의 PHP에 쓰므로 쓰지 않는다. `make ext`는 아무것도 build하지 않고 그 library만 요구한다. Composer는 php zip `polyspec-template-php-0.0.20.zip`을 같은 Composer repository에서 직접 가져오며, 그 dist가 zip을 URL과 sha1로 지정한다(H23.11, H27.45).
 - network: `make install-tools`, `make install-packages`, `make hyper-install`, `make hyper-install-browser`만 download한다. 다른 모든 recipe는 npm, Composer를 offline으로 실행하므로(`npm_config_offline`, `COMPOSER_DISABLE_NETWORK`) 없는 download는 바로 실패하고 그것을 만드는 설치 target을 밝힌다(HR-89).
@@ -23,11 +23,10 @@
 |---|---|
 | `make install-tools` | `devEngines`가 이름하는 `mise.toml`의 npm과 `config/toolchain.json`의 Composer를 `var/tools`에 설치하고 `var/tools/bin`의 명령을 쓰며, 각 download를 pin한 digest로 확인한다(HR-81) |
 | `make install-packages` | `var/tools`의 npm으로 `@polyspec/kit`과 npm workspace를 포함한 `package-lock.json`을 `$(ONLINE)`으로 설치한다 |
-| `make kit-sync` | 설치된 `@polyspec/kit`에서 `kit.copies`의 복사본을 쓴다. offline이며 두 번째 실행은 아무것도 바꾸지 않는다 |
 | `make kit-check` | 설치된 `@polyspec/kit`이 `package-lock.json`과 다르거나, 복사본이 패키지와 다르거나, `config/*.json`이 schema를 어기면 실패한다 |
 | `make layout-check` | `config/layout.kit.yml`을 extend하는 `config/layout.yml`에 대해 `var/tools`의 alint로 폴더 배치를 검사한다 |
 | `make hyper-install` | pin한 도구를 설치하고, `$(ONLINE)`을 거쳐 template release의 Composer repository에서 PIE로 네이티브 확장을 build하며(`make template-ext`; H14.1-7, H27.45), `make hyper-install-python`을 실행하고, template release의 template package를 포함한 Composer 의존성을 설치한다(HR-70) |
-| `make hyper-install-python` | kit의 `python-venv`로 `mise.toml`의 Python에서 Python 서버 package의 venv `.venv`를 새로 만들고, release의 template wheel을 포함한 의존성과 함께 package를 non-editable로 설치한다. Python test와 board Python 서버는 그 Python을 실행하며 source 경로를 읽지 않는다(S5) |
+| `make hyper-install-python` | kit의 `python-venv` 유틸리티로 `mise.toml`의 Python에서 Python 서버 package의 venv `.venv`를 새로 만들고, release의 template wheel을 포함한 의존성과 함께 package를 non-editable로 설치한다. Python test와 board Python 서버는 그 Python을 실행하며 source 경로를 읽지 않는다(S5) |
 | `make hyper-server-php-install` | `packages/server/php`를 가리키는 symbolic link로 `polyspec/hyper-server`를 설치하는 board의 Composer 의존성을 설치한다(HR-79). 의존성을 설치할 때 이 target을 명시적으로 실행한다 |
 | `make ext` | `make hyper-install`의 `make template-ext`가 template release의 Composer repository(`packages.json`)에서 PIE로 build한 네이티브 template 확장 `build/ext/polyspec_template.so`가 없으면 실패한다. offline으로 실행하며 아무것도 build하지 않는다(HY-48, H27.45) |
 | `make packages` | `@polyspec/hyper-client`와 `@polyspec/hyper-server`의 JavaScript module과 type 선언을 각 package가 선언한 build(npm의 bin link인 `tsc`를 실행하는 `npm run build`)로 각자의 `dist` 디렉터리에 build하고 각 build를 파일 단위로 publish한다. npm은 workspace를 link하므로 `node_modules`는 build를 바로 보여 준다(HR-79, HR-82). Node 서버 test, board 에셋 build, `make package-check`, `make hyper-test-scripts`는 package를 exports로 가져오므로 이것을 먼저 실행한다(HR-61). build script는 `data-template.json`, `checkManifest`, `templateReferences`를 script 옆 `packages/client`의 소스에서 읽으므로 `dist`가 필요 없고 어느 작업 디렉터리에서도 실행된다 |
@@ -44,7 +43,7 @@
 | `make analyse-php` | `packages/server/php/phpstan.neon`으로 `packages/server/php`의 소스와 테스트에 레벨 `max`의 PHPStan을 실행한다. 기준선(baseline)과 무시하는 오류는 없다. PHPStan은 cache를 `build/phpstan`에 쓴다. 메모리 제한은 `--memory-limit=256M`이다. 먼저 `make ext`를 실행한다 |
 | `make templates-check` | 레이아웃 템플릿만 `hx-` 속성을 가지는지(HC-6), 레이아웃이 `{# title}`과 `{# data}`를 한 번씩 배치하는지, 레이아웃과 각 라우트 템플릿의 모든 영역이 블록 인자 없이 `id`가 영역 이름인 요소 바로 안에 한 번씩 배치되는지(HY-3, HY-30) 검사한다 |
 | `make typecheck` | `node_modules`의 tsc와 root `tsconfig.json`(strict, `erasableSyntaxOnly`)으로 `scripts/`, `tests/`, `benchmarks/`의 TypeScript type을 검사한다. Node는 이 `.mts` 파일을 type stripping으로 실행하며 검사하지 않는다(S9). `scripts/check-parity.mts`가 `@polyspec/hyper-client`의 build가 쓰는 type을 import하므로 먼저 `make packages`를 실행한다 |
-| `make lint-ts` | kit의 oxlint(`.oxlintrc.json`, type-aware)로 TypeScript를 검사하고, knip(`knip.json`과 `config/knip-entries.json`)으로 쓰이지 않는 파일, 의존성, export를 검사한다. `make check`와 CI job `docs`의 target이다(H23.13) |
+| `make lint-ts` | kit의 oxlint(`.oxlintrc.json`, type-aware)로 TypeScript를 검사하고, knip(`knip.json`)으로 쓰이지 않는 파일, 의존성, export를 검사한다. `make check`와 CI 항목 `gates`의 target이다(H23.13) |
 | `make hyper-test-scripts` | 검사 스크립트의 테스트를 실행한다. 예: 잘못된 픽스처 애플리케이션으로 영역 배치 검사를 시험한다 |
 | `make virtiofs-check` | 출력이 virtiofs bind mount에 있는 Apple `container`에서 server build와 출력 복사를 실행한다(HR-68). Darwin에서만 `make check`의 target이며(`DARWIN_TARGETS`), `container`가 없으면 실패한다. Darwin에서만 실행하는 이유는, 시험하는 virtiofs bind mount가 Apple `container`에만 있고 CI의 Linux target 중 이 증상을 검사하는 것이 없기 때문이다. 원인은 모든 platform에서 `tests/scripts/output-files.test.mts`가 시험한다 |
 | `make parity` | PHP 문서와, 문서 JSON과 영역 JSON의 브라우저 렌더 결과를 비교한다. generated 프로그램으로 한 번, 네이티브 확장으로 한 번 실행한다 |
@@ -54,8 +53,8 @@
 | `make owner-check` | `config/owner-checks.json`이 선언한 바뀐 경로의 owner를 실행한다. `PATHS`는 경로를 밝히고 `BASE`는 그 revision 이후의 변경을 가져온다(HR-88) |
 | `make owner-validate` | 추적 경로에 owner가 없거나 `config/owner-checks.json`이 없는 target이나 test 파일을 밝히면 실패한다(HR-88) |
 | `make docs-check` | `config/documents.json`의 문서를 검사한다: 문서 쌍, marker `doc-id`와 `source-sha256`, 링크, 코드 블록, changelog, checklist |
-| `make hooks` | `core.hooksPath`를 `.githooks`로 설정하고 hook을 쓰며 `make hooks-check`를 실행한다([Hooks](#hooks) 참조) |
-| `make hooks-check` | `core.hooksPath`가 `.githooks`가 아니거나 hook이 없거나 실행할 수 없거나 바뀌었으면 실패한다 |
+| `make hooks` | changelog와 checklist의 merge driver를 선언한다([Hooks](#hooks) 참조) |
+| `make hooks-check` | `make hooks`의 merge driver가 선언되지 않았으면 실패한다 |
 | `make ci-targets` | make target `TARGETS`를 끝까지 실행하고 보고서 `CI_REPORT`를 쓴다([CI](#ci) 참고) |
 | `make ci-summary` | 보고서 `CI_REPORT`의 요약과 job summary를 쓴다([CI](#ci) 참고) |
 | `make ci-passed` | `RESULTS`, 곧 `needs`의 JSON의 모든 job의 결과가 `success`가 아니면 실패한다([CI](#ci) 참고) |
@@ -76,7 +75,7 @@ Script 검사는 runner 전에 `assets`와 `server`를 요구한다. `package-ch
 
 전체 모음은 `main` push 뒤 GitHub에서 실행한다. commit이나 push 전에 로컬 전체 실행은 필요하지 않다. 체크리스트 개발 중에는 변경을 소유한 unit 검사만 실행한다. 체크리스트 개발이 끝나면 `make check`를 정확히 한 번 실행한다. 실패하면 그 소유 부분만 수정하고 다시 검사한다. 새 commit이 생겼다고 전체를 다시 실행하지 않는다.
 
-`make check`는 `FINAL_RUN=1`, 모든 `CHECK_TARGETS`, Darwin에서는 `DARWIN_TARGETS`를 더해 kit의 기본 `ci-targets` 실행기를 호출한다. 실행기는 활성 `[~]` 체크리스트 항목과 변경되었거나 commit되지 않은 tree를 거부하고 `var/report/full-run.lock`을 잡으며 실패해도 모든 target을 끝까지 실행한다. `hooks-check`도 이 모음의 target이다. Darwin은 `virtiofs-check`를 포함하고 Linux CI는 포함하지 않는다.
+`make check`는 `FINAL_RUN=1`, 모든 `CHECK_TARGETS`, Darwin에서는 `DARWIN_TARGETS`를 더해 kit의 기본 `ci-targets` 실행기를 호출한다. 실행기는 활성 `[~]` 체크리스트 항목과 변경되었거나 commit되지 않은 tree를 거부하고 `var/report/full-run.lock`을 잡으며 실패해도 모든 target을 끝까지 실행한다. kit의 검사기 `GATE_TARGETS`도 이 모음의 target이다. Darwin은 `virtiofs-check`를 포함하고 Linux CI는 포함하지 않는다.
 
 실행기는 tree, runtime version, target 상태와 시간을 `var/report/full-run/record.json`에, 요약을 `summary.md`에, 전체 log를 `targets/<target>.log`에 쓴다. 요약에는 실패 target의 근거를 포함한다. 실행기는 tree당 한 번 제한을 강제하지 않으며, 위의 한 번 실행 절차가 작업 규칙이다. 설치된 소스 link는 개발 입력으로 유지하고, `make link-check`가 그것을 link 선언 `.links`와 비교한다(kit K869).
 
@@ -86,7 +85,7 @@ Script 검사는 runner 전에 `assets`와 `server`를 요구한다. `package-ch
 
 ## Hooks
 
-Git은 clone에서 hook을 설치하지 않는다. 그래서 모든 `make` 실행이 `core.hooksPath`를 `.githooks`로 설정하고, `make hooks`는 이를 명시적으로 설정하며 hook을 쓴다. `make hooks-check`는 `core.hooksPath`가 `.githooks`가 아니거나 hook이 없거나 실행할 수 없거나 도구의 hook과 다르면 실패한다. push는 검사하지 않는다. message 규칙은 commit에서 실행되고, commit의 CI 실행은 release에서 읽는다.
+hyper는 Git hook을 두지 않는다. `make hooks`는 `CHANGELOG.md`, checklist와 그 한국어 짝의 merge driver를 `.git/info/attributes`와 git 설정에 선언하고, git은 각 driver를 `make twin-merge`로 실행한다. `make commit`은 commit message를 검사한다. push는 검사하지 않는다. commit의 CI 실행은 release에서 읽는다.
 
 ## main 공개
 
@@ -96,7 +95,7 @@ Git은 clone에서 hook을 설치하지 않는다. 그래서 모든 `make` 실�
 git push origin main
 ```
 
-`main`의 push는 `.github/workflows/ci.yml`, 곧 전체 suite를 실행한다([CI](#ci) 참고). 그 job `kit`은 kit의 gate인 `.github/workflows/ci-pipeline.yml`을 호출하고, 마지막 job `ci-passed`는 다른 모든 job이 통과했을 때만 통과한다. 릴리스는 그렇게 성공한 실행의 id를 받아 그 commit에 tag를 단다([Tag 릴리스](#tag-릴리스) 참고).
+`main`의 push는 `.github/workflows/ci.yml`, 곧 전체 suite를 실행한다([CI](#ci) 참고). 그 항목 `gates`가 kit의 검사기를 실행하고, 마지막 job `ci-passed`는 다른 모든 job이 통과했을 때만 통과한다. 릴리스는 그렇게 성공한 실행의 id를 받아 그 commit에 tag를 단다([Tag 릴리스](#tag-릴리스) 참고).
 
 ## Tag 릴리스
 
@@ -160,21 +159,22 @@ workflow `.github/workflows/ci.yml`은 `main`의 push와 모든 수동 실행(`w
 
 | 항목 | Bootstrap 이후 선택 도구 | 잠긴 package 환경 | 검사 |
 |---|---|---|---|
-| `docs` | Node/npm, PHP/Composer, PIE, Python/uv | Root와 board Composer lock | 타입 검사, hook과 script 검사 |
+| `gates` | Node/npm, PHP/Composer, PIE, Python/uv, ruff, vulture, alint, phpcs, phpstan | Root npm, root와 board Composer, Python uv lock | kit의 검사기: 설정, 배치, 문서, owner, rebuild 분류, 언어, test marker, 중복, suppression, divergence, parity 선언과 parity, TypeScript, PHP, Python 린트(`GATE_TARGETS`) |
+| `docs` | Node/npm, PHP/Composer, PIE, Python/uv | Root와 board Composer lock | 타입 검사와 script 검사 |
 | `php` | Node/npm, PHP/Composer, PIE | Root와 board Composer lock | PHP 정책, benchmark smoke, formatting, analysis와 test |
 | `node` | Node/npm | Root npm lock | Template, browser unit, Node server와 npm consumer |
 | `board` | Node/npm, PHP/Composer, PIE, Python/uv | Root npm, root와 board Composer, Python uv lock | Browser parity, Node/Python server 비교, bundle 크기와 E2E |
 | `python` | Node/npm, Python/uv | Root npm과 Python uv lock | Python unit과 rendering |
 
-각 group은 `make install-tools TOOLS="${{ matrix.tools }}"`를 호출한다. Kit은 선택, 필수 도구 의존성, version과 hash 검증, 일치하는 설치 도구 재사용을 소유한다. Hyper는 별도 도구 설치기를 선언하지 않는다. 고정된 Kit 설치기는 이 selector를 지원한다. `make hyper-install-php`가 네이티브 template 확장을 build하는 `docs`, `php`, `board` group은 `pie`를 선택한다. npm은 별도 bootstrap을 사용하고 `docs` group은 `make hyper-test-scripts`의 `tests/scripts/public-symbols.test.mts`가 실행하는 선언된 PHP symbol extractor를 `make kit-install-symbols EXTRACTORS="php"`로 명시적으로 설치한다. 어떤 group도 kit의 lint 도구(phpcs, phpstan, ruff, alint, vulture)를 설치하지 않는다. 그 도구는 `.github/workflows/ci-pipeline.yml`이 실행하는 kit의 gate만 실행하고(kit K870, K910), `make hyper-lint`와 `make analyse-php`는 `vendor`의 pint와 PHPStan을 실행한다.
+각 group은 `make install-tools TOOLS="${{ matrix.tools }}"`를 호출한다. Kit은 선택, 필수 도구 의존성, version과 hash 검증, 일치하는 설치 도구 재사용을 소유한다. Hyper는 별도 도구 설치기를 선언하지 않는다. 고정된 Kit 설치기는 이 selector를 지원한다. `make hyper-install-php`가 네이티브 template 확장을 build하는 `docs`, `php`, `board` group은 `pie`를 선택한다. npm은 별도 bootstrap을 사용하고 `docs`와 `gates` group은 `make hyper-test-scripts`의 `tests/scripts/public-symbols.test.mts`와 parity 선언이 읽는 선언된 PHP symbol extractor를 `make install-symbols EXTRACTORS="php"`로 명시적으로 설치한다. kit의 lint 도구(phpcs, phpstan, ruff, alint, vulture)는 그 target이 실행하는 `gates` group만 설치하고, `make hyper-lint`와 `make analyse-php`는 `vendor`의 pint와 PHPStan을 실행한다.
 
-`make hyper-install-php`는 기존 설치 lock 안에서 고정 PHP archive와 root 및 board Composer lock만 설치한다. `make hyper-install-python`은 `uv sync --locked`를 실행하는 `make uv-install`로 Python 환경만 설치한다(kit K850). Node 의존성은 기존 npm lock 설치를 사용한다. Native source 개발 link는 별도 로컬 설치 선택으로 유지한다.
+`make hyper-install-php`는 기존 설치 lock 안에서 고정 PHP archive와 root 및 board Composer lock만 설치한다. `make hyper-install-python`은 `uv sync --locked`를 실행하는 kit의 `uv-install` 유틸리티로 Python 환경만 설치한다(kit K850). Node 의존성은 기존 npm lock 설치를 사용한다. Native source 개발 link는 별도 로컬 설치 선택으로 유지한다.
 
 Build 선행 조건은 각 job의 검사가 소유한다. 언어 job은 다른 언어 job을 기다리거나 설치 환경 또는 build 산출물을 다운로드하지 않는다. 설치는 online이고 build와 검사는 offline 환경을 유지한다.
 
-Protocol 선언과 언어 간 동등 검사(`parity-declarations-check`, `parity-check`)는 `ci.yml`의 job `kit`이 호출하는, kit의 gate인 `.github/workflows/ci-pipeline.yml`의 parity job에서 실행한다(kit K870, K910). Browser가 필요한 server 간 비교는 세 구현과 Chromium을 직접 설치하는 `board`가 소유한다. Python 렌더링 검사는 Python job이 소유한다. Matrix 집계는 `ci-passed`에 모든 group 결과를 요구한다.
+Protocol 선언과 언어 간 동등 검사(`parity-declarations-check`, `parity-check`)는 `ci.yml`의 항목 `gates`에서 실행하며, 이 항목은 그 target의 prerequisite로 PHP, Python, TypeScript 구현을 설치하고 fixture를 build한다. Browser가 필요한 server 간 비교는 세 구현과 Chromium을 직접 설치하는 `board`가 소유한다. Python 렌더링 검사는 Python job이 소유한다. Matrix 집계는 `ci-passed`에 모든 group 결과를 요구한다.
 
-각 명령 step은 make target 하나를 실행하고(HR-90), 이전 단계가 실패해도 보고서를 모두 수집한다. 각 job은 hyper를 workspace root에 checkout하고 checkout 바로 다음에 kit의 bootstrap action(`./.github/actions/kit-bootstrap`)을 실행하며, 그 action은 `mise.toml`의 Node를 사용한다. matrix가 나머지 고정 도구를 선택하며 PHP, Composer, Python과 Chromium을 조건에 따라 준비한다. 어떤 job도 다른 저장소를 checkout하지 않으며, 고정 release asset이 template package와 확장 소스를 준다. `make ci-targets TARGETS="<targets>" CI_REPORT=var/ci/<name>`은 항목의 모든 target을 자기 `make -k <target>`으로 끝까지 실행하고 보고서를 쓴다. `make ci-summary CI_REPORT=var/ci/<name>`은 job summary를 쓴다. job은 artifact `ci-<name>-<run id>-<attempt>`, 곧 디렉터리 `var/ci/<name>/`을 upload한다.
+각 명령 step은 make target 하나를 실행하고(HR-90), 이전 단계가 실패해도 보고서를 모두 수집한다. 각 job은 hyper를 workspace root에 checkout하고 checkout 바로 다음에 hyper의 bootstrap action(`./.github/actions/bootstrap`)을 실행하며, 그 action은 `mise.toml`의 Node를 사용한다. matrix가 나머지 고정 도구를 선택하며 PHP, Composer, Python과 Chromium을 조건에 따라 준비한다. 어떤 job도 다른 저장소를 checkout하지 않으며, 고정 release asset이 template package와 확장 소스를 준다. `make ci-targets TARGETS="<targets>" CI_REPORT=var/ci/<name>`은 항목의 모든 target을 자기 `make -k <target>`으로 끝까지 실행하고 보고서를 쓴다. `make ci-summary CI_REPORT=var/ci/<name>`은 job summary를 쓴다. job은 artifact `ci-<name>-<run id>-<attempt>`, 곧 디렉터리 `var/ci/<name>/`을 upload한다.
 
 - `summary.md`: tree, Node.js, npm, patch를 포함한 PHP, Composer, make의 실행 중인 release, 각 setup step의 결과, target의 상태, 시간, 첫 실패 줄의 표, 그리고 실패한 각 target의 첫 실패 줄;
 - `record.json`: 같은 내용의 data이며 각 target 앞뒤에 쓰므로, 멈춘 runner는 실행 중이던 target을 남긴다;
@@ -273,4 +273,4 @@ BOARD_DB=$PWD/examples/board/var/node.db BOARD_SESSIONS=$PWD/examples/board/var/
 
 Package virtual environment를 사용하는 Python discovery를 포함해 모든 runtime test target은 설치된 Kit runner를 사용한다. 범위를 제한한 Python 검사는 정확한 discovery 파일명 또는 `--cwd`와 dotted module 이름을 사용하며 앱 전용 unittest harness는 없다. 지원하지 않거나 잘못된 runner 동작은 runner를 교체하거나 CI 식별을 바꾸는 대신 Kit GitHub issue로 보고한다. 완료된 과거 검증 기록의 원래 명령은 유지하며 현재 실행 지침으로 사용하지 않는다.
 
-Kit provider gate 분할은 `config/ci.json`에서 native lock 설치와 fixture build를 선언한다. 전체 parity mode는 필수로 유지하고 PHP, Python과 TypeScript provider job은 자신의 입력을 준비한다. 공유 workflow 복사본은 로컬에서 편집하지 않는다.
+`.github/workflows`의 모든 workflow와 action `.github/actions/bootstrap`은 hyper의 파일이며, 그 명령 step은 각각 Makefile의 target 하나를 실행한다.

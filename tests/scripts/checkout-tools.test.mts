@@ -1,4 +1,4 @@
-// Tests that the recipes start the tools of the checkout, the var/tools that kit.mk names $(KIT_TOOLS) (HR-81, kit
+// Tests that the recipes start the tools of the checkout, the var/tools that the Makefile names $(KIT_TOOLS) (HR-81, kit
 // K858): a linked worktree installs and runs its own tools, so npm, Composer, uv and the first entry of PATH name the
 // var/tools of the checkout, in a worktree as on main.
 import assert from 'node:assert/strict';

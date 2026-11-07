@@ -1,0 +1,24 @@
+# The bootstrap of every CI job of hyper: the jobs of ci.yml, bench.yml and release.yml run it after their checkout with
+# `uses: ./.github/actions/bootstrap`. Each step runs one make target of the Makefile (HR-90).
+name: bootstrap
+description: Sets up the Node.js of mise.toml, installs the lock with the npm of devEngines, then the mise, node and npm of mise.toml into var/tools and the packages of package-lock.json with that npm.
+runs:
+  using: composite
+  steps:
+    # actions/setup-node v7.1.0: the Node.js of mise.toml runs make bootstrap and the bootstrap of install-tools, which installs
+    # that release into var/tools with mise (kit K171); the recipes then run the node of var/tools. The pinned npm of var/tools
+    # installs the packages, so the cache of setup-node is off.
+    - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+      with:
+        node-version-file: mise.toml
+        package-manager-cache: false
+    # The npm of devEngines installs the lock, @polyspec/kit included, whose utilities the recipes run.
+    - name: bootstrap the lock
+      shell: bash
+      run: make bootstrap
+    - name: install npm
+      shell: bash
+      run: make install-tools TOOLS=npm
+    - name: install packages
+      shell: bash
+      run: make install-packages

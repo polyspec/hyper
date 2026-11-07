@@ -18,7 +18,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 // The tools of the checkout: every checkout, a linked worktree too, installs and runs its own var/tools (kit K858).
 const TOOLS = path.join(realpathSync(ROOT), 'var/tools');
 const NPM = path.join(TOOLS, 'bin/npm');
-// The node of mise.toml, which the bootstrap wraps in var/tools/bin and kit.mk names $(NODE) (kit K171).
+// The node of mise.toml, which the bootstrap wraps in var/tools/bin and the Makefile names $(NODE) (kit K171).
 const NODE = path.join(TOOLS, 'bin/node');
 // Composer is a tool of mise.toml, run by its shim (kit K127).
 const COMPOSER = path.join(TOOLS, 'mise/shims/composer');
@@ -131,9 +131,12 @@ test('only explicit install targets download through $(ONLINE), and no check tar
   const downloads = install.filter((line) => / ci |composer install|install-tools\.mts/.test(line.replace(/ -- /, ' ')));
   assert.ok(downloads.length > 0, install.join('\n'));
   assert.deepEqual(downloads.filter((line) => !line.includes(ONLINE)), [], 'a download of make hyper-install without $(ONLINE)');
-  const declared = /^CHECK_TARGETS := (.+)$/m.exec(readFileSync('Makefile', 'utf8'))?.[1];
-  assert.ok(declared !== undefined, 'the Makefile declares no CHECK_TARGETS');
-  const checks = declared.split(' ');
+  // CHECK_TARGETS starts with $(GATE_TARGETS), the checkers of kit, which the case reads in its place.
+  const makefile = readFileSync('Makefile', 'utf8');
+  const declared = /^CHECK_TARGETS := (.+)$/m.exec(makefile)?.[1];
+  const gates = /^GATE_TARGETS := (.+)$/m.exec(makefile)?.[1];
+  assert.ok(declared !== undefined && gates !== undefined, 'the Makefile declares no CHECK_TARGETS or GATE_TARGETS');
+  const checks = declared.split(' ').flatMap((word) => word === '$(GATE_TARGETS)' ? gates.split(' ') : [word]);
   assert.ok(checks.length > 10, checks.join(' '));
   // kit refuses even a dry run of a target that runs only in CI outside CI, with [ci-only]; CI dry-runs those targets as well.
   const caller = ['MAKEFLAGS', 'MFLAGS', 'MAKELEVEL', 'MAKEOVERRIDES'];
@@ -155,10 +158,10 @@ test('only explicit install targets download through $(ONLINE), and no check tar
 test('the venv of the Python server package installs its committed uv.lock and nothing that the index serves now', () => {
   const lines = dryRun('hyper-install-python');
   const removed = lines.findIndex((line) => line === `rm -rf ${path.join(ROOT, 'packages/server/python/.venv')}`);
-  const made = lines.findIndex((line) => line.includes('python-venv DIR='));
+  const made = lines.findIndex((line) => line.endsWith(`${kitTool('python-venv')} ${path.join(ROOT, 'packages/server/python/.venv')}`));
   assert.ok(removed !== -1 && made > removed, lines.join('\n'));
-  // uv-install of kit runs uv sync --locked with the flags of SYNC (kit K850).
-  assert.ok(lines.some((line) => line.startsWith('UV_SYNC="--quiet --no-editable --project packages/server/python" ') && line.endsWith(`${kitTool('uv-install')} .`)), lines.join('\n'));
+  // uv-install of kit runs uv sync --locked with the flags of UV_SYNC (kit K850).
+  assert.ok(lines.some((line) => line.startsWith("UV_SYNC='--quiet --no-editable --project packages/server/python' ") && line.endsWith(`${kitTool('uv-install')} .`)), lines.join('\n'));
   assert.equal(spawnSync('git', ['ls-files', '--error-unmatch', 'packages/server/python/uv.lock'], { encoding: 'utf8' }).status, 0, 'packages/server/python/uv.lock is not tracked');
 });
 

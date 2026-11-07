@@ -4,15 +4,14 @@
 # entries (fail-fast: false), every step after the first runs after a failed step (`if: ${{ !cancelled() }}`), and
 # `make ci-targets` runs every target to its end. Each matrix job writes the job summary and uploads its report
 # var/ci/<name>/: the record with the status, the time and the first failure lines of each target, the full log of each
-# target and the summary. The gates of kit run in the job kit, which calls .github/workflows/ci-pipeline.yml of kit (kit
-# K910); its jobs run on the runner and upload the reports that kit declares. The last job, ci-passed, passes only when
-# every other job of this workflow passed, the job kit included; a release takes the id of such a run and tags its commit
-# (HR-94, HR-95). In the jobs of this file every step that runs a command runs one make target, the jobs run on
+# target and the summary. The entry gates runs GATE_TARGETS of the Makefile, the checkers of kit on this checkout. The last
+# job, ci-passed, passes only when every other job of this workflow passed; a release takes the id of such a run and tags its
+# commit (HR-94, HR-95). In the jobs of this file every step that runs a command runs one make target, the jobs run on
 # ubuntu-26.04-arm, the actions are pinned by commit and no step has a time limit (HR-90).
 #
-# Each job checks hyper out at the workspace root and runs the bootstrap of kit right after the checkout
-# (uses: ./.github/actions/kit-bootstrap, kit K992), which sets up the Node.js of mise.toml and installs the locked kit
-# package, the npm of devEngines and the packages; each matrix entry then declares its own selected tools and native
+# Each job checks hyper out at the workspace root with its history, which the document and owner checks read, and runs the
+# bootstrap right after the checkout (uses: ./.github/actions/bootstrap), which sets up the Node.js of mise.toml and installs
+# the locked kit package, the npm of devEngines and the packages; each matrix entry then declares its own selected tools and native
 # package environments, installed at the versions and hashes that this checkout declares. No job checks out another
 # repository: every template asset comes from the template release that the manifests and their locks pin by integrity.
 # PHP setup and Composer projects run only for entries that execute PHP. Python packages are installed from uv.lock
@@ -29,19 +28,20 @@ permissions:
   contents: read
 
 jobs:
-  # The gates of kit (kit S12): ci-pipeline.yml, which kit-sync copies, plans and runs the shared, parity and runtime gates.
-  # Every other job needs it (kit S12), so the job check runs only after the gates of kit passed.
-  kit:
-    uses: ./.github/workflows/ci-pipeline.yml
-
   check:
     name: check (${{ matrix.name }})
-    needs: kit
     runs-on: ubuntu-26.04-arm
     strategy:
       fail-fast: false
       matrix:
         include:
+          - name: gates
+            tools: node php composer pie python uv ruff vulture alint phpcs phpstan
+            php: true
+            symbols: php
+            composer: true
+            python: true
+            targets: kit-check layout-check docs-check owner-validate rebuild-check language-check test-markers-check duplication-check suppression-check divergence-check parity-declarations-check parity-check lint-ts lint-php lint-python
           - name: docs
             tools: node php composer pie python uv
             php: true
@@ -49,7 +49,7 @@ jobs:
             composer: true
             python: true
             redis: true
-            targets: typecheck hooks-check hyper-test-scripts
+            targets: typecheck hyper-test-scripts
           - name: php
             tools: node php composer pie
             php: true
@@ -72,7 +72,9 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         id: checkout
-      - uses: ./.github/actions/kit-bootstrap
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/bootstrap
         id: bootstrap
         if: ${{ !cancelled() }}
       - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
@@ -88,10 +90,7 @@ jobs:
         run: make install-tools TOOLS="${{ matrix.tools }}"
       - id: symbols
         if: ${{ !cancelled() && matrix.symbols }}
-        run: make kit-install-symbols EXTRACTORS="${{ matrix.symbols }}"
-      - id: hooks
-        if: ${{ !cancelled() }}
-        run: make hooks
+        run: make install-symbols EXTRACTORS="${{ matrix.symbols }}"
       - id: install
         if: ${{ !cancelled() && matrix.composer }}
         run: make hyper-install-php
@@ -123,13 +122,13 @@ jobs:
   # holds every job (HR-95). It runs after every other job, also after a
   # failed, skipped or cancelled one (if: always()), and make ci-passed fails unless every job of needs has the result
   # success, so a new job of this workflow is required once it is listed in needs. Each step needs the step before it, and the
-  # bootstrap action of kit installs the package whose kit.mk has the target ci-passed.
+  # bootstrap installs the kit package whose ci-passed utility make ci-passed runs.
   ci-passed:
     if: ${{ always() }}
-    needs: [check, kit]
+    needs: [check]
     runs-on: ubuntu-26.04-arm
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: ./.github/actions/kit-bootstrap
+      - uses: ./.github/actions/bootstrap
       - name: make ci-passed
         run: make ci-passed RESULTS='${{ toJSON(needs) }}'

@@ -1,0 +1,21 @@
+# The PHPStan configuration of the Composer packages of hyper that hold none of their own (packages/server/php holds its
+# phpstan.neon): make lint-php runs PHPStan on each Composer package with this root file and the autoloader of the package.
+# It runs the disallowed calls of S2 only: customRulesetUsed loads no rule level, so the result depends on no level a package may later choose for itself.
+# phpstan/extension-installer loads spaze/phpstan-disallowed-calls and shipmonk/phpstan-rules (the PHP lint project of kit,
+# which make install-tools installs).
+# Only ShipMonk's caught-exception cause rule is enabled below.
+parameters:
+    customRulesetUsed: true
+    shipmonkRules:
+        enableAllRules: false
+        requirePreviousExceptionPass:
+            enabled: true
+            reportEvenIfExceptionIsNotAcceptableByRethrownOne: true
+    disallowedFunctionCalls:
+        -
+            function: 'spl_autoload_register()'
+            message: 'S2: classes load through the PSR-4 autoloader of Composer; never register an autoloader'
+    disallowedMethodCalls:
+        -
+            method: 'Composer\Autoload\ClassLoader::*()'
+            message: 'S2: classes load through the PSR-4 autoloader of Composer; never change a ClassLoader at run time'

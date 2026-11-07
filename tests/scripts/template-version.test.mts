@@ -100,15 +100,12 @@ test('the Python package of the server names the wheel asset of the release with
   );
 });
 
-// The release workflow of kit runs make release-prepare before release-tools (kit K132; make kit-sync refreshes the
-// copy): it installs as CI does and reads no template checkout (H23.7, H27.57).
+// The release workflow runs make release-prepare before release-tools: it installs as CI does and reads no template checkout
+// (H23.7, H27.57).
 test('release-prepare runs only make hyper-install (H23.7, H27.57)', () => {
-  // kit.mk declares release-prepare:: with the empty recipe `@:` (kit K132), which the dry run prints as `:` first.
-  const [declared, ...lines] = dryRun('release-prepare');
-  assert.equal(declared, ':', 'the first rule of release-prepare is the empty rule of kit');
   // make -n runs a recursive make too, so the dry run prints the line of make hyper-install and then the commands of its dry
-  // run. $(MAKE) of kit-bootstrap.mk adds KIT and KIT_EXT to every recursive make, so the case compares only the target that
-  // ends the first line.
+  // run; a recursive make prints $(MAKE) as it was started, so the case compares only the target that ends the first line.
+  const lines = dryRun('release-prepare');
   assert.equal(lines[0]?.split(' ').at(-1), 'hyper-install', lines.join('\n'));
   assert.deepEqual(lines.slice(1), dryRun('hyper-install'), 'release-prepare runs a command beside make hyper-install');
 });

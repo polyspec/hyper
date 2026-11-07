@@ -3,8 +3,8 @@
 // failed step (`if: ${{ !cancelled() }}`), except in the jobs whose every step needs the earlier one (STOPPING), and
 // every step that runs a command runs one make target, so the exported settings and the checks of the Makefile, such
 // as the offline settings and the toolchain check, apply to it. The entries of the matrix of ci.yml run the targets of
-// CHECK_TARGETS, each once. The job kit calls .github/workflows/ci-pipeline.yml, the gates of kit (kit K910). The last job of
-// ci.yml is ci-passed, which a release requires of the run whose id it takes (HR-95): it runs after every other job (`if: ${{ always() }}`), needs every other job of the workflow, runs on their runner and runs
+// CHECK_TARGETS, each once; the entry gates runs GATE_TARGETS, the checkers of kit, and no job calls another workflow. The
+// last job of ci.yml is ci-passed, which a release requires of the run whose id it takes (HR-95): it runs after every other job (`if: ${{ always() }}`), needs every other job of the workflow, runs on their runner and runs
 // `make ci-passed` with the JSON of `needs`.
 import assert from 'node:assert/strict';
 import { readdirSync, readFileSync } from 'node:fs';
@@ -12,7 +12,6 @@ import path from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
-import { jsonObject, parseJsonObject } from '../../scripts/json.mts';
 import { dryRun } from './make-dry-run.mts';
 import { kitTool } from './kit-tools.mts';
 
@@ -24,10 +23,10 @@ const RUNNER = 'ubuntu-26.04-arm';
 const STOPPING: Record<string, string[]> = { 'ci.yml': ['ci-passed'], 'release.yml': ['release'] };
 const CI_PASSED = 'ci-passed';
 const CI_PASSED_RUN = "make ci-passed RESULTS='${{ toJSON(needs) }}'";
-// The bootstrap of @polyspec/kit (kit K992): the action that kit-sync vendors, which sets up the Node.js of mise.toml and installs
-// the locked kit package, the npm of devEngines and the packages of package-lock.json. Every job of ci.yml that runs steps runs it
-// right after its checkout, at the workspace root.
-const BOOTSTRAP_ACTION = './.github/actions/kit-bootstrap';
+// The bootstrap of hyper: the action of .github/actions/bootstrap, which sets up the Node.js of mise.toml and installs the lock,
+// the npm of devEngines and the packages of package-lock.json. Every job that runs steps runs it right after its checkout, at
+// the workspace root.
+const BOOTSTRAP_ACTION = './.github/actions/bootstrap';
 
 interface Step { text: string; run: string | undefined; uses: string | undefined; if: string | undefined }
 interface Job { name: string; text: string; steps: Step[] }
@@ -80,19 +79,10 @@ function jobs(text: string): Job[] {
   }));
 }
 
-// The workflows of this repository. The workflows that the installed @polyspec/kit names in kit.copies of its package.json are
-// copies of kit: kit owns their text and tests their rules, and make kit-check holds each copy to the package, so the rules of
-// this file read the other workflows.
-const allWorkflows = () => readdirSync(WORKFLOWS).filter((name) => name.endsWith('.yml')).map((name) => ({ name, text: readFileSync(path.join(WORKFLOWS, name), 'utf8') }));
-const KIT_MANIFEST = parseJsonObject(readFileSync(fileURLToPath(import.meta.resolve('@polyspec/kit/package.json')), 'utf8'), '@polyspec/kit/package.json');
-const KIT_COPIES = Object.keys(jsonObject(jsonObject(KIT_MANIFEST.kit, '@polyspec/kit kit').copies, '@polyspec/kit kit.copies'))
-  .filter((file) => path.dirname(file) === '.github/workflows')
-  .map((file) => path.basename(file));
-const workflows = () => allWorkflows().filter((workflow) => !KIT_COPIES.includes(workflow.name));
-// The job of ci.yml that calls the gates workflow of kit (kit K910). A job with `uses:` runs the jobs of the workflow that it
-// calls, so it has no runner and no steps of its own; the rules of runners and steps read the jobs that run steps.
-const KIT_JOB = 'kit';
-const KIT_PIPELINE = './.github/workflows/ci-pipeline.yml';
+// The workflows of this repository, each a file of hyper.
+const workflows = () => readdirSync(WORKFLOWS).filter((name) => name.endsWith('.yml')).map((name) => ({ name, text: readFileSync(path.join(WORKFLOWS, name), 'utf8') }));
+const allWorkflows = workflows;
+// A job with `uses:` runs the jobs of another workflow; no job of hyper calls one, so each job runs its own steps.
 const calls = (job: Job) => /^ {4}uses: /m.test(job.text);
 
 test('the reader finds the jobs and the steps of a workflow', () => {
@@ -134,11 +124,12 @@ test('every step that runs a command runs make, and every step after the first r
   assert.deepEqual(found, []);
 });
 
-// The on: block of each workflow of this repository, exactly: the checks run on the push of main and on every manual run.
-// The copies of kit declare the triggers that kit gives them. No other workflow exists, and none runs on a pull request or a
-// merge group (HR-91, HR-95).
+// The on: block of each workflow of this repository, exactly: the checks run on the push of main and on every manual run,
+// and the release on a completed CI run of main and on a manual run with the id of a CI run. No other workflow exists, and
+// none runs on a pull request or a merge group (HR-91, HR-95).
 const TRIGGERS: Record<string, string> = {
   'ci.yml': 'on:\n  push:\n    branches: [main]\n  workflow_dispatch:\n',
+  'release.yml': 'on:\n  workflow_run:\n    workflows: [ci]\n    types: [completed]\n    branches: [main]\n  workflow_dispatch:\n    inputs:\n      run:\n        description: The id of the successful CI run whose exact commit is released\n        required: true\n        type: string\n',
   // The benchmarks: a report on a manual run, which no check and no release reads.
   'bench.yml': 'on:\n  workflow_dispatch:\n',
 };
@@ -204,12 +195,20 @@ function matrixEntries(text: string): MatrixEntry[] {
   return entries.map(entry => ({ name: entry.name, keys: entry.keys, targets: (entry.keys['targets'] ?? '').split(' ').filter(Boolean), browser: entry.keys['browser'] === 'true' }));
 }
 
+// The words of the simple variable `name` of the Makefile, with each $(<variable>) of its value replaced by the words of
+// that variable.
+function makeWords(makefile: string, name: string): string[] {
+  const value = new RegExp(`^${name} := (.*)$`, 'm').exec(makefile)?.[1];
+  if (value === undefined) throw new Error(`the Makefile declares no ${name}`);
+  return value.split(' ').filter(Boolean).flatMap((word) => {
+    const variable = /^\$\((\w+)\)$/.exec(word)?.[1];
+    return variable === undefined ? [word] : makeWords(makefile, variable);
+  });
+}
+
 // CHECK_TARGETS of the Makefile without the targets of one platform.
 function checkTargets(): string[] {
-  const makefile = readFileSync(path.join(ROOT, 'Makefile'), 'utf8');
-  const targets = /^CHECK_TARGETS := (.*)$/m.exec(makefile)?.[1];
-  if (targets === undefined) throw new Error('the Makefile declares no CHECK_TARGETS');
-  return targets.split(' ').filter(Boolean);
+  return makeWords(readFileSync(path.join(ROOT, 'Makefile'), 'utf8'), 'CHECK_TARGETS');
 }
 
 test('the matrix entries of ci.yml run every target of the full suite once (HR-91)', () => {
@@ -308,9 +307,8 @@ test('ci-passed is the last job of ci.yml, runs always, needs every other job an
     missing: [head + '\n', 'the job ci-passed is missing'],
     'not last': [head.replace('\njobs:\n', `\njobs:\n  ci-passed:\n${tail.trimEnd()}\n`) + '\n', 'the job ci-passed is not the last job'],
     'not always': [text.replace('    if: ${{ always() }}\n', '    if: ${{ success() }}\n'), 'the job ci-passed has if: ${{ success() }}'],
-    'needs no job': [text.replace('    needs: [check, kit]\n', '    needs: []\n'), 'the job ci-passed needs [], not every other job [kit, check]'],
-    'needs no kit': [text.replace('    needs: [check, kit]\n', '    needs: [check]\n'), 'the job ci-passed needs [check], not every other job [kit, check]'],
-    'another runner': [text.replace('    needs: [check, kit]\n    runs-on: ubuntu-26.04-arm\n', '    needs: [check, kit]\n    runs-on: ubuntu-24.04\n'), 'the job ci-passed runs on ubuntu-24.04, not on the runner of the other jobs'],
+    'needs no job': [text.replace('    needs: [check]\n', '    needs: []\n'), 'the job ci-passed needs [], not every other job [check]'],
+    'another runner': [text.replace('    needs: [check]\n    runs-on: ubuntu-26.04-arm\n', '    needs: [check]\n    runs-on: ubuntu-24.04\n'), 'the job ci-passed runs on ubuntu-24.04, not on the runner of the other jobs'],
     'another step': [text.replace(CI_PASSED_RUN, 'make ci-passed'), 'the job ci-passed runs [make ci-passed], not the one last step'],
   };
   for (const [name, [changed, message]] of Object.entries(broken)) {
@@ -361,40 +359,31 @@ test('H27.20 PHP-enabled CI groups prepare PHP before selected tool installation
   }
 });
 
-test('H27.20 every CI check group installs per-checkout hook configuration before checks', () => {
-  for (const job of jobs(readFileSync(path.join(WORKFLOWS, 'ci.yml'), 'utf8')).filter(job => job.name !== CI_PASSED && !calls(job))) {
-    const installed = job.steps.findIndex(step => step.uses === BOOTSTRAP_ACTION);
-    const hooks = job.steps.findIndex(step => step.run === 'make hooks');
-    const check = job.steps.findIndex(step => step.run?.startsWith('make ci-targets'));
-    assert.ok(installed >= 0 && installed < hooks && hooks < check, `${job.name}: native hook setup must follow installation and precede checks`);
-  }
-});
-
-
-// kit K870, K910: .github/workflows/ci-pipeline.yml, which the job kit calls, runs the gates of kit, cross-language parity among
-// them, so no entry of ci.yml runs one again; the gates are the prerequisites of the kit-gates-* targets of the installed kit.mk.
-test('H27.24 no matrix entry of ci.yml runs a gate of kit, which ci-pipeline.yml runs (HY-1, HY-27, HY-114, HR-91)', () => {
-  const kit = readFileSync(path.join(path.dirname(kitTool('run-tests')), 'kit.mk'), 'utf8');
-  const gates = [...kit.matchAll(/^kit-gates-[\w-]+: ([^#\n]+)/gm)].flatMap(match => (match[1] ?? '').trim().split(/\s+/));
-  assert.ok(gates.includes('parity-check') && gates.includes('parity-declarations-check'), gates.join(' '));
+// kit 0.0.98 runs no gate of its own in a repository: the entry gates of ci.yml runs GATE_TARGETS of the Makefile, each a
+// target of the full suite, with the lint tools that those targets start, and no other entry runs one.
+test('H27.83 the entry gates runs GATE_TARGETS of the Makefile with their lint tools', () => {
+  const makefile = readFileSync(path.join(ROOT, 'Makefile'), 'utf8');
+  const gates = makeWords(makefile, 'GATE_TARGETS');
+  assert.ok(gates.includes('parity-check') && gates.includes('lint-ts') && gates.includes('docs-check'), gates.join(' '));
+  assert.deepEqual(gates.filter((target) => !checkTargets().includes(target)), [], 'a gate that is not in CHECK_TARGETS');
   const entries = matrixEntries(readFileSync(path.join(WORKFLOWS, 'ci.yml'), 'utf8'));
-  for (const entry of entries) assert.deepEqual(entry.targets.filter(target => gates.includes(target)), [], `${entry.name} runs gates of kit`);
-  const check = jobs(readFileSync(path.join(WORKFLOWS, 'ci.yml'), 'utf8')).find(job => job.name === 'check');
-  assert.ok(check !== undefined);
-  // The checks wait for no job of hyper; they need only the job kit, which kit S12 requires (H27.60).
-  assert.doesNotMatch(check.text, /^ {4}needs: (?!kit$)/m, 'matrix checks must need only the job kit');
+  const entry = entries.find((candidate) => candidate.name === 'gates');
+  assert.deepEqual(entry?.targets, gates);
+  for (const other of entries.filter((candidate) => candidate.name !== 'gates')) assert.deepEqual(other.targets.filter((target) => gates.includes(target)), [], `${other.name} runs a gate`);
+  for (const tool of ['ruff', 'vulture', 'alint', 'phpcs', 'phpstan']) assert.ok((entry?.keys['tools'] ?? '').split(' ').includes(tool), `gates installs no ${tool}`);
 });
 
-
-// H27.47-3: the lint tools of kit, which only the lint gates of kit start from their own scripts; ci-pipeline.yml runs those gates
-// (kit K870), and hyper-lint and analyse-php run the pint and PHPStan of vendor, so no CI job of hyper installs them.
-const KIT_LINT_TOOLS = ['ruff', 'vulture', 'alint', 'phpcs', 'phpstan', 'golangciLint', 'deadcode', 'govulncheck', 'cargoAudit', 'cargoDeny'];
-
-test('H27.47-3 no matrix entry of ci.yml installs a lint tool of kit, which only the gates of ci-pipeline.yml start', () => {
-  for (const entry of matrixEntries(readFileSync(path.join(WORKFLOWS, 'ci.yml'), 'utf8'))) {
-    const tools = (entry.keys['tools'] ?? '').split(' ');
-    assert.deepEqual(tools.filter(tool => KIT_LINT_TOOLS.includes(tool)), [], `${entry.name} installs lint tools of kit that none of its targets starts`);
-  }
+// kit 0.0.98 includes no recipe into a repository (kit docs/spec/utilities-and-recipes.md): the Makefile holds every target
+// that its recipes and workflows run, and no workflow calls a workflow that kit wrote.
+test('H27.83 the Makefile includes no file of kit, and every make target of a workflow is a target of the Makefile', () => {
+  const makefile = readFileSync(path.join(ROOT, 'Makefile'), 'utf8');
+  assert.deepEqual(makefile.split('\n').filter((line) => /^-?include\b/.test(line)), [], 'the Makefile includes a file');
+  const defined = new Set([...makefile.matchAll(/^([a-z][\w-]*(?: [a-z][\w-]*)*):(?!=)/gm)].flatMap((match) => (match[1] ?? '').split(' ')));
+  const action = readFileSync(path.join(ROOT, '.github/actions/bootstrap/action.yml'), 'utf8');
+  const called = [...workflows().map((workflow) => workflow.text), action].flatMap((text) => [...text.matchAll(/^\s*run: make ([a-z][\w-]*)/gm)].map((match) => match[1] ?? ''));
+  assert.ok(called.includes('ci-targets') && called.includes('release-tag') && called.includes('bootstrap'), called.join(' '));
+  assert.deepEqual([...new Set(called)].filter((target) => !defined.has(target)), [], 'a workflow runs a target that the Makefile does not define');
+  for (const workflow of workflows()) assert.deepEqual(jobs(workflow.text).filter(calls).map((job) => job.name), [], `${workflow.name} calls another workflow`);
 });
 
 
@@ -402,6 +391,7 @@ test('H27.25 CI declares job-owned tools and locked package environments (HR-81,
   const text = readFileSync(path.join(WORKFLOWS, 'ci.yml'), 'utf8');
   const entries = matrixEntries(text);
   const expected: Record<string, { tools: string; php?: boolean; composer?: boolean; python?: boolean }> = {
+    gates: { tools: 'node php composer pie python uv ruff vulture alint phpcs phpstan', php: true, composer: true, python: true },
     docs: { tools: 'node php composer pie python uv', php: true, composer: true, python: true },
     php: { tools: 'node php composer pie', php: true, composer: true },
     node: { tools: 'node' },
@@ -414,17 +404,16 @@ test('H27.25 CI declares job-owned tools and locked package environments (HR-81,
     assert.ok(profile !== undefined);
     assert.equal(entry.keys['tools'], profile.tools, `${entry.name}: declared tool selection`);
     assert.ok(!profile.tools.split(' ').includes('npm'), 'npm belongs to the separate bootstrap selector');
-    assert.equal(entry.keys['symbols'], entry.name === 'docs' ? 'php' : undefined, `${entry.name}: explicit extractor selection, which public-symbols of hyper-test-scripts reads`);
+    assert.equal(entry.keys['symbols'], ['docs', 'gates'].includes(entry.name) ? 'php' : undefined, `${entry.name}: explicit extractor selection, which public-symbols of hyper-test-scripts and the parity declarations read`);
     for (const key of ['php', 'composer', 'python'] as const) assert.equal(entry.keys[key] === 'true', profile[key] === true, `${entry.name}: ${key} environment`);
   }
   const checks = jobs(text).find(job => job.name === 'check');
   assert.ok(checks !== undefined);
   assert.ok(checks.steps.some(step => step.run === 'make install-tools TOOLS="${{ matrix.tools }}"'));
   assert.ok(!checks.steps.some(step => step.run === 'make install-tools' || step.run === 'make hyper-install' || step.run === 'make install'));
-  // A check job builds what it tests and takes no artifact of another job; it needs only the job kit, which kit S12
-  // requires and kit-check judges (H27.60).
-  assert.doesNotMatch(checks.text, /actions\/download-artifact@|^ {4}needs: (?!kit$)/m);
-  const symbols = checks.steps.find(step => step.run === 'make kit-install-symbols EXTRACTORS="${{ matrix.symbols }}"');
+  // A check job builds what it tests, takes no artifact of another job and waits for no job.
+  assert.doesNotMatch(checks.text, /actions\/download-artifact@|^ {4}needs:/m);
+  const symbols = checks.steps.find(step => step.run === 'make install-symbols EXTRACTORS="${{ matrix.symbols }}"');
   assert.equal(symbols?.if, '${{ !cancelled() && matrix.symbols }}');
   const php = checks.steps.find(step => step.run === 'make hyper-install-php');
   const python = checks.steps.find(step => step.run === 'make hyper-install-python');
@@ -433,30 +422,4 @@ test('H27.25 CI declares job-owned tools and locked package environments (HR-81,
   assert.ok(entries.find(entry => entry.name === 'docs')?.targets.includes('hyper-test-scripts'));
   assert.ok(entries.find(entry => entry.name === 'python')?.targets.includes('hyper-test-python-render'));
   assert.ok(entries.find(entry => entry.name === 'board')?.targets.includes('server-parity-python'));
-});
-
-
-test('H27.26 provider gate setup declares every native runtime and full parity coverage (HR-81, HR-91)', () => {
-  const ci = parseJsonObject(readFileSync(path.join(ROOT, 'config/ci.json'), 'utf8'), 'config/ci.json');
-  assert.equal(ci.parityMode, 'full');
-  const setup = ci.setup;
-  assert.ok(typeof setup === 'object' && setup !== null && !Array.isArray(setup));
-  const text = JSON.stringify(setup);
-  assert.ok(text.includes('hyper-install-php') && text.includes('hyper-install-python') && text.includes('server-fixtures') && text.includes('node-fixtures'));
-  assert.doesNotMatch(text, /"(?:install|install-kit|parity-check|kit-gates)"/);
-  // hyper-install-php runs template-ext, whose recipe runs the http:pie of mise.toml (H27.51); the pipeline installs
-  // the tools of the php runtime there and, since kit adds the tools of every runtime to the parity phase, in parity too.
-  const tools = ci.tools;
-  assert.ok(typeof tools === 'object' && tools !== null && !Array.isArray(tools));
-  const php: unknown = new Map(Object.entries(tools)).get('php');
-  assert.ok(Array.isArray(php) && php.includes('pie'), 'config/ci.json tools.php installs no pie');
-});
-
-// kit K910: the job kit of ci.yml calls ci-pipeline.yml, the gates of kit, and is the only job that calls a workflow; ci-passed
-// needs it, so a release requires the gates of kit of its run.
-test('the job kit calls ci-pipeline.yml of kit, and ci-passed needs it (kit K910, HR-95)', () => {
-  const read = jobs(readFileSync(path.join(WORKFLOWS, 'ci.yml'), 'utf8'));
-  assert.deepEqual(read.filter(calls).map((job) => [job.name, job.text.trim()]), [[KIT_JOB, `uses: ${KIT_PIPELINE}`]]);
-  const passed = read.find((job) => job.name === CI_PASSED);
-  assert.match(passed?.text ?? '', new RegExp(`^ {4}needs: \\[[^\\]]*\\b${KIT_JOB}\\b[^\\]]*\\]$`, 'm'));
 });

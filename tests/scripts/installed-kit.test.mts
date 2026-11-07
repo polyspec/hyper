@@ -27,7 +27,9 @@ test('a fresh checkout can bootstrap the declared native npm without installed t
   assert.equal(result.status, 0, result.stderr);
   assert.match(result.stdout, /\/npm" exec --yes --package=/);
   assert.match(result.stdout, /devEngines\.packageManager\.version/);
-  assert.match(result.stdout, /npm --prefix "\$root" ci --ignore-scripts --allow-remote=root/);
+  // npm reads allow-remote=root of the .npmrc of the checkout, so the command line states no setting of npm (kit K1045).
+  assert.match(result.stdout, /npm --prefix "\$root" ci --ignore-scripts\n/);
+  assert.match(readFileSync(join(root, '.npmrc'), 'utf8'), /^allow-remote=root$/m);
   assert.doesNotMatch(result.stdout, /\.\.\/kit/);
 });
 
@@ -81,9 +83,9 @@ test('H27.21 the native consumer installs its lock with npm ci offline without e
   assert.equal(installed.status, 0, `${installed.stdout}${installed.stderr}`);
   const project = join(root, 'tests/package-install');
   mkdirSync(project, { recursive: true });
-  for (const file of ['package.json', 'package-lock.json']) cpSync(join('tests/package-install', file), join(project, file));
+  for (const file of ['package.json', 'package-lock.json', '.npmrc']) cpSync(join('tests/package-install', file), join(project, file));
   const lock = readFileSync(join(project, 'package-lock.json'), 'utf8');
-  const consumer = spawnSync(npm, ['ci', '--no-audit', '--allow-remote=root'], { cwd: project, encoding: 'utf8', env });
+  const consumer = spawnSync(npm, ['ci', '--no-audit'], { cwd: project, encoding: 'utf8', env });
   assert.equal(consumer.status, 0, `${consumer.stdout}${consumer.stderr}`);
   assert.equal(realpathSync(join(project, 'node_modules/@polyspec/hyper-client')), realpathSync(join(root, 'packages/client')));
   const template = parseJsonObject(readFileSync(join(project, 'node_modules/@polyspec/template/package.json'), 'utf8'), 'installed template package.json');

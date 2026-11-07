@@ -1,5 +1,5 @@
 <!-- doc-id: agents -->
-<!-- source-sha256: c1d239594d073c3dd10a7c1dac63a13d6713190fa90aec2eb853b00690b0e145 -->
+<!-- source-sha256: 6c8dfddb02ac3ea96a13b8f6d3c7e0798abebfc173e33dcc806efc76ab68a206 -->
 # 개발
 
 [English](AGENTS.md).
@@ -54,8 +54,8 @@
   Enforced by: none, 실행보다 오래 남는 process는 코드를 읽어 찾는다.
 - Own: 추적하는 모든 경로는 `config/owner-checks.json`에 owner를 가진다(HR-88). 경로를 추가하는 변경은 그 owner 규칙도 추가하며, 저장소의 일부를 복사하는 test는 그 일부가 import하는 것을 함께 복사한다.
   Enforced by: `make owner-validate`
-- Own: 공유 도구는 npm package `@polyspec/kit`이며 `package.json`의 release asset URL과 `package-lock.json`의 integrity로 고정한다. 깨끗한 checkout은 `make bootstrap`으로 `devEngines`가 이름하는 version의 기본 npm을 checkout 밖에서 호출해 lock을 설치한 뒤(kit K938) `make install-tools TOOLS=npm`과 `make install-packages`를 실행한다. Makefile은 설치 package의 `node_modules/@polyspec/kit/scripts/kit/kit-bootstrap.mk`를 include하고 기본 로컬 package link는 선택 사항이다. `PRINCIPLES.md`, 그 짝, `.editorconfig`, `.claude/settings.json`을 포함한 package의 `kit.copies` 파일은 설치 package에서 `make kit-sync`가 원자적으로 쓰는 일반 파일 복사본이다. 설치 package의 소스 link는 로컬 개발 상태로 유지한다. 복사본은 kit에서만 바꾼다. 이 저장소는 `config/*.json`과 자기 script에서만 다른 저장소와 다르다. 앱 작업을 완료하기 위해 Kit checkout을 직접 수정하지 않는다. 공유 도구 결함이나 빠진 기능은 재현 방법, 기대 동작, 실제 동작과 앱 영향을 담아 polyspec/kit GitHub issue로 등록하고 개선을 요구한다. 모든 로컬 및 CI runtime test는 설치된 Kit runner를 사용한다. 이를 대체하거나 guard를 끄거나 필수 coverage를 줄이거나 우회 결과를 릴리즈 근거로 삼지 않는다. 별도 결함은 보고하면서 지원되는 Kit 선택 방식을 사용할 수 있다. 릴리즈 공개에는 Kit을 통한 필수 CI와 native archive 증명의 성공이 필요하다.
-  Enforced by: none, `make kit-sync`가 설치 package에서 복사본을 갱신한다.
+- Own: 공유 도구는 npm package `@polyspec/kit`이며 `package.json`의 release asset URL과 `package-lock.json`의 integrity로 고정한다. 깨끗한 checkout은 `make bootstrap`으로 `devEngines`가 이름하는 version의 기본 npm을 checkout 밖에서 호출해 lock을 설치한 뒤(kit K938) `make install-tools TOOLS=npm`과 `make install-packages`를 실행한다. Makefile은 kit의 파일을 include하지 않는다. Makefile이 이 저장소의 모든 레시피를 담고, 각 레시피는 설치 package의 유틸리티를 명시적 인자로 실행한다. 기본 로컬 package link이면 그 소스를, pack된 release이면 그 dist를 실행한다. 기본 로컬 package link는 선택 사항이며 설치 package의 소스 link는 로컬 개발 상태로 유지한다. 도구의 설정은 이 저장소의 기본 파일이다: `.npmrc`, `mise.toml`의 `[settings]`와 `[env]`, `knip.json`, `.oxlintrc.json`, `ruff.toml`, `phpcs.xml.dist`, `phpstan.dist.neon`. `PRINCIPLES.md`, 그 짝, `.editorconfig`, `config/layout.kit.yml`, `config/composer.schema.json`, `.github/workflows/release.yml`, `.github/actions/bootstrap`은 이 저장소의 파일이다. 앱 작업을 완료하기 위해 Kit checkout을 직접 수정하지 않는다. 공유 도구 결함이나 빠진 기능은 재현 방법, 기대 동작, 실제 동작과 앱 영향을 담아 polyspec/kit GitHub issue로 등록하고 개선을 요구한다. 모든 로컬 및 CI runtime test는 설치된 Kit runner를 사용한다. 이를 대체하거나 guard를 끄거나 필수 coverage를 줄이거나 우회 결과를 릴리즈 근거로 삼지 않는다. 별도 결함은 보고하면서 지원되는 Kit 선택 방식을 사용할 수 있다. 릴리즈 공개에는 Kit을 통한 필수 CI와 native archive 증명의 성공이 필요하다.
+  Enforced by: `make hyper-test-scripts`, whose tests/scripts/ci-workflow.test.mts fails an include of the Makefile and a workflow target that the Makefile does not define
 - Own: 코드와 test는 각 package 안에서 서로 다른 디렉터리에 둔다.
   Enforced by: `make layout-check`
 - Own: 이 저장소가 만드는 경로와 추적 파일에 이름을 적는 경로에는 저장소 상대 경로를 쓴다. 경로는 선언적으로, 추적 파일의 이름으로, 또는 문서나 script가 밝힌 탐색 규칙에 따른 탐색으로 해석한다. 외부 입력에는 명시적인 경로를 요구한다.
@@ -91,8 +91,8 @@
   Enforced by: `make check`
 - Own: `main`의 push와 모든 수동 실행(`workflow_dispatch`)에 대해 GitHub은 `.github/workflows/ci.yml`의 job에서 CI group마다 하나씩 전체 suite를 각 target 끝까지 실행한다. 각 job은 job summary를 쓰고, 상태, 시간, 처음 실패한 줄과 각 target의 전체 로그를 담은 보고서 `var/ci/<name>/`을 올린다(HR-91). 전체 suite와 end-to-end 검사는 여기서 실행한다. 다음 push 전에 그것이 적는 실패를 모두 고친다. 알려진 한계: CI runner는 Linux라서, Darwin에서만 full suite에 속하는 `make virtiofs-check`(`DARWIN_TARGETS`, HR-68)는 Mac에서 local `make check`를 실행할 때만 실행된다.
   Enforced by: `make ci-passed`
-- Own: 모든 `make` 실행은 `core.hooksPath`를 `make hooks`가 쓰는 hook인 `.githooks`로 설정한다. `make hooks-check`는 그것이 설정되지 않았거나 hook이 다르면 실패한다. push는 검사하지 않는다. message 규칙은 commit에서 실행되고, CI는 release에서 읽는다(`docs/operations/development.md`).
-  Enforced by: `make hooks-check`
+- Own: 이 저장소는 Git hook을 두지 않는다. `make hooks`는 changelog와 checklist의 merge driver를 선언하고, `make commit`은 commit message를 검사한다. push는 검사하지 않는다. CI는 release에서 읽는다(`docs/operations/development.md`).
+  Enforced by: none, `make commit` 없이 만든 commit은 review로 찾는다.
 - Own: Version 0.1 전까지 변경은 그것을 소유한 unit test로 검사하고, checklist의 모든 task가 `[o]`일 때 `main`을 한 번 push한다(HR-94). Pull request, merge queue, GitHub ruleset은 없으며, push는 `git push origin main`이다. `main`의 push는 `.github/workflows/ci.yml`을 실행하고, 그 마지막 job `ci-passed`는 workflow의 다른 모든 job이 통과했을 때만 통과한다. 그 push의 CI 실행이 commit의 근거이며, release tag는 태그된 commit에 대해 `ci-passed`가 성공한 뒤에만 정한다(`docs/operations/development.md`).
   Enforced by: `make ci-passed`
 
@@ -101,7 +101,7 @@
 
 ## 릴리스
 
-- Own: Version 0.1 전까지 `main`은 모든 task가 끝났을 때 한 번 push하며, 그 push의 CI 실행이 commit들의 근거다. release는 `main`에서 `.github/workflows/ci.yml`의 push 또는 수동 실행이 성공한 commit이며, 그 job `ci-passed`는 그 실행의 다른 모든 job이, kit의 gate를 담은 job `kit`까지 통과해야만 통과한다(HR-95). release는 maintainer만 시작하고, 아무도 손으로 tag를 만들거나 옮기거나 push하지 않는다.
+- Own: Version 0.1 전까지 `main`은 모든 task가 끝났을 때 한 번 push하며, 그 push의 CI 실행이 commit들의 근거다. release는 `main`에서 `.github/workflows/ci.yml`의 push 또는 수동 실행이 성공한 commit이며, 그 job `ci-passed`는 그 실행의 다른 모든 job이, kit의 검사기를 담은 entry `gates`까지 통과해야만 통과한다(HR-95). release는 maintainer만 시작하고, 아무도 손으로 tag를 만들거나 옮기거나 push하지 않는다.
   Enforced by: `make release-tag`, which tags only the commit of such a run; who dispatches the release is a permission of GitHub.
 - Own: 버전을 올리는 commit `chore(release): Release X.Y.Z (#<task>)`는 `package.json`, `packages/client/package.json`, `packages/server/ts/package.json`, `packages/build/package.json`, `packages/server/php/composer.json`과 `packages/server/python/pyproject.toml`의 버전을 X.Y.Z로 정한다. `packages/server/ts/package.json`과 `packages/build/package.json`의 `@polyspec/hyper-client` 요구와, private root `composer.json`과 `examples/board/composer.json`의 `polyspec/hyper-server` 요구를 정하며, 그 lock도 쓴다. 두 changelog의 `## Unreleased`를 `## X.Y.Z`로 바꾸고, 그 위에 빈 `## Unreleased`를 새로 둔다. private test package `tests/package-install`은 자기 버전을 유지한다. 그것은 아무것도 공개하지 않기 때문이다(`config/release.json`의 `notReleased`). 버전 올림 commit은 그 lock을 다시 쓰므로, lock이 로컬 package의 버전을 기록한다.
   Enforced by: none, the version-bump commit is a judgement; the package managers resolve the versions.
@@ -111,7 +111,7 @@
 ## 생성 파일
 
 생성 파일은 Git에 추적하지 않는다. 여기에는 의존성 설치(`node_modules/`, `vendor/`, 가상 환경), build 출력(`dist/`, `target/`, `*.tsbuildinfo`), 캐시(`.cache/`, `__pycache__/`, `.pytest_cache/`), test 실행 산출물(`test-results/`, `playwright-report/`, PHPUnit 캐시)과 도구 다운로드(`var/`)가 속한다. 예외는 저장소가 의도적으로 필요로 하는 파일뿐이며, 추적하는 것은 이것뿐이다: lock 파일(`package-lock.json`, `composer.lock`, `Cargo.lock`, uv lock, `mise.lock`), 이 파일이 이름을 적는 커밋된 생성 문서, test fixture. 각 `.gitignore`가 이 경로들을 덮는다. 새 생성기는 같은 commit에서 자기 ignore 항목을 추가한다.
-  Enforced by: `make staged-generated-hook`
+  Enforced by: `make layout-check`, which fails a tracked generated file and an install directory that Git does not ignore
 
 ## 체크리스트
 
