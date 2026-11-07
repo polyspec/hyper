@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- hyper takes the latest releases of its providers, php-serialize 0.0.2 and template 0.0.21: the npm, Composer and uv manifests and locks name their release URLs and digests, and the packages build, client and server/ts require them by version (H27.86).
 
 ## 0.0.32
 - make lint-php runs phpstan.dist.neon on packages/server/php again: kit 0.0.98 reads the phpstan.neon of a package folder first, so the level max configuration of make analyse-php is named phpstan-max.neon (H27.85).

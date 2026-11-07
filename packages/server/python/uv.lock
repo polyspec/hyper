@@ -54,8 +54,8 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "polyspec-php-serialize", url = "https://github.com/polyspec/php-serialize/releases/download/v0.0.1/polyspec_php_serialize-0.0.1-py3-none-any.whl" },
-    { name = "polyspec-template", url = "https://github.com/polyspec/template/releases/download/v0.0.20/polyspec_template-0.0.20-py3-none-any.whl" },
+    { name = "polyspec-php-serialize", url = "https://github.com/polyspec/php-serialize/releases/download/v0.0.2/polyspec_php_serialize-0.0.2-py3-none-any.whl" },
+    { name = "polyspec-template", url = "https://github.com/polyspec/template/releases/download/v0.0.21/polyspec_template-0.0.21-py3-none-any.whl" },
 ]
 
 [package.metadata.requires-dev]
@@ -63,21 +63,21 @@ dev = [{ name = "redis", specifier = "==8.1.0" }]
 
 [[package]]
 name = "polyspec-php-serialize"
-version = "0.0.1"
-source = { url = "https://github.com/polyspec/php-serialize/releases/download/v0.0.1/polyspec_php_serialize-0.0.1-py3-none-any.whl" }
+version = "0.0.2"
+source = { url = "https://github.com/polyspec/php-serialize/releases/download/v0.0.2/polyspec_php_serialize-0.0.2-py3-none-any.whl" }
 wheels = [
-    { url = "https://github.com/polyspec/php-serialize/releases/download/v0.0.1/polyspec_php_serialize-0.0.1-py3-none-any.whl", hash = "sha256:0789bdf0ec9b84f856ec1613782fba17ec41b4b45c5cb6ba78cb97211844866e" },
+    { url = "https://github.com/polyspec/php-serialize/releases/download/v0.0.2/polyspec_php_serialize-0.0.2-py3-none-any.whl", hash = "sha256:601c7fe5ac2e661cb980b71c30a2b515e1789faedd3f42c8073fbe11064e5e90" },
 ]
 
 [[package]]
 name = "polyspec-template"
-version = "0.0.20"
-source = { url = "https://github.com/polyspec/template/releases/download/v0.0.20/polyspec_template-0.0.20-py3-none-any.whl" }
+version = "0.0.21"
+source = { url = "https://github.com/polyspec/template/releases/download/v0.0.21/polyspec_template-0.0.21-py3-none-any.whl" }
 dependencies = [
     { name = "jsonschema" },
 ]
 wheels = [
-    { url = "https://github.com/polyspec/template/releases/download/v0.0.20/polyspec_template-0.0.20-py3-none-any.whl", hash = "sha256:dbdeb77ee341c378c4b4262deca2860d30f805924d16274ed3341e73fe962e7b" },
+    { url = "https://github.com/polyspec/template/releases/download/v0.0.21/polyspec_template-0.0.21-py3-none-any.whl", hash = "sha256:74fa724a2d932d3cc268151e269dafe73c4f8e8697a3beaf7eaf61a40518985c" },
 ]
 
 [package.metadata]

@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: d9b223aab50f252424cb514ce7bcab8da69ad875e4fb72a0c0ef52f6dc438b05 -->
+<!-- source-sha256: 23938c91259eb6f4181faea6a00b1ca2b9c3415567fb827eae9be7e5ead8494d -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- hyper가 제공 라이브러리의 최신 릴리스 php-serialize 0.0.2와 template 0.0.21을 받는다. npm, Composer, uv의 manifest와 lock이 그 릴리스 URL과 digest를 적고, packages build, client, server/ts가 그 버전을 요구한다(H27.86).
 
 ## 0.0.32
 - make lint-php가 packages/server/php에 다시 phpstan.dist.neon을 실행한다. kit 0.0.98은 package 폴더의 phpstan.neon을 먼저 읽으므로, make analyse-php의 level max 설정 이름을 phpstan-max.neon으로 한다(H27.85).

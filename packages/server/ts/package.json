@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "@polyspec/hyper-client": "0.0.32",
-    "@polyspec/php-serialize": "0.0.1",
-    "@polyspec/template": "0.0.20"
+    "@polyspec/php-serialize": "0.0.2",
+    "@polyspec/template": "0.0.21"
   }
 }
