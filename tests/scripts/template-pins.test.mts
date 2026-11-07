@@ -83,6 +83,19 @@ test('Composer release declarations name the Composer repository of the release 
   assert.doesNotMatch(readFileSync('packages/server/php/phpstan.neon', 'utf8'), /polyspec_template\.stub\.php/);
 });
 
+test('both Composer roots require the json-schema fork by a release and their locks pin its tag', () => {
+  // A branch of the fork moves, so each root requires a release of the fork, as its FORK.md states, and its lock records the tag
+  // of that release (H27.82).
+  for (const manifest of ['composer.json', 'examples/board/composer.json']) {
+    const required = jsonString(jsonObject(readObject(manifest).require, `${manifest} require`)['min-0-max/json-schema'], `${manifest} require min-0-max/json-schema`);
+    assert.match(required, /^\d+\.\d+\.\d+-p\d+$/, `${manifest}: the json-schema fork is required by a release`);
+    const lockFile = manifest.replace(/\.json$/, '.lock');
+    const entry = jsonObjects(readObject(lockFile).packages, `${lockFile} packages`).find(({ name }) => name === 'min-0-max/json-schema');
+    assert.ok(entry !== undefined, `${lockFile} has no min-0-max/json-schema`);
+    assert.equal(entry.version, `v${required}`, `${lockFile}: the lock pins the tag of the release`);
+  }
+});
+
 test('pyproject.toml and uv.lock name the wheel asset of the release and pin it by the same sha256', () => {
   const pyproject = readFileSync('packages/server/python/pyproject.toml', 'utf8');
   const requirements = [...pyproject.matchAll(/"polyspec-template @ ([^"#]*)#sha256=([0-9a-f]{64})"/g)];

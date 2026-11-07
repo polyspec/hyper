@@ -14,7 +14,7 @@
 
 ## Native Composer development
 
-A development checkout links its polyspec providers (kit, template) only through the entries of its `.links` and `make link`. min-0-max/json-schema is the maintained fork of opis/json-schema (kit S14), named on its default branch `polyspec-origin-2.6.0`: `composer.json` and `examples/board/composer.json` declare its VCS repository `https://github.com/min-0-max/json-schema` and require `dev-polyspec-origin-2.6.0`, and both locks pin that branch at its commit with its dist. `packages/server/php/composer.json` names no repository, so a consumer of polyspec/hyper-server declares the fork in its own root. A checkout that edits the fork links it through the entry of its `.links` that names the checkout of the fork and `make link`, like a provider.
+A development checkout links its polyspec providers (kit, template) only through the entries of its `.links` and `make link`. min-0-max/json-schema is the maintained fork of opis/json-schema, whose FORK.md states how it is kept and consumed: `composer.json` and `examples/board/composer.json` declare its VCS repository `https://github.com/min-0-max/json-schema` and require its release `2.6.0-p2`, and both locks pin that release at its commit with its dist. `packages/server/php/composer.json` names no repository, so a consumer of polyspec/hyper-server declares the fork in its own root. A checkout that edits the fork links it through the entry of its `.links` that names the checkout of the fork and `make link`, like a provider.
 
 ## Targets
 
