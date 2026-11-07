@@ -80,7 +80,7 @@ test('Composer release declarations name the Composer repository of the release 
     return dist;
   });
   assert.deepEqual(dists[1], dists[0], 'the two Composer locks pin different template zips');
-  assert.doesNotMatch(readFileSync('packages/server/php/phpstan.neon', 'utf8'), /polyspec_template\.stub\.php/);
+  assert.doesNotMatch(readFileSync('packages/server/php/phpstan-max.neon', 'utf8'), /polyspec_template\.stub\.php/);
 });
 
 test('both Composer roots require the json-schema fork by a release and their locks pin its tag', () => {

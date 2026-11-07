@@ -62,5 +62,5 @@ test('make ext of the checks builds and downloads nothing (H14.1-7, HR-89)', () 
 test('the template repository is not copied any more, and PHPStan reads no stub of the template extension (H14.1-7, H25.60)', () => {
   assert.doesNotMatch(read('Makefile'), /copy-template/);
   // H25.60: the PHP server holds no branch on the template extension, so PHPStan scans no stub of it.
-  assert.doesNotMatch(read('packages/server/php/phpstan.neon'), /template-ext|polyspec_template\.stub/);
+  assert.doesNotMatch(read('packages/server/php/phpstan-max.neon'), /template-ext|polyspec_template\.stub/);
 });

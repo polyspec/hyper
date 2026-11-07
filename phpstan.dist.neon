@@ -1,5 +1,6 @@
-# The PHPStan configuration of the Composer packages of hyper that hold none of their own (packages/server/php holds its
-# phpstan.neon): make lint-php runs PHPStan on each Composer package with this root file and the autoloader of the package.
+# The PHPStan configuration of the Composer packages of hyper: make lint-php runs PHPStan on each Composer package with this
+# root file and the autoloader of the package. packages/server/php names its level max phpstan-max.neon, which only make
+# analyse-php reads, so that lint-php runs this file there too (H27.85).
 # It runs the disallowed calls of S2 only: customRulesetUsed loads no rule level, so the result depends on no level a package may later choose for itself.
 # phpstan/extension-installer loads spaze/phpstan-disallowed-calls and shipmonk/phpstan-rules (the PHP lint project of kit,
 # which make install-tools installs).

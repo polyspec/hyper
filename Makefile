@@ -272,7 +272,7 @@ hyper-lint: ## Check PHP formatting
 	$(checks_result)
 
 analyse-php: ext ## Run PHPStan at level max on the source and the tests of the server package
-	cd $(PHP_PACKAGE) && $(PHP_VENDOR)/bin/phpstan analyse --no-progress --memory-limit=$(PHPSTAN_MEMORY)
+	cd $(PHP_PACKAGE) && $(PHP_VENDOR)/bin/phpstan analyse --configuration=phpstan-max.neon --no-progress --memory-limit=$(PHPSTAN_MEMORY)
 
 templates-check: ## Check hx- attributes (HC-6) and region placements (HY-3, HY-30) of the board templates
 	$(NODE) scripts/check-templates.mts --app $(BOARD)
@@ -496,7 +496,8 @@ parity-declarations-check: ## Check the parity rules of config/parity.json that 
 	$(NODE) $(KIT)/parity.$(KIT_EXT) --declarations$(foreach unit,$(UNITS), --unit $(unit))
 
 # The lint of each language reads the configuration of this repository: knip.json and .oxlintrc.json, phpcs.xml.dist and
-# phpstan.dist.neon (packages/server/php reads its own phpstan.neon), ruff.toml and [tool.vulture] of each pyproject.toml.
+# phpstan.dist.neon (also for packages/server/php, whose phpstan-max.neon only make analyse-php reads, H27.85), ruff.toml
+# and [tool.vulture] of each pyproject.toml.
 lint-ts: ## Lint the TypeScript: oxlint, knip and tsc of each project; offline
 	$(NODE) $(KIT)/lint-ts.$(KIT_EXT)
 
