@@ -139,7 +139,7 @@ const TRIGGERS: Record<string, string> = {
   // The benchmarks: a report on a manual run, which no check and no release reads.
   'bench.yml': 'on:\n  workflow_dispatch:\n',
   // kit K987: the release starts by itself when a CI run of main succeeds, and a dispatch starts it again.
-  'release.yml': 'on:\n  workflow_run:\n    workflows: [ci]\n    types: [completed]\n    branches: [main]\n  workflow_dispatch:\n    inputs:\n      run:\n        description: The id of the successful CI run of main whose commit is released\n        required: true\n        type: string\n',
+  'release.yml': 'on:\n  workflow_run:\n    workflows: [ci]\n    types: [completed]\n    branches: [main]\n  workflow_dispatch:\n    inputs:\n      run:\n        description: The id of the successful CI run whose exact commit is released\n        required: true\n        type: string\n',
   // The gates workflow of @polyspec/kit (K910), a copy that make kit-check holds to the package, which only the job kit calls.
   'ci-pipeline.yml': 'on:\n  workflow_call:\n',
 };
