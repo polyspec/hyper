@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 8366089da5dbbe7d2ead04899e9832fe26708a74b357cd635a7b1075d1b6aed4 -->
+<!-- source-sha256: aaa6ae6f07b11109cb3327eaa5bc9af64741817ad03ad6bdad12e27ba91a6a8f -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- 두 Composer root는 json-schema fork를 branch polyspec-origin-2.6.0 대신 release 2.6.0-p2로 require하고, hyper는 kit 0.0.95를 채택한다. kit 0.0.95의 PRINCIPLES는 fork 규칙을 각 fork의 FORK.md와 각 root의 manifest와 lock에 맡긴다 (H27.82).
 - docs/operations/deployment.md에 phpredis의 persistent 연결은 TLS 인증서를 연결을 열 때만 검증하므로 바뀐 CA는 php-fpm reload 뒤에 적용되고, 실행 중인 worker는 잘못된 CA를 알아채지 못한다고 적는다(H27.81).
 
 ## 0.0.31

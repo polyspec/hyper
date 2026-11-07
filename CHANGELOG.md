@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- Both Composer roots require the json-schema fork by its release 2.6.0-p2 in place of its branch polyspec-origin-2.6.0, and hyper adopts kit 0.0.95, whose PRINCIPLES leave the rule of forks to the FORK.md of each fork and the manifest and lock of each root (H27.82).
 - docs/operations/deployment.md states that a persistent connection of phpredis verifies the TLS certificate only when it opens, so a changed CA applies after php-fpm reloads, and that a running worker does not detect a wrong CA (H27.81).
 
 ## 0.0.31

@@ -1,5 +1,5 @@
 <!-- doc-id: principles -->
-<!-- source-sha256: 145aaff71707e4d90c95ea34f0ef619172c227f94a7764fbc01074b01c7111f6 -->
+<!-- source-sha256: bdd8a2c14dd559b0d01c780565e06e0f966a39236d1f0a48b175c59be69e1dbd -->
 # 원칙
 
 [English](PRINCIPLES.md)
@@ -250,24 +250,16 @@ owner가 2026-10-13에 이 기준을 승인했습니다. 각 기준은 위반 �
   kit의 K761 link test는 tool log에 npm link, composer update, editable 설치가 없음을 확인합니다
 - S12 저장소의 CI는 파이프라인 하나입니다. 저장소 자신의 ci.yml이 kit이 주는 workflow(`ci-pipeline.yml`)를 job `kit`으로
   호출하고, 그 job은 `make kit-gates`의 prerequisite를 config/ci.json의 targets(`targets.shared`, `targets.parity`,
-  `targets.runtimes`)와 함께 한 번 실행하며, 같은 ci.yml의 저장소 job은 `needs: kit`으로 그 뒤를 잇습니다. 저장소의 다른 workflow도,
+  `targets.runtimes`)와 함께 한 번 실행하며, 독립적인 저장소 job은 병렬로 실행합니다. 마지막 `ci-passed` job은 다른 모든 job을 needs로 요구하며, 앞선 결과를 사용하는 작업만 순서대로 실행합니다. 저장소의 다른 workflow도,
   ci-targets나 ci-setup이 읽는 입력도 kit-gates의 prerequisite를 다시 지정하지 않습니다. kit 자신을 시험하는 kit의 ci.yml은 소비자
   CI가 아닙니다(K870, K910).
-  Enforced by: `make kit-check`가 job kit이 없는 ci.yml, needs: kit이 없는 그 job, 그리고 kit-gates의 gate를 다시 적거나 다른
+  Enforced by: `make kit-check`가 job kit이 없는 ci.yml, 마지막 ci-passed job의 누락이나 그 needs에서 빠진 job, 그리고 kit-gates의 gate를 다시 적거나 다른
   저장소나 경로를 checkout하거나 clone하는 저장소 workflow의 줄과, kit-gates의 gate를 다시 적는 config/ci.json의 입력을
   적는다(K998)
 - S13 모든 저장소가 공유하는 규칙은 똑같이 주입됩니다. 설치된 kit의 `kit.copies`에 있는 각 사본(이 파일, ci-pipeline.yml,
   release.yml 등)은 package의 byte 그대로이며, `make kit-sync`가 쓰고 kit에서만 고칩니다. scripts/kit은 그 사본만 담습니다.
   kit 자신은 사본의 원천이므로 사본을 갖지 않습니다(K851).
   Enforced by: `make kit-inject-check`
-- S14 Fork: upstream의 수정을 기다리는 유지 중인 제3자 package의 fork는 자기 이름(`min-0-max/<name>`)의 package입니다. 수정은
-  기반 upstream 버전을 이름에 담은 branch(예: polyspec-origin-2.6.0)에 하며, Composer의 VCS source가 default branch로
-  package 이름을 정하므로 그 branch가 fork의 default branch입니다. master는 upstream 계열로 남고, 더 새 upstream으로 rebase하면
-  새 branch가 default가 됩니다. 개발 중에는 설치 폴더를 `.links`와 `make link`로 개발 checkout에 link합니다(S11). polyspec
-  package는 fork의 이름을 require하고, root는 package manager의 VCS source로 그 branch에서 설치합니다(Composer: `vcs`
-  repository와 `dev-<branch>` require). 공개 registry는 쓰지 않습니다. upstream이 수정을 릴리즈하면 fork를 폐기합니다(K1000).
-  Enforced by: none, link는 개발 환경에만 있고 거기서 make link-check가 어떤 설치 폴더도 link하지 않는 선언된 fork를
-  적지만(K999) CI는 아무것도 link하지 않으므로 어떤 CI도 거기에 닿지 않는다(K824). root가 어느 branch를 설치하는지는 lock의 기록이다(S4)
 - S15 느슨한 결합: core, plugin, sidecar, kit, spec, contract는 인터페이스로만 서로를 아는 part입니다. part는 다른 part의 설치된
   manifest가 선언한 인터페이스(npm package라면 package.json의 `exports`)로만 그 part에 닿고, 설치가 놓은 package와 설치 때 기록된
   JSON으로 그 part를 찾습니다. 그 인터페이스 너머의 다른 part 파일을 import, include, 읽기, build, 실행하지 않으며, 다른 checkout의
