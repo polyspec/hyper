@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+## 0.0.34
+- Release 0.0.34 after H27.94: every manifest of config/release.json, the exact requirements of polyspec/hyper-server and @polyspec/hyper-client and the locks that npm, Composer and uv wrote hold 0.0.34 (H27.95).
 - hyper takes the latest releases of its providers, php-serialize 0.0.3 and template 0.0.22: the npm, Composer and uv manifests and locks name their release URLs and digests (H27.94).
 - hyper adopts kit 0.0.100: divergence-check and test-markers-check, which kit deleted with parity, leave the gates and CI (H27.92).
 - hyper runs no parity gate of kit: parity-check and parity-declarations-check leave the gates and CI, config/parity.json is deleted, and each implementation's own tests run the shared vectors of contracts/ (H27.91).
