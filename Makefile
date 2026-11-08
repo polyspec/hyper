@@ -542,8 +542,8 @@ release-checkout: ## Check out the tag TAG that release-tag created
 release-archive-tool: ## Fail unless Info-ZIP, which builds the Composer archives of the release, is on PATH
 	@command -v zip >/dev/null || { echo 'release-archive-tool: Info-ZIP is required for the Composer release archives; install the zip package'; exit 1; }
 
-release-tools: ## Install the tools that config/release.json needs for the release; ONLINE
-	$(ONLINE) $(NODE) $(KIT)/release-tools.$(KIT_EXT)
+release-tools: ## Install the tools that config/release.json needs for the release, with the Composer home of install-tools; ONLINE
+	$(COMPOSER_TOOL_ENV) $(ONLINE) $(NODE) $(KIT)/release-tools.$(KIT_EXT)
 
 release-tools-path: ## Append var/tools/bin and the shims of mise to GITHUB_PATH and the environment of mise to GITHUB_ENV
 	@test -n "$$GITHUB_PATH" && test -n "$$GITHUB_ENV" || { echo 'release-tools-path: GITHUB_PATH and GITHUB_ENV are set only between the steps of a workflow'; exit 1; }

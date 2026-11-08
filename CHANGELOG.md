@@ -5,6 +5,7 @@
 
 ## Unreleased
 
+- The release installs its tools with the Composer home and cache of install-tools, so the PHP lint that release-prepare installed there with its allowed plugin installs again without Composer refusing that plugin as global (H27.96).
 ## 0.0.34
 - Release 0.0.34 after H27.94: every manifest of config/release.json, the exact requirements of polyspec/hyper-server and @polyspec/hyper-client and the locks that npm, Composer and uv wrote hold 0.0.34 (H27.95).
 - hyper takes the latest releases of its providers, php-serialize 0.0.3 and template 0.0.22: the npm, Composer and uv manifests and locks name their release URLs and digests (H27.94).
