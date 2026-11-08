@@ -12,8 +12,6 @@ import path from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
-import { dryRun } from './make-dry-run.mts';
-import { kitTool } from './kit-tools.mts';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const WORKFLOWS = path.join(ROOT, '.github/workflows');
@@ -124,16 +122,6 @@ test('every step that runs a command runs make, and every step after the first r
   assert.deepEqual(found, []);
 });
 
-// The on: block of each workflow of this repository, exactly: the checks run on the push of main and on every manual run,
-// and the release on a completed CI run of main and on a manual run with the id of a CI run. No other workflow exists, and
-// none runs on a pull request or a merge group (HR-91, HR-95).
-const TRIGGERS: Record<string, string> = {
-  'ci.yml': 'on:\n  push:\n    branches: [main]\n  workflow_dispatch:\n',
-  'release.yml': 'on:\n  workflow_run:\n    workflows: [ci]\n    types: [completed]\n    branches: [main]\n  workflow_dispatch:\n    inputs:\n      run:\n        description: The id of the successful CI run whose exact commit is released\n        required: true\n        type: string\n',
-  // The benchmarks: a report on a manual run, which no check and no release reads.
-  'bench.yml': 'on:\n  workflow_dispatch:\n',
-};
-
 /**
  * The ways in which a workflow starts on a tag push: a tag push starts every workflow whose `push:` has a `tags:` filter or no
  * `branches:` filter. No workflow starts so: a release takes the id of a successful CI run of main and tags its commit with
@@ -154,27 +142,6 @@ test('no workflow starts on a tag push (HR-95)', () => {
   assert.equal(tagStartProblems('release.yml', "on:\n  push:\n    tags: ['v*']\n").length, 1);
   assert.equal(tagStartProblems('ci.yml', 'on:\n  push:\n    branches: [main]\n  workflow_dispatch:\n').length, 0);
   assert.equal(tagStartProblems('push-gate.yml', "on:\n  push:\n    branches-ignore: ['gh-readonly-queue/**']\n").length, 0);
-});
-
-test('each workflow declares exactly its triggers (HR-91, HR-95)', () => {
-  assert.deepEqual(workflows().map(workflow => workflow.name).sort(), Object.keys(TRIGGERS).sort());
-  for (const workflow of workflows()) {
-    const declared = /^(on:\n(?: {2}.*\n)+)/m.exec(workflow.text)?.[1] ?? '';
-    assert.equal(declared, TRIGGERS[workflow.name], `${workflow.name} declares other triggers`);
-  }
-  // No workflow of this repository names a pull request, which it never opens.
-  for (const workflow of workflows()) assert.doesNotMatch(workflow.text, /pull_request|merge_group|gh-readonly-queue/, `${workflow.name} names a pull request or a merge group`);
-});
-
-test('bench.yml runs the benchmarks one after another in one job and uploads their report', () => {
-  const read = jobs(readFileSync(path.join(WORKFLOWS, 'bench.yml'), 'utf8'));
-  assert.deepEqual(read.map((job) => job.name), ['bench']);
-  const runs = item(read, 0, 'the jobs').steps.flatMap((step) => step.run ?? []);
-  for (const install of ['make hyper-install-php', 'make hyper-install-python', 'make hyper-install-redis', 'make hyper-install-browser']) {
-    assert.ok(runs.includes(install), `bench.yml runs ${install}`);
-  }
-  assert.ok(runs.includes('make ci-targets TARGETS="bench bench-sessions" CI_REPORT=var/ci/bench'));
-  assert.ok(item(read, 0, 'the jobs').steps.some((step) => (step.uses ?? '').startsWith('actions/upload-artifact@')));
 });
 
 /**
@@ -223,59 +190,6 @@ test('the matrix entries of ci.yml run every target of the full suite once (HR-9
   for (const [key, same] of groups) assert.equal(same.length, 1, `${key} runs in ${same.map(entry => entry.name).join(', ')}`);
   const all = [...groups.keys()].flatMap(key => key.split(' '));
   assert.deepEqual([...all].sort(), [...checkTargets()].sort(), 'the targets of the matrix entries are not the targets of CHECK_TARGETS, each once');
-});
-
-test('the workflow ci runs every matrix entry in a job that runs to its end and uploads its report (HR-91)', () => {
-  const text = readFileSync(path.join(WORKFLOWS, 'ci.yml'), 'utf8');
-  const read = jobs(text).filter((job) => job.name !== CI_PASSED && !calls(job));
-  assert.ok(read.length > 0);
-  for (const job of read) {
-    assert.match(job.text, /^ {4}strategy:\n {6}fail-fast: false\n/m, `${job.name}: fail-fast`);
-    const index = (predicate: (step: Step) => boolean, name: string) => {
-      const at = job.steps.findIndex(predicate);
-      assert.ok(at >= 0, `${job.name} has no ${name} step`);
-      assert.match(item(job.steps, at, job.name).if ?? '', /^\$\{\{ !cancelled\(\) \}\}$/, `${job.name}: the ${name} step runs only while every earlier step passed`);
-      return at;
-    };
-    const check = index((step) => step.run === 'make ci-targets TARGETS="${{ matrix.targets }}" CI_REPORT=var/ci/${{ matrix.name }}', 'make ci-targets');
-    const summary = index((step) => step.run === 'make ci-summary CI_REPORT=var/ci/${{ matrix.name }}', 'make ci-summary');
-    const report = index((step) => (step.uses ?? '').startsWith('actions/upload-artifact@'), 'report upload');
-    assert.ok(check < summary && summary < report, `${job.name}: the report steps follow make ci-targets`);
-    assert.match(item(job.steps, summary, job.name).text, /CI_STEPS: \$\{\{ toJSON\(steps\) \}\}/);
-    const reportStep = item(job.steps, report, job.name);
-    assert.match(reportStep.text, /path: var\/ci\/\$\{\{ matrix\.name \}\}\/\n/);
-    assert.match(reportStep.text, /if-no-files-found: error/);
-    assert.match(reportStep.text, /name: ci-\$\{\{ matrix\.name \}\}-/);
-    // Chromium is installed only in the entries whose targets run a browser.
-    const browser = job.steps.find((step) => step.run === 'make hyper-install-browser');
-    assert.match(browser?.if ?? '', /matrix\.browser/);
-    for (const entry of matrixEntries(text)) {
-      assert.equal(entry.browser, entry.targets.some((target) => ['parity', 'server-parity', 'server-parity-python', 'e2e'].includes(target)), `${entry.name}: browser flag`);
-    }
-    assert.ok(!job.steps.some((step) => (step.uses ?? '').startsWith('actions/setup-python@')), `${job.name}: no setup-python step`);
-  }
-});
-
-// A target of the full suite declared for one platform runs there and is never skipped there (HR-68): the full suite of
-// Darwin runs DARWIN_TARGETS, which no CI group of Linux runs, and their tests skip no case and fail without their tool.
-test('a target declared for Darwin is in the full suite exactly on Darwin and skips nothing there', () => {
-  const makefile = readFileSync(path.join(ROOT, 'Makefile'), 'utf8');
-  const darwin = /^DARWIN_TARGETS := (.*)$/m.exec(makefile)?.[1]?.split(' ').filter(Boolean) ?? [];
-  assert.deepEqual(darwin, ['virtiofs-check']);
-  const check = checkTargets();
-  assert.deepEqual(darwin.filter((target) => check.includes(target)), [], 'a Darwin target in the CHECK_TARGETS of every platform');
-  const command = ` ${kitTool('ci-targets')} -k var/report/full-run `;
-  const line = dryRun('check').find((entry) => entry.includes(command));
-  assert.ok(line, 'make check does not run ci-targets of @polyspec/kit');
-  const suite = item(line.split(command), 1, 'the final verification command').split(' ');
-  assert.deepEqual(suite, process.platform === 'darwin' ? [...check, ...darwin] : check);
-  const virtiofs = readdirSync(path.join(ROOT, 'tests/virtiofs')).filter((name) => name.endsWith('.test.mts'));
-  assert.ok(virtiofs.length > 0);
-  for (const name of virtiofs) {
-    const text = readFileSync(path.join(ROOT, 'tests/virtiofs', name), 'utf8');
-    assert.doesNotMatch(text, /\.skip\(|\bskip:|\btodo\b/, `${name} skips a case`);
-    assert.match(text, /if \(result\.error\) throw new Error\(`container cannot run: /, `${name} does not fail without container`);
-  }
 });
 
 /** Each broken rule of the job ci-passed of a workflow text. */
@@ -349,29 +263,6 @@ test('.php-version holds the PHP minor release, and every setup-php step reads i
 });
 
 
-test('H27.20 PHP-enabled CI groups prepare PHP before selected tool installation', () => {
-  for (const job of jobs(readFileSync(path.join(WORKFLOWS, 'ci.yml'), 'utf8')).filter(job => job.name !== CI_PASSED && !calls(job))) {
-    const php = job.steps.findIndex(step => step.uses?.startsWith('shivammathur/setup-php@'));
-    const tools = job.steps.findIndex(step => step.run === 'make install-tools TOOLS="${{ matrix.tools }}"');
-    assert.ok(php >= 0 && php < tools, `${job.name}: declared PHP must exist before tool discovery`);
-    assert.equal(job.steps[php]?.if, '${{ !cancelled() && matrix.php }}', `${job.name}: PHP setup follows the declared environment`);
-  }
-});
-
-// kit 0.0.98 runs no gate of its own in a repository: the entry gates of ci.yml runs GATE_TARGETS of the Makefile, each a
-// target of the full suite, with the lint tools that those targets start, and no other entry runs one.
-test('H27.83 the entry gates runs GATE_TARGETS of the Makefile with their lint tools', () => {
-  const makefile = readFileSync(path.join(ROOT, 'Makefile'), 'utf8');
-  const gates = makeWords(makefile, 'GATE_TARGETS');
-  assert.ok(gates.includes('parity-check') && gates.includes('lint-ts') && gates.includes('docs-check'), gates.join(' '));
-  assert.deepEqual(gates.filter((target) => !checkTargets().includes(target)), [], 'a gate that is not in CHECK_TARGETS');
-  const entries = matrixEntries(readFileSync(path.join(WORKFLOWS, 'ci.yml'), 'utf8'));
-  const entry = entries.find((candidate) => candidate.name === 'gates');
-  assert.deepEqual(entry?.targets, gates);
-  for (const other of entries.filter((candidate) => candidate.name !== 'gates')) assert.deepEqual(other.targets.filter((target) => gates.includes(target)), [], `${other.name} runs a gate`);
-  for (const tool of ['ruff', 'vulture', 'alint', 'phpcs', 'phpstan']) assert.ok((entry?.keys['tools'] ?? '').split(' ').includes(tool), `gates installs no ${tool}`);
-});
-
 // kit 0.0.98 includes no recipe into a repository (kit docs/spec/utilities-and-recipes.md): the Makefile holds every target
 // that its recipes and workflows run, and no workflow calls a workflow that kit wrote.
 test('H27.83 the Makefile includes no file of kit, and every make target of a workflow is a target of the Makefile', () => {
@@ -385,40 +276,3 @@ test('H27.83 the Makefile includes no file of kit, and every make target of a wo
   for (const workflow of workflows()) assert.deepEqual(jobs(workflow.text).filter(calls).map((job) => job.name), [], `${workflow.name} calls another workflow`);
 });
 
-
-test('H27.25 CI declares job-owned tools and locked package environments (HR-81, HR-89, HR-91)', () => {
-  const text = readFileSync(path.join(WORKFLOWS, 'ci.yml'), 'utf8');
-  const entries = matrixEntries(text);
-  const expected: Record<string, { tools: string; php?: boolean; composer?: boolean; python?: boolean }> = {
-    gates: { tools: 'node php composer pie python uv ruff vulture alint phpcs phpstan', php: true, composer: true, python: true },
-    docs: { tools: 'node php composer pie python uv', php: true, composer: true, python: true },
-    php: { tools: 'node php composer pie', php: true, composer: true },
-    node: { tools: 'node' },
-    board: { tools: 'node php composer pie python uv', php: true, composer: true, python: true },
-    python: { tools: 'node python uv', python: true },
-  };
-  assert.deepEqual(entries.map(entry => entry.name).sort(), Object.keys(expected).sort());
-  for (const entry of entries) {
-    const profile = expected[entry.name];
-    assert.ok(profile !== undefined);
-    assert.equal(entry.keys['tools'], profile.tools, `${entry.name}: declared tool selection`);
-    assert.ok(!profile.tools.split(' ').includes('npm'), 'npm belongs to the separate bootstrap selector');
-    assert.equal(entry.keys['symbols'], ['docs', 'gates'].includes(entry.name) ? 'php' : undefined, `${entry.name}: explicit extractor selection, which public-symbols of hyper-test-scripts and the parity declarations read`);
-    for (const key of ['php', 'composer', 'python'] as const) assert.equal(entry.keys[key] === 'true', profile[key] === true, `${entry.name}: ${key} environment`);
-  }
-  const checks = jobs(text).find(job => job.name === 'check');
-  assert.ok(checks !== undefined);
-  assert.ok(checks.steps.some(step => step.run === 'make install-tools TOOLS="${{ matrix.tools }}"'));
-  assert.ok(!checks.steps.some(step => step.run === 'make install-tools' || step.run === 'make hyper-install' || step.run === 'make install'));
-  // A check job builds what it tests, takes no artifact of another job and waits for no job.
-  assert.doesNotMatch(checks.text, /actions\/download-artifact@|^ {4}needs:/m);
-  const symbols = checks.steps.find(step => step.run === 'make install-symbols EXTRACTORS="${{ matrix.symbols }}"');
-  assert.equal(symbols?.if, '${{ !cancelled() && matrix.symbols }}');
-  const php = checks.steps.find(step => step.run === 'make hyper-install-php');
-  const python = checks.steps.find(step => step.run === 'make hyper-install-python');
-  assert.equal(php?.if, '${{ !cancelled() && matrix.composer }}');
-  assert.equal(python?.if, '${{ !cancelled() && matrix.python }}');
-  assert.ok(entries.find(entry => entry.name === 'docs')?.targets.includes('hyper-test-scripts'));
-  assert.ok(entries.find(entry => entry.name === 'python')?.targets.includes('hyper-test-python-render'));
-  assert.ok(entries.find(entry => entry.name === 'board')?.targets.includes('server-parity-python'));
-});

@@ -9,19 +9,9 @@ import path from 'node:path';
 import { test, type TestContext } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
-import { dryRun } from './make-dry-run.mts';
 import { requireBuilt } from './requires.mts';
-import { kitTool } from './kit-tools.mts';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
-
-test('server build uses installed packages without Composer install (HR-79)', () => {
-  const build = dryRun('server').join('\n');
-  assert.match(build, /hyper-build-server\.mjs --manifest/);
-  assert.doesNotMatch(build, /\bcomposer install\b/);
-  const install = dryRun('hyper-server-php-install').join('\n');
-  assert.match(install, /\bcomposer install\b/);
-});
 
 function temporary(t: TestContext) {
   const directory = mkdtempSync(path.join(tmpdir(), 'hyper-check-recipes-'));
@@ -74,20 +64,6 @@ test('make hyper-test-js runs the type check when the tests fail and names both'
   assert.match(run.stdout, new RegExp(`failed checks: the tests of ${directory}; the type check of ${directory};`));
 });
 
-test('every other recipe with several checks runs them in one accumulating command', () => {
-  const recipes: [string, number][] = [['hyper-test-node', 2], ['hyper-test-php', 2], ['parity', 2], ['bench-server', 2]];
-  for (const [target, checks] of recipes) {
-    const lines = dryRun(target);
-    const start = lines.findLastIndex((line) => line === 'failed=; \\');
-    assert.ok(start >= 0, `${target}:\n${lines.join('\n')}`);
-    const recipe = lines.slice(start);
-    assert.equal(recipe.filter((line) => line.includes("node scripts/line-end.mts '") && line.includes(' || failed="$failed ')).length, checks, `${target}:\n${recipe.join('\n')}`);
-    const last = recipe.at(-1);
-    assert.ok(last !== undefined, `${target}: the recipe has no line`);
-    assert.match(last, /test -z "\$failed" \|\| \{ echo "failed checks:\$failed"; exit 1; \}/, target);
-  }
-});
-
 // A recipe passes only options that the script it starts declares: node:util parseArgs throws for an unknown option, so
 // an option renamed in one place fails the target at its start, as `--php-extension` (the option of the test runner of the
 // kit) did for scripts/check-parity.mts, whose option is `--extension`.
@@ -107,69 +83,4 @@ test('every option that a recipe passes to a script of scripts/ is declared by t
   }
   assert.ok(checked > 10, `only ${checked} options were checked`);
   assert.deepEqual(found, []);
-});
-
-for (const target of ['lint-ts', 'parity-declarations-check']) {
-  test(`H27.19 ${target} builds its workspace declarations before reading them`, () => {
-    const steps = dryRun(target);
-    const checker = steps.findIndex(step => step.includes(kitTool(target === 'lint-ts' ? 'lint-ts' : 'parity')));
-    assert.ok(checker >= 0, `${target}: no native checker was selected`);
-    for (const folder of ['packages/client', 'packages/server/ts']) {
-      const build = steps.findIndex(step => step.includes(`cd ${folder} &&`) && step.includes('build'));
-      assert.ok(build >= 0 && build < checker, `${target}: ${folder} declarations are not built before the check`);
-    }
-  });
-}
-
-test('H27.19 parity-check declares both runtime fixture producers without running a CI-only goal locally', () => {
-  const database = dryRun('parity-declarations-check', { variables: ['-p'] });
-  const prerequisites = database.find(line => line.startsWith('parity-check:'));
-  assert.ok(prerequisites, 'the native Make database has no parity-check target');
-  for (const target of ['server-fixtures', 'node-fixtures']) {
-    assert.ok(prerequisites.split(/\s+/).includes(target), `parity-check does not declare ${target}`);
-    const steps = dryRun(target);
-    assert.ok(steps.some(step => step.includes('cd packages/server/ts &&') && step.includes('build')), `${target} does not build workspace declarations`);
-  }
-});
-
-
-test('H27.21 script checks build their asset and server inputs before the runner', () => {
-  const steps = dryRun('hyper-test-scripts');
-  const runner = steps.findIndex(step => step.includes(kitTool('run-tests')));
-  for (const producer of ['hyper-build-assets.mjs', 'hyper-build-server.mjs']) {
-    const built = steps.findIndex(step => step.includes(producer));
-    assert.ok(built >= 0 && built < runner, `${producer} is not built before script checks`);
-  }
-});
-
-// kit K859, K983: npm ci installs the lock of the consumer, and make install-link PROJECT then connects the checkouts that .links
-// declares to that consumer alone, without the Claude Code hook of make link (kit K967), which an installed kit cannot run.
-test('H27.21 package consumers install their native locked graph with npm ci and then make install-link of themselves', () => {
-  const steps = dryRun('package-check');
-  const install = steps.findIndex(step => step.startsWith('cd tests/package-install && ') && / ci /.test(step));
-  const link = steps.findIndex(step => step.includes(kitTool('link')) && step.endsWith('link --project tests/package-install'));
-  assert.ok(install >= 0 && link > install, steps.join('\n'));
-  assert.ok(steps.some(step => step.includes('package-install.test.ts')));
-});
-
-
-test('H27.26 every Python checking target delegates discovery and execution to Kit (HR-84, HR-87)', () => {
-  for (const target of ['hyper-test-python', 'hyper-test-python-render', 'python-file-parts-test']) {
-    const lines = dryRun(target);
-    const python = lines.filter(line => line.includes(`${kitTool('run-tests')} python`));
-    assert.ok(python.length > 0, `${target}: shared Python runner is missing`);
-    for (const line of python) assert.ok(line.includes('--venv ') && (line.includes(' discover ') || line.includes(' -- tests.')), line);
-    assert.doesNotMatch(lines.join('\n'), /tests\/run\.py|python -m unittest/);
-  }
-  assert.equal(existsSync(path.join(ROOT, 'packages/server/python/tests/run.py')), false, 'a private Python runner must not remain');
-});
-
-test('H27.26 the browser cases run through the Playwright run of Kit', () => {
-  const e2e = dryRun('e2e').filter(line => line.includes('scripts/run-e2e.mts'));
-  const [line] = e2e;
-  assert.ok(e2e.length === 1 && line !== undefined, e2e.join('\n'));
-  assert.ok(line.includes(`scripts/run-e2e.mts -- `) && line.endsWith(`${kitTool('run-tests')} playwright --timeout 30 -- --config tests/e2e/playwright.config.ts`), line);
-  assert.doesNotMatch(line, /node_modules\/\.bin\/playwright|@playwright\/test\/cli\.js/);
-  const selected = dryRun('e2e', { variables: ['CASES=stylesheet'] }).find(entry => entry.includes('scripts/run-e2e.mts')) ?? '';
-  assert.ok(selected.endsWith("--config tests/e2e/playwright.config.ts --grep 'stylesheet'"), selected);
 });

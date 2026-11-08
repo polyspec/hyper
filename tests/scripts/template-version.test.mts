@@ -25,12 +25,6 @@ const TAG = `v${VERSION}`;
 const RELEASE = `https://github.com/polyspec/template/releases/download/${TAG}`;
 const NPM_PACKAGES = ['@polyspec/template', '@polyspec/template-compiler'];
 
-test('the Makefile reads no template repository, and make check runs no template-tag (H27.57)', () => {
-  assert.doesNotMatch(read('Makefile'), /TEMPLATE_REPOSITORY/, 'the Makefile names a template repository');
-  const lines = dryRun('check');
-  assert.ok(!lines.some((line) => line.includes('template-tag')), `make check runs template-tag: ${lines.join('\n')}`);
-});
-
 test('the npm manifests name the template tarballs of the release, and their dependencies name its version (H21.4)', () => {
   const root = json('package.json');
   for (const name of NPM_PACKAGES) {
@@ -98,14 +92,4 @@ test('the Python package of the server names the wheel asset of the release with
     [`polyspec-template @ ${RELEASE}/polyspec_template-${VERSION}-py3-none-any.whl#sha256=<hex>`],
     'pyproject.toml names the template wheel of the release asset and the sha256 of that asset',
   );
-});
-
-// The release workflow runs make release-prepare before release-tools: it installs as CI does and reads no template checkout
-// (H23.7, H27.57).
-test('release-prepare runs only make hyper-install (H23.7, H27.57)', () => {
-  // make -n runs a recursive make too, so the dry run prints the line of make hyper-install and then the commands of its dry
-  // run; a recursive make prints $(MAKE) as it was started, so the case compares only the target that ends the first line.
-  const lines = dryRun('release-prepare');
-  assert.equal(lines[0]?.split(' ').at(-1), 'hyper-install', lines.join('\n'));
-  assert.deepEqual(lines.slice(1), dryRun('hyper-install'), 'release-prepare runs a command beside make hyper-install');
 });

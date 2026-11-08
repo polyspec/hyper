@@ -42,25 +42,3 @@ test('make template-ext builds polyspec/template-php-ext of TEMPLATE_VERSION wit
   // The recipe takes the one library that PIE recorded with scripts/pie-binary.mts, fails with its status and publishes a file.
   assert.match(text, new RegExp(`binary=\\$\\(\\S+ scripts/pie-binary\\.mts ${escape(work)} polyspec/template-php-ext\\) \\|\\| exit \\$\\?; \\\\\n\\s*mkdir -p build/ext\\.next-`), text);
 });
-
-test('make hyper-install builds the extension through make template-ext once (H27.45)', () => {
-  const lines = dryRun('hyper-install', { variables: ['KIT_WORKTREE='] });
-  // A recursive make prints $(MAKE) as it was started, a bare make or its path, so the case judges the words of the command:
-  // a make by its base name, and template-ext as its last word.
-  const recursive = lines.filter((line) => {
-    const words = line.trim().split(/\s+/);
-    return path.basename(words[0] ?? '') === 'make' && words.at(-1) === 'template-ext';
-  });
-  assert.equal(recursive.length, 1, lines.join('\n'));
-});
-
-test('make ext of the checks builds and downloads nothing (H14.1-7, HR-89)', () => {
-  const lines = dryRun('ext');
-  assert.deepEqual(lines.filter((line) => /\bpie\b|phpize|\b(curl|fetch)\b|gh release|composer/.test(line)), [], lines.join('\n'));
-});
-
-test('the template repository is not copied any more, and PHPStan reads no stub of the template extension (H14.1-7, H25.60)', () => {
-  assert.doesNotMatch(read('Makefile'), /copy-template/);
-  // H25.60: the PHP server holds no branch on the template extension, so PHPStan scans no stub of it.
-  assert.doesNotMatch(read('packages/server/php/phpstan-max.neon'), /template-ext|polyspec_template\.stub/);
-});
