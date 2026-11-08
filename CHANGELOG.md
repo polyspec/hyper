@@ -4,6 +4,9 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+
+## 0.0.37
+- Release 0.0.37 after H27.100 and H27.101: every manifest of config/release.json, the exact requirements of polyspec/hyper-server and @polyspec/hyper-client and the locks that npm, Composer and uv wrote hold 0.0.37 (H27.102).
 - docs/spec/protocol.ko.md carries the revision of its source, which H27.91 changed in both languages (H27.101).
 - hyper takes the latest releases of its providers, php-serialize 0.0.4 and template 0.0.23: the npm, Composer and uv manifests and locks name their release URLs and digests (H27.100).
 
