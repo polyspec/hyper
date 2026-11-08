@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: d9abd188cbfcebfe47ea1535ca27afdb02bed979c23eb9a55f08097613b8cae5 -->
+<!-- source-sha256: 23fbc40206ffd0133bfa8ce0bb15b06e6eb186e131b5d498c428ac8d625f4c56 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -360,3 +360,4 @@
 | H27.90 | recipe나 workflow의 문구를 단언하는 시험을 지운다: 그 시험은 동작을 확인하지 않고 kit나 recipe가 바뀔 때마다 깨진다 | `tests/scripts/check-recipes.test.mts`, `tests/scripts/ci-workflow.test.mts`, `tests/scripts/toolchain.test.mts`, `tests/scripts/template-version.test.mts`, `tests/scripts/template-ext.test.mts` | `make lint-ts` and `make docs-check` exit 0; the deleted tests are named in the commit body | [o] |
 | H27.91 | hyper에서 kit의 parity gate를 뺀다: 언어 간 test id를 맞추는 parity-check와 parity-declarations-check가 GATE_TARGETS, ci.yml, owner-checks에서 빠지고 config/parity.json을 지우며 divergence-check는 구현 root를 직접 이름 짓는다; 각 구현의 자기 test가 contracts/의 공유 vector를 실행한다(hyper CI run 42449592272가 parity-check에서 실패); kit의 parity module로 config/parity.json을 읽던 tests/scripts/public-symbols.test.mts를 지우고 installed-kit은 그 module을 더 이상 import하지 않는다 | `Makefile`, `tests/scripts/public-symbols.test.mts`, `tests/scripts/installed-kit.test.mts`, `.github/workflows/ci.yml`, `config/owner-checks.json`, `config/parity.json`, `PRINCIPLES.md`, `docs/operations/development.md`, `docs/spec/protocol.md`, `docs/features.md` | the ci workflow passes | [o] |
 | H27.92 | parity, divergence-check, test-markers-check를 지운 kit 0.0.100을 적용한다: 두 target이 GATE_TARGETS, .PHONY, ci.yml의 gate에서 빠지고, PRINCIPLES의 P6과 P32는 안내하는 규칙이 되며, kit 의존성은 0.0.100이 된다; hyper 자신의 parity, server-parity, server-parity-python target은 남는다 | `Makefile`, `.github/workflows/ci.yml`, `PRINCIPLES.md`, `docs/operations/development.md`, `package.json`, `package-lock.json` | the ci workflow passes | [o] |
+| H27.93 | kit 거부 두 가지만 멈추는 kit 0.0.101을 채택한다: 0.0.101 release asset을 고정하며, recipe 줄은 바뀌지 않는다 | `package.json`, `package-lock.json` | `make docs-check` and `make lint-ts` exit 0 | [o] |
