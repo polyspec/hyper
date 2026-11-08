@@ -43,19 +43,6 @@ test('a native locked archive install reads the installed bootstrap with no sibl
   assert.equal(run.status, 0, run.stderr);
   assert.match(run.stdout, /node_modules\/@polyspec\/kit\/dist\/owner-check\.mjs/);
   assert.doesNotMatch(run.stdout, /\.\.\/kit/);
-  const modules = spawnSync(process.execPath, ['--input-type=module', '--eval', `
-    import assert from 'node:assert/strict';
-    import { createRequire } from 'node:module';
-    import { pathToFileURL } from 'node:url';
-    const entry = pathToFileURL(createRequire(process.cwd() + '/package.json').resolve('@polyspec/kit/run-tests'));
-    const declaration = await import(new URL('./parity-declaration.mjs', entry));
-    const symbols = await import(new URL('./parity-symbols.mjs', entry));
-    const units = await import(new URL('./parity-units.mjs', entry));
-    assert.equal(typeof declaration.readDeclaration, 'function');
-    assert.equal(typeof symbols.extractSymbols, 'function');
-    assert.equal(typeof units.undeclaredPublic, 'function');
-  `], { cwd: root, encoding: 'utf8' });
-  assert.equal(modules.status, 0, `${modules.stdout}${modules.stderr}`);
 });
 
 

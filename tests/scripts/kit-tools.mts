@@ -10,6 +10,3 @@ const directory = realpathSync(dirname(fileURLToPath(entry)));
 
 /** The command path of a kit tool as make runs it. */
 export const kitTool = (name: string): string => join(directory, `${name}${extension}`);
-
-/** An installed native tool module beside the declared runner entry. */
-export const kitModule = (name: string): URL => new URL(`./${name}${extension}`, entry);

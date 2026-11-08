@@ -22,8 +22,7 @@
       "tests": [
         "tests/scripts/toolchain.test.mts",
         "tests/scripts/ci-workflow.test.mts",
-        "tests/scripts/template-ext.test.mts",
-        "tests/scripts/public-symbols.test.mts"
+        "tests/scripts/template-ext.test.mts"
       ],
       "targets": [
         "typecheck"

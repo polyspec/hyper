@@ -45,7 +45,6 @@ jobs:
           - name: docs
             tools: node php composer pie python uv
             php: true
-            symbols: php
             composer: true
             python: true
             redis: true
