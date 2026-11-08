@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 78d180ee20592c8d5901a273b56fbb99fd7255e6754c7f9c61b66f80ed736e4b -->
+<!-- source-sha256: 2e9a67ba3ed14a5668b6e95ff4df9197dee32b712e3dbd7516a53888f1d6ca48 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- hyper는 제공 라이브러리의 최신 릴리스 php-serialize 0.0.4와 template 0.0.23을 받는다: npm, Composer, uv의 manifest와 lock이 그 릴리스 URL과 digest를 적는다(H27.100).
 
 ## 0.0.36
 - H27.98을 담아 0.0.36을 릴리스한다: config/release.json의 모든 manifest, polyspec/hyper-server와 @polyspec/hyper-client의 정확한 요구 버전, npm, Composer, uv가 쓴 lock이 0.0.36을 담는다(H27.99).
