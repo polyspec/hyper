@@ -6,6 +6,8 @@
 
 ## Unreleased
 
+- hyper는 kit의 parity gate를 실행하지 않는다: parity-check와 parity-declarations-check가 gate와 CI에서 빠지고 config/parity.json을 지우며, 각 구현의 자기 test가 contracts/의 공유 vector를 실행한다(H27.91).
+
 ## 0.0.33
 - H27.86 다음에 0.0.33을 릴리즈한다. config/release.json의 모든 manifest, polyspec/hyper-server와 @polyspec/hyper-client의 정확한 요구 버전, npm, Composer, uv가 쓴 lock이 0.0.33을 가진다(H27.87).
 - hyper가 제공 라이브러리의 최신 릴리스 php-serialize 0.0.2와 template 0.0.21을 받는다. npm, Composer, uv의 manifest와 lock이 그 릴리스 URL과 digest를 적고, packages build, client, server/ts가 그 버전을 요구한다(H27.86).

@@ -67,7 +67,7 @@
 
 Darwin virtiofs 검사는 Makefile의 digest로 고정한 `VIRTIOFS_IMAGE`를 읽는다. `make hyper-install-virtiofs`가 그 image를 명시적으로 설치한다. 검사는 로컬 image를 먼저 확인하고 없으면 해당 설치 target을 밝히고 실패한다. 검사는 이 checkout과 외부 소스 제공 저장소를 원래 경로에 읽기 전용으로 mount한다. 제공 저장소 root는 설치된 template과 compiler 모듈 진입점에서 `git rev-parse --show-toplevel`로 찾는다. 컨테이너 안에서도 기본 package 소스 link와 그 의존성 해석을 유지한다.
 
-`lint-ts`와 `parity-declarations-check`는 검사 전에 `packages`로 workspace 선언을 build한다. `parity-check`는 `server-fixtures`와 `node-fixtures`로 PHP server와 Node template fixture도 build하며 깨끗한 checkout에서도 기존 개발 설치와 같은 입력을 제공한다.
+`lint-ts`는 검사 전에 `packages`로 workspace 선언을 build한다.
 
 Script 검사는 runner 전에 `assets`와 `server`를 요구한다. `package-check`는 고정 설치와 호환 source link를 native npm에 맡긴 뒤 editor hook 설정 없이 type 검사와 설치된 package 실행을 검증한다.
 
@@ -172,7 +172,7 @@ workflow `.github/workflows/ci.yml`은 `main`의 push와 모든 수동 실행(`w
 
 Build 선행 조건은 각 job의 검사가 소유한다. 언어 job은 다른 언어 job을 기다리거나 설치 환경 또는 build 산출물을 다운로드하지 않는다. 설치는 online이고 build와 검사는 offline 환경을 유지한다.
 
-Protocol 선언과 언어 간 동등 검사(`parity-declarations-check`, `parity-check`)는 `ci.yml`의 항목 `gates`에서 실행하며, 이 항목은 그 target의 prerequisite로 PHP, Python, TypeScript 구현을 설치하고 fixture를 build한다. Browser가 필요한 server 간 비교는 세 구현과 Chromium을 직접 설치하는 `board`가 소유한다. Python 렌더링 검사는 Python job이 소유한다. Matrix 집계는 `ci-passed`에 모든 group 결과를 요구한다.
+각 구현의 자기 test가 `contracts/`의 공유 vector를 실행하며, 언어 간 test 이름을 맞추는 gate는 없다(H27.91). Browser가 필요한 server 간 비교는 세 구현과 Chromium을 직접 설치하는 `board`가 소유한다. Python 렌더링 검사는 Python job이 소유한다. Matrix 집계는 `ci-passed`에 모든 group 결과를 요구한다.
 
 각 명령 step은 make target 하나를 실행하고(HR-90), 이전 단계가 실패해도 보고서를 모두 수집한다. 각 job은 hyper를 workspace root에 checkout하고 checkout 바로 다음에 hyper의 bootstrap action(`./.github/actions/bootstrap`)을 실행하며, 그 action은 `mise.toml`의 Node를 사용한다. matrix가 나머지 고정 도구를 선택하며 PHP, Composer, Python과 Chromium을 조건에 따라 준비한다. 어떤 job도 다른 저장소를 checkout하지 않으며, 고정 release asset이 template package와 확장 소스를 준다. `make ci-targets TARGETS="<targets>" CI_REPORT=var/ci/<name>`은 항목의 모든 target을 자기 `make -k <target>`으로 끝까지 실행하고 보고서를 쓴다. `make ci-summary CI_REPORT=var/ci/<name>`은 job summary를 쓴다. job은 artifact `ci-<name>-<run id>-<attempt>`, 곧 디렉터리 `var/ci/<name>/`을 upload한다.
 

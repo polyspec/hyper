@@ -70,7 +70,7 @@
 | kit-tools | 상속된 offline 설정에서도 명시적 bootstrap은 선언된 다운로드를 허용한다. 문서 검사, commit message 규칙, owner 검사, test runner, CI 보고서, toolchain 설치, 린트, release는 release asset의 URL과 integrity로 pin하고 선택적인 기본 로컬 소스 link를 지원하는 npm 패키지 `@polyspec/kit`의 유틸리티이며 `config/*.json`이 이를 설정한다. hyper의 Makefile이 모든 레시피를 담고 각 유틸리티를 명시적 인자로 실행하며, 도구는 hyper의 기본 설정(`.npmrc`, `mise.toml`, 린트 설정)을 읽고, 각 유틸리티는 실행할 때 자기가 읽는 `config/*.json`을 schema로 확인한다 | implemented | `make check` |
 | template-tag | 릴리즈 선언은 template release `v0.0.21`(`v$(TEMPLATE_VERSION)`)의 asset을 고정하고, 각 설치는 자기가 설치하는 모든 template asset을 그 integrity로 확인한다. npm lock의 sha512, Composer lock의 sha1, `pyproject.toml`과 `uv.lock`의 sha256이다. 어떤 검사도 template checkout을 읽지 않는다(HR-80) | implemented | `tests/scripts/template-pins.test.mts` |
 | query-values | 중첩 없이 순서대로 읽는 모든 쿼리 값과 원본 쿼리(HY-56) | implemented | `make test-php`, `make hyper-test-node` |
-| file-parts | 공개 업로드 metadata와 파일 제한은 기본 API 선언을 가지며 PHP 요청 map은 내부 저장형 없이 순서가 있는 iterable 항목을 노출한다(HY-106, HY-113, HY-114) | implemented | `tests/scripts/public-symbols.test.mts`, `make parity-check UNITS=file-parts`, `packages/server/php/tests/FilePartsTest.php`, `make python-file-parts-test` |
+| file-parts | 공개 업로드 metadata와 파일 제한은 기본 API 선언을 가지며 PHP 요청 map은 내부 저장형 없이 순서가 있는 iterable 항목을 노출한다(HY-106, HY-113, HY-114) | implemented | `tests/scripts/public-symbols.test.mts`, `packages/server/php/tests/FilePartsTest.php`, `make python-file-parts-test` |
 | form-values | urlencoded body나 multipart body에서 중첩 없이 순서대로 읽는 모든 폼 값(HY-57) | implemented | `make test-php`, `make hyper-test-node` |
 | request-boundary | UTF-8 검사, 상세 없는 500 오류, 데이터 모델 검사, 강화한 세션 쿠키, 리다이렉트 검사, 실패 표시(HY-42 ~ HYC-14) | implemented | `make test-php`, `make test-js`, `make e2e` |
 | benchmark | 서버와 브라우저 성능 측정: 요청 비용, generated 프로그램과 확장 상태 보고, 행 수별 렌더, 첫 화면, `hy-set` 메인 스레드 부하, 이동 중 메모리 | implemented | `make bench`, [성능 측정](operations/benchmark.ko.md) |
@@ -78,7 +78,7 @@
 | embedded-data | 문서는 reply가 요청할 때만 데이터를 내장하고, 브라우저는 내장 데이터가 없는 페이지의 데이터를 처음 필요할 때 문서 요청 하나로 얻는다(HY-31, HY-92, HYC-7) | implemented | `make test-php`, `make hyper-test-node`, `make test-js` |
 | cdn-deployment | 서버와 CDN 배포(권장)와 정적 셸 배포 | 문서화, 배포 안 함 | [배포](operations/deployment.ko.md) |
 | publication | 패키지의 레지스트리 배포 | not started | |
-| gate-inputs | Native gate가 읽기 전에 workspace 선언과 runtime fixture를 build한다(HR-85) | implemented | `tests/scripts/check-recipes.test.mts`, `make lint-ts`, `make parity-check` |
+| gate-inputs | Native gate가 읽기 전에 workspace 선언과 runtime fixture를 build한다(HR-85) | implemented | `tests/scripts/check-recipes.test.mts`, `make lint-ts`|
 | ci-setup | 모든 CI 검사 group이 검증 전에 선언된 PHP와 checkout hook을 준비한다 | implemented | `tests/scripts/ci-workflow.test.mts` |
 | consumer-check-inputs | Script 검사가 build를 소유하고 package 검사가 editor 설정 없이 native source 연결을 위임한다 | implemented | `tests/scripts/check-recipes.test.mts`, `tests/scripts/template-ext.test.mts`, `make package-check` |
 | language-parity-ci | 언어 간 protocol 동등 검사는 `ci.yml`의 항목 `gates`에서 실행하고, 선언을 한 번 검증하며 browser를 설치하지 않고, release가 자기 실행에 요구하는 `ci-passed`는 그 항목의 job `check`를 기다린다 | configured | `tests/scripts/ci-workflow.test.mts`, `ci.yml`의 항목 `gates` |

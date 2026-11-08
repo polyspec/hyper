@@ -146,10 +146,10 @@ repository는 자기 사본을 자기 파일로 바꿉니다(K1055).
   중립적인 규칙 하나로 쓰고, 적용되는 각 구현이 자기 고유한 형태를 거기에 묶는다. component나 artifact에만 해당하는 requirement는
   기존 coverage part나 release package에서 owner가 도출되는 feature unit만 test한다. scope가 없는 unit은 여전히 모든 구현에 적용한다.
   구현 내부 test는 자기 package의 보통 test이지 parity unit이 아니며 requirement를 인용하지 않는다. 우연히 public인 symbol은 non-public이 된다.
-  Enforced by: `make parity-declarations-check`, `make parity-check`, `make divergence-check`, `make test-markers-check`
+  Enforced by: `make divergence-check`, `make test-markers-check`
 - P33 작업에 필요한데 docs/spec에 없는 규칙은 docs/spec에 먼저 쓴다. requirement는 그것을 test하는 test만 인용하고, unit을 통과하려고
   버리지 않으며, 검사를 피하려고 이름을 바꾸지 않는다.
-  Enforced by: `make parity-declarations-check`
+  Enforced by: none, 안내 규칙: test는 자기가 시험하는 requirement만 인용한다 (H27.91).
 - P34 반복된 code는 제외가 아니라 하나의 module로 재구성해서 고친다. tool source는 분류하고, 생성물은 Git에 추적하지 않는다. 다만 consumer가 tagged tree 그 자체로 설치하는 생성 source(Go module, Rust crate)는 추적하고, 그 이유를 config/generated.json에 선언한다.
   배포되는 package가 생성물을 필요로 하면 그 생성 경로마다 그것을 만드는 저장소의 make target을 config/release.json에 선언한다. release는 먼저 tagged commit과 다른 checkout, 변경되었거나 추적되지 않은 경로, 바깥에서 link된 dependency를 거부한다. 그다음 선언된 경로를 지우고 checkout에서 그 target을 실행하며, 선언된 경로가 결과에 없거나 Git에 추적되면 실패한다.
   Enforced by: `make duplication-check`, `make rebuild-check`, `make release-assets`.
@@ -200,7 +200,7 @@ owner가 2026-10-13에 이 기준을 승인했습니다. 각 기준은 위반 �
   `sys.path` 변경, repository를 벗어나는 경로를 쓰지 않습니다. kit은 runner마다 test 파일을 고정합니다
   (`*.test.{ts,mts,cts,mjs,cjs,js}`, vitest의 `*.{test,spec}.*`, `*Test.php`, `*_test.go`, `tests/`와 `#[test]`, `test_*.py`).
   repository는 파일을 더할 수만 있고 좁힐 수 없으며, test처럼 이름 붙은 파일은 binding이 실행합니다.
-  Enforced by: `make parity-declarations-check`
+  Enforced by: none, 안내 규칙: 각 runner가 자기 test 파일을 실행한다 (H27.91).
 - S4 버전: kit은 버전도 lock도 비교하지 않고 pin하지 않습니다. 각 package manager와 그 lock이 정합니다. 예외는 둘입니다. 하나는
   kit의 bootstrap 도구 mise의 digest로, bootstrap이 어떤 package manager보다 먼저 기준으로 검사하며 mise의 설치 상태는 그
   digest만으로 판정합니다. 다른 하나는 release가 그 버전을 취하는, change log의 저장소 자신의 release heading과 release tag의
@@ -217,9 +217,9 @@ owner가 2026-10-13에 이 기준을 승인했습니다. 각 기준은 위반 �
   그 안의 예외는 모두 이유를 가집니다.
   Enforced by: `make layout-check`
 - S6 언어 parity: repository의 모든 구현은 공유 feature unit, vector, API를 같은 수준으로 test하고, docs/spec이 정의하는 각 requirement(list item, 곧 글머리 기호나 번호 목록의 `**<id>**` 또는 heading `<id>`)는 unit이 인용합니다. scope가 없는 unit은 모든 구현에 binding합니다. component나 artifact에만 해당하는 requirement는 `contracts/features.json`의 coverage part 또는 `config/release.json`의 package에서 도출한 owner 하나, 또는 한 feature의 명시적이고 비어 있지 않은 coverage-part owner 집합에만 feature unit을 scope할 수 있습니다. 해석된 각 implementation에는 자체 native binding이 있어야 하고, requirement는 각 owner 또는 그 owner가 test를 명시적으로 공유하는 implementation을 이름으로 말하며, 각 native test는 requirement를 인용합니다. 임의 profile, implementation 허용 목록, exclusion, native-only symbol은 scope가 아닙니다. directory suite의 case는 자신이 test하는 requirement를 `case.json`에 나열합니다.
-  Enforced by: `make parity-declarations-check`, `make parity-check`
+  Enforced by: none, 안내 규칙: 각 구현의 자기 test가 contracts/의 공유 vector를 실행한다 (H27.91).
 - S7 test 위치: 기본 기능의 test는 그 기능을 소유한 package와 repository에 둡니다. 소비자는 소비자 관점의 test만 둡니다.
-  Enforced by: `make layout-check`, `make parity-declarations-check`
+  Enforced by: `make layout-check`
 - S8 이상한 점의 보고는 "책임"의 두 번째 항목이며, 어떤 tool도 이를 강제할 수 없습니다. S8이 더하는 것: 모든 예외,
   profile, rebuild 기록은 선언된 자리에 이유를 가집니다.
   Enforced by: `make rebuild-check`
@@ -236,9 +236,9 @@ owner가 2026-10-13에 이 기준을 승인했습니다. 각 기준은 위반 �
   `config.m4`가 extension의 version을 `../composer.json`에서 가져온다. `make test-php-ext`는 unit test 전에 등록한 것을
   Reflection으로 library와 비교하되 이름마다 그것을 선언한 library와 비교하며, unit test는 extension을 load하고 library의 source는 하나도 load하지 않고
   (dependency와 autoload-dev는 load하고 library 자신의 autoload는 load하지 않으므로 library에는 extension에 대한 guard가 없다) 실행하는,
-  config/parity.json이 extension에 선언한 폴더의 PHPUnit 파일이다. 곧 extension 구현의 root와, 이 layout으로 test를 공유하는 PHP
-  구현의 root이며, 설정에 상대 경로를 두지 않고, parity-check가 읽는 것과 같다(K905). Composer type이 `project`인 package는
-  application이다. S10 library 검사 밖에 있고 config/parity.json이 PHP 구현으로 선언할 때만 extension과 함께 실행되며,
+  extension의 test 폴더의 PHPUnit 파일이다. 곧 extension 구현의 root와, 이 layout으로 test를 공유하는 PHP
+  구현의 root이며, 설정에 상대 경로를 두지 않는다(K905). Composer type이 `project`인 package는
+  application이다. S10 library 검사 밖에 있고 PHP 구현일 때만 extension과 함께 실행되며,
   `make test-php`는 그 test를 자기 package로 실행한다.
   Enforced by: none, 안내 규칙: hyper에는 자기 PHP extension(packages/php-ext)이 없으므로 여기서 실행하는 그 검사가 없다.
 - S11 로컬 링크: 개발 중 각 polyspec 패키지의 설치 폴더(node_modules, vendor, site-packages)는 checkout으로 가는 평범한

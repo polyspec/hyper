@@ -597,14 +597,6 @@
     },
     {
       "paths": [
-        "config/parity.json"
-      ],
-      "targets": [
-        "parity-declarations-check"
-      ]
-    },
-    {
-      "paths": [
         ".mise/locks/**"
       ],
       "targets": [

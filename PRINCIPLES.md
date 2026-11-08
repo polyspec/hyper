@@ -154,10 +154,10 @@ repository.
   to it. A component- or artifact-specific requirement is tested only by a feature unit whose owner resolves from an existing
   coverage part or released package; an unscoped unit still applies to every implementation. An implementation-internal test is a
   plain test of its package, not a parity unit, and it cites no requirement; a symbol that is public by accident becomes non-public.
-  Enforced by: `make parity-declarations-check`, `make parity-check`, `make divergence-check`, `make test-markers-check`
+  Enforced by: `make divergence-check`, `make test-markers-check`
 - P33 A rule that the work needs and docs/spec lacks is written in docs/spec first. A requirement is cited only by a test that
   tests it, a unit is never dropped to pass, and nothing is renamed to escape a check.
-  Enforced by: `make parity-declarations-check`
+  Enforced by: none, a guided rule: a test cites only the requirement it tests (H27.91).
 - P34 Repeated code is fixed by restructuring it into one module, never by excluding it; a tool source is classified; generated
   output is never tracked in Git, except a generated source that a consumer installs as the tagged tree itself (a Go module, a Rust
   crate), which is tracked and declared with its reason in config/generated.json. A released package that needs generated output
@@ -218,7 +218,7 @@ tool lands, a standard binds the work as written here.
   no `PYTHONPATH`, no `sys.path` change, no path that leaves the repository. kit fixes the test files of each runner
   (`*.test.{ts,mts,cts,mjs,cjs,js}`, vitest's `*.{test,spec}.*`, `*Test.php`, `*_test.go`, `tests/` and `#[test]`,
   `test_*.py`); a repository may add files but never narrow the set, and a file named like a test is run by a binding.
-  Enforced by: `make parity-declarations-check`
+  Enforced by: none, a guided rule: each runner runs its own test files (H27.91).
 - S4 Versions: kit compares and pins no version or lock; each package manager and its lock decide. Two exceptions: the
   digest of kit's bootstrap tool mise, which the bootstrap checks as the anchor before any package manager runs, with the
   installed state of mise judged by that digest alone; and the order of the repository's own release headings in its change
@@ -242,10 +242,10 @@ tool lands, a standard binds the work as written here.
   implementation whose tests it explicitly shares, and each native test names the requirement. A free-form profile, implementation
   allow-list, exclusion or native-only symbol is not scope.
   A case of a directory suite lists the requirements it tests in its `case.json`.
-  Enforced by: `make parity-declarations-check`, `make parity-check`
+  Enforced by: none, a guided rule: each implementation's own tests run the shared vectors of contracts/ (H27.91).
 - S7 Test placement: a test of a basic feature lives in the package and repository that own the feature; a consumer keeps
   only tests from the consumer's point of view.
-  Enforced by: `make layout-check`, `make parity-declarations-check`
+  Enforced by: `make layout-check`
 - S8 Reporting oddities is the second bullet of "Responsibility"; no tool can enforce it. What S8 adds: every exception,
   profile and rebuild record carries its reason, in the place where it is declared.
   Enforced by: `make rebuild-check`
@@ -263,10 +263,10 @@ tool lands, a standard binds the work as written here.
   `src/`, so that `config.m4` takes the version of the extension from `../composer.json`; `make test-php-ext` compares by
   Reflection what it registers with the libraries, each name with the library that declares it, before its unit tests, which
   are the PHPUnit files run with the extension loaded and none of the sources of the library (its dependencies and autoload-dev
-  are loaded, its own autoload is not, so the library has no guard against the extension) of the folders that config/parity.json
-  declares for it: the roots of its implementation and of the PHP implementations whose tests it shares by this layout, with no
-  relative path in a configuration, as parity-check reads them (K905). A Composer package of type `project` is an application:
-  it is outside the S10 library checks and is run with the extension only when config/parity.json declares it as a PHP
+  are loaded, its own autoload is not, so the library has no guard against the extension) of the folders of
+  its tests: the roots of its implementation and of the PHP implementations whose tests it shares by this layout, with no
+  relative path in a configuration (K905). A Composer package of type `project` is an application:
+  it is outside the S10 library checks and is run with the extension only when it is a PHP
   implementation, and `make test-php` runs its tests as its own package.
   Enforced by: none, a guided rule: hyper has no PHP extension of its own (packages/php-ext), so no check of it runs here.
 - S11 Local links: during development each polyspec package's install folder (node_modules, vendor, site-packages) is one

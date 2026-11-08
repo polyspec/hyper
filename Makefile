@@ -113,8 +113,8 @@ help: ## List the targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
 
 # The install order of a checkout: the mise, node and npm of mise.toml (the bootstrap of install-tools), the packages of
-# package-lock.json with that npm, then the other tools of mise.toml, the symbol extractor of PHP, which the parity
-# declarations read, and the Composer projects and the venv of hyper.
+# package-lock.json with that npm, then the other tools of mise.toml, the symbol extractor of PHP, whose php-parser
+# lint-php reads, and the Composer projects and the venv of hyper.
 hyper-install: ## Install the pinned tools and the npm packages, fetch the archives of the template release and install the Composer dependencies and the Python venv (HR-89, H14.1-7); ONLINE
 	$(MAKE) --no-print-directory install-tools TOOLS=npm
 	$(MAKE) --no-print-directory install-packages
@@ -226,8 +226,7 @@ node-fixtures: packages ## Build the template files of the PHP test fixtures for
 	$(NODE) scripts/build-templates.mts --templates $(FIXTURES)/templates --output $(NODE_PACKAGE)/tests/build
 
 # Shared gates read the declarations and runtime fixtures built by this checkout.
-lint-ts parity-declarations-check: packages
-parity-check: server-fixtures node-fixtures
+lint-ts: packages
 
 assets: packages ## Build the board client bundle (SSR) and the single-file static shell (CSR)
 	$(NODE) $(BUILD_PACKAGE)/bin/hyper-build-assets.mjs --app $(BOARD) --api /api --output $(BOARD)/build --static public/assets/app.css --static public/assets/reader.css
@@ -340,7 +339,7 @@ bench: bench-server bench-browser ## Run both measurements; results are reports,
 # The final suite runs through the native kit report runner, which runs every target to its end and refuses nothing.
 # Run it once after checklist development on a committed tree, then rerun only failed owners. GATE_TARGETS are the checks of the configuration,
 # the layout, the documents, the owners, the parity declarations and the lint, which run the checkers of kit.
-GATE_TARGETS := layout-check docs-check owner-validate rebuild-check rules-check language-check test-markers-check duplication-check suppression-check divergence-check parity-declarations-check parity-check lint-ts lint-php lint-python
+GATE_TARGETS := layout-check docs-check owner-validate rebuild-check rules-check language-check test-markers-check duplication-check suppression-check divergence-check lint-ts lint-php lint-python
 CHECK_TARGETS := $(GATE_TARGETS) typecheck bench-server-smoke hyper-lint analyse-php templates-check hyper-test-scripts hyper-test-js hyper-test-node hyper-test-python hyper-test-python-render package-check hyper-test-php parity server-parity server-parity-python bundle-size e2e
 
 # The CI groups of the full suite (HR-91) are the entries of the matrix of .github/workflows/ci.yml: each entry runs its
@@ -383,7 +382,7 @@ endif
 install-packages: ## Install the packages of package-lock.json, @polyspec/kit included, with the npm of var/tools; ONLINE
 	$(ONLINE) $(NPM) ci
 
-install-symbols: ## Install the symbol extractors of EXTRACTORS, such as php, which the parity declarations read; ONLINE
+install-symbols: ## Install the symbol extractors of EXTRACTORS, such as php, whose php-parser lint-php reads; ONLINE
 	$(COMPOSER_TOOL_ENV) $(ONLINE) $(NODE) $(KIT)/install-symbols.$(KIT_EXT) $(EXTRACTORS)
 
 # install-link links the polyspec packages to the checkouts that the git-ignored .links names (K869); PROJECT selects one
@@ -470,7 +469,7 @@ docs-check: ## Check the documents of config/documents.json: translation pairs, 
 	$(NODE) $(KIT)/check-documents.$(KIT_EXT) --checklist-place --private-path /Users/ --private-path /home/ --kit-rows
 
 # ---- Gates: the checkers of kit on this checkout (GATE_TARGETS) ------------------------------------------------------
-.PHONY: layout-check owner-check owner-validate rebuild-check rules-check language-check test-markers-check duplication-check suppression-check divergence-check parity-check parity-declarations-check lint-ts lint-php lint-python
+.PHONY: layout-check owner-check owner-validate rebuild-check rules-check language-check test-markers-check duplication-check suppression-check divergence-check lint-ts lint-php lint-python
 layout-check: ## Check the folder layout against config/layout.yml with alint, that Git ignores each install directory and that no tracked file is generated; offline
 	$(ALINT) check --config config/layout.yml --color never --compact .
 	$(NODE) $(KIT)/generated-files.$(KIT_EXT) installs var package.json=node_modules pyproject.toml=.venv composer.json=vendor
@@ -505,14 +504,8 @@ suppression-check: ## Fail on a suppression of a lint finding that states no rea
 	$(NODE) $(KIT)/suppression-check.$(KIT_EXT)
 
 divergence-check: ## Fail on an implementation that diverges by a branch on the runtime without a kind of reason; offline
-	$(NODE) $(KIT)/divergence-check.$(KIT_EXT) --reason-kind generated --reason-kind fixture --reason-kind test --reason-kind harness --reason-kind ecosystem --reason-kind external --feature-state partial --feature-state unsupported --parity config/parity.json
+	$(NODE) $(KIT)/divergence-check.$(KIT_EXT) --reason-kind generated --reason-kind fixture --reason-kind test --reason-kind harness --reason-kind ecosystem --reason-kind external --feature-state partial --feature-state unsupported --roots packages/server/php packages/server/python packages/server/ts
 
-# The parity of config/parity.json: parity-check runs every binding, UNITS="<id>..." selects units; the declarations need no run.
-parity-check: ## Run every parity binding and check every rule of config/parity.json, or the units of UNITS; offline
-	$(NODE) $(KIT)/parity.$(KIT_EXT)$(foreach unit,$(UNITS), --unit $(unit))
-
-parity-declarations-check: ## Check the parity rules of config/parity.json that need no run, or the units of UNITS; offline
-	$(NODE) $(KIT)/parity.$(KIT_EXT) --declarations$(foreach unit,$(UNITS), --unit $(unit))
 
 # The lint of each language reads the configuration of this repository: knip.json and .oxlintrc.json, phpcs.xml.dist and
 # phpstan.dist.neon (also for packages/server/php, whose phpstan-max.neon only make analyse-php reads, H27.85), ruff.toml

@@ -66,7 +66,7 @@ A development checkout links its polyspec providers (kit, template) only through
 
 The Darwin virtiofs tests read the digest-pinned `VIRTIOFS_IMAGE` of the Makefile. `make hyper-install-virtiofs` installs that image explicitly; the tests inspect the local image first and fail with that install target when it is missing. The tests mount this checkout and any external source providers read-only at their original paths. Provider roots are discovered with `git rev-parse --show-toplevel` from the installed template and compiler module entries; this preserves native package source links and their dependency resolution inside the container.
 
-`lint-ts` and `parity-declarations-check` build workspace declarations through `packages` before inspecting them. `parity-check` also builds the PHP server and Node template fixtures through `server-fixtures` and `node-fixtures`; a cold checkout supplies the same inputs as an existing development installation.
+`lint-ts` builds workspace declarations through `packages` before inspecting them.
 
 Script checks require `assets` and `server` before the runner. `package-check` delegates locked installation and compatible source links to native npm, then checks types and executes the installed packages without setting up editor hooks.
 
@@ -171,7 +171,7 @@ Each group calls `make install-tools TOOLS="${{ matrix.tools }}"`; Kit owns sele
 
 Build prerequisites belong to the checks in their own job. No language job waits for another language job or downloads its environment or build artifacts. Installation is online; builds and checks retain the offline environment.
 
-Protocol declaration and cross-language parity (`parity-declarations-check`, `parity-check`) run in the entry `gates` of `ci.yml`, which installs the PHP, Python and TypeScript implementations and builds their fixtures through the prerequisites of those targets. Browser-dependent cross-server comparisons belong to `board`, which installs all three implementations and Chromium itself. Python rendering tests belong to the Python job. The matrix aggregate requires every group result for `ci-passed`.
+Each implementation's own tests run the shared vectors of `contracts/`; no gate matches test names across languages (H27.91). Browser-dependent cross-server comparisons belong to `board`, which installs all three implementations and Chromium itself. Python rendering tests belong to the Python job. The matrix aggregate requires every group result for `ci-passed`.
 
 Each command step runs one make target (HR-90), and steps continue after an earlier failure to collect all reports. Each job checks hyper out at the workspace root and runs the bootstrap action of hyper (`./.github/actions/bootstrap`) right after the checkout, which uses Node from `mise.toml`; the matrix selects the remaining pinned tools and conditionally prepares PHP, Composer, Python and Chromium. No job checks out another repository: the pinned release assets provide the template packages and the extension sources. `make ci-targets TARGETS="<targets>" CI_REPORT=var/ci/<name>` runs every target of the entry with its own `make -k <target>` to its end and writes the report. `make ci-summary CI_REPORT=var/ci/<name>` writes the job summary. The job uploads the artifact `ci-<name>-<run id>-<attempt>`, the directory `var/ci/<name>/`:
 
