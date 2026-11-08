@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+## 0.0.35
+- Release 0.0.35 after H27.96: every manifest of config/release.json, the exact requirements of polyspec/hyper-server and @polyspec/hyper-client and the locks that npm, Composer and uv wrote hold 0.0.35; the tag v0.0.34 has no release, since its release run failed in release-tools (H27.97).
 - The release installs its tools with the Composer home and cache of install-tools, so the PHP lint that release-prepare installed there with its allowed plugin installs again without Composer refusing that plugin as global (H27.96).
 ## 0.0.34
 - Release 0.0.34 after H27.94: every manifest of config/release.json, the exact requirements of polyspec/hyper-server and @polyspec/hyper-client and the locks that npm, Composer and uv wrote hold 0.0.34 (H27.95).
