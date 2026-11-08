@@ -22,7 +22,7 @@ const RUNNER = 'ubuntu-26.04-arm';
 // the other jobs of ci.yml, and each step of release reads what the step before it checked or built.
 const STOPPING: Record<string, string[]> = { 'ci.yml': ['ci-passed'], 'release.yml': ['release'] };
 const CI_PASSED = 'ci-passed';
-const CI_PASSED_RUN = "make ci-passed RESULTS='${{ toJSON(needs) }}'";
+const CI_PASSED_RUN = "make ci-passed RESULTS='${{ toJSON(needs) }}' FAIL_SKIPPED=1";
 // The bootstrap of hyper: the action of .github/actions/bootstrap, which sets up the Node.js of mise.toml and installs the lock,
 // the npm of devEngines and the packages of package-lock.json. Every job that runs steps runs it right after its checkout, at
 // the workspace root.
@@ -264,7 +264,7 @@ test('a target declared for Darwin is in the full suite exactly on Darwin and sk
   assert.deepEqual(darwin, ['virtiofs-check']);
   const check = checkTargets();
   assert.deepEqual(darwin.filter((target) => check.includes(target)), [], 'a Darwin target in the CHECK_TARGETS of every platform');
-  const command = ` ${kitTool('ci-targets')} var/report/full-run `;
+  const command = ` ${kitTool('ci-targets')} -k var/report/full-run `;
   const line = dryRun('check').find((entry) => entry.includes(command));
   assert.ok(line, 'make check does not run ci-targets of @polyspec/kit');
   const suite = item(line.split(command), 1, 'the final verification command').split(' ');

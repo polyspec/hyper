@@ -18,6 +18,8 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 // The tools of the checkout: every checkout, a linked worktree too, installs and runs its own var/tools (kit K858).
 const TOOLS = path.join(realpathSync(ROOT), 'var/tools');
 const NPM = path.join(TOOLS, 'bin/npm');
+// The home and the cache of Composer that install-tools runs with, the folders of var/tools (kit K1095).
+const COMPOSER_TOOL_ENV = `COMPOSER_HOME=${path.join(TOOLS, 'composer/home')} COMPOSER_CACHE_DIR=${path.join(TOOLS, 'composer/cache')}`;
 // The node of mise.toml, which the bootstrap wraps in var/tools/bin and the Makefile names $(NODE) (kit K171).
 const NODE = path.join(TOOLS, 'bin/node');
 // Composer is a tool of mise.toml, run by its shim (kit K127).
@@ -29,7 +31,7 @@ const commandsOf = (lines: string[]) => lines.flatMap((line) => line.split(/&&|;
 // make hyper-install of every checkout installs its own tools (kit K858).
 test('make hyper-install installs the tools of the checkout', () => {
   const lines = dryRun('hyper-install').map((line) => line.trim());
-  assert.ok(lines.includes(`env -u npm_config_offline -u COMPOSER_DISABLE_NETWORK ${NODE} ${kitTool('install-tools')}`), lines.join('\n'));
+  assert.ok(lines.includes(`${COMPOSER_TOOL_ENV} env -u npm_config_offline -u COMPOSER_DISABLE_NETWORK ${NODE} ${kitTool('install-tools')} --no-self-update`), lines.join('\n'));
 });
 
 // kit deletes the tools that it no longer ships, as the toolchain check and the install wrappers of kit 0.0.77 (K854, K859),
@@ -120,7 +122,7 @@ test('every recipe runs npm and Composer offline, and $(ONLINE) lifts it (HR-89)
 
 test('only explicit install targets download through $(ONLINE), and no check target downloads (HR-89)', () => {
   // Every checkout downloads its own tools (kit K858).
-  assert.deepEqual(dryRun('install-tools').map((line) => line.trim()), [`${ONLINE}${NODE} ${kitTool('install-tools')}`]);
+  assert.deepEqual(dryRun('install-tools').map((line) => line.trim()), [`${COMPOSER_TOOL_ENV} ${ONLINE}${NODE} ${kitTool('install-tools')} --no-self-update`]);
   assert.deepEqual(dryRun('install-packages'), [`${ONLINE}${NPM} ci`]);
   assert.deepEqual(dryRun('hyper-install-browser'), [`${ONLINE}${NODE} node_modules/@playwright/test/cli.js install --with-deps chromium`]);
   const image = /^VIRTIOFS_IMAGE := (\S+)$/m.exec(readFileSync('Makefile', 'utf8'))?.[1];
@@ -152,7 +154,7 @@ test('the venv of the Python server package installs its committed uv.lock and n
   const made = lines.findIndex((line) => line.endsWith(`${kitTool('python-venv')} ${path.join(ROOT, 'packages/server/python/.venv')}`));
   assert.ok(removed !== -1 && made > removed, lines.join('\n'));
   // uv-install of kit runs uv sync --locked with the flags of UV_SYNC (kit K850).
-  assert.ok(lines.some((line) => line.startsWith("UV_SYNC='--quiet --no-editable --project packages/server/python' ") && line.endsWith(`${kitTool('uv-install')} .`)), lines.join('\n'));
+  assert.ok(lines.some((line) => line.startsWith("UV_SYNC='--locked --quiet --no-editable --project packages/server/python' ") && line.endsWith(`${kitTool('uv-install')} .`)), lines.join('\n'));
   assert.equal(spawnSync('git', ['ls-files', '--error-unmatch', 'packages/server/python/uv.lock'], { encoding: 'utf8' }).status, 0, 'packages/server/python/uv.lock is not tracked');
 });
 
