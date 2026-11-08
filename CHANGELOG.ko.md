@@ -1,11 +1,13 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 8316d60fb292b994dbf60162e6c80a57c3b8464a7dcb703067f1d4269768b9f5 -->
+<!-- source-sha256: 78d180ee20592c8d5901a273b56fbb99fd7255e6754c7f9c61b66f80ed736e4b -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+## 0.0.36
+- H27.98을 담아 0.0.36을 릴리스한다: config/release.json의 모든 manifest, polyspec/hyper-server와 @polyspec/hyper-client의 정확한 요구 버전, npm, Composer, uv가 쓴 lock이 0.0.36을 담는다(H27.99).
 - hyper는 설치가 실패하면 uv-install이 provider 링크를 되돌리는 kit 0.0.102를 채택한다. recipe 줄은 바뀌지 않는다(H27.98).
 
 ## 0.0.35

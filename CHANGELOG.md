@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+## 0.0.36
+- Release 0.0.36 after H27.98: every manifest of config/release.json, the exact requirements of polyspec/hyper-server and @polyspec/hyper-client and the locks that npm, Composer and uv wrote hold 0.0.36 (H27.99).
 - hyper adopts kit 0.0.102, whose uv-install puts back the provider links when its install fails; no recipe line changes (H27.98).
 
 ## 0.0.35
