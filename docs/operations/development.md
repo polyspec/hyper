@@ -158,7 +158,7 @@ The workflow `.github/workflows/ci.yml` runs the full suite for the push of `mai
 
 | Entry | Tools selected after bootstrap | Locked package environments | Targets |
 |---|---|---|---|
-| `gates` | Node/npm, PHP/Composer, PIE, Python/uv, ruff, vulture, alint, phpcs, phpstan | Root npm, root and board Composer, Python uv locks | The checkers of kit: configuration, layout, documents, owners, rebuild classes, language, test markers, duplication, suppressions, divergence, parity declarations and parity, and the lint of TypeScript, PHP and Python (`GATE_TARGETS`) |
+| `gates` | Node/npm, PHP/Composer, PIE, Python/uv, ruff, vulture, alint, phpcs, phpstan | Root npm, root and board Composer, Python uv locks | The checkers of kit: configuration, layout, documents, owners, rebuild classes, language, duplication, suppressions, and the lint of TypeScript, PHP and Python (`GATE_TARGETS`) |
 | `docs` | Node/npm, PHP/Composer, PIE, Python/uv | Root and board Composer locks | Type check and script checks |
 | `php` | Node/npm, PHP/Composer, PIE | Root and board Composer locks | PHP policy, benchmark smoke, formatting, analysis and tests |
 | `node` | Node/npm | Root npm lock | Template, browser-unit, Node-server and npm consumer checks |

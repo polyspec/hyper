@@ -339,7 +339,7 @@ bench: bench-server bench-browser ## Run both measurements; results are reports,
 # The final suite runs through the native kit report runner, which runs every target to its end and refuses nothing.
 # Run it once after checklist development on a committed tree, then rerun only failed owners. GATE_TARGETS are the checks of the configuration,
 # the layout, the documents, the owners, the parity declarations and the lint, which run the checkers of kit.
-GATE_TARGETS := layout-check docs-check owner-validate rebuild-check rules-check language-check test-markers-check duplication-check suppression-check divergence-check lint-ts lint-php lint-python
+GATE_TARGETS := layout-check docs-check owner-validate rebuild-check rules-check language-check duplication-check suppression-check lint-ts lint-php lint-python
 CHECK_TARGETS := $(GATE_TARGETS) typecheck bench-server-smoke hyper-lint analyse-php templates-check hyper-test-scripts hyper-test-js hyper-test-node hyper-test-python hyper-test-python-render package-check hyper-test-php parity server-parity server-parity-python bundle-size e2e
 
 # The CI groups of the full suite (HR-91) are the entries of the matrix of .github/workflows/ci.yml: each entry runs its
@@ -469,7 +469,7 @@ docs-check: ## Check the documents of config/documents.json: translation pairs, 
 	$(NODE) $(KIT)/check-documents.$(KIT_EXT) --checklist-place --private-path /Users/ --private-path /home/ --kit-rows
 
 # ---- Gates: the checkers of kit on this checkout (GATE_TARGETS) ------------------------------------------------------
-.PHONY: layout-check owner-check owner-validate rebuild-check rules-check language-check test-markers-check duplication-check suppression-check divergence-check lint-ts lint-php lint-python
+.PHONY: layout-check owner-check owner-validate rebuild-check rules-check language-check duplication-check suppression-check lint-ts lint-php lint-python
 layout-check: ## Check the folder layout against config/layout.yml with alint, that Git ignores each install directory and that no tracked file is generated; offline
 	$(ALINT) check --config config/layout.yml --color never --compact .
 	$(NODE) $(KIT)/generated-files.$(KIT_EXT) installs var package.json=node_modules pyproject.toml=.venv composer.json=vendor
@@ -494,17 +494,11 @@ rules-check: ## Check that every rule of PRINCIPLES.md and AGENTS.md names a che
 language-check: ## Fail on Hangul in a comment, an identifier, a message or a test name of the code; offline
 	$(NODE) $(KIT)/language-check.$(KIT_EXT) --forbid '\p{Script=Hangul}'
 
-test-markers-check: ## Fail on a test that a marker skips or narrows; offline
-	$(NODE) $(KIT)/test-markers.$(KIT_EXT)
-
 duplication-check: ## Fail while a piece of 6 lines or more of code exists twice outside the folders of config/duplication.json; offline
 	$(NODE) $(KIT)/duplication-check.$(KIT_EXT)
 
 suppression-check: ## Fail on a suppression of a lint finding that states no reason; offline
 	$(NODE) $(KIT)/suppression-check.$(KIT_EXT)
-
-divergence-check: ## Fail on an implementation that diverges by a branch on the runtime without a kind of reason; offline
-	$(NODE) $(KIT)/divergence-check.$(KIT_EXT) --reason-kind generated --reason-kind fixture --reason-kind test --reason-kind harness --reason-kind ecosystem --reason-kind external --feature-state partial --feature-state unsupported --roots packages/server/php packages/server/python packages/server/ts
 
 
 # The lint of each language reads the configuration of this repository: knip.json and .oxlintrc.json, phpcs.xml.dist and

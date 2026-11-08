@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: 4a81a5f06c1e1a688750d552d7c2c66e33dd0bf2f55f43dae7e09cdc9df12b5a -->
+<!-- source-sha256: edd0eed420db5d2bdfb6d7805270b04643d6910523a16c88e2ba3f8fd5359618 -->
 # 개발
 
 [English](development.md).
@@ -159,7 +159,7 @@ workflow `.github/workflows/ci.yml`은 `main`의 push와 모든 수동 실행(`w
 
 | 항목 | Bootstrap 이후 선택 도구 | 잠긴 package 환경 | 검사 |
 |---|---|---|---|
-| `gates` | Node/npm, PHP/Composer, PIE, Python/uv, ruff, vulture, alint, phpcs, phpstan | Root npm, root와 board Composer, Python uv lock | kit의 검사기: 설정, 배치, 문서, owner, rebuild 분류, 언어, test marker, 중복, suppression, divergence, parity 선언과 parity, TypeScript, PHP, Python 린트(`GATE_TARGETS`) |
+| `gates` | Node/npm, PHP/Composer, PIE, Python/uv, ruff, vulture, alint, phpcs, phpstan | Root npm, root와 board Composer, Python uv lock | kit의 검사기: 설정, 배치, 문서, owner, rebuild 분류, 언어, 중복, suppression, TypeScript, PHP, Python 린트(`GATE_TARGETS`) |
 | `docs` | Node/npm, PHP/Composer, PIE, Python/uv | Root와 board Composer lock | 타입 검사와 script 검사 |
 | `php` | Node/npm, PHP/Composer, PIE | Root와 board Composer lock | PHP 정책, benchmark smoke, formatting, analysis와 test |
 | `node` | Node/npm | Root npm lock | Template, browser unit, Node server와 npm consumer |

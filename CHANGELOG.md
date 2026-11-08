@@ -5,6 +5,7 @@
 
 ## Unreleased
 
+- hyper adopts kit 0.0.100: divergence-check and test-markers-check, which kit deleted with parity, leave the gates and CI (H27.92).
 - hyper runs no parity gate of kit: parity-check and parity-declarations-check leave the gates and CI, config/parity.json is deleted, and each implementation's own tests run the shared vectors of contracts/ (H27.91).
 
 ## 0.0.33

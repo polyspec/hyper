@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 018adf6d8af44e850568beb35d9ad7ffc20c7c8fde7efc29bac0fa40ce5a6cfc -->
+<!-- source-sha256: 2ee0293d563fe8366ca8814b8760bfaa3ea5bae5263036ff4751972ec410bc1f -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- hyper는 kit 0.0.100을 적용한다: kit이 parity와 함께 지운 divergence-check와 test-markers-check가 gate와 CI에서 빠진다(H27.92).
 - hyper는 kit의 parity gate를 실행하지 않는다: parity-check와 parity-declarations-check가 gate와 CI에서 빠지고 config/parity.json을 지우며, 각 구현의 자기 test가 contracts/의 공유 vector를 실행한다(H27.91).
 
 ## 0.0.33

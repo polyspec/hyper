@@ -32,7 +32,7 @@ its grounding, and a repository changes its copy as its own file (K1055).
 
 - P6 A standard is never lowered because it is hard to meet; lowering it while testing is betrayal of the standard. A standard
   that is wrong is raised as a problem and corrected, with the reason.
-  Enforced by: `make test-markers-check`
+  Enforced by: none, a guided rule: whether a standard was lowered is a judgement (H27.92).
 - P7 No tricks, in any case. A goal reached by an abnormal method is not reached. When a requirement can be met only by a
   trick, that is stated exactly instead of done.
   Enforced by: none, a guided rule: kit refuses no command or commit (K1053).
@@ -154,7 +154,7 @@ repository.
   to it. A component- or artifact-specific requirement is tested only by a feature unit whose owner resolves from an existing
   coverage part or released package; an unscoped unit still applies to every implementation. An implementation-internal test is a
   plain test of its package, not a parity unit, and it cites no requirement; a symbol that is public by accident becomes non-public.
-  Enforced by: `make divergence-check`, `make test-markers-check`
+  Enforced by: none, a guided rule: each implementation runs its own tests; kit does not check how implementations relate (H27.92).
 - P33 A rule that the work needs and docs/spec lacks is written in docs/spec first. A requirement is cited only by a test that
   tests it, a unit is never dropped to pass, and nothing is renamed to escape a check.
   Enforced by: none, a guided rule: a test cites only the requirement it tests (H27.91).

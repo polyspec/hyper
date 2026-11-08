@@ -1,5 +1,5 @@
 <!-- doc-id: principles -->
-<!-- source-sha256: 03ddc2f85ad9548eeb677c165524a810b82c4e639ad1cd2b9bf842f0457e58c9 -->
+<!-- source-sha256: 24bd989ac9e5af270da9b62794a8bd8a0eb9fc21b5a2f41e70996aaf62efd35a -->
 # 원칙
 
 [English](PRINCIPLES.md)
@@ -33,7 +33,7 @@ repository는 자기 사본을 자기 파일로 바꿉니다(K1055).
 
 - P6 기준은 달성하기 어렵다고 낮추지 않습니다; test 중에 기준을 낮추는 것은 기준에 대한 배신입니다. 잘못된 기준은 문제로
   제기해 이유와 함께 바로잡습니다.
-  Enforced by: `make test-markers-check`
+  Enforced by: none, 안내하는 규칙이다: 기준을 낮췄는지는 판단이다 (H27.92).
 - P7 꼼수는 어떤 경우에도 허락하지 않습니다. 비정상적인 방법으로 이룬 목표는 이룬 것이 아닙니다. 요구를 꼼수로만 채울 수
   있다면 그렇게 하지 않고 그 사실을 정확히 적습니다.
   Enforced by: none, 안내하는 규칙이다: kit은 어떤 명령도 커밋도 거부하지 않는다 (K1053).
@@ -146,7 +146,7 @@ repository는 자기 사본을 자기 파일로 바꿉니다(K1055).
   중립적인 규칙 하나로 쓰고, 적용되는 각 구현이 자기 고유한 형태를 거기에 묶는다. component나 artifact에만 해당하는 requirement는
   기존 coverage part나 release package에서 owner가 도출되는 feature unit만 test한다. scope가 없는 unit은 여전히 모든 구현에 적용한다.
   구현 내부 test는 자기 package의 보통 test이지 parity unit이 아니며 requirement를 인용하지 않는다. 우연히 public인 symbol은 non-public이 된다.
-  Enforced by: `make divergence-check`, `make test-markers-check`
+  Enforced by: none, 안내하는 규칙이다: 각 구현이 자기 test를 실행하며, kit은 구현 사이의 관계를 검사하지 않는다 (H27.92).
 - P33 작업에 필요한데 docs/spec에 없는 규칙은 docs/spec에 먼저 쓴다. requirement는 그것을 test하는 test만 인용하고, unit을 통과하려고
   버리지 않으며, 검사를 피하려고 이름을 바꾸지 않는다.
   Enforced by: none, 안내 규칙: test는 자기가 시험하는 requirement만 인용한다 (H27.91).
