@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- docs/spec/protocol.ko.md carries the revision of its source, which H27.91 changed in both languages (H27.101).
 - hyper takes the latest releases of its providers, php-serialize 0.0.4 and template 0.0.23: the npm, Composer and uv manifests and locks name their release URLs and digests (H27.100).
 
 ## 0.0.36

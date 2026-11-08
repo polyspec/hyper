@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 2e9a67ba3ed14a5668b6e95ff4df9197dee32b712e3dbd7516a53888f1d6ca48 -->
+<!-- source-sha256: 973cf5a19811fb7f104ac40910f1243ee145ed78b619130654921fe5a9528bcc -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- docs/spec/protocol.ko.md가 H27.91이 두 언어에서 바꾼 원문의 revision을 적는다(H27.101).
 - hyper는 제공 라이브러리의 최신 릴리스 php-serialize 0.0.4와 template 0.0.23을 받는다: npm, Composer, uv의 manifest와 lock이 그 릴리스 URL과 digest를 적는다(H27.100).
 
 ## 0.0.36
