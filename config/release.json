@@ -55,5 +55,18 @@
     "examples/board/composer.json": "the example application, which installs the packages from the checkout",
     "composer.json": "the private development root of packages/server/php, which resolves the packages from the checkout"
   },
-  "goModules": {}
+  "goModules": {},
+  "annotatedTags": true,
+  "packageFiles": [
+    "package.json",
+    "composer.json",
+    "Cargo.toml",
+    "pyproject.toml",
+    "go.mod",
+    "VERSION"
+  ],
+  "writtenFiles": [
+    "config/phpunit/composer.json",
+    ".mise/locks/**"
+  ]
 }

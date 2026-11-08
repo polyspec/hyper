@@ -1,5 +1,5 @@
 <!-- doc-id: features -->
-<!-- source-sha256: bb66a86cd03a4c93a22a2355f2689224cfaefedb57fc2ecc7ea08b41067bb2a9 -->
+<!-- source-sha256: 9ff11cb51e4a4a539dc55b1d1b6cce3f2aa61d90161d40d979d3ebb25642394a -->
 # 기능 상태
 
 [English](features.md).
@@ -67,7 +67,7 @@
 | tool-output | 검사는 run 맥락이나 pin하지 않은 release에 따라 바뀌지 않는 형태로 tool 출력을 읽는다. 호출한 make의 변수 없는 make dry run, machine이 읽는 형태, pin한 도구의 text만 읽는다(HR-83) | implemented | `tests/scripts/template-copy.test.mjs` |
 | atomic-outputs | 다른 process가 읽는 출력은 rename으로 파일 단위 publish하고, 파일 하나는 rename 한 번으로 쓰며, 설치한 사본은 의존성 tree가 같을 때만 publish하고, package manager 설치와 full run은 lock을 잡는다(HR-82) | implemented | `tests/scripts/publish.test.mts`, `tests/scripts/toolchain.test.mts` |
 | toolchain-pin | Node.js, npm, Composer는 정확한 release로, PHP와 Python은 minor release로 추적 파일에 pin한다. npm과 Composer는 digest로 확인해 checkout의 `var/tools`에 설치하고 `PATH`의 맨 앞에 둔다. 없는 도구는 그것을 실행하는 target을 실패시키고(kit K854), CI 보고서는 실행 중인 release를 기록한다(HR-81) | implemented | `tests/scripts/toolchain.test.mts`, `tests/scripts/template-copy.test.mjs` |
-| kit-tools | 상속된 offline 설정에서도 명시적 bootstrap은 선언된 다운로드를 허용한다. 문서 검사, commit message 규칙, owner 검사, test runner, CI 보고서, toolchain 설치, 린트, release는 release asset의 URL과 integrity로 pin하고 선택적인 기본 로컬 소스 link를 지원하는 npm 패키지 `@polyspec/kit`의 유틸리티이며 `config/*.json`이 이를 설정한다. hyper의 Makefile이 모든 레시피를 담고 각 유틸리티를 명시적 인자로 실행하며, 도구는 hyper의 기본 설정(`.npmrc`, `mise.toml`, 린트 설정)을 읽고, schema를 어기는 설정은 실패한다 | implemented | `make kit-check` |
+| kit-tools | 상속된 offline 설정에서도 명시적 bootstrap은 선언된 다운로드를 허용한다. 문서 검사, commit message 규칙, owner 검사, test runner, CI 보고서, toolchain 설치, 린트, release는 release asset의 URL과 integrity로 pin하고 선택적인 기본 로컬 소스 link를 지원하는 npm 패키지 `@polyspec/kit`의 유틸리티이며 `config/*.json`이 이를 설정한다. hyper의 Makefile이 모든 레시피를 담고 각 유틸리티를 명시적 인자로 실행하며, 도구는 hyper의 기본 설정(`.npmrc`, `mise.toml`, 린트 설정)을 읽고, 각 유틸리티는 실행할 때 자기가 읽는 `config/*.json`을 schema로 확인한다 | implemented | `make check` |
 | template-tag | 릴리즈 선언은 template release `v0.0.21`(`v$(TEMPLATE_VERSION)`)의 asset을 고정하고, 각 설치는 자기가 설치하는 모든 template asset을 그 integrity로 확인한다. npm lock의 sha512, Composer lock의 sha1, `pyproject.toml`과 `uv.lock`의 sha256이다. 어떤 검사도 template checkout을 읽지 않는다(HR-80) | implemented | `tests/scripts/template-pins.test.mts` |
 | query-values | 중첩 없이 순서대로 읽는 모든 쿼리 값과 원본 쿼리(HY-56) | implemented | `make test-php`, `make hyper-test-node` |
 | file-parts | 공개 업로드 metadata와 파일 제한은 기본 API 선언을 가지며 PHP 요청 map은 내부 저장형 없이 순서가 있는 iterable 항목을 노출한다(HY-106, HY-113, HY-114) | implemented | `tests/scripts/public-symbols.test.mts`, `make parity-check UNITS=file-parts`, `packages/server/php/tests/FilePartsTest.php`, `make python-file-parts-test` |

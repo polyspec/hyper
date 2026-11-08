@@ -447,7 +447,6 @@
         "config/checklist.json"
       ],
       "targets": [
-        "kit-check",
         "docs-check"
       ]
     },
@@ -586,9 +585,7 @@
       "paths": [
         "config/generated.json"
       ],
-      "targets": [
-        "kit-check"
-      ]
+      "targets": []
     },
     {
       "paths": [
@@ -751,6 +748,14 @@
       ],
       "targets": [
         "lint-php",
+        "duplication-check"
+      ]
+    },
+    {
+      "paths": [
+        "config/duplication.json"
+      ],
+      "targets": [
         "duplication-check"
       ]
     }

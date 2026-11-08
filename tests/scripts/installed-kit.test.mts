@@ -39,9 +39,9 @@ test('a native locked archive install reads the installed bootstrap with no sibl
   assert.equal(result.status, 0, `make install-packages prepares the native package cache:\n${result.stdout}${result.stderr}`);
   const manifest = parseJsonObject(readFileSync(join(root, 'node_modules/@polyspec/kit/package.json'), 'utf8'), 'installed kit package.json');
   assert.equal(jsonString(manifest.name, 'installed package name'), '@polyspec/kit');
-  const run = spawnSync('make', ['--no-print-directory', '-n', 'kit-check', `NODE=${process.execPath}`], { cwd: root, encoding: 'utf8' });
+  const run = spawnSync('make', ['--no-print-directory', '-n', 'owner-validate', `NODE=${process.execPath}`], { cwd: root, encoding: 'utf8' });
   assert.equal(run.status, 0, run.stderr);
-  assert.match(run.stdout, /node_modules\/@polyspec\/kit\/dist\/kit-check\.mjs/);
+  assert.match(run.stdout, /node_modules\/@polyspec\/kit\/dist\/owner-check\.mjs/);
   assert.doesNotMatch(run.stdout, /\.\.\/kit/);
   const modules = spawnSync(process.execPath, ['--input-type=module', '--eval', `
     import assert from 'node:assert/strict';

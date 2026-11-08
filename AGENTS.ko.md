@@ -1,5 +1,5 @@
 <!-- doc-id: agents -->
-<!-- source-sha256: d2854bfa6bd631bbd584c3b6a478f1e2d34c583d7eab6d45b566cac3c8a12979 -->
+<!-- source-sha256: ccb6f54b4b6c07856879922b91181dc117d90a0c28053fe24653b6eb96ddaf58 -->
 # 개발
 
 [English](AGENTS.md).
@@ -30,12 +30,12 @@
 - Own: 개발 checkout은 polyspec provider(kit, template)를 자기 `.links`의 항목과 kit의 `make link`로만 link한다(K869). Composer path repository나 두 번째 manifest는 소스를 link하지 않는다. min-0-max/json-schema는 opis/json-schema의 유지되는 fork이고, 그 FORK.md가 fork를 유지하고 소비하는 방법을 적는다. template decoder는 collect-all-errors 방식으로 검증하는데, upstream opis/json-schema 2.6.0은 거기서 유효한 property도 `additionalProperties: false`가 허용하지 않는다고 보고하고 실패한 group 뒤에 `unevaluatedProperties`를 실행하지 않으며, fork가 둘을 고친다. `composer.json`과 `examples/board/composer.json`은 repository `{"type": "vcs", "url": "https://github.com/min-0-max/json-schema", "no-api": true}`를 선언하고 template release가 요구하는 이름으로 fork의 release `"min-0-max/json-schema": "2.6.0-p2"`를 요구하며, `composer.lock`과 `examples/board/composer.lock`은 그 release를 commit과 dist로 고정한다. 그래서 CI와 release step(release-prepare는 `make hyper-install`을 실행한다)은 고친 decoder를 실행한다. 릴리스되는 manifest `packages/server/php/composer.json`은 repository를 적지 않으므로, polyspec/hyper-server의 소비자는 자기 root에 fork를 선언한다. fork를 편집하는 개발 checkout은 fork의 checkout을 가리키는 `.links` 항목과 `make link`로 provider처럼 그것을 link한다.
   Enforced by: `make hyper-test-scripts`
 - Own: release가 결과를 바꾸는 모든 도구는 추적 파일에 고정하고 쓰기 전에 확인한다(HR-81): `.php-version`, `package.json`의 `devEngines`, `mise.toml`과 `mise.lock`, 그리고 `config/toolchain.json`. 도구는 결과가 요구하는 만큼 정확히 고정한다. PHP는 minor로, mise의 도구는 정확한 release로, make는 고정하지 않는다. 도구는 기계가 아니라 checkout(`var/tools`)에 설치하며, 다운로드는 고정된 digest가 있을 때만 쓰고, 처음 쓸 때 다른 도구가 도구를 설치하지 않는다. recipe나 script는 checkout의 도구를 절대 경로로 시작한다. make는 shell 문법이 없는 recipe 줄을 자기 `PATH`에서 찾기 때문이다.
-  Enforced by: `make hyper-test-scripts`, `make kit-check`
+  Enforced by: `make hyper-test-scripts`
 - Own: PHP 개발, test와 release 검증은 PHP 8.4.27을 기준으로 한다. Windows는 8.4.27-1 package rebuild를 쓰며 runtime version은 8.4.27이다. `.php-version`은 native tool 탐색을 위해 8.4 minor를 선택한다. 검증 결과에는 실제 runtime version을 기록하며 이전 patch의 결과를 이 기준에서의 검증으로 취급하지 않는다.
   Enforced by: none, 검증 근거를 검토할 때 기준과 기록된 runtime을 확인한다.
 
 - Own: 어떤 결과도 live service나 시간에 의존하지 않는다(HR-89). 결과가 시간에 따라 달라지는 registry 조회, 예컨대 latest 조회, version 범위의 해석, outdated package나 새 release의 조회를 하는 검사는 없으며, 다른 live service를 조회하는 검사도 없다. lock이 정확한 version과 integrity로 고정한 package의 다운로드는 설치이므로 허용한다. `npm ci`와 `composer install`이 그렇게 한다. 설치는 audit 없이 lock을 따른다. Test는 사건을 사건이나 주입된 clock으로 정렬하며, 경쟁하는 timer로 정렬하지 않는다. 실행의 server는 시스템이 배정하고 알리는 port에서 듣는다. 모든 recipe는 npm과 Composer를 오프라인으로 실행한다(Makefile의 `npm_config_offline`과 `COMPOSER_DISABLE_NETWORK`). 기본 소스 helper를 포함한 명시적 설치 target, `make bootstrap`, `make install-tools`, `make install-packages`, `make hyper-install`, `make hyper-install-php`, `make hyper-install-browser`, `make hyper-install-virtiofs`만 `$(ONLINE)`으로 다운로드하며, 빠진 다운로드는 그것을 만드는 설치 target과 함께 실패하고, 도구에게 온라인으로 다시 시도하라는 안내로 실패하지 않는다. server 시작처럼 오래 걸리는 작업은 시간 제한 없이 기다리며 진행을 출력한다.
-  Enforced by: `make kit-check`, `make hyper-test-scripts`
+  Enforced by: `make hyper-test-scripts`
 - Own: 성능은 측정하고 보고하며 검사를 실패시키지 않는다. 크기나 시간이 한도를 넘으면 값과 한도를 적은 `WARNING` 줄을 출력하고, GitHub에서는 `::warning::` annotation과 CI 요약의 경고를 남기며, 검사는 통과한다(`make bundle-size`, `make bench`). 측정 script는 사용법 오류나 빠진 입력에서만 실패한다.
   Enforced by: `make hyper-test-scripts`
 - Own: 모든 GitHub workflow는 job을 `ubuntu-26.04-arm`에서 실행하고, 각 action을 commit으로 고정하며, `timeout-minutes`를 두지 않고, step의 모든 명령을 하나의 make target으로 실행한다. script나 도구를 직접 실행하지 않는다. 그래야 Makefile의 설정과 검사가 적용된다(HR-90).

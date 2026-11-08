@@ -1,5 +1,12 @@
 {
   "schema": 1,
   "include": ["*.md", "docs/**/*.md", "packages/**/README*.md"],
-  "changelogs": ["CHANGELOG.md"]
+  "changelogs": ["CHANGELOG.md"],
+  "changelogRules": [
+    "unreleased-first",
+    "unreleased-once",
+    "versions-only",
+    "newest-first",
+    "unreleased-empty-at-release"
+  ]
 }
