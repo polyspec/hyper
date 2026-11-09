@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 6369fac0def45ba8219077ac9e8b4c24770d36cc1a6dadc0681ea9f902dad546 -->
+<!-- source-sha256: 20801fd759aa41bce39af718c49af22df0fcb590b6f5cdf5d242e9e146fc0116 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- docs/operations/dependencies.md는 composer.lock이 기록한 polyspec/template 0.0.23의 PHP 의존성을 적는다. Packagist의 opis/json-schema가 아니라 fork의 VCS repository에서 온 min-0-max/json-schema v2.6.0-p2이다(H27.88).
 
 ## 0.0.37
 - H27.100과 H27.101을 담아 0.0.37을 릴리스한다: config/release.json의 모든 manifest, polyspec/hyper-server와 @polyspec/hyper-client의 정확한 요구 버전, npm, Composer, uv가 쓴 lock이 0.0.37을 담는다(H27.102).

@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- docs/operations/dependencies.md states the PHP dependency of polyspec/template 0.0.23 that composer.lock records: min-0-max/json-schema v2.6.0-p2 from the VCS repository of the fork, not opis/json-schema from Packagist (H27.88).
 
 ## 0.0.37
 - Release 0.0.37 after H27.100 and H27.101: every manifest of config/release.json, the exact requirements of polyspec/hyper-server and @polyspec/hyper-client and the locks that npm, Composer and uv wrote hold 0.0.37 (H27.102).
