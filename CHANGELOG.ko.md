@@ -1,10 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 20801fd759aa41bce39af718c49af22df0fcb590b6f5cdf5d242e9e146fc0116 -->
+<!-- source-sha256: b5c60ecf7f25f1af8ec7c3788614e65b394c5120becf5d4b441bd52e610b4477 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+- docs/operations/dependencies.md는 template 요구 0.0.23, .links와 make link의 개발 link, kit release v0.0.102, 정확한 pin min-0-max/json-schema 2.6.0-p2와 그 출처, 이유, 해제 조건을 적는다(H27.88-1).
 - docs/operations/dependencies.md는 composer.lock이 기록한 polyspec/template 0.0.23의 PHP 의존성을 적는다. Packagist의 opis/json-schema가 아니라 fork의 VCS repository에서 온 min-0-max/json-schema v2.6.0-p2이다(H27.88).
 
 ## 0.0.37

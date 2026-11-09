@@ -4,6 +4,7 @@
 [한국어](CHANGELOG.ko.md).
 
 ## Unreleased
+- docs/operations/dependencies.md states the template requirement 0.0.23, the development links of .links and make link, the kit release v0.0.102, and the exact pin min-0-max/json-schema 2.6.0-p2 with its source, reason and removal condition (H27.88-1).
 - docs/operations/dependencies.md states the PHP dependency of polyspec/template 0.0.23 that composer.lock records: min-0-max/json-schema v2.6.0-p2 from the VCS repository of the fork, not opis/json-schema from Packagist (H27.88).
 
 ## 0.0.37
