@@ -9,11 +9,11 @@ description = "Server for the polyspec region protocol: manifest, routing, docum
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
-    # The wheel asset of the template release v0.0.24 with the sha256 of that asset (H21.4, H23.5). uv.lock locks it with
+    # The wheel asset of the template release v0.0.26 with the sha256 of that asset (H21.4, H23.5). uv.lock locks it with
     # its dependencies, and `make hyper-install-python` installs that lock into the venv of the package (H23.15).
-    # The wheel asset of the php-serialize release v0.0.5 with the sha256 of that asset (HY-104).
-    "polyspec-php-serialize @ https://github.com/polyspec/php-serialize/releases/download/v0.0.5/polyspec_php_serialize-0.0.5-py3-none-any.whl#sha256=c953ed6d53956c4f3cb0d923fcc661f29012a9076debfdede6f87097046c2374",
-    "polyspec-template @ https://github.com/polyspec/template/releases/download/v0.0.24/polyspec_template-0.0.24-py3-none-any.whl#sha256=cfd48ac58612a9434f973ad5d2e39e0d94107984287b7c8dd11ceda2a62c4a5e",
+    # The wheel asset of the php-serialize release v0.0.6 with the sha256 of that asset (HY-104).
+    "polyspec-php-serialize @ https://github.com/polyspec/php-serialize/releases/download/v0.0.6/polyspec_php_serialize-0.0.6-py3-none-any.whl#sha256=00d8022dd33432532dbbbd3bed072e33d9243784b5454ddc814f867be14bc716",
+    "polyspec-template @ https://github.com/polyspec/template/releases/download/v0.0.26/polyspec_template-0.0.26-py3-none-any.whl#sha256=65458672f868bee77de9d6536f631f138cc17e9f2ff21fb397d87971acc0c1fe",
 ]
 
 # The client of the session tests against a real Redis server (HY-115); an application names its own client.

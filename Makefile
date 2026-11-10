@@ -57,7 +57,7 @@ export HYPER_PYTHON := $(PYTHON_VENV)/bin/python
 # package.json names (HR-70). Composer installs polyspec/template from TEMPLATE_PACKAGES, the Composer repository of the
 # release (packages.json), which composer.json and examples/board/composer.json declare and whose dist carries the sha1 of the
 # php zip; PIE builds the native template extension polyspec/template-php-ext from the same repository (H27.45).
-TEMPLATE_VERSION := 0.0.24
+TEMPLATE_VERSION := 0.0.26
 TEMPLATE_TAG := v$(TEMPLATE_VERSION)
 TEMPLATE_PACKAGES := https://github.com/polyspec/template/releases/download/$(TEMPLATE_TAG)/packages.json
 FIXTURES := $(PHP_PACKAGE)/tests/fixtures
@@ -208,7 +208,7 @@ package-check: packages node-fixtures ## Install the npm packages into tests/pac
 	cd tests/package-install && $(NODE) $(KIT)/holder-lock.$(KIT_EXT) run $(abspath $(INSTALL_LOCK)) -- $(NPM) ci --no-audit
 	$(MAKE) --no-print-directory install-link PROJECT=tests/package-install
 	$(TSC) -p tests/package-install/tsconfig.json
-	NPM_BIN=$(NPM) $(NODE) $(KIT)/run-tests.$(KIT_EXT) node --timeout 30 --cwd tests/package-install -- --test-concurrency=1 package-install.test.ts
+	NPM_BIN=$(NPM) $(NODE) $(KIT)/run-tests.$(KIT_EXT) node --cwd tests/package-install -- --test-concurrency=1 package-install.test.ts
 
 server: packages ## Build the board server program from installed dependencies: its templates and generated PHP program (HY-48)
 	$(NODE) $(BUILD_PACKAGE)/bin/hyper-build-server.mjs --manifest $(BOARD)/app/app.json --templates $(BOARD)/templates --output $(BOARD)/build/server --php-namespace 'Polyspec\Hyper\Examples\Board\Program'
@@ -233,13 +233,13 @@ assets: packages ## Build the board client bundle (SSR) and the single-file stat
 
 hyper-test-js: ## Run the browser code tests, including the router conformance cases, and the type check
 	@failed=; \
-	$(call check,the tests of $(JS_PACKAGE),node $(KIT)/run-tests.$(KIT_EXT) vitest --timeout 30 --cwd $(JS_PACKAGE)$(if $(JS_TESTS), -- $(JS_TESTS))) \
+	$(call check,the tests of $(JS_PACKAGE),node $(KIT)/run-tests.$(KIT_EXT) vitest --cwd $(JS_PACKAGE)$(if $(JS_TESTS), -- $(JS_TESTS))) \
 	$(call check,the type check of $(JS_PACKAGE),$(TSC) --noEmit -p $(JS_PACKAGE)/tsconfig.json) \
 	$(checks_result)
 
 hyper-test-node: packages node-fixtures ## Run the Node server tests, including the PHP AppTest cases and the JSON conformance cases, and the type check
 	@failed=; \
-	$(call check,the tests of $(NODE_PACKAGE),node $(KIT)/run-tests.$(KIT_EXT) vitest --timeout 30 --cwd $(NODE_PACKAGE)) \
+	$(call check,the tests of $(NODE_PACKAGE),node $(KIT)/run-tests.$(KIT_EXT) vitest --cwd $(NODE_PACKAGE)) \
 	$(call check,the type check of $(NODE_PACKAGE),$(TSC) --noEmit -p $(NODE_PACKAGE)/tsconfig.json) \
 	$(checks_result)
 
@@ -287,10 +287,10 @@ typecheck: packages ## Check the types of the TypeScript of scripts/, tests/ and
 
 .PHONY: toolchain-policy-test
 toolchain-policy-test: ## Verify the declared toolchain and offline recipe policy
-	$(NODE) $(KIT)/run-tests.$(KIT_EXT) node --timeout 30 -- --test-concurrency=1 tests/scripts/toolchain.test.mts
+	$(NODE) $(KIT)/run-tests.$(KIT_EXT) node -- --test-concurrency=1 tests/scripts/toolchain.test.mts
 
 hyper-test-scripts: packages assets server node-server ## Run the tests of the check scripts, or only the files of TESTS
-	$(NODE) $(KIT)/run-tests.$(KIT_EXT) node --timeout 30 -- --test-concurrency=1 $(or $(TESTS),tests/scripts/)
+	$(NODE) $(KIT)/run-tests.$(KIT_EXT) node -- --test-concurrency=1 $(or $(TESTS),tests/scripts/)
 
 parity: assets server ext ## Compare PHP documents (generated program and native extension) with browser renders of document and region JSON
 	@failed=; \
@@ -308,10 +308,10 @@ bundle-size: assets ## Print the sizes of the SSR script, the CSR shell, the chu
 	$(NODE) scripts/check-bundle-size.mts --app $(BOARD) --output $(BOARD)/build --limits config/bundle-size.json$(if $(filter true,$(GITHUB_ACTIONS)), --annotations)
 
 e2e: assets server ## Run the SSR, CSR, no-JavaScript and comparison flows in Chromium on servers of the run; CASES=<pattern> runs the cases whose title matches
-	$(NODE) scripts/run-e2e.mts -- $(NODE) $(KIT)/run-tests.$(KIT_EXT) playwright --timeout 30 -- --config tests/e2e/playwright.config.ts$(if $(CASES), --grep '$(CASES)')
+	$(NODE) scripts/run-e2e.mts -- $(NODE) $(KIT)/run-tests.$(KIT_EXT) playwright -- --config tests/e2e/playwright.config.ts$(if $(CASES), --grep '$(CASES)')
 
 virtiofs-check: ## Write the outputs of the server build and of the output copies on a virtiofs bind mount of Apple container (HR-68); a target of the full suite on Darwin
-	$(NODE) $(KIT)/run-tests.$(KIT_EXT) node --timeout 30 -- --test-concurrency=1 tests/virtiofs/
+	$(NODE) $(KIT)/run-tests.$(KIT_EXT) node -- --test-concurrency=1 tests/virtiofs/
 
 serve-demo: assets server ## Serve SSR on :8080, CSR on :8081 and the comparison page on :8081/compare; fails with the holder while another demo runs
 	$(NODE) scripts/serve-demo.mts --db $(BOARD)/var/board.db --ssr 8080 --edge 8081 --api 8082 --lock $(SERVE_DEMO_LOCK)
@@ -361,7 +361,7 @@ check: ## Run final verification once after checklist development, on a committe
 
 .PHONY: hyper-runner-owner-check
 hyper-runner-owner-check: ## Verify application test entry points through the shared test runner
-	$(NODE) $(KIT)/run-tests.$(KIT_EXT) node --timeout 30 -- --test-concurrency=1 tests/scripts/check-recipes.test.mts tests/scripts/ci-workflow.test.mts tests/scripts/run-e2e.test.mts
+	$(NODE) $(KIT)/run-tests.$(KIT_EXT) node -- --test-concurrency=1 tests/scripts/check-recipes.test.mts tests/scripts/ci-workflow.test.mts tests/scripts/run-e2e.test.mts
 
 # ---- Tools and packages ----------------------------------------------------------------------------------------------
 # TOOLS=npm is the first step of a checkout, before the pinned npm installs the packages: it runs the bootstrap of kit, which

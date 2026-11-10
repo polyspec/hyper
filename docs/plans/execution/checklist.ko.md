@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: aafb71f30cec04a6ab91bfe5a5171aa0d21f414f0f3231d1e91ecad23a298670 -->
+<!-- source-sha256: 412d5d13acb411da2b3bbf01d6270d2b1d10bbfe85a335ae3fcf6d1ed4dbeab7 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -374,3 +374,4 @@
 | H27.103 | kit이 조용히 버리던 출력, 오류, 실패를 남기는 kit 0.0.103(kit K1136–K1165)를 채택한다: 0.0.103 release asset을 고정한다 | `package.json`, `package-lock.json` | `make docs-check` and `make lint-ts` exit 0 | [o] |
 | H27.104 | P0: provider의 최신 release인 php-serialize 0.0.5와 template 0.0.24를 받는다: 모든 manifest, sha256을 가진 wheel URL, TEMPLATE_VERSION과 pin을 적은 문서이며, 각 lock은 자기 도구로 쓴다 | `package.json`, `composer.json`, `examples/board/composer.json`, package manifest, `tests/package-install/package.json`, `Makefile`, 그 lock과 `docs/operations/dependencies.md` | `node --test tests/scripts/template-version.test.mts` exit 0; manifest와 lock에서 template 0.0.23과 php-serialize 0.0.4의 `git grep`이 exit 1 | [o] |
 | H27.105 | 0.0.38 release | version commit과 release asset | `make release-coverage`와 version commit의 CI run에서 만들어진 release | [o] |
+| H27.106 | run-tests의 시간 제한을 없앤 kit 0.0.105(kit K1175)를 채택하고 provider의 최신 release인 template 0.0.26와 php-serialize 0.0.6을 받는다: kit 0.0.105 release asset을 고정하고, Makefile recipe 여덟 개에서 0.0.105가 알 수 없는 option으로 거부하는 `--timeout`을 run-tests에 넘기지 않으며, development.md에 runner가 시간 제한을 두지 않는다고 적고, 모든 manifest, sha256을 가진 wheel URL, TEMPLATE_VERSION과 pin을 적은 문서에 새 release를 적으며, 각 lock은 자기 도구로 쓴다 | `package.json`, `composer.json`, `examples/board/composer.json`, package manifest, `tests/package-install/package.json`, `Makefile`, 그 lock, `docs/operations/development.md(.ko)`와 `docs/operations/dependencies.md(.ko)` | `node --test tests/scripts/template-version.test.mts tests/scripts/check-recipes.test.mts tests/scripts/ci-workflow.test.mts`, `make docs-check`, `make lint-ts` exit 0; manifest, lock, Makefile에서 template 0.0.24, php-serialize 0.0.5, `--timeout`의 `git grep`이 exit 1 | [o] |

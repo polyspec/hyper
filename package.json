@@ -22,7 +22,7 @@
   ],
   "devDependencies": {
     "@playwright/test": "1.64.1",
-    "@polyspec/kit": "https://github.com/polyspec/kit/releases/download/v0.0.103/polyspec-kit-0.0.103.tgz",
+    "@polyspec/kit": "https://github.com/polyspec/kit/releases/download/v0.0.105/polyspec-kit-0.0.105.tgz",
     "@types/node": "26.6.5",
     "esbuild": "0.28.2",
     "htmx.org": "4.0.0",
@@ -36,9 +36,9 @@
     "fsevents@2.3.3": true
   },
   "dependencies": {
-    "@polyspec/php-serialize": "https://github.com/polyspec/php-serialize/releases/download/v0.0.5/polyspec-php-serialize-0.0.5.tgz",
-    "@polyspec/template": "https://github.com/polyspec/template/releases/download/v0.0.24/polyspec-template-0.0.24.tgz",
-    "@polyspec/template-compiler": "https://github.com/polyspec/template/releases/download/v0.0.24/polyspec-template-compiler-0.0.24.tgz"
+    "@polyspec/php-serialize": "https://github.com/polyspec/php-serialize/releases/download/v0.0.6/polyspec-php-serialize-0.0.6.tgz",
+    "@polyspec/template": "https://github.com/polyspec/template/releases/download/v0.0.26/polyspec-template-0.0.26.tgz",
+    "@polyspec/template-compiler": "https://github.com/polyspec/template/releases/download/v0.0.26/polyspec-template-compiler-0.0.26.tgz"
   },
   "overrides": {
     "@polyspec/php-serialize": "$@polyspec/php-serialize",

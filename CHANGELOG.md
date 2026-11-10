@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- hyper adopts kit 0.0.105, which removed the time limits of run-tests (kit K1175), passes no `--timeout` to run-tests, and takes template 0.0.26 and php-serialize 0.0.6 in every manifest and lock (H27.106).
+
 ## 0.0.38
 
 - hyper takes php-serialize 0.0.5 and template 0.0.24 in every manifest and lock (H27.104).
