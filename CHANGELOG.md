@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+## 0.0.38
+
 - hyper takes php-serialize 0.0.5 and template 0.0.24 in every manifest and lock (H27.104).
 
 - The repository adopts kit 0.0.103, which keeps the output, errors and failures that kit used to drop silently (kit K1136–K1165) (H27.103).

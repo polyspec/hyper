@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 8183f81a1aed8565ecdc2051b04655ff7add4fca32ef58544c9da03a5b3590e2 -->
+<!-- source-sha256: 9943a7ff9fcf033d262bf27e54f0789df581ec6e0e270bcf95ca24ca9ac591e9 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+## 0.0.38
 
 - hyper는 모든 manifest와 lock에서 php-serialize 0.0.5와 template 0.0.24를 받는다(H27.104).
 
