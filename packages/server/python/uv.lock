@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = ">=3.14"
 
 [[package]]
@@ -54,8 +54,8 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "polyspec-php-serialize", url = "https://github.com/polyspec/php-serialize/releases/download/v0.0.4/polyspec_php_serialize-0.0.4-py3-none-any.whl" },
-    { name = "polyspec-template", url = "https://github.com/polyspec/template/releases/download/v0.0.23/polyspec_template-0.0.23-py3-none-any.whl" },
+    { name = "polyspec-php-serialize", url = "https://github.com/polyspec/php-serialize/releases/download/v0.0.5/polyspec_php_serialize-0.0.5-py3-none-any.whl" },
+    { name = "polyspec-template", url = "https://github.com/polyspec/template/releases/download/v0.0.24/polyspec_template-0.0.24-py3-none-any.whl" },
 ]
 
 [package.metadata.requires-dev]
@@ -63,21 +63,21 @@ dev = [{ name = "redis", specifier = "==8.1.0" }]
 
 [[package]]
 name = "polyspec-php-serialize"
-version = "0.0.4"
-source = { url = "https://github.com/polyspec/php-serialize/releases/download/v0.0.4/polyspec_php_serialize-0.0.4-py3-none-any.whl" }
+version = "0.0.5"
+source = { url = "https://github.com/polyspec/php-serialize/releases/download/v0.0.5/polyspec_php_serialize-0.0.5-py3-none-any.whl" }
 wheels = [
-    { url = "https://github.com/polyspec/php-serialize/releases/download/v0.0.4/polyspec_php_serialize-0.0.4-py3-none-any.whl", hash = "sha256:7df6cf4ea5b47ec07483c17fe7863284a786ecbdcbadf1339e6ad38cc3e5e93e" },
+    { url = "https://github.com/polyspec/php-serialize/releases/download/v0.0.5/polyspec_php_serialize-0.0.5-py3-none-any.whl", hash = "sha256:c953ed6d53956c4f3cb0d923fcc661f29012a9076debfdede6f87097046c2374" },
 ]
 
 [[package]]
 name = "polyspec-template"
-version = "0.0.23"
-source = { url = "https://github.com/polyspec/template/releases/download/v0.0.23/polyspec_template-0.0.23-py3-none-any.whl" }
+version = "0.0.24"
+source = { url = "https://github.com/polyspec/template/releases/download/v0.0.24/polyspec_template-0.0.24-py3-none-any.whl" }
 dependencies = [
     { name = "jsonschema" },
 ]
 wheels = [
-    { url = "https://github.com/polyspec/template/releases/download/v0.0.23/polyspec_template-0.0.23-py3-none-any.whl", hash = "sha256:4c2e403e4942aebf18e38ff4dec1e0e945fc95538aef63357c6f0e4e5eab9565" },
+    { url = "https://github.com/polyspec/template/releases/download/v0.0.24/polyspec_template-0.0.24-py3-none-any.whl", hash = "sha256:cfd48ac58612a9434f973ad5d2e39e0d94107984287b7c8dd11ceda2a62c4a5e" },
 ]
 
 [package.metadata]

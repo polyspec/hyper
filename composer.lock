@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4ce71f503a3c063b90a4d6429042f95a",
+    "content-hash": "14f2e50ac82fc89c889dadacd2ef52bc",
     "packages": [
         {
             "name": "min-0-max/json-schema",
@@ -207,11 +207,11 @@
             "dist": {
                 "type": "path",
                 "url": "packages/server/php",
-                "reference": "14808dbd545ff7a620d7d4044f241b0cd3f46427"
+                "reference": "d760e1e9cf850a626cdb56086aac80fc9827edd0"
             },
             "require": {
                 "php": ">=8.4",
-                "polyspec/template": "0.0.23"
+                "polyspec/template": "0.0.24"
             },
             "require-dev": {
                 "laravel/pint": "^1.32.1",
@@ -248,11 +248,11 @@
         },
         {
             "name": "polyspec/template",
-            "version": "0.0.23",
+            "version": "0.0.24",
             "dist": {
                 "type": "zip",
-                "url": "https://github.com/polyspec/template/releases/download/v0.0.23/polyspec-template-php-0.0.23.zip",
-                "shasum": "6eead888cfbb4375e056653795e1f22478e7ec76"
+                "url": "https://github.com/polyspec/template/releases/download/v0.0.24/polyspec-template-php-0.0.24.zip",
+                "shasum": "e856b00c07dff34a86ab41c5d30d1599f0b025df"
             },
             "require": {
                 "ext-mbstring": "*",

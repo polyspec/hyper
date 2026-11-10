@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: ee10da6115a76008bd270bca5b47a14d9eb6fcbb94192b970848d6231003bc0d -->
+<!-- source-sha256: ad68dc687fc71edfa50eddf0e5ad5375f6df102cfc59843115c9705178babd65 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -372,3 +372,4 @@
 | H27.101 | P2: docs/spec/protocol.ko.md가 원문의 revision을 적는다. 원인: H27.91이 HY-106과 HY-113 변경을 두 언어로 옮겼지만 한국어 twin은 docs/spec/protocol.md의 이전 revision을 적은 채로 남겼다. 인수 조건: twin이 docs/spec/protocol.md의 source-sha256을 적고, 인자 없는 make documents-stamp가 0 moved를 보인다. | docs/spec/protocol.ko.md, CHANGELOG.md, CHANGELOG.ko.md | `make documents-stamp` shows 0 stamped, 0 moved | [o] |
 | H27.102 | P1: H27.100과 H27.101을 담아 0.0.37을 릴리스한다. 인수 조건: config/release.json의 모든 manifest, polyspec/hyper-server와 @polyspec/hyper-client의 정확한 요구 버전, npm, Composer, uv의 lock이 0.0.37을 담고, CHANGELOG.md와 CHANGELOG.ko.md의 ## Unreleased가 ## 0.0.37이 되며, release workflow가 v0.0.37을 tag하고 asset을 공개한다. | the manifests and locks of config/release.json, composer.json composer.lock examples/board/composer.json examples/board/composer.lock, tests/package-install/package-lock.json, docs/operations/dependencies.md(.ko), CHANGELOG.md CHANGELOG.ko.md | `make release-coverage`, `make docs-check`; the release workflow runs after CI | [o] |
 | H27.103 | kit이 조용히 버리던 출력, 오류, 실패를 남기는 kit 0.0.103(kit K1136–K1165)를 채택한다: 0.0.103 release asset을 고정한다 | `package.json`, `package-lock.json` | `make docs-check` and `make lint-ts` exit 0 | [o] |
+| H27.104 | P0: provider의 최신 release인 php-serialize 0.0.5와 template 0.0.24를 받는다: 모든 manifest, sha256을 가진 wheel URL, TEMPLATE_VERSION과 pin을 적은 문서이며, 각 lock은 자기 도구로 쓴다 | `package.json`, `composer.json`, `examples/board/composer.json`, package manifest, `tests/package-install/package.json`, `Makefile`, 그 lock과 `docs/operations/dependencies.md` | `node --test tests/scripts/template-version.test.mts` exit 0; manifest와 lock에서 template 0.0.23과 php-serialize 0.0.4의 `git grep`이 exit 1 | [o] |

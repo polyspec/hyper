@@ -20,8 +20,8 @@
   },
   "dependencies": {
     "@polyspec/hyper-client": "0.0.37",
-    "@polyspec/template": "0.0.23",
-    "@polyspec/template-compiler": "0.0.23",
+    "@polyspec/template": "0.0.24",
+    "@polyspec/template-compiler": "0.0.24",
     "@tailwindcss/node": "4.3.3",
     "@tailwindcss/oxide": "4.3.3",
     "esbuild": "0.28.2",

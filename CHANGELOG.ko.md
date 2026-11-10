@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 6698c9e7cb628db17725771c8af99554723cedc1cf001de6c370271261aa62b5 -->
+<!-- source-sha256: 8183f81a1aed8565ecdc2051b04655ff7add4fca32ef58544c9da03a5b3590e2 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- hyper는 모든 manifest와 lock에서 php-serialize 0.0.5와 template 0.0.24를 받는다(H27.104).
 
 - 저장소는 kit이 조용히 버리던 출력, 오류, 실패를 남기는 kit 0.0.103(kit K1136–K1165)를 채택한다(H27.103).
 - docs/operations/dependencies.md는 template 요구 0.0.23, .links와 make link의 개발 link, kit release v0.0.102, 정확한 pin min-0-max/json-schema 2.6.0-p2와 그 출처, 이유, 해제 조건을 적는다(H27.88-1).

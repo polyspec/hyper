@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- hyper takes php-serialize 0.0.5 and template 0.0.24 in every manifest and lock (H27.104).
+
 - The repository adopts kit 0.0.103, which keeps the output, errors and failures that kit used to drop silently (kit K1136–K1165) (H27.103).
 - docs/operations/dependencies.md states the template requirement 0.0.23, the development links of .links and make link, the kit release v0.0.102, and the exact pin min-0-max/json-schema 2.6.0-p2 with its source, reason and removal condition (H27.88-1).
 - docs/operations/dependencies.md states the PHP dependency of polyspec/template 0.0.23 that composer.lock records: min-0-max/json-schema v2.6.0-p2 from the VCS repository of the fork, not opis/json-schema from Packagist (H27.88).
