@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 5c9207be42fc076ada0b5622526d4e8372f6f6b67d41a53f95f2280e60769071 -->
+<!-- source-sha256: 85242a09fa77a1749b7e1d3a5c159d98880c9792c4cf468fedc2bd7f842830c9 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+## 0.0.39
 
 - hyper는 run-tests의 시간 제한을 없앤 kit 0.0.105(kit K1175)를 채택해 run-tests에 `--timeout`을 넘기지 않고, 모든 manifest와 lock에서 template 0.0.26와 php-serialize 0.0.6을 받는다(H27.106).
 
