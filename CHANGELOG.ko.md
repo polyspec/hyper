@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: c90a85aa4fcfe5bd85df022604e6d01426dc073a2fa87d1f4bab9c8510c3a675 -->
+<!-- source-sha256: f3f390f56c04a7dc5999058e4020b53706778cb0a24c9252690108a217676b0f -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- docs/spec/protocol.md는 server build가 option `--build`로 asset output의 `build.json`을 받아 program directory에 쓰고, file이 없거나 build id가 올바르지 않으면 실패한다고 정한다(HY-125)(H28.1-1).
 
 - docs/spec/protocol.md는 다음을 명세한다: routing 뒤에 `Accept`로 media type을 선택하고 그 `Vary`를 정한다(HY-116, HY-117). page data의 media type은 `application/vnd.hyper+json`이다(HY-15). route의 representation은 자기 media type, method, response 규칙을 가지며 session과 cookie를 읽지 않는다(HY-118~HY-123). application의 context는 hash가 바뀌었을 때만 JSON response에 담기며, `Hyper-Context` header와 build id가 `build.json`, 모든 JSON response, definition `build`에 있다(HY-124~HY-128). browser는 context를 보관하고, 다른 build에서 새 document를 load하며, 마지막 region response만 render하고, host function을 등록한다(HYC-22~HYC-24). `contracts/representations.json`과 `contracts/context.json`이 그 case를 담고, `contracts/client.json`은 새 media type을 따른다(H28.1).
 

@@ -1,5 +1,5 @@
 <!-- doc-id: protocol -->
-<!-- source-sha256: 5b1642b430babcf46082bdbef45c3a0f2d452b7c8ae5f50679abd15ed14bde0f -->
+<!-- source-sha256: 37de353fbc949cf40889309cb132bb75940db0c936117e6952f4c4c654993244 -->
 # 영역 프로토콜
 
 [English](protocol.md).
@@ -197,6 +197,7 @@
   - 출력은 client entry, 그 chunk, `manifest.json`, 에셋 build(HYC-16)의 템플릿 파일과 index이며, id를 담는 HY-62의 정적 셸은 뺀다.
   - build는 출력 디렉터리 기준 상대 경로를 바이트로 비교한 순서로 출력을 hash한다. 각 출력마다 UTF-8로 쓴 경로와 NUL 바이트 하나, 8바이트 big-endian으로 쓴 파일 길이, 파일의 바이트를 넣는다.
   - build는 id를 `{"build":"<build id>"}`로, hash에서 빠지는 에셋 출력의 `build.json`과 프로그램 디렉터리(HY-48)의 `build.json`에 쓴다. 모든 서버는 애플리케이션을 열 때 id를 읽으며, `build.json`이 없으면 `open`이 그 절대 경로와 함께 실패한다.
+  - 서버 build(HY-48)는 option `--build`로 에셋 출력의 `build.json` 경로를 받아 같은 파일을 프로그램 디렉터리에 쓴다. 파일이 없거나 64자의 소문자 16진수 build id를 담지 않으면 그 경로와 함께 실패한다. 에셋 build가 없는 test fixture는 내용이 고정된 `build.json`을 이름 붙인다.
   - 문서는 `html` 정의 `build`를 가진다. 그 텍스트는 `<meta name="hyper-build" content="<build id>">`이며, 레이아웃은 그것을 `<head>` 안에서 `{# build}`로 한 번 렌더한다(HY-3, HY-12). 영역 배치가 빠졌을 때처럼, `{# build}`가 정확히 하나가 아닌 레이아웃은 build를 실패시킨다. 정적 셸도 같은 요소를 가진다.
   - context hash는 `{"build": <build id>, "context": <context>}`의 HY-54 JSON 텍스트의 소문자 16진수 SHA-256 digest다. 그래서 모든 서버는 같은 context에 같은 hash를 계산하고, 새 build는 새 hash를 준다.
 - **HY-126** HY-73의 읽기 경로는 `context`에 적용하지 않는다. context 하나가 모든 라우트에 쓰이고 그 hash가 전체를 덮으므로 서버는 그것을 통째로 보낸다. HY-71은 모든 공유 데이터와 같이 context에도 적용한다.
