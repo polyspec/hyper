@@ -128,3 +128,10 @@ test('the Python reader records annotated and unpacked module constants', () => 
   const names = readPython(path.join(fixture, 'readers', 'python')).constants.filter((c) => c.file === 'src/limits.py').map((c) => c.name);
   for (const name of ['LIMIT', 'LOW', 'HIGH']) assert.ok(names.includes(name), `${name} is not a constant of src/limits.py: ${names.join(', ')}`);
 });
+
+test('the Python reader takes the module-level, async and pytest-style tests of every file under the test roots', () => {
+  const tests = readPython(path.join(fixture, 'readers', 'python')).tests.map((t) => `${t.file}::${t.name}`);
+  for (const test of ['tests/test_module.py::test_plain', 'tests/test_module.py::test_async', 'tests/extra/helpers.py::test_helper', 'tests/test_widget.py::TestWidget.test_size']) {
+    assert.ok(tests.includes(test), `${test} is not a test: ${tests.join(', ')}`);
+  }
+});
