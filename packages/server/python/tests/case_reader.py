@@ -6,65 +6,6 @@ import json
 from pathlib import Path
 from typing import Any
 
-CONTRACTS = Path(__file__).resolve().parents[4] / "contracts"
-LANGUAGE = "python"
-
-
-def _applies(node: dict) -> bool:
-    only = node.get("only")
-    return only is None or LANGUAGE in only["languages"]
-
-
-def _leaves(fields: dict, prefix: str = ""):
-    """The dotted names and the declarations of the fields that carry no fields, for the languages of this reader."""
-    for key, node in fields.items():
-        if not _applies(node):
-            continue
-        name = prefix + key
-        if "fields" in node:
-            yield from _leaves(node["fields"], name + ".")
-        else:
-            yield name, node
-
-
-def _nested_undeclared(node: dict, value: Any, path: str) -> str | None:
-    if "fields" not in node or not isinstance(value, dict):
-        return None
-    for key, item in value.items():
-        if key not in node["fields"]:
-            return f"{path}.{key}"
-        found = _nested_undeclared(node["fields"][key], item, f"{path}.{key}")
-        if found:
-            return found
-    return None
-
-
-def _undeclared(declaration: dict, data: dict) -> str | None:
-    """The path of the first key, section or field of a case file that caseFiles does not declare, or None."""
-    sections = declaration["sections"]
-    for key in data:
-        if key not in declaration["fixtures"] and key not in sections:
-            return key
-    for name, spec in sections.items():
-        for index, case in enumerate(data.get(name, [])):
-            for key, value in case.items():
-                if key == "only":
-                    continue
-                path = f"{name}[{index}].{key}"
-                if key not in spec["fields"]:
-                    return path
-                found = _nested_undeclared(spec["fields"][key], value, path)
-                if found:
-                    return found
-        for field, node in _leaves(spec["fields"]):
-            if node["role"] == "expected" and not any(k in node for k in ("compare", "rule", "quote")):
-                return f"{name}.{field}"
-    return None
-
-
-def _json(name: str) -> Any:
-    return json.loads((CONTRACTS / name).read_text(encoding="utf-8"))
-
 
 class CaseReader:
     def __init__(self, file: str, section: str, case: dict, data: dict, spec: dict, failure: str | None):
@@ -83,21 +24,78 @@ class CaseReader:
     def cases(file: str) -> list["CaseReader"]:
         """The readers of the cases of a case file that the runners of python run, in file order."""
         declaration = CaseReader._declaration(file)
-        data = _json(file)
-        failure = _undeclared(declaration, data)
+        data = CaseReader._json(file)
+        failure = CaseReader._undeclared(declaration, data)
         readers = []
         for name, spec in declaration["sections"].items():
-            if LANGUAGE not in spec["runners"]:
+            if "python" not in spec["runners"]:
                 continue
             for case in data.get(name, []):
-                if "only" in case and LANGUAGE not in case["only"]["languages"]:
+                if "only" in case and "python" not in case["only"]["languages"]:
                     continue
                 readers.append(CaseReader(file, name, case, data, spec, failure))
         return readers
 
     @staticmethod
     def _declaration(file: str) -> dict:
-        return _json("interfaces.json")["caseFiles"][file]
+        return CaseReader._json("interfaces.json")["caseFiles"][file]
+
+    @staticmethod
+    def _json(name: str) -> Any:
+        contracts = Path(__file__).resolve().parents[4] / "contracts"
+        return json.loads((contracts / name).read_text(encoding="utf-8"))
+
+    @staticmethod
+    def _applies(node: dict) -> bool:
+        only = node.get("only")
+        return only is None or "python" in only["languages"]
+
+    @staticmethod
+    def _leaves(fields: dict, prefix: str = ""):
+        """The dotted names and the declarations of the fields that carry no fields, for the languages of this reader."""
+        for key, node in fields.items():
+            if not CaseReader._applies(node):
+                continue
+            name = prefix + key
+            if "fields" in node:
+                yield from CaseReader._leaves(node["fields"], name + ".")
+            else:
+                yield name, node
+
+    @staticmethod
+    def _nested_undeclared(node: dict, value: Any, path: str) -> str | None:
+        if "fields" not in node or not isinstance(value, dict):
+            return None
+        for key, item in value.items():
+            if key not in node["fields"]:
+                return f"{path}.{key}"
+            found = CaseReader._nested_undeclared(node["fields"][key], item, f"{path}.{key}")
+            if found:
+                return found
+        return None
+
+    @staticmethod
+    def _undeclared(declaration: dict, data: dict) -> str | None:
+        """The path of the first key, section or field of a case file that caseFiles does not declare, or None."""
+        sections = declaration["sections"]
+        for key in data:
+            if key not in declaration["fixtures"] and key not in sections:
+                return key
+        for name, spec in sections.items():
+            for index, case in enumerate(data.get(name, [])):
+                for key, value in case.items():
+                    if key == "only":
+                        continue
+                    path = f"{name}[{index}].{key}"
+                    if key not in spec["fields"]:
+                        return path
+                    found = CaseReader._nested_undeclared(spec["fields"][key], value, path)
+                    if found:
+                        return found
+            for field, node in CaseReader._leaves(spec["fields"]):
+                if node["role"] == "expected" and not any(k in node for k in ("compare", "rule", "quote")):
+                    return f"{name}.{field}"
+        return None
 
     def section(self) -> str:
         return self._section_name
@@ -134,13 +132,13 @@ class CaseReader:
         if node["role"] != "input":
             raise ValueError(f"not an input field: {name}")
         self._read.add(name)
-        for leaf, _ in _leaves(node.get("fields", {}), name + "."):
+        for leaf, _ in CaseReader._leaves(node.get("fields", {}), name + "."):
             self._read.add(leaf)
         return self._lookup(name)[1]
 
     def compare(self, name: str, observed: Any) -> None:
         node = self._node(name)
-        if not _applies(node):
+        if not CaseReader._applies(node):
             return
         parts = name.split(".")
         for depth in range(1, len(parts)):
@@ -155,7 +153,7 @@ class CaseReader:
 
     def outcome(self, name: str, observed: Any) -> None:
         node = self._spec.get("outcomes", {})[name]
-        if not _applies(node):
+        if not CaseReader._applies(node):
             return
         self._compared.add(name)
         if node["compare"] == "raises":
@@ -183,7 +181,7 @@ class CaseReader:
             return f"FIELD_DIFFERS {self._differs[0]}"
         present_inputs = [
             name
-            for name, node in _leaves(self._spec["fields"])
+            for name, node in CaseReader._leaves(self._spec["fields"])
             if node["role"] == "input" and self._lookup(name)[0]
         ]
         for name in present_inputs + list(self._spec["uses"]):
@@ -191,10 +189,10 @@ class CaseReader:
                 return f"FIELD_UNKNOWN {name}"
         expected = [
             name
-            for name, node in _leaves(self._spec["fields"])
+            for name, node in CaseReader._leaves(self._spec["fields"])
             if node["role"] == "expected" and self._lookup(name)[0]
         ]
-        expected += [name for name, node in self._spec.get("outcomes", {}).items() if _applies(node)]
+        expected += [name for name, node in self._spec.get("outcomes", {}).items() if CaseReader._applies(node)]
         for name in expected:
             if name not in self._compared:
                 return f"FIELD_UNCOMPARED {name}"
