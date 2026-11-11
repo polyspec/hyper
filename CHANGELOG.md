@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- The recipe check takes the visibility of a Python constructor from the spec, because `__init__` has no form with `_`, and fails a call of a class whose constructor the spec declares private in another file of the package; it failed every private Python constructor as public. The Python reader records the calls of a name for this check, and the test types of the readers name the parameters of a member (HYR-8) (H28.11).
+
 - The Python reader of the recipe check counts a variadic parameter (`*name`, `**name`) as an input, as the PHP and Node readers count `...$name` and `...name`; it left it out, so that a method with a variadic parameter differed from its inputs in the spec (HYR-8) (H28.11).
 
 - The Python reader of the recipe check lists a class-level annotated attribute whose name starts with one `_` as an internal property, as HYR-8 states; it dropped every such attribute, so that an internal property of a public Python module could not be listed. An attribute whose name starts with `__` is private to its class and is not a member, and the Python `Container` keeps its factories and instances in such attributes (HYR-8) (H28.11).

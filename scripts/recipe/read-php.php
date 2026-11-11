@@ -270,6 +270,8 @@ $out = [
     'uses' => [],
     'tests' => [],
     'dynamicTests' => [],
+    // A private constructor is private by the language in PHP, so the reader records no calls (HYR-8).
+    'calls' => [],
 ];
 
 foreach ($sourceFiles as $file) {

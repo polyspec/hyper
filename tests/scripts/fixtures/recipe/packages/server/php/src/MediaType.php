@@ -9,6 +9,10 @@ namespace Polyspec\Hyper;
  */
 final class MediaType
 {
+    private function __construct()
+    {
+    }
+
     public function essence(): string
     {
         return 'text/html';

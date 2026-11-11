@@ -114,8 +114,17 @@ function checkMember(
   if (found.signature !== mn.signature || found.kind !== m.kind || found.parameters.length !== m.inputs.length) {
     add('MEMBER_SIGNATURE', `${lang} member ${m.id} is "${found.signature}", spec says "${mn.signature}"`);
   }
-  if (found.visibility !== expectedVisibility(lang, m.visibility)) {
+  // HYR-8: `__init__` has no form with `_`, so the spec decides the visibility of a Python constructor; a private one is
+  // checked by its calls in the other files of the package.
+  const pythonConstructor = lang === 'python' && m.kind === 'constructor' && found.visibility === 'public';
+  if (!pythonConstructor && found.visibility !== expectedVisibility(lang, m.visibility)) {
     add('MEMBER_VISIBILITY', `${lang} member ${m.id} is ${found.visibility}, spec says ${m.visibility}`);
+  }
+  if (pythonConstructor && m.visibility === 'private') {
+    const unit = found.symbol.slice(found.symbol.indexOf('::') + 2).split('.')[0] ?? '';
+    for (const call of ctx.sources.python.calls.filter((c) => c.name === unit && c.file !== found.file)) {
+      add('PRIVATE_USED', `python ${call.file} calls the private constructor of ${unit}`);
+    }
   }
   const native = expectedNative(lang, m, mn.symbol.split('::')[0]);
   const name = symbolName(mn.symbol);

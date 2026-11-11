@@ -4,7 +4,7 @@
   "title": "Output of a recipe reader (HYR-8): what a language's sources and tests declare",
   "type": "object",
   "additionalProperties": false,
-  "required": ["language", "files", "units", "types", "members", "constants", "exports", "uses", "tests", "dynamicTests"],
+  "required": ["language", "files", "units", "types", "members", "constants", "exports", "uses", "calls", "tests", "dynamicTests"],
   "properties": {
     "language": { "enum": ["php", "node", "python"] },
     "files": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
@@ -14,6 +14,7 @@
     "constants": { "type": "array", "items": { "$ref": "#/$defs/constant" } },
     "exports": { "type": "array", "items": { "$ref": "#/$defs/name" } },
     "uses": { "type": "array", "items": { "$ref": "#/$defs/name" } },
+    "calls": { "type": "array", "items": { "$ref": "#/$defs/name" } },
     "tests": { "type": "array", "items": { "$ref": "#/$defs/name" } },
     "dynamicTests": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["file", "line"], "properties": { "file": { "type": "string", "minLength": 1 }, "line": { "type": "integer", "minimum": 1 } } } }
   },

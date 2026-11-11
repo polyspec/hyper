@@ -6,6 +6,8 @@
 
 ## Unreleased
 
+- recipe check는 `__init__`에 `_`를 붙인 형태가 없으므로 Python constructor의 visibility를 spec에서 가져오고, spec이 private으로 선언한 constructor의 class를 package의 다른 파일이 호출하면 실패합니다. 이전에는 모든 private Python constructor를 public이라며 실패시켰습니다. Python reader는 이 검사를 위해 이름의 호출을 기록하고, reader의 test 타입은 member의 parameter를 명시합니다(HYR-8) (H28.11).
+
 - recipe check의 Python reader는 PHP와 Node reader가 `...$name`과 `...name`을 세듯 가변 인자(`*name`, `**name`)를 입력으로 셉니다. 이전에는 빼서 가변 인자를 가진 method가 spec의 입력과 달랐습니다(HYR-8) (H28.11).
 
 - recipe check의 Python reader는 이름이 `_` 하나로 시작하는 class 수준 annotated attribute를 HYR-8대로 internal property로 나열합니다. 이전에는 그런 attribute를 모두 버려서 공개 Python module의 internal property를 나열할 수 없었습니다. 이름이 `__`로 시작하는 attribute는 그 class의 private이고 member가 아니며, Python `Container`는 factory와 instance를 그런 attribute에 둡니다(HYR-8) (H28.11).

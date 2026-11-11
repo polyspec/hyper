@@ -175,6 +175,9 @@ def read_module(root: Path, rel: str, out: dict) -> None:
     for node in ast.walk(tree):
         if isinstance(node, ast.Attribute):
             out["uses"].append({"file": rel, "name": node.attr})
+        # HYR-8: a call of a name, such as a class that a file constructs, for the check of a private constructor.
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
+            out["calls"].append({"file": rel, "name": node.func.id})
         if isinstance(node, ast.ImportFrom) and node.module != "__future__":
             for alias in node.names:
                 out["uses"] += [{"file": rel, "name": n} for n in (alias.name, alias.asname) if n]
@@ -223,6 +226,7 @@ def main() -> None:
         "constants": [],
         "exports": [],
         "uses": [],
+        "calls": [],
         "tests": [],
         "dynamicTests": [],
     }

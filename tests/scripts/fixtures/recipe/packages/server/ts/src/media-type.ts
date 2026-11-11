@@ -4,6 +4,8 @@
 export type Essence = string;
 
 export class MediaType {
+  private constructor() {}
+
   essence(): string {
     return 'text/html';
   }

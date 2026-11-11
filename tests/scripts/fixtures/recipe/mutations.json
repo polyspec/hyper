@@ -101,6 +101,14 @@
     "code": "PRIVATE_USED"
   },
   {
+    "id": "private-constructor-called-elsewhere",
+    "file": "packages/server/python/src/polyspec/hyper/__init__.py",
+    "from": "__all__ = [\"MediaType\"]",
+    "to": "VALUE = MediaType()\n\n__all__ = [\"MediaType\"]",
+    "code": "PRIVATE_USED",
+    "detail": "calls the private constructor of MediaType"
+  },
+  {
     "id": "test-added-without-spec",
     "file": "packages/server/ts/tests/extra.test.mts",
     "create": "import { test } from 'node:test';\n\ntest('extra', () => {});\n",

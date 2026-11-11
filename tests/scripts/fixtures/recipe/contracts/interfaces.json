@@ -194,6 +194,26 @@
           },
           "members": [
             {
+              "id": "media-type.constructor",
+              "kind": "constructor",
+              "visibility": "private",
+              "inputs": [],
+              "output": "media-type",
+              "errors": [],
+              "state": "Makes a media type.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/MediaType.php::Polyspec\\Hyper\\MediaType::__construct",
+                  "signature": "private function __construct()"
+                },
+                "node": { "symbol": "packages/server/ts/src/media-type.ts::MediaType.constructor", "signature": "private constructor()" },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/media_type.py::MediaType.__init__",
+                  "signature": "def __init__(self) -> None"
+                }
+              }
+            },
+            {
               "id": "media-type.essence",
               "kind": "method",
               "visibility": "public",
