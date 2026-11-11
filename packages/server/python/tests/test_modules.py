@@ -3,7 +3,6 @@
 import unittest
 from pathlib import Path
 
-from polyspec.hyper.reply import Reply
 from polyspec.hyper.request import Request
 from polyspec.hyper._session import Flash, Session
 from polyspec.hyper.session import ArraySession
@@ -125,84 +124,6 @@ class RequestValuesTest(unittest.TestCase):
         request = Request("GET", "/x")._with_selection({"host": "a.test"})
         self.assertEqual({"host": "a.test"}, request.selection())
         self.assertIsNone(Request("GET", "/x").selection())
-
-
-class ReplyTest(unittest.TestCase):
-    def test_a_cookie_name_or_value_outside_the_rules_fails(self) -> None:
-        reply = Reply()
-        with self.assertRaises(ValueError):
-            reply.cookie("X-Session", "v")
-        with self.assertRaises(ValueError):
-            reply.cookie("session", "a b")
-        reply.cookie("session", "v", 60)
-        self.assertEqual(
-            ["session=v; Path=/; HttpOnly; SameSite=Lax; Max-Age=60"],
-            reply._cookie_headers(False),
-        )
-        self.assertEqual(
-            ["session=v; Path=/; HttpOnly; SameSite=Lax; Secure; Max-Age=60"],
-            reply._cookie_headers(True),
-        )
-
-    def test_a_removed_cookie_has_an_empty_value_and_max_age_zero(self) -> None:
-        reply = Reply().remove_cookie("session")
-        self.assertEqual(
-            ["session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0"],
-            reply._cookie_headers(False),
-        )
-
-    def test_a_cache_control_that_a_shared_cache_may_store_fails(self) -> None:
-        reply = Reply()
-        with self.assertRaises(ValueError):
-            reply.cache_control("public")
-        with self.assertRaises(ValueError):
-            reply.cache_control("max-age=60")
-        with self.assertRaises(ValueError):
-            reply.cache_control("private, s-maxage=60")
-        reply.cache_control("private, max-age=60")
-        self.assertEqual("private, max-age=60", reply._cache_control_value())
-
-    def test_a_referrer_policy_is_a_token_of_the_specification(self) -> None:
-        for value in [
-            "no-referrer",
-            "no-referrer-when-downgrade",
-            "origin",
-            "origin-when-cross-origin",
-            "same-origin",
-            "strict-origin",
-            "strict-origin-when-cross-origin",
-            "unsafe-url",
-        ]:
-            self.assertEqual(
-                value, Reply().referrer_policy(value)._referrer_policy_value(), value
-            )
-        self.assertIsNone(Reply()._referrer_policy_value())
-        for value in [
-            "",
-            "none",
-            "NO-REFERRER",
-            "unsafe",
-            "origin, same-origin",
-            "no-referrer ",
-        ]:
-            with self.assertRaises(ValueError, msg=value):
-                Reply().referrer_policy(value)
-
-    def test_the_page_status_of_a_reply_is_403(self) -> None:
-        reply = Reply()
-        with self.assertRaises(ValueError):
-            reply.status(401)
-        reply.status(403)
-        self.assertEqual(403, reply._status_value())
-
-    def test_a_renewal_is_taken_once(self) -> None:
-        reply = Reply().renew_session()
-        self.assertTrue(reply._take_renewal())
-        self.assertFalse(reply._take_renewal())
-
-    def test_a_note_of_the_same_name_replaces_its_value(self) -> None:
-        reply = Reply().note("a", 1).note("b", 2).note("a", 3)
-        self.assertEqual({"a": 3, "b": 2}, reply.notes())
 
 
 class SessionTest(unittest.TestCase):

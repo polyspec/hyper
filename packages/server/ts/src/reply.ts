@@ -18,6 +18,8 @@ export class Reply {
   // Records a value of the request for the response hook; a later note of the same name replaces the value and keeps
   // its position. The notes are not part of the response (HY-60).
   note(name: string, value: unknown): this {
+    // HY-60.14: a JavaScript caller may pass a name that is not a string.
+    if (typeof name !== 'string') throw new TypeError('a note name is not a string (HY-60)');
     this.noted.set(name, value);
     return this;
   }
@@ -27,12 +29,17 @@ export class Reply {
     return new Map(this.noted);
   }
 
-  // Adds a cookie; a name or value outside HY-52 fails.
+  // Adds a cookie; a name, value or Max-Age of another type (HY-52.11) or outside HY-52 (HY-52.12) fails. The types are
+  // checked before the values, in the order of the parameters.
   cookie(name: string, value: string, maxAge: number | null = null): this {
-    if (!/^[a-z][a-z0-9_-]*$/.test(name) || name.startsWith('hy-')) throw new Error(`hyper: cookie name ${name} is not allowed`);
-    if (!/^[A-Za-z0-9._~-]+$/.test(value)) throw new Error(`hyper: cookie value of ${name} has a character that is not allowed`);
-    if (maxAge !== null && (!Number.isSafeInteger(maxAge) || maxAge < 0)) throw new Error(`hyper: cookie ${name} has a Max-Age that is not a non-negative integer`);
-    this.cookies.push([name, value, maxAge]);
+    if (typeof name !== 'string') throw new TypeError('a cookie name is not a string (HY-52)');
+    if (typeof value !== 'string') throw new TypeError('a cookie value is not a string (HY-52)');
+    const age = maxAge === null ? null : Reply.integer(maxAge);
+    if (maxAge !== null && age === null) throw new TypeError('a Max-Age is not an integer within ±(2^53 − 1) (HY-52)');
+    if (!/^[a-z][a-z0-9_-]*$/.test(name) || name.startsWith('hy-')) throw new RangeError(`cookie name ${name} is not allowed (HY-52)`);
+    if (!/^[A-Za-z0-9._~-]+$/.test(value)) throw new RangeError(`cookie value of ${name} has a character that is not allowed (HY-52)`);
+    if (age !== null && age < 0) throw new RangeError(`cookie ${name} has a negative Max-Age (HY-52)`);
+    this.cookies.push([name, value, age]);
     return this;
   }
 
@@ -46,10 +53,11 @@ export class Reply {
   // Sets the Cache-Control of a page response with status 200. A page carries the session token of its visitor, so the
   // value keeps it out of shared caches: it has `private` or `no-store` and neither `public` nor `s-maxage` (HY-52).
   cacheControl(value: string): this {
-    if (!/^[\x20-\x7e]+$/.test(value)) throw new Error('hyper: Cache-Control has a character that is not allowed');
+    if (typeof value !== 'string') throw new TypeError('a Cache-Control is not a string (HY-52)');
+    if (!/^[\x20-\x7e]+$/.test(value)) throw new RangeError('Cache-Control has a character that is not allowed (HY-52)');
     const directives = value.split(',').map((part) => (part.includes('=') ? part.slice(0, part.indexOf('=')) : part).trim().toLowerCase());
     if (!directives.some((name) => name === 'private' || name === 'no-store') || directives.some((name) => name === 'public' || name === 's-maxage')) {
-      throw new Error(`hyper: Cache-Control ${value} lets a shared cache store the page; it needs private or no-store and neither public nor s-maxage`);
+      throw new RangeError(`Cache-Control ${value} lets a shared cache store the page; it needs private or no-store and neither public nor s-maxage (HY-52)`);
     }
     this.cacheControlText = value;
     return this;
@@ -77,7 +85,8 @@ export class Reply {
   // Sets the Referrer-Policy of the page and JSON answers of the request, whatever their status; a value that is not a
   // token of the Referrer-Policy specification fails (HY-103).
   referrerPolicy(value: string): this {
-    if (!REFERRER_POLICIES.includes(value)) throw new Error(`hyper: Referrer-Policy ${value} is not a token of the Referrer-Policy specification`);
+    if (typeof value !== 'string') throw new TypeError('a Referrer-Policy is not a string (HY-103)');
+    if (!REFERRER_POLICIES.includes(value)) throw new RangeError(`Referrer-Policy ${value} is not a token of the Referrer-Policy specification (HY-103)`);
     this.referrerPolicyText = value;
     return this;
   }
@@ -95,8 +104,10 @@ export class Reply {
   // Gives a page response that has status 200 otherwise the status 403, for a page that shows other data in place of
   // the data that the request may not see; another status fails (HY-69).
   status(status: number): this {
-    if (status !== 403) throw new Error(`hyper: page status ${status} of a reply is not 403`);
-    this.pageStatus = status;
+    const code = Reply.integer(status);
+    if (code === null) throw new TypeError('a page status of a reply is not an integer within ±(2^53 − 1) (HY-69)');
+    if (code !== 403) throw new RangeError(`page status ${code} of a reply is not 403 (HY-69)`);
+    this.pageStatus = code;
     return this;
   }
 
@@ -115,6 +126,14 @@ export class Reply {
   /** @internal */
   embedsData(): boolean {
     return this.embed;
+  }
+
+  // Returns an integer of the data model as a number, or null for another value: a number or a bigint within
+  // ±(2^53 − 1) without a fraction, as PHP and Python take an integer or a float with an integer value (HY-44).
+  private static integer(value: unknown): number | null {
+    if (typeof value === 'bigint') return value >= -9007199254740991n && value <= 9007199254740991n ? Number(value) : null;
+    // `+ 0` makes -0 the integer 0, which PHP and Python have.
+    return typeof value === 'number' && Number.isSafeInteger(value) ? value + 0 : null;
   }
 
   /** @internal */

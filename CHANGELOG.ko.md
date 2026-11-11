@@ -6,6 +6,8 @@
 
 ## Unreleased
 
+- 요청의 reply는 세 server에서 같게 실패합니다. 문자열이 아닌 cookie 이름이나 값, `Cache-Control`, `Referrer-Policy`, note 이름, 그리고 data model의 정수가 아닌 `Max-Age`나 page 상태는 `TypeError`와 하나의 메시지로 실패하고(HY-52.11, HY-60.28, HY-69.6, HY-103.8), 규칙 밖의 값은 HY-46.2의 class와 하나의 메시지로 실패합니다(HY-52.12). 이전에는 PHP가 strict types가 없는 호출자의 정수를 변환했고, Node는 숫자 5를 cookie 값 `5`로 받았으며, Python은 자체 `TypeError`를 냈고, Node는 접두사 `hyper:`를 붙인 `Error`를 썼습니다. `Max-Age`와 상태는 Node처럼 `60.0` 같은 정수 값 float를 그 정수로 받습니다(HY-52.10). native reply test 대신 `contracts/reply.json`의 case 85개를 세 runner가 통과하며, Python `Reply`는 PHP와 Node처럼 constructor 없이 private dataclass field에 상태를 둡니다(H28.11).
+
 - `contracts/interfaces.json`은 HY-25.6의 `TypeError`와 함께 PHP signature `flash(mixed $name, mixed $value)`와 `changed(mixed ...$topics)`를 명시하고, PHP `Result::flash`는 private helper 대신 직접 값을 검사하므로, `make recipe-check`는 result concern의 실패를 보고하지 않습니다(H28.11).
 
 - private Python constructor 검사는 상대 import처럼 `from polyspec.hyper import MediaType` 같은 package의 절대 import를 거친 호출도 셉니다(HYR-8). H28.7이 representations와 client case를 추가해야 runner가 통과하므로, task H28.11-1은 다시 진행 중입니다(H28.11).

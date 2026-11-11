@@ -36,8 +36,12 @@ final class Reply
      * Records a value of the request for the response hook; a later note of the same name replaces the value and
      * keeps its position. The notes are not part of the response (HY-60).
      */
-    public function note(string $name, mixed $value): self
+    public function note(mixed $name, mixed $value): self
     {
+        // HY-60.14: a declared type would convert an integer name for a caller without strict types.
+        if (!is_string($name)) {
+            throw new \TypeError('a note name is not a string (HY-60)');
+        }
         $this->notes[$name] = $value;
 
         return $this;
@@ -53,28 +57,44 @@ final class Reply
         return $this->notes;
     }
 
-    /** Adds a cookie; a name or value outside HY-52 fails. */
-    public function cookie(string $name, string $value, ?int $maxAge = null): self
+    /**
+     * Adds a cookie; a name, value or Max-Age of another type (HY-52.11) or outside HY-52 (HY-52.12) fails. The types
+     * are checked before the values, in the order of the parameters; a declared type would convert them for a caller
+     * without strict types.
+     */
+    public function cookie(mixed $name, mixed $value, mixed $maxAge = null): self
     {
+        if (!is_string($name)) {
+            throw new \TypeError('a cookie name is not a string (HY-52)');
+        }
+        if (!is_string($value)) {
+            throw new \TypeError('a cookie value is not a string (HY-52)');
+        }
+        $age = $maxAge === null ? null : self::integer($maxAge);
+        if ($maxAge !== null && $age === null) {
+            throw new \TypeError('a Max-Age is not an integer within ±(2^53 − 1) (HY-52)');
+        }
         if (preg_match('/^[a-z][a-z0-9_-]*$/D', $name) !== 1 || str_starts_with($name, 'hy-')) {
-            throw new \InvalidArgumentException("cookie name {$name} is not allowed");
+            throw new \InvalidArgumentException("cookie name {$name} is not allowed (HY-52)");
         }
         if (preg_match('/^[A-Za-z0-9._~-]+$/D', $value) !== 1) {
-            throw new \InvalidArgumentException("cookie value of {$name} has a character that is not allowed");
+            throw new \InvalidArgumentException("cookie value of {$name} has a character that is not allowed (HY-52)");
         }
-        if ($maxAge !== null && $maxAge < 0) {
-            throw new \InvalidArgumentException("cookie {$name} has a negative Max-Age");
+        if ($age !== null && $age < 0) {
+            throw new \InvalidArgumentException("cookie {$name} has a negative Max-Age (HY-52)");
         }
-        $this->cookies[] = [$name, $value, $maxAge];
+        $this->cookies[] = [$name, $value, $age];
 
         return $this;
     }
 
     /** Removes a cookie with Max-Age=0. */
-    public function removeCookie(string $name): self
+    public function removeCookie(mixed $name): self
     {
         $this->cookie($name, 'x');
-        $this->cookies[count($this->cookies) - 1] = [$name, '', 0];
+        // The cookie that `cookie` checked and added holds the name as a string.
+        $last = count($this->cookies) - 1;
+        $this->cookies[$last] = [$this->cookies[$last][0], '', 0];
 
         return $this;
     }
@@ -84,10 +104,13 @@ final class Reply
      * the value keeps it out of shared caches: it has `private` or `no-store` and neither `public` nor `s-maxage`
      * (HY-52).
      */
-    public function cacheControl(string $value): self
+    public function cacheControl(mixed $value): self
     {
+        if (!is_string($value)) {
+            throw new \TypeError('a Cache-Control is not a string (HY-52)');
+        }
         if (preg_match('/^[\x20-\x7e]+$/D', $value) !== 1) {
-            throw new \InvalidArgumentException('Cache-Control has a character that is not allowed');
+            throw new \InvalidArgumentException('Cache-Control has a character that is not allowed (HY-52)');
         }
         $directives = array_map(
             fn (string $part): string => strtolower(trim(explode('=', $part, 2)[0])),
@@ -99,7 +122,7 @@ final class Reply
         ) {
             throw new \InvalidArgumentException(
                 "Cache-Control {$value} lets a shared cache store the page; "
-                . 'it needs private or no-store and neither public nor s-maxage',
+                . 'it needs private or no-store and neither public nor s-maxage (HY-52)',
             );
         }
         $this->cacheControl = $value;
@@ -138,11 +161,14 @@ final class Reply
      * Sets the Referrer-Policy of the page and JSON answers of the request, whatever their status; a value that is not
      * a token of the Referrer-Policy specification fails (HY-103).
      */
-    public function referrerPolicy(string $value): self
+    public function referrerPolicy(mixed $value): self
     {
+        if (!is_string($value)) {
+            throw new \TypeError('a Referrer-Policy is not a string (HY-103)');
+        }
         if (!in_array($value, self::REFERRER_POLICIES, true)) {
             throw new \InvalidArgumentException(
-                "Referrer-Policy {$value} is not a token of the Referrer-Policy specification",
+                "Referrer-Policy {$value} is not a token of the Referrer-Policy specification (HY-103)",
             );
         }
         $this->referrerPolicy = $value;
@@ -170,12 +196,16 @@ final class Reply
      * Gives a page response that has status 200 otherwise the status 403, for a page that shows other data in place
      * of the data that the request may not see; another status fails (HY-69).
      */
-    public function status(int $status): self
+    public function status(mixed $status): self
     {
-        if ($status !== 403) {
-            throw new \InvalidArgumentException("page status {$status} of a reply is not 403");
+        $code = self::integer($status);
+        if ($code === null) {
+            throw new \TypeError('a page status of a reply is not an integer within ±(2^53 − 1) (HY-69)');
         }
-        $this->status = $status;
+        if ($code !== 403) {
+            throw new \InvalidArgumentException("page status {$code} of a reply is not 403 (HY-69)");
+        }
+        $this->status = $code;
 
         return $this;
     }
@@ -216,5 +246,21 @@ final class Reply
                 . ($secure ? '; Secure' : '') . ($cookie[2] === null ? '' : "; Max-Age={$cookie[2]}"),
             $this->cookies,
         );
+    }
+
+    /**
+     * Returns an integer of the data model, or null for another value: an int or a float within ±(2^53 − 1) without a
+     * fraction, as Node takes a number (HY-44).
+     */
+    private static function integer(mixed $value): ?int
+    {
+        if (is_int($value)) {
+            return $value >= -9007199254740991 && $value <= 9007199254740991 ? $value : null;
+        }
+        if (is_float($value) && is_finite($value) && floor($value) === $value && abs($value) <= 9007199254740991) {
+            return (int) $value;
+        }
+
+        return null;
     }
 }

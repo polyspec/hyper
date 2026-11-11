@@ -1324,11 +1324,15 @@
       "id": "reply",
       "rules": [
         "HY-52",
+        "HY-60",
         "HY-69",
+        "HY-72",
         "HY-92",
         "HY-103"
       ],
-      "cases": [],
+      "cases": [
+        "contracts/reply.json"
+      ],
       "units": [
         {
           "id": "reply",
@@ -1349,7 +1353,418 @@
               "internal": false
             }
           },
-          "members": []
+          "members": [
+            {
+              "id": "reply.note",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [
+                "string",
+                "value"
+              ],
+              "output": "reply",
+              "errors": [],
+              "state": "Records a value under a name for the response hook; a later note of the same name replaces the value at its place, and a name that is not a string fails with TypeError (HY-60).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Reply.php::Polyspec\\Hyper\\Reply::note",
+                  "signature": "public function note(mixed $name, mixed $value): Polyspec\\Hyper\\Reply"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/reply.ts::Reply.note",
+                  "signature": "note(name: string, value: unknown): this"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/reply.py::Reply.note",
+                  "signature": "def note(self, name: str, value: object) -> 'Reply'"
+                }
+              }
+            },
+            {
+              "id": "reply.notes",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [],
+              "output": "map<value>",
+              "errors": [],
+              "state": "Returns the notes in the order of their first names (HY-60).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Reply.php::Polyspec\\Hyper\\Reply::notes",
+                  "signature": "public function notes(): array"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/reply.ts::Reply.notes",
+                  "signature": "notes(): ReadonlyMap<string, unknown>"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/reply.py::Reply.notes",
+                  "signature": "def notes(self) -> dict[str, object]"
+                }
+              }
+            },
+            {
+              "id": "reply.cookie",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [
+                "string",
+                "string",
+                "optional<number>"
+              ],
+              "output": "reply",
+              "errors": [],
+              "state": "Adds a cookie with an optional Max-Age, an integer of the data model that is not negative; a name, value or Max-Age of another type fails with TypeError and one outside HY-52 with the class of HY-46.2 (HY-52).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Reply.php::Polyspec\\Hyper\\Reply::cookie",
+                  "signature": "public function cookie(mixed $name, mixed $value, mixed $maxAge): Polyspec\\Hyper\\Reply"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/reply.ts::Reply.cookie",
+                  "signature": "cookie(name: string, value: string, maxAge: number | null = null): this"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/reply.py::Reply.cookie",
+                  "signature": "def cookie(self, name: str, value: str, max_age: int | None=None) -> 'Reply'"
+                }
+              }
+            },
+            {
+              "id": "reply.removeCookie",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [
+                "string"
+              ],
+              "output": "reply",
+              "errors": [],
+              "state": "Removes a cookie with an empty value and Max-Age=0; a name that cookie refuses fails as it does (HY-52).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Reply.php::Polyspec\\Hyper\\Reply::removeCookie",
+                  "signature": "public function removeCookie(mixed $name): Polyspec\\Hyper\\Reply"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/reply.ts::Reply.removeCookie",
+                  "signature": "removeCookie(name: string): this"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/reply.py::Reply.remove_cookie",
+                  "signature": "def remove_cookie(self, name: str) -> 'Reply'"
+                }
+              }
+            },
+            {
+              "id": "reply.cacheControl",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [
+                "string"
+              ],
+              "output": "reply",
+              "errors": [],
+              "state": "Sets the Cache-Control of a page response with status 200; a value that is not a string fails with TypeError, and one that lets a shared cache store the page with the class of HY-46.2 (HY-52).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Reply.php::Polyspec\\Hyper\\Reply::cacheControl",
+                  "signature": "public function cacheControl(mixed $value): Polyspec\\Hyper\\Reply"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/reply.ts::Reply.cacheControl",
+                  "signature": "cacheControl(value: string): this"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/reply.py::Reply.cache_control",
+                  "signature": "def cache_control(self, value: str) -> 'Reply'"
+                }
+              }
+            },
+            {
+              "id": "reply.renewSession",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [],
+              "output": "reply",
+              "errors": [],
+              "state": "Renews the session after the action of the request returns (HY-72).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Reply.php::Polyspec\\Hyper\\Reply::renewSession",
+                  "signature": "public function renewSession(): Polyspec\\Hyper\\Reply"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/reply.ts::Reply.renewSession",
+                  "signature": "renewSession(): this"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/reply.py::Reply.renew_session",
+                  "signature": "def renew_session(self) -> 'Reply'"
+                }
+              }
+            },
+            {
+              "id": "reply.takeRenewal",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "boolean",
+              "errors": [],
+              "state": "Returns whether a renewal was asked since the last call, and clears it (HY-72).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Reply.php::Polyspec\\Hyper\\Reply::takeRenewal",
+                  "signature": "public function takeRenewal(): bool"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/reply.ts::Reply.takeRenewal",
+                  "signature": "takeRenewal(): boolean"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/reply.py::Reply._take_renewal",
+                  "signature": "def _take_renewal(self) -> bool"
+                }
+              }
+            },
+            {
+              "id": "reply.cacheControlValue",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "optional<string>",
+              "errors": [],
+              "state": "Returns the Cache-Control that the reply sets, or null (HY-52).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Reply.php::Polyspec\\Hyper\\Reply::cacheControlValue",
+                  "signature": "public function cacheControlValue(): ?string"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/reply.ts::Reply.cacheControlValue",
+                  "signature": "cacheControlValue(): string | null"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/reply.py::Reply._cache_control_value",
+                  "signature": "def _cache_control_value(self) -> str | None"
+                }
+              }
+            },
+            {
+              "id": "reply.referrerPolicy",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [
+                "string"
+              ],
+              "output": "reply",
+              "errors": [],
+              "state": "Sets the Referrer-Policy of the page and JSON answers of the request; a value that is not a string fails with TypeError, and one that is not a token of the specification with the class of HY-46.2 (HY-103).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Reply.php::Polyspec\\Hyper\\Reply::referrerPolicy",
+                  "signature": "public function referrerPolicy(mixed $value): Polyspec\\Hyper\\Reply"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/reply.ts::Reply.referrerPolicy",
+                  "signature": "referrerPolicy(value: string): this"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/reply.py::Reply.referrer_policy",
+                  "signature": "def referrer_policy(self, value: str) -> 'Reply'"
+                }
+              }
+            },
+            {
+              "id": "reply.referrerPolicyValue",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "optional<string>",
+              "errors": [],
+              "state": "Returns the Referrer-Policy that the reply sets, or null (HY-103).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Reply.php::Polyspec\\Hyper\\Reply::referrerPolicyValue",
+                  "signature": "public function referrerPolicyValue(): ?string"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/reply.ts::Reply.referrerPolicyValue",
+                  "signature": "referrerPolicyValue(): string | null"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/reply.py::Reply._referrer_policy_value",
+                  "signature": "def _referrer_policy_value(self) -> str | None"
+                }
+              }
+            },
+            {
+              "id": "reply.referrerPolicyHeaders",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "map<string>",
+              "errors": [],
+              "state": "Returns the header Referrer-Policy with the value that the reply sets, or no header (HY-103).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Reply.php::Polyspec\\Hyper\\Reply::referrerPolicyHeaders",
+                  "signature": "public function referrerPolicyHeaders(): array"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/reply.ts::Reply.referrerPolicyHeaders",
+                  "signature": "referrerPolicyHeaders(): Record<string, string>"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/reply.py::Reply._referrer_policy_headers",
+                  "signature": "def _referrer_policy_headers(self) -> dict[str, str]"
+                }
+              }
+            },
+            {
+              "id": "reply.status",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [
+                "number"
+              ],
+              "output": "reply",
+              "errors": [],
+              "state": "Gives a page with status 200 the status 403; a value that is not an integer of the data model fails with TypeError, and another integer with the class of HY-46.2 (HY-69).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Reply.php::Polyspec\\Hyper\\Reply::status",
+                  "signature": "public function status(mixed $status): Polyspec\\Hyper\\Reply"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/reply.ts::Reply.status",
+                  "signature": "status(status: number): this"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/reply.py::Reply.status",
+                  "signature": "def status(self, status: int) -> 'Reply'"
+                }
+              }
+            },
+            {
+              "id": "reply.statusValue",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "optional<number>",
+              "errors": [],
+              "state": "Returns the page status that the reply sets, or null (HY-69).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Reply.php::Polyspec\\Hyper\\Reply::statusValue",
+                  "signature": "public function statusValue(): ?int"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/reply.ts::Reply.statusValue",
+                  "signature": "statusValue(): number | null"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/reply.py::Reply._status_value",
+                  "signature": "def _status_value(self) -> int | None"
+                }
+              }
+            },
+            {
+              "id": "reply.embedData",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [],
+              "output": "reply",
+              "errors": [],
+              "state": "Makes the HTML document of the response embed its data (HY-92).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Reply.php::Polyspec\\Hyper\\Reply::embedData",
+                  "signature": "public function embedData(): Polyspec\\Hyper\\Reply"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/reply.ts::Reply.embedData",
+                  "signature": "embedData(): this"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/reply.py::Reply.embed_data",
+                  "signature": "def embed_data(self) -> 'Reply'"
+                }
+              }
+            },
+            {
+              "id": "reply.embedsData",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "boolean",
+              "errors": [],
+              "state": "Returns whether the HTML document of the response embeds its data (HY-92).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Reply.php::Polyspec\\Hyper\\Reply::embedsData",
+                  "signature": "public function embedsData(): bool"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/reply.ts::Reply.embedsData",
+                  "signature": "embedsData(): boolean"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/reply.py::Reply._embeds_data",
+                  "signature": "def _embeds_data(self) -> bool"
+                }
+              }
+            },
+            {
+              "id": "reply.cookieHeaders",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "boolean"
+              ],
+              "output": "list<string>",
+              "errors": [],
+              "state": "Returns the Set-Cookie values of the cookies in their order, with Secure on HTTPS (HY-52).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Reply.php::Polyspec\\Hyper\\Reply::cookieHeaders",
+                  "signature": "public function cookieHeaders(bool $secure): array"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/reply.ts::Reply.cookieHeaders",
+                  "signature": "cookieHeaders(secure: boolean): string[]"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/reply.py::Reply._cookie_headers",
+                  "signature": "def _cookie_headers(self, secure: bool) -> list[str]"
+                }
+              }
+            },
+            {
+              "id": "reply.integer",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "value"
+              ],
+              "output": "optional<number>",
+              "errors": [],
+              "state": "Returns an integer of the data model, a number within ±(2^53 − 1) without a fraction, or null for another value; a bool is not an integer (HY-52).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Reply.php::Polyspec\\Hyper\\Reply::integer",
+                  "signature": "private static function integer(mixed $value): ?int"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/reply.ts::Reply.integer",
+                  "signature": "private static integer(value: unknown): number | null"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/reply.py::Reply._integer",
+                  "signature": "def _integer(value: object) -> int | None"
+                }
+              }
+            }
+          ]
         }
       ]
     },
@@ -5858,6 +6273,237 @@
               "compare": "exact",
               "sentence": "HY-25.6",
               "state": "`error` is the message of the `TypeError` of the method `call` of a redirect, `flash` with the value null under the name or `changed` with the topic, for the JSON text `argument` as a handler gives it, or null when the method takes it."
+            }
+          }
+        }
+      }
+    },
+    "reply.json": {
+      "fixtures": {},
+      "sections": {
+        "cookies": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "calls": {
+              "role": "input"
+            },
+            "secure": {
+              "role": "input",
+              "optional": true
+            },
+            "headers": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-52.3",
+              "state": "`headers` are the `Set-Cookie` values of a reply after `calls`, each pair of a method of the reply and the JSON texts of its arguments as a handler gives them, in their order, with `Secure` when `secure` is true."
+            },
+            "error": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-52.12",
+              "state": "`error` is the message of the error with which a call of `calls` fails, after which no later call runs, or null when every call returns."
+            },
+            "class": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-52.11",
+              "state": "`class` is `type` for a `TypeError`, `value` for an error of the classes of HY-46.2, or null when every call returns."
+            }
+          }
+        },
+        "cacheControl": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "calls": {
+              "role": "input"
+            },
+            "value": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-52.5",
+              "state": "`value` is the `Cache-Control` of a reply after `calls`, or null when no call set it."
+            },
+            "error": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-52.12",
+              "state": "`error` is the message of the error with which a call of `calls` fails, after which no later call runs, or null when every call returns."
+            },
+            "class": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-52.11",
+              "state": "`class` is `type` for a `TypeError`, `value` for an error of the classes of HY-46.2, or null when every call returns."
+            }
+          }
+        },
+        "referrerPolicy": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "calls": {
+              "role": "input"
+            },
+            "value": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-103.4",
+              "state": "`value` is the `Referrer-Policy` of a reply after `calls`, or null when no call set it."
+            },
+            "headers": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-103.5",
+              "state": "`headers` are the headers that the reply gives a page or JSON answer: `Referrer-Policy` with that value, or none."
+            },
+            "error": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-103.8",
+              "state": "`error` is the message of the error with which a call of `calls` fails, after which no later call runs, or null when every call returns."
+            },
+            "class": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-103.8",
+              "state": "`class` is `type` for a `TypeError`, `value` for an error of the classes of HY-46.2, or null when every call returns."
+            }
+          }
+        },
+        "status": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "calls": {
+              "role": "input"
+            },
+            "value": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-69.1",
+              "state": "`value` is the page status of a reply after `calls`, or null when no call set it."
+            },
+            "error": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-69.6",
+              "state": "`error` is the message of the error with which a call of `calls` fails, after which no later call runs, or null when every call returns."
+            },
+            "class": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-69.6",
+              "state": "`class` is `type` for a `TypeError`, `value` for an error of the classes of HY-46.2, or null when every call returns."
+            }
+          }
+        },
+        "notes": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "calls": {
+              "role": "input"
+            },
+            "notes": {
+              "role": "expected",
+              "compare": "ordered",
+              "sentence": "HY-60.9",
+              "state": "`notes` are the notes of a reply after `calls`, each name with its value in the order of the first note of the name."
+            },
+            "error": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-60.28",
+              "state": "`error` is the message of the error with which a call of `calls` fails, after which no later call runs, or null when every call returns."
+            },
+            "class": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-60.28",
+              "state": "`class` is `type` for a `TypeError`, `value` for an error of the classes of HY-46.2, or null when every call returns."
+            }
+          }
+        },
+        "flags": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "calls": {
+              "role": "input"
+            },
+            "renewals": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-72.1",
+              "state": "`renewals` are the two answers of taking the renewal of a reply twice after `calls`: whether a renewal was asked since the last time."
+            },
+            "embeds": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-92.2",
+              "state": "`embeds` states whether a reply after `calls` makes the HTML document embed its data."
             }
           }
         }

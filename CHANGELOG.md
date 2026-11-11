@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- The reply of a request fails alike in the three servers: a cookie name or value, a `Cache-Control`, a `Referrer-Policy` or a note name that is not a string, and a `Max-Age` or a page status that is not an integer of the data model, fail with `TypeError` and one message (HY-52.11, HY-60.28, HY-69.6, HY-103.8), and a value outside the rules fails with the class of HY-46.2 and one message (HY-52.12). Before, PHP converted an integer for a caller without strict types, Node accepted the number 5 as the cookie value `5`, Python raised its own `TypeError`, and Node used `Error` with the prefix `hyper:`. A `Max-Age` and a status take a float with an integer value, such as `60.0`, as the integer, as Node does (HY-52.10). `contracts/reply.json` holds 85 cases that the three runners pass, in place of the native reply tests, and the Python `Reply` keeps its state in private dataclass fields without a constructor, as PHP and Node do (H28.11).
+
 - `contracts/interfaces.json` states the PHP signatures `flash(mixed $name, mixed $value)` and `changed(mixed ...$topics)` with the `TypeError` of HY-25.6, and PHP `Result::flash` checks a value in place of a private helper, so that `make recipe-check` reports no failure of the result concern (H28.11).
 
 - The check of a private Python constructor also counts a call through an absolute import of the package, such as `from polyspec.hyper import MediaType`, as it counts a relative one (HYR-8). The task H28.11-1 is in progress again, because its runners pass only when H28.7 adds the representations and the client cases (H28.11).

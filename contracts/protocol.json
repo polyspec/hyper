@@ -5251,6 +5251,24 @@
                   "en": "The response of the request contains the cookies of its reply, whether it is a page, a redirect or a failure of HY-27, HY-50 or HY-51.",
                   "ko": "요청의 응답은 그 reply의 cookie를 담으며, 그것이 page, 리다이렉트, HY-27, HY-50, HY-51의 실패 가운데 무엇이든 마찬가지다.",
                   "koSource": "610eb1a61386c2c5835af43268b074948194c2d397e6564e32caffa42c821d90"
+                },
+                {
+                  "id": "HY-52.10",
+                  "en": "A `Max-Age` is an integer of the data model that is not negative: a number within ±(2^53 − 1) without a fraction, so that `60.0` is the integer 60 and a bool is not an integer.",
+                  "ko": "`Max-Age`는 음수가 아닌 data model의 정수다: 소수부가 없는 ±(2^53 − 1) 안의 수이므로 `60.0`은 정수 60이고 bool은 정수가 아니다.",
+                  "koSource": "49e9251b031afcc1757c767ca86cd2f6442b71af7549fd62bd79c764157f5d7c"
+                },
+                {
+                  "id": "HY-52.11",
+                  "en": "A cookie name, a cookie value or a `Cache-Control` value that is not a string, and a `Max-Age` that is neither null nor such an integer, fail with `TypeError` and the message `a cookie name is not a string (HY-52)`, `a cookie value is not a string (HY-52)`, `a Cache-Control is not a string (HY-52)` or `a Max-Age is not an integer within ±(2^53 − 1) (HY-52)`, and the types of a cookie are checked in the order of its parameters before its values.",
+                  "ko": "문자열이 아닌 cookie 이름, cookie 값이나 `Cache-Control` 값, 그리고 null도 그런 정수도 아닌 `Max-Age`는 `TypeError`와 메시지 `a cookie name is not a string (HY-52)`, `a cookie value is not a string (HY-52)`, `a Cache-Control is not a string (HY-52)` 또는 `a Max-Age is not an integer within ±(2^53 − 1) (HY-52)`로 실패하며, cookie의 타입은 값보다 먼저 parameter 순서로 검사한다.",
+                  "koSource": "73ca7052012f10416560c0bc25671214ddf3de58e4766dc24839033cf3fbbc27"
+                },
+                {
+                  "id": "HY-52.12",
+                  "en": "A cookie of these types fails otherwise with the class of HY-46.2 and the message `cookie name <name> is not allowed (HY-52)`, `cookie value of <name> has a character that is not allowed (HY-52)` or `cookie <name> has a negative Max-Age (HY-52)` in this order, and a `Cache-Control` string with the message `Cache-Control has a character that is not allowed (HY-52)` or `Cache-Control <value> lets a shared cache store the page; it needs private or no-store and neither public nor s-maxage (HY-52)`, where `<name>` and `<value>` are the given strings.",
+                  "ko": "이 타입의 cookie는 그 밖에는 HY-46.2의 class와 메시지 `cookie name <name> is not allowed (HY-52)`, `cookie value of <name> has a character that is not allowed (HY-52)` 또는 `cookie <name> has a negative Max-Age (HY-52)`로 이 순서에 따라 실패하고, `Cache-Control` 문자열은 메시지 `Cache-Control has a character that is not allowed (HY-52)` 또는 `Cache-Control <value> lets a shared cache store the page; it needs private or no-store and neither public nor s-maxage (HY-52)`로 실패하며, `<name>`과 `<value>`는 주어진 문자열이다.",
+                  "koSource": "639c9e5db3453bb85aab9b6c7ff013e2496235be73b31dd0dc851bb63d3e4e4e"
                 }
               ]
             }
@@ -5479,6 +5497,12 @@
                   "en": "The method sets no other header, and the redirects, the stops and the plain text failures of HY-27, HY-50, HY-51 and HY-65 have none from the reply.",
                   "ko": "이 메서드는 다른 header를 설정하지 않으며, HY-27, HY-50, HY-51, HY-65의 리다이렉트, stop, 평문 텍스트 실패는 reply에서 온 것을 갖지 않는다.",
                   "koSource": "7b70065a96c49106c6bb2da5221f128454fad691c491d8b5760c949402ef9577"
+                },
+                {
+                  "id": "HY-103.8",
+                  "en": "A value that is not a string fails with `TypeError` and the message `a Referrer-Policy is not a string (HY-103)`, and another string fails with the class of HY-46.2 and the message `Referrer-Policy <value> is not a token of the Referrer-Policy specification (HY-103)`.",
+                  "ko": "문자열이 아닌 값은 `TypeError`와 메시지 `a Referrer-Policy is not a string (HY-103)`로 실패하고, 다른 문자열은 HY-46.2의 class와 메시지 `Referrer-Policy <value> is not a token of the Referrer-Policy specification (HY-103)`로 실패한다.",
+                  "koSource": "d13b67050750c51383ff22323c4e99ce522b64a768afdd93df8139b005f056ac"
                 }
               ]
             }
@@ -5782,9 +5806,9 @@
               "statements": [
                 {
                   "id": "HY-69.1",
-                  "en": "A loader or an action may give the page of its request the status 403 with `Reply::status(403)` in PHP and `reply.status(403)` in Node, for a page that shows other data in place of the data that the request may not see, such as a sign-in form in place of a page that needs a session.",
-                  "ko": "loader나 action은 `Reply::status(403)`(PHP)이나 `reply.status(403)`(Node)로 요청의 page에 상태 403을 줄 수 있으며, 이는 요청이 볼 수 없는 데이터 대신 다른 데이터를 보이는 page에 쓴다(예: session이 필요한 page 대신 로그인 form).",
-                  "koSource": "ca53b6150ebdb8519cd16688c93c1452c89fd76cd91eb8f15954a8e2ac11e266"
+                  "en": "A loader or an action may give the page of its request the status 403 with `Reply::status(403)` in PHP and `reply.status(403)` in Node and Python, for a page that shows other data in place of the data that the request may not see, such as a sign-in form in place of a page that needs a session.",
+                  "ko": "loader나 action은 `Reply::status(403)`(PHP)이나 `reply.status(403)`(Node와 Python)로 요청의 page에 상태 403을 줄 수 있으며, 이는 요청이 볼 수 없는 데이터 대신 다른 데이터를 보이는 page에 쓴다(예: session이 필요한 page 대신 로그인 form).",
+                  "koSource": "d5a1b583601b7ff46a523bd07ca48eb29e23d613eba4ece8fd1abdf9f906187b"
                 },
                 {
                   "id": "HY-69.2",
@@ -5809,6 +5833,12 @@
                   "en": "Another status fails with HY-43, because 403 states that the request may not see the page; 401 would require a `WWW-Authenticate` challenge (RFC 9110), and 200 would state that the response is the page.",
                   "ko": "다른 상태는 HY-43으로 실패하는데, 403은 요청이 page를 볼 수 없다는 것을 말하기 때문이며, 401은 `WWW-Authenticate` challenge(RFC 9110)를 요구하고, 200은 응답이 page라고 말하게 되기 때문이다.",
                   "koSource": "a8cacf52b7f32dcf2b06779e44a924d668d8f701a6d9c07e67f7a9eccfc39c2e"
+                },
+                {
+                  "id": "HY-69.6",
+                  "en": "A status that is not an integer of the data model (HY-52) fails with `TypeError` and the message `a page status of a reply is not an integer within ±(2^53 − 1) (HY-69)`, and another integer fails with the class of HY-46.2 and the message `page status <status> of a reply is not 403 (HY-69)`, where `<status>` is the integer in decimal digits.",
+                  "ko": "data model의 정수(HY-52)가 아닌 상태는 `TypeError`와 메시지 `a page status of a reply is not an integer within ±(2^53 − 1) (HY-69)`로 실패하고, 다른 정수는 HY-46.2의 class와 메시지 `page status <status> of a reply is not 403 (HY-69)`로 실패하며, `<status>`는 그 정수의 십진수 숫자다.",
+                  "koSource": "642d8abd4c0ffae0922b5a52733f9a2701d0d6ed8bfe9cd4482279888afc289b"
                 }
               ]
             }
@@ -6091,6 +6121,17 @@
                     }
                   ],
                   "blocks": []
+                }
+              ]
+            },
+            {
+              "kind": "paragraph",
+              "statements": [
+                {
+                  "id": "HY-60.28",
+                  "en": "A note name that is not a string fails with `TypeError` and the message `a note name is not a string (HY-60)`.",
+                  "ko": "문자열이 아닌 note 이름은 `TypeError`와 메시지 `a note name is not a string (HY-60)`로 실패한다.",
+                  "koSource": "252ce6bb974a079fffbea2a26a28be5a9c099f0c237ab33e98121f8158691977"
                 }
               ]
             }
