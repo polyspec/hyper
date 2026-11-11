@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// Builds the applications of the contract files contracts/context.json and contracts/functions.json (HY-48, HY-125)
-// for the tests of the three servers. The application names of all contracts are distinct. For each application it
+// Builds the applications of the contract files contracts/context.json, contracts/functions.json and
+// contracts/representations.json (HY-48, HY-125) for the tests of the three servers. The application names of all contracts are distinct. For each application it
 // writes into <output>/<application>/:
 //   manifest.json, templates/ and build.json   the inputs that the case states
 //   program/                                   the server program of hyper-build-server, which PHP and Python open

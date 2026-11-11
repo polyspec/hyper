@@ -14,6 +14,7 @@ from . import _accept, _data_model, _json_codec, _media
 from .client import Choice, ClientRendering
 from .container import Container
 from ._build import read_build_id
+from ._representation_entries import check_handlers as check_representation_handlers
 from . import _context
 from ._context import Context
 from ._csrf import masked, verify
@@ -186,6 +187,11 @@ class App:
         for name, route in declared.routes.items():
             if route["post"] and "post" not in route_handlers.get(name, {}):
                 raise ValueError(f"route {name} declares post but has no POST action")
+            check_representation_handlers(
+                name,
+                route["representations"],
+                route_handlers.get(name, {}).get("representations", {}),
+            )
 
         shell = "" if client_rendering is None else _shell(client_rendering, declared)
 

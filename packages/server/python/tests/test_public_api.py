@@ -10,8 +10,10 @@ PUBLIC_MODULES = [
     "client",
     "container",
     "file_sessions",
+    "media_type",  # HY-106: the media type that a representation handler receives.
     "redis_sessions",
     "reply",
+    "representation",  # HY-106, HY-122: the response of a representation handler.
     "request",
     "response",
     "result",

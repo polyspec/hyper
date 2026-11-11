@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Optional
 
 from ._region import Region
+from ._representation_entries import declare as declare_representations
 from ._router import Router
 
 _REGION_NAME = re.compile(r"[A-Za-z][A-Za-z0-9_-]*\Z")
@@ -139,6 +140,9 @@ class Manifest:
                 "template": template,
                 "post": route.get("post") == True,  # noqa: E712 - only the JSON value true marks a post route, not any truthy value
                 "regions": route_regions,
+                "representations": declare_representations(
+                    name, _entries(route, "representations")
+                ),
             }
 
         return Manifest(
