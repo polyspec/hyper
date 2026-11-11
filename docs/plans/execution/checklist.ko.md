@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 8422635d3c476cbdcec8bd9073f2ca8f7ff2c155be88de0cd957ec507211f28a -->
+<!-- source-sha256: 2a6b5a410a8e41e18929e1245b1d13a5539a2e6b1d9d58f550ddd3d0d23e17f0 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -378,6 +378,7 @@
 | H27.107 | 0.0.39 release | version commit과 release asset | `make release-coverage`와 version commit의 CI run에서 만들어진 release | [o] |
 | H28.1 | Accept에 의한 media type 선택(RFC 9110 section 12.5.1)을 routing 뒤에 두고 Vary, media type application/vnd.hyper+json, application의 context와 그 hash와 Hyper-Context header, build.json과 모든 JSON response와 html definition build의 build id, browser context, 마지막 region response, HyperOptions와 App의 host function, route의 representation(선언, match, session, request, response, ETag와 etag)을 명세한다; HY-1, HY-2, HY-3, HY-10, HY-12, HY-15, HY-17, HY-27, HY-31, HY-44, HY-48, HY-60, HY-62, HY-65, HY-73, HY-97, HY-100, HY-104, HY-106, HYC-2, HYC-3, HYC-4, HYC-7, HYC-8을 바꾼다 | docs/spec/protocol.md and its Korean twin, docs/plans/execution/plan.md wave 28 and its Korean twin, contracts/context.json, contracts/representations.json, contracts/client.json | `make docs-check` | [o] |
 | H28.1-1 | server build가 build id를 얻는 방법을 명세한다: option --build로 이름 붙인 asset output의 build.json을 읽어 같은 file을 program directory에 쓰고, file이 없거나 build id가 올바르지 않으면 실패한다 | docs/spec/protocol.md and its Korean twin | `make docs-check` | [o] |
+| H28.1-2 | build id가 hash하는 각 산출물의 path를 정한다: public/assets 아래 file은 앞의 slash를 뺀 URL path로, manifest.json과 templates.index.json은 --output directory 안의 이름으로 | docs/spec/protocol.md and its Korean twin, contracts/context.json | `make docs-check` | [ ] |
 | H28.2 | PHP server: media type 선택과 Vary, context, Hyper-Context header와 build member, representation을 선택하지 않은 request만 session을 연다, media type application/vnd.hyper+json, App의 functions; contracts/context.json과 contracts/client.json의 case | packages/server/php | `make test-php` | [ ] |
 | H28.3 | Node server: H28.2와 같은 규칙 | packages/server/node | `make test-node` | [ ] |
 | H28.4 | Python server: H28.2와 같은 규칙 | packages/server/python | `make test-python` | [ ] |
