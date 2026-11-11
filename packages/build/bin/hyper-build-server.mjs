@@ -82,13 +82,13 @@ function readBuildFile(file) {
   try {
     text = readFileSync(file, 'utf8');
   } catch (error) {
-    throw new Error(`build id file ${file} cannot be read: ${error.message}`);
+    throw new Error(`build id file ${file} cannot be read: ${error.message}`, { cause: error });
   }
   let value;
   try {
     value = JSON.parse(text);
   } catch (error) {
-    throw new Error(`build id file ${file} is not JSON: ${error.message}`);
+    throw new Error(`build id file ${file} is not JSON: ${error.message}`, { cause: error });
   }
   const keys = value !== null && typeof value === 'object' && !Array.isArray(value) ? Object.keys(value) : [];
   if (keys.length !== 1 || keys[0] !== 'build' || typeof value.build !== 'string' || !/^[0-9a-f]{64}$/.test(value.build)) {
