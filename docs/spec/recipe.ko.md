@@ -1,5 +1,5 @@
 <!-- doc-id: recipe -->
-<!-- source-sha256: d89ec8133364e2b795616c776c78922e2f4643eb35df3b649173ef63afce3928 -->
+<!-- source-sha256: fdce9e6d6bd683002c0dbbf4ef020aee38be1c77bc4c9ba47a76e9abb4ed8cfc -->
 # 서버의 레시피
 
 PHP, Node, Python 서버는 하나의 프로토콜(`protocol.md`)을 구현한다. 이 서버들의 레시피는 세 부분으로 이루어진다.
@@ -155,8 +155,9 @@ PHP, Node, Python 서버는 하나의 프로토콜(`protocol.md`)을 구현한�
     `build` 중 몇 개를 적는다. `browser`는 `packages/client/tests`의 runner, `build`는 `tests/scripts/build-id.test.mts`이며,
     둘 다 Node case reader로 자기 section을 읽고, check는 세 서버의 결과만 센다.
   - **Reading a case.** runner는 각 case를 그 언어의 case reader를 통해서만 읽는다. case reader는 모든 언어에서 같은
-    member를 가진 test tree의 unit 하나다: public member `cases`, `section`, `id`, `has`, `input`, `compare`, `fail`,
-    `line`과 private member `declaration`, `matches`, `equal`.
+    member를 가진 test tree의 unit 하나다: public member `cases`, `section`, `id`, `has`, `input`, `compare`, `outcome`,
+    `fail`, `line`과 private member `declaration`, `matches`, `equal`. `compare`는 필드를, `outcome`은 단계의 결과를
+    비교한다.
     - `contracts/interfaces.json`의 `caseFiles`는 case 파일의 역할과 비교의 유일한 출처다(HY-130). 파일마다 그 규칙,
       최상위 key(`fixtures`), case 배열(`sections`)마다 그 `runners`, case가 쓰는 fixture(`uses`), 모든 필드와 그 역할,
       그리고 각 expected 필드, 단계가 함께 확인하는 각 input 필드, 단계의 각 결과에 대해 비교 방법과 그것을 정하는

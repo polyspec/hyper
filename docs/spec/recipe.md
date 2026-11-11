@@ -166,7 +166,8 @@ The PHP, Node and Python servers implement one protocol (`protocol.md`). Their r
     sections through the Node case reader, and the check counts the results of the three servers only.
   - **Reading a case.** A runner reads each case only through the case reader of its language, one unit of the test
     tree with the same members in every language: the public members `cases`, `section`, `id`, `has`, `input`,
-    `compare`, `fail` and `line`, and the private members `declaration`, `matches` and `equal`.
+    `compare`, `outcome`, `fail` and `line`, and the private members `declaration`, `matches` and `equal`. `compare`
+    compares a field and `outcome` an outcome of the step.
     - `caseFiles` of `contracts/interfaces.json` is the one source of the roles and comparisons of the case files
       (HY-130). For each file it names its rule, its top-level keys (`fixtures`) and, for each case array
       (`sections`), its `runners`, the fixtures that its cases use (`uses`), every field with its role and, for each
