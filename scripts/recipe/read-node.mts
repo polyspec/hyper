@@ -278,11 +278,13 @@ function readTypeAlias(file: string, sf: ts.SourceFile, st: ts.TypeAliasDeclarat
 
 const TEST_CALLS = new Set(['describe', 'it', 'test']);
 
-// The identifier a test call is made on: `it`, `it.each(table)` and `it.skip` all root at `it`.
-function testRoot(expr: ts.Expression): string | undefined {
-  if (ts.isIdentifier(expr)) return expr.text;
-  if (ts.isPropertyAccessExpression(expr) || ts.isCallExpression(expr)) return testRoot(expr.expression);
-  return undefined;
+// The names a call chain runs through, root first: `it.each` and a tagged `it.each` table give it and each; `runner.test` gives runner and test.
+function chainOf(expr: ts.Expression): string[] {
+  if (ts.isIdentifier(expr)) return [expr.text];
+  if (ts.isPropertyAccessExpression(expr)) return [...chainOf(expr.expression), expr.name.text];
+  if (ts.isCallExpression(expr)) return chainOf(expr.expression);
+  if (ts.isTaggedTemplateExpression(expr)) return chainOf(expr.tag);
+  return [];
 }
 
 // A test name must be a string literal: the spec names tests by their literal names (HYR-7). A call whose name is not one,
@@ -290,13 +292,14 @@ function testRoot(expr: ts.Expression): string | undefined {
 function isEach(expr: ts.Expression): boolean {
   if (ts.isPropertyAccessExpression(expr)) return expr.name.text === 'each' || isEach(expr.expression);
   if (ts.isCallExpression(expr)) return isEach(expr.expression);
+  if (ts.isTaggedTemplateExpression(expr)) return isEach(expr.tag);
   return false;
 }
 
 function visitTests(node: ts.Node, sf: ts.SourceFile, stack: string[]): void {
   if (ts.isCallExpression(node)) {
-    const root = testRoot(node.expression);
-    if (root !== undefined && TEST_CALLS.has(root)) {
+    const root = chainOf(node.expression).find((name) => TEST_CALLS.has(name));
+    if (root !== undefined) {
       const first = node.arguments[0];
       if (first === undefined || !ts.isStringLiteralLike(first) || isEach(node.expression)) {
         out.dynamicTests.push({ file: sf.fileName, line: sf.getLineAndCharacterOfPosition(node.getStart(sf)).line + 1 });
