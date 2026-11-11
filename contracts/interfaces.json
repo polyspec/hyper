@@ -9,7 +9,8 @@
         "packages/server/php/tests"
       ],
       "barrel": [],
-      "runner": "packages/server/php/tests/CaseRunnerTest.php::CaseRunnerTest::testCases"
+      "runner": "packages/server/php/tests/CaseRunnerTest.php::CaseRunnerTest::testCases",
+      "caseReader": "packages/server/php/tests/CaseReader.php::CaseReader"
     },
     "node": {
       "sources": [
@@ -21,7 +22,8 @@
       "barrel": [
         "packages/server/ts/src/index.ts"
       ],
-      "runner": "packages/server/ts/tests/case-runner.test.ts::cases"
+      "runner": "packages/server/ts/tests/case-runner.test.ts::cases",
+      "caseReader": "packages/server/ts/tests/case-reader.ts::CaseReader"
     },
     "python": {
       "sources": [
@@ -33,7 +35,8 @@
       "barrel": [
         "packages/server/python/src/polyspec/hyper/__init__.py"
       ],
-      "runner": "packages/server/python/tests/test_case_runner.py::CaseRunner.test_cases"
+      "runner": "packages/server/python/tests/test_case_runner.py::CaseRunner.test_cases",
+      "caseReader": "packages/server/python/tests/case_reader.py::CaseReader"
     }
   },
   "outside": [],
