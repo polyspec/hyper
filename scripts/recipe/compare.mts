@@ -52,7 +52,8 @@ export function compare(spec: Spec, sources: Record<Lang, Sources>, root: string
     out.push({ code, message });
   };
   const units = spec.concerns.flatMap((c) => c.units);
-  const rules = new Set([...protocol.matchAll(/HY-\d+/g)].map((m) => m[0]));
+  // The rules of protocol.md are its definition lines `- **HY-n** ...`; a mention of HY-n in prose defines no rule.
+  const rules = new Set(protocol.split('\n').flatMap((line) => line.match(/^\s*-\s*\*\*(HY-\d+)\*\*/u)?.[1] ?? []));
   const flat = protocol.replace(/\s+/g, ' ');
 
   // Every `only` of the spec, with its unit, member, type or field.
