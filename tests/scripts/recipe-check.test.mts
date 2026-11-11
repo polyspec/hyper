@@ -151,3 +151,9 @@ test('the readers list only the public properties of a class as members', () => 
     for (const name of hidden[lang]) assert.ok(!names.includes(name), `${lang} lists ${name} as a member: ${names.join(', ')}`);
   }
 });
+
+test('the PHP reader lists a trait member under the trait, not under the class that uses it', () => {
+  const names = readFixture('php', path.join(fixture, 'readers', 'php')).members.filter((m) => m.unit === 'Gadget').map((m) => m.name);
+  assert.ok(names.includes('size'), `Gadget does not list size: ${names.join(', ')}`);
+  for (const name of ['label', 'describe']) assert.ok(!names.includes(name), `Gadget lists the trait member ${name}: ${names.join(', ')}`);
+});
