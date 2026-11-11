@@ -6,6 +6,8 @@
 
 ## Unreleased
 
+- `make recipe-check`는 Python method의 receiver를 이름이 아니라 위치로 판단한다. static이 아닌 method의 첫 parameter가 receiver다. 그래서 뒤에 오는 `cls`나 `self`라는 이름의 parameter를 더 이상 input에서 빼지 않는다(H28.11).
+
 - 세 서버에서 build id는 static member `read(file)`를 가진 unit `Build`가 읽는다. 실패하면 error unit `InvalidBuild`와 파일 경로를 담은 같은 메시지로 실패한다. PHP `App`은 build id를 문자열로 가진다. native build 파일 테스트의 case는 `contracts/build.json`에 있다(HY-125.5)(H28.11).
 
 - spec은 세 서버의 unit `Response`의 member를 나열한다. `send`, `sendReplacing`, `writeHeaders`는 PHP에만 둔다(HY-100.30). Python `Response`는 PHP와 Node가 property로 선언하듯 `status`, `headers`, `body`를 class의 속성으로 선언한다(HY-130)(H28.11).

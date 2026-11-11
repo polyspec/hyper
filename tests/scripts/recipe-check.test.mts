@@ -146,6 +146,48 @@ test('an internal member of a public Python module is named with a leading under
   }
 });
 
+test('a Python parameter named cls or self after the receiver is an input', () => {
+  const root = mkdtempSync(path.join(tmpdir(), 'recipe-receiver-'));
+  const replaceIn = (file: string, from: string, to: string): void => {
+    const target = path.join(root, file);
+    const text = readFileSync(target, 'utf8');
+    assert.ok(text.includes(from), `${file} lacks ${JSON.stringify(from)}`);
+    writeFileSync(target, text.replace(from, to));
+  };
+  try {
+    cpSync(fixture, root, { recursive: true });
+    replaceIn('packages/server/php/src/MediaType.php', "        return 'text/html';\n    }\n", "        return 'text/html';\n    }\n\n    public function named(string $cls): string\n    {\n        return $cls;\n    }\n");
+    replaceIn('packages/server/ts/src/media-type.ts', "    return 'text/html';\n  }\n", "    return 'text/html';\n  }\n\n  named(cls: string): string {\n    return cls;\n  }\n");
+    replaceIn('packages/server/python/src/polyspec/hyper/media_type.py', '        return "text/html"\n', '        return "text/html"\n\n    def named(self, cls: str) -> str:\n        return cls\n');
+    const specFile = path.join(root, 'contracts', 'interfaces.json');
+    const spec = JSON.parse(readFileSync(specFile, 'utf8')) as { concerns: { units: { id: string; members: unknown[] }[] }[] };
+    const unit = spec.concerns.flatMap((c) => c.units).find((u) => u.id === 'media-type');
+    assert.ok(unit, 'the fixture has no unit media-type');
+    unit.members.push({
+      id: 'media-type.named',
+      kind: 'method',
+      visibility: 'public',
+      inputs: ['string'],
+      output: 'string',
+      errors: [],
+      state: 'Returns the name.',
+      native: {
+        php: { symbol: 'packages/server/php/src/MediaType.php::Polyspec\\Hyper\\MediaType::named', signature: 'public function named(string $cls): string' },
+        node: { symbol: 'packages/server/ts/src/media-type.ts::MediaType.named', signature: 'named(cls: string): string' },
+        python: { symbol: 'packages/server/python/src/polyspec/hyper/media_type.py::MediaType.named', signature: 'def named(self, cls: str) -> str' },
+      },
+    });
+    writeFileSync(specFile, JSON.stringify(spec, null, 2));
+    track(root);
+    const result = spawnSync(process.execPath, [check, '--root', root, '--php-autoload', phpAutoload(root), '--no-selftest', ...resultArguments(root)], { encoding: 'utf8' });
+    const output = result.stdout + result.stderr;
+    assert.doesNotMatch(output, /\bMEMBER_SIGNATURE\b/);
+    assert.equal(result.status, 0, output);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
 test('the candidate refreshes the native fields and lists the hand-written ones', () => {
   const dir = mkdtempSync(path.join(tmpdir(), 'recipe-candidate-'));
   try {

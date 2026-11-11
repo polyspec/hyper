@@ -39,9 +39,12 @@ def signature(node: ast.FunctionDef | ast.AsyncFunctionDef) -> str:
     return text
 
 
-def parameters(node: ast.FunctionDef | ast.AsyncFunctionDef) -> list[str]:
+def parameters(node: ast.FunctionDef | ast.AsyncFunctionDef, receiver: bool = False) -> list[str]:
+    """The inputs of a function: every parameter, without the first one of a method that is not static, which is the
+    receiver whatever its name."""
     args = [*node.args.posonlyargs, *node.args.args, *node.args.kwonlyargs]
-    return [a.arg for a in args if a.arg not in ("self", "cls")]
+    names = [a.arg for a in args]
+    return names[1:] if receiver and not is_static(node) and names else names
 
 
 def is_test_class(node: ast.ClassDef) -> bool:
@@ -120,7 +123,7 @@ def read_module(root: Path, rel: str, out: dict) -> None:
                         "visibility": visibility(member.name, module_internal),
                         "symbol": f"{rel}::{cls.name}.{member.name}",
                         "signature": signature(member),
-                        "parameters": parameters(member),
+                        "parameters": parameters(member, receiver=True),
                     }
                 )
             elif isinstance(member, ast.AnnAssign) and isinstance(member.target, ast.Name) and not member.target.id.startswith("_"):
