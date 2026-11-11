@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: a81a85ccc261a48018d133ed91039c0e50bf72e6958fa25f5a156d6b577e1416 -->
+<!-- source-sha256: 8faf4e46979c77de096f13a053cf7470b7a5ceeb2571a64c0476f2bb3e3bc08f -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -378,3 +378,4 @@
 | H27.107 | 0.0.39 release | version commit과 release asset | `make release-coverage`와 version commit의 CI run에서 만들어진 release | [o] |
 | H28.1 | Accept에 의한 media type 선택(RFC 9110 section 12.5.1)을 routing 뒤에 두고 Vary, media type application/vnd.hyper+json, application의 context와 그 hash와 Hyper-Context header, build.json과 모든 JSON response와 html definition build의 build id, browser context, 마지막 region response, HyperOptions와 App의 host function, route의 representation(선언, match, session, request, response, ETag와 etag)을 명세한다; HY-1, HY-2, HY-3, HY-10, HY-12, HY-15, HY-17, HY-27, HY-31, HY-44, HY-48, HY-60, HY-62, HY-65, HY-73, HY-97, HY-100, HY-104, HY-106, HYC-2, HYC-3, HYC-4, HYC-7, HYC-8을 바꾼다 | docs/spec/protocol.md and its Korean twin, docs/plans/execution/plan.md wave 28 and its Korean twin, contracts/context.json, contracts/representations.json, contracts/client.json | `make docs-check` | [ ] |
 | H28.2 | PHP server: media type 선택과 Vary, context, Hyper-Context header와 build member, representation을 선택하지 않은 request만 session을 연다, media type application/vnd.hyper+json, App의 functions; contracts/context.json과 contracts/client.json의 case | packages/server/php | `make test-php` | [ ] |
+| H28.3 | Node server: H28.2와 같은 규칙 | packages/server/node | `make test-node` | [ ] |
