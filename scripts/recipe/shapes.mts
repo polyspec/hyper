@@ -51,10 +51,9 @@ export function checkShapes(ctx: Ctx): void {
       if (rt.name !== name) add('TYPE_MISSING', `${lang} type ${t.id} is named ${rt.name}, spec says ${name}`);
       if (rt.declaration !== n.declaration) add('TYPE_CHANGED', `${lang} type ${t.id} declaration differs from spec`);
       if (rt.visibility !== expectedVisibility(lang, t.visibility)) add('TYPE_VISIBILITY', `${lang} type ${t.id} is ${rt.visibility}, spec says ${t.visibility}`);
-      if (t.shape.fields !== undefined && rt.fields !== undefined) {
-        const read = rt.fields.map((f) => words(f.replace(/^["']|["']$/gu, ''))).sort();
-        if (fieldWords(t, lang).join(',') !== read.join(',')) add('TYPE_SHAPE', `${lang} type ${t.id} fields differ from spec`);
-      }
+      const read = (rt.fields ?? []).map((f) => words(f.replace(/^["']|["']$/gu, ''))).sort();
+      const want = t.shape.fields === undefined ? [] : fieldWords(t, lang);
+      if (want.join(',') !== read.join(',')) add('TYPE_SHAPE', `${lang} type ${t.id} fields differ from spec`);
       const fn = t.shape.function as { inputs?: string[] } | undefined;
       if (fn?.inputs !== undefined && rt.parameters !== undefined && rt.parameters !== fn.inputs.length) {
         add('TYPE_SHAPE', `${lang} type ${t.id} takes ${rt.parameters} parameters, spec says ${fn.inputs.length}`);
