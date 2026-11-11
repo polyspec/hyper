@@ -638,7 +638,8 @@ final class App
         if ($response->status !== 200 || $method !== 'GET') {
             return $response;
         }
-        // HY-122.10: a 200 of a GET, as which a HEAD is answered, has a strong tag, and a request that names it receives 304.
+        // HY-122.10: a 200 of a GET, as which a HEAD is answered, has a strong tag, and a request that names it
+        // receives 304.
         $tag = RepresentationResponse::etag($contentType, $response->body);
         $response = $response->withHeader('ETag', $tag);
         if ($request->header('If-None-Match') !== $tag) {
