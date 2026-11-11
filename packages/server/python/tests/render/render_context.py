@@ -7,7 +7,6 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from polyspec.hyper._json_codec import JsonCodec
 from polyspec.hyper.app import App
 from polyspec.hyper.reply import Reply
 from polyspec.hyper.request import Request
@@ -44,24 +43,6 @@ class ContextTest(unittest.TestCase):
                 self.assertEqual(build["build"], result["build"])
                 if "stream" in build:
                     self.assertEqual(build["stream"], result["stream"])
-
-    def test_the_context_comes_after_the_title_in_the_shared_data(self) -> None:
-        # HY-10, HY-73: the shared data keeps title and then context; csrf is not kept by the route, and no value comes
-        # before title.
-        application = _contract()["applications"]["with_context"]
-        manifest, program = program_of("with_context")
-        app = open_application(application, {}, manifest, program, [], [])
-        kept = app._kept_shared(
-            "home",
-            {
-                "title": "Home",
-                "csrf": "token",
-                "context": {"title": "Board"},
-                "site": "Site",
-            },
-        )
-        self.assertEqual(["title", "context"], list(kept))
-        self.assertEqual({"title": "Board"}, kept["context"])
 
 
 def build_ids(builds: list, directory: Path) -> list:
@@ -114,10 +95,14 @@ def open_application(
     program: Path,
     calls: list,
     selections: list,
+    context: str | None = None,
+    failures: list | None = None,
 ) -> App:
     """Opens the application with the handlers of its contract: a loader stops with NotFound when it says so, an action
     returns the page with its status or the redirect, and the handlers record their calls in order. The shared handler
-    returns the shared data of the case."""
+    returns the shared data of the case. The context handler returns the decoded JSON text `context`, or the context of
+    the application, as it is, also a value that is not a map, so that the server checks it (HY-124); the response hook
+    appends the failure of each response to `failures` (HY-60)."""
     loaders = application["loaders"]
     embed = set(application["embedData"])
 
@@ -160,17 +145,25 @@ def open_application(
             entry["regions"] = regions
         routes[name] = entry
 
-    def context(selection: object) -> dict:
+    text = context if context is not None else application.get("context")
+    value = None if text is None else json.loads(text)
+
+    def context_handler(selection: object) -> object:
         calls.append("context")
         selections.append(selection)
-        return JsonCodec.decode(application["context"])
+        return value
+
+    def on_response(request, response, elapsed, reply, failure) -> None:
+        if failures is not None:
+            failures.append(failure)
 
     return App.open(
         manifest=str(manifest),
         program=str(program),
         handlers={"shared": shared_data, "routes": routes},
         timezone="+09:00",
-        context=context if "context" in application else None,
+        context=context_handler if text is not None else None,
+        on_response=on_response,
     )
 
 

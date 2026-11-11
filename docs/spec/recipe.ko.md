@@ -9,7 +9,7 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
    signature를 가진다.
 2. **test recipe**, `contracts/` 아래의 case 파일. `contracts/interfaces.json`의 `runners`가 가리키는 각 runner가 자기를 가리키는
    section을 읽는다.
-3. **각 언어의 고유 analyzer를 실행하는 check.**
+3. **각 언어 고유 analyzer의 check.**
 
 `make recipe-check`는 1번과 2번 부분을 source와 test 실행 결과에 맞춰 검사한다.
 
@@ -85,7 +85,7 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
     - Node interface unit의 property signature;
     - Python의 class 수준 annotated attribute.
     method 본문의 대입은 property가 아니다.
-  - **Fields of a member.** member의 필드는 다음과 같다.
+  - **Fields of a member.**
     - `id`: `<unit>.<member>`, 언어 중립 이름을 camelCase로 쓴다.
     - `kind`: constructor, method, static method, function, property 중 하나.
     - `visibility`: public, internal, private 중 하나.
@@ -130,7 +130,7 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
       - Python: 앞에 `_`가 있고 spec이 `private`으로 선언한다. Python에는 접근 modifier가 없으므로 spec이 정하며, Python
         reader는 타입 추론 없이 이름으로 사용을 검사한다. 같은 package의 다른 파일에서 `private` member의 이름이 import
         이름, alias, 또는 attribute 이름(`ast.Attribute.attr`)으로 나타나면 실패시킨다. 따라서 private 이름은 package 안에서
-        유일해야 하며, 동명이인은 spec과 source가 둘 중 하나의 이름을 바꿀 때까지 실패한다.
+        유일하며, 같은 이름은 spec과 source가 둘 중 하나의 이름을 바꿀 때까지 실패한다.
     - PHP와 Node reader는 private을 modifier에서 읽으며, modifier가 중립 `visibility`와 다른 member는 check가 실패시킨다.
 
 - **HYR-6 Only some languages.** 일부 언어에만 있는 unit, member, type의 필드 또는 case는 `only: {languages, sentence}`를
@@ -185,7 +185,7 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
     `only: {languages, sentence}`(HYR-6)를 가진 case이며, 다른 runner는 그 case를 빼고 실행한다. check는 각 언어의 case
     id를 `runners`가 그 언어를 가리키는 section의, `only`가 없는 case와 `only`가 그 언어를 가리키는 case에서 얻는다.
     - spec은 각 native test를 그 unit, member 또는 concern 아래에 `<test file>::<test name>: <reason>` 형식으로 적는다.
-    - HYR-8은 언어마다 그 언어의 파서로 test tree의 모든 test를 나열한다. runner도 spec의 이름도 아닌 test, 빠진 이름 붙은
+    - HYR-8은 언어마다 그 언어의 파서로 test tree의 모든 test를 나열한다. runner도 아니고 spec에 이름이 적히지도 않은 test, spec에 이름이 적혔으나 없는
       test, 빈 reason, 그리고 `only`가 정확히 한 언어를 가리키지 않는 unit이나 member 또는 case가 있는 concern 아래에 적힌
       native test는 실패시킨다.
     - 따라서 둘 이상의 언어가 가진 동작은 case 파일로만 테스트되며, 그런 동작의 native test는 그 case를 추가하는 commit에서
@@ -241,7 +241,7 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
   - `contains`: expected 텍스트, 또는 expected list의 모든 텍스트가 관찰된 텍스트의 일부다;
   - `excludes`: expected list의 어떤 텍스트도 관찰된 텍스트의 일부가 아니다;
   - `prefix`: expected list가 관찰된 list의 첫 item들과 같다;
-  - `keys`: expected list가 관찰된 map의 key를 그 순서대로 가진 것과 같다;
+  - `keys`: expected list가 관찰된 map의 key를 그 순서대로 나열한 list와 같다;
   - `raises`: expected 값이 true이면 단계는 HY-106의 open error로 실패하고, false이면 단계는 실패하지 않는다.
   - response 필드는 `compare`를 가지지 않으며 이름으로 비교된다: `status`와 `body`는 `exact`, `headers`는 `subset`, `allHeaders`는
     `exact`, `absentHeaders`는 `absent`, `bodyContains`는 `contains`, `bodyNotContains`는 `excludes`. header 이름은 HY-130이
@@ -256,8 +256,8 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
   - 각 case는 `requirements`를 가진다. 이는 response 필드가 확인하는 규칙의 목록이다. `requirements`는 필드가 아니다: reader는
     그것을 건너뛰고, check는 그것을 읽는다. case의 유효 규칙은 `requirements`와, 명시된 필드의 `sentence` 및 section의 결과의
     `sentence`에 있는 규칙이다. check는 다른 requirement를 반복하거나 명시된 필드의 `sentence` 규칙을 반복하는 requirement,
-    response 필드를 명시하면서 유효 규칙이 비어 있는 case, 그리고 `outside`에 있거나 그 파일을 `cases`가 이름으로 가리키는
-    concern의 `rules`에 없는 유효 규칙을 실패시킨다.
+    response 필드를 명시하면서 유효 규칙이 비어 있는 case, 그리고 `outside`에 있거나, 그 파일을 `cases`가 이름으로 가리키는
+    어떤 concern의 `rules`에도 없는 유효 규칙을 실패시킨다.
 
 ## 첫 정렬 (H28.11)
 
@@ -270,8 +270,8 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
    - 규칙이 그 언어에 한정하는 member다(HYR-6);
    - HY-106의 public API이며, 다른 언어가 그때 추가한다.
 4. **한 언어에만 있는 unit.** 자기 sentence와 함께 `only`를 가지거나, 다른 언어가 추가한다.
-5. **다른 parameter.** 규칙의 parameter를 쓴다. 그렇지 않으면 두 언어의 parameter를 쓴다. 규칙이 정하는 실행 형식의 차이,
-   예를 들어 Node handler의 context 인자(HY-105, HY-106)는 그 규칙의 sentence와 함께 `only`다. 어떤 규칙도 정하지 않는 차이,
+5. **다른 parameter.** 규칙의 parameter를 쓴다. 그렇지 않으면 두 언어의 parameter를 쓴다. 규칙이 정하는 runtime 형식의 차이,
+   예를 들어 Node handler의 인자 하나인 `HandlerArgument`(HY-105, HY-106)는 그 규칙의 sentence와 함께 `only`다. 어떤 규칙도 정하지 않는 차이,
    예를 들어 Node request 경로의 abort signal은 남기 전에 규칙이 필요하다. 그 밖에는 정렬한다.
 6. **접어 넣은 helper.** 접어 넣은 함수는 한 unit의 member다. 자기 파일만 쓰면 `private`이다. 다른 파일이 쓰면
    `internal`이며(Node와 PHP에서는 `@internal`과 함께 export, Python에서는 `_`), 그 파일은 그 unit을 통해 호출한다.
@@ -289,11 +289,11 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
    - 원인: PHP 8.5.10 CGI SAPI(`HTTP_COOKIE`를 가진 `php-cgi`)를 측정한 결과, PHP는 `.`이나 공백이 든 이름을 바꾸고
      (`a.b=1`은 `a_b`가 된다), `[`가 든 이름을 배열로 만들고(`a[x]=1`), `=`가 없는 pair를 빈 값으로 남기고, 이름을
      디코드하지 않으며, 값의 `+`를 그대로 둔다. 이 형태들은 다른 어떤 runtime에도 없는 PHP 변수 이름에서 온다. 지금
-     Node와 Python은 PHP와 서로 다르다. Node는 앞의 모든 공백을 제거하고 `+`를 공백으로 디코드하며, Python은 공백만
+     Node와 Python은 PHP와 서로 다르다. Node는 앞의 모든 white space를 제거하고 `+`를 space로 디코드하며, Python은 space만
      제거한다.
    - 규칙은 다음과 같다.
      - 헤더는 받은 field 값의 바이트 그대로다. 클라이언트는 `Cookie` 줄 하나를 보내며(RFC 6265 section 5.4), HTTP/2에서
-       서버는 cookie 줄을 `; `로 잇는다(RFC 9113 section 8.2.3). 줄을 떨어뜨려 받는 host는 parse 전에 `; `로 잇는다.
+       서버는 cookie 줄을 `; `로 잇는다(RFC 9113 section 8.2.3). 줄을 따로따로 받는 host는 parse 전에 그 줄들을 `; `로 잇는다.
        Node는 `node:http`의 `cookie`를 쓰며, 이것은 `; `로 잇는다. Python `server.py`는 첫 줄만이 아니라 모든 `Cookie`
        줄을 읽는다. `asgi.py`는 scope의 `cookie` 헤더들을 `; `로 잇고, 다른 헤더처럼 `, `로 잇지 않는다.
      - 이미 이어진 헤더를 받는 host는 그것을 주어진 그대로 받는다. PHP는 SAPI에서 `HTTP_COOKIE`를 받고, `wsgi.py`는
@@ -316,7 +316,7 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
    빠뜨린다. 이 문장은 "the session stores of HY-104 and HY-115"로 고친다.
 3. **case 비교.** HYR-11은 case 파일의 비교를 정한다. HY-130은 response의 header를 정하고, HY-4, HY-5, HY-38, HY-62, HY-73,
    HY-106, HY-129는 비교가 정하던 사실을 얻는다.
-   - 원인: HYR-7은 reader가 각 기대 필드를 그 파일의 규칙이 정한 비교로 비교하게 했으며, 일부 파일의 필드에는 규칙이 없었다.
+   - 원인: HYR-7은 reader가 각 expected 필드를 그 파일의 규칙이 정한 비교로 비교하게 했으며, 일부 파일의 필드에는 규칙이 없었다.
 
 ## H28.11의 작업 순서
 

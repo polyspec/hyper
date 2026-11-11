@@ -1,6 +1,6 @@
 import { BindError, bindValue, parseJson, type HostFunction, type MapValue, type Value } from '@polyspec/template/render';
 import { createEngine } from './engine.js';
-import { applyRegionKept, copyValue, decodeResponse, presentRouteRegions, renderDocument, renderLayout, renderRegionOf, requireMap, toHtml, type Application, type DecodedResponse } from './response.js';
+import { applyRegionKept, copyValue, decodeResponse, presentRouteRegions, renderDocument, renderLayout, renderRegionOf, requireMap, toHtml, withContext, type Application, type DecodedResponse } from './response.js';
 import { documentHeaders, ObtainError, requestDocument, type Fetch } from './obtain.js';
 import { PageStylesheets, StylesheetError } from './stylesheets.js';
 import { stripBasePath } from './router.js';
@@ -750,7 +750,7 @@ export class Hyper<E extends RegionElement = Element> {
     } else if (hash !== this.contextHash) {
       throw new Error(`hyper: the response has the context ${hash} without value, and the browser holds ${this.contextHash ?? 'no context'} (HYC-22)`);
     }
-    if (this.contextValue !== null) decoded.shared.set('context', this.contextValue);
+    if (this.contextValue !== null) decoded.shared = withContext(decoded.shared, this.contextValue);
   }
 
   // Returns the build id of a JSON response, which every response holds (HY-128).

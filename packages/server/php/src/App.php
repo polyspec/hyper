@@ -411,7 +411,7 @@ final class App
             return self::notAcceptable();
         }
         // HY-127: the Hyper-Context header is checked before the session, the token check and every handler.
-        if ($this->context !== null && self::invalidHyperContext($request)) {
+        if ($this->context !== null && !Context::validHeader($request->header('Hyper-Context'))) {
             return Response::text(400, 'Bad Request');
         }
         $session = new Session($store);
@@ -474,48 +474,6 @@ final class App
     private function vary(): string
     {
         return 'Accept, HX-Request, HX-Current-URL' . ($this->context === null ? '' : ', Hyper-Context');
-    }
-
-    /** Returns true when the request sends a Hyper-Context that is not a context hash, lowercase hexadecimal (HY-127). */
-    private static function invalidHyperContext(Request $request): bool
-    {
-        $held = $request->header('Hyper-Context');
-
-        return $held !== null && preg_match('/^[0-9a-f]{64}$/D', $held) !== 1;
-    }
-
-    /**
-     * Returns the shared data without the context, which a JSON response holds as its member `context` (HY-128).
-     *
-     * @param array<array-key, mixed> $shared
-     * @return array<array-key, mixed>
-     */
-    private static function withoutContext(array $shared): array
-    {
-        unset($shared['context']);
-
-        return $shared;
-    }
-
-    /**
-     * Keeps the shared values that the route reads (HY-73); the context is sent whole and keeps its place (HY-126).
-     *
-     * @param array<array-key, mixed> $shared
-     * @return array<array-key, mixed>
-     */
-    private function readsShared(string $route, array $shared): array
-    {
-        $read = $this->reads->shared($route, $shared);
-        $kept = [];
-        foreach ($shared as $name => $value) {
-            if ($name === 'context') {
-                $kept[$name] = $value;
-            } elseif (array_key_exists($name, $read)) {
-                $kept[$name] = $read[$name];
-            }
-        }
-
-        return $kept;
     }
 
     /**
@@ -690,12 +648,7 @@ final class App
         $provided = [Request::class => $request, Reply::class => $reply];
         $shared = ['title' => $route['title'], 'csrf' => $request->csrfToken()];
         // HY-124: the context handler runs after the action and before the shared handler and any loader.
-        $context = null;
-        if ($this->context !== null) {
-            $context = self::map(($this->context)($request->selection()), 'the context handler');
-            DataModel::check(['context' => $context]);
-            $shared['context'] = $context;
-        }
+        $context = $this->context === null ? null : Context::held($this->context, $request->selection());
         if ($this->shared !== null) {
             $returned = self::map($this->container->call($this->shared, $provided), 'the shared handler');
             if (array_key_exists('context', $returned)) {
@@ -738,7 +691,7 @@ final class App
         // HY-44: every value that the handlers returned belongs to the data model, also a value that no template reads.
         DataModel::check(['shared' => $shared, 'regions' => $data]);
         // HY-73: the page keeps only the paths that the templates of the route read.
-        $shared = $this->readsShared($route['name'], $shared);
+        $shared = $this->reads->shared($route['name'], $shared);
         foreach ($data as $name => $regionData) {
             $data[$name] = $this->reads->region($route['name'], $name, $regionData);
         }
@@ -758,7 +711,7 @@ final class App
                 $context === null
                     ? null
                     : Context::member($this->build, $context, $request->header('Hyper-Context')),
-                self::withoutContext($shared),
+                $shared,
                 $data,
                 $kept,
             );
@@ -800,7 +753,7 @@ final class App
         return new Response(
             $status,
             $headers,
-            $this->document($request, $route, $shared, $data, $templates, $kept, $reply->embedsData()),
+            $this->document($request, $route, $shared, $context, $data, $templates, $kept, $reply->embedsData()),
         );
     }
 
@@ -865,6 +818,7 @@ final class App
      *
      * @param RouteDefinition $route
      * @param array<array-key, mixed> $shared
+     * @param array<array-key, mixed>|null $context the context of the application, or null without one (HY-124)
      * @param array<string, array<array-key, mixed>> $data
      * @param array<string, string> $templates
      * @param array<string, array<string, mixed>> $kept
@@ -873,13 +827,15 @@ final class App
         Request $request,
         array $route,
         array $shared,
+        ?array $context,
         array $data,
         array $templates,
         array $kept,
         bool $embed,
     ): string {
         // H10.4: each root of the document is bound once, and every render merges the bound roots (VAL-22).
-        $boundShared = $this->renderer->bind($shared);
+        // HY-10, HY-124: the templates read the context in the shared data, in its place after csrf or title.
+        $boundShared = $this->renderer->bind($context === null ? $shared : Context::withContext($shared, $context));
         $applied = [];
         foreach ($data as $name => $regionData) {
             $pairs = [];
@@ -893,6 +849,7 @@ final class App
                 $request,
                 $route,
                 $shared,
+                $context,
                 $boundShared,
                 $data,
                 $applied,
@@ -933,6 +890,7 @@ final class App
             $request,
             $route,
             $shared,
+            $context,
             $boundShared,
             $data,
             $applied,
@@ -962,6 +920,7 @@ final class App
     /**
      * @param RouteDefinition $route
      * @param array<array-key, mixed> $shared shared data, which the embedded data carries
+     * @param array<array-key, mixed>|null $context the context of the application, or null without one (HY-124)
      * @param array<string, array<array-key, mixed>> $data loader data, which the embedded data carries
      * @param array<string, BoundMap> $applied bound region data with kept values applied, which the
      *     regions render
@@ -973,6 +932,7 @@ final class App
         Request $request,
         array $route,
         array $shared,
+        ?array $context,
         BoundMap $boundShared,
         array $data,
         array $applied,
@@ -988,16 +948,13 @@ final class App
         if ($embed && $routeRegionNames !== []) {
             $embedded = array_intersect_key($data, array_flip($routeRegionNames));
             // HY-31: an embedded document holds build and context with its value, whatever the request holds.
-            $context = isset($shared['context']) && is_array($shared['context'])
-                ? Context::member($this->build, $shared['context'], null)
-                : null;
             $response = JsonCodec::value(
                 $this->timezone,
                 $route['name'],
                 $request->params(),
                 $this->build,
-                $context,
-                self::withoutContext($shared),
+                $context === null ? null : Context::member($this->build, $context, null),
+                $shared,
                 $embedded,
                 array_intersect_key($kept, $embedded),
             );

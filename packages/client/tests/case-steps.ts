@@ -1,9 +1,9 @@
-// The steps of the browser runner (HYR-7) for the case files keep.json, reads.json, routes.json and rest.json. Each step
+// The steps of the browser runner (HYR-7) for the case files context.json, keep.json, reads.json, routes.json and rest.json. Each step
 // calls the browser package, and reads its cases through the case reader of the server tree (the only import from there).
 import { parse } from '@polyspec/template';
 import { MapLoader, resolvePath, type MapValue, type Value } from '@polyspec/template/render';
 import type { CaseReader } from '../../server/ts/tests/case-reader.js';
-import { applyKept, copyValue, createEngine, keepRead, Router, stripBasePath, templateReads } from '../src/index.js';
+import { applyKept, copyValue, createEngine, keepRead, Router, stripBasePath, templateReads, withContext } from '../src/index.js';
 
 export type Step = (reader: CaseReader) => unknown;
 
@@ -89,8 +89,31 @@ const routes = {
   invalidPaths: refusesPath,
 };
 
+// The step of the section withContext of contracts/context.json (HY-10, HY-128): the place of the context that a JSON
+// response carries in the shared data that the browser renders.
+function placesContext(reader: CaseReader): void {
+  const names = reader.input('shared');
+  if (!Array.isArray(names) || !names.every((name): name is string => typeof name === 'string')) throw new TypeError('hyper: the case field shared is not a list of strings');
+  const shared: MapValue = new Map(names.map((name) => [name, name]));
+  let keys: string[] | null = null;
+  let context: Value | null = null;
+  let fails = false;
+  try {
+    const placed = withContext(shared, new Map<string, Value>([['name', 'Board']]));
+    keys = [...placed.keys()];
+    context = placed.get('context') ?? null;
+  } catch (error) {
+    if (!(error instanceof Error) || !error.message.includes('already holds the member context')) throw error;
+    fails = true;
+  }
+  reader.compare('keys', keys);
+  reader.compare('context', context);
+  reader.compare('fails', fails);
+}
+
 // The browser steps by case file and section (`file:section`). A section without a step fails its cases.
 export const STEPS: Record<string, Step> = {
+  'context.json:withContext': placesContext,
   'keep.json:cases': keepCases,
   'reads.json:cases': readsCases,
   'routes.json:cases': routes.cases,

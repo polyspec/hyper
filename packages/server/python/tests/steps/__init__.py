@@ -24,6 +24,7 @@ STEPS = {
     ("accept.json", "select"): accept_steps.select,
     ("client.json", "cases"): client_steps.cases,
     ("context.json", "contexts"): context_steps.contexts,
+    ("context.json", "withContext"): context_steps.with_context,
     ("context.json", "cases"): context_steps.cases,
     ("cookies.json", "parse"): cookies_steps.parse,
     ("build.json", "read"): build_steps.read,

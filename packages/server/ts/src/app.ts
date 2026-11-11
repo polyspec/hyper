@@ -14,7 +14,7 @@ import { JsonCodec } from './json-codec.js';
 import { JsonDecodeError } from './json-decode-error.js';
 import { WarningsGuard } from './warnings-guard.js';
 import { Disconnected, renderPage, stopClosed, VARY, type PageInput } from './page.js';
-import { HYPER_CONTEXT, type ContextHandler } from './context.js';
+import { Context, type ContextHandler } from './context.js';
 import { checkClient, checkHandlers, type Client } from './open-checks.js';
 import { Reply } from './reply.js';
 import { negotiate, PAGE_AND_DATA, PAGE_TYPE } from './negotiate.js';
@@ -44,16 +44,16 @@ function readJsonFile(path: string): unknown {
 
 // The one argument of every loader and action: the request, the reply of the request and the services that the
 // application binds by key.
-export interface Context<S extends object> {
+export interface HandlerArgument<S extends object> {
   request: Request;
   reply: Reply;
   services: Container<S>;
 }
 
-export type Loader<S extends object> = (context: Context<S>) => Data | Promise<Data>;
-export type Action<S extends object> = (context: Context<S>) => Result | Promise<Result>;
+export type Loader<S extends object> = (argument: HandlerArgument<S>) => Data | Promise<Data>;
+export type Action<S extends object> = (argument: HandlerArgument<S>) => Result | Promise<Result>;
 // The loader of a route region, which returns null when the region is absent from the response (HY-75).
-export type RouteRegionLoader<S extends object> = (context: Context<S>) => Data | null | Promise<Data | null>;
+export type RouteRegionLoader<S extends object> = (argument: HandlerArgument<S>) => Data | null | Promise<Data | null>;
 
 export interface RouteHandlers<S extends object> {
   load?: Loader<S>;
@@ -359,7 +359,7 @@ export class App<S extends object = Record<string, never>> {
     if (selected.method !== 'GET' && (selected.method !== 'POST' || handler.post === undefined)) return Response.text(405, 'Method Not Allowed');
     // HY-127: a Hyper-Context value that is not 64 lowercase hexadecimal characters is refused before any handler runs.
     const hash = selected.header('Hyper-Context');
-    if (this.context !== null && hash !== null && !HYPER_CONTEXT.test(hash)) return Response.text(400, 'Bad Request');
+    if (this.context !== null && !Context.validHeader(hash)) return Response.text(400, 'Bad Request');
     const session = new Session(store);
     const flash = session.takeFlash();
     const routed = selected.withRoute(path, match.params).withSession(flash, Csrf.masked(session.csrfToken()));

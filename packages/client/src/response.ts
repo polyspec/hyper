@@ -259,6 +259,25 @@ function embeddedHtml(app: Application, decoded: DecodedResponse, env: { timezon
   return app.engine.render(DATA_TEMPLATE_NAME, new Map([['response', value]]), { env });
 }
 
+// Returns the shared data with the context in its place (HY-10, HY-128): right after `csrf`; right after `title` when
+// the read paths of the route (HY-73) removed `csrf`; and first when they removed both. Shared data that already holds a
+// member `context` fails, because the context has one place and one source (HY-124, HY-128).
+export function withContext(shared: MapValue, context: MapValue): MapValue {
+  if (shared.has('context')) throw new Error('hyper: the shared data already holds the member context (HY-128)');
+  const anchor = shared.has('csrf') ? 'csrf' : 'title';
+  const entries: [string, Value][] = [];
+  let placed = false;
+  for (const [name, item] of shared) {
+    entries.push([name, item]);
+    if (name === anchor) {
+      entries.push(['context', context]);
+      placed = true;
+    }
+  }
+  if (!placed) entries.unshift(['context', context]);
+  return new Map(entries);
+}
+
 export function requireMap(value: Value, label: string): MapValue {
   if (!(value instanceof Map)) throw new Error(`hyper: ${label} is not an object`);
   return value;

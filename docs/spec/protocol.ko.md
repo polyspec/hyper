@@ -1,5 +1,5 @@
 <!-- doc-id: protocol -->
-<!-- source-sha256: 922f0c108b3b689d7bb376e7d94bf92a6b47dc2cb153598cad0f2e76c56f9eac -->
+<!-- source-sha256: 5dd0124424e58fc1bdbd9d74f1b79da2c148b9a0d6a3ab4a246bf79e3866275d -->
 # 영역 프로토콜
 
 <!-- contracts/protocol.json에서 생성됨. 직접 수정하지 않는다. -->
@@ -49,7 +49,7 @@
 
 ## 데이터와 주제
 
-- **HY-10** <a id="HY-10.1"></a> 공유 데이터는 레이아웃, 제목, 모든 영역이 받는 맵 하나다. <a id="HY-10.2"></a> 라우트 제목 `title`과 이 응답을 위해 가린 HY-24의 세션 토큰 `csrf`로 시작하고, 애플리케이션이 context를 선언하면 그다음에 애플리케이션의 context인 `context`(HY-124)가 오며, 그 뒤에 애플리케이션이 추가하는 값이 온다.
+- **HY-10** <a id="HY-10.1"></a> 공유 데이터는 레이아웃, 제목, 모든 영역이 받는 맵 하나다. <a id="HY-10.2"></a> 라우트 제목 `title`과 이 응답을 위해 가린 HY-24의 세션 토큰 `csrf`로 시작하고, 애플리케이션이 context를 선언하면 그다음에 애플리케이션의 context인 `context`(HY-124)가 오며, 그 뒤에 애플리케이션이 추가하는 값이 온다. <a id="HY-10.3"></a> 라우트의 read path(HY-73)가 `csrf`를 빼면 `context`는 `title` 바로 뒤에 오고, 둘 다 빼면 맨 앞에 온다. context의 자리와 출처는 하나이므로, 이미 member `context`를 가진 공유 데이터에 context를 넣으면 서버에서는 HY-43으로, 브라우저에서는 오류로 실패한다.
 
 - **HY-11** <a id="HY-11.1"></a> 페이지 영역이 아닌 모든 영역은 사용하는 주제를 선언한다. <a id="HY-11.2"></a> 주제는 바뀔 수 있는 데이터의 이름이다(예: `posts`). <a id="HY-11.3"></a> `path` 주제는 내장 주제이며, 요청 경로가 `HX-Current-URL` 요청 헤더의 경로(기본 경로 제거 후)와 다르면 바뀐다.
 
@@ -138,7 +138,7 @@
 
 - **HY-127** <a id="HY-127.1"></a> 영역 요청과 문서 요청은 브라우저가 보관한 context hash를 header `Hyper-Context`로 보낼 수 있다. <a id="HY-127.2"></a> context가 있는 애플리케이션은 `text/html`이나 `application/vnd.hyper+json`을 선택했고 HY-62가 그 405, 406, 셸로 응답하지 않는 모든 요청의 이 header를, HY-116의 method 검사 바로 뒤, HY-59.7과 HY-59.8, HY-114의 파일 제한, HY-24의 token 검사, context handler, 어떤 loader나 action보다 먼저 검사한다: 소문자 16진수 64자가 아닌 값이면 서버는 상태 400과 텍스트 `Bad Request`로 응답한다(HY-58). <a id="HY-127.3"></a> context가 없는 애플리케이션은 이 header를 읽지 않는다. <a id="HY-127.4"></a> 유효한 값을 가진 HTML 요청은 그 값이 없을 때처럼 응답한다. 문서는 context 전체를 담기 때문이다.
 
-- **HY-128** <a id="HY-128.1"></a> 모든 JSON 응답(HY-17)은 `params` 뒤에 build id인 member `build`를 담는다. <a id="HY-128.2"></a> context가 있는 애플리케이션의 JSON 응답은 그 뒤에 member `context`를 담는다. 그 값은 `{"hash": <context hash>}`이며, 요청에 `Hyper-Context`가 없거나 다른 hash를 지정했으면 그 뒤에 `"value": <context>`가 온다. <a id="HY-128.3"></a> `shared`의 member `context`는 JSON 응답에 없다. 브라우저 코드는 렌더하기 전에 context를 HY-10의 위치인 `csrf` 바로 뒤에 `shared`에 넣는다. 응답에 `value`가 있으면 그 값이고, 없으면 보관한 context다. <a id="HY-128.4"></a> Node 서버는 context map으로 같은 코드(HY-54)를 써서 문서를 렌더하며, `hash`와 `value`를 가진 member `context`는 데이터를 내장하는 문서에서만 렌더하는 값에 넣는다. <a id="HY-128.5"></a> 데이터를 내장하는 문서(HY-31)는 `build`와, `value`를 가진 `context`를 내장한다.
+- **HY-128** <a id="HY-128.1"></a> 모든 JSON 응답(HY-17)은 `params` 뒤에 build id인 member `build`를 담는다. <a id="HY-128.2"></a> context가 있는 애플리케이션의 JSON 응답은 그 뒤에 member `context`를 담는다. 그 값은 `{"hash": <context hash>}`이며, 요청에 `Hyper-Context`가 없거나 다른 hash를 지정했으면 그 뒤에 `"value": <context>`가 온다. <a id="HY-128.3"></a> `shared`의 member `context`는 JSON 응답에 없다. 브라우저 코드는 렌더하기 전에 context를 HY-10의 위치에 맞춰 `shared`에 넣는다. 응답에 `value`가 있으면 그 값이고, 없으면 보관한 context다. <a id="HY-128.4"></a> Node 서버는 context map으로 같은 코드(HY-54)를 써서 문서를 렌더하며, `hash`와 `value`를 가진 member `context`는 데이터를 내장하는 문서에서만 렌더하는 값에 넣는다. <a id="HY-128.5"></a> 데이터를 내장하는 문서(HY-31)는 `build`와, `value`를 가진 `context`를 내장한다.
 
 ## 브라우저
 

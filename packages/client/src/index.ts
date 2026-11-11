@@ -27,6 +27,7 @@ export {
   bindParts,
   type BoundParts,
   toHtml,
+  withContext,
   type Application,
   type DecodedResponse,
   type RenderedParts,

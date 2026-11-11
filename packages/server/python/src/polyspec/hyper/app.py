@@ -16,7 +16,6 @@ from .client import Choice, ClientRendering
 from .container import Container
 from ._build import Build
 from ._representation_entries import check_handlers as check_representation_handlers
-from . import _context
 from ._context import Context
 from ._csrf import Csrf
 from ._data_model import DataModel
@@ -387,7 +386,9 @@ class App:
         ):
             return Response.text(405, "Method Not Allowed")
         # HY-127: an application with a context checks the Hyper-Context header after the method check.
-        if self._context_handler is not None and not _valid_context_header(request):
+        if self._context_handler is not None and not Context.valid_header(
+            request.header("Hyper-Context")
+        ):
             return Response.text(400, "Bad Request")
         return None
 
@@ -493,15 +494,17 @@ class App:
         json_request = request.wants_json()
         provided = {Request: request, Reply: reply, "request": request, "reply": reply}
         # HY-124: the context handler runs once, after the action of the request and before the shared handler.
-        context = self._context_of(request)
+        context = (
+            None
+            if self._context_handler is None
+            else Context.held(self._context_handler, request.selection())
+        )
         shared = {"title": route["title"], "csrf": request.csrf_token()}
-        if context is not None:
-            shared["context"] = context.value
         if self._shared is not None:
             handed = _loader_map(
                 self.container.call(self._shared, provided), "the shared handler"
             )
-            if context is not None and "context" in handed:
+            if "context" in handed:
                 raise ValueError("the shared handler returned the key context (HY-124)")
             shared.update(handed)
 
@@ -552,7 +555,7 @@ class App:
         # reads.
         DataModel.check({"shared": shared, "regions": data})
         # HY-73: the page keeps only the paths that the templates of the route read.
-        shared = self._kept_shared(route["name"], shared)
+        shared = self.reads.shared(route["name"], shared)
         for name, region_data in data.items():
             data[name] = self.reads.region(route["name"], name, region_data)
         kept = self._kept(request, session, data)
@@ -566,8 +569,12 @@ class App:
                 route["name"],
                 request.params(),
                 self.build,
-                _context_member(context, request.header("Hyper-Context")),
-                _without_context(shared),
+                None
+                if context is None
+                else Context.member(
+                    self.build, context, request.header("Hyper-Context")
+                ),
+                shared,
                 data,
                 kept,
             )
@@ -633,32 +640,6 @@ class App:
             return "Accept, HX-Request, HX-Current-URL"
         return "Accept, HX-Request, HX-Current-URL, Hyper-Context"
 
-    def _context_of(self, request: Request) -> Optional[Context]:
-        """Calls the context handler with the selection value of the request and returns its context with the hash of
-        the build (HY-124, HY-125), or None for an application without a context. The map is checked as HY-44
-        requires."""
-        if self._context_handler is None:
-            return None
-        value = _loader_map(
-            self._context_handler(request.selection()), "the context handler"
-        )
-        DataModel.check(value)
-        return _context.of(value, self.build)
-
-    def _kept_shared(self, route: str, shared: dict) -> dict:
-        """Returns the shared data that a route keeps (HY-73). The context is sent whole (HY-126), and it keeps its
-        place after `csrf` (HY-10)."""
-        if "context" not in shared:
-            return self.reads.shared(route, shared)
-        kept = self.reads.shared(
-            route, {name: value for name, value in shared.items() if name != "context"}
-        )
-        return {
-            name: shared[name] if name == "context" else kept[name]
-            for name in shared
-            if name == "context" or name in kept
-        }
-
     def _kept(self, request: Request, session: Session, data: dict) -> dict:
         """Returns the conforming `server` and `cookie` kept values of the regions, by region and path (HY-17,
         HY-38)."""
@@ -703,13 +684,16 @@ class App:
         templates: dict,
         kept: dict,
         embed: bool,
-        context: Optional[Context],
+        context: Optional[dict],
     ) -> str:
         """Renders the document with the kept values applied. When that fails, every region whose rendering alone
         fails with its kept values renders with its loader data, route regions first, and its kept values leave the
         embedded data (HY-31, HY-38). The document embeds its data only when `embed` is True (HY-92)."""
         # H10.4: each root of the document is bound once, and every render merges the bound roots (VAL-22).
-        bound_shared = self.renderer.bind(shared)
+        # HY-10, HY-124: the templates read the context in the shared data, in its place after csrf or title.
+        bound_shared = self.renderer.bind(
+            shared if context is None else Context.with_context(shared, context)
+        )
         applied = {}
         for name, region_data in data.items():
             pairs = list(
@@ -776,7 +760,7 @@ class App:
         templates: dict,
         kept: dict,
         embed: bool,
-        context: Optional[Context],
+        context: Optional[dict],
     ) -> str:
         # HY-31, HY-75, HY-92: a document embeds its data only when the reply asks for it, and then only the present
         # route regions and their kept entries, the data that the browser can change; a response without a present
@@ -790,8 +774,8 @@ class App:
                 route["name"],
                 request.params(),
                 self.build,
-                None if context is None else {"hash": context.hash, "value": context.value},
-                _without_context(shared),
+                None if context is None else Context.member(self.build, context, None),
+                shared,
                 embedded,
                 {name: kept[name] for name in embedded if name in kept},
             )
@@ -848,27 +832,6 @@ class App:
             return Response.text(400, "Bad Request")
         session.keep(name, path, decoded)
         return Response(204, {}, "")
-
-
-def _context_member(context: Optional[Context], header: Optional[str]) -> Optional[dict]:
-    """Returns the member `context` of a JSON response (HY-128): the hash, and the value unless the request names
-    the current hash in `Hyper-Context`."""
-    if context is None:
-        return None
-    if header == context.hash:
-        return {"hash": context.hash}
-    return {"hash": context.hash, "value": context.value}
-
-
-def _without_context(shared: dict) -> dict:
-    """Returns the shared data of a response without its member `context`, which the browser inserts (HY-128)."""
-    return {name: value for name, value in shared.items() if name != "context"}
-
-
-def _valid_context_header(request: Request) -> bool:
-    """Returns True when the request has no `Hyper-Context` header or a valid hash in it (HY-127)."""
-    header = request.header("Hyper-Context")
-    return header is None or _context.valid_header(header)
 
 
 def _loader_map(value: object, source: str) -> dict:

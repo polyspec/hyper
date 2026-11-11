@@ -1,4 +1,5 @@
-export { App, type Action, type AppOptions, type Choice, type ClientRendering, type Context, type Handlers, type Loader, type RouteHandlers, type RouteRegionLoader } from './app.js';
+export { App, type Action, type AppOptions, type Choice, type ClientRendering, type HandlerArgument, type Handlers, type Loader, type RouteHandlers, type RouteRegionLoader } from './app.js';
+export { type ContextHandler } from './context.js';
 export { FileSession, FileSessions, type FileSessionsOptions } from './file-sessions.js';
 export { RecordSession } from './session-record.js';
 export { RedisSession, RedisSessions, SessionLockError, type RedisCommand, type RedisSessionsOptions } from './redis-sessions.js';

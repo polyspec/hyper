@@ -377,6 +377,12 @@
                   "en": "It starts with `title`, the route title, and `csrf`, the masked session token of HY-24 for this response, then `context`, the context of the application (HY-124), when the application declares one, followed by the values that the application adds.",
                   "ko": "라우트 제목 `title`과 이 응답을 위해 가린 HY-24의 세션 토큰 `csrf`로 시작하고, 애플리케이션이 context를 선언하면 그다음에 애플리케이션의 context인 `context`(HY-124)가 오며, 그 뒤에 애플리케이션이 추가하는 값이 온다.",
                   "koSource": "1013983b7ed1beebe77697714a38c879f3b72ce6535f49dd59815b9b92721d7a"
+                },
+                {
+                  "id": "HY-10.3",
+                  "en": "When the read paths of the route (HY-73) remove `csrf`, `context` comes right after `title`, and when they remove both, it comes first; placing the context in shared data that already holds a member `context` fails, with HY-43 on a server and with an error in the browser, because the context has one place and one source.",
+                  "ko": "라우트의 read path(HY-73)가 `csrf`를 빼면 `context`는 `title` 바로 뒤에 오고, 둘 다 빼면 맨 앞에 온다. context의 자리와 출처는 하나이므로, 이미 member `context`를 가진 공유 데이터에 context를 넣으면 서버에서는 HY-43으로, 브라우저에서는 오류로 실패한다.",
+                  "koSource": "03f4cd5f2225e1513f8fe9a002ff5e8befd0c4d7451b3090b59726307d660221"
                 }
               ]
             }
@@ -1695,9 +1701,9 @@
                   "id": "HY-128.2"
                 },
                 {
-                  "en": "The member `context` of `shared` is absent from a JSON response; before it renders, the browser code inserts the context into `shared` right after `csrf`, the position of HY-10: the `value` of the response when it has one, and otherwise the held context.",
-                  "ko": "`shared`의 member `context`는 JSON 응답에 없다. 브라우저 코드는 렌더하기 전에 context를 HY-10의 위치인 `csrf` 바로 뒤에 `shared`에 넣는다. 응답에 `value`가 있으면 그 값이고, 없으면 보관한 context다.",
-                  "koSource": "aaa2456c74c9c703b7f4dc955465485e04cd990568b3af604ee72ff2d4f4c9a6",
+                  "en": "The member `context` of `shared` is absent from a JSON response; before it renders, the browser code inserts the context into `shared` at its position of HY-10: the `value` of the response when it has one, and otherwise the held context.",
+                  "ko": "`shared`의 member `context`는 JSON 응답에 없다. 브라우저 코드는 렌더하기 전에 context를 HY-10의 위치에 맞춰 `shared`에 넣는다. 응답에 `value`가 있으면 그 값이고, 없으면 보관한 context다.",
+                  "koSource": "f71d6802c85bdc391c671e2f7c66527aa1112d3a38fd02aa3a9f83720187cee1",
                   "id": "HY-128.3"
                 },
                 {

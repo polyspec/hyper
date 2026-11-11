@@ -32,6 +32,9 @@ final class ContextRun
     /** @var list<mixed> the selection values that the context handler received */
     public array $selections = [];
 
+    /** the failure that the response hook received with the last response (HY-60), or null */
+    public ?string $failure = null;
+
     /** @param Application $application */
     public function __construct(
         private readonly string $key,
@@ -46,8 +49,9 @@ final class ContextRun
      *
      * @param array<string, mixed>|null $shared
      * @param array<string, callable|string> $functions the host functions of the case (HYC-24)
+     * @param ?string $context the JSON text of the context of the case, which replaces the context of the application
      */
-    public function open(?array $shared, array $functions = []): App
+    public function open(?array $shared, array $functions = [], ?string $context = null): App
     {
         $directory = "{$this->programs}/{$this->key}";
         self::autoload($directory);
@@ -77,13 +81,17 @@ final class ContextRun
             };
         }
 
-        $context = null;
-        if (isset($this->application['context'])) {
-            $context = function (mixed $selection): array {
+        $text = $context ?? $this->application['context'] ?? null;
+        $handler = null;
+        if ($text !== null) {
+            // The handler returns the decoded text as it is, also a value that is not a map, so that the server
+            // checks it (HY-124).
+            $value = json_decode($text, true, flags: JSON_THROW_ON_ERROR);
+            $handler = function (mixed $selection) use ($value): mixed {
                 $this->calls[] = 'context';
                 $this->selections[] = $selection;
 
-                return $this->contextMap();
+                return $value;
             };
         }
 
@@ -92,7 +100,10 @@ final class ContextRun
             "{$directory}/program",
             $handlers,
             'Z',
-            context: $context,
+            onResponse: function (Request $request, Response $response, float $elapsed, Reply $reply, ?string $failure): void {
+                $this->failure = $failure;
+            },
+            context: $handler,
             functions: $functions,
         );
     }
@@ -139,25 +150,23 @@ final class ContextRun
      */
     public function send(App $app, ArraySession $session, array $request): Response
     {
-        $headers = [];
-        foreach ($request['headers'] ?? [] as $name => $value) {
-            $headers[(string) $name] = (string) $value;
+        $headers = self::texts($request, 'headers');
+        $form = array_key_exists('form', $request) ? self::texts($request, 'form') : [];
+        $csrf = $request['csrf'] ?? false;
+        if (!is_bool($csrf)) {
+            throw new \UnexpectedValueException('the request field csrf is not a boolean');
         }
-        $form = [];
-        foreach ($request['form'] ?? [] as $name => $value) {
-            $form[(string) $name] = (string) $value;
-        }
-        if (($request['csrf'] ?? false) === true) {
+        if ($csrf) {
             $form['_csrf'] = self::maskedToken($app, $session);
             $this->calls = [];
             $this->selections = [];
         }
-        $target = (string) $request['target'];
+        $target = self::text($request, 'target');
         $body = http_build_query($form);
 
         return $app->handle(
             new Request(
-                (string) $request['method'],
+                self::text($request, 'method'),
                 Request::targetPath($target),
                 $headers,
                 Request::targetQuery($target),
@@ -167,19 +176,46 @@ final class ContextRun
         );
     }
 
-    /** @return array<string, mixed> */
-    private function contextMap(): array
+    /**
+     * Returns a string field of a request, and fails for any other value.
+     *
+     * @param array<string, mixed> $request
+     */
+    private static function text(array $request, string $field): string
     {
-        $context = $this->application['context'] ?? null;
-        if (!is_string($context)) {
-            throw new \LogicException("application {$this->key} declares no context");
-        }
-        $map = json_decode($context, true, flags: JSON_THROW_ON_ERROR);
-        if (!is_array($map)) {
-            throw new \LogicException("the context of {$this->key} is not a map");
+        $value = $request[$field] ?? null;
+        if (!is_string($value)) {
+            throw new \UnexpectedValueException("the request field {$field} is not a string");
         }
 
-        return $map;
+        return $value;
+    }
+
+    /**
+     * Returns a field of a request that maps names to strings, and fails for any other value.
+     *
+     * @param array<string, mixed> $request
+     * @return array<string, string>
+     */
+    private static function texts(array $request, string $field): array
+    {
+        $value = $request[$field] ?? null;
+        // Plain gives an empty JSON object as stdClass, so that it differs from an empty list.
+        if ($value instanceof \stdClass && get_object_vars($value) === []) {
+            return [];
+        }
+        if (!is_array($value) || ($value !== [] && array_is_list($value))) {
+            throw new \UnexpectedValueException("the request field {$field} is not a map");
+        }
+        $texts = [];
+        foreach ($value as $name => $text) {
+            if (!is_string($name) || !is_string($text)) {
+                throw new \UnexpectedValueException("the request field {$field} holds a value that is not a string");
+            }
+            $texts[$name] = $text;
+        }
+
+        return $texts;
     }
 
     /** @param array<string, mixed> $spec */

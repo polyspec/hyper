@@ -294,7 +294,7 @@ the list below does not settle, with its reason.
    - it is public API of HY-106, which the other languages then add.
 4. **A unit in one language.** It carries `only` with its sentence, or the other languages add it.
 5. **Different parameters.** Use the parameters of a rule. Otherwise use those of two languages. A difference of the
-   runtime form that a rule states, such as the context argument of a Node handler (HY-105, HY-106), is `only` with
+   runtime form that a rule states, such as the one argument of a Node handler, `HandlerArgument` (HY-105, HY-106), is `only` with
    the sentence of that rule. A difference that no rule states, such as the abort signal of the Node request path, needs a rule before
    it stays. Otherwise it is aligned.
 6. **Folded helpers.** A folded function is a member of one unit. It is `private` when only its own file uses it.

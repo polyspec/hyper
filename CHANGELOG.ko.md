@@ -6,6 +6,8 @@
 
 ## Unreleased
 
+- context는 세 server에서 static member `held`, `text`, `hash`, `member`, `validHeader`, `withContext`를 가진 unit `Context`입니다. 브라우저는 `@polyspec/hyper-client`의 `withContext`로 context를 놓습니다. 브라우저는 JSON 응답의 context를 `shared`의 끝이 아니라 HY-10.3의 자리에 놓고, 이미 `context`를 가진 공유 데이터에 context를 놓으면 실패합니다. Python server는 PHP와 Node처럼 애플리케이션에 context handler가 없을 때에도 key `context`를 반환하는 shared handler를 실패시킵니다(HY-124). Node context handler는 데이터 모델 밖의 값(HY-44)에 대해 일반 문구 대신 그 원인을 보고하고, `context`를 반환하는 shared handler에 대한 Node 문구는 PHP, Python과 같이 `returned`입니다. PHP는 context가 맨 앞에 올 때 공유 데이터의 정수 key를 유지합니다. loader와 action이 받는 하나의 인자의 Node 타입은 `Context`를 대신하는 `HandlerArgument`이며, `ContextHandler`를 export합니다. `contracts/context.json`의 case는 context 자리의 값과 응답 hook이 받는 failure(HY-60)를 비교하고, list를 반환하는 context handler, 데이터 모델 밖의 context, context가 없는 애플리케이션에서 `context`를 반환하는 shared handler를 추가하며, 기본값 없이 field를 읽습니다(H28.11).
+
 - PHP, Node, Python의 `contracts/container.json`과 `contracts/csrf.json` case step은 case가 선언하지 않은 service 이름과 문자열이 아닌 field에서 실패합니다. 이전에는 그 이름을 `mailer`로, 그 field를 빈 문자열로 읽었습니다(H28.11).
 
 - client와 Node server test는 link된 `@polyspec/template`을 한 module instance로 적재합니다. vitest는 link 경로를 module id로 유지합니다(`resolve.preserveSymlinks`). vitest가 template의 같은 파일을 `engine.ts`, `keep.ts`, `templates.ts`에서는 link 경로로, `response.ts`, `hyper.ts`, `obtain.ts`에서는 실제 경로로 불렀기 때문에, `response.ts`가 bind한 map이 engine에서 `assign is not a map`으로 실패했고 `tests/functions.test.ts`가 실패했습니다(H28.11).

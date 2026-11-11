@@ -927,14 +927,17 @@
     {
       "id": "context",
       "rules": [
+        "HY-10",
         "HY-15",
         "HY-25",
         "HY-27",
         "HY-31",
         "HY-43",
+        "HY-44",
         "HY-45",
         "HY-52",
         "HY-58",
+        "HY-60",
         "HY-65",
         "HY-117",
         "HY-124",
@@ -959,16 +962,172 @@
             },
             "node": {
               "file": "packages/server/ts/src/context.ts",
-              "kind": "functions",
+              "kind": "class",
               "internal": true
             },
             "python": {
               "file": "packages/server/python/src/polyspec/hyper/_context.py",
-              "kind": "functions",
+              "kind": "class",
               "internal": true
             }
           },
-          "members": []
+          "members": [
+            {
+              "id": "context.held",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "function(value) -> map<value>",
+                "value"
+              ],
+              "output": "map<value>",
+              "errors": [],
+              "state": "Calls the context handler with the selection value and returns its map, which belongs to the data model.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Context.php::Polyspec\\Hyper\\Context::held",
+                  "signature": "public static function held(Closure $handler, mixed $selection): array"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/context.ts::Context.held",
+                  "signature": "static async held(handler: ContextHandler, selection: unknown): Promise<MapValue>"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_context.py::Context.held",
+                  "signature": "def held(handler: Callable[[object], object], selection: object) -> dict"
+                }
+              }
+            },
+            {
+              "id": "context.text",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "map<value>"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Returns the JSON text of a context map.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Context.php::Polyspec\\Hyper\\Context::text",
+                  "signature": "public static function text(array $map): string"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/context.ts::Context.text",
+                  "signature": "static text(map: MapValue): string"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_context.py::Context.text",
+                  "signature": "def text(map: dict) -> str"
+                }
+              }
+            },
+            {
+              "id": "context.hash",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "string",
+                "string"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Returns the context hash of a build id and the JSON text of a context.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Context.php::Polyspec\\Hyper\\Context::hash",
+                  "signature": "public static function hash(string $build, string $text): string"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/context.ts::Context.hash",
+                  "signature": "static hash(build: string, text: string): string"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_context.py::Context.hash",
+                  "signature": "def hash(build: str, text: str) -> str"
+                }
+              }
+            },
+            {
+              "id": "context.member",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "string",
+                "map<value>",
+                "optional<string>"
+              ],
+              "output": "map<value>",
+              "errors": [],
+              "state": "Returns the member context of a JSON response: the hash, and the value unless the held hash equals it.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Context.php::Polyspec\\Hyper\\Context::member",
+                  "signature": "public static function member(string $build, array $map, ?string $held): array"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/context.ts::Context.member",
+                  "signature": "static member(build: string, map: MapValue, held: string | null): MapValue"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_context.py::Context.member",
+                  "signature": "def member(build: str, map: dict, held: Optional[str]) -> dict"
+                }
+              }
+            },
+            {
+              "id": "context.validHeader",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "optional<string>"
+              ],
+              "output": "boolean",
+              "errors": [],
+              "state": "Tells whether a Hyper-Context value is absent or a context hash.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Context.php::Polyspec\\Hyper\\Context::validHeader",
+                  "signature": "public static function validHeader(?string $value): bool"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/context.ts::Context.validHeader",
+                  "signature": "static validHeader(value: string | null): boolean"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_context.py::Context.valid_header",
+                  "signature": "def valid_header(value: Optional[str]) -> bool"
+                }
+              }
+            },
+            {
+              "id": "context.withContext",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "map<value>",
+                "map<value>"
+              ],
+              "output": "map<value>",
+              "errors": [],
+              "state": "Returns the shared data with the context in its place.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Context.php::Polyspec\\Hyper\\Context::withContext",
+                  "signature": "public static function withContext(array $shared, array $map): array"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/context.ts::Context.withContext",
+                  "signature": "static withContext(shared: MapValue, map: MapValue): MapValue"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_context.py::Context.with_context",
+                  "signature": "def with_context(shared: dict, map: dict) -> dict"
+                }
+              }
+            }
+          ]
         }
       ]
     },
@@ -3647,6 +3806,26 @@
           "declaration": "export type DecodedValue = null | boolean | number | string | OutsideNumber | DecodedValue[] | Map<string, DecodedValue>;"
         }
       }
+    },
+    {
+      "id": "contextHandler",
+      "visibility": "public",
+      "unit": "context",
+      "shape": {
+        "term": "function(value) -> map<value>"
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-124.10"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/server/ts/src/context.ts::ContextHandler",
+          "declaration": "export type ContextHandler = (selection: unknown) => Map<string, Value> | Promise<Map<string, Value>>;"
+        }
+      }
     }
   ],
   "caseFiles": {
@@ -3975,6 +4154,44 @@
             }
           }
         },
+        "withContext": {
+          "runners": [
+            "php",
+            "node",
+            "python",
+            "browser"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "shared": {
+              "role": "input"
+            },
+            "keys": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-10.3",
+              "state": "`keys` are the keys of the shared data whose keys `shared` lists after the context takes its place in it, or null when it fails."
+            },
+            "context": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-10.3",
+              "state": "`context` is the value at the member `context` of the shared data after the context takes its place in it, or null when it fails."
+            },
+            "fails": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-128.3",
+              "state": "`fails` states whether placing the context fails because the shared data already holds the member `context`."
+            }
+          }
+        },
         "cases": {
           "runners": [
             "php",
@@ -3995,6 +4212,10 @@
               "role": "input"
             },
             "shared": {
+              "role": "input",
+              "optional": true
+            },
+            "context": {
               "role": "input",
               "optional": true
             },
@@ -4041,6 +4262,13 @@
             "bodyNotContains": {
               "role": "response",
               "optional": true
+            },
+            "failure": {
+              "role": "expected",
+              "optional": true,
+              "compare": "contains",
+              "sentence": "HY-60.11",
+              "state": "`failure` is a text that the failure of the response, as the response hook receives it, contains."
             },
             "keys": {
               "role": "expected",
