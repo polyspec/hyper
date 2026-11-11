@@ -23,7 +23,8 @@ export abstract class MultipartReader {
   feed(chunk: Uint8Array): boolean {
     if (this.state === 'failed') return false;
     if (this.state === 'done') return true;
-    this.buffer = Buffer.concat([this.buffer, chunk]);
+    // A chunk that follows an empty buffer is the buffer itself, without a copy.
+    this.buffer = this.buffer.length === 0 ? Buffer.from(chunk.buffer, chunk.byteOffset, chunk.byteLength) : Buffer.concat([this.buffer, chunk]);
     while (this.advance());
     // advance changes the state, which the narrowing above does not see.
     const state: string = this.state;
@@ -96,9 +97,13 @@ export abstract class MultipartReader {
         if (!this.partEnded()) return this.fail();
         return this.next('delimiter', index + this.separator.length);
       }
-      const keep = Math.min(buffer.length, this.separator.length - 1);
+      // A separator that the next chunk completes starts with a CR among the last bytes: the reader keeps the bytes
+      // from the first such CR, and nothing when there is none, so that it gives the chunk as it is.
+      const carriage = buffer.indexOf(13, buffer.length - Math.min(buffer.length, this.separator.length - 1));
+      const keep = carriage < 0 ? 0 : buffer.length - carriage;
       if (buffer.length > keep && !this.partData(buffer.subarray(0, buffer.length - keep))) return this.fail();
-      this.buffer = buffer.subarray(buffer.length - keep);
+      // The kept bytes are copied, so that the reader holds no chunk of its caller between two chunks.
+      this.buffer = keep === 0 ? Buffer.alloc(0) : Buffer.from(buffer.subarray(buffer.length - keep));
       return false;
     }
     return false;

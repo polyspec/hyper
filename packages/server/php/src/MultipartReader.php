@@ -44,7 +44,8 @@ abstract class MultipartReader
         if ($this->state === 'done') {
             return true;
         }
-        $this->buffer .= $chunk;
+        // A chunk that follows an empty buffer is the buffer itself, without a copy.
+        $this->buffer = $this->buffer === '' ? $chunk : $this->buffer . $chunk;
         while ($this->advance()) {
             continue;
         }
@@ -151,11 +152,14 @@ abstract class MultipartReader
 
                 return $this->next('delimiter', $index + strlen($this->separator));
             }
-            $keep = min($length, strlen($this->separator) - 1);
-            if ($length > $keep && !$this->partData(substr($buffer, 0, $length - $keep))) {
+            // A separator that the next chunk completes starts with a CR among the last bytes: the reader keeps the
+            // bytes from the first such CR, and nothing when there is none, so that it gives the chunk as it is.
+            $carriage = strpos($buffer, "\r", $length - min($length, strlen($this->separator) - 1));
+            $keep = $carriage === false ? 0 : $length - $carriage;
+            if ($length > $keep && !$this->partData($keep === 0 ? $buffer : substr($buffer, 0, $length - $keep))) {
                 return $this->fail();
             }
-            $this->buffer = substr($buffer, $length - $keep);
+            $this->buffer = $keep === 0 ? '' : substr($buffer, $length - $keep);
 
             return false;
         }

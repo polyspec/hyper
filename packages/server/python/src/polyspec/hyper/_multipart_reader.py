@@ -27,7 +27,8 @@ class MultipartReader:
             return False
         if self.__state == "done":
             return True
-        self.__buffer += chunk
+        # A chunk that follows an empty buffer is the buffer itself, without a copy.
+        self.__buffer = self.__buffer + chunk if self.__buffer else chunk
         while self._advance():
             pass
         return self.__state != "failed"
@@ -102,10 +103,17 @@ class MultipartReader:
                 if not self.part_ended():
                     return self._fail()
                 return self._next("delimiter", index + len(self.__separator))
-            keep = min(length, len(self.__separator) - 1)
-            if length > keep and not self.part_data(buffer[: length - keep]):
+            # A separator that the next chunk completes starts with a CR among the last bytes: the reader keeps the
+            # bytes from the first such CR, and nothing when there is none, so that it gives the chunk as it is.
+            carriage = buffer.find(
+                b"\r", length - min(length, len(self.__separator) - 1)
+            )
+            keep = 0 if carriage < 0 else length - carriage
+            if length > keep and not self.part_data(
+                buffer if keep == 0 else buffer[: length - keep]
+            ):
                 return self._fail()
-            self.__buffer = buffer[length - keep :]
+            self.__buffer = b"" if keep == 0 else buffer[length - keep :]
             return False
         return False
 

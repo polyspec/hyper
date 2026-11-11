@@ -6,6 +6,8 @@
 
 ## Unreleased
 
+- multipart body의 reader는 조각의 마지막 byte들에 CR이 없으면 part 내용의 조각을 그대로 준다. 다음 조각이 완성하는 delimiter는 CR로 시작하기 때문이다. 이전에는 모든 조각을 buffer에 붙였다가 내용을 다시 잘라냈다. 저장소 밖에서 file에서 읽은 1 GiB body로 각 5회 측정했다. processor 시간은 PHP에서 768 ms(732부터 860)에서 710 ms(673부터 803)로, Node에서 994 ms(965부터 1038)에서 963 ms(925부터 1019)로, Python에서 700 ms(676부터 718)에서 673 ms(662부터 687)로 줄었다. 범위가 겹치므로 그 복사는 비용의 작은 부분이었다(H29.6-3).
+
 - `docs/operations/deployment.md`에 업로드 절이 생겼다. 요청 body의 네 제한과 그 option과 기본값, 느린 client를 묶는 앞단 server의 설정, `enable_post_data_reading`이 꺼졌을 때 아무것도 묶지 않는 PHP 설정, 요청의 임시 directory와 그 삭제와 강제 종료된 server가 남기는 것, 세 server와 PHP reader에서 1 GiB body의 측정된 메모리와 processor 시간을 적는다(H29.6).
 
 - `tests/scripts/upload-servers.test.mts`는 같은 요청을 HTTP로 각 server의 실제 process 하나에 보낸다. `enable_post_data_reading`을 끈 내장 server 아래 PHP의 `App::run`, Node의 `App.server` server, Python의 `http.server` server다(HY-131). 반복 이름을 가진 3 MiB file의 upload, 닫는 delimiter가 없는 body, form body, body 없는 요청이 세 server에서 같은 답을 내며, request hook이 옮긴 file은 보낸 byte를 담고, PHP와 `http.server` server가 연결을 닫았을 때 요청의 directory는 사라져 있다. 이전에는 `App::run`의 `php://input` 읽기와 `http.server` transport에 닿는 test가 없었다(H29.3-1).
