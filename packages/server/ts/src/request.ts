@@ -35,7 +35,12 @@ interface State {
   csrfToken: string;
   // The value of the choice of the client rendering selection (HY-62).
   selection: unknown;
+  // The media type that the selection of HY-116 chose, or null before the selection.
+  mediaType: string | null;
 }
+
+// The media type of the JSON of hyper (HY-15).
+export const HYPER_JSON = 'application/vnd.hyper+json';
 
 export class Request {
   private readonly state: State;
@@ -74,6 +79,7 @@ export class Request {
       flash: new Map(),
       csrfToken: '',
       selection: null,
+      mediaType: null,
     });
   }
 
@@ -122,6 +128,19 @@ export class Request {
   /** @internal */
   withSelection(value: unknown): Request {
     return new Request({ ...this.state, selection: value });
+  }
+
+  // Returns a copy that holds the media type that the selection of HY-116 chose for this request, once per request.
+  /** @internal */
+  withSelectedType(type: string): Request {
+    if (this.state.mediaType !== null) throw new Error('hyper: the media type of a request is selected once (HY-116)');
+    return new Request({ ...this.state, mediaType: type });
+  }
+
+  // Returns the media type that the selection chose for this request (HY-116). It fails before the selection.
+  selectedType(): string {
+    if (this.state.mediaType === null) throw new Error('hyper: the media type of the request is read before its selection (HY-116)');
+    return this.state.mediaType;
   }
 
   // Returns the value of the choice that the client rendering selection returned for this request, or null for an
@@ -183,9 +202,9 @@ export class Request {
     return this.state.headers.get(name.toLowerCase()) ?? null;
   }
 
-  // Returns true when the request accepts JSON (HY-15).
+  // Returns true when the selected media type of the request is the JSON of hyper (HY-15, HY-116).
   wantsJson(): boolean {
-    return (this.header('Accept') ?? '').includes('application/json');
+    return this.selectedType() === HYPER_JSON;
   }
 
   // Returns true for a region request: JSON from htmx, which sends HX-Request with every request (HY-15).

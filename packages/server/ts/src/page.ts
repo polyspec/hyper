@@ -7,7 +7,7 @@ import { encodeJson } from './json.js';
 import { keptValues } from './kept.js';
 import { changedTopics, selectRegions } from './planner.js';
 import type { Reply } from './reply.js';
-import type { Request } from './request.js';
+import { HYPER_JSON, type Request } from './request.js';
 import { Response } from './response.js';
 import type { Services } from './services.js';
 import type { Flash, Session } from './session.js';
@@ -47,7 +47,8 @@ export interface PageEnvironment<S extends object> {
   reads: RouteReads;
 }
 
-const VARY = 'Accept, HX-Request, HX-Current-URL';
+// The Vary of a response with text/html or the JSON of hyper (HY-117).
+export const VARY = 'Accept, HX-Request, HX-Current-URL';
 
 export async function renderPage<S extends object>(input: PageInput<S>, environment: PageEnvironment<S>): Promise<Response> {
   const { request, route, handler, reply, status } = input;
@@ -102,7 +103,7 @@ export async function renderPage<S extends object>(input: PageInput<S>, environm
   const cacheControl = pageStatus === 200 ? (reply.cacheControlValue() ?? 'no-store') : 'no-store';
   if (request.wantsJson()) {
     const body = encodeJson(value);
-    const headers: Response['headers'] = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': cacheControl, Vary: VARY, ...reply.referrerPolicyHeaders() };
+    const headers: Response['headers'] = { 'Content-Type': HYPER_JSON, 'Cache-Control': cacheControl, Vary: VARY, ...reply.referrerPolicyHeaders() };
     if (pageStatus !== 200) return new Response(pageStatus, headers, body);
     // HY-53: a weak tag of the body with the masked token replaced by the session token, so the mask does not change
     // it; a matching GET request receives 304 without a body and without `Content-Type`, because a 304 carries no

@@ -12,7 +12,7 @@ export const FIXTURES = fileURLToPath(new URL('../../php/tests/fixtures/', impor
 // The template files of the fixtures, which `make hyper-test-node` builds with scripts/build-templates.mts.
 const BUILD = fileURLToPath(new URL('./build/', import.meta.url));
 export const TEMPLATES = { index: `${BUILD}templates.index.json`, root: BUILD };
-export const JSON_REGION = { Accept: 'application/json', 'HX-Request': 'true' };
+export const JSON_REGION = { Accept: 'application/vnd.hyper+json', 'HX-Request': 'true' };
 
 export interface Counter {
   count: number;

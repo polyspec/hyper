@@ -11,9 +11,10 @@ import type { RedisSessions } from './redis-sessions.js';
 import { createListener, createServer, type Listener, type ServerOptions } from './http.js';
 import { decodeJson, inDataModel, JsonDecodeError } from './json.js';
 import { warningsAsErrors } from './warnings.js';
-import { Disconnected, renderPage, stopClosed, type PageInput } from './page.js';
+import { Disconnected, renderPage, stopClosed, VARY, type PageInput } from './page.js';
 import { Reply } from './reply.js';
-import type { Request } from './request.js';
+import { negotiate, PAGE_AND_DATA, PAGE_TYPE } from './negotiate.js';
+import { HYPER_JSON, type Request } from './request.js';
 import { Response } from './response.js';
 import { BadRequest, Forbidden, NotFound, Redirect, Result } from './result.js';
 import { Services } from './services.js';
@@ -317,14 +318,14 @@ export class App<S extends object = Record<string, never>> {
     const route = this.routes.get(match.name);
     if (route === undefined) throw new Error(`hyper: route ${match.name} is not declared`);
     const handler = this.handlers.routes?.[route.name] ?? {};
-    if (client !== null) {
-      // HY-62: the data base path answers only JSON requests and actions, before the session is read.
-      if (request.method !== 'GET' && (request.method !== 'POST' || handler.post === undefined)) return Response.text(405, 'Method Not Allowed');
-      if (!request.wantsJson()) return Response.text(406, 'Not Acceptable');
-    }
+    // HY-116: the media type is selected after the routing; the data base path of HY-62 step 2 serves only the JSON of hyper.
+    const selected = negotiate(request, client === null ? PAGE_AND_DATA : [HYPER_JSON]);
+    if (selected instanceof Response) return selected;
+    // HY-62 step 2: a method other than GET or a declared POST is refused before the session is read (HY-120).
+    if (client !== null && selected.method !== 'GET' && (selected.method !== 'POST' || handler.post === undefined)) return Response.text(405, 'Method Not Allowed');
     const session = new Session(store);
     const flash = session.takeFlash();
-    const routed = request.withRoute(path, match.params).withSession(flash, maskedToken(session.csrfToken()));
+    const routed = selected.withRoute(path, match.params).withSession(flash, maskedToken(session.csrfToken()));
     const response = await this.routed({ request: routed, route, handler, session, flash, reply, status: 200, invalid: {}, basePath, signal });
     return response.withCookies(reply, this.https || request.https);
   }
@@ -339,12 +340,14 @@ export class App<S extends object = Record<string, never>> {
     return { chosen: choice.chosen, value: choice.value };
   }
 
-  // Answers a client-rendered request outside the data base path: the static shell for a page (HY-62).
+  // Answers a client-rendered request outside the data base path: the static shell for a page (HY-62). The path is
+  // routed and the method checked before the media type is selected (HY-62 step 3).
   private shell(request: Request, client: Client): Response {
     if (this.application.router.match(request.path()) === null) return Response.text(404, 'Not Found');
     if (request.method !== 'GET') return Response.text(405, 'Method Not Allowed');
-    if (request.wantsJson()) return Response.text(406, 'Not Acceptable');
-    return new Response(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache', Vary: 'Accept' }, client.shell);
+    const selected = negotiate(request, [PAGE_TYPE]);
+    if (selected instanceof Response) return selected;
+    return new Response(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache', Vary: VARY }, client.shell);
   }
 
   // Answers a routed request with its page, action result or stop result.

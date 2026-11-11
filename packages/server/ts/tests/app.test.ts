@@ -27,7 +27,7 @@ describe('App', () => {
     const application = createApplication(manifest, index, async (url) => decodeTemplate(JSON.parse(readFileSync(`${TEMPLATES.root}${url}`, 'utf8'))));
     await application.templates.ensure(Object.keys(index));
     const document = (await fixture.get('/')).body;
-    const parts = renderParts(application, decodeResponse(application, parseJson((await fixture.get('/', { Accept: 'application/json' })).body), '/'));
+    const parts = renderParts(application, decodeResponse(application, parseJson((await fixture.get('/', { Accept: 'application/vnd.hyper+json' })).body), '/'));
     expect(document).toContain(`<title>${parts.title}</title>`);
     expect(document).toContain(`<aside id="side">${parts.regions.get('side')}</aside>`);
     expect(parts.regions.get('content')).toBe('<p>Home|n0</p>\n');
@@ -37,7 +37,7 @@ describe('App', () => {
   it('embeds only the route regions of the document JSON and their kept entries (HY-31)', async () => {
     const headers = cookie('hy-keep', '{"rows":{"mode":"b"}}');
     const html = (await fixture.get('/list?embed=1', headers)).body;
-    const document = json(await fixture.get('/list', { Accept: 'application/json', ...headers }));
+    const document = json(await fixture.get('/list', { Accept: 'application/vnd.hyper+json', ...headers }));
     expect(Object.keys(document.regions)).toEqual(['side', 'content', 'rows']);
     const found = /<script type="application\/json" id="hy-data">(.*)<\/script>/.exec(html)?.[1];
     expect(JSON.parse(fixture.unmasked(present(found)))).toEqual(JSON.parse(fixture.unmasked(JSON.stringify({ ...document, regions: { rows: document.regions.rows } }))));
@@ -50,14 +50,14 @@ describe('App', () => {
     expect(document).toContain('<ul id="rows"><li>a&lt;</li><li>b0</li></ul>');
     expect(document).not.toContain('id="hy-data"');
     expect((await fixture.get('/list?embed=1')).body).toContain('id="hy-data"');
-    const plain = (await fixture.get('/list', { Accept: 'application/json' })).body;
-    const asked = (await fixture.get('/list?embed=1', { Accept: 'application/json' })).body;
+    const plain = (await fixture.get('/list', { Accept: 'application/vnd.hyper+json' })).body;
+    const asked = (await fixture.get('/list?embed=1', { Accept: 'application/vnd.hyper+json' })).body;
     expect(fixture.unmasked(asked)).toBe(fixture.unmasked(plain));
   });
 
   it('puts route regions right after the page region (HY-30)', async () => {
     const region = json(await fixture.get('/list', JSON_REGION));
-    const document = json(await fixture.get('/list', { Accept: 'application/json' }));
+    const document = json(await fixture.get('/list', { Accept: 'application/vnd.hyper+json' }));
     expect(Object.keys(region.regions)).toEqual(['content', 'rows']);
     expect(Object.keys(document.regions)).toEqual(['side', 'content', 'rows']);
     expect(region.regions.rows).toEqual({ items: ['a<', 'b0'], open: false, mode: 'a', view: 'x', filter: { a: 1 }, tags: [] });
@@ -187,7 +187,7 @@ describe('App', () => {
       for (const [label, variant] of Object.entries(variants)) {
         const app = await fixture.app({ handlers: variant });
         // A document runs every loader; a region request runs no loader of an unchanged region (HY-18).
-        for (const headers of [{}, { Accept: 'application/json' }]) {
+        for (const headers of [{}, { Accept: 'application/vnd.hyper+json' }]) {
           expect((await app.handle(Request.from({ method: 'GET', target: '/', headers }), fixture.session)).status, `${label} ${JSON.stringify(value)}`).toBe(500);
         }
       }
@@ -209,7 +209,7 @@ describe('App', () => {
     for (const [label, value, status] of cases) {
       const shared: Loader<Services> = () => ({ value });
       const app = await fixture.app({ handlers: { ...handlers(), shared } });
-      for (const headers of [{}, { Accept: 'application/json' }]) {
+      for (const headers of [{}, { Accept: 'application/vnd.hyper+json' }]) {
         expect((await app.handle(Request.from({ method: 'GET', target: '/', headers }), fixture.session)).status, label).toBe(status);
       }
     }
@@ -288,13 +288,13 @@ describe('App', () => {
   it('returns the protocol shape for a region request, with the time zone of the environment (HY-14, HY-17, HY-18)', async () => {
     const response = await fixture.get('/items/a%20b', JSON_REGION);
     expect(response.status).toBe(200);
-    expect(response.headers['Content-Type']).toBe('application/json; charset=utf-8');
+    expect(response.headers['Content-Type']).toBe('application/vnd.hyper+json');
     // HY-73: no template of the route reads csrf and no route region keeps a value on the server.
     expect(response.body).toBe('{"env":{"timezone":"+09:00"},"route":"item","params":{"id":"a b"},"shared":{"title":"Item"},"regions":{"content":{"id":"a b"}},"kept":{}}');
   });
 
   it('returns every region in manifest order for a document request (HY-15, HY-18)', async () => {
-    const response = json(await fixture.get('/', { Accept: 'application/json' }));
+    const response = json(await fixture.get('/', { Accept: 'application/vnd.hyper+json' }));
     expect(response.route).toBe('home');
     expect(Object.keys(response.regions)).toEqual(['side', 'content']);
   });
@@ -313,7 +313,7 @@ describe('App', () => {
 
   it('treats an htmx JSON request as a region request and other JSON as a document request (HY-15, HY-18)', async () => {
     expect(Object.keys(json(await fixture.get('/', JSON_REGION)).regions)).toEqual(['content']);
-    expect(Object.keys(json(await fixture.get('/', { Accept: 'application/json' })).regions)).toEqual(['side', 'content']);
+    expect(Object.keys(json(await fixture.get('/', { Accept: 'application/vnd.hyper+json' })).regions)).toEqual(['side', 'content']);
     expect((await fixture.get('/', JSON_REGION)).headers.Vary).toBe('Accept, HX-Request, HX-Current-URL');
   });
 
@@ -364,7 +364,7 @@ describe('App', () => {
     expect((await fixture.post('/add', { _csrf: old, name: 'sign-in' })).status).toBe(303);
     expect(fixture.session.renewals).toBe(1);
     expect(fixture.session.get('_hyper_csrf')).not.toBe(oldToken);
-    expect(record(json(await fixture.get('/', { Accept: 'application/json' })).regions.side).note).toBe('renewed');
+    expect(record(json(await fixture.get('/', { Accept: 'application/vnd.hyper+json' })).regions.side).note).toBe('renewed');
     expect((await fixture.post('/add', { _csrf: old, name: 'a' })).status).toBe(403);
     expect((await fixture.post('/add', { _csrf: await fixture.token(), name: 'a' })).status).toBe(303);
   });
@@ -378,7 +378,7 @@ describe('App', () => {
     const page = json(await fixture.get('/items/secret', JSON_REGION));
     expect(page.regions.content).toEqual({ id: 's' });
     expect(page.shared).toEqual({ title: 'Item' });
-    expect((await fixture.get('/items/secret', { Accept: 'application/json' })).body).not.toContain('"p"');
+    expect((await fixture.get('/items/secret', { Accept: 'application/vnd.hyper+json' })).body).not.toContain('"p"');
 
     const base = handlers();
     const app = await fixture.app({ handlers: { ...base, shared: () => ({ site: 'x', name: 'shared name' }), routes: { ...base.routes, list: { regions: { rows: () => ({ items: ['a'], open: false, mode: 'a', view: 'x', filter: {}, tags: [], unread: 1 }) } } } } });
@@ -402,7 +402,7 @@ describe('App', () => {
     };
     const app = await fixture.app({ handlers: { ...base, routes: { ...base.routes, list: { regions: { rows } } } } });
     const keep = cookie('hy-keep', '{"rows":{"mode":"b"}}');
-    const page = json(await app.handle(Request.from({ method: 'GET', target: '/list?rows=0', headers: { Accept: 'application/json', ...keep } }), fixture.session));
+    const page = json(await app.handle(Request.from({ method: 'GET', target: '/list?rows=0', headers: { Accept: 'application/vnd.hyper+json', ...keep } }), fixture.session));
     expect(Object.keys(page.regions)).toEqual(['side', 'content']);
     expect(page.kept).toEqual({});
     const document = (await app.handle(Request.from({ method: 'GET', target: '/list?rows=0', headers: keep }), fixture.session)).body;
@@ -415,10 +415,10 @@ describe('App', () => {
   });
 
   it('changes the tag of a renewed session (HY-53, HY-72)', async () => {
-    const first = await fixture.get('/items/plain', { Accept: 'application/json' });
-    expect((await fixture.get('/items/plain', { Accept: 'application/json', 'If-None-Match': text(first.headers.ETag) })).status).toBe(304);
+    const first = await fixture.get('/items/plain', { Accept: 'application/vnd.hyper+json' });
+    expect((await fixture.get('/items/plain', { Accept: 'application/vnd.hyper+json', 'If-None-Match': text(first.headers.ETag) })).status).toBe(304);
     expect((await fixture.post('/add', { _csrf: await fixture.token(), name: 'sign-in' })).status).toBe(303);
-    const renewed = await fixture.get('/items/plain', { Accept: 'application/json', 'If-None-Match': text(first.headers.ETag) });
+    const renewed = await fixture.get('/items/plain', { Accept: 'application/vnd.hyper+json', 'If-None-Match': text(first.headers.ETag) });
     expect(renewed.status).toBe(200);
     expect(renewed.headers.ETag).not.toBe(first.headers.ETag);
   });
@@ -456,7 +456,7 @@ describe('App', () => {
   });
 
   it('puts the referrer policy of the reply into every page and JSON answer (HY-103)', async () => {
-    const JSON_PAGE = { Accept: 'application/json', 'HX-Request': 'true' };
+    const JSON_PAGE = { Accept: 'application/vnd.hyper+json', 'HX-Request': 'true' };
     const page = await fixture.get('/items/referrer');
     expect(page.status).toBe(200);
     expect(page.headers['Referrer-Policy']).toBe('same-origin');
@@ -522,7 +522,7 @@ describe('App', () => {
     expect(response.status).toBe(303);
     expect(response.headers.Location).toBe('/items/new');
     expect(response.body).toBe('');
-    expect(record(json(await fixture.get('/', { Accept: 'application/json' })).regions.side).note).toBe('moved');
+    expect(record(json(await fixture.get('/', { Accept: 'application/vnd.hyper+json' })).regions.side).note).toBe('moved');
     expect((await fixture.get('/api/items/moved', {}, '/api')).headers.Location).toBe('/api/items/new');
   });
 
@@ -716,11 +716,11 @@ describe('App', () => {
     expect(document.status).toBe(409);
     expect(document.body).toContain('<p>Add|taken !conflict</p>');
 
-    const preview = await fixture.post('/add', { _csrf: token, name: 'preview' }, { Accept: 'application/json' });
+    const preview = await fixture.post('/add', { _csrf: token, name: 'preview' }, { Accept: 'application/vnd.hyper+json' });
     expect(preview.status).toBe(200);
     expect(record(json(preview).regions.content).name).toBe('preview');
     // HY-53: only a GET request receives 304; an action runs whatever tag the request names.
-    const again = await fixture.post('/add', { _csrf: token, name: 'preview' }, { Accept: 'application/json', 'If-None-Match': text(preview.headers.ETag) });
+    const again = await fixture.post('/add', { _csrf: token, name: 'preview' }, { Accept: 'application/vnd.hyper+json', 'If-None-Match': text(preview.headers.ETag) });
     expect(again.status).toBe(200);
     expect(fixture.unmasked(again.body)).toBe(fixture.unmasked(preview.body));
     expect((await fixture.post('/add', { _csrf: token, name: 'preview' })).status).toBe(200);
@@ -731,7 +731,7 @@ describe('App', () => {
     // The page renders as with 200 and has the status 403, no-store and no ETag; a GET with any tag runs.
     const page = await fixture.get('/items/in-place', JSON_REGION);
     expect(page.status).toBe(403);
-    expect(page.headers['Content-Type']).toBe('application/json; charset=utf-8');
+    expect(page.headers['Content-Type']).toBe('application/vnd.hyper+json');
     expect(page.headers['Cache-Control']).toBe('no-store');
     expect(page.headers.ETag).toBeUndefined();
     expect(record(json(page).regions.content).id).toBe('in-place');
@@ -792,16 +792,16 @@ describe('App', () => {
   });
 
   it('tags JSON responses and answers a matching request with 304 (HY-53)', async () => {
-    const first = await fixture.get('/items/plain', { Accept: 'application/json' });
+    const first = await fixture.get('/items/plain', { Accept: 'application/vnd.hyper+json' });
     const tag = text(first.headers.ETag);
     expect(tag).toBe(fixture.tag(first.body));
-    const again = await fixture.get('/items/plain', { Accept: 'application/json', 'If-None-Match': tag });
+    const again = await fixture.get('/items/plain', { Accept: 'application/vnd.hyper+json', 'If-None-Match': tag });
     expect(again.status).toBe(304);
     expect(again.body).toBe('');
     expect(again.headers.ETag).toBe(tag);
     expect(again.headers['Content-Type']).toBeUndefined();
     expect(again.headers['Cache-Control']).toBe(first.headers['Cache-Control']);
-    expect((await fixture.get('/items/plain', { Accept: 'application/json', 'If-None-Match': '"other"' })).status).toBe(200);
+    expect((await fixture.get('/items/plain', { Accept: 'application/vnd.hyper+json', 'If-None-Match': '"other"' })).status).toBe(200);
   });
 
   it('requires the handlers to match the manifest (HY-2)', async () => {

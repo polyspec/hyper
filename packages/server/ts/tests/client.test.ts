@@ -110,7 +110,7 @@ describe('client rendering (HY-62)', () => {
     expect(selections).toBe(1);
     expect(seen).toEqual([['shared', { host: 'server.test' }], ['side', { host: 'server.test' }], ['item', { host: 'server.test' }]]);
     seen.length = 0;
-    await app.handle(Request.from({ method: 'GET', target: '/_props/items/7', headers: { Host: 'client.test', Accept: 'application/json' } }), fixture.session);
+    await app.handle(Request.from({ method: 'GET', target: '/_props/items/7', headers: { Host: 'client.test', Accept: 'application/vnd.hyper+json' } }), fixture.session);
     expect(selections).toBe(2);
     expect(seen).toEqual([['shared', { host: 'client.test' }], ['side', { host: 'client.test' }], ['item', { host: 'client.test' }]]);
     seen.length = 0;

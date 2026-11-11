@@ -90,11 +90,11 @@ describe('App.server', () => {
   it('sets the session cookie of a new session and keeps the session (HY-45)', async () => {
     await start();
     // The route region of /list keeps a value on the server, so its shared data keeps csrf (HY-73).
-    const first = await fetch(`${base}/list`, { headers: { Accept: 'application/json' } });
+    const first = await fetch(`${base}/list`, { headers: { Accept: 'application/vnd.hyper+json' } });
     const cookie = present(first.headers.get('set-cookie'));
     expect(cookie).toMatch(/^hy-session=[0-9a-f]{64}; path=\/; HttpOnly; SameSite=Lax$/);
     const masked = text(record(record(parsed(await first.text())).shared).csrf);
-    const second = await fetch(`${base}/list`, { headers: { Accept: 'application/json', Cookie: present(cookie.split(';')[0]) } });
+    const second = await fetch(`${base}/list`, { headers: { Accept: 'application/vnd.hyper+json', Cookie: present(cookie.split(';')[0]) } });
     expect(second.headers.get('set-cookie')).toBeNull();
     // HY-24: the second response masks the same session token anew.
     expect(record(record(parsed(await second.text())).shared).csrf).not.toBe(masked);
@@ -382,10 +382,10 @@ describe('the request hook around', () => {
 
   it('answers a changed copy of the request, such as a copy with a header (HY-97)', async () => {
     const app = await new Fixture().app();
-    server = app.server(new FileSessions({ directory }), { around: (request, answer) => answer(request.withHeader('Accept', 'application/json')) });
+    server = app.server(new FileSessions({ directory }), { around: (request, answer) => answer(request.withHeader('Accept', 'application/vnd.hyper+json')) });
     base = await listen(server);
     const response = await fetch(`${base}/items/7`);
-    expect(response.headers.get('content-type')).toBe('application/json; charset=utf-8');
+    expect(response.headers.get('content-type')).toBe('application/vnd.hyper+json');
     expect(record(parsed(await response.text())).route).toBe('item');
   });
 
