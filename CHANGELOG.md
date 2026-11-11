@@ -5,6 +5,10 @@
 
 ## Unreleased
 
+- `make recipe-check` reads `contracts/interfaces.json` and checks it against the PHP, Node and Python sources and their case results (HYR-7, HYR-8); `make recipe-candidates` writes the candidate of that spec under `var/recipe` with its hand-written fields listed beside it (HYR-10) (H28.11).
+
+- The owner rule covers `scripts/recipe`, `scripts/schema` and the recipe fixtures; the Node reader pins TypeScript 6.0.3 in its own private package, recorded in docs/operations/dependencies.md (H28.11).
+
 - `contracts/representations.json` states its application under `applications`, with its manifest, templates, loaders, base path and build id, as the other contracts do (H28.1-9).
 
 - `contracts/functions.json` holds the cases of the host functions of HYC-24: a document that renders a registered function, the 500 of a call of a name that is not registered, and the open that a built-in name or an entry that is not a function fails (H28.1-8).

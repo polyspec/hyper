@@ -6,6 +6,10 @@
 
 ## Unreleased
 
+- `make recipe-check`은 `contracts/interfaces.json`을 읽어 PHP, Node, Python 소스와 case 결과에 대조한다(HYR-7, HYR-8). `make recipe-candidates`는 그 spec의 candidate를 `var/recipe` 아래 쓰고, 손으로 쓴 필드를 옆에 나열한다(HYR-10)(H28.11).
+
+- owner 규칙이 `scripts/recipe`, `scripts/schema`와 recipe fixture를 포함한다. Node reader는 TypeScript 6.0.3을 자기 private package에 고정하며, 그 기록은 docs/operations/dependencies.ko.md에 있다(H28.11).
+
 - `contracts/representations.json`은 다른 contract처럼 application을 manifest, template, loader, base path, build id와 함께 `applications` 아래에 적는다 (H28.1-9).
 
 - `contracts/functions.json`은 HYC-24 host function의 case를 담는다: 등록한 함수를 render하는 document, 등록하지 않은 이름을 부르는 호출의 500, built-in 이름이나 함수가 아닌 항목이 실패시키는 열기 (H28.1-8).
