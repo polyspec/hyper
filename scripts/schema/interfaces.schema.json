@@ -1,0 +1,259 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://polyspec.dev/schema/hyper/interfaces.schema.json",
+  "title": "Development spec of the Hyper servers (HYR-1)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["languages", "outside", "concerns", "types"],
+  "properties": {
+    "languages": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["php", "node", "python"],
+      "properties": {
+        "php": { "$ref": "#/$defs/language" },
+        "node": { "$ref": "#/$defs/language" },
+        "python": { "$ref": "#/$defs/language" }
+      }
+    },
+    "outside": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/outside" }
+    },
+    "concerns": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/concern" }
+    },
+    "types": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/type" }
+    }
+  },
+  "$defs": {
+    "hyId": { "type": "string", "pattern": "^HY-[0-9]+$" },
+    "kebab": { "type": "string", "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$" },
+    "camel": { "type": "string", "pattern": "^[a-z][a-zA-Z0-9]*$" },
+    "language": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sources", "tests", "barrel", "runner"],
+      "properties": {
+        "sources": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+        "tests": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+        "barrel": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "runner": { "type": "string", "pattern": "::" }
+      }
+    },
+    "outside": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rule", "reason"],
+      "properties": {
+        "rule": { "$ref": "#/$defs/hyId" },
+        "reason": { "type": "string", "minLength": 1 }
+      }
+    },
+    "only": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["languages", "rule", "quote"],
+      "properties": {
+        "languages": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "enum": ["php", "node", "python"] }
+        },
+        "rule": { "$ref": "#/$defs/hyId" },
+        "quote": { "type": "string", "minLength": 1 }
+      }
+    },
+    "term": {
+      "type": "string",
+      "pattern": "^(string|number|boolean|null|[a-z][a-zA-Z0-9-]*|[1-5][0-9]{2}|list<.+>|map<.+>|optional<.+>|function\\(.*\\) -> .+)$"
+    },
+    "nativeSymbol": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["symbol", "signature"],
+      "properties": {
+        "symbol": { "type": "string", "pattern": "::" },
+        "signature": { "type": "string", "minLength": 1 }
+      }
+    },
+    "nativeUnit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file", "kind", "internal"],
+      "properties": {
+        "file": { "type": "string", "minLength": 1 },
+        "kind": { "enum": ["class", "interface", "trait", "functions"] },
+        "internal": { "type": "boolean" }
+      }
+    },
+    "nativeType": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["symbol", "declaration"],
+      "properties": {
+        "symbol": { "type": "string", "pattern": "::" },
+        "declaration": { "type": "string", "minLength": 1 }
+      }
+    },
+    "unit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "native", "members"],
+      "properties": {
+        "id": { "$ref": "#/$defs/kebab" },
+        "native": {
+          "type": "object",
+          "additionalProperties": false,
+          "minProperties": 1,
+          "properties": {
+            "php": { "$ref": "#/$defs/nativeUnit" },
+            "node": { "$ref": "#/$defs/nativeUnit" },
+            "python": { "$ref": "#/$defs/nativeUnit" }
+          }
+        },
+        "members": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/member" }
+        },
+        "only": { "$ref": "#/$defs/only" }
+      }
+    },
+    "member": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "visibility", "inputs", "output", "errors", "state", "native"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*\\.[a-z][a-zA-Z0-9]*$" },
+        "kind": { "enum": ["constructor", "method", "static method", "function", "property"] },
+        "visibility": { "enum": ["public", "internal", "private"] },
+        "inputs": { "type": "array", "items": { "$ref": "#/$defs/term" } },
+        "output": { "$ref": "#/$defs/term" },
+        "errors": { "type": "array", "items": { "$ref": "#/$defs/term" } },
+        "state": { "type": "string", "minLength": 1 },
+        "native": {
+          "type": "object",
+          "additionalProperties": false,
+          "minProperties": 1,
+          "properties": {
+            "php": { "$ref": "#/$defs/nativeSymbol" },
+            "node": { "$ref": "#/$defs/nativeSymbol" },
+            "python": { "$ref": "#/$defs/nativeSymbol" }
+          }
+        },
+        "only": { "$ref": "#/$defs/only" }
+      }
+    },
+    "shape": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["fields", "optional"],
+          "properties": {
+            "fields": {
+              "type": "object",
+              "minProperties": 1,
+              "additionalProperties": {
+                "oneOf": [
+                  { "$ref": "#/$defs/term" },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["term", "only"],
+                    "properties": {
+                      "term": { "$ref": "#/$defs/term" },
+                      "only": { "$ref": "#/$defs/only" }
+                    }
+                  }
+                ]
+              }
+            },
+            "optional": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["function"],
+          "properties": {
+            "function": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["inputs", "output"],
+              "properties": {
+                "inputs": { "type": "array", "items": { "$ref": "#/$defs/term" } },
+                "output": { "$ref": "#/$defs/term" }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["term"],
+          "properties": { "term": { "$ref": "#/$defs/term" } }
+        }
+      ]
+    },
+    "type": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "visibility", "unit", "shape", "native"],
+      "properties": {
+        "id": { "$ref": "#/$defs/camel" },
+        "visibility": { "enum": ["public", "internal", "private"] },
+        "unit": { "$ref": "#/$defs/kebab" },
+        "shape": { "$ref": "#/$defs/shape" },
+        "only": { "$ref": "#/$defs/only" },
+        "native": {
+          "type": "object",
+          "additionalProperties": false,
+          "minProperties": 1,
+          "properties": {
+            "php": { "$ref": "#/$defs/nativeType" },
+            "node": { "$ref": "#/$defs/nativeType" },
+            "python": { "$ref": "#/$defs/nativeType" }
+          }
+        }
+      }
+    },
+    "testRef": {
+      "type": "string",
+      "pattern": "^.+::.+: .+$"
+    },
+    "cases": {
+      "oneOf": [
+        {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^contracts/.+\\.json$" }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["none", "tests"],
+          "properties": {
+            "none": { "type": "string", "minLength": 1 },
+            "tests": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/testRef" } }
+          }
+        }
+      ]
+    },
+    "concern": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "rules", "cases", "units"],
+      "properties": {
+        "id": { "$ref": "#/$defs/kebab" },
+        "rules": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/hyId" } },
+        "cases": { "$ref": "#/$defs/cases" },
+        "units": { "type": "array", "items": { "$ref": "#/$defs/unit" } }
+      }
+    }
+  }
+}

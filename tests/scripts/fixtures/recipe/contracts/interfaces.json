@@ -103,12 +103,7 @@
           "id": "media-type",
           "native": {
             "php": { "file": "packages/server/php/src/MediaType.php", "kind": "class", "internal": false },
-            "node": {
-              "file": "packages/server/ts/src/media-type.ts",
-              "kind": "class",
-              "internal": false,
-              "types": [{ "name": "Essence", "declaration": "export type Essence = string;" }]
-            },
+            "node": { "file": "packages/server/ts/src/media-type.ts", "kind": "class", "internal": false },
             "python": { "file": "packages/server/python/src/polyspec/hyper/media_type.py", "kind": "class", "internal": false }
           },
           "members": [
@@ -133,7 +128,18 @@
     {
       "id": "index",
       "rules": [],
-      "cases": { "none": "The barrels hold only re-exports, which the barrel check reads.", "tests": [] }
+      "cases": { "none": "The barrels hold only re-exports, which the barrel check reads.", "tests": [] },
+      "units": []
+    }
+  ],
+  "types": [
+    {
+      "id": "essence",
+      "visibility": "public",
+      "unit": "media-type",
+      "shape": { "term": "string" },
+      "only": { "languages": ["node"], "rule": "HY-2", "quote": "A media type is one essence." },
+      "native": { "node": { "symbol": "packages/server/ts/src/media-type.ts::Essence", "declaration": "export type Essence = string;" } }
     }
   ]
 }

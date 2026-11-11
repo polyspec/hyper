@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://polyspec.dev/schema/hyper/recipe-sources.schema.json",
+  "title": "Output of a recipe reader (HYR-8): what a language's sources and tests declare",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["language", "files", "units", "types", "members", "constants", "exports", "uses", "tests"],
+  "properties": {
+    "language": { "enum": ["php", "node", "python"] },
+    "files": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+    "units": { "type": "array", "items": { "$ref": "#/$defs/unit" } },
+    "types": { "type": "array", "items": { "$ref": "#/$defs/type" } },
+    "members": { "type": "array", "items": { "$ref": "#/$defs/member" } },
+    "constants": { "type": "array", "items": { "$ref": "#/$defs/constant" } },
+    "exports": { "type": "array", "items": { "$ref": "#/$defs/name" } },
+    "uses": { "type": "array", "items": { "$ref": "#/$defs/name" } },
+    "tests": { "type": "array", "items": { "$ref": "#/$defs/name" } }
+  },
+  "$defs": {
+    "visibility": { "enum": ["public", "internal", "private", "protected"] },
+    "unit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file", "name", "kind", "internal"],
+      "properties": {
+        "file": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "kind": { "enum": ["class", "interface", "trait", "functions"] },
+        "internal": { "type": "boolean" }
+      }
+    },
+    "type": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file", "name", "visibility", "declaration"],
+      "properties": {
+        "file": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "visibility": { "$ref": "#/$defs/visibility" },
+        "declaration": { "type": "string", "minLength": 1 },
+        "fields": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+        "parameters": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "member": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file", "unit", "name", "kind", "visibility", "symbol", "signature", "parameters"],
+      "properties": {
+        "file": { "type": "string", "minLength": 1 },
+        "unit": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "kind": { "enum": ["constructor", "method", "static method", "function", "property"] },
+        "visibility": { "$ref": "#/$defs/visibility" },
+        "symbol": { "type": "string", "pattern": "::" },
+        "signature": { "type": "string", "minLength": 1 },
+        "parameters": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+      }
+    },
+    "constant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file", "name", "visibility"],
+      "properties": {
+        "file": { "type": "string", "minLength": 1 },
+        "unit": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "visibility": { "$ref": "#/$defs/visibility" }
+      }
+    },
+    "name": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file", "name"],
+      "properties": {
+        "file": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "name": "@polyspec/hyper-recipe-typescript",
+  "private": true,
+  "description": "TypeScript compiler API for the recipe Node reader. TypeScript 7 has no stable JavaScript compiler API; remove this package when it has one.",
+  "devDependencies": {
+    "typescript": "6.0.3"
+  }
+}
