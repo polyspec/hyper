@@ -67,6 +67,26 @@ test('the candidate refreshes the native fields and lists the hand-written ones'
   }
 });
 
+test('the candidate derives the units and concerns from an empty skeleton', () => {
+  const dir = mkdtempSync(path.join(tmpdir(), 'recipe-skeleton-'));
+  const root = mkdtempSync(path.join(tmpdir(), 'recipe-skeleton-root-'));
+  try {
+    cpSync(fixture, root, { recursive: true });
+    const spec = JSON.parse(readFileSync(path.join(fixture, 'contracts', 'interfaces.json'), 'utf8')) as Record<string, unknown>;
+    writeFileSync(path.join(root, 'contracts', 'interfaces.json'), JSON.stringify({ ...spec, outside: [], concerns: [], types: [] }));
+    const output = path.join(dir, 'interfaces.candidate.json');
+    const result = spawnSync(process.execPath, [candidate, '--root', root, '--php-autoload', phpAutoload(root), '--output', output], { encoding: 'utf8' });
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+    const derived = JSON.parse(readFileSync(output, 'utf8')) as { concerns: { id: string; units: { native: Record<string, unknown> }[] }[] };
+    const csrf = derived.concerns.find((c) => c.id === 'csrf');
+    assert.ok(csrf, 'no concern csrf');
+    assert.deepEqual(Object.keys(csrf.units[0].native).sort(), ['node', 'php', 'python']);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
 for (const m of mutations) {
   test(`mutation ${m.id} fails with ${m.code}`, () => {
     const root = mkdtempSync(path.join(tmpdir(), 'recipe-mutation-'));
