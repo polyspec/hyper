@@ -25,6 +25,12 @@ final class App
     /** The error types that end the script with a fatal error, which `run` answers with the plain 500 (HY-60). */
     private const FATAL = [E_ERROR, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR];
 
+    /** The media type of a document (HY-15, HY-116). */
+    private const PAGE_TYPE = 'text/html';
+
+    /** The media type of a JSON response (HY-15, HY-116). */
+    private const DATA_TYPE = 'application/vnd.hyper+json';
+
     /** Whether the response hook has been called for the request that `run` answers (HY-60). */
 
     /**
@@ -381,18 +387,26 @@ final class App
         }
         $route = $this->manifest->routes[$match['name']];
         $handler = $this->routeHandlers[$route['name']] ?? [];
+        // HY-116: the selection runs after the routing and before the method check; the data base path serves JSON.
+        $selected = self::negotiate(
+            $request,
+            $client === null ? [self::PAGE_TYPE, self::DATA_TYPE] : [self::DATA_TYPE],
+        );
+        if ($selected instanceof Response) {
+            return $selected;
+        }
         if ($client !== null) {
             // HY-62: the data base path answers only JSON requests and actions, before the session is read.
             if ($request->method !== 'GET' && ($request->method !== 'POST' || !isset($handler['post']))) {
                 return Response::text(405, 'Method Not Allowed');
             }
-            if (!$request->wantsJson()) {
-                return Response::text(406, 'Not Acceptable');
+            if ($selected === self::PAGE_TYPE) {
+                return self::notAcceptable();
             }
         }
         $session = new Session($store);
         $flash = $session->takeFlash();
-        $request = $request->withRoute((string) $path, $match['params'])->withSession(
+        $request = $request->withMedia($selected)->withRoute((string) $path, $match['params'])->withSession(
             $flash,
             Csrf::masked($session->csrfToken()),
         );
@@ -426,15 +440,59 @@ final class App
         if ($request->method !== 'GET') {
             return Response::text(405, 'Method Not Allowed');
         }
-        if ($request->wantsJson()) {
-            return Response::text(406, 'Not Acceptable');
+        // HY-62 step 3: the path serves only text/html, so a request that selects the JSON receives 406.
+        $selected = self::negotiate($request, [self::PAGE_TYPE]);
+        if ($selected instanceof Response) {
+            return $selected;
+        }
+        if ($selected === self::DATA_TYPE) {
+            return self::notAcceptable();
         }
 
         return new Response(
             200,
-            ['Content-Type' => 'text/html; charset=utf-8', 'Cache-Control' => 'no-cache', 'Vary' => 'Accept'],
+            [
+                'Content-Type' => 'text/html; charset=utf-8',
+                'Cache-Control' => 'no-cache',
+                'Vary' => 'Accept, HX-Request, HX-Current-URL',
+            ],
             $this->shell,
         );
+    }
+
+    /**
+     * Selects the media type of a request among text/html and application/vnd.hyper+json (HY-116), or returns the
+     * refusal of the request: 400 for an Accept that does not follow the grammar, and 406 for a request that matches
+     * none of the types, which lists the `$served` types, one on each line.
+     *
+     * @param list<string> $served the media types that the path serves
+     */
+    private static function negotiate(Request $request, array $served): string|Response
+    {
+        try {
+            $selected = Accept::select($request->header('Accept'), [self::PAGE_TYPE, self::DATA_TYPE]);
+        } catch (\InvalidArgumentException) {
+            return Response::text(400, 'Bad Request')->withHeader('Vary', 'Accept');
+        }
+        if ($selected !== null) {
+            return $selected;
+        }
+        $body = '';
+        foreach ($served as $type) {
+            $body .= "{$type}\n";
+        }
+
+        return new Response(
+            406,
+            ['Content-Type' => 'text/plain; charset=utf-8', 'Vary' => 'Accept'],
+            $body,
+        );
+    }
+
+    /** Returns the 406 of a selected type that the path does not serve (HY-62 steps 2 and 3). */
+    private static function notAcceptable(): Response
+    {
+        return Response::text(406, 'Not Acceptable')->withHeader('Vary', 'Accept');
     }
 
     /**
@@ -632,7 +690,7 @@ final class App
 
             $body = JsonEncoder::encode($response);
             $headers = [
-                'Content-Type' => 'application/json; charset=utf-8',
+                'Content-Type' => self::DATA_TYPE,
                 'Cache-Control' => $status === 200 ? ($reply->cacheControlValue() ?? 'no-store') : 'no-store',
                 'Vary' => $vary,
                 ...$reply->referrerPolicyHeaders(),

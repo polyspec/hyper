@@ -45,7 +45,7 @@ $app = App::open(
 $before = set_error_handler(null);
 restore_error_handler();
 foreach (['undefined-key', 'user-notice', 'deprecation', 'silenced'] as $id) {
-    $response = $app->handle(new Request('GET', "/items/{$id}", ['Accept' => 'application/json']), new ArraySession());
+    $response = $app->handle(new Request('GET', "/items/{$id}", ['Accept' => 'application/vnd.hyper+json']), new ArraySession());
     echo json_encode([$id, $response->status, $response->body]), "\n";
 }
 // The handler of a request is removed after the request.

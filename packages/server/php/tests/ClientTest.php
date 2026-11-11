@@ -229,7 +229,7 @@ final class ClientTest extends TestCase
         );
         $seen = [];
         $app->handle(
-            new Request('GET', '/_props/items/7', ['Host' => 'client.test', 'Accept' => 'application/json']),
+            new Request('GET', '/_props/items/7', ['Host' => 'client.test', 'Accept' => 'application/vnd.hyper+json']),
             new ArraySession(),
         );
         self::assertSame(2, $selections);

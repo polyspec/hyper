@@ -39,6 +39,7 @@ final class Request
         private readonly array $cookies = [],
         public readonly bool $https = false,
         private readonly mixed $selection = null,
+        private readonly ?string $media = null,
     ) {
         $this->headers = array_change_key_case($headers, CASE_LOWER);
         $this->queryFields = Fields::parse($query);
@@ -77,6 +78,16 @@ final class Request
     }
 
     /**
+     * Returns a copy that carries the media type that the request selected (HY-116).
+     *
+     * @internal
+     */
+    public function withMedia(string $type): self
+    {
+        return $this->copy(['media' => $type]);
+    }
+
+    /**
      * Returns a copy that carries the value of the choice of the client rendering selection (HY-62).
      *
      * @internal
@@ -95,7 +106,8 @@ final class Request
      *     path?: string,
      *     params?: array<string, string>,
      *     headers?: array<string, string>,
-     *     selection?: mixed
+     *     selection?: mixed,
+     *     media?: string
      * } $changes
      */
     private function copy(array $changes): self
@@ -112,6 +124,7 @@ final class Request
             'cookies' => $this->cookies,
             'https' => $this->https,
             'selection' => $this->selection,
+            'media' => $this->media,
             ...$changes,
         ]);
     }
@@ -190,10 +203,10 @@ final class Request
         return $this->headers[strtolower($name)] ?? null;
     }
 
-    /** Returns true when the request accepts JSON (HY-15). */
+    /** Returns true when the request selected application/vnd.hyper+json, the JSON of hyper (HY-15, HY-116). */
     public function wantsJson(): bool
     {
-        return str_contains($this->header('Accept') ?? '', 'application/json');
+        return $this->media === 'application/vnd.hyper+json';
     }
 
     /** Returns true for a region request: JSON from htmx, which sends HX-Request with every request (HY-15). */
