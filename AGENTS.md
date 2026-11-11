@@ -10,6 +10,8 @@ The working principles of every polyspec repository, and the rules of work that 
 
 - Own: A record describes only this repository. A changelog entry, a task, a wave background, a comment and a commit message state a defect as a fact about this repository: the input, the behaviour and the expected behaviour. They name no other product, no user of this repository, no reporter and no source of a decision, and a sentence that carries no such fact is deleted. An identifier is named after its role in this repository.
   Enforced by: none, whether a sentence names a source of a decision is a judgement that no tool makes.
+- Own: An instruction that a document records is written, once it is understood, as the rule that follows from it and the reason for that rule: what must be done and why. A document does not copy the wording or the tone of the instruction, because copied words do not give a reader the meaning that is needed to apply them.
+  Enforced by: none, whether a sentence states a rule and its reason or copies an instruction is a judgement.
 - Own: One authoritative document per topic. The protocol contract is in `docs/spec/`. Implementation and verification status is in `docs/features.md`. Planned tasks, their verification commands and their completion are in `docs/plans/execution/checklist.md`. Current procedures are in `docs/operations/`. Actual changes and their verification results are in `CHANGELOG.md`.
   Enforced by: none, which document owns a topic is a judgement.
 - Refines P4: Documents describe current behavior. When the direction changes, change the specification (`docs/spec/`) first and mark the parts that are not implemented.
