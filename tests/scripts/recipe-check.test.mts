@@ -32,6 +32,12 @@ function resultArguments(root: string): string[] {
   return ['php', 'node', 'python'].flatMap((lang) => ['--results', `${lang}=${path.join(root, 'results', `${lang}.txt`)}`]);
 }
 
+/** Makes a copied tree a git repository whose files are all tracked: the readers list the files git tracks. */
+function track(root: string): void {
+  spawnSync('git', ['init', '-q'], { cwd: root });
+  spawnSync('git', ['add', '-A'], { cwd: root });
+}
+
 function applyMutation(root: string, m: Mutation): void {
   const file = path.join(root, m.file);
   if (m.delete) {
@@ -186,4 +192,25 @@ test('the Node reader lists an accessor as a method, with its head and not its b
   assert.equal(size?.signature, 'get size(): number', `size signature: ${size?.signature}`);
   assert.equal(kind?.kind, 'static method', `kind is ${kind?.kind}`);
   assert.equal(kind?.signature, 'static get kind(): string', `kind signature: ${kind?.signature}`);
+});
+
+test('the readers read only the files that git tracks under their source and test directories', () => {
+  const extra = {
+    php: ['src/Untracked.php', '<?php\nclass Untracked {}\n'],
+    node: ['src/untracked.ts', 'export class Untracked {}\n'],
+    python: ['src/untracked.py', 'class Untracked:\n    pass\n'],
+  } as const;
+  for (const lang of ['php', 'node', 'python'] as const) {
+    const root = mkdtempSync(path.join(tmpdir(), 'recipe-tracked-'));
+    try {
+      cpSync(path.join(fixture, 'readers', lang), root, { recursive: true });
+      track(root);
+      const [file, code] = extra[lang];
+      writeFileSync(path.join(root, file), code);
+      const out = readFixture(lang, root);
+      assert.ok(!out.units.some((u) => u.name === 'Untracked'), `${lang} read the untracked file ${file}`);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  }
 });
