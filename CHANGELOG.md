@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- `contracts/interfaces.json` states the PHP signatures `flash(mixed $name, mixed $value)` and `changed(mixed ...$topics)` with the `TypeError` of HY-25.6, and PHP `Result::flash` checks a value in place of a private helper, so that `make recipe-check` reports no failure of the result concern (H28.11).
+
 - The check of a private Python constructor also counts a call through an absolute import of the package, such as `from polyspec.hyper import MediaType`, as it counts a relative one (HYR-8). The task H28.11-1 is in progress again, because its runners pass only when H28.7 adds the representations and the client cases (H28.11).
 
 - PHP `Result::flash` and `Result::changed` check a name and a topic themselves, so that a caller without strict types gets the `TypeError` of HY-25.6 in place of an integer name converted to a string; the three servers give the same messages, which the section `types` of `contracts/result.json` compares. `DataModel::contains` returns false only for an error with a message of HY-44.8, and passes another error, such as a stack overflow, to its caller (H28.11).

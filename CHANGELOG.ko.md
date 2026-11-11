@@ -6,6 +6,8 @@
 
 ## Unreleased
 
+- `contracts/interfaces.json`은 HY-25.6의 `TypeError`와 함께 PHP signature `flash(mixed $name, mixed $value)`와 `changed(mixed ...$topics)`를 명시하고, PHP `Result::flash`는 private helper 대신 직접 값을 검사하므로, `make recipe-check`는 result concern의 실패를 보고하지 않습니다(H28.11).
+
 - private Python constructor 검사는 상대 import처럼 `from polyspec.hyper import MediaType` 같은 package의 절대 import를 거친 호출도 셉니다(HYR-8). H28.7이 representations와 client case를 추가해야 runner가 통과하므로, task H28.11-1은 다시 진행 중입니다(H28.11).
 
 - PHP `Result::flash`와 `Result::changed`는 이름과 topic을 직접 검사하므로, strict types가 없는 호출자는 문자열로 변환된 정수 이름 대신 HY-25.6의 `TypeError`를 받습니다. 세 server는 같은 메시지를 내며, `contracts/result.json`의 section `types`가 그 메시지를 비교합니다. `DataModel::contains`는 HY-44.8의 메시지를 가진 오류에만 false를 반환하고, stack overflow 같은 다른 오류는 호출자에게 전달합니다(H28.11).

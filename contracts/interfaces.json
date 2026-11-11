@@ -1774,11 +1774,11 @@
               ],
               "output": "result",
               "errors": [],
-              "state": "Returns a copy that stores a flash value of the data model under its name, in the place of that name (HY-25).",
+              "state": "Returns a copy that stores a flash value of the data model under its name, in the place of that name; a name that is not a string fails with TypeError (HY-25).",
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/Result.php::Polyspec\\Hyper\\Result::flash",
-                  "signature": "public function flash(string $name, mixed $value): Polyspec\\Hyper\\Result"
+                  "signature": "public function flash(mixed $name, mixed $value): Polyspec\\Hyper\\Result"
                 },
                 "node": {
                   "symbol": "packages/server/ts/src/result.ts::Result.flash",
@@ -1799,11 +1799,11 @@
               ],
               "output": "result",
               "errors": [],
-              "state": "Returns a copy that records changed topics after its own, each once in its first place (HY-25).",
+              "state": "Returns a copy that records changed topics after its own, each once in its first place; a topic that is not a string fails with TypeError (HY-25).",
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/Result.php::Polyspec\\Hyper\\Result::changed",
-                  "signature": "public function changed(string ...$topics): Polyspec\\Hyper\\Result"
+                  "signature": "public function changed(mixed ...$topics): Polyspec\\Hyper\\Result"
                 },
                 "node": {
                   "symbol": "packages/server/ts/src/result.ts::Result.changed",

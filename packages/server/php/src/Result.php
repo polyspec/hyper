@@ -75,8 +75,10 @@ final class Result
         }
         // An assignment keeps every name and the place of a name stored again (HY-25.5); a spread would number the
         // names that PHP keeps as integer keys again.
+        // HY-25.4: the value is checked, and the value as the handler gave it is stored.
+        DataModel::check($value);
         $values = $this->flashValues;
-        $values[$name] = self::checked($value);
+        $values[$name] = $value;
 
         return new self($this->location, $this->status, $this->data, $values, $this->changedTopics);
     }
@@ -110,14 +112,6 @@ final class Result
     public function isRedirect(): bool
     {
         return $this->location !== null;
-    }
-
-    /** Returns the value, and fails when it is not a value of the data model (HY-44). */
-    private static function checked(mixed $value): mixed
-    {
-        DataModel::check($value);
-
-        return $value;
     }
 
     /** Returns true when the path of a location has a `.` or `..` segment, also with a percent-encoded dot. */
