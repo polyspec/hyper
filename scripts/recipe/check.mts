@@ -3,24 +3,16 @@
 // Usage: node scripts/recipe/check.mts [--root <dir>] [--results <php|node|python>=<file>]... [--no-selftest]
 // Prints one `CODE message` line per finding and exits 1 on any.
 
-import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import Ajv2020 from 'ajv/dist/2020.js';
-import type { SchemaObject } from 'ajv';
 import type { Results } from './results.mts';
-import { runChecks, type Validators } from './run.mts';
+import { runChecks } from './run.mts';
 import { selfTest } from './selftest.mts';
-import { LANGS, type Sources, type Spec } from './types.mts';
+import { LANGS } from './types.mts';
+import { validators } from './validators.mts';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const schemaDir = path.join(here, '..', 'schema');
 const fixture = path.join(here, '..', '..', 'tests', 'scripts', 'fixtures', 'recipe');
-
-function readSchema(file: string): SchemaObject {
-  const doc: SchemaObject = JSON.parse(readFileSync(path.join(schemaDir, file), 'utf8'));
-  return doc;
-}
 
 function argumentOf(name: string): string | undefined {
   const at = process.argv.indexOf(name);
@@ -42,11 +34,7 @@ function resultArguments(): Results {
 
 function main(): number {
   const root = path.resolve(argumentOf('--root') ?? process.cwd());
-  const ajv = new Ajv2020({ strict: true, allErrors: true });
-  const v: Validators = {
-    spec: ajv.compile<Spec>(readSchema('interfaces.schema.json')),
-    sources: ajv.compile<Sources>(readSchema('recipe-sources.schema.json')),
-  };
+  const v = validators();
 
   if (!process.argv.includes('--no-selftest')) {
     const failures = selfTest(fixture, v);

@@ -11,17 +11,22 @@ import type { Finding, Lang, Sources, Spec } from './types.mts';
 
 export type Validators = { spec: ValidateFunction<Spec>; sources: ValidateFunction<Sources> };
 
+/** The sources of the three languages, each read by its reader. */
+export function readAllSources(root: string, spec: Spec, v: Validators): Record<Lang, Sources> {
+  return {
+    php: readSources(root, 'php', spec, v.sources),
+    node: readSources(root, 'node', spec, v.sources),
+    python: readSources(root, 'python', spec, v.sources),
+  };
+}
+
 export function runChecks(root: string, v: Validators, results: Results): Finding[] {
   const specDoc: unknown = JSON.parse(readFileSync(path.join(root, 'contracts', 'interfaces.json'), 'utf8'));
   if (!v.spec(specDoc)) {
     return (v.spec.errors ?? []).map((e) => ({ code: 'SPEC_INVALID', message: `${e.instancePath} ${e.message}` }));
   }
   const spec = specDoc;
-  const sources: Record<Lang, Sources> = {
-    php: readSources(root, 'php', spec, v.sources),
-    node: readSources(root, 'node', spec, v.sources),
-    python: readSources(root, 'python', spec, v.sources),
-  };
+  const sources = readAllSources(root, spec, v);
   const protocol = readFileSync(path.join(root, 'docs', 'spec', 'protocol.md'), 'utf8');
   return [...compare(spec, sources, root, protocol), ...checkResults(root, spec, results)];
 }

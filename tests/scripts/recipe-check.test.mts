@@ -12,6 +12,7 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const repo = path.resolve(here, '..', '..');
 const fixture = path.join(here, 'fixtures', 'recipe');
 const check = path.join(repo, 'scripts', 'recipe', 'check.mts');
+const candidate = path.join(repo, 'scripts', 'recipe', 'candidate.mts');
 
 type Mutation = { id: string; file: string; code: string; from?: string; to?: string; rename?: string; create?: string; delete?: boolean };
 
@@ -47,6 +48,21 @@ function applyMutation(root: string, m: Mutation): void {
 test('the fixture passes the recipe check, with its mutation cases first', () => {
   const result = spawnSync(process.execPath, [check, '--root', fixture, ...resultArguments(fixture)], { encoding: 'utf8' });
   assert.equal(result.status, 0, result.stdout + result.stderr);
+});
+
+test('the candidate refreshes the native fields and lists the hand-written ones', () => {
+  const dir = mkdtempSync(path.join(tmpdir(), 'recipe-candidate-'));
+  try {
+    const output = path.join(dir, 'interfaces.candidate.json');
+    const result = spawnSync(process.execPath, [candidate, '--root', fixture, '--output', output], { encoding: 'utf8' });
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+    const spec = JSON.parse(readFileSync(output, 'utf8')) as { schema: number };
+    assert.equal(spec.schema, 1);
+    const handWritten = JSON.parse(readFileSync(path.join(dir, 'interfaces.candidate.hand-written.json'), 'utf8')) as string[];
+    assert.ok(handWritten.includes('/concerns/0/rules'));
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 for (const m of mutations) {
