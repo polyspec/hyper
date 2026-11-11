@@ -169,6 +169,12 @@ describe('App', () => {
       // A leading U+FEFF is a character of the text, which JSON does not allow before a value, as in PHP and Python.
       writeFileSync(manifest, Buffer.concat([Buffer.from([0xef, 0xbb, 0xbf]), readFileSync(`${FIXTURES}app.json`)]));
       expect((await failure({ manifest, build: `${FIXTURES}build.json`, templates: TEMPLATES, handlers: handlersOf, timezone: 'Z' }))?.constructor).toBe(Error);
+      // HY-2.8: the manifest is JSON text as HY-54 decodes it, so a key that starts with U+0000 and a lone surrogate escape
+      // fail, in a manifest that is valid without them.
+      for (const member of ['"\\u0000k":1,', '"k":"\\ud800",']) {
+        writeFileSync(manifest, `{${member}${readFileSync(`${FIXTURES}app.json`, 'utf8').slice(1)}`);
+        expect((await failure({ manifest, build: `${FIXTURES}build.json`, templates: TEMPLATES, handlers: handlersOf, timezone: 'Z' }))?.constructor).toBe(Error);
+      }
       writeFileSync(index, '{"layout":');
       expect((await failure({ manifest: `${FIXTURES}app.json`, build: `${FIXTURES}build.json`, templates: { index, root: TEMPLATES.root }, handlers: handlersOf, timezone: 'Z' }))?.constructor).toBe(Error);
     } finally {

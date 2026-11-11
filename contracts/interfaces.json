@@ -324,6 +324,32 @@
               }
             },
             {
+              "id": "accept.best",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "list<media-range>",
+                "list<string>"
+              ],
+              "output": "list<value>",
+              "errors": [],
+              "state": "Returns the type of the highest weight among the given types with that weight in thousandths, the first on a tie, or none and 0 when every weight is 0.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Accept.php::Polyspec\\Hyper\\Accept::best",
+                  "signature": "public static function best(array $ranges, array $types): array"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/accept.ts::Accept.best",
+                  "signature": "static best(ranges: readonly MediaRange[], types: readonly string[]): [string | null, number]"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_accept.py::Accept.best",
+                  "signature": "def best(ranges: Sequence[MediaRange], types: Sequence[str]) -> tuple[Optional[str], int]"
+                }
+              }
+            },
+            {
               "id": "accept.typeWeight",
               "kind": "static method",
               "visibility": "private",

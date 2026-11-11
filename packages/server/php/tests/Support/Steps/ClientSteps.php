@@ -11,6 +11,8 @@ use Polyspec\Hyper\Tests\Support\ClientApp;
 use Polyspec\Hyper\Tests\Support\Counter;
 use Polyspec\Hyper\Tests\Support\CountingStore;
 use Polyspec\Hyper\Tests\Support\Json;
+use Polyspec\Hyper\Tests\Support\Plain;
+use Polyspec\Hyper\Tests\Support\RepresentationCalls;
 
 /** HY-62: the cases of contracts/client.json. */
 final class ClientSteps
@@ -25,10 +27,19 @@ final class ClientSteps
         if ($case->input('shell') !== file_get_contents(ClientApp::SHELL)) {
             throw new \LogicException('the shell fixture differs from the shell file');
         }
-        // The representations and the representation handler are not served by PHP yet (H28.7): they are read
-        // here, and the handled and received fields are not compared, so their cases fail as FIELD_UNCOMPARED.
-        $case->input('representations');
-        $case->input('handler');
+        // The entries of the routes of the case, each with the response of its handler, which `handler` replaces.
+        $declared = [];
+        $handlers = [];
+        $calls = new RepresentationCalls();
+        foreach (Json::array($case->input('representations')) as $route => $entries) {
+            foreach (Json::arrays($entries) as $entry) {
+                $response = $case->has('handler') ? $case->input('handler') : ($entry['handler'] ?? null);
+                $handlers[(string) $route][Json::string($entry['type'] ?? null)] = $calls->handler($response);
+                unset($entry['handler']);
+                $declared[(string) $route][] = $entry;
+            }
+        }
+        $manifest = RepresentationCalls::manifest(__DIR__ . '/../../fixtures/app.json', $declared);
 
         $counter = new Counter();
         $store = new CountingStore();
@@ -46,7 +57,12 @@ final class ClientSteps
         $question = strpos($target, '?');
         $query = $question === false ? '' : substr($target, $question + 1);
         $path = $question === false ? $target : substr($target, 0, $question);
-        $response = ClientApp::open($basePath, $chosenHost, $counter)->handle(
+        try {
+            $app = ClientApp::open($basePath, $chosenHost, $counter, null, ['manifest' => $manifest], $handlers);
+        } finally {
+            unlink($manifest);
+        }
+        $response = $app->handle(
             new Request(
                 Json::string($request['method'] ?? null),
                 $path,
@@ -74,5 +90,9 @@ final class ClientSteps
         // HY-62: the session holds no token after a request whose expected session is false.
         $case->compare('session', $store->holds('_hyper_csrf'));
         $case->compare('actions', $counter->actions);
+        $case->compare('handled', $calls->handled);
+        $case->compare('received.parameters', Plain::map($calls->parameters));
+        $case->compare('received.selection', $calls->request?->selection());
+        $case->compare('received.absentHeaders', $calls->headers(array_map(strval(...), array_keys($headers))));
     }
 }

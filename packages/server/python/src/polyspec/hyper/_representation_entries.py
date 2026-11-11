@@ -7,9 +7,9 @@ import re
 from dataclasses import dataclass
 
 _TOKEN = re.compile(r"[!#$%&'*+\-.^_`|~0-9A-Za-z]+")
-# The characters of a quoted string and of a quoted pair that a manifest value may hold without quoting (RFC 9110,
-# section 5.6.4), so a value written unquoted in a Content-Type is valid as a quoted string.
-_QUOTABLE = re.compile(r"[\t \x21-\x7e\x80-\xff]+")
+# The characters that a served value may hold: HTAB, SP and U+0021 to U+007E (HY-118.6), which are valid in a quoted
+# string (RFC 9110, section 5.6.4) and have the same bytes in UTF-8 and ISO-8859-1.
+_QUOTABLE = re.compile(r"[\t \x21-\x7e]+")
 _METHODS = ("GET", "POST", "PUT", "DELETE")
 _PAGE_TYPES = ("text/html", "application/vnd.hyper+json")
 _REJECTED_VARY = ("accept", "cookie")

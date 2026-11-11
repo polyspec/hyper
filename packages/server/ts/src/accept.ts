@@ -50,7 +50,12 @@ export class Accept {
   // type takes the weight of its most specific matching range, and among the ranges of that specificity the one of the
   // highest weight. The first type of the list wins a tie. Throws InvalidAccept as `parse` does.
   static select(value: string | null, types: readonly string[]): string | null {
-    const ranges = Accept.parse(value);
+    return Accept.best(Accept.parse(value), types)[0];
+  }
+
+  // Returns the type of the highest weight among the given types with that weight in thousandths, the first on a tie, or
+  // null and 0 when no type has a weight above 0 (HY-116).
+  static best(ranges: readonly MediaRange[], types: readonly string[]): [string | null, number] {
     let selected: string | null = null;
     let best = 0;
     for (const type of types) {
@@ -60,12 +65,12 @@ export class Accept {
         best = weight;
       }
     }
-    return selected;
+    return [selected, best];
   }
 
   // Returns the weight in thousandths that the ranges give a type: the weight of the most specific range that matches it,
   // or 0 when no range matches. A range that names the type matches it whatever its parameters (HY-116).
-  static typeWeight(ranges: readonly MediaRange[], type: string): number {
+  private static typeWeight(ranges: readonly MediaRange[], type: string): number {
     const slash = type.indexOf('/');
     const name = type.slice(0, slash);
     const subtype = type.slice(slash + 1);

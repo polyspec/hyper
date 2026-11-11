@@ -122,6 +122,12 @@
                   "en": "A server checks its manifest against these rules when it starts, and the asset build checks the manifest before it writes the client bundle; the browser does not check the manifest of its bundle again.",
                   "ko": "서버는 시작할 때 매니페스트를 이 규칙으로 검사하고, 에셋 빌드는 클라이언트 번들을 쓰기 전에 매니페스트를 검사하며, 브라우저는 번들의 매니페스트를 다시 검사하지 않는다.",
                   "koSource": "0f65cec5a969ef11f6e75c81c72664f4a8a314cd1dffd0c2bd49fbcff82080b6"
+                },
+                {
+                  "id": "HY-2.8",
+                  "en": "The manifest file is JSON text as HY-54 decodes it, so a lone surrogate escape, a key that starts with U+0000 and 512 nested containers fail the open with the error of HY-106.6.",
+                  "ko": "매니페스트 파일은 HY-54가 decode하는 JSON text이므로, 짝 없는 surrogate escape, U+0000으로 시작하는 key, 512단계로 중첩된 container는 HY-106.6의 오류로 열기를 실패시킨다.",
+                  "koSource": "33cfd0dfc841cb079742e3d738888dda209d1c256850e1c869baecce927f8191"
                 }
               ]
             }
@@ -1287,6 +1293,18 @@
                   "ko": "매니페스트 검사(HY-2)는 대소문자를 구분하지 않고 비교하여 다음을 거부한다: 한 라우트 안의 중복 type, `text/html`이나 `application/vnd.hyper+json`과 같은 type, type이나 subtype이 `*`인 type, 이름이 `q`인 매개변수, 유효하지 않은 type, 매개변수 이름, 값(RFC 9110, 8.3.1절), 빈 `methods`, 빈 값 목록, field name이 아닌 `vary` 이름(RFC 9110, 5.1절), `vary` 이름 `Accept`나 `Cookie`, 같은 `vary` 이름 둘; handler가 없는 항목과, 라우트가 선언하지 않은 type의 handler가 있으면 애플리케이션 열기가 실패한다.",
                   "koSource": "7f3d6cf43773eb1f1c1b93ff4e27fad4cd3efca63d7e9e27392a78396ba7d42d",
                   "id": "HY-118.5"
+                },
+                {
+                  "id": "HY-118.6",
+                  "en": "A served value holds only HTAB, SP and the characters U+0021 to U+007E, and the manifest check rejects a value with another character, because a header carries a character above U+007E in bytes that differ between UTF-8 and ISO-8859-1.",
+                  "ko": "제공하는 값은 HTAB, SP, U+0021부터 U+007E까지의 문자만 가지며, 매니페스트 검사는 다른 문자가 있는 값을 거부한다. header는 U+007E보다 큰 문자를 UTF-8과 ISO-8859-1에서 서로 다른 byte로 싣기 때문이다.",
+                  "koSource": "cf27d5173e4369bdde1aff8030743aed023075c411d3ae389030400fec4a3992"
+                },
+                {
+                  "id": "HY-118.7",
+                  "en": "`parameters` is a JSON object, and `methods`, `vary` and each value list are JSON arrays; the manifest check rejects another JSON value in their place, also an empty array in place of the empty object.",
+                  "ko": "`parameters`는 JSON object이고 `methods`, `vary`, 각 값 목록은 JSON array이며, 매니페스트 검사는 그 자리의 다른 JSON 값을 거부하고 빈 object 자리의 빈 array도 거부한다.",
+                  "koSource": "7aa823d893ed907d10e8609ccaa6d8f93e9377f2a39651640480d44ba8293695"
                 }
               ]
             }

@@ -14,8 +14,10 @@ namespace Polyspec\Hyper;
  *     title: string,
  *     template: string,
  *     post: bool,
- *     regions: list<Region>
+ *     regions: list<Region>,
+ *     representations: list<RepresentationEntry>
  * }
+ * @phpstan-import-type RepresentationEntry from RepresentationEntries
  */
 final class Manifest
 {
@@ -40,9 +42,13 @@ final class Manifest
             throw new \InvalidArgumentException("manifest {$file} does not exist");
         }
         try {
-            $data = json_decode((string) file_get_contents($file), true, flags: JSON_THROW_ON_ERROR);
-        } catch (\JsonException) {
-            throw new \InvalidArgumentException("manifest {$file} is not valid JSON or UTF-8");
+            $text = (string) file_get_contents($file);
+            $data = json_decode($text, true, flags: JSON_THROW_ON_ERROR);
+            // HY-2.8: the manifest is JSON text as HY-54 decodes it. The objects tell an empty object from an empty
+            // array, which the representations of a route need (HY-118.7).
+            $objects = JsonCodec::decode($text);
+        } catch (\JsonException | JsonDecodeError $error) {
+            throw new \InvalidArgumentException("manifest {$file} is not valid JSON or UTF-8", previous: $error);
         }
         if (!is_array($data) || !is_string($data['layout'] ?? null) || !is_string($data['title'] ?? null)) {
             throw new \InvalidArgumentException("manifest {$file} has no layout or title template");
@@ -93,7 +99,8 @@ final class Manifest
 
         $routes = [];
         $regionNames = array_fill_keys(array_keys($regions), true);
-        foreach (self::entries($data, 'routes') as $route) {
+        $routeObjects = $objects instanceof \stdClass && is_array($objects->routes ?? null) ? $objects->routes : [];
+        foreach (self::entries($data, 'routes') as $index => $route) {
             $name = is_string($route['name'] ?? null) ? $route['name'] : '';
             $title = $route['title'] ?? null;
             $template = $route['template'] ?? null;
@@ -129,6 +136,10 @@ final class Manifest
                 'template' => $template,
                 'post' => ($route['post'] ?? false) === true,
                 'regions' => $routeRegions,
+                'representations' => RepresentationEntries::declare(
+                    $name,
+                    array_key_exists('representations', $route) ? ($routeObjects[$index]->representations ?? null) : [],
+                ),
             ];
         }
 

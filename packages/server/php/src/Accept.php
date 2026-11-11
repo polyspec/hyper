@@ -73,7 +73,19 @@ final class Accept
      */
     public static function select(?string $value, array $types): ?string
     {
-        $ranges = self::parse($value);
+        return self::best(self::parse($value), $types)[0];
+    }
+
+    /**
+     * Returns the type of the highest weight among the given types with that weight in thousandths, the first on a
+     * tie, or null and 0 when no type has a weight above 0 (HY-116).
+     *
+     * @param list<MediaRange> $ranges
+     * @param list<string> $types media types in lower case, in the order of the ties
+     * @return array{0: ?string, 1: int}
+     */
+    public static function best(array $ranges, array $types): array
+    {
         $selected = null;
         $best = 0;
         foreach ($types as $type) {
@@ -84,7 +96,7 @@ final class Accept
             }
         }
 
-        return $selected;
+        return [$selected, $best];
     }
 
     /**

@@ -31,7 +31,12 @@ class ManifestTest(unittest.TestCase):
         # HY-106: the exact class ValueError, not a subclass such as JSONDecodeError or UnicodeDecodeError.
         # HY-106.7: a valid manifest that starts with U+FEFF is not valid JSON.
         bom = b"\xef\xbb\xbf" + json.dumps(BASE).encode("utf-8")
-        for content in (b'{"layout":', b'{"layout":"\xff"}', bom):
+        # HY-2.8: the manifest is JSON text as HY-54 decodes it, so a key that starts with U+0000 and a lone surrogate
+        # escape fail, in a manifest that is valid without them.
+        text = json.dumps(BASE)
+        key = ('{"\\u0000k":1,' + text[1:]).encode("utf-8")
+        surrogate = ('{"k":"\\ud800",' + text[1:]).encode("utf-8")
+        for content in (b'{"layout":', b'{"layout":"\xff"}', bom, key, surrogate):
             with tempfile.TemporaryDirectory() as directory:
                 file = Path(directory) / "app.json"
                 file.write_bytes(content)

@@ -7,6 +7,7 @@ import re
 from pathlib import Path
 from typing import Optional
 
+from ._json_codec import JsonCodec
 from ._region import Region
 from ._representation_entries import declare as declare_representations
 from ._router import Router
@@ -41,7 +42,10 @@ class Manifest:
         if not path.is_file():
             raise ValueError(f"manifest {file} does not exist")
         try:
-            data = json.loads(path.read_text(encoding="utf-8"))
+            text = path.read_text(encoding="utf-8")
+            # HY-2.8: the manifest is JSON text as HY-54 decodes it.
+            JsonCodec.decode(text)
+            data = json.loads(text)
         except ValueError as error:
             raise ValueError(f"manifest {file} is not valid JSON or UTF-8: {error}") from None
         if (

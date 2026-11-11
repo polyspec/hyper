@@ -4,67 +4,160 @@ declare(strict_types=1);
 
 namespace Polyspec\Hyper\Tests\Support\Steps;
 
+use Polyspec\Hyper\App;
 use Polyspec\Hyper\ArraySession;
+use Polyspec\Hyper\Request;
 use Polyspec\Hyper\Tests\CaseReader;
 use Polyspec\Hyper\Tests\Support\ContextRun;
+use Polyspec\Hyper\Tests\Support\Json;
+use Polyspec\Hyper\Tests\Support\Plain;
+use Polyspec\Hyper\Tests\Support\RepresentationCalls;
 
-/** HY-106, HY-116, HY-118, HY-119, HY-121: the cases of contracts/representations.json. */
+/**
+ * HY-116 to HY-122: the cases of contracts/representations.json: the manifest and open rejections, and the cases of
+ * the representations application, which run through the app with the handlers of the contract.
+ */
 final class RepresentationsSteps
 {
-    private const PROGRAMS = __DIR__ . '/../../../../../../var/contract-programs';
+    private const PROGRAM = __DIR__ . '/../../../../../../var/contract-programs/representations';
 
     /** HY-118: the manifest check rejects a route whose representations do not open. */
     public static function manifestRejections(CaseReader $case): void
     {
-        $route = (string) $case->input('route');
+        $route = Json::string($case->input('route'));
         $representations = $case->input('representations');
-        $definition = self::application($case);
-        $definition['manifest']['routes'] = array_map(
-            static fn (mixed $spec): mixed => is_array($spec) && ($spec['name'] ?? null) === $route
-                ? [...$spec, 'representations' => $representations]
-                : $spec,
-            is_array($definition['manifest']['routes'] ?? null) ? $definition['manifest']['routes'] : [],
-        );
-        $case->outcome('open', self::opens($definition));
+        // The route has a handler for each type that the case declares, so that only the manifest check fails the open.
+        $types = self::declaredTypes($case);
+        $types[$route] = [];
+        foreach (is_array($representations) ? $representations : [] as $entry) {
+            if (is_array($entry) && is_string($entry['type'] ?? null)) {
+                $types[$route][] = $entry['type'];
+            }
+        }
+        $manifest = RepresentationCalls::manifest(self::PROGRAM . '/manifest.json', [$route => $representations]);
+        try {
+            $case->outcome('open', self::opens($case, $manifest, $types));
+        } finally {
+            unlink($manifest);
+        }
     }
 
-    /** HY-118: opening the application fails for an entry without a handler. */
+    /** HY-118: opening the application fails for an entry without a handler and for a handler of another type. */
     public static function openRejections(CaseReader $case): void
     {
-        $case->input('route');
-        $case->input('handlers');
-        $case->outcome('open', self::opens(self::application($case)));
+        $types = self::declaredTypes($case);
+        $types[Json::string($case->input('route'))] = Json::strings($case->input('handlers'));
+        $case->outcome('open', self::opens($case, self::PROGRAM . '/manifest.json', $types));
     }
 
-    /** HY-118, HY-121: the request of a case receives the response of the representations application. */
+    /** HY-116 to HY-122: the request of a case receives the response of the representations application. */
     public static function cases(CaseReader $case): void
     {
-        $case->input('basePath');
-        $case->input('handler');
-        $run = new ContextRun('representations', self::application($case), self::PROGRAMS);
-        $response = $run->send($run->open(null), new ArraySession(), (array) $case->input('request'));
+        $calls = new RepresentationCalls();
+        $basePath = $case->has('basePath') ? Json::string($case->input('basePath')) : '';
+        $app = self::open(
+            $case,
+            self::PROGRAM . '/manifest.json',
+            self::declaredTypes($case),
+            $calls->handler($case->has('handler') ? $case->input('handler') : null),
+            $basePath,
+        );
+        $request = Json::array($case->input('request'));
+        // An empty map of the contract is an object.
+        $headers = Json::stringMap((array) ($request['headers'] ?? []));
+        $target = Json::string($request['target'] ?? null);
+        $body = $request['body'] ?? '';
+        $store = new ArraySession();
+        $response = $app->handle(
+            new Request(
+                Json::string($request['method'] ?? null),
+                Request::targetPath($target),
+                $headers,
+                Request::targetQuery($target),
+                is_string($body) ? $body : '',
+            ),
+            $store,
+        );
+        $type = $response->headers['Content-Type'] ?? null;
+        $received = $calls->headers(array_map(strval(...), array_keys($headers)));
         $case->compare('status', $response->status);
         $case->compare('headers', $response->headers);
         $case->compare('body', $response->body);
         $case->compare('absentHeaders', $response->headers);
-        // The page, the handled, the session and the received fields are not compared yet (H28.7).
+        $case->compare('page', is_string($type) ? trim(explode(';', $type, 2)[0]) : null);
+        $case->compare('handled', $calls->handled);
+        $case->compare('session', $store->get('_hyper_csrf') !== null);
+        $case->compare('received.method', $calls->request?->method);
+        $case->compare('received.parameters', Plain::map($calls->parameters));
+        $case->compare('received.body', $calls->request?->json());
+        $case->compare('received.headers', $received);
+        $case->compare('received.absentHeaders', $received);
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * Returns the representation types that each route of the manifest of the application declares, by the route name.
+     *
+     * @return array<string, list<string>>
+     */
+    private static function declaredTypes(CaseReader $case): array
+    {
+        $types = [];
+        foreach (Json::arrays(Json::at(self::application($case), 'manifest', 'routes')) as $route) {
+            $types[Json::string($route['name'] ?? null)] = array_map(
+                static fn (array $entry): string => Json::string($entry['type'] ?? null),
+                Json::arrays($route['representations'] ?? []),
+            );
+        }
+
+        return $types;
+    }
+
+    /** @return array<array-key, mixed> */
     private static function application(CaseReader $case): array
     {
-        $applications = $case->input('applications');
-
-        return is_array($applications) && is_array($applications['representations'] ?? null)
-            ? $applications['representations']
-            : [];
+        return Json::array(Json::at($case->input('applications'), 'representations'));
     }
 
-    /** @param array<string, mixed> $definition */
-    private static function opens(array $definition): ?\Throwable
+    /**
+     * Opens the representations application with a manifest: each route loads the data of the contract and has the
+     * handler for each of the given types.
+     *
+     * @param array<string, list<string>> $types
+     */
+    private static function open(
+        CaseReader $case,
+        string $manifest,
+        array $types,
+        \Closure $handler,
+        string $basePath,
+    ): App {
+        ContextRun::autoload(self::PROGRAM);
+        $loaders = Json::array(Json::at(self::application($case), 'loaders'));
+        $routes = [];
+        foreach ($types as $name => $declared) {
+            // An empty map of the contract is an object; a loader returns an array.
+            $data = (array) ($loaders[$name] ?? []);
+            $routes[$name] = [
+                'load' => static fn (): array => $data,
+                'representations' => array_fill_keys($declared, $handler),
+            ];
+        }
+
+        return App::open($manifest, self::PROGRAM . '/program', ['routes' => $routes], '+09:00', basePath: $basePath);
+    }
+
+    /**
+     * Returns the error of an open with handlers that no request reaches, or null when the open did not fail.
+     *
+     * @param array<string, list<string>> $types
+     */
+    private static function opens(CaseReader $case, string $manifest, array $types): ?\Throwable
     {
+        $rejected = static fn (): never => throw new \LogicException(
+            'a representation handler of a rejection case is called',
+        );
         try {
-            (new ContextRun('representations', $definition, self::PROGRAMS))->open(null);
+            self::open($case, $manifest, $types, $rejected, '');
         } catch (\Throwable $error) {
             return $error;
         }

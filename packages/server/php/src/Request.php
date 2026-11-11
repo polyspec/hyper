@@ -30,6 +30,7 @@ final class Request
      * @param array<string, string> $params
      * @param array<array-key, string> $cookies cookie values by name; PHP gives a decimal name as an integer key
      * @param ?RequestBody $read the body as a host read it: a body read in chunks gives its parts (HY-131)
+     * @param mixed $json the decoded JSON body of a representation request (HY-121), which the server gives
      */
     public function __construct(
         public readonly string $method,
@@ -45,6 +46,7 @@ final class Request
         private readonly mixed $selection = null,
         private readonly ?string $media = null,
         private readonly ?RequestBody $read = null,
+        private readonly mixed $json = null,
     ) {
         $this->headers = array_change_key_case($headers, CASE_LOWER);
         $this->queryFields = Fields::parse($query);
@@ -136,6 +138,39 @@ final class Request
     }
 
     /**
+     * Returns the request that a representation handler receives: with the method, which is GET for a HEAD request,
+     * without the Cookie header and the cookies, and with the decoded JSON value of its body (HY-121).
+     *
+     * @internal
+     */
+    public function asRepresentation(string $method, mixed $value): self
+    {
+        $headers = $this->headers;
+        unset($headers['cookie']);
+
+        return $this->copy(['method' => $method, 'headers' => $headers, 'cookies' => [], 'json' => $value]);
+    }
+
+    /**
+     * Returns the bytes of the body as the host gave them.
+     *
+     * @internal
+     */
+    public function bodyBytes(): string
+    {
+        return $this->body;
+    }
+
+    /**
+     * Returns the value of the JSON body of a representation request, or null for a request without a body
+     * (HY-121.9). An object of the body is a `stdClass`, as `json_decode` gives it.
+     */
+    public function json(): mixed
+    {
+        return $this->json;
+    }
+
+    /**
      * Returns a copy that carries the value of the choice of the client rendering selection (HY-62).
      *
      * @internal
@@ -155,7 +190,10 @@ final class Request
      *     params?: array<string, string>,
      *     headers?: array<string, string>,
      *     selection?: mixed,
-     *     media?: string
+     *     media?: string,
+     *     method?: string,
+     *     cookies?: array<array-key, string>,
+     *     json?: mixed
      * } $changes
      */
     private function copy(array $changes): self
@@ -174,6 +212,7 @@ final class Request
             'selection' => $this->selection,
             'media' => $this->media,
             'read' => $this->read,
+            'json' => $this->json,
             ...$changes,
         ]);
     }

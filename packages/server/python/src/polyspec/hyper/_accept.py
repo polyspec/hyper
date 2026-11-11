@@ -57,17 +57,22 @@ class Accept:
         (HY-116). A type takes the weight of its most specific matching range, and among the ranges of that
         specificity the one of the highest weight. The first type of the list wins a tie. Raises InvalidAccept as
         `parse` does."""
-        ranges = Accept.parse(value)
+        return Accept.best(Accept.parse(value), types)[0]
+
+    @staticmethod
+    def best(ranges: Sequence[MediaRange], types: Sequence[str]) -> tuple[Optional[str], int]:
+        """Returns the type of the highest weight among the given types with that weight in thousandths, the first
+        on a tie, or None and 0 when no type has a weight above 0 (HY-116)."""
         selected: Optional[str] = None
         best = 0
         for media in types:
-            weight = Accept.type_weight(ranges, media)
+            weight = Accept._type_weight(ranges, media)
             if weight > best:
                 selected, best = media, weight
-        return selected
+        return selected, best
 
     @staticmethod
-    def type_weight(ranges: Sequence[MediaRange], media: str) -> int:
+    def _type_weight(ranges: Sequence[MediaRange], media: str) -> int:
         """Returns the weight in thousandths that the ranges give a type: the weight of the most specific range that
         matches it, or 0 when no range matches. A range that names the type matches it whatever its parameters
         (HY-116)."""

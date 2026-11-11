@@ -1814,6 +1814,12 @@ final class AppTest extends TestCase
             // HY-106.7: a valid file that starts with U+FEFF is not valid JSON.
             file_put_contents($manifest, "\xEF\xBB\xBF" . file_get_contents(__DIR__ . '/fixtures/app.json'));
             self::assertSame(\InvalidArgumentException::class, $failure(fn () => Manifest::fromFile($manifest)), 'manifest with U+FEFF');
+            // HY-2.8: the manifest is JSON text as HY-54 decodes it, so a key that starts with U+0000 and a lone
+            // surrogate escape fail, in a manifest that is valid without them.
+            foreach (['"\\u0000k":1,', '"k":"\\ud800",'] as $member) {
+                file_put_contents($manifest, '{' . $member . substr((string) file_get_contents(__DIR__ . '/fixtures/app.json'), 1));
+                self::assertSame(\InvalidArgumentException::class, $failure(fn () => Manifest::fromFile($manifest)), $member);
+            }
             foreach ($valid as $name => $value) {
                 file_put_contents("{$program}/{$name}", "\xEF\xBB\xBF{$value}");
                 $open = match ($name) {

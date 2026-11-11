@@ -23,15 +23,9 @@ export class MediaSelection {
   // `Accept.parse` does.
   static select(accept: string | null, pages: readonly string[], entries: readonly Entry[]): Selected | null {
     const ranges = Accept.parse(accept);
-    let selected: Selected | null = null;
-    let best = 0;
-    for (const type of pages) {
-      const weight = Accept.typeWeight(ranges, type);
-      if (weight > best) {
-        selected = { type, entry: null, values: new Map() };
-        best = weight;
-      }
-    }
+    const [page, weight] = Accept.best(ranges, pages);
+    let selected: Selected | null = page === null ? null : { type: page, entry: null, values: new Map() };
+    let best = weight;
     for (const entry of entries) {
       const [weight, values] = MediaSelection.entryWeight(ranges, entry);
       if (weight > best) {

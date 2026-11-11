@@ -11,7 +11,13 @@ use Polyspec\Template\BoundMap;
  * HY-58 to HY-60, HY-62).
  *
  * @phpstan-import-type RouteDefinition from Manifest
- * @phpstan-type RouteHandler array{load?: \Closure, post?: \Closure, regions?: array<string, \Closure>}
+ * @phpstan-type RouteHandler array{
+ *     load?: \Closure,
+ *     post?: \Closure,
+ *     regions?: array<string, \Closure>,
+ *     representations?: array<string, \Closure>
+ * }
+ * @phpstan-import-type RepresentationEntry from RepresentationEntries
  * @phpstan-type Handlers array{shared?: \Closure, regions?: array<string, \Closure>, routes?: array<string,
  *     RouteHandler>}
  */
@@ -204,6 +210,11 @@ final class App
             if ($route['post'] && !isset($routeHandlers[$name]['post'])) {
                 throw new \InvalidArgumentException("route {$name} declares post but has no POST action");
             }
+            RepresentationEntries::checkHandlers(
+                $name,
+                $route['representations'],
+                $routeHandlers[$name]['representations'] ?? [],
+            );
         }
 
         $shell = $clientRendering === null ? '' : self::shell($clientRendering, $declared);
@@ -416,13 +427,26 @@ final class App
         }
         $route = $this->manifest->routes[$match['name']];
         $handler = $this->routeHandlers[$route['name']] ?? [];
-        // HY-116: the selection runs after the routing and before the method check; the data base path serves JSON.
-        $selected = self::negotiate(
+        // HY-116: the selection runs after the routing and before the method check; the data base path serves the
+        // JSON and the representations of the route (HY-116.14).
+        $chosen = self::negotiate(
             $request,
             $client === null ? [self::PAGE_TYPE, self::DATA_TYPE] : [self::DATA_TYPE],
+            $route['representations'],
         );
-        if ($selected instanceof Response) {
-            return $selected;
+        if ($chosen instanceof Response) {
+            return $chosen;
+        }
+        [$selected, $entry, $values] = $chosen;
+        if ($entry !== null) {
+            // HY-120, HY-121: a representation request opens no session and runs only its handler.
+            return $this->representation(
+                $request->withRoute((string) $path, $match['params']),
+                $handler,
+                $entry,
+                $values,
+                $basePath,
+            );
         }
         // HY-116: the method check of the selected type comes before the refusals of HY-62 and HY-127.
         if ($request->method !== 'GET' && ($request->method !== 'POST' || !isset($handler['post']))) {
@@ -466,18 +490,29 @@ final class App
     /** Answers a client-rendered request outside the data base path: the static shell for a page (HY-62). */
     private function shellResponse(Request $request): Response
     {
-        if ($this->manifest->router->match($request->path) === null) {
+        $match = $this->manifest->router->match($request->path);
+        if ($match === null) {
             return Response::text(404, 'Not Found');
         }
         if ($request->method !== 'GET') {
             return Response::text(405, 'Method Not Allowed');
         }
-        // HY-62 step 3: the path serves only text/html, so a request that selects the JSON receives 406.
-        $selected = self::negotiate($request, [self::PAGE_TYPE]);
-        if ($selected instanceof Response) {
-            return $selected;
+        // HY-62 step 3: the path serves only text/html, so a request that selects the JSON receives 406. The
+        // representations of the route take part in the selection, so that a request that selects one of them is not
+        // acceptable here, and they are not listed (HY-116.14).
+        try {
+            $selected = MediaSelection::select(
+                $request->header('Accept'),
+                [self::PAGE_TYPE, self::DATA_TYPE],
+                $this->manifest->routes[$match['name']]['representations'],
+            );
+        } catch (InvalidAccept) {
+            return Response::text(400, 'Bad Request')->withHeader('Vary', 'Accept');
         }
-        if ($selected === self::DATA_TYPE) {
+        if ($selected === null) {
+            return Response::text(406, MediaSelection::listing([self::PAGE_TYPE], []))->withHeader('Vary', 'Accept');
+        }
+        if ($selected[0] !== self::PAGE_TYPE) {
             return self::notAcceptable();
         }
 
@@ -499,32 +534,115 @@ final class App
     }
 
     /**
-     * Selects the media type of a request among text/html and application/vnd.hyper+json (HY-116), or returns the
-     * refusal of the request: 400 for an Accept that does not follow the grammar, and 406 for a request that matches
-     * none of the types, which lists the `$served` types, one on each line.
+     * Selects the media type of a request among text/html, application/vnd.hyper+json and the representations of
+     * its route (HY-116), or returns the refusal of the request: 400 for an Accept that does not follow the grammar,
+     * and 406 for a request that matches none of the types, which lists the `$served` types and the entries, one on
+     * each line.
      *
-     * @param list<string> $served the media types that the path serves
+     * @param list<string> $served the page types that the path serves
+     * @param list<RepresentationEntry> $entries
+     * @return array{0: string, 1: ?RepresentationEntry, 2: array<array-key, string>}|Response
      */
-    private static function negotiate(Request $request, array $served): string|Response
+    private static function negotiate(Request $request, array $served, array $entries): array|Response
     {
         try {
-            $selected = Accept::select($request->header('Accept'), [self::PAGE_TYPE, self::DATA_TYPE]);
+            $selected = MediaSelection::select(
+                $request->header('Accept'),
+                [self::PAGE_TYPE, self::DATA_TYPE],
+                $entries,
+            );
         } catch (InvalidAccept) {
             return Response::text(400, 'Bad Request')->withHeader('Vary', 'Accept');
         }
-        if ($selected !== null) {
-            return $selected;
-        }
-        $body = '';
-        foreach ($served as $type) {
-            $body .= "{$type}\n";
-        }
 
-        return new Response(
-            406,
-            ['Content-Type' => 'text/plain; charset=utf-8', 'Vary' => 'Accept'],
-            $body,
+        return $selected
+            ?? Response::text(406, MediaSelection::listing($served, $entries))->withHeader('Vary', 'Accept');
+    }
+
+    /**
+     * Answers a representation request (HY-121, HY-122): the method check, the body checks, the handler of the
+     * entry, and the response of what it returned with its tag.
+     *
+     * @param RouteHandler $handler
+     * @param RepresentationEntry $entry
+     * @param array<array-key, string> $values
+     */
+    private function representation(
+        Request $request,
+        array $handler,
+        array $entry,
+        array $values,
+        string $basePath,
+    ): Response {
+        $vary = implode(', ', ['Accept', ...$entry['vary']]);
+        $method = $request->method;
+        $reads = $method === 'HEAD' && in_array('GET', $entry['methods'], true);
+        if (!in_array($method, $entry['methods'], true) && !$reads) {
+            $answered = array_filter(
+                ['GET', 'HEAD', 'POST', 'PUT', 'DELETE'],
+                static fn (string $name): bool => in_array($name, $entry['methods'], true)
+                    || ($name === 'HEAD' && in_array('GET', $entry['methods'], true)),
+            );
+
+            return Response::text(405, 'Method Not Allowed')
+                ->withHeader('Allow', implode(', ', $answered))
+                ->withHeader('Vary', $vary);
+        }
+        $value = null;
+        if (in_array($method, ['GET', 'HEAD', 'DELETE'], true)) {
+            if ($request->bodySize() !== 0) {
+                return Response::text(400, 'Bad Request')->withHeader('Vary', $vary);
+            }
+        } else {
+            if ($request->mediaType() !== 'application/json') {
+                return Response::text(415, 'Unsupported Media Type')->withHeader('Vary', $vary);
+            }
+            try {
+                $value = JsonCodec::decode($request->bodyBytes());
+            } catch (JsonDecodeError) {
+                return Response::text(400, 'Bad Request')->withHeader('Vary', $vary);
+            }
+            // HY-121.8: a number outside the data model is no value that a handler reads.
+            if (!JsonCodec::inDataModel($value)) {
+                return Response::text(400, 'Bad Request')->withHeader('Vary', $vary);
+            }
+        }
+        $contentType = MediaSelection::contentType($entry, $values);
+        $handle = $handler['representations'][$entry['type']]
+            ?? throw new \LogicException("the route has no representation handler for {$entry['type']} (HY-118)");
+        try {
+            $returned = $this->container->call($handle, [
+                Request::class => $request->asRepresentation($reads ? 'GET' : $method, $value),
+                MediaType::class => new MediaType($values, $contentType),
+            ]);
+        } catch (\Throwable $error) {
+            // HY-107: an error of the ORM is known by its class name and code.
+            return match (self::ormCode($error)) {
+                'NO_ROWS' => Response::text(404, 'Not Found')->withHeader('Vary', $vary),
+                'REVISION_CHANGED' => Response::text(412, 'Precondition Failed')->withHeader('Vary', $vary),
+                default => throw $error,
+            };
+        }
+        $response = RepresentationResponse::of(
+            $returned,
+            $contentType,
+            $vary,
+            $request->header('Authorization') !== null,
+            $basePath,
         );
+        if ($response->status !== 200 || !in_array($method, ['GET', 'HEAD'], true)) {
+            return $response;
+        }
+        // HY-122.10: a 200 of a GET or HEAD has a strong tag, and a request that names it receives 304.
+        $tag = RepresentationResponse::etag($contentType, $response->body);
+        $response = $response->withHeader('ETag', $tag);
+        if ($request->header('If-None-Match') !== $tag) {
+            return $response;
+        }
+        $headers = $response->headers;
+        unset($headers['Content-Type']);
+
+        return new Response(304, $headers, '');
     }
 
     /** Returns the 406 of a selected type that the path does not serve (HY-62 steps 2 and 3). */

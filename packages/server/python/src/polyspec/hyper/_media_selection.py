@@ -23,12 +23,10 @@ def select(
     first wins: the page types in their order, then the entries in declared order (HY-116.11). Raises InvalidAccept
     as `Accept.parse` does."""
     ranges = Accept.parse(accept)
-    selected: Optional[tuple[str, Optional[Entry], dict[str, str]]] = None
-    best = 0
-    for media in pages:
-        weight = Accept.type_weight(ranges, media)
-        if weight > best:
-            selected, best = (media, None, {}), weight
+    page, best = Accept.best(ranges, pages)
+    selected: Optional[tuple[str, Optional[Entry], dict[str, str]]] = (
+        None if page is None else (page, None, {})
+    )
     for entry in entries:
         weight, values = entry_weight(ranges, entry)
         if weight > best:

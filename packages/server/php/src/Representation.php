@@ -1,0 +1,20 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Polyspec\Hyper;
+
+/**
+ * The response of a representation handler (HY-122): a status, a body that is a value of the data model or null for
+ * no body, and headers. The server checks the response (HY-122) before it sends it.
+ */
+final class Representation
+{
+    /** @param array<string, string> $headers */
+    public function __construct(
+        public readonly int $status,
+        public readonly mixed $body = null,
+        public readonly array $headers = [],
+    ) {
+    }
+}
