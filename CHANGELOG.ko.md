@@ -6,6 +6,8 @@
 
 ## Unreleased
 
+- recipe check의 Python reader는 PHP와 Node reader가 `...$name`과 `...name`을 세듯 가변 인자(`*name`, `**name`)를 입력으로 셉니다. 이전에는 빼서 가변 인자를 가진 method가 spec의 입력과 달랐습니다(HYR-8) (H28.11).
+
 - recipe check의 Python reader는 이름이 `_` 하나로 시작하는 class 수준 annotated attribute를 HYR-8대로 internal property로 나열합니다. 이전에는 그런 attribute를 모두 버려서 공개 Python module의 internal property를 나열할 수 없었습니다. 이름이 `__`로 시작하는 attribute는 그 class의 private이고 member가 아니며, Python `Container`는 factory와 instance를 그런 attribute에 둡니다(HYR-8) (H28.11).
 
 - HY-106.6은 build 파일의 모든 실패, 즉 없거나 읽을 수 없는 파일, UTF-8이나 JSON이 아닌 byte, build id가 없는 파일을 open 오류의 하위 클래스 `InvalidBuild`로 명시하고, Node `Build.read`는 UTF-8 decoder의 `TypeError`만 유효하지 않은 JSON으로 보고하여 JSON decoder의 결함이 유효하지 않은 JSON으로 보고되지 않습니다(HY-106, HY-125) (H28.11).

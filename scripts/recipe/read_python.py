@@ -46,10 +46,11 @@ def signature(node: ast.FunctionDef | ast.AsyncFunctionDef) -> str:
 
 
 def parameters(node: ast.FunctionDef | ast.AsyncFunctionDef, receiver: bool = False) -> list[str]:
-    """The inputs of a function: every parameter, without the first one of a method that is not static, which is the
-    receiver whatever its name."""
-    args = [*node.args.posonlyargs, *node.args.args, *node.args.kwonlyargs]
-    names = [a.arg for a in args]
+    """The inputs of a function: every parameter in its order, a variadic one included as PHP and Node count it, without
+    the first one of a method that is not static, which is the receiver whatever its name."""
+    a = node.args
+    args = [*a.posonlyargs, *a.args, *([a.vararg] if a.vararg else []), *a.kwonlyargs, *([a.kwarg] if a.kwarg else [])]
+    names = [arg.arg for arg in args]
     return names[1:] if receiver and not is_static(node) and names else names
 
 

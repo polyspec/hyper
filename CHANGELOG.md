@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- The Python reader of the recipe check counts a variadic parameter (`*name`, `**name`) as an input, as the PHP and Node readers count `...$name` and `...name`; it left it out, so that a method with a variadic parameter differed from its inputs in the spec (HYR-8) (H28.11).
+
 - The Python reader of the recipe check lists a class-level annotated attribute whose name starts with one `_` as an internal property, as HYR-8 states; it dropped every such attribute, so that an internal property of a public Python module could not be listed. An attribute whose name starts with `__` is private to its class and is not a member, and the Python `Container` keeps its factories and instances in such attributes (HYR-8) (H28.11).
 
 - HY-106.6 names every failure of the build file, a missing or unreadable file, bytes that are not UTF-8 or JSON and a file without a build id, as the subclass `InvalidBuild` of the open error, and Node `Build.read` reports only a `TypeError` of the UTF-8 decoder as not valid JSON, so that a defect of the JSON decoder is not reported as invalid JSON (HY-106, HY-125) (H28.11).

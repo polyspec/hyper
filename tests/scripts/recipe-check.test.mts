@@ -314,6 +314,11 @@ test('the readers list only the public and internal properties of a class as mem
   assert.equal(cache?.visibility, 'internal', 'python does not list _cache as an internal member');
 });
 
+test('the Python reader counts a variadic parameter as one input, as PHP and Node do', () => {
+  const grow = readPython(path.join(fixture, 'readers', 'python')).members.find((m) => m.unit === 'Widget' && m.name === 'grow');
+  assert.deepEqual(grow?.parameters, ['sizes'], `python reads the parameters of grow as ${JSON.stringify(grow?.parameters)}`);
+});
+
 test('the PHP reader lists a trait member under the trait, not under the class that uses it', () => {
   const names = readFixture('php', path.join(fixture, 'readers', 'php')).members.filter((m) => m.unit === 'Gadget').map((m) => m.name);
   assert.ok(names.includes('size'), `Gadget does not list size: ${names.join(', ')}`);
