@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- `docs/spec/recipe.md` names its cases through `contracts/protocol.json` statement ids and states the case comparisons in HYR-11: each expected field and step result names one `compare` kind, and `CASE_EMPTY` fails a case that compares nothing for its runner. The recipe names the runners and case readers through the JSON fields `runners` and `caseReaders` instead of file names, and `only` names one statement with its `sentence` (H28.11).
+
 - `contracts/protocol.json` is the one source of the protocol: every rule is a list of statements, one English sentence each with its Korean translation and the sha256 of the English that the translation follows, and `docs/spec/protocol.md` and `protocol.ko.md` are generated from it with an anchor per statement. The Korean follows the English statement by statement, and the conversion corrected the Korean where it said something other than the English (for example constant time in HY-24, the layout of the response in HYC-2, the referent of the context hash in HY-125). AGENTS.md names the JSON as the place of the protocol rules (H28.11).
 
 - `contracts/protocol.json` retires the statements that the case text of HY-130 and the removed rules HY-9, HY-41 and HY-123 held, moves HY-130 to the section of request boundary and failures, and gives the interface terms their own section; the test comments, the feature table, the execution plan, the checklist, the recipe and the app headers now cite the statement ids and rule ids that hold each case (H28.11).

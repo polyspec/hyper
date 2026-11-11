@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 5b0d9540263c1872f6bdeda9710eb1f507b4e4c6b1b3063155222cf4209a1180 -->
+<!-- source-sha256: 90306589f22b029d7b47833a25e62ae318324007517a05850508d68796ca7c52 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- `docs/spec/recipe.md`는 case를 `contracts/protocol.json`의 statement id로 적고, HYR-11에 case 비교를 정한다. 기대 필드와 단계 결과마다 `compare` 종류 하나를 적으며, `CASE_EMPTY`는 자기 runner에 대해 아무것도 비교하지 않는 case를 실패시킨다. recipe는 runner와 case reader를 파일 이름 대신 JSON 필드 `runners`와 `caseReaders`로 가리키며, `only`는 `sentence`로 statement 하나를 적는다(H28.11).
 
 - `contracts/protocol.json`이 프로토콜의 유일한 원천이다. 모든 규칙은 statement의 목록이며, 각 statement는 영어 문장 하나와 그 한국어 번역, 번역이 따르는 영어의 sha256을 가진다. `docs/spec/protocol.md`와 `protocol.ko.md`는 statement마다 anchor를 붙여 그것에서 생성된다. 한국어는 영어를 statement마다 따르며, 변환에서 영어와 다른 것을 말하던 한국어를 고쳤다(예: HY-24의 constant time, HYC-2의 응답 layout, HY-125의 context hash가 가리키는 대상). AGENTS.md는 프로토콜 규칙의 자리로 이 JSON을 적는다(H28.11).
 

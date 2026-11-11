@@ -1,7 +1,7 @@
 <!-- doc-id: recipe -->
 # Recipe of the servers
 
-The PHP, Node and Python servers implement one protocol (`protocol.md`). Their recipe has three parts:
+The PHP, Node and Python servers implement one protocol (`contracts/protocol.json`). Their recipe has three parts:
 
 1. **The development spec**, `contracts/interfaces.json`. It names every concern of the servers, the units and files of
    each concern, and every public, internal and private member of those units. Each member has a language-neutral
@@ -20,10 +20,10 @@ The PHP, Node and Python servers implement one protocol (`protocol.md`). Their r
 
 - **HYR-2 Concerns.** A concern has these fields:
   - `id`: its words in kebab-case.
-  - `rules`: the HY- rule ids that it implements. Every id is stated in `protocol.md`. Every HY- rule of `protocol.md`
-    is named by a concern, or by the field `outside` of the spec, a list of `{rule, reason}`. An example is a rule of
-    the browser code only. A rule in `outside` that a concern names, or an `outside` entry with an empty reason, fails
-    HYR-8.
+  - `rules`: the HY- and HYC- rule ids that it implements. Every id is stated in `contracts/protocol.json`. Every
+    HY- rule of `contracts/protocol.json` is named by a concern, or by the field `outside` of the spec, a list of
+    `{rule, reason}`. An example is a rule of the browser code only. A rule in `outside` that a concern names, or an
+    `outside` entry with an empty reason, fails HYR-8.
   - `cases`: the case files under `contracts/` that state its behaviour. A concern without a unit, or whose every unit
     has `only` for one language, may have `none` with the reason and the native tests of HYR-7; the check fails `none`
     for any other concern.
@@ -64,8 +64,8 @@ The PHP, Node and Python servers implement one protocol (`protocol.md`). Their r
     in the test directory of its language: PHP `packages/server/php/tests/<Words>.php` in the namespace
     `Polyspec\Hyper\Tests`, Node `packages/server/ts/tests/<words>.ts`, and Python
     `packages/server/python/tests/<words>.py` without a leading `_`, because no test module is public or internal API of
-    HY-106. The case runner is `CaseRunnerTest.php`, `case-runner.test.ts` and `test_case_runner.py`, which the test tool
-    of each language discovers, and the case reader is `CaseReader.php`, `case-reader.ts` and `case_reader.py`.
+    HY-106. The case runner and the case reader of a language are the `runners` and `caseReaders` entries of
+    `contracts/interfaces.json`, as HYR-7 states.
 
   For example, the unit `media selection` is `MediaSelection.php`, `media-selection.ts` and `_media_selection.py`.
 
@@ -90,10 +90,11 @@ The PHP, Node and Python servers implement one protocol (`protocol.md`). Their r
     - `id`: `<unit>.<member>`, with the language-neutral name in camelCase.
     - `kind`: one of constructor, method, static method, function or property.
     - `visibility`: one of public, internal or private.
-    - `inputs`, `output` and `errors`: in the terms of the vocabulary. The vocabulary is the closed list of
-      `scripts/schema/interfaces.schema.json`: the data-model types of `protocol.md`, the units and the types of the
-      spec, and `list<T>`, `map<T>`, `optional<T>` and `function(<T>, …) -> <T>` of them. A term outside it fails HYR-8.
-      An error is a status of `protocol.md` or an error unit of the spec.
+    - `inputs`, `output` and `errors`: in the terms of the vocabulary. The vocabulary is the terms of
+      `contracts/protocol.json`, the units and types of the spec, and `list<T>`, `map<T>`, `optional<T>` and
+      `function(...) -> T` of them; no union term, a Node `Promise<T>` is `T`, an iterator or generator is `list<T>`,
+      and a callable is `function(...) -> T`. A term outside it fails HYR-8.
+      An error is a status that a statement of `contracts/protocol.json` names or an error unit of the spec.
     - `state`: one sentence of what it does.
     - `native`: for each language, the exact `symbol` and the exact `signature` (see below).
   - **Types.** A type is a type declaration that is no unit (HYR-3): a Node `type` alias or `interface`, and a Python
@@ -139,17 +140,16 @@ The PHP, Node and Python servers implement one protocol (`protocol.md`). Their r
       from its neutral visibility.
 
 - **HYR-6 Only some languages.** A unit, a member, a field of a type or a case that only some languages have carries
-  `only: {languages, rule, quote}`:
-  - `rule` is a HY- id;
-  - `quote` is one whole sentence of that rule that requires the difference. A sentence runs from its first word to
-    the period that is followed by a space or by the end of the rule. A period inside a code span or an identifier,
-    such as `session.save_handler` or `6.3.0`, does not end a sentence. Examples come from HY-54, HY-100, HY-104,
-    HY-105, HY-106 and HY-115.
+  `only: {languages, sentence}`:
+  - `sentence` is one statement id of `contracts/protocol.json` that requires the difference.
+  - A statement of `contracts/protocol.json` is one sentence. A sentence runs from its first word to the period that is
+    followed by a space or by the end of the rule. A period inside a code span or an identifier, such as
+    `session.save_handler` or `6.3.0`, does not end a sentence. Examples come from HY-54, HY-100, HY-104, HY-105,
+    HY-106 and HY-115.
 
-  A unit, a member or a field of a type that is missing in a language without `only` is a defect. So is a quote that is not one whole
-  sentence of its rule. A runtime idiom that no rule names, such as the `code` of a Node.js error, is no unit and no
-  member of its own: each user writes it in its own code, as the other languages write theirs (Python
-  `except FileNotFoundError`).
+  A unit, a member or a field of a type that is missing in a language without `only` is a defect. A runtime idiom that no
+  rule names, such as the `code` of a Node.js error, is no unit and no member of its own: each user writes it in its own
+  code, as the other languages write theirs (Python `except FileNotFoundError`).
 
   The concerns that the Node server takes from the browser code by HY-54 (manifest, region, router, reads and the
   renderer) are units `only` PHP and Python with the HY-54 sentence. Their behaviour is the same across all three
@@ -158,47 +158,46 @@ The PHP, Node and Python servers implement one protocol (`protocol.md`). Their r
   browser package as a language.
 
 - **HYR-7 Test recipe.**
-  - **Runners.** Each server language has exactly one case runner at a fixed path:
-    `packages/server/php/tests/CaseRunnerTest.php`, `packages/server/ts/tests/case-runner.test.ts` and
-    `packages/server/python/tests/test_case_runner.py`. It runs every section of every case file under `contracts/` whose
-    `runners` in `caseFiles` names its language. `runners` lists any of `php`, `node`, `python`, `browser` and `build`:
-    `browser` is the runner of `packages/client/tests` and `build` is `tests/scripts/build-id.test.mts`; both read their
-    sections through the Node case reader, and the check counts the results of the three servers only.
+  - **Runners.** Each server language has exactly one case runner, which `runners` in `contracts/interfaces.json` names.
+    It runs every section of every case file under `contracts/` whose `runners` in `caseFiles` names its language.
+    `runners` names the runner of each of `php`, `node`, `python`, `browser` and `build`. `browser` and `build` read
+    their sections through `caseReaders.node`, and the check counts the results of all five runners.
   - **Reading a case.** A runner reads each case only through the case reader of its language, one unit of the test
     tree with the same members in every language: the public members `cases`, `section`, `id`, `has`, `input`,
     `compare`, `outcome`, `fail` and `line`, and the private members `declaration`, `matches` and `equal`. `compare`
     compares a field and `outcome` an outcome of the step.
     - `caseFiles` of `contracts/interfaces.json` is the one source of the roles and comparisons of the case files
-      (HY-130). For each file it names its rule, its top-level keys (`fixtures`) and, for each case array
+      (HYR-11). For each file it names its top-level keys (`fixtures`) and, for each case array
       (`sections`), its `runners`, the fixtures that its cases use (`uses`), every field with its role and, for each
-      expected field, each input field that a step also checks and each outcome of a step, the comparison with the
-      rule and the whole sentence of that rule that states it. The check verifies each quote as a whole sentence of
-      its rule, as for `only` (HYR-6).
+      expected field, each input field that a step also checks and each outcome of a step, the comparison, its `state`,
+      and the `sentence` that states the observed behaviour. The check verifies each `sentence` as it verifies `only`
+      (HYR-6).
     - The case reader gives the input fields and the used fixtures of a case to the runner, and compares each expected
       field with the observed value itself, by the comparison that `caseFiles` names. The runner does not compare.
     - The reader fails a file with `FILE_UNDECLARED <path>` before its first case when the file holds a key, a section
-      or a field that `caseFiles` does not declare, other than `only` (HYR-6), or an expected field without `fields`
-      that has no comparison, rule or quote, and the runner writes `CASE <file> <id> FAIL FILE_UNDECLARED <path>` for
-      each case of the file.
-    - It fails a case with `CASE_ERROR <message>` for an error that the step of the runner raised, with
-      `FIELD_DIFFERS <name>` for the first expected field whose comparison fails, and, after the case, with
-      `FIELD_UNKNOWN <name>` for an input field or a used fixture that was not read and with
-      `FIELD_UNCOMPARED <name>` for an expected field that was not compared. The reason of a failed case is the first
-      of these in that order. A nested field is named by its dotted path, such as `received.headers`.
+      or a field that `caseFiles` does not declare, other than `only` (HYR-6) and `requirements` (HYR-11), or an expected
+      field without `fields` that has no comparison or sentence, and the runner writes
+      `CASE <file> <id> FAIL FILE_UNDECLARED <path>` for each case of the file.
+    - It fails a case with `CASE_ERROR <message>` for an error that the step of the runner raised, with `CASE_EMPTY`
+      for a case that compares nothing for its runner (HYR-11), with `FIELD_DIFFERS <name>` for the first expected
+      field whose comparison fails, and, after the case, with `FIELD_UNKNOWN <name>` for an input field or a used
+      fixture that was not read and with `FIELD_UNCOMPARED <name>` for an expected field that was not compared. The
+      reason of a failed case is the first of these in that order. A nested field is named by its dotted path, such as
+      `received.headers`.
     - A case may carry `only` (HYR-6); the reader reads it and gives the case only to the runners of the languages
       that it names.
   - **Results.**
-    - The runner writes one line per case to the results file named by `RECIPE_RESULTS`: `CASE <file> <id> PASS`, or
+    - Every runner writes one line per case to the results file named by `RECIPE_RESULTS`: `CASE <file> <id> PASS`, or
       `CASE <file> <id> FAIL <reason>`.
     - It exits nonzero when a case fails.
     - `make recipe-check` takes success from the exit status and from the lines of that file. A case without a line
       fails, and no other output supplies a result.
-    - The check takes the case ids of each server language from the sections whose `runners` in `caseFiles` name it,
+    - The check takes the case ids of each runner from the sections whose `runners` in `caseFiles` name it,
       and fails when a language misses such a case id or prints an id that is not one. A case with `only` counts only
       for the languages that it names.
   - **Native tests.** A native test is a test of the test tree of one language that runs no case file. It exists only
     for a unit or member whose `only` names one language, or for a concern with `cases: none`. A behaviour that two
-    languages have is a case with `only: {languages, rule, quote}` (HYR-6), which the other runners leave out, and the
+    languages have is a case with `only: {languages, sentence}` (HYR-6), which the other runners leave out, and the
     check takes the case ids of each language from the sections whose `runners` name it, from the cases without `only`
     and those whose `only` names it.
     - The spec names each one under that unit, member or concern as `<test file>::<test name>: <reason>`.
@@ -226,11 +225,11 @@ The PHP, Node and Python servers implement one protocol (`protocol.md`). Their r
   - a unit against HYR-3 or HYR-4;
   - a member or a type that is missing, added, moved, retyped, or of another visibility;
   - a constant against HYR-5;
-  - an `only` against HYR-6;
+  - an `only`, a field or outcome `sentence`, or a case `requirements` against HYR-6, HYR-11 or HYR-2;
   - a rule or case reference, or an `outside` entry, against HYR-2;
   - a barrel file whose re-exports differ from the public members and the public types of the spec;
-  - a `contracts/*.json` case file with no `caseFiles` entry, and an entry, section or field of `caseFiles` that no
-    file holds;
+  - a file of `git ls-files contracts/*.json` other than `interfaces.json` and `protocol.json` with no `caseFiles`
+    entry, and an entry, section or field of `caseFiles` that no file holds;
   - a result, a case reader or a native test against HYR-7.
 
   Each run first runs the readers' mutation cases, and fails when a reader passes a mutation.
@@ -244,25 +243,55 @@ The PHP, Node and Python servers implement one protocol (`protocol.md`). Their r
   - These fields are written by hand in the reviewed change of the spec:
     - the neutral fields `inputs`, `output`, `errors`, `state` and the `shape` of a type;
     - the concern fields `rules` and `cases`;
-    - `caseFiles`, the case files and the comparison of each of their fields (HY-130);
+    - `caseFiles`, the case files and the comparison of each of their fields (HYR-11);
     - the unit grouping;
     - `only`.
   - The candidate marks each of these fields as hand-written.
   - A change of the spec is written from the field-by-field diff between the candidate and the spec. The sources
     then follow it.
 
+- **HYR-11 Case comparisons.** A field of a case file has one role: `id`, `label`, `input`, `expected` or `response`.
+  Each expected field and each outcome of a step has a `compare` in `caseFiles`, one of these nine kinds:
+  - `exact`: the observed value equals the expected value as a JSON value, where a map equals a map with the same keys
+    and equal values in any order, a list equals a list with equal items in the same order, and null equals only null;
+  - `ordered`: as `exact`, and the keys of every map are in the same order;
+  - `subset`: every key of the expected map is a key of the observed map with an equal value;
+  - `absent`: no name of the expected list is a key of the observed map;
+  - `contains`: the expected text, or every text of the expected list, is part of the observed text;
+  - `excludes`: no text of the expected list is part of the observed text;
+  - `prefix`: the expected list equals the first items of the observed list;
+  - `keys`: the expected list equals the keys of the observed map in their order;
+  - `raises`: when the expected value is true, the step fails with the open error of HY-106, and when it is false, the step
+    does not fail.
+  - Response fields have no `compare` and are compared by name: `status` and `body` `exact`, `headers` `subset`,
+    `allHeaders` `exact`, `absentHeaders` `absent`, `bodyContains` `contains` and `bodyNotContains` `excludes`. Header
+    names are compared as HY-130 states.
+  - An expected field with `fields` is not compared itself, and each of its fields is compared by its own comparison.
+  - An outcome of a step is compared without a field: `raises` expects the value true, and `exact` compares the two values
+    that the step observes.
+  - A field that a case does not state is not compared.
+  - Every runner that `caseFiles` names compares every case by these comparisons and by no other. A case that compares
+    nothing for its runner fails with `CASE_EMPTY`; fields and outcomes whose `only` leaves that runner out do not count.
+  - `raises` on a step: the runner catches every error of the step and gives it, or null, to the reader, which checks that
+    its class is exactly the open error of HY-106.
+  - Each case carries `requirements`, the rules that its response fields check. `requirements` is not a field: the reader
+    skips it, and the check reads it. A case's effective rules are its `requirements` plus the rules of the sentences of
+    its stated fields and of its section's outcomes. The check fails a requirement that repeats another requirement or the
+    rule of a stated field's sentence, a case that states a response field and whose effective rules are empty, and an
+    effective rule that is in `outside` or in the `rules` of no concern whose `cases` name the file.
+
 ## The first alignment (H28.11)
 
 The first spec is the candidate of HYR-10 with these decisions applied in order. The item lists every decision that
 the list below does not settle, with its reason.
 
-1. **Same concept, different names.** Use the name that a rule of `protocol.md` writes. Otherwise use the name that two
+1. **Same concept, different names.** Use the name that a rule of `contracts/protocol.json` writes. Otherwise use the name that two
    languages share. Otherwise the item decides and lists the decision.
 2. **A member in two languages.** The third language adds it, unless a rule makes the difference (HYR-6).
 3. **A member in one language.** It is folded into its callers and removed, unless one of these holds:
    - a rule makes it specific to that language (HYR-6);
    - it is public API of HY-106, which the other languages then add.
-4. **A unit in one language.** It carries `only` with its rule, or the other languages add it.
+4. **A unit in one language.** It carries `only` with its sentence, or the other languages add it.
 5. **Different parameters.** Use the parameters of a rule. Otherwise use those of two languages. A difference of the
    runtime form that a rule states, such as the context argument of a Node handler (HY-105, HY-106), is `only` with
    that rule. A difference that no rule states, such as the abort signal of the Node request path, needs a rule before
@@ -275,7 +304,7 @@ the list below does not settle, with its reason.
 8. **Tests.** A native test of a behaviour that more than one language has becomes a case of its concern's case file,
    or is removed when a case already states it, in the commit that moves that concern.
 
-## The rules that H28.11 writes in protocol.md first
+## The rules that H28.11 writes in contracts/protocol.json first
 
 These rules state behaviour that the servers have and that no rule states. They are written before the spec.
 
@@ -310,14 +339,13 @@ These rules state behaviour that the servers have and that no rule states. They 
      The server sends the session cookie of HY-45 itself. No part of the PHP server reads `$_COOKIE`.
      Today `NativeSession.php` reads `$_COOKIE[$name]` and `Request.php` builds the cookies from `$_COOKIE`, which
      makes two parses of one header.
-   - `contracts/cookies.json` holds one case for each of these points, and the case reader compares the cookies of
-     each case exactly.
+   - `contracts/cookies.json` holds one case for each of these points.
    - The cookies unit exists in all three servers, with no `only`.
 2. **The public session stores.** HY-106 names "the session stores of HY-104" and leaves out the Redis stores of
    HY-115, which an application uses. The sentence is corrected to "the session stores of HY-104 and HY-115".
-3. **The case comparisons.** A new rule, HY-130, states the comparison of every field of a case file: `exact`, `ordered`, `subset`, `absent`, `contains`, `excludes`, `prefix`, `keys` and `raises`. The case file formats change with it: `invalidPaths` of `routes.json` and `rest.json` become objects with `id`, `label` and `path`; `client.json` states the `shell` fixture, and its shell cases state `body` and `allHeaders` instead of `headers`; `fields.json` states `files` in the two cases that have none; and `context.json` compares `selection` as a list per call.
+3. **The case comparisons.** HYR-11 states the comparisons of the case files. HY-130 states the headers of a response;
+   HY-4, HY-5, HY-38, HY-62, HY-73, HY-106 and HY-129 gain the facts that the comparisons had stated.
    - Cause: HYR-7 has the reader compare each expected field by the rule of its file, and some files had no rule for their fields.
-   - The reason that HY-130 is in `outside` is that it states the case readers of the test trees.
 
 ## The order of work for H28.11
 
@@ -328,11 +356,11 @@ HYR-7). Until the last step `make recipe-check` fails on this branch, and each s
 GREEN.
 
 1. Audit these rules (same fixed scope), until no core finding is open.
-2. Write the rules of protocol.md above, with their cases, RED and GREEN in the three servers.
+2. Write the rules of contracts/protocol.json above, with their cases, RED and GREEN in the three servers.
 3. Write the readers, the mutation cases, the schema and the check, RED before the check exists.
 4. Write the spec from the candidate by the first alignment, and review the diff. The spec fills `rules`, `cases`
    and the whole `only` sentences of each concern, the representation concern included with the units that H28.7
-   writes, and the check verifies the coverage of HYR-2 and the quotes of HYR-6.
+   writes, and the check verifies the coverage of HYR-2 and the `only` sentences of HYR-6.
 5. Add the case reader and the runner of each language with the results file.
 6. Move the sources of the three languages to the spec, one concern per commit. Each commit adds the cases of its
    concern and removes the native tests that HYR-7 does not allow, with its owner tests GREEN.
@@ -406,7 +434,7 @@ Notation:
 14. **cookies**
     - cookies: `Cookies.php` (← Request.php `$_COOKIE`) / `cookies.ts` (← form.ts parseCookies) / `_cookies.py` (←
       _pipeline.cookie_values). All three servers parse the header by HY-129 ("The rules that H28.11 writes in
-      protocol.md first", item 1).
+      contracts/protocol.json first", item 1).
 15. **container** (HY-105)
     - container: `Container.php` / `container.ts` (← services.ts) / `container.py` (pub).
 
@@ -443,8 +471,8 @@ Notation:
     - flock: — / `flock.ts` / —. `only node`: HY-104 "The Node server calls `flock` through `node:ffi` with
       `LOCK_NB` and tries again after a pause of at most 50 ms, because a call that blocks would stop its event
       loop." Python calls `fcntl.flock` of its standard library, so it has no binding.
-    - Every quote is one whole sentence of its rule (HYR-6). The spec copies each one exactly, and the check verifies
-      it against protocol.md.
+    - Every `only` names one statement (HYR-6). The spec copies each one exactly, and the check verifies
+      it against contracts/protocol.json.
 20. **error code**
     - No unit. `errorCode` of `error-code.ts` is the Node.js idiom of reading the `code` of an error, which no rule
       names (HYR-6). Each user, file-sessions.ts and server.ts, reads the code in its own code, as Python writes
