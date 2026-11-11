@@ -1,5 +1,6 @@
 {
   "mask": [
-    { "id": "raw-token", "label": "raw token", "input": "token", "expected": "mask" }
+    { "id": "raw-token", "label": "raw token", "input": "token", "expected": "mask" },
+    { "id": "raw-response", "label": "raw response", "input": "token", "output": "mask", "requirements": ["HY-1"] }
   ]
 }

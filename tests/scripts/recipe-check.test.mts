@@ -29,7 +29,7 @@ test('the schema term is the vocabulary: a status number is not a term', () => {
 const mutations = JSON.parse(readFileSync(path.join(fixture, 'mutations.json'), 'utf8')) as Mutation[];
 
 function resultArguments(root: string): string[] {
-  return ['php', 'node', 'python'].flatMap((lang) => ['--results', `${lang}=${path.join(root, 'results', `${lang}.txt`)}`]);
+  return ['php', 'node', 'python', 'browser', 'build'].flatMap((lang) => ['--results', `${lang}=${path.join(root, 'results', `${lang}.txt`)}`]);
 }
 
 /** Makes a copied tree a git repository whose files are all tracked: the readers list the files git tracks. */

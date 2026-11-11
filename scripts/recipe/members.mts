@@ -2,7 +2,7 @@
 // visibility, its terms are in the vocabulary, its native name is the one HYR-5 gives, and an options record names the
 // parameters of the member that takes it.
 
-import { LANGS, type Lang, type Member, type Only, type Spec } from './types.mts';
+import { LANGS, type Lang, type Member, type Only, type Runner, type Spec } from './types.mts';
 import type { Ctx } from './context.mts';
 import { errorKnown, expectedNative, expectedVisibility, hasAcronym, readerKey, specKey, symbolName, termKnown, words } from './names.mts';
 
@@ -11,12 +11,17 @@ export function vocabulary(spec: Spec): Set<string> {
   return new Set([...spec.concerns.flatMap((c) => c.units.map((u) => u.id)), ...spec.types.map((t) => t.id)]);
 }
 
+/** The terms of the vocabulary (HYR-5): the units and types of the spec, and the terms of protocol.json. */
+export function termsOf(spec: Spec, protocol: Ctx['protocol']): Set<string> {
+  return new Set([...vocabulary(spec), ...protocol.terms]);
+}
+
 /** HYR-6: the languages a unit, member or type has native code for are exactly its `only` languages, or all of them. */
 export function checkOnly(
   add: (code: string, message: string) => void,
   label: string,
   native: Partial<Record<Lang, unknown>>,
-  scope: Lang[],
+  scope: readonly Runner[],
   only: Only | undefined,
 ): void {
   const wanted = only?.languages ?? scope;
@@ -41,7 +46,7 @@ function recordNames(spec: Spec, term: string, lang: Lang): string[] | undefined
 export function checkMembers(ctx: Ctx): void {
   const { spec, sources, add } = ctx;
   const units = spec.concerns.flatMap((c) => c.units);
-  const ids = vocabulary(spec);
+  const ids = termsOf(spec, ctx.protocol);
   const checkTerm = (where: string, term: string): void => {
     if (!termKnown(term, ids)) add('TERM_UNKNOWN', `${where} uses ${term}, which is outside the vocabulary (HYR-5)`);
   };
@@ -50,7 +55,7 @@ export function checkMembers(ctx: Ctx): void {
       m.inputs.forEach((t, i) => checkTerm(`${m.id} input ${i + 1}`, t));
       checkTerm(`${m.id} output`, m.output);
       for (const t of m.errors) {
-        if (!errorKnown(t, ids, ctx.protocol.replace(/\s+/gu, ' '))) add('TERM_UNKNOWN', `${m.id} error ${t} is neither a status of protocol.md nor an error unit`);
+        if (!errorKnown(t, ids, ctx.protocol.statuses.replace(/\s+/gu, ' '))) add('TERM_UNKNOWN', `${m.id} error ${t} is neither a status of protocol.json nor an error unit`);
       }
     }
   }

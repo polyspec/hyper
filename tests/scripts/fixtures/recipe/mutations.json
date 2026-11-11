@@ -1,58 +1,474 @@
 [
-  { "id": "member-added", "file": "packages/server/php/src/Csrf.php", "from": "    public function raw(): string", "to": "    public function extra(): string\n    {\n        return 'x';\n    }\n\n    public function raw(): string", "code": "MEMBER_ADDED" },
-  { "id": "member-removed", "file": "packages/server/ts/src/csrf.ts", "from": "  raw(): string {\n    return 'x';\n  }\n\n", "to": "", "code": "MEMBER_MISSING" },
-  { "id": "member-renamed", "file": "packages/server/python/src/polyspec/hyper/_csrf.py", "from": "def raw(self)", "to": "def rawer(self)", "code": "MEMBER_MISSING" },
-  { "id": "member-retyped", "file": "packages/server/php/src/MediaType.php", "from": "essence(): string", "to": "essence(): int", "code": "MEMBER_SIGNATURE" },
-  { "id": "visibility-public-to-internal", "file": "packages/server/php/src/MediaType.php", "from": "    public function essence", "to": "    /** @internal */\n    public function essence", "code": "MEMBER_VISIBILITY" },
-  { "id": "visibility-to-private", "file": "packages/server/ts/src/media-type.ts", "from": "  essence(): string {", "to": "  private essence(): string {", "code": "MEMBER_VISIBILITY" },
-  { "id": "member-moved-file", "file": "packages/server/python/src/polyspec/hyper/media_type.py", "rename": "packages/server/python/src/polyspec/hyper/media_extra.py", "code": "MEMBER_MOVED" },
-  { "id": "second-unit-in-file", "file": "packages/server/ts/src/csrf.ts", "from": "export class Csrf {", "to": "export class Extra {}\n\nexport class Csrf {", "code": "UNIT_COUNT" },
-  { "id": "file-renamed-against-hyr-4", "file": "packages/server/ts/src/csrf.ts", "rename": "packages/server/ts/src/csrf-token.ts", "code": "UNIT_FILE" },
-  { "id": "unnamed-file", "file": "packages/server/ts/src/helper.ts", "create": "export const helper = 1;\n", "code": "FILE_UNOWNED" },
-  { "id": "file-missing", "file": "packages/server/ts/src/media-type.ts", "delete": true, "code": "FILE_MISSING" },
-  { "id": "type-added", "file": "packages/server/ts/src/csrf.ts", "from": "export class Csrf {", "to": "export type Mode = 'a' | 'b';\n\nexport class Csrf {", "code": "TYPE_UNLISTED" },
-  { "id": "type-changed", "file": "packages/server/ts/src/media-type.ts", "from": "export type Essence = string;", "to": "export type Essence = number;", "code": "TYPE_CHANGED" },
-  { "id": "barrel-export-added", "file": "packages/server/ts/src/index.ts", "from": "export { MediaType } from './media-type.ts';", "to": "export { MediaType } from './media-type.ts';\nexport { Csrf } from './csrf.ts';", "code": "BARREL_EXPORT" },
-  { "id": "private-name-used-elsewhere", "file": "packages/server/python/src/polyspec/hyper/media_type.py", "from": "class MediaType:", "to": "from polyspec.hyper._csrf import Csrf\n\nVALUE = Csrf()._fold()\n\n\nclass MediaType:", "code": "PRIVATE_USED" },
-  { "id": "test-added-without-spec", "file": "packages/server/ts/tests/extra.test.mts", "create": "import { test } from 'node:test';\n\ntest('extra', () => {});\n", "code": "TEST_UNNAMED" },
-  { "id": "node-test-name-dynamic", "file": "packages/server/ts/tests/dynamic.test.mts", "create": "import { test } from 'vitest';\n\nconst label = 'dynamic';\ntest(label, () => {});\n", "code": "TEST_NAME_DYNAMIC" },
-  { "id": "python-render-test-unnamed", "file": "packages/server/python/tests/render/render_probe.py", "create": "import unittest\n\n\nclass ProbeTest(unittest.TestCase):\n    def test_probe(self) -> None:\n        self.assertTrue(True)\n", "code": "TEST_UNNAMED" },
-  { "id": "spec-rule-unknown", "file": "contracts/interfaces.json", "from": "\"rules\": [\"HY-2\"]", "to": "\"rules\": [\"HY-9\"]", "code": "RULE_UNKNOWN" },
-  { "id": "result-file-deleted", "file": "results/node.txt", "delete": true, "code": "RESULT_MISSING" },
-  { "id": "result-line-missing", "file": "results/php.txt", "from": "CASE contracts/csrf.json raw-token PASS\n", "to": "", "code": "RESULT_MISSING" },
-  { "id": "result-line-failed", "file": "results/python.txt", "from": "PASS", "to": "FAIL the token differs", "code": "RESULT_FAIL" },
-  { "id": "term-outside-vocabulary", "file": "contracts/interfaces.json", "from": "\"output\": \"string\",", "to": "\"output\": \"bytes\",", "code": "TERM_UNKNOWN" },
-  { "id": "member-id-acronym", "file": "contracts/interfaces.json", "from": "\"id\": \"csrf.raw\",", "to": "\"id\": \"csrf.rawURL\",", "code": "NAME_ACRONYM" },
-  { "id": "case-reader-member-renamed", "file": "packages/server/php/tests/CaseReader.php", "from": "public function fail(): string", "to": "public function failed(): string", "code": "CASE_READER_MEMBERS" },
-  { "id": "unit-missing", "file": "packages/server/ts/src/csrf.ts", "from": "export class Csrf {", "to": "export class Token {", "code": "UNIT_MISSING" },
-  { "id": "unit-kind-changed", "file": "contracts/interfaces.json", "from": "\"file\": \"packages/server/php/src/Csrf.php\", \"kind\": \"class\"", "to": "\"file\": \"packages/server/php/src/Csrf.php\", \"kind\": \"interface\"", "code": "UNIT_KIND" },
-  { "id": "unit-visibility-changed", "file": "contracts/interfaces.json", "from": "\"file\": \"packages/server/ts/src/csrf.ts\", \"kind\": \"class\", \"internal\": true", "to": "\"file\": \"packages/server/ts/src/csrf.ts\", \"kind\": \"class\", \"internal\": false", "code": "UNIT_VISIBILITY" },
-  { "id": "type-moved-file", "file": "contracts/interfaces.json", "from": "media-type.ts::Essence", "to": "csrf.ts::Essence", "code": "TYPE_MISSING" },
-  { "id": "type-visibility-changed", "file": "contracts/interfaces.json", "from": "\"id\": \"essence\",\n      \"visibility\": \"public\"", "to": "\"id\": \"essence\",\n      \"visibility\": \"internal\"", "code": "TYPE_VISIBILITY" },
-  { "id": "only-quote-changed", "file": "contracts/interfaces.json", "from": "\"languages\": [\"node\"], \"rule\": \"HY-2\", \"quote\": \"A media type is one essence.\"", "to": "\"languages\": [\"node\"], \"rule\": \"HY-2\", \"quote\": \"A media type is one.\"", "code": "ONLY_QUOTE" },
-  { "id": "only-mismatch", "file": "contracts/interfaces.json", "from": "\"languages\": [\"node\"], \"rule\": \"HY-2\"", "to": "\"languages\": [\"php\"], \"rule\": \"HY-2\"", "code": "ONLY_MISMATCH" },
-  { "id": "only-missing", "file": "contracts/interfaces.json", "from": "\"languages\": [\"node\"], \"rule\": \"HY-2\"", "to": "\"languages\": [\"node\", \"python\"], \"rule\": \"HY-2\"", "code": "ONLY_MISSING" },
-  { "id": "rule-uncovered", "file": "docs/spec/protocol.md", "from": "- **HY-3** A session store reads the session of an identifier as a string or null.", "to": "- **HY-3** A session store reads the session of an identifier as a string or null.\n- **HY-4** Nothing covers this rule.", "code": "RULE_UNCOVERED" },
-  { "id": "outside-reason-blank", "file": "contracts/interfaces.json", "from": "\"outside\": [],", "to": "\"outside\": [{ \"rule\": \"HY-1\", \"reason\": \"  \" }],", "code": "OUTSIDE_REASON" },
-  { "id": "outside-concern", "file": "contracts/interfaces.json", "from": "\"outside\": [],", "to": "\"outside\": [{ \"rule\": \"HY-1\", \"reason\": \"Not outside.\" }],", "code": "OUTSIDE_CONCERN" },
-  { "id": "cases-none-two-languages", "file": "contracts/interfaces.json", "from": "\"languages\": [\"php\"], \"rule\": \"HY-3\"", "to": "\"languages\": [\"php\", \"node\"], \"rule\": \"HY-3\"", "code": "CASES_NONE" },
-  { "id": "runner-missing", "file": "contracts/interfaces.json", "from": "CaseRunnerTest.php::CaseRunnerTest::testCases\"", "to": "CaseRunnerTest.php::CaseRunnerTest::testGone\"", "code": "RUNNER_MISSING" },
-  { "id": "native-reason-blank", "file": "contracts/interfaces.json", "from": "case-runner.test.mts::cases: runs the essence cases", "to": "case-runner.test.mts::cases:  ", "code": "NATIVE_REASON" },
-  { "id": "native-scope-two-languages", "file": "contracts/interfaces.json", "from": "\"only\": { \"languages\": [\"php\"], \"rule\": \"HY-3\"", "to": "\"only\": { \"languages\": [\"php\", \"node\"], \"rule\": \"HY-3\"", "code": "NATIVE_SCOPE" },
-  { "id": "native-test-missing", "file": "contracts/interfaces.json", "from": "case-runner.test.mts::cases: runs the essence cases", "to": "case-runner.test.mts::gone: runs the essence cases", "code": "NATIVE_TEST_MISSING" },
-  { "id": "result-form-lowercase", "file": "results/php.txt", "from": "raw-token PASS", "to": "raw-token pass", "code": "RESULT_FORM" },
-  { "id": "result-unknown-id", "file": "results/php.txt", "from": "essence-one PASS", "to": "essence-two PASS", "code": "RESULT_UNKNOWN_ID" },
-  { "id": "result-duplicated", "file": "results/php.txt", "from": "raw-token PASS\n", "to": "raw-token PASS\nCASE contracts/csrf.json raw-token PASS\n", "code": "RESULT_DUPLICATE" },
-  { "id": "php-const-public", "file": "packages/server/php/src/MediaType.php", "from": "    public function essence", "to": "    public const LIMIT = 1;\n\n    public function essence", "code": "CONST_PUBLIC" },
-  { "id": "node-const-public", "file": "packages/server/ts/src/media-type.ts", "from": "export type Essence = string;", "to": "export const LIMIT = 1;\n\nexport type Essence = string;", "code": "CONST_PUBLIC" },
-  { "id": "python-const-public", "file": "packages/server/python/src/polyspec/hyper/media_type.py", "from": "class MediaType:", "to": "LIMIT = 1\n\n\nclass MediaType:", "code": "CONST_PUBLIC" },
-  { "id": "php-sources-missing", "file": "contracts/interfaces.json", "from": "\"sources\": [\"packages/server/php/src\"]", "to": "\"sources\": [\"packages/server/php/missing\"]", "code": "READER_FAILED" },
-  { "id": "php-tests-missing", "file": "contracts/interfaces.json", "from": "\"tests\": [\"packages/server/php/tests\"]", "to": "\"tests\": [\"packages/server/php/missing\"]", "code": "READER_FAILED" },
-  { "id": "node-sources-missing", "file": "contracts/interfaces.json", "from": "\"sources\": [\"packages/server/ts/src\"]", "to": "\"sources\": [\"packages/server/ts/missing\"]", "code": "READER_FAILED" },
-  { "id": "node-tests-missing", "file": "contracts/interfaces.json", "from": "\"tests\": [\"packages/server/ts/tests\"]", "to": "\"tests\": [\"packages/server/ts/missing\"]", "code": "READER_FAILED" },
-  { "id": "python-sources-missing", "file": "contracts/interfaces.json", "from": "\"sources\": [\"packages/server/python/src/polyspec/hyper\"]", "to": "\"sources\": [\"packages/server/python/src/polyspec/missing\"]", "code": "READER_FAILED" },
-  { "id": "python-tests-missing", "file": "contracts/interfaces.json", "from": "\"tests\": [\"packages/server/python/tests\"]", "to": "\"tests\": [\"packages/server/python/missing\"]", "code": "READER_FAILED" },
-  { "id": "python-typed-field-renamed", "file": "packages/server/python/src/polyspec/hyper/_csrf.py", "from": "    raw: str", "to": "    token: str", "code": "TYPE_SHAPE" },
-  { "id": "python-type-spec-field-renamed", "file": "contracts/interfaces.json", "from": "\"fields\": { \"raw\": \"string\" }", "to": "\"fields\": { \"token\": \"string\" }", "code": "TYPE_SHAPE" },
-  { "id": "node-essence-fields-added", "file": "contracts/interfaces.json", "from": "\"shape\": { \"term\": \"string\" }", "to": "\"shape\": { \"fields\": { \"value\": \"string\" }, \"optional\": [] }", "code": "TYPE_SHAPE" }
+  {
+    "id": "member-added",
+    "file": "packages/server/php/src/Csrf.php",
+    "from": "    public function raw(): string",
+    "to": "    public function extra(): string\n    {\n        return 'x';\n    }\n\n    public function raw(): string",
+    "code": "MEMBER_ADDED"
+  },
+  {
+    "id": "member-removed",
+    "file": "packages/server/ts/src/csrf.ts",
+    "from": "  raw(): string {\n    return 'x';\n  }\n\n",
+    "to": "",
+    "code": "MEMBER_MISSING"
+  },
+  {
+    "id": "member-renamed",
+    "file": "packages/server/python/src/polyspec/hyper/_csrf.py",
+    "from": "def raw(self)",
+    "to": "def rawer(self)",
+    "code": "MEMBER_MISSING"
+  },
+  {
+    "id": "member-retyped",
+    "file": "packages/server/php/src/MediaType.php",
+    "from": "essence(): string",
+    "to": "essence(): int",
+    "code": "MEMBER_SIGNATURE"
+  },
+  {
+    "id": "visibility-public-to-internal",
+    "file": "packages/server/php/src/MediaType.php",
+    "from": "    public function essence",
+    "to": "    /** @internal */\n    public function essence",
+    "code": "MEMBER_VISIBILITY"
+  },
+  {
+    "id": "visibility-to-private",
+    "file": "packages/server/ts/src/media-type.ts",
+    "from": "  essence(): string {",
+    "to": "  private essence(): string {",
+    "code": "MEMBER_VISIBILITY"
+  },
+  {
+    "id": "member-moved-file",
+    "file": "packages/server/python/src/polyspec/hyper/media_type.py",
+    "rename": "packages/server/python/src/polyspec/hyper/media_extra.py",
+    "code": "MEMBER_MOVED"
+  },
+  {
+    "id": "second-unit-in-file",
+    "file": "packages/server/ts/src/csrf.ts",
+    "from": "export class Csrf {",
+    "to": "export class Extra {}\n\nexport class Csrf {",
+    "code": "UNIT_COUNT"
+  },
+  {
+    "id": "file-renamed-against-hyr-4",
+    "file": "packages/server/ts/src/csrf.ts",
+    "rename": "packages/server/ts/src/csrf-token.ts",
+    "code": "UNIT_FILE"
+  },
+  {
+    "id": "unnamed-file",
+    "file": "packages/server/ts/src/helper.ts",
+    "create": "export const helper = 1;\n",
+    "code": "FILE_UNOWNED"
+  },
+  {
+    "id": "file-missing",
+    "file": "packages/server/ts/src/media-type.ts",
+    "delete": true,
+    "code": "FILE_MISSING"
+  },
+  {
+    "id": "type-added",
+    "file": "packages/server/ts/src/csrf.ts",
+    "from": "export class Csrf {",
+    "to": "export type Mode = 'a' | 'b';\n\nexport class Csrf {",
+    "code": "TYPE_UNLISTED"
+  },
+  {
+    "id": "type-changed",
+    "file": "packages/server/ts/src/media-type.ts",
+    "from": "export type Essence = string;",
+    "to": "export type Essence = number;",
+    "code": "TYPE_CHANGED"
+  },
+  {
+    "id": "barrel-export-added",
+    "file": "packages/server/ts/src/index.ts",
+    "from": "export { MediaType } from './media-type.ts';",
+    "to": "export { MediaType } from './media-type.ts';\nexport { Csrf } from './csrf.ts';",
+    "code": "BARREL_EXPORT"
+  },
+  {
+    "id": "private-name-used-elsewhere",
+    "file": "packages/server/python/src/polyspec/hyper/media_type.py",
+    "from": "class MediaType:",
+    "to": "from polyspec.hyper._csrf import Csrf\n\nVALUE = Csrf()._fold()\n\n\nclass MediaType:",
+    "code": "PRIVATE_USED"
+  },
+  {
+    "id": "test-added-without-spec",
+    "file": "packages/server/ts/tests/extra.test.mts",
+    "create": "import { test } from 'node:test';\n\ntest('extra', () => {});\n",
+    "code": "TEST_UNNAMED"
+  },
+  {
+    "id": "node-test-name-dynamic",
+    "file": "packages/server/ts/tests/dynamic.test.mts",
+    "create": "import { test } from 'vitest';\n\nconst label = 'dynamic';\ntest(label, () => {});\n",
+    "code": "TEST_NAME_DYNAMIC"
+  },
+  {
+    "id": "python-render-test-unnamed",
+    "file": "packages/server/python/tests/render/render_probe.py",
+    "create": "import unittest\n\n\nclass ProbeTest(unittest.TestCase):\n    def test_probe(self) -> None:\n        self.assertTrue(True)\n",
+    "code": "TEST_UNNAMED"
+  },
+  {
+    "id": "spec-rule-unknown",
+    "file": "contracts/interfaces.json",
+    "from": "\"HY-2\"",
+    "to": "\"HY-7\"",
+    "code": "RULE_UNKNOWN"
+  },
+  {
+    "id": "result-file-deleted",
+    "file": "results/node.txt",
+    "delete": true,
+    "code": "RESULT_MISSING"
+  },
+  {
+    "id": "result-line-missing",
+    "file": "results/php.txt",
+    "from": "CASE contracts/csrf.json raw-token PASS\n",
+    "to": "",
+    "code": "RESULT_MISSING"
+  },
+  {
+    "id": "result-line-failed",
+    "file": "results/python.txt",
+    "from": "PASS",
+    "to": "FAIL the token differs",
+    "code": "RESULT_FAIL"
+  },
+  {
+    "id": "term-outside-vocabulary",
+    "file": "contracts/interfaces.json",
+    "from": "\"output\": \"string\",",
+    "to": "\"output\": \"bytes2\",",
+    "code": "TERM_UNKNOWN"
+  },
+  {
+    "id": "member-id-acronym",
+    "file": "contracts/interfaces.json",
+    "from": "\"id\": \"csrf.raw\",",
+    "to": "\"id\": \"csrf.rawURL\",",
+    "code": "NAME_ACRONYM"
+  },
+  {
+    "id": "case-reader-member-renamed",
+    "file": "packages/server/php/tests/CaseReader.php",
+    "from": "public function fail(): string",
+    "to": "public function failed(): string",
+    "code": "CASE_READER_MEMBERS"
+  },
+  {
+    "id": "unit-missing",
+    "file": "packages/server/ts/src/csrf.ts",
+    "from": "export class Csrf {",
+    "to": "export class Token {",
+    "code": "UNIT_MISSING"
+  },
+  {
+    "id": "unit-kind-changed",
+    "file": "contracts/interfaces.json",
+    "from": "\"kind\": \"class\"",
+    "to": "\"kind\": \"interface\"",
+    "code": "UNIT_KIND"
+  },
+  {
+    "id": "unit-visibility-changed",
+    "file": "contracts/interfaces.json",
+    "from": "\"internal\": true",
+    "to": "\"internal\": false",
+    "code": "UNIT_VISIBILITY"
+  },
+  {
+    "id": "type-moved-file",
+    "file": "contracts/interfaces.json",
+    "from": "media-type.ts::Essence",
+    "to": "csrf.ts::Essence",
+    "code": "TYPE_MISSING"
+  },
+  {
+    "id": "type-visibility-changed",
+    "file": "contracts/interfaces.json",
+    "from": "\"id\": \"essence\",\n      \"visibility\": \"public\"",
+    "to": "\"id\": \"essence\",\n      \"visibility\": \"internal\"",
+    "code": "TYPE_VISIBILITY"
+  },
+  {
+    "id": "only-mismatch",
+    "file": "contracts/interfaces.json",
+    "from": "\"languages\": [\"php\"],\n            \"sentence\"",
+    "to": "\"languages\": [\"node\"],\n            \"sentence\"",
+    "code": "ONLY_MISMATCH"
+  },
+  {
+    "id": "only-missing",
+    "file": "contracts/interfaces.json",
+    "from": "\"languages\": [\"php\"],",
+    "to": "\"languages\": [\"php\", \"node\"],",
+    "code": "ONLY_MISSING"
+  },
+  {
+    "id": "rule-uncovered",
+    "file": "contracts/protocol.json",
+    "from": "    }\n  ],\n  \"retiredRules\"",
+    "to": "    },\n    {\"title\":{\"en\":\"Nothing\",\"ko\":\"없음\"},\"blocks\":[{\"kind\":\"rule\",\"id\":\"HY-6\",\"retired\":[],\"blocks\":[{\"kind\":\"paragraph\",\"statements\":[{\"id\":\"HY-6.1\",\"en\":\"Nothing.\",\"ko\":\"없음.\"}]}]}]}\n  ],\n  \"retiredRules\"",
+    "code": "RULE_UNCOVERED"
+  },
+  {
+    "id": "outside-reason-blank",
+    "file": "contracts/interfaces.json",
+    "from": "\"reason\": \"The terms are the vocabulary that the term check reads.\"",
+    "to": "\"reason\": \"  \"",
+    "code": "OUTSIDE_REASON"
+  },
+  {
+    "id": "outside-concern",
+    "file": "contracts/interfaces.json",
+    "from": "\"rule\": \"HY-5\"",
+    "to": "\"rule\": \"HY-1\"",
+    "code": "OUTSIDE_CONCERN"
+  },
+  {
+    "id": "cases-none-two-languages",
+    "file": "contracts/interfaces.json",
+    "from": "\"languages\": [\"php\"],",
+    "to": "\"languages\": [\"php\", \"node\"],",
+    "code": "CASES_NONE"
+  },
+  {
+    "id": "runner-missing",
+    "file": "contracts/interfaces.json",
+    "from": "CaseRunnerTest.php::CaseRunnerTest::testCases\"",
+    "to": "CaseRunnerTest.php::CaseRunnerTest::testGone\"",
+    "code": "RUNNER_MISSING"
+  },
+  {
+    "id": "native-reason-blank",
+    "file": "contracts/interfaces.json",
+    "from": "case-runner.test.mts::cases: runs the essence cases",
+    "to": "case-runner.test.mts::cases:  ",
+    "code": "NATIVE_REASON"
+  },
+  {
+    "id": "native-scope-two-languages",
+    "file": "contracts/interfaces.json",
+    "from": "\"languages\": [\"php\"],",
+    "to": "\"languages\": [\"php\", \"node\"],",
+    "code": "NATIVE_SCOPE"
+  },
+  {
+    "id": "native-test-missing",
+    "file": "contracts/interfaces.json",
+    "from": "case-runner.test.mts::cases: runs the essence cases",
+    "to": "case-runner.test.mts::gone: runs the essence cases",
+    "code": "NATIVE_TEST_MISSING"
+  },
+  {
+    "id": "result-form-lowercase",
+    "file": "results/php.txt",
+    "from": "raw-token PASS",
+    "to": "raw-token pass",
+    "code": "RESULT_FORM"
+  },
+  {
+    "id": "result-unknown-id",
+    "file": "results/php.txt",
+    "from": "essence-one PASS",
+    "to": "essence-two PASS",
+    "code": "RESULT_UNKNOWN_ID"
+  },
+  {
+    "id": "result-duplicated",
+    "file": "results/php.txt",
+    "from": "raw-token PASS\n",
+    "to": "raw-token PASS\nCASE contracts/csrf.json raw-token PASS\n",
+    "code": "RESULT_DUPLICATE"
+  },
+  {
+    "id": "php-const-public",
+    "file": "packages/server/php/src/MediaType.php",
+    "from": "    public function essence",
+    "to": "    public const LIMIT = 1;\n\n    public function essence",
+    "code": "CONST_PUBLIC"
+  },
+  {
+    "id": "node-const-public",
+    "file": "packages/server/ts/src/media-type.ts",
+    "from": "export type Essence = string;",
+    "to": "export const LIMIT = 1;\n\nexport type Essence = string;",
+    "code": "CONST_PUBLIC"
+  },
+  {
+    "id": "python-const-public",
+    "file": "packages/server/python/src/polyspec/hyper/media_type.py",
+    "from": "class MediaType:",
+    "to": "LIMIT = 1\n\n\nclass MediaType:",
+    "code": "CONST_PUBLIC"
+  },
+  {
+    "id": "php-sources-missing",
+    "file": "contracts/interfaces.json",
+    "from": "\"packages/server/php/src\"",
+    "to": "\"packages/server/php/missing\"",
+    "code": "READER_FAILED"
+  },
+  {
+    "id": "php-tests-missing",
+    "file": "contracts/interfaces.json",
+    "from": "\"packages/server/php/tests\"",
+    "to": "\"packages/server/php/missing\"",
+    "code": "READER_FAILED"
+  },
+  {
+    "id": "node-sources-missing",
+    "file": "contracts/interfaces.json",
+    "from": "\"packages/server/ts/src\"",
+    "to": "\"packages/server/ts/missing\"",
+    "code": "READER_FAILED"
+  },
+  {
+    "id": "node-tests-missing",
+    "file": "contracts/interfaces.json",
+    "from": "\"packages/server/ts/tests\"",
+    "to": "\"packages/server/ts/missing\"",
+    "code": "READER_FAILED"
+  },
+  {
+    "id": "python-sources-missing",
+    "file": "contracts/interfaces.json",
+    "from": "\"packages/server/python/src/polyspec/hyper\"",
+    "to": "\"packages/server/python/src/polyspec/missing\"",
+    "code": "READER_FAILED"
+  },
+  {
+    "id": "python-tests-missing",
+    "file": "contracts/interfaces.json",
+    "from": "\"packages/server/python/tests\"",
+    "to": "\"packages/server/python/missing\"",
+    "code": "READER_FAILED"
+  },
+  {
+    "id": "python-typed-field-renamed",
+    "file": "packages/server/python/src/polyspec/hyper/_csrf.py",
+    "from": "    raw: str",
+    "to": "    token: str",
+    "code": "TYPE_SHAPE"
+  },
+  {
+    "id": "python-type-spec-field-renamed",
+    "file": "contracts/interfaces.json",
+    "from": "\"raw\": \"string\"",
+    "to": "\"token\": \"string\"",
+    "code": "TYPE_SHAPE"
+  },
+  {
+    "id": "node-essence-fields-added",
+    "file": "contracts/interfaces.json",
+    "from": "\"term\": \"string\"",
+    "to": "\"fields\": { \"value\": \"string\" }, \"optional\": []",
+    "code": "TYPE_SHAPE"
+  },
+  {
+    "id": "rule-retired",
+    "file": "contracts/interfaces.json",
+    "from": "\"HY-2\"",
+    "to": "\"HY-9\"",
+    "code": "RULE_RETIRED"
+  },
+  {
+    "id": "sentence-unknown",
+    "file": "contracts/interfaces.json",
+    "from": "\"sentence\": \"HY-2.1\"",
+    "to": "\"sentence\": \"HY-2.9\"",
+    "code": "SENTENCE_UNKNOWN"
+  },
+  {
+    "id": "sentence-retired",
+    "file": "contracts/interfaces.json",
+    "from": "\"sentence\": \"HY-3.1\"",
+    "to": "\"sentence\": \"HY-3.4\"",
+    "code": "SENTENCE_RETIRED"
+  },
+  {
+    "id": "sentence-outside",
+    "file": "contracts/interfaces.json",
+    "from": "\"sentence\": \"HY-2.1\"",
+    "to": "\"sentence\": \"HY-5.1\"",
+    "code": "SENTENCE_OUTSIDE"
+  },
+  {
+    "id": "requirement-repeat",
+    "file": "contracts/csrf.json",
+    "from": "\"expected\": \"mask\" }",
+    "to": "\"expected\": \"mask\", \"requirements\": [\"HY-1\"] }",
+    "code": "REQUIREMENT_REPEAT"
+  },
+  {
+    "id": "requirement-empty",
+    "file": "contracts/csrf.json",
+    "from": ", \"requirements\": [\"HY-1\"]",
+    "to": "",
+    "code": "REQUIREMENT_EMPTY"
+  },
+  {
+    "id": "requirement-outside",
+    "file": "contracts/csrf.json",
+    "from": "\"requirements\": [\"HY-1\"]",
+    "to": "\"requirements\": [\"HY-5\"]",
+    "code": "REQUIREMENT_OUTSIDE"
+  },
+  {
+    "id": "requirement-uncovered",
+    "file": "contracts/csrf.json",
+    "from": "\"requirements\": [\"HY-1\"]",
+    "to": "\"requirements\": [\"HY-2\"]",
+    "code": "REQUIREMENT_UNCOVERED"
+  },
+  {
+    "id": "case-empty",
+    "file": "contracts/csrf.json",
+    "create": "{\n  \"mask\": [\n    { \"id\": \"raw-token\", \"label\": \"raw token\", \"input\": \"token\", \"expected\": \"mask\", \"only\": { \"languages\": [\"php\"], \"sentence\": \"HY-1.1\" } }\n  ]\n}\n",
+    "code": "CASE_EMPTY"
+  },
+  {
+    "id": "casefile-unlisted",
+    "file": "contracts/extra.json",
+    "create": "{\n  \"mask\": []\n}\n",
+    "code": "CASEFILE_UNLISTED"
+  },
+  {
+    "id": "case-compare-unknown",
+    "file": "contracts/interfaces.json",
+    "from": "\"compare\": \"exact\"",
+    "to": "\"compare\": \"loose\"",
+    "code": "CASE_COMPARE"
+  },
+  {
+    "id": "case-field-undeclared",
+    "file": "contracts/csrf.json",
+    "from": "\"expected\": \"mask\" }",
+    "to": "\"expected\": \"mask\", \"extra\": \"x\" }",
+    "code": "FILE_UNDECLARED"
+  },
+  {
+    "id": "browser-result-deleted",
+    "file": "results/browser.txt",
+    "delete": true,
+    "code": "RESULT_MISSING"
+  },
+  {
+    "id": "protocol-statement-retired",
+    "file": "contracts/protocol.json",
+    "from": "\"retired\": [4]",
+    "to": "\"retired\": [1]",
+    "code": "SENTENCE_RETIRED"
+  }
 ]

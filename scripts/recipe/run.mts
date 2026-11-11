@@ -7,6 +7,7 @@ import type { ValidateFunction } from 'ajv';
 import { compare } from './compare.mts';
 import { readSources, readTree } from './readers.mts';
 import { checkResults, type Results } from './results.mts';
+import { readProtocol } from './protocol.mts';
 import type { Finding, Lang, Sources, Spec } from './types.mts';
 
 export type Validators = { spec: ValidateFunction<Spec>; sources: ValidateFunction<Sources> };
@@ -33,6 +34,6 @@ export function runChecks(root: string, v: Validators, results: Results, phpAuto
   const spec = specDoc;
   const sources = readAllSources(root, spec, v, phpAutoload);
   const readDir = (lang: Lang, dir: string): Sources => readTree(root, lang, [dir], [], v.sources, extraOf(lang, phpAutoload));
-  const protocol = readFileSync(path.join(root, 'docs', 'spec', 'protocol.md'), 'utf8');
+  const protocol = readProtocol(readFileSync(path.join(root, 'contracts', 'protocol.json'), 'utf8'));
   return [...compare(spec, sources, root, protocol, readDir), ...checkResults(root, spec, results)];
 }

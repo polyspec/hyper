@@ -1,0 +1,84 @@
+{
+  "schema": 1,
+  "docId": "fixture",
+  "title": { "en": "Fixture protocol", "ko": "픽스처 프로토콜" },
+  "intro": [],
+  "sections": [
+    {
+      "title": { "en": "Rules", "ko": "규칙" },
+      "blocks": [
+        {
+          "kind": "rule",
+          "id": "HY-1",
+          "retired": [],
+          "blocks": [
+            {
+              "kind": "paragraph",
+              "statements": [
+                { "id": "HY-1.1", "en": "The server masks the token of a request.", "ko": "서버는 요청의 토큰을 가린다." },
+                { "id": "HY-1.2", "en": "The mask is kept.", "ko": "가림은 보존된다." }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "rule",
+          "id": "HY-2",
+          "retired": [],
+          "blocks": [
+            {
+              "kind": "paragraph",
+              "statements": [{ "id": "HY-2.1", "en": "A media type is one essence.", "ko": "미디어 타입은 하나의 essence이다." }]
+            }
+          ]
+        },
+        {
+          "kind": "rule",
+          "id": "HY-3",
+          "retired": [4],
+          "blocks": [
+            {
+              "kind": "paragraph",
+              "statements": [
+                { "id": "HY-3.1", "en": "A session store reads the session of an identifier as a string or null.", "ko": "세션 저장소는 식별자의 세션을 문자열 또는 null로 읽는다." },
+                { "id": "HY-3.2", "en": "A session store keeps its sessions until they expire.", "ko": "세션 저장소는 만료될 때까지 세션을 보관한다." }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "rule",
+          "id": "HY-4",
+          "retired": [],
+          "blocks": [
+            {
+              "kind": "paragraph",
+              "statements": [{ "id": "HY-4.1", "en": "A barrel re-exports the public units.", "ko": "배럴은 공개 단위를 다시 내보낸다." }]
+            }
+          ]
+        },
+        {
+          "kind": "rule",
+          "id": "HY-5",
+          "retired": [],
+          "blocks": [
+            {
+              "kind": "paragraph",
+              "statements": [
+                { "id": "HY-5.1", "en": "A string is a text.", "ko": "string은 텍스트이다.", "term": "string" },
+                { "id": "HY-5.2", "en": "A number is an integer or a float.", "ko": "number는 정수 또는 float이다.", "term": "number" },
+                { "id": "HY-5.3", "en": "A boolean is true or false.", "ko": "boolean은 true 또는 false이다.", "term": "boolean" },
+                { "id": "HY-5.4", "en": "Null is the value null.", "ko": "null은 값 null이다.", "term": "null" },
+                { "id": "HY-5.5", "en": "A bigint is an integer of arbitrary size.", "ko": "bigint는 임의 크기의 정수이다.", "term": "bigint" },
+                { "id": "HY-5.6", "en": "A bytes is a byte sequence.", "ko": "bytes는 바이트 열이다.", "term": "bytes" },
+                { "id": "HY-5.7", "en": "A value is any value of the data model.", "ko": "value는 데이터 모델의 임의의 값이다.", "term": "value" },
+                { "id": "HY-5.8", "en": "None is no result.", "ko": "none은 결과가 없음이다.", "term": "none" }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "retiredRules": ["HY-9"]
+}

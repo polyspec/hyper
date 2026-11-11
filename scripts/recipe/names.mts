@@ -64,8 +64,6 @@ export function testKey(ref: string): string {
   return at < 0 ? ref : ref.slice(0, at);
 }
 
-const BASE_TERMS = ['string', 'number', 'boolean', 'null', 'bigint'];
-
 /** Splits a list at its top-level commas; `->` is not a closing bracket. */
 export function splitTop(list: string): string[] {
   const parts: string[] = [];
@@ -84,9 +82,9 @@ export function splitTop(list: string): string[] {
   return parts;
 }
 
-/** HYR-5: a term is a base term, a unit or type id of the spec, or list, map, optional or function of terms. */
+/** HYR-5: a term is a term of the vocabulary (the spec's units and types, protocol.json's terms), or list, map, optional or function of terms. */
 export function termKnown(term: string, ids: Set<string>): boolean {
-  if (BASE_TERMS.includes(term) || ids.has(term)) return true;
+  if (ids.has(term)) return true;
   const generic = /^(?:list|map|optional)<(.*)>$/u.exec(term);
   if (generic) return termKnown(generic[1] ?? '', ids);
   const fn = /^function\((.*)\) -> (.+)$/u.exec(term);
@@ -94,7 +92,7 @@ export function termKnown(term: string, ids: Set<string>): boolean {
   return false;
 }
 
-/** HYR-5: an error is a status of protocol.md (the status is named as a whole word in it) or an error unit of the spec. */
+/** HYR-5: an error is a status of protocol.json (the status is named as a whole word in it) or an error unit of the spec. */
 export function errorKnown(term: string, ids: Set<string>, flat: string): boolean {
   return ids.has(term) || new RegExp(`\\b${term}\\b`, 'u').test(flat);
 }

@@ -4,7 +4,7 @@
   "title": "Development spec of the Hyper servers (HYR-1)",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "languages", "outside", "concerns", "types", "caseFiles"],
+  "required": ["schema", "languages", "runners", "caseReaders", "outside", "concerns", "types", "caseFiles"],
   "properties": {
     "schema": { "const": 1 },
     "languages": {
@@ -17,6 +17,28 @@
         "python": { "$ref": "#/$defs/language" }
       }
     },
+  "runners": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["php", "node", "python", "browser", "build"],
+    "properties": {
+      "php": { "$ref": "#/$defs/runner" },
+      "node": { "$ref": "#/$defs/runner" },
+      "python": { "$ref": "#/$defs/runner" },
+      "browser": { "$ref": "#/$defs/runner" },
+      "build": { "$ref": "#/$defs/runner" }
+    }
+  },
+  "caseReaders": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["php", "node", "python"],
+    "properties": {
+      "php": { "type": "string", "pattern": "^[^:]+::[^:]+$" },
+      "node": { "type": "string", "pattern": "^[^:]+::[^:]+$" },
+      "python": { "type": "string", "pattern": "^[^:]+::[^:]+$" }
+    }
+  },
     "outside": {
       "type": "array",
       "items": { "$ref": "#/$defs/outside" }
@@ -38,18 +60,23 @@
   },
   "$defs": {
     "hyId": { "type": "string", "pattern": "^HYC?-[0-9]+$" },
+    "sentenceId": { "type": "string", "pattern": "^HY(C)?-[0-9]+\\.[0-9]+$" },
+    "runner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runner"],
+      "properties": { "runner": { "type": "string", "pattern": "::" } }
+    },
     "kebab": { "type": "string", "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$" },
     "camel": { "type": "string", "pattern": "^[a-z][a-zA-Z0-9]*$" },
     "language": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["sources", "tests", "barrel", "runner", "caseReader"],
+      "required": ["sources", "tests", "barrel"],
       "properties": {
         "sources": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
         "tests": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
-        "barrel": { "type": "array", "items": { "type": "string", "minLength": 1 } },
-        "runner": { "type": "string", "pattern": "::" },
-        "caseReader": { "type": "string", "pattern": "^[^:]+::[^:]+$" }
+        "barrel": { "type": "array", "items": { "type": "string", "minLength": 1 } }
       }
     },
     "outside": {
@@ -64,7 +91,7 @@
     "only": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["languages", "rule", "quote"],
+      "required": ["languages", "sentence"],
       "properties": {
         "languages": {
           "type": "array",
@@ -72,28 +99,26 @@
           "uniqueItems": true,
           "items": { "enum": ["php", "node", "python"] }
         },
-        "rule": { "$ref": "#/$defs/hyId" },
-        "quote": { "type": "string", "minLength": 1 }
+        "sentence": { "$ref": "#/$defs/sentenceId" }
       }
     },
     "caseOnly": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["languages", "rule", "quote"],
+      "required": ["languages", "sentence"],
       "properties": {
         "languages": {
           "type": "array",
           "minItems": 1,
           "uniqueItems": true,
-          "items": { "enum": ["php", "node", "python", "browser"] }
+          "items": { "enum": ["php", "node", "python", "browser", "build"] }
         },
-        "rule": { "$ref": "#/$defs/hyId" },
-        "quote": { "type": "string", "minLength": 1 }
+        "sentence": { "$ref": "#/$defs/sentenceId" }
       }
     },
     "term": {
       "type": "string",
-      "pattern": "^(string|number|boolean|null|bigint|[a-z][a-zA-Z0-9-]*|list<.+>|map<.+>|optional<.+>|function\\(.*\\) -> .+)$"
+      "pattern": "^([a-z][a-zA-Z0-9-]*|list<.+>|map<.+>|optional<.+>|function\\(.*\\) -> .+)$"
     },
     "nativeSymbol": {
       "type": "object",
@@ -283,9 +308,8 @@
     "caseFile": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["rule", "fixtures", "sections"],
+      "required": ["fixtures", "sections"],
       "properties": {
-        "rule": { "$ref": "#/$defs/hyId" },
         "fixtures": {
           "type": "object",
           "additionalProperties": { "enum": ["label", "input"] }
@@ -320,11 +344,10 @@
     "caseCompare": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["compare", "rule", "quote"],
+      "required": ["compare", "sentence"],
       "properties": {
-        "compare": { "enum": ["exact", "ordered", "subset", "absent", "contains", "excludes", "prefix", "keys", "raises"] },
-        "rule": { "$ref": "#/$defs/hyId" },
-        "quote": { "type": "string", "minLength": 1 },
+        "compare": { "type": "string", "minLength": 1 },
+        "sentence": { "$ref": "#/$defs/sentenceId" },
         "only": { "$ref": "#/$defs/caseOnly" }
       }
     },
@@ -333,12 +356,12 @@
       "additionalProperties": false,
       "required": ["role"],
       "properties": {
-        "role": { "enum": ["id", "label", "input", "expected"] },
+        "role": { "enum": ["id", "label", "input", "expected", "response"] },
         "optional": { "type": "boolean" },
         "only": { "$ref": "#/$defs/caseOnly" },
-        "compare": { "enum": ["exact", "ordered", "subset", "absent", "contains", "excludes", "prefix", "keys", "raises"] },
-        "rule": { "$ref": "#/$defs/hyId" },
-        "quote": { "type": "string", "minLength": 1 },
+        "compare": { "type": "string", "minLength": 1 },
+        "sentence": { "$ref": "#/$defs/sentenceId" },
+        "state": { "type": "string", "minLength": 1 },
         "fields": {
           "type": "object",
           "minProperties": 1,

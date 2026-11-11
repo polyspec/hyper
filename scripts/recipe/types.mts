@@ -1,13 +1,18 @@
-// Types of the recipe check (HYR-8): the development spec (contracts/interfaces.json) and the readers' output.
+// Types of the recipe check (HYR-8): the development spec (contracts/interfaces.json), the protocol
+// (contracts/protocol.json) and the readers' output.
 
 export type Lang = 'php' | 'node' | 'python';
 export const LANGS: Lang[] = ['php', 'node', 'python'];
+export type Runner = 'php' | 'node' | 'python' | 'browser' | 'build';
+export const RUNNERS: Runner[] = ['php', 'node', 'python', 'browser', 'build'];
 export type Visibility = 'public' | 'internal' | 'private' | 'protected';
-export type Only = { languages: Lang[]; rule: string; quote: string };
+export type Only = { languages: Runner[]; sentence: string };
 
 export type Spec = {
   schema: 1;
-  languages: Record<Lang, { sources: string[]; tests: string[]; barrel: string[]; runner: string; caseReader: string }>;
+  languages: Record<Lang, { sources: string[]; tests: string[]; barrel: string[] }>;
+  runners: Record<Runner, { runner: string }>;
+  caseReaders: Record<Lang, string>;
   outside: { rule: string; reason: string }[];
   concerns: Concern[];
   types: SpecType[];
@@ -51,29 +56,28 @@ export type SpecType = {
   native: Partial<Record<Lang, { symbol: string; declaration: string }>>;
 };
 
-/** A case file of contracts/ (HYR-9): its rule, its fixtures and its sections of cases. */
+/** A case file of contracts/ (HYR-9): its fixtures and its sections of cases. */
 export type CaseFile = {
-  rule: string;
   fixtures: Record<string, string>;
   sections: Record<string, CaseSection>;
 };
 
 export type CaseSection = {
-  runners: string[];
+  runners: Runner[];
   uses: string[];
   outcomes?: Record<string, CaseCompare>;
   fields: Record<string, CaseField>;
 };
 
-export type CaseCompare = { compare: string; rule: string; quote: string; only?: Only };
+export type CaseCompare = { compare: string; sentence: string; only?: Only };
 
 export type CaseField = {
   role: string;
   optional?: boolean;
   only?: Only;
   compare?: string;
-  rule?: string;
-  quote?: string;
+  sentence?: string;
+  state?: string;
   fields?: Record<string, CaseField>;
 };
 

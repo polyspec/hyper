@@ -4,26 +4,47 @@
     "php": {
       "sources": ["packages/server/php/src"],
       "tests": ["packages/server/php/tests"],
-      "barrel": [],
-      "runner": "packages/server/php/tests/CaseRunnerTest.php::CaseRunnerTest::testCases",
-      "caseReader": "packages/server/php/tests/CaseReader.php::CaseReader"
+      "barrel": []
     },
     "node": {
       "sources": ["packages/server/ts/src"],
       "tests": ["packages/server/ts/tests"],
-      "barrel": ["packages/server/ts/src/index.ts"],
-      "runner": "packages/server/ts/tests/case-runner.test.mts::cases",
-      "caseReader": "packages/server/ts/tests/case-reader.ts::CaseReader"
+      "barrel": ["packages/server/ts/src/index.ts"]
     },
     "python": {
       "sources": ["packages/server/python/src/polyspec/hyper"],
       "tests": ["packages/server/python/tests"],
-      "barrel": ["packages/server/python/src/polyspec/hyper/__init__.py"],
-      "runner": "packages/server/python/tests/test_case_runner.py::CaseRunner.test_cases",
-      "caseReader": "packages/server/python/tests/case_reader.py::CaseReader"
+      "barrel": ["packages/server/python/src/polyspec/hyper/__init__.py"]
     }
   },
-  "outside": [],
+  "runners": {
+    "php": {
+      "runner": "packages/server/php/tests/CaseRunnerTest.php::CaseRunnerTest::testCases"
+    },
+    "node": {
+      "runner": "packages/server/ts/tests/case-runner.test.mts::cases"
+    },
+    "python": {
+      "runner": "packages/server/python/tests/test_case_runner.py::CaseRunner.test_cases"
+    },
+    "browser": {
+      "runner": "packages/server/ts/tests/case-runner.test.mts::browser"
+    },
+    "build": {
+      "runner": "packages/server/ts/tests/case-runner.test.mts::build"
+    }
+  },
+  "caseReaders": {
+    "php": "packages/server/php/tests/CaseReader.php::CaseReader",
+    "node": "packages/server/ts/tests/case-reader.ts::CaseReader",
+    "python": "packages/server/python/tests/case_reader.py::CaseReader"
+  },
+  "outside": [
+    {
+      "rule": "HY-5",
+      "reason": "The terms are the vocabulary that the term check reads."
+    }
+  ],
   "concerns": [
     {
       "id": "csrf",
@@ -33,9 +54,21 @@
         {
           "id": "csrf",
           "native": {
-            "php": { "file": "packages/server/php/src/Csrf.php", "kind": "class", "internal": true },
-            "node": { "file": "packages/server/ts/src/csrf.ts", "kind": "class", "internal": true },
-            "python": { "file": "packages/server/python/src/polyspec/hyper/_csrf.py", "kind": "class", "internal": true }
+            "php": {
+              "file": "packages/server/php/src/Csrf.php",
+              "kind": "class",
+              "internal": true
+            },
+            "node": {
+              "file": "packages/server/ts/src/csrf.ts",
+              "kind": "class",
+              "internal": true
+            },
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/_csrf.py",
+              "kind": "class",
+              "internal": true
+            }
           },
           "members": [
             {
@@ -47,9 +80,18 @@
               "errors": [],
               "state": "Checks the secret.",
               "native": {
-                "php": { "symbol": "packages/server/php/src/Csrf.php::Polyspec\\Hyper\\Csrf::__construct", "signature": "public function __construct(string $secret)" },
-                "node": { "symbol": "packages/server/ts/src/csrf.ts::Csrf.constructor", "signature": "constructor(secret: string)" },
-                "python": { "symbol": "packages/server/python/src/polyspec/hyper/_csrf.py::Csrf.__init__", "signature": "def __init__(self, secret: str) -> None" }
+                "php": {
+                  "symbol": "packages/server/php/src/Csrf.php::Polyspec\\Hyper\\Csrf::__construct",
+                  "signature": "public function __construct(string $secret)"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/csrf.ts::Csrf.constructor",
+                  "signature": "constructor(secret: string)"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_csrf.py::Csrf.__init__",
+                  "signature": "def __init__(self, secret: str) -> None"
+                }
               }
             },
             {
@@ -61,9 +103,18 @@
               "errors": [],
               "state": "Masks the token.",
               "native": {
-                "php": { "symbol": "packages/server/php/src/Csrf.php::Polyspec\\Hyper\\Csrf::mask", "signature": "public function mask(string $token): string" },
-                "node": { "symbol": "packages/server/ts/src/csrf.ts::Csrf.mask", "signature": "mask(token: string): string" },
-                "python": { "symbol": "packages/server/python/src/polyspec/hyper/_csrf.py::Csrf.mask", "signature": "def mask(self, token: str) -> str" }
+                "php": {
+                  "symbol": "packages/server/php/src/Csrf.php::Polyspec\\Hyper\\Csrf::mask",
+                  "signature": "public function mask(string $token): string"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/csrf.ts::Csrf.mask",
+                  "signature": "mask(token: string): string"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_csrf.py::Csrf.mask",
+                  "signature": "def mask(self, token: str) -> str"
+                }
               }
             },
             {
@@ -75,9 +126,18 @@
               "errors": [],
               "state": "Returns the raw token.",
               "native": {
-                "php": { "symbol": "packages/server/php/src/Csrf.php::Polyspec\\Hyper\\Csrf::raw", "signature": "public function raw(): string" },
-                "node": { "symbol": "packages/server/ts/src/csrf.ts::Csrf.raw", "signature": "raw(): string" },
-                "python": { "symbol": "packages/server/python/src/polyspec/hyper/_csrf.py::Csrf.raw", "signature": "def raw(self) -> str" }
+                "php": {
+                  "symbol": "packages/server/php/src/Csrf.php::Polyspec\\Hyper\\Csrf::raw",
+                  "signature": "public function raw(): string"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/csrf.ts::Csrf.raw",
+                  "signature": "raw(): string"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_csrf.py::Csrf.raw",
+                  "signature": "def raw(self) -> str"
+                }
               }
             },
             {
@@ -89,9 +149,18 @@
               "errors": [],
               "state": "Folds the token for the mask.",
               "native": {
-                "php": { "symbol": "packages/server/php/src/Csrf.php::Polyspec\\Hyper\\Csrf::fold", "signature": "private function fold(): string" },
-                "node": { "symbol": "packages/server/ts/src/csrf.ts::Csrf.fold", "signature": "private fold(): string" },
-                "python": { "symbol": "packages/server/python/src/polyspec/hyper/_csrf.py::Csrf._fold", "signature": "def _fold(self) -> str" }
+                "php": {
+                  "symbol": "packages/server/php/src/Csrf.php::Polyspec\\Hyper\\Csrf::fold",
+                  "signature": "private function fold(): string"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/csrf.ts::Csrf.fold",
+                  "signature": "private fold(): string"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_csrf.py::Csrf._fold",
+                  "signature": "def _fold(self) -> str"
+                }
               }
             }
           ]
@@ -107,9 +176,21 @@
           "id": "media-type",
           "tests": ["packages/server/ts/tests/case-runner.test.mts::cases: runs the essence cases"],
           "native": {
-            "php": { "file": "packages/server/php/src/MediaType.php", "kind": "class", "internal": false },
-            "node": { "file": "packages/server/ts/src/media-type.ts", "kind": "class", "internal": false },
-            "python": { "file": "packages/server/python/src/polyspec/hyper/media_type.py", "kind": "class", "internal": false }
+            "php": {
+              "file": "packages/server/php/src/MediaType.php",
+              "kind": "class",
+              "internal": false
+            },
+            "node": {
+              "file": "packages/server/ts/src/media-type.ts",
+              "kind": "class",
+              "internal": false
+            },
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/media_type.py",
+              "kind": "class",
+              "internal": false
+            }
           },
           "members": [
             {
@@ -121,9 +202,18 @@
               "errors": [],
               "state": "Returns the essence.",
               "native": {
-                "php": { "symbol": "packages/server/php/src/MediaType.php::Polyspec\\Hyper\\MediaType::essence", "signature": "public function essence(): string" },
-                "node": { "symbol": "packages/server/ts/src/media-type.ts::MediaType.essence", "signature": "essence(): string" },
-                "python": { "symbol": "packages/server/python/src/polyspec/hyper/media_type.py::MediaType.essence", "signature": "def essence(self) -> str" }
+                "php": {
+                  "symbol": "packages/server/php/src/MediaType.php::Polyspec\\Hyper\\MediaType::essence",
+                  "signature": "public function essence(): string"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/media-type.ts::MediaType.essence",
+                  "signature": "essence(): string"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/media_type.py::MediaType.essence",
+                  "signature": "def essence(self) -> str"
+                }
               }
             }
           ]
@@ -133,12 +223,21 @@
     {
       "id": "session",
       "rules": ["HY-3"],
-      "cases": { "none": "The fixture holds no case of the session store.", "tests": [] },
+      "cases": {
+        "none": "The fixture holds no case of the session store.",
+        "tests": []
+      },
       "units": [
         {
           "id": "session-store",
           "tests": ["packages/server/php/tests/CaseRunnerTest.php::CaseRunnerTest::testCases: reads through the case runner"],
-          "native": { "php": { "file": "packages/server/php/src/SessionStore.php", "kind": "interface", "internal": true } },
+          "native": {
+            "php": {
+              "file": "packages/server/php/src/SessionStore.php",
+              "kind": "interface",
+              "internal": true
+            }
+          },
           "members": [
             {
               "id": "session-store.read",
@@ -148,14 +247,28 @@
               "output": "optional<string>",
               "errors": [],
               "state": "Reads the session of an identifier.",
-              "native": { "php": { "symbol": "packages/server/php/src/SessionStore.php::Polyspec\\Hyper\\SessionStore::read", "signature": "abstract public function read(string $id): ?string" } }
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/SessionStore.php::Polyspec\\Hyper\\SessionStore::read",
+                  "signature": "abstract public function read(string $id): ?string"
+                }
+              }
             }
           ],
-          "only": { "languages": ["php"], "rule": "HY-3", "quote": "A session store reads the session of an identifier as a string or null." }
+          "only": {
+            "languages": ["php"],
+            "sentence": "HY-3.1"
+          }
         },
         {
           "id": "array-session",
-          "native": { "php": { "file": "packages/server/php/src/ArraySession.php", "kind": "class", "internal": true } },
+          "native": {
+            "php": {
+              "file": "packages/server/php/src/ArraySession.php",
+              "kind": "class",
+              "internal": true
+            }
+          },
           "members": [
             {
               "id": "array-session.read",
@@ -165,17 +278,28 @@
               "output": "optional<string>",
               "errors": [],
               "state": "Reads the session of an identifier.",
-              "native": { "php": { "symbol": "packages/server/php/src/ArraySession.php::Polyspec\\Hyper\\ArraySession::read", "signature": "public function read(string $id): ?string" } }
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/ArraySession.php::Polyspec\\Hyper\\ArraySession::read",
+                  "signature": "public function read(string $id): ?string"
+                }
+              }
             }
           ],
-          "only": { "languages": ["php"], "rule": "HY-3", "quote": "A session store reads the session of an identifier as a string or null." }
+          "only": {
+            "languages": ["php"],
+            "sentence": "HY-3.1"
+          }
         }
       ]
     },
     {
       "id": "index",
-      "rules": [],
-      "cases": { "none": "The barrels hold only re-exports, which the barrel check reads.", "tests": [] },
+      "rules": ["HY-4"],
+      "cases": {
+        "none": "The barrels hold only re-exports, which the barrel check reads.",
+        "tests": []
+      },
       "units": []
     }
   ],
@@ -184,48 +308,94 @@
       "id": "essence",
       "visibility": "public",
       "unit": "media-type",
-      "shape": { "term": "string" },
-      "only": { "languages": ["node"], "rule": "HY-2", "quote": "A media type is one essence." },
-      "native": { "node": { "symbol": "packages/server/ts/src/media-type.ts::Essence", "declaration": "export type Essence = string;" } }
+      "shape": {
+        "term": "string"
+      },
+      "only": {
+        "languages": ["node"],
+        "sentence": "HY-2.1"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/server/ts/src/media-type.ts::Essence",
+          "declaration": "export type Essence = string;"
+        }
+      }
     },
     {
       "id": "csrfParts",
       "visibility": "internal",
       "unit": "csrf",
-      "shape": { "fields": { "raw": "string" }, "optional": [] },
-      "only": { "languages": ["python"], "rule": "HY-1", "quote": "The server masks the token of a request." },
-      "native": { "python": { "symbol": "packages/server/python/src/polyspec/hyper/_csrf.py::CsrfParts", "declaration": "class CsrfParts(TypedDict):\n    raw: str" } }
+      "shape": {
+        "fields": {
+          "raw": "string"
+        },
+        "optional": []
+      },
+      "only": {
+        "languages": ["python"],
+        "sentence": "HY-1.1"
+      },
+      "native": {
+        "python": {
+          "symbol": "packages/server/python/src/polyspec/hyper/_csrf.py::CsrfParts",
+          "declaration": "class CsrfParts(TypedDict):\n    raw: str"
+        }
+      }
     }
   ],
   "caseFiles": {
     "csrf.json": {
-      "rule": "HY-1",
       "fixtures": {},
       "sections": {
         "mask": {
-          "runners": ["php", "node", "python"],
+          "runners": ["php", "node", "python", "browser", "build"],
           "uses": [],
           "fields": {
-            "id": { "role": "id" },
-            "label": { "role": "label" },
-            "input": { "role": "input" },
-            "expected": { "role": "expected", "compare": "exact", "rule": "HY-1", "quote": "The server masks the token of a request." }
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "input": {
+              "role": "input"
+            },
+            "expected": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-1.1",
+              "state": "Masks the token."
+            },
+            "output": {
+              "role": "response"
+            }
           }
         }
       }
     },
     "media-type.json": {
-      "rule": "HY-2",
       "fixtures": {},
       "sections": {
         "essence": {
-          "runners": ["php", "node", "python"],
+          "runners": ["php", "node", "python", "browser", "build"],
           "uses": [],
           "fields": {
-            "id": { "role": "id" },
-            "label": { "role": "label" },
-            "input": { "role": "input" },
-            "expected": { "role": "expected", "compare": "exact", "rule": "HY-2", "quote": "A media type is one essence." }
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "input": {
+              "role": "input"
+            },
+            "expected": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-2.1",
+              "state": "Returns the essence."
+            }
           }
         }
       }

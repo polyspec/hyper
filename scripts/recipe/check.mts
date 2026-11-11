@@ -1,6 +1,6 @@
 // The recipe check (HYR-8): runs the readers' mutation cases, then validates contracts/interfaces.json, runs the three
-// readers, compares them with the spec and checks the case results (HYR-7).
-// Usage: node scripts/recipe/check.mts [--root <dir>] --php-autoload <autoload.php> [--results <php|node|python>=<file>]... [--no-selftest]
+// readers, compares them with the spec and checks the case results of the five runners (HYR-7).
+// Usage: node scripts/recipe/check.mts [--root <dir>] --php-autoload <autoload.php> [--results <php|node|python|browser|build>=<file>]... [--no-selftest]
 // Prints one `CODE message` line per finding and exits 1 on any.
 
 import path from 'node:path';
@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 import type { Results } from './results.mts';
 import { runChecks } from './run.mts';
 import { selfTest } from './selftest.mts';
-import { LANGS } from './types.mts';
+import { LANGS, RUNNERS } from './types.mts';
 import { validators } from './validators.mts';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -19,15 +19,15 @@ function argumentOf(name: string): string | undefined {
   return at < 0 ? undefined : process.argv[at + 1];
 }
 
-/** The `--results <lang>=<file>` arguments, one per language. */
+/** The `--results <runner>=<file>` arguments, one per runner. */
 function resultArguments(): Results {
   const out: Results = {};
   process.argv.forEach((arg, i) => {
     if (arg !== '--results') return;
     const value = process.argv[i + 1] ?? '';
-    const lang = LANGS.find((l) => value.startsWith(`${l}=`));
-    if (lang === undefined) throw new Error(`--results takes <php|node|python>=<file>, got ${value}`);
-    out[lang] = path.resolve(value.slice(lang.length + 1));
+    const runner = RUNNERS.find((r) => value.startsWith(`${r}=`));
+    if (runner === undefined) throw new Error(`--results takes <php|node|python|browser|build>=<file>, got ${value}`);
+    out[runner] = path.resolve(value.slice(runner.length + 1));
   });
   return out;
 }

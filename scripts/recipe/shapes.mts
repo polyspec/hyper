@@ -4,7 +4,7 @@
 import { LANGS, type Lang, type SpecType } from './types.mts';
 import type { Ctx } from './context.mts';
 import { expectedVisibility, termKnown, words } from './names.mts';
-import { checkOnly, vocabulary } from './members.mts';
+import { checkOnly, termsOf } from './members.mts';
 
 /** The field keys of a spec type that apply to a language, as words; quotes around a key do not count. */
 function fieldWords(t: SpecType, lang: Lang): string[] {
@@ -18,7 +18,7 @@ export function checkShapes(ctx: Ctx): void {
   const { spec, sources, add } = ctx;
   const units = spec.concerns.flatMap((c) => c.units);
   const unitIds = new Set(units.map((u) => u.id));
-  const ids = vocabulary(spec);
+  const ids = termsOf(spec, ctx.protocol);
   for (const t of spec.types) {
     if (!unitIds.has(t.unit)) add('TYPE_UNIT', `type ${t.id} names unit ${t.unit}, which the spec does not list`);
     if (unitIds.has(words(t.id))) add('TYPE_IS_UNIT', `type ${t.id} has the words of a unit (HYR-3)`);

@@ -1,25 +1,67 @@
-// Rules of protocol.md in the recipe check (HYR-2, HYR-6): the rules a concern or outside names, the sentences that
-// a quote must equal, and the `only` of each unit, member, type, type field and case.
-import { type Only, type Spec } from './types.mts';
+// Rules and statements of contracts/protocol.json in the recipe check (HYR-2, HYR-6): the rules a concern or outside
+// names, the statements an `only` or a case names, and the concern or outside entry that covers each rule.
+import type { Only, Spec } from './types.mts';
 import type { Ctx } from './context.mts';
 
-/** The rules of protocol.md are its definition lines `- **HY-n** ...`; a mention of HY-n in prose defines no rule. */
-export function rulesOf(protocol: string): Set<string> {
-  return new Set(protocol.split('\n').flatMap((line) => line.match(/^\s*-\s*\*\*(HY-\d+)\*\*/u)?.[1] ?? []));
+/** The rule of a statement id: `HY-2.1` belongs to `HY-2`. */
+export function ruleOf(sentence: string): string {
+  return sentence.slice(0, sentence.lastIndexOf('.'));
 }
 
-/** The text of one rule: its definition line and the indented lines under it, without the id. */
-export function ruleText(protocol: string, rule: string): string | undefined {
-  const lines = protocol.split('\n');
-  const at = lines.findIndex((l) => l.match(/^\s*-\s*\*\*(HY-\d+)\*\*/u)?.[1] === rule);
-  if (at < 0) return undefined;
-  const parts = [(lines[at] ?? '').replace(/^\s*-\s*\*\*HY-\d+\*\*/u, '')];
-  for (let i = at + 1; i < lines.length; i++) {
-    const line = lines[i] ?? '';
-    if (line.trim() === '' || /^\s*(?:-|#)/u.test(line)) break;
-    parts.push(line.trim());
+/** HYR-2: a rule the spec names is a live rule of protocol.json; a retired one is named as retired. */
+export function checkRuleId(ctx: Ctx, where: string, rule: string): void {
+  const { protocol, add } = ctx;
+  if (protocol.retiredRules.has(rule)) add('RULE_RETIRED', `${where} names ${rule}, which protocol.json retires`);
+  else if (!protocol.rules.has(rule)) add('RULE_UNKNOWN', `${where} names ${rule}, which is not a rule of protocol.json`);
+}
+
+/** HYR-6: a statement the spec names is a live statement of a live rule; returns its rule when it is one. */
+export function checkStatement(ctx: Ctx, where: string, sentence: string): string | undefined {
+  const { protocol, add } = ctx;
+  const rule = ruleOf(sentence);
+  if (protocol.retiredRules.has(rule)) {
+    add('RULE_RETIRED', `${where} names ${rule}, which protocol.json retires`);
+    return undefined;
   }
-  return parts.join(' ').replace(/\s+/gu, ' ').trim();
+  const entry = protocol.rules.get(rule);
+  if (entry === undefined) {
+    add('RULE_UNKNOWN', `${where} names ${rule}, which is not a rule of protocol.json`);
+    return undefined;
+  }
+  if (entry.retired.has(Number(sentence.slice(sentence.lastIndexOf('.') + 1)))) {
+    add('SENTENCE_RETIRED', `${where} names ${sentence}, a statement that protocol.json retires`);
+    return undefined;
+  }
+  if (!entry.statements.has(sentence)) {
+    add('SENTENCE_UNKNOWN', `${where} names ${sentence}, which is not a statement of protocol.json`);
+    return undefined;
+  }
+  return rule;
+}
+
+/** HYR-2 and HYR-6: each rule the spec names is live, each live rule is covered once, and each `only` names a statement. */
+export function checkRules(ctx: Ctx, onlys: Only[]): void {
+  const { spec, protocol, add } = ctx;
+  for (const c of spec.concerns) for (const r of c.rules) checkRuleId(ctx, `concern ${c.id}`, r);
+  for (const o of spec.outside) checkRuleId(ctx, `outside ${o.rule}`, o.rule);
+  const concernRules = new Set(spec.concerns.flatMap((c) => c.rules));
+  const outsideRules = new Set(spec.outside.map((o) => o.rule));
+  for (const o of spec.outside) {
+    if (o.reason.trim() === '') add('OUTSIDE_REASON', `outside ${o.rule} has an empty reason`);
+    if (concernRules.has(o.rule)) add('OUTSIDE_CONCERN', `${o.rule} is named by a concern and by outside`);
+  }
+  for (const r of protocol.rules.keys()) {
+    if (!concernRules.has(r) && !outsideRules.has(r)) add('RULE_UNCOVERED', `${r} is named by no concern and no outside entry`);
+  }
+  for (const o of onlys) {
+    const rule = checkStatement(ctx, `an only of ${o.sentence}`, o.sentence);
+    if (rule !== undefined && outsideRules.has(rule)) add('SENTENCE_OUTSIDE', `${o.sentence} is a statement of ${rule}, which is outside the spec`);
+  }
+}
+
+/** The rules a concern names, for the case file that lists the concern in its cases. */
+export function rulesOfFile(spec: Spec, file: string): Set<string> {
+  return new Set(spec.concerns.filter((c) => Array.isArray(c.cases) && c.cases.includes(file)).flatMap((c) => c.rules));
 }
 
 /**
@@ -42,30 +84,3 @@ export function sentences(text: string): string[] {
   if (current.trim() !== '') out.push(current.trim());
   return out;
 }
-
-/** True when `quote` is one whole sentence of the text of `rule` (HYR-6). */
-export function isSentenceOf(protocol: string, rule: string, quote: string): boolean {
-  const text = ruleText(protocol, rule);
-  return text !== undefined && sentences(text).includes(quote.trim());
-}
-
-/** HYR-2 and HYR-6: each rule the spec names exists, every rule is named once, and each `only` quotes its rule. */
-export function checkRules(ctx: Ctx, onlys: Only[]): void {
-  const { spec, protocol, add } = ctx;
-  const rules = rulesOf(protocol);
-  for (const r of [...spec.concerns.flatMap((c) => c.rules), ...spec.outside.map((o) => o.rule), ...onlys.map((o) => o.rule)]) {
-    if (!rules.has(r)) add('RULE_UNKNOWN', `${r} is not a rule of protocol.md`);
-  }
-  const concernRules = new Set(spec.concerns.flatMap((c) => c.rules));
-  for (const o of spec.outside) {
-    if (o.reason.trim() === '') add('OUTSIDE_REASON', `outside ${o.rule} has an empty reason`);
-    if (concernRules.has(o.rule)) add('OUTSIDE_CONCERN', `${o.rule} is named by a concern and by outside`);
-  }
-  for (const r of rules) {
-    if (!concernRules.has(r) && !spec.outside.some((o) => o.rule === r)) add('RULE_UNCOVERED', `${r} is named by no concern and no outside entry`);
-  }
-  for (const o of onlys) {
-    if (!isSentenceOf(protocol, o.rule, o.quote)) add('ONLY_QUOTE', `quote of ${o.rule} is not one whole sentence of it: ${o.quote}`);
-  }
-}
-

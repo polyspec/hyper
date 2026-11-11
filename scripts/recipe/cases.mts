@@ -1,11 +1,12 @@
-// The case files of the spec (HYR-9): which concern names them, how they are shaped, their rules and quotes, their
-// `only`s, and the case reader of each language, which must hold the same members in all three languages (HYR-8).
+// The case files of the spec (HYR-9): which concern names them, how they are shaped, their statements, the rules their
+// items require, their `only`s, the runners that get cases, and the case reader of each language (HYR-8).
 
+import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
-import { LANGS, type CaseField, type CaseFile, type Lang, type Only, type Spec } from './types.mts';
+import { LANGS, type CaseField, type CaseFile, type Only, type Runner, type Spec } from './types.mts';
 import type { Ctx } from './context.mts';
-import { isSentenceOf, rulesOf } from './rules.mts';
+import { checkRuleId, checkStatement, rulesOfFile } from './rules.mts';
 import { words } from './names.mts';
 
 const COMPARE_KINDS = ['exact', 'ordered', 'subset', 'absent', 'contains', 'excludes', 'prefix', 'keys', 'raises'];
@@ -29,6 +30,20 @@ function fieldsDeep(fields: Record<string, CaseField>): CaseField[] {
   return Object.values(fields).flatMap((f) => [f, ...fieldsDeep(f.fields ?? {})]);
 }
 
+/** The fields an item states: the section's fields it holds, and those nested in the objects it holds. */
+function statedFields(fields: Record<string, CaseField>, item: Json): CaseField[] {
+  return Object.entries(fields).flatMap(([name, f]) => {
+    if (!(name in item)) return [];
+    const value = item[name];
+    return [f, ...(f.fields !== undefined && isObject(value) ? statedFields(f.fields, value) : [])];
+  });
+}
+
+/** True when a case or field with this `only` runs for the runner. */
+function keeps(only: Only | undefined, runner: Runner): boolean {
+  return only === undefined || only.languages.includes(runner);
+}
+
 /** Every `only` of a case: the item's own, those of outcomes and those of fields (HYR-9). */
 export function caseOnlys(spec: Spec, root: string): Only[] {
   const out: Only[] = [];
@@ -45,65 +60,17 @@ export function caseOnlys(spec: Spec, root: string): Only[] {
   return out;
 }
 
-/** HYR-9: a compare names a known kind and carries its rule and a quote, which is one sentence of the rule. */
-function checkCompare(ctx: Ctx, where: string, rule: string | undefined, compare: string | undefined, quote: string | undefined): void {
-  const { protocol, add } = ctx;
-  if (compare === undefined || rule === undefined || quote === undefined) {
-    add('CASE_COMPARE', `${where} lacks compare, rule or quote`);
-    return;
+/** HYR-9: a compare names a known kind and a statement of protocol.json; returns the statement's rule when it is one. */
+function checkCompare(ctx: Ctx, where: string, compare: string | undefined, sentence: string | undefined): string | undefined {
+  if (compare === undefined || sentence === undefined) {
+    ctx.add('CASE_COMPARE', `${where} lacks compare or sentence`);
+    return undefined;
   }
-  if (!COMPARE_KINDS.includes(compare)) add('CASE_COMPARE', `${where} uses compare ${compare}, which is not a kind of HYR-9`);
-  if (!rulesOf(protocol).has(rule)) add('RULE_UNKNOWN', `${where} names ${rule}, which is not a rule of protocol.md`);
-  else if (!isSentenceOf(protocol, rule, quote)) add('CASE_QUOTE', `${where} quotes ${rule} with a text that is not one whole sentence of it: ${quote}`);
+  if (!COMPARE_KINDS.includes(compare)) ctx.add('CASE_COMPARE', `${where} uses compare ${compare}, which is not a kind of HYR-9`);
+  return checkStatement(ctx, where, sentence);
 }
 
-/** The case file of each concern, the shape of each file and its items, and the compares of its sections. */
-function checkFiles(ctx: Ctx, entries: [string, CaseFile][]): void {
-  const { spec, root, add } = ctx;
-  for (const [key, entry] of entries) {
-    const data = dataOf(root, key);
-    if (!isObject(data)) {
-      add('CASEFILE_UNKNOWN', `caseFiles ${key} has no contracts/${key} file that holds an object`);
-      continue;
-    }
-    for (const fixture of Object.keys(entry.fixtures)) {
-      if (!(fixture in data)) add('CASE_SECTION_UNKNOWN', `${key} declares fixture ${fixture}, which the file does not hold`);
-    }
-    for (const [name, section] of Object.entries(entry.sections)) {
-      const items = data[name];
-      if (!Array.isArray(items)) {
-        add('CASE_SECTION_UNKNOWN', `${key} declares section ${name}, which the file does not hold as a list`);
-        continue;
-      }
-      for (const use of section.uses) if (!(use in entry.fixtures)) add('FILE_UNDECLARED', `${key} section ${name} uses ${use}, an undeclared fixture`);
-      for (const item of items) {
-        if (!isObject(item)) {
-          add('FILE_UNDECLARED', `${key} section ${name} holds an item that is not an object`);
-          continue;
-        }
-        for (const k of Object.keys(item)) {
-          if (k !== 'only' && !(k in section.fields)) add('FILE_UNDECLARED', `${key} section ${name} holds ${k}, which the spec does not declare`);
-        }
-      }
-      for (const [field, f] of Object.entries(section.fields)) {
-        if (f.optional !== true && !items.some((it) => isObject(it) && field in it)) {
-          add('CASE_FIELD_UNKNOWN', `${key} section ${name} declares field ${field}, which no case holds`);
-        }
-      }
-      for (const [outcome, o] of Object.entries(section.outcomes ?? {})) checkCompare(ctx, `${key} outcome ${outcome}`, o.rule, o.compare, o.quote);
-      for (const f of fieldsDeep(section.fields)) {
-        if (f.role === 'expected' && f.fields === undefined && f.compare === undefined) {
-          add('CASE_COMPARE', `${key} section ${name} has an expected field without a compare`);
-        }
-        if (f.compare !== undefined || f.rule !== undefined || f.quote !== undefined) {
-          checkCompare(ctx, `${key} section ${name} field ${f.role}`, f.rule, f.compare, f.quote);
-        }
-      }
-    }
-  }
-}
-
-/** HYR-9 and HYR-2: each case file of a concern is in caseFiles with a rule the concern lists, and no entry is unused. */
+/** HYR-9 and HYR-2: each case file of a concern is in caseFiles, and each caseFiles entry is named by a concern. */
 function checkCoverage(ctx: Ctx): Set<string> {
   const { spec, root, add } = ctx;
   const named = new Set<string>();
@@ -116,12 +83,7 @@ function checkCoverage(ctx: Ctx): Set<string> {
           add('CASE_MISSING', `${file} is named by concern ${c.id} and missing`);
           continue;
         }
-        const entry = spec.caseFiles[key];
-        if (entry === undefined) {
-          add('CASEFILE_MISSING', `${file} is named by concern ${c.id} and has no caseFiles entry`);
-          continue;
-        }
-        if (!c.rules.includes(entry.rule)) add('CASE_RULE', `${file} has rule ${entry.rule}, concern ${c.id} lists ${c.rules.join(', ')}`);
+        if (spec.caseFiles[key] === undefined) add('CASEFILE_MISSING', `${file} is named by concern ${c.id} and has no caseFiles entry`);
       }
     } else {
       if (c.cases.none.trim() === '') add('CASE_REASON', `concern ${c.id} has an empty reason for cases none`);
@@ -136,12 +98,114 @@ function checkCoverage(ctx: Ctx): Set<string> {
   return named;
 }
 
+/** HYR-9: each case file of contracts/ is named by a caseFiles entry; the spec and the protocol are not case files. */
+function checkListed(ctx: Ctx): void {
+  const { spec, root, add } = ctx;
+  const listed = execFileSync('git', ['ls-files', '--cached', '--others', '--exclude-standard', '--', 'contracts'], {
+    cwd: root,
+    encoding: 'utf8',
+  })
+    .split('\n')
+    .filter((f) => f.endsWith('.json') && path.dirname(f) === 'contracts');
+  const keys = new Set(Object.keys(spec.caseFiles));
+  for (const file of listed) {
+    const key = path.basename(file);
+    if (key === 'interfaces.json' || key === 'protocol.json' || keys.has(key)) continue;
+    add('CASEFILE_UNLISTED', `${file} is a case file that caseFiles does not name`);
+  }
+}
+
+/** HYR-9: the shape of each case file, its items and its sections; the compares, requirements and runners of each. */
+function checkFiles(ctx: Ctx, entries: [string, CaseFile][]): void {
+  const { spec, root, add } = ctx;
+  for (const [key, entry] of entries) {
+    const data = dataOf(root, key);
+    if (!isObject(data)) {
+      add('CASEFILE_UNKNOWN', `caseFiles ${key} has no contracts/${key} file that holds an object`);
+      continue;
+    }
+    const concernRules = rulesOfFile(spec, `contracts/${key}`);
+    for (const fixture of Object.keys(entry.fixtures)) {
+      if (!(fixture in data)) add('CASE_SECTION_UNKNOWN', `${key} declares fixture ${fixture}, which the file does not hold`);
+    }
+    for (const [name, section] of Object.entries(entry.sections)) {
+      const where = `${key} section ${name}`;
+      const items = data[name];
+      if (!Array.isArray(items)) {
+        add('CASE_SECTION_UNKNOWN', `${where} is declared, which the file does not hold as a list`);
+        continue;
+      }
+      for (const use of section.uses) if (!(use in entry.fixtures)) add('FILE_UNDECLARED', `${where} uses ${use}, an undeclared fixture`);
+      const fieldRules = new Map<CaseField, string | undefined>();
+      for (const f of fieldsDeep(section.fields)) {
+        if (f.compare === undefined && f.sentence === undefined) continue;
+        if (f.role === 'expected' && f.fields === undefined && (f.compare === undefined || f.sentence === undefined)) {
+          add('CASE_COMPARE', `${where} has an expected field without a compare or sentence`);
+          continue;
+        }
+        fieldRules.set(f, checkCompare(ctx, `${where} field ${f.role}`, f.compare, f.sentence));
+      }
+      const outcomeRules = new Set<string>();
+      for (const [outcome, o] of Object.entries(section.outcomes ?? {})) {
+        const rule = checkCompare(ctx, `${where} outcome ${outcome}`, o.compare, o.sentence);
+        if (rule !== undefined) outcomeRules.add(rule);
+      }
+      for (const item of items) {
+        if (!isObject(item)) {
+          add('FILE_UNDECLARED', `${where} holds an item that is not an object`);
+          continue;
+        }
+        for (const k of Object.keys(item)) {
+          if (k !== 'only' && k !== 'requirements' && !(k in section.fields)) add('FILE_UNDECLARED', `${where} holds ${k}, which the spec does not declare`);
+        }
+        const requirements = item.requirements;
+        if (requirements !== undefined && (!Array.isArray(requirements) || !requirements.every((r) => typeof r === 'string'))) {
+          add('REQUIREMENT_FORM', `${where} holds requirements that are not a list of rule ids`);
+        }
+        const required = Array.isArray(requirements) ? requirements.filter((r): r is string => typeof r === 'string') : [];
+        for (const r of required) checkRuleId(ctx, `${where} requirement`, r);
+        const stated = statedFields(section.fields, item);
+        const statedRules = new Set(stated.flatMap((f) => fieldRules.get(f) ?? []));
+        if (new Set(required).size !== required.length || required.some((r) => statedRules.has(r))) {
+          add('REQUIREMENT_REPEAT', `${where} requires a rule twice, or a rule that one of its fields already states`);
+        }
+        const effective = new Set([...required, ...statedRules, ...outcomeRules]);
+        if (stated.some((f) => f.role === 'response') && effective.size === 0) {
+          add('REQUIREMENT_EMPTY', `${where} holds a response with no rule to cover it`);
+        }
+        for (const r of effective) {
+          if (spec.outside.some((o) => o.rule === r)) add('REQUIREMENT_OUTSIDE', `${where} requires ${r}, which is outside the spec`);
+          else if (!concernRules.has(r)) add('REQUIREMENT_UNCOVERED', `${where} requires ${r}, which no concern of ${key} names`);
+        }
+      }
+      for (const [field, f] of Object.entries(section.fields)) {
+        if (f.optional !== true && !items.some((it) => isObject(it) && field in it)) {
+          add('CASE_FIELD_UNKNOWN', `${where} declares field ${field}, which no case holds`);
+        }
+      }
+      for (const runner of section.runners) {
+        const outcomesKept = Object.values(section.outcomes ?? {}).some((o) => keeps(o.only, runner));
+        const cased = items.some(
+          (it) =>
+            isObject(it) &&
+            keeps(it.only as Only | undefined, runner) &&
+            (outcomesKept ||
+              statedFields(section.fields, it).some(
+                (f) => f.fields === undefined && keeps(f.only, runner) && (f.role === 'response' || f.compare !== undefined),
+              )),
+        );
+        if (!cased) add('CASE_EMPTY', `${where} gives runner ${runner} no case`);
+      }
+    }
+  }
+}
+
 /** HYR-8: the case reader of each language is a class that holds the same public and private members as in the others. */
 function checkReaders(ctx: Ctx): void {
   const { spec, add } = ctx;
-  const shapes = new Map<Lang, string>();
+  const shapes = new Map<string, string>();
   for (const lang of LANGS) {
-    const ref = spec.languages[lang].caseReader;
+    const ref = spec.caseReaders[lang];
     const [file, name] = ref.split('::');
     if (file === undefined || name === undefined) {
       add('CASE_READER_MISSING', `${lang} caseReader ${ref} is not file::class`);
@@ -172,6 +236,7 @@ function checkReaders(ctx: Ctx): void {
 
 export function checkCases(ctx: Ctx): void {
   const named = checkCoverage(ctx);
+  checkListed(ctx);
   const entries = Object.entries(ctx.spec.caseFiles).filter(([key]) => named.has(key));
   checkFiles(ctx, entries);
   checkReaders(ctx);

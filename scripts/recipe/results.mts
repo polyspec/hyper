@@ -3,24 +3,24 @@
 
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
-import { LANGS, type Finding, type Lang, type Spec } from './types.mts';
+import { RUNNERS, type Finding, type Runner, type Spec } from './types.mts';
 import { keyOf } from './cases.mts';
 import type { CaseFile } from './types.mts';
 
-export type Results = Partial<Record<Lang, string>>;
+export type Results = Partial<Record<Runner, string>>;
 
-type CaseId = { file: string; id: string; languages: Lang[] };
+type CaseId = { file: string; id: string; runners: Runner[] };
 
 const LINE = /^CASE (\S+) (\S+) (PASS|FAIL)(?: (.*))?$/;
 
-/** The languages a case names in its `only`; a case without `only` counts for all of them. */
-function onlyLanguages(only: unknown): Lang[] {
-  if (typeof only !== 'object' || only === null || !('languages' in only) || !Array.isArray(only.languages)) return LANGS;
+/** The runners a case names in its `only`; a case without `only` counts for all of them. */
+function onlyRunners(only: unknown): Runner[] {
+  if (typeof only !== 'object' || only === null || !('languages' in only) || !Array.isArray(only.languages)) return RUNNERS;
   const named: unknown[] = only.languages;
-  return LANGS.filter((l) => named.includes(l));
+  return RUNNERS.filter((r) => named.includes(r));
 }
 
-/** The case ids of a case file: the items of each section, for the languages its runners name and its `only` keeps. */
+/** The case ids of a case file: the items of each section, for the runners the section names and the item's `only` keeps. */
 function caseIds(file: string, entry: CaseFile | undefined, data: unknown): CaseId[] {
   if (entry === undefined || typeof data !== 'object' || data === null) return [];
   const record = data as Record<string, unknown>;
@@ -28,18 +28,17 @@ function caseIds(file: string, entry: CaseFile | undefined, data: unknown): Case
   for (const [name, section] of Object.entries(entry.sections)) {
     const items = record[name];
     if (!Array.isArray(items)) continue;
-    const runners = LANGS.filter((l) => section.runners.includes(l));
     for (const item of items) {
       if (typeof item !== 'object' || item === null || !('id' in item) || typeof item.id !== 'string') continue;
       const only = 'only' in item ? item.only : undefined;
-      const kept = onlyLanguages(only);
-      out.push({ file, id: item.id, languages: runners.filter((l) => kept.includes(l)) });
+      const kept = onlyRunners(only);
+      out.push({ file, id: item.id, runners: section.runners.filter((r) => kept.includes(r)) });
     }
   }
   return out;
 }
 
-/** Checks the result lines of each language against the cases of the spec; a case without a line fails. */
+/** Checks the result lines of each runner against the cases of the spec; a case without a line fails. */
 export function checkResults(root: string, spec: Spec, results: Results): Finding[] {
   const out: Finding[] = [];
   const files = [...new Set(spec.concerns.flatMap((c) => (Array.isArray(c.cases) ? c.cases : [])))];
@@ -50,12 +49,12 @@ export function checkResults(root: string, spec: Spec, results: Results): Findin
   }
   const key = (file: string, id: string): string => `${file}\t${id}`;
 
-  for (const lang of LANGS) {
-    const expected = cases.filter((c) => c.languages.includes(lang));
+  for (const runner of RUNNERS) {
+    const expected = cases.filter((c) => c.runners.includes(runner));
     const expectedKeys = new Set(expected.map((c) => key(c.file, c.id)));
-    const file = results[lang];
+    const file = results[runner];
     if (file === undefined || !existsSync(file)) {
-      for (const c of expected) out.push({ code: 'RESULT_MISSING', message: `${lang} prints no line for ${c.file} ${c.id}` });
+      for (const c of expected) out.push({ code: 'RESULT_MISSING', message: `${runner} prints no line for ${c.file} ${c.id}` });
       continue;
     }
     const seen = new Set<string>();
@@ -63,24 +62,24 @@ export function checkResults(root: string, spec: Spec, results: Results): Findin
       if (line === '') continue;
       const m = LINE.exec(line);
       if (m === null) {
-        out.push({ code: 'RESULT_FORM', message: `${lang} prints a line that is not CASE <file> <id> PASS|FAIL: ${line}` });
+        out.push({ code: 'RESULT_FORM', message: `${runner} prints a line that is not CASE <file> <id> PASS|FAIL: ${line}` });
         continue;
       }
       const [, caseFile = '', id = '', status = '', reason = ''] = m;
       const k = key(caseFile, id);
       if (!expectedKeys.has(k)) {
-        out.push({ code: 'RESULT_UNKNOWN_ID', message: `${lang} prints ${caseFile} ${id}, which the spec does not name for it` });
+        out.push({ code: 'RESULT_UNKNOWN_ID', message: `${runner} prints ${caseFile} ${id}, which the spec does not name for it` });
         continue;
       }
       if (seen.has(k)) {
-        out.push({ code: 'RESULT_DUPLICATE', message: `${lang} prints ${caseFile} ${id} twice` });
+        out.push({ code: 'RESULT_DUPLICATE', message: `${runner} prints ${caseFile} ${id} twice` });
         continue;
       }
       seen.add(k);
-      if (status === 'FAIL') out.push({ code: 'RESULT_FAIL', message: `${lang} ${caseFile} ${id} failed: ${reason}` });
+      if (status === 'FAIL') out.push({ code: 'RESULT_FAIL', message: `${runner} ${caseFile} ${id} failed: ${reason}` });
     }
     for (const c of expected) {
-      if (!seen.has(key(c.file, c.id))) out.push({ code: 'RESULT_MISSING', message: `${lang} prints no line for ${c.file} ${c.id}` });
+      if (!seen.has(key(c.file, c.id))) out.push({ code: 'RESULT_MISSING', message: `${runner} prints no line for ${c.file} ${c.id}` });
     }
   }
   return out;

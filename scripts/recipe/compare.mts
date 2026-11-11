@@ -1,6 +1,7 @@
 // The recipe check (HYR-1 to HYR-9): compares the development spec with the readers' output, the protocol and the case
 // files. Each check module adds its findings through the context; this module runs them in order.
 
+import type { Protocol } from './protocol.mts';
 import { type Lang, type Finding, type Only, type Sources, type Spec } from './types.mts';
 import type { Ctx } from './context.mts';
 import { checkRules } from './rules.mts';
@@ -15,7 +16,7 @@ export function compare(
   spec: Spec,
   sources: Record<Lang, Sources>,
   root: string,
-  protocol: string,
+  protocol: Protocol,
   readDir: Ctx['readDir'],
 ): Finding[] {
   const out: Finding[] = [];

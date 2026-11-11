@@ -7,7 +7,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import type { Results } from './results.mts';
 import { runChecks, type Validators } from './run.mts';
-import { LANGS } from './types.mts';
+import { RUNNERS } from './types.mts';
 
 type Mutation = {
   id: string;
@@ -55,7 +55,7 @@ function applyMutation(root: string, m: Mutation): void {
 /** The result files of a copy of the fixture, where the fixture keeps them. */
 function fixtureResults(root: string): Results {
   const out: Results = {};
-  for (const lang of LANGS) out[lang] = path.join(root, 'results', `${lang}.txt`);
+  for (const runner of RUNNERS) out[runner] = path.join(root, 'results', `${runner}.txt`);
   return out;
 }
 
