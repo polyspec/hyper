@@ -101,7 +101,7 @@ def read_module(root: Path, rel: str, out: dict) -> None:
                         "parameters": parameters(member),
                     }
                 )
-            elif isinstance(member, ast.AnnAssign) and isinstance(member.target, ast.Name):
+            elif isinstance(member, ast.AnnAssign) and isinstance(member.target, ast.Name) and not member.target.id.startswith("_"):
                 name = member.target.id
                 out["members"].append(
                     {

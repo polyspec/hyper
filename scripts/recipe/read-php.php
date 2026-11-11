@@ -275,6 +275,9 @@ foreach ($sourceFiles as $file) {
             ];
         }
         foreach (ownProperties($class) as $property) {
+            if (!$property->isPublic()) {
+                continue;
+            }
             $out['members'][] = [
                 'file' => $file,
                 'unit' => $unit,

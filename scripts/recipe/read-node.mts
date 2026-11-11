@@ -173,6 +173,11 @@ function readSource(file: string): void {
   }
 }
 
+/** Only public and internal properties are members (HYR-8): a private or protected property is not part of the surface. */
+function isExposed(visibility: Visibility): boolean {
+  return visibility === 'public' || visibility === 'internal';
+}
+
 function readClassMember(file: string, sf: ts.SourceFile, cls: string, classInternal: boolean, m: ts.ClassElement): void {
   if (ts.isConstructorDeclaration(m)) {
     out.members.push({
@@ -189,7 +194,7 @@ function readClassMember(file: string, sf: ts.SourceFile, cls: string, classInte
       const isProperty = modifiers(p).some((mod) =>
         [ts.SyntaxKind.PublicKeyword, ts.SyntaxKind.PrivateKeyword, ts.SyntaxKind.ProtectedKeyword, ts.SyntaxKind.ReadonlyKeyword].includes(mod.kind),
       );
-      if (isProperty && ts.isIdentifier(p.name)) {
+      if (isProperty && ts.isIdentifier(p.name) && isExposed(memberVisibility(p, classInternal))) {
         const name = p.name.text;
         out.members.push({
           file,
@@ -215,7 +220,7 @@ function readClassMember(file: string, sf: ts.SourceFile, cls: string, classInte
       signature: headOf(m, sf),
       parameters: parameterNames(m.parameters),
     });
-  } else if (ts.isPropertyDeclaration(m)) {
+  } else if (ts.isPropertyDeclaration(m) && isExposed(memberVisibility(m, classInternal))) {
     const name = nameOf(m);
     out.members.push({
       file,
