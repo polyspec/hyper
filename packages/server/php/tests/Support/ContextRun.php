@@ -56,16 +56,16 @@ final class ContextRun
             static fn (array $route): string => (string) $route['name'],
             $this->application['manifest']['routes'],
         );
-        foreach ($this->application['loaders'] ?? [] as $name => $spec) {
+        foreach ((array) ($this->application['loaders'] ?? []) as $name => $spec) {
             if (in_array($name, $names, true)) {
-                $routes[$name]['load'] = $this->loader($name, $spec);
+                $routes[$name]['load'] = $this->loader($name, (array) $spec);
 
                 continue;
             }
-            $routes[$this->routeOfRegion($name)]['regions'][$name] = $this->loader($name, $spec);
+            $routes[$this->routeOfRegion($name)]['regions'][$name] = $this->loader($name, (array) $spec);
         }
-        foreach ($this->application['actions'] ?? [] as $route => $spec) {
-            $routes[$route]['post'] = $this->action($route, $spec);
+        foreach ((array) ($this->application['actions'] ?? []) as $route => $spec) {
+            $routes[$route]['post'] = $this->action($route, (array) $spec);
         }
         $data = $shared ?? $this->application['shared'] ?? null;
         $handlers = ['routes' => $routes];

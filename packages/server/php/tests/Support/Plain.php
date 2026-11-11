@@ -5,15 +5,17 @@ declare(strict_types=1);
 namespace Polyspec\Hyper\Tests\Support;
 
 /**
- * Converts the decoded JSON of a case to the arrays and lists that the server takes. An empty object becomes an empty
- * array, as `Json::file` gives it; `map` turns an empty observed map back into an object, which the case compares.
+ * Converts the decoded JSON of a case to the values that loaders return: arrays for lists and non-empty objects,
+ * and `stdClass` for empty objects, so that an empty map stays a map. `map` gives an observed map the same form.
  */
 final class Plain
 {
     public static function value(mixed $value): mixed
     {
         if ($value instanceof \stdClass) {
-            $value = (array) $value;
+            $map = get_object_vars($value);
+
+            return $map === [] ? new \stdClass() : array_map(self::value(...), $map);
         }
 
         return is_array($value) ? array_map(self::value(...), $value) : $value;
