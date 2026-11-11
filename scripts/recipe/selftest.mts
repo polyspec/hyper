@@ -1,6 +1,7 @@
 // The readers' mutation cases (HYR-8): each mutation of tests/scripts/fixtures/recipe/mutations.json is applied to a copy
 // of the fixture, and the check must print the finding code that the mutation names. A run stops when one passes.
 
+import { spawnSync } from 'node:child_process';
 import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, unlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -21,6 +22,12 @@ type Mutation = {
 
 function isMutation(x: unknown): x is Mutation {
   return typeof x === 'object' && x !== null && 'id' in x && 'file' in x && 'code' in x && typeof x.id === 'string' && typeof x.file === 'string' && typeof x.code === 'string';
+}
+
+/** Makes a copied tree a git repository whose files are all tracked: the readers list the files git tracks. */
+function track(root: string): void {
+  spawnSync('git', ['init', '-q'], { cwd: root });
+  spawnSync('git', ['add', '-A'], { cwd: root });
 }
 
 function applyMutation(root: string, m: Mutation): void {
@@ -64,6 +71,7 @@ export function selfTest(fixture: string, v: Validators): string[] {
     try {
       cpSync(fixture, root, { recursive: true });
       applyMutation(root, m);
+      track(root);
       const findings = runChecks(root, v, fixtureResults(root), path.join(root, 'vendor', 'autoload.php'));
       if (!findings.some((f) => f.code === m.code)) failures.push(`MUTATION_PASSED ${m.id}: the check printed no ${m.code}`);
     } catch (error) {

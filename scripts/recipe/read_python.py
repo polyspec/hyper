@@ -12,6 +12,7 @@ from __future__ import annotations
 import argparse
 import ast
 import json
+import subprocess
 from pathlib import Path
 
 
@@ -162,11 +163,12 @@ def read_tests(root: Path, rel: str, out: dict) -> None:
                     out["tests"].append({"file": rel, "name": f"{node.name}.{member.name}"})
 
 
-def files(root: Path, dirs: list[str], pattern: str) -> list[str]:
-    found: list[str] = []
-    for d in dirs:
-        found += [p.relative_to(root).as_posix() for p in (root / d).rglob(pattern)]
-    return sorted(set(found))
+def files(root: Path, dirs: list[str]) -> list[str]:
+    """The Python files git tracks below the directories, relative to the root, sorted."""
+    listed = subprocess.run(
+        ["git", "-c", "core.quotePath=false", "ls-files", "-z", "--", *dirs], cwd=root, capture_output=True, text=True, check=True
+    ).stdout
+    return sorted(p for p in listed.split("\0") if p.endswith(".py"))
 
 
 def main() -> None:
@@ -177,7 +179,7 @@ def main() -> None:
     args = parser.parse_args()
     root = Path(args.root).resolve()
 
-    sources = files(root, args.sources, "*.py")
+    sources = files(root, args.sources)
     out: dict = {
         "language": "python",
         "files": sources,
@@ -193,7 +195,7 @@ def main() -> None:
     for rel in sources:
         read_module(root, rel, out)
     # HYR-7: every Python file under the test roots holds tests.
-    for rel in files(root, args.tests, "*.py"):
+    for rel in files(root, args.tests):
         read_tests(root, rel, out)
     print(json.dumps(out, indent=2))
 

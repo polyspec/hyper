@@ -86,6 +86,7 @@ test('the candidate derives the units and concerns from an empty skeleton', () =
   const root = mkdtempSync(path.join(tmpdir(), 'recipe-skeleton-root-'));
   try {
     cpSync(fixture, root, { recursive: true });
+    track(root);
     const spec = JSON.parse(readFileSync(path.join(fixture, 'contracts', 'interfaces.json'), 'utf8')) as Record<string, unknown>;
     writeFileSync(path.join(root, 'contracts', 'interfaces.json'), JSON.stringify({ ...spec, outside: [], concerns: [], types: [] }));
     const output = path.join(dir, 'interfaces.candidate.json');
@@ -107,6 +108,7 @@ for (const m of mutations) {
     try {
       cpSync(fixture, root, { recursive: true });
       applyMutation(root, m);
+      track(root);
       const result = spawnSync(process.execPath, [check, '--root', root, '--php-autoload', phpAutoload(root), '--no-selftest', ...resultArguments(root)], { encoding: 'utf8' });
       assert.notEqual(result.status, 0, `mutation ${m.id} passed the check`);
       assert.match(result.stdout + result.stderr, new RegExp(`\\b${m.code}\\b`));

@@ -39,16 +39,15 @@ if ($autoload === null || !is_file($autoload)) {
 }
 require $autoload;
 
-/** @return list<string> the PHP files below a directory, relative to the root, sorted */
+/** @return list<string> the PHP files git tracks below a directory, relative to the root, sorted */
 function phpFiles(string $root, string $dir): array
 {
-    $found = [];
-    $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($root . '/' . $dir, FilesystemIterator::SKIP_DOTS));
-    foreach ($iterator as $file) {
-        if ($file->getExtension() === 'php') {
-            $found[] = substr($file->getPathname(), strlen($root) + 1);
-        }
+    exec('git -C ' . escapeshellarg($root) . ' -c core.quotePath=false ls-files -- ' . escapeshellarg($dir), $lines, $status);
+    if ($status !== 0) {
+        fwrite(STDERR, "read-php.php: git ls-files failed under $root\n");
+        exit(1);
     }
+    $found = array_values(array_filter($lines, static fn($f) => str_ends_with($f, '.php')));
     sort($found);
 
     return $found;

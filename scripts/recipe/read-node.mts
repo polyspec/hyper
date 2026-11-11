@@ -3,8 +3,9 @@
 // The compiler comes from the private package scripts/recipe/typescript (TypeScript 6.0.3, see its description).
 
 import { createRequire } from 'node:module';
-import { readFileSync, readdirSync } from 'node:fs';
-import { join, relative, sep } from 'node:path';
+import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
+import { basename, join } from 'node:path';
 
 const require = createRequire(new URL('./typescript/package.json', import.meta.url));
 const ts = require('typescript') as typeof import('typescript');
@@ -27,16 +28,10 @@ for (const arg of rest) {
   groups[current].push(arg);
 }
 
-function listFiles(dirs: string[], keep: (name: string) => boolean): string[] {
-  const found: string[] = [];
-  for (const dir of dirs) {
-    for (const entry of readdirSync(join(root!, dir), { withFileTypes: true, recursive: true })) {
-      if (entry.isFile() && keep(entry.name)) {
-        found.push(relative(root!, join(entry.parentPath, entry.name)).split(sep).join('/'));
-      }
-    }
-  }
-  return [...new Set(found)].sort();
+// The files git tracks below the directories, relative to the root; a file git does not track is not part of the tree.
+function listFiles(dirs: string[], keep: (path: string) => boolean): string[] {
+  const listed = execFileSync('git', ['-c', 'core.quotePath=false', 'ls-files', '-z', '--', ...dirs], { cwd: root!, encoding: 'utf8' });
+  return listed.split('\0').filter((path) => path !== '' && keep(path)).sort();
 }
 
 type Visibility = 'public' | 'internal' | 'private' | 'protected';
@@ -53,7 +48,7 @@ type Out = {
   dynamicTests: { file: string; line: number }[];
 };
 
-const sourceFiles = listFiles(groups.sources, (n) => n.endsWith('.ts') && !n.endsWith('.d.ts') && !n.includes('.test.'));
+const sourceFiles = listFiles(groups.sources, (n) => n.endsWith('.ts') && !n.endsWith('.d.ts') && !basename(n).includes('.test.'));
 const testFiles = listFiles(groups.tests, (n) => /\.test\.m?ts$/.test(n));
 const out: Out = {
   language: 'node',
