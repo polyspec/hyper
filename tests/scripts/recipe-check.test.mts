@@ -109,3 +109,17 @@ for (const m of mutations) {
     }
   });
 }
+
+// The readers' own output for a tree, as the check reads it (HYR-8).
+type ReaderOutput = { uses: { file: string; name: string }[]; tests: { file: string; name: string }[]; dynamicTests: { file: string; line: number }[] };
+
+function readPython(root: string): ReaderOutput {
+  const result = spawnSync('python3', [path.join(repo, 'scripts', 'recipe', 'read_python.py'), root, '--sources', 'src', '--tests', 'tests'], { encoding: 'utf8' });
+  assert.equal(result.status, 0, result.stderr);
+  return JSON.parse(result.stdout) as ReaderOutput;
+}
+
+test('the Python reader records the names an import binds, and its aliases', () => {
+  const names = readPython(path.join(fixture, 'readers', 'python')).uses.filter((u) => u.file === 'src/app.py').map((u) => u.name);
+  for (const name of ['_secret', 'shown', 'tools', '_util', 'util']) assert.ok(names.includes(name), `${name} is not a use of src/app.py: ${names.join(', ')}`);
+});
