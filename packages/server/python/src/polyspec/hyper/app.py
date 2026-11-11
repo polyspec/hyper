@@ -66,6 +66,7 @@ class App:
         shell: str,
         program: str,
         context: Optional[Callable],
+        functions: Optional[dict],
     ):
         self.manifest = manifest
         self.timezone = timezone
@@ -87,7 +88,7 @@ class App:
         self.container = Container()
         from ._renderer import Renderer
 
-        self.renderer = Renderer.open(program, timezone)
+        self.renderer = Renderer.open(program, timezone, functions)
         # HY-125: the build id of the program directory, read when the application opens.
         self.build = read_build_id(str(Path(program) / "build.json"))
         from ._reads import Reads
@@ -111,6 +112,7 @@ class App:
         on_disconnect: Optional[Callable] = None,
         client_rendering: Optional[ClientRendering] = None,
         context: Optional[Callable] = None,
+        functions: Optional[dict] = None,
     ) -> "App":
         """Creates an application from its manifest, the server program that `hyper-build-server` of
         `@polyspec/hyper-build` built from its templates (HY-48) and the handlers that load data and run actions.
@@ -206,6 +208,7 @@ class App:
             shell,
             program,
             context,
+            functions,
         )
 
     def bind(self, cls: type, factory: Callable) -> None:

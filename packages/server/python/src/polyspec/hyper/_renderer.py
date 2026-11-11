@@ -8,6 +8,7 @@ again (VAL-22)."""
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Optional
 
 from polyspec.template import AstProgram, Engine, EngineOptions, FsLoader, RenderOptions
 from polyspec.template import bind as template_bind
@@ -25,9 +26,11 @@ class Renderer:
         self.timezone = timezone
 
     @staticmethod
-    def open(program: str, timezone: str) -> "Renderer":
+    def open(program: str, timezone: str, functions: Optional[dict] = None) -> "Renderer":
         """Opens the server program that `hyper-build-server` of `@polyspec/hyper-build` wrote to a directory; a
-        missing build fails here and names the missing file (HY-48)."""
+        missing build fails here and names the missing file (HY-48). `functions` are the host functions of the
+        application, which the engine registers as template RT-5 states: a name that is a built-in function or a value
+        that is not a function fails the open with the error of the engine."""
         templates = Path(program) / "templates"
         reads = Path(program) / "reads.json"
         build = Path(program) / "build.json"
@@ -38,7 +41,12 @@ class Renderer:
                     "hyper-build-server of @polyspec/hyper-build builds it"
                 )
         return Renderer(
-            Engine(AstProgram(EngineOptions(loader=FsLoader(str(templates))))), timezone
+            Engine(
+                AstProgram(
+                    EngineOptions(loader=FsLoader(str(templates)), functions=functions)
+                )
+            ),
+            timezone,
         )
 
     @staticmethod
