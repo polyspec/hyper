@@ -52,7 +52,7 @@ type Out = {
   tests: { file: string; name: string }[];
   dynamicTests: { file: string; line: number }[];
   // A private constructor is private by the language in Node, so the reader records no calls (HYR-8).
-  calls: { file: string; name: string }[];
+  calls: { file: string; name: string; module: string }[];
 };
 
 const sourceFiles = listFiles(groups.sources, (n) => n.endsWith('.ts') && !n.endsWith('.d.ts') && !basename(n).includes('.test.'));

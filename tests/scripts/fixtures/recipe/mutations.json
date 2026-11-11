@@ -109,6 +109,30 @@
     "detail": "calls the private constructor of MediaType"
   },
   {
+    "id": "private-constructor-called-through-an-alias",
+    "file": "packages/server/python/src/polyspec/hyper/__init__.py",
+    "from": "__all__ = [\"MediaType\"]",
+    "to": "from polyspec.hyper.media_type import MediaType as Kind\n\nVALUE = Kind()\n\n__all__ = [\"MediaType\"]",
+    "code": "PRIVATE_USED",
+    "detail": "calls the private constructor of MediaType"
+  },
+  {
+    "id": "private-constructor-called-through-its-module",
+    "file": "packages/server/python/src/polyspec/hyper/__init__.py",
+    "from": "__all__ = [\"MediaType\"]",
+    "to": "from polyspec.hyper import media_type\n\nVALUE = media_type.MediaType()\n\n__all__ = [\"MediaType\"]",
+    "code": "PRIVATE_USED",
+    "detail": "calls the private constructor of MediaType"
+  },
+  {
+    "id": "private-python-method-with-two-underscores",
+    "file": "packages/server/python/src/polyspec/hyper/media_type.py",
+    "from": "    def essence(self) -> str:",
+    "to": "    def __spare(self) -> str:\n        return \"x\"\n\n    def essence(self) -> str:",
+    "code": "MEMBER_NAME",
+    "detail": "a private Python method starts with one _"
+  },
+  {
     "id": "test-added-without-spec",
     "file": "packages/server/ts/tests/extra.test.mts",
     "create": "import { test } from 'node:test';\n\ntest('extra', () => {});\n",

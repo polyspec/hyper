@@ -93,7 +93,7 @@ export type Sources = {
   tests: { file: string; name: string }[];
   dynamicTests: { file: string; line: number }[];
   // The calls of a name in a source file; only Python, whose constructor has no private form, records them (HYR-8).
-  calls: { file: string; name: string }[];
+  calls: { file: string; name: string; module: string }[];
 };
 
 export type Finding = { code: string; message: string };

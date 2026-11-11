@@ -134,9 +134,12 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
     - Private, in each language:
       - PHP: `private`;
       - Node: `private` for a class member, and not exported for a module function;
-      - Python: a leading `_`, and the spec declares it `private`; a constructor `__init__`, which has no form with
-        `_`, is private when the spec declares it so, and the check fails a call of its class by name in another file
-        of the package. Python has no access modifier, so the spec decides,
+      - Python: a leading `_`, and the spec declares it `private`; a method whose name starts with `__` and does not
+        end with it fails, because only a property marks its privacy with `__`. A constructor `__init__`, which has no
+        form with `_`, is private when the spec declares it so, and the check fails a call of its class in another file
+        of the package: a call of a name that an import binds, also through an alias or an attribute of an imported
+        module, from the module of the class or from the package. A constructor that the spec declares internal must
+        be in an internal module. Python has no access modifier, so the spec decides,
         and the Python reader checks the use by name, with no type inference: it fails a `private` member whose name
         appears as an import name or alias or as an attribute name (`ast.Attribute.attr`) in another file of the
         package. So a private name is unique in the package, and a homonym fails until the spec and the source rename

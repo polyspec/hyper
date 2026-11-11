@@ -2,6 +2,7 @@
 // visibility, its terms are in the vocabulary, its native name is the one HYR-5 gives, and an options record names the
 // parameters of the member that takes it.
 
+import path from 'node:path';
 import { LANGS, type Lang, type Member, type Only, type Runner, type Spec } from './types.mts';
 import type { Ctx } from './context.mts';
 import { errorKnown, expectedNative, expectedVisibility, hasAcronym, readerKey, specKey, symbolName, termKnown, words } from './names.mts';
@@ -69,6 +70,10 @@ export function checkMembers(ctx: Ctx): void {
         checkMember(ctx, lang, u, m, unitMembers);
       }
       for (const r of unitMembers) {
+        // HYR-8: a private Python method is written with one `_`; only a property marks its privacy with `__`.
+        if (lang === 'python' && r.kind !== 'property' && /^__(?!.*__$)/u.test(r.name)) {
+          add('MEMBER_NAME', `python ${r.symbol} starts with __; a private Python method starts with one _ (HYR-8)`);
+        }
         // HYR-5: a private property is not a member of the public API; the readers report it, the spec does not list it.
         if (r.kind === 'property' && r.visibility !== 'public') continue;
         if (!u.members.some((m) => m.native[lang] && specKey(m) === readerKey(r.name, r.kind))) {
@@ -116,13 +121,17 @@ function checkMember(
   }
   // HYR-8: `__init__` has no form with `_`, so the spec decides the visibility of a Python constructor; a private one is
   // checked by its calls in the other files of the package.
-  const pythonConstructor = lang === 'python' && m.kind === 'constructor' && found.visibility === 'public';
+  // A constructor that the spec declares internal keeps the comparison: a public Python module cannot hold one.
+  const pythonConstructor = lang === 'python' && m.kind === 'constructor' && found.visibility === 'public' && m.visibility !== 'internal';
   if (!pythonConstructor && found.visibility !== expectedVisibility(lang, m.visibility)) {
     add('MEMBER_VISIBILITY', `${lang} member ${m.id} is ${found.visibility}, spec says ${m.visibility}`);
   }
   if (pythonConstructor && m.visibility === 'private') {
     const unit = found.symbol.slice(found.symbol.indexOf('::') + 2).split('.')[0] ?? '';
-    for (const call of ctx.sources.python.calls.filter((c) => c.name === unit && c.file !== found.file)) {
+    const module = path.basename(found.file, '.py');
+    // A call names the module of its import; the package itself (an empty module) may export the class.
+    const calls = ctx.sources.python.calls.filter((c) => c.name === unit && c.file !== found.file && (c.module === module || c.module === ''));
+    for (const call of calls) {
       add('PRIVATE_USED', `python ${call.file} calls the private constructor of ${unit}`);
     }
   }

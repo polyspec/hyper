@@ -270,7 +270,7 @@ for (const m of mutations) {
 }
 
 // The readers' own output for a tree, as the check reads it (HYR-8).
-type ReaderOutput = { units: { name: string; kind: string; internal: boolean }[]; uses: { file: string; name: string }[]; constants: { file: string; name: string }[]; tests: { file: string; name: string }[]; dynamicTests: { file: string; line: number }[]; members: { unit: string; name: string; kind: string; visibility: string; signature: string; parameters: string[] }[] };
+type ReaderOutput = { calls: { file: string; name: string; module: string }[]; units: { name: string; kind: string; internal: boolean }[]; uses: { file: string; name: string }[]; constants: { file: string; name: string }[]; tests: { file: string; name: string }[]; dynamicTests: { file: string; line: number }[]; members: { unit: string; name: string; kind: string; visibility: string; signature: string; parameters: string[] }[] };
 
 const readerCommands: Record<'php' | 'node' | 'python', (root: string) => [string, string[]]> = {
   php: (root) => [process.env.RECIPE_PHP ?? 'php', [path.join(repo, 'scripts', 'recipe', 'read-php.php'), root, '--autoload', path.join(root, 'autoload.php')]],
@@ -312,6 +312,11 @@ test('the readers list only the public and internal properties of a class as mem
   // A Python property with one leading underscore is internal; one with two is private to its class (HYR-8).
   const cache = readPython(path.join(fixture, 'readers', 'python')).members.find((m) => m.unit === 'Widget' && m.name === '_cache');
   assert.equal(cache?.visibility, 'internal', 'python does not list _cache as an internal member');
+});
+
+test('the Python reader records a call of an imported name by its original name and module, and no call of a local name', () => {
+  const calls = readPython(path.join(fixture, 'readers', 'python')).calls.filter((c) => c.file === 'src/maker.py').map((c) => `${c.module}:${c.name}`);
+  assert.deepEqual(calls.sort(), ['widget:Widget', 'widget:Widget', 'widget:Widget'], `python records the calls of src/maker.py as ${calls.join(', ')}`);
 });
 
 test('the Python reader counts a variadic parameter as one input, as PHP and Node do', () => {

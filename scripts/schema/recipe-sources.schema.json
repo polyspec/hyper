@@ -14,7 +14,7 @@
     "constants": { "type": "array", "items": { "$ref": "#/$defs/constant" } },
     "exports": { "type": "array", "items": { "$ref": "#/$defs/name" } },
     "uses": { "type": "array", "items": { "$ref": "#/$defs/name" } },
-    "calls": { "type": "array", "items": { "$ref": "#/$defs/name" } },
+    "calls": { "type": "array", "items": { "$ref": "#/$defs/call" } },
     "tests": { "type": "array", "items": { "$ref": "#/$defs/name" } },
     "dynamicTests": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["file", "line"], "properties": { "file": { "type": "string", "minLength": 1 }, "line": { "type": "integer", "minimum": 1 } } } }
   },
@@ -68,6 +68,16 @@
         "unit": { "type": "string", "minLength": 1 },
         "name": { "type": "string", "minLength": 1 },
         "visibility": { "$ref": "#/$defs/visibility" }
+      }
+    },
+    "call": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file", "name", "module"],
+      "properties": {
+        "file": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "module": { "type": "string" }
       }
     },
     "name": {

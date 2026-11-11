@@ -30,6 +30,47 @@ def is_class_private(name: str) -> bool:
     return name.startswith("__") and not name.endswith("__")
 
 
+def import_map(tree: ast.Module) -> dict[str, tuple[str, str]]:
+    """The names that the imports of a file bind, each with the module that the import names and its original name:
+    `from m import X as Y` binds Y to (m, X), and `import a.b as c` binds c to (a.b, "")."""
+    names: dict[str, tuple[str, str]] = {}
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom):
+            for alias in node.names:
+                names[alias.asname or alias.name] = (node.module or "", alias.name)
+        elif isinstance(node, ast.Import):
+            for alias in node.names:
+                if alias.asname is not None:
+                    names[alias.asname] = (alias.name, "")
+                else:
+                    names[alias.name.split(".")[0]] = (alias.name.split(".")[0], "")
+    return names
+
+
+def last_part(module: str) -> str:
+    return module.rsplit(".", 1)[-1]
+
+
+def imported_call(func: ast.expr, imports: dict[str, tuple[str, str]]) -> tuple[str, str] | None:
+    """The last part of the module and the name of a called imported name, or None for a name that no import binds.
+    The module of `from . import X` is the package, whose last part is empty; such a name may be a module or a name
+    that the package exports."""
+    if isinstance(func, ast.Name) and func.id in imports:
+        module, name = imports[func.id]
+        return (last_part(module), name) if name else None
+    if isinstance(func, ast.Attribute):
+        parts: list[str] = []
+        base: ast.expr = func.value
+        while isinstance(base, ast.Attribute):
+            parts.insert(0, base.attr)
+            base = base.value
+        if isinstance(base, ast.Name) and base.id in imports:
+            module, name = imports[base.id]
+            path = ".".join(part for part in [module, name, *parts] if part)
+            return (last_part(path), func.attr)
+    return None
+
+
 def visibility(name: str, module_internal: bool) -> str:
     return "internal" if module_internal or is_private(name) else "public"
 
@@ -172,12 +213,17 @@ def read_module(root: Path, rel: str, out: dict) -> None:
             for alias in node.names:
                 out["exports"].append({"file": rel, "name": alias.asname or alias.name})
 
+    imports = import_map(tree)
     for node in ast.walk(tree):
         if isinstance(node, ast.Attribute):
             out["uses"].append({"file": rel, "name": node.attr})
-        # HYR-8: a call of a name, such as a class that a file constructs, for the check of a private constructor.
-        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
-            out["calls"].append({"file": rel, "name": node.func.id})
+        # HYR-8: a call of an imported name, such as a class that a file constructs, for the check of a private
+        # constructor: the original name and the last part of the module that the import names, through an alias
+        # and through an attribute of an imported module alike.
+        if isinstance(node, ast.Call):
+            call = imported_call(node.func, imports)
+            if call is not None:
+                out["calls"].append({"file": rel, "name": call[1], "module": call[0]})
         if isinstance(node, ast.ImportFrom) and node.module != "__future__":
             for alias in node.names:
                 out["uses"] += [{"file": rel, "name": n} for n in (alias.name, alias.asname) if n]
