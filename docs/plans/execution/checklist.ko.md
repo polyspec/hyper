@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 4e89f4b100e8b8fed0230c856536ab432bcecf4ec27afd916c9c8d54dbfd194a -->
+<!-- source-sha256: a6ad383a1f33703faea3d8b5f5335466fa2e5fb0530cf909fa10d6cff0db6b2d -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -382,3 +382,4 @@
 | H28.4 | Python server: H28.2와 같은 규칙 | packages/server/python | `make test-python` | [ ] |
 | H28.5 | Browser package: browser context와 Hyper-Context header, 다른 build에서 새 document, html definition build, 마지막 region response, HyperOptions의 functions, media type application/vnd.hyper+json | packages/client | `make test-js` | [ ] |
 | H28.6 | Build: browser 산출물을 path 순서로 hash한 build id, asset output과 program directory의 build.json, 모든 layout의 placement build 검사, static shell의 hyper-build element | packages/build, scripts | `make test-scripts` | [ ] |
+| H28.7 | PHP, Node, Python server: route의 representation, match, Allow와 HEAD가 있는 405, 406, 415, 400, status와 header와 Cache-Control 검사, strong ETag, If-None-Match와 304, 함수 etag; contracts/representations.json의 case | packages/server/php, packages/server/node, packages/server/python | `make test-php`, `make test-node`, `make test-python` | [ ] |
