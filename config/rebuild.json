@@ -134,6 +134,10 @@
       "kind": "policy",
       "reason": "the local counterpart of the CDN in front of the client-side rendering deployment: the API prefix goes to the API origin, /compare returns the comparison page, a file of the deployment is returned and every other path returns index.html; it runs on node:http"
     },
+    "scripts/spec-docs.mts": {
+      "kind": "policy",
+      "reason": "H2: the protocol documents are rendered from contracts/protocol.json by this script and checked against that rendering; no tool of an ecosystem writes them"
+    },
     "scripts/tracked-files.mts": {
       "kind": "ecosystem",
       "tool": "git ls-files lists the tracked files of a path; the copy keeps their modification time and executable bits through packages/build/lib/output-files.mjs"

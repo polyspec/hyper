@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- `make spec-docs` writes `docs/spec/protocol.md` and `docs/spec/protocol.ko.md` from `contracts/protocol.json`; `make spec-docs-check` checks both documents against that rendering, and the CI `docs` group runs it (H28.11).
+
 - `make recipe-check` reads `contracts/interfaces.json` and checks it against the PHP, Node and Python sources and their case results (HYR-7, HYR-8); `make recipe-candidates` writes the candidate of that spec under `var/recipe` with its hand-written fields listed beside it (HYR-10) (H28.11).
 
 - The owner rule covers `scripts/recipe`, `scripts/schema` and the recipe fixtures; the Node reader pins TypeScript 6.0.3 in its own private package, recorded in docs/operations/dependencies.md (H28.11).

@@ -329,6 +329,12 @@ recipe-candidates: ## Write the candidate of contracts/interfaces.json under var
 	@test -d $(RECIPE_TYPESCRIPT) || { echo 'recipe-candidates needs the pinned TypeScript: run npm ci --prefix scripts/recipe/typescript'; exit 1; }
 	$(NODE) scripts/recipe/candidate.mts --root . --php-autoload $(PHP_VENDOR)/autoload.php --output var/recipe/interfaces.candidate.json
 
+.PHONY: spec-docs spec-docs-check
+spec-docs: ## Write docs/spec/protocol.md and protocol.ko.md from contracts/protocol.json (H2)
+	$(NODE) scripts/spec-docs.mts write
+spec-docs-check: ## Check contracts/protocol.json and the protocol documents against their generation (H2)
+	$(NODE) scripts/spec-docs.mts check
+
 parity: assets server ext ## Compare PHP documents (generated program and native extension) with browser renders of document and region JSON
 	@failed=; \
 	$(call check,parity with the generated program,node scripts/check-parity.mts --app $(BOARD) --requests $(BOARD)/tests/parity/requests.json) \
@@ -377,7 +383,7 @@ bench: bench-server bench-browser ## Run both measurements; results are reports,
 # Run it once after checklist development on a committed tree, then rerun only failed owners. GATE_TARGETS are the checks of the configuration,
 # the layout, the documents, the owners, the parity declarations and the lint, which run the checkers of kit.
 GATE_TARGETS := layout-check docs-check owner-validate rebuild-check rules-check language-check duplication-check suppression-check lint-ts lint-php lint-python
-CHECK_TARGETS := $(GATE_TARGETS) typecheck bench-server-smoke hyper-lint analyse-php templates-check hyper-test-scripts hyper-test-js hyper-test-node hyper-test-python hyper-test-python-render package-check hyper-test-php parity server-parity server-parity-python bundle-size e2e
+CHECK_TARGETS := $(GATE_TARGETS) typecheck bench-server-smoke hyper-lint analyse-php templates-check hyper-test-scripts spec-docs-check hyper-test-js hyper-test-node hyper-test-python hyper-test-python-render package-check hyper-test-php parity server-parity server-parity-python bundle-size e2e
 
 # The CI groups of the full suite (HR-91) are the entries of the matrix of .github/workflows/ci.yml: each entry runs its
 # `targets` with `make ci-targets`, so the entries together run every target of CHECK_TARGETS once

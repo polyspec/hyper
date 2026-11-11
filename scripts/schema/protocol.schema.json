@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "The protocol document model (contracts/protocol.json)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "docId", "title", "intro", "sections", "retiredRules"],
+  "properties": {
+    "schema": { "const": 1 },
+    "docId": { "const": "protocol" },
+    "title": { "$ref": "#/$defs/text" },
+    "intro": { "type": "array", "items": { "$ref": "#/$defs/block" } },
+    "sections": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["title", "blocks"],
+        "properties": {
+          "title": { "$ref": "#/$defs/text" },
+          "blocks": { "type": "array", "items": { "$ref": "#/$defs/block" } }
+        }
+      }
+    },
+    "retiredRules": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/ruleId" }
+    }
+  },
+  "$defs": {
+    "line": { "type": "string", "pattern": "^[^\\n]+$" },
+    "text": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["en", "ko"],
+      "properties": {
+        "en": { "$ref": "#/$defs/line" },
+        "ko": { "$ref": "#/$defs/line" }
+      }
+    },
+    "ruleId": { "type": "string", "pattern": "^HYC?-[1-9][0-9]*$" },
+    "statement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["en", "ko", "koSource"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^HYC?-[1-9][0-9]*\\.[1-9][0-9]*$" },
+        "en": { "$ref": "#/$defs/line" },
+        "ko": { "$ref": "#/$defs/line" },
+        "koSource": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "term": { "type": "string", "minLength": 1 }
+      }
+    },
+    "block": {
+      "oneOf": [
+        { "$ref": "#/$defs/paragraph" },
+        { "$ref": "#/$defs/list" },
+        { "$ref": "#/$defs/code" },
+        { "$ref": "#/$defs/table" },
+        { "$ref": "#/$defs/rule" }
+      ]
+    },
+    "paragraph": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "statements"],
+      "properties": {
+        "kind": { "const": "paragraph" },
+        "statements": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/statement" } }
+      }
+    },
+    "list": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "ordered", "items"],
+      "properties": {
+        "kind": { "const": "list" },
+        "ordered": { "type": "boolean" },
+        "items": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["statements", "blocks"],
+            "properties": {
+              "statements": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/statement" } },
+              "blocks": { "type": "array", "items": { "$ref": "#/$defs/block" } }
+            }
+          }
+        }
+      }
+    },
+    "code": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "language", "text"],
+      "properties": {
+        "kind": { "const": "code" },
+        "language": { "type": "string", "pattern": "^[A-Za-z0-9+.-]+$" },
+        "text": { "type": "string", "pattern": "[^\\n]$" }
+      }
+    },
+    "table": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "header", "rows"],
+      "properties": {
+        "kind": { "const": "table" },
+        "header": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/text" } },
+        "rows": {
+          "type": "array",
+          "items": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/text" } }
+        }
+      }
+    },
+    "rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "id", "retired", "blocks"],
+      "properties": {
+        "kind": { "const": "rule" },
+        "id": { "$ref": "#/$defs/ruleId" },
+        "retired": { "type": "array", "uniqueItems": true, "items": { "type": "integer", "minimum": 1 } },
+        "blocks": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/block" }
+        }
+      }
+    }
+  }
+}

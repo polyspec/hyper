@@ -6,6 +6,8 @@
 
 ## Unreleased
 
+- `make spec-docs`는 `contracts/protocol.json`에서 `docs/spec/protocol.md`와 `docs/spec/protocol.ko.md`를 쓴다. `make spec-docs-check`는 두 문서가 그 렌더링과 같은지 검사하며, CI `docs` 그룹이 이를 실행한다(H28.11).
+
 - `make recipe-check`은 `contracts/interfaces.json`을 읽어 PHP, Node, Python 소스와 case 결과에 대조한다(HYR-7, HYR-8). `make recipe-candidates`는 그 spec의 candidate를 `var/recipe` 아래 쓰고, 손으로 쓴 필드를 옆에 나열한다(HYR-10)(H28.11).
 
 - owner 규칙이 `scripts/recipe`, `scripts/schema`와 recipe fixture를 포함한다. Node reader는 TypeScript 6.0.3을 자기 private package에 고정하며, 그 기록은 docs/operations/dependencies.ko.md에 있다(H28.11).

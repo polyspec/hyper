@@ -214,6 +214,39 @@
     },
     {
       "paths": [
+        "tests/scripts/fixtures/spec-docs/**"
+      ],
+      "tests": [
+        "tests/scripts/spec-docs.test.mts"
+      ]
+    },
+    {
+      "paths": [
+        "docs/spec/protocol.md",
+        "docs/spec/protocol.ko.md"
+      ],
+      "tests": [
+        "tests/scripts/spec-docs.test.mts"
+      ],
+      "targets": [
+        "spec-docs-check"
+      ]
+    },
+    {
+      "paths": [
+        "scripts/spec-docs.mts",
+        "scripts/schema/protocol.schema.json"
+      ],
+      "tests": [
+        "tests/scripts/spec-docs.test.mts"
+      ],
+      "targets": [
+        "typecheck",
+        "spec-docs-check"
+      ]
+    },
+    {
+      "paths": [
         "tests/scripts/fixtures/session-worker/**",
         "packages/server/php/src/NativeSession.php",
         "packages/server/python/src/polyspec/hyper/file_sessions.py",
