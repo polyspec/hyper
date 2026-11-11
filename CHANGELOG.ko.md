@@ -6,6 +6,8 @@
 
 ## Unreleased
 
+- `docs/operations/deployment.md`에 업로드 절이 생겼다. 요청 body의 네 제한과 그 option과 기본값, 느린 client를 묶는 앞단 server의 설정, `enable_post_data_reading`이 꺼졌을 때 아무것도 묶지 않는 PHP 설정, 요청의 임시 directory와 그 삭제와 강제 종료된 server가 남기는 것, 세 server와 PHP reader에서 1 GiB body의 측정된 메모리와 processor 시간을 적는다(H29.6).
+
 - `tests/scripts/upload-servers.test.mts`는 같은 요청을 HTTP로 각 server의 실제 process 하나에 보낸다. `enable_post_data_reading`을 끈 내장 server 아래 PHP의 `App::run`, Node의 `App.server` server, Python의 `http.server` server다(HY-131). 반복 이름을 가진 3 MiB file의 upload, 닫는 delimiter가 없는 body, form body, body 없는 요청이 세 server에서 같은 답을 내며, request hook이 옮긴 file은 보낸 byte를 담고, PHP와 `http.server` server가 연결을 닫았을 때 요청의 directory는 사라져 있다. 이전에는 `App::run`의 `php://input` 읽기와 `http.server` transport에 닿는 test가 없었다(H29.3-1).
 
 - `tests/scripts/multipart-compare.test.mts`는 요청 body 314개를 PHP, Node, Python server 각각의 실제 process 하나로 읽고, 어떤 body가 한 server에서 다른 결과를 내면 실패한다(HY-131). seed로 생성한 body 300개는 형식이 맞거나 틀리거나 제한을 넘으며 각자의 크기의 조각으로 읽고, 이름을 붙인 body 14개에는 file 제한과 그 위의 256 MiB file, part 제한과 그 위의 part 1000개, value 제한과 그 위의 text 값, 그리고 PHP multipart reader의 결함 세 가지의 형태(buffer보다 긴 boundary와 내용 속의 그 접두사, CVE-2024-8925. part 100000개의 body, CVE-2023-0662. 끝나지 않는 part header, CVE-2015-4024)가 있다. 각 server의 시간은 보고만 하고 판정하지 않는다. 이 test가 Node server의 결함을 찾았다. destroy한 file의 stream이 아직 열리는 동안 요청의 directory를 지워서 여섯 번 중 한 번 `ENOTEMPTY`로 실패했다. 이제 server는 file들이 닫힌 뒤에 directory를 지우며(HY-131.21), 자신이 destroy한 stream의 오류는 쓰기 실패가 아니다. 각 10회의 측정이 Node server가 stream을 유지하는 이유를 보였다. PHP와 Python처럼 다음 읽기 전에 조각을 쓰면 1 GiB를 읽는 동안 모든 실행에서 event loop가 10 ms 넘게, 최대 226 ms 멈췄고, stream으로는 한 번도 그렇지 않았다(최대 4.5 ms)(H29.5).

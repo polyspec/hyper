@@ -49,10 +49,29 @@ A request that the selection does not choose is answered as in the server form. 
 ## Server settings
 
 - Set `display_errors=Off` in the PHP configuration (`php.ini`, PHP-FPM pool, or `php -d display_errors=0`). PHP writes startup warnings, such as an exceeded `max_input_vars`, before the application runs. An exception inside the application answers 500 without details and is logged (HY-43).
-- Set `post_max_size` to the body limit of the application or more (8 MiB, PHP's default `8M`, by default), and set `enable_post_data_reading=Off` when the application accepts `multipart/form-data`; `App::run` fails otherwise (HY-59).
+- Set `post_max_size` to the body limit of the application or more (8 MiB, PHP's default `8M`, by default), and set `enable_post_data_reading=Off` when the application accepts `multipart/form-data`; `App::run` fails otherwise (HY-59). [Uploads](#uploads) states the limits and the settings of a body with files.
 - The session cookie is `__Host-hy-session` on HTTPS and `hy-session` otherwise, with `Path=/`, no `Domain`, `HttpOnly`, `SameSite=Lax`, and `Secure` on HTTPS (HY-45). Behind a CDN that terminates TLS, PHP receives plain HTTP: open the application with `https: true` (the example reads `BOARD_HTTPS=1`) so that the cookie keeps its `__Host-` name and stays `Secure`.
 - A page carries a masked CSRF token of its visitor (HY-24), so `Cache-Control` of a page must keep it out of shared caches (HY-52), and a sign-in or sign-out action calls `renewSession()` of its reply (HY-72).
 - Every response carries `Content-Security-Policy: frame-ancestors 'self'` (HY-45). `App::open(frameAncestors: ...)` changes the sources; the example reads `BOARD_FRAME_ANCESTORS`. A static shell on S3 needs the same header from a CloudFront response headers policy, because `frame-ancestors` has no effect in a `<meta>` policy.
+
+## Uploads
+
+A server reads a `multipart/form-data` body in chunks into files of the request and holds neither the body nor a file as one value (HY-131). This section states what an operator sets for it.
+
+- **Limits.** An application declares four limits, and a body that passes one receives status 413 while it is read:
+
+  | Limit | Option (PHP and Node, Python) | Default | Bounds |
+  |---|---|---|---|
+  | body limit | `bodyLimit`, `body_limit` | 8 MiB | every byte of a request body (HY-59) |
+  | file limit | `fileLimit`, `file_limit` | the smaller of 8 MiB and the body limit | the bytes of one file (HY-114) |
+  | value limit | `valueLimit`, `value_limit` | the smaller of 8 MiB and the body limit | a body that is one value, and the names and contents of the text values of a multipart body together (HY-131) |
+  | part limit | `partLimit`, `part_limit` | 1000 | the parts of a multipart body, also those that are neither a value nor a file (HY-131) |
+
+  The header lines of one part are at most 8192 bytes (HY-113.16); this limit is fixed. An application that accepts large files raises the body limit and the file limit; the memory of a request does not grow with them. An application whose forms hold more than 1000 parts raises the part limit: a form of 2701 parts receives 413 with the default.
+- **The server in front.** hyper sets no time limit (HY-131.19). The server in front of the application bounds a slow client and the size of a request before the application reads it: `client_max_body_size`, `client_body_timeout` and the connection limits of nginx, `request_terminate_timeout` of PHP-FPM, `requestTimeout` and `headersTimeout` of the Node HTTP server, and the timeouts of the WSGI or ASGI server. Set the size limit of the server in front to the body limit of the application or more, or that server answers before the application does.
+- **PHP settings.** With `enable_post_data_reading=Off` PHP does not read the body itself, so `upload_max_filesize`, `max_file_uploads`, `max_input_vars`, `max_multipart_body_parts` and `upload_tmp_dir` of its own reader bound nothing, and `$_POST`, `$_FILES`, `is_uploaded_file()` and `move_uploaded_file()` hold nothing: the four limits above and `moveTo()` of `UploadedFile` take their place. `post_max_size` still applies. PHP keeps what `php://input` gave in a temporary file of its own in `sys_temp_dir`, so a request uses about twice its body on that disk until it ends.
+- **The temporary directory.** Each request with a multipart body has a directory `hyper-…` below the temporary directory of the system (`sys_temp_dir` of PHP, `TMPDIR` of Node and Python), which only the user of the server reads. The server removes it after the response hook, the write hook and the disconnect hook of the request returned, also when the request failed. A file that the application moved with `moveTo()` is not removed; `moveTo()` renames the file, or copies it to another file system, so a target on the file system of the temporary directory costs no copy. A server that is killed while it answers leaves the directory of that request: remove the `hyper-*` directories of the temporary directory when the server starts.
+- **What a request uses.** Measured on PHP 8.5.10, Node 26.12.0 and Python 3.14 on one machine, three runs each, with one worker and a hook that reads the sizes: a body of 1 GiB used 13 MiB in a PHP-FPM worker, 36 MiB in the Python `http.server` server and 183 MiB in the Node server, and a body of 30 MiB used the same. The processor time for 1 GiB was 2221 ms (2114 to 2289) in PHP-FPM, 1124 ms (1098 to 1146) in Node and 667 ms (609 to 698) in Python; the reader of PHP itself used 1262 ms (1220 to 1283) and 6 MiB for the same body. A PHP script cannot reach that, because PHP writes the body to its temporary file before a script reads it.
 
 ## Local reproduction
 

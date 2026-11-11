@@ -60,10 +60,29 @@ PHP는 기본 경로 없이 실행한다. 응답에는 `Vary: Accept, HX-Request
 ## 서버 설정
 
 - PHP 설정(`php.ini`, PHP-FPM 풀, 또는 `php -d display_errors=0`)에서 `display_errors=Off`로 둔다. PHP는 애플리케이션이 실행되기 전에 시작 경고(예: `max_input_vars` 초과)를 출력한다. 애플리케이션 안의 예외는 상세 없이 500으로 응답하고 로그에 남는다(HY-43).
-- `post_max_size`는 애플리케이션의 body 한도 이상으로 둔다(기본 8 MiB, PHP 기본값 `8M`). 애플리케이션이 `multipart/form-data`를 받으면 `enable_post_data_reading=Off`로 둔다. 그렇지 않으면 `App::run`이 실패한다(HY-59).
+- `post_max_size`는 애플리케이션의 body 한도 이상으로 둔다(기본 8 MiB, PHP 기본값 `8M`). 애플리케이션이 `multipart/form-data`를 받으면 `enable_post_data_reading=Off`로 둔다. 그렇지 않으면 `App::run`이 실패한다(HY-59). file을 가진 body의 제한과 설정은 [업로드](#업로드)가 적는다.
 - 세션 쿠키는 HTTPS에서 `__Host-hy-session`, 그렇지 않으면 `hy-session`이고, `Path=/`를 가지며 `Domain`이 없고, `HttpOnly`, `SameSite=Lax`이며 HTTPS에서는 `Secure`다(HY-45). TLS를 끝내는 CDN 뒤에서는 PHP가 평문 HTTP를 받는다. 쿠키가 `__Host-` 이름과 `Secure`를 유지하도록 애플리케이션을 `https: true`로 연다(예제는 `BOARD_HTTPS=1`을 읽는다).
 - 페이지는 방문자의 가린 CSRF 토큰을 담으므로(HY-24) 페이지의 `Cache-Control`은 공유 캐시가 저장하지 못하게 해야 하고(HY-52), 로그인과 로그아웃 액션은 reply의 `renewSession()`을 부른다(HY-72).
 - 모든 응답은 `Content-Security-Policy: frame-ancestors 'self'`를 가진다(HY-45). `App::open(frameAncestors: ...)`로 출처를 바꿀 수 있으며, 예제는 `BOARD_FRAME_ANCESTORS`를 읽는다. S3의 정적 셸에는 CloudFront 응답 헤더 정책으로 같은 헤더를 붙여야 한다. `frame-ancestors`는 `<meta>` 정책에서는 효과가 없기 때문이다.
+
+## 업로드
+
+server는 `multipart/form-data` body를 조각으로 요청의 file에 읽으며 body도 file도 한 값으로 두지 않는다(HY-131). 이 절은 운영자가 그에 대해 정하는 것을 적는다.
+
+- **제한.** application은 네 제한을 선언하며, 하나를 넘는 body는 읽는 동안 status 413을 받는다.
+
+  | 제한 | option(PHP와 Node, Python) | 기본값 | 묶는 것 |
+  |---|---|---|---|
+  | body 제한 | `bodyLimit`, `body_limit` | 8 MiB | 요청 body의 모든 byte(HY-59) |
+  | file 제한 | `fileLimit`, `file_limit` | 8 MiB와 body 제한 중 작은 것 | file 하나의 byte(HY-114) |
+  | value 제한 | `valueLimit`, `value_limit` | 8 MiB와 body 제한 중 작은 것 | 한 값인 body, 그리고 multipart body의 text 값들의 이름과 내용의 합(HY-131) |
+  | part 제한 | `partLimit`, `part_limit` | 1000 | multipart body의 part이며 값도 file도 아닌 것도 센다(HY-131) |
+
+  part 하나의 header 줄은 8192 byte 이하다(HY-113.16). 이 제한은 고정이다. 큰 file을 받는 application은 body 제한과 file 제한을 올린다. 요청의 메모리는 그에 따라 늘지 않는다. form이 1000개보다 많은 part를 가지는 application은 part 제한을 올린다. part 2701개의 form은 기본값에서 413을 받는다.
+- **앞단 server.** hyper는 시간 제한을 두지 않는다(HY-131.19). application 앞단의 server가 느린 client와 요청의 크기를 application이 읽기 전에 묶는다. nginx의 `client_max_body_size`, `client_body_timeout`, 연결 제한, PHP-FPM의 `request_terminate_timeout`, Node HTTP server의 `requestTimeout`과 `headersTimeout`, WSGI나 ASGI server의 timeout이 그것이다. 앞단 server의 크기 제한은 application의 body 제한 이상으로 둔다. 그렇지 않으면 application보다 그 server가 먼저 답한다.
+- **PHP 설정.** `enable_post_data_reading=Off`에서 PHP는 body를 스스로 읽지 않으므로, 자체 reader의 `upload_max_filesize`, `max_file_uploads`, `max_input_vars`, `max_multipart_body_parts`, `upload_tmp_dir`은 아무것도 묶지 않고 `$_POST`, `$_FILES`, `is_uploaded_file()`, `move_uploaded_file()`은 아무것도 담지 않는다. 위의 네 제한과 `UploadedFile`의 `moveTo()`가 그 자리를 맡는다. `post_max_size`는 여전히 적용된다. PHP는 `php://input`이 준 것을 `sys_temp_dir`의 자체 임시 file에 두므로, 요청은 끝날 때까지 그 disk에서 body의 약 두 배를 쓴다.
+- **임시 directory.** multipart body를 가진 요청마다 system의 임시 directory(PHP의 `sys_temp_dir`, Node와 Python의 `TMPDIR`) 아래에 directory `hyper-…`가 생기며 server의 user만 읽는다. server는 요청의 response hook, write hook, disconnect hook이 반환한 뒤에 그것을 지우고, 요청이 실패했을 때도 그렇다. application이 `moveTo()`로 옮긴 file은 지우지 않는다. `moveTo()`는 file의 이름을 바꾸거나 다른 file system으로는 복사하므로, 임시 directory와 같은 file system의 대상은 복사 비용이 없다. 답하는 중에 강제 종료된 server는 그 요청의 directory를 남긴다. server가 시작할 때 임시 directory의 `hyper-*` directory를 지운다.
+- **요청이 쓰는 것.** PHP 8.5.10, Node 26.12.0, Python 3.14로 한 대의 machine에서 각 3회, worker 하나와 크기만 읽는 hook으로 측정했다. 1 GiB body는 PHP-FPM worker에서 13 MiB, Python `http.server` server에서 36 MiB, Node server에서 183 MiB를 썼고, 30 MiB body도 같은 양을 썼다. 1 GiB의 processor 시간은 PHP-FPM에서 2221 ms(2114부터 2289), Node에서 1124 ms(1098부터 1146), Python에서 667 ms(609부터 698)였다. PHP 자체의 reader는 같은 body에 1262 ms(1220부터 1283)와 6 MiB를 썼다. PHP script는 거기에 도달할 수 없다. PHP가 script가 읽기 전에 body를 자신의 임시 file에 쓰기 때문이다.
 
 ## 로컬 재현
 
