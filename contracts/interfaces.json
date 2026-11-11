@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "languages": {
+    "php": {
+      "sources": ["packages/server/php/src"],
+      "tests": ["packages/server/php/tests"],
+      "barrel": [],
+      "runner": "packages/server/php/tests/CaseRunnerTest.php::CaseRunnerTest::testCases"
+    },
+    "node": {
+      "sources": ["packages/server/ts/src"],
+      "tests": ["packages/server/ts/tests"],
+      "barrel": ["packages/server/ts/src/index.ts"],
+      "runner": "packages/server/ts/tests/case-runner.test.ts::cases"
+    },
+    "python": {
+      "sources": ["packages/server/python/src/polyspec/hyper"],
+      "tests": ["packages/server/python/tests"],
+      "barrel": ["packages/server/python/src/polyspec/hyper/__init__.py"],
+      "runner": "packages/server/python/tests/test_case_runner.py::CaseRunner.test_cases"
+    }
+  },
+  "outside": [],
+  "concerns": [],
+  "types": []
+}
