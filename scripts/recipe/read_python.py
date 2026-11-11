@@ -153,10 +153,13 @@ def read_module(root: Path, rel: str, out: dict) -> None:
 
 def read_tests(root: Path, rel: str, out: dict) -> None:
     tree = ast.parse((root / rel).read_text(encoding="utf-8"), filename=rel)
-    for cls in [n for n in tree.body if isinstance(n, ast.ClassDef) and is_test_class(n)]:
-        for member in cls.body:
-            if isinstance(member, ast.FunctionDef) and member.name.startswith("test"):
-                out["tests"].append({"file": rel, "name": f"{cls.name}.{member.name}"})
+    for node in tree.body:
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name.startswith("test"):
+            out["tests"].append({"file": rel, "name": node.name})
+        if isinstance(node, ast.ClassDef) and (is_test_class(node) or node.name.startswith("Test")):
+            for member in node.body:
+                if isinstance(member, (ast.FunctionDef, ast.AsyncFunctionDef)) and member.name.startswith("test"):
+                    out["tests"].append({"file": rel, "name": f"{node.name}.{member.name}"})
 
 
 def files(root: Path, dirs: list[str], pattern: str) -> list[str]:
@@ -189,9 +192,8 @@ def main() -> None:
     }
     for rel in sources:
         read_module(root, rel, out)
-    # HYR-7: test_*.py under the test roots and render_*.py under their render/ directories.
-    test_files = files(root, args.tests, "test_*.py") + files(root, [f"{d}/render" for d in args.tests], "render_*.py")
-    for rel in sorted(set(test_files)):
+    # HYR-7: every Python file under the test roots holds tests.
+    for rel in files(root, args.tests, "*.py"):
         read_tests(root, rel, out)
     print(json.dumps(out, indent=2))
 
