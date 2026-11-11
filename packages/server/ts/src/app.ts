@@ -10,14 +10,19 @@ import type { FileSessions } from './file-sessions.js';
 import type { RedisSessions } from './redis-sessions.js';
 import { createListener, createServer, type Listener, type ServerOptions } from './http.js';
 import { Build } from './build.js';
-import { JsonCodec } from './json-codec.js';
+import { JsonCodec, type DecodedValue } from './json-codec.js';
 import { JsonDecodeError } from './json-decode-error.js';
 import { WarningsGuard } from './warnings-guard.js';
 import { Disconnected, renderPage, stopClosed, VARY, type PageInput } from './page.js';
 import { Context, type ContextHandler } from './context.js';
 import { checkClient, checkHandlers, type Client } from './open-checks.js';
 import { Reply } from './reply.js';
-import { negotiate, PAGE_AND_DATA, PAGE_TYPE } from './negotiate.js';
+import { negotiate, PAGE_AND_DATA, PAGE_TYPE, refusal } from './negotiate.js';
+import { MediaSelection } from './media-selection.js';
+import { MediaType } from './media-type.js';
+import type { Representation } from './representation.js';
+import { RepresentationEntries, type Entry } from './representation-entries.js';
+import { RepresentationResponse } from './representation-response.js';
 import { HYPER_JSON, type Request } from './request.js';
 import { Response } from './response.js';
 import { BadRequest } from './bad-request.js';
@@ -27,24 +32,49 @@ import { Redirect } from './redirect.js';
 import { Result } from './result.js';
 import { Container } from './container.js';
 import { Session, type SessionStore } from './session.js';
-import type { Data } from './values.js';
+import type { Data, Value } from './values.js';
 
 // Reads a JSON file of an application as strict UTF-8 JSON. A file that cannot be read fails with its system error;
 // a file that is not valid UTF-8 or not valid JSON raises an Error that names it (HY-106).
 function readJsonFile(path: string): unknown {
-  const bytes = readFileSync(path);
-  let text: string;
-  try {
-    // ignoreBOM keeps a leading U+FEFF, so that a file that starts with it is not valid JSON, as in PHP and Python.
-    text = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(bytes);
-  } catch (error) {
-    throw new Error(`hyper: ${path} is not valid UTF-8`, { cause: error });
-  }
+  const text = readJsonText(path);
   try {
     return JSON.parse(text);
   } catch (error) {
     throw new Error(`hyper: ${path} is not valid JSON`, { cause: error });
   }
+}
+
+// Reads the text of a JSON file of an application as strict UTF-8.
+function readJsonText(path: string): string {
+  try {
+    // ignoreBOM keeps a leading U+FEFF, so that a file that starts with it is not valid JSON, as in PHP and Python.
+    return new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(readFileSync(path));
+  } catch (error) {
+    if (!(error instanceof TypeError)) throw error;
+    throw new Error(`hyper: ${path} is not valid UTF-8`, { cause: error });
+  }
+}
+
+// Returns the representations of each route of a checked manifest, by the route name (HY-118). The manifest is decoded
+// with maps for objects, because the parameters of an entry keep the order of the manifest, which a plain object does
+// not keep for a name that is an integer.
+function routeEntries(path: string): Map<string, Entry[]> {
+  let decoded: DecodedValue;
+  try {
+    decoded = JsonCodec.decode(readJsonText(path));
+  } catch (error) {
+    if (!(error instanceof JsonDecodeError)) throw error;
+    throw new Error(`hyper: ${path} is not valid JSON`, { cause: error });
+  }
+  const entries = new Map<string, Entry[]>();
+  const routes = decoded instanceof Map ? decoded.get('routes') : undefined;
+  for (const route of Array.isArray(routes) ? routes : []) {
+    if (!(route instanceof Map)) continue;
+    const name = route.get('name');
+    if (typeof name === 'string') entries.set(name, RepresentationEntries.declare(name, route.get('representations')));
+  }
+  return entries;
 }
 
 // The one argument of every loader and action: the request, the reply of the request and the services that the
@@ -60,10 +90,22 @@ export type Action<S extends object> = (argument: HandlerArgument<S>) => Result 
 // The loader of a route region, which returns null when the region is absent from the response (HY-75).
 export type RouteRegionLoader<S extends object> = (argument: HandlerArgument<S>) => Data | null | Promise<Data | null>;
 
+// The one argument of a representation handler: the request without its Cookie, the media type of the selection and
+// the services of the application (HY-106, HY-119).
+export interface RepresentationArgument<S extends object> {
+  request: Request;
+  media: MediaType;
+  services: Container<S>;
+}
+
+export type RepresentationHandler<S extends object> = (argument: RepresentationArgument<S>) => Representation | Promise<Representation>;
+
 export interface RouteHandlers<S extends object> {
   load?: Loader<S>;
   post?: Action<S>;
   regions?: Record<string, RouteRegionLoader<S>>;
+  // The representation handlers of the route, by the type as the manifest writes it (HY-118).
+  representations?: Record<string, RepresentationHandler<S>>;
 }
 
 export interface Handlers<S extends object> {
@@ -178,6 +220,8 @@ export class App<S extends object = Record<string, never>> {
   private readonly client: Client | null;
   private readonly build: string;
   private readonly context: ContextHandler | null;
+  // The representations of each route, by the route name (HY-118).
+  private readonly entries: Map<string, Entry[]>;
   // The Vary of the html and JSON responses, with `Hyper-Context` for an application with a context (HY-117).
   private readonly vary: string;
 
@@ -201,7 +245,9 @@ export class App<S extends object = Record<string, never>> {
     reads: Record<string, RouteReads>,
     build: string,
     context: ContextHandler | null,
+    entries: Map<string, Entry[]>,
   ) {
+    this.entries = entries;
     this.context = context;
     this.vary = context === null ? VARY : `${VARY}, Hyper-Context`;
     this.build = build;
@@ -261,6 +307,10 @@ export class App<S extends object = Record<string, never>> {
     const fetcher = async (url: string): Promise<Template> => decodeTemplate(readJsonFile(join(options.templates.root, url)));
     const application = createApplication(manifest, index, fetcher, options.functions);
     checkHandlers(manifest, options.handlers);
+    const entries = routeEntries(options.manifest);
+    for (const route of manifest.routes) {
+      RepresentationEntries.checkHandlers(route.name, entries.get(route.name) ?? [], options.handlers.routes?.[route.name]?.representations ?? {});
+    }
     const client = options.clientRendering === undefined ? null : checkClient(options.clientRendering, manifest);
     // Every entry template of every route and the template of the embedded data are in the index (HY-31, HR-34), and the
     // server renders every page, so it reads every template of the index (HYC-12).
@@ -278,7 +328,7 @@ export class App<S extends object = Record<string, never>> {
       if (template === undefined) throw new Error(`hyper: template ${name} is not in the template index`);
       return template;
     }, resolvePath);
-    return new App(application, options.handlers, options.timezone, basePath, options.https ?? false, options.frameAncestors ?? "'self'", bodyLimit, fileLimit, valueLimit, partLimit, responseLimit, [...formTypes], options.onResponse, options.onDisconnect, options.log ?? ((message) => process.stderr.write(`${message}\n`)), client, reads, build, options.context ?? null);
+    return new App(application, options.handlers, options.timezone, basePath, options.https ?? false, options.frameAncestors ?? "'self'", bodyLimit, fileLimit, valueLimit, partLimit, responseLimit, [...formTypes], options.onResponse, options.onDisconnect, options.log ?? ((message) => process.stderr.write(`${message}\n`)), client, reads, build, options.context ?? null, entries);
   }
 
   // Registers the factory of an application service.
@@ -383,9 +433,14 @@ export class App<S extends object = Record<string, never>> {
     const route = this.routes.get(match.name);
     if (route === undefined) throw new Error(`hyper: route ${match.name} is not declared`);
     const handler = this.handlers.routes?.[route.name] ?? {};
-    // HY-116: the media type is selected after the routing; the data base path of HY-62 step 2 serves only the JSON of hyper.
-    const selected = negotiate(request, client === null ? PAGE_AND_DATA : [HYPER_JSON]);
-    if (selected instanceof Response) return selected;
+    // HY-116: the media type is selected after the routing; the data base path of HY-62 step 2 serves the JSON of hyper
+    // and the representations of the route (HY-116.14).
+    const entries = this.entries.get(route.name) ?? [];
+    const chosen = negotiate(request, client === null ? PAGE_AND_DATA : [HYPER_JSON], entries, entries);
+    if (chosen instanceof Response) return chosen;
+    // HY-120, HY-121: a representation request opens no session and runs only its handler.
+    if (chosen.entry !== null) return this.representation(request.withRoute(path, match.params), handler, chosen.entry, chosen.values, basePath);
+    const selected = request.withSelectedType(chosen.type);
     // HY-116, HY-27: a method other than GET or a declared POST is refused before the session is read (HY-120).
     if (selected.method !== 'GET' && (selected.method !== 'POST' || handler.post === undefined)) return Response.text(405, 'Method Not Allowed');
     // HY-127: a Hyper-Context value that is not 64 lowercase hexadecimal characters is refused before any handler runs.
@@ -411,11 +466,64 @@ export class App<S extends object = Record<string, never>> {
   // Answers a client-rendered request outside the data base path: the static shell for a page (HY-62). The path is
   // routed and the method checked before the media type is selected (HY-62 step 3).
   private shell(request: Request, client: Client): Response {
-    if (this.application.router.match(request.path()) === null) return Response.text(404, 'Not Found');
+    const match = this.application.router.match(request.path());
+    if (match === null) return Response.text(404, 'Not Found');
     if (request.method !== 'GET') return Response.text(405, 'Method Not Allowed');
-    const selected = negotiate(request, [PAGE_TYPE]);
+    // The representations of the route take part in the selection, so that a request that selects one of them is not
+    // acceptable here, and they are not listed (HY-116.14).
+    const selected = negotiate(request, [PAGE_TYPE], this.entries.get(match.name) ?? [], []);
     if (selected instanceof Response) return selected;
+    if (selected.entry !== null) return refusal(406, 'Not Acceptable');
     return new Response(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache', Vary: this.vary }, client.shell);
+  }
+
+  // Answers a representation request (HY-121, HY-122): the method check, the body checks, the handler of the entry, and
+  // the response of what it returned with its tag.
+  private async representation(request: Request, handler: RouteHandlers<S>, entry: Entry, values: ReadonlyMap<string, string>, basePath: string): Promise<Response> {
+    const vary = ['Accept', ...entry.vary].join(', ');
+    const method = request.method;
+    const reads = method === 'HEAD' && entry.methods.includes('GET');
+    if (!entry.methods.includes(method) && !reads) {
+      const answered = ['GET', 'HEAD', 'POST', 'PUT', 'DELETE'].filter((name) => entry.methods.includes(name) || (name === 'HEAD' && entry.methods.includes('GET')));
+      return Response.text(405, 'Method Not Allowed').withHeader('Allow', answered.join(', ')).withHeader('Vary', vary);
+    }
+    let value: Value = null;
+    if (method === 'GET' || method === 'HEAD' || method === 'DELETE') {
+      if (request.bodySize() !== 0) return Response.text(400, 'Bad Request').withHeader('Vary', vary);
+    } else {
+      if (request.mediaType() !== 'application/json') return Response.text(415, 'Unsupported Media Type').withHeader('Vary', vary);
+      let decoded: DecodedValue;
+      try {
+        decoded = JsonCodec.decode(new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(request.bodyBytes()));
+      } catch (error) {
+        if (!(error instanceof JsonDecodeError) && !(error instanceof TypeError)) throw error;
+        return Response.text(400, 'Bad Request').withHeader('Vary', vary);
+      }
+      // HY-121.8: a number outside the data model is no value that a handler reads.
+      if (!JsonCodec.inDataModel(decoded)) return Response.text(400, 'Bad Request').withHeader('Vary', vary);
+      value = decoded;
+    }
+    const contentType = MediaSelection.contentType(entry, values);
+    const handle = handler.representations?.[entry.type];
+    if (handle === undefined) throw new Error(`hyper: route has no representation handler for ${entry.type} (HY-118)`);
+    let returned: unknown;
+    try {
+      returned = await handle({ request: request.asRepresentation(reads ? 'GET' : method, value), media: new MediaType(values, contentType), services: this.services });
+    } catch (error) {
+      // HY-107: an error of the ORM is known by its class name and code.
+      const code = ormCode(error);
+      if (code === 'NO_ROWS') return Response.text(404, 'Not Found').withHeader('Vary', vary);
+      if (code === 'REVISION_CHANGED') return Response.text(412, 'Precondition Failed').withHeader('Vary', vary);
+      throw error;
+    }
+    const response = RepresentationResponse.of(returned, contentType, vary, request.header('Authorization') !== null, basePath);
+    if (response.status !== 200 || (method !== 'GET' && method !== 'HEAD')) return response;
+    // HY-122.10: a 200 of a GET or HEAD has a strong tag, and a request that names it receives 304.
+    const tag = RepresentationResponse.etag(contentType, response.body);
+    const tagged = response.withHeader('ETag', tag);
+    if (request.header('If-None-Match') !== tag) return tagged;
+    const { 'Content-Type': _, ...notModified } = tagged.headers;
+    return new Response(304, notModified, '');
   }
 
   // Answers a routed request with its page, action result or stop result.

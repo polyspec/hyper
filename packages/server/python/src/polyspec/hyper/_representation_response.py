@@ -68,6 +68,10 @@ class RepresentationResponse:
                 given["location"], base_path
             )
         if "www-authenticate" in given:
+            if not isinstance(given["www-authenticate"], str):
+                raise ValueError(
+                    "hyper: a WWW-Authenticate of a representation is not a string (HY-122)"
+                )
             headers["WWW-Authenticate"] = given["www-authenticate"]
         return Response(status, headers, body)
 
@@ -96,7 +100,7 @@ class RepresentationResponse:
                 "hyper: a Cache-Control of a representation is not a string (HY-122)"
             )
         directives = [
-            item.split("=", 1)[0].strip().lower() for item in given.split(",")
+            item.split("=", 1)[0].strip(" \t").lower() for item in given.split(",")
         ]
         shared = "public" in directives or "s-maxage" in directives
         if authorized and (

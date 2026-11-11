@@ -67,8 +67,9 @@ def _entry(route: str, item: dict) -> Entry:
     kind = item["type"]
     if not isinstance(kind, str):
         raise ValueError(f"route {route} has a representation type that is not text (HY-118)")
+    # The type and the subtype are tokens as the manifest writes them, so that lower case changes only ASCII letters.
+    main, slash, sub = kind.partition("/")
     media = kind.lower()
-    main, slash, sub = media.partition("/")
     if (
         not slash
         or _TOKEN.fullmatch(main) is None

@@ -1,4 +1,4 @@
-export { App, type Action, type AppOptions, type Choice, type ClientRendering, type HandlerArgument, type Handlers, type Loader, type RouteHandlers, type RouteRegionLoader } from './app.js';
+export { App, type Action, type AppOptions, type Choice, type ClientRendering, type HandlerArgument, type Handlers, type Loader, type RepresentationArgument, type RepresentationHandler, type RouteHandlers, type RouteRegionLoader } from './app.js';
 export { type ContextHandler } from './context.js';
 export { FileSession, FileSessions, type FileSessionsOptions } from './file-sessions.js';
 export { RecordSession } from './session-record.js';
@@ -8,6 +8,8 @@ export { Reply } from './reply.js';
 export { Request, type RequestInit } from './request.js';
 export { UploadedFile } from './uploaded-file.js';
 export { Response } from './response.js';
+export { MediaType } from './media-type.js';
+export { Representation } from './representation.js';
 export { BadRequest } from './bad-request.js';
 export { Forbidden } from './forbidden.js';
 export { NotFound } from './not-found.js';

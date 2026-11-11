@@ -65,7 +65,7 @@ export class Accept {
 
   // Returns the weight in thousandths that the ranges give a type: the weight of the most specific range that matches it,
   // or 0 when no range matches. A range that names the type matches it whatever its parameters (HY-116).
-  private static typeWeight(ranges: readonly MediaRange[], type: string): number {
+  static typeWeight(ranges: readonly MediaRange[], type: string): number {
     const slash = type.indexOf('/');
     const name = type.slice(0, slash);
     const subtype = type.slice(slash + 1);

@@ -1,13 +1,55 @@
 // The steps of contracts/client.json (HY-62): one server answers the client-rendered and the server-rendered pages of the
 // fixture manifest. PHP and Python pass the same cases.
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { Csrf } from '../../src/csrf.js';
+import { Representation, type Handlers, type RepresentationHandler, type Request } from '../../src/index.js';
 import type { SessionStore } from '../../src/session.js';
 import type { CaseReader } from '../case-reader.js';
-import { client, Fixture, parsed, record, TOKEN } from '../support.js';
+import { client, Fixture, FIXTURES, handlers, parsed, plain, record, TOKEN, type Services } from '../support.js';
 
-// The representation handler of the client fixture is not wired into the test application yet (H28.7); the cases that
-// state its calls or its request fail until it is.
-const HANDLER_NOT_WIRED = 'the representation handler of the client fixture is not wired (H28.7)';
+// What the representation handlers of a case received: the number of their calls, and the media parameters and the
+// request of the last call.
+interface Calls {
+  handled: number;
+  parameters: ReadonlyMap<string, string> | null;
+  request: Request | null;
+}
+
+// Returns a representation handler that answers `response` and records its calls and what it receives (HY-122).
+function representation(calls: Calls, response: Map<string, unknown>): RepresentationHandler<Services> {
+  return ({ request, media }) => {
+    calls.handled++;
+    calls.parameters = media.parameters;
+    calls.request = request;
+    const headers = response.get('headers');
+    return new Representation(response.get('status') as number, response.get('body') ?? null, headers instanceof Map ? Object.fromEntries(headers as Map<string, string>) : {});
+  };
+}
+
+// Writes the manifest of the fixture application with the representations that the case declares for its routes, and
+// returns its path in a directory that the caller removes, with the handlers of the fixture and of those entries. Each
+// entry answers the response `handler` of the case, or its own.
+function declared(representations: Map<string, Map<string, unknown>[]>, handler: Map<string, unknown> | null, calls: Calls): { directory: string; manifest: string; handlers: Handlers<Services> } {
+  const directory = mkdtempSync(join(tmpdir(), 'hyper-client-'));
+  const manifest = join(directory, 'app.json');
+  const document = record(parsed(readFileSync(`${FIXTURES}app.json`, 'utf8')));
+  const all = handlers();
+  const routes = { ...all.routes };
+  for (const route of document.routes as { name: string; representations?: unknown }[]) {
+    const entries = representations.get(route.name);
+    if (entries === undefined) continue;
+    route.representations = entries.map((entry) => plain(new Map([...entry].filter(([key]) => key !== 'handler'))));
+    routes[route.name] = {
+      ...routes[route.name],
+      representations: Object.fromEntries(entries.map((entry) => [entry.get('type') as string, representation(calls, handler ?? (entry.get('handler') as Map<string, unknown>))])),
+    };
+  }
+  writeFileSync(manifest, JSON.stringify(document));
+  return { directory, manifest, handlers: { ...all, routes } };
+}
+
 
 // A session store that records the writes that the application makes to it, and keeps them in the store it wraps.
 class RecordingStore implements SessionStore {
@@ -40,7 +82,6 @@ class RecordingStore implements SessionStore {
 
 export const steps = {
   async cases(reader: CaseReader): Promise<void> {
-    if (reader.has('handler') || reader.has('received')) throw new Error(HANDLER_NOT_WIRED);
     const fixture = new Fixture();
     const store = new RecordingStore(fixture.session);
     const headers = Object.fromEntries(reader.input('request.headers') as Map<string, string>);
@@ -55,7 +96,18 @@ export const steps = {
     const body = reader.has('request.body')
       ? (reader.input('request.body') as string)
       : fields === undefined ? undefined : new URLSearchParams(fields).toString();
-    const response = await fixture.handle({ method, target, headers, body }, { clientRendering: client() }, store);
+    const calls: Calls = { handled: 0, parameters: null, request: null };
+    const application = declared(
+      reader.input('representations') as Map<string, Map<string, unknown>[]>,
+      reader.has('handler') ? (reader.input('handler') as Map<string, unknown>) : null,
+      calls,
+    );
+    let response;
+    try {
+      response = await fixture.handle({ method, target, headers, body }, { clientRendering: client(), manifest: application.manifest, handlers: application.handlers }, store);
+    } finally {
+      rmSync(application.directory, { recursive: true, force: true });
+    }
     reader.compare('status', response.status);
     reader.compare('headers', response.headers);
     reader.compare('allHeaders', response.headers);
@@ -70,7 +122,16 @@ export const steps = {
     reader.compare('session', fixture.session.get('_hyper_csrf') !== undefined);
     reader.compare('actions', fixture.counter.actions);
     reader.compare('storeCalls', store.calls);
-    // The client fixture wires no representation handler yet (H28.7): no case that states a handler call reaches here.
-    if (reader.has('handled')) reader.compare('handled', 0);
+    reader.compare('handled', calls.handled);
+    if (!reader.has('received')) return;
+    // The headers that the handler received are among the headers of the request.
+    const received: Record<string, string> = {};
+    for (const name of Object.keys(headers)) {
+      const value = calls.request?.header(name) ?? null;
+      if (value !== null) received[name] = value;
+    }
+    reader.compare('received.parameters', calls.parameters);
+    reader.compare('received.selection', calls.request?.selection());
+    reader.compare('received.absentHeaders', received);
   },
 };

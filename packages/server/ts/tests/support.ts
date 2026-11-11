@@ -137,7 +137,7 @@ export function handlers(): Handlers<Services> {
 
 // A fixture application with one session and one counter, as the PHP AppTest sets them up.
 /** An error shaped like the OrmError of @polyspec/orm, which hyper identifies by its class name and its code (HY-107). */
-class OrmError extends Error {
+export class OrmError extends Error {
   public readonly code: string;
 
   public constructor(code: string) {
@@ -219,6 +219,13 @@ export function cookie(name: string, value: string): Record<string, string> {
 export function json(response: Response): Record<string, unknown> & { shared: Record<string, unknown>; regions: Record<string, unknown>; kept: Record<string, unknown> } {
   const page = record(parsed(response.body));
   return { ...page, shared: record(page.shared), regions: record(page.regions), kept: record(page.kept) };
+}
+
+// Converts the Maps of a parsed contract value into plain objects, the shape the manifest file holds.
+export function plain(value: unknown): unknown {
+  if (value instanceof Map) return Object.fromEntries([...value].map(([key, item]) => [key, plain(item)]));
+  if (Array.isArray(value)) return value.map(plain);
+  return value;
 }
 
 // The value of a JSON text, which a test narrows with record and text.

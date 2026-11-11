@@ -46,6 +46,10 @@ interface State {
   // The size of a body that is one value, and the number of its parts when it is multipart (HY-131.12).
   held: number;
   partCount: number;
+  // The body as one value, which a representation request decodes (HY-121).
+  body: Uint8Array;
+  // The decoded JSON body of a representation request (HY-121), which `asRepresentation` sets.
+  json: Value;
 }
 
 // The media type of the JSON of hyper (HY-15).
@@ -112,6 +116,8 @@ export class Request {
       read,
       held: body.byteLength,
       partCount,
+      body,
+      json: null,
     });
   }
 
@@ -182,6 +188,26 @@ export class Request {
   /** @internal */
   withSelection(value: unknown): Request {
     return new Request({ ...this.state, selection: value });
+  }
+
+  // Returns the request that a representation handler receives: with the method, which is GET for a HEAD request,
+  // without the Cookie header and the cookies, and with the decoded JSON value of its body (HY-121).
+  /** @internal */
+  asRepresentation(method: string, value: Value): Request {
+    const headers = new Map(this.state.headers);
+    headers.delete('cookie');
+    return new Request({ ...this.state, method, headers, cookies: new Map(), json: value });
+  }
+
+  // Returns the bytes of the body as the host gave them.
+  /** @internal */
+  bodyBytes(): Uint8Array {
+    return this.state.body;
+  }
+
+  // Returns the value of the JSON body of a representation request, or null for a request without a body (HY-121.9).
+  json(): Value {
+    return this.state.json;
   }
 
   // Returns a copy that holds the media type that the selection of HY-116 chose for this request, once per request.
