@@ -1,5 +1,5 @@
 <!-- doc-id: protocol -->
-<!-- source-sha256: 37de353fbc949cf40889309cb132bb75940db0c936117e6952f4c4c654993244 -->
+<!-- source-sha256: e14ae99e0e853dfb2e74e37cd2edb7641a4e742458e81578c46d2781baab45cf -->
 # 영역 프로토콜
 
 [English](protocol.md).
@@ -195,7 +195,8 @@
   - Node에서 context는 `Map`이다(HY-54). 일반 객체는 정수 같은 key를 먼저 정렬하므로 PHP와 Python과 다른 JSON 텍스트를 내기 때문이다.
 - **HY-125** build id는 브라우저가 실행하는 출력의 소문자 16진수 SHA-256 digest다.
   - 출력은 client entry, 그 chunk, `manifest.json`, 에셋 build(HYC-16)의 템플릿 파일과 index이며, id를 담는 HY-62의 정적 셸은 뺀다.
-  - build는 출력 디렉터리 기준 상대 경로를 바이트로 비교한 순서로 출력을 hash한다. 각 출력마다 UTF-8로 쓴 경로와 NUL 바이트 하나, 8바이트 big-endian으로 쓴 파일 길이, 파일의 바이트를 넣는다.
+  - 출력의 경로는, `public/assets` 아래 파일(entry, 그 chunk, 템플릿 파일)이면 앞의 slash를 뺀 URL 경로(예: `assets/hyper-<hash>.js`)이고, `manifest.json`과 `templates.index.json`이면 `--output` 디렉터리 안의 이름이다.
+  - build는 경로를 바이트로 비교한 순서로 출력을 hash한다. 각 출력마다 UTF-8로 쓴 경로와 NUL 바이트 하나, 8바이트 big-endian으로 쓴 파일 길이, 파일의 바이트를 넣는다.
   - build는 id를 `{"build":"<build id>"}`로, hash에서 빠지는 에셋 출력의 `build.json`과 프로그램 디렉터리(HY-48)의 `build.json`에 쓴다. 모든 서버는 애플리케이션을 열 때 id를 읽으며, `build.json`이 없으면 `open`이 그 절대 경로와 함께 실패한다.
   - 서버 build(HY-48)는 option `--build`로 에셋 출력의 `build.json` 경로를 받아 같은 파일을 프로그램 디렉터리에 쓴다. 파일이 없거나 64자의 소문자 16진수 build id를 담지 않으면 그 경로와 함께 실패한다. 에셋 build가 없는 test fixture는 내용이 고정된 `build.json`을 이름 붙인다.
   - 문서는 `html` 정의 `build`를 가진다. 그 텍스트는 `<meta name="hyper-build" content="<build id>">`이며, 레이아웃은 그것을 `<head>` 안에서 `{# build}`로 한 번 렌더한다(HY-3, HY-12). 영역 배치가 빠졌을 때처럼, `{# build}`가 정확히 하나가 아닌 레이아웃은 build를 실패시킨다. 정적 셸도 같은 요소를 가진다.

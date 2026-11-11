@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: f3f390f56c04a7dc5999058e4020b53706778cb0a24c9252690108a217676b0f -->
+<!-- source-sha256: 464a7191405f1ed6976de618a885c92bb97b902b4b97d50b775a7baa03a10d20 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- docs/spec/protocol.md는 build id가 hash하는 각 산출물의 path를 정한다: `public/assets` 아래 file은 앞의 slash를 뺀 URL path, `manifest.json`과 `templates.index.json`은 `--output` directory 안의 이름이다(HY-125). `contracts/context.json`의 build case가 그 path를 쓴다(H28.1-2).
 
 - docs/spec/protocol.md는 server build가 option `--build`로 asset output의 `build.json`을 받아 program directory에 쓰고, file이 없거나 build id가 올바르지 않으면 실패한다고 정한다(HY-125)(H28.1-1).
 
