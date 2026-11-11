@@ -12,14 +12,18 @@ The working principles of every polyspec repository, and the rules of work that 
   Enforced by: none, whether a sentence names a source of a decision is a judgement that no tool makes.
 - Own: An instruction that a document records is written, once it is understood, as the rule that follows from it and the reason for that rule: what must be done and why. A document does not copy the wording or the tone of the instruction, because copied words do not give a reader the meaning that is needed to apply them.
   Enforced by: none, whether a sentence states a rule and its reason or copies an instruction is a judgement.
-- Own: One authoritative document per topic. The protocol contract is in `docs/spec/`. Implementation and verification status is in `docs/features.md`. Planned tasks, their verification commands and their completion are in `docs/plans/execution/checklist.md`. Current procedures are in `docs/operations/`. Actual changes and their verification results are in `CHANGELOG.md`.
+- Own: One authoritative document per topic. The protocol contract is in `contracts/protocol.json`, which `docs/spec/protocol*.md` render; the other specifications are in `docs/spec/`. Implementation and verification status is in `docs/features.md`. Planned tasks, their verification commands and their completion are in `docs/plans/execution/checklist.md`. Current procedures are in `docs/operations/`. Actual changes and their verification results are in `CHANGELOG.md`.
   Enforced by: none, which document owns a topic is a judgement.
 - Refines P4: Documents describe current behavior. When the direction changes, change the specification (`docs/spec/`) first and mark the parts that are not implemented.
   Enforced by: none, whether a document describes the current behavior is a judgement.
 - Own: A behavior change, its documents, its feature status row in `docs/features.md` and its entry in `CHANGELOG.md` are one change.
   Enforced by: none, no tool sees whether the four are in one change.
-- Own: `make docs-check` reads each document on its own, as `config/documents.json` declares, and verifies its links, anchors, fences and checklist. The English file and its Korean twin hold the same marker `doc-id`, and the Korean file holds `source-sha256`, the sha256 of its English file, which `make documents-stamp` writes after the translation is reviewed; no check compares the twins (kit K809). Content accuracy is verified by reading the code and the tests.
+- Own: `make docs-check` reads each document on its own, as `config/documents.json` declares, and verifies its links, anchors, fences and checklist. The English file and its Korean twin hold the same marker `doc-id`, and the Korean file holds `source-sha256`, the sha256 of its English file, which `make documents-stamp` writes after the translation is reviewed; a generated pair takes its marker from its generator. No check compares the twins (kit K809), except the protocol pair, which `make spec-docs-check` compares statement by statement. Content accuracy is verified by reading the code and the tests.
   Enforced by: `make docs-check`
+- Own: `docs/spec/protocol.md` and `docs/spec/protocol.ko.md` are written by `make spec-docs` from `contracts/protocol.json`; a change edits the JSON and commits it with both documents.
+  Enforced by: `make spec-docs-check`
+- Own: A statement of `contracts/protocol.json` keeps its id only while its meaning stays; a change of meaning retires the id and adds a new statement.
+  Enforced by: none, whether a change keeps the meaning of a statement is judged by review.
 
 ## Implementation
 
@@ -69,7 +73,7 @@ The working principles of every polyspec repository, and the rules of work that 
 
 ## Decision and acceptance rules
 
-- Refines P3: Define the invariant, the acceptance condition and the failure condition in `docs/spec/protocol.md` before changing an implementation. Tests cite the rule identifiers (`HY-n`).
+- Refines P3: Define the invariant, the acceptance condition and the failure condition in `contracts/protocol.json` before changing an implementation. Tests cite the rule identifiers (`HY-n`).
   Enforced by: none, whether a test cites a rule identifier is judged by review.
 - Own: Server rendering and browser rendering of the same region produce the same bytes. `make parity` is the evidence for that invariant.
   Enforced by: `make parity`
@@ -112,7 +116,7 @@ The working principles of every polyspec repository, and the rules of work that 
 
 ## Generated files
 
-Generated files are never tracked in Git. This covers dependency installs (`node_modules/`, `vendor/`, virtual environments), build output (`dist/`, `target/`, `*.tsbuildinfo`), caches (`.cache/`, `__pycache__/`, `.pytest_cache/`), test run artifacts (`test-results/`, `playwright-report/`, PHPUnit caches) and tool downloads (`var/`). The only exceptions are files the repository deliberately needs, and only these are tracked: lock files (`package-lock.json`, `composer.lock`, `Cargo.lock`, uv locks, `mise.lock`), committed generated documents that this file names, and test fixtures. Each `.gitignore` covers these paths. A new generator adds its ignore entry in the same commit.
+Generated files are never tracked in Git. This covers dependency installs (`node_modules/`, `vendor/`, virtual environments), build output (`dist/`, `target/`, `*.tsbuildinfo`), caches (`.cache/`, `__pycache__/`, `.pytest_cache/`), test run artifacts (`test-results/`, `playwright-report/`, PHPUnit caches) and tool downloads (`var/`). The only exceptions are files the repository deliberately needs, and only these are tracked: lock files (`package-lock.json`, `composer.lock`, `Cargo.lock`, uv locks, `mise.lock`), committed generated documents that this file names (the protocol documents that `make spec-docs` writes), and test fixtures. Each `.gitignore` covers these paths. A new generator adds its ignore entry in the same commit.
   Enforced by: `make layout-check`, which fails a tracked generated file and an install directory that Git does not ignore
 
 ## Checklist

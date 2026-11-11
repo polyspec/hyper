@@ -1,5 +1,5 @@
 <!-- doc-id: agents -->
-<!-- source-sha256: d39ccc764a54457ec87488f603737ed513940e07c962df98705088e2e8d14404 -->
+<!-- source-sha256: b077c49d5071c6b0ae82d9da89d70c35d0f0836f57cc8a55e3fe7d575aa371c0 -->
 # 개발
 
 [English](AGENTS.md).
@@ -12,14 +12,18 @@
   Enforced by: none, 문장이 결정의 출처를 적는지는 어떤 도구도 판단하지 않는 판단이다.
 - Own: 문서가 기록하는 지시는 이해한 뒤, 그 지시에서 나오는 규칙과 그 규칙의 이유로 적는다: 무엇을 해야 하고 왜 그런지. 문서는 지시의 말투와 문장을 옮기지 않는다. 옮긴 문장은 독자가 그것을 적용하는 데 필요한 뜻을 주지 않기 때문이다.
   Enforced by: none, 문장이 규칙과 그 이유를 적는지, 지시를 옮기는지는 판단이다.
-- Own: 주제마다 권위 있는 문서는 하나다. 프로토콜 계약은 `docs/spec/`에 있다. 구현과 검증 상태는 `docs/features.md`에 있다. 계획된 task, 그 검증 명령과 완료는 `docs/plans/execution/checklist.md`에 있다. 현재 절차는 `docs/operations/`에 있다. 실제 변경과 그 검증 결과는 `CHANGELOG.md`에 있다.
+- Own: 주제마다 권위 있는 문서는 하나다. 프로토콜 계약은 `contracts/protocol.json`에 있고 `docs/spec/protocol*.md`가 그것을 보여 준다. 다른 명세는 `docs/spec/`에 있다. 구현과 검증 상태는 `docs/features.md`에 있다. 계획된 task, 그 검증 명령과 완료는 `docs/plans/execution/checklist.md`에 있다. 현재 절차는 `docs/operations/`에 있다. 실제 변경과 그 검증 결과는 `CHANGELOG.md`에 있다.
   Enforced by: none, 어느 문서가 주제를 맡는지는 판단이다.
 - Refines P4: 문서는 현재 동작을 설명한다. 방향이 바뀌면 명세(`docs/spec/`)를 먼저 바꾸고, 구현되지 않은 부분을 표시한다.
   Enforced by: none, 문서가 현재 동작을 설명하는지는 판단이다.
 - Own: 동작 변경, 그 문서, `docs/features.md`의 기능 상태 행과 `CHANGELOG.md`의 항목은 한 변경이다.
   Enforced by: none, 네 가지가 한 변경에 있는지는 어떤 도구도 보지 않는다.
-- Own: `make docs-check`는 `config/documents.json`이 선언한 대로 각 문서를 따로 읽어 링크, anchor, fence, checklist를 검증한다. 영어 파일과 한국어 짝은 같은 표지 `doc-id`를 가지고, 한국어 파일은 영어 파일의 sha256인 `source-sha256`을 가지며, `make documents-stamp`가 번역을 검토한 뒤에 그 값을 쓴다. 두 짝을 비교하는 검사는 없다(kit K809). 내용의 정확성은 코드와 test를 읽어 검증한다.
+- Own: `make docs-check`는 `config/documents.json`이 선언한 대로 각 문서를 따로 읽어 링크, anchor, fence, checklist를 검증한다. 영어 파일과 한국어 짝은 같은 표지 `doc-id`를 가지고, 한국어 파일은 영어 파일의 sha256인 `source-sha256`을 가지며, `make documents-stamp`가 번역을 검토한 뒤에 그 값을 쓴다. 생성된 짝은 생성기가 그 표지를 쓴다. 두 짝을 비교하는 검사는 없다(kit K809). 다만 프로토콜 짝은 `make spec-docs-check`가 문장마다 비교한다. 내용의 정확성은 코드와 test를 읽어 검증한다.
   Enforced by: `make docs-check`
+- Own: `docs/spec/protocol.md`와 `docs/spec/protocol.ko.md`는 `make spec-docs`가 `contracts/protocol.json`에서 쓴다. 변경은 JSON을 고치고 두 문서와 함께 commit한다.
+  Enforced by: `make spec-docs-check`
+- Own: `contracts/protocol.json`의 문장은 뜻이 같은 동안만 그 id를 유지한다. 뜻이 바뀌면 그 id를 retire하고 새 문장을 더한다.
+  Enforced by: none, 변경이 문장의 뜻을 유지하는지는 review로 판단한다.
 
 ## 구현
 
@@ -69,7 +73,7 @@
 
 ## 결정과 수락 규칙
 
-- Refines P3: 구현을 바꾸기 전에 불변식, 수락 조건과 실패 조건을 `docs/spec/protocol.md`에 정한다. Test는 규칙 식별자(`HY-n`)를 인용한다.
+- Refines P3: 구현을 바꾸기 전에 불변식, 수락 조건과 실패 조건을 `contracts/protocol.json`에 정한다. Test는 규칙 식별자(`HY-n`)를 인용한다.
   Enforced by: none, test가 규칙 식별자를 인용하는지는 review로 판단한다.
 - Own: 같은 영역의 서버 렌더링과 브라우저 렌더링은 같은 바이트를 만든다. `make parity`가 그 불변식의 근거다.
   Enforced by: `make parity`
@@ -112,7 +116,7 @@
 
 ## 생성 파일
 
-생성 파일은 Git에 추적하지 않는다. 여기에는 의존성 설치(`node_modules/`, `vendor/`, 가상 환경), build 출력(`dist/`, `target/`, `*.tsbuildinfo`), 캐시(`.cache/`, `__pycache__/`, `.pytest_cache/`), test 실행 산출물(`test-results/`, `playwright-report/`, PHPUnit 캐시)과 도구 다운로드(`var/`)가 속한다. 예외는 저장소가 의도적으로 필요로 하는 파일뿐이며, 추적하는 것은 이것뿐이다: lock 파일(`package-lock.json`, `composer.lock`, `Cargo.lock`, uv lock, `mise.lock`), 이 파일이 이름을 적는 커밋된 생성 문서, test fixture. 각 `.gitignore`가 이 경로들을 덮는다. 새 생성기는 같은 commit에서 자기 ignore 항목을 추가한다.
+생성 파일은 Git에 추적하지 않는다. 여기에는 의존성 설치(`node_modules/`, `vendor/`, 가상 환경), build 출력(`dist/`, `target/`, `*.tsbuildinfo`), 캐시(`.cache/`, `__pycache__/`, `.pytest_cache/`), test 실행 산출물(`test-results/`, `playwright-report/`, PHPUnit 캐시)과 도구 다운로드(`var/`)가 속한다. 예외는 저장소가 의도적으로 필요로 하는 파일뿐이며, 추적하는 것은 이것뿐이다: lock 파일(`package-lock.json`, `composer.lock`, `Cargo.lock`, uv lock, `mise.lock`), 이 파일이 이름을 적는 커밋된 생성 문서(`make spec-docs`가 쓰는 프로토콜 문서), test fixture. 각 `.gitignore`가 이 경로들을 덮는다. 새 생성기는 같은 commit에서 자기 ignore 항목을 추가한다.
   Enforced by: `make layout-check`, which fails a tracked generated file and an install directory that Git does not ignore
 
 ## 체크리스트

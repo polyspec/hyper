@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- `contracts/protocol.json` is the one source of the protocol: every rule is a list of statements, one English sentence each with its Korean translation and the sha256 of the English that the translation follows, and `docs/spec/protocol.md` and `protocol.ko.md` are generated from it with an anchor per statement. The Korean follows the English statement by statement, and the conversion corrected the Korean where it said something other than the English (for example constant time in HY-24, the layout of the response in HYC-2, the referent of the context hash in HY-125). AGENTS.md names the JSON as the place of the protocol rules (H28.11).
+
 - `make spec-docs` writes `docs/spec/protocol.md` and `docs/spec/protocol.ko.md` from `contracts/protocol.json`; `make spec-docs-check` checks both documents against that rendering, and the CI `docs` group runs it (H28.11).
 
 - `make recipe-check` reads `contracts/interfaces.json` and checks it against the PHP, Node and Python sources and their case results (HYR-7, HYR-8); `make recipe-candidates` writes the candidate of that spec under `var/recipe` with its hand-written fields listed beside it (HYR-10) (H28.11).
