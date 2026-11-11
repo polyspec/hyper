@@ -269,28 +269,45 @@ function readTypeAlias(file: string, sf: ts.SourceFile, st: ts.TypeAliasDeclarat
   out.types.push(entry);
 }
 
-function visitTests(node: ts.Node, file: string, stack: string[]): void {
-  if (ts.isCallExpression(node) && ts.isIdentifier(node.expression)) {
-    const callee = node.expression.text;
-    const first = node.arguments[0];
-    if (first !== undefined && ts.isStringLiteralLike(first)) {
-      if (callee === 'describe') {
-        for (const arg of node.arguments.slice(1)) visitTests(arg, file, [...stack, first.text]);
-        return;
-      }
-      if (callee === 'it' || callee === 'test') {
-        out.tests.push({ file, name: [...stack, first.text].join(' > ') });
-        return;
-      }
-    }
-  }
-  ts.forEachChild(node, (child) => visitTests(child, file, stack));
+const TEST_CALLS = new Set(['describe', 'it', 'test']);
+
+// The identifier a test call is made on: `it`, `it.each(table)` and `it.skip` all root at `it`.
+function testRoot(expr: ts.Expression): string | undefined {
+  if (ts.isIdentifier(expr)) return expr.text;
+  if (ts.isPropertyAccessExpression(expr) || ts.isCallExpression(expr)) return testRoot(expr.expression);
+  return undefined;
 }
 
-for (const file of sourceFiles) readSource(file);
-for (const file of testFiles) {
-  const sf = ts.createSourceFile(file, readFileSync(join(root!, file), 'utf8'), ts.ScriptTarget.Latest, true);
-  visitTests(sf, file, []);
+// A test name must be a string literal: the spec names tests by their literal names (HYR-7).
+function visitTests(node: ts.Node, sf: ts.SourceFile, stack: string[]): void {
+  if (ts.isCallExpression(node)) {
+    const root = testRoot(node.expression);
+    if (root !== undefined && TEST_CALLS.has(root)) {
+      const first = node.arguments[0];
+      if (first === undefined || !ts.isStringLiteralLike(first)) {
+        const line = sf.getLineAndCharacterOfPosition(node.getStart(sf)).line + 1;
+        throw new Error(`${sf.fileName}:${line}: the name of a ${root} call is not a string literal`);
+      }
+      if (root === 'describe') {
+        for (const arg of node.arguments.slice(1)) visitTests(arg, sf, [...stack, first.text]);
+      } else {
+        out.tests.push({ file: sf.fileName, name: [...stack, first.text].join(' > ') });
+      }
+      return;
+    }
+  }
+  ts.forEachChild(node, (child) => visitTests(child, sf, stack));
+}
+
+try {
+  for (const file of sourceFiles) readSource(file);
+  for (const file of testFiles) {
+    const sf = ts.createSourceFile(file, readFileSync(join(root!, file), 'utf8'), ts.ScriptTarget.Latest, true);
+    visitTests(sf, sf, []);
+  }
+} catch (error) {
+  console.error(`read-node.mts: ${error instanceof Error ? error.message : String(error)}`);
+  process.exit(1);
 }
 
 console.log(JSON.stringify(out, null, 2));

@@ -67,7 +67,9 @@ export function selfTest(fixture: string, v: Validators): string[] {
       const findings = runChecks(root, v, fixtureResults(root), path.join(root, 'vendor', 'autoload.php'));
       if (!findings.some((f) => f.code === m.code)) failures.push(`MUTATION_PASSED ${m.id}: the check printed no ${m.code}`);
     } catch (error) {
-      failures.push(`MUTATION_FAILED ${m.id}: ${error instanceof Error ? error.message : String(error)}`);
+      // A mutation the reader cannot read fails with READER_FAILED, which is its code when the code says so.
+      const message = error instanceof Error ? error.message : String(error);
+      if (!message.includes(m.code)) failures.push(`MUTATION_FAILED ${m.id}: ${message}`);
     } finally {
       rmSync(root, { recursive: true, force: true });
     }

@@ -172,7 +172,9 @@ def main() -> None:
     }
     for rel in sources:
         read_module(root, rel, out)
-    for rel in files(root, args.tests, "test_*.py"):
+    # HYR-7: test_*.py under the test roots and render_*.py under their render/ directories.
+    test_files = files(root, args.tests, "test_*.py") + files(root, [f"{d}/render" for d in args.tests], "render_*.py")
+    for rel in sorted(set(test_files)):
         read_tests(root, rel, out)
     print(json.dumps(out, indent=2))
 
