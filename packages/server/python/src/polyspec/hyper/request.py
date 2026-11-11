@@ -41,6 +41,8 @@ class Request:
         read: Optional[RequestBody] = None,
     ):
         self._method = method
+        # The decoded JSON body of a representation request (HY-121), which `_as_representation` sets.
+        self._json: object = None
         # The media type that the server selected for the request (HY-116); None until the server selects it.
         self._media = media
         # The size of the body that the server received, when it stopped reading a body larger than the limit
@@ -127,6 +129,23 @@ class Request:
     def _with_media(self, media: str) -> "Request":
         """Returns a copy that holds the media type that the server selected for the request (HY-116)."""
         return self._copy(media=media)
+
+    def _as_representation(self, method: str, value: object) -> "Request":
+        """Returns the request that a representation handler receives: with the method, which is `GET` for a `HEAD`
+        request, without the `Cookie` header and the cookies, and with the decoded JSON value of its body (HY-121)."""
+        headers = {
+            name: text for name, text in self._headers.items() if name != "cookie"
+        }
+        copy = self._copy(headers=headers)
+        copy._method = method
+        copy._cookies = {}
+        copy._json = value
+        return copy
+
+    def json(self) -> object:
+        """Returns the value of the JSON body of a representation request, or None for a request without a body
+        (HY-121.9)."""
+        return self._json
 
     def _with_selection(self, value: object) -> "Request":
         """Returns a copy that carries the value of the choice of the client rendering selection (HY-62)."""

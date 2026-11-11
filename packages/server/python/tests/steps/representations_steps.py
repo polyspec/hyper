@@ -9,6 +9,7 @@ from pathlib import Path
 from polyspec.hyper._json_codec import JsonCodec
 from polyspec.hyper._session import _TOKEN_KEY
 from polyspec.hyper.app import App
+from polyspec.hyper.reply import Reply
 from polyspec.hyper.request import Request
 from polyspec.hyper.representation import Representation
 from polyspec.hyper.session import ArraySession
@@ -140,7 +141,7 @@ def _rejected_handler(request: object, media: object) -> None:
 
 
 def _loader(data: dict):
-    def load(request: Request, reply: object) -> dict:
+    def load(request: Request, reply: Reply) -> dict:
         return dict(data)
 
     return load

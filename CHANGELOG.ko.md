@@ -6,6 +6,8 @@
 
 ## Unreleased
 
+- Python server가 route의 representation에 답한다(HY-116부터 HY-122까지). `Accept`의 weight로 `text/html`, `application/vnd.hyper+json`, 선언된 type 중에서 요청의 media type을 고르며, 선언된 type은 모든 필수 parameter에 served 값을 주고 그 type을 이름 짓는 range만 match하고, path가 serve하는 type과 함께 406으로 답한다. representation 요청은 session을 열지 않고 자신의 handler만 실행하며, handler는 `Cookie`가 없는 요청과 decode된 body를 주는 `json()`, 그리고 `parameters()`와 `etag(body)`를 가진 `MediaType`을 받는다. server는 `Allow`와 함께 405로, `GET`·`HEAD`·`DELETE`의 body에 400으로, 415로, 데이터 모델의 JSON 값이 아닌 body에 400으로 답하고, handler가 반환한 것의 status, header, `Location`, `Cache-Control`을 검사하며, `GET`이나 `HEAD`의 200에 strong `ETag`를 주고 그것을 이름 짓는 요청에 304를 준다. Python case runner의 step이 loader에 class 없는 `reply`를 주어서 `contracts/representations.json`의 모든 page case가 500으로 답했다. Python runner는 contract의 모든 case, 686개 중 686개를 통과한다(H28.7).
+
 - PHP의 `App::run`은 요청을 처리하는 SAPI, 곧 `cli`와 `phpdbg`를 뺀 모든 SAPI 아래에서 `enable_post_data_reading`이 켜져 있으면 실패한다(HY-59.9). 이전에는 form 타입에 `multipart/form-data`가 있는 application에서만 실패했다. 그 설정이 켜져 있으면 PHP가 application이 실행되기 전에 모든 요청 body를 자신의 reader로 `$_POST`와 `$_FILES`에 읽는데 hyper는 그것을 읽지 않으므로, body를 가진 모든 요청에서 그 reader의 code가 실행되었다. `scripts/board-servers.mts`의 `startPhp`와 PHP test의 server는 그 설정을 끄고 PHP를 시작하며, `tests/scripts/upload-servers.test.mts`는 그 설정을 켜고 server를 시작해 500을 요구한다(H29.7).
 
 - `docs/operations/benchmark.md`의 `make bench-uploads` 결과는 기준 버전인 PHP 8.4.27에서 실행한 것이다. 첫 기록은 PHP 8.5.10에서 실행한 것이었는데, checkout의 `php`가 `PATH`의 첫 번째인 그것을 가리켰기 때문이다. 요청 body 작업의 PHP 검사를 8.4.27에서 다시 실행했고 결과는 같다. `contracts/fields.json`의 91개 case, unit test, 세 server의 비교, HTTP upload가 그것이다. `docs/operations/deployment.md`는 수치를 benchmark에 맡기고 요청의 메모리만 다시 적는다(H29.6-2).

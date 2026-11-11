@@ -8,9 +8,9 @@ import re
 import sys
 import time
 from pathlib import Path
+from collections.abc import Sequence
 from typing import Callable, Optional, Union
 
-from ._accept import Accept
 from ._invalid_accept import InvalidAccept
 from .client import Choice, ClientRendering
 from .container import Container
@@ -23,6 +23,12 @@ from ._json_codec import JsonCodec
 from ._json_decode_error import JsonDecodeError
 from ._kept import Kept
 from ._media import JSON, TEXT_HTML
+from ._media_selection import content_type as media_content_type
+from ._media_selection import listing as media_listing
+from ._media_selection import select as select_media
+from ._representation_entries import Entry
+from ._representation_response import RepresentationResponse
+from .media_type import MediaType
 from ._manifest import Manifest
 from ._region_planner import RegionPlanner
 from .reply import Reply
@@ -330,17 +336,29 @@ class App:
             return Response.text(404, "Not Found")
         route = self.manifest.routes[match["name"]]
         handler = self._route_handlers.get(route["name"], {})
+        entries = route["representations"]
         if client is not None:
-            # HY-62 step 2: the data base path serves only the JSON type, and the method check follows the selection.
-            chosen = self._negotiate(request, (JSON,))
-            if isinstance(chosen, Response):
-                return chosen
-            if chosen != JSON:
+            # HY-62 step 2: the data base path serves the JSON type and the representations of the route (HY-116.14),
+            # and the method check follows the selection.
+            selected = self._negotiate(request, (JSON,), entries)
+            if isinstance(selected, Response):
+                return selected
+            if selected[0] == TEXT_HTML:
                 return _not_acceptable()
         else:
-            chosen = self._negotiate(request, _PAGE_TYPES)
-            if isinstance(chosen, Response):
-                return chosen
+            selected = self._negotiate(request, _PAGE_TYPES, entries)
+            if isinstance(selected, Response):
+                return selected
+        chosen, entry, values = selected
+        if entry is not None:
+            # HY-120, HY-121: a representation request opens no session and runs only its handler.
+            return self._representation(
+                request._with_route(path, match["params"]),
+                handler,
+                entry,
+                values,
+                base_path,
+            )
         # HY-120: the session opens after the method check and the context header check, which refuse the request first.
         refused = self._refused_before_session(request, handler)
         if refused is not None:
@@ -357,19 +375,90 @@ class App:
         )._with_cookies(reply, self.https or request.https)
 
     def _negotiate(
-        self, request: Request, served: tuple[str, ...]
-    ) -> Union[str, Response]:
-        """Selects the media type of a request among text/html and application/vnd.hyper+json (HY-116), or returns
-        the response that refuses it: 400 for an invalid `Accept`, and 406 with the served types for a request that
-        matches none of them."""
+        self, request: Request, served: tuple[str, ...], entries: Sequence[Entry]
+    ) -> Union[tuple[str, Optional[Entry], dict[str, str]], Response]:
+        """Selects the media type of a request among text/html, application/vnd.hyper+json and the representations
+        of its route (HY-116), or returns the response that refuses it: 400 for an invalid `Accept`, and 406 with the
+        served types for a request that matches none of them."""
         try:
-            chosen = Accept.select(request.header("Accept"), _PAGE_TYPES)
+            selected = select_media(request.header("Accept"), _PAGE_TYPES, entries)
         except InvalidAccept:
             return Response.text(400, "Bad Request").with_header("Vary", "Accept")
-        if chosen is None:
-            body = "".join(f"{media}\n" for media in served)
-            return Response.text(406, body).with_header("Vary", "Accept")
-        return chosen
+        if selected is None:
+            return Response.text(406, media_listing(served, entries)).with_header(
+                "Vary", "Accept"
+            )
+        return selected
+
+    def _representation(
+        self,
+        request: Request,
+        handler: dict,
+        entry: Entry,
+        values: dict[str, str],
+        base_path: str,
+    ) -> Response:
+        """Answers a representation request (HY-121, HY-122): the method check, the body checks, the handler of the
+        entry, and the response of what it returned with its tag."""
+        vary = ", ".join(("Accept", *entry.vary))
+        method = request.method
+        reads = method == "HEAD" and "GET" in entry.methods
+        if method not in entry.methods and not reads:
+            answered = [
+                name
+                for name in ("GET", "HEAD", "POST", "PUT", "DELETE")
+                if name in entry.methods or (name == "HEAD" and "GET" in entry.methods)
+            ]
+            return (
+                Response.text(405, "Method Not Allowed")
+                .with_header("Allow", ", ".join(answered))
+                .with_header("Vary", vary)
+            )
+        value = None
+        if method in ("GET", "HEAD", "DELETE"):
+            if request.body_size() != 0:
+                return Response.text(400, "Bad Request").with_header("Vary", vary)
+        else:
+            if request.media_type() != "application/json":
+                return Response.text(415, "Unsupported Media Type").with_header("Vary", vary)
+            try:
+                value = JsonCodec.decode(request._body.decode("utf-8"))
+            except (UnicodeDecodeError, JsonDecodeError):
+                return Response.text(400, "Bad Request").with_header("Vary", vary)
+            # HY-121.8: a number outside the data model is no value that a handler reads.
+            if not JsonCodec.in_data_model(value):
+                return Response.text(400, "Bad Request").with_header("Vary", vary)
+        content_type = media_content_type(entry, values)
+        given = request._as_representation("GET" if reads else method, value)
+        try:
+            returned = handler["representations"][entry.type](
+                given, MediaType(values, content_type)
+            )
+        except Exception as error:
+            code = _orm_code(error)
+            if code == "NO_ROWS":
+                return Response.text(404, "Not Found").with_header("Vary", vary)
+            if code == "REVISION_CHANGED":
+                return Response.text(412, "Precondition Failed").with_header("Vary", vary)
+            raise
+        response = RepresentationResponse.of(
+            returned,
+            content_type,
+            vary,
+            request.header("Authorization") is not None,
+            base_path,
+        )
+        if response.status != 200 or method not in ("GET", "HEAD"):
+            return response
+        # HY-122.10: a 200 of a GET or HEAD has a strong tag, and a request that names it receives 304.
+        tag = RepresentationResponse.etag(content_type, response.body)
+        response = response.with_header("ETag", tag)
+        if request.header("If-None-Match") != tag:
+            return response
+        headers = {
+            name: text for name, text in response.headers.items() if name != "Content-Type"
+        }
+        return Response(304, headers, "")
 
     def _choice(self, request: Request) -> Optional[Choice]:
         """Returns the choice of the client rendering selection for the request, or None without client rendering
@@ -385,15 +474,24 @@ class App:
 
     def _shell_response(self, request: Request) -> Response:
         """Answers a client-rendered request outside the data base path: the static shell for a page (HY-62)."""
-        if self.manifest.router.match(request.path()) is None:
+        match = self.manifest.router.match(request.path())
+        if match is None:
             return Response.text(404, "Not Found")
         if request.method != "GET":
             return Response.text(405, "Method Not Allowed")
-        # HY-62 step 3: the static shell is the only page of this path, and it serves only text/html.
-        chosen = self._negotiate(request, (TEXT_HTML,))
-        if isinstance(chosen, Response):
-            return chosen
-        if chosen != TEXT_HTML:
+        # HY-62 step 3: the static shell is the only page of this path, and it serves only text/html. The
+        # representations of the route take part in the selection, so that a request that selects one of them is not
+        # acceptable here, and they are not listed (HY-116.14).
+        entries = self.manifest.routes[match["name"]]["representations"]
+        try:
+            chosen = select_media(request.header("Accept"), _PAGE_TYPES, entries)
+        except InvalidAccept:
+            return Response.text(400, "Bad Request").with_header("Vary", "Accept")
+        if chosen is None:
+            return Response.text(406, media_listing((TEXT_HTML,), ())).with_header(
+                "Vary", "Accept"
+            )
+        if chosen[0] != TEXT_HTML:
             return _not_acceptable()
         return Response(
             200,
