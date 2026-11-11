@@ -1,74 +1,130 @@
-// Reads a `multipart/form-data` body (HY-57, HY-113): a part whose `Content-Disposition` is `form-data` with a `name`
-// and no `filename` is a text field, a part with a `name` and a `filename` is a file, and a part without a name is
-// neither. The header lines of a part are separated by CRLF, and blanks are spaces and tabs (HY-113.12, HY-113.13).
+// Reads the parts of a `multipart/form-data` body (HY-57, HY-113): a part whose `Content-Disposition` is `form-data`
+// with a `name` and no `filename` is a text field, a part with a `name` and a `filename` is a file, and another part
+// is neither.
 import { Fields } from './fields.js';
 import { Files } from './files.js';
+import { MultipartReader } from './multipart-reader.js';
 import { UploadedFile } from './uploaded-file.js';
 
 /** @internal */
-export class Multipart {
+export class Multipart extends MultipartReader {
   // ignoreBOM keeps a leading U+FEFF as a character, as PHP and Python decode it; the default of TextDecoder drops it.
   private static readonly decoder = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true });
-  private static readonly NAME = /;[ \t]*name="([^"]*)"/i;
-  private static readonly FILENAME = /;[ \t]*filename=(?:"([^"]*)"|([^; \t]*))/i;
-  // The largest header of a part in bytes (HY-113.16).
-  private static readonly HEADER_LIMIT = 8192;
+  private readonly names: string[];
+  private readonly values: Map<string, string[]>;
+  private readonly fileNames: string[];
+  private readonly files: Map<string, UploadedFile[]>;
+  // The name of the part that is read, or null for a part that is neither a value nor a file (HY-113.6).
+  private name: string | null;
+  // The filename and the content type of the file part that is read, or null for a text field.
+  private file: [string, string] | null;
+  private content: Uint8Array[];
+
+  constructor(boundary: string) {
+    super(boundary);
+    this.names = [];
+    this.values = new Map();
+    this.fileNames = [];
+    this.files = new Map();
+    this.name = null;
+    this.file = null;
+    this.content = [];
+  }
 
   // Returns the boundary of a `multipart/form-data` content type, or null for another type (HY-113.11).
   static boundary(type: string): string | null {
-    if (!/^multipart\/form-data[ \t]*;/i.test(type)) return null;
-    const found = /;[ \t]*boundary=(?:"([^"]+)"|([^; \t]+))/i.exec(type);
-    return found === null ? null : (found[1] ?? found[2] ?? null);
+    const [kind, parameters] = Multipart.headerParameters(type);
+    const boundary = parameters.get('boundary');
+    return kind !== 'multipart/form-data' || boundary === undefined || boundary === '' ? null : boundary;
   }
 
-  // Returns the text fields and the files of the body, or null when a name, a value, a filename or a content type is
-  // not UTF-8 (HY-42, HY-113).
+  // Returns the text fields and the files of the body, or null when the body fails with HY-42 (HY-113, HY-131).
   static read(body: Uint8Array, boundary: string): [Fields, Files] | null {
-    const buffer = Buffer.from(body.buffer, body.byteOffset, body.byteLength);
-    const delimiter = Buffer.from(`--${boundary}`, 'latin1');
-    const names: string[] = [];
-    const values = new Map<string, string[]>();
-    const fileNames: string[] = [];
-    const files = new Map<string, UploadedFile[]>();
-    let start = buffer.indexOf(delimiter);
-    while (start >= 0) {
-      const partStart = start + delimiter.length;
-      if (buffer.subarray(partStart, partStart + 2).toString('latin1') === '--') break;
-      const next = buffer.indexOf(delimiter, partStart);
-      if (next < 0) break;
-      const part = buffer.subarray(partStart + 2, next - 2);
-      const headerEnd = part.indexOf('\r\n\r\n');
-      start = next;
-      if ((headerEnd < 0 ? part.length : headerEnd) > Multipart.HEADER_LIMIT) return null;
-      if (headerEnd < 0) continue;
-      const lines = part.subarray(0, headerEnd).toString('latin1').split('\r\n');
-      const content = part.subarray(headerEnd + 4);
-      const disposition = Multipart.headerValue(lines, 'content-disposition');
-      if (disposition === null || disposition.slice(0, 9).toLowerCase() !== 'form-data') continue;
-      const parameters = disposition.slice(9);
-      const found = Multipart.NAME.exec(parameters);
-      if (found === null) continue;
-      const name = Multipart.utf8Text(found[1] ?? '');
-      if (name === null) return null;
-      const filename = Multipart.FILENAME.exec(parameters);
-      if (filename === null) {
-        const value = Multipart.utf8Text(content.toString('latin1'));
-        if (value === null) return null;
-        Multipart.addValue(names, values, name, value);
-      } else {
-        // A quoted filename keeps its backslashes; a token is the text as it is (HY-113.14).
-        const raw = filename[1] ?? filename[2] ?? '';
-        const text = Multipart.utf8Text(raw);
-        const kind = Multipart.utf8Text(Multipart.headerValue(lines, 'content-type') ?? '');
-        if (text === null || kind === null) return null;
-        Multipart.addValue(fileNames, files, name, new UploadedFile(name, text, kind, Uint8Array.from(content)));
-      }
+    const reader = new Multipart(boundary);
+    return reader.feed(body) ? reader.result() : null;
+  }
+
+  // Returns the text fields and the files that were read, or null for a body that failed or has not ended (HY-131.5).
+  result(): [Fields, Files] | null {
+    return this.closed() ? [new Fields(this.names, this.values), new Files(this.fileNames, this.files)] : null;
+  }
+
+  partStarted(lines: string[]): boolean {
+    this.name = null;
+    this.file = null;
+    this.content = [];
+    const disposition = Multipart.headerValue(lines, 'content-disposition');
+    if (disposition === null) return true;
+    const [kind, parameters] = Multipart.headerParameters(disposition);
+    const name = parameters.get('name');
+    if (kind !== 'form-data' || name === undefined) return true;
+    const filename = parameters.get('filename');
+    if (filename !== undefined) {
+      const text = Multipart.utf8Text(filename);
+      const type = Multipart.utf8Text(Multipart.headerValue(lines, 'content-type') ?? '');
+      if (text === null || type === null) return false;
+      this.file = [text, type];
     }
-    return [new Fields(names, values), new Files(fileNames, files)];
+    this.name = Multipart.utf8Text(name);
+    return this.name !== null;
+  }
+
+  partData(bytes: Uint8Array): boolean {
+    if (this.name !== null) this.content.push(Uint8Array.from(bytes));
+    return true;
+  }
+
+  partEnded(): boolean {
+    if (this.name === null) return true;
+    const content = Buffer.concat(this.content);
+    this.content = [];
+    if (this.file === null) {
+      const value = Multipart.utf8Text(content.toString('latin1'));
+      if (value === null) return false;
+      Multipart.addValue(this.names, this.values, this.name, value);
+    } else {
+      Multipart.addValue(this.fileNames, this.files, this.name, new UploadedFile(this.name, this.file[0], this.file[1], Uint8Array.from(content)));
+    }
+    return true;
+  }
+
+  // Returns the text before the first `;` without the spaces and tabs around it, in lower case, and the parameters
+  // after it by their names in lower case: each follows a `;` and spaces or tabs, its value is a quoted string
+  // without its quotes or the text up to the next `;`, space or tab, and the first parameter of a name counts
+  // (HY-113.13).
+  private static headerParameters(text: string): [string, Map<string, string>] {
+    const parameters = new Map<string, string>();
+    let index = text.indexOf(';');
+    const kind = (index < 0 ? text : text.slice(0, index)).replace(/^[ \t]+|[ \t]+$/g, '').toLowerCase();
+    while (index >= 0) {
+      index += 1;
+      while (text.charAt(index) === ' ' || text.charAt(index) === '\t') index += 1;
+      const start = index;
+      while (index < text.length && text.charAt(index) !== '=' && text.charAt(index) !== ';') index += 1;
+      if (text.charAt(index) !== '=') {
+        index = index < text.length ? index : -1;
+        continue;
+      }
+      const name = text.slice(start, index).toLowerCase();
+      index += 1;
+      let value: string;
+      if (text.charAt(index) === '"') {
+        const close = text.indexOf('"', index + 1);
+        value = text.slice(index + 1, close < 0 ? text.length : close);
+        index = close < 0 ? text.length : close + 1;
+      } else {
+        const from = index;
+        while (index < text.length && text.charAt(index) !== ';' && text.charAt(index) !== ' ' && text.charAt(index) !== '\t') index += 1;
+        value = text.slice(from, index);
+      }
+      if (!parameters.has(name)) parameters.set(name, value);
+      index = text.indexOf(';', index);
+    }
+    return [kind, parameters];
   }
 
   // Returns the value of the first header line of the name, compared without case, without the spaces and tabs around
-  // it, or null when no line has the name.
+  // it, or null when no line has the name (HY-113.12).
   private static headerValue(lines: readonly string[], name: string): string | null {
     for (const line of lines) {
       const colon = line.indexOf(':');

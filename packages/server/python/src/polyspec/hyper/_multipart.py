@@ -1,110 +1,141 @@
-"""Reads a ``multipart/form-data`` body (HY-57, HY-113): a part whose ``Content-Disposition`` is ``form-data`` with a
-``name`` and no ``filename`` is a text field, a part with a ``name`` and a ``filename`` is a file, and a part without a
-name is neither. The header lines of a part are separated by CRLF, and blanks are spaces and tabs (HY-113.12, HY-113.13)."""
+"""Reads the parts of a ``multipart/form-data`` body (HY-57, HY-113): a part whose ``Content-Disposition`` is
+``form-data`` with a ``name`` and no ``filename`` is a text field, a part with a ``name`` and a ``filename`` is a file,
+and another part is neither."""
 
 from __future__ import annotations
 
-import re
 from typing import Optional
 
 # Fields and Files read a body through this module, so it reaches them as modules, which a cycle allows.
 from . import _fields, _files
+from ._multipart_reader import MultipartReader
 from .uploaded_file import UploadedFile
 
 
-# re.ASCII keeps the case folding to ASCII, as the byte patterns of PHP and the patterns of Node fold it.
-class Multipart:
-    """Reads the parts of a ``multipart/form-data`` body."""
+class Multipart(MultipartReader):
+    """Reads the text fields and the files of a ``multipart/form-data`` body."""
 
-    _MULTIPART = re.compile(r"multipart/form-data[ \t]*;", re.IGNORECASE | re.ASCII)
-    _BOUNDARY = re.compile(
-        r';[ \t]*boundary=(?:"([^"]+)"|([^; \t]+))', re.IGNORECASE | re.ASCII
-    )
-    _NAME = re.compile(r';[ \t]*name="([^"]*)"', re.IGNORECASE | re.ASCII)
-    _FILENAME = re.compile(
-        r';[ \t]*filename=(?:"([^"]*)"|([^; \t]*))', re.IGNORECASE | re.ASCII
-    )
-    # The largest header of a part in bytes (HY-113.16).
-    _HEADER_LIMIT = 8192
+    def __init__(self, boundary: str):
+        super().__init__(boundary)
+        self.__names: list[str] = []
+        self.__values: dict[str, list[str]] = {}
+        self.__file_names: list[str] = []
+        self.__files: dict[str, list[UploadedFile]] = {}
+        # The name of the part that is read, or None for a part that is neither a value nor a file (HY-113.6).
+        self.__name: Optional[str] = None
+        # The filename and the content type of the file part that is read, or None for a text field.
+        self.__file: Optional[tuple[str, str]] = None
+        self.__content: list[bytes] = []
 
     @staticmethod
     def boundary(content_type: str) -> Optional[str]:
-        """Returns the boundary of a ``multipart/form-data`` content type, or None for another type (HY-57, HY-113)."""
-        if Multipart._MULTIPART.match(content_type) is None:
-            return None
-        found = Multipart._BOUNDARY.search(content_type)
-        if found is None:
-            return None
-        return found.group(1) if found.group(1) is not None else found.group(2)
+        """Returns the boundary of a ``multipart/form-data`` content type, or None for another type (HY-113.11)."""
+        kind, parameters = Multipart._header_parameters(content_type)
+        boundary = parameters.get("boundary", "")
+        return None if kind != "multipart/form-data" or boundary == "" else boundary
 
     @staticmethod
     def read(
         body: bytes, boundary: str
     ) -> Optional[tuple[_fields.Fields, _files.Files]]:
-        """Returns the text fields and the files of the body, or None when a name, a value, a filename or a content type
-        is not UTF-8 (HY-42, HY-113)."""
-        delimiter = b"--" + boundary.encode("latin-1")
-        names: list[str] = []
-        values: dict[str, list[str]] = {}
-        file_names: list[str] = []
-        files: dict[str, list[UploadedFile]] = {}
-        start = body.find(delimiter)
-        while start >= 0:
-            part_start = start + len(delimiter)
-            if body[part_start : part_start + 2] == b"--":
-                break
-            next_start = body.find(delimiter, part_start)
-            if next_start < 0:
-                break
-            part = body[part_start + 2 : next_start - 2]
-            header_end = part.find(b"\r\n\r\n")
-            start = next_start
-            if (len(part) if header_end < 0 else header_end) > Multipart._HEADER_LIMIT:
-                return None
-            if header_end < 0:
+        """Returns the text fields and the files of the body, or None when the body fails with HY-42 (HY-113,
+        HY-131)."""
+        reader = Multipart(boundary)
+        return reader.result() if reader.feed(body) else None
+
+    def result(self) -> Optional[tuple[_fields.Fields, _files.Files]]:
+        """Returns the text fields and the files that were read, or None for a body that failed or has not ended
+        (HY-131.5)."""
+        if not self.closed():
+            return None
+        return (
+            _fields.Fields(self.__names, self.__values),
+            _files.Files(self.__file_names, self.__files),
+        )
+
+    def part_started(self, lines: list[str]) -> bool:
+        self.__name = None
+        self.__file = None
+        self.__content = []
+        disposition = Multipart._header_value(lines, "content-disposition")
+        if disposition is None:
+            return True
+        kind, parameters = Multipart._header_parameters(disposition)
+        if kind != "form-data" or "name" not in parameters:
+            return True
+        if "filename" in parameters:
+            text = Multipart._utf8_text(parameters["filename"].encode("latin-1"))
+            content_type = Multipart._utf8_text(
+                (Multipart._header_value(lines, "content-type") or "").encode("latin-1")
+            )
+            if text is None or content_type is None:
+                return False
+            self.__file = (text, content_type)
+        self.__name = Multipart._utf8_text(parameters["name"].encode("latin-1"))
+        return self.__name is not None
+
+    def part_data(self, data: bytes) -> bool:
+        if self.__name is not None:
+            self.__content.append(data)
+        return True
+
+    def part_ended(self) -> bool:
+        if self.__name is None:
+            return True
+        content = b"".join(self.__content)
+        self.__content = []
+        if self.__file is None:
+            value = Multipart._utf8_text(content)
+            if value is None:
+                return False
+            Multipart._add_value(self.__names, self.__values, self.__name, value)
+        else:
+            uploaded = UploadedFile(
+                self.__name, self.__file[0], self.__file[1], content
+            )
+            Multipart._add_value(self.__file_names, self.__files, self.__name, uploaded)
+        return True
+
+    @staticmethod
+    def _header_parameters(text: str) -> tuple[str, dict[str, str]]:
+        """Returns the text before the first ``;`` without the spaces and tabs around it, in lower case, and the
+        parameters after it by their names in lower case: each follows a ``;`` and spaces or tabs, its value is a
+        quoted string without its quotes or the text up to the next ``;``, space or tab, and the first parameter of a
+        name counts (HY-113.13)."""
+        parameters: dict[str, str] = {}
+        length = len(text)
+        index = text.find(";")
+        kind = (text if index < 0 else text[:index]).strip(" \t").lower()
+        while index >= 0:
+            index += 1
+            while index < length and text[index] in " \t":
+                index += 1
+            start = index
+            while index < length and text[index] not in "=;":
+                index += 1
+            if index >= length or text[index] != "=":
+                index = index if index < length else -1
                 continue
-            lines = part[:header_end].decode("latin-1").split("\r\n")
-            content = part[header_end + 4 :]
-            disposition = Multipart._header_value(lines, "content-disposition")
-            if disposition is None or disposition[:9].lower() != "form-data":
-                continue
-            parameters = disposition[9:]
-            found = Multipart._NAME.search(parameters)
-            if found is None:
-                continue
-            name = Multipart._utf8_text(found.group(1).encode("latin-1"))
-            if name is None:
-                return None
-            filename = Multipart._FILENAME.search(parameters)
-            if filename is None:
-                value = Multipart._utf8_text(content)
-                if value is None:
-                    return None
-                Multipart._add_value(names, values, name, value)
+            name = text[start:index].lower()
+            index += 1
+            if index < length and text[index] == '"':
+                close = text.find('"', index + 1)
+                value = text[index + 1 : length if close < 0 else close]
+                index = length if close < 0 else close + 1
             else:
-                # A quoted filename keeps its backslashes; a token is the text as it is (HY-113.14).
-                raw = (
-                    filename.group(1)
-                    if filename.group(1) is not None
-                    else filename.group(2) or ""
-                )
-                text = Multipart._utf8_text(raw.encode("latin-1"))
-                kind = Multipart._utf8_text(
-                    (Multipart._header_value(lines, "content-type") or "").encode(
-                        "latin-1"
-                    )
-                )
-                if text is None or kind is None:
-                    return None
-                Multipart._add_value(
-                    file_names, files, name, UploadedFile(name, text, kind, content)
-                )
-        return _fields.Fields(names, values), _files.Files(file_names, files)
+                start = index
+                while index < length and text[index] not in "; \t":
+                    index += 1
+                value = text[start:index]
+            if name not in parameters:
+                parameters[name] = value
+            index = text.find(";", index)
+        return kind, parameters
 
     @staticmethod
     def _header_value(lines: list[str], name: str) -> Optional[str]:
         """Returns the value of the first header line of the name, compared without case, without the spaces and tabs
-        around it, or None when no line has the name."""
+        around it, or None when no line has the name (HY-113.12)."""
         for line in lines:
             colon = line.find(":")
             if colon >= 0 and line[:colon].lower() == name:

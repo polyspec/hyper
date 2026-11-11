@@ -2835,7 +2835,7 @@
           "native": {
             "php": {
               "file": "packages/server/php/src/Multipart.php",
-              "kind": "functions",
+              "kind": "class",
               "internal": true
             },
             "node": {
@@ -2850,6 +2850,31 @@
             }
           },
           "members": [
+            {
+              "id": "multipart.constructor",
+              "kind": "constructor",
+              "visibility": "internal",
+              "inputs": [
+                "string"
+              ],
+              "output": "none",
+              "errors": [],
+              "state": "Starts a reader of a body with the boundary and no parts.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Multipart.php::Polyspec\\Hyper\\Multipart::__construct",
+                  "signature": "public function __construct(string $boundary)"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/multipart.ts::Multipart.constructor",
+                  "signature": "constructor(boundary: string)"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_multipart.py::Multipart.__init__",
+                  "signature": "def __init__(self, boundary: str)"
+                }
+              }
+            },
             {
               "id": "multipart.boundary",
               "kind": "static method",
@@ -2898,6 +2923,127 @@
                 "python": {
                   "symbol": "packages/server/python/src/polyspec/hyper/_multipart.py::Multipart.read",
                   "signature": "def read(body: bytes, boundary: str) -> Optional[tuple[_fields.Fields, _files.Files]]"
+                }
+              }
+            },
+            {
+              "id": "multipart.result",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "optional<list<value>>",
+              "errors": [],
+              "state": "Returns the text fields and the files that were read as a pair, or null for a body that failed or has not ended (HY-131.5).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Multipart.php::Polyspec\\Hyper\\Multipart::result",
+                  "signature": "public function result(): ?array"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/multipart.ts::Multipart.result",
+                  "signature": "result(): [Fields, Files] | null"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_multipart.py::Multipart.result",
+                  "signature": "def result(self) -> Optional[tuple[_fields.Fields, _files.Files]]"
+                }
+              }
+            },
+            {
+              "id": "multipart.partStarted",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "list<string>"
+              ],
+              "output": "boolean",
+              "errors": [],
+              "state": "Reads the name, the filename and the content type of a part from its header lines, and returns false when one of them is not UTF-8 (HY-113.5, HY-113.13).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Multipart.php::Polyspec\\Hyper\\Multipart::partStarted",
+                  "signature": "public function partStarted(array $lines): bool"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/multipart.ts::Multipart.partStarted",
+                  "signature": "partStarted(lines: string[]): boolean"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_multipart.py::Multipart.part_started",
+                  "signature": "def part_started(self, lines: list[str]) -> bool"
+                }
+              }
+            },
+            {
+              "id": "multipart.partData",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "bytes"
+              ],
+              "output": "boolean",
+              "errors": [],
+              "state": "Keeps the bytes of the content of a part that is a value or a file.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Multipart.php::Polyspec\\Hyper\\Multipart::partData",
+                  "signature": "public function partData(string $bytes): bool"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/multipart.ts::Multipart.partData",
+                  "signature": "partData(bytes: Uint8Array): boolean"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_multipart.py::Multipart.part_data",
+                  "signature": "def part_data(self, data: bytes) -> bool"
+                }
+              }
+            },
+            {
+              "id": "multipart.partEnded",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "boolean",
+              "errors": [],
+              "state": "Adds the value or the file of the part to its name, and returns false when the content of a text field is not UTF-8 (HY-57.5).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Multipart.php::Polyspec\\Hyper\\Multipart::partEnded",
+                  "signature": "public function partEnded(): bool"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/multipart.ts::Multipart.partEnded",
+                  "signature": "partEnded(): boolean"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_multipart.py::Multipart.part_ended",
+                  "signature": "def part_ended(self) -> bool"
+                }
+              }
+            },
+            {
+              "id": "multipart.headerParameters",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "string"
+              ],
+              "output": "list<value>",
+              "errors": [],
+              "state": "Returns the text before the first ; in lower case and the parameters after it by their names, the value of each a quoted string without its quotes or the text up to the next ;, space or tab, the first of a name counting (HY-113.13, HY-113.14).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Multipart.php::Polyspec\\Hyper\\Multipart::headerParameters",
+                  "signature": "private static function headerParameters(string $text): array"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/multipart.ts::Multipart.headerParameters",
+                  "signature": "private static headerParameters(text: string): [string, Map<string, string>]"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_multipart.py::Multipart._header_parameters",
+                  "signature": "def _header_parameters(text: str) -> tuple[str, dict[str, str]]"
                 }
               }
             },
@@ -2977,6 +3123,269 @@
                 "python": {
                   "symbol": "packages/server/python/src/polyspec/hyper/_multipart.py::Multipart._utf8_text",
                   "signature": "def _utf8_text(data: bytes) -> Optional[str]"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "multipart-reader",
+          "native": {
+            "php": {
+              "file": "packages/server/php/src/MultipartReader.php",
+              "kind": "class",
+              "internal": true
+            },
+            "node": {
+              "file": "packages/server/ts/src/multipart-reader.ts",
+              "kind": "class",
+              "internal": true
+            },
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/_multipart_reader.py",
+              "kind": "class",
+              "internal": true
+            }
+          },
+          "members": [
+            {
+              "id": "multipart-reader.constructor",
+              "kind": "constructor",
+              "visibility": "internal",
+              "inputs": [
+                "string"
+              ],
+              "output": "none",
+              "errors": [],
+              "state": "Starts in the state before the first delimiter of a body with the boundary (HY-131.2).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/MultipartReader.php::Polyspec\\Hyper\\MultipartReader::__construct",
+                  "signature": "public function __construct(string $boundary)"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/multipart-reader.ts::MultipartReader.constructor",
+                  "signature": "constructor(boundary: string)"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_multipart_reader.py::MultipartReader.__init__",
+                  "signature": "def __init__(self, boundary: str)"
+                }
+              }
+            },
+            {
+              "id": "multipart-reader.feed",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "bytes"
+              ],
+              "output": "boolean",
+              "errors": [],
+              "state": "Reads the next chunk of the body, and returns false when the body failed (HY-131.5, HY-131.6).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/MultipartReader.php::Polyspec\\Hyper\\MultipartReader::feed",
+                  "signature": "public function feed(string $chunk): bool"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/multipart-reader.ts::MultipartReader.feed",
+                  "signature": "feed(chunk: Uint8Array): boolean"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_multipart_reader.py::MultipartReader.feed",
+                  "signature": "def feed(self, chunk: bytes) -> bool"
+                }
+              }
+            },
+            {
+              "id": "multipart-reader.closed",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "boolean",
+              "errors": [],
+              "state": "Returns true when the body ended with the -- after a delimiter (HY-131.4).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/MultipartReader.php::Polyspec\\Hyper\\MultipartReader::closed",
+                  "signature": "public function closed(): bool"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/multipart-reader.ts::MultipartReader.closed",
+                  "signature": "closed(): boolean"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_multipart_reader.py::MultipartReader.closed",
+                  "signature": "def closed(self) -> bool"
+                }
+              }
+            },
+            {
+              "id": "multipart-reader.buffered",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "number",
+              "errors": [],
+              "state": "Returns the number of bytes that the reader holds between two chunks, at most the header limit or the delimiter with three bytes (HY-131.1).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/MultipartReader.php::Polyspec\\Hyper\\MultipartReader::buffered",
+                  "signature": "public function buffered(): int"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/multipart-reader.ts::MultipartReader.buffered",
+                  "signature": "buffered(): number"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_multipart_reader.py::MultipartReader.buffered",
+                  "signature": "def buffered(self) -> int"
+                }
+              }
+            },
+            {
+              "id": "multipart-reader.partStarted",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "list<string>"
+              ],
+              "output": "boolean",
+              "errors": [],
+              "state": "Receives the header lines of a part, and returns false to fail the body.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/MultipartReader.php::Polyspec\\Hyper\\MultipartReader::partStarted",
+                  "signature": "abstract public function partStarted(array $lines): bool"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/multipart-reader.ts::MultipartReader.partStarted",
+                  "signature": "abstract partStarted(lines: string[]): boolean"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_multipart_reader.py::MultipartReader.part_started",
+                  "signature": "def part_started(self, lines: list[str]) -> bool"
+                }
+              }
+            },
+            {
+              "id": "multipart-reader.partData",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "bytes"
+              ],
+              "output": "boolean",
+              "errors": [],
+              "state": "Receives the next bytes of the content of the part, and returns false to fail the body.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/MultipartReader.php::Polyspec\\Hyper\\MultipartReader::partData",
+                  "signature": "abstract public function partData(string $bytes): bool"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/multipart-reader.ts::MultipartReader.partData",
+                  "signature": "abstract partData(bytes: Uint8Array): boolean"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_multipart_reader.py::MultipartReader.part_data",
+                  "signature": "def part_data(self, data: bytes) -> bool"
+                }
+              }
+            },
+            {
+              "id": "multipart-reader.partEnded",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "boolean",
+              "errors": [],
+              "state": "Receives the end of the part, and returns false to fail the body.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/MultipartReader.php::Polyspec\\Hyper\\MultipartReader::partEnded",
+                  "signature": "abstract public function partEnded(): bool"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/multipart-reader.ts::MultipartReader.partEnded",
+                  "signature": "abstract partEnded(): boolean"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_multipart_reader.py::MultipartReader.part_ended",
+                  "signature": "def part_ended(self) -> bool"
+                }
+              }
+            },
+            {
+              "id": "multipart-reader.advance",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [],
+              "output": "boolean",
+              "errors": [],
+              "state": "Takes one step of the state machine, and returns false when it needs another chunk or has ended (HY-131.2 to HY-131.5, HY-113.16).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/MultipartReader.php::Polyspec\\Hyper\\MultipartReader::advance",
+                  "signature": "private function advance(): bool"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/multipart-reader.ts::MultipartReader.advance",
+                  "signature": "private advance(): boolean"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_multipart_reader.py::MultipartReader._advance",
+                  "signature": "def _advance(self) -> bool"
+                }
+              }
+            },
+            {
+              "id": "multipart-reader.next",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [
+                "string",
+                "number"
+              ],
+              "output": "boolean",
+              "errors": [],
+              "state": "Drops the bytes that were read and enters the state.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/MultipartReader.php::Polyspec\\Hyper\\MultipartReader::next",
+                  "signature": "private function next(string $state, int $read): bool"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/multipart-reader.ts::MultipartReader.next",
+                  "signature": "private next(state: 'delimiter' | 'headers' | 'content', read: number): boolean"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_multipart_reader.py::MultipartReader._next",
+                  "signature": "def _next(self, state: str, read: int) -> bool"
+                }
+              }
+            },
+            {
+              "id": "multipart-reader.fail",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [],
+              "output": "boolean",
+              "errors": [],
+              "state": "Enters the failed state and drops the buffer.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/MultipartReader.php::Polyspec\\Hyper\\MultipartReader::fail",
+                  "signature": "private function fail(): bool"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/multipart-reader.ts::MultipartReader.fail",
+                  "signature": "private fail(): boolean"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_multipart_reader.py::MultipartReader._fail",
+                  "signature": "def _fail(self) -> bool"
                 }
               }
             }

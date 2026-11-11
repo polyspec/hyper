@@ -5,113 +5,185 @@ declare(strict_types=1);
 namespace Polyspec\Hyper;
 
 /**
- * Reads a `multipart/form-data` body without PHP's own reader, which needs `enable_post_data_reading` (HY-57): a part
- * whose `Content-Disposition` is `form-data` with a `name` and no `filename` is a text field, a part with a `name` and
- * a `filename` is a file, and a part without a name is neither (HY-113). The header lines of a part are separated by
- * CRLF, and blanks are spaces and tabs (HY-113.12, HY-113.13).
+ * Reads the parts of a `multipart/form-data` body without PHP's own reader, which needs `enable_post_data_reading`
+ * (HY-57): a part whose `Content-Disposition` is `form-data` with a `name` and no `filename` is a text field, a part
+ * with a `name` and a `filename` is a file, and another part is neither (HY-113).
  *
  * @internal
  */
-final class Multipart
+final class Multipart extends MultipartReader
 {
-    private const NAME = '/;[ \t]*name="([^"]*)"/i';
+    /** @var list<string> */
+    private array $names;
 
-    private const FILENAME = '/;[ \t]*filename=(?:"([^"]*)"|([^; \t]*))/i';
+    /** @var array<array-key, list<string>> */
+    private array $values;
 
-    /** The largest header of a part in bytes (HY-113.16). */
-    private const HEADER_LIMIT = 8192;
+    /** @var list<string> */
+    private array $fileNames;
 
-    /** Returns the boundary of a `multipart/form-data` content type, or null for another type (HY-57, HY-113). */
+    /** @var array<array-key, list<UploadedFile>> */
+    private array $files;
+
+    /** The name of the part that is read, or null for a part that is neither a value nor a file (HY-113.6). */
+    private ?string $name;
+
+    /**
+     * The filename and the content type of the file part that is read, or null for a text field.
+     *
+     * @var array{string, string}|null
+     */
+    private ?array $file;
+
+    private string $content;
+
+    public function __construct(string $boundary)
+    {
+        parent::__construct($boundary);
+        $this->names = [];
+        $this->values = [];
+        $this->fileNames = [];
+        $this->files = [];
+        $this->name = null;
+        $this->file = null;
+        $this->content = '';
+    }
+
+    /** Returns the boundary of a `multipart/form-data` content type, or null for another type (HY-113.11). */
     public static function boundary(string $type): ?string
     {
-        if (
-            preg_match('#^multipart/form-data[ \t]*;#i', $type) !== 1
-            || preg_match('#;[ \t]*boundary=(?:"([^"]+)"|([^; \t]+))#i', $type, $found, PREG_UNMATCHED_AS_NULL) !== 1
-        ) {
-            return null;
-        }
+        [$kind, $parameters] = self::headerParameters($type);
+        $boundary = $parameters['boundary'] ?? '';
 
-        return $found[1] ?? $found[2];
+        return $kind !== 'multipart/form-data' || $boundary === '' ? null : $boundary;
     }
 
     /**
-     * Returns the text fields and the files of the body, or null when a name, a value, a filename or a content type is
-     * not UTF-8 (HY-42, HY-113).
+     * Returns the text fields and the files of the body, or null when the body fails with HY-42 (HY-113, HY-131).
      *
      * @return array{0: Fields, 1: Files}|null
      */
     public static function read(string $body, string $boundary): ?array
     {
-        $delimiter = "--{$boundary}";
-        $names = [];
-        $values = [];
-        $fileNames = [];
-        $files = [];
-        $start = strpos($body, $delimiter);
-        while ($start !== false) {
-            $partStart = $start + strlen($delimiter);
-            if (substr($body, $partStart, 2) === '--') {
-                break;
+        $reader = new self($boundary);
+
+        return $reader->feed($body) ? $reader->result() : null;
+    }
+
+    /**
+     * Returns the text fields and the files that were read, or null for a body that failed or has not ended
+     * (HY-131.5).
+     *
+     * @return array{0: Fields, 1: Files}|null
+     */
+    public function result(): ?array
+    {
+        return $this->closed()
+            ? [new Fields($this->names, $this->values), new Files($this->fileNames, $this->files)]
+            : null;
+    }
+
+    public function partStarted(array $lines): bool
+    {
+        $this->name = null;
+        $this->file = null;
+        $this->content = '';
+        $disposition = self::headerValue($lines, 'content-disposition');
+        if ($disposition === null) {
+            return true;
+        }
+        [$kind, $parameters] = self::headerParameters($disposition);
+        if ($kind !== 'form-data' || !array_key_exists('name', $parameters)) {
+            return true;
+        }
+        if (array_key_exists('filename', $parameters)) {
+            $text = self::utf8Text($parameters['filename']);
+            $type = self::utf8Text(self::headerValue($lines, 'content-type') ?? '');
+            if ($text === null || $type === null) {
+                return false;
             }
-            $next = strpos($body, $delimiter, $partStart);
-            if ($next === false) {
-                break;
-            }
-            // Fewer than four bytes between two delimiters hold no part; a negative length of substr counts from the
-            // end of the body.
-            $part = $next - 2 < $partStart + 2 ? '' : substr($body, $partStart + 2, $next - 2 - ($partStart + 2));
-            $headerEnd = strpos($part, "\r\n\r\n");
-            $start = $next;
-            if (($headerEnd === false ? strlen($part) : $headerEnd) > self::HEADER_LIMIT) {
-                return null;
-            }
-            if ($headerEnd === false) {
-                continue;
-            }
-            $lines = explode("\r\n", substr($part, 0, $headerEnd));
-            $content = substr($part, $headerEnd + 4);
-            $disposition = self::headerValue($lines, 'content-disposition');
-            if ($disposition === null || strtolower(substr($disposition, 0, 9)) !== 'form-data') {
-                continue;
-            }
-            $parameters = substr($disposition, 9);
-            $named = preg_match(self::NAME, $parameters, $found);
-            $filed = preg_match(self::FILENAME, $parameters, $filename, PREG_UNMATCHED_AS_NULL);
-            if ($named === false || $filed === false) {
-                // A pattern that fails is a defect of this reader, not a part without the parameter.
-                throw new \LogicException('hyper: ' . preg_last_error_msg());
-            }
-            if ($named !== 1) {
-                continue;
-            }
-            $name = self::utf8Text($found[1]);
-            if ($name === null) {
-                return null;
-            }
-            if ($filed !== 1) {
-                $value = self::utf8Text($content);
-                if ($value === null) {
-                    return null;
-                }
-                self::addValue($names, $values, $name, $value);
-            } else {
-                // A quoted filename keeps its backslashes; a token is the text as it is (HY-113.14).
-                $raw = $filename[1] ?? $filename[2] ?? '';
-                $text = self::utf8Text($raw);
-                $kind = self::utf8Text(self::headerValue($lines, 'content-type') ?? '');
-                if ($text === null || $kind === null) {
-                    return null;
-                }
-                self::addValue($fileNames, $files, $name, new UploadedFile($name, $text, $kind, $content));
-            }
+            $this->file = [$text, $type];
+        }
+        $this->name = self::utf8Text($parameters['name']);
+
+        return $this->name !== null;
+    }
+
+    public function partData(string $bytes): bool
+    {
+        if ($this->name !== null) {
+            $this->content .= $bytes;
         }
 
-        return [new Fields($names, $values), new Files($fileNames, $files)];
+        return true;
+    }
+
+    public function partEnded(): bool
+    {
+        if ($this->name === null) {
+            return true;
+        }
+        $content = $this->content;
+        $this->content = '';
+        if ($this->file === null) {
+            $value = self::utf8Text($content);
+            if ($value === null) {
+                return false;
+            }
+            self::addValue($this->names, $this->values, $this->name, $value);
+        } else {
+            $file = new UploadedFile($this->name, $this->file[0], $this->file[1], $content);
+            self::addValue($this->fileNames, $this->files, $this->name, $file);
+        }
+
+        return true;
+    }
+
+    /**
+     * Returns the text before the first `;` without the spaces and tabs around it, in lower case, and the parameters
+     * after it by their names in lower case: each follows a `;` and spaces or tabs, its value is a quoted string
+     * without its quotes or the text up to the next `;`, space or tab, and the first parameter of a name counts
+     * (HY-113.13).
+     *
+     * @return array{string, array<array-key, string>}
+     */
+    private static function headerParameters(string $text): array
+    {
+        $parameters = [];
+        $length = strlen($text);
+        $index = strpos($text, ';');
+        $kind = strtolower(trim($index === false ? $text : substr($text, 0, $index), " \t"));
+        while ($index !== false) {
+            $index += 1 + strspn($text, " \t", $index + 1);
+            $start = $index;
+            $index += strcspn($text, '=;', $index);
+            if ($index >= $length || $text[$index] !== '=') {
+                $index = $index < $length ? $index : false;
+                continue;
+            }
+            $name = strtolower(substr($text, $start, $index - $start));
+            $index += 1;
+            if ($index < $length && $text[$index] === '"') {
+                $close = strpos($text, '"', $index + 1);
+                $value = substr($text, $index + 1, ($close === false ? $length : $close) - $index - 1);
+                $index = $close === false ? $length : $close + 1;
+            } else {
+                $size = strcspn($text, "; \t", $index);
+                $value = substr($text, $index, $size);
+                $index += $size;
+            }
+            if (!array_key_exists($name, $parameters)) {
+                $parameters[$name] = $value;
+            }
+            $index = $index < $length ? strpos($text, ';', $index) : false;
+        }
+
+        return [$kind, $parameters];
     }
 
     /**
      * Returns the value of the first header line of the name, compared without case, without the spaces and tabs
-     * around it, or null when no line has the name.
+     * around it, or null when no line has the name (HY-113.12).
      *
      * @param list<string> $lines
      */

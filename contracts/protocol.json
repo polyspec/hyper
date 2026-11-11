@@ -845,9 +845,9 @@
                 },
                 {
                   "id": "HY-113.11",
-                  "en": "The boundary of a `multipart/form-data` body is the parameter `boundary` of a content type that starts with `multipart/form-data`, spaces or tabs and `;`, compared without case: a quoted string of one character or more without its quotes, or else the text up to the next `;`, space or tab.",
-                  "ko": "`multipart/form-data` body의 boundary는 대소문자를 구분하지 않고 `multipart/form-data`, 공백이나 tab, `;`으로 시작하는 content type의 parameter `boundary`다: 한 글자 이상의 quoted string에서 따옴표를 뺀 것, 아니면 다음 `;`, 공백, tab까지의 text다.",
-                  "koSource": "10f18ca3e92f82974ef0565b0d328e96d1208cc2e0e9e8de88a27f2ad8e5d321"
+                  "en": "The boundary of a `multipart/form-data` body is the parameter `boundary` (HY-113.13) of a content type whose text before its first `;`, without the spaces and tabs around it and compared without case, is `multipart/form-data`, and a content type without that parameter, or with an empty one, has no boundary.",
+                  "ko": "`multipart/form-data` body의 boundary는 첫 `;` 앞의 text가 둘레의 공백과 tab을 빼고 대소문자를 구분하지 않아 `multipart/form-data`인 content type의 parameter `boundary`(HY-113.13)이며, 그 parameter가 없거나 비어 있는 content type은 boundary가 없다.",
+                  "koSource": "b9ec8b30ce45cfb07fc603b58586eec1fcb2372846d2ca65cf028ba29b5c3724"
                 },
                 {
                   "id": "HY-113.12",
@@ -857,15 +857,15 @@
                 },
                 {
                   "id": "HY-113.13",
-                  "en": "A `Content-Disposition` is `form-data` when its value starts with `form-data`, compared without case, and the parameters `name` and `filename` are found in the rest after a `;` and spaces or tabs, compared without case, so that another blank, such as a no-break space, separates nothing.",
-                  "ko": "`Content-Disposition`은 그 값이 대소문자를 구분하지 않고 `form-data`로 시작할 때 `form-data`이며, parameter `name`과 `filename`은 나머지에서 `;`과 공백이나 tab 뒤에서 대소문자를 구분하지 않고 찾으므로, no-break space 같은 다른 공백은 아무것도 나누지 않는다.",
-                  "koSource": "ed471b2eec7fda4393fcb3adf4ed7a43f6c917057a7e308d30648415cbb9602b"
+                  "en": "A `Content-Disposition` is `form-data` when its text before its first `;`, without the spaces and tabs around it and compared without case, is `form-data`, and each parameter follows a `;` and spaces or tabs as a name up to its `=`, compared without case, and a value that is a quoted string without its quotes or the text up to the next `;`, space or tab; the first parameter of a name counts, the text inside a quoted string is no parameter, and another blank, such as a no-break space, separates nothing.",
+                  "ko": "`Content-Disposition`은 첫 `;` 앞의 text가 둘레의 공백과 tab을 빼고 대소문자를 구분하지 않아 `form-data`일 때 `form-data`이며, 각 parameter는 `;`과 공백이나 tab 뒤에 오고 `=`까지가 대소문자를 구분하지 않는 이름, 그 뒤가 따옴표를 뺀 quoted string이거나 다음 `;`, 공백, tab까지의 text인 값이다. 같은 이름의 parameter는 첫 번째가 쓰이고, quoted string 안의 text는 parameter가 아니며, no-break space 같은 다른 공백은 아무것도 나누지 않는다.",
+                  "koSource": "3608ddc3545461be53682f472dc7e93a6c1f0eb836d92a463180addfe58640ba"
                 },
                 {
                   "id": "HY-113.14",
-                  "en": "A quoted filename is the text between its first `\"` and the next `\"`, with every backslash kept, because a browser sends a backslash of a filename as it is and a `\"` as `%22`; a filename that is not quoted is the text up to the next `;`, space or tab as it is, also when it holds a `\"`.",
-                  "ko": "따옴표로 감싼 filename은 첫 `\"`와 다음 `\"` 사이의 text이며 backslash를 모두 그대로 둔다. browser는 filename의 backslash를 그대로 보내고 `\"`는 `%22`로 보내기 때문이다. 따옴표로 감싸지 않은 filename은 다음 `;`, 공백, tab까지의 text를 그대로 쓰며 `\"`를 담아도 그렇다.",
-                  "koSource": "871cc9bd58d052727ae7168a1525869b8bf4d32e531008f266a4272a2f6d3b0c"
+                  "en": "A quoted value is the text between its first `\"` and the next `\"`, or the rest of the text when there is no next one, with every backslash kept, because a browser sends a backslash of a filename as it is and a `\"` as `%22`; a value that is not quoted is the text as it is, also when it holds a `\"`.",
+                  "ko": "quoted 값은 첫 `\"`와 다음 `\"` 사이의 text이고 다음 것이 없으면 text의 나머지이며 backslash를 모두 그대로 둔다. browser는 filename의 backslash를 그대로 보내고 `\"`는 `%22`로 보내기 때문이다. 따옴표로 감싸지 않은 값은 text 그대로이며 `\"`를 담아도 그렇다.",
+                  "koSource": "a47caa4e0105ee9b5c4ba567c0f39a0813929c390228dc607f8aac92a9f080ef"
                 },
                 {
                   "id": "HY-113.15",
@@ -875,9 +875,9 @@
                 },
                 {
                   "id": "HY-113.16",
-                  "en": "The header lines of a part, from the end of its delimiter line to its empty line, or the whole part when it has no empty line, are at most 8192 bytes, and a body with a longer one fails with HY-42.",
-                  "ko": "part의 header 줄은 delimiter 줄의 끝부터 빈 줄까지, 빈 줄이 없으면 part 전체이며 8192 byte 이하이고, 더 긴 것을 가진 body는 HY-42로 실패한다.",
-                  "koSource": "45f4816b2b54b50ae361f3b1fb39c363fae16b9b6d000db718226c371699ae5f"
+                  "en": "The header lines of a part, from the end of its delimiter line to its empty line, are at most 8192 bytes, and a body with longer ones fails with HY-42.",
+                  "ko": "part의 header 줄은 delimiter 줄의 끝부터 빈 줄까지이며 8192 byte 이하이고, 더 긴 것을 가진 body는 HY-42로 실패한다.",
+                  "koSource": "03f9dee4a4f1b2799eabcf55ee2e77e73b229ba508cd9e4fc613d91a5f7cb10b"
                 }
               ]
             }
@@ -1067,9 +1067,9 @@
                 },
                 {
                   "id": "HY-131.20",
-                  "en": "This rule is not implemented: each server reads a body as one value, copies the content of each file part, ignores a part without an empty line and a body without its end, and has no value limit and no part limit (H29.2 to H29.4).",
-                  "ko": "이 rule은 구현되지 않았으며, 각 server는 body를 한 값으로 읽고 file part마다 내용을 복사하고, 빈 줄이 없는 part와 끝이 없는 body를 무시하며, value 제한과 part 제한이 없다(H29.2부터 H29.4까지).",
-                  "koSource": "75c7082c2f4f0d6f181aaa96fc3dfa18e5808aa04c559030d9bc0d70001111f4"
+                  "en": "Of this rule the servers implement the reading of the delimiters and the parts with their failures (HY-131.2 to HY-131.6), while each server still holds a body and the content of each file part as one value and has no value limit, no part limit, no temporary file and no `size()` and `moveTo()` (H29.3, H29.4).",
+                  "ko": "이 rule 중 server들은 delimiter와 part를 읽는 것과 그 실패(HY-131.2부터 HY-131.6까지)를 구현하며, 각 server는 아직 body와 file part의 내용을 한 값으로 두고 value 제한, part 제한, 임시 file, `size()`와 `moveTo()`가 없다(H29.3, H29.4).",
+                  "koSource": "33121490432f045808e7fb567f335e256dc495f6271e69c18ac415f5ae8755e8"
                 }
               ]
             }

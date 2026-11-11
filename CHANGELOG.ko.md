@@ -6,6 +6,8 @@
 
 ## Unreleased
 
+- 세 server가 body를 조각으로 받는 하나의 상태 기계로 multipart body를 읽는다(HY-131.2부터 HY-131.6까지). `MultipartReader`는 delimiter를 찾고 두 조각 사이에 part 하나의 header 줄이나 delimiter까지만 두며, `Multipart`는 이를 확장해 값과 file을 모은다. delimiter는 body의 처음이나 CRLF 뒤에서만 인정되므로 내용의 줄 안에 있는 `--boundary`는 내용이다. server들은 거기서 내용을 잘랐다. 닫는 delimiter가 없는 body, delimiter 뒤의 CRLF나 `--`가 아닌 byte, delimiter로 시작하는 header 줄은 요청을 status 400으로 실패시킨다. server들은 그런 body를 오류 없이 읽고 그 part를 버렸다. `Content-Disposition`과 content type의 parameter는 순서대로 읽는다(HY-113.11, HY-113.13, HY-113.14). quoted string 안의 text는 parameter가 아니므로 `name="a; filename=x"`는 file이 아니라 값이고 quoted string 안의 `boundary=`는 boundary가 아니다. 따옴표 없는 `name`은 이름이다. `form-dataX`는 `form-data`가 아니다. 문자가 없는 quoted boundary는 boundary가 아니다. `contracts/fields.json`의 각 multipart case는 모든 위치에서 두 조각으로 나눠서도 읽고 reader가 둔 byte를 그 한계와 대조하며, 14개 case가 이 입력들을 담는다. server들은 아직 body와 각 file을 메모리에 둔다(H29.2, H29.2-1).
+
 - PHP server는 multipart body의 두 delimiter 사이의 4 byte 미만을 Node와 Python server처럼 part가 없는 것으로 읽는다. `substr`의 음수 길이가 끝에서부터 세기 때문에 body의 나머지를 part의 내용으로 읽었다. PHP의 `queryInt`는 Node와 Python처럼 마지막에 line feed가 있는 숫자(`12%0A`)를 거부한다. Python reader의 pattern은 대소문자를 ASCII에서만 접으므로 U+0131을 가진 `multıpart/form-data`는 multipart type이 아니다. `UploadedFile`의 주석은 filename이 보낸 그대로라고 적는다(HY-113.14). `contracts/fields.json`의 두 case가 그 delimiter를 담는다(H28.11).
 
 - HY-131이 조각 단위로 읽는 `multipart/form-data` body를 명세한다. delimiter와 body의 끝, 형식이 틀린 body의 status 400 실패, status 413의 value 제한과 part 제한, file part의 임시 file과 그 삭제, `UploadedFile`의 `size()`와 `moveTo()`다. 이 rule은 아직 어느 server도 구현하지 않았다고 적으며, 각 server는 body를 한 값으로 읽는다(H29.1).
