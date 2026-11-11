@@ -7,6 +7,7 @@ requests in the temporary directory while the request runs. It prints the addres
 import hashlib
 import json
 import os
+import resource
 import tempfile
 
 from polyspec.hyper.app import App
@@ -20,9 +21,15 @@ limit = int(os.environ["UPLOAD_LIMIT"])
 
 
 def around(request, answer):
+    # UPLOAD_USAGE=1 is the form of benchmarks/uploads.mts: the sizes of the files without a move, and the processor
+    # time and the largest memory of the process.
+    usage = os.environ.get("UPLOAD_USAGE") == "1"
     files = []
     for name, items in request.files():
         for uploaded in items:
+            if usage:
+                files.append([name, uploaded.size()])
+                continue
             target = os.path.join(moved, f"python-{len(files)}")
             uploaded.move_to(target)
             digest = hashlib.sha256()
@@ -39,23 +46,23 @@ def around(request, answer):
                 ]
             )
             os.unlink(target)
-    return Response.text(
-        200,
-        json.dumps(
-            {
-                "valid": request.valid_input(),
-                "form": request.form(),
-                "files": files,
-                "held": len(
-                    [
-                        name
-                        for name in os.listdir(tempfile.gettempdir())
-                        if name.startswith("hyper-")
-                    ]
-                ),
-            }
+    result = {
+        "valid": request.valid_input(),
+        "form": request.form(),
+        "files": files,
+        "held": len(
+            [
+                name
+                for name in os.listdir(tempfile.gettempdir())
+                if name.startswith("hyper-")
+            ]
         ),
-    )
+    }
+    if usage:
+        used = resource.getrusage(resource.RUSAGE_SELF)
+        result["cpu"] = (used.ru_utime + used.ru_stime) * 1000
+        result["rss"] = used.ru_maxrss
+    return Response.text(200, json.dumps(result))
 
 
 app = App.open(
@@ -66,6 +73,7 @@ app = App.open(
     body_limit=limit,
     form_types=["application/x-www-form-urlencoded", "multipart/form-data"],
     file_limit=limit,
+    part_limit=int(os.environ.get("UPLOAD_PARTS", "1000")),
 )
 server = create_server(app, FileSessions(os.environ["UPLOAD_SESSIONS"]), around=around)
 print(f"upload on http://127.0.0.1:{server.server_address[1]}", flush=True)

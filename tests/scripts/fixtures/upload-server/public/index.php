@@ -29,10 +29,18 @@ App::open(
     bodyLimit: $limit,
     formTypes: ['application/x-www-form-urlencoded', 'multipart/form-data'],
     fileLimit: $limit,
+    partLimit: (int) (getenv('UPLOAD_PARTS') ?: 1000),
     around: static function (Request $request) use ($moved): Response {
+        // UPLOAD_USAGE=1 is the form of benchmarks/uploads.mts: the sizes of the files without a move, and the
+        // processor time and the largest memory of the process.
+        $usage = getenv('UPLOAD_USAGE') === '1';
         $files = [];
         foreach ($request->files() as [$name, $list]) {
             foreach ($list as $file) {
+                if ($usage) {
+                    $files[] = [$name, $file->size()];
+                    continue;
+                }
                 $target = "{$moved}/php-" . count($files);
                 $file->moveTo($target);
                 $digest = hash_file('sha256', $target);
@@ -40,12 +48,19 @@ App::open(
                 unlink($target);
             }
         }
-
-        return Response::text(200, json_encode([
+        $answer = [
             'valid' => $request->validInput(),
             'form' => $request->form(),
             'files' => $files,
             'held' => count(glob(sys_get_temp_dir() . '/hyper-*') ?: []),
-        ], JSON_THROW_ON_ERROR));
+        ];
+        if ($usage) {
+            $used = getrusage();
+            $answer['cpu'] = ($used['ru_utime.tv_sec'] + $used['ru_stime.tv_sec']) * 1000
+                + ($used['ru_utime.tv_usec'] + $used['ru_stime.tv_usec']) / 1000;
+            $answer['rss'] = $used['ru_maxrss'];
+        }
+
+        return Response::text(200, json_encode($answer, JSON_THROW_ON_ERROR));
     },
 )->run();

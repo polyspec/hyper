@@ -6,6 +6,8 @@
 
 ## Unreleased
 
+- `make bench-uploads`가 각 구현의 실제 server 하나에서 upload를 측정하고 `make bench`가 그것을 실행한다. `benchmarks/uploads.mts`의 FastCGI client가 부르는 PHP-FPM 아래의 PHP application, HTTP로 부르는 Node server와 Python `http.server` server, 그리고 PHP 자체 reader(`benchmarks/uploads-native.php`)다. 1 GiB file, 값 500개와 file 500개, 반복 이름과 대괄호 이름의 값 900개에 대해 요청 시간, server의 processor 시간, 최대 메모리를 보고하며 아무것도 판정하지 않는다. `docs/operations/benchmark.md`가 방법과 한 번의 실행 결과를 적고, `tests/scripts/benchmark-uploads.test.mts`가 1 MiB file로 benchmark를 실행한다. `tests/scripts/fixtures/upload-server`의 server들은 `UPLOAD_USAGE=1`에서 process의 사용량을 답하고 part 제한을 `UPLOAD_PARTS`에서 받는다(H29.6-2).
+
 - multipart body의 reader는 조각의 마지막 byte들에 CR이 없으면 part 내용의 조각을 그대로 준다. 다음 조각이 완성하는 delimiter는 CR로 시작하기 때문이다. 이전에는 모든 조각을 buffer에 붙였다가 내용을 다시 잘라냈다. 저장소 밖에서 file에서 읽은 1 GiB body로 각 5회 측정했다. processor 시간은 PHP에서 768 ms(732부터 860)에서 710 ms(673부터 803)로, Node에서 994 ms(965부터 1038)에서 963 ms(925부터 1019)로, Python에서 700 ms(676부터 718)에서 673 ms(662부터 687)로 줄었다. 범위가 겹치므로 그 복사는 비용의 작은 부분이었다(H29.6-3).
 
 - `docs/operations/deployment.md`에 업로드 절이 생겼다. 요청 body의 네 제한과 그 option과 기본값, 느린 client를 묶는 앞단 server의 설정, `enable_post_data_reading`이 꺼졌을 때 아무것도 묶지 않는 PHP 설정, 요청의 임시 directory와 그 삭제와 강제 종료된 server가 남기는 것, 세 server와 PHP reader에서 1 GiB body의 측정된 메모리와 processor 시간을 적는다(H29.6).

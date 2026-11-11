@@ -11,6 +11,7 @@
 | `make bench-server` | `benchmarks/server.php --app <directory> --iterations <n>` | 네트워크 없이 요청 종류별 `App::handle`, 그리고 10, 100, 1,000행에서 `board/rows.tpl` 렌더, `Bind::value`, `json_encode` 비용. generated PHP 프로그램으로 한 번, 네이티브 템플릿 확장으로 한 번 실행한다(HY-48) |
 | `make bench-browser` | `benchmarks/browser.mts --ssr <port> --edge <port> --api <port> --runs <n>` | 첫 화면, 영역 이동, 10, 100, 1,000행에서 `hy-set` 변경 1회(시간, 단계, 메인 스레드 부하, 긴 작업), 반복 이동 중 메모리와 두 힙 스냅샷 사이의 증가, 템플릿 로드, 전송 바이트 |
 | `make bench-sessions` | `benchmarks/sessions.mts --requests <n>` | Redis 서버 하나에서 process 하나와 넷으로 측정한 PHP, Node, Python 서버의 초당 요청 수와 Redis CPU 1초당 요청 수 |
+| `make bench-uploads` | `benchmarks/uploads.mts --size <bytes> --runs <n>` | PHP, Node, Python server와 PHP 자체 reader에서 upload의 요청 시간, server의 processor 시간, 최대 메모리 |
 
 `bench-server`는 `examples/board/var/` 아래에 자체 데이터베이스를 만들고 끝나면 지운다. `bench-browser`는 `scripts/board-servers.mts`로 board 예제를 system이 배정하는 port와 실행의 임시 디렉터리에 있는 자체 데이터베이스로 띄우고, 그 디렉터리를 `run directory: <path>`로 출력하고 지운다. 따라서 다른 checkout이나 session의 실행은 다른 서버와 다른 데이터베이스를 쓴다. `make check`는 PHP 측정기를 측정마다 한 번씩 실행하는 `make bench-server-smoke`를 실행하므로, 측정기를 깨는 변경은 검사에서 실패한다. 브라우저 측정기는 `make check`에 넣지 않았으므로, 변경이 그것을 깨도 다음 `make bench`까지 드러나지 않을 수 있다.
 
@@ -18,6 +19,7 @@
 
 - **서버:** PHP 프로세스는 항상 generated 프로그램을 렌더한다. 마지막 줄은 그 프로그램과 템플릿 확장의 로드 여부를 별도로 밝힌다. 확장은 같은 이름으로 template API를 제공한다(HY-48). 요청마다 20회 예열한 뒤 지정한 횟수만큼 한 프로세스 안에서 메모리 세션으로 실행한다. 시간은 `App::handle` 앞뒤의 `hrtime`이다. 라우팅, SQLite 로더, 렌더, 인코딩을 포함하고 네트워크와 PHP 시작은 제외한다.
 - **Redis session:** 각 process는 자기 session의 요청을 실행한다. 요청은 작은 record를 loopback 연결로 다루며 잠금을 얻고, 읽고, 쓰고, 잠금을 푼다. PHP worker는 배포 환경처럼 `persistent=1`로 연결 하나를 유지한다. Client가 Redis 서버와 머신을 공유하므로 초당 요청 수는 그 머신이 내는 값을 보여 주고, `INFO`의 `used_cpu_user`와 `used_cpu_sys`로 구한 Redis CPU 1초당 요청 수는 명령을 한 thread에서 실행하는 Redis 서버의 비용을 보여 준다.
+- **Upload:** 각 구현의 실제 server 하나가 benchmark가 쓴 같은 요청 body를 읽는다. 1 GiB file 하나, 값 500개와 204,800 byte file 500개, 반복 이름과 대괄호 이름의 값 900개다. server는 `tests/scripts/fixtures/upload-server`의 것이다. PHP application은 worker 하나와 `memory_limit=64M`의 PHP-FPM 아래에서 돌며 benchmark의 FastCGI client가 web server처럼 UNIX socket으로 부르고, Node의 `App.server` server와 Python의 `http.server` server는 HTTP로 부른다. PHP 자체 reader는 `enable_post_data_reading`을 켠 같은 PHP-FPM 아래의 `benchmarks/uploads-native.php`다. 각 server의 request hook은 file의 크기를 읽고 자기 process의 processor 시간과 최대 메모리를 답한다. file 없는 요청이 먼저 오고, 요청의 processor 시간은 직전 요청과의 차이다. client는 같은 machine에서 돈다. `http.server` server는 Python의 개발용 server이며 WSGI나 ASGI server는 측정하지 않는다.
 - **첫 화면:** 페이지 로드 전에 추가한 `MutationObserver`가 목록 제목 `게시판`이 나타난 시각을 내비게이션 시작부터 기록한다. 매 회 새 브라우저 컨텍스트를 쓰므로 캐시가 없다.
 - **영역 이동:** 글쓰기 링크 클릭부터 제목 `글쓰기`가 나타날 때까지의 시간이다.
 - **`hy-set` 변경:** 호출부터 스왑이 끝날 때까지의 `window.hyper.set('rows', …)` 시간이다. 클릭 뒤와 같게 변경마다 페이지가 프레임 하나를 렌더한다. 두 가지 변경을 잰다.
@@ -71,6 +73,39 @@
 | Node | 4 | 3,960 | 9,191 |
 
 요청은 잠금을 얻고, 읽고, 쓰고, 잠금을 풀며 명령 다섯 개를 쓴다. Redis 서버는 포화되지 않았다. Client가 runner를 공유하며 초당 요청 수를 제한한다. 마지막 열인 Redis CPU 1초가 처리하는 요청은 두 실행에서 이 runner 기준 약 8,000에서 13,000이므로, 명령을 한 thread에서 실행하는 Redis 서버 하나의 한계는 여기서 그 정도 규모다. 이 값은 CPU counter에서 구한 것이고 포화 상태에서 측정한 것이 아니다. Network는 포함되지 않는다. 배포 환경은 이 값에 기대기 전에 자기 크기와 network로 측정한다.
+
+### Upload
+
+`make bench-uploads`로 Apple silicon machine 한 대에서 PHP 8.5.10, Node 26.12.0, Python 3.14로 측정했다. body마다 요청 3회이며 평균과 최소와 최대다. PHP 8.5.10은 이 저장소의 기준 버전이 아니므로 이 수치는 기준 버전에서의 검증이 아니다.
+
+1 GiB file 하나:
+
+| 구현 | server processor 시간 ms | 요청 시간 ms | server 최대 메모리 MiB |
+|---|---:|---:|---:|
+| hyper Python(`http.server`) | 629 (586-657) | 669 (648-680) | 35.9 |
+| hyper Node(`App.server`) | 831 (782-886) | 637 (606-658) | 141.7 |
+| PHP 자체(PHP-FPM) | 1,224 (1,172-1,258) | 1,803 (1,577-2,231) | 6.4 |
+| hyper PHP(PHP-FPM) | 2,292 (2,265-2,342) | 4,172 (3,399-4,780) | 13.4 |
+
+값 500개와 204,800 byte file 500개(98 MiB):
+
+| 구현 | server processor 시간 ms | 요청 시간 ms | server 최대 메모리 MiB |
+|---|---:|---:|---:|
+| hyper Python(`http.server`) | 149 (134-174) | 127 (106-157) | 37.3 |
+| PHP 자체(PHP-FPM) | 224 (213-243) | 270 (242-309) | 7.3 |
+| hyper Node(`App.server`) | 241 (208-263) | 139 (115-156) | 143.4 |
+| hyper PHP(PHP-FPM) | 354 (319-410) | 418 (395-438) | 13.4 |
+
+반복 이름과 대괄호 이름의 값 900개:
+
+| 구현 | server processor 시간 ms | 요청 시간 ms | server 최대 메모리 MiB |
+|---|---:|---:|---:|
+| hyper Python(`http.server`) | 6 (6-6) | 5 (5-5) | 37.3 |
+| PHP 자체(PHP-FPM) | 9 (1-25) | 9 (1-26) | 7.3 |
+| hyper Node(`App.server`) | 14 (3-34) | 12 (3-29) | 148.2 |
+| hyper PHP(PHP-FPM) | 14 (2-38) | 3 (3-3) | 13.4 |
+
+server의 메모리는 1 GiB body와 98 MiB body에서 같으므로 body에 따라 늘지 않는다. hyper의 PHP server는 file이 있는 두 body에서 PHP 자체 reader의 1.6배에서 1.9배의 processor 시간을 쓴다. PHP는 script가 `php://input`을 읽기 전에 body를 자신의 임시 file에 쓰므로 file의 내용이 두 번 쓰인다. PHP 자체 reader는 반복된 이름의 마지막 값만 두고 대괄호 이름을 중첩하므로, 세 번째 body에서 hyper의 세 server가 주는 것을 주지 않는다.
 
 ### 브라우저
 

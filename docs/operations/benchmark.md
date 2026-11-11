@@ -10,6 +10,7 @@
 | `make bench-server` | `benchmarks/server.php --app <directory> --iterations <n>` | `App::handle` per request kind without network, and the cost of `board/rows.tpl` rendering, `Bind::value` and `json_encode` for 10, 100 and 1,000 rows; it runs once with the generated PHP program and once with the native template extension (HY-48) |
 | `make bench-browser` | `benchmarks/browser.mts --ssr <port> --edge <port> --api <port> --runs <n>` | First screens, region navigation, one `hy-set` change for 10, 100 and 1,000 rows (time, phases, main thread load and long tasks), memory over repeated navigation with the growth between two heap snapshots, template loading, and transferred bytes |
 | `make bench-sessions` | `benchmarks/sessions.mts --requests <n>` | The requests per second of the PHP, Node and Python servers on one Redis server, with one and four processes, and the requests per second of Redis CPU |
+| `make bench-uploads` | `benchmarks/uploads.mts --size <bytes> --runs <n>` | The time of a request, the processor time of the server and its largest memory for an upload in the PHP, Node and Python servers and in the reader of PHP itself |
 
 `bench-server` creates its own database under `examples/board/var/` and removes it when it finishes. `bench-browser` starts the board example with `scripts/board-servers.mts` on ports that the system assigns and its own database in a temporary directory of the run, which it prints as `run directory: <path>` and removes, so a run from another checkout or session uses other servers and another database. `make check` runs `make bench-server-smoke`, which runs the PHP benchmark once per measurement, so a change that breaks it fails the check; the browser benchmark is not part of `make check`, so a change can break it unnoticed until the next `make bench`.
 
@@ -17,6 +18,7 @@
 
 - **Server:** the PHP process always renders the generated program. The last line names that program and separately reports whether the template extension is loaded; the extension provides the template API under the same names (HY-48). Every request runs 20 times as warm-up and then the given number of times in one process with an in-memory session. The time is `hrtime` around `App::handle`. It includes routing, loaders on SQLite, rendering and encoding, and excludes network and PHP startup.
 - **Redis sessions:** each process runs requests of a session of its own, which take the lock, read, write and release it, with a small record over a loopback connection. The PHP worker keeps one connection with `persistent=1`, as a deployment does. The clients share the machine with the Redis server, so requests per second show what the machine gives; requests per second of Redis CPU, from `used_cpu_user` and `used_cpu_sys` of `INFO`, show the cost to the Redis server, which runs commands on one thread.
+- **Uploads:** one real server of each implementation reads the same request bodies, which the benchmark writes: one file of 1 GiB, 500 values with 500 files of 204,800 bytes, and 900 values of repeated and bracketed names. The servers are those of `tests/scripts/fixtures/upload-server`: the PHP application under PHP-FPM with one worker and `memory_limit=64M`, which a FastCGI client of the benchmark calls over a UNIX socket as a web server does, the server of `App.server` of Node and the `http.server` server of Python, both over HTTP. The reader of PHP itself is `benchmarks/uploads-native.php` under the same PHP-FPM with `enable_post_data_reading` on. The request hook of each server reads the sizes of the files and answers the processor time and the largest memory of its process; a request without a file comes first, and the processor time of a request is the difference to the request before it. The client runs on the same machine. The `http.server` server is the development server of Python, and no WSGI or ASGI server is measured.
 - **First screen:** a `MutationObserver` added before the page loads records when the list heading `게시판` appears, measured from navigation start. Each run uses a new browser context, so nothing is cached.
 - **Region navigation:** the time from the click on the create link to the appearance of the heading `글쓰기`.
 - **`hy-set` change:** `window.hyper.set('rows', …)` from the call to the end of the swap. After every change the page renders one frame, as after a click. Two changes are measured:
@@ -70,6 +72,39 @@ Measured with `make bench-sessions`, 20,000 requests per process.
 | Node | 4 | 3,960 | 9,191 |
 
 A request takes the lock, reads, writes and releases it, five commands. The Redis server was not saturated: the clients share the runner and limit the requests per second. The last column, the requests that one second of Redis CPU serves, is about 8,000 to 13,000 on this runner over both runs, so one Redis server, which runs commands on one thread, has that order of limit here; it is derived from the CPU counters and not measured at saturation. No network is included. A deployment measures its own sizes and network before it relies on this.
+
+### Uploads
+
+Measured with `make bench-uploads` on one Apple silicon machine with PHP 8.5.10, Node 26.12.0 and Python 3.14: three requests of each body, the mean with the least and the most. PHP 8.5.10 is not the baseline of this repository, so these numbers are no verification at that baseline.
+
+One file of 1 GiB:
+
+| Implementation | Server processor time ms | Request time ms | Largest memory of the server MiB |
+|---|---:|---:|---:|
+| hyper Python (`http.server`) | 629 (586-657) | 669 (648-680) | 35.9 |
+| hyper Node (`App.server`) | 831 (782-886) | 637 (606-658) | 141.7 |
+| PHP itself (PHP-FPM) | 1,224 (1,172-1,258) | 1,803 (1,577-2,231) | 6.4 |
+| hyper PHP (PHP-FPM) | 2,292 (2,265-2,342) | 4,172 (3,399-4,780) | 13.4 |
+
+500 values and 500 files of 204,800 bytes (98 MiB):
+
+| Implementation | Server processor time ms | Request time ms | Largest memory of the server MiB |
+|---|---:|---:|---:|
+| hyper Python (`http.server`) | 149 (134-174) | 127 (106-157) | 37.3 |
+| PHP itself (PHP-FPM) | 224 (213-243) | 270 (242-309) | 7.3 |
+| hyper Node (`App.server`) | 241 (208-263) | 139 (115-156) | 143.4 |
+| hyper PHP (PHP-FPM) | 354 (319-410) | 418 (395-438) | 13.4 |
+
+900 values of repeated and bracketed names:
+
+| Implementation | Server processor time ms | Request time ms | Largest memory of the server MiB |
+|---|---:|---:|---:|
+| hyper Python (`http.server`) | 6 (6-6) | 5 (5-5) | 37.3 |
+| PHP itself (PHP-FPM) | 9 (1-25) | 9 (1-26) | 7.3 |
+| hyper Node (`App.server`) | 14 (3-34) | 12 (3-29) | 148.2 |
+| hyper PHP (PHP-FPM) | 14 (2-38) | 3 (3-3) | 13.4 |
+
+The memory of a server is the same for a body of 1 GiB and for a body of 98 MiB, so it does not grow with the body. The PHP server of hyper uses 1.6 to 1.9 times the processor time of the reader of PHP itself for the two bodies with files: PHP writes a body to its own temporary file before a script reads `php://input`, so the content of a file is written twice. The reader of PHP itself keeps the last value of a repeated name and nests bracketed names, so it does not give what the three servers of hyper give for the third body.
 
 ### Browser
 

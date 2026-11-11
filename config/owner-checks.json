@@ -830,11 +830,15 @@
         "packages/server/python/src/polyspec/hyper/_pipeline.py",
         "packages/server/python/src/polyspec/hyper/request.py",
         "tests/scripts/upload-servers.test.mts",
-        "tests/scripts/fixtures/upload-server/**"
+        "tests/scripts/fixtures/upload-server/**",
+        "benchmarks/uploads.mts",
+        "benchmarks/uploads-native.php",
+        "tests/scripts/benchmark-uploads.test.mts"
       ],
       "tests": [
         "tests/scripts/multipart-compare.test.mts",
-        "tests/scripts/upload-servers.test.mts"
+        "tests/scripts/upload-servers.test.mts",
+        "tests/scripts/benchmark-uploads.test.mts"
       ]
     }
   ]

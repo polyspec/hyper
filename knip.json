@@ -11,8 +11,8 @@
 //     tests/scripts/multipart-compare.test.mts;
 //   - tests/scripts/fixtures/upload-server/server.mjs, the Node server of tests/scripts/upload-servers.test.mts.
 // The binaries are the programs that the scripts start from PATH: container (Apple container, make virtiofs-check on Darwin),
-// make (the dry runs of the recipe tests), openssl (the TLS certificates of session-redis-failover.test.mts) and php
-// (scripts/check-parity.mts asks it whether the polyspec_template extension loads).
+// make (the dry runs of the recipe tests), openssl (the TLS certificates of session-redis-failover.test.mts), php
+// (scripts/check-parity.mts asks it whether the polyspec_template extension loads) and php-fpm (benchmarks/uploads.mts).
 // The ignored dependencies are packages that no import of their workspace reaches:
 //   - @polyspec/php-serialize, which the root names by the tarball URL of its release, which npm installs only from the root
 //     with allow-remote=root (H21.4); packages/server/ts requires it by its version;
@@ -33,7 +33,7 @@
       "tests/scripts/fixtures/upload-server/server.mjs"
     ]
   },
-  "ignoreBinaries": ["container", "make", "openssl", "php"],
+  "ignoreBinaries": ["container", "make", "openssl", "php", "php-fpm"],
   "ignoreDependencies": ["@polyspec/php-serialize"],
   "workspaces": {
     "packages/build": {

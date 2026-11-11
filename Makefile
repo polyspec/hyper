@@ -107,7 +107,7 @@ checks_result = test -z "$$failed" || { echo "failed checks:$$failed"; exit 1; }
 
 .DEFAULT_GOAL := help
 
-.PHONY: bench-sessions help hyper-install hyper-install-python hyper-install-browser hyper-install-virtiofs hyper-test-node hyper-test-python-render hyper-test-scripts check typecheck hyper-server-php-install ext packages package-check server server-fixtures contract-programs node-server node-fixtures assets hyper-test-js hyper-test-php hyper-test-python hyper-lint analyse-php templates-check virtiofs-check parity server-parity server-parity-python bundle-size e2e serve-demo bench-server bench-server-smoke bench-browser bench serve-demo-unlock
+.PHONY: bench-sessions bench-uploads help hyper-install hyper-install-python hyper-install-browser hyper-install-virtiofs hyper-test-node hyper-test-python-render hyper-test-scripts check typecheck hyper-server-php-install ext packages package-check server server-fixtures contract-programs node-server node-fixtures assets hyper-test-js hyper-test-php hyper-test-python hyper-lint analyse-php templates-check virtiofs-check parity server-parity server-parity-python bundle-size e2e serve-demo bench-server bench-server-smoke bench-browser bench serve-demo-unlock
 
 help: ## List the targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
@@ -384,10 +384,13 @@ bench-browser: assets server ## Measure first screens, navigation, hy-set phases
 bench-sessions: packages ## Measure the requests per second of the three servers on one Redis server
 	$(NODE) benchmarks/sessions.mts --requests 20000
 
+bench-uploads: packages ## Measure the time, the processor time and the memory of an upload in the three servers and in the reader of PHP itself
+	$(NODE) benchmarks/uploads.mts --size 1073741824 --runs 3
+
 bench-server-smoke: assets server ## Run the PHP benchmark once per measurement so that a change that breaks it fails make check
 	php benchmarks/server.php --app $(BOARD) --iterations 1 > /dev/null
 
-bench: bench-server bench-browser ## Run both measurements; results are reports, not pass or fail checks
+bench: bench-server bench-browser bench-uploads ## Run the measurements; results are reports, not pass or fail checks
 
 # The final suite runs through the native kit report runner, which runs every target to its end and refuses nothing.
 # Run it once after checklist development on a committed tree, then rerun only failed owners. GATE_TARGETS are the checks of the configuration,
