@@ -119,10 +119,10 @@ export const steps = {
         }
         reader.compare('moved', { content, left: count(), again: failed?.[0] ?? null, read: after, class: failed?.[1] ?? null });
       }
-      read.remove();
+      await read.remove();
       reader.compare('removed', directory === null ? null : !existsSync(directory));
     } finally {
-      read.remove();
+      await read.remove();
       rmSync(scratch, { recursive: true, force: true });
     }
   },

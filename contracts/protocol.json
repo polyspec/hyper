@@ -1069,9 +1069,9 @@
                 },
                 {
                   "id": "HY-131.21",
-                  "en": "The Node server writes the content of a file through a stream of the file and reads the next chunk of a body after that stream emptied its buffer, so that a write of a file does not stop its other requests; the PHP and Python servers write a chunk before they read the next one.",
-                  "ko": "Node server는 file의 내용을 그 file의 stream으로 쓰고 그 stream이 buffer를 비운 뒤에 body의 다음 조각을 읽으므로 file 쓰기가 다른 요청을 멈추지 않으며, PHP와 Python server는 조각 하나를 쓴 뒤에 다음 조각을 읽는다.",
-                  "koSource": "bb049d79a78ecc3eb18f2ca278ae5f3ce362030a118c82664618c4b0321524d6"
+                  "en": "The Node server writes the content of a file through a stream of the file, reads the next chunk of a body after that stream emptied its buffer, and removes the directory of a request after its files are closed, so that a write of a file does not stop its other requests; the PHP and Python servers write a chunk before they read the next one.",
+                  "ko": "Node server는 file의 내용을 그 file의 stream으로 쓰고, 그 stream이 buffer를 비운 뒤에 body의 다음 조각을 읽으며, file들이 닫힌 뒤에 요청의 directory를 지우므로 file 쓰기가 다른 요청을 멈추지 않고, PHP와 Python server는 조각 하나를 쓴 뒤에 다음 조각을 읽는다.",
+                  "koSource": "afc690e98595803c3433a706669f0f12726f2e91fadc544323f2032e5476a2ae"
                 },
                 {
                   "id": "HY-131.22",

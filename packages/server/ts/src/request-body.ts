@@ -92,9 +92,11 @@ export class RequestBody {
     return mkdtempSync(join(tmpdir(), 'hyper-'));
   }
 
-  // Removes the directory of the files with the files that were not moved (HY-131.14).
-  remove(): void {
+  // Removes the directory of the files with the files that were not moved, after the files are closed (HY-131.14,
+  // HY-131.21).
+  async remove(): Promise<void> {
     this.multipart?.release();
+    await this.multipart?.settled();
     if (this.files !== null) rmSync(this.files, { recursive: true, force: true });
   }
 }

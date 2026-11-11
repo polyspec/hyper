@@ -3229,11 +3229,56 @@
               "inputs": [],
               "output": "none",
               "errors": [],
-              "state": "Resolves when the bytes given to the files are written, and rejects with the first error of a write (HY-131.21).",
+              "state": "Resolves when the bytes given to the files are written and the ended files are closed, and rejects with the first error of a write (HY-131.21).",
               "native": {
                 "node": {
                   "symbol": "packages/server/ts/src/multipart.ts::Multipart.written",
                   "signature": "async written(): Promise<void>"
+                }
+              },
+              "only": {
+                "languages": [
+                  "node"
+                ],
+                "sentence": "HY-131.21"
+              }
+            },
+            {
+              "id": "multipart.settled",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "none",
+              "errors": [],
+              "state": "Resolves when every file that was ended or released is closed, so that its directory can be removed (HY-131.21).",
+              "native": {
+                "node": {
+                  "symbol": "packages/server/ts/src/multipart.ts::Multipart.settled",
+                  "signature": "async settled(): Promise<void>"
+                }
+              },
+              "only": {
+                "languages": [
+                  "node"
+                ],
+                "sentence": "HY-131.21"
+              }
+            },
+            {
+              "id": "multipart.finish",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [
+                "value",
+                "boolean"
+              ],
+              "output": "none",
+              "errors": [],
+              "state": "Ends the stream of a file, or destroys it, and keeps the promise of its close (HY-131.21).",
+              "native": {
+                "node": {
+                  "symbol": "packages/server/ts/src/multipart.ts::Multipart.finish",
+                  "signature": "private finish(target: WriteStream, destroyed: boolean): void"
                 }
               },
               "only": {
@@ -3751,7 +3796,7 @@
               "inputs": [],
               "output": "none",
               "errors": [],
-              "state": "Removes the directory of the files with the files that were not moved (HY-131.14).",
+              "state": "Removes the directory of the files with the files that were not moved, in Node after the files are closed (HY-131.14, HY-131.21).",
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/RequestBody.php::Polyspec\\Hyper\\RequestBody::remove",
@@ -3759,7 +3804,7 @@
                 },
                 "node": {
                   "symbol": "packages/server/ts/src/request-body.ts::RequestBody.remove",
-                  "signature": "remove(): void"
+                  "signature": "async remove(): Promise<void>"
                 },
                 "python": {
                   "symbol": "packages/server/python/src/polyspec/hyper/_request_body.py::RequestBody.remove",

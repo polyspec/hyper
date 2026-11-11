@@ -166,7 +166,7 @@ export function createListener<S extends object>(app: App<S>, sessions: FileSess
         if (stopped && reply !== null) app.disconnected(disconnectedRequest ?? request, started, reply);
       } finally {
         // HY-131.14: the files of the request are removed after its hooks returned.
-        read?.remove();
+        await read?.remove();
       }
     }
   };

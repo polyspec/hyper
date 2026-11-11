@@ -796,6 +796,36 @@
       "targets": [
         "typecheck"
       ]
+    },
+    {
+      "paths": [
+        "packages/server/php/src/Multipart.php",
+        "packages/server/php/src/MultipartReader.php",
+        "packages/server/php/src/RequestBody.php",
+        "packages/server/php/src/UploadedFile.php",
+        "packages/server/php/src/Fields.php",
+        "packages/server/php/src/Files.php",
+        "packages/server/php/src/NamedValues.php",
+        "packages/server/ts/src/multipart.ts",
+        "packages/server/ts/src/multipart-reader.ts",
+        "packages/server/ts/src/request-body.ts",
+        "packages/server/ts/src/uploaded-file.ts",
+        "packages/server/ts/src/fields.ts",
+        "packages/server/ts/src/files.ts",
+        "packages/server/ts/src/named-values.ts",
+        "packages/server/python/src/polyspec/hyper/_multipart.py",
+        "packages/server/python/src/polyspec/hyper/_multipart_reader.py",
+        "packages/server/python/src/polyspec/hyper/_request_body.py",
+        "packages/server/python/src/polyspec/hyper/uploaded_file.py",
+        "packages/server/python/src/polyspec/hyper/_fields.py",
+        "packages/server/python/src/polyspec/hyper/_files.py",
+        "packages/server/python/src/polyspec/hyper/_named_values.py",
+        "tests/scripts/multipart-compare.test.mts",
+        "tests/scripts/fixtures/multipart-worker/**"
+      ],
+      "tests": [
+        "tests/scripts/multipart-compare.test.mts"
+      ]
     }
   ]
 }

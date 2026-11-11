@@ -133,8 +133,8 @@ export class Request {
    *
    * @internal
    */
-  release(): void {
-    this.state.read?.remove();
+  async release(): Promise<void> {
+    await this.state.read?.remove();
   }
 
   // Returns the path of a request target: the target before `?` or `#`, after the authority of an absolute-form

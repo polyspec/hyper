@@ -36,8 +36,8 @@ export class Multipart extends MultipartReader {
   private valueBytes: number;
   private partCount: number;
   private over: boolean;
-  // The files whose last bytes are not written yet, and the first error of a write.
-  private finishing: Promise<void>[];
+  // The files that are not closed yet, and the first error of a write.
+  private closing: Promise<void>[];
   private failure: Error | null;
 
   constructor(boundary: string, directory: string | null, valueLimit: number | null, partLimit: number | null, fileLimit: number | null) {
@@ -53,7 +53,7 @@ export class Multipart extends MultipartReader {
     this.valueBytes = 0;
     this.partCount = 0;
     this.over = false;
-    this.finishing = [];
+    this.closing = [];
     this.failure = null;
     this.names = [];
     this.values = new Map();
@@ -153,17 +153,45 @@ export class Multipart extends MultipartReader {
         // Both listeners leave the stream with the first event, so that a long file does not collect them.
         const settle = (): void => {
           target.off('drain', settle);
-          target.off('error', settle);
+          target.off('close', settle);
           resolve();
         };
         target.on('drain', settle);
-        target.on('error', settle);
+        target.on('close', settle);
       });
     }
-    const finishing = this.finishing;
-    this.finishing = [];
-    await Promise.all(finishing);
+    await this.settled();
     if (this.failure !== null) throw this.failure;
+  }
+
+  // Resolves when every file that was ended or released is closed, so that its directory can be removed (HY-131.14).
+  async settled(): Promise<void> {
+    const closing = this.closing;
+    this.closing = [];
+    await Promise.all(closing);
+  }
+
+  // Closes the file of a part whose end was not read; `settled` waits for it.
+  release(): void {
+    if (this.target !== null) this.finish(this.target, true);
+    this.target = null;
+  }
+
+  // Ends the stream of a file, or destroys it, and keeps the promise of its close, which follows an end and a failure.
+  private finish(target: WriteStream, destroyed: boolean): void {
+    this.closing.push(
+      new Promise<void>((resolve) => {
+        target.once('close', resolve);
+      }),
+    );
+    if (destroyed) {
+      // A write that was waiting fails when its stream is destroyed; that is no failure of a write of the body.
+      target.removeAllListeners('error');
+      target.on('error', () => undefined);
+      target.destroy();
+    } else {
+      target.end();
+    }
   }
 
   // Records that the body passed a limit, and fails the body.
@@ -171,12 +199,6 @@ export class Multipart extends MultipartReader {
     this.over = true;
     this.content = [];
     return false;
-  }
-
-  // Closes the file of a part whose end was not read.
-  release(): void {
-    this.target?.destroy();
-    this.target = null;
   }
 
   partEnded(): boolean {
@@ -190,20 +212,8 @@ export class Multipart extends MultipartReader {
     } else if (this.target === null) {
       Multipart.addValue(this.fileNames, this.files, this.name, new UploadedFile(this.name, this.file[0], this.file[1], Uint8Array.from(content)));
     } else {
-      const target = this.target;
+      this.finish(this.target, false);
       this.target = null;
-      this.finishing.push(
-        new Promise<void>((resolve) => {
-          const settle = (): void => {
-            target.off('finish', settle);
-            target.off('error', settle);
-            resolve();
-          };
-          target.on('finish', settle);
-          target.on('error', settle);
-        }),
-      );
-      target.end();
       Multipart.addValue(this.fileNames, this.files, this.name, UploadedFile.stored(this.name, this.file[0], this.file[1], this.path, this.size));
     }
     return true;

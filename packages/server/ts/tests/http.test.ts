@@ -372,10 +372,11 @@ describe('a multipart body read in chunks', () => {
     process.env['TMPDIR'] = uploads;
     try {
       const seen: unknown[] = [];
-      const hook = latch();
       let atHook: string[] = [];
+      // The end of the listener of the request, which follows the removal of the directory.
+      let handled: Promise<void> = Promise.resolve();
       const app = await new Fixture().app({ formTypes: ['application/x-www-form-urlencoded', 'multipart/form-data'], bodyLimit: 4 * 1024 * 1024 });
-      server = app.server(new FileSessions({ directory }), {
+      const listener = app.listener(new FileSessions({ directory }), {
         around: (request) => {
           const file = request.file('f');
           seen.push(request.validInput(), request.form(), file?.filename() ?? null, file?.size() ?? null, readdirSync(uploads).length);
@@ -384,15 +385,16 @@ describe('a multipart body read in chunks', () => {
         },
         written: () => {
           atHook = readdirSync(uploads).map((name) => (name.startsWith('hyper-') ? 'hyper-' : name)).sort();
-          hook.open();
         },
+      });
+      server = createHttpServer((incoming, outgoing) => {
+        handled = listener(incoming, outgoing);
       });
       base = await listen(server);
       const response = await fetch(`${base}/upload`, { method: 'POST', headers: { 'Content-Type': 'multipart/form-data; boundary=XyZ' }, body: new Uint8Array(body) });
       await response.text();
-      // The removal follows the write hook in the same turn of the event loop, so the next turn sees its result.
-      await hook.opened;
-      await new Promise<void>((resolve) => setImmediate(resolve));
+      // The listener ends after the write hook and the removal of the directory, which waits for the files to close.
+      await handled;
       return { status: response.status, seen, atHook, after: readdirSync(uploads) };
     } finally {
       if (previous === undefined) delete process.env['TMPDIR'];
