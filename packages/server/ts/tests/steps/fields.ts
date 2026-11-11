@@ -10,17 +10,20 @@ function fieldsOf(fields: { valid: boolean; values: Iterable<unknown> }): unknow
 export const steps = {
   urlencoded(reader: CaseReader): void {
     const text = reader.input('text') as string;
-    reader.compare('fields', fieldsOf(parseUrlEncoded(Buffer.from(text, 'utf8').toString('latin1'))));
+    const fields = parseUrlEncoded(Buffer.from(text, 'utf8').toString('latin1'));
+    reader.compare('fields', fieldsOf(fields));
+    reader.compare('names', fields.valid ? [...fields.values.keys()] : null);
   },
   multipart(reader: CaseReader): void {
     const type = reader.input('type') as string;
     const body = reader.input('body') as string;
     const bytes = Buffer.from(body, 'latin1');
-    reader.compare('fields', fieldsOf(formFields(type, bytes)));
+    const fields = formFields(type, bytes);
+    reader.compare('fields', fieldsOf(fields));
     const files = fileParts(type, bytes);
     reader.compare(
       'files',
-      files.valid
+      fields.valid && files.valid
         ? [...files.values].flatMap(([, values]) =>
             values.map((file) => ({ name: file.name, filename: file.filename, contentType: file.contentType, content: Buffer.from(file.content).toString('latin1') })),
           )

@@ -16,7 +16,17 @@ final class CaseReader
     private const LANGUAGE = 'php';
     private const CONTRACTS = __DIR__ . '/../../../../contracts/';
     /** The keys of a case that are not fields of its section. */
-    private const CASE_KEYS = ['id', 'label', 'only'];
+    private const CASE_KEYS = ['id', 'label', 'only', 'requirements'];
+    /** HYR-11: the comparison of a response field, by its name. */
+    private const RESPONSE_KINDS = [
+        'status' => 'exact',
+        'body' => 'exact',
+        'headers' => 'subset',
+        'allHeaders' => 'exact',
+        'absentHeaders' => 'absent',
+        'bodyContains' => 'contains',
+        'bodyNotContains' => 'excludes',
+    ];
 
     /** @var array<string, true> names read by the step, with their ancestors */
     private array $read = [];
@@ -24,6 +34,8 @@ final class CaseReader
     private array $compared = [];
     /** @var array<string, true> outcome names compared by the step */
     private array $comparedOutcomes = [];
+    /** the comparisons that the step made, for CASE_EMPTY */
+    private int $checks = 0;
     private ?string $failure = null;
     private ?string $differs = null;
 
@@ -138,7 +150,7 @@ final class CaseReader
         return $found ? Plain::value($value) : null;
     }
 
-    /** Compares an observed value with the expected one of the case by the declared kind of the field. */
+    /** Compares an observed value with the expected one of the case by the kind of the field (HYR-11). */
     public function compare(string $name, mixed $observed): void
     {
         $field = $this->field($name);
@@ -150,21 +162,25 @@ final class CaseReader
         if (!$found) {
             return;
         }
-        $kind = $field['compare'] ?? throw new \LogicException("$name declares no compare");
-        if (!self::matches($kind, $expected, $observed, self::isHeaders($name))) {
+        $this->checks++;
+        if (!self::matches(self::kind($field, $name), $expected, $observed, self::isHeaders($name))) {
             $this->differs ??= $name;
         }
     }
 
-    /** Compares the observed outcome of a section with its declaration: the outcome is expected to hold. */
-    public function outcome(string $name, mixed $observed): void
+    /**
+     * Compares an outcome of the section (HYR-11): `raises` takes the error that the step caught, or null, and expects
+     * the value true by default; `exact` compares the observed value with the expected one that the step gives.
+     */
+    public function outcome(string $name, mixed $observed, mixed $expected = true): void
     {
         $outcome = $this->decl['outcomes'][$name] ?? throw new \LogicException("$name is no outcome of {$this->section}");
         $this->comparedOutcomes[$name] = true;
         if (!self::visible($outcome)) {
             return;
         }
-        if (!self::matches($outcome['compare'], true, $observed, false)) {
+        $this->checks++;
+        if (!self::matches($outcome['compare'], $expected, $observed, false)) {
             $this->differs ??= $name;
         }
     }
@@ -192,6 +208,9 @@ final class CaseReader
         if ($this->failure !== null) {
             return $this->failure;
         }
+        if ($this->checks === 0) {
+            return 'CASE_EMPTY';
+        }
         if ($this->differs !== null) {
             return "FIELD_DIFFERS {$this->differs}";
         }
@@ -204,7 +223,7 @@ final class CaseReader
         return $uncompared === null ? null : "FIELD_UNCOMPARED $uncompared";
     }
 
-    /** The first visible input field of the case that no step has read. */
+    /** The first visible input field of the case, or used fixture, that no step has read. */
     private function unknown(): ?string
     {
         foreach ($this->decl['fields'] ?? [] as $name => $field) {
@@ -213,6 +232,11 @@ final class CaseReader
             }
             if (self::lookup($this->case, (string) $name)[0] && !$this->covered((string) $name)) {
                 return (string) $name;
+            }
+        }
+        foreach ($this->decl['uses'] ?? [] as $name) {
+            if (!$this->covered($name)) {
+                return $name;
             }
         }
 
@@ -318,6 +342,16 @@ final class CaseReader
         return $only === null || in_array(self::LANGUAGE, $only['languages'] ?? [], true);
     }
 
+    /** The comparison of a field: a response field has the comparison of its name (HYR-11). */
+    private static function kind(array $field, string $name): string
+    {
+        if (($field['role'] ?? null) === 'response') {
+            return self::RESPONSE_KINDS[$name] ?? throw new \LogicException("$name has no response comparison");
+        }
+
+        return $field['compare'] ?? throw new \LogicException("$name declares no compare");
+    }
+
     /** Header names compare without regard to ASCII case (HY-130). */
     private static function isHeaders(string $name): bool
     {
@@ -337,9 +371,15 @@ final class CaseReader
             'excludes' => !self::contains($expected, $observed) && self::none($expected, $observed),
             'prefix' => self::prefix($expected, $observed),
             'keys' => self::keys($expected, $observed),
-            'raises' => $expected === $observed,
+            'raises' => $expected === true ? self::openError($observed) : $observed === null,
             default => throw new \LogicException("unknown compare kind $kind"),
         };
+    }
+
+    /** HYR-11: the error that a step raises is the open error of HY-106 when its class is exactly that error. */
+    private static function openError(mixed $observed): bool
+    {
+        return $observed instanceof \Throwable && $observed::class === \InvalidArgumentException::class;
     }
 
     /**
@@ -525,7 +565,7 @@ final class CaseReader
 
     /**
      * The first key of the file, or of a case, that its declaration does not declare, or an expected field without
-     * `fields` that has no compare, rule or quote.
+     * `fields` that has no comparison or sentence.
      *
      * @param array<string, array<string, mixed>> $sections
      * @param array<string, mixed> $fixtures
@@ -590,7 +630,7 @@ final class CaseReader
                 }
                 continue;
             }
-            if (($field['role'] ?? null) === 'expected' && !isset($field['compare']) && !isset($field['rule']) && !isset($field['quote'])) {
+            if (($field['role'] ?? null) === 'expected' && !isset($field['compare']) && !isset($field['sentence'])) {
                 return $fieldPath;
             }
         }

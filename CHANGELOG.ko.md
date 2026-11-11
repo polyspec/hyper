@@ -1,10 +1,16 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 90306589f22b029d7b47833a25e62ae318324007517a05850508d68796ca7c52 -->
+<!-- source-sha256: 0ed9e63acaced3e48f183f86dc445c9b607650f22161504f3759ef465aed7c54 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- case 파일은 각 필드에 대해 그 필드가 검사하는 동작을 정한 `contracts/protocol.json`의 statement, 비교 방식, 인코딩을 적는다(`contracts/interfaces.json`의 `caseFiles`). 응답 필드는 이름으로 비교 방식을 정하며(HYR-11), 응답을 적는 각 case는 그 응답의 규칙을 `requirements`에 나열한다. PHP, Node, Python, browser, build runner는 각자의 case reader로 case를 읽고, `make recipe-check`는 다섯 결과 파일을 모두 센다. case는 native test가 검사하던 세 동작을 검사한다: session을 열지 않는 요청은 session store를 호출하지 않고 cookie를 설정하지 않는다(HY-120), urlencoded 폼 값의 이름 순서(HY-56), 이름이 `__proto__`인 라우트 매개변수(HY-5, HY-49)(H28.11).
+
+- 읽는 파일이 유효한 JSON이나 유효한 UTF-8이 아니어서 열기에 실패하는 애플리케이션은 runtime의 open error, 즉 PHP `InvalidArgumentException`, Node `Error`, Python `ValueError`를 낸다(HY-106). 브라우저 router는 이름이 `__proto__`인 라우트 매개변수를 유지한다(H28.11).
+
+- `make recipe-check`는 protocol의 statement, 규칙, term, status를 `contracts/protocol.json`에서 읽고, 모든 `sentence`와 `requirements` 참조를 검사하며, `caseFiles`가 선언하지 않은 case 파일을 실패시킨다(H28.11).
 
 - `docs/spec/recipe.md`는 case를 `contracts/protocol.json`의 statement id로 적고, HYR-11에 case 비교를 정한다. 기대 필드와 단계 결과마다 `compare` 종류 하나를 적으며, `CASE_EMPTY`는 자기 runner에 대해 아무것도 비교하지 않는 case를 실패시킨다. recipe는 runner와 case reader를 파일 이름 대신 JSON 필드 `runners`와 `caseReaders`로 가리키며, `only`는 `sentence`로 statement 하나를 적는다(H28.11).
 

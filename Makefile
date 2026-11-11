@@ -234,9 +234,9 @@ lint-ts: packages
 assets: packages ## Build the board client bundle (SSR) and the single-file static shell (CSR)
 	$(NODE) $(BUILD_PACKAGE)/bin/hyper-build-assets.mjs --app $(BOARD) --api /api --output $(BOARD)/build --static public/assets/app.css --static public/assets/reader.css
 
-hyper-test-js: ## Run the browser code tests, including the router conformance cases, and the type check
-	@failed=; \
-	$(call check,the tests of $(JS_PACKAGE),node $(KIT)/run-tests.$(KIT_EXT) vitest --cwd $(JS_PACKAGE)$(if $(JS_TESTS), -- $(JS_TESTS))) \
+hyper-test-js: ## Run the browser code tests, including the browser case runner (HYR-7), and the type check
+	@mkdir -p $(RECIPE_RESULTS_DIR); failed=; \
+	$(call check,the tests of $(JS_PACKAGE),RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/browser.txt node $(KIT)/run-tests.$(KIT_EXT) vitest --cwd $(JS_PACKAGE)$(if $(JS_TESTS), -- $(JS_TESTS))) \
 	$(call check,the type check of $(JS_PACKAGE),$(TSC) --noEmit -p $(JS_PACKAGE)/tsconfig.json) \
 	$(checks_result)
 
@@ -292,8 +292,9 @@ typecheck: packages ## Check the types of the TypeScript of scripts/, tests/ and
 toolchain-policy-test: ## Verify the declared toolchain and offline recipe policy
 	$(NODE) $(KIT)/run-tests.$(KIT_EXT) node -- --test-concurrency=1 tests/scripts/toolchain.test.mts
 
-hyper-test-scripts: packages assets server node-server ## Run the tests of the check scripts, or only the files of TESTS
-	$(NODE) $(KIT)/run-tests.$(KIT_EXT) node -- --test-concurrency=1 $(or $(TESTS),tests/scripts/)
+hyper-test-scripts: packages assets server node-server ## Run the tests of the check scripts, the build case runner included (HYR-7), or only the files of TESTS
+	@mkdir -p $(RECIPE_RESULTS_DIR)
+	RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/build.txt $(NODE) $(KIT)/run-tests.$(KIT_EXT) node -- --test-concurrency=1 $(or $(TESTS),tests/scripts/)
 
 # The recipe check (HYR-8) and the candidate of its spec (HYR-10). The TypeScript reader needs the pinned TypeScript of
 # scripts/recipe/typescript, which `npm ci --prefix scripts/recipe/typescript` installs. The case results (HYR-7) are the
@@ -301,8 +302,8 @@ hyper-test-scripts: packages assets server node-server ## Run the tests of the c
 RECIPE_TYPESCRIPT := scripts/recipe/typescript/node_modules
 RECIPE_RESULTS_DIR := $(CURDIR)/var/recipe/results
 
-.PHONY: recipe-check recipe-candidates recipe-run-php recipe-run-node recipe-run-python
-# Each case runner writes one line per case to the file that RECIPE_RESULTS names (HYR-7); recipe-check runs the three
+.PHONY: recipe-check recipe-candidates recipe-run-php recipe-run-node recipe-run-python recipe-run-browser recipe-run-build
+# Each case runner writes one line per case to the file that RECIPE_RESULTS names (HYR-7); recipe-check runs the five
 # runners to their end, then the check, which reads their files, and fails when a runner or the check fails.
 recipe-run-php: server-fixtures ## Run the PHP case runner with its results file (HYR-7)
 	@mkdir -p $(RECIPE_RESULTS_DIR)
@@ -316,13 +317,23 @@ recipe-run-python: server-fixtures ## Run the Python case runner with its result
 	@mkdir -p $(RECIPE_RESULTS_DIR)
 	RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/python.txt PYTHONUNBUFFERED=1 NO_COLOR=1 PYTHON_COLORS=0 $(NODE) $(KIT)/run-tests.$(KIT_EXT) python --venv $(PYTHON_VENV) -- discover -s $(PYTHON_PACKAGE)/tests -t $(PYTHON_PACKAGE) -p test_case_runner.py
 
+recipe-run-browser: packages ## Run the browser case runner with its results file (HYR-7)
+	@mkdir -p $(RECIPE_RESULTS_DIR)
+	RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/browser.txt node $(KIT)/run-tests.$(KIT_EXT) vitest --cwd $(JS_PACKAGE) -- tests/case-runner.test.ts
+
+recipe-run-build: packages ## Run the build case runner with its results file (HYR-7)
+	@mkdir -p $(RECIPE_RESULTS_DIR)
+	RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/build.txt $(NODE) $(KIT)/run-tests.$(KIT_EXT) node -- --test-concurrency=1 tests/scripts/build-id.test.mts
+
 recipe-check: ## Check contracts/interfaces.json against the sources of the three servers and their case results (HYR-7, HYR-8)
 	@test -d $(RECIPE_TYPESCRIPT) || { echo 'recipe-check needs the pinned TypeScript: run npm ci --prefix scripts/recipe/typescript'; exit 1; }
 	@failed=; \
 	$(call check,the PHP case runner,$(MAKE) --no-print-directory recipe-run-php) \
 	$(call check,the Node case runner,$(MAKE) --no-print-directory recipe-run-node) \
 	$(call check,the Python case runner,$(MAKE) --no-print-directory recipe-run-python) \
-	$(call check,the recipe check,$(NODE) scripts/recipe/check.mts --root . --php-autoload $(PHP_VENDOR)/autoload.php --results php=$(RECIPE_RESULTS_DIR)/php.txt --results node=$(RECIPE_RESULTS_DIR)/node.txt --results python=$(RECIPE_RESULTS_DIR)/python.txt) \
+	$(call check,the browser case runner,$(MAKE) --no-print-directory recipe-run-browser) \
+	$(call check,the build case runner,$(MAKE) --no-print-directory recipe-run-build) \
+	$(call check,the recipe check,$(NODE) scripts/recipe/check.mts --root . --php-autoload $(PHP_VENDOR)/autoload.php --results php=$(RECIPE_RESULTS_DIR)/php.txt --results node=$(RECIPE_RESULTS_DIR)/node.txt --results python=$(RECIPE_RESULTS_DIR)/python.txt --results browser=$(RECIPE_RESULTS_DIR)/browser.txt --results build=$(RECIPE_RESULTS_DIR)/build.txt) \
 	$(checks_result)
 
 recipe-candidates: ## Write the candidate of contracts/interfaces.json under var/recipe, with the hand-written fields listed beside it (HYR-10)

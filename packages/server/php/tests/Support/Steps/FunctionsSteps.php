@@ -21,7 +21,7 @@ final class FunctionsSteps
             ? $applications[$application]
             : [];
         $run = new ContextRun($application, $definition, self::PROGRAMS);
-        $functions = self::functions($case->input('functions'));
+        $functions = self::functions($case->input('functions'), $case->input('functionKinds'));
 
         $error = null;
         try {
@@ -29,7 +29,7 @@ final class FunctionsSteps
         } catch (\Throwable $caught) {
             $error = $caught;
         }
-        $case->compare('openFails', $error instanceof \InvalidArgumentException);
+        $case->compare('openFails', $error);
         $case->compare('openError', $error?->getMessage());
         if ($error !== null) {
             return;
@@ -46,10 +46,13 @@ final class FunctionsSteps
      *
      * @return array<string, callable|string>
      */
-    private static function functions(mixed $kinds): array
+    private static function functions(mixed $kinds, mixed $declared): array
     {
         $functions = [];
         foreach (is_array($kinds) ? $kinds : [] as $name => $kind) {
+            if (!is_array($declared) || !array_key_exists((string) $kind, $declared)) {
+                throw new \LogicException("the kind {$kind} is not a functionKinds of the contract");
+            }
             $functions[(string) $name] = match ($kind) {
                 // FUN-43: a host function receives the argument list as host values.
                 'suffix' => static fn (array $arguments): string => (string) $arguments[0] . '!',

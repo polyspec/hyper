@@ -7,6 +7,19 @@ from pathlib import Path
 from typing import Any
 
 
+# The comparison of each response field, by its name (HYR-11); header names compare without regard to ASCII case (HY-130.20).
+RESPONSE_COMPARE = {
+    "status": "exact",
+    "body": "exact",
+    "headers": "subset",
+    "allHeaders": "exact",
+    "absentHeaders": "absent",
+    "bodyContains": "contains",
+    "bodyNotContains": "excludes",
+}
+HEADER_NAMES = {"headers", "allHeaders", "absentHeaders"}
+
+
 class CaseReader:
     def __init__(self, file: str, section: str, case: dict, data: dict, spec: dict, failure: str | None):
         self._file = file
@@ -84,7 +97,7 @@ class CaseReader:
         for name, spec in sections.items():
             for index, case in enumerate(data.get(name, [])):
                 for key, value in case.items():
-                    if key == "only":
+                    if key in ("only", "requirements"):
                         continue
                     path = f"{name}[{index}].{key}"
                     if key not in spec["fields"]:
@@ -93,7 +106,7 @@ class CaseReader:
                     if found:
                         return found
             for field, node in CaseReader._leaves(spec["fields"]):
-                if node["role"] == "expected" and not any(k in node for k in ("compare", "rule", "quote")):
+                if node["role"] == "expected" and not any(k in node for k in ("compare", "sentence")):
                     return f"{name}.{field}"
         return None
 
@@ -148,7 +161,10 @@ class CaseReader:
         if not present:
             return
         self._compared.add(name)
-        if not CaseReader._matches(node["compare"], expected, observed):
+        kind = RESPONSE_COMPARE[parts[-1]] if node["role"] == "response" else node["compare"]
+        if parts[-1] in HEADER_NAMES:
+            expected, observed = CaseReader._folded(expected), CaseReader._folded(observed)
+        if not CaseReader._matches(kind, expected, observed):
             self._differs.append(name)
 
     def outcome(self, name: str, observed: Any) -> None:
@@ -157,7 +173,7 @@ class CaseReader:
             return
         self._compared.add(name)
         if node["compare"] == "raises":
-            ok = bool(observed)
+            ok = CaseReader._matches("raises", True, observed)
         else:
             ok = CaseReader._matches(node["compare"], observed[0], observed[1])
         if not ok:
@@ -177,6 +193,9 @@ class CaseReader:
             return self._failure
         if self._error is not None:
             return self._error
+        names = self._compares()
+        if not names:
+            return "CASE_EMPTY"
         if self._differs:
             return f"FIELD_DIFFERS {self._differs[0]}"
         present_inputs = [
@@ -187,16 +206,29 @@ class CaseReader:
         for name in present_inputs + list(self._spec["uses"]):
             if name not in self._read:
                 return f"FIELD_UNKNOWN {name}"
-        expected = [
-            name
-            for name, node in CaseReader._leaves(self._spec["fields"])
-            if node["role"] == "expected" and self._lookup(name)[0]
-        ]
-        expected += [name for name, node in self._spec.get("outcomes", {}).items() if CaseReader._applies(node)]
-        for name in expected:
+        for name in names:
             if name not in self._compared:
                 return f"FIELD_UNCOMPARED {name}"
         return None
+
+    def _compares(self) -> list[str]:
+        """The expected and response fields that the case states, then the outcomes of the step that apply to python."""
+        names = [
+            name
+            for name, node in CaseReader._leaves(self._spec["fields"])
+            if node["role"] in ("expected", "response") and self._lookup(name)[0]
+        ]
+        names += [name for name, node in self._spec.get("outcomes", {}).items() if CaseReader._applies(node)]
+        return names
+
+    @staticmethod
+    def _folded(value: Any) -> Any:
+        """The names of a header map, or of a list of header names, in lower case."""
+        if isinstance(value, dict):
+            return {key.lower(): item for key, item in value.items()}
+        if isinstance(value, list):
+            return [item.lower() if isinstance(item, str) else item for item in value]
+        return value
 
     @staticmethod
     def _matches(kind: str, expected: Any, observed: Any) -> bool:
@@ -225,7 +257,7 @@ class CaseReader:
         if kind == "keys":
             return list(observed) == list(expected)
         if kind == "raises":
-            return bool(observed) == bool(expected)
+            return type(observed) is ValueError if expected else observed is None
         raise ValueError(f"unknown comparison {kind}")
 
     @staticmethod

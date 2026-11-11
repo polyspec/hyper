@@ -14,6 +14,32 @@ from polyspec.hyper.session import ArraySession
 from ..render.render_client import TOKEN, Counter, app
 
 
+class _RecordingStore:
+    """The session store that the host passes to the application: it records the calls of the store during a request
+    (HY-120)."""
+
+    def __init__(self, store: ArraySession):
+        self._store = store
+        self.calls: list[list[str]] = []
+
+    def get(self, key: str) -> object:
+        self.calls.append(["get", key])
+        return self._store.get(key)
+
+    def set(self, key: str, value: object) -> None:
+        self.calls.append(["set", key])
+        self._store.set(key, value)
+
+    def remove(self, key: str) -> None:
+        self.calls.append(["remove", key])
+        self._store.remove(key)
+
+    def renew(self) -> None:
+        self.calls.append(["renew"])
+        self._store.renew()
+
+
+
 def cases(case) -> None:
     shell = case.input("shell")
     base_path = case.input("basePath")
@@ -51,7 +77,8 @@ def cases(case) -> None:
             base_path,
             lambda selected: Choice(selected.header("Host") == chosen_host, None),
         )
-        response = app(counter, client, representations).handle(request, session)
+        store = _RecordingStore(session)
+        response = app(counter, client, representations).handle(request, store)
 
     case.compare("status", response.status)
     case.compare("headers", response.headers)
@@ -68,6 +95,7 @@ def cases(case) -> None:
     case.compare("session", session.get("_hyper_csrf") is not None)
     case.compare("actions", counter.actions)
     case.compare("handled", counter.handled)
+    case.compare("storeCalls", store.calls)
     received = counter.received or {}
     case.compare("received.parameters", received.get("parameters"))
     case.compare("received.selection", received.get("selection"))

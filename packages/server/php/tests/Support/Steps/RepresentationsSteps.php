@@ -25,7 +25,7 @@ final class RepresentationsSteps
                 : $spec,
             is_array($definition['manifest']['routes'] ?? null) ? $definition['manifest']['routes'] : [],
         );
-        $case->outcome('open', self::opens($definition) === false);
+        $case->outcome('open', self::opens($definition));
     }
 
     /** HY-118: opening the application fails for an entry without a handler. */
@@ -33,7 +33,7 @@ final class RepresentationsSteps
     {
         $case->input('route');
         $case->input('handlers');
-        $case->outcome('open', self::opens(self::application($case)) === false);
+        $case->outcome('open', self::opens(self::application($case)));
     }
 
     /** HY-118, HY-121: the request of a case receives the response of the representations application. */
@@ -61,14 +61,14 @@ final class RepresentationsSteps
     }
 
     /** @param array<string, mixed> $definition */
-    private static function opens(array $definition): bool
+    private static function opens(array $definition): ?\Throwable
     {
         try {
             (new ContextRun('representations', $definition, self::PROGRAMS))->open(null);
-        } catch (\InvalidArgumentException) {
-            return false;
+        } catch (\Throwable $error) {
+            return $error;
         }
 
-        return true;
+        return null;
     }
 }

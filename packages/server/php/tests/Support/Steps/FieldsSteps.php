@@ -16,15 +16,19 @@ final class FieldsSteps
 {
     public static function urlencoded(CaseReader $case): void
     {
-        $case->compare('fields', self::pairs(Fields::parse((string) $case->input('text'))));
+        $pairs = self::pairs(Fields::parse((string) $case->input('text')));
+        $case->compare('fields', $pairs);
+        $case->compare('names', $pairs === null ? null : array_column($pairs, 0));
     }
 
     public static function multipart(CaseReader $case): void
     {
         $type = (string) $case->input('type');
         $body = (string) $case->input('body');
-        $case->compare('fields', self::pairs(Fields::fromBody($type, (string) mb_convert_encoding($body, 'ISO-8859-1', 'UTF-8'))));
-        $case->compare('files', self::files($type, $body));
+        $fields = Fields::fromBody($type, (string) mb_convert_encoding($body, 'ISO-8859-1', 'UTF-8'));
+        $case->compare('fields', self::pairs($fields));
+        // The files are null when the fields are null, which is a name or a value that is not UTF-8.
+        $case->compare('files', $fields === null ? null : self::files($type, $body));
     }
 
     /** @return ?list<array{0: string, 1: list<string>}> the name and values of each field, in order */

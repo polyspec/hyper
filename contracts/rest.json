@@ -1,5 +1,4 @@
 {
-  "requirements": ["HY-4", "HY-5", "HY-9", "HY-49"],
   "routes": [
     {
       "name": "home",
@@ -8,6 +7,10 @@
     {
       "name": "files",
       "path": "/files/{rest*}"
+    },
+    {
+      "name": "proto.rest",
+      "path": "/x/{__proto__*}"
     },
     {
       "name": "all",
@@ -96,6 +99,15 @@
     {
       "id": "news", "path": "news",
       "result": null
+    },
+    {
+      "id": "x_proto_rest", "path": "/x/a/b",
+      "result": {
+        "name": "proto.rest",
+        "params": {
+          "__proto__": "/a/b"
+        }
+      }
     }
   ],
   "invalidPaths": [

@@ -7,16 +7,16 @@ export function routerOf(routes: unknown): Router {
   return new Router((routes as Map<string, string>[]).map((route) => ({ name: route.get('name') as string, path: route.get('path') as string })));
 }
 
-// Refuses a route path that a router must reject; the case states whether the router raised.
+// Refuses a route path that a router must reject; the case states the error that the router raised, or null.
 export function refusesPath(reader: CaseReader): void {
   const path = reader.input('path') as string;
-  let raised = false;
+  let error: unknown = null;
   try {
     new Router([{ name: 'invalid', path }]);
-  } catch {
-    raised = true;
+  } catch (caught) {
+    error = caught;
   }
-  reader.outcome('router', raised);
+  reader.outcome('router', error);
 }
 
 export const steps = {

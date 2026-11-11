@@ -21,13 +21,13 @@ def cases(case) -> None:
     functions = {key: function_of(kind) for key, kind in declared.items()}
     try:
         app = open_application(name, applications[name], functions)
-    except ValueError as error:
+    except Exception as error:
         if not case.has("openFails"):
             raise
-        case.compare("openFails", True)
+        case.compare("openFails", error)
         case.compare("openError", str(error))
         return
-    case.compare("openFails", False)
+    case.compare("openFails", None)
     store = ArraySession()
     # The server writes the cause of a 500 to stderr (HY-43); the case captures it, so that the report of the runner
     # holds only its own result.

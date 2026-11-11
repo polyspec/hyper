@@ -15,8 +15,8 @@ def base_cases(case) -> None:
 def invalid_paths(case) -> None:
     try:
         Router([{"name": "x", "path": case.input("path")}])
-    except ValueError:
-        raised = True
+    except Exception as error:
+        raised = error
     else:
-        raised = False
+        raised = None
     case.outcome("router", raised)

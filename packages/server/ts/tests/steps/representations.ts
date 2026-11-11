@@ -20,11 +20,11 @@ function plain(value: unknown): unknown {
   return value;
 }
 
-// The message of a rejected open, or null when the open did not fail.
-function failureOf(open: Promise<unknown>): Promise<string | null> {
+// The error of a rejected open, or null when the open did not fail.
+function failureOf(open: Promise<unknown>): Promise<unknown> {
   return open.then(
     () => null,
-    (error: unknown) => (error instanceof Error ? error.message : String(error)),
+    (error: unknown) => error,
   );
 }
 
@@ -66,7 +66,7 @@ export const steps = {
     const copy = manifestWith(route, representations);
     try {
       const failure = await failureOf(App.open<Record<string, never>>({ ...programOf(copy.file), timezone: '+09:00', log: () => {} }));
-      reader.outcome('open', failure !== null);
+      reader.outcome('open', failure);
     } finally {
       rmSync(copy.directory, { recursive: true, force: true });
     }
@@ -76,7 +76,7 @@ export const steps = {
     // The handler types of the route are not part of the Node handler options yet (H28.7), so they are not read here and
     // the case fails as uncompared.
     const failure = await failureOf(App.open<Record<string, never>>({ ...programOf(join(PROGRAMS, APPLICATION, 'manifest.json')), timezone: '+09:00', log: () => {} }));
-    reader.outcome('open', failure !== null);
+    reader.outcome('open', failure);
   },
 
   async cases(reader: CaseReader): Promise<void> {

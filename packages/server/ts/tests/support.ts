@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { expect } from 'vitest';
 import { verifyToken } from '../src/csrf.js';
 import { App, BadRequest, Forbidden, MemorySessionStore, NotFound, Redirect, Request, Result, type AppOptions, type ClientRendering, type Handlers, type Response } from '../src/index.js';
+import type { SessionStore } from '../src/session.js';
 
 export const FIXTURES = fileURLToPath(new URL('../../php/tests/fixtures/', import.meta.url));
 // The template files of the fixtures, which `make hyper-test-node` builds with scripts/build-templates.mts.
@@ -165,10 +166,10 @@ export class Fixture {
     return app;
   }
 
-  async handle(init: { method?: string; target: string; headers?: Record<string, string>; body?: string; https?: boolean }, options: Partial<AppOptions<Services>> = {}): Promise<Response> {
+  async handle(init: { method?: string; target: string; headers?: Record<string, string>; body?: string; https?: boolean }, options: Partial<AppOptions<Services>> = {}, session: SessionStore = this.session): Promise<Response> {
     const headers = init.body === undefined ? init.headers : { 'Content-Type': 'application/x-www-form-urlencoded', ...init.headers };
     const request = Request.from({ method: init.method ?? 'GET', target: init.target, headers, body: init.body === undefined ? undefined : Buffer.from(init.body, 'latin1'), https: init.https });
-    return (await this.app(options)).handle(request, this.session);
+    return (await this.app(options)).handle(request, session);
   }
 
   get(target: string, headers: Record<string, string> = {}, basePath = ''): Promise<Response> {

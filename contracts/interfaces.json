@@ -8,9 +8,7 @@
       "tests": [
         "packages/server/php/tests"
       ],
-      "barrel": [],
-      "runner": "packages/server/php/tests/CaseRunnerTest.php::CaseRunnerTest::testCases",
-      "caseReader": "packages/server/php/tests/CaseReader.php::CaseReader"
+      "barrel": []
     },
     "node": {
       "sources": [
@@ -21,9 +19,7 @@
       ],
       "barrel": [
         "packages/server/ts/src/index.ts"
-      ],
-      "runner": "packages/server/ts/tests/case-runner.test.ts::cases",
-      "caseReader": "packages/server/ts/tests/case-reader.ts::CaseReader"
+      ]
     },
     "python": {
       "sources": [
@@ -34,17 +30,36 @@
       ],
       "barrel": [
         "packages/server/python/src/polyspec/hyper/__init__.py"
-      ],
-      "runner": "packages/server/python/tests/test_case_runner.py::CaseRunner.test_cases",
-      "caseReader": "packages/server/python/tests/case_reader.py::CaseReader"
+      ]
     }
+  },
+  "runners": {
+    "php": {
+      "runner": "packages/server/php/tests/CaseRunnerTest.php::CaseRunnerTest::testCases"
+    },
+    "node": {
+      "runner": "packages/server/ts/tests/case-runner.test.ts::cases"
+    },
+    "python": {
+      "runner": "packages/server/python/tests/test_case_runner.py::CaseRunner.test_cases"
+    },
+    "browser": {
+      "runner": "packages/client/tests/case-runner.test.ts::cases"
+    },
+    "build": {
+      "runner": "tests/scripts/build-id.test.mts::cases"
+    }
+  },
+  "caseReaders": {
+    "php": "packages/server/php/tests/CaseReader.php::CaseReader",
+    "node": "packages/server/ts/tests/case-reader.ts::CaseReader",
+    "python": "packages/server/python/tests/case_reader.py::CaseReader"
   },
   "outside": [],
   "concerns": [],
   "types": [],
   "caseFiles": {
     "cookies.json": {
-      "rule": "HY-129",
       "fixtures": {},
       "sections": {
         "parse": {
@@ -67,15 +82,14 @@
             "cookies": {
               "role": "expected",
               "compare": "exact",
-              "rule": "HY-129",
-              "quote": "The cases of `contracts/cookies.json` state a header and its cookies: the header is text whose characters `U+0000` to `U+00FF` are its bytes, or null for a request without the header, and every server compares the cookies of each case by `exact` (HY-130), as a map from names to values."
+              "sentence": "HY-129.1",
+              "state": "`header` is text whose characters U+0000 to U+00FF are its bytes, or null for a request without the header, and `cookies` is the map of names to values that its parse gives."
             }
           }
         }
       }
     },
     "csrf.json": {
-      "rule": "HY-24",
       "fixtures": {},
       "sections": {
         "mask": {
@@ -101,8 +115,8 @@
             "value": {
               "role": "expected",
               "compare": "exact",
-              "rule": "HY-24",
-              "quote": "The `value` of a case of `mask` and the `valid` of a case of `verify` are compared `exact` (HY-130)."
+              "sentence": "HY-24.2",
+              "state": "`value` is the masked value, 128 lowercase hexadecimal digits, that the random bytes `mask` give for the token `token`."
             }
           }
         },
@@ -129,15 +143,14 @@
             "valid": {
               "role": "expected",
               "compare": "exact",
-              "rule": "HY-24",
-              "quote": "The `value` of a case of `mask` and the `valid` of a case of `verify` are compared `exact` (HY-130)."
+              "sentence": "HY-24.4",
+              "state": "`valid` states whether the form value `value` is a masked value of the token `token`."
             }
           }
         }
       }
     },
     "fields.json": {
-      "rule": "HY-57",
       "fixtures": {},
       "sections": {
         "urlencoded": {
@@ -160,8 +173,14 @@
             "fields": {
               "role": "expected",
               "compare": "exact",
-              "rule": "HY-57",
-              "quote": "The `fields` of a case of `urlencoded` or `multipart` are its values as a list of `[name, values]` pairs in the order of HY-56, or null when the text or the body fails with HY-42, and they are compared `exact` (HY-130)."
+              "sentence": "HY-57.2",
+              "state": "`fields` lists the values of `text` as `[name, values]` pairs in the order of their names, or is null when `text` fails with HY-42."
+            },
+            "names": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-56.4",
+              "state": "`names` lists the names of the values of `text` in the order of their first occurrence, or is null when `fields` is null."
             }
           }
         },
@@ -188,25 +207,21 @@
             "fields": {
               "role": "expected",
               "compare": "exact",
-              "rule": "HY-57",
-              "quote": "The `fields` of a case of `urlencoded` or `multipart` are its values as a list of `[name, values]` pairs in the order of HY-56, or null when the text or the body fails with HY-42, and they are compared `exact` (HY-130)."
+              "sentence": "HY-57.3",
+              "state": "`fields` lists the form values of the body `body` of the type `type`, a text whose characters are its bytes, as `[name, values]` pairs, or is null when the body fails with HY-42."
             },
             "files": {
               "role": "expected",
-              "optional": true,
               "compare": "exact",
-              "rule": "HY-113",
-              "quote": "The `files` of a case of `multipart` are compared `exact` (HY-130), and a case whose `fields` is null states no `files`."
+              "sentence": "HY-113.3",
+              "state": "`files` lists the files of the body in request order as objects with `name`, `filename`, `contentType` and `content`, where `content` is the text of the file and `contentType` is empty text for a part without a content type, or is null when `fields` is null."
             }
           }
         }
       }
     },
     "json.json": {
-      "rule": "HY-54",
-      "fixtures": {
-        "requirements": "label"
-      },
+      "fixtures": {},
       "sections": {
         "encode": {
           "runners": [
@@ -228,8 +243,8 @@
             "expected": {
               "role": "expected",
               "compare": "exact",
-              "rule": "HY-54",
-              "quote": "The `expected` of a case of `encode` is the JSON text of the value of its `json`, compared `exact` (HY-130)."
+              "sentence": "HY-54.4",
+              "state": "`expected` is the JSON text of the value of `json`."
             }
           }
         },
@@ -253,18 +268,15 @@
             "result": {
               "role": "expected",
               "compare": "exact",
-              "rule": "HY-54",
-              "quote": "The `result` of a case of `decode` is `value` for a value of the data model, `outside` for a JSON text whose value is outside it, and `error` for a text that fails to decode, compared `exact` (HY-130)."
+              "sentence": "HY-54.8",
+              "state": "`result` is `value` for a text `json` whose value is a value of the data model, `outside` for one whose value is outside it, and `error` for a text that fails to decode."
             }
           }
         }
       }
     },
     "keep.json": {
-      "rule": "HY-41",
-      "fixtures": {
-        "requirements": "label"
-      },
+      "fixtures": {},
       "sections": {
         "cases": {
           "runners": [
@@ -290,15 +302,14 @@
             "expected": {
               "role": "expected",
               "compare": "ordered",
-              "rule": "HY-41",
-              "quote": "`contracts/keep.json` holds region data, kept values and the expected data after HY-38, which is compared `ordered` (HY-130)."
+              "sentence": "HY-38.19",
+              "state": "`expected` is the region data `data` after the kept values `kept`, a list of `[path, value]` pairs, apply by HY-38."
             }
           }
         }
       }
     },
     "reads.json": {
-      "rule": "HY-73",
       "fixtures": {},
       "sections": {
         "cases": {
@@ -323,8 +334,7 @@
                   "node",
                   "browser"
                 ],
-                "rule": "HY-73",
-                "quote": "The Node server and the browser package compare the read paths that they compute from `templates` with the `reads` of a case by `exact` (HY-130)."
+                "sentence": "HY-73.23"
               }
             },
             "template": {
@@ -334,8 +344,7 @@
                   "node",
                   "browser"
                 ],
-                "rule": "HY-73",
-                "quote": "The PHP, Node and Python servers compare the kept data of a case with its `kept` by `ordered` (HY-130), and the Node server and the browser package compare by `exact` the text that `template` renders from the kept data with the text that it renders from `data`."
+                "sentence": "HY-54.3"
               }
             },
             "data": {
@@ -344,36 +353,33 @@
             "reads": {
               "role": "input",
               "compare": "exact",
-              "rule": "HY-73",
-              "quote": "The Node server and the browser package compare the read paths that they compute from `templates` with the `reads` of a case by `exact` (HY-130).",
+              "sentence": "HY-73.2",
+              "state": "`reads` is the read paths of the template `template` among the templates `templates`, a tree whose node is true for a path read whole and otherwise holds `keys` or `each`.",
               "only": {
                 "languages": [
                   "node",
                   "browser"
                 ],
-                "rule": "HY-73",
-                "quote": "The Node server and the browser package compare the read paths that they compute from `templates` with the `reads` of a case by `exact` (HY-130)."
+                "sentence": "HY-73.23"
               }
             },
             "kept": {
               "role": "expected",
               "compare": "ordered",
-              "rule": "HY-73",
-              "quote": "The PHP, Node and Python servers compare the kept data of a case with its `kept` by `ordered` (HY-130), and the Node server and the browser package compare by `exact` the text that `template` renders from the kept data with the text that it renders from `data`."
+              "sentence": "HY-73.29",
+              "state": "`kept` is the data `data` with only its read paths `reads` kept."
             }
           },
           "outcomes": {
             "render": {
               "compare": "exact",
-              "rule": "HY-73",
-              "quote": "The PHP, Node and Python servers compare the kept data of a case with its `kept` by `ordered` (HY-130), and the Node server and the browser package compare by `exact` the text that `template` renders from the kept data with the text that it renders from `data`.",
+              "sentence": "HY-73.28",
               "only": {
                 "languages": [
                   "node",
                   "browser"
                 ],
-                "rule": "HY-73",
-                "quote": "The PHP, Node and Python servers compare the kept data of a case with its `kept` by `ordered` (HY-130), and the Node server and the browser package compare by `exact` the text that `template` renders from the kept data with the text that it renders from `data`."
+                "sentence": "HY-54.3"
               }
             }
           }
@@ -381,9 +387,7 @@
       }
     },
     "routes.json": {
-      "rule": "HY-9",
       "fixtures": {
-        "requirements": "label",
         "routes": "input",
         "basePath": "input"
       },
@@ -402,14 +406,18 @@
             "id": {
               "role": "id"
             },
+            "label": {
+              "role": "label",
+              "optional": true
+            },
             "path": {
               "role": "input"
             },
             "result": {
               "role": "expected",
               "compare": "ordered",
-              "rule": "HY-9",
-              "quote": "The `result` of a case of `cases` or `baseCases`, the route name with its parameters or null, is compared `ordered` (HY-130)."
+              "sentence": "HY-5.3",
+              "state": "`result` is the name and the parameters of the route of `routes` that the request path `path` matches, or null when none matches."
             }
           }
         },
@@ -434,8 +442,8 @@
             "result": {
               "role": "expected",
               "compare": "ordered",
-              "rule": "HY-9",
-              "quote": "The `result` of a case of `cases` or `baseCases`, the route name with its parameters or null, is compared `ordered` (HY-130)."
+              "sentence": "HY-8.2",
+              "state": "`result` is the name and the parameters of the route that the request path `path` matches after the base path `basePath` is removed, or null when the path has no result."
             }
           }
         },
@@ -461,17 +469,14 @@
           "outcomes": {
             "router": {
               "compare": "raises",
-              "rule": "HY-9",
-              "quote": "Each case of `invalidPaths` states a route path that the router refuses, and the creation of a router with that path is compared `raises` (HY-130)."
+              "sentence": "HY-4.6"
             }
           }
         }
       }
     },
     "rest.json": {
-      "rule": "HY-49",
       "fixtures": {
-        "requirements": "label",
         "routes": "input"
       },
       "sections": {
@@ -495,8 +500,8 @@
             "result": {
               "role": "expected",
               "compare": "ordered",
-              "rule": "HY-49",
-              "quote": "The `result` of a case of `cases` is compared `ordered`, and the creation of a router with the path of a case of `invalidPaths` is compared `raises` (HY-130)."
+              "sentence": "HY-49.3",
+              "state": "`result` is the name and the parameters of the route of `routes` that the request path `path` matches, a rest parameter holding the rest of the path, or null when none matches."
             }
           }
         },
@@ -522,17 +527,14 @@
           "outcomes": {
             "router": {
               "compare": "raises",
-              "rule": "HY-49",
-              "quote": "The `result` of a case of `cases` is compared `ordered`, and the creation of a router with the path of a case of `invalidPaths` is compared `raises` (HY-130)."
+              "sentence": "HY-4.6"
             }
           }
         }
       }
     },
     "client.json": {
-      "rule": "HY-62",
       "fixtures": {
-        "requirements": "label",
         "basePath": "input",
         "chosenHost": "input",
         "representations": "input",
@@ -589,38 +591,23 @@
               "optional": true
             },
             "status": {
-              "role": "expected",
-              "compare": "exact",
-              "rule": "HY-130",
-              "quote": "A case that states a response compares it by `exact` in `status` and `body`, by `subset` in `headers`, by `exact` in `allHeaders`, by `absent` in `absentHeaders`, by `contains` in `bodyContains` and by `excludes` in `bodyNotContains`."
+              "role": "response"
             },
             "body": {
-              "role": "expected",
-              "optional": true,
-              "compare": "exact",
-              "rule": "HY-130",
-              "quote": "A case that states a response compares it by `exact` in `status` and `body`, by `subset` in `headers`, by `exact` in `allHeaders`, by `absent` in `absentHeaders`, by `contains` in `bodyContains` and by `excludes` in `bodyNotContains`."
+              "role": "response",
+              "optional": true
             },
             "headers": {
-              "role": "expected",
-              "optional": true,
-              "compare": "subset",
-              "rule": "HY-130",
-              "quote": "A case that states a response compares it by `exact` in `status` and `body`, by `subset` in `headers`, by `exact` in `allHeaders`, by `absent` in `absentHeaders`, by `contains` in `bodyContains` and by `excludes` in `bodyNotContains`."
+              "role": "response",
+              "optional": true
             },
             "allHeaders": {
-              "role": "expected",
-              "optional": true,
-              "compare": "exact",
-              "rule": "HY-130",
-              "quote": "A case that states a response compares it by `exact` in `status` and `body`, by `subset` in `headers`, by `exact` in `allHeaders`, by `absent` in `absentHeaders`, by `contains` in `bodyContains` and by `excludes` in `bodyNotContains`."
+              "role": "response",
+              "optional": true
             },
             "absentHeaders": {
-              "role": "expected",
-              "optional": true,
-              "compare": "absent",
-              "rule": "HY-130",
-              "quote": "A case that states a response compares it by `exact` in `status` and `body`, by `subset` in `headers`, by `exact` in `allHeaders`, by `absent` in `absentHeaders`, by `contains` in `bodyContains` and by `excludes` in `bodyNotContains`."
+              "role": "response",
+              "optional": true
             },
             "json": {
               "role": "expected",
@@ -629,20 +616,20 @@
                 "route": {
                   "role": "expected",
                   "compare": "exact",
-                  "rule": "HY-62",
-                  "quote": "`json` compares `route` by `exact`, `params` by `ordered` and `regions` by `keys` with the response object (HY-130)."
+                  "sentence": "HY-62.19",
+                  "state": "`route` is the route name of the JSON response."
                 },
                 "params": {
                   "role": "expected",
                   "compare": "ordered",
-                  "rule": "HY-62",
-                  "quote": "`json` compares `route` by `exact`, `params` by `ordered` and `regions` by `keys` with the response object (HY-130)."
+                  "sentence": "HY-5.3",
+                  "state": "`params` is the parameters of the JSON response in their order."
                 },
                 "regions": {
                   "role": "expected",
                   "compare": "keys",
-                  "rule": "HY-62",
-                  "quote": "`json` compares `route` by `exact`, `params` by `ordered` and `regions` by `keys` with the response object (HY-130)."
+                  "sentence": "HY-62.21",
+                  "state": "`regions` lists the region names of the JSON response in their order."
                 }
               }
             },
@@ -650,21 +637,28 @@
               "role": "expected",
               "optional": true,
               "compare": "exact",
-              "rule": "HY-62",
-              "quote": "`session` false states a request after which the session holds no session token, `actions` is the number of calls of the actions and `handled` the number of calls of the representation handlers, each compared `exact` (HY-130)."
+              "sentence": "HY-45.4",
+              "state": "`session` false states a request after which the session holds no session token."
             },
             "actions": {
               "role": "expected",
               "compare": "exact",
-              "rule": "HY-62",
-              "quote": "`session` false states a request after which the session holds no session token, `actions` is the number of calls of the actions and `handled` the number of calls of the representation handlers, each compared `exact` (HY-130)."
+              "sentence": "HY-62.26",
+              "state": "`actions` is the number of calls of the actions of the application during the request."
             },
             "handled": {
               "role": "expected",
               "optional": true,
               "compare": "exact",
-              "rule": "HY-62",
-              "quote": "`session` false states a request after which the session holds no session token, `actions` is the number of calls of the actions and `handled` the number of calls of the representation handlers, each compared `exact` (HY-130)."
+              "sentence": "HY-62.20",
+              "state": "`handled` is the number of calls of the representation handlers during the request."
+            },
+            "storeCalls": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-120.3",
+              "state": "`storeCalls` lists the calls of the session store that the host passes to the application for the request, empty for a request that opens no session."
             },
             "received": {
               "role": "expected",
@@ -673,20 +667,20 @@
                 "parameters": {
                   "role": "expected",
                   "compare": "ordered",
-                  "rule": "HY-62",
-                  "quote": "`received` compares `parameters` by `ordered` and `selection` by `exact` with what the representation handler received (HY-130), and `absentHeaders` by `absent` with its request headers."
+                  "sentence": "HY-119.3",
+                  "state": "`parameters` is the parameter values that the representation handler received, in their order."
                 },
                 "selection": {
                   "role": "expected",
                   "compare": "exact",
-                  "rule": "HY-62",
-                  "quote": "`received` compares `parameters` by `ordered` and `selection` by `exact` with what the representation handler received (HY-130), and `absentHeaders` by `absent` with its request headers."
+                  "sentence": "HY-121.1",
+                  "state": "`selection` is the selection value that the representation handler read from its request."
                 },
                 "absentHeaders": {
                   "role": "expected",
                   "compare": "absent",
-                  "rule": "HY-62",
-                  "quote": "`received` compares `parameters` by `ordered` and `selection` by `exact` with what the representation handler received (HY-130), and `absentHeaders` by `absent` with its request headers."
+                  "sentence": "HY-121.2",
+                  "state": "`absentHeaders` lists header names that the request that the representation handler received does not hold."
                 }
               }
             }
@@ -695,9 +689,7 @@
       }
     },
     "context.json": {
-      "rule": "HY-128",
       "fixtures": {
-        "requirements": "label",
         "applications": "input"
       },
       "sections": {
@@ -717,26 +709,29 @@
               "role": "input"
             },
             "excluded": {
-              "role": "label"
+              "role": "input",
+              "compare": "exact",
+              "sentence": "HY-125.4",
+              "state": "`excluded` lists the outputs that the hash leaves out, the `build.json` whose content is `{\"build\":\"<build id>\"}` with the build id of `files`."
             },
             "sortedPaths": {
               "role": "expected",
               "compare": "exact",
-              "rule": "HY-125",
-              "quote": "The `builds` of `contracts/context.json` give `files` to the build function and name in `excluded` the outputs that the hash leaves out, and their `sortedPaths`, `stream` and `build` are compared `exact` (HY-130)."
+              "sentence": "HY-125.3",
+              "state": "`sortedPaths` lists the paths of `files` in the order in which the build hashes them."
             },
             "stream": {
               "role": "expected",
               "optional": true,
               "compare": "exact",
-              "rule": "HY-125",
-              "quote": "The `builds` of `contracts/context.json` give `files` to the build function and name in `excluded` the outputs that the hash leaves out, and their `sortedPaths`, `stream` and `build` are compared `exact` (HY-130)."
+              "sentence": "HY-125.3",
+              "state": "`stream` is the hexadecimal text of the bytes that the build hashes for `files`."
             },
             "build": {
               "role": "expected",
               "compare": "exact",
-              "rule": "HY-125",
-              "quote": "The `builds` of `contracts/context.json` give `files` to the build function and name in `excluded` the outputs that the hash leaves out, and their `sortedPaths`, `stream` and `build` are compared `exact` (HY-130)."
+              "sentence": "HY-125.1",
+              "state": "`build` is the build id of `files`, whose `content` is the UTF-8 text of each file."
             }
           }
         },
@@ -760,20 +755,20 @@
             "context": {
               "role": "input",
               "compare": "exact",
-              "rule": "HY-128",
-              "quote": "A context entry compares by `exact` the JSON text of HY-54 of its decoded `context` with `context`, the bytes that its hash digests with `text`, its context hash with `hash`, and the context hash of the map that `reorderedText` writes with `reorderedHash` (HY-130)."
+              "sentence": "HY-125.10",
+              "state": "`context` is the JSON text of a context map, which the server decodes and writes again as the same text."
             },
             "text": {
               "role": "expected",
               "compare": "exact",
-              "rule": "HY-128",
-              "quote": "A context entry compares by `exact` the JSON text of HY-54 of its decoded `context` with `context`, the bytes that its hash digests with `text`, its context hash with `hash`, and the context hash of the map that `reorderedText` writes with `reorderedHash` (HY-130)."
+              "sentence": "HY-125.12",
+              "state": "`text` is the bytes that the hash of `context` under the build id `build` digests."
             },
             "hash": {
               "role": "expected",
               "compare": "exact",
-              "rule": "HY-128",
-              "quote": "A context entry compares by `exact` the JSON text of HY-54 of its decoded `context` with `context`, the bytes that its hash digests with `text`, its context hash with `hash`, and the context hash of the map that `reorderedText` writes with `reorderedHash` (HY-130)."
+              "sentence": "HY-125.12",
+              "state": "`hash` is the context hash of `context` under the build id `build`."
             },
             "reorderedText": {
               "role": "input",
@@ -783,8 +778,8 @@
               "role": "expected",
               "optional": true,
               "compare": "exact",
-              "rule": "HY-128",
-              "quote": "A context entry compares by `exact` the JSON text of HY-54 of its decoded `context` with `context`, the bytes that its hash digests with `text`, its context hash with `hash`, and the context hash of the map that `reorderedText` writes with `reorderedHash` (HY-130)."
+              "sentence": "HY-125.12",
+              "state": "`reorderedHash` is the context hash of the map that `reorderedText` writes, the members of `context` in another order."
             }
           }
         },
@@ -834,88 +829,68 @@
               }
             },
             "status": {
-              "role": "expected",
-              "compare": "exact",
-              "rule": "HY-130",
-              "quote": "A case that states a response compares it by `exact` in `status` and `body`, by `subset` in `headers`, by `exact` in `allHeaders`, by `absent` in `absentHeaders`, by `contains` in `bodyContains` and by `excludes` in `bodyNotContains`."
+              "role": "response"
             },
             "headers": {
-              "role": "expected",
-              "compare": "subset",
-              "rule": "HY-130",
-              "quote": "A case that states a response compares it by `exact` in `status` and `body`, by `subset` in `headers`, by `exact` in `allHeaders`, by `absent` in `absentHeaders`, by `contains` in `bodyContains` and by `excludes` in `bodyNotContains`."
+              "role": "response"
             },
             "absentHeaders": {
-              "role": "expected",
-              "optional": true,
-              "compare": "absent",
-              "rule": "HY-130",
-              "quote": "A case that states a response compares it by `exact` in `status` and `body`, by `subset` in `headers`, by `exact` in `allHeaders`, by `absent` in `absentHeaders`, by `contains` in `bodyContains` and by `excludes` in `bodyNotContains`."
+              "role": "response",
+              "optional": true
             },
             "body": {
-              "role": "expected",
-              "optional": true,
-              "compare": "exact",
-              "rule": "HY-130",
-              "quote": "A case that states a response compares it by `exact` in `status` and `body`, by `subset` in `headers`, by `exact` in `allHeaders`, by `absent` in `absentHeaders`, by `contains` in `bodyContains` and by `excludes` in `bodyNotContains`."
+              "role": "response",
+              "optional": true
             },
             "bodyContains": {
-              "role": "expected",
-              "optional": true,
-              "compare": "contains",
-              "rule": "HY-130",
-              "quote": "A case that states a response compares it by `exact` in `status` and `body`, by `subset` in `headers`, by `exact` in `allHeaders`, by `absent` in `absentHeaders`, by `contains` in `bodyContains` and by `excludes` in `bodyNotContains`."
+              "role": "response",
+              "optional": true
             },
             "bodyNotContains": {
-              "role": "expected",
-              "optional": true,
-              "compare": "excludes",
-              "rule": "HY-130",
-              "quote": "A case that states a response compares it by `exact` in `status` and `body`, by `subset` in `headers`, by `exact` in `allHeaders`, by `absent` in `absentHeaders`, by `contains` in `bodyContains` and by `excludes` in `bodyNotContains`."
+              "role": "response",
+              "optional": true
             },
             "keys": {
               "role": "expected",
               "optional": true,
               "compare": "keys",
-              "rule": "HY-128",
-              "quote": "`keys` and `sharedKeys` are compared by `keys` with the response object and its `shared`, `contextCalls` by `exact` with the number of calls of the context handler, and `selection` by `exact` with the list of the values that the context handler received, one item for each call (HY-130)."
+              "sentence": "HY-128.1",
+              "state": "`keys` lists the keys of the JSON response object in their order."
             },
             "sharedKeys": {
               "role": "expected",
               "optional": true,
               "compare": "keys",
-              "rule": "HY-128",
-              "quote": "`keys` and `sharedKeys` are compared by `keys` with the response object and its `shared`, `contextCalls` by `exact` with the number of calls of the context handler, and `selection` by `exact` with the list of the values that the context handler received, one item for each call (HY-130)."
+              "sentence": "HY-128.3",
+              "state": "`sharedKeys` lists the keys of the member `shared` of the JSON response in their order."
             },
             "contextCalls": {
               "role": "expected",
               "optional": true,
               "compare": "exact",
-              "rule": "HY-128",
-              "quote": "`keys` and `sharedKeys` are compared by `keys` with the response object and its `shared`, `contextCalls` by `exact` with the number of calls of the context handler, and `selection` by `exact` with the list of the values that the context handler received, one item for each call (HY-130)."
+              "sentence": "HY-124.2",
+              "state": "`contextCalls` is the number of calls of the context handler during the request."
             },
             "firstCalls": {
               "role": "expected",
               "optional": true,
               "compare": "prefix",
-              "rule": "HY-128",
-              "quote": "`firstCalls` lists the first calls of the request in the order in which they run and is compared by `prefix` with the recorded calls (HY-130)."
+              "sentence": "HY-124.2",
+              "state": "`firstCalls` lists the first calls of the request in the order in which they run, written `action:<route>`, `context` and `shared`."
             },
             "selection": {
               "role": "expected",
               "optional": true,
               "compare": "exact",
-              "rule": "HY-128",
-              "quote": "`keys` and `sharedKeys` are compared by `keys` with the response object and its `shared`, `contextCalls` by `exact` with the number of calls of the context handler, and `selection` by `exact` with the list of the values that the context handler received, one item for each call (HY-130)."
+              "sentence": "HY-124.2",
+              "state": "`selection` lists the selection value that the context handler received, one item for each call."
             }
           }
         }
       }
     },
     "functions.json": {
-      "rule": "HYC-24",
       "fixtures": {
-        "requirements": "label",
         "functionKinds": "input",
         "applications": "input"
       },
@@ -959,48 +934,37 @@
               }
             },
             "status": {
-              "role": "expected",
-              "optional": true,
-              "compare": "exact",
-              "rule": "HY-130",
-              "quote": "A case that states a response compares it by `exact` in `status` and `body`, by `subset` in `headers`, by `exact` in `allHeaders`, by `absent` in `absentHeaders`, by `contains` in `bodyContains` and by `excludes` in `bodyNotContains`."
+              "role": "response",
+              "optional": true
             },
             "body": {
-              "role": "expected",
-              "optional": true,
-              "compare": "exact",
-              "rule": "HY-130",
-              "quote": "A case that states a response compares it by `exact` in `status` and `body`, by `subset` in `headers`, by `exact` in `allHeaders`, by `absent` in `absentHeaders`, by `contains` in `bodyContains` and by `excludes` in `bodyNotContains`."
+              "role": "response",
+              "optional": true
             },
             "bodyContains": {
-              "role": "expected",
-              "optional": true,
-              "compare": "contains",
-              "rule": "HY-130",
-              "quote": "A case that states a response compares it by `exact` in `status` and `body`, by `subset` in `headers`, by `exact` in `allHeaders`, by `absent` in `absentHeaders`, by `contains` in `bodyContains` and by `excludes` in `bodyNotContains`."
+              "role": "response",
+              "optional": true
             },
             "openFails": {
               "role": "expected",
               "optional": true,
               "compare": "raises",
-              "rule": "HYC-24",
-              "quote": "`openFails` compares the open by `raises`, and `openError` compares the message of its error by `contains` (HY-130)."
+              "sentence": "HYC-24.2",
+              "state": "`openFails` true states an application whose open fails with the functions `functions`, written as kinds of `functionKinds`."
             },
             "openError": {
               "role": "expected",
               "optional": true,
               "compare": "contains",
-              "rule": "HYC-24",
-              "quote": "`openFails` compares the open by `raises`, and `openError` compares the message of its error by `contains` (HY-130)."
+              "sentence": "HYC-24.5",
+              "state": "`openError` is a text that the message of the open error contains."
             }
           }
         }
       }
     },
     "representations.json": {
-      "rule": "HY-123",
       "fixtures": {
-        "requirements": "label",
         "applications": "input"
       },
       "sections": {
@@ -1030,8 +994,7 @@
           "outcomes": {
             "open": {
               "compare": "raises",
-              "rule": "HY-123",
-              "quote": "The open of a case of `manifestRejections` or `openRejections` is compared `raises` (HY-130)."
+              "sentence": "HY-118.5"
             }
           }
         },
@@ -1061,8 +1024,7 @@
           "outcomes": {
             "open": {
               "compare": "raises",
-              "rule": "HY-123",
-              "quote": "The open of a case of `manifestRejections` or `openRejections` is compared `raises` (HY-130)."
+              "sentence": "HY-106.6"
             }
           }
         },
@@ -1109,50 +1071,38 @@
               "optional": true
             },
             "status": {
-              "role": "expected",
-              "compare": "exact",
-              "rule": "HY-130",
-              "quote": "A case that states a response compares it by `exact` in `status` and `body`, by `subset` in `headers`, by `exact` in `allHeaders`, by `absent` in `absentHeaders`, by `contains` in `bodyContains` and by `excludes` in `bodyNotContains`."
+              "role": "response"
             },
             "headers": {
-              "role": "expected",
-              "compare": "subset",
-              "rule": "HY-130",
-              "quote": "A case that states a response compares it by `exact` in `status` and `body`, by `subset` in `headers`, by `exact` in `allHeaders`, by `absent` in `absentHeaders`, by `contains` in `bodyContains` and by `excludes` in `bodyNotContains`."
+              "role": "response"
             },
             "body": {
-              "role": "expected",
-              "optional": true,
-              "compare": "exact",
-              "rule": "HY-130",
-              "quote": "A case that states a response compares it by `exact` in `status` and `body`, by `subset` in `headers`, by `exact` in `allHeaders`, by `absent` in `absentHeaders`, by `contains` in `bodyContains` and by `excludes` in `bodyNotContains`."
+              "role": "response",
+              "optional": true
             },
             "absentHeaders": {
-              "role": "expected",
-              "optional": true,
-              "compare": "absent",
-              "rule": "HY-130",
-              "quote": "A case that states a response compares it by `exact` in `status` and `body`, by `subset` in `headers`, by `exact` in `allHeaders`, by `absent` in `absentHeaders`, by `contains` in `bodyContains` and by `excludes` in `bodyNotContains`."
+              "role": "response",
+              "optional": true
             },
             "page": {
               "role": "expected",
               "optional": true,
               "compare": "exact",
-              "rule": "HY-123",
-              "quote": "`page` names the media type of the `Content-Type` of a page response, `text/html` or `application/vnd.hyper+json`, `handled` is the number of calls of the representation handlers, and `session` false states a request after which the session holds no session token, each compared `exact` (HY-130)."
+              "sentence": "HY-116.11",
+              "state": "`page` names the media type of the `Content-Type` of a page response, `text/html` or `application/vnd.hyper+json`."
             },
             "handled": {
               "role": "expected",
               "compare": "exact",
-              "rule": "HY-123",
-              "quote": "`page` names the media type of the `Content-Type` of a page response, `text/html` or `application/vnd.hyper+json`, `handled` is the number of calls of the representation handlers, and `session` false states a request after which the session holds no session token, each compared `exact` (HY-130)."
+              "sentence": "HY-121.1",
+              "state": "`handled` is the number of calls of the representation handlers during the request."
             },
             "session": {
               "role": "expected",
               "optional": true,
               "compare": "exact",
-              "rule": "HY-123",
-              "quote": "`page` names the media type of the `Content-Type` of a page response, `text/html` or `application/vnd.hyper+json`, `handled` is the number of calls of the representation handlers, and `session` false states a request after which the session holds no session token, each compared `exact` (HY-130)."
+              "sentence": "HY-121.2",
+              "state": "`session` false states a request after which the session holds no session token."
             },
             "received": {
               "role": "expected",
@@ -1162,35 +1112,35 @@
                   "role": "expected",
                   "optional": true,
                   "compare": "exact",
-                  "rule": "HY-123",
-                  "quote": "`received` compares `method` and `body` by `exact`, `parameters` by `ordered`, `headers` by `subset` and `absentHeaders` by `absent` with the request that the handler received (HY-130)."
+                  "sentence": "HY-121.5",
+                  "state": "`method` is the request method that the handler received."
                 },
                 "parameters": {
                   "role": "expected",
                   "compare": "ordered",
-                  "rule": "HY-123",
-                  "quote": "`received` compares `method` and `body` by `exact`, `parameters` by `ordered`, `headers` by `subset` and `absentHeaders` by `absent` with the request that the handler received (HY-130)."
+                  "sentence": "HY-119.3",
+                  "state": "`parameters` is the parameter values that the handler received, in their order."
                 },
                 "body": {
                   "role": "expected",
                   "optional": true,
                   "compare": "exact",
-                  "rule": "HY-123",
-                  "quote": "`received` compares `method` and `body` by `exact`, `parameters` by `ordered`, `headers` by `subset` and `absentHeaders` by `absent` with the request that the handler received (HY-130)."
+                  "sentence": "HY-121.9",
+                  "state": "`body` is the decoded value of the request body that the handler read."
                 },
                 "headers": {
                   "role": "expected",
                   "optional": true,
                   "compare": "subset",
-                  "rule": "HY-123",
-                  "quote": "`received` compares `method` and `body` by `exact`, `parameters` by `ordered`, `headers` by `subset` and `absentHeaders` by `absent` with the request that the handler received (HY-130)."
+                  "sentence": "HY-121.2",
+                  "state": "`headers` holds request headers that the handler received."
                 },
                 "absentHeaders": {
                   "role": "expected",
                   "optional": true,
                   "compare": "absent",
-                  "rule": "HY-123",
-                  "quote": "`received` compares `method` and `body` by `exact`, `parameters` by `ordered`, `headers` by `subset` and `absentHeaders` by `absent` with the request that the handler received (HY-130)."
+                  "sentence": "HY-121.2",
+                  "state": "`absentHeaders` lists header names that the request that the handler received does not hold."
                 }
               }
             }

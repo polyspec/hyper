@@ -16,6 +16,6 @@ final class RestSteps
 
     public static function invalidPaths(CaseReader $case): void
     {
-        $case->outcome('router', RoutesSteps::refuses((string) $case->input('path')));
+        $case->outcome('router', RoutesSteps::refusal((string) $case->input('path')));
     }
 }

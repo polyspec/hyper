@@ -1,5 +1,5 @@
-// The case runner of the Node server (HYR-7, HY-130): it runs every case of every case file of contracts/ that a step
-// of this server answers, and writes one result line per case to the results file that RECIPE_RESULTS names.
+// The case runner of the Node server (HYR-7, HY-130): it runs every case of every case file of contracts/ whose sections
+// name the node runner, and writes one result line per case to the results file that RECIPE_RESULTS names.
 import { mkdirSync, renameSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { it } from 'vitest';
@@ -19,21 +19,25 @@ import { steps as routesSteps } from './steps/routes.js';
 
 type Step = (reader: CaseReader) => unknown;
 
-// The steps of this server, by case file and section. A section without a step fails its cases with STEP_UNKNOWN.
-const STEPS: Record<string, Record<string, Step>> = {
-  'client.json': clientSteps,
-  'context.json': contextSteps,
-  'cookies.json': cookiesSteps,
-  'csrf.json': csrfSteps,
-  'fields.json': fieldsSteps,
-  'functions.json': functionsSteps,
-  'json.json': jsonSteps,
-  'keep.json': keepSteps,
-  'reads.json': readsSteps,
-  'representations.json': representationsSteps,
-  'rest.json': restSteps,
-  'routes.json': routesSteps,
+// The steps of this server, by case file and section (`file:section`). A section without a step fails its cases.
+const STEPS: Record<string, Step> = {
+  ...prefixed('client.json', clientSteps),
+  ...prefixed('context.json', contextSteps),
+  ...prefixed('cookies.json', cookiesSteps),
+  ...prefixed('csrf.json', csrfSteps),
+  ...prefixed('fields.json', fieldsSteps),
+  ...prefixed('functions.json', functionsSteps),
+  ...prefixed('json.json', jsonSteps),
+  ...prefixed('keep.json', keepSteps),
+  ...prefixed('reads.json', readsSteps),
+  ...prefixed('representations.json', representationsSteps),
+  ...prefixed('rest.json', restSteps),
+  ...prefixed('routes.json', routesSteps),
 };
+
+function prefixed(file: string, steps: Record<string, Step>): Record<string, Step> {
+  return Object.fromEntries(Object.entries(steps).map(([section, step]) => [`${file}:${section}`, step]));
+}
 
 function messageOf(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
@@ -41,21 +45,19 @@ function messageOf(error: unknown): string {
 
 it('cases', async () => {
   const results = process.env.RECIPE_RESULTS;
-  if (results === undefined) throw new Error('RECIPE_RESULTS names the results file');
+  if (results === undefined) throw new Error('RECIPE_RESULTS is not set: the case runner writes its results to the file that it names');
   const lines: string[] = [];
-  for (const file of CaseReader.files()) {
-    for (const reader of CaseReader.cases(file)) {
-      const step = STEPS[file]?.[reader.section()];
-      if (step === undefined) reader.fail(`STEP_UNKNOWN ${file} ${reader.section()}`);
-      else if (!reader.failed()) {
-        try {
-          await step(reader);
-        } catch (error) {
-          reader.fail(messageOf(error));
-        }
+  for (const reader of CaseReader.cases('node')) {
+    const step = STEPS[reader.section()];
+    if (step === undefined) reader.fail(`STEP_UNKNOWN ${reader.section()}`);
+    else {
+      try {
+        await step(reader);
+      } catch (error) {
+        reader.fail(messageOf(error));
       }
-      lines.push(reader.line());
     }
+    lines.push(reader.line());
   }
   const temporary = `${results}.tmp`;
   mkdirSync(dirname(results), { recursive: true });

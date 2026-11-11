@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Polyspec\Hyper\Tests\Support\Steps;
 
-use Polyspec\Hyper\ArraySession;
 use Polyspec\Hyper\Csrf;
 use Polyspec\Hyper\Request;
 use Polyspec\Hyper\Tests\CaseReader;
 use Polyspec\Hyper\Tests\Support\ClientApp;
 use Polyspec\Hyper\Tests\Support\Counter;
+use Polyspec\Hyper\Tests\Support\CountingStore;
 use Polyspec\Hyper\Tests\Support\Json;
 
 /** HY-62: the cases of contracts/client.json. */
@@ -31,11 +31,11 @@ final class ClientSteps
         $case->input('handler');
 
         $counter = new Counter();
-        $session = new ArraySession();
+        $store = new CountingStore();
         $request = Json::array($case->input('request'));
         $form = isset($request['form']) ? Json::stringMap($request['form']) : null;
         if ($request['csrf'] ?? false) {
-            $session->set('_hyper_csrf', self::TOKEN);
+            $store->preset('_hyper_csrf', self::TOKEN);
             $form = ['_csrf' => Csrf::masked(self::TOKEN), ...$form ?? []];
         }
         $headers = Json::stringMap($request['headers'] ?? null);
@@ -54,8 +54,10 @@ final class ClientSteps
                 $query,
                 $form === null ? '' : http_build_query($form),
             ),
-            $session,
+            $store,
         );
+
+        $case->compare('storeCalls', $store->log);
 
         $case->compare('status', $response->status);
         $case->compare('headers', $response->headers);
@@ -70,7 +72,7 @@ final class ClientSteps
             $case->compare('json.regions', $json->regions ?? null);
         }
         // HY-62: the session holds no token after a request whose expected session is false.
-        $case->compare('session', $session->get('_hyper_csrf') !== null);
+        $case->compare('session', $store->holds('_hyper_csrf'));
         $case->compare('actions', $counter->actions);
     }
 }

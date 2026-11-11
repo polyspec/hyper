@@ -128,10 +128,10 @@ def _check_open(case: CaseReader, manifest: dict, types: dict) -> None:
                 handlers=handlers,
                 timezone="+09:00",
             )
-        except ValueError:
-            raised = True
+        except Exception as error:
+            raised = error
         else:
-            raised = False
+            raised = None
     case.outcome("open", raised)
 
 

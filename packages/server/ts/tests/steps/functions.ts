@@ -24,11 +24,11 @@ function functionsOf(kinds: Map<string, string>, declared: Map<string, string>):
   );
 }
 
-// The message of a rejected open, or null when the open did not fail.
-function failureOf(open: Promise<unknown>): Promise<string | null> {
+// The error of a rejected open, or null when the open did not fail.
+function failureOf(open: Promise<unknown>): Promise<unknown> {
   return open.then(
     () => null,
-    (error: unknown) => (error instanceof Error ? error.message : String(error)),
+    (error: unknown) => error,
   );
 }
 
@@ -53,8 +53,8 @@ export const steps = {
     };
     if (reader.has('openFails')) {
       const failure = await failureOf(App.open<Record<string, never>>(options));
-      reader.compare('openFails', failure !== null);
-      reader.compare('openError', failure);
+      reader.compare('openFails', failure);
+      reader.compare('openError', failure instanceof Error ? failure.message : null);
       return;
     }
     const app = await App.open<Record<string, never>>(options);

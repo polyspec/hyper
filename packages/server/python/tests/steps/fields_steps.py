@@ -21,7 +21,9 @@ def file_entries(files):
 
 
 def urlencoded(case) -> None:
-    case.compare("fields", entries(Fields.parse(case.input("text").encode("utf-8"))))
+    fields = Fields.parse(case.input("text").encode("utf-8"))
+    case.compare("fields", entries(fields))
+    case.compare("names", None if fields is None else list(fields.names()))
 
 
 def multipart(case) -> None:
