@@ -1,0 +1,41 @@
+# The steps of the case runner (HYR-7): one step per section of a case file, keyed by the file and the section. A step
+# reads the input fields of its case through the case reader, runs the code under test and compares the observed values
+# through the reader. The runner calls each step with the reader of one case.
+from . import (
+    client_steps,
+    context_steps,
+    cookies_steps,
+    csrf_steps,
+    fields_steps,
+    functions_steps,
+    json_steps,
+    keep_steps,
+    reads_steps,
+    representations_steps,
+    rest_steps,
+    routes_steps,
+)
+
+STEPS = {
+    ("client.json", "cases"): client_steps.cases,
+    ("context.json", "contexts"): context_steps.contexts,
+    ("context.json", "cases"): context_steps.cases,
+    ("cookies.json", "parse"): cookies_steps.parse_cookies,
+    ("csrf.json", "mask"): csrf_steps.mask_token,
+    ("csrf.json", "verify"): csrf_steps.verify_value,
+    ("fields.json", "urlencoded"): fields_steps.urlencoded,
+    ("fields.json", "multipart"): fields_steps.multipart,
+    ("functions.json", "cases"): functions_steps.cases,
+    ("json.json", "encode"): json_steps.encode_text,
+    ("json.json", "decode"): json_steps.decode_text,
+    ("keep.json", "cases"): keep_steps.cases,
+    ("reads.json", "cases"): reads_steps.cases,
+    ("representations.json", "manifestRejections"): representations_steps.manifest_rejections,
+    ("representations.json", "openRejections"): representations_steps.open_rejections,
+    ("representations.json", "cases"): representations_steps.cases,
+    ("rest.json", "cases"): rest_steps.cases,
+    ("rest.json", "invalidPaths"): rest_steps.invalid_paths,
+    ("routes.json", "cases"): routes_steps.cases,
+    ("routes.json", "baseCases"): routes_steps.base_cases,
+    ("routes.json", "invalidPaths"): routes_steps.invalid_paths,
+}

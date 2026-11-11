@@ -1,31 +1,26 @@
-# The context of an application, run from contracts/context.json (HY-10, HY-124 to HY-128): every case opens the
-# application named by the case with its build, its context, its shared data and its handlers, sends the request and
-# compares the response with the stated expectations. The applications are built once by scripts/contract-programs.mjs
-# into var/contract-programs, which the tests of the three servers share.
-import contextlib
-import io
+# The context of an application (HY-10, HY-124 to HY-128): the cases of contracts/context.json run in steps/context_steps.py,
+# which open each application with its build, its context, its shared data and its handlers. This module keeps the helpers
+# that open the applications of the contract, and the tests of the builds and of the shared data of an application.
 import json
 import subprocess
 import tempfile
 import unittest
 from pathlib import Path
-from urllib.parse import urlencode
 
-from polyspec.hyper._context import hash_of, text_of
-from polyspec.hyper._csrf import masked
 from polyspec.hyper._json_codec import decode
-from polyspec.hyper._session import Session
 from polyspec.hyper.app import App
 from polyspec.hyper.reply import Reply
 from polyspec.hyper.request import Request
 from polyspec.hyper.result import NotFound, Result
-from polyspec.hyper.session import ArraySession
 
 ROOT = Path(__file__).resolve().parents[5]
-CONTRACT = json.loads((ROOT / "contracts" / "context.json").read_text(encoding="utf-8"))
 NODE = ROOT / "var" / "tools" / "bin" / "node"
 PROGRAMS = ROOT / "var" / "contract-programs"
 BUILD_LIBRARY = ROOT / "packages" / "build" / "lib" / "build-id.mjs"
+
+
+def _contract() -> dict:
+    return json.loads((ROOT / "contracts" / "context.json").read_text(encoding="utf-8"))
 
 
 def program_of(name: str) -> tuple[Path, Path]:
@@ -39,82 +34,9 @@ def program_of(name: str) -> tuple[Path, Path]:
 
 
 class ContextTest(unittest.TestCase):
-    directory: Path
-    programs: dict
-
-    @classmethod
-    def setUpClass(cls) -> None:
-        cls.programs = {name: program_of(name) for name in CONTRACT["applications"]}
-
-    def test_every_context_has_its_text_and_hash(self) -> None:
-        for context in CONTRACT["contexts"]:
-            with self.subTest(context=context["id"]):
-                value = decode(context["context"])
-                self.assertEqual(context["context"], text_of(value))
-                self.assertEqual(context["hash"], hash_of(context["build"], value))
-
-    def run_case(self, case: dict) -> None:
-        application = CONTRACT["applications"][case["application"]]
-        manifest, program = self.programs[case["application"]]
-        calls: list[str] = []
-        selections: list[object] = []
-        app = open_application(application, case, manifest, program, calls, selections)
-        store = ArraySession()
-        headers = dict(case["request"].get("headers", {}))
-        fields = dict(case["request"].get("form", {}))
-        if case["request"].get("csrf") is True:
-            # HY-24: the first response of the session creates its token; the form carries a masked value of it.
-            app.handle(Request("GET", "/", {"Accept": "text/html"}), store)
-            calls.clear()
-            selections.clear()
-            fields["_csrf"] = masked(Session(store).csrf_token())
-        body = urlencode(fields).encode("utf-8") if fields else b""
-        target = case["request"]["target"]
-        request = Request(
-            case["request"]["method"],
-            Request.target_path(target),
-            headers,
-            Request.target_query(target),
-            body,
-        )
-        # The server writes the cause of a 500 to stderr (HY-43); the case captures it, so that the report of the test
-        # holds only its own result.
-        logged = io.StringIO()
-        with contextlib.redirect_stderr(logged):
-            response = app.handle(request, store)
-        self.assertEqual(case["status"], response.status)
-        if case["status"] == 500:
-            self.assertIn(
-                "hyper: ValueError: the shared handler returned the key context (HY-124)",
-                logged.getvalue(),
-            )
-        for name, value in case.get("headers", {}).items():
-            self.assertEqual(value, response.headers.get(name), name)
-        for name in case.get("absentHeaders", []):
-            self.assertNotIn(name, response.headers)
-        if "body" in case:
-            self.assertEqual(case["body"], response.body)
-        for text in case.get("bodyContains", []):
-            self.assertIn(text, response.body)
-        for text in case.get("bodyNotContains", []):
-            self.assertNotIn(text, response.body)
-        if "keys" in case or "sharedKeys" in case:
-            document = json.loads(response.body)
-        if "keys" in case:
-            self.assertEqual(case["keys"], list(document))
-        if "sharedKeys" in case:
-            self.assertEqual(case["sharedKeys"], list(document["shared"]))
-        if "contextCalls" in case:
-            self.assertEqual(case["contextCalls"], calls.count("context"))
-        if "firstCalls" in case:
-            self.assertEqual(case["firstCalls"], calls[: len(case["firstCalls"])])
-        if "selection" in case:
-            self.assertEqual(case["selection"], selections)
-
-
     def test_the_builds_have_the_build_ids_of_their_files(self) -> None:
         # HY-125: the build id and the stream of each build are computed by the build function of packages/build.
-        builds = CONTRACT["builds"]
+        builds = _contract()["builds"]
         with tempfile.TemporaryDirectory() as directory:
             computed = build_ids(builds, Path(directory))
         for build, result in zip(builds, computed):
@@ -126,15 +48,9 @@ class ContextTest(unittest.TestCase):
     def test_the_context_comes_after_the_title_in_the_shared_data(self) -> None:
         # HY-10, HY-73: the shared data keeps title and then context; csrf is not kept by the route, and no value comes
         # before title.
-        manifest, program = self.programs["with_context"]
-        app = open_application(
-            CONTRACT["applications"]["with_context"],
-            {"shared": {}},
-            manifest,
-            program,
-            [],
-            [],
-        )
+        application = _contract()["applications"]["with_context"]
+        manifest, program = program_of("with_context")
+        app = open_application(application, {}, manifest, program, [], [])
         kept = app._kept_shared(
             "home",
             {
@@ -193,14 +109,15 @@ def build_ids(builds: list, directory: Path) -> list:
 
 def open_application(
     application: dict,
-    case: dict,
+    shared: dict,
     manifest: Path,
     program: Path,
     calls: list,
     selections: list,
 ) -> App:
     """Opens the application with the handlers of its contract: a loader stops with NotFound when it says so, an action
-    returns the page with its status or the redirect, and the handlers record their calls in order."""
+    returns the page with its status or the redirect, and the handlers record their calls in order. The shared handler
+    returns the shared data of the case."""
     loaders = application["loaders"]
     embed = set(application["embedData"])
 
@@ -223,9 +140,9 @@ def open_application(
 
         return run
 
-    def shared(request: Request) -> dict:
+    def shared_data(request: Request) -> dict:
         calls.append("shared")
-        return dict(case.get("shared", application["shared"]))
+        return dict(shared)
 
     routes = {}
     for route in application["manifest"]["routes"]:
@@ -251,21 +168,10 @@ def open_application(
     return App.open(
         manifest=str(manifest),
         program=str(program),
-        handlers={"shared": shared, "routes": routes},
+        handlers={"shared": shared_data, "routes": routes},
         timezone="+09:00",
         context=context if "context" in application else None,
     )
-
-
-def _case_test(case: dict):
-    def test(self: ContextTest) -> None:
-        self.run_case(case)
-
-    return test
-
-
-for _case in CONTRACT["cases"]:
-    setattr(ContextTest, f"test_{_case['id']}", _case_test(_case))
 
 
 if __name__ == "__main__":

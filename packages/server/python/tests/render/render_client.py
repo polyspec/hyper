@@ -1,35 +1,47 @@
 # The client rendering beyond the cases of contracts/client.json (HY-62): the selection, the declaration and the fixtures that
 # the cases run against.
 import json
+import tempfile
 import unittest
 from pathlib import Path
 
 from .fixture_app import FIXTURES, PROGRAM
 from polyspec.hyper.app import App
 from polyspec.hyper.client import Choice, ClientRendering
+from polyspec.hyper.representation import Representation
 from polyspec.hyper.request import Request
 from polyspec.hyper.result import Result
 from polyspec.hyper.session import ArraySession
 
 SHELL = FIXTURES / "shell" / "index.html"
-CONTRACTS = Path(__file__).resolve().parents[5] / "contracts"
 # A session token of HY-24; the form carries a masked value of it.
 TOKEN = "00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff"
+# The base path and the chosen host of the client rendering that the tests open by default (client.json).
+BASE_PATH = "/_props"
+CHOSEN_HOST = "client.test"
+
+
+def default_client() -> ClientRendering:
+    return ClientRendering(
+        str(SHELL),
+        BASE_PATH,
+        lambda request: Choice(request.header("Host") == CHOSEN_HOST, None),
+    )
 
 
 class Counter:
-    """A service that the fixture application reads and changes."""
+    """A service that the fixture application reads and changes, and the calls of its representation handlers."""
 
-    def __init__(self):
+    def __init__(self, header_names=()):
         self.count = 0
         self.actions = 0
+        self.handled = 0
+        self.received = None
+        # The names of the request headers that a representation handler looks up in what it received.
+        self.header_names = tuple(header_names)
 
 
-def conformance() -> dict:
-    return json.loads((CONTRACTS / "client.json").read_text(encoding="utf-8"))
-
-
-def _handlers() -> dict:
+def _handlers(counter: Counter, representations: dict) -> dict:
     def add(request: Request, counter: Counter) -> Result:
         counter.actions += 1
         if request.form_string("name") == "taken":
@@ -53,35 +65,72 @@ def _handlers() -> dict:
             "tags": [],
         }
 
-    return {
-        "regions": {"side": side},
-        "routes": {
-            "home": {"load": home_load},
-            "add": {"post": add},
-            "list": {"regions": {"rows": rows}},
-            "item": {"load": lambda request: {"id": request.param("id")}},
-        },
+    routes = {
+        "home": {"load": home_load},
+        "add": {"post": add},
+        "list": {"regions": {"rows": rows}},
+        "item": {"load": lambda request: {"id": request.param("id")}},
     }
+    for name, entries in representations.items():
+        routes.setdefault(name, {})["representations"] = {
+            entry["type"]: _representation(counter, entry["handler"]) for entry in entries
+        }
+    return {"regions": {"side": side}, "routes": routes}
 
 
-def app(counter: Counter, client: ClientRendering | None = None, **options) -> App:
-    fixture = conformance()
+def _manifest(directory: str, representations: dict) -> Path:
+    """Writes the manifest of the fixture application with the representations that the case declares for its routes."""
+    manifest = json.loads((FIXTURES / "app.json").read_text(encoding="utf-8"))
+    for route in manifest["routes"]:
+        if route["name"] in representations:
+            route["representations"] = [
+                {key: value for key, value in entry.items() if key != "handler"}
+                for entry in representations[route["name"]]
+            ]
+    path = Path(directory) / "app.json"
+    path.write_text(json.dumps(manifest), encoding="utf-8")
+    return path
+
+
+def _representation(counter: Counter, response: dict):
+    """Returns a representation handler that answers `response` and records its calls and what it receives (HY-122)."""
+
+    def handler(request, media) -> Representation:
+        counter.handled += 1
+        counter.received = {
+            "parameters": media.parameters(),
+            "selection": request.selection(),
+            "headers": {
+                name: request.header(name)
+                for name in counter.header_names
+                if request.header(name) is not None
+            },
+        }
+        return Representation(response["status"], response.get("body"), response.get("headers"))
+
+    return handler
+
+
+def app(
+    counter: Counter,
+    client: ClientRendering | None = None,
+    representations: dict | None = None,
+    **options,
+) -> App:
+    """Opens the fixture application with the client rendering `client`. `representations` declares the entries of the
+    routes of a case (client.json), each with the response `handler` of its representation handler."""
     if client is None:
-        client = ClientRendering(
-            str(SHELL),
-            fixture["basePath"],
-            lambda request: Choice(
-                request.header("Host") == fixture["chosenHost"], None
-            ),
+        client = default_client()
+    with tempfile.TemporaryDirectory() as directory:
+        manifest = _manifest(directory, representations) if representations else FIXTURES / "app.json"
+        application = App.open(
+            manifest=str(manifest),
+            program=str(PROGRAM),
+            handlers=_handlers(counter, representations or {}),
+            timezone="+09:00",
+            client_rendering=client,
+            **options,
         )
-    application = App.open(
-        manifest=str(FIXTURES / "app.json"),
-        program=str(PROGRAM),
-        handlers=_handlers(),
-        timezone="+09:00",
-        client_rendering=client,
-        **options,
-    )
     application.bind(Counter, lambda: counter)
     return application
 

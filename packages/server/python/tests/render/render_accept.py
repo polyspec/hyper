@@ -3,7 +3,7 @@
 import unittest
 
 from .render_app import get, opened
-from .render_client import Counter, app, conformance
+from .render_client import BASE_PATH, CHOSEN_HOST, Counter, app
 from polyspec.hyper.request import Request
 from polyspec.hyper.session import ArraySession
 
@@ -49,8 +49,8 @@ class AcceptTest(unittest.TestCase):
     def test_the_data_path_serves_only_the_json_type(self) -> None:
         # HY-62 step 2: a request that selects text/html receives 406 Not Acceptable, and a request that matches
         # none of the served types lists the JSON type alone.
-        base = conformance()["basePath"]
-        host = conformance()["chosenHost"]
+        base = BASE_PATH
+        host = CHOSEN_HOST
         application = app(Counter())
         page = application.handle(
             Request("GET", base + "/items/7", {"Host": host, "Accept": "text/html"}),
@@ -75,7 +75,7 @@ class AcceptTest(unittest.TestCase):
     def test_the_shell_serves_only_the_page_type(self) -> None:
         # HY-62 step 3: a request that selects the JSON type receives 406 Not Acceptable, and a request that selects
         # text/html receives the shell with the Vary of HY-117.
-        host = conformance()["chosenHost"]
+        host = CHOSEN_HOST
         application = app(Counter())
         data = application.handle(
             Request("GET", "/items/7", {"Host": host, "Accept": JSON}), ArraySession()
