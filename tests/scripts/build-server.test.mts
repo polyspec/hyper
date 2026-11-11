@@ -3,7 +3,7 @@
 // hold a build id of 64 lowercase hexadecimal characters fails with the path before any output is written.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { test } from 'node:test';
@@ -75,6 +75,25 @@ test('fails with the absolute path of a missing --build file (HY-125)', () => {
     assert.notEqual(result.status, 0);
     assert.ok(result.stderr.includes(file), result.stderr);
     assert.equal(existsSync(output), false);
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+test('builds a template placed with scope arguments, which keeps its inputs (HY-73.16)', () => {
+  const directory = mkdtempSync(join(tmpdir(), 'hyper-server-build-'));
+  try {
+    const templates = join(directory, 'templates');
+    cpSync(join(fixtures, 'templates'), templates, { recursive: true });
+    writeFileSync(join(templates, 'box.tpl'), '<b>{= item.title}</b>');
+    writeFileSync(join(templates, 'page.tpl'), `<p>{= title}|{= name}{? error} !{= error}{/}</p>\n{# box.tpl item:post}`);
+    const output = join(directory, 'server');
+    const result = spawnSync(process.execPath, [
+      'packages/build/bin/hyper-build-server.mjs', '--manifest', join(fixtures, 'app.json'), '--templates', templates,
+      '--output', output, '--php-namespace', 'Polyspec\\Hyper\\Tests\\Program', '--build', buildFile(directory, `{"build":"${id}"}`),
+    ], { encoding: 'utf8' });
+    assert.equal(result.status, 0, result.stderr);
+    assert.ok(existsSync(join(output, 'php', 'GeneratedProgram.php')));
   } finally {
     rmSync(directory, { recursive: true, force: true });
   }

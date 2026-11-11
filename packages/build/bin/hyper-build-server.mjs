@@ -52,13 +52,16 @@ copyDirectory(values.templates, templates);
 mkdirSync(dirname(join(templates, dataTemplate.name)), { recursive: true });
 writeFileSync(join(templates, dataTemplate.name), dataTemplate.source);
 
-// Every template renders as a target with merge(shared, data) as root data, and every definition is the
-// HTML of a region rendered alone, so no template takes template inputs (HY-12, HY-13, HY-30).
+// The targets, the layout, the title, the reserved data template, the manifest region templates, the route templates
+// and the route region templates, render with merge(shared, data) as root data and take no template inputs (HY-12,
+// HY-13, HY-30, HY-31); every other template keeps the inputs that deriveTypeManifest derives from its block arguments
+// (HY-73.16).
 const parsed = new Map();
 for (const name of listTemplates(templates)) parsed.set(name, parse(readFileSync(join(templates, name)), name));
 const typesPath = join(output, 'types.json');
 const types = deriveTypeManifest(parsed, {});
-writeFileSync(typesPath, JSON.stringify({ ...types, entry: manifest.layout, templates: Object.fromEntries([...parsed.keys()].map((name) => [name, {}])) }));
+const targets = new Set([manifest.layout, manifest.title, dataTemplate.name, ...manifest.regions.map((region) => region.template), ...manifest.routes.flatMap((route) => [route.template, ...(route.regions ?? []).map((region) => region.template)])].filter((name) => name !== undefined));
+writeFileSync(typesPath, JSON.stringify({ ...types, entry: manifest.layout, templates: Object.fromEntries([...parsed.keys()].map((name) => [name, targets.has(name) ? {} : (types.templates[name] ?? {})])) }));
 const graph = join(output, 'graph');
 compileAst({ root: templates, output: graph, entry: manifest.layout, refresh: 'true', typeManifest: typesPath });
 const php = join(output, 'php');
