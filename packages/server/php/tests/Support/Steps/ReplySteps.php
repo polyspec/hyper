@@ -41,8 +41,7 @@ final class ReplySteps
     /** Records the notes of the reply (HY-60). */
     public static function notes(CaseReader $case): void
     {
-        // An empty PHP array is also a list; the object states that the notes are a map.
-        $case->compare('notes', (object) self::applied($case, true)->notes());
+        $case->compare('notes', self::applied($case, true)->notes());
     }
 
     /** Records the renewal, taken twice, and the embedding of the reply (HY-72, HY-92). */

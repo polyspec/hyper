@@ -23,7 +23,7 @@ describe('client rendering (HY-62)', () => {
     const app = await fixture.app({
       clientRendering: client(),
       frameAncestors: "'self' https://frame.test",
-      onResponse: (request, response, _elapsed, reply) => reports.push([present(request).path(), response.status, response.headers['Content-Security-Policy'], reply.notes().size]),
+      onResponse: (request, response, _elapsed, reply) => reports.push([present(request).path(), response.status, response.headers['Content-Security-Policy'], reply.notes().length]),
     });
     await app.handle(Request.from({ method: 'GET', target: '/list', headers: { Host: 'client.test' } }), fixture.session);
     await app.handle(Request.from({ method: 'GET', target: '/_props/list', headers: { Host: 'client.test' } }), fixture.session);

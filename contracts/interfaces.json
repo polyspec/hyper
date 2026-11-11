@@ -1385,9 +1385,9 @@
               "kind": "method",
               "visibility": "public",
               "inputs": [],
-              "output": "map<value>",
+              "output": "list<list<value>>",
               "errors": [],
-              "state": "Returns the notes in the order of their first names (HY-60).",
+              "state": "Returns the notes as pairs of a name and its value in the order of their first names, the name a string also when it is decimal (HY-60).",
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/Reply.php::Polyspec\\Hyper\\Reply::notes",
@@ -1395,11 +1395,11 @@
                 },
                 "node": {
                   "symbol": "packages/server/ts/src/reply.ts::Reply.notes",
-                  "signature": "notes(): ReadonlyMap<string, unknown>"
+                  "signature": "notes(): [string, unknown][]"
                 },
                 "python": {
                   "symbol": "packages/server/python/src/polyspec/hyper/reply.py::Reply.notes",
-                  "signature": "def notes(self) -> dict[str, object]"
+                  "signature": "def notes(self) -> list[tuple[str, object]]"
                 }
               }
             },
@@ -6458,9 +6458,9 @@
             },
             "notes": {
               "role": "expected",
-              "compare": "ordered",
-              "sentence": "HY-60.9",
-              "state": "`notes` are the notes of a reply after `calls`, each name with its value in the order of the first note of the name."
+              "compare": "exact",
+              "sentence": "HY-60.29",
+              "state": "`notes` are the notes of a reply after `calls`, a list of pairs of a name and its value in the order of the first note of each name."
             },
             "error": {
               "role": "expected",

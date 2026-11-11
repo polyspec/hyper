@@ -19,7 +19,7 @@ async function start(options: { https?: boolean; bodyLimit?: number } = {}): Pro
   const app = await new Fixture().app({
     https: options.https ?? false,
     ...(options.bodyLimit === undefined ? {} : { bodyLimit: options.bodyLimit }),
-    onResponse: (request, response, elapsed, reply) => reports.push([request === null ? null : `${request.method} ${request.path()}`, response.status, elapsed, reply.notes().size]),
+    onResponse: (request, response, elapsed, reply) => reports.push([request === null ? null : `${request.method} ${request.path()}`, response.status, elapsed, reply.notes().length]),
   });
   server = app.server(new FileSessions({ directory }));
   base = await listen(server);

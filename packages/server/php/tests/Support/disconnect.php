@@ -39,7 +39,7 @@ FrontController::open(
                 $request->method,
                 $request->path,
                 $elapsed >= 300.0 ? 1 : 0,
-                json_encode($reply->notes()),
+                json_encode(array_column($reply->notes(), 1, 0)),
             ),
             FILE_APPEND,
         );

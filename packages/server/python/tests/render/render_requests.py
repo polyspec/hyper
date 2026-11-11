@@ -693,7 +693,7 @@ class LimitTest(FixtureTest):
         options = {
             "response_limit": 64,
             "on_response": lambda request, response, elapsed, reply, failure: (
-                reports.append((response.status, reply.notes(), failure))
+                reports.append((response.status, dict(reply.notes()), failure))
             ),
         }
         log = io.StringIO()

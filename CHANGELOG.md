@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- `notes()` of a reply returns a list of pairs of a name and its value in the three servers (HY-60.29): PHP returned an array whose decimal names were integer keys, so that the notes `"0"` and `"1"` were a list, while Node returned a `Map` and Python a `dict`. HY-106.8 states that a call with another number of arguments than the parameters of a public method is answered by the calling convention of each runtime, and the comments of the note name cite HY-60.28 (H28.11).
+
 - The test of the installed packages gives `App.open` the build file that it requires since the Node server reads the build id when it opens (HY-125), so that `make typecheck` passes for `tests/package-install` (H28.11).
 
 - The reply of a request fails alike in the three servers: a cookie name or value, a `Cache-Control`, a `Referrer-Policy` or a note name that is not a string, and a `Max-Age` or a page status that is not an integer of the data model, fail with `TypeError` and one message (HY-52.11, HY-60.28, HY-69.6, HY-103.8), and a value outside the rules fails with the class of HY-46.2 and one message (HY-52.12). Before, PHP converted an integer for a caller without strict types, Node accepted the number 5 as the cookie value `5`, Python raised its own `TypeError`, and Node used `Error` with the prefix `hyper:`. A `Max-Age` and a status take a float with an integer value, such as `60.0`, as the integer, as Node does (HY-52.10). `contracts/reply.json` holds 85 cases that the three runners pass, in place of the native reply tests, and the Python `Reply` keeps its state in private dataclass fields without a constructor, as PHP and Node do (H28.11).

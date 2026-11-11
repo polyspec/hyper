@@ -18,15 +18,15 @@ export class Reply {
   // Records a value of the request for the response hook; a later note of the same name replaces the value and keeps
   // its position. The notes are not part of the response (HY-60).
   note(name: string, value: unknown): this {
-    // HY-60.14: a JavaScript caller may pass a name that is not a string.
+    // HY-60.28: a JavaScript caller may pass a name that is not a string.
     if (typeof name !== 'string') throw new TypeError('a note name is not a string (HY-60)');
     this.noted.set(name, value);
     return this;
   }
 
-  // Returns the notes in the order of their first names.
-  notes(): ReadonlyMap<string, unknown> {
-    return new Map(this.noted);
+  // Returns the notes as pairs of a name and its value, in the order of their first names (HY-60.29).
+  notes(): [string, unknown][] {
+    return [...this.noted];
   }
 
   // Adds a cookie; a name, value or Max-Age of another type (HY-52.11) or outside HY-52 (HY-52.12) fails. The types are

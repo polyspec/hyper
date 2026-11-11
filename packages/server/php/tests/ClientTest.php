@@ -55,7 +55,7 @@ final class ClientTest extends TestCase
                     $request->path,
                     $response->status,
                     $response->headers['Content-Security-Policy'] ?? null,
-                    $reply->notes(),
+                    array_column($reply->notes(), 1, 0),
                 ];
             },
         ]);

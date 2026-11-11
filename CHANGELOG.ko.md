@@ -6,6 +6,8 @@
 
 ## Unreleased
 
+- reply의 `notes()`는 세 server에서 이름과 값의 쌍 목록을 반환합니다(HY-60.29). 이전에는 PHP가 십진수 이름을 정수 key로 둔 배열을 반환해 note `"0"`과 `"1"`이 list가 되었고, Node는 `Map`을, Python은 `dict`를 반환했습니다. HY-106.8은 공개 method의 parameter와 다른 개수의 인자를 준 호출에 각 runtime의 호출 규약이 답한다고 명시하며, note 이름의 주석은 HY-60.28을 가리킵니다(H28.11).
+
 - 설치된 package의 test는 Node server가 열릴 때 build id를 읽게 된 뒤로 `App.open`이 요구하는 build 파일을 넘기므로, `tests/package-install`에 대해 `make typecheck`가 통과합니다(HY-125) (H28.11).
 
 - 요청의 reply는 세 server에서 같게 실패합니다. 문자열이 아닌 cookie 이름이나 값, `Cache-Control`, `Referrer-Policy`, note 이름, 그리고 data model의 정수가 아닌 `Max-Age`나 page 상태는 `TypeError`와 하나의 메시지로 실패하고(HY-52.11, HY-60.28, HY-69.6, HY-103.8), 규칙 밖의 값은 HY-46.2의 class와 하나의 메시지로 실패합니다(HY-52.12). 이전에는 PHP가 strict types가 없는 호출자의 정수를 변환했고, Node는 숫자 5를 cookie 값 `5`로 받았으며, Python은 자체 `TypeError`를 냈고, Node는 접두사 `hyper:`를 붙인 `Error`를 썼습니다. `Max-Age`와 상태는 Node처럼 `60.0` 같은 정수 값 float를 그 정수로 받습니다(HY-52.10). native reply test 대신 `contracts/reply.json`의 case 85개를 세 runner가 통과하며, Python `Reply`는 PHP와 Node처럼 constructor 없이 private dataclass field에 상태를 둡니다(H28.11).

@@ -5359,6 +5359,12 @@
                   "en": "A file that starts with U+FEFF is not valid JSON, because JSON allows no character before a value.",
                   "ko": "U+FEFF로 시작하는 파일은 올바른 JSON이 아니다. JSON은 값 앞에 어떤 문자도 허용하지 않기 때문이다.",
                   "koSource": "27f540dae8a7b876d837018627863108e36395db018721519ff324a5b9b2448c"
+                },
+                {
+                  "id": "HY-106.8",
+                  "en": "A call of a public method with another number of arguments than its parameters is outside the public API: each runtime answers it by its own calling convention, so that PHP and Python fail it with their `TypeError` and its own message, Node and PHP ignore an extra argument and Node gives a missing argument as `undefined`, and the errors and messages that the rules state hold for a call that gives each parameter.",
+                  "ko": "parameter와 다른 개수의 인자로 공개 method를 부르는 호출은 공개 API 밖이다: 각 runtime이 자기 호출 규약으로 답하므로 PHP와 Python은 자체 `TypeError`와 자체 메시지로 실패시키고, Node와 PHP는 남는 인자를 무시하며 Node는 빠진 인자를 `undefined`로 주고, 규칙이 정한 오류와 메시지는 각 parameter를 준 호출에 대해 성립한다.",
+                  "koSource": "b13cf0adca2867dc29785adeb71dc0891a5307a3d1071f5174bf5de81c53f84c"
                 }
               ]
             }
@@ -6132,6 +6138,12 @@
                   "en": "A note name that is not a string fails with `TypeError` and the message `a note name is not a string (HY-60)`.",
                   "ko": "문자열이 아닌 note 이름은 `TypeError`와 메시지 `a note name is not a string (HY-60)`로 실패한다.",
                   "koSource": "252ce6bb974a079fffbea2a26a28be5a9c099f0c237ab33e98121f8158691977"
+                },
+                {
+                  "id": "HY-60.29",
+                  "en": "`notes()` returns the notes as a list of pairs of a name, which stays a string also when it is decimal, and its value, in the order of the first note of each name, in the three servers.",
+                  "ko": "`notes()`는 note를 이름과 값의 쌍 목록으로 세 server에서 각 이름의 첫 note 순서대로 반환하며, 이름은 십진수일 때도 문자열로 남는다.",
+                  "koSource": "418e86a964a79e6d793a94bd9bf1565d2f905c8e2c3da4648d4ca5ee97dc614e"
                 }
               ]
             }

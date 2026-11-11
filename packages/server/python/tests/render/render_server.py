@@ -200,7 +200,7 @@ class DisconnectTest(unittest.TestCase):
             ],
             events,
         )
-        self.assertEqual({"loaded": True}, replies[0].notes())
+        self.assertEqual([("loaded", True)], replies[0].notes())
 
     def test_a_client_that_reads_the_whole_response_is_not_reported(self) -> None:
         # HY-67: every write succeeds, so the server detects no close.

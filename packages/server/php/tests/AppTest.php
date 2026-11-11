@@ -399,7 +399,7 @@ final class AppTest extends TestCase
             Reply $reply,
             ?string $failure,
         ) use (&$reports): void {
-            $reports[] = [$response->status, $reply->notes(), $failure];
+            $reports[] = [$response->status, array_column($reply->notes(), 1, 0), $failure];
         };
     }
 

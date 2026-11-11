@@ -41,7 +41,8 @@ def status(case) -> None:
 
 def notes(case) -> None:
     """Records the notes of the reply (HY-60)."""
-    case.compare("notes", _applied(case, True).notes())
+    # A pair is a tuple in Python and a list in JSON.
+    case.compare("notes", [list(pair) for pair in _applied(case, True).notes()])
 
 
 def flags(case) -> None:

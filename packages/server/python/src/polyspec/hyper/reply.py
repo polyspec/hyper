@@ -46,9 +46,9 @@ class Reply:
         self.__notes[name] = value
         return self
 
-    def notes(self) -> dict[str, object]:
-        """Returns the notes in the order of their first names."""
-        return dict(self.__notes)
+    def notes(self) -> list[tuple[str, object]]:
+        """Returns the notes as pairs of a name and its value, in the order of their first names (HY-60.29)."""
+        return list(self.__notes.items())
 
     def cookie(self, name: str, value: str, max_age: int | None = None) -> "Reply":
         """Adds a cookie; a name, value or Max-Age of another type (HY-52.11) or outside HY-52 (HY-52.12) fails.

@@ -29,7 +29,7 @@ final class Reply
 
     private bool $embed = false;
 
-    /** @var array<string, mixed> */
+    /** @var array<array-key, mixed> the values by name, whose decimal names PHP keeps as integer keys */
     private array $notes = [];
 
     /**
@@ -38,7 +38,7 @@ final class Reply
      */
     public function note(mixed $name, mixed $value): self
     {
-        // HY-60.14: a declared type would convert an integer name for a caller without strict types.
+        // HY-60.28: a declared type would convert an integer name for a caller without strict types.
         if (!is_string($name)) {
             throw new \TypeError('a note name is not a string (HY-60)');
         }
@@ -48,13 +48,19 @@ final class Reply
     }
 
     /**
-     * Returns the notes in the order of their first names.
+     * Returns the notes as pairs of a name and its value, in the order of their first names (HY-60.29): a pair keeps a
+     * decimal name a string, which a PHP array key would make an integer.
      *
-     * @return array<string, mixed>
+     * @return list<array{string, mixed}>
      */
     public function notes(): array
     {
-        return $this->notes;
+        $pairs = [];
+        foreach ($this->notes as $name => $value) {
+            $pairs[] = [(string) $name, $value];
+        }
+
+        return $pairs;
     }
 
     /**
