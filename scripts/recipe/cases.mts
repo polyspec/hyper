@@ -200,10 +200,18 @@ function checkFiles(ctx: Ctx, entries: [string, CaseFile][]): void {
   }
 }
 
+/** The words of the members that the first reader holds and the other lacks, and the words that the other adds (HYR-5 names). */
+function differ(kind: string, first: string[], other: string[]): string {
+  const missing = first.filter((w) => !other.includes(w));
+  const extra = other.filter((w) => !first.includes(w));
+  if (missing.length === 0 && extra.length === 0) return '';
+  return `${kind} missing [${missing.join(', ')}], extra [${extra.join(', ')}]`;
+}
+
 /** HYR-8: the case reader of each language is a class that holds the same public and private members as in the others. */
 function checkReaders(ctx: Ctx): void {
   const { spec, add } = ctx;
-  const shapes = new Map<string, string>();
+  const shapes = new Map<string, { pub: string[]; priv: string[] }>();
   for (const lang of LANGS) {
     const ref = spec.caseReaders[lang];
     const [file, name] = ref.split('::');
@@ -225,12 +233,16 @@ function checkReaders(ctx: Ctx): void {
     const members = src.members.filter((m) => m.file === file && m.unit === name);
     const pub = members.filter((m) => m.visibility === 'public').map((m) => words(m.name)).sort();
     const priv = members.filter((m) => m.visibility !== 'public').map((m) => words(m.name)).sort();
-    shapes.set(lang, JSON.stringify({ pub, priv }));
+    shapes.set(lang, { pub, priv });
   }
   const [first, ...rest] = LANGS.filter((l) => shapes.has(l));
   if (first === undefined) return;
+  const base = shapes.get(first);
   for (const lang of rest) {
-    if (shapes.get(lang) !== shapes.get(first)) add('CASE_READER_MEMBERS', `${lang} case reader holds other members than ${first} (HYR-8)`);
+    const other = shapes.get(lang);
+    if (base === undefined || other === undefined) continue;
+    const detail = [differ('public', base.pub, other.pub), differ('private', base.priv, other.priv)].filter((s) => s !== '');
+    if (detail.length > 0) add('CASE_READER_MEMBERS', `${lang} case reader holds other members than ${first} (HYR-8): ${detail.join('; ')}`);
   }
 }
 

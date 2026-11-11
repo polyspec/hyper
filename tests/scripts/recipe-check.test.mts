@@ -17,7 +17,7 @@ const candidate = path.join(repo, 'scripts', 'recipe', 'candidate.mts');
 /** The PHP autoloader of a recipe tree: the fixture's stand-in for the server's Composer autoloader. */
 const phpAutoload = (root: string): string => path.join(root, 'vendor', 'autoload.php');
 
-type Mutation = { id: string; file: string; code: string; from?: string; to?: string; rename?: string; create?: string; delete?: boolean };
+type Mutation = { id: string; file: string; code: string; from?: string; to?: string; rename?: string; create?: string; delete?: boolean; forbid?: string; detail?: string };
 
 test('the schema term is the vocabulary: a status number is not a term', () => {
   const text = readFileSync(path.join(fixture, 'contracts', 'interfaces.json'), 'utf8');
@@ -111,7 +111,10 @@ for (const m of mutations) {
       track(root);
       const result = spawnSync(process.execPath, [check, '--root', root, '--php-autoload', phpAutoload(root), '--no-selftest', ...resultArguments(root)], { encoding: 'utf8' });
       assert.notEqual(result.status, 0, `mutation ${m.id} passed the check`);
-      assert.match(result.stdout + result.stderr, new RegExp(`\\b${m.code}\\b`));
+      const output = result.stdout + result.stderr;
+      assert.match(output, new RegExp(`\\b${m.code}\\b`));
+      if (m.forbid !== undefined) assert.doesNotMatch(output, new RegExp(`\\b${m.forbid}\\b`));
+      if (m.detail !== undefined) assert.ok(output.includes(m.detail), `mutation ${m.id}: output lacks ${m.detail}`);
     } finally {
       rmSync(root, { recursive: true, force: true });
     }

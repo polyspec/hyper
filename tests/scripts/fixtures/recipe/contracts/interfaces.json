@@ -28,7 +28,7 @@
       "runner": "packages/server/python/tests/test_case_runner.py::CaseRunner.test_cases"
     },
     "browser": {
-      "runner": "packages/server/ts/tests/case-runner.test.mts::browser"
+      "runner": "packages/client/tests/case-runner.test.mts::browser"
     },
     "build": {
       "runner": "packages/server/ts/tests/case-runner.test.mts::build"

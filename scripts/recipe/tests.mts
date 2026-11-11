@@ -1,8 +1,21 @@
 // Tests of the recipe check (HYR-7): each runner is a test of its language, each native test is named with a reason in the
 // test tree of its scope, names are literals, and every reader test is named by the spec.
+import path from 'node:path';
 import { LANGS, RUNNERS, type Runner } from './types.mts';
 import type { Ctx } from './context.mts';
 import { testKey } from './names.mts';
+
+/** Whether a runner reference names a test: a test of a language's test tree, or else a test that the Node reader finds in its file. */
+function isTest(ctx: Ctx, readerTests: Set<string>, ref: string): boolean {
+  if (readerTests.has(ref)) return true;
+  const cut = ref.indexOf('::');
+  if (cut < 0) return false;
+  try {
+    return ctx.readDir('node', path.posix.dirname(ref.slice(0, cut))).tests.some((t) => `${t.file}::${t.name}` === ref);
+  } catch {
+    return false;
+  }
+}
 
 export function checkTests(ctx: Ctx): void {
   const { spec, sources, add } = ctx;
@@ -11,7 +24,7 @@ export function checkTests(ctx: Ctx): void {
   const named = new Set<string>();
   for (const r of RUNNERS) {
     named.add(spec.runners[r].runner);
-    if (!readerTests.has(spec.runners[r].runner)) add('RUNNER_MISSING', `${r} runner ${spec.runners[r].runner} is not a test`);
+    if (!isTest(ctx, readerTests, spec.runners[r].runner)) add('RUNNER_MISSING', `${r} runner ${spec.runners[r].runner} is not a test`);
   }
   // HYR-7: a native test is named with a reason, and lies in the test tree of the one language that its scope names.
   const nativeTest = (ref: string, label: string, scope: Runner[] | undefined): void => {

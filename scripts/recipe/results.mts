@@ -4,7 +4,6 @@
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { RUNNERS, type Finding, type Runner, type Spec } from './types.mts';
-import { keyOf } from './cases.mts';
 import type { CaseFile } from './types.mts';
 
 export type Results = Partial<Record<Runner, string>>;
@@ -41,11 +40,10 @@ function caseIds(file: string, entry: CaseFile | undefined, data: unknown): Case
 /** Checks the result lines of each runner against the cases of the spec; a case without a line fails. */
 export function checkResults(root: string, spec: Spec, results: Results): Finding[] {
   const out: Finding[] = [];
-  const files = [...new Set(spec.concerns.flatMap((c) => (Array.isArray(c.cases) ? c.cases : [])))];
   const cases: CaseId[] = [];
-  for (const file of files) {
-    const full = path.join(root, file);
-    if (existsSync(full)) cases.push(...caseIds(file, spec.caseFiles[keyOf(file)], JSON.parse(readFileSync(full, 'utf8'))));
+  for (const [name, entry] of Object.entries(spec.caseFiles)) {
+    const full = path.join(root, 'contracts', name);
+    if (existsSync(full)) cases.push(...caseIds(name, entry, JSON.parse(readFileSync(full, 'utf8'))));
   }
   const key = (file: string, id: string): string => `${file}\t${id}`;
 
@@ -68,7 +66,7 @@ export function checkResults(root: string, spec: Spec, results: Results): Findin
       const [, caseFile = '', id = '', status = '', reason = ''] = m;
       const k = key(caseFile, id);
       if (!expectedKeys.has(k)) {
-        out.push({ code: 'RESULT_UNKNOWN_ID', message: `${runner} prints ${caseFile} ${id}, which the spec does not name for it` });
+        out.push({ code: 'RESULT_UNKNOWN_ID', message: `${runner} prints ${caseFile} ${id}, which no case file names for it` });
         continue;
       }
       if (seen.has(k)) {

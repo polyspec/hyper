@@ -134,7 +134,7 @@
   {
     "id": "result-line-missing",
     "file": "results/php.txt",
-    "from": "CASE contracts/csrf.json raw-token PASS\n",
+    "from": "CASE csrf.json raw-token PASS\n",
     "to": "",
     "code": "RESULT_MISSING"
   },
@@ -289,7 +289,7 @@
     "id": "result-duplicated",
     "file": "results/php.txt",
     "from": "raw-token PASS\n",
-    "to": "raw-token PASS\nCASE contracts/csrf.json raw-token PASS\n",
+    "to": "raw-token PASS\nCASE csrf.json raw-token PASS\n",
     "code": "RESULT_DUPLICATE"
   },
   {
@@ -470,5 +470,21 @@
     "from": "\"retired\": [4]",
     "to": "\"retired\": [1]",
     "code": "SENTENCE_RETIRED"
+  },
+  {
+    "id": "casefile-unnamed",
+    "file": "contracts/interfaces.json",
+    "from": "\"cases\": [\"contracts/csrf.json\"]",
+    "to": "\"cases\": []",
+    "code": "CASEFILE_UNKNOWN",
+    "forbid": "RESULT_UNKNOWN_ID"
+  },
+  {
+    "id": "case-reader-member-renamed-detail",
+    "file": "packages/server/php/tests/CaseReader.php",
+    "from": "public function fail(): string",
+    "to": "public function failed(): string",
+    "code": "CASE_READER_MEMBERS",
+    "detail": "failed"
   }
 ]
