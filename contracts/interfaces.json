@@ -328,24 +328,10 @@
               "role": "label"
             },
             "templates": {
-              "role": "input",
-              "only": {
-                "languages": [
-                  "node",
-                  "browser"
-                ],
-                "sentence": "HY-73.23"
-              }
+              "role": "input"
             },
             "template": {
-              "role": "input",
-              "only": {
-                "languages": [
-                  "node",
-                  "browser"
-                ],
-                "sentence": "HY-54.3"
-              }
+              "role": "input"
             },
             "data": {
               "role": "input"
@@ -373,14 +359,7 @@
           "outcomes": {
             "render": {
               "compare": "exact",
-              "sentence": "HY-73.28",
-              "only": {
-                "languages": [
-                  "node",
-                  "browser"
-                ],
-                "sentence": "HY-54.3"
-              }
+              "sentence": "HY-73.28"
             }
           }
         }

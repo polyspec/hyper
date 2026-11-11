@@ -1,10 +1,14 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 0ed9e63acaced3e48f183f86dc445c9b607650f22161504f3759ef465aed7c54 -->
+<!-- source-sha256: c2cf21361ecf53150bda11b70bd2b6ed41e2e038423d49990ff88e049ebc28a9 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- `contracts/reads.json`의 reads case는 모든 server에서 template을 kept data로 render한다. PHP와 Python runner는 `scripts/contract-programs.mjs`(`make contract-programs`)로 case마다 program을 하나씩 빌드하고, kept data와 data의 render 결과가 같은 바이트인지 검사한다(HY-73.28). reads의 `template`, `templates`, `render` 필드의 `only`를 뺐으며, `reads`는 `only`를 유지한다(HY-73.23). `a_list_literal_reads_its_items_whole`은 server 타입 검사가 받는 `l[1]`을 읽는다(H28.11).
+
+- server 애플리케이션의 build는 block이나 include가 인자와 함께 배치하는 template의 입력을 유지한다. 그 입력은 `deriveTypeManifest`가 인자에서 도출한다(HY-73.16). target, layout, title, 예약된 data template, route와 region template만 template 입력 없이 render한다(HY-12, HY-13, HY-30, HY-31)(H28.11).
 
 - case 파일은 각 필드에 대해 그 필드가 검사하는 동작을 정한 `contracts/protocol.json`의 statement, 비교 방식, 인코딩을 적는다(`contracts/interfaces.json`의 `caseFiles`). 응답 필드는 이름으로 비교 방식을 정하며(HYR-11), 응답을 적는 각 case는 그 응답의 규칙을 `requirements`에 나열한다. PHP, Node, Python, browser, build runner는 각자의 case reader로 case를 읽고, `make recipe-check`는 다섯 결과 파일을 모두 센다. case는 native test가 검사하던 세 동작을 검사한다: session을 열지 않는 요청은 session store를 호출하지 않고 cookie를 설정하지 않는다(HY-120), urlencoded 폼 값의 이름 순서(HY-56), 이름이 `__proto__`인 라우트 매개변수(HY-5, HY-49)(H28.11).
 

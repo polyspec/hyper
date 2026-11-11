@@ -101,7 +101,7 @@ final class ContextRun
      * Maps the namespace that program.json of the program names to its directory php, as the autoload of Composer maps
      * the program of the fixtures (HY-48). Each namespace is mapped once.
      */
-    private static function autoload(string $directory): void
+    public static function autoload(string $directory): void
     {
         $declaration = Json::file("{$directory}/program/program.json");
         $namespace = Json::string($declaration['namespace'] ?? null) . '\\';

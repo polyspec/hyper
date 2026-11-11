@@ -5,6 +5,10 @@
 
 ## Unreleased
 
+- The reads cases of `contracts/reads.json` render their template with the kept data in every server: the PHP and Python runners build one program per case through `scripts/contract-programs.mjs` (`make contract-programs`) and check that the kept data and the data render the same bytes (HY-73.28); the `only` of the reads `template`, `templates` and `render` fields is removed, and `reads` keeps its `only` (HY-73.23). `a_list_literal_reads_its_items_whole` reads `l[1]`, which the server type check accepts (H28.11).
+
+- The build of a server application keeps the inputs of a template that a block or an include places with arguments, which `deriveTypeManifest` derives from those arguments (HY-73.16); only the targets, the layout, the title, the reserved data template and the route and region templates render with no template inputs (HY-12, HY-13, HY-30, HY-31) (H28.11).
+
 - The case files name for each field the statement of `contracts/protocol.json` whose behaviour it checks, its comparison and its encoding (`caseFiles` of `contracts/interfaces.json`); response fields take their comparison from their name (HYR-11); each case that states a response lists the rules of that response in `requirements`. The PHP, Node, Python, browser and build runners read the cases through their case reader, and `make recipe-check` counts all five results files. The cases check three behaviours that native tests had checked: a request that opens no session calls no session store and sets no cookie (HY-120), the names of urlencoded form values in order (HY-56), and a route parameter named `__proto__` (HY-5, HY-49) (H28.11).
 
 - An application that fails to open because a file that it reads is not valid JSON or not valid UTF-8 raises the open error of its runtime, `InvalidArgumentException` in PHP, `Error` in Node and `ValueError` in Python (HY-106); the browser router keeps a route parameter named `__proto__` (H28.11).
