@@ -105,6 +105,7 @@
       "units": [
         {
           "id": "media-type",
+          "tests": ["packages/server/ts/tests/case-runner.test.mts::cases: runs the essence cases"],
           "native": {
             "php": { "file": "packages/server/php/src/MediaType.php", "kind": "class", "internal": false },
             "node": { "file": "packages/server/ts/src/media-type.ts", "kind": "class", "internal": false },
@@ -136,6 +137,7 @@
       "units": [
         {
           "id": "session-store",
+          "tests": ["packages/server/php/tests/CaseRunnerTest.php::CaseRunnerTest::testCases: reads through the case runner"],
           "native": { "php": { "file": "packages/server/php/src/SessionStore.php", "kind": "interface", "internal": true } },
           "members": [
             {
