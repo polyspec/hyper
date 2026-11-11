@@ -39,6 +39,7 @@ final class App
     /**
      * @param array<string, \Closure> $regionLoaders
      * @param array<string, RouteHandler> $routeHandlers
+     * @param array<string, callable(): mixed> $functions
      */
     private function __construct(
         private readonly Manifest $manifest,
@@ -101,9 +102,9 @@ final class App
      *     that `around` returns (HY-97)
      * @param ?\Closure(): void $sessionSetup called just before a session starts, for the settings of the session
      *     that a request reads, such as the primary of `RedisSentinelSessions`; an error fails the request (HY-115)
-     * @param ?\Closure(mixed): array $context the context handler, which receives the selection value and returns the
+     * @param ?\Closure(mixed): array<string, mixed> $context the context handler, which receives the selection value and returns the
      *     context of the application, a map of the data model (HY-124)
-     * @param array<string, callable> $functions the host functions of the application, a map from names to functions,
+     * @param array<string, callable(): mixed> $functions the host functions of the application, a map from names to functions,
      *     which the template engine registers (HYC-24, HY-106)
      */
     public static function open(
@@ -987,7 +988,7 @@ final class App
         if ($embed && $routeRegionNames !== []) {
             $embedded = array_intersect_key($data, array_flip($routeRegionNames));
             // HY-31: an embedded document holds build and context with its value, whatever the request holds.
-            $context = isset($shared['context'])
+            $context = isset($shared['context']) && is_array($shared['context'])
                 ? Context::member($this->build, $shared['context'], null)
                 : null;
             $response = JsonCodec::value(

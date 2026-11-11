@@ -3,7 +3,7 @@
 import { readFileSync } from 'node:fs';
 import { isAbsolute, join } from 'node:path';
 import type { Server } from 'node:http';
-import { checkManifest, checkTemplateIndex, createApplication, DATA_TEMPLATE_NAME, keptPaths, routeReads, routeTemplates, stripBasePath, type Application, type Manifest, type RouteDeclaration, type RouteReads } from '@polyspec/hyper-client';
+import { checkManifest, checkTemplateIndex, createApplication, DATA_TEMPLATE_NAME, keptPaths, routeReads, routeTemplates, stripBasePath, type Application, type RouteDeclaration, type RouteReads } from '@polyspec/hyper-client';
 import { decodeTemplate, resolvePath, type HostFunction, type Template } from '@polyspec/template/render';
 import { Csrf } from './csrf.js';
 import type { FileSessions } from './file-sessions.js';

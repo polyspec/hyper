@@ -27,7 +27,11 @@ final class Renderer
     ) {
     }
 
-    /** Opens the program that `hyper-build-server` of `@polyspec/hyper-build` wrote to a directory. */
+    /**
+     * Opens the program that `hyper-build-server` of `@polyspec/hyper-build` wrote to a directory.
+     *
+     * @param array<string, callable(): mixed> $functions the host functions of the application (HYC-24)
+     */
     public static function open(string $program, string $timezone, array $functions = []): self
     {
         // A missing build fails here and names the missing file (HY-48).

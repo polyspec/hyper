@@ -6,6 +6,8 @@
 
 ## Unreleased
 
+- PHP host function은 template engine이 요구하는 대로 `App::open`부터 `Renderer::open`까지 `array<string, callable(): mixed>` 타입이다. context handler는 `array<string, mixed>`를 반환한다. PHPStan은 PHP 서버의 `src/`에서 오류를 보고하지 않는다. Node `app.ts`는 더 이상 쓰지 않는 타입 `Manifest`를 import하지 않는다(H28.11).
+
 - 세 서버에서 요청의 경고는 static member `run(work)`를 가진 unit `WarningsGuard`가 오류로 바꾼다. 전에는 PHP `App`이 이 처리를 직접 적었다. 세 서버에서 응답의 region은 static member `changedTopics`와 `select`를 가진 unit `RegionPlanner`가 고르고, 이 unit은 `region-planner.ts`와 `_region_planner.py`에 있다. Node의 service는 `container.ts`의 class `Container`이고, package는 `Services` 대신 이것을 export한다. Python `Container`는 factory와 service를 dataclass의 field로 가진다. spec은 `call`과 private `service`를 PHP와 Python에, `get`을 Node에 둔다(HY-105.4). native container 테스트의 case는 `contracts/container.json`에 있다(HY-74, HY-11, HY-18, HY-19, HY-105)(H28.11).
 
 - `make recipe-check`는 Python method의 receiver를 이름이 아니라 위치로 판단한다. static이 아닌 method의 첫 parameter가 receiver다. 그래서 뒤에 오는 `cls`나 `self`라는 이름의 parameter를 더 이상 input에서 빼지 않는다(H28.11).
