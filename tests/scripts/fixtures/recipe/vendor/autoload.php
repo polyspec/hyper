@@ -25,3 +25,10 @@ spl_autoload_register(static function (string $class): void {
         require $file;
     }
 });
+
+// The fixture's stand-in for PHPUnit's base test class, which the case runner extends.
+spl_autoload_register(static function (string $class): void {
+    if ($class === 'PHPUnit\\Framework\\TestCase') {
+        require __DIR__ . '/phpunit-stub.php';
+    }
+});

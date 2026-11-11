@@ -7,7 +7,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { readAllSources, type Validators } from './run.mts';
-import { readerKey, words } from './compare.mts';
+import { readerKey, words } from './names.mts';
 import { LANGS, type Concern, type Lang, type Member, type Sources, type Spec, type SpecType, type Unit } from './types.mts';
 import { validators } from './validators.mts';
 

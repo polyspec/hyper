@@ -7,10 +7,11 @@ export type Only = { languages: Lang[]; rule: string; quote: string };
 
 export type Spec = {
   schema: 1;
-  languages: Record<Lang, { sources: string[]; tests: string[]; barrel: string[]; runner: string }>;
+  languages: Record<Lang, { sources: string[]; tests: string[]; barrel: string[]; runner: string; caseReader: string }>;
   outside: { rule: string; reason: string }[];
   concerns: Concern[];
   types: SpecType[];
+  caseFiles: Record<string, CaseFile>;
 };
 
 export type Concern = {
@@ -48,6 +49,32 @@ export type SpecType = {
   shape: { fields?: Record<string, string | { term: string; only: Only }>; optional?: string[]; function?: unknown; term?: string };
   only?: Only;
   native: Partial<Record<Lang, { symbol: string; declaration: string }>>;
+};
+
+/** A case file of contracts/ (HYR-9): its rule, its fixtures and its sections of cases. */
+export type CaseFile = {
+  rule: string;
+  fixtures: Record<string, string>;
+  sections: Record<string, CaseSection>;
+};
+
+export type CaseSection = {
+  runners: string[];
+  uses: string[];
+  outcomes?: Record<string, CaseCompare>;
+  fields: Record<string, CaseField>;
+};
+
+export type CaseCompare = { compare: string; rule: string; quote: string; only?: Only };
+
+export type CaseField = {
+  role: string;
+  optional?: boolean;
+  only?: Only;
+  compare?: string;
+  rule?: string;
+  quote?: string;
+  fields?: Record<string, CaseField>;
 };
 
 export type Sources = {
