@@ -322,7 +322,7 @@ These rules state behaviour that the servers have and that no rule states. They 
 ## The order of work for H28.11
 
 H28.11 lands on main in one integration with H28.2, H28.3, H28.4, H28.7 and the server commits of H28.10 that this
-branch holds. Main states HY-116 to HY-128 and holds `contracts/context.json` and `contracts/representations.json`,
+branch holds. Main states HY-116 to HY-122 and HY-124 to HY-128 and holds `contracts/context.json` and `contracts/representations.json`,
 which no server of main implements, so `make recipe-check` cannot pass on main before those items land (HYR-2,
 HYR-7). Until the last step `make recipe-check` fails on this branch, and each step keeps the checks of its own item
 GREEN.

@@ -39,7 +39,7 @@
 | hyper-server-python | server protocol의 Python 구현 `polyspec-hyper-server`. template Python package로 렌더하고 file session(HY-104)과 `http.server` 서버, WSGI application callable(H19.1), ASGI application callable(H19.2), board 예제 서버를 둔다 (H15.3) | implemented | `make test-python`, `make hyper-test-python-render`, `make server-parity-python` |
 | route-regions | 자기 로더를 가진 페이지 안의 라우트 영역(HY-30) | implemented | `make test-php`, `make parity` |
 | region-data | 라우트 영역의 내장 데이터, 요청 없이 라우트 영역에서 동작하는 `data`, `render`, `set`, `hy-set`, 데이터 공개 규칙(HYC-10 ~ HYC-11, HYC-5, HY-71) | implemented | `make test-js`, `make e2e` |
-| kept-data | 서버 세션, 쿠키, localStorage, sessionStorage의 유지 경로(HY-37 ~ HY-41) | implemented | `make test-php`, `make test-js`, `make parity`, `make e2e` |
+| kept-data | 서버 세션, 쿠키, localStorage, sessionStorage의 유지 경로(HY-37 ~ HY-40) | implemented | `make test-php`, `make test-js`, `make parity`, `make e2e` |
 | template-delivery | 템플릿마다 파일 하나, 렌더가 닿는 템플릿만 불러오기(HR-34, HYC-12) | implemented | `make test-js`, `make e2e`, `make bundle-size` |
 | tailwind-build | `--tailwind <source>=<output>`은 application stylesheet를 Tailwind theme과 template이 쓰는 utility로 compile한다(HR-77) | implemented | `make hyper-test-scripts` |
 | asset-delivery | 페이지는 자기가 쓰는 자원만 요청한다. `import()`로 불러오는 클라이언트 조각, 진입 파일 URL만 담은 매니페스트, 스타일시트 없는 정적 셸(HYC-16) | implemented | `make hyper-test-scripts`, `make e2e` |

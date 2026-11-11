@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 use Polyspec\Hyper\Kept;
 
 /**
- * HY-38, HY-41: a kept value walks into the stdClass maps of the data. The cases of contracts/keep.json are run by the
+ * HY-38: a kept value walks into the stdClass maps of the data. The cases of contracts/keep.json are run by the
  * case runner.
  */
 final class KeptTest extends TestCase

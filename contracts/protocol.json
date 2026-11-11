@@ -168,7 +168,9 @@
         {
           "kind": "rule",
           "id": "HY-4",
-          "retired": [],
+          "retired": [
+            5
+          ],
           "blocks": [
             {
               "kind": "paragraph",
@@ -198,10 +200,10 @@
                   "koSource": "65258eca4b88686c11c9bcabc8552384771b4b2d48a21c6e6f4ba85fb7f3fc65"
                 },
                 {
-                  "id": "HY-4.5",
-                  "en": "The parameter names of a route path are different from each other, and a path that repeats one is refused.",
-                  "ko": "라우트 경로의 매개변수 이름은 서로 달라야 하며, 같은 이름을 반복하는 경로는 거부된다.",
-                  "koSource": "a9aeb823d31a5e3e7d74b35c1ed6dc75adc8462ad372d9fb6920871ab92da9be"
+                  "id": "HY-4.6",
+                  "en": "The router refuses a route path against this rule or HY-49, such as one that repeats a parameter name, so an application whose manifest declares it fails to open.",
+                  "ko": "라우터는 이 규칙이나 HY-49에 맞지 않는 route path, 예를 들어 parameter 이름을 반복하는 path를 거절하므로, 그런 path를 매니페스트에 선언한 애플리케이션은 열리지 않는다.",
+                  "koSource": "da08e651242a2abb35e05b5c5133b6049e03ef631fc083c513e506fc21c88c67"
                 }
               ]
             }
@@ -226,6 +228,12 @@
                   "en": "The query string is not part of the path.",
                   "ko": "쿼리 문자열은 경로에 포함하지 않는다.",
                   "koSource": "12ee0a41fd84547c753a69484b337298d97fbc4021434083b17fd93303afc45a"
+                },
+                {
+                  "id": "HY-5.3",
+                  "en": "The parameters of a match are a map from each parameter name to its value, in the order of the parameters in the route path.",
+                  "ko": "매칭의 parameter는 각 parameter 이름에서 그 값으로 가는 맵이며, route path에서 parameter의 순서대로 놓인다.",
+                  "koSource": "67fd7b3e18a258f1db34dc054bae2cda4838ffbd41b2bbc0e30164e59b18eb29"
                 }
               ]
             }
@@ -311,44 +319,11 @@
         },
         {
           "kind": "rule",
-          "id": "HY-9",
-          "retired": [],
-          "blocks": [
-            {
-              "kind": "paragraph",
-              "statements": [
-                {
-                  "id": "HY-9.1",
-                  "en": "`contracts/routes.json` holds routes and request paths with their expected results.",
-                  "ko": "`contracts/routes.json`은 라우트, 요청 경로, 기대 결과를 담는다.",
-                  "koSource": "f1f48f4583d4ea2d8dace0301fa1911cfefeace52f82a6a709f03d6398d1e822"
-                },
-                {
-                  "id": "HY-9.2",
-                  "en": "The `result` of a case of `cases` or `baseCases`, the route name with its parameters or null, is compared `ordered` (HY-130).",
-                  "ko": "`cases`나 `baseCases`의 case의 `result`는 매개변수를 가진 라우트 이름이거나 null이며, `ordered`로 비교한다(HY-130).",
-                  "koSource": "4edeb8bcbf6401e7547a5142dd1cbbb33085fb2cf0a9d6465bd2c4b46dddbe80"
-                },
-                {
-                  "id": "HY-9.3",
-                  "en": "Each case of `invalidPaths` states a route path that the router refuses, and the creation of a router with that path is compared `raises` (HY-130).",
-                  "ko": "`invalidPaths`의 각 case는 라우터가 거부하는 라우트 경로를 적으며, 그 경로로 라우터를 만드는 것을 `raises`로 비교한다(HY-130).",
-                  "koSource": "639d6179fbb72ddd3ce9f84ed0bc99fbc11c87ad8a420de5a54972668645b544"
-                },
-                {
-                  "id": "HY-9.4",
-                  "en": "The PHP, Node and Python servers and the browser package pass every case.",
-                  "ko": "PHP, Node, Python 서버와 브라우저 패키지는 모든 case를 통과한다.",
-                  "koSource": "f56ba29b24367f6480d999843679401c586cbea340836fdcd33559e994ea7349"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "kind": "rule",
           "id": "HY-49",
-          "retired": [],
+          "retired": [
+            4,
+            5
+          ],
           "blocks": [
             {
               "kind": "paragraph",
@@ -370,18 +345,6 @@
                   "en": "Its value is the rest of the request path without decoding: `/` followed by the remaining segments joined with `/`, or `/` when none remains.",
                   "ko": "값은 decode하지 않은 요청 경로의 나머지로, `/` 뒤에 남은 segment를 `/`로 이은 것이며 남은 segment가 없으면 `/`다.",
                   "koSource": "55deaa92cb8eac417a901deb250b6e303ae62570d655285721110f56af644453"
-                },
-                {
-                  "id": "HY-49.4",
-                  "en": "`contracts/rest.json` holds routes and request paths with their expected results, and the PHP, Node and Python servers and the browser package pass every case.",
-                  "ko": "`contracts/rest.json`은 라우트, 요청 경로, 기대 결과를 담으며, PHP, Node, Python 서버와 브라우저 패키지는 모든 case를 통과한다.",
-                  "koSource": "e1c6d211d5cdc4293c3213a3fb2206be008126fc6d3d1906fe773e1ad1bd10d0"
-                },
-                {
-                  "id": "HY-49.5",
-                  "en": "The `result` of a case of `cases` is compared `ordered`, and the creation of a router with the path of a case of `invalidPaths` is compared `raises` (HY-130).",
-                  "ko": "`cases`의 case의 `result`는 `ordered`로 비교하고, `invalidPaths`의 case의 경로로 라우터를 만드는 것은 `raises`로 비교한다(HY-130).",
-                  "koSource": "82bb3b3979e00c768552ba2645a8ecd8c2b900b2ba9febf78dd52e2be7f3d847"
                 }
               ]
             }
@@ -630,9 +593,9 @@
                   "statements": [
                     {
                       "id": "HY-48.10",
-                      "en": "Python: the program directory holds `reads.json`, `build.json` and the directory `templates`; `App.open` fails with a `ValueError` that names the first missing one.",
-                      "ko": "Python: 프로그램 디렉터리에는 `reads.json`, `build.json`, 디렉터리 `templates`가 있고, `App.open`은 처음 없는 것을 밝히는 `ValueError`로 실패한다.",
-                      "koSource": "8fce9a89746adce08e2ab0489eb5c2fef006eda4d52f8cce669ae517da13f233"
+                      "en": "Python: the program directory holds `reads.json`, `build.json` and the directory `templates`; `App.open` fails with a `ValueError` (HY-106) that names the first missing one.",
+                      "ko": "Python: 프로그램 디렉터리에는 `reads.json`, `build.json`, 디렉터리 `templates`가 있고, `App.open`은 처음 없는 것을 밝히는 `ValueError`(HY-106)로 실패한다.",
+                      "koSource": "2019befcd621f66bb589e7eedb4939ed9295612977f1bc77e0800abce9b75088"
                     }
                   ],
                   "blocks": []
@@ -705,7 +668,9 @@
         {
           "kind": "rule",
           "id": "HY-56",
-          "retired": [],
+          "retired": [
+            6
+          ],
           "blocks": [
             {
               "kind": "paragraph",
@@ -739,12 +704,6 @@
                   "en": "`Request` provides the raw query and the query values, and `queryInt` reads the last value of a name.",
                   "ko": "`Request`는 원본 쿼리와 쿼리 값을 제공하고, `queryInt`는 이름의 마지막 값을 읽는다.",
                   "koSource": "0286e3cd34611fe32b716bb19236db2b0221f4cf2bf69a7124deb43a5fa76cb1"
-                },
-                {
-                  "id": "HY-56.6",
-                  "en": "`contracts/fields.json` holds texts with their values, and the PHP, Node and Python servers pass every case.",
-                  "ko": "`contracts/fields.json`은 텍스트와 그 값을 담으며, PHP, Node, Python 서버는 모든 case를 통과한다.",
-                  "koSource": "3ce5740d049448aa6a883741e609d8ab67aa01726f9596e30e1f1d413c9c5ed3"
                 }
               ]
             }
@@ -753,7 +712,10 @@
         {
           "kind": "rule",
           "id": "HY-57",
-          "retired": [],
+          "retired": [
+            8,
+            9
+          ],
           "blocks": [
             {
               "kind": "paragraph",
@@ -799,18 +761,6 @@
                   "en": "`Request` provides the form values, and `formString` reads the last value of a name.",
                   "ko": "`Request`는 폼 값을 제공하고, `formString`은 이름의 마지막 값을 읽는다.",
                   "koSource": "6144c4787600413b267641a811ece6382699fd18af245ee5dd57b1d4bb2e8a0a"
-                },
-                {
-                  "id": "HY-57.8",
-                  "en": "`contracts/fields.json` holds urlencoded and multipart cases, and the PHP, Node and Python servers pass every case.",
-                  "ko": "`contracts/fields.json`은 urlencoded case와 multipart case를 담으며, PHP, Node, Python 서버는 모든 case를 통과한다.",
-                  "koSource": "59ee3e725843dd7a857bee65bd47a5412b0aced15ae4c45fcfefe6c64f44a0e0"
-                },
-                {
-                  "id": "HY-57.9",
-                  "en": "The `fields` of a case of `urlencoded` or `multipart` are its values as a list of `[name, values]` pairs in the order of HY-56, or null when the text or the body fails with HY-42, and they are compared `exact` (HY-130).",
-                  "ko": "`urlencoded`나 `multipart`의 case의 `fields`는 그 값들을 HY-56의 순서로 적은 `[name, values]` 쌍의 목록이거나, 텍스트나 body가 HY-42로 실패하면 null이며, `exact`로 비교한다(HY-130).",
-                  "koSource": "aff4c89a835edd35b102aa4305d509f23d5bcd10a6dfd14f6bb85f910e53da23"
                 }
               ]
             }
@@ -819,7 +769,10 @@
         {
           "kind": "rule",
           "id": "HY-113",
-          "retired": [],
+          "retired": [
+            9,
+            10
+          ],
           "blocks": [
             {
               "kind": "paragraph",
@@ -871,18 +824,6 @@
                   "en": "The file API is part of the public API of HY-106, in each runtime form: PHP `Request::files()` and `Request::file()` with the file class `UploadedFile`, Python `files()` and `file()` with the class `UploadedFile`, and Node `files()` and `file()` with the type `UploadedFile`.",
                   "ko": "file API는 HY-106의 공개 API의 일부로 각 runtime 형태에서 제공되며, PHP는 `Request::files()`와 `Request::file()`을 파일 클래스 `UploadedFile`과 함께, Python은 `files()`와 `file()`을 클래스 `UploadedFile`과 함께, Node는 `files()`와 `file()`을 타입 `UploadedFile`과 함께 제공한다.",
                   "koSource": "0d8b39503b396f3b27db8ef4e001a6213e236cd755deecdaa312b3035c6e5232"
-                },
-                {
-                  "id": "HY-113.9",
-                  "en": "The contract cases of `contracts/fields.json` state the files of a multipart case in its optional key `files`: a list of objects with `name`, `filename`, `contentType` and `content`, where `content` is the text of the file and `contentType` is empty text when the part has no content type.",
-                  "ko": "`contracts/fields.json`의 계약 case는 multipart case의 file을 선택적 키 `files`로 적으며, 이는 `name`, `filename`, `contentType`, `content`를 가진 객체의 목록이고, `content`는 file의 텍스트이며, `contentType`은 part에 content type이 없으면 빈 텍스트다.",
-                  "koSource": "87e3afb3c2124ddcae419f88c29aae02750e5e6c2c4759da932b923789852bf2"
-                },
-                {
-                  "id": "HY-113.10",
-                  "en": "The `files` of a case of `multipart` are compared `exact` (HY-130), and a case whose `fields` is null states no `files`.",
-                  "ko": "`multipart`의 case의 `files`는 `exact`로 비교하며(HY-130), `fields`가 null인 case는 `files`를 적지 않는다.",
-                  "koSource": "b5ef60d79c17c869020faee7b6a447c521cdd620e2cdc356814e6c2bddc79589"
                 }
               ]
             }
@@ -934,9 +875,9 @@
                 },
                 {
                   "id": "HY-114.7",
-                  "en": "After the checks of HY-59 steps 1 and 2 and before any action or `/_hyper/keep` handler runs, the server checks the bytes of each file part of the request: a file whose bytes are more than the file limit makes the request fail with status 413 and the text `Content Too Large`, as HY-59 step 1 does, and no action runs.",
-                  "ko": "HY-59의 1단계와 2단계 검사 뒤, action이나 `/_hyper/keep` handler가 실행되기 전에, 서버는 요청의 file part마다 bytes를 검사한다. bytes가 파일 제한보다 많은 file은 HY-59의 1단계와 같이 요청을 상태 413과 텍스트 `Content Too Large`로 실패시키며, 어떤 action도 실행하지 않는다.",
-                  "koSource": "6700bc04957df943d7b9b7a5ee1decd95f33d8388e474cfdee8f50d9a68ca9a2"
+                  "en": "After the checks of HY-59.4 and HY-59.7 and before any action or `/_hyper/keep` handler runs, the server checks the bytes of each file part of the request: a file whose bytes are more than the file limit makes the request fail with status 413 and the text `Content Too Large`, as HY-59.4 does, and no action runs.",
+                  "ko": "HY-59.4와 HY-59.7 검사 뒤, action이나 `/_hyper/keep` handler가 실행되기 전에, 서버는 요청의 file part마다 bytes를 검사한다. bytes가 파일 제한보다 많은 file은 HY-59.4와 같이 요청을 상태 413과 텍스트 `Content Too Large`로 실패시키며, 어떤 action도 실행하지 않는다.",
+                  "koSource": "fcf9632850d5d70fbfc47e40a50c26794c2c24dc5ed28110280020355d063b4c"
                 },
                 {
                   "id": "HY-114.8",
@@ -980,9 +921,9 @@
               "kind": "paragraph",
               "statements": [
                 {
-                  "en": "The server selects the media type of every request, except `<base path>/_hyper/keep` (HY-40), among `text/html`, `application/vnd.hyper+json` and the representation types of its route (HY-118), after the selection of HY-62, the removal of the data base path of a chosen request (HY-62 step 2) and the routing of the path (HY-27, 404), because the types depend on the route.",
-                  "ko": "서버는 `<base path>/_hyper/keep`(HY-40)을 뺀 모든 요청의 media type을 `text/html`, `application/vnd.hyper+json`, 그 라우트의 representation type(HY-118) 가운데에서 선택하며, 이는 HY-62의 선택, 선택이 고른 요청의 데이터 기본 경로 제거(HY-62의 2단계), 경로의 라우팅(HY-27, 404) 뒤에 한다. type이 라우트에 따라 다르기 때문이다.",
-                  "koSource": "b50baf29a55be8f8eec408c57b159d84a2c8551e1f51e5d97cf26e478a3440e4",
+                  "en": "The server selects the media type of every request, except `<base path>/_hyper/keep` (HY-40), among `text/html`, `application/vnd.hyper+json` and the representation types of its route (HY-118), after the selection of HY-62, the removal of the data base path of a chosen request (HY-62.19) and the routing of the path (HY-27, 404), because the types depend on the route.",
+                  "ko": "서버는 `<base path>/_hyper/keep`(HY-40)을 뺀 모든 요청의 media type을 `text/html`, `application/vnd.hyper+json`, 그 라우트의 representation type(HY-118) 가운데에서 선택하며, 이는 HY-62의 선택, 선택이 고른 요청의 데이터 기본 경로 제거(HY-62.19), 경로의 라우팅(HY-27, 404) 뒤에 한다. type이 라우트에 따라 다르기 때문이다.",
+                  "koSource": "9ce461cf4ed1e728ef952d2b82eef1c9c6e27455c22217de62027942c1fe212c",
                   "id": "HY-116.1"
                 },
                 {
@@ -1058,15 +999,15 @@
                   "id": "HY-116.13"
                 },
                 {
-                  "en": "Under a chosen request of HY-62, the path of step 2 serves no `text/html` and the path of step 3 serves only `text/html`.",
-                  "ko": "HY-62의 선택이 고른 요청에서 2단계의 경로는 `text/html`을 제공하지 않고, 3단계의 경로는 `text/html`만 제공한다.",
-                  "koSource": "2a3d3f8fb0d80c09d7a7eceab5059f814fcf63238e522ca426f76150fe9309e8",
+                  "en": "Under a chosen request of HY-62, the path of HY-62.19 serves no `text/html` and the path of HY-62.22 serves only `text/html`.",
+                  "ko": "HY-62의 선택이 고른 요청에서 HY-62.19의 경로는 `text/html`을 제공하지 않고, HY-62.22의 경로는 `text/html`만 제공한다.",
+                  "koSource": "835a082763661faf68d7917d0ad86124ccd9f9ff8c7280c7e84b1c4742a51598",
                   "id": "HY-116.14"
                 },
                 {
-                  "en": "A representation is answered only under the data base path (step 2); a request of step 3 receives the 404 and the 405 of step 3 before the selection, so a request of step 3 with a method other than `GET` receives 405 also when no type of the route is acceptable.",
-                  "ko": "representation은 데이터 기본 경로 아래(2단계)에서만 응답한다. 3단계의 요청은 선택 전에 3단계의 404와 405를 받으므로, `GET`이 아닌 method의 3단계 요청은 라우트의 어떤 type도 받을 수 없을 때에도 405를 받는다.",
-                  "koSource": "4498d735c0e01d139827680176cc8fbdf54d66645fabf84634ada02fed986f63",
+                  "en": "A representation is answered only under the data base path (HY-62.19); a request of HY-62.22 receives the 404 and the 405 of HY-62.22 before the selection, so a request of HY-62.22 with a method other than `GET` receives 405 also when no type of the route is acceptable.",
+                  "ko": "representation은 데이터 기본 경로 아래(HY-62.19)에서만 응답한다. HY-62.22의 요청은 선택 전에 HY-62.22의 404와 405를 받으므로, `GET`이 아닌 method의 HY-62.22 요청은 라우트의 어떤 type도 받을 수 없을 때에도 405를 받는다.",
+                  "koSource": "271ee8108cab55294dfe2c742e87a6be0ad3f534cc566dacffb1b31251beb867",
                   "id": "HY-116.15"
                 }
               ]
@@ -1094,9 +1035,9 @@
                   "id": "HY-117.2"
                 },
                 {
-                  "en": "The 400 and the 406 of HY-116 and the 406 of HY-62 steps 2 and 3 have `Vary: Accept`, because `Accept` decides them.",
-                  "ko": "HY-116의 400과 406, HY-62 2단계와 3단계의 406은 `Accept`가 정하므로 `Vary: Accept`를 가진다.",
-                  "koSource": "48d44f071c28a23e94ebd2e952bdd7aed12b3a0ded8b63a24aaab9dc7c167edb",
+                  "en": "The 400 and the 406 of HY-116 and the 406 of HY-62.19 and HY-62.22 have `Vary: Accept`, because `Accept` decides them.",
+                  "ko": "HY-116의 400과 406, HY-62.19와 HY-62.22의 406은 `Accept`가 정하므로 `Vary: Accept`를 가진다.",
+                  "koSource": "7373fd80dc3a4d6dbe144b104679a0b00a3662b22b703d72b4ba04ac3fb016cf",
                   "id": "HY-117.3"
                 },
                 {
@@ -1208,9 +1149,9 @@
                   "id": "HY-120.1"
                 },
                 {
-                  "en": "It opens it after the checks of HY-116, HY-62 (its 405, 406 and shell), HY-127, HY-59 step 2 and HY-114 that apply to the request, and before the token check of HY-24 and the first handler, because the token check is the first step that reads the session.",
-                  "ko": "요청에 적용되는 HY-116, HY-62(그 405, 406, 셸), HY-127, HY-59의 2단계, HY-114의 검사 뒤, HY-24의 token 검사와 첫 handler 앞에서 연다. token 검사가 session을 읽는 첫 단계이기 때문이다.",
-                  "koSource": "d8266c0cc255c1522620e5ff3821fd74bc4dcbfe08d41bed5743d64622cd9702",
+                  "en": "It opens it after the checks of HY-116, HY-62 (its 405, 406 and shell), HY-127, HY-59.7 and HY-114 that apply to the request, and before the token check of HY-24 and the first handler, because the token check is the first step that reads the session.",
+                  "ko": "요청에 적용되는 HY-116, HY-62(그 405, 406, 셸), HY-127, HY-59.7, HY-114의 검사 뒤, HY-24의 token 검사와 첫 handler 앞에서 연다. token 검사가 session을 읽는 첫 단계이기 때문이다.",
+                  "koSource": "526e61aaf78014848f7eac48c2b845fec2e98e427ec87bccdbb6fdf4b06e43d6",
                   "id": "HY-120.2"
                 },
                 {
@@ -1274,9 +1215,9 @@
                   "id": "HY-121.6"
                 },
                 {
-                  "en": "A `GET`, `HEAD` or `DELETE` whose body has a size (HY-59 step 1) other than 0 receives 400 with the text `Bad Request`, because these methods carry no body that the handler reads.",
-                  "ko": "body의 크기(HY-59의 1단계)가 0이 아닌 `GET`, `HEAD`, `DELETE`는 텍스트 `Bad Request`와 함께 400을 받는다. 이 method는 handler가 읽는 body를 싣지 않기 때문이다.",
-                  "koSource": "f720d7d668c3355f5e942357c097e8ceb0d1176696472d4b283f373b71ea7efc",
+                  "en": "A `GET`, `HEAD` or `DELETE` whose body has a size (HY-59.4) other than 0 receives 400 with the text `Bad Request`, because these methods carry no body that the handler reads.",
+                  "ko": "body의 크기(HY-59.4)가 0이 아닌 `GET`, `HEAD`, `DELETE`는 텍스트 `Bad Request`와 함께 400을 받는다. 이 method는 handler가 읽는 body를 싣지 않기 때문이다.",
+                  "koSource": "7b397753f8f06891a886aeb3d6e36bfd59998b987242829a78b1574f10e7b063",
                   "id": "HY-121.7"
                 },
                 {
@@ -1322,15 +1263,15 @@
                   "id": "HY-122.3"
                 },
                 {
-                  "en": "The handler may set only `Location`, `WWW-Authenticate` and `Cache-Control`, with names compared without regard to case.",
-                  "ko": "handler는 `Location`, `WWW-Authenticate`, `Cache-Control`만 설정할 수 있으며, 이름은 대소문자를 구분하지 않고 비교한다.",
-                  "koSource": "730796e2fb551d035b92a22f0170ecdce9952c04018916747aa4dfa66e1350d7",
+                  "en": "The handler may set only `Location`, `WWW-Authenticate` and `Cache-Control` (HY-130).",
+                  "ko": "handler는 `Location`, `WWW-Authenticate`, `Cache-Control`만 설정할 수 있으며, (HY-130).",
+                  "koSource": "1dba5fbfcfaac4888e6ee3935ef7cbacd061da50e11f1e7bf6291cdafcb1a1aa",
                   "id": "HY-122.4"
                 },
                 {
-                  "en": "A `Location` that is an application path (HY-46) gets the base path of the request, the data base path under a chosen request (HY-62 step 2), as every `Location` of the application does (HY-8); a `Location` that is an absolute URI (RFC 3986, section 4.3) is sent as it is; another value, such as `//host/path` or `posts/8`, fails with HY-43.",
-                  "ko": "애플리케이션 경로(HY-46)인 `Location`은 애플리케이션의 모든 `Location`처럼(HY-8) 요청의 기본 경로, 선택이 고른 요청에서는 데이터 기본 경로(HY-62의 2단계)를 붙인다. 절대 URI(RFC 3986, 4.3절)인 `Location`은 그대로 보내고, `//host/path`나 `posts/8` 같은 다른 값은 HY-43으로 실패한다.",
-                  "koSource": "f443e843a7a075cc86054c0768006f6472927227e434ea68d7e0cc012031f95f",
+                  "en": "A `Location` that is an application path (HY-46) gets the base path of the request, the data base path under a chosen request (HY-62.19), as every `Location` of the application does (HY-8); a `Location` that is an absolute URI (RFC 3986, section 4.3) is sent as it is; another value, such as `//host/path` or `posts/8`, fails with HY-43.",
+                  "ko": "애플리케이션 경로(HY-46)인 `Location`은 애플리케이션의 모든 `Location`처럼(HY-8) 요청의 기본 경로, 선택이 고른 요청에서는 데이터 기본 경로(HY-62.19)를 붙인다. 절대 URI(RFC 3986, 4.3절)인 `Location`은 그대로 보내고, `//host/path`나 `posts/8` 같은 다른 값은 HY-43으로 실패한다.",
+                  "koSource": "77ea64f5e33a710f1cd58e09547b749f85c668ef646b75dcb1160e93b1d051ff",
                   "id": "HY-122.5"
                 },
                 {
@@ -1378,65 +1319,6 @@
               ]
             }
           ]
-        },
-        {
-          "kind": "rule",
-          "id": "HY-123",
-          "retired": [],
-          "blocks": [
-            {
-              "kind": "paragraph",
-              "statements": [
-                {
-                  "en": "`contracts/representations.json` holds manifests, requests and the expected responses of HY-116, HY-117 and HY-118 to HY-122: the selection with q-values, wildcards, parameters, ties and an invalid `Accept`, the manifest checks, 405 with `Allow`, 406 with its body, 415, 400 for a body of a `GET`, `HEAD` or `DELETE` and for an invalid JSON body, `HEAD`, the status, header, `Location` and `Cache-Control` checks, the `ETag`, `If-None-Match` and 304, and `Vary`.",
-                  "ko": "`contracts/representations.json`은 HY-116, HY-117, HY-118부터 HY-122까지의 매니페스트, 요청, 기대 응답을 담는다: q-value, wildcard, 매개변수, 동률, 유효하지 않은 `Accept`가 있는 선택, 매니페스트 검사, `Allow`가 있는 405, body가 있는 406, 415, `GET`, `HEAD`, `DELETE`의 body와 유효하지 않은 JSON body에 대한 400, `HEAD`, 상태, header, `Location`, `Cache-Control` 검사, `ETag`, `If-None-Match`와 304, `Vary`.",
-                  "koSource": "51e6d4a8b8806d30932f0985ec7176b1bab3f58dd76469ff7e54af6d91d8a6a0",
-                  "id": "HY-123.1"
-                },
-                {
-                  "en": "`manifestRejections` lists the entries that the manifest check rejects in place of the `representations` of a route, and `openRejections` the handler types of one route, which replace the handlers of that route while every other route keeps the handlers that the runner registers, for which opening fails.",
-                  "ko": "`manifestRejections`는 라우트의 `representations` 대신 넣었을 때 매니페스트 검사가 거부하는 항목을, `openRejections`는 한 라우트의 handler type을 나열한다. 그 type들이 그 라우트의 handler를 대신하고 다른 모든 라우트는 runner가 등록하는 handler를 유지하며, 그때 열기가 실패한다.",
-                  "koSource": "995c07d7c0f5aded316bc694bdaa2ba35b0be58ac4b586232a2e8835476f50fd",
-                  "id": "HY-123.2"
-                },
-                {
-                  "en": "The runner of a server registers, for every declared entry, a handler that returns the `handler` of the case and records what it `received`, and gives each request to `App.handle`, so a `HEAD` case states the response with the body of its `GET` (HY-121).",
-                  "ko": "서버의 runner는 선언된 항목마다 case의 `handler`를 돌려주고 받은 것을 `received`로 기록하는 handler를 등록하며, 모든 요청을 `App.handle`에 준다. 그래서 `HEAD` case는 그 `GET`의 body를 가진 응답을 적는다(HY-121).",
-                  "koSource": "f24493355994864b8cb2d1a3cd180bee4c0b86229c64958a597b4e804e6e2a15",
-                  "id": "HY-123.3"
-                },
-                {
-                  "en": "The PHP, Node and Python servers pass every case.",
-                  "ko": "PHP, Node, Python 서버는 모든 case를 통과한다.",
-                  "koSource": "6d16a812fee99a0b4380c5415a95debf142c55e661b7aea735f8208da52639c4",
-                  "id": "HY-123.4"
-                }
-              ]
-            },
-            {
-              "kind": "paragraph",
-              "statements": [
-                {
-                  "en": "The open of a case of `manifestRejections` or `openRejections` is compared `raises` (HY-130).",
-                  "ko": "`manifestRejections`나 `openRejections`의 case의 열기는 `raises`로 비교한다(HY-130).",
-                  "koSource": "149bdae968dbdf677463562dfaa75a522803a68962892e56ad1de53f35fc5db3",
-                  "id": "HY-123.5"
-                },
-                {
-                  "en": "`page` names the media type of the `Content-Type` of a page response, `text/html` or `application/vnd.hyper+json`, `handled` is the number of calls of the representation handlers, and `session` false states a request after which the session holds no session token, each compared `exact` (HY-130).",
-                  "ko": "`page`는 페이지 응답의 `Content-Type`의 media type인 `text/html`이나 `application/vnd.hyper+json`을 적고, `handled`는 representation handler의 호출 수, `session` false는 요청 뒤 session이 session token을 갖지 않음을 적으며, 각각 `exact`로 비교한다(HY-130).",
-                  "koSource": "df9662f6165dd85b46b9bb4241000a9a0b5d4abe84d08fc383d4b10fe001295b",
-                  "id": "HY-123.6"
-                },
-                {
-                  "en": "`received` compares `method` and `body` by `exact`, `parameters` by `ordered`, `headers` by `subset` and `absentHeaders` by `absent` with the request that the handler received (HY-130).",
-                  "ko": "`received`는 handler가 받은 요청의 `method`와 `body`를 `exact`로, `parameters`를 `ordered`로, `headers`를 `subset`으로, `absentHeaders`를 `absent`로 비교한다(HY-130).",
-                  "koSource": "c6e26e437f446681c685eb696fbc22676e223a065b1e29b173f9d79d660a3ae0",
-                  "id": "HY-123.7"
-                }
-              ]
-            }
-          ]
         }
       ]
     },
@@ -1465,6 +1347,12 @@
                   "ko": "키는 순서를 유지한다.",
                   "koSource": "4f49e4bf4ef5c05043a4a65a1589110d1bd709d8086a9d8946499ea88780d5be",
                   "id": "HY-17.2"
+                },
+                {
+                  "id": "HY-17.3",
+                  "en": "Every server writes the JSON text of a response, and decodes the kept values of HY-38 and HY-40, as HY-54 states.",
+                  "ko": "모든 서버는 응답의 JSON 텍스트를 쓰고, HY-54가 밝힌 대로 HY-38과 HY-40의 남긴 값을 decode한다.",
+                  "koSource": "b6d6a1a6be59b1e94a77d64a2825367faf8dcbc22750fc0e973c24a2ea864d3c"
                 }
               ]
             }
@@ -1640,7 +1528,9 @@
         {
           "kind": "rule",
           "id": "HY-125",
-          "retired": [],
+          "retired": [
+            13
+          ],
           "blocks": [
             {
               "kind": "paragraph",
@@ -1718,17 +1608,6 @@
                   "id": "HY-125.12"
                 }
               ]
-            },
-            {
-              "kind": "paragraph",
-              "statements": [
-                {
-                  "en": "The `builds` of `contracts/context.json` give `files` to the build function and name in `excluded` the outputs that the hash leaves out, and their `sortedPaths`, `stream` and `build` are compared `exact` (HY-130).",
-                  "ko": "`contracts/context.json`의 `builds`는 `files`를 build 함수에 주고, hash가 빼는 출력을 `excluded`에 적으며, 그 `sortedPaths`, `stream`, `build`는 `exact`로 비교한다(HY-130).",
-                  "koSource": "857c8ff7e5e46d6111177bd66b95393d6c6adaaec7d9a222436de2e0aa8cbca6",
-                  "id": "HY-125.13"
-                }
-              ]
             }
           ]
         },
@@ -1771,9 +1650,9 @@
                   "id": "HY-127.1"
                 },
                 {
-                  "en": "An application with a context checks the header of every request that selects `text/html` or `application/vnd.hyper+json` and that HY-62 does not answer with its 405, 406 or shell, right after the method check of HY-116 and before HY-59 steps 2 and 3, the file limit of HY-114, the token check of HY-24, the context handler and any loader or action: a value that is not 64 lowercase hexadecimal characters makes the server respond with status 400 and the text `Bad Request` (HY-58).",
-                  "ko": "context가 있는 애플리케이션은 `text/html`이나 `application/vnd.hyper+json`을 선택했고 HY-62가 그 405, 406, 셸로 응답하지 않는 모든 요청의 이 header를, HY-116의 method 검사 바로 뒤, HY-59의 2단계와 3단계, HY-114의 파일 제한, HY-24의 token 검사, context handler, 어떤 loader나 action보다 먼저 검사한다: 소문자 16진수 64자가 아닌 값이면 서버는 상태 400과 텍스트 `Bad Request`로 응답한다(HY-58).",
-                  "koSource": "0deee53a2bc5d5847a9e5f683bc88d4263c4a5fa0d2501f12ad3dab059bdd505",
+                  "en": "An application with a context checks the header of every request that selects `text/html` or `application/vnd.hyper+json` and that HY-62 does not answer with its 405, 406 or shell, right after the method check of HY-116 and before HY-59.7 and HY-59.8, the file limit of HY-114, the token check of HY-24, the context handler and any loader or action: a value that is not 64 lowercase hexadecimal characters makes the server respond with status 400 and the text `Bad Request` (HY-58).",
+                  "ko": "context가 있는 애플리케이션은 `text/html`이나 `application/vnd.hyper+json`을 선택했고 HY-62가 그 405, 406, 셸로 응답하지 않는 모든 요청의 이 header를, HY-116의 method 검사 바로 뒤, HY-59.7과 HY-59.8, HY-114의 파일 제한, HY-24의 token 검사, context handler, 어떤 loader나 action보다 먼저 검사한다: 소문자 16진수 64자가 아닌 값이면 서버는 상태 400과 텍스트 `Bad Request`로 응답한다(HY-58).",
+                  "koSource": "2bc12399407e8428289adc40fb3283f2cedaafbc9b60859dfd7ee6c6895f1cee",
                   "id": "HY-127.2"
                 },
                 {
@@ -1795,7 +1674,14 @@
         {
           "kind": "rule",
           "id": "HY-128",
-          "retired": [],
+          "retired": [
+            6,
+            7,
+            9,
+            10,
+            11,
+            12
+          ],
           "blocks": [
             {
               "kind": "paragraph",
@@ -1831,46 +1717,10 @@
                   "id": "HY-128.5"
                 },
                 {
-                  "en": "`contracts/context.json` holds builds, contexts, their JSON texts and hashes, requests with and without `Hyper-Context` and the expected responses.",
-                  "ko": "`contracts/context.json`은 build, context, 그 JSON 텍스트와 hash, `Hyper-Context`가 있는 요청과 없는 요청, 기대 응답을 담는다.",
-                  "koSource": "0090256d4bad603d38c763e296dcfc8367a5a3d2399c98be3dd9b71bc52a2b35",
-                  "id": "HY-128.6"
-                },
-                {
-                  "en": "A context entry compares by `exact` the JSON text of HY-54 of its decoded `context` with `context`, the bytes that its hash digests with `text`, its context hash with `hash`, and the context hash of the map that `reorderedText` writes with `reorderedHash` (HY-130).",
-                  "ko": "context 항목은 decode한 `context`의 HY-54 JSON 텍스트를 `context`와, 그 hash가 digest하는 바이트를 `text`와, 그 context hash를 `hash`와, `reorderedText`가 쓰는 map의 context hash를 `reorderedHash`와 `exact`로 비교한다(HY-130).",
-                  "koSource": "01fd9b675a9c1ded8f05d100867be40741dfdd26a9bad85de431e8ef79f5ccdd",
-                  "id": "HY-128.7"
-                },
-                {
                   "en": "An application declares its loaders, a loader `{\"stop\": \"NotFound\"}` that stops the request (HY-27), and its `actions`, each of which returns the route page with a status (HY-58) or a redirect (HY-25).",
                   "ko": "애플리케이션은 loader, 요청을 멈추는 loader `{\"stop\": \"NotFound\"}`(HY-27), 그리고 상태와 함께 라우트 페이지를 돌려주거나(HY-58) redirect하는(HY-25) `actions`를 선언한다.",
                   "koSource": "a0271af4a6f3069bef963df7fc8ce49340f367ee16034c201e37074072f1c32e",
                   "id": "HY-128.8"
-                },
-                {
-                  "en": "A case states `contextCalls`, the number of calls of the context handler, and `firstCalls`, the first calls of the request in order (`action:<route>`, `context`, `shared`), and a request with `csrf` carries in its form the field `_csrf` with a masked token of its session (HY-24), added to the fields of `form`; the runner masks the token that the session holds after a first `GET` of the same session, because a response sends `csrf` only when a template reads it (HY-73).",
-                  "ko": "case는 context handler의 호출 수 `contextCalls`와, 요청의 처음 호출들을 순서대로 적은 `firstCalls`(`action:<route>`, `context`, `shared`)를 적으며, `csrf`가 있는 요청은 `form`의 field에 더해 자기 session의 token을 가린 값을 field `_csrf`로 담는다(HY-24). 응답은 template이 `csrf`를 읽을 때만 그것을 보내므로(HY-73), runner는 같은 session의 첫 `GET` 뒤에 session이 가진 token을 가린다.",
-                  "koSource": "0f50523f05223610556c76b32ddb1f9431e28f21bdd5ecfdd75d3c5e0fe4a29e",
-                  "id": "HY-128.9"
-                },
-                {
-                  "en": "`firstCalls` lists the first calls of the request in the order in which they run and is compared by `prefix` with the recorded calls (HY-130).",
-                  "ko": "`firstCalls`는 요청의 처음 호출들을 실행 순서대로 적으며, 기록한 호출과 `prefix`로 비교한다(HY-130).",
-                  "koSource": "97285e4b0ebe339578ac2f62d37b1b15271f115bcbd39aff0874ee4dd090044e",
-                  "id": "HY-128.10"
-                },
-                {
-                  "en": "`keys` and `sharedKeys` are compared by `keys` with the response object and its `shared`, `contextCalls` by `exact` with the number of calls of the context handler, and `selection` by `exact` with the list of the values that the context handler received, one item for each call (HY-130).",
-                  "ko": "`keys`와 `sharedKeys`는 `keys`로 응답 객체와 그 `shared`를 비교하고, `contextCalls`는 context handler의 호출 수와 `exact`로, `selection`은 context handler가 받은 값을 호출마다 한 항목씩 담은 목록과 `exact`로 비교한다(HY-130).",
-                  "koSource": "6ab80c6d45fd945973958dfb9ae37ca1183e192b9bc49d8be15033651e08f570",
-                  "id": "HY-128.11"
-                },
-                {
-                  "en": "The PHP, Node and Python servers pass every case.",
-                  "ko": "PHP, Node, Python 서버는 모든 case를 통과한다.",
-                  "koSource": "6d16a812fee99a0b4380c5415a95debf142c55e661b7aea735f8208da52639c4",
-                  "id": "HY-128.12"
                 }
               ]
             }
@@ -1909,6 +1759,12 @@
                   "ko": "페이지 영역 템플릿은 그 라우트의 템플릿이다.",
                   "koSource": "8aa2bcce1911548c7e39a3216963d10a783fa1524bd942ad1dc15b726f8bb724",
                   "id": "HYC-1.3"
+                },
+                {
+                  "id": "HYC-1.4",
+                  "en": "The browser code routes a request path by HY-4 to HY-8 and HY-49.",
+                  "ko": "브라우저 코드는 요청 path를 HY-4부터 HY-8과 HY-49로 라우팅한다.",
+                  "koSource": "8c78df5535517a9c5d361dc6e4becc4f182ba0bc8e281219cdefca67704871fb"
                 }
               ]
             }
@@ -2263,7 +2119,10 @@
         {
           "kind": "rule",
           "id": "HYC-24",
-          "retired": [],
+          "retired": [
+            3,
+            4
+          ],
           "blocks": [
             {
               "kind": "paragraph",
@@ -2281,21 +2140,16 @@
                   "id": "HYC-24.2"
                 },
                 {
-                  "en": "`contracts/functions.json` holds an application whose template calls a host function, the kinds of function that its cases name, which the runner of every server and of the browser code maps to a function of its runtime, and the cases: a document that renders the result of the function, the plain 500 of a call of a name that the application did not register (HY-43), and the open that a built-in name or an entry that is not a function fails, with the argument error of template RT-5 where the case states it.",
-                  "ko": "`contracts/functions.json`은 template이 host function을 부르는 애플리케이션, case가 이름으로 부르는 함수의 종류, 그리고 case들을 담는다. 모든 서버와 브라우저 코드의 runner는 각 종류를 자기 runtime의 함수로 바꾼다. case는 함수의 결과를 render하는 document, 애플리케이션이 등록하지 않은 이름을 부르는 호출의 plain 500(HY-43), built-in 이름이나 함수가 아닌 항목이 실패시키는 열기이며, case가 적은 경우 template RT-5의 argument error를 함께 확인한다.",
-                  "koSource": "c82a29c0128017a094ddbe96f2852a447eda74679e2f6d5392eb90242ca3d4bc",
-                  "id": "HYC-24.3"
-                }
-              ]
-            },
-            {
-              "kind": "paragraph",
-              "statements": [
+                  "id": "HYC-24.5",
+                  "en": "An entry that is not a function fails the open with the argument error of template RT-5.",
+                  "ko": "함수가 아닌 entry는 template RT-5의 인자 오류로 open을 실패시킨다.",
+                  "koSource": "fe95b39cb857b8058e3a988b348eb82c8bb567d8a8f60de0a40daf09ac1caf9c"
+                },
                 {
-                  "en": "`openFails` compares the open by `raises`, and `openError` compares the message of its error by `contains` (HY-130).",
-                  "ko": "`openFails`는 열기를 `raises`로, `openError`는 그 오류의 message를 `contains`로 비교한다(HY-130).",
-                  "koSource": "f8e3cf0a7b91758aebc8b17a9ecfa7cc32bb06dfe163153079490e07cf14fbaf",
-                  "id": "HYC-24.4"
+                  "id": "HYC-24.6",
+                  "en": "A render that calls a name that is neither built in nor registered fails with HY-43.",
+                  "ko": "built-in도 등록도 아닌 이름을 호출하는 render는 HY-43으로 실패한다.",
+                  "koSource": "be1b66131962cfe97a15fc9e8068bff013eb6b8cfdc2ed341a75d2babc867584"
                 }
               ]
             }
@@ -2312,7 +2166,14 @@
         {
           "kind": "rule",
           "id": "HY-62",
-          "retired": [],
+          "retired": [
+            28,
+            29,
+            30,
+            31,
+            32,
+            33
+          ],
           "blocks": [
             {
               "kind": "paragraph",
@@ -2385,9 +2246,9 @@
                     },
                     {
                       "id": "HY-62.9",
-                      "en": "The server calls the selection once per request, after HY-59 step 1 and HY-42 and before routing, with the request without its `Cookie` header: the choice decides the shell response and the path of a representation, and neither varies by `Cookie` (HY-117).",
-                      "ko": "서버는 요청마다 HY-59의 1단계와 HY-42 뒤, 라우팅 전에 `Cookie` header를 뺀 요청으로 선택을 한 번 호출한다. choice가 셸 응답과 representation의 경로를 정하고, 둘 다 `Cookie`에 따라 달라지지 않기 때문이다(HY-117).",
-                      "koSource": "34d366c7af06713e67ee8e71112083d0ab7608fee85b39e8123cfc7c2a47bdee"
+                      "en": "The server calls the selection once per request, after HY-59.4 and HY-42 and before routing, with the request without its `Cookie` header: the choice decides the shell response and the path of a representation, and neither varies by `Cookie` (HY-117).",
+                      "ko": "서버는 요청마다 HY-59.4와 HY-42 뒤, 라우팅 전에 `Cookie` header를 뺀 요청으로 선택을 한 번 호출한다. choice가 셸 응답과 representation의 경로를 정하고, 둘 다 `Cookie`에 따라 달라지지 않기 때문이다(HY-117).",
+                      "koSource": "74af890ff305d3d1635a44f4cb4edf08491ddafc25dd05cf6b249cc7f7fcc92d"
                     },
                     {
                       "id": "HY-62.10",
@@ -2483,9 +2344,9 @@
                     },
                     {
                       "id": "HY-62.21",
-                      "en": "Every other request is answered by HY-15 to HY-59: a document request and a region request receive JSON, and an action runs.",
-                      "ko": "다른 모든 요청에는 HY-15부터 HY-59까지에 따라 응답하며, 문서 요청과 영역 요청은 JSON을 받고 액션은 실행된다.",
-                      "koSource": "30996f10e6d876a4be2e23200d59972b787f7cfd94075d3e2100018de6f0d317"
+                      "en": "Every other request is answered by HY-15 to HY-40 and HY-42 to HY-59: a document request and a region request receive JSON, and an action runs.",
+                      "ko": "다른 모든 요청에는 HY-15부터 HY-40과 HY-42부터 HY-59까지에 따라 응답하며, 문서 요청과 영역 요청은 JSON을 받고 액션은 실행된다.",
+                      "koSource": "87b2da9d8538bf90ac74cdd83a0f6c406f5918f4ba24d3ce28b1a3f34e708b90"
                     }
                   ],
                   "blocks": []
@@ -2506,9 +2367,9 @@
                     },
                     {
                       "id": "HY-62.24",
-                      "en": "Then a request that selects `application/vnd.hyper+json` or a representation (HY-116) receives status 406 with the text `Not Acceptable` and `Vary: Accept`, and a request that selects `text/html` receives status 200 with the bytes of the shell as its body and the headers `Content-Type: text/html; charset=utf-8`, `Cache-Control: no-cache` and the `Vary` of HY-117.",
-                      "ko": "그다음 `application/vnd.hyper+json`이나 representation을 선택한(HY-116) 요청은 텍스트 `Not Acceptable`, `Vary: Accept`와 함께 상태 406을 받고, `text/html`을 선택한 요청은 셸의 바이트를 body로, `Content-Type: text/html; charset=utf-8`, `Cache-Control: no-cache`, HY-117의 `Vary` header와 함께 상태 200을 받는다.",
-                      "koSource": "f2c8ff50f47ebfc45afc8caa5f03c785b6f74181358dcea27cb884ecc4cef4e3"
+                      "en": "Then a request that selects `application/vnd.hyper+json` or a representation (HY-116) receives status 406 with the text `Not Acceptable` and `Vary: Accept`, and a request that selects `text/html` receives status 200 with the bytes of the shell as its body and the response of the application to it has the headers `Content-Type: text/html; charset=utf-8`, `Cache-Control: no-cache`, the `Vary` of HY-117 and the frame policy of HY-45, and no other header; its host may add headers as HY-130 allows.",
+                      "ko": "그다음 `application/vnd.hyper+json`이나 representation을 선택한(HY-116) 요청은 텍스트 `Not Acceptable`, `Vary: Accept`와 함께 상태 406을 받고, `text/html`을 선택한 요청은 셸의 바이트를 body로 가진 상태 200을 받고, 애플리케이션의 응답은 `Content-Type: text/html; charset=utf-8`, `Cache-Control: no-cache`, HY-117의 `Vary`, HY-45의 frame policy를 가지며 다른 header는 없다. 그 호스트는 HY-130이 허용하는 대로 header를 더할 수 있다.",
+                      "koSource": "998f20ee81b9cd5990936d616f9e9770ab9827ece685c25eca0c2c956f09920e"
                     },
                     {
                       "id": "HY-62.25",
@@ -2535,42 +2396,6 @@
                   "en": "Every response of a chosen request carries the frame policy of HY-45 and is reported to the response hook of HY-60.",
                   "ko": "선택이 고른 요청의 모든 응답은 HY-45의 frame 정책을 가지며 HY-60의 응답 hook에 보고된다.",
                   "koSource": "93ae73fcade136d5a9361639ba7491f64bf9a94099cfd2ea1fee4a6e098da32c"
-                },
-                {
-                  "id": "HY-62.28",
-                  "en": "`contracts/client.json` holds requests, the selection of each request and the expected responses; the `handler` of a case replaces the handler of its entry for that case.",
-                  "ko": "`contracts/client.json`은 요청, 각 요청의 선택, 기대 응답을 담으며, case의 `handler`는 그 case에서 자기 항목의 handler를 대신한다.",
-                  "koSource": "e256d7fca19c71c69b93dd63b647d3c29dded4e943c8e322bef108166be42885"
-                },
-                {
-                  "id": "HY-62.29",
-                  "en": "The PHP, Node and Python servers pass every case.",
-                  "ko": "PHP, Node, Python 서버는 모든 case를 통과한다.",
-                  "koSource": "6d16a812fee99a0b4380c5415a95debf142c55e661b7aea735f8208da52639c4"
-                },
-                {
-                  "id": "HY-62.30",
-                  "en": "The `shell` of the file is the text of the static shell, which the runner writes to a file that the declaration names, and a case that receives the shell states that text as its `body`.",
-                  "ko": "파일의 `shell`은 정적 셸의 텍스트이며, runner는 그것을 선언이 이름 붙인 파일로 쓰고, 셸을 받는 case는 그 텍스트를 `body`로 적는다.",
-                  "koSource": "7c182442c3174e4f82c7a561a61acd7ea0c545cf96ad92e417f12ba91c6af257"
-                },
-                {
-                  "id": "HY-62.31",
-                  "en": "`json` compares `route` by `exact`, `params` by `ordered` and `regions` by `keys` with the response object (HY-130).",
-                  "ko": "`json`은 `route`를 `exact`로, `params`를 `ordered`로, `regions`를 `keys`로 응답 객체와 비교한다(HY-130).",
-                  "koSource": "d7002f121aa2c83c14046ee7651b552cac0ddb2d347213796ffd524595ed4996"
-                },
-                {
-                  "id": "HY-62.32",
-                  "en": "`session` false states a request after which the session holds no session token, `actions` is the number of calls of the actions and `handled` the number of calls of the representation handlers, each compared `exact` (HY-130).",
-                  "ko": "`session` false는 요청 뒤 session이 session token을 갖지 않음을 적고, `actions`는 action의 호출 수, `handled`는 representation handler의 호출 수이며, 각각 `exact`로 비교한다(HY-130).",
-                  "koSource": "2031f292f4d53c8206f39694f227396a4dc309607cff3c09a6e660284716769c"
-                },
-                {
-                  "id": "HY-62.33",
-                  "en": "`received` compares `parameters` by `ordered` and `selection` by `exact` with what the representation handler received (HY-130), and `absentHeaders` by `absent` with its request headers.",
-                  "ko": "`received`는 `parameters`를 `ordered`로, `selection`을 `exact`로 representation handler가 받은 것과 비교하고(HY-130), `absentHeaders`를 `absent`로 그 handler의 요청 header와 비교한다.",
-                  "koSource": "45b2eaefb5224a59b83d248afdeb2dcab9878b6012c727545679ef24e5998d65"
                 }
               ]
             }
@@ -2617,7 +2442,10 @@
         {
           "kind": "rule",
           "id": "HY-24",
-          "retired": [],
+          "retired": [
+            7,
+            8
+          ],
           "blocks": [
             {
               "kind": "paragraph",
@@ -2657,23 +2485,6 @@
                   "en": "The server never sends the token itself.",
                   "ko": "서버는 토큰 자체를 보내지 않는다.",
                   "koSource": "a2032f2c3bdeb889870377a9b8b85493b5b1131780686fec0a82de7737d92b01"
-                },
-                {
-                  "id": "HY-24.7",
-                  "en": "`contracts/csrf.json` holds tokens, masks and form values with the expected results, and the PHP, Node and Python servers pass every case.",
-                  "ko": "`contracts/csrf.json`은 토큰, 가림 값, 폼 값과 기대 결과를 담으며, PHP, Node, Python 서버는 모든 case를 통과한다.",
-                  "koSource": "371e02f012e71ea3f5b1714f84bb52f1b5ea87adc53a6be211fb9a58e1f444dc"
-                }
-              ]
-            },
-            {
-              "kind": "paragraph",
-              "statements": [
-                {
-                  "id": "HY-24.8",
-                  "en": "The `value` of a case of `mask` and the `valid` of a case of `verify` are compared `exact` (HY-130).",
-                  "ko": "`mask`의 case의 `value`와 `verify`의 case의 `valid`는 `exact`로 비교한다(HY-130).",
-                  "koSource": "1789c40a9fb6b53580c34a074f258ed50172dbc64ce30da737a49a9a24abf7eb"
                 }
               ]
             }
@@ -3056,7 +2867,11 @@
         {
           "kind": "rule",
           "id": "HY-73",
-          "retired": [],
+          "retired": [
+            24,
+            26,
+            27
+          ],
           "blocks": [
             {
               "kind": "paragraph",
@@ -3216,9 +3031,9 @@
                   "statements": [
                     {
                       "id": "HY-73.21",
-                      "en": "Before it renders or encodes a page, the server keeps of the shared data and of every region's data only their read paths: a map keeps the keys that a path names, with their values kept recursively, and every key under `*`; a list keeps its length, with each element kept under `*` and the paths of its index and with `null` at an index that no path names; any other value stays as it is.",
-                      "ko": "서버는 페이지를 렌더하거나 인코딩하기 전에 공유 데이터와 모든 영역 데이터에서 읽기 경로만 남기며, 맵은 경로가 이름 붙인 키와 그 값을 같은 방식으로 남기고 `*` 아래에서는 모든 키를 남기고, 목록은 길이를 유지하고 각 원소를 `*`와 그 인덱스의 경로로 남기며 어떤 경로도 이름 붙이지 않은 인덱스에는 `null`을 두고, 다른 값은 그대로 둔다.",
-                      "koSource": "1fe97a96c0115af969b0d812dce77a0fe000aa8e9c6237526c9f28645d109a35"
+                      "en": "Before it renders or encodes a page, the server keeps of the shared data and of every region's data only their read paths: a map keeps the keys that a path names, in their order in the data, with their values kept recursively, and every key under `*`; a list keeps its length, with each element kept under `*` and the paths of its index and with `null` at an index that no path names; any other value stays as it is.",
+                      "ko": "서버는 페이지를 렌더하거나 인코딩하기 전에 공유 데이터와 모든 영역 데이터에서 읽기 경로만 남기며, 맵은 경로가 이름 붙인 키를 데이터에서의 순서대로, 그 값을 같은 방식으로 남기고 `*` 아래에서는 모든 키를 남기고, 목록은 길이를 유지하고 각 원소를 `*`와 그 인덱스의 경로로 남기며 어떤 경로도 이름 붙이지 않은 인덱스에는 `null`을 두고, 다른 값은 그대로 둔다.",
+                      "koSource": "ebfb383f7fc626ad5c0f75721fd70e7335c04b2a9f805149ad0e7618b025a92d"
                     },
                     {
                       "id": "HY-73.22",
@@ -3238,37 +3053,24 @@
                       "koSource": "5eee8f6e4610f61c9d2dad5d662ce97c777b43fcafa943d2d2689b1980f9a2a3"
                     },
                     {
-                      "id": "HY-73.24",
-                      "en": "`contracts/reads.json` holds templates, data, the read paths and the kept data; the browser package computes the read paths of every case, the PHP, Node and Python servers keep the expected data, and the kept data renders the same bytes as the data.",
-                      "ko": "`contracts/reads.json`은 템플릿, 데이터, 읽기 경로, 남긴 데이터를 담으며, 브라우저 패키지는 모든 case의 읽기 경로를 계산하고, PHP, Node, Python 서버는 기대한 데이터를 남기며, 남긴 데이터는 데이터와 같은 바이트로 렌더된다.",
-                      "koSource": "44dbe6a3f56c8ee4aab5de2a7bf4b61fcc18522122d2afff725f0ad5eaa3baf0"
-                    },
-                    {
                       "id": "HY-73.25",
                       "en": "`data(region)` (HYC-11) returns the kept data, so a path that no template reads is not there.",
                       "ko": "`data(region)`(HYC-11)은 남긴 데이터를 돌려주므로, 어떤 템플릿도 읽지 않는 경로는 거기에 없다.",
                       "koSource": "1f2f6eb06021feba99101d7e91927bac0fa62db407129d3c8b72bcbc0adff636"
                     }
                   ],
-                  "blocks": [
-                    {
-                      "kind": "paragraph",
-                      "statements": [
-                        {
-                          "id": "HY-73.26",
-                          "en": "The PHP, Node and Python servers compare the kept data of a case with its `kept` by `ordered` (HY-130), and the Node server and the browser package compare by `exact` the text that `template` renders from the kept data with the text that it renders from `data`.",
-                          "ko": "PHP, Node, Python 서버는 case의 남긴 데이터를 그 `kept`와 `ordered`로 비교하고(HY-130), Node 서버와 브라우저 패키지는 `template`이 남긴 데이터로 렌더한 텍스트를 `data`로 렌더한 텍스트와 `exact`로 비교한다.",
-                          "koSource": "afc14625519d8f7b0fd097516e57a3c1ff574c4c36d9c79d4a2ac716c8b3b1f1"
-                        },
-                        {
-                          "id": "HY-73.27",
-                          "en": "The Node server and the browser package compare the read paths that they compute from `templates` with the `reads` of a case by `exact` (HY-130).",
-                          "ko": "Node 서버와 브라우저 패키지는 `templates`로 계산한 읽기 경로를 case의 `reads`와 `exact`로 비교한다(HY-130).",
-                          "koSource": "ae3b506887ddf26e8a4dfc76b3230ffa63b31497ba06505dcc19069c7ac3103f"
-                        }
-                      ]
-                    }
-                  ]
+                  "blocks": []
+                }
+              ]
+            },
+            {
+              "kind": "paragraph",
+              "statements": [
+                {
+                  "id": "HY-73.28",
+                  "en": "The kept data renders the same bytes as the data.",
+                  "ko": "남긴 데이터는 데이터와 같은 바이트로 렌더된다.",
+                  "koSource": "4dcbbb898b44c586c202bb2a610e417112438aca1817a859e5d6465bfbc54450"
                 }
               ]
             }
@@ -4212,6 +4014,17 @@
                   "blocks": []
                 }
               ]
+            },
+            {
+              "kind": "paragraph",
+              "statements": [
+                {
+                  "id": "HY-38.19",
+                  "en": "A kept value takes the place of the value at its path, so every map of the data keeps its keys in their order, and a kept map keeps its keys in its own order.",
+                  "ko": "남긴 값은 경로의 값을 대신하므로, 데이터의 모든 맵은 키를 그 순서대로 유지하고, 남긴 맵은 자신의 순서대로 키를 유지한다.",
+                  "koSource": "d837eab31e964475e895019b54bb2b42f4c2c335fe5f793c0d531d9a197ec80b"
+                }
+              ]
             }
           ]
         },
@@ -4288,30 +4101,6 @@
                   "en": "The path `/_hyper/keep` is reserved; a route path may not start with `/_hyper`.",
                   "ko": "경로 `/_hyper/keep`은 예약되어 있다. 라우트 경로는 `/_hyper`로 시작할 수 없다.",
                   "koSource": "63fc0904a29f063b9cf4442aa648c3b9b7a80fb0aa08a81219f768f37d31fc29"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "kind": "rule",
-          "id": "HY-41",
-          "retired": [],
-          "blocks": [
-            {
-              "kind": "paragraph",
-              "statements": [
-                {
-                  "id": "HY-41.1",
-                  "en": "`contracts/keep.json` holds region data, kept values and the expected data after HY-38, which is compared `ordered` (HY-130).",
-                  "ko": "`contracts/keep.json`은 영역 데이터, 유지 값, HY-38을 적용한 뒤의 기대 데이터를 담으며, 기대 데이터는 `ordered`로 비교한다(HY-130).",
-                  "koSource": "2633722f6e848343c9cd0a54cf8c5cd9ce207abad0cf321a2f264025524c8991"
-                },
-                {
-                  "id": "HY-41.2",
-                  "en": "The PHP, Node and Python servers and the browser package pass every case.",
-                  "ko": "PHP, Node, Python 서버와 브라우저 패키지는 모든 case를 통과한다.",
-                  "koSource": "f56ba29b24367f6480d999843679401c586cbea340836fdcd33559e994ea7349"
                 }
               ]
             }
@@ -4625,7 +4414,9 @@
         {
           "kind": "rule",
           "id": "HY-129",
-          "retired": [],
+          "retired": [
+            11
+          ],
           "blocks": [
             {
               "kind": "paragraph",
@@ -4691,138 +4482,53 @@
                   "koSource": "0c2035b3284ca047f408934edb2de3793ede7c46454ca704b12fab86c1a3b6ba"
                 },
                 {
-                  "id": "HY-129.11",
-                  "en": "The cases of `contracts/cookies.json` state a header and its cookies: the header is text whose characters `U+0000` to `U+00FF` are its bytes, or null for a request without the header, and every server compares the cookies of each case by `exact` (HY-130), as a map from names to values.",
-                  "ko": "`contracts/cookies.json`의 case는 header와 그 cookie를 적는데, header는 `U+0000`부터 `U+00FF`까지의 문자가 그 바이트인 text이고 header가 없는 요청이면 null이다; 모든 서버는 각 case의 cookie를 이름에서 값으로의 map으로 `exact`로 비교한다(HY-130).",
-                  "koSource": "6d974494769ee0aaa10179a8a29d3494bfad1b95b6dba44f743f5dac2d5a693a"
+                  "id": "HY-129.12",
+                  "en": "The cookies of a request are a map from names to values.",
+                  "ko": "요청의 cookie는 이름에서 값으로 가는 맵이다.",
+                  "koSource": "b0a8831b7454d8ff0309657272db6e407370b46de371b99696771c50fbaa12a0"
                 }
               ]
             }
           ]
-        }
-      ]
-    },
-    {
-      "title": {
-        "en": "Case files",
-        "ko": "Case 파일"
-      },
-      "blocks": [
+        },
         {
           "kind": "rule",
           "id": "HY-130",
-          "retired": [],
+          "retired": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18
+          ],
           "blocks": [
             {
               "kind": "paragraph",
               "statements": [
                 {
-                  "id": "HY-130.1",
-                  "en": "A case file under `contracts/` holds cases, each an object with an `id`.",
-                  "ko": "`contracts/` 아래의 case 파일은 각각 `id`를 가진 객체인 case를 담는다.",
-                  "koSource": "f15eebe636f2ffbfb7e9e85a2e088c159f6c9e9781af41f5c16a43602d92feca"
+                  "id": "HY-130.19",
+                  "en": "A response of an application carries the headers that the rules of this document name for it, and may carry other headers unless a rule states that it has no other header; the host of a server may add headers to any response.",
+                  "ko": "애플리케이션의 응답은 이 문서의 규칙이 그 응답에 대해 밝힌 header를 가지며, 규칙이 다른 header가 없다고 밝히지 않는 한 다른 header를 가질 수 있다. 서버의 호스트는 어떤 응답에든 header를 더할 수 있다.",
+                  "koSource": "d187b265cb3c027c7db16ea41102f3b3e86d31e3f20b139cc35446e1ffbc6f08"
                 },
                 {
-                  "id": "HY-130.2",
-                  "en": "The declaration `caseFiles` of `contracts/interfaces.json` names, for every field of a case, its role (`id`, `input`, `expected` or `label`) and, for every expected field, every input field that a step also checks and every outcome of a step, the comparison and the sentence of a rule that states it.",
-                  "ko": "`contracts/interfaces.json`의 선언 `caseFiles`는 case의 모든 필드마다 그 역할(`id`, `input`, `expected`, `label` 가운데 하나)을, 모든 expected 필드, 단계가 함께 확인하는 모든 input 필드, 단계의 모든 결과마다 비교와 그것을 정하는 규칙의 문장을 적는다.",
-                  "koSource": "169cb8c25e9b4d8606ee6d04c13893def5bd92d1dc63baac533bdb08b9fd5793"
-                },
-                {
-                  "id": "HY-130.3",
-                  "en": "An expected field with `fields` is not compared itself, and each of its fields is compared by its own comparison.",
-                  "ko": "`fields`를 가진 expected 필드는 그 자체로 비교하지 않으며, 그 각 필드를 자기 비교로 비교한다.",
-                  "koSource": "b0ccb5ea7bf3065db35b3da0f273a1565383781a415adf6fad8cc8580a3602ef"
-                },
-                {
-                  "id": "HY-130.4",
-                  "en": "An expected field is compared by one of these comparisons.",
-                  "ko": "expected 필드는 다음 비교 가운데 하나로 비교한다.",
-                  "koSource": "4a4aeff7e53e4a5f7675649a0b4ad233de46c6e1e0ed6454972d87a94241d34e"
-                },
-                {
-                  "id": "HY-130.5",
-                  "en": "`exact`: the observed value equals the expected value as a JSON value, where a map equals a map with the same keys and equal values in any order, a list equals a list with equal items in the same order, and null equals only null.",
-                  "ko": "`exact`: 관찰한 값이 JSON 값으로서 기대한 값과 같다; map은 같은 key와 같은 값을 가지면 순서와 상관없이 같고, list는 같은 항목을 같은 순서로 가지면 같으며, null은 null과만 같다.",
-                  "koSource": "81abb43e9a597825020baf24d03297ea21bea92db91052416a731137dadc892c"
-                },
-                {
-                  "id": "HY-130.6",
-                  "en": "`ordered`: as `exact`, and the keys of every map are in the same order.",
-                  "ko": "`ordered`: `exact`와 같고, 모든 map의 key도 같은 순서다.",
-                  "koSource": "c14b27a07e69bfd346c964b9eb77af0dad4574680fdbf4c93a271c529202fb70"
-                },
-                {
-                  "id": "HY-130.7",
-                  "en": "`subset`: every key of the expected map is a key of the observed map with an equal value.",
-                  "ko": "`subset`: 기대한 map의 모든 key가 관찰한 map에 같은 값으로 있다.",
-                  "koSource": "7cff0fc970e8d70fa37057ba1ced104604330918aa0a0e1327d5f8b04d93da35"
-                },
-                {
-                  "id": "HY-130.8",
-                  "en": "`absent`: no name of the expected list is a key of the observed map.",
-                  "ko": "`absent`: 기대한 list의 어떤 이름도 관찰한 map의 key가 아니다.",
-                  "koSource": "a4cca415ef51b3885152ca45c569e2659cd06c5a78a3fbe91a5d8a353178a6b8"
-                },
-                {
-                  "id": "HY-130.9",
-                  "en": "`contains`: the expected text, or every text of the expected list, is part of the observed text.",
-                  "ko": "`contains`: 기대한 text, 또는 기대한 list의 모든 text가 관찰한 text의 일부다.",
-                  "koSource": "e43914b8cb437e26a00ce46781e7150c966d381f57e6697a2917f4da7d551ed9"
-                },
-                {
-                  "id": "HY-130.10",
-                  "en": "`excludes`: no text of the expected list is part of the observed text.",
-                  "ko": "`excludes`: 기대한 list의 어떤 text도 관찰한 text의 일부가 아니다.",
-                  "koSource": "6a26f9cfb0037b588953a0d5204fb642224b438672762fbca491922196f891e0"
-                },
-                {
-                  "id": "HY-130.11",
-                  "en": "`prefix`: the expected list equals the first items of the observed list.",
-                  "ko": "`prefix`: 기대한 list가 관찰한 list의 앞 항목들과 같다.",
-                  "koSource": "8708be306465daa2907d5ce4c03030e9914dbd8bbcba2a732fadb1c4bf9a6ab1"
-                },
-                {
-                  "id": "HY-130.12",
-                  "en": "`keys`: the expected list equals the keys of the observed map in their order.",
-                  "ko": "`keys`: 기대한 list가 관찰한 map의 key들과 그 순서대로 같다.",
-                  "koSource": "c9d6450d7dd81ec01a4c65d26e350d7663a5246c9c945cf5e54fa3af74473076"
-                },
-                {
-                  "id": "HY-130.13",
-                  "en": "`raises`: when the expected value is true, the step fails with the argument error of its runtime, `InvalidArgumentException` in PHP, `Error` in Node (the constructor `Error` itself, not a subclass) and `ValueError` in Python; when it is false, the step does not fail.",
-                  "ko": "`raises`: 기대한 값이 true면 그 단계는 runtime의 argument error로 실패하며, 그 error는 PHP에서 `InvalidArgumentException`, Node에서 `Error`(생성자 `Error` 자체이며 하위 class가 아니다), Python에서 `ValueError`다; false면 그 단계는 실패하지 않는다.",
-                  "koSource": "97b5775343cf68f7bcd093be536edf370e71cfd5e50fe80779fbe67e2002bbb6"
-                },
-                {
-                  "id": "HY-130.14",
-                  "en": "Where the observed map holds header names, `subset` and `absent` compare the names without regard to ASCII case (HY-122).",
-                  "ko": "관찰한 map이 header 이름을 담으면 `subset`과 `absent`는 ASCII 대소문자를 무시하고 이름을 비교한다(HY-122).",
-                  "koSource": "05f7bb09f1588348e996baee5aaf2720500fcec7f7282e31b154611d932d46a3"
-                },
-                {
-                  "id": "HY-130.15",
-                  "en": "A case that states a response compares it by `exact` in `status` and `body`, by `subset` in `headers`, by `exact` in `allHeaders`, by `absent` in `absentHeaders`, by `contains` in `bodyContains` and by `excludes` in `bodyNotContains`.",
-                  "ko": "응답을 적는 case는 `status`와 `body`를 `exact`로, `headers`를 `subset`으로, `allHeaders`를 `exact`로, `absentHeaders`를 `absent`로, `bodyContains`를 `contains`로, `bodyNotContains`를 `excludes`로 비교한다.",
-                  "koSource": "41c907f31e022583aa2899759767fc68c3d341e249c89f160ff2b461961a4def"
-                },
-                {
-                  "id": "HY-130.16",
-                  "en": "An outcome of a step is compared without a field: `raises` expects the value true, and `exact` compares the two values that the step observes.",
-                  "ko": "단계의 결과는 필드 없이 비교하며, `raises`는 값 true를 기대하고 `exact`는 단계가 관찰한 두 값을 비교한다.",
-                  "koSource": "ab448d4b4800a096b1109875b6ca2d000f91bc6ab3247eb5df1f4c819cd62bdd"
-                },
-                {
-                  "id": "HY-130.17",
-                  "en": "A field that a case does not state is not compared.",
-                  "ko": "case가 적지 않은 필드는 비교하지 않는다.",
-                  "koSource": "91498d066f8cc28c9c9134311c02b9409b113e7fa04bd2bdb244b16a567bdec6"
-                },
-                {
-                  "id": "HY-130.18",
-                  "en": "Every runner that `caseFiles` names compares every case by these comparisons and by no other.",
-                  "ko": "`caseFiles`가 이름 붙인 모든 runner는 모든 case를 이 비교들로만 비교하고 다른 비교는 쓰지 않는다.",
-                  "koSource": "8cbf5532973d56acde3a62bdbbac3c210791fcf4c9cf0a90d8a6984d42539cf6"
+                  "id": "HY-130.20",
+                  "en": "A header name has no case: names that differ only in ASCII case are one name (RFC 9110 section 5.1).",
+                  "ko": "header 이름은 대소문자를 구분하지 않는다. ASCII 대소문자만 다른 이름은 같은 이름이다(RFC 9110 5.1절).",
+                  "koSource": "aadae2712c10dbebb8a1e9ec7049bcbc82e224c2e825a4b6f93dda908de78a74"
                 }
               ]
             }
@@ -4839,7 +4545,11 @@
         {
           "kind": "rule",
           "id": "HY-54",
-          "retired": [],
+          "retired": [
+            9,
+            10,
+            11
+          ],
           "blocks": [
             {
               "kind": "paragraph",
@@ -4904,24 +4614,6 @@
                       "en": "It decodes kept values (HY-38, HY-40) as PHP `json_decode` does: an integer literal is an integer and other literals are floats, a number outside ±(2^53 − 1) or one that is not finite is not a value of the data model, and 512 nested containers, a lone surrogate escape or a key that starts with U+0000 fail.",
                       "ko": "kept 값(HY-38, HY-40)은 PHP `json_decode`처럼 decode한다: 정수 literal은 정수이고 다른 literal은 float이며, ±(2^53 − 1) 밖의 수나 유한하지 않은 수는 데이터 모델의 값이 아니고, 512단계로 중첩된 container, 짝 없는 surrogate escape, U+0000으로 시작하는 key는 실패한다.",
                       "koSource": "36543dbc0f55b1e5b8f96044805475b54a1251b00e2c36735166c556f5748be3"
-                    },
-                    {
-                      "id": "HY-54.9",
-                      "en": "`contracts/json.json` holds the cases that the PHP, Node and Python servers pass.",
-                      "ko": "`contracts/json.json`은 PHP, Node, Python 서버가 통과하는 case를 담는다.",
-                      "koSource": "8a5ff6d06d95b0132a3e1f9e085489d1fa2cc6ceb1a3ef6708c4a69a4453ecba"
-                    },
-                    {
-                      "id": "HY-54.10",
-                      "en": "The `expected` of a case of `encode` is the JSON text of the value of its `json`, compared `exact` (HY-130).",
-                      "ko": "`encode` case의 `expected`는 그 `json`의 값의 JSON 텍스트이며, `exact`로 비교한다(HY-130).",
-                      "koSource": "c02deed14bc0be4d04c1ad2cb7a3e65108b468aad4deb642b8b23a4f1281cdbf"
-                    },
-                    {
-                      "id": "HY-54.11",
-                      "en": "The `result` of a case of `decode` is `value` for a value of the data model, `outside` for a JSON text whose value is outside it, and `error` for a text that fails to decode, compared `exact` (HY-130).",
-                      "ko": "`decode` case의 `result`는 데이터 모델의 값이면 `value`, 값이 그 밖인 JSON 텍스트면 `outside`, decode에 실패하는 텍스트면 `error`이며, `exact`로 비교한다(HY-130).",
-                      "koSource": "2733a4e988253e5ff950897ca658bc07e9b135ced10080386d7ef7aae088684d"
                     }
                   ],
                   "blocks": []
@@ -5585,6 +5277,12 @@
                   "en": "Public upload metadata, bytes, construction, the request file-limit predicate and the application file-limit option exist in each runtime form.",
                   "ko": "공개 upload 메타데이터, 바이트, 생성, 요청의 file-limit 판정, 애플리케이션의 file-limit 옵션은 각 런타임 형태로 모두 존재한다.",
                   "koSource": "e76be182161af359de5055338fb31917975c93c6ac39cbe22673f26196f0dc7e"
+                },
+                {
+                  "id": "HY-106.6",
+                  "en": "An application that fails to open raises the open error of its runtime, of exactly that class: `InvalidArgumentException` in PHP, `Error` in Node and `ValueError` in Python, also when a file that it reads is not valid JSON or not valid UTF-8.",
+                  "ko": "열리지 않는 애플리케이션은 자기 runtime의 open 오류를 정확히 그 클래스로 던진다: PHP에서는 `InvalidArgumentException`, Node에서는 `Error`, Python에서는 `ValueError`이며, 읽는 파일이 유효한 JSON이나 유효한 UTF-8이 아닐 때에도 그렇다.",
+                  "koSource": "1217816e4cd4d35af5355b22e6cfad9ff8df2195ab6383a3533fb7b970736f8a"
                 }
               ]
             }
@@ -6604,7 +6302,72 @@
           ]
         }
       ]
+    },
+    {
+      "title": {
+        "en": "Interface terms",
+        "ko": "인터페이스 용어"
+      },
+      "blocks": [
+        {
+          "kind": "paragraph",
+          "statements": [
+            {
+              "en": "A string is a text.",
+              "ko": "string은 텍스트이다.",
+              "koSource": "85978ca949d86f25e2f936dc5c3a5c2b29537eb9db5705b3e518f173551e02ba",
+              "term": "string"
+            },
+            {
+              "en": "A number is a numeric value.",
+              "ko": "number는 수 값이다.",
+              "koSource": "7b40319ff551c2809e5449386b27be4a587c756fd840d92edd0ce5a286d30e80",
+              "term": "number"
+            },
+            {
+              "en": "A boolean is `true` or `false`.",
+              "ko": "boolean은 `true` 또는 `false`이다.",
+              "koSource": "d6e2a52f4651d06ae66bfb91d772822efdcd4d5686a8f3d4f85637a5c2518f4e",
+              "term": "boolean"
+            },
+            {
+              "en": "Null is the value `null`.",
+              "ko": "null은 값 `null`이다.",
+              "koSource": "ce77ec5d1e7f47296db7d035c4c5167ea44db6c6ec849020d5260ab9e9946c6c",
+              "term": "null"
+            },
+            {
+              "en": "A bigint is an integer of arbitrary size.",
+              "ko": "bigint는 임의 크기의 정수이다.",
+              "koSource": "b65cf5b4e48a4aa5ab992fac1f20d2c367c48e830537a216974e4c1095519cf3",
+              "term": "bigint"
+            },
+            {
+              "en": "Bytes is a byte sequence.",
+              "ko": "bytes는 바이트 열이다.",
+              "koSource": "e03f87764420d890e9350743f5c3eee4deb1593a281a50a45fac688cb3493efb",
+              "term": "bytes"
+            },
+            {
+              "en": "A value is any value of the data model of HY-54.",
+              "ko": "value는 HY-54의 데이터 모델의 임의의 값이다.",
+              "koSource": "187992d24374d70f7c92db503137705aeca1b315ca4dd74a5d5dc0cf45b084a0",
+              "term": "value"
+            },
+            {
+              "en": "None is no result.",
+              "ko": "none은 결과가 없음이다.",
+              "koSource": "9176ac5698746f1b7d1907168118733c71a82a74f0e2c25f830956e57ca545f0",
+              "term": "none"
+            }
+          ]
+        }
+      ]
     }
   ],
-  "retiredRules": []
+  "retiredRules": [
+    "HY-9",
+    "HY-41",
+    "HY-123"
+  ]
 }

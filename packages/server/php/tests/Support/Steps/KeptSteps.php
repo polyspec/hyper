@@ -7,7 +7,7 @@ namespace Polyspec\Hyper\Tests\Support\Steps;
 use Polyspec\Hyper\Kept;
 use Polyspec\Hyper\Tests\CaseReader;
 
-/** HY-38, HY-41: the cases of contracts/keep.json. */
+/** HY-38: the cases of contracts/keep.json. */
 final class KeptSteps
 {
     public static function cases(CaseReader $case): void

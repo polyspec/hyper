@@ -7,7 +7,7 @@ import { listOf, mapOf, stringOf } from './values.js';
 const fixture = mapOf(parseJson(readFileSync(new URL('../../../contracts/keep.json', import.meta.url), 'utf8')));
 const cases = listOf(fixture.get('cases')).map((value) => mapOf(value));
 
-// HY-41: these are the same cases that the PHP implementation passes. Each case is a top-level test named by its id (S6).
+// HY-38: these are the same cases that the PHP implementation passes. Each case is a top-level test named by its id (S6).
 it.each(cases.map((item) => [stringOf(item.get('id')), item] as const))('%s', (_id, item) => {
   const data = mapOf(item.get('data'));
   const kept = listOf(item.get('kept')).map((entry) => {

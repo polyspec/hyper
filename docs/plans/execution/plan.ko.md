@@ -130,8 +130,8 @@ H27.26은 모든 runtime test가 provider runner를 사용할 때까지 0.0.21 �
 
 ## Wave 28 — application의 context와 representation
 
-선행 조건: wave 27의 완료된 row. H28.1은 규칙 HY-116~HY-128과 HYC-22~HYC-24, 그 규칙이 건드리는 규칙의 변경, contract case를 쓴다. H28.2~H28.7은 각자의 unit test와 함께 이를 구현한다. H28.8은 이를 board example에 넣고 parity를 실행한다. H28.9는 representation의 `HEAD`를 설계하며 찾은 결함으로, 모든 page route에 `HEAD`를 더한다.
+선행 조건: wave 27의 완료된 row. H28.1은 규칙 HY-116~HY-122, HY-124~HY-128과 HYC-22~HYC-24, 그 규칙이 건드리는 규칙의 변경, contract case를 쓴다. H28.2~H28.7은 각자의 unit test와 함께 이를 구현한다. H28.8은 이를 board example에 넣고 parity를 실행한다. H28.9는 representation의 `HEAD`를 설계하며 찾은 결함으로, 모든 page route에 `HEAD`를 더한다.
 
 application은 configuration과 build가 바뀔 때만 바뀌는 값을 모든 JSON response에 실어 보냈다. shared data(HY-10)가 request마다 만드는 map 하나이기 때문이다. browser는 그 값을 이미 가지고 있었다. context(HY-124~HY-128)는 browser가 hash로 보관하는 shared data의 부분이다. JSON response는 hash가 바뀌었을 때만 context를 담는다. 모든 JSON response가 담는 build id는 deployment 뒤에 browser가 새 document를 load하게 한다(HYC-22). browser는 마지막 region response만 render하고(HYC-23), server가 등록하는 host function을 등록한다(HYC-24).
 
-route는 resource 하나와 그 representation 여럿을 가진다(RFC 9110, section 3.2). 다른 client를 위한 JSON contract는 그 route의 representation이다(HY-118~HY-123). `Accept`로 선택되고(HY-116), page와 같은 router, limit, response 규칙을 거친다. session과 cookie를 읽지 않으므로, session으로 쓰는 요청은 token 검사가 있는 action으로 남는다(HY-24). `application/vnd.hyper+json`(HY-15)은 page data의 media type이므로 `application/json`은 application이 쓸 수 있다. client rendering의 data base path(HY-62)는 남는다. web server가 모든 path에 static shell을 file 하나로 내주고, data request는 그 path 아래에서 application에 닿기 때문이다.
+route는 resource 하나와 그 representation 여럿을 가진다(RFC 9110, section 3.2). 다른 client를 위한 JSON contract는 그 route의 representation이다(HY-118~HY-122). `Accept`로 선택되고(HY-116), page와 같은 router, limit, response 규칙을 거친다. session과 cookie를 읽지 않으므로, session으로 쓰는 요청은 token 검사가 있는 action으로 남는다(HY-24). `application/vnd.hyper+json`(HY-15)은 page data의 media type이므로 `application/json`은 application이 쓸 수 있다. client rendering의 data base path(HY-62)는 남는다. web server가 모든 path에 static shell을 file 하나로 내주고, data request는 그 path 아래에서 application에 닿기 때문이다.

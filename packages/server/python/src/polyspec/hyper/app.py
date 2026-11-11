@@ -1,5 +1,5 @@
 """Answers requests with documents, JSON, action redirects and the static shell (HY-8, HY-10 to HY-19, HY-24 to
-HY-27, HY-40 to HY-46, HY-50 to HY-62, HY-65 to HY-67), with the rules of the PHP server."""
+HY-27, HY-40, HY-42 to HY-46, HY-50 to HY-62, HY-65 to HY-67), with the rules of the PHP server."""
 
 from __future__ import annotations
 

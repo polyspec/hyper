@@ -8,7 +8,7 @@ use Polyspec\Hyper\ArraySession;
 use Polyspec\Hyper\Tests\CaseReader;
 use Polyspec\Hyper\Tests\Support\ContextRun;
 
-/** HY-118, HY-123: the cases of contracts/representations.json. */
+/** HY-118, HY-119, HY-121: the cases of contracts/representations.json. */
 final class RepresentationsSteps
 {
     private const PROGRAMS = __DIR__ . '/../../../../../../var/contract-programs';
@@ -36,7 +36,7 @@ final class RepresentationsSteps
         $case->outcome('open', self::opens(self::application($case)) === false);
     }
 
-    /** HY-118, HY-123: the request of a case receives the response of the representations application. */
+    /** HY-118, HY-121: the request of a case receives the response of the representations application. */
     public static function cases(CaseReader $case): void
     {
         $case->input('basePath');

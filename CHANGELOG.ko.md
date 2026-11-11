@@ -1,5 +1,5 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 4c372bc1d4ee2c829b1bdca540c39b52dc56a7f28d33efa9ce20117431c69ab1 -->
+<!-- source-sha256: 5b0d9540263c1872f6bdeda9710eb1f507b4e4c6b1b3063155222cf4209a1180 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
@@ -7,6 +7,8 @@
 ## Unreleased
 
 - `contracts/protocol.json`이 프로토콜의 유일한 원천이다. 모든 규칙은 statement의 목록이며, 각 statement는 영어 문장 하나와 그 한국어 번역, 번역이 따르는 영어의 sha256을 가진다. `docs/spec/protocol.md`와 `protocol.ko.md`는 statement마다 anchor를 붙여 그것에서 생성된다. 한국어는 영어를 statement마다 따르며, 변환에서 영어와 다른 것을 말하던 한국어를 고쳤다(예: HY-24의 constant time, HYC-2의 응답 layout, HY-125의 context hash가 가리키는 대상). AGENTS.md는 프로토콜 규칙의 자리로 이 JSON을 적는다(H28.11).
+
+- `contracts/protocol.json`은 HY-130의 case 문장과 제거한 규칙 HY-9, HY-41, HY-123의 statement를 폐기하고, HY-130을 요청 경계와 실패 절로 옮기며, 인터페이스 용어에 자기 절을 준다. test 주석, 기능 표, 실행 계획, 체크리스트, recipe, app 머리글은 각 case를 가진 statement id와 규칙 id를 인용한다(H28.11).
 
 - `make spec-docs`는 `contracts/protocol.json`에서 `docs/spec/protocol.md`와 `docs/spec/protocol.ko.md`를 쓴다. `make spec-docs-check`는 두 문서가 그 렌더링과 같은지 검사하며, CI `docs` 그룹이 이를 실행한다(H28.11).
 

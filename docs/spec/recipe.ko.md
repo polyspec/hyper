@@ -293,7 +293,7 @@ PHP, Node, Python 서버는 하나의 프로토콜(`protocol.md`)을 구현한�
 ## H28.11의 작업 순서
 
 H28.11은 H28.2, H28.3, H28.4, H28.7, 그리고 이 branch가 가진 H28.10의 서버 commit과 함께 한 번의 통합으로 main에 올라간다.
-main은 HY-116부터 HY-128까지를 적고 `contracts/context.json`과 `contracts/representations.json`을 가지지만, main의 어떤
+main은 HY-116부터 HY-122까지와 HY-124부터 HY-128까지를 적고 `contracts/context.json`과 `contracts/representations.json`을 가지지만, main의 어떤
 서버도 이를 구현하지 않으므로, 그 item들이 올라가기 전에는 main에서 `make recipe-check`가 통과할 수 없다(HYR-2, HYR-7).
 마지막 단계까지 이 branch에서 `make recipe-check`는 실패하며, 각 단계는 자기 item의 check를 GREEN으로 유지한다.
 

@@ -1,4 +1,4 @@
-// The cases step of contracts/keep.json (HY-38, HY-41): the kept values that conform, applied to the data, give the
+// The cases step of contracts/keep.json (HY-38): the kept values that conform, applied to the data, give the
 // expected data.
 import { applyKept, copyValue } from '@polyspec/hyper-client';
 import type { Value } from '@polyspec/template/render';

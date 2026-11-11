@@ -1,5 +1,5 @@
 // Answers requests with documents, JSON, action redirects and the static shell (HY-8, HY-10 to HY-19, HY-24 to HY-27,
-// HY-40 to HY-46, HY-50 to HY-54, HY-58 to HY-60, HY-62).
+// HY-40, HY-42 to HY-46, HY-50 to HY-54, HY-58 to HY-60, HY-62).
 import { readFileSync } from 'node:fs';
 import { isAbsolute, join } from 'node:path';
 import type { Server } from 'node:http';

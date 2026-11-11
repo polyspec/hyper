@@ -1,4 +1,4 @@
-// The steps of contracts/representations.json (HY-116 to HY-123): the selection of a representation, the manifest checks
+// The steps of contracts/representations.json (HY-116 to HY-122): the selection of a representation, the manifest checks
 // and the open of an application whose representation handlers are wrong. The Node server has no representation handler
 // yet (H28.7), so the cases that state the calls of one fail on the fields that the server does not report.
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';

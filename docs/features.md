@@ -38,7 +38,7 @@
 | hyper-server-python | Python implementation `polyspec-hyper-server` of the server protocol, rendering with the template Python package, sessions in files (HY-104), an `http.server` server, a WSGI application callable (H19.1), an ASGI application callable (H19.2) and the board example server (H15.3) | implemented | `make test-python`, `make hyper-test-python-render`, `make server-parity-python` |
 | route-regions | Route regions inside a page with their own loaders (HY-30) | implemented | `make test-php`, `make parity` |
 | region-data | Embedded data of the route regions, `data`, `render`, `set` and `hy-set` on route regions without requests, and the public data rule (HYC-10 to HYC-11, HYC-5, HY-71) | implemented | `make test-js`, `make e2e` |
-| kept-data | Kept paths in the server session, a cookie, localStorage and sessionStorage (HY-37 to HY-41) | implemented | `make test-php`, `make test-js`, `make parity`, `make e2e` |
+| kept-data | Kept paths in the server session, a cookie, localStorage and sessionStorage (HY-37 to HY-40) | implemented | `make test-php`, `make test-js`, `make parity`, `make e2e` |
 | template-delivery | One file per template, loaded when rendering reaches it (HR-34, HYC-12) | implemented | `make test-js`, `make e2e`, `make bundle-size` |
 | tailwind-build | `--tailwind <source>=<output>` compiles an application stylesheet with the Tailwind theme and the utilities that its templates use (HR-77) | implemented | `make hyper-test-scripts` |
 | asset-delivery | A page requests only the resources that it uses: client chunks loaded by `import()`, a manifest with the entry URL only, a static shell without a stylesheet (HYC-16) | implemented | `make hyper-test-scripts`, `make e2e` |

@@ -4,7 +4,7 @@ import fixture from '../../../contracts/routes.json';
 
 const router = new Router(fixture.routes);
 
-// HY-9: these are the same cases that the PHP and the Node routers pass. Each case is a top-level test named by its id (S6).
+// HY-4, HY-5: these are the same cases that the PHP and the Node routers pass. Each case is a top-level test named by its id (S6).
 it.each(fixture.cases.map((item) => [item.id, item] as const))('%s', (_id, { path, result }) => {
   expect(router.match(path)).toEqual(result);
 });
