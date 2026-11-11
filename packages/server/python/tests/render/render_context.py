@@ -1,11 +1,10 @@
 # The context of an application, run from contracts/context.json (HY-10, HY-124 to HY-128): every case opens the
 # application named by the case with its build, its context, its shared data and its handlers, sends the request and
-# compares the response with the stated expectations. The build id of each application is written with the server
-# program that the server build of this checkout writes for the application's manifest and templates.
+# compares the response with the stated expectations. The applications are built once by scripts/context-programs.mjs
+# into var/context-programs, which the tests of the three servers share.
 import contextlib
 import io
 import json
-import shutil
 import subprocess
 import tempfile
 import unittest
@@ -25,49 +24,18 @@ from polyspec.hyper.session import ArraySession
 ROOT = Path(__file__).resolve().parents[5]
 CONTRACT = json.loads((ROOT / "contracts" / "context.json").read_text(encoding="utf-8"))
 NODE = ROOT / "var" / "tools" / "bin" / "node"
-BUILD_TOOL = ROOT / "packages" / "build" / "bin" / "hyper-build-server.mjs"
+PROGRAMS = ROOT / "var" / "context-programs"
 BUILD_LIBRARY = ROOT / "packages" / "build" / "lib" / "build-id.mjs"
 
 
-def build_program(name: str, application: dict, directory: Path) -> tuple[Path, Path]:
-    """Writes the manifest, the templates and the build id of an application and builds its server program with the
-    server build of this checkout; returns the manifest path and the program directory."""
-    root = directory / name
-    templates = root / "templates-src"
-    templates.mkdir(parents=True)
-    for file, text in application["templates"].items():
-        (templates / file).write_text(text, encoding="utf-8")
-    manifest = root / "app.json"
-    manifest.write_text(json.dumps(application["manifest"]), encoding="utf-8")
-    build = root / "build.json"
-    build.write_text(json.dumps({"build": application["build"]}), encoding="utf-8")
-    program = root / "program"
-    log = root / "build.log"
-    with log.open("w", encoding="utf-8") as output:
-        status = subprocess.run(
-            [
-                str(NODE),
-                str(BUILD_TOOL),
-                "--manifest",
-                str(manifest),
-                "--templates",
-                str(templates),
-                "--output",
-                str(program),
-                "--php-namespace",
-                "Polyspec\\Hyper\\Tests\\Context",
-                "--build",
-                str(build),
-            ],
-            stdout=output,
-            stderr=subprocess.STDOUT,
-            check=False,
-        )
-    if status.returncode != 0:
-        raise RuntimeError(
-            f"the server build of {name} failed: {log.read_text(encoding='utf-8')}"
-        )
-    return manifest, program
+def program_of(name: str) -> tuple[Path, Path]:
+    """Returns the manifest path and the program directory that scripts/context-programs.mjs wrote for an application;
+    a missing output fails here and names the missing file."""
+    root = PROGRAMS / name
+    for path in (root / "manifest.json", root / "build.json", root / "program"):
+        if not path.exists():
+            raise FileNotFoundError(f"{path} is missing: run make context-programs")
+    return root / "manifest.json", root / "program"
 
 
 class ContextTest(unittest.TestCase):
@@ -76,15 +44,7 @@ class ContextTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls.directory = Path(tempfile.mkdtemp(prefix="hyper-context-"))
-        cls.programs = {
-            name: build_program(name, application, cls.directory)
-            for name, application in CONTRACT["applications"].items()
-        }
-
-    @classmethod
-    def tearDownClass(cls) -> None:
-        shutil.rmtree(cls.directory)
+        cls.programs = {name: program_of(name) for name in CONTRACT["applications"]}
 
     def test_every_context_has_its_text_and_hash(self) -> None:
         for context in CONTRACT["contexts"]:
@@ -155,7 +115,8 @@ class ContextTest(unittest.TestCase):
     def test_the_builds_have_the_build_ids_of_their_files(self) -> None:
         # HY-125: the build id and the stream of each build are computed by the build function of packages/build.
         builds = CONTRACT["builds"]
-        computed = build_ids(builds, self.directory)
+        with tempfile.TemporaryDirectory() as directory:
+            computed = build_ids(builds, Path(directory))
         for build, result in zip(builds, computed):
             with self.subTest(build=build["id"]):
                 self.assertEqual(build["build"], result["build"])
