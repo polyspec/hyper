@@ -1,5 +1,5 @@
 <!-- doc-id: recipe -->
-<!-- source-sha256: 142156e0d9245f37e2ccc7c6368e178398657951c7df1d7de1882a88e491e617 -->
+<!-- source-sha256: 5b07cbd0c4affeacca72393679d438feca29a90b84eeab488e7e4cf0b47e6036 -->
 # 서버의 레시피
 
 PHP, Node, Python 서버는 하나의 프로토콜(`protocol.md`)을 구현한다. 이 서버들의 레시피는 세 부분으로 이루어진다.
@@ -23,14 +23,15 @@ PHP, Node, Python 서버는 하나의 프로토콜(`protocol.md`)을 구현한�
   - `rules`: concern이 구현하는 HY- 규칙 id. 모든 id는 `protocol.md`에 적혀 있다. `protocol.md`의 모든 HY- 규칙은
     concern이 이름으로 가리키거나, spec의 `outside` 필드(`{rule, reason}`의 목록)가 가리킨다. 예를 들어 브라우저 코드에만
     해당하는 규칙이 그러하다. concern이 가리키는 `outside`의 규칙이거나 reason이 빈 `outside` 항목이면 HYR-8에 실패한다.
-  - `cases`: concern의 동작을 적는 `contracts/` 아래의 case 파일, 또는 `none`. `none`이면 reason과 HYR-7의 native test를
-    함께 적는다.
+  - `cases`: concern의 동작을 적는 `contracts/` 아래의 case 파일. unit이 없는 concern, 또는 모든 unit이 한 언어를 가리키는
+    `only`를 가진 concern만 `none`을 가질 수 있으며, 이때 reason과 HYR-7의 native test를 함께 적는다. 그 밖의 concern이
+    `none`이면 check가 실패시킨다.
   - `units`: concern의 unit들.
 
   `packages/server/php/src`, `packages/server/ts/src`, `packages/server/python/src/polyspec/hyper` 아래의 `git ls-files`
   파일은 모두 정확히 하나의 concern에 속하며, 이름이 적힌 파일은 모두 존재한다. unit의 파일은 정확히 하나의 unit을 가진다
   (HYR-3). barrel 파일(`index.ts`, `__init__.py`)과 `py.typed`는 `index` concern에 속하며 unit을 가지지 않는다. 이 파일들은
-  HY-106의 public member를 re-export하는 내용만 가지며, HYR-8은 unit 검사 대신 이 목록을 검사한다.
+  HY-106의 public member와 public type을 re-export하는 내용만 가지며, HYR-8은 unit 검사 대신 이 목록을 검사한다.
 
 - **HYR-3 One unit per file.** unit은 다음 필드를 가진다.
   - `id`: 단어들;
@@ -40,8 +41,10 @@ PHP, Node, Python 서버는 하나의 프로토콜(`protocol.md`)을 구현한�
   모든 언어에서 파일은 정확히 하나의 unit을 가진다.
   - PHP의 `functions` unit은 static method들의 class 하나다.
   - 일부 언어에만 있는 unit은 `only`를 가진다(HYR-6).
-  - concern의 각 class, interface, trait은 자기 unit이다. 예: Result와 그 네 개의 stop, Session과 Flash, ClientRendering과
-    Choice, SessionStore와 ArraySession.
+  - concern의 각 class, interface, trait은 자기 unit이며, Python의 각 class도 `Protocol`과 `TypedDict`를 포함하여 자기
+    unit이다. Node의 `interface`는 다른 언어가 같은 단어의 unit을 가지면 kind `interface`의 unit이고, 그렇지 않으면 HYR-5의
+    type이다. check는 unit의 단어와 같은 단어를 가진 type을 실패시킨다. 예: Result와 그 네 개의 stop, Session과 Flash,
+    ClientRendering과 Choice, SessionStore와 ArraySession.
 
 - **HYR-4 File names.** unit의 파일은 unit의 단어들을 그 언어의 규칙으로 쓴 이름이다.
   - PHP: PascalCase, `<Words>.php`, namespace `Polyspec\Hyper`에 속한다.
@@ -64,23 +67,36 @@ PHP, Node, Python 서버는 하나의 프로토콜(`protocol.md`)을 구현한�
     - constructor;
     - HY-106이 public API로 만드는 property.
 
-    HY-106은 constant를 public API로 만들지 않으므로 constant는 member가 아니다. constant가 public API가 되려면 그 규칙이
-    먼저 필요하며, 그 뒤 이름은 해당 언어의 constant 형식을 따른다.
+    HY-106은 constant를 public API로 만들지 않으므로 constant는 member가 아니며, 모든 constant는 internal 또는 private이다.
+    reader는 각 constant를 visibility만을 위해 읽으며, check는 constant 자신과 그 class 어디에도 `@internal`이 없는 PHP
+    `public const`, `@internal`이 없는 Node의 export된 `const`, public module에서 `_`가 없는 Python module 수준 이름을
+    실패시킨다. constant가 public API가 되려면 그 규칙이 먼저 필요하다.
   - **Properties.** property는 class 본문의 선언이다.
     - PHP의 타입이 붙은 property, 또는 constructor에서 승격된 parameter;
     - Node의 class field, 또는 Node의 parameter property(`public`, `private`, `protected`, `readonly`가 붙은 constructor
       parameter);
+    - Node interface unit의 property signature;
     - Python의 class 수준 annotated attribute.
     method 본문의 대입은 property가 아니다.
   - **Fields of a member.** member의 필드는 다음과 같다.
     - `id`: `<unit>.<member>`, 언어 중립 이름을 camelCase로 쓴다.
-    - `kind`: constructor, method, static method, function, property, constant 중 하나.
+    - `kind`: constructor, method, static method, function, property 중 하나.
     - `visibility`: public, internal, private 중 하나.
     - `inputs`, `output`, `errors`: 어휘의 용어로 쓴다. 어휘는 `scripts/schema/interfaces.schema.json`의 닫힌 목록이다. 즉
-      `protocol.md`의 데이터 모델 타입, spec의 unit, 그리고 이들의 `list<T>`, `map<T>`, `optional<T>`다. 이 밖의 용어는
-      HYR-8에 실패한다. error는 `protocol.md`의 status 또는 spec의 error unit이다.
+      `protocol.md`의 데이터 모델 타입, spec의 unit과 type, 그리고 이들의 `list<T>`, `map<T>`, `optional<T>`,
+      `function(<T>, …) -> <T>`다. 이 밖의 용어는 HYR-8에 실패한다. error는 `protocol.md`의 status 또는 spec의 error unit이다.
     - `state`: member가 하는 일을 한 문장으로 쓴다.
     - `native`: 언어마다 정확한 `symbol`과 정확한 `signature`(아래 참조).
+  - **Types.** type은 unit(HYR-3)이 아닌 타입 선언이다: Node의 `type` alias 또는 `interface`, 그리고 Python의 `type` 문.
+    spec은 각 type을 `types` 아래에 한 번 적으며, `id`(camelCase로 쓴 단어들), `visibility`(member와 같다), `unit`(각
+    언어에서 그 type을 가진 파일의 unit), 중립 `shape`, 그리고 선언하는 언어마다 `native: {symbol, declaration}`을 가진다.
+    - shape는 record이면 중립 이름에서 어휘 용어로 가는 map인 `fields`와 `optional` 목록, 함수 타입이면 `inputs`와
+      `output`을 가진 `function`, 또는 어휘 용어 하나다.
+    - check는 빠졌거나, 추가되었거나, 옮겨졌거나, visibility가 다른 type을 실패시키며, HYR-5의 이름으로 쓴 필드가 shape와
+      다른 선언을 실패시킨다.
+    - options record는 이름 붙은 parameter의 runtime 형식이다(HY-106). 그 필드는 그것을 받는 member의 이름 붙은
+      `inputs`이며, 다른 언어에서 같은 member의 이름 붙은 parameter와 다르면 check가 실패시킨다. 일부 언어에만 있는
+      필드는 member처럼 `only`를 가진다(HYR-6).
   - **Symbol.** symbol은 `<path>::<qualified name>`이다.
     - `<path>`는 파일의 repository 기준 상대 경로다.
     - PHP member의 qualified name은 `Polyspec\Hyper\<Unit>::<member>`다.
@@ -109,13 +125,14 @@ PHP, Node, Python 서버는 하나의 프로토콜(`protocol.md`)을 구현한�
         유일해야 하며, 동명이인은 spec과 source가 둘 중 하나의 이름을 바꿀 때까지 실패한다.
     - PHP와 Node reader는 private을 modifier에서 읽으며, modifier가 중립 `visibility`와 다른 member는 check가 실패시킨다.
 
-- **HYR-6 Only some languages.** 일부 언어에만 있는 unit 또는 member는 `only: {languages, rule, quote}`를 가진다.
+- **HYR-6 Only some languages.** 일부 언어에만 있는 unit, member, type의 필드 또는 case는 `only: {languages, rule, quote}`를
+  가진다.
   - `rule`은 HY- id다;
   - `quote`는 차이를 요구하는 그 규칙의 문장 전체 하나다. 문장은 첫 단어부터, 공백이나 규칙의 끝이 뒤따르는 마침표까지다.
     `session.save_handler`나 `6.3.0`처럼 code span이나 식별자 안의 마침표는 문장을 끝내지 않는다. 예는 HY-54, HY-100,
     HY-104, HY-105, HY-106, HY-115에서 온다.
 
-  `only`가 없는 언어에서 빠진 unit 또는 member는 결함이다. 규칙의 문장 전체가 아닌 quote도 결함이다. 어떤 규칙도 이름을
+  `only`가 없는 언어에서 빠진 unit, member 또는 type의 필드는 결함이다. 규칙의 문장 전체가 아닌 quote도 결함이다. 어떤 규칙도 이름을
   붙이지 않은 runtime 관용구, 예를 들어 Node.js 오류의 `code`는 unit도 member도 아니다. 각 사용자는 그것을 자기 코드에
   쓰며, 다른 언어가 자기 코드에 쓰는 것과 같다(Python의 `except FileNotFoundError`).
 
@@ -138,13 +155,18 @@ PHP, Node, Python 서버는 하나의 프로토콜(`protocol.md`)을 구현한�
     - case가 실패하면 0이 아닌 코드로 종료한다.
     - `make recipe-check`는 성공 여부를 종료 상태와 그 파일의 줄에서 얻는다. 줄이 없는 case는 실패하며, 다른 출력은 결과를
       제공하지 않는다.
-    - 언어가 파일의 case id를 빠뜨리거나, 파일이 가지지 않은 id를 출력하면 check가 실패한다.
-  - **Native tests.** native test는 case 파일을 실행하지 않는, 한 언어의 test tree에 있는 테스트다. `only`를 가진 unit이나
-    member, 또는 `cases: none`인 concern에 대해서만 존재한다.
+    - 언어가 파일의 case id를 빠뜨리거나, 파일이 가지지 않은 id를 출력하면 check가 실패한다. `only`를 가진 case는 그것이
+      가리키는 언어에서만 센다.
+  - **Native tests.** native test는 case 파일을 실행하지 않는, 한 언어의 test tree에 있는 테스트다. 한 언어를 가리키는
+    `only`를 가진 unit이나 member, 또는 `cases: none`인 concern에 대해서만 존재한다. 두 언어가 가진 동작은
+    `only: {languages, rule, quote}`(HYR-6)를 가진 case이며, 다른 runner는 그 case를 빼고 실행한다. check는 각 언어의 case
+    id를 `only`가 없는 case와 `only`가 그 언어를 가리키는 case에서 얻는다.
     - spec은 각 native test를 그 unit, member 또는 concern 아래에 `<test file>::<test name>: <reason>` 형식으로 적는다.
     - HYR-8은 언어마다 그 언어의 파서로 test tree의 모든 test를 나열한다. runner도 spec의 이름도 아닌 test, 빠진 이름 붙은
-      test, 빈 reason, 그리고 `only`가 없는 unit이나 member 또는 case가 있는 concern 아래에 적힌 native test는 실패시킨다.
-    - 따라서 둘 이상의 언어가 가진 동작은 case 파일로만 테스트된다.
+      test, 빈 reason, 그리고 `only`가 정확히 한 언어를 가리키지 않는 unit이나 member 또는 case가 있는 concern 아래에 적힌
+      native test는 실패시킨다.
+    - 따라서 둘 이상의 언어가 가진 동작은 case 파일로만 테스트되며, 그런 동작의 native test는 그 case를 추가하는 commit에서
+      제거한다.
 
 - **HYR-8 The check.** `make recipe-check`는 `contracts/interfaces.json`을 읽고, source의 모든 unit과 member를 언어마다
   그 언어의 파서로 읽는다.
@@ -154,15 +176,18 @@ PHP, Node, Python 서버는 하나의 프로토콜(`protocol.md`)을 구현한�
     - `@internal`을 위한 `getDocComment()`;
     - trait method를 위한 `getDeclaringClass()`.
   - Node: 모든 선언, 그 modifier, export, JSDoc tag를 대상으로 하는 TypeScript compiler API.
-  - Python: 모든 `def`, 모든 `class`, 모든 class 수준 annotated attribute를 대상으로 하는 `ast`. private인 것도 포함한다.
+  - Python: 모든 `def`, 모든 `class`, 모든 `type` 문(`ast.TypeAlias`), 모든 class 수준 annotated attribute, 모든 module 수준
+    대입을 대상으로 하는 `ast`. private인 것도 포함한다. Python의 type alias는 `type`으로 쓰며, module 수준 대입은
+    constant다.
 
   check는 spec과 source의 정렬된 key를 필드 단위로 정확히 비교한다. 다음의 경우 실패한다.
   - 어떤 unit도 이름 붙이지 않은 파일, 또는 이름 붙었으나 없는 파일;
   - HYR-3 또는 HYR-4에 어긋나는 unit;
-  - 빠지거나, 추가되거나, 옮겨지거나, 타입이 바뀌거나, 다른 visibility를 가진 member;
+  - 빠지거나, 추가되거나, 옮겨지거나, 타입이 바뀌거나, 다른 visibility를 가진 member 또는 type;
+  - HYR-5에 어긋나는 constant;
   - HYR-6에 어긋나는 `only`;
   - HYR-2에 어긋나는 규칙이나 case 참조, 또는 `outside` 항목;
-  - re-export가 spec의 public member와 다른 barrel 파일;
+  - re-export가 spec의 public member 및 public type과 다른 barrel 파일;
   - HYR-7에 어긋나는 결과, case reader 또는 native test.
 
   실행할 때마다 먼저 reader의 mutation case를 실행하며, reader가 mutation을 통과시키면 실패한다.
@@ -171,9 +196,9 @@ PHP, Node, Python 서버는 하나의 프로토콜(`protocol.md`)을 구현한�
 
 - **HYR-10 Update.**
   - `make recipe-candidates`는 spec의 schema로 `var/` 아래에 candidate를 쓴다. reader가 native 필드인 `symbol`,
-    `signature`, `kind`, `visibility`를 채운다.
+    `signature`, `declaration`, `kind`, `visibility`를 채운다.
   - 다음 필드는 검토된 spec 변경에서 손으로 쓴다:
-    - 중립 필드 `inputs`, `output`, `errors`, `state`;
+    - 중립 필드 `inputs`, `output`, `errors`, `state`와 type의 `shape`;
     - concern 필드 `rules`와 `cases`;
     - unit 묶음;
     - `only`.
@@ -198,6 +223,8 @@ PHP, Node, Python 서버는 하나의 프로토콜(`protocol.md`)을 구현한�
    `internal`이며(Node와 PHP에서는 `@internal`과 함께 export, Python에서는 `_`), 그 파일은 그 unit을 통해 호출한다.
 7. **파일.** "Concerns and units" 절의 unit을 쓴다. 이 절은 HYR-3, HYR-4, HYR-6에 따라 그것을 정한다. 이 규칙들과
    다르면 규칙이 우선하며, item이 결정을 나열한다.
+8. **테스트.** 둘 이상의 언어가 가진 동작의 native test는 그 concern의 case 파일의 case가 되거나, case가 이미 그것을
+   적으면 제거된다. 이는 그 concern을 옮기는 commit에서 한다.
 
 ## H28.11이 protocol.md에 먼저 쓰는 규칙
 
@@ -236,14 +263,23 @@ PHP, Node, Python 서버는 하나의 프로토콜(`protocol.md`)을 구현한�
 
 ## H28.11의 작업 순서
 
+H28.11은 H28.2, H28.3, H28.4, H28.7, 그리고 이 branch가 가진 H28.10의 서버 commit과 함께 한 번의 통합으로 main에 올라간다.
+main은 HY-116부터 HY-128까지를 적고 `contracts/context.json`과 `contracts/representations.json`을 가지지만, main의 어떤
+서버도 이를 구현하지 않으므로, 그 item들이 올라가기 전에는 main에서 `make recipe-check`가 통과할 수 없다(HYR-2, HYR-7).
+마지막 단계까지 이 branch에서 `make recipe-check`는 실패하며, 각 단계는 자기 item의 check를 GREEN으로 유지한다.
+
 1. 이 규칙들을 감사한다(같은 고정 범위). 핵심 발견 사항이 열려 있지 않을 때까지 반복한다.
 2. protocol.md의 위 규칙을 case와 함께 쓰고, 세 서버에서 RED와 GREEN을 거친다.
 3. reader, mutation case, schema, check를 쓴다. check가 존재하기 전에 RED를 확인한다.
-4. 첫 정렬에 따라 candidate로부터 spec을 쓰고 diff를 검토한다. spec은 각 concern의 `rules`, `cases`, `only` 문장 전체를
-   채우며, check는 HYR-2의 coverage와 HYR-6의 quote를 검증한다.
+4. 첫 정렬에 따라 candidate로부터 spec을 쓰고 diff를 검토한다. spec은 H28.7이 쓰는 unit을 가진 representation concern을
+   포함하여 각 concern의 `rules`, `cases`, `only` 문장 전체를 채우며, check는 HYR-2의 coverage와 HYR-6의 quote를 검증한다.
 5. 각 언어의 case reader와 runner를 결과 파일과 함께 추가한다.
-6. 세 언어의 source를 spec에 맞춘다. concern마다 한 commit으로 하며, 각 commit은 자기 owner test가 GREEN이다.
-7. spec에 맞춰 H28.7을 재개한다.
+6. 세 언어의 source를 spec에 맞춘다. concern마다 한 commit으로 하며, 각 commit은 그 concern의 case를 추가하고 HYR-7이
+   허용하지 않는 native test를 제거하고, 자기 owner test가 GREEN이다.
+7. representation concern의 unit으로 세 서버에 H28.7을 쓴다. `contracts/representations.json`과 `contracts/client.json`의
+   case와 함께, `make recipe-check`가 통과할 때까지 한다.
+8. branch를 한 번의 통합으로 main에 올린다. H28.2, H28.3, H28.4, H28.7, H28.11은 이와 함께 완료되며, H28.10은 build와
+   browser 부분까지 끝나야 완료된다.
 
 ## Concern과 unit
 

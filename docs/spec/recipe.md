@@ -23,15 +23,16 @@ The PHP, Node and Python servers implement one protocol (`protocol.md`). Their r
     is named by a concern, or by the field `outside` of the spec, a list of `{rule, reason}`. An example is a rule of
     the browser code only. A rule in `outside` that a concern names, or an `outside` entry with an empty reason, fails
     HYR-8.
-  - `cases`: the case files under `contracts/` that state its behaviour, or `none` with the reason and the native
-    tests of HYR-7.
+  - `cases`: the case files under `contracts/` that state its behaviour. A concern without a unit, or whose every unit
+    has `only` for one language, may have `none` with the reason and the native tests of HYR-7; the check fails `none`
+    for any other concern.
   - `units`: its units.
 
   Every file of `git ls-files` below `packages/server/php/src`, `packages/server/ts/src` and
   `packages/server/python/src/polyspec/hyper` belongs to exactly one concern, and every named file exists. A file of a
   unit holds exactly one unit (HYR-3). The barrel files (`index.ts`, `__init__.py`) and `py.typed` belong to the
-  concern `index` and hold no unit. They hold only the re-exports of the public members of HY-106, and HYR-8 checks
-  that list instead of the unit checks.
+  concern `index` and hold no unit. They hold only the re-exports of the public members and the public types of
+  HY-106, and HYR-8 checks that list instead of the unit checks.
 
 - **HYR-3 One unit per file.** A unit has these fields:
   - `id`: its words;
@@ -41,8 +42,10 @@ The PHP, Node and Python servers implement one protocol (`protocol.md`). Their r
   In every language a file holds exactly one unit.
   - A PHP `functions` unit is one class of static methods.
   - A unit that only some languages have carries `only` (HYR-6).
-  - Each class, interface and trait of a concern is its own unit. Examples: Result and its four stops, Session and
-    Flash, ClientRendering and Choice, SessionStore and ArraySession.
+  - Each class, interface and trait of a concern is its own unit, and so is each Python class, `Protocol` and
+    `TypedDict` included. A Node `interface` is a unit of kind `interface` when another language holds a unit of the
+    same words, and a type of HYR-5 otherwise; the check fails a type whose words are the words of a unit. Examples:
+    Result and its four stops, Session and Flash, ClientRendering and Choice, SessionStore and ArraySession.
 
 - **HYR-4 File names.** The file of a unit is the words of the unit, written by the rule of its language.
   - PHP: PascalCase, `<Words>.php`, in the namespace `Polyspec\Hyper`.
@@ -65,24 +68,38 @@ The PHP, Node and Python servers implement one protocol (`protocol.md`). Their r
     - its constructor;
     - the properties that HY-106 makes public API.
 
-    HY-106 makes no constant public API, so no constant is a member. A constant that becomes public API needs that rule
-    first, and its name then follows the constant form of its language.
+    HY-106 makes no constant public API, so no constant is a member, and every constant is internal or private: the
+    readers read each constant for its visibility only, and the check fails a PHP `public const` without `@internal` on
+    it or its class, a Node exported `const` without `@internal`, and a Python module-level name without `_` in a
+    public module. A constant that becomes public API needs that rule first.
   - **Properties.** A property is a declaration in the class body:
     - a PHP typed property, or a constructor-promoted parameter;
     - a Node class field, or a Node parameter property (a constructor parameter with `public`, `private`,
       `protected` or `readonly`);
+    - a property signature of a Node interface unit;
     - a Python class-level annotated attribute.
     An assignment in a method body is not a property.
   - **Fields of a member.**
     - `id`: `<unit>.<member>`, with the language-neutral name in camelCase.
-    - `kind`: one of constructor, method, static method, function, property or constant.
+    - `kind`: one of constructor, method, static method, function or property.
     - `visibility`: one of public, internal or private.
     - `inputs`, `output` and `errors`: in the terms of the vocabulary. The vocabulary is the closed list of
-      `scripts/schema/interfaces.schema.json`: the data-model types of `protocol.md`, the units of the spec, and
-      `list<T>`, `map<T>` and `optional<T>` of them. A term outside it fails HYR-8. An error is a status of
-      `protocol.md` or an error unit of the spec.
+      `scripts/schema/interfaces.schema.json`: the data-model types of `protocol.md`, the units and the types of the
+      spec, and `list<T>`, `map<T>`, `optional<T>` and `function(<T>, …) -> <T>` of them. A term outside it fails HYR-8.
+      An error is a status of `protocol.md` or an error unit of the spec.
     - `state`: one sentence of what it does.
     - `native`: for each language, the exact `symbol` and the exact `signature` (see below).
+  - **Types.** A type is a type declaration that is no unit (HYR-3): a Node `type` alias or `interface`, and a Python
+    `type` statement. The spec lists it once under `types` with `id` (its words in camelCase), `visibility` (as for a
+    member), `unit` (the unit whose file holds it in each language), a neutral `shape` and, for each language that
+    declares it, `native: {symbol, declaration}`.
+    - The shape is `fields`, a map from neutral names to vocabulary terms with an `optional` list, for a record;
+      `function` with `inputs` and `output` for a function type; or a vocabulary term.
+    - The check fails a type that is missing, added, moved or of another visibility, and a declaration whose fields,
+      written by the names of HYR-5, differ from the shape.
+    - An options record is the runtime form of named parameters (HY-106): its fields are the named `inputs` of the
+      member that takes it, and the check fails when they differ from the named parameters of that member in another
+      language. A field that only some languages have carries `only` (HYR-6), as a member does.
   - **Symbol.** The symbol is `<path>::<qualified name>`.
     - `<path>` is the repository-relative path of the file.
     - The qualified name of a PHP member is `Polyspec\Hyper\<Unit>::<member>`.
@@ -114,7 +131,7 @@ The PHP, Node and Python servers implement one protocol (`protocol.md`). Their r
     - The PHP and Node readers take private from the modifier, and the check fails a member whose modifier differs
       from its neutral visibility.
 
-- **HYR-6 Only some languages.** A unit or a member that only some languages have carries
+- **HYR-6 Only some languages.** A unit, a member, a field of a type or a case that only some languages have carries
   `only: {languages, rule, quote}`:
   - `rule` is a HY- id;
   - `quote` is one whole sentence of that rule that requires the difference. A sentence runs from its first word to
@@ -122,7 +139,7 @@ The PHP, Node and Python servers implement one protocol (`protocol.md`). Their r
     such as `session.save_handler` or `6.3.0`, does not end a sentence. Examples come from HY-54, HY-100, HY-104,
     HY-105, HY-106 and HY-115.
 
-  A unit or a member that is missing in a language without `only` is a defect. So is a quote that is not one whole
+  A unit, a member or a field of a type that is missing in a language without `only` is a defect. So is a quote that is not one whole
   sentence of its rule. A runtime idiom that no rule names, such as the `code` of a Node.js error, is no unit and no
   member of its own: each user writes it in its own code, as the other languages write theirs (Python
   `except FileNotFoundError`).
@@ -148,14 +165,19 @@ The PHP, Node and Python servers implement one protocol (`protocol.md`). Their r
     - It exits nonzero when a case fails.
     - `make recipe-check` takes success from the exit status and from the lines of that file. A case without a line
       fails, and no other output supplies a result.
-    - The check fails when a language misses a case id of a file or prints an id that the file does not hold.
+    - The check fails when a language misses a case id of a file or prints an id that the file does not hold. A case
+      with `only` counts only for the languages that it names.
   - **Native tests.** A native test is a test of the test tree of one language that runs no case file. It exists only
-    for a unit or member that has `only`, or for a concern with `cases: none`.
+    for a unit or member whose `only` names one language, or for a concern with `cases: none`. A behaviour that two
+    languages have is a case with `only: {languages, rule, quote}` (HYR-6), which the other runners leave out, and the
+    check takes the case ids of each language from the cases without `only` and those whose `only` names it.
     - The spec names each one under that unit, member or concern as `<test file>::<test name>: <reason>`.
     - HYR-8 lists every test of each language's test tree by that language's own parser. It fails for a test that is
       neither the runner nor named in the spec, for a named test that is missing, for an empty reason, and for a
-      native test named under a unit or member without `only` or a concern with cases.
-    - So a behaviour that more than one language has is tested only by its case file.
+      native test named under a unit or member whose `only` does not name exactly one language, or a concern with
+      cases.
+    - So a behaviour that more than one language has is tested only by its case file, and the native test of such a
+      behaviour is removed in the commit that adds its case.
 
 - **HYR-8 The check.** `make recipe-check` reads `contracts/interfaces.json`, and reads every unit and member of the
   sources with each language's own parser:
@@ -165,15 +187,18 @@ The PHP, Node and Python servers implement one protocol (`protocol.md`). Their r
     - `getDocComment()` for `@internal`;
     - `getDeclaringClass()` for a trait method.
   - Node: the TypeScript compiler API, for every declaration, its modifiers, its export and its JSDoc tags.
-  - Python: `ast`, for every `def`, every `class` and every class-level annotated attribute, private ones included.
+  - Python: `ast`, for every `def`, every `class`, every `type` statement (`ast.TypeAlias`), every class-level
+    annotated attribute and every module-level assignment, private ones included. A Python type alias is written with
+    `type`; a module-level assignment is a constant.
 
   It compares the sorted keys of the spec and of the sources exactly, field by field. It fails for:
   - a file that no unit names, or a named file that is missing;
   - a unit against HYR-3 or HYR-4;
-  - a member that is missing, added, moved, retyped, or of another visibility;
+  - a member or a type that is missing, added, moved, retyped, or of another visibility;
+  - a constant against HYR-5;
   - an `only` against HYR-6;
   - a rule or case reference, or an `outside` entry, against HYR-2;
-  - a barrel file whose re-exports differ from the public members of the spec;
+  - a barrel file whose re-exports differ from the public members and the public types of the spec;
   - a result, a case reader or a native test against HYR-7.
 
   Each run first runs the readers' mutation cases, and fails when a reader passes a mutation.
@@ -183,9 +208,9 @@ The PHP, Node and Python servers implement one protocol (`protocol.md`). Their r
 
 - **HYR-10 Update.**
   - `make recipe-candidates` writes a candidate under `var/` with the schema of the spec. The readers fill the native
-    fields: `symbol`, `signature`, `kind` and `visibility`.
+    fields: `symbol`, `signature`, `declaration`, `kind` and `visibility`.
   - These fields are written by hand in the reviewed change of the spec:
-    - the neutral fields `inputs`, `output`, `errors` and `state`;
+    - the neutral fields `inputs`, `output`, `errors`, `state` and the `shape` of a type;
     - the concern fields `rules` and `cases`;
     - the unit grouping;
     - `only`.
@@ -214,6 +239,8 @@ the list below does not settle, with its reason.
    file calls it through that unit.
 7. **Files.** Use the units of the section "Concerns and units", which states them by HYR-3, HYR-4 and HYR-6. Where it differs
    from these rules, the rules govern and the item lists the decision.
+8. **Tests.** A native test of a behaviour that more than one language has becomes a case of its concern's case file,
+   or is removed when a case already states it, in the commit that moves that concern.
 
 ## The rules that H28.11 writes in protocol.md first
 
@@ -258,15 +285,25 @@ These rules state behaviour that the servers have and that no rule states. They 
 
 ## The order of work for H28.11
 
+H28.11 lands on main in one integration with H28.2, H28.3, H28.4, H28.7 and the server commits of H28.10 that this
+branch holds. Main states HY-116 to HY-128 and holds `contracts/context.json` and `contracts/representations.json`,
+which no server of main implements, so `make recipe-check` cannot pass on main before those items land (HYR-2,
+HYR-7). Until the last step `make recipe-check` fails on this branch, and each step keeps the checks of its own item
+GREEN.
+
 1. Audit these rules (same fixed scope), until no core finding is open.
 2. Write the rules of protocol.md above, with their cases, RED and GREEN in the three servers.
 3. Write the readers, the mutation cases, the schema and the check, RED before the check exists.
 4. Write the spec from the candidate by the first alignment, and review the diff. The spec fills `rules`, `cases`
-   and the whole `only` sentences of each concern, and the check verifies the coverage of HYR-2 and the quotes of
-   HYR-6.
+   and the whole `only` sentences of each concern, the representation concern included with the units that H28.7
+   writes, and the check verifies the coverage of HYR-2 and the quotes of HYR-6.
 5. Add the case reader and the runner of each language with the results file.
-6. Move the sources of the three languages to the spec, one concern per commit, each with its owner tests GREEN.
-7. Resume H28.7 against the spec.
+6. Move the sources of the three languages to the spec, one concern per commit. Each commit adds the cases of its
+   concern and removes the native tests that HYR-7 does not allow, with its owner tests GREEN.
+7. Write H28.7 in the three servers in the units of the representation concern, with the cases of
+   `contracts/representations.json` and `contracts/client.json`, until `make recipe-check` passes.
+8. Land the branch on main in one integration. The items H28.2, H28.3, H28.4, H28.7 and H28.11 complete with it; H28.10
+   completes only with its build and browser parts.
 
 ## Concerns and units
 
