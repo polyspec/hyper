@@ -111,13 +111,20 @@ for (const m of mutations) {
 }
 
 // The readers' own output for a tree, as the check reads it (HYR-8).
-type ReaderOutput = { uses: { file: string; name: string }[]; constants: { file: string; name: string }[]; tests: { file: string; name: string }[]; dynamicTests: { file: string; line: number }[] };
+type ReaderOutput = { uses: { file: string; name: string }[]; constants: { file: string; name: string }[]; tests: { file: string; name: string }[]; dynamicTests: { file: string; line: number }[]; members: { unit: string; name: string }[] };
 
-function readPython(root: string): ReaderOutput {
-  const result = spawnSync('python3', [path.join(repo, 'scripts', 'recipe', 'read_python.py'), root, '--sources', 'src', '--tests', 'tests'], { encoding: 'utf8' });
+const readerCommands: Record<'php' | 'node' | 'python', (root: string) => [string, string[]]> = {
+  php: (root) => [process.env.RECIPE_PHP ?? 'php', [path.join(repo, 'scripts', 'recipe', 'read-php.php'), root, '--autoload', path.join(root, 'autoload.php')]],
+  node: (root) => [process.execPath, [path.join(repo, 'scripts', 'recipe', 'read-node.mts'), root]],
+  python: (root) => [process.env.RECIPE_PYTHON ?? 'python3', [path.join(repo, 'scripts', 'recipe', 'read_python.py'), root]],
+};
+function readFixture(lang: 'php' | 'node' | 'python', root: string): ReaderOutput {
+  const [bin, prefix] = readerCommands[lang](root);
+  const result = spawnSync(bin, [...prefix, '--sources', 'src', '--tests', 'tests'], { encoding: 'utf8' });
   assert.equal(result.status, 0, result.stderr);
   return JSON.parse(result.stdout) as ReaderOutput;
 }
+const readPython = (root: string): ReaderOutput => readFixture('python', root);
 
 test('the Python reader records the names an import binds, and its aliases', () => {
   const names = readPython(path.join(fixture, 'readers', 'python')).uses.filter((u) => u.file === 'src/app.py').map((u) => u.name);
@@ -133,5 +140,14 @@ test('the Python reader takes the module-level, async and pytest-style tests of 
   const tests = readPython(path.join(fixture, 'readers', 'python')).tests.map((t) => `${t.file}::${t.name}`);
   for (const test of ['tests/test_module.py::test_plain', 'tests/test_module.py::test_async', 'tests/extra/helpers.py::test_helper', 'tests/test_widget.py::TestWidget.test_size']) {
     assert.ok(tests.includes(test), `${test} is not a test: ${tests.join(', ')}`);
+  }
+});
+
+test('the readers list only the public properties of a class as members', () => {
+  const hidden: Record<'php' | 'node' | 'python', string[]> = { php: ['hidden', 'guarded'], node: ['hidden', 'guarded'], python: ['_cache'] };
+  for (const lang of ['php', 'node', 'python'] as const) {
+    const names = readFixture(lang, path.join(fixture, 'readers', lang)).members.filter((m) => m.unit === 'Widget').map((m) => m.name);
+    assert.ok(names.includes('size'), `${lang} does not list size: ${names.join(', ')}`);
+    for (const name of hidden[lang]) assert.ok(!names.includes(name), `${lang} lists ${name} as a member: ${names.join(', ')}`);
   }
 });
