@@ -25,7 +25,7 @@ from ._json_decode_error import JsonDecodeError
 from ._kept import Kept
 from ._media import JSON, TEXT_HTML
 from ._manifest import Manifest
-from ._planner import changed_topics, select as select_regions
+from ._region_planner import RegionPlanner
 from .reply import Reply
 from .request import Request
 from .response import Response
@@ -33,7 +33,7 @@ from .result import BadRequest, Forbidden, NotFound, Redirect, Result
 from ._router import strip_base_path
 from ._session import Flash, Session
 from .session import SessionStore
-from ._warnings_guard import warnings_as_errors
+from ._warnings_guard import WarningsGuard
 
 _FORM_TYPES = ("application/x-www-form-urlencoded", "multipart/form-data")
 _COOKIE_KEPT = re.compile(r"[a-z][a-z0-9_-]*")
@@ -245,8 +245,7 @@ class App:
         failure = None
         try:
             # HY-74: a warning of the runtime fails the request instead of leaving a wrong page with status 200.
-            with warnings_as_errors():
-                response = self._answer(request, store, reply)
+            response = WarningsGuard.run(lambda: self._answer(request, store, reply))
         except Exception as error:  # noqa: BLE001 - HY-43: every error of the application answers a plain 500
             print(f"hyper: {type(error).__name__}: {error}", file=sys.stderr)
             failure = str(error)
@@ -506,10 +505,10 @@ class App:
                 raise ValueError("the shared handler returned the key context (HY-124)")
             shared.update(handed)
 
-        changed = changed_topics(request, flash, base_path)
+        changed = RegionPlanner.changed_topics(request, flash, base_path)
         data: dict[str, dict] = {}
         templates: dict[str, str] = {}
-        for selected in select_regions(
+        for selected in RegionPlanner.select(
             self.manifest, not request.is_region_request(), changed
         ):
             if selected.page:

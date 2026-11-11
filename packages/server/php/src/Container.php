@@ -33,13 +33,14 @@ final class Container
             if (!$type instanceof \ReflectionNamedType || $type->isBuiltin()) {
                 throw new \LogicException("parameter \${$parameter->getName()} has no class type");
             }
-            $arguments[] = $provided[$type->getName()] ?? $this->get($type->getName());
+            $arguments[] = $provided[$type->getName()] ?? $this->service($type->getName());
         }
 
         return $function(...$arguments);
     }
 
-    private function get(string $class): object
+    /** Returns the service of a class, which its factory creates on the first use (HY-105.2). */
+    private function service(string $class): object
     {
         if (!isset($this->instances[$class])) {
             $factory = $this->factories[$class] ?? throw new \LogicException("no factory is bound for {$class}");

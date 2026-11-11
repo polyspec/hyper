@@ -1,5 +1,5 @@
 // Application services that the application binds by key. A service is created once, on first use.
-export class Services<S extends object> {
+export class Container<S extends object> {
   // The getter of each bound service, which creates the service on its first call and returns it on every call.
   private readonly getters: { [K in keyof S]?: () => S[K] } = {};
 

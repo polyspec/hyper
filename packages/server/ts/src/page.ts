@@ -7,11 +7,11 @@ import { contextHash, heldContext, namesHash, withContext, type ContextHandler }
 import { JsonCodec, type DecodedValue } from './json-codec.js';
 import { JsonDecodeError } from './json-decode-error.js';
 import { Kept } from './kept.js';
-import { changedTopics, selectRegions } from './planner.js';
+import { RegionPlanner } from './region-planner.js';
 import type { Reply } from './reply.js';
 import { HYPER_JSON, type Request } from './request.js';
 import { Response } from './response.js';
-import type { Services } from './services.js';
+import type { Container } from './container.js';
 import type { Flash, Session } from './session.js';
 import { replaced, requireMap, toMap, type Data, type MapValue, type Value } from './values.js';
 
@@ -42,7 +42,7 @@ export function stopClosed(signal: AbortSignal | undefined): void {
 export interface PageEnvironment<S extends object> {
   application: Application;
   handlers: Handlers<S>;
-  services: Services<S>;
+  services: Container<S>;
   timezone: string;
   https: boolean;
   // The read paths of the route (HY-73).
@@ -73,9 +73,9 @@ export async function renderPage<S extends object>(input: PageInput<S>, environm
   }
   stopClosed(input.signal);
 
-  const changed = changedTopics(request, input.flash, input.basePath);
+  const changed = RegionPlanner.changedTopics(request, input.flash, input.basePath);
   const data = new Map<string, MapValue>();
-  for (const selected of selectRegions(application.manifest, !request.isRegionRequest(), changed)) {
+  for (const selected of RegionPlanner.select(application.manifest, !request.isRegionRequest(), changed)) {
     if (selected.page === true) {
       const loaded = handler.load === undefined ? new Map() : toMap(await handler.load(context), `data of route ${route.name}`);
       stopClosed(input.signal);

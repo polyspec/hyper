@@ -5,14 +5,16 @@ from __future__ import annotations
 
 import inspect
 import typing
+from dataclasses import dataclass, field
+from typing import Callable
 
 
+@dataclass
 class Container:
     """Calls a function with arguments chosen by parameter type (HY-62)."""
 
-    def __init__(self):
-        self._factories: dict[type, "callable[[], object]"] = {}
-        self._instances: dict[type, object] = {}
+    _factories: dict[type, Callable[[], object]] = field(default_factory=dict)
+    _instances: dict[type, object] = field(default_factory=dict)
 
     def bind(self, cls: type, factory: "callable[[], object]") -> None:
         """Registers the factory that creates the service of a class."""

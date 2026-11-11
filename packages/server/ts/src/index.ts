@@ -8,6 +8,6 @@ export { Request, type RequestInit } from './request.js';
 export { UploadedFile } from './uploaded-file.js';
 export { Response } from './response.js';
 export { BadRequest, Forbidden, NotFound, Redirect, Result } from './result.js';
-export { Services } from './services.js';
+export { Container } from './container.js';
 export { MemorySessionStore, type SessionStore } from './session.js';
 export { type Data } from './values.js';

@@ -12,7 +12,7 @@ import { createListener, createServer, type Listener, type ServerOptions } from 
 import { Build } from './build.js';
 import { JsonCodec } from './json-codec.js';
 import { JsonDecodeError } from './json-decode-error.js';
-import { warningsAsErrors } from './warnings.js';
+import { WarningsGuard } from './warnings-guard.js';
 import { Disconnected, renderPage, stopClosed, VARY, type PageInput } from './page.js';
 import { HYPER_CONTEXT, type ContextHandler } from './context.js';
 import { checkClient, checkHandlers, type Client } from './open-checks.js';
@@ -21,7 +21,7 @@ import { negotiate, PAGE_AND_DATA, PAGE_TYPE } from './negotiate.js';
 import { HYPER_JSON, type Request } from './request.js';
 import { Response } from './response.js';
 import { BadRequest, Forbidden, NotFound, Redirect, Result } from './result.js';
-import { Services } from './services.js';
+import { Container } from './container.js';
 import { Session, type SessionStore } from './session.js';
 import type { Data } from './values.js';
 
@@ -47,7 +47,7 @@ function readJsonFile(path: string): unknown {
 export interface Context<S extends object> {
   request: Request;
   reply: Reply;
-  services: Services<S>;
+  services: Container<S>;
 }
 
 export type Loader<S extends object> = (context: Context<S>) => Data | Promise<Data>;
@@ -137,7 +137,7 @@ export type Answer = { stopped: false; response: Response; reply: Reply } | { st
 
 export class App<S extends object = Record<string, never>> {
   /** @internal */
-  readonly services = new Services<S>();
+  readonly services = new Container<S>();
   private readonly routes: Map<string, RouteDeclaration>;
   private readonly application: Application;
   private readonly handlers: Handlers<S>;
@@ -290,7 +290,7 @@ export class App<S extends object = Record<string, never>> {
     let failure: string | null = null;
     try {
       // HY-74: a warning of the runtime fails the request instead of leaving a wrong page with status 200.
-      response = await warningsAsErrors(() => this.answer(request, store, reply, signal));
+      response = await WarningsGuard.run(() => this.answer(request, store, reply, signal));
     } catch (error) {
       if (error instanceof Disconnected) return { stopped: true, reply };
       failure = this.fail(error);

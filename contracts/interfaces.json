@@ -989,16 +989,42 @@
             },
             "node": {
               "file": "packages/server/ts/src/warnings-guard.ts",
-              "kind": "functions",
+              "kind": "class",
               "internal": true
             },
             "python": {
               "file": "packages/server/python/src/polyspec/hyper/_warnings_guard.py",
-              "kind": "functions",
+              "kind": "class",
               "internal": true
             }
           },
-          "members": []
+          "members": [
+            {
+              "id": "warnings-guard.run",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "function() -> value"
+              ],
+              "output": "value",
+              "errors": [],
+              "state": "Runs a work with the warnings of the runtime as errors and returns its result.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/WarningsGuard.php::Polyspec\\Hyper\\WarningsGuard::run",
+                  "signature": "public static function run(callable $work): mixed"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/warnings-guard.ts::WarningsGuard.run",
+                  "signature": "static run<T>(work: () => Promise<T>): Promise<T>"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_warnings_guard.py::WarningsGuard.run",
+                  "signature": "def run(work: Callable[[], T]) -> T"
+                }
+              }
+            }
+          ]
         }
       ]
     },
@@ -1791,7 +1817,9 @@
       "rules": [
         "HY-105"
       ],
-      "cases": [],
+      "cases": [
+        "contracts/container.json"
+      ],
       "units": [
         {
           "id": "container",
@@ -1812,7 +1840,114 @@
               "internal": false
             }
           },
-          "members": []
+          "members": [
+            {
+              "id": "container.bind",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [
+                "value",
+                "function() -> value"
+              ],
+              "output": "none",
+              "errors": [],
+              "state": "Registers the factory of a service.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Container.php::Polyspec\\Hyper\\Container::bind",
+                  "signature": "public function bind(string $class, Closure $factory): void"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/container.ts::Container.bind",
+                  "signature": "bind<K extends keyof S>(key: K, factory: () => S[K]): void"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/container.py::Container.bind",
+                  "signature": "def bind(self, cls: type, factory: 'callable[[], object]') -> None"
+                }
+              }
+            },
+            {
+              "id": "container.call",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [
+                "function() -> value",
+                "map<value>"
+              ],
+              "output": "value",
+              "errors": [],
+              "state": "Calls a function with the service or the provided object of each parameter type.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Container.php::Polyspec\\Hyper\\Container::call",
+                  "signature": "public function call(Closure $function, array $provided): mixed"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/container.py::Container.call",
+                  "signature": "def call(self, function: 'callable', provided: dict[object, object]) -> object"
+                }
+              },
+              "only": {
+                "languages": [
+                  "php",
+                  "python"
+                ],
+                "sentence": "HY-105.4"
+              }
+            },
+            {
+              "id": "container.service",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [
+                "value"
+              ],
+              "output": "value",
+              "errors": [],
+              "state": "Returns the service of a class, which its factory creates on the first use.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Container.php::Polyspec\\Hyper\\Container::service",
+                  "signature": "private function service(string $class): object"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/container.py::Container._service",
+                  "signature": "def _service(self, cls: type) -> object"
+                }
+              },
+              "only": {
+                "languages": [
+                  "php",
+                  "python"
+                ],
+                "sentence": "HY-105.4"
+              }
+            },
+            {
+              "id": "container.get",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [
+                "string"
+              ],
+              "output": "value",
+              "errors": [],
+              "state": "Returns the service of a key, which its factory creates on the first use.",
+              "native": {
+                "node": {
+                  "symbol": "packages/server/ts/src/container.ts::Container.get",
+                  "signature": "get<K extends keyof S>(key: K): S[K]"
+                }
+              },
+              "only": {
+                "languages": [
+                  "node"
+                ],
+                "sentence": "HY-105.4"
+              }
+            }
+          ]
         }
       ]
     },
@@ -3254,16 +3389,71 @@
             },
             "node": {
               "file": "packages/server/ts/src/region-planner.ts",
-              "kind": "functions",
+              "kind": "class",
               "internal": true
             },
             "python": {
               "file": "packages/server/python/src/polyspec/hyper/_region_planner.py",
-              "kind": "functions",
+              "kind": "class",
               "internal": true
             }
           },
-          "members": []
+          "members": [
+            {
+              "id": "region-planner.changedTopics",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "request",
+                "flash",
+                "string"
+              ],
+              "output": "list<string>",
+              "errors": [],
+              "state": "Returns the changed topics: the topics of the previous action, and path after navigation.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/RegionPlanner.php::Polyspec\\Hyper\\RegionPlanner::changedTopics",
+                  "signature": "public static function changedTopics(Polyspec\\Hyper\\Request $request, Polyspec\\Hyper\\Flash $flash, string $basePath): array"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/region-planner.ts::RegionPlanner.changedTopics",
+                  "signature": "static changedTopics(request: Request, flash: Flash, basePath: string): string[]"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_region_planner.py::RegionPlanner.changed_topics",
+                  "signature": "def changed_topics(request: Request, flash: Flash, base_path: str) -> list[str]"
+                }
+              }
+            },
+            {
+              "id": "region-planner.select",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "manifest",
+                "boolean",
+                "list<string>"
+              ],
+              "output": "list<region>",
+              "errors": [],
+              "state": "Returns the regions that a document or a region response contains.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/RegionPlanner.php::Polyspec\\Hyper\\RegionPlanner::select",
+                  "signature": "public static function select(Polyspec\\Hyper\\Manifest $manifest, bool $document, array $changed): array"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/region-planner.ts::RegionPlanner.select",
+                  "signature": "static select(manifest: Manifest, document: boolean, changed: readonly string[]): RegionDeclaration[]"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_region_planner.py::RegionPlanner.select",
+                  "signature": "def select(manifest: Manifest, document: bool, changed: list[str]) -> list[Region]"
+                }
+              }
+            }
+          ]
         }
       ]
     },
@@ -4705,6 +4895,45 @@
               "compare": "exact",
               "sentence": "HY-125.5",
               "state": "`error` is `invalid-build` when the file fails with a message that names its path, or null when it gives a build id."
+            }
+          }
+        }
+      }
+    },
+    "container.json": {
+      "fixtures": {},
+      "sections": {
+        "services": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "bound": {
+              "role": "input"
+            },
+            "uses": {
+              "role": "input"
+            },
+            "created": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-105.2",
+              "state": "`created` is the number of factory calls after the uses `uses` of the services whose factories `bound` names."
+            },
+            "failed": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-105.3",
+              "state": "`failed` states whether a use of `uses` failed because no factory is bound for its service."
             }
           }
         }

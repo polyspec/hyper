@@ -9,6 +9,7 @@ use Polyspec\Hyper\Tests\Support\Steps\AcceptSteps;
 use Polyspec\Hyper\Tests\Support\Steps\BuildSteps;
 use Polyspec\Hyper\Tests\Support\Steps\ClientSteps;
 use Polyspec\Hyper\Tests\Support\Steps\ContextSteps;
+use Polyspec\Hyper\Tests\Support\Steps\ContainerSteps;
 use Polyspec\Hyper\Tests\Support\Steps\CookiesSteps;
 use Polyspec\Hyper\Tests\Support\Steps\CsrfSteps;
 use Polyspec\Hyper\Tests\Support\Steps\FieldsSteps;
@@ -31,6 +32,7 @@ final class CaseSteps
             'accept.json select' => AcceptSteps::select(...),
             'cookies.json parse' => CookiesSteps::parse(...),
             'build.json read' => BuildSteps::read(...),
+            'container.json services' => ContainerSteps::services(...),
             'csrf.json mask' => CsrfSteps::mask(...),
             'csrf.json masked' => CsrfSteps::masked(...),
             'csrf.json verify' => CsrfSteps::verify(...),

@@ -9,6 +9,7 @@ import { steps as clientSteps } from './steps/client.js';
 import { steps as contextSteps } from './steps/context.js';
 import { steps as cookiesSteps } from './steps/cookies.js';
 import { steps as buildSteps } from './steps/build.js';
+import { steps as containerSteps } from './steps/container.js';
 import { steps as csrfSteps } from './steps/csrf.js';
 import { steps as fieldsSteps } from './steps/fields.js';
 import { steps as functionsSteps } from './steps/functions.js';
@@ -28,6 +29,7 @@ const STEPS: Record<string, Step> = {
   ...prefixed('context.json', contextSteps),
   ...prefixed('cookies.json', cookiesSteps),
   ...prefixed('build.json', buildSteps),
+  ...prefixed('container.json', containerSteps),
   ...prefixed('csrf.json', csrfSteps),
   ...prefixed('fields.json', fieldsSteps),
   ...prefixed('functions.json', functionsSteps),

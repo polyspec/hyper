@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- The warnings of a request become errors through the unit `WarningsGuard` with the static member `run(work)` in the three servers, which PHP `App` used to write inline. The regions of a response are selected by the unit `RegionPlanner` with the static members `changedTopics` and `select` in the three servers, in `region-planner.ts` and `_region_planner.py`. The Node services are the class `Container` of `container.ts`, which the package exports in place of `Services`, and the Python `Container` holds its factories and services as fields of a dataclass; the spec lists `call` and the private `service` for PHP and Python and `get` for Node (HY-105.4). The cases of the native container tests are in `contracts/container.json` (HY-74, HY-11, HY-18, HY-19, HY-105) (H28.11).
+
 - `make recipe-check` takes the receiver of a Python method by its place, the first parameter of a method that is not static, and no longer drops a later parameter named `cls` or `self` from its inputs (H28.11).
 
 - The build id is read by the unit `Build` with the static member `read(file)` in the three servers, which fails with the error unit `InvalidBuild` and the same message that names the path of the file; PHP `App` holds the build id as a string. The cases of the native build file tests are in `contracts/build.json` (HY-125.5) (H28.11).
