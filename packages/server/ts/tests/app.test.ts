@@ -18,7 +18,7 @@ describe('App', () => {
     const response = await fixture.get('/');
     expect(response.status).toBe(200);
     expect(response.headers['Content-Type']).toBe('text/html; charset=utf-8');
-    expect(response.body).toBe('<title>Home - Site</title>\n<aside id="side"><b>0</b>\n</aside>\n<main id="content"><p>Home|n0</p>\n</main>\n');
+    expect(response.body).toBe('<title>Home - Site</title><meta name="hyper-build" content="1111111111111111111111111111111111111111111111111111111111111111">\n<aside id="side"><b>0</b>\n</aside>\n<main id="content"><p>Home|n0</p>\n</main>\n');
   });
 
   it('renders parts alone that match the document (HY-13)', async () => {

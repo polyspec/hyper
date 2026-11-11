@@ -213,10 +213,19 @@ export function renderDocument(app: Application, decoded: DecodedResponse, optio
     const define: Record<string, { html: string }> = {
       title: { html: app.engine.render(app.manifest.title, parts.shared, { env }) },
       data: { html: options.embed ? embeddedHtml(app, decoded, env) : '' },
+      build: { html: buildHtml(decoded) },
     };
     for (const region of app.manifest.regions) define[region.name] = { html: renderRegion(app, decoded.route, region.name, parts, decoded.timezone) };
     return app.engine.render(app.manifest.layout, parts.shared, { define, env });
   });
+}
+
+// Returns the html definition `build` of a document: the meta element with the build id of the response (HY-125). The
+// build id is 64 lowercase hexadecimal characters, which the server checked when the application opened.
+function buildHtml(decoded: DecodedResponse): string {
+  const build = decoded.value.get('build');
+  if (typeof build !== 'string' || !/^[0-9a-f]{64}$/.test(build)) throw new Error('hyper: the build id of the response is not 64 lowercase hexadecimal characters (HY-125)');
+  return `<meta name="hyper-build" content="${build}">`;
 }
 
 // Renders the layout of a region response for its stylesheet links: the layout with the shared data as root data,
