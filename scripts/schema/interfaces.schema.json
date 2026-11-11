@@ -4,7 +4,7 @@
   "title": "Development spec of the Hyper servers (HYR-1)",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "languages", "outside", "concerns", "types"],
+  "required": ["schema", "languages", "outside", "concerns", "types", "caseFiles"],
   "properties": {
     "schema": { "const": 1 },
     "languages": {
@@ -28,21 +28,28 @@
     "types": {
       "type": "array",
       "items": { "$ref": "#/$defs/type" }
+    },
+    "caseFiles": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": { "pattern": "^[a-z][a-z0-9-]*\\.json$" },
+      "additionalProperties": { "$ref": "#/$defs/caseFile" }
     }
   },
   "$defs": {
-    "hyId": { "type": "string", "pattern": "^HY-[0-9]+$" },
+    "hyId": { "type": "string", "pattern": "^HYC?-[0-9]+$" },
     "kebab": { "type": "string", "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$" },
     "camel": { "type": "string", "pattern": "^[a-z][a-zA-Z0-9]*$" },
     "language": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["sources", "tests", "barrel", "runner"],
+      "required": ["sources", "tests", "barrel", "runner", "caseReader"],
       "properties": {
         "sources": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
         "tests": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
         "barrel": { "type": "array", "items": { "type": "string", "minLength": 1 } },
-        "runner": { "type": "string", "pattern": "::" }
+        "runner": { "type": "string", "pattern": "::" },
+        "caseReader": { "type": "string", "pattern": "^[^:]+::[^:]+$" }
       }
     },
     "outside": {
@@ -64,6 +71,21 @@
           "minItems": 1,
           "uniqueItems": true,
           "items": { "enum": ["php", "node", "python"] }
+        },
+        "rule": { "$ref": "#/$defs/hyId" },
+        "quote": { "type": "string", "minLength": 1 }
+      }
+    },
+    "caseOnly": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["languages", "rule", "quote"],
+      "properties": {
+        "languages": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "enum": ["php", "node", "python", "browser"] }
         },
         "rule": { "$ref": "#/$defs/hyId" },
         "quote": { "type": "string", "minLength": 1 }
@@ -256,6 +278,72 @@
         "rules": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/hyId" } },
         "cases": { "$ref": "#/$defs/cases" },
         "units": { "type": "array", "items": { "$ref": "#/$defs/unit" } }
+      }
+    },
+    "caseFile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rule", "fixtures", "sections"],
+      "properties": {
+        "rule": { "$ref": "#/$defs/hyId" },
+        "fixtures": {
+          "type": "object",
+          "additionalProperties": { "enum": ["label", "input"] }
+        },
+        "sections": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": { "$ref": "#/$defs/caseSection" }
+        }
+      }
+    },
+    "caseSection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runners", "uses", "fields"],
+      "properties": {
+        "runners": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "enum": ["php", "node", "python", "browser", "build"] }
+        },
+        "uses": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+        "outcomes": { "type": "object", "additionalProperties": { "$ref": "#/$defs/caseCompare" } },
+        "fields": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": { "$ref": "#/$defs/caseField" }
+        }
+      }
+    },
+    "caseCompare": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["compare", "rule", "quote"],
+      "properties": {
+        "compare": { "enum": ["exact", "ordered", "subset", "absent", "contains", "excludes", "prefix", "keys", "raises"] },
+        "rule": { "$ref": "#/$defs/hyId" },
+        "quote": { "type": "string", "minLength": 1 },
+        "only": { "$ref": "#/$defs/caseOnly" }
+      }
+    },
+    "caseField": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["role"],
+      "properties": {
+        "role": { "enum": ["id", "label", "input", "expected"] },
+        "optional": { "type": "boolean" },
+        "only": { "$ref": "#/$defs/caseOnly" },
+        "compare": { "enum": ["exact", "ordered", "subset", "absent", "contains", "excludes", "prefix", "keys", "raises"] },
+        "rule": { "$ref": "#/$defs/hyId" },
+        "quote": { "type": "string", "minLength": 1 },
+        "fields": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": { "$ref": "#/$defs/caseField" }
+        }
       }
     }
   }
