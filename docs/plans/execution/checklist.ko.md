@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: ff17d227347a6ea916d22cd6b16d3a9d74646277bd9b239363fde8de3b64fe30 -->
+<!-- source-sha256: eebf2e42501a27e6808aaf081addc460b00211f96542b756516beaaadd473baa -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -385,6 +385,7 @@
 | H28.1-6 | contracts/context.json을 HY-73에 맞게 고친다: 일곱 case의 JSON shared data는 title만 담고, loader case의 firstCalls는 context와 shared를 적으며, csrf case의 runner는 자기 session의 token을 가린다 | contracts/context.json, docs/spec/protocol.md and its Korean twin | `make docs-check` and `tests/scripts/build-id.test.mts` | [o] |
 | H28.1-7 | HY-97, HY-100, HY-121, HY-123과 contracts/representations.json에서 요청의 진입을 HY-106처럼 App.handle로 부른다 | docs/spec/protocol.md and its Korean twin, contracts/representations.json | `make docs-check` | [o] |
 | H28.1-8 | HYC-24의 contracts/functions.json을 추가한다: template이 host function을 부르는 application, 그 결과를 render하는 document, built-in 이름이나 함수가 아닌 값이 실패시키는 open, 등록되지 않은 이름을 부르는 호출의 500 | contracts/functions.json, docs/spec/protocol.md and its Korean twin | `make docs-check` | [o] |
+| H28.1-9 | contracts/representations.json의 application을 contracts/context.json처럼 build id와 함께 applications 아래에 적는다 | contracts/representations.json | `make docs-check` | [ ] |
 | H28.2 | PHP server: media type 선택과 Vary, context, Hyper-Context header와 build member, representation을 선택하지 않은 request만 session을 연다, media type application/vnd.hyper+json, App의 functions; contracts/context.json과 contracts/client.json의 case | packages/server/php | `make test-php` | [~] |
 | H28.3 | Node server: H28.2와 같은 규칙 | packages/server/node | `make test-node` | [~] |
 | H28.4 | Python server: H28.2와 같은 규칙 | packages/server/python | `make test-python` | [~] |
