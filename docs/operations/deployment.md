@@ -12,7 +12,7 @@ One application deploys in two forms. Both use the same manifest, templates, cli
 
 ## Server and CDN (recommended)
 
-The server tells the two kinds of requests apart by their headers (HY-15). A direct request (the address bar, a reload, a bookmark, a search crawler or a link preview bot) has no `HX-Request` and receives the complete document. A request from htmx inside a page carries `Accept: application/json` and `HX-Request` and receives JSON, which the browser renders. Search engines and link previews therefore always receive complete documents with their titles.
+The server tells the two kinds of requests apart by their headers (HY-15). A direct request (the address bar, a reload, a bookmark, a search crawler or a link preview bot) has no `HX-Request` and receives the complete document. A request from htmx inside a page carries `Accept: application/vnd.hyper+json` and `HX-Request` and receives JSON, which the browser renders. Search engines and link previews therefore always receive complete documents with their titles.
 
 | Path pattern | Origin | Behavior |
 |---|---|---|

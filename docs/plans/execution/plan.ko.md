@@ -1,5 +1,5 @@
 <!-- doc-id: plan-execution -->
-<!-- source-sha256: 47a59b9df9d644b1cf0c75565efd1b1abe6e3d494d241ac809619a2cf4c475fd -->
+<!-- source-sha256: cb1c2b5535b2b8609a18f68753cf15b54993148ad578087db2ddc46bb0c0ba66 -->
 # 실행
 
 [English](plan.md).
@@ -127,3 +127,11 @@ H27.26은 모든 runtime test가 provider runner를 사용할 때까지 0.0.21 �
 고정된 0.0.65(H27.27)는 깨끗한 checkout의 bootstrap과 runtime 범위를 제한한 native link에 대한 0.0.63의 수정을 유지하고, H27.26에 필요한 공유 test runner의 Playwright 실행(K747)을 포함하며, rules check가 gates matrix의 모든 runtime에 닿게 한다(K757). 개발 중에는 0.0.21 후보의 릴리즈 tag를 만들지 않는다.
 
 릴리스 0.0.21(H27.46)은 CI 40983016356과 gates 40983016346을 거쳐 b95d425에서 공개되었고, 릴리스 실행은 40983816897이다. `@polyspec/hyper-client`, `@polyspec/hyper-server`, `@polyspec/hyper-build`의 npm tarball, `polyspec/hyper-server`의 zip, `polyspec-hyper-server`의 wheel과 packages.json(kit K871)을 담는다. template 0.0.14를 그 release의 Composer repository에서 읽고 네이티브 확장을 PIE로 build한다(H27.45). 그 앞의 두 실행은 CI에서 실패했다. dfa6f79는 어떤 TOOLS 목록도 http:pie를 이름 붙일 수 없어 PIE shim을 찾지 못했고(H27.45-1, polyspec/kit#22), dc0b6d0는 GNU make가 출력하지 않는 slash로 재귀 make를 찾았다(H27.45-2). Kit 0.0.75의 무결성을 잠갔으며(H27.47-1), H27.47은 K850-K870을 완성하는 Kit release를 기다린다.
+
+## Wave 28 — application의 context와 representation
+
+선행 조건: wave 27의 완료된 row. H28.1은 규칙 HY-116~HY-128과 HYC-22~HYC-24, 그 규칙이 건드리는 규칙의 변경, contract case를 쓴다. H28.2~H28.7은 각자의 unit test와 함께 이를 구현한다. H28.8은 이를 board example에 넣고 parity를 실행한다. H28.9는 representation의 `HEAD`를 설계하며 찾은 결함으로, 모든 page route에 `HEAD`를 더한다.
+
+application은 configuration과 build가 바뀔 때만 바뀌는 값을 모든 JSON response에 실어 보냈다. shared data(HY-10)가 request마다 만드는 map 하나이기 때문이다. browser는 그 값을 이미 가지고 있었다. context(HY-124~HY-128)는 browser가 hash로 보관하는 shared data의 부분이다. JSON response는 hash가 바뀌었을 때만 context를 담는다. 모든 JSON response가 담는 build id는 deployment 뒤에 browser가 새 document를 load하게 한다(HYC-22). browser는 마지막 region response만 render하고(HYC-23), server가 등록하는 host function을 등록한다(HYC-24).
+
+route는 resource 하나와 그 representation 여럿을 가진다(RFC 9110, section 3.2). 다른 client를 위한 JSON contract는 그 route의 representation이다(HY-118~HY-123). `Accept`로 선택되고(HY-116), page와 같은 router, limit, response 규칙을 거친다. session과 cookie를 읽지 않으므로, session으로 쓰는 요청은 token 검사가 있는 action으로 남는다(HY-24). `application/vnd.hyper+json`(HY-15)은 page data의 media type이므로 `application/json`은 application이 쓸 수 있다. client rendering의 data base path(HY-62)는 남는다. web server가 모든 path에 static shell을 file 하나로 내주고, data request는 그 path 아래에서 application에 닿기 때문이다.

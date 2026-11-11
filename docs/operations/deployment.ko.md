@@ -1,5 +1,5 @@
 <!-- doc-id: deployment -->
-<!-- source-sha256: d61fe2e9843765a24b5c52b604aecb1edc2eced1e8dcab43d19ebeaf9f2eeb2d -->
+<!-- source-sha256: 435dd8c71df8276c1fd6fe814dff52c029947b24237f524e08132265583c7d73 -->
 # 배포
 
 [English](deployment.md).
@@ -15,7 +15,7 @@
 
 서버는 요청 헤더로 두 종류의 요청을 구분한다(HY-15).
 - **직접 요청:** 주소창 입력, 새로고침, 북마크, 검색 크롤러, 링크 미리보기 봇의 요청이다. `HX-Request`가 없으며 완성된 문서를 받는다.
-- **htmx 요청:** 페이지 안에서 htmx가 보내는 요청이다. `Accept: application/json`과 `HX-Request`를 가지며 JSON을 받고, 브라우저가 이를 렌더한다.
+- **htmx 요청:** 페이지 안에서 htmx가 보내는 요청이다. `Accept: application/vnd.hyper+json`과 `HX-Request`를 가지며 JSON을 받고, 브라우저가 이를 렌더한다.
 
 따라서 검색엔진과 링크 미리보기는 언제나 제목이 들어 있는 완성된 문서를 받는다.
 

@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- docs/spec/protocol.md specifies the selection of the media type by `Accept` after routing with its `Vary` (HY-116, HY-117), the media type `application/vnd.hyper+json` of the page data (HY-15), the representations of a route with their own media types, methods and response rules, which read no session and no cookie (HY-118 to HY-123), the context of an application that a JSON response holds only when its hash changed, with the `Hyper-Context` header and the build id in `build.json`, in every JSON response and in the definition `build` (HY-124 to HY-128), and in the browser the held context, a new document for another build, the latest region response and the host functions (HYC-22 to HYC-24); `contracts/representations.json` and `contracts/context.json` hold their cases and `contracts/client.json` follows the new media type (H28.1).
+
 ## 0.0.39
 
 - hyper adopts kit 0.0.105, which removed the time limits of run-tests (kit K1175), passes no `--timeout` to run-tests, and takes template 0.0.26 and php-serialize 0.0.6 in every manifest and lock (H27.106).
