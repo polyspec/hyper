@@ -7,14 +7,21 @@ namespace Polyspec\Hyper\Tests;
 use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
 use Polyspec\Hyper\NativeSession;
+use Polyspec\Hyper\Request;
 
-/** HY-45, HY-72, HY-104: the PHP session starts only when a request reads or writes session data, under the name that hyper sets. */
+/** HY-45, HY-72, HY-104, HY-129: the PHP session starts only when a request reads or writes session data, under the name that hyper sets. */
 final class NativeSessionTest extends TestCase
 {
+    /** @param array<string, string> $cookies */
+    private static function request(array $cookies = [], bool $https = false): Request
+    {
+        return new Request('GET', '/', cookies: $cookies, https: $https);
+    }
+
     #[RunInSeparateProcess]
     public function testStartsTheSessionOnFirstUse(): void
     {
-        $store = new NativeSession(false);
+        $store = new NativeSession(false, self::request());
         self::assertSame(PHP_SESSION_NONE, session_status());
 
         $store->set('a', 1);
@@ -28,7 +35,7 @@ final class NativeSessionTest extends TestCase
     {
         $directory = sys_get_temp_dir();
         $calls = 0;
-        $session = new NativeSession(false, static function () use (&$calls, $directory): void {
+        $session = new NativeSession(false, self::request(), static function () use (&$calls, $directory): void {
             $calls++;
             self::assertSame(PHP_SESSION_NONE, session_status());
             ini_set('session.save_path', $directory);
@@ -44,7 +51,7 @@ final class NativeSessionTest extends TestCase
     #[RunInSeparateProcess]
     public function testAnErrorOfTheSetupFailsTheRequest(): void
     {
-        $session = new NativeSession(false, static function (): void {
+        $session = new NativeSession(false, self::request(), static function (): void {
             throw new \RuntimeException('no primary');
         });
         try {
@@ -93,7 +100,7 @@ final class NativeSessionTest extends TestCase
         });
         set_error_handler(static fn (): bool => true);
         try {
-            (new NativeSession(false))->set('a', 1);
+            (new NativeSession(false, self::request()))->set('a', 1);
             self::fail('the request went on without its session');
         } catch (\RuntimeException $failure) {
             self::assertSame('hyper: the session could not start', $failure->getMessage());
@@ -105,7 +112,7 @@ final class NativeSessionTest extends TestCase
     #[RunInSeparateProcess]
     public function testNamesTheCookieHySessionOverHttp(): void
     {
-        (new NativeSession(false))->set('a', 1);
+        (new NativeSession(false, self::request()))->set('a', 1);
 
         self::assertSame('hy-session', session_name());
         self::assertSame(
@@ -120,7 +127,7 @@ final class NativeSessionTest extends TestCase
     #[RunInSeparateProcess]
     public function testNamesTheCookieWithTheHostPrefixOverHttps(): void
     {
-        (new NativeSession(true))->set('a', 1);
+        (new NativeSession(true, self::request()))->set('a', 1);
 
         self::assertSame('__Host-hy-session', session_name());
         self::assertSame(
@@ -129,10 +136,45 @@ final class NativeSessionTest extends TestCase
         );
     }
 
+    /** HY-129: a session that the request's cookie names is resumed, and its identifier is not sent again. */
+    #[RunInSeparateProcess]
+    public function testResumesTheSessionOfTheRequestCookie(): void
+    {
+        (new NativeSession(false, self::request()))->set('a', 1);
+        $identifier = session_id();
+        self::assertIsString($identifier);
+        session_write_close();
+
+        $store = new NativeSession(false, self::request(['hy-session' => $identifier]));
+        self::assertSame(1, $store->get('a'));
+        self::assertSame($identifier, session_id());
+    }
+
+    /** HY-45: an identifier that the server did not create gives a new session. */
+    #[RunInSeparateProcess]
+    public function testReplacesAnIdentifierThatTheServerDidNotCreate(): void
+    {
+        $unknown = str_repeat('a', 26);
+        $store = new NativeSession(false, self::request(['hy-session' => $unknown]));
+
+        self::assertNull($store->get('a'));
+        self::assertNotSame($unknown, session_id());
+    }
+
+    /** HY-45: a cookie value that is not an identifier of the form of HY-45 starts no session with it. */
+    #[RunInSeparateProcess]
+    public function testIgnoresACookieThatIsNotAnIdentifierOfHySession(): void
+    {
+        $store = new NativeSession(false, self::request(['hy-session' => 'short']));
+        $store->set('a', 1);
+
+        self::assertNotSame('short', session_id());
+    }
+
     #[RunInSeparateProcess]
     public function testRenewsTheIdentifierAndKeepsTheValues(): void
     {
-        $store = new NativeSession(false);
+        $store = new NativeSession(false, self::request());
         $store->set('a', 1);
         $old = session_id();
 

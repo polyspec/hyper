@@ -1,0 +1,27 @@
+{
+  "parse": [
+    { "id": "two_pairs_give_two_cookies", "label": "two pairs give two cookies", "header": "a=1; b=2", "cookies": {"a": "1", "b": "2"} },
+    { "id": "pairs_without_a_space_split_at_the_semicolon", "label": "pairs without a space split at the semicolon", "header": "a=1;b=2", "cookies": {"a": "1", "b": "2"} },
+    { "id": "spaces_and_tabs_at_the_start_of_a_pair_are_removed", "label": "spaces and tabs at the start of a pair are removed", "header": " \ta=1", "cookies": {"a": "1"} },
+    { "id": "spaces_and_tabs_at_the_end_of_a_pair_are_removed", "label": "spaces and tabs at the end of a pair are removed", "header": "a=1 \t; b=2", "cookies": {"a": "1", "b": "2"} },
+    { "id": "spaces_inside_a_pair_are_kept", "label": "spaces inside a pair are kept", "header": "a = 1", "cookies": {"a ": " 1"} },
+    { "id": "the_first_cookie_of_a_name_counts", "label": "the first cookie of a name counts", "header": "a=1; a=2", "cookies": {"a": "1"} },
+    { "id": "a_pair_without_an_equals_sign_gives_no_cookie", "label": "a pair without an equals sign gives no cookie", "header": "a; b=2", "cookies": {"b": "2"} },
+    { "id": "a_pair_with_an_empty_name_gives_no_cookie", "label": "a pair with an empty name gives no cookie", "header": "=1; b=2", "cookies": {"b": "2"} },
+    { "id": "a_pair_splits_at_its_first_equals_sign", "label": "a pair splits at its first equals sign", "header": "a=x=y", "cookies": {"a": "x=y"} },
+    { "id": "an_empty_value_is_a_cookie", "label": "an empty value is a cookie", "header": "a=", "cookies": {"a": ""} },
+    { "id": "the_value_is_percent_decoded_and_a_plus_is_kept", "label": "the value is percent-decoded and a plus is kept", "header": "a=%41%2b+", "cookies": {"a": "A++"} },
+    { "id": "a_percent_without_two_hexadecimal_digits_is_itself", "label": "a percent without two hexadecimal digits is itself", "header": "a=%4; b=%zz; c=%", "cookies": {"a": "%4", "b": "%zz", "c": "%"} },
+    { "id": "the_name_is_not_decoded", "label": "the name is not decoded", "header": "%61=1", "cookies": {"%61": "1"} },
+    { "id": "dots_spaces_and_brackets_of_a_name_are_kept", "label": "dots, spaces and brackets of a name are kept", "header": "a.b=1; a b=2; a[x]=3; a[]=4", "cookies": {"a.b": "1", "a b": "2", "a[x]": "3", "a[]": "4"} },
+    { "id": "a_decimal_name_is_text", "label": "a decimal name is text", "header": "1=a; 2=b", "cookies": {"1": "a", "2": "b"} },
+    { "id": "a_value_that_is_not_utf8_gives_no_cookie_and_a_later_pair_counts", "label": "a value that is not UTF-8 gives no cookie, and a later pair of its name counts", "header": "a=%FF; a=2", "cookies": {"a": "2"} },
+    { "id": "a_name_that_is_not_utf8_gives_no_cookie", "label": "a name that is not UTF-8 gives no cookie", "header": "\u00ff=1; b=2", "cookies": {"b": "2"} },
+    { "id": "the_utf8_bytes_of_a_value_are_its_text", "label": "the UTF-8 bytes of a value are its text", "header": "a=\u00c3\u00a9; b=%C3%A9", "cookies": {"a": "\u00e9", "b": "\u00e9"} },
+    { "id": "a_comma_is_part_of_a_value", "label": "a comma is part of a value", "header": "a=1, b=2", "cookies": {"a": "1, b=2"} },
+    { "id": "quotes_are_part_of_a_value", "label": "quotes are part of a value", "header": "a=\"q\"", "cookies": {"a": "\"q\""} },
+    { "id": "empty_pairs_give_no_cookie", "label": "empty pairs give no cookie", "header": ";; a=1;", "cookies": {"a": "1"} },
+    { "id": "an_empty_header_gives_no_cookies", "label": "an empty header gives no cookies", "header": "", "cookies": {} },
+    { "id": "a_request_without_the_header_has_no_cookies", "label": "a request without the header has no cookies", "header": null, "cookies": {} }
+  ]
+}

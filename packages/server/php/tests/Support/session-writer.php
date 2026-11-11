@@ -10,12 +10,11 @@ declare(strict_types=1);
 require __DIR__ . '/../../../../../vendor/autoload.php';
 
 use Polyspec\Hyper\NativeSession;
+use Polyspec\Hyper\Request;
 
 ini_set('session.save_path', (string) getenv('HYPER_SESSION_DIRECTORY'));
-if (getenv('HYPER_SESSION_ID') !== false) {
-    $_COOKIE['hy-session'] = (string) getenv('HYPER_SESSION_ID');
-}
-$store = new NativeSession(false);
+$cookies = getenv('HYPER_SESSION_ID') !== false ? ['hy-session' => (string) getenv('HYPER_SESSION_ID')] : [];
+$store = new NativeSession(false, new Request('GET', '/', cookies: $cookies));
 $count = $store->get('n');
 usleep(100_000);
 $store->set('n', (is_int($count) ? $count : 0) + 1);

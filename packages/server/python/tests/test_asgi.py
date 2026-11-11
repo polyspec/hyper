@@ -97,6 +97,18 @@ class AsgiTest(TransportCase):
         )
         self.assertEqual([(request, True)], written)
 
+    def test_several_cookie_headers_join_with_a_semicolon(self) -> None:
+        # HY-129: the cookie headers of the scope are one header joined with `; `.
+        application = create_asgi(self.app, self.sessions)
+        run(
+            application,
+            scope(headers=[(b"cookie", b"a=1"), (b"cookie", b"b=2")]),
+            Sends(),
+            Receives(b""),
+        )
+        request = self.app.requests[0]
+        self.assertEqual(("1", "2"), (request.cookie("a"), request.cookie("b")))
+
     def test_the_pipeline_runs_in_a_worker_thread(self) -> None:
         application = create_asgi(self.app, self.sessions)
         sends = Sends()

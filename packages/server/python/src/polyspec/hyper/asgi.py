@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from typing import Callable, Optional, Union
 
 from .app import App
+from ._cookies import parse as parse_cookies
 from .file_sessions import FileSessions
 from .redis_sessions import RedisSessions
 from ._pipeline import (
@@ -21,7 +22,6 @@ from ._pipeline import (
     Written,
     Exchange,
     answer_with,
-    cookie_values,
     declared_length,
     escape,
     head_request,
@@ -144,11 +144,12 @@ async def _answer(
     method = scope["method"]
     target = _raw_path(scope)
     declared = declared_length(_header(scope, b"content-length"))
+    cookies = parse_cookies(_cookie_header(scope))
     exchange.request = head_request(
         method,
         target,
         _scope_headers(scope),
-        _header(scope, b"cookie"),
+        cookies,
         app.https,
         declared,
     )
@@ -175,7 +176,7 @@ async def _answer(
         _scope_headers(scope),
         scope.get("query_string", b"").decode("latin-1"),
         body,
-        cookies=cookie_values(_header(scope, b"cookie")),
+        cookies=cookies,
         https=app.https,
         body_size=size,
     )
@@ -223,6 +224,12 @@ def _header(scope: dict, name: bytes) -> Optional[str]:
     them, or None."""
     values = [value for key, value in scope.get("headers", []) if key == name]
     return ", ".join(value.decode("latin-1") for value in values) if values else None
+
+
+def _cookie_header(scope: dict) -> Optional[bytes]:
+    """Returns the `cookie` headers of the scope joined with `; ` (HY-129), or None when it has none."""
+    values = [value for key, value in scope.get("headers", []) if key == b"cookie"]
+    return b"; ".join(values) if values else None
 
 
 def _scope_headers(scope: dict) -> dict[str, str]:

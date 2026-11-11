@@ -6,6 +6,7 @@ namespace Polyspec\Hyper\Tests;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Polyspec\Hyper\Cookies;
 use Polyspec\Hyper\NativeSession;
 use Polyspec\Hyper\Request;
 
@@ -54,6 +55,7 @@ final class RequestTest extends TestCase
                 'cookie_secure' => false,
                 'use_strict_mode' => true,
                 'use_only_cookies' => true,
+                'use_cookies' => false,
                 'cache_limiter' => '',
                 'serialize_handler' => 'php_serialize',
             ],
@@ -61,6 +63,16 @@ final class RequestTest extends TestCase
         );
         self::assertTrue(NativeSession::options(true)['cookie_secure']);
         self::assertSame('__Host-hy-session', NativeSession::options(true)['name']);
+    }
+
+    /** HY-129: PHP keeps a decimal cookie name as an integer key, and the lookup by the string name still finds it. */
+    public function testCookieLookupFindsADecimalName(): void
+    {
+        $request = new Request('GET', '/', cookies: Cookies::parse('1=a; b=2'));
+
+        self::assertSame('a', $request->cookie('1'));
+        self::assertSame('2', $request->cookie('b'));
+        self::assertNull($request->cookie('2'));
     }
 
     public function testInvalidUtf8KeysAreRejectedAtAnyDepth(): void

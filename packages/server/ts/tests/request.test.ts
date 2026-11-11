@@ -28,6 +28,12 @@ describe('Request', () => {
     expect(Request.from({ method: 'GET', target: '/?a[b][c]=d' }).validInput()).toBe(true);
   });
 
+  it('joins several Cookie lines with a semicolon (HY-129)', () => {
+    const request = Request.from({ method: 'GET', target: '/', headers: { cookie: ['a=1', 'b=2'] } });
+    expect(request.cookie('a')).toBe('1');
+    expect(request.cookie('b')).toBe('2');
+  });
+
   it('does not check cookies (HY-42)', () => {
     const request = Request.from({ method: 'GET', target: '/', headers: { Cookie: 'hy-keep=%FF; hy-session=%FF' } });
     expect(request.validInput()).toBe(true);

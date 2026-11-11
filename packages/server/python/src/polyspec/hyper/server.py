@@ -16,6 +16,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Optional
 
 from .app import App
+from ._cookies import parse as parse_cookies
 from .file_sessions import FileSessions
 from .redis_sessions import RedisSessions
 from ._pipeline import (
@@ -25,7 +26,6 @@ from ._pipeline import (
     CONTENT_TYPES,
     Exchange,
     answer_with,
-    cookie_values,
     declared_length,
     head_request,
     header_lines,
@@ -99,11 +99,12 @@ def create_server(
             exchange = Exchange(written, started)
             try:
                 # The request as received so far: an unread body is empty and its size is the declared one (HY-60).
+                cookies = parse_cookies(_cookie_header(self.headers))
                 exchange.request = head_request(
                     self.command,
                     self.path,
                     _headers(self.headers),
-                    self.headers.get("Cookie"),
+                    cookies,
                     application.https,
                     declared_length(self.headers.get("Content-Length")),
                 )
@@ -122,7 +123,7 @@ def create_server(
                     _headers(self.headers),
                     Request.target_query(self.path),
                     body,
-                    cookies=cookie_values(self.headers.get("Cookie")),
+                    cookies=cookies,
                     https=application.https,
                     body_size=size,
                 )
@@ -224,6 +225,13 @@ def create_server(
                 self.wfile.write(file.read_bytes())
 
     return ThreadingHTTPServer((host, port), Handler)
+
+
+def _cookie_header(headers) -> Optional[bytes]:
+    """Returns the `Cookie` lines of the request joined with `; ` (HY-129), or None when it has none. The header
+    lines are text with one character per byte, so Latin-1 gives back their bytes."""
+    lines = headers.get_all("Cookie")
+    return None if lines is None else "; ".join(lines).encode("latin-1")
 
 
 def _headers(headers) -> dict[str, str]:

@@ -63,23 +63,6 @@ def header_lines(response: Response) -> list[tuple[str, str]]:
     ]
 
 
-def cookie_values(header: Optional[str]) -> dict[str, str]:
-    """Parses a Cookie header: values are URL-decoded and the first cookie of a name counts, as PHP reads
-    `$_COOKIE`; a cookie that is not UTF-8 is ignored, because hyper does not check cookies (HY-42)."""
-    cookies: dict[str, str] = {}
-    if header is None:
-        return cookies
-    for pair in header.split(";"):
-        equals = pair.find("=")
-        if equals < 0:
-            continue
-        name = _utf8(_url_decode(pair[:equals].lstrip(" ")))
-        value = _utf8(_url_decode(pair[equals + 1 :]))
-        if name not in (None, "") and value is not None and name not in cookies:
-            cookies[name] = value
-    return cookies
-
-
 def public_file(files: str, method: str, target: str) -> Optional[Path]:
     """Returns the file of a GET or HEAD request path in the public directory, or None."""
     if method not in ("GET", "HEAD"):
@@ -150,19 +133,19 @@ def head_request(
     method: str,
     target: str,
     headers: dict[str, str],
-    cookie: Optional[str],
+    cookies: dict[str, str],
     https: bool,
     declared: int,
 ) -> Request:
     """Returns the request as the transport received it before its body was read (HY-60): the target, the
-    headers and the cookies, an empty body, and the size that the Content-Length declares."""
+    headers and the cookies of its one parse (HY-129), an empty body, and the size that the Content-Length declares."""
     return Request(
         method,
         Request.target_path(target),
         headers,
         Request.target_query(target),
         b"",
-        cookies=cookie_values(cookie),
+        cookies=cookies,
         https=https,
         body_size=declared,
     )
@@ -232,36 +215,3 @@ def answer_with(
     if not isinstance(response, Response):
         raise TypeError(f"around returned {type(response).__name__}, not a Response")
     return response
-
-
-def _url_decode(text: str) -> bytes:
-    """Decodes `+` to a space and `%XX` to its byte, as PHP urldecode does; any other `%` stays."""
-    decoded = bytearray()
-    index = 0
-    while index < len(text):
-        char = text[index]
-        if char == "+":
-            decoded.append(0x20)
-            index += 1
-        elif (
-            char == "%"
-            and index + 2 < len(text) + 1
-            and _hex(text[index + 1 : index + 3])
-        ):
-            decoded.append(int(text[index + 1 : index + 3], 16))
-            index += 3
-        else:
-            decoded.extend(char.encode("latin-1"))
-            index += 1
-    return bytes(decoded)
-
-
-def _hex(text: str) -> bool:
-    return len(text) == 2 and all(char in "0123456789abcdefABCDEF" for char in text)
-
-
-def _utf8(data: bytes) -> Optional[str]:
-    try:
-        return data.decode("utf-8")
-    except UnicodeDecodeError:
-        return None

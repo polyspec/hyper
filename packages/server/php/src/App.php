@@ -1004,7 +1004,7 @@ final class App
                 }
             });
         }
-        $response = $this->through($request, new NativeSession($this->https, $this->sessionSetup), $started, $delivery);
+        $response = $this->through($request, new NativeSession($this->https, $request, $this->sessionSetup), $started, $delivery);
         $delivery->response = $response;
         $response->send();
     }

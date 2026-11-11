@@ -1,8 +1,8 @@
 import { UploadedFile } from './uploaded-file.js';
 
-// Query strings, form bodies and cookies. Query and form fields are read without nesting: each name, in the order
-// of its first occurrence, has its values in request order, and a bracketed name is the name as written (HY-56).
-// The first cookie of a name counts, as PHP reads $_COOKIE. Names and values must be UTF-8 (HY-42).
+// Query strings and form bodies. Query and form fields are read without nesting: each name, in the order of its first
+// occurrence, has its values in request order, and a bracketed name is the name as written (HY-56). Names and values
+// must be UTF-8 (HY-42).
 
 const strict = new TextDecoder('utf-8', { fatal: true });
 
@@ -138,18 +138,4 @@ function add(fields: Fields, nameBytes: Uint8Array, valueBytes: Uint8Array): voi
   const values = fields.values.get(name);
   if (values === undefined) fields.values.set(name, [value]);
   else values.push(value);
-}
-
-// Parses a Cookie header. Values are URL-decoded; a cookie that is not UTF-8 is ignored, because hyper does not
-// check cookies (HY-42).
-export function parseCookies(header: string): Map<string, string> {
-  const cookies = new Map<string, string>();
-  for (const pair of header.split(';')) {
-    const equals = pair.indexOf('=');
-    if (equals < 0) continue;
-    const name = utf8(urlDecode(pair.slice(0, equals).trimStart()));
-    const value = utf8(urlDecode(pair.slice(equals + 1)));
-    if (name !== null && value !== null && name !== '' && !cookies.has(name)) cookies.set(name, value);
-  }
-  return cookies;
 }

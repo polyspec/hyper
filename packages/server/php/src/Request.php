@@ -351,7 +351,8 @@ final class Request
             // The raw body, not $_POST, which nests bracketed names. PHP gives the body of a multipart/form-data
             // request here only when enable_post_data_reading is off.
             (string) file_get_contents('php://input'),
-            cookies: array_filter($_COOKIE, 'is_string'),
+            // HY-129: the one parse of the header, which PHP gives as it received it in $_SERVER.
+            cookies: Cookies::parse(is_string($_SERVER['HTTP_COOKIE'] ?? null) ? $_SERVER['HTTP_COOKIE'] : null),
             https: ($_SERVER['HTTPS'] ?? '') !== '' && ($_SERVER['HTTPS'] ?? '') !== 'off',
         );
     }

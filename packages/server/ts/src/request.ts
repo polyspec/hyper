@@ -1,5 +1,6 @@
 // One HTTP request with the session values that the application reads.
-import { bytesOf, fileParts, formFields, parseCookies, parseUrlEncoded, utf8, type Fields, type FileParts } from './form.js';
+import { parse } from './cookies.js';
+import { bytesOf, fileParts, formFields, parseUrlEncoded, utf8, type Fields, type FileParts } from './form.js';
 import type { Flash } from './session.js';
 import type { UploadedFile } from './uploaded-file.js';
 import type { Value } from './values.js';
@@ -48,7 +49,10 @@ export class Request {
   static from(init: RequestInit): Request {
     const headers = new Map<string, string>();
     for (const [name, value] of Object.entries(init.headers ?? {})) {
-      if (value !== undefined) headers.set(name.toLowerCase(), Array.isArray(value) ? value.join(', ') : value);
+      if (value === undefined) continue;
+      const key = name.toLowerCase();
+      // Several Cookie lines are one header joined with `; ` (HY-129); other repeated headers join with `, `.
+      headers.set(key, Array.isArray(value) ? value.join(key === 'cookie' ? '; ' : ', ') : value);
     }
     const rawQuery = Request.targetQuery(init.target);
     const body = init.body ?? new Uint8Array();
@@ -64,7 +68,7 @@ export class Request {
       query: parseUrlEncoded(rawQuery),
       form,
       files,
-      cookies: parseCookies(headers.get('cookie') ?? ''),
+      cookies: parse(headers.get('cookie')),
       https: init.https ?? false,
       params: {},
       flash: new Map(),

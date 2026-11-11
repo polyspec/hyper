@@ -13,6 +13,7 @@ from http import HTTPStatus
 from typing import Callable, Optional, Union
 
 from .app import App
+from ._cookies import parse as parse_cookies
 from .file_sessions import FileSessions
 from .redis_sessions import RedisSessions
 from ._pipeline import (
@@ -21,7 +22,6 @@ from ._pipeline import (
     CONTENT_TYPES,
     Exchange,
     answer_with,
-    cookie_values,
     declared_length,
     escape,
     head_request,
@@ -168,11 +168,12 @@ def _answer(
     method = environ["REQUEST_METHOD"]
     target = _request_target(environ)
     declared = declared_length(environ.get("CONTENT_LENGTH"))
+    cookies = parse_cookies(_cookie_header(environ))
     exchange.request = head_request(
         method,
         target,
         _environ_headers(environ),
-        environ.get("HTTP_COOKIE"),
+        cookies,
         app.https,
         declared,
     )
@@ -201,11 +202,18 @@ def _answer(
         _environ_headers(environ),
         Request.target_query(target),
         body,
-        cookies=cookie_values(environ.get("HTTP_COOKIE")),
+        cookies=cookies,
         https=app.https,
         body_size=size,
     )
     return answer_with(app, sessions, around, exchange)
+
+
+def _cookie_header(environ: dict) -> Optional[bytes]:
+    """Returns the `Cookie` header of the environ (HY-129) as the bytes that the server received: PEP 3333 gives it as
+    text with one character per byte, so Latin-1 gives back those bytes. Returns None when the request has none."""
+    value = environ.get("HTTP_COOKIE")
+    return None if value is None else value.encode("latin-1")
 
 
 def _request_target(environ: dict) -> str:
