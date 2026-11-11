@@ -6,6 +6,8 @@
 
 ## Unreleased
 
+- client와 Node server test는 link된 `@polyspec/template`을 한 module instance로 적재합니다. vitest는 link 경로를 module id로 유지합니다(`resolve.preserveSymlinks`). vitest가 template의 같은 파일을 `engine.ts`, `keep.ts`, `templates.ts`에서는 link 경로로, `response.ts`, `hyper.ts`, `obtain.ts`에서는 실제 경로로 불렀기 때문에, `response.ts`가 bind한 map이 engine에서 `assign is not a map`으로 실패했고 `tests/functions.test.ts`가 실패했습니다(H28.11).
+
 - PHP host function은 template engine이 요구하는 대로 `App::open`부터 `Renderer::open`까지 `array<string, callable(): mixed>` 타입이다. context handler는 `array<string, mixed>`를 반환한다. PHPStan은 PHP 서버의 `src/`에서 오류를 보고하지 않는다. Node `app.ts`는 더 이상 쓰지 않는 타입 `Manifest`를 import하지 않는다(H28.11).
 
 - 세 서버에서 요청의 경고는 static member `run(work)`를 가진 unit `WarningsGuard`가 오류로 바꾼다. 전에는 PHP `App`이 이 처리를 직접 적었다. 세 서버에서 응답의 region은 static member `changedTopics`와 `select`를 가진 unit `RegionPlanner`가 고르고, 이 unit은 `region-planner.ts`와 `_region_planner.py`에 있다. Node의 service는 `container.ts`의 class `Container`이고, package는 `Services` 대신 이것을 export한다. Python `Container`는 factory와 service를 dataclass의 field로 가진다. spec은 `call`과 private `service`를 PHP와 Python에, `get`을 Node에 둔다(HY-105.4). native container 테스트의 case는 `contracts/container.json`에 있다(HY-74, HY-11, HY-18, HY-19, HY-105)(H28.11).
