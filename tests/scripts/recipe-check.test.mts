@@ -140,6 +140,32 @@ test('the candidate derives the units and concerns from an empty skeleton', () =
   }
 });
 
+test('the candidate derives the members of a unit that the spec lists without members', () => {
+  const dir = mkdtempSync(path.join(tmpdir(), 'recipe-members-'));
+  const root = mkdtempSync(path.join(tmpdir(), 'recipe-members-root-'));
+  try {
+    cpSync(fixture, root, { recursive: true });
+    track(root);
+    const spec = JSON.parse(readFileSync(path.join(fixture, 'contracts', 'interfaces.json'), 'utf8')) as { concerns: { id: string; units: { members: unknown[] }[] }[] };
+    const csrf = spec.concerns.find((c) => c.id === 'csrf');
+    assert.ok(csrf?.units[0] !== undefined, 'the fixture has no unit of csrf');
+    const expected = csrf.units[0].members.length;
+    csrf.units[0].members = [];
+    writeFileSync(path.join(root, 'contracts', 'interfaces.json'), JSON.stringify(spec));
+    const output = path.join(dir, 'interfaces.candidate.json');
+    const result = spawnSync(process.execPath, [candidate, '--root', root, '--php-autoload', phpAutoload(root), '--output', output], { encoding: 'utf8' });
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+    const derived = JSON.parse(readFileSync(output, 'utf8')) as { concerns: { id: string; units: { members: { native: Record<string, unknown> }[] }[] }[] };
+    const members = derived.concerns.find((c) => c.id === 'csrf')?.units[0]?.members ?? [];
+    assert.ok(expected > 0, 'the fixture unit of csrf has no members');
+    assert.equal(members.length, expected);
+    assert.ok(members.every((m) => Object.keys(m.native).length > 0), 'a derived member names no native symbol');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
 for (const m of mutations) {
   test(`mutation ${m.id} fails with ${m.code}`, () => {
     const root = mkdtempSync(path.join(tmpdir(), 'recipe-mutation-'));

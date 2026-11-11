@@ -6,6 +6,8 @@
 
 ## Unreleased
 
+- `make recipe-candidates`는 `contracts/interfaces.json`이 member 없이 적은 unit의 member를 그 파일의 소스에서 도출한다. neutral 필드는 손으로 쓸 필드로 나열한다(HYR-10)(H28.11).
+
 - `contracts/interfaces.json`은 세 server의 concern을 규칙, case 파일, unit과 함께 적는다. 각 unit의 member는 그 concern을 옮길 때 적는다. `docs/spec/recipe.md`는 "Concerns and units" 절을 뺐고, 그 나눔의 결정은 wave 28 배경이 나열한다(H28.11).
 
 - 각 server의 case reader는 HYR-7이 정한 member만 가지며, case에 적용하는 규칙은 그 옆의 test unit 하나(`Support/CaseRules.php`, `case-rules.ts`, `case_rules.py`)에 둔다. `make recipe-check`는 모든 언어에서 생성자를 member 하나로 센다. `sentence`는 HYC 규칙의 statement도 가리킬 수 있다. mutation case는 browser runner나 build runner가 빠진 경우를 실패로 판정한다(H28.11).

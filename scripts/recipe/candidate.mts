@@ -32,6 +32,51 @@ function camel(kebab: string): string {
 }
 
 /**
+ * Derives the members of a unit from the sources of its files (HYR-5): the members of each file joined across languages
+ * by their reader key. The neutral fields take placeholders; a kind, a visibility or an `only` that the languages do
+ * not agree on is flagged.
+ */
+function deriveMembers(unit: Unit, sources: Record<Lang, Sources>, flag: (item: object, what: string) => void): void {
+  const byKey = new Map<string, Partial<Record<Lang, ReaderMember>>>();
+  for (const lang of LANGS) {
+    const file = unit.native[lang]?.file;
+    if (file === undefined) continue;
+    for (const m of sources[lang].members.filter((r) => r.file === file)) {
+      const key = readerKey(m.name, m.kind);
+      const entry = byKey.get(key) ?? {};
+      entry[lang] = m;
+      byKey.set(key, entry);
+    }
+  }
+  for (const [key, entry] of byKey) {
+    const list = LANGS.flatMap((lang) => {
+      const r = entry[lang];
+      return r === undefined ? [] : [r];
+    });
+    const first = list[0];
+    if (first === undefined) continue;
+    const member: Member = {
+      id: `${unit.id}.${camel(key)}`,
+      kind: first.kind,
+      visibility: first.visibility as Member['visibility'],
+      inputs: first.parameters.map(() => PLACEHOLDER_TERM),
+      output: PLACEHOLDER_TERM,
+      errors: [],
+      state: PLACEHOLDER_STATE,
+      native: {},
+    };
+    for (const lang of LANGS) {
+      const r = entry[lang];
+      if (r !== undefined) member.native[lang] = { symbol: r.symbol, signature: r.signature };
+    }
+    if (!list.every((r) => r.kind === first.kind)) flag(member, 'kind');
+    if (!list.every((r) => r.visibility === first.visibility)) flag(member, 'visibility');
+    if (list.length < Object.keys(unit.native).length) flag(member, 'only');
+    unit.members.push(member);
+  }
+}
+
+/**
  * Derives the concerns and types of a skeleton spec from the sources (HYR-2, HYR-3, HYR-4): each source file that holds
  * a unit is a unit, joined across languages by its words, and each unit is its own concern. The facts the readers cannot
  * state (rules, cases, inputs, output, state, shapes) take placeholders. Their pointers, and the pointers of the kind,
@@ -58,42 +103,7 @@ function deriveSpec(spec: Spec, sources: Record<Lang, Sources>, handWritten: str
 
   for (const unit of units.values()) {
     if (Object.keys(unit.native).length < LANGS.length) flag(unit, 'only');
-    const byKey = new Map<string, Partial<Record<Lang, ReaderMember>>>();
-    for (const lang of LANGS) {
-      const file = unit.native[lang]?.file;
-      if (file === undefined) continue;
-      for (const m of sources[lang].members.filter((r) => r.file === file)) {
-        const key = readerKey(m.name, m.kind);
-        const entry = byKey.get(key) ?? {};
-        entry[lang] = m;
-        byKey.set(key, entry);
-      }
-    }
-    for (const [key, entry] of byKey) {
-      const list = LANGS.flatMap((lang) => {
-        const r = entry[lang];
-        return r === undefined ? [] : [r];
-      });
-      const first = list[0];
-      const member: Member = {
-        id: `${unit.id}.${camel(key)}`,
-        kind: first.kind,
-        visibility: first.visibility as Member['visibility'],
-        inputs: first.parameters.map(() => PLACEHOLDER_TERM),
-        output: PLACEHOLDER_TERM,
-        errors: [],
-        state: PLACEHOLDER_STATE,
-        native: {},
-      };
-      for (const lang of LANGS) {
-        const r = entry[lang];
-        if (r !== undefined) member.native[lang] = { symbol: r.symbol, signature: r.signature };
-      }
-      if (!list.every((r) => r.kind === first.kind)) flag(member, 'kind');
-      if (!list.every((r) => r.visibility === first.visibility)) flag(member, 'visibility');
-      if (list.length < Object.keys(unit.native).length) flag(member, 'only');
-      unit.members.push(member);
-    }
+    deriveMembers(unit, sources, flag);
   }
 
   const typeEntries = new Map<string, Partial<Record<Lang, ReaderType>>>();
@@ -171,6 +181,13 @@ export function buildCandidate(root: string, phpAutoload: string, v: Validators)
         const found = sources[lang].units.find((u) => u.file === native.file);
         if (found === undefined) stale.push(`${ua}/native/${lang}`);
         else unit.native[lang] = { file: found.file, kind: found.kind, internal: found.internal };
+      }
+      // A unit that the spec lists without members takes the members of its sources, with their neutral fields to write.
+      if (unit.members.length === 0) {
+        deriveMembers(unit, sources, (item, what) => {
+          const mi = unit.members.indexOf(item as Member);
+          handWritten.push(`${ua}/members/${mi < 0 ? unit.members.length : mi}/${what}`);
+        });
       }
       unit.members.forEach((member, mi) => {
         const ma = `${ua}/members/${mi}`;
