@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: c11d6935b56a96d21fc022fa12113e0f67e79deac0f4e21d056dd505cec2f31b -->
+<!-- source-sha256: 0d0fa6d0f8edb15561e07d2dcd09d72b450f000bbb5479c15fe4c33b09fdffe0 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -397,3 +397,4 @@
 | H28.10 | placement build(HY-125): {# build}가 정확히 하나 없는 layout이면 build가 실패하고, fixture와 board example의 모든 layout이 head 안에 그것을 두며, PHP, Node, Python server와 browser가 html definition build를 build id로 render한다 | packages/build, packages/server/php, packages/server/node, packages/server/python, packages/client, the layouts of the fixtures and examples/board | `make test-scripts`, `make test-php`, `make test-node`, `make test-python`, `make test-js` | [ ] |
 | H28.11 | PHP, Node, Python 서버의 source map을 명세한다: 모든 관심사에 대해 언어별 파일과 public 이름을 고정하는 규칙과 docs/spec/structure.md, 빠진 파일이나 map에 없는 파일이나 잘못 놓인 파일에서 실패하는 검사, 그리고 기존 파일을 map에 맞게 옮긴다 | docs/spec/structure.md and its Korean twin, scripts/check-structure.mjs, Makefile, packages/server | `make structure-check` and `make docs-check` | [ ] |
 | H28.13 | HYC-15와 HYC-16 옆에 head의 module script를 명세하고 구현한다: browser code가 region response나 자신이 render하는 document의 head를 보일 때, page가 아직 가지지 않은 `src`를 가진 type `module`의 `script`마다 `script` element를 만들며 address로 비교한다. page의 script는 지우지 않되, 실패한 navigation을 위해 자신이 만든 것은 지우고, load되지 않는 script는 stylesheet처럼 navigation을 실패시킨다. 원인: morph가 head에 넣은 `script` element는 실행되지 않으므로 module script를 적은 head가 아무것도 load하지 않는다 | docs/spec/protocol.md and its Korean twin, packages/client, contracts/client.json | `make test-js` | [ ] |
+| H28.14 | HY-24 옆에, HY-106의 공개 API로, contracts/csrf.json의 case와 함께 요청의 `browser`를 명세하고 구현한다: session이 가진 token의 소문자 16진수 SHA-256 digest이며, token이 갱신될 때까지 한 session의 모든 요청에서 같고, session을 열지 않는 요청에는 없다. token 자체는 주지 않는다. 원인: `csrfToken()`은 응답마다 새로 mask되므로 application에는 요청의 browser를 가리키는 값이 없다 | docs/spec/protocol.md and its Korean twin, packages/server/php, packages/server/ts, packages/server/python, contracts/csrf.json | `make hyper-test-php`, `make hyper-test-node`, `make hyper-test-python` | [ ] |
