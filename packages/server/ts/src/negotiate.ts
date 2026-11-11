@@ -1,6 +1,7 @@
 // Selects the media type of a request by its Accept header and answers its refusals (HY-116, HY-62). The app calls it
 // after the routing; the selection itself is in accept.ts.
-import { InvalidAccept, parseAccept, selectType } from './accept.js';
+import { Accept } from './accept.js';
+import { InvalidAccept } from './invalid-accept.js';
 import { HYPER_JSON, type Request } from './request.js';
 import { Response } from './response.js';
 
@@ -14,7 +15,7 @@ export const PAGE_AND_DATA = [PAGE_TYPE, HYPER_JSON];
 export function negotiate(request: Request, served: readonly string[]): Request | Response {
   let selected: string | null;
   try {
-    selected = selectType(parseAccept(request.header('Accept') ?? '*/*'), PAGE_AND_DATA);
+    selected = Accept.select(request.header('Accept'), PAGE_AND_DATA);
   } catch (error) {
     if (error instanceof InvalidAccept) return refusal(400, 'Bad Request');
     throw error;

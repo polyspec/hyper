@@ -2,6 +2,7 @@
 # reads the input fields of its case through the case reader, runs the code under test and compares the observed values
 # through the reader. The runner calls each step with the reader of one case.
 from . import (
+    accept_steps,
     client_steps,
     context_steps,
     cookies_steps,
@@ -17,6 +18,8 @@ from . import (
 )
 
 STEPS = {
+    ("accept.json", "parse"): accept_steps.parse,
+    ("accept.json", "select"): accept_steps.select,
     ("client.json", "cases"): client_steps.cases,
     ("context.json", "contexts"): context_steps.contexts,
     ("context.json", "cases"): context_steps.cases,

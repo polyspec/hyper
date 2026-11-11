@@ -4,6 +4,7 @@ import { mkdirSync, renameSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { it } from 'vitest';
 import { CaseReader } from './case-reader.js';
+import { steps as acceptSteps } from './steps/accept.js';
 import { steps as clientSteps } from './steps/client.js';
 import { steps as contextSteps } from './steps/context.js';
 import { steps as cookiesSteps } from './steps/cookies.js';
@@ -21,6 +22,7 @@ type Step = (reader: CaseReader) => unknown;
 
 // The steps of this server, by case file and section (`file:section`). A section without a step fails its cases.
 const STEPS: Record<string, Step> = {
+  ...prefixed('accept.json', acceptSteps),
   ...prefixed('client.json', clientSteps),
   ...prefixed('context.json', contextSteps),
   ...prefixed('cookies.json', cookiesSteps),

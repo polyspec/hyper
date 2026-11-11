@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Polyspec\Hyper\Tests\Support;
 
 use Polyspec\Hyper\Tests\CaseReader;
+use Polyspec\Hyper\Tests\Support\Steps\AcceptSteps;
 use Polyspec\Hyper\Tests\Support\Steps\ClientSteps;
 use Polyspec\Hyper\Tests\Support\Steps\ContextSteps;
 use Polyspec\Hyper\Tests\Support\Steps\CookiesSteps;
@@ -25,6 +26,8 @@ final class CaseSteps
     public static function of(string $file, string $section): ?callable
     {
         return match ("$file $section") {
+            'accept.json parse' => AcceptSteps::parse(...),
+            'accept.json select' => AcceptSteps::select(...),
             'cookies.json parse' => CookiesSteps::parse(...),
             'csrf.json mask' => CsrfSteps::mask(...),
             'csrf.json verify' => CsrfSteps::verify(...),

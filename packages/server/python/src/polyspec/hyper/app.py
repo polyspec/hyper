@@ -10,7 +10,9 @@ import time
 from pathlib import Path
 from typing import Callable, Optional, Union
 
-from . import _accept, _data_model, _json_codec, _media
+from . import _data_model, _json_codec
+from ._accept import Accept
+from ._invalid_accept import InvalidAccept
 from .client import Choice, ClientRendering
 from .container import Container
 from ._build import read_build_id
@@ -333,10 +335,9 @@ class App:
         the response that refuses it: 400 for an invalid `Accept`, and 406 with the served types for a request that
         matches none of them."""
         try:
-            ranges = _accept.parse(request.header("Accept"))
-        except _accept.InvalidAccept:
+            chosen = Accept.select(request.header("Accept"), _PAGE_TYPES)
+        except InvalidAccept:
             return Response.text(400, "Bad Request").with_header("Vary", "Accept")
-        chosen = _media.select(ranges, _PAGE_TYPES)
         if chosen is None:
             body = "".join(f"{media}\n" for media in served)
             return Response.text(406, body).with_header("Vary", "Accept")

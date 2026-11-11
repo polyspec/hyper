@@ -6,6 +6,8 @@
 
 ## Unreleased
 
+- Accept 파서와 media type 선택은 세 서버에서 같은 member를 가진 unit `Accept`이다. range는 weight를 천분율로 가진 `MediaRange`이고, 오류는 `InvalidAccept`이다. case는 `contracts/accept.json`이며, 각 서버의 native accept 테스트를 대신한다(HY-116)(H28.11).
+
 - `make recipe-candidates`는 `contracts/interfaces.json`이 member 없이 적은 unit의 member를 그 파일의 소스에서 도출한다. neutral 필드는 손으로 쓸 필드로 나열한다(HYR-10)(H28.11).
 
 - `contracts/interfaces.json`은 세 server의 concern을 규칙, case 파일, unit과 함께 적는다. 각 unit의 member는 그 concern을 옮길 때 적는다. `docs/spec/recipe.md`는 "Concerns and units" 절을 뺐고, 그 나눔의 결정은 wave 28 배경이 나열한다(H28.11).

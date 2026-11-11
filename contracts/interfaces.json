@@ -216,29 +216,601 @@
     },
     {
       "id": "accept",
-      "rules": [],
-      "cases": [],
+      "rules": [
+        "HY-116"
+      ],
+      "cases": [
+        "contracts/accept.json"
+      ],
       "units": [
         {
           "id": "accept",
           "native": {
             "php": {
               "file": "packages/server/php/src/Accept.php",
-              "kind": "functions",
+              "kind": "class",
               "internal": true
             },
             "node": {
               "file": "packages/server/ts/src/accept.ts",
-              "kind": "interface",
+              "kind": "class",
               "internal": true
             },
             "python": {
               "file": "packages/server/python/src/polyspec/hyper/_accept.py",
-              "kind": "functions",
+              "kind": "class",
+              "internal": true
+            }
+          },
+          "members": [
+            {
+              "id": "accept.constructor",
+              "kind": "constructor",
+              "visibility": "private",
+              "inputs": [
+                "string"
+              ],
+              "output": "accept",
+              "errors": [],
+              "state": "Starts a reader of an Accept value at its first character.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Accept.php::Polyspec\\Hyper\\Accept::__construct",
+                  "signature": "private function __construct(string $text)"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/accept.ts::Accept.constructor",
+                  "signature": "private constructor(text: string)"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_accept.py::Accept.__init__",
+                  "signature": "def __init__(self, text: str) -> None"
+                }
+              }
+            },
+            {
+              "id": "accept.parse",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "optional<string>"
+              ],
+              "output": "list<media-range>",
+              "errors": [
+                "invalid-accept"
+              ],
+              "state": "Parses an Accept value into its media ranges in order, and reads no value as the range of every type.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Accept.php::Polyspec\\Hyper\\Accept::parse",
+                  "signature": "public static function parse(?string $value): array"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/accept.ts::Accept.parse",
+                  "signature": "static parse(value: string | null): MediaRange[]"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_accept.py::Accept.parse",
+                  "signature": "def parse(value: Optional[str]) -> list[MediaRange]"
+                }
+              }
+            },
+            {
+              "id": "accept.select",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "optional<string>",
+                "list<string>"
+              ],
+              "output": "optional<string>",
+              "errors": [
+                "invalid-accept"
+              ],
+              "state": "Selects the type of the highest weight among the given types, the first on a tie, or none when every weight is 0.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Accept.php::Polyspec\\Hyper\\Accept::select",
+                  "signature": "public static function select(?string $value, array $types): ?string"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/accept.ts::Accept.select",
+                  "signature": "static select(value: string | null, types: readonly string[]): string | null"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_accept.py::Accept.select",
+                  "signature": "def select(value: Optional[str], types: Sequence[str]) -> Optional[str]"
+                }
+              }
+            },
+            {
+              "id": "accept.weight",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "list<media-range>",
+                "string"
+              ],
+              "output": "integer",
+              "errors": [],
+              "state": "Returns the weight in thousandths of the most specific range that matches a type.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Accept.php::Polyspec\\Hyper\\Accept::weight",
+                  "signature": "private static function weight(array $ranges, string $type): int"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/accept.ts::Accept.weight",
+                  "signature": "private static weight(ranges: readonly MediaRange[], type: string): number"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_accept.py::Accept._weight",
+                  "signature": "def _weight(ranges: Sequence[MediaRange], media: str) -> int"
+                }
+              }
+            },
+            {
+              "id": "accept.range",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [],
+              "output": "media-range",
+              "errors": [
+                "invalid-accept"
+              ],
+              "state": "Reads one media range with its parameters and its weight.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Accept.php::Polyspec\\Hyper\\Accept::range",
+                  "signature": "private function range(): Polyspec\\Hyper\\MediaRange"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/accept.ts::Accept.range",
+                  "signature": "private range(): MediaRange"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_accept.py::Accept._range",
+                  "signature": "def _range(self) -> MediaRange"
+                }
+              }
+            },
+            {
+              "id": "accept.qvalue",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [],
+              "output": "integer",
+              "errors": [
+                "invalid-accept"
+              ],
+              "state": "Reads a qvalue and returns it in thousandths.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Accept.php::Polyspec\\Hyper\\Accept::qvalue",
+                  "signature": "private function qvalue(): int"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/accept.ts::Accept.qvalue",
+                  "signature": "private qvalue(): number"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_accept.py::Accept._qvalue",
+                  "signature": "def _qvalue(self) -> int"
+                }
+              }
+            },
+            {
+              "id": "accept.parameterValue",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [],
+              "output": "string",
+              "errors": [
+                "invalid-accept"
+              ],
+              "state": "Reads a token or a quoted string and returns it unquoted.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Accept.php::Polyspec\\Hyper\\Accept::parameterValue",
+                  "signature": "private function parameterValue(): string"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/accept.ts::Accept.parameterValue",
+                  "signature": "private parameterValue(): string"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_accept.py::Accept._parameter_value",
+                  "signature": "def _parameter_value(self) -> str"
+                }
+              }
+            },
+            {
+              "id": "accept.quoted",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [],
+              "output": "string",
+              "errors": [
+                "invalid-accept"
+              ],
+              "state": "Reads a quoted string and returns its text without the quoted pairs.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Accept.php::Polyspec\\Hyper\\Accept::quoted",
+                  "signature": "private function quoted(): string"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/accept.ts::Accept.quoted",
+                  "signature": "private quoted(): string"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_accept.py::Accept._quoted",
+                  "signature": "def _quoted(self) -> str"
+                }
+              }
+            },
+            {
+              "id": "accept.qdtextCharacter",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "integer"
+              ],
+              "output": "boolean",
+              "errors": [],
+              "state": "Tells whether a character is a qdtext.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Accept.php::Polyspec\\Hyper\\Accept::qdtextCharacter",
+                  "signature": "private static function qdtextCharacter(int $code): bool"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/accept.ts::Accept.qdtextCharacter",
+                  "signature": "private static qdtextCharacter(code: number): boolean"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_accept.py::Accept._qdtext_character",
+                  "signature": "def _qdtext_character(code: int) -> bool"
+                }
+              }
+            },
+            {
+              "id": "accept.quotedPairCharacter",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "integer"
+              ],
+              "output": "boolean",
+              "errors": [],
+              "state": "Tells whether a character may follow the backslash of a quoted pair.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Accept.php::Polyspec\\Hyper\\Accept::quotedPairCharacter",
+                  "signature": "private static function quotedPairCharacter(int $code): bool"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/accept.ts::Accept.quotedPairCharacter",
+                  "signature": "private static quotedPairCharacter(code: number): boolean"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_accept.py::Accept._quoted_pair_character",
+                  "signature": "def _quoted_pair_character(code: int) -> bool"
+                }
+              }
+            },
+            {
+              "id": "accept.token",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [],
+              "output": "string",
+              "errors": [
+                "invalid-accept"
+              ],
+              "state": "Reads a token.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Accept.php::Polyspec\\Hyper\\Accept::token",
+                  "signature": "private function token(): string"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/accept.ts::Accept.token",
+                  "signature": "private token(): string"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_accept.py::Accept._token",
+                  "signature": "def _token(self) -> str"
+                }
+              }
+            },
+            {
+              "id": "accept.skipOws",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [],
+              "output": "none",
+              "errors": [],
+              "state": "Skips the optional white space.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Accept.php::Polyspec\\Hyper\\Accept::skipOws",
+                  "signature": "private function skipOws(): void"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/accept.ts::Accept.skipOws",
+                  "signature": "private skipOws(): void"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_accept.py::Accept._skip_ows",
+                  "signature": "def _skip_ows(self) -> None"
+                }
+              }
+            },
+            {
+              "id": "accept.expect",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [
+                "string"
+              ],
+              "output": "none",
+              "errors": [
+                "invalid-accept"
+              ],
+              "state": "Reads a character that must come next.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Accept.php::Polyspec\\Hyper\\Accept::expect",
+                  "signature": "private function expect(string $char): void"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/accept.ts::Accept.expect",
+                  "signature": "private expect(char: string): void"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_accept.py::Accept._expect",
+                  "signature": "def _expect(self, char: str) -> None"
+                }
+              }
+            },
+            {
+              "id": "accept.at",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [
+                "string"
+              ],
+              "output": "boolean",
+              "errors": [],
+              "state": "Tells whether a character comes next.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Accept.php::Polyspec\\Hyper\\Accept::at",
+                  "signature": "private function at(string $char): bool"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/accept.ts::Accept.at",
+                  "signature": "private at(char: string): boolean"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_accept.py::Accept._at",
+                  "signature": "def _at(self, char: str) -> bool"
+                }
+              }
+            },
+            {
+              "id": "accept.end",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [],
+              "output": "boolean",
+              "errors": [],
+              "state": "Tells whether the whole value has been read.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Accept.php::Polyspec\\Hyper\\Accept::end",
+                  "signature": "private function end(): bool"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/accept.ts::Accept.end",
+                  "signature": "private end(): boolean"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_accept.py::Accept._end",
+                  "signature": "def _end(self) -> bool"
+                }
+              }
+            },
+            {
+              "id": "accept.invalid",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [
+                "string"
+              ],
+              "output": "invalid-accept",
+              "errors": [],
+              "state": "Makes the error of the value at the current position.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Accept.php::Polyspec\\Hyper\\Accept::invalid",
+                  "signature": "private function invalid(string $reason): Polyspec\\Hyper\\InvalidAccept"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/accept.ts::Accept.invalid",
+                  "signature": "private invalid(reason: string): InvalidAccept"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_accept.py::Accept._invalid",
+                  "signature": "def _invalid(self, reason: str) -> InvalidAccept"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "invalid-accept",
+          "native": {
+            "php": {
+              "file": "packages/server/php/src/InvalidAccept.php",
+              "kind": "class",
+              "internal": true
+            },
+            "node": {
+              "file": "packages/server/ts/src/invalid-accept.ts",
+              "kind": "class",
+              "internal": true
+            },
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/_invalid_accept.py",
+              "kind": "class",
               "internal": true
             }
           },
           "members": []
+        },
+        {
+          "id": "media-range",
+          "native": {
+            "php": {
+              "file": "packages/server/php/src/MediaRange.php",
+              "kind": "class",
+              "internal": true
+            },
+            "node": {
+              "file": "packages/server/ts/src/media-range.ts",
+              "kind": "class",
+              "internal": true
+            },
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/_media_range.py",
+              "kind": "class",
+              "internal": true
+            }
+          },
+          "members": [
+            {
+              "id": "media-range.constructor",
+              "kind": "constructor",
+              "visibility": "internal",
+              "inputs": [
+                "string",
+                "string",
+                "list<list<string>>",
+                "integer"
+              ],
+              "output": "media-range",
+              "errors": [],
+              "state": "Holds the type, the subtype, the parameters and the weight of a range.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/MediaRange.php::Polyspec\\Hyper\\MediaRange::__construct",
+                  "signature": "public function __construct(string $type, string $subtype, array $parameters, int $weight)"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/media-range.ts::MediaRange.constructor",
+                  "signature": "constructor(type: string, subtype: string, parameters: readonly [string, string][], weight: number)"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_media_range.py::MediaRange.__init__",
+                  "signature": "def __init__(self, type: str, subtype: str, parameters: tuple[tuple[str, str], ...], weight: int) -> None"
+                }
+              }
+            },
+            {
+              "id": "media-range.type",
+              "kind": "property",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "string",
+              "errors": [],
+              "state": "Holds the type in lower case, or * for a wildcard.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/MediaRange.php::Polyspec\\Hyper\\MediaRange::type",
+                  "signature": "public protected(set) readonly string $type"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/media-range.ts::MediaRange.type",
+                  "signature": "readonly type: string"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_media_range.py::MediaRange.type",
+                  "signature": "type: str"
+                }
+              }
+            },
+            {
+              "id": "media-range.subtype",
+              "kind": "property",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "string",
+              "errors": [],
+              "state": "Holds the subtype in lower case, or * for a wildcard.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/MediaRange.php::Polyspec\\Hyper\\MediaRange::subtype",
+                  "signature": "public protected(set) readonly string $subtype"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/media-range.ts::MediaRange.subtype",
+                  "signature": "readonly subtype: string"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_media_range.py::MediaRange.subtype",
+                  "signature": "subtype: str"
+                }
+              }
+            },
+            {
+              "id": "media-range.parameters",
+              "kind": "property",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "list<list<string>>",
+              "errors": [],
+              "state": "Holds the parameters before q as name and value pairs in their order.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/MediaRange.php::Polyspec\\Hyper\\MediaRange::parameters",
+                  "signature": "public protected(set) readonly array $parameters"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/media-range.ts::MediaRange.parameters",
+                  "signature": "readonly parameters: readonly [string, string][]"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_media_range.py::MediaRange.parameters",
+                  "signature": "parameters: tuple[tuple[str, str], ...]"
+                }
+              }
+            },
+            {
+              "id": "media-range.weight",
+              "kind": "property",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "integer",
+              "errors": [],
+              "state": "Holds the weight in thousandths, 0 to 1000.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/MediaRange.php::Polyspec\\Hyper\\MediaRange::weight",
+                  "signature": "public protected(set) readonly int $weight"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/media-range.ts::MediaRange.weight",
+                  "signature": "readonly weight: number"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_media_range.py::MediaRange.weight",
+                  "signature": "weight: int"
+                }
+              }
+            }
+          ]
         }
       ]
     },
@@ -1636,8 +2208,10 @@
   ],
   "types": [],
   "caseFiles": {
-    "cookies.json": {
-      "fixtures": {},
+    "accept.json": {
+      "fixtures": {
+        "types": "input"
+      },
       "sections": {
         "parse": {
           "runners": [
@@ -1653,364 +2227,34 @@
             "label": {
               "role": "label"
             },
-            "header": {
+            "accept": {
               "role": "input"
             },
-            "cookies": {
+            "ranges": {
               "role": "expected",
+              "optional": true,
               "compare": "exact",
-              "sentence": "HY-129.1",
-              "state": "`header` is text whose characters U+0000 to U+00FF are its bytes, or null for a request without the header, and `cookies` is the map of names to values that its parse gives."
-            }
-          }
-        }
-      }
-    },
-    "csrf.json": {
-      "fixtures": {},
-      "sections": {
-        "mask": {
-          "runners": [
-            "php",
-            "node",
-            "python"
-          ],
-          "uses": [],
-          "fields": {
-            "id": {
-              "role": "id"
+              "sentence": "HY-116.9",
+              "state": "`accept` is the Accept value, or null for a request without it, and `ranges` is the list of its media ranges in order, each with its type and subtype in lower case, its parameters before q as [name, value] pairs with the name in lower case, and its weight in thousandths."
             },
-            "label": {
-              "role": "label"
-            },
-            "token": {
-              "role": "input"
-            },
-            "mask": {
-              "role": "input"
-            },
-            "value": {
+            "invalid": {
               "role": "expected",
+              "optional": true,
               "compare": "exact",
-              "sentence": "HY-24.2",
-              "state": "`value` is the masked value, 128 lowercase hexadecimal digits, that the random bytes `mask` give for the token `token`."
+              "sentence": "HY-116.5",
+              "state": "`invalid` is true when the parse refuses the value with the error of an invalid Accept, which the server answers with status 400."
             }
           }
         },
-        "verify": {
+        "select": {
           "runners": [
             "php",
             "node",
             "python"
-          ],
-          "uses": [],
-          "fields": {
-            "id": {
-              "role": "id"
-            },
-            "label": {
-              "role": "label"
-            },
-            "token": {
-              "role": "input"
-            },
-            "value": {
-              "role": "input"
-            },
-            "valid": {
-              "role": "expected",
-              "compare": "exact",
-              "sentence": "HY-24.4",
-              "state": "`valid` states whether the form value `value` is a masked value of the token `token`."
-            }
-          }
-        }
-      }
-    },
-    "fields.json": {
-      "fixtures": {},
-      "sections": {
-        "urlencoded": {
-          "runners": [
-            "php",
-            "node",
-            "python"
-          ],
-          "uses": [],
-          "fields": {
-            "id": {
-              "role": "id"
-            },
-            "label": {
-              "role": "label"
-            },
-            "text": {
-              "role": "input"
-            },
-            "fields": {
-              "role": "expected",
-              "compare": "exact",
-              "sentence": "HY-57.2",
-              "state": "`fields` lists the values of `text` as `[name, values]` pairs in the order of their names, or is null when `text` fails with HY-42."
-            },
-            "names": {
-              "role": "expected",
-              "compare": "exact",
-              "sentence": "HY-56.4",
-              "state": "`names` lists the names of the values of `text` in the order of their first occurrence, or is null when `fields` is null."
-            }
-          }
-        },
-        "multipart": {
-          "runners": [
-            "php",
-            "node",
-            "python"
-          ],
-          "uses": [],
-          "fields": {
-            "id": {
-              "role": "id"
-            },
-            "label": {
-              "role": "label"
-            },
-            "type": {
-              "role": "input"
-            },
-            "body": {
-              "role": "input"
-            },
-            "fields": {
-              "role": "expected",
-              "compare": "exact",
-              "sentence": "HY-57.3",
-              "state": "`fields` lists the form values of the body `body` of the type `type`, a text whose characters are its bytes, as `[name, values]` pairs, or is null when the body fails with HY-42."
-            },
-            "files": {
-              "role": "expected",
-              "compare": "exact",
-              "sentence": "HY-113.3",
-              "state": "`files` lists the files of the body in request order as objects with `name`, `filename`, `contentType` and `content`, where `content` is the text of the file and `contentType` is empty text for a part without a content type, or is null when `fields` is null."
-            }
-          }
-        }
-      }
-    },
-    "json.json": {
-      "fixtures": {},
-      "sections": {
-        "encode": {
-          "runners": [
-            "php",
-            "node",
-            "python"
-          ],
-          "uses": [],
-          "fields": {
-            "id": {
-              "role": "id"
-            },
-            "label": {
-              "role": "label"
-            },
-            "json": {
-              "role": "input"
-            },
-            "expected": {
-              "role": "expected",
-              "compare": "exact",
-              "sentence": "HY-54.4",
-              "state": "`expected` is the JSON text of the value of `json`."
-            }
-          }
-        },
-        "decode": {
-          "runners": [
-            "php",
-            "node",
-            "python"
-          ],
-          "uses": [],
-          "fields": {
-            "id": {
-              "role": "id"
-            },
-            "label": {
-              "role": "label"
-            },
-            "json": {
-              "role": "input"
-            },
-            "result": {
-              "role": "expected",
-              "compare": "exact",
-              "sentence": "HY-54.8",
-              "state": "`result` is `value` for a text `json` whose value is a value of the data model, `outside` for one whose value is outside it, and `error` for a text that fails to decode."
-            }
-          }
-        }
-      }
-    },
-    "keep.json": {
-      "fixtures": {},
-      "sections": {
-        "cases": {
-          "runners": [
-            "php",
-            "node",
-            "python",
-            "browser"
-          ],
-          "uses": [],
-          "fields": {
-            "id": {
-              "role": "id"
-            },
-            "label": {
-              "role": "label"
-            },
-            "data": {
-              "role": "input"
-            },
-            "kept": {
-              "role": "input"
-            },
-            "expected": {
-              "role": "expected",
-              "compare": "ordered",
-              "sentence": "HY-38.19",
-              "state": "`expected` is the region data `data` after the kept values `kept`, a list of `[path, value]` pairs, apply by HY-38."
-            }
-          }
-        }
-      }
-    },
-    "reads.json": {
-      "fixtures": {},
-      "sections": {
-        "cases": {
-          "runners": [
-            "php",
-            "node",
-            "python",
-            "browser"
-          ],
-          "uses": [],
-          "fields": {
-            "id": {
-              "role": "id"
-            },
-            "label": {
-              "role": "label"
-            },
-            "templates": {
-              "role": "input"
-            },
-            "template": {
-              "role": "input"
-            },
-            "data": {
-              "role": "input"
-            },
-            "reads": {
-              "role": "input",
-              "compare": "exact",
-              "sentence": "HY-73.2",
-              "state": "`reads` is the read paths of the template `template` among the templates `templates`, a tree whose node is true for a path read whole and otherwise holds `keys` or `each`.",
-              "only": {
-                "languages": [
-                  "node",
-                  "browser"
-                ],
-                "sentence": "HY-73.23"
-              }
-            },
-            "kept": {
-              "role": "expected",
-              "compare": "ordered",
-              "sentence": "HY-73.29",
-              "state": "`kept` is the data `data` with only its read paths `reads` kept."
-            }
-          },
-          "outcomes": {
-            "render": {
-              "compare": "exact",
-              "sentence": "HY-73.28"
-            }
-          }
-        }
-      }
-    },
-    "routes.json": {
-      "fixtures": {
-        "routes": "input",
-        "basePath": "input"
-      },
-      "sections": {
-        "cases": {
-          "runners": [
-            "php",
-            "node",
-            "python",
-            "browser"
           ],
           "uses": [
-            "routes"
+            "types"
           ],
-          "fields": {
-            "id": {
-              "role": "id"
-            },
-            "label": {
-              "role": "label",
-              "optional": true
-            },
-            "path": {
-              "role": "input"
-            },
-            "result": {
-              "role": "expected",
-              "compare": "ordered",
-              "sentence": "HY-5.3",
-              "state": "`result` is the name and the parameters of the route of `routes` that the request path `path` matches, or null when none matches."
-            }
-          }
-        },
-        "baseCases": {
-          "runners": [
-            "php",
-            "node",
-            "python",
-            "browser"
-          ],
-          "uses": [
-            "routes",
-            "basePath"
-          ],
-          "fields": {
-            "id": {
-              "role": "id"
-            },
-            "path": {
-              "role": "input"
-            },
-            "result": {
-              "role": "expected",
-              "compare": "ordered",
-              "sentence": "HY-8.2",
-              "state": "`result` is the name and the parameters of the route that the request path `path` matches after the base path `basePath` is removed, or null when the path has no result."
-            }
-          }
-        },
-        "invalidPaths": {
-          "runners": [
-            "php",
-            "node",
-            "python",
-            "browser"
-          ],
-          "uses": [],
           "fields": {
             "id": {
               "role": "id"
@@ -2018,72 +2262,22 @@
             "label": {
               "role": "label"
             },
-            "path": {
-              "role": "input"
-            }
-          },
-          "outcomes": {
-            "router": {
-              "compare": "raises",
-              "sentence": "HY-4.6"
-            }
-          }
-        }
-      }
-    },
-    "rest.json": {
-      "fixtures": {
-        "routes": "input"
-      },
-      "sections": {
-        "cases": {
-          "runners": [
-            "php",
-            "node",
-            "python",
-            "browser"
-          ],
-          "uses": [
-            "routes"
-          ],
-          "fields": {
-            "id": {
-              "role": "id"
-            },
-            "path": {
+            "accept": {
               "role": "input"
             },
-            "result": {
+            "selected": {
               "role": "expected",
-              "compare": "ordered",
-              "sentence": "HY-49.3",
-              "state": "`result` is the name and the parameters of the route of `routes` that the request path `path` matches, a rest parameter holding the rest of the path, or null when none matches."
-            }
-          }
-        },
-        "invalidPaths": {
-          "runners": [
-            "php",
-            "node",
-            "python",
-            "browser"
-          ],
-          "uses": [],
-          "fields": {
-            "id": {
-              "role": "id"
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-116.7",
+              "state": "`selected` is the type of `types` that the Accept value selects by the weight of its most specific matching range, the first of the highest weight, or null when no type has a weight above 0."
             },
-            "label": {
-              "role": "label"
-            },
-            "path": {
-              "role": "input"
-            }
-          },
-          "outcomes": {
-            "router": {
-              "compare": "raises",
-              "sentence": "HY-4.6"
+            "invalid": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-116.5",
+              "state": "`invalid` is true when the selection refuses the value with the error of an invalid Accept, which the server answers with status 400."
             }
           }
         }
@@ -2445,6 +2639,167 @@
         }
       }
     },
+    "cookies.json": {
+      "fixtures": {},
+      "sections": {
+        "parse": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "header": {
+              "role": "input"
+            },
+            "cookies": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-129.1",
+              "state": "`header` is text whose characters U+0000 to U+00FF are its bytes, or null for a request without the header, and `cookies` is the map of names to values that its parse gives."
+            }
+          }
+        }
+      }
+    },
+    "csrf.json": {
+      "fixtures": {},
+      "sections": {
+        "mask": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "token": {
+              "role": "input"
+            },
+            "mask": {
+              "role": "input"
+            },
+            "value": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-24.2",
+              "state": "`value` is the masked value, 128 lowercase hexadecimal digits, that the random bytes `mask` give for the token `token`."
+            }
+          }
+        },
+        "verify": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "token": {
+              "role": "input"
+            },
+            "value": {
+              "role": "input"
+            },
+            "valid": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-24.4",
+              "state": "`valid` states whether the form value `value` is a masked value of the token `token`."
+            }
+          }
+        }
+      }
+    },
+    "fields.json": {
+      "fixtures": {},
+      "sections": {
+        "urlencoded": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "text": {
+              "role": "input"
+            },
+            "fields": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-57.2",
+              "state": "`fields` lists the values of `text` as `[name, values]` pairs in the order of their names, or is null when `text` fails with HY-42."
+            },
+            "names": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-56.4",
+              "state": "`names` lists the names of the values of `text` in the order of their first occurrence, or is null when `fields` is null."
+            }
+          }
+        },
+        "multipart": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "type": {
+              "role": "input"
+            },
+            "body": {
+              "role": "input"
+            },
+            "fields": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-57.3",
+              "state": "`fields` lists the form values of the body `body` of the type `type`, a text whose characters are its bytes, as `[name, values]` pairs, or is null when the body fails with HY-42."
+            },
+            "files": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-113.3",
+              "state": "`files` lists the files of the body in request order as objects with `name`, `filename`, `contentType` and `content`, where `content` is the text of the file and `contentType` is empty text for a part without a content type, or is null when `fields` is null."
+            }
+          }
+        }
+      }
+    },
     "functions.json": {
       "fixtures": {
         "functionKinds": "input",
@@ -2514,6 +2869,151 @@
               "compare": "contains",
               "sentence": "HYC-24.5",
               "state": "`openError` is a text that the message of the open error contains."
+            }
+          }
+        }
+      }
+    },
+    "json.json": {
+      "fixtures": {},
+      "sections": {
+        "encode": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "json": {
+              "role": "input"
+            },
+            "expected": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-54.4",
+              "state": "`expected` is the JSON text of the value of `json`."
+            }
+          }
+        },
+        "decode": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "json": {
+              "role": "input"
+            },
+            "result": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-54.8",
+              "state": "`result` is `value` for a text `json` whose value is a value of the data model, `outside` for one whose value is outside it, and `error` for a text that fails to decode."
+            }
+          }
+        }
+      }
+    },
+    "keep.json": {
+      "fixtures": {},
+      "sections": {
+        "cases": {
+          "runners": [
+            "php",
+            "node",
+            "python",
+            "browser"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "data": {
+              "role": "input"
+            },
+            "kept": {
+              "role": "input"
+            },
+            "expected": {
+              "role": "expected",
+              "compare": "ordered",
+              "sentence": "HY-38.19",
+              "state": "`expected` is the region data `data` after the kept values `kept`, a list of `[path, value]` pairs, apply by HY-38."
+            }
+          }
+        }
+      }
+    },
+    "reads.json": {
+      "fixtures": {},
+      "sections": {
+        "cases": {
+          "runners": [
+            "php",
+            "node",
+            "python",
+            "browser"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "templates": {
+              "role": "input"
+            },
+            "template": {
+              "role": "input"
+            },
+            "data": {
+              "role": "input"
+            },
+            "reads": {
+              "role": "input",
+              "compare": "exact",
+              "sentence": "HY-73.2",
+              "state": "`reads` is the read paths of the template `template` among the templates `templates`, a tree whose node is true for a path read whole and otherwise holds `keys` or `each`.",
+              "only": {
+                "languages": [
+                  "node",
+                  "browser"
+                ],
+                "sentence": "HY-73.23"
+              }
+            },
+            "kept": {
+              "role": "expected",
+              "compare": "ordered",
+              "sentence": "HY-73.29",
+              "state": "`kept` is the data `data` with only its read paths `reads` kept."
+            }
+          },
+          "outcomes": {
+            "render": {
+              "compare": "exact",
+              "sentence": "HY-73.28"
             }
           }
         }
@@ -2699,6 +3199,153 @@
                   "state": "`absentHeaders` lists header names that the request that the handler received does not hold."
                 }
               }
+            }
+          }
+        }
+      }
+    },
+    "rest.json": {
+      "fixtures": {
+        "routes": "input"
+      },
+      "sections": {
+        "cases": {
+          "runners": [
+            "php",
+            "node",
+            "python",
+            "browser"
+          ],
+          "uses": [
+            "routes"
+          ],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "path": {
+              "role": "input"
+            },
+            "result": {
+              "role": "expected",
+              "compare": "ordered",
+              "sentence": "HY-49.3",
+              "state": "`result` is the name and the parameters of the route of `routes` that the request path `path` matches, a rest parameter holding the rest of the path, or null when none matches."
+            }
+          }
+        },
+        "invalidPaths": {
+          "runners": [
+            "php",
+            "node",
+            "python",
+            "browser"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "path": {
+              "role": "input"
+            }
+          },
+          "outcomes": {
+            "router": {
+              "compare": "raises",
+              "sentence": "HY-4.6"
+            }
+          }
+        }
+      }
+    },
+    "routes.json": {
+      "fixtures": {
+        "routes": "input",
+        "basePath": "input"
+      },
+      "sections": {
+        "cases": {
+          "runners": [
+            "php",
+            "node",
+            "python",
+            "browser"
+          ],
+          "uses": [
+            "routes"
+          ],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label",
+              "optional": true
+            },
+            "path": {
+              "role": "input"
+            },
+            "result": {
+              "role": "expected",
+              "compare": "ordered",
+              "sentence": "HY-5.3",
+              "state": "`result` is the name and the parameters of the route of `routes` that the request path `path` matches, or null when none matches."
+            }
+          }
+        },
+        "baseCases": {
+          "runners": [
+            "php",
+            "node",
+            "python",
+            "browser"
+          ],
+          "uses": [
+            "routes",
+            "basePath"
+          ],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "path": {
+              "role": "input"
+            },
+            "result": {
+              "role": "expected",
+              "compare": "ordered",
+              "sentence": "HY-8.2",
+              "state": "`result` is the name and the parameters of the route that the request path `path` matches after the base path `basePath` is removed, or null when the path has no result."
+            }
+          }
+        },
+        "invalidPaths": {
+          "runners": [
+            "php",
+            "node",
+            "python",
+            "browser"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "path": {
+              "role": "input"
+            }
+          },
+          "outcomes": {
+            "router": {
+              "compare": "raises",
+              "sentence": "HY-4.6"
             }
           }
         }

@@ -1,204 +1,195 @@
-// Parses the Accept header of a request by RFC 9110 section 12.5.1 and selects the media type of the request among the
-// candidate types by the weights of its ranges (HY-116). Internal: the package index does not export it.
+// The Accept field of a request: its parser (RFC 9110, section 12.5.1) and the selection of a media type by the weights
+// of its ranges (HY-116). An instance reads one value from its start to its end.
+import { InvalidAccept } from './invalid-accept.js';
+import { MediaRange } from './media-range.js';
 
-// One media range of an Accept value: its type and subtype in lower case, its parameters before q with their names in
-// lower case, and its weight.
-export interface AcceptRange {
-  type: string;
-  subtype: string;
-  parameters: [string, string][];
-  weight: number;
-}
+// The weight of a range without q, and of q=1, in thousandths (RFC 9110, section 12.4.2).
+const ANY = 1000;
 
-// An Accept value that does not follow the grammar, or that has a weight that is not a qvalue (HY-116).
-export class InvalidAccept extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'InvalidAccept';
-  }
-}
+// The characters of a token (RFC 9110, section 5.6.2).
+const TCHAR = "!#$%&'*+-.^_`|~0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-const TCHAR = /[!#$%&'*+\-.^_`|~0-9A-Za-z]/;
-const QVALUE = /^(0(\.[0-9]{0,3})?|1(\.0{0,3})?)$/;
-
-// Parses an Accept value, whose field lines are one value joined with `, ` (RFC 9110 section 5.3). An empty value is an
-// empty list; a missing header is read by the caller as `*/*`.
-export function parseAccept(value: string): AcceptRange[] {
-  const scanner = new Scanner(value);
-  const ranges: AcceptRange[] = [];
-  scanner.ows();
-  while (!scanner.end()) {
-    // A list accepts empty elements (RFC 9110 section 5.6.1).
-    if (scanner.at(',')) {
-      scanner.skip();
-      scanner.ows();
-      continue;
-    }
-    ranges.push(mediaRange(scanner));
-    scanner.ows();
-    if (scanner.end()) break;
-    scanner.expect(',');
-    scanner.ows();
-  }
-  return ranges;
-}
-
-// Selects the candidate type of the highest weight, or null when no candidate has a weight above 0 (HY-116). Among equal
-// weights the first candidate in the given order is selected, so the candidates list the tie order.
-export function selectType(ranges: readonly AcceptRange[], types: readonly string[]): string | null {
-  let selected: string | null = null;
-  let best = 0;
-  for (const type of types) {
-    const weight = weightOf(ranges, type);
-    if (weight > best) {
-      best = weight;
-      selected = type;
-    }
-  }
-  return selected;
-}
-
-// Returns the weight that the most specific matching range gives a type `main/sub` without parameters: the range that
-// names the type (whatever its parameters), then `main/*`, then `*/*`. Among ranges of that level the highest weight
-// counts; a type that no range matches has weight 0 (HY-116).
-function weightOf(ranges: readonly AcceptRange[], type: string): number {
-  const slash = type.indexOf('/');
-  const main = type.slice(0, slash);
-  const sub = type.slice(slash + 1);
-  let level = 0;
-  let weight = 0;
-  for (const range of ranges) {
-    const matched = range.type === main && range.subtype === sub ? 3 : range.type === main && range.subtype === '*' ? 2 : range.type === '*' && range.subtype === '*' ? 1 : 0;
-    if (matched === 0) continue;
-    if (matched > level) {
-      level = matched;
-      weight = range.weight;
-    } else if (matched === level && range.weight > weight) {
-      weight = range.weight;
-    }
-  }
-  return weight;
-}
-
-// Reads one media range with its parameters and its weight (RFC 9110 section 12.5.1). Parameters after q are accept
-// extensions, which are read and not kept.
-function mediaRange(scanner: Scanner): AcceptRange {
-  const type = scanner.token().toLowerCase();
-  scanner.expect('/');
-  const subtype = scanner.token().toLowerCase();
-  const parameters: [string, string][] = [];
-  let weight = 1;
-  let weighted = false;
-  for (;;) {
-    scanner.ows();
-    if (!scanner.at(';')) break;
-    scanner.skip();
-    scanner.ows();
-    const name = scanner.token().toLowerCase();
-    if (weighted) {
-      // An accept extension: a token with an optional value (RFC 9110 section 12.5.1).
-      if (scanner.at('=')) {
-        scanner.skip();
-        parameterValue(scanner);
-      }
-    } else if (name === 'q') {
-      scanner.expect('=');
-      weight = qvalue(scanner);
-      weighted = true;
-    } else {
-      scanner.expect('=');
-      parameters.push([name, parameterValue(scanner)]);
-    }
-  }
-  return { type, subtype, parameters, weight };
-}
-
-// Reads a parameter value, which is a token or a quoted-string (RFC 9110 section 5.6.6).
-function parameterValue(scanner: Scanner): string {
-  return scanner.at('"') ? scanner.quoted() : scanner.token();
-}
-
-// Reads a qvalue (RFC 9110 section 12.4.2), which is not quoted; a weight above 1 or with more than three decimals is refused.
-function qvalue(scanner: Scanner): number {
-  const text = scanner.token();
-  if (!QVALUE.test(text)) scanner.fail(`the weight ${text} is not a qvalue`);
-  return Number(text);
-}
-
-// Reads the characters of an Accept value from a position, and fails with InvalidAccept at the first character that the
-// grammar does not allow.
-class Scanner {
+/** @internal */
+export class Accept {
+  // The position of the next character to read.
   private pos = 0;
   private readonly text: string;
 
-  constructor(text: string) {
+  private constructor(text: string) {
     this.text = text;
   }
 
-  end(): boolean {
-    return this.pos >= this.text.length;
-  }
-
-  at(char: string): boolean {
-    return this.text[this.pos] === char;
-  }
-
-  skip(): void {
-    this.pos++;
-  }
-
-  expect(char: string): void {
-    if (!this.at(char)) this.fail(`expected ${char}`);
-    this.pos++;
-  }
-
-  // Skips optional whitespace (RFC 9110 section 5.6.3).
-  ows(): void {
-    while (this.at(' ') || this.at('\t')) this.pos++;
-  }
-
-  // Reads a token (RFC 9110 section 5.6.2).
-  token(): string {
-    const start = this.pos;
-    while (!this.end() && TCHAR.test(this.text[this.pos] ?? '')) this.pos++;
-    if (start === this.pos) this.fail('expected a token');
-    return this.text.slice(start, this.pos);
-  }
-
-  // Reads a quoted-string (RFC 9110 section 5.6.4) and returns its value without the quotes and the quoted pairs.
-  quoted(): string {
-    this.expect('"');
-    let value = '';
-    for (;;) {
-      if (this.end()) this.fail('an unterminated quoted-string');
-      const char = this.text[this.pos] ?? '';
-      this.pos++;
-      if (char === '"') return value;
-      if (char === '\\') {
-        const next = this.text[this.pos] ?? '';
-        if (this.end() || !isQuotedPairChar(next)) this.fail('an invalid quoted pair');
-        this.pos++;
-        value += next;
-      } else {
-        if (!isQdtext(char)) this.fail('an invalid character in a quoted-string');
-        value += char;
+  // Parses an Accept field value into its ranges, in order. A null value is a request without Accept, which reads as the
+  // range that matches every type (RFC 9110, section 12.5.1; HY-116). An empty value is an empty list, and an empty list
+  // element is ignored (RFC 9110, section 5.6.1). The names of the types, subtypes and parameters are in lower case. The
+  // parameters are those before `q`, and the weight is the qvalue in thousandths (RFC 9110, section 12.4.2). What follows
+  // `q` is an accept extension, which is checked and not read. Throws InvalidAccept for a value that the grammar does not
+  // allow, or a weight that is not a qvalue.
+  static parse(value: string | null): MediaRange[] {
+    if (value === null) return [new MediaRange('*', '*', [], ANY)];
+    const reader = new Accept(value);
+    const ranges: MediaRange[] = [];
+    reader.skipOws();
+    while (!reader.end()) {
+      if (reader.at(',')) {
+        reader.pos++;
+        reader.skipOws();
+        continue;
       }
+      ranges.push(reader.range());
+      reader.skipOws();
+      if (!reader.end()) {
+        reader.expect(',');
+        reader.skipOws();
+      }
+    }
+    return ranges;
+  }
+
+  // Returns the media type of the request among the given types, or null when no type has a weight above 0 (HY-116). A
+  // type takes the weight of its most specific matching range, and among the ranges of that specificity the one of the
+  // highest weight. The first type of the list wins a tie. Throws InvalidAccept as `parse` does.
+  static select(value: string | null, types: readonly string[]): string | null {
+    const ranges = Accept.parse(value);
+    let selected: string | null = null;
+    let best = 0;
+    for (const type of types) {
+      const weight = Accept.weight(ranges, type);
+      if (weight > best) {
+        selected = type;
+        best = weight;
+      }
+    }
+    return selected;
+  }
+
+  // Returns the weight in thousandths that the ranges give a type: the weight of the most specific range that matches it,
+  // or 0 when no range matches. A range that names the type matches it whatever its parameters (HY-116).
+  private static weight(ranges: readonly MediaRange[], type: string): number {
+    const slash = type.indexOf('/');
+    const name = type.slice(0, slash);
+    const subtype = type.slice(slash + 1);
+    let specificity = 0;
+    let weight = 0;
+    for (const range of ranges) {
+      const match = range.type === '*' ? 1 : range.type === name && range.subtype === '*' ? 2 : range.type === name && range.subtype === subtype ? 3 : 0;
+      if (match === 0) continue;
+      if (match > specificity || (match === specificity && range.weight > weight)) {
+        specificity = match;
+        weight = range.weight;
+      }
+    }
+    return weight;
+  }
+
+  // Reads one media range: `type "/" subtype`, then its parameters and its weight (RFC 9110, section 12.5.1).
+  private range(): MediaRange {
+    const type = this.token().toLowerCase();
+    this.expect('/');
+    const subtype = this.token().toLowerCase();
+    if (type === '*' && subtype !== '*') throw this.invalid('a wildcard type has a subtype');
+    const parameters: [string, string][] = [];
+    let weight = ANY;
+    let weighted = false;
+    for (;;) {
+      this.skipOws();
+      if (!this.at(';')) break;
+      this.pos++;
+      this.skipOws();
+      const name = this.token().toLowerCase();
+      if (weighted) {
+        // An accept extension after the weight: `token [ "=" ( token / quoted-string ) ]`, read and not kept.
+        if (this.at('=')) {
+          this.pos++;
+          this.parameterValue();
+        }
+        continue;
+      }
+      this.expect('=');
+      if (name === 'q') {
+        weight = this.qvalue();
+        weighted = true;
+        continue;
+      }
+      parameters.push([name, this.parameterValue()]);
+    }
+    return new MediaRange(type, subtype, parameters, weight);
+  }
+
+  // Reads a qvalue and returns it in thousandths: `0[.000-999]` or `1[.000]` (RFC 9110, section 12.4.2).
+  private qvalue(): number {
+    const text = this.token();
+    if (!/^(0(\.[0-9]{0,3})?|1(\.0{0,3})?)$/.test(text)) throw this.invalid(`the weight ${text} is not a qvalue`);
+    const [whole = '0', fraction = ''] = text.split('.');
+    return Number(whole) * ANY + Number(fraction.padEnd(3, '0'));
+  }
+
+  // Reads a parameter value, a token or a quoted string, and returns it unquoted (RFC 9110, section 5.6.6).
+  private parameterValue(): string {
+    return this.at('"') ? this.quoted() : this.token();
+  }
+
+  // Reads a quoted string and returns its text without the quotes and the quoted pairs (RFC 9110, section 5.6.4).
+  private quoted(): string {
+    this.expect('"');
+    let text = '';
+    for (;;) {
+      if (this.end()) throw this.invalid('an unterminated quoted string');
+      const char = this.text.charAt(this.pos);
+      this.pos++;
+      if (char === '"') return text;
+      if (char === '\\') {
+        if (this.end() || !Accept.quotedPairCharacter(this.text.charCodeAt(this.pos))) throw this.invalid('an invalid quoted pair');
+        text += this.text.charAt(this.pos);
+        this.pos++;
+        continue;
+      }
+      if (!Accept.qdtextCharacter(char.charCodeAt(0))) throw this.invalid('an invalid character in a quoted string');
+      text += char;
     }
   }
 
-  fail(reason: string): never {
-    throw new InvalidAccept(`hyper: the Accept value ${JSON.stringify(this.text)} is invalid at ${this.pos}: ${reason} (HY-116)`);
+  // Whether a character is a qdtext: HTAB, SP, %x21, %x23-5B, %x5D-7E or obs-text (RFC 9110, section 5.6.4).
+  private static qdtextCharacter(code: number): boolean {
+    return code === 0x09 || code === 0x20 || code === 0x21 || (code >= 0x23 && code <= 0x5b) || (code >= 0x5d && code <= 0x7e) || (code >= 0x80 && code <= 0xff);
   }
-}
 
-// qdtext = HTAB / SP / %x21 / %x23-5B / %x5D-7E / obs-text (RFC 9110 section 5.6.4).
-function isQdtext(char: string): boolean {
-  const code = char.charCodeAt(0);
-  return code === 0x09 || code === 0x20 || code === 0x21 || (code >= 0x23 && code <= 0x5b) || (code >= 0x5d && code <= 0x7e) || (code >= 0x80 && code <= 0xff);
-}
+  // Whether a character may follow the backslash of a quoted pair: HTAB, SP, VCHAR or obs-text (RFC 9110, 5.6.4).
+  private static quotedPairCharacter(code: number): boolean {
+    return code === 0x09 || code === 0x20 || (code >= 0x21 && code <= 0x7e) || (code >= 0x80 && code <= 0xff);
+  }
 
-// quoted-pair = "\" ( HTAB / SP / VCHAR / obs-text ) (RFC 9110 section 5.6.4).
-function isQuotedPairChar(char: string): boolean {
-  const code = char.charCodeAt(0);
-  return code === 0x09 || code === 0x20 || (code >= 0x21 && code <= 0x7e) || (code >= 0x80 && code <= 0xff);
+  // Reads a token (RFC 9110, section 5.6.2).
+  private token(): string {
+    const start = this.pos;
+    while (!this.end() && TCHAR.includes(this.text.charAt(this.pos))) this.pos++;
+    if (start === this.pos) throw this.invalid('expected a token');
+    return this.text.slice(start, this.pos);
+  }
+
+  // Skips the optional white space (RFC 9110, section 5.6.3).
+  private skipOws(): void {
+    while (this.at(' ') || this.at('\t')) this.pos++;
+  }
+
+  // Reads the character `char`, which must come next.
+  private expect(char: string): void {
+    if (!this.at(char)) throw this.invalid(`expected ${char}`);
+    this.pos++;
+  }
+
+  // Whether the next character is `char`.
+  private at(char: string): boolean {
+    return this.pos < this.text.length && this.text.charAt(this.pos) === char;
+  }
+
+  // Whether the whole value has been read.
+  private end(): boolean {
+    return this.pos >= this.text.length;
+  }
+
+  // The error of a value that the grammar does not allow, at the current position.
+  private invalid(reason: string): InvalidAccept {
+    return new InvalidAccept(`hyper: the Accept value ${JSON.stringify(this.text)} is invalid at ${this.pos}: ${reason} (HY-116)`);
+  }
 }

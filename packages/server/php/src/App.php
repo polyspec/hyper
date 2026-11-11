@@ -538,7 +538,7 @@ final class App
     {
         try {
             $selected = Accept::select($request->header('Accept'), [self::PAGE_TYPE, self::DATA_TYPE]);
-        } catch (\InvalidArgumentException) {
+        } catch (InvalidAccept) {
             return Response::text(400, 'Bad Request')->withHeader('Vary', 'Accept');
         }
         if ($selected !== null) {
