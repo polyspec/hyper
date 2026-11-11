@@ -4326,6 +4326,12 @@
                   "en": "A JSON response checks only the parameters of the request again, because this check covered the shared data and the region data and a kept value enters a response only when it is a value of the data model (HY-38).",
                   "ko": "JSON 응답은 요청의 매개변수만 다시 검사하는데, 이 검사가 공유 데이터와 영역 데이터를 이미 다뤘고 kept 값은 데이터 모델의 값일 때만 응답에 들어가기 때문이다(HY-38).",
                   "koSource": "2ba01cc5768542a57bc4f3e910c0f1e5abf811f7c12ddf5320a2950c367fab54"
+                },
+                {
+                  "id": "HY-44.8",
+                  "en": "A value outside the data model fails with an error of the classes of HY-46.2 whose message names the kind of the failure: `a number outside ±(2^53 − 1) is not a value of the data model (HY-44)`, `a number that is not finite is not a value of the data model (HY-44)`, `a string that is not UTF-8 text is not a value of the data model (HY-44)`, `lists and maps that nest deeper than 64 levels are not a value of the data model (HY-44)` and, for any other value or map key, `a value or a map key of another type is not a value of the data model (HY-44)`.",
+                  "ko": "data model 밖의 값은 HY-46.2의 클래스로 실패하며 그 메시지는 실패의 종류를 나타낸다: `a number outside ±(2^53 − 1) is not a value of the data model (HY-44)`, `a number that is not finite is not a value of the data model (HY-44)`, `a string that is not UTF-8 text is not a value of the data model (HY-44)`, `lists and maps that nest deeper than 64 levels are not a value of the data model (HY-44)`, 그리고 그 밖의 값이나 map key에는 `a value or a map key of another type is not a value of the data model (HY-44)`이다.",
+                  "koSource": "49dee704e8b7ef768bbd1322dc114072fbc749b4682ec34f80a11ef03299cd3a"
                 }
               ]
             }

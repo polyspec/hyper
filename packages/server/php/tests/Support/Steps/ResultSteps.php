@@ -11,7 +11,6 @@ use Polyspec\Hyper\Redirect;
 use Polyspec\Hyper\Result;
 use Polyspec\Hyper\Tests\CaseReader;
 use Polyspec\Hyper\Tests\Support\Plain;
-use Polyspec\Template\Value\BindError;
 
 /** HY-25, HY-27, HY-46, HY-50, HY-58: the cases of contracts/result.json, the results of actions and the stops. */
 final class ResultSteps
@@ -89,7 +88,7 @@ final class ResultSteps
             foreach ($topics as $names) {
                 $result = $result->changed(...$names);
             }
-        } catch (BindError $failure) {
+        } catch (\InvalidArgumentException $failure) {
             $result = null;
             $error = $failure->getMessage();
         }

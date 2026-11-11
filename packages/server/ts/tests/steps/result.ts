@@ -1,5 +1,4 @@
 // The steps of contracts/result.json (HY-25, HY-27, HY-46, HY-50, HY-58): the results of actions and the stops.
-import { BindError } from '@polyspec/template/render';
 import { BadRequest } from '../../src/bad-request.js';
 import { Forbidden } from '../../src/forbidden.js';
 import { NotFound } from '../../src/not-found.js';
@@ -94,7 +93,7 @@ export const steps = {
       for (const [name, value] of flashes) result = result.flash(name, value);
       for (const names of topics) result = result.changed(...names);
       return result;
-    }, BindError);
+    }, RangeError);
     reader.compare('flashValues', outcome.result?.flashValues ?? null);
     reader.compare('changedTopics', outcome.result === null ? null : [...outcome.result.changedTopics]);
     reader.compare('error', outcome.error);

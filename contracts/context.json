@@ -979,7 +979,7 @@
       "absentHeaders": [
         "Vary"
       ],
-      "failure": "integer 9007199254740993 is outside the safe range",
+      "failure": "a number outside ±(2^53 − 1) is not a value of the data model (HY-44)",
       "requirements": [
         "HY-43",
         "HY-44",

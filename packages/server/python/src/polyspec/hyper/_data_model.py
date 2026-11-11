@@ -10,6 +10,12 @@ import math
 
 _MAX_SAFE = 9007199254740991
 _MAX_DEPTH = 64
+# The message of each kind of failure (HY-44.8).
+_NUMBER = "a number outside ±(2^53 − 1) is not a value of the data model (HY-44)"
+_FINITE = "a number that is not finite is not a value of the data model (HY-44)"
+_UTF8 = "a string that is not UTF-8 text is not a value of the data model (HY-44)"
+_DEPTH = "lists and maps that nest deeper than 64 levels are not a value of the data model (HY-44)"
+_TYPE = "a value or a map key of another type is not a value of the data model (HY-44)"
 
 
 class DataModel:
@@ -39,30 +45,28 @@ class DataModel:
                 continue
             if isinstance(item, int):
                 if abs(item) > _MAX_SAFE:
-                    raise ValueError(f"integer {item} is outside the safe range")
+                    raise ValueError(_NUMBER)
                 continue
             if isinstance(item, float):
                 if not math.isfinite(item):
-                    raise ValueError("number is not finite")
+                    raise ValueError(_FINITE)
                 if abs(item) > _MAX_SAFE:
-                    raise ValueError(f"number {item} is outside the safe range")
+                    raise ValueError(_NUMBER)
                 continue
             if isinstance(item, str):
                 if any(0xD800 <= ord(char) <= 0xDFFF for char in item):
-                    raise ValueError("string contains an unpaired surrogate")
+                    raise ValueError(_UTF8)
                 continue
             if isinstance(item, (list, dict)) and level + 1 > _MAX_DEPTH:
-                raise ValueError(
-                    f"lists and dictionaries nest deeper than {_MAX_DEPTH} levels"
-                )
+                raise ValueError(_DEPTH)
             if isinstance(item, list):
                 stack.extend((child, level + 1) for child in reversed(item))
                 continue
             if isinstance(item, dict):
                 for key, child in reversed(list(item.items())):
                     if not isinstance(key, str):
-                        raise ValueError("map key is not a string")
+                        raise ValueError(_TYPE)
                     stack.append((key, level + 1))
                     stack.append((child, level + 1))
                 continue
-            raise ValueError(f"a {type(item).__name__} value has no binding")
+            raise ValueError(_TYPE)
