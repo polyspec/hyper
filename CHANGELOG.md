@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- The spec lists the members of the unit `Response` of the three servers, and `send`, `sendReplacing` and `writeHeaders` for PHP alone (HY-100.30). The Python `Response` declares `status`, `headers` and `body` as attributes of the class, as PHP and Node declare them as properties (HY-130) (H28.11).
+
 - `make recipe-check` names an internal member of a public Python module with a leading `_`, as HYR-5 states, and no longer reports it as `MEMBER_NAME` (H28.11).
 
 - The JSON text is the unit `JsonCodec` in the three servers, with the static members `value`, `encode`, `decode` and `inDataModel`; PHP writes and reads JSON text with `json_encode` and `json_decode`, and Node and Python with the private members that the spec lists for them alone (HY-54.4, HY-54.8). `OutsideNumber` and `JsonDecodeError` are units of their own files. The data model is the unit `DataModel` with `check`, `contains` and the private member `walk` in the three servers, and `inDataModel` is `DataModel.contains`, so a decoded value that nests deeper than the data model allows is outside it in every server; Python checks the nesting with a stack, so 511 nested lists no longer exceed its recursion limit. The cases of the native JSON tests are in `contracts/json.json` (HY-17, HY-44, HY-54) (H28.11).

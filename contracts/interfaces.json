@@ -1143,7 +1143,248 @@
               "internal": false
             }
           },
-          "members": []
+          "members": [
+            {
+              "id": "response.constructor",
+              "kind": "constructor",
+              "visibility": "public",
+              "inputs": [
+                "number",
+                "map<value>",
+                "string"
+              ],
+              "output": "response",
+              "errors": [],
+              "state": "Holds the status, the headers and the body of a response.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Response.php::Polyspec\\Hyper\\Response::__construct",
+                  "signature": "public function __construct(int $status, array $headers, string $body)"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/response.ts::Response.constructor",
+                  "signature": "constructor(status: number, headers: Record<string, string | string[]>, body: string)"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/response.py::Response.__init__",
+                  "signature": "def __init__(self, status: int, headers: dict[str, Union[str, list[str]]], body: str)"
+                }
+              }
+            },
+            {
+              "id": "response.withHeader",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [
+                "string",
+                "string"
+              ],
+              "output": "response",
+              "errors": [],
+              "state": "Returns a copy of the response with a header added or replaced.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Response.php::Polyspec\\Hyper\\Response::withHeader",
+                  "signature": "public function withHeader(string $name, string $value): Polyspec\\Hyper\\Response"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/response.ts::Response.withHeader",
+                  "signature": "withHeader(name: string, value: string): Response"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/response.py::Response.with_header",
+                  "signature": "def with_header(self, name: str, value: str) -> 'Response'"
+                }
+              }
+            },
+            {
+              "id": "response.withCookies",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "reply",
+                "boolean"
+              ],
+              "output": "response",
+              "errors": [],
+              "state": "Returns a copy of the response with the Set-Cookie headers of the cookies of a reply.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Response.php::Polyspec\\Hyper\\Response::withCookies",
+                  "signature": "public function withCookies(Polyspec\\Hyper\\Reply $reply, bool $secure): Polyspec\\Hyper\\Response"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/response.ts::Response.withCookies",
+                  "signature": "withCookies(reply: Reply, secure: boolean): Response"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/response.py::Response._with_cookies",
+                  "signature": "def _with_cookies(self, reply: Reply, secure: bool) -> 'Response'"
+                }
+              }
+            },
+            {
+              "id": "response.text",
+              "kind": "static method",
+              "visibility": "public",
+              "inputs": [
+                "number",
+                "string"
+              ],
+              "output": "response",
+              "errors": [],
+              "state": "Returns a plain text response of a status.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Response.php::Polyspec\\Hyper\\Response::text",
+                  "signature": "public static function text(int $status, string $body): Polyspec\\Hyper\\Response"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/response.ts::Response.text",
+                  "signature": "static text(status: number, body: string): Response"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/response.py::Response.text",
+                  "signature": "def text(status: int, body: str) -> 'Response'"
+                }
+              }
+            },
+            {
+              "id": "response.send",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "none",
+              "errors": [],
+              "state": "Writes the status, the headers and the body through the PHP SAPI.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Response.php::Polyspec\\Hyper\\Response::send",
+                  "signature": "public function send(): void"
+                }
+              },
+              "only": {
+                "languages": [
+                  "php"
+                ],
+                "sentence": "HY-100.30"
+              }
+            },
+            {
+              "id": "response.sendReplacing",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "list<string>",
+                "string"
+              ],
+              "output": "none",
+              "errors": [],
+              "state": "Writes the response in place of the headers that PHP already queued, keeping the named ones.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Response.php::Polyspec\\Hyper\\Response::sendReplacing",
+                  "signature": "public function sendReplacing(array $kept, string $statusLine): void"
+                }
+              },
+              "only": {
+                "languages": [
+                  "php"
+                ],
+                "sentence": "HY-100.30"
+              }
+            },
+            {
+              "id": "response.writeHeaders",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [],
+              "output": "none",
+              "errors": [],
+              "state": "Writes the status line and the headers through the PHP SAPI.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Response.php::Polyspec\\Hyper\\Response::writeHeaders",
+                  "signature": "private function writeHeaders(): void"
+                }
+              },
+              "only": {
+                "languages": [
+                  "php"
+                ],
+                "sentence": "HY-100.30"
+              }
+            },
+            {
+              "id": "response.status",
+              "kind": "property",
+              "visibility": "public",
+              "inputs": [],
+              "output": "number",
+              "errors": [],
+              "state": "Holds the status of the response.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Response.php::Polyspec\\Hyper\\Response::status",
+                  "signature": "public protected(set) readonly int $status"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/response.ts::Response.status",
+                  "signature": "readonly status: number"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/response.py::Response.status",
+                  "signature": "status: int"
+                }
+              }
+            },
+            {
+              "id": "response.headers",
+              "kind": "property",
+              "visibility": "public",
+              "inputs": [],
+              "output": "map<value>",
+              "errors": [],
+              "state": "Holds the headers of the response by name.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Response.php::Polyspec\\Hyper\\Response::headers",
+                  "signature": "public protected(set) readonly array $headers"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/response.ts::Response.headers",
+                  "signature": "readonly headers: Record<string, string | string[]>"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/response.py::Response.headers",
+                  "signature": "headers: dict[str, Union[str, list[str]]]"
+                }
+              }
+            },
+            {
+              "id": "response.body",
+              "kind": "property",
+              "visibility": "public",
+              "inputs": [],
+              "output": "string",
+              "errors": [],
+              "state": "Holds the body of the response.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Response.php::Polyspec\\Hyper\\Response::body",
+                  "signature": "public protected(set) readonly string $body"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/response.ts::Response.body",
+                  "signature": "readonly body: string"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/response.py::Response.body",
+                  "signature": "body: str"
+                }
+              }
+            }
+          ]
         }
       ]
     },

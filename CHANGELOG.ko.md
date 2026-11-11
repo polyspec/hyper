@@ -6,6 +6,8 @@
 
 ## Unreleased
 
+- spec은 세 서버의 unit `Response`의 member를 나열한다. `send`, `sendReplacing`, `writeHeaders`는 PHP에만 둔다(HY-100.30). Python `Response`는 PHP와 Node가 property로 선언하듯 `status`, `headers`, `body`를 class의 속성으로 선언한다(HY-130)(H28.11).
+
 - `make recipe-check`는 공개 Python module의 internal member 이름을 HYR-5대로 `_`로 시작하는 것으로 보고, 더 이상 `MEMBER_NAME`으로 보고하지 않는다(H28.11).
 
 - JSON 텍스트는 세 서버에서 unit `JsonCodec`이다. static member `value`, `encode`, `decode`, `inDataModel`을 가진다. PHP는 `json_encode`와 `json_decode`로 JSON 텍스트를 쓰고 읽는다. Node와 Python은 spec이 두 언어에만 적은 private member로 쓰고 읽는다(HY-54.4, HY-54.8). `OutsideNumber`와 `JsonDecodeError`는 각자 자기 파일의 unit이다. 데이터 모델은 세 서버에서 `check`, `contains`, private member `walk`를 가진 unit `DataModel`이다. `inDataModel`은 `DataModel.contains`이므로, 데이터 모델이 허용하는 깊이보다 깊게 중첩된 decode 값은 모든 서버에서 데이터 모델 밖이다. Python은 중첩을 stack으로 검사하므로, 511단으로 중첩된 list가 더 이상 재귀 한계를 넘지 않는다. native JSON 테스트의 case는 `contracts/json.json`에 있다(HY-17, HY-44, HY-54)(H28.11).
