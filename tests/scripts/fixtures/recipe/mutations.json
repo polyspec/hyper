@@ -21,5 +21,7 @@
   { "id": "result-file-deleted", "file": "results/node.txt", "delete": true, "code": "RESULT_MISSING" },
   { "id": "result-line-missing", "file": "results/php.txt", "from": "CASE contracts/csrf.json raw-token PASS\n", "to": "", "code": "RESULT_MISSING" },
   { "id": "result-line-failed", "file": "results/python.txt", "from": "PASS", "to": "FAIL the token differs", "code": "RESULT_FAIL" },
-  { "id": "term-outside-vocabulary", "file": "contracts/interfaces.json", "from": "\"output\": \"string\",", "to": "\"output\": \"bytes\",", "code": "TERM_UNKNOWN" }
+  { "id": "term-outside-vocabulary", "file": "contracts/interfaces.json", "from": "\"output\": \"string\",", "to": "\"output\": \"bytes\",", "code": "TERM_UNKNOWN" },
+  { "id": "member-id-acronym", "file": "contracts/interfaces.json", "from": "\"id\": \"csrf.raw\",", "to": "\"id\": \"csrf.rawURL\",", "code": "NAME_ACRONYM" },
+  { "id": "case-reader-member-renamed", "file": "packages/server/php/tests/CaseReader.php", "from": "public function fail(): string", "to": "public function failed(): string", "code": "CASE_READER_MEMBERS" }
 ]
