@@ -92,7 +92,8 @@ export function startPhp({ name, app, port, env, extension, ini = [], children }
   return startServer({
     name,
     command: 'php',
-    args: [...loaded, '-d', 'display_errors=0', '-S', `127.0.0.1:${port}`, '-t', join(app, 'public')],
+    // App::run requires that PHP leaves the request body to the application (HY-59.9); a setting of `ini` follows it.
+    args: ['-d', 'enable_post_data_reading=0', ...loaded, '-d', 'display_errors=0', '-S', `127.0.0.1:${port}`, '-t', join(app, 'public')],
     env: { ...process.env, ...env },
     ready: PHP_READY,
     children,

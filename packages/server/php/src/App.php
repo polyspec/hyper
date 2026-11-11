@@ -1066,8 +1066,9 @@ final class App
         // The headers that the caller set before this call stay on the plain 500 of an escaped error (HY-60).
         $kept = headers_list();
         $started ??= hrtime(true);
-        // HY-59: PHP drops a body larger than post_max_size, and gives the body of a multipart request to
-        // php://input only when enable_post_data_reading is off.
+        // HY-59: PHP drops a body larger than post_max_size, gives the body of a multipart request to php://input only
+        // when enable_post_data_reading is off, and with it on reads every body with its own reader before the
+        // application, under every SAPI that serves requests.
         $postMaxSize = ini_parse_quantity((string) ini_get('post_max_size'));
         if ($postMaxSize > 0 && $postMaxSize < $this->bodyLimit) {
             throw new \LogicException("body limit {$this->bodyLimit} is larger than post_max_size {$postMaxSize}");
@@ -1077,6 +1078,14 @@ final class App
             && filter_var(ini_get('enable_post_data_reading'), FILTER_VALIDATE_BOOL)
         ) {
             throw new \LogicException('multipart/form-data is accepted, so enable_post_data_reading must be off');
+        }
+        if (
+            !in_array(PHP_SAPI, ['cli', 'phpdbg'], true)
+            && filter_var(ini_get('enable_post_data_reading'), FILTER_VALIDATE_BOOL)
+        ) {
+            throw new \LogicException(
+                'enable_post_data_reading must be off: with it on PHP reads a request body before the application',
+            );
         }
         ini_set('display_errors', '0');
         ini_set('log_errors', '1');

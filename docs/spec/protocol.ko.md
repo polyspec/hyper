@@ -1,5 +1,5 @@
 <!-- doc-id: protocol -->
-<!-- source-sha256: 7609959901e1264d36b99a1c6c6b27e3133654700284a0c3c4da000a8028dfa0 -->
+<!-- source-sha256: 2350edce856d16ef544deca2839fe3cffb497fbf52eac4fcd9cdb241b3fe39ce -->
 # 영역 프로토콜
 
 <!-- contracts/protocol.json에서 생성됨. 직접 수정하지 않는다. -->
@@ -367,7 +367,7 @@
   2. <a id="HY-59.7"></a> 라우팅과 HY-27 뒤에, `Content-Type`의 media type(매개변수 없이, 대소문자 무시하고 비교)이 form 타입이 아닌 action이나 `/_hyper/keep`으로의 `POST` 요청은 상태 415와 텍스트 `Unsupported Media Type`으로 응답한다.
   3. <a id="HY-59.8"></a> 그다음 HY-24의 CSRF 검사가 403으로 응답한다.
 
-  <a id="HY-59.9"></a> PHP의 `App::run`은 `post_max_size`가 한도보다 작거나, `multipart/form-data`가 form 타입이고 `enable_post_data_reading`이 켜져 있으면(HY-57), 응답하기 전에 실패한다.
+  <a id="HY-59.9"></a> PHP의 `App::run`은 `post_max_size`가 한도보다 작거나, `multipart/form-data`가 form 타입이고 `enable_post_data_reading`이 켜져 있거나(HY-57), 요청을 처리하는 SAPI, 곧 `cli`와 `phpdbg`를 뺀 모든 SAPI 아래에서 `enable_post_data_reading`이 켜져 있으면 응답하기 전에 실패한다. 그때 PHP는 application이 실행되기 전에 모든 요청 body를 자신의 reader로 읽기 때문이다.
 
 - **HY-60** <a id="HY-60.1"></a> 애플리케이션은 응답 hook을 선언할 수 있다. <a id="HY-60.2"></a> 서버는 애플리케이션의 모든 응답에 대해 한 번 그것을 호출하며, 요청, 응답, 경과 밀리초와 함께 호출하고, hyper가 직접 응답하는 응답도 포함한다: 400(HY-42, HY-58), 403(HY-24, HY-51), 404와 405(HY-27), 406과 정적 shell(HY-62), HY-116의 400과 406, HY-127의 400, HY-121의 400, 405, 415, 413과 415(HY-59), 500(HY-43, HY-66). <a id="HY-60.3"></a> 요청은 받은 그대로의 요청이며 base path를 가진다. <a id="HY-60.4"></a> 응답은 애플리케이션의 응답이며 `Content-Security-Policy`(HY-45)를 가진다; 그 뒤에 session이 더하는 session cookie는 그 일부가 아니다. <a id="HY-60.5"></a> 경과 시간은 요청의 시작부터 단조 시계로 측정한다: PHP의 `App::run`과 `handle`은 시작 시각을 호출자로부터 `hrtime(true)` 값으로 받거나(예: front controller의 첫 문장이 얻는 값), 자기 호출부터 측정한다; Node 서버는 `node:http`가 요청을 준 시각부터 `performance.now()`로 측정한다. <a id="HY-60.6"></a> 어느 서버도 `REQUEST_TIME_FLOAT`나 `microtime(true)` 같은 벽시계 시각을 빼지 않는데, 시스템 시각의 조정이 벽시계를 뒤로 옮겨 음수 경과 시간을 주기 때문이다. <a id="HY-60.7"></a> Node 서버는 `node:http`가 파싱할 수 없는 요청에 대한 400과 431 응답도 보고하며, 그 요청은 요청 줄의 method와 target을 가지고, 패킷에 요청 줄이 없으면 요청은 없다. <a id="HY-60.8"></a> hook은 또한 요청의 reply(HY-52)를 받으므로, loader와 action이 정한 값을 읽는다: 요청이 stop(HY-50, HY-51, HY-58), HY-27의 실패, HY-43의 오류로 끝났어도 그들이 받은 reply를, 그리고 서버가 라우팅 전에(HY-42, HY-59, route가 없는 path, `/_hyper/keep`, `node:http`가 애플리케이션에 줄 수 없는 응답) 응답했거나 loader나 action 없이(HY-62의 405와 406 응답과 shell, HY-116의 406, representation의 모든 응답, HY-121과 HY-122) 응답했다면 새 빈 reply를 받는다. <a id="HY-60.9"></a> loader나 action은 그런 값을 reply의 note(이름과 임의의 값)로 기록하며, 같은 이름의 나중 note는 값을 바꾸고 자리를 유지한다. <a id="HY-60.10"></a> 서버는 note를 읽지 않으며, note는 응답의 일부가 아니다. <a id="HY-60.11"></a> hook은 HY-43 또는 HY-66의 500에 대해 그 실패도 받으므로, 애플리케이션은 원인을 자기 줄로 쓴다: 실패는 HY-43의 오류 메시지(PHP `Throwable`이나 Node `Error`의 메시지, 또는 다른 던져진 값의 텍스트) 또는 HY-66의 `the response to <method> <path> has <size> bytes, more than the response limit of <limit> bytes`이다; 다른 모든 응답에 대해서는 null을 받는다. <a id="HY-60.12"></a> Node 서버의 public 디렉터리 파일은 애플리케이션의 응답이 아니다. <a id="HY-60.13"></a> hook이 던지는 오류는 HY-43이 처리하지 않으며, `handle`의 호출자에게 전달된다.
 

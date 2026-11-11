@@ -11,7 +11,7 @@ import { mkdirSync, mkdtempSync, readdirSync, rmSync } from 'node:fs';
 import { connect } from 'node:net';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { test } from 'node:test';
+import { test, type TestContext } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 
@@ -47,19 +47,16 @@ function send(url: string, method: string, headers: Record<string, string>, body
   });
 }
 
-const part = (disposition: string, content: Buffer): Buffer => Buffer.concat([Buffer.from(`--${BOUNDARY}\r\nContent-Disposition: ${disposition}\r\n\r\n`), content, Buffer.from('\r\n')]);
-
-test('the three servers read an upload over HTTP alike and remove its directory (HY-131)', { timeout: 300_000 }, async (t) => {
-  requireBuilt('packages', 'packages/server/ts/dist/index.js');
-  requireBuilt('hyper-install-python', 'packages/server/python/.venv/bin/python');
-  requireBuilt('hyper-install-php', 'vendor/autoload.php');
+// Starts a run: its directory with the application of the servers, built as the applications of the contract cases
+// are, its children, which the end of the test stops before it removes the directory, and the environment of a server
+// with directories of its own.
+async function started(t: TestContext): Promise<{ directory: string; children: ChildProcess[]; environment: (server: string) => Record<string, string> }> {
   const directory = mkdtempSync(path.join(tmpdir(), 'hyper-upload-servers-'));
   const children: ChildProcess[] = [];
   t.after(async () => {
     await stopServers(children);
     rmSync(directory, { recursive: true, force: true });
   });
-  // The application of the three servers, built as the applications of the contract cases are.
   await promisify(execFile)(process.execPath, [
     path.join(ROOT, 'scripts/contract-programs.mts'),
     '--contract', path.join(FIXTURE, 'application.json'),
@@ -76,6 +73,16 @@ test('the three servers read an upload over HTTP alike and remove its directory 
       TMPDIR: path.join(directory, server, 'tmp'),
     };
   };
+  return { directory, children, environment };
+}
+
+const part = (disposition: string, content: Buffer): Buffer => Buffer.concat([Buffer.from(`--${BOUNDARY}\r\nContent-Disposition: ${disposition}\r\n\r\n`), content, Buffer.from('\r\n')]);
+
+test('the three servers read an upload over HTTP alike and remove its directory (HY-131)', { timeout: 300_000 }, async (t) => {
+  requireBuilt('packages', 'packages/server/ts/dist/index.js');
+  requireBuilt('hyper-install-python', 'packages/server/python/.venv/bin/python');
+  requireBuilt('hyper-install-php', 'vendor/autoload.php');
+  const { directory, children, environment } = await started(t);
   const urls = {
     php: (await startPhp({ name: 'php', app: FIXTURE, port: 0, env: environment('php'), ini: ['enable_post_data_reading=0', 'post_max_size=64M', `session.save_path=${path.join(directory, 'php/sessions')}`], children })).url,
     node: (await startServer({ name: 'node', command: process.execPath, args: ['--no-warnings', path.join(FIXTURE, 'server.mjs')], env: { ...process.env, ...environment('node') }, ready: READY, children })).url,
@@ -111,4 +118,17 @@ test('the three servers read an upload over HTTP alike and remove its directory 
       if (server !== 'node') assert.deepEqual(readdirSync(path.join(directory, server, 'tmp')).filter((name) => name.startsWith('hyper-')), [], `${server}, ${request.label}: the directory of the request stays`);
     }
   }
+});
+
+test('App::run of PHP fails under a server when PHP reads the request body itself (HY-59.9)', { timeout: 120_000 }, async (t) => {
+  requireBuilt('hyper-install-php', 'vendor/autoload.php');
+  const { children, environment } = await started(t);
+  const env = { ...environment('php'), UPLOAD_FORMS: 'urlencoded' };
+  // The application accepts no multipart body, and the two servers differ only in the setting, so the 500 of the first
+  // is the refusal of `App::run` for a SAPI that serves requests.
+  const reading = await startPhp({ name: 'php-reading', app: FIXTURE, port: 0, env, ini: ['post_max_size=64M', 'enable_post_data_reading=1', 'log_errors=0'], children });
+  const refused = await send(reading.url, 'GET', {}, Buffer.alloc(0));
+  assert.equal(refused.status, 500, 'the application answered although PHP reads the request body itself');
+  const left = await startPhp({ name: 'php-left', app: FIXTURE, port: 0, env, ini: ['post_max_size=64M', 'log_errors=0'], children });
+  assert.equal((await send(left.url, 'GET', {}, Buffer.alloc(0))).status, 200);
 });

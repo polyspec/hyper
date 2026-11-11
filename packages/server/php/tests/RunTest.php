@@ -183,7 +183,16 @@ final class RunTest extends TestCase
             // The server listens on a port that the system assigns and reports it, so no other process can take the
             // port between its choice and its use (HR-89). ignore_user_abort is on here, so App::run must turn it off.
             [$server, $stderr, $port] = self::startServer(
-                [PHP_BINARY, '-d', 'ignore_user_abort=1', '-S', '127.0.0.1:0', __DIR__ . '/Support/disconnect.php'],
+                [
+                    PHP_BINARY,
+                    '-d',
+                    'ignore_user_abort=1',
+                    '-d',
+                    'enable_post_data_reading=0',
+                    '-S',
+                    '127.0.0.1:0',
+                    __DIR__ . '/Support/disconnect.php',
+                ],
                 [...getenv(), ...$env, 'HYPER_DISCONNECT_LOG' => $log],
             );
             $client = stream_socket_client("tcp://127.0.0.1:{$port}");
@@ -366,6 +375,8 @@ final class RunTest extends TestCase
                     'error_log=/dev/null',
                     '-d',
                     'output_buffering=' . $outputBuffering,
+                    '-d',
+                    'enable_post_data_reading=0',
                     '-S',
                     '127.0.0.1:0',
                     __DIR__ . '/Support/escape.php',

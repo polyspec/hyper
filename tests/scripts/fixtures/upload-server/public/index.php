@@ -27,7 +27,10 @@ App::open(
     handlers: ['routes' => ['home' => ['load' => static fn (): array => []]]],
     timezone: 'Z',
     bodyLimit: $limit,
-    formTypes: ['application/x-www-form-urlencoded', 'multipart/form-data'],
+    // UPLOAD_FORMS=urlencoded opens the application without the multipart form type.
+    formTypes: getenv('UPLOAD_FORMS') === 'urlencoded'
+        ? ['application/x-www-form-urlencoded']
+        : ['application/x-www-form-urlencoded', 'multipart/form-data'],
     fileLimit: $limit,
     partLimit: (int) (getenv('UPLOAD_PARTS') ?: 1000),
     around: static function (Request $request) use ($moved): Response {

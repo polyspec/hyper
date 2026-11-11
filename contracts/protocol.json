@@ -6122,9 +6122,9 @@
               "statements": [
                 {
                   "id": "HY-59.9",
-                  "en": "`App::run` of PHP fails before it answers when `post_max_size` is smaller than the limit, or when `multipart/form-data` is a form type and `enable_post_data_reading` is on (HY-57).",
-                  "ko": "PHP의 `App::run`은 `post_max_size`가 한도보다 작거나, `multipart/form-data`가 form 타입이고 `enable_post_data_reading`이 켜져 있으면(HY-57), 응답하기 전에 실패한다.",
-                  "koSource": "d129fb21866a13ee0c210ddc157e9c7bd7d52ec48e14b0fd0239ec062078ab38"
+                  "en": "`App::run` of PHP fails before it answers when `post_max_size` is smaller than the limit, when `multipart/form-data` is a form type and `enable_post_data_reading` is on (HY-57), or when `enable_post_data_reading` is on under a SAPI that serves requests, every SAPI but `cli` and `phpdbg`, because PHP then reads every request body with its own reader before the application runs.",
+                  "ko": "PHP의 `App::run`은 `post_max_size`가 한도보다 작거나, `multipart/form-data`가 form 타입이고 `enable_post_data_reading`이 켜져 있거나(HY-57), 요청을 처리하는 SAPI, 곧 `cli`와 `phpdbg`를 뺀 모든 SAPI 아래에서 `enable_post_data_reading`이 켜져 있으면 응답하기 전에 실패한다. 그때 PHP는 application이 실행되기 전에 모든 요청 body를 자신의 reader로 읽기 때문이다.",
+                  "koSource": "cec6a9942b8d947a54a4e95f66ab79b72f7d48585bdc7ce4172bd0307c38d5a5"
                 }
               ]
             }
