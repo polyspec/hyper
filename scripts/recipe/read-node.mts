@@ -105,7 +105,7 @@ function nameOf(node: ts.NamedDeclaration): string {
 
 /** The declaration text up to its body, one line, without the trailing `;`. */
 function bodyOf(node: ts.Node): ts.Node | undefined {
-  if (ts.isFunctionDeclaration(node) || ts.isMethodDeclaration(node) || ts.isConstructorDeclaration(node)) {
+  if (ts.isFunctionDeclaration(node) || ts.isMethodDeclaration(node) || ts.isConstructorDeclaration(node) || ts.isGetAccessorDeclaration(node) || ts.isSetAccessorDeclaration(node)) {
     return node.body;
   }
   return undefined;
@@ -208,7 +208,7 @@ function readClassMember(file: string, sf: ts.SourceFile, cls: string, classInte
         });
       }
     }
-  } else if (ts.isMethodDeclaration(m)) {
+  } else if (ts.isMethodDeclaration(m) || ts.isGetAccessorDeclaration(m) || ts.isSetAccessorDeclaration(m)) {
     const name = nameOf(m);
     out.members.push({
       file,
