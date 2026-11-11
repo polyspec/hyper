@@ -93,6 +93,7 @@ test('the server package answers requests and reports the reply of each one', as
   };
   const app = await App.open({
     manifest: `${FIXTURES}app.json`,
+    build: `${FIXTURES}build.json`,
     templates: { index: `${BUILD}templates.index.json`, root: BUILD },
     handlers,
     timezone: 'Z',

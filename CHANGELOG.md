@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- The test of the installed packages gives `App.open` the build file that it requires since the Node server reads the build id when it opens (HY-125), so that `make typecheck` passes for `tests/package-install` (H28.11).
+
 - The reply of a request fails alike in the three servers: a cookie name or value, a `Cache-Control`, a `Referrer-Policy` or a note name that is not a string, and a `Max-Age` or a page status that is not an integer of the data model, fail with `TypeError` and one message (HY-52.11, HY-60.28, HY-69.6, HY-103.8), and a value outside the rules fails with the class of HY-46.2 and one message (HY-52.12). Before, PHP converted an integer for a caller without strict types, Node accepted the number 5 as the cookie value `5`, Python raised its own `TypeError`, and Node used `Error` with the prefix `hyper:`. A `Max-Age` and a status take a float with an integer value, such as `60.0`, as the integer, as Node does (HY-52.10). `contracts/reply.json` holds 85 cases that the three runners pass, in place of the native reply tests, and the Python `Reply` keeps its state in private dataclass fields without a constructor, as PHP and Node do (H28.11).
 
 - `contracts/interfaces.json` states the PHP signatures `flash(mixed $name, mixed $value)` and `changed(mixed ...$topics)` with the `TypeError` of HY-25.6, and PHP `Result::flash` checks a value in place of a private helper, so that `make recipe-check` reports no failure of the result concern (H28.11).
