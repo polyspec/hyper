@@ -107,7 +107,7 @@ checks_result = test -z "$$failed" || { echo "failed checks:$$failed"; exit 1; }
 
 .DEFAULT_GOAL := help
 
-.PHONY: bench-sessions help hyper-install hyper-install-python hyper-install-browser hyper-install-virtiofs hyper-test-node hyper-test-python-render hyper-test-scripts check typecheck hyper-server-php-install ext packages package-check server server-fixtures context-programs node-server node-fixtures assets hyper-test-js hyper-test-php hyper-test-python hyper-lint analyse-php templates-check virtiofs-check parity server-parity server-parity-python bundle-size e2e serve-demo bench-server bench-server-smoke bench-browser bench serve-demo-unlock
+.PHONY: bench-sessions help hyper-install hyper-install-python hyper-install-browser hyper-install-virtiofs hyper-test-node hyper-test-python-render hyper-test-scripts check typecheck hyper-server-php-install ext packages package-check server server-fixtures contract-programs node-server node-fixtures assets hyper-test-js hyper-test-php hyper-test-python hyper-lint analyse-php templates-check virtiofs-check parity server-parity server-parity-python bundle-size e2e serve-demo bench-server bench-server-smoke bench-browser bench serve-demo-unlock
 
 help: ## List the targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
@@ -213,11 +213,11 @@ package-check: packages node-fixtures ## Install the npm packages into tests/pac
 server: packages assets ## Build the board server program from installed dependencies: its templates and generated PHP program (HY-48, HY-125)
 	$(NODE) $(BUILD_PACKAGE)/bin/hyper-build-server.mjs --manifest $(BOARD)/app/app.json --templates $(BOARD)/templates --output $(BOARD)/build/server --php-namespace 'Polyspec\Hyper\Examples\Board\Program' --build $(abspath $(BOARD)/build/build.json)
 
-server-fixtures: packages context-programs ## Build the server program of the PHP test fixtures (HY-48, HY-125)
+server-fixtures: packages contract-programs ## Build the server program of the PHP test fixtures (HY-48, HY-125)
 	$(NODE) $(BUILD_PACKAGE)/bin/hyper-build-server.mjs --manifest $(FIXTURES)/app.json --templates $(FIXTURES)/templates --output $(PHP_PACKAGE)/tests/build/server --php-namespace 'Polyspec\Hyper\Tests\Program' --build $(abspath $(FIXTURES)/build.json)
 
-context-programs: packages ## Build the applications of contracts/context.json for the tests of the three servers (HY-124)
-	$(NODE) scripts/context-programs.mjs --contract $(abspath contracts/context.json) --output $(abspath var/context-programs)
+contract-programs: packages ## Build the applications of contracts/context.json and contracts/functions.json for the tests of the three servers (HY-124, HYC-24)
+	$(NODE) scripts/contract-programs.mjs --contract $(abspath contracts/context.json) --contract $(abspath contracts/functions.json) --output $(abspath var/contract-programs)
 
 # A Node server bundle keeps the packages of node_modules external, and Node loads them from there: a CommonJS package that
 # requires Node modules cannot run inside an ESM bundle.
@@ -225,7 +225,7 @@ node-server: assets ## Build the board Node server into examples/board/build/nod
 	$(TSC) -p $(BOARD)/node/tsconfig.json
 	$(ESBUILD) $(BOARD)/node/main.ts --bundle --platform=node --format=esm --packages=external --target=node26 --log-level=warning --outfile=$(BOARD)/build/node/server.mjs
 
-node-fixtures: packages context-programs ## Build the template files of the PHP test fixtures for the Node server tests
+node-fixtures: packages contract-programs ## Build the template files of the PHP test fixtures for the Node server tests
 	$(NODE) scripts/build-templates.mts --templates $(FIXTURES)/templates --output $(NODE_PACKAGE)/tests/build
 
 # Shared gates read the declarations and runtime fixtures built by this checkout.

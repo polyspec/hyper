@@ -13,11 +13,11 @@ use Polyspec\Hyper\Tests\Support\Json;
 
 /**
  * HY-124 to HY-128: the cases of contracts/context.json, which the PHP, Node and Python servers pass. The programs of
- * the applications are built by scripts/context-programs.mjs (`make server-fixtures`).
+ * the applications are built by scripts/contract-programs.mjs (`make server-fixtures`).
  */
 final class ContextTest extends TestCase
 {
-    private const PROGRAMS = __DIR__ . '/../../../../var/context-programs';
+    private const PROGRAMS = __DIR__ . '/../../../../var/contract-programs';
 
     /** @return array<array-key, mixed> */
     private static function conformance(): array

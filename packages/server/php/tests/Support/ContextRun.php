@@ -15,7 +15,7 @@ use Polyspec\Hyper\Result;
 
 /**
  * Opens one application of contracts/context.json with its declared handlers and records the calls of the handlers
- * (HY-124). The program of each application is built by scripts/context-programs.mjs into var/context-programs.
+ * (HY-124). The program of each application is built by scripts/contract-programs.mjs into var/contract-programs.
  *
  * @phpstan-type Application array{manifest: array<string, mixed>, shared: array<string, mixed>, context?: string,
  *     loaders: array<string, array<string, mixed>>, embedData: list<string>,

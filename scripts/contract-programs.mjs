@@ -1,12 +1,13 @@
 #!/usr/bin/env node
-// Builds the applications of contracts/context.json (HY-48, HY-125) for the tests of the three servers. For each
-// application it writes into <output>/<application>/:
+// Builds the applications of the contract files contracts/context.json and contracts/functions.json (HY-48, HY-125)
+// for the tests of the three servers. The application names of all contracts are distinct. For each application it
+// writes into <output>/<application>/:
 //   manifest.json, templates/ and build.json   the inputs that the case states
 //   program/                                   the server program of hyper-build-server, which PHP and Python open
 //   node/templates.index.json, node/templates/ the template files that the Node server opens (HR-34)
 //
-// Usage: context-programs.mjs --contract contracts/context.json --output var/context-programs
-// Both paths are absolute.
+// Usage: contract-programs.mjs --contract <contracts/context.json> --contract <contracts/functions.json> --output
+// <var/contract-programs>. Every path is absolute.
 
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, join, resolve } from 'node:path';
@@ -16,17 +17,24 @@ import { parseArgs } from 'node:util';
 import { writeFileAtomic } from '../packages/build/lib/output-files.mjs';
 import { writeTemplateFiles } from '../packages/build/lib/template-files.mjs';
 
-const { values } = parseArgs({ options: { contract: { type: 'string' }, output: { type: 'string' } } });
-for (const name of ['contract', 'output']) {
-  if (!values[name]) throw new Error(`--${name} is required`);
-  if (!isAbsolute(values[name])) throw new Error(`--${name} is not an absolute path: ${values[name]}`);
+const { values } = parseArgs({ options: { contract: { type: 'string', multiple: true }, output: { type: 'string' } } });
+if (!values.contract || values.contract.length === 0) throw new Error('--contract is required');
+if (!values.output) throw new Error('--output is required');
+for (const path of [...values.contract, values.output]) {
+  if (!isAbsolute(path)) throw new Error(`not an absolute path: ${path}`);
 }
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const buildTool = join(root, 'packages/build/bin/hyper-build-server.mjs');
-const contract = JSON.parse(readFileSync(values.contract, 'utf8'));
+const applications = new Map();
+for (const path of values.contract) {
+  for (const [key, application] of Object.entries(JSON.parse(readFileSync(path, 'utf8')).applications)) {
+    if (applications.has(key)) throw new Error(`the application ${key} of ${path} is also an application of ${applications.get(key).path}`);
+    applications.set(key, { path, application });
+  }
+}
 
-for (const [key, application] of Object.entries(contract.applications)) {
+for (const [key, { application }] of applications) {
   const directory = join(values.output, key);
   rmSync(directory, { recursive: true, force: true });
   const templates = join(directory, 'templates');
@@ -38,7 +46,7 @@ for (const [key, application] of Object.entries(contract.applications)) {
   writeFileSync(manifest, JSON.stringify(application.manifest));
   const build = join(directory, 'build.json');
   writeFileSync(build, JSON.stringify({ build: application.build }));
-  const namespace = `Polyspec\\Hyper\\Tests\\Context\\${key.split('_').map((word) => word[0].toUpperCase() + word.slice(1)).join('')}\\Program`;
+  const namespace = `Polyspec\\Hyper\\Tests\\Contract\\${key.split('_').map((word) => word[0].toUpperCase() + word.slice(1)).join('')}\\Program`;
   const run = spawnSync(
     process.execPath,
     [buildTool, '--manifest', manifest, '--templates', templates, '--output', join(directory, 'program'),
