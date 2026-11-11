@@ -6,6 +6,8 @@
 
 ## Unreleased
 
+- 세 server의 `Build.read`는 byte가 UTF-8이 아니거나 U+FEFF로 시작하는 `build.json`을 `is not valid JSON`으로 실패시키고 각 실패의 원인을 유지합니다. 이전에는 Python이 UTF-8이 아닌 byte를 `is missing or not readable`로 보고했고, Node는 그 byte를 U+FFFD로 바꾸고 앞의 U+FEFF를 버려서 그런 파일에서 build id를 읽었습니다. `contracts/build.json`은 새 field `bytes`로 파일의 byte를 쓰고 새 field `message`로 실패의 원인을 비교하며, 그 step은 문자열도 null도 아닌 `text`를 없는 파일로 다루지 않고 실패합니다(HY-125, HY-106) (H28.11).
+
 - case의 애플리케이션을 읽는 step은 PHP, Node, Python에서 한 규칙으로 각 member를 검사합니다. `page`는 boolean이 아닌 정수이고, `data`, loader, 공유 데이터는 map이며, `redirect`는 문자열, `embedData`는 문자열 list입니다. Node는 cast 대신 검사하는 reader로 애플리케이션을 읽고, PHP는 읽는 곳에서 member를 검사하는 타입 없는 배열로 읽으므로, step의 test에는 타입 오류가 남지 않습니다. case가 handler의 타입에 어긋나게 주는 값, 곧 map이 아닌 context와 함수가 아닌 host function은 이유와 함께 `@ts-expect-error`와 `@phpstan-ignore`로 표시합니다(H28.11).
 
 - 브라우저 코드는 server-sent events 표준이 요구하는 대로 event stream 앞의 두 번째 U+FEFF를 첫 줄의 문자로 유지합니다. 이전에는 decoder가 U+FEFF 하나를, stream parser가 또 하나를 버려서, 두 개 뒤의 줄이 event를 보냈습니다. HY-42.5는 디코드한 이름, 값, route parameter, cookie 값 앞의 U+FEFF가 그 문자임을, HY-106.7은 U+FEFF로 시작하는 파일이 올바른 JSON이 아님을 정하며, PHP와 Python의 open test는 Node test처럼 그런 파일을 확인합니다(H28.11).

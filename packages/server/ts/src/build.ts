@@ -8,17 +8,18 @@ export class Build {
   // Reads the build id of a `build.json` file. The file must exist, be valid JSON and hold exactly the key `build` with
   // a build id of 64 lowercase hexadecimal characters; a failure names the path of the file (HY-125.5).
   static read(file: string): string {
-    let text: string;
+    let bytes: Buffer;
     try {
-      text = readFileSync(file, 'utf8');
-    } catch {
-      throw new InvalidBuild(`${file} is missing or not readable (HY-125)`);
+      bytes = readFileSync(file);
+    } catch (error) {
+      throw new InvalidBuild(`${file} is missing or not readable (HY-125)`, { cause: error });
     }
     let value: unknown;
     try {
-      value = JSON.parse(text);
-    } catch {
-      throw new InvalidBuild(`${file} is not valid JSON (HY-125)`);
+      // Bytes that are not UTF-8 and a leading U+FEFF are not valid JSON, as in PHP and Python (HY-106.7).
+      value = JSON.parse(new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(bytes));
+    } catch (error) {
+      throw new InvalidBuild(`${file} is not valid JSON (HY-125)`, { cause: error });
     }
     const build = typeof value === 'object' && value !== null && !Array.isArray(value) && Object.keys(value).length === 1 && 'build' in value ? value.build : undefined;
     if (typeof build !== 'string' || !/^[0-9a-f]{64}$/u.test(build)) {

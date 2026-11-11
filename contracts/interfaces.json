@@ -5128,6 +5128,10 @@
             "text": {
               "role": "input"
             },
+            "bytes": {
+              "role": "input",
+              "optional": true
+            },
             "build": {
               "role": "expected",
               "compare": "exact",
@@ -5139,6 +5143,13 @@
               "compare": "exact",
               "sentence": "HY-125.5",
               "state": "`error` is `invalid-build` when the file fails with a message that names its path, or null when it gives a build id."
+            },
+            "message": {
+              "role": "expected",
+              "optional": true,
+              "compare": "contains",
+              "sentence": "HY-125.5",
+              "state": "`message` is a text that the message of the failure of the file contains after its path."
             }
           }
         }

@@ -18,11 +18,12 @@ class Build:
         `build` with a build id of 64 lowercase hexadecimal characters; a failure names the path of the file
         (HY-125.5)."""
         try:
-            text = Path(file).read_text(encoding="utf-8")
-        except (OSError, UnicodeDecodeError) as error:
+            data = Path(file).read_bytes()
+        except OSError as error:
             raise InvalidBuild(f"{file} is missing or not readable (HY-125)") from error
         try:
-            value = json.loads(text)
+            # Bytes that are not UTF-8 and a leading U+FEFF are not valid JSON, as in PHP and Node (HY-106.7).
+            value = json.loads(data.decode("utf-8"))
         except ValueError as error:
             raise InvalidBuild(f"{file} is not valid JSON (HY-125)") from error
         build = (

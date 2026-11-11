@@ -26,8 +26,9 @@ final class Build
         }
         try {
             $value = json_decode($text, true, flags: JSON_THROW_ON_ERROR);
-        } catch (\JsonException) {
-            throw new InvalidBuild("{$file} is not valid JSON (HY-125)");
+        } catch (\JsonException $error) {
+            // Bytes that are not UTF-8 and a leading U+FEFF are not valid JSON, as in Node and Python (HY-106.7).
+            throw new InvalidBuild("{$file} is not valid JSON (HY-125)", previous: $error);
         }
         if (
             !is_array($value)

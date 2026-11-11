@@ -26,7 +26,8 @@
       "label": "a missing file fails",
       "text": null,
       "build": null,
-      "error": "invalid-build"
+      "error": "invalid-build",
+      "message": "is missing or not readable (HY-125)"
     },
     {
       "id": "an_empty_file_fails",
@@ -111,6 +112,24 @@
       "text": "{\"build\":1}",
       "build": null,
       "error": "invalid-build"
+    },
+    {
+      "id": "a_file_that_is_not_utf8_is_not_valid_json",
+      "label": "a file whose bytes are not UTF-8 is not valid JSON",
+      "text": null,
+      "bytes": "7b226275696c64223a2231313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131227dff",
+      "build": null,
+      "error": "invalid-build",
+      "message": "is not valid JSON (HY-125)"
+    },
+    {
+      "id": "a_file_that_starts_with_a_byte_order_mark_is_not_valid_json",
+      "label": "a file that starts with U+FEFF is not valid JSON (HY-106.7)",
+      "text": null,
+      "bytes": "efbbbf7b226275696c64223a2231313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131227d",
+      "build": null,
+      "error": "invalid-build",
+      "message": "is not valid JSON (HY-125)"
     }
   ]
 }
