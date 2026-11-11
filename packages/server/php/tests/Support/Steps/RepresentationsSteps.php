@@ -8,7 +8,7 @@ use Polyspec\Hyper\ArraySession;
 use Polyspec\Hyper\Tests\CaseReader;
 use Polyspec\Hyper\Tests\Support\ContextRun;
 
-/** HY-118, HY-119, HY-121: the cases of contracts/representations.json. */
+/** HY-106, HY-116, HY-118, HY-119, HY-121: the cases of contracts/representations.json. */
 final class RepresentationsSteps
 {
     private const PROGRAMS = __DIR__ . '/../../../../../../var/contract-programs';

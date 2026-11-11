@@ -232,7 +232,7 @@
                 {
                   "id": "HY-5.3",
                   "en": "The parameters of a match are a map from each parameter name to its value, in the order of the parameters in the route path.",
-                  "ko": "매칭의 parameter는 각 parameter 이름에서 그 값으로 가는 맵이며, route path에서 parameter의 순서대로 놓인다.",
+                  "ko": "매칭의 parameter는 각 parameter 이름을 그 값에 대응시키는 map이며, route path에서 parameter의 순서대로 놓인다.",
                   "koSource": "67fd7b3e18a258f1db34dc054bae2cda4838ffbd41b2bbc0e30164e59b18eb29"
                 }
               ]
@@ -1005,9 +1005,9 @@
                   "id": "HY-116.14"
                 },
                 {
-                  "en": "A representation is answered only under the data base path (HY-62.19); a request of HY-62.22 receives the 404 and the 405 of HY-62.22 before the selection, so a request of HY-62.22 with a method other than `GET` receives 405 also when no type of the route is acceptable.",
-                  "ko": "representation은 데이터 기본 경로 아래(HY-62.19)에서만 응답한다. HY-62.22의 요청은 선택 전에 HY-62.22의 404와 405를 받으므로, `GET`이 아닌 method의 HY-62.22 요청은 라우트의 어떤 type도 받을 수 없을 때에도 405를 받는다.",
-                  "koSource": "271ee8108cab55294dfe2c742e87a6be0ad3f534cc566dacffb1b31251beb867",
+                  "en": "A representation is answered only under the data base path (HY-62.19); a request of HY-62.22 receives the 404 and the 405 of HY-62.23 before the selection, so a request of HY-62.22 with a method other than `GET` receives 405 also when no type of the route is acceptable.",
+                  "ko": "representation은 데이터 기본 경로 아래(HY-62.19)에서만 응답한다. HY-62.22의 요청은 선택 전에 HY-62.23의 404와 405를 받으므로, `GET`이 아닌 method의 HY-62.22 요청은 라우트의 어떤 type도 받을 수 없을 때에도 405를 받는다.",
+                  "koSource": "575ce2056c8394ad87294ea938a3c9c1d5767080fbb6240f0130a8fd1aa98454",
                   "id": "HY-116.15"
                 }
               ]
@@ -1035,9 +1035,9 @@
                   "id": "HY-117.2"
                 },
                 {
-                  "en": "The 400 and the 406 of HY-116 and the 406 of HY-62.19 and HY-62.22 have `Vary: Accept`, because `Accept` decides them.",
-                  "ko": "HY-116의 400과 406, HY-62.19와 HY-62.22의 406은 `Accept`가 정하므로 `Vary: Accept`를 가진다.",
-                  "koSource": "7373fd80dc3a4d6dbe144b104679a0b00a3662b22b703d72b4ba04ac3fb016cf",
+                  "en": "The 400 and the 406 of HY-116 and the 406 of HY-62.20 and HY-62.34 have `Vary: Accept`, because `Accept` decides them.",
+                  "ko": "HY-116의 400과 406, HY-62.20과 HY-62.34의 406은 `Accept`가 정하므로 `Vary: Accept`를 가진다.",
+                  "koSource": "677db2960abc22a4a8c82da11b992a9b63bd4142a0d87885aa779a1dd69eec13",
                   "id": "HY-117.3"
                 },
                 {
@@ -1215,9 +1215,9 @@
                   "id": "HY-121.6"
                 },
                 {
-                  "en": "A `GET`, `HEAD` or `DELETE` whose body has a size (HY-59.4) other than 0 receives 400 with the text `Bad Request`, because these methods carry no body that the handler reads.",
-                  "ko": "body의 크기(HY-59.4)가 0이 아닌 `GET`, `HEAD`, `DELETE`는 텍스트 `Bad Request`와 함께 400을 받는다. 이 method는 handler가 읽는 body를 싣지 않기 때문이다.",
-                  "koSource": "7b397753f8f06891a886aeb3d6e36bfd59998b987242829a78b1574f10e7b063",
+                  "en": "A `GET`, `HEAD` or `DELETE` whose body has a size (HY-59.5) other than 0 receives 400 with the text `Bad Request`, because these methods carry no body that the handler reads.",
+                  "ko": "body의 크기(HY-59.5)가 0이 아닌 `GET`, `HEAD`, `DELETE`는 텍스트 `Bad Request`와 함께 400을 받는다. 이 method는 handler가 읽는 body를 싣지 않기 때문이다.",
+                  "koSource": "6c67793355b77874698f24ac313c9048f2eccfe3a87e233edf8bc7e04a3a2dcc",
                   "id": "HY-121.7"
                 },
                 {
@@ -1264,7 +1264,7 @@
                 },
                 {
                   "en": "The handler may set only `Location`, `WWW-Authenticate` and `Cache-Control` (HY-130).",
-                  "ko": "handler는 `Location`, `WWW-Authenticate`, `Cache-Control`만 설정할 수 있으며, (HY-130).",
+                  "ko": "handler는 `Location`, `WWW-Authenticate`, `Cache-Control`만 설정할 수 있다(HY-130).",
                   "koSource": "1dba5fbfcfaac4888e6ee3935ef7cbacd061da50e11f1e7bf6291cdafcb1a1aa",
                   "id": "HY-122.4"
                 },
@@ -1351,7 +1351,7 @@
                 {
                   "id": "HY-17.3",
                   "en": "Every server writes the JSON text of a response, and decodes the kept values of HY-38 and HY-40, as HY-54 states.",
-                  "ko": "모든 서버는 응답의 JSON 텍스트를 쓰고, HY-54가 밝힌 대로 HY-38과 HY-40의 남긴 값을 decode한다.",
+                  "ko": "모든 서버는 응답의 JSON 텍스트를 쓰고, HY-54가 밝힌 대로 HY-38과 HY-40의 유지 값을 decode한다.",
                   "koSource": "b6d6a1a6be59b1e94a77d64a2825367faf8dcbc22750fc0e973c24a2ea864d3c"
                 }
               ]
@@ -1529,6 +1529,7 @@
           "kind": "rule",
           "id": "HY-125",
           "retired": [
+            6,
             13
           ],
           "blocks": [
@@ -1564,12 +1565,6 @@
                   "ko": "서버 build(HY-48)는 option `--build`로 에셋 출력의 `build.json` 경로를 받아 같은 파일을 프로그램 디렉터리에 쓴다. 파일이 없거나 64자의 소문자 16진수 build id를 담지 않으면 그 경로와 함께 실패한다.",
                   "koSource": "6adecf1ddb0f23dd5e69a1e22aea79645f99cff8b94c660016ce99ef15e86d0c",
                   "id": "HY-125.5"
-                },
-                {
-                  "en": "A test fixture without an asset build names a `build.json` of fixed content.",
-                  "ko": "에셋 build가 없는 test fixture는 내용이 고정된 `build.json`을 지정한다.",
-                  "koSource": "de6007e6e154eeccf1ec21ff249a4a105de6619e4e47dd02dacf70f896b2fec5",
-                  "id": "HY-125.6"
                 },
                 {
                   "en": "A document has the `html` definition `build`, the text `<meta name=\"hyper-build\" content=\"<build id>\">`, which the layout renders with `{# build}` once inside `<head>` (HY-3, HY-12); the build fails for a layout that does not place `{# build}` exactly once, as for `{# title}` and `{# data}` (HY-48); the check counts the placement and does not check that it lies inside `<head>`.",
@@ -1677,6 +1672,7 @@
           "retired": [
             6,
             7,
+            8,
             9,
             10,
             11,
@@ -1715,12 +1711,6 @@
                   "ko": "데이터를 내장하는 문서(HY-31)는 `build`와, `value`를 가진 `context`를 내장한다.",
                   "koSource": "9d3ca021ee5b48e0c5da625aaee89c6ca2e8b7bc69fcfb75c151020bcf0130f5",
                   "id": "HY-128.5"
-                },
-                {
-                  "en": "An application declares its loaders, a loader `{\"stop\": \"NotFound\"}` that stops the request (HY-27), and its `actions`, each of which returns the route page with a status (HY-58) or a redirect (HY-25).",
-                  "ko": "애플리케이션은 loader, 요청을 멈추는 loader `{\"stop\": \"NotFound\"}`(HY-27), 그리고 상태와 함께 라우트 페이지를 돌려주거나(HY-58) redirect하는(HY-25) `actions`를 선언한다.",
-                  "koSource": "a0271af4a6f3069bef963df7fc8ce49340f367ee16034c201e37074072f1c32e",
-                  "id": "HY-128.8"
                 }
               ]
             }
@@ -1763,7 +1753,7 @@
                 {
                   "id": "HYC-1.4",
                   "en": "The browser code routes a request path by HY-4 to HY-8 and HY-49.",
-                  "ko": "브라우저 코드는 요청 path를 HY-4부터 HY-8과 HY-49로 라우팅한다.",
+                  "ko": "브라우저 코드는 요청 path를 HY-4부터 HY-8까지와 HY-49로 라우팅한다.",
                   "koSource": "8c78df5535517a9c5d361dc6e4becc4f182ba0bc8e281219cdefca67704871fb"
                 }
               ]
@@ -2148,7 +2138,7 @@
                 {
                   "id": "HYC-24.6",
                   "en": "A render that calls a name that is neither built in nor registered fails with HY-43.",
-                  "ko": "built-in도 등록도 아닌 이름을 호출하는 render는 HY-43으로 실패한다.",
+                  "ko": "built-in이 아니고 등록되지도 않은 이름을 호출하는 render는 HY-43으로 실패한다.",
                   "koSource": "be1b66131962cfe97a15fc9e8068bff013eb6b8cfdc2ed341a75d2babc867584"
                 }
               ]
@@ -2167,6 +2157,7 @@
           "kind": "rule",
           "id": "HY-62",
           "retired": [
+            24,
             28,
             29,
             30,
@@ -2345,7 +2336,7 @@
                     {
                       "id": "HY-62.21",
                       "en": "Every other request is answered by HY-15 to HY-40 and HY-42 to HY-59: a document request and a region request receive JSON, and an action runs.",
-                      "ko": "다른 모든 요청에는 HY-15부터 HY-40과 HY-42부터 HY-59까지에 따라 응답하며, 문서 요청과 영역 요청은 JSON을 받고 액션은 실행된다.",
+                      "ko": "다른 모든 요청에는 HY-15부터 HY-40까지와 HY-42부터 HY-59까지에 따라 응답하며, 문서 요청과 영역 요청은 JSON을 받고 액션은 실행된다.",
                       "koSource": "87b2da9d8538bf90ac74cdd83a0f6c406f5918f4ba24d3ce28b1a3f34e708b90"
                     }
                   ],
@@ -2366,9 +2357,9 @@
                       "koSource": "329ec6240f69cb8c946dc51038c8698abb13cdc0467f0ee8a72bf0e990f57e03"
                     },
                     {
-                      "id": "HY-62.24",
+                      "id": "HY-62.34",
                       "en": "Then a request that selects `application/vnd.hyper+json` or a representation (HY-116) receives status 406 with the text `Not Acceptable` and `Vary: Accept`, and a request that selects `text/html` receives status 200 with the bytes of the shell as its body and the response of the application to it has the headers `Content-Type: text/html; charset=utf-8`, `Cache-Control: no-cache`, the `Vary` of HY-117 and the frame policy of HY-45, and no other header; its host may add headers as HY-130 allows.",
-                      "ko": "그다음 `application/vnd.hyper+json`이나 representation을 선택한(HY-116) 요청은 텍스트 `Not Acceptable`, `Vary: Accept`와 함께 상태 406을 받고, `text/html`을 선택한 요청은 셸의 바이트를 body로 가진 상태 200을 받고, 애플리케이션의 응답은 `Content-Type: text/html; charset=utf-8`, `Cache-Control: no-cache`, HY-117의 `Vary`, HY-45의 frame policy를 가지며 다른 header는 없다. 그 호스트는 HY-130이 허용하는 대로 header를 더할 수 있다.",
+                      "ko": "그다음 `application/vnd.hyper+json`이나 representation을 선택한(HY-116) 요청은 텍스트 `Not Acceptable`, `Vary: Accept`와 함께 상태 406을 받고, `text/html`을 선택한 요청은 셸의 바이트를 body로 가진 상태 200을 받으며, 그 요청에 대한 애플리케이션의 응답은 `Content-Type: text/html; charset=utf-8`, `Cache-Control: no-cache`, HY-117의 `Vary`, HY-45의 frame policy를 가지고 다른 header는 가지지 않는다. 그 호스트는 HY-130이 허용하는 대로 header를 더할 수 있다.",
                       "koSource": "998f20ee81b9cd5990936d616f9e9770ab9827ece685c25eca0c2c956f09920e"
                     },
                     {
@@ -2868,6 +2859,7 @@
           "kind": "rule",
           "id": "HY-73",
           "retired": [
+            21,
             24,
             26,
             27
@@ -3030,7 +3022,7 @@
                 {
                   "statements": [
                     {
-                      "id": "HY-73.21",
+                      "id": "HY-73.29",
                       "en": "Before it renders or encodes a page, the server keeps of the shared data and of every region's data only their read paths: a map keeps the keys that a path names, in their order in the data, with their values kept recursively, and every key under `*`; a list keeps its length, with each element kept under `*` and the paths of its index and with `null` at an index that no path names; any other value stays as it is.",
                       "ko": "서버는 페이지를 렌더하거나 인코딩하기 전에 공유 데이터와 모든 영역 데이터에서 읽기 경로만 남기며, 맵은 경로가 이름 붙인 키를 데이터에서의 순서대로, 그 값을 같은 방식으로 남기고 `*` 아래에서는 모든 키를 남기고, 목록은 길이를 유지하고 각 원소를 `*`와 그 인덱스의 경로로 남기며 어떤 경로도 이름 붙이지 않은 인덱스에는 `null`을 두고, 다른 값은 그대로 둔다.",
                       "koSource": "ebfb383f7fc626ad5c0f75721fd70e7335c04b2a9f805149ad0e7618b025a92d"
@@ -4021,7 +4013,7 @@
                 {
                   "id": "HY-38.19",
                   "en": "A kept value takes the place of the value at its path, so every map of the data keeps its keys in their order, and a kept map keeps its keys in its own order.",
-                  "ko": "남긴 값은 경로의 값을 대신하므로, 데이터의 모든 맵은 키를 그 순서대로 유지하고, 남긴 맵은 자신의 순서대로 키를 유지한다.",
+                  "ko": "유지 값은 그 경로의 값을 대신하므로, 데이터의 모든 map은 키를 그 순서대로 유지하고, 유지 map은 자신의 순서대로 키를 유지한다.",
                   "koSource": "d837eab31e964475e895019b54bb2b42f4c2c335fe5f793c0d531d9a197ec80b"
                 }
               ]
@@ -4484,7 +4476,7 @@
                 {
                   "id": "HY-129.12",
                   "en": "The cookies of a request are a map from names to values.",
-                  "ko": "요청의 cookie는 이름에서 값으로 가는 맵이다.",
+                  "ko": "요청의 cookie는 각 이름을 그 값에 대응시키는 map이다.",
                   "koSource": "b0a8831b7454d8ff0309657272db6e407370b46de371b99696771c50fbaa12a0"
                 }
               ]
@@ -6319,9 +6311,9 @@
               "term": "string"
             },
             {
-              "en": "A number is a numeric value.",
-              "ko": "number는 수 값이다.",
-              "koSource": "7b40319ff551c2809e5449386b27be4a587c756fd840d92edd0ce5a286d30e80",
+              "en": "A number is an integer or a float, as HY-54.8 reads a JSON number.",
+              "ko": "number는 HY-54.8이 JSON 수를 읽는 대로 정수나 float이다.",
+              "koSource": "f7bf864deb3008b0d0825c5f365f2654d628ac71f7791fc2e9d3c54dec59d77f",
               "term": "number"
             },
             {

@@ -8,7 +8,7 @@ use Polyspec\Hyper\Router;
 use Polyspec\Hyper\Tests\CaseReader;
 use Polyspec\Hyper\Tests\Support\Plain;
 
-/** HY-4, HY-5: the cases of contracts/routes.json. */
+/** HY-4, HY-5, HY-8: the cases of contracts/routes.json. */
 final class RoutesSteps
 {
     public static function cases(CaseReader $case): void
