@@ -14,7 +14,8 @@ const LINE = /^CASE (\S+) (\S+) (PASS|FAIL)(?: (.*))?$/;
 /** The languages a case names in its `only`; a case without `only` counts for all of them. */
 function onlyLanguages(only: unknown): Lang[] {
   if (typeof only !== 'object' || only === null || !('languages' in only) || !Array.isArray(only.languages)) return LANGS;
-  return LANGS.filter((l) => only.languages.includes(l));
+  const named: unknown[] = only.languages;
+  return LANGS.filter((l) => named.includes(l));
 }
 
 /** The case ids of a case file: the `id` of each object in its top-level arrays. */

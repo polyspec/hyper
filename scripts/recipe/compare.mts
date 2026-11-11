@@ -70,9 +70,9 @@ function splitTop(list: string): string[] {
 function termKnown(term: string, ids: Set<string>): boolean {
   if (BASE_TERMS.includes(term) || ids.has(term)) return true;
   const generic = /^(?:list|map|optional)<(.*)>$/u.exec(term);
-  if (generic) return termKnown(generic[1], ids);
+  if (generic) return termKnown(generic[1] ?? '', ids);
   const fn = /^function\((.*)\) -> (.+)$/u.exec(term);
-  if (fn) return [...splitTop(fn[1]), fn[2]].every((t) => termKnown(t, ids));
+  if (fn) return [...splitTop(fn[1] ?? ''), fn[2] ?? ''].every((t) => termKnown(t, ids));
   return false;
 }
 

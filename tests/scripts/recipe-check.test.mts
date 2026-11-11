@@ -88,7 +88,7 @@ test('the candidate derives the units and concerns from an empty skeleton', () =
     const derived = JSON.parse(readFileSync(output, 'utf8')) as { concerns: { id: string; units: { native: Record<string, unknown> }[] }[] };
     const csrf = derived.concerns.find((c) => c.id === 'csrf');
     assert.ok(csrf, 'no concern csrf');
-    assert.deepEqual(Object.keys(csrf.units[0].native).sort(), ['node', 'php', 'python']);
+    assert.deepEqual(Object.keys(csrf?.units[0]?.native ?? {}).sort(), ['node', 'php', 'python']);
   } finally {
     rmSync(dir, { recursive: true, force: true });
     rmSync(root, { recursive: true, force: true });
