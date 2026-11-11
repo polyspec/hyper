@@ -1,6 +1,8 @@
-// The encode and decode steps of contracts/json.json (HY-17, HY-38, HY-40, HY-44).
-import type { Value } from '@polyspec/template/render';
-import { decodeJson, encodeJson, inDataModel, JsonDecodeError, OutsideNumber, type DecodedValue } from '../../src/json.js';
+// The steps of contracts/json.json (HY-17, HY-54): the JSON text of a decoded value, and the decoding of a text.
+import { JsonCodec, type DecodedValue } from '../../src/json-codec.js';
+import { JsonDecodeError } from '../../src/json-decode-error.js';
+import { OutsideNumber } from '../../src/outside-number.js';
+import type { Value } from '../../src/values.js';
 import type { CaseReader } from '../case-reader.js';
 
 // Encoding writes every finite number, also one outside the data model, as PHP json_encode does.
@@ -11,14 +13,19 @@ function finite(value: DecodedValue): Value {
   return value;
 }
 
+function text(reader: CaseReader): string {
+  const json = reader.input('json');
+  return typeof json === 'string' ? json : '';
+}
+
 export const steps = {
   encode(reader: CaseReader): void {
-    reader.compare('expected', encodeJson(finite(decodeJson(reader.input('json') as string))));
+    reader.compare('expected', JsonCodec.encode(finite(JsonCodec.decode(text(reader)))));
   },
   decode(reader: CaseReader): void {
     let result: string;
     try {
-      result = inDataModel(decodeJson(reader.input('json') as string)) ? 'value' : 'outside';
+      result = JsonCodec.inDataModel(JsonCodec.decode(text(reader))) ? 'value' : 'outside';
     } catch (error) {
       if (!(error instanceof JsonDecodeError)) throw error;
       result = 'error';

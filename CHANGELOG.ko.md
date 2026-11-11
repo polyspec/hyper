@@ -6,6 +6,8 @@
 
 ## Unreleased
 
+- JSON 텍스트는 세 서버에서 unit `JsonCodec`이다. static member `value`, `encode`, `decode`, `inDataModel`을 가진다. PHP는 `json_encode`와 `json_decode`로 JSON 텍스트를 쓰고 읽는다. Node와 Python은 spec이 두 언어에만 적은 private member로 쓰고 읽는다(HY-54.4, HY-54.8). `OutsideNumber`와 `JsonDecodeError`는 각자 자기 파일의 unit이다. 데이터 모델은 세 서버에서 `check`, `contains`, private member `walk`를 가진 unit `DataModel`이다. `inDataModel`은 `DataModel.contains`이므로, 데이터 모델이 허용하는 깊이보다 깊게 중첩된 decode 값은 모든 서버에서 데이터 모델 밖이다. Python은 중첩을 stack으로 검사하므로, 511단으로 중첩된 list가 더 이상 재귀 한계를 넘지 않는다. native JSON 테스트의 case는 `contracts/json.json`에 있다(HY-17, HY-44, HY-54)(H28.11).
+
 - kept 값은 세 서버에서 unit `Kept`이다. static member `apply`, `select`와 private member `replaceAt`, `conforms`, `mapEntries`, `valueKind`를 가진다. Node는 더 이상 브라우저 package로 kept 값을 적용하지 않는다. `contracts/keep.json`의 section `select`는 서버가 보내는 값과 바뀌지 않는 region data를 담는다. PHP step은 각 case를 배열과 stdClass map 두 형태로 준다. 이들은 각 서버의 native kept 테스트를 대신한다(HY-38)(H28.11).
 
 - mask된 session token은 세 서버에서 unit `Csrf`이다. static member `masked`, `mask`, `verify`, `bytes`, `xor`를 가진다. mask된 값마다 새 mask를 쓰는 동작은 `contracts/csrf.json`의 section `masked`이며, 각 서버의 native csrf 테스트를 대신한다(HY-24)(H28.11).

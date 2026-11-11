@@ -759,7 +759,7 @@ final class App
         $vary = $this->vary();
         if ($json) {
             // HY-128: the member context holds the hash, and the value unless the request holds that hash (HY-127).
-            $response = JsonEncoder::value(
+            $response = JsonCodec::value(
                 $this->timezone,
                 $route['name'],
                 $request->params(),
@@ -775,7 +775,7 @@ final class App
             // data model, so only the parameters of the request are checked here.
             DataModel::check($request->params());
 
-            $body = JsonEncoder::encode($response);
+            $body = JsonCodec::encode($response);
             $headers = [
                 'Content-Type' => self::DATA_TYPE,
                 'Cache-Control' => $status === 200 ? ($reply->cacheControlValue() ?? 'no-store') : 'no-store',
@@ -837,7 +837,7 @@ final class App
     private function kept(Request $request, Session $session, array $data): array
     {
         // On HTTPS only the host-only cookie counts, which another host cannot set (HY-38).
-        $cookie = json_decode($request->cookie($this->https || $request->https ? '__Host-hy-keep' : 'hy-keep') ?? '');
+        $cookie = self::decodedCookie($request->cookie($this->https || $request->https ? '__Host-hy-keep' : 'hy-keep'));
         $kept = [];
         foreach ($data as $name => $regionData) {
             $region = $this->manifest->region($name);
@@ -1000,7 +1000,7 @@ final class App
             $context = isset($shared['context'])
                 ? Context::member($this->build->id, $shared['context'], null)
                 : null;
-            $response = JsonEncoder::value(
+            $response = JsonCodec::value(
                 $this->timezone,
                 $route['name'],
                 $request->params(),
@@ -1071,11 +1071,11 @@ final class App
             return Response::text(400, 'Bad Request');
         }
         try {
-            $value = json_decode($text, false, flags: JSON_THROW_ON_ERROR);
-        } catch (\JsonException) {
+            $value = JsonCodec::decode($text);
+        } catch (JsonDecodeError) {
             return Response::text(400, 'Bad Request');
         }
-        if (!DataModel::contains($value)) {
+        if (!JsonCodec::inDataModel($value)) {
             return Response::text(400, 'Bad Request');
         }
         $session->keep($name, $path, $value);
@@ -1160,4 +1160,18 @@ final class App
         $delivery->response = $response;
         $response->send();
     }
+
+    /** Returns the decoded hy-keep cookie, or null for a cookie that is absent or not JSON (HY-42). */
+    private static function decodedCookie(?string $text): mixed
+    {
+        if ($text === null) {
+            return null;
+        }
+        try {
+            return JsonCodec::decode($text);
+        } catch (JsonDecodeError) {
+            return null;
+        }
+    }
+
 }

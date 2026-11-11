@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 import { contextHash, heldContext } from '../../src/context.js';
 import { Csrf } from '../../src/csrf.js';
-import { decodeJson, encodeJson } from '../../src/json.js';
+import { JsonCodec } from '../../src/json-codec.js';
 import { App, MemorySessionStore, NotFound, Request, Result, type Handlers, type RouteHandlers } from '../../src/index.js';
 import type { Value } from '../../src/values.js';
 import type { CaseReader } from '../case-reader.js';
@@ -83,13 +83,13 @@ export const steps = {
   contexts(reader: CaseReader): void {
     const build = reader.input('build') as string;
     const context = reader.input('context') as string;
-    const text = encodeJson(decodeJson(context) as Map<string, Value>);
+    const text = JsonCodec.encode(JsonCodec.decode(context) as Map<string, Value>);
     reader.compare('context', text);
     reader.compare('text', `{"build":"${build}","context":${text}}`);
     reader.compare('hash', contextHash(build, text));
     if (reader.has('reorderedText')) {
-      const reordered = decodeJson(reader.input('reorderedText') as string) as Map<string, Value>;
-      reader.compare('reorderedHash', contextHash(build, encodeJson(reordered.get('context') as Map<string, Value>)));
+      const reordered = JsonCodec.decode(reader.input('reorderedText') as string) as Map<string, Value>;
+      reader.compare('reorderedHash', contextHash(build, JsonCodec.encode(reordered.get('context') as Map<string, Value>)));
     }
   },
 
@@ -116,7 +116,7 @@ export const steps = {
             context: (selection: unknown) => {
               calls.push('context');
               selections.push(selection);
-              return heldContext(() => decodeJson(application.context ?? '') as Map<string, Value>, selection);
+              return heldContext(() => JsonCodec.decode(application.context ?? '') as Map<string, Value>, selection);
             },
           }),
     });

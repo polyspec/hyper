@@ -5,11 +5,12 @@ declare(strict_types=1);
 namespace Polyspec\Hyper;
 
 /**
- * Builds and encodes the JSON response value (HY-17).
+ * The JSON text of the servers (HY-17, HY-54): the JSON response value, its text with the bytes of `json_encode` with
+ * `JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES`, and the decoding of kept values with `json_decode`.
  *
  * @internal
  */
-final class JsonEncoder
+final class JsonCodec
 {
     /**
      * Returns the response value; empty maps are `stdClass` so that JSON encoding and template binding both see maps.
@@ -56,10 +57,39 @@ final class JsonEncoder
         ];
     }
 
-    /** @param array<array-key, mixed>|\stdClass $value */
-    public static function encode(array|\stdClass $value): string
+    /**
+     * Returns the JSON text of a value; a number that is not finite or a string that is not UTF-8 fails (HY-44).
+     *
+     * @throws \JsonException
+     */
+    public static function encode(mixed $value): string
     {
         return json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
+    }
+
+    /**
+     * Decodes JSON text with `stdClass` maps in document order (HY-54). A number outside ±(2^53 − 1) or one that is not
+     * finite decodes, and `inDataModel` finds it outside the data model. Invalid text, a lone surrogate escape, a key
+     * that starts with U+0000 or nesting deeper than 511 containers fails.
+     *
+     * @throws JsonDecodeError
+     */
+    public static function decode(string $text): mixed
+    {
+        try {
+            return json_decode($text, false, 512, JSON_THROW_ON_ERROR);
+        } catch (\JsonException $error) {
+            throw new JsonDecodeError('hyper: ' . $error->getMessage(), 0, $error);
+        }
+    }
+
+    /**
+     * Returns true when a decoded value is a value of the data model (HY-44, HY-54): a number outside ±(2^53 − 1) or
+     * one that is not finite, and nesting deeper than the data model allows, are not.
+     */
+    public static function inDataModel(mixed $value): bool
+    {
+        return DataModel::contains($value);
     }
 
     /**

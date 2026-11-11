@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- The JSON text is the unit `JsonCodec` in the three servers, with the static members `value`, `encode`, `decode` and `inDataModel`; PHP writes and reads JSON text with `json_encode` and `json_decode`, and Node and Python with the private members that the spec lists for them alone (HY-54.4, HY-54.8). `OutsideNumber` and `JsonDecodeError` are units of their own files. The data model is the unit `DataModel` with `check`, `contains` and the private member `walk` in the three servers, and `inDataModel` is `DataModel.contains`, so a decoded value that nests deeper than the data model allows is outside it in every server; Python checks the nesting with a stack, so 511 nested lists no longer exceed its recursion limit. The cases of the native JSON tests are in `contracts/json.json` (HY-17, HY-44, HY-54) (H28.11).
+
 - The kept values are the unit `Kept` in the three servers, with the static members `apply` and `select` and the private members `replaceAt`, `conforms`, `mapEntries` and `valueKind`; Node no longer applies them through the browser package. The section `select` of `contracts/keep.json` holds the values that the server sends and the unchanged region data, and the PHP step gives each case as arrays and as stdClass maps; they replace the native kept tests of each server (HY-38) (H28.11).
 
 - The masked session token is the unit `Csrf` in the three servers, with the static members `masked`, `mask`, `verify`, `bytes` and `xor`. The new mask of every masked value is the section `masked` of `contracts/csrf.json`, which replaces the native csrf tests of each server (HY-24) (H28.11).

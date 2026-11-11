@@ -10,7 +10,8 @@ import type { FileSessions } from './file-sessions.js';
 import type { RedisSessions } from './redis-sessions.js';
 import { createListener, createServer, type Listener, type ServerOptions } from './http.js';
 import { readBuildId } from './build.js';
-import { decodeJson, inDataModel, JsonDecodeError } from './json.js';
+import { JsonCodec } from './json-codec.js';
+import { JsonDecodeError } from './json-decode-error.js';
 import { warningsAsErrors } from './warnings.js';
 import { Disconnected, renderPage, stopClosed, VARY, type PageInput } from './page.js';
 import { HYPER_CONTEXT, type ContextHandler } from './context.js';
@@ -452,12 +453,12 @@ export class App<S extends object = Record<string, never>> {
     if (Buffer.byteLength(text) > 4096) return Response.text(400, 'Bad Request');
     let value;
     try {
-      value = decodeJson(text);
+      value = JsonCodec.decode(text);
     } catch (error) {
       if (error instanceof JsonDecodeError) return Response.text(400, 'Bad Request');
       throw error;
     }
-    if (!inDataModel(value)) return Response.text(400, 'Bad Request');
+    if (!JsonCodec.inDataModel(value)) return Response.text(400, 'Bad Request');
     session.keep(name, path, value);
     return new Response(204, {}, '');
   }

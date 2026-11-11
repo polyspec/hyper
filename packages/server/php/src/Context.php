@@ -19,7 +19,7 @@ final class Context
      */
     public static function text(array $map): string
     {
-        return JsonEncoder::encode(self::value($map));
+        return JsonCodec::encode(self::value($map));
     }
 
     /**

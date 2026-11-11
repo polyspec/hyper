@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import re
 
-from ._data_model import check
+from ._data_model import DataModel
 
 _PATH = re.compile(r"/(?![/\\])[^\x00-\x20\x7f-\x9f\\]*\Z", re.DOTALL)
 
@@ -48,7 +48,7 @@ class Result:
 
     def flash_value(self, name: str, value: object) -> "Result":
         """Returns a copy that stores a flash value, a value of the data model, for the next request."""
-        check(value)
+        DataModel.check(value)
         return Result(
             self.location,
             self.status,

@@ -4,7 +4,8 @@ import { createHash } from 'node:crypto';
 import { decodeResponse, keepRead, keptPaths, renderDocument, type Application, type RouteDeclaration, type RouteReads } from '@polyspec/hyper-client';
 import type { Handlers, RouteHandlers } from './app.js';
 import { contextHash, heldContext, namesHash, withContext, type ContextHandler } from './context.js';
-import { decodeJson, encodeJson, JsonDecodeError, type DecodedValue } from './json.js';
+import { JsonCodec, type DecodedValue } from './json-codec.js';
+import { JsonDecodeError } from './json-decode-error.js';
 import { Kept } from './kept.js';
 import { changedTopics, selectRegions } from './planner.js';
 import type { Reply } from './reply.js';
@@ -95,7 +96,7 @@ export async function renderPage<S extends object>(input: PageInput<S>, environm
   }
 
   // HY-44: every value that the handlers returned belongs to the data model, also a value that no template reads.
-  encodeJson(new Map<string, Value>([['shared', shared], ['regions', new Map(data)]]));
+  JsonCodec.encode(new Map<string, Value>([['shared', shared], ['regions', new Map(data)]]));
   // HY-73: the page keeps only the paths that the templates of the route read.
   shared = requireMap(keepRead(shared, environment.reads.shared), 'the shared data');
   for (const [name, regionData] of data) {
@@ -106,21 +107,23 @@ export async function renderPage<S extends object>(input: PageInput<S>, environm
 
   // HY-31, HY-92: a document embeds its data when its reply asks for it and a route region is present (HY-75).
   const embeds = reply.embedsData() && (route.regions ?? []).some((region) => data.has(region.name));
-  const entries: [string, Value][] = [
-    ['env', new Map([['timezone', environment.timezone]])],
-    ['route', route.name],
-    ['params', new Map(Object.entries(request.params()))],
-    ['build', environment.build],
-  ];
   // HY-128: a JSON response, and a document that embeds its data, hold the member context after build.
-  if (held !== null && (request.wantsJson() || embeds)) entries.push(['context', contextMember(held, request, environment.build, embeds)]);
-  entries.push(['shared', shared], ['regions', new Map(data)], ['kept', kept(request, input.session, data, application, environment.https)]);
-  const value: MapValue = new Map(entries);
+  const contextValue = held !== null && (request.wantsJson() || embeds) ? contextMember(held, request, environment.build, embeds) : null;
+  const value = JsonCodec.value(
+    environment.timezone,
+    route.name,
+    new Map(Object.entries(request.params())),
+    environment.build,
+    contextValue,
+    shared,
+    new Map(data),
+    kept(request, input.session, data, application, environment.https),
+  );
   // HY-69: the reply gives a page with status 200 the status 403.
   const pageStatus = status === 200 ? (reply.statusValue() ?? status) : status;
   const cacheControl = pageStatus === 200 ? (reply.cacheControlValue() ?? 'no-store') : 'no-store';
   if (request.wantsJson()) {
-    const body = encodeJson(value);
+    const body = JsonCodec.encode(value);
     const headers: Response['headers'] = { 'Content-Type': HYPER_JSON, 'Cache-Control': cacheControl, Vary: environment.vary, ...reply.referrerPolicyHeaders() };
     if (pageStatus !== 200) return new Response(pageStatus, headers, body);
     // HY-53: a weak tag of the body with the masked token replaced by the session token, so the mask does not change
@@ -142,7 +145,7 @@ export async function renderPage<S extends object>(input: PageInput<S>, environm
 // Returns the member context of a JSON response or of an embedded document (HY-128): its hash, with its value unless the
 // request names the hash of the context that it holds, and an embedded document always has the value.
 function contextMember(held: MapValue, request: Request, build: string, embeds: boolean): MapValue {
-  const hash = contextHash(build, encodeJson(held));
+  const hash = contextHash(build, JsonCodec.encode(held));
   return new Map<string, Value>(embeds || !namesHash(request, hash) ? [['hash', hash], ['value', held]] : [['hash', hash]]);
 }
 
@@ -169,7 +172,7 @@ function kept(request: Request, session: Session, data: Map<string, MapValue>, a
 function decodedCookie(text: string | null): DecodedValue {
   if (text === null) return null;
   try {
-    return decodeJson(text);
+    return JsonCodec.decode(text);
   } catch (error) {
     if (error instanceof JsonDecodeError) return null;
     throw error;

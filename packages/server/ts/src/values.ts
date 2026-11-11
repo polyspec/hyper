@@ -1,5 +1,6 @@
 // Values of the template data model that loaders and actions give the server (HY-44, HY-54).
-import { bindValue, NativeObject, SafeString, type MapValue, type Value } from '@polyspec/template/render';
+import { NativeObject, SafeString, type MapValue, type Value } from '@polyspec/template/render';
+import { DataModel } from './data-model.js';
 
 export { NativeObject, SafeString, type MapValue, type Value };
 
@@ -13,9 +14,7 @@ export type Data = Record<string, unknown> | Map<string, unknown>;
 // ±(2^53 − 1), a string without a lone surrogate, an array, a Map with string keys or a plain object.
 // Any other value fails, and the request fails with HY-43 (HY-44).
 export function toValue(input: unknown): Value {
-  const value = bindValue(input);
-  check(value);
-  return value;
+  return DataModel.check(input);
 }
 
 // Converts loader data into a map of the data model.
@@ -45,18 +44,6 @@ export function isMapValue(input: unknown): input is MapValue {
     if (typeof key !== 'string' || !isValue(item)) return false;
   }
   return true;
-}
-
-function check(value: Value): void {
-  if (typeof value === 'string' && !value.isWellFormed()) throw new TypeError('hyper: a string with a lone surrogate is not UTF-8');
-  if (value instanceof NativeObject) throw new TypeError('hyper: an application object is not a value of the data model');
-  if (Array.isArray(value)) value.forEach(check);
-  if (value instanceof Map) {
-    for (const [key, item] of value) {
-      check(key);
-      check(item);
-    }
-  }
 }
 
 // Returns a map with the entries of a base map, replaced or followed by the entries of another map, as PHP

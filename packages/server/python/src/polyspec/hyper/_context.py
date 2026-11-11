@@ -7,7 +7,7 @@ import hashlib
 import re
 from dataclasses import dataclass
 
-from . import _json_codec
+from ._json_codec import JsonCodec
 
 _HASH = re.compile(r"[0-9a-f]{64}")
 
@@ -23,7 +23,7 @@ class Context:
 
 def text_of(value: dict) -> str:
     """Returns the JSON text of a context map (HY-54)."""
-    return _json_codec.encode(value)
+    return JsonCodec.encode(value)
 
 
 def signed_text(build: str, text: str) -> str:

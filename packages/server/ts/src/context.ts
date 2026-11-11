@@ -1,7 +1,7 @@
 // The context of an application (HY-124, HY-125, HY-127, HY-128): the value that its handler returns, the hash of that
 // value with its build, and the check of the Hyper-Context header. The use in the page and the app is in page.ts and app.ts.
 import { createHash } from 'node:crypto';
-import { inDataModel } from './json.js';
+import { JsonCodec } from './json-codec.js';
 import type { Request } from './request.js';
 import { type MapValue, type Value } from './values.js';
 
@@ -16,7 +16,7 @@ export const HYPER_CONTEXT = /^[0-9a-f]{64}$/;
 export async function heldContext(handler: ContextHandler, selection: unknown): Promise<MapValue> {
   const value: unknown = await handler(selection);
   if (!(value instanceof Map)) throw new Error('hyper: the context handler did not return a Map (HY-124)');
-  if (!inDataModel(value)) throw new Error('hyper: the context holds a value outside the data model (HY-44)');
+  if (!JsonCodec.inDataModel(value)) throw new Error('hyper: the context holds a value outside the data model (HY-44)');
   return value;
 }
 

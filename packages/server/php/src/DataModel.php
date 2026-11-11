@@ -17,10 +17,13 @@ use Polyspec\Template\Value\SafeString;
  */
 final class DataModel
 {
-    /** Binds the value and fails when it is not a value of the data model. */
-    public static function check(mixed $value): void
+    /** Binds the value, fails when it is not a value of the data model, and returns the bound value. */
+    public static function check(mixed $value): mixed
     {
-        self::noNativeObject(Bind::value($value));
+        $bound = Bind::value($value);
+        self::walk($bound);
+
+        return $bound;
     }
 
     /** Returns true for a value of the data model; for example, integers outside ±(2^53 − 1) are not. */
@@ -35,15 +38,16 @@ final class DataModel
         }
     }
 
-    private static function noNativeObject(mixed $value): void
+    /** Fails when a bound value holds an application object, which is not a value of the data model. */
+    private static function walk(mixed $value): void
     {
         if ($value instanceof MapValue) {
             foreach ($value->values() as $item) {
-                self::noNativeObject($item);
+                self::walk($item);
             }
         } elseif (is_array($value)) {
             foreach ($value as $item) {
-                self::noNativeObject($item);
+                self::walk($item);
             }
         } elseif (is_object($value) && !$value instanceof SafeString) {
             throw new \UnexpectedValueException(

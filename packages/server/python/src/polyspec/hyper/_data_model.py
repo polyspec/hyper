@@ -8,65 +8,61 @@ from __future__ import annotations
 
 import math
 
-MAX_SAFE = 9007199254740991
-MAX_DEPTH = 64
+_MAX_SAFE = 9007199254740991
+_MAX_DEPTH = 64
 
 
-def check(value) -> None:
-    """Fails with ValueError when a value is not a value of the data model."""
-    _check(value, 0)
+class DataModel:
+    @staticmethod
+    def check(value: object) -> object:
+        """Fails with ValueError when a value is not a value of the data model, and returns the value."""
+        DataModel._walk(value)
+        return value
 
+    @staticmethod
+    def contains(value: object) -> bool:
+        """Returns True for a value of the data model; for example, integers outside ±(2^53 − 1) are not."""
+        try:
+            DataModel._walk(value)
+            return True
+        except ValueError:
+            return False
 
-def contains(value) -> bool:
-    """Returns True for a value of the data model; for example, integers outside ±(2^53 − 1) are not."""
-    try:
-        check(value)
-        return True
-    except ValueError:
-        return False
-
-
-def _check(value, level: int) -> None:
-    if value is None or isinstance(value, bool):
-        return
-    if isinstance(value, int):
-        if abs(value) > MAX_SAFE:
-            raise ValueError(f"integer {value} is outside the safe range")
-        return
-    if isinstance(value, float):
-        if not math.isfinite(value):
-            raise ValueError("number is not finite")
-        if abs(value) > MAX_SAFE:
-            raise ValueError(f"number {value} is outside the safe range")
-        return
-    if isinstance(value, str):
-        _check_text(value)
-        return
-    if isinstance(value, list):
-        _check_level(level + 1)
-        for item in value:
-            _check(item, level + 1)
-        return
-    if isinstance(value, dict):
-        _check_level(level + 1)
-        for key, item in value.items():
-            if not isinstance(key, str):
-                raise ValueError("map key is not a string")
-            _check_text(key)
-            _check(item, level + 1)
-        return
-    raise ValueError(f"a {type(value).__name__} value has no binding")
-
-
-def _check_text(text: str) -> None:
-    index = 0
-    while index < len(text):
-        code = ord(text[index])
-        if 0xD800 <= code <= 0xDFFF:
-            raise ValueError("string contains an unpaired surrogate")
-        index += 1
-
-
-def _check_level(level: int) -> None:
-    if level > MAX_DEPTH:
-        raise ValueError(f"lists and dictionaries nest deeper than {MAX_DEPTH} levels")
+    @staticmethod
+    def _walk(value: object) -> None:
+        """Fails with ValueError at the first item that is not a value of the data model; the items are kept on a
+        stack with their nesting level, so a deep value fails by its level and not by the recursion of Python."""
+        stack: list[tuple[object, int]] = [(value, 0)]
+        while stack:
+            item, level = stack.pop()
+            if item is None or isinstance(item, bool):
+                continue
+            if isinstance(item, int):
+                if abs(item) > _MAX_SAFE:
+                    raise ValueError(f"integer {item} is outside the safe range")
+                continue
+            if isinstance(item, float):
+                if not math.isfinite(item):
+                    raise ValueError("number is not finite")
+                if abs(item) > _MAX_SAFE:
+                    raise ValueError(f"number {item} is outside the safe range")
+                continue
+            if isinstance(item, str):
+                if any(0xD800 <= ord(char) <= 0xDFFF for char in item):
+                    raise ValueError("string contains an unpaired surrogate")
+                continue
+            if isinstance(item, (list, dict)) and level + 1 > _MAX_DEPTH:
+                raise ValueError(
+                    f"lists and dictionaries nest deeper than {_MAX_DEPTH} levels"
+                )
+            if isinstance(item, list):
+                stack.extend((child, level + 1) for child in reversed(item))
+                continue
+            if isinstance(item, dict):
+                for key, child in reversed(list(item.items())):
+                    if not isinstance(key, str):
+                        raise ValueError("map key is not a string")
+                    stack.append((key, level + 1))
+                    stack.append((child, level + 1))
+                continue
+            raise ValueError(f"a {type(item).__name__} value has no binding")

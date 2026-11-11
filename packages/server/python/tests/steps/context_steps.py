@@ -7,7 +7,7 @@ from urllib.parse import urlencode
 
 from polyspec.hyper._context import hash_of, signed_text, text_of
 from polyspec.hyper._csrf import Csrf
-from polyspec.hyper._json_codec import decode
+from polyspec.hyper._json_codec import JsonCodec
 from polyspec.hyper._session import Session
 from polyspec.hyper.request import Request
 from polyspec.hyper.session import ArraySession
@@ -20,7 +20,7 @@ CONTEXT_ERROR = "hyper: ValueError: the shared handler returned the key context 
 def contexts(case) -> None:
     build = case.input("build")
     text = case.input("context")
-    value = decode(text)
+    value = JsonCodec.decode(text)
     case.compare("context", text_of(value))
     case.compare("text", signed_text(build, text_of(value)))
     case.compare("hash", hash_of(build, value))
@@ -29,7 +29,7 @@ def contexts(case) -> None:
         prefix = '{"build":"' + build + '","context":'
         observed = None
         if reordered.startswith(prefix):
-            observed = hash_of(build, decode(reordered[len(prefix) : -1]))
+            observed = hash_of(build, JsonCodec.decode(reordered[len(prefix) : -1]))
         case.compare("reorderedHash", observed)
 
 

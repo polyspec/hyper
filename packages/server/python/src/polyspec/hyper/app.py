@@ -10,7 +10,6 @@ import time
 from pathlib import Path
 from typing import Callable, Optional, Union
 
-from . import _data_model, _json_codec
 from ._accept import Accept
 from ._invalid_accept import InvalidAccept
 from .client import Choice, ClientRendering
@@ -20,7 +19,9 @@ from ._representation_entries import check_handlers as check_representation_hand
 from . import _context
 from ._context import Context
 from ._csrf import Csrf
-from ._data_model import check
+from ._data_model import DataModel
+from ._json_codec import JsonCodec
+from ._json_decode_error import JsonDecodeError
 from ._kept import Kept
 from ._media import JSON, TEXT_HTML
 from ._manifest import Manifest
@@ -550,7 +551,7 @@ class App:
 
         # HY-44: every value that the handlers returned belongs to the data model, also a value that no template
         # reads.
-        check({"shared": shared, "regions": data})
+        DataModel.check({"shared": shared, "regions": data})
         # HY-73: the page keeps only the paths that the templates of the route read.
         shared = self._kept_shared(route["name"], shared)
         for name, region_data in data.items():
@@ -561,7 +562,7 @@ class App:
             status = reply._status_value()
         vary = self._vary
         if json_request:
-            value = _json_codec.value(
+            value = JsonCodec.value(
                 self.timezone,
                 route["name"],
                 request.params(),
@@ -573,8 +574,8 @@ class App:
             )
             # HY-44: the check above covered the handler data, and a kept value enters only when it belongs to the
             # data model, so only the parameters of the request are checked here.
-            check(request.params())
-            body = _json_codec.encode(value)
+            DataModel.check(request.params())
+            body = JsonCodec.encode(value)
             headers = {
                 "Content-Type": JSON,
                 "Cache-Control": (reply._cache_control_value() or "no-store")
@@ -642,7 +643,7 @@ class App:
         value = _loader_map(
             self._context_handler(request.selection()), "the context handler"
         )
-        check(value)
+        DataModel.check(value)
         return _context.of(value, self.build)
 
     def _kept_shared(self, route: str, shared: dict) -> dict:
@@ -785,7 +786,7 @@ class App:
         response = None
         if embed and route_region_names != []:
             embedded = {name: data[name] for name in route_region_names}
-            response = _json_codec.value(
+            response = JsonCodec.value(
                 self.timezone,
                 route["name"],
                 request.params(),
@@ -841,10 +842,10 @@ class App:
         if len(text.encode("utf-8")) > _KEEP_VALUE_LIMIT:
             return Response.text(400, "Bad Request")
         try:
-            decoded = _json_codec.decode(text)
-        except _json_codec.JsonDecodeError:
+            decoded = JsonCodec.decode(text)
+        except JsonDecodeError:
             return Response.text(400, "Bad Request")
-        if not _json_codec.in_data_model(decoded) or not _data_model.contains(decoded):
+        if not JsonCodec.in_data_model(decoded):
             return Response.text(400, "Bad Request")
         session.keep(name, path, decoded)
         return Response(204, {}, "")
@@ -944,6 +945,6 @@ def _present(route: dict, data: dict) -> list[str]:
 def _decoded_cookie(text: str) -> object:
     """Returns the decoded hy-keep cookie, or None for a cookie that is not JSON (HY-42)."""
     try:
-        return _json_codec.decode(text)
-    except _json_codec.JsonDecodeError:
+        return JsonCodec.decode(text)
+    except JsonDecodeError:
         return None

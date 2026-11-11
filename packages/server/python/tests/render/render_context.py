@@ -7,7 +7,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from polyspec.hyper._json_codec import decode
+from polyspec.hyper._json_codec import JsonCodec
 from polyspec.hyper.app import App
 from polyspec.hyper.reply import Reply
 from polyspec.hyper.request import Request
@@ -163,7 +163,7 @@ def open_application(
     def context(selection: object) -> dict:
         calls.append("context")
         selections.append(selection)
-        return decode(application["context"])
+        return JsonCodec.decode(application["context"])
 
     return App.open(
         manifest=str(manifest),

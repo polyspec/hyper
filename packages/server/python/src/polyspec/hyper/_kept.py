@@ -6,7 +6,7 @@ from __future__ import annotations
 import re
 from typing import Optional
 
-from ._data_model import contains
+from ._data_model import DataModel
 
 KINDS = ("server", "cookie", "localStorage", "sessionStorage")
 
@@ -16,7 +16,7 @@ class Kept:
     def apply(data: dict, kept: list[tuple[str, object]]) -> dict:
         """Replaces values at kept paths when the path exists and the kept value conforms to its value."""
         for path, value in kept:
-            if contains(value):
+            if DataModel.contains(value):
                 replaced = Kept._replace_at(data, path.split("."), value)[0]
                 data = replaced if isinstance(replaced, dict) else data
         return data
@@ -27,7 +27,7 @@ class Kept:
         next."""
         selected: dict = {}
         for path, value in kept:
-            if not contains(value):
+            if not DataModel.contains(value):
                 continue
             replaced, applied = Kept._replace_at(data, path.split("."), value)
             if applied:

@@ -6,7 +6,7 @@ import json
 import tempfile
 from pathlib import Path
 
-from polyspec.hyper._json_codec import decode
+from polyspec.hyper._json_codec import JsonCodec
 from polyspec.hyper._session import _TOKEN_KEY
 from polyspec.hyper.app import App
 from polyspec.hyper.request import Request
@@ -168,7 +168,7 @@ def _observed(request: Request, media: object) -> dict:
         "method": request.method,
         "parameters": media.parameters(),
         "headers": dict(request._headers),
-        "body": decode(body.decode("utf-8")) if body else None,
+        "body": JsonCodec.decode(body.decode("utf-8")) if body else None,
     }
 
 

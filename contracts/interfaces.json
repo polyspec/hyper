@@ -1952,16 +1952,92 @@
             },
             "node": {
               "file": "packages/server/ts/src/data-model.ts",
-              "kind": "functions",
+              "kind": "class",
               "internal": true
             },
             "python": {
               "file": "packages/server/python/src/polyspec/hyper/_data_model.py",
-              "kind": "functions",
+              "kind": "class",
               "internal": true
             }
           },
-          "members": []
+          "members": [
+            {
+              "id": "data-model.check",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "value"
+              ],
+              "output": "value",
+              "errors": [],
+              "state": "Binds a value, fails when it is not a value of the data model, and returns the bound value.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/DataModel.php::Polyspec\\Hyper\\DataModel::check",
+                  "signature": "public static function check(mixed $value): mixed"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/data-model.ts::DataModel.check",
+                  "signature": "static check(value: unknown): Value"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_data_model.py::DataModel.check",
+                  "signature": "def check(value: object) -> object"
+                }
+              }
+            },
+            {
+              "id": "data-model.contains",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "value"
+              ],
+              "output": "boolean",
+              "errors": [],
+              "state": "Tells whether a value is a value of the data model.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/DataModel.php::Polyspec\\Hyper\\DataModel::contains",
+                  "signature": "public static function contains(mixed $value): bool"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/data-model.ts::DataModel.contains",
+                  "signature": "static contains(value: unknown): boolean"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_data_model.py::DataModel.contains",
+                  "signature": "def contains(value: object) -> bool"
+                }
+              }
+            },
+            {
+              "id": "data-model.walk",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "value"
+              ],
+              "output": "none",
+              "errors": [],
+              "state": "Fails at the first item of a value that is not a value of the data model.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/DataModel.php::Polyspec\\Hyper\\DataModel::walk",
+                  "signature": "private static function walk(mixed $value): void"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/data-model.ts::DataModel.walk",
+                  "signature": "private static walk(value: Value): void"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_data_model.py::DataModel._walk",
+                  "signature": "def _walk(value: object) -> None"
+                }
+              }
+            }
+          ]
         }
       ]
     },
@@ -1985,16 +2061,518 @@
             },
             "node": {
               "file": "packages/server/ts/src/json-codec.ts",
-              "kind": "functions",
+              "kind": "class",
               "internal": true
             },
             "python": {
               "file": "packages/server/python/src/polyspec/hyper/_json_codec.py",
-              "kind": "functions",
+              "kind": "class",
+              "internal": true
+            }
+          },
+          "members": [
+            {
+              "id": "json-codec.value",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "string",
+                "string",
+                "map<string>",
+                "string",
+                "optional<map<value>>",
+                "map<value>",
+                "map<map<value>>",
+                "map<map<value>>"
+              ],
+              "output": "map<value>",
+              "errors": [],
+              "state": "Returns the JSON response value of a page with its members in their order.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/JsonCodec.php::Polyspec\\Hyper\\JsonCodec::value",
+                  "signature": "public static function value(string $timezone, string $route, array $params, string $build, ?array $context, array $shared, array $regions, array $kept): array"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/json-codec.ts::JsonCodec.value",
+                  "signature": "static value(timezone: string, route: string, params: MapValue, build: string, context: MapValue | null, shared: MapValue, regions: MapValue, kept: MapValue): MapValue"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_json_codec.py::JsonCodec.value",
+                  "signature": "def value(timezone: str, route: str, params: dict, build: str, context: Optional[dict], shared: dict, regions: dict, kept: dict) -> dict"
+                }
+              }
+            },
+            {
+              "id": "json-codec.encode",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "value"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Returns the JSON text of a value with the bytes of PHP json_encode.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/JsonCodec.php::Polyspec\\Hyper\\JsonCodec::encode",
+                  "signature": "public static function encode(mixed $value): string"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/json-codec.ts::JsonCodec.encode",
+                  "signature": "static encode(value: Value): string"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_json_codec.py::JsonCodec.encode",
+                  "signature": "def encode(value: object) -> str"
+                }
+              }
+            },
+            {
+              "id": "json-codec.decode",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "string"
+              ],
+              "output": "value",
+              "errors": [
+                "json-decode-error"
+              ],
+              "state": "Decodes a JSON text as PHP json_decode reads it, with maps in document order.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/JsonCodec.php::Polyspec\\Hyper\\JsonCodec::decode",
+                  "signature": "public static function decode(string $text): mixed"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/json-codec.ts::JsonCodec.decode",
+                  "signature": "static decode(text: string): DecodedValue"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_json_codec.py::JsonCodec.decode",
+                  "signature": "def decode(text: str) -> object"
+                }
+              }
+            },
+            {
+              "id": "json-codec.inDataModel",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "value"
+              ],
+              "output": "boolean",
+              "errors": [],
+              "state": "Tells whether a decoded value is a value of the data model.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/JsonCodec.php::Polyspec\\Hyper\\JsonCodec::inDataModel",
+                  "signature": "public static function inDataModel(mixed $value): bool"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/json-codec.ts::JsonCodec.inDataModel",
+                  "signature": "static inDataModel(value: Value | DecodedValue): value is Value"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_json_codec.py::JsonCodec.in_data_model",
+                  "signature": "def in_data_model(value: object) -> bool"
+                }
+              }
+            },
+            {
+              "id": "json-codec.map",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "map<value>"
+              ],
+              "output": "map<value>",
+              "errors": [],
+              "state": "Returns an empty PHP array as an object, so that it encodes and binds as a map.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/JsonCodec.php::Polyspec\\Hyper\\JsonCodec::map",
+                  "signature": "private static function map(array $value): stdClass|array"
+                }
+              },
+              "only": {
+                "languages": [
+                  "php"
+                ],
+                "sentence": "HY-17.1"
+              }
+            },
+            {
+              "id": "json-codec.constructor",
+              "kind": "constructor",
+              "visibility": "private",
+              "inputs": [
+                "string"
+              ],
+              "output": "json-codec",
+              "errors": [],
+              "state": "Starts a reader of a JSON text at its first character.",
+              "native": {
+                "node": {
+                  "symbol": "packages/server/ts/src/json-codec.ts::JsonCodec.constructor",
+                  "signature": "private constructor(text: string)"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_json_codec.py::JsonCodec.__init__",
+                  "signature": "def __init__(self, text: str) -> None"
+                }
+              },
+              "only": {
+                "languages": [
+                  "node",
+                  "python"
+                ],
+                "sentence": "HY-54.8"
+              }
+            },
+            {
+              "id": "json-codec.encodeNumber",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "number"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Writes a number with the digits of PHP json_encode.",
+              "native": {
+                "node": {
+                  "symbol": "packages/server/ts/src/json-codec.ts::JsonCodec.encodeNumber",
+                  "signature": "private static encodeNumber(value: number): string"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_json_codec.py::JsonCodec._encode_number",
+                  "signature": "def _encode_number(value: int | float) -> str"
+                }
+              },
+              "only": {
+                "languages": [
+                  "node",
+                  "python"
+                ],
+                "sentence": "HY-54.4"
+              }
+            },
+            {
+              "id": "json-codec.encodeString",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "string"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Writes a string with the escapes of PHP json_encode.",
+              "native": {
+                "node": {
+                  "symbol": "packages/server/ts/src/json-codec.ts::JsonCodec.encodeString",
+                  "signature": "private static encodeString(text: string): string"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_json_codec.py::JsonCodec._encode_string",
+                  "signature": "def _encode_string(text: str) -> str"
+                }
+              },
+              "only": {
+                "languages": [
+                  "node",
+                  "python"
+                ],
+                "sentence": "HY-54.4"
+              }
+            },
+            {
+              "id": "json-codec.checkWellFormed",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "string"
+              ],
+              "output": "none",
+              "errors": [],
+              "state": "Fails for a string with a lone surrogate.",
+              "native": {
+                "node": {
+                  "symbol": "packages/server/ts/src/json-codec.ts::JsonCodec.checkWellFormed",
+                  "signature": "private static checkWellFormed(text: string): void"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_json_codec.py::JsonCodec._check_well_formed",
+                  "signature": "def _check_well_formed(text: str) -> None"
+                }
+              },
+              "only": {
+                "languages": [
+                  "node",
+                  "python"
+                ],
+                "sentence": "HY-54.4"
+              }
+            },
+            {
+              "id": "json-codec.combineSurrogates",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "string"
+              ],
+              "output": "string",
+              "errors": [
+                "json-decode-error"
+              ],
+              "state": "Joins an escaped surrogate pair into one character and fails for a lone surrogate.",
+              "native": {
+                "node": {
+                  "symbol": "packages/server/ts/src/json-codec.ts::JsonCodec.combineSurrogates",
+                  "signature": "private static combineSurrogates(text: string): string"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_json_codec.py::JsonCodec._combine_surrogates",
+                  "signature": "def _combine_surrogates(text: str) -> str"
+                }
+              },
+              "only": {
+                "languages": [
+                  "node",
+                  "python"
+                ],
+                "sentence": "HY-54.8"
+              }
+            },
+            {
+              "id": "json-codec.failAt",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [
+                "string"
+              ],
+              "output": "none",
+              "errors": [
+                "json-decode-error"
+              ],
+              "state": "Fails the decoding at the current position.",
+              "native": {
+                "node": {
+                  "symbol": "packages/server/ts/src/json-codec.ts::JsonCodec.failAt",
+                  "signature": "private failAt(message: string): never"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_json_codec.py::JsonCodec._fail_at",
+                  "signature": "def _fail_at(self, message: str) -> NoReturn"
+                }
+              },
+              "only": {
+                "languages": [
+                  "node",
+                  "python"
+                ],
+                "sentence": "HY-54.8"
+              }
+            },
+            {
+              "id": "json-codec.skipWhitespace",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [],
+              "output": "none",
+              "errors": [],
+              "state": "Skips the JSON white space.",
+              "native": {
+                "node": {
+                  "symbol": "packages/server/ts/src/json-codec.ts::JsonCodec.skipWhitespace",
+                  "signature": "private skipWhitespace(): void"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_json_codec.py::JsonCodec._skip_whitespace",
+                  "signature": "def _skip_whitespace(self) -> None"
+                }
+              },
+              "only": {
+                "languages": [
+                  "node",
+                  "python"
+                ],
+                "sentence": "HY-54.8"
+              }
+            },
+            {
+              "id": "json-codec.parseString",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [],
+              "output": "string",
+              "errors": [
+                "json-decode-error"
+              ],
+              "state": "Reads a string from its opening quote.",
+              "native": {
+                "node": {
+                  "symbol": "packages/server/ts/src/json-codec.ts::JsonCodec.parseString",
+                  "signature": "private parseString(): string"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_json_codec.py::JsonCodec._parse_string",
+                  "signature": "def _parse_string(self) -> str"
+                }
+              },
+              "only": {
+                "languages": [
+                  "node",
+                  "python"
+                ],
+                "sentence": "HY-54.8"
+              }
+            },
+            {
+              "id": "json-codec.parseNumber",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [],
+              "output": "value",
+              "errors": [
+                "json-decode-error"
+              ],
+              "state": "Reads a number, an integer for an integer literal and a float otherwise.",
+              "native": {
+                "node": {
+                  "symbol": "packages/server/ts/src/json-codec.ts::JsonCodec.parseNumber",
+                  "signature": "private parseNumber(): number | OutsideNumber"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_json_codec.py::JsonCodec._parse_number",
+                  "signature": "def _parse_number(self) -> object"
+                }
+              },
+              "only": {
+                "languages": [
+                  "node",
+                  "python"
+                ],
+                "sentence": "HY-54.8"
+              }
+            },
+            {
+              "id": "json-codec.parseValue",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [
+                "number"
+              ],
+              "output": "value",
+              "errors": [
+                "json-decode-error"
+              ],
+              "state": "Reads a value at a nesting depth.",
+              "native": {
+                "node": {
+                  "symbol": "packages/server/ts/src/json-codec.ts::JsonCodec.parseValue",
+                  "signature": "private parseValue(depth: number): DecodedValue"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_json_codec.py::JsonCodec._parse_value",
+                  "signature": "def _parse_value(self, depth: int) -> object"
+                }
+              },
+              "only": {
+                "languages": [
+                  "node",
+                  "python"
+                ],
+                "sentence": "HY-54.8"
+              }
+            }
+          ]
+        },
+        {
+          "id": "json-decode-error",
+          "native": {
+            "php": {
+              "file": "packages/server/php/src/JsonDecodeError.php",
+              "kind": "class",
+              "internal": true
+            },
+            "node": {
+              "file": "packages/server/ts/src/json-decode-error.ts",
+              "kind": "class",
+              "internal": true
+            },
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/_json_decode_error.py",
+              "kind": "class",
               "internal": true
             }
           },
           "members": []
+        },
+        {
+          "id": "outside-number",
+          "native": {
+            "node": {
+              "file": "packages/server/ts/src/outside-number.ts",
+              "kind": "class",
+              "internal": true
+            },
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/_outside_number.py",
+              "kind": "class",
+              "internal": true
+            }
+          },
+          "members": [
+            {
+              "id": "outside-number.literal",
+              "kind": "property",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "string",
+              "errors": [],
+              "state": "Holds the literal of the number as the JSON text writes it.",
+              "native": {
+                "node": {
+                  "symbol": "packages/server/ts/src/outside-number.ts::OutsideNumber.literal",
+                  "signature": "readonly literal: string"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_outside_number.py::OutsideNumber.literal",
+                  "signature": "literal: str"
+                }
+              }
+            },
+            {
+              "id": "outside-number.constructor",
+              "kind": "constructor",
+              "visibility": "internal",
+              "inputs": [
+                "string"
+              ],
+              "output": "outside-number",
+              "errors": [],
+              "state": "Holds the literal of a number outside the data model.",
+              "native": {
+                "node": {
+                  "symbol": "packages/server/ts/src/outside-number.ts::OutsideNumber.constructor",
+                  "signature": "constructor(literal: string)"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_outside_number.py::OutsideNumber.__init__",
+                  "signature": "def __init__(self, literal: str) -> None"
+                }
+              }
+            }
+          ],
+          "only": {
+            "languages": [
+              "node",
+              "python"
+            ],
+            "sentence": "HY-54.8"
+          }
         }
       ]
     },
@@ -2567,7 +3145,28 @@
       "units": []
     }
   ],
-  "types": [],
+  "types": [
+    {
+      "id": "decodedValue",
+      "visibility": "internal",
+      "unit": "json-codec",
+      "shape": {
+        "term": "value"
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-54.8"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/server/ts/src/json-codec.ts::DecodedValue",
+          "declaration": "export type DecodedValue = null | boolean | number | string | OutsideNumber | DecodedValue[] | Map<string, DecodedValue>;"
+        }
+      }
+    }
+  ],
   "caseFiles": {
     "accept.json": {
       "fixtures": {

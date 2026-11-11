@@ -4,29 +4,32 @@ declare(strict_types=1);
 
 namespace Polyspec\Hyper\Tests\Support\Steps;
 
-use Polyspec\Hyper\DataModel;
-use Polyspec\Hyper\JsonEncoder;
+use Polyspec\Hyper\JsonCodec;
+use Polyspec\Hyper\JsonDecodeError;
 use Polyspec\Hyper\Tests\CaseReader;
 
-/** HY-38, HY-40: the cases of contracts/json.json. */
+/** HY-17, HY-54: the cases of contracts/json.json, the JSON text of a decoded value and the decoding of a text. */
 final class JsonSteps
 {
     public static function encode(CaseReader $case): void
     {
-        $value = json_decode((string) $case->input('json'), false, flags: JSON_THROW_ON_ERROR);
-        $encoded = JsonEncoder::encode(['v' => $value]);
-        // The case gives the value alone: the encoder's text is compared without its wrapping member.
-        $prefix = '{"v":';
-        $observed = str_starts_with($encoded, $prefix) && str_ends_with($encoded, '}')
-            ? substr($encoded, strlen($prefix), -1)
-            : $encoded;
-        $case->compare('expected', $observed);
+        $case->compare('expected', JsonCodec::encode(JsonCodec::decode(self::text($case))));
     }
 
     public static function decode(CaseReader $case): void
     {
-        $value = json_decode((string) $case->input('json'), false);
-        $result = json_last_error() !== JSON_ERROR_NONE ? 'error' : (DataModel::contains($value) ? 'value' : 'outside');
+        try {
+            $result = JsonCodec::inDataModel(JsonCodec::decode(self::text($case))) ? 'value' : 'outside';
+        } catch (JsonDecodeError) {
+            $result = 'error';
+        }
         $case->compare('result', $result);
+    }
+
+    private static function text(CaseReader $case): string
+    {
+        $json = $case->input('json');
+
+        return is_string($json) ? $json : '';
     }
 }
