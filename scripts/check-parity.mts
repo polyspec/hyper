@@ -43,7 +43,7 @@ interface CookieStep {
   value: string;
 }
 interface RequestStep {
-  action: 'send' | 'status' | 'compare';
+  action: 'send' | 'status' | 'compare' | 'representation';
   method: string;
   path: string;
   status?: number | undefined;
@@ -51,13 +51,16 @@ interface RequestStep {
   form?: Record<string, string> | undefined;
   pad?: number | undefined;
   contentType?: string | undefined;
+  // The Accept of a representation step (HY-116).
+  accept?: string | undefined;
 }
 type Step = CookieStep | RequestStep;
 interface Answer { status: number; headers: Headers; text: string; token: string }
 interface ServerClient { base: string; send: (step: RequestStep, headers: Record<string, string>, keepCookie: string) => Promise<Answer> }
 type Send = (step: RequestStep, headers: Record<string, string>) => Promise<Answer>;
 // The browser code that loadBrowserCode bundles from @polyspec/hyper-client and @polyspec/template/render.
-type BrowserCode = Pick<typeof Client, 'checkManifest' | 'checkTemplateIndex' | 'createApplication' | 'decodeResponse' | 'renderDocument' | 'renderParts'> & { parseJson: typeof parseJson };
+type Decoded = ReturnType<typeof Client.decodeResponse>;
+type BrowserCode = Pick<typeof Client, 'checkManifest' | 'checkTemplateIndex' | 'createApplication' | 'decodeResponse' | 'renderDocument' | 'renderParts'> & { parseJson: typeof parseJson; withContext: (shared: Decoded['shared'], context: Decoded['shared']) => Decoded['shared'] };
 
 const errorMessage = (error: unknown): string => (error instanceof Error ? error.message : String(error));
 
@@ -77,7 +80,7 @@ const TRANSPORT_HEADERS = new Set(['date', 'connection', 'keep-alive', 'content-
 const REQUEST_TIMEOUT_MS = 10_000;
 const steps = readSteps(requests);
 // A request file without a status or a compare step would pass without checking anything (HR-84).
-const checks = steps.filter((step) => step.action === 'status' || step.action === 'compare').length;
+const checks = steps.filter((step) => step.action === 'status' || step.action === 'compare' || step.action === 'representation').length;
 if (checks === 0) throw new Error(`${requests} holds no status or compare step; expected at least 1, actual 0 of ${steps.length} steps`);
 
 const browser = await loadBrowserCode();
@@ -164,6 +167,15 @@ if (failures > 0) {
 // Runs a send, status or compare step and returns the text of its result line.
 async function runStep(step: RequestStep, label: string, send: Send, php: ServerClient): Promise<string> {
   if (step.action === 'send') return String((await send(step, {})).status);
+  if (step.action === 'representation') {
+    // HY-116 to HY-122: the servers answer a representation request alike, with the status of the step and without a
+    // session cookie.
+    if (step.accept === undefined) throw new Error(`${label} has no accept`);
+    const answer = await send(step, { Accept: step.accept });
+    if (answer.status !== step.status) fail(`${label}: status ${answer.status}, expected ${step.status}`);
+    if (answer.headers.getSetCookie().length > 0) fail(`${label}: the representation request received a cookie`);
+    return `${answer.status}, ${answer.headers.get('content-type') ?? 'no Content-Type'}, ${Buffer.byteLength(answer.text)} bytes`;
+  }
   if (step.action === 'status') {
     const html = await send(step, {});
     const json = await send(step, { Accept: 'application/vnd.hyper+json' });
@@ -187,10 +199,10 @@ async function runStep(step: RequestStep, label: string, send: Send, php: Server
   // The server embeds the data of a document when the reply of its request asks for it (HY-92); the browser renders
   // the document with the same choice and must give the same bytes, the embedded data included.
   const embed = html.text.includes('<script type="application/json" id="hy-data">');
-  const rendered = placeholder(browser.renderDocument(application, browser.decodeResponse(application, browser.parseJson(documentJson.text), path), { embed }), documentJson.token);
+  const rendered = placeholder(browser.renderDocument(application, decoded(documentJson.text, path), { embed }), documentJson.token);
   if (rendered !== server) fail(`${label}: browser document differs\n--- browser\n${rendered}\n--- server\n${server}`);
 
-  const parts = browser.renderParts(application, browser.decodeResponse(application, browser.parseJson(regionJson.text), path));
+  const parts = browser.renderParts(application, decoded(regionJson.text, path));
   if (!server.includes(`<title>${parts.title}</title>`)) fail(`${label}: document does not contain the title ${parts.title}`);
   for (const [name, alone] of parts.regions) {
     const region = placeholder(alone, regionJson.token);
@@ -200,6 +212,16 @@ async function runStep(step: RequestStep, label: string, send: Send, php: Server
     }
   }
   return `${html.status}, route ${parts.route.name}, document ${Buffer.byteLength(rendered)} bytes, regions ${[...parts.regions.keys()].join(', ')}`;
+}
+
+// Decodes a JSON response as the browser does before it renders: the value of the member context, which a request
+// without Hyper-Context receives, is set into the shared data (HYC-22, HY-128).
+function decoded(text: string, path: string): Decoded {
+  const response = browser.decodeResponse(application, browser.parseJson(text), path);
+  const member = response.value.get('context');
+  const value = member instanceof Map ? member.get('value') : undefined;
+  if (value instanceof Map) response.shared = browser.withContext(response.shared, value);
+  return response;
 }
 
 // A client of one server with its own session cookie and CSRF token.
@@ -254,6 +276,14 @@ function normalize(label: string, server: string, response: Answer): { headers: 
   const headers: string[] = [];
   for (const [name, value] of response.headers) {
     if (TRANSPORT_HEADERS.has(name) || name === 'set-cookie') continue;
+    if (name === 'etag' && !value.startsWith('W/')) {
+      // HY-122.10: the strong tag of a representation, of its Content-Type, a line feed and its body. A HEAD and a 304
+      // have no body to compute it from; the servers must still send the same tag.
+      const tag = `"${createHash('sha256').update(`${response.headers.get('content-type') ?? ''}\n${response.text}`).digest('hex').slice(0, 32)}"`;
+      if (response.text !== '' && value !== tag) fail(`${label}: ${server} ETag ${value} is not the tag of its representation`);
+      headers.push(`${name}: ${value}`);
+      continue;
+    }
     if (name === 'etag') {
       // HY-53: the weak tag of the body with the masked token of the response replaced by the session token, which
       // the masked value gives as its second half XOR its first half (HY-24).
@@ -295,7 +325,8 @@ function fail(message: string): void {
 async function loadBrowserCode(): Promise<BrowserCode> {
   const result = await build({
     stdin: {
-      contents: "export { checkManifest, checkTemplateIndex, createApplication, decodeResponse, renderDocument, renderParts } from '@polyspec/hyper-client'; export { parseJson } from '@polyspec/template/render';",
+      // withContext is the function of the browser code that places the context; the package does not export it.
+      contents: "export { checkManifest, checkTemplateIndex, createApplication, decodeResponse, renderDocument, renderParts } from '@polyspec/hyper-client'; export { withContext } from './src/response.ts'; export { parseJson } from '@polyspec/template/render';",
       resolveDir: resolve('packages', 'client'),
       sourcefile: 'parity-entry.ts',
       loader: 'ts',
@@ -310,13 +341,13 @@ async function loadBrowserCode(): Promise<BrowserCode> {
   if (output === undefined) throw new Error('esbuild wrote no bundle of the browser code');
   const code = Buffer.from(output.contents).toString('base64');
   const module: unknown = await import(`data:text/javascript;base64,${code}`);
-  if (!isBrowserCode(module)) throw new Error('the bundle of the browser code does not export checkManifest, checkTemplateIndex, createApplication, decodeResponse, renderDocument, renderParts and parseJson');
+  if (!isBrowserCode(module)) throw new Error('the bundle of the browser code does not export checkManifest, checkTemplateIndex, createApplication, decodeResponse, renderDocument, renderParts, withContext and parseJson');
   return module;
 }
 
 // The bundle exports each function of BrowserCode.
 function isBrowserCode(module: unknown): module is BrowserCode {
-  return isJsonObject(module) && ['checkManifest', 'checkTemplateIndex', 'createApplication', 'decodeResponse', 'renderDocument', 'renderParts', 'parseJson'].every((name) => typeof module[name] === 'function');
+  return isJsonObject(module) && ['checkManifest', 'checkTemplateIndex', 'createApplication', 'decodeResponse', 'renderDocument', 'renderParts', 'withContext', 'parseJson'].every((name) => typeof module[name] === 'function');
 }
 
 // The steps of the request file `file`.
@@ -328,7 +359,7 @@ function readSteps(file: string): Step[] {
       if (entry.value === undefined) throw new Error(`a cookie step of ${file} has no value`);
       return { action, value: jsonString(entry.value, `${where} value`) };
     }
-    if (action !== 'send' && action !== 'status' && action !== 'compare') throw new Error(`${where} has the action ${action}; expected cookie, send, status or compare`);
+    if (action !== 'send' && action !== 'status' && action !== 'compare' && action !== 'representation') throw new Error(`${where} has the action ${action}; expected cookie, send, status, compare or representation`);
     const optional = <T,>(key: string, read: (value: unknown, where: string) => T): T | undefined => (entry[key] === undefined ? undefined : read(entry[key], `${where} ${key}`));
     return {
       action,
@@ -339,6 +370,7 @@ function readSteps(file: string): Step[] {
       form: optional('form', (value, at) => Object.fromEntries(Object.entries(jsonObject(value, at)).map(([name, field]) => [name, jsonString(field, `${at} ${name}`)]))),
       pad: optional('pad', jsonNumber),
       contentType: optional('contentType', jsonString),
+      accept: optional('accept', jsonString),
     };
   });
 }

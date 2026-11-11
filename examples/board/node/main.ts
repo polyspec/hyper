@@ -85,6 +85,8 @@ const app = await App.open<Services>({
   basePath: process.env.BOARD_BASE_PATH ?? '',
   https: process.env.BOARD_HTTPS === '1',
   frameAncestors: process.env.BOARD_FRAME_ANCESTORS || "'self'",
+  // The context of every page (HY-124): the name of the site, which the title template reads.
+  context: () => new Map([['site', new Map([['name', '게시판 예제']])]]),
 });
 // BOARD_TIME fixes the creation time of new posts in Unix seconds, so that two servers store the same posts
 // (`make server-parity`); without it a post has the current time.

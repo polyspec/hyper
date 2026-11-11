@@ -57,6 +57,8 @@ $app = App::open(
     https: getenv('BOARD_HTTPS') === '1',
     sessionSetup: $sessionSetup,
     frameAncestors: is_string($frameAncestors) && $frameAncestors !== '' ? $frameAncestors : "'self'",
+    // The context of every page (HY-124): the name of the site, which the title template reads.
+    context: static fn (mixed $selection): array => ['site' => ['name' => '게시판 예제']],
 );
 $app->bind(Posts::class, fn (): Posts => new Posts($database, $now));
 $app->bind(Assets::class, fn (): Assets => Assets::fromManifest(__DIR__ . '/../build/manifest.json'));

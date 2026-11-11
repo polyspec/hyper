@@ -33,6 +33,11 @@
     {"action": "status", "method": "POST", "path": "/board/create", "form": {"_csrf": "wrong", "title": "t"}, "status": 403},
     {"action": "status", "method": "GET", "path": "/board/999", "status": 404},
     {"action": "status", "method": "GET", "path": "/board/%ED%95%9C", "status": 404},
-    {"action": "status", "method": "GET", "path": "/board/", "status": 404}
+    {"action": "status", "method": "GET", "path": "/board/", "status": 404},
+    {"action": "representation", "method": "GET", "path": "/board/1", "accept": "application/vnd.board.post+json;version=1", "status": 200},
+    {"action": "representation", "method": "HEAD", "path": "/board/1", "accept": "application/vnd.board.post+json;version=1", "status": 200},
+    {"action": "representation", "method": "GET", "path": "/board/999", "accept": "application/vnd.board.post+json;version=1", "status": 404},
+    {"action": "representation", "method": "GET", "path": "/board/1", "accept": "application/vnd.board.post+json;version=2", "status": 406},
+    {"action": "representation", "method": "DELETE", "path": "/board/1", "accept": "application/vnd.board.post+json;version=1", "status": 405}
   ]
 }

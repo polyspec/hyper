@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import re
 
+from polyspec.hyper.media_type import MediaType
 from polyspec.hyper.reply import Reply
+from polyspec.hyper.representation import Representation
 from polyspec.hyper.request import Request
 from polyspec.hyper.not_found import NotFound
 from polyspec.hyper.result import Result
@@ -32,12 +34,17 @@ def _current_page(request: Request, posts: Posts) -> tuple[int, int]:
     return min(pages, max(1, request.query_int("page", 1))), pages
 
 
-def _find_post(request: Request, posts: Posts) -> dict:
-    """Returns the post of the route parameter `id`, or reports a missing resource."""
+def _post_of(request: Request, posts: Posts) -> dict | None:
+    """Returns the post of the route parameter `id`, or None for an identifier without a post."""
     identifier = request.param("id") or ""
-    post = (
+    return (
         posts.find(int(identifier)) if _ID.fullmatch(identifier) is not None else None
     )
+
+
+def _find_post(request: Request, posts: Posts) -> dict:
+    """Returns the post of the route parameter `id`, or reports a missing resource."""
+    post = _post_of(request, posts)
     if post is None:
         raise NotFound()
     return post
@@ -112,6 +119,11 @@ def handlers(services: Services) -> dict:
         )
         return Result.redirect("/board").flash("created", identifier).changed("posts")
 
+    def post_json(request: Request, media: MediaType) -> Representation:
+        # The post as JSON for a program (HY-118): a request without a session, and 404 without a post.
+        post = _post_of(request, services.posts)
+        return Representation(404) if post is None else Representation(200, post)
+
     return {
         "shared": shared,
         "regions": {"left": left},
@@ -120,7 +132,11 @@ def handlers(services: Services) -> dict:
                 "load": list_load,
                 "regions": {"notice": notice, "rows": rows},
             },
-            "board.show": {"load": show_load, "regions": {"reader": reader}},
+            "board.show": {
+                "load": show_load,
+                "regions": {"reader": reader},
+                "representations": {"application/vnd.board.post+json": post_json},
+            },
             "board.create": {"post": create},
         },
     }

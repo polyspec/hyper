@@ -6,6 +6,7 @@ use Polyspec\Hyper\Examples\Board\Assets;
 use Polyspec\Hyper\Examples\Board\Posts;
 use Polyspec\Hyper\NotFound;
 use Polyspec\Hyper\Reply;
+use Polyspec\Hyper\Representation;
 use Polyspec\Hyper\Request;
 use Polyspec\Hyper\Result;
 
@@ -23,16 +24,22 @@ $currentPage = static function (Request $request, Posts $posts) use ($postsPerPa
 };
 
 /**
+ * Returns the post of the route parameter `id`, or null for an identifier without a post.
+ *
+ * @return ?array{id: int, title: string, author: string, body: string, created_at: int}
+ */
+$post = static function (Request $request, Posts $posts): ?array {
+    $id = (string) $request->param('id');
+
+    return preg_match('/^[1-9]\d{0,15}$/D', $id) === 1 ? $posts->find((int) $id) : null;
+};
+
+/**
  * Returns the post of the route parameter `id`, or reports a missing resource.
  *
  * @return array{id: int, title: string, author: string, body: string, created_at: int}
  */
-$findPost = static function (Request $request, Posts $posts): array {
-    $id = (string) $request->param('id');
-    $post = preg_match('/^[1-9]\d{0,15}$/D', $id) === 1 ? $posts->find((int) $id) : null;
-
-    return $post ?? throw new NotFound();
-};
+$findPost = static fn (Request $request, Posts $posts): array => $post($request, $posts) ?? throw new NotFound();
 
 // Loaders and actions of the regions and routes that app.json declares.
 return [
@@ -76,6 +83,17 @@ return [
 
         'board.show' => [
             'load' => fn (Request $request, Posts $posts): array => ['post' => $findPost($request, $posts)],
+            // The post as JSON for a program (HY-118): a request without a session, and 404 without a post.
+            'representations' => [
+                'application/vnd.board.post+json' => static function (
+                    Request $request,
+                    Posts $posts,
+                ) use ($post): Representation {
+                    $found = $post($request, $posts);
+
+                    return $found === null ? new Representation(404) : new Representation(200, $found);
+                },
+            ],
             'regions' => [
                 // The post page embeds its data, so the reader changes without a request; the list embeds none and
                 // the browser requests its data when it first changes a region (HY-31, HY-92).

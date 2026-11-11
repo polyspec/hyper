@@ -355,6 +355,26 @@ test('a stylesheet that fails to load keeps the page and marks the region (HYC-1
   }
 });
 
+test('a post is JSON for a request that names its type, without a session cookie (HY-116, HY-121, HY-122)', async ({ page }) => {
+  const type = 'application/vnd.board.post+json';
+  // The client-rendered application serves a representation under its data base path (HY-116.15).
+  for (const url of [`${ssr}/board/1`, `${csr}/api/board/1`]) {
+    const answer = await page.request.get(url, { headers: { Accept: `${type};version=1` } });
+    expect(answer.status(), url).toBe(200);
+    expect(answer.headers()['content-type']).toBe(`${type}; version=1`);
+    expect(answer.headers()['set-cookie']).toBeUndefined();
+    const tag = answer.headers().etag ?? '';
+    expect(tag).toMatch(/^"[0-9a-f]{32}"$/);
+    const post: unknown = await answer.json();
+    expect(at(post, 'id')).toBe(1);
+    expect(typeof at(post, 'title')).toBe('string');
+    // HY-122.10: a request that names the tag receives 304.
+    expect((await page.request.get(url, { headers: { Accept: `${type};version=1`, 'If-None-Match': tag } })).status()).toBe(304);
+    // HY-119: a version that the entry does not serve is not acceptable.
+    expect((await page.request.get(url, { headers: { Accept: `${type};version=2` } })).status()).toBe(406);
+  }
+});
+
 test('the comparison page accepts only an http origin', async ({ page }) => {
   let dialogs = 0;
   page.on('dialog', (dialog) => { dialogs++; void dialog.dismiss(); });

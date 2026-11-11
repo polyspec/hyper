@@ -1,5 +1,5 @@
 // Loaders and actions of the regions and routes that app.json declares, as app/handlers.php defines them.
-import { NotFound, Result, type Handlers, type Request } from '@polyspec/hyper-server';
+import { NotFound, Representation, Result, type Handlers, type Request } from '@polyspec/hyper-server';
 import type { Post, Posts } from './posts.js';
 
 export interface Services {
@@ -15,10 +15,15 @@ function currentPage(request: Request, posts: Posts): [number, number] {
   return [Math.min(pages, Math.max(1, request.queryInt('page', 1))), pages];
 }
 
+// Returns the post of the route parameter `id`, or null for an identifier without a post.
+function postOf(request: Request, posts: Posts): Post | null {
+  const id = request.param('id') ?? '';
+  return /^[1-9][0-9]{0,15}$/.test(id) ? posts.find(BigInt(id)) : null;
+}
+
 // Returns the post of the route parameter `id`, or reports a missing resource.
 function findPost(request: Request, posts: Posts): Post {
-  const id = request.param('id') ?? '';
-  const post = /^[1-9][0-9]{0,15}$/.test(id) ? posts.find(BigInt(id)) : null;
+  const post = postOf(request, posts);
   if (post === null) throw new NotFound();
   return post;
 }
@@ -60,6 +65,13 @@ export const handlers: Handlers<Services> = {
 
     'board.show': {
       load: ({ request, services }) => ({ post: findPost(request, services.get('posts')) }),
+      // The post as JSON for a program (HY-118): a request without a session, and 404 without a post.
+      representations: {
+        'application/vnd.board.post+json': ({ request, services }) => {
+          const post = postOf(request, services.get('posts'));
+          return post === null ? new Representation(404) : new Representation(200, post);
+        },
+      },
       regions: {
         // The post page embeds its data, so the reader changes without a request; the list embeds none and the
         // browser requests its data when it first changes a region (HY-31, HY-92).

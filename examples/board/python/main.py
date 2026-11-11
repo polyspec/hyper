@@ -103,6 +103,8 @@ application = App.open(
     base_path=os.environ.get("BOARD_BASE_PATH") or "",
     https=os.environ.get("BOARD_HTTPS") == "1",
     frame_ancestors=os.environ.get("BOARD_FRAME_ANCESTORS") or "'self'",
+    # The context of every page (HY-124): the name of the site, which the title template reads.
+    context=lambda selection: {"site": {"name": "게시판 예제"}},
 )
 server = create_server(
     application,

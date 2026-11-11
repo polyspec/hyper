@@ -1,1 +1,1 @@
-{= title} · 게시판 예제
+{= title} · {= context.site.name}
