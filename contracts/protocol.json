@@ -3024,7 +3024,7 @@
                     {
                       "id": "HY-73.29",
                       "en": "Before it renders or encodes a page, the server keeps of the shared data and of every region's data only their read paths: a map keeps the keys that a path names, in their order in the data, with their values kept recursively, and every key under `*`; a list keeps its length, with each element kept under `*` and the paths of its index and with `null` at an index that no path names; any other value stays as it is.",
-                      "ko": "서버는 페이지를 렌더하거나 인코딩하기 전에 공유 데이터와 모든 영역 데이터에서 읽기 경로만 남기며, 맵은 경로가 이름 붙인 키를 데이터에서의 순서대로, 그 값을 같은 방식으로 남기고 `*` 아래에서는 모든 키를 남기고, 목록은 길이를 유지하고 각 원소를 `*`와 그 인덱스의 경로로 남기며 어떤 경로도 이름 붙이지 않은 인덱스에는 `null`을 두고, 다른 값은 그대로 둔다.",
+                      "ko": "서버는 페이지를 렌더하거나 인코딩하기 전에 공유 데이터와 모든 영역 데이터에서 읽기 경로만 남기며, map은 경로가 지정한 키를 데이터에서의 순서대로, 그 값을 같은 방식으로 남기고 `*` 아래에서는 모든 키를 남기고, 목록은 길이를 유지하고 각 원소를 `*`와 그 인덱스의 경로로 남기며 어떤 경로도 지정하지 않은 인덱스에는 `null`을 두고, 다른 값은 그대로 둔다.",
                       "koSource": "ebfb383f7fc626ad5c0f75721fd70e7335c04b2a9f805149ad0e7618b025a92d"
                     },
                     {
