@@ -324,28 +324,28 @@
               }
             },
             {
-              "id": "accept.weight",
+              "id": "accept.typeWeight",
               "kind": "static method",
               "visibility": "private",
               "inputs": [
                 "list<media-range>",
                 "string"
               ],
-              "output": "integer",
+              "output": "number",
               "errors": [],
               "state": "Returns the weight in thousandths of the most specific range that matches a type.",
               "native": {
                 "php": {
-                  "symbol": "packages/server/php/src/Accept.php::Polyspec\\Hyper\\Accept::weight",
-                  "signature": "private static function weight(array $ranges, string $type): int"
+                  "symbol": "packages/server/php/src/Accept.php::Polyspec\\Hyper\\Accept::typeWeight",
+                  "signature": "private static function typeWeight(array $ranges, string $type): int"
                 },
                 "node": {
-                  "symbol": "packages/server/ts/src/accept.ts::Accept.weight",
-                  "signature": "private static weight(ranges: readonly MediaRange[], type: string): number"
+                  "symbol": "packages/server/ts/src/accept.ts::Accept.typeWeight",
+                  "signature": "private static typeWeight(ranges: readonly MediaRange[], type: string): number"
                 },
                 "python": {
-                  "symbol": "packages/server/python/src/polyspec/hyper/_accept.py::Accept._weight",
-                  "signature": "def _weight(ranges: Sequence[MediaRange], media: str) -> int"
+                  "symbol": "packages/server/python/src/polyspec/hyper/_accept.py::Accept._type_weight",
+                  "signature": "def _type_weight(ranges: Sequence[MediaRange], media: str) -> int"
                 }
               }
             },
@@ -379,7 +379,7 @@
               "kind": "method",
               "visibility": "private",
               "inputs": [],
-              "output": "integer",
+              "output": "number",
               "errors": [
                 "invalid-accept"
               ],
@@ -454,7 +454,7 @@
               "kind": "static method",
               "visibility": "private",
               "inputs": [
-                "integer"
+                "number"
               ],
               "output": "boolean",
               "errors": [],
@@ -479,7 +479,7 @@
               "kind": "static method",
               "visibility": "private",
               "inputs": [
-                "integer"
+                "number"
               ],
               "output": "boolean",
               "errors": [],
@@ -698,7 +698,7 @@
                 "string",
                 "string",
                 "list<list<string>>",
-                "integer"
+                "number"
               ],
               "output": "media-range",
               "errors": [],
@@ -792,7 +792,7 @@
               "kind": "property",
               "visibility": "internal",
               "inputs": [],
-              "output": "integer",
+              "output": "number",
               "errors": [],
               "state": "Holds the weight in thousandths, 0 to 1000.",
               "native": {

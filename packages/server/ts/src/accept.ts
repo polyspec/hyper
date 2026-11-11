@@ -54,7 +54,7 @@ export class Accept {
     let selected: string | null = null;
     let best = 0;
     for (const type of types) {
-      const weight = Accept.weight(ranges, type);
+      const weight = Accept.typeWeight(ranges, type);
       if (weight > best) {
         selected = type;
         best = weight;
@@ -65,7 +65,7 @@ export class Accept {
 
   // Returns the weight in thousandths that the ranges give a type: the weight of the most specific range that matches it,
   // or 0 when no range matches. A range that names the type matches it whatever its parameters (HY-116).
-  private static weight(ranges: readonly MediaRange[], type: string): number {
+  private static typeWeight(ranges: readonly MediaRange[], type: string): number {
     const slash = type.indexOf('/');
     const name = type.slice(0, slash);
     const subtype = type.slice(slash + 1);

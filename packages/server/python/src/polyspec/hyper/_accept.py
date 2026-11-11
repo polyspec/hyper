@@ -61,13 +61,13 @@ class Accept:
         selected: Optional[str] = None
         best = 0
         for media in types:
-            weight = Accept._weight(ranges, media)
+            weight = Accept._type_weight(ranges, media)
             if weight > best:
                 selected, best = media, weight
         return selected
 
     @staticmethod
-    def _weight(ranges: Sequence[MediaRange], media: str) -> int:
+    def _type_weight(ranges: Sequence[MediaRange], media: str) -> int:
         """Returns the weight in thousandths that the ranges give a type: the weight of the most specific range that
         matches it, or 0 when no range matches. A range that names the type matches it whatever its parameters
         (HY-116)."""

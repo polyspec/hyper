@@ -77,7 +77,7 @@ final class Accept
         $selected = null;
         $best = 0;
         foreach ($types as $type) {
-            $weight = self::weight($ranges, $type);
+            $weight = self::typeWeight($ranges, $type);
             if ($weight > $best) {
                 $selected = $type;
                 $best = $weight;
@@ -93,7 +93,7 @@ final class Accept
      *
      * @param list<MediaRange> $ranges
      */
-    private static function weight(array $ranges, string $type): int
+    private static function typeWeight(array $ranges, string $type): int
     {
         [$name, $subtype] = explode('/', $type, 2);
         $specificity = 0;
