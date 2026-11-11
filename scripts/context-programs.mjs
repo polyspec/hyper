@@ -1,7 +1,9 @@
 #!/usr/bin/env node
-// Builds the server programs of the applications of contracts/context.json (HY-48, HY-125) for the server tests. For each
-// application it writes its manifest, its templates and its build id file into <output>/<application>/ and runs
-// hyper-build-server of @polyspec/hyper-build, which writes <output>/<application>/program.
+// Builds the applications of contracts/context.json (HY-48, HY-125) for the tests of the three servers. For each
+// application it writes into <output>/<application>/:
+//   manifest.json, templates/ and build.json   the inputs that the case states
+//   program/                                   the server program of hyper-build-server, which PHP and Python open
+//   node/templates.index.json, node/templates/ the template files that the Node server opens (HR-34)
 //
 // Usage: context-programs.mjs --contract contracts/context.json --output var/context-programs
 // Both paths are absolute.
@@ -11,6 +13,8 @@ import { dirname, isAbsolute, join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
+import { writeFileAtomic } from '../packages/build/lib/output-files.mjs';
+import { writeTemplateFiles } from '../packages/build/lib/template-files.mjs';
 
 const { values } = parseArgs({ options: { contract: { type: 'string' }, output: { type: 'string' } } });
 for (const name of ['contract', 'output']) {
@@ -44,5 +48,8 @@ for (const [key, application] of Object.entries(contract.applications)) {
   if (run.status !== 0) {
     throw new Error(`building the context application ${key} failed with status ${run.status}: ${run.stdout}${run.stderr}`);
   }
-  process.stdout.write(`built ${key} into ${join(directory, 'program')}\n`);
+  const node = join(directory, 'node');
+  const { index } = await writeTemplateFiles({ templates, output: join(node, 'templates'), urlPrefix: '/templates' });
+  writeFileAtomic(join(node, 'templates.index.json'), `${JSON.stringify(index, null, 2)}\n`);
+  process.stdout.write(`built ${key} into ${join(directory, 'program')} and ${node}\n`);
 }
