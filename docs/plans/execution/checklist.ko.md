@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: ce71cd8de6f73ee766b9292d9a499c85e4f46a7a45a11afb3ee434a190f45b9c -->
+<!-- source-sha256: 2694731d4754f5ebf0268111c0e252e9fa670398fad0a6910b9b0f06018b9f43 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -380,7 +380,7 @@
 | H28.1-1 | server build가 build id를 얻는 방법을 명세한다: option --build로 이름 붙인 asset output의 build.json을 읽어 같은 file을 program directory에 쓰고, file이 없거나 build id가 올바르지 않으면 실패한다 | docs/spec/protocol.md and its Korean twin | `make docs-check` | [o] |
 | H28.1-2 | build id가 hash하는 각 산출물의 path를 정한다: public/assets 아래 file은 앞의 slash를 뺀 URL path로, manifest.json과 templates.index.json은 --output directory 안의 이름으로 | docs/spec/protocol.md and its Korean twin, contracts/context.json | `make docs-check` | [o] |
 | H28.2 | PHP server: media type 선택과 Vary, context, Hyper-Context header와 build member, representation을 선택하지 않은 request만 session을 연다, media type application/vnd.hyper+json, App의 functions; contracts/context.json과 contracts/client.json의 case | packages/server/php | `make test-php` | [~] |
-| H28.3 | Node server: H28.2와 같은 규칙 | packages/server/node | `make test-node` | [ ] |
+| H28.3 | Node server: H28.2와 같은 규칙 | packages/server/node | `make test-node` | [~] |
 | H28.4 | Python server: H28.2와 같은 규칙 | packages/server/python | `make test-python` | [ ] |
 | H28.5 | Browser package: browser context와 Hyper-Context header, 다른 build에서 새 document, 마지막 region response, HyperOptions의 functions, media type application/vnd.hyper+json | packages/client | `make test-js` | [~] |
 | H28.6 | Build: browser 산출물을 path 순서와 HY-125의 framing으로 hash한 build id, asset output의 build.json, 그것을 program directory에 쓰는 server build의 option --build, static shell의 hyper-build element | packages/build, scripts | `make test-scripts` | [o] |
