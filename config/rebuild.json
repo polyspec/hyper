@@ -6,13 +6,13 @@
       "kind": "ecosystem",
       "tool": "Playwright drives Chromium and measures the board example; node:perf_hooks times the steps"
     },
-    "benchmarks/sessions.mts": {
-      "kind": "ecosystem",
-      "tool": "node:child_process runs the session workers and the CPU of INFO of Redis counts the cost; node:perf_hooks times them"
-    },
     "benchmarks/server.php": {
       "kind": "ecosystem",
       "tool": "hrtime(true) of PHP times App::handle and the template program on the board example"
+    },
+    "benchmarks/sessions.mts": {
+      "kind": "ecosystem",
+      "tool": "node:child_process runs the session workers and the CPU of INFO of Redis counts the cost; node:perf_hooks times them"
     },
     "examples/board/app/handlers.php": {
       "kind": "policy",
@@ -102,6 +102,10 @@
       "kind": "policy",
       "reason": "the template rules of hyper (HC-6, HY-3, HY-30, HY-75) in packages/build/lib/template-rules.mjs; @polyspec/template parses the templates"
     },
+    "scripts/contract-programs.mjs": {
+      "kind": "policy",
+      "reason": "it writes the applications of the contract files with the server build of this repository (hyper-build-server); no ecosystem tool writes them"
+    },
     "scripts/install-redis.mts": {
       "kind": "ecosystem",
       "tool": "the make of the Redis release archive, checked by its sha256, and PIE build the Redis server and phpredis"
@@ -121,6 +125,90 @@
     "scripts/publish.mts": {
       "kind": "ecosystem",
       "tool": "node:fs renames, through publish of packages/build/lib/publish.mjs (HR-82)"
+    },
+    "scripts/recipe/barrels.mts": {
+      "kind": "policy",
+      "reason": "a part of the recipe check of docs/spec/recipe.md (HYR-7, HYR-8, HYR-10), which compares the development spec with the readers' output and the case results; no ecosystem tool performs this comparison"
+    },
+    "scripts/recipe/candidate.mts": {
+      "kind": "policy",
+      "reason": "a part of the recipe check of docs/spec/recipe.md (HYR-7, HYR-8, HYR-10), which compares the development spec with the readers' output and the case results; no ecosystem tool performs this comparison"
+    },
+    "scripts/recipe/cases.mts": {
+      "kind": "policy",
+      "reason": "a part of the recipe check of docs/spec/recipe.md (HYR-7, HYR-8, HYR-10), which compares the development spec with the readers' output and the case results; no ecosystem tool performs this comparison"
+    },
+    "scripts/recipe/check.mts": {
+      "kind": "policy",
+      "reason": "a part of the recipe check of docs/spec/recipe.md (HYR-7, HYR-8, HYR-10), which compares the development spec with the readers' output and the case results; no ecosystem tool performs this comparison"
+    },
+    "scripts/recipe/compare.mts": {
+      "kind": "policy",
+      "reason": "a part of the recipe check of docs/spec/recipe.md (HYR-7, HYR-8, HYR-10), which compares the development spec with the readers' output and the case results; no ecosystem tool performs this comparison"
+    },
+    "scripts/recipe/context.mts": {
+      "kind": "policy",
+      "reason": "a part of the recipe check of docs/spec/recipe.md (HYR-7, HYR-8, HYR-10), which compares the development spec with the readers' output and the case results; no ecosystem tool performs this comparison"
+    },
+    "scripts/recipe/members.mts": {
+      "kind": "policy",
+      "reason": "a part of the recipe check of docs/spec/recipe.md (HYR-7, HYR-8, HYR-10), which compares the development spec with the readers' output and the case results; no ecosystem tool performs this comparison"
+    },
+    "scripts/recipe/names.mts": {
+      "kind": "policy",
+      "reason": "a part of the recipe check of docs/spec/recipe.md (HYR-7, HYR-8, HYR-10), which compares the development spec with the readers' output and the case results; no ecosystem tool performs this comparison"
+    },
+    "scripts/recipe/read-node.mts": {
+      "kind": "ecosystem",
+      "tool": "the TypeScript compiler API of the pinned TypeScript 6.0.3 reads the declarations, modifiers, exports and JSDoc tags (HYR-8)"
+    },
+    "scripts/recipe/read-php.php": {
+      "kind": "ecosystem",
+      "tool": "PHP Reflection reads the classes, members, doc comments and constants of the autoloaded server package (HYR-8)"
+    },
+    "scripts/recipe/read_python.py": {
+      "kind": "ecosystem",
+      "tool": "the ast module of Python reads the definitions, classes, type statements, annotations, assignments and imports (HYR-8)"
+    },
+    "scripts/recipe/readers.mts": {
+      "kind": "policy",
+      "reason": "a part of the recipe check of docs/spec/recipe.md (HYR-7, HYR-8, HYR-10), which compares the development spec with the readers' output and the case results; no ecosystem tool performs this comparison"
+    },
+    "scripts/recipe/results.mts": {
+      "kind": "policy",
+      "reason": "a part of the recipe check of docs/spec/recipe.md (HYR-7, HYR-8, HYR-10), which compares the development spec with the readers' output and the case results; no ecosystem tool performs this comparison"
+    },
+    "scripts/recipe/rules.mts": {
+      "kind": "policy",
+      "reason": "a part of the recipe check of docs/spec/recipe.md (HYR-7, HYR-8, HYR-10), which compares the development spec with the readers' output and the case results; no ecosystem tool performs this comparison"
+    },
+    "scripts/recipe/run.mts": {
+      "kind": "policy",
+      "reason": "a part of the recipe check of docs/spec/recipe.md (HYR-7, HYR-8, HYR-10), which compares the development spec with the readers' output and the case results; no ecosystem tool performs this comparison"
+    },
+    "scripts/recipe/selftest.mts": {
+      "kind": "policy",
+      "reason": "a part of the recipe check of docs/spec/recipe.md (HYR-7, HYR-8, HYR-10), which compares the development spec with the readers' output and the case results; no ecosystem tool performs this comparison"
+    },
+    "scripts/recipe/shapes.mts": {
+      "kind": "policy",
+      "reason": "a part of the recipe check of docs/spec/recipe.md (HYR-7, HYR-8, HYR-10), which compares the development spec with the readers' output and the case results; no ecosystem tool performs this comparison"
+    },
+    "scripts/recipe/tests.mts": {
+      "kind": "policy",
+      "reason": "a part of the recipe check of docs/spec/recipe.md (HYR-7, HYR-8, HYR-10), which compares the development spec with the readers' output and the case results; no ecosystem tool performs this comparison"
+    },
+    "scripts/recipe/types.mts": {
+      "kind": "policy",
+      "reason": "a part of the recipe check of docs/spec/recipe.md (HYR-7, HYR-8, HYR-10), which compares the development spec with the readers' output and the case results; no ecosystem tool performs this comparison"
+    },
+    "scripts/recipe/units.mts": {
+      "kind": "policy",
+      "reason": "a part of the recipe check of docs/spec/recipe.md (HYR-7, HYR-8, HYR-10), which compares the development spec with the readers' output and the case results; no ecosystem tool performs this comparison"
+    },
+    "scripts/recipe/validators.mts": {
+      "kind": "policy",
+      "reason": "a part of the recipe check of docs/spec/recipe.md (HYR-7, HYR-8, HYR-10), which compares the development spec with the readers' output and the case results; no ecosystem tool performs this comparison"
     },
     "scripts/run-e2e.mts": {
       "kind": "ecosystem",
