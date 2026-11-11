@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- The Korean recipe (`docs/spec/recipe.ko.md`) states the rules of HYR-8, the field `keys`, the cookies and the white space as the English recipe does, after a review of the translation, and holds the hash of the reviewed English text (H28.11).
+
 - The steps of `contracts/context.json`, `contracts/functions.json` and `contracts/representations.json` read an application by one rule in PHP, Node and Python: an absent `shared`, `actions`, `embedData` or `context` declares none, a present one must have its type, an action has `redirect` or an integer `page` with `data`, `stop` must be `NotFound`, and only a declared loader or action is registered; PHP no longer casts a member, Node no longer registers an empty loader for every route or answers an action without `page` with 200, and the session token of a case comes from a first `text/html` request in every language. Python decodes the context of a case without NaN and Infinity, which PHP and Node refuse. The container step counts only the error `no factory is bound for` as the declared failure, and the Python csrf step fails for a field that is not a string, as PHP and Node do (H28.11).
 
 - The Node server and the browser router keep a leading U+FEFF of a decoded cookie value, form or query field and route parameter as a character, as PHP and Python do; `TextDecoder` dropped it by default, so that `a=%EF%BB%BFx` gave `x`. A JSON file of a Node application that starts with U+FEFF is not valid JSON, as in PHP and Python, and the errors of an application file that is not valid UTF-8 or not valid JSON carry their cause. `contracts/cookies.json`, `contracts/fields.json` and `contracts/routes.json` hold a case of a leading U+FEFF (HY-42, H28.11).

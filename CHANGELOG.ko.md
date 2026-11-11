@@ -6,6 +6,8 @@
 
 ## Unreleased
 
+- 한국어 recipe(`docs/spec/recipe.ko.md`)는 번역 검토를 거쳐 HYR-8의 규칙, field `keys`, cookie, 공백을 영어 recipe와 같이 서술하고, 검토한 영어 원문의 hash를 가집니다(H28.11).
+
 - `contracts/context.json`, `contracts/functions.json`, `contracts/representations.json`의 step은 PHP, Node, Python에서 한 규칙으로 애플리케이션을 읽습니다. 없는 `shared`, `actions`, `embedData`, `context`는 없음을 선언하고, 있는 member는 그 타입을 가져야 하며, action은 `redirect` 또는 정수 `page`와 `data`를 가지고, `stop`은 `NotFound`여야 하며, 선언된 loader와 action만 등록합니다. PHP는 더 이상 member를 cast하지 않고, Node는 더 이상 모든 route에 빈 loader를 등록하거나 `page` 없는 action에 200으로 응답하지 않으며, case의 session token은 모든 언어에서 첫 `text/html` 요청에서 옵니다. Python은 PHP와 Node가 거부하는 NaN과 Infinity 없이 case의 context를 decode합니다. container step은 `no factory is bound for` 오류만 선언된 실패로 세고, Python csrf step은 PHP, Node처럼 문자열이 아닌 field에서 실패합니다(H28.11).
 
 - Node server와 브라우저 router는 PHP, Python처럼 decode한 cookie 값, form과 query field, route parameter 앞의 U+FEFF를 문자로 유지합니다. `TextDecoder`가 기본으로 그 문자를 버렸기 때문에 `a=%EF%BB%BFx`가 `x`가 되었습니다. U+FEFF로 시작하는 Node 애플리케이션의 JSON 파일은 PHP, Python처럼 올바른 JSON이 아니며, UTF-8이나 JSON이 올바르지 않은 애플리케이션 파일의 오류는 그 원인을 가집니다. `contracts/cookies.json`, `contracts/fields.json`, `contracts/routes.json`은 앞에 U+FEFF가 있는 case를 가집니다(HY-42, H28.11).
