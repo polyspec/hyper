@@ -10,7 +10,7 @@ from . import _multipart
 from ._named_values import NamedValues
 
 _URLENCODED = re.compile(
-    r"application/x-www-form-urlencoded[ \t]*(;|\Z)", re.IGNORECASE
+    r"application/x-www-form-urlencoded[ \t]*(;|\Z)", re.IGNORECASE | re.ASCII
 )
 _HEX = re.compile(rb"[0-9A-Fa-f]{2}")
 

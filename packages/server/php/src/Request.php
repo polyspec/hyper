@@ -254,7 +254,7 @@ final class Request
     public function queryInt(string $name, int $default): int
     {
         $value = $this->queryFields?->last($name);
-        if ($value !== null && preg_match('/^-?\d{1,15}$/', $value) === 1) {
+        if ($value !== null && preg_match('/^-?\d{1,15}$/D', $value) === 1) {
             return (int) $value;
         }
 

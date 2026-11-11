@@ -105,6 +105,8 @@ final class RequestTest extends TestCase
             $request->query(),
         );
         self::assertSame(2, $request->queryInt('b', 7));
+        // A digit text with a final line feed is not an integer, as in the Node and Python servers.
+        self::assertSame(7, (new Request('GET', '/', [], 'n=12%0A'))->queryInt('n', 7));
         self::assertSame('', (new Request('GET', '/'))->rawQuery());
         self::assertSame([], (new Request('GET', '/'))->query());
     }

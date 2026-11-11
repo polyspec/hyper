@@ -12,13 +12,18 @@ from . import _fields, _files
 from .uploaded_file import UploadedFile
 
 
+# re.ASCII keeps the case folding to ASCII, as the byte patterns of PHP and the patterns of Node fold it.
 class Multipart:
     """Reads the parts of a ``multipart/form-data`` body."""
 
-    _MULTIPART = re.compile(r"multipart/form-data[ \t]*;", re.IGNORECASE)
-    _BOUNDARY = re.compile(r';[ \t]*boundary=(?:"([^"]+)"|([^; \t]+))', re.IGNORECASE)
-    _NAME = re.compile(r';[ \t]*name="([^"]*)"', re.IGNORECASE)
-    _FILENAME = re.compile(r';[ \t]*filename=(?:"([^"]*)"|([^; \t]*))', re.IGNORECASE)
+    _MULTIPART = re.compile(r"multipart/form-data[ \t]*;", re.IGNORECASE | re.ASCII)
+    _BOUNDARY = re.compile(
+        r';[ \t]*boundary=(?:"([^"]+)"|([^; \t]+))', re.IGNORECASE | re.ASCII
+    )
+    _NAME = re.compile(r';[ \t]*name="([^"]*)"', re.IGNORECASE | re.ASCII)
+    _FILENAME = re.compile(
+        r';[ \t]*filename=(?:"([^"]*)"|([^; \t]*))', re.IGNORECASE | re.ASCII
+    )
     # The largest header of a part in bytes (HY-113.16).
     _HEADER_LIMIT = 8192
 

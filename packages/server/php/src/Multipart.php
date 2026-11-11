@@ -57,7 +57,9 @@ final class Multipart
             if ($next === false) {
                 break;
             }
-            $part = substr($body, $partStart + 2, $next - 2 - ($partStart + 2));
+            // Fewer than four bytes between two delimiters hold no part; a negative length of substr counts from the
+            // end of the body.
+            $part = $next - 2 < $partStart + 2 ? '' : substr($body, $partStart + 2, $next - 2 - ($partStart + 2));
             $headerEnd = strpos($part, "\r\n\r\n");
             $start = $next;
             if (($headerEnd === false ? strlen($part) : $headerEnd) > self::HEADER_LIMIT) {

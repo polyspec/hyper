@@ -17,7 +17,7 @@ class UploadedFile:
         return self.__name
 
     def filename(self) -> str:
-        """Returns the filename parameter of the part, with the escapes of its quoted string undone."""
+        """Returns the filename parameter of the part, as it was sent (HY-113.14)."""
         return self.__filename
 
     def content_type(self) -> str:

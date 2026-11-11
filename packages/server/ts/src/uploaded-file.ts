@@ -18,7 +18,7 @@ export class UploadedFile {
     return this.partName;
   }
 
-  // Returns the filename parameter of the part, with the escapes of its quoted string undone.
+  // Returns the filename parameter of the part, as it was sent (HY-113.14).
   filename(): string {
     return this.fileName;
   }
