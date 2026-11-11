@@ -85,7 +85,9 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
     - a Node class field, or a Node parameter property (a constructor parameter with `public`, `private`,
       `protected` or `readonly`);
     - a property signature of a Node interface unit;
-    - a Python class-level annotated attribute.
+    - a Python class-level annotated attribute; one whose name starts with one `_` is internal, and one whose name
+      starts with `__` and does not end with it is private to its class, which Python marks by name mangling, and is
+      not a member.
     An assignment in a method body is not a property.
   - **Fields of a member.**
     - `id`: `<unit>.<member>`, with the language-neutral name in camelCase.

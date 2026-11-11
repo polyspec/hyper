@@ -1,5 +1,5 @@
 <!-- doc-id: recipe -->
-<!-- source-sha256: 406de6b30c52c313037570c3bab962b5c7f933cae80082395598416f20e6e77b -->
+<!-- source-sha256: 06a86a2b19b39c1e170e81a4aa3dd15d6274f9f4b5d042b2c796fb2c7ed1bebe -->
 # 서버의 레시피
 
 PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을 구현한다. 이 서버들의 레시피는 세 부분으로 이루어진다.
@@ -83,7 +83,8 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
     - Node의 class field, 또는 Node의 parameter property(`public`, `private`, `protected`, `readonly`가 붙은 constructor
       parameter);
     - Node interface unit의 property signature;
-    - Python의 class 수준 annotated attribute.
+    - Python의 class 수준 annotated attribute. 이름이 `_` 하나로 시작하면 internal이고, 이름이 `__`로 시작하고 `__`로
+      끝나지 않으면 Python이 name mangling으로 표시하는 그 class의 private이며 member가 아니다.
     method 본문의 대입은 property가 아니다.
   - **Fields of a member.**
     - `id`: `<unit>.<member>`, 언어 중립 이름을 camelCase로 쓴다.

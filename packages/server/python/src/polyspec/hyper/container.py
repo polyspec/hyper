@@ -13,13 +13,13 @@ from typing import Callable
 class Container:
     """Calls a function with arguments chosen by parameter type (HY-62)."""
 
-    _factories: dict[type, Callable[[], object]] = field(default_factory=dict)
-    _instances: dict[type, object] = field(default_factory=dict)
+    __factories: dict[type, Callable[[], object]] = field(default_factory=dict, init=False)
+    __instances: dict[type, object] = field(default_factory=dict, init=False)
 
     def bind(self, cls: type, factory: "callable[[], object]") -> None:
         """Registers the factory that creates the service of a class."""
-        self._factories[cls] = factory
-        self._instances.pop(cls, None)
+        self.__factories[cls] = factory
+        self.__instances.pop(cls, None)
 
     def call(self, function: "callable", provided: dict[object, object]) -> object:
         """Calls a function with an argument for every parameter: a parameter whose annotation names a class
@@ -59,8 +59,8 @@ class Container:
         return function(*arguments)
 
     def _service(self, cls: type) -> object:
-        if cls not in self._instances:
-            factory = self._factories.get(cls)
+        if cls not in self.__instances:
+            factory = self.__factories.get(cls)
             if factory is None:
                 raise TypeError(f"no factory is bound for {cls.__name__}")
             instance = factory()
@@ -68,5 +68,5 @@ class Container:
                 raise TypeError(
                     f"the factory of {cls.__name__} did not return an instance of it"
                 )
-            self._instances[cls] = instance
-        return self._instances[cls]
+            self.__instances[cls] = instance
+        return self.__instances[cls]

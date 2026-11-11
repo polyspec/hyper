@@ -302,13 +302,16 @@ test('the Python reader takes the module-level, async and pytest-style tests of 
   }
 });
 
-test('the readers list only the public properties of a class as members', () => {
-  const hidden: Record<'php' | 'node' | 'python', string[]> = { php: ['hidden', 'guarded'], node: ['hidden', 'guarded'], python: ['_cache'] };
+test('the readers list only the public and internal properties of a class as members', () => {
+  const hidden: Record<'php' | 'node' | 'python', string[]> = { php: ['hidden', 'guarded'], node: ['hidden', 'guarded'], python: ['__secret'] };
   for (const lang of ['php', 'node', 'python'] as const) {
     const names = readFixture(lang, path.join(fixture, 'readers', lang)).members.filter((m) => m.unit === 'Widget').map((m) => m.name);
     assert.ok(names.includes('size'), `${lang} does not list size: ${names.join(', ')}`);
     for (const name of hidden[lang]) assert.ok(!names.includes(name), `${lang} lists ${name} as a member: ${names.join(', ')}`);
   }
+  // A Python property with one leading underscore is internal; one with two is private to its class (HYR-8).
+  const cache = readPython(path.join(fixture, 'readers', 'python')).members.find((m) => m.unit === 'Widget' && m.name === '_cache');
+  assert.equal(cache?.visibility, 'internal', 'python does not list _cache as an internal member');
 });
 
 test('the PHP reader lists a trait member under the trait, not under the class that uses it', () => {

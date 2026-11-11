@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- The Python reader of the recipe check lists a class-level annotated attribute whose name starts with one `_` as an internal property, as HYR-8 states; it dropped every such attribute, so that an internal property of a public Python module could not be listed. An attribute whose name starts with `__` is private to its class and is not a member, and the Python `Container` keeps its factories and instances in such attributes (HYR-8) (H28.11).
+
 - HY-106.6 names every failure of the build file, a missing or unreadable file, bytes that are not UTF-8 or JSON and a file without a build id, as the subclass `InvalidBuild` of the open error, and Node `Build.read` reports only a `TypeError` of the UTF-8 decoder as not valid JSON, so that a defect of the JSON decoder is not reported as invalid JSON (HY-106, HY-125) (H28.11).
 
 - `Build.read` of the three servers decodes `build.json` with `JsonCodec.decode` of its server, so that one nesting limit and one error apply: Python raised a raw `RecursionError` for deep nesting, and PHP and Node answered such a file differently. HY-106.6 states that a build file that does not hold a build id raises `InvalidBuild`, the subclass of the open error. `contracts/build.json` adds a case with a byte that is not UTF-8 inside the build id and a case nested 600 deep. The context step of Node passes shared, loader and action data to the server as host values, as PHP and Python do, so that the server and not the step checks the data model (HY-125, HY-106, HY-54, HY-44) (H28.11).

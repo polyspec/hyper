@@ -24,6 +24,12 @@ def is_private(name: str) -> bool:
     return name.startswith("_") and not is_dunder(name)
 
 
+def is_class_private(name: str) -> bool:
+    """A class-level name with two leading underscores and no trailing ones is private to its class, which Python marks
+    by name mangling; such a property is not a member (HYR-8)."""
+    return name.startswith("__") and not name.endswith("__")
+
+
 def visibility(name: str, module_internal: bool) -> str:
     return "internal" if module_internal or is_private(name) else "public"
 
@@ -126,7 +132,7 @@ def read_module(root: Path, rel: str, out: dict) -> None:
                         "parameters": parameters(member, receiver=True),
                     }
                 )
-            elif isinstance(member, ast.AnnAssign) and isinstance(member.target, ast.Name) and not member.target.id.startswith("_"):
+            elif isinstance(member, ast.AnnAssign) and isinstance(member.target, ast.Name) and not is_class_private(member.target.id):
                 name = member.target.id
                 out["members"].append(
                     {
