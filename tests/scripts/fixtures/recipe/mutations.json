@@ -20,5 +20,6 @@
   { "id": "spec-rule-unknown", "file": "contracts/interfaces.json", "from": "\"rules\": [\"HY-2\"]", "to": "\"rules\": [\"HY-9\"]", "code": "RULE_UNKNOWN" },
   { "id": "result-file-deleted", "file": "results/node.txt", "delete": true, "code": "RESULT_MISSING" },
   { "id": "result-line-missing", "file": "results/php.txt", "from": "CASE contracts/csrf.json raw-token PASS\n", "to": "", "code": "RESULT_MISSING" },
-  { "id": "result-line-failed", "file": "results/python.txt", "from": "PASS", "to": "FAIL the token differs", "code": "RESULT_FAIL" }
+  { "id": "result-line-failed", "file": "results/python.txt", "from": "PASS", "to": "FAIL the token differs", "code": "RESULT_FAIL" },
+  { "id": "term-outside-vocabulary", "file": "contracts/interfaces.json", "from": "\"output\": \"string\",", "to": "\"output\": \"bytes\",", "code": "TERM_UNKNOWN" }
 ]
