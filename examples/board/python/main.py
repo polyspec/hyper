@@ -100,6 +100,8 @@ application = App.open(
     program=str(BOARD / "build" / "server"),
     handlers=handlers(_services()),
     timezone="+09:00",
+    # The form of a new post is multipart, because it holds a file (HY-59.6, HY-131).
+    form_types=["application/x-www-form-urlencoded", "multipart/form-data"],
     base_path=os.environ.get("BOARD_BASE_PATH") or "",
     https=os.environ.get("BOARD_HTTPS") == "1",
     frame_ancestors=os.environ.get("BOARD_FRAME_ANCESTORS") or "'self'",

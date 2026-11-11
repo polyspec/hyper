@@ -114,9 +114,19 @@ def handlers(services: Services) -> dict:
             errors["body"] = "내용을 입력하세요."
         if errors != {}:
             return Result.invalid({"values": values, "errors": errors})
+        # HY-131: a file part of the form is a file of the request, which the action moves to the post. A browser
+        # sends a part without a filename for a file field that holds no file.
+        file = request.file("attachment")
+        attached = file is not None and file.filename() != ""
         identifier = services.posts.create(
-            values["title"], values["author"], values["body"]
+            values["title"],
+            values["author"],
+            values["body"],
+            file.filename() if attached else "",
+            file.size() if attached else 0,
         )
+        if attached:
+            file.move_to(services.posts.attachment_path(identifier))
         return Result.redirect("/board").flash("created", identifier).changed("posts")
 
     def post_json(request: Request, media: MediaType) -> Representation:

@@ -128,7 +128,20 @@ return [
                 if ($errors !== []) {
                     return Result::invalid(['values' => $values, 'errors' => $errors]);
                 }
-                $id = $posts->create($values['title'], $values['author'], $values['body']);
+                // HY-131: a file part of the form is a file of the request, which the action moves to the post. A
+                // browser sends a part without a filename for a file field that holds no file.
+                $file = $request->file('attachment');
+                $attached = $file !== null && $file->filename() !== '';
+                $id = $posts->create(
+                    $values['title'],
+                    $values['author'],
+                    $values['body'],
+                    $attached ? $file->filename() : '',
+                    $attached ? $file->size() : 0,
+                );
+                if ($attached) {
+                    $file->moveTo($posts->attachmentPath($id));
+                }
 
                 return Result::redirect('/board')->flash('created', $id)->changed('posts');
             },

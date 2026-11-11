@@ -72,6 +72,8 @@ async function boardFlow(page: Page, origin: string, dataPrefix: string, title: 
 
   // HY-25: a successful action redirects; the list shows the new post and the left badge changes.
   await page.locator('input[name="title"]').fill(title);
+  // HY-131: the form is multipart and holds a file, which the action moves to the post.
+  await page.locator('input[name="attachment"]').setInputFiles({ name: '첨부.txt', mimeType: 'text/plain', buffer: Buffer.from('첨부 내용\n') });
   const list = fetchResponse(page, `${dataPrefix}/board`);
   await page.getByRole('button', { name: '등록' }).click();
   expect((await list).headers()['content-type']).toContain('application/vnd.hyper+json');
@@ -85,6 +87,7 @@ async function boardFlow(page: Page, origin: string, dataPrefix: string, title: 
   await expect(page).toHaveURL(new RegExp(`${origin}/board/\\d+$`));
   await expect(page.locator('#content h1')).toHaveText(title);
   await expect(page.locator('.post-body')).toContainText('둘째 줄');
+  await expect(page.locator('.post-file')).toHaveText('첨부: 첨부.txt (14 bytes)');
   expect(await documentWasKept(page)).toBe(true);
 
   // HYC-3: history restoration renders the restored path.

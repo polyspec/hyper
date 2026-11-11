@@ -1,6 +1,6 @@
 <section class="board-form">
 <h1>글쓰기</h1>
-<form method="post" action="/board/create">
+<form method="post" action="/board/create" enctype="multipart/form-data">
 <input type="hidden" name="_csrf" value="{= csrf}">
 <label>제목 <input name="title" value="{= values.title}" maxlength="100"></label>
 {? errors.title}<p class="error">{= errors.title}</p>{/}
@@ -8,6 +8,7 @@
 {? errors.author}<p class="error">{= errors.author}</p>{/}
 <label>내용 <textarea name="body" rows="12">{= values.body}</textarea></label>
 {? errors.body}<p class="error">{= errors.body}</p>{/}
+<label>첨부 <input type="file" name="attachment"></label>
 <div class="form-actions">
 <a href="/board" class="button secondary">취소</a>
 <button type="submit">등록</button>

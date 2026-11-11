@@ -27,7 +27,7 @@
 
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { build } from 'esbuild';
@@ -53,6 +53,10 @@ interface RequestStep {
   contentType?: string | undefined;
   // The Accept of a representation step (HY-116).
   accept?: string | undefined;
+  // A file that a send step uploads in a multipart form (HY-131), and the name under which every server stores it in
+  // the directory `<database>.uploads` of its database.
+  file?: { field: string; filename: string; content: string } | undefined;
+  stored?: string | undefined;
 }
 type Step = CookieStep | RequestStep;
 interface Answer { status: number; headers: Headers; text: string; token: string }
@@ -166,7 +170,19 @@ if (failures > 0) {
 
 // Runs a send, status or compare step and returns the text of its result line.
 async function runStep(step: RequestStep, label: string, send: Send, php: ServerClient): Promise<string> {
-  if (step.action === 'send') return String((await send(step, {})).status);
+  if (step.action === 'send') {
+    const status = String((await send(step, {})).status);
+    if (step.file === undefined) return status;
+    // HY-131.15: the action of every server moved the file, which holds the bytes that the step sent.
+    if (step.stored === undefined) throw new Error(`${label} uploads a file and names no stored file`);
+    const servers = ['php', ...(node === null ? [] : ['node']), ...(python === null ? [] : ['python'])];
+    for (const server of servers) {
+      const file = join(run.directory, `${server}.db.uploads`, step.stored);
+      const stored = existsSync(file) ? readFileSync(file, 'utf8') : null;
+      if (stored !== step.file.content) fail(`${label}: the ${server} server stored ${stored === null ? 'no file' : `${Buffer.byteLength(stored)} bytes`} at ${file}, expected the ${Buffer.byteLength(step.file.content)} bytes of the step`);
+    }
+    return `${status}, the file ${step.stored} of ${servers.join(', ')} holds ${Buffer.byteLength(step.file.content)} bytes`;
+  }
   if (step.action === 'representation') {
     // HY-116 to HY-122: the servers answer a representation request alike, with the status of the step and without a
     // session cookie.
@@ -230,7 +246,13 @@ function client(base: string): ServerClient {
   const send = async (step: RequestStep, headers: Record<string, string>, keepCookie: string): Promise<Answer> => {
     // A step may add a field `pad` of that many bytes and send the form with another Content-Type (HY-59).
     const fields = step.pad === undefined ? step.form : { ...step.form, pad: 'a'.repeat(step.pad) };
-    const body = fields === undefined ? undefined : new URLSearchParams({ _csrf: state.token, ...fields });
+    let body: URLSearchParams | FormData | undefined = fields === undefined ? undefined : new URLSearchParams({ _csrf: state.token, ...fields });
+    if (step.file !== undefined) {
+      // A file makes the form multipart; the field of the file follows the values, as a browser sends a form.
+      body = new FormData();
+      for (const [name, value] of Object.entries({ _csrf: state.token, ...fields })) body.append(name, value);
+      body.append(step.file.field, new Blob([step.file.content], { type: 'text/plain' }), step.file.filename);
+    }
     const cookies = [state.cookie, keepCookie].filter((item) => item !== '').join('; ');
     const type = step.contentType === undefined ? {} : { 'Content-Type': step.contentType };
     let response: Response;
@@ -371,6 +393,11 @@ function readSteps(file: string): Step[] {
       pad: optional('pad', jsonNumber),
       contentType: optional('contentType', jsonString),
       accept: optional('accept', jsonString),
+      file: optional('file', (value, at) => {
+        const file = jsonObject(value, at);
+        return { field: jsonString(file.field, `${at} field`), filename: jsonString(file.filename, `${at} filename`), content: jsonString(file.content, `${at} content`) };
+      }),
+      stored: optional('stored', jsonString),
     };
   });
 }

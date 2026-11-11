@@ -92,7 +92,12 @@ export const handlers: Handlers<Services> = {
         else if (length(values.author) > 30) errors.author = '작성자는 30자 이하로 입력하세요.';
         if (values.body === '') errors.body = '내용을 입력하세요.';
         if (Object.keys(errors).length > 0) return Result.invalid({ values, errors });
-        const id = services.get('posts').create(values.title, values.author, values.body);
+        // HY-131: a file part of the form is a file of the request, which the action moves to the post. A browser sends
+        // a part without a filename for a file field that holds no file.
+        const file = request.file('attachment');
+        const attached = file !== null && file.filename() !== '';
+        const id = services.get('posts').create(values.title, values.author, values.body, attached ? file.filename() : '', attached ? file.size() : 0);
+        if (attached) file.moveTo(services.get('posts').attachmentPath(id));
         return Result.redirect('/board').flash('created', id).changed('posts');
       },
     },
