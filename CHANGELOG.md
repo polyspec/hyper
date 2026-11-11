@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- `contracts/representations.json` states its application under `applications`, with its manifest, templates, loaders, base path and build id, as the other contracts do (H28.1-9).
+
 - `contracts/functions.json` holds the cases of the host functions of HYC-24: a document that renders a registered function, the 500 of a call of a name that is not registered, and the open that a built-in name or an entry that is not a function fails (H28.1-8).
 
 - HY-97, HY-100, HY-121 and HY-123 and `contracts/representations.json` name the entry of a request `App.handle`, as HY-106 names the public entry of every server (H28.1-7).
