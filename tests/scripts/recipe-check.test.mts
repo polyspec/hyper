@@ -111,7 +111,7 @@ for (const m of mutations) {
 }
 
 // The readers' own output for a tree, as the check reads it (HYR-8).
-type ReaderOutput = { uses: { file: string; name: string }[]; tests: { file: string; name: string }[]; dynamicTests: { file: string; line: number }[] };
+type ReaderOutput = { uses: { file: string; name: string }[]; constants: { file: string; name: string }[]; tests: { file: string; name: string }[]; dynamicTests: { file: string; line: number }[] };
 
 function readPython(root: string): ReaderOutput {
   const result = spawnSync('python3', [path.join(repo, 'scripts', 'recipe', 'read_python.py'), root, '--sources', 'src', '--tests', 'tests'], { encoding: 'utf8' });
@@ -122,4 +122,9 @@ function readPython(root: string): ReaderOutput {
 test('the Python reader records the names an import binds, and its aliases', () => {
   const names = readPython(path.join(fixture, 'readers', 'python')).uses.filter((u) => u.file === 'src/app.py').map((u) => u.name);
   for (const name of ['_secret', 'shown', 'tools', '_util', 'util']) assert.ok(names.includes(name), `${name} is not a use of src/app.py: ${names.join(', ')}`);
+});
+
+test('the Python reader records annotated and unpacked module constants', () => {
+  const names = readPython(path.join(fixture, 'readers', 'python')).constants.filter((c) => c.file === 'src/limits.py').map((c) => c.name);
+  for (const name of ['LIMIT', 'LOW', 'HIGH']) assert.ok(names.includes(name), `${name} is not a constant of src/limits.py: ${names.join(', ')}`);
 });
