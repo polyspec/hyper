@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 464a7191405f1ed6976de618a885c92bb97b902b4b97d50b775a7baa03a10d20 -->
+<!-- source-sha256: e42a35a84e221e01f86455e38f3d0f8141a11b42bb56162a1608d2bd4a2706fd -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- asset build는 browser가 실행하는 산출물의 path와 byte를 SHA-256으로 hash한 build id를 `build.json`에 쓰고, static shell에 element `hyper-build`를 둔다. server build는 그 file의 path인 `--build`를 요구하고, 검증한 뒤 program directory에 쓴다(HY-125)(H28.6).
 
 - docs/spec/protocol.md는 build id가 hash하는 각 산출물의 path를 정한다: `public/assets` 아래 file은 앞의 slash를 뺀 URL path, `manifest.json`과 `templates.index.json`은 `--output` directory 안의 이름이다(HY-125). `contracts/context.json`의 build case가 그 path를 쓴다(H28.1-2).
 

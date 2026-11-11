@@ -8,6 +8,7 @@ import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSy
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { test } from 'node:test';
+import { buildId } from '../../packages/build/lib/build-id.mjs';
 import { jsonObject, jsonString, parseJsonObject } from '../../scripts/json.mts';
 import { copyTracked } from '../../scripts/tracked-files.mts';
 
@@ -83,6 +84,58 @@ test('writes the entry, a chunk for code that the entry imports with import(), t
     // The static shell of the second build holds the chunk of that build only.
     const secondChunk = scripts().find((name) => name.startsWith('hyper-chunk-') && name !== chunk);
     assert.deepEqual(readdirSync(join(output, 'csr', 'assets')).filter((name) => name.endsWith('.js')), [secondChunk]);
+  } finally {
+    rmSync(app, { recursive: true, force: true });
+  }
+});
+
+// The files that the build id of HY-125 hashes, read back from disk: the entry and the chunks, the template files of
+// templates.index.json, manifest.json and templates.index.json, each with its path in the order of HY-125.
+function buildIdFiles(app: string) {
+  const assets = join(app, 'public', 'assets');
+  const output = join(app, 'out');
+  const manifestFile = join(output, 'manifest.json');
+  const indexFile = join(output, 'templates.index.json');
+  const manifest = parseJsonObject(readFileSync(manifestFile, 'utf8'), manifestFile);
+  const entryUrl = jsonString(manifest.hyper, `${manifestFile} hyper`);
+  const chunks = readdirSync(assets).filter((name) => name.startsWith('hyper-chunk-') && name.endsWith('.js')).sort();
+  assert.equal(chunks.length, 1, `the build wrote ${chunks.length} chunks: ${chunks.join(' ')}`);
+  const index = parseJsonObject(readFileSync(indexFile, 'utf8'), indexFile);
+  const templateUrls = Object.values(index).map((entry) => jsonString(jsonObject(entry, `${indexFile} entry`).url, `${indexFile} url`));
+  const urls = [entryUrl, `/assets/${chunks[0]}`, ...templateUrls];
+  const files = urls.map((url) => ({ path: url.slice(1), bytes: readFileSync(join(app, 'public', url.slice(1))) }));
+  files.push({ path: 'manifest.json', bytes: readFileSync(manifestFile) }, { path: 'templates.index.json', bytes: readFileSync(indexFile) });
+  return files;
+}
+
+test('writes build.json with the build id of the outputs and the shell meta element (HY-125)', () => {
+  const app = mkdtempSync(join(tmpdir(), 'hyper-build-id-'));
+  try {
+    fixture('chunks', app);
+    const output = join(app, 'out');
+    const buildFile = join(output, 'build.json');
+    const first = buildAssets(app);
+    assert.equal(first.status, 0, first.stderr);
+    assert.ok(existsSync(buildFile), `${buildFile} is missing`);
+    const text = readFileSync(buildFile, 'utf8');
+    const build = parseJsonObject(text, buildFile);
+    assert.deepEqual(Object.keys(build), ['build']);
+    const id = jsonString(build.build, `${buildFile} build`);
+    assert.match(id, /^[0-9a-f]{64}$/);
+    assert.equal(text, `{"build":"${id}"}`);
+    assert.equal(id, buildId(buildIdFiles(app)));
+    const meta = `<meta name="hyper-build" content="${id}">`;
+    const shell = readFileSync(join(output, 'csr', 'index.html'), 'utf8');
+    assert.equal(shell.split(meta).length - 1, 1, shell);
+    // A build after one changed byte of a template gives another build id.
+    const home = join(app, 'templates', 'home.tpl');
+    writeFileSync(home, '<p>hime</p>\n');
+    const second = buildAssets(app);
+    assert.equal(second.status, 0, second.stderr);
+    const secondId = jsonString(parseJsonObject(readFileSync(buildFile, 'utf8'), buildFile).build, `${buildFile} build`);
+    assert.match(secondId, /^[0-9a-f]{64}$/);
+    assert.notEqual(secondId, id);
+    assert.equal(secondId, buildId(buildIdFiles(app)));
   } finally {
     rmSync(app, { recursive: true, force: true });
   }

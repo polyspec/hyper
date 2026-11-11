@@ -60,6 +60,7 @@ test('builds the templates and the server program from another working directory
     const server = spawnSync(process.execPath, [
       join(build, 'bin', 'hyper-build-server.mjs'), '--manifest', join(board, 'app', 'app.json'), '--templates', join(board, 'templates'),
       '--output', join(output, 'server'), '--php-namespace', 'Polyspec\\Hyper\\Examples\\Board\\Program',
+      '--build', join(repository, 'packages', 'server', 'php', 'tests', 'fixtures', 'build.json'),
     ], { cwd: output, encoding: 'utf8' });
     assert.equal(server.status, 0, server.stderr);
     // HY-48: the generated program is the PSR-4 files of the namespace in the directory php, which the autoload of

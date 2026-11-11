@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { test } from 'node:test';
 
 // The template repository of the build, as the Makefile passes it.
@@ -30,7 +30,7 @@ test('the server build fails and writes nothing for templates that break HY-3 an
   const output = mkdtempSync(join(tmpdir(), 'hyper-build-server-'));
   rmSync(output, { recursive: true });
   try {
-    const result = spawnSync(process.execPath, ['packages/build/bin/hyper-build-server.mjs', '--manifest', 'tests/scripts/fixtures/regions/app/app.json', '--templates', 'tests/scripts/fixtures/regions/templates', '--output', output, '--php-namespace', 'Fixture\\Program'], { encoding: 'utf8' });
+    const result = spawnSync(process.execPath, ['packages/build/bin/hyper-build-server.mjs', '--manifest', 'tests/scripts/fixtures/regions/app/app.json', '--templates', 'tests/scripts/fixtures/regions/templates', '--output', output, '--php-namespace', 'Fixture\\Program', '--build', resolve('packages/server/php/tests/fixtures/build.json')], { encoding: 'utf8' });
     assert.equal(result.status, 1, result.stdout);
     assert.match(result.stderr, /view\.tpl: places \{# lost\} 0 times, expected once \(HY-3, HY-30\)/);
     assert.equal(existsSync(output), false);

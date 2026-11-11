@@ -9,10 +9,10 @@ Node.js 26.12.0 or later. The package publishes its JavaScript modules as they a
 
 ## Server program
 
-`hyper-build-server` checks the templates of the application with the template rules and writes the server program into `--output`: the templates with the reserved template `hyper/data.tpl`, the generated PHP program in the namespace `--php-namespace` as PSR-4 files in the directory `php`, `program.json` and the read paths `reads.json` (HY-48, HY-73). The application maps the namespace to that directory in `autoload.psr-4` of its `composer.json`, through which the PHP server loads the program.
+`hyper-build-server` checks the templates of the application with the template rules and writes the server program into `--output`: the templates with the reserved template `hyper/data.tpl`, the generated PHP program in the namespace `--php-namespace` as PSR-4 files in the directory `php`, `program.json`, the read paths `reads.json` and `build.json`, a copy of the `--build` file that holds the build id of the asset output (HY-48, HY-73, HY-125). The application maps the namespace to that directory in `autoload.psr-4` of its `composer.json`, through which the PHP server loads the program.
 
 ```sh
-npx hyper-build-server --manifest app/app.json --templates templates --output build/server --php-namespace 'App\Program'
+npx hyper-build-server --manifest app/app.json --templates templates --output build/server --php-namespace 'App\Program' --build build/assets/build.json
 ```
 
 ```json

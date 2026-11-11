@@ -15,6 +15,6 @@ import { writeTemplateFiles } from '../packages/build/lib/template-files.mjs';
 
 const { values } = parseArgs({ options: { templates: { type: 'string' }, output: { type: 'string' } } });
 if (!values.templates || !values.output) throw new Error('--templates and --output are required');
-const index = await writeTemplateFiles({ templates: values.templates, output: join(values.output, 'templates'), urlPrefix: '/templates' });
+const { index } = await writeTemplateFiles({ templates: values.templates, output: join(values.output, 'templates'), urlPrefix: '/templates' });
 writeFileAtomic(join(values.output, 'templates.index.json'), `${JSON.stringify(index, null, 2)}\n`);
 console.log(`templates ${Object.keys(index).length}, ${join(values.output, 'templates.index.json')}`);

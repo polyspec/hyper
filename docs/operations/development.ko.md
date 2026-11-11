@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: 2c01edf5e700a1027cebaa80d00abe0853e79950fc6a4776b08ea5ea04f2c209 -->
+<!-- source-sha256: 9de016594e9bb682dc24cc47433341ea4a43eed6f991076772a5eaa374d3a2af -->
 # 개발
 
 [English](development.md).
@@ -198,10 +198,10 @@ workflow `.github/workflows/bench.yml`은 수동 실행에서 benchmark를 실�
 
 ## 서버 빌드
 
-build 패키지 `@polyspec/hyper-build`의 bin `hyper-build-server --manifest <app.json> --templates <directory> --output <directory> --php-namespace <namespace>`는 서버 프로그램을 만든다(HY-48, HR-96). `make server`는 checkout에서 `node packages/build/bin/hyper-build-server.mjs`로 실행한다.
+build 패키지 `@polyspec/hyper-build`의 bin `hyper-build-server --manifest <app.json> --templates <directory> --output <directory> --php-namespace <namespace> --build <build.json>`는 서버 프로그램을 만든다(HY-48, HR-96). `make server`는 checkout에서 `node packages/build/bin/hyper-build-server.mjs`로 실행한다.
 
 1. `templates/`: 애플리케이션의 모든 템플릿과 예약 템플릿 `hyper/data.tpl`. 네이티브 확장이 이 파일을 읽는다.
-2. `php/`: 같은 템플릿을 `@polyspec/hyper-build`가 요구하는 compiler package `@polyspec/template-compiler`로(HR-70), 주어진 PHP 네임스페이스(게시판은 `Polyspec\Hyper\Examples\Board\Program`)에 클래스마다 파일 하나인 PSR-4 파일로 컴파일한 generated PHP 프로그램. `program.json`은 그 네임스페이스를 기록하며, 렌더러가 이 파일을 읽는다. 애플리케이션은 `composer.json`의 `autoload.psr-4`에서 그 네임스페이스를 이 디렉터리에 연결한다. `examples/board/composer.json`은 `Polyspec\Hyper\Examples\Board\Program\`을 `build/server/php/`에, root `composer.json`은 테스트 fixture의 네임스페이스를 `packages/server/php/tests/build/server/php/`에 연결하며, 렌더러는 클래스 `GeneratedProgram`을 Composer의 autoload로 불러온다. 서버가 각 영역을 단독으로 렌더하므로, 모든 템플릿은 대상으로 렌더되고 모든 정의는 HTML이다.
+2. `php/`: 같은 템플릿을 `@polyspec/hyper-build`가 요구하는 compiler package `@polyspec/template-compiler`로(HR-70), 주어진 PHP 네임스페이스(게시판은 `Polyspec\Hyper\Examples\Board\Program`)에 클래스마다 파일 하나인 PSR-4 파일로 컴파일한 generated PHP 프로그램. `program.json`은 그 네임스페이스를 기록하며, 렌더러가 이 파일을 읽는다. `build.json`은 `--build` 파일의 사본으로, asset 출력의 build id이다(HY-125). 애플리케이션은 `composer.json`의 `autoload.psr-4`에서 그 네임스페이스를 이 디렉터리에 연결한다. `examples/board/composer.json`은 `Polyspec\Hyper\Examples\Board\Program\`을 `build/server/php/`에, root `composer.json`은 테스트 fixture의 네임스페이스를 `packages/server/php/tests/build/server/php/`에 연결하며, 렌더러는 클래스 `GeneratedProgram`을 Composer의 autoload로 불러온다. 서버가 각 영역을 단독으로 렌더하므로, 모든 템플릿은 대상으로 렌더되고 모든 정의는 HTML이다.
 3. `reads.json`: `@polyspec/hyper-client`의 `routeReads`로 계산한 모든 라우트의 read path(HY-73).
 
 PHP가 `polyspec_template`을 불러왔으면 네이티브 확장으로, 그렇지 않으면 `php/`의 generated 프로그램으로 렌더한다. 두 출력은 같은 원본에서 만들어지므로, 서버는 확장을 불러오는지 여부만으로 엔진을 바꿀 수 있다.

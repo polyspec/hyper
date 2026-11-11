@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: b3dfc5868b562cd5deb128e86ed9815a61b7120f84375ec61ea5de704f56ca25 -->
+<!-- source-sha256: cf136247c9ccc17fa8f7caa46da33d682655c1b333046656056730ee21135933 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -383,7 +383,7 @@
 | H28.3 | Node server: H28.2와 같은 규칙 | packages/server/node | `make test-node` | [ ] |
 | H28.4 | Python server: H28.2와 같은 규칙 | packages/server/python | `make test-python` | [ ] |
 | H28.5 | Browser package: browser context와 Hyper-Context header, 다른 build에서 새 document, 마지막 region response, HyperOptions의 functions, media type application/vnd.hyper+json | packages/client | `make test-js` | [~] |
-| H28.6 | Build: browser 산출물을 path 순서와 HY-125의 framing으로 hash한 build id, asset output의 build.json, 그것을 program directory에 쓰는 server build의 option --build, static shell의 hyper-build element | packages/build, scripts | `make test-scripts` | [~] |
+| H28.6 | Build: browser 산출물을 path 순서와 HY-125의 framing으로 hash한 build id, asset output의 build.json, 그것을 program directory에 쓰는 server build의 option --build, static shell의 hyper-build element | packages/build, scripts | `make test-scripts` | [o] |
 | H28.7 | PHP, Node, Python server: route의 representation, match, Allow와 HEAD가 있는 405, 406, 415, 400, status와 header와 Cache-Control 검사, strong ETag, If-None-Match와 304, 함수 etag; contracts/representations.json의 case | packages/server/php, packages/server/node, packages/server/python | `make test-php`, `make test-node`, `make test-python` | [ ] |
 | H28.8 | context와 JSON representation이 있는 board example, browser test, parity, feature status, H28.1~H28.7의 changelog | examples/board, tests/e2e, docs/features.md and its Korean twin, CHANGELOG.md and its Korean twin | `make parity` | [ ] |
 | H28.9 | 모든 page route의 HEAD(RFC 9110 section 9.1)를 명세하고 구현한다: HEAD request는 GET response의 header를 받고 body는 받지 않으며 Allow는 GET과 함께 HEAD를 적는다; PHP, Node, Python server | docs/spec/protocol.md and its Korean twin, packages/server/php, packages/server/node, packages/server/python | `make docs-check`, `make test-php`, `make test-node`, `make test-python` | [ ] |

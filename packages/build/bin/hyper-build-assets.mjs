@@ -10,6 +10,9 @@
 //   <output>/templates.index.json               template name -> file URL; the client imports it as
 //                                                @polyspec/hyper-client/templates-index
 //   <output>/manifest.json                      the URL of the entry, which the server passes to the layout
+//   <output>/build.json                         {"build":"<id>"}, the build id of the outputs above (HY-125): the
+//                                                SHA-256 digest of their paths and bytes, which the static shell
+//                                                also holds as <meta name="hyper-build">
 //   <output> of --tailwind <source>=<output>     the source stylesheet compiled with the Tailwind theme and the
 //                                                utilities that templates/ and client/ use, its rules in the
 //                                                layer components (HR-77)
@@ -38,6 +41,7 @@ import { Scanner } from '@tailwindcss/oxide';
 import { parseArgs } from 'node:util';
 import { build } from 'esbuild';
 import { checkManifest } from '@polyspec/hyper-client';
+import { buildId } from '../lib/build-id.mjs';
 import { copyFile, writeFileAtomic } from '../lib/output-files.mjs';
 import { publish, staging } from '../lib/publish.mjs';
 import { sha256, templatePlugin, writeTemplateFiles } from '../lib/template-files.mjs';
@@ -52,8 +56,13 @@ const templateFilesDir = join(assetsDir, 'templates');
 const csrDir = join(output, 'csr');
 // The browser does not check the manifest that the bundle contains, so the build checks it before it writes anything (HY-2).
 checkManifest(JSON.parse(readFileSync(join(app, 'app', 'app.json'), 'utf8')));
-const index = await writeTemplateFiles({ templates: templatesDir, output: templateFilesDir, urlPrefix: '/assets/templates' });
-writeFileAtomic(join(output, 'templates.index.json'), `${JSON.stringify(index, null, 2)}\n`);
+// The outputs that the browser runs, each with its path of HY-125 and the bytes that the build wrote; the build id hashes them.
+const hashed = [];
+const { index, files: templateFiles } = await writeTemplateFiles({ templates: templatesDir, output: templateFilesDir, urlPrefix: '/assets/templates' });
+for (const file of templateFiles) hashed.push({ path: `assets/templates/${file.name}`, bytes: file.bytes });
+const indexText = `${JSON.stringify(index, null, 2)}\n`;
+writeFileAtomic(join(output, 'templates.index.json'), indexText);
+hashed.push({ path: 'templates.index.json', bytes: Buffer.from(indexText, 'utf8') });
 
 const bundle = await build({
   entryPoints: [join(app, 'client', 'main.ts')],
@@ -71,14 +80,26 @@ const bundle = await build({
   logLevel: 'error',
   plugins: [templatePlugin(), indexPlugin(index)],
 });
-const scripts = bundle.outputFiles.map((file) => ({ name: basename(file.path), code: Buffer.from(file.contents).toString('utf8') }));
+const scripts = bundle.outputFiles.map((file) => {
+  const bytes = Buffer.from(file.contents);
+  return { name: basename(file.path), code: bytes.toString('utf8'), bytes };
+});
 const entries = scripts.filter((script) => !script.name.startsWith('hyper-chunk-'));
 if (entries.length !== 1) throw new Error(`the client build wrote ${entries.length} entry files`);
 const entry = entries[0];
 if (/<\/script/i.test(entry.code)) throw new Error('the client entry contains </script and cannot be inlined');
 
-for (const script of scripts) writeFileAtomic(join(assetsDir, script.name), script.code);
-writeFileAtomic(join(output, 'manifest.json'), `${JSON.stringify({ hyper: `/assets/${entry.name}` }, null, 2)}\n`);
+for (const script of scripts) {
+  writeFileAtomic(join(assetsDir, script.name), script.bytes);
+  hashed.push({ path: `assets/${script.name}`, bytes: script.bytes });
+}
+const manifestText = `${JSON.stringify({ hyper: `/assets/${entry.name}` }, null, 2)}\n`;
+writeFileAtomic(join(output, 'manifest.json'), manifestText);
+hashed.push({ path: 'manifest.json', bytes: Buffer.from(manifestText, 'utf8') });
+
+// The build id (HY-125) hashes the outputs above; the static shell holds it, so it is computed before the shell is written.
+const id = buildId(hashed);
+writeFileAtomic(join(output, 'build.json'), `{"build":"${id}"}`);
 
 // The compiled stylesheet lies in public/assets before the static deployment copies the stylesheets (HR-77).
 if (values.tailwind !== undefined) {
@@ -95,6 +116,7 @@ const shell = [
   '<meta charset="utf-8">',
   '<meta name="viewport" content="width=device-width, initial-scale=1">',
   `<meta name="hyper-api" content="${values.api}">`,
+  `<meta name="hyper-build" content="${id}">`,
   '<title></title>',
   `<script type="module">${entry.code}</script>`,
   '</head>',

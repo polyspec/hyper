@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- The asset build writes `build.json` with the build id, the SHA-256 digest of the paths and bytes of the outputs that the browser runs, and the element `hyper-build` of the static shell; the server build requires `--build`, the path of that file, validates it and writes it into the program directory (HY-125) (H28.6).
+
 - docs/spec/protocol.md names the path of each output that the build id hashes: a file below `public/assets` by its URL path without the leading slash, and `manifest.json` and `templates.index.json` by their names in the directory of `--output` (HY-125); the build cases of `contracts/context.json` use those paths (H28.1-2).
 
 - docs/spec/protocol.md states that the server build takes the `build.json` of the asset output with its option `--build`, writes it into the program directory and fails for a missing file or an invalid build id (HY-125) (H28.1-1).

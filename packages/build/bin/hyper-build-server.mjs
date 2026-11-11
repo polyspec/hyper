@@ -9,12 +9,14 @@
 //                         autoload.psr-4 of its composer.json
 //   <output>/program.json the namespace of the generated program
 //   <output>/reads.json   the read paths of every route, by which the server keeps data (HY-73)
+//   <output>/build.json   a copy of the file named by --build, the build id of the asset output (HY-125); the file
+//                         must hold exactly the key "build" with a build id of 64 lowercase hexadecimal characters
 //
 // Usage: hyper-build-server --manifest app/app.json --templates templates --output build/server
-//          --php-namespace 'App\Program'
+//          --php-namespace 'App\Program' --build build/assets/build.json
 
 import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, isAbsolute, join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { routeReads } from '@polyspec/hyper-client';
 import dataTemplate from '@polyspec/hyper-client/data-template.json' with { type: 'json' };
@@ -26,8 +28,11 @@ import { copyDirectory } from '../lib/output-files.mjs';
 import { publish, staging } from '../lib/publish.mjs';
 import { templateProblems } from '../lib/template-rules.mjs';
 
-const { values } = parseArgs({ options: { manifest: { type: 'string' }, templates: { type: 'string' }, output: { type: 'string' }, 'php-namespace': { type: 'string' } } });
-for (const name of ['manifest', 'templates', 'output', 'php-namespace']) if (!values[name]) throw new Error(`--${name} is required`);
+const { values } = parseArgs({ options: { manifest: { type: 'string' }, templates: { type: 'string' }, output: { type: 'string' }, 'php-namespace': { type: 'string' }, build: { type: 'string' } } });
+for (const name of ['manifest', 'templates', 'output', 'php-namespace', 'build']) if (!values[name]) throw new Error(`--${name} is required`);
+if (!isAbsolute(values.build)) throw new Error(`--build is not an absolute path: ${values.build}`);
+// HY-125: the build id is read before any output is written, so an invalid id writes nothing.
+const buildText = readBuildFile(values.build);
 
 const manifest = JSON.parse(readFileSync(values.manifest, 'utf8'));
 // HY-48: templates that break the template rules fail the build before it removes or writes any output.
@@ -63,8 +68,31 @@ for (const [file, source] of Object.entries(compileFiles(join(graph, 'manifest.j
 }
 writeFileSync(join(output, 'program.json'), `${JSON.stringify({ namespace: values['php-namespace'] }, null, 2)}\n`);
 writeFileSync(join(output, 'reads.json'), `${JSON.stringify({ routes: routeReads(manifest, (name) => parsed.get(name), resolvePath) })}\n`);
-publish(output, target, { last: ['reads.json', 'program.json', join('php', 'GeneratedProgram.php')] });
+writeFileSync(join(output, 'build.json'), buildText);
+publish(output, target, { last: ['reads.json', 'program.json', join('php', 'GeneratedProgram.php'), 'build.json'] });
 process.stdout.write(`server program: ${parsed.size} templates, ${join(values.output, 'php')}\n`);
+
+// Returns the text of the build file, which holds exactly the key `build` with a build id (HY-125). A file that cannot
+// be read, is not JSON or holds another value fails with its path.
+function readBuildFile(file) {
+  let text;
+  try {
+    text = readFileSync(file, 'utf8');
+  } catch (error) {
+    throw new Error(`build id file ${file} cannot be read: ${error.message}`);
+  }
+  let value;
+  try {
+    value = JSON.parse(text);
+  } catch (error) {
+    throw new Error(`build id file ${file} is not JSON: ${error.message}`);
+  }
+  const keys = value !== null && typeof value === 'object' && !Array.isArray(value) ? Object.keys(value) : [];
+  if (keys.length !== 1 || keys[0] !== 'build' || typeof value.build !== 'string' || !/^[0-9a-f]{64}$/.test(value.build)) {
+    throw new Error(`build id file ${file} does not hold {"build": "<64 lowercase hexadecimal characters>"}`);
+  }
+  return text;
+}
 
 function listTemplates(root, prefix = '') {
   const names = [];
