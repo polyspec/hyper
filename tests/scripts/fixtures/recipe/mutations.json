@@ -45,5 +45,11 @@
   { "id": "result-duplicated", "file": "results/php.txt", "from": "raw-token PASS\n", "to": "raw-token PASS\nCASE contracts/csrf.json raw-token PASS\n", "code": "RESULT_DUPLICATE" },
   { "id": "php-const-public", "file": "packages/server/php/src/MediaType.php", "from": "    public function essence", "to": "    public const LIMIT = 1;\n\n    public function essence", "code": "CONST_PUBLIC" },
   { "id": "node-const-public", "file": "packages/server/ts/src/media-type.ts", "from": "export type Essence = string;", "to": "export const LIMIT = 1;\n\nexport type Essence = string;", "code": "CONST_PUBLIC" },
-  { "id": "python-const-public", "file": "packages/server/python/src/polyspec/hyper/media_type.py", "from": "class MediaType:", "to": "LIMIT = 1\n\n\nclass MediaType:", "code": "CONST_PUBLIC" }
+  { "id": "python-const-public", "file": "packages/server/python/src/polyspec/hyper/media_type.py", "from": "class MediaType:", "to": "LIMIT = 1\n\n\nclass MediaType:", "code": "CONST_PUBLIC" },
+  { "id": "php-sources-missing", "file": "contracts/interfaces.json", "from": "\"sources\": [\"packages/server/php/src\"]", "to": "\"sources\": [\"packages/server/php/missing\"]", "code": "READER_FAILED" },
+  { "id": "php-tests-missing", "file": "contracts/interfaces.json", "from": "\"tests\": [\"packages/server/php/tests\"]", "to": "\"tests\": [\"packages/server/php/missing\"]", "code": "READER_FAILED" },
+  { "id": "node-sources-missing", "file": "contracts/interfaces.json", "from": "\"sources\": [\"packages/server/ts/src\"]", "to": "\"sources\": [\"packages/server/ts/missing\"]", "code": "READER_FAILED" },
+  { "id": "node-tests-missing", "file": "contracts/interfaces.json", "from": "\"tests\": [\"packages/server/ts/tests\"]", "to": "\"tests\": [\"packages/server/ts/missing\"]", "code": "READER_FAILED" },
+  { "id": "python-sources-missing", "file": "contracts/interfaces.json", "from": "\"sources\": [\"packages/server/python/src/polyspec/hyper\"]", "to": "\"sources\": [\"packages/server/python/src/polyspec/missing\"]", "code": "READER_FAILED" },
+  { "id": "python-tests-missing", "file": "contracts/interfaces.json", "from": "\"tests\": [\"packages/server/python/tests\"]", "to": "\"tests\": [\"packages/server/python/missing\"]", "code": "READER_FAILED" }
 ]
