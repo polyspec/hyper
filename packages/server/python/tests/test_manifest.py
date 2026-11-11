@@ -72,6 +72,26 @@ class ManifestTest(unittest.TestCase):
                         }
                     )
 
+    def test_a_route_region_without_keep_opens(self) -> None:
+        # HY-37: a route region may declare kept paths, so a route region without `keep` declares none and opens.
+        declared = manifest(
+            {
+                **BASE,
+                "routes": [
+                    {
+                        "name": "list",
+                        "path": "/list",
+                        "title": "List",
+                        "template": "list.tpl",
+                        "regions": [{"name": "rows", "template": "rows.tpl"}],
+                    }
+                ],
+            }
+        )
+        self.assertEqual(
+            ["rows"], [region.name for region in declared.routes["list"]["regions"]]
+        )
+
     def test_a_manifest_region_cannot_keep_values(self) -> None:
         with self.assertRaises(ValueError):
             manifest(

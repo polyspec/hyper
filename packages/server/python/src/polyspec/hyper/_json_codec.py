@@ -111,21 +111,24 @@ def value(
     route: str,
     params: dict,
     build: str,
+    context: dict | None,
     shared: dict,
     regions: dict,
     kept: dict | None = None,
 ) -> dict:
-    """Returns the JSON response value of a page (HY-17, HY-128); `build` is the build id, the member that follows
-    `params`, `regions` holds the loader data by region name and `kept` the kept values by region name and path."""
-    return {
+    """Returns the JSON response value of a page (HY-17, HY-128); `build` is the build id and `context` the member
+    `context` of HY-128 when the application has one, both after `params`; `regions` holds the loader data by region
+    name and `kept` the kept values by region name and path."""
+    result = {
         "env": {"timezone": timezone},
         "route": route,
         "params": params,
         "build": build,
-        "shared": shared,
-        "regions": regions,
-        "kept": kept or {},
     }
+    if context is not None:
+        result["context"] = context
+    result.update({"shared": shared, "regions": regions, "kept": kept or {}})
+    return result
 
 
 class OutsideNumber:

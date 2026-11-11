@@ -180,7 +180,7 @@ def _entries(obj: dict, key: str) -> list[dict]:
 
 def _keep(region: dict, name: str) -> dict[str, str]:
     """Returns the kept paths of a route region by path; the region checks the paths and kinds (HY-37)."""
-    declared = region.get("keep", [])
+    declared = region.get("keep", {})
     if not isinstance(declared, dict):
         raise ValueError(f"region {name} has kept paths that are not an object")
     keep: dict[str, str] = {}

@@ -14,6 +14,8 @@ from . import _accept, _data_model, _json_codec, _media
 from .client import Choice, ClientRendering
 from .container import Container
 from ._build import read_build_id
+from . import _context
+from ._context import Context
 from ._csrf import masked, verify
 from ._data_model import check
 from ._kept import apply, select
@@ -63,6 +65,7 @@ class App:
         client: Optional[ClientRendering],
         shell: str,
         program: str,
+        context: Optional[Callable],
     ):
         self.manifest = manifest
         self.timezone = timezone
@@ -80,6 +83,7 @@ class App:
         self._on_disconnect = on_disconnect
         self._client = client
         self._shell = shell
+        self._context_handler = context
         self.container = Container()
         from ._renderer import Renderer
 
@@ -106,6 +110,7 @@ class App:
         on_response: Optional[Callable] = None,
         on_disconnect: Optional[Callable] = None,
         client_rendering: Optional[ClientRendering] = None,
+        context: Optional[Callable] = None,
     ) -> "App":
         """Creates an application from its manifest, the server program that `hyper-build-server` of
         `@polyspec/hyper-build` built from its templates (HY-48) and the handlers that load data and run actions.
@@ -200,6 +205,7 @@ class App:
             client_rendering,
             shell,
             program,
+            context,
         )
 
     def bind(self, cls: type, factory: Callable) -> None:
@@ -356,7 +362,7 @@ class App:
             {
                 "Content-Type": "text/html; charset=utf-8",
                 "Cache-Control": "no-cache",
-                "Vary": "Accept, HX-Request, HX-Current-URL",
+                "Vary": self._vary,
             },
             self._shell,
         )
@@ -373,6 +379,13 @@ class App:
     ) -> Response:
         """Answers a routed request with its page, action result or stop result."""
         try:
+            if request.method != "GET" and (
+                request.method != "POST" or "post" not in handler
+            ):
+                return Response.text(405, "Method Not Allowed")
+            # HY-127: an application with a context checks the Hyper-Context header after the method check.
+            if self._context_handler is not None and not _valid_context_header(request):
+                return Response.text(400, "Bad Request")
             if request.method == "GET":
                 return _without_renewal(
                     reply,
@@ -388,8 +401,6 @@ class App:
                         base_path,
                     ),
                 )
-            if request.method != "POST" or "post" not in handler:
-                return Response.text(405, "Method Not Allowed")
             refused = self._refused_form(request, session)
             if refused is not None:
                 return refused
@@ -464,13 +475,18 @@ class App:
         HY-53, HY-69, HY-73, HY-92)."""
         json_request = request.wants_json()
         provided = {Request: request, Reply: reply, "request": request, "reply": reply}
+        # HY-124: the context handler runs once, after the action of the request and before the shared handler.
+        context = self._context_of(request)
         shared = {"title": route["title"], "csrf": request.csrf_token()}
+        if context is not None:
+            shared["context"] = context.value
         if self._shared is not None:
-            shared.update(
-                _loader_map(
-                    self.container.call(self._shared, provided), "the shared handler"
-                )
+            handed = _loader_map(
+                self.container.call(self._shared, provided), "the shared handler"
             )
+            if context is not None and "context" in handed:
+                raise ValueError("the shared handler returned the key context (HY-124)")
+            shared.update(handed)
 
         changed = changed_topics(request, flash, base_path)
         data: dict[str, dict] = {}
@@ -519,21 +535,22 @@ class App:
         # reads.
         check({"shared": shared, "regions": data})
         # HY-73: the page keeps only the paths that the templates of the route read.
-        shared = self.reads.shared(route["name"], shared)
+        shared = self._kept_shared(route["name"], shared)
         for name, region_data in data.items():
             data[name] = self.reads.region(route["name"], name, region_data)
         kept = self._kept(request, session, data)
         # HY-69: the reply gives a page with status 200 the status 403.
         if status == 200 and reply._status_value() is not None:
             status = reply._status_value()
-        vary = "Accept, HX-Request, HX-Current-URL"
+        vary = self._vary
         if json_request:
             value = _json_codec.value(
                 self.timezone,
                 route["name"],
                 request.params(),
                 self.build,
-                shared,
+                _context_member(context, request.header("Hyper-Context")),
+                _without_context(shared),
                 data,
                 kept,
             )
@@ -581,9 +598,49 @@ class App:
             status,
             headers,
             self._document(
-                request, route, shared, data, templates, kept, reply._embeds_data()
+                request,
+                route,
+                shared,
+                data,
+                templates,
+                kept,
+                reply._embeds_data(),
+                context,
             ),
         )
+
+    @property
+    def _vary(self) -> str:
+        """The `Vary` of a response that `Accept` and the context decide (HY-117)."""
+        if self._context_handler is None:
+            return "Accept, HX-Request, HX-Current-URL"
+        return "Accept, HX-Request, HX-Current-URL, Hyper-Context"
+
+    def _context_of(self, request: Request) -> Optional[Context]:
+        """Calls the context handler with the selection value of the request and returns its context with the hash of
+        the build (HY-124, HY-125), or None for an application without a context. The map is checked as HY-44
+        requires."""
+        if self._context_handler is None:
+            return None
+        value = _loader_map(
+            self._context_handler(request.selection()), "the context handler"
+        )
+        check(value)
+        return _context.of(value, self.build)
+
+    def _kept_shared(self, route: str, shared: dict) -> dict:
+        """Returns the shared data that a route keeps (HY-73). The context is sent whole (HY-126), and it keeps its
+        place after `csrf` (HY-10)."""
+        if "context" not in shared:
+            return self.reads.shared(route, shared)
+        kept = self.reads.shared(
+            route, {name: value for name, value in shared.items() if name != "context"}
+        )
+        return {
+            name: shared[name] if name == "context" else kept[name]
+            for name in shared
+            if name == "context" or name in kept
+        }
 
     def _kept(self, request: Request, session: Session, data: dict) -> dict:
         """Returns the conforming `server` and `cookie` kept values of the regions, by region and path (HY-17,
@@ -629,6 +686,7 @@ class App:
         templates: dict,
         kept: dict,
         embed: bool,
+        context: Optional[Context],
     ) -> str:
         """Renders the document with the kept values applied. When that fails, every region whose rendering alone
         fails with its kept values renders with its loader data, route regions first, and its kept values leave the
@@ -652,6 +710,7 @@ class App:
                 templates,
                 kept,
                 embed,
+                context,
             )
         except Exception:  # HY-38: kept values come from the client and may break a template; without them the error is raised again
             if kept == {}:
@@ -677,7 +736,16 @@ class App:
                 applied[name] = self.renderer.bind(data[name])
                 del kept[name]
         return self._render_document(
-            request, route, shared, bound_shared, data, applied, templates, kept, embed
+            request,
+            route,
+            shared,
+            bound_shared,
+            data,
+            applied,
+            templates,
+            kept,
+            embed,
+            context,
         )
 
     def _render_document(
@@ -691,6 +759,7 @@ class App:
         templates: dict,
         kept: dict,
         embed: bool,
+        context: Optional[Context],
     ) -> str:
         # HY-31, HY-75, HY-92: a document embeds its data only when the reply asks for it, and then only the present
         # route regions and their kept entries, the data that the browser can change; a response without a present
@@ -704,7 +773,8 @@ class App:
                 route["name"],
                 request.params(),
                 self.build,
-                shared,
+                None if context is None else {"hash": context.hash, "value": context.value},
+                _without_context(shared),
                 embedded,
                 {name: kept[name] for name in embedded if name in kept},
             )
@@ -761,6 +831,27 @@ class App:
             return Response.text(400, "Bad Request")
         session.keep(name, path, decoded)
         return Response(204, {}, "")
+
+
+def _context_member(context: Optional[Context], header: Optional[str]) -> Optional[dict]:
+    """Returns the member `context` of a JSON response (HY-128): the hash, and the value unless the request names
+    the current hash in `Hyper-Context`."""
+    if context is None:
+        return None
+    if header == context.hash:
+        return {"hash": context.hash}
+    return {"hash": context.hash, "value": context.value}
+
+
+def _without_context(shared: dict) -> dict:
+    """Returns the shared data of a response without its member `context`, which the browser inserts (HY-128)."""
+    return {name: value for name, value in shared.items() if name != "context"}
+
+
+def _valid_context_header(request: Request) -> bool:
+    """Returns True when the request has no `Hyper-Context` header or a valid hash in it (HY-127)."""
+    header = request.header("Hyper-Context")
+    return header is None or _context.valid_header(header)
 
 
 def _loader_map(value: object, source: str) -> dict:
