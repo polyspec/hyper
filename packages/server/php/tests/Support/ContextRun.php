@@ -41,11 +41,13 @@ final class ContextRun
     }
 
     /**
-     * Opens the application with the shared data of the case, which replaces the shared data of the application.
+     * Opens the application with the shared data of the case, which replaces the shared data of the application; an
+     * application that declares no shared data and a case that gives none opens with no shared handler.
      *
      * @param array<string, mixed>|null $shared
+     * @param array<string, callable|string> $functions the host functions of the case (HYC-24)
      */
-    public function open(?array $shared): App
+    public function open(?array $shared, array $functions = []): App
     {
         $directory = "{$this->programs}/{$this->key}";
         self::autoload($directory);
@@ -65,7 +67,15 @@ final class ContextRun
         foreach ($this->application['actions'] ?? [] as $route => $spec) {
             $routes[$route]['post'] = $this->action($route, $spec);
         }
-        $data = $shared ?? $this->application['shared'];
+        $data = $shared ?? $this->application['shared'] ?? null;
+        $handlers = ['routes' => $routes];
+        if ($data !== null) {
+            $handlers['shared'] = function () use ($data): array {
+                $this->calls[] = 'shared';
+
+                return $data;
+            };
+        }
 
         $context = null;
         if (isset($this->application['context'])) {
@@ -80,16 +90,10 @@ final class ContextRun
         return App::open(
             "{$directory}/manifest.json",
             "{$directory}/program",
-            [
-                'shared' => function () use ($data): array {
-                    $this->calls[] = 'shared';
-
-                    return $data;
-                },
-                'routes' => $routes,
-            ],
+            $handlers,
             'Z',
             context: $context,
+            functions: $functions,
         );
     }
 

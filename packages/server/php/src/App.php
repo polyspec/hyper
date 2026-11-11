@@ -64,10 +64,12 @@ final class App
         private readonly string $shell,
         /** The context handler, which returns the context of the application (HY-124), or null without one. */
         private readonly ?\Closure $context,
+        /** The host functions of the application, which the engine registers (HYC-24). */
+        array $functions,
         string $program,
     ) {
         $this->container = new Container();
-        $this->renderer = Renderer::open($program, $timezone);
+        $this->renderer = Renderer::open($program, $timezone, $functions);
         $this->reads = Reads::open($program);
         $this->build = Build::open($program);
     }
@@ -101,6 +103,8 @@ final class App
      *     that a request reads, such as the primary of `RedisSentinelSessions`; an error fails the request (HY-115)
      * @param ?\Closure(mixed): array $context the context handler, which receives the selection value and returns the
      *     context of the application, a map of the data model (HY-124)
+     * @param array<string, callable> $functions the host functions of the application, a map from names to functions,
+     *     which the template engine registers (HYC-24, HY-106)
      */
     public static function open(
         string $manifest,
@@ -121,6 +125,7 @@ final class App
         ?\Closure $around = null,
         ?\Closure $sessionSetup = null,
         ?\Closure $context = null,
+        array $functions = [],
     ): self {
         if ($bodyLimit < 1) {
             throw new \InvalidArgumentException("body limit {$bodyLimit} is not a positive number of bytes");
@@ -209,6 +214,7 @@ final class App
             $sessionSetup,
             $shell,
             $context,
+            $functions,
             $program,
         );
     }

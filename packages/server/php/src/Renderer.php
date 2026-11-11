@@ -6,6 +6,7 @@ namespace Polyspec\Hyper;
 
 use Polyspec\Template\BoundMap;
 use Polyspec\Template\Program;
+use Polyspec\Template\Render\RuntimeEnvironment;
 
 /**
  * Renders documents and single regions with the generated PHP program of the application, through the API of the
@@ -27,7 +28,7 @@ final class Renderer
     }
 
     /** Opens the program that `hyper-build-server` of `@polyspec/hyper-build` wrote to a directory. */
-    public static function open(string $program, string $timezone): self
+    public static function open(string $program, string $timezone, array $functions = []): self
     {
         // A missing build fails here and names the missing file (HY-48).
         $required = [
@@ -63,7 +64,9 @@ final class Renderer
                 . "map the namespace {$namespace} to {$program}/php in autoload.psr-4 of composer.json",
             );
         }
-        $generated = new $class();
+        // HYC-24, RT-5: the host functions of the application are registered by the engine, which fails the open of a
+        // name that is built in or an entry that is not a function.
+        $generated = new $class(new RuntimeEnvironment(hostFunctions: $functions));
         if (!$generated instanceof Program) {
             throw new \InvalidArgumentException("{$class} of the server program {$program} is not a template program");
         }
