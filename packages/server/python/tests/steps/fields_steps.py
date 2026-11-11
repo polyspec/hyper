@@ -1,8 +1,13 @@
 # The steps of contracts/fields.json (HY-56, HY-57, HY-113): a urlencoded text is the UTF-8 encoding of its JSON
 # string, and a multipart type and body are text whose characters are their bytes.
 from polyspec.hyper._fields import Fields
+import os
+import shutil
+import tempfile
+
 from polyspec.hyper._files import Files
 from polyspec.hyper._multipart import Multipart
+from polyspec.hyper._request_body import RequestBody
 
 
 def urlencoded(case) -> None:
@@ -30,7 +35,7 @@ def multipart(case) -> None:
     if boundary is not None:
         bound = max(8192 + 3, len(boundary) + 3)
         for at in range(len(body) + 1):
-            parts = Multipart(boundary)
+            parts = Multipart(boundary, None)
             for chunk in (body[:at], body[at:]):
                 parts.feed(chunk)
                 if parts.buffered() > bound:
@@ -47,6 +52,109 @@ def multipart(case) -> None:
                 break
     case.compare("fields", result[0])
     case.compare("files", result[1])
+
+
+def streamed(case) -> None:
+    """Reads the body in chunks as a host does, and records what the body holds, its parts, the files of its
+    directory, the move of its first file and the removal of the directory (HY-131)."""
+    kind = _text(case, "type")
+    body = _text(case, "body").encode("latin-1")
+    chunk = case.input("chunk")
+    limit = case.input("limit")
+    move = _text(case, "move")
+    if not isinstance(chunk, int) or chunk < 1 or not isinstance(limit, int):
+        raise LookupError("the chunk or the limit of the case is not a number")
+    read = RequestBody(kind, limit, case.input("stream") is True)
+    scratch = tempfile.mkdtemp(prefix="hyper-case-")
+    try:
+        stopped = False
+        at = 0
+        while at < len(body) and not stopped:
+            stopped = not read.feed(body[at : at + chunk])
+            at += chunk
+        held = read.bytes()
+        if read.streamed():
+            parts = read.parts()
+            fields = None if parts is None else parts[0]
+            files = None if parts is None else parts[1]
+        else:
+            fields = None if stopped else Fields.from_body(kind, held)
+            files = None if stopped else Files.from_body(kind, held)
+        directory = read.directory()
+
+        def count():
+            return None if directory is None else len(os.listdir(directory))
+
+        case.compare("stopped", stopped)
+        case.compare("held", held.decode("latin-1"))
+        case.compare("fields", _fields_of(fields))
+        case.compare(
+            "files",
+            None
+            if files is None
+            else [
+                {
+                    "name": item.name(),
+                    "filename": item.filename(),
+                    "contentType": item.content_type(),
+                    "content": item.content().decode("latin-1"),
+                    "size": item.size(),
+                }
+                for _, items in files.pairs()
+                for item in items
+            ],
+        )
+        case.compare("entries", count())
+        pairs = [] if files is None else files.pairs()
+        if move == "none" or not pairs:
+            case.compare("moved", None)
+        else:
+            first = pairs[0][1][0]
+            target = os.path.join(scratch, "target")
+            if move == "exists":
+                with open(target, "wb") as taken:
+                    taken.write(b"taken")
+            failed = _failure(lambda: first.move_to(7 if move == "type" else target))
+            after = None
+            if failed is None:
+                with open(target, "rb") as moved:
+                    content = moved.read().decode("latin-1")
+                failed = _failure(
+                    lambda: first.move_to(os.path.join(scratch, "second"))
+                )
+                read_failure = _failure(first.content)
+                after = None if read_failure is None else read_failure[0]
+            else:
+                content = first.content().decode("latin-1")
+            case.compare(
+                "moved",
+                {
+                    "content": content,
+                    "left": count(),
+                    "again": None if failed is None else failed[0],
+                    "read": after,
+                    "class": None if failed is None else failed[1],
+                },
+            )
+        read.remove()
+        case.compare(
+            "removed", None if directory is None else not os.path.isdir(directory)
+        )
+    finally:
+        read.remove()
+        shutil.rmtree(scratch)
+
+
+def _failure(work):
+    """Runs the work and returns the message and the class of its failure, ``type`` for a TypeError and ``value`` for
+    the class of HY-46.2, or None when it does not fail."""
+    try:
+        work()
+        return None
+    except TypeError as error:
+        return (str(error), "type")
+    except ValueError as error:
+        return (str(error), "value")
 
 
 def _fields_of(fields):

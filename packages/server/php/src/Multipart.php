@@ -37,9 +37,29 @@ final class Multipart extends MultipartReader
 
     private string $content;
 
-    public function __construct(string $boundary)
+    /**
+     * The file that the content of the file part is written to, with its path and the bytes given to it.
+     *
+     * @var resource|null
+     */
+    private mixed $target;
+
+    private string $path;
+
+    private int $size;
+
+    private int $count;
+
+    /**
+     * @param ?string $directory the directory of the files of the body, or null for files that are values (HY-131.13)
+     */
+    public function __construct(string $boundary, private readonly ?string $directory)
     {
         parent::__construct($boundary);
+        $this->target = null;
+        $this->path = '';
+        $this->size = 0;
+        $this->count = 0;
         $this->names = [];
         $this->values = [];
         $this->fileNames = [];
@@ -65,7 +85,7 @@ final class Multipart extends MultipartReader
      */
     public static function read(string $body, string $boundary): ?array
     {
-        $reader = new self($boundary);
+        $reader = new self($boundary, null);
 
         return $reader->feed($body) ? $reader->result() : null;
     }
@@ -105,17 +125,48 @@ final class Multipart extends MultipartReader
             $this->file = [$text, $type];
         }
         $this->name = self::utf8Text($parameters['name']);
+        if ($this->name === null) {
+            return false;
+        }
+        if ($this->file !== null && $this->directory !== null) {
+            $this->count++;
+            $this->path = "{$this->directory}/{$this->count}";
+            $this->size = 0;
+            // The mode x fails for a path that exists; the directory gives its files to the user of the server only.
+            $target = fopen($this->path, 'x');
+            if ($target === false) {
+                throw new \RuntimeException("hyper: cannot create {$this->path}");
+            }
+            $this->target = $target;
+        }
 
-        return $this->name !== null;
+        return true;
     }
 
     public function partData(string $bytes): bool
     {
-        if ($this->name !== null) {
+        if ($this->name === null) {
+            return true;
+        }
+        if ($this->target === null) {
             $this->content .= $bytes;
+        } else {
+            $this->size += strlen($bytes);
+            if (fwrite($this->target, $bytes) !== strlen($bytes)) {
+                throw new \RuntimeException("hyper: cannot write {$this->path}");
+            }
         }
 
         return true;
+    }
+
+    /** Closes the file of a part whose end was not read. */
+    public function release(): void
+    {
+        if ($this->target !== null) {
+            fclose($this->target);
+            $this->target = null;
+        }
     }
 
     public function partEnded(): bool
@@ -131,8 +182,15 @@ final class Multipart extends MultipartReader
                 return false;
             }
             self::addValue($this->names, $this->values, $this->name, $value);
-        } else {
+        } elseif ($this->target === null) {
             $file = new UploadedFile($this->name, $this->file[0], $this->file[1], $content);
+            self::addValue($this->fileNames, $this->files, $this->name, $file);
+        } else {
+            if (!fclose($this->target)) {
+                throw new \RuntimeException("hyper: cannot write {$this->path}");
+            }
+            $this->target = null;
+            $file = UploadedFile::stored($this->name, $this->file[0], $this->file[1], $this->path, $this->size);
             self::addValue($this->fileNames, $this->files, $this->name, $file);
         }
 

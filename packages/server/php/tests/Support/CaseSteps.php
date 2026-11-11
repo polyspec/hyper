@@ -40,6 +40,7 @@ final class CaseSteps
             'csrf.json verify' => CsrfSteps::verify(...),
             'fields.json urlencoded' => FieldsSteps::urlencoded(...),
             'fields.json multipart' => FieldsSteps::multipart(...),
+            'fields.json streamed' => FieldsSteps::streamed(...),
             'json.json encode' => JsonSteps::encode(...),
             'json.json decode' => JsonSteps::decode(...),
             'keep.json cases' => KeptSteps::cases(...),

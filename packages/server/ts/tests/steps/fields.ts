@@ -1,8 +1,12 @@
 // The urlencoded and multipart steps of contracts/fields.json (HY-56, HY-57, HY-113): a urlencoded text is the UTF-8
 // encoding of its JSON string, and a multipart type and body are text whose characters are their bytes.
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { Fields } from '../../src/fields.js';
 import { Files } from '../../src/files.js';
 import { Multipart } from '../../src/multipart.js';
+import { RequestBody } from '../../src/request-body.js';
 import type { CaseReader } from '../case-reader.js';
 
 function text(reader: CaseReader, name: string): string {
@@ -41,7 +45,7 @@ export const steps = {
     if (boundary !== null) {
       const bound = Math.max(8192 + 3, boundary.length + 3);
       for (let at = 0; at <= body.length && result === whole; at += 1) {
-        const parts = new Multipart(boundary);
+        const parts = new Multipart(boundary, null);
         for (const chunk of [body.subarray(0, at), body.subarray(at)]) {
           parts.feed(chunk);
           if (parts.buffered() > bound) throw new Error(`the reader holds ${parts.buffered()} bytes after a chunk that ends at ${at}; its bound is ${bound}`);
@@ -53,5 +57,69 @@ export const steps = {
     }
     reader.compare('fields', result[0]);
     reader.compare('files', result[1]);
+  },
+  // Reads the body in chunks as a host does, and records what the body holds, its parts, the files of its directory,
+  // the move of its first file and the removal of the directory (HY-131).
+  async streamed(reader: CaseReader): Promise<void> {
+    const type = text(reader, 'type');
+    const body = Buffer.from(text(reader, 'body'), 'latin1');
+    const chunk = reader.input('chunk');
+    const limit = reader.input('limit');
+    const move = text(reader, 'move');
+    if (typeof chunk !== 'number' || typeof limit !== 'number') throw new Error('the chunk or the limit of the case is not a number');
+    const read = new RequestBody(type, limit, reader.input('stream') === true);
+    const scratch = mkdtempSync(join(tmpdir(), 'hyper-case-'));
+    try {
+      let stopped = false;
+      for (let at = 0; at < body.length && !stopped; at += chunk) {
+        stopped = !read.feed(body.subarray(at, at + chunk));
+        await read.written();
+      }
+      const held = Buffer.from(read.bytes());
+      const parts = read.streamed() ? read.parts() : null;
+      const fields = read.streamed() ? (parts?.[0] ?? null) : stopped ? null : Fields.fromBody(type, held);
+      const files = read.streamed() ? (parts?.[1] ?? null) : stopped ? null : Files.fromBody(type, held);
+      const directory = read.directory();
+      const count = (): number | null => (directory === null ? null : readdirSync(directory).length);
+      reader.compare('stopped', stopped);
+      reader.compare('held', held.toString('latin1'));
+      reader.compare('fields', fieldsOf(fields));
+      reader.compare('files', files === null ? null : files.pairs().flatMap(([, list]) => list.map((file) => ({ name: file.name(), filename: file.filename(), contentType: file.contentType(), content: Buffer.from(file.content()).toString('latin1'), size: file.size() }))));
+      reader.compare('entries', count());
+      const first = files?.pairs()[0]?.[1][0];
+      if (move === 'none' || first === undefined) {
+        reader.compare('moved', null);
+      } else {
+        const target = join(scratch, 'target');
+        if (move === 'exists') writeFileSync(target, 'taken');
+        const failure = (work: () => void): [string, string] | null => {
+          try {
+            work();
+            return null;
+          } catch (error) {
+            if (error instanceof TypeError) return [error.message, 'type'];
+            if (error instanceof RangeError) return [error.message, 'value'];
+            throw error;
+          }
+        };
+        // @ts-expect-error -- a caller may pass a path of any type
+        let failed = failure(() => first.moveTo(move === 'type' ? 7 : target));
+        let content: string;
+        let after: string | null = null;
+        if (failed === null) {
+          content = readFileSync(target).toString('latin1');
+          failed = failure(() => first.moveTo(join(scratch, 'second')));
+          after = failure(() => first.content())?.[0] ?? null;
+        } else {
+          content = Buffer.from(first.content()).toString('latin1');
+        }
+        reader.compare('moved', { content, left: count(), again: failed?.[0] ?? null, read: after, class: failed?.[1] ?? null });
+      }
+      read.remove();
+      reader.compare('removed', directory === null ? null : !existsSync(directory));
+    } finally {
+      read.remove();
+      rmSync(scratch, { recursive: true, force: true });
+    }
   },
 };

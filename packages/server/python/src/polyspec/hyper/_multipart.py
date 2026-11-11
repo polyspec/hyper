@@ -4,7 +4,8 @@ and another part is neither."""
 
 from __future__ import annotations
 
-from typing import Optional
+import os
+from typing import BinaryIO, Optional
 
 # Fields and Files read a body through this module, so it reaches them as modules, which a cycle allows.
 from . import _fields, _files
@@ -15,8 +16,15 @@ from .uploaded_file import UploadedFile
 class Multipart(MultipartReader):
     """Reads the text fields and the files of a ``multipart/form-data`` body."""
 
-    def __init__(self, boundary: str):
+    def __init__(self, boundary: str, directory: Optional[str]):
         super().__init__(boundary)
+        # The directory of the files of the body, or None for files that are values (HY-131.13).
+        self.__directory = directory
+        # The file that the content of the file part is written to, with its path and the bytes given to it.
+        self.__target: Optional[BinaryIO] = None
+        self.__path = ""
+        self.__size = 0
+        self.__count = 0
         self.__names: list[str] = []
         self.__values: dict[str, list[str]] = {}
         self.__file_names: list[str] = []
@@ -40,7 +48,7 @@ class Multipart(MultipartReader):
     ) -> Optional[tuple[_fields.Fields, _files.Files]]:
         """Returns the text fields and the files of the body, or None when the body fails with HY-42 (HY-113,
         HY-131)."""
-        reader = Multipart(boundary)
+        reader = Multipart(boundary, None)
         return reader.result() if reader.feed(body) else None
 
     def result(self) -> Optional[tuple[_fields.Fields, _files.Files]]:
@@ -72,12 +80,33 @@ class Multipart(MultipartReader):
                 return False
             self.__file = (text, content_type)
         self.__name = Multipart._utf8_text(parameters["name"].encode("latin-1"))
-        return self.__name is not None
+        if self.__name is None:
+            return False
+        if self.__file is not None and self.__directory is not None:
+            self.__count += 1
+            self.__path = os.path.join(self.__directory, str(self.__count))
+            self.__size = 0
+            # O_EXCL fails for a path that exists, and the mode gives the file to the user of the server only.
+            self.__target = os.fdopen(
+                os.open(self.__path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600), "wb"
+            )
+        return True
 
     def part_data(self, data: bytes) -> bool:
-        if self.__name is not None:
+        if self.__name is None:
+            return True
+        if self.__target is None:
             self.__content.append(data)
+        else:
+            self.__size += len(data)
+            self.__target.write(data)
         return True
+
+    def release(self) -> None:
+        """Closes the file of a part whose end was not read."""
+        if self.__target is not None:
+            self.__target.close()
+            self.__target = None
 
     def part_ended(self) -> bool:
         if self.__name is None:
@@ -89,9 +118,16 @@ class Multipart(MultipartReader):
             if value is None:
                 return False
             Multipart._add_value(self.__names, self.__values, self.__name, value)
-        else:
+        elif self.__target is None:
             uploaded = UploadedFile(
                 self.__name, self.__file[0], self.__file[1], content
+            )
+            Multipart._add_value(self.__file_names, self.__files, self.__name, uploaded)
+        else:
+            self.__target.close()
+            self.__target = None
+            uploaded = UploadedFile._stored(
+                self.__name, self.__file[0], self.__file[1], self.__path, self.__size
             )
             Multipart._add_value(self.__file_names, self.__files, self.__name, uploaded)
         return True

@@ -2855,23 +2855,24 @@
               "kind": "constructor",
               "visibility": "internal",
               "inputs": [
-                "string"
+                "string",
+                "optional<string>"
               ],
               "output": "none",
               "errors": [],
-              "state": "Starts a reader of a body with the boundary and no parts.",
+              "state": "Starts a reader of a body with the boundary and no parts, whose files are values, or files of the directory when one is given (HY-131.13).",
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/Multipart.php::Polyspec\\Hyper\\Multipart::__construct",
-                  "signature": "public function __construct(string $boundary)"
+                  "signature": "public function __construct(string $boundary, ?string $directory)"
                 },
                 "node": {
                   "symbol": "packages/server/ts/src/multipart.ts::Multipart.constructor",
-                  "signature": "constructor(boundary: string)"
+                  "signature": "constructor(boundary: string, directory: string | null)"
                 },
                 "python": {
                   "symbol": "packages/server/python/src/polyspec/hyper/_multipart.py::Multipart.__init__",
-                  "signature": "def __init__(self, boundary: str)"
+                  "signature": "def __init__(self, boundary: str, directory: Optional[str])"
                 }
               }
             },
@@ -2958,7 +2959,7 @@
               ],
               "output": "boolean",
               "errors": [],
-              "state": "Reads the name, the filename and the content type of a part from its header lines, and returns false when one of them is not UTF-8 (HY-113.5, HY-113.13).",
+              "state": "Reads the name, the filename and the content type of a part from its header lines, opens the file of a file part in the directory, and returns false when one of them is not UTF-8 (HY-113.5, HY-113.13, HY-131.13).",
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/Multipart.php::Polyspec\\Hyper\\Multipart::partStarted",
@@ -2983,7 +2984,7 @@
               ],
               "output": "boolean",
               "errors": [],
-              "state": "Keeps the bytes of the content of a part that is a value or a file.",
+              "state": "Keeps the bytes of the content of a value, and writes those of a file part to its file when the reader has a directory (HY-131.13).",
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/Multipart.php::Polyspec\\Hyper\\Multipart::partData",
@@ -3000,13 +3001,36 @@
               }
             },
             {
+              "id": "multipart.release",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "none",
+              "errors": [],
+              "state": "Closes the file of a part whose end was not read.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Multipart.php::Polyspec\\Hyper\\Multipart::release",
+                  "signature": "public function release(): void"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/multipart.ts::Multipart.release",
+                  "signature": "release(): void"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_multipart.py::Multipart.release",
+                  "signature": "def release(self) -> None"
+                }
+              }
+            },
+            {
               "id": "multipart.partEnded",
               "kind": "method",
               "visibility": "internal",
               "inputs": [],
               "output": "boolean",
               "errors": [],
-              "state": "Adds the value or the file of the part to its name, and returns false when the content of a text field is not UTF-8 (HY-57.5).",
+              "state": "Adds the value or the file of the part to its name and closes its file, and returns false when the content of a text field is not UTF-8 (HY-57.5).",
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/Multipart.php::Polyspec\\Hyper\\Multipart::partEnded",
@@ -3124,6 +3148,27 @@
                   "symbol": "packages/server/python/src/polyspec/hyper/_multipart.py::Multipart._utf8_text",
                   "signature": "def _utf8_text(data: bytes) -> Optional[str]"
                 }
+              }
+            },
+            {
+              "id": "multipart.written",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "none",
+              "errors": [],
+              "state": "Resolves when the bytes given to the files are written, and rejects with the first error of a write (HY-131.21).",
+              "native": {
+                "node": {
+                  "symbol": "packages/server/ts/src/multipart.ts::Multipart.written",
+                  "signature": "async written(): Promise<void>"
+                }
+              },
+              "only": {
+                "languages": [
+                  "node"
+                ],
+                "sentence": "HY-131.21"
               }
             }
           ]
@@ -3392,6 +3437,262 @@
           ]
         },
         {
+          "id": "request-body",
+          "native": {
+            "php": {
+              "file": "packages/server/php/src/RequestBody.php",
+              "kind": "class",
+              "internal": true
+            },
+            "node": {
+              "file": "packages/server/ts/src/request-body.ts",
+              "kind": "class",
+              "internal": true
+            },
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/_request_body.py",
+              "kind": "class",
+              "internal": true
+            }
+          },
+          "members": [
+            {
+              "id": "request-body.constructor",
+              "kind": "constructor",
+              "visibility": "internal",
+              "inputs": [
+                "string",
+                "number",
+                "boolean"
+              ],
+              "output": "none",
+              "errors": [],
+              "state": "Starts the body of the content type with the body limit, read in chunks into a new directory when it is multipart and the application has that form type (HY-131.1, HY-131.13).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/RequestBody.php::Polyspec\\Hyper\\RequestBody::__construct",
+                  "signature": "public function __construct(string $type, int $limit, bool $stream)"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/request-body.ts::RequestBody.constructor",
+                  "signature": "constructor(type: string, limit: number, stream: boolean)"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_request_body.py::RequestBody.__init__",
+                  "signature": "def __init__(self, content_type: str, limit: int, stream: bool)"
+                }
+              }
+            },
+            {
+              "id": "request-body.feed",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "bytes"
+              ],
+              "output": "boolean",
+              "errors": [],
+              "state": "Reads the next chunk, and returns false when the body passed the body limit, after which it holds no bytes (HY-59.4, HY-131.11).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/RequestBody.php::Polyspec\\Hyper\\RequestBody::feed",
+                  "signature": "public function feed(string $chunk): bool"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/request-body.ts::RequestBody.feed",
+                  "signature": "feed(chunk: Uint8Array): boolean"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_request_body.py::RequestBody.feed",
+                  "signature": "def feed(self, chunk: bytes) -> bool"
+                }
+              }
+            },
+            {
+              "id": "request-body.size",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "number",
+              "errors": [],
+              "state": "Returns the number of bytes that were read (HY-59.5).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/RequestBody.php::Polyspec\\Hyper\\RequestBody::size",
+                  "signature": "public function size(): int"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/request-body.ts::RequestBody.size",
+                  "signature": "size(): number"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_request_body.py::RequestBody.size",
+                  "signature": "def size(self) -> int"
+                }
+              }
+            },
+            {
+              "id": "request-body.bytes",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "bytes",
+              "errors": [],
+              "state": "Returns the body as one value, with no bytes for a body read in chunks and for a body that passed the limit (HY-131.1).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/RequestBody.php::Polyspec\\Hyper\\RequestBody::bytes",
+                  "signature": "public function bytes(): string"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/request-body.ts::RequestBody.bytes",
+                  "signature": "bytes(): Uint8Array"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_request_body.py::RequestBody.bytes",
+                  "signature": "def bytes(self) -> bytes"
+                }
+              }
+            },
+            {
+              "id": "request-body.streamed",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "boolean",
+              "errors": [],
+              "state": "Returns true when the body is read in chunks (HY-131.1).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/RequestBody.php::Polyspec\\Hyper\\RequestBody::streamed",
+                  "signature": "public function streamed(): bool"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/request-body.ts::RequestBody.streamed",
+                  "signature": "streamed(): boolean"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_request_body.py::RequestBody.streamed",
+                  "signature": "def streamed(self) -> bool"
+                }
+              }
+            },
+            {
+              "id": "request-body.parts",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "optional<list<value>>",
+              "errors": [],
+              "state": "Returns the text fields and the files of a body read in chunks as a pair, or null when it failed, has not ended or passed the limit (HY-131.5).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/RequestBody.php::Polyspec\\Hyper\\RequestBody::parts",
+                  "signature": "public function parts(): ?array"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/request-body.ts::RequestBody.parts",
+                  "signature": "parts(): [Fields, Files] | null"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_request_body.py::RequestBody.parts",
+                  "signature": "def parts(self) -> Optional[tuple[Fields, Files]]"
+                }
+              }
+            },
+            {
+              "id": "request-body.directory",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "optional<string>",
+              "errors": [],
+              "state": "Returns the directory of the files of the body, or null for a body that is one value (HY-131.13).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/RequestBody.php::Polyspec\\Hyper\\RequestBody::directory",
+                  "signature": "public function directory(): ?string"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/request-body.ts::RequestBody.directory",
+                  "signature": "directory(): string | null"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_request_body.py::RequestBody.directory",
+                  "signature": "def directory(self) -> Optional[str]"
+                }
+              }
+            },
+            {
+              "id": "request-body.remove",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "none",
+              "errors": [],
+              "state": "Removes the directory of the files with the files that were not moved (HY-131.14).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/RequestBody.php::Polyspec\\Hyper\\RequestBody::remove",
+                  "signature": "public function remove(): void"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/request-body.ts::RequestBody.remove",
+                  "signature": "remove(): void"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_request_body.py::RequestBody.remove",
+                  "signature": "def remove(self) -> None"
+                }
+              }
+            },
+            {
+              "id": "request-body.createdDirectory",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [],
+              "output": "string",
+              "errors": [],
+              "state": "Creates a directory below the temporary directory of the system for the user of the server only (HY-131.13).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/RequestBody.php::Polyspec\\Hyper\\RequestBody::createdDirectory",
+                  "signature": "private static function createdDirectory(): string"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/request-body.ts::RequestBody.createdDirectory",
+                  "signature": "private static createdDirectory(): string"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_request_body.py::RequestBody._created_directory",
+                  "signature": "def _created_directory() -> str"
+                }
+              }
+            },
+            {
+              "id": "request-body.written",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "none",
+              "errors": [],
+              "state": "Resolves when the bytes given to the files are written (HY-131.21).",
+              "native": {
+                "node": {
+                  "symbol": "packages/server/ts/src/request-body.ts::RequestBody.written",
+                  "signature": "async written(): Promise<void>"
+                }
+              },
+              "only": {
+                "languages": [
+                  "node"
+                ],
+                "sentence": "HY-131.21"
+              }
+            }
+          ]
+        },
+        {
           "id": "named-values",
           "native": {
             "php": {
@@ -3567,7 +3868,7 @@
               ],
               "output": "none",
               "errors": [],
-              "state": "Holds the name, the filename, the content type and the bytes of a file part (HY-113.3).",
+              "state": "Holds the name, the filename, the content type and the bytes of a file part as a value (HY-113.3).",
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/UploadedFile.php::Polyspec\\Hyper\\UploadedFile::__construct",
@@ -3580,6 +3881,35 @@
                 "python": {
                   "symbol": "packages/server/python/src/polyspec/hyper/uploaded_file.py::UploadedFile.__init__",
                   "signature": "def __init__(self, name: str, filename: str, content_type: str, content: bytes)"
+                }
+              }
+            },
+            {
+              "id": "uploaded-file.stored",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "string",
+                "string",
+                "string",
+                "string",
+                "number"
+              ],
+              "output": "uploaded-file",
+              "errors": [],
+              "state": "Returns a file whose bytes are the file of the path, of the size in bytes (HY-131.13).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/UploadedFile.php::Polyspec\\Hyper\\UploadedFile::stored",
+                  "signature": "public static function stored(string $name, string $filename, string $contentType, string $path, int $size): Polyspec\\Hyper\\UploadedFile"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/uploaded-file.ts::UploadedFile.stored",
+                  "signature": "static stored(name: string, filename: string, contentType: string, path: string, size: number): UploadedFile"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/uploaded_file.py::UploadedFile._stored",
+                  "signature": "def _stored(name: str, filename: str, content_type: str, path: str, size: int) -> UploadedFile"
                 }
               }
             },
@@ -3653,13 +3983,36 @@
               }
             },
             {
+              "id": "uploaded-file.size",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [],
+              "output": "number",
+              "errors": [],
+              "state": "Returns the number of bytes of the part (HY-131.15).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/UploadedFile.php::Polyspec\\Hyper\\UploadedFile::size",
+                  "signature": "public function size(): int"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/uploaded-file.ts::UploadedFile.size",
+                  "signature": "size(): number"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/uploaded_file.py::UploadedFile.size",
+                  "signature": "def size(self) -> int"
+                }
+              }
+            },
+            {
               "id": "uploaded-file.content",
               "kind": "method",
               "visibility": "public",
               "inputs": [],
               "output": "bytes",
               "errors": [],
-              "state": "Returns the bytes of the part as they were sent (HY-113.3).",
+              "state": "Returns the bytes of the part as one value, read from its file when it has one, and fails with the class of HY-46.2 after a move (HY-113.3, HY-131.16).",
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/UploadedFile.php::Polyspec\\Hyper\\UploadedFile::content",
@@ -3672,6 +4025,82 @@
                 "python": {
                   "symbol": "packages/server/python/src/polyspec/hyper/uploaded_file.py::UploadedFile.content",
                   "signature": "def content(self) -> bytes"
+                }
+              }
+            },
+            {
+              "id": "uploaded-file.moveTo",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [
+                "string"
+              ],
+              "output": "none",
+              "errors": [],
+              "state": "Moves the file to the path; a path that is not a string fails with TypeError, and a path that exists or a file that was moved fails with the class of HY-46.2 (HY-131.15, HY-131.16).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/UploadedFile.php::Polyspec\\Hyper\\UploadedFile::moveTo",
+                  "signature": "public function moveTo(mixed $path): void"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/uploaded-file.ts::UploadedFile.moveTo",
+                  "signature": "moveTo(path: string): void"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/uploaded_file.py::UploadedFile.move_to",
+                  "signature": "def move_to(self, path: str) -> None"
+                }
+              }
+            },
+            {
+              "id": "uploaded-file.createdFile",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "string"
+              ],
+              "output": "value",
+              "errors": [],
+              "state": "Opens a new file at the path for writing, and fails when the path exists (HY-131.16).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/UploadedFile.php::Polyspec\\Hyper\\UploadedFile::createdFile",
+                  "signature": "private static function createdFile(string $path): mixed"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/uploaded-file.ts::UploadedFile.createdFile",
+                  "signature": "private static createdFile(path: string): number"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/uploaded_file.py::UploadedFile._created_file",
+                  "signature": "def _created_file(path: str)"
+                }
+              }
+            },
+            {
+              "id": "uploaded-file.linkedFile",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "string",
+                "string"
+              ],
+              "output": "none",
+              "errors": [],
+              "state": "Gives the file of the source the path as a second name, or copies it there when the file system gives none, and fails when the path exists (HY-131.15).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/UploadedFile.php::Polyspec\\Hyper\\UploadedFile::linkedFile",
+                  "signature": "private static function linkedFile(string $source, string $path): void"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/uploaded-file.ts::UploadedFile.linkedFile",
+                  "signature": "private static linkedFile(source: string, path: string): void"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/uploaded_file.py::UploadedFile._linked_file",
+                  "signature": "def _linked_file(source: str, path: str) -> None"
                 }
               }
             }
@@ -6334,6 +6763,83 @@
               "compare": "exact",
               "sentence": "HY-113.3",
               "state": "`files` lists the files of the body in request order as objects with `name`, `filename`, `contentType` and `content`, where `content` is the text of the file and `contentType` is empty text for a part without a content type, or is null when `fields` is null."
+            }
+          }
+        },
+        "streamed": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "type": {
+              "role": "input"
+            },
+            "body": {
+              "role": "input"
+            },
+            "chunk": {
+              "role": "input"
+            },
+            "limit": {
+              "role": "input"
+            },
+            "stream": {
+              "role": "input"
+            },
+            "move": {
+              "role": "input"
+            },
+            "stopped": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-131.11",
+              "state": "`stopped` is true when the body `body`, a text whose characters are its bytes, given in chunks of `chunk` bytes, passed the body limit `limit`, after which no chunk is given."
+            },
+            "held": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-131.1",
+              "state": "`held` is the text of the bytes that the body holds as one value: empty text for a body that is read in chunks, which a multipart body of the type `type` is when `stream` is true, and for a body that passed the limit."
+            },
+            "fields": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-131.6",
+              "state": "`fields` lists the form values of the body as `[name, values]` pairs, read from the chunks or from the held bytes, or is null when the body failed or passed the limit."
+            },
+            "files": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-131.15",
+              "state": "`files` lists the files of the body in request order as objects with `name`, `filename`, `contentType`, `content`, the text of the bytes of the file, and `size`, or is null when `fields` is null."
+            },
+            "entries": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-131.13",
+              "state": "`entries` is the number of files in the directory of the body after its last chunk, or null for a body without a directory."
+            },
+            "moved": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-131.16",
+              "state": "`moved` is null when `move` is `none`, and else tells the move of the first file: for `new`, to a path that does not exist, and then a second time; for `exists`, to a path that exists; for `type`, to the number 7. `content` is the text of the bytes at the path after the first move, or of the file when the move failed; `left` is the number of files in the directory after it, or null without a directory; `again` is the message of the failure of the second move or of the failed move; `read` is the message of the failure of `content()` after the move, or null when the move failed; `class` is `value` for the class of HY-46.2 and `type` for TypeError."
+            },
+            "removed": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-131.14",
+              "state": "`removed` is true when the directory of the body does not exist after `remove()`, or null for a body without a directory."
             }
           }
         }

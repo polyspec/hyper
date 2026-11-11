@@ -36,6 +36,7 @@ STEPS = {
     ("csrf.json", "verify"): csrf_steps.verify,
     ("fields.json", "urlencoded"): fields_steps.urlencoded,
     ("fields.json", "multipart"): fields_steps.multipart,
+    ("fields.json", "streamed"): fields_steps.streamed,
     ("functions.json", "cases"): functions_steps.cases,
     ("json.json", "encode"): json_steps.encode,
     ("json.json", "decode"): json_steps.decode,

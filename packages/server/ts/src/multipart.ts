@@ -1,6 +1,8 @@
 // Reads the parts of a `multipart/form-data` body (HY-57, HY-113): a part whose `Content-Disposition` is `form-data`
 // with a `name` and no `filename` is a text field, a part with a `name` and a `filename` is a file, and another part
 // is neither.
+import { createWriteStream, type WriteStream } from 'node:fs';
+import { join } from 'node:path';
 import { Fields } from './fields.js';
 import { Files } from './files.js';
 import { MultipartReader } from './multipart-reader.js';
@@ -19,9 +21,26 @@ export class Multipart extends MultipartReader {
   // The filename and the content type of the file part that is read, or null for a text field.
   private file: [string, string] | null;
   private content: Uint8Array[];
+  // The directory of the files of the body, or null for files that are values (HY-131.13).
+  private readonly directory: string | null;
+  // The file that the content of the file part is written to, with its path and the bytes given to it.
+  private target: WriteStream | null;
+  private path: string;
+  private size: number;
+  private count: number;
+  // The files whose last bytes are not written yet, and the first error of a write.
+  private finishing: Promise<void>[];
+  private failure: Error | null;
 
-  constructor(boundary: string) {
+  constructor(boundary: string, directory: string | null) {
     super(boundary);
+    this.directory = directory;
+    this.target = null;
+    this.path = '';
+    this.size = 0;
+    this.count = 0;
+    this.finishing = [];
+    this.failure = null;
     this.names = [];
     this.values = new Map();
     this.fileNames = [];
@@ -40,7 +59,7 @@ export class Multipart extends MultipartReader {
 
   // Returns the text fields and the files of the body, or null when the body fails with HY-42 (HY-113, HY-131).
   static read(body: Uint8Array, boundary: string): [Fields, Files] | null {
-    const reader = new Multipart(boundary);
+    const reader = new Multipart(boundary, null);
     return reader.feed(body) ? reader.result() : null;
   }
 
@@ -66,12 +85,51 @@ export class Multipart extends MultipartReader {
       this.file = [text, type];
     }
     this.name = Multipart.utf8Text(name);
-    return this.name !== null;
+    if (this.name === null) return false;
+    if (this.file !== null && this.directory !== null) {
+      this.count += 1;
+      this.path = join(this.directory, String(this.count));
+      this.size = 0;
+      // The flag wx fails for a path that exists, and the mode gives the file to the user of the server only.
+      this.target = createWriteStream(this.path, { flags: 'wx', mode: 0o600 });
+      this.target.on('error', (error) => {
+        this.failure ??= error;
+      });
+    }
+    return true;
   }
 
   partData(bytes: Uint8Array): boolean {
-    if (this.name !== null) this.content.push(Uint8Array.from(bytes));
+    if (this.name === null) return true;
+    if (this.target === null) {
+      this.content.push(Uint8Array.from(bytes));
+    } else {
+      this.size += bytes.byteLength;
+      this.target.write(bytes);
+    }
     return true;
+  }
+
+  // Resolves when the bytes given to the files are written, after the stream of a file emptied its buffer; rejects
+  // with the first error of a write (HY-131.21).
+  async written(): Promise<void> {
+    const target = this.target;
+    if (target?.writableNeedDrain === true) {
+      await new Promise<void>((resolve) => {
+        target.once('drain', resolve);
+        target.once('error', () => resolve());
+      });
+    }
+    const finishing = this.finishing;
+    this.finishing = [];
+    await Promise.all(finishing);
+    if (this.failure !== null) throw this.failure;
+  }
+
+  // Closes the file of a part whose end was not read.
+  release(): void {
+    this.target?.destroy();
+    this.target = null;
   }
 
   partEnded(): boolean {
@@ -82,8 +140,19 @@ export class Multipart extends MultipartReader {
       const value = Multipart.utf8Text(content.toString('latin1'));
       if (value === null) return false;
       Multipart.addValue(this.names, this.values, this.name, value);
-    } else {
+    } else if (this.target === null) {
       Multipart.addValue(this.fileNames, this.files, this.name, new UploadedFile(this.name, this.file[0], this.file[1], Uint8Array.from(content)));
+    } else {
+      const target = this.target;
+      this.target = null;
+      this.finishing.push(
+        new Promise<void>((resolve) => {
+          target.once('finish', resolve);
+          target.once('error', () => resolve());
+        }),
+      );
+      target.end();
+      Multipart.addValue(this.fileNames, this.files, this.name, UploadedFile.stored(this.name, this.file[0], this.file[1], this.path, this.size));
     }
     return true;
   }
