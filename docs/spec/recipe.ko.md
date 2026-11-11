@@ -1,5 +1,5 @@
 <!-- doc-id: recipe -->
-<!-- source-sha256: 55e61771b754da2403fdef27cba8f4d3515492669ee384fc13fbdb26dec83fc8 -->
+<!-- source-sha256: 4438fe3cfc09809ce049df42ed541365b0a528b19765154037bc63e712811e25 -->
 # 서버의 레시피
 
 PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을 구현한다. 이 서버들의 레시피는 세 부분으로 이루어진다.
@@ -7,7 +7,8 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
 1. **개발 spec**, `contracts/interfaces.json`. 이 파일은 서버의 모든 concern, 각 concern의 unit과 파일, 그리고 그 unit들의
    모든 public, internal, private member를 정한다. 각 member는 언어 중립 설명과, 각 언어에서의 정확한 native symbol 및
    signature를 가진다.
-2. **test recipe**, `contracts/` 아래의 case 파일. 언어마다 하나의 runner가 이 파일들을 모두 읽는다.
+2. **test recipe**, `contracts/` 아래의 case 파일. `contracts/interfaces.json`의 `runners`가 가리키는 각 runner가 자기를 가리키는
+   section을 읽는다.
 3. **각 언어의 고유 analyzer를 실행하는 check.**
 
 `make recipe-check`는 1번과 2번 부분을 source와 test 실행 결과에 맞춰 검사한다.
@@ -177,8 +178,8 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
     - case가 실패하면 0이 아닌 코드로 종료한다.
     - `make recipe-check`는 성공 여부를 종료 상태와 그 파일의 줄에서 얻는다. 줄이 없는 case는 실패하며, 다른 출력은 결과를
       제공하지 않는다.
-    - check는 각 runner의 case id를 `caseFiles`의 `runners`가 그 runner를 가리키는 section에서 얻으며, 언어가 그런 case
-      id를 빠뜨리거나 그런 id가 아닌 id를 출력하면 실패한다. `only`를 가진 case는 그것이 가리키는 언어에서만 센다.
+    - check는 각 runner의 case id를 `caseFiles`의 `runners`가 그 runner를 가리키는 section에서 얻으며, 그런 case
+      id를 빠뜨리거나 그런 id가 아닌 id를 출력하는 runner가 있으면 실패한다. `only`를 가진 case는 그것이 가리키는 언어에서만 센다.
   - **Native tests.** native test는 case 파일을 실행하지 않는, 한 언어의 test tree에 있는 테스트다. 한 언어를 가리키는
     `only`를 가진 unit이나 member, 또는 `cases: none`인 concern에 대해서만 존재한다. 두 언어가 가진 동작은
     `only: {languages, sentence}`(HYR-6)를 가진 case이며, 다른 runner는 그 case를 빼고 실행한다. check는 각 언어의 case
@@ -248,7 +249,7 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
   - `fields`를 가진 expected 필드는 자체로 비교되지 않으며, 각 하위 필드가 자기 비교로 비교된다.
   - 단계의 결과는 필드 없이 비교된다: `raises`는 값 true를 기대하고, `exact`는 단계가 관찰한 두 값을 비교한다.
   - case가 명시하지 않은 필드는 비교되지 않는다.
-  - `caseFiles`가 이름을 준 모든 runner는 모든 case를 이 비교들로만 비교한다. 자기 runner에 대해 아무것도 비교하지 않는 case는
+  - `caseFiles`가 가리키는 모든 runner는 모든 case를 이 비교들로만 비교한다. 자기 runner에 대해 아무것도 비교하지 않는 case는
     `CASE_EMPTY`로 실패하며, `only`가 그 runner를 빼는 필드와 결과는 세지 않는다.
   - 단계의 `raises`: runner는 단계의 모든 error를 잡아 그것 또는 null을 reader에 넘기고, reader는 그 class가 HY-106의 open
     error와 정확히 같은지 확인한다.
@@ -268,9 +269,9 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
 3. **한 언어에만 있는 member.** 다음 중 하나가 성립하지 않는 한 호출자에 접어 넣고 제거한다.
    - 규칙이 그 언어에 한정하는 member다(HYR-6);
    - HY-106의 public API이며, 다른 언어가 그때 추가한다.
-4. **한 언어에만 있는 unit.** 규칙과 함께 `only`를 가지거나, 다른 언어가 추가한다.
+4. **한 언어에만 있는 unit.** 자기 sentence와 함께 `only`를 가지거나, 다른 언어가 추가한다.
 5. **다른 parameter.** 규칙의 parameter를 쓴다. 그렇지 않으면 두 언어의 parameter를 쓴다. 규칙이 정하는 실행 형식의 차이,
-   예를 들어 Node handler의 context 인자(HY-105, HY-106)는 그 규칙과 함께 `only`다. 어떤 규칙도 정하지 않는 차이,
+   예를 들어 Node handler의 context 인자(HY-105, HY-106)는 그 규칙의 sentence와 함께 `only`다. 어떤 규칙도 정하지 않는 차이,
    예를 들어 Node request 경로의 abort signal은 남기 전에 규칙이 필요하다. 그 밖에는 정렬한다.
 6. **접어 넣은 helper.** 접어 넣은 함수는 한 unit의 member다. 자기 파일만 쓰면 `private`이다. 다른 파일이 쓰면
    `internal`이며(Node와 PHP에서는 `@internal`과 함께 export, Python에서는 `_`), 그 파일은 그 unit을 통해 호출한다.
@@ -315,7 +316,7 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
    빠뜨린다. 이 문장은 "the session stores of HY-104 and HY-115"로 고친다.
 3. **case 비교.** HYR-11은 case 파일의 비교를 정한다. HY-130은 response의 header를 정하고, HY-4, HY-5, HY-38, HY-62, HY-73,
    HY-106, HY-129는 비교가 정하던 사실을 얻는다.
-   - 원인: HYR-7은 reader가 각 기대 필드를 그 파일의 규칙이 정한 비교로 비교하게 하며, 일부 파일의 필드에는 규칙이 없었다.
+   - 원인: HYR-7은 reader가 각 기대 필드를 그 파일의 규칙이 정한 비교로 비교하게 했으며, 일부 파일의 필드에는 규칙이 없었다.
 
 ## H28.11의 작업 순서
 
@@ -328,7 +329,7 @@ main은 HY-116부터 HY-122까지와 HY-124부터 HY-128까지를 적고 `contra
 2. contracts/protocol.json의 위 규칙을 case와 함께 쓰고, 세 서버에서 RED와 GREEN을 거친다.
 3. reader, mutation case, schema, check를 쓴다. check가 존재하기 전에 RED를 확인한다.
 4. 첫 정렬에 따라 candidate로부터 spec을 쓰고 diff를 검토한다. spec은 H28.7이 쓰는 unit을 가진 representation concern을
-   포함하여 각 concern의 `rules`, `cases`, `only` 문장 전체를 채우며, check는 HYR-2의 coverage와 HYR-6의 `only` 문장을 검증한다.
+   포함하여 각 concern의 `rules`, `cases`, `only` sentence를 채우며, check는 HYR-2의 coverage와 HYR-6의 `only` 문장을 검증한다.
 5. 각 언어의 case reader와 runner를 결과 파일과 함께 추가한다.
 6. 세 언어의 source를 spec에 맞춘다. concern마다 한 commit으로 하며, 각 commit은 그 concern의 case를 추가하고 HYR-7이
    허용하지 않는 native test를 제거하고, 자기 owner test가 GREEN이다.

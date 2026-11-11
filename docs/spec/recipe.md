@@ -6,7 +6,8 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
 1. **The development spec**, `contracts/interfaces.json`. It names every concern of the servers, the units and files of
    each concern, and every public, internal and private member of those units. Each member has a language-neutral
    description and its exact native symbol and signature in each language.
-2. **The test recipe**, the case files under `contracts/`. One runner per language reads them all.
+2. **The test recipe**, the case files under `contracts/`. Each runner that `runners` of `contracts/interfaces.json` names reads the
+   sections that name it.
 3. **The checks of each language's own analyzers.**
 
 `make recipe-check` checks parts 1 and 2 against the sources and the test runs.
@@ -193,7 +194,7 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
     - `make recipe-check` takes success from the exit status and from the lines of that file. A case without a line
       fails, and no other output supplies a result.
     - The check takes the case ids of each runner from the sections whose `runners` in `caseFiles` name it,
-      and fails when a language misses such a case id or prints an id that is not one. A case with `only` counts only
+      and fails when a runner misses such a case id or prints an id that is not one. A case with `only` counts only
       for the languages that it names.
   - **Native tests.** A native test is a test of the test tree of one language that runs no case file. It exists only
     for a unit or member whose `only` names one language, or for a concern with `cases: none`. A behaviour that two
@@ -294,7 +295,7 @@ the list below does not settle, with its reason.
 4. **A unit in one language.** It carries `only` with its sentence, or the other languages add it.
 5. **Different parameters.** Use the parameters of a rule. Otherwise use those of two languages. A difference of the
    runtime form that a rule states, such as the context argument of a Node handler (HY-105, HY-106), is `only` with
-   that rule. A difference that no rule states, such as the abort signal of the Node request path, needs a rule before
+   the sentence of that rule. A difference that no rule states, such as the abort signal of the Node request path, needs a rule before
    it stays. Otherwise it is aligned.
 6. **Folded helpers.** A folded function is a member of one unit. It is `private` when only its own file uses it.
    It is `internal` (exported with `@internal` in Node and PHP, `_` in Python) when another file uses it, and that
@@ -345,7 +346,8 @@ These rules state behaviour that the servers have and that no rule states. They 
    HY-115, which an application uses. The sentence is corrected to "the session stores of HY-104 and HY-115".
 3. **The case comparisons.** HYR-11 states the comparisons of the case files. HY-130 states the headers of a response;
    HY-4, HY-5, HY-38, HY-62, HY-73, HY-106 and HY-129 gain the facts that the comparisons had stated.
-   - Cause: HYR-7 has the reader compare each expected field by the rule of its file, and some files had no rule for their fields.
+   - Cause: HYR-7 had the reader compare each expected field by the rule of its file, and some files had no rule for their
+     fields.
 
 ## The order of work for H28.11
 
@@ -359,7 +361,7 @@ GREEN.
 2. Write the rules of contracts/protocol.json above, with their cases, RED and GREEN in the three servers.
 3. Write the readers, the mutation cases, the schema and the check, RED before the check exists.
 4. Write the spec from the candidate by the first alignment, and review the diff. The spec fills `rules`, `cases`
-   and the whole `only` sentences of each concern, the representation concern included with the units that H28.7
+   and the `only` sentences of each concern, the representation concern included with the units that H28.7
    writes, and the check verifies the coverage of HYR-2 and the `only` sentences of HYR-6.
 5. Add the case reader and the runner of each language with the results file.
 6. Move the sources of the three languages to the spec, one concern per commit. Each commit adds the cases of its
