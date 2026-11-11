@@ -46,6 +46,36 @@ function testKey(ref: string): string {
   return at < 0 ? ref : ref.slice(0, at);
 }
 
+const BASE_TERMS = ['string', 'number', 'boolean', 'null', 'bigint'];
+
+// Splits the parameters of `function(...)` at their top-level commas; `->` is not a closing bracket.
+function splitTop(list: string): string[] {
+  const parts: string[] = [];
+  let depth = 0;
+  let current = '';
+  for (let i = 0; i < list.length; i++) {
+    const ch = list[i];
+    if (ch === '(' || ch === '<') depth++;
+    if ((ch === ')' || ch === '>') && list[i - 1] !== '-') depth--;
+    if (ch === ',' && depth === 0) {
+      parts.push(current.trim());
+      current = '';
+    } else current += ch;
+  }
+  if (current.trim() !== '') parts.push(current.trim());
+  return parts;
+}
+
+// HYR-5: a term is a base term, a unit or type id of the spec, or list, map, optional or function of terms.
+function termKnown(term: string, ids: Set<string>): boolean {
+  if (BASE_TERMS.includes(term) || ids.has(term)) return true;
+  const generic = /^(?:list|map|optional)<(.*)>$/u.exec(term);
+  if (generic) return termKnown(generic[1], ids);
+  const fn = /^function\((.*)\) -> (.+)$/u.exec(term);
+  if (fn) return [...splitTop(fn[1]), fn[2]].every((t) => termKnown(t, ids));
+  return false;
+}
+
 export function compare(spec: Spec, sources: Record<Lang, Sources>, root: string, protocol: string): Finding[] {
   const out: Finding[] = [];
   const add = (code: string, message: string): void => {
@@ -65,6 +95,26 @@ export function compare(spec: Spec, sources: Record<Lang, Sources>, root: string
   for (const t of spec.types) {
     if (t.only) onlys.push(t.only);
     for (const f of Object.values(t.shape.fields ?? {})) if (typeof f !== 'string' && f.only) onlys.push(f.only);
+  }
+
+  // HYR-5: every term of a member and of a type is in the vocabulary.
+  const ids = new Set<string>([...units.map((u) => u.id), ...spec.types.map((t) => t.id)]);
+  const checkTerm = (where: string, term: string): void => {
+    if (!termKnown(term, ids)) add('TERM_UNKNOWN', `${where} uses ${term}, which is outside the vocabulary (HYR-5)`);
+  };
+  for (const u of units) {
+    for (const m of u.members) {
+      m.inputs.forEach((t, i) => checkTerm(`${m.id} input ${i + 1}`, t));
+      checkTerm(`${m.id} output`, m.output);
+      m.errors.forEach((t) => checkTerm(`${m.id} error`, t));
+    }
+  }
+  for (const t of spec.types) {
+    for (const [field, f] of Object.entries(t.shape.fields ?? {})) checkTerm(`${t.id} field ${field}`, typeof f === 'string' ? f : f.term);
+    if (t.shape.term !== undefined) checkTerm(t.id, t.shape.term);
+    const fn = t.shape.function as { inputs?: string[]; output?: string } | undefined;
+    fn?.inputs?.forEach((term, i) => checkTerm(`${t.id} function input ${i + 1}`, term));
+    if (fn?.output !== undefined) checkTerm(`${t.id} function output`, fn.output);
   }
 
   // HYR-2 and HYR-6: rules exist in protocol.md; a quote is a sentence of it.
