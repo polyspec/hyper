@@ -240,16 +240,16 @@ hyper-test-js: ## Run the browser code tests, including the router conformance c
 	$(call check,the type check of $(JS_PACKAGE),$(TSC) --noEmit -p $(JS_PACKAGE)/tsconfig.json) \
 	$(checks_result)
 
-hyper-test-node: packages node-fixtures ## Run the Node server tests, including the PHP AppTest cases and the JSON conformance cases, and the type check
-	@failed=; \
-	$(call check,the tests of $(NODE_PACKAGE),node $(KIT)/run-tests.$(KIT_EXT) vitest --cwd $(NODE_PACKAGE)) \
+hyper-test-node: packages node-fixtures ## Run the Node server tests, including the case runner (HYR-7), and the type check
+	@mkdir -p $(RECIPE_RESULTS_DIR); failed=; \
+	$(call check,the tests of $(NODE_PACKAGE),RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/node.txt node $(KIT)/run-tests.$(KIT_EXT) vitest --cwd $(NODE_PACKAGE)) \
 	$(call check,the type check of $(NODE_PACKAGE),$(TSC) --noEmit -p $(NODE_PACKAGE)/tsconfig.json) \
 	$(checks_result)
 
-hyper-test-php: server-fixtures ext ## Run the server package tests with the generated program and with the native extension
-	@failed=; \
-	$(call check,PHPUnit with the generated program,COMPOSER_VENDOR_DIR=$(PHP_VENDOR) node $(KIT)/run-tests.$(KIT_EXT) phpunit --cwd $(PHP_PACKAGE)) \
-	$(call check,PHPUnit with the native extension,COMPOSER_VENDOR_DIR=$(PHP_VENDOR) node $(KIT)/run-tests.$(KIT_EXT) phpunit --cwd $(PHP_PACKAGE) --php-extension $(EXT)) \
+hyper-test-php: server-fixtures ext ## Run the server package tests, the case runner included (HYR-7), with the generated program and with the native extension
+	@mkdir -p $(RECIPE_RESULTS_DIR); failed=; \
+	$(call check,PHPUnit with the generated program,RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/php.txt COMPOSER_VENDOR_DIR=$(PHP_VENDOR) node $(KIT)/run-tests.$(KIT_EXT) phpunit --cwd $(PHP_PACKAGE)) \
+	$(call check,PHPUnit with the native extension,RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/php-extension.txt COMPOSER_VENDOR_DIR=$(PHP_VENDOR) node $(KIT)/run-tests.$(KIT_EXT) phpunit --cwd $(PHP_PACKAGE) --php-extension $(EXT)) \
 	$(checks_result)
 
 .PHONY: python-file-parts-test
@@ -259,9 +259,9 @@ python-file-parts-test: server-fixtures ## Run Python multipart unit and renderi
 	$(call check,multipart application cases,PYTHONUNBUFFERED=1 NO_COLOR=1 PYTHON_COLORS=0 $(NODE) $(KIT)/run-tests.$(KIT_EXT) python --venv $(PYTHON_VENV) -- discover -s $(PYTHON_PACKAGE)/tests/render -t $(PYTHON_PACKAGE) -p render_files.py) \
 	$(checks_result)
 
-hyper-test-python: ## Run the Python server package tests, which read the conformance cases of routes, rest, csrf, fields and json
-	@failed=; \
-	$(call check,Python protocol unit tests,PYTHONUNBUFFERED=1 NO_COLOR=1 PYTHON_COLORS=0 $(NODE) $(KIT)/run-tests.$(KIT_EXT) python --venv $(PYTHON_VENV) -- discover -s $(PYTHON_PACKAGE)/tests -t $(PYTHON_PACKAGE) -p 'test_*.py') \
+hyper-test-python: server-fixtures ## Run the Python server package tests, the case runner included (HYR-7)
+	@mkdir -p $(RECIPE_RESULTS_DIR); failed=; \
+	$(call check,Python protocol unit tests,RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/python.txt PYTHONUNBUFFERED=1 NO_COLOR=1 PYTHON_COLORS=0 $(NODE) $(KIT)/run-tests.$(KIT_EXT) python --venv $(PYTHON_VENV) -- discover -s $(PYTHON_PACKAGE)/tests -t $(PYTHON_PACKAGE) -p 'test_*.py') \
 	$(call check,Python package data tests,PYTHONUNBUFFERED=1 NO_COLOR=1 PYTHON_COLORS=0 $(NODE) $(KIT)/run-tests.$(KIT_EXT) python --venv $(PYTHON_VENV) -- discover -s tests/python_package -p 'test_*.py') \
 	$(checks_result)
 
@@ -297,14 +297,33 @@ hyper-test-scripts: packages assets server node-server ## Run the tests of the c
 
 # The recipe check (HYR-8) and the candidate of its spec (HYR-10). The TypeScript reader needs the pinned TypeScript of
 # scripts/recipe/typescript, which `npm ci --prefix scripts/recipe/typescript` installs. The case results (HYR-7) are the
-# files that each language's case runner writes under RECIPE_RESULTS; a missing file fails the check.
+# files that each language's case runner writes under RECIPE_RESULTS_DIR; a missing file fails the check.
 RECIPE_TYPESCRIPT := scripts/recipe/typescript/node_modules
-RECIPE_RESULTS := var/recipe/results
+RECIPE_RESULTS_DIR := $(CURDIR)/var/recipe/results
 
-.PHONY: recipe-check recipe-candidates
+.PHONY: recipe-check recipe-candidates recipe-run-php recipe-run-node recipe-run-python
+# Each case runner writes one line per case to the file that RECIPE_RESULTS names (HYR-7); recipe-check runs the three
+# runners to their end, then the check, which reads their files, and fails when a runner or the check fails.
+recipe-run-php: server-fixtures ## Run the PHP case runner with its results file (HYR-7)
+	@mkdir -p $(RECIPE_RESULTS_DIR)
+	RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/php.txt COMPOSER_VENDOR_DIR=$(PHP_VENDOR) node $(KIT)/run-tests.$(KIT_EXT) phpunit --cwd $(PHP_PACKAGE) -- --filter CaseRunnerTest
+
+recipe-run-node: packages node-fixtures ## Run the Node case runner with its results file (HYR-7)
+	@mkdir -p $(RECIPE_RESULTS_DIR)
+	RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/node.txt node $(KIT)/run-tests.$(KIT_EXT) vitest --cwd $(NODE_PACKAGE) -- tests/case-runner.test.ts
+
+recipe-run-python: server-fixtures ## Run the Python case runner with its results file (HYR-7)
+	@mkdir -p $(RECIPE_RESULTS_DIR)
+	RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/python.txt PYTHONUNBUFFERED=1 NO_COLOR=1 PYTHON_COLORS=0 $(NODE) $(KIT)/run-tests.$(KIT_EXT) python --venv $(PYTHON_VENV) -- discover -s $(PYTHON_PACKAGE)/tests -t $(PYTHON_PACKAGE) -p test_case_runner.py
+
 recipe-check: ## Check contracts/interfaces.json against the sources of the three servers and their case results (HYR-7, HYR-8)
 	@test -d $(RECIPE_TYPESCRIPT) || { echo 'recipe-check needs the pinned TypeScript: run npm ci --prefix scripts/recipe/typescript'; exit 1; }
-	$(NODE) scripts/recipe/check.mts --root . --php-autoload $(PHP_VENDOR)/autoload.php --results php=$(RECIPE_RESULTS)/php.txt --results node=$(RECIPE_RESULTS)/node.txt --results python=$(RECIPE_RESULTS)/python.txt
+	@failed=; \
+	$(call check,the PHP case runner,$(MAKE) --no-print-directory recipe-run-php) \
+	$(call check,the Node case runner,$(MAKE) --no-print-directory recipe-run-node) \
+	$(call check,the Python case runner,$(MAKE) --no-print-directory recipe-run-python) \
+	$(call check,the recipe check,$(NODE) scripts/recipe/check.mts --root . --php-autoload $(PHP_VENDOR)/autoload.php --results php=$(RECIPE_RESULTS_DIR)/php.txt --results node=$(RECIPE_RESULTS_DIR)/node.txt --results python=$(RECIPE_RESULTS_DIR)/python.txt) \
+	$(checks_result)
 
 recipe-candidates: ## Write the candidate of contracts/interfaces.json under var/recipe, with the hand-written fields listed beside it (HYR-10)
 	@test -d $(RECIPE_TYPESCRIPT) || { echo 'recipe-candidates needs the pinned TypeScript: run npm ci --prefix scripts/recipe/typescript'; exit 1; }
