@@ -37,6 +37,7 @@ final class CaseSteps
             'json.json encode' => JsonSteps::encode(...),
             'json.json decode' => JsonSteps::decode(...),
             'keep.json cases' => KeptSteps::cases(...),
+            'keep.json select' => KeptSteps::select(...),
             'reads.json cases' => ReadsSteps::cases(...),
             'routes.json cases' => RoutesSteps::cases(...),
             'routes.json baseCases' => RoutesSteps::baseCases(...),

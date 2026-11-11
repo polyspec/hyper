@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Polyspec\Hyper;
 
 /**
- * Kept values (HY-37, HY-38). Values outside the template data model are ignored. The JavaScript implementation
- * follows the same rules; both pass contracts/keep.json.
+ * Kept values (HY-37, HY-38). Values outside the template data model are ignored; the cases of contracts/keep.json
+ * hold the rules.
  *
  * @internal
  */
@@ -25,8 +25,8 @@ final class Kept
     {
         foreach ($kept as [$path, $value]) {
             if (DataModel::contains($value)) {
-                $applied = false;
-                $data = self::replaceInArray($data, explode('.', $path), $value, $applied);
+                $replaced = self::replaceAt($data, explode('.', $path), $value)[0];
+                $data = is_array($replaced) ? $replaced : $data;
             }
         }
 
@@ -34,7 +34,7 @@ final class Kept
     }
 
     /**
-     * Returns the kept values that conform to the data, by path (HY-17, HY-38).
+     * Returns the kept values that conform to the data, by path (HY-17, HY-38), applying each one before the next.
      *
      * @param array<array-key, mixed> $data
      * @param list<array{0: string, 1: mixed}> $kept
@@ -44,77 +44,73 @@ final class Kept
     {
         $selected = [];
         foreach ($kept as [$path, $value]) {
-            $applied = false;
-            if (DataModel::contains($value)) {
-                $data = self::replaceInArray($data, explode('.', $path), $value, $applied);
+            if (!DataModel::contains($value)) {
+                continue;
             }
+            [$replaced, $applied] = self::replaceAt($data, explode('.', $path), $value);
             if ($applied) {
                 $selected[$path] = $value;
             }
+            $data = is_array($replaced) ? $replaced : $data;
         }
 
         return $selected;
     }
 
-    /** @param non-empty-list<string> $keys */
-    private static function replace(mixed $container, array $keys, mixed $value, bool &$applied): mixed
+    /**
+     * Returns the container with the value at the path of keys replaced when it conforms, and whether it replaced
+     * the value; an absent path changes nothing. A list accepts only an index.
+     *
+     * @param list<string> $keys
+     * @return array{0: mixed, 1: bool}
+     */
+    private static function replaceAt(mixed $container, array $keys, mixed $value): array
     {
+        $key = $keys[0] ?? '';
+        $rest = array_slice($keys, 1);
         if ($container instanceof \stdClass) {
-            $key = $keys[0];
             if (!property_exists($container, $key)) {
-                return $container;
+                return [$container, false];
             }
             $copy = clone $container;
-            $rest = array_slice($keys, 1);
             if ($rest === []) {
-                if (self::conforms($value, $copy->{$key})) {
-                    $copy->{$key} = $value;
-                    $applied = true;
+                if (!self::conforms($value, $copy->{$key})) {
+                    return [$container, false];
                 }
-            } else {
-                $copy->{$key} = self::replace($copy->{$key}, $rest, $value, $applied);
+                $copy->{$key} = $value;
+
+                return [$copy, true];
             }
+            [$copy->{$key}, $applied] = self::replaceAt($copy->{$key}, $rest, $value);
 
-            return $copy;
+            return [$copy, $applied];
         }
-
-        return is_array($container) ? self::replaceInArray($container, $keys, $value, $applied) : $container;
-    }
-
-    /**
-     * @param array<array-key, mixed> $container
-     * @param non-empty-list<string> $keys
-     * @return array<array-key, mixed>
-     */
-    private static function replaceInArray(array $container, array $keys, mixed $value, bool &$applied): array
-    {
-        $key = $keys[0];
-        $rest = array_slice($keys, 1);
+        if (!is_array($container)) {
+            return [$container, false];
+        }
         if (array_is_list($container) && $container !== []) {
-            // A list accepts only an index.
             if (preg_match('/^\d+$/D', $key) !== 1) {
-                return $container;
+                return [$container, false];
             }
             $index = (int) $key;
         } else {
             $index = $key;
         }
         if (!array_key_exists($index, $container)) {
-            return $container;
+            return [$container, false];
         }
         if ($rest === []) {
-            if (self::conforms($value, $container[$index])) {
-                $container[$index] = $value;
-                $applied = true;
+            if (!self::conforms($value, $container[$index])) {
+                return [$container, false];
             }
+            $container[$index] = $value;
 
-            return $container;
+            return [$container, true];
         }
-        $container[$index] = self::replace($container[$index], $rest, $value, $applied);
+        [$container[$index], $applied] = self::replaceAt($container[$index], $rest, $value);
 
-        return $container;
+        return [$container, $applied];
     }
-
 
     /**
      * Returns true when a kept value has the shape of the data value (HY-38): the same type, the same
@@ -123,11 +119,11 @@ final class Kept
      */
     private static function conforms(mixed $value, mixed $current): bool
     {
-        if (self::kind($current) !== self::kind($value)) {
+        if (self::valueKind($current) !== self::valueKind($value)) {
             return false;
         }
-        $data = self::entries($current);
-        $kept = self::entries($value);
+        $data = self::mapEntries($current);
+        $kept = self::mapEntries($value);
         if ($data !== null && $kept !== null) {
             if ($data === []) {
                 return true;
@@ -159,7 +155,7 @@ final class Kept
      *
      * @return array<array-key, mixed>|null
      */
-    private static function entries(mixed $value): ?array
+    private static function mapEntries(mixed $value): ?array
     {
         return match (true) {
             $value instanceof \stdClass => get_object_vars($value),
@@ -169,7 +165,7 @@ final class Kept
     }
 
     /** Returns the value type of the data model: null, bool, number, string, list or map. */
-    private static function kind(mixed $value): string
+    private static function valueKind(mixed $value): string
     {
         return match (true) {
             $value === null => 'null',

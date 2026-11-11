@@ -33,6 +33,7 @@ STEPS = {
     ("json.json", "encode"): json_steps.encode_text,
     ("json.json", "decode"): json_steps.decode_text,
     ("keep.json", "cases"): keep_steps.cases,
+    ("keep.json", "select"): keep_steps.select,
     ("reads.json", "cases"): reads_steps.cases,
     ("representations.json", "manifestRejections"): representations_steps.manifest_rejections,
     ("representations.json", "openRejections"): representations_steps.open_rejections,

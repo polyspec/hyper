@@ -21,7 +21,7 @@ from . import _context
 from ._context import Context
 from ._csrf import Csrf
 from ._data_model import check
-from ._kept import apply, select
+from ._kept import Kept
 from ._media import JSON, TEXT_HTML
 from ._manifest import Manifest
 from ._planner import changed_topics, select as select_regions
@@ -689,7 +689,7 @@ class App:
                     source = {}
                 if kept_path in source:
                     values.append((kept_path, source[kept_path]))
-            selected_kept = select(region_data, values)
+            selected_kept = Kept.select(region_data, values)
             if selected_kept != {}:
                 kept[name] = selected_kept
         return kept
@@ -715,7 +715,7 @@ class App:
             pairs = list(
                 (path, value) for path, value in (kept.get(name) or {}).items()
             )
-            applied[name] = self.renderer.bind(apply(region_data, pairs))
+            applied[name] = self.renderer.bind(Kept.apply(region_data, pairs))
         try:
             return self._render_document(
                 request,

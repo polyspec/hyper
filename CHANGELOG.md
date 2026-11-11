@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- The kept values are the unit `Kept` in the three servers, with the static members `apply` and `select` and the private members `replaceAt`, `conforms`, `mapEntries` and `valueKind`; Node no longer applies them through the browser package. The section `select` of `contracts/keep.json` holds the values that the server sends and the unchanged region data, and the PHP step gives each case as arrays and as stdClass maps; they replace the native kept tests of each server (HY-38) (H28.11).
+
 - The masked session token is the unit `Csrf` in the three servers, with the static members `masked`, `mask`, `verify`, `bytes` and `xor`. The new mask of every masked value is the section `masked` of `contracts/csrf.json`, which replaces the native csrf tests of each server (HY-24) (H28.11).
 
 - The parse of a Cookie header is the unit `Cookies` in the three servers, with the static members `parse`, `percentDecode` and `utf8`, and the spec lists them (HY-129) (H28.11).

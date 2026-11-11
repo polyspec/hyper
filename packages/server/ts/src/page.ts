@@ -1,11 +1,11 @@
 // Renders the route page as a document or as JSON (HY-12 to HY-19, HY-26, HY-30, HY-31, HY-38, HY-44, HY-52,
 // HY-53, HY-69). The document is the browser rendering of the document JSON value, with the browser code.
 import { createHash } from 'node:crypto';
-import { decodeResponse, keepRead, renderDocument, type Application, type RouteDeclaration, type RouteReads } from '@polyspec/hyper-client';
+import { decodeResponse, keepRead, keptPaths, renderDocument, type Application, type RouteDeclaration, type RouteReads } from '@polyspec/hyper-client';
 import type { Handlers, RouteHandlers } from './app.js';
 import { contextHash, heldContext, namesHash, withContext, type ContextHandler } from './context.js';
-import { encodeJson } from './json.js';
-import { keptValues } from './kept.js';
+import { decodeJson, encodeJson, JsonDecodeError, type DecodedValue } from './json.js';
+import { Kept } from './kept.js';
 import { changedTopics, selectRegions } from './planner.js';
 import type { Reply } from './reply.js';
 import { HYPER_JSON, type Request } from './request.js';
@@ -114,7 +114,7 @@ export async function renderPage<S extends object>(input: PageInput<S>, environm
   ];
   // HY-128: a JSON response, and a document that embeds its data, hold the member context after build.
   if (held !== null && (request.wantsJson() || embeds)) entries.push(['context', contextMember(held, request, environment.build, embeds)]);
-  entries.push(['shared', shared], ['regions', new Map(data)], ['kept', keptValues(request, input.session, data, application, environment.https)]);
+  entries.push(['shared', shared], ['regions', new Map(data)], ['kept', kept(request, input.session, data, application, environment.https)]);
   const value: MapValue = new Map(entries);
   // HY-69: the reply gives a page with status 200 the status 403.
   const pageStatus = status === 200 ? (reply.statusValue() ?? status) : status;
@@ -144,4 +144,34 @@ export async function renderPage<S extends object>(input: PageInput<S>, environm
 function contextMember(held: MapValue, request: Request, build: string, embeds: boolean): MapValue {
   const hash = contextHash(build, encodeJson(held));
   return new Map<string, Value>(embeds || !namesHash(request, hash) ? [['hash', hash], ['value', held]] : [['hash', hash]]);
+}
+
+// Returns the conforming `server` and `cookie` kept values of the regions, by region and path (HY-17, HY-38).
+function kept(request: Request, session: Session, data: Map<string, MapValue>, application: Application, https: boolean): MapValue {
+  // On HTTPS only the host-only cookie counts, which another host cannot set (HY-38).
+  const cookie = decodedCookie(request.cookie(https || request.https ? '__Host-hy-keep' : 'hy-keep'));
+  const values: MapValue = new Map();
+  for (const [name, regionData] of data) {
+    const stored = session.kept(name);
+    const cookieValues = cookie instanceof Map ? cookie.get(name) : undefined;
+    const pairs: [string, Value | DecodedValue][] = [];
+    for (const [path, kind] of Object.entries(keptPaths(application.manifest, name))) {
+      const value = kind === 'server' ? stored.get(path) : kind === 'cookie' && cookieValues instanceof Map ? cookieValues.get(path) : undefined;
+      if (value !== undefined) pairs.push([path, value]);
+    }
+    const selected = Kept.select(regionData, pairs);
+    if (selected.size > 0) values.set(name, selected);
+  }
+  return values;
+}
+
+// Returns the decoded hy-keep cookie, or null for a cookie that is absent or not JSON (HY-42).
+function decodedCookie(text: string | null): DecodedValue {
+  if (text === null) return null;
+  try {
+    return decodeJson(text);
+  } catch (error) {
+    if (error instanceof JsonDecodeError) return null;
+    throw error;
+  }
 }

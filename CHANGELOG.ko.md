@@ -6,6 +6,8 @@
 
 ## Unreleased
 
+- kept 값은 세 서버에서 unit `Kept`이다. static member `apply`, `select`와 private member `replaceAt`, `conforms`, `mapEntries`, `valueKind`를 가진다. Node는 더 이상 브라우저 package로 kept 값을 적용하지 않는다. `contracts/keep.json`의 section `select`는 서버가 보내는 값과 바뀌지 않는 region data를 담는다. PHP step은 각 case를 배열과 stdClass map 두 형태로 준다. 이들은 각 서버의 native kept 테스트를 대신한다(HY-38)(H28.11).
+
 - mask된 session token은 세 서버에서 unit `Csrf`이다. static member `masked`, `mask`, `verify`, `bytes`, `xor`를 가진다. mask된 값마다 새 mask를 쓰는 동작은 `contracts/csrf.json`의 section `masked`이며, 각 서버의 native csrf 테스트를 대신한다(HY-24)(H28.11).
 
 - Cookie header의 parse는 세 서버에서 unit `Cookies`이다. static member `parse`, `percentDecode`, `utf8`을 가지며, spec이 이들을 나열한다(HY-129)(H28.11).

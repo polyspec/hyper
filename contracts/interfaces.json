@@ -2019,16 +2019,172 @@
             },
             "node": {
               "file": "packages/server/ts/src/kept.ts",
-              "kind": "functions",
+              "kind": "class",
               "internal": true
             },
             "python": {
               "file": "packages/server/python/src/polyspec/hyper/_kept.py",
-              "kind": "functions",
+              "kind": "class",
               "internal": true
             }
           },
-          "members": []
+          "members": [
+            {
+              "id": "kept.apply",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "map<value>",
+                "list<list<value>>"
+              ],
+              "output": "map<value>",
+              "errors": [],
+              "state": "Replaces the value at each kept path when the path exists and the kept value conforms to it.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Kept.php::Polyspec\\Hyper\\Kept::apply",
+                  "signature": "public static function apply(array $data, array $kept): array"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/kept.ts::Kept.apply",
+                  "signature": "static apply(data: MapValue, kept: readonly (readonly [string, Value | DecodedValue])[]): MapValue"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_kept.py::Kept.apply",
+                  "signature": "def apply(data: dict, kept: list[tuple[str, object]]) -> dict"
+                }
+              }
+            },
+            {
+              "id": "kept.select",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "map<value>",
+                "list<list<value>>"
+              ],
+              "output": "map<value>",
+              "errors": [],
+              "state": "Returns the kept values that conform to the data, by path, applying each one before the next.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Kept.php::Polyspec\\Hyper\\Kept::select",
+                  "signature": "public static function select(array $data, array $kept): array"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/kept.ts::Kept.select",
+                  "signature": "static select(data: MapValue, kept: readonly (readonly [string, Value | DecodedValue])[]): MapValue"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_kept.py::Kept.select",
+                  "signature": "def select(data: dict, kept: list[tuple[str, object]]) -> dict"
+                }
+              }
+            },
+            {
+              "id": "kept.replaceAt",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "value",
+                "list<string>",
+                "value"
+              ],
+              "output": "list<value>",
+              "errors": [],
+              "state": "Returns the container with the value at a path replaced when it conforms, and whether it replaced it.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Kept.php::Polyspec\\Hyper\\Kept::replaceAt",
+                  "signature": "private static function replaceAt(mixed $container, array $keys, mixed $value): array"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/kept.ts::Kept.replaceAt",
+                  "signature": "private static replaceAt(container: Value, keys: readonly string[], value: Value): [Value, boolean]"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_kept.py::Kept._replace_at",
+                  "signature": "def _replace_at(container: object, keys: list[str], value: object) -> tuple[object, bool]"
+                }
+              }
+            },
+            {
+              "id": "kept.conforms",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "value",
+                "value"
+              ],
+              "output": "boolean",
+              "errors": [],
+              "state": "Tells whether a kept value has the shape of the data value.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Kept.php::Polyspec\\Hyper\\Kept::conforms",
+                  "signature": "private static function conforms(mixed $value, mixed $current): bool"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/kept.ts::Kept.conforms",
+                  "signature": "private static conforms(value: Value, current: Value): boolean"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_kept.py::Kept._conforms",
+                  "signature": "def _conforms(value: object, current: object) -> bool"
+                }
+              }
+            },
+            {
+              "id": "kept.mapEntries",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "value"
+              ],
+              "output": "optional<map<value>>",
+              "errors": [],
+              "state": "Returns the entries of a map of the data model, or none for another value.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Kept.php::Polyspec\\Hyper\\Kept::mapEntries",
+                  "signature": "private static function mapEntries(mixed $value): ?array"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/kept.ts::Kept.mapEntries",
+                  "signature": "private static mapEntries(value: Value): MapValue | null"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_kept.py::Kept._map_entries",
+                  "signature": "def _map_entries(value: object) -> Optional[dict]"
+                }
+              }
+            },
+            {
+              "id": "kept.valueKind",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "value"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Returns the value type of the data model: null, bool, number, string, list or map.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Kept.php::Polyspec\\Hyper\\Kept::valueKind",
+                  "signature": "private static function valueKind(mixed $value): string"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/kept.ts::Kept.valueKind",
+                  "signature": "private static valueKind(value: Value): string"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_kept.py::Kept._value_kind",
+                  "signature": "def _value_kind(value: object) -> str"
+                }
+              }
+            }
+          ]
         }
       ]
     },
@@ -3200,6 +3356,40 @@
               "compare": "ordered",
               "sentence": "HY-38.19",
               "state": "`expected` is the region data `data` after the kept values `kept`, a list of `[path, value]` pairs, apply by HY-38."
+            }
+          }
+        },
+        "select": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "data": {
+              "role": "input"
+            },
+            "kept": {
+              "role": "input"
+            },
+            "selected": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-38.8",
+              "state": "`selected` is the values of `kept`, a list of `[path, value]` pairs, that conform to the region data `data` and that the server sends in `kept`, by path, each applied before the next."
+            },
+            "unchanged": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-38.9",
+              "state": "`unchanged` states whether the region data `data` is the same after the selection, because the kept values never change `regions`."
             }
           }
         }
