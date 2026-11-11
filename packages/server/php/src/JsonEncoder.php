@@ -16,6 +16,7 @@ final class JsonEncoder
      *
      * @param array<string, string> $params
      * @param string $build the build id of the application, which follows `params` (HY-128)
+     * @param ?array<string, mixed> $context the member `context` of HY-128, or null without a context
      * @param array<array-key, mixed> $shared
      * @param array<string, array<array-key, mixed>> $regions region data by region name
      * @param array<string, array<string, mixed>> $kept kept values by region name and path
@@ -26,6 +27,7 @@ final class JsonEncoder
         string $route,
         array $params,
         string $build,
+        ?array $context,
         array $shared,
         array $regions,
         array $kept = [],
@@ -35,19 +37,27 @@ final class JsonEncoder
             $encoded[$name] = self::map($data);
         }
 
-        return [
+        $value = [
             'env' => ['timezone' => $timezone],
             'route' => $route,
             'params' => self::map($params),
             'build' => $build,
+        ];
+        // HY-128: the member context follows build, and an application without a context has none.
+        if ($context !== null) {
+            $value['context'] = $context;
+        }
+
+        return [
+            ...$value,
             'shared' => self::map($shared),
             'regions' => self::map($encoded),
             'kept' => self::map($kept),
         ];
     }
 
-    /** @param array<string, mixed> $value */
-    public static function encode(array $value): string
+    /** @param array<array-key, mixed>|\stdClass $value */
+    public static function encode(array|\stdClass $value): string
     {
         return json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
     }

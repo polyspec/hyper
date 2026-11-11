@@ -213,8 +213,9 @@ package-check: packages node-fixtures ## Install the npm packages into tests/pac
 server: packages assets ## Build the board server program from installed dependencies: its templates and generated PHP program (HY-48, HY-125)
 	$(NODE) $(BUILD_PACKAGE)/bin/hyper-build-server.mjs --manifest $(BOARD)/app/app.json --templates $(BOARD)/templates --output $(BOARD)/build/server --php-namespace 'Polyspec\Hyper\Examples\Board\Program' --build $(abspath $(BOARD)/build/build.json)
 
-server-fixtures: packages ## Build the server program of the PHP test fixtures (HY-48, HY-125)
+server-fixtures: packages ## Build the server program of the PHP test fixtures and the programs of the context cases (HY-48, HY-125)
 	$(NODE) $(BUILD_PACKAGE)/bin/hyper-build-server.mjs --manifest $(FIXTURES)/app.json --templates $(FIXTURES)/templates --output $(PHP_PACKAGE)/tests/build/server --php-namespace 'Polyspec\Hyper\Tests\Program' --build $(abspath $(FIXTURES)/build.json)
+	$(NODE) scripts/context-programs.mjs --contract $(abspath contracts/context.json) --output $(abspath var/context-programs)
 
 # A Node server bundle keeps the packages of node_modules external, and Node loads them from there: a CommonJS package that
 # requires Node modules cannot run inside an ESM bundle.

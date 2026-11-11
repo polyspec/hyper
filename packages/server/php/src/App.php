@@ -62,6 +62,8 @@ final class App
         private readonly ?\Closure $sessionSetup,
         /** The bytes of the static shell of the client rendering (HY-62). */
         private readonly string $shell,
+        /** The context handler, which returns the context of the application (HY-124), or null without one. */
+        private readonly ?\Closure $context,
         string $program,
     ) {
         $this->container = new Container();
@@ -97,6 +99,8 @@ final class App
      *     that `around` returns (HY-97)
      * @param ?\Closure(): void $sessionSetup called just before a session starts, for the settings of the session
      *     that a request reads, such as the primary of `RedisSentinelSessions`; an error fails the request (HY-115)
+     * @param ?\Closure(mixed): array $context the context handler, which receives the selection value and returns the
+     *     context of the application, a map of the data model (HY-124)
      */
     public static function open(
         string $manifest,
@@ -116,6 +120,7 @@ final class App
         ?\Closure $written = null,
         ?\Closure $around = null,
         ?\Closure $sessionSetup = null,
+        ?\Closure $context = null,
     ): self {
         if ($bodyLimit < 1) {
             throw new \InvalidArgumentException("body limit {$bodyLimit} is not a positive number of bytes");
@@ -203,6 +208,7 @@ final class App
             $around,
             $sessionSetup,
             $shell,
+            $context,
             $program,
         );
     }
@@ -399,14 +405,17 @@ final class App
         if ($selected instanceof Response) {
             return $selected;
         }
-        if ($client !== null) {
-            // HY-62: the data base path answers only JSON requests and actions, before the session is read.
-            if ($request->method !== 'GET' && ($request->method !== 'POST' || !isset($handler['post']))) {
-                return Response::text(405, 'Method Not Allowed');
-            }
-            if ($selected === self::PAGE_TYPE) {
-                return self::notAcceptable();
-            }
+        // HY-116: the method check of the selected type comes before the refusals of HY-62 and HY-127.
+        if ($request->method !== 'GET' && ($request->method !== 'POST' || !isset($handler['post']))) {
+            return Response::text(405, 'Method Not Allowed');
+        }
+        // HY-62: the data base path answers only JSON requests and actions, before the session is read.
+        if ($client !== null && $selected === self::PAGE_TYPE) {
+            return self::notAcceptable();
+        }
+        // HY-127: the Hyper-Context header is checked before the session, the token check and every handler.
+        if ($this->context !== null && self::invalidHyperContext($request)) {
+            return Response::text(400, 'Bad Request');
         }
         $session = new Session($store);
         $flash = $session->takeFlash();
@@ -458,10 +467,58 @@ final class App
             [
                 'Content-Type' => 'text/html; charset=utf-8',
                 'Cache-Control' => 'no-cache',
-                'Vary' => 'Accept, HX-Request, HX-Current-URL',
+                'Vary' => $this->vary(),
             ],
             $this->shell,
         );
+    }
+
+    /** Returns the Vary of a response with text/html or application/vnd.hyper+json (HY-117). */
+    private function vary(): string
+    {
+        return 'Accept, HX-Request, HX-Current-URL' . ($this->context === null ? '' : ', Hyper-Context');
+    }
+
+    /** Returns true when the request sends a Hyper-Context that is not a context hash, lowercase hexadecimal (HY-127). */
+    private static function invalidHyperContext(Request $request): bool
+    {
+        $held = $request->header('Hyper-Context');
+
+        return $held !== null && preg_match('/^[0-9a-f]{64}$/D', $held) !== 1;
+    }
+
+    /**
+     * Returns the shared data without the context, which a JSON response holds as its member `context` (HY-128).
+     *
+     * @param array<array-key, mixed> $shared
+     * @return array<array-key, mixed>
+     */
+    private static function withoutContext(array $shared): array
+    {
+        unset($shared['context']);
+
+        return $shared;
+    }
+
+    /**
+     * Keeps the shared values that the route reads (HY-73); the context is sent whole and keeps its place (HY-126).
+     *
+     * @param array<array-key, mixed> $shared
+     * @return array<array-key, mixed>
+     */
+    private function readsShared(string $route, array $shared): array
+    {
+        $read = $this->reads->shared($route, $shared);
+        $kept = [];
+        foreach ($shared as $name => $value) {
+            if ($name === 'context') {
+                $kept[$name] = $value;
+            } elseif (array_key_exists($name, $read)) {
+                $kept[$name] = $read[$name];
+            }
+        }
+
+        return $kept;
     }
 
     /**
@@ -635,11 +692,19 @@ final class App
         $json = $request->wantsJson();
         $provided = [Request::class => $request, Reply::class => $reply];
         $shared = ['title' => $route['title'], 'csrf' => $request->csrfToken()];
+        // HY-124: the context handler runs after the action and before the shared handler and any loader.
+        $context = null;
+        if ($this->context !== null) {
+            $context = self::map(($this->context)($request->selection()), 'the context handler');
+            DataModel::check(['context' => $context]);
+            $shared['context'] = $context;
+        }
         if ($this->shared !== null) {
-            $shared = array_replace(
-                $shared,
-                self::map($this->container->call($this->shared, $provided), 'the shared handler'),
-            );
+            $returned = self::map($this->container->call($this->shared, $provided), 'the shared handler');
+            if (array_key_exists('context', $returned)) {
+                throw new \LogicException('the shared handler returned the key context (HY-124)');
+            }
+            $shared = array_replace($shared, $returned);
         }
 
         $changed = RegionPlanner::changedTopics($request, $flash, $basePath);
@@ -676,7 +741,7 @@ final class App
         // HY-44: every value that the handlers returned belongs to the data model, also a value that no template reads.
         DataModel::check(['shared' => $shared, 'regions' => $data]);
         // HY-73: the page keeps only the paths that the templates of the route read.
-        $shared = $this->reads->shared($route['name'], $shared);
+        $shared = $this->readsShared($route['name'], $shared);
         foreach ($data as $name => $regionData) {
             $data[$name] = $this->reads->region($route['name'], $name, $regionData);
         }
@@ -685,14 +750,18 @@ final class App
         if ($status === 200 && $reply->statusValue() !== null) {
             $status = $reply->statusValue();
         }
-        $vary = 'Accept, HX-Request, HX-Current-URL';
+        $vary = $this->vary();
         if ($json) {
+            // HY-128: the member context holds the hash, and the value unless the request holds that hash (HY-127).
             $response = JsonEncoder::value(
                 $this->timezone,
                 $route['name'],
                 $request->params(),
                 $this->build->id,
-                $shared,
+                $context === null
+                    ? null
+                    : Context::member($this->build->id, $context, $request->header('Hyper-Context')),
+                self::withoutContext($shared),
                 $data,
                 $kept,
             );
@@ -921,12 +990,17 @@ final class App
         $response = null;
         if ($embed && $routeRegionNames !== []) {
             $embedded = array_intersect_key($data, array_flip($routeRegionNames));
+            // HY-31: an embedded document holds build and context with its value, whatever the request holds.
+            $context = isset($shared['context'])
+                ? Context::member($this->build->id, $shared['context'], null)
+                : null;
             $response = JsonEncoder::value(
                 $this->timezone,
                 $route['name'],
                 $request->params(),
                 $this->build->id,
-                $shared,
+                $context,
+                self::withoutContext($shared),
                 $embedded,
                 array_intersect_key($kept, $embedded),
             );
