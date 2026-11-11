@@ -51,6 +51,16 @@ def is_test_class(node: ast.ClassDef) -> bool:
     return False
 
 
+def assigned_names(target: ast.expr) -> list[str]:
+    if isinstance(target, ast.Name):
+        return [target.id]
+    if isinstance(target, (ast.Tuple, ast.List)):
+        return [name for elt in target.elts for name in assigned_names(elt)]
+    if isinstance(target, ast.Starred):
+        return assigned_names(target.value)
+    return []
+
+
 def read_module(root: Path, rel: str, out: dict) -> None:
     tree = ast.parse((root / rel).read_text(encoding="utf-8"), filename=rel)
     stem = Path(rel).stem
@@ -108,11 +118,14 @@ def read_module(root: Path, rel: str, out: dict) -> None:
 
     for node in tree.body:
         if isinstance(node, ast.Assign):
-            for target in node.targets:
-                if isinstance(target, ast.Name) and not is_dunder(target.id):
-                    out["constants"].append(
-                        {"file": rel, "name": target.id, "visibility": visibility(target.id, module_internal)}
-                    )
+            targets = node.targets
+        elif isinstance(node, ast.AnnAssign) and node.value is not None:
+            targets = [node.target]
+        else:
+            targets = []
+        for name in [n for target in targets for n in assigned_names(target)]:
+            if not is_dunder(name):
+                out["constants"].append({"file": rel, "name": name, "visibility": visibility(name, module_internal)})
         if isinstance(node, ast.TypeAlias):
             name = node.name.id
             out["types"].append(
