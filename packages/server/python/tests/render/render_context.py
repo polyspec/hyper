@@ -112,13 +112,24 @@ def open_application(
 ) -> App:
     """Opens the application with the handlers of its contract: a loader stops with NotFound when it says so, an action
     returns the page with its status or the redirect, and the handlers record their calls in order. The shared handler
-    returns the shared data of the case, and an application without shared data has no shared handler. The context handler returns the decoded JSON text `context`, or the context of
-    the application, as it is, also a value that is not a map, so that the server checks it (HY-124); the response hook
+    returns the shared data of the case, and an application without shared data has no shared handler. The context
+    handler returns the decoded JSON text `context`, or the context of the application, as it is, also a value that is not a map, so that the server checks it (HY-124); the response hook
     appends the failure of each response to `failures` (HY-60)."""
     loaders = application["loaders"]
-    # An absent member declares none.
-    embed = set(application.get("embedData", []))
+    if not isinstance(loaders, dict) or not all(
+        isinstance(data, dict) for data in loaders.values()
+    ):
+        raise ValueError("the loaders are not a map of maps")
+    # An absent member declares none; a present member must have its type.
+    embed_data = application.get("embedData", [])
+    if not isinstance(embed_data, list) or not all(
+        isinstance(name, str) for name in embed_data
+    ):
+        raise ValueError("embedData is not a list of strings")
+    embed = set(embed_data)
     actions = application.get("actions", {})
+    if not isinstance(actions, dict):
+        raise ValueError("the actions are not a map")
 
     def loader(route: str, data: dict):
         def load(request: Request, reply: Reply) -> dict:
@@ -138,8 +149,11 @@ def open_application(
         def run(request: Request) -> Result:
             calls.append(f"action:{route}")
             if "redirect" in spec:
+                if not isinstance(spec["redirect"], str):
+                    raise ValueError(f"the redirect of {route} is not a string")
                 return Result.redirect(spec["redirect"])
-            if not isinstance(spec.get("page"), int) or not isinstance(
+            # type() and not isinstance(): a bool is an int of Python, but not an integer of JSON.
+            if type(spec.get("page")) is not int or not isinstance(
                 spec.get("data"), dict
             ):
                 raise ValueError(

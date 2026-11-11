@@ -16,10 +16,7 @@ use Polyspec\Hyper\Result;
 /**
  * Opens one application of contracts/context.json with its declared handlers and records the calls of the handlers
  * (HY-124). The program of each application is built by scripts/contract-programs.mjs into var/contract-programs.
- *
- * @phpstan-type Application array{manifest: array<string, mixed>, shared: array<string, mixed>, context?: string,
- *     loaders: array<string, array<string, mixed>>, embedData: list<string>,
- *     actions: array<string, array<string, mixed>>}
+ * The application is the decoded value of the contract, whose members are checked where they are read.
  */
 final class ContextRun
 {
@@ -35,7 +32,7 @@ final class ContextRun
     /** the failure that the response hook received with the last response (HY-60), or null */
     public ?string $failure = null;
 
-    /** @param Application $application */
+    /** @param array<array-key, mixed> $application */
     public function __construct(
         private readonly string $key,
         private readonly array $application,
@@ -47,7 +44,7 @@ final class ContextRun
      * Opens the application with the shared data of the case, which replaces the shared data of the application; an
      * application that declares no shared data and a case that gives none opens with no shared handler.
      *
-     * @param array<string, mixed>|null $shared
+     * @param array<array-key, mixed>|null $shared
      * @param array<string, callable|string> $functions the host functions of the case (HYC-24)
      * @param ?string $context the JSON text of the context of the case, which replaces the context of the application
      */
@@ -58,10 +55,11 @@ final class ContextRun
         $routes = [];
         $names = array_map(
             static fn (array $route): string => self::string($route['name'] ?? null, 'a route name'),
-            $this->application['manifest']['routes'],
+            $this->routes(),
         );
         // An absent member declares none; a member that is present must have its type.
         foreach (self::map($this->application['loaders'] ?? null, 'the loaders') as $name => $spec) {
+            // PHP keeps a decimal name as an integer key; the name is its string.
             $name = (string) $name;
             $loader = $this->loader($name, self::map($spec, "the loader {$name}"));
             if (in_array($name, $names, true)) {
@@ -73,6 +71,7 @@ final class ContextRun
         }
         if (array_key_exists('actions', $this->application)) {
             foreach (self::map($this->application['actions'], 'the actions') as $route => $spec) {
+                // PHP keeps a decimal name as an integer key; the name is its string.
                 $route = (string) $route;
                 $routes[$route]['post'] = $this->action($route, self::map($spec, "the action of {$route}"));
             }
@@ -113,7 +112,9 @@ final class ContextRun
             onResponse: function (Request $request, Response $response, float $elapsed, Reply $reply, ?string $failure): void {
                 $this->failure = $failure;
             },
+            // @phpstan-ignore argument.type (a case hands the server a value that is not a map, which the type of the handler excludes)
             context: $handler,
+            // @phpstan-ignore argument.type (the cases of functions.json hand the engine a value that is not a function, which it refuses)
             functions: $functions,
         );
     }
@@ -156,7 +157,7 @@ final class ContextRun
     /**
      * Sends a request of a case, with the form fields of the case and the token when the case states `csrf: true`.
      *
-     * @param array<string, mixed> $request
+     * @param array<array-key, mixed> $request
      */
     public function send(App $app, ArraySession $session, array $request): Response
     {
@@ -189,7 +190,7 @@ final class ContextRun
     /**
      * Returns a string field of a request, and fails for any other value.
      *
-     * @param array<string, mixed> $request
+     * @param array<array-key, mixed> $request
      */
     private static function text(array $request, string $field): string
     {
@@ -204,7 +205,7 @@ final class ContextRun
     /**
      * Returns a field of a request that maps names to strings, and fails for any other value.
      *
-     * @param array<string, mixed> $request
+     * @param array<array-key, mixed> $request
      * @return array<string, string>
      */
     private static function texts(array $request, string $field): array
@@ -270,6 +271,25 @@ final class ContextRun
         return $value;
     }
 
+    /**
+     * Returns a map of the application whose keys are names, and fails for any other value; a decimal name, which PHP
+     * keeps as an integer key, is not a name of the data of a page.
+     *
+     * @return array<string, mixed>
+     */
+    private static function stringMap(mixed $value, string $what): array
+    {
+        $names = [];
+        foreach (self::map($value, $what) as $key => $item) {
+            if (!is_string($key)) {
+                throw new \UnexpectedValueException("{$what} has a key that is not a name");
+            }
+            $names[$key] = $item;
+        }
+
+        return $names;
+    }
+
     /** @param array<array-key, mixed> $spec */
     private function loader(string $name, array $spec): \Closure
     {
@@ -286,7 +306,7 @@ final class ContextRun
         $embed = array_key_exists('embedData', $this->application)
             && in_array($name, self::strings($this->application['embedData'], 'embedData'), true);
 
-        return function (Reply $reply) use ($name, $spec, $embed): array {
+        return function (Reply $reply) use ($spec, $embed): array {
             if ($embed) {
                 $reply->embedData();
             }
@@ -308,15 +328,34 @@ final class ContextRun
                 throw new \UnexpectedValueException("the action of {$route} has no redirect and no integer page");
             }
 
-            return Result::page($page, self::map($spec['data'] ?? null, "the data of the action of {$route}"));
+            return Result::page($page, self::stringMap($spec['data'] ?? null, "the data of the action of {$route}"));
         };
+    }
+
+    /**
+     * Returns the routes of the manifest of the application, and fails for any other value.
+     *
+     * @return list<array<array-key, mixed>>
+     */
+    private function routes(): array
+    {
+        $routes = self::map($this->application['manifest'] ?? null, 'the manifest')['routes'] ?? null;
+        if (!is_array($routes) || !array_is_list($routes)) {
+            throw new \UnexpectedValueException('the routes of the manifest are not a list');
+        }
+
+        return array_map(static fn (mixed $route): array => self::map($route, 'a route'), $routes);
     }
 
     private function routeOfRegion(string $region): string
     {
-        foreach ($this->application['manifest']['routes'] as $route) {
-            foreach ($route['regions'] ?? [] as $declared) {
-                if ($declared['name'] === $region) {
+        foreach ($this->routes() as $route) {
+            $regions = array_key_exists('regions', $route) ? $route['regions'] : [];
+            if (!is_array($regions) || !array_is_list($regions)) {
+                throw new \UnexpectedValueException('the regions of a route are not a list');
+            }
+            foreach ($regions as $declared) {
+                if ((self::map($declared, 'a region')['name'] ?? null) === $region) {
                     return self::string($route['name'], 'a route name');
                 }
             }
