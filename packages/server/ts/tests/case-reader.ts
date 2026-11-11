@@ -64,7 +64,12 @@ function equal(a: unknown, b: unknown, ordered: boolean): boolean {
   const eb = entriesOf(b);
   if (ea !== undefined || eb !== undefined) {
     if (ea === undefined || eb === undefined || ea.length !== eb.length) return false;
-    if (ordered) return ea.every(([key, item], i) => eb[i][0] === key && equal(item, eb[i][1], true));
+    if (ordered) {
+      return ea.every(([key, item], i) => {
+        const other = eb[i];
+        return other !== undefined && other[0] === key && equal(item, other[1], true);
+      });
+    }
     return ea.every(([key, item]) => equal(item, member(b, key), false) && eb.some(([name]) => name === key));
   }
   return a === b;
@@ -111,13 +116,19 @@ export class CaseReader {
   private readonly differs: string[] = [];
   private error: string | undefined;
 
-  private constructor(
-    private readonly file: string,
-    private readonly sectionName: string,
-    private readonly item: unknown,
-    private readonly section_: Section,
-    private readonly contract: unknown,
-  ) {}
+  private readonly file: string;
+  private readonly sectionName: string;
+  private readonly item: unknown;
+  private readonly section_: Section;
+  private readonly contract: unknown;
+
+  private constructor(file: string, sectionName: string, item: unknown, section_: Section, contract: unknown) {
+    this.file = file;
+    this.sectionName = sectionName;
+    this.item = item;
+    this.section_ = section_;
+    this.contract = contract;
+  }
 
   // Returns the names of the case files that the declaration of interfaces.json states.
   static files(): string[] {

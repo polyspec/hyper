@@ -92,7 +92,7 @@ export const steps = {
     reader.compare('headers', response.headers);
     reader.compare('absentHeaders', response.headers);
     reader.compare('body', response.body);
-    reader.compare('page', (response.headers['Content-Type'] ?? '').split(';')[0]);
+    reader.compare('page', String(response.headers['Content-Type'] ?? '').split(';')[0]);
     reader.compare('session', store.get('_hyper_csrf') !== undefined);
     // The representation handler calls are not observable through the Node server yet (H28.7): the field is not compared.
   },
