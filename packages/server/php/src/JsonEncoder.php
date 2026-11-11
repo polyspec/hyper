@@ -15,6 +15,7 @@ final class JsonEncoder
      * Returns the response value; empty maps are `stdClass` so that JSON encoding and template binding both see maps.
      *
      * @param array<string, string> $params
+     * @param string $build the build id of the application, which follows `params` (HY-128)
      * @param array<array-key, mixed> $shared
      * @param array<string, array<array-key, mixed>> $regions region data by region name
      * @param array<string, array<string, mixed>> $kept kept values by region name and path
@@ -24,6 +25,7 @@ final class JsonEncoder
         string $timezone,
         string $route,
         array $params,
+        string $build,
         array $shared,
         array $regions,
         array $kept = [],
@@ -37,6 +39,7 @@ final class JsonEncoder
             'env' => ['timezone' => $timezone],
             'route' => $route,
             'params' => self::map($params),
+            'build' => $build,
             'shared' => self::map($shared),
             'regions' => self::map($encoded),
             'kept' => self::map($kept),

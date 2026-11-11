@@ -909,7 +909,8 @@ final class AppTest extends TestCase
         self::assertSame('application/vnd.hyper+json', $response->headers['Content-Type']);
         // HY-73: no template of the route reads csrf and no route region keeps a value on the server.
         self::assertSame(
-            '{"env":{"timezone":"+09:00"},"route":"item","params":{"id":"a b"},"shared":{"title":"Item"},'
+            '{"env":{"timezone":"+09:00"},"route":"item","params":{"id":"a b"},'
+                . '"build":"1111111111111111111111111111111111111111111111111111111111111111","shared":{"title":"Item"},'
                 . '"regions":{"content":{"id":"a b"}},"kept":{}}',
             $response->body,
         );

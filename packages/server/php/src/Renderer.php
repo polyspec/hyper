@@ -34,6 +34,7 @@ final class Renderer
             "{$program}/php" => is_dir(...),
             "{$program}/program.json" => is_file(...),
             "{$program}/reads.json" => is_file(...),
+            "{$program}/build.json" => is_file(...),
             "{$program}/templates" => is_dir(...),
         ];
         foreach ($required as $path => $exists) {

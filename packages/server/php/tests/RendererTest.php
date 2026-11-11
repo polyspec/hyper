@@ -49,7 +49,7 @@ final class RendererTest extends TestCase
     {
         // HY-48: a missing build names the missing file when the application opens.
         $root = sys_get_temp_dir() . '/hyper-renderer-' . bin2hex(random_bytes(6));
-        $files = ['php', 'program.json', 'reads.json', 'templates'];
+        $files = ['php', 'program.json', 'reads.json', 'build.json', 'templates'];
         $directories = ['php', 'templates'];
         try {
             foreach ($files as $missing) {
@@ -86,6 +86,7 @@ final class RendererTest extends TestCase
             mkdir("{$program}/php", 0o700, true);
             mkdir("{$program}/templates");
             file_put_contents("{$program}/reads.json", '{"routes":{}}');
+            file_put_contents("{$program}/build.json", '{"build":"' . str_repeat('1', 64) . '"}');
             file_put_contents("{$program}/program.json", '{"namespace":"Polyspec\\\\Hyper\\\\Tests\\\\Unmapped"}');
             try {
                 Renderer::open($program, 'Z');

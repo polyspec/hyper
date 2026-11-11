@@ -22,6 +22,9 @@ final class App
 
     private readonly Reads $reads;
 
+    /** The build id of the application, which every JSON response holds (HY-125, HY-128). */
+    private readonly Build $build;
+
     /** The error types that end the script with a fatal error, which `run` answers with the plain 500 (HY-60). */
     private const FATAL = [E_ERROR, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR];
 
@@ -64,6 +67,7 @@ final class App
         $this->container = new Container();
         $this->renderer = Renderer::open($program, $timezone);
         $this->reads = Reads::open($program);
+        $this->build = Build::open($program);
     }
 
     /**
@@ -683,7 +687,15 @@ final class App
         }
         $vary = 'Accept, HX-Request, HX-Current-URL';
         if ($json) {
-            $response = JsonEncoder::value($this->timezone, $route['name'], $request->params(), $shared, $data, $kept);
+            $response = JsonEncoder::value(
+                $this->timezone,
+                $route['name'],
+                $request->params(),
+                $this->build->id,
+                $shared,
+                $data,
+                $kept,
+            );
             // HY-44: the check above covered the handler data, and a kept value enters only when it belongs to the
             // data model, so only the parameters of the request are checked here.
             DataModel::check($request->params());
@@ -913,6 +925,7 @@ final class App
                 $this->timezone,
                 $route['name'],
                 $request->params(),
+                $this->build->id,
                 $shared,
                 $embedded,
                 array_intersect_key($kept, $embedded),
