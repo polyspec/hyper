@@ -145,3 +145,16 @@ recipe(H28.11)는 세 server를 `contracts/interfaces.json`의 concern으로 나
 - concern index는 HY-106을 가지며 unit이 없다. HYR-8이 barrel 파일을 public member와 type에 대해 검사하므로 case는 `none`이다.
 - 어떤 concern도 `error-code.ts`를 가지지 않는다. error의 `code`를 읽는 일을 정하는 규칙이 없으므로 각 사용처가 자기 코드에서 읽으며, 이 파일은 사용처를 옮기는 concern과 함께 제거된다.
 - spec은 unit을 먼저 적고, member는 각 concern을 옮기는 commit에서 적는다. 그래서 마지막 concern을 옮길 때까지 이 branch에서 `make recipe-check`는 실패한다.
+
+## Wave 29 — stream으로 읽는 multipart body
+
+의존: part를 읽는 방법을 정한 H28.11의 폼 값(HY-113.11부터 HY-113.16까지). H29.1이 규칙을 쓰고, H29.2부터 H29.5까지가 각자의 case와 함께 구현하며, H29.6이 문서와 예제를 더한다.
+
+각 server는 요청 body를 한 값으로 읽고 file part마다 내용을 복사하므로 요청 하나가 body의 약 두 배의 메모리를 쓰며, HY-114의 file 제한은 file을 메모리에 두기 때문에 있다. 그래서 큰 upload는 큰 메모리 제한이 필요하고, `contracts/fields.json`의 case는 수백 byte의 입력만 시험한다. 이 wave는 `multipart/form-data` body를 stream으로 읽으며 다음을 정한다.
+
+- 각 server는 자신의 reader를 유지한다. 각 runtime의 parser가 보낸 것을 바꾸거나 버리기 때문이다. PHP의 `$_POST`와 `$_FILES`는 반복된 이름의 마지막 값만 두고, `a.b c`를 `a_b_c`로 쓰고, 대괄호 이름을 중첩하고, filename을 마지막 segment로 자르며, `docs/operations/dependencies.md`는 관리되는 parser들의 같은 종류의 손실을 기록한다. C extension은 쓰지 않는다. `strpos`, `Buffer.indexOf`, `bytes.find`가 이미 native code로 byte를 훑으며, C reader는 네 번째 구현과 메모리 안전성 결함을 더한다.
+- 세 언어의 같은 상태 기계가 body를 조각으로 받아 각 part의 시작, 내용, 끝을 알린다. 그 buffer는 body의 크기와 무관하게 boundary의 길이와 header 제한으로 묶인다. PHP의 `main/rfc1867.c`는 그 구조와 제한의 본보기이며 결과의 본보기는 아니다.
+- file part의 내용은 요청의 임시 file에 쓰고, server는 요청이 끝나거나 실패하거나 연결이 끊기면 그것을 지운다. `UploadedFile`은 크기를 주고, file을 경로로 옮기며, 내용을 한 값으로도 여전히 준다.
+- 모든 제한은 application이 선언할 수 있는 명세의 숫자다: body, file 하나, part의 header, part의 수, text 값의 byte. 제한을 넘거나 닫는 delimiter가 없는 body처럼 형식이 틀린 body는 요청 전체를 실패시킨다. part를 건너뛰지 않는다.
+- 세 검사가 증거를 담는다. 모든 case를 모든 위치에서 두 조각으로 나눠 읽어도 body 전체의 결과와 같다. seed로 생성한 body 집합이 세 server에서 같은 결과를 낸다. test가 reader의 buffer 길이를 그 한계와 대조한다.
+- 느린 client와 연결 수는 앞단 server(nginx, php-fpm, ASGI server, Node의 `requestTimeout`)의 일이며 운영 문서가 그 설정을 적는다. 이어받기가 필요하거나 수 gigabyte인 upload는 storage로 직접 가며 이 wave의 밖이다.

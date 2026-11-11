@@ -144,3 +144,16 @@ The recipe (H28.11) divides the three servers into the concerns of `contracts/in
 - The concern index holds HY-106 and no unit; its cases are `none`, because HYR-8 checks the barrel files against the public members and types.
 - No concern holds `error-code.ts`: no rule names the reading of the `code` of an error, so each user reads it in its own code and the file is removed with the concern that moves its users.
 - The spec states the units first and their members with the commit that moves each concern, so `make recipe-check` fails on this branch until the last concern moves.
+
+## Wave 29 — The multipart body read as a stream
+
+Depends on: the form values of H28.11 (HY-113.11 to HY-113.16), which state how a part is read. H29.1 writes the rules; H29.2 to H29.5 implement them, each with its cases; H29.6 adds the documents and the example.
+
+Each server reads a request body as one value and copies the content of each file part, so a request uses memory of about twice its body, and the file limit of HY-114 exists because a file is held in memory. A large upload therefore needs a large memory limit, and the cases of `contracts/fields.json` test inputs of a few hundred bytes only. The wave reads a `multipart/form-data` body as a stream with these decisions:
+
+- Each server keeps its own reader, because the parser of each runtime changes or drops what was sent: PHP `$_POST` and `$_FILES` keep the last value of a repeated name, write `a.b c` as `a_b_c`, nest bracketed names and cut a filename to its last segment, and `docs/operations/dependencies.md` records the same kind of loss for the maintained parsers. No C extension is written: `strpos`, `Buffer.indexOf` and `bytes.find` already scan the bytes in native code, and a reader in C adds a fourth implementation and memory-safety defects.
+- One state machine in the three languages takes the body in chunks and reports the start, the content and the end of each part. Its buffer is bounded by the length of the boundary and the header limit, whatever the size of the body. `main/rfc1867.c` of PHP is the model of its structure and its limits, not of its results.
+- The content of a file part is written to a temporary file of the request, which the server removes when the request ends, fails or is disconnected. `UploadedFile` gives its size, moves the file to a path, and still gives its content as one value.
+- Every limit is a number of the specification that an application may declare: the body, a file, the header of a part, the number of parts and the bytes of the text values. A body that passes a limit or that is malformed, such as a body without its closing delimiter, fails the whole request; no part is skipped.
+- Three checks carry the evidence: every case read in two chunks split at every position gives the result of the whole body; a seeded set of generated bodies gives the same result in the three servers; and a test reads the length of the buffer of the reader against its bound.
+- A slow client and the number of connections are the task of the server in front (nginx, php-fpm, the ASGI server, `requestTimeout` of Node), and the operations document names the settings. An upload that must resume, or of several gigabytes, goes to a storage directly and is outside this wave.
