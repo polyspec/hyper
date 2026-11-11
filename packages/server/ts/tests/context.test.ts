@@ -44,8 +44,8 @@ const contract = JSON.parse(readFileSync(new URL('../../../../contracts/context.
   applications: Record<string, Application>;
   cases: Case[];
 };
-// The applications of the contract, built once for the three servers by scripts/context-programs.mjs (HY-124).
-const PROGRAMS = fileURLToPath(new URL('../../../../var/context-programs/', import.meta.url));
+// The applications of the contracts, built once for the three servers by scripts/contract-programs.mjs (HY-124, HYC-24).
+const PROGRAMS = fileURLToPath(new URL('../../../../var/contract-programs/', import.meta.url));
 const JSON_TYPE = 'application/vnd.hyper+json';
 
 const prepared = new Map<string, { manifest: string; build: string; index: string; root: string }>();
@@ -57,7 +57,7 @@ function applicationOf(name: string): Application {
   return application;
 }
 
-// Returns the paths of an application built by scripts/context-programs.mjs: its manifest, its build id file and the
+// Returns the paths of an application built by scripts/contract-programs.mjs: its manifest, its build id file and the
 // template index and root that the Node server opens (HR-34). Each application is looked up once per run.
 function prepare(name: string): { manifest: string; build: string; index: string; root: string } {
   const existing = prepared.get(name);
