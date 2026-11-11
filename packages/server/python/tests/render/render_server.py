@@ -11,6 +11,7 @@ import unittest
 from pathlib import Path
 from typing import Callable, Optional
 
+from .fixture_app import FIXTURES
 from polyspec.hyper.app import App
 from polyspec.hyper.file_sessions import FileSessions
 from polyspec.hyper.reply import Reply
@@ -38,6 +39,7 @@ def open_app(load: Callable, **options) -> App:
         shutil.copyfile(MANIFEST, manifest)
         (program / "templates").mkdir()
         (program / "reads.json").write_text(json.dumps(READS), encoding="utf-8")
+        shutil.copyfile(FIXTURES / "build.json", program / "build.json")
         handlers = {
             "regions": {"side": lambda: {}},
             "routes": {"home": {"load": load}, "add": {"post": lambda: None}},

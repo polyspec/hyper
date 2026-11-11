@@ -3,6 +3,7 @@
 import contextlib
 import io
 import json
+import shutil
 import tempfile
 import unittest
 from pathlib import Path
@@ -430,6 +431,15 @@ class ProgramTest(unittest.TestCase):
                 )
             self.assertIn("reads.json", str(missing.exception))
             (empty / "reads.json").write_text('{"routes": {}}', encoding="utf-8")
+            with self.assertRaises(ValueError) as missing:
+                App.open(
+                    manifest=str(FIXTURES / "app.json"),
+                    program=str(empty),
+                    handlers=handlers(),
+                    timezone="+09:00",
+                )
+            self.assertIn("build.json", str(missing.exception))
+            shutil.copyfile(FIXTURES / "build.json", empty / "build.json")
             with self.assertRaises(ValueError) as missing:
                 App.open(
                     manifest=str(FIXTURES / "app.json"),

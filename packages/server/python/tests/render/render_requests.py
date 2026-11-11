@@ -177,8 +177,8 @@ class DocumentTest(FixtureTest):
             "application/vnd.hyper+json", response.headers["Content-Type"]
         )
         self.assertEqual(
-            '{"env":{"timezone":"+09:00"},"route":"item","params":{"id":"a b"},"shared":{"title":"Item"},'
-            '"regions":{"content":{"id":"a b"}},"kept":{}}',
+            '{"env":{"timezone":"+09:00"},"route":"item","params":{"id":"a b"},"build":"' + "1" * 64 + '",'
+            '"shared":{"title":"Item"},"regions":{"content":{"id":"a b"}},"kept":{}}',
             response.body,
         )
 

@@ -30,7 +30,8 @@ class Renderer:
         missing build fails here and names the missing file (HY-48)."""
         templates = Path(program) / "templates"
         reads = Path(program) / "reads.json"
-        for path, is_directory in ((reads, False), (templates, True)):
+        build = Path(program) / "build.json"
+        for path, is_directory in ((reads, False), (build, False), (templates, True)):
             if not (path.is_dir() if is_directory else path.is_file()):
                 raise ValueError(
                     f"{path} of the server program {program} is missing; "

@@ -110,16 +110,18 @@ def value(
     timezone: str,
     route: str,
     params: dict,
+    build: str,
     shared: dict,
     regions: dict,
     kept: dict | None = None,
 ) -> dict:
-    """Returns the JSON response value of a page (HY-17); `regions` holds the loader data by region name and `kept`
-    the kept values by region name and path."""
+    """Returns the JSON response value of a page (HY-17, HY-128); `build` is the build id, the member that follows
+    `params`, `regions` holds the loader data by region name and `kept` the kept values by region name and path."""
     return {
         "env": {"timezone": timezone},
         "route": route,
         "params": params,
+        "build": build,
         "shared": shared,
         "regions": regions,
         "kept": kept or {},

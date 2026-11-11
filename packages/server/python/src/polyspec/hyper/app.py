@@ -13,6 +13,7 @@ from typing import Callable, Optional, Union
 from . import _accept, _data_model, _json_codec, _media
 from .client import Choice, ClientRendering
 from .container import Container
+from ._build import read_build_id
 from ._csrf import masked, verify
 from ._data_model import check
 from ._kept import apply, select
@@ -83,6 +84,8 @@ class App:
         from ._renderer import Renderer
 
         self.renderer = Renderer.open(program, timezone)
+        # HY-125: the build id of the program directory, read when the application opens.
+        self.build = read_build_id(str(Path(program) / "build.json"))
         from ._reads import Reads
 
         self.reads = Reads.open(program)
@@ -526,7 +529,13 @@ class App:
         vary = "Accept, HX-Request, HX-Current-URL"
         if json_request:
             value = _json_codec.value(
-                self.timezone, route["name"], request.params(), shared, data, kept
+                self.timezone,
+                route["name"],
+                request.params(),
+                self.build,
+                shared,
+                data,
+                kept,
             )
             # HY-44: the check above covered the handler data, and a kept value enters only when it belongs to the
             # data model, so only the parameters of the request are checked here.
@@ -694,6 +703,7 @@ class App:
                 self.timezone,
                 route["name"],
                 request.params(),
+                self.build,
                 shared,
                 embedded,
                 {name: kept[name] for name in embedded if name in kept},
