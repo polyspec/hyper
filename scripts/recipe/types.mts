@@ -60,6 +60,7 @@ export type Sources = {
   exports: { file: string; name: string }[];
   uses: { file: string; name: string }[];
   tests: { file: string; name: string }[];
+  dynamicTests: { file: string; line: number }[];
 };
 
 export type Finding = { code: string; message: string };

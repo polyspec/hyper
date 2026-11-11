@@ -50,6 +50,7 @@ type Out = {
   exports: { file: string; name: string }[];
   uses: { file: string; name: string }[];
   tests: { file: string; name: string }[];
+  dynamicTests: { file: string; line: number }[];
 };
 
 const sourceFiles = listFiles(groups.sources, (n) => n.endsWith('.ts') && !n.endsWith('.d.ts') && !n.includes('.test.'));
@@ -64,6 +65,7 @@ const out: Out = {
   exports: [],
   uses: [],
   tests: [],
+  dynamicTests: [],
 };
 
 function modifiers(node: ts.Node): readonly ts.ModifierLike[] {
@@ -278,15 +280,22 @@ function testRoot(expr: ts.Expression): string | undefined {
   return undefined;
 }
 
-// A test name must be a string literal: the spec names tests by their literal names (HYR-7).
+// A test name must be a string literal: the spec names tests by their literal names (HYR-7). A call whose name is not one,
+// or that runs an `each` table, is a dynamic test: the check reports its line (TEST_NAME_DYNAMIC) and names no test.
+function isEach(expr: ts.Expression): boolean {
+  if (ts.isPropertyAccessExpression(expr)) return expr.name.text === 'each' || isEach(expr.expression);
+  if (ts.isCallExpression(expr)) return isEach(expr.expression);
+  return false;
+}
+
 function visitTests(node: ts.Node, sf: ts.SourceFile, stack: string[]): void {
   if (ts.isCallExpression(node)) {
     const root = testRoot(node.expression);
     if (root !== undefined && TEST_CALLS.has(root)) {
       const first = node.arguments[0];
-      if (first === undefined || !ts.isStringLiteralLike(first)) {
-        const line = sf.getLineAndCharacterOfPosition(node.getStart(sf)).line + 1;
-        throw new Error(`${sf.fileName}:${line}: the name of a ${root} call is not a string literal`);
+      if (first === undefined || !ts.isStringLiteralLike(first) || isEach(node.expression)) {
+        out.dynamicTests.push({ file: sf.fileName, line: sf.getLineAndCharacterOfPosition(node.getStart(sf)).line + 1 });
+        return;
       }
       if (root === 'describe') {
         for (const arg of node.arguments.slice(1)) visitTests(arg, sf, [...stack, first.text]);

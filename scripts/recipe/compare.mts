@@ -175,6 +175,7 @@ export function compare(spec: Spec, sources: Record<Lang, Sources>, root: string
     for (const ref of u.tests ?? []) nativeTest(ref, `unit ${u.id}`, u.only?.languages ?? []);
     for (const m of u.members) for (const ref of m.tests ?? []) nativeTest(ref, `member ${m.id}`, m.only?.languages ?? []);
   }
+  for (const lang of LANGS) for (const d of sources[lang].dynamicTests) add('TEST_NAME_DYNAMIC', `${lang} ${d.file}:${d.line} names a test by something other than a literal (HYR-7)`);
   for (const key of readerTests) {
     if (!named.has(key)) add('TEST_UNNAMED', `${key} is a test that the spec does not name`);
   }

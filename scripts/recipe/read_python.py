@@ -169,6 +169,7 @@ def main() -> None:
         "exports": [],
         "uses": [],
         "tests": [],
+        "dynamicTests": [],
     }
     for rel in sources:
         read_module(root, rel, out)

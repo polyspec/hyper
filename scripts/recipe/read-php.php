@@ -247,6 +247,7 @@ $out = [
     'exports' => [],
     'uses' => [],
     'tests' => [],
+    'dynamicTests' => [],
 ];
 
 foreach ($sourceFiles as $file) {
