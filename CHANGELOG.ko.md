@@ -6,6 +6,8 @@
 
 ## Unreleased
 
+- Cookie header의 parse는 세 서버에서 unit `Cookies`이다. static member `parse`, `percentDecode`, `utf8`을 가지며, spec이 이들을 나열한다(HY-129)(H28.11).
+
 - Accept 파서와 media type 선택은 세 서버에서 같은 member를 가진 unit `Accept`이다. range는 weight를 천분율로 가진 `MediaRange`이고, 오류는 `InvalidAccept`이다. case는 `contracts/accept.json`이며, 각 서버의 native accept 테스트를 대신한다(HY-116)(H28.11).
 
 - `make recipe-candidates`는 `contracts/interfaces.json`이 member 없이 적은 unit의 member를 그 파일의 소스에서 도출한다. neutral 필드는 손으로 쓸 필드로 나열한다(HYR-10)(H28.11).

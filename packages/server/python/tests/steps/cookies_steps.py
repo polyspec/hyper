@@ -1,11 +1,8 @@
-# The steps of contracts/cookies.json (HY-29 to HY-31): the cookies of a Cookie header.
-from polyspec.hyper._cookies import parse
+# The steps of contracts/cookies.json (HY-129): a header is text whose characters U+0000 to U+00FF are its bytes.
+from polyspec.hyper._cookies import Cookies
 
 
-def _header_bytes(header):
-    # The header text has one character per byte (U+0000 to U+00FF); null is a request without the header.
-    return None if header is None else header.encode("latin-1")
-
-
-def parse_cookies(case) -> None:
-    case.compare("cookies", parse(_header_bytes(case.input("header"))))
+def parse(case) -> None:
+    header = case.input("header")
+    data = header.encode("latin-1") if isinstance(header, str) else None
+    case.compare("cookies", Cookies.parse(data))

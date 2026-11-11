@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from typing import Callable, Optional, Union
 
 from .app import App
-from ._cookies import parse as parse_cookies
+from ._cookies import Cookies
 from .file_sessions import FileSessions
 from .redis_sessions import RedisSessions
 from ._pipeline import (
@@ -144,7 +144,7 @@ async def _answer(
     method = scope["method"]
     target = _raw_path(scope)
     declared = declared_length(_header(scope, b"content-length"))
-    cookies = parse_cookies(_cookie_header(scope))
+    cookies = Cookies.parse(_cookie_header(scope))
     exchange.request = head_request(
         method,
         target,

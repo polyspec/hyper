@@ -23,7 +23,7 @@ STEPS = {
     ("client.json", "cases"): client_steps.cases,
     ("context.json", "contexts"): context_steps.contexts,
     ("context.json", "cases"): context_steps.cases,
-    ("cookies.json", "parse"): cookies_steps.parse_cookies,
+    ("cookies.json", "parse"): cookies_steps.parse,
     ("csrf.json", "mask"): csrf_steps.mask_token,
     ("csrf.json", "verify"): csrf_steps.verify_value,
     ("fields.json", "urlencoded"): fields_steps.urlencoded,

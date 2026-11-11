@@ -1,44 +1,46 @@
-// The parse of a Cookie header (HY-129). The header is text whose characters U+0000 to U+00FF are its bytes, as node:http
-// gives it, and the names and values are decoded as UTF-8 (HY-42).
+// The cookies of a request: one parse of its Cookie header (HY-129), the same in every server. The header is text whose
+// characters U+0000 to U+00FF are its bytes, as node:http gives it, and the names and values are decoded as UTF-8
+// (HY-42).
 
 const strict = new TextDecoder('utf-8', { fatal: true });
 
-// Returns the bytes of text whose characters are bytes; a character above U+00FF fails, because it has no byte.
-function bytesOf(text: string): Uint8Array {
-  const bytes = new Uint8Array(text.length);
-  for (let index = 0; index < text.length; index += 1) {
-    const code = text.charCodeAt(index);
-    if (code > 0xff) throw new RangeError(`hyper: cookie text has the character U+${code.toString(16).toUpperCase()} outside U+0000 to U+00FF`);
-    bytes[index] = code;
-  }
-  return bytes;
-}
-
-// Returns the text of UTF-8 bytes, or null for bytes that are not UTF-8.
-function utf8(bytes: Uint8Array): string | null {
-  try {
-    return strict.decode(bytes);
-  } catch {
-    return null;
-  }
-}
-
-// Parses a Cookie header into a map from name to value, in the order of the first pair of each name (HY-129). A pair
-// gives no cookie when it has no `=`, an empty name, a name that is not UTF-8, or a value that is not UTF-8 after
-// percent-decoding; the first pair of a name that gives a cookie counts. A request without the header has no cookies.
 /** @internal */
-export function parse(header: string | undefined): Map<string, string> {
-  const cookies = new Map<string, string>();
-  if (header === undefined) return cookies;
-  for (const pair of header.split(';')) {
-    const trimmed = pair.replace(/^[ \t]+/, '').replace(/[ \t]+$/, '');
-    const equals = trimmed.indexOf('=');
-    // No `=` (-1) or an empty name (0) gives no cookie.
-    if (equals <= 0) continue;
-    const name = utf8(bytesOf(trimmed.slice(0, equals)));
-    const value = utf8(bytesOf(trimmed.slice(equals + 1).replace(/%([0-9A-Fa-f]{2})/g, (_match, hex: string) => String.fromCharCode(Number.parseInt(hex, 16)))));
-    if (name === null || value === null || cookies.has(name)) continue;
-    cookies.set(name, value);
+export class Cookies {
+  // Returns the cookies of a Cookie header, or none for a request without the header. The header splits at each `;`,
+  // spaces and tabs at both ends of a pair are removed, and a pair splits at its first `=`. A pair gives no cookie when
+  // it has no `=`, an empty name, a name that is not UTF-8 (the name is not decoded), or a value that is not UTF-8 after
+  // percent-decoding. Of the pairs that give a cookie, the first of a name counts.
+  static parse(header: string | null): Map<string, string> {
+    const cookies = new Map<string, string>();
+    if (header === null) return cookies;
+    for (const part of header.split(';')) {
+      const pair = part.replace(/^[ \t]+/u, '').replace(/[ \t]+$/u, '');
+      const equals = pair.indexOf('=');
+      if (equals < 0) continue;
+      const name = Cookies.utf8(pair.slice(0, equals));
+      const value = Cookies.utf8(Cookies.percentDecode(pair.slice(equals + 1)));
+      if (name !== null && name !== '' && value !== null && !cookies.has(name)) cookies.set(name, value);
+    }
+    return cookies;
   }
-  return cookies;
+
+  // Replaces each `%` with two hexadecimal digits by its byte; every other byte, `+` included, is kept.
+  private static percentDecode(bytes: string): string {
+    return bytes.replace(/%([0-9A-Fa-f]{2})/gu, (_match, hex: string) => String.fromCharCode(Number.parseInt(hex, 16)));
+  }
+
+  // Returns the bytes as UTF-8 text, or null when they are not UTF-8. Each character of `bytes` is one byte.
+  private static utf8(bytes: string): string | null {
+    const data = new Uint8Array(bytes.length);
+    for (let index = 0; index < bytes.length; index += 1) {
+      const code = bytes.charCodeAt(index);
+      if (code > 0xff) return null;
+      data[index] = code;
+    }
+    try {
+      return strict.decode(data);
+    } catch {
+      return null;
+    }
+  }
 }

@@ -16,7 +16,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Optional
 
 from .app import App
-from ._cookies import parse as parse_cookies
+from ._cookies import Cookies
 from .file_sessions import FileSessions
 from .redis_sessions import RedisSessions
 from ._pipeline import (
@@ -99,7 +99,7 @@ def create_server(
             exchange = Exchange(written, started)
             try:
                 # The request as received so far: an unread body is empty and its size is the declared one (HY-60).
-                cookies = parse_cookies(_cookie_header(self.headers))
+                cookies = Cookies.parse(_cookie_header(self.headers))
                 exchange.request = head_request(
                     self.command,
                     self.path,

@@ -13,7 +13,7 @@ from http import HTTPStatus
 from typing import Callable, Optional, Union
 
 from .app import App
-from ._cookies import parse as parse_cookies
+from ._cookies import Cookies
 from .file_sessions import FileSessions
 from .redis_sessions import RedisSessions
 from ._pipeline import (
@@ -168,7 +168,7 @@ def _answer(
     method = environ["REQUEST_METHOD"]
     target = _request_target(environ)
     declared = declared_length(environ.get("CONTENT_LENGTH"))
-    cookies = parse_cookies(_cookie_header(environ))
+    cookies = Cookies.parse(_cookie_header(environ))
     exchange.request = head_request(
         method,
         target,

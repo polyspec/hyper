@@ -1,5 +1,5 @@
 // One HTTP request with the session values that the application reads.
-import { parse } from './cookies.js';
+import { Cookies } from './cookies.js';
 import { bytesOf, fileParts, formFields, parseUrlEncoded, utf8, type Fields, type FileParts } from './form.js';
 import type { Flash } from './session.js';
 import type { UploadedFile } from './uploaded-file.js';
@@ -73,7 +73,7 @@ export class Request {
       query: parseUrlEncoded(rawQuery),
       form,
       files,
-      cookies: parse(headers.get('cookie')),
+      cookies: Cookies.parse(headers.get('cookie') ?? null),
       https: init.https ?? false,
       params: {},
       flash: new Map(),

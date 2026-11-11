@@ -1405,16 +1405,92 @@
             },
             "node": {
               "file": "packages/server/ts/src/cookies.ts",
-              "kind": "functions",
+              "kind": "class",
               "internal": true
             },
             "python": {
               "file": "packages/server/python/src/polyspec/hyper/_cookies.py",
-              "kind": "functions",
+              "kind": "class",
               "internal": true
             }
           },
-          "members": []
+          "members": [
+            {
+              "id": "cookies.parse",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "optional<bytes>"
+              ],
+              "output": "map<string>",
+              "errors": [],
+              "state": "Returns the cookies of a Cookie header by name, the first pair of a name that gives a cookie, or none without the header.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Cookies.php::Polyspec\\Hyper\\Cookies::parse",
+                  "signature": "public static function parse(?string $header): array"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/cookies.ts::Cookies.parse",
+                  "signature": "static parse(header: string | null): Map<string, string>"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_cookies.py::Cookies.parse",
+                  "signature": "def parse(header: Optional[bytes]) -> dict[str, str]"
+                }
+              }
+            },
+            {
+              "id": "cookies.percentDecode",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "bytes"
+              ],
+              "output": "bytes",
+              "errors": [],
+              "state": "Replaces each percent sign with two hexadecimal digits by its byte.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Cookies.php::Polyspec\\Hyper\\Cookies::percentDecode",
+                  "signature": "private static function percentDecode(string $bytes): string"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/cookies.ts::Cookies.percentDecode",
+                  "signature": "private static percentDecode(bytes: string): string"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_cookies.py::Cookies._percent_decode",
+                  "signature": "def _percent_decode(data: bytes) -> bytes"
+                }
+              }
+            },
+            {
+              "id": "cookies.utf8",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "bytes"
+              ],
+              "output": "optional<string>",
+              "errors": [],
+              "state": "Returns the bytes as UTF-8 text, or none when they are not UTF-8.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Cookies.php::Polyspec\\Hyper\\Cookies::utf8",
+                  "signature": "private static function utf8(string $bytes): ?string"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/cookies.ts::Cookies.utf8",
+                  "signature": "private static utf8(bytes: string): string | null"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_cookies.py::Cookies._utf8",
+                  "signature": "def _utf8(data: bytes) -> Optional[str]"
+                }
+              }
+            }
+          ]
         }
       ]
     },
