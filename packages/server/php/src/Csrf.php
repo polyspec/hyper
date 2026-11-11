@@ -21,7 +21,7 @@ final class Csrf
     /** Returns the token masked with a mask; both are 64 lowercase hexadecimal digits. */
     public static function mask(string $token, string $mask): string
     {
-        return $mask . bin2hex(self::bytes($mask) ^ self::bytes($token));
+        return $mask . bin2hex(self::xor(self::bytes($mask), self::bytes($token)));
     }
 
     /** Returns true when a form value is a masked value of the token, compared in constant time. */
@@ -31,7 +31,7 @@ final class Csrf
             return false;
         }
 
-        return hash_equals(self::bytes($token), self::bytes(substr($value, 0, 64)) ^ self::bytes(substr($value, 64)));
+        return hash_equals(self::bytes($token), self::xor(self::bytes(substr($value, 64)), self::bytes(substr($value, 0, 64))));
     }
 
     /** Returns the bytes of an even number of hexadecimal digits; other text fails. */
@@ -43,5 +43,11 @@ final class Csrf
         }
 
         return $bytes;
+    }
+
+    /** Returns the bytes of the first XOR the bytes of the second, as long as the shorter. */
+    private static function xor(string $first, string $second): string
+    {
+        return $first ^ $second;
     }
 }

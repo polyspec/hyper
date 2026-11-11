@@ -5,7 +5,7 @@ import { isAbsolute, join } from 'node:path';
 import type { Server } from 'node:http';
 import { checkManifest, checkTemplateIndex, createApplication, DATA_TEMPLATE_NAME, keptPaths, routeReads, routeTemplates, stripBasePath, type Application, type Manifest, type RouteDeclaration, type RouteReads } from '@polyspec/hyper-client';
 import { decodeTemplate, resolvePath, type HostFunction, type Template } from '@polyspec/template/render';
-import { maskedToken, verifyToken } from './csrf.js';
+import { Csrf } from './csrf.js';
 import type { FileSessions } from './file-sessions.js';
 import type { RedisSessions } from './redis-sessions.js';
 import { createListener, createServer, type Listener, type ServerOptions } from './http.js';
@@ -361,7 +361,7 @@ export class App<S extends object = Record<string, never>> {
     if (this.context !== null && hash !== null && !HYPER_CONTEXT.test(hash)) return Response.text(400, 'Bad Request');
     const session = new Session(store);
     const flash = session.takeFlash();
-    const routed = selected.withRoute(path, match.params).withSession(flash, maskedToken(session.csrfToken()));
+    const routed = selected.withRoute(path, match.params).withSession(flash, Csrf.masked(session.csrfToken()));
     const response = await this.routed({ request: routed, route, handler, session, flash, reply, status: 200, invalid: {}, basePath, signal });
     return response.withCookies(reply, this.https || request.https);
   }
@@ -393,7 +393,7 @@ export class App<S extends object = Record<string, never>> {
       if (request.method === 'GET') return withoutRenewal(reply, await this.page(input));
       if (request.method !== 'POST' || handler.post === undefined) return Response.text(405, 'Method Not Allowed');
       if (!this.formTypes.includes(request.mediaType())) return Response.text(415, 'Unsupported Media Type');
-      if (!verifyToken(session.csrfToken(), request.formString('_csrf'))) return Response.text(403, 'Forbidden');
+      if (!Csrf.verify(session.csrfToken(), request.formString('_csrf'))) return Response.text(403, 'Forbidden');
       // HY-114: a file over the file limit is refused before the action runs, as HY-59 refuses a large body.
       if (request.fileOver(this.fileLimit)) return Response.text(413, 'Content Too Large');
       const result = await handler.post({ request, reply, services: this.services });
@@ -403,7 +403,7 @@ export class App<S extends object = Record<string, never>> {
       let page = input;
       if (reply.takeRenewal()) {
         session.renew();
-        page = { ...input, request: request.withSession(input.flash, maskedToken(session.csrfToken())) };
+        page = { ...input, request: request.withSession(input.flash, Csrf.masked(session.csrfToken())) };
       }
       if (result.isRedirect()) return this.redirect(session, result, input.basePath);
       return withoutRenewal(reply, await this.page({ ...page, status: result.status, invalid: result.data }));
@@ -441,7 +441,7 @@ export class App<S extends object = Record<string, never>> {
   private keep(request: Request, session: Session): Response {
     if (request.method !== 'POST') return Response.text(405, 'Method Not Allowed');
     if (!this.formTypes.includes(request.mediaType())) return Response.text(415, 'Unsupported Media Type');
-    if (!verifyToken(session.csrfToken(), request.formString('_csrf'))) return Response.text(403, 'Forbidden');
+    if (!Csrf.verify(session.csrfToken(), request.formString('_csrf'))) return Response.text(403, 'Forbidden');
     if (request.fileOver(this.fileLimit)) return Response.text(413, 'Content Too Large');
     const name = request.formString('region');
     const path = request.formString('path');

@@ -3,7 +3,7 @@ import { mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { maskedToken } from '../src/csrf.js';
+import { Csrf } from '../src/csrf.js';
 import { FileSessions, Request, Result, type Choice, type ClientRendering } from '../src/index.js';
 import { client, Fixture, FIXTURES, port, present, SHELL, TOKEN } from './support.js';
 
@@ -115,7 +115,7 @@ describe('client rendering (HY-62)', () => {
     expect(seen).toEqual([['shared', { host: 'client.test' }], ['side', { host: 'client.test' }], ['item', { host: 'client.test' }]]);
     seen.length = 0;
     fixture.session.set('_hyper_csrf', TOKEN);
-    const body = Buffer.from(new URLSearchParams({ _csrf: maskedToken(TOKEN), name: 'x' }).toString(), 'latin1');
+    const body = Buffer.from(new URLSearchParams({ _csrf: Csrf.masked(TOKEN), name: 'x' }).toString(), 'latin1');
     const response = await app.handle(Request.from({ method: 'POST', target: '/add', headers: { Host: 'server.test', 'Content-Type': 'application/x-www-form-urlencoded' }, body }), fixture.session);
     expect(response.status).toBe(303);
     expect(selections).toBe(3);

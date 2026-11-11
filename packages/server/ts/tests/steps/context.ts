@@ -3,7 +3,7 @@
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 import { contextHash, heldContext } from '../../src/context.js';
-import { maskedToken } from '../../src/csrf.js';
+import { Csrf } from '../../src/csrf.js';
 import { decodeJson, encodeJson } from '../../src/json.js';
 import { App, MemorySessionStore, NotFound, Request, Result, type Handlers, type RouteHandlers } from '../../src/index.js';
 import type { Value } from '../../src/values.js';
@@ -127,7 +127,7 @@ export const steps = {
       // A first response of the same session makes its token (HY-24); the case masks the token that the session holds.
       // Its calls are not the case's calls.
       await app.handle(Request.from({ method: 'GET', target: '/', headers: { Accept: JSON_TYPE } }), store);
-      token = maskedToken(String(store.get('_hyper_csrf')));
+      token = Csrf.masked(String(store.get('_hyper_csrf')));
       calls.length = 0;
       selections.length = 0;
     }

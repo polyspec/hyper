@@ -1,6 +1,6 @@
 // The steps of contracts/client.json (HY-62): one server answers the client-rendered and the server-rendered pages of the
 // fixture manifest. PHP and Python pass the same cases.
-import { maskedToken } from '../../src/csrf.js';
+import { Csrf } from '../../src/csrf.js';
 import type { SessionStore } from '../../src/session.js';
 import type { CaseReader } from '../case-reader.js';
 import { client, Fixture, parsed, record, TOKEN } from '../support.js';
@@ -50,7 +50,7 @@ export const steps = {
     let fields = form;
     if (reader.has('request.csrf') && reader.input('request.csrf') === true) {
       fixture.session.set('_hyper_csrf', TOKEN);
-      fields = { _csrf: maskedToken(TOKEN), ...fields };
+      fields = { _csrf: Csrf.masked(TOKEN), ...fields };
     }
     const body = reader.has('request.body')
       ? (reader.input('request.body') as string)

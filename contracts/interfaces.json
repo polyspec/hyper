@@ -1647,16 +1647,145 @@
             },
             "node": {
               "file": "packages/server/ts/src/csrf.ts",
-              "kind": "functions",
+              "kind": "class",
               "internal": true
             },
             "python": {
               "file": "packages/server/python/src/polyspec/hyper/_csrf.py",
-              "kind": "functions",
+              "kind": "class",
               "internal": true
             }
           },
-          "members": []
+          "members": [
+            {
+              "id": "csrf.masked",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "string"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Masks the token with a new random mask.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Csrf.php::Polyspec\\Hyper\\Csrf::masked",
+                  "signature": "public static function masked(string $token): string"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/csrf.ts::Csrf.masked",
+                  "signature": "static masked(token: string): string"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_csrf.py::Csrf.masked",
+                  "signature": "def masked(token: str) -> str"
+                }
+              }
+            },
+            {
+              "id": "csrf.mask",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "string",
+                "string"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Masks the token with the given mask, and writes the mask before the masked bytes.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Csrf.php::Polyspec\\Hyper\\Csrf::mask",
+                  "signature": "public static function mask(string $token, string $mask): string"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/csrf.ts::Csrf.mask",
+                  "signature": "static mask(token: string, mask: string): string"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_csrf.py::Csrf.mask",
+                  "signature": "def mask(token: str, mask: str) -> str"
+                }
+              }
+            },
+            {
+              "id": "csrf.verify",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "string",
+                "string"
+              ],
+              "output": "boolean",
+              "errors": [],
+              "state": "Tells whether a form value is a masked value of the token, compared in constant time.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Csrf.php::Polyspec\\Hyper\\Csrf::verify",
+                  "signature": "public static function verify(string $token, string $value): bool"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/csrf.ts::Csrf.verify",
+                  "signature": "static verify(token: string, value: string): boolean"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_csrf.py::Csrf.verify",
+                  "signature": "def verify(token: str, value: str) -> bool"
+                }
+              }
+            },
+            {
+              "id": "csrf.bytes",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "string"
+              ],
+              "output": "bytes",
+              "errors": [],
+              "state": "Returns the bytes of an even number of hexadecimal digits.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Csrf.php::Polyspec\\Hyper\\Csrf::bytes",
+                  "signature": "private static function bytes(string $hex): string"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/csrf.ts::Csrf.bytes",
+                  "signature": "private static bytes(hex: string): Buffer"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_csrf.py::Csrf._bytes",
+                  "signature": "def _bytes(hex_text: str) -> bytes"
+                }
+              }
+            },
+            {
+              "id": "csrf.xor",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "bytes",
+                "bytes"
+              ],
+              "output": "bytes",
+              "errors": [],
+              "state": "Returns the bytes of the first XOR the bytes of the second.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Csrf.php::Polyspec\\Hyper\\Csrf::xor",
+                  "signature": "private static function xor(string $first, string $second): string"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/csrf.ts::Csrf.xor",
+                  "signature": "private static xor(first: Buffer, second: Buffer): Buffer"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_csrf.py::Csrf._xor",
+                  "signature": "def _xor(first: bytes, second: bytes) -> bytes"
+                }
+              }
+            }
+          ]
         }
       ]
     },
@@ -2801,6 +2930,43 @@
               "compare": "exact",
               "sentence": "HY-24.4",
               "state": "`valid` states whether the form value `value` is a masked value of the token `token`."
+            }
+          }
+        },
+        "masked": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "token": {
+              "role": "input"
+            },
+            "hexadecimal": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-24.2",
+              "state": "`hexadecimal` states whether the masked value of the token `token` is 128 lowercase hexadecimal digits."
+            },
+            "distinct": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-24.3",
+              "state": "`distinct` states whether two masked values of the token `token` differ, because each draws a new mask."
+            },
+            "valid": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-24.4",
+              "state": "`valid` states whether each of the two masked values is a masked value of the token `token`."
             }
           }
         }

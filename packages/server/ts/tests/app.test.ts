@@ -6,7 +6,7 @@ import { inspect } from 'node:util';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { checkManifest, createApplication, decodeResponse, renderParts, type TemplateIndex } from '@polyspec/hyper-client';
 import { decodeTemplate, parseJson } from '@polyspec/template/render';
-import { verifyToken } from '../src/csrf.js';
+import { Csrf } from '../src/csrf.js';
 import { App, Reply as ReplyClass, Request, Result, type Handlers, type Loader, type Reply, type Response } from '../src/index.js';
 import { cookie, Fixture, FIXTURES, handlers, json, JSON_REGION, parsed, present, record, TEMPLATES, text, type Services } from './support.js';
 
@@ -391,7 +391,7 @@ describe('App', () => {
 
   it('gives the page of a renewing action the new token (HY-72)', async () => {
     const page = json(await fixture.post('/add', { _csrf: await fixture.token(), name: 'sign-in-page' }, JSON_REGION));
-    expect(verifyToken(text(fixture.session.get('_hyper_csrf')), text(page.shared.csrf))).toBe(true);
+    expect(Csrf.verify(text(fixture.session.get('_hyper_csrf')), text(page.shared.csrf))).toBe(true);
   });
 
   it('sends only the paths that the templates of the route read, after the title and the token of the shared data (HY-10, HY-73)', async () => {
@@ -448,7 +448,7 @@ describe('App', () => {
     const masked = text(json(await fixture.get('/list', JSON_REGION)).shared.csrf);
     const token = text(fixture.session.get('_hyper_csrf'));
     expect(token).toMatch(/^[0-9a-f]{64}$/);
-    expect(verifyToken(token, masked)).toBe(true);
+    expect(Csrf.verify(token, masked)).toBe(true);
   });
 
   it('fails a loader that renews the session (HY-72, HY-43)', async () => {

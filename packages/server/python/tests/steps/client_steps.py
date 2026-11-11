@@ -6,7 +6,7 @@ import tempfile
 from pathlib import Path
 from urllib.parse import urlencode
 
-from polyspec.hyper._csrf import masked
+from polyspec.hyper._csrf import Csrf
 from polyspec.hyper.client import Choice, ClientRendering
 from polyspec.hyper.request import Request
 from polyspec.hyper.session import ArraySession
@@ -54,7 +54,7 @@ def cases(case) -> None:
     form = {name: str(value) for name, value in (spec.get("form") or {}).items()}
     if spec.get("csrf"):
         session.set("_hyper_csrf", TOKEN)
-        form = {"_csrf": masked(TOKEN), **form}
+        form = {"_csrf": Csrf.masked(TOKEN), **form}
     body = ""
     if form or "form" in spec:
         headers["Content-Type"] = "application/x-www-form-urlencoded"

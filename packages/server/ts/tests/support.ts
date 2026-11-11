@@ -4,7 +4,7 @@ import type { Server } from 'node:http';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { expect } from 'vitest';
-import { verifyToken } from '../src/csrf.js';
+import { Csrf } from '../src/csrf.js';
 import { App, BadRequest, Forbidden, MemorySessionStore, NotFound, Redirect, Request, Result, type AppOptions, type ClientRendering, type Handlers, type Response } from '../src/index.js';
 import type { SessionStore } from '../src/session.js';
 
@@ -193,7 +193,7 @@ export class Fixture {
   unmasked(body: string): string {
     const token = text(this.session.get('_hyper_csrf'));
     return body.replace(/[0-9a-f]{128}/g, (found) => {
-      expect(verifyToken(token, found), found).toBe(true);
+      expect(Csrf.verify(token, found), found).toBe(true);
       return 'masked';
     });
   }

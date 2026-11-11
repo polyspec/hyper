@@ -12,7 +12,7 @@ import warnings
 from urllib.parse import urlencode
 
 from polyspec.hyper.app import App
-from polyspec.hyper._csrf import verify
+from polyspec.hyper._csrf import Csrf
 from polyspec.hyper.reply import Reply
 from polyspec.hyper.request import Request
 from polyspec.hyper.response import Response
@@ -96,7 +96,7 @@ class FixtureTest(unittest.TestCase):
         token = self.session_token()
 
         def replace(found: re.Match) -> str:
-            self.assertTrue(verify(token, found[0]), found[0])
+            self.assertTrue(Csrf.verify(token, found[0]), found[0])
             return "masked"
 
         return re.sub(r"[0-9a-f]{128}", replace, body)

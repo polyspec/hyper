@@ -19,7 +19,7 @@ from ._build import read_build_id
 from ._representation_entries import check_handlers as check_representation_handlers
 from . import _context
 from ._context import Context
-from ._csrf import masked, verify
+from ._csrf import Csrf
 from ._data_model import check
 from ._kept import apply, select
 from ._media import JSON, TEXT_HTML
@@ -321,7 +321,7 @@ class App:
         session = Session(store)
         flash = session.take_flash()
         request = request._with_route(path, match["params"])._with_session(
-            flash, masked(session.csrf_token())
+            flash, Csrf.masked(session.csrf_token())
         )
 
         return self._routed(
@@ -435,7 +435,7 @@ class App:
             # token.
             if reply._take_renewal():
                 session.renew()
-                request = request._with_session(flash, masked(session.csrf_token()))
+                request = request._with_session(flash, Csrf.masked(session.csrf_token()))
             if result._is_redirect():
                 return self._redirect(session, result, base_path)
             return _without_renewal(
@@ -819,7 +819,7 @@ class App:
         or None."""
         if request.media_type() not in self._form_types:
             return Response.text(415, "Unsupported Media Type")
-        if not verify(session.csrf_token(), request.form_string("_csrf")):
+        if not Csrf.verify(session.csrf_token(), request.form_string("_csrf")):
             return Response.text(403, "Forbidden")
         return None
 

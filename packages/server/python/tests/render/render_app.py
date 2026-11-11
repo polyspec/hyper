@@ -11,7 +11,7 @@ from urllib.parse import urlencode
 
 from .fixture_app import FIXTURES, PROGRAM
 from polyspec.hyper.app import App
-from polyspec.hyper._csrf import masked
+from polyspec.hyper._csrf import Csrf
 from polyspec.hyper.reply import Reply
 from polyspec.hyper.request import Request
 from polyspec.hyper.response import Response
@@ -156,7 +156,7 @@ class PageTest(unittest.TestCase):
                     "HX-Request": "true",
                 },
                 body=urlencode(
-                    {"_csrf": masked(_token(app, store)), "name": "ok"}
+                    {"_csrf": Csrf.masked(_token(app, store)), "name": "ok"}
                 ).encode(),
             ),
             store,
@@ -227,7 +227,7 @@ class ActionTest(unittest.TestCase):
                 "/add",
                 {"Content-Type": "application/x-www-form-urlencoded"},
                 body=urlencode(
-                    {"_csrf": masked(_token(app, store)), "name": "ok"}
+                    {"_csrf": Csrf.masked(_token(app, store)), "name": "ok"}
                 ).encode(),
             ),
             store,
@@ -260,7 +260,7 @@ class ActionTest(unittest.TestCase):
                     "Accept": "application/vnd.hyper+json",
                 },
                 body=urlencode(
-                    {"_csrf": masked(_token(app, store)), "name": "taken"}
+                    {"_csrf": Csrf.masked(_token(app, store)), "name": "taken"}
                 ).encode(),
             ),
             store,
@@ -282,7 +282,7 @@ class ActionTest(unittest.TestCase):
                     "/add",
                     {"Content-Type": "application/x-www-form-urlencoded"},
                     body=urlencode(
-                        {"_csrf": masked(_token(app, store)), "name": name}
+                        {"_csrf": Csrf.masked(_token(app, store)), "name": name}
                     ).encode(),
                 ),
                 store,
@@ -459,7 +459,7 @@ def post_keep(store: ArraySession, fields: dict) -> Response:
             "POST",
             "/_hyper/keep",
             {"Content-Type": "application/x-www-form-urlencoded"},
-            body=urlencode({"_csrf": masked(token), **fields}).encode(),
+            body=urlencode({"_csrf": Csrf.masked(token), **fields}).encode(),
         ),
         store,
     )

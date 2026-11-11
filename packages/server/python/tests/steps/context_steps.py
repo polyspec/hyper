@@ -6,7 +6,7 @@ import json
 from urllib.parse import urlencode
 
 from polyspec.hyper._context import hash_of, signed_text, text_of
-from polyspec.hyper._csrf import masked
+from polyspec.hyper._csrf import Csrf
 from polyspec.hyper._json_codec import decode
 from polyspec.hyper._session import Session
 from polyspec.hyper.request import Request
@@ -51,7 +51,7 @@ def cases(case) -> None:
         app.handle(Request("GET", "/", {"Accept": "text/html"}), store)
         calls.clear()
         selections.clear()
-        fields["_csrf"] = masked(Session(store).csrf_token())
+        fields["_csrf"] = Csrf.masked(Session(store).csrf_token())
     body = urlencode(fields).encode("utf-8") if fields else b""
     target = request["target"]
     sent = Request(

@@ -30,6 +30,7 @@ final class CaseSteps
             'accept.json select' => AcceptSteps::select(...),
             'cookies.json parse' => CookiesSteps::parse(...),
             'csrf.json mask' => CsrfSteps::mask(...),
+            'csrf.json masked' => CsrfSteps::masked(...),
             'csrf.json verify' => CsrfSteps::verify(...),
             'fields.json urlencoded' => FieldsSteps::urlencoded(...),
             'fields.json multipart' => FieldsSteps::multipart(...),

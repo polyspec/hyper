@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- The masked session token is the unit `Csrf` in the three servers, with the static members `masked`, `mask`, `verify`, `bytes` and `xor`. The new mask of every masked value is the section `masked` of `contracts/csrf.json`, which replaces the native csrf tests of each server (HY-24) (H28.11).
+
 - The parse of a Cookie header is the unit `Cookies` in the three servers, with the static members `parse`, `percentDecode` and `utf8`, and the spec lists them (HY-129) (H28.11).
 
 - The Accept parser and the selection of a media type are the unit `Accept` in the three servers, with the same members, a range `MediaRange` with its weight in thousandths and the error `InvalidAccept`; their cases are `contracts/accept.json`, which replaces the native accept tests of each server (HY-116) (H28.11).
