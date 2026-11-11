@@ -4,7 +4,7 @@
 
 import { createRequire } from 'node:module';
 import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { readFileSync, statSync } from 'node:fs';
 import { basename, join } from 'node:path';
 
 const require = createRequire(new URL('./typescript/package.json', import.meta.url));
@@ -30,6 +30,11 @@ for (const arg of rest) {
 
 // The files git tracks below the directories, relative to the root; a file git does not track is not part of the tree.
 function listFiles(dirs: string[], keep: (path: string) => boolean): string[] {
+  for (const dir of dirs) {
+    if (!statSync(join(root!, dir), { throwIfNoEntry: false })?.isDirectory()) {
+      throw new Error(`no such directory ${dir} under ${root}`);
+    }
+  }
   const listed = execFileSync('git', ['-c', 'core.quotePath=false', 'ls-files', '-z', '--', ...dirs], { cwd: root!, encoding: 'utf8' });
   return listed.split('\0').filter((path) => path !== '' && keep(path)).sort();
 }

@@ -42,6 +42,10 @@ require $autoload;
 /** @return list<string> the PHP files git tracks below a directory, relative to the root, sorted */
 function phpFiles(string $root, string $dir): array
 {
+    if (!is_dir($root . '/' . $dir)) {
+        fwrite(STDERR, "read-php.php: no such directory $dir under $root\n");
+        exit(1);
+    }
     exec('git -C ' . escapeshellarg($root) . ' -c core.quotePath=false ls-files -- ' . escapeshellarg($dir), $lines, $status);
     if ($status !== 0) {
         fwrite(STDERR, "read-php.php: git ls-files failed under $root\n");

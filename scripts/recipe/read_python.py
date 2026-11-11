@@ -165,6 +165,9 @@ def read_tests(root: Path, rel: str, out: dict) -> None:
 
 def files(root: Path, dirs: list[str]) -> list[str]:
     """The Python files git tracks below the directories, relative to the root, sorted."""
+    for d in dirs:
+        if not (root / d).is_dir():
+            raise SystemExit(f"read_python.py: no such directory {d} under {root}")
     listed = subprocess.run(
         ["git", "-c", "core.quotePath=false", "ls-files", "-z", "--", *dirs], cwd=root, capture_output=True, text=True, check=True
     ).stdout
