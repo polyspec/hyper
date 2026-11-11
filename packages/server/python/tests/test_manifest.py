@@ -29,7 +29,9 @@ BASE = {
 class ManifestTest(unittest.TestCase):
     def test_a_file_that_is_not_json_or_utf8_raises_the_value_error(self) -> None:
         # HY-106: the exact class ValueError, not a subclass such as JSONDecodeError or UnicodeDecodeError.
-        for content in (b'{"layout":', b'{"layout":"\xff"}'):
+        # HY-106.7: a valid manifest that starts with U+FEFF is not valid JSON.
+        bom = b"\xef\xbb\xbf" + json.dumps(BASE).encode("utf-8")
+        for content in (b'{"layout":', b'{"layout":"\xff"}', bom):
             with tempfile.TemporaryDirectory() as directory:
                 file = Path(directory) / "app.json"
                 file.write_bytes(content)

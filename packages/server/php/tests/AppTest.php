@@ -1766,6 +1766,23 @@ final class AppTest extends TestCase
             foreach ($valid as $name => $text) {
                 file_put_contents("{$program}/{$name}", $text);
             }
+            // HY-106.7: a valid file that starts with U+FEFF is not valid JSON.
+            file_put_contents($manifest, "\xEF\xBB\xBF" . file_get_contents(__DIR__ . '/fixtures/app.json'));
+            self::assertSame(\InvalidArgumentException::class, $failure(fn () => Manifest::fromFile($manifest)), 'manifest with U+FEFF');
+            foreach ($valid as $name => $value) {
+                file_put_contents("{$program}/{$name}", "\xEF\xBB\xBF{$value}");
+                $open = match ($name) {
+                    'build.json' => fn () => Build::read("{$program}/build.json"),
+                    'program.json' => fn () => Renderer::open($program, 'Z'),
+                    default => fn () => Reads::open($program),
+                };
+                self::assertSame(
+                    $name === 'build.json' ? InvalidBuild::class : \InvalidArgumentException::class,
+                    $failure($open),
+                    "{$name} with U+FEFF",
+                );
+                file_put_contents("{$program}/{$name}", $value);
+            }
             foreach (['{"layout":', "{\"layout\":\"\xff\"}"] as $text) {
                 file_put_contents($manifest, $text);
                 self::assertSame(\InvalidArgumentException::class, $failure(fn () => Manifest::fromFile($manifest)), 'manifest');

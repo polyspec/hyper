@@ -67,6 +67,17 @@ describe('client stream subscription', () => {
     expect(events[1]).toEqual({ event: 'message', data: 'b', id: '7' });
   });
 
+  it('ignores one leading U+FEFF of a stream and keeps a second as a character of the first line', async () => {
+    vi.useFakeTimers();
+    const fetch: Fetch = async () => eventStream(['\uFEFF\uFEFFdata: x\n\ndata: y\n\n'], true);
+    const events: unknown[] = [];
+    client(fetch).subscribe('/api/events', { onEvent: (event) => events.push(event), onError: () => undefined });
+
+    await vi.advanceTimersByTimeAsync(0);
+    // The first line is the unknown field `\uFEFFdata`, which dispatches no event.
+    expect(events).toEqual([{ event: 'message', data: 'y', id: '' }]);
+  });
+
   it('reports a silent stream and reconnects', async () => {
     vi.useFakeTimers();
     const sent: string[] = [];

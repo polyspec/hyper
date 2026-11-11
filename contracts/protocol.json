@@ -4149,6 +4149,12 @@
                   "en": "Cookies are not checked: the server ignores a `hy-keep` cookie that is not a JSON object, ignores its values that do not conform (HY-38), and starts a new session for a session cookie that is not an identifier that it created (HY-45).",
                   "ko": "Cookie는 검사하지 않는다: 서버는 JSON 객체가 아닌 `hy-keep` cookie를 무시하고, 그 cookie의 값 가운데 맞지 않는 값(HY-38)을 무시하며, 자기가 만든 identifier가 아닌 session cookie에는 새 session을 시작한다(HY-45).",
                   "koSource": "b012deb3492c73399add7d78d1062319bf561f6df4cec75848d338ebac0b05fb"
+                },
+                {
+                  "id": "HY-42.5",
+                  "en": "A leading U+FEFF of a decoded query or form name or value (HY-56), of a route parameter (HY-5) and of a cookie value (HY-129) is a character of it, which no server and no browser code removes.",
+                  "ko": "디코드한 query나 form 이름이나 값(HY-56), route parameter(HY-5), cookie 값(HY-129) 앞의 U+FEFF는 그 문자이며, 어떤 server와 브라우저 코드도 그것을 지우지 않는다.",
+                  "koSource": "f95a97f62cbf6f4e4d5b5024989f306d5db7f012cebc00bc15b89903e7a7376c"
                 }
               ]
             }
@@ -5287,6 +5293,12 @@
                   "en": "An application that fails to open raises the open error of its runtime, of exactly that class: `InvalidArgumentException` in PHP, `Error` in Node and `ValueError` in Python, also when a file that it reads is not valid JSON or not valid UTF-8.",
                   "ko": "열리지 않는 애플리케이션은 자기 runtime의 open 오류를 정확히 그 클래스로 던진다: PHP에서는 `InvalidArgumentException`, Node에서는 `Error`, Python에서는 `ValueError`이며, 읽는 파일이 유효한 JSON이나 유효한 UTF-8이 아닐 때에도 그렇다.",
                   "koSource": "1217816e4cd4d35af5355b22e6cfad9ff8df2195ab6383a3533fb7b970736f8a"
+                },
+                {
+                  "id": "HY-106.7",
+                  "en": "A file that starts with U+FEFF is not valid JSON, because JSON allows no character before a value.",
+                  "ko": "U+FEFF로 시작하는 파일은 올바른 JSON이 아니다. JSON은 값 앞에 어떤 문자도 허용하지 않기 때문이다.",
+                  "koSource": "27f540dae8a7b876d837018627863108e36395db018721519ff324a5b9b2448c"
                 }
               ]
             }

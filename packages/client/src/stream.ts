@@ -89,8 +89,10 @@ export class StreamSubscription {
       this.fail(attempt, new Error(`the stream of ${this.url} has no body`));
       return;
     }
-    // The fatal decoder turns a body that is not UTF-8 into a parse failure (HYC-18).
-    const decoder = new TextDecoder('utf-8', { fatal: true });
+    // The fatal decoder turns a body that is not UTF-8 into a parse failure (HYC-18). The parser removes the one leading
+    // U+FEFF that the standard ignores (HTML, server-sent events), so the decoder keeps it with ignoreBOM, and a second
+    // U+FEFF stays a character of the first line.
+    const decoder = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true });
     // The parser ignores an unknown field and an invalid retry value, which the standard says are not failures (HYC-18).
     const parser = createParser({
       onId: (id) => {

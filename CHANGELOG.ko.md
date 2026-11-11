@@ -6,13 +6,15 @@
 
 ## Unreleased
 
+- 브라우저 코드는 server-sent events 표준이 요구하는 대로 event stream 앞의 두 번째 U+FEFF를 첫 줄의 문자로 유지합니다. 이전에는 decoder가 U+FEFF 하나를, stream parser가 또 하나를 버려서, 두 개 뒤의 줄이 event를 보냈습니다. HY-42.5는 디코드한 이름, 값, route parameter, cookie 값 앞의 U+FEFF가 그 문자임을, HY-106.7은 U+FEFF로 시작하는 파일이 올바른 JSON이 아님을 정하며, PHP와 Python의 open test는 Node test처럼 그런 파일을 확인합니다(H28.11).
+
 - 세 server의 unit `Csrf`는 소문자 16진수 64자리의 token과 mask로만 가리고 검증하며, 다른 값에서는 HY-24.9가 이제 정하는 대로 같은 문구로 실패합니다. 이전에는 62자리 token이 세 언어 모두에서 126자리 값을 주었고, Python은 대문자 숫자와 공백을 읽었으며, PHP는 warning을 냈고, Node는 길이가 다른 저장 token에서 throw했지만 PHP와 Python은 false로 답했습니다. `xor`는 짧은 쪽 길이를 유지하지 않고 길이가 다른 두 byte열에서 실패합니다. HY-24.9는 token 자리에 다른 값을 가진 session이 새 token을 받는다는 것도 정합니다. `contracts/csrf.json`은 62자리 token, 대문자 숫자를 가진 mask, 공백을 가진 mask의 오류를 비교합니다(HY-24) (H28.11).
 
 - 한국어 recipe(`docs/spec/recipe.ko.md`)는 번역 검토를 거쳐 HYR-8의 규칙, field `keys`, cookie, 공백을 영어 recipe와 같이 서술하고, 검토한 영어 원문의 hash를 가집니다(H28.11).
 
 - `contracts/context.json`, `contracts/functions.json`, `contracts/representations.json`의 step은 PHP, Node, Python에서 한 규칙으로 애플리케이션을 읽습니다. 없는 `shared`, `actions`, `embedData`, `context`는 없음을 선언하고, 있는 member는 그 타입을 가져야 하며, action은 `redirect` 또는 정수 `page`와 `data`를 가지고, `stop`은 `NotFound`여야 하며, 선언된 loader와 action만 등록합니다. PHP는 더 이상 member를 cast하지 않고, Node는 더 이상 모든 route에 빈 loader를 등록하거나 `page` 없는 action에 200으로 응답하지 않으며, case의 session token은 모든 언어에서 첫 `text/html` 요청에서 옵니다. Python은 PHP와 Node가 거부하는 NaN과 Infinity 없이 case의 context를 decode합니다. container step은 `no factory is bound for` 오류만 선언된 실패로 세고, Python csrf step은 PHP, Node처럼 문자열이 아닌 field에서 실패합니다(H28.11).
 
-- Node server와 브라우저 router는 PHP, Python처럼 decode한 cookie 값, form과 query field, route parameter 앞의 U+FEFF를 문자로 유지합니다. `TextDecoder`가 기본으로 그 문자를 버렸기 때문에 `a=%EF%BB%BFx`가 `x`가 되었습니다. U+FEFF로 시작하는 Node 애플리케이션의 JSON 파일은 PHP, Python처럼 올바른 JSON이 아니며, UTF-8이나 JSON이 올바르지 않은 애플리케이션 파일의 오류는 그 원인을 가집니다. `contracts/cookies.json`, `contracts/fields.json`, `contracts/routes.json`은 앞에 U+FEFF가 있는 case를 가집니다(HY-42, H28.11).
+- Node server와 브라우저 router는 PHP, Python처럼 decode한 cookie 값, form과 query field, route parameter 앞의 U+FEFF를 문자로 유지합니다. `TextDecoder`가 기본으로 그 문자를 버렸기 때문에 `a=%EF%BB%BFx`가 `x`가 되었습니다. U+FEFF로 시작하는 Node 애플리케이션의 JSON 파일은 PHP, Python처럼 올바른 JSON이 아니며, UTF-8이나 JSON이 올바르지 않은 애플리케이션 파일의 오류는 그 원인을 가집니다. `contracts/cookies.json`, `contracts/fields.json`, `contracts/routes.json`은 앞에 U+FEFF가 있는 case를 가집니다(HY-42, HY-106, HY-129) (H28.11).
 
 - context는 세 server에서 static member `held`, `text`, `hash`, `member`, `validHeader`, `withContext`를 가진 unit `Context`입니다. 브라우저는 `@polyspec/hyper-client`의 `withContext`로 context를 놓습니다. 브라우저는 JSON 응답의 context를 `shared`의 끝이 아니라 HY-10.3의 자리에 놓고, 이미 `context`를 가진 공유 데이터에 context를 놓으면 실패합니다. Python server는 PHP와 Node처럼 애플리케이션에 context handler가 없을 때에도 key `context`를 반환하는 shared handler를 실패시킵니다(HY-124). Node context handler는 데이터 모델 밖의 값(HY-44)에 대해 일반 문구 대신 그 원인을 보고하고, `context`를 반환하는 shared handler에 대한 Node 문구는 PHP, Python과 같이 `returned`입니다. PHP는 context가 맨 앞에 올 때 공유 데이터의 정수 key를 유지합니다. loader와 action이 받는 하나의 인자의 Node 타입은 `Context`를 대신하는 `HandlerArgument`이며, `ContextHandler`를 export합니다. `contracts/context.json`의 case는 context 자리의 값과 응답 hook이 받는 failure(HY-60)를 비교하고, list를 반환하는 context handler, 데이터 모델 밖의 context, context가 없는 애플리케이션에서 `context`를 반환하는 shared handler를 추가하며, 기본값 없이 field를 읽습니다(H28.11).
 
