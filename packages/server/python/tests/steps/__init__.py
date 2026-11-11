@@ -51,6 +51,7 @@ STEPS = {
     ("result.json", "page"): result_steps.page,
     ("result.json", "redirect"): result_steps.redirect,
     ("result.json", "stop"): result_steps.stop,
+    ("result.json", "types"): result_steps.types,
     ("routes.json", "cases"): routes_steps.cases,
     ("routes.json", "baseCases"): routes_steps.base_cases,
     ("routes.json", "invalidPaths"): routes_steps.invalid_paths,

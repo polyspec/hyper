@@ -5832,6 +5832,34 @@
               "state": "`error` is the message of the error with which making the stop fails, or null."
             }
           }
+        },
+        "types": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "call": {
+              "role": "input"
+            },
+            "argument": {
+              "role": "input"
+            },
+            "rejected": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-25.6",
+              "state": "`rejected` states whether the method `call` of a redirect, `flash` with the value null under the name or `changed` with the topic, fails with `TypeError` for the JSON text `argument` as a handler gives it."
+            }
+          }
         }
       }
     }

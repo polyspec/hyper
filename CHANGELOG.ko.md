@@ -6,6 +6,8 @@
 
 ## Unreleased
 
+- PHP `Result::flash`는 HY-25.5대로 십진수 flash 이름과 다시 저장한 이름의 자리를 유지합니다. 이전에는 spread가 PHP가 정수 key로 두는 이름을 다시 번호 매겨 `flash('5', …)`가 이름을 잃었습니다. Node와 Python은 PHP가 선언된 타입으로 하듯 문자열이 아닌 flash 이름이나 바뀐 topic을 `TypeError`로 실패시키고(HY-25.6), `contracts/result.json`은 section `types`와 십진수 이름의 case를 추가합니다. PHP 결과의 data는 임의의 key를 가진 map으로 선언됩니다(HY-25) (H28.11).
+
 - data model 밖의 값은 세 server에서 종류마다 하나의 오류로 실패하며, 그 클래스는 HY-46.2의 클래스(`InvalidArgumentException`, `RangeError`, `ValueError`)이고 메시지는 HY-44.8이 명시한 것입니다. 이전에는 Node가 template의 `BindError`나 `TypeError`로, PHP가 template의 `BindError`나 `UnexpectedValueException`으로 실패했고 메시지가 서로 달랐습니다. Node와 PHP는 binding의 오류를 원인으로 유지하고, `DataModel.contains`는 그 오류에만 false를 반환하고 다른 실패는 전달합니다. 이전에는 Node와 PHP가 모든 실패에 false를 반환했습니다(HY-44) (H28.11-1).
 
 - action의 결과와 loader 및 action의 정지는 세 server에서 파일마다 하나의 unit(`Result`, `Redirect`, `NotFound`, `Forbidden`, `BadRequest`)이고, native test를 대신하는 그 case를 `contracts/result.json`이 담습니다. 세 server는 리다이렉트 위치, page 상태, 리다이렉트가 아닌 결과의 리다이렉트 정지를 같은 메시지와 HY-46.2의 클래스(`InvalidArgumentException`, `RangeError`, `ValueError`)로 실패시킵니다. 이전에는 Node가 다른 메시지의 `Error`를 던졌습니다. PHP `Result::flash`는 Node와 Python처럼 data model 밖의 값을 실패시킵니다(HY-25.4). Python은 Node처럼 lone surrogate가 있는 리다이렉트 위치를 거부하고, flash 값을 저장하는 method 이름을 `flash_value` 대신 `flash`로 하며, 정지를 module `redirect`, `not_found`, `forbidden`, `bad_request`에서 import합니다. 정지의 메시지는 세 server에서 `not found`, `forbidden`, `bad request`입니다(HY-25, HY-27, HY-46, HY-50, HY-58) (H28.11).

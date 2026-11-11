@@ -98,6 +98,28 @@ export const steps = {
     reader.compare('changedTopics', outcome.result === null ? null : [...outcome.result.changedTopics]);
     reader.compare('error', outcome.error);
   },
+  // Calls `flash` or `changed` with the decoded argument as a JavaScript caller may, and records whether it fails with
+  // TypeError (HY-25.6).
+  types(reader: CaseReader): void {
+    const call = text(reader, 'call');
+    if (call !== 'flash' && call !== 'changed') throw new Error(`the call ${call} of the case is unknown`);
+    const argument = hostValue(JsonCodec.decode(text(reader, 'argument')));
+    const result = Result.redirect('/');
+    let rejected = false;
+    try {
+      if (call === 'flash') {
+        // @ts-expect-error -- a JavaScript caller passes a name that is not a string
+        result.flash(argument, null);
+      } else {
+        // @ts-expect-error -- a JavaScript caller passes a topic that is not a string
+        result.changed(argument);
+      }
+    } catch (error) {
+      if (!(error instanceof TypeError)) throw error;
+      rejected = true;
+    }
+    reader.compare('rejected', rejected);
+  },
   // Makes the stop of the kind, or records the message of the error with which it fails (HY-27, HY-50).
   stop(reader: CaseReader): void {
     const kind = text(reader, 'kind');

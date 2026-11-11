@@ -74,15 +74,33 @@ def copies(case) -> None:
     try:
         for name, value in values:
             result = result.flash(name, value)
+        for names in topics:
+            result = result.changed(*names)
     except ValueError as failure:
         result = None
         error = str(failure)
-    if result is not None:
-        for names in topics:
-            result = result.changed(*names)
     case.compare("flashValues", None if result is None else result._flash_values)
     case.compare("changedTopics", None if result is None else result._changed_topics)
     case.compare("error", error)
+
+
+def types(case) -> None:
+    """Calls `flash` or `changed` with the decoded argument, and records whether it fails with TypeError
+    (HY-25.6)."""
+    call = _text(case, "call")
+    if call not in ("flash", "changed"):
+        raise ValueError(f"the call {call} of the case is unknown")
+    argument = json.loads(_text(case, "argument"), parse_constant=_reject)
+    result = Result.redirect("/")
+    rejected = False
+    try:
+        if call == "flash":
+            result.flash(argument, None)
+        else:
+            result.changed(argument)
+    except TypeError:
+        rejected = True
+    case.compare("rejected", rejected)
 
 
 def stop(case) -> None:

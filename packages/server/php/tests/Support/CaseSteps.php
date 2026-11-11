@@ -49,6 +49,7 @@ final class CaseSteps
             'result.json page' => ResultSteps::page(...),
             'result.json redirect' => ResultSteps::redirect(...),
             'result.json stop' => ResultSteps::stop(...),
+            'result.json types' => ResultSteps::types(...),
             'routes.json cases' => RoutesSteps::cases(...),
             'routes.json baseCases' => RoutesSteps::baseCases(...),
             'routes.json invalidPaths' => RoutesSteps::invalidPaths(...),

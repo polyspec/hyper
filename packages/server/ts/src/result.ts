@@ -41,11 +41,15 @@ export class Result {
   // Returns a copy that stores a flash value, a value of the data model, for the next request; a value outside the
   // data model fails (HY-44).
   flash(name: string, value: unknown): Result {
+    // HY-25.6: a caller in JavaScript may pass a name that is not a string.
+    if (typeof name !== 'string') throw new TypeError('a flash name is not a string (HY-25)');
     return new Result(this.location, this.status, this.data, new Map(this.flashValues).set(name, toValue(value)), this.changedTopics);
   }
 
   // Returns a copy that records changed topics for the next request; a topic that it records already keeps its place.
   changed(...topics: string[]): Result {
+    // HY-25.6: a caller in JavaScript may pass a topic that is not a string.
+    if (!topics.every((topic) => typeof topic === 'string')) throw new TypeError('a changed topic is not a string (HY-25)');
     return new Result(this.location, this.status, this.data, this.flashValues, [...new Set([...this.changedTopics, ...topics])]);
   }
 

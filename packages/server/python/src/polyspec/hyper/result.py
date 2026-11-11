@@ -55,7 +55,9 @@ class Result:
 
     def flash(self, name: str, value: object) -> Result:
         """Returns a copy that stores a flash value, a value of the data model, for the next request; a value outside
-        the data model fails (HY-44)."""
+        the data model fails (HY-44), and a name that is not a string fails with TypeError (HY-25.6)."""
+        if not isinstance(name, str):
+            raise TypeError("a flash name is not a string (HY-25)")
         DataModel.check(value)
         return Result(
             self.location,
@@ -67,7 +69,9 @@ class Result:
 
     def changed(self, *topics: str) -> Result:
         """Returns a copy that records changed topics for the next request; a topic that it records already keeps its
-        place."""
+        place; a topic that is not a string fails with TypeError (HY-25.6)."""
+        if not all(isinstance(topic, str) for topic in topics):
+            raise TypeError("a changed topic is not a string (HY-25)")
         return Result(
             self.location,
             self.status,

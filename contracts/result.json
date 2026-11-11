@@ -282,6 +282,31 @@
       "error": null
     },
     {
+      "id": "decimal_flash_names_keep_their_values_and_places",
+      "label": "decimal flash names keep their values and places",
+      "flashes": [
+        [
+          "5",
+          "\"x\""
+        ],
+        [
+          "6",
+          "\"y\""
+        ],
+        [
+          "5",
+          "\"z\""
+        ]
+      ],
+      "topics": [],
+      "flashValues": {
+        "5": "z",
+        "6": "y"
+      },
+      "changedTopics": [],
+      "error": null
+    },
+    {
       "id": "a_flash_value_may_be_a_map_with_a_list",
       "label": "a flash value may be a map with a list",
       "flashes": [
@@ -376,6 +401,36 @@
       "page": 200,
       "message": null,
       "error": "a redirect stop needs a redirect result (HY-50)"
+    }
+  ],
+  "types": [
+    {
+      "id": "a_flash_name_that_is_not_a_string_is_rejected",
+      "label": "a flash name that is not a string is rejected",
+      "call": "flash",
+      "argument": "5",
+      "rejected": true
+    },
+    {
+      "id": "a_changed_topic_that_is_not_a_string_is_rejected",
+      "label": "a changed topic that is not a string is rejected",
+      "call": "changed",
+      "argument": "5",
+      "rejected": true
+    },
+    {
+      "id": "a_flash_name_that_is_a_string_is_taken",
+      "label": "a flash name that is a string is taken",
+      "call": "flash",
+      "argument": "\"5\"",
+      "rejected": false
+    },
+    {
+      "id": "a_changed_topic_that_is_a_string_is_taken",
+      "label": "a changed topic that is a string is taken",
+      "call": "changed",
+      "argument": "\"5\"",
+      "rejected": false
     }
   ]
 }

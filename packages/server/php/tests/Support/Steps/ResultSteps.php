@@ -97,6 +97,32 @@ final class ResultSteps
         $case->compare('error', $error);
     }
 
+    /**
+     * Calls `flash` or `changed` with the decoded argument, and records whether it fails with TypeError, which the
+     * declared types raise under strict types (HY-25.6).
+     */
+    public static function types(CaseReader $case): void
+    {
+        $call = self::text($case, 'call');
+        $argument = json_decode(self::text($case, 'argument'), true, 512, JSON_THROW_ON_ERROR);
+        $result = Result::redirect('/');
+        $rejected = false;
+        try {
+            if ($call === 'flash') {
+                // @phpstan-ignore argument.type (a caller passes a name that is not a string)
+                $result->flash($argument, null);
+            } elseif ($call === 'changed') {
+                // @phpstan-ignore argument.type (a caller passes a topic that is not a string)
+                $result->changed($argument);
+            } else {
+                throw new \UnexpectedValueException("the call {$call} of the case is unknown");
+            }
+        } catch (\TypeError) {
+            $rejected = true;
+        }
+        $case->compare('rejected', $rejected);
+    }
+
     /** Makes the stop of the kind, or records the message of the error with which it fails (HY-27, HY-50). */
     public static function stop(CaseReader $case): void
     {
@@ -150,7 +176,7 @@ final class ResultSteps
             : throw new \UnexpectedValueException("the case field {$name} is not a list");
     }
 
-    /** @return array<string, mixed> */
+    /** @return array<array-key, mixed> a map whose decimal names PHP keeps as integer keys */
     private static function data(CaseReader $case, string $name): array
     {
         $value = $case->input($name);
@@ -162,8 +188,7 @@ final class ResultSteps
         }
         $map = [];
         foreach ($value as $key => $item) {
-            // A key of a JSON object is a string, also one that PHP would write as an integer key.
-            $map[(string) $key] = Plain::value($item);
+            $map[$key] = Plain::value($item);
         }
 
         return $map;

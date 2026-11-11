@@ -631,7 +631,7 @@ final class App
      *
      * @param RouteDefinition $route
      * @param RouteHandler $handler
-     * @param array<string, mixed> $invalid
+     * @param array<array-key, mixed> $invalid
      */
     private function page(
         Request $request,

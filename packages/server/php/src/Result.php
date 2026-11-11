@@ -11,8 +11,8 @@ namespace Polyspec\Hyper;
 final class Result
 {
     /**
-     * @param array<string, mixed> $data
-     * @param array<string, mixed> $flashValues
+     * @param array<array-key, mixed> $data
+     * @param array<array-key, mixed> $flashValues
      * @param list<string> $changedTopics
      */
     private function __construct(
@@ -42,7 +42,7 @@ final class Result
     /**
      * Returns the route page with a status of 200, 409 or 422 and the data that the page renders (HY-58).
      *
-     * @param array<string, mixed> $data
+     * @param array<array-key, mixed> $data
      */
     public static function page(int $status, array $data): self
     {
@@ -56,7 +56,7 @@ final class Result
     /**
      * Returns invalid input with the data that the page renders: the page with status 422 (HY-26).
      *
-     * @param array<string, mixed> $data
+     * @param array<array-key, mixed> $data
      */
     public static function invalid(array $data): self
     {
@@ -69,13 +69,12 @@ final class Result
      */
     public function flash(string $name, mixed $value): self
     {
-        return new self(
-            $this->location,
-            $this->status,
-            $this->data,
-            [...$this->flashValues, $name => self::checked($value)],
-            $this->changedTopics,
-        );
+        // An assignment keeps every name and the place of a name stored again (HY-25.5); a spread would number the
+        // names that PHP keeps as integer keys again.
+        $values = $this->flashValues;
+        $values[$name] = self::checked($value);
+
+        return new self($this->location, $this->status, $this->data, $values, $this->changedTopics);
     }
 
     /** Returns a copy that records changed topics for the next request; a topic that it records already keeps its place. */
