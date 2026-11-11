@@ -111,7 +111,7 @@ for (const m of mutations) {
 }
 
 // The readers' own output for a tree, as the check reads it (HYR-8).
-type ReaderOutput = { units: { name: string; internal: boolean }[]; uses: { file: string; name: string }[]; constants: { file: string; name: string }[]; tests: { file: string; name: string }[]; dynamicTests: { file: string; line: number }[]; members: { unit: string; name: string; visibility: string }[] };
+type ReaderOutput = { units: { name: string; kind: string; internal: boolean }[]; uses: { file: string; name: string }[]; constants: { file: string; name: string }[]; tests: { file: string; name: string }[]; dynamicTests: { file: string; line: number }[]; members: { unit: string; name: string; visibility: string }[] };
 
 const readerCommands: Record<'php' | 'node' | 'python', (root: string) => [string, string[]]> = {
   php: (root) => [process.env.RECIPE_PHP ?? 'php', [path.join(repo, 'scripts', 'recipe', 'read-php.php'), root, '--autoload', path.join(root, 'autoload.php')]],
@@ -163,4 +163,9 @@ test('the PHP reader reads @internal as a tag of a docblock line, not as a word 
   assert.equal(out.units.find((u) => u.name === 'Tagged')?.internal, false, 'Tagged is internal by a word in its docblock');
   assert.equal(out.members.find((m) => m.unit === 'Tagged' && m.name === 'size')?.visibility, 'public', 'Tagged::size is not public');
   assert.equal(out.units.find((u) => u.name === 'Sealed')?.internal, true, 'Sealed has the @internal tag but is not internal');
+});
+
+test('a PHP class of static methods is a functions unit, whatever its properties', () => {
+  const kind = readFixture('php', path.join(fixture, 'readers', 'php')).units.find((u) => u.name === 'Helpers')?.kind;
+  assert.equal(kind, 'functions', `Helpers is a ${kind} unit`);
 });
