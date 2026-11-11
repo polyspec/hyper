@@ -6,7 +6,8 @@ import re
 
 from polyspec.hyper.reply import Reply
 from polyspec.hyper.request import Request
-from polyspec.hyper.result import NotFound, Result
+from polyspec.hyper.not_found import NotFound
+from polyspec.hyper.result import Result
 
 from posts import Posts
 
@@ -109,11 +110,7 @@ def handlers(services: Services) -> dict:
         identifier = services.posts.create(
             values["title"], values["author"], values["body"]
         )
-        return (
-            Result.redirect("/board")
-            .flash_value("created", identifier)
-            .changed("posts")
-        )
+        return Result.redirect("/board").flash("created", identifier).changed("posts")
 
     return {
         "shared": shared,

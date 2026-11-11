@@ -13,8 +13,8 @@
 | manifest | PHP와 브라우저가 읽는 애플리케이션 매니페스트 | implemented | `make test-php`, `make test-js` |
 | router | 적합성 사례를 공유하는 PHP 라우터와 브라우저 라우터 | implemented | `make test-php`, `make test-js` |
 | rest-routes | 라우트 경로 끝의 나머지 매개변수 `{name*}`(HY-49) | implemented | `make test-php`, `make test-js` |
-| stop-results | loader와 action의 redirect, 금지 결과(HY-50, HY-51) | implemented | `make test-php` |
-| page-statuses | loader와 action의 잘못된 요청 멈춤, 200, 409, 422로 페이지를 렌더하는 action 결과(HY-58) | implemented | `make test-php`, `make hyper-test-node` |
+| stop-results | loader와 action의 redirect, 금지 결과(HY-50, HY-51) | implemented | `make test-php`, `make recipe-run-php`, `make recipe-run-node`, `make recipe-run-python`이 실행하는 `contracts/result.json`의 case |
+| page-statuses | loader와 action의 잘못된 요청 멈춤, 200, 409, 422로 페이지를 렌더하는 action 결과(HY-58) | implemented | `make test-php`, `make hyper-test-node`, `make recipe-run-php`, `make recipe-run-node`, `make recipe-run-python`이 실행하는 `contracts/result.json`의 case |
 | page-forbidden | loader나 action은 reply로 그 요청의 페이지에 상태 403을 준다. 요청이 볼 수 없는 데이터 대신 다른 데이터를 보이는 페이지를 위한 것이다(HY-69) | implemented | `make test-php`, `make hyper-test-node` |
 | body-checks | 애플리케이션의 body 한도와 받는 폼 type, 413, 415, CSRF 403 순서의 검사(HY-59) | implemented | `make test-php`, `make hyper-test-node`, `make server-parity` |
 | failure-cache | 상태가 400 이상인 모든 응답의 `Cache-Control: no-store`(HY-65) | implemented | `make test-php`, `make hyper-test-node` |

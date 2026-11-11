@@ -6,6 +6,8 @@
 
 ## Unreleased
 
+- action의 결과와 loader 및 action의 정지는 세 server에서 파일마다 하나의 unit(`Result`, `Redirect`, `NotFound`, `Forbidden`, `BadRequest`)이고, native test를 대신하는 그 case를 `contracts/result.json`이 담습니다. 세 server는 리다이렉트 위치, page 상태, 리다이렉트가 아닌 결과의 리다이렉트 정지를 같은 메시지와 HY-46.2의 클래스(`InvalidArgumentException`, `RangeError`, `ValueError`)로 실패시킵니다. 이전에는 Node가 다른 메시지의 `Error`를 던졌습니다. PHP `Result::flash`는 Node와 Python처럼 data model 밖의 값을 실패시킵니다(HY-25.4). Python은 Node처럼 lone surrogate가 있는 리다이렉트 위치를 거부하고, flash 값을 저장하는 method 이름을 `flash_value` 대신 `flash`로 하며, 정지를 module `redirect`, `not_found`, `forbidden`, `bad_request`에서 import합니다. 정지의 메시지는 세 server에서 `not found`, `forbidden`, `bad request`입니다(HY-25, HY-27, HY-46, HY-50, HY-58) (H28.11).
+
 - recipe check는 `__init__`에 `_`를 붙인 형태가 없으므로 Python constructor의 visibility를 spec에서 가져오고, spec이 private으로 선언한 constructor의 class를 package의 다른 파일이 호출하면 실패합니다. 이전에는 모든 private Python constructor를 public이라며 실패시켰습니다. Python reader는 이 검사를 위해 이름의 호출을 기록하고, reader의 test 타입은 member의 parameter를 명시합니다(HYR-8) (H28.11).
 
 - recipe check의 Python reader는 PHP와 Node reader가 `...$name`과 `...name`을 세듯 가변 인자(`*name`, `**name`)를 입력으로 셉니다. 이전에는 빼서 가변 인자를 가진 method가 spec의 입력과 달랐습니다(HYR-8) (H28.11).

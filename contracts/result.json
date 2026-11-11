@@ -1,0 +1,381 @@
+{
+  "redirect": [
+    {
+      "id": "an_empty_location_is_not_an_application_path",
+      "label": "an empty location is not an application path",
+      "location": "",
+      "redirect": null,
+      "status": null,
+      "error": "a redirect location is not an application path (HY-46)"
+    },
+    {
+      "id": "a_relative_location_is_not_an_application_path",
+      "label": "a relative location is not an application path",
+      "location": "board",
+      "redirect": null,
+      "status": null,
+      "error": "a redirect location is not an application path (HY-46)"
+    },
+    {
+      "id": "a_location_that_names_another_host_is_not_an_application_path",
+      "label": "a location that names another host is not an application path",
+      "location": "//evil.example",
+      "redirect": null,
+      "status": null,
+      "error": "a redirect location is not an application path (HY-46)"
+    },
+    {
+      "id": "a_location_with_a_backslash_after_the_slash_is_not_an_application_path",
+      "label": "a location with a backslash after the slash is not an application path",
+      "location": "/\\evil.example",
+      "redirect": null,
+      "status": null,
+      "error": "a redirect location is not an application path (HY-46)"
+    },
+    {
+      "id": "a_location_with_a_tab_after_the_slash_is_not_an_application_path",
+      "label": "a location with a tab after the slash is not an application path",
+      "location": "/\t/evil.example",
+      "redirect": null,
+      "status": null,
+      "error": "a redirect location is not an application path (HY-46)"
+    },
+    {
+      "id": "a_location_with_a_line_break_is_not_an_application_path",
+      "label": "a location with a line break is not an application path",
+      "location": "/ok\r\nX-Injected: 1",
+      "redirect": null,
+      "status": null,
+      "error": "a redirect location is not an application path (HY-46)"
+    },
+    {
+      "id": "a_location_with_a_space_is_not_an_application_path",
+      "label": "a location with a space is not an application path",
+      "location": "/a b",
+      "redirect": null,
+      "status": null,
+      "error": "a redirect location is not an application path (HY-46)"
+    },
+    {
+      "id": "a_location_with_u_0000_is_not_an_application_path",
+      "label": "a location with U+0000 is not an application path",
+      "location": "/a\u0000",
+      "redirect": null,
+      "status": null,
+      "error": "a redirect location is not an application path (HY-46)"
+    },
+    {
+      "id": "a_location_with_a_c1_control_character_is_not_an_application_path",
+      "label": "a location with a C1 control character is not an application path",
+      "location": "/a",
+      "redirect": null,
+      "status": null,
+      "error": "a redirect location is not an application path (HY-46)"
+    },
+    {
+      "id": "a_location_with_a_unit_that_is_not_utf8_text_is_not_an_application_path",
+      "label": "a location with a unit that is not UTF-8 text is not an application path",
+      "location": "/a",
+      "notUtf8": true,
+      "redirect": null,
+      "status": null,
+      "error": "a redirect location is not an application path (HY-46)"
+    },
+    {
+      "id": "a_location_with_a_backslash_is_not_an_application_path",
+      "label": "a location with a backslash is not an application path",
+      "location": "/a\\b",
+      "redirect": null,
+      "status": null,
+      "error": "a redirect location is not an application path (HY-46)"
+    },
+    {
+      "id": "a_location_with_a_dot_segment_before_an_empty_segment_is_not_an_application_path",
+      "label": "a location with a dot segment before an empty segment is not an application path",
+      "location": "/.//evil.example",
+      "redirect": null,
+      "status": null,
+      "error": "a redirect location is not an application path (HY-46)"
+    },
+    {
+      "id": "a_location_with_a_dot_dot_segment_before_an_empty_segment_is_not_an_application_path",
+      "label": "a location with a dot dot segment before an empty segment is not an application path",
+      "location": "/a/..//evil.example",
+      "redirect": null,
+      "status": null,
+      "error": "a redirect location is not an application path (HY-46)"
+    },
+    {
+      "id": "a_location_with_a_percent_encoded_dot_segment_is_not_an_application_path",
+      "label": "a location with a percent encoded dot segment is not an application path",
+      "location": "/%2E//evil.example",
+      "redirect": null,
+      "status": null,
+      "error": "a redirect location is not an application path (HY-46)"
+    },
+    {
+      "id": "a_location_with_a_percent_encoded_dot_dot_segment_is_not_an_application_path",
+      "label": "a location with a percent encoded dot dot segment is not an application path",
+      "location": "/a/%2e%2E/b",
+      "redirect": null,
+      "status": null,
+      "error": "a redirect location is not an application path (HY-46)"
+    },
+    {
+      "id": "a_location_that_ends_with_a_dot_segment_is_not_an_application_path",
+      "label": "a location that ends with a dot segment is not an application path",
+      "location": "/a/.",
+      "redirect": null,
+      "status": null,
+      "error": "a redirect location is not an application path (HY-46)"
+    },
+    {
+      "id": "a_location_with_a_dot_segment_before_a_query_is_not_an_application_path",
+      "label": "a location with a dot segment before a query is not an application path",
+      "location": "/./b?x=1",
+      "redirect": null,
+      "status": null,
+      "error": "a redirect location is not an application path (HY-46)"
+    },
+    {
+      "id": "a_location_with_a_dot_dot_segment_is_not_an_application_path",
+      "label": "a location with a dot dot segment is not an application path",
+      "location": "/a/../b",
+      "redirect": null,
+      "status": null,
+      "error": "a redirect location is not an application path (HY-46)"
+    },
+    {
+      "id": "a_path_with_a_query_is_an_application_path",
+      "label": "a path with a query is an application path",
+      "location": "/board?page=2",
+      "redirect": "/board?page=2",
+      "status": 303,
+      "error": null
+    },
+    {
+      "id": "the_root_is_an_application_path",
+      "label": "the root is an application path",
+      "location": "/",
+      "redirect": "/",
+      "status": 303,
+      "error": null
+    },
+    {
+      "id": "dots_inside_segments_and_in_the_query_are_not_dot_segments",
+      "label": "dots inside segments and in the query are not dot segments",
+      "location": "/a.b/..c/.d?x=..",
+      "redirect": "/a.b/..c/.d?x=..",
+      "status": 303,
+      "error": null
+    }
+  ],
+  "page": [
+    {
+      "id": "a_page_with_status_200_is_a_page",
+      "label": "a page with status 200 is a page",
+      "status": 200,
+      "data": {
+        "name": "taken"
+      },
+      "result": 200,
+      "redirect": null,
+      "error": null
+    },
+    {
+      "id": "a_page_with_status_409_is_a_page",
+      "label": "a page with status 409 is a page",
+      "status": 409,
+      "data": {
+        "name": "taken"
+      },
+      "result": 409,
+      "redirect": null,
+      "error": null
+    },
+    {
+      "id": "a_page_with_status_422_is_a_page",
+      "label": "a page with status 422 is a page",
+      "status": 422,
+      "data": {
+        "name": "taken"
+      },
+      "result": 422,
+      "redirect": null,
+      "error": null
+    },
+    {
+      "id": "a_page_with_status_303_fails",
+      "label": "a page with status 303 fails",
+      "status": 303,
+      "data": {},
+      "result": null,
+      "redirect": null,
+      "error": "a page status 303 is not 200, 409 or 422 (HY-58)"
+    },
+    {
+      "id": "a_page_with_status_500_fails",
+      "label": "a page with status 500 fails",
+      "status": 500,
+      "data": {},
+      "result": null,
+      "redirect": null,
+      "error": "a page status 500 is not 200, 409 or 422 (HY-58)"
+    }
+  ],
+  "invalid": [
+    {
+      "id": "invalid_data_is_the_page_with_status_422",
+      "label": "invalid data is the page with status 422",
+      "data": {
+        "name": ""
+      },
+      "status": 422,
+      "redirect": null
+    }
+  ],
+  "copies": [
+    {
+      "id": "flash_values_keep_the_order_in_which_they_are_stored",
+      "label": "flash values keep the order in which they are stored",
+      "flashes": [
+        [
+          "b",
+          "1"
+        ],
+        [
+          "a",
+          "\"x\""
+        ]
+      ],
+      "topics": [],
+      "flashValues": {
+        "b": 1,
+        "a": "x"
+      },
+      "changedTopics": [],
+      "error": null
+    },
+    {
+      "id": "a_flash_value_stored_again_replaces_the_value_at_its_place",
+      "label": "a flash value stored again replaces the value at its place",
+      "flashes": [
+        [
+          "a",
+          "1"
+        ],
+        [
+          "b",
+          "2"
+        ],
+        [
+          "a",
+          "3"
+        ]
+      ],
+      "topics": [],
+      "flashValues": {
+        "a": 3,
+        "b": 2
+      },
+      "changedTopics": [],
+      "error": null
+    },
+    {
+      "id": "a_flash_value_may_be_a_map_with_a_list",
+      "label": "a flash value may be a map with a list",
+      "flashes": [
+        [
+          "post",
+          "{\"id\":7,\"tags\":[\"a\",\"b\"]}"
+        ]
+      ],
+      "topics": [],
+      "flashValues": {
+        "post": {
+          "id": 7,
+          "tags": [
+            "a",
+            "b"
+          ]
+        }
+      },
+      "changedTopics": [],
+      "error": null
+    },
+    {
+      "id": "a_changed_topic_recorded_again_keeps_its_first_place",
+      "label": "a changed topic recorded again keeps its first place",
+      "flashes": [],
+      "topics": [
+        [
+          "posts",
+          "path",
+          "posts"
+        ],
+        [
+          "path",
+          "new"
+        ]
+      ],
+      "flashValues": {},
+      "changedTopics": [
+        "posts",
+        "path",
+        "new"
+      ],
+      "error": null
+    },
+    {
+      "id": "a_flash_value_outside_the_data_model_fails",
+      "label": "a flash value outside the data model fails",
+      "flashes": [
+        [
+          "n",
+          "9007199254740993"
+        ]
+      ],
+      "topics": [],
+      "error": "integer 9007199254740993 is outside the safe range"
+    }
+  ],
+  "stop": [
+    {
+      "id": "the_not_found_stop_has_the_message_not_found",
+      "label": "the not found stop has the message not found",
+      "kind": "NotFound",
+      "message": "not found",
+      "error": null
+    },
+    {
+      "id": "the_forbidden_stop_has_the_message_forbidden",
+      "label": "the forbidden stop has the message forbidden",
+      "kind": "Forbidden",
+      "message": "forbidden",
+      "error": null
+    },
+    {
+      "id": "the_bad_request_stop_has_the_message_bad_request",
+      "label": "the bad request stop has the message bad request",
+      "kind": "BadRequest",
+      "message": "bad request",
+      "error": null
+    },
+    {
+      "id": "a_redirect_stop_names_its_location",
+      "label": "a redirect stop names its location",
+      "kind": "Redirect",
+      "redirect": "/board",
+      "message": "redirect to /board",
+      "error": null
+    },
+    {
+      "id": "a_redirect_stop_of_a_page_fails",
+      "label": "a redirect stop of a page fails",
+      "kind": "Redirect",
+      "page": 200,
+      "message": null,
+      "error": "a redirect stop needs a redirect result (HY-50)"
+    }
+  ]
+}

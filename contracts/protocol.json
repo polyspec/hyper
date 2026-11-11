@@ -2554,6 +2554,18 @@
                   "en": "The browser follows the redirect with the same headers, and htmx records the final URL in history.",
                   "ko": "브라우저는 같은 헤더로 리다이렉트를 따라가며, htmx는 최종 URL을 히스토리에 기록한다.",
                   "koSource": "f29ea1aa4af57a0c11b38ee21b76093f5e1d155ec51cb8ed49928c0e473adf8c"
+                },
+                {
+                  "id": "HY-25.4",
+                  "en": "The flash values of a result are values of the data model (HY-44): storing a value outside it fails when it is stored, with the error of the data model.",
+                  "ko": "결과의 flash 값은 data model의 값이다(HY-44): 그 밖의 값을 저장하면 저장할 때 data model의 오류로 실패한다.",
+                  "koSource": "e472babd83ad92efc06e6ab17e707f711d1dbb9106a300fa3aa395cbddcac45d"
+                },
+                {
+                  "id": "HY-25.5",
+                  "en": "A flash value stored again under its name replaces the value at the place of that name, and a changed topic recorded again keeps its first place.",
+                  "ko": "같은 이름으로 다시 저장한 flash 값은 그 이름의 자리에서 값을 바꾸고, 다시 기록한 바뀐 topic은 처음 자리를 유지한다.",
+                  "koSource": "854cbcee09c615a1f7c185050e29c19d6755703bfcddf74d5481418c442b66a2"
                 }
               ]
             }
@@ -4374,6 +4386,12 @@
                   "en": "A redirect location is an application path: valid UTF-8 that starts with `/`, whose second character is neither `/` nor `\\`, that contains no control character (C0, DEL or C1), no space and no `\\`, and whose path has no segment `.` or `..`, also when a dot is percent-encoded (`%2e`).",
                   "ko": "리다이렉트 위치는 애플리케이션 경로다: `/`로 시작하고 두 번째 문자가 `/`나 `\\`가 아니며, 제어 문자(C0, DEL, C1), 공백, `\\`를 담지 않는 올바른 UTF-8이고, 점이 percent-encode된 경우(`%2e`)를 포함해 path에 `.`이나 `..` segment가 없어야 한다.",
                   "koSource": "52578b620fec8ea0176252e4f661671fa3604bc4d5f365ee770923b8bc356d02"
+                },
+                {
+                  "id": "HY-46.2",
+                  "en": "Making a redirect to a location that is not an application path fails with the error `a redirect location is not an application path (HY-46)`, of the class `InvalidArgumentException` in PHP, `RangeError` in Node and `ValueError` in Python.",
+                  "ko": "애플리케이션 경로가 아닌 위치로 리다이렉트를 만들면 오류 `a redirect location is not an application path (HY-46)`로 실패하며, 그 클래스는 PHP에서 `InvalidArgumentException`, Node에서 `RangeError`, Python에서 `ValueError`다.",
+                  "koSource": "f603cc9aaa6597e4c943b0ed73ab3f3fd5b79704da8d866538c8a03464e94a8c"
                 }
               ]
             }
@@ -5095,6 +5113,12 @@
                   "en": "A method other than `GET` or a declared `POST` responds with status 405; a representation checks the method of HY-121 instead.",
                   "ko": "`GET`도 선언된 `POST`도 아닌 method는 상태 405로 응답하며, representation은 대신 HY-121의 method를 검사한다.",
                   "koSource": "2675f15347725b4d1e6e5cb704fe1cadf45013deecb969e7620c13ea661faf6b"
+                },
+                {
+                  "id": "HY-27.3",
+                  "en": "A loader or an action reports a missing resource with the not-found stop, whose message is `not found`; the forbidden stop of HY-51 has the message `forbidden` and the bad-request stop of HY-58 the message `bad request`.",
+                  "ko": "loader나 action은 없는 자원을 not-found 정지로 보고하며 그 메시지는 `not found`다. HY-51의 forbidden 정지의 메시지는 `forbidden`이고 HY-58의 bad-request 정지의 메시지는 `bad request`다.",
+                  "koSource": "acd3034dd0c238247790336982649a97608b9c3d453b967704d22ad8b1b27fef"
                 }
               ]
             }
@@ -5119,6 +5143,12 @@
                   "en": "The server responds with status 303 and `Location` with the base path, stores the flash values and the changed topics as HY-25 does, and renders nothing.",
                   "ko": "서버는 상태 303과 base path를 담은 `Location`으로 응답하고, HY-25가 하듯 flash 값과 바뀐 topic을 저장하며, 아무것도 렌더하지 않는다.",
                   "koSource": "4f7b67f758c2b00344552cbb014ca8749d15438b2451a56432245e9b0f28cdb5"
+                },
+                {
+                  "id": "HY-50.3",
+                  "en": "Making a redirect stop of a result that is not a redirect fails with the error `a redirect stop needs a redirect result (HY-50)`, of the classes of HY-46.2; the message of a redirect stop is `redirect to` followed by a space and its location.",
+                  "ko": "리다이렉트가 아닌 결과로 리다이렉트 정지를 만들면 HY-46.2의 클래스로 오류 `a redirect stop needs a redirect result (HY-50)`를 내며 실패한다. 리다이렉트 정지의 메시지는 `redirect to` 뒤에 공백과 그 위치가 오는 문자열이다.",
+                  "koSource": "64b36d7269df0e905c87d7014fed93ae32a82a6ea5509df55f15d6680a8f4997"
                 }
               ]
             }
@@ -5719,6 +5749,12 @@
                   "en": "HY-26 is the page with status 422; a page with status 200 follows HY-52 and HY-53.",
                   "ko": "HY-26은 상태 422의 page이고, 상태 200의 page는 HY-52와 HY-53을 따른다.",
                   "koSource": "082b49ace1ff3366723c2c6e87f46a3940fba0b26433b4dfb473080a9d7c1d4c"
+                },
+                {
+                  "id": "HY-58.6",
+                  "en": "Making a page with another status fails with the error `a page status`, a space, the status and ` is not 200, 409 or 422 (HY-58)`, of the classes of HY-46.2.",
+                  "ko": "다른 상태로 page를 만들면 HY-46.2의 클래스로 `a page status`, 공백, 그 상태, ` is not 200, 409 or 422 (HY-58)`로 이루어진 오류를 내며 실패한다.",
+                  "koSource": "85af7d170574a36ea823e0628e5a4abec0c88e568a33f3f7fcc6c28244384f90"
                 }
               ]
             }

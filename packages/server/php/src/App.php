@@ -621,7 +621,7 @@ final class App
     /** Stores the flash values and changed topics of a redirect result and answers 303 (HY-25, HY-50). */
     private function redirect(Session $session, Result $result, string $basePath): Response
     {
-        $session->putFlash(new Flash($result->flash, $result->changed));
+        $session->putFlash(new Flash($result->flashValues, $result->changedTopics));
 
         return new Response(303, ['Location' => $basePath . $result->location], '');
     }

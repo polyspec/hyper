@@ -19,6 +19,7 @@ use Polyspec\Hyper\Tests\Support\Steps\KeptSteps;
 use Polyspec\Hyper\Tests\Support\Steps\ReadsSteps;
 use Polyspec\Hyper\Tests\Support\Steps\RepresentationsSteps;
 use Polyspec\Hyper\Tests\Support\Steps\RestSteps;
+use Polyspec\Hyper\Tests\Support\Steps\ResultSteps;
 use Polyspec\Hyper\Tests\Support\Steps\RoutesSteps;
 
 /** The step of each (file, section) of the case files that the PHP server runs. */
@@ -43,6 +44,11 @@ final class CaseSteps
             'keep.json cases' => KeptSteps::cases(...),
             'keep.json select' => KeptSteps::select(...),
             'reads.json cases' => ReadsSteps::cases(...),
+            'result.json copies' => ResultSteps::copies(...),
+            'result.json invalid' => ResultSteps::invalid(...),
+            'result.json page' => ResultSteps::page(...),
+            'result.json redirect' => ResultSteps::redirect(...),
+            'result.json stop' => ResultSteps::stop(...),
             'routes.json cases' => RoutesSteps::cases(...),
             'routes.json baseCases' => RoutesSteps::baseCases(...),
             'routes.json invalidPaths' => RoutesSteps::invalidPaths(...),

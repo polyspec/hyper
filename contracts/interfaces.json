@@ -1635,7 +1635,9 @@
         "HY-51",
         "HY-58"
       ],
-      "cases": [],
+      "cases": [
+        "contracts/result.json"
+      ],
       "units": [
         {
           "id": "result",
@@ -1652,11 +1654,331 @@
             },
             "python": {
               "file": "packages/server/python/src/polyspec/hyper/result.py",
-              "kind": "functions",
+              "kind": "class",
               "internal": false
             }
           },
-          "members": []
+          "members": [
+            {
+              "id": "result.constructor",
+              "kind": "constructor",
+              "visibility": "private",
+              "inputs": [
+                "optional<string>",
+                "number",
+                "map<value>",
+                "map<value>",
+                "list<string>"
+              ],
+              "output": "result",
+              "errors": [],
+              "state": "Holds the location, the status, the data, the flash values and the changed topics of a result.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Result.php::Polyspec\\Hyper\\Result::__construct",
+                  "signature": "private function __construct(?string $location, int $status, array $data, array $flashValues, array $changedTopics)"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/result.ts::Result.constructor",
+                  "signature": "private constructor(location: string | null, status: number, data: Data, flashValues: ReadonlyMap<string, Value>, changedTopics: readonly string[])"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/result.py::Result.__init__",
+                  "signature": "def __init__(self, location: str | None, status: int, data: dict, flash_values: dict, changed_topics: list[str])"
+                }
+              }
+            },
+            {
+              "id": "result.redirect",
+              "kind": "static method",
+              "visibility": "public",
+              "inputs": [
+                "string"
+              ],
+              "output": "result",
+              "errors": [],
+              "state": "Returns a redirect with status 303 to an application path, and fails for another location (HY-46).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Result.php::Polyspec\\Hyper\\Result::redirect",
+                  "signature": "public static function redirect(string $location): Polyspec\\Hyper\\Result"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/result.ts::Result.redirect",
+                  "signature": "static redirect(location: string): Result"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/result.py::Result.redirect",
+                  "signature": "def redirect(location: str) -> Result"
+                }
+              }
+            },
+            {
+              "id": "result.page",
+              "kind": "static method",
+              "visibility": "public",
+              "inputs": [
+                "number",
+                "map<value>"
+              ],
+              "output": "result",
+              "errors": [],
+              "state": "Returns the route page with a status of 200, 409 or 422 and its data, and fails for another status (HY-58).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Result.php::Polyspec\\Hyper\\Result::page",
+                  "signature": "public static function page(int $status, array $data): Polyspec\\Hyper\\Result"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/result.ts::Result.page",
+                  "signature": "static page(status: number, data: Data): Result"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/result.py::Result.page",
+                  "signature": "def page(status: int, data: dict) -> Result"
+                }
+              }
+            },
+            {
+              "id": "result.invalid",
+              "kind": "static method",
+              "visibility": "public",
+              "inputs": [
+                "map<value>"
+              ],
+              "output": "result",
+              "errors": [],
+              "state": "Returns the route page with status 422 and its data (HY-26).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Result.php::Polyspec\\Hyper\\Result::invalid",
+                  "signature": "public static function invalid(array $data): Polyspec\\Hyper\\Result"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/result.ts::Result.invalid",
+                  "signature": "static invalid(data: Data): Result"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/result.py::Result.invalid",
+                  "signature": "def invalid(data: dict) -> Result"
+                }
+              }
+            },
+            {
+              "id": "result.flash",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [
+                "string",
+                "value"
+              ],
+              "output": "result",
+              "errors": [],
+              "state": "Returns a copy that stores a flash value of the data model under its name, in the place of that name (HY-25).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Result.php::Polyspec\\Hyper\\Result::flash",
+                  "signature": "public function flash(string $name, mixed $value): Polyspec\\Hyper\\Result"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/result.ts::Result.flash",
+                  "signature": "flash(name: string, value: unknown): Result"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/result.py::Result.flash",
+                  "signature": "def flash(self, name: str, value: object) -> Result"
+                }
+              }
+            },
+            {
+              "id": "result.changed",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [
+                "list<string>"
+              ],
+              "output": "result",
+              "errors": [],
+              "state": "Returns a copy that records changed topics after its own, each once in its first place (HY-25).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Result.php::Polyspec\\Hyper\\Result::changed",
+                  "signature": "public function changed(string ...$topics): Polyspec\\Hyper\\Result"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/result.ts::Result.changed",
+                  "signature": "changed(...topics: string[]): Result"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/result.py::Result.changed",
+                  "signature": "def changed(self, *topics: str) -> Result"
+                }
+              }
+            },
+            {
+              "id": "result.isRedirect",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "boolean",
+              "errors": [],
+              "state": "Returns true for a redirect.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Result.php::Polyspec\\Hyper\\Result::isRedirect",
+                  "signature": "public function isRedirect(): bool"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/result.ts::Result.isRedirect",
+                  "signature": "isRedirect(): boolean"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/result.py::Result._is_redirect",
+                  "signature": "def _is_redirect(self) -> bool"
+                }
+              }
+            },
+            {
+              "id": "result.hasDotSegment",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "string"
+              ],
+              "output": "boolean",
+              "errors": [],
+              "state": "Returns true when the path of a location has a segment `.` or `..`, also with a percent-encoded dot.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Result.php::Polyspec\\Hyper\\Result::hasDotSegment",
+                  "signature": "private static function hasDotSegment(string $location): bool"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/result.ts::Result.hasDotSegment",
+                  "signature": "private static hasDotSegment(location: string): boolean"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/result.py::Result._has_dot_segment",
+                  "signature": "def _has_dot_segment(location: str) -> bool"
+                }
+              }
+            },
+            {
+              "id": "result.location",
+              "kind": "property",
+              "visibility": "public",
+              "inputs": [],
+              "output": "optional<string>",
+              "errors": [],
+              "state": "Holds the location of a redirect, or null for a page.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Result.php::Polyspec\\Hyper\\Result::location",
+                  "signature": "public protected(set) readonly ?string $location"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/result.ts::Result.location",
+                  "signature": "readonly location: string | null"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/result.py::Result.location",
+                  "signature": "location: str | None"
+                }
+              }
+            },
+            {
+              "id": "result.status",
+              "kind": "property",
+              "visibility": "public",
+              "inputs": [],
+              "output": "number",
+              "errors": [],
+              "state": "Holds the status: 303 for a redirect, or 200, 409 or 422 for a page.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Result.php::Polyspec\\Hyper\\Result::status",
+                  "signature": "public protected(set) readonly int $status"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/result.ts::Result.status",
+                  "signature": "readonly status: number"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/result.py::Result.status",
+                  "signature": "status: int"
+                }
+              }
+            },
+            {
+              "id": "result.data",
+              "kind": "property",
+              "visibility": "public",
+              "inputs": [],
+              "output": "map<value>",
+              "errors": [],
+              "state": "Holds the data that the page renders, empty for a redirect.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Result.php::Polyspec\\Hyper\\Result::data",
+                  "signature": "public protected(set) readonly array $data"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/result.ts::Result.data",
+                  "signature": "readonly data: Data"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/result.py::Result.data",
+                  "signature": "data: dict"
+                }
+              }
+            },
+            {
+              "id": "result.flashValues",
+              "kind": "property",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "map<value>",
+              "errors": [],
+              "state": "Holds the flash values in the order of their names.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Result.php::Polyspec\\Hyper\\Result::flashValues",
+                  "signature": "public protected(set) readonly array $flashValues"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/result.ts::Result.flashValues",
+                  "signature": "readonly flashValues: ReadonlyMap<string, Value>"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/result.py::Result._flash_values",
+                  "signature": "_flash_values: dict"
+                }
+              }
+            },
+            {
+              "id": "result.changedTopics",
+              "kind": "property",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "list<string>",
+              "errors": [],
+              "state": "Holds the changed topics in the order in which they were first recorded.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Result.php::Polyspec\\Hyper\\Result::changedTopics",
+                  "signature": "public protected(set) readonly array $changedTopics"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/result.ts::Result.changedTopics",
+                  "signature": "readonly changedTopics: readonly string[]"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/result.py::Result._changed_topics",
+                  "signature": "_changed_topics: list[str]"
+                }
+              }
+            }
+          ]
         },
         {
           "id": "redirect",
@@ -1677,7 +1999,56 @@
               "internal": false
             }
           },
-          "members": []
+          "members": [
+            {
+              "id": "redirect.constructor",
+              "kind": "constructor",
+              "visibility": "public",
+              "inputs": [
+                "result"
+              ],
+              "output": "redirect",
+              "errors": [],
+              "state": "Holds the redirect result of the stop, and fails for a result that is not a redirect (HY-50).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Redirect.php::Polyspec\\Hyper\\Redirect::__construct",
+                  "signature": "public function __construct(Polyspec\\Hyper\\Result $result)"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/redirect.ts::Redirect.constructor",
+                  "signature": "constructor(result: Result)"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/redirect.py::Redirect.__init__",
+                  "signature": "def __init__(self, result: Result)"
+                }
+              }
+            },
+            {
+              "id": "redirect.result",
+              "kind": "property",
+              "visibility": "public",
+              "inputs": [],
+              "output": "result",
+              "errors": [],
+              "state": "Holds the redirect result of the stop.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Redirect.php::Polyspec\\Hyper\\Redirect::result",
+                  "signature": "public protected(set) readonly Polyspec\\Hyper\\Result $result"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/redirect.ts::Redirect.result",
+                  "signature": "readonly result: Result"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/redirect.py::Redirect.result",
+                  "signature": "result: Result"
+                }
+              }
+            }
+          ]
         },
         {
           "id": "not-found",
@@ -1698,7 +2069,31 @@
               "internal": false
             }
           },
-          "members": []
+          "members": [
+            {
+              "id": "not-found.constructor",
+              "kind": "constructor",
+              "visibility": "public",
+              "inputs": [],
+              "output": "not-found",
+              "errors": [],
+              "state": "Makes the stop of a missing resource, with the message `not found` (HY-27).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/NotFound.php::Polyspec\\Hyper\\NotFound::__construct",
+                  "signature": "public function __construct()"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/not-found.ts::NotFound.constructor",
+                  "signature": "constructor()"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/not_found.py::NotFound.__init__",
+                  "signature": "def __init__(self) -> None"
+                }
+              }
+            }
+          ]
         },
         {
           "id": "forbidden",
@@ -1719,7 +2114,31 @@
               "internal": false
             }
           },
-          "members": []
+          "members": [
+            {
+              "id": "forbidden.constructor",
+              "kind": "constructor",
+              "visibility": "public",
+              "inputs": [],
+              "output": "forbidden",
+              "errors": [],
+              "state": "Makes the stop of a forbidden request, with the message `forbidden` (HY-51).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Forbidden.php::Polyspec\\Hyper\\Forbidden::__construct",
+                  "signature": "public function __construct()"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/forbidden.ts::Forbidden.constructor",
+                  "signature": "constructor()"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/forbidden.py::Forbidden.__init__",
+                  "signature": "def __init__(self) -> None"
+                }
+              }
+            }
+          ]
         },
         {
           "id": "bad-request",
@@ -1740,7 +2159,31 @@
               "internal": false
             }
           },
-          "members": []
+          "members": [
+            {
+              "id": "bad-request.constructor",
+              "kind": "constructor",
+              "visibility": "public",
+              "inputs": [],
+              "output": "bad-request",
+              "errors": [],
+              "state": "Makes the stop of a bad request, with the message `bad request` (HY-58).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/BadRequest.php::Polyspec\\Hyper\\BadRequest::__construct",
+                  "signature": "public function __construct()"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/bad-request.ts::BadRequest.constructor",
+                  "signature": "constructor()"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/bad_request.py::BadRequest.__init__",
+                  "signature": "def __init__(self) -> None"
+                }
+              }
+            }
+          ]
         }
       ]
     },
@@ -5189,6 +5632,204 @@
               "compare": "exact",
               "sentence": "HY-105.3",
               "state": "`failed` states whether a use of `uses` failed because no factory is bound for its service."
+            }
+          }
+        }
+      }
+    },
+    "result.json": {
+      "fixtures": {},
+      "sections": {
+        "redirect": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "location": {
+              "role": "input"
+            },
+            "notUtf8": {
+              "role": "input",
+              "optional": true
+            },
+            "redirect": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-46.1",
+              "state": "`redirect` is the location of the redirect to `location`, or null when making it fails; with `notUtf8` true the location ends with one unit that is not UTF-8 text in its host: the byte FF in PHP and the lone surrogate D800 in Node and Python."
+            },
+            "status": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-25.2",
+              "state": "`status` is the status of the redirect, 303, or null when making it fails."
+            },
+            "error": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-46.2",
+              "state": "`error` is the message of the error with which making a redirect to `location` fails, or null."
+            }
+          }
+        },
+        "page": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "status": {
+              "role": "input"
+            },
+            "data": {
+              "role": "input"
+            },
+            "result": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-58.3",
+              "state": "`result` is the status of the page with the status `status` and the data `data`, or null when making it fails."
+            },
+            "redirect": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-58.3",
+              "state": "`redirect` is the location of the page, null because a page is no redirect."
+            },
+            "error": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-58.6",
+              "state": "`error` is the message of the error with which making the page fails, or null."
+            }
+          }
+        },
+        "invalid": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "data": {
+              "role": "input"
+            },
+            "status": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-58.5",
+              "state": "`status` is the status of the invalid result with the data `data`, 422."
+            },
+            "redirect": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-58.5",
+              "state": "`redirect` is the location of the invalid result, null because it is the route page."
+            }
+          }
+        },
+        "copies": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "flashes": {
+              "role": "input"
+            },
+            "topics": {
+              "role": "input"
+            },
+            "flashValues": {
+              "role": "expected",
+              "compare": "ordered",
+              "sentence": "HY-25.5",
+              "state": "`flashValues` are the flash values of a redirect that stores each pair of `flashes` in order, a name and the JSON text of its value as a handler of the server returns it, in the order of their names.",
+              "optional": true
+            },
+            "changedTopics": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-25.5",
+              "state": "`changedTopics` are the changed topics of that redirect after it records each list of `topics` in order.",
+              "optional": true
+            },
+            "error": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-25.4",
+              "state": "`error` is the message of the error of the data model with which storing a flash value fails, or null."
+            }
+          }
+        },
+        "stop": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "kind": {
+              "role": "input"
+            },
+            "redirect": {
+              "role": "input",
+              "optional": true
+            },
+            "page": {
+              "role": "input",
+              "optional": true
+            },
+            "message": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-27.3",
+              "state": "`message` is the message of the stop `kind`; a redirect stop takes the redirect to `redirect` or the page with the status `page`, and `message` is null when making it fails."
+            },
+            "error": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-50.3",
+              "state": "`error` is the message of the error with which making the stop fails, or null."
             }
           }
         }

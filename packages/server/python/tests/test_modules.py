@@ -5,7 +5,6 @@ from pathlib import Path
 
 from polyspec.hyper.reply import Reply
 from polyspec.hyper.request import Request
-from polyspec.hyper.result import Redirect, Result
 from polyspec.hyper._session import Flash, Session
 from polyspec.hyper.session import ArraySession
 
@@ -126,40 +125,6 @@ class RequestValuesTest(unittest.TestCase):
         request = Request("GET", "/x")._with_selection({"host": "a.test"})
         self.assertEqual({"host": "a.test"}, request.selection())
         self.assertIsNone(Request("GET", "/x").selection())
-
-
-class ResultTest(unittest.TestCase):
-    def test_a_redirect_location_must_be_an_application_path(self) -> None:
-        with self.assertRaises(ValueError):
-            Result.redirect("//host.example/x")
-        with self.assertRaises(ValueError):
-            Result.redirect("/a/../b")
-        with self.assertRaises(ValueError):
-            Result.redirect("/a/%2e%2e")
-        with self.assertRaises(ValueError):
-            Result.redirect("relative")
-        self.assertEqual("/board", Result.redirect("/board").location)
-
-    def test_a_page_status_is_200_409_or_422(self) -> None:
-        with self.assertRaises(ValueError):
-            Result.page(500, {})
-        self.assertEqual(422, Result.invalid({}).status)
-
-    def test_changed_topics_are_unique(self) -> None:
-        self.assertEqual(
-            ["posts", "path"],
-            Result.redirect("/").changed("posts", "path", "posts").changed_topics,
-        )
-
-    def test_a_flash_value_belongs_to_the_data_model(self) -> None:
-        with self.assertRaises(ValueError):
-            Result.redirect("/").flash_value("n", 2**60)
-        self.assertEqual({"id": 7}, Result.redirect("/").flash_value("id", 7).flash)
-
-    def test_a_redirect_stop_needs_a_redirect_result(self) -> None:
-        with self.assertRaises(ValueError):
-            Redirect(Result.page(200, {}))
-        self.assertEqual("/x", Redirect(Result.redirect("/x")).result.location)
 
 
 class ReplyTest(unittest.TestCase):

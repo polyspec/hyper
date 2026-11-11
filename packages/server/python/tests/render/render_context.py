@@ -10,7 +10,8 @@ from pathlib import Path
 from polyspec.hyper.app import App
 from polyspec.hyper.reply import Reply
 from polyspec.hyper.request import Request
-from polyspec.hyper.result import NotFound, Result
+from polyspec.hyper.not_found import NotFound
+from polyspec.hyper.result import Result
 
 ROOT = Path(__file__).resolve().parents[5]
 NODE = ROOT / "var" / "tools" / "bin" / "node"

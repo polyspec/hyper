@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { Context, type ContextHandler } from '../../src/context.js';
 import { Csrf } from '../../src/csrf.js';
 import { JsonCodec } from '../../src/json-codec.js';
-import { OutsideNumber } from '../../src/outside-number.js';
+import { hostValue } from './host-value.js';
 import { App, MemorySessionStore, NotFound, Request, Result, type Handlers, type RouteHandlers } from '../../src/index.js';
 import type { Value } from '../../src/values.js';
 import type { CaseReader } from '../case-reader.js';
@@ -167,18 +167,6 @@ function mapOf(value: unknown, name: string): Map<string, Value> {
   return value;
 }
 
-// Returns a decoded JSON value as the host value that a context handler returns: an integer outside ±(2^53 − 1) is a
-// bigint, as PHP and Python decode it to their integer, so that the three servers check the same value (HY-44). A number
-// with a fraction or an exponent outside that range has no host value of the case and fails.
-function hostValue(value: unknown): unknown {
-  if (value instanceof OutsideNumber) {
-    if (!/^-?(?:0|[1-9][0-9]*)$/u.test(value.literal)) throw new Error(`the case number ${value.literal} is not an integer`);
-    return BigInt(value.literal);
-  }
-  if (Array.isArray(value)) return value.map((item: unknown) => hostValue(item));
-  if (value instanceof Map) return new Map([...value].map(([key, item]) => [key, hostValue(item)]));
-  return value;
-}
 
 // Returns a field of a case that maps names to strings, and fails for any other value.
 function textMap(reader: CaseReader, name: string): Map<string, string> {

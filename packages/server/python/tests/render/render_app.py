@@ -39,7 +39,7 @@ def handlers() -> dict:
                     request.form_string("name"), "DRIVER"
                 )
             )
-        return Result.redirect("/list").flash_value("created", 3).changed("rows")
+        return Result.redirect("/list").flash("created", 3).changed("rows")
 
     def item(request: Request) -> dict:
         if request.param("id") in ("orm-missing", "orm-stale"):

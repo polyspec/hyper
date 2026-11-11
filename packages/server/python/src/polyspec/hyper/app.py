@@ -28,7 +28,11 @@ from ._region_planner import RegionPlanner
 from .reply import Reply
 from .request import Request
 from .response import Response
-from .result import BadRequest, Forbidden, NotFound, Redirect, Result
+from .bad_request import BadRequest
+from .forbidden import Forbidden
+from .not_found import NotFound
+from .redirect import Redirect
+from .result import Result
 from ._router import strip_base_path
 from ._session import Flash, Session
 from .session import SessionStore
@@ -474,7 +478,7 @@ class App:
 
     def _redirect(self, session: Session, result: Result, base_path: str) -> Response:
         """Stores the flash values and changed topics of a redirect result and answers 303 (HY-25, HY-50)."""
-        session.put_flash(Flash(result.flash, result.changed_topics))
+        session.put_flash(Flash(result._flash_values, result._changed_topics))
         return Response(303, {"Location": base_path + result.location}, "")
 
     def _page(

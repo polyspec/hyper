@@ -1,5 +1,5 @@
-"""The results of actions: a redirect (HY-25) or a page with a status (HY-26, HY-58), and the stops of loaders and
-actions (HY-27, HY-50, HY-51, HY-58)."""
+"""The outcome of an action: a redirect (HY-25, HY-46) or a page with a status (HY-26, HY-58), with the flash values
+and the changed topics that it stores for the next request."""
 
 from __future__ import annotations
 
@@ -7,102 +7,84 @@ import re
 
 from ._data_model import DataModel
 
-_PATH = re.compile(r"/(?![/\\])[^\x00-\x20\x7f-\x9f\\]*\Z", re.DOTALL)
+# A lone surrogate is not UTF-8 text, so that a location holds none (HY-46).
+_PATH = re.compile(r"/(?![/\\])[^\x00-\x20\x7f-\x9f\\\ud800-\udfff]*\Z", re.DOTALL)
 
 
 class Result:
     """The outcome of an action."""
+
+    location: str | None
+    status: int
+    data: dict
+    _flash_values: dict
+    _changed_topics: list[str]
 
     def __init__(
         self,
         location: str | None,
         status: int,
         data: dict,
-        flash: dict,
+        flash_values: dict,
         changed_topics: list[str],
     ):
         self.location = location
         self.status = status
         self.data = data
-        self.flash = flash
-        self.changed_topics = changed_topics
+        self._flash_values = flash_values
+        self._changed_topics = changed_topics
 
     @staticmethod
-    def redirect(location: str) -> "Result":
+    def redirect(location: str) -> Result:
         """Returns a redirect to a path of this application (HY-46)."""
-        if _PATH.fullmatch(location) is None or _has_dot_segment(location):
-            raise ValueError(f"redirect location {location} is not an application path")
+        if _PATH.fullmatch(location) is None or Result._has_dot_segment(location):
+            raise ValueError("a redirect location is not an application path (HY-46)")
         return Result(location, 303, {}, {}, [])
 
     @staticmethod
-    def page(status: int, data: dict) -> "Result":
+    def page(status: int, data: dict) -> Result:
         """Returns the route page with a status of 200, 409 or 422 and the data that the page renders (HY-58)."""
-        if status not in (200, 409, 422):
-            raise ValueError(f"page status {status} is not 200, 409 or 422")
+        if type(status) is not int or status not in (200, 409, 422):
+            raise ValueError(f"a page status {status} is not 200, 409 or 422 (HY-58)")
         return Result(None, status, data, {}, [])
 
     @staticmethod
-    def invalid(data: dict) -> "Result":
+    def invalid(data: dict) -> Result:
         """Returns invalid input with the data that the page renders: the page with status 422 (HY-26)."""
         return Result.page(422, data)
 
-    def flash_value(self, name: str, value: object) -> "Result":
-        """Returns a copy that stores a flash value, a value of the data model, for the next request."""
+    def flash(self, name: str, value: object) -> Result:
+        """Returns a copy that stores a flash value, a value of the data model, for the next request; a value outside
+        the data model fails (HY-44)."""
         DataModel.check(value)
         return Result(
             self.location,
             self.status,
             self.data,
-            {**self.flash, name: value},
-            self.changed_topics,
+            {**self._flash_values, name: value},
+            self._changed_topics,
         )
 
-    def changed(self, *topics: str) -> "Result":
-        """Returns a copy that records changed topics for the next request."""
+    def changed(self, *topics: str) -> Result:
+        """Returns a copy that records changed topics for the next request; a topic that it records already keeps its
+        place."""
         return Result(
             self.location,
             self.status,
             self.data,
-            self.flash,
-            list(dict.fromkeys([*self.changed_topics, *topics])),
+            self._flash_values,
+            list(dict.fromkeys([*self._changed_topics, *topics])),
         )
 
     def _is_redirect(self) -> bool:
         """Returns True for a redirect."""
         return self.location is not None
 
-
-def _has_dot_segment(location: str) -> bool:
-    """Returns True when the path of a location has a `.` or `..` segment, also with a percent-encoded dot."""
-    path = re.split(r"[?#]", location, maxsplit=1)[0]
-    return any(
-        re.sub("%2e", ".", segment, flags=re.IGNORECASE) in (".", "..")
-        for segment in path.split("/")
-    )
-
-
-class NotFound(Exception):
-    """A loader or an action raises this error when the requested resource does not exist (HY-27)."""
-
-
-class Forbidden(Exception):
-    """A loader or an action raises this error to answer the request with 403 (HY-51)."""
-
-
-class BadRequest(Exception):
-    """A loader or an action raises this error to answer the request with 400 (HY-58)."""
-
-
-class Redirect(Exception):
-    """A loader or an action raises this error to answer the request with the redirect of a result (HY-50)."""
-
-    def __init__(self, result: Result):
-        if not result._is_redirect():
-            raise ValueError("a redirect needs a redirect result")
-        super().__init__(f"redirect to {result.location}")
-        self._result = result
-
-    @property
-    def result(self) -> Result:
-        """The redirect result of the stop."""
-        return self._result
+    @staticmethod
+    def _has_dot_segment(location: str) -> bool:
+        """Returns True when the path of a location has a `.` or `..` segment, also with a percent-encoded dot."""
+        path = re.split(r"[?#]", location, maxsplit=1)[0]
+        return any(
+            re.sub("%2e", ".", segment, flags=re.IGNORECASE) in (".", "..")
+            for segment in path.split("/")
+        )

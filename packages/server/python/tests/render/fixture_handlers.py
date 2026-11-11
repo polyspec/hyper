@@ -6,7 +6,11 @@ from __future__ import annotations
 from polyspec.hyper.app import App
 from polyspec.hyper.reply import Reply
 from polyspec.hyper.request import Request
-from polyspec.hyper.result import BadRequest, Forbidden, NotFound, Redirect, Result
+from polyspec.hyper.bad_request import BadRequest
+from polyspec.hyper.forbidden import Forbidden
+from polyspec.hyper.not_found import NotFound
+from polyspec.hyper.redirect import Redirect
+from polyspec.hyper.result import Result
 
 from .fixture_app import FIXTURES, PROGRAM
 
@@ -41,12 +45,12 @@ def _add(request: Request, reply: Reply, counter: Counter) -> Result:
         return Result.invalid({"name": "", "error": "empty"})
     if name == "sign-in":
         reply.renew_session()
-        return Result.redirect("/").flash_value("note", "renewed")
+        return Result.redirect("/").flash("note", "renewed")
     if name == "sign-in-page":
         reply.renew_session()
         return Result.page(200, {"name": "renewed"})
     counter.count += 1
-    return Result.redirect("/").flash_value("note", "added").changed("count")
+    return Result.redirect("/").flash("note", "added").changed("count")
 
 
 def _rows(request: Request, reply: Reply, counter: Counter) -> dict:
@@ -99,7 +103,7 @@ def _item(request: Request, reply: Reply) -> dict:
             reply.status(404)
             return {"id": "other-status"}
         case "moved":
-            raise Redirect(Result.redirect("/items/new").flash_value("note", "moved"))
+            raise Redirect(Result.redirect("/items/new").flash("note", "moved"))
         case "broken":
             reply.note("stage", "load")
             raise RuntimeError("secret detail /srv/app.py")

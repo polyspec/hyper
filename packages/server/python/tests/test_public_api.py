@@ -7,10 +7,14 @@ import polyspec.hyper
 PUBLIC_MODULES = [
     "app",
     "asgi",
+    "bad_request",  # HY-58: the stop of a bad request.
     "client",
     "container",
     "file_sessions",
+    "forbidden",  # HY-51: the stop of a forbidden request.
     "media_type",  # HY-106: the media type that a representation handler receives.
+    "not_found",  # HY-27: the stop of a missing resource.
+    "redirect",  # HY-50: the stop with a redirect.
     "redis_sessions",
     "reply",
     "representation",  # HY-106, HY-122: the response of a representation handler.

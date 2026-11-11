@@ -16,6 +16,7 @@ from . import (
     reads_steps,
     representations_steps,
     rest_steps,
+    result_steps,
     routes_steps,
 )
 
@@ -45,6 +46,11 @@ STEPS = {
     ("representations.json", "cases"): representations_steps.cases,
     ("rest.json", "cases"): rest_steps.cases,
     ("rest.json", "invalidPaths"): rest_steps.invalid_paths,
+    ("result.json", "copies"): result_steps.copies,
+    ("result.json", "invalid"): result_steps.invalid,
+    ("result.json", "page"): result_steps.page,
+    ("result.json", "redirect"): result_steps.redirect,
+    ("result.json", "stop"): result_steps.stop,
     ("routes.json", "cases"): routes_steps.cases,
     ("routes.json", "baseCases"): routes_steps.base_cases,
     ("routes.json", "invalidPaths"): routes_steps.invalid_paths,
