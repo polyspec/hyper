@@ -1,5 +1,5 @@
 <!-- doc-id: recipe -->
-<!-- source-sha256: 3c83f1c988e6f35ce7e0e4db640e243e89bb168474562667341550e4ab5e0da9 -->
+<!-- source-sha256: d89ec8133364e2b795616c776c78922e2f4643eb35df3b649173ef63afce3928 -->
 # 서버의 레시피
 
 PHP, Node, Python 서버는 하나의 프로토콜(`protocol.md`)을 구현한다. 이 서버들의 레시피는 세 부분으로 이루어진다.
@@ -59,6 +59,11 @@ PHP, Node, Python 서버는 하나의 프로토콜(`protocol.md`)을 구현한�
     - 약어는 한 단어이며 단어로 쓴다: PascalCase `Csrf`, camelCase `csrf`, snake_case `csrf`. 따라서 spec의 어떤 이름도
       대문자를 연속해서 두 개 가지지 않으며, check는 그런 이름을 실패시킨다.
     - member 이름도 같은 경계를 따른다(HYR-5).
+  - Test unit. HYR-7의 case runner와 case reader처럼 test tree에 있는 unit은 같은 단어로 그 언어의 test 디렉터리에 둔다:
+    PHP `packages/server/php/tests/<Words>.php`(namespace `Polyspec\Hyper\Tests`), Node `packages/server/ts/tests/<words>.ts`,
+    Python `packages/server/python/tests/<words>.py`. 어떤 test module도 HY-106의 public 또는 internal API가 아니므로 Python
+    이름에 `_`를 붙이지 않는다. case runner는 각 언어의 test 도구가 찾는 `CaseRunnerTest.php`, `case-runner.test.ts`,
+    `test_case_runner.py`이고, case reader는 `CaseReader.php`, `case-reader.ts`, `case_reader.py`다.
 
   예를 들어 unit `media selection`은 `MediaSelection.php`, `media-selection.ts`, `_media_selection.py`다.
 
@@ -139,31 +144,45 @@ PHP, Node, Python 서버는 하나의 프로토콜(`protocol.md`)을 구현한�
 
   Node 서버가 HY-54에 따라 브라우저 코드에서 가져오는 concern(manifest, region, router, reads, renderer)은 HY-54 문장과
   함께 `only` PHP와 Python인 unit이다. 이들의 동작은 case 파일을 통해(HYR-7) 세 서버에서 같다.
-  `only`를 가진 case 필드도 같은 방식으로 쓰며, `browser`는 브라우저 패키지를 가리키는 언어 이름이다.
+  일부 언어만 읽거나 비교하는 case 필드도 같은 방식으로 `only`를 가지며, `browser`는 브라우저 패키지를 가리키는 언어
+  이름이다.
 
 - **HYR-7 Test recipe.**
-  - **Runners.** 언어마다 고정된 경로에 정확히 하나의 case runner가 있다: `packages/server/php/tests/CaseRunnerTest.php`, `packages/server/ts/tests/case-runner.test.ts` 또는 `packages/server/python/tests/test_case_runner.py`. case reader는 같은 디렉터리의 `CaseReader.php`, `case-reader.ts`, `case_reader.py`다. 브라우저 패키지는 `packages/client/tests`에서 자기 case를 실행하며, build check는 `tests/scripts/build-id.test.mts`에 있다. runner는 `caseFiles`가 이름 붙인 case 파일(HYR-10)을 모두 실행하며, 다른 파일은 실행하지 않는다.
+  - **Runners.** 서버 언어마다 고정된 경로에 정확히 하나의 case runner가 있다:
+    `packages/server/php/tests/CaseRunnerTest.php`, `packages/server/ts/tests/case-runner.test.ts`,
+    `packages/server/python/tests/test_case_runner.py`. 이 runner는 `contracts/` 아래 모든 case 파일의 section 가운데
+    `caseFiles`의 `runners`가 그 언어를 가리키는 section을 실행한다. `runners`는 `php`, `node`, `python`, `browser`,
+    `build` 중 몇 개를 적는다. `browser`는 `packages/client/tests`의 runner, `build`는 `tests/scripts/build-id.test.mts`이며,
+    둘 다 Node case reader로 자기 section을 읽고, check는 세 서버의 결과만 센다.
   - **Reading a case.** runner는 각 case를 그 언어의 case reader를 통해서만 읽는다. case reader는 모든 언어에서 같은
-    member를 가진 test tree의 unit 하나다.
-    - case reader는 case의 입력 필드를 runner에 넘기며, 각 기대 필드를 관찰된 값과 직접 비교한다. 비교 방법은 case 파일의
-      규칙이 정한 것이다(예: `representations.json`에 대한 HY-123). runner는 비교하지 않는다.
-    - case가 끝난 뒤 reader는 읽히지 않은 필드에 `FIELD_UNKNOWN <name>`으로, 비교되지 않은 기대 필드에
-      `FIELD_UNCOMPARED <name>`으로 실패시킨다.
-    - 필드 중 하나에 대한 비교를 규칙이 정하지 않은 case 파일은 파일 전체가 실패한다. `fields`가 없고 비교, 규칙, quote가 없는 기대 필드도 파일 전체를 실패시킨다.
+    member를 가진 test tree의 unit 하나다: public member `cases`, `section`, `id`, `has`, `input`, `compare`, `fail`,
+    `line`과 private member `declaration`, `matches`, `equal`.
+    - `contracts/interfaces.json`의 `caseFiles`는 case 파일의 역할과 비교의 유일한 출처다(HY-130). 파일마다 그 규칙,
+      최상위 key(`fixtures`), case 배열(`sections`)마다 그 `runners`, case가 쓰는 fixture(`uses`), 모든 필드와 그 역할,
+      그리고 각 expected 필드, 단계가 함께 확인하는 각 input 필드, 단계의 각 결과에 대해 비교 방법과 그것을 정하는
+      규칙과 그 규칙의 문장 전체를 적는다. check는 각 quote가 그 규칙의 온전한 문장인지 `only`(HYR-6)처럼 검증한다.
+    - case reader는 case의 입력 필드와 쓰는 fixture를 runner에 넘기며, 각 expected 필드를 관찰된 값과 `caseFiles`가
+      정한 비교로 직접 비교한다. runner는 비교하지 않는다.
+    - 파일이 `caseFiles`가 선언하지 않은 key, section, 필드(`only`(HYR-6)는 빼고)를 가지거나, `fields`가 없고 비교나
+      규칙이나 quote가 없는 expected 필드를 가지면 reader는 첫 case 전에 그 파일을 `FILE_UNDECLARED <path>`로
+      실패시키고, runner는 그 파일의 case마다 `CASE <file> <id> FAIL FILE_UNDECLARED <path>`를 쓴다.
+    - reader는 runner의 단계가 일으킨 오류에 `CASE_ERROR <message>`로, 비교가 실패한 첫 expected 필드에
+      `FIELD_DIFFERS <name>`으로, case가 끝난 뒤 읽히지 않은 입력 필드나 쓰는 fixture에 `FIELD_UNKNOWN <name>`으로,
+      비교되지 않은 expected 필드에 `FIELD_UNCOMPARED <name>`으로 case를 실패시킨다. 실패한 case의 reason은 이 순서에서
+      첫 번째 것이다. 중첩된 필드는 `received.headers`처럼 점으로 이은 경로로 부른다.
+    - case는 `only`(HYR-6)를 가질 수 있다. reader는 그것을 읽고, 그것이 가리키는 언어의 runner에만 그 case를 준다.
   - **Results.**
     - runner는 case마다 한 줄을 `RECIPE_RESULTS`가 가리키는 결과 파일에 쓴다: `CASE <file> <id> PASS` 또는
       `CASE <file> <id> FAIL <reason>`.
     - case가 실패하면 0이 아닌 코드로 종료한다.
-    - `caseFiles`가 이름 붙이지 않은 case 파일은 그 case마다 `CASE <file> <id> FAIL FILE_UNDECLARED <path>` 줄을 얻으며, `<path>`는 파일의 경로다.
     - `make recipe-check`는 성공 여부를 종료 상태와 그 파일의 줄에서 얻는다. 줄이 없는 case는 실패하며, 다른 출력은 결과를
       제공하지 않는다.
-    - 언어가 파일의 case id를 빠뜨리거나, 파일이 가지지 않은 id를 출력하면 check가 실패한다. `only`를 가진 case는 그것이
-      가리키는 언어에서만 센다.
-    - 각 언어의 case id는 `caseFiles`의 section 중 `runners`가 그 언어를 이름 붙인 section에서 얻는다.
+    - check는 각 서버 언어의 case id를 `caseFiles`의 `runners`가 그 언어를 가리키는 section에서 얻으며, 언어가 그런 case
+      id를 빠뜨리거나 그런 id가 아닌 id를 출력하면 실패한다. `only`를 가진 case는 그것이 가리키는 언어에서만 센다.
   - **Native tests.** native test는 case 파일을 실행하지 않는, 한 언어의 test tree에 있는 테스트다. 한 언어를 가리키는
     `only`를 가진 unit이나 member, 또는 `cases: none`인 concern에 대해서만 존재한다. 두 언어가 가진 동작은
     `only: {languages, rule, quote}`(HYR-6)를 가진 case이며, 다른 runner는 그 case를 빼고 실행한다. check는 각 언어의 case
-    id를 `only`가 없는 case와 `only`가 그 언어를 가리키는 case에서 얻는다.
+    id를 `runners`가 그 언어를 가리키는 section의, `only`가 없는 case와 `only`가 그 언어를 가리키는 case에서 얻는다.
     - spec은 각 native test를 그 unit, member 또는 concern 아래에 `<test file>::<test name>: <reason>` 형식으로 적는다.
     - HYR-8은 언어마다 그 언어의 파서로 test tree의 모든 test를 나열한다. runner도 spec의 이름도 아닌 test, 빠진 이름 붙은
       test, 빈 reason, 그리고 `only`가 정확히 한 언어를 가리키지 않는 unit이나 member 또는 case가 있는 concern 아래에 적힌
@@ -191,8 +210,9 @@ PHP, Node, Python 서버는 하나의 프로토콜(`protocol.md`)을 구현한�
   - HYR-6에 어긋나는 `only`;
   - HYR-2에 어긋나는 규칙이나 case 참조, 또는 `outside` 항목;
   - re-export가 spec의 public member 및 public type과 다른 barrel 파일;
+  - `contracts/*.json` case 파일이 `caseFiles` 항목을 가지지 않거나, `caseFiles`의 항목, section 또는 필드를 어떤 파일도
+    가지지 않는 경우;
   - HYR-7에 어긋나는 결과, case reader 또는 native test.
-  - `contracts/*.json` case 파일이 `caseFiles` 항목을 가지지 않거나, `caseFiles`의 항목, section 또는 필드를 어떤 파일도 가지지 않는 경우;
 
   실행할 때마다 먼저 reader의 mutation case를 실행하며, reader가 mutation을 통과시키면 실패한다.
 
