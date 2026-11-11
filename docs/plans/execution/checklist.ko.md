@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: f8b8b253946a5e5e943e57656a4362b5217d54d35afc30dd5739523d402c0231 -->
+<!-- source-sha256: 4e89f4b100e8b8fed0230c856536ab432bcecf4ec27afd916c9c8d54dbfd194a -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -381,3 +381,4 @@
 | H28.3 | Node server: H28.2와 같은 규칙 | packages/server/node | `make test-node` | [ ] |
 | H28.4 | Python server: H28.2와 같은 규칙 | packages/server/python | `make test-python` | [ ] |
 | H28.5 | Browser package: browser context와 Hyper-Context header, 다른 build에서 새 document, html definition build, 마지막 region response, HyperOptions의 functions, media type application/vnd.hyper+json | packages/client | `make test-js` | [ ] |
+| H28.6 | Build: browser 산출물을 path 순서로 hash한 build id, asset output과 program directory의 build.json, 모든 layout의 placement build 검사, static shell의 hyper-build element | packages/build, scripts | `make test-scripts` | [ ] |

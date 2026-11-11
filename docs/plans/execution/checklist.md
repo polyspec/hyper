@@ -380,3 +380,4 @@
 | H28.3 | Node server: the same rules as H28.2 | packages/server/node | `make test-node` | [ ] |
 | H28.4 | Python server: the same rules as H28.2 | packages/server/python | `make test-python` | [ ] |
 | H28.5 | Browser package: the browser context and the Hyper-Context header, a new document for another build, the html definition build, the latest region response, the functions of HyperOptions and the media type application/vnd.hyper+json | packages/client | `make test-js` | [ ] |
+| H28.6 | Build: the build id over the browser outputs in path order, build.json in the asset output and the program directory, the build check of the placement build in every layout and the hyper-build element of the static shell | packages/build, scripts | `make test-scripts` | [ ] |
