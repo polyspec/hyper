@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 1dbe1ca68d39fb7dc8c35d9aadcdf4999d23d961201bb2c09d8a460fffaed11b -->
+<!-- source-sha256: dd4ecff182c16a722082a36bbddc9610dc17fafc626fd66802d080ea1d86e23a -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- docs/spec/protocol.md는 both servers라고 쓴 모든 문장에 PHP, Node, Python 서버를 적는다: `contracts/fields.json`, `contracts/csrf.json`, `contracts/reads.json`, `contracts/json.json`의 case와 application object의 HY-44 실패이며, 이 실패는 Python rendering test가 `datetime`으로 확인한다(H28.1-4).
 
 - docs/spec/protocol.md는 두 번의 문장 감사에 따라 wave 28의 규칙을 고친다: media type은 한 번 선택되어 요청이 가지며, 유효하지 않은 `Accept`는 400을 받고, 406 body는 제공하는 매개변수 값의 모든 조합을 나열하며, representation 요청이 선택 뒤에 받는 모든 응답은 하나의 `Vary`를 가진다(HY-116, HY-117). 매니페스트는 페이지 type, wildcard, `q`, `vary` 이름 `Accept`와 `Cookie`를 거부한다(HY-118). application은 hyper의 검사 뒤, token 검사 앞에서 session을 연다(HY-120). body가 있는 `GET`, `HEAD`, `DELETE`는 400을 받고, JSON body는 HY-54가 kept 값을 decode하듯 decode되며, `HEAD`는 `App.respond`로 `GET` 응답을 돌려준다(HY-121). `Location`은 애플리케이션 경로이거나 절대 URI다(HY-122). context handler는 action 뒤, 공유 데이터 handler와 loader 앞에서 실행되고(HY-124), context는 모든 호출에서 검사되며 그것을 담는 응답에서만 encode되고(HY-125), `Hyper-Context`는 token 검사 앞에서 검사된다(HY-127). context handler, host 함수, representation handler의 public API를 runtime마다 정한다(HY-106). `contracts/representations.json`, `contracts/context.json`, `contracts/client.json`이 이 규칙의 case를 담는다(H28.1-3).
 

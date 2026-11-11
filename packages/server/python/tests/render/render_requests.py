@@ -3,6 +3,7 @@
 # (HY-3, HY-10 to HY-15, HY-18, HY-19, HY-25 to HY-27, HY-30, HY-31, HY-50 to HY-53, HY-58, HY-59, HY-65, HY-66, HY-69,
 # HY-75, HY-92, HY-103).
 import contextlib
+import datetime
 import io
 import json
 import re
@@ -542,6 +543,25 @@ class WarningTest(FixtureTest):
         self.assertEqual(500, response.status)
         self.assertEqual("Internal Server Error", response.body)
         self.assertEqual([(500, "beware")], reports)
+
+    def test_application_objects_in_shared_data_fail(self) -> None:
+        # HY-44: an application object is not a value of the data model, so the check fails the request with HY-43 on
+        # a document and on a JSON request, as the PHP and Node servers fail a DateTimeImmutable and a Date.
+        cases = {
+            "datetime": (datetime.datetime(2026, 1, 1, tzinfo=datetime.timezone.utc), 500),
+            "nested application object": ({"list": [object()]}, 500),
+            "dictionary": ({"a": 1}, 200),
+        }
+        def shared_of(value: object):
+            return lambda request: {"site": "x", "value": value}
+
+        for label, (value, status) in cases.items():
+            loaded = {**handlers(), "shared": shared_of(value)}
+            app = self.app(handlers=loaded)
+            for headers in ({}, JSON):
+                with contextlib.redirect_stderr(io.StringIO()):
+                    response = app.handle(Request("GET", "/", headers), self.session)
+                self.assertEqual(status, response.status, label)
 
     def test_the_filters_of_the_process_are_restored_after_the_request(self) -> None:
         # HY-74: the server sets the filter for the requests only.

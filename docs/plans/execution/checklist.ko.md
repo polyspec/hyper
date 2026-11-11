@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 3810f0b41f821b885bb481ec73c013a4e3e20acbfc1f3e5df7fd75d96e5fd6f1 -->
+<!-- source-sha256: 4f7c54dd46cba7a9fc4e22cb3fe5dce147705e23de5b8ae396548008dcf35bbf -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -380,7 +380,7 @@
 | H28.1-1 | server build가 build id를 얻는 방법을 명세한다: option --build로 이름 붙인 asset output의 build.json을 읽어 같은 file을 program directory에 쓰고, file이 없거나 build id가 올바르지 않으면 실패한다 | docs/spec/protocol.md and its Korean twin | `make docs-check` | [o] |
 | H28.1-2 | build id가 hash하는 각 산출물의 path를 정한다: public/assets 아래 file은 앞의 slash를 뺀 URL path로, manifest.json과 templates.index.json은 --output directory 안의 이름으로 | docs/spec/protocol.md and its Korean twin, contracts/context.json | `make docs-check` | [o] |
 | H28.1-3 | commit된 문장의 감사에 따라 wave 28의 규칙과 contract case를 고친다: selection 뒤에 application이 여는 session, context handler와 Hyper-Context 검사와 selection의 순서, Accept 문법, JSON body decoding, representation의 response와 Vary 규칙, Location 검사, 각 runtime의 public API, HYC-15의 build definition, shared 안의 context 위치, request마다 한 번의 context encoding, 빠진 case | docs/spec/protocol.md and its Korean twin, contracts/representations.json, contracts/context.json, contracts/client.json | `make docs-check` | [o] |
-| H28.1-4 | both servers라고 쓴 모든 문장에 세 server를 적는다: HY-24, HY-56, HY-57, HY-54, HY-73의 contract 문장과 HY-44의 검사 | docs/spec/protocol.md and its Korean twin | `make docs-check` and no sentence of protocol.md or protocol.ko.md that says both servers or 두 서버 | [ ] |
+| H28.1-4 | both servers라고 쓴 모든 문장에 세 server를 적는다: HY-24, HY-56, HY-57, HY-54, HY-73의 contract 문장과 HY-44의 검사 | docs/spec/protocol.md and its Korean twin | `make docs-check` and no sentence of protocol.md or protocol.ko.md that says both servers or 두 서버 | [o] |
 | H28.2 | PHP server: media type 선택과 Vary, context, Hyper-Context header와 build member, representation을 선택하지 않은 request만 session을 연다, media type application/vnd.hyper+json, App의 functions; contracts/context.json과 contracts/client.json의 case | packages/server/php | `make test-php` | [~] |
 | H28.3 | Node server: H28.2와 같은 규칙 | packages/server/node | `make test-node` | [~] |
 | H28.4 | Python server: H28.2와 같은 규칙 | packages/server/python | `make test-python` | [~] |
