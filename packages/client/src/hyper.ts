@@ -1,8 +1,10 @@
-import { BindError, bindValue, parseJson, type MapValue, type Value } from '@polyspec/template/render';
+import { BindError, bindValue, parseJson, type HostFunction, type MapValue, type Value } from '@polyspec/template/render';
+import { createEngine } from './engine.js';
 import { applyRegionKept, copyValue, decodeResponse, presentRouteRegions, renderDocument, renderLayout, renderRegionOf, requireMap, toHtml, type Application, type DecodedResponse } from './response.js';
-import { ObtainError, requestDocument, type Fetch } from './obtain.js';
+import { documentHeaders, ObtainError, requestDocument, type Fetch } from './obtain.js';
 import { PageStylesheets, StylesheetError } from './stylesheets.js';
 import { stripBasePath } from './router.js';
+import { isHyperJson } from './media-type.js';
 import { routeTemplates } from './templates.js';
 import { keptPaths, type RouteDeclaration } from './manifest.js';
 import { browserStorage, childOf, valueToJson, type KeepStorage } from './keep.js';
@@ -65,6 +67,10 @@ export interface DocumentAdapter {
   fail(status: string): void;
   // Returns the number of elements with an id in the page (HY-75).
   elements(id: string): number;
+  // Returns the content of the `hyper-build` meta element of the document (HY-125), or null when it has none (HYC-22).
+  build(): string | null;
+  // Loads the URL as a new document with GET (HYC-22).
+  assign(url: string): void;
 }
 
 // The data of the last rendered response (HYC-4): the loader data and the region data that rendered.
@@ -98,6 +104,9 @@ export interface HyperOptions<E extends RegionElement = Element> {
   document?: DocumentAdapter;
   // Returns the URL of the current page; the default reads the browser location.
   currentUrl?: () => string;
+  // The host functions of the application, by name (HYC-24, template FUN-43). The client registers them in the template
+  // engine of its application when it is created, as createApplication does; a registration that fails fails the start.
+  functions?: Record<string, HostFunction>;
 }
 
 // A server kept value whose saving has not completed, with the number of its change and the number of
@@ -134,15 +143,26 @@ export class Hyper<E extends RegionElement = Element> {
   readonly app: Application;
   private readonly htmx: HtmxApi<E>;
   private readonly options: HyperOptions<E>;
+  // The build id of the page, from its meta element when the client is created (HY-125, HYC-22).
+  private readonly build: string;
+  // The context of the application that the browser holds: its hash and its value, both absent at first (HYC-22).
+  private contextHash: string | null = null;
+  private contextValue: MapValue | null = null;
 
   constructor(app: Application, htmx: HtmxApi<E>, options: HyperOptions<E>) {
-    this.app = app;
+    // The engine of the application is replaced by one with the functions of the options, which registers them and
+    // fails for a name that the template refuses (HYC-24, template FUN-44, RT-5); the templates stay the same.
+    this.app = options.functions === undefined ? app : { ...app, engine: createEngine(app.templates.loader, options.functions) };
     this.htmx = htmx;
     this.options = options;
     this.element = options.element ?? ((id) => htmx.find(`[id="${CSS.escape(id)}"]`));
     this.request = options.fetch ?? ((input, init) => fetch(input, init));
     this.page = options.document ?? browserDocument(htmx);
     this.currentUrl = options.currentUrl ?? (() => window.location.href);
+    const build = this.page.build();
+    if (build === null) throw new Error('hyper: the document has no meta element hyper-build with the build of the page (HY-125)');
+    if (!/^[0-9a-f]{64}$/.test(build)) throw new Error(`hyper: the build of the page ${JSON.stringify(build)} is not a SHA-256 hexadecimal digest (HY-125)`);
+    this.build = build;
   }
 
   // Opens the event stream of `url` with the request function of the client and returns its subscription (HYC-17).
@@ -206,6 +226,9 @@ export class Hyper<E extends RegionElement = Element> {
   }
 
   private async openServerRendered(path: string): Promise<void> {
+    // The document holds the context that its embedded data holds, and none without it (HYC-22).
+    this.contextHash = null;
+    this.contextValue = null;
     const embedded = this.element('hy-data')?.textContent;
     if (embedded) return this.holdEmbedded(embedded, path);
     this.release();
@@ -265,8 +288,14 @@ export class Hyper<E extends RegionElement = Element> {
     const holds = this.holds;
     const page = new URL(this.currentUrl());
     const url = this.options.basePath + page.pathname + page.search;
-    const { value, url: answered } = await requestDocument(this.request, url);
+    const { value, url: answered } = await requestDocument(this.request, url, this.contextHash);
     if (this.holds !== holds) return;
+    const root = requireMap(value, 'response');
+    // A response of another build is not rendered: the browser loads its page URL as a new document (HYC-22).
+    if (this.buildOf(root) !== this.build) {
+      this.page.assign(this.responsePath(answered).page);
+      throw new ObtainError(`hyper: the document of ${url} has another build, and the browser loads its page URL instead`, '0');
+    }
     const route = this.pageRoute();
     const path = stripBasePath(pathOf(answered), this.options.basePath);
     const routed = path === null ? null : this.app.router.match(path);
@@ -275,7 +304,8 @@ export class Hyper<E extends RegionElement = Element> {
     }
     let decoded: DecodedResponse;
     try {
-      decoded = decodeResponse(this.app, value, path);
+      decoded = decodeResponse(this.app, root, path);
+      this.adoptContext(decoded);
     } catch (error) {
       throw new ObtainError(`hyper: the document of ${url} cannot be decoded: ${String(error)}`, '0');
     }
@@ -293,6 +323,7 @@ export class Hyper<E extends RegionElement = Element> {
     let decoded: DecodedResponse;
     try {
       decoded = decodeResponse(this.app, parseJson(text), path);
+      this.adoptContext(decoded);
     } catch (error) {
       failure(error);
       this.page.fail('0');
@@ -420,22 +451,28 @@ export class Hyper<E extends RegionElement = Element> {
     const route = this.routeNamed(match.name);
     try {
       const [response] = await Promise.all([
-        this.request(this.options.basePath + url.pathname + url.search, { headers: { Accept: 'application/json' }, credentials: 'same-origin', signal: abort.signal }),
+        this.request(this.options.basePath + url.pathname + url.search, { headers: documentHeaders(this.contextHash), credentials: 'same-origin', signal: abort.signal }),
         this.app.templates.ensure(routeTemplates(this.app.manifest, route)),
       ]);
       const text = await response.text();
       if (generation !== this.location) return;
-      if (!(response.headers.get('content-type') ?? '').startsWith('application/json')) {
+      if (!isHyperJson(response.headers.get('content-type'))) {
         this.page.text(text);
         return;
       }
       // The document belongs to the URL after redirects (HYC-1, HYC-8).
-      const path = response.url ? stripBasePath(pathOf(response.url), this.options.basePath) : url.pathname;
-      if (path === null) throw new Error(`hyper: response URL ${response.url} is outside the base path ${this.options.basePath}`);
-      const final = this.routeOf(this.options.basePath + path);
+      const answered = response.url ? this.responsePath(response.url) : { path: url.pathname, page: url.pathname + url.search };
+      const root = requireMap(parseJson(text), 'response');
+      // A response of another build is not rendered: the browser loads its page URL as a new document (HYC-22).
+      if (this.buildOf(root) !== this.build) {
+        this.page.assign(answered.page);
+        return;
+      }
+      const final = this.routeOf(this.options.basePath + answered.path);
       if (final !== null && final !== route) await this.app.templates.ensure(routeTemplates(this.app.manifest, final));
       if (generation !== this.location) return;
-      const decoded = decodeResponse(this.app, parseJson(text), path);
+      const decoded = decodeResponse(this.app, root, answered.path);
+      this.adoptContext(decoded);
       this.applyBrowserKept(decoded);
       // A client-rendered document never embeds its data, because the browser holds the data of the JSON (HY-31).
       const html = await this.app.templates.render(() => renderDocument(this.app, decoded, { embed: false }));
@@ -459,7 +496,7 @@ export class Hyper<E extends RegionElement = Element> {
       htmx_config_request: (_elt, { ctx }) => {
         // Only a request whose target is the page region element is a region request; htmx sends HX-Request (HY-15, HYC-2).
         if (!isElementWithId(ctx.target) || ctx.target.id !== this.app.page) return;
-        ctx.request.headers['Accept'] = 'application/json';
+        ctx.request.headers['Accept'] = 'application/vnd.hyper+json';
         ctx.hyperRegion = ctx.target.id;
         ctx.hyperStart = performance.now();
         if (basePath !== '') {
@@ -480,6 +517,8 @@ export class Hyper<E extends RegionElement = Element> {
           }
           return;
         }
+        // A region request sends the held context hash, and no header while none is held (HYC-22, HY-127).
+        if (this.contextHash !== null) ctx.request.headers['Hyper-Context'] = this.contextHash;
         // A region request is the latest navigation: the region request and the client-side restoration that it
         // supersedes are aborted (HYC-3).
         this.regionAbort?.();
@@ -497,18 +536,19 @@ export class Hyper<E extends RegionElement = Element> {
         loading.catch(() => undefined);
         ctx.fetch = async (url, init) => {
           const [response] = await Promise.all([fetch(url, init), loading]);
+          // A response that a later region request superseded renders nothing and holds no context (HYC-23).
+          if (ctx.hyperLocation !== this.location) return response;
           const final = this.routeOf(response.url || url);
           if (final !== null && final !== requested) await this.app.templates.ensure(routeTemplates(this.app.manifest, final));
           // The stylesheet links of the layout of the response load before htmx swaps (HYC-15).
-          if ((response.headers.get('content-type') ?? '').startsWith('application/json')) {
+          if (isHyperJson(response.headers.get('content-type'))) {
             const root = requireMap(parseJson(await response.clone().text()), 'response');
-            const timezone = requireMap(root.get('env') ?? null, 'env').get('timezone');
-            if (typeof timezone !== 'string') throw new Error('hyper: env.timezone is not a string');
-            ctx.hyperStylesheets = await this.page.stylesheets(await this.app.templates.render(() => renderLayout(this.app, requireMap(root.get('shared') ?? null, 'shared'), timezone)));
-            // Load the templates that the rendering of the response reaches before htmx renders it synchronously (HYC-12).
-            const path = stripBasePath(pathOf(response.url || url), basePath);
-            if (path !== null) {
-              const decoded = decodeResponse(this.app, root, path);
+            // A response of another build renders nothing here; the after-request hook loads its page (HYC-22).
+            if (this.buildOf(root) === this.build) {
+              const decoded = decodeResponse(this.app, root, this.responsePath(response.url || url).path);
+              this.adoptContext(decoded);
+              ctx.hyperStylesheets = await this.page.stylesheets(await this.app.templates.render(() => renderLayout(this.app, decoded.shared, decoded.timezone, this.build)));
+              // Load the templates that the rendering of the response reaches before htmx renders it synchronously (HYC-12).
               this.applyBrowserKept(decoded);
               await this.app.templates.render(() => toHtml(this.app, decoded));
             }
@@ -520,14 +560,20 @@ export class Hyper<E extends RegionElement = Element> {
         if (ctx.hyperRegion === undefined || ctx.text === undefined) return;
         // A response that arrived before the abort of its superseded request does not swap over the newer navigation.
         if (ctx.hyperLocation !== undefined && ctx.hyperLocation !== this.location) return false;
-        if (!(ctx.response?.headers.get('content-type') ?? '').startsWith('application/json')) {
+        if (!isHyperJson(ctx.response?.headers.get('content-type') ?? null)) {
           markError(ctx.target, String(ctx.response?.status ?? 0));
           return false;
         }
         const url = ctx.response?.raw?.url || ctx.request.action;
-        const path = stripBasePath(pathOf(url), basePath);
-        if (path === null) throw new Error(`hyper: response URL ${url} is outside the base path ${basePath}`);
-        const decoded = decodeResponse(this.app, parseJson(ctx.text), path);
+        const answered = this.responsePath(url);
+        const root = requireMap(parseJson(ctx.text), 'response');
+        // A response of another build is not rendered: the browser loads its page URL as a new document (HYC-22).
+        if (this.buildOf(root) !== this.build) {
+          this.page.assign(answered.page);
+          return false;
+        }
+        const decoded = decodeResponse(this.app, root, answered.path);
+        this.adoptContext(decoded);
         this.applyBrowserKept(decoded);
         ctx.text = toHtml(this.app, decoded);
         this.hold(decoded);
@@ -688,6 +734,39 @@ export class Hyper<E extends RegionElement = Element> {
     }
   }
 
+  // Holds the context of a JSON response and sets the held value into its shared data before the response renders
+  // (HYC-22, HY-128). A response without a context member leaves its shared data as it is. A response without value
+  // must carry the held hash; another hash is an error of the request (HYC-14).
+  private adoptContext(decoded: DecodedResponse): void {
+    const member = decoded.value.get('context');
+    if (member === undefined) return;
+    const context = requireMap(member, 'context');
+    const hash = context.get('hash');
+    if (typeof hash !== 'string') throw new Error('hyper: context.hash is not a string');
+    const value = context.get('value');
+    if (value !== undefined) {
+      this.contextHash = hash;
+      this.contextValue = requireMap(value, 'context.value');
+    } else if (hash !== this.contextHash) {
+      throw new Error(`hyper: the response has the context ${hash} without value, and the browser holds ${this.contextHash ?? 'no context'} (HYC-22)`);
+    }
+    if (this.contextValue !== null) decoded.shared.set('context', this.contextValue);
+  }
+
+  // Returns the build id of a JSON response, which every response holds (HY-128).
+  private buildOf(root: MapValue): string {
+    const build = root.get('build');
+    if (typeof build !== 'string') throw new Error('hyper: the response has no build id (HY-128)');
+    return build;
+  }
+
+  // Returns the path of a response URL without the base path, and the page URL of it with its query (HYC-1, HYC-22).
+  private responsePath(url: string): { path: string; page: string } {
+    const path = stripBasePath(pathOf(url), this.options.basePath);
+    if (path === null) throw new Error(`hyper: response URL ${url} is outside the base path ${this.options.basePath}`);
+    return { path, page: path + new URL(url, 'http://hyper.invalid').search };
+  }
+
   private routeOf(url: string): RouteDeclaration | null {
     const path = stripBasePath(pathOf(url), this.options.basePath);
     const match = path === null ? null : this.app.router.match(path);
@@ -808,6 +887,8 @@ function browserDocument(htmx: { process(element: Element): void }): DocumentAda
     text: (text) => replaceBody(null, [document.createTextNode(text)]),
     fail: (status) => document.body.setAttribute('hy-error', status),
     elements: (id) => document.querySelectorAll(`[id="${CSS.escape(id)}"]`).length,
+    build: () => document.querySelector('meta[name="hyper-build"]')?.getAttribute('content') ?? null,
+    assign: (url) => window.location.assign(url),
   };
 }
 

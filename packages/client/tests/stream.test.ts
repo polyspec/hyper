@@ -24,6 +24,8 @@ const idlePage: DocumentAdapter = {
   text: () => undefined,
   fail: () => undefined,
   elements: () => 0,
+  build: () => 'a'.repeat(64),
+  assign: () => undefined,
 };
 const idleHtmx: HtmxApi = { process: () => undefined, swap: async () => undefined, find: () => null, config: { defaultTimeout: 60000 }, parseInterval: Number };
 

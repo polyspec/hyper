@@ -7,6 +7,9 @@ import { sources, testApplication, testApplicationFailing } from './application.
 
 interface Swap { region: string; text: string; swap: string }
 
+// The build id of the test page, which its meta element and its JSON responses hold (HY-125).
+const BUILD = 'a'.repeat(64);
+
 // A storage that records writes and requests and returns preset browser values.
 class FakeStorage implements KeepStorage {
   readonly writes: string[] = [];
@@ -59,6 +62,13 @@ class FakeDocument {
   readonly counts = new Map<string, number>();
   elements(id: string): number {
     return this.counts.get(id) ?? 1;
+  }
+  // the build of the page in its meta element (HYC-22); null is a document without that element
+  build: () => string | null = () => BUILD;
+  // the URLs that the browser loads as a new document (HYC-22)
+  readonly assigned: string[] = [];
+  assign(url: string): void {
+    this.assigned.push(url);
   }
 }
 
@@ -120,7 +130,7 @@ function clientRendering(page: FakeDocument, fetch: Fetch): Hyper<RegionElement>
 }
 
 function jsonResponse(url: string, body: string): Response {
-  const response = new Response(body, { headers: { 'content-type': 'application/json' } });
+  const response = new Response(body, { headers: { 'content-type': 'application/vnd.hyper+json' } });
   Object.defineProperty(response, 'url', { value: url });
   return response;
 }
@@ -139,10 +149,10 @@ async function request<E extends RegionElement>(hyper: Hyper<E>, action: string,
   return ctx;
 }
 
-const listJson = '{"env":{"timezone":"Z"},"route":"list","params":{},"shared":{"title":"T","csrf":"token"},"regions":{"content":{"heading":"H"},"rows":{"items":[{"name":"a","open":true},{"name":"b","open":false}],"flag":false,"tab":"a"}},"kept":{}}';
+const listJson = '{"env":{"timezone":"Z"},"route":"list","params":{},"build":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","shared":{"title":"T","csrf":"token"},"regions":{"content":{"heading":"H"},"rows":{"items":[{"name":"a","open":true},{"name":"b","open":false}],"flag":false,"tab":"a"}},"kept":{}}';
 
 // The list route with its route region absent (HY-75).
-const absentJson = '{"env":{"timezone":"Z"},"route":"list","params":{},"shared":{"title":"T","csrf":"token"},"regions":{"content":{"heading":"H"}},"kept":{}}';
+const absentJson = '{"env":{"timezone":"Z"},"route":"list","params":{},"build":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","shared":{"title":"T","csrf":"token"},"regions":{"content":{"heading":"H"}},"kept":{}}';
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -150,7 +160,7 @@ describe('superseded region requests', () => {
   it('does not swap the response of a region request that a later region request superseded (HYC-3)', async () => {
     const { hyper } = setup('', []);
     const extension = hyper.extension();
-    const item = (id: string) => `{"env":{"timezone":"Z"},"route":"item","params":{"id":"${id}"},"shared":{"title":"T${id}"},"regions":{"content":{"id":"${id}"}},"kept":{}}`;
+    const item = (id: string) => `{"env":{"timezone":"Z"},"route":"item","params":{"id":"${id}"},"build":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","shared":{"title":"T${id}"},"regions":{"content":{"id":"${id}"}},"kept":{}}`;
     const older = context('/items/1');
     let aborted = 0;
     older.request.abort = () => { aborted++; };
@@ -177,7 +187,7 @@ describe('render errors of a region response', () => {
   it('rejects the fetch with the render error of the response instead of dropping it (HYC-9)', async () => {
     const { hyper } = setup('', []);
     // The response has no page region `content`, so rendering it fails (toHtml).
-    const { ctx } = startRequest(hyper, '/items/7', '{"env":{"timezone":"Z"},"route":"item","params":{"id":"7"},"shared":{"title":"T"},"regions":{},"kept":{}}');
+    const { ctx } = startRequest(hyper, '/items/7', '{"env":{"timezone":"Z"},"route":"item","params":{"id":"7"},"build":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","shared":{"title":"T"},"regions":{},"kept":{}}');
     const error = await defined(ctx.fetch, 'the fetch of the request context')(ctx.request.action, {}).then(() => null, (failure: unknown) => failure);
     expect(String(error)).toContain('has no region content');
   });
@@ -187,14 +197,14 @@ describe('template delivery', () => {
   it('loads only the templates of the requested route (HYC-12)', async () => {
     const fetched: string[] = [];
     const { hyper } = setup('', fetched);
-    await request(hyper, '/items/7', 'http://localhost/items/7', '{"env":{"timezone":"Z"},"route":"item","params":{"id":"7"},"shared":{"title":"T"},"regions":{"content":{"id":"7"}},"kept":{}}');
+    await request(hyper, '/items/7', 'http://localhost/items/7', '{"env":{"timezone":"Z"},"route":"item","params":{"id":"7"},"build":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","shared":{"title":"T"},"regions":{"content":{"id":"7"}},"kept":{}}');
     expect(fetched.sort()).toEqual(['/t/item.tpl', '/t/layout.tpl', '/t/part.tpl', '/t/side.tpl', '/t/title.tpl']);
   });
 
   it('loads only the view template that the data selects, in a region response (HYC-12)', async () => {
     const fetched: string[] = [];
     const { hyper } = setup('', fetched);
-    const ctx = await request(hyper, '/pick', 'http://localhost/pick', '{"env":{"timezone":"Z"},"route":"pick","params":{},"shared":{"title":"T"},"regions":{"content":{"view":"a"}},"kept":{}}');
+    const ctx = await request(hyper, '/pick', 'http://localhost/pick', '{"env":{"timezone":"Z"},"route":"pick","params":{},"build":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","shared":{"title":"T"},"regions":{"content":{"view":"a"}},"kept":{}}');
     expect(ctx.text).toBe('<title>T - Site</title><p>A</p>');
     expect(fetched).toContain('/t/pick-a.tpl');
     expect(fetched).not.toContain('/t/pick-b.tpl');
@@ -204,7 +214,7 @@ describe('template delivery', () => {
     const fetched: string[] = [];
     const page = new FakeDocument();
     const { hyper } = setup('/api', fetched, new FakeStorage(), page);
-    vi.stubGlobal('fetch', async () => jsonResponse('http://localhost/api/pick', '{"env":{"timezone":"Z"},"route":"pick","params":{},"shared":{"title":"T"},"regions":{"side":{"count":1},"content":{"view":"b"}},"kept":{}}'));
+    vi.stubGlobal('fetch', async () => jsonResponse('http://localhost/api/pick', '{"env":{"timezone":"Z"},"route":"pick","params":{},"build":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","shared":{"title":"T"},"regions":{"side":{"count":1},"content":{"view":"b"}},"kept":{}}'));
     await hyper.renderLocation('/pick');
     expect(page.mounted[0]).toContain('<p>B</p>');
     expect(fetched).toContain('/t/pick-b.tpl');
@@ -374,7 +384,7 @@ describe('held data, restorations and kept values', () => {
     const hyper = new Hyper(app, fakeHtmx(), {
       basePath: '/api',
       storage: new FakeStorage(),
-      fetch: (input) => respond(input.includes('/list') ? listJson.replace('"heading":"H"', '"heading":"LIST"').replace('"regions":{', '"regions":{"side":{"count":1},') : '{"env":{"timezone":"Z"},"route":"item","params":{"id":"7"},"shared":{"title":"T","csrf":"t"},"regions":{"side":{"count":1},"content":{"id":"7"}},"kept":{}}'),
+      fetch: (input) => respond(input.includes('/list') ? listJson.replace('"heading":"H"', '"heading":"LIST"').replace('"regions":{', '"regions":{"side":{"count":1},') : '{"env":{"timezone":"Z"},"route":"item","params":{"id":"7"},"build":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","shared":{"title":"T","csrf":"t"},"regions":{"side":{"count":1},"content":{"id":"7"}},"kept":{}}'),
       document: page,
     });
     const first = hyper.renderLocation('/list');
@@ -426,7 +436,7 @@ describe('held data, restorations and kept values', () => {
 
     const ok = context('/list', target);
     extension.htmx_config_request(null, { ctx: ok });
-    ok.response = { raw: { url: 'http://localhost/list' }, status: 200, headers: new Headers({ 'content-type': 'application/json' }) };
+    ok.response = { raw: { url: 'http://localhost/list' }, status: 200, headers: new Headers({ 'content-type': 'application/vnd.hyper+json' }) };
     ok.text = listJson;
     await hyper.app.templates.ensure(Object.keys(sources));
     extension.htmx_after_request(null, { ctx: ok });
@@ -518,14 +528,15 @@ describe('restorations, saves and failure marks', () => {
     const hyper = new Hyper(testApplication(), fakeHtmx(), {
       basePath: '',
       storage: new FakeStorage(),
+      document: new FakeDocument(),
       element: (id) => (id === 'side' ? side : ({ id })),
     });
     await hyper.app.templates.ensure(Object.keys(sources));
     const extension = hyper.extension();
     const ctx = context('/');
     extension.htmx_config_request(null, { ctx });
-    ctx.response = { raw: { url: 'http://localhost/' }, status: 200, headers: new Headers({ 'content-type': 'application/json' }) };
-    ctx.text = '{"env":{"timezone":"Z"},"route":"home","params":{},"shared":{"title":"T","csrf":"t"},"regions":{"content":{"name":"n"},"side":{"count":2}},"kept":{}}';
+    ctx.response = { raw: { url: 'http://localhost/' }, status: 200, headers: new Headers({ 'content-type': 'application/vnd.hyper+json' }) };
+    ctx.text = '{"env":{"timezone":"Z"},"route":"home","params":{},"build":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","shared":{"title":"T","csrf":"t"},"regions":{"content":{"name":"n"},"side":{"count":2}},"kept":{}}';
     extension.htmx_after_request(null, { ctx });
     expect(side.attributes.has('hy-error')).toBe(false);
   });
@@ -534,6 +545,7 @@ describe('restorations, saves and failure marks', () => {
     const hyper = new Hyper(testApplication(), fakeHtmx(), {
       basePath: '/api',
       storage: new FakeStorage(),
+      document: new FakeDocument(),
       currentUrl: () => 'http://localhost:3000/list',
     });
     const extension = hyper.extension();
@@ -639,7 +651,7 @@ describe('concurrent changes, saves and timeouts', () => {
   });
 
   it('marks a region whose request timed out, and not one cancelled before (HYC-14)', async () => {
-    const hyper = new Hyper(testApplication(), { ...fakeHtmx(), config: { defaultTimeout: 5 } }, { basePath: '', storage: new FakeStorage() });
+    const hyper = new Hyper(testApplication(), { ...fakeHtmx(), config: { defaultTimeout: 5 } }, { basePath: '', storage: new FakeStorage(), document: new FakeDocument() });
     const extension = hyper.extension();
     const cancelled = regionElement('content');
     const early = context('/', cancelled);
@@ -660,7 +672,7 @@ describe('concurrent changes, saves and timeouts', () => {
   });
 
   it('takes a timeout that htmx cannot parse as no timeout, so an abort is a cancellation (HYC-14)', async () => {
-    const hyper = new Hyper(testApplication(), { ...fakeHtmx(), config: { defaultTimeout: 5 }, parseInterval: () => undefined }, { basePath: '', storage: new FakeStorage() });
+    const hyper = new Hyper(testApplication(), { ...fakeHtmx(), config: { defaultTimeout: 5 }, parseInterval: () => undefined }, { basePath: '', storage: new FakeStorage(), document: new FakeDocument() });
     const extension = hyper.extension();
     const element = regionElement('content');
     const ctx = context('/', element);
@@ -702,6 +714,7 @@ describe('concurrent changes, saves and timeouts', () => {
     const hyper = new Hyper(testApplication(), fakeHtmx(), {
       basePath: '/api',
       storage: new FakeStorage(),
+      document: new FakeDocument(),
       currentUrl: () => 'http://localhost/',
     });
     const ctx = context('/api/items/7');
@@ -752,7 +765,7 @@ describe('swaps, storage order and client-side documents', () => {
 
   it('routes the response URL after a redirect in client-side rendering (HYC-8)', async () => {
     const page = new FakeDocument();
-    const item = '{"env":{"timezone":"Z"},"route":"item","params":{"id":"7"},"shared":{"title":"T","csrf":"t"},"regions":{"side":{"count":1},"content":{"id":"7"}},"kept":{}}';
+    const item = '{"env":{"timezone":"Z"},"route":"item","params":{"id":"7"},"build":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","shared":{"title":"T","csrf":"t"},"regions":{"side":{"count":1},"content":{"id":"7"}},"kept":{}}';
     const hyper = new Hyper(testApplication(), fakeHtmx(), {
       basePath: '/api',
       storage: new FakeStorage(),
@@ -796,7 +809,7 @@ describe('extension', () => {
     }
     const target = context('/');
     extension.htmx_config_request(null, { ctx: target });
-    expect(target.request.headers).toEqual({ Accept: 'application/json' });
+    expect(target.request.headers).toEqual({ Accept: 'application/vnd.hyper+json' });
   });
 
   it('passes a non-JSON response unchanged', () => {
@@ -804,6 +817,26 @@ describe('extension', () => {
     const ctx = context('/');
     extension.htmx_config_request(null, { ctx });
     ctx.response = { raw: { url: 'http://localhost/' }, headers: new Headers({ 'content-type': 'text/plain' }) };
+    ctx.text = 'Not Found';
+    extension.htmx_after_request(null, { ctx });
+    expect(ctx.text).toBe('Not Found');
+  });
+
+  it('passes an application/json response unchanged, because it is not the hyper JSON media type (HYC-2)', () => {
+    const extension = setup().hyper.extension();
+    const ctx = context('/');
+    extension.htmx_config_request(null, { ctx });
+    ctx.response = { raw: { url: 'http://localhost/' }, headers: new Headers({ 'content-type': 'application/json' }) };
+    ctx.text = 'Not Found';
+    extension.htmx_after_request(null, { ctx });
+    expect(ctx.text).toBe('Not Found');
+  });
+
+  it('passes an application/vnd.hyper+jsonx response unchanged, because it is not the hyper JSON media type (HYC-2)', () => {
+    const extension = setup().hyper.extension();
+    const ctx = context('/');
+    extension.htmx_config_request(null, { ctx });
+    ctx.response = { raw: { url: 'http://localhost/' }, headers: new Headers({ 'content-type': 'application/vnd.hyper+jsonx' }) };
     ctx.text = 'Not Found';
     extension.htmx_after_request(null, { ctx });
     expect(ctx.text).toBe('Not Found');
@@ -823,7 +856,7 @@ describe('extension', () => {
 
     const page = new FakeDocument();
     const requested: string[] = [];
-    const itemJson = '{"env":{"timezone":"Z"},"route":"item","params":{"id":"7"},"shared":{"title":"T","csrf":"t"},"regions":{"side":{"count":1},"content":{"id":"7"}},"kept":{}}';
+    const itemJson = '{"env":{"timezone":"Z"},"route":"item","params":{"id":"7"},"build":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","shared":{"title":"T","csrf":"t"},"regions":{"side":{"count":1},"content":{"id":"7"}},"kept":{}}';
     const restoring = new Hyper(testApplication(), fakeHtmx(), {
       basePath: '/api',
       storage: new FakeStorage(),
@@ -841,7 +874,7 @@ describe('extension', () => {
 });
 
 describe('stylesheet links (HYC-15)', () => {
-  const itemJson = '{"env":{"timezone":"Z"},"route":"item","params":{"id":"7"},"shared":{"title":"T","csrf":"t"},"regions":{"side":{"count":1},"content":{"id":"7"}},"kept":{}}';
+  const itemJson = '{"env":{"timezone":"Z"},"route":"item","params":{"id":"7"},"build":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","shared":{"title":"T","csrf":"t"},"regions":{"side":{"count":1},"content":{"id":"7"}},"kept":{}}';
   const htmx = fakeHtmx();
   const client = (page: FakeDocument, fetch: Fetch) => new Hyper(testApplication(), htmx, { basePath: '/api', storage: new FakeStorage(), document: page, fetch, currentUrl: () => 'http://localhost/items/7' });
   // A promise with its resolve and reject functions.
@@ -1031,7 +1064,7 @@ describe('obtaining the data of a page without embedded data (HYC-7)', () => {
   it('obtains the data when the page opens with a stored browser kept value and renders the kept value (HYC-4, HY-38)', async () => {
     const { hyper, requests, swaps } = obtaining({ storage: new FakeStorage({ 'localStorage:rows:items.1.open': 'true' }) });
     await hyper.open();
-    expect(requests).toEqual([{ url: '/list?page=2', headers: { Accept: 'application/json' } }]);
+    expect(requests).toEqual([{ url: '/list?page=2', headers: { Accept: 'application/vnd.hyper+json' } }]);
     expect(swaps).toEqual([{ region: 'rows', text: '<li class="open">a</li><li class="open">b</li>', swap: 'innerMorph' }]);
     expect(mapOf(await hyper.data('rows')).get('tab')).toBe('a');
     expect(requests).toHaveLength(1);
@@ -1041,7 +1074,7 @@ describe('obtaining the data of a page without embedded data (HYC-7)', () => {
     const { hyper, requests, swaps } = obtaining();
     await hyper.set('rows', 'items.0.open', false);
     await hyper.set('rows', 'items.1.open', true);
-    expect(requests).toEqual([{ url: '/list?page=2', headers: { Accept: 'application/json' } }]);
+    expect(requests).toEqual([{ url: '/list?page=2', headers: { Accept: 'application/vnd.hyper+json' } }]);
     expect(swaps.map((swap) => swap.text)).toEqual([
       '<li class="open">a</li><li>b</li>',
       '<li>a</li><li>b</li>',
@@ -1089,7 +1122,7 @@ describe('obtaining the data of a page without embedded data (HYC-7)', () => {
   });
 
   it('fails with 0 when the response routes to another route than the current page (HYC-1)', async () => {
-    const item = '{"env":{"timezone":"Z"},"route":"item","params":{"id":"7"},"shared":{"title":"T"},"regions":{"side":{"count":1},"content":{"id":"7"}},"kept":{}}';
+    const item = '{"env":{"timezone":"Z"},"route":"item","params":{"id":"7"},"build":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","shared":{"title":"T"},"regions":{"side":{"count":1},"content":{"id":"7"}},"kept":{}}';
     const { hyper, elements } = obtaining({ answer: async () => jsonResponse('http://localhost/items/7', item) });
     await expect(hyper.set('rows', 'flag', true)).rejects.toThrow('routes to item');
     expect(defined(elements.get('rows'), 'the element rows').attributes.get('hy-error')).toBe('0');

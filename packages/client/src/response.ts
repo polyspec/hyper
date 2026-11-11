@@ -229,11 +229,16 @@ function buildHtml(decoded: DecodedResponse): string {
 }
 
 // Renders the layout of a region response for its stylesheet links: the layout with the shared data as root data,
-// the title rendered alone as the definition `title`, and an empty definition `data` and an empty definition for every
-// manifest region (HYC-15).
-export function renderLayout(app: Application, shared: MapValue, timezone: string): string {
+// the title rendered alone as the definition `title`, the definition `build` of the build of the page (HYC-22), and an
+// empty definition `data` and an empty definition for every manifest region (HYC-15).
+export function renderLayout(app: Application, shared: MapValue, timezone: string, build: string): string {
+  if (!/^[0-9a-f]{64}$/.test(build)) throw new Error('hyper: the build of the page is not 64 lowercase hexadecimal characters (HY-125)');
   const env = { timezone };
-  const define: Record<string, { html: string }> = { title: { html: app.engine.render(app.manifest.title, shared, { env }) }, data: { html: '' } };
+  const define: Record<string, { html: string }> = {
+    title: { html: app.engine.render(app.manifest.title, shared, { env }) },
+    data: { html: '' },
+    build: { html: `<meta name="hyper-build" content="${build}">` },
+  };
   for (const region of app.manifest.regions) define[region.name] = { html: '' };
   return app.engine.render(app.manifest.layout, shared, { define, env });
 }

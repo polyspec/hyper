@@ -6,8 +6,11 @@ import { mapOf } from './values.js';
 
 const app = await loadedApplication();
 
+// The build id of every response of the test (HY-128, HY-125).
+const BUILD = '3'.repeat(64);
+
 function response(route: string, regions: string, shared = '{"title":"T","shared_only":"s"}', timezone = 'Z', kept = '{}'): ReturnType<typeof parseJson> {
-  return parseJson(`{"env":{"timezone":"${timezone}"},"route":"${route}","params":{},"shared":${shared},"regions":${regions},"kept":${kept}}`);
+  return parseJson(`{"env":{"timezone":"${timezone}"},"route":"${route}","params":{},"build":"${BUILD}","shared":${shared},"regions":${regions},"kept":${kept}}`);
 }
 
 describe('toHtml', () => {
@@ -86,7 +89,7 @@ describe('renderDocument', () => {
     const html = renderDocument(app, decodeResponse(app, value, '/list'), { embed: true });
     expect(html).toBe(
       '<title>T - Site</title>\n<aside id="side"><b>2</b></aside>\n<main id="content"><h1>H</h1><ul id="rows"><li>&lt;a&gt;</li></ul></main>\n'
-      + '<script type="application/json" id="hy-data">{"env":{"timezone":"Z"},"route":"list","params":{},"shared":{"title":"T","shared_only":"s"},'
+      + `<script type="application/json" id="hy-data">{"env":{"timezone":"Z"},"route":"list","params":{},"build":"${BUILD}","shared":{"title":"T","shared_only":"s"},`
       + '"regions":{"rows":{"items":[{"name":"\\u003ca\\u003e"}]}},"kept":{}}</script>',
     );
   });
