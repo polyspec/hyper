@@ -52,6 +52,15 @@ def is_test_class(node: ast.ClassDef) -> bool:
     return False
 
 
+def is_record(node: ast.ClassDef) -> bool:
+    """A class of typing.TypedDict or typing.NamedTuple: a record, whose fields are its annotated names."""
+    return any(
+        (isinstance(base, ast.Name) and base.id in ("TypedDict", "NamedTuple"))
+        or (isinstance(base, ast.Attribute) and base.attr in ("TypedDict", "NamedTuple"))
+        for base in node.bases
+    )
+
+
 def assigned_names(target: ast.expr) -> list[str]:
     if isinstance(target, ast.Name):
         return [target.id]
@@ -86,6 +95,18 @@ def read_module(root: Path, rel: str, out: dict) -> None:
             )
 
     for cls in classes:
+        if is_record(cls):
+            fields = [m.target.id for m in cls.body if isinstance(m, ast.AnnAssign) and isinstance(m.target, ast.Name)]
+            out["types"].append(
+                {
+                    "file": rel,
+                    "name": cls.name,
+                    "visibility": visibility(cls.name, module_internal),
+                    "declaration": ast.unparse(cls),
+                    "fields": fields,
+                }
+            )
+            continue
         out["units"].append({"file": rel, "name": cls.name, "kind": "class", "internal": module_internal})
         for member in cls.body:
             if isinstance(member, (ast.FunctionDef, ast.AsyncFunctionDef)):
