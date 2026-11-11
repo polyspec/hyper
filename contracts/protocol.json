@@ -942,6 +942,138 @@
               ]
             }
           ]
+        },
+        {
+          "kind": "rule",
+          "id": "HY-131",
+          "retired": [],
+          "blocks": [
+            {
+              "kind": "paragraph",
+              "statements": [
+                {
+                  "id": "HY-131.1",
+                  "en": "The server reads a `multipart/form-data` body in chunks as it arrives, for an application whose form types include `multipart/form-data` (HY-59.1), and holds neither the body nor the content of a file part as one value: besides one chunk it holds at most the delimiter, the header lines of one part (HY-113.16), the text values within the value limit and the names, filenames and content types of the parts that it read.",
+                  "ko": "form type에 `multipart/form-data`가 있는 application(HY-59.1)에서 server는 `multipart/form-data` body를 도착하는 대로 조각으로 읽고 body도 file part의 내용도 한 값으로 두지 않으며, 조각 하나 외에 두는 것은 delimiter, part 하나의 header 줄(HY-113.16), value 제한 안의 text 값, 읽은 part들의 이름과 filename과 content type이 전부다.",
+                  "koSource": "f1a6473375d160aa042714c5e0a07ce87fc721807c1ce76c77975d59721fe80b"
+                },
+                {
+                  "id": "HY-131.2",
+                  "en": "The delimiter is `--` and the boundary (HY-113.11).",
+                  "ko": "delimiter는 `--`와 boundary다(HY-113.11).",
+                  "koSource": "20211248a84d827a85137f9b41db3b39c2bd6c6395f1f863a4b6255145f76733"
+                },
+                {
+                  "id": "HY-131.3",
+                  "en": "The first delimiter starts the body or follows a CRLF, and the bytes before it are ignored; every later delimiter follows the CRLF that ends the content of a part, and that CRLF is not content.",
+                  "ko": "첫 delimiter는 body의 처음이거나 CRLF 뒤에 오고 그 앞의 byte는 무시하며, 그 뒤의 모든 delimiter는 part의 내용을 끝내는 CRLF 뒤에 오고 그 CRLF는 내용이 아니다.",
+                  "koSource": "9533f5e8e291a89a2a81f8d44f6d9fbbc92c2cdba796e97ffedd90ece9f2a011"
+                },
+                {
+                  "id": "HY-131.4",
+                  "en": "After a delimiter comes a CRLF, which starts the header lines of a part, or `--`, which ends the body, and the bytes after that `--` are ignored.",
+                  "ko": "delimiter 뒤에는 part의 header 줄을 시작하는 CRLF나 body를 끝내는 `--`가 오며, 그 `--` 뒤의 byte는 무시한다.",
+                  "koSource": "5f3ebf6bd386a44db4b12abed3633d07d64d29de66672aa637275618a0c854ce"
+                },
+                {
+                  "id": "HY-131.5",
+                  "en": "A body with other bytes after a delimiter, a body that ends before the `--` that ends it, and a part whose header lines hold a line that starts with the delimiter before their empty line, fail with status 400 as HY-42 does; no part is skipped for its form.",
+                  "ko": "delimiter 뒤에 다른 byte가 있는 body, body를 끝내는 `--` 전에 끝나는 body, 빈 줄 전에 delimiter로 시작하는 줄이 header 줄에 있는 part는 HY-42처럼 status 400으로 실패하며, 형식 때문에 건너뛰는 part는 없다.",
+                  "koSource": "d3a89dd74ec2f93d8af4e98805ac634d488bbb0ac4c4a0d62c9368bb70330453"
+                },
+                {
+                  "id": "HY-131.6",
+                  "en": "The result does not depend on the chunks: a body read in any division into chunks gives the values, the files and the failure of the body read as one chunk.",
+                  "ko": "결과는 조각에 달려 있지 않아서, body를 어떤 조각으로 나눠 읽어도 한 조각으로 읽은 body의 값, file, 실패와 같다.",
+                  "koSource": "1fe87a94ae4d3e30115591dffcb7ad1f2f00b114cb3a3986093086ec6b4aca8a"
+                },
+                {
+                  "id": "HY-131.7",
+                  "en": "The application may declare a value limit, the largest number of bytes that the server holds as one value: a body that is not read in chunks, and the names and the content of the text values of a body read in chunks together.",
+                  "ko": "application은 server가 한 값으로 두는 byte의 최대인 value 제한을 선언할 수 있으며, 조각으로 읽지 않는 body와 조각으로 읽는 body의 text 값들의 이름과 내용의 합이 그 대상이다.",
+                  "koSource": "487242e31fd6629b0bc52a2884af1878a50d57fbf68743d1109d0c2809150725"
+                },
+                {
+                  "id": "HY-131.8",
+                  "en": "An application that declares no value limit uses the smaller of 8 MiB and its body limit.",
+                  "ko": "value 제한을 선언하지 않은 application은 8 MiB와 body 제한 중 작은 것을 쓴다.",
+                  "koSource": "7b3ef4e9b7a19dccb9a881451e1e0965153f065d16e5034810fdd46a609405ad"
+                },
+                {
+                  "id": "HY-131.9",
+                  "en": "The application may declare a part limit, the largest number of parts of a body, 1000 by default.",
+                  "ko": "application은 body의 part 수의 최대인 part 제한을 선언할 수 있으며 기본값은 1000이다.",
+                  "koSource": "5189adf288b802cfa6b42b66ed213b3a460ede8a30b04e3e54f6fe442995aba4"
+                },
+                {
+                  "id": "HY-131.10",
+                  "en": "A value limit or a part limit that is not a positive integer, or a value limit larger than the body limit, fails when the application opens, as HY-59.2 states.",
+                  "ko": "양의 정수가 아닌 value 제한이나 part 제한, 그리고 body 제한보다 큰 value 제한은 HY-59.2가 정하듯 application이 열릴 때 실패한다.",
+                  "koSource": "a6e622e8111c913f532db2c614982ecc879cd1023751c20649d171a7f1ba13e1"
+                },
+                {
+                  "id": "HY-131.11",
+                  "en": "A body that passes the body limit, the value limit, the part limit or the file limit (HY-114) receives status 413 with the text `Content Too Large`, and every server stops reading the body when it passes a limit.",
+                  "ko": "body 제한, value 제한, part 제한, file 제한(HY-114)을 넘는 body는 text `Content Too Large`와 함께 status 413을 받고, 모든 server는 제한을 넘는 순간 body 읽기를 멈춘다.",
+                  "koSource": "a6721f7d4392a75b4f1522caf1b9d5f2638c263b2b6e552331479952ee6d83d3"
+                },
+                {
+                  "id": "HY-131.12",
+                  "en": "The part limit counts every part, also one that is neither a value nor a file (HY-113.6).",
+                  "ko": "part 제한은 값도 file도 아닌 part(HY-113.6)를 포함해 모든 part를 센다.",
+                  "koSource": "ef627a1825fff23541279b42cc8f4530d551330a7aeb478dc0397533994eb523"
+                },
+                {
+                  "id": "HY-131.13",
+                  "en": "The server writes the content of a file part, as it arrives, to a file in a directory that it creates for the request below the temporary directory of the system, with access for its own user only.",
+                  "ko": "server는 file part의 내용을 도착하는 대로 system의 임시 directory 아래에 요청을 위해 만든 directory의 file에 쓰며, 자신의 user만 접근하게 한다.",
+                  "koSource": "2c19e7518f7a6370c0de776e18698a1ae87483b85b897a7d403a11d0aa963789"
+                },
+                {
+                  "id": "HY-131.14",
+                  "en": "It removes the directory after the response hook (HY-60) or the disconnect hook (HY-67) of the request returned, also for a request that fails; a file that the application moved is not in it.",
+                  "ko": "server는 요청의 response hook(HY-60)이나 disconnect hook(HY-67)이 반환한 뒤에 그 directory를 지우며 실패한 요청도 그렇고, application이 옮긴 file은 그 안에 없다.",
+                  "koSource": "2475b53711b855c615fbe14abc7bd013bbf94ffd874a7e8ee35483becda15f5e"
+                },
+                {
+                  "id": "HY-131.15",
+                  "en": "`UploadedFile` gives the bytes of its file as `size()` and moves its file with `moveTo(path)` (`move_to` in Python), by a rename or, to another file system, by a copy and a removal.",
+                  "ko": "`UploadedFile`은 file의 byte 수를 `size()`로 주고 `moveTo(path)`(Python에서는 `move_to`)로 file을 옮기며, rename으로 하거나 다른 file system으로는 복사와 삭제로 한다.",
+                  "koSource": "1ad3099a1fee5c84abcdad8462ab47ef2e40fdfaf7a1c7924960c3a77586a9a7"
+                },
+                {
+                  "id": "HY-131.16",
+                  "en": "`moveTo` fails with the class of HY-46.2 when the path exists or when the file was moved, and `content()` reads the file as one value and fails likewise after a move.",
+                  "ko": "`moveTo`는 path가 있거나 file이 이미 옮겨졌으면 HY-46.2의 class로 실패하고, `content()`는 file을 한 값으로 읽으며 옮긴 뒤에는 마찬가지로 실패한다.",
+                  "koSource": "2bb92b5e6e453ec01c4b78e9b5006f06beff97563782e7e68ebe02f49fa19d62"
+                },
+                {
+                  "id": "HY-131.17",
+                  "en": "The file limit bounds the temporary storage of one file and no longer its memory (HY-114.5), so an application may declare a file limit up to its body limit without the memory of a request growing.",
+                  "ko": "file 제한은 file 하나의 메모리가 아니라 임시 저장소를 묶으므로(HY-114.5), application은 요청의 메모리가 늘지 않으면서 body 제한까지 file 제한을 선언할 수 있다.",
+                  "koSource": "01e89d56dc8ed350b4b0c3c5f50229e6b178476d32022d8540cf3fd46e91886b"
+                },
+                {
+                  "id": "HY-131.18",
+                  "en": "The checks keep the order of HY-59.3: a `Content-Length` larger than the body limit receives 413 before the body is read; the limits of this rule and the failures of HY-42 answer while the body is read; then routing, the form type (HY-59.7) and the CSRF token (HY-59.8) answer, and a request that they refuse leaves no temporary file.",
+                  "ko": "검사는 HY-59.3의 순서를 유지하여, body 제한보다 큰 `Content-Length`는 body를 읽기 전에 413을 받고, 이 rule의 제한과 HY-42의 실패는 body를 읽는 동안 답하며, 그 뒤에 routing, form type(HY-59.7), CSRF token(HY-59.8)이 답하고 그것들이 거부한 요청은 임시 file을 남기지 않는다.",
+                  "koSource": "8f7a7882fee486d9a929b3f000aef9cc76d6b6ff6c77c74d29e8e1ddc696b16f"
+                },
+                {
+                  "id": "HY-131.19",
+                  "en": "A request with a slow client or without an end is the task of the server in front of the application, which this rule gives no time limit.",
+                  "ko": "느린 client나 끝나지 않는 요청은 application 앞단 server의 일이며 이 rule은 시간 제한을 두지 않는다.",
+                  "koSource": "2701dc599b0bb82fe04770389b2c17678cde1759bef816c6aed0efb58672d2e7"
+                },
+                {
+                  "id": "HY-131.20",
+                  "en": "This rule is not implemented: each server reads a body as one value, copies the content of each file part, ignores a part without an empty line and a body without its end, and has no value limit and no part limit (H29.2 to H29.4).",
+                  "ko": "이 rule은 구현되지 않았으며, 각 server는 body를 한 값으로 읽고 file part마다 내용을 복사하고, 빈 줄이 없는 part와 끝이 없는 body를 무시하며, value 제한과 part 제한이 없다(H29.2부터 H29.4까지).",
+                  "koSource": "75c7082c2f4f0d6f181aaa96fc3dfa18e5808aa04c559030d9bc0d70001111f4"
+                }
+              ]
+            }
+          ]
         }
       ]
     },
