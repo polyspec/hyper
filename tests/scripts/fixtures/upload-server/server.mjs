@@ -7,7 +7,7 @@ import { createHash } from 'node:crypto';
 import { createReadStream, readdirSync, unlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { App, FileSessions, Response } from '@polyspec/hyper-server';
+import { App, FileSessions, Representation, Response } from '@polyspec/hyper-server';
 
 const application = process.env.UPLOAD_APP;
 const moved = process.env.UPLOAD_MOVED;
@@ -16,7 +16,18 @@ const app = await App.open({
   manifest: join(application, 'manifest.json'),
   build: join(application, 'build.json'),
   templates: { index: join(application, 'node/templates.index.json'), root: join(application, 'node') },
-  handlers: { routes: { home: { load: () => ({}) } } },
+  handlers: {
+    routes: {
+      home: { load: () => ({}) },
+      // The representation of an item: a PUT answers the JSON value that it read, and a GET the item of the path.
+      item: {
+        load: () => ({}),
+        representations: {
+          'application/vnd.example.item+json': ({ request }) => new Representation(200, request.method === 'PUT' ? request.json() : { id: request.param('id'), title: 'é' }),
+        },
+      },
+    },
+  },
   timezone: 'Z',
   bodyLimit: limit,
   formTypes: ['application/x-www-form-urlencoded', 'multipart/form-data'],
@@ -24,7 +35,9 @@ const app = await App.open({
   partLimit: Number(process.env.UPLOAD_PARTS ?? 1000),
 });
 const server = app.server(new FileSessions({ directory: process.env.UPLOAD_SESSIONS }), {
-  around: async (request) => {
+  around: async (request, pass) => {
+    // UPLOAD_ANSWER=app lets the application answer the request.
+    if (process.env.UPLOAD_ANSWER === 'app') return pass(request);
     // UPLOAD_USAGE=1 is the form of benchmarks/uploads.mts: the sizes of the files without a move, and the processor
     // time and the largest memory of the process.
     const usage = process.env.UPLOAD_USAGE === '1';

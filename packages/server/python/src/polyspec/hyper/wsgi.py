@@ -63,24 +63,26 @@ def create_wsgi(
     def application(environ: dict, start_response: Callable) -> object:
         started = time.perf_counter_ns()
         exchange = Exchange(written, started)
+        # HY-27.5: a HEAD request receives the headers, with the Content-Length of the body, and no body.
+        head = environ.get("REQUEST_METHOD") == "HEAD"
         try:
             result: Union[Response, _FileResponse] = _answer(
                 app, sessions, around, files, environ, exchange
             )
         except Exception as error:  # noqa: BLE001 - HY-60: an error that escapes the answer gets the plain 500
-            return _escape(app, exchange, error, start_response)
+            return _escape(app, exchange, error, start_response, head)
         if isinstance(result, _FileResponse):
             start_response(_status(200), result.headers)
             return [result.data]
         try:
             line, headers, encoded = _encode(result)
         except Exception as error:  # noqa: BLE001 - HY-60: a status, header or body that cannot be written is an escape
-            return _escape(app, exchange, error, start_response)
+            return _escape(app, exchange, error, start_response, head)
         try:
             start_response(line, headers)
         except Exception as error:  # noqa: BLE001 - HY-60: a start_response that raises is an escape
-            return _escape(app, exchange, error, start_response, sys.exc_info())
-        return _Body(app, exchange, result, [encoded], None)
+            return _escape(app, exchange, error, start_response, head, sys.exc_info())
+        return _Body(app, exchange, result, [] if head else [encoded], None)
 
     return application
 
@@ -144,6 +146,7 @@ def _escape(
     exchange: Exchange,
     error: BaseException,
     start_response: Callable,
+    head: bool,
     exc_info=None,
 ) -> _Body:
     """Answers an error that escapes the answer with the plain 500 through `start_response` (HY-60). The write hook
@@ -160,7 +163,7 @@ def _escape(
         finally:
             exchange.release()
         raise
-    return _Body(app, exchange, response, [encoded], failure)
+    return _Body(app, exchange, response, [] if head else [encoded], failure)
 
 
 def _answer(

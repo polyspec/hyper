@@ -9,6 +9,8 @@ declare(strict_types=1);
 // requests in the temporary directory while the request runs.
 
 use Polyspec\Hyper\App;
+use Polyspec\Hyper\MediaType;
+use Polyspec\Hyper\Representation;
 use Polyspec\Hyper\Request;
 use Polyspec\Hyper\Response;
 
@@ -24,7 +26,20 @@ $loader->addPsr4("{$program['namespace']}\\", "{$application}/program/php");
 App::open(
     manifest: "{$application}/manifest.json",
     program: "{$application}/program",
-    handlers: ['routes' => ['home' => ['load' => static fn (): array => []]]],
+    handlers: ['routes' => [
+        'home' => ['load' => static fn (): array => []],
+        // The representation of an item: a PUT answers the JSON value that it read, and a GET the item of the path.
+        'item' => [
+            'load' => static fn (): array => [],
+            'representations' => [
+                'application/vnd.example.item+json' => static fn (Request $request, MediaType $media): Representation
+                    => new Representation(
+                        200,
+                        $request->method === 'PUT' ? $request->json() : ['id' => $request->param('id'), 'title' => 'é'],
+                    ),
+            ],
+        ],
+    ]],
     timezone: 'Z',
     bodyLimit: $limit,
     // UPLOAD_FORMS=urlencoded opens the application without the multipart form type.
@@ -33,7 +48,11 @@ App::open(
         : ['application/x-www-form-urlencoded', 'multipart/form-data'],
     fileLimit: $limit,
     partLimit: (int) (getenv('UPLOAD_PARTS') ?: 1000),
-    around: static function (Request $request) use ($moved): Response {
+    around: static function (Request $request, \Closure $answer) use ($moved): Response {
+        // UPLOAD_ANSWER=app lets the application answer the request.
+        if (getenv('UPLOAD_ANSWER') === 'app') {
+            return $answer($request);
+        }
         // UPLOAD_USAGE=1 is the form of benchmarks/uploads.mts: the sizes of the files without a move, and the
         // processor time and the largest memory of the process.
         $usage = getenv('UPLOAD_USAGE') === '1';

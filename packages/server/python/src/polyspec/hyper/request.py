@@ -130,14 +130,19 @@ class Request:
         """Returns a copy that holds the media type that the server selected for the request (HY-116)."""
         return self._copy(media=media)
 
-    def _as_representation(self, method: str, value: object) -> "Request":
-        """Returns the request that a representation handler receives: with the method, which is `GET` for a `HEAD`
-        request, without the `Cookie` header and the cookies, and with the decoded JSON value of its body (HY-121)."""
+    def _as_get(self) -> "Request":
+        """Returns a copy with the method `GET`, as which the server answers a `HEAD` request (HY-27.4)."""
+        copy = self._copy()
+        copy._method = "GET"
+        return copy
+
+    def _as_representation(self, value: object) -> "Request":
+        """Returns the request that a representation handler receives: without the `Cookie` header and the cookies,
+        and with the decoded JSON value of its body (HY-121)."""
         headers = {
             name: text for name, text in self._headers.items() if name != "cookie"
         }
         copy = self._copy(headers=headers)
-        copy._method = method
         copy._cookies = {}
         copy._json = value
         return copy

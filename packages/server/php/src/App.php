@@ -410,6 +410,10 @@ final class App
         if (!$request->validInput()) {
             return Response::text(400, 'Bad Request');
         }
+        // HY-27.4: a HEAD request is answered as the GET request of its target.
+        if ($request->method === 'HEAD') {
+            return $this->answer($request->asGet(), $store, $reply);
+        }
         $choice = $this->choice($request);
         $client = $choice?->chosen === true ? $this->client : null;
         $request = $request->withSelection($choice?->value);
@@ -450,7 +454,7 @@ final class App
         }
         // HY-116: the method check of the selected type comes before the refusals of HY-62 and HY-127.
         if ($request->method !== 'GET' && ($request->method !== 'POST' || !isset($handler['post']))) {
-            return Response::text(405, 'Method Not Allowed');
+            return self::notAllowed(isset($handler['post']) ? 'GET, HEAD, POST' : 'GET, HEAD');
         }
         // HY-62: the data base path answers only JSON requests and actions, before the session is read.
         if ($client !== null && $selected === self::PAGE_TYPE) {
@@ -495,7 +499,7 @@ final class App
             return Response::text(404, 'Not Found');
         }
         if ($request->method !== 'GET') {
-            return Response::text(405, 'Method Not Allowed');
+            return self::notAllowed('GET, HEAD');
         }
         // HY-62 step 3: the path serves only text/html, so a request that selects the JSON receives 406. The
         // representations of the route take part in the selection, so that a request that selects one of them is not
@@ -576,20 +580,21 @@ final class App
     ): Response {
         $vary = implode(', ', ['Accept', ...$entry['vary']]);
         $method = $request->method;
-        $reads = $method === 'HEAD' && in_array('GET', $entry['methods'], true);
-        if (!in_array($method, $entry['methods'], true) && !$reads) {
+        if (!in_array($method, $entry['methods'], true)) {
+            // HY-121.6: an entry with GET also answers HEAD, which reaches here as GET (HY-27.4).
             $answered = array_filter(
                 ['GET', 'HEAD', 'POST', 'PUT', 'DELETE'],
-                static fn (string $name): bool => in_array($name, $entry['methods'], true)
-                    || ($name === 'HEAD' && in_array('GET', $entry['methods'], true)),
+                static fn (string $name): bool => in_array(
+                    $name === 'HEAD' ? 'GET' : $name,
+                    $entry['methods'],
+                    true,
+                ),
             );
 
-            return Response::text(405, 'Method Not Allowed')
-                ->withHeader('Allow', implode(', ', $answered))
-                ->withHeader('Vary', $vary);
+            return self::notAllowed(implode(', ', $answered))->withHeader('Vary', $vary);
         }
         $value = null;
-        if (in_array($method, ['GET', 'HEAD', 'DELETE'], true)) {
+        if (in_array($method, ['GET', 'DELETE'], true)) {
             if ($request->bodySize() !== 0) {
                 return Response::text(400, 'Bad Request')->withHeader('Vary', $vary);
             }
@@ -612,7 +617,7 @@ final class App
             ?? throw new \LogicException("the route has no representation handler for {$entry['type']} (HY-118)");
         try {
             $returned = $this->container->call($handle, [
-                Request::class => $request->asRepresentation($reads ? 'GET' : $method, $value),
+                Request::class => $request->asRepresentation($value),
                 MediaType::class => new MediaType($values, $contentType),
             ]);
         } catch (\Throwable $error) {
@@ -630,10 +635,10 @@ final class App
             $request->header('Authorization') !== null,
             $basePath,
         );
-        if ($response->status !== 200 || !in_array($method, ['GET', 'HEAD'], true)) {
+        if ($response->status !== 200 || $method !== 'GET') {
             return $response;
         }
-        // HY-122.10: a 200 of a GET or HEAD has a strong tag, and a request that names it receives 304.
+        // HY-122.10: a 200 of a GET, as which a HEAD is answered, has a strong tag, and a request that names it receives 304.
         $tag = RepresentationResponse::etag($contentType, $response->body);
         $response = $response->withHeader('ETag', $tag);
         if ($request->header('If-None-Match') !== $tag) {
@@ -643,6 +648,12 @@ final class App
         unset($headers['Content-Type']);
 
         return new Response(304, $headers, '');
+    }
+
+    /** Returns the 405 of a method that a target does not take, with the methods that it takes (HY-27.6). */
+    private static function notAllowed(string $allow): Response
+    {
+        return Response::text(405, 'Method Not Allowed')->withHeader('Allow', $allow);
     }
 
     /** Returns the 406 of a selected type that the path does not serve (HY-62 steps 2 and 3). */
@@ -674,7 +685,7 @@ final class App
                 );
             }
             if ($request->method !== 'POST' || !isset($handler['post'])) {
-                return Response::text(405, 'Method Not Allowed');
+                return self::notAllowed(isset($handler['post']) ? 'GET, HEAD, POST' : 'GET, HEAD');
             }
             $refused = $this->refusedForm($request, $session);
             if ($refused !== null) {
@@ -1139,7 +1150,7 @@ final class App
     private function keep(Request $request, Session $session): Response
     {
         if ($request->method !== 'POST') {
-            return Response::text(405, 'Method Not Allowed');
+            return self::notAllowed('POST');
         }
         $refused = $this->refusedForm($request, $session);
         if ($refused !== null) {

@@ -1,8 +1,8 @@
 {
   "applications": {
     "upload": {
-      "manifest": { "layout": "layout.tpl", "title": "title.tpl", "regions": [{ "name": "content", "page": true }], "routes": [{ "name": "home", "path": "/", "title": "Home", "template": "home.tpl" }] },
-      "templates": { "layout.tpl": "<head><title>{# title}</title>{# build}</head>\n<main id=\"content\">{# content}</main>\n{# data}\n", "title.tpl": "{= title}", "home.tpl": "<p>upload</p>" },
+      "manifest": { "layout": "layout.tpl", "title": "title.tpl", "regions": [{ "name": "content", "page": true }], "routes": [{ "name": "home", "path": "/", "title": "Home", "template": "home.tpl" }, { "name": "item", "path": "/items/{id}", "title": "Item", "template": "item.tpl", "representations": [{ "type": "application/vnd.example.item+json", "parameters": {}, "methods": ["GET", "PUT"], "vary": [] }] }] },
+      "templates": { "layout.tpl": "<head><title>{# title}</title>{# build}</head>\n<main id=\"content\">{# content}</main>\n{# data}\n", "title.tpl": "{= title}", "home.tpl": "<p>upload</p>", "item.tpl": "<p>item</p>" },
       "build": "4444444444444444444444444444444444444444444444444444444444444444"
     }
   }

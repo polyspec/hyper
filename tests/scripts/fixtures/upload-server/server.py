@@ -12,6 +12,9 @@ import tempfile
 
 from polyspec.hyper.app import App
 from polyspec.hyper.file_sessions import FileSessions
+from polyspec.hyper.media_type import MediaType
+from polyspec.hyper.representation import Representation
+from polyspec.hyper.request import Request
 from polyspec.hyper.response import Response
 from polyspec.hyper.server import create_server
 
@@ -20,7 +23,17 @@ moved = os.environ["UPLOAD_MOVED"]
 limit = int(os.environ["UPLOAD_LIMIT"])
 
 
+def item(request: Request, media: MediaType) -> Representation:
+    """The representation of an item: a PUT answers the JSON value that it read, and a GET the item of the path."""
+    if request.method == "PUT":
+        return Representation(200, request.json())
+    return Representation(200, {"id": request.param("id"), "title": "é"})
+
+
 def around(request, answer):
+    # UPLOAD_ANSWER=app lets the application answer the request.
+    if os.environ.get("UPLOAD_ANSWER") == "app":
+        return answer(request)
     # UPLOAD_USAGE=1 is the form of benchmarks/uploads.mts: the sizes of the files without a move, and the processor
     # time and the largest memory of the process.
     usage = os.environ.get("UPLOAD_USAGE") == "1"
@@ -68,7 +81,15 @@ def around(request, answer):
 app = App.open(
     manifest=os.path.join(application, "manifest.json"),
     program=os.path.join(application, "program"),
-    handlers={"routes": {"home": {"load": lambda: {}}}},
+    handlers={
+        "routes": {
+            "home": {"load": lambda: {}},
+            "item": {
+                "load": lambda: {},
+                "representations": {"application/vnd.example.item+json": item},
+            },
+        }
+    },
     timezone="Z",
     body_limit=limit,
     form_types=["application/x-www-form-urlencoded", "multipart/form-data"],

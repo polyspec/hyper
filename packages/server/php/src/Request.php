@@ -138,17 +138,27 @@ final class Request
     }
 
     /**
-     * Returns the request that a representation handler receives: with the method, which is GET for a HEAD request,
-     * without the Cookie header and the cookies, and with the decoded JSON value of its body (HY-121).
+     * Returns the request that a representation handler receives: without the Cookie header and the cookies, and
+     * with the decoded JSON value of its body (HY-121).
      *
      * @internal
      */
-    public function asRepresentation(string $method, mixed $value): self
+    public function asRepresentation(mixed $value): self
     {
         $headers = $this->headers;
         unset($headers['cookie']);
 
-        return $this->copy(['method' => $method, 'headers' => $headers, 'cookies' => [], 'json' => $value]);
+        return $this->copy(['headers' => $headers, 'cookies' => [], 'json' => $value]);
+    }
+
+    /**
+     * Returns a copy with the method GET, as which the server answers a HEAD request (HY-27.4).
+     *
+     * @internal
+     */
+    public function asGet(): self
+    {
+        return $this->copy(['method' => 'GET']);
     }
 
     /**

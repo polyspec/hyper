@@ -102,7 +102,9 @@ def create_asgi(
                         "headers": headers,
                     }
                 )
-                await send({"type": "http.response.body", "body": body})
+                # HY-27.5: a HEAD request receives the headers, with the Content-Length of the body, and no body.
+                sent = b"" if scope.get("method") == "HEAD" else body
+                await send({"type": "http.response.body", "body": sent})
             except Exception:
                 # HY-100 and HY-67: a send raised, which an ASGI server does for a connection that the client
                 # closed; the write hook runs before the disconnect hook, and the error propagates.

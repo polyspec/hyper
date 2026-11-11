@@ -420,6 +420,8 @@ export class App<S extends object = Record<string, never>> {
       return Response.text(413, 'Content Too Large');
     }
     if (!received.validInput()) return Response.text(400, 'Bad Request');
+    // HY-27.4: a HEAD request is answered as the GET request of its target.
+    if (received.method === 'HEAD') return this.answer(received.asGet(), store, reply, signal);
     const choice = await this.choice(received);
     stopClosed(signal);
     const client = choice?.chosen === true ? this.client : null;
@@ -442,7 +444,7 @@ export class App<S extends object = Record<string, never>> {
     if (chosen.entry !== null) return this.representation(request.withRoute(path, match.params), handler, chosen.entry, chosen.values, basePath);
     const selected = request.withSelectedType(chosen.type);
     // HY-116, HY-27: a method other than GET or a declared POST is refused before the session is read (HY-120).
-    if (selected.method !== 'GET' && (selected.method !== 'POST' || handler.post === undefined)) return Response.text(405, 'Method Not Allowed');
+    if (selected.method !== 'GET' && (selected.method !== 'POST' || handler.post === undefined)) return notAllowed(handler.post === undefined ? 'GET, HEAD' : 'GET, HEAD, POST');
     // HY-127: a Hyper-Context value that is not 64 lowercase hexadecimal characters is refused before any handler runs.
     const hash = selected.header('Hyper-Context');
     if (this.context !== null && !Context.validHeader(hash)) return Response.text(400, 'Bad Request');
@@ -468,7 +470,7 @@ export class App<S extends object = Record<string, never>> {
   private shell(request: Request, client: Client): Response {
     const match = this.application.router.match(request.path());
     if (match === null) return Response.text(404, 'Not Found');
-    if (request.method !== 'GET') return Response.text(405, 'Method Not Allowed');
+    if (request.method !== 'GET') return notAllowed('GET, HEAD');
     // The representations of the route take part in the selection, so that a request that selects one of them is not
     // acceptable here, and they are not listed (HY-116.14).
     const selected = negotiate(request, [PAGE_TYPE], this.entries.get(match.name) ?? [], []);
@@ -482,13 +484,13 @@ export class App<S extends object = Record<string, never>> {
   private async representation(request: Request, handler: RouteHandlers<S>, entry: Entry, values: ReadonlyMap<string, string>, basePath: string): Promise<Response> {
     const vary = ['Accept', ...entry.vary].join(', ');
     const method = request.method;
-    const reads = method === 'HEAD' && entry.methods.includes('GET');
-    if (!entry.methods.includes(method) && !reads) {
-      const answered = ['GET', 'HEAD', 'POST', 'PUT', 'DELETE'].filter((name) => entry.methods.includes(name) || (name === 'HEAD' && entry.methods.includes('GET')));
-      return Response.text(405, 'Method Not Allowed').withHeader('Allow', answered.join(', ')).withHeader('Vary', vary);
+    if (!entry.methods.includes(method)) {
+      // HY-121.6: an entry with GET also answers HEAD, which reaches here as GET (HY-27.4).
+      const answered = ['GET', 'HEAD', 'POST', 'PUT', 'DELETE'].filter((name) => entry.methods.includes(name === 'HEAD' ? 'GET' : name));
+      return notAllowed(answered.join(', ')).withHeader('Vary', vary);
     }
     let value: Value = null;
-    if (method === 'GET' || method === 'HEAD' || method === 'DELETE') {
+    if (method === 'GET' || method === 'DELETE') {
       if (request.bodySize() !== 0) return Response.text(400, 'Bad Request').withHeader('Vary', vary);
     } else {
       if (request.mediaType() !== 'application/json') return Response.text(415, 'Unsupported Media Type').withHeader('Vary', vary);
@@ -508,7 +510,7 @@ export class App<S extends object = Record<string, never>> {
     if (handle === undefined) throw new Error(`hyper: route has no representation handler for ${entry.type} (HY-118)`);
     let returned: unknown;
     try {
-      returned = await handle({ request: request.asRepresentation(reads ? 'GET' : method, value), media: new MediaType(values, contentType), services: this.services });
+      returned = await handle({ request: request.asRepresentation(value), media: new MediaType(values, contentType), services: this.services });
     } catch (error) {
       // HY-107: an error of the ORM is known by its class name and code.
       const code = ormCode(error);
@@ -517,8 +519,8 @@ export class App<S extends object = Record<string, never>> {
       throw error;
     }
     const response = RepresentationResponse.of(returned, contentType, vary, request.header('Authorization') !== null, basePath);
-    if (response.status !== 200 || (method !== 'GET' && method !== 'HEAD')) return response;
-    // HY-122.10: a 200 of a GET or HEAD has a strong tag, and a request that names it receives 304.
+    if (response.status !== 200 || method !== 'GET') return response;
+    // HY-122.10: a 200 of a GET, as which a HEAD is answered, has a strong tag, and a request that names it receives 304.
     const tag = RepresentationResponse.etag(contentType, response.body);
     const tagged = response.withHeader('ETag', tag);
     if (request.header('If-None-Match') !== tag) return tagged;
@@ -531,7 +533,7 @@ export class App<S extends object = Record<string, never>> {
     const { request, handler, session, reply } = input;
     try {
       if (request.method === 'GET') return withoutRenewal(reply, await this.page(input));
-      if (request.method !== 'POST' || handler.post === undefined) return Response.text(405, 'Method Not Allowed');
+      if (request.method !== 'POST' || handler.post === undefined) return notAllowed(handler.post === undefined ? 'GET, HEAD' : 'GET, HEAD, POST');
       if (!this.formTypes.includes(request.mediaType())) return Response.text(415, 'Unsupported Media Type');
       if (!Csrf.verify(session.csrfToken(), request.formString('_csrf'))) return Response.text(403, 'Forbidden');
       // HY-114: a file over the file limit is refused before the action runs, as HY-59 refuses a large body.
@@ -579,7 +581,7 @@ export class App<S extends object = Record<string, never>> {
 
   // Stores a kept value of a `server` path in the session (HY-40).
   private keep(request: Request, session: Session): Response {
-    if (request.method !== 'POST') return Response.text(405, 'Method Not Allowed');
+    if (request.method !== 'POST') return notAllowed('POST');
     if (!this.formTypes.includes(request.mediaType())) return Response.text(415, 'Unsupported Media Type');
     if (!Csrf.verify(session.csrfToken(), request.formString('_csrf'))) return Response.text(403, 'Forbidden');
     if (request.fileOver(this.fileLimit)) return Response.text(413, 'Content Too Large');
@@ -610,6 +612,11 @@ const FORM_TYPES = ['application/x-www-form-urlencoded', 'multipart/form-data'];
 function ormCode(error: unknown): string | undefined {
   if (!(error instanceof Error) || error.name !== 'OrmError' || !('code' in error)) return undefined;
   return typeof error.code === 'string' ? error.code : undefined;
+}
+
+// Returns the 405 of a method that a target does not take, with the methods that it takes (HY-27.6).
+function notAllowed(allow: string): Response {
+  return Response.text(405, 'Method Not Allowed').withHeader('Allow', allow);
 }
 
 // Fails when a loader or the shared handler renewed the session, because the page carries the old token (HY-72).

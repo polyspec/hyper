@@ -51,6 +51,11 @@ _KEEP_VALUE_LIMIT = 4096
 _PAGE_TYPES = (TEXT_HTML, JSON)
 
 
+def _not_allowed(allow: str) -> Response:
+    """Returns the 405 of a method that a target does not take, with the methods that it takes (HY-27.6)."""
+    return Response.text(405, "Method Not Allowed").with_header("Allow", allow)
+
+
 def _not_acceptable() -> Response:
     """Returns the 406 of HY-62 steps 2 and 3, which `Accept` decides."""
     return Response.text(406, "Not Acceptable").with_header("Vary", "Accept")
@@ -322,6 +327,9 @@ class App:
             return Response.text(413, "Content Too Large")
         if not request.valid_input():
             return Response.text(400, "Bad Request")
+        # HY-27.4: a HEAD request is answered as the GET request of its target.
+        if request.method == "HEAD":
+            return self._answer(request._as_get(), store, reply)
         choice = self._choice(request)
         client = self._client if choice is not None and choice.chosen is True else None
         request = request._with_selection(None if choice is None else choice.value)
@@ -402,20 +410,16 @@ class App:
         entry, and the response of what it returned with its tag."""
         vary = ", ".join(("Accept", *entry.vary))
         method = request.method
-        reads = method == "HEAD" and "GET" in entry.methods
-        if method not in entry.methods and not reads:
+        if method not in entry.methods:
+            # HY-121.6: an entry with GET also answers HEAD, which reaches here as GET (HY-27.4).
             answered = [
                 name
                 for name in ("GET", "HEAD", "POST", "PUT", "DELETE")
-                if name in entry.methods or (name == "HEAD" and "GET" in entry.methods)
+                if ("GET" if name == "HEAD" else name) in entry.methods
             ]
-            return (
-                Response.text(405, "Method Not Allowed")
-                .with_header("Allow", ", ".join(answered))
-                .with_header("Vary", vary)
-            )
+            return _not_allowed(", ".join(answered)).with_header("Vary", vary)
         value = None
-        if method in ("GET", "HEAD", "DELETE"):
+        if method in ("GET", "DELETE"):
             if request.body_size() != 0:
                 return Response.text(400, "Bad Request").with_header("Vary", vary)
         else:
@@ -429,7 +433,7 @@ class App:
             if not JsonCodec.in_data_model(value):
                 return Response.text(400, "Bad Request").with_header("Vary", vary)
         content_type = media_content_type(entry, values)
-        given = request._as_representation("GET" if reads else method, value)
+        given = request._as_representation(value)
         try:
             returned = handler["representations"][entry.type](
                 given, MediaType(values, content_type)
@@ -448,9 +452,9 @@ class App:
             request.header("Authorization") is not None,
             base_path,
         )
-        if response.status != 200 or method not in ("GET", "HEAD"):
+        if response.status != 200 or method != "GET":
             return response
-        # HY-122.10: a 200 of a GET or HEAD has a strong tag, and a request that names it receives 304.
+        # HY-122.10: a 200 of a GET, as which a HEAD is answered, has a strong tag, and a request that names it receives 304.
         tag = RepresentationResponse.etag(content_type, response.body)
         response = response.with_header("ETag", tag)
         if request.header("If-None-Match") != tag:
@@ -478,7 +482,7 @@ class App:
         if match is None:
             return Response.text(404, "Not Found")
         if request.method != "GET":
-            return Response.text(405, "Method Not Allowed")
+            return _not_allowed("GET, HEAD")
         # HY-62 step 3: the static shell is the only page of this path, and it serves only text/html. The
         # representations of the route take part in the selection, so that a request that selects one of them is not
         # acceptable here, and they are not listed (HY-116.14).
@@ -511,7 +515,7 @@ class App:
         if request.method != "GET" and (
             request.method != "POST" or "post" not in handler
         ):
-            return Response.text(405, "Method Not Allowed")
+            return _not_allowed("GET, HEAD, POST" if "post" in handler else "GET, HEAD")
         # HY-127: an application with a context checks the Hyper-Context header after the method check.
         if self._context_handler is not None and not Context.valid_header(
             request.header("Hyper-Context")
@@ -939,7 +943,7 @@ class App:
     def _keep(self, request: Request, session: Session) -> Response:
         """Stores a kept value of a `server` path in the session (HY-40)."""
         if request.method != "POST":
-            return Response.text(405, "Method Not Allowed")
+            return _not_allowed("POST")
         refused = self._refused_form(request, session)
         if refused is not None:
             return refused

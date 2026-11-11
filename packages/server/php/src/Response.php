@@ -52,7 +52,7 @@ final class Response
     {
         http_response_code($this->status);
         $this->writeHeaders();
-        echo $this->body;
+        $this->writeBody();
     }
 
     /**
@@ -73,7 +73,23 @@ final class Response
         }
         header($statusLine, true, $this->status);
         $this->writeHeaders();
-        echo $this->body;
+        $this->writeBody();
+    }
+
+    /**
+     * Writes the body, or for a HEAD request of the SAPI the Content-Length of the body and no body (HY-27.5); a 204
+     * and a 304 have no Content-Length.
+     */
+    private function writeBody(): void
+    {
+        if (($_SERVER['REQUEST_METHOD'] ?? null) !== 'HEAD') {
+            echo $this->body;
+
+            return;
+        }
+        if ($this->status !== 204 && $this->status !== 304) {
+            header('Content-Length: ' . strlen($this->body));
+        }
     }
 
     /** Adds the headers of this response to the PHP output, each value as a line of its own. */

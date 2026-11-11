@@ -6,6 +6,8 @@
 
 ## Unreleased
 
+- 세 server가 `HEAD` 요청에 같은 target의 `GET` 요청으로 답한다(HY-27.4). 모든 단계가 method `GET`으로 실행되고 `App.handle`은 body가 있는 그 `GET` 응답을 반환한다. 이전에는 page, shell, `/_hyper/keep`의 `HEAD`가 405를 받았다. host는 그런 응답의 상태와 header를 쓰고 그 body의 `Content-Length`를 함께 쓰며 body는 쓰지 않는다(HY-27.5). 이전에는 Python의 `http.server`, WSGI, ASGI host가 body를 썼고 PHP의 `App::run`은 `Content-Length`를 쓰지 않았다. 모든 405는 `Allow`를 가진다(HY-27.6). 라우트는 `GET, HEAD`, action이 있는 라우트는 `GET, HEAD, POST`, shell 경로는 `GET, HEAD`, `/_hyper/keep`은 `POST`이다. 이전에는 representation의 405만 그것을 가졌다. `contracts/client.json`에 그 case 다섯 개가 있고, `tests/scripts/upload-servers.test.mts`는 실제 server 세 개에 HTTP로 page, representation, 그 `HEAD`, `If-None-Match`가 있는 요청, JSON이 있는 `PUT`, 거부되는 method를 보내 같은 상태, header, body를 요구한다(H28.9).
+
 - build는 `{# title}`, `{# data}`와 같이 `{# build}`를 정확히 한 번 배치하지 않은 layout에서 실패한다(HY-125.7): `layout.tpl: places {# build} 0 times, expected once (HY-125)`. board 예제의 layout과 script fixture `regions`, `chunks`의 layout이 그것을 배치한다. 그것이 없어서 board는 500으로 답했는데, program이 정의 `build`를 선언하지 않았기 때문이다(H28.10).
 - `make hyper-test-scripts` 전체가 통과한다(test 278개). 이전에는 8개 group의 test 67개가 실패했다. PHP의 session worker는 `NativeSession`에 session cookie를 가진 request를 준다. cookie를 한 번만 parse하게 된 뒤로 그 class가 request를 받는다. target은 `tests/scripts/*.test.mts` 파일을 실행하고 `tests/scripts/fixtures` 아래의 파일은 실행하지 않는다. 이전에는 그중 넷이 test로 실행되었다. `benchmarks/server.php`는 `JsonCodec`과 build id를 읽는다. 이전에는 존재하지 않는 class `JsonEncoder`를 이름 지었다. server와 browser benchmark, `scripts/check-parity.mts`, `tests/e2e/board.spec.ts`, Node server의 README는 `application/vnd.hyper+json`을 보내고 기대한다. 이전에는 server가 406으로 답하는 `application/json`을 이름 지었다(H28.11-9).
 

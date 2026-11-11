@@ -219,7 +219,8 @@ def create_server(
             for name, value in headers:
                 self.send_header(name, value)
             self.end_headers()
-            if body:
+            # HY-27.5: a HEAD request receives the headers, with the Content-Length of the body, and no body.
+            if body and self.command != "HEAD":
                 self.wfile.write(body)
 
         def send_file(self, file) -> None:

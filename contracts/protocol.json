@@ -1205,9 +1205,9 @@
                   "id": "HY-116.14"
                 },
                 {
-                  "en": "A representation is answered only under the data base path (HY-62.19); a request of HY-62.22 receives the 404 and the 405 of HY-62.23 before the selection, so a request of HY-62.22 with a method other than `GET` receives 405 also when no type of the route is acceptable.",
-                  "ko": "representation은 데이터 기본 경로 아래(HY-62.19)에서만 응답한다. HY-62.22의 요청은 선택 전에 HY-62.23의 404와 405를 받으므로, `GET`이 아닌 method의 HY-62.22 요청은 라우트의 어떤 type도 받을 수 없을 때에도 405를 받는다.",
-                  "koSource": "575ce2056c8394ad87294ea938a3c9c1d5767080fbb6240f0130a8fd1aa98454",
+                  "en": "A representation is answered only under the data base path (HY-62.19); a request of HY-62.22 receives the 404 and the 405 of HY-62.23 before the selection, so a request of HY-62.22 with a method other than `GET` or `HEAD` receives 405 also when no type of the route is acceptable.",
+                  "ko": "representation은 데이터 기본 경로 아래(HY-62.19)에서만 응답한다. HY-62.22의 요청은 선택 전에 HY-62.23의 404와 405를 받으므로, `GET`도 `HEAD`도 아닌 method의 HY-62.22 요청은 라우트의 어떤 type도 받을 수 없을 때에도 405를 받는다.",
+                  "koSource": "35cb40907ae838457c7934c89ca53ae378bcfb9f3ec7059da56419ee7c80f433",
                   "id": "HY-116.15"
                 }
               ]
@@ -2564,9 +2564,9 @@
                     },
                     {
                       "id": "HY-62.23",
-                      "en": "A path without a route receives 404 and a method other than `GET` receives 405 (HY-27).",
-                      "ko": "라우트가 없는 경로는 404를, `GET`이 아닌 method는 405를 받는다(HY-27).",
-                      "koSource": "329ec6240f69cb8c946dc51038c8698abb13cdc0467f0ee8a72bf0e990f57e03"
+                      "en": "A path without a route receives 404 and a method other than `GET` or `HEAD` receives 405 (HY-27).",
+                      "ko": "라우트가 없는 경로는 404를, `GET`도 `HEAD`도 아닌 method는 405를 받는다(HY-27).",
+                      "koSource": "d7abbc60d435809313a3c1913c45ecfa1981a25582d214dae6cf497b45b2e2c8"
                     },
                     {
                       "id": "HY-62.34",
@@ -5328,15 +5328,33 @@
                 },
                 {
                   "id": "HY-27.2",
-                  "en": "A method other than `GET` or a declared `POST` responds with status 405; a representation checks the method of HY-121 instead.",
-                  "ko": "`GET`도 선언된 `POST`도 아닌 method는 상태 405로 응답하며, representation은 대신 HY-121의 method를 검사한다.",
-                  "koSource": "2675f15347725b4d1e6e5cb704fe1cadf45013deecb969e7620c13ea661faf6b"
+                  "en": "A method other than `GET`, `HEAD` or a declared `POST` responds with status 405; a representation checks the method of HY-121 instead.",
+                  "ko": "`GET`도 `HEAD`도 선언된 `POST`도 아닌 method는 상태 405로 응답하며, representation은 대신 HY-121의 method를 검사한다.",
+                  "koSource": "cee3e628516a37d4f7886674ff8abe9c2b80e055186b72459059e4df8fe5c3e3"
                 },
                 {
                   "id": "HY-27.3",
                   "en": "A loader or an action reports a missing resource with the not-found stop, whose message is `not found`; the forbidden stop of HY-51 has the message `forbidden` and the bad-request stop of HY-58 the message `bad request`.",
                   "ko": "loader나 action은 없는 자원을 not-found 정지로 보고하며 그 메시지는 `not found`다. HY-51의 forbidden 정지의 메시지는 `forbidden`이고 HY-58의 bad-request 정지의 메시지는 `bad request`다.",
                   "koSource": "acd3034dd0c238247790336982649a97608b9c3d453b967704d22ad8b1b27fef"
+                },
+                {
+                  "id": "HY-27.4",
+                  "en": "The server answers a `HEAD` request as the `GET` request of the same target (RFC 9110, section 9.3.2): every step runs with the request method `GET`, so a handler reads `GET`, and `App.handle` returns the `GET` response with its body, which the response hook (HY-60), the response limit (HY-66) and `around` (HY-97) receive with the request as the host gave it.",
+                  "ko": "서버는 `HEAD` 요청에 같은 target의 `GET` 요청으로 답한다(RFC 9110, 9.3.2절). 모든 단계가 요청 method `GET`으로 실행되어 handler는 `GET`을 읽고, `App.handle`은 body가 있는 그 `GET` 응답을 반환하며, 응답 hook(HY-60), 응답 한도(HY-66), `around`(HY-97)는 host가 준 그대로의 요청과 함께 그것을 받는다.",
+                  "koSource": "55842154b79972f6afc79aeae0a2cc164773821c720b98a8cb50596686f653dd"
+                },
+                {
+                  "id": "HY-27.5",
+                  "en": "The host writes the status and the headers of the response to a `HEAD` request, with the `Content-Length` of its body unless the status is 204 or 304, and no body.",
+                  "ko": "host는 `HEAD` 요청의 응답에서 상태와 header를 쓰고, 상태가 204나 304가 아니면 그 body의 `Content-Length`를 함께 쓰며, body는 쓰지 않는다.",
+                  "koSource": "bd1eb875776fde3b40ed3f56874004678dd10531d60b7173534df3cfa198536b"
+                },
+                {
+                  "id": "HY-27.6",
+                  "en": "Every 405 has the header `Allow` (RFC 9110, section 15.5.6): `GET, HEAD` for a route, `GET, HEAD, POST` for a route that declares `post`, `GET, HEAD` for the 405 of HY-62.23, `POST` for `/_hyper/keep` (HY-40), and the methods of HY-121.6 for a representation.",
+                  "ko": "모든 405는 header `Allow`를 가진다(RFC 9110, 15.5.6절). 라우트는 `GET, HEAD`, `post`를 선언한 라우트는 `GET, HEAD, POST`, HY-62.23의 405는 `GET, HEAD`, `/_hyper/keep`(HY-40)은 `POST`, representation은 HY-121.6의 method이다.",
+                  "koSource": "f35e5be645b1e1916ce2d2b08a222b29bbeb2922a7bd48eb52f13d863354104b"
                 }
               ]
             }
