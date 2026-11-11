@@ -6,6 +6,8 @@
 
 ## Unreleased
 
+- HY-106.6은 build 파일의 모든 실패, 즉 없거나 읽을 수 없는 파일, UTF-8이나 JSON이 아닌 byte, build id가 없는 파일을 open 오류의 하위 클래스 `InvalidBuild`로 명시하고, Node `Build.read`는 UTF-8 decoder의 `TypeError`만 유효하지 않은 JSON으로 보고하여 JSON decoder의 결함이 유효하지 않은 JSON으로 보고되지 않습니다(HY-106, HY-125) (H28.11).
+
 - 세 server의 `Build.read`는 `build.json`을 자기 server의 `JsonCodec.decode`로 decode하여 하나의 nesting 한도와 하나의 오류를 적용합니다. 이전에는 깊은 nesting에 Python이 `RecursionError`를 그대로 던졌고 PHP와 Node가 서로 다르게 답했습니다. HY-106.6은 build id를 담지 않은 build 파일이 open 오류의 하위 클래스 `InvalidBuild`를 던진다고 명시합니다. `contracts/build.json`은 build id 안에 UTF-8이 아닌 byte가 있는 case와 600단계로 중첩된 case를 추가합니다. Node의 context step은 shared, loader, action data를 PHP와 Python처럼 host 값으로 server에 넘겨서 data model 검사를 step이 아닌 server가 합니다(HY-125, HY-106, HY-54, HY-44) (H28.11).
 
 - 세 server의 `Build.read`는 byte가 UTF-8이 아니거나 U+FEFF로 시작하는 `build.json`을 `is not valid JSON`으로 실패시키고 각 실패의 원인을 유지합니다. 이전에는 Python이 UTF-8이 아닌 byte를 `is missing or not readable`로 보고했고, Node는 그 byte를 U+FFFD로 바꾸어서 build id 안의 그런 byte가 `does not hold exactly the key build`로 실패했습니다. `contracts/build.json`은 새 field `bytes`로 파일의 byte를 쓰고 새 field `message`로 실패의 원인을 비교하며, 그 step은 문자열도 null도 아닌 `text`를 없는 파일로 다루지 않고 실패합니다(HY-125, HY-106) (H28.11).

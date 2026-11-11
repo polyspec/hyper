@@ -16,13 +16,20 @@ export class Build {
     } catch (error) {
       throw new InvalidBuild(`${file} is missing or not readable (HY-125)`, { cause: error });
     }
+    let text: string;
+    try {
+      // Bytes that are not UTF-8 and a leading U+FEFF are not valid JSON (HY-106.7).
+      text = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(bytes);
+    } catch (error) {
+      if (!(error instanceof TypeError)) throw error;
+      throw new InvalidBuild(`${file} is not valid JSON (HY-125)`, { cause: error });
+    }
     let value: DecodedValue;
     try {
-      // Bytes that are not UTF-8 and a leading U+FEFF are not valid JSON (HY-106.7); the JSON text is decoded by the
-      // decoder of the server, with its one nesting limit (HY-54).
-      value = JsonCodec.decode(new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(bytes));
+      // The JSON text is decoded by the decoder of the server, with its one nesting limit (HY-54).
+      value = JsonCodec.decode(text);
     } catch (error) {
-      if (!(error instanceof TypeError) && !(error instanceof JsonDecodeError)) throw error;
+      if (!(error instanceof JsonDecodeError)) throw error;
       throw new InvalidBuild(`${file} is not valid JSON (HY-125)`, { cause: error });
     }
     const build = value instanceof Map && value.size === 1 ? value.get('build') : undefined;

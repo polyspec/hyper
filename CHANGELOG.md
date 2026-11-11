@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- HY-106.6 names every failure of the build file, a missing or unreadable file, bytes that are not UTF-8 or JSON and a file without a build id, as the subclass `InvalidBuild` of the open error, and Node `Build.read` reports only a `TypeError` of the UTF-8 decoder as not valid JSON, so that a defect of the JSON decoder is not reported as invalid JSON (HY-106, HY-125) (H28.11).
+
 - `Build.read` of the three servers decodes `build.json` with `JsonCodec.decode` of its server, so that one nesting limit and one error apply: Python raised a raw `RecursionError` for deep nesting, and PHP and Node answered such a file differently. HY-106.6 states that a build file that does not hold a build id raises `InvalidBuild`, the subclass of the open error. `contracts/build.json` adds a case with a byte that is not UTF-8 inside the build id and a case nested 600 deep. The context step of Node passes shared, loader and action data to the server as host values, as PHP and Python do, so that the server and not the step checks the data model (HY-125, HY-106, HY-54, HY-44) (H28.11).
 
 - `Build.read` of the three servers fails a `build.json` whose bytes are not UTF-8 or that starts with U+FEFF as `is not valid JSON` and keeps the cause of each failure: Python reported bytes that are not UTF-8 as `is missing or not readable`, and Node replaced them with U+FFFD, so that such bytes inside the build id failed as `does not hold exactly the key build`. `contracts/build.json` writes the bytes of a file in its new field `bytes` and compares the cause of a failure in its new field `message`, and its steps fail for a `text` that is neither a string nor null instead of treating it as a missing file (HY-125, HY-106) (H28.11).
