@@ -3,6 +3,7 @@
 import { createHash } from 'node:crypto';
 import { decodeResponse, keepRead, renderDocument, type Application, type RouteDeclaration, type RouteReads } from '@polyspec/hyper-client';
 import type { Handlers, RouteHandlers } from './app.js';
+import { contextHash, heldContext, namesHash, withContext, type ContextHandler } from './context.js';
 import { encodeJson } from './json.js';
 import { keptValues } from './kept.js';
 import { changedTopics, selectRegions } from './planner.js';
@@ -47,6 +48,10 @@ export interface PageEnvironment<S extends object> {
   reads: RouteReads;
   // The build id of the asset output (HY-125), which every JSON response holds after its params (HY-128).
   build: string;
+  // The context handler of the application (HY-124), or null for an application without a context.
+  context: ContextHandler | null;
+  // The Vary of the application's html and JSON responses (HY-117).
+  vary: string;
 }
 
 // The Vary of a response with text/html or the JSON of hyper (HY-117).
@@ -56,8 +61,15 @@ export async function renderPage<S extends object>(input: PageInput<S>, environm
   const { request, route, handler, reply, status } = input;
   const { application, handlers } = environment;
   const context = { request, reply, services: environment.services };
+  // HY-124: the context handler runs after the action of the request and before the shared handler and any loader.
+  const held = environment.context === null ? null : await heldContext(environment.context, request.selection());
   let shared: MapValue = new Map<string, Value>([['title', route.title], ['csrf', request.csrfToken()]]);
-  if (handlers.shared !== undefined) shared = replaced(shared, toMap(await handlers.shared(context), 'shared data'));
+  if (handlers.shared !== undefined) {
+    const returned = toMap(await handlers.shared(context), 'shared data');
+    // HY-124: a shared handler that returns the key context fails.
+    if (returned.has('context')) throw new Error('hyper: the shared handler returns the key context (HY-124)');
+    shared = replaced(shared, returned);
+  }
   stopClosed(input.signal);
 
   const changed = changedTopics(request, input.flash, input.basePath);
@@ -92,21 +104,24 @@ export async function renderPage<S extends object>(input: PageInput<S>, environm
     data.set(name, requireMap(keepRead(regionData, reads), `data of region ${name}`));
   }
 
-  const value: MapValue = new Map<string, Value>([
+  // HY-31, HY-92: a document embeds its data when its reply asks for it and a route region is present (HY-75).
+  const embeds = reply.embedsData() && (route.regions ?? []).some((region) => data.has(region.name));
+  const entries: [string, Value][] = [
     ['env', new Map([['timezone', environment.timezone]])],
     ['route', route.name],
     ['params', new Map(Object.entries(request.params()))],
     ['build', environment.build],
-    ['shared', shared],
-    ['regions', new Map(data)],
-    ['kept', keptValues(request, input.session, data, application, environment.https)],
-  ]);
+  ];
+  // HY-128: a JSON response, and a document that embeds its data, hold the member context after build.
+  if (held !== null && (request.wantsJson() || embeds)) entries.push(['context', contextMember(held, request, environment.build, embeds)]);
+  entries.push(['shared', shared], ['regions', new Map(data)], ['kept', keptValues(request, input.session, data, application, environment.https)]);
+  const value: MapValue = new Map(entries);
   // HY-69: the reply gives a page with status 200 the status 403.
   const pageStatus = status === 200 ? (reply.statusValue() ?? status) : status;
   const cacheControl = pageStatus === 200 ? (reply.cacheControlValue() ?? 'no-store') : 'no-store';
   if (request.wantsJson()) {
     const body = encodeJson(value);
-    const headers: Response['headers'] = { 'Content-Type': HYPER_JSON, 'Cache-Control': cacheControl, Vary: VARY, ...reply.referrerPolicyHeaders() };
+    const headers: Response['headers'] = { 'Content-Type': HYPER_JSON, 'Cache-Control': cacheControl, Vary: environment.vary, ...reply.referrerPolicyHeaders() };
     if (pageStatus !== 200) return new Response(pageStatus, headers, body);
     // HY-53: a weak tag of the body with the masked token replaced by the session token, so the mask does not change
     // it; a matching GET request receives 304 without a body and without `Content-Type`, because a 304 carries no
@@ -118,6 +133,15 @@ export async function renderPage<S extends object>(input: PageInput<S>, environm
     return new Response(304, notModified, '');
   }
   // HY-92: the document embeds its data only when the reply asks for it.
-  const document = renderDocument(application, decodeResponse(application, value, request.path()), { embed: reply.embedsData() });
-  return new Response(pageStatus, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': cacheControl, Vary: VARY, ...reply.referrerPolicyHeaders() }, document);
+  // HY-124, HY-10: the templates read the context in the shared data (HY-126: the read paths do not reduce it).
+  const decoded = decodeResponse(application, value, request.path());
+  const document = renderDocument(application, held === null ? decoded : { ...decoded, shared: withContext(decoded.shared, held) }, { embed: reply.embedsData() });
+  return new Response(pageStatus, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': cacheControl, Vary: environment.vary, ...reply.referrerPolicyHeaders() }, document);
+}
+
+// Returns the member context of a JSON response or of an embedded document (HY-128): its hash, with its value unless the
+// request names the hash of the context that it holds, and an embedded document always has the value.
+function contextMember(held: MapValue, request: Request, build: string, embeds: boolean): MapValue {
+  const hash = contextHash(build, encodeJson(held));
+  return new Map<string, Value>(embeds || !namesHash(request, hash) ? [['hash', hash], ['value', held]] : [['hash', hash]]);
 }

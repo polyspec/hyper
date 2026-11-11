@@ -13,6 +13,8 @@ import { readBuildId } from './build.js';
 import { decodeJson, inDataModel, JsonDecodeError } from './json.js';
 import { warningsAsErrors } from './warnings.js';
 import { Disconnected, renderPage, stopClosed, VARY, type PageInput } from './page.js';
+import { HYPER_CONTEXT, type ContextHandler } from './context.js';
+import { checkClient, checkHandlers, type Client } from './open-checks.js';
 import { Reply } from './reply.js';
 import { negotiate, PAGE_AND_DATA, PAGE_TYPE } from './negotiate.js';
 import { HYPER_JSON, type Request } from './request.js';
@@ -65,12 +67,6 @@ export interface Choice {
   value: unknown;
 }
 
-// A checked client rendering with the bytes of its shell.
-interface Client {
-  basePath: string;
-  shell: string;
-  selects: (request: Request) => Choice | Promise<Choice>;
-}
 
 export interface AppOptions<S extends object> {
   // The absolute path of the manifest (HY-1).
@@ -111,6 +107,8 @@ export interface AppOptions<S extends object> {
   // The client-rendered pages, which receive the static shell for HTML requests and JSON under the data base path
   // (HY-62).
   clientRendering?: ClientRendering;
+  // The context handler (HY-124, HY-106): a function of the selection value that returns a Map, or a promise of one.
+  context?: ContextHandler;
 }
 
 // The outcome of a request for its transport: the response, or a stop because its connection closed (HY-67).
@@ -141,6 +139,9 @@ export class App<S extends object = Record<string, never>> {
   private readonly reads: Record<string, RouteReads>;
   private readonly client: Client | null;
   private readonly build: string;
+  private readonly context: ContextHandler | null;
+  // The Vary of the html and JSON responses, with `Hyper-Context` for an application with a context (HY-117).
+  private readonly vary: string;
 
   private constructor(
     application: Application,
@@ -159,7 +160,10 @@ export class App<S extends object = Record<string, never>> {
     client: Client | null,
     reads: Record<string, RouteReads>,
     build: string,
+    context: ContextHandler | null,
   ) {
+    this.context = context;
+    this.vary = context === null ? VARY : `${VARY}, Hyper-Context`;
     this.build = build;
     this.client = client;
     this.reads = reads;
@@ -203,6 +207,7 @@ export class App<S extends object = Record<string, never>> {
     }
     if (typeof options.build !== 'string' || !isAbsolute(options.build)) throw new Error(`hyper: the build file ${String(options.build)} is not an absolute path`);
     const build = readBuildId(options.build);
+    if (options.context !== undefined && typeof options.context !== 'function') throw new Error('hyper: the context must be a function (HY-106)');
     const manifest = checkManifest(JSON.parse(readFileSync(options.manifest, 'utf8')));
     const index = checkTemplateIndex(JSON.parse(readFileSync(options.templates.index, 'utf8')), `the template index ${options.templates.index}`);
     const fetcher = async (url: string): Promise<Template> => decodeTemplate(JSON.parse(readFileSync(join(options.templates.root, url), 'utf8')));
@@ -225,7 +230,7 @@ export class App<S extends object = Record<string, never>> {
       if (template === undefined) throw new Error(`hyper: template ${name} is not in the template index`);
       return template;
     }, resolvePath);
-    return new App(application, options.handlers, options.timezone, basePath, options.https ?? false, options.frameAncestors ?? "'self'", bodyLimit, fileLimit, responseLimit, [...formTypes], options.onResponse, options.onDisconnect, options.log ?? ((message) => process.stderr.write(`${message}\n`)), client, reads, build);
+    return new App(application, options.handlers, options.timezone, basePath, options.https ?? false, options.frameAncestors ?? "'self'", bodyLimit, fileLimit, responseLimit, [...formTypes], options.onResponse, options.onDisconnect, options.log ?? ((message) => process.stderr.write(`${message}\n`)), client, reads, build, options.context ?? null);
   }
 
   // Registers the factory of an application service.
@@ -329,8 +334,11 @@ export class App<S extends object = Record<string, never>> {
     // HY-116: the media type is selected after the routing; the data base path of HY-62 step 2 serves only the JSON of hyper.
     const selected = negotiate(request, client === null ? PAGE_AND_DATA : [HYPER_JSON]);
     if (selected instanceof Response) return selected;
-    // HY-62 step 2: a method other than GET or a declared POST is refused before the session is read (HY-120).
-    if (client !== null && selected.method !== 'GET' && (selected.method !== 'POST' || handler.post === undefined)) return Response.text(405, 'Method Not Allowed');
+    // HY-116, HY-27: a method other than GET or a declared POST is refused before the session is read (HY-120).
+    if (selected.method !== 'GET' && (selected.method !== 'POST' || handler.post === undefined)) return Response.text(405, 'Method Not Allowed');
+    // HY-127: a Hyper-Context value that is not 64 lowercase hexadecimal characters is refused before any handler runs.
+    const hash = selected.header('Hyper-Context');
+    if (this.context !== null && hash !== null && !HYPER_CONTEXT.test(hash)) return Response.text(400, 'Bad Request');
     const session = new Session(store);
     const flash = session.takeFlash();
     const routed = selected.withRoute(path, match.params).withSession(flash, maskedToken(session.csrfToken()));
@@ -355,7 +363,7 @@ export class App<S extends object = Record<string, never>> {
     if (request.method !== 'GET') return Response.text(405, 'Method Not Allowed');
     const selected = negotiate(request, [PAGE_TYPE]);
     if (selected instanceof Response) return selected;
-    return new Response(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache', Vary: VARY }, client.shell);
+    return new Response(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache', Vary: this.vary }, client.shell);
   }
 
   // Answers a routed request with its page, action result or stop result.
@@ -400,7 +408,7 @@ export class App<S extends object = Record<string, never>> {
   }
 
   private page(input: PageInput<S>): Promise<Response> {
-    return renderPage(input, { application: this.application, handlers: this.handlers, services: this.services, timezone: this.timezone, https: this.https, reads: this.readsOf(input.route.name), build: this.build });
+    return renderPage(input, { application: this.application, handlers: this.handlers, services: this.services, timezone: this.timezone, https: this.https, reads: this.readsOf(input.route.name), build: this.build, context: this.context, vary: this.vary });
   }
 
   // Stores the flash values and changed topics of a redirect result and answers 303 (HY-25, HY-50).
@@ -437,24 +445,6 @@ export class App<S extends object = Record<string, never>> {
 
 const FORM_TYPES = ['application/x-www-form-urlencoded', 'multipart/form-data'];
 
-// Reads the static shell after checking the declaration of the client rendering against the manifest (HY-62).
-function checkClient(client: ClientRendering, manifest: Manifest): Client {
-  const base = client.basePath;
-  if (base === '' || !base.startsWith('/') || base.endsWith('/')) throw new Error(`hyper: data base path ${base} must start with / and must not end with /`);
-  for (const route of manifest.routes) {
-    if (route.path === base || route.path.startsWith(`${base}/`)) throw new Error(`hyper: route ${route.name} lies under the data base path ${base}`);
-  }
-  if (!isAbsolute(client.shell)) throw new Error(`hyper: static shell ${client.shell} is not an absolute path`);
-  const shell = readFileSync(client.shell, 'utf8');
-  if (!shell.includes(`<meta name="hyper-api" content="${escapeAttribute(base)}">`)) throw new Error(`hyper: static shell ${client.shell} does not declare the data base path ${base}`);
-  return { basePath: base, shell, selects: client.selects };
-}
-
-// Escapes a value as PHP htmlspecialchars with ENT_QUOTES does.
-function escapeAttribute(value: string): string {
-  return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#039;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
-
 // The code of an error of the ORM, which hyper knows by the name of its class and by its property `code`, because it does not
 // depend on the ORM (HY-107), or undefined for every other error.
 function ormCode(error: unknown): string | undefined {
@@ -467,24 +457,3 @@ function withoutRenewal(reply: Reply, response: Response): Response {
   if (reply.takeRenewal()) throw new Error('hyper: a loader or the shared handler called renewSession; only an action renews the session');
   return response;
 }
-
-// Checks that the handlers match the manifest (HY-2, HY-30).
-function checkHandlers<S extends object>(manifest: Manifest, handlers: Handlers<S>): void {
-  for (const name of Object.keys(handlers.regions ?? {})) {
-    const region = manifest.regions.find((item) => item.name === name);
-    if (region === undefined || region.page === true) throw new Error(`hyper: region loader ${name} has no non-page region in the manifest`);
-  }
-  for (const [name, handler] of Object.entries(handlers.routes ?? {})) {
-    const route = manifest.routes.find((item) => item.name === name);
-    if (route === undefined) throw new Error(`hyper: route handler ${name} has no route in the manifest`);
-    if ((handler.post !== undefined) !== (route.post === true)) throw new Error(`hyper: route ${name} must have a POST action exactly when the manifest declares post`);
-    const routeRegions = (route.regions ?? []).map((region) => region.name);
-    for (const regionName of Object.keys(handler.regions ?? {})) {
-      if (!routeRegions.includes(regionName)) throw new Error(`hyper: route ${name} has a loader for undeclared region ${regionName}`);
-    }
-  }
-  for (const route of manifest.routes) {
-    if (route.post === true && handlers.routes?.[route.name]?.post === undefined) throw new Error(`hyper: route ${route.name} declares post but has no POST action`);
-  }
-}
-
