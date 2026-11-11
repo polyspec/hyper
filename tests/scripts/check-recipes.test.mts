@@ -3,7 +3,7 @@
 // recipes with several checks show one accumulating command.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { test, type TestContext } from 'node:test';
@@ -67,6 +67,24 @@ test('make hyper-test-js runs the type check when the tests fail and names both'
 // A recipe passes only options that the script it starts declares: node:util parseArgs throws for an unknown option, so
 // an option renamed in one place fails the target at its start, as `--php-extension` (the option of the test runner of the
 // kit) did for scripts/check-parity.mts, whose option is `--extension`.
+test('make packages leaves no staging directory when a build fails (HR-87)', (t) => {
+  const directory = temporary(t);
+  const first = path.join(directory, 'first');
+  const second = path.join(directory, 'second');
+  mkdirSync(first);
+  mkdirSync(second);
+  // The stub stands for `npm run build -- --outDir <staging>`: it writes the staging directory that its last argument
+  // names, and fails in the second package, after the first package was built and published.
+  const npm = path.join(directory, 'npm');
+  writeFileSync(npm, '#!/bin/sh\nfor argument; do staging=$argument; done\nmkdir -p "$staging" && echo built > "$staging/index.js"\ncase "$PWD" in */second) exit 1;; esac\n');
+  chmodSync(npm, 0o755);
+  const result = make('packages', [`JS_PACKAGE=${first}`, `NODE_PACKAGE=${second}`, `NPM=${npm}`]);
+  assert.notEqual(result.status, 0, result.stdout + result.stderr);
+  assert.deepEqual(readdirSync(first), ['dist'], 'the first package holds only its published output');
+  assert.equal(readFileSync(path.join(first, 'dist/index.js'), 'utf8'), 'built\n');
+  assert.deepEqual(readdirSync(second), [], 'the failed build left its staging directory');
+});
+
 test('every option that a recipe passes to a script of scripts/ is declared by that script', () => {
   const makefile = readFileSync(path.join(ROOT, 'Makefile'), 'utf8');
   const found: string[] = [];

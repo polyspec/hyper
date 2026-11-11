@@ -167,7 +167,7 @@ template-ext: ## Build the native template extension of TEMPLATE_TAG with PIE fr
 	$(ONLINE) env PIE_WORKING_DIRECTORY=$(PIE_WORK) $(PIE) repository:add composer $(TEMPLATE_PACKAGES) --no-interaction
 	$(ONLINE) env PIE_WORKING_DIRECTORY=$(PIE_WORK) $(PIE) build polyspec/template-php-ext:$(TEMPLATE_VERSION) --no-interaction
 	@binary=$$($(NODE) scripts/pie-binary.mts $(PIE_WORK) polyspec/template-php-ext) || exit $$?; \
-	  mkdir -p build/ext.next-$$$$ && cp "$$binary" build/ext.next-$$$$/polyspec_template.so && $(NODE) scripts/publish.mts directory build/ext.next-$$$$ build/ext
+	  mkdir -p build/ext.next-$$$$ && trap 'rm -rf build/ext.next-$$$$' EXIT && trap 'exit 130' INT TERM && cp "$$binary" build/ext.next-$$$$/polyspec_template.so && $(NODE) scripts/publish.mts directory build/ext.next-$$$$ build/ext
 
 # The session tests of HY-115 run against a real Redis server and the real phpredis extension, at these versions. PIE builds
 # phpredis as it builds the template extension; `pie build` installs nothing into the PHP, and the tests load the library
@@ -189,9 +189,11 @@ hyper-install-redis: ## Build the Redis server and the phpredis extension of the
 ext: ## Fail unless the native template extension of make template-ext is in build/ext (HY-48, H14.1-7, H27.45)
 	@test -f $(EXT) || { echo "ext: $(EXT) does not exist; run make hyper-install, which builds it with PIE (make template-ext)" >&2; exit 1; }
 
+# A build that fails or is interrupted leaves no staging directory: the shell of each line removes its own when it ends
+# (HR-87).
 packages: ## Build the JavaScript modules and type declarations of the npm packages into their dist directories; npm links the workspaces (HR-61, HR-79, HR-96)
-	cd $(JS_PACKAGE) && $(NPM) run --silent build -- --outDir dist.next-$$$$ && $(NODE) $(CURDIR)/scripts/publish.mts directory dist.next-$$$$ dist
-	cd $(NODE_PACKAGE) && $(NPM) run --silent build -- --outDir dist.next-$$$$ && $(NODE) $(CURDIR)/scripts/publish.mts directory dist.next-$$$$ dist
+	cd $(JS_PACKAGE) && trap 'rm -rf dist.next-$$$$' EXIT && trap 'exit 130' INT TERM && $(NPM) run --silent build -- --outDir dist.next-$$$$ && $(NODE) $(CURDIR)/scripts/publish.mts directory dist.next-$$$$ dist
+	cd $(NODE_PACKAGE) && trap 'rm -rf dist.next-$$$$' EXIT && trap 'exit 130' INT TERM && $(NPM) run --silent build -- --outDir dist.next-$$$$ && $(NODE) $(CURDIR)/scripts/publish.mts directory dist.next-$$$$ dist
 
 # The path repository of the board links the PHP server package to packages/server/php (Composer's default, HR-79), so the
 # board runs the current source without a copy. The install reads no registry: the targets of the checks reach it, so Composer

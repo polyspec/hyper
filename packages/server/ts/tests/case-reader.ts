@@ -4,7 +4,7 @@
 // and the browser and build runners read their cases through this reader; the reader has no test of its own.
 import { readFileSync } from 'node:fs';
 import { parseJson } from '@polyspec/template/render';
-import { type Compare, CONTRACTS, caseFiles, entriesOf, field, folded, kind, lookup, member, type Declaration, type Section, uncovered, undeclared, visible } from './case-rules.js';
+import { type Compare, CONTRACTS, caseFiles, entriesOf, field, folded, kind, lookup, member, type Declaration, type Section, uncovered, undeclared, visible } from './case-rules.ts';
 
 export class CaseReader {
   private readonly read = new Set<string>();
