@@ -1,0 +1,182 @@
+{
+  "schema": 1,
+  "docId": "protocol",
+  "title": {
+    "en": "Fixture protocol",
+    "ko": "픽스처 프로토콜"
+  },
+  "intro": [
+    {
+      "kind": "paragraph",
+      "statements": [
+        {
+          "en": "The fixture states one protocol.",
+          "ko": "픽스처는 프로토콜 하나를 적는다.",
+          "koSource": "213e3f6e160c5e73aa8c401990593f6a0005e3f01cdf59b5a437ff8a4993bb3b"
+        },
+        {
+          "en": "Its documents are written by the generator.",
+          "ko": "문서는 생성기가 쓴다.",
+          "koSource": "44eda29401eabc9d62c63380fecf29bafc99bbba22d534ef0ac89e03d7196731"
+        }
+      ]
+    }
+  ],
+  "sections": [
+    {
+      "title": {
+        "en": "Overview",
+        "ko": "개요"
+      },
+      "blocks": [
+        {
+          "kind": "list",
+          "ordered": false,
+          "items": [
+            {
+              "statements": [
+                {
+                  "en": "First item.",
+                  "ko": "첫 항목이다.",
+                  "koSource": "0f0135c9d0f19c0626f7865fae17f6aab5786c3b0be64cd7e7420d5acf1d5898"
+                }
+              ],
+              "blocks": []
+            },
+            {
+              "statements": [
+                {
+                  "en": "Second item.",
+                  "ko": "둘째 항목이다.",
+                  "koSource": "a24b55131cddb0c8786f0a5839feb227928205e1cb98d7bc1c9960da0f2c54c3"
+                }
+              ],
+              "blocks": [
+                {
+                  "kind": "paragraph",
+                  "statements": [
+                    {
+                      "en": "A nested paragraph.",
+                      "ko": "중첩된 문단이다.",
+                      "koSource": "737b1b08f93a0ce21a7ac51234c887205631c590c2b2850d0a43d133656d3004"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": {
+        "en": "Rules",
+        "ko": "규칙"
+      },
+      "blocks": [
+        {
+          "kind": "rule",
+          "id": "HY-1",
+          "retired": [
+            2
+          ],
+          "blocks": [
+            {
+              "kind": "paragraph",
+              "statements": [
+                {
+                  "id": "HY-1.1",
+                  "en": "A rule states one statement.",
+                  "ko": "규칙은 문장 하나를 적는다.",
+                  "koSource": "bf2150daef076df29ce0d9487bdb3b110e79c0a586d39c22e38df67c7bfcb9ca"
+                },
+                {
+                  "id": "HY-1.3",
+                  "en": "The number 2 is retired.",
+                  "ko": "번호 2는 폐기되었다.",
+                  "koSource": "3d1d49495865eeb3eca102cae49164f72ecedbf608865582b42714b297283be5"
+                }
+              ]
+            },
+            {
+              "kind": "list",
+              "ordered": true,
+              "items": [
+                {
+                  "statements": [
+                    {
+                      "id": "HY-1.4",
+                      "en": "An ordered item.",
+                      "ko": "순서 있는 항목이다.",
+                      "koSource": "fde61f57832a0474d179f68b9e8a844254ba03c06dc38dc58259da194c31faf0"
+                    }
+                  ],
+                  "blocks": []
+                }
+              ]
+            },
+            {
+              "kind": "code",
+              "language": "json",
+              "text": "{\"a\": 1}"
+            }
+          ]
+        },
+        {
+          "kind": "rule",
+          "id": "HY-2",
+          "retired": [],
+          "blocks": [
+            {
+              "kind": "paragraph",
+              "statements": [
+                {
+                  "id": "HY-2.1",
+                  "en": "The second rule has one statement.",
+                  "ko": "둘째 규칙은 문장 하나를 가진다.",
+                  "koSource": "35abfd8b7654f9b2e2d8cb332dd99683c03fca81691991496b6221b255aa6d23"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": {
+        "en": "Table",
+        "ko": "표"
+      },
+      "blocks": [
+        {
+          "kind": "table",
+          "header": [
+            {
+              "en": "Name",
+              "ko": "이름"
+            },
+            {
+              "en": "Meaning",
+              "ko": "뜻"
+            }
+          ],
+          "rows": [
+            [
+              {
+                "en": "`a`",
+                "ko": "`a`"
+              },
+              {
+                "en": "first",
+                "ko": "첫째"
+              }
+            ]
+          ]
+        }
+      ]
+    }
+  ],
+  "retiredRules": [
+    "HY-9"
+  ]
+}
