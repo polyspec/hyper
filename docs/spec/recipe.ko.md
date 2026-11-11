@@ -1,5 +1,5 @@
 <!-- doc-id: recipe -->
-<!-- source-sha256: e4b9963818475adcb083ebab8cba48d4d44ee3c0701276be966cf5ad4ad5140b -->
+<!-- source-sha256: f34217dc1b5e9c2fe7c83dcda0afd91634ea62fe320f52efbcd658cc39f3e804 -->
 # 서버의 레시피
 
 PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을 구현한다. 이 서버들의 레시피는 세 부분으로 이루어진다.
@@ -132,7 +132,7 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
         method는 실패한다. `__`로 private을 표시하는 것은 property뿐이기 때문이다. `_`를 붙인 형태가 없는 constructor
         `__init__`은 spec이 private으로 선언하면 private이며, check는 package의 다른 파일이 그 class를 호출하면
         실패한다: import가 묶은 이름의 호출로, alias나 import한 module의 attribute를 거친 호출도 포함하며, 그 class의
-        module이나 package에서 온 이름이다. spec이 internal로 선언한 constructor는 internal module에 있어야 한다. Python에는 접근 modifier가 없으므로 spec이 정하며, Python
+        module에서, 또는 상대 import나 절대 import로 package에서 온 이름이다. spec이 internal로 선언한 constructor는 internal module에 있어야 한다. Python에는 접근 modifier가 없으므로 spec이 정하며, Python
         reader는 타입 추론 없이 이름으로 사용을 검사한다. 같은 package의 다른 파일에서 `private` member의 이름이 import
         이름, alias, 또는 attribute 이름(`ast.Attribute.attr`)으로 나타나면 실패시킨다. 따라서 private 이름은 package 안에서
         유일하며, 같은 이름은 spec과 source가 둘 중 하나의 이름을 바꿀 때까지 실패한다.

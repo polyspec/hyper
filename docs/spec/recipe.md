@@ -138,7 +138,7 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
         end with it fails, because only a property marks its privacy with `__`. A constructor `__init__`, which has no
         form with `_`, is private when the spec declares it so, and the check fails a call of its class in another file
         of the package: a call of a name that an import binds, also through an alias or an attribute of an imported
-        module, from the module of the class or from the package. A constructor that the spec declares internal must
+        module, from the module of the class or from the package, by a relative or an absolute import. A constructor that the spec declares internal must
         be in an internal module. Python has no access modifier, so the spec decides,
         and the Python reader checks the use by name, with no type inference: it fails a `private` member whose name
         appears as an import name or alias or as an attribute name (`ast.Attribute.attr`) in another file of the

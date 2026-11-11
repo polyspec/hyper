@@ -125,6 +125,14 @@
     "detail": "calls the private constructor of MediaType"
   },
   {
+    "id": "private-constructor-called-through-the-absolute-package",
+    "file": "packages/server/python/src/polyspec/hyper/__init__.py",
+    "from": "__all__ = [\"MediaType\"]",
+    "to": "from polyspec.hyper import MediaType\n\nVALUE = MediaType()\n\n__all__ = [\"MediaType\"]",
+    "code": "PRIVATE_USED",
+    "detail": "calls the private constructor of MediaType"
+  },
+  {
     "id": "private-python-method-with-two-underscores",
     "file": "packages/server/python/src/polyspec/hyper/media_type.py",
     "from": "    def essence(self) -> str:",
