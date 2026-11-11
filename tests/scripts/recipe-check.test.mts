@@ -169,3 +169,11 @@ test('a PHP class of static methods is a functions unit, whatever its properties
   const kind = readFixture('php', path.join(fixture, 'readers', 'php')).units.find((u) => u.name === 'Helpers')?.kind;
   assert.equal(kind, 'functions', `Helpers is a ${kind} unit`);
 });
+
+test('the Node reader reads a test called on any receiver, and an each table written as a tagged template', () => {
+  const out = readFixture('node', path.join(fixture, 'readers', 'node'));
+  const names = out.tests.map((t) => t.name);
+  assert.ok(names.includes('suite > via receiver'), `tests: ${names.join(', ')}`);
+  assert.ok(names.includes('suite > skipped'), `tests: ${names.join(', ')}`);
+  assert.deepEqual(out.dynamicTests.map((t) => t.line), [3], `dynamic lines: ${out.dynamicTests.map((t) => t.line).join(', ')}`);
+});
