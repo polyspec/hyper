@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: a6ad383a1f33703faea3d8b5f5335466fa2e5fb0530cf909fa10d6cff0db6b2d -->
+<!-- source-sha256: ef00419c7c68875fcc50b47cc614e539dc7dbfa2750abfcbe4918f618fae7f86 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -383,3 +383,4 @@
 | H28.5 | Browser package: browser context와 Hyper-Context header, 다른 build에서 새 document, html definition build, 마지막 region response, HyperOptions의 functions, media type application/vnd.hyper+json | packages/client | `make test-js` | [ ] |
 | H28.6 | Build: browser 산출물을 path 순서로 hash한 build id, asset output과 program directory의 build.json, 모든 layout의 placement build 검사, static shell의 hyper-build element | packages/build, scripts | `make test-scripts` | [ ] |
 | H28.7 | PHP, Node, Python server: route의 representation, match, Allow와 HEAD가 있는 405, 406, 415, 400, status와 header와 Cache-Control 검사, strong ETag, If-None-Match와 304, 함수 etag; contracts/representations.json의 case | packages/server/php, packages/server/node, packages/server/python | `make test-php`, `make test-node`, `make test-python` | [ ] |
+| H28.8 | context와 JSON representation이 있는 board example, browser test, parity, feature status, H28.1~H28.7의 changelog | examples/board, tests/e2e, docs/features.md and its Korean twin, CHANGELOG.md and its Korean twin | `make parity` | [ ] |
