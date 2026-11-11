@@ -27,6 +27,27 @@
       "token": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
       "mask": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
       "value": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    {
+      "id": "a_token_of_62_digits_fails",
+      "label": "a token of 62 digits fails",
+      "token": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e",
+      "mask": "a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5",
+      "error": "a CSRF token or mask is not 64 lowercase hexadecimal digits (HY-24)"
+    },
+    {
+      "id": "a_mask_with_upper_case_digits_fails",
+      "label": "a mask with upper case digits fails",
+      "token": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+      "mask": "A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5",
+      "error": "a CSRF token or mask is not 64 lowercase hexadecimal digits (HY-24)"
+    },
+    {
+      "id": "a_mask_with_white_space_fails",
+      "label": "a mask with white space fails",
+      "token": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+      "mask": "a5 a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a",
+      "error": "a CSRF token or mask is not 64 lowercase hexadecimal digits (HY-24)"
     }
   ],
   "verify": [
@@ -99,6 +120,13 @@
       "token": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
       "value": "",
       "valid": false
+    },
+    {
+      "id": "a_token_of_62_digits_fails",
+      "label": "verifying against a token of 62 digits fails",
+      "token": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e",
+      "value": "a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5",
+      "error": "a CSRF token or mask is not 64 lowercase hexadecimal digits (HY-24)"
     }
   ],
   "masked": [

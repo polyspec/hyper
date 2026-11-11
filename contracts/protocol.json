@@ -2482,6 +2482,12 @@
                   "en": "The server never sends the token itself.",
                   "ko": "서버는 토큰 자체를 보내지 않는다.",
                   "koSource": "a2032f2c3bdeb889870377a9b8b85493b5b1131780686fec0a82de7737d92b01"
+                },
+                {
+                  "id": "HY-24.9",
+                  "en": "A server holds the token as 64 lowercase hexadecimal digits, and a session that holds another value in the place of the token gets a new token, as a session that holds none (HY-24.1), so that no masked value of the other value is valid; masking or verifying with a token or a mask in any other form fails with HY-43, while a form value that is not 128 lowercase hexadecimal digits is not valid (HY-24.5).",
+                  "ko": "서버는 token을 소문자 16진수 64자리로 가지며, token 자리에 다른 값을 가진 session은 token이 없는 session처럼 새 token을 받으므로(HY-24.1) 그 다른 값을 가린 어떤 값도 올바르지 않다. 다른 형태의 token이나 mask로 가리거나 검증하면 HY-43으로 실패하고, 소문자 16진수 128자리가 아닌 form 값은 올바르지 않다(HY-24.5).",
+                  "koSource": "eb1af1b54409889b35a33f78202e3caa28560ee243e30b9adf3f721b5626fabc"
                 }
               ]
             }

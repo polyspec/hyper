@@ -10,14 +10,32 @@ use Polyspec\Hyper\Tests\CaseReader;
 /** HY-24: the cases of contracts/csrf.json, the masked values of a token and their verification. */
 final class CsrfSteps
 {
+    /** Masks the token with the mask, or records the message of the error with which it fails (HY-24.9). */
     public static function mask(CaseReader $case): void
     {
-        $case->compare('value', Csrf::mask(self::text($case, 'token'), self::text($case, 'mask')));
+        $value = null;
+        $error = null;
+        try {
+            $value = Csrf::mask(self::text($case, 'token'), self::text($case, 'mask'));
+        } catch (\InvalidArgumentException $failure) {
+            $error = $failure->getMessage();
+        }
+        $case->compare('value', $value);
+        $case->compare('error', $error);
     }
 
+    /** Verifies the value against the token, or records the message of the error with which it fails (HY-24.9). */
     public static function verify(CaseReader $case): void
     {
-        $case->compare('valid', Csrf::verify(self::text($case, 'token'), self::text($case, 'value')));
+        $valid = null;
+        $error = null;
+        try {
+            $valid = Csrf::verify(self::text($case, 'token'), self::text($case, 'value'));
+        } catch (\InvalidArgumentException $failure) {
+            $error = $failure->getMessage();
+        }
+        $case->compare('valid', $valid);
+        $case->compare('error', $error);
     }
 
     public static function masked(CaseReader $case): void

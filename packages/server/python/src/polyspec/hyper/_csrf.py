@@ -8,6 +8,8 @@ import re
 import secrets
 
 _MASKED = re.compile(r"[0-9a-f]{128}\Z")
+_TOKEN = re.compile(r"[0-9a-f]{64}\Z")
+_DIGITS = re.compile(r"(?:[0-9a-f]{2})*\Z")
 
 
 class Csrf:
@@ -19,22 +21,42 @@ class Csrf:
     @staticmethod
     def mask(token: str, mask: str) -> str:
         """Returns the token masked with a mask; both are 64 lowercase hexadecimal digits."""
+        Csrf._require_token(token)
+        Csrf._require_token(mask)
         return mask + Csrf._xor(Csrf._bytes(mask), Csrf._bytes(token)).hex()
 
     @staticmethod
     def verify(token: str, value: str) -> bool:
         """Returns True when a form value is a masked value of the token, compared in constant time."""
+        Csrf._require_token(token)
         if _MASKED.fullmatch(value) is None:
             return False
         unmasked = Csrf._xor(Csrf._bytes(value[64:]), Csrf._bytes(value[:64]))
         return hmac.compare_digest(Csrf._bytes(token), unmasked)
 
     @staticmethod
+    def _require_token(text: str) -> None:
+        """Fails for a token or a mask that is not 64 lowercase hexadecimal digits (HY-24.9)."""
+        if _TOKEN.fullmatch(text) is None:
+            raise ValueError(
+                "a CSRF token or mask is not 64 lowercase hexadecimal digits (HY-24)"
+            )
+
+    @staticmethod
     def _bytes(hex_text: str) -> bytes:
-        """Returns the bytes of an even number of hexadecimal digits; other text fails."""
+        """Returns the bytes of an even number of lowercase hexadecimal digits; other text fails. bytes.fromhex
+        accepts upper case digits and white space, so the digits are checked first."""
+        if _DIGITS.fullmatch(hex_text) is None:
+            raise ValueError(
+                "a CSRF token or mask is not lowercase hexadecimal digits (HY-24)"
+            )
         return bytes.fromhex(hex_text)
 
     @staticmethod
     def _xor(first: bytes, second: bytes) -> bytes:
-        """Returns the bytes of the first XOR the bytes of the second, as long as the shorter."""
-        return bytes(a ^ b for a, b in zip(first, second))
+        """Returns the bytes of the first XOR the bytes of the second, which have one length; other bytes fail."""
+        if len(first) != len(second):
+            raise ValueError(
+                "the bytes of a CSRF token and its mask differ in length (HY-24)"
+            )
+        return bytes(a ^ b for a, b in zip(first, second, strict=True))

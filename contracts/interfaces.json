@@ -4366,7 +4366,15 @@
               "role": "expected",
               "compare": "exact",
               "sentence": "HY-24.2",
-              "state": "`value` is the masked value, 128 lowercase hexadecimal digits, that the random bytes `mask` give for the token `token`."
+              "state": "`value` is the masked value, 128 lowercase hexadecimal digits, that the random bytes `mask` give for the token `token`.",
+              "optional": true
+            },
+            "error": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-24.9",
+              "state": "`error` is the message of the error with which masking the token `token` with `mask` fails."
             }
           }
         },
@@ -4394,7 +4402,15 @@
               "role": "expected",
               "compare": "exact",
               "sentence": "HY-24.4",
-              "state": "`valid` states whether the form value `value` is a masked value of the token `token`."
+              "state": "`valid` states whether the form value `value` is a masked value of the token `token`.",
+              "optional": true
+            },
+            "error": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-24.9",
+              "state": "`error` is the message of the error with which verifying the value `value` against the token `token` fails."
             }
           }
         },

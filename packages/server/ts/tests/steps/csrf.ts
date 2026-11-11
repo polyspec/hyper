@@ -8,12 +8,32 @@ function text(reader: CaseReader, name: string): string {
   return value;
 }
 
+// Returns the result of a call, or the message of the RangeError with which it fails; any other error is thrown.
+function failureOf<T>(call: () => T): { result: T | null; error: string | null } {
+  try {
+    return { result: call(), error: null };
+  } catch (error) {
+    if (!(error instanceof RangeError)) throw error;
+    return { result: null, error: error.message };
+  }
+}
+
 export const steps = {
+  // Masks the token with the mask, or records the message of the error with which it fails (HY-24.9).
   mask(reader: CaseReader): void {
-    reader.compare('value', Csrf.mask(text(reader, 'token'), text(reader, 'mask')));
+    const token = text(reader, 'token');
+    const mask = text(reader, 'mask');
+    const outcome = failureOf(() => Csrf.mask(token, mask));
+    reader.compare('value', outcome.result);
+    reader.compare('error', outcome.error);
   },
+  // Verifies the value against the token, or records the message of the error with which it fails (HY-24.9).
   verify(reader: CaseReader): void {
-    reader.compare('valid', Csrf.verify(text(reader, 'token'), text(reader, 'value')));
+    const token = text(reader, 'token');
+    const value = text(reader, 'value');
+    const outcome = failureOf(() => Csrf.verify(token, value));
+    reader.compare('valid', outcome.result);
+    reader.compare('error', outcome.error);
   },
   masked(reader: CaseReader): void {
     const token = text(reader, 'token');

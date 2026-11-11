@@ -5,16 +5,31 @@ from polyspec.hyper._csrf import Csrf
 
 
 def mask(case) -> None:
-    case.compare(
-        "value", Csrf.mask(_string_field(case, "token"), _string_field(case, "mask"))
-    )
+    """Masks the token with the mask, or records the message of the error with which it fails (HY-24.9)."""
+    token = _string_field(case, "token")
+    mask_text = _string_field(case, "mask")
+    value = None
+    error = None
+    try:
+        value = Csrf.mask(token, mask_text)
+    except ValueError as failure:
+        error = str(failure)
+    case.compare("value", value)
+    case.compare("error", error)
 
 
 def verify(case) -> None:
-    case.compare(
-        "valid",
-        Csrf.verify(_string_field(case, "token"), _string_field(case, "value")),
-    )
+    """Verifies the value against the token, or records the message of the error with which it fails (HY-24.9)."""
+    token = _string_field(case, "token")
+    value = _string_field(case, "value")
+    valid = None
+    error = None
+    try:
+        valid = Csrf.verify(token, value)
+    except ValueError as failure:
+        error = str(failure)
+    case.compare("valid", valid)
+    case.compare("error", error)
 
 
 def masked(case) -> None:

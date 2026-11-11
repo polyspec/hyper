@@ -6,6 +6,8 @@
 
 ## Unreleased
 
+- 세 server의 unit `Csrf`는 소문자 16진수 64자리의 token과 mask로만 가리고 검증하며, 다른 값에서는 HY-24.9가 이제 정하는 대로 같은 문구로 실패합니다. 이전에는 62자리 token이 세 언어 모두에서 126자리 값을 주었고, Python은 대문자 숫자와 공백을 읽었으며, PHP는 warning을 냈고, Node는 길이가 다른 저장 token에서 throw했지만 PHP와 Python은 false로 답했습니다. `xor`는 짧은 쪽 길이를 유지하지 않고 길이가 다른 두 byte열에서 실패합니다. HY-24.9는 token 자리에 다른 값을 가진 session이 새 token을 받는다는 것도 정합니다. `contracts/csrf.json`은 62자리 token, 대문자 숫자를 가진 mask, 공백을 가진 mask의 오류를 비교합니다(HY-24) (H28.11).
+
 - 한국어 recipe(`docs/spec/recipe.ko.md`)는 번역 검토를 거쳐 HYR-8의 규칙, field `keys`, cookie, 공백을 영어 recipe와 같이 서술하고, 검토한 영어 원문의 hash를 가집니다(H28.11).
 
 - `contracts/context.json`, `contracts/functions.json`, `contracts/representations.json`의 step은 PHP, Node, Python에서 한 규칙으로 애플리케이션을 읽습니다. 없는 `shared`, `actions`, `embedData`, `context`는 없음을 선언하고, 있는 member는 그 타입을 가져야 하며, action은 `redirect` 또는 정수 `page`와 `data`를 가지고, `stop`은 `NotFound`여야 하며, 선언된 loader와 action만 등록합니다. PHP는 더 이상 member를 cast하지 않고, Node는 더 이상 모든 route에 빈 loader를 등록하거나 `page` 없는 action에 200으로 응답하지 않으며, case의 session token은 모든 언어에서 첫 `text/html` 요청에서 옵니다. Python은 PHP와 Node가 거부하는 NaN과 Infinity 없이 case의 context를 decode합니다. container step은 `no factory is bound for` 오류만 선언된 실패로 세고, Python csrf step은 PHP, Node처럼 문자열이 아닌 field에서 실패합니다(H28.11).
