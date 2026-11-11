@@ -54,7 +54,9 @@ def services(case) -> None:
     try:
         for name in _names(case, "uses"):
             container.call(USES[name], {})
-    except TypeError:
+    except TypeError as error:
+        if "no factory is bound for" not in str(error):
+            raise
         failed = True
     case.compare("created", created)
     case.compare("failed", failed)

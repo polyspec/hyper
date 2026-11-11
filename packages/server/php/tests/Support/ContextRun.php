@@ -57,21 +57,29 @@ final class ContextRun
         self::autoload($directory);
         $routes = [];
         $names = array_map(
-            static fn (array $route): string => (string) $route['name'],
+            static fn (array $route): string => self::string($route['name'] ?? null, 'a route name'),
             $this->application['manifest']['routes'],
         );
-        foreach ((array) ($this->application['loaders'] ?? []) as $name => $spec) {
+        // An absent member declares none; a member that is present must have its type.
+        foreach (self::map($this->application['loaders'] ?? null, 'the loaders') as $name => $spec) {
+            $name = (string) $name;
+            $loader = $this->loader($name, self::map($spec, "the loader {$name}"));
             if (in_array($name, $names, true)) {
-                $routes[$name]['load'] = $this->loader($name, (array) $spec);
+                $routes[$name]['load'] = $loader;
 
                 continue;
             }
-            $routes[$this->routeOfRegion($name)]['regions'][$name] = $this->loader($name, (array) $spec);
+            $routes[$this->routeOfRegion($name)]['regions'][$name] = $loader;
         }
-        foreach ((array) ($this->application['actions'] ?? []) as $route => $spec) {
-            $routes[$route]['post'] = $this->action($route, (array) $spec);
+        if (array_key_exists('actions', $this->application)) {
+            foreach (self::map($this->application['actions'], 'the actions') as $route => $spec) {
+                $route = (string) $route;
+                $routes[$route]['post'] = $this->action($route, self::map($spec, "the action of {$route}"));
+            }
         }
-        $data = $shared ?? $this->application['shared'] ?? null;
+        $data = $shared ?? (array_key_exists('shared', $this->application)
+            ? self::map($this->application['shared'], 'the shared data')
+            : null);
         $handlers = ['routes' => $routes];
         if ($data !== null) {
             $handlers['shared'] = function () use ($data): array {
@@ -81,7 +89,9 @@ final class ContextRun
             };
         }
 
-        $text = $context ?? $this->application['context'] ?? null;
+        $text = $context ?? (array_key_exists('context', $this->application)
+            ? self::string($this->application['context'], 'the context')
+            : null);
         $handler = null;
         if ($text !== null) {
             // The handler returns the decoded text as it is, also a value that is not a map, so that the server
@@ -218,20 +228,63 @@ final class ContextRun
         return $texts;
     }
 
-    /** @param array<string, mixed> $spec */
+    /** Returns a string of the application, and fails for any other value. */
+    private static function string(mixed $value, string $what): string
+    {
+        if (!is_string($value)) {
+            throw new \UnexpectedValueException("{$what} is not a string");
+        }
+
+        return $value;
+    }
+
+    /**
+     * Returns a list of strings of the application, and fails for any other value.
+     *
+     * @return list<string>
+     */
+    private static function strings(mixed $value, string $what): array
+    {
+        if (!is_array($value) || !array_is_list($value)) {
+            throw new \UnexpectedValueException("{$what} is not a list of strings");
+        }
+
+        return array_map(static fn (mixed $item): string => self::string($item, "an item of {$what}"), $value);
+    }
+
+    /**
+     * Returns a map of the application, and fails for any other value. Plain gives an empty JSON object as stdClass,
+     * so that it differs from an empty list.
+     *
+     * @return array<array-key, mixed>
+     */
+    private static function map(mixed $value, string $what): array
+    {
+        if ($value instanceof \stdClass && get_object_vars($value) === []) {
+            return [];
+        }
+        if (!is_array($value) || ($value !== [] && array_is_list($value))) {
+            throw new \UnexpectedValueException("{$what} is not a map");
+        }
+
+        return $value;
+    }
+
+    /** @param array<array-key, mixed> $spec */
     private function loader(string $name, array $spec): \Closure
     {
         $stop = $spec['stop'] ?? null;
         if ($stop !== null) {
             if ($stop !== 'NotFound') {
-                throw new \LogicException("loader {$name} stops with {$stop}, which the contract does not declare");
+                throw new \UnexpectedValueException("loader {$name} stops with a value other than NotFound");
             }
 
             return static function (): array {
                 throw new NotFound();
             };
         }
-        $embed = in_array($name, $this->application['embedData'] ?? [], true);
+        $embed = array_key_exists('embedData', $this->application)
+            && in_array($name, self::strings($this->application['embedData'], 'embedData'), true);
 
         return function (Reply $reply) use ($name, $spec, $embed): array {
             if ($embed) {
@@ -242,16 +295,20 @@ final class ContextRun
         };
     }
 
-    /** @param array<string, mixed> $spec */
+    /** @param array<array-key, mixed> $spec */
     private function action(string $route, array $spec): \Closure
     {
         return function () use ($route, $spec): Result {
             $this->calls[] = "action:{$route}";
             if (array_key_exists('redirect', $spec)) {
-                return Result::redirect((string) $spec['redirect']);
+                return Result::redirect(self::string($spec['redirect'], "the redirect of {$route}"));
+            }
+            $page = $spec['page'] ?? null;
+            if (!is_int($page)) {
+                throw new \UnexpectedValueException("the action of {$route} has no redirect and no integer page");
             }
 
-            return Result::page((int) $spec['page'], (array) ($spec['data'] ?? []));
+            return Result::page($page, self::map($spec['data'] ?? null, "the data of the action of {$route}"));
         };
     }
 
@@ -260,7 +317,7 @@ final class ContextRun
         foreach ($this->application['manifest']['routes'] as $route) {
             foreach ($route['regions'] ?? [] as $declared) {
                 if ($declared['name'] === $region) {
-                    return (string) $route['name'];
+                    return self::string($route['name'], 'a route name');
                 }
             }
         }

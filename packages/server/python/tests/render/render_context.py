@@ -78,7 +78,14 @@ def build_ids(builds: list, directory: Path) -> list:
     output = directory / "builds.out.json"
     with output.open("w", encoding="utf-8") as stdout:
         status = subprocess.run(
-            [str(NODE), "--input-type=module", "-e", script, str(request), str(BUILD_LIBRARY)],
+            [
+                str(NODE),
+                "--input-type=module",
+                "-e",
+                script,
+                str(request),
+                str(BUILD_LIBRARY),
+            ],
             stdout=stdout,
             stderr=subprocess.STDOUT,
             check=False,
@@ -88,9 +95,14 @@ def build_ids(builds: list, directory: Path) -> list:
     return json.loads(output.read_text(encoding="utf-8"))
 
 
+def _reject(name: str) -> None:
+    """Fails for a constant of a JSON text that JSON does not define."""
+    raise ValueError(f"the case context holds {name}, which is not JSON")
+
+
 def open_application(
     application: dict,
-    shared: dict,
+    shared: dict | None,
     manifest: Path,
     program: Path,
     calls: list,
@@ -100,17 +112,23 @@ def open_application(
 ) -> App:
     """Opens the application with the handlers of its contract: a loader stops with NotFound when it says so, an action
     returns the page with its status or the redirect, and the handlers record their calls in order. The shared handler
-    returns the shared data of the case. The context handler returns the decoded JSON text `context`, or the context of
+    returns the shared data of the case, and an application without shared data has no shared handler. The context handler returns the decoded JSON text `context`, or the context of
     the application, as it is, also a value that is not a map, so that the server checks it (HY-124); the response hook
     appends the failure of each response to `failures` (HY-60)."""
     loaders = application["loaders"]
-    embed = set(application["embedData"])
+    # An absent member declares none.
+    embed = set(application.get("embedData", []))
+    actions = application.get("actions", {})
 
     def loader(route: str, data: dict):
         def load(request: Request, reply: Reply) -> dict:
             if route in embed:
                 reply.embed_data()
             if "stop" in data:
+                if data["stop"] != "NotFound":
+                    raise ValueError(
+                        f"loader {route} stops with a value other than NotFound"
+                    )
                 raise NotFound()
             return dict(data)
 
@@ -121,6 +139,12 @@ def open_application(
             calls.append(f"action:{route}")
             if "redirect" in spec:
                 return Result.redirect(spec["redirect"])
+            if not isinstance(spec.get("page"), int) or not isinstance(
+                spec.get("data"), dict
+            ):
+                raise ValueError(
+                    f"the action of {route} has no redirect and no page with data"
+                )
             return Result.page(spec["page"], dict(spec["data"]))
 
         return run
@@ -135,18 +159,22 @@ def open_application(
         entry: dict = {}
         if name in loaders:
             entry["load"] = loader(name, loaders[name])
-        if route.get("post"):
-            entry["post"] = action(name, application["actions"][name])
+        # Only a declared action is registered, as in PHP and Node.
+        if name in actions:
+            entry["post"] = action(name, actions[name])
         regions = {}
         for region in route.get("regions", []):
             if region["name"] in loaders:
-                regions[region["name"]] = loader(region["name"], loaders[region["name"]])
+                regions[region["name"]] = loader(
+                    region["name"], loaders[region["name"]]
+                )
         if regions:
             entry["regions"] = regions
         routes[name] = entry
 
     text = context if context is not None else application.get("context")
-    value = None if text is None else json.loads(text)
+    # NaN and Infinity are not JSON, which PHP and Node refuse; an integer stays an int of Python (HY-44).
+    value = None if text is None else json.loads(text, parse_constant=_reject)
 
     def context_handler(selection: object) -> object:
         calls.append("context")
@@ -160,7 +188,9 @@ def open_application(
     return App.open(
         manifest=str(manifest),
         program=str(program),
-        handlers={"shared": shared_data, "routes": routes},
+        handlers={"routes": routes}
+        if shared is None
+        else {"shared": shared_data, "routes": routes},
         timezone="+09:00",
         context=context_handler if text is not None else None,
         on_response=on_response,

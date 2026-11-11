@@ -2,7 +2,7 @@
 // without a context answers. Every expected value comes from the contract.
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
-import { Context } from '../../src/context.js';
+import { Context, type ContextHandler } from '../../src/context.js';
 import { Csrf } from '../../src/csrf.js';
 import { JsonCodec, type DecodedValue } from '../../src/json-codec.js';
 import { OutsideNumber } from '../../src/outside-number.js';
@@ -15,15 +15,14 @@ interface Application {
   manifest: { routes: { name: string; regions?: { name: string }[]; post?: boolean }[] } & Record<string, unknown>;
   build: string;
   context?: string;
-  shared: Record<string, unknown>;
+  shared?: Record<string, unknown>;
   loaders: Record<string, Record<string, unknown>>;
-  embedData: string[];
-  actions: Record<string, { page?: number; data?: Record<string, unknown>; redirect?: string }>;
+  embedData?: string[];
+  actions?: Record<string, { page?: number; data?: Record<string, unknown>; redirect?: string }>;
 }
 
 // The applications of the contracts, built once for the three servers by scripts/contract-programs.mjs (HY-124, HYC-24).
 const PROGRAMS = fileURLToPath(new URL('../../../../../var/contract-programs/', import.meta.url));
-const JSON_TYPE = 'application/vnd.hyper+json';
 
 // Converts the Maps of a parsed contract value into plain objects, the shape the application handlers read.
 function plain(value: unknown): unknown {
@@ -35,35 +34,42 @@ function plain(value: unknown): unknown {
 // Returns the handlers of an application for one case: each route loads its stated data, stops with NotFound when the
 // contract says so, and embeds its data when the contract lists it; each action returns its stated page or redirect;
 // the shared handler returns the shared data of the case. Every call is recorded in order (HY-124).
-function handlersOf(application: Application, shared: Record<string, unknown>, calls: string[]): Handlers<Record<string, never>> {
+// Only a declared loader is registered, as in PHP and Python; a loader whose data holds `stop` stops with NotFound, and
+// any other value of `stop` fails.
+function handlersOf(application: Application, shared: Record<string, unknown> | null, calls: string[]): Handlers<Record<string, never>> {
   const routes: Record<string, RouteHandlers<Record<string, never>>> = {};
   for (const route of application.manifest.routes) {
-    const spec = application.loaders[route.name] ?? {};
-    const embeds = application.embedData.includes(route.name);
+    const handler: RouteHandlers<Record<string, never>> = {};
+    const spec = application.loaders[route.name];
+    if (spec !== undefined) {
+      const embeds = application.embedData?.includes(route.name) === true;
+      handler.load = ({ reply }) => {
+        if (embeds) reply.embedData();
+        if (spec.stop !== undefined) {
+          if (spec.stop !== 'NotFound') throw new Error(`loader ${route.name} stops with a value other than NotFound`);
+          throw new NotFound();
+        }
+        return new Map(Object.entries(spec) as [string, Value][]);
+      };
+    }
     const regions: Record<string, () => Map<string, Value>> = {};
     for (const region of route.regions ?? []) {
-      const regionSpec = application.loaders[region.name] ?? {};
-      regions[region.name] = () => new Map(Object.entries(regionSpec) as [string, Value][]);
+      const regionSpec = application.loaders[region.name];
+      if (regionSpec !== undefined) regions[region.name] = () => new Map(Object.entries(regionSpec) as [string, Value][]);
     }
-    const handler: RouteHandlers<Record<string, never>> = {
-      load: ({ reply }) => {
-        if (embeds) reply.embedData();
-        if (spec.stop === 'NotFound') throw new NotFound();
-        return new Map(Object.entries(spec) as [string, Value][]);
-      },
-      regions,
-    };
-    if (route.post === true) {
+    if (Object.keys(regions).length > 0) handler.regions = regions;
+    const action = application.actions?.[route.name];
+    if (action !== undefined) {
       handler.post = () => {
         calls.push(`action:${route.name}`);
-        const action = application.actions[route.name];
-        if (action === undefined) throw new Error(`the contract has no action for ${route.name}`);
         if (action.redirect !== undefined) return Result.redirect(action.redirect);
-        return Result.page(action.page ?? 200, action.data ?? {});
+        if (typeof action.page !== 'number' || action.data === undefined) throw new Error(`the action of ${route.name} has no redirect and no page with data`);
+        return Result.page(action.page, action.data);
       };
     }
     routes[route.name] = handler;
   }
+  if (shared === null) return { routes };
   return {
     shared: () => {
       calls.push('shared');
@@ -165,14 +171,26 @@ export const steps = {
     if (!(applications instanceof Map) || !(applications.get(name) instanceof Map)) throw new Error(`the contract has no application ${name}`);
     const application = plain(applications.get(name)) as Application;
     const dir = join(PROGRAMS, name);
-    const sharedInput = reader.has('shared') ? plain(reader.input('shared')) : application.shared;
-    if (typeof sharedInput !== 'object' || sharedInput === null || Array.isArray(sharedInput)) throw new Error('the shared data of the case is not a map');
-    const shared = Object.fromEntries(Object.entries(sharedInput));
+    // Absent shared data declares no shared handler; present shared data must be a map.
+    const sharedInput = reader.has('shared') ? plain(reader.input('shared')) : (application.shared ?? null);
+    if (sharedInput !== null && (typeof sharedInput !== 'object' || Array.isArray(sharedInput))) throw new Error('the shared data of the case is not a map');
+    const shared = sharedInput === null ? null : Object.fromEntries(Object.entries(sharedInput));
     const contextText = reader.has('context') ? stringField(reader, 'context') : (application.context ?? null);
     const calls: string[] = [];
     const selections: unknown[] = [];
     let failure: string | null = null;
     const handlers = handlersOf(application, shared, calls);
+    // The handler returns the decoded text as it is, also a value that is not a map, so that the server checks it
+    // (HY-124).
+    let contextHandler: ContextHandler | null = null;
+    if (contextText !== null) {
+      // @ts-expect-error -- a case hands the server a value that is not a Map, which the type of the handler excludes
+      contextHandler = (selection) => {
+        calls.push('context');
+        selections.push(selection);
+        return hostValue(JsonCodec.decode(contextText));
+      };
+    }
     const app = await App.open<Record<string, never>>({
       manifest: join(dir, 'manifest.json'),
       build: join(dir, 'build.json'),
@@ -183,18 +201,7 @@ export const steps = {
       onResponse: (_request, _response, _elapsed, _reply, received) => {
         failure = received;
       },
-      ...(contextText === null
-        ? {}
-        : {
-            context: (selection: unknown) => {
-              calls.push('context');
-              selections.push(selection);
-              // The handler returns the decoded text as it is, also a value that is not a map, so that the server checks
-              // it (HY-124).
-              // @ts-expect-error -- a case hands the server a value that is not a Map, which the type of the handler excludes
-              return hostValue(JsonCodec.decode(contextText));
-            },
-          }),
+      ...(contextHandler === null ? {} : { context: contextHandler }),
     });
     const store = new MemorySessionStore();
     const csrfInput = reader.has('request.csrf') ? reader.input('request.csrf') : false;
@@ -204,7 +211,7 @@ export const steps = {
     if (csrf) {
       // A first response of the same session makes its token (HY-24); the case masks the token that the session holds.
       // Its calls are not the case's calls.
-      await app.handle(Request.from({ method: 'GET', target: '/', headers: { Accept: JSON_TYPE } }), store);
+      await app.handle(Request.from({ method: 'GET', target: '/', headers: { Accept: 'text/html' } }), store);
       const held = store.get('_hyper_csrf');
       if (typeof held !== 'string') throw new Error('the first response of the session created no token');
       token = Csrf.masked(held);

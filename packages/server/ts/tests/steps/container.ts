@@ -27,7 +27,8 @@ export const steps = {
     let failed = false;
     try {
       for (const name of names(reader, 'uses')) container.get(name);
-    } catch {
+    } catch (error) {
+      if (!(error instanceof Error) || !error.message.includes('no factory is bound for')) throw error;
       failed = true;
     }
     reader.compare('created', created);

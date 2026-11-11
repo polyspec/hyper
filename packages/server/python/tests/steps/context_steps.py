@@ -84,8 +84,9 @@ def cases(case) -> None:
     ):
         raise ValueError(f"the contract has no application {name}")
     application = applications[name]
-    shared = case.input("shared") if case.has("shared") else application["shared"]
-    if not isinstance(shared, dict):
+    # Absent shared data declares no shared handler; present shared data must be a map.
+    shared = case.input("shared") if case.has("shared") else application.get("shared")
+    if shared is not None and not isinstance(shared, dict):
         raise TypeError("the shared data of the case is not a map")
     context = (
         _string_field(case, "context")

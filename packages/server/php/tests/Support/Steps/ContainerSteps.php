@@ -33,7 +33,10 @@ final class ContainerSteps
                     default => static fn (\SplObjectStorage $service): object => $service,
                 }, []);
             }
-        } catch (\LogicException) {
+        } catch (\LogicException $error) {
+            if (!str_contains($error->getMessage(), 'no factory is bound for')) {
+                throw $error;
+            }
             $failed = true;
         }
         $case->compare('created', $created);
