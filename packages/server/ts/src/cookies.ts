@@ -2,7 +2,8 @@
 // characters U+0000 to U+00FF are its bytes, as node:http gives it, and the names and values are decoded as UTF-8
 // (HY-42).
 
-const strict = new TextDecoder('utf-8', { fatal: true });
+// ignoreBOM keeps a leading U+FEFF as a character, as PHP and Python decode it; the default of TextDecoder drops it.
+const strict = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true });
 
 /** @internal */
 export class Cookies {

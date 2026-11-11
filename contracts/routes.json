@@ -43,7 +43,8 @@
     { "id": "v1_0_user_name_x", "path": "/v1.0/~user_name-x", "result": { "name": "versioned", "params": {} } },
     { "id": "v1_2e0_user_name_x", "path": "/v1%2E0/~user_name-x", "result": null },
     { "id": "missing", "path": "/missing", "result": null },
-    { "id": "x_proto", "label": "a parameter named __proto__ is a key of the parameters with its value (HY-5)", "path": "/x/abc", "result": { "name": "proto", "params": { "__proto__": "abc" } } }
+    { "id": "x_proto", "label": "a parameter named __proto__ is a key of the parameters with its value (HY-5)", "path": "/x/abc", "result": { "name": "proto", "params": { "__proto__": "abc" } } },
+    { "id": "board_ef_bb_bf_78", "path": "/board/%EF%BB%BFx", "result": {"name": "board.show", "params": {"id": "\ufeffx"}} }
   ],
   "basePath": "/api",
   "baseCases": [

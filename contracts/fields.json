@@ -16,7 +16,8 @@
     { "id": "a_semicolon_does_not_separate", "label": "a semicolon does not separate", "text": "a=1;b=2", "fields": [["a", ["1;b=2"]]], "names": ["a"] },
     { "id": "a_value_that_is_not_utf_8_fails", "label": "a value that is not UTF-8 fails", "text": "a=%E2%82", "fields": null, "names": null },
     { "id": "a_name_that_is_not_utf_8_fails", "label": "a name that is not UTF-8 fails", "text": "a%FF=1", "fields": null, "names": null },
-    { "id": "a_bracketed_name_that_is_not_utf_8_fails", "label": "a bracketed name that is not UTF-8 fails", "text": "a[%C3]=v", "fields": null, "names": null }
+    { "id": "a_bracketed_name_that_is_not_utf_8_fails", "label": "a bracketed name that is not UTF-8 fails", "text": "a[%C3]=v", "fields": null, "names": null },
+    { "id": "a_leading_bom_of_a_value_is_kept", "label": "a leading U+FEFF of a value is a character of the value", "text": "a=%EF%BB%BFx", "fields": [["a", ["\ufeffx"]]], "names": ["a"] }
   ],
   "multipart": [
     {"id": "text_fields_in_order_with_repeated_and_bracketed_names", "label": "text fields in order with repeated and bracketed names", "type": "multipart/form-data; boundary=XyZ", "body": "--XyZ\r\nContent-Disposition: form-data; name=\"roles[]\"\r\n\r\nadmin\r\n--XyZ\r\nContent-Disposition: form-data; name=\"title\"\r\n\r\n\u00ed\u0095\u009c \u00ea\u00b8\u0080\r\n--XyZ\r\nContent-Disposition: form-data; name=\"roles[]\"\r\n\r\neditor\r\n--XyZ--\r\n", "fields": [["roles[]", ["admin", "editor"]], ["title", ["\ud55c \uae00"]]], "files": []},

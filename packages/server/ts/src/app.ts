@@ -31,14 +31,15 @@ function readJsonFile(path: string): unknown {
   const bytes = readFileSync(path);
   let text: string;
   try {
-    text = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
-  } catch {
-    throw new Error(`hyper: ${path} is not valid UTF-8`);
+    // ignoreBOM keeps a leading U+FEFF, so that a file that starts with it is not valid JSON, as in PHP and Python.
+    text = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(bytes);
+  } catch (error) {
+    throw new Error(`hyper: ${path} is not valid UTF-8`, { cause: error });
   }
   try {
     return JSON.parse(text);
-  } catch {
-    throw new Error(`hyper: ${path} is not valid JSON`);
+  } catch (error) {
+    throw new Error(`hyper: ${path} is not valid JSON`, { cause: error });
   }
 }
 

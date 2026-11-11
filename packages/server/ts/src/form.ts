@@ -4,7 +4,8 @@ import { UploadedFile } from './uploaded-file.js';
 // occurrence, has its values in request order, and a bracketed name is the name as written (HY-56). Names and values
 // must be UTF-8 (HY-42).
 
-const strict = new TextDecoder('utf-8', { fatal: true });
+// ignoreBOM keeps a leading U+FEFF as a character, as PHP and Python decode it; the default of TextDecoder drops it.
+const strict = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true });
 
 // The fields of a query string or a form body; `valid` is false when a name or a value is not UTF-8.
 export interface Fields {

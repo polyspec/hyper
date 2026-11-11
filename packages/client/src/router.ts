@@ -15,7 +15,8 @@ interface CompiledRoute {
 const LITERAL = /^[A-Za-z0-9._~-]+$/;
 const PARAM = /^\{([A-Za-z_][A-Za-z0-9_]*)\}$/;
 const REST = /^\{([A-Za-z_][A-Za-z0-9_]*)\*\}$/;
-const decoder = new TextDecoder('utf-8', { fatal: true });
+// ignoreBOM keeps a leading U+FEFF as a character, as the servers decode it; the default of TextDecoder drops it.
+const decoder = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true });
 
 export class Router {
   private readonly routes: CompiledRoute[];

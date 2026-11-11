@@ -155,7 +155,7 @@ describe('App', () => {
     await expect(App.open({ manifest: `${FIXTURES}app.json`, build: `${FIXTURES}build.json`, templates: { index: 'templates.index.json', root: TEMPLATES.root }, handlers: handlers(), timezone: 'Z' })).rejects.toThrow('not an absolute path');
   });
 
-  it('raises the Error of its runtime for a file that is not valid JSON or not valid UTF-8 (HY-106)', async () => {
+  it('raises the Error of its runtime for a file that is not valid JSON, not valid UTF-8 or starts with U+FEFF (HY-106)', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'hyper-open-'));
     try {
       const manifest = join(dir, 'app.json');
@@ -165,6 +165,9 @@ describe('App', () => {
       writeFileSync(manifest, '{"layout":');
       expect((await failure({ manifest, build: `${FIXTURES}build.json`, templates: TEMPLATES, handlers: handlersOf, timezone: 'Z' }))?.constructor).toBe(Error);
       writeFileSync(manifest, Buffer.from([0x7b, 0x22, 0x6c, 0x61, 0x79, 0x6f, 0x75, 0x74, 0x22, 0x3a, 0x22, 0xff, 0x22, 0x7d]));
+      expect((await failure({ manifest, build: `${FIXTURES}build.json`, templates: TEMPLATES, handlers: handlersOf, timezone: 'Z' }))?.constructor).toBe(Error);
+      // A leading U+FEFF is a character of the text, which JSON does not allow before a value, as in PHP and Python.
+      writeFileSync(manifest, Buffer.concat([Buffer.from([0xef, 0xbb, 0xbf]), readFileSync(`${FIXTURES}app.json`)]));
       expect((await failure({ manifest, build: `${FIXTURES}build.json`, templates: TEMPLATES, handlers: handlersOf, timezone: 'Z' }))?.constructor).toBe(Error);
       writeFileSync(index, '{"layout":');
       expect((await failure({ manifest: `${FIXTURES}app.json`, build: `${FIXTURES}build.json`, templates: { index, root: TEMPLATES.root }, handlers: handlersOf, timezone: 'Z' }))?.constructor).toBe(Error);
