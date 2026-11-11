@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- The case reader of each server holds exactly the members of HYR-7, and the rules that it applies to a case are in one test unit beside it (`Support/CaseRules.php`, `case-rules.ts`, `case_rules.py`). `make recipe-check` counts a constructor as one member in every language, and a `sentence` may cite a statement of an HYC rule. The mutation cases fail a missing browser or build runner (H28.11).
+
 - The reads cases of `contracts/reads.json` render their template with the kept data in every server: the PHP and Python runners build one program per case through `scripts/contract-programs.mjs` (`make contract-programs`) and check that the kept data and the data render the same bytes (HY-73.28); the `only` of the reads `template`, `templates` and `render` fields is removed, and `reads` keeps its `only` (HY-73.23). `a_list_literal_reads_its_items_whole` reads `l[1]`, which the server type check accepts (H28.11).
 
 - The build of a server application keeps the inputs of a template that a block or an include places with arguments, which `deriveTypeManifest` derives from those arguments (HY-73.16); only the targets, the layout, the title, the reserved data template and the route and region templates render with no template inputs (HY-12, HY-13, HY-30, HY-31) (H28.11).

@@ -1,10 +1,10 @@
 # The case runner of HYR-7 for python: runs every case of every case file whose runners name python, and writes one line
 # per case to the results file named by RECIPE_RESULTS.
-import json
 import os
 import unittest
 from pathlib import Path
 
+from . import case_rules
 from .case_reader import CaseReader
 from .steps import STEPS
 
@@ -14,8 +14,7 @@ class CaseRunner(unittest.TestCase):
         results = os.environ.get("RECIPE_RESULTS")
         if not results:
             self.fail("RECIPE_RESULTS names no results file")
-        contracts = Path(__file__).resolve().parents[4] / "contracts"
-        files = json.loads((contracts / "interfaces.json").read_text(encoding="utf-8"))["caseFiles"]
+        files = case_rules.case_files()
         lines: list[str] = []
         errors: list[str] = []
         for file in files:
@@ -31,7 +30,8 @@ class CaseRunner(unittest.TestCase):
                 else:
                     try:
                         step(reader)
-                    except Exception as error:
+                    # HYR-7: every error that a step raises is the CASE_ERROR of its case.
+                    except Exception as error:  # noqa: BLE001
                         reader.fail(str(error) or type(error).__name__)
                 lines.append(reader.line())
         path = Path(results)

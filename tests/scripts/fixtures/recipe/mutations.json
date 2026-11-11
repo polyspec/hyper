@@ -251,6 +251,20 @@
     "code": "RUNNER_MISSING"
   },
   {
+    "id": "runner-missing-browser",
+    "file": "contracts/interfaces.json",
+    "from": "case-runner.test.mts::browser\"",
+    "to": "case-runner.test.mts::browserGone\"",
+    "code": "RUNNER_MISSING"
+  },
+  {
+    "id": "runner-missing-build",
+    "file": "contracts/interfaces.json",
+    "from": "case-runner.test.mts::build\"",
+    "to": "case-runner.test.mts::buildGone\"",
+    "code": "RUNNER_MISSING"
+  },
+  {
     "id": "native-reason-blank",
     "file": "contracts/interfaces.json",
     "from": "case-runner.test.mts::cases: runs the essence cases",

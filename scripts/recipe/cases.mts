@@ -7,7 +7,7 @@ import path from 'node:path';
 import { LANGS, type CaseField, type CaseFile, type Only, type Runner, type Spec } from './types.mts';
 import type { Ctx } from './context.mts';
 import { checkRuleId, checkStatement, rulesOfFile } from './rules.mts';
-import { words } from './names.mts';
+import { readerKey } from './names.mts';
 
 const COMPARE_KINDS = ['exact', 'ordered', 'subset', 'absent', 'contains', 'excludes', 'prefix', 'keys', 'raises'];
 
@@ -231,8 +231,8 @@ function checkReaders(ctx: Ctx): void {
       continue;
     }
     const members = src.members.filter((m) => m.file === file && m.unit === name);
-    const pub = members.filter((m) => m.visibility === 'public').map((m) => words(m.name)).sort();
-    const priv = members.filter((m) => m.visibility !== 'public').map((m) => words(m.name)).sort();
+    const pub = members.filter((m) => m.visibility === 'public').map((m) => readerKey(m.name, m.kind)).sort();
+    const priv = members.filter((m) => m.visibility !== 'public').map((m) => readerKey(m.name, m.kind)).sort();
     shapes.set(lang, { pub, priv });
   }
   const [first, ...rest] = LANGS.filter((l) => shapes.has(l));

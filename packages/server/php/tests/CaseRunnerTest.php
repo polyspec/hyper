@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Polyspec\Hyper\Tests;
 
 use PHPUnit\Framework\TestCase;
+use Polyspec\Hyper\Tests\Support\CaseRules;
 use Polyspec\Hyper\Tests\Support\CaseSteps;
 
 /**
@@ -22,7 +23,7 @@ final class CaseRunnerTest extends TestCase
 
         $lines = [];
         $failed = 0;
-        foreach (CaseReader::files() as $file) {
+        foreach (array_keys(CaseRules::caseFiles()) as $file) {
             foreach (CaseReader::cases($file) as $case) {
                 $section = $case->section();
                 $step = CaseSteps::of($file, $section);

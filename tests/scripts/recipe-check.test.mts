@@ -66,6 +66,44 @@ test('the fixture passes the recipe check, with its mutation cases first', () =>
   assert.equal(result.status, 0, result.stdout + result.stderr);
 });
 
+test('a sentence may cite a statement of an HYC rule of protocol.json', () => {
+  const root = mkdtempSync(path.join(tmpdir(), 'recipe-hyc-'));
+  try {
+    cpSync(fixture, root, { recursive: true });
+    applyMutation(root, { id: 'hyc-sentence', file: 'contracts/interfaces.json', from: '"sentence": "HY-1.1",', to: '"sentence": "HYC-1.1",', code: 'SENTENCE_UNKNOWN' });
+    track(root);
+    const result = spawnSync(process.execPath, [check, '--root', root, '--php-autoload', phpAutoload(root), '--no-selftest', ...resultArguments(root)], { encoding: 'utf8' });
+    const output = result.stdout + result.stderr;
+    assert.doesNotMatch(output, /\bSENTENCE_UNKNOWN\b/);
+    assert.equal(result.status, 0, output);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('a constructor of each case reader is one member, whatever the language calls it', () => {
+  const root = mkdtempSync(path.join(tmpdir(), 'recipe-ctor-'));
+  const replaceIn = (file: string, from: string, to: string): void => {
+    const target = path.join(root, file);
+    const text = readFileSync(target, 'utf8');
+    assert.ok(text.includes(from), `${file} lacks ${JSON.stringify(from)}`);
+    writeFileSync(target, text.replace(from, to));
+  };
+  try {
+    cpSync(fixture, root, { recursive: true });
+    replaceIn('packages/server/php/tests/CaseReader.php', '    public function cases(): array', '    public function __construct()\n    {\n    }\n\n    public function cases(): array');
+    replaceIn('packages/server/python/tests/case_reader.py', '    def cases(self):', '    def __init__(self):\n        pass\n\n    def cases(self):');
+    replaceIn('packages/server/ts/tests/case-reader.ts', '  cases(): unknown[] {', '  constructor() {}\n\n  cases(): unknown[] {');
+    track(root);
+    const result = spawnSync(process.execPath, [check, '--root', root, '--php-autoload', phpAutoload(root), '--no-selftest', ...resultArguments(root)], { encoding: 'utf8' });
+    const output = result.stdout + result.stderr;
+    assert.doesNotMatch(output, /\bCASE_READER_MEMBERS\b/);
+    assert.equal(result.status, 0, output);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
 test('the candidate refreshes the native fields and lists the hand-written ones', () => {
   const dir = mkdtempSync(path.join(tmpdir(), 'recipe-candidate-'));
   try {

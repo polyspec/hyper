@@ -1,27 +1,23 @@
 # The case reader of HYR-7: one case of a case file under contracts/, read through caseFiles of interfaces.json. A runner
 # gets its input fields and fixtures from here, and each expected field is compared here, by the comparison of caseFiles.
+# The rules that apply to a case are in case_rules.
 from __future__ import annotations
 
-import json
-from pathlib import Path
 from typing import Any
 
-
-# The comparison of each response field, by its name (HYR-11); header names compare without regard to ASCII case (HY-130.20).
-RESPONSE_COMPARE = {
-    "status": "exact",
-    "body": "exact",
-    "headers": "subset",
-    "allHeaders": "exact",
-    "absentHeaders": "absent",
-    "bodyContains": "contains",
-    "bodyNotContains": "excludes",
-}
-HEADER_NAMES = {"headers", "allHeaders", "absentHeaders"}
+from . import case_rules as rules
 
 
 class CaseReader:
-    def __init__(self, file: str, section: str, case: dict, data: dict, spec: dict, failure: str | None):
+    def __init__(
+        self,
+        file: str,
+        section: str,
+        case: dict,
+        data: dict,
+        spec: dict,
+        failure: str | None,
+    ):
         self._file = file
         self._section_name = section
         self._case = case
@@ -34,81 +30,19 @@ class CaseReader:
         self._failure = None if failure is None else f"FILE_UNDECLARED {failure}"
 
     @staticmethod
-    def cases(file: str) -> list["CaseReader"]:
-        """The readers of the cases of a case file that the runners of python run, in file order."""
+    def cases(file: str) -> list[CaseReader]:
+        """The readers of the cases of a case file that the runner of python runs, in file order."""
         declaration = CaseReader._declaration(file)
-        data = CaseReader._json(file)
-        failure = CaseReader._undeclared(declaration, data)
+        data = rules.contract(file)
+        failure = rules.undeclared(declaration, data)
         readers = []
         for name, spec in declaration["sections"].items():
-            if "python" not in spec["runners"]:
+            if rules.LANGUAGE not in spec["runners"]:
                 continue
             for case in data.get(name, []):
-                if "only" in case and "python" not in case["only"]["languages"]:
-                    continue
-                readers.append(CaseReader(file, name, case, data, spec, failure))
+                if rules.visible(case):
+                    readers.append(CaseReader(file, name, case, data, spec, failure))
         return readers
-
-    @staticmethod
-    def _declaration(file: str) -> dict:
-        return CaseReader._json("interfaces.json")["caseFiles"][file]
-
-    @staticmethod
-    def _json(name: str) -> Any:
-        contracts = Path(__file__).resolve().parents[4] / "contracts"
-        return json.loads((contracts / name).read_text(encoding="utf-8"))
-
-    @staticmethod
-    def _applies(node: dict) -> bool:
-        only = node.get("only")
-        return only is None or "python" in only["languages"]
-
-    @staticmethod
-    def _leaves(fields: dict, prefix: str = ""):
-        """The dotted names and the declarations of the fields that carry no fields, for the languages of this reader."""
-        for key, node in fields.items():
-            if not CaseReader._applies(node):
-                continue
-            name = prefix + key
-            if "fields" in node:
-                yield from CaseReader._leaves(node["fields"], name + ".")
-            else:
-                yield name, node
-
-    @staticmethod
-    def _nested_undeclared(node: dict, value: Any, path: str) -> str | None:
-        if "fields" not in node or not isinstance(value, dict):
-            return None
-        for key, item in value.items():
-            if key not in node["fields"]:
-                return f"{path}.{key}"
-            found = CaseReader._nested_undeclared(node["fields"][key], item, f"{path}.{key}")
-            if found:
-                return found
-        return None
-
-    @staticmethod
-    def _undeclared(declaration: dict, data: dict) -> str | None:
-        """The path of the first key, section or field of a case file that caseFiles does not declare, or None."""
-        sections = declaration["sections"]
-        for key in data:
-            if key not in declaration["fixtures"] and key not in sections:
-                return key
-        for name, spec in sections.items():
-            for index, case in enumerate(data.get(name, [])):
-                for key, value in case.items():
-                    if key in ("only", "requirements"):
-                        continue
-                    path = f"{name}[{index}].{key}"
-                    if key not in spec["fields"]:
-                        return path
-                    found = CaseReader._nested_undeclared(spec["fields"][key], value, path)
-                    if found:
-                        return found
-            for field, node in CaseReader._leaves(spec["fields"]):
-                if node["role"] == "expected" and not any(k in node for k in ("compare", "sentence")):
-                    return f"{name}.{field}"
-        return None
 
     def section(self) -> str:
         return self._section_name
@@ -116,60 +50,41 @@ class CaseReader:
     def id(self) -> str:
         return self._case["id"]
 
-    def _lookup(self, name: str) -> tuple[bool, Any]:
-        value: Any = self._case
-        for part in name.split("."):
-            if not isinstance(value, dict) or part not in value:
-                return False, None
-            value = value[part]
-        return True, value
-
-    def _node(self, name: str) -> dict:
-        fields = self._spec["fields"]
-        node: dict = {}
-        for part in name.split("."):
-            fields = node.get("fields", fields) if node else fields
-            if part not in fields:
-                raise KeyError(f"undeclared field {name}")
-            node = fields[part]
-        return node
-
     def has(self, name: str) -> bool:
-        return self._lookup(name)[0]
+        """Whether the case states the dotted field."""
+        return rules.lookup(self._case, name)[0]
 
     def input(self, name: str) -> Any:
+        """The input field of the case, or the fixture of the file that the section uses; it counts as read."""
         if name in self._spec["uses"]:
             self._read.add(name)
             return self._data[name]
-        node = self._node(name)
+        node = rules.field(self._spec["fields"], name, self._section_name)
         if node["role"] != "input":
-            raise ValueError(f"not an input field: {name}")
+            raise ValueError(f"{name} of {self._section_name} is not an input")
         self._read.add(name)
-        for leaf, _ in CaseReader._leaves(node.get("fields", {}), name + "."):
+        for leaf, _ in rules.leaves(node.get("fields", {}), name + "."):
             self._read.add(leaf)
-        return self._lookup(name)[1]
+        return rules.lookup(self._case, name)[1]
 
     def compare(self, name: str, observed: Any) -> None:
-        node = self._node(name)
-        if not CaseReader._applies(node):
+        """Compares an observed value with the expected field of the case by its comparison (HYR-11)."""
+        node = rules.field(self._spec["fields"], name, self._section_name)
+        if not rules.visible(node):
             return
-        parts = name.split(".")
-        for depth in range(1, len(parts)):
-            if not self._lookup(".".join(parts[:depth]))[0]:
-                return
-        present, expected = self._lookup(name)
+        present, expected = rules.lookup(self._case, name)
         if not present:
             return
         self._compared.add(name)
-        kind = RESPONSE_COMPARE[parts[-1]] if node["role"] == "response" else node["compare"]
-        if parts[-1] in HEADER_NAMES:
-            expected, observed = CaseReader._folded(expected), CaseReader._folded(observed)
-        if not CaseReader._matches(kind, expected, observed):
+        if name.split(".")[-1] in rules.HEADER_FIELDS:
+            expected, observed = rules.folded(expected), rules.folded(observed)
+        if not CaseReader._matches(rules.kind(node, name), expected, observed):
             self._differs.append(name)
 
     def outcome(self, name: str, observed: Any) -> None:
+        """Compares an outcome: `raises` takes the error that the step caught, or None; any other takes the pair."""
         node = self._spec.get("outcomes", {})[name]
-        if not CaseReader._applies(node):
+        if not rules.visible(node):
             return
         self._compared.add(name)
         if node["compare"] == "raises":
@@ -180,55 +95,41 @@ class CaseReader:
             self._differs.append(name)
 
     def fail(self, reason: str) -> None:
+        """Records an error that the step raised, as CASE_ERROR."""
         if self._error is None:
-            self._error = f"CASE_ERROR {reason}"
+            self._error = "CASE_ERROR " + " ".join(reason.split())
 
     def line(self) -> str:
+        """The result line of the case: the first reason that applies, in the order of HYR-7."""
         head = f"CASE {self._file} {self.id()}"
-        reason = self._reason()
+        names = rules.compared_names(self._spec, self._case)
+        if self._failure is not None:
+            reason: str | None = self._failure
+        elif self._error is not None:
+            reason = self._error
+        elif not names:
+            reason = "CASE_EMPTY"
+        elif self._differs:
+            reason = f"FIELD_DIFFERS {self._differs[0]}"
+        else:
+            unknown = rules.unknown_input(self._spec, self._case, self._read)
+            uncompared = next(
+                (name for name in names if name not in self._compared), None
+            )
+            if unknown is not None:
+                reason = f"FIELD_UNKNOWN {unknown}"
+            elif uncompared is not None:
+                reason = f"FIELD_UNCOMPARED {uncompared}"
+            else:
+                reason = None
         return f"{head} PASS" if reason is None else f"{head} FAIL {reason}"
 
-    def _reason(self) -> str | None:
-        if self._failure is not None:
-            return self._failure
-        if self._error is not None:
-            return self._error
-        names = self._compares()
-        if not names:
-            return "CASE_EMPTY"
-        if self._differs:
-            return f"FIELD_DIFFERS {self._differs[0]}"
-        present_inputs = [
-            name
-            for name, node in CaseReader._leaves(self._spec["fields"])
-            if node["role"] == "input" and self._lookup(name)[0]
-        ]
-        for name in present_inputs + list(self._spec["uses"]):
-            if name not in self._read:
-                return f"FIELD_UNKNOWN {name}"
-        for name in names:
-            if name not in self._compared:
-                return f"FIELD_UNCOMPARED {name}"
-        return None
-
-    def _compares(self) -> list[str]:
-        """The expected and response fields that the case states, then the outcomes of the step that apply to python."""
-        names = [
-            name
-            for name, node in CaseReader._leaves(self._spec["fields"])
-            if node["role"] in ("expected", "response") and self._lookup(name)[0]
-        ]
-        names += [name for name, node in self._spec.get("outcomes", {}).items() if CaseReader._applies(node)]
-        return names
-
     @staticmethod
-    def _folded(value: Any) -> Any:
-        """The names of a header map, or of a list of header names, in lower case."""
-        if isinstance(value, dict):
-            return {key.lower(): item for key, item in value.items()}
-        if isinstance(value, list):
-            return [item.lower() if isinstance(item, str) else item for item in value]
-        return value
+    def _declaration(file: str) -> dict:
+        files = rules.case_files()
+        if file not in files:
+            raise KeyError(f"{file} is not a case file of contracts/interfaces.json")
+        return files[file]
 
     @staticmethod
     def _matches(kind: str, expected: Any, observed: Any) -> bool:
@@ -239,7 +140,8 @@ class CaseReader:
         if kind == "subset":
             seen = {key.lower(): value for key, value in observed.items()}
             return all(
-                key.lower() in seen and CaseReader._equal(value, seen[key.lower()], False)
+                key.lower() in seen
+                and CaseReader._equal(value, seen[key.lower()], False)
                 for key, value in expected.items()
             )
         if kind == "absent":
@@ -253,7 +155,9 @@ class CaseReader:
             return not any(item in observed for item in items)
         if kind == "prefix":
             head = list(observed[: len(expected)])
-            return len(observed) >= len(expected) and CaseReader._equal(list(expected), head, False)
+            return len(observed) >= len(expected) and CaseReader._equal(
+                list(expected), head, False
+            )
         if kind == "keys":
             return list(observed) == list(expected)
         if kind == "raises":
@@ -271,13 +175,20 @@ class CaseReader:
         if isinstance(a, str) or isinstance(b, str):
             return isinstance(a, str) and isinstance(b, str) and a == b
         if isinstance(a, dict) or isinstance(b, dict):
-            if not (isinstance(a, dict) and isinstance(b, dict)) or a.keys() != b.keys():
+            if (
+                not (isinstance(a, dict) and isinstance(b, dict))
+                or a.keys() != b.keys()
+            ):
                 return False
             if ordered and list(a) != list(b):
                 return False
             return all(CaseReader._equal(a[key], b[key], ordered) for key in a)
         if isinstance(a, (list, tuple)) or isinstance(b, (list, tuple)):
-            if not (isinstance(a, (list, tuple)) and isinstance(b, (list, tuple))) or len(a) != len(b):
+            if not (
+                isinstance(a, (list, tuple)) and isinstance(b, (list, tuple))
+            ) or len(a) != len(b):
                 return False
-            return all(CaseReader._equal(x, y, ordered) for x, y in zip(a, b))
+            return all(
+                CaseReader._equal(x, y, ordered) for x, y in zip(a, b, strict=True)
+            )
         return a == b

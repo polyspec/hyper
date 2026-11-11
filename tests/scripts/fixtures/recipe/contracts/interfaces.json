@@ -48,7 +48,7 @@
   "concerns": [
     {
       "id": "csrf",
-      "rules": ["HY-1"],
+      "rules": ["HY-1", "HYC-1"],
       "cases": ["contracts/csrf.json"],
       "units": [
         {

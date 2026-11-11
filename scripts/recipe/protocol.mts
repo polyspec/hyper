@@ -30,7 +30,7 @@ export function readProtocol(text: string): Protocol {
       const retired = Array.isArray(v.retired) ? v.retired.filter((n): n is number => typeof n === 'number') : [];
       rules.set(v.id, { statements: new Set(), retired: new Set(retired) });
     }
-    if (typeof v.id === 'string' && /^HY-\d+\.\d+$/u.test(v.id)) statements.push(v.id);
+    if (typeof v.id === 'string' && /^HYC?-\d+\.\d+$/u.test(v.id)) statements.push(v.id);
     if (typeof v.term === 'string') terms.add(v.term);
     if (typeof v.en === 'string') statuses.push(v.en);
     for (const x of Object.values(v)) visit(x);

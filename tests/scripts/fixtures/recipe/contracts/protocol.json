@@ -76,6 +76,17 @@
               ]
             }
           ]
+        },
+        {
+          "kind": "rule",
+          "id": "HYC-1",
+          "retired": [],
+          "blocks": [
+            {
+              "kind": "paragraph",
+              "statements": [{ "id": "HYC-1.1", "en": "The check reads the case of a rule.", "ko": "check는 규칙의 case를 읽는다." }]
+            }
+          ]
         }
       ]
     }
