@@ -118,31 +118,48 @@ function testNames(string $code): array
     return $names;
 }
 
-/** @return list<ReflectionMethod> the methods a class declares itself */
+/** @return list<ReflectionMethod> the methods a class declares itself: a trait method has the trait's file */
 function ownMethods(ReflectionClass $class): array
 {
     return array_values(array_filter(
         $class->getMethods(),
-        static fn(ReflectionMethod $m) => $m->getDeclaringClass()->getName() === $class->getName(),
+        static fn(ReflectionMethod $m) => $m->getDeclaringClass()->getName() === $class->getName()
+            && $m->getFileName() === $class->getFileName(),
     ));
 }
 
-/** @return list<ReflectionProperty> the properties a class declares itself */
+/** @return list<ReflectionProperty> the properties a class declares itself, not the ones its traits declare */
 function ownProperties(ReflectionClass $class): array
 {
     return array_values(array_filter(
         $class->getProperties(),
-        static fn(ReflectionProperty $p) => $p->getDeclaringClass()->getName() === $class->getName(),
+        static fn(ReflectionProperty $p) => $p->getDeclaringClass()->getName() === $class->getName()
+            && !declaredByTrait($class, $p->getName(), false),
     ));
 }
 
-/** @return list<ReflectionClassConstant> the constants a class declares itself */
+/** @return list<ReflectionClassConstant> the constants a class declares itself, not the ones its traits declare */
 function ownConstants(ReflectionClass $class): array
 {
     return array_values(array_filter(
         $class->getReflectionConstants(),
-        static fn(ReflectionClassConstant $c) => $c->getDeclaringClass()->getName() === $class->getName(),
+        static fn(ReflectionClassConstant $c) => $c->getDeclaringClass()->getName() === $class->getName()
+            && !declaredByTrait($class, $c->getName(), true),
     ));
+}
+
+/** Whether a trait of the class, or a trait of that trait, declares the property or the constant. */
+function declaredByTrait(ReflectionClass $class, string $name, bool $constant): bool
+{
+    foreach ($class->getTraits() as $trait) {
+        if ($constant ? $trait->hasConstant($name) : $trait->hasProperty($name)) {
+            return true;
+        }
+        if (declaredByTrait($trait, $name, $constant)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 function unitKind(ReflectionClass $class): string
