@@ -3,9 +3,8 @@
 
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
-import type { Finding, Lang, Member, Only, Sources, Spec, Unit, Visibility } from './types.mts';
+import { LANGS, type Finding, type Lang, type Member, type Only, type Sources, type Spec, type Unit, type Visibility } from './types.mts';
 
-const LANGS: Lang[] = ['php', 'node', 'python'];
 const CTOR_NAMES = ['__construct', '__init__', 'constructor'];
 
 /** Words of a name, lowercased and joined by `-`: `MediaType`, `media-type` and `media_type` all give `media-type`. */
@@ -71,6 +70,15 @@ export function compare(spec: Spec, sources: Record<Lang, Sources>, root: string
   for (const r of [...spec.concerns.flatMap((c) => c.rules), ...spec.outside.map((o) => o.rule), ...onlys.map((o) => o.rule)]) {
     if (!rules.has(r)) add('RULE_UNKNOWN', `${r} is not a rule of protocol.md`);
   }
+  // HYR-2: every rule of protocol.md is named by a concern or by outside; outside names no rule of a concern.
+  const concernRules = new Set(spec.concerns.flatMap((c) => c.rules));
+  for (const o of spec.outside) {
+    if (o.reason.trim() === '') add('OUTSIDE_REASON', `outside ${o.rule} has an empty reason`);
+    if (concernRules.has(o.rule)) add('OUTSIDE_CONCERN', `${o.rule} is named by a concern and by outside`);
+  }
+  for (const r of rules) {
+    if (!concernRules.has(r) && !spec.outside.some((o) => o.rule === r)) add('RULE_UNCOVERED', `${r} is named by no concern and no outside entry`);
+  }
   for (const o of onlys) {
     if (!flat.includes(o.quote.replace(/\s+/g, ' '))) add('ONLY_QUOTE', `quote of ${o.rule} is not a sentence of protocol.md: ${o.quote}`);
   }
@@ -82,6 +90,16 @@ export function compare(spec: Spec, sources: Record<Lang, Sources>, root: string
     named.add(spec.languages[lang].runner);
     if (!readerTests.has(spec.languages[lang].runner)) add('RUNNER_MISSING', `${lang} runner ${spec.languages[lang].runner} is not a test`);
   }
+  // HYR-7: a native test is named with a reason, and lies in the test tree of the one language that its scope names.
+  const nativeTest = (ref: string, label: string, scope: Lang[] | undefined): void => {
+    const key = testKey(ref);
+    named.add(key);
+    if (ref.slice(key.length + 2).trim() === '') add('NATIVE_REASON', `${label} names native test ${key} without a reason`);
+    if (scope !== undefined && scope.length !== 1) add('NATIVE_SCOPE', `${label} names native test ${key} but its only does not name exactly one language`);
+    const lang = scope?.length === 1 ? scope[0] : undefined;
+    const tests = lang === undefined ? [...readerTests] : sources[lang].tests.map((t) => `${t.file}::${t.name}`);
+    if (!tests.includes(key)) add('NATIVE_TEST_MISSING', `${label} names native test ${key}, which is not a test`);
+  };
   for (const c of spec.concerns) {
     if (Array.isArray(c.cases)) {
       for (const file of c.cases) {
@@ -95,14 +113,16 @@ export function compare(spec: Spec, sources: Record<Lang, Sources>, root: string
         if (typeof rule !== 'string' || !c.rules.includes(rule)) add('CASE_RULE', `${file} has rule ${String(rule)}, concern ${c.id} lists ${c.rules.join(', ')}`);
       }
     } else {
-      for (const ref of c.cases.tests) {
-        named.add(testKey(ref));
-        if (!readerTests.has(testKey(ref))) add('NATIVE_TEST_MISSING', `${testKey(ref)} is named by concern ${c.id} and is not a test`);
-      }
+      if (c.cases.none.trim() === '') add('CASE_REASON', `concern ${c.id} has an empty reason for cases none`);
+      for (const ref of c.cases.tests) nativeTest(ref, `concern ${c.id}`, undefined);
       if (units.length > 0 && c.units.some((u) => u.only?.languages.length !== 1)) {
         add('CASES_NONE', `concern ${c.id} has cases none but a unit without an only for one language`);
       }
     }
+  }
+  for (const u of units) {
+    for (const ref of u.tests ?? []) nativeTest(ref, `unit ${u.id}`, u.only?.languages ?? []);
+    for (const m of u.members) for (const ref of m.tests ?? []) nativeTest(ref, `member ${m.id}`, m.only?.languages ?? []);
   }
   for (const key of readerTests) {
     if (!named.has(key)) add('TEST_UNNAMED', `${key} is a test that the spec does not name`);

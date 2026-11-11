@@ -4,8 +4,9 @@
   "title": "Development spec of the Hyper servers (HYR-1)",
   "type": "object",
   "additionalProperties": false,
-  "required": ["languages", "outside", "concerns", "types"],
+  "required": ["schema", "languages", "outside", "concerns", "types"],
   "properties": {
+    "schema": { "const": 1 },
     "languages": {
       "type": "object",
       "additionalProperties": false,
@@ -120,7 +121,8 @@
           "type": "array",
           "items": { "$ref": "#/$defs/member" }
         },
-        "only": { "$ref": "#/$defs/only" }
+        "only": { "$ref": "#/$defs/only" },
+        "tests": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/testRef" } }
       }
     },
     "member": {
@@ -145,7 +147,8 @@
             "python": { "$ref": "#/$defs/nativeSymbol" }
           }
         },
-        "only": { "$ref": "#/$defs/only" }
+        "only": { "$ref": "#/$defs/only" },
+        "tests": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/testRef" } }
       }
     },
     "shape": {

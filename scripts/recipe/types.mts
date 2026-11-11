@@ -1,10 +1,12 @@
 // Types of the recipe check (HYR-8): the development spec (contracts/interfaces.json) and the readers' output.
 
 export type Lang = 'php' | 'node' | 'python';
+export const LANGS: Lang[] = ['php', 'node', 'python'];
 export type Visibility = 'public' | 'internal' | 'private' | 'protected';
 export type Only = { languages: Lang[]; rule: string; quote: string };
 
 export type Spec = {
+  schema: 1;
   languages: Record<Lang, { sources: string[]; tests: string[]; barrel: string[]; runner: string }>;
   outside: { rule: string; reason: string }[];
   concerns: Concern[];
@@ -23,6 +25,7 @@ export type Unit = {
   native: Partial<Record<Lang, { file: string; kind: string; internal: boolean }>>;
   members: Member[];
   only?: Only;
+  tests?: string[];
 };
 
 export type Member = {
@@ -35,6 +38,7 @@ export type Member = {
   state: string;
   native: Partial<Record<Lang, { symbol: string; signature: string }>>;
   only?: Only;
+  tests?: string[];
 };
 
 export type SpecType = {

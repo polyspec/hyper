@@ -15,5 +15,8 @@
   { "id": "barrel-export-added", "file": "packages/server/ts/src/index.ts", "from": "export { MediaType } from './media-type.ts';", "to": "export { MediaType } from './media-type.ts';\nexport { Csrf } from './csrf.ts';", "code": "BARREL_EXPORT" },
   { "id": "private-name-used-elsewhere", "file": "packages/server/python/src/polyspec/hyper/media_type.py", "from": "class MediaType:", "to": "from polyspec.hyper._csrf import Csrf\n\nVALUE = Csrf()._fold()\n\n\nclass MediaType:", "code": "PRIVATE_USED" },
   { "id": "test-added-without-spec", "file": "packages/server/ts/tests/extra.test.mts", "create": "import { test } from 'node:test';\n\ntest('extra', () => {});\n", "code": "TEST_UNNAMED" },
-  { "id": "spec-rule-unknown", "file": "contracts/interfaces.json", "from": "\"rules\": [\"HY-2\"]", "to": "\"rules\": [\"HY-9\"]", "code": "RULE_UNKNOWN" }
+  { "id": "spec-rule-unknown", "file": "contracts/interfaces.json", "from": "\"rules\": [\"HY-2\"]", "to": "\"rules\": [\"HY-9\"]", "code": "RULE_UNKNOWN" },
+  { "id": "result-file-deleted", "file": "results/node.txt", "delete": true, "code": "RESULT_MISSING" },
+  { "id": "result-line-missing", "file": "results/php.txt", "from": "CASE contracts/csrf.json raw-token PASS\n", "to": "", "code": "RESULT_MISSING" },
+  { "id": "result-line-failed", "file": "results/python.txt", "from": "PASS", "to": "FAIL the token differs", "code": "RESULT_FAIL" }
 ]
