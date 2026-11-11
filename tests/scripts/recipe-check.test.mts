@@ -81,7 +81,7 @@ test('a sentence may cite a statement of an HYC rule of protocol.json', () => {
   }
 });
 
-test('a constructor of each case reader is one member, whatever the language calls it', () => {
+test('a constructor of each case reader is one member, whatever the language calls it and whatever its visibility', () => {
   const root = mkdtempSync(path.join(tmpdir(), 'recipe-ctor-'));
   const replaceIn = (file: string, from: string, to: string): void => {
     const target = path.join(root, file);
@@ -91,7 +91,7 @@ test('a constructor of each case reader is one member, whatever the language cal
   };
   try {
     cpSync(fixture, root, { recursive: true });
-    replaceIn('packages/server/php/tests/CaseReader.php', '    public function cases(): array', '    public function __construct()\n    {\n    }\n\n    public function cases(): array');
+    replaceIn('packages/server/php/tests/CaseReader.php', '    public function cases(): array', '    private function __construct()\n    {\n    }\n\n    public function cases(): array');
     replaceIn('packages/server/python/tests/case_reader.py', '    def cases(self):', '    def __init__(self):\n        pass\n\n    def cases(self):');
     replaceIn('packages/server/ts/tests/case-reader.ts', '  cases(): unknown[] {', '  constructor() {}\n\n  cases(): unknown[] {');
     track(root);

@@ -231,8 +231,10 @@ function checkReaders(ctx: Ctx): void {
       continue;
     }
     const members = src.members.filter((m) => m.file === file && m.unit === name);
-    const pub = members.filter((m) => m.visibility === 'public').map((m) => readerKey(m.name, m.kind)).sort();
-    const priv = members.filter((m) => m.visibility !== 'public').map((m) => readerKey(m.name, m.kind)).sort();
+    // A constructor is no member of HYR-7, and Python has no private one, so it counts once whatever its visibility.
+    const isPublic = (m: (typeof members)[number]): boolean => m.visibility === 'public' || readerKey(m.name, m.kind) === 'constructor';
+    const pub = members.filter((m) => isPublic(m)).map((m) => readerKey(m.name, m.kind)).sort();
+    const priv = members.filter((m) => !isPublic(m)).map((m) => readerKey(m.name, m.kind)).sort();
     shapes.set(lang, { pub, priv });
   }
   const [first, ...rest] = LANGS.filter((l) => shapes.has(l));
