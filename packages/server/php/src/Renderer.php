@@ -90,6 +90,8 @@ final class Renderer
      *     page region
      * @param BoundMap|null $data the bound root of `{# data}`, the map with the member `response`
      *     (HY-31), or null when the document embeds no data (HY-92)
+     * @param string $build the build id of the application, which the definition `build` holds as a meta element
+     *     (HY-125)
      */
     public function document(
         string $layout,
@@ -99,8 +101,10 @@ final class Renderer
         string $page,
         array $routeRegions,
         BoundMap|null $data,
+        string $build,
     ): string {
         $define = [
+            'build' => ['html' => '<meta name="hyper-build" content="' . $build . '">'],
             'title' => ['html' => $this->render($title, $shared, [])],
             'data' => ['html' => $data === null ? '' : $this->render(self::DATA_NAME, $data, [])],
         ];

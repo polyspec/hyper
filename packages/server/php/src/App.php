@@ -950,6 +950,7 @@ final class App
             $this->manifest->page->name,
             $routeRegions,
             $response === null ? null : $this->renderer->bind(['response' => $response]),
+            $this->build->id,
         );
     }
 

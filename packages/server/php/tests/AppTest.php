@@ -41,6 +41,7 @@ final class AppTest extends TestCase
     private const JSON = ['Accept' => 'application/vnd.hyper+json', 'HX-Request' => 'true'];
     // The server program of the fixtures, which `make hyper-test-php` builds (HY-48).
     private const PROGRAM = __DIR__ . '/build/server';
+    private const BUILD = '1111111111111111111111111111111111111111111111111111111111111111';
 
     private ArraySession $session;
     private Counter $counter;
@@ -407,7 +408,7 @@ final class AppTest extends TestCase
         self::assertSame(200, $response->status);
         self::assertSame('text/html; charset=utf-8', $response->headers['Content-Type']);
         self::assertSame(
-            "<title>Home - Site</title>\n<aside id=\"side\"><b>0</b>\n</aside>\n"
+            "<title>Home - Site</title><meta name=\"hyper-build\" content=\"" . self::BUILD . "\">\n<aside id=\"side\"><b>0</b>\n</aside>\n"
                 . "<main id=\"content\"><p>Home|n0</p>\n</main>\n",
             $response->body,
         );
@@ -423,10 +424,11 @@ final class AppTest extends TestCase
         $document = $renderer->document('layout.tpl', 'title.tpl', $shared, [
             'side' => ['template' => 'side.tpl', 'data' => $side],
             'content' => ['template' => 'page.tpl', 'data' => $content],
-        ], 'content', [], $renderer->bind(['response' => new \stdClass()]));
+        ], 'content', [], $renderer->bind(['response' => new \stdClass()]), self::BUILD);
 
         self::assertStringContainsString(
-            '<title>' . $renderer->alone('title.tpl', $shared, $renderer->bind([])) . '</title>',
+            '<title>' . $renderer->alone('title.tpl', $shared, $renderer->bind([])) . '</title>'
+                . '<meta name="hyper-build" content="' . self::BUILD . '">',
             $document,
         );
         self::assertStringContainsString(
@@ -507,7 +509,7 @@ final class AppTest extends TestCase
         $document = $renderer->document('layout.tpl', 'title.tpl', $shared, [
             'side' => ['template' => 'side.tpl', 'data' => $renderer->bind(['count' => 1])],
             'content' => ['template' => 'list.tpl', 'data' => $renderer->bind([])],
-        ], 'content', ['rows' => $rows], $renderer->bind(['response' => new \stdClass()]));
+        ], 'content', ['rows' => $rows], $renderer->bind(['response' => new \stdClass()]), self::BUILD);
 
         self::assertSame("<h1>T</h1><ul id=\"rows\"><li>x</li></ul>\n", $page);
         self::assertStringContainsString('<main id="content">' . $page . '</main>', $document);
