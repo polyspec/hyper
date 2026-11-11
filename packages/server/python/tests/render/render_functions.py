@@ -20,7 +20,7 @@ def function_of(kind: str):
 
 
 def program_of(name: str) -> tuple[Path, Path]:
-    """Returns the manifest path and the program directory that scripts/contract-programs.mjs wrote for an application."""
+    """Returns the manifest path and the program directory that scripts/contract-programs.mts wrote for an application."""
     root = PROGRAMS / name
     for path in (root / "manifest.json", root / "build.json", root / "program"):
         if not path.exists():

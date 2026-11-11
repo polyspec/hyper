@@ -69,3 +69,15 @@ rules:
       # One real process of the PHP, Python and Node server over one session (HY-104): the test drives each server in its
       # own language, so a port to TypeScript would test no server.
       - "!tests/scripts/fixtures/session-worker/**"
+      # One real process of the PHP, Node and Python server over the request bodies of a list, and one real server of
+      # each over HTTP (HY-131): the tests compare the servers in their own languages, so a port to TypeScript would
+      # compare nothing.
+      - "!tests/scripts/fixtures/multipart-worker/**"
+      - "!tests/scripts/fixtures/upload-server/**"
+      # The sources of the fixture of the recipe check (HYR-8): PHP, Node and Python files that the reader of each
+      # language reads, with the stand-in of the Composer autoloader that the PHP reader requires.
+      - "!tests/scripts/fixtures/recipe/**"
+      # The readers of the recipe check (HYR-8): the PHP reader reads the classes with the reflection of PHP and the
+      # Python reader the modules with the ast module of Python, which TypeScript does not have.
+      - "!scripts/recipe/read-php.php"
+      - "!scripts/recipe/read_python.py"

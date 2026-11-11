@@ -1,6 +1,6 @@
 # The steps of contracts/reads.json (HY-73): the data that a template keeps, by the reads that the case states, and the
 # render of the template with the kept data and with the data, which gives the same bytes (HY-73.28). Each case is the
-# application `reads_<id>` that scripts/contract-programs.mjs builds from the templates of the case.
+# application `reads_<id>` that scripts/contract-programs.mts builds from the templates of the case.
 from pathlib import Path
 
 from polyspec.hyper._reads import Reads

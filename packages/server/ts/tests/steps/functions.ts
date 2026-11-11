@@ -1,5 +1,5 @@
 // The steps of contracts/functions.json (HYC-24, HY-106): the cases run against the application with_functions that the
-// shared build of var/contract-programs holds (scripts/contract-programs.mjs). `suffix` returns its first argument followed
+// shared build of var/contract-programs holds (scripts/contract-programs.mts). `suffix` returns its first argument followed
 // by `!`, and `not_a_function` is the string "x" in the place of a function; the open must refuse it.
 import { fileURLToPath } from 'node:url';
 import { App, MemorySessionStore, Request, type Handlers } from '../../src/index.js';

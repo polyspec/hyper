@@ -15,7 +15,7 @@ use Polyspec\Hyper\Result;
 
 /**
  * Opens one application of contracts/context.json with its declared handlers and records the calls of the handlers
- * (HY-124). The program of each application is built by scripts/contract-programs.mjs into var/contract-programs.
+ * (HY-124). The program of each application is built by scripts/contract-programs.mts into var/contract-programs.
  * The application is the decoded value of the contract, whose members are checked where they are read.
  */
 final class ContextRun

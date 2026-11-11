@@ -10,7 +10,12 @@
     "**/dist/**",
     "**/*.egg-info/**"
   ],
-  "exceptions": [],
+  "exceptions": [
+    {
+      "path": "tests/scripts/fixtures/recipe/vendor/{autoload,phpunit-stub}.php",
+      "reason": "The fixture of the recipe check: the stand-in of the Composer autoloader and of PHPUnit that the PHP reader requires at vendor/ of the checkout that it reads. Both files are written by hand."
+    }
+  ],
   "headers": [
     "Code generated .* DO NOT EDIT"
   ]

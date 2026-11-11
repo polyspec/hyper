@@ -10,7 +10,7 @@
 // The application of a case of reads.json is named reads_<id>: its templates are the templates of the case, with the
 // layout and the title that hyper-build-server requires, so that its program renders the template of the case.
 //
-// Usage: contract-programs.mjs --contract <contracts/context.json> --contract <contracts/functions.json> --reads
+// Usage: contract-programs.mts --contract <contracts/context.json> --contract <contracts/functions.json> --reads
 // <contracts/reads.json> --output <var/contract-programs>. Every path is absolute.
 
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -30,24 +30,54 @@ for (const path of [...values.contract, values.reads, values.output]) {
   if (!isAbsolute(path)) throw new Error(`not an absolute path: ${path}`);
 }
 
+// An application of a contract file: its manifest, its templates by their names and its build id.
+interface Application {
+  manifest: unknown;
+  templates: Record<string, string>;
+  build: string;
+}
+
+// A case of reads.json: its id, its templates and the template that its application renders.
+interface ReadsCase {
+  id: string;
+  template: string;
+  templates: Record<string, string>;
+}
+
+const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value);
+const isTemplates = (value: unknown): value is Record<string, string> => isRecord(value) && Object.values(value).every((source) => typeof source === 'string');
+
+// Returns the member of a JSON file that must be an object or a list, and fails for another file.
+function member(path: string, name: string): unknown {
+  const parsed: unknown = JSON.parse(readFileSync(path, 'utf8'));
+  if (!isRecord(parsed) || !(name in parsed)) throw new Error(`${path} has no member ${name}`);
+  return parsed[name];
+}
+
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const buildTool = join(root, 'packages/build/bin/hyper-build-server.mjs');
-const applications = new Map();
+const applications = new Map<string, { path: string; application: Application }>();
 for (const path of values.contract) {
-  for (const [key, application] of Object.entries(JSON.parse(readFileSync(path, 'utf8')).applications)) {
-    if (applications.has(key)) throw new Error(`the application ${key} of ${path} is also an application of ${applications.get(key).path}`);
-    applications.set(key, { path, application });
+  const listed = member(path, 'applications');
+  if (!isRecord(listed)) throw new Error(`the applications of ${path} are not an object`);
+  for (const [key, application] of Object.entries(listed)) {
+    if (applications.has(key)) throw new Error(`the application ${key} of ${path} is also an application of ${applications.get(key)?.path}`);
+    if (!isRecord(application) || !isTemplates(application.templates) || typeof application.build !== 'string') throw new Error(`the application ${key} of ${path} names no templates or no build id`);
+    applications.set(key, { path, application: { manifest: application.manifest, templates: application.templates, build: application.build } });
   }
 }
 
 // HY-73: each case of reads.json is an application of its own, named reads_<id>, which renders the template of the case.
-for (const entry of JSON.parse(readFileSync(values.reads, 'utf8')).cases) {
+const cases = member(values.reads, 'cases');
+if (!Array.isArray(cases)) throw new Error(`the cases of ${values.reads} are not a list`);
+for (const entry of cases) {
+  if (!isRecord(entry) || typeof entry.id !== 'string' || typeof entry.template !== 'string' || !isTemplates(entry.templates)) throw new Error(`a case of ${values.reads} names no id, no template or no templates`);
   const key = `reads_${entry.id}`;
-  if (applications.has(key)) throw new Error(`the application ${key} of ${values.reads} is also an application of ${applications.get(key).path}`);
-  applications.set(key, { path: values.reads, application: readsApplication(entry) });
+  if (applications.has(key)) throw new Error(`the application ${key} of ${values.reads} is also an application of ${applications.get(key)?.path}`);
+  applications.set(key, { path: values.reads, application: readsApplication({ id: entry.id, template: entry.template, templates: entry.templates }) });
 }
 
-const failures = [];
+const failures: string[] = [];
 for (const [key, { application }] of applications) {
   const directory = join(values.output, key);
   rmSync(directory, { recursive: true, force: true });
@@ -60,7 +90,7 @@ for (const [key, { application }] of applications) {
   writeFileSync(manifest, JSON.stringify(application.manifest));
   const build = join(directory, 'build.json');
   writeFileSync(build, JSON.stringify({ build: application.build }));
-  const namespace = `Polyspec\\Hyper\\Tests\\Contract\\${key.split('_').map((word) => word[0].toUpperCase() + word.slice(1)).join('')}\\Program`;
+  const namespace = `Polyspec\\Hyper\\Tests\\Contract\\${key.split('_').map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join('')}\\Program`;
   const run = spawnSync(
     process.execPath,
     [buildTool, '--manifest', manifest, '--templates', templates, '--output', join(directory, 'program'),
@@ -80,7 +110,7 @@ if (failures.length > 0) throw new Error(failures.join('\n'));
 
 // Returns the application of a case of reads.json: its templates with the layout and the title that the build requires
 // (HY-3), and the build id of its output files (HY-125).
-function readsApplication(entry) {
+function readsApplication(entry: ReadsCase): Application {
   const templates = { ...entry.templates };
   for (const name of ['layout.tpl', 'title.tpl']) {
     if (Object.hasOwn(templates, name)) throw new Error(`the case ${entry.id} names ${name}, which its application reserves`);

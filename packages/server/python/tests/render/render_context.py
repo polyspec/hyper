@@ -24,7 +24,7 @@ def _contract() -> dict:
 
 
 def program_of(name: str) -> tuple[Path, Path]:
-    """Returns the manifest path and the program directory that scripts/contract-programs.mjs wrote for an application;
+    """Returns the manifest path and the program directory that scripts/contract-programs.mts wrote for an application;
     a missing output fails here and names the missing file."""
     root = PROGRAMS / name
     for path in (root / "manifest.json", root / "build.json", root / "program"):

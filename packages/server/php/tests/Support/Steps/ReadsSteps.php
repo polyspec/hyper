@@ -11,7 +11,7 @@ use Polyspec\Hyper\Tests\Support\ContextRun;
 
 /**
  * HY-73: the cases of contracts/reads.json. A read node is true or a map. Each case is the application `reads_<id>` that
- * scripts/contract-programs.mjs builds from the templates of the case, so the render of the template with the kept data
+ * scripts/contract-programs.mts builds from the templates of the case, so the render of the template with the kept data
  * and with the data gives the same bytes (HY-73.28).
  */
 final class ReadsSteps

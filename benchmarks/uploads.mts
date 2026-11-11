@@ -255,7 +255,7 @@ async function measure(implementation: string, call: Call, files: [string, strin
 }
 
 try {
-  await promisify(execFile)(process.execPath, [path.join(ROOT, 'scripts/contract-programs.mjs'), '--contract', path.join(FIXTURE, 'application.json'), '--reads', path.join(FIXTURE, 'reads.json'), '--output', path.join(directory, 'applications')], { cwd: ROOT });
+  await promisify(execFile)(process.execPath, [path.join(ROOT, 'scripts/contract-programs.mts'), '--contract', path.join(FIXTURE, 'application.json'), '--reads', path.join(FIXTURE, 'reads.json'), '--output', path.join(directory, 'applications')], { cwd: ROOT });
   const files = bodies();
   const warm = path.join(directory, 'warm');
   writeFileSync(warm, `--${BOUNDARY}\r\nContent-Disposition: form-data; name="a"\r\n\r\n1\r\n--${BOUNDARY}--\r\n`);

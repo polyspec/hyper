@@ -217,7 +217,7 @@ server-fixtures: packages contract-programs ## Build the server program of the P
 	$(NODE) $(BUILD_PACKAGE)/bin/hyper-build-server.mjs --manifest $(FIXTURES)/app.json --templates $(FIXTURES)/templates --output $(PHP_PACKAGE)/tests/build/server --php-namespace 'Polyspec\Hyper\Tests\Program' --build $(abspath $(FIXTURES)/build.json)
 
 contract-programs: packages ## Build the applications of contracts/context.json, contracts/functions.json and contracts/representations.json and one application per case of contracts/reads.json for the tests of the three servers (HY-73, HY-118, HY-124, HYC-24)
-	$(NODE) scripts/contract-programs.mjs --contract $(abspath contracts/context.json) --contract $(abspath contracts/functions.json) --contract $(abspath contracts/representations.json) --reads $(abspath contracts/reads.json) --output $(abspath var/contract-programs)
+	$(NODE) scripts/contract-programs.mts --contract $(abspath contracts/context.json) --contract $(abspath contracts/functions.json) --contract $(abspath contracts/representations.json) --reads $(abspath contracts/reads.json) --output $(abspath var/contract-programs)
 
 # A Node server bundle keeps the packages of node_modules external, and Node loads them from there: a CommonJS package that
 # requires Node modules cannot run inside an ESM bundle.

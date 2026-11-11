@@ -61,7 +61,7 @@ test('the three servers read an upload over HTTP alike and remove its directory 
   });
   // The application of the three servers, built as the applications of the contract cases are.
   await promisify(execFile)(process.execPath, [
-    path.join(ROOT, 'scripts/contract-programs.mjs'),
+    path.join(ROOT, 'scripts/contract-programs.mts'),
     '--contract', path.join(FIXTURE, 'application.json'),
     '--reads', path.join(FIXTURE, 'reads.json'),
     '--output', path.join(directory, 'applications'),

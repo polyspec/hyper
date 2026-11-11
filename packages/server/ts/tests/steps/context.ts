@@ -29,7 +29,7 @@ interface Application {
   context: string | null;
 }
 
-// The applications of the contracts, built once for the three servers by scripts/contract-programs.mjs (HY-124, HYC-24).
+// The applications of the contracts, built once for the three servers by scripts/contract-programs.mts (HY-124, HYC-24).
 const PROGRAMS = fileURLToPath(new URL('../../../../../var/contract-programs/', import.meta.url));
 
 

@@ -1,5 +1,7 @@
 node_modules/
 vendor/
+# The fixture of the recipe check holds the stand-in of the Composer autoloader that its PHP reader requires.
+!/tests/scripts/fixtures/recipe/vendor/
 test-results/
 playwright-report/
 .phpunit.result.cache

@@ -102,7 +102,7 @@
       "kind": "policy",
       "reason": "the template rules of hyper (HC-6, HY-3, HY-30, HY-75) in packages/build/lib/template-rules.mjs; @polyspec/template parses the templates"
     },
-    "scripts/contract-programs.mjs": {
+    "scripts/contract-programs.mts": {
       "kind": "policy",
       "reason": "it writes the applications of the contract files with the server build of this repository (hyper-build-server); no ecosystem tool writes them"
     },

@@ -6,6 +6,10 @@
 
 ## Unreleased
 
+- `.gitignore`가 recipe fixture의 Composer autoloader 대역인 `tests/scripts/fixtures/recipe/vendor/`의 추적되는 두 file을 더 이상 무시하지 않는다. `vendor/` 규칙이 그것들에 걸려 `tests/scripts/ignored-files.test.mts`가 실패했다(H28.11-4).
+
+- `make layout-check`가 recipe와 upload test의 file에 대해 통과한다. `scripts/contract-programs.mts`는 `scripts/` 아래 infrastructure처럼 TypeScript이고(이전에는 `contract-programs.mjs`였다), `config/layout.yml`은 다른 언어로 남는 file을 이유와 함께 선언한다. reader `scripts/recipe/read-php.php`와 `scripts/recipe/read_python.py`, recipe fixture의 source, 그리고 `tests/scripts/fixtures/multipart-worker`와 `tests/scripts/fixtures/upload-server`의 worker와 server다(H28.11-4).
+
 - `make bench-uploads`가 각 구현의 실제 server 하나에서 upload를 측정하고 `make bench`가 그것을 실행한다. `benchmarks/uploads.mts`의 FastCGI client가 부르는 PHP-FPM 아래의 PHP application, HTTP로 부르는 Node server와 Python `http.server` server, 그리고 PHP 자체 reader(`benchmarks/uploads-native.php`)다. 1 GiB file, 값 500개와 file 500개, 반복 이름과 대괄호 이름의 값 900개에 대해 요청 시간, server의 processor 시간, 최대 메모리를 보고하며 아무것도 판정하지 않는다. `docs/operations/benchmark.md`가 방법과 한 번의 실행 결과를 적고, `tests/scripts/benchmark-uploads.test.mts`가 1 MiB file로 benchmark를 실행한다. `tests/scripts/fixtures/upload-server`의 server들은 `UPLOAD_USAGE=1`에서 process의 사용량을 답하고 part 제한을 `UPLOAD_PARTS`에서 받는다(H29.6-2).
 
 - multipart body의 reader는 조각의 마지막 byte들에 CR이 없으면 part 내용의 조각을 그대로 준다. 다음 조각이 완성하는 delimiter는 CR로 시작하기 때문이다. 이전에는 모든 조각을 buffer에 붙였다가 내용을 다시 잘라냈다. 저장소 밖에서 file에서 읽은 1 GiB body로 각 5회 측정했다. processor 시간은 PHP에서 768 ms(732부터 860)에서 710 ms(673부터 803)로, Node에서 994 ms(965부터 1038)에서 963 ms(925부터 1019)로, Python에서 700 ms(676부터 718)에서 673 ms(662부터 687)로 줄었다. 범위가 겹치므로 그 복사는 비용의 작은 부분이었다(H29.6-3).
@@ -112,7 +116,7 @@
 
 - 각 server의 case reader는 HYR-7이 정한 member만 가지며, case에 적용하는 규칙은 그 옆의 test unit 하나(`Support/CaseRules.php`, `case-rules.ts`, `case_rules.py`)에 둔다. `make recipe-check`는 모든 언어에서 생성자를 member 하나로 센다. `sentence`는 HYC 규칙의 statement도 가리킬 수 있다. mutation case는 browser runner나 build runner가 빠진 경우를 실패로 판정한다(H28.11).
 
-- `contracts/reads.json`의 reads case는 모든 server에서 template을 kept data로 render한다. PHP와 Python runner는 `scripts/contract-programs.mjs`(`make contract-programs`)로 case마다 program을 하나씩 빌드하고, kept data와 data의 render 결과가 같은 바이트인지 검사한다(HY-73.28). reads의 `template`, `templates`, `render` 필드의 `only`를 뺐으며, `reads`는 `only`를 유지한다(HY-73.23). `a_list_literal_reads_its_items_whole`은 server 타입 검사가 받는 `l[1]`을 읽는다(H28.11).
+- `contracts/reads.json`의 reads case는 모든 server에서 template을 kept data로 render한다. PHP와 Python runner는 `scripts/contract-programs.mts`(`make contract-programs`)로 case마다 program을 하나씩 빌드하고, kept data와 data의 render 결과가 같은 바이트인지 검사한다(HY-73.28). reads의 `template`, `templates`, `render` 필드의 `only`를 뺐으며, `reads`는 `only`를 유지한다(HY-73.23). `a_list_literal_reads_its_items_whole`은 server 타입 검사가 받는 `l[1]`을 읽는다(H28.11).
 
 - server 애플리케이션의 build는 block이나 include가 인자와 함께 배치하는 template의 입력을 유지한다. 그 입력은 `deriveTypeManifest`가 인자에서 도출한다(HY-73.16). target, layout, title, 예약된 data template, route와 region template만 template 입력 없이 render한다(HY-12, HY-13, HY-30, HY-31)(H28.11).
 
