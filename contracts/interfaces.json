@@ -2856,23 +2856,26 @@
               "visibility": "internal",
               "inputs": [
                 "string",
-                "optional<string>"
+                "optional<string>",
+                "optional<number>",
+                "optional<number>",
+                "optional<number>"
               ],
               "output": "none",
               "errors": [],
-              "state": "Starts a reader of a body with the boundary and no parts, whose files are values, or files of the directory when one is given (HY-131.13).",
+              "state": "Starts a reader of a body with the boundary and no parts, whose files are values, or files of the directory when one is given, with the value limit, the part limit and the file limit, each null for none (HY-131.7 to HY-131.13).",
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/Multipart.php::Polyspec\\Hyper\\Multipart::__construct",
-                  "signature": "public function __construct(string $boundary, ?string $directory)"
+                  "signature": "public function __construct(string $boundary, ?string $directory, ?int $valueLimit, ?int $partLimit, ?int $fileLimit)"
                 },
                 "node": {
                   "symbol": "packages/server/ts/src/multipart.ts::Multipart.constructor",
-                  "signature": "constructor(boundary: string, directory: string | null)"
+                  "signature": "constructor(boundary: string, directory: string | null, valueLimit: number | null, partLimit: number | null, fileLimit: number | null)"
                 },
                 "python": {
                   "symbol": "packages/server/python/src/polyspec/hyper/_multipart.py::Multipart.__init__",
-                  "signature": "def __init__(self, boundary: str, directory: Optional[str])"
+                  "signature": "def __init__(self, boundary: str, directory: Optional[str], value_limit: Optional[int], part_limit: Optional[int], file_limit: Optional[int])"
                 }
               }
             },
@@ -2951,6 +2954,52 @@
               }
             },
             {
+              "id": "multipart.exceeded",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "boolean",
+              "errors": [],
+              "state": "Returns true when the body passed the value limit, the part limit or the file limit (HY-131.11).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Multipart.php::Polyspec\\Hyper\\Multipart::exceeded",
+                  "signature": "public function exceeded(): bool"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/multipart.ts::Multipart.exceeded",
+                  "signature": "exceeded(): boolean"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_multipart.py::Multipart.exceeded",
+                  "signature": "def exceeded(self) -> bool"
+                }
+              }
+            },
+            {
+              "id": "multipart.count",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "number",
+              "errors": [],
+              "state": "Returns the number of parts that were read, also those that are neither a value nor a file (HY-131.12).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Multipart.php::Polyspec\\Hyper\\Multipart::count",
+                  "signature": "public function count(): int"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/multipart.ts::Multipart.count",
+                  "signature": "count(): number"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_multipart.py::Multipart.count",
+                  "signature": "def count(self) -> int"
+                }
+              }
+            },
+            {
               "id": "multipart.partStarted",
               "kind": "method",
               "visibility": "internal",
@@ -2959,7 +3008,7 @@
               ],
               "output": "boolean",
               "errors": [],
-              "state": "Reads the name, the filename and the content type of a part from its header lines, opens the file of a file part in the directory, and returns false when one of them is not UTF-8 (HY-113.5, HY-113.13, HY-131.13).",
+              "state": "Counts the part and reads its name, its filename and its content type from its header lines, opens the file of a file part in the directory, and returns false when the part limit or the value limit is passed or when one of the texts is not UTF-8 (HY-113.5, HY-113.13, HY-131.11, HY-131.13).",
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/Multipart.php::Polyspec\\Hyper\\Multipart::partStarted",
@@ -2984,7 +3033,7 @@
               ],
               "output": "boolean",
               "errors": [],
-              "state": "Keeps the bytes of the content of a value, and writes those of a file part to its file when the reader has a directory (HY-131.13).",
+              "state": "Keeps the bytes of the content of a value, and writes those of a file part to its file when the reader has a directory; returns false when the value limit or the file limit is passed (HY-131.11, HY-131.13).",
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/Multipart.php::Polyspec\\Hyper\\Multipart::partData",
@@ -2997,6 +3046,29 @@
                 "python": {
                   "symbol": "packages/server/python/src/polyspec/hyper/_multipart.py::Multipart.part_data",
                   "signature": "def part_data(self, data: bytes) -> bool"
+                }
+              }
+            },
+            {
+              "id": "multipart.limitPassed",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [],
+              "output": "boolean",
+              "errors": [],
+              "state": "Records that the body passed a limit, and fails the body (HY-131.11).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Multipart.php::Polyspec\\Hyper\\Multipart::limitPassed",
+                  "signature": "private function limitPassed(): bool"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/multipart.ts::Multipart.limitPassed",
+                  "signature": "private limitPassed(): boolean"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_multipart.py::Multipart._limit_passed",
+                  "signature": "def _limit_passed(self) -> bool"
                 }
               }
             },
@@ -3463,23 +3535,26 @@
               "inputs": [
                 "string",
                 "number",
-                "boolean"
+                "boolean",
+                "number",
+                "number",
+                "number"
               ],
               "output": "none",
               "errors": [],
-              "state": "Starts the body of the content type with the body limit, read in chunks into a new directory when it is multipart and the application has that form type (HY-131.1, HY-131.13).",
+              "state": "Starts the body of the content type with the body limit, read in chunks into a new directory when it is multipart and the application has that form type, with the value limit, the part limit and the file limit (HY-131.1, HY-131.7 to HY-131.13).",
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/RequestBody.php::Polyspec\\Hyper\\RequestBody::__construct",
-                  "signature": "public function __construct(string $type, int $limit, bool $stream)"
+                  "signature": "public function __construct(string $type, int $limit, bool $stream, int $valueLimit, int $partLimit, int $fileLimit)"
                 },
                 "node": {
                   "symbol": "packages/server/ts/src/request-body.ts::RequestBody.constructor",
-                  "signature": "constructor(type: string, limit: number, stream: boolean)"
+                  "signature": "constructor(type: string, limit: number, stream: boolean, valueLimit: number, partLimit: number, fileLimit: number)"
                 },
                 "python": {
                   "symbol": "packages/server/python/src/polyspec/hyper/_request_body.py::RequestBody.__init__",
-                  "signature": "def __init__(self, content_type: str, limit: int, stream: bool)"
+                  "signature": "def __init__(self, content_type: str, limit: int, stream: bool, value_limit: int, part_limit: int, file_limit: int)"
                 }
               }
             },
@@ -3492,7 +3567,7 @@
               ],
               "output": "boolean",
               "errors": [],
-              "state": "Reads the next chunk, and returns false when the body passed the body limit, after which it holds no bytes (HY-59.4, HY-131.11).",
+              "state": "Reads the next chunk, and returns false when the body passed a limit, after which it holds no bytes (HY-59.4, HY-131.11).",
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/RequestBody.php::Polyspec\\Hyper\\RequestBody::feed",
@@ -3505,6 +3580,52 @@
                 "python": {
                   "symbol": "packages/server/python/src/polyspec/hyper/_request_body.py::RequestBody.feed",
                   "signature": "def feed(self, chunk: bytes) -> bool"
+                }
+              }
+            },
+            {
+              "id": "request-body.exceeded",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "boolean",
+              "errors": [],
+              "state": "Returns true when the body passed the body limit, the value limit, the part limit or the file limit (HY-131.11).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/RequestBody.php::Polyspec\\Hyper\\RequestBody::exceeded",
+                  "signature": "public function exceeded(): bool"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/request-body.ts::RequestBody.exceeded",
+                  "signature": "exceeded(): boolean"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_request_body.py::RequestBody.exceeded",
+                  "signature": "def exceeded(self) -> bool"
+                }
+              }
+            },
+            {
+              "id": "request-body.bodyPassed",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [],
+              "output": "boolean",
+              "errors": [],
+              "state": "Records that the body passed a limit and drops what it holds (HY-131.11).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/RequestBody.php::Polyspec\\Hyper\\RequestBody::bodyPassed",
+                  "signature": "private function bodyPassed(): bool"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/request-body.ts::RequestBody.bodyPassed",
+                  "signature": "private bodyPassed(): boolean"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_request_body.py::RequestBody._body_passed",
+                  "signature": "def _body_passed(self) -> bool"
                 }
               }
             },
@@ -3584,7 +3705,7 @@
               "inputs": [],
               "output": "optional<list<value>>",
               "errors": [],
-              "state": "Returns the text fields and the files of a body read in chunks as a pair, or null when it failed, has not ended or passed the limit (HY-131.5).",
+              "state": "Returns the text fields and the files of a body read in chunks as a pair, or null when it failed, has not ended or passed a limit (HY-131.5).",
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/RequestBody.php::Polyspec\\Hyper\\RequestBody::parts",
@@ -6792,6 +6913,15 @@
             "limit": {
               "role": "input"
             },
+            "valueLimit": {
+              "role": "input"
+            },
+            "partLimit": {
+              "role": "input"
+            },
+            "fileLimit": {
+              "role": "input"
+            },
             "stream": {
               "role": "input"
             },
@@ -6802,7 +6932,13 @@
               "role": "expected",
               "compare": "exact",
               "sentence": "HY-131.11",
-              "state": "`stopped` is true when the body `body`, a text whose characters are its bytes, given in chunks of `chunk` bytes, passed the body limit `limit`, after which no chunk is given."
+              "state": "`stopped` is true when the body `body`, a text whose characters are its bytes, given in chunks of `chunk` bytes, passed a limit, after which no chunk is given."
+            },
+            "exceeded": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-131.11",
+              "state": "`exceeded` is true when the body passed the body limit `limit`, the value limit `valueLimit`, the part limit `partLimit` or the file limit `fileLimit`."
             },
             "held": {
               "role": "expected",

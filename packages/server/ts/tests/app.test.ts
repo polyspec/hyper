@@ -598,6 +598,28 @@ describe('App', () => {
     await expect(fixture.app({ bodyLimit: 16, fileLimit: 32 })).rejects.toThrow('hyper:');
   });
 
+  it('a body over the value limit or the part limit is refused before the action (HY-131)', async () => {
+    const token = await fixture.token();
+    const multipart = { 'Content-Type': 'multipart/form-data; boundary=x' };
+    // Three parts: the token, a value and a file.
+    const body = `--x\r\nContent-Disposition: form-data; name="_csrf"\r\n\r\n${token}\r\n--x\r\nContent-Disposition: form-data; name="name"\r\n\r\na\r\n--x\r\nContent-Disposition: form-data; name="upload"; filename="a.txt"\r\n\r\nA\r\n--x--\r\n`;
+    const formTypes = ['application/x-www-form-urlencoded', 'multipart/form-data'];
+    const send = (options: object) => fixture.handle({ method: 'POST', target: '/add', headers: multipart, body }, { formTypes, ...options });
+    for (const options of [{ partLimit: 2 }, { valueLimit: Buffer.byteLength(body) - 1 }]) {
+      const refused = await send(options);
+      expect(refused.status).toBe(413);
+      expect(refused.body).toBe('Content Too Large');
+    }
+    expect(fixture.counter.actions).toBe(0);
+    expect((await send({ partLimit: 3, valueLimit: Buffer.byteLength(body) })).status).toBe(303);
+    expect(fixture.counter.actions).toBe(1);
+    // A body that is one value has the value limit also without the multipart form type.
+    expect((await fixture.handle({ method: 'POST', target: '/add', body: `_csrf=${token}&name=a` }, { valueLimit: 8 })).status).toBe(413);
+    for (const options of [{ valueLimit: 0 }, { valueLimit: 1.5 }, { bodyLimit: 16, valueLimit: 32 }, { partLimit: 0 }, { partLimit: 1.5 }]) {
+      await expect(fixture.app(options)).rejects.toThrow('(HY-131)');
+    }
+  });
+
   it('an application without a declared file limit opens with a smaller body limit (HY-114)', async () => {
     const token = await fixture.token();
     const multipart = { 'Content-Type': 'multipart/form-data; boundary=x' };

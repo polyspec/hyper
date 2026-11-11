@@ -48,18 +48,35 @@ final class Multipart extends MultipartReader
 
     private int $size;
 
-    private int $count;
+    private int $stored;
+
+    private int $valueBytes;
+
+    private int $partCount;
+
+    private bool $over;
 
     /**
      * @param ?string $directory the directory of the files of the body, or null for files that are values (HY-131.13)
+     * @param ?int $valueLimit the largest bytes of the names and contents of the text values together, or null
+     * @param ?int $partLimit the largest number of parts, or null
+     * @param ?int $fileLimit the largest bytes of one file, or null (HY-131.7 to HY-131.12)
      */
-    public function __construct(string $boundary, private readonly ?string $directory)
-    {
+    public function __construct(
+        string $boundary,
+        private readonly ?string $directory,
+        private readonly ?int $valueLimit,
+        private readonly ?int $partLimit,
+        private readonly ?int $fileLimit,
+    ) {
         parent::__construct($boundary);
         $this->target = null;
         $this->path = '';
         $this->size = 0;
-        $this->count = 0;
+        $this->stored = 0;
+        $this->valueBytes = 0;
+        $this->partCount = 0;
+        $this->over = false;
         $this->names = [];
         $this->values = [];
         $this->fileNames = [];
@@ -85,7 +102,7 @@ final class Multipart extends MultipartReader
      */
     public static function read(string $body, string $boundary): ?array
     {
-        $reader = new self($boundary, null);
+        $reader = new self($boundary, null, null, null, null);
 
         return $reader->feed($body) ? $reader->result() : null;
     }
@@ -103,11 +120,27 @@ final class Multipart extends MultipartReader
             : null;
     }
 
+    /** Returns true when the body passed the value limit, the part limit or the file limit (HY-131.11). */
+    public function exceeded(): bool
+    {
+        return $this->over;
+    }
+
+    /** Returns the number of parts that were read, also those that are neither a value nor a file (HY-131.12). */
+    public function count(): int
+    {
+        return $this->partCount;
+    }
+
     public function partStarted(array $lines): bool
     {
         $this->name = null;
         $this->file = null;
         $this->content = '';
+        $this->partCount++;
+        if ($this->partLimit !== null && $this->partCount > $this->partLimit) {
+            return $this->limitPassed();
+        }
         $disposition = self::headerValue($lines, 'content-disposition');
         if ($disposition === null) {
             return true;
@@ -128,10 +161,17 @@ final class Multipart extends MultipartReader
         if ($this->name === null) {
             return false;
         }
+        $this->size = 0;
+        if ($this->file === null) {
+            // The name counts as its bytes were sent.
+            $this->valueBytes += strlen($parameters['name']);
+            if ($this->valueLimit !== null && $this->valueBytes > $this->valueLimit) {
+                return $this->limitPassed();
+            }
+        }
         if ($this->file !== null && $this->directory !== null) {
-            $this->count++;
-            $this->path = "{$this->directory}/{$this->count}";
-            $this->size = 0;
+            $this->stored++;
+            $this->path = "{$this->directory}/{$this->stored}";
             // The mode x fails for a path that exists; the directory gives its files to the user of the server only.
             $target = fopen($this->path, 'x');
             if ($target === false) {
@@ -148,16 +188,33 @@ final class Multipart extends MultipartReader
         if ($this->name === null) {
             return true;
         }
-        if ($this->target === null) {
-            $this->content .= $bytes;
+        if ($this->file === null) {
+            $this->valueBytes += strlen($bytes);
+            if ($this->valueLimit !== null && $this->valueBytes > $this->valueLimit) {
+                return $this->limitPassed();
+            }
         } else {
             $this->size += strlen($bytes);
-            if (fwrite($this->target, $bytes) !== strlen($bytes)) {
-                throw new \RuntimeException("hyper: cannot write {$this->path}");
+            if ($this->fileLimit !== null && $this->size > $this->fileLimit) {
+                return $this->limitPassed();
             }
+        }
+        if ($this->target === null) {
+            $this->content .= $bytes;
+        } elseif (fwrite($this->target, $bytes) !== strlen($bytes)) {
+            throw new \RuntimeException("hyper: cannot write {$this->path}");
         }
 
         return true;
+    }
+
+    /** Records that the body passed a limit, and fails the body. */
+    private function limitPassed(): bool
+    {
+        $this->over = true;
+        $this->content = '';
+
+        return false;
     }
 
     /** Closes the file of a part whose end was not read. */

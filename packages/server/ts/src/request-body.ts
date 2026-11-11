@@ -14,30 +14,46 @@ export class RequestBody {
   private readonly files: string | null;
   private chunks: Uint8Array[];
   private length: number;
+  private readonly valueLimit: number;
+  private over: boolean;
 
   // Starts the body of the content type with the body limit; `stream` tells whether a multipart body is read in
   // chunks, which it is when `multipart/form-data` is a form type of the application (HY-131.1).
-  constructor(type: string, limit: number, stream: boolean) {
+  // The value limit bounds a body that is one value and the text values of a body read in chunks, the part limit
+  // its parts and the file limit each of its files (HY-131.7 to HY-131.12).
+  constructor(type: string, limit: number, stream: boolean, valueLimit: number, partLimit: number, fileLimit: number) {
     const boundary = stream ? Multipart.boundary(type) : null;
     this.limit = limit;
     this.files = boundary === null ? null : RequestBody.createdDirectory();
-    this.multipart = boundary === null ? null : new Multipart(boundary, this.files);
+    this.multipart = boundary === null ? null : new Multipart(boundary, this.files, valueLimit, partLimit, fileLimit);
+    this.valueLimit = valueLimit;
+    this.over = false;
     this.chunks = [];
     this.length = 0;
   }
 
-  // Reads the next chunk, and returns false when the body passed the body limit, after which it holds no bytes
-  // (HY-59.4, HY-131.11).
+  // Reads the next chunk, and returns false when the body passed a limit, after which it holds no bytes (HY-59.4,
+  // HY-131.11).
   feed(chunk: Uint8Array): boolean {
+    if (this.over) return false;
     this.length += chunk.byteLength;
-    if (this.length > this.limit) {
-      this.chunks = [];
-      this.multipart?.release();
-      return false;
-    }
+    if (this.length > this.limit || (this.multipart === null && this.length > this.valueLimit)) return this.bodyPassed();
     if (this.multipart === null) this.chunks.push(Uint8Array.from(chunk));
-    else this.multipart.feed(chunk);
+    else if (!this.multipart.feed(chunk) && this.multipart.exceeded()) return this.bodyPassed();
     return true;
+  }
+
+  // Returns true when the body passed the body limit, the value limit, the part limit or the file limit (HY-131.11).
+  exceeded(): boolean {
+    return this.over;
+  }
+
+  // Records that the body passed a limit and drops what it holds.
+  private bodyPassed(): boolean {
+    this.over = true;
+    this.chunks = [];
+    this.multipart?.release();
+    return false;
   }
 
   // Returns the number of bytes that were read.
@@ -58,7 +74,7 @@ export class RequestBody {
   // Returns the text fields and the files of a body read in chunks, or null when it failed, has not ended or passed
   // the limit (HY-131.5).
   parts(): [Fields, Files] | null {
-    return this.multipart === null || this.length > this.limit ? null : this.multipart.result();
+    return this.multipart === null || this.over ? null : this.multipart.result();
   }
 
   // Returns the directory of the files of the body, or null for a body that is one value.

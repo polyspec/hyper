@@ -9,6 +9,7 @@ from typing import Optional
 
 from ._fields import Fields
 from ._files import Files
+from ._multipart import Multipart
 from ._request_body import RequestBody
 from ._media import JSON
 from .uploaded_file import UploadedFile
@@ -59,17 +60,41 @@ class Request:
         self._query_fields = Fields.parse(query.encode("latin-1"))
         # The body as a host read it: a body read in chunks gives its parts (HY-131).
         self._read = read
+        boundary = Multipart.boundary(self.header("Content-Type") or "")
+        # The number of parts of a multipart body that is one value (HY-131.12).
+        self._part_count = 0
         if read is not None and read.streamed():
             parts = read.parts()
             self._form_fields = None if parts is None else parts[0]
             self._file_parts = None if parts is None else parts[1]
+        elif boundary is not None:
+            # A multipart body that is one value is read once, which also gives the number of its parts.
+            reader = Multipart(boundary, None, None, None, None)
+            parts = reader.result() if reader.feed(body) else None
+            self._form_fields = None if parts is None else parts[0]
+            self._file_parts = None if parts is None else parts[1]
+            self._part_count = reader.count()
         else:
             # The form values of the body, or None when a name or a value is not UTF-8 (HY-42, HY-57).
             self._form_fields = Fields.from_body(
                 self.header("Content-Type") or "", body
             )
             # The file parts of the body, or None when a name, a filename or a content type is not UTF-8 (HY-113).
-            self._file_parts = Files.from_body(self.header("Content-Type") or "", body)
+            self._file_parts = Files.empty()
+
+    def _exceeded(
+        self, value_limit: int, part_limit: int, file_limit: int, streams: bool
+    ) -> bool:
+        """Returns True when the body passed the value limit, the part limit or the file limit (HY-131.11): as its
+        host read it, or for a body that is one value by its size, and by its parts and files when ``streams`` tells
+        that the application reads a multipart body in chunks."""
+        read = self._read
+        if read is not None and (read.exceeded() or read.streamed()):
+            return read.exceeded()
+        largest = 0 if self._file_parts is None else self._file_parts.largest()
+        return len(self._body) > value_limit or (
+            streams and (self._part_count > part_limit or largest > file_limit)
+        )
 
     def _release(self) -> None:
         """Removes the directory of the files of the body with the files that were not moved (HY-131.14)."""

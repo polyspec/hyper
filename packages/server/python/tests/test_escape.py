@@ -17,6 +17,9 @@ class FailingApplication:
     frame_ancestors = "'self'"
     body_limit = 1024
     _form_types = ["application/x-www-form-urlencoded"]
+    file_limit = 1 << 30
+    _value_limit = 1 << 30
+    _part_limit = 1000
 
     def __init__(self):
         self.responds = 0
@@ -36,6 +39,9 @@ class AnsweringApplication:
     frame_ancestors = "'self'"
     body_limit = 1024
     _form_types = ["application/x-www-form-urlencoded"]
+    file_limit = 1 << 30
+    _value_limit = 1 << 30
+    _part_limit = 1000
 
     def _respond(self, request, session, started):
         return Response(

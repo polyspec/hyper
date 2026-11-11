@@ -204,6 +204,9 @@ def _answer(
         environ.get("CONTENT_TYPE", ""),
         app.body_limit,
         "multipart/form-data" in app._form_types,
+        app._value_limit,
+        app._part_limit,
+        app.file_limit,
     )
     if declared <= app.body_limit:
         # HY-100 and HY-59: a body over the limit is not read; its size is its Content-Length.

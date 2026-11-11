@@ -130,6 +130,9 @@ def create_server(
                     self.headers.get("Content-Type") or "",
                     application.body_limit,
                     "multipart/form-data" in application._form_types,
+                    application._value_limit,
+                    application._part_limit,
+                    application.file_limit,
                 )
                 read_body(self.rfile.read, exchange.body, declared)
                 exchange.request = Request(

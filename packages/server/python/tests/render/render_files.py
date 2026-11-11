@@ -45,6 +45,48 @@ class FileParts(FixtureTest):
         self.assertEqual(303, accepted.status)
         self.assertEqual(1, self.counter.actions)
 
+    def test_a_body_over_the_value_limit_or_the_part_limit_is_refused_before_the_action(
+        self,
+    ) -> None:
+        # HY-131: 413 with the text of HY-59, and no action runs; the body has three parts, the token, a value and a
+        # file.
+        token = self.token()
+        body = upload(token, b"A")
+        for options in ({"part_limit": 2}, {"value_limit": len(body) - 1}):
+            refused = self.send(
+                "POST", "/add", MULTIPART, body, **options, **FORM_TYPES
+            )
+            self.assertEqual(413, refused.status)
+            self.assertEqual("Content Too Large", refused.body)
+        self.assertEqual(0, self.counter.actions)
+        accepted = self.send(
+            "POST",
+            "/add",
+            MULTIPART,
+            body,
+            part_limit=3,
+            value_limit=len(body),
+            **FORM_TYPES,
+        )
+        self.assertEqual(303, accepted.status)
+        self.assertEqual(1, self.counter.actions)
+        # A body that is one value has the value limit also without the multipart form type.
+        held = self.send(
+            "POST",
+            "/add",
+            {"Content-Type": "application/x-www-form-urlencoded"},
+            f"_csrf={token}&name=a".encode(),
+            value_limit=8,
+        )
+        self.assertEqual(413, held.status)
+        for options in (
+            {"value_limit": 0},
+            {"body_limit": 16, "value_limit": 32},
+            {"part_limit": 0},
+        ):
+            with self.assertRaisesRegex(ValueError, r"\(HY-131\)"):
+                self.send("GET", "/", {}, b"", **options)
+
     def test_an_application_without_a_declared_file_limit_opens_with_a_smaller_body_limit(
         self,
     ) -> None:

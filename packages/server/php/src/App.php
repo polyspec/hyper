@@ -52,6 +52,8 @@ final class App
         private readonly string $frameAncestors,
         private readonly int $bodyLimit,
         private readonly int $fileLimit,
+        private readonly int $valueLimit,
+        private readonly int $partLimit,
         private readonly int $responseLimit,
         /** @var list<string> */
         private readonly array $formTypes,
@@ -119,6 +121,8 @@ final class App
         array $formTypes = ['application/x-www-form-urlencoded'],
         ?int $fileLimit = null,
         int $responseLimit = 8 * 1024 * 1024,
+        ?int $valueLimit = null,
+        int $partLimit = 1000,
         ?\Closure $onResponse = null,
         ?ClientRendering $clientRendering = null,
         ?\Closure $onDisconnect = null,
@@ -137,6 +141,16 @@ final class App
                 "file limit {$fileLimit} is not a positive number of bytes no larger than the body limit "
                 . "{$bodyLimit} (HY-114)",
             );
+        }
+        $valueLimit ??= min(8 * 1024 * 1024, $bodyLimit);
+        if ($valueLimit < 1 || $valueLimit > $bodyLimit) {
+            throw new \InvalidArgumentException(
+                "value limit {$valueLimit} is not a positive number of bytes no larger than the body limit "
+                . "{$bodyLimit} (HY-131)",
+            );
+        }
+        if ($partLimit < 1) {
+            throw new \InvalidArgumentException("part limit {$partLimit} is not a positive number (HY-131)");
         }
         if ($responseLimit < 1) {
             throw new \InvalidArgumentException("response limit {$responseLimit} is not a positive number of bytes");
@@ -205,6 +219,8 @@ final class App
             $frameAncestors,
             $bodyLimit,
             $fileLimit,
+            $valueLimit,
+            $partLimit,
             $responseLimit,
             $formTypes,
             $onResponse,
@@ -371,7 +387,13 @@ final class App
     /** Answers a request; the loaders and actions of a routed request receive `$reply` (HY-52, HY-60). */
     private function answer(Request $request, SessionStore $store, Reply $reply): Response
     {
-        if ($request->bodySize() > $this->bodyLimit) {
+        // HY-131.11: a body that passed the value limit, the part limit or the file limit is answered as a body over
+        // the body limit.
+        $streams = in_array('multipart/form-data', $this->formTypes, true);
+        if (
+            $request->bodySize() > $this->bodyLimit
+            || $request->exceeded($this->valueLimit, $this->partLimit, $this->fileLimit, $streams)
+        ) {
             return Response::text(413, 'Content Too Large');
         }
         if (!$request->validInput()) {
@@ -1088,6 +1110,9 @@ final class App
         $request = Request::fromGlobals(
             $this->bodyLimit,
             in_array('multipart/form-data', $this->formTypes, true),
+            $this->valueLimit,
+            $this->partLimit,
+            $this->fileLimit,
         );
         // HY-99: the write hook runs after the escape function and before the disconnect hook. A response that no write
         // started is the plain 500, and its write is not complete.

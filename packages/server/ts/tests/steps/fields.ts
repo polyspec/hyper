@@ -45,7 +45,7 @@ export const steps = {
     if (boundary !== null) {
       const bound = Math.max(8192 + 3, boundary.length + 3);
       for (let at = 0; at <= body.length && result === whole; at += 1) {
-        const parts = new Multipart(boundary, null);
+        const parts = new Multipart(boundary, null, null, null, null);
         for (const chunk of [body.subarray(0, at), body.subarray(at)]) {
           parts.feed(chunk);
           if (parts.buffered() > bound) throw new Error(`the reader holds ${parts.buffered()} bytes after a chunk that ends at ${at}; its bound is ${bound}`);
@@ -67,7 +67,10 @@ export const steps = {
     const limit = reader.input('limit');
     const move = text(reader, 'move');
     if (typeof chunk !== 'number' || typeof limit !== 'number') throw new Error('the chunk or the limit of the case is not a number');
-    const read = new RequestBody(type, limit, reader.input('stream') === true);
+    const limits = [reader.input('valueLimit'), reader.input('partLimit'), reader.input('fileLimit')];
+    const [valueLimit, partLimit, fileLimit] = limits;
+    if (typeof valueLimit !== 'number' || typeof partLimit !== 'number' || typeof fileLimit !== 'number') throw new Error('a limit of the case is not a number');
+    const read = new RequestBody(type, limit, reader.input('stream') === true, valueLimit, partLimit, fileLimit);
     const scratch = mkdtempSync(join(tmpdir(), 'hyper-case-'));
     try {
       let stopped = false;
@@ -82,6 +85,7 @@ export const steps = {
       const directory = read.directory();
       const count = (): number | null => (directory === null ? null : readdirSync(directory).length);
       reader.compare('stopped', stopped);
+      reader.compare('exceeded', read.exceeded());
       reader.compare('held', held.toString('latin1'));
       reader.compare('fields', fieldsOf(fields));
       reader.compare('files', files === null ? null : files.pairs().flatMap(([, list]) => list.map((file) => ({ name: file.name(), filename: file.filename(), contentType: file.contentType(), content: Buffer.from(file.content()).toString('latin1'), size: file.size() }))));

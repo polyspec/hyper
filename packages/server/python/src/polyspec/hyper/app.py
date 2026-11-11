@@ -65,6 +65,8 @@ class App:
         frame_ancestors: str,
         body_limit: int,
         file_limit: int,
+        value_limit: int,
+        part_limit: int,
         response_limit: int,
         form_types: list[str],
         on_response: Optional[Callable],
@@ -82,6 +84,8 @@ class App:
         self.frame_ancestors = frame_ancestors
         self.body_limit = body_limit
         self.file_limit = file_limit
+        self._value_limit = value_limit
+        self._part_limit = part_limit
         self._shared = shared
         self._region_loaders = region_loaders
         self._route_handlers = route_handlers
@@ -115,6 +119,8 @@ class App:
         form_types: Optional[list[str]] = None,
         file_limit: Optional[int] = None,
         response_limit: int = 8 * 1024 * 1024,
+        value_limit: Optional[int] = None,
+        part_limit: int = 1000,
         on_response: Optional[Callable] = None,
         on_disconnect: Optional[Callable] = None,
         client_rendering: Optional[ClientRendering] = None,
@@ -140,6 +146,16 @@ class App:
         if file_limit < 1 or file_limit > body_limit:
             raise ValueError(
                 f"file limit {file_limit} is not a positive number of bytes no larger than the body limit {body_limit} (HY-114)"
+            )
+        if value_limit is None:
+            value_limit = min(8 * 1024 * 1024, body_limit)
+        if value_limit < 1 or value_limit > body_limit:
+            raise ValueError(
+                f"value limit {value_limit} is not a positive number of bytes no larger than the body limit {body_limit} (HY-131)"
+            )
+        if part_limit < 1:
+            raise ValueError(
+                f"part limit {part_limit} is not a positive number (HY-131)"
             )
         if response_limit < 1:
             raise ValueError(
@@ -212,6 +228,8 @@ class App:
             frame_ancestors,
             body_limit,
             file_limit,
+            value_limit,
+            part_limit,
             response_limit,
             types,
             on_response,
@@ -287,7 +305,14 @@ class App:
 
     def _answer(self, request: Request, store: SessionStore, reply: Reply) -> Response:
         """Answers a request; the loaders and actions of a routed request receive `reply` (HY-52, HY-60)."""
-        if request.body_size() > self.body_limit:
+        # HY-131.11: a body that passed the value limit, the part limit or the file limit is answered as a body over
+        # the body limit.
+        if request.body_size() > self.body_limit or request._exceeded(
+            self._value_limit,
+            self._part_limit,
+            self.file_limit,
+            "multipart/form-data" in self._form_types,
+        ):
             return Response.text(413, "Content Too Large")
         if not request.valid_input():
             return Response.text(400, "Bad Request")
@@ -440,7 +465,9 @@ class App:
             # token.
             if reply._take_renewal():
                 session.renew()
-                request = request._with_session(flash, Csrf.masked(session.csrf_token()))
+                request = request._with_session(
+                    flash, Csrf.masked(session.csrf_token())
+                )
             if result._is_redirect():
                 return self._redirect(session, result, base_path)
             return _without_renewal(
@@ -865,7 +892,9 @@ def _shell(client: ClientRendering, manifest: Manifest) -> str:
     try:
         shell = shell_path.read_text(encoding="utf-8")
     except UnicodeDecodeError as error:
-        raise ValueError(f"static shell {client.shell} is not valid UTF-8: {error}") from None
+        raise ValueError(
+            f"static shell {client.shell} is not valid UTF-8: {error}"
+        ) from None
     if f'<meta name="hyper-api" content="{_escape_attribute(base)}">' not in shell:
         raise ValueError(
             f"static shell {client.shell} does not declare the data base path {base}"

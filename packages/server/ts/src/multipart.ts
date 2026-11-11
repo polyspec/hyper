@@ -27,18 +27,32 @@ export class Multipart extends MultipartReader {
   private target: WriteStream | null;
   private path: string;
   private size: number;
-  private count: number;
+  private stored: number;
+  // The largest bytes of the names and contents of the text values together, the largest number of parts and the
+  // largest bytes of one file, each null for no limit (HY-131.7 to HY-131.12), with what was read of each.
+  private readonly valueLimit: number | null;
+  private readonly partLimit: number | null;
+  private readonly fileLimit: number | null;
+  private valueBytes: number;
+  private partCount: number;
+  private over: boolean;
   // The files whose last bytes are not written yet, and the first error of a write.
   private finishing: Promise<void>[];
   private failure: Error | null;
 
-  constructor(boundary: string, directory: string | null) {
+  constructor(boundary: string, directory: string | null, valueLimit: number | null, partLimit: number | null, fileLimit: number | null) {
     super(boundary);
     this.directory = directory;
     this.target = null;
     this.path = '';
     this.size = 0;
-    this.count = 0;
+    this.stored = 0;
+    this.valueLimit = valueLimit;
+    this.partLimit = partLimit;
+    this.fileLimit = fileLimit;
+    this.valueBytes = 0;
+    this.partCount = 0;
+    this.over = false;
     this.finishing = [];
     this.failure = null;
     this.names = [];
@@ -59,7 +73,7 @@ export class Multipart extends MultipartReader {
 
   // Returns the text fields and the files of the body, or null when the body fails with HY-42 (HY-113, HY-131).
   static read(body: Uint8Array, boundary: string): [Fields, Files] | null {
-    const reader = new Multipart(boundary, null);
+    const reader = new Multipart(boundary, null, null, null, null);
     return reader.feed(body) ? reader.result() : null;
   }
 
@@ -68,10 +82,22 @@ export class Multipart extends MultipartReader {
     return this.closed() ? [new Fields(this.names, this.values), new Files(this.fileNames, this.files)] : null;
   }
 
+  // Returns true when the body passed the value limit, the part limit or the file limit (HY-131.11).
+  exceeded(): boolean {
+    return this.over;
+  }
+
+  // Returns the number of parts that were read, also those that are neither a value nor a file (HY-131.12).
+  count(): number {
+    return this.partCount;
+  }
+
   partStarted(lines: string[]): boolean {
     this.name = null;
     this.file = null;
     this.content = [];
+    this.partCount += 1;
+    if (this.partLimit !== null && this.partCount > this.partLimit) return this.limitPassed();
     const disposition = Multipart.headerValue(lines, 'content-disposition');
     if (disposition === null) return true;
     const [kind, parameters] = Multipart.headerParameters(disposition);
@@ -86,10 +112,15 @@ export class Multipart extends MultipartReader {
     }
     this.name = Multipart.utf8Text(name);
     if (this.name === null) return false;
+    this.size = 0;
+    if (this.file === null) {
+      // The name counts as its bytes were sent.
+      this.valueBytes += name.length;
+      if (this.valueLimit !== null && this.valueBytes > this.valueLimit) return this.limitPassed();
+    }
     if (this.file !== null && this.directory !== null) {
-      this.count += 1;
-      this.path = join(this.directory, String(this.count));
-      this.size = 0;
+      this.stored += 1;
+      this.path = join(this.directory, String(this.stored));
       // The flag wx fails for a path that exists, and the mode gives the file to the user of the server only.
       this.target = createWriteStream(this.path, { flags: 'wx', mode: 0o600 });
       this.target.on('error', (error) => {
@@ -101,12 +132,15 @@ export class Multipart extends MultipartReader {
 
   partData(bytes: Uint8Array): boolean {
     if (this.name === null) return true;
-    if (this.target === null) {
-      this.content.push(Uint8Array.from(bytes));
+    if (this.file === null) {
+      this.valueBytes += bytes.byteLength;
+      if (this.valueLimit !== null && this.valueBytes > this.valueLimit) return this.limitPassed();
     } else {
       this.size += bytes.byteLength;
-      this.target.write(bytes);
+      if (this.fileLimit !== null && this.size > this.fileLimit) return this.limitPassed();
     }
+    if (this.target === null) this.content.push(Uint8Array.from(bytes));
+    else this.target.write(bytes);
     return true;
   }
 
@@ -130,6 +164,13 @@ export class Multipart extends MultipartReader {
     this.finishing = [];
     await Promise.all(finishing);
     if (this.failure !== null) throw this.failure;
+  }
+
+  // Records that the body passed a limit, and fails the body.
+  private limitPassed(): boolean {
+    this.over = true;
+    this.content = [];
+    return false;
   }
 
   // Closes the file of a part whose end was not read.

@@ -20,37 +20,68 @@ final class RequestBody
 
     private int $length = 0;
 
+    private bool $over = false;
+
     /**
      * Starts the body of the content type with the body limit; `$stream` tells whether a multipart body is read in
-     * chunks, which it is when `multipart/form-data` is a form type of the application (HY-131.1).
+     * chunks, which it is when `multipart/form-data` is a form type of the application (HY-131.1). The value limit
+     * bounds a body that is one value and the text values of a body read in chunks, the part limit its parts and the
+     * file limit each of its files (HY-131.7 to HY-131.12).
      */
-    public function __construct(string $type, private readonly int $limit, bool $stream)
-    {
+    public function __construct(
+        string $type,
+        private readonly int $limit,
+        bool $stream,
+        private readonly int $valueLimit,
+        int $partLimit,
+        int $fileLimit,
+    ) {
         $boundary = $stream ? Multipart::boundary($type) : null;
         $this->files = $boundary === null ? null : self::createdDirectory();
-        $this->multipart = $boundary === null ? null : new Multipart($boundary, $this->files);
+        $this->multipart = $boundary === null
+            ? null
+            : new Multipart($boundary, $this->files, $valueLimit, $partLimit, $fileLimit);
     }
 
     /**
-     * Reads the next chunk, and returns false when the body passed the body limit, after which it holds no bytes
-     * (HY-59.4, HY-131.11).
+     * Reads the next chunk, and returns false when the body passed a limit, after which it holds no bytes (HY-59.4,
+     * HY-131.11).
      */
     public function feed(string $chunk): bool
     {
-        $this->length += strlen($chunk);
-        if ($this->length > $this->limit) {
-            $this->content = '';
-            $this->multipart?->release();
-
+        if ($this->over) {
             return false;
+        }
+        $this->length += strlen($chunk);
+        if ($this->length > $this->limit || ($this->multipart === null && $this->length > $this->valueLimit)) {
+            return $this->bodyPassed();
         }
         if ($this->multipart === null) {
             $this->content .= $chunk;
-        } else {
-            $this->multipart->feed($chunk);
+        } elseif (!$this->multipart->feed($chunk) && $this->multipart->exceeded()) {
+            return $this->bodyPassed();
         }
 
         return true;
+    }
+
+    /**
+     * Returns true when the body passed the body limit, the value limit, the part limit or the file limit
+     * (HY-131.11).
+     */
+    public function exceeded(): bool
+    {
+        return $this->over;
+    }
+
+    /** Records that the body passed a limit and drops what it holds. */
+    private function bodyPassed(): bool
+    {
+        $this->over = true;
+        $this->content = '';
+        $this->multipart?->release();
+
+        return false;
     }
 
     /** Returns the number of bytes that were read. */
@@ -79,7 +110,7 @@ final class RequestBody
      */
     public function parts(): ?array
     {
-        return $this->multipart === null || $this->length > $this->limit ? null : $this->multipart->result();
+        return $this->multipart === null || $this->over ? null : $this->multipart->result();
     }
 
     /** Returns the directory of the files of the body, or null for a body that is one value. */

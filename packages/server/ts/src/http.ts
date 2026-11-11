@@ -105,7 +105,7 @@ export function createListener<S extends object>(app: App<S>, sessions: FileSess
       request = Request.from({ method: incoming.method ?? 'GET', target: incoming.url ?? '/', headers: incoming.headers, https });
       // The application answers a body larger than its limit with 413 (HY-59); the server reads no more of it.
       // HY-131: a multipart body of an application with that form type is read in chunks into files of the request.
-      read = new RequestBody(incoming.headers['content-type'] ?? '', app.bodyLimit, app.formTypes.includes('multipart/form-data'));
+      read = new RequestBody(incoming.headers['content-type'] ?? '', app.bodyLimit, app.formTypes.includes('multipart/form-data'), app.valueLimit, app.partLimit, app.fileLimit);
       await readBody(incoming, read, app.bodyLimit);
       request = Request.from({ method: incoming.method ?? 'GET', target: incoming.url ?? '/', headers: incoming.headers, body: read.held(), bodySize: read.size(), https }, read);
       // The last call of `answer`: its request and its reply, which the disconnect hook receives (HY-67, HY-97).

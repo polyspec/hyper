@@ -2,6 +2,7 @@
 import { Cookies } from './cookies.js';
 import { Fields } from './fields.js';
 import { Files } from './files.js';
+import { Multipart } from './multipart.js';
 import type { RequestBody } from './request-body.js';
 import type { Flash } from './session.js';
 import type { UploadedFile } from './uploaded-file.js';
@@ -42,6 +43,9 @@ interface State {
   mediaType: string | null;
   // The body as the host read it, whose directory holds the files of a body read in chunks (HY-131), or null.
   read: RequestBody | null;
+  // The size of a body that is one value, and the number of its parts when it is multipart (HY-131.12).
+  held: number;
+  partCount: number;
 }
 
 // The media type of the JSON of hyper (HY-15).
@@ -69,9 +73,25 @@ export class Request {
     }
     const rawQuery = Request.targetQuery(init.target);
     const body = init.body ?? new Uint8Array();
-    const parts = read?.streamed() === true ? read.parts() : undefined;
-    const form = parts === undefined ? Fields.fromBody(headers.get('content-type') ?? '', body) : (parts?.[0] ?? null);
-    const files = parts === undefined ? Files.fromBody(headers.get('content-type') ?? '', body) : (parts?.[1] ?? null);
+    const boundary = Multipart.boundary(headers.get('content-type') ?? '');
+    let form: Fields | null;
+    let files: Files | null;
+    let partCount = 0;
+    if (read?.streamed() === true) {
+      const parts = read.parts();
+      form = parts?.[0] ?? null;
+      files = parts?.[1] ?? null;
+    } else if (boundary !== null) {
+      // A multipart body that is one value is read once, which also gives the number of its parts.
+      const reader = new Multipart(boundary, null, null, null, null);
+      const parts = reader.feed(body) ? reader.result() : null;
+      form = parts?.[0] ?? null;
+      files = parts?.[1] ?? null;
+      partCount = reader.count();
+    } else {
+      form = Fields.fromBody(headers.get('content-type') ?? '', body);
+      files = Files.empty();
+    }
     const declared = headers.get('content-length') ?? '';
     return new Request({
       method: init.method.toUpperCase(),
@@ -90,7 +110,22 @@ export class Request {
       selection: null,
       mediaType: null,
       read,
+      held: body.byteLength,
+      partCount,
     });
+  }
+
+  /**
+   * Returns true when the body passed the value limit, the part limit or the file limit (HY-131.11): as its host read
+   * it, or for a body that is one value by its size, and by its parts and files when `streams` tells that the
+   * application reads a multipart body in chunks.
+   *
+   * @internal
+   */
+  exceeded(valueLimit: number, partLimit: number, fileLimit: number, streams: boolean): boolean {
+    const read = this.state.read;
+    if (read !== null && (read.exceeded() || read.streamed())) return read.exceeded();
+    return this.state.held > valueLimit || (streams && (this.state.partCount > partLimit || (this.state.files?.largest() ?? 0) > fileLimit));
   }
 
   /**

@@ -35,7 +35,7 @@ def multipart(case) -> None:
     if boundary is not None:
         bound = max(8192 + 3, len(boundary) + 3)
         for at in range(len(body) + 1):
-            parts = Multipart(boundary, None)
+            parts = Multipart(boundary, None, None, None, None)
             for chunk in (body[:at], body[at:]):
                 parts.feed(chunk)
                 if parts.buffered() > bound:
@@ -64,7 +64,14 @@ def streamed(case) -> None:
     move = _text(case, "move")
     if not isinstance(chunk, int) or chunk < 1 or not isinstance(limit, int):
         raise LookupError("the chunk or the limit of the case is not a number")
-    read = RequestBody(kind, limit, case.input("stream") is True)
+    limits = [
+        case.input("valueLimit"),
+        case.input("partLimit"),
+        case.input("fileLimit"),
+    ]
+    if not all(isinstance(value, int) for value in limits):
+        raise LookupError("a limit of the case is not a number")
+    read = RequestBody(kind, limit, case.input("stream") is True, *limits)
     scratch = tempfile.mkdtemp(prefix="hyper-case-")
     try:
         stopped = False
@@ -86,6 +93,7 @@ def streamed(case) -> None:
             return None if directory is None else len(os.listdir(directory))
 
         case.compare("stopped", stopped)
+        case.compare("exceeded", read.exceeded())
         case.compare("held", held.decode("latin-1"))
         case.compare("fields", _fields_of(fields))
         case.compare(

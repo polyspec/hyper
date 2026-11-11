@@ -42,7 +42,7 @@ final class FieldsSteps
         if ($boundary !== null) {
             $bound = max(8192 + 3, strlen($boundary) + 3);
             for ($at = 0; $at <= strlen($body) && $result === $whole; $at++) {
-                $parts = new Multipart($boundary, null);
+                $parts = new Multipart($boundary, null, null, null, null);
                 foreach ([substr($body, 0, $at), substr($body, $at)] as $chunk) {
                     $parts->feed($chunk);
                     if ($parts->buffered() > $bound) {
@@ -77,7 +77,13 @@ final class FieldsSteps
         if (!is_int($chunk) || $chunk < 1 || !is_int($limit)) {
             throw new \UnexpectedValueException('the chunk or the limit of the case is not a number');
         }
-        $read = new RequestBody($type, $limit, $case->input('stream') === true);
+        $valueLimit = $case->input('valueLimit');
+        $partLimit = $case->input('partLimit');
+        $fileLimit = $case->input('fileLimit');
+        if (!is_int($valueLimit) || !is_int($partLimit) || !is_int($fileLimit)) {
+            throw new \UnexpectedValueException('a limit of the case is not a number');
+        }
+        $read = new RequestBody($type, $limit, $case->input('stream') === true, $valueLimit, $partLimit, $fileLimit);
         $scratch = sys_get_temp_dir() . '/hyper-case-' . bin2hex(random_bytes(8));
         mkdir($scratch, 0700);
         try {
@@ -97,6 +103,7 @@ final class FieldsSteps
             $directory = $read->directory();
             $count = static fn (): ?int => $directory === null ? null : count(scandir($directory) ?: []) - 2;
             $case->compare('stopped', $stopped);
+            $case->compare('exceeded', $read->exceeded());
             $case->compare('held', self::latin($held));
             $case->compare('fields', self::fieldsOf($fields));
             $entries = null;

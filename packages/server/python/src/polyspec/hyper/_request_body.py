@@ -16,32 +16,60 @@ from ._multipart import Multipart
 class RequestBody:
     """Reads the chunks of a request body."""
 
-    def __init__(self, content_type: str, limit: int, stream: bool):
+    def __init__(
+        self,
+        content_type: str,
+        limit: int,
+        stream: bool,
+        value_limit: int,
+        part_limit: int,
+        file_limit: int,
+    ):
         """Starts the body of the content type with the body limit; ``stream`` tells whether a multipart body is read
-        in chunks, which it is when ``multipart/form-data`` is a form type of the application (HY-131.1)."""
+        in chunks, which it is when ``multipart/form-data`` is a form type of the application (HY-131.1). The value
+        limit bounds a body that is one value and the text values of a body read in chunks, the part limit its parts
+        and the file limit each of its files (HY-131.7 to HY-131.12)."""
         boundary = Multipart.boundary(content_type) if stream else None
         self.__limit = limit
         self.__files = None if boundary is None else RequestBody._created_directory()
         self.__multipart = (
-            None if boundary is None else Multipart(boundary, self.__files)
+            None
+            if boundary is None
+            else Multipart(boundary, self.__files, value_limit, part_limit, file_limit)
         )
         self.__chunks: list[bytes] = []
         self.__length = 0
+        self.__value_limit = value_limit
+        self.__over = False
 
     def feed(self, chunk: bytes) -> bool:
-        """Reads the next chunk, and returns False when the body passed the body limit, after which it holds no bytes
+        """Reads the next chunk, and returns False when the body passed a limit, after which it holds no bytes
         (HY-59.4, HY-131.11)."""
-        self.__length += len(chunk)
-        if self.__length > self.__limit:
-            self.__chunks = []
-            if self.__multipart is not None:
-                self.__multipart.release()
+        if self.__over:
             return False
+        self.__length += len(chunk)
+        if self.__length > self.__limit or (
+            self.__multipart is None and self.__length > self.__value_limit
+        ):
+            return self._body_passed()
         if self.__multipart is None:
             self.__chunks.append(chunk)
-        else:
-            self.__multipart.feed(chunk)
+        elif not self.__multipart.feed(chunk) and self.__multipart.exceeded():
+            return self._body_passed()
         return True
+
+    def exceeded(self) -> bool:
+        """Returns True when the body passed the body limit, the value limit, the part limit or the file limit
+        (HY-131.11)."""
+        return self.__over
+
+    def _body_passed(self) -> bool:
+        """Records that the body passed a limit and drops what it holds."""
+        self.__over = True
+        self.__chunks = []
+        if self.__multipart is not None:
+            self.__multipart.release()
+        return False
 
     def size(self) -> int:
         """Returns the number of bytes that were read."""
@@ -58,7 +86,7 @@ class RequestBody:
     def parts(self) -> Optional[tuple[Fields, Files]]:
         """Returns the text fields and the files of a body read in chunks, or None when it failed, has not ended or
         passed the limit (HY-131.5)."""
-        if self.__multipart is None or self.__length > self.__limit:
+        if self.__multipart is None or self.__over:
             return None
         return self.__multipart.result()
 

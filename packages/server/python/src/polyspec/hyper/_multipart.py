@@ -16,15 +16,30 @@ from .uploaded_file import UploadedFile
 class Multipart(MultipartReader):
     """Reads the text fields and the files of a ``multipart/form-data`` body."""
 
-    def __init__(self, boundary: str, directory: Optional[str]):
+    def __init__(
+        self,
+        boundary: str,
+        directory: Optional[str],
+        value_limit: Optional[int],
+        part_limit: Optional[int],
+        file_limit: Optional[int],
+    ):
         super().__init__(boundary)
+        # The largest bytes of the names and contents of the text values together, the largest number of parts and
+        # the largest bytes of one file, each None for no limit (HY-131.7 to HY-131.12), with what was read of each.
+        self.__value_limit = value_limit
+        self.__part_limit = part_limit
+        self.__file_limit = file_limit
+        self.__value_bytes = 0
+        self.__part_count = 0
+        self.__over = False
         # The directory of the files of the body, or None for files that are values (HY-131.13).
         self.__directory = directory
         # The file that the content of the file part is written to, with its path and the bytes given to it.
         self.__target: Optional[BinaryIO] = None
         self.__path = ""
         self.__size = 0
-        self.__count = 0
+        self.__stored = 0
         self.__names: list[str] = []
         self.__values: dict[str, list[str]] = {}
         self.__file_names: list[str] = []
@@ -48,7 +63,7 @@ class Multipart(MultipartReader):
     ) -> Optional[tuple[_fields.Fields, _files.Files]]:
         """Returns the text fields and the files of the body, or None when the body fails with HY-42 (HY-113,
         HY-131)."""
-        reader = Multipart(boundary, None)
+        reader = Multipart(boundary, None, None, None, None)
         return reader.result() if reader.feed(body) else None
 
     def result(self) -> Optional[tuple[_fields.Fields, _files.Files]]:
@@ -61,10 +76,22 @@ class Multipart(MultipartReader):
             _files.Files(self.__file_names, self.__files),
         )
 
+    def exceeded(self) -> bool:
+        """Returns True when the body passed the value limit, the part limit or the file limit (HY-131.11)."""
+        return self.__over
+
+    def count(self) -> int:
+        """Returns the number of parts that were read, also those that are neither a value nor a file
+        (HY-131.12)."""
+        return self.__part_count
+
     def part_started(self, lines: list[str]) -> bool:
         self.__name = None
         self.__file = None
         self.__content = []
+        self.__part_count += 1
+        if self.__part_limit is not None and self.__part_count > self.__part_limit:
+            return self._limit_passed()
         disposition = Multipart._header_value(lines, "content-disposition")
         if disposition is None:
             return True
@@ -82,10 +109,18 @@ class Multipart(MultipartReader):
         self.__name = Multipart._utf8_text(parameters["name"].encode("latin-1"))
         if self.__name is None:
             return False
+        self.__size = 0
+        if self.__file is None:
+            # The name counts as its bytes were sent.
+            self.__value_bytes += len(parameters["name"])
+            if (
+                self.__value_limit is not None
+                and self.__value_bytes > self.__value_limit
+            ):
+                return self._limit_passed()
         if self.__file is not None and self.__directory is not None:
-            self.__count += 1
-            self.__path = os.path.join(self.__directory, str(self.__count))
-            self.__size = 0
+            self.__stored += 1
+            self.__path = os.path.join(self.__directory, str(self.__stored))
             # O_EXCL fails for a path that exists, and the mode gives the file to the user of the server only.
             self.__target = os.fdopen(
                 os.open(self.__path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600), "wb"
@@ -95,12 +130,28 @@ class Multipart(MultipartReader):
     def part_data(self, data: bytes) -> bool:
         if self.__name is None:
             return True
+        if self.__file is None:
+            self.__value_bytes += len(data)
+            if (
+                self.__value_limit is not None
+                and self.__value_bytes > self.__value_limit
+            ):
+                return self._limit_passed()
+        else:
+            self.__size += len(data)
+            if self.__file_limit is not None and self.__size > self.__file_limit:
+                return self._limit_passed()
         if self.__target is None:
             self.__content.append(data)
         else:
-            self.__size += len(data)
             self.__target.write(data)
         return True
+
+    def _limit_passed(self) -> bool:
+        """Records that the body passed a limit, and fails the body."""
+        self.__over = True
+        self.__content = []
+        return False
 
     def release(self) -> None:
         """Closes the file of a part whose end was not read."""

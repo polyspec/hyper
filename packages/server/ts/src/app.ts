@@ -110,6 +110,12 @@ export interface AppOptions<S extends object> {
   // The largest file in bytes of a request body, a file part of it (HY-113): a larger file receives 413 before the
   // action or the kept value runs. The default is the smaller of 8 MiB and the body limit, so that the body limit refuses first.
   fileLimit?: number;
+  // The largest bytes that the server holds as one value: a body that is not read in chunks, and the names and the
+  // contents of the text values of a multipart body together; more receives 413. The default is the smaller of 8 MiB
+  // and the body limit (HY-131).
+  valueLimit?: number;
+  // The largest number of parts of a multipart body; more receives 413. The default is 1000 (HY-131).
+  partLimit?: number;
   // The media types of the request bodies that actions and /_hyper/keep accept: application/x-www-form-urlencoded
   // and multipart/form-data. The default is application/x-www-form-urlencoded (HY-59).
   formTypes?: string[];
@@ -156,7 +162,12 @@ export class App<S extends object = Record<string, never>> {
   readonly frameAncestors: string;
   /** @internal */
   readonly bodyLimit: number;
-  private readonly fileLimit: number;
+  /** @internal */
+  readonly fileLimit: number;
+  /** @internal */
+  readonly valueLimit: number;
+  /** @internal */
+  readonly partLimit: number;
   private readonly responseLimit: number;
   /** @internal */
   readonly formTypes: readonly string[];
@@ -179,6 +190,8 @@ export class App<S extends object = Record<string, never>> {
     frameAncestors: string,
     bodyLimit: number,
     fileLimit: number,
+    valueLimit: number,
+    partLimit: number,
     responseLimit: number,
     formTypes: readonly string[],
     onResponse: AppOptions<S>['onResponse'],
@@ -202,6 +215,8 @@ export class App<S extends object = Record<string, never>> {
     this.frameAncestors = frameAncestors;
     this.bodyLimit = bodyLimit;
     this.fileLimit = fileLimit;
+    this.valueLimit = valueLimit;
+    this.partLimit = partLimit;
     this.responseLimit = responseLimit;
     this.formTypes = formTypes;
     this.onResponse = onResponse;
@@ -223,6 +238,12 @@ export class App<S extends object = Record<string, never>> {
     if (!Number.isSafeInteger(fileLimit) || fileLimit < 1 || fileLimit > bodyLimit) {
       throw new Error(`hyper: file limit ${fileLimit} is not a positive number of bytes no larger than the body limit ${bodyLimit} (HY-114)`);
     }
+    const valueLimit = options.valueLimit ?? Math.min(8 * 1024 * 1024, bodyLimit);
+    if (!Number.isSafeInteger(valueLimit) || valueLimit < 1 || valueLimit > bodyLimit) {
+      throw new Error(`hyper: value limit ${valueLimit} is not a positive number of bytes no larger than the body limit ${bodyLimit} (HY-131)`);
+    }
+    const partLimit = options.partLimit ?? 1000;
+    if (!Number.isSafeInteger(partLimit) || partLimit < 1) throw new Error(`hyper: part limit ${partLimit} is not a positive number (HY-131)`);
     const responseLimit = options.responseLimit ?? 8 * 1024 * 1024;
     if (!Number.isSafeInteger(responseLimit) || responseLimit < 1) throw new Error(`hyper: response limit ${responseLimit} is not a positive number of bytes`);
     const formTypes = options.formTypes ?? ['application/x-www-form-urlencoded'];
@@ -257,7 +278,7 @@ export class App<S extends object = Record<string, never>> {
       if (template === undefined) throw new Error(`hyper: template ${name} is not in the template index`);
       return template;
     }, resolvePath);
-    return new App(application, options.handlers, options.timezone, basePath, options.https ?? false, options.frameAncestors ?? "'self'", bodyLimit, fileLimit, responseLimit, [...formTypes], options.onResponse, options.onDisconnect, options.log ?? ((message) => process.stderr.write(`${message}\n`)), client, reads, build, options.context ?? null);
+    return new App(application, options.handlers, options.timezone, basePath, options.https ?? false, options.frameAncestors ?? "'self'", bodyLimit, fileLimit, valueLimit, partLimit, responseLimit, [...formTypes], options.onResponse, options.onDisconnect, options.log ?? ((message) => process.stderr.write(`${message}\n`)), client, reads, build, options.context ?? null);
   }
 
   // Registers the factory of an application service.
@@ -343,7 +364,11 @@ export class App<S extends object = Record<string, never>> {
 
   // Answers a request; the loaders and actions of a routed request receive `reply` (HY-52, HY-60).
   private async answer(received: Request, store: SessionStore, reply: Reply, signal: AbortSignal | undefined): Promise<Response> {
-    if (received.bodySize() > this.bodyLimit) return Response.text(413, 'Content Too Large');
+    // HY-131.11: a body that passed the value limit, the part limit or the file limit is answered as a body over the
+    // body limit.
+    if (received.bodySize() > this.bodyLimit || received.exceeded(this.valueLimit, this.partLimit, this.fileLimit, this.formTypes.includes('multipart/form-data'))) {
+      return Response.text(413, 'Content Too Large');
+    }
     if (!received.validInput()) return Response.text(400, 'Bad Request');
     const choice = await this.choice(received);
     stopClosed(signal);

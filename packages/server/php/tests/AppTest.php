@@ -28,7 +28,8 @@ use Polyspec\Hyper\Tests\Support\OrmException;
 /**
  * @phpstan-import-type Handlers from App
  * @phpstan-type Options array{handlers?: Handlers, basePath?: string, bodyLimit?: int, formTypes?: list<string>,
- *     responseLimit?: int, onResponse?: \Closure, around?: \Closure}
+ *     responseLimit?: int, fileLimit?: int, valueLimit?: int, partLimit?: int, onResponse?: \Closure,
+ *     around?: \Closure}
  */
 final class AppTest extends TestCase
 {
@@ -273,6 +274,50 @@ final class AppTest extends TestCase
         );
         self::assertSame(303, $accepted->status);
         self::assertSame(1, $this->counter->actions);
+    }
+
+    /** HY-131: a body over the value limit or the part limit is refused before the action. */
+    public function testBodyOverTheValueLimitOrThePartLimitIsRefusedBeforeTheAction(): void
+    {
+        $token = $this->token();
+        // Three parts: the token, a value and a file.
+        $body = "--x\r\nContent-Disposition: form-data; name=\"_csrf\"\r\n\r\n{$token}"
+            . "\r\n--x\r\nContent-Disposition: form-data; name=\"name\"\r\n\r\na\r\n"
+            . "--x\r\nContent-Disposition: form-data; name=\"upload\"; filename=\"a.txt\"\r\n\r\nA\r\n--x--\r\n";
+        $formTypes = ['application/x-www-form-urlencoded', 'multipart/form-data'];
+        $headers = ['Content-Type' => 'multipart/form-data; boundary=x'];
+        $send = fn (int $partLimit, int $valueLimit): Response => $this->app(
+            '',
+            ['formTypes' => $formTypes, 'partLimit' => $partLimit, 'valueLimit' => $valueLimit],
+        )->handle(new Request('POST', '/add', $headers, '', $body), $this->session);
+        foreach ([[2, 8 * 1024 * 1024], [1000, strlen($body) - 1]] as [$partLimit, $valueLimit]) {
+            $refused = $send($partLimit, $valueLimit);
+            self::assertSame(413, $refused->status);
+            self::assertSame('Content Too Large', $refused->body);
+        }
+        self::assertSame(0, $this->counter->actions);
+        self::assertSame(303, $send(3, strlen($body))->status);
+        self::assertSame(1, $this->counter->actions);
+        // A body that is one value has the value limit also without the multipart form type.
+        $held = $this->app('', ['valueLimit' => 8])->handle(
+            new Request(
+                'POST',
+                '/add',
+                ['Content-Type' => 'application/x-www-form-urlencoded'],
+                '',
+                "_csrf={$token}&name=a",
+            ),
+            $this->session,
+        );
+        self::assertSame(413, $held->status);
+        foreach ([['valueLimit' => 0], ['bodyLimit' => 16, 'valueLimit' => 32], ['partLimit' => 0]] as $options) {
+            try {
+                $this->app('', $options);
+                self::fail('the application opened with ' . json_encode($options));
+            } catch (\InvalidArgumentException $error) {
+                self::assertStringContainsString('(HY-131)', $error->getMessage());
+            }
+        }
     }
 
     /** HY-114: an application that declares no file limit opens with a body limit below 8 MiB. */
