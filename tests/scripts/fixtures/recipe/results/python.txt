@@ -1,1 +1,2 @@
 CASE contracts/csrf.json raw-token PASS
+CASE contracts/media-type.json essence-one PASS

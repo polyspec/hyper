@@ -1,1 +1,1 @@
-{ "rule": "HY-2", "cases": [] }
+{"essence": [{"id": "essence-one", "label": "one essence", "input": "text/plain", "expected": "text/plain"}]}

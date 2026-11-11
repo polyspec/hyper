@@ -5,19 +5,22 @@
       "sources": ["packages/server/php/src"],
       "tests": ["packages/server/php/tests"],
       "barrel": [],
-      "runner": "packages/server/php/tests/CaseRunnerTest.php::CaseRunnerTest::testCases"
+      "runner": "packages/server/php/tests/CaseRunnerTest.php::CaseRunnerTest::testCases",
+      "caseReader": "packages/server/php/tests/CaseReader.php::CaseReader"
     },
     "node": {
       "sources": ["packages/server/ts/src"],
       "tests": ["packages/server/ts/tests"],
       "barrel": ["packages/server/ts/src/index.ts"],
-      "runner": "packages/server/ts/tests/case-runner.test.mts::cases"
+      "runner": "packages/server/ts/tests/case-runner.test.mts::cases",
+      "caseReader": "packages/server/ts/tests/case-reader.ts::CaseReader"
     },
     "python": {
       "sources": ["packages/server/python/src/polyspec/hyper"],
       "tests": ["packages/server/python/tests"],
       "barrel": ["packages/server/python/src/polyspec/hyper/__init__.py"],
-      "runner": "packages/server/python/tests/test_case_runner.py::CaseRunner.test_cases"
+      "runner": "packages/server/python/tests/test_case_runner.py::CaseRunner.test_cases",
+      "caseReader": "packages/server/python/tests/case_reader.py::CaseReader"
     }
   },
   "outside": [],
@@ -183,5 +186,39 @@
       "only": { "languages": ["node"], "rule": "HY-2", "quote": "A media type is one essence." },
       "native": { "node": { "symbol": "packages/server/ts/src/media-type.ts::Essence", "declaration": "export type Essence = string;" } }
     }
-  ]
+  ],
+  "caseFiles": {
+    "csrf.json": {
+      "rule": "HY-1",
+      "fixtures": {},
+      "sections": {
+        "mask": {
+          "runners": ["php", "node", "python"],
+          "uses": [],
+          "fields": {
+            "id": { "role": "id" },
+            "label": { "role": "label" },
+            "input": { "role": "input" },
+            "expected": { "role": "expected", "compare": "exact", "rule": "HY-1", "quote": "The server masks the token of a request." }
+          }
+        }
+      }
+    },
+    "media-type.json": {
+      "rule": "HY-2",
+      "fixtures": {},
+      "sections": {
+        "essence": {
+          "runners": ["php", "node", "python"],
+          "uses": [],
+          "fields": {
+            "id": { "role": "id" },
+            "label": { "role": "label" },
+            "input": { "role": "input" },
+            "expected": { "role": "expected", "compare": "exact", "rule": "HY-2", "quote": "A media type is one essence." }
+          }
+        }
+      }
+    }
+  }
 }

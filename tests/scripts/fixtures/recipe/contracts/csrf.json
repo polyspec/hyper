@@ -1,1 +1,5 @@
-{ "rule": "HY-1", "cases": [{ "id": "raw-token", "input": {}, "expected": {} }] }
+{
+  "mask": [
+    { "id": "raw-token", "label": "raw token", "input": "token", "expected": "mask" }
+  ]
+}

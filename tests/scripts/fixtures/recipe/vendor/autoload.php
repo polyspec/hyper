@@ -13,3 +13,15 @@ spl_autoload_register(static function (string $class): void {
         require $file;
     }
 });
+
+// The fixture's case reader units live in the test tree.
+spl_autoload_register(static function (string $class): void {
+    $prefix = 'Polyspec\\Hyper\\Tests\\';
+    if (!str_starts_with($class, $prefix)) {
+        return;
+    }
+    $file = __DIR__ . '/../packages/server/php/tests/' . substr($class, strlen($prefix)) . '.php';
+    if (is_file($file)) {
+        require $file;
+    }
+});
