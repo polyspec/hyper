@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 954be1462e3337366e7a11cb5433b25fb1be63ccb287453e08ec9780fb9ed50e -->
+<!-- source-sha256: 86038768f2b56c64c6e54733904e5c8aad1d29bbca94a43e5e8c1826bfeebe69 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -386,3 +386,4 @@
 | H28.7 | PHP, Node, Python server: route의 representation, match, Allow와 HEAD가 있는 405, 406, 415, 400, status와 header와 Cache-Control 검사, strong ETag, If-None-Match와 304, 함수 etag; contracts/representations.json의 case | packages/server/php, packages/server/node, packages/server/python | `make test-php`, `make test-node`, `make test-python` | [ ] |
 | H28.8 | context와 JSON representation이 있는 board example, browser test, parity, feature status, H28.1~H28.7의 changelog | examples/board, tests/e2e, docs/features.md and its Korean twin, CHANGELOG.md and its Korean twin | `make parity` | [ ] |
 | H28.9 | 모든 page route의 HEAD(RFC 9110 section 9.1)를 명세하고 구현한다: HEAD request는 GET response의 header를 받고 body는 받지 않으며 Allow는 GET과 함께 HEAD를 적는다; PHP, Node, Python server | docs/spec/protocol.md and its Korean twin, packages/server/php, packages/server/node, packages/server/python | `make docs-check`, `make test-php`, `make test-node`, `make test-python` | [ ] |
+| H28.10 | placement build(HY-125): {# build}가 정확히 하나 없는 layout이면 build가 실패하고, fixture와 board example의 모든 layout이 head 안에 그것을 두며, PHP, Node, Python server와 browser가 html definition build를 build id로 render한다 | packages/build, packages/server/php, packages/server/node, packages/server/python, packages/client, the layouts of the fixtures and examples/board | `make test-scripts`, `make test-php`, `make test-node`, `make test-python`, `make test-js` | [ ] |
