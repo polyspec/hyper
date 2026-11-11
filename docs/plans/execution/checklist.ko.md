@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 82eaba9bf351ae5db31e9ac56b5dc70ac25c7152cc9eb6897b3fd1cf9d39cc15 -->
+<!-- source-sha256: e8e28bca3a32ce952ee1834a4c322d52a4f08dbc40f9786ab271502f5586196e -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -382,7 +382,7 @@
 | H28.1-3 | commit된 문장의 감사에 따라 wave 28의 규칙과 contract case를 고친다: selection 뒤에 application이 여는 session, context handler와 Hyper-Context 검사와 selection의 순서, Accept 문법, JSON body decoding, representation의 response와 Vary 규칙, Location 검사, 각 runtime의 public API, HYC-15의 build definition, shared 안의 context 위치, request마다 한 번의 context encoding, 빠진 case | docs/spec/protocol.md and its Korean twin, contracts/representations.json, contracts/context.json, contracts/client.json | `make docs-check` | [o] |
 | H28.1-4 | both servers라고 쓴 모든 문장에 세 server를 적는다: HY-24, HY-56, HY-57, HY-54, HY-73의 contract 문장과 HY-44의 검사 | docs/spec/protocol.md and its Korean twin | `make docs-check` and no sentence of protocol.md or protocol.ko.md that says both servers or 두 서버 | [o] |
 | H28.1-5 | server가 통합될 때까지 main이 통과하게 한다: main의 contracts/client.json을 H28.1 이전 내용으로 되돌리고, wave 28의 client case는 H28.2~H28.4의 통합에 담는다 | contracts/client.json | the client case tests of the three servers pass on main: tests/client-requests.test.ts, ClientTest.php and render_client_requests.py | [o] |
-| H28.1-6 | contracts/context.json을 HY-73에 맞게 고친다: 일곱 case의 JSON shared data는 title만 담고, loader case의 firstCalls는 context와 shared를 적으며, csrf case의 runner는 자기 session의 token을 가린다 | contracts/context.json, docs/spec/protocol.md and its Korean twin | `make docs-check` and `tests/scripts/build-id.test.mts` | [ ] |
+| H28.1-6 | contracts/context.json을 HY-73에 맞게 고친다: 일곱 case의 JSON shared data는 title만 담고, loader case의 firstCalls는 context와 shared를 적으며, csrf case의 runner는 자기 session의 token을 가린다 | contracts/context.json, docs/spec/protocol.md and its Korean twin | `make docs-check` and `tests/scripts/build-id.test.mts` | [o] |
 | H28.2 | PHP server: media type 선택과 Vary, context, Hyper-Context header와 build member, representation을 선택하지 않은 request만 session을 연다, media type application/vnd.hyper+json, App의 functions; contracts/context.json과 contracts/client.json의 case | packages/server/php | `make test-php` | [~] |
 | H28.3 | Node server: H28.2와 같은 규칙 | packages/server/node | `make test-node` | [~] |
 | H28.4 | Python server: H28.2와 같은 규칙 | packages/server/python | `make test-python` | [~] |

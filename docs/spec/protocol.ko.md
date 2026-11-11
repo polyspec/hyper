@@ -1,5 +1,5 @@
 <!-- doc-id: protocol -->
-<!-- source-sha256: 5220a67034f60d7cedb3fa4a1511a66dbcc594d468f7f95a25d77cc0551f40f6 -->
+<!-- source-sha256: 48243952a765186dc6e5967457da08c417f8f71e0785c7a91c5ce5061b721aac -->
 # 영역 프로토콜
 
 [English](protocol.md).
@@ -212,7 +212,7 @@
   - context가 있는 애플리케이션의 JSON 응답은 그 뒤에 member `context`를 담는다. 그 값은 `{"hash": <context hash>}`이며, 요청에 `Hyper-Context`가 없거나 다른 hash를 지정했으면 그 뒤에 `"value": <context>`가 온다.
   - `shared`의 member `context`는 JSON 응답에 없다. 브라우저 코드는 렌더하기 전에 context를 HY-10의 위치인 `csrf` 바로 뒤에 `shared`에 넣는다. 응답에 `value`가 있으면 그 값이고, 없으면 보관한 context다. Node 서버는 context map으로 같은 코드(HY-54)를 써서 문서를 렌더하며, `hash`와 `value`를 가진 member `context`는 데이터를 내장하는 문서에서만 렌더하는 값에 넣는다.
   - 데이터를 내장하는 문서(HY-31)는 `build`와, `value`를 가진 `context`를 내장한다.
-  - `contracts/context.json`은 build, context, 그 JSON 텍스트와 hash, `Hyper-Context`가 있는 요청과 없는 요청, 기대 응답을 담는다. application은 loader, 요청을 멈추는 loader `{"stop": "NotFound"}`(HY-27), 그리고 상태와 함께 라우트 페이지를 돌려주거나(HY-58) redirect하는(HY-25) `actions`를 선언한다. case는 context handler의 호출 수 `contextCalls`와, 요청의 처음 호출들을 순서대로 적은 `firstCalls`(`action:<route>`, `context`, `shared`)를 적으며, `csrf`가 있는 요청은 `form`의 field에 더해 자기 session의 token을 가린 값을 field `_csrf`로 담는다(HY-24). PHP, Node, Python 서버는 모든 사례를 통과한다.
+  - `contracts/context.json`은 build, context, 그 JSON 텍스트와 hash, `Hyper-Context`가 있는 요청과 없는 요청, 기대 응답을 담는다. application은 loader, 요청을 멈추는 loader `{"stop": "NotFound"}`(HY-27), 그리고 상태와 함께 라우트 페이지를 돌려주거나(HY-58) redirect하는(HY-25) `actions`를 선언한다. case는 context handler의 호출 수 `contextCalls`와, 요청의 처음 호출들을 순서대로 적은 `firstCalls`(`action:<route>`, `context`, `shared`)를 적으며, `csrf`가 있는 요청은 `form`의 field에 더해 자기 session의 token을 가린 값을 field `_csrf`로 담는다(HY-24). 응답은 template이 `csrf`를 읽을 때만 그것을 보내므로(HY-73), runner는 같은 session의 첫 `GET` 뒤에 session이 가진 token을 가린다. `firstCalls`는 요청의 처음 호출들을 실행 순서대로 적으며, 기록한 호출의 앞부분과 비교한다. PHP, Node, Python 서버는 모든 사례를 통과한다.
 
 ## 브라우저
 

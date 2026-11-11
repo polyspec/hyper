@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- `contracts/context.json` expects only `title` in the shared data of a JSON response whose templates read no other shared value (HY-73), and the case of a loader that stops lists the shared handler after the context handler; HY-128 states how a runner masks the token of its session and compares `firstCalls` (H28.1-6).
+
 - `contracts/client.json` holds again the cases that the servers of main pass; the client cases of wave 28 land with the servers that implement them (H28.1-5).
 
 - docs/spec/protocol.md names the PHP, Node and Python servers in every sentence that said both servers: the cases of `contracts/fields.json`, `contracts/csrf.json`, `contracts/reads.json` and `contracts/json.json` and the HY-44 failure of an application object, which a Python rendering test now states for a `datetime` (H28.1-4).

@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 6e751a9855e81108620b8344761d0a5353ba7f7106db6538c965d41f7f3bf7d5 -->
+<!-- source-sha256: 1d3e012aeda520eb9f83ce6a9b7bb61c8a71ecf35a4b8e3c86d6b5f9679b651d -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- `contracts/context.json`은 template이 다른 shared 값을 읽지 않는 JSON 응답의 shared data에 `title`만 기대하고(HY-73), 멈추는 loader의 case는 context handler 뒤에 shared handler를 적는다. HY-128은 runner가 자기 session의 token을 가리는 방법과 `firstCalls`를 비교하는 방법을 정한다(H28.1-6).
 
 - `contracts/client.json`은 다시 main의 server가 통과하는 case를 담는다. wave 28의 client case는 그것을 구현하는 server와 함께 통합된다(H28.1-5).
 
