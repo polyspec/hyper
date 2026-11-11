@@ -4,6 +4,8 @@
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { LANGS, type Finding, type Lang, type Spec } from './types.mts';
+import { keyOf } from './cases.mts';
+import type { CaseFile } from './types.mts';
 
 export type Results = Partial<Record<Lang, string>>;
 
@@ -18,16 +20,20 @@ function onlyLanguages(only: unknown): Lang[] {
   return LANGS.filter((l) => named.includes(l));
 }
 
-/** The case ids of a case file: the `id` of each object in its top-level arrays. */
-function caseIds(file: string, data: unknown): CaseId[] {
-  if (typeof data !== 'object' || data === null) return [];
+/** The case ids of a case file: the items of each section, for the languages its runners name and its `only` keeps. */
+function caseIds(file: string, entry: CaseFile | undefined, data: unknown): CaseId[] {
+  if (entry === undefined || typeof data !== 'object' || data === null) return [];
+  const record = data as Record<string, unknown>;
   const out: CaseId[] = [];
-  for (const value of Object.values(data)) {
-    if (!Array.isArray(value)) continue;
-    for (const item of value) {
+  for (const [name, section] of Object.entries(entry.sections)) {
+    const items = record[name];
+    if (!Array.isArray(items)) continue;
+    const runners = LANGS.filter((l) => section.runners.includes(l));
+    for (const item of items) {
       if (typeof item !== 'object' || item === null || !('id' in item) || typeof item.id !== 'string') continue;
       const only = 'only' in item ? item.only : undefined;
-      out.push({ file, id: item.id, languages: onlyLanguages(only) });
+      const kept = onlyLanguages(only);
+      out.push({ file, id: item.id, languages: runners.filter((l) => kept.includes(l)) });
     }
   }
   return out;
@@ -40,7 +46,7 @@ export function checkResults(root: string, spec: Spec, results: Results): Findin
   const cases: CaseId[] = [];
   for (const file of files) {
     const full = path.join(root, file);
-    if (existsSync(full)) cases.push(...caseIds(file, JSON.parse(readFileSync(full, 'utf8'))));
+    if (existsSync(full)) cases.push(...caseIds(file, spec.caseFiles[keyOf(file)], JSON.parse(readFileSync(full, 'utf8'))));
   }
   const key = (file: string, id: string): string => `${file}\t${id}`;
 
