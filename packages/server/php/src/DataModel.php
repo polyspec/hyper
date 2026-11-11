@@ -49,7 +49,12 @@ final class DataModel
             self::check($value);
 
             return true;
-        } catch (\InvalidArgumentException) {
+        } catch (\InvalidArgumentException $error) {
+            // HY-44.8: only a message of the data model is a value outside it; another failure is not swallowed.
+            if (!in_array($error->getMessage(), self::MESSAGES, true)) {
+                throw $error;
+            }
+
             return false;
         }
     }

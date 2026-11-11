@@ -409,28 +409,42 @@
       "label": "a flash name that is not a string is rejected",
       "call": "flash",
       "argument": "5",
-      "rejected": true
+      "error": "a flash name is not a string (HY-25)"
     },
     {
       "id": "a_changed_topic_that_is_not_a_string_is_rejected",
       "label": "a changed topic that is not a string is rejected",
       "call": "changed",
       "argument": "5",
-      "rejected": true
+      "error": "a changed topic is not a string (HY-25)"
+    },
+    {
+      "id": "a_flash_name_true_is_rejected",
+      "label": "a flash name true is rejected",
+      "call": "flash",
+      "argument": "true",
+      "error": "a flash name is not a string (HY-25)"
+    },
+    {
+      "id": "a_changed_topic_true_is_rejected",
+      "label": "a changed topic true is rejected",
+      "call": "changed",
+      "argument": "true",
+      "error": "a changed topic is not a string (HY-25)"
     },
     {
       "id": "a_flash_name_that_is_a_string_is_taken",
       "label": "a flash name that is a string is taken",
       "call": "flash",
       "argument": "\"5\"",
-      "rejected": false
+      "error": null
     },
     {
       "id": "a_changed_topic_that_is_a_string_is_taken",
       "label": "a changed topic that is a string is taken",
       "call": "changed",
       "argument": "\"5\"",
-      "rejected": false
+      "error": null
     }
   ]
 }

@@ -3,13 +3,19 @@
 import { BindError, bindValue, NativeObject, type BindErrorCode, type Value } from '@polyspec/template/render';
 
 // The message of each kind of failure of the binding (HY-44.8); the binding of a value raises no other code.
-const MESSAGES: Partial<Record<BindErrorCode, string>> = {
+const MESSAGES = {
   E_DATA_NUMBER_RANGE: 'a number outside ±(2^53 − 1) is not a value of the data model (HY-44)',
   E_DATA_NUMBER_NOT_FINITE: 'a number that is not finite is not a value of the data model (HY-44)',
   E_DATA_INVALID_UTF8: 'a string that is not UTF-8 text is not a value of the data model (HY-44)',
   E_DATA_DEPTH: 'lists and maps that nest deeper than 64 levels are not a value of the data model (HY-44)',
   E_DATA_UNSUPPORTED_TYPE: 'a value or a map key of another type is not a value of the data model (HY-44)',
-};
+} as const satisfies Partial<Record<BindErrorCode, string>>;
+// The messages by the code of a failure of the binding; a code without a message is not a failure of HY-44.8.
+const BY_CODE: Partial<Record<BindErrorCode, string>> = MESSAGES;
+
+// The messages of HY-44.8, by which `contains` tells a value outside the data model from another RangeError, such as a
+// stack overflow.
+const FAILURES: ReadonlySet<string> = new Set<string>(Object.values(MESSAGES));
 
 /** @internal */
 export class DataModel {
@@ -22,7 +28,7 @@ export class DataModel {
       bound = bindValue(value);
     } catch (error) {
       // HY-44.8: a failure of the binding is the RangeError of its kind, with the error of the binding as its cause.
-      const message = error instanceof BindError ? MESSAGES[error.code] : undefined;
+      const message = error instanceof BindError ? BY_CODE[error.code] : undefined;
       if (message === undefined) throw error;
       throw new RangeError(message, { cause: error });
     }
@@ -36,15 +42,15 @@ export class DataModel {
       DataModel.check(value);
       return true;
     } catch (error) {
-      if (error instanceof RangeError) return false;
+      if (error instanceof RangeError && FAILURES.has(error.message)) return false;
       throw error;
     }
   }
 
   // Fails when a bound value holds an application object or a string with a lone surrogate.
   private static walk(value: Value): void {
-    if (typeof value === 'string' && !value.isWellFormed()) throw new RangeError('a string that is not UTF-8 text is not a value of the data model (HY-44)');
-    if (value instanceof NativeObject) throw new RangeError('a value or a map key of another type is not a value of the data model (HY-44)');
+    if (typeof value === 'string' && !value.isWellFormed()) throw new RangeError(MESSAGES.E_DATA_INVALID_UTF8);
+    if (value instanceof NativeObject) throw new RangeError(MESSAGES.E_DATA_UNSUPPORTED_TYPE);
     if (Array.isArray(value)) value.forEach((item) => DataModel.walk(item));
     if (value instanceof Map) {
       for (const [key, item] of value) {

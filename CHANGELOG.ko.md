@@ -6,6 +6,8 @@
 
 ## Unreleased
 
+- PHP `Result::flash`와 `Result::changed`는 이름과 topic을 직접 검사하므로, strict types가 없는 호출자는 문자열로 변환된 정수 이름 대신 HY-25.6의 `TypeError`를 받습니다. 세 server는 같은 메시지를 내며, `contracts/result.json`의 section `types`가 그 메시지를 비교합니다. `DataModel::contains`는 HY-44.8의 메시지를 가진 오류에만 false를 반환하고, stack overflow 같은 다른 오류는 호출자에게 전달합니다(H28.11).
+
 - private Python constructor 검사는 파일의 import를 따릅니다. Python reader는 import한 이름의 호출을 원래 이름과 import가 지정한 module로 기록하고, alias나 import한 module의 attribute를 거친 호출도 기록하며, check는 그 class의 module이나 package에서 온 호출만 셉니다. 그래서 다른 module의 같은 이름 class는 더 이상 실패하지 않습니다. spec이 internal로 선언한 constructor는 visibility 비교를 유지하고, 이름이 `__`로 시작하는 Python method는 private method가 `_` 하나로 시작하므로 `MEMBER_NAME`으로 실패합니다(HYR-8) (H28.11).
 
 - PHP `Result::flash`는 HY-25.5대로 십진수 flash 이름과 다시 저장한 이름의 자리를 유지합니다. 이전에는 spread가 PHP가 정수 key로 두는 이름을 다시 번호 매겨 `flash('5', …)`가 이름을 잃었습니다. Node와 Python은 PHP가 선언된 타입으로 하듯 문자열이 아닌 flash 이름이나 바뀐 topic을 `TypeError`로 실패시키고(HY-25.6), `contracts/result.json`은 section `types`와 십진수 이름의 case를 추가합니다. PHP 결과의 data는 임의의 key를 가진 map으로 선언됩니다(HY-25) (H28.11).

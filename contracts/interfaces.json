@@ -5853,11 +5853,11 @@
             "argument": {
               "role": "input"
             },
-            "rejected": {
+            "error": {
               "role": "expected",
               "compare": "exact",
               "sentence": "HY-25.6",
-              "state": "`rejected` states whether the method `call` of a redirect, `flash` with the value null under the name or `changed` with the topic, fails with `TypeError` for the JSON text `argument` as a handler gives it."
+              "state": "`error` is the message of the `TypeError` of the method `call` of a redirect, `flash` with the value null under the name or `changed` with the topic, for the JSON text `argument` as a handler gives it, or null when the method takes it."
             }
           }
         }

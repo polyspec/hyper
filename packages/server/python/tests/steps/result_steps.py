@@ -85,22 +85,22 @@ def copies(case) -> None:
 
 
 def types(case) -> None:
-    """Calls `flash` or `changed` with the decoded argument, and records whether it fails with TypeError
+    """Calls `flash` or `changed` with the decoded argument, and records the message of its TypeError, or None
     (HY-25.6)."""
     call = _text(case, "call")
     if call not in ("flash", "changed"):
         raise ValueError(f"the call {call} of the case is unknown")
     argument = json.loads(_text(case, "argument"), parse_constant=_reject)
     result = Result.redirect("/")
-    rejected = False
+    error = None
     try:
         if call == "flash":
             result.flash(argument, None)
         else:
             result.changed(argument)
-    except TypeError:
-        rejected = True
-    case.compare("rejected", rejected)
+    except TypeError as failure:
+        error = str(failure)
+    case.compare("error", error)
 
 
 def stop(case) -> None:

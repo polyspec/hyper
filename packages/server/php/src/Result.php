@@ -65,10 +65,14 @@ final class Result
 
     /**
      * Returns a copy that stores a flash value, a value of the data model, for the next request; a value outside the
-     * data model fails (HY-44).
+     * data model fails (HY-44), and a name that is not a string fails with TypeError (HY-25.6).
      */
-    public function flash(string $name, mixed $value): self
+    public function flash(mixed $name, mixed $value): self
     {
+        // HY-25.6: a declared type would convert an integer name for a caller without strict types.
+        if (!is_string($name)) {
+            throw new \TypeError('a flash name is not a string (HY-25)');
+        }
         // An assignment keeps every name and the place of a name stored again (HY-25.5); a spread would number the
         // names that PHP keeps as integer keys again.
         $values = $this->flashValues;
@@ -77,9 +81,18 @@ final class Result
         return new self($this->location, $this->status, $this->data, $values, $this->changedTopics);
     }
 
-    /** Returns a copy that records changed topics for the next request; a topic that it records already keeps its place. */
-    public function changed(string ...$topics): self
+    /**
+     * Returns a copy that records changed topics for the next request; a topic that it records already keeps its
+     * place, and a topic that is not a string fails with TypeError (HY-25.6).
+     */
+    public function changed(mixed ...$topics): self
     {
+        // HY-25.6: a declared type would convert an integer topic for a caller without strict types.
+        foreach ($topics as $topic) {
+            if (!is_string($topic)) {
+                throw new \TypeError('a changed topic is not a string (HY-25)');
+            }
+        }
         return new self(
             $this->location,
             $this->status,

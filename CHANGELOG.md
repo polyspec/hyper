@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- PHP `Result::flash` and `Result::changed` check a name and a topic themselves, so that a caller without strict types gets the `TypeError` of HY-25.6 in place of an integer name converted to a string; the three servers give the same messages, which the section `types` of `contracts/result.json` compares. `DataModel::contains` returns false only for an error with a message of HY-44.8, and passes another error, such as a stack overflow, to its caller (H28.11).
+
 - The check of a private Python constructor follows the imports of a file: the Python reader records a call of an imported name by its original name and the module of its import, also through an alias or an attribute of an imported module, and the check counts only a call from the module of the class or from the package, so that a class of the same name in another module no longer fails. A constructor that the spec declares internal keeps the comparison of its visibility, and a Python method whose name starts with `__` fails as `MEMBER_NAME`, because a private method starts with one `_` (HYR-8) (H28.11).
 
 - PHP `Result::flash` keeps a decimal flash name and the place of a name stored again, as HY-25.5 states: a spread numbered the names that PHP keeps as integer keys again, so that `flash('5', …)` lost its name. Node and Python fail a flash name or a changed topic that is not a string with `TypeError`, as PHP does by its declared types (HY-25.6), and `contracts/result.json` adds the section `types` and a case of decimal names. The data of a PHP result is declared as a map with any keys (HY-25) (H28.11).

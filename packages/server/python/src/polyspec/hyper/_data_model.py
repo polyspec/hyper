@@ -16,6 +16,7 @@ _FINITE = "a number that is not finite is not a value of the data model (HY-44)"
 _UTF8 = "a string that is not UTF-8 text is not a value of the data model (HY-44)"
 _DEPTH = "lists and maps that nest deeper than 64 levels are not a value of the data model (HY-44)"
 _TYPE = "a value or a map key of another type is not a value of the data model (HY-44)"
+_FAILURES = frozenset((_NUMBER, _FINITE, _UTF8, _DEPTH, _TYPE))
 
 
 class DataModel:
@@ -31,7 +32,10 @@ class DataModel:
         try:
             DataModel._walk(value)
             return True
-        except ValueError:
+        except ValueError as error:
+            # HY-44.8: only a message of the data model is a value outside it; another failure is not swallowed.
+            if str(error) not in _FAILURES:
+                raise
             return False
 
     @staticmethod
