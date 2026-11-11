@@ -69,7 +69,7 @@ describe('App', () => {
   });
 
   it('requires a route region loader to be declared (HY-30)', async () => {
-    await expect(App.open({ manifest: `${FIXTURES}app.json`, templates: TEMPLATES, timezone: 'Z', handlers: {
+    await expect(App.open({ manifest: `${FIXTURES}app.json`, build: `${FIXTURES}build.json`, templates: TEMPLATES, timezone: 'Z', handlers: {
       routes: { add: { post: () => Result.redirect('/') }, home: { regions: { rows: () => ({}) } } },
     } })).rejects.toThrow('undeclared region rows');
   });
@@ -147,10 +147,10 @@ describe('App', () => {
 
   it('opens only when every output of the build exists and names the first missing one (HY-48)', async () => {
     const missing = `${TEMPLATES.root}without/templates.index.json`;
-    await expect(App.open({ manifest: `${FIXTURES}app.json`, templates: { index: missing, root: TEMPLATES.root }, handlers: handlers(), timezone: 'Z' })).rejects.toThrow(missing);
+    await expect(App.open({ manifest: `${FIXTURES}app.json`, build: `${FIXTURES}build.json`, templates: { index: missing, root: TEMPLATES.root }, handlers: handlers(), timezone: 'Z' })).rejects.toThrow(missing);
     const absent = `${FIXTURES}without-app.json`;
-    await expect(App.open({ manifest: absent, templates: TEMPLATES, handlers: handlers(), timezone: 'Z' })).rejects.toThrow(absent);
-    await expect(App.open({ manifest: `${FIXTURES}app.json`, templates: { index: 'templates.index.json', root: TEMPLATES.root }, handlers: handlers(), timezone: 'Z' })).rejects.toThrow('not an absolute path');
+    await expect(App.open({ manifest: absent, build: `${FIXTURES}build.json`, templates: TEMPLATES, handlers: handlers(), timezone: 'Z' })).rejects.toThrow(absent);
+    await expect(App.open({ manifest: `${FIXTURES}app.json`, build: `${FIXTURES}build.json`, templates: { index: 'templates.index.json', root: TEMPLATES.root }, handlers: handlers(), timezone: 'Z' })).rejects.toThrow('not an absolute path');
   });
 
   it('sends the masked token and never the session token itself (HY-71)', async () => {
@@ -164,13 +164,13 @@ describe('App', () => {
 
   it('rejects manifests with invalid keep declarations (HY-37, HY-40)', async () => {
     for (const name of ['keep-kind', 'keep-page', 'keep-manifest', 'keep-reserved', 'uses-topic']) {
-      await expect(App.open({ manifest: `${FIXTURES}invalid/${name}.json`, templates: TEMPLATES, handlers: {}, timezone: 'Z' }), name).rejects.toThrow();
+      await expect(App.open({ manifest: `${FIXTURES}invalid/${name}.json`, build: `${FIXTURES}build.json`, templates: TEMPLATES, handlers: {}, timezone: 'Z' }), name).rejects.toThrow();
     }
   });
 
   it('rejects manifests whose lists or names have another type (HY-1, HY-2)', async () => {
     for (const name of ['routes-text', 'route-name-number', 'region-name-list']) {
-      await expect(App.open({ manifest: `${FIXTURES}invalid/${name}.json`, templates: TEMPLATES, handlers: {}, timezone: 'Z' }), name).rejects.toThrow();
+      await expect(App.open({ manifest: `${FIXTURES}invalid/${name}.json`, build: `${FIXTURES}build.json`, templates: TEMPLATES, handlers: {}, timezone: 'Z' }), name).rejects.toThrow();
     }
   });
 
@@ -289,8 +289,8 @@ describe('App', () => {
     const response = await fixture.get('/items/a%20b', JSON_REGION);
     expect(response.status).toBe(200);
     expect(response.headers['Content-Type']).toBe('application/vnd.hyper+json');
-    // HY-73: no template of the route reads csrf and no route region keeps a value on the server.
-    expect(response.body).toBe('{"env":{"timezone":"+09:00"},"route":"item","params":{"id":"a b"},"shared":{"title":"Item"},"regions":{"content":{"id":"a b"}},"kept":{}}');
+    // HY-73: no template of the route reads csrf and no route region keeps a value on the server. HY-128: the build id follows params.
+    expect(response.body).toBe('{"env":{"timezone":"+09:00"},"route":"item","params":{"id":"a b"},"build":"1111111111111111111111111111111111111111111111111111111111111111","shared":{"title":"Item"},"regions":{"content":{"id":"a b"}},"kept":{}}');
   });
 
   it('returns every region in manifest order for a document request (HY-15, HY-18)', async () => {
@@ -805,11 +805,11 @@ describe('App', () => {
   });
 
   it('requires the handlers to match the manifest (HY-2)', async () => {
-    await expect(App.open({ manifest: `${FIXTURES}app.json`, templates: TEMPLATES, timezone: 'Z', handlers: { routes: { unknown: {} } } })).rejects.toThrow('no route');
+    await expect(App.open({ manifest: `${FIXTURES}app.json`, build: `${FIXTURES}build.json`, templates: TEMPLATES, timezone: 'Z', handlers: { routes: { unknown: {} } } })).rejects.toThrow('no route');
   });
 
   it('requires an action for a declared POST route (HY-2)', async () => {
-    await expect(App.open({ manifest: `${FIXTURES}app.json`, templates: TEMPLATES, timezone: 'Z', handlers: {} })).rejects.toThrow('no POST action');
+    await expect(App.open({ manifest: `${FIXTURES}app.json`, build: `${FIXTURES}build.json`, templates: TEMPLATES, timezone: 'Z', handlers: {} })).rejects.toThrow('no POST action');
   });
 });
 
@@ -839,7 +839,7 @@ describe('Node handlers', () => {
   });
 
   it('fails a service without a factory with 500 (HY-43)', async () => {
-    const app = await App.open<{ counter: { count: number } }>({ manifest: `${FIXTURES}app.json`, templates: TEMPLATES, timezone: 'Z', log: () => {}, handlers: {
+    const app = await App.open<{ counter: { count: number } }>({ manifest: `${FIXTURES}app.json`, build: `${FIXTURES}build.json`, templates: TEMPLATES, timezone: 'Z', log: () => {}, handlers: {
       routes: { add: { post: () => Result.redirect('/') }, home: { load: ({ services }) => ({ name: services.get('counter').count }) } },
     } });
     const request = (await import('../src/index.js')).Request.from({ method: 'GET', target: '/' });
@@ -847,7 +847,7 @@ describe('Node handlers', () => {
   });
 
   it('requires absolute paths and a template for every route (HR-34, HY-54)', async () => {
-    await expect(App.open({ manifest: 'app.json', templates: TEMPLATES, timezone: 'Z', handlers: {} })).rejects.toThrow('absolute');
-    await expect(App.open({ manifest: `${FIXTURES}app.json`, templates: { index: `${FIXTURES}app.json`, root: TEMPLATES.root }, timezone: 'Z', handlers: { routes: { add: { post: () => Result.redirect('/') } } } })).rejects.toThrow('template index');
+    await expect(App.open({ manifest: 'app.json', build: `${FIXTURES}build.json`, templates: TEMPLATES, timezone: 'Z', handlers: {} })).rejects.toThrow('absolute');
+    await expect(App.open({ manifest: `${FIXTURES}app.json`, build: `${FIXTURES}build.json`, templates: { index: `${FIXTURES}app.json`, root: TEMPLATES.root }, timezone: 'Z', handlers: { routes: { add: { post: () => Result.redirect('/') } } } })).rejects.toThrow('template index');
   });
 });

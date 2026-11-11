@@ -45,6 +45,8 @@ export interface PageEnvironment<S extends object> {
   https: boolean;
   // The read paths of the route (HY-73).
   reads: RouteReads;
+  // The build id of the asset output (HY-125), which every JSON response holds after its params (HY-128).
+  build: string;
 }
 
 // The Vary of a response with text/html or the JSON of hyper (HY-117).
@@ -94,6 +96,7 @@ export async function renderPage<S extends object>(input: PageInput<S>, environm
     ['env', new Map([['timezone', environment.timezone]])],
     ['route', route.name],
     ['params', new Map(Object.entries(request.params()))],
+    ['build', environment.build],
     ['shared', shared],
     ['regions', new Map(data)],
     ['kept', keptValues(request, input.session, data, application, environment.https)],

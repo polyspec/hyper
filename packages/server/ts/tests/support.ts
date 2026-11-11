@@ -155,6 +155,7 @@ export class Fixture {
   async app(options: Partial<AppOptions<Services>> = {}): Promise<App<Services>> {
     const app = await App.open<Services>({
       manifest: `${FIXTURES}app.json`,
+      build: `${FIXTURES}build.json`,
       templates: TEMPLATES,
       handlers: handlers(),
       timezone: '+09:00',

@@ -76,6 +76,8 @@ const sessionStore = async (): Promise<FileSessions | RedisSessions> => {
 
 const app = await App.open<Services>({
   manifest: join(board, 'app', 'app.json'),
+  // `make assets` writes the build id of the asset output, which App.open reads (HY-125).
+  build: join(board, 'build', 'build.json'),
   // `make assets` builds the template files that the browser loads; the server renders with the same files.
   templates: { index: join(board, 'build', 'templates.index.json'), root: join(board, 'public') },
   handlers,

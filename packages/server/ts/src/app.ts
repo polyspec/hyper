@@ -9,6 +9,7 @@ import { maskedToken, verifyToken } from './csrf.js';
 import type { FileSessions } from './file-sessions.js';
 import type { RedisSessions } from './redis-sessions.js';
 import { createListener, createServer, type Listener, type ServerOptions } from './http.js';
+import { readBuildId } from './build.js';
 import { decodeJson, inDataModel, JsonDecodeError } from './json.js';
 import { warningsAsErrors } from './warnings.js';
 import { Disconnected, renderPage, stopClosed, VARY, type PageInput } from './page.js';
@@ -74,6 +75,8 @@ interface Client {
 export interface AppOptions<S extends object> {
   // The absolute path of the manifest (HY-1).
   manifest: string;
+  // The absolute path of the `build.json` of the asset output, which holds the build id (HY-125, HY-48).
+  build: string;
   // The template index that the asset build writes, and the absolute directory that its file URLs are relative to
   // (HR-34). The server renders with these template files, as the browser does.
   templates: { index: string; root: string };
@@ -137,6 +140,7 @@ export class App<S extends object = Record<string, never>> {
   private readonly log: (message: string) => void;
   private readonly reads: Record<string, RouteReads>;
   private readonly client: Client | null;
+  private readonly build: string;
 
   private constructor(
     application: Application,
@@ -154,7 +158,9 @@ export class App<S extends object = Record<string, never>> {
     log: (message: string) => void,
     client: Client | null,
     reads: Record<string, RouteReads>,
+    build: string,
   ) {
+    this.build = build;
     this.client = client;
     this.reads = reads;
     this.application = application;
@@ -195,6 +201,8 @@ export class App<S extends object = Record<string, never>> {
     for (const path of [options.manifest, options.templates.index, options.templates.root]) {
       if (!isAbsolute(path)) throw new Error(`hyper: ${path} is not an absolute path`);
     }
+    if (typeof options.build !== 'string' || !isAbsolute(options.build)) throw new Error(`hyper: the build file ${String(options.build)} is not an absolute path`);
+    const build = readBuildId(options.build);
     const manifest = checkManifest(JSON.parse(readFileSync(options.manifest, 'utf8')));
     const index = checkTemplateIndex(JSON.parse(readFileSync(options.templates.index, 'utf8')), `the template index ${options.templates.index}`);
     const fetcher = async (url: string): Promise<Template> => decodeTemplate(JSON.parse(readFileSync(join(options.templates.root, url), 'utf8')));
@@ -217,7 +225,7 @@ export class App<S extends object = Record<string, never>> {
       if (template === undefined) throw new Error(`hyper: template ${name} is not in the template index`);
       return template;
     }, resolvePath);
-    return new App(application, options.handlers, options.timezone, basePath, options.https ?? false, options.frameAncestors ?? "'self'", bodyLimit, fileLimit, responseLimit, [...formTypes], options.onResponse, options.onDisconnect, options.log ?? ((message) => process.stderr.write(`${message}\n`)), client, reads);
+    return new App(application, options.handlers, options.timezone, basePath, options.https ?? false, options.frameAncestors ?? "'self'", bodyLimit, fileLimit, responseLimit, [...formTypes], options.onResponse, options.onDisconnect, options.log ?? ((message) => process.stderr.write(`${message}\n`)), client, reads, build);
   }
 
   // Registers the factory of an application service.
@@ -392,7 +400,7 @@ export class App<S extends object = Record<string, never>> {
   }
 
   private page(input: PageInput<S>): Promise<Response> {
-    return renderPage(input, { application: this.application, handlers: this.handlers, services: this.services, timezone: this.timezone, https: this.https, reads: this.readsOf(input.route.name) });
+    return renderPage(input, { application: this.application, handlers: this.handlers, services: this.services, timezone: this.timezone, https: this.https, reads: this.readsOf(input.route.name), build: this.build });
   }
 
   // Stores the flash values and changed topics of a redirect result and answers 303 (HY-25, HY-50).
