@@ -75,36 +75,36 @@ A request takes the lock, reads, writes and releases it, five commands. The Redi
 
 ### Uploads
 
-Measured with `make bench-uploads` on one Apple silicon machine with PHP 8.5.10, Node 26.12.0 and Python 3.14: three requests of each body, the mean with the least and the most. PHP 8.5.10 is not the baseline of this repository, so these numbers are no verification at that baseline.
+Measured with `make bench-uploads` on one Apple silicon machine with PHP 8.4.27, Node 26.12.0 and Python 3.14: three requests of each body, the mean with the least and the most. Other work ran on the machine during the measurement, so the ranges are wide.
 
 One file of 1 GiB:
 
 | Implementation | Server processor time ms | Request time ms | Largest memory of the server MiB |
 |---|---:|---:|---:|
-| hyper Python (`http.server`) | 629 (586-657) | 669 (648-680) | 35.9 |
-| hyper Node (`App.server`) | 831 (782-886) | 637 (606-658) | 141.7 |
-| PHP itself (PHP-FPM) | 1,224 (1,172-1,258) | 1,803 (1,577-2,231) | 6.4 |
-| hyper PHP (PHP-FPM) | 2,292 (2,265-2,342) | 4,172 (3,399-4,780) | 13.4 |
+| hyper Python (`http.server`) | 961 (767-1,271) | 1,165 (860-1,455) | 36.0 |
+| hyper Node (`App.server`) | 1,068 (1,046-1,099) | 838 (793-886) | 152.0 |
+| PHP itself (PHP-FPM) | 2,017 (1,792-2,274) | 4,305 (2,769-5,233) | 6.2 |
+| hyper PHP (PHP-FPM) | 3,552 (3,128-4,021) | 5,653 (5,027-6,065) | 13.3 |
 
 500 values and 500 files of 204,800 bytes (98 MiB):
 
 | Implementation | Server processor time ms | Request time ms | Largest memory of the server MiB |
 |---|---:|---:|---:|
-| hyper Python (`http.server`) | 149 (134-174) | 127 (106-157) | 37.3 |
-| PHP itself (PHP-FPM) | 224 (213-243) | 270 (242-309) | 7.3 |
-| hyper Node (`App.server`) | 241 (208-263) | 139 (115-156) | 143.4 |
-| hyper PHP (PHP-FPM) | 354 (319-410) | 418 (395-438) | 13.4 |
+| hyper Python (`http.server`) | 289 (278-296) | 351 (241-419) | 37.5 |
+| PHP itself (PHP-FPM) | 349 (325-369) | 461 (422-486) | 6.2 |
+| hyper Node (`App.server`) | 369 (325-439) | 228 (191-269) | 154.5 |
+| hyper PHP (PHP-FPM) | 402 (355-490) | 461 (441-475) | 13.3 |
 
 900 values of repeated and bracketed names:
 
 | Implementation | Server processor time ms | Request time ms | Largest memory of the server MiB |
 |---|---:|---:|---:|
-| hyper Python (`http.server`) | 6 (6-6) | 5 (5-5) | 37.3 |
-| PHP itself (PHP-FPM) | 9 (1-25) | 9 (1-26) | 7.3 |
-| hyper Node (`App.server`) | 14 (3-34) | 12 (3-29) | 148.2 |
-| hyper PHP (PHP-FPM) | 14 (2-38) | 3 (3-3) | 13.4 |
+| hyper Python (`http.server`) | 8 (7-8) | 7 (6-8) | 37.5 |
+| PHP itself (PHP-FPM) | 12 (1-35) | 16 (2-42) | 6.2 |
+| hyper PHP (PHP-FPM) | 16 (3-40) | 5 (4-7) | 13.3 |
+| hyper Node (`App.server`) | 20 (5-50) | 19 (4-46) | 157.6 |
 
-The memory of a server is the same for a body of 1 GiB and for a body of 98 MiB, so it does not grow with the body. The PHP server of hyper uses 1.6 to 1.9 times the processor time of the reader of PHP itself for the two bodies with files: PHP writes a body to its own temporary file before a script reads `php://input`, so the content of a file is written twice. The reader of PHP itself keeps the last value of a repeated name and nests bracketed names, so it does not give what the three servers of hyper give for the third body.
+The memory of a server is the same for a body of 1 GiB and for a body of 98 MiB, so it does not grow with the body. The PHP server of hyper uses 1.2 to 1.8 times the processor time of the reader of PHP itself for the two bodies with files: PHP writes a body to its own temporary file before a script reads `php://input`, so the content of a file is written twice. The reader of PHP itself keeps the last value of a repeated name and nests bracketed names, so it does not give what the three servers of hyper give for the third body.
 
 ### Browser
 

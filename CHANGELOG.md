@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- The results of `make bench-uploads` in `docs/operations/benchmark.md` are those of a run on PHP 8.4.27, the baseline; the first record was a run on PHP 8.5.10, which the `php` of the checkout named because it was the first of `PATH`. The PHP checks of the work on the request bodies were repeated on 8.4.27 with the same results: the 91 cases of `contracts/fields.json`, the unit tests, the comparison of the three servers and the upload over HTTP. `docs/operations/deployment.md` names the benchmark for the numbers and repeats only the memory of a request (H29.6-2).
+
 - `config/rebuild.json` declares `benchmarks/uploads.mts`, `benchmarks/uploads-native.php` and `scripts/recipe/protocol.mts`, so `make rebuild-check` passes. The steps and the tests of the uploads hold each piece of code once: `filesOf` of the PHP fields steps gives the files with or without their sizes, and the tests of a multipart body of the WSGI and ASGI callables are the class `UploadCases` of `tests/transport.py`, which each takes with its own request; `make duplication-check` named them (H28.11-4).
 
 - `.gitignore` no longer ignores the two tracked files of `tests/scripts/fixtures/recipe/vendor/`, the stand-in of the Composer autoloader of the recipe fixture: the rule `vendor/` matched them, so `tests/scripts/ignored-files.test.mts` failed (H28.11-4).

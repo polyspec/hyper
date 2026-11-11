@@ -76,36 +76,36 @@
 
 ### Upload
 
-`make bench-uploads`로 Apple silicon machine 한 대에서 PHP 8.5.10, Node 26.12.0, Python 3.14로 측정했다. body마다 요청 3회이며 평균과 최소와 최대다. PHP 8.5.10은 이 저장소의 기준 버전이 아니므로 이 수치는 기준 버전에서의 검증이 아니다.
+`make bench-uploads`로 Apple silicon machine 한 대에서 PHP 8.4.27, Node 26.12.0, Python 3.14로 측정했다. body마다 요청 3회이며 평균과 최소와 최대다. 다른 작업이 같은 machine에서 도는 동안 측정했으므로 범위가 넓다.
 
 1 GiB file 하나:
 
 | 구현 | server processor 시간 ms | 요청 시간 ms | server 최대 메모리 MiB |
 |---|---:|---:|---:|
-| hyper Python(`http.server`) | 629 (586-657) | 669 (648-680) | 35.9 |
-| hyper Node(`App.server`) | 831 (782-886) | 637 (606-658) | 141.7 |
-| PHP 자체(PHP-FPM) | 1,224 (1,172-1,258) | 1,803 (1,577-2,231) | 6.4 |
-| hyper PHP(PHP-FPM) | 2,292 (2,265-2,342) | 4,172 (3,399-4,780) | 13.4 |
+| hyper Python(`http.server`) | 961 (767-1,271) | 1,165 (860-1,455) | 36.0 |
+| hyper Node(`App.server`) | 1,068 (1,046-1,099) | 838 (793-886) | 152.0 |
+| PHP 자체(PHP-FPM) | 2,017 (1,792-2,274) | 4,305 (2,769-5,233) | 6.2 |
+| hyper PHP(PHP-FPM) | 3,552 (3,128-4,021) | 5,653 (5,027-6,065) | 13.3 |
 
 값 500개와 204,800 byte file 500개(98 MiB):
 
 | 구현 | server processor 시간 ms | 요청 시간 ms | server 최대 메모리 MiB |
 |---|---:|---:|---:|
-| hyper Python(`http.server`) | 149 (134-174) | 127 (106-157) | 37.3 |
-| PHP 자체(PHP-FPM) | 224 (213-243) | 270 (242-309) | 7.3 |
-| hyper Node(`App.server`) | 241 (208-263) | 139 (115-156) | 143.4 |
-| hyper PHP(PHP-FPM) | 354 (319-410) | 418 (395-438) | 13.4 |
+| hyper Python(`http.server`) | 289 (278-296) | 351 (241-419) | 37.5 |
+| PHP 자체(PHP-FPM) | 349 (325-369) | 461 (422-486) | 6.2 |
+| hyper Node(`App.server`) | 369 (325-439) | 228 (191-269) | 154.5 |
+| hyper PHP(PHP-FPM) | 402 (355-490) | 461 (441-475) | 13.3 |
 
 반복 이름과 대괄호 이름의 값 900개:
 
 | 구현 | server processor 시간 ms | 요청 시간 ms | server 최대 메모리 MiB |
 |---|---:|---:|---:|
-| hyper Python(`http.server`) | 6 (6-6) | 5 (5-5) | 37.3 |
-| PHP 자체(PHP-FPM) | 9 (1-25) | 9 (1-26) | 7.3 |
-| hyper Node(`App.server`) | 14 (3-34) | 12 (3-29) | 148.2 |
-| hyper PHP(PHP-FPM) | 14 (2-38) | 3 (3-3) | 13.4 |
+| hyper Python(`http.server`) | 8 (7-8) | 7 (6-8) | 37.5 |
+| PHP 자체(PHP-FPM) | 12 (1-35) | 16 (2-42) | 6.2 |
+| hyper PHP(PHP-FPM) | 16 (3-40) | 5 (4-7) | 13.3 |
+| hyper Node(`App.server`) | 20 (5-50) | 19 (4-46) | 157.6 |
 
-server의 메모리는 1 GiB body와 98 MiB body에서 같으므로 body에 따라 늘지 않는다. hyper의 PHP server는 file이 있는 두 body에서 PHP 자체 reader의 1.6배에서 1.9배의 processor 시간을 쓴다. PHP는 script가 `php://input`을 읽기 전에 body를 자신의 임시 file에 쓰므로 file의 내용이 두 번 쓰인다. PHP 자체 reader는 반복된 이름의 마지막 값만 두고 대괄호 이름을 중첩하므로, 세 번째 body에서 hyper의 세 server가 주는 것을 주지 않는다.
+server의 메모리는 1 GiB body와 98 MiB body에서 같으므로 body에 따라 늘지 않는다. hyper의 PHP server는 file이 있는 두 body에서 PHP 자체 reader의 1.2배에서 1.8배의 processor 시간을 쓴다. PHP는 script가 `php://input`을 읽기 전에 body를 자신의 임시 file에 쓰므로 file의 내용이 두 번 쓰인다. PHP 자체 reader는 반복된 이름의 마지막 값만 두고 대괄호 이름을 중첩하므로, 세 번째 body에서 hyper의 세 server가 주는 것을 주지 않는다.
 
 ### 브라우저
 

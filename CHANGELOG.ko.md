@@ -6,6 +6,8 @@
 
 ## Unreleased
 
+- `docs/operations/benchmark.md`의 `make bench-uploads` 결과는 기준 버전인 PHP 8.4.27에서 실행한 것이다. 첫 기록은 PHP 8.5.10에서 실행한 것이었는데, checkout의 `php`가 `PATH`의 첫 번째인 그것을 가리켰기 때문이다. 요청 body 작업의 PHP 검사를 8.4.27에서 다시 실행했고 결과는 같다. `contracts/fields.json`의 91개 case, unit test, 세 server의 비교, HTTP upload가 그것이다. `docs/operations/deployment.md`는 수치를 benchmark에 맡기고 요청의 메모리만 다시 적는다(H29.6-2).
+
 - `config/rebuild.json`이 `benchmarks/uploads.mts`, `benchmarks/uploads-native.php`, `scripts/recipe/protocol.mts`를 선언하므로 `make rebuild-check`가 통과한다. upload의 step과 test는 각 code를 한 번만 둔다. PHP fields step의 `filesOf`는 file을 크기와 함께 또는 크기 없이 주고, WSGI와 ASGI callable의 multipart body test는 `tests/transport.py`의 class `UploadCases`이며 각자의 요청으로 그것을 받는다. `make duplication-check`가 그것들을 지적했다(H28.11-4).
 
 - `.gitignore`가 recipe fixture의 Composer autoloader 대역인 `tests/scripts/fixtures/recipe/vendor/`의 추적되는 두 file을 더 이상 무시하지 않는다. `vendor/` 규칙이 그것들에 걸려 `tests/scripts/ignored-files.test.mts`가 실패했다(H28.11-4).
