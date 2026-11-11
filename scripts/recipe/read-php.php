@@ -172,8 +172,6 @@ function unitKind(ReflectionClass $class): string
     }
     $methods = ownMethods($class);
     $functions = $methods !== []
-        && ownProperties($class) === []
-        && ownConstants($class) === []
         && !in_array('__construct', array_map(static fn($m) => $m->getName(), $methods), true);
     foreach ($methods as $method) {
         $functions = $functions && $method->isStatic();
