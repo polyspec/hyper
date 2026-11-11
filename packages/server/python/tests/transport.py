@@ -175,6 +175,33 @@ class Upload:
             for name in os.listdir(self.uploads)
         )
 
+    @staticmethod
+    def stored_body() -> bytes:
+        """Returns a body with the value `a` and the file `f` of 1.5 MiB."""
+        return (
+            multipart_part('form-data; name="a"', b"1")
+            + multipart_part('form-data; name="f"; filename="big.bin"', b"x" * 1500000)
+            + b"--XyZ--\r\n"
+        )
+
+    @staticmethod
+    def cut_body() -> bytes:
+        """Returns a body with the file `f` and without its closing delimiter."""
+        return multipart_part('form-data; name="f"; filename="cut.bin"', b"y" * 200000)
+
+    def assert_stored(self, case: unittest.TestCase) -> None:
+        """Requires that the request of `stored_body` gave its file from a file of the request, that the directory
+        of the request was there at the write hook, and that only the moved file stays (HY-131.13, HY-131.14)."""
+        case.assertEqual([True, [("a", ["1"])], "big.bin", 1500000, 1], self.seen)
+        case.assertEqual(["hyper-", "kept.bin"], self.at_hook)
+        case.assertEqual(["kept.bin"], self.entries())
+
+    def assert_cut(self, case: unittest.TestCase) -> None:
+        """Requires that the input of the request of `cut_body` is not valid and that its directory is removed
+        (HY-131.5)."""
+        case.assertEqual([False, [], None, None, 1], self.seen)
+        case.assertEqual([], self.entries())
+
     def entries(self) -> list[str]:
         """Returns the entries of the directory."""
         return sorted(os.listdir(self.uploads))
@@ -184,3 +211,20 @@ class Upload:
         for name in os.listdir(self.uploads):
             os.unlink(os.path.join(self.uploads, name))
         os.rmdir(self.uploads)
+
+
+class UploadCases:
+    """The tests of a multipart body that a transport reads in chunks (HY-131), which the test class of each transport
+    takes with its own `upload`, the request of a body through its callable."""
+
+    def test_a_multipart_body_is_read_into_files_that_are_removed_after_the_write_hook(
+        self,
+    ) -> None:
+        upload = Upload(self, self.app, True)
+        self.upload(upload, Upload.stored_body())
+        upload.assert_stored(self)
+
+    def test_a_multipart_body_without_its_end_leaves_no_directory(self) -> None:
+        upload = Upload(self, self.app, False)
+        self.upload(upload, Upload.cut_body())
+        upload.assert_cut(self)

@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- `config/rebuild.json` declares `benchmarks/uploads.mts`, `benchmarks/uploads-native.php` and `scripts/recipe/protocol.mts`, so `make rebuild-check` passes. The steps and the tests of the uploads hold each piece of code once: `filesOf` of the PHP fields steps gives the files with or without their sizes, and the tests of a multipart body of the WSGI and ASGI callables are the class `UploadCases` of `tests/transport.py`, which each takes with its own request; `make duplication-check` named them (H28.11-4).
+
 - `.gitignore` no longer ignores the two tracked files of `tests/scripts/fixtures/recipe/vendor/`, the stand-in of the Composer autoloader of the recipe fixture: the rule `vendor/` matched them, so `tests/scripts/ignored-files.test.mts` failed (H28.11-4).
 
 - `make layout-check` passes for the files of the recipe and of the upload tests: `scripts/contract-programs.mts` is TypeScript, as the infrastructure under `scripts/` is (it was `contract-programs.mjs`), and `config/layout.yml` declares with their reasons the files that stay in another language: the readers `scripts/recipe/read-php.php` and `scripts/recipe/read_python.py`, the sources of the recipe fixture, and the workers and servers of `tests/scripts/fixtures/multipart-worker` and `tests/scripts/fixtures/upload-server` (H28.11-4).

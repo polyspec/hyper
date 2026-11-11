@@ -106,22 +106,7 @@ final class FieldsSteps
             $case->compare('exceeded', $read->exceeded());
             $case->compare('held', self::latin($held));
             $case->compare('fields', self::fieldsOf($fields));
-            $entries = null;
-            if ($files !== null) {
-                $entries = [];
-                foreach ($files->pairs() as [, $list]) {
-                    foreach ($list as $file) {
-                        $entries[] = [
-                            'name' => $file->name(),
-                            'filename' => $file->filename(),
-                            'contentType' => $file->contentType(),
-                            'content' => self::latin($file->content()),
-                            'size' => $file->size(),
-                        ];
-                    }
-                }
-            }
-            $case->compare('files', $entries);
+            $case->compare('files', self::filesOf($files, true));
             $case->compare('entries', $count());
             $first = $files?->pairs()[0][1][0] ?? null;
             if ($move === 'none' || $first === null) {
@@ -194,8 +179,12 @@ final class FieldsSteps
         return $fields?->pairs();
     }
 
-    /** @return list<array<string, string>>|null */
-    private static function filesOf(?Files $files): ?array
+    /**
+     * Returns the files in request order as the cases state them, with the size of each when `$sizes` is true.
+     *
+     * @return list<array<string, string|int>>|null
+     */
+    private static function filesOf(?Files $files, bool $sizes = false): ?array
     {
         if ($files === null) {
             return null;
@@ -203,12 +192,13 @@ final class FieldsSteps
         $entries = [];
         foreach ($files->pairs() as [, $list]) {
             foreach ($list as $file) {
-                $entries[] = [
+                $entry = [
                     'name' => $file->name(),
                     'filename' => $file->filename(),
                     'contentType' => $file->contentType(),
-                    'content' => (string) mb_convert_encoding($file->content(), 'UTF-8', 'ISO-8859-1'),
+                    'content' => self::latin($file->content()),
                 ];
+                $entries[] = $sizes ? [...$entry, 'size' => $file->size()] : $entry;
             }
         }
 

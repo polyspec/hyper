@@ -6,6 +6,8 @@
 
 ## Unreleased
 
+- `config/rebuild.json`이 `benchmarks/uploads.mts`, `benchmarks/uploads-native.php`, `scripts/recipe/protocol.mts`를 선언하므로 `make rebuild-check`가 통과한다. upload의 step과 test는 각 code를 한 번만 둔다. PHP fields step의 `filesOf`는 file을 크기와 함께 또는 크기 없이 주고, WSGI와 ASGI callable의 multipart body test는 `tests/transport.py`의 class `UploadCases`이며 각자의 요청으로 그것을 받는다. `make duplication-check`가 그것들을 지적했다(H28.11-4).
+
 - `.gitignore`가 recipe fixture의 Composer autoloader 대역인 `tests/scripts/fixtures/recipe/vendor/`의 추적되는 두 file을 더 이상 무시하지 않는다. `vendor/` 규칙이 그것들에 걸려 `tests/scripts/ignored-files.test.mts`가 실패했다(H28.11-4).
 
 - `make layout-check`가 recipe와 upload test의 file에 대해 통과한다. `scripts/contract-programs.mts`는 `scripts/` 아래 infrastructure처럼 TypeScript이고(이전에는 `contract-programs.mjs`였다), `config/layout.yml`은 다른 언어로 남는 file을 이유와 함께 선언한다. reader `scripts/recipe/read-php.php`와 `scripts/recipe/read_python.py`, recipe fixture의 source, 그리고 `tests/scripts/fixtures/multipart-worker`와 `tests/scripts/fixtures/upload-server`의 worker와 server다(H28.11-4).

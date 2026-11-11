@@ -13,7 +13,7 @@ from .transport import (
     record_failure,
     record_status,
     Upload,
-    multipart_part,
+    UploadCases,
 )
 from polyspec.hyper.reply import Reply
 from polyspec.hyper.response import Response
@@ -58,7 +58,7 @@ def half_call(application, values: dict) -> None:
     body.close()
 
 
-class WsgiTest(TransportCase):
+class WsgiTest(UploadCases, TransportCase):
     def escape_with(self, response: Response) -> str:
         """Requires that the application's answer `response` is an escape that gets the plain 500, ended and reported
         once to the write hook, and returns the failure that the hook received."""
@@ -140,35 +140,8 @@ class WsgiTest(TransportCase):
         self.assertEqual(25, request.body_size())
         self.assertLessEqual(sum(input.reads), self.app.body_limit)
 
-    def test_a_multipart_body_is_read_into_files_that_are_removed_after_the_write_hook(
-        self,
-    ) -> None:
-        # HY-131.13, HY-131.14: a file of 1.5 MiB comes from a file of the request, whose directory is removed after
-        # the write hook; a file that the application moved stays.
-        upload = Upload(self, self.app, True)
-        body = (
-            multipart_part('form-data; name="a"', b"1")
-            + multipart_part('form-data; name="f"; filename="big.bin"', b"x" * 1500000)
-            + b"--XyZ--\r\n"
-        )
-        status, _, _ = call(
-            create_wsgi(self.app, self.sessions, written=upload.written),
-            environ(
-                REQUEST_METHOD="POST",
-                CONTENT_TYPE="multipart/form-data; boundary=XyZ",
-                CONTENT_LENGTH=str(len(body)),
-                **{"wsgi.input": Input(body)},
-            ),
-        )
-        self.assertEqual("200 OK", status)
-        self.assertEqual([True, [("a", ["1"])], "big.bin", 1500000, 1], upload.seen)
-        self.assertEqual(["hyper-", "kept.bin"], upload.at_hook)
-        self.assertEqual(["kept.bin"], upload.entries())
-
-    def test_a_multipart_body_without_its_end_leaves_no_directory(self) -> None:
-        # HY-131.5: the input of a body without its closing delimiter is not valid, and its directory is removed.
-        upload = Upload(self, self.app, False)
-        body = multipart_part('form-data; name="f"; filename="cut.bin"', b"y" * 200000)
+    def upload(self, upload: Upload, body: bytes) -> None:
+        """Sends the multipart body through the callable with the write hook of the upload."""
         call(
             create_wsgi(self.app, self.sessions, written=upload.written),
             environ(
@@ -178,8 +151,6 @@ class WsgiTest(TransportCase):
                 **{"wsgi.input": Input(body)},
             ),
         )
-        self.assertEqual([False, [], None, None, 1], upload.seen)
-        self.assertEqual([], upload.entries())
 
     def test_a_public_file_is_served_before_around(self) -> None:
         files = Path(self.directory.name) / "public"

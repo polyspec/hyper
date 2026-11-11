@@ -14,6 +14,14 @@
       "kind": "ecosystem",
       "tool": "node:child_process runs the session workers and the CPU of INFO of Redis counts the cost; node:perf_hooks times them"
     },
+    "benchmarks/uploads-native.php": {
+      "kind": "ecosystem",
+      "tool": "getrusage of PHP reports the processor time and the largest memory of the worker that read a body into $_POST and $_FILES"
+    },
+    "benchmarks/uploads.mts": {
+      "kind": "ecosystem",
+      "tool": "node:http and node:net send the bodies to one real server of each implementation, PHP-FPM over FastCGI; node:perf_hooks times the requests and getrusage of each server reports its use"
+    },
     "examples/board/app/handlers.php": {
       "kind": "policy",
       "reason": "the handlers of the board example, an application of the PHP server; it implements no tool of an ecosystem"
@@ -155,6 +163,10 @@
       "reason": "a part of the recipe check of docs/spec/recipe.md (HYR-7, HYR-8, HYR-10), which compares the development spec with the readers' output and the case results; no ecosystem tool performs this comparison"
     },
     "scripts/recipe/names.mts": {
+      "kind": "policy",
+      "reason": "a part of the recipe check of docs/spec/recipe.md (HYR-7, HYR-8, HYR-10), which compares the development spec with the readers' output and the case results; no ecosystem tool performs this comparison"
+    },
+    "scripts/recipe/protocol.mts": {
       "kind": "policy",
       "reason": "a part of the recipe check of docs/spec/recipe.md (HYR-7, HYR-8, HYR-10), which compares the development spec with the readers' output and the case results; no ecosystem tool performs this comparison"
     },
