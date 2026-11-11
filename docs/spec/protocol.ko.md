@@ -1,5 +1,5 @@
 <!-- doc-id: protocol -->
-<!-- source-sha256: b8d52d8b98375429905171c8b2e3f695b14aded57e52e589c3773cf0abad2deb -->
+<!-- source-sha256: 0e77e637f3f6d05a958298d7b7033799248cbf84f4bfd29035e13df80016b1fc -->
 # 영역 프로토콜
 
 [English](protocol.md).
@@ -49,6 +49,7 @@
   - 매개변수 `{name}`. `name`은 `[A-Za-z_][A-Za-z0-9_]*`에 맞는다.
 
   경로 `/`는 세그먼트가 없다.
+  라우트 경로의 매개변수 이름은 서로 달라야 하며, 같은 이름을 반복하는 경로는 거부된다.
 - **HY-5** 요청 경로가 라우트와 일치하려면 다음 조건을 모두 만족해야 한다. 쿼리 문자열은 경로에 포함하지 않는다.
   - `/`로 시작한다.
   - 세그먼트 수가 같다.
@@ -62,8 +63,8 @@
   - 요청 경로는 기본 경로를 제거한 뒤 라우팅한다.
   - 기본 경로 뒤에 `/`나 경로의 끝이 오지 않는 요청 경로는 결과가 없다.
   - `Location` 헤더는 기본 경로를 포함한다.
-- **HY-9** `contracts/routes.json`은 라우트, 요청 경로, 기대 결과를 담는다. PHP 라우터와 JavaScript 라우터는 모든 사례를 통과한다.
-- **HY-49** 라우트 경로의 마지막 segment는 나머지 매개변수 `{name*}`일 수 있다. `name`은 HY-4와 같고 경로의 다른 매개변수와 달라야 한다. 이 segment는 0개 이상의 남은 요청 segment에 놓이며, 그 segment가 모두 비어 있거나 HY-6으로 decode될 때 맞는다. 값은 decode하지 않은 요청 경로의 나머지로, `/` 뒤에 남은 segment를 `/`로 이은 것이며 남은 segment가 없으면 `/`다. `contracts/rest.json`은 라우트, 요청 경로, 기대 결과를 담는다. PHP 라우터와 JavaScript 라우터는 모든 사례를 통과한다.
+- **HY-9** `contracts/routes.json`은 라우트, 요청 경로, 기대 결과를 담는다. `cases`나 `baseCases`의 case의 `result`는 매개변수를 가진 라우트 이름이거나 null이며, `ordered`로 비교한다(HY-130). `invalidPaths`의 각 case는 라우터가 거부하는 라우트 경로를 적으며, 그 경로로 라우터를 만드는 것을 `raises`로 비교한다(HY-130). PHP, Node, Python 서버와 브라우저 패키지는 모든 사례를 통과한다.
+- **HY-49** 라우트 경로의 마지막 segment는 나머지 매개변수 `{name*}`일 수 있다. `name`은 HY-4와 같고 경로의 다른 매개변수와 달라야 한다. 이 segment는 0개 이상의 남은 요청 segment에 놓이며, 그 segment가 모두 비어 있거나 HY-6으로 decode될 때 맞는다. 값은 decode하지 않은 요청 경로의 나머지로, `/` 뒤에 남은 segment를 `/`로 이은 것이며 남은 segment가 없으면 `/`다. `contracts/rest.json`은 라우트, 요청 경로, 기대 결과를 담으며, PHP, Node, Python 서버와 브라우저 패키지는 모든 사례를 통과한다. `cases`의 case의 `result`는 `ordered`로 비교하고, `invalidPaths`의 case의 경로로 라우터를 만드는 것은 `raises`로 비교한다(HY-130).
 
 ## 데이터와 주제
 
@@ -98,8 +99,9 @@
 
 - **HY-56** 요청의 원본 쿼리는 요청 대상에서 첫 `?` 뒤부터 첫 `#` 앞까지이며, `?`가 없으면 빈 텍스트다. 그 값은 중첩 없이 읽는다. 원본 쿼리를 모든 `&`에서 나누고 빈 부분은 건너뛴다. 부분의 이름은 첫 `=` 앞의 텍스트이고 값은 그 나머지이며, `=`가 없으면 값은 빈 텍스트다. 둘 다 `+`는 공백이고, 16진수 두 자리가 붙은 `%XX`는 그 바이트이며, 그 밖의 `%`는 그대로 둔다. `roles[]`나 `a[b]`처럼 괄호가 있는 이름은 쓴 그대로의 이름이고, 빈 이름도 이름이다. 쿼리 값은 각 이름을 처음 나온 순서대로 그 값들의 요청 순서 목록에 대응시키는 순서 있는 map이다. 유효한 UTF-8이 아닌 이름이나 값은 HY-42로 실패한다. `Request`는 원본 쿼리와 쿼리 값을 제공하고, `queryInt`는 이름의 마지막 값을 읽는다. `contracts/fields.json`은 텍스트와 그 값을 담으며, PHP, Node, Python 서버는 모든 사례를 통과한다.
 - **HY-57** 요청의 폼 값은 원본 body에서 중첩 없이 읽으며, HY-56의 쿼리 값처럼 순서 있는 map이다. `application/x-www-form-urlencoded` body는 원본 쿼리처럼 읽는다. `multipart/form-data` body는 `Content-Disposition`이 `form-data`이고 `name` 매개변수가 있으며 `filename` 매개변수가 없는 part마다 값 하나를 준다. 이름은 그 매개변수이고 값은 part의 내용 그대로다. `filename`이 있는 part는 파일이며 폼 값이 아니다. 다른 type의 body에는 폼 값이 없다. 유효한 UTF-8이 아닌 이름이나 값은 HY-42로 실패한다. PHP 서버는 대괄호 이름을 중첩하는 `$_POST`가 아니라 `php://input`에서 body를 읽는다. PHP는 `enable_post_data_reading`이 꺼져 있을 때만 `multipart/form-data` 요청의 body를 준다. `Request`는 폼 값을 제공하고, `formString`은 이름의 마지막 값을 읽는다. `contracts/fields.json`은 urlencoded 사례와 multipart 사례를 담으며, PHP, Node, Python 서버는 모든 사례를 통과한다.
+  `urlencoded`나 `multipart`의 case의 `fields`는 그 값들을 HY-56의 순서로 적은 `[name, values]` 쌍의 목록이거나, 텍스트나 body가 HY-42로 실패하면 null이며, `exact`로 비교한다(HY-130).
 
-- **HY-113** `multipart/form-data` body의 file part는 `Content-Disposition`이 `form-data`이고 `name` parameter와 `filename` parameter를 모두 가진 part다(HY-57). 요청은 그 file들을 `files()`로 제공한다. 이는 각 이름에서 그 file들의 목록으로 가는 순서 있는 map이며, 요청 순서를 HY-57이 폼 값의 순서를 정하듯 따른다. `file(name)`은 이름의 마지막 file을 돌려주고, 없으면 아무것도 돌려주지 않는다. `formString`이 마지막 값을 읽는 것과 같다. file은 네 부분을 가진다. 이름은 `name` parameter다. 파일 이름은 `filename` parameter이며, 그 quoted string의 백슬래시 escape를 풀고 더 decode하지 않는다. content type은 part의 `Content-Type` 헤더 값을 보낸 그대로이며, 헤더가 없으면 빈 텍스트다. bytes는 part의 내용을 그대로다. filename이 빈 file도 file이다. 이름, 파일 이름, content type은 valid UTF-8이어야 하며, 그렇지 않은 part는 HY-42가 이름에 주는 것과 같이 status 400을 받는다. `name` parameter가 없는 part는 폼 값도 file도 아니며, 어떤 규칙도 이를 애플리케이션에 주지 않는다. `filename*`(RFC 5987)는 읽지 않는다. file API는 HY-106의 공개 API의 일부이며, 각 runtime의 형태로 제공한다. PHP는 `Request::files()`와 `Request::file()`을 파일 클래스 `UploadedFile`과 함께, Python은 `files()`와 `file()`을 클래스 `UploadedFile`과 함께, Node는 `files()`와 `file()`을 타입 `UploadedFile`과 함께 제공한다. `contracts/fields.json`의 계약 case는 multipart case의 file을 선택적 키 `files`로 적는다. 이는 `name`, `filename`, `contentType`, `content`를 가진 객체의 목록이며, `content`는 file의 텍스트이고, `contentType`은 part에 content type이 없으면 빈 텍스트다. `files`가 없는 case는 file을 적지 않는다.
+- **HY-113** `multipart/form-data` body의 file part는 `Content-Disposition`이 `form-data`이고 `name` parameter와 `filename` parameter를 모두 가진 part다(HY-57). 요청은 그 file들을 `files()`로 제공한다. 이는 각 이름에서 그 file들의 목록으로 가는 순서 있는 map이며, 요청 순서를 HY-57이 폼 값의 순서를 정하듯 따른다. `file(name)`은 이름의 마지막 file을 돌려주고, 없으면 아무것도 돌려주지 않는다. `formString`이 마지막 값을 읽는 것과 같다. file은 네 부분을 가진다. 이름은 `name` parameter다. 파일 이름은 `filename` parameter이며, 그 quoted string의 백슬래시 escape를 풀고 더 decode하지 않는다. content type은 part의 `Content-Type` 헤더 값을 보낸 그대로이며, 헤더가 없으면 빈 텍스트다. bytes는 part의 내용을 그대로다. filename이 빈 file도 file이다. 이름, 파일 이름, content type은 valid UTF-8이어야 하며, 그렇지 않은 part는 HY-42가 이름에 주는 것과 같이 status 400을 받는다. `name` parameter가 없는 part는 폼 값도 file도 아니며, 어떤 규칙도 이를 애플리케이션에 주지 않는다. `filename*`(RFC 5987)는 읽지 않는다. file API는 HY-106의 공개 API의 일부이며, 각 runtime의 형태로 제공한다. PHP는 `Request::files()`와 `Request::file()`을 파일 클래스 `UploadedFile`과 함께, Python은 `files()`와 `file()`을 클래스 `UploadedFile`과 함께, Node는 `files()`와 `file()`을 타입 `UploadedFile`과 함께 제공한다. `contracts/fields.json`의 계약 case는 multipart case의 file을 선택적 키 `files`로 적는다. 이는 `name`, `filename`, `contentType`, `content`를 가진 객체의 목록이며, `content`는 file의 텍스트이고, `contentType`은 part에 content type이 없으면 빈 텍스트다. `multipart`의 case의 `files`는 `exact`로 비교하며(HY-130), `fields`가 null인 case는 `files`를 적지 않는다.
 - **HY-114** 애플리케이션은 파일 제한, 즉 한 file(HY-113)의 최대 바이트 수를 선언할 수 있다. 이는 body 제한(HY-59) 옆에 있는 애플리케이션의 옵션이다. 기본값은 8 MiB로 기본 body 제한과 같다. 파일 제한을 선언하지 않은 애플리케이션은 8 MiB와 body 제한 중 작은 값을 파일 제한으로 쓴다. 그래서 어떤 body 제한으로도 열리며, body 제한이 요청을 거절할 때에만 파일을 거절한다. 아래의 검사는 선언한 값에만 적용한다. 제한의 이유는 모든 runtime이 file 하나를 값 하나로 메모리에 담기 때문이다. 양의 정수가 아니거나 body 제한보다 큰 파일 제한은 애플리케이션을 열 때 실패하며, 이는 HY-59가 다른 제한에 대해 정하는 것과 같다. HY-59의 1단계와 2단계 검사 뒤, action이나 `/_hyper/keep` handler가 실행되기 전에, 서버는 요청의 file part마다 bytes를 검사한다. bytes가 파일 제한보다 많은 file은 요청을 status 413과 텍스트 `Content Too Large`로 실패시키며, HY-59의 1단계가 하는 것과 같이 어떤 action도 실행하지 않는다. 서버는 file을 자르지 않으며 file의 일부를 넘기지도 않는다. 제한 안의 file은 전부 넘긴다.
 
 ## Media type과 representation
@@ -154,6 +156,7 @@
   - 서버는 handler에 함수 `etag(body)`를 준다. 이 함수는 선택한 type의 body에 대해 그 tag를 돌려주므로, `PUT`이나 `DELETE` handler는 `If-Match`를 그것과 비교한다(RFC 9110, 13.1.1절).
   - 응답 hook(HY-60, 새 빈 reply와 함께), frame 정책(HY-45), 응답 제한(HY-66), ORM의 오류(HY-107: `NO_ROWS`는 텍스트 `Not Found`와 함께 404, `REVISION_CHANGED`는 텍스트 `Precondition Failed`와 함께 412이며, 둘 다 `Cache-Control: no-store`를 가진 plain text다), HY-43의 오류는 페이지처럼 적용된다. HY-52, weak tag에 대한 HY-53, HY-103은 적용되지 않는다. handler에는 reply가 없기 때문이다.
 - **HY-123** `contracts/representations.json`은 HY-116, HY-117, HY-118부터 HY-122까지의 매니페스트, 요청, 기대 응답을 담는다. q-value, wildcard, 매개변수, 동률, 유효하지 않은 `Accept`가 있는 선택, 매니페스트 검사, `Allow`가 있는 405, body가 있는 406, 415, `GET`, `HEAD`, `DELETE`의 body와 유효하지 않은 JSON body에 대한 400, `HEAD`, 상태, header, `Location`, `Cache-Control` 검사, `ETag`, `If-None-Match`와 304, `Vary`를 담는다. `manifestRejections`는 라우트의 `representations` 대신 넣었을 때 매니페스트 검사가 거부하는 항목을, `openRejections`는 한 라우트의 handler type을 나열한다. 그 type들이 그 라우트의 handler를 대신하고 다른 모든 라우트는 runner가 등록하는 handler를 유지하며, 그때 열기가 실패한다. 서버의 runner는 선언된 항목마다 case의 `handler`를 돌려주고 받은 것을 `received`로 기록하는 handler를 등록하며, 모든 요청을 `App.handle`에 준다. 그래서 `HEAD` case는 그 `GET`의 body를 가진 응답을 적는다(HY-121). PHP, Node, Python 서버는 모든 사례를 통과한다.
+  `manifestRejections`나 `openRejections`의 case의 열기는 `raises`로 비교한다(HY-130). `page`는 페이지 응답의 `Content-Type`의 media type인 `text/html`이나 `application/vnd.hyper+json`을 적고, `handled`는 representation handler의 호출 수, `session` false는 요청 뒤 session이 session token을 갖지 않음을 적으며, 각각 `exact`로 비교한다(HY-130). `received`는 handler가 받은 요청의 `method`와 `body`를 `exact`로, `parameters`를 `ordered`로, `headers`를 `subset`으로, `absentHeaders`를 `absent`로 비교한다(HY-130).
 
 ## JSON 응답
 
@@ -206,13 +209,14 @@
   - 문서는 `html` 정의 `build`를 가진다. 그 텍스트는 `<meta name="hyper-build" content="<build id>">`이며, 레이아웃은 그것을 `<head>` 안에서 `{# build}`로 한 번 렌더한다(HY-3, HY-12). `{# title}`과 `{# data}`처럼(HY-48), `{# build}`를 정확히 한 번 배치하지 않는 레이아웃은 build를 실패시킨다. 검사는 배치를 세며, 그것이 `<head>` 안에 있는지는 검사하지 않는다. 정적 셸도 같은 요소를 가진다.
   - 서버는 context handler를 호출하는 모든 요청에서 context를 HY-44로 검사한다. 그리고 JSON 응답과 데이터를 내장하는 문서(HY-31)에서만 context의 HY-54 JSON 텍스트를 한 번 쓰고 그것으로 context hash를 계산한다. 그 텍스트가 HY-128의 member `value`의 텍스트이고 아래 hash의 텍스트다. 데이터를 내장하지 않는 문서는 hash도 `value`도 담지 않으므로, 서버는 그것을 context map으로 렌더하고 그 텍스트를 쓰지 않는다.
   - context hash는 바이트 `{"build":"<build id>","context":`, 그 텍스트, `}`의 소문자 16진수 SHA-256 digest다. 이것은 그 map의 HY-54 JSON 텍스트다. 그래서 모든 서버는 같은 context에 같은 hash를 계산하고, 새 build는 새 hash를 준다.
+  `contracts/context.json`의 `builds`는 `files`를 build 함수에 주고, hash가 빼는 출력을 `excluded`에 적으며, 그 `sortedPaths`, `stream`, `build`는 `exact`로 비교한다(HY-130).
 - **HY-126** HY-73의 읽기 경로는 `context`에 적용하지 않는다. context 하나가 모든 라우트에 쓰이고 그 hash가 전체를 덮으므로 서버는 그것을 통째로 보낸다. HY-71은 모든 공유 데이터와 같이 context에도 적용한다.
 - **HY-127** 영역 요청과 문서 요청은 브라우저가 보관한 context hash를 header `Hyper-Context`로 보낼 수 있다. context가 있는 애플리케이션은 `text/html`이나 `application/vnd.hyper+json`을 선택했고 HY-62가 그 405, 406, 셸로 응답하지 않는 모든 요청의 이 header를, HY-116의 method 검사 바로 뒤, HY-59의 2단계와 3단계, HY-114의 파일 제한, HY-24의 token 검사, context handler, 어떤 loader나 action보다 먼저 검사한다. 소문자 16진수 64자가 아닌 값이면 서버는 상태 400과 텍스트 `Bad Request`로 응답한다(HY-58). 유효한 값을 가진 HTML 요청은 그 값이 없을 때처럼 응답한다. 문서는 context 전체를 담기 때문이다. context가 없는 애플리케이션은 이 header를 읽지 않는다.
 - **HY-128** 모든 JSON 응답(HY-17)은 `params` 뒤에 build id인 member `build`를 담는다.
   - context가 있는 애플리케이션의 JSON 응답은 그 뒤에 member `context`를 담는다. 그 값은 `{"hash": <context hash>}`이며, 요청에 `Hyper-Context`가 없거나 다른 hash를 지정했으면 그 뒤에 `"value": <context>`가 온다.
   - `shared`의 member `context`는 JSON 응답에 없다. 브라우저 코드는 렌더하기 전에 context를 HY-10의 위치인 `csrf` 바로 뒤에 `shared`에 넣는다. 응답에 `value`가 있으면 그 값이고, 없으면 보관한 context다. Node 서버는 context map으로 같은 코드(HY-54)를 써서 문서를 렌더하며, `hash`와 `value`를 가진 member `context`는 데이터를 내장하는 문서에서만 렌더하는 값에 넣는다.
   - 데이터를 내장하는 문서(HY-31)는 `build`와, `value`를 가진 `context`를 내장한다.
-  - `contracts/context.json`은 build, context, 그 JSON 텍스트와 hash, `Hyper-Context`가 있는 요청과 없는 요청, 기대 응답을 담는다. application은 loader, 요청을 멈추는 loader `{"stop": "NotFound"}`(HY-27), 그리고 상태와 함께 라우트 페이지를 돌려주거나(HY-58) redirect하는(HY-25) `actions`를 선언한다. case는 context handler의 호출 수 `contextCalls`와, 요청의 처음 호출들을 순서대로 적은 `firstCalls`(`action:<route>`, `context`, `shared`)를 적으며, `csrf`가 있는 요청은 `form`의 field에 더해 자기 session의 token을 가린 값을 field `_csrf`로 담는다(HY-24). 응답은 template이 `csrf`를 읽을 때만 그것을 보내므로(HY-73), runner는 같은 session의 첫 `GET` 뒤에 session이 가진 token을 가린다. `firstCalls`는 요청의 처음 호출들을 실행 순서대로 적으며, 기록한 호출의 앞부분과 비교한다. PHP, Node, Python 서버는 모든 사례를 통과한다.
+  - `contracts/context.json`은 build, context, 그 JSON 텍스트와 hash, `Hyper-Context`가 있는 요청과 없는 요청, 기대 응답을 담는다. context 항목은 decode한 `context`의 HY-54 JSON 텍스트를 `context`와, 그 hash가 digest하는 바이트를 `text`와, 그 context hash를 `hash`와, `reorderedText`가 쓰는 map의 context hash를 `reorderedHash`와 `exact`로 비교한다(HY-130). application은 loader, 요청을 멈추는 loader `{"stop": "NotFound"}`(HY-27), 그리고 상태와 함께 라우트 페이지를 돌려주거나(HY-58) redirect하는(HY-25) `actions`를 선언한다. case는 context handler의 호출 수 `contextCalls`와, 요청의 처음 호출들을 순서대로 적은 `firstCalls`(`action:<route>`, `context`, `shared`)를 적으며, `csrf`가 있는 요청은 `form`의 field에 더해 자기 session의 token을 가린 값을 field `_csrf`로 담는다(HY-24). 응답은 template이 `csrf`를 읽을 때만 그것을 보내므로(HY-73), runner는 같은 session의 첫 `GET` 뒤에 session이 가진 token을 가린다. `firstCalls`는 요청의 처음 호출들을 실행 순서대로 적으며, 기록한 호출과 `prefix`로 비교한다(HY-130). `keys`와 `sharedKeys`는 `keys`로 응답 객체와 그 `shared`를 비교하고, `contextCalls`는 context handler의 호출 수와 `exact`로, `selection`은 호출마다 context handler가 받은 값의 목록 하나씩으로 `exact`로 비교한다(HY-130). PHP, Node, Python 서버는 모든 사례를 통과한다.
 
 ## 브라우저
 
@@ -258,6 +262,7 @@
   - `value`가 없고 `hash`가 보관한 hash와 다른 응답은 요청의 오류다(HYC-14).
 - **HYC-23** 브라우저는 가장 마지막 영역 요청의 응답만 렌더한다. 나중 복원이 이전 복원을 취소하듯(HYC-3), 이전 영역 요청의 응답은 렌더하지 않는다. 이 규칙에서 복원(HYC-3, HYC-8)은 영역 요청으로 센다. HYC-7의 문서 요청은 세지 않는다. HYC-7은 다른 응답이 보관 데이터를 교체했을 때 자기 응답을 버리기 때문이다. 렌더하지 않은 응답은 실패가 아니다(HYC-14).
 - **HYC-24** 브라우저 코드의 `HyperOptions`는 이름에서 함수로 가는 map인 `functions`를 받아 template engine에 등록한다(template FUN-43). 모든 서버의 `App`은 애플리케이션을 열 때 같은 map을 option `functions`(HY-106)로 받고, Node 서버는 브라우저 코드의 `createApplication`으로 그것을 등록하므로, 서버와 브라우저는 같은 이름을 등록한다(template FUN-47). 등록이 실패하면(template FUN-44) 열기가 실패한다. `contracts/functions.json`은 template이 host function을 부르는 애플리케이션, case가 이름으로 부르는 함수의 종류, 그리고 case들을 담는다. 모든 서버와 브라우저 코드의 runner는 각 종류를 자기 runtime의 함수로 바꾼다. case는 함수의 결과를 render하는 document, 애플리케이션이 등록하지 않은 이름을 부르는 호출의 plain 500(HY-43), built-in 이름이나 함수가 아닌 항목이 실패시키는 열기이며, case가 적은 경우 template RT-5의 argument error를 함께 확인한다.
+  `openFails`는 열기를 `raises`로 비교하고(HY-130), `openError`는 그 오류의 message를 `contains`로 비교한다.
 
 ## 서버의 클라이언트 렌더
 
@@ -273,11 +278,13 @@
   3. 그 밖의 요청 경로는 그대로 라우팅한다. 라우트가 없는 경로는 404를, `GET`이 아닌 method는 405를 받는다(HY-27). 그다음 `application/vnd.hyper+json`이나 representation을 선택한(HY-116) 요청은 텍스트 `Not Acceptable`, `Vary: Accept`와 함께 상태 406을 받고, `text/html`을 선택한 요청은 셸의 바이트를 body로, `Content-Type: text/html; charset=utf-8`, `Cache-Control: no-cache`, HY-117의 `Vary` header와 함께 상태 200을 받는다. 셸은 에셋 build가 쓰는 HY-125의 요소 `hyper-build`를 담는다.
 
   선택이 고른 요청의 405와 406 응답과 셸 응답은 loader나 액션을 실행하지 않고, 세션을 읽지 않으며(HY-45), 요청 데이터를 담지 않는다. 선택이 고른 요청의 모든 응답은 HY-45의 frame 정책을 가지며 HY-60의 응답 hook에 보고된다. `contracts/client.json`은 요청, 각 요청의 선택, 기대 응답을 담는다. case의 `handler`는 그 case에서 항목의 handler를 대신한다. PHP, Node, Python 서버는 모든 사례를 통과한다.
+  case가 응답을 적으면 HY-130이 정한 대로 비교한다. 파일의 `shell`은 정적 셸의 텍스트이며, runner는 그것을 선언이 이름 붙인 파일로 쓰고, 셸을 받는 case는 그 텍스트를 `body`로 적는다. `json`은 `route`를 `exact`로, `params`를 `ordered`로, `regions`를 `keys`로 응답 객체와 비교한다(HY-130). `session` false는 요청 뒤 session이 session token을 갖지 않음을 적고, `actions`는 action의 호출 수, `handled`는 representation handler의 호출 수이며, 각각 `exact`로 비교한다(HY-130). `received`는 representation handler가 받은 `parameters`를 `ordered`로, `selection`을 `exact`로 비교하고, `absentHeaders`는 그 요청의 header와 `absent`로 비교한다(HY-130).
 - **HYC-6** 클라이언트 렌더가 렌더한 문서를 붙일 때(HYC-8, HYC-3), 브라우저는 `html` 요소의 속성을 렌더한 문서의 `html` 요소의 속성으로 그 순서대로 바꾼다. 렌더한 요소에 없는 속성은 제거한다. 따라서 `<html lang="{= language}">`를 렌더하는 layout은 서버 렌더 문서처럼 클라이언트 렌더 페이지에도 그 데이터의 언어를 준다. `scripts/build-assets.mjs`가 쓰는 정적 셸은 데이터를 담지 않으므로 `lang` 속성이 없다.
 
 ## 액션
 
 - **HY-24** 세션 토큰은 세션이 처음 필요로 할 때 서버가 만드는 무작위 32바이트다. 응답의 값 `csrf`(HY-10)는 토큰을 가린 값이다. 서버가 응답마다 한 번 뽑는 무작위 32바이트 `r` 뒤에 `r`과 토큰의 XOR를 붙이고, 128자리 소문자 16진수로 쓴다. 응답마다 새 `r`을 뽑으므로 어떤 응답도 토큰의 바이트를 담지 않고, 요청 입력을 함께 담은 응답을 압축해도 그 크기로 토큰을 알아낼 수 없다. 액션 요청과 유지 값 저장(HY-40)은 세션 토큰을 가린 값을 폼 필드 `_csrf`로 담아야 한다. 이 값은 128자리 소문자 16진수이고, 뒤쪽 절반과 앞쪽 절반의 XOR가 토큰과 같아야 하며, 비교는 일정한 시간에 한다. 그렇지 않으면 서버는 상태 403으로 응답하고 액션을 실행하지 않는다. 서버는 토큰 자체를 보내지 않는다. `contracts/csrf.json`은 토큰, 가림 값, 폼 값과 기대 결과를 담고, PHP, Node, Python 서버는 모든 사례를 통과한다.
+  `mask`의 case의 `value`와 `verify`의 case의 `valid`는 `exact`로 비교한다(HY-130).
 - **HY-72** 세션의 주인인 방문자가 바뀔 때, 예를 들어 로그인과 로그아웃에서 액션은 reply의 `renewSession()`으로 세션을 갱신한다. 액션이 끝나면 서버는 세션 값을 새 세션 식별자로 옮기고, 예전 세션을 지우고, 새 세션 토큰을 만들고, 새 세션 cookie를 설정한다. redirect의 flash 값과 유지 값은 남는다. 액션이 렌더하는 페이지는 새 토큰을 가린 값을 담는다. 로더나 공유 데이터 핸들러가 `renewSession()`을 부르면 HY-43으로 실패한다. 그 페이지는 예전 토큰을 담기 때문이다.
 - **HY-25** 성공한 액션은 리다이렉트를 반환한다.
   - 서버는 상태 303과 `Location`으로 응답한다.
@@ -315,6 +322,7 @@
   - 라우트의 공유 데이터 읽기 경로는 레이아웃, 제목, 모든 매니페스트 영역 템플릿, 라우트 템플릿, 모든 라우트 영역 템플릿의 읽기 경로이고, 라우트 영역이 서버에 값을 남기면(HYC-13) `csrf`를 통째로 더한다. 영역 데이터의 읽기 경로는 그 영역 템플릿의 읽기 경로이며, 페이지 영역은 라우트 템플릿의 것이고, 라우트 영역은 유지 경로를 통째로 더한다. `hyper/data.tpl`은 아무것도 읽지 않는다.
   - 서버는 페이지를 렌더하거나 인코딩하기 전에 공유 데이터와 모든 영역 데이터에서 읽기 경로만 남긴다. 맵은 경로가 이름 붙인 키를 남기고 그 값도 같은 방식으로 남기며, `*` 아래에서는 모든 키를 남긴다. 목록은 길이를 유지한다. 각 원소는 `*`와 그 인덱스의 경로로 남기고, 어떤 경로도 이름 붙이지 않은 인덱스에는 `null`을 둔다. 다른 값은 그대로 둔다. 비게 된 맵은 맵으로 남는다.
   - 빌드는 모든 라우트의 읽기 경로를 서버 프로그램의 `reads.json`(HY-48)에 쓰고, Node 서버는 애플리케이션을 열 때 브라우저 패키지로 계산한다. `contracts/reads.json`은 템플릿, 데이터, 읽기 경로, 남긴 데이터를 담는다. 브라우저 패키지는 모든 사례의 읽기 경로를 계산하고, PHP, Node, Python 서버는 기대한 데이터를 남기며, 남긴 데이터는 원래 데이터와 같은 바이트로 렌더된다. `data(region)`(HYC-11)은 남긴 데이터를 돌려주므로, 어떤 템플릿도 읽지 않는 경로는 거기에 없다.
+    PHP, Node, Python 서버는 case의 남긴 데이터를 그 `kept`와 `ordered`로 비교하고(HY-130), Node 서버와 브라우저 패키지는 `template`이 남긴 데이터로 렌더한 텍스트를 `data`로 렌더한 텍스트와 `exact`로 비교한다. Node 서버와 브라우저 패키지는 `templates`로 계산한 읽기 경로를 case의 `reads`와 `exact`로 비교한다(HY-130).
 
 ## 브라우저 데이터
 
@@ -387,7 +395,7 @@
   - 204: 값을 세션에 저장한 뒤
   - 403: CSRF 토큰이 맞지 않을 때
   - 400: 영역이 그 경로를 `server`로 선언하지 않았거나, 값이 JSON이 아니거나, JSON 텍스트가 4,096바이트보다 길거나, 값이 template 데이터 모델의 값이 아닐 때
-- **HY-41** `contracts/keep.json`은 영역 데이터, 유지 값, HY-38을 적용한 뒤의 기대 데이터를 담는다. PHP 구현과 JavaScript 구현은 모든 사례를 통과한다.
+- **HY-41** `contracts/keep.json`은 영역 데이터, 유지 값, HY-38을 적용한 뒤의 기대 데이터를 담으며, 기대 데이터는 `ordered`로 비교한다(HY-130). PHP, Node, Python 서버와 브라우저 패키지는 모든 사례를 통과한다.
 
 ## 요청 경계와 실패
 
@@ -408,11 +416,16 @@
   - 클라이언트에서 문서 렌더가 실패하거나, 서버 렌더의 히스토리 복원에서 stylesheet 불러오기가 실패하면 body에 `hy-error`를 설정한다.
 - **HY-129** 요청의 cookie는 그 `Cookie` header를 한 가지 방식으로 파싱한 결과이며, 모든 서버에서 같다. header는 받은 그대로의 field value 바이트다. 클라이언트는 `Cookie` 줄을 하나만 보내고(RFC 6265 section 5.4), HTTP/2에서는 서버가 cookie 줄을 `; `로 잇는다(RFC 9113 section 8.2.3). 줄을 따로 받는 host는 파싱 전에 `; `로 잇는다. Node 서버는 `; `로 잇는 `node:http`의 `cookie`를 쓰고, Python `create_server`는 모든 `Cookie` 줄을 읽으며, Python ASGI callable은 scope의 `cookie` header를 `; `로 잇는다. 이어진 header를 받는 host는 받은 그대로 쓴다. PHP는 SAPI가 주는 `$_SERVER['HTTP_COOKIE']`를 쓰고, Python WSGI callable은 `HTTP_COOKIE`를 Latin-1로 encode해 바이트로 되돌린다. PHP built-in server는 HTTP/1.1의 여러 `Cookie` 줄을 `, `로 잇는다. 그래서 RFC 6265 section 5.4를 어긴 그런 요청은 그 이어진 값의 cookie를 준다. header는 `;`마다 쌍으로 나뉘고, 쌍 양끝의 space와 tab은 지워지며, 쌍은 첫 `=`에서 이름과 값으로 나뉜다. `=`가 없거나, 이름이 비었거나, 이름이 올바른 UTF-8이 아니거나, percent-decoding한 값이 올바른 UTF-8이 아닌 쌍은 cookie가 되지 않는다. 이름은 decode하지 않는다. 값은 percent-decoding한다. `%`와 16진수 두 자리는 그 자리의 바이트이고, `+`를 포함한 다른 모든 바이트는 그 자신이다. cookie가 되는 쌍 중 한 이름의 첫 쌍이 쓰인다. PHP 서버의 어느 부분도 `$_COOKIE`를 읽지 않는다. PHP는 그 이름을 변수 이름처럼 바꾸기 때문이다(`a.b`는 `a_b`가 되고, `a[x]`는 배열이 된다). native session은 `session.use_cookies`를 false로 두고 돌며, 이 파싱에서 얻은 HY-45의 identifier를 `session_start()` 전에 `session_id()`로 받는다. 파싱에서 identifier가 나오지 않으면 받지 않는다. 서버는 HY-45의 session cookie를 직접 보낸다. `contracts/cookies.json`의 case는 header와 그 cookie를 적는다. header는 `U+0000`부터 `U+00FF`까지의 문자가 그 바이트인 text이고, header가 없는 요청이면 null이다. 모든 서버는 각 case의 cookie를 이름에서 값으로의 map으로 정확히 비교한다.
 
+## Case 파일
+
+- **HY-130** `contracts/` 아래의 case 파일은 각각 `id`를 가진 객체인 case를 담는다. `contracts/interfaces.json`의 선언 `caseFiles`는 case의 모든 필드마다 그 역할(`id`, `input`, `expected`, `label` 가운데 하나)을, 모든 expected 필드마다 비교와 그것을 정하는 규칙의 문장을 적는다. `fields`를 가진 expected 필드는 그 자체로 비교하지 않으며, 그 각 필드를 자기 비교로 비교한다. expected 필드는 다음 비교 가운데 하나로 비교한다. `exact`: 관찰한 값이 JSON 값으로서 기대한 값과 같다. map은 같은 key와 같은 값을 가지면 순서와 상관없이 같고, list는 같은 항목을 같은 순서로 가지면 같으며, null은 null과만 같다. `ordered`: `exact`와 같고, 모든 map의 key도 같은 순서다. `subset`: 기대한 map의 모든 key가 관찰한 map에 같은 값으로 있다. `absent`: 기대한 list의 어떤 이름도 관찰한 map의 key가 아니다. `contains`: 기대한 text, 또는 기대한 list의 모든 text가 관찰한 text의 일부다. `excludes`: 기대한 list의 어떤 text도 관찰한 text의 일부가 아니다. `prefix`: 기대한 list가 관찰한 list의 앞 항목들과 같다. `keys`: 기대한 list가 관찰한 map의 key들과 그 순서대로 같다. `raises`: 기대한 값이 true면 그 단계가 runtime의 argument error를 낸다. 그것은 PHP에서 `InvalidArgumentException`, Node에서 `Error`(생성자 `Error` 자체이며 하위 클래스가 아니다), Python에서 `ValueError`다. false면 그 단계는 실패하지 않는다. 관찰한 map이 header 이름을 담으면 `subset`과 `absent`는 ASCII 대소문자를 무시하고 이름을 비교한다(HY-122). 응답을 적는 case는 `status`와 `body`를 `exact`로, `headers`를 `subset`으로, `allHeaders`를 `exact`로, `absentHeaders`를 `absent`로, `bodyContains`를 `contains`로, `bodyNotContains`를 `excludes`로 비교한다. 단계의 결과는 필드 없이 비교하며, `raises`는 값 true를 기대하고 `exact`는 단계가 관찰한 두 값을 비교한다. case가 적지 않은 필드는 비교하지 않는다. `caseFiles`가 이름 붙인 runner는 모든 case를 이 비교들로만 비교한다.
+
 ## Node 서버
 
 - **HY-54** Node 서버 package `@polyspec/hyper-server`는 이 문서의 서버 규칙을 PHP 서버와 같게 구현한다. 그 test는 같은 fixture로 PHP 서버 test의 사례를 실행한다. PHP 서버와 다른 점은 다음뿐이다.
   - 문서는 브라우저가 문서 JSON 값을 렌더하는 방법(HY-12, HY-31, HY-38)으로, 브라우저 코드와 asset build의 템플릿 파일(HR-34)로 렌더하고, reply가 요청하면 데이터를 내장한다(HY-92).
   - JSON 텍스트는 `JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES`를 준 PHP `json_encode`와 같은 바이트다. 문자열은 `"`, `\`, U+0020 아래 제어 문자(`\b`, `\f`, `\n`, `\r`, `\t`, 나머지는 `\u00xx`), U+2028과 U+2029(`\u2028`, `\u2029`)를 escape하고 다른 문자는 escape하지 않는다. ±(2^53 − 1) 안의 정수는 10진수로 쓴다. 그 밖의 수는 같은 수로 다시 읽히는 가장 짧은 숫자로 쓴다. 소수점 위치 p(수는 0.d × 10^p)가 −3부터 17 사이면 위치 표기로, 아니면 소수 자리가 하나 이상인 `d.ddde±x`로 쓴다. 음의 0은 `-0`이다. 유지 값(HY-38, HY-40)은 PHP `json_decode`처럼 decode한다. 정수 literal은 정수이고 다른 literal은 float이며, ±(2^53 − 1) 밖의 수나 유한하지 않은 수는 데이터 모델의 값이 아니고, 512단계로 중첩된 container, 짝 없는 surrogate escape, U+0000으로 시작하는 key는 실패한다. `contracts/json.json`에 PHP, Node, Python 서버가 통과하는 사례가 있다.
+    `encode`의 case의 `expected`는 그 `json`이 가진 값의 JSON 텍스트이며, `exact`로 비교한다(HY-130). `decode`의 case의 `result`는 데이터 모델의 값이면 `value`, 값이 데이터 모델 밖인 JSON 텍스트면 `outside`, decode에 실패하는 텍스트면 `error`이며, `exact`로 비교한다(HY-130).
   - 데이터 모델의 JavaScript 값은 null, boolean, ±(2^53 − 1) 안의 number나 bigint, string, 배열, 문자열 key의 `Map`, plain object다. UTF-8 형태가 없는 짝 없는 surrogate를 담은 문자열과 그 밖의 값은 HY-43으로 실패한다.
   - loader와 action은 요청, reply(HY-52), 애플리케이션이 key로 bind한 service를 담은 context 인자 하나를 받는다.
   - session store는 각 session을 한 디렉터리의 파일에 저장하며, 파일 이름은 store가 만든 64자리 16진수 식별자다. session cookie는 PHP session cookie와 같은 속성과 순서로 쓰고(`<name>=<id>; path=/; secure; HttpOnly; SameSite=Lax`, `secure`는 HY-45의 조건에서), 한 session의 요청은 차례로 실행한다.

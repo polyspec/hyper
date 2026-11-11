@@ -1,5 +1,5 @@
 <!-- doc-id: recipe -->
-<!-- source-sha256: 5b07cbd0c4affeacca72393679d438feca29a90b84eeab488e7e4cf0b47e6036 -->
+<!-- source-sha256: 3c83f1c988e6f35ce7e0e4db640e243e89bb168474562667341550e4ab5e0da9 -->
 # 서버의 레시피
 
 PHP, Node, Python 서버는 하나의 프로토콜(`protocol.md`)을 구현한다. 이 서버들의 레시피는 세 부분으로 이루어진다.
@@ -17,6 +17,7 @@ PHP, Node, Python 서버는 하나의 프로토콜(`protocol.md`)을 구현한�
 - **HYR-1 One spec.** `contracts/interfaces.json`은 세 서버의 유일한 개발 spec이며, 이 spec의 schema는
   `scripts/schema/interfaces.schema.json`이다. 구조를 바꾸는 변경은 spec을 먼저 바꾼다. 그다음 세 언어의 파일이 같은
   변경에서 함께 바뀐다. spec을 쓰는 tool은 없다.
+  이 spec은 HYR-7의 case 파일을 선언하는 `caseFiles`도 담는다.
 
 - **HYR-2 Concerns.** concern은 다음 필드를 가진다.
   - `id`: kebab-case로 쓴 단어들.
@@ -138,25 +139,27 @@ PHP, Node, Python 서버는 하나의 프로토콜(`protocol.md`)을 구현한�
 
   Node 서버가 HY-54에 따라 브라우저 코드에서 가져오는 concern(manifest, region, router, reads, renderer)은 HY-54 문장과
   함께 `only` PHP와 Python인 unit이다. 이들의 동작은 case 파일을 통해(HYR-7) 세 서버에서 같다.
+  `only`를 가진 case 필드도 같은 방식으로 쓰며, `browser`는 브라우저 패키지를 가리키는 언어 이름이다.
 
 - **HYR-7 Test recipe.**
-  - **Runners.** 언어마다 고정된 경로에 정확히 하나의 case runner가 있다. 이 runner는 `contracts/` 아래의 모든 case
-    파일을 실행한다.
+  - **Runners.** 언어마다 고정된 경로에 정확히 하나의 case runner가 있다: `packages/server/php/tests/CaseRunnerTest.php`, `packages/server/ts/tests/case-runner.test.ts` 또는 `packages/server/python/tests/test_case_runner.py`. case reader는 같은 디렉터리의 `CaseReader.php`, `case-reader.ts`, `case_reader.py`다. 브라우저 패키지는 `packages/client/tests`에서 자기 case를 실행하며, build check는 `tests/scripts/build-id.test.mts`에 있다. runner는 `caseFiles`가 이름 붙인 case 파일(HYR-10)을 모두 실행하며, 다른 파일은 실행하지 않는다.
   - **Reading a case.** runner는 각 case를 그 언어의 case reader를 통해서만 읽는다. case reader는 모든 언어에서 같은
     member를 가진 test tree의 unit 하나다.
     - case reader는 case의 입력 필드를 runner에 넘기며, 각 기대 필드를 관찰된 값과 직접 비교한다. 비교 방법은 case 파일의
       규칙이 정한 것이다(예: `representations.json`에 대한 HY-123). runner는 비교하지 않는다.
     - case가 끝난 뒤 reader는 읽히지 않은 필드에 `FIELD_UNKNOWN <name>`으로, 비교되지 않은 기대 필드에
       `FIELD_UNCOMPARED <name>`으로 실패시킨다.
-    - 필드 중 하나에 대한 비교를 규칙이 정하지 않은 case 파일은 파일 전체가 실패한다.
+    - 필드 중 하나에 대한 비교를 규칙이 정하지 않은 case 파일은 파일 전체가 실패한다. `fields`가 없고 비교, 규칙, quote가 없는 기대 필드도 파일 전체를 실패시킨다.
   - **Results.**
     - runner는 case마다 한 줄을 `RECIPE_RESULTS`가 가리키는 결과 파일에 쓴다: `CASE <file> <id> PASS` 또는
       `CASE <file> <id> FAIL <reason>`.
     - case가 실패하면 0이 아닌 코드로 종료한다.
+    - `caseFiles`가 이름 붙이지 않은 case 파일은 그 case마다 `CASE <file> <id> FAIL FILE_UNDECLARED <path>` 줄을 얻으며, `<path>`는 파일의 경로다.
     - `make recipe-check`는 성공 여부를 종료 상태와 그 파일의 줄에서 얻는다. 줄이 없는 case는 실패하며, 다른 출력은 결과를
       제공하지 않는다.
     - 언어가 파일의 case id를 빠뜨리거나, 파일이 가지지 않은 id를 출력하면 check가 실패한다. `only`를 가진 case는 그것이
       가리키는 언어에서만 센다.
+    - 각 언어의 case id는 `caseFiles`의 section 중 `runners`가 그 언어를 이름 붙인 section에서 얻는다.
   - **Native tests.** native test는 case 파일을 실행하지 않는, 한 언어의 test tree에 있는 테스트다. 한 언어를 가리키는
     `only`를 가진 unit이나 member, 또는 `cases: none`인 concern에 대해서만 존재한다. 두 언어가 가진 동작은
     `only: {languages, rule, quote}`(HYR-6)를 가진 case이며, 다른 runner는 그 case를 빼고 실행한다. check는 각 언어의 case
@@ -189,6 +192,7 @@ PHP, Node, Python 서버는 하나의 프로토콜(`protocol.md`)을 구현한�
   - HYR-2에 어긋나는 규칙이나 case 참조, 또는 `outside` 항목;
   - re-export가 spec의 public member 및 public type과 다른 barrel 파일;
   - HYR-7에 어긋나는 결과, case reader 또는 native test.
+  - `contracts/*.json` case 파일이 `caseFiles` 항목을 가지지 않거나, `caseFiles`의 항목, section 또는 필드를 어떤 파일도 가지지 않는 경우;
 
   실행할 때마다 먼저 reader의 mutation case를 실행하며, reader가 mutation을 통과시키면 실패한다.
 
@@ -200,6 +204,7 @@ PHP, Node, Python 서버는 하나의 프로토콜(`protocol.md`)을 구현한�
   - 다음 필드는 검토된 spec 변경에서 손으로 쓴다:
     - 중립 필드 `inputs`, `output`, `errors`, `state`와 type의 `shape`;
     - concern 필드 `rules`와 `cases`;
+    - `caseFiles`: 각 case 파일과 그 필드의 비교 방법(HY-130);
     - unit 묶음;
     - `only`.
   - candidate는 이 필드들 각각을 손으로 쓴 것으로 표시한다.
@@ -260,6 +265,9 @@ PHP, Node, Python 서버는 하나의 프로토콜(`protocol.md`)을 구현한�
    - cookies unit은 세 서버 모두에 있으며 `only`가 없다.
 2. **public session store.** HY-106은 "the session stores of HY-104"라고 쓰고, 애플리케이션이 쓰는 HY-115의 Redis store를
    빠뜨린다. 이 문장은 "the session stores of HY-104 and HY-115"로 고친다.
+3. **case 비교.** 새 규칙 HY-130은 case 파일의 모든 필드의 비교를 정한다: `exact`, `ordered`, `subset`, `absent`, `contains`, `excludes`, `prefix`, `keys`, `raises`. case 파일 형식도 함께 바뀐다. `routes.json`과 `rest.json`의 `invalidPaths`는 `id`, `label`, `path`를 가진 객체가 되고, `client.json`은 `shell` fixture를 적으며 그 shell case는 `headers` 대신 `body`와 `allHeaders`를 적고, `fields.json`은 `files`가 없던 두 case에 `files`를 적으며, `context.json`은 `selection`을 호출마다 한 목록으로 비교한다.
+   - 원인: HYR-7은 reader가 각 기대 필드를 그 파일의 규칙이 정한 비교로 비교하게 하며, 일부 파일의 필드에는 규칙이 없었다.
+   - HY-130이 `outside`에 있는 이유는 test tree의 case reader를 정하기 때문이다.
 
 ## H28.11의 작업 순서
 

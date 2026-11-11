@@ -16,6 +16,7 @@ The PHP, Node and Python servers implement one protocol (`protocol.md`). Their r
 - **HYR-1 One spec.** `contracts/interfaces.json` is the one development spec of the three servers, and its schema is
   `scripts/schema/interfaces.schema.json`. A change of the structure changes the spec first. Then the files of all three
   languages change in the same change. No tool writes the spec.
+  It also holds `caseFiles`, the declaration of the case files of HYR-7.
 
 - **HYR-2 Concerns.** A concern has these fields:
   - `id`: its words in kebab-case.
@@ -147,10 +148,10 @@ The PHP, Node and Python servers implement one protocol (`protocol.md`). Their r
   The concerns that the Node server takes from the browser code by HY-54 (manifest, region, router, reads and the
   renderer) are units `only` PHP and Python with the HY-54 sentence. Their behaviour is the same across all three
   servers through their case files (HYR-7).
+  A field of a case that only some languages compare carries `only` in the same way, and `browser` names the browser package as a language.
 
 - **HYR-7 Test recipe.**
-  - **Runners.** Each language has exactly one case runner at a fixed path. It runs every case file under
-    `contracts/`.
+  - **Runners.** Each language has exactly one case runner at a fixed path: `packages/server/php/tests/CaseRunnerTest.php`, `packages/server/ts/tests/case-runner.test.ts` or `packages/server/python/tests/test_case_runner.py`. The case readers are `CaseReader.php`, `case-reader.ts` and `case_reader.py` in the same directories. The browser package runs its cases in `packages/client/tests`, and the build check in `tests/scripts/build-id.test.mts`. A runner runs every case file that `caseFiles` names (HYR-10), and no other file.
   - **Reading a case.** A runner reads each case only through the case reader of its language, one unit of the test
     tree with the same members in every language.
     - The case reader gives the input fields of a case to the runner, and compares each expected field with the
@@ -158,15 +159,17 @@ The PHP, Node and Python servers implement one protocol (`protocol.md`). Their r
       `representations.json`). The runner does not compare.
     - After a case, the reader fails it with `FIELD_UNKNOWN <name>` for a field that was not read, and with
       `FIELD_UNCOMPARED <name>` for an expected field that was not compared.
-    - A case file whose rule defines no comparison for one of its fields fails the file.
+    - A case file whose rule defines no comparison for one of its fields fails the file, and so does an expected field without `fields` that has no comparison, rule or quote.
   - **Results.**
     - The runner writes one line per case to the results file named by `RECIPE_RESULTS`: `CASE <file> <id> PASS`, or
       `CASE <file> <id> FAIL <reason>`.
     - It exits nonzero when a case fails.
+    - A case file that `caseFiles` does not name gives each of its cases the line `CASE <file> <id> FAIL FILE_UNDECLARED <path>`, where `<path>` is the path of the file.
     - `make recipe-check` takes success from the exit status and from the lines of that file. A case without a line
       fails, and no other output supplies a result.
     - The check fails when a language misses a case id of a file or prints an id that the file does not hold. A case
       with `only` counts only for the languages that it names.
+    - The check takes the case ids of each language from the sections of `caseFiles` whose `runners` name that language.
   - **Native tests.** A native test is a test of the test tree of one language that runs no case file. It exists only
     for a unit or member whose `only` names one language, or for a concern with `cases: none`. A behaviour that two
     languages have is a case with `only: {languages, rule, quote}` (HYR-6), which the other runners leave out, and the
@@ -200,6 +203,7 @@ The PHP, Node and Python servers implement one protocol (`protocol.md`). Their r
   - a rule or case reference, or an `outside` entry, against HYR-2;
   - a barrel file whose re-exports differ from the public members and the public types of the spec;
   - a result, a case reader or a native test against HYR-7.
+  - a `contracts/*.json` case file with no `caseFiles` entry, and an entry, section or field of `caseFiles` that no file holds;
 
   Each run first runs the readers' mutation cases, and fails when a reader passes a mutation.
 
@@ -212,6 +216,7 @@ The PHP, Node and Python servers implement one protocol (`protocol.md`). Their r
   - These fields are written by hand in the reviewed change of the spec:
     - the neutral fields `inputs`, `output`, `errors`, `state` and the `shape` of a type;
     - the concern fields `rules` and `cases`;
+    - `caseFiles`, the case files and the comparison of each of their fields (HY-130);
     - the unit grouping;
     - `only`.
   - The candidate marks each of these fields as hand-written.
@@ -282,6 +287,9 @@ These rules state behaviour that the servers have and that no rule states. They 
    - The cookies unit exists in all three servers, with no `only`.
 2. **The public session stores.** HY-106 names "the session stores of HY-104" and leaves out the Redis stores of
    HY-115, which an application uses. The sentence is corrected to "the session stores of HY-104 and HY-115".
+3. **The case comparisons.** A new rule, HY-130, states the comparison of every field of a case file: `exact`, `ordered`, `subset`, `absent`, `contains`, `excludes`, `prefix`, `keys` and `raises`. The case file formats change with it: `invalidPaths` of `routes.json` and `rest.json` become objects with `id`, `label` and `path`; `client.json` states the `shell` fixture, and its shell cases state `body` and `allHeaders` instead of `headers`; `fields.json` states `files` in the two cases that have none; and `context.json` compares `selection` as a list per call.
+   - Cause: HYR-7 has the reader compare each expected field by the rule of its file, and some files had no rule for their fields.
+   - The reason that HY-130 is in `outside` is that it states the case readers of the test trees.
 
 ## The order of work for H28.11
 
