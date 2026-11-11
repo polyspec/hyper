@@ -6,6 +6,8 @@
 
 ## Unreleased
 
+- `contracts/functions.json`은 HYC-24 host function의 case를 담는다: 등록한 함수를 render하는 document, 등록하지 않은 이름을 부르는 호출의 500, built-in 이름이나 함수가 아닌 항목이 실패시키는 열기 (H28.1-8).
+
 - HY-97, HY-100, HY-121, HY-123과 `contracts/representations.json`은 요청의 진입을 HY-106이 모든 server의 public 진입으로 부르는 `App.handle`로 부른다 (H28.1-7).
 
 - `contracts/context.json`은 template이 다른 shared 값을 읽지 않는 JSON 응답의 shared data에 `title`만 기대하고(HY-73), 멈추는 loader의 case는 context handler 뒤에 shared handler를 적는다. HY-128은 runner가 자기 session의 token을 가리는 방법과 `firstCalls`를 비교하는 방법을 정한다(H28.1-6).

@@ -1,5 +1,5 @@
 <!-- doc-id: protocol -->
-<!-- source-sha256: f67bb8edcd648a2a872599e7a1d954b8d53492406fcce48a495b6df283addacc -->
+<!-- source-sha256: bdce161894c7a5673e5a9a051692ab0e90495a633b8bc99f838374e2c52662cb -->
 # 영역 프로토콜
 
 [English](protocol.md).
@@ -257,7 +257,7 @@
   - htmx가 HTML을 요청해 히스토리에서 페이지를 복원할 때(HYC-4), `hyper-build`가 페이지의 build와 다른 문서는 swap하지 않고 새 문서로 불러온다.
   - `value`가 없고 `hash`가 보관한 hash와 다른 응답은 요청의 오류다(HYC-14).
 - **HYC-23** 브라우저는 가장 마지막 영역 요청의 응답만 렌더한다. 나중 복원이 이전 복원을 취소하듯(HYC-3), 이전 영역 요청의 응답은 렌더하지 않는다. 이 규칙에서 복원(HYC-3, HYC-8)은 영역 요청으로 센다. HYC-7의 문서 요청은 세지 않는다. HYC-7은 다른 응답이 보관 데이터를 교체했을 때 자기 응답을 버리기 때문이다. 렌더하지 않은 응답은 실패가 아니다(HYC-14).
-- **HYC-24** 브라우저 코드의 `HyperOptions`는 이름에서 함수로 가는 map인 `functions`를 받아 template engine에 등록한다(template FUN-43). 모든 서버의 `App`은 애플리케이션을 열 때 같은 map을 option `functions`(HY-106)로 받고, Node 서버는 브라우저 코드의 `createApplication`으로 그것을 등록하므로, 서버와 브라우저는 같은 이름을 등록한다(template FUN-47). 등록이 실패하면(template FUN-44) 열기가 실패한다.
+- **HYC-24** 브라우저 코드의 `HyperOptions`는 이름에서 함수로 가는 map인 `functions`를 받아 template engine에 등록한다(template FUN-43). 모든 서버의 `App`은 애플리케이션을 열 때 같은 map을 option `functions`(HY-106)로 받고, Node 서버는 브라우저 코드의 `createApplication`으로 그것을 등록하므로, 서버와 브라우저는 같은 이름을 등록한다(template FUN-47). 등록이 실패하면(template FUN-44) 열기가 실패한다. `contracts/functions.json`은 template이 host function을 부르는 애플리케이션, case가 이름으로 부르는 함수의 종류, 그리고 case들을 담는다. 모든 서버와 브라우저 코드의 runner는 각 종류를 자기 runtime의 함수로 바꾼다. case는 함수의 결과를 render하는 document, 애플리케이션이 등록하지 않은 이름을 부르는 호출의 plain 500(HY-43), built-in 이름이나 함수가 아닌 항목이 실패시키는 열기이며, case가 적은 경우 template RT-5의 argument error를 함께 확인한다.
 
 ## 서버의 클라이언트 렌더
 

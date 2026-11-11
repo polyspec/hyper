@@ -1,0 +1,16 @@
+{
+  "requirements": ["HYC-24", "HY-43", "HY-106"],
+  "functionKinds": {
+    "suffix": "returns its first argument, a string, followed by \"!\"",
+    "not_a_function": "the string \"x\" in the place of a function"
+  },
+  "applications": {
+    "with_functions": {"manifest": {"layout": "layout.tpl", "title": "title.tpl", "regions": [{"name": "content", "page": true}], "routes": [{"name": "home", "path": "/", "title": "Home", "template": "home.tpl"}]}, "templates": {"layout.tpl": "<head><title>{# title}</title>{# build}</head>\n<main id=\"content\">{# content}</main>\n{# data}\n", "title.tpl": "{= title}", "home.tpl": "<p>{= shout(\"hi\")}</p>"}, "build": "2222222222222222222222222222222222222222222222222222222222222222", "loaders": {"home": {}}}
+  },
+  "cases": [
+    {"id": "a_document_renders_the_host_function", "label": "a document renders the result of the host function that the application registered (HYC-24, template FUN-43)", "application": "with_functions", "functions": {"shout": "suffix"}, "request": {"method": "GET", "target": "/", "headers": {"Accept": "text/html"}}, "status": 200, "bodyContains": ["<main id=\"content\"><p>hi!</p></main>"]},
+    {"id": "a_call_of_a_name_that_is_not_registered_answers_500", "label": "a template that calls a name that the application did not register fails the render, which answers the plain 500 (HY-43, template FUN-47)", "application": "with_functions", "functions": {}, "request": {"method": "GET", "target": "/", "headers": {"Accept": "text/html"}}, "status": 500, "body": "Internal Server Error"},
+    {"id": "a_built_in_name_fails_the_open", "label": "a function with the name of a built-in function fails the open (template FUN-44)", "application": "with_functions", "functions": {"upper": "suffix"}, "openFails": true},
+    {"id": "a_value_that_is_not_a_function_fails_the_open", "label": "an entry that is not a function fails the open with the argument error of template RT-5", "application": "with_functions", "functions": {"shout": "not_a_function"}, "openFails": true, "openError": "functions.shout is not a function"}
+  ]
+}
