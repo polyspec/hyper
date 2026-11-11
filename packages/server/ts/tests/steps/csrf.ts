@@ -4,7 +4,8 @@ import type { CaseReader } from '../case-reader.js';
 
 function text(reader: CaseReader, name: string): string {
   const value = reader.input(name);
-  return typeof value === 'string' ? value : '';
+  if (typeof value !== 'string') throw new Error(`the case field ${name} is not a string`);
+  return value;
 }
 
 export const steps = {

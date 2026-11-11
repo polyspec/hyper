@@ -18,6 +18,23 @@ def use_mailer(service: Mailer) -> object:
     return service
 
 
+SERVICES = {"clock": Clock, "mailer": Mailer}
+USES = {"clock": use_clock, "mailer": use_mailer}
+
+
+def _names(case, field: str) -> list[str]:
+    """Returns the service names of a field, and fails for a value that is not a list of the names of the cases."""
+    value = case.input(field)
+    if not isinstance(value, list):
+        raise TypeError(f"the case field {field} is not a list")
+    for name in value:
+        if name not in SERVICES:
+            raise ValueError(
+                f"the case field {field} names the unknown service {name!r}"
+            )
+    return value
+
+
 def services(case) -> None:
     container = Container()
     created = 0
@@ -30,13 +47,13 @@ def services(case) -> None:
 
         return create
 
-    for name in case.input("bound"):
-        cls = Clock if name == "clock" else Mailer
+    for name in _names(case, "bound"):
+        cls = SERVICES[name]
         container.bind(cls, factory(cls))
     failed = False
     try:
-        for name in case.input("uses"):
-            container.call(use_clock if name == "clock" else use_mailer, {})
+        for name in _names(case, "uses"):
+            container.call(USES[name], {})
     except TypeError:
         failed = True
     case.compare("created", created)

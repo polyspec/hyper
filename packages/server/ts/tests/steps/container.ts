@@ -4,9 +4,14 @@ import type { CaseReader } from '../case-reader.js';
 
 interface Bound { clock: object; mailer: object }
 
+// Returns the service names of a field, and fails for a value that is not a list of the names of the cases.
 function names(reader: CaseReader, field: string): (keyof Bound)[] {
-  const value = reader.input(field);
-  return (Array.isArray(value) ? value : []).map((name) => (name === 'clock' ? 'clock' : 'mailer'));
+  const value: unknown = reader.input(field);
+  if (!Array.isArray(value)) throw new Error(`the case field ${field} is not a list`);
+  return value.map((name: unknown): keyof Bound => {
+    if (name !== 'clock' && name !== 'mailer') throw new Error(`the case field ${field} names the unknown service ${String(name)}`);
+    return name;
+  });
 }
 
 export const steps = {

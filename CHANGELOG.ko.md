@@ -6,6 +6,8 @@
 
 ## Unreleased
 
+- PHP, Node, Python의 `contracts/container.json`과 `contracts/csrf.json` case step은 case가 선언하지 않은 service 이름과 문자열이 아닌 field에서 실패합니다. 이전에는 그 이름을 `mailer`로, 그 field를 빈 문자열로 읽었습니다(H28.11).
+
 - client와 Node server test는 link된 `@polyspec/template`을 한 module instance로 적재합니다. vitest는 link 경로를 module id로 유지합니다(`resolve.preserveSymlinks`). vitest가 template의 같은 파일을 `engine.ts`, `keep.ts`, `templates.ts`에서는 link 경로로, `response.ts`, `hyper.ts`, `obtain.ts`에서는 실제 경로로 불렀기 때문에, `response.ts`가 bind한 map이 engine에서 `assign is not a map`으로 실패했고 `tests/functions.test.ts`가 실패했습니다(H28.11).
 
 - PHP host function은 template engine이 요구하는 대로 `App::open`부터 `Renderer::open`까지 `array<string, callable(): mixed>` 타입이다. context handler는 `array<string, mixed>`를 반환한다. PHPStan은 PHP 서버의 `src/`에서 오류를 보고하지 않는다. Node `app.ts`는 더 이상 쓰지 않는 타입 `Manifest`를 import하지 않는다(H28.11).

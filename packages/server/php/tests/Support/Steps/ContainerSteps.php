@@ -40,12 +40,23 @@ final class ContainerSteps
         $case->compare('failed', $failed);
     }
 
-    /** @return list<'clock'|'mailer'> */
+    /**
+     * Returns the service names of a field, and fails for a value that is not a list of the names of the cases.
+     *
+     * @return list<'clock'|'mailer'>
+     */
     private static function names(CaseReader $case, string $field): array
     {
+        $value = $case->input($field);
+        if (!is_array($value) || !array_is_list($value)) {
+            throw new \UnexpectedValueException("the case field {$field} is not a list");
+        }
         $names = [];
-        foreach ((array) $case->input($field) as $name) {
-            $names[] = $name === 'clock' ? 'clock' : 'mailer';
+        foreach ($value as $name) {
+            if ($name !== 'clock' && $name !== 'mailer') {
+                throw new \UnexpectedValueException("the case field {$field} names the unknown service " . var_export($name, true));
+            }
+            $names[] = $name;
         }
 
         return $names;

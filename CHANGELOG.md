@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- The case steps of `contracts/container.json` and `contracts/csrf.json` in PHP, Node and Python fail for a service name that the cases do not declare and for a field that is not a string, instead of reading the name as `mailer` and the field as the empty text (H28.11).
+
 - The client and Node server tests load a linked `@polyspec/template` as one module instance: vitest keeps the link path as the module id (`resolve.preserveSymlinks`), because it named the same file of the template by its link path for `engine.ts`, `keep.ts` and `templates.ts` and by its real path for `response.ts`, `hyper.ts` and `obtain.ts`, so that a map that `response.ts` bound failed in the engine with `assign is not a map` and `tests/functions.test.ts` failed (H28.11).
 
 - The PHP host functions are typed `array<string, callable(): mixed>` from `App::open` to `Renderer::open`, as the template engine requires, and the context handler returns `array<string, mixed>`; PHPStan reports no error in `src/` of the PHP server, and Node `app.ts` no longer imports the unused type `Manifest` (H28.11).

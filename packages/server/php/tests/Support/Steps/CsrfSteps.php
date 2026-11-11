@@ -33,7 +33,10 @@ final class CsrfSteps
     private static function text(CaseReader $case, string $name): string
     {
         $value = $case->input($name);
+        if (!is_string($value)) {
+            throw new \UnexpectedValueException("the case field {$name} is not a string");
+        }
 
-        return is_string($value) ? $value : '';
+        return $value;
     }
 }
