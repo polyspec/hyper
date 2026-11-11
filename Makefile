@@ -253,9 +253,8 @@ hyper-test-php: server-fixtures ext ## Run the server package tests, the case ru
 	$(checks_result)
 
 .PHONY: python-file-parts-test
-python-file-parts-test: server-fixtures ## Run Python multipart unit and rendering cases (HY-113, HY-114)
+python-file-parts-test: server-fixtures ## Run the Python multipart rendering cases (HY-113, HY-114); the cases of contracts/fields.json run in hyper-test-python
 	@failed=; \
-	$(call check,multipart contract cases,PYTHONUNBUFFERED=1 NO_COLOR=1 PYTHON_COLORS=0 $(NODE) $(KIT)/run-tests.$(KIT_EXT) python --venv $(PYTHON_VENV) -- discover -s $(PYTHON_PACKAGE)/tests -t $(PYTHON_PACKAGE) -p test_files.py) \
 	$(call check,multipart application cases,PYTHONUNBUFFERED=1 NO_COLOR=1 PYTHON_COLORS=0 $(NODE) $(KIT)/run-tests.$(KIT_EXT) python --venv $(PYTHON_VENV) -- discover -s $(PYTHON_PACKAGE)/tests/render -t $(PYTHON_PACKAGE) -p render_files.py) \
 	$(checks_result)
 

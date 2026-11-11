@@ -710,6 +710,12 @@
                   "en": "`Request` provides the raw query and the query values, and `queryInt` reads the last value of a name.",
                   "ko": "`Request`는 원본 쿼리와 쿼리 값을 제공하고, `queryInt`는 이름의 마지막 값을 읽는다.",
                   "koSource": "0286e3cd34611fe32b716bb19236db2b0221f4cf2bf69a7124deb43a5fa76cb1"
+                },
+                {
+                  "id": "HY-56.7",
+                  "en": "`query()`, `form()` and `files()` of a request return a list of pairs of a name and its values in the three servers, so that a decimal name stays a string.",
+                  "ko": "요청의 `query()`, `form()`, `files()`는 세 server에서 이름과 값 목록의 쌍 목록을 반환하므로 십진수 이름도 문자열로 남는다.",
+                  "koSource": "4101f99a094f1442c4d4d171bd3c42506e01b55a743ac96112662de6b126f425"
                 }
               ]
             }
@@ -767,6 +773,12 @@
                   "en": "`Request` provides the form values, and `formString` reads the last value of a name.",
                   "ko": "`Request`는 폼 값을 제공하고, `formString`은 이름의 마지막 값을 읽는다.",
                   "koSource": "6144c4787600413b267641a811ece6382699fd18af245ee5dd57b1d4bb2e8a0a"
+                },
+                {
+                  "id": "HY-57.10",
+                  "en": "A body is `application/x-www-form-urlencoded` when its content type starts with that media type, compared without case, followed by spaces or tabs and then `;` or the end of the content type.",
+                  "ko": "content type이 대소문자를 구분하지 않고 그 media type으로 시작하고, 공백이나 tab 뒤에 `;`이나 content type의 끝이 오면 body는 `application/x-www-form-urlencoded`다.",
+                  "koSource": "f984cf58404969e086aafa8bed87ea05b460fa2210070f17f2f1386786482388"
                 }
               ]
             }
@@ -791,15 +803,15 @@
                 },
                 {
                   "id": "HY-113.2",
-                  "en": "The request gives its files as `files()`, an ordered map from each name to the list of its files in request order, as HY-57 orders the form values, and `file(name)` returns the last file of a name, or nothing when it has none, as `formString` reads the last value.",
-                  "ko": "요청은 그 file들을 `files()`로 제공하며, 이는 각 이름에서 그 file들의 목록으로 가는 순서 있는 map으로 요청 순서를 HY-57이 폼 값의 순서를 정하듯 따르고, `file(name)`은 이름의 마지막 file을 돌려주고 없으면 아무것도 돌려주지 않는데 `formString`이 마지막 값을 읽는 것과 같다.",
-                  "koSource": "fbc303cd9b96c171b67a4ff860aaaa162e6a8c2d8b56fb10374ad4091208d30a"
+                  "en": "The request gives its files as `files()`, a list of pairs of a name and its files in request order (HY-56.7), as HY-57 orders the form values, and `file(name)` returns the last file of a name, or null (`None` in Python) when it has none, as `formString` reads the last value.",
+                  "ko": "요청은 그 file들을 `files()`로 제공하며, 이는 이름과 요청 순서의 file 목록의 쌍 목록(HY-56.7)으로 HY-57이 폼 값의 순서를 정하듯 따르고, `file(name)`은 이름의 마지막 file을 돌려주고 없으면 null(Python에서는 `None`)을 돌려주는데 `formString`이 마지막 값을 읽는 것과 같다.",
+                  "koSource": "a24465a14438e5cdca62fa84b445238ed6bd420764d950cf6ce931f33b13fa43"
                 },
                 {
                   "id": "HY-113.3",
-                  "en": "A file has four parts: its name, which is the `name` parameter; its filename, which is the `filename` parameter with the backslash escapes of its quoted string undone and no further decoding; its content type, which is the value of its `Content-Type` header as sent, or the empty text when it has none; and its bytes, which are the content of the part as it is.",
-                  "ko": "file은 네 부분을 가지며, 이름은 `name` 매개변수이고, 파일 이름은 `filename` 매개변수로 그 quoted string의 백슬래시 escape를 풀고 더 decode하지 않은 것이며, content type은 part의 `Content-Type` 헤더 값을 보낸 그대로(헤더가 없으면 빈 텍스트)이고, bytes는 part의 내용 그대로다.",
-                  "koSource": "2142490fc16921326002b0c28002e8ee29369b8aa0eb24015d670cb6f84e41a7"
+                  "en": "A file has four parts: its name, which is the `name` parameter; its filename, which is the `filename` parameter as sent, with no decoding; its content type, which is the value of its `Content-Type` header as sent, or the empty text when it has none; and its bytes, which are the content of the part as it is.",
+                  "ko": "file은 네 부분으로 이루어진다. 이름은 `name` parameter이고, filename은 보낸 그대로의 `filename` parameter로 디코딩하지 않으며, content type은 보낸 그대로의 `Content-Type` header 값이고 없으면 빈 text이며, bytes는 part의 내용 그대로다.",
+                  "koSource": "33722bf010190392b1f5c9bc7c91bdf1c7398575795a4657b69398d4a3e04a8f"
                 },
                 {
                   "id": "HY-113.4",
@@ -827,9 +839,45 @@
                 },
                 {
                   "id": "HY-113.8",
-                  "en": "The file API is part of the public API of HY-106, in each runtime form: PHP `Request::files()` and `Request::file()` with the file class `UploadedFile`, Python `files()` and `file()` with the class `UploadedFile`, and Node `files()` and `file()` with the type `UploadedFile`.",
-                  "ko": "file API는 HY-106의 공개 API의 일부로 각 runtime 형태에서 제공되며, PHP는 `Request::files()`와 `Request::file()`을 파일 클래스 `UploadedFile`과 함께, Python은 `files()`와 `file()`을 클래스 `UploadedFile`과 함께, Node는 `files()`와 `file()`을 타입 `UploadedFile`과 함께 제공한다.",
-                  "koSource": "0d8b39503b396f3b27db8ef4e001a6213e236cd755deecdaa312b3035c6e5232"
+                  "en": "The file API is part of the public API of HY-106, in each runtime form: PHP `Request::files()` and `Request::file()`, Python `files()` and `file()`, and Node `files()` and `file()`, each with the class `UploadedFile`, whose methods `name()`, `filename()`, `contentType()` (`content_type()` in Python) and `content()` return the four parts of HY-113.3.",
+                  "ko": "file API는 HY-106의 공개 API의 일부로 각 runtime 형태에서 제공되며, PHP `Request::files()`와 `Request::file()`, Python `files()`와 `file()`, Node `files()`와 `file()`은 각각 클래스 `UploadedFile`을 쓰고, 그 method `name()`, `filename()`, `contentType()`(Python에서는 `content_type()`), `content()`는 HY-113.3의 네 부분을 돌려준다.",
+                  "koSource": "3ad971980eb98e48987f67c1920f9abbffd603baa31037bf3e985896d9326049"
+                },
+                {
+                  "id": "HY-113.11",
+                  "en": "The boundary of a `multipart/form-data` body is the parameter `boundary` of a content type that starts with `multipart/form-data`, spaces or tabs and `;`, compared without case: a quoted string of one character or more without its quotes, or else the text up to the next `;`, space or tab.",
+                  "ko": "`multipart/form-data` body의 boundary는 대소문자를 구분하지 않고 `multipart/form-data`, 공백이나 tab, `;`으로 시작하는 content type의 parameter `boundary`다: 한 글자 이상의 quoted string에서 따옴표를 뺀 것, 아니면 다음 `;`, 공백, tab까지의 text다.",
+                  "koSource": "10f18ca3e92f82974ef0565b0d328e96d1208cc2e0e9e8de88a27f2ad8e5d321"
+                },
+                {
+                  "id": "HY-113.12",
+                  "en": "The header lines of a part are separated by CRLF, and the header of a name is the first line whose text before its first `:` is that name, compared without case, with the rest of the line as its value without the spaces and tabs around it.",
+                  "ko": "part의 header 줄은 CRLF로 나뉘며, 이름의 header는 첫 `:` 앞의 text가 대소문자를 구분하지 않고 그 이름인 첫 줄이고, 그 값은 줄의 나머지에서 둘레의 공백과 tab을 뺀 것이다.",
+                  "koSource": "609ee337408441188cbf2c88ddfc3231349dd9d1d098f687d597a7ddcbdb96e5"
+                },
+                {
+                  "id": "HY-113.13",
+                  "en": "A `Content-Disposition` is `form-data` when its value starts with `form-data`, compared without case, and the parameters `name` and `filename` are found in the rest after a `;` and spaces or tabs, compared without case, so that another blank, such as a no-break space, separates nothing.",
+                  "ko": "`Content-Disposition`은 그 값이 대소문자를 구분하지 않고 `form-data`로 시작할 때 `form-data`이며, parameter `name`과 `filename`은 나머지에서 `;`과 공백이나 tab 뒤에서 대소문자를 구분하지 않고 찾으므로, no-break space 같은 다른 공백은 아무것도 나누지 않는다.",
+                  "koSource": "ed471b2eec7fda4393fcb3adf4ed7a43f6c917057a7e308d30648415cbb9602b"
+                },
+                {
+                  "id": "HY-113.14",
+                  "en": "A quoted filename is the text between its first `\"` and the next `\"`, with every backslash kept, because a browser sends a backslash of a filename as it is and a `\"` as `%22`; a filename that is not quoted is the text up to the next `;`, space or tab as it is, also when it holds a `\"`.",
+                  "ko": "따옴표로 감싼 filename은 첫 `\"`와 다음 `\"` 사이의 text이며 backslash를 모두 그대로 둔다. browser는 filename의 backslash를 그대로 보내고 `\"`는 `%22`로 보내기 때문이다. 따옴표로 감싸지 않은 filename은 다음 `;`, 공백, tab까지의 text를 그대로 쓰며 `\"`를 담아도 그렇다.",
+                  "koSource": "871cc9bd58d052727ae7168a1525869b8bf4d32e531008f266a4272a2f6d3b0c"
+                },
+                {
+                  "id": "HY-113.15",
+                  "en": "A part that fails with HY-42 fails the whole body, so that the form values and the files of the body both fail.",
+                  "ko": "HY-42로 실패하는 part는 body 전체를 실패시키므로 body의 form 값과 file이 함께 실패한다.",
+                  "koSource": "4f125bccc9a35eef420f65bcd6a2a273eba5a5156d7add8b201a84643a166927"
+                },
+                {
+                  "id": "HY-113.16",
+                  "en": "The header lines of a part, from the end of its delimiter line to its empty line, or the whole part when it has no empty line, are at most 8192 bytes, and a body with a longer one fails with HY-42.",
+                  "ko": "part의 header 줄은 delimiter 줄의 끝부터 빈 줄까지, 빈 줄이 없으면 part 전체이며 8192 byte 이하이고, 더 긴 것을 가진 body는 HY-42로 실패한다.",
+                  "koSource": "45f4816b2b54b50ae361f3b1fb39c363fae16b9b6d000db718226c371699ae5f"
                 }
               ]
             }

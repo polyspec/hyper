@@ -159,7 +159,10 @@ function readSource(file: string): void {
   }
 
   if (functions.length > 0) {
-    out.units.push({ file, name: stem, kind: 'functions', internal: false });
+    // A module of functions is internal when each of its exported functions carries @internal (HYR-3).
+    const exported = functions.filter((fn) => isExported(fn));
+    const internal = exported.length > 0 && exported.every((fn) => jsdocInternal(fn));
+    out.units.push({ file, name: stem, kind: 'functions', internal });
     for (const fn of functions) {
       const name = nameOf(fn);
       out.members.push({

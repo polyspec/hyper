@@ -30,13 +30,14 @@ class TargetTest(unittest.TestCase):
 class RequestValuesTest(unittest.TestCase):
     def test_query_values_without_nesting(self) -> None:
         request = Request("GET", "/x", {}, "z=1&y=2&x=3&y=4")
-        self.assertEqual(["z", "y", "x"], request.query().names())
-        self.assertEqual(["2", "4"], request.query().get("y"))
+        self.assertEqual(
+            [("z", ["1"]), ("y", ["2", "4"]), ("x", ["3"])], request.query()
+        )
         self.assertEqual(4, request.query_int("y", 0))
         self.assertEqual(7, request.query_int("missing", 7))
 
     def test_a_query_that_is_not_utf8_is_invalid_input(self) -> None:
-        self.assertEqual([], Request("GET", "/x", {}, "a=%ff").query().names())
+        self.assertEqual([], Request("GET", "/x", {}, "a=%ff").query())
         self.assertFalse(Request("GET", "/x", {}, "a=%ff").valid_input())
         self.assertTrue(Request("GET", "/x", {}, "a=%c3%a9").valid_input())
 

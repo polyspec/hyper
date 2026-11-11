@@ -1,6 +1,7 @@
 // One HTTP request with the session values that the application reads.
 import { Cookies } from './cookies.js';
-import { bytesOf, fileParts, formFields, parseUrlEncoded, utf8, type Fields, type FileParts } from './form.js';
+import { Fields } from './fields.js';
+import { Files } from './files.js';
 import type { Flash } from './session.js';
 import type { UploadedFile } from './uploaded-file.js';
 import type { Value } from './values.js';
@@ -24,10 +25,11 @@ interface State {
   headers: Map<string, string>;
   bodySize: number;
   rawQuery: string;
-  query: Fields;
-  form: Fields;
-  // The file parts of the body (HY-113).
-  files: FileParts;
+  // The query values, the form values and the file parts of the body (HY-56, HY-57, HY-113), each null when it fails
+  // with HY-42.
+  query: Fields | null;
+  form: Fields | null;
+  files: Files | null;
   cookies: Map<string, string>;
   https: boolean;
   params: Record<string, string>;
@@ -43,6 +45,8 @@ interface State {
 export const HYPER_JSON = 'application/vnd.hyper+json';
 
 export class Request {
+  // ignoreBOM keeps a leading U+FEFF as a character, as PHP and Python decode it; the default of TextDecoder drops it.
+  private static readonly decoder = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true });
   private readonly state: State;
 
   private constructor(state: State) {
@@ -61,8 +65,8 @@ export class Request {
     }
     const rawQuery = Request.targetQuery(init.target);
     const body = init.body ?? new Uint8Array();
-    const form = formFields(headers.get('content-type') ?? '', body);
-    const files = fileParts(headers.get('content-type') ?? '', body);
+    const form = Fields.fromBody(headers.get('content-type') ?? '', body);
+    const files = Files.fromBody(headers.get('content-type') ?? '', body);
     const declared = headers.get('content-length') ?? '';
     return new Request({
       method: init.method.toUpperCase(),
@@ -70,7 +74,7 @@ export class Request {
       headers,
       bodySize: Math.max(init.bodySize ?? body.byteLength, /^[0-9]+$/.test(declared) ? Number(declared) : 0),
       rawQuery,
-      query: parseUrlEncoded(rawQuery),
+      query: Fields.parse(Buffer.from(rawQuery, 'latin1')),
       form,
       files,
       cookies: Cookies.parse(headers.get('cookie') ?? null),
@@ -168,22 +172,23 @@ export class Request {
   // and HX-Current-URL are UTF-8 (HY-42). Cookies are not checked; hyper ignores invalid ones.
   validInput(): boolean {
     const current = this.state.headers.get('hx-current-url');
-    return /^[\x21-\x7e]*$/.test(this.state.path) && (current === undefined || utf8(bytesOf(current)) !== null) && this.state.query.valid && this.state.form.valid && this.state.files.valid;
+    return /^[\x21-\x7e]*$/.test(this.state.path) && (current === undefined || Request.utf8(current) !== null) && this.state.query !== null && this.state.form !== null && this.state.files !== null;
   }
 
-  // Returns the file parts of the body, an ordered map from each name to its files in request order (HY-113).
-  files(): ReadonlyMap<string, readonly UploadedFile[]> {
-    return new Map([...this.state.files.values].map(([name, files]) => [name, [...files]]));
+  // Returns the file parts of the body as pairs of a name and its files in request order, in the order of the first
+  // file of each name (HY-113).
+  files(): [string, UploadedFile[]][] {
+    return (this.state.files ?? Files.empty()).pairs();
   }
 
-  // Returns the last file of a name, or undefined (HY-113).
-  file(name: string): UploadedFile | undefined {
-    return this.state.files.values.get(name)?.at(-1);
+  // Returns the last file of a name, or null (HY-113).
+  file(name: string): UploadedFile | null {
+    return this.state.files?.last(name) ?? null;
   }
 
   // Returns true when a file of the body is larger than `limit` bytes (HY-114).
   fileOver(limit: number): boolean {
-    return [...this.state.files.values.values()].some((files) => files.some((file) => file.content.byteLength > limit));
+    return (this.state.files ?? Files.empty()).largest() > limit;
   }
 
   // Returns the size of the body in bytes: its length, or the Content-Length header when that is larger (HY-59).
@@ -215,7 +220,7 @@ export class Request {
   // Returns the path of the page that sent the request, or null (HY-11).
   currentPath(): string | null {
     const header = this.header('HX-Current-URL');
-    const url = header === null ? null : utf8(bytesOf(header));
+    const url = header === null ? null : Request.utf8(header);
     if (url === null) return null;
     const rest = url.replace(/^([A-Za-z][A-Za-z0-9+.-]*:)?\/\/[^/?#]*/, '');
     const path = rest.slice(0, Math.min(firstOf(rest, '?'), firstOf(rest, '#')));
@@ -233,25 +238,27 @@ export class Request {
     return this.state.rawQuery;
   }
 
-  // Returns every query value in order, without nesting (HY-56).
-  query(): ReadonlyMap<string, readonly string[]> {
-    return copy(this.state.query);
+  // Returns every query value without nesting, as pairs of a name and its values in request order, in the order of the
+  // first value of each name (HY-56).
+  query(): [string, string[]][] {
+    return (this.state.query ?? Fields.empty()).pairs();
   }
 
   // Returns the last query value of a name as an integer, or the default when it is absent or not an integer.
   queryInt(name: string, fallback: number): number {
-    const value = this.state.query.values.get(name)?.at(-1);
-    return value !== undefined && /^-?[0-9]{1,15}$/.test(value) ? Number(value) : fallback;
+    const value = this.state.query?.last(name) ?? null;
+    return value !== null && /^-?[0-9]{1,15}$/.test(value) ? Number(value) : fallback;
   }
 
-  // Returns every form value of the body in order, without nesting (HY-57).
-  form(): ReadonlyMap<string, readonly string[]> {
-    return copy(this.state.form);
+  // Returns every form value of the body without nesting, as pairs of a name and its values in request order, in the
+  // order of the first value of each name (HY-57).
+  form(): [string, string[]][] {
+    return (this.state.form ?? Fields.empty()).pairs();
   }
 
   // Returns the last form value of a name; an absent name gives the empty string.
   formString(name: string): string {
-    return this.state.form.values.get(name)?.at(-1) ?? '';
+    return this.state.form?.last(name) ?? '';
   }
 
   // Returns a flash value stored by the previous action, or null.
@@ -263,10 +270,17 @@ export class Request {
   csrfToken(): string {
     return this.state.csrfToken;
   }
-}
 
-function copy(fields: Fields): Map<string, string[]> {
-  return new Map([...fields.values].map(([name, values]) => [name, [...values]]));
+  // Returns the UTF-8 text of a header value whose characters are bytes, or null when the bytes are not UTF-8 (HY-42).
+  private static utf8(text: string): string | null {
+    try {
+      return Request.decoder.decode(Buffer.from(text, 'latin1'));
+    } catch (error) {
+      // The fatal decoder fails bytes that are no UTF-8 with a TypeError; any other failure propagates.
+      if (error instanceof TypeError) return null;
+      throw error;
+    }
+  }
 }
 
 function firstOf(text: string, char: string): number {

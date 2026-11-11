@@ -5,62 +5,64 @@ declare(strict_types=1);
 namespace Polyspec\Hyper\Tests\Support\Steps;
 
 use Polyspec\Hyper\Fields;
-use Polyspec\Hyper\Request;
+use Polyspec\Hyper\Files;
 use Polyspec\Hyper\Tests\CaseReader;
 
 /**
- * HY-56, HY-57, HY-113: the cases of contracts/fields.json. A urlencoded text is the UTF-8 encoding of its JSON string;
- * a multipart body is text whose characters are its bytes.
+ * HY-56, HY-57, HY-113: the cases of contracts/fields.json. A urlencoded text is the UTF-8 encoding of its JSON string,
+ * and a multipart type and body are text whose characters are their bytes.
  */
 final class FieldsSteps
 {
+    /** Parses the text and records its pairs and its names, or null for both when it fails with HY-42 (HY-56). */
     public static function urlencoded(CaseReader $case): void
     {
-        $pairs = self::pairs(Fields::parse((string) $case->input('text')));
-        $case->compare('fields', $pairs);
-        $case->compare('names', $pairs === null ? null : array_column($pairs, 0));
+        $fields = Fields::parse(self::text($case, 'text'));
+        $case->compare('fields', $fields?->pairs());
+        $case->compare('names', $fields?->names());
     }
 
+    /**
+     * Reads the form values and the files of the body, or null for each when the body fails with HY-42 (HY-57,
+     * HY-113).
+     */
     public static function multipart(CaseReader $case): void
     {
-        $type = (string) $case->input('type');
-        $body = (string) $case->input('body');
-        $fields = Fields::fromBody($type, (string) mb_convert_encoding($body, 'ISO-8859-1', 'UTF-8'));
-        $case->compare('fields', self::pairs($fields));
-        // The files are null when the fields are null, which is a name or a value that is not UTF-8.
-        $case->compare('files', $fields === null ? null : self::files($type, $body));
-    }
+        $type = self::bytes(self::text($case, 'type'));
+        $body = self::bytes(self::text($case, 'body'));
+        $case->compare('fields', Fields::fromBody($type, $body)?->pairs());
+        $files = Files::fromBody($type, $body);
+        if ($files === null) {
+            $case->compare('files', null);
 
-    /** @return ?list<array{0: string, 1: list<string>}> the name and values of each field, in order */
-    private static function pairs(?Fields $fields): ?array
-    {
-        if ($fields === null) {
-            return null;
+            return;
         }
-        $pairs = [];
-        foreach ($fields as $name => $values) {
-            $pairs[] = [(string) $name, $values];
-        }
-
-        return $pairs;
-    }
-
-    /** @return list<array{name: string, filename: string, contentType: string, content: string}> */
-    private static function files(string $type, string $body): array
-    {
-        $request = new Request('POST', '/', ['Content-Type' => $type], '', $body);
-        $files = [];
-        foreach ($request->files() as $name => $parts) {
-            foreach ($parts as $file) {
-                $files[] = [
+        $entries = [];
+        foreach ($files->pairs() as [, $list]) {
+            foreach ($list as $file) {
+                $entries[] = [
                     'name' => $file->name(),
                     'filename' => $file->filename(),
                     'contentType' => $file->contentType(),
-                    'content' => $file->content(),
+                    'content' => (string) mb_convert_encoding($file->content(), 'UTF-8', 'ISO-8859-1'),
                 ];
             }
         }
+        $case->compare('files', $entries);
+    }
 
-        return $files;
+    private static function text(CaseReader $case, string $name): string
+    {
+        $value = $case->input($name);
+
+        return is_string($value)
+            ? $value
+            : throw new \UnexpectedValueException("the case field {$name} is not a string");
+    }
+
+    /** Returns the bytes of text whose characters are bytes. */
+    private static function bytes(string $text): string
+    {
+        return (string) mb_convert_encoding($text, 'ISO-8859-1', 'UTF-8');
     }
 }

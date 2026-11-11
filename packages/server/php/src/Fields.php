@@ -5,29 +5,15 @@ declare(strict_types=1);
 namespace Polyspec\Hyper;
 
 /**
- * The values of a query or a form, without nesting: an ordered map from each name, in the order of its first
- * occurrence, to its values in request order (HY-56, HY-57). Iteration yields every name as a string, also a decimal
- * one.
+ * The values of a query or a form, without nesting: each name, in the order of its first occurrence, with its values
+ * in request order; a bracketed name is the name as written (HY-56, HY-57).
  *
- * @implements \IteratorAggregate<string, list<string>>
+ * @extends NamedValues<string>
  *
  * @internal
  */
-final class Fields implements \IteratorAggregate, \Countable
+final class Fields extends NamedValues
 {
-    /** @use NamedValues<string> */
-    use NamedValues;
-
-    /**
-     * @param list<string> $names
-     * @param array<array-key, list<string>> $values values by name
-     */
-    public function __construct(
-        private readonly array $names,
-        private readonly array $values,
-    ) {
-    }
-
     /** Returns fields without names. */
     public static function empty(): self
     {
@@ -36,7 +22,7 @@ final class Fields implements \IteratorAggregate, \Countable
 
     /**
      * Parses `name=value&name=value`: `+` is a space, `%XX` is its byte and another `%` stays. Returns null when a
-     * name or a value is not UTF-8 (HY-42).
+     * name or a value is not UTF-8 (HY-42, HY-56).
      */
     public static function parse(string $text): ?self
     {
@@ -47,9 +33,9 @@ final class Fields implements \IteratorAggregate, \Countable
                 continue;
             }
             $equals = strpos($part, '=');
-            $name = urldecode($equals === false ? $part : substr($part, 0, $equals));
-            $value = urldecode($equals === false ? '' : substr($part, $equals + 1));
-            if (preg_match('//u', $name) !== 1 || preg_match('//u', $value) !== 1) {
+            $name = self::percentDecoded($equals === false ? $part : substr($part, 0, $equals));
+            $value = self::percentDecoded($equals === false ? '' : substr($part, $equals + 1));
+            if ($name === null || $value === null) {
                 return null;
             }
             if (!array_key_exists($name, $values)) {
@@ -64,39 +50,29 @@ final class Fields implements \IteratorAggregate, \Countable
 
     /**
      * Returns the fields of a request body: of an `application/x-www-form-urlencoded` body, or the text fields of a
-     * `multipart/form-data` body; a body of another type has none (HY-57). Returns null when a name or a value is not
-     * UTF-8 (HY-42).
+     * `multipart/form-data` body; a body of another type has none (HY-57). Returns null when a part of the body fails
+     * with HY-42 (HY-113.15).
      */
     public static function fromBody(string $type, string $body): ?self
     {
-        if (preg_match('#^application/x-www-form-urlencoded\s*(;|$)#i', $type) === 1) {
+        if (preg_match('#^application/x-www-form-urlencoded[ \t]*(;|$)#iD', $type) === 1) {
             return self::parse($body);
         }
         $boundary = Multipart::boundary($type);
-        if ($boundary !== null) {
-            // The text fields of the body; its file parts are read by Files (HY-113).
-            $parts = Multipart::read($body, $boundary);
-
-            return $parts === null ? null : $parts[0];
+        if ($boundary === null) {
+            return self::empty();
         }
 
-        return self::empty();
+        return Multipart::read($body, $boundary)[0] ?? null;
     }
 
-    /** Returns true when the name has a value. */
-    public function has(string $name): bool
+    /**
+     * Decodes `+` to a space and `%XX` to its byte, and returns the bytes when they are UTF-8, or null.
+     */
+    private static function percentDecoded(string $text): ?string
     {
-        return array_key_exists($name, $this->values);
-    }
+        $decoded = urldecode($text);
 
-    /** Returns the last value of a name, or null. */
-    public function last(string $name): ?string
-    {
-        return $this->lastOf($name);
-    }
-
-    public function count(): int
-    {
-        return count($this->names);
+        return preg_match('//u', $decoded) === 1 ? $decoded : null;
     }
 }

@@ -240,13 +240,14 @@ final class Request
     }
 
     /**
-     * Returns every query value in order, without nesting (HY-56).
+     * Returns every query value without nesting, as pairs of a name and its values in request order, in the order of
+     * the first value of each name (HY-56).
      *
-     * @return \IteratorAggregate<string, list<string>>
+     * @return list<array{string, list<string>}>
      */
-    public function query(): \IteratorAggregate
+    public function query(): array
     {
-        return $this->queryFields ?? Fields::empty();
+        return ($this->queryFields ?? Fields::empty())->pairs();
     }
 
     /** Returns the last query value of a name as an integer, or the default when it is absent or not an integer. */
@@ -261,13 +262,14 @@ final class Request
     }
 
     /**
-     * Returns every form value of the body in order, without nesting (HY-57).
+     * Returns every form value of the body without nesting, as pairs of a name and its values in request order, in
+     * the order of the first value of each name (HY-57).
      *
-     * @return \IteratorAggregate<string, list<string>>
+     * @return list<array{string, list<string>}>
      */
-    public function form(): \IteratorAggregate
+    public function form(): array
     {
-        return $this->formFields ?? Fields::empty();
+        return ($this->formFields ?? Fields::empty())->pairs();
     }
 
     /** Returns the last form value of a name; an absent name gives the empty string. */
@@ -277,13 +279,14 @@ final class Request
     }
 
     /**
-     * Returns the file parts of the body, an ordered map from each name to its files in request order (HY-113).
+     * Returns the file parts of the body as pairs of a name and its files in request order, in the order of the first
+     * file of each name (HY-113).
      *
-     * @return \IteratorAggregate<string, list<UploadedFile>>
+     * @return list<array{string, list<UploadedFile>}>
      */
-    public function files(): \IteratorAggregate
+    public function files(): array
     {
-        return $this->fileParts ?? Files::empty();
+        return ($this->fileParts ?? Files::empty())->pairs();
     }
 
     /** Returns the last file of a name, or null (HY-113). */

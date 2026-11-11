@@ -2629,11 +2629,111 @@
             },
             "python": {
               "file": "packages/server/python/src/polyspec/hyper/_fields.py",
-              "kind": "functions",
+              "kind": "class",
               "internal": true
             }
           },
-          "members": []
+          "members": [
+            {
+              "id": "fields.empty",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "fields",
+              "errors": [],
+              "state": "Returns fields without names.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Fields.php::Polyspec\\Hyper\\Fields::empty",
+                  "signature": "public static function empty(): Polyspec\\Hyper\\Fields"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/fields.ts::Fields.empty",
+                  "signature": "static empty(): Fields"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_fields.py::Fields.empty",
+                  "signature": "def empty() -> Fields"
+                }
+              }
+            },
+            {
+              "id": "fields.parse",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "bytes"
+              ],
+              "output": "optional<fields>",
+              "errors": [],
+              "state": "Parses name=value parts separated by &, skipping empty parts: + is a space, %XX is its byte and another % stays; returns null when a name or a value is not UTF-8 (HY-42, HY-56).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Fields.php::Polyspec\\Hyper\\Fields::parse",
+                  "signature": "public static function parse(string $text): ?Polyspec\\Hyper\\Fields"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/fields.ts::Fields.parse",
+                  "signature": "static parse(text: Uint8Array): Fields | null"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_fields.py::Fields.parse",
+                  "signature": "def parse(text: bytes) -> Optional[Fields]"
+                }
+              }
+            },
+            {
+              "id": "fields.fromBody",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "string",
+                "bytes"
+              ],
+              "output": "optional<fields>",
+              "errors": [],
+              "state": "Returns the values of an application/x-www-form-urlencoded body, the text fields of a multipart/form-data body and none for another type; returns null when the body fails with HY-42 (HY-57.10, HY-113.15).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Fields.php::Polyspec\\Hyper\\Fields::fromBody",
+                  "signature": "public static function fromBody(string $type, string $body): ?Polyspec\\Hyper\\Fields"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/fields.ts::Fields.fromBody",
+                  "signature": "static fromBody(type: string, body: Uint8Array): Fields | null"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_fields.py::Fields.from_body",
+                  "signature": "def from_body(content_type: str, body: bytes) -> Optional[Fields]"
+                }
+              }
+            },
+            {
+              "id": "fields.percentDecoded",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "bytes"
+              ],
+              "output": "optional<string>",
+              "errors": [],
+              "state": "Decodes + to a space and %XX to its byte, and returns the text when the bytes are UTF-8, or null (HY-56).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Fields.php::Polyspec\\Hyper\\Fields::percentDecoded",
+                  "signature": "private static function percentDecoded(string $text): ?string"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/fields.ts::Fields.percentDecoded",
+                  "signature": "private static percentDecoded(text: string): string | null"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_fields.py::Fields._percent_decoded",
+                  "signature": "def _percent_decoded(text: bytes) -> Optional[str]"
+                }
+              }
+            }
+          ]
         },
         {
           "id": "files",
@@ -2654,7 +2754,80 @@
               "internal": true
             }
           },
-          "members": []
+          "members": [
+            {
+              "id": "files.empty",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "files",
+              "errors": [],
+              "state": "Returns files without names.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Files.php::Polyspec\\Hyper\\Files::empty",
+                  "signature": "public static function empty(): Polyspec\\Hyper\\Files"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/files.ts::Files.empty",
+                  "signature": "static empty(): Files"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_files.py::Files.empty",
+                  "signature": "def empty() -> Files"
+                }
+              }
+            },
+            {
+              "id": "files.fromBody",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "string",
+                "bytes"
+              ],
+              "output": "optional<files>",
+              "errors": [],
+              "state": "Returns the files of a multipart/form-data body and none for another type; returns null when the body fails with HY-42 (HY-113.15).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Files.php::Polyspec\\Hyper\\Files::fromBody",
+                  "signature": "public static function fromBody(string $type, string $body): ?Polyspec\\Hyper\\Files"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/files.ts::Files.fromBody",
+                  "signature": "static fromBody(type: string, body: Uint8Array): Files | null"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_files.py::Files.from_body",
+                  "signature": "def from_body(content_type: str, body: bytes) -> Optional[Files]"
+                }
+              }
+            },
+            {
+              "id": "files.largest",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "number",
+              "errors": [],
+              "state": "Returns the size in bytes of the largest file, or 0 when there is none (HY-114).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Files.php::Polyspec\\Hyper\\Files::largest",
+                  "signature": "public function largest(): int"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/files.ts::Files.largest",
+                  "signature": "largest(): number"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_files.py::Files.largest",
+                  "signature": "def largest(self) -> int"
+                }
+              }
+            }
+          ]
         },
         {
           "id": "multipart",
@@ -2666,23 +2839,154 @@
             },
             "node": {
               "file": "packages/server/ts/src/multipart.ts",
-              "kind": "functions",
+              "kind": "class",
               "internal": true
             },
             "python": {
               "file": "packages/server/python/src/polyspec/hyper/_multipart.py",
-              "kind": "functions",
+              "kind": "class",
               "internal": true
             }
           },
-          "members": []
+          "members": [
+            {
+              "id": "multipart.boundary",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "string"
+              ],
+              "output": "optional<string>",
+              "errors": [],
+              "state": "Returns the boundary of a multipart/form-data content type, or null for another type (HY-113.11).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Multipart.php::Polyspec\\Hyper\\Multipart::boundary",
+                  "signature": "public static function boundary(string $type): ?string"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/multipart.ts::Multipart.boundary",
+                  "signature": "static boundary(type: string): string | null"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_multipart.py::Multipart.boundary",
+                  "signature": "def boundary(content_type: str) -> Optional[str]"
+                }
+              }
+            },
+            {
+              "id": "multipart.read",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "bytes",
+                "string"
+              ],
+              "output": "optional<list<value>>",
+              "errors": [],
+              "state": "Returns the text fields and the files of the body as a pair, or null when a name, a value, a filename or a content type is not UTF-8 (HY-113.12 to HY-113.15).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Multipart.php::Polyspec\\Hyper\\Multipart::read",
+                  "signature": "public static function read(string $body, string $boundary): ?array"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/multipart.ts::Multipart.read",
+                  "signature": "static read(body: Uint8Array, boundary: string): [Fields, Files] | null"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_multipart.py::Multipart.read",
+                  "signature": "def read(body: bytes, boundary: str) -> Optional[tuple[_fields.Fields, _files.Files]]"
+                }
+              }
+            },
+            {
+              "id": "multipart.headerValue",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "list<string>",
+                "string"
+              ],
+              "output": "optional<string>",
+              "errors": [],
+              "state": "Returns the value of the first header line of the name, compared without case, without the spaces and tabs around it, or null (HY-113.12).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Multipart.php::Polyspec\\Hyper\\Multipart::headerValue",
+                  "signature": "private static function headerValue(array $lines, string $name): ?string"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/multipart.ts::Multipart.headerValue",
+                  "signature": "private static headerValue(lines: readonly string[], name: string): string | null"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_multipart.py::Multipart._header_value",
+                  "signature": "def _header_value(lines: list[str], name: str) -> Optional[str]"
+                }
+              }
+            },
+            {
+              "id": "multipart.addValue",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "list<string>",
+                "map<list<value>>",
+                "string",
+                "value"
+              ],
+              "output": "none",
+              "errors": [],
+              "state": "Appends a value to its name, and the name to the names at its first value (HY-56).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Multipart.php::Polyspec\\Hyper\\Multipart::addValue",
+                  "signature": "private static function addValue(array &$names, array &$values, string $name, mixed $value): void"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/multipart.ts::Multipart.addValue",
+                  "signature": "private static addValue<T>(names: string[], values: Map<string, T[]>, name: string, value: T): void"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_multipart.py::Multipart._add_value",
+                  "signature": "def _add_value(names: list[str], values: dict, name: str, value: object) -> None"
+                }
+              }
+            },
+            {
+              "id": "multipart.utf8Text",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "bytes"
+              ],
+              "output": "optional<string>",
+              "errors": [],
+              "state": "Returns the text of the bytes when they are UTF-8, or null (HY-42).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Multipart.php::Polyspec\\Hyper\\Multipart::utf8Text",
+                  "signature": "private static function utf8Text(string $bytes): ?string"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/multipart.ts::Multipart.utf8Text",
+                  "signature": "private static utf8Text(text: string): string | null"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_multipart.py::Multipart._utf8_text",
+                  "signature": "def _utf8_text(data: bytes) -> Optional[str]"
+                }
+              }
+            }
+          ]
         },
         {
           "id": "named-values",
           "native": {
             "php": {
               "file": "packages/server/php/src/NamedValues.php",
-              "kind": "trait",
+              "kind": "class",
               "internal": true
             },
             "node": {
@@ -2696,7 +3000,130 @@
               "internal": true
             }
           },
-          "members": []
+          "members": [
+            {
+              "id": "named-values.constructor",
+              "kind": "constructor",
+              "visibility": "internal",
+              "inputs": [
+                "list<string>",
+                "map<list<value>>"
+              ],
+              "output": "none",
+              "errors": [],
+              "state": "Holds the names in the order of their first occurrence and the values of each name in request order.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/NamedValues.php::Polyspec\\Hyper\\NamedValues::__construct",
+                  "signature": "public function __construct(array $names, array $values)"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/named-values.ts::NamedValues.constructor",
+                  "signature": "constructor(names: readonly string[], values: ReadonlyMap<string, readonly T[]>)"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_named_values.py::NamedValues.__init__",
+                  "signature": "def __init__(self, names: list[str], values: dict[str, list[T]])"
+                }
+              }
+            },
+            {
+              "id": "named-values.names",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "list<string>",
+              "errors": [],
+              "state": "Returns the names in the order of their first occurrence (HY-56).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/NamedValues.php::Polyspec\\Hyper\\NamedValues::names",
+                  "signature": "public function names(): array"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/named-values.ts::NamedValues.names",
+                  "signature": "names(): string[]"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_named_values.py::NamedValues.names",
+                  "signature": "def names(self) -> list[str]"
+                }
+              }
+            },
+            {
+              "id": "named-values.get",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "string"
+              ],
+              "output": "list<value>",
+              "errors": [],
+              "state": "Returns the values of a name in request order; an absent name has none (HY-56).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/NamedValues.php::Polyspec\\Hyper\\NamedValues::get",
+                  "signature": "public function get(string $name): array"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/named-values.ts::NamedValues.get",
+                  "signature": "get(name: string): T[]"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_named_values.py::NamedValues.get",
+                  "signature": "def get(self, name: str) -> list[T]"
+                }
+              }
+            },
+            {
+              "id": "named-values.last",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "string"
+              ],
+              "output": "optional<value>",
+              "errors": [],
+              "state": "Returns the last value of a name, or null (HY-56.5, HY-57.7, HY-113.2).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/NamedValues.php::Polyspec\\Hyper\\NamedValues::last",
+                  "signature": "public function last(string $name): mixed"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/named-values.ts::NamedValues.last",
+                  "signature": "last(name: string): T | null"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_named_values.py::NamedValues.last",
+                  "signature": "def last(self, name: str) -> Optional[T]"
+                }
+              }
+            },
+            {
+              "id": "named-values.pairs",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "list<list<value>>",
+              "errors": [],
+              "state": "Returns each name with its values in the order of the names, the name a string also when it is decimal (HY-56.7).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/NamedValues.php::Polyspec\\Hyper\\NamedValues::pairs",
+                  "signature": "public function pairs(): array"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/named-values.ts::NamedValues.pairs",
+                  "signature": "pairs(): [string, T[]][]"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_named_values.py::NamedValues.pairs",
+                  "signature": "def pairs(self) -> list[tuple[str, list[T]]]"
+                }
+              }
+            }
+          ]
         },
         {
           "id": "uploaded-file",
@@ -2717,7 +3144,128 @@
               "internal": false
             }
           },
-          "members": []
+          "members": [
+            {
+              "id": "uploaded-file.constructor",
+              "kind": "constructor",
+              "visibility": "public",
+              "inputs": [
+                "string",
+                "string",
+                "string",
+                "bytes"
+              ],
+              "output": "none",
+              "errors": [],
+              "state": "Holds the name, the filename, the content type and the bytes of a file part (HY-113.3).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/UploadedFile.php::Polyspec\\Hyper\\UploadedFile::__construct",
+                  "signature": "public function __construct(string $name, string $filename, string $contentType, string $content)"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/uploaded-file.ts::UploadedFile.constructor",
+                  "signature": "constructor(name: string, filename: string, contentType: string, content: Uint8Array)"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/uploaded_file.py::UploadedFile.__init__",
+                  "signature": "def __init__(self, name: str, filename: str, content_type: str, content: bytes)"
+                }
+              }
+            },
+            {
+              "id": "uploaded-file.name",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [],
+              "output": "string",
+              "errors": [],
+              "state": "Returns the name parameter of the part (HY-113.3).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/UploadedFile.php::Polyspec\\Hyper\\UploadedFile::name",
+                  "signature": "public function name(): string"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/uploaded-file.ts::UploadedFile.name",
+                  "signature": "name(): string"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/uploaded_file.py::UploadedFile.name",
+                  "signature": "def name(self) -> str"
+                }
+              }
+            },
+            {
+              "id": "uploaded-file.filename",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [],
+              "output": "string",
+              "errors": [],
+              "state": "Returns the filename parameter of the part, with the escapes of its quoted string undone (HY-113.3, HY-113.14).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/UploadedFile.php::Polyspec\\Hyper\\UploadedFile::filename",
+                  "signature": "public function filename(): string"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/uploaded-file.ts::UploadedFile.filename",
+                  "signature": "filename(): string"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/uploaded_file.py::UploadedFile.filename",
+                  "signature": "def filename(self) -> str"
+                }
+              }
+            },
+            {
+              "id": "uploaded-file.contentType",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [],
+              "output": "string",
+              "errors": [],
+              "state": "Returns the Content-Type header of the part, or the empty text when it has none (HY-113.3).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/UploadedFile.php::Polyspec\\Hyper\\UploadedFile::contentType",
+                  "signature": "public function contentType(): string"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/uploaded-file.ts::UploadedFile.contentType",
+                  "signature": "contentType(): string"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/uploaded_file.py::UploadedFile.content_type",
+                  "signature": "def content_type(self) -> str"
+                }
+              }
+            },
+            {
+              "id": "uploaded-file.content",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [],
+              "output": "bytes",
+              "errors": [],
+              "state": "Returns the bytes of the part as they were sent (HY-113.3).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/UploadedFile.php::Polyspec\\Hyper\\UploadedFile::content",
+                  "signature": "public function content(): string"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/uploaded-file.ts::UploadedFile.content",
+                  "signature": "content(): Uint8Array"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/uploaded_file.py::UploadedFile.content",
+                  "signature": "def content(self) -> bytes"
+                }
+              }
+            }
+          ]
         }
       ]
     },

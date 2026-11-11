@@ -7,27 +7,23 @@ class UploadedFile:
     """A file that a request sent in a file part. Its content is the bytes of the part as they were sent."""
 
     def __init__(self, name: str, filename: str, content_type: str, content: bytes):
-        self._name = name
-        self._filename = filename
-        self._content_type = content_type
-        self._content = content
+        self.__name = name
+        self.__filename = filename
+        self.__content_type = content_type
+        self.__content = content
 
-    @property
     def name(self) -> str:
-        """The name of the part, the `name` parameter of its Content-Disposition."""
-        return self._name
+        """Returns the name of the part, the `name` parameter of its Content-Disposition."""
+        return self.__name
 
-    @property
     def filename(self) -> str:
-        """The filename parameter of the part, with the escapes of its quoted string undone."""
-        return self._filename
+        """Returns the filename parameter of the part, with the escapes of its quoted string undone."""
+        return self.__filename
 
-    @property
     def content_type(self) -> str:
-        """The Content-Type header of the part as it was sent, or the empty text when it has none."""
-        return self._content_type
+        """Returns the Content-Type header of the part as it was sent, or the empty text when it has none."""
+        return self.__content_type
 
-    @property
     def content(self) -> bytes:
-        """The bytes of the part."""
-        return self._content
+        """Returns the bytes of the part."""
+        return self.__content

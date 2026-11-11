@@ -173,8 +173,11 @@ function unitKind(ReflectionClass $class): string
     if ($class->isTrait()) {
         return 'trait';
     }
+    // A class that extends another class or is abstract has instances, so it is a class (HYR-3).
     $methods = ownMethods($class);
     $functions = $methods !== []
+        && $class->getParentClass() === false
+        && !$class->isAbstract()
         && !in_array('__construct', array_map(static fn($m) => $m->getName(), $methods), true);
     foreach ($methods as $method) {
         $functions = $functions && $method->isStatic();

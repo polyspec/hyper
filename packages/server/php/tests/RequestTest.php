@@ -100,14 +100,13 @@ final class RequestTest extends TestCase
             $_GET = $get;
         }
         self::assertSame('b=1&roles[]=a&roles%5B%5D=b&1=x&b=2&q=a+b', $request->rawQuery());
-        $query = [];
-        foreach ($request->query() as $name => $values) {
-            $query[] = [$name, $values];
-        }
-        self::assertSame([['b', ['1', '2']], ['roles[]', ['a', 'b']], ['1', ['x']], ['q', ['a b']]], $query);
+        self::assertSame(
+            [['b', ['1', '2']], ['roles[]', ['a', 'b']], ['1', ['x']], ['q', ['a b']]],
+            $request->query(),
+        );
         self::assertSame(2, $request->queryInt('b', 7));
         self::assertSame('', (new Request('GET', '/'))->rawQuery());
-        self::assertSame([], iterator_to_array((new Request('GET', '/'))->query()));
+        self::assertSame([], (new Request('GET', '/'))->query());
     }
 
     /** HY-57: every form value of the body in order, without nesting, whatever PHP put into $_POST. */
@@ -120,16 +119,15 @@ final class RequestTest extends TestCase
             '',
             'title=%ED%95%9C+%EA%B8%80&roles[]=a&empty&roles%5B%5D=b&x=1&x=2',
         );
-        $form = [];
-        foreach ($request->form() as $name => $values) {
-            $form[] = [$name, $values];
-        }
-        self::assertSame([['title', ['한 글']], ['roles[]', ['a', 'b']], ['empty', ['']], ['x', ['1', '2']]], $form);
+        self::assertSame(
+            [['title', ['한 글']], ['roles[]', ['a', 'b']], ['empty', ['']], ['x', ['1', '2']]],
+            $request->form(),
+        );
         self::assertSame('2', $request->formString('x'));
         self::assertSame('', $request->formString('missing'));
         self::assertSame(
             [],
-            iterator_to_array((new Request('POST', '/', ['Content-Type' => 'text/plain'], '', 'a=1'))->form()),
+            (new Request('POST', '/', ['Content-Type' => 'text/plain'], '', 'a=1'))->form(),
         );
 
         $server = $_SERVER;
@@ -139,7 +137,7 @@ final class RequestTest extends TestCase
         $_SERVER['CONTENT_TYPE'] = 'application/x-www-form-urlencoded';
         $_POST = ['ignored' => '1'];
         try {
-            self::assertSame([], iterator_to_array(Request::fromGlobals()->form()));
+            self::assertSame([], Request::fromGlobals()->form());
         } finally {
             $_SERVER = $server;
             $_POST = $post;

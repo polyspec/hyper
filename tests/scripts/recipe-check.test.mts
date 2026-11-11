@@ -342,6 +342,17 @@ test('a PHP class of static methods is a functions unit, whatever its properties
   assert.equal(kind, 'functions', `Helpers is a ${kind} unit`);
 });
 
+test('a PHP class of static methods that extends another class is a class unit', () => {
+  const kind = readFixture('php', path.join(fixture, 'readers', 'php')).units.find((u) => u.name === 'Derived')?.kind;
+  assert.equal(kind, 'class', `Derived is a ${kind} unit`);
+});
+
+test('a Node module of functions is internal only when each of its exported functions carries @internal', () => {
+  const units = readFixture('node', path.join(fixture, 'readers', 'node')).units;
+  assert.equal(units.find((u) => u.name === 'hidden')?.internal, true, 'hidden is not internal');
+  assert.equal(units.find((u) => u.name === 'shown')?.internal, false, 'shown is internal');
+});
+
 test('the Node reader reads a test called on any receiver, and an each table written as a tagged template', () => {
   const out = readFixture('node', path.join(fixture, 'readers', 'node'));
   const names = out.tests.map((t) => t.name);

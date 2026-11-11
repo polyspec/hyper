@@ -6,6 +6,12 @@
 
 ## Unreleased
 
+- 세 server가 query, form body, multipart body를 똑같이 읽는다(HY-56, HY-57, HY-113). 요청의 `query()`, `form()`, `files()`는 이름과 값 목록의 쌍 목록을 반환한다(HY-56.7). PHP는 십진수 이름이 정수 key가 되는 iterable을, Node는 `Map`을, Python은 `Fields` 객체를 반환했다. `file(name)`은 file이 없는 이름에 null(Python에서는 `None`)을 반환한다. Node는 `undefined`를 반환했다. `UploadedFile`은 세 server에서 네 부분을 method `name()`, `filename()`, `contentType()`(Python에서는 `content_type()`), `content()`로 준다(HY-113.8). Node와 Python은 property로 주었다. HY-57.10과 HY-113.11부터 HY-113.15까지가 content type, boundary, part의 header 줄과 parameter를 읽는 방법을 정하고 server들이 이를 따른다. boundary `""`는 Python에서 오류를 냈고 PHP와 Node에서는 boundary가 아니었다. no-break space는 PHP에서 공백이었고 Node와 Python에서는 아니었다. 홀로 있는 carriage return은 Node에서만 header 줄을 끝냈다. 따옴표로 감싸지 않고 `"`를 담은 filename은 PHP에서 빈 text였다. HY-42로 실패한 part는 Node에서 body의 자기 쪽 절반만 실패시켰다. 따옴표로 감싼 filename은 backslash를 그대로 둔다(HY-113.3, HY-113.14). server들은 backslash를 모두 지워서 filename `C:\dir\a.txt`가 `C:dira.txt`가 되었다. 8192 byte보다 긴 part header는 body를 status 400으로 실패시킨다(HY-113.16). escape된 문자 100000개의 filename에서 PHP는 오류 없이 file을 버렸고, 5000000개에서 Node는 stack overflow로 실패했으며 Python은 1초 동안 읽었다. `contracts/fields.json`의 case가 이 입력들을 담고, 세 server의 fields와 files의 native test는 그 case로 옮겼다. `Fields.has`는 호출하는 source가 없어 지웠다. `make python-file-parts-test`는 rendering case만 실행한다. 첫 검사는 더 이상 없는 `test_files.py`를 골라 test 없이 실패했다(H28.11).
+
+- recipe reader가 두 형태를 더 읽는다(HYR-3). 다른 class를 확장하거나 abstract인 PHP static method class는 `functions` unit이 아니라 `class` unit이고, Node의 함수 module은 export한 함수마다 `@internal`이 있을 때 internal이다. reader는 그런 module을 모두 public으로 보고했다(H28.11).
+
+- `docs/operations/dependencies.md`는 multipart parser의 대조를 최신 릴리스 `riverline/multipart-parser` 2.3.0과 `python-multipart` 0.0.33으로 다시 기록한다. 각각 여전히 HY-57이나 HY-113과 다르므로 각 server는 자신의 parser를 유지한다(H28.11).
+
 - reply의 `notes()`는 세 server에서 이름과 값의 쌍 목록을 반환합니다(HY-60.29). 이전에는 PHP가 십진수 이름을 정수 key로 둔 배열을 반환해 note `"0"`과 `"1"`이 list가 되었고, Node는 `Map`을, Python은 `dict`를 반환했습니다. HY-106.8은 공개 method의 parameter와 다른 개수의 인자를 준 호출에 각 runtime의 호출 규약이 답한다고 명시하며, note 이름의 주석은 HY-60.28을 가리킵니다(H28.11).
 
 - 설치된 package의 test는 Node server가 열릴 때 build id를 읽게 된 뒤로 `App.open`이 요구하는 build 파일을 넘기므로, `tests/package-install`에 대해 `make typecheck`가 통과합니다(HY-125) (H28.11).

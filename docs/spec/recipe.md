@@ -42,7 +42,9 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
   - its file in each language.
 
   In every language a file holds exactly one unit.
-  - A PHP `functions` unit is one class of static methods.
+  - A PHP `functions` unit is one class of static methods without a constructor, which extends no class and is not
+    abstract, because a class that extends another class or is abstract has instances.
+  - A Node `functions` unit is internal when each of its exported functions carries the JSDoc tag `@internal`.
   - A unit that only some languages have carries `only` (HYR-6).
   - Each class, interface and trait of a concern is its own unit, and so is each Python class, `Protocol` and
     `TypedDict` included. A Node `interface` is a unit of kind `interface` when another language holds a unit of the

@@ -19,7 +19,7 @@ from polyspec.hyper.request import Request
 from polyspec.hyper.result import Result
 
 request = Request("GET", "/board/7", {}, "page=2")
-request.path(), request.query().get("page")  # ('/board/7', ['2'])
+request.path(), request.query()  # ('/board/7', [('page', ['2'])])
 Result.redirect("/board/7")  # the outcome of an action that succeeded (HY-25)
 ```
 

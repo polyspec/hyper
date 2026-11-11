@@ -41,7 +41,9 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
   - 각 언어의 파일.
 
   모든 언어에서 파일은 정확히 하나의 unit을 가진다.
-  - PHP의 `functions` unit은 static method들의 class 하나다.
+  - PHP의 `functions` unit은 생성자가 없고 다른 class를 확장하지 않으며 abstract가 아닌 static method들의 class
+    하나다. 다른 class를 확장하거나 abstract인 class는 instance를 가지기 때문이다.
+  - Node의 `functions` unit은 export한 함수마다 JSDoc tag `@internal`이 있을 때 internal이다.
   - 일부 언어에만 있는 unit은 `only`를 가진다(HYR-6).
   - concern의 각 class, interface, trait은 자기 unit이며, Python의 각 class도 `Protocol`과 `TypedDict`를 포함하여 자기
     unit이다. Node의 `interface`는 다른 언어가 같은 단어의 unit을 가지면 kind `interface`의 unit이고, 그렇지 않으면 HYR-5의

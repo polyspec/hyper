@@ -7,7 +7,8 @@ from __future__ import annotations
 import re
 from typing import Optional
 
-from ._fields import Fields, Files
+from ._fields import Fields
+from ._files import Files
 from ._media import JSON
 from .uploaded_file import UploadedFile
 from ._session import Flash
@@ -166,37 +167,40 @@ class Request:
         """Returns the raw query of the request target, or the empty string (HY-56)."""
         return self._query
 
-    def query(self) -> Fields:
-        """Returns every query value in order, without nesting (HY-56)."""
-        return self._query_fields or Fields.empty()
+    def query(self) -> list[tuple[str, list[str]]]:
+        """Returns every query value without nesting, as pairs of a name and its values in request order, in the
+        order of the first value of each name (HY-56)."""
+        return (self._query_fields or Fields.empty()).pairs()
 
     def query_int(self, name: str, default: int) -> int:
         """Returns the last query value of a name as an integer, or the default when it is absent or not an
         integer."""
-        value = self.query().last(name)
+        value = (self._query_fields or Fields.empty()).last(name)
         if value is not None and _INTEGER.fullmatch(value) is not None:
             return int(value)
         return default
 
-    def form(self) -> Fields:
-        """Returns every form value of the body in order, without nesting (HY-57)."""
-        return self._form_fields or Fields.empty()
+    def form(self) -> list[tuple[str, list[str]]]:
+        """Returns every form value of the body without nesting, as pairs of a name and its values in request order,
+        in the order of the first value of each name (HY-57)."""
+        return (self._form_fields or Fields.empty()).pairs()
 
     def form_string(self, name: str) -> str:
         """Returns the last form value of a name; an absent name gives the empty string."""
-        return self.form().last(name) or ""
+        return (self._form_fields or Fields.empty()).last(name) or ""
 
-    def files(self) -> Files:
-        """Returns the file parts of the body, an ordered map from each name to its files in request order (HY-113)."""
-        return self._file_parts or Files.empty()
+    def files(self) -> list[tuple[str, list[UploadedFile]]]:
+        """Returns the file parts of the body as pairs of a name and its files in request order, in the order of the
+        first file of each name (HY-113)."""
+        return (self._file_parts or Files.empty()).pairs()
 
     def file(self, name: str) -> Optional[UploadedFile]:
         """Returns the last file of a name, or None (HY-113)."""
-        return self.files().last(name)
+        return (self._file_parts or Files.empty()).last(name)
 
     def file_over(self, limit: int) -> bool:
         """Returns True when a file of the body is larger than `limit` bytes (HY-114)."""
-        return self.files().largest() > limit
+        return (self._file_parts or Files.empty()).largest() > limit
 
     def flash(self, name: str) -> object:
         """Returns a flash value stored by the previous action, or None."""
