@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 991dc81660776e9e50d8df9f792b5a54705799e43b39dad649a4ad59625aee08 -->
+<!-- source-sha256: f8b8b253946a5e5e943e57656a4362b5217d54d35afc30dd5739523d402c0231 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -380,3 +380,4 @@
 | H28.2 | PHP server: media type 선택과 Vary, context, Hyper-Context header와 build member, representation을 선택하지 않은 request만 session을 연다, media type application/vnd.hyper+json, App의 functions; contracts/context.json과 contracts/client.json의 case | packages/server/php | `make test-php` | [ ] |
 | H28.3 | Node server: H28.2와 같은 규칙 | packages/server/node | `make test-node` | [ ] |
 | H28.4 | Python server: H28.2와 같은 규칙 | packages/server/python | `make test-python` | [ ] |
+| H28.5 | Browser package: browser context와 Hyper-Context header, 다른 build에서 새 document, html definition build, 마지막 region response, HyperOptions의 functions, media type application/vnd.hyper+json | packages/client | `make test-js` | [ ] |

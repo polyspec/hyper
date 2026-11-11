@@ -379,3 +379,4 @@
 | H28.2 | PHP server: the selection of the media type and Vary, the context, the Hyper-Context header and the build member, the session opened only for a request that selects no representation, the media type application/vnd.hyper+json and the functions of App, with the cases of contracts/context.json and contracts/client.json | packages/server/php | `make test-php` | [ ] |
 | H28.3 | Node server: the same rules as H28.2 | packages/server/node | `make test-node` | [ ] |
 | H28.4 | Python server: the same rules as H28.2 | packages/server/python | `make test-python` | [ ] |
+| H28.5 | Browser package: the browser context and the Hyper-Context header, a new document for another build, the html definition build, the latest region response, the functions of HyperOptions and the media type application/vnd.hyper+json | packages/client | `make test-js` | [ ] |
