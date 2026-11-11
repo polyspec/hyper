@@ -5,6 +5,9 @@
 
 ## Unreleased
 
+- The build fails for a layout that does not place `{# build}` exactly once, as for `{# title}` and `{# data}` (HY-125.7): `layout.tpl: places {# build} 0 times, expected once (HY-125)`. The layout of the board example and of the script fixtures `regions` and `chunks` place it; without it the board answered 500, because its program declared no definition `build` (H28.10).
+- `make hyper-test-scripts` passes as a whole, 278 tests; 8 groups with 67 tests failed. The session worker of PHP gives `NativeSession` a request with the session cookie, which the class takes since the cookies are parsed once. The target runs the files `tests/scripts/*.test.mts` and no file below `tests/scripts/fixtures`, of which four were run as tests. `benchmarks/server.php` reads `JsonCodec` and the build id; it named the class `JsonEncoder`, which does not exist. The server and browser benchmarks, `scripts/check-parity.mts`, `tests/e2e/board.spec.ts` and the README of the Node server send and expect `application/vnd.hyper+json`; they named `application/json`, which the servers answer with 406 (H28.11-9).
+
 - The build case runner runs again: `packages/server/ts/tests/case-reader.ts` imports `./case-rules.ts` by its file name, which Node resolves, and `packages/server/ts/tsconfig.json` allows that extension for the tests, which are not built. With `./case-rules.js` `tests/scripts/build-id.test.mts` ran no test and wrote no result (H28.11-7).
 - `make packages` and `make template-ext` remove the staging directory of a build that fails or is interrupted (HR-87): the shell of the recipe line removes it when it ends. A failed build left `dist.next-<pid>` in its package each time. `tests/scripts/check-recipes.test.mts` runs `make packages` with a build that fails in the second package and requires that no staging directory is left (H28.11-8).
 

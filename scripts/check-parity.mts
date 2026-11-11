@@ -166,7 +166,7 @@ async function runStep(step: RequestStep, label: string, send: Send, php: Server
   if (step.action === 'send') return String((await send(step, {})).status);
   if (step.action === 'status') {
     const html = await send(step, {});
-    const json = await send(step, { Accept: 'application/json' });
+    const json = await send(step, { Accept: 'application/vnd.hyper+json' });
     const routed = application.router.match(new URL(step.path, php.base).pathname);
     if (html.status !== step.status || json.status !== step.status) fail(`${label}: statuses ${html.status} and ${json.status}, expected ${step.status}`);
     return `${html.status}, browser route ${routed?.name ?? 'none'}`;
@@ -174,9 +174,9 @@ async function runStep(step: RequestStep, label: string, send: Send, php: Server
 
   const path = new URL(step.path, php.base).pathname;
   const html = await send(step, {});
-  const documentJson = await send(step, { Accept: 'application/json' });
+  const documentJson = await send(step, { Accept: 'application/vnd.hyper+json' });
   if (step.currentPath === undefined) throw new Error(`${label} has no currentPath`);
-  const regionJson = await send(step, { Accept: 'application/json', 'HX-Request': 'true', 'HX-Current-URL': php.base + step.currentPath });
+  const regionJson = await send(step, { Accept: 'application/vnd.hyper+json', 'HX-Request': 'true', 'HX-Current-URL': php.base + step.currentPath });
   if (html.status !== documentJson.status || html.status !== regionJson.status) {
     fail(`${label}: statuses ${html.status}, ${documentJson.status}, ${regionJson.status}`);
   }

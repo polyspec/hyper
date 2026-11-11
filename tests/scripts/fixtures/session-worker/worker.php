@@ -15,6 +15,7 @@ require __DIR__ . '/../../../../vendor/autoload.php';
 use Polyspec\Hyper\NativeSession;
 use Polyspec\Hyper\RedisClusterSessions;
 use Polyspec\Hyper\RedisSentinelSessions;
+use Polyspec\Hyper\Request;
 
 [, $directory, $identifier, $command, $first, $second] = [...$argv, null, null];
 $port = getenv('HYPER_SESSION_REDIS');
@@ -67,8 +68,8 @@ if ($cluster !== false) {
 
 /** Runs one request with a session store; closing the PHP session ends the request. */
 $request = static function (callable $use) use ($identifier, $setup): mixed {
-    $_COOKIE['hy-session'] = $identifier;
-    $result = $use(new NativeSession(false, $setup));
+    $cookies = new Request('GET', '/', cookies: ['hy-session' => $identifier]);
+    $result = $use(new NativeSession(false, $cookies, $setup));
     session_write_close();
 
     return $result;

@@ -2,7 +2,7 @@
 // placements break HY-3 and HY-30.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdtempSync, rmSync } from 'node:fs';
+import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { test } from 'node:test';
@@ -19,6 +19,21 @@ test('reports every region placement that breaks HY-3 and HY-30', () => {
     // A route region placed in an included template passes; one that no template of the route places fails (HY-75).
     'view.tpl: places {# lost} 0 times, expected once (HY-3, HY-30)',
   ]);
+});
+
+test('reports a layout that does not place {# build} exactly once (HY-125.7)', (t) => {
+  const app = mkdtempSync(join(tmpdir(), 'hyper-check-templates-'));
+  t.after(() => rmSync(app, { recursive: true, force: true }));
+  cpSync('tests/scripts/fixtures/chunks', app, { recursive: true });
+  const layout = join(app, 'templates/layout.tpl');
+  const text = readFileSync(layout, 'utf8');
+  assert.equal(spawnSync(process.execPath, ['scripts/check-templates.mts', '--app', app], { encoding: 'utf8' }).status, 0, 'the fixture passes as it is');
+  for (const [written, count] of [[text.replace('{# build}', ''), 0], [text.replace('{# build}', '{# build}{# build}'), 2]] as const) {
+    writeFileSync(layout, written);
+    const result = spawnSync(process.execPath, ['scripts/check-templates.mts', '--app', app], { encoding: 'utf8' });
+    assert.equal(result.status, 1, result.stdout);
+    assert.deepEqual(result.stderr.trim().split('\n'), [`layout.tpl: places {# build} ${count} times, expected once (HY-125)`]);
+  }
 });
 
 test('accepts the board example', () => {

@@ -57,7 +57,7 @@ async function boardFlow(page: Page, origin: string, dataPrefix: string, title: 
   // HYC-1, HYC-2: the link requests JSON for the content region and the browser renders it.
   const createPage = fetchResponse(page, `${dataPrefix}/board/create`);
   await page.getByRole('link', { name: '글쓰기' }).click();
-  expect((await createPage).headers()['content-type']).toContain('application/json');
+  expect((await createPage).headers()['content-type']).toContain('application/vnd.hyper+json');
   await expect(page).toHaveURL(`${origin}/board/create`);
   await expect(page).toHaveTitle('글쓰기 · 게시판 예제');
 
@@ -74,7 +74,7 @@ async function boardFlow(page: Page, origin: string, dataPrefix: string, title: 
   await page.locator('input[name="title"]').fill(title);
   const list = fetchResponse(page, `${dataPrefix}/board`);
   await page.getByRole('button', { name: '등록' }).click();
-  expect((await list).headers()['content-type']).toContain('application/json');
+  expect((await list).headers()['content-type']).toContain('application/vnd.hyper+json');
   await expect(page).toHaveURL(`${origin}/board`);
   await expect(page.locator('.board-table tr.new td').nth(1)).toHaveText(title);
   await expect(page.locator('#left .badge')).toHaveText(String(expectedCount));
@@ -193,7 +193,7 @@ async function keepFlow(page: Page, context: BrowserContext, origin: string, dat
     expect(list).not.toContain('board-table compact');
     expect(await (await page.request.get(detail)).text()).toContain('post-body large');
   } else {
-    const json: unknown = await (await page.request.get(`${origin}${dataPrefix}/board`, { headers: { Accept: 'application/json' } })).json();
+    const json: unknown = await (await page.request.get(`${origin}${dataPrefix}/board`, { headers: { Accept: 'application/vnd.hyper+json' } })).json();
     // HY-17: regions hold the loader data, and kept holds the server and cookie values.
     expect(at(json, 'regions', 'notice', 'notice', 'closed')).toBe(false);
     expect(at(json, 'kept', 'notice', 'notice.closed')).toBe(true);

@@ -293,9 +293,11 @@ typecheck: packages ## Check the types of the TypeScript of scripts/, tests/ and
 toolchain-policy-test: ## Verify the declared toolchain and offline recipe policy
 	$(NODE) $(KIT)/run-tests.$(KIT_EXT) node -- --test-concurrency=1 tests/scripts/toolchain.test.mts
 
+# The tests are the files of tests/scripts itself: a file below tests/scripts/fixtures that is named as a test is the
+# input of a test and is not run.
 hyper-test-scripts: packages assets server node-server ## Run the tests of the check scripts, the build case runner included (HYR-7), or only the files of TESTS
 	@mkdir -p $(RECIPE_RESULTS_DIR)
-	RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/build.txt $(NODE) $(KIT)/run-tests.$(KIT_EXT) node -- --test-concurrency=1 $(or $(TESTS),tests/scripts/)
+	RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/build.txt $(NODE) $(KIT)/run-tests.$(KIT_EXT) node -- --test-concurrency=1 $(or $(TESTS),$(wildcard tests/scripts/*.test.mts))
 
 # The recipe check (HYR-8) and the candidate of its spec (HYR-10). The TypeScript reader needs the pinned TypeScript of
 # scripts/recipe/typescript, which `npm ci --prefix scripts/recipe/typescript` installs. The case results (HYR-7) are the

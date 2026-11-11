@@ -268,7 +268,7 @@ try {
   await csrContext.close();
 
   const sizes: string[] = [];
-  const responses: [string, Record<string, string>][] = [['/board document HTML', {}], ['/board region JSON', { Accept: 'application/json', 'HX-Request': 'true', 'HX-Current-URL': `${ssr}/` }]];
+  const responses: [string, Record<string, string>][] = [['/board document HTML', {}], ['/board region JSON', { Accept: 'application/vnd.hyper+json', 'HX-Request': 'true', 'HX-Current-URL': `${ssr}/` }]];
   for (const [label, headers] of responses) {
     const body = Buffer.from(await (await fetch(`${ssr}/board`, { headers })).arrayBuffer());
     sizes.push(`| ${label} | ${body.length} | ${gzipSync(body, { level: 9 }).length} |`);

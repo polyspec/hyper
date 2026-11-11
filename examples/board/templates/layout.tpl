@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{# title}</title>
+{# build}
 <link rel="stylesheet" href="/assets/app.css">
 {? reader}<link rel="stylesheet" href="/assets/reader.css">
 {/}<script type="module" src="{= assets.hyper}"></script>

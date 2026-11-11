@@ -106,7 +106,7 @@ app.server(sessions, { files: '/srv/board/public' }).listen(8080, '127.0.0.1');
 import { MemorySessionStore, Request } from '@polyspec/hyper-server';
 
 const session = new MemorySessionStore();
-const response = await app.handle(Request.from({ method: 'GET', target: '/board', headers: { Accept: 'application/json' } }), session);
+const response = await app.handle(Request.from({ method: 'GET', target: '/board', headers: { Accept: 'application/vnd.hyper+json' } }), session);
 // response.status, response.headers, response.body
 ```
 

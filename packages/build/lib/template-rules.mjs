@@ -70,9 +70,10 @@ export function templateProblems({ manifest, templatesDir, parse, resolvePath })
     }
   };
   const layoutBody = parse(readFileSync(join(templatesDir, layout)), layout).body;
-  for (const id of ['title', 'data']) {
+  // HY-3: the title and the data; HY-125.7: the build, whose placement is counted and not checked to lie inside <head>.
+  for (const [id, rule] of [['title', 'HY-3'], ['data', 'HY-3'], ['build', 'HY-125']]) {
     const count = placements(layoutBody).filter((item) => item.node.id === id).length;
-    if (count !== 1) problems.push(`${layout}: places {# ${id}} ${count} times, expected once (HY-3)`);
+    if (count !== 1) problems.push(`${layout}: places {# ${id}} ${count} times, expected once (${rule})`);
   }
   checkRegions(layout, layoutBody, manifest.regions.filter((region) => !region.page).map((region) => region.name));
   const page = manifest.regions.find((region) => region.page).name;

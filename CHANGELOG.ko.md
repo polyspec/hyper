@@ -6,6 +6,9 @@
 
 ## Unreleased
 
+- build는 `{# title}`, `{# data}`와 같이 `{# build}`를 정확히 한 번 배치하지 않은 layout에서 실패한다(HY-125.7): `layout.tpl: places {# build} 0 times, expected once (HY-125)`. board 예제의 layout과 script fixture `regions`, `chunks`의 layout이 그것을 배치한다. 그것이 없어서 board는 500으로 답했는데, program이 정의 `build`를 선언하지 않았기 때문이다(H28.10).
+- `make hyper-test-scripts` 전체가 통과한다(test 278개). 이전에는 8개 group의 test 67개가 실패했다. PHP의 session worker는 `NativeSession`에 session cookie를 가진 request를 준다. cookie를 한 번만 parse하게 된 뒤로 그 class가 request를 받는다. target은 `tests/scripts/*.test.mts` 파일을 실행하고 `tests/scripts/fixtures` 아래의 파일은 실행하지 않는다. 이전에는 그중 넷이 test로 실행되었다. `benchmarks/server.php`는 `JsonCodec`과 build id를 읽는다. 이전에는 존재하지 않는 class `JsonEncoder`를 이름 지었다. server와 browser benchmark, `scripts/check-parity.mts`, `tests/e2e/board.spec.ts`, Node server의 README는 `application/vnd.hyper+json`을 보내고 기대한다. 이전에는 server가 406으로 답하는 `application/json`을 이름 지었다(H28.11-9).
+
 - build case runner가 다시 실행된다. `packages/server/ts/tests/case-reader.ts`가 `./case-rules.ts`를 파일 이름으로 import하여 Node가 그것을 해석하고, `packages/server/ts/tsconfig.json`은 build되지 않는 test에 그 확장자를 허용한다. `./case-rules.js`였을 때 `tests/scripts/build-id.test.mts`는 test를 하나도 실행하지 않았고 결과를 쓰지 않았다(H28.11-7).
 - `make packages`와 `make template-ext`가 실패하거나 중단된 build의 staging directory를 제거한다(HR-87). recipe 줄의 shell이 끝날 때 그것을 제거한다. 이전에는 실패한 build마다 package에 `dist.next-<pid>`가 남았다. `tests/scripts/check-recipes.test.mts`는 두 번째 package에서 실패하는 build로 `make packages`를 실행하고 staging directory가 남지 않음을 요구한다(H28.11-8).
 

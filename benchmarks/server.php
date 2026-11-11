@@ -13,7 +13,8 @@ use Polyspec\Hyper\ArraySession;
 use Polyspec\Hyper\Csrf;
 use Polyspec\Hyper\Examples\Board\Assets;
 use Polyspec\Hyper\Examples\Board\Posts;
-use Polyspec\Hyper\JsonEncoder;
+use Polyspec\Hyper\Build;
+use Polyspec\Hyper\JsonCodec;
 use Polyspec\Hyper\Renderer;
 use Polyspec\Hyper\Request;
 use Polyspec\Template\Value\Bind;
@@ -48,8 +49,8 @@ $application->bind(Assets::class, fn (): Assets => Assets::fromManifest("{$app}/
 $session = new ArraySession();
 $application->handle(new Request('GET', '/board'), $session);
 $token = (string) $session->get('_hyper_csrf');
-$json = ['Accept' => 'application/json'];
-$region = ['Accept' => 'application/json', 'HX-Request' => 'true', 'HX-Current-URL' => 'http://localhost/'];
+$json = ['Accept' => 'application/vnd.hyper+json'];
+$region = ['Accept' => 'application/vnd.hyper+json', 'HX-Request' => 'true', 'HX-Current-URL' => 'http://localhost/'];
 
 /**
  * Runs a function repeatedly after a warm-up and returns the times in milliseconds.
@@ -121,6 +122,8 @@ foreach ($requests as $label => [$expected, $request]) {
 }
 
 $renderer = Renderer::open("{$app}/build/server", '+09:00');
+// The build id of the program, which every JSON value holds (HY-128).
+$build = Build::read("{$app}/build/server/build.json");
 $shared = ['title' => '게시판', 'csrf' => $token];
 echo "\n## Scaling with rows (board/rows.tpl)\n\n";
 echo "| Rows | render ms | Bind::value ms | json_encode ms | HTML bytes | JSON bytes |\n";
@@ -136,7 +139,7 @@ foreach ([10, 100, 1000] as $count) {
         ];
     }
     $data = ['posts' => $rows, 'sort' => 'title', 'compact' => false, 'highlight' => null];
-    $value = JsonEncoder::value('+09:00', 'board.list', [], $shared, ['rows' => $data]);
+    $value = JsonCodec::value('+09:00', 'board.list', [], $build, null, $shared, ['rows' => $data]);
     // The render measures one render of roots that the document binds once (H10.4).
     $boundShared = $renderer->bind($shared);
     $boundData = $renderer->bind($data);
@@ -149,7 +152,7 @@ foreach ([10, 100, 1000] as $count) {
 
         return 0;
     });
-    $encode = $measure(max(20, intdiv($iterations, 10)), fn (): int => strlen(JsonEncoder::encode($value)));
+    $encode = $measure(max(20, intdiv($iterations, 10)), fn (): int => strlen(JsonCodec::encode($value)));
     printf(
         "| %d | %.3f | %.3f | %.3f | %d | %d |\n",
         $count,
