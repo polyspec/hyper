@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- `contracts/interfaces.json` states the concerns of the three servers with their rules, case files and units; the members of each unit follow with the move of its concern. `docs/spec/recipe.md` drops its section "Concerns and units", and the background of wave 28 lists the decisions of that division (H28.11).
+
 - The case reader of each server holds exactly the members of HYR-7, and the rules that it applies to a case are in one test unit beside it (`Support/CaseRules.php`, `case-rules.ts`, `case_rules.py`). `make recipe-check` counts a constructor as one member in every language, and a `sentence` may cite a statement of an HYC rule. The mutation cases fail a missing browser or build runner (H28.11).
 
 - The reads cases of `contracts/reads.json` render their template with the kept data in every server: the PHP and Python runners build one program per case through `scripts/contract-programs.mjs` (`make contract-programs`) and check that the kept data and the data render the same bytes (HY-73.28); the `only` of the reads `template`, `templates` and `render` fields is removed, and `reads` keeps its `only` (HY-73.23). `a_list_literal_reads_its_items_whole` reads `l[1]`, which the server type check accepts (H28.11).

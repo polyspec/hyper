@@ -135,3 +135,13 @@ H27.26은 모든 runtime test가 provider runner를 사용할 때까지 0.0.21 �
 application은 configuration과 build가 바뀔 때만 바뀌는 값을 모든 JSON response에 실어 보냈다. shared data(HY-10)가 request마다 만드는 map 하나이기 때문이다. browser는 그 값을 이미 가지고 있었다. context(HY-124~HY-128)는 browser가 hash로 보관하는 shared data의 부분이다. JSON response는 hash가 바뀌었을 때만 context를 담는다. 모든 JSON response가 담는 build id는 deployment 뒤에 browser가 새 document를 load하게 한다(HYC-22). browser는 마지막 region response만 render하고(HYC-23), server가 등록하는 host function을 등록한다(HYC-24).
 
 route는 resource 하나와 그 representation 여럿을 가진다(RFC 9110, section 3.2). 다른 client를 위한 JSON contract는 그 route의 representation이다(HY-118~HY-122). `Accept`로 선택되고(HY-116), page와 같은 router, limit, response 규칙을 거친다. session과 cookie를 읽지 않으므로, session으로 쓰는 요청은 token 검사가 있는 action으로 남는다(HY-24). `application/vnd.hyper+json`(HY-15)은 page data의 media type이므로 `application/json`은 application이 쓸 수 있다. client rendering의 data base path(HY-62)는 남는다. web server가 모든 path에 static shell을 file 하나로 내주고, data request는 그 path 아래에서 application에 닿기 때문이다.
+
+recipe(H28.11)는 세 server를 `contracts/interfaces.json`의 concern으로 나눈다. 각 concern은 규칙, case 파일, unit을 가진다. 모든 HY 규칙은 그것을 구현하는 코드의 concern이 적고, concern은 자기 case 파일이 인용하는 규칙도 모두 적는다. 어떤 server도 구현하지 않는 HYC 규칙은 `outside`에 있다. 다음 결정은 `docs/spec/recipe.md`의 첫 정렬이 열어 둔 것을 정한다.
+
+- HY-62는 그것을 선언하는 concern client-rendering에 속한다. concern media-selection은 HY-116과 HY-119를 가진다. session concern은 HY-45, HY-72, HY-120을 가진다. 앞선 두 나눔은 `contracts/protocol.json`에 없는 규칙(HY-34, HY-96)을 적었다.
+- Node server가 HY-54에 따라 browser code에서 가져오는 unit(manifest, region, router, reads, renderer)은 manifest, route, rendering의 규칙과 HY-54를 가진 concern browser-code를 이룬다. 각 unit은 HY-54.3으로 PHP와 Python에만 있다(`only`).
+- concern host는 HY-97, HY-99, HY-100을 가진다. delivery는 HY-100.30으로 PHP에만 있다. server는 HY-100.1로 Node와 Python에만 있고, Python pipeline도 그렇다. wsgi는 HY-100.3으로, asgi는 HY-100.15로 Python에만 있다.
+- concern native-sessions는 HY-115를 가진다. native session(HY-104.4), Redis Cluster session(HY-115.19), Redis Sentinel session(HY-115.14)은 PHP에만 있다. session record와 file session(HY-104.4), Redis session(HY-115.10)은 Node와 Python에만 있다. flock은 HY-104.6으로 Node에만 있다.
+- concern index는 HY-106을 가지며 unit이 없다. HYR-8이 barrel 파일을 public member와 type에 대해 검사하므로 case는 `none`이다.
+- 어떤 concern도 `error-code.ts`를 가지지 않는다. error의 `code`를 읽는 일을 정하는 규칙이 없으므로 각 사용처가 자기 코드에서 읽으며, 이 파일은 사용처를 옮기는 concern과 함께 제거된다.
+- spec은 unit을 먼저 적고, member는 각 concern을 옮기는 commit에서 적는다. 그래서 마지막 concern을 옮길 때까지 이 branch에서 `make recipe-check`는 실패한다.

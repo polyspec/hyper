@@ -55,8 +55,1585 @@
     "node": "packages/server/ts/tests/case-reader.ts::CaseReader",
     "python": "packages/server/python/tests/case_reader.py::CaseReader"
   },
-  "outside": [],
-  "concerns": [],
+  "outside": [
+    {
+      "rule": "HYC-1",
+      "reason": "A rule of the browser code, which no server unit implements."
+    },
+    {
+      "rule": "HYC-2",
+      "reason": "A rule of the browser code, which no server unit implements."
+    },
+    {
+      "rule": "HYC-8",
+      "reason": "A rule of the browser code, which no server unit implements."
+    },
+    {
+      "rule": "HYC-3",
+      "reason": "A rule of the browser code, which no server unit implements."
+    },
+    {
+      "rule": "HYC-15",
+      "reason": "A rule of the browser code, which no server unit implements."
+    },
+    {
+      "rule": "HYC-22",
+      "reason": "A rule of the browser code, which no server unit implements."
+    },
+    {
+      "rule": "HYC-23",
+      "reason": "A rule of the browser code, which no server unit implements."
+    },
+    {
+      "rule": "HYC-6",
+      "reason": "A rule of the browser code, which no server unit implements."
+    },
+    {
+      "rule": "HYC-4",
+      "reason": "A rule of the browser code, which no server unit implements."
+    },
+    {
+      "rule": "HYC-7",
+      "reason": "A rule of the browser code, which no server unit implements."
+    },
+    {
+      "rule": "HYC-11",
+      "reason": "A rule of the browser code, which no server unit implements."
+    },
+    {
+      "rule": "HYC-5",
+      "reason": "A rule of the browser code, which no server unit implements."
+    },
+    {
+      "rule": "HYC-17",
+      "reason": "A rule of the browser code, which no server unit implements."
+    },
+    {
+      "rule": "HYC-18",
+      "reason": "A rule of the browser code, which no server unit implements."
+    },
+    {
+      "rule": "HYC-19",
+      "reason": "A rule of the browser code, which no server unit implements."
+    },
+    {
+      "rule": "HYC-20",
+      "reason": "A rule of the browser code, which no server unit implements."
+    },
+    {
+      "rule": "HYC-21",
+      "reason": "A rule of the browser code, which no server unit implements."
+    },
+    {
+      "rule": "HYC-12",
+      "reason": "A rule of the browser code, which no server unit implements."
+    },
+    {
+      "rule": "HYC-16",
+      "reason": "A rule of the browser code, which no server unit implements."
+    },
+    {
+      "rule": "HYC-13",
+      "reason": "A rule of the browser code, which no server unit implements."
+    },
+    {
+      "rule": "HYC-14",
+      "reason": "A rule of the browser code, which no server unit implements."
+    },
+    {
+      "rule": "HYC-9",
+      "reason": "A rule of the browser code, which no server unit implements."
+    }
+  ],
+  "concerns": [
+    {
+      "id": "app",
+      "rules": [
+        "HY-10",
+        "HY-43",
+        "HY-59",
+        "HY-60",
+        "HY-65",
+        "HY-66",
+        "HY-67",
+        "HY-107"
+      ],
+      "cases": [],
+      "units": [
+        {
+          "id": "app",
+          "native": {
+            "php": {
+              "file": "packages/server/php/src/App.php",
+              "kind": "class",
+              "internal": false
+            },
+            "node": {
+              "file": "packages/server/ts/src/app.ts",
+              "kind": "interface",
+              "internal": false
+            },
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/app.py",
+              "kind": "functions",
+              "internal": false
+            }
+          },
+          "members": []
+        }
+      ]
+    },
+    {
+      "id": "media-selection",
+      "rules": [
+        "HY-116",
+        "HY-119"
+      ],
+      "cases": [],
+      "units": [
+        {
+          "id": "media-selection",
+          "native": {
+            "php": {
+              "file": "packages/server/php/src/MediaSelection.php",
+              "kind": "functions",
+              "internal": true
+            },
+            "node": {
+              "file": "packages/server/ts/src/media-selection.ts",
+              "kind": "functions",
+              "internal": true
+            },
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/_media_selection.py",
+              "kind": "functions",
+              "internal": true
+            }
+          },
+          "members": []
+        }
+      ]
+    },
+    {
+      "id": "accept",
+      "rules": [],
+      "cases": [],
+      "units": [
+        {
+          "id": "accept",
+          "native": {
+            "php": {
+              "file": "packages/server/php/src/Accept.php",
+              "kind": "functions",
+              "internal": true
+            },
+            "node": {
+              "file": "packages/server/ts/src/accept.ts",
+              "kind": "interface",
+              "internal": true
+            },
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/_accept.py",
+              "kind": "functions",
+              "internal": true
+            }
+          },
+          "members": []
+        }
+      ]
+    },
+    {
+      "id": "media-type",
+      "rules": [],
+      "cases": [],
+      "units": [
+        {
+          "id": "media-type",
+          "native": {
+            "php": {
+              "file": "packages/server/php/src/MediaType.php",
+              "kind": "class",
+              "internal": false
+            },
+            "node": {
+              "file": "packages/server/ts/src/media-type.ts",
+              "kind": "class",
+              "internal": false
+            },
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/media_type.py",
+              "kind": "class",
+              "internal": false
+            }
+          },
+          "members": []
+        }
+      ]
+    },
+    {
+      "id": "build",
+      "rules": [
+        "HY-48",
+        "HY-125"
+      ],
+      "cases": [],
+      "units": [
+        {
+          "id": "build",
+          "native": {
+            "php": {
+              "file": "packages/server/php/src/Build.php",
+              "kind": "class",
+              "internal": true
+            },
+            "node": {
+              "file": "packages/server/ts/src/build.ts",
+              "kind": "functions",
+              "internal": true
+            },
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/_build.py",
+              "kind": "functions",
+              "internal": true
+            }
+          },
+          "members": []
+        }
+      ]
+    },
+    {
+      "id": "context",
+      "rules": [
+        "HY-15",
+        "HY-25",
+        "HY-27",
+        "HY-31",
+        "HY-43",
+        "HY-45",
+        "HY-52",
+        "HY-58",
+        "HY-65",
+        "HY-117",
+        "HY-124",
+        "HY-125",
+        "HY-126",
+        "HY-127",
+        "HY-128",
+        "HYC-24"
+      ],
+      "cases": [
+        "contracts/context.json",
+        "contracts/functions.json"
+      ],
+      "units": [
+        {
+          "id": "context",
+          "native": {
+            "php": {
+              "file": "packages/server/php/src/Context.php",
+              "kind": "functions",
+              "internal": true
+            },
+            "node": {
+              "file": "packages/server/ts/src/context.ts",
+              "kind": "functions",
+              "internal": true
+            },
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/_context.py",
+              "kind": "functions",
+              "internal": true
+            }
+          },
+          "members": []
+        }
+      ]
+    },
+    {
+      "id": "warnings-guard",
+      "rules": [
+        "HY-74"
+      ],
+      "cases": [],
+      "units": [
+        {
+          "id": "warnings-guard",
+          "native": {
+            "php": {
+              "file": "packages/server/php/src/WarningsGuard.php",
+              "kind": "functions",
+              "internal": true
+            },
+            "node": {
+              "file": "packages/server/ts/src/warnings-guard.ts",
+              "kind": "functions",
+              "internal": true
+            },
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/_warnings_guard.py",
+              "kind": "functions",
+              "internal": true
+            }
+          },
+          "members": []
+        }
+      ]
+    },
+    {
+      "id": "host",
+      "rules": [
+        "HY-97",
+        "HY-99",
+        "HY-100"
+      ],
+      "cases": [],
+      "units": [
+        {
+          "id": "delivery",
+          "native": {
+            "php": {
+              "file": "packages/server/php/src/Delivery.php",
+              "kind": "class",
+              "internal": true
+            }
+          },
+          "members": [],
+          "only": {
+            "languages": [
+              "php"
+            ],
+            "sentence": "HY-100.30"
+          }
+        },
+        {
+          "id": "server",
+          "native": {
+            "node": {
+              "file": "packages/server/ts/src/server.ts",
+              "kind": "functions",
+              "internal": true
+            },
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/server.py",
+              "kind": "functions",
+              "internal": false
+            }
+          },
+          "members": [],
+          "only": {
+            "languages": [
+              "node",
+              "python"
+            ],
+            "sentence": "HY-100.1"
+          }
+        },
+        {
+          "id": "pipeline",
+          "native": {
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/_pipeline.py",
+              "kind": "functions",
+              "internal": true
+            }
+          },
+          "members": [],
+          "only": {
+            "languages": [
+              "python"
+            ],
+            "sentence": "HY-100.1"
+          }
+        },
+        {
+          "id": "wsgi",
+          "native": {
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/wsgi.py",
+              "kind": "functions",
+              "internal": false
+            }
+          },
+          "members": [],
+          "only": {
+            "languages": [
+              "python"
+            ],
+            "sentence": "HY-100.3"
+          }
+        },
+        {
+          "id": "asgi",
+          "native": {
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/asgi.py",
+              "kind": "functions",
+              "internal": false
+            }
+          },
+          "members": [],
+          "only": {
+            "languages": [
+              "python"
+            ],
+            "sentence": "HY-100.15"
+          }
+        }
+      ]
+    },
+    {
+      "id": "request",
+      "rules": [
+        "HY-15",
+        "HY-42"
+      ],
+      "cases": [],
+      "units": [
+        {
+          "id": "request",
+          "native": {
+            "php": {
+              "file": "packages/server/php/src/Request.php",
+              "kind": "class",
+              "internal": false
+            },
+            "node": {
+              "file": "packages/server/ts/src/request.ts",
+              "kind": "interface",
+              "internal": false
+            },
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/request.py",
+              "kind": "functions",
+              "internal": false
+            }
+          },
+          "members": []
+        }
+      ]
+    },
+    {
+      "id": "reply",
+      "rules": [
+        "HY-52",
+        "HY-69",
+        "HY-92",
+        "HY-103"
+      ],
+      "cases": [],
+      "units": [
+        {
+          "id": "reply",
+          "native": {
+            "php": {
+              "file": "packages/server/php/src/Reply.php",
+              "kind": "class",
+              "internal": false
+            },
+            "node": {
+              "file": "packages/server/ts/src/reply.ts",
+              "kind": "class",
+              "internal": false
+            },
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/reply.py",
+              "kind": "class",
+              "internal": false
+            }
+          },
+          "members": []
+        }
+      ]
+    },
+    {
+      "id": "response",
+      "rules": [
+        "HY-130"
+      ],
+      "cases": [],
+      "units": [
+        {
+          "id": "response",
+          "native": {
+            "php": {
+              "file": "packages/server/php/src/Response.php",
+              "kind": "class",
+              "internal": false
+            },
+            "node": {
+              "file": "packages/server/ts/src/response.ts",
+              "kind": "class",
+              "internal": false
+            },
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/response.py",
+              "kind": "class",
+              "internal": false
+            }
+          },
+          "members": []
+        }
+      ]
+    },
+    {
+      "id": "result",
+      "rules": [
+        "HY-25",
+        "HY-26",
+        "HY-27",
+        "HY-46",
+        "HY-50",
+        "HY-51",
+        "HY-58"
+      ],
+      "cases": [],
+      "units": [
+        {
+          "id": "result",
+          "native": {
+            "php": {
+              "file": "packages/server/php/src/Result.php",
+              "kind": "class",
+              "internal": false
+            },
+            "node": {
+              "file": "packages/server/ts/src/result.ts",
+              "kind": "class",
+              "internal": false
+            },
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/result.py",
+              "kind": "functions",
+              "internal": false
+            }
+          },
+          "members": []
+        },
+        {
+          "id": "redirect",
+          "native": {
+            "php": {
+              "file": "packages/server/php/src/Redirect.php",
+              "kind": "class",
+              "internal": false
+            },
+            "node": {
+              "file": "packages/server/ts/src/redirect.ts",
+              "kind": "class",
+              "internal": false
+            },
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/redirect.py",
+              "kind": "class",
+              "internal": false
+            }
+          },
+          "members": []
+        },
+        {
+          "id": "not-found",
+          "native": {
+            "php": {
+              "file": "packages/server/php/src/NotFound.php",
+              "kind": "class",
+              "internal": false
+            },
+            "node": {
+              "file": "packages/server/ts/src/not-found.ts",
+              "kind": "class",
+              "internal": false
+            },
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/not_found.py",
+              "kind": "class",
+              "internal": false
+            }
+          },
+          "members": []
+        },
+        {
+          "id": "forbidden",
+          "native": {
+            "php": {
+              "file": "packages/server/php/src/Forbidden.php",
+              "kind": "class",
+              "internal": false
+            },
+            "node": {
+              "file": "packages/server/ts/src/forbidden.ts",
+              "kind": "class",
+              "internal": false
+            },
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/forbidden.py",
+              "kind": "class",
+              "internal": false
+            }
+          },
+          "members": []
+        },
+        {
+          "id": "bad-request",
+          "native": {
+            "php": {
+              "file": "packages/server/php/src/BadRequest.php",
+              "kind": "class",
+              "internal": false
+            },
+            "node": {
+              "file": "packages/server/ts/src/bad-request.ts",
+              "kind": "class",
+              "internal": false
+            },
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/bad_request.py",
+              "kind": "class",
+              "internal": false
+            }
+          },
+          "members": []
+        }
+      ]
+    },
+    {
+      "id": "form-values",
+      "rules": [
+        "HY-56",
+        "HY-57",
+        "HY-113",
+        "HY-114"
+      ],
+      "cases": [
+        "contracts/fields.json"
+      ],
+      "units": [
+        {
+          "id": "fields",
+          "native": {
+            "php": {
+              "file": "packages/server/php/src/Fields.php",
+              "kind": "class",
+              "internal": true
+            },
+            "node": {
+              "file": "packages/server/ts/src/fields.ts",
+              "kind": "class",
+              "internal": true
+            },
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/_fields.py",
+              "kind": "functions",
+              "internal": true
+            }
+          },
+          "members": []
+        },
+        {
+          "id": "files",
+          "native": {
+            "php": {
+              "file": "packages/server/php/src/Files.php",
+              "kind": "class",
+              "internal": true
+            },
+            "node": {
+              "file": "packages/server/ts/src/files.ts",
+              "kind": "class",
+              "internal": true
+            },
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/_files.py",
+              "kind": "class",
+              "internal": true
+            }
+          },
+          "members": []
+        },
+        {
+          "id": "multipart",
+          "native": {
+            "php": {
+              "file": "packages/server/php/src/Multipart.php",
+              "kind": "functions",
+              "internal": true
+            },
+            "node": {
+              "file": "packages/server/ts/src/multipart.ts",
+              "kind": "functions",
+              "internal": true
+            },
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/_multipart.py",
+              "kind": "functions",
+              "internal": true
+            }
+          },
+          "members": []
+        },
+        {
+          "id": "named-values",
+          "native": {
+            "php": {
+              "file": "packages/server/php/src/NamedValues.php",
+              "kind": "trait",
+              "internal": true
+            },
+            "node": {
+              "file": "packages/server/ts/src/named-values.ts",
+              "kind": "class",
+              "internal": true
+            },
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/_named_values.py",
+              "kind": "class",
+              "internal": true
+            }
+          },
+          "members": []
+        },
+        {
+          "id": "uploaded-file",
+          "native": {
+            "php": {
+              "file": "packages/server/php/src/UploadedFile.php",
+              "kind": "class",
+              "internal": false
+            },
+            "node": {
+              "file": "packages/server/ts/src/uploaded-file.ts",
+              "kind": "class",
+              "internal": false
+            },
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/uploaded_file.py",
+              "kind": "class",
+              "internal": false
+            }
+          },
+          "members": []
+        }
+      ]
+    },
+    {
+      "id": "cookies",
+      "rules": [
+        "HY-129"
+      ],
+      "cases": [
+        "contracts/cookies.json"
+      ],
+      "units": [
+        {
+          "id": "cookies",
+          "native": {
+            "php": {
+              "file": "packages/server/php/src/Cookies.php",
+              "kind": "functions",
+              "internal": true
+            },
+            "node": {
+              "file": "packages/server/ts/src/cookies.ts",
+              "kind": "functions",
+              "internal": true
+            },
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/_cookies.py",
+              "kind": "functions",
+              "internal": true
+            }
+          },
+          "members": []
+        }
+      ]
+    },
+    {
+      "id": "container",
+      "rules": [
+        "HY-105"
+      ],
+      "cases": [],
+      "units": [
+        {
+          "id": "container",
+          "native": {
+            "php": {
+              "file": "packages/server/php/src/Container.php",
+              "kind": "class",
+              "internal": false
+            },
+            "node": {
+              "file": "packages/server/ts/src/container.ts",
+              "kind": "class",
+              "internal": false
+            },
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/container.py",
+              "kind": "class",
+              "internal": false
+            }
+          },
+          "members": []
+        }
+      ]
+    },
+    {
+      "id": "session-store",
+      "rules": [
+        "HY-104"
+      ],
+      "cases": [],
+      "units": [
+        {
+          "id": "session-store",
+          "native": {
+            "php": {
+              "file": "packages/server/php/src/SessionStore.php",
+              "kind": "interface",
+              "internal": false
+            },
+            "node": {
+              "file": "packages/server/ts/src/session-store.ts",
+              "kind": "interface",
+              "internal": false
+            },
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/session_store.py",
+              "kind": "class",
+              "internal": false
+            }
+          },
+          "members": []
+        },
+        {
+          "id": "array-session",
+          "native": {
+            "php": {
+              "file": "packages/server/php/src/ArraySession.php",
+              "kind": "class",
+              "internal": true
+            },
+            "node": {
+              "file": "packages/server/ts/src/array-session.ts",
+              "kind": "class",
+              "internal": true
+            },
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/_array_session.py",
+              "kind": "class",
+              "internal": true
+            }
+          },
+          "members": []
+        }
+      ]
+    },
+    {
+      "id": "session",
+      "rules": [
+        "HY-45",
+        "HY-72",
+        "HY-120"
+      ],
+      "cases": [],
+      "units": [
+        {
+          "id": "session",
+          "native": {
+            "php": {
+              "file": "packages/server/php/src/Session.php",
+              "kind": "class",
+              "internal": true
+            },
+            "node": {
+              "file": "packages/server/ts/src/session.ts",
+              "kind": "interface",
+              "internal": true
+            },
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/_session.py",
+              "kind": "class",
+              "internal": true
+            }
+          },
+          "members": []
+        },
+        {
+          "id": "flash",
+          "native": {
+            "php": {
+              "file": "packages/server/php/src/Flash.php",
+              "kind": "class",
+              "internal": true
+            },
+            "node": {
+              "file": "packages/server/ts/src/flash.ts",
+              "kind": "class",
+              "internal": true
+            },
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/_flash.py",
+              "kind": "class",
+              "internal": true
+            }
+          },
+          "members": []
+        }
+      ]
+    },
+    {
+      "id": "csrf",
+      "rules": [
+        "HY-24"
+      ],
+      "cases": [
+        "contracts/csrf.json"
+      ],
+      "units": [
+        {
+          "id": "csrf",
+          "native": {
+            "php": {
+              "file": "packages/server/php/src/Csrf.php",
+              "kind": "functions",
+              "internal": true
+            },
+            "node": {
+              "file": "packages/server/ts/src/csrf.ts",
+              "kind": "functions",
+              "internal": true
+            },
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/_csrf.py",
+              "kind": "functions",
+              "internal": true
+            }
+          },
+          "members": []
+        }
+      ]
+    },
+    {
+      "id": "native-sessions",
+      "rules": [
+        "HY-115"
+      ],
+      "cases": [],
+      "units": [
+        {
+          "id": "native-session",
+          "native": {
+            "php": {
+              "file": "packages/server/php/src/NativeSession.php",
+              "kind": "class",
+              "internal": false
+            }
+          },
+          "members": [],
+          "only": {
+            "languages": [
+              "php"
+            ],
+            "sentence": "HY-104.4"
+          }
+        },
+        {
+          "id": "redis-cluster-sessions",
+          "native": {
+            "php": {
+              "file": "packages/server/php/src/RedisClusterSessions.php",
+              "kind": "class",
+              "internal": false
+            }
+          },
+          "members": [],
+          "only": {
+            "languages": [
+              "php"
+            ],
+            "sentence": "HY-115.19"
+          }
+        },
+        {
+          "id": "redis-sentinel-sessions",
+          "native": {
+            "php": {
+              "file": "packages/server/php/src/RedisSentinelSessions.php",
+              "kind": "class",
+              "internal": false
+            }
+          },
+          "members": [],
+          "only": {
+            "languages": [
+              "php"
+            ],
+            "sentence": "HY-115.14"
+          }
+        },
+        {
+          "id": "session-record",
+          "native": {
+            "node": {
+              "file": "packages/server/ts/src/session-record.ts",
+              "kind": "class",
+              "internal": true
+            },
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/_session_record.py",
+              "kind": "functions",
+              "internal": true
+            }
+          },
+          "members": [],
+          "only": {
+            "languages": [
+              "node",
+              "python"
+            ],
+            "sentence": "HY-104.4"
+          }
+        },
+        {
+          "id": "file-sessions",
+          "native": {
+            "node": {
+              "file": "packages/server/ts/src/file-sessions.ts",
+              "kind": "interface",
+              "internal": false
+            },
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/file_sessions.py",
+              "kind": "functions",
+              "internal": false
+            }
+          },
+          "members": [],
+          "only": {
+            "languages": [
+              "node",
+              "python"
+            ],
+            "sentence": "HY-104.4"
+          }
+        },
+        {
+          "id": "redis-sessions",
+          "native": {
+            "node": {
+              "file": "packages/server/ts/src/redis-sessions.ts",
+              "kind": "interface",
+              "internal": false
+            },
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/redis_sessions.py",
+              "kind": "class",
+              "internal": false
+            }
+          },
+          "members": [],
+          "only": {
+            "languages": [
+              "node",
+              "python"
+            ],
+            "sentence": "HY-115.10"
+          }
+        },
+        {
+          "id": "flock",
+          "native": {
+            "node": {
+              "file": "packages/server/ts/src/flock.ts",
+              "kind": "interface",
+              "internal": true
+            }
+          },
+          "members": [],
+          "only": {
+            "languages": [
+              "node"
+            ],
+            "sentence": "HY-104.6"
+          }
+        }
+      ]
+    },
+    {
+      "id": "data-model",
+      "rules": [
+        "HY-44"
+      ],
+      "cases": [],
+      "units": [
+        {
+          "id": "data-model",
+          "native": {
+            "php": {
+              "file": "packages/server/php/src/DataModel.php",
+              "kind": "functions",
+              "internal": true
+            },
+            "node": {
+              "file": "packages/server/ts/src/data-model.ts",
+              "kind": "functions",
+              "internal": true
+            },
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/_data_model.py",
+              "kind": "functions",
+              "internal": true
+            }
+          },
+          "members": []
+        }
+      ]
+    },
+    {
+      "id": "json-codec",
+      "rules": [
+        "HY-17",
+        "HY-54"
+      ],
+      "cases": [
+        "contracts/json.json"
+      ],
+      "units": [
+        {
+          "id": "json-codec",
+          "native": {
+            "php": {
+              "file": "packages/server/php/src/JsonCodec.php",
+              "kind": "functions",
+              "internal": true
+            },
+            "node": {
+              "file": "packages/server/ts/src/json-codec.ts",
+              "kind": "functions",
+              "internal": true
+            },
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/_json_codec.py",
+              "kind": "functions",
+              "internal": true
+            }
+          },
+          "members": []
+        }
+      ]
+    },
+    {
+      "id": "kept",
+      "rules": [
+        "HY-37",
+        "HY-38",
+        "HY-40"
+      ],
+      "cases": [
+        "contracts/keep.json"
+      ],
+      "units": [
+        {
+          "id": "kept",
+          "native": {
+            "php": {
+              "file": "packages/server/php/src/Kept.php",
+              "kind": "functions",
+              "internal": true
+            },
+            "node": {
+              "file": "packages/server/ts/src/kept.ts",
+              "kind": "functions",
+              "internal": true
+            },
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/_kept.py",
+              "kind": "functions",
+              "internal": true
+            }
+          },
+          "members": []
+        }
+      ]
+    },
+    {
+      "id": "browser-code",
+      "rules": [
+        "HY-1",
+        "HY-2",
+        "HY-3",
+        "HY-4",
+        "HY-5",
+        "HY-6",
+        "HY-7",
+        "HY-8",
+        "HY-12",
+        "HY-13",
+        "HY-14",
+        "HY-30",
+        "HY-31",
+        "HY-49",
+        "HY-54",
+        "HY-71",
+        "HY-73",
+        "HYC-10"
+      ],
+      "cases": [
+        "contracts/routes.json",
+        "contracts/rest.json",
+        "contracts/reads.json"
+      ],
+      "units": [
+        {
+          "id": "manifest",
+          "native": {
+            "php": {
+              "file": "packages/server/php/src/Manifest.php",
+              "kind": "class",
+              "internal": true
+            },
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/_manifest.py",
+              "kind": "functions",
+              "internal": true
+            }
+          },
+          "members": [],
+          "only": {
+            "languages": [
+              "php",
+              "python"
+            ],
+            "sentence": "HY-54.3"
+          }
+        },
+        {
+          "id": "region",
+          "native": {
+            "php": {
+              "file": "packages/server/php/src/Region.php",
+              "kind": "class",
+              "internal": true
+            },
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/_region.py",
+              "kind": "class",
+              "internal": true
+            }
+          },
+          "members": [],
+          "only": {
+            "languages": [
+              "php",
+              "python"
+            ],
+            "sentence": "HY-54.3"
+          }
+        },
+        {
+          "id": "router",
+          "native": {
+            "php": {
+              "file": "packages/server/php/src/Router.php",
+              "kind": "class",
+              "internal": true
+            },
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/_router.py",
+              "kind": "functions",
+              "internal": true
+            }
+          },
+          "members": [],
+          "only": {
+            "languages": [
+              "php",
+              "python"
+            ],
+            "sentence": "HY-54.3"
+          }
+        },
+        {
+          "id": "reads",
+          "native": {
+            "php": {
+              "file": "packages/server/php/src/Reads.php",
+              "kind": "class",
+              "internal": true
+            },
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/_reads.py",
+              "kind": "functions",
+              "internal": true
+            }
+          },
+          "members": [],
+          "only": {
+            "languages": [
+              "php",
+              "python"
+            ],
+            "sentence": "HY-54.3"
+          }
+        },
+        {
+          "id": "renderer",
+          "native": {
+            "php": {
+              "file": "packages/server/php/src/Renderer.php",
+              "kind": "class",
+              "internal": true
+            },
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/_renderer.py",
+              "kind": "class",
+              "internal": true
+            }
+          },
+          "members": [],
+          "only": {
+            "languages": [
+              "php",
+              "python"
+            ],
+            "sentence": "HY-54.3"
+          }
+        }
+      ]
+    },
+    {
+      "id": "page",
+      "rules": [
+        "HY-53",
+        "HY-75",
+        "HY-117"
+      ],
+      "cases": [],
+      "units": [
+        {
+          "id": "page",
+          "native": {
+            "php": {
+              "file": "packages/server/php/src/Page.php",
+              "kind": "functions",
+              "internal": true
+            },
+            "node": {
+              "file": "packages/server/ts/src/page.ts",
+              "kind": "interface",
+              "internal": true
+            },
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/_page.py",
+              "kind": "functions",
+              "internal": true
+            }
+          },
+          "members": []
+        }
+      ]
+    },
+    {
+      "id": "region-planner",
+      "rules": [
+        "HY-11",
+        "HY-18",
+        "HY-19"
+      ],
+      "cases": [],
+      "units": [
+        {
+          "id": "region-planner",
+          "native": {
+            "php": {
+              "file": "packages/server/php/src/RegionPlanner.php",
+              "kind": "functions",
+              "internal": true
+            },
+            "node": {
+              "file": "packages/server/ts/src/region-planner.ts",
+              "kind": "functions",
+              "internal": true
+            },
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/_region_planner.py",
+              "kind": "functions",
+              "internal": true
+            }
+          },
+          "members": []
+        }
+      ]
+    },
+    {
+      "id": "client-rendering",
+      "rules": [
+        "HY-5",
+        "HY-8",
+        "HY-15",
+        "HY-24",
+        "HY-25",
+        "HY-27",
+        "HY-40",
+        "HY-45",
+        "HY-52",
+        "HY-58",
+        "HY-62",
+        "HY-65",
+        "HY-116",
+        "HY-117",
+        "HY-119",
+        "HY-120",
+        "HY-121",
+        "HY-122"
+      ],
+      "cases": [
+        "contracts/client.json"
+      ],
+      "units": [
+        {
+          "id": "client-rendering",
+          "native": {
+            "php": {
+              "file": "packages/server/php/src/ClientRendering.php",
+              "kind": "class",
+              "internal": false
+            },
+            "node": {
+              "file": "packages/server/ts/src/client-rendering.ts",
+              "kind": "class",
+              "internal": false
+            },
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/client_rendering.py",
+              "kind": "class",
+              "internal": false
+            }
+          },
+          "members": []
+        },
+        {
+          "id": "choice",
+          "native": {
+            "php": {
+              "file": "packages/server/php/src/Choice.php",
+              "kind": "class",
+              "internal": false
+            },
+            "node": {
+              "file": "packages/server/ts/src/choice.ts",
+              "kind": "class",
+              "internal": false
+            },
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/choice.py",
+              "kind": "class",
+              "internal": false
+            }
+          },
+          "members": []
+        }
+      ]
+    },
+    {
+      "id": "representations",
+      "rules": [
+        "HY-15",
+        "HY-43",
+        "HY-45",
+        "HY-52",
+        "HY-54",
+        "HY-65",
+        "HY-106",
+        "HY-107",
+        "HY-116",
+        "HY-117",
+        "HY-118",
+        "HY-119",
+        "HY-120",
+        "HY-121",
+        "HY-122"
+      ],
+      "cases": [
+        "contracts/representations.json"
+      ],
+      "units": [
+        {
+          "id": "representation-entries",
+          "native": {
+            "php": {
+              "file": "packages/server/php/src/RepresentationEntries.php",
+              "kind": "functions",
+              "internal": true
+            },
+            "node": {
+              "file": "packages/server/ts/src/representation-entries.ts",
+              "kind": "functions",
+              "internal": true
+            },
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/_representation_entries.py",
+              "kind": "functions",
+              "internal": true
+            }
+          },
+          "members": []
+        },
+        {
+          "id": "representation",
+          "native": {
+            "php": {
+              "file": "packages/server/php/src/Representation.php",
+              "kind": "class",
+              "internal": false
+            },
+            "node": {
+              "file": "packages/server/ts/src/representation.ts",
+              "kind": "class",
+              "internal": false
+            },
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/representation.py",
+              "kind": "class",
+              "internal": false
+            }
+          },
+          "members": []
+        },
+        {
+          "id": "representation-response",
+          "native": {
+            "php": {
+              "file": "packages/server/php/src/RepresentationResponse.php",
+              "kind": "class",
+              "internal": true
+            },
+            "node": {
+              "file": "packages/server/ts/src/representation-response.ts",
+              "kind": "class",
+              "internal": true
+            },
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/_representation_response.py",
+              "kind": "class",
+              "internal": true
+            }
+          },
+          "members": []
+        }
+      ]
+    },
+    {
+      "id": "index",
+      "rules": [
+        "HY-106"
+      ],
+      "cases": {
+        "none": "The barrel files hold only the re-exports of the public members and types of HY-106, which HYR-8 checks.",
+        "tests": []
+      },
+      "units": []
+    }
+  ],
   "types": [],
   "caseFiles": {
     "cookies.json": {

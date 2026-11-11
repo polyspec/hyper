@@ -6,6 +6,8 @@
 
 ## Unreleased
 
+- `contracts/interfaces.json`은 세 server의 concern을 규칙, case 파일, unit과 함께 적는다. 각 unit의 member는 그 concern을 옮길 때 적는다. `docs/spec/recipe.md`는 "Concerns and units" 절을 뺐고, 그 나눔의 결정은 wave 28 배경이 나열한다(H28.11).
+
 - 각 server의 case reader는 HYR-7이 정한 member만 가지며, case에 적용하는 규칙은 그 옆의 test unit 하나(`Support/CaseRules.php`, `case-rules.ts`, `case_rules.py`)에 둔다. `make recipe-check`는 모든 언어에서 생성자를 member 하나로 센다. `sentence`는 HYC 규칙의 statement도 가리킬 수 있다. mutation case는 browser runner나 build runner가 빠진 경우를 실패로 판정한다(H28.11).
 
 - `contracts/reads.json`의 reads case는 모든 server에서 template을 kept data로 render한다. PHP와 Python runner는 `scripts/contract-programs.mjs`(`make contract-programs`)로 case마다 program을 하나씩 빌드하고, kept data와 data의 render 결과가 같은 바이트인지 검사한다(HY-73.28). reads의 `template`, `templates`, `render` 필드의 `only`를 뺐으며, `reads`는 `only`를 유지한다(HY-73.23). `a_list_literal_reads_its_items_whole`은 server 타입 검사가 받는 `l[1]`을 읽는다(H28.11).
