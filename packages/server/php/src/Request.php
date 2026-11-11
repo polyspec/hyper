@@ -26,6 +26,7 @@ final class Request
      * @param array<array-key, mixed> $flash
      * @param array<string, string> $params
      * @param array<array-key, string> $cookies cookie values by name; PHP gives a decimal name as an integer key
+     * @param ?RequestBody $read the body as a host read it: a body read in chunks gives its parts (HY-131)
      */
     public function __construct(
         public readonly string $method,
@@ -40,11 +41,28 @@ final class Request
         public readonly bool $https = false,
         private readonly mixed $selection = null,
         private readonly ?string $media = null,
+        private readonly ?RequestBody $read = null,
     ) {
         $this->headers = array_change_key_case($headers, CASE_LOWER);
         $this->queryFields = Fields::parse($query);
-        $this->formFields = Fields::fromBody($this->header('Content-Type') ?? '', $body);
-        $this->fileParts = Files::fromBody($this->header('Content-Type') ?? '', $body);
+        if ($read !== null && $read->streamed()) {
+            $parts = $read->parts();
+            $this->formFields = $parts[0] ?? null;
+            $this->fileParts = $parts[1] ?? null;
+        } else {
+            $this->formFields = Fields::fromBody($this->header('Content-Type') ?? '', $body);
+            $this->fileParts = Files::fromBody($this->header('Content-Type') ?? '', $body);
+        }
+    }
+
+    /**
+     * Removes the directory of the files of the body with the files that were not moved (HY-131.14).
+     *
+     * @internal
+     */
+    public function release(): void
+    {
+        $this->read?->remove();
     }
 
     /**
@@ -125,6 +143,7 @@ final class Request
             'https' => $this->https,
             'selection' => $this->selection,
             'media' => $this->media,
+            'read' => $this->read,
             ...$changes,
         ]);
     }
@@ -186,7 +205,11 @@ final class Request
     {
         $declared = $this->header('Content-Length') ?? '';
 
-        return max(strlen($this->body), preg_match('/^\d+$/D', $declared) === 1 ? (int) $declared : 0);
+        return max(
+            strlen($this->body),
+            $this->read?->size() ?? 0,
+            preg_match('/^\d+$/D', $declared) === 1 ? (int) $declared : 0,
+        );
     }
 
     /** Returns the media type of the Content-Type header in lower case, without its parameters (HY-59). */
@@ -337,11 +360,12 @@ final class Request
     }
 
     /**
-     * Creates a request from the PHP request globals.
+     * Creates a request from the PHP request globals. It reads the body in chunks up to the body limit `$limit`, and
+     * a multipart body through the reader of HY-131 when `$stream` is true.
      *
      * @internal
      */
-    public static function fromGlobals(): self
+    public static function fromGlobals(int $limit = PHP_INT_MAX, bool $stream = false): self
     {
         $headers = [];
         foreach ($_SERVER as $key => $value) {
@@ -359,17 +383,31 @@ final class Request
         $target = $_SERVER['REQUEST_URI'] ?? null;
         $target = is_string($target) ? $target : '/';
 
+        // The raw body, not $_POST, which nests bracketed names. PHP gives the body of a multipart/form-data request
+        // here only when enable_post_data_reading is off, and holds what was read in a temporary file of its own.
+        $read = new RequestBody($headers['Content-Type'] ?? '', $limit, $stream);
+        $input = fopen('php://input', 'rb');
+        if ($input === false) {
+            throw new \RuntimeException('hyper: cannot open php://input');
+        }
+        while (!feof($input)) {
+            $chunk = fread($input, 65536);
+            if ($chunk === false || !$read->feed($chunk)) {
+                break;
+            }
+        }
+        fclose($input);
+
         return new self(
             strtoupper(is_string($method) ? $method : 'GET'),
             self::targetPath($target),
             $headers,
             self::targetQuery($target),
-            // The raw body, not $_POST, which nests bracketed names. PHP gives the body of a multipart/form-data
-            // request here only when enable_post_data_reading is off.
-            (string) file_get_contents('php://input'),
+            $read->held(),
             // HY-129: the one parse of the header, which PHP gives as it received it in $_SERVER.
             cookies: Cookies::parse(is_string($_SERVER['HTTP_COOKIE'] ?? null) ? $_SERVER['HTTP_COOKIE'] : null),
             https: ($_SERVER['HTTPS'] ?? '') !== '' && ($_SERVER['HTTPS'] ?? '') !== 'off',
+            read: $read,
         );
     }
 }

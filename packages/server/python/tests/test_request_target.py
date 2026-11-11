@@ -26,6 +26,8 @@ class Application:
 
     https = False
     body_limit = 1024
+    # The form types of the application, which tell a transport whether it reads a multipart body in chunks (HY-131).
+    _form_types = ["application/x-www-form-urlencoded"]
 
     def __init__(self):
         self.seen: list[tuple[str, str]] = []

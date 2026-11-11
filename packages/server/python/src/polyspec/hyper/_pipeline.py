@@ -12,6 +12,7 @@ import traceback
 from pathlib import Path
 from typing import Callable, Optional
 
+from ._request_body import RequestBody
 from .app import App
 from .file_sessions import FileSessions, _cookie_header, _cookie_name
 from .redis_sessions import RedisSessions
@@ -74,22 +75,18 @@ def public_file(files: str, method: str, target: str) -> Optional[Path]:
     return file if file.is_file() else None
 
 
-def read_limited(
-    read: Callable[[int], bytes], limit: int, length: int
-) -> tuple[bytes, int]:
-    """Reads a request body of `length` bytes with `read` and its size. A body larger than the limit
-    gives no bytes and the size read so far; the rest of it is read and discarded, so that the
-    response can be sent (HY-59)."""
+def read_body(read: Callable[[int], bytes], body: RequestBody, length: int) -> None:
+    """Gives a request body of `length` bytes to `body` in chunks of at most 65536 bytes. A body that passes the
+    limit is read to its end and discarded, so that the response can be sent (HY-59, HY-131.11)."""
     size = 0
-    body = bytearray()
+    reading = True
     while size < length:
         chunk = read(min(65536, length - size))
         if not chunk:
             break
         size += len(chunk)
-        if size <= limit:
-            body.extend(chunk)
-    return bytes(body), max(size, length)
+        if reading:
+            reading = body.feed(chunk)
 
 
 class Exchange:
@@ -99,6 +96,8 @@ class Exchange:
 
     def __init__(self, written: Optional[Callable], started: int):
         self.request: Optional[Request] = None
+        # The body as the transport reads it, whose directory holds the files of a body read in chunks (HY-131).
+        self.body: Optional[RequestBody] = None
         self.written = written
         self.started = started
         self.answered: list[tuple[Request, Reply]] = []
@@ -122,6 +121,11 @@ class Exchange:
                 (time.perf_counter_ns() - self.started) / 1e6,
                 failure,
             )
+
+    def release(self) -> None:
+        """Removes the directory of the files of the body after the hooks of the request returned (HY-131.14)."""
+        if self.body is not None:
+            self.body.remove()
 
     def disconnect(self, app: App) -> None:
         """Calls the disconnect hook with the request and the reply of the last call of `answer` (HY-67)."""

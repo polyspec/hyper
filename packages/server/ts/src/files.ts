@@ -21,6 +21,6 @@ export class Files extends NamedValues<UploadedFile> {
 
   // Returns the size in bytes of the largest file, or 0 when there is none (HY-114).
   largest(): number {
-    return Math.max(0, ...this.pairs().flatMap(([, files]) => files.map((file) => file.content().byteLength)));
+    return Math.max(0, ...this.pairs().flatMap(([, files]) => files.map((file) => file.size())));
   }
 }

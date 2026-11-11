@@ -47,7 +47,7 @@ class RequestBody:
         """Returns the number of bytes that were read."""
         return self.__length
 
-    def bytes(self) -> bytes:
+    def held(self) -> bytes:
         """Returns the body as one value: no bytes for a body read in chunks and for a body that passed the limit."""
         return b"".join(self.__chunks)
 

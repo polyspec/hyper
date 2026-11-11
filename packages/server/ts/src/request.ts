@@ -2,6 +2,7 @@
 import { Cookies } from './cookies.js';
 import { Fields } from './fields.js';
 import { Files } from './files.js';
+import type { RequestBody } from './request-body.js';
 import type { Flash } from './session.js';
 import type { UploadedFile } from './uploaded-file.js';
 import type { Value } from './values.js';
@@ -39,6 +40,8 @@ interface State {
   selection: unknown;
   // The media type that the selection of HY-116 chose, or null before the selection.
   mediaType: string | null;
+  // The body as the host read it, whose directory holds the files of a body read in chunks (HY-131), or null.
+  read: RequestBody | null;
 }
 
 // The media type of the JSON of hyper (HY-15).
@@ -55,7 +58,8 @@ export class Request {
 
   // Creates a request from its HTTP parts. The form values are read from an application/x-www-form-urlencoded
   // body and from the text fields of a multipart/form-data body, without nesting (HY-57).
-  static from(init: RequestInit): Request {
+  // `read` is the body as a host read it: a body read in chunks gives its parts (HY-131).
+  static from(init: RequestInit, read: RequestBody | null = null): Request {
     const headers = new Map<string, string>();
     for (const [name, value] of Object.entries(init.headers ?? {})) {
       if (value === undefined) continue;
@@ -65,14 +69,15 @@ export class Request {
     }
     const rawQuery = Request.targetQuery(init.target);
     const body = init.body ?? new Uint8Array();
-    const form = Fields.fromBody(headers.get('content-type') ?? '', body);
-    const files = Files.fromBody(headers.get('content-type') ?? '', body);
+    const parts = read?.streamed() === true ? read.parts() : undefined;
+    const form = parts === undefined ? Fields.fromBody(headers.get('content-type') ?? '', body) : (parts?.[0] ?? null);
+    const files = parts === undefined ? Files.fromBody(headers.get('content-type') ?? '', body) : (parts?.[1] ?? null);
     const declared = headers.get('content-length') ?? '';
     return new Request({
       method: init.method.toUpperCase(),
       path: Request.targetPath(init.target),
       headers,
-      bodySize: Math.max(init.bodySize ?? body.byteLength, /^[0-9]+$/.test(declared) ? Number(declared) : 0),
+      bodySize: Math.max(init.bodySize ?? body.byteLength, read?.size() ?? 0, /^[0-9]+$/.test(declared) ? Number(declared) : 0),
       rawQuery,
       query: Fields.parse(Buffer.from(rawQuery, 'latin1')),
       form,
@@ -84,7 +89,17 @@ export class Request {
       csrfToken: '',
       selection: null,
       mediaType: null,
+      read,
     });
+  }
+
+  /**
+   * Removes the directory of the files of the body with the files that were not moved (HY-131.14).
+   *
+   * @internal
+   */
+  release(): void {
+    this.state.read?.remove();
   }
 
   // Returns the path of a request target: the target before `?` or `#`, after the authority of an absolute-form

@@ -72,7 +72,7 @@ def streamed(case) -> None:
         while at < len(body) and not stopped:
             stopped = not read.feed(body[at : at + chunk])
             at += chunk
-        held = read.bytes()
+        held = read.held()
         if read.streamed():
             parts = read.parts()
             fields = None if parts is None else parts[0]

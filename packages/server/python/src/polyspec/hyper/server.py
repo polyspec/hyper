@@ -31,9 +31,10 @@ from ._pipeline import (
     header_lines,
     plain_500,
     public_file,
-    read_limited,
+    read_body,
     validate,
 )
+from ._request_body import RequestBody
 from .request import Request
 from .response import Response
 
@@ -93,10 +94,16 @@ def create_server(
             self.serve()
 
         def serve(self) -> None:
+            exchange = Exchange(written, _now_ns())
+            try:
+                self.answer(exchange)
+            finally:
+                # HY-131.14: the files of the request are removed after its hooks returned.
+                exchange.release()
+
+        def answer(self, exchange: Exchange) -> None:
             application, session_store, public = app_address
-            started = _now_ns()
             self.headers_started = False
-            exchange = Exchange(written, started)
             try:
                 # The request as received so far: an unread body is empty and its size is the declared one (HY-60).
                 cookies = Cookies.parse(_cookie_header(self.headers))
@@ -116,16 +123,25 @@ def create_server(
                 if file is not None:
                     self.send_file(file)
                     return
-                body, size = self.read_body(application.body_limit)
+                # HY-131: a multipart body of an application with that form type is read in chunks into files of the
+                # request.
+                declared = declared_length(self.headers.get("Content-Length"))
+                exchange.body = RequestBody(
+                    self.headers.get("Content-Type") or "",
+                    application.body_limit,
+                    "multipart/form-data" in application._form_types,
+                )
+                read_body(self.rfile.read, exchange.body, declared)
                 exchange.request = Request(
                     self.command,
                     Request.target_path(self.path),
                     _headers(self.headers),
                     Request.target_query(self.path),
-                    body,
+                    exchange.body.held(),
                     cookies=cookies,
                     https=application.https,
-                    body_size=size,
+                    body_size=max(exchange.body.size(), declared),
+                    read=exchange.body,
                 )
                 response = answer_with(application, session_store, around, exchange)
             except Exception as error:
@@ -185,15 +201,6 @@ def create_server(
             # The status line and the headers leave the server with the end of the headers (HY-60).
             self.headers_started = True
             super().end_headers()
-
-        def read_body(self, limit: int) -> tuple[bytes, int]:
-            """Reads the request body and its size. A body larger than the limit gives no bytes and the size read
-            so far; the rest of it is read and discarded, so that the response can be sent (HY-59)."""
-            return read_limited(
-                self.rfile.read,
-                limit,
-                declared_length(self.headers.get("Content-Length")),
-            )
 
         def send(self, response: Response) -> None:
             empty = response.status in (204, 304)

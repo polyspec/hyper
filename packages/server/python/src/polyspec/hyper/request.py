@@ -9,6 +9,7 @@ from typing import Optional
 
 from ._fields import Fields
 from ._files import Files
+from ._request_body import RequestBody
 from ._media import JSON
 from .uploaded_file import UploadedFile
 from ._session import Flash
@@ -36,6 +37,7 @@ class Request:
         selection: object = None,
         body_size: Optional[int] = None,
         media: Optional[str] = None,
+        read: Optional[RequestBody] = None,
     ):
         self._method = method
         # The media type that the server selected for the request (HY-116); None until the server selects it.
@@ -55,10 +57,24 @@ class Request:
         self._selection = selection
         # The query values, or None when a name or a value is not UTF-8 (HY-42, HY-56).
         self._query_fields = Fields.parse(query.encode("latin-1"))
-        # The form values of the body, or None when a name or a value is not UTF-8 (HY-42, HY-57).
-        self._form_fields = Fields.from_body(self.header("Content-Type") or "", body)
-        # The file parts of the body, or None when a name, a filename or a content type is not UTF-8 (HY-113).
-        self._file_parts = Files.from_body(self.header("Content-Type") or "", body)
+        # The body as a host read it: a body read in chunks gives its parts (HY-131).
+        self._read = read
+        if read is not None and read.streamed():
+            parts = read.parts()
+            self._form_fields = None if parts is None else parts[0]
+            self._file_parts = None if parts is None else parts[1]
+        else:
+            # The form values of the body, or None when a name or a value is not UTF-8 (HY-42, HY-57).
+            self._form_fields = Fields.from_body(
+                self.header("Content-Type") or "", body
+            )
+            # The file parts of the body, or None when a name, a filename or a content type is not UTF-8 (HY-113).
+            self._file_parts = Files.from_body(self.header("Content-Type") or "", body)
+
+    def _release(self) -> None:
+        """Removes the directory of the files of the body with the files that were not moved (HY-131.14)."""
+        if self._read is not None:
+            self._read.remove()
 
     @property
     def method(self) -> str:
@@ -128,7 +144,8 @@ class Request:
             length = int(declared) if declared.isdigit() else 0
         except ValueError:
             length = 0
-        return max(len(self._body), length, self._given_body_size or 0)
+        read = 0 if self._read is None else self._read.size()
+        return max(len(self._body), length, self._given_body_size or 0, read)
 
     def media_type(self) -> str:
         """Returns the media type of the Content-Type header in lower case, without its parameters (HY-59)."""
@@ -254,6 +271,7 @@ class Request:
             state["selection"],
             state["body_size"],
             state["media"],
+            self._read,
         )
 
 

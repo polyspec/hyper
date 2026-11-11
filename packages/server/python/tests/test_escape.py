@@ -16,6 +16,7 @@ class FailingApplication:
     https = False
     frame_ancestors = "'self'"
     body_limit = 1024
+    _form_types = ["application/x-www-form-urlencoded"]
 
     def __init__(self):
         self.responds = 0
@@ -34,6 +35,7 @@ class AnsweringApplication:
     https = False
     frame_ancestors = "'self'"
     body_limit = 1024
+    _form_types = ["application/x-www-form-urlencoded"]
 
     def _respond(self, request, session, started):
         return Response(

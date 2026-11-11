@@ -75,7 +75,7 @@ export const steps = {
         stopped = !read.feed(body.subarray(at, at + chunk));
         await read.written();
       }
-      const held = Buffer.from(read.bytes());
+      const held = Buffer.from(read.held());
       const parts = read.streamed() ? read.parts() : null;
       const fields = read.streamed() ? (parts?.[0] ?? null) : stopped ? null : Fields.fromBody(type, held);
       const files = read.streamed() ? (parts?.[1] ?? null) : stopped ? null : Files.fromBody(type, held);

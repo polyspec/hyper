@@ -1084,7 +1084,11 @@ final class App
                 );
             }
         });
-        $request = Request::fromGlobals();
+        // HY-131: a multipart body of an application with that form type is read in chunks into files of the request.
+        $request = Request::fromGlobals(
+            $this->bodyLimit,
+            in_array('multipart/form-data', $this->formTypes, true),
+        );
         // HY-99: the write hook runs after the escape function and before the disconnect hook. A response that no write
         // started is the plain 500, and its write is not complete.
         if ($this->written !== null) {
@@ -1104,6 +1108,11 @@ final class App
                 }
             });
         }
+        // HY-131.14: the files of the request are removed after the hooks above, which run first, also for a request
+        // that fails or whose client closed the connection.
+        register_shutdown_function(static function () use ($request): void {
+            $request->release();
+        });
         $response = $this->through($request, new NativeSession($this->https, $request, $this->sessionSetup), $started, $delivery);
         $delivery->response = $response;
         $response->send();

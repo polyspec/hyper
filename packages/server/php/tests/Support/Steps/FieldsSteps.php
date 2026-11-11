@@ -85,7 +85,7 @@ final class FieldsSteps
             for ($at = 0; $at < strlen($body) && !$stopped; $at += $chunk) {
                 $stopped = !$read->feed(substr($body, $at, $chunk));
             }
-            $held = $read->bytes();
+            $held = $read->held();
             $parts = $read->parts();
             if ($read->streamed()) {
                 $fields = $parts[0] ?? null;

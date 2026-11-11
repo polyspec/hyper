@@ -12,6 +12,7 @@ import { sessionCookie, sessionCookieName } from './session-record.js';
 import { Reply } from './reply.js';
 import { Disconnected } from './page.js';
 import { Request } from './request.js';
+import { RequestBody } from './request-body.js';
 import { Response } from './response.js';
 
 export interface ServerOptions {
@@ -93,6 +94,8 @@ export function createListener<S extends object>(app: App<S>, sessions: FileSess
     let stopped = false;
     // The request of the last call of `answer`, which the disconnect hook receives (HY-97).
     let disconnectedRequest: Request | null = null;
+    // The body as it is read, whose directory holds the files of a body read in chunks (HY-131).
+    let read: RequestBody | null = null;
     try {
       const file = files === undefined ? null : publicFile(files, incoming);
       if (file !== null) {
@@ -101,8 +104,10 @@ export function createListener<S extends object>(app: App<S>, sessions: FileSess
       }
       request = Request.from({ method: incoming.method ?? 'GET', target: incoming.url ?? '/', headers: incoming.headers, https });
       // The application answers a body larger than its limit with 413 (HY-59); the server reads no more of it.
-      const { body, size } = await readBody(incoming, app.bodyLimit);
-      request = Request.from({ method: incoming.method ?? 'GET', target: incoming.url ?? '/', headers: incoming.headers, body, bodySize: size, https });
+      // HY-131: a multipart body of an application with that form type is read in chunks into files of the request.
+      read = new RequestBody(incoming.headers['content-type'] ?? '', app.bodyLimit, app.formTypes.includes('multipart/form-data'));
+      await readBody(incoming, read, app.bodyLimit);
+      request = Request.from({ method: incoming.method ?? 'GET', target: incoming.url ?? '/', headers: incoming.headers, body: read.held(), bodySize: read.size(), https }, read);
       // The last call of `answer`: its request and its reply, which the disconnect hook receives (HY-67, HY-97).
       const last: { request?: Request; reply?: Reply } = {};
       // Opens the session of the request by its session cookie, answers with the application, closes the session and
@@ -157,7 +162,12 @@ export function createListener<S extends object>(app: App<S>, sessions: FileSess
     try {
       written?.(request, response, outgoing.writableFinished, performance.now() - started, failure);
     } finally {
-      if (stopped && reply !== null) app.disconnected(disconnectedRequest ?? request, started, reply);
+      try {
+        if (stopped && reply !== null) app.disconnected(disconnectedRequest ?? request, started, reply);
+      } finally {
+        // HY-131.14: the files of the request are removed after its hooks returned.
+        read?.remove();
+      }
     }
   };
 }
@@ -199,28 +209,39 @@ function publicFile(files: string, incoming: IncomingMessage): string | null {
   }
 }
 
-// Reads the request body and its size. A body larger than the limit gives no bytes and the size read so far, or the
-// Content-Length; the rest of it is read and discarded, so that the response can be sent.
-function readBody(incoming: IncomingMessage, limit: number): Promise<{ body: Uint8Array; size: number }> {
+// Gives the request body to `read` in chunks. A body larger than the limit is not kept: the rest of it is read and
+// discarded, so that the response can be sent (HY-59). The next chunk is read after the files of the body took the
+// bytes of the last one (HY-131.21).
+function readBody(incoming: IncomingMessage, read: RequestBody, limit: number): Promise<void> {
   return new Promise((resolve, reject) => {
-    const chunks: Buffer[] = [];
-    let size = 0;
-    const discard = (): void => {
+    const stop = (): void => {
       incoming.removeListener('data', collect);
       incoming.resume();
-      resolve({ body: new Uint8Array(), size });
     };
     const collect = (chunk: Buffer): void => {
-      size += chunk.length;
-      if (size > limit) discard();
-      else chunks.push(chunk);
+      if (!read.feed(chunk)) {
+        stop();
+        resolve();
+        return;
+      }
+      incoming.pause();
+      read.written().then(
+        () => incoming.resume(),
+        (error: unknown) => {
+          stop();
+          reject(error instanceof Error ? error : new Error(String(error)));
+        },
+      );
     };
     if (Number(incoming.headers['content-length'] ?? 0) > limit) {
-      discard();
+      incoming.resume();
+      resolve();
       return;
     }
     incoming.on('data', collect);
-    incoming.on('end', () => resolve({ body: Buffer.concat(chunks), size }));
+    incoming.on('end', () => {
+      read.written().then(resolve, reject);
+    });
     incoming.on('error', reject);
   });
 }

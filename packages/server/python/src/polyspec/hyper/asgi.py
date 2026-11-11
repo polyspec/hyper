@@ -29,6 +29,7 @@ from ._pipeline import (
     public_file,
     validate,
 )
+from ._request_body import RequestBody
 from .request import Request
 from .response import Response
 
@@ -64,54 +65,58 @@ def create_asgi(
             )
         started = time.perf_counter_ns()
         exchange = Exchange(written, started)
-        failure: Optional[str] = None
         try:
-            result: Union[Response, _FileResponse] = await _answer(
-                app, sessions, around, files, scope, receive, exchange
-            )
-        except Exception as error:  # noqa: BLE001 - HY-60: an error that escapes the answer gets the plain 500
-            result = escape(app, error)
-            failure = str(error)
-        except asyncio.CancelledError:
-            # HY-99: a cancellation before the answer ends the request before a response started: a null response.
-            exchange.report(None, False)
-            raise
-        if isinstance(result, _FileResponse):
-            await send(
-                {
-                    "type": "http.response.start",
-                    "status": 200,
-                    "headers": result.headers,
-                }
-            )
-            await send({"type": "http.response.body", "body": result.data})
-            return
-        try:
-            headers, body = _messages(result)
-        except Exception as error:  # noqa: BLE001 - HY-60: a header or a body that cannot be encoded is an escape
-            result = escape(app, error)
-            failure = str(error)
-            headers, body = _messages(result)
-        try:
-            await send(
-                {
-                    "type": "http.response.start",
-                    "status": result.status,
-                    "headers": headers,
-                }
-            )
-            await send({"type": "http.response.body", "body": body})
-        except Exception:
-            # HY-100 and HY-67: a send raised, which an ASGI server does for a connection that the client
-            # closed; the write hook runs before the disconnect hook, and the error propagates.
-            exchange.report(result, False, failure)
-            exchange.disconnect(app)
-            raise
-        except asyncio.CancelledError:
-            # HY-99: a cancellation of the task ends the write; it is not a closed connection, so no disconnect hook runs.
-            exchange.report(result, False, failure)
-            raise
-        exchange.report(result, True, failure)
+            failure: Optional[str] = None
+            try:
+                result: Union[Response, _FileResponse] = await _answer(
+                    app, sessions, around, files, scope, receive, exchange
+                )
+            except Exception as error:  # noqa: BLE001 - HY-60: an error that escapes the answer gets the plain 500
+                result = escape(app, error)
+                failure = str(error)
+            except asyncio.CancelledError:
+                # HY-99: a cancellation before the answer ends the request before a response started: a null response.
+                exchange.report(None, False)
+                raise
+            if isinstance(result, _FileResponse):
+                await send(
+                    {
+                        "type": "http.response.start",
+                        "status": 200,
+                        "headers": result.headers,
+                    }
+                )
+                await send({"type": "http.response.body", "body": result.data})
+                return
+            try:
+                headers, body = _messages(result)
+            except Exception as error:  # noqa: BLE001 - HY-60: a header or a body that cannot be encoded is an escape
+                result = escape(app, error)
+                failure = str(error)
+                headers, body = _messages(result)
+            try:
+                await send(
+                    {
+                        "type": "http.response.start",
+                        "status": result.status,
+                        "headers": headers,
+                    }
+                )
+                await send({"type": "http.response.body", "body": body})
+            except Exception:
+                # HY-100 and HY-67: a send raised, which an ASGI server does for a connection that the client
+                # closed; the write hook runs before the disconnect hook, and the error propagates.
+                exchange.report(result, False, failure)
+                exchange.disconnect(app)
+                raise
+            except asyncio.CancelledError:
+                # HY-99: a cancellation of the task ends the write; it is not a closed connection, so no disconnect hook runs.
+                exchange.report(result, False, failure)
+                raise
+            exchange.report(result, True, failure)
+        finally:
+            # HY-131.14: the files of the request are removed after its hooks returned.
+            exchange.release()
 
     return application
 
@@ -169,16 +174,31 @@ async def _answer(
             ],
             b"" if method == "HEAD" else data,
         )
-    body, size = await _read_body(receive, app.body_limit)
+    # HY-131: a multipart body of an application with that form type is read in chunks into files of the request.
+    headers = _scope_headers(scope)
+    exchange.body = RequestBody(
+        next(
+            (
+                value
+                for name, value in headers.items()
+                if name.lower() == "content-type"
+            ),
+            "",
+        ),
+        app.body_limit,
+        "multipart/form-data" in app._form_types,
+    )
+    await _read_body(receive, exchange.body)
     exchange.request = Request(
         method,
         Request.target_path(target),
-        _scope_headers(scope),
+        headers,
         scope.get("query_string", b"").decode("latin-1"),
-        body,
+        exchange.body.held(),
         cookies=cookies,
         https=app.https,
-        body_size=size,
+        body_size=exchange.body.size(),
+        read=exchange.body,
     )
     # HY-100: the pipeline of a request runs in a worker thread, so the event loop answers other requests while a
     # request responds.
@@ -188,23 +208,24 @@ async def _answer(
     )
 
 
-async def _read_body(receive: Callable, limit: int) -> tuple[bytes, int]:
-    """Reads the request body from the receive events up to the limit and no more, and its size. A
-    body larger than the limit gives no bytes and the size read so far; the rest of it is read and
-    discarded, so that the response can be sent (HY-59)."""
-    size = 0
-    body = bytearray()
+async def _read_body(receive: Callable, body: RequestBody) -> None:
+    """Gives the request body of the receive events to `body`. A body that passes the limit is read to its end and
+    discarded, so that the response can be sent (HY-59). A chunk of a body that is read into files is given in a
+    worker thread, so that the write of a file does not stop the event loop (HY-131.21)."""
+    reading = True
     while True:
         event = await receive()
         if event["type"] != "http.request":
             break
         part = event.get("body", b"")
-        size += len(part)
-        if size <= limit:
-            body.extend(part)
+        if reading and part:
+            reading = (
+                await asyncio.to_thread(body.feed, part)
+                if body.streamed()
+                else body.feed(part)
+            )
         if not event.get("more_body", False):
             break
-    return bytes(body), size
 
 
 def _raw_path(scope: dict) -> str:

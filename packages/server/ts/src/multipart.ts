@@ -116,8 +116,14 @@ export class Multipart extends MultipartReader {
     const target = this.target;
     if (target?.writableNeedDrain === true) {
       await new Promise<void>((resolve) => {
-        target.once('drain', resolve);
-        target.once('error', () => resolve());
+        // Both listeners leave the stream with the first event, so that a long file does not collect them.
+        const settle = (): void => {
+          target.off('drain', settle);
+          target.off('error', settle);
+          resolve();
+        };
+        target.on('drain', settle);
+        target.on('error', settle);
       });
     }
     const finishing = this.finishing;
@@ -147,8 +153,13 @@ export class Multipart extends MultipartReader {
       this.target = null;
       this.finishing.push(
         new Promise<void>((resolve) => {
-          target.once('finish', resolve);
-          target.once('error', () => resolve());
+          const settle = (): void => {
+            target.off('finish', settle);
+            target.off('error', settle);
+            resolve();
+          };
+          target.on('finish', settle);
+          target.on('error', settle);
         }),
       );
       target.end();

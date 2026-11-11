@@ -158,7 +158,8 @@ export class App<S extends object = Record<string, never>> {
   readonly bodyLimit: number;
   private readonly fileLimit: number;
   private readonly responseLimit: number;
-  private readonly formTypes: readonly string[];
+  /** @internal */
+  readonly formTypes: readonly string[];
   private readonly onResponse: AppOptions<S>['onResponse'];
   private readonly onDisconnect: AppOptions<S>['onDisconnect'];
   private readonly log: (message: string) => void;

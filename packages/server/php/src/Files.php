@@ -40,7 +40,7 @@ final class Files extends NamedValues
         $sizes = [0];
         foreach ($this->pairs() as [, $files]) {
             foreach ($files as $file) {
-                $sizes[] = strlen($file->content());
+                $sizes[] = $file->size();
             }
         }
 

@@ -8,7 +8,13 @@ import io
 import threading
 from pathlib import Path
 
-from .transport import TransportCase, record_ended, record_status
+from .transport import (
+    TransportCase,
+    Upload,
+    multipart_part,
+    record_ended,
+    record_status,
+)
 from polyspec.hyper.asgi import create_asgi
 from polyspec.hyper.response import Response
 
@@ -142,6 +148,47 @@ class AsgiTest(TransportCase):
             Receives(b"0123456789abcdef012345678"),
         )
         self.assertEqual(25, self.app.requests[0].body_size())
+
+    def test_a_multipart_body_is_read_into_files_that_are_removed_after_the_write_hook(
+        self,
+    ) -> None:
+        # HY-131.13, HY-131.14: a file of 1.5 MiB comes from a file of the request, whose directory is removed after
+        # the write hook; a file that the application moved stays.
+        upload = Upload(self, self.app, True)
+        body = (
+            multipart_part('form-data; name="a"', b"1")
+            + multipart_part('form-data; name="f"; filename="big.bin"', b"x" * 1500000)
+            + b"--XyZ--\r\n"
+        )
+        sends = Sends()
+        run(
+            create_asgi(self.app, self.sessions, written=upload.written),
+            scope(
+                method="POST",
+                headers=[(b"content-type", b"multipart/form-data; boundary=XyZ")],
+            ),
+            sends,
+            Receives(body),
+        )
+        self.assertEqual([True, [("a", ["1"])], "big.bin", 1500000, 1], upload.seen)
+        self.assertEqual(["hyper-", "kept.bin"], upload.at_hook)
+        self.assertEqual(["kept.bin"], upload.entries())
+
+    def test_a_multipart_body_without_its_end_leaves_no_directory(self) -> None:
+        # HY-131.5: the input of a body without its closing delimiter is not valid, and its directory is removed.
+        upload = Upload(self, self.app, False)
+        body = multipart_part('form-data; name="f"; filename="cut.bin"', b"y" * 200000)
+        run(
+            create_asgi(self.app, self.sessions, written=upload.written),
+            scope(
+                method="POST",
+                headers=[(b"content-type", b"multipart/form-data; boundary=XyZ")],
+            ),
+            Sends(),
+            Receives(body),
+        )
+        self.assertEqual([False, [], None, None, 1], upload.seen)
+        self.assertEqual([], upload.entries())
 
     def test_a_public_file_is_served_before_around(self) -> None:
         files = Path(self.directory.name) / "public"

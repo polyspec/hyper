@@ -46,7 +46,7 @@ export class RequestBody {
   }
 
   // Returns the body as one value: no bytes for a body read in chunks and for a body that passed the limit.
-  bytes(): Uint8Array {
+  held(): Uint8Array {
     return Buffer.concat(this.chunks);
   }
 

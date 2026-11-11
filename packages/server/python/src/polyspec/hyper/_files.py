@@ -31,6 +31,6 @@ class Files(NamedValues[UploadedFile]):
     def largest(self) -> int:
         """Returns the size in bytes of the largest file, or 0 when there is none (HY-114)."""
         return max(
-            (len(item.content()) for _, files in self.pairs() for item in files),
+            (item.size() for _, files in self.pairs() for item in files),
             default=0,
         )

@@ -1067,9 +1067,9 @@
                 },
                 {
                   "id": "HY-131.20",
-                  "en": "Of this rule the servers implement the reading of the delimiters and the parts with their failures (HY-131.2 to HY-131.6), the directory and the files of a body read in chunks with its removal, and `size()` and `moveTo()`, while each host still reads a body as one value and gives it to a request, so that no request has a directory, and no server has a value limit or a part limit (H29.3, H29.4).",
-                  "ko": "이 rule 중 server들은 delimiter와 part를 읽는 것과 그 실패(HY-131.2부터 HY-131.6까지), 조각으로 읽는 body의 directory와 file과 그 삭제, `size()`와 `moveTo()`를 구현하며, 각 host는 아직 body를 한 값으로 읽어 요청에 주므로 directory를 가진 요청이 없고, 어느 server에도 value 제한과 part 제한이 없다(H29.3, H29.4).",
-                  "koSource": "595e2c0b429b5c1843cfae60c69aadc2f523f8dd121a844a31cd7a985860e258"
+                  "en": "Of this rule the servers implement the reading in chunks by every host, the failures of a malformed body, the directory and the files of a request with their removal, and `size()` and `moveTo()`, while no server has a value limit or a part limit, and each server checks the file limit after the body was read and not while it reads (H29.4).",
+                  "ko": "이 rule 중 server들은 모든 host의 조각 단위 읽기, 형식이 틀린 body의 실패, 요청의 directory와 file과 그 삭제, `size()`와 `moveTo()`를 구현하며, 어느 server에도 value 제한과 part 제한이 없고 각 server는 file 제한을 읽는 동안이 아니라 body를 읽은 뒤에 검사한다(H29.4).",
+                  "koSource": "78cbb9653a6cda77635608c7c0d4fe4343104b88cb96e4eb69732ba168d96f52"
                 },
                 {
                   "id": "HY-131.21",

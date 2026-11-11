@@ -3,6 +3,7 @@ the set-up of a test, the hooks that record what the write hook reports and the 
 application."""
 
 import http.client
+import os
 import tempfile
 import threading
 import unittest
@@ -20,6 +21,8 @@ class Application:
     https = False
     frame_ancestors = "'self'"
     body_limit = 16
+    # The form types of the application, which tell a transport whether it reads a multipart body in chunks (HY-131).
+    _form_types = ["application/x-www-form-urlencoded"]
 
     def __init__(self, opens_session: bool = False):
         self.requests: list[Request] = []
@@ -118,3 +121,63 @@ class TransportCase(unittest.TestCase):
             [(self.app.requests[0], self.app.replies[0])],
             self.app.disconnected_calls,
         )
+
+
+def multipart_part(disposition: str, content: bytes) -> bytes:
+    """Returns a part of a multipart body with the boundary XyZ."""
+    return (
+        b"--XyZ\r\nContent-Disposition: "
+        + disposition.encode("latin-1")
+        + b"\r\n\r\n"
+        + content
+        + b"\r\n"
+    )
+
+
+class Upload:
+    """The set-up of a test of a multipart body that a transport reads in chunks (HY-131): the temporary directory of
+    the system is a directory of the test, the application has the multipart form type, records what its request
+    gives and moves the file `f` when `move` is true, and the write hook records the entries of the directory."""
+
+    def __init__(self, case: unittest.TestCase, app: Application, move: bool):
+        self.uploads = tempfile.mkdtemp(prefix="hyper-uploads-")
+        previous = tempfile.tempdir
+        tempfile.tempdir = self.uploads
+        case.addCleanup(self._restore, previous)
+        self.seen: list = []
+        self.at_hook: list[str] = []
+        app.body_limit = 4 * 1024 * 1024
+        app._form_types = ["application/x-www-form-urlencoded", "multipart/form-data"]
+        respond = app._respond
+
+        def record(request: Request, session, started: int):
+            uploaded = request.file("f")
+            self.seen = [
+                request.valid_input(),
+                request.form(),
+                None if uploaded is None else uploaded.filename(),
+                None if uploaded is None else uploaded.size(),
+                len(os.listdir(self.uploads)),
+            ]
+            if move and uploaded is not None:
+                uploaded.move_to(os.path.join(self.uploads, "kept.bin"))
+            return respond(request, session, started)
+
+        app._respond = record
+
+    def written(self, request, response, ended, elapsed, failure) -> None:
+        """The write hook: records the entries of the directory, a directory of a request as `hyper-`."""
+        self.at_hook = sorted(
+            "hyper-" if name.startswith("hyper-") else name
+            for name in os.listdir(self.uploads)
+        )
+
+    def entries(self) -> list[str]:
+        """Returns the entries of the directory."""
+        return sorted(os.listdir(self.uploads))
+
+    def _restore(self, previous) -> None:
+        tempfile.tempdir = previous
+        for name in os.listdir(self.uploads):
+            os.unlink(os.path.join(self.uploads, name))
+        os.rmdir(self.uploads)

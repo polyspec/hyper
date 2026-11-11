@@ -360,6 +360,66 @@ describe('the write hook and App.listener', () => {
   });
 });
 
+// A multipart body that the server reads in chunks (HY-131), the same cases as the Python transports.
+describe('a multipart body read in chunks', () => {
+  const part = (disposition: string, content: Buffer): Buffer => Buffer.concat([Buffer.from(`--XyZ\r\nContent-Disposition: ${disposition}\r\n\r\n`), content, Buffer.from('\r\n')]);
+
+  // Runs the server with the temporary directory `uploads` and one request with the body, and returns what around saw
+  // and the entries of `uploads` at the write hook and after the removal that follows it.
+  async function upload(body: Buffer, move: boolean): Promise<{ status: number; seen: unknown[]; atHook: string[]; after: string[] }> {
+    const uploads = mkdtempSync(join(tmpdir(), 'hyper-uploads-'));
+    const previous = process.env['TMPDIR'];
+    process.env['TMPDIR'] = uploads;
+    try {
+      const seen: unknown[] = [];
+      const hook = latch();
+      let atHook: string[] = [];
+      const app = await new Fixture().app({ formTypes: ['application/x-www-form-urlencoded', 'multipart/form-data'], bodyLimit: 4 * 1024 * 1024 });
+      server = app.server(new FileSessions({ directory }), {
+        around: (request) => {
+          const file = request.file('f');
+          seen.push(request.validInput(), request.form(), file?.filename() ?? null, file?.size() ?? null, readdirSync(uploads).length);
+          if (move) file?.moveTo(join(uploads, 'kept.bin'));
+          return Promise.resolve(Response.text(200, 'stored'));
+        },
+        written: () => {
+          atHook = readdirSync(uploads).map((name) => (name.startsWith('hyper-') ? 'hyper-' : name)).sort();
+          hook.open();
+        },
+      });
+      base = await listen(server);
+      const response = await fetch(`${base}/upload`, { method: 'POST', headers: { 'Content-Type': 'multipart/form-data; boundary=XyZ' }, body: new Uint8Array(body) });
+      await response.text();
+      // The removal follows the write hook in the same turn of the event loop, so the next turn sees its result.
+      await hook.opened;
+      await new Promise<void>((resolve) => setImmediate(resolve));
+      return { status: response.status, seen, atHook, after: readdirSync(uploads) };
+    } finally {
+      if (previous === undefined) delete process.env['TMPDIR'];
+      else process.env['TMPDIR'] = previous;
+      rmSync(uploads, { recursive: true, force: true });
+    }
+  }
+
+  it('gives a file of 1.5 MiB from a file of the request, and removes the directory after the write hook (HY-131.13, HY-131.14)', async () => {
+    const content = Buffer.alloc(1_500_000, 'x');
+    const body = Buffer.concat([part('form-data; name="a"', Buffer.from('1')), part('form-data; name="f"; filename="big.bin"', content), Buffer.from('--XyZ--\r\n')]);
+    const result = await upload(body, true);
+    expect(result.status).toBe(200);
+    expect(result.seen).toEqual([true, [['a', ['1']]], 'big.bin', 1_500_000, 1]);
+    // At the write hook the directory of the request is there with the moved file beside it; then only the moved file.
+    expect(result.atHook).toEqual(['hyper-', 'kept.bin']);
+    expect(result.after).toEqual(['kept.bin']);
+  });
+
+  it('removes the directory of a body without its closing delimiter, whose input is not valid (HY-131.5)', async () => {
+    const body = part('form-data; name="f"; filename="cut.bin"', Buffer.alloc(200_000, 'y'));
+    const result = await upload(body, false);
+    expect(result.seen).toEqual([false, [], null, null, 1]);
+    expect(result.after).toEqual([]);
+  });
+});
+
 // The request hook around (HY-97), the same cases as the Python server.
 describe('the request hook around', () => {
   it('runs the application for the request that around passes to answer, and sends the response that around returns (HY-97)', async () => {

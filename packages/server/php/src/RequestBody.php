@@ -60,7 +60,7 @@ final class RequestBody
     }
 
     /** Returns the body as one value: no bytes for a body read in chunks and for a body that passed the limit. */
-    public function bytes(): string
+    public function held(): string
     {
         return $this->content;
     }

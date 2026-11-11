@@ -27,9 +27,10 @@ from ._pipeline import (
     head_request,
     header_lines,
     public_file,
-    read_limited,
+    read_body,
     validate,
 )
+from ._request_body import RequestBody
 from .request import Request
 from .response import Response
 
@@ -115,9 +116,13 @@ class _Body:
         if self.done:
             return
         self.done = True
-        self.exchange.report(self.response, ended, self.failure)
-        if not ended:
-            self.exchange.disconnect(self.app)
+        try:
+            self.exchange.report(self.response, ended, self.failure)
+            if not ended:
+                self.exchange.disconnect(self.app)
+        finally:
+            # HY-131.14: the files of the request are removed after its hooks returned.
+            self.exchange.release()
 
 
 def _encode(response: Response) -> tuple[str, list[tuple[str, str]], bytes]:
@@ -150,7 +155,10 @@ def _escape(
     try:
         start_response(line, headers, exc_info)
     except Exception:
-        exchange.report(response, False, failure)
+        try:
+            exchange.report(response, False, failure)
+        finally:
+            exchange.release()
         raise
     return _Body(app, exchange, response, [encoded], failure)
 
@@ -191,20 +199,25 @@ def _answer(
             ],
             b"" if method == "HEAD" else data,
         )
-    if declared > app.body_limit:
+    # HY-131: a multipart body of an application with that form type is read in chunks into files of the request.
+    exchange.body = RequestBody(
+        environ.get("CONTENT_TYPE", ""),
+        app.body_limit,
+        "multipart/form-data" in app._form_types,
+    )
+    if declared <= app.body_limit:
         # HY-100 and HY-59: a body over the limit is not read; its size is its Content-Length.
-        body, size = b"", declared
-    else:
-        body, size = read_limited(environ["wsgi.input"].read, app.body_limit, declared)
+        read_body(environ["wsgi.input"].read, exchange.body, declared)
     exchange.request = Request(
         method,
         Request.target_path(target),
         _environ_headers(environ),
         Request.target_query(target),
-        body,
+        exchange.body.held(),
         cookies=cookies,
         https=app.https,
-        body_size=size,
+        body_size=max(exchange.body.size(), declared),
+        read=exchange.body,
     )
     return answer_with(app, sessions, around, exchange)
 

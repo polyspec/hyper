@@ -3532,7 +3532,7 @@
               }
             },
             {
-              "id": "request-body.bytes",
+              "id": "request-body.held",
               "kind": "method",
               "visibility": "internal",
               "inputs": [],
@@ -3541,16 +3541,16 @@
               "state": "Returns the body as one value, with no bytes for a body read in chunks and for a body that passed the limit (HY-131.1).",
               "native": {
                 "php": {
-                  "symbol": "packages/server/php/src/RequestBody.php::Polyspec\\Hyper\\RequestBody::bytes",
-                  "signature": "public function bytes(): string"
+                  "symbol": "packages/server/php/src/RequestBody.php::Polyspec\\Hyper\\RequestBody::held",
+                  "signature": "public function held(): string"
                 },
                 "node": {
-                  "symbol": "packages/server/ts/src/request-body.ts::RequestBody.bytes",
-                  "signature": "bytes(): Uint8Array"
+                  "symbol": "packages/server/ts/src/request-body.ts::RequestBody.held",
+                  "signature": "held(): Uint8Array"
                 },
                 "python": {
-                  "symbol": "packages/server/python/src/polyspec/hyper/_request_body.py::RequestBody.bytes",
-                  "signature": "def bytes(self) -> bytes"
+                  "symbol": "packages/server/python/src/polyspec/hyper/_request_body.py::RequestBody.held",
+                  "signature": "def held(self) -> bytes"
                 }
               }
             },
