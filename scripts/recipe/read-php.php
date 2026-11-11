@@ -182,6 +182,12 @@ function unitKind(ReflectionClass $class): string
     return $functions ? 'functions' : 'class';
 }
 
+/** Whether a docblock carries the @internal tag: the tag opens a line, or the one-line docblock, and is not a word of the text. */
+function docInternal(string|false $doc): bool
+{
+    return $doc !== false && preg_match('/^\s*(\/\*\*|\*)\s*@internal(?![\w-])/m', $doc) === 1;
+}
+
 /** A member is internal when its own docblock or its class docblock has @internal; private and protected win. */
 function visibility(ReflectionMethod|ReflectionProperty|ReflectionClassConstant $member, bool $classInternal): string
 {
@@ -191,9 +197,7 @@ function visibility(ReflectionMethod|ReflectionProperty|ReflectionClassConstant 
     if ($member->isProtected()) {
         return 'protected';
     }
-    $doc = $member->getDocComment();
-
-    return $classInternal || ($doc !== false && str_contains($doc, '@internal')) ? 'internal' : 'public';
+    return ($classInternal || docInternal($member->getDocComment())) ? 'internal' : 'public';
 }
 
 function methodSignature(ReflectionMethod $method): string
@@ -272,7 +276,7 @@ foreach ($sourceFiles as $file) {
     foreach (declaredTypes(file_get_contents($path)) as $fqcn) {
         $class = loadClass($file, $path, $fqcn);
         $unit = $class->getShortName();
-        $internal = ($doc = $class->getDocComment()) !== false && str_contains($doc, '@internal');
+        $internal = docInternal($class->getDocComment());
         $out['units'][] = ['file' => $file, 'name' => $unit, 'kind' => unitKind($class), 'internal' => $internal];
         foreach (ownMethods($class) as $method) {
             $kind = match (true) {
