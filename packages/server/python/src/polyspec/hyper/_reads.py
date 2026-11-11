@@ -28,6 +28,8 @@ class Reads:
                 f"{file} of the server program {program} is missing; "
                 "hyper-build-server of @polyspec/hyper-build builds it"
             ) from None
+        except ValueError as error:
+            raise ValueError(f"{file} is not valid JSON or UTF-8: {error}") from None
         if not isinstance(reads, dict) or not isinstance(reads.get("routes"), dict):
             raise ValueError(f"{file} has no routes")
         return Reads(reads["routes"])

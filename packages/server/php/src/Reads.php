@@ -22,7 +22,11 @@ final class Reads
     public static function open(string $program): self
     {
         $file = "{$program}/reads.json";
-        $reads = json_decode((string) file_get_contents($file), true, flags: JSON_THROW_ON_ERROR);
+        try {
+            $reads = json_decode((string) file_get_contents($file), true, flags: JSON_THROW_ON_ERROR);
+        } catch (\JsonException) {
+            throw new \InvalidArgumentException("{$file} is not valid JSON or UTF-8");
+        }
         if (!is_array($reads) || !is_array($reads['routes'] ?? null)) {
             throw new \InvalidArgumentException("{$file} has no routes");
         }

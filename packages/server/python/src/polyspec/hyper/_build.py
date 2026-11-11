@@ -16,7 +16,7 @@ def read_build_id(path: str) -> str:
     file = Path(path)
     try:
         text = file.read_text(encoding="utf-8")
-    except OSError as error:
+    except (OSError, UnicodeDecodeError) as error:
         raise ValueError(f"{path} cannot be read as the build id file: {error}") from error
     try:
         value = json.loads(text)

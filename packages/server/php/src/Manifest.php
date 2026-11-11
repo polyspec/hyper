@@ -39,7 +39,11 @@ final class Manifest
         if (!is_file($file)) {
             throw new \InvalidArgumentException("manifest {$file} does not exist");
         }
-        $data = json_decode((string) file_get_contents($file), true, flags: JSON_THROW_ON_ERROR);
+        try {
+            $data = json_decode((string) file_get_contents($file), true, flags: JSON_THROW_ON_ERROR);
+        } catch (\JsonException) {
+            throw new \InvalidArgumentException("manifest {$file} is not valid JSON or UTF-8");
+        }
         if (!is_array($data) || !is_string($data['layout'] ?? null) || !is_string($data['title'] ?? null)) {
             throw new \InvalidArgumentException("manifest {$file} has no layout or title template");
         }

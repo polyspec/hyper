@@ -1,5 +1,7 @@
 // The cases of packages/server/php/tests/AppTest.php against the same fixture application (HY-54).
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { inspect } from 'node:util';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { checkManifest, createApplication, decodeResponse, renderParts, type TemplateIndex } from '@polyspec/hyper-client';
@@ -151,6 +153,24 @@ describe('App', () => {
     const absent = `${FIXTURES}without-app.json`;
     await expect(App.open({ manifest: absent, build: `${FIXTURES}build.json`, templates: TEMPLATES, handlers: handlers(), timezone: 'Z' })).rejects.toThrow(absent);
     await expect(App.open({ manifest: `${FIXTURES}app.json`, build: `${FIXTURES}build.json`, templates: { index: 'templates.index.json', root: TEMPLATES.root }, handlers: handlers(), timezone: 'Z' })).rejects.toThrow('not an absolute path');
+  });
+
+  it('raises the Error of its runtime for a file that is not valid JSON or not valid UTF-8 (HY-106)', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'hyper-open-'));
+    try {
+      const manifest = join(dir, 'app.json');
+      const index = join(dir, 'templates.index.json');
+      const failure = async (options: Parameters<typeof App.open>[0]): Promise<unknown> => App.open(options).then(() => null, (error: unknown) => error);
+      const handlersOf = handlers();
+      writeFileSync(manifest, '{"layout":');
+      expect((await failure({ manifest, build: `${FIXTURES}build.json`, templates: TEMPLATES, handlers: handlersOf, timezone: 'Z' }))?.constructor).toBe(Error);
+      writeFileSync(manifest, Buffer.from([0x7b, 0x22, 0x6c, 0x61, 0x79, 0x6f, 0x75, 0x74, 0x22, 0x3a, 0x22, 0xff, 0x22, 0x7d]));
+      expect((await failure({ manifest, build: `${FIXTURES}build.json`, templates: TEMPLATES, handlers: handlersOf, timezone: 'Z' }))?.constructor).toBe(Error);
+      writeFileSync(index, '{"layout":');
+      expect((await failure({ manifest: `${FIXTURES}app.json`, build: `${FIXTURES}build.json`, templates: { index, root: TEMPLATES.root }, handlers: handlersOf, timezone: 'Z' }))?.constructor).toBe(Error);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 
   it('sends the masked token and never the session token itself (HY-71)', async () => {

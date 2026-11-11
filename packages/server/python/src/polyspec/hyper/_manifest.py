@@ -42,8 +42,8 @@ class Manifest:
             raise ValueError(f"manifest {file} does not exist")
         try:
             data = json.loads(path.read_text(encoding="utf-8"))
-        except json.JSONDecodeError as error:
-            raise ValueError(f"manifest {file} is not JSON: {error}") from None
+        except ValueError as error:
+            raise ValueError(f"manifest {file} is not valid JSON or UTF-8: {error}") from None
         if (
             not isinstance(data, dict)
             or not isinstance(data.get("layout"), str)

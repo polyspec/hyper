@@ -24,6 +24,23 @@ import { Services } from './services.js';
 import { Session, type SessionStore } from './session.js';
 import type { Data } from './values.js';
 
+// Reads a JSON file of an application as strict UTF-8 JSON. A file that cannot be read fails with its system error;
+// a file that is not valid UTF-8 or not valid JSON raises an Error that names it (HY-106).
+function readJsonFile(path: string): unknown {
+  const bytes = readFileSync(path);
+  let text: string;
+  try {
+    text = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+  } catch {
+    throw new Error(`hyper: ${path} is not valid UTF-8`);
+  }
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error(`hyper: ${path} is not valid JSON`);
+  }
+}
+
 // The one argument of every loader and action: the request, the reply of the request and the services that the
 // application binds by key.
 export interface Context<S extends object> {
@@ -211,9 +228,9 @@ export class App<S extends object = Record<string, never>> {
     if (typeof options.build !== 'string' || !isAbsolute(options.build)) throw new Error(`hyper: the build file ${String(options.build)} is not an absolute path`);
     const build = readBuildId(options.build);
     if (options.context !== undefined && typeof options.context !== 'function') throw new Error('hyper: the context must be a function (HY-106)');
-    const manifest = checkManifest(JSON.parse(readFileSync(options.manifest, 'utf8')));
-    const index = checkTemplateIndex(JSON.parse(readFileSync(options.templates.index, 'utf8')), `the template index ${options.templates.index}`);
-    const fetcher = async (url: string): Promise<Template> => decodeTemplate(JSON.parse(readFileSync(join(options.templates.root, url), 'utf8')));
+    const manifest = checkManifest(readJsonFile(options.manifest));
+    const index = checkTemplateIndex(readJsonFile(options.templates.index), `the template index ${options.templates.index}`);
+    const fetcher = async (url: string): Promise<Template> => decodeTemplate(readJsonFile(join(options.templates.root, url)));
     const application = createApplication(manifest, index, fetcher, options.functions);
     checkHandlers(manifest, options.handlers);
     const client = options.clientRendering === undefined ? null : checkClient(options.clientRendering, manifest);

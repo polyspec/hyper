@@ -27,6 +27,16 @@ BASE = {
 
 
 class ManifestTest(unittest.TestCase):
+    def test_a_file_that_is_not_json_or_utf8_raises_the_value_error(self) -> None:
+        # HY-106: the exact class ValueError, not a subclass such as JSONDecodeError or UnicodeDecodeError.
+        for content in (b'{"layout":', b'{"layout":"\xff"}'):
+            with tempfile.TemporaryDirectory() as directory:
+                file = Path(directory) / "app.json"
+                file.write_bytes(content)
+                with self.assertRaises(ValueError) as caught:
+                    Manifest.from_file(str(file))
+                self.assertIs(ValueError, type(caught.exception))
+
     def test_reads_the_fixtures_manifest(self) -> None:
         declared = Manifest.from_file(str(FIXTURES / "app.json"))
         self.assertEqual(

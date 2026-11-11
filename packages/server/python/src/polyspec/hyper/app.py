@@ -894,7 +894,10 @@ def _shell(client: ClientRendering, manifest: Manifest) -> str:
         raise ValueError(
             f"static shell {client.shell} is not a readable file at an absolute path"
         )
-    shell = shell_path.read_text(encoding="utf-8")
+    try:
+        shell = shell_path.read_text(encoding="utf-8")
+    except UnicodeDecodeError as error:
+        raise ValueError(f"static shell {client.shell} is not valid UTF-8: {error}") from None
     if f'<meta name="hyper-api" content="{_escape_attribute(base)}">' not in shell:
         raise ValueError(
             f"static shell {client.shell} does not declare the data base path {base}"

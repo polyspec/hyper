@@ -8,9 +8,12 @@ use PHPUnit\Framework\TestCase;
 use Polyspec\Hyper\App;
 use Polyspec\Hyper\ArraySession;
 use Polyspec\Hyper\BadRequest;
+use Polyspec\Hyper\Build;
 use Polyspec\Hyper\Csrf;
 use Polyspec\Hyper\Forbidden;
+use Polyspec\Hyper\Manifest;
 use Polyspec\Hyper\NotFound;
+use Polyspec\Hyper\Reads;
 use Polyspec\Hyper\Redirect;
 use Polyspec\Hyper\Reply;
 use Polyspec\Hyper\Renderer;
@@ -1734,6 +1737,60 @@ final class AppTest extends TestCase
         $returns = $this->app(options: ['around' => fn (): string => 'not a response']);
         $this->expectException(\UnexpectedValueException::class);
         $returns->handle(new Request('GET', '/'), $this->session);
+    }
+
+    /** HY-106: a file that an open reads and that is not JSON or not UTF-8 fails the open with InvalidArgumentException. */
+    public function testAMalformedFileFailsTheOpenWithTheOpenError(): void
+    {
+        $dir = sys_get_temp_dir() . '/hyper-open-' . bin2hex(random_bytes(4));
+        $program = "{$dir}/program";
+        mkdir("{$program}/php", 0777, true);
+        mkdir("{$program}/templates", 0777, true);
+        $failure = static function (callable $open): ?string {
+            try {
+                $open();
+            } catch (\Throwable $error) {
+                return $error::class;
+            }
+
+            return null;
+        };
+        $valid = [
+            'build.json' => '{"build":"' . self::BUILD . '"}',
+            'program.json' => '{"namespace":"Hyper"}',
+            'reads.json' => '{"routes":{}}',
+        ];
+        $manifest = "{$dir}/app.json";
+        try {
+            foreach ($valid as $name => $text) {
+                file_put_contents("{$program}/{$name}", $text);
+            }
+            foreach (['{"layout":', "{\"layout\":\"\xff\"}"] as $text) {
+                file_put_contents($manifest, $text);
+                self::assertSame(\InvalidArgumentException::class, $failure(fn () => Manifest::fromFile($manifest)), 'manifest');
+                foreach ($valid as $name => $value) {
+                    file_put_contents("{$program}/{$name}", $text);
+                    $open = match ($name) {
+                        'build.json' => fn () => Build::open($program),
+                        'program.json' => fn () => Renderer::open($program, 'Z'),
+                        default => fn () => Reads::open($program),
+                    };
+                    self::assertSame(\InvalidArgumentException::class, $failure($open), $name);
+                    file_put_contents("{$program}/{$name}", $value);
+                }
+            }
+        } finally {
+            foreach (glob("{$program}/*.json") ?: [] as $file) {
+                unlink($file);
+            }
+            rmdir("{$program}/php");
+            rmdir("{$program}/templates");
+            rmdir($program);
+            foreach (glob("{$dir}/*.json") ?: [] as $file) {
+                unlink($file);
+            }
+            rmdir($dir);
+        }
     }
 
     public function testHandlersMustMatchTheManifest(): void

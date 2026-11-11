@@ -48,11 +48,11 @@ final class Renderer
         }
         // The generated program is the PSR-4 files of the namespace that the build chose, in the directory php, and the
         // autoload of Composer loads them through autoload.psr-4 of the application (HY-48).
-        $declaration = json_decode(
-            (string) file_get_contents("{$program}/program.json"),
-            true,
-            flags: JSON_THROW_ON_ERROR,
-        );
+        try {
+            $declaration = json_decode((string) file_get_contents("{$program}/program.json"), true, flags: JSON_THROW_ON_ERROR);
+        } catch (\JsonException) {
+            throw new \InvalidArgumentException("{$program}/program.json is not valid JSON or UTF-8");
+        }
         $namespace = is_array($declaration) ? $declaration['namespace'] ?? null : null;
         if (!is_string($namespace)) {
             throw new \InvalidArgumentException("{$program}/program.json names no namespace");
