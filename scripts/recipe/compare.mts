@@ -31,7 +31,7 @@ function expectedFile(lang: Lang, id: string, internal: boolean): string {
 function specKey(m: Member): string {
   return m.kind === 'constructor' ? 'constructor' : words(m.id.slice(m.id.indexOf('.') + 1));
 }
-function readerKey(name: string, kind: string): string {
+export function readerKey(name: string, kind: string): string {
   return kind === 'constructor' || CTOR_NAMES.includes(name) ? 'constructor' : words(name);
 }
 
