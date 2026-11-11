@@ -56,7 +56,7 @@
     { "id": "api_board_2", "path": "/API/board", "result": null }
   ],
   "invalidPaths": [
-    { "id": "empty_path", "label": "a route path starts with a slash (HY-4)", "path": "" },
+    { "id": "empty_route_path", "label": "a route path starts with a slash (HY-4)", "path": "" },
     { "id": "missing_leading_slash", "label": "a route path starts with a slash (HY-4)", "path": "board" },
     { "id": "trailing_slash", "label": "a route path has no empty segment (HY-4)", "path": "/board/" },
     { "id": "empty_segment_at_start", "label": "a route path has no empty segment (HY-4)", "path": "//board" },
