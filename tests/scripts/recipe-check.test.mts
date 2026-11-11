@@ -111,7 +111,7 @@ for (const m of mutations) {
 }
 
 // The readers' own output for a tree, as the check reads it (HYR-8).
-type ReaderOutput = { uses: { file: string; name: string }[]; constants: { file: string; name: string }[]; tests: { file: string; name: string }[]; dynamicTests: { file: string; line: number }[]; members: { unit: string; name: string }[] };
+type ReaderOutput = { units: { name: string; internal: boolean }[]; uses: { file: string; name: string }[]; constants: { file: string; name: string }[]; tests: { file: string; name: string }[]; dynamicTests: { file: string; line: number }[]; members: { unit: string; name: string; visibility: string }[] };
 
 const readerCommands: Record<'php' | 'node' | 'python', (root: string) => [string, string[]]> = {
   php: (root) => [process.env.RECIPE_PHP ?? 'php', [path.join(repo, 'scripts', 'recipe', 'read-php.php'), root, '--autoload', path.join(root, 'autoload.php')]],
@@ -156,4 +156,11 @@ test('the PHP reader lists a trait member under the trait, not under the class t
   const names = readFixture('php', path.join(fixture, 'readers', 'php')).members.filter((m) => m.unit === 'Gadget').map((m) => m.name);
   assert.ok(names.includes('size'), `Gadget does not list size: ${names.join(', ')}`);
   for (const name of ['label', 'describe']) assert.ok(!names.includes(name), `Gadget lists the trait member ${name}: ${names.join(', ')}`);
+});
+
+test('the PHP reader reads @internal as a tag of a docblock line, not as a word in a comment', () => {
+  const out = readFixture('php', path.join(fixture, 'readers', 'php'));
+  assert.equal(out.units.find((u) => u.name === 'Tagged')?.internal, false, 'Tagged is internal by a word in its docblock');
+  assert.equal(out.members.find((m) => m.unit === 'Tagged' && m.name === 'size')?.visibility, 'public', 'Tagged::size is not public');
+  assert.equal(out.units.find((u) => u.name === 'Sealed')?.internal, true, 'Sealed has the @internal tag but is not internal');
 });
