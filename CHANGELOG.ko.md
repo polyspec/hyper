@@ -6,6 +6,8 @@
 
 ## Unreleased
 
+- HY-97, HY-100, HY-121, HY-123과 `contracts/representations.json`은 요청의 진입을 HY-106이 모든 server의 public 진입으로 부르는 `App.handle`로 부른다 (H28.1-7).
+
 - `contracts/context.json`은 template이 다른 shared 값을 읽지 않는 JSON 응답의 shared data에 `title`만 기대하고(HY-73), 멈추는 loader의 case는 context handler 뒤에 shared handler를 적는다. HY-128은 runner가 자기 session의 token을 가리는 방법과 `firstCalls`를 비교하는 방법을 정한다(H28.1-6).
 
 - `contracts/client.json`은 다시 main의 server가 통과하는 case를 담는다. wave 28의 client case는 그것을 구현하는 server와 함께 통합된다(H28.1-5).

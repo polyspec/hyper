@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- HY-97, HY-100, HY-121 and HY-123 and `contracts/representations.json` name the entry of a request `App.handle`, as HY-106 names the public entry of every server (H28.1-7).
+
 - `contracts/context.json` expects only `title` in the shared data of a JSON response whose templates read no other shared value (HY-73), and the case of a loader that stops lists the shared handler after the context handler; HY-128 states how a runner masks the token of its session and compares `firstCalls` (H28.1-6).
 
 - `contracts/client.json` holds again the cases that the servers of main pass; the client cases of wave 28 land with the servers that implement them (H28.1-5).
