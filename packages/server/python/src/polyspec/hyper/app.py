@@ -301,14 +301,14 @@ class App:
                 return chosen
             if chosen != JSON:
                 return _not_acceptable()
-            if request.method != "GET" and (
-                request.method != "POST" or "post" not in handler
-            ):
-                return Response.text(405, "Method Not Allowed")
         else:
             chosen = self._negotiate(request, _PAGE_TYPES)
             if isinstance(chosen, Response):
                 return chosen
+        # HY-120: the session opens after the method check and the context header check, which refuse the request first.
+        refused = self._refused_before_session(request, handler)
+        if refused is not None:
+            return refused
         request = request._with_media(chosen)
         session = Session(store)
         flash = session.take_flash()
@@ -370,6 +370,20 @@ class App:
             self._shell,
         )
 
+    def _refused_before_session(
+        self, request: Request, handler: dict
+    ) -> Optional[Response]:
+        """Returns the refusal of the method check (HY-62 step 3) and of the context header (HY-127) of a request, or
+        None. The application makes both checks before it opens the session (HY-120)."""
+        if request.method != "GET" and (
+            request.method != "POST" or "post" not in handler
+        ):
+            return Response.text(405, "Method Not Allowed")
+        # HY-127: an application with a context checks the Hyper-Context header after the method check.
+        if self._context_handler is not None and not _valid_context_header(request):
+            return Response.text(400, "Bad Request")
+        return None
+
     def _routed(
         self,
         request: Request,
@@ -382,13 +396,6 @@ class App:
     ) -> Response:
         """Answers a routed request with its page, action result or stop result."""
         try:
-            if request.method != "GET" and (
-                request.method != "POST" or "post" not in handler
-            ):
-                return Response.text(405, "Method Not Allowed")
-            # HY-127: an application with a context checks the Hyper-Context header after the method check.
-            if self._context_handler is not None and not _valid_context_header(request):
-                return Response.text(400, "Bad Request")
             if request.method == "GET":
                 return _without_renewal(
                     reply,
