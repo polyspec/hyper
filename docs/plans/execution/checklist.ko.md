@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 4cd9a3e89524f834e86260e2bc8b451b7205c8c38e541d8fb62384d2148053e3 -->
+<!-- source-sha256: 65e80b0df39c1f07449cad33989ab0322f80f7304898cd95f4e4da119966adb6 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -395,3 +395,4 @@
 | H28.8 | context와 JSON representation이 있는 board example, browser test, parity, feature status, H28.1~H28.7의 changelog | examples/board, tests/e2e, docs/features.md and its Korean twin, CHANGELOG.md and its Korean twin | `make parity` | [ ] |
 | H28.9 | 모든 page route의 HEAD(RFC 9110 section 9.1)를 명세하고 구현한다: HEAD request는 GET response의 header를 받고 body는 받지 않으며 Allow는 GET과 함께 HEAD를 적는다; PHP, Node, Python server | docs/spec/protocol.md and its Korean twin, packages/server/php, packages/server/node, packages/server/python | `make docs-check`, `make test-php`, `make test-node`, `make test-python` | [ ] |
 | H28.10 | placement build(HY-125): {# build}가 정확히 하나 없는 layout이면 build가 실패하고, fixture와 board example의 모든 layout이 head 안에 그것을 두며, PHP, Node, Python server와 browser가 html definition build를 build id로 render한다 | packages/build, packages/server/php, packages/server/node, packages/server/python, packages/client, the layouts of the fixtures and examples/board | `make test-scripts`, `make test-php`, `make test-node`, `make test-python`, `make test-js` | [ ] |
+| H28.11 | PHP, Node, Python 서버의 source map을 명세한다: 모든 관심사에 대해 언어별 파일과 public 이름을 고정하는 규칙과 docs/spec/structure.md, 빠진 파일이나 map에 없는 파일이나 잘못 놓인 파일에서 실패하는 검사, 그리고 기존 파일을 map에 맞게 옮긴다 | docs/spec/structure.md and its Korean twin, scripts/check-structure.mjs, Makefile, packages/server | `make structure-check` and `make docs-check` | [ ] |
