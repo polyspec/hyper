@@ -132,7 +132,10 @@ def read_module(root: Path, rel: str, out: dict) -> None:
             out["uses"].append({"file": rel, "name": node.attr})
         if isinstance(node, ast.ImportFrom) and node.module != "__future__":
             for alias in node.names:
-                out["uses"].append({"file": rel, "name": alias.name})
+                out["uses"] += [{"file": rel, "name": n} for n in (alias.name, alias.asname) if n]
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                out["uses"] += [{"file": rel, "name": n} for n in [*alias.name.split("."), alias.asname] if n]
 
 
 def read_tests(root: Path, rel: str, out: dict) -> None:
