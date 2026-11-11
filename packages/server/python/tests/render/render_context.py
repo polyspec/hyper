@@ -1,7 +1,7 @@
 # The context of an application, run from contracts/context.json (HY-10, HY-124 to HY-128): every case opens the
 # application named by the case with its build, its context, its shared data and its handlers, sends the request and
-# compares the response with the stated expectations. The applications are built once by scripts/context-programs.mjs
-# into var/context-programs, which the tests of the three servers share.
+# compares the response with the stated expectations. The applications are built once by scripts/contract-programs.mjs
+# into var/contract-programs, which the tests of the three servers share.
 import contextlib
 import io
 import json
@@ -24,17 +24,17 @@ from polyspec.hyper.session import ArraySession
 ROOT = Path(__file__).resolve().parents[5]
 CONTRACT = json.loads((ROOT / "contracts" / "context.json").read_text(encoding="utf-8"))
 NODE = ROOT / "var" / "tools" / "bin" / "node"
-PROGRAMS = ROOT / "var" / "context-programs"
+PROGRAMS = ROOT / "var" / "contract-programs"
 BUILD_LIBRARY = ROOT / "packages" / "build" / "lib" / "build-id.mjs"
 
 
 def program_of(name: str) -> tuple[Path, Path]:
-    """Returns the manifest path and the program directory that scripts/context-programs.mjs wrote for an application;
+    """Returns the manifest path and the program directory that scripts/contract-programs.mjs wrote for an application;
     a missing output fails here and names the missing file."""
     root = PROGRAMS / name
     for path in (root / "manifest.json", root / "build.json", root / "program"):
         if not path.exists():
-            raise FileNotFoundError(f"{path} is missing: run make context-programs")
+            raise FileNotFoundError(f"{path} is missing: run make contract-programs")
     return root / "manifest.json", root / "program"
 
 
