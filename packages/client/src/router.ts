@@ -75,7 +75,8 @@ function matchSegments(segments: Segment[], parts: string[]): Record<string, str
     return params;
   }
   if (segments.length !== parts.length) return null;
-  const params: Record<string, string> = {};
+  // A null prototype keeps a parameter named __proto__ as a key with its own value (HY-5).
+  const params: Record<string, string> = Object.create(null);
   for (const [index, segment] of segments.entries()) {
     const part = parts[index];
     // segments and parts have the same length, checked above.
