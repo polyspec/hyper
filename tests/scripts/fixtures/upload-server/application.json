@@ -1,0 +1,9 @@
+{
+  "applications": {
+    "upload": {
+      "manifest": { "layout": "layout.tpl", "title": "title.tpl", "regions": [{ "name": "content", "page": true }], "routes": [{ "name": "home", "path": "/", "title": "Home", "template": "home.tpl" }] },
+      "templates": { "layout.tpl": "<head><title>{# title}</title>{# build}</head>\n<main id=\"content\">{# content}</main>\n{# data}\n", "title.tpl": "{= title}", "home.tpl": "<p>upload</p>" },
+      "build": "4444444444444444444444444444444444444444444444444444444444444444"
+    }
+  }
+}

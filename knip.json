@@ -8,7 +8,8 @@
 //   - tests/scripts/fixtures/chunks/client/main.ts, the fixture app of the chunk tests of hyper-build-assets;
 //   - tests/scripts/fixtures/session-worker/worker.mjs, one Node server process of tests/scripts/session-shared.test.mts.
 //   - tests/scripts/fixtures/multipart-worker/worker.mjs, one Node server process of
-//     tests/scripts/multipart-compare.test.mts.
+//     tests/scripts/multipart-compare.test.mts;
+//   - tests/scripts/fixtures/upload-server/server.mjs, the Node server of tests/scripts/upload-servers.test.mts.
 // The binaries are the programs that the scripts start from PATH: container (Apple container, make virtiofs-check on Darwin),
 // make (the dry runs of the recipe tests), openssl (the TLS certificates of session-redis-failover.test.mts) and php
 // (scripts/check-parity.mts asks it whether the polyspec_template extension loads).
@@ -28,7 +29,8 @@
       "tests/e2e/playwright.config.ts",
       "tests/scripts/fixtures/chunks/client/main.ts",
       "tests/scripts/fixtures/session-worker/worker.mjs",
-      "tests/scripts/fixtures/multipart-worker/worker.mjs"
+      "tests/scripts/fixtures/multipart-worker/worker.mjs",
+      "tests/scripts/fixtures/upload-server/server.mjs"
     ]
   },
   "ignoreBinaries": ["container", "make", "openssl", "php"],

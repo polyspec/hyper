@@ -71,7 +71,15 @@ for index, case in enumerate(cases):
     print(
         json.dumps(
             {
-                "result": [parts is not None, stopped, read.exceeded(), values, files, size, digest.hexdigest()],
+                "result": [
+                    parts is not None,
+                    stopped,
+                    read.exceeded(),
+                    values,
+                    files,
+                    size,
+                    digest.hexdigest(),
+                ],
                 "ms": round(ms, 1),
                 "cpu": round((usage.ru_utime + usage.ru_stime) * 1000),
             }

@@ -821,10 +821,20 @@
         "packages/server/python/src/polyspec/hyper/_files.py",
         "packages/server/python/src/polyspec/hyper/_named_values.py",
         "tests/scripts/multipart-compare.test.mts",
-        "tests/scripts/fixtures/multipart-worker/**"
+        "tests/scripts/fixtures/multipart-worker/**",
+        "packages/server/php/src/Request.php",
+        "packages/server/php/src/App.php",
+        "packages/server/ts/src/http.ts",
+        "packages/server/ts/src/request.ts",
+        "packages/server/python/src/polyspec/hyper/server.py",
+        "packages/server/python/src/polyspec/hyper/_pipeline.py",
+        "packages/server/python/src/polyspec/hyper/request.py",
+        "tests/scripts/upload-servers.test.mts",
+        "tests/scripts/fixtures/upload-server/**"
       ],
       "tests": [
-        "tests/scripts/multipart-compare.test.mts"
+        "tests/scripts/multipart-compare.test.mts",
+        "tests/scripts/upload-servers.test.mts"
       ]
     }
   ]
