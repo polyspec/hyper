@@ -127,6 +127,47 @@
       ]
     },
     {
+      "id": "session",
+      "rules": ["HY-3"],
+      "cases": { "none": "The fixture holds no case of the session store.", "tests": [] },
+      "units": [
+        {
+          "id": "session-store",
+          "native": { "php": { "file": "packages/server/php/src/SessionStore.php", "kind": "interface", "internal": true } },
+          "members": [
+            {
+              "id": "session-store.read",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": ["string"],
+              "output": "optional<string>",
+              "errors": [],
+              "state": "Reads the session of an identifier.",
+              "native": { "php": { "symbol": "packages/server/php/src/SessionStore.php::Polyspec\\Hyper\\SessionStore::read", "signature": "public function read(string $id): ?string" } }
+            }
+          ],
+          "only": { "languages": ["php"], "rule": "HY-3", "quote": "A session store reads the session of an identifier as a string or null." }
+        },
+        {
+          "id": "array-session",
+          "native": { "php": { "file": "packages/server/php/src/ArraySession.php", "kind": "class", "internal": true } },
+          "members": [
+            {
+              "id": "array-session.read",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": ["string"],
+              "output": "optional<string>",
+              "errors": [],
+              "state": "Reads the session of an identifier.",
+              "native": { "php": { "symbol": "packages/server/php/src/ArraySession.php::Polyspec\\Hyper\\ArraySession::read", "signature": "public function read(string $id): ?string" } }
+            }
+          ],
+          "only": { "languages": ["php"], "rule": "HY-3", "quote": "A session store reads the session of an identifier as a string or null." }
+        }
+      ]
+    },
+    {
       "id": "index",
       "rules": [],
       "cases": { "none": "The barrels hold only re-exports, which the barrel check reads.", "tests": [] },
