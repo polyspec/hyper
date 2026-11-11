@@ -1,4 +1,4 @@
-import { bind, merge, type BoundMap, type Engine, type MapValue, type Value } from '@polyspec/template/render';
+import { bind, merge, type BoundMap, type Engine, type HostFunction, type MapValue, type Value } from '@polyspec/template/render';
 import { createEngine } from './engine.js';
 import { applyKept } from './keep.js';
 import { DATA_TEMPLATE_NAME, keptPaths, pageRegion, type Manifest, type RouteDeclaration } from './manifest.js';
@@ -41,13 +41,13 @@ export interface RenderedParts {
 // Creates an application from its manifest, its template index and the function that fetches template files.
 // It does not check the manifest: the asset build checks the manifest that a bundle contains, and a server checks
 // its manifest with checkManifest when it starts (HY-2).
-export function createApplication(manifest: Manifest, index: TemplateIndex, fetcher: TemplateFetcher): Application {
+export function createApplication(manifest: Manifest, index: TemplateIndex, fetcher: TemplateFetcher, functions?: Record<string, HostFunction>): Application {
   const templates = new TemplateStore(index, fetcher);
   return {
     manifest,
     router: new Router(manifest.routes),
     templates,
-    engine: createEngine(templates.loader),
+    engine: createEngine(templates.loader, functions),
     page: pageRegion(manifest),
   };
 }

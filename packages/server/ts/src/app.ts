@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { isAbsolute, join } from 'node:path';
 import type { Server } from 'node:http';
 import { checkManifest, checkTemplateIndex, createApplication, DATA_TEMPLATE_NAME, keptPaths, routeReads, routeTemplates, stripBasePath, type Application, type Manifest, type RouteDeclaration, type RouteReads } from '@polyspec/hyper-client';
-import { decodeTemplate, resolvePath, type Template } from '@polyspec/template/render';
+import { decodeTemplate, resolvePath, type HostFunction, type Template } from '@polyspec/template/render';
 import { maskedToken, verifyToken } from './csrf.js';
 import type { FileSessions } from './file-sessions.js';
 import type { RedisSessions } from './redis-sessions.js';
@@ -109,6 +109,9 @@ export interface AppOptions<S extends object> {
   clientRendering?: ClientRendering;
   // The context handler (HY-124, HY-106): a function of the selection value that returns a Map, or a promise of one.
   context?: ContextHandler;
+  // The host functions of the templates (HYC-24, HY-106): a map from names to functions that the template engine registers when
+  // the application opens; a registration that fails fails the open (template FUN-44, RT-5).
+  functions?: Record<string, HostFunction>;
 }
 
 // The outcome of a request for its transport: the response, or a stop because its connection closed (HY-67).
@@ -211,7 +214,7 @@ export class App<S extends object = Record<string, never>> {
     const manifest = checkManifest(JSON.parse(readFileSync(options.manifest, 'utf8')));
     const index = checkTemplateIndex(JSON.parse(readFileSync(options.templates.index, 'utf8')), `the template index ${options.templates.index}`);
     const fetcher = async (url: string): Promise<Template> => decodeTemplate(JSON.parse(readFileSync(join(options.templates.root, url), 'utf8')));
-    const application = createApplication(manifest, index, fetcher);
+    const application = createApplication(manifest, index, fetcher, options.functions);
     checkHandlers(manifest, options.handlers);
     const client = options.clientRendering === undefined ? null : checkClient(options.clientRendering, manifest);
     // Every entry template of every route and the template of the embedded data are in the index (HY-31, HR-34), and the
