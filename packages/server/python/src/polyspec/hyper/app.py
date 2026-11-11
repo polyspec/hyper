@@ -724,6 +724,7 @@ class App:
             self.manifest.page.name,
             route_regions,
             None if response is None else self.renderer.bind({"response": response}),
+            self.build,
         )
 
     def _refused_form(self, request: Request, session: Session) -> Optional[Response]:

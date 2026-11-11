@@ -60,15 +60,18 @@ class Renderer:
         page: str,
         route_regions: dict,
         data,
+        build: str,
     ) -> str:
         """Renders the document: the layout with the title, the embedded data and every manifest region rendered
         alone as HTML definitions; the page region receives its route regions the same way.
 
         `regions` and `route_regions` map a name to `{'template': str, 'data': <bound root>}`; `data` is the bound
         root of `{# data}` (HY-31) or None when the document embeds no data (HY-92)."""
+        # HY-125: the html definition `build` is the element that the layout places with `{# build}`.
         define = {
             "title": {"html": self.render(title, shared, {})},
             "data": {"html": "" if data is None else self.render(DATA_NAME, data, {})},
+            "build": {"html": f'<meta name="hyper-build" content="{build}">'},
         }
         for name, region in regions.items():
             define[name] = {

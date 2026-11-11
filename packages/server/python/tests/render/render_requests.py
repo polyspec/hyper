@@ -110,7 +110,7 @@ class DocumentTest(FixtureTest):
         self.assertEqual(200, response.status)
         self.assertEqual("text/html; charset=utf-8", response.headers["Content-Type"])
         self.assertEqual(
-            '<title>Home - Site</title>\n<aside id="side"><b>0</b>\n</aside>\n'
+            '<title>Home - Site</title><meta name="hyper-build" content="' + "1" * 64 + '">\n<aside id="side"><b>0</b>\n</aside>\n'
             '<main id="content"><p>Home|n0</p>\n</main>\n',
             response.body,
         )
@@ -134,6 +134,7 @@ class DocumentTest(FixtureTest):
             "content",
             {},
             renderer.bind({"response": {}}),
+            "1" * 64,
         )
         self.assertIn(
             "<title>"
@@ -246,6 +247,7 @@ class DocumentTest(FixtureTest):
             "content",
             {"rows": rows},
             renderer.bind({"response": {}}),
+            "1" * 64,
         )
         self.assertEqual('<h1>T</h1><ul id="rows"><li>x</li></ul>\n', page)
         self.assertIn('<main id="content">' + page + "</main>", document)
