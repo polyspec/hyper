@@ -304,11 +304,11 @@ RECIPE_RESULTS := var/recipe/results
 .PHONY: recipe-check recipe-candidates
 recipe-check: ## Check contracts/interfaces.json against the sources of the three servers and their case results (HYR-7, HYR-8)
 	@test -d $(RECIPE_TYPESCRIPT) || { echo 'recipe-check needs the pinned TypeScript: run npm ci --prefix scripts/recipe/typescript'; exit 1; }
-	$(NODE) scripts/recipe/check.mts --root . --results php=$(RECIPE_RESULTS)/php.txt --results node=$(RECIPE_RESULTS)/node.txt --results python=$(RECIPE_RESULTS)/python.txt
+	$(NODE) scripts/recipe/check.mts --root . --php-autoload $(PHP_VENDOR)/autoload.php --results php=$(RECIPE_RESULTS)/php.txt --results node=$(RECIPE_RESULTS)/node.txt --results python=$(RECIPE_RESULTS)/python.txt
 
 recipe-candidates: ## Write the candidate of contracts/interfaces.json under var/recipe, with the hand-written fields listed beside it (HYR-10)
 	@test -d $(RECIPE_TYPESCRIPT) || { echo 'recipe-candidates needs the pinned TypeScript: run npm ci --prefix scripts/recipe/typescript'; exit 1; }
-	$(NODE) scripts/recipe/candidate.mts --root . --output var/recipe/interfaces.candidate.json
+	$(NODE) scripts/recipe/candidate.mts --root . --php-autoload $(PHP_VENDOR)/autoload.php --output var/recipe/interfaces.candidate.json
 
 parity: assets server ext ## Compare PHP documents (generated program and native extension) with browser renders of document and region JSON
 	@failed=; \

@@ -1,7 +1,7 @@
 // The candidate of the development spec (HYR-10): the spec with its native fields refreshed from the readers. The
 // hand-written fields (neutral fields, concern fields, unit grouping, `only`, type shape) keep their values; their JSON
 // pointers go to a sidecar file, so that the reviewed change of the spec can tell them apart from the native fields.
-// Usage: node scripts/recipe/candidate.mts [--root <dir>] [--output <file>]
+// Usage: node scripts/recipe/candidate.mts [--root <dir>] --php-autoload <autoload.php> [--output <file>]
 // Prints `CANDIDATE_STALE <pointer>` for each native item that the readers no longer find.
 
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -12,13 +12,13 @@ import { validators } from './validators.mts';
 
 export type Candidate = { spec: Spec; handWritten: string[]; stale: string[] };
 
-export function buildCandidate(root: string, v: Validators): Candidate {
+export function buildCandidate(root: string, phpAutoload: string, v: Validators): Candidate {
   const specDoc: unknown = JSON.parse(readFileSync(path.join(root, 'contracts', 'interfaces.json'), 'utf8'));
   if (!v.spec(specDoc)) {
     throw new Error(`SPEC_INVALID ${v.spec.errors?.[0]?.instancePath ?? ''} ${v.spec.errors?.[0]?.message ?? ''}`);
   }
   const spec: Spec = structuredClone(specDoc);
-  const sources = readAllSources(root, spec, v);
+  const sources = readAllSources(root, spec, v, phpAutoload);
   const handWritten: string[] = [];
   const stale: string[] = [];
 
@@ -72,7 +72,10 @@ export function buildCandidate(root: string, v: Validators): Candidate {
 function main(): number {
   const root = path.resolve(argumentOf('--root') ?? process.cwd());
   const output = path.resolve(argumentOf('--output') ?? path.join(root, 'var', 'recipe', 'interfaces.candidate.json'));
-  const { spec, handWritten, stale } = buildCandidate(root, validators());
+  const autoload = argumentOf('--php-autoload');
+  if (autoload === undefined) throw new Error('--php-autoload <autoload.php> is required');
+  const phpAutoload = path.resolve(autoload);
+  const { spec, handWritten, stale } = buildCandidate(root, phpAutoload, validators());
   mkdirSync(path.dirname(output), { recursive: true });
   writeFileSync(output, `${JSON.stringify(spec, null, 2)}\n`);
   writeFileSync(output.replace(/\.json$/u, '.hand-written.json'), `${JSON.stringify(handWritten, null, 2)}\n`);

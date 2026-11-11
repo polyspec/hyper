@@ -64,7 +64,7 @@ export function selfTest(fixture: string, v: Validators): string[] {
     try {
       cpSync(fixture, root, { recursive: true });
       applyMutation(root, m);
-      const findings = runChecks(root, v, fixtureResults(root));
+      const findings = runChecks(root, v, fixtureResults(root), path.join(root, 'vendor', 'autoload.php'));
       if (!findings.some((f) => f.code === m.code)) failures.push(`MUTATION_PASSED ${m.id}: the check printed no ${m.code}`);
     } catch (error) {
       failures.push(`MUTATION_FAILED ${m.id}: ${error instanceof Error ? error.message : String(error)}`);

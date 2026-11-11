@@ -1,6 +1,6 @@
 // The recipe check (HYR-8): runs the readers' mutation cases, then validates contracts/interfaces.json, runs the three
 // readers, compares them with the spec and checks the case results (HYR-7).
-// Usage: node scripts/recipe/check.mts [--root <dir>] [--results <php|node|python>=<file>]... [--no-selftest]
+// Usage: node scripts/recipe/check.mts [--root <dir>] --php-autoload <autoload.php> [--results <php|node|python>=<file>]... [--no-selftest]
 // Prints one `CODE message` line per finding and exits 1 on any.
 
 import path from 'node:path';
@@ -34,6 +34,8 @@ function resultArguments(): Results {
 
 function main(): number {
   const root = path.resolve(argumentOf('--root') ?? process.cwd());
+  const phpAutoload = argumentOf('--php-autoload');
+  if (phpAutoload === undefined) throw new Error('--php-autoload <autoload.php> is required');
   const v = validators();
 
   if (!process.argv.includes('--no-selftest')) {
@@ -42,7 +44,7 @@ function main(): number {
     if (failures.length > 0) return 1;
   }
 
-  const findings = runChecks(root, v, resultArguments());
+  const findings = runChecks(root, v, resultArguments(), path.resolve(phpAutoload));
   for (const f of findings) process.stdout.write(`${f.code} ${f.message}\n`);
   if (findings.length === 0) process.stdout.write(`recipe-check: ${LANGS.length} languages agree with the spec\n`);
   return findings.length === 0 ? 0 : 1;

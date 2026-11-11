@@ -138,12 +138,12 @@
             {
               "id": "session-store.read",
               "kind": "method",
-              "visibility": "public",
+              "visibility": "internal",
               "inputs": ["string"],
               "output": "optional<string>",
               "errors": [],
               "state": "Reads the session of an identifier.",
-              "native": { "php": { "symbol": "packages/server/php/src/SessionStore.php::Polyspec\\Hyper\\SessionStore::read", "signature": "public function read(string $id): ?string" } }
+              "native": { "php": { "symbol": "packages/server/php/src/SessionStore.php::Polyspec\\Hyper\\SessionStore::read", "signature": "abstract public function read(string $id): ?string" } }
             }
           ],
           "only": { "languages": ["php"], "rule": "HY-3", "quote": "A session store reads the session of an identifier as a string or null." }
@@ -155,7 +155,7 @@
             {
               "id": "array-session.read",
               "kind": "method",
-              "visibility": "public",
+              "visibility": "internal",
               "inputs": ["string"],
               "output": "optional<string>",
               "errors": [],

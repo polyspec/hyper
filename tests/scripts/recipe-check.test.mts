@@ -13,6 +13,8 @@ const repo = path.resolve(here, '..', '..');
 const fixture = path.join(here, 'fixtures', 'recipe');
 const check = path.join(repo, 'scripts', 'recipe', 'check.mts');
 const candidate = path.join(repo, 'scripts', 'recipe', 'candidate.mts');
+/** The PHP autoloader of a recipe tree: the fixture's stand-in for the server's Composer autoloader. */
+const phpAutoload = (root: string): string => path.join(root, 'vendor', 'autoload.php');
 
 type Mutation = { id: string; file: string; code: string; from?: string; to?: string; rename?: string; create?: string; delete?: boolean };
 
@@ -46,7 +48,7 @@ function applyMutation(root: string, m: Mutation): void {
 }
 
 test('the fixture passes the recipe check, with its mutation cases first', () => {
-  const result = spawnSync(process.execPath, [check, '--root', fixture, ...resultArguments(fixture)], { encoding: 'utf8' });
+  const result = spawnSync(process.execPath, [check, '--root', fixture, '--php-autoload', phpAutoload(fixture), ...resultArguments(fixture)], { encoding: 'utf8' });
   assert.equal(result.status, 0, result.stdout + result.stderr);
 });
 
@@ -54,7 +56,7 @@ test('the candidate refreshes the native fields and lists the hand-written ones'
   const dir = mkdtempSync(path.join(tmpdir(), 'recipe-candidate-'));
   try {
     const output = path.join(dir, 'interfaces.candidate.json');
-    const result = spawnSync(process.execPath, [candidate, '--root', fixture, '--output', output], { encoding: 'utf8' });
+    const result = spawnSync(process.execPath, [candidate, '--root', fixture, '--php-autoload', phpAutoload(fixture), '--output', output], { encoding: 'utf8' });
     assert.equal(result.status, 0, result.stdout + result.stderr);
     const spec = JSON.parse(readFileSync(output, 'utf8')) as { schema: number };
     assert.equal(spec.schema, 1);
@@ -71,7 +73,7 @@ for (const m of mutations) {
     try {
       cpSync(fixture, root, { recursive: true });
       applyMutation(root, m);
-      const result = spawnSync(process.execPath, [check, '--root', root, '--no-selftest', ...resultArguments(root)], { encoding: 'utf8' });
+      const result = spawnSync(process.execPath, [check, '--root', root, '--php-autoload', phpAutoload(root), '--no-selftest', ...resultArguments(root)], { encoding: 'utf8' });
       assert.notEqual(result.status, 0, `mutation ${m.id} passed the check`);
       assert.match(result.stdout + result.stderr, new RegExp(`\\b${m.code}\\b`));
     } finally {

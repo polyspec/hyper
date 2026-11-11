@@ -15,11 +15,11 @@ function command(lang: Lang): [string, string[]] {
   return [process.env.RECIPE_PYTHON ?? 'python3', [path.join(here, 'read_python.py')]];
 }
 
-/** Runs the reader of one language; a reader that fails or prints an invalid document stops the check. */
-export function readSources(root: string, lang: Lang, spec: Spec, validate: ValidateFunction<Sources>): Sources {
+/** Runs the reader of one language; a reader that fails or prints an invalid document stops the check. `extra` are the reader's options. */
+export function readSources(root: string, lang: Lang, spec: Spec, validate: ValidateFunction<Sources>, extra: string[] = []): Sources {
   const language = spec.languages[lang];
   const [bin, prefix] = command(lang);
-  const args = [root, '--sources', ...language.sources, '--tests', ...language.tests];
+  const args = [root, ...extra, '--sources', ...language.sources, '--tests', ...language.tests];
   const result = spawnSync(bin, [...prefix, ...args], { cwd: root, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
   if (result.error !== undefined || result.status !== 0) {
     const detail = result.error?.message ?? result.stderr;

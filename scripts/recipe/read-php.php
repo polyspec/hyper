@@ -3,28 +3,41 @@
 declare(strict_types=1);
 
 // Reads the PHP server sources for the recipe check (HYR-8) and prints one JSON document on stdout.
-// Usage: php read-php.php <root> --sources <dir>... [--tests <dir>...]
+// Usage: php read-php.php <root> --autoload <autoload.php> --sources <dir>... [--tests <dir>...]
+// The autoloader of the server package loads each source class by its name; the reader never requires a file itself.
 // Reflection is used for members, constants and visibility; signatures are rebuilt from reflection.
 
 $args = array_slice($argv, 1);
 if ($args === []) {
-    fwrite(STDERR, "usage: read-php.php <root> --sources <dir>... [--tests <dir>...]\n");
+    fwrite(STDERR, "usage: read-php.php <root> --autoload <autoload.php> --sources <dir>... [--tests <dir>...]\n");
     exit(2);
 }
 $root = rtrim(array_shift($args), '/');
 $groups = ['sources' => [], 'tests' => []];
+$autoload = null;
 $current = null;
-foreach ($args as $arg) {
+for ($i = 0; $i < count($args); $i++) {
+    $arg = $args[$i];
+    if ($arg === '--autoload') {
+        $autoload = $args[++$i] ?? null;
+        $current = null;
+        continue;
+    }
     if ($arg === '--sources' || $arg === '--tests') {
         $current = substr($arg, 2);
         continue;
     }
     if ($current === null) {
-        fwrite(STDERR, "argument before --sources or --tests: $arg\n");
+        fwrite(STDERR, "argument before --autoload, --sources or --tests: $arg\n");
         exit(2);
     }
     $groups[$current][] = $arg;
 }
+if ($autoload === null || !is_file($autoload)) {
+    fwrite(STDERR, "read-php.php: --autoload takes the autoloader file, got " . var_export($autoload, true) . "\n");
+    exit(2);
+}
+require $autoload;
 
 /** @return list<string> the PHP files below a directory, relative to the root, sorted */
 function phpFiles(string $root, string $dir): array
@@ -187,6 +200,34 @@ function propertySignature(ReflectionProperty $property): string
     return implode(' ', Reflection::getModifierNames($property->getModifiers())) . ' ' . $type . '$' . $property->getName();
 }
 
+function fail(string $message): never
+{
+    fwrite(STDERR, "read-php.php: $message\n");
+    exit(1);
+}
+
+/**
+ * Loads a class of a source file by its name through the autoloader and checks that the autoloader loads it from that
+ * file; a class it cannot load, or loads from another file, stops the reader with the file that declares it.
+ */
+function loadClass(string $file, string $path, string $fqcn): ReflectionClass
+{
+    try {
+        $loaded = class_exists($fqcn) || interface_exists($fqcn) || trait_exists($fqcn);
+    } catch (Throwable $error) {
+        fail("$file: the autoloader cannot load $fqcn: " . $error->getMessage());
+    }
+    if (!$loaded) {
+        fail("$file: the autoloader does not find $fqcn");
+    }
+    $class = new ReflectionClass($fqcn);
+    if (realpath((string) $class->getFileName()) !== realpath($path)) {
+        fail("$file: the autoloader loads $fqcn from {$class->getFileName()}");
+    }
+
+    return $class;
+}
+
 $sourceFiles = [];
 foreach ($groups['sources'] as $dir) {
     $sourceFiles = array_merge($sourceFiles, phpFiles($root, $dir));
@@ -210,9 +251,8 @@ $out = [
 
 foreach ($sourceFiles as $file) {
     $path = $root . '/' . $file;
-    require_once $path;
     foreach (declaredTypes(file_get_contents($path)) as $fqcn) {
-        $class = new ReflectionClass($fqcn);
+        $class = loadClass($file, $path, $fqcn);
         $unit = $class->getShortName();
         $internal = ($doc = $class->getDocComment()) !== false && str_contains($doc, '@internal');
         $out['units'][] = ['file' => $file, 'name' => $unit, 'kind' => unitKind($class), 'internal' => $internal];
