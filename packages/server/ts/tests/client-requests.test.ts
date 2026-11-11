@@ -19,10 +19,10 @@ it.each(list(conformance.cases).map(record).map((item) => [text(item.id), item] 
     { clientRendering: client() },
   );
   expect(response.status).toBe(item.status);
-  for (const [name, value] of Object.entries(record(item.headers))) expect(response.headers[name], name).toBe(value);
-  if (item.shell === true) {
+  if (item.headers !== undefined) for (const [name, value] of Object.entries(record(item.headers))) expect(response.headers[name], name).toBe(value);
+  if (item.allHeaders !== undefined) {
     expect(response.body).toBe(readFileSync(SHELL, 'utf8'));
-    expect(response.headers).toEqual(item.headers);
+    expect(response.headers).toEqual(record(item.allHeaders));
   }
   if (item.body !== undefined) expect(response.body).toBe(item.body);
   if (item.json !== undefined) {

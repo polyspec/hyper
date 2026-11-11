@@ -36,11 +36,11 @@ class ClientConformanceTest(unittest.TestCase):
         response = app(counter).handle(request, session)
 
         self.assertEqual(case["status"], response.status)
-        for name, value in case["headers"].items():
+        for name, value in case.get("headers", {}).items():
             self.assertEqual(value, response.headers.get(name), name)
-        if case.get("shell"):
+        if "allHeaders" in case:
             self.assertEqual(SHELL.read_text(encoding="utf-8"), response.body)
-            self.assertEqual(case["headers"], response.headers)
+            self.assertEqual(case["allHeaders"], response.headers)
         if "body" in case:
             self.assertEqual(case["body"], response.body)
         if "json" in case:

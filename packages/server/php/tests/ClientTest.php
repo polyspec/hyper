@@ -124,12 +124,12 @@ final class ClientTest extends TestCase
         );
 
         self::assertSame($case['status'] ?? null, $response->status);
-        foreach (Json::stringMap($case['headers'] ?? null) as $name => $value) {
+        foreach (Json::stringMap($case['headers'] ?? []) as $name => $value) {
             self::assertSame($value, $response->headers[$name] ?? null, $name);
         }
-        if ($case['shell'] ?? false) {
+        if (array_key_exists('allHeaders', $case)) {
             self::assertSame((string) file_get_contents(self::SHELL), $response->body);
-            self::assertSame($case['headers'], $response->headers);
+            self::assertSame($case['allHeaders'], $response->headers);
         }
         if (array_key_exists('body', $case)) {
             self::assertSame($case['body'], $response->body);

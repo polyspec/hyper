@@ -10,6 +10,6 @@ it.each(rest.cases.map((item) => [item.id, item] as const))('%s', (_id, { path, 
   expect(restRouter.match(path)).toEqual(result);
 });
 
-it.each(rest.invalidPaths)('rejects the route path %j', (path) => {
+it.each(rest.invalidPaths)('rejects the route path $path', ({ path }) => {
   expect(() => new Router([{ name: 'invalid', path }])).toThrow();
 });

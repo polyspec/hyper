@@ -14,6 +14,6 @@ it.each(fixture.baseCases.map((item) => [item.id, item] as const))('%s', (_id, {
   expect(stripped === null ? null : router.match(stripped)).toEqual(result);
 });
 
-it.each(fixture.invalidPaths)('rejects the route path %j', (path) => {
+it.each(fixture.invalidPaths)('rejects the route path $path', ({ path }) => {
   expect(() => new Router([{ name: 'invalid', path }])).toThrow();
 });

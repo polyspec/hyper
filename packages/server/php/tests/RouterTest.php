@@ -75,7 +75,14 @@ final class RouterTest extends TestCase
     /** @return iterable<string, array{string}> */
     public static function invalidPaths(): iterable
     {
-        foreach (Json::strings(self::fixture()['invalidPaths'] ?? null) as $path) {
+        yield from self::invalidPathCases(self::fixture()['invalidPaths'] ?? null);
+    }
+
+    /** @return iterable<string, array{string}> */
+    private static function invalidPathCases(mixed $cases): iterable
+    {
+        foreach (Json::arrays($cases ?? null) as $case) {
+            $path = Json::string($case['path'] ?? null);
             yield json_encode($path, JSON_THROW_ON_ERROR) => [$path];
         }
     }
@@ -135,9 +142,7 @@ final class RouterTest extends TestCase
     /** @return iterable<string, array{string}> */
     public static function invalidRestPaths(): iterable
     {
-        foreach (Json::strings(self::rest()['invalidPaths'] ?? null) as $path) {
-            yield json_encode($path, JSON_THROW_ON_ERROR) => [$path];
-        }
+        yield from self::invalidPathCases(self::rest()['invalidPaths'] ?? null);
     }
 
     /**

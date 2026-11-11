@@ -99,10 +99,10 @@
     }
   ],
   "invalidPaths": [
-    "/{rest*}/x",
-    "/{rest*}/{more*}",
-    "/{id}/{id*}",
-    "/{*}",
-    "/{1rest*}"
+    { "id": "rest_parameter_not_last", "label": "a rest parameter is the last segment of the path (HY-49)", "path": "/{rest*}/x" },
+    { "id": "two_rest_parameters", "label": "a rest parameter is the last segment of the path (HY-49)", "path": "/{rest*}/{more*}" },
+    { "id": "rest_parameter_repeats_name", "label": "a rest parameter has a name different from the other parameters (HY-49)", "path": "/{id}/{id*}" },
+    { "id": "rest_parameter_without_name", "label": "a rest parameter has a name, as HY-4 requires (HY-49)", "path": "/{*}" },
+    { "id": "rest_parameter_bad_name", "label": "a rest parameter has a name, as HY-4 requires (HY-49)", "path": "/{1rest*}" }
   ]
 }

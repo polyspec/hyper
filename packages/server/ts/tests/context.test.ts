@@ -36,7 +36,7 @@ interface Case {
   sharedKeys?: string[];
   contextCalls?: number;
   firstCalls?: string[];
-  selection?: unknown;
+  selection?: unknown[];
 }
 
 const contract = JSON.parse(readFileSync(new URL('../../../../contracts/context.json', import.meta.url), 'utf8')) as {
@@ -186,7 +186,9 @@ describe('context requests (HY-124 to HY-128)', () => {
       if (item.contextCalls !== undefined) expect(calls.filter((call) => call === 'context')).toHaveLength(item.contextCalls);
       // firstCalls are the first calls of the request in order, so the calls that the case states are its prefix.
       if (item.firstCalls !== undefined) expect(calls.slice(0, item.firstCalls.length)).toEqual(item.firstCalls);
-      if (item.selection !== undefined && selections.length > 0) expect(selections[0]).toBe(item.selection);
+      item.selection?.forEach((expected, i) => {
+        if (i < selections.length) expect(selections[i]).toBe(expected);
+      });
     });
   }
 });

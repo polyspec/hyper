@@ -55,17 +55,17 @@
     { "id": "api_board_2", "path": "/API/board", "result": null }
   ],
   "invalidPaths": [
-    "",
-    "board",
-    "/board/",
-    "//board",
-    "/board//x",
-    "/a b",
-    "/a%20b",
-    "/{1x}",
-    "/{id}{x}",
-    "/x{id}",
-    "/{}",
-    "/{id}/{id}"
+    { "id": "empty_path", "label": "a route path starts with a slash (HY-4)", "path": "" },
+    { "id": "missing_leading_slash", "label": "a route path starts with a slash (HY-4)", "path": "board" },
+    { "id": "trailing_slash", "label": "a route path has no empty segment (HY-4)", "path": "/board/" },
+    { "id": "empty_segment_at_start", "label": "a route path has no empty segment (HY-4)", "path": "//board" },
+    { "id": "empty_segment_in_middle", "label": "a route path has no empty segment (HY-4)", "path": "/board//x" },
+    { "id": "space_in_literal", "label": "a literal segment holds only the characters allowed by HY-4", "path": "/a b" },
+    { "id": "percent_in_literal", "label": "a literal segment holds only the characters allowed by HY-4", "path": "/a%20b" },
+    { "id": "parameter_name_starts_with_digit", "label": "a parameter name starts with a letter or underscore (HY-4)", "path": "/{1x}" },
+    { "id": "two_parameters_in_one_segment", "label": "a segment is either a literal or one parameter (HY-4)", "path": "/{id}{x}" },
+    { "id": "literal_and_parameter_in_one_segment", "label": "a segment is either a literal or one parameter (HY-4)", "path": "/x{id}" },
+    { "id": "empty_parameter_name", "label": "a parameter name has at least one character (HY-4)", "path": "/{}" },
+    { "id": "repeated_parameter_name", "label": "a route path does not repeat a parameter name (HY-4)", "path": "/{id}/{id}" }
   ]
 }

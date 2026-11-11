@@ -109,7 +109,7 @@ class ContextTest(unittest.TestCase):
         if "firstCalls" in case:
             self.assertEqual(case["firstCalls"], calls[: len(case["firstCalls"])])
         if "selection" in case:
-            self.assertEqual([case["selection"]] * calls.count("context"), selections)
+            self.assertEqual(case["selection"], selections)
 
 
     def test_the_builds_have_the_build_ids_of_their_files(self) -> None:

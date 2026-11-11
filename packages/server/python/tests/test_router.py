@@ -9,7 +9,8 @@ from .contracts import file
 class InvalidPathsTest(unittest.TestCase):
     def test_every_invalid_path_fails(self) -> None:
         for contract in ("routes.json", "rest.json"):
-            for path in file(contract)["invalidPaths"]:
+            for item in file(contract)["invalidPaths"]:
+                path = item["path"]
                 with self.subTest(path):
                     with self.assertRaises(ValueError):
                         Router([{"name": "x", "path": path}])

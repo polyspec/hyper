@@ -120,8 +120,10 @@ final class ContextTest extends TestCase
             self::assertSame($expected, array_slice($run->calls, 0, count($expected)), 'firstCalls');
         }
         if (array_key_exists('selection', $case)) {
-            foreach ($run->selections as $selection) {
-                self::assertSame($case['selection'], $selection, 'selection');
+            $expected = Json::array($case['selection']);
+            foreach ($run->selections as $i => $selection) {
+                self::assertArrayHasKey($i, $expected, 'selection');
+                self::assertSame($expected[$i], $selection, "selection {$i}");
             }
         }
     }
