@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: dd4ecff182c16a722082a36bbddc9610dc17fafc626fd66802d080ea1d86e23a -->
+<!-- source-sha256: 6e751a9855e81108620b8344761d0a5353ba7f7106db6538c965d41f7f3bf7d5 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- `contracts/client.json`은 다시 main의 server가 통과하는 case를 담는다. wave 28의 client case는 그것을 구현하는 server와 함께 통합된다(H28.1-5).
 
 - docs/spec/protocol.md는 both servers라고 쓴 모든 문장에 PHP, Node, Python 서버를 적는다: `contracts/fields.json`, `contracts/csrf.json`, `contracts/reads.json`, `contracts/json.json`의 case와 application object의 HY-44 실패이며, 이 실패는 Python rendering test가 `datetime`으로 확인한다(H28.1-4).
 
