@@ -6,7 +6,9 @@
 
 ## Unreleased
 
-- 세 server의 `Build.read`는 byte가 UTF-8이 아니거나 U+FEFF로 시작하는 `build.json`을 `is not valid JSON`으로 실패시키고 각 실패의 원인을 유지합니다. 이전에는 Python이 UTF-8이 아닌 byte를 `is missing or not readable`로 보고했고, Node는 그 byte를 U+FFFD로 바꾸고 앞의 U+FEFF를 버려서 그런 파일에서 build id를 읽었습니다. `contracts/build.json`은 새 field `bytes`로 파일의 byte를 쓰고 새 field `message`로 실패의 원인을 비교하며, 그 step은 문자열도 null도 아닌 `text`를 없는 파일로 다루지 않고 실패합니다(HY-125, HY-106) (H28.11).
+- 세 server의 `Build.read`는 `build.json`을 자기 server의 `JsonCodec.decode`로 decode하여 하나의 nesting 한도와 하나의 오류를 적용합니다. 이전에는 깊은 nesting에 Python이 `RecursionError`를 그대로 던졌고 PHP와 Node가 서로 다르게 답했습니다. HY-106.6은 build id를 담지 않은 build 파일이 open 오류의 하위 클래스 `InvalidBuild`를 던진다고 명시합니다. `contracts/build.json`은 build id 안에 UTF-8이 아닌 byte가 있는 case와 600단계로 중첩된 case를 추가합니다. Node의 context step은 shared, loader, action data를 PHP와 Python처럼 host 값으로 server에 넘겨서 data model 검사를 step이 아닌 server가 합니다(HY-125, HY-106, HY-54, HY-44) (H28.11).
+
+- 세 server의 `Build.read`는 byte가 UTF-8이 아니거나 U+FEFF로 시작하는 `build.json`을 `is not valid JSON`으로 실패시키고 각 실패의 원인을 유지합니다. 이전에는 Python이 UTF-8이 아닌 byte를 `is missing or not readable`로 보고했고, Node는 그 byte를 U+FFFD로 바꾸어서 build id 안의 그런 byte가 `does not hold exactly the key build`로 실패했습니다. `contracts/build.json`은 새 field `bytes`로 파일의 byte를 쓰고 새 field `message`로 실패의 원인을 비교하며, 그 step은 문자열도 null도 아닌 `text`를 없는 파일로 다루지 않고 실패합니다(HY-125, HY-106) (H28.11).
 
 - case의 애플리케이션을 읽는 step은 PHP, Node, Python에서 한 규칙으로 각 member를 검사합니다. `page`는 boolean이 아닌 정수이고, `data`, loader, 공유 데이터는 map이며, `redirect`는 문자열, `embedData`는 문자열 list입니다. Node는 cast 대신 검사하는 reader로 애플리케이션을 읽고, PHP는 읽는 곳에서 member를 검사하는 타입 없는 배열로 읽으므로, step의 test에는 타입 오류가 남지 않습니다. case가 handler의 타입에 어긋나게 주는 값, 곧 map이 아닌 context와 함수가 아닌 host function은 이유와 함께 `@ts-expect-error`와 `@phpstan-ignore`로 표시합니다(H28.11).
 

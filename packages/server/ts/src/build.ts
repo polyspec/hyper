@@ -2,6 +2,8 @@
 // lowercase hexadecimal SHA-256 digest of the outputs of the browser; no server derives or defaults it (HY-48).
 import { readFileSync } from 'node:fs';
 import { InvalidBuild } from './invalid-build.js';
+import { JsonCodec, type DecodedValue } from './json-codec.js';
+import { JsonDecodeError } from './json-decode-error.js';
 
 /** @internal */
 export class Build {
@@ -14,14 +16,16 @@ export class Build {
     } catch (error) {
       throw new InvalidBuild(`${file} is missing or not readable (HY-125)`, { cause: error });
     }
-    let value: unknown;
+    let value: DecodedValue;
     try {
-      // Bytes that are not UTF-8 and a leading U+FEFF are not valid JSON, as in PHP and Python (HY-106.7).
-      value = JSON.parse(new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(bytes));
+      // Bytes that are not UTF-8 and a leading U+FEFF are not valid JSON (HY-106.7); the JSON text is decoded by the
+      // decoder of the server, with its one nesting limit (HY-54).
+      value = JsonCodec.decode(new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(bytes));
     } catch (error) {
+      if (!(error instanceof TypeError) && !(error instanceof JsonDecodeError)) throw error;
       throw new InvalidBuild(`${file} is not valid JSON (HY-125)`, { cause: error });
     }
-    const build = typeof value === 'object' && value !== null && !Array.isArray(value) && Object.keys(value).length === 1 && 'build' in value ? value.build : undefined;
+    const build = value instanceof Map && value.size === 1 ? value.get('build') : undefined;
     if (typeof build !== 'string' || !/^[0-9a-f]{64}$/u.test(build)) {
       throw new InvalidBuild(`${file} does not hold exactly the key build with a build id of 64 lowercase hexadecimal characters (HY-125)`);
     }

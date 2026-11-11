@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 import { Context, type ContextHandler } from '../../src/context.js';
 import { Csrf } from '../../src/csrf.js';
-import { JsonCodec, type DecodedValue } from '../../src/json-codec.js';
+import { JsonCodec } from '../../src/json-codec.js';
 import { OutsideNumber } from '../../src/outside-number.js';
 import { App, MemorySessionStore, NotFound, Request, Result, type Handlers, type RouteHandlers } from '../../src/index.js';
 import type { Value } from '../../src/values.js';
@@ -15,17 +15,17 @@ import { parsed, record } from '../support.js';
 interface Action {
   redirect: string | null;
   page: number;
-  data: Map<string, Value>;
+  data: Map<string, unknown>;
 }
 
 // An application of a case, read by applicationOf: an absent `shared`, `actions`, `embedData` or `context` declares
 // none.
 interface Application {
   routes: { name: string; regions: string[] }[];
-  loaders: Map<string, Map<string, Value>>;
+  loaders: Map<string, Map<string, unknown>>;
   embedData: string[];
   actions: Map<string, Action>;
-  shared: Map<string, Value> | null;
+  shared: Map<string, unknown> | null;
   context: string | null;
 }
 
@@ -72,7 +72,7 @@ function applicationOf(value: unknown, name: string): Application {
       return { name: stringIn(route.get('name'), 'a route name'), regions: regions.map((region: unknown) => stringIn(mapIn(region, 'a region').get('name'), 'a region name')) };
     });
   })();
-  const loaders = new Map([...mapIn(application.get('loaders'), 'the loaders')].map(([loader, data]): [string, Map<string, Value>] => [loader, mapOf(data, `the loader ${loader}`)]));
+  const loaders = new Map([...mapIn(application.get('loaders'), 'the loaders')].map(([loader, data]): [string, Map<string, unknown>] => [loader, hostMap(data, `the loader ${loader}`)]));
   const actions = new Map<string, Action>();
   if (application.has('actions')) {
     for (const [route, item] of mapIn(application.get('actions'), 'the actions')) {
@@ -83,7 +83,7 @@ function applicationOf(value: unknown, name: string): Application {
       }
       const page = action.get('page');
       if (typeof page !== 'number' || !Number.isInteger(page)) throw new Error(`the action of ${route} has no redirect and no integer page`);
-      actions.set(route, { redirect: null, page, data: mapOf(action.get('data'), `the data of the action of ${route}`) });
+      actions.set(route, { redirect: null, page, data: hostMap(action.get('data'), `the data of the action of ${route}`) });
     }
   }
   return {
@@ -91,7 +91,7 @@ function applicationOf(value: unknown, name: string): Application {
     loaders,
     embedData: application.has('embedData') ? stringsIn(application.get('embedData'), 'embedData') : [],
     actions,
-    shared: application.has('shared') ? mapOf(application.get('shared'), 'the shared data') : null,
+    shared: application.has('shared') ? hostMap(application.get('shared'), 'the shared data') : null,
     context: application.has('context') ? stringIn(application.get('context'), 'the context') : null,
   };
 }
@@ -100,7 +100,7 @@ function applicationOf(value: unknown, name: string): Application {
 // NotFound when its data holds `stop: NotFound` and embeds its data when the application lists it; each declared action
 // returns its stated page or redirect; the shared handler returns the shared data of the case. Only a declared loader
 // or action is registered, as in PHP and Python, and every call is recorded in order (HY-124).
-function handlersOf(application: Application, shared: Map<string, Value> | null, calls: string[]): Handlers<Record<string, never>> {
+function handlersOf(application: Application, shared: Map<string, unknown> | null, calls: string[]): Handlers<Record<string, never>> {
   const routes: Record<string, RouteHandlers<Record<string, never>>> = {};
   for (const route of application.routes) {
     const handler: RouteHandlers<Record<string, never>> = {};
@@ -116,7 +116,7 @@ function handlersOf(application: Application, shared: Map<string, Value> | null,
         return new Map(spec);
       };
     }
-    const regions: Record<string, () => Map<string, Value>> = {};
+    const regions: Record<string, () => Map<string, unknown>> = {};
     for (const region of route.regions) {
       const regionSpec = application.loaders.get(region);
       if (regionSpec !== undefined) regions[region] = () => new Map(regionSpec);
@@ -155,6 +155,12 @@ function stringList(reader: CaseReader, name: string): string[] {
   return value;
 }
 
+// Returns a decoded map of a case as the host values that a handler returns (hostValue), and fails for any other value:
+// the server, not the step, checks that the values belong to the data model, as in PHP and Python (HY-44).
+function hostMap(value: unknown, what: string): Map<string, unknown> {
+  return new Map([...mapIn(value, what)].map(([key, item]) => [key, hostValue(item)]));
+}
+
 // Returns a decoded value that is a map, and fails for any other value.
 function mapOf(value: unknown, name: string): Map<string, Value> {
   if (!(value instanceof Map) || !JsonCodec.inDataModel(value)) throw new Error(`${name} is not a map of the data model`);
@@ -164,12 +170,12 @@ function mapOf(value: unknown, name: string): Map<string, Value> {
 // Returns a decoded JSON value as the host value that a context handler returns: an integer outside ±(2^53 − 1) is a
 // bigint, as PHP and Python decode it to their integer, so that the three servers check the same value (HY-44). A number
 // with a fraction or an exponent outside that range has no host value of the case and fails.
-function hostValue(value: DecodedValue): unknown {
+function hostValue(value: unknown): unknown {
   if (value instanceof OutsideNumber) {
     if (!/^-?(?:0|[1-9][0-9]*)$/u.test(value.literal)) throw new Error(`the case number ${value.literal} is not an integer`);
     return BigInt(value.literal);
   }
-  if (Array.isArray(value)) return value.map(hostValue);
+  if (Array.isArray(value)) return value.map((item: unknown) => hostValue(item));
   if (value instanceof Map) return new Map([...value].map(([key, item]) => [key, hostValue(item)]));
   return value;
 }
@@ -234,7 +240,7 @@ export const steps = {
     const application = applicationOf(applications.get(name), name);
     const dir = join(PROGRAMS, name);
     // Absent shared data declares no shared handler; present shared data must be a map.
-    const shared = reader.has('shared') ? mapOf(reader.input('shared'), 'the shared data of the case') : application.shared;
+    const shared = reader.has('shared') ? hostMap(reader.input('shared'), 'the shared data of the case') : application.shared;
     const contextText = reader.has('context') ? stringField(reader, 'context') : application.context;
     const calls: string[] = [];
     const selections: unknown[] = [];

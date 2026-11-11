@@ -113,8 +113,9 @@ def open_application(
     """Opens the application with the handlers of its contract: a loader stops with NotFound when it says so, an action
     returns the page with its status or the redirect, and the handlers record their calls in order. The shared handler
     returns the shared data of the case, and an application without shared data has no shared handler. The context
-    handler returns the decoded JSON text `context`, or the context of the application, as it is, also a value that is not a map, so that the server checks it (HY-124); the response hook
-    appends the failure of each response to `failures` (HY-60)."""
+    handler returns the decoded JSON text `context`, or the context of the application, as it is, also a value that
+    is not a map, so that the server checks it (HY-124); the response hook appends the failure of each response to
+    `failures` (HY-60)."""
     loaders = application["loaders"]
     if not isinstance(loaders, dict) or not all(
         isinstance(data, dict) for data in loaders.values()

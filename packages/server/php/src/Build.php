@@ -25,16 +25,18 @@ final class Build
             throw new InvalidBuild("{$file} is missing or not readable (HY-125)");
         }
         try {
-            $value = json_decode($text, true, flags: JSON_THROW_ON_ERROR);
-        } catch (\JsonException $error) {
-            // Bytes that are not UTF-8 and a leading U+FEFF are not valid JSON, as in Node and Python (HY-106.7).
+            // Bytes that are not UTF-8 and a leading U+FEFF are not valid JSON (HY-106.7); the JSON text is decoded by
+            // the decoder of the server, with its one nesting limit (HY-54).
+            $value = JsonCodec::decode($text);
+        } catch (JsonDecodeError $error) {
             throw new InvalidBuild("{$file} is not valid JSON (HY-125)", previous: $error);
         }
+        $members = $value instanceof \stdClass ? get_object_vars($value) : null;
         if (
-            !is_array($value)
-            || array_keys($value) !== ['build']
-            || !is_string($value['build'])
-            || preg_match('/^[0-9a-f]{64}$/D', $value['build']) !== 1
+            $members === null
+            || array_keys($members) !== ['build']
+            || !is_string($members['build'])
+            || preg_match('/^[0-9a-f]{64}$/D', $members['build']) !== 1
         ) {
             throw new InvalidBuild(
                 "{$file} does not hold exactly the key build with a build id of 64 lowercase hexadecimal "
@@ -42,6 +44,6 @@ final class Build
             );
         }
 
-        return $value['build'];
+        return $members['build'];
     }
 }

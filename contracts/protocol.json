@@ -5290,9 +5290,9 @@
                 },
                 {
                   "id": "HY-106.6",
-                  "en": "An application that fails to open raises the open error of its runtime, of exactly that class: `InvalidArgumentException` in PHP, `Error` in Node and `ValueError` in Python, also when a file that it reads is not valid JSON or not valid UTF-8.",
-                  "ko": "열리지 않는 애플리케이션은 자기 runtime의 open 오류를 정확히 그 클래스로 던진다: PHP에서는 `InvalidArgumentException`, Node에서는 `Error`, Python에서는 `ValueError`이며, 읽는 파일이 유효한 JSON이나 유효한 UTF-8이 아닐 때에도 그렇다.",
-                  "koSource": "1217816e4cd4d35af5355b22e6cfad9ff8df2195ab6383a3533fb7b970736f8a"
+                  "en": "An application that fails to open raises the open error of its runtime, of exactly that class: `InvalidArgumentException` in PHP, `Error` in Node and `ValueError` in Python, also when a file that it reads is not valid JSON or not valid UTF-8; only a build file that does not hold a build id raises the subclass `InvalidBuild` of that class (HY-125.5).",
+                  "ko": "열리지 않는 애플리케이션은 자기 runtime의 open 오류를 정확히 그 클래스로 던진다: PHP에서는 `InvalidArgumentException`, Node에서는 `Error`, Python에서는 `ValueError`이며, 읽는 파일이 유효한 JSON이나 유효한 UTF-8이 아닐 때에도 그렇다. build id를 담지 않은 build 파일만 그 클래스의 하위 클래스 `InvalidBuild`를 던진다(HY-125.5).",
+                  "koSource": "e94f1afc963b1f60ab097047c59e04588e7fc6ad671362552e687b2d47ab5ad4"
                 },
                 {
                   "id": "HY-106.7",
