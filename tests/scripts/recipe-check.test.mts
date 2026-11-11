@@ -7,6 +7,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
+import { validators } from '../../scripts/recipe/validators.mts';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const repo = path.resolve(here, '..', '..');
@@ -17,6 +18,13 @@ const candidate = path.join(repo, 'scripts', 'recipe', 'candidate.mts');
 const phpAutoload = (root: string): string => path.join(root, 'vendor', 'autoload.php');
 
 type Mutation = { id: string; file: string; code: string; from?: string; to?: string; rename?: string; create?: string; delete?: boolean };
+
+test('the schema term is the vocabulary: a status number is not a term', () => {
+  const text = readFileSync(path.join(fixture, 'contracts', 'interfaces.json'), 'utf8');
+  const spec = validators().spec;
+  assert.equal(spec(JSON.parse(text)), true);
+  assert.equal(spec(JSON.parse(text.replace('"output": "string",', '"output": "404",'))), false);
+});
 
 const mutations = JSON.parse(readFileSync(path.join(fixture, 'mutations.json'), 'utf8')) as Mutation[];
 
