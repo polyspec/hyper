@@ -1,0 +1,139 @@
+{
+  "languages": {
+    "php": {
+      "sources": ["packages/server/php/src"],
+      "tests": ["packages/server/php/tests"],
+      "barrel": [],
+      "runner": "packages/server/php/tests/CaseRunnerTest.php::CaseRunnerTest::testCases"
+    },
+    "node": {
+      "sources": ["packages/server/ts/src"],
+      "tests": ["packages/server/ts/tests"],
+      "barrel": ["packages/server/ts/src/index.ts"],
+      "runner": "packages/server/ts/tests/case-runner.test.mts::cases"
+    },
+    "python": {
+      "sources": ["packages/server/python/src/polyspec/hyper"],
+      "tests": ["packages/server/python/tests"],
+      "barrel": ["packages/server/python/src/polyspec/hyper/__init__.py"],
+      "runner": "packages/server/python/tests/test_case_runner.py::CaseRunner.test_cases"
+    }
+  },
+  "outside": [],
+  "concerns": [
+    {
+      "id": "csrf",
+      "rules": ["HY-1"],
+      "cases": ["contracts/csrf.json"],
+      "units": [
+        {
+          "id": "csrf",
+          "native": {
+            "php": { "file": "packages/server/php/src/Csrf.php", "kind": "class", "internal": true },
+            "node": { "file": "packages/server/ts/src/csrf.ts", "kind": "class", "internal": true },
+            "python": { "file": "packages/server/python/src/polyspec/hyper/_csrf.py", "kind": "class", "internal": true }
+          },
+          "members": [
+            {
+              "id": "csrf.constructor",
+              "kind": "constructor",
+              "visibility": "internal",
+              "inputs": ["string"],
+              "output": "csrf",
+              "errors": [],
+              "state": "Checks the secret.",
+              "native": {
+                "php": { "symbol": "packages/server/php/src/Csrf.php::Polyspec\\Hyper\\Csrf::__construct", "signature": "public function __construct(string $secret)" },
+                "node": { "symbol": "packages/server/ts/src/csrf.ts::Csrf.constructor", "signature": "constructor(secret: string)" },
+                "python": { "symbol": "packages/server/python/src/polyspec/hyper/_csrf.py::Csrf.__init__", "signature": "def __init__(self, secret: str) -> None" }
+              }
+            },
+            {
+              "id": "csrf.mask",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": ["string"],
+              "output": "string",
+              "errors": [],
+              "state": "Masks the token.",
+              "native": {
+                "php": { "symbol": "packages/server/php/src/Csrf.php::Polyspec\\Hyper\\Csrf::mask", "signature": "public function mask(string $token): string" },
+                "node": { "symbol": "packages/server/ts/src/csrf.ts::Csrf.mask", "signature": "mask(token: string): string" },
+                "python": { "symbol": "packages/server/python/src/polyspec/hyper/_csrf.py::Csrf.mask", "signature": "def mask(self, token: str) -> str" }
+              }
+            },
+            {
+              "id": "csrf.raw",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "string",
+              "errors": [],
+              "state": "Returns the raw token.",
+              "native": {
+                "php": { "symbol": "packages/server/php/src/Csrf.php::Polyspec\\Hyper\\Csrf::raw", "signature": "public function raw(): string" },
+                "node": { "symbol": "packages/server/ts/src/csrf.ts::Csrf.raw", "signature": "raw(): string" },
+                "python": { "symbol": "packages/server/python/src/polyspec/hyper/_csrf.py::Csrf.raw", "signature": "def raw(self) -> str" }
+              }
+            },
+            {
+              "id": "csrf.fold",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [],
+              "output": "string",
+              "errors": [],
+              "state": "Folds the token for the mask.",
+              "native": {
+                "php": { "symbol": "packages/server/php/src/Csrf.php::Polyspec\\Hyper\\Csrf::fold", "signature": "private function fold(): string" },
+                "node": { "symbol": "packages/server/ts/src/csrf.ts::Csrf.fold", "signature": "private fold(): string" },
+                "python": { "symbol": "packages/server/python/src/polyspec/hyper/_csrf.py::Csrf._fold", "signature": "def _fold(self) -> str" }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "media-type",
+      "rules": ["HY-2"],
+      "cases": ["contracts/media-type.json"],
+      "units": [
+        {
+          "id": "media-type",
+          "native": {
+            "php": { "file": "packages/server/php/src/MediaType.php", "kind": "class", "internal": false },
+            "node": {
+              "file": "packages/server/ts/src/media-type.ts",
+              "kind": "class",
+              "internal": false,
+              "types": [{ "name": "Essence", "declaration": "export type Essence = string;" }]
+            },
+            "python": { "file": "packages/server/python/src/polyspec/hyper/media_type.py", "kind": "class", "internal": false }
+          },
+          "members": [
+            {
+              "id": "media-type.essence",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [],
+              "output": "string",
+              "errors": [],
+              "state": "Returns the essence.",
+              "native": {
+                "php": { "symbol": "packages/server/php/src/MediaType.php::Polyspec\\Hyper\\MediaType::essence", "signature": "public function essence(): string" },
+                "node": { "symbol": "packages/server/ts/src/media-type.ts::MediaType.essence", "signature": "essence(): string" },
+                "python": { "symbol": "packages/server/python/src/polyspec/hyper/media_type.py::MediaType.essence", "signature": "def essence(self) -> str" }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "index",
+      "rules": [],
+      "cases": { "none": "The barrels hold only re-exports, which the barrel check reads.", "tests": [] }
+    }
+  ]
+}

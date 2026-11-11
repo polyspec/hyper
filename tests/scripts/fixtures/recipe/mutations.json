@@ -1,0 +1,19 @@
+[
+  { "id": "member-added", "file": "packages/server/php/src/Csrf.php", "from": "    public function raw(): string", "to": "    public function extra(): string\n    {\n        return 'x';\n    }\n\n    public function raw(): string", "code": "MEMBER_ADDED" },
+  { "id": "member-removed", "file": "packages/server/ts/src/csrf.ts", "from": "  raw(): string {\n    return 'x';\n  }\n\n", "to": "", "code": "MEMBER_MISSING" },
+  { "id": "member-renamed", "file": "packages/server/python/src/polyspec/hyper/_csrf.py", "from": "def raw(self)", "to": "def rawer(self)", "code": "MEMBER_MISSING" },
+  { "id": "member-retyped", "file": "packages/server/php/src/MediaType.php", "from": "essence(): string", "to": "essence(): int", "code": "MEMBER_SIGNATURE" },
+  { "id": "visibility-public-to-internal", "file": "packages/server/php/src/MediaType.php", "from": "    public function essence", "to": "    /** @internal */\n    public function essence", "code": "MEMBER_VISIBILITY" },
+  { "id": "visibility-to-private", "file": "packages/server/ts/src/media-type.ts", "from": "  essence(): string {", "to": "  private essence(): string {", "code": "MEMBER_VISIBILITY" },
+  { "id": "member-moved-file", "file": "packages/server/python/src/polyspec/hyper/media_type.py", "rename": "packages/server/python/src/polyspec/hyper/media_extra.py", "code": "MEMBER_MOVED" },
+  { "id": "second-unit-in-file", "file": "packages/server/ts/src/csrf.ts", "from": "export class Csrf {", "to": "export class Extra {}\n\nexport class Csrf {", "code": "UNIT_COUNT" },
+  { "id": "file-renamed-against-hyr-4", "file": "packages/server/ts/src/csrf.ts", "rename": "packages/server/ts/src/csrf-token.ts", "code": "UNIT_FILE" },
+  { "id": "unnamed-file", "file": "packages/server/ts/src/helper.ts", "create": "export const helper = 1;\n", "code": "FILE_UNOWNED" },
+  { "id": "file-missing", "file": "packages/server/ts/src/media-type.ts", "delete": true, "code": "FILE_MISSING" },
+  { "id": "type-added", "file": "packages/server/ts/src/csrf.ts", "from": "export class Csrf {", "to": "export type Mode = 'a' | 'b';\n\nexport class Csrf {", "code": "TYPE_UNLISTED" },
+  { "id": "type-changed", "file": "packages/server/ts/src/media-type.ts", "from": "export type Essence = string;", "to": "export type Essence = number;", "code": "TYPE_CHANGED" },
+  { "id": "barrel-export-added", "file": "packages/server/ts/src/index.ts", "from": "export { MediaType } from './media-type.ts';", "to": "export { MediaType } from './media-type.ts';\nexport { Csrf } from './csrf.ts';", "code": "BARREL_EXPORT" },
+  { "id": "private-name-used-elsewhere", "file": "packages/server/python/src/polyspec/hyper/media_type.py", "from": "class MediaType:", "to": "from polyspec.hyper._csrf import Csrf\n\nVALUE = Csrf()._fold()\n\n\nclass MediaType:", "code": "PRIVATE_USED" },
+  { "id": "test-added-without-spec", "file": "packages/server/ts/tests/extra.test.mts", "create": "import { test } from 'node:test';\n\ntest('extra', () => {});\n", "code": "TEST_UNNAMED" },
+  { "id": "spec-rule-unknown", "file": "contracts/interfaces.json", "from": "\"rules\": [\"HY-2\"]", "to": "\"rules\": [\"HY-9\"]", "code": "RULE_UNKNOWN" }
+]
