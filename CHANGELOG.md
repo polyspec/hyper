@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- The build id is read by the unit `Build` with the static member `read(file)` in the three servers, which fails with the error unit `InvalidBuild` and the same message that names the path of the file; PHP `App` holds the build id as a string. The cases of the native build file tests are in `contracts/build.json` (HY-125.5) (H28.11).
+
 - The spec lists the members of the unit `Response` of the three servers, and `send`, `sendReplacing` and `writeHeaders` for PHP alone (HY-100.30). The Python `Response` declares `status`, `headers` and `body` as attributes of the class, as PHP and Node declare them as properties (HY-130) (H28.11).
 
 - `make recipe-check` names an internal member of a public Python module with a leading `_`, as HYR-5 states, and no longer reports it as `MEMBER_NAME` (H28.11).

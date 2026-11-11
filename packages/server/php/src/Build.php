@@ -12,27 +12,22 @@ namespace Polyspec\Hyper;
  */
 final class Build
 {
-    private function __construct(public readonly string $id)
-    {
-    }
-
     /**
-     * Reads `build.json` of a server program. The file must exist, be valid JSON and hold exactly the key `build` with
-     * a build id of 64 lowercase hexadecimal characters; a failure names the absolute path of the file (HY-125).
+     * Reads the build id of a `build.json` file. The file must exist, be valid JSON and hold exactly the key `build`
+     * with a build id of 64 lowercase hexadecimal characters; a failure names the path of the file (HY-125.5).
      *
-     * @throws \InvalidArgumentException
+     * @throws InvalidBuild
      */
-    public static function open(string $program): self
+    public static function read(string $file): string
     {
-        $file = "{$program}/build.json";
         $text = is_file($file) ? file_get_contents($file) : false;
         if ($text === false) {
-            throw new \InvalidArgumentException("{$file} is missing or not readable (HY-125)");
+            throw new InvalidBuild("{$file} is missing or not readable (HY-125)");
         }
         try {
             $value = json_decode($text, true, flags: JSON_THROW_ON_ERROR);
         } catch (\JsonException) {
-            throw new \InvalidArgumentException("{$file} is not valid JSON (HY-125)");
+            throw new InvalidBuild("{$file} is not valid JSON (HY-125)");
         }
         if (
             !is_array($value)
@@ -40,12 +35,12 @@ final class Build
             || !is_string($value['build'])
             || preg_match('/^[0-9a-f]{64}$/D', $value['build']) !== 1
         ) {
-            throw new \InvalidArgumentException(
+            throw new InvalidBuild(
                 "{$file} does not hold exactly the key build with a build id of 64 lowercase hexadecimal "
                 . "characters (HY-125)",
             );
         }
 
-        return new self($value['build']);
+        return $value['build'];
     }
 }

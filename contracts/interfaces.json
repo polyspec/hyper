@@ -848,24 +848,75 @@
         "HY-48",
         "HY-125"
       ],
-      "cases": [],
+      "cases": [
+        "contracts/build.json"
+      ],
       "units": [
         {
           "id": "build",
           "native": {
             "php": {
               "file": "packages/server/php/src/Build.php",
-              "kind": "class",
+              "kind": "functions",
               "internal": true
             },
             "node": {
               "file": "packages/server/ts/src/build.ts",
-              "kind": "functions",
+              "kind": "class",
               "internal": true
             },
             "python": {
               "file": "packages/server/python/src/polyspec/hyper/_build.py",
-              "kind": "functions",
+              "kind": "class",
+              "internal": true
+            }
+          },
+          "members": [
+            {
+              "id": "build.read",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "string"
+              ],
+              "output": "string",
+              "errors": [
+                "invalid-build"
+              ],
+              "state": "Reads the build id of a build.json file.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Build.php::Polyspec\\Hyper\\Build::read",
+                  "signature": "public static function read(string $file): string"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/build.ts::Build.read",
+                  "signature": "static read(file: string): string"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_build.py::Build.read",
+                  "signature": "def read(file: str) -> str"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "invalid-build",
+          "native": {
+            "php": {
+              "file": "packages/server/php/src/InvalidBuild.php",
+              "kind": "class",
+              "internal": true
+            },
+            "node": {
+              "file": "packages/server/ts/src/invalid-build.ts",
+              "kind": "class",
+              "internal": true
+            },
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/_invalid_build.py",
+              "kind": "class",
               "internal": true
             }
           },
@@ -4618,6 +4669,42 @@
             "router": {
               "compare": "raises",
               "sentence": "HY-4.6"
+            }
+          }
+        }
+      }
+    },
+    "build.json": {
+      "fixtures": {},
+      "sections": {
+        "read": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "text": {
+              "role": "input"
+            },
+            "build": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-125.5",
+              "state": "`build` is the build id that a `build.json` with the text `text` gives, or null when the file fails; a null `text` is a missing file."
+            },
+            "error": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-125.5",
+              "state": "`error` is `invalid-build` when the file fails with a message that names its path, or null when it gives a build id."
             }
           }
         }

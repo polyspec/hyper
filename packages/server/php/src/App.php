@@ -23,7 +23,7 @@ final class App
     private readonly Reads $reads;
 
     /** The build id of the application, which every JSON response holds (HY-125, HY-128). */
-    private readonly Build $build;
+    private readonly string $build;
 
     /** The error types that end the script with a fatal error, which `run` answers with the plain 500 (HY-60). */
     private const FATAL = [E_ERROR, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR];
@@ -71,7 +71,7 @@ final class App
         $this->container = new Container();
         $this->renderer = Renderer::open($program, $timezone, $functions);
         $this->reads = Reads::open($program);
-        $this->build = Build::open($program);
+        $this->build = Build::read("{$program}/build.json");
     }
 
     /**
@@ -763,10 +763,10 @@ final class App
                 $this->timezone,
                 $route['name'],
                 $request->params(),
-                $this->build->id,
+                $this->build,
                 $context === null
                     ? null
-                    : Context::member($this->build->id, $context, $request->header('Hyper-Context')),
+                    : Context::member($this->build, $context, $request->header('Hyper-Context')),
                 self::withoutContext($shared),
                 $data,
                 $kept,
@@ -998,13 +998,13 @@ final class App
             $embedded = array_intersect_key($data, array_flip($routeRegionNames));
             // HY-31: an embedded document holds build and context with its value, whatever the request holds.
             $context = isset($shared['context'])
-                ? Context::member($this->build->id, $shared['context'], null)
+                ? Context::member($this->build, $shared['context'], null)
                 : null;
             $response = JsonCodec::value(
                 $this->timezone,
                 $route['name'],
                 $request->params(),
-                $this->build->id,
+                $this->build,
                 $context,
                 self::withoutContext($shared),
                 $embedded,
@@ -1030,7 +1030,7 @@ final class App
             $this->manifest->page->name,
             $routeRegions,
             $response === null ? null : $this->renderer->bind(['response' => $response]),
-            $this->build->id,
+            $this->build,
         );
     }
 

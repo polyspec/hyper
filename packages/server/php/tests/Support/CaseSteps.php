@@ -6,6 +6,7 @@ namespace Polyspec\Hyper\Tests\Support;
 
 use Polyspec\Hyper\Tests\CaseReader;
 use Polyspec\Hyper\Tests\Support\Steps\AcceptSteps;
+use Polyspec\Hyper\Tests\Support\Steps\BuildSteps;
 use Polyspec\Hyper\Tests\Support\Steps\ClientSteps;
 use Polyspec\Hyper\Tests\Support\Steps\ContextSteps;
 use Polyspec\Hyper\Tests\Support\Steps\CookiesSteps;
@@ -29,6 +30,7 @@ final class CaseSteps
             'accept.json parse' => AcceptSteps::parse(...),
             'accept.json select' => AcceptSteps::select(...),
             'cookies.json parse' => CookiesSteps::parse(...),
+            'build.json read' => BuildSteps::read(...),
             'csrf.json mask' => CsrfSteps::mask(...),
             'csrf.json masked' => CsrfSteps::masked(...),
             'csrf.json verify' => CsrfSteps::verify(...),

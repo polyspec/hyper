@@ -9,7 +9,7 @@ import { Csrf } from './csrf.js';
 import type { FileSessions } from './file-sessions.js';
 import type { RedisSessions } from './redis-sessions.js';
 import { createListener, createServer, type Listener, type ServerOptions } from './http.js';
-import { readBuildId } from './build.js';
+import { Build } from './build.js';
 import { JsonCodec } from './json-codec.js';
 import { JsonDecodeError } from './json-decode-error.js';
 import { warningsAsErrors } from './warnings.js';
@@ -227,7 +227,7 @@ export class App<S extends object = Record<string, never>> {
       if (!isAbsolute(path)) throw new Error(`hyper: ${path} is not an absolute path`);
     }
     if (typeof options.build !== 'string' || !isAbsolute(options.build)) throw new Error(`hyper: the build file ${String(options.build)} is not an absolute path`);
-    const build = readBuildId(options.build);
+    const build = Build.read(options.build);
     if (options.context !== undefined && typeof options.context !== 'function') throw new Error('hyper: the context must be a function (HY-106)');
     const manifest = checkManifest(readJsonFile(options.manifest));
     const index = checkTemplateIndex(readJsonFile(options.templates.index), `the template index ${options.templates.index}`);

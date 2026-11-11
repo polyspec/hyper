@@ -1,21 +1,10 @@
-// The build id that App.open reads (HY-125, HY-48) and the member build of every JSON response (HY-128).
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+// The build file option of App.open (HY-48.11) and the member build of every JSON response (HY-128); contracts/build.json
+// holds the cases of the build id that the file gives (HY-125).
+import { describe, expect, it } from 'vitest';
 import { App } from '../src/index.js';
 import { Fixture, FIXTURES, handlers, JSON_REGION, TEMPLATES } from './support.js';
 
 const ONES = '1'.repeat(64);
-let directory: string;
-
-beforeEach(() => {
-  directory = mkdtempSync(join(tmpdir(), 'hyper-build-'));
-});
-
-afterEach(() => {
-  rmSync(directory, { recursive: true, force: true });
-});
 
 // Opens the fixture application with the given build file and returns the rejection of open (HY-125).
 async function openWith(build: string): Promise<unknown> {
@@ -25,24 +14,7 @@ async function openWith(build: string): Promise<unknown> {
   );
 }
 
-describe('App.open reads the build id (HY-125)', () => {
-  it('fails with the path of a missing build file', async () => {
-    const missing = join(directory, 'build.json');
-    await expect(openWith(missing)).resolves.toEqual(expect.objectContaining({ message: expect.stringContaining(missing) }));
-  });
-
-  it.each([
-    ['an empty object', '{}'],
-    ['an uppercase build id', `{"build":"${'A'.repeat(64)}"}`],
-    ['a short build id', '{"build":"ABC"}'],
-    ['an extra key', `{"build":"${ONES}","extra":1}`],
-    ['text that is not JSON', 'build'],
-  ])('fails with the path of a build file that holds %s', async (_name, text) => {
-    const path = join(directory, 'build.json');
-    writeFileSync(path, text);
-    await expect(openWith(path)).resolves.toEqual(expect.objectContaining({ message: expect.stringContaining(path) }));
-  });
-
+describe('App.open takes the build file by an absolute path (HY-48.11)', () => {
   it('fails with the path of a build file whose option is relative', async () => {
     await expect(openWith('build.json')).resolves.toEqual(expect.objectContaining({ message: expect.stringContaining('build.json') }));
   });

@@ -3,6 +3,7 @@
 # through the reader. The runner calls each step with the reader of one case.
 from . import (
     accept_steps,
+    build_steps,
     client_steps,
     context_steps,
     cookies_steps,
@@ -24,6 +25,7 @@ STEPS = {
     ("context.json", "contexts"): context_steps.contexts,
     ("context.json", "cases"): context_steps.cases,
     ("cookies.json", "parse"): cookies_steps.parse,
+    ("build.json", "read"): build_steps.read,
     ("csrf.json", "mask"): csrf_steps.mask,
     ("csrf.json", "masked"): csrf_steps.masked,
     ("csrf.json", "verify"): csrf_steps.verify,

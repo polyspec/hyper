@@ -14,7 +14,7 @@ from ._accept import Accept
 from ._invalid_accept import InvalidAccept
 from .client import Choice, ClientRendering
 from .container import Container
-from ._build import read_build_id
+from ._build import Build
 from ._representation_entries import check_handlers as check_representation_handlers
 from . import _context
 from ._context import Context
@@ -94,7 +94,7 @@ class App:
 
         self.renderer = Renderer.open(program, timezone, functions)
         # HY-125: the build id of the program directory, read when the application opens.
-        self.build = read_build_id(str(Path(program) / "build.json"))
+        self.build = Build.read(str(Path(program) / "build.json"))
         from ._reads import Reads
 
         self.reads = Reads.open(program)

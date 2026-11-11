@@ -11,6 +11,7 @@ use Polyspec\Hyper\BadRequest;
 use Polyspec\Hyper\Build;
 use Polyspec\Hyper\Csrf;
 use Polyspec\Hyper\Forbidden;
+use Polyspec\Hyper\InvalidBuild;
 use Polyspec\Hyper\Manifest;
 use Polyspec\Hyper\NotFound;
 use Polyspec\Hyper\Reads;
@@ -1771,11 +1772,15 @@ final class AppTest extends TestCase
                 foreach ($valid as $name => $value) {
                     file_put_contents("{$program}/{$name}", $text);
                     $open = match ($name) {
-                        'build.json' => fn () => Build::open($program),
+                        'build.json' => fn () => Build::read("{$program}/build.json"),
                         'program.json' => fn () => Renderer::open($program, 'Z'),
                         default => fn () => Reads::open($program),
                     };
-                    self::assertSame(\InvalidArgumentException::class, $failure($open), $name);
+                    self::assertSame(
+                        $name === 'build.json' ? InvalidBuild::class : \InvalidArgumentException::class,
+                        $failure($open),
+                        $name,
+                    );
                     file_put_contents("{$program}/{$name}", $value);
                 }
             }
