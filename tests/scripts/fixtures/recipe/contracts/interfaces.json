@@ -187,6 +187,14 @@
       "shape": { "term": "string" },
       "only": { "languages": ["node"], "rule": "HY-2", "quote": "A media type is one essence." },
       "native": { "node": { "symbol": "packages/server/ts/src/media-type.ts::Essence", "declaration": "export type Essence = string;" } }
+    },
+    {
+      "id": "csrfParts",
+      "visibility": "internal",
+      "unit": "csrf",
+      "shape": { "fields": { "raw": "string" }, "optional": [] },
+      "only": { "languages": ["python"], "rule": "HY-1", "quote": "The server masks the token of a request." },
+      "native": { "python": { "symbol": "packages/server/python/src/polyspec/hyper/_csrf.py::CsrfParts", "declaration": "class CsrfParts(TypedDict):\n    raw: str" } }
     }
   ],
   "caseFiles": {

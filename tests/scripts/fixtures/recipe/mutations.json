@@ -51,5 +51,7 @@
   { "id": "node-sources-missing", "file": "contracts/interfaces.json", "from": "\"sources\": [\"packages/server/ts/src\"]", "to": "\"sources\": [\"packages/server/ts/missing\"]", "code": "READER_FAILED" },
   { "id": "node-tests-missing", "file": "contracts/interfaces.json", "from": "\"tests\": [\"packages/server/ts/tests\"]", "to": "\"tests\": [\"packages/server/ts/missing\"]", "code": "READER_FAILED" },
   { "id": "python-sources-missing", "file": "contracts/interfaces.json", "from": "\"sources\": [\"packages/server/python/src/polyspec/hyper\"]", "to": "\"sources\": [\"packages/server/python/src/polyspec/missing\"]", "code": "READER_FAILED" },
-  { "id": "python-tests-missing", "file": "contracts/interfaces.json", "from": "\"tests\": [\"packages/server/python/tests\"]", "to": "\"tests\": [\"packages/server/python/missing\"]", "code": "READER_FAILED" }
+  { "id": "python-tests-missing", "file": "contracts/interfaces.json", "from": "\"tests\": [\"packages/server/python/tests\"]", "to": "\"tests\": [\"packages/server/python/missing\"]", "code": "READER_FAILED" },
+  { "id": "python-typed-field-renamed", "file": "packages/server/python/src/polyspec/hyper/_csrf.py", "from": "    raw: str", "to": "    token: str", "code": "TYPE_SHAPE" },
+  { "id": "python-type-spec-field-renamed", "file": "contracts/interfaces.json", "from": "\"fields\": { \"raw\": \"string\" }", "to": "\"fields\": { \"token\": \"string\" }", "code": "TYPE_SHAPE" }
 ]

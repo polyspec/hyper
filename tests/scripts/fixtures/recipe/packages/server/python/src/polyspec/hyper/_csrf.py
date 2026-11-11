@@ -1,6 +1,11 @@
 """The CSRF token of HY-1."""
 
 from __future__ import annotations
+from typing import TypedDict
+
+
+class CsrfParts(TypedDict):
+    raw: str
 
 
 class Csrf:
