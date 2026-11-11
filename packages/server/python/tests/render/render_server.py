@@ -110,7 +110,7 @@ class Served:
         lines = [
             f"GET {target} HTTP/1.1",
             "Host: 127.0.0.1",
-            "Accept: application/json",
+            "Accept: application/vnd.hyper+json",
             "Connection: close",
             *(f"{name}: {value}" for name, value in (headers or {}).items()),
         ]
@@ -194,7 +194,7 @@ class DisconnectTest(unittest.TestCase):
         self.assertEqual(
             [
                 ("response", "/", 200, replies[0]),
-                ("disconnect", "/", "application/json", True, replies[0]),
+                ("disconnect", "/", "application/vnd.hyper+json", True, replies[0]),
             ],
             events,
         )

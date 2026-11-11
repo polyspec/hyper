@@ -8,6 +8,7 @@ import re
 from typing import Optional
 
 from ._fields import Fields, Files
+from ._media import JSON
 from .uploaded_file import UploadedFile
 from ._session import Flash
 
@@ -33,8 +34,11 @@ class Request:
         https: bool = False,
         selection: object = None,
         body_size: Optional[int] = None,
+        media: Optional[str] = None,
     ):
         self._method = method
+        # The media type that the server selected for the request (HY-116); None until the server selects it.
+        self._media = media
         # The size of the body that the server received, when it stopped reading a body larger than the limit
         # (HY-59); None counts the body itself.
         self._given_body_size = body_size
@@ -77,6 +81,10 @@ class Request:
         """Returns a copy whose header of the name, compared without case as `header` reads it, has the value
         (HY-97)."""
         return self._copy(headers={**self._headers, name.lower(): value})
+
+    def _with_media(self, media: str) -> "Request":
+        """Returns a copy that holds the media type that the server selected for the request (HY-116)."""
+        return self._copy(media=media)
 
     def _with_selection(self, value: object) -> "Request":
         """Returns a copy that carries the value of the choice of the client rendering selection (HY-62)."""
@@ -131,8 +139,11 @@ class Request:
         return self._headers.get(name.lower())
 
     def wants_json(self) -> bool:
-        """Returns True when the request accepts JSON (HY-15)."""
-        return "application/json" in (self.header("Accept") or "")
+        """Returns True when the selected media type of the request is application/vnd.hyper+json (HY-15, HY-116).
+        The selection is read from the request and `Accept` is not read again; a request without a selection fails."""
+        if self._media is None:
+            raise RuntimeError("the request holds no selected media type (HY-116)")
+        return self._media == JSON
 
     def is_region_request(self) -> bool:
         """Returns True for a region request: a JSON request that carries the HX-Request header (HY-15)."""
@@ -222,6 +233,7 @@ class Request:
             "params": self._params,
             "selection": self._selection,
             "body_size": self._given_body_size,
+            "media": self._media,
         }
         state.update(changes)
         return Request(
@@ -237,6 +249,7 @@ class Request:
             self._https,
             state["selection"],
             state["body_size"],
+            state["media"],
         )
 
 

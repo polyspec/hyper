@@ -144,7 +144,7 @@ class SelectionTest(unittest.TestCase):
             Request(
                 "GET",
                 "/_props/items/7",
-                {"Host": "client.test", "Accept": "application/json"},
+                {"Host": "client.test", "Accept": "application/vnd.hyper+json"},
             ),
             ArraySession(),
         )

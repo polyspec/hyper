@@ -56,19 +56,26 @@ class RequestValuesTest(unittest.TestCase):
         )
 
     def test_a_region_request_wants_json_with_the_hx_request_header(self) -> None:
+        # HY-15, HY-116: the kind reads the selected media type that the server holds, not the Accept header.
+        json_type = "application/vnd.hyper+json"
         self.assertTrue(
-            Request(
-                "GET", "/x", {"Accept": "application/json", "HX-Request": "true"}
-            ).is_region_request()
+            Request("GET", "/x", {"HX-Request": "true"})
+            ._with_media(json_type)
+            .is_region_request()
         )
         self.assertFalse(
-            Request("GET", "/x", {"Accept": "application/json"}).is_region_request()
+            Request("GET", "/x", {})._with_media(json_type).is_region_request()
         )
         self.assertFalse(
-            Request(
-                "GET", "/x", {"Accept": "text/html", "HX-Request": "true"}
-            ).is_region_request()
+            Request("GET", "/x", {"HX-Request": "true"})
+            ._with_media("text/html")
+            .is_region_request()
         )
+
+    def test_the_kind_of_a_request_without_a_selected_type_fails(self) -> None:
+        # HY-116: a request that the server did not select has no kind, and its Accept header is not read.
+        with self.assertRaises(RuntimeError):
+            Request("GET", "/x", {"Accept": "application/vnd.hyper+json"}).wants_json()
 
     def test_the_current_path_of_a_header_url(self) -> None:
         self.assertEqual(

@@ -22,7 +22,7 @@ from polyspec.hyper.session import ArraySession
 from .fixture_app import FIXTURES, PROGRAM
 from .fixture_handlers import Counter, fixture_app, handlers
 
-JSON = {"Accept": "application/json", "HX-Request": "true"}
+JSON = {"Accept": "application/vnd.hyper+json", "HX-Request": "true"}
 FORM = {"Content-Type": "application/x-www-form-urlencoded"}
 ROWS = {
     "items": ["a<", "b0"],
@@ -174,7 +174,7 @@ class DocumentTest(FixtureTest):
         response = self.get("/items/a%20b", JSON)
         self.assertEqual(200, response.status)
         self.assertEqual(
-            "application/json; charset=utf-8", response.headers["Content-Type"]
+            "application/vnd.hyper+json", response.headers["Content-Type"]
         )
         self.assertEqual(
             '{"env":{"timezone":"+09:00"},"route":"item","params":{"id":"a b"},"shared":{"title":"Item"},'
@@ -184,7 +184,7 @@ class DocumentTest(FixtureTest):
 
     def test_a_document_request_returns_every_region_in_manifest_order(self) -> None:
         # HY-15, HY-18
-        answered = self.body(self.get("/", {"Accept": "application/json"}))
+        answered = self.body(self.get("/", {"Accept": "application/vnd.hyper+json"}))
         self.assertEqual("home", answered["route"])
         self.assertEqual(["side", "content"], list(answered["regions"]))
 
@@ -193,7 +193,7 @@ class DocumentTest(FixtureTest):
         self.assertEqual(["content"], list(self.body(self.get("/", JSON))["regions"]))
         self.assertEqual(
             ["side", "content"],
-            list(self.body(self.get("/", {"Accept": "application/json"}))["regions"]),
+            list(self.body(self.get("/", {"Accept": "application/vnd.hyper+json"}))["regions"]),
         )
         self.assertEqual(
             "Accept, HX-Request, HX-Current-URL", self.get("/", JSON).headers["Vary"]
@@ -214,7 +214,7 @@ class DocumentTest(FixtureTest):
     def test_the_route_regions_follow_the_page_region(self) -> None:
         # HY-30
         region = self.body(self.get("/list", JSON))
-        document = self.body(self.get("/list", {"Accept": "application/json"}))
+        document = self.body(self.get("/list", {"Accept": "application/vnd.hyper+json"}))
         self.assertEqual(["content", "rows"], list(region["regions"]))
         self.assertEqual(["side", "content", "rows"], list(document["regions"]))
         self.assertEqual(ROWS, region["regions"]["rows"])
@@ -275,10 +275,10 @@ class DocumentTest(FixtureTest):
         )
         self.assertIn('id="hy-data"', embedded.body)
         plain = self.app().handle(
-            Request("GET", "/list", {"Accept": "application/json"}), self.session
+            Request("GET", "/list", {"Accept": "application/vnd.hyper+json"}), self.session
         )
         asked = self.app().handle(
-            Request("GET", "/list", {"Accept": "application/json"}, "embed=1"),
+            Request("GET", "/list", {"Accept": "application/vnd.hyper+json"}, "embed=1"),
             self.session,
         )
         self.assertEqual(self.unmasked(plain.body), self.unmasked(asked.body))
@@ -297,7 +297,7 @@ class DocumentTest(FixtureTest):
         answered = self.body(
             self.app().handle(
                 Request(
-                    "GET", "/list", {"Accept": "application/json"}, cookies=cookies
+                    "GET", "/list", {"Accept": "application/vnd.hyper+json"}, cookies=cookies
                 ),
                 self.session,
             )
@@ -326,7 +326,7 @@ class DocumentTest(FixtureTest):
                 Request(
                     "GET",
                     "/list",
-                    {"Accept": "application/json"},
+                    {"Accept": "application/vnd.hyper+json"},
                     "rows=0",
                     cookies=cookies,
                 ),
@@ -392,7 +392,7 @@ class ActionTest(FixtureTest):
         self.assertEqual(303, response.status)
         self.assertEqual("/items/new", response.headers["Location"])
         self.assertEqual("", response.body)
-        following = self.body(self.get("/", {"Accept": "application/json"}))
+        following = self.body(self.get("/", {"Accept": "application/vnd.hyper+json"}))
         self.assertEqual("moved", following["regions"]["side"]["note"])
         self.assertEqual(
             "/api/items/new",
@@ -506,10 +506,10 @@ class ActionTest(FixtureTest):
 
     def test_a_json_response_has_a_tag_and_a_matching_request_gets_304(self) -> None:
         # HY-53
-        first = self.get("/items/plain", {"Accept": "application/json"})
+        first = self.get("/items/plain", {"Accept": "application/vnd.hyper+json"})
         tag = first.headers["ETag"]
         again = self.get(
-            "/items/plain", {"Accept": "application/json", "If-None-Match": tag}
+            "/items/plain", {"Accept": "application/vnd.hyper+json", "If-None-Match": tag}
         )
         self.assertEqual(304, again.status)
         self.assertEqual("", again.body)
@@ -517,7 +517,7 @@ class ActionTest(FixtureTest):
         self.assertNotIn("Content-Type", again.headers)
         other = self.get(
             "/items/plain",
-            {"Accept": "application/json", "If-None-Match": '"other"'},
+            {"Accept": "application/vnd.hyper+json", "If-None-Match": '"other"'},
         )
         self.assertEqual(200, other.status)
 

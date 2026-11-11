@@ -127,11 +127,11 @@ def get(
 class PageTest(unittest.TestCase):
     def test_a_document_request_receives_the_document_html(self) -> None:
         response = opened().handle(
-            get("/", {"Accept": "application/json"}), ArraySession()
+            get("/", {"Accept": "application/vnd.hyper+json"}), ArraySession()
         )
         self.assertEqual(200, response.status)
         self.assertEqual(
-            "application/json; charset=utf-8", response.headers["Content-Type"]
+            "application/vnd.hyper+json", response.headers["Content-Type"]
         )
         answered = json.loads(response.body)
         self.assertEqual("home", answered["route"])
@@ -142,7 +142,7 @@ class PageTest(unittest.TestCase):
     def test_a_region_request_receives_the_page_and_the_changed_regions(self) -> None:
         store = ArraySession()
         app = opened()
-        app.handle(get("/list", {"Accept": "application/json"}), store)
+        app.handle(get("/list", {"Accept": "application/vnd.hyper+json"}), store)
         # The action of the next request stores the changed topic `rows`; the region request selects the regions
         # that use it.
         app.handle(
@@ -150,7 +150,7 @@ class PageTest(unittest.TestCase):
                 "POST",
                 "/add",
                 {
-                    "Accept": "application/json",
+                    "Accept": "application/vnd.hyper+json",
                     "Content-Type": "application/x-www-form-urlencoded",
                     "HX-Request": "true",
                 },
@@ -164,7 +164,7 @@ class PageTest(unittest.TestCase):
             get(
                 "/list",
                 {
-                    "Accept": "application/json",
+                    "Accept": "application/vnd.hyper+json",
                     "HX-Request": "true",
                     "HX-Current-URL": "http://host.example/list",
                 },
@@ -256,7 +256,7 @@ class ActionTest(unittest.TestCase):
                 "/add",
                 {
                     "Content-Type": "application/x-www-form-urlencoded",
-                    "Accept": "application/json",
+                    "Accept": "application/vnd.hyper+json",
                 },
                 body=urlencode(
                     {"_csrf": masked(_token(app, store)), "name": "taken"}
@@ -303,11 +303,11 @@ class ActionTest(unittest.TestCase):
     def test_the_etag_of_a_json_page_and_the_304_of_a_matching_request(self) -> None:
         store = ArraySession()
         app = opened()
-        first = app.handle(get("/list", {"Accept": "application/json"}), store)
+        first = app.handle(get("/list", {"Accept": "application/vnd.hyper+json"}), store)
         tag = first.headers["ETag"]
         self.assertTrue(tag.startswith('W/"'))
         again = app.handle(
-            get("/list", {"Accept": "application/json", "If-None-Match": tag}), store
+            get("/list", {"Accept": "application/vnd.hyper+json", "If-None-Match": tag}), store
         )
         self.assertEqual(304, again.status)
         self.assertNotIn("Content-Type", again.headers)
@@ -319,7 +319,7 @@ class ActionTest(unittest.TestCase):
             return {}
 
         response = opened_with(shared_loader).handle(
-            get("/", {"Accept": "application/json"}), ArraySession()
+            get("/", {"Accept": "application/vnd.hyper+json"}), ArraySession()
         )
         self.assertEqual(403, response.status)
         self.assertEqual("no-store", response.headers["Cache-Control"])
@@ -340,14 +340,14 @@ class ReferrerPolicyTest(unittest.TestCase):
         self.assertEqual(
             "strict-origin-when-cross-origin", document.headers["Referrer-Policy"]
         )
-        answer = app.handle(get("/", {"Accept": "application/json"}), store)
+        answer = app.handle(get("/", {"Accept": "application/vnd.hyper+json"}), store)
         self.assertEqual(
             "strict-origin-when-cross-origin", answer.headers["Referrer-Policy"]
         )
         again = app.handle(
             get(
                 "/",
-                {"Accept": "application/json", "If-None-Match": answer.headers["ETag"]},
+                {"Accept": "application/vnd.hyper+json", "If-None-Match": answer.headers["ETag"]},
             ),
             store,
         )
@@ -365,7 +365,7 @@ class ReferrerPolicyTest(unittest.TestCase):
             return {}
 
         response = opened_with(shared_loader).handle(
-            get("/", {"Accept": "application/json"}), ArraySession()
+            get("/", {"Accept": "application/vnd.hyper+json"}), ArraySession()
         )
         self.assertEqual(403, response.status)
         self.assertEqual("origin", response.headers["Referrer-Policy"])
@@ -375,7 +375,7 @@ class KeepTest(unittest.TestCase):
     def test_a_conforming_kept_value_replaces_its_path(self) -> None:
         store = ArraySession()
         store.set("_hyper_keep", {"rows": {"open": True}})
-        response = opened().handle(get("/list", {"Accept": "application/json"}), store)
+        response = opened().handle(get("/list", {"Accept": "application/vnd.hyper+json"}), store)
         answered = json.loads(response.body)
         self.assertEqual({"open": True}, answered["kept"]["rows"])
         self.assertEqual(True, answered["kept"]["rows"]["open"])

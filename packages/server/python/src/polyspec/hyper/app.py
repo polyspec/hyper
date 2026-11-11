@@ -8,14 +8,15 @@ import re
 import sys
 import time
 from pathlib import Path
-from typing import Callable, Optional
+from typing import Callable, Optional, Union
 
-from . import _data_model, _json_codec
+from . import _accept, _data_model, _json_codec, _media
 from .client import Choice, ClientRendering
 from .container import Container
 from ._csrf import masked, verify
 from ._data_model import check
 from ._kept import apply, select
+from ._media import JSON, TEXT_HTML
 from ._manifest import Manifest
 from ._planner import changed_topics, select as select_regions
 from .reply import Reply
@@ -30,6 +31,13 @@ from ._warnings_guard import warnings_as_errors
 _FORM_TYPES = ("application/x-www-form-urlencoded", "multipart/form-data")
 _COOKIE_KEPT = re.compile(r"[a-z][a-z0-9_-]*")
 _KEEP_VALUE_LIMIT = 4096
+# HY-116: the types that a request without a client rendering selection can select.
+_PAGE_TYPES = (TEXT_HTML, JSON)
+
+
+def _not_acceptable() -> Response:
+    """Returns the 406 of HY-62 steps 2 and 3, which `Accept` decides."""
+    return Response.text(406, "Not Acceptable").with_header("Vary", "Accept")
 
 
 class App:
@@ -275,13 +283,21 @@ class App:
         route = self.manifest.routes[match["name"]]
         handler = self._route_handlers.get(route["name"], {})
         if client is not None:
-            # HY-62: the data base path answers only JSON requests and actions, before the session is read.
+            # HY-62 step 2: the data base path serves only the JSON type, and the method check follows the selection.
+            chosen = self._negotiate(request, (JSON,))
+            if isinstance(chosen, Response):
+                return chosen
+            if chosen != JSON:
+                return _not_acceptable()
             if request.method != "GET" and (
                 request.method != "POST" or "post" not in handler
             ):
                 return Response.text(405, "Method Not Allowed")
-            if not request.wants_json():
-                return Response.text(406, "Not Acceptable")
+        else:
+            chosen = self._negotiate(request, _PAGE_TYPES)
+            if isinstance(chosen, Response):
+                return chosen
+        request = request._with_media(chosen)
         session = Session(store)
         flash = session.take_flash()
         request = request._with_route(path, match["params"])._with_session(
@@ -291,6 +307,22 @@ class App:
         return self._routed(
             request, route, handler, session, flash, reply, base_path
         )._with_cookies(reply, self.https or request.https)
+
+    def _negotiate(
+        self, request: Request, served: tuple[str, ...]
+    ) -> Union[str, Response]:
+        """Selects the media type of a request among text/html and application/vnd.hyper+json (HY-116), or returns
+        the response that refuses it: 400 for an invalid `Accept`, and 406 with the served types for a request that
+        matches none of them."""
+        try:
+            ranges = _accept.parse(request.header("Accept"))
+        except _accept.InvalidAccept:
+            return Response.text(400, "Bad Request").with_header("Vary", "Accept")
+        chosen = _media.select(ranges, _PAGE_TYPES)
+        if chosen is None:
+            body = "".join(f"{media}\n" for media in served)
+            return Response.text(406, body).with_header("Vary", "Accept")
+        return chosen
 
     def _choice(self, request: Request) -> Optional[Choice]:
         """Returns the choice of the client rendering selection for the request, or None without client rendering
@@ -310,14 +342,18 @@ class App:
             return Response.text(404, "Not Found")
         if request.method != "GET":
             return Response.text(405, "Method Not Allowed")
-        if request.wants_json():
-            return Response.text(406, "Not Acceptable")
+        # HY-62 step 3: the static shell is the only page of this path, and it serves only text/html.
+        chosen = self._negotiate(request, (TEXT_HTML,))
+        if isinstance(chosen, Response):
+            return chosen
+        if chosen != TEXT_HTML:
+            return _not_acceptable()
         return Response(
             200,
             {
                 "Content-Type": "text/html; charset=utf-8",
                 "Cache-Control": "no-cache",
-                "Vary": "Accept",
+                "Vary": "Accept, HX-Request, HX-Current-URL",
             },
             self._shell,
         )
@@ -497,7 +533,7 @@ class App:
             check(request.params())
             body = _json_codec.encode(value)
             headers = {
-                "Content-Type": "application/json; charset=utf-8",
+                "Content-Type": JSON,
                 "Cache-Control": (reply._cache_control_value() or "no-store")
                 if status == 200
                 else "no-store",
