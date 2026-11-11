@@ -1,6 +1,7 @@
 // Names of the recipe check (HYR-4, HYR-5): the words of a name, the file and member names each language takes, and
 // the vocabulary terms. Pure functions; the checks that use them live in the modules next to this one.
 
+import path from 'node:path';
 import { type Lang, type Member, type Visibility } from './types.mts';
 
 const CTOR_NAMES = ['__construct', '__init__', 'constructor'];
@@ -40,12 +41,15 @@ export function readerKey(name: string, kind: string): string {
 }
 
 /** HYR-5 "Names": PHP and Node keep the camelCase name; Python writes it in snake_case, and a private one with a leading `_`. */
-export function expectedNative(lang: Lang, member: Pick<Member, 'id' | 'kind' | 'visibility'>): string | undefined {
+export function expectedNative(lang: Lang, member: Pick<Member, 'id' | 'kind' | 'visibility'>, file = ''): string | undefined {
   if (member.kind === 'constructor') return undefined;
   const camel = member.id.slice(member.id.indexOf('.') + 1);
   if (lang !== 'python') return camel;
   const snake = camel.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toLowerCase();
-  return member.visibility === 'private' ? `_${snake}` : snake;
+  // HYR-5: a private member has a leading `_`, and so has an internal member of a public module; in a `_` module the
+  // module makes it internal.
+  const publicModule = !path.basename(file).startsWith('_');
+  return member.visibility === 'private' || (member.visibility === 'internal' && publicModule) ? `_${snake}` : snake;
 }
 
 /** The last name of a native symbol: `Csrf.raw`, `Polyspec\Hyper\Csrf::raw` and `_csrf.py::Csrf.__init__` all give the member. */

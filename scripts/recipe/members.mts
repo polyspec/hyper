@@ -117,7 +117,7 @@ function checkMember(
   if (found.visibility !== expectedVisibility(lang, m.visibility)) {
     add('MEMBER_VISIBILITY', `${lang} member ${m.id} is ${found.visibility}, spec says ${m.visibility}`);
   }
-  const native = expectedNative(lang, m);
+  const native = expectedNative(lang, m, mn.symbol.split('::')[0]);
   const name = symbolName(mn.symbol);
   if (native !== undefined && name !== native) add('MEMBER_NAME', `${lang} member ${m.id} is named ${name}, HYR-5 says ${native}`);
   if (hasAcronym(name)) add('NAME_ACRONYM', `${lang} member ${m.id} is named ${name}, which holds two capitals in a row (HYR-4)`);
