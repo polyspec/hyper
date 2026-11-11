@@ -4,7 +4,6 @@ import type { Server } from 'node:http';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { expect } from 'vitest';
-import { Router } from '@polyspec/hyper-client';
 import { verifyToken } from '../src/csrf.js';
 import { App, BadRequest, Forbidden, MemorySessionStore, NotFound, Redirect, Request, Result, type AppOptions, type ClientRendering, type Handlers, type Response } from '../src/index.js';
 
@@ -265,33 +264,6 @@ export function port(server: Server): number {
   const address = server.address();
   if (address === null || typeof address === 'string') throw new TypeError('the server listens on no port');
   return address.port;
-}
-
-// A case of a contract of routes: the path and the match that the router gives for it.
-export interface RouteCase {
-  id: string;
-  path: string;
-  result: unknown;
-}
-
-// The cases of a list of a contract of routes, each as [id, case] for `it.each`.
-export const routeCases = (value: unknown): [string, RouteCase][] => list(value).map(record).map((item) => [text(item.id), { id: text(item.id), path: text(item.path), result: item.result }]);
-
-// The contract `contracts/<file>` of routes and the router that is built from its `routes`.
-export function routeContract(file: string): { fixture: Record<string, unknown>; router: Router } {
-  const fixture = record(parsed(readFileSync(new URL(`../../../../contracts/${file}`, import.meta.url), 'utf8')));
-  const router = new Router(list(fixture.routes).map(record).map((route) => ({ name: text(route.name), path: text(route.path) })));
-  return { fixture, router };
-}
-
-// Requires that `fields` is invalid when the contract expects null, and otherwise valid with the expected values.
-export function expectFields(fields: { valid: boolean; values: Iterable<unknown> }, expected: unknown): void {
-  if (expected === null) {
-    expect(fields.valid).toBe(false);
-    return;
-  }
-  expect(fields.valid).toBe(true);
-  expect([...fields.values]).toEqual(expected);
 }
 
 // The contract of the client rendering (HY-62) and the declaration that its cases run against.

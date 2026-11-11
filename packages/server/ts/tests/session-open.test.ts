@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { App, MemorySessionStore, Request, Result, type Handlers, type SessionStore } from '../src/index.js';
 import type { Value } from '../src/values.js';
-import { client, conformance, Fixture, list, record, text } from './support.js';
+import { Fixture } from './support.js';
 
 // A session store that records every call of its interface and keeps the values in memory.
 class CountingStore implements SessionStore {
@@ -33,37 +33,9 @@ class CountingStore implements SessionStore {
   }
 }
 
-// The cases of contracts/client.json that are refused before the session opens, by their ids (HY-62, HY-116).
-const REFUSED_BEFORE_SESSION = [
-  'an_unacceptable_request_under_the_data_base_path_lists_no_page',
-  'a_put_outside_the_data_base_path_is_not_allowed_before_selection',
-  'an_html_request_under_the_data_base_path_is_not_acceptable',
-  'an_html_request_of_a_page_receives_the_shell',
-];
-const cases = list(conformance.cases).map(record);
-const caseOf = (id: string): Record<string, unknown> => {
-  const item = cases.find((candidate) => text(candidate.id) === id);
-  if (item === undefined) throw new Error(`the contract has no case ${id}`);
-  return item;
-};
-
 const withContextDir = fileURLToPath(new URL('../../../../var/contract-programs/with_context/', import.meta.url));
 
 describe('the session of a request (HY-120)', () => {
-  for (const id of REFUSED_BEFORE_SESSION) {
-    it(`opens no session for ${id}`, async () => {
-      const item = caseOf(id);
-      const request = record(item.request);
-      const headers = Object.fromEntries(Object.entries(record(request.headers)).map(([name, value]) => [name, text(value)]));
-      const store = new CountingStore();
-      const app = await new Fixture().app({ clientRendering: client() });
-      const response = await app.handle(Request.from({ method: text(request.method), target: text(request.target), headers }), store);
-      expect(response.status).toBe(item.status);
-      expect(store.calls).toEqual([]);
-      expect(response.headers['Set-Cookie']).toBeUndefined();
-    });
-  }
-
   it('opens no session for a body above the body limit (HY-59)', async () => {
     const store = new CountingStore();
     const app = await new Fixture().app({ bodyLimit: 4 });

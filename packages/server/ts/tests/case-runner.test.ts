@@ -4,11 +4,36 @@ import { mkdirSync, renameSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { it } from 'vitest';
 import { CaseReader } from './case-reader.js';
+import { steps as clientSteps } from './steps/client.js';
+import { steps as contextSteps } from './steps/context.js';
+import { steps as cookiesSteps } from './steps/cookies.js';
+import { steps as csrfSteps } from './steps/csrf.js';
+import { steps as fieldsSteps } from './steps/fields.js';
+import { steps as functionsSteps } from './steps/functions.js';
+import { steps as jsonSteps } from './steps/json.js';
+import { steps as keepSteps } from './steps/keep.js';
+import { steps as readsSteps } from './steps/reads.js';
+import { steps as representationsSteps } from './steps/representations.js';
+import { steps as restSteps } from './steps/rest.js';
+import { steps as routesSteps } from './steps/routes.js';
 
 type Step = (reader: CaseReader) => unknown;
 
 // The steps of this server, by case file and section. A section without a step fails its cases with STEP_UNKNOWN.
-const STEPS: Record<string, Record<string, Step>> = {};
+const STEPS: Record<string, Record<string, Step>> = {
+  'client.json': clientSteps,
+  'context.json': contextSteps,
+  'cookies.json': cookiesSteps,
+  'csrf.json': csrfSteps,
+  'fields.json': fieldsSteps,
+  'functions.json': functionsSteps,
+  'json.json': jsonSteps,
+  'keep.json': keepSteps,
+  'reads.json': readsSteps,
+  'representations.json': representationsSteps,
+  'rest.json': restSteps,
+  'routes.json': routesSteps,
+};
 
 function messageOf(error: unknown): string {
   return error instanceof Error ? error.message : String(error);

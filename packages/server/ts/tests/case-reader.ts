@@ -3,6 +3,7 @@
 // the cases of its section with the inputs that it reads and the comparisons that it makes. The steps of the Node server
 // are the only users of this reader; the reader has no test of its own.
 import { readFileSync } from 'node:fs';
+import { parseJson } from '@polyspec/template/render';
 
 type Compare = 'exact' | 'ordered' | 'subset' | 'absent' | 'contains' | 'excludes' | 'prefix' | 'keys' | 'raises';
 
@@ -36,20 +37,22 @@ interface Declaration {
   sections: Record<string, Section>;
 }
 
-type Plain = Record<string, unknown>;
-
 const LANGUAGE = 'node';
 const CONTRACTS = new URL('../../../../contracts/', import.meta.url);
 
-const isObject = (value: unknown): value is Plain => typeof value === 'object' && value !== null && !Array.isArray(value);
-
 const applies = (declared: { only?: Only }): boolean => declared.only === undefined || declared.only.languages.includes(LANGUAGE);
 
-// The entries of a plain object or a Map, or undefined for any other value.
+// The entries of an object of the contract, which is a Map that keeps the order of its keys, or undefined for a value
+// that is not an object.
 function entriesOf(value: unknown): [string, unknown][] | undefined {
   if (value instanceof Map) return [...value.entries()].map(([key, item]) => [String(key), item]);
-  if (isObject(value)) return Object.entries(value);
+  if (typeof value === 'object' && value !== null && !Array.isArray(value)) return Object.entries(value);
   return undefined;
+}
+
+// The member of an object of the contract under a key, or undefined when the object has no such key.
+function member(value: unknown, key: string): unknown {
+  return (entriesOf(value) ?? []).find(([name]) => name === key)?.[1];
 }
 
 // Two values are equal when they hold equal items; maps and objects are unordered unless `ordered` is set.
@@ -62,10 +65,44 @@ function equal(a: unknown, b: unknown, ordered: boolean): boolean {
   if (ea !== undefined || eb !== undefined) {
     if (ea === undefined || eb === undefined || ea.length !== eb.length) return false;
     if (ordered) return ea.every(([key, item], i) => eb[i][0] === key && equal(item, eb[i][1], true));
-    const other = new Map(eb);
-    return ea.every(([key, item]) => other.has(key) && equal(item, other.get(key), false));
+    return ea.every(([key, item]) => equal(item, member(b, key), false) && eb.some(([name]) => name === key));
   }
   return a === b;
+}
+
+// The declarations of interfaces.json, read once.
+let cached: { caseFiles: Record<string, Declaration> } | undefined;
+function declarations(): { caseFiles: Record<string, Declaration> } {
+  cached ??= JSON.parse(readFileSync(new URL('interfaces.json', CONTRACTS), 'utf8')) as { caseFiles: Record<string, Declaration> };
+  return cached;
+}
+
+// The first key of a case file, or of one of its cases, that the declaration does not state, as the path of the key.
+function undeclaredIn(contract: unknown, declaration: Declaration): string | undefined {
+  for (const [key] of entriesOf(contract) ?? []) {
+    if (!(key in declaration.sections) && !(key in declaration.fixtures)) return `$.${key}`;
+  }
+  for (const [name, section] of Object.entries(declaration.sections)) {
+    const items = member(contract, name);
+    if (!section.runners.includes(LANGUAGE) || !Array.isArray(items)) continue;
+    for (const [index, item] of items.entries()) {
+      const found = undeclaredFields(section.fields, item, `$.${name}[${index}]`);
+      if (found !== undefined) return found;
+    }
+  }
+  return undefined;
+}
+
+function undeclaredFields(fields: Record<string, Field>, value: unknown, path: string): string | undefined {
+  for (const [key, child] of entriesOf(value) ?? []) {
+    const field = fields[key];
+    if (field === undefined) return `${path}.${key}`;
+    if (field.fields !== undefined) {
+      const found = undeclaredFields(field.fields, child, `${path}.${key}`);
+      if (found !== undefined) return found;
+    }
+  }
+  return undefined;
 }
 
 export class CaseReader {
@@ -77,9 +114,9 @@ export class CaseReader {
   private constructor(
     private readonly file: string,
     private readonly sectionName: string,
-    private readonly item: Plain,
+    private readonly item: unknown,
     private readonly section_: Section,
-    private readonly contract: Plain,
+    private readonly contract: unknown,
   ) {}
 
   // Returns the names of the case files that the declaration of interfaces.json states.
@@ -92,13 +129,14 @@ export class CaseReader {
   static cases(file: string): CaseReader[] {
     const declaration = declarations().caseFiles[file];
     if (declaration === undefined) throw new Error(`interfaces.json declares no case file ${file}`);
-    const contract = JSON.parse(readFileSync(new URL(file, CONTRACTS), 'utf8')) as Plain;
+    const contract = parseJson(readFileSync(new URL(file, CONTRACTS), 'utf8'));
     const undeclared = undeclaredIn(contract, declaration);
     const readers: CaseReader[] = [];
-    for (const [name, value] of Object.entries(contract)) {
+    for (const [name] of entriesOf(contract) ?? []) {
       const section = declaration.sections[name];
-      if (section === undefined || !section.runners.includes(LANGUAGE) || !Array.isArray(value)) continue;
-      for (const item of value as Plain[]) {
+      const items = member(contract, name);
+      if (section === undefined || !section.runners.includes(LANGUAGE) || !Array.isArray(items)) continue;
+      for (const item of items) {
         const reader = new CaseReader(file, name, item, section, contract);
         if (undeclared !== undefined) reader.error = `FILE_UNDECLARED ${undeclared}`;
         readers.push(reader);
@@ -112,7 +150,7 @@ export class CaseReader {
   }
 
   id(): string {
-    return String(this.item.id);
+    return String(member(this.item, 'id'));
   }
 
   // Whether the case states a field, with dotted names for the fields of a nested field.
@@ -123,7 +161,7 @@ export class CaseReader {
   // Returns the input of the case, or the fixture of the file that the section uses; the input is read for `line`.
   input(name: string): unknown {
     this.read.add(name);
-    if (this.section_.uses.includes(name)) return this.contract[name];
+    if (this.section_.uses.includes(name)) return member(this.contract, name);
     const field = this.fieldOf(name);
     if (field.role !== 'input') throw new Error(`${name} of ${this.sectionName} is not an input`);
     return this.valueOf(name);
@@ -140,6 +178,7 @@ export class CaseReader {
     }
     if (field.compare === undefined) throw new Error(`${name} of ${this.sectionName} has no comparison`);
     this.compared.add(name);
+    this.read.add(name);
     if (!this.matches(field.compare, expected, observed)) this.differs.push(name);
   }
 
@@ -150,8 +189,13 @@ export class CaseReader {
     if (declared === undefined) throw new Error(`${this.sectionName} declares no outcome ${name}`);
     if (!applies(declared)) return;
     this.compared.add(name);
-    const [left, right] = observed as [unknown, unknown];
-    const ok = declared.compare === 'raises' ? observed === true : equal(left, right, false);
+    let ok: boolean;
+    if (declared.compare === 'raises') {
+      ok = observed === true;
+    } else {
+      const [left, right] = observed as [unknown, unknown];
+      ok = equal(left, right, false);
+    }
     if (!ok) this.differs.push(name);
   }
 
@@ -182,12 +226,13 @@ export class CaseReader {
   }
 
   // The first present field of the given role that is not covered by the set of read or compared names.
-  private unreadIn(fields: Record<string, Field>, value: Plain, prefix: string, role: 'input' | 'expected', seen: Set<string>): string | undefined {
+  private unreadIn(fields: Record<string, Field>, value: unknown, prefix: string, role: 'input' | 'expected', seen: Set<string>): string | undefined {
     for (const [key, field] of Object.entries(fields)) {
-      if (!applies(field) || value[key] === undefined) continue;
+      const child = member(value, key);
+      if (!applies(field) || child === undefined) continue;
       const name = prefix + key;
-      if (field.fields !== undefined && isObject(value[key])) {
-        const inner = this.unreadIn(field.fields, value[key], `${name}.`, role, seen);
+      if (field.fields !== undefined && entriesOf(child) !== undefined) {
+        const inner = this.unreadIn(field.fields, child, `${name}.`, role, seen);
         if (inner !== undefined) return inner;
         continue;
       }
@@ -211,8 +256,8 @@ export class CaseReader {
   private valueOf(name: string): unknown {
     let value: unknown = this.item;
     for (const part of name.split('.')) {
-      if (!isObject(value) || !Object.prototype.hasOwnProperty.call(value, part)) return undefined;
-      value = value[part];
+      if (entriesOf(value) === undefined) return undefined;
+      value = member(value, part);
     }
     return value;
   }
@@ -243,38 +288,4 @@ export class CaseReader {
         return expected === observed;
     }
   }
-}
-
-// The declarations of interfaces.json, read once.
-let cached: { caseFiles: Record<string, Declaration> } | undefined;
-function declarations(): { caseFiles: Record<string, Declaration> } {
-  cached ??= JSON.parse(readFileSync(new URL('interfaces.json', CONTRACTS), 'utf8')) as { caseFiles: Record<string, Declaration> };
-  return cached;
-}
-
-// The first key of a case file, or of one of its cases, that the declaration does not state, as the path of the key.
-function undeclaredIn(contract: Plain, declaration: Declaration): string | undefined {
-  for (const key of Object.keys(contract)) {
-    if (!(key in declaration.sections) && !(key in declaration.fixtures)) return `$.${key}`;
-  }
-  for (const [name, section] of Object.entries(declaration.sections)) {
-    if (!section.runners.includes(LANGUAGE) || !Array.isArray(contract[name])) continue;
-    for (const [index, item] of (contract[name] as Plain[]).entries()) {
-      const found = undeclaredFields(section.fields, item, `$.${name}[${index}]`);
-      if (found !== undefined) return found;
-    }
-  }
-  return undefined;
-}
-
-function undeclaredFields(fields: Record<string, Field>, value: Plain, path: string): string | undefined {
-  for (const key of Object.keys(value)) {
-    const field = fields[key];
-    if (field === undefined) return `${path}.${key}`;
-    if (field.fields !== undefined && isObject(value[key])) {
-      const found = undeclaredFields(field.fields, value[key] as Plain, `${path}.${key}`);
-      if (found !== undefined) return found;
-    }
-  }
-  return undefined;
 }
