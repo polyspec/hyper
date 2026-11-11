@@ -111,7 +111,7 @@ for (const m of mutations) {
 }
 
 // The readers' own output for a tree, as the check reads it (HYR-8).
-type ReaderOutput = { units: { name: string; kind: string; internal: boolean }[]; uses: { file: string; name: string }[]; constants: { file: string; name: string }[]; tests: { file: string; name: string }[]; dynamicTests: { file: string; line: number }[]; members: { unit: string; name: string; visibility: string }[] };
+type ReaderOutput = { units: { name: string; kind: string; internal: boolean }[]; uses: { file: string; name: string }[]; constants: { file: string; name: string }[]; tests: { file: string; name: string }[]; dynamicTests: { file: string; line: number }[]; members: { unit: string; name: string; kind: string; visibility: string; signature: string }[] };
 
 const readerCommands: Record<'php' | 'node' | 'python', (root: string) => [string, string[]]> = {
   php: (root) => [process.env.RECIPE_PHP ?? 'php', [path.join(repo, 'scripts', 'recipe', 'read-php.php'), root, '--autoload', path.join(root, 'autoload.php')]],
@@ -176,4 +176,14 @@ test('the Node reader reads a test called on any receiver, and an each table wri
   assert.ok(names.includes('suite > via receiver'), `tests: ${names.join(', ')}`);
   assert.ok(names.includes('suite > skipped'), `tests: ${names.join(', ')}`);
   assert.deepEqual(out.dynamicTests.map((t) => t.line), [3], `dynamic lines: ${out.dynamicTests.map((t) => t.line).join(', ')}`);
+});
+
+test('the Node reader lists an accessor as a method, with its head and not its body', () => {
+  const members = readFixture('node', path.join(fixture, 'readers', 'node')).members.filter((m) => m.unit === 'Accessed');
+  const size = members.find((m) => m.name === 'size');
+  const kind = members.find((m) => m.name === 'kind');
+  assert.equal(size?.kind, 'method', `size is ${size?.kind}`);
+  assert.equal(size?.signature, 'get size(): number', `size signature: ${size?.signature}`);
+  assert.equal(kind?.kind, 'static method', `kind is ${kind?.kind}`);
+  assert.equal(kind?.signature, 'static get kind(): string', `kind signature: ${kind?.signature}`);
 });
