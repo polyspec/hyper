@@ -335,13 +335,15 @@
       "type": "object",
       "additionalProperties": false,
       "required": ["runners", "uses", "fields"],
+      "if": { "properties": { "runners": { "type": "array", "maxItems": 0 } } },
+      "then": { "required": ["fixedCopy"], "properties": { "fixedCopy": { "type": "string" } } },
       "properties": {
         "runners": {
           "type": "array",
-          "minItems": 1,
           "uniqueItems": true,
           "items": { "enum": ["php", "node", "python", "browser", "build"] }
         },
+        "fixedCopy": { "type": "string", "pattern": "^[a-z0-9-]+-before-s3b\\.json$" },
         "uses": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
         "members": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
         "outcomes": { "type": "object", "additionalProperties": { "$ref": "#/$defs/caseCompare" } },

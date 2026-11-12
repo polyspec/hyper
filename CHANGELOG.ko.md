@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 544b8b9db155836c3430a4af0f4e01c6e5ca6e686c3b653ced0ae2e1a5cb22e2 -->
+<!-- source-sha256: f4b5f97c44edf3412ed425c6da607f538e3330697de9878da17c1746430a67bc -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- recipe check가 S-3b case 변경의 고정 사본을 안다: `contracts/interfaces.json`의 section은 `fixedCopy`가 `tests/legacy`의 `<name>-before-s3b.json`, 곧 그 변경 전의 section을 가리키면 runner가 없어도 되며, host runner는 그 section의 규칙을 core로 옮기는 commit(C-7)이 다시 live로 만들 때까지 그 사본을 읽는다(HYR-7). spec의 schema가 그런 section을 허용하고, check는 그 section을 담은 파일의 고정 사본이 아닌 `fixedCopy`를 실패시키며, 고정 사본의 step을 그 live 파일에서 찾고, 고정 사본에서 S-3b가 폐기한 statement를 받아들이며, runner가 없는 section의 member 검사는 그 사본에 맡긴다. Node registry reader는 Node runner의 `prefixed`가 빼거나 따로 남기는 section을 읽는다.
 
 - PHP와 Python 서버는 브라우저 package와 Node 서버처럼, 이미 member `context`를 가진 shared data에 context를 놓을 때 category `value`, kind `shared_holds_context`의 오류로 실패한다(HY-124.8, HY-132). PHP는 `LogicException` 대신 `kind()`와 `status()`를 가진 `InvalidArgumentException`인 `Polyspec\Hyper\HyperValueError`를 던지고, Python은 그냥 `ValueError` 대신 `kind`와 `status`를 가진 `ValueError`인 `polyspec.hyper._hyper_value_error`의 `HyperValueError`를 던진다. 두 class는 서버가 HY-132의 모든 오류를 던질 때까지 내부 class다. PHP와 Python runner의 withContext step은 실패를 `raises`로 비교하고, 그 case reader는 Node reader처럼 case가 message를 적지 않은 실패의 message를 빼고 비교한다(HY-132.4). 이전에는 contract에 더는 없는 key `fails`를 비교했다. `contracts/interfaces.json`은 PHP와 Python의 unit `hyper-value-error`를 적는다.
 

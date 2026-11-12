@@ -8,7 +8,7 @@ import { LANGS, RUNNERS, isObject, type CaseField, type CaseFile, type Json, typ
 import type { Ctx } from './context.mts';
 import { checkRuleId, checkStatement, rulesOfFile } from './rules.mts';
 import { readerKey } from './names.mts';
-import { caseFileName, caseFilePath } from './legacy.mts';
+import { caseFileName, caseFilePath, isFixedCopy, liveFile } from './legacy.mts';
 
 const COMPARE_KINDS = ['exact', 'ordered', 'subset', 'absent', 'contains', 'excludes', 'prefix', 'keys', 'raises'];
 
@@ -66,24 +66,25 @@ export function caseOnlys(spec: Spec, root: string): Only[] {
         const items: unknown[] = data[name];
         for (const item of items) {
           const only = isObject(item) ? onlyOf(item, `${key} section ${name}`) : undefined;
-          if (only !== undefined) out.push(only);
+          if (only !== undefined) out.push(isFixedCopy(key) ? { ...only, fixed: true } : only);
         }
       }
-      for (const o of Object.values(section.outcomes ?? {})) if (o.only) out.push(o.only);
-      for (const f of fieldsDeep(section.fields)) if (f.only) out.push(f.only);
+      const fixed = isFixedCopy(key);
+      for (const o of Object.values(section.outcomes ?? {})) if (o.only) out.push(fixed ? { ...o.only, fixed } : o.only);
+      for (const f of fieldsDeep(section.fields)) if (f.only) out.push(fixed ? { ...f.only, fixed } : f.only);
     }
   }
   return out;
 }
 
 /** HYR-9: a compare names a known kind and a statement of protocol.json; returns the statement's rule when it is one. */
-function checkCompare(ctx: Ctx, where: string, compare: string | undefined, sentence: string | undefined): string | undefined {
+function checkCompare(ctx: Ctx, where: string, compare: string | undefined, sentence: string | undefined, fixed = false): string | undefined {
   if (compare === undefined || sentence === undefined) {
     ctx.add('CASE_COMPARE', `${where} lacks compare or sentence`);
     return undefined;
   }
   if (!COMPARE_KINDS.includes(compare)) ctx.add('CASE_COMPARE', `${where} uses compare ${compare}, which is not a kind of HYR-9`);
-  return checkStatement(ctx, where, sentence);
+  return checkStatement(ctx, where, sentence, fixed);
 }
 
 /** HYR-9 and HYR-2: each case file of a concern is in caseFiles, and each caseFiles entry is named by a concern. */
@@ -147,6 +148,13 @@ function checkFiles(ctx: Ctx, entries: [string, CaseFile][]): void {
     }
     for (const [name, section] of Object.entries(entry.sections)) {
       const where = `${key} section ${name}`;
+      // A section that no runner reads names the fixed copy of its file that holds it for the host runners (legacy.mts).
+      if (section.fixedCopy !== undefined) {
+        const copy = spec.caseFiles[section.fixedCopy];
+        if (!isFixedCopy(section.fixedCopy) || liveFile(section.fixedCopy) !== key || copy?.sections[name] === undefined) {
+          add('FIXED_COPY', `${where} names ${section.fixedCopy}, which is no fixed copy of ${key} that holds the section`);
+        }
+      }
       const items = data[name];
       if (!Array.isArray(items)) {
         add('CASE_SECTION_UNKNOWN', `${where} is declared, which the file does not hold as a list`);
@@ -162,11 +170,11 @@ function checkFiles(ctx: Ctx, entries: [string, CaseFile][]): void {
           add('CASE_COMPARE', `${where} has an expected field without a compare or sentence`);
           continue;
         }
-        fieldRules.set(f, checkCompare(ctx, `${where} field ${f.role}`, f.compare, f.sentence));
+        fieldRules.set(f, checkCompare(ctx, `${where} field ${f.role}`, f.compare, f.sentence, isFixedCopy(key)));
       }
       const outcomeRules = new Set<string>();
       for (const [outcome, o] of Object.entries(section.outcomes ?? {})) {
-        const rule = checkCompare(ctx, `${where} outcome ${outcome}`, o.compare, o.sentence);
+        const rule = checkCompare(ctx, `${where} outcome ${outcome}`, o.compare, o.sentence, isFixedCopy(key));
         if (rule !== undefined) outcomeRules.add(rule);
       }
       for (const item of items) {

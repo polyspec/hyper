@@ -32,3 +32,17 @@ export function caseFileName(root: string, key: string): string {
 export function caseFilePath(root: string, key: string): string {
   return path.join(root, caseFileName(root, key));
 }
+
+/**
+ * A fixed copy of the S-3b case changes: `<name>-before-s3b.json` holds sections of `<name>.json` as they were before
+ * those changes, which the host runners read until the commit that moves their rules to the core (C-7) makes the
+ * sections live again. Its steps are those of `<name>.json`, and its sentences may name the statements that S-3b retired.
+ */
+export function isFixedCopy(key: string): boolean {
+  return key.endsWith('-before-s3b.json');
+}
+
+/** The case file whose steps a case file runs: `<name>.json` for its fixed copy, else the file itself. */
+export function liveFile(key: string): string {
+  return isFixedCopy(key) ? key.replace(/-before-s3b\.json$/u, '.json') : key;
+}

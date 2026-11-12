@@ -6,7 +6,7 @@ export const LANGS: Lang[] = ['php', 'node', 'python'];
 export type Runner = 'php' | 'node' | 'python' | 'browser' | 'build';
 export const RUNNERS: Runner[] = ['php', 'node', 'python', 'browser', 'build'];
 export type Visibility = 'public' | 'internal' | 'private' | 'protected';
-export type Only = { languages: Runner[]; sentence: string };
+export type Only = { languages: Runner[]; sentence: string; fixed?: boolean };
 
 /** A JSON object as a parsed document holds it, and the check that a value is one. */
 export type Json = Record<string, unknown>;
@@ -70,6 +70,8 @@ export type CaseFile = {
 
 export type CaseSection = {
   runners: Runner[];
+  // The fixed copy in tests/legacy whose section the host runners read while no runner reads this one (legacy.mts).
+  fixedCopy?: string;
   uses: string[];
   members?: string[];
   outcomes?: Record<string, CaseCompare>;

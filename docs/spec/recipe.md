@@ -218,6 +218,14 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
     their sections through `caseReaders.node`, and the check counts the results of all five runners.
     For `php`, `node` and `python`, `runners` also names the directory of the steps (`steps`) and the registry of the
     runner (`registry`), the file that maps each section to its step.
+  - **Fixed copies of the S-3b case changes.** A section whose cases the S-3b changes gave a form that the host code
+    does not run yet has `runners` without `php`, `node` and `python`, and its `fixedCopy` names
+    `<name>-before-s3b.json` of `tests/legacy`, which holds the section as it was before those changes, with the fixtures
+    that it uses and its declaration in `tests/legacy/interfaces.json`; the host runners read that copy. A section
+    without runners has a `fixedCopy`, and the check fails a `fixedCopy` that is no fixed copy of the file holding the
+    section. The steps of a fixed copy are those of its live file, its sentences may name the statements that S-3b
+    retired, and a live section that no runner reads states its members through the copy. The commit that moves the
+    rules of a section to the core (C-7) gives its runners back and removes the section from the copy.
   - **Steps.** The step of a section in a language is one function below the `steps` directory of that language, at the
     place that the words of the case file and the name of the section give: PHP the static method `<section>` of the
     class `<Words>Steps` in `<Words>Steps.php`, Node the property `<section>` of the exported object `steps` in

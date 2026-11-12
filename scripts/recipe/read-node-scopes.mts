@@ -425,11 +425,18 @@ export function readRegistry(files: NodeFiles, file: string): RegistryEntry[] {
   const entries: RegistryEntry[] = [];
   const visit = (n: ts.Node): void => {
     if (ts.isCallExpression(n) && ts.isIdentifier(n.expression) && n.expression.text === 'prefixed') {
-      const [caseFile, steps] = n.arguments;
+      // prefixed(file, steps[, frozen[, only]]): the steps of a case file, without the sections of the array literal
+      // `frozen`, or with `only` (the literal true) only those, the sections that the fixed copy of the file holds.
+      const [caseFile, steps, frozen, only] = n.arguments;
       if (caseFile !== undefined && ts.isStringLiteral(caseFile) && steps !== undefined && ts.isIdentifier(steps)) {
         const found = files.resolve(file, steps.text);
+        const listed = frozen !== undefined && ts.isArrayLiteralExpression(frozen) ? frozen.elements.filter(ts.isStringLiteral).map((e) => e.text) : [];
+        const kept = only !== undefined && only.kind === ts.SyntaxKind.TrueKeyword;
         if (found?.kind === 'steps') {
-          for (const section of files.stepNames(found.file)) entries.push({ file: caseFile.text, section, step: { file: found.file, name: `steps.${section}` } });
+          for (const section of files.stepNames(found.file)) {
+            if (listed.includes(section) !== kept) continue;
+            entries.push({ file: caseFile.text, section, step: { file: found.file, name: `steps.${section}` } });
+          }
         }
       }
     }

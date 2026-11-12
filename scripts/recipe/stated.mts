@@ -6,6 +6,7 @@
 
 import path from 'node:path';
 import type { Ctx } from './context.mts';
+import { liveFile } from './legacy.mts';
 import { symbolName, words } from './names.mts';
 import { LANGS, type ClassRef, type Expr, type Lang, type Member, type Scope, type Sources, type Spec, type Unit } from './types.mts';
 
@@ -298,7 +299,8 @@ function below(file: string, dirs: string[]): boolean {
 
 /** The place of the step of a section (HYR-7): its file and its scope key. */
 function placeOf(lang: Lang, steps: string, caseFile: string, section: string): { file: string; key: string; shown: string } {
-  const w = words(caseFile.replace(/\.json$/u, ''));
+  // A fixed copy of the S-3b case changes runs the steps of its live file (legacy.mts).
+  const w = words(liveFile(caseFile).replace(/\.json$/u, ''));
   const pascal = w.split('-').map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join('');
   if (lang === 'php') {
     const file = `${steps}/${pascal}Steps.php`;
@@ -469,6 +471,8 @@ function checkSteps(
 ): void {
   const { spec, sources, add } = ctx;
   for (const { file, name, s } of sections) {
+    // A live section that no runner reads states its members through its fixed copy (legacy.mts).
+    if (s.fixedCopy !== undefined) continue;
     const runnerLangs = LANGS.filter((l) => s.runners.includes(l));
     for (const id of s.members ?? []) {
       const m = memberById.get(id);

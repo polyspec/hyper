@@ -64,8 +64,16 @@ const STEPS: Record<string, Step> = {
   ...prefixed('session.json', sessionSteps),
 };
 
-function prefixed(file: string, steps: Record<string, Step>): Record<string, Step> {
-  return Object.fromEntries(Object.entries(steps).map(([section, step]) => [`${file}:${section}`, step]));
+// The steps of a case file by `file:section`. A file `<name>-before-s3b.json` is the fixed copy in tests/legacy of the
+// sections of `<name>.json` that the host code runs in their form from before the S-3b case changes, until the commit
+// that moves their rules to the core (C-7) makes them live again: `frozen` lists those sections, which the steps of the
+// live file leave out and the steps of the fixed copy, with `only`, keep alone.
+function prefixed(file: string, steps: Record<string, Step>, frozen: string[] = [], only = false): Record<string, Step> {
+  return Object.fromEntries(
+    Object.entries(steps)
+      .filter(([section]) => frozen.includes(section) === only)
+      .map(([section, step]) => [`${file}:${section}`, step]),
+  );
 }
 
 it('cases', () => runCases('node', STEPS), 1_200_000);

@@ -15,8 +15,11 @@ export function checkRuleId(ctx: Ctx, where: string, rule: string): void {
   else if (!protocol.rules.has(rule)) add('RULE_UNKNOWN', `${where} names ${rule}, which is not a rule of protocol.json`);
 }
 
-/** HYR-6: a statement the spec names is a live statement of a live rule; returns its rule when it is one. */
-export function checkStatement(ctx: Ctx, where: string, sentence: string): string | undefined {
+/**
+ * HYR-6: a statement the spec names is a live statement of a live rule; returns its rule when it is one. A fixed copy of
+ * the S-3b case changes (`fixed`) states the rule as it was before those changes, so its statement may be retired.
+ */
+export function checkStatement(ctx: Ctx, where: string, sentence: string, fixed = false): string | undefined {
   const { protocol, add } = ctx;
   const rule = ruleOf(sentence);
   if (protocol.retiredRules.has(rule)) {
@@ -29,6 +32,7 @@ export function checkStatement(ctx: Ctx, where: string, sentence: string): strin
     return undefined;
   }
   if (entry.retired.has(Number(sentence.slice(sentence.lastIndexOf('.') + 1)))) {
+    if (fixed) return rule;
     add('SENTENCE_RETIRED', `${where} names ${sentence}, a statement that protocol.json retires`);
     return undefined;
   }
@@ -54,7 +58,7 @@ export function checkRules(ctx: Ctx, onlys: Only[]): void {
     if (!concernRules.has(r) && !outsideRules.has(r)) add('RULE_UNCOVERED', `${r} is named by no concern and no outside entry`);
   }
   for (const o of onlys) {
-    const rule = checkStatement(ctx, `an only of ${o.sentence}`, o.sentence);
+    const rule = checkStatement(ctx, `an only of ${o.sentence}`, o.sentence, o.fixed === true);
     if (rule !== undefined && outsideRules.has(rule)) add('SENTENCE_OUTSIDE', `${o.sentence} is a statement of ${rule}, which is outside the spec`);
   }
 }
