@@ -1398,34 +1398,6 @@
               }
             },
             {
-              "id": "accept.select",
-              "kind": "static method",
-              "visibility": "internal",
-              "inputs": [
-                "optional<string>",
-                "list<string>"
-              ],
-              "output": "optional<string>",
-              "errors": [
-                "invalid-accept"
-              ],
-              "state": "Selects the type of the highest weight among the given types, the first on a tie, or none when every weight is 0.",
-              "native": {
-                "php": {
-                  "symbol": "packages/server/php/src/Accept.php::Polyspec\\Hyper\\Accept::select",
-                  "signature": "public static function select(?string $value, array $types): ?string"
-                },
-                "node": {
-                  "symbol": "packages/server/ts/src/accept.ts::Accept.select",
-                  "signature": "static select(value: string | null, types: readonly string[]): string | null"
-                },
-                "python": {
-                  "symbol": "packages/server/python/src/polyspec/hyper/_accept.py::Accept.select",
-                  "signature": "def select(value: Optional[str], types: Sequence[str]) -> Optional[str]"
-                }
-              }
-            },
-            {
               "id": "accept.best",
               "kind": "static method",
               "visibility": "internal",
@@ -15145,7 +15117,8 @@
             }
           },
           "members": [
-            "accept.select"
+            "accept.best",
+            "accept.parse"
           ]
         }
       }

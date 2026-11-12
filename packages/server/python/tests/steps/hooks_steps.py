@@ -35,9 +35,15 @@ def creation(case) -> None:
         sessions = FileSessions(directory)
         errors = []
         entries = {
-            create_server: lambda: create_server(application, sessions, **{hook: _NO_FUNCTION}),
-            create_wsgi: lambda: create_wsgi(application, sessions, **{hook: _NO_FUNCTION}),
-            create_asgi: lambda: create_asgi(application, sessions, **{hook: _NO_FUNCTION}),
+            create_server: lambda: create_server(
+                application, sessions, **{hook: _NO_FUNCTION}
+            ),
+            create_wsgi: lambda: create_wsgi(
+                application, sessions, **{hook: _NO_FUNCTION}
+            ),
+            create_asgi: lambda: create_asgi(
+                application, sessions, **{hook: _NO_FUNCTION}
+            ),
         }
         for entry, create in entries.items():
             try:

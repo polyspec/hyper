@@ -52,14 +52,6 @@ class Accept:
         return ranges
 
     @staticmethod
-    def select(value: Optional[str], types: Sequence[str]) -> Optional[str]:
-        """Returns the media type of the request among the given types, or None when no type has a weight above 0
-        (HY-116). A type takes the weight of its most specific matching range, and among the ranges of that
-        specificity the one of the highest weight. The first type of the list wins a tie. Raises InvalidAccept as
-        `parse` does."""
-        return Accept.best(Accept.parse(value), types)[0]
-
-    @staticmethod
     def best(
         ranges: Sequence[MediaRange], types: Sequence[str]
     ) -> tuple[Optional[str], int]:

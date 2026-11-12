@@ -35,7 +35,7 @@ export const steps = {
     const listed = reader.input('types');
     const types = Array.isArray(listed) ? listed.filter((type): type is string => typeof type === 'string') : [];
     refused(reader, () => {
-      reader.compare('selected', Accept.select(value, types));
+      reader.compare('selected', Accept.best(Accept.parse(value), types)[0]);
     });
   },
 };

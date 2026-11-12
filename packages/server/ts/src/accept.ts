@@ -46,15 +46,9 @@ export class Accept {
     return ranges;
   }
 
-  // Returns the media type of the request among the given types, or null when no type has a weight above 0 (HY-116). A
-  // type takes the weight of its most specific matching range, and among the ranges of that specificity the one of the
-  // highest weight. The first type of the list wins a tie. Throws InvalidAccept as `parse` does.
-  static select(value: string | null, types: readonly string[]): string | null {
-    return Accept.best(Accept.parse(value), types)[0];
-  }
-
   // Returns the type of the highest weight among the given types with that weight in thousandths, the first on a tie, or
-  // null and 0 when no type has a weight above 0 (HY-116).
+  // null and 0 when no type has a weight above 0 (HY-116). A type takes the weight of its most specific matching range,
+  // and among the ranges of that specificity the one of the highest weight.
   static best(ranges: readonly MediaRange[], types: readonly string[]): [string | null, number] {
     let selected: string | null = null;
     let best = 0;
