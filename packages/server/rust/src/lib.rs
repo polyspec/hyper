@@ -12,6 +12,7 @@ pub mod cookies;
 pub mod csrf;
 pub mod error;
 pub mod etag;
+pub mod front;
 pub mod json;
 pub mod keep;
 pub mod location;

@@ -46,6 +46,8 @@ pub struct Application {
     pub timezone: String,
     /// Whether the application declares a context handler (HY-124.1).
     pub context: bool,
+    /// The base path, the data base path of client rendering and the form types (HY-8, HY-62.2, HY-59.1).
+    pub declared: crate::front::Declared,
 }
 
 /// The read paths of every route from the value that the build gives (HY-73.23): a map from the name of a route to a
@@ -86,6 +88,23 @@ pub fn route_reads(value: &Value) -> Result<Vec<(String, RouteReads)>, Error> {
     Ok(reads)
 }
 
+/// The options of the pages of an application (HY-8, HY-14.2, HY-59.1, HY-62.2, HY-124.1, HY-125).
+#[derive(Debug, Clone)]
+pub struct PagesOptions {
+    /// The build id (HY-125).
+    pub build: String,
+    /// The time zone of the server (HY-14.2).
+    pub timezone: String,
+    /// Whether the application declares a context handler (HY-124.1).
+    pub context: bool,
+    /// The base path (HY-8).
+    pub base_path: String,
+    /// The data base path of client rendering, or `None` without the declaration (HY-62.2).
+    pub data_base_path: Option<String>,
+    /// The form types (HY-59.1).
+    pub form_types: Vec<String>,
+}
+
 /// The pages of an application, which every page request of the application shares: a handle that owns the
 /// application, so that a page request holds it while the host calls the handlers.
 #[derive(Clone)]
@@ -94,9 +113,9 @@ pub struct Pages {
 }
 
 impl Pages {
-    /// The pages of an application (HY-1, HY-12, HY-73, HY-124, HY-125): the bytes of its manifest, its templates by
-    /// name, the read paths of its build, its build id, the time zone of the server and whether it declares a context
-    /// handler.
+    /// The pages of an application (HY-1, HY-8, HY-12, HY-59.1, HY-62.2, HY-73, HY-124, HY-125): the bytes of its
+    /// manifest, its templates by name, the read paths of its build, its build id, the time zone of the server, whether
+    /// it declares a context handler, its base path, the data base path of its client rendering and its form types.
     ///
     /// # Errors
     /// `invalid_application` for a manifest, a template name or read paths that the application cannot open with.
@@ -104,9 +123,7 @@ impl Pages {
         manifest: &[u8],
         templates: &Map<String>,
         reads: &Value,
-        build: &str,
-        timezone: &str,
-        context: bool,
+        options: &PagesOptions,
     ) -> Result<Pages, Error> {
         let sources: Vec<(String, String)> = templates
             .iter()
@@ -116,9 +133,14 @@ impl Pages {
             manifest: crate::manifest::read(manifest)?,
             templates: Templates::new(&sources, std::collections::HashMap::new())?,
             reads: route_reads(reads)?,
-            build: build.to_owned(),
-            timezone: timezone.to_owned(),
-            context,
+            build: options.build.clone(),
+            timezone: options.timezone.clone(),
+            context: options.context,
+            declared: crate::front::Declared {
+                base_path: options.base_path.clone(),
+                data_base_path: options.data_base_path.clone(),
+                form_types: options.form_types.clone(),
+            },
         }))
     }
 
@@ -126,6 +148,12 @@ impl Pages {
     #[must_use]
     pub fn from_application(app: Application) -> Pages {
         Pages { app: Arc::new(app) }
+    }
+
+    /// The application of the pages.
+    #[must_use]
+    pub fn application(&self) -> &Application {
+        &self.app
     }
 
     /// Registers a function of the application for its templates (HYC-24.2), before its first page request.

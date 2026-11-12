@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 05d9772d7e1f38240d8858d3ccf1f3b81b1dc58748df7eb53a28375d98485aa3 -->
+<!-- source-sha256: 5e3ec89dd682292b1d1e93f12140f35ea408a38877759313d3ef4951eec0a5ae -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- Rust core가 page 앞에서 요청을 라우팅한다(C-7). `front::route_request`는 page들, host가 부르는 client 렌더 selection의 `chosen`(HY-62.9), 그리고 method, 경로, `Accept`, `HX-Request`, `Hyper-Context`, body의 media type을 받아, HY-59.3과 HY-120의 순서로 plain 거부, shell, kept endpoint, representation, page 가운데 하나를 준다: base path나 data base path(HY-8.2, HY-62.16부터 HY-62.19까지), data base path 밖의 답(HY-62.22, HY-62.23, HY-62.34), 405와 form type을 가진 `/_hyper/keep`(HY-40, HY-59.12), route(404), data base path 아래에서도 page를 후보로 두되 그 406은 page를 나열하지 않는 media type(HY-116.13, HY-116.14), method(HY-27.6), data base path 아래 page의 406(HY-62.20), `Hyper-Context`(HY-127.2), action의 form type(HY-59.12). `front::page_headers`는 page의 `Content-Type`, `Cache-Control`, `Vary`, weak tag와 그 304를 주고(HY-15.3, HY-52, HY-53, HY-65, HY-117.1), `front::frame_headers`는 frame 정책과 실패의 `no-store`를(HY-45, HY-65.1), `front::kept_value`는 kept endpoint가 저장하는 값을 준다(HY-40.1). page들은 `Pages::open`의 record `pages_options`로 base path, data base path, form type을 가지며, interface 계약은 record `front`, `plain`, `page_response`, `page_headers`, variant `route`와 이 함수들을 둔다.
 
 - `AGENTS.md`는 Rust core의 의존을 적는다. release 전까지 각 polyspec 저장소의 branch `v1/rust-core`, 그 저장소가 이름을 커밋할 때까지 이 저장소 옆 checkout에 대한 path 의존인 `polyspec-http-negotiation`, sessions 라이브러리가 새 이름을 받을 때까지 `polyspec-php-serialize`, 그리고 host package 옆 `packages/server/<lang>/native/`의 binding crate이며, bindgen이 그 자리에 scaffold할 때까지 그 계약 검사는 binding crate가 없음을 CK-19와 CK-20으로 보고한다(C-7).
 

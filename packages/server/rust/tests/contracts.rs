@@ -1046,6 +1046,11 @@ fn a_region_that_fails_with_its_kept_values_renders_with_its_loader_data() {
 
 /// The application `a_board` of `app.json` as the steps of a page hold it, every path read whole.
 fn board(context: bool) -> polyspec_hyper::steps::Pages {
+    board_under(context, "")
+}
+
+/// The application `a_board` under a base path, with client rendering under `/_props` and urlencoded forms.
+fn board_under(context: bool, base_path: &str) -> polyspec_hyper::steps::Pages {
     use polyspec_hyper::reads::Read;
     use polyspec_hyper::steps::{Application, Pages, RouteReads};
     let file = cases("app.json");
@@ -1085,6 +1090,11 @@ fn board(context: bool) -> polyspec_hyper::steps::Pages {
         build: text(fixture, "build").to_owned(),
         timezone: text(fixture, "timezone").to_owned(),
         context,
+        declared: polyspec_hyper::front::Declared {
+            base_path: base_path.to_owned(),
+            data_base_path: Some("/_props".to_owned()),
+            form_types: vec!["application/x-www-form-urlencoded".to_owned()],
+        },
     })
 }
 
@@ -1351,4 +1361,209 @@ fn a_declaration_of_client_rendering_is_checked_when_the_application_opens() {
         shell,
     );
     assert!(declared.is_ok(), "{declared:?}");
+}
+
+#[test]
+fn the_route_of_a_request_before_its_page() -> Result<(), Error> {
+    // HY-62.16 to HY-62.23, HY-40.1, HY-27.6, HY-116.12, HY-116.13, HY-116.18, HY-127.2, HY-59.12, HY-15.1
+    use polyspec_hyper::front::{route_request, Front, Plain, Route};
+    use polyspec_hyper::steps::PageKind;
+    let pages = board(false);
+    let with_context = board(true);
+    let front = |method: &str, path: &str, accept: &str| Front {
+        method: method.to_owned(),
+        path: path.to_owned(),
+        accept: vec![accept.as_bytes().to_vec()],
+        hx_request: false,
+        context_header: None,
+        media_type: Some("application/x-www-form-urlencoded".to_owned()),
+        malformed_content_type: false,
+    };
+    let page = |route: &str, kind: PageKind, action: bool| Route::Page {
+        route: route.to_owned(),
+        params: Vec::new(),
+        kind,
+        action,
+    };
+    let refused = |status: u16, body: &str, allow: Option<&str>, vary_accept: bool| Route::Plain {
+        answer: Plain {
+            status,
+            body: body.as_bytes().to_vec(),
+            allow: allow.map(str::to_owned),
+            vary_accept,
+        },
+    };
+    let html = "text/html";
+    let json = "application/vnd.hyper+json";
+    let route = |front: &Front, chosen: bool| route_request(&pages, chosen, front);
+    assert_eq!(
+        route(&front("GET", "/list", html), false)?,
+        page("list", PageKind::Html, false)
+    );
+    assert_eq!(
+        route(
+            &Front {
+                hx_request: true,
+                ..front("GET", "/list", json)
+            },
+            false
+        )?,
+        page("list", PageKind::RegionJson, false)
+    );
+    assert_eq!(
+        route(&front("GET", "/list", json), false)?,
+        page("list", PageKind::DocumentJson, false)
+    );
+    assert_eq!(
+        route(&front("POST", "/list", html), false)?,
+        refused(405, "Method Not Allowed", Some("GET, HEAD"), false)
+    );
+    assert_eq!(
+        route(&front("POST", "/add", html), false)?,
+        page("add", PageKind::Html, true)
+    );
+    assert_eq!(
+        route(
+            &Front {
+                media_type: Some("text/plain".to_owned()),
+                ..front("POST", "/add", html)
+            },
+            false
+        )?,
+        refused(415, "Unsupported Media Type", None, false)
+    );
+    assert_eq!(
+        route(
+            &Front {
+                malformed_content_type: true,
+                ..front("POST", "/add", html)
+            },
+            false
+        )?,
+        refused(400, "Bad Request", None, false)
+    );
+    assert_eq!(
+        route(&front("GET", "/nowhere", html), false)?,
+        refused(404, "Not Found", None, false)
+    );
+    assert_eq!(
+        route(&front("GET", "/_hyper/keep", html), false)?,
+        refused(405, "Method Not Allowed", Some("POST"), false)
+    );
+    assert_eq!(
+        route(&front("POST", "/_hyper/keep", html), false)?,
+        Route::Keep
+    );
+    assert_eq!(
+        route(&front("GET", "/list", "image/png"), false)?,
+        refused(406, "text/html\napplication/vnd.hyper+json\n", None, true)
+    );
+    assert_eq!(
+        route(&front("GET", "/list", "text/html;q=2"), false)?,
+        refused(400, "Bad Request", None, true)
+    );
+    let bad_hash = Front {
+        context_header: Some(b"x".to_vec()),
+        ..front("GET", "/list", html)
+    };
+    assert_eq!(
+        route_request(&with_context, false, &bad_hash)?,
+        refused(400, "Bad Request", None, false)
+    );
+    // A chosen request: the data base path answers JSON and no page (HY-62.19, HY-62.20), and outside it the shell.
+    assert_eq!(
+        route(&front("GET", "/_props/list", html), true)?,
+        refused(406, "Not Acceptable", None, true)
+    );
+    assert_eq!(
+        route(&front("GET", "/_props/list", json), true)?,
+        page("list", PageKind::DocumentJson, false)
+    );
+    assert_eq!(
+        route(&front("GET", "/_props/list", "application/xml"), true)?,
+        refused(406, "application/vnd.hyper+json\n", None, true)
+    );
+    assert_eq!(
+        route(&front("DELETE", "/_props/list", html), true)?,
+        refused(405, "Method Not Allowed", Some("GET, HEAD"), false)
+    );
+    assert_eq!(route(&front("GET", "/list", html), true)?, Route::Shell);
+    // An application under a base path routes no path outside it (HY-8.2).
+    let under = board_under(false, "/app");
+    assert_eq!(
+        route_request(&under, false, &front("GET", "/list", html))?,
+        refused(404, "Not Found", None, false)
+    );
+    assert_eq!(
+        route_request(&under, false, &front("GET", "/app/list", html))?,
+        page("list", PageKind::Html, false)
+    );
+    Ok(())
+}
+
+#[test]
+fn the_headers_of_a_page_and_the_kept_endpoint() {
+    // HY-53, HY-52, HY-65, HY-117.1, HY-45, HY-40.1
+    use polyspec_hyper::front::{frame_headers, kept_value, page_headers, PageResponse};
+    let response =
+        |status: u16, json: bool, method: &str, if_none_match: Option<&str>| PageResponse {
+            status,
+            json,
+            body: r#"{"shared":{"csrf":"masked"}}"#.to_owned(),
+            cache_control: Some("private, max-age=60".to_owned()),
+            context: false,
+            masked_token: "masked".to_owned(),
+            token: "token".to_owned(),
+            method: method.to_owned(),
+            if_none_match: if_none_match.map(str::to_owned),
+        };
+    let ok = page_headers(&response(200, true, "GET", None));
+    assert_eq!(ok.status, 200);
+    let names: Vec<&str> = ok.headers.iter().map(|(name, _)| name.as_str()).collect();
+    assert_eq!(names, ["Content-Type", "Cache-Control", "Vary", "ETag"]);
+    let tag = ok.headers[3].1.clone();
+    assert_eq!(
+        tag,
+        polyspec_hyper::etag::page_tag(r#"{"shared":{"csrf":"token"}}"#, "", "")
+    );
+    let not_modified = page_headers(&response(200, true, "GET", Some(&tag)));
+    assert_eq!(not_modified.status, 304);
+    assert!(!not_modified.body);
+    assert!(not_modified
+        .headers
+        .iter()
+        .all(|(name, _)| name != "Content-Type"));
+    // An action runs whatever tag its request names (HY-53.4).
+    assert_eq!(
+        page_headers(&response(200, true, "POST", Some(&tag))).status,
+        200
+    );
+    let failed = page_headers(&response(422, false, "POST", None));
+    assert_eq!(
+        failed.headers[1],
+        ("Cache-Control".to_owned(), "no-store".to_owned())
+    );
+    assert_eq!(failed.headers.len(), 3);
+    assert_eq!(
+        frame_headers(403, "'self'"),
+        [
+            (
+                "Content-Security-Policy".to_owned(),
+                "frame-ancestors 'self'".to_owned()
+            ),
+            ("Cache-Control".to_owned(), "no-store".to_owned())
+        ]
+    );
+    let pages = board(false);
+    assert_eq!(
+        kept_value(&pages, "rows", "open", "true"),
+        Some(polyspec_template::Value::Bool(true))
+    );
+    assert_eq!(kept_value(&pages, "rows", "mode", "\"b\""), None);
+    assert_eq!(kept_value(&pages, "rows", "open", "{"), None);
+    assert_eq!(
+        kept_value(&pages, "rows", "open", &format!("\"{}\"", "a".repeat(4095))),
+        None
+    );
+    assert_eq!(kept_value(&pages, "nowhere", "open", "true"), None);
 }
