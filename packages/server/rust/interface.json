@@ -156,6 +156,10 @@
         "category": "value"
       },
       {
+        "variant": "polyspec_hyper::Error::InvalidClientRendering",
+        "category": "value"
+      },
+      {
         "variant": "polyspec_hyper::Error::InvalidRepresentation",
         "category": "value"
       },
@@ -989,6 +993,62 @@
           "raises": [],
           "wait": "none",
           "core": "polyspec_hyper::page::current_path"
+        },
+        {
+          "id": "rules.check_shell_path",
+          "name": [
+            "check",
+            "shell",
+            "path"
+          ],
+          "kind": "function",
+          "visibility": "internal",
+          "parameters": [
+            {
+              "name": [
+                "path"
+              ],
+              "type": "text",
+              "required": true
+            }
+          ],
+          "returns": "none",
+          "raises": [
+            "polyspec_hyper::Error::InvalidClientRendering"
+          ],
+          "wait": "none",
+          "core": "polyspec_hyper::client::check_shell_path"
+        },
+        {
+          "id": "rules.shell_text",
+          "name": [
+            "shell",
+            "text"
+          ],
+          "kind": "function",
+          "visibility": "internal",
+          "parameters": [
+            {
+              "name": [
+                "path"
+              ],
+              "type": "text",
+              "required": true
+            },
+            {
+              "name": [
+                "bytes"
+              ],
+              "type": "bytes",
+              "required": true
+            }
+          ],
+          "returns": "text",
+          "raises": [
+            "polyspec_hyper::Error::InvalidClientRendering"
+          ],
+          "wait": "none",
+          "core": "polyspec_hyper::client::shell_text"
         },
         {
           "id": "rules.valid_context_header",

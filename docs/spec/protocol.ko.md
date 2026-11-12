@@ -1,5 +1,5 @@
 <!-- doc-id: protocol -->
-<!-- source-sha256: e4f439d210528c0e6378633f0178ce8445b41092d4ae985e419050f99896756b -->
+<!-- source-sha256: 3fc89c1e2e93b4c815aa5ab2ef8d1b61117f1cdf689a772aeb90d8512675254e -->
 # 영역 프로토콜
 
 <!-- contracts/protocol.json에서 생성됨. 직접 수정하지 않는다. -->
@@ -189,7 +189,7 @@
   2. <a id="HY-62.19"></a> 데이터 기본 경로 뒤에 `/`나 경로의 끝이 오는 것으로 시작하는 요청 경로는 데이터 기본 경로를 제거한 뒤 라우팅하며, `Location` header는 데이터 기본 경로를 포함한다(HY-8). <a id="HY-62.20"></a> 선택과 HY-116의 method 검사 뒤에, representation을 선택한 요청은 HY-121로 응답하고, `text/html`을 선택한 요청은 텍스트 `Not Acceptable`, `Vary: Accept`와 함께 상태 406을 받는다. <a id="HY-62.21"></a> 다른 모든 요청에는 HY-15부터 HY-40까지와 HY-42부터 HY-59까지에 따라 응답하며, 문서 요청과 영역 요청은 JSON을 받고 액션은 실행된다.
   3. <a id="HY-62.22"></a> 그 밖의 요청 경로는 그대로 라우팅한다. <a id="HY-62.23"></a> 라우트가 없는 경로는 404를, `GET`도 `HEAD`도 아닌 method는 405를 받는다(HY-27). <a id="HY-62.34"></a> 그다음 `application/vnd.hyper+json`이나 representation을 선택한(HY-116) 요청은 텍스트 `Not Acceptable`, `Vary: Accept`와 함께 상태 406을 받고, `text/html`을 선택한 요청은 셸의 바이트를 body로 가진 상태 200을 받으며, 그 요청에 대한 애플리케이션의 응답은 `Content-Type: text/html; charset=utf-8`, `Cache-Control: no-cache`, HY-117의 `Vary`, HY-45의 frame policy를 가지고 다른 header는 가지지 않는다. 그 호스트는 HY-130이 허용하는 대로 header를 더할 수 있다. <a id="HY-62.25"></a> 셸은 에셋 build가 쓰는 HY-125의 요소 `hyper-build`를 담는다.
 
-  <a id="HY-62.26"></a> 선택이 고른 요청의 405와 406 응답과 셸 응답은 loader나 액션을 실행하지 않고, 세션을 읽지 않으며(HY-45), 요청 데이터를 담지 않는다. <a id="HY-62.27"></a> 선택이 고른 요청의 모든 응답은 HY-45의 frame 정책을 가지며 HY-60의 응답 hook에 보고된다. <a id="HY-62.35"></a> shell 파일의 경로가 절대 경로가 아닐 때, 파일이 없거나 읽을 수 없을 때, 그 바이트가 유효한 UTF-8이 아닐 때 open은 런타임의 open 오류로 실패한다. <a id="HY-62.36"></a> Python에서 choice는 `Choice(chosen, value)`이며, `chosen`이 boolean이 아닌 choice는 세 서버에서 다른 값(HY-62.11)이다. <a id="HY-62.37"></a> HY-62.15나 HY-62.35의 실패 message는 그 원인을 말한다: 경로와 함께 static shell, data base path, 또는 data base path 아래에 놓인 라우트이다. <a id="HY-62.38"></a> HY-59.4나 HY-42가 거절하는 요청은 selection을 호출하지 않는다.
+  <a id="HY-62.26"></a> 선택이 고른 요청의 405와 406 응답과 셸 응답은 loader나 액션을 실행하지 않고, 세션을 읽지 않으며(HY-45), 요청 데이터를 담지 않는다. <a id="HY-62.27"></a> 선택이 고른 요청의 모든 응답은 HY-45의 frame 정책을 가지며 HY-60의 응답 hook에 보고된다. <a id="HY-62.39"></a> shell 파일의 경로가 절대 경로가 아니거나, 파일이 없거나 읽을 수 없거나, 그 byte가 올바른 UTF-8이 아니면 열기는 kind `invalid_application`(HY-106.18)으로 실패한다. <a id="HY-62.36"></a> Python에서 choice는 `Choice(chosen, value)`이며, `chosen`이 boolean이 아닌 choice는 세 서버에서 다른 값(HY-62.11)이다. <a id="HY-62.37"></a> HY-62.15나 HY-62.35의 실패 message는 그 원인을 말한다: 경로와 함께 static shell, data base path, 또는 data base path 아래에 놓인 라우트이다. <a id="HY-62.38"></a> HY-59.4나 HY-42가 거절하는 요청은 selection을 호출하지 않는다.
 
 - **HYC-6** <a id="HYC-6.1"></a> 클라이언트 렌더가 렌더한 문서를 붙일 때(HYC-8, HYC-3), 브라우저는 `html` 요소의 속성을 렌더한 문서의 `html` 요소의 속성으로 그 순서대로 바꾸며, 렌더한 요소에 없는 속성은 제거한다. <a id="HYC-6.2"></a> 따라서 `<html lang="{= language}">`를 렌더하는 layout은 서버 렌더 문서처럼 클라이언트 렌더 페이지에도 그 데이터의 언어를 준다. <a id="HYC-6.3"></a> `scripts/build-assets.mjs`가 쓰는 정적 셸은 데이터를 담지 않으므로 `lang` 속성이 없다.
 

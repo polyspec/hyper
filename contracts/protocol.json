@@ -2399,7 +2399,8 @@
             30,
             31,
             32,
-            33
+            33,
+            35
           ],
           "blocks": [
             {
@@ -2625,10 +2626,10 @@
                   "koSource": "93ae73fcade136d5a9361639ba7491f64bf9a94099cfd2ea1fee4a6e098da32c"
                 },
                 {
-                  "id": "HY-62.35",
-                  "en": "The open fails with the open error of the runtime when the path of the shell file is not absolute, when the file does not exist or cannot be read, and when its bytes are not valid UTF-8.",
-                  "ko": "shell 파일의 경로가 절대 경로가 아닐 때, 파일이 없거나 읽을 수 없을 때, 그 바이트가 유효한 UTF-8이 아닐 때 open은 런타임의 open 오류로 실패한다.",
-                  "koSource": "63374cbbd49e7a5c291aaaeae22e1b413070c140d6bc95f87f285db896b85105"
+                  "id": "HY-62.39",
+                  "en": "The open fails with kind `invalid_application` (HY-106.18) when the path of the shell file is not absolute, when the file does not exist or cannot be read, and when its bytes are not valid UTF-8.",
+                  "ko": "shell 파일의 경로가 절대 경로가 아니거나, 파일이 없거나 읽을 수 없거나, 그 byte가 올바른 UTF-8이 아니면 열기는 kind `invalid_application`(HY-106.18)으로 실패한다.",
+                  "koSource": "2a1ec3388bffc1460323482f611a33a3e8e2c810ccd5c42e5a68f4d2105f0b36"
                 },
                 {
                   "id": "HY-62.36",

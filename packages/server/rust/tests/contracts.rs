@@ -1043,3 +1043,290 @@ fn a_region_that_fails_with_its_kept_values_renders_with_its_loader_data() {
         Ok(document) => panic!("{document}"),
     }
 }
+
+/// The application `a_board` of `app.json` as the steps of a page hold it, every path read whole.
+fn board(context: bool) -> polyspec_hyper::steps::Application {
+    use polyspec_hyper::reads::Read;
+    use polyspec_hyper::steps::{Application, RouteReads};
+    let file = cases("app.json");
+    let (templates, manifest) = application(&file, "a_board");
+    let fixture = &file["applications"]["a_board"];
+    let names: Vec<String> = manifest
+        .regions
+        .iter()
+        .chain(
+            manifest
+                .routes
+                .iter()
+                .flat_map(|route| route.regions.iter()),
+        )
+        .map(|region| region.name.clone())
+        .collect();
+    let reads = manifest
+        .routes
+        .iter()
+        .map(|route| {
+            (
+                route.name.clone(),
+                RouteReads {
+                    shared: Read::Whole,
+                    regions: names
+                        .iter()
+                        .map(|name| (name.clone(), Read::Whole))
+                        .collect(),
+                },
+            )
+        })
+        .collect();
+    Application {
+        manifest,
+        templates,
+        reads,
+        build: text(fixture, "build").to_owned(),
+        timezone: text(fixture, "timezone").to_owned(),
+        context,
+    }
+}
+
+fn map(json: &str) -> polyspec_template::OrderedMap {
+    match data_value(json) {
+        Ok(polyspec_template::Value::Map(map)) => (*map).clone(),
+        Ok(_) | Err(_) => panic!("{json} is no map"),
+    }
+}
+
+/// Runs the steps of a page, answering each call from the list in order, and gives the calls and the answer.
+fn run_page(
+    app: &polyspec_hyper::steps::Application,
+    input: polyspec_hyper::steps::PageInput,
+    results: Vec<polyspec_hyper::steps::Input>,
+) -> (
+    Vec<polyspec_hyper::steps::Call>,
+    polyspec_hyper::steps::Answer,
+) {
+    use polyspec_hyper::steps::{Input, PageRequest, Step};
+    let mut page = match PageRequest::new(app, input) {
+        Ok(page) => page,
+        Err(error) => panic!("{error}"),
+    };
+    let mut calls = Vec::new();
+    let mut results = results.into_iter();
+    let mut input = Input::Start;
+    loop {
+        match page.next(input) {
+            Ok(Step::Call(call)) => {
+                calls.push(call);
+                input = match results.next() {
+                    Some(result) => result,
+                    None => panic!("no result for {calls:?}"),
+                };
+            }
+            Ok(Step::Answer(answer)) => return (calls, answer),
+            Err(error) => panic!("{calls:?}: {error}"),
+        }
+    }
+}
+
+fn page_input(
+    route: &str,
+    kind: polyspec_hyper::steps::PageKind,
+    action: bool,
+) -> polyspec_hyper::steps::PageInput {
+    polyspec_hyper::steps::PageInput {
+        route: route.to_owned(),
+        params: Vec::new(),
+        kind,
+        action,
+        csrf: "t".to_owned(),
+        changed: Vec::new(),
+        stored: Vec::new(),
+        keep_cookie: None,
+        held_hash: None,
+        now: 0.0,
+    }
+}
+
+#[test]
+fn the_steps_of_a_page_ask_the_host_for_each_handler() {
+    // HY-124.2, HY-124.4, HY-18, HY-26.2, HY-58.3, HY-75.1, HY-128.2
+    use polyspec_hyper::steps::{ActionOutcome, Answer, Call, Input, PageKind};
+    let app = board(false);
+    let (calls, answer) = run_page(
+        &app,
+        page_input("list", PageKind::Html, false),
+        vec![
+            Input::NoHandler,
+            Input::Loaded(map(r#"{"count":1,"note":null}"#)),
+            Input::NoHandler,
+            Input::Loaded(map(r#"{"items":["x"],"tags":[]}"#)),
+            Input::Reply {
+                embeds: false,
+                status: None,
+            },
+        ],
+    );
+    assert_eq!(
+        calls,
+        [
+            Call::Shared,
+            Call::RegionLoader("side".to_owned()),
+            Call::RouteLoader,
+            Call::RouteRegionLoader("rows".to_owned()),
+            Call::Reply
+        ]
+    );
+    match answer {
+        Answer::Document { status, html } => {
+            assert_eq!(status, 200);
+            assert!(html.contains("<title>List - Site</title>"), "{html}");
+            assert!(html.contains("<ul id=\"rows\"><li>x</li></ul>"), "{html}");
+        }
+        other => panic!("{other:?}"),
+    }
+
+    // A route region whose loader returns null is absent (HY-75.1), and the reply gives a page with status 200 its
+    // status (HY-69).
+    let (_, answer) = run_page(
+        &app,
+        page_input("list", PageKind::DocumentJson, false),
+        vec![
+            Input::NoHandler,
+            Input::NoHandler,
+            Input::NoHandler,
+            Input::Absent,
+            Input::Reply {
+                embeds: true,
+                status: Some(403),
+            },
+        ],
+    );
+    assert_eq!(
+        answer,
+        Answer::Json {
+            status: 403,
+            text: concat!(
+                r#"{"env":{"timezone":"+09:00"},"route":"list","params":{},"#,
+                r#""build":"1111111111111111111111111111111111111111111111111111111111111111","#,
+                r#""shared":{"title":"List","csrf":"t"},"regions":{"side":{},"content":{}},"kept":{}}"#
+            )
+            .to_owned()
+        }
+    );
+
+    // An action that redirects, stops or fails causes no call of the context handler (HY-124.4).
+    let with_context = board(true);
+    let (calls, answer) = run_page(
+        &with_context,
+        page_input("add", PageKind::Html, true),
+        vec![Input::Action(ActionOutcome::NoPage)],
+    );
+    assert_eq!(calls, [Call::Action]);
+    assert_eq!(answer, Answer::NoPage);
+
+    // An action that returns the route page calls the context handler after it and before the shared handler, and
+    // its data replaces the route data (HY-124.2, HY-26.2); a region request holds the page region alone (HY-18.2).
+    let (calls, answer) = run_page(
+        &with_context,
+        page_input("add", PageKind::RegionJson, true),
+        vec![
+            Input::Action(ActionOutcome::Page {
+                status: 422,
+                data: map(r#"{"error":"e"}"#),
+            }),
+            Input::Context(map(r#"{"name":"Board"}"#)),
+            Input::NoHandler,
+            Input::Loaded(map(r#"{"name":"n","error":null}"#)),
+            Input::Reply {
+                embeds: false,
+                status: Some(403),
+            },
+        ],
+    );
+    assert_eq!(
+        calls,
+        [
+            Call::Action,
+            Call::Context,
+            Call::Shared,
+            Call::RouteLoader,
+            Call::Reply
+        ]
+    );
+    match answer {
+        Answer::Json { status, text } => {
+            assert_eq!(status, 422);
+            assert!(
+                text.contains(r#""context":{"hash":"#)
+                    && text.contains(r#""value":{"name":"Board"}"#),
+                "{text}"
+            );
+            assert!(
+                text.contains(r#""regions":{"content":{"name":"n","error":"e"}}"#),
+                "{text}"
+            );
+        }
+        other => panic!("{other:?}"),
+    }
+}
+
+#[test]
+fn a_page_refuses_the_result_of_another_call() {
+    use polyspec_hyper::steps::{Input, PageKind, PageRequest, Step};
+    let app = board(false);
+    let mut page = match PageRequest::new(&app, page_input("home", PageKind::Html, false)) {
+        Ok(page) => page,
+        Err(error) => panic!("{error}"),
+    };
+    assert!(matches!(page.next(Input::Start), Ok(Step::Call(_))));
+    match page.next(Input::Absent) {
+        Err(bindgen_core::Failure::Kind(error)) => {
+            assert_eq!(bindgen_core::Kinds::kind(&error), "internal")
+        }
+        other => panic!("{other:?}"),
+    }
+}
+
+#[test]
+fn a_declaration_of_client_rendering_is_checked_when_the_application_opens() {
+    // HY-62.5, HY-62.6, HY-62.15, HY-62.35, HY-62.37, HY-62.39
+    use polyspec_hyper::client::{check_declaration, check_shell_path, shell_text};
+    let file = cases("client.json");
+    let (_, manifest) = application(&cases("app.json"), "a_board");
+    let shell = text(&file, "shell");
+    let mut ran = 0;
+    for case in group(&file, "openRejections") {
+        let base = match case.get("dataBasePath") {
+            Some(base) => text_of(base),
+            None => text(&file, "basePath"),
+        };
+        let path = "/srv/shell/index.html";
+        let result = match text(case, "shellFile") {
+            "relative" => check_shell_path("shell/index.html"),
+            "not-utf8" => shell_text(path, vec![0xff]).map(|_| ()),
+            "other-base" => check_declaration(
+                &manifest,
+                base,
+                path,
+                &shell.replace("content=\"/_props\"", "content=\"/_other\""),
+            ),
+            "declared" => check_declaration(&manifest, base, path, shell),
+            // The host reads the shell file: a file that does not exist, a directory and a file that it may not read
+            // fail its read, which it reports with `unreadable_shell`.
+            "missing" | "directory" | "unreadable" => continue,
+            other => panic!("{}: {other}", case["id"]),
+        };
+        match result {
+            Err(error) => check_raises(case, &error),
+            Ok(()) => panic!("{}: opened", case["id"]),
+        }
+        ran += 1;
+    }
+    assert_eq!(ran, 6);
+    let declared = check_declaration(
+        &manifest,
+        text(&file, "basePath"),
+        "/srv/shell/index.html",
+        shell,
+    );
+    assert!(declared.is_ok(), "{declared:?}");
+}

@@ -15422,28 +15422,18 @@
               "role": "input",
               "optional": true
             },
-            "openError": {
+            "raises": {
               "role": "expected",
               "optional": true,
-              "compare": "contains",
-              "sentence": "HY-62.37",
-              "state": "`openError` is a text that the message of the open error contains."
+              "compare": "exact",
+              "sentence": "HY-62.39",
+              "state": "`raises` is the failure of the case: its `kind`, its HTTP `status` or null, its `category` and its `message` when a rule states the message, or null; a case with `raises` has no result field."
             }
           },
           "outcomes": {
             "open": {
               "compare": "raises",
               "sentence": "HY-106.18"
-            },
-            "messageStart": {
-              "compare": "exact",
-              "sentence": "HY-106.19",
-              "only": {
-                "languages": [
-                  "node"
-                ],
-                "sentence": "HY-106.19"
-              }
             }
           },
           "members": [

@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 540bfce572bbb4ca0f43c2430c244f77af7bcd3c77a00992002c49575a9d6f58 -->
+<!-- source-sha256: c25bc48dc5a900c73e4ff48afa587d85b6252e0f98771f5a30a0d905d8958db9 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- Rust core가 요청의 page를 단계로 준다(C-7). `steps::PageRequest`는 I/O 없는 상태기계이며, `next`는 host에게 애플리케이션 handler 하나(action, context handler, shared handler, route·route region·manifest region의 loader, reply)를 부르라고 요청하거나, 답(문서, JSON 텍스트, page 없음)을 준다. core는 언어 객체를 쥐지 않고, Node handler는 event loop에서 기다리며, handler의 예외는 Rust frame을 지나지 않는다. template 함수는 엔진이 렌더 중에 부르는 callback으로 남는데, 렌더는 엔진이 멈추지 않는 한 번의 호출이기 때문이다. 단계는 page를 반환하거나 `REVISION_CHANGED`를 내보낸 action 뒤, shared handler 앞에서 context handler를 부르고, redirect·stop·실패 뒤에는 부르지 않으며(HY-124.2부터 HY-124.4까지), action의 데이터를 route 데이터에 합치고(HY-26.2, HY-58.3), 없는 route region을 빼며(HY-75.1), 상태 200인 page에 reply의 상태를 준다(HY-69). core는 client 렌더 선언(shell 경로, 그 텍스트와 data base path 선언, 그 아래의 route)을 검사하고(HY-62.5, HY-62.6, HY-62.15, HY-62.39), data base path 밖의 선택된 요청에 404, 405, 400, 406 또는 shell로 답한다(HY-62.22, HY-62.23, HY-62.34). 실패한 client 렌더 열기는 kind `invalid_application`을 주며(HY-62.35를 대신하는 HY-62.39), `contracts/client.json`의 group `openRejections` case는 이를 `raises`로 준다. 접두사 `hyper: `의 Node case는 없어졌다(HY-106.19). interface 계약은 `check_shell_path`와 `shell_text`를 둔다.
 
 - Rust core가 template 언어의 template 엔진으로 문서를 렌더한다(C-7). `render::Templates`는 host가 애플리케이션을 열 때 읽는 애플리케이션의 template과 예약 template `hyper/data.tpl`(HY-31.3), 그리고 엔진이 렌더 중에 부르며 예외가 그대로 지나가는 애플리케이션의 함수(HYC-24)를 가진다. `render_document`는 layout을 title, embedded data, build 요소, 따로 렌더한 각 manifest region과 함께 렌더하고, page region은 있는 route region과 함께 렌더하며(HY-12, HY-13), 각 root를 한 번 bind한다(HY-13.5). kept 값을 적용하면 렌더되지 않는 region은 loader 데이터로 렌더하고 그 kept 값을 embedded data에서도 잃으며, 그래도 렌더되지 않는 문서는 template 언어의 kind로 실패한다(HY-38.16부터 HY-38.18까지). 렌더 실패는 template 언어의 kind와 category를 가진 오류 `Template`이고, interface 계약은 template 언어의 모든 kind를 넘겨준다. 테스트는 `app.json`의 group `parts` 3개 case와 `app.json` kept case의 문서를 애플리케이션 `a_board`로 실행한다.
 

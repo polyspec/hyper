@@ -595,3 +595,48 @@ fn the_kept_values_the_json_value_and_the_embedded_data() -> Result<(), Error> {
     );
     Ok(())
 }
+
+#[test]
+fn a_chosen_request_outside_the_data_base_path() -> Result<(), Error> {
+    // HY-62.20, HY-62.22, HY-62.23, HY-62.34
+    use polyspec_hyper::client::{refuses_page, shell_answer, ShellAnswer};
+    let manifest = page_manifest()?;
+    let accept = |value: &str| vec![value.as_bytes().to_vec()];
+    assert_eq!(
+        shell_answer(&manifest, "/nowhere", "GET", &[])?,
+        ShellAnswer::NotFound
+    );
+    assert_eq!(
+        shell_answer(&manifest, "/board/7", "POST", &[])?,
+        ShellAnswer::NotAllowed
+    );
+    assert_eq!(
+        shell_answer(&manifest, "/board/7", "GET", &[])?,
+        ShellAnswer::Shell
+    );
+    assert_eq!(
+        shell_answer(&manifest, "/board/7", "HEAD", &accept("text/html"))?,
+        ShellAnswer::Shell
+    );
+    assert_eq!(
+        shell_answer(
+            &manifest,
+            "/board/7",
+            "GET",
+            &accept("application/vnd.hyper+json")
+        )?,
+        ShellAnswer::NotAcceptable
+    );
+    assert_eq!(
+        shell_answer(&manifest, "/board/7", "GET", &accept("image/png"))?,
+        ShellAnswer::Listing(b"text/html\n".to_vec())
+    );
+    assert_eq!(
+        shell_answer(&manifest, "/board/7", "GET", &accept("text/html;q=2"))?,
+        ShellAnswer::BadRequest
+    );
+    assert!(refuses_page(true, &Selected::Page));
+    assert!(!refuses_page(false, &Selected::Page));
+    assert!(!refuses_page(true, &Selected::PageData));
+    Ok(())
+}
