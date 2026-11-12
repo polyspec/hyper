@@ -46,7 +46,8 @@ const STEPS: Record<string, Step> = {
   ...prefixed('build.json', buildSteps, ['read']),
   ...prefixed('build-before-s3b.json', buildSteps, ['read'], true),
   ...prefixed('container.json', containerSteps),
-  ...prefixed('csrf.json', csrfSteps),
+  ...prefixed('csrf.json', csrfSteps, ['browser', 'mask', 'verify']),
+  ...prefixed('csrf-before-s3b.json', csrfSteps, ['browser', 'mask', 'verify'], true),
   ...prefixed('fields.json', fieldsSteps),
   ...prefixed('file-sessions.json', fileSessionsSteps),
   // The fixed copy of the store cases that the sessions library holds (tests/legacy), until S-4 removes it.

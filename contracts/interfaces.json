@@ -8751,7 +8751,8 @@
         "contracts/session.json",
         "contracts/app.json",
         "contracts/representations.json",
-        "tests/legacy/app-before-s3b.json"
+        "tests/legacy/app-before-s3b.json",
+        "tests/legacy/csrf-before-s3b.json"
       ],
       "units": [
         {
@@ -15909,11 +15910,8 @@
       "fixtures": {},
       "sections": {
         "mask": {
-          "runners": [
-            "php",
-            "node",
-            "python"
-          ],
+          "runners": [],
+          "fixedCopy": "csrf-before-s3b.json",
           "uses": [],
           "fields": {
             "id": {
@@ -15945,11 +15943,8 @@
           }
         },
         "verify": {
-          "runners": [
-            "php",
-            "node",
-            "python"
-          ],
+          "runners": [],
+          "fixedCopy": "csrf-before-s3b.json",
           "uses": [],
           "fields": {
             "id": {
@@ -16018,11 +16013,8 @@
           }
         },
         "browser": {
-          "runners": [
-            "php",
-            "node",
-            "python"
-          ],
+          "runners": [],
+          "fixedCopy": "csrf-before-s3b.json",
           "uses": [],
           "fields": {
             "id": {

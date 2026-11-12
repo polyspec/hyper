@@ -1182,6 +1182,119 @@
           }
         }
       }
+    },
+    "csrf-before-s3b.json": {
+      "fixtures": {},
+      "sections": {
+        "browser": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "value": {
+              "role": "input"
+            },
+            "browser": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-24.10",
+              "state": "`browser` is the digest that the masked value `value` gives, 64 lowercase hexadecimal digits, or null for the empty text."
+            },
+            "error": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-24.13",
+              "state": "`error` is the message of the error with which the digest of the value `value` fails."
+            }
+          },
+          "members": [
+            "csrf.browserOf"
+          ]
+        },
+        "mask": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "token": {
+              "role": "input"
+            },
+            "mask": {
+              "role": "input"
+            },
+            "value": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-24.2",
+              "state": "`value` is the masked value, 128 lowercase hexadecimal digits, that the random bytes `mask` give for the token `token`.",
+              "optional": true
+            },
+            "error": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-24.9",
+              "state": "`error` is the message of the error with which masking the token `token` with `mask` fails."
+            }
+          }
+        },
+        "verify": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "token": {
+              "role": "input"
+            },
+            "value": {
+              "role": "input"
+            },
+            "valid": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-24.4",
+              "state": "`valid` states whether the form value `value` is a masked value of the token `token`.",
+              "optional": true
+            },
+            "error": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-24.9",
+              "state": "`error` is the message of the error with which verifying the value `value` against the token `token` fails."
+            }
+          }
+        }
+      }
     }
   }
 }

@@ -1,0 +1,188 @@
+{
+  "browser": [
+    {
+      "id": "a_masked_value_gives_the_digest_of_the_32_bytes_of_its_token",
+      "label": "a masked value gives the SHA-256 digest of the 32 bytes of its token, not of its digits",
+      "value": "a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a4a7a6a1a0a3a2adacafaea9a8abaab5b4b7b6b1b0b3b2bdbcbfbeb9b8bbba",
+      "browser": "630dcd2966c4336691125448bbb25b4ff412a49c732db2c8abc1b8581bd710dd"
+    },
+    {
+      "id": "another_mask_of_the_same_token_gives_the_same_browser",
+      "label": "a masked value of the same token with another mask gives the same browser",
+      "value": "030a11181f262d343b424950575e656c737a81888f969da4abb2b9c0c7ced5dc030b131b1b232b33334b435b5b536b63636b939b9b838bb3b3aba3dbdbd3cbc3",
+      "browser": "630dcd2966c4336691125448bbb25b4ff412a49c732db2c8abc1b8581bd710dd"
+    },
+    {
+      "id": "a_mask_of_zero_bytes_gives_the_same_browser",
+      "label": "a masked value of the same token with a mask of zero bytes gives the same browser",
+      "value": "0000000000000000000000000000000000000000000000000000000000000000000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+      "browser": "630dcd2966c4336691125448bbb25b4ff412a49c732db2c8abc1b8581bd710dd"
+    },
+    {
+      "id": "a_masked_value_of_another_token_gives_another_browser",
+      "label": "a masked value of another token, with the mask of the first case, gives another browser",
+      "value": "a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a55a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a",
+      "browser": "af9613760f72635fbdb44a5a0a63c39f12af30f950a6ee5c971be188e89c4051"
+    },
+    {
+      "id": "the_empty_text_gives_no_browser",
+      "label": "the empty text, which a request without a session holds, gives no browser",
+      "value": "",
+      "browser": null
+    },
+    {
+      "id": "a_value_one_digit_short_fails",
+      "label": "a value of 127 digits fails",
+      "value": "a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a4a7a6a1a0a3a2adacafaea9a8abaab5b4b7b6b1b0b3b2bdbcbfbeb9b8bbb",
+      "error": "a CSRF token or mask is not 64 lowercase hexadecimal digits (HY-24)"
+    },
+    {
+      "id": "a_value_one_digit_long_fails",
+      "label": "a value of 129 digits fails",
+      "value": "a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a4a7a6a1a0a3a2adacafaea9a8abaab5b4b7b6b1b0b3b2bdbcbfbeb9b8bbba0",
+      "error": "a CSRF token or mask is not 64 lowercase hexadecimal digits (HY-24)"
+    },
+    {
+      "id": "the_token_itself_fails",
+      "label": "a token of 64 digits in the place of the masked value fails",
+      "value": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+      "error": "a CSRF token or mask is not 64 lowercase hexadecimal digits (HY-24)"
+    },
+    {
+      "id": "a_value_with_upper_case_digits_fails",
+      "label": "a value with upper case digits fails",
+      "value": "A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A4A7A6A1A0A3A2ADACAFAEA9A8ABAAB5B4B7B6B1B0B3B2BDBCBFBEB9B8BBBA",
+      "error": "a CSRF token or mask is not 64 lowercase hexadecimal digits (HY-24)"
+    }
+  ],
+  "mask": [
+    {
+      "id": "a_mask_of_zero_bytes_writes_the_token_after_it",
+      "label": "a mask of zero bytes writes the token after it",
+      "token": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+      "mask": "0000000000000000000000000000000000000000000000000000000000000000",
+      "value": "0000000000000000000000000000000000000000000000000000000000000000000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+    },
+    {
+      "id": "a_mask_xor_the_token_follows_the_mask",
+      "label": "a mask XOR the token follows the mask",
+      "token": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+      "mask": "a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5",
+      "value": "a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a4a7a6a1a0a3a2adacafaea9a8abaab5b4b7b6b1b0b3b2bdbcbfbeb9b8bbba"
+    },
+    {
+      "id": "another_mask_gives_another_value_of_the_same_token",
+      "label": "another mask gives another value of the same token",
+      "token": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+      "mask": "030a11181f262d343b424950575e656c737a81888f969da4abb2b9c0c7ced5dc",
+      "value": "030a11181f262d343b424950575e656c737a81888f969da4abb2b9c0c7ced5dc030b131b1b232b33334b435b5b536b63636b939b9b838bb3b3aba3dbdbd3cbc3"
+    },
+    {
+      "id": "a_mask_equal_to_the_token_gives_zero_bytes_after_it",
+      "label": "a mask equal to the token gives zero bytes after it",
+      "token": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "mask": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "value": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    {
+      "id": "a_token_of_62_digits_fails",
+      "label": "a token of 62 digits fails",
+      "token": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e",
+      "mask": "a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5",
+      "error": "a CSRF token or mask is not 64 lowercase hexadecimal digits (HY-24)"
+    },
+    {
+      "id": "a_mask_with_upper_case_digits_fails",
+      "label": "a mask with upper case digits fails",
+      "token": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+      "mask": "A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5",
+      "error": "a CSRF token or mask is not 64 lowercase hexadecimal digits (HY-24)"
+    },
+    {
+      "id": "a_mask_with_white_space_fails",
+      "label": "a mask with white space fails",
+      "token": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+      "mask": "a5 a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a",
+      "error": "a CSRF token or mask is not 64 lowercase hexadecimal digits (HY-24)"
+    }
+  ],
+  "verify": [
+    {
+      "id": "a_masked_value_of_the_token_is_accepted",
+      "label": "a masked value of the token is accepted",
+      "token": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+      "value": "a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a4a7a6a1a0a3a2adacafaea9a8abaab5b4b7b6b1b0b3b2bdbcbfbeb9b8bbba",
+      "valid": true
+    },
+    {
+      "id": "every_mask_of_the_token_is_accepted",
+      "label": "every mask of the token is accepted",
+      "token": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+      "value": "030a11181f262d343b424950575e656c737a81888f969da4abb2b9c0c7ced5dc030b131b1b232b33334b435b5b536b63636b939b9b838bb3b3aba3dbdbd3cbc3",
+      "valid": true
+    },
+    {
+      "id": "the_token_itself_is_refused",
+      "label": "the token itself is refused",
+      "token": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+      "value": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+      "valid": false
+    },
+    {
+      "id": "a_masked_value_of_another_token_is_refused",
+      "label": "a masked value of another token is refused",
+      "token": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+      "value": "a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a55a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a",
+      "valid": false
+    },
+    {
+      "id": "a_changed_digit_is_refused",
+      "label": "a changed digit is refused",
+      "token": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+      "value": "030a11181f262d343b424950575e656c737a81888f969da4abb2b9c0c7ced5dc030b131b1b232b33334b435b5b536b63636b939b9b838bb3b3aba3dbdbd3cbc0",
+      "valid": false
+    },
+    {
+      "id": "uppercase_digits_are_refused",
+      "label": "uppercase digits are refused",
+      "token": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+      "value": "A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A4A7A6A1A0A3A2ADACAFAEA9A8ABAAB5B4B7B6B1B0B3B2BDBCBFBEB9B8BBBA",
+      "valid": false
+    },
+    {
+      "id": "a_value_one_digit_short_is_refused",
+      "label": "a value one digit short is refused",
+      "token": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+      "value": "a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a4a7a6a1a0a3a2adacafaea9a8abaab5b4b7b6b1b0b3b2bdbcbfbeb9b8bbb",
+      "valid": false
+    },
+    {
+      "id": "a_value_one_digit_long_is_refused",
+      "label": "a value one digit long is refused",
+      "token": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+      "value": "a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a4a7a6a1a0a3a2adacafaea9a8abaab5b4b7b6b1b0b3b2bdbcbfbeb9b8bbba0",
+      "valid": false
+    },
+    {
+      "id": "a_value_with_a_character_outside_hexadecimal_digits_is_refused",
+      "label": "a value with a character outside hexadecimal digits is refused",
+      "token": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+      "value": "g5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a4a7a6a1a0a3a2adacafaea9a8abaab5b4b7b6b1b0b3b2bdbcbfbeb9b8bbba",
+      "valid": false
+    },
+    {
+      "id": "an_empty_value_is_refused",
+      "label": "an empty value is refused",
+      "token": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+      "value": "",
+      "valid": false
+    },
+    {
+      "id": "verifying_against_a_token_of_62_digits_fails",
+      "label": "verifying against a token of 62 digits fails",
+      "token": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e",
+      "value": "a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5",
+      "error": "a CSRF token or mask is not 64 lowercase hexadecimal digits (HY-24)"
+    }
+  ]
+}
