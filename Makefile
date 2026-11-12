@@ -338,6 +338,16 @@ recipe-candidates: ## Write the candidate of contracts/interfaces.json under var
 	@test -d $(RECIPE_TYPESCRIPT) || { echo 'recipe-candidates needs the pinned TypeScript of scripts/recipe/typescript: run make install-packages'; exit 1; }
 	$(NODE) scripts/recipe/candidate.mts --root . --php-autoload $(PHP_VENDOR)/autoload.php --output var/recipe/interfaces.candidate.json
 
+.PHONY: core-test core-lint core-fmt-check
+# The Rust core of the server rules (C-7) at packages/server/rust, built with the toolchain of its rust-toolchain.toml
+# and the lints of its Cargo.toml and clippy.toml (plan R-1).
+CORE := packages/server/rust
+core-test: ## Run the tests of the Rust core, which run the cases of contracts/ that it decides (HY-132)
+	cd $(CORE) && cargo test --locked
+core-lint: ## Run clippy on the Rust core and its tests with every warning an error (plan R-1)
+	cd $(CORE) && cargo clippy --locked --all-targets -- -D warnings
+core-fmt-check: ## Check the format of the Rust core
+	cd $(CORE) && cargo fmt --check
 .PHONY: spec-docs spec-docs-check
 spec-docs: ## Write docs/spec/protocol.md and protocol.ko.md from contracts/protocol.json (H2)
 	$(NODE) scripts/spec-docs.mts write

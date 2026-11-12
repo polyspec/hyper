@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 1381f6799b7fe83e7df53e0aa56b743636db40ad7ab94ce3770b8c63ccf0aabd -->
+<!-- source-sha256: 197add9674f4b57c27fef1ec579c4b356b36e03f6b9ac8d37929398a8809f3bf -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- server 규칙의 Rust core는 `packages/server/rust`의 crate `polyspec-hyper`이며(C-7), `make core-test`, `make core-lint`, `make core-fmt-check`를 가진다. 담는 것: HY-132의 오류와 그 kind, 상태, category; http-negotiate의 무게로 요청의 media type을 고르는 선택, 같은 무게일 때의 순서, 406 목록, 각 응답의 `Vary`(HY-116, HY-117, HY-119); representation entry의 manifest 검사, 그 method와 `Allow`, 그 body와 handler 응답의 검사(HY-118, HY-121, HY-122); 약한 tag와 강한 tag(HY-53, HY-122.10); hyper cookie의 이름과 http-cookies로 쓰는 session cookie(HY-45, HY-38.10); reply의 cookie, `Cache-Control`, page 상태, `Referrer-Policy`(HY-52, HY-69, HY-103); 애플리케이션 경로와 page 상태(HY-46, HY-58); token, 그 mask, 검증, `browser()`(HY-24); ORM 오류의 kind별 응답(HY-107); 요청 단계의 순서와 session을 여는 요청(HY-120). 그 시험은 core가 정하는 `csrf.json`, `result.json`, `reply.json`, `accept.json`, `media-type.json`의 case를 실행한다. kind `invalid_representation`이 HY-132의 표에 더해지고, UTF-8 텍스트가 아닌 위치의 `result.json` case는 binding의 `invalid_text`를 기대한다. 세 server는 아직 이 crate를 쓰지 않는다(S-4).
 
 - contract case는 수의 binding 규칙과 세 server의 session 저장소를 따른다(S-3b). `60.0` 같은 float `Max-Age`나 page 상태는 PHP와 Python에서 정수가 아니므로 `invalid_number`로 실패하고, number에 float 타입이 없는 Node는 그것을 받는다(HY-52.14). 그래서 `contracts/reply.json`의 그런 case 넷은 각각 Node case와 PHP·Python case로 나뉜다. Node와 Python만 실행하던 `contracts/file-sessions.json`과 `contracts/redis-sessions.json`의 case는 세 server에 적용되고(HY-104.26, HY-115.25), 접두어 `hyper: `가 있는 message를 비교하던 Node case는 message를 비교하지 않는다(HY-106.19).
 

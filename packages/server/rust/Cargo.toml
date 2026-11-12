@@ -1,0 +1,53 @@
+[package]
+name = "polyspec-hyper"
+version = "0.0.0"
+edition = "2021"
+rust-version = "1.99.0"
+description = "The rules of the hyper server that every runtime shares: media selection, representations, tags, cookies, the reply, the CSRF token and the order of a request"
+repository = "https://github.com/polyspec/hyper.git"
+publish = false
+# The package holds the interface contract of the bindings beside the source, so that a repository that depends on
+# this crate reads the contract from the package that Cargo resolved (bindgen design I-1, T-3).
+include = ["/src/**/*.rs", "/interface.json"]
+
+[lib]
+name = "polyspec_hyper"
+path = "src/lib.rs"
+
+[dependencies]
+# The kind interface of every error (plan F-2, bindgen design E-1).
+polyspec-bindgen-core = { path = "../../../../bindgen/packages/core/rust" }
+# The Cookie and Set-Cookie fields (CK-1 to CK-14; HY-129.13, HY-45.8, HY-52.13).
+polyspec-http-cookies = { path = "../../../../http-cookies/packages/rust" }
+# The weights of Accept (NG-5 to NG-10; HY-116.17 to HY-116.20).
+polyspec-http-negotiate = { path = "../../../../http-negotiate/packages/rust" }
+# The reading and writing of media types (MT-4, MT-6; HY-119.4, HY-121.11).
+polyspec-http-media-type = { path = "../../../../http-media-type/packages/rust" }
+# The digests of HY-24.10, HY-53 and HY-122.10.
+sha2 = "0.10"
+
+[dev-dependencies]
+serde_json = "1"
+
+[lints]
+workspace = true
+
+[workspace]
+
+[workspace.lints.rust]
+warnings = "deny"
+unsafe_code = "forbid"
+unused_must_use = "deny"
+
+[workspace.lints.clippy]
+all = { level = "deny", priority = -1 }
+allow_attributes_without_reason = "deny"
+unwrap_used = "deny"
+expect_used = "deny"
+let_underscore_must_use = "deny"
+let_underscore_untyped = "deny"
+map_err_ignore = "deny"
+as_conversions = "deny"
+cast_possible_truncation = "deny"
+cast_possible_wrap = "deny"
+cast_sign_loss = "deny"

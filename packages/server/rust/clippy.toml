@@ -1,0 +1,16 @@
+# clippy reads clippy.toml from the folder of the Cargo workspace. A rule never turns a failure or an absence into a
+# plausible value (plan R-1): an Err or a None is matched, passed on with ?, or kept by a statement whose rule says why,
+# with #[allow(clippy::disallowed_methods, reason = "<rule id>")].
+disallowed-methods = [
+  { path = "core::option::Option::unwrap_or", reason = "a None becomes a plausible value; match it or name the rule" },
+  { path = "core::option::Option::unwrap_or_default", reason = "a None becomes a default value; match it or name the rule" },
+  { path = "core::option::Option::unwrap_or_else", reason = "a None becomes a computed fallback; match it or name the rule" },
+  { path = "core::option::Option::map_or", reason = "a None becomes a plausible value; match it or name the rule" },
+  { path = "core::option::Option::map_or_else", reason = "a None becomes a computed fallback; match it or name the rule" },
+  { path = "core::result::Result::ok", reason = "an Err becomes None and its error is dropped; match it, use ? or name the rule" },
+  { path = "core::result::Result::unwrap_or", reason = "an Err becomes a plausible value; handle the error or name the rule" },
+  { path = "core::result::Result::unwrap_or_default", reason = "an Err becomes a default value; handle the error or name the rule" },
+  { path = "core::result::Result::unwrap_or_else", reason = "an Err becomes a computed fallback; handle the error or name the rule" },
+  { path = "core::result::Result::map_or", reason = "an Err becomes a plausible value; handle the error or name the rule" },
+  { path = "core::result::Result::map_or_else", reason = "an Err becomes a computed fallback; handle the error or name the rule" },
+]

@@ -1,5 +1,5 @@
 <!-- doc-id: protocol -->
-<!-- source-sha256: 54524c7932adab63cd415aee09781c2b1389afe16f3f020508d7de73297311d6 -->
+<!-- source-sha256: 0bb92042f851d99ef4bbe7ee15f896146c8eb3929d8a3e8457d315750d8b99ec -->
 # 영역 프로토콜
 
 <!-- contracts/protocol.json에서 생성됨. 직접 수정하지 않는다. -->
@@ -360,6 +360,7 @@
   | `invalid_session_token` | 없음 | `store` | HY-24.14 |
   | `invalid_session_record` | 없음 | `store` | HY-104.23 |
   | `shared_holds_context` | 없음 | `value` | HY-124.8 |
+  | `invalid_representation` | 없음 | `value` | HY-122.2부터 HY-122.8 |
   | `internal` | 없음 | `internal` | HY-132.6 |
 
 - **HY-27** <a id="HY-27.1"></a> route가 없는 path나 리소스가 없다고 알리는 loader는 상태 404로 응답한다. <a id="HY-27.2"></a> `GET`도 `HEAD`도 선언된 `POST`도 아닌 method는 상태 405로 응답하며, representation은 대신 HY-121의 method를 검사한다. <a id="HY-27.3"></a> loader나 action은 없는 자원을 not-found 정지로 보고하며 그 메시지는 `not found`다. HY-51의 forbidden 정지의 메시지는 `forbidden`이고 HY-58의 bad-request 정지의 메시지는 `bad request`다. <a id="HY-27.4"></a> 서버는 `HEAD` 요청에 같은 target의 `GET` 요청으로 답한다(RFC 9110, 9.3.2절). 모든 단계가 요청 method `GET`으로 실행되어 handler는 `GET`을 읽고, `App.handle`은 body가 있는 그 `GET` 응답을 반환하며, 응답 hook(HY-60), 응답 한도(HY-66), `around`(HY-97)는 host가 준 그대로의 요청과 함께 그것을 받는다. <a id="HY-27.5"></a> host는 `HEAD` 요청의 응답에서 상태와 header를 쓰고, 상태가 204나 304가 아니면 그 body의 `Content-Length`를 함께 쓰며, body는 쓰지 않는다. <a id="HY-27.6"></a> 모든 405는 header `Allow`를 가진다(RFC 9110, 15.5.6절). 라우트는 `GET, HEAD`, `post`를 선언한 라우트는 `GET, HEAD, POST`, HY-62.23의 405는 `GET, HEAD`, `/_hyper/keep`(HY-40)은 `POST`, representation은 HY-121.6의 method이다.

@@ -6022,6 +6022,24 @@
                 ],
                 [
                   {
+                    "en": "`invalid_representation`",
+                    "ko": "`invalid_representation`"
+                  },
+                  {
+                    "en": "none",
+                    "ko": "없음"
+                  },
+                  {
+                    "en": "`value`",
+                    "ko": "`value`"
+                  },
+                  {
+                    "en": "HY-122.2 to HY-122.8",
+                    "ko": "HY-122.2부터 HY-122.8"
+                  }
+                ],
+                [
+                  {
                     "en": "`internal`",
                     "ko": "`internal`"
                   },

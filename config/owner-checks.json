@@ -847,6 +847,16 @@
         "tests/scripts/upload-servers.test.mts",
         "tests/scripts/benchmark-uploads.test.mts"
       ]
+    },
+    {
+      "paths": [
+        "packages/server/rust/**"
+      ],
+      "targets": [
+        "core-test",
+        "core-lint",
+        "core-fmt-check"
+      ]
     }
   ]
 }
