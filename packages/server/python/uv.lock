@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = ">=3.14"
 
 [[package]]
@@ -55,7 +55,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "polyspec-php-serialize", url = "https://github.com/polyspec/php-serialize/releases/download/v0.0.6/polyspec_php_serialize-0.0.6-py3-none-any.whl" },
-    { name = "polyspec-template", url = "https://github.com/polyspec/template/releases/download/v0.0.26/polyspec_template-0.0.26-py3-none-any.whl" },
+    { name = "polyspec-template", url = "https://github.com/polyspec/template/releases/download/v0.0.27/polyspec_template-0.0.27-py3-none-any.whl" },
 ]
 
 [package.metadata.requires-dev]
@@ -71,13 +71,13 @@ wheels = [
 
 [[package]]
 name = "polyspec-template"
-version = "0.0.26"
-source = { url = "https://github.com/polyspec/template/releases/download/v0.0.26/polyspec_template-0.0.26-py3-none-any.whl" }
+version = "0.0.27"
+source = { url = "https://github.com/polyspec/template/releases/download/v0.0.27/polyspec_template-0.0.27-py3-none-any.whl" }
 dependencies = [
     { name = "jsonschema" },
 ]
 wheels = [
-    { url = "https://github.com/polyspec/template/releases/download/v0.0.26/polyspec_template-0.0.26-py3-none-any.whl", hash = "sha256:65458672f868bee77de9d6536f631f138cc17e9f2ff21fb397d87971acc0c1fe" },
+    { url = "https://github.com/polyspec/template/releases/download/v0.0.27/polyspec_template-0.0.27-py3-none-any.whl", hash = "sha256:f8c8f5de89095ae495ba398e4f4a3205ff1f48459ea9880dcb95a2858f3000d4" },
 ]
 
 [package.metadata]
