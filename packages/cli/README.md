@@ -1,5 +1,5 @@
-<!-- doc-id: hyper-build-readme -->
-# @polyspec/hyper-build
+<!-- doc-id: hyper-cli-readme -->
+# @polyspec/hyper-cli
 
 [한국어](README.ko.md).
 

@@ -1,6 +1,6 @@
-<!-- doc-id: hyper-build-readme -->
+<!-- doc-id: hyper-cli-readme -->
 <!-- source-sha256: ec0921371ad3c4059cd3dcc60da817145db94129de55ef47a11a5823142fe506 -->
-# @polyspec/hyper-build
+# @polyspec/hyper-cli
 
 [English](README.md).
 

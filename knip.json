@@ -18,8 +18,8 @@
 // (scripts/check-parity.mts asks it whether the polyspec_template extension loads) and php-fpm (benchmarks/uploads.mts).
 // The ignored dependencies are packages that no import of their workspace reaches:
 //   - @polyspec/php-serialize, which the root names by the tarball URL of its release, which npm installs only from the root
-//     with allow-remote=root (H21.4); packages/server/ts requires it by its version;
-//   - tailwindcss of packages/build: bin/hyper-build-assets.mjs compiles the stylesheet of an app with @tailwindcss/node from
+//     with allow-remote=root (H21.4); packages/ts requires it by its version;
+//   - tailwindcss of packages/cli: bin/hyper-build-assets.mjs compiles the stylesheet of an app with @tailwindcss/node from
 //     the CSS text '@import "tailwindcss/theme.css"', which Tailwind CSS resolves from this package.
 {
   "node": {
@@ -42,7 +42,7 @@
   "ignoreBinaries": ["container", "make", "openssl", "php", "php-fpm"],
   "ignoreDependencies": ["@polyspec/php-serialize"],
   "workspaces": {
-    "packages/build": {
+    "packages/cli": {
       "ignoreDependencies": ["tailwindcss"]
     }
   }
