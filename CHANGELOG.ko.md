@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 719bdc3e9abd30eab0c61865acc3ce9064933323b145a523542316848cfa9a5a -->
+<!-- source-sha256: d20bf77488c4d7435505e9634ede059af33be419b5b3f39e26a9a3e6ff43d2e2 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- `config/release.json`은 recipe 검사의 Node reader가 읽는 TypeScript compiler API의 private 설치 `scripts/recipe/typescript/package.json`을 release하지 않는 것으로 적어 `make release-coverage`가 통과한다. 전에는 분류되지 않은 그 manifest에서 실패했다(H28.16).
 
 - HY-106.4는 PHP 요청의 `query()`, `form()`, `files()`가 code와 HY-56, HY-113처럼 이름과 그 값 목록의 쌍의 list를 돌려준다고 적는다. 전에는 그것이 `IteratorAggregate`를 노출한다고 적었다(H28.18).
 
