@@ -6084,7 +6084,7 @@
         "HY-106"
       ],
       "cases": [
-        "contracts/fields.json",
+        "tests/legacy/fields.json",
         "contracts/request.json",
         "contracts/app.json"
       ],
@@ -15132,17 +15132,7 @@
               "role": "expected",
               "optional": true,
               "compare": "exact",
-              "sentence": {
-                "id": "an_invalid_value_selects_nothing",
-                "label": "an invalid value is refused before a type is selected",
-                "accept": "text/html;q=1.5",
-                "raises": {
-                  "kind": "invalid_weight",
-                  "status": 400,
-                  "category": "value",
-                  "message": null
-                }
-              },
+              "sentence": "HY-116.19",
               "state": "`selected` is the type of `types` that the Accept value selects by the weight of its most specific matching range, the first of the highest weight, or null when no type has a weight above 0."
             },
             "raises": {

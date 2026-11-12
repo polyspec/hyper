@@ -52,7 +52,7 @@ final class CaseReader
         $decl = self::declaration($file);
         $fixtures = Json::map($decl['fixtures'] ?? [], 'fixtures');
         $sections = CaseRules::declarations($decl['sections'] ?? [], 'sections');
-        $data = Json::objectFile(CaseRules::CONTRACTS . $file);
+        $data = Json::objectFile(CaseRules::caseFilePath($file));
         $error = CaseRules::undeclared($sections, $fixtures, $data);
 
         $readers = [];

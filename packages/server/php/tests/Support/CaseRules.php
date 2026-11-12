@@ -12,6 +12,8 @@ final class CaseRules
 {
     public const LANGUAGE = 'php';
     public const CONTRACTS = __DIR__ . '/../../../../../contracts/';
+    /** The fixed case files of tests/legacy, which a library holds now; the steps read them until S-4 removes the directory. */
+    public const LEGACY = __DIR__ . '/../../../../../tests/legacy/';
     /** The keys of a case that are not fields of its section. */
     public const CASE_KEYS = ['id', 'label', 'only', 'requirements'];
     /** HYR-11: the comparison of a response field, by its name. */
@@ -25,10 +27,29 @@ final class CaseRules
         'bodyNotContains' => 'excludes',
     ];
 
-    /** @return array<string, array<array-key, mixed>> the `caseFiles` of contracts/interfaces.json */
+    /** @return array<string, array<array-key, mixed>> the `caseFiles` of contracts/interfaces.json and of tests/legacy/interfaces.json */
     public static function caseFiles(): array
     {
-        return self::declarations(Json::file(self::CONTRACTS . 'interfaces.json')['caseFiles'] ?? null, 'caseFiles');
+        return [
+            ...self::declarations(Json::file(self::CONTRACTS . 'interfaces.json')['caseFiles'] ?? null, 'caseFiles'),
+            ...self::legacyCaseFiles(),
+        ];
+    }
+
+    /** @return array<string, array<array-key, mixed>> the `caseFiles` of tests/legacy/interfaces.json, or none when the directory is gone */
+    private static function legacyCaseFiles(): array
+    {
+        if (!is_file(self::LEGACY . 'interfaces.json')) {
+            return [];
+        }
+
+        return self::declarations(Json::file(self::LEGACY . 'interfaces.json')['caseFiles'] ?? null, 'legacy caseFiles');
+    }
+
+    /** The path of a case file: under tests/legacy for a fixed case file, under contracts/ for every other one. */
+    public static function caseFilePath(string $file): string
+    {
+        return (array_key_exists($file, self::legacyCaseFiles()) ? self::LEGACY : self::CONTRACTS) . $file;
     }
 
     /**

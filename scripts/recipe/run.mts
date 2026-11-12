@@ -8,6 +8,7 @@ import { compare } from './compare.mts';
 import { readSources, readTree } from './readers.mts';
 import { checkResults, type Results } from './results.mts';
 import { readProtocol } from './protocol.mts';
+import { withLegacy } from './legacy.mts';
 import type { Counts } from './stated.mts';
 import type { Finding, Lang, Sources, Spec } from './types.mts';
 
@@ -29,7 +30,7 @@ export function readAllSources(root: string, spec: Spec, v: Validators, phpAutol
 
 /** Runs the checks of a tree; `counts`, when given, receives the three numbers of HYR-5. */
 export function runChecks(root: string, v: Validators, results: Results, phpAutoload: string, counts?: Counts): Finding[] {
-  const specDoc: unknown = JSON.parse(readFileSync(path.join(root, 'contracts', 'interfaces.json'), 'utf8'));
+  const specDoc: unknown = withLegacy(root, JSON.parse(readFileSync(path.join(root, 'contracts', 'interfaces.json'), 'utf8')));
   if (!v.spec(specDoc)) {
     return (v.spec.errors ?? []).map((e) => ({ code: 'SPEC_INVALID', message: `${e.instancePath} ${e.message}` }));
   }

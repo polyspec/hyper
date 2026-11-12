@@ -2,9 +2,9 @@
 // results file that the check is given, and the check takes success from these lines and from the exit status alone.
 
 import { existsSync, readFileSync } from 'node:fs';
-import path from 'node:path';
 import { RUNNERS, isObject, type Finding, type Runner, type Spec } from './types.mts';
 import type { CaseFile } from './types.mts';
+import { caseFilePath } from './legacy.mts';
 
 export type Results = Partial<Record<Runner, string>>;
 
@@ -41,7 +41,7 @@ export function checkResults(root: string, spec: Spec, results: Results): Findin
   const out: Finding[] = [];
   const cases: CaseId[] = [];
   for (const [name, entry] of Object.entries(spec.caseFiles)) {
-    const full = path.join(root, 'contracts', name);
+    const full = caseFilePath(root, name);
     if (existsSync(full)) cases.push(...caseIds(name, entry, JSON.parse(readFileSync(full, 'utf8'))));
   }
   const key = (file: string, id: string): string => `${file}\t${id}`;

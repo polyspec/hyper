@@ -1,0 +1,220 @@
+{
+  "note": "A fixed copy of contracts/fields.json and its caseFiles declaration as hyper held them before http-forms took these cases (F-20 to F-27); the steps of the three servers read it until the servers call the core, and S-4 removes tests/legacy. Its sentences name the statements that point to the rules of http-forms.",
+  "caseFiles": {
+    "fields.json": {
+      "fixtures": {},
+      "sections": {
+        "urlencoded": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "text": {
+              "role": "input"
+            },
+            "fields": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-57.13",
+              "state": "`fields` lists the values of `text` as `[name, values]` pairs in the order of their names, or is null when `text` fails with HY-42."
+            },
+            "names": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-56.9",
+              "state": "`names` lists the names of the values of `text` in the order of their first occurrence, or is null when `fields` is null."
+            }
+          },
+          "members": [
+            "named-values.names"
+          ]
+        },
+        "multipart": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "type": {
+              "role": "input"
+            },
+            "body": {
+              "role": "input"
+            },
+            "fields": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-57.13",
+              "state": "`fields` lists the form values of the body `body` of the type `type`, a text whose characters are its bytes, as `[name, values]` pairs, or is null when the body fails with HY-42."
+            },
+            "files": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-113.21",
+              "state": "`files` lists the files of the body in request order as objects with `name`, `filename`, `contentType` and `content`, where `content` is the text of the file and `contentType` is empty text for a part without a content type, or is null when `fields` is null."
+            }
+          },
+          "members": [
+            "files.fromBody",
+            "multipart-reader.buffered"
+          ]
+        },
+        "streamed": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "type": {
+              "role": "input"
+            },
+            "body": {
+              "role": "input"
+            },
+            "chunk": {
+              "role": "input"
+            },
+            "limit": {
+              "role": "input"
+            },
+            "valueLimit": {
+              "role": "input"
+            },
+            "partLimit": {
+              "role": "input"
+            },
+            "fileLimit": {
+              "role": "input"
+            },
+            "stream": {
+              "role": "input"
+            },
+            "move": {
+              "role": "input"
+            },
+            "stopped": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-131.11",
+              "state": "`stopped` is true when the body `body`, a text whose characters are its bytes, given in chunks of `chunk` bytes, passed a limit, after which no chunk is given."
+            },
+            "exceeded": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-131.11",
+              "state": "`exceeded` is true when the body passed the body limit `limit`, the value limit `valueLimit`, the part limit `partLimit` or the file limit `fileLimit`."
+            },
+            "held": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-131.26",
+              "state": "`held` is the text of the bytes that the body holds as one value: empty text for a body that is read in chunks, which a multipart body of the type `type` is when `stream` is true, and for a body that passed the limit."
+            },
+            "fields": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-131.26",
+              "state": "`fields` lists the form values of the body as `[name, values]` pairs, read from the chunks or from the held bytes, or is null when the body failed or passed the limit."
+            },
+            "files": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-131.28",
+              "state": "`files` lists the files of the body in request order as objects with `name`, `filename`, `contentType`, `content`, the text of the bytes of the file, and `size`, or is null when `fields` is null."
+            },
+            "entries": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-131.28",
+              "state": "`entries` is the number of files in the directory of the body after its last chunk, or null for a body without a directory."
+            },
+            "moved": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-131.28",
+              "state": "`moved` is null when `move` is `none`, and else tells the move of the first file: for `new`, to a path that does not exist, and then a second time; for `exists`, to a path that exists; for `type`, to the number 7. `content` is the text of the bytes at the path after the first move, or of the file when the move failed; `left` is the number of files in the directory after it, or null without a directory; `again` is the message of the failure of the second move or of the failed move; `read` is the message of the failure of `content()` after the move, or null when the move failed; `class` is `value` for the class of HY-46.2 and `type` for TypeError."
+            },
+            "removed": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-131.14",
+              "state": "`removed` is true when the directory of the body does not exist after `remove()`, or null for a body without a directory."
+            }
+          },
+          "members": [
+            "request-body.directory",
+            "uploaded-file.moveTo"
+          ]
+        },
+        "uploaded": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "name": {
+              "role": "input"
+            },
+            "filename": {
+              "role": "input"
+            },
+            "contentType": {
+              "role": "input"
+            },
+            "content": {
+              "role": "input"
+            },
+            "file": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-106.5",
+              "state": "`content` is a text whose characters U+0000 to U+00FF are bytes; `file` holds what `name()`, `filename()`, `contentType()`, `size()` and `content()` of `new UploadedFile(name, filename, contentType, bytes)` return, the content written as such a text."
+            }
+          },
+          "members": [
+            "uploaded-file.constructor",
+            "uploaded-file.content",
+            "uploaded-file.contentType",
+            "uploaded-file.filename",
+            "uploaded-file.name",
+            "uploaded-file.size"
+          ]
+        }
+      }
+    }
+  }
+}

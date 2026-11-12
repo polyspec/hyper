@@ -3,7 +3,7 @@
 // the cases of its section with the inputs that it reads and the comparisons that it makes. The steps of the Node server
 // and the browser and build runners read their cases through this reader; the reader has no test of its own.
 import { readFileSync } from 'node:fs';
-import { type Compare, CONTRACTS, caseFiles, entriesOf, field, folded, kind, lookup, member, parsed, type Declaration, type Section, uncovered, undeclared, visible } from './case-rules.ts';
+import { type Compare, caseFileUrl, caseFiles, entriesOf, field, folded, kind, lookup, member, parsed, type Declaration, type Section, uncovered, undeclared, visible } from './case-rules.ts';
 
 // Returns an expected value that is a list of strings, and fails for any other value.
 function stringsOf(expected: unknown): string[] {
@@ -45,7 +45,7 @@ export class CaseReader {
   static cases(runner: string): CaseReader[] {
     const readers: CaseReader[] = [];
     for (const [file, declaration] of Object.entries(CaseReader.declaration())) {
-      const contract = parsed(readFileSync(new URL(file, CONTRACTS), 'utf8'));
+      const contract = parsed(readFileSync(caseFileUrl(file), 'utf8'));
       const found = undeclared(declaration, contract, runner);
       for (const [name] of entriesOf(contract) ?? []) {
         const section = Object.hasOwn(declaration.sections, name) ? declaration.sections[name] : undefined;

@@ -8,6 +8,7 @@ import { LANGS, RUNNERS, isObject, type CaseField, type CaseFile, type Json, typ
 import type { Ctx } from './context.mts';
 import { checkRuleId, checkStatement, rulesOfFile } from './rules.mts';
 import { readerKey } from './names.mts';
+import { caseFileName, caseFilePath } from './legacy.mts';
 
 const COMPARE_KINDS = ['exact', 'ordered', 'subset', 'absent', 'contains', 'excludes', 'prefix', 'keys', 'raises'];
 
@@ -32,7 +33,7 @@ export function keyOf(file: string): string {
 
 /** The case file's data, or undefined when the file is missing. */
 function dataOf(root: string, key: string): unknown {
-  const full = path.join(root, 'contracts', key);
+  const full = caseFilePath(root, key);
   return existsSync(full) ? JSON.parse(readFileSync(full, 'utf8')) : undefined;
 }
 
@@ -140,7 +141,7 @@ function checkFiles(ctx: Ctx, entries: [string, CaseFile][]): void {
       add('CASEFILE_UNKNOWN', `caseFiles ${key} has no contracts/${key} file that holds an object`);
       continue;
     }
-    const concernRules = rulesOfFile(spec, `contracts/${key}`);
+    const concernRules = rulesOfFile(spec, caseFileName(root, key));
     for (const fixture of Object.keys(entry.fixtures)) {
       if (!(fixture in data)) add('CASE_SECTION_UNKNOWN', `${key} declares fixture ${fixture}, which the file does not hold`);
     }

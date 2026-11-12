@@ -89,6 +89,16 @@
     },
     {
       "paths": [
+        "tests/legacy/**"
+      ],
+      "targets": [
+        "hyper-test-node",
+        "hyper-test-php",
+        "hyper-test-python"
+      ]
+    },
+    {
+      "paths": [
         "contracts/**"
       ],
       "targets": [

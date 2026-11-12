@@ -9,6 +9,8 @@ from typing import Any
 
 LANGUAGE = "python"
 CONTRACTS = Path(__file__).resolve().parents[4] / "contracts"
+# The fixed case files of tests/legacy, which a library holds now; the steps read them until S-4 removes the directory.
+LEGACY = Path(__file__).resolve().parents[4] / "tests" / "legacy"
 # The keys of a case that are not fields of its section (HYR-6, HYR-11).
 CASE_KEYS = ("id", "label", "only", "requirements")
 # HYR-11: the comparison of a response field, by its name.
@@ -26,13 +28,22 @@ HEADER_FIELDS = frozenset({"headers", "allHeaders", "absentHeaders"})
 
 
 def contract(name: str) -> Any:
-    """The JSON value of a file under contracts/."""
-    return json.loads((CONTRACTS / name).read_text(encoding="utf-8"))
+    """The JSON value of a file under contracts/, or of a fixed case file under tests/legacy."""
+    folder = LEGACY if name in _legacy_case_files() else CONTRACTS
+    return json.loads((folder / name).read_text(encoding="utf-8"))
+
+
+def _legacy_case_files() -> dict[str, dict]:
+    """The `caseFiles` of tests/legacy/interfaces.json, or none when the directory is gone."""
+    path = LEGACY / "interfaces.json"
+    if not path.exists():
+        return {}
+    return json.loads(path.read_text(encoding="utf-8"))["caseFiles"]
 
 
 def case_files() -> dict[str, dict]:
-    """The `caseFiles` of contracts/interfaces.json."""
-    return contract("interfaces.json")["caseFiles"]
+    """The `caseFiles` of contracts/interfaces.json and of tests/legacy/interfaces.json."""
+    return {**contract("interfaces.json")["caseFiles"], **_legacy_case_files()}
 
 
 def visible(node: dict) -> bool:

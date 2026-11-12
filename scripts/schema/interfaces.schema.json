@@ -291,7 +291,7 @@
         {
           "type": "array",
           "uniqueItems": true,
-          "items": { "type": "string", "pattern": "^contracts/.+\\.json$" }
+          "items": { "type": "string", "pattern": "^(contracts|tests/legacy)/.+\\.json$" }
         },
         {
           "type": "object",

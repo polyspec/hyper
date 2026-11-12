@@ -1,6 +1,6 @@
 // The rules that CaseReader applies to one case of a case file (HYR-7, HYR-11): the declarations, the field lookups,
 // the undeclared keys, the unread and uncompared fields, and the folding of header names.
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { parseJson } from '@polyspec/template/render';
 
 export type Compare = 'exact' | 'ordered' | 'subset' | 'absent' | 'contains' | 'excludes' | 'prefix' | 'keys' | 'raises';
@@ -38,6 +38,8 @@ export interface Declaration {
 }
 
 export const CONTRACTS = new URL('../../../../contracts/', import.meta.url);
+// The fixed case files of tests/legacy, which a library holds now; the steps read them until S-4 removes the directory.
+const LEGACY = new URL('../../../../tests/legacy/', import.meta.url);
 
 // The comparison of each response field, which is compared by its name (HYR-11).
 const RESPONSE_KINDS: Record<string, Compare> = {
@@ -97,8 +99,24 @@ export function caseFiles(): Record<string, Declaration> {
   const document: unknown = JSON.parse(readFileSync(new URL('interfaces.json', CONTRACTS), 'utf8'));
   const declarations: unknown = isObject(document) ? document.caseFiles : undefined;
   if (!isDeclarations(declarations)) throw new Error('interfaces.json holds no caseFiles');
-  cached = declarations;
+  const legacy = legacyCaseFiles();
+  cached = { ...declarations, ...legacy };
   return cached;
+}
+
+/** The `caseFiles` of tests/legacy/interfaces.json, or none when the directory is gone. */
+function legacyCaseFiles(): Record<string, Declaration> {
+  const file = new URL('interfaces.json', LEGACY);
+  if (!existsSync(file)) return {};
+  const document: unknown = JSON.parse(readFileSync(file, 'utf8'));
+  const declarations: unknown = isObject(document) ? document.caseFiles : undefined;
+  if (!isDeclarations(declarations)) throw new Error('tests/legacy/interfaces.json holds no caseFiles');
+  return declarations;
+}
+
+/** The URL of a case file: under tests/legacy for a fixed case file, under contracts/ for every other one. */
+export function caseFileUrl(file: string): URL {
+  return Object.hasOwn(legacyCaseFiles(), file) ? new URL(file, LEGACY) : new URL(file, CONTRACTS);
 }
 
 /** Whether a field, an outcome or a case applies to the runner (HYR-6). */
