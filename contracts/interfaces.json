@@ -180,7 +180,8 @@
         "contracts/hooks.json",
         "tests/legacy/app-before-s3b.json",
         "tests/legacy/client-before-s3b.json",
-        "tests/legacy/context-before-s3b.json"
+        "tests/legacy/context-before-s3b.json",
+        "tests/legacy/representations-before-s3b.json"
       ],
       "units": [
         {
@@ -7972,7 +7973,8 @@
         "contracts/container.json",
         "contracts/representations.json",
         "contracts/app.json",
-        "tests/legacy/app-before-s3b.json"
+        "tests/legacy/app-before-s3b.json",
+        "tests/legacy/representations-before-s3b.json"
       ],
       "units": [
         {
@@ -8756,7 +8758,8 @@
         "contracts/app.json",
         "contracts/representations.json",
         "tests/legacy/app-before-s3b.json",
-        "tests/legacy/csrf-before-s3b.json"
+        "tests/legacy/csrf-before-s3b.json",
+        "tests/legacy/representations-before-s3b.json"
       ],
       "units": [
         {
@@ -13508,7 +13511,8 @@
         "contracts/manifest.json",
         "contracts/app.json",
         "tests/legacy/app-before-s3b.json",
-        "tests/legacy/manifest-before-s3b.json"
+        "tests/legacy/manifest-before-s3b.json",
+        "tests/legacy/representations-before-s3b.json"
       ],
       "units": [
         {
@@ -16455,11 +16459,8 @@
           }
         },
         "cases": {
-          "runners": [
-            "php",
-            "node",
-            "python"
-          ],
+          "runners": [],
+          "fixedCopy": "representations-before-s3b.json",
           "uses": [
             "applications"
           ],

@@ -1717,6 +1717,162 @@
           ]
         }
       }
+    },
+    "representations-before-s3b.json": {
+      "fixtures": {
+        "applications": "input"
+      },
+      "sections": {
+        "cases": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [
+            "applications"
+          ],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "request": {
+              "role": "input",
+              "fields": {
+                "method": {
+                  "role": "input"
+                },
+                "target": {
+                  "role": "input"
+                },
+                "headers": {
+                  "role": "input"
+                },
+                "body": {
+                  "role": "input",
+                  "optional": true
+                }
+              }
+            },
+            "handler": {
+              "role": "input",
+              "optional": true
+            },
+            "basePath": {
+              "role": "input",
+              "optional": true
+            },
+            "status": {
+              "role": "response"
+            },
+            "headers": {
+              "role": "response"
+            },
+            "body": {
+              "role": "response",
+              "optional": true
+            },
+            "absentHeaders": {
+              "role": "response",
+              "optional": true
+            },
+            "page": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-116.11",
+              "state": "`page` names the media type of the `Content-Type` of a page response, `text/html` or `application/vnd.hyper+json`."
+            },
+            "handled": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-121.1",
+              "state": "`handled` is the number of calls of the representation handlers during the request."
+            },
+            "session": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-121.2",
+              "state": "`session` false states a request after which the session holds no session token."
+            },
+            "received": {
+              "role": "expected",
+              "optional": true,
+              "fields": {
+                "method": {
+                  "role": "expected",
+                  "optional": true,
+                  "compare": "exact",
+                  "sentence": "HY-121.5",
+                  "state": "`method` is the request method that the handler received."
+                },
+                "parameters": {
+                  "role": "expected",
+                  "compare": "ordered",
+                  "sentence": "HY-119.3",
+                  "state": "`parameters` is the parameter values that the handler received, in their order."
+                },
+                "body": {
+                  "role": "expected",
+                  "optional": true,
+                  "compare": "exact",
+                  "sentence": "HY-121.9",
+                  "state": "`body` is the decoded value of the request body that the handler read."
+                },
+                "headers": {
+                  "role": "expected",
+                  "optional": true,
+                  "compare": "subset",
+                  "sentence": "HY-121.2",
+                  "state": "`headers` holds request headers that the handler received."
+                },
+                "absentHeaders": {
+                  "role": "expected",
+                  "optional": true,
+                  "compare": "absent",
+                  "sentence": "HY-121.2",
+                  "state": "`absentHeaders` lists header names that the request that the handler received does not hold."
+                },
+                "service": {
+                  "role": "expected",
+                  "optional": true,
+                  "compare": "exact",
+                  "sentence": "HY-105.1",
+                  "state": "`service` true states that the handler received the service of the name `handler.service`, the object that the factory bound for it returned."
+                },
+                "params": {
+                  "role": "expected",
+                  "optional": true,
+                  "compare": "exact",
+                  "sentence": "HY-121.10",
+                  "state": "`params` is the route parameters of the request that the handler received."
+                },
+                "browser": {
+                  "role": "expected",
+                  "optional": true,
+                  "compare": "exact",
+                  "sentence": "HY-24.12",
+                  "state": "`browser` is what `browser()` of the request that the handler received returns, or null."
+                }
+              }
+            },
+            "bound": {
+              "role": "input",
+              "optional": true
+            }
+          },
+          "members": [
+            "app.bind",
+            "request.browser",
+            "request.json",
+            "request.params"
+          ]
+        }
+      }
     }
   }
 }

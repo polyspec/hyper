@@ -80,7 +80,7 @@ final class CaseSteps
             'functions.json cases' => FunctionsSteps::cases(...),
             'representations.json manifestRejections' => RepresentationsSteps::manifestRejections(...),
             'representations.json openRejections' => RepresentationsSteps::openRejections(...),
-            'representations.json cases' => RepresentationsSteps::cases(...),
+            'representations-before-s3b.json cases' => RepresentationsSteps::cases(...),
             'session.json token' => SessionSteps::token(...),
             'session.json flash' => SessionSteps::flash(...),
             'session.json kept' => SessionSteps::kept(...),

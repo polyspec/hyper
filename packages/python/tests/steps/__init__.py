@@ -72,7 +72,7 @@ STEPS = {
         "manifestRejections",
     ): representations_steps.manifest_rejections,
     ("representations.json", "openRejections"): representations_steps.open_rejections,
-    ("representations.json", "cases"): representations_steps.cases,
+    ("representations-before-s3b.json", "cases"): representations_steps.cases,
     ("representations.json", "values"): representations_steps.values,
     ("media-type-before-s3b.json", "values"): media_type_steps.values,
     ("response.json", "values"): response_steps.values,
