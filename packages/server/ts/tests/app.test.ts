@@ -192,18 +192,6 @@ describe('App', () => {
     expect(response.body).toMatch(/[0-9a-f]{128}/);
   });
 
-  it('rejects manifests with invalid keep declarations (HY-37, HY-40)', async () => {
-    for (const name of ['keep-kind', 'keep-page', 'keep-manifest', 'keep-reserved', 'uses-topic']) {
-      await expect(App.open({ manifest: `${FIXTURES}invalid/${name}.json`, build: `${FIXTURES}build.json`, templates: TEMPLATES, handlers: {}, timezone: 'Z' }), name).rejects.toThrow();
-    }
-  });
-
-  it('rejects manifests whose lists or names have another type (HY-1, HY-2)', async () => {
-    for (const name of ['routes-text', 'route-name-number', 'region-name-list']) {
-      await expect(App.open({ manifest: `${FIXTURES}invalid/${name}.json`, build: `${FIXTURES}build.json`, templates: TEMPLATES, handlers: {}, timezone: 'Z' }), name).rejects.toThrow();
-    }
-  });
-
   it('fails shared data and region data that are not maps (HY-44)', async () => {
     for (const value of [['b'], 'b']) {
       // The loaders return a value outside their declared type, which the server checks at run time.
@@ -500,12 +488,6 @@ describe('App', () => {
     expect((await fixture.get('/items/missing')).headers['Referrer-Policy']).toBeUndefined();
   });
 
-  it('rejects an action without the token (HY-24)', async () => {
-    await fixture.token();
-    expect((await fixture.post('/add', { _csrf: 'wrong', name: 'a' })).status).toBe(403);
-    expect(fixture.counter.actions).toBe(0);
-  });
-
   it('redirects after a successful action and passes flash values and topics once (HY-25)', async () => {
     const response = await fixture.post('/add', { _csrf: await fixture.token(), name: 'a' }, JSON_REGION);
     expect(response.status).toBe(303);
@@ -526,13 +508,6 @@ describe('App', () => {
     expect(html.status).toBe(422);
     expect(html.body).toContain('<p>Add| !empty</p>');
     expect(fixture.counter.count).toBe(0);
-  });
-
-  it('fails unknown paths, missing resources and other methods (HY-27)', async () => {
-    expect((await fixture.get('/missing')).status).toBe(404);
-    expect((await fixture.get('/items/missing')).status).toBe(404);
-    expect((await fixture.post('/', {})).status).toBe(405);
-    expect((await fixture.handle({ method: 'DELETE', target: '/add' })).status).toBe(405);
   });
 
   it('answers the ORM errors NO_ROWS and REVISION_CHANGED as their stops (HY-107)', async () => {

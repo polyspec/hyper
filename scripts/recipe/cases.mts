@@ -118,6 +118,7 @@ function checkListed(ctx: Ctx): void {
 /** HYR-9: the shape of each case file, its items and its sections; the compares, requirements and runners of each. */
 function checkFiles(ctx: Ctx, entries: [string, CaseFile][]): void {
   const { spec, root, add } = ctx;
+  const memberIds = new Set(spec.concerns.flatMap((c) => c.units.flatMap((u) => u.members.map((m) => m.id))));
   for (const [key, entry] of entries) {
     const data = dataOf(root, key);
     if (!isObject(data)) {
@@ -136,6 +137,8 @@ function checkFiles(ctx: Ctx, entries: [string, CaseFile][]): void {
         continue;
       }
       for (const use of section.uses) if (!(use in entry.fixtures)) add('FILE_UNDECLARED', `${where} uses ${use}, an undeclared fixture`);
+      // HYR-9: a section names the members whose result it states, and each is a member of the spec.
+      for (const member of section.members ?? []) if (!memberIds.has(member)) add('SECTION_MEMBER_UNKNOWN', `${where} names member ${member}, which the spec does not list`);
       const fieldRules = new Map<CaseField, string | undefined>();
       for (const f of fieldsDeep(section.fields)) {
         if (f.compare === undefined && f.sentence === undefined) continue;

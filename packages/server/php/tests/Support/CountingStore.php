@@ -7,13 +7,13 @@ namespace Polyspec\Hyper\Tests\Support;
 use Polyspec\Hyper\ArraySession;
 use Polyspec\Hyper\SessionStore;
 
-/** Counts and logs every call of the session store interface and keeps the values in memory (HY-120). */
+/** Counts and records every call of the session store interface and keeps the values in memory (HY-120). */
 final class CountingStore implements SessionStore
 {
     /** The number of calls of the store interface. */
     public int $calls = 0;
 
-    /** The names of the calls of the store interface, in order: get, set, remove or renew. */
+    /** @var list<string> the calls of the store interface, in order: `get <key>`, `set <key>`, `remove <key>` or `renew` */
     public array $log = [];
 
     private readonly ArraySession $values;
@@ -37,20 +37,20 @@ final class CountingStore implements SessionStore
 
     public function get(string $key): mixed
     {
-        $this->record('get');
+        $this->record("get {$key}");
 
         return $this->values->get($key);
     }
 
     public function set(string $key, mixed $value): void
     {
-        $this->record('set');
+        $this->record("set {$key}");
         $this->values->set($key, $value);
     }
 
     public function remove(string $key): void
     {
-        $this->record('remove');
+        $this->record("remove {$key}");
         $this->values->remove($key);
     }
 

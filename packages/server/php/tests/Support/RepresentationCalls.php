@@ -23,39 +23,53 @@ final class RepresentationCalls
     /** @var array<array-key, string> the media parameters that the last handler received */
     public array $parameters = [];
 
+    /** The service that the last handler received, or null. */
+    public ?object $service = null;
+
     /**
      * Returns a handler that answers the response of a case, which has `status`, `body` and `headers`, or throws the
-     * error of its `throw`; without a response the handler fails, because the case states no call.
+     * error of its `throw`; without a response the handler fails, because the case states no call. A response with
+     * `service` gives a handler that takes the service of that name between the media type and the request (HY-105.4).
      */
     public function handler(mixed $response): \Closure
     {
-        return function (Request $request, MediaType $media) use ($response): Representation {
-            $this->handled++;
-            $this->request = $request;
-            $this->parameters = $media->parameters();
-            if (!is_array($response)) {
-                throw new \LogicException('a case without a handler calls a representation handler');
-            }
-            if (isset($response['throw'])) {
-                $thrown = Json::array($response['throw']);
-                if (($thrown['class'] ?? null) !== 'OrmError') {
-                    throw new \LogicException('the case throws an unknown class');
-                }
-
-                throw new OrmException(Json::string($thrown['code'] ?? null));
-            }
-            $status = $response['status'] ?? null;
-            if (!is_int($status)) {
-                throw new \LogicException('the handler of the case has no status');
-            }
-            $headers = $response['headers'] ?? [];
-
-            return new Representation(
-                $status,
-                $response['body'] ?? null,
-                Json::stringMap(is_array($headers) ? $headers : []),
-            );
+        return match (is_array($response) ? $response['service'] ?? null : null) {
+            null => fn (Request $request, MediaType $media): Representation => $this->answer($request, $media, null, $response),
+            'clock' => fn (MediaType $media, Clock $clock, Request $request): Representation => $this->answer($request, $media, $clock, $response),
+            'mailer' => fn (MediaType $media, Mailer $mailer, Request $request): Representation => $this->answer($request, $media, $mailer, $response),
+            default => throw new \LogicException('the handler of the case takes an unknown service'),
         };
+    }
+
+    /** Records a call of a handler with what it received, and answers or throws what the response of the case states. */
+    private function answer(Request $request, MediaType $media, ?object $service, mixed $response): Representation
+    {
+        $this->handled++;
+        $this->request = $request;
+        $this->service = $service;
+        $this->parameters = $media->parameters();
+        if (!is_array($response)) {
+            throw new \LogicException('a case without a handler calls a representation handler');
+        }
+        if (isset($response['throw'])) {
+            $thrown = Json::array($response['throw']);
+            if (($thrown['class'] ?? null) !== 'OrmError') {
+                throw new \LogicException('the case throws an unknown class');
+            }
+
+            throw new OrmException(Json::string($thrown['code'] ?? null));
+        }
+        $status = $response['status'] ?? null;
+        if (!is_int($status)) {
+            throw new \LogicException('the handler of the case has no status');
+        }
+        $headers = $response['headers'] ?? [];
+
+        return new Representation(
+            $status,
+            $response['body'] ?? null,
+            Json::stringMap(is_array($headers) ? $headers : []),
+        );
     }
 
     /**

@@ -328,11 +328,14 @@ final class Request
         return $this->wantsJson() && $this->header('HX-Request') === 'true';
     }
 
-    /** Returns the path of the page that sent the request, or null (HY-11). */
+    /**
+     * Returns the path of the page that sent the request, or null without the header, without a path and for a header
+     * whose bytes are not valid UTF-8 (HY-11.4).
+     */
     public function currentPath(): ?string
     {
         $url = $this->header('HX-Current-URL');
-        if ($url === null) {
+        if ($url === null || !self::validUtf8($url)) {
             return null;
         }
         $path = parse_url($url, PHP_URL_PATH);

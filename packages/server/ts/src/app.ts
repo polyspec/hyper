@@ -262,6 +262,7 @@ export class App<S extends object = Record<string, never>> {
     if (typeof options.build !== 'string' || !isAbsolute(options.build)) throw new Error(`hyper: the build file ${String(options.build)} is not an absolute path`);
     const build = Build.read(options.build);
     if (options.context !== undefined && typeof options.context !== 'function') throw new Error('hyper: the context must be a function (HY-106)');
+    if (options.onDisconnect !== undefined && typeof options.onDisconnect !== 'function') throw new Error('hyper: the disconnect hook must be a function (HY-67)');
     const manifest = checkManifest(App.readJsonFile(options.manifest));
     // HY-118: the representations of each route, by the route name. The manifest is decoded with maps for objects,
     // because the parameters of an entry keep the order of the manifest, which a plain object does not keep for a name

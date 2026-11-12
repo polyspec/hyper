@@ -16,6 +16,7 @@ use Polyspec\Hyper\Tests\Support\Steps\FieldsSteps;
 use Polyspec\Hyper\Tests\Support\Steps\FunctionsSteps;
 use Polyspec\Hyper\Tests\Support\Steps\JsonSteps;
 use Polyspec\Hyper\Tests\Support\Steps\KeptSteps;
+use Polyspec\Hyper\Tests\Support\Steps\ManifestSteps;
 use Polyspec\Hyper\Tests\Support\Steps\ReadsSteps;
 use Polyspec\Hyper\Tests\Support\Steps\RepresentationsSteps;
 use Polyspec\Hyper\Tests\Support\Steps\RequestSteps;
@@ -23,6 +24,7 @@ use Polyspec\Hyper\Tests\Support\Steps\RestSteps;
 use Polyspec\Hyper\Tests\Support\Steps\ReplySteps;
 use Polyspec\Hyper\Tests\Support\Steps\ResultSteps;
 use Polyspec\Hyper\Tests\Support\Steps\RoutesSteps;
+use Polyspec\Hyper\Tests\Support\Steps\SessionSteps;
 
 /** The step of each (file, section) of the case files that the PHP server runs. */
 final class CaseSteps
@@ -74,6 +76,15 @@ final class CaseSteps
             'representations.json manifestRejections' => RepresentationsSteps::manifestRejections(...),
             'representations.json openRejections' => RepresentationsSteps::openRejections(...),
             'representations.json cases' => RepresentationsSteps::cases(...),
+            'session.json token' => SessionSteps::token(...),
+            'session.json flash' => SessionSteps::flash(...),
+            'session.json kept' => SessionSteps::kept(...),
+            'manifest.json checks' => ManifestSteps::checks(...),
+            'manifest.json reads' => ManifestSteps::reads(...),
+            'request.json targets' => RequestSteps::targets(...),
+            'request.json values' => RequestSteps::values(...),
+            'build.json outputs' => BuildSteps::outputs(...),
+            'client.json openRejections' => ClientSteps::openRejections(...),
             default => null,
         };
     }

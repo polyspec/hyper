@@ -148,5 +148,80 @@
       "error": "invalid-build",
       "message": "is not valid JSON (HY-125)"
     }
+  ],
+  "outputs": [
+    {
+      "id": "a_program_without_reads_json_fails_the_open_with_its_path",
+      "label": "a program directory without `reads.json` fails the open with the absolute path of `reads.json` (HY-48.2)",
+      "missing": [
+        "reads.json"
+      ],
+      "message": "{program}/reads.json"
+    },
+    {
+      "id": "a_program_without_build_json_fails_the_open_with_its_path",
+      "label": "a program directory without `build.json` fails the open with the absolute path of `build.json` (HY-48.2)",
+      "missing": [
+        "build.json"
+      ],
+      "message": "{program}/build.json"
+    },
+    {
+      "id": "a_program_without_templates_fails_the_open_with_its_path",
+      "label": "a program directory without `templates` fails the open with the absolute path of `templates` (HY-48.2)",
+      "missing": [
+        "templates"
+      ],
+      "message": "{program}/templates"
+    },
+    {
+      "id": "a_program_without_php_fails_the_open_with_its_path",
+      "label": "a program directory without `php` fails the open with the absolute path of `php` (HY-48.2)",
+      "missing": [
+        "php"
+      ],
+      "message": "{program}/php",
+      "only": {
+        "languages": [
+          "php"
+        ],
+        "sentence": "HY-48.8"
+      }
+    },
+    {
+      "id": "a_program_without_program_json_fails_the_open_with_its_path",
+      "label": "a program directory without `program.json` fails the open with the absolute path of `program.json` (HY-48.2)",
+      "missing": [
+        "program.json"
+      ],
+      "message": "{program}/program.json",
+      "only": {
+        "languages": [
+          "php"
+        ],
+        "sentence": "HY-48.8"
+      }
+    },
+    {
+      "id": "the_first_missing_output_is_named",
+      "label": "a program directory without reads.json, build.json and templates fails the open with the path of reads.json, the first of them (HY-48.2)",
+      "missing": [
+        "reads.json",
+        "build.json",
+        "templates"
+      ],
+      "message": "{program}/reads.json"
+    },
+    {
+      "id": "a_directory_without_any_output_fails_the_open",
+      "label": "a directory that holds no output of the build fails the open (HY-48.2)",
+      "missing": [
+        "php",
+        "program.json",
+        "reads.json",
+        "build.json",
+        "templates"
+      ]
+    }
   ]
 }

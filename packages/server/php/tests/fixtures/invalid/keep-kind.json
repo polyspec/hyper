@@ -1,6 +1,0 @@
-{
-  "layout": "layout.tpl",
-  "title": "title.tpl",
-  "regions": [{ "name": "side", "template": "side.tpl", "keep": { "count": "disk" } }, { "name": "content", "page": true }],
-  "routes": []
-}

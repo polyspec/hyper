@@ -419,6 +419,12 @@
                   "en": "The topic `path` is built in: it changes when the request path differs from the path of the `HX-Current-URL` request header after removing the base path.",
                   "ko": "`path` 주제는 내장 주제이며, 요청 경로가 `HX-Current-URL` 요청 헤더의 경로(기본 경로 제거 후)와 다르면 바뀐다.",
                   "koSource": "4f90c94421770cdc778a5dc49dddcb9835944a0a88051315d62e9e7c0610d6e9"
+                },
+                {
+                  "id": "HY-11.4",
+                  "en": "The current path is the path of the URL of `HX-Current-URL` with its bytes read as UTF-8, and it is absent when the request has no such header, when the URL has no path, and when the bytes are not valid UTF-8.",
+                  "ko": "current path는 `HX-Current-URL`의 URL 경로를 UTF-8로 읽은 것이며, 요청에 그 header가 없을 때, URL에 경로가 없을 때, 바이트가 유효한 UTF-8이 아닐 때는 없다.",
+                  "koSource": "6a633f82f416f5135e5aa857a05c7dc894d4d1edbb2e3a2950ffff73b63b75ce"
                 }
               ]
             }
@@ -553,6 +559,12 @@
                   "en": "The build first rejects `hx-*` attributes outside the layout (HC-6 of the [application authoring rules](../operations/composition.md)) and checks the templates with the rules of HY-3 (with the placement `{# build}`, HY-125), HY-30 and HY-75, the same rules as `make templates-check`, and a violation fails the build with every problem before it removes or writes any output, so a server program never serves templates that break them.",
                   "ko": "빌드는 먼저 레이아웃 밖의 `hx-*` 속성을 거부하고([애플리케이션 작성 규칙](../operations/composition.ko.md)의 HC-6), `make templates-check`와 같은 HY-3(배치 `{# build}` 포함, HY-125), HY-30, HY-75 규칙으로 템플릿을 검사하며, 위반이 있으면 출력을 지우거나 쓰기 전에 모든 문제와 함께 실패하므로 서버 프로그램은 이 규칙을 어기는 템플릿을 제공하지 않는다.",
                   "koSource": "570040fa329970e0645b600293e9e00a47d6c69dfc4dc6784cec959ce4d7f2f3"
+                },
+                {
+                  "id": "HY-48.12",
+                  "en": "Node: `App.open` fails when the template index is not a template index or does not hold a template of a route.",
+                  "ko": "Node: `App.open`은 template index가 template index가 아니거나 라우트의 template을 담고 있지 않을 때 실패한다.",
+                  "koSource": "90f0be619e5a62a55f2da3691e77ba373b0c9337731e6bc9cc2ffd4bb0207eb2"
                 }
               ]
             },
@@ -722,6 +734,12 @@
                   "en": "`query()`, `form()` and `files()` of a request return a list of pairs of a name and its values in the three servers, so that a decimal name stays a string.",
                   "ko": "요청의 `query()`, `form()`, `files()`는 세 server에서 이름과 값 목록의 쌍 목록을 반환하므로 십진수 이름도 문자열로 남는다.",
                   "koSource": "4101f99a094f1442c4d4d171bd3c42506e01b55a743ac96112662de6b126f425"
+                },
+                {
+                  "id": "HY-56.8",
+                  "en": "`queryInt(name, default)` returns the last value as an integer when it is an optional `-` and 1 to 15 decimal digits, and the default otherwise.",
+                  "ko": "`queryInt(name, default)`는 마지막 값이 선택적인 `-`와 십진 숫자 1개에서 15개일 때 그 값을 정수로 돌려주고, 그렇지 않으면 default를 돌려준다.",
+                  "koSource": "5e087ff034d2151f63b3654cf721eede1479e93001d56591a5710abd6cd0694d"
                 }
               ]
             }
@@ -1209,6 +1227,12 @@
                   "ko": "representation은 데이터 기본 경로 아래(HY-62.19)에서만 응답한다. HY-62.22의 요청은 선택 전에 HY-62.23의 404와 405를 받으므로, `GET`도 `HEAD`도 아닌 method의 HY-62.22 요청은 라우트의 어떤 type도 받을 수 없을 때에도 405를 받는다.",
                   "koSource": "35cb40907ae838457c7934c89ca53ae378bcfb9f3ec7059da56419ee7c80f433",
                   "id": "HY-116.15"
+                },
+                {
+                  "id": "HY-116.16",
+                  "en": "A request holds the selected media type only after the selection, and asking a request without it whether it wants JSON or is a region request is an error of the caller, which each runtime raises as its logic error: `LogicException` in PHP, `Error` in Node and `RuntimeError` in Python.",
+                  "ko": "요청은 선택이 끝난 뒤에만 선택된 media type을 가진다. 그것이 없는 요청에 JSON을 원하는지나 영역 요청인지를 묻는 것은 호출자의 오류이며, 각 런타임은 이를 자신의 논리 오류로 낸다: PHP는 `LogicException`, Node는 `Error`, Python은 `RuntimeError`이다.",
+                  "koSource": "e97d6bf0e895024a6a12f5b8649181a19c74c5d6f4943370f56e0a5e891ce318"
                 }
               ]
             }
@@ -1377,6 +1401,12 @@
                   "ko": "그래서 representation 요청은 session을 열지 않고, HY-104의 잠금을 잡지 않으며, session cookie를 설정하지 않는다.",
                   "koSource": "331ac3ce12c036c3a8a55e4c03c6156b340d93e0faa0305f767a5abe2f2f6953",
                   "id": "HY-120.4"
+                },
+                {
+                  "id": "HY-120.5",
+                  "en": "The opening reads and removes the flash data and then reads the token, which it sets when the session holds none.",
+                  "ko": "세션을 열 때 flash data를 읽고 지운 다음 토큰을 읽으며, 세션에 토큰이 없으면 토큰을 저장한다.",
+                  "koSource": "0a39f5342b39b6386760578375c6255135493544b3fc27d1918f2489f8c28001"
                 }
               ]
             }
@@ -1443,6 +1473,12 @@
                   "ko": "handler는 decode된 값을 요청의 `json()`(PHP `Request::json()`, Node와 Python `request.json()`)으로 읽는다.",
                   "koSource": "498e1e9c53e15d537f5dfa94c4d844039ee9b22121d5c8528b575dc1d56c7a78",
                   "id": "HY-121.9"
+                },
+                {
+                  "id": "HY-121.10",
+                  "en": "The request that the handler receives holds the route parameters of its path (HY-5).",
+                  "ko": "handler가 받는 요청은 그 경로의 라우트 매개변수(HY-5)를 가진다.",
+                  "koSource": "72b3f1e1c1d2b9159900f83b414ae45c8420e064419828197d65aa02b4cfb667"
                 }
               ]
             }
@@ -1619,6 +1655,12 @@
                   "ko": "영역 요청이면 페이지 영역을 먼저 담고, 그 뒤에 바뀐 주제를 사용하는 다른 영역을 매니페스트 순서로 담는다.",
                   "koSource": "72405a43b072332da2c293b41b6a72acc20e14621fcbc758f46c78957ddddabe",
                   "id": "HY-18.2"
+                },
+                {
+                  "id": "HY-18.3",
+                  "en": "The page region of a route without a loader has the empty map as its data.",
+                  "ko": "loader가 없는 라우트의 페이지 영역은 빈 map을 data로 가진다.",
+                  "koSource": "c2e40ab079b0f1e27a597a0ae39672e5e3b46bbf0ce0c3cc121c66948dc0c68e"
                 }
               ]
             }
@@ -2605,6 +2647,24 @@
                   "en": "The open fails with the open error of the runtime when the path of the shell file is not absolute, when the file does not exist or cannot be read, and when its bytes are not valid UTF-8.",
                   "ko": "shell 파일의 경로가 절대 경로가 아닐 때, 파일이 없거나 읽을 수 없을 때, 그 바이트가 유효한 UTF-8이 아닐 때 open은 런타임의 open 오류로 실패한다.",
                   "koSource": "63374cbbd49e7a5c291aaaeae22e1b413070c140d6bc95f87f285db896b85105"
+                },
+                {
+                  "id": "HY-62.36",
+                  "en": "In Python the choice is `Choice(chosen, value)`, and a choice whose `chosen` is not a boolean is another value (HY-62.11) in the three servers.",
+                  "ko": "Python에서 choice는 `Choice(chosen, value)`이며, `chosen`이 boolean이 아닌 choice는 세 서버에서 다른 값(HY-62.11)이다.",
+                  "koSource": "90fa4b2da2542f15d9f455bf1afbc18265041517462aa875e6c8640c54218f80"
+                },
+                {
+                  "id": "HY-62.37",
+                  "en": "The message of a failure of HY-62.15 or HY-62.35 names its cause: the static shell with its path, the data base path, or the route that lies under the data base path.",
+                  "ko": "HY-62.15나 HY-62.35의 실패 message는 그 원인을 말한다: 경로와 함께 static shell, data base path, 또는 data base path 아래에 놓인 라우트이다.",
+                  "koSource": "993b94ffaabd7740e194505386da166690c5deea88b78e88d3e1dd22d587395c"
+                },
+                {
+                  "id": "HY-62.38",
+                  "en": "A request that HY-59.4 or HY-42 refuses calls no selection.",
+                  "ko": "HY-59.4나 HY-42가 거절하는 요청은 selection을 호출하지 않는다.",
+                  "koSource": "e0347e9943aac6bbea1d7fc6d5e6ff29fe1139f2abf6bf553b74f0049718fe21"
                 }
               ]
             }
@@ -4341,6 +4401,12 @@
                   "en": "The path `/_hyper/keep` is reserved; a route path may not start with `/_hyper`.",
                   "ko": "경로 `/_hyper/keep`은 예약되어 있다. 라우트 경로는 `/_hyper`로 시작할 수 없다.",
                   "koSource": "63fc0904a29f063b9cf4442aa648c3b9b7a80fb0aa08a81219f768f37d31fc29"
+                },
+                {
+                  "id": "HY-40.3",
+                  "en": "The kept values of a region that stored none are an empty map.",
+                  "ko": "아무것도 저장하지 않은 영역의 kept 값은 빈 map이다.",
+                  "koSource": "2afce1aad4aad1b3a36918cae2b8b6f379c2f9e19ecbc8bd2e264e931a35e84d"
                 }
               ]
             }
@@ -4433,6 +4499,12 @@
                   "en": "The log is `error_log` in the PHP server, the standard error in the Python server, and in the Node server the function `log` of `App.open`, which writes to the standard error when the application gives none.",
                   "ko": "로그는 PHP 서버에서 `error_log`, Python 서버에서 표준 오류이고, Node 서버에서는 `App.open`의 함수 `log`이며 애플리케이션이 주지 않으면 표준 오류에 쓴다.",
                   "koSource": "8b87afbfce8a9bd7381b17003ff96375fef10dffa583135a67ce7d6c423386e2"
+                },
+                {
+                  "id": "HY-43.5",
+                  "en": "The text that a server gives to its log for an unhandled error starts with `hyper: ` and contains the message of the error; the rest of the line is the runtime's.",
+                  "ko": "처리되지 않은 오류에 대해 서버가 로그에 주는 text는 `hyper: `로 시작하고 그 오류의 message를 포함한다. 줄의 나머지는 런타임의 형식이다.",
+                  "koSource": "93dac452f0708675a06dc974600e95d2acfc9da61c6ac5fef22d8d13aeaf6aea"
                 }
               ]
             }
@@ -4616,6 +4688,12 @@
                   "en": "A request uses HTTPS when its host states it: the TLS socket of `node:http`, `HTTPS` of the SAPI, `wsgi.url_scheme` of WSGI and `scheme` of ASGI; the `http.server` server states none, so there only the declaration of the application counts.",
                   "ko": "호스트가 HTTPS라고 알릴 때 요청은 HTTPS를 쓴다: `node:http`의 TLS 소켓, SAPI의 `HTTPS`, WSGI의 `wsgi.url_scheme`, ASGI의 `scheme`이다. `http.server` 서버는 알리지 않으므로 거기에서는 애플리케이션의 선언만 적용된다.",
                   "koSource": "c0dff00383edab38bfa249c5d8c426dfe22b29859a6f8e6a39f9c74685f057c5"
+                },
+                {
+                  "id": "HY-45.7",
+                  "en": "The Node and Python hosts write the attributes of the session cookie as PHP writes them: `path=/`, then `secure` for HTTPS, `HttpOnly` and `SameSite=Lax`.",
+                  "ko": "Node와 Python 호스트는 세션 쿠키의 속성을 PHP가 쓰는 대로 쓴다: `path=/`, 그다음 HTTPS이면 `secure`, `HttpOnly`, `SameSite=Lax`이다.",
+                  "koSource": "6b0cd0752117af5b883b6dc01ad7bb49a16f6e20b4cc15e17142b79428c470f4"
                 }
               ]
             }
@@ -4998,6 +5076,18 @@
                   "en": "An error that `around` raises outside `answer`, and a return value that is not a response, are escaped errors (HY-60), also for PHP, where `App::run` writes the plain 500 of an uncaught exception: the server logs them and answers the plain 500, which the write hook receives (HY-99).",
                   "ko": "`around`가 `answer` 밖에서 던지는 오류와 응답이 아닌 반환값은 escape된 오류다(HY-60); PHP에서도 마찬가지이며, 그때 `App::run`은 잡히지 않은 예외의 평문 500을 쓴다: 서버는 그것을 로그에 남기고 평문 500으로 응답하며, 그 500은 write hook이 받는다(HY-99).",
                   "koSource": "53bb26774183d4dbbe69602122e2b4de373983706208b02700347b624a10cdfa"
+                },
+                {
+                  "id": "HY-97.11",
+                  "en": "The copy holds every other part of the request, and the request is not changed.",
+                  "ko": "그 복사본은 요청의 다른 모든 부분을 가지며, 원래 요청은 바뀌지 않는다.",
+                  "koSource": "77518d27f9eaebdbabc19b597aa347c9e2d757d50b8660fef63c2b7121067a3d"
+                },
+                {
+                  "id": "HY-97.12",
+                  "en": "The failure of a return value of `around` that is no response contains the text `not a Response`.",
+                  "ko": "response가 아닌 `around` 반환값의 failure는 `not a Response`라는 text를 포함한다.",
+                  "koSource": "157b3db2c6d0f000ac132bf23deaff01f35984daad18af931798649aea222e8e"
                 }
               ]
             },
@@ -5111,6 +5201,24 @@
                   "en": "An error that the hook raises is not handled by HY-43; it reaches the transport.",
                   "ko": "hook이 던지는 오류는 HY-43이 처리하지 않으며, 전송에 전달된다.",
                   "koSource": "e1fd9284863519630977ba5f68ae71d68e87bdfee4f7d2c4f66e0e157e2243a1"
+                },
+                {
+                  "id": "HY-99.14",
+                  "en": "A write hook that is not callable fails when the server is created, in Node and Python.",
+                  "ko": "호출할 수 없는 write hook은 Node와 Python에서 서버를 만들 때 실패한다.",
+                  "koSource": "d142b2279ffa9577c6c18d5cd826cf821d3da6fde55a9d955844df79e726f4fa"
+                },
+                {
+                  "id": "HY-99.15",
+                  "en": "For the response of `around` alone on a connection that the client closed, the hook receives that response with `ended` false in the three servers.",
+                  "ko": "client가 닫은 연결에서 `around`만으로 만든 response에 대해, hook은 세 서버에서 그 response를 `ended` false와 함께 받는다.",
+                  "koSource": "5221bbac38f5a77d34556eba642d36a979c04ef60647c105f73698869b460afe"
+                },
+                {
+                  "id": "HY-99.16",
+                  "en": "The 400 and 431 responses of HY-60.7 call no write hook.",
+                  "ko": "HY-60.7의 400과 431 response는 write hook을 호출하지 않는다.",
+                  "koSource": "00d5b997309322aa2bbb9df73cc0d08475ade7007f97e742382a41058284c975"
                 }
               ]
             }
@@ -5141,6 +5249,18 @@
                   "en": "A host passes every request method that its transport accepts to the application in upper case, so such a method that no route allows receives the 405 of HY-27; `node:http` refuses a method outside its own list, and a method in lower case, with the 400 of HY-60.7.",
                   "ko": "호스트는 자신의 transport가 받아들이는 모든 요청 메서드를 대문자로 애플리케이션에 전달하므로, 그런 메서드 중 어떤 라우트도 허용하지 않는 것은 HY-27의 405를 받는다. `node:http`는 자신의 목록 밖 메서드와 소문자 메서드를 HY-60.7의 400으로 거절한다.",
                   "koSource": "e6aa5530ebddcf0b5db12c58f1b6245fc2e9e24b66f3ccede1cc83d27d651629"
+                },
+                {
+                  "id": "HY-100.32",
+                  "en": "The HTTP version of the status line is the host's.",
+                  "ko": "상태 줄의 HTTP 버전은 호스트의 것이다.",
+                  "koSource": "efb74ae54bbd321bd8d3a951b3eaedddd18c6414fc6f6481319214e201afe4d7"
+                },
+                {
+                  "id": "HY-100.33",
+                  "en": "The built-in server of PHP answers a method outside its own list with its 501 and closes the connection of a method in lower case without a response, so neither reaches the application.",
+                  "ko": "PHP 내장 서버는 자신의 목록 밖 메서드에 자체 501로 답하고, 소문자 메서드의 연결은 response 없이 닫으므로, 둘 다 애플리케이션에 도달하지 않는다.",
+                  "koSource": "08232c3650d6f4f8fada6cd5f4cb8456bddf7b297a32f30fb0343c2642b51056"
                 }
               ]
             },
@@ -5631,6 +5751,18 @@
                   "en": "A Node function takes its named parameters as one options record, an object whose members are the parameters by their names, because JavaScript has no named arguments: `new Request(init)`, `App.open(options)`, and the options of the session stores and of the host entries of HY-100.",
                   "ko": "Node 함수는 이름 있는 parameter를 options record 하나로 받는다. 이는 member가 그 이름의 parameter인 object이며, JavaScript에 이름 있는 argument가 없기 때문이다: `new Request(init)`, `App.open(options)`, 그리고 session store와 HY-100 host entry의 option.",
                   "koSource": "a49aa9d495f89ff2b771668b286af032529f3544285d61086446e39683e464c0"
+                },
+                {
+                  "id": "HY-106.10",
+                  "en": "A message of an error that the Node server raises starts with `hyper: `.",
+                  "ko": "Node 서버가 내는 오류의 message는 `hyper: `로 시작한다.",
+                  "koSource": "78a302027f7743bdb3b202b59e3697e75137f314ae81006f423e51eb192c83f1"
+                },
+                {
+                  "id": "HY-106.11",
+                  "en": "The open error of a handler that does not match the manifest names the handler: `route handler <name> has no route in the manifest`, `route <name> has a loader for undeclared region <region>`, and `route <name> declares post but has no POST action`.",
+                  "ko": "manifest와 맞지 않는 handler의 open 오류는 그 handler를 말한다: `route handler <name> has no route in the manifest`, `route <name> has a loader for undeclared region <region>`, `route <name> declares post but has no POST action`이다.",
+                  "koSource": "6f822c99b4642971b7249fb052267ea059511014472881a7c87ab4e9c842afe3"
                 }
               ]
             }
@@ -5895,6 +6027,36 @@
                   "en": "`App::open` of the PHP server takes `sessionSetup`, a function that the server calls just before the native session of a request starts, for the settings of the session module.",
                   "ko": "PHP 서버의 `App::open`은 `sessionSetup`을 받는다. 서버는 요청의 native 세션이 시작되기 직전에 세션 모듈의 설정을 위해 이 함수를 호출한다.",
                   "koSource": "2dd6231447619a5bf7ed8f0cb7982bb4786219648ea4f6c03201fb25a2c396c1"
+                },
+                {
+                  "id": "HY-104.19",
+                  "en": "A session store of files of the Node and Python servers takes an existing absolute directory and a lifetime, a positive integer of seconds whose default is 1440, and making it with another directory or lifetime fails with the open error of HY-106.6.",
+                  "ko": "Node와 Python 서버의 파일 세션 저장소는 존재하는 절대 디렉터리와 수명을 받는다. 수명은 초 단위의 양의 정수이고 기본값은 1440이며, 다른 디렉터리나 수명으로 만들면 HY-106.6의 open 오류로 실패한다.",
+                  "koSource": "8db63e5d9ac991ca08993e63c80d329b6389a8786f4da13c2639c9539aee6f6e"
+                },
+                {
+                  "id": "HY-104.20",
+                  "en": "A record whose value is no array fails as a record that cannot be decoded does.",
+                  "ko": "값이 배열이 아닌 레코드는 디코드할 수 없는 레코드와 같이 실패한다.",
+                  "koSource": "fd04a82aad7352e721c695f1284c1fe8ba143d8b6d253072c418a2728ee32f1b"
+                },
+                {
+                  "id": "HY-104.21",
+                  "en": "A session file whose modification time is older than the lifetime names no session: a request with its identifier starts a new session, and the removal of expired sessions removes the file.",
+                  "ko": "수정 시각이 수명보다 오래된 세션 파일은 세션을 가리키지 않는다. 그 식별자를 가진 요청은 새 세션을 시작하고, 만료된 세션의 제거가 그 파일을 지운다.",
+                  "koSource": "4ba7522937b9685897c681d2cf23504175cfe802defa7875732a4bc896999c51"
+                },
+                {
+                  "id": "HY-104.22",
+                  "en": "A session holds the token under `_hyper_csrf`, the flash values and the changed topics under `_hyper_flash` as a map with `values` and `changed`, and the kept values under `_hyper_keep` as a map from a region name to a map from a path to its value.",
+                  "ko": "세션은 토큰을 `_hyper_csrf`에, flash 값과 변경된 topic을 `_hyper_flash`에 `values`와 `changed`를 가진 map으로, kept 값을 `_hyper_keep`에 영역 이름에서 경로별 값의 map으로 가는 map으로 담는다.",
+                  "koSource": "59d8303a99c0e3e0d455388791a8d8a7a03b224651c991831d183d12cb078497"
+                },
+                {
+                  "id": "HY-104.23",
+                  "en": "A stored flash value or kept value of another form fails the request with HY-43, and no server repairs it.",
+                  "ko": "다른 형태로 저장된 flash 값이나 kept 값은 HY-43으로 요청을 실패시키며, 어떤 서버도 그것을 고쳐 쓰지 않는다.",
+                  "koSource": "c80dece20175a916486c165621ffe7e846fd73c79dec8712b331f86920233fc3"
                 }
               ]
             }
@@ -6027,6 +6189,18 @@
                   "en": "`tests/scripts/session-redis-cluster.test.mts` checks it on a real cluster of three primaries, also while a slot moves.",
                   "ko": "`tests/scripts/session-redis-cluster.test.mts`는 세 primary의 실제 cluster 위에서 이것을 검사하며, 슬롯이 옮겨지는 동안에도 검사한다.",
                   "koSource": "62e393cfbb922bcbca3e2c63a42f956c26afbf7ef34ed53b31f8664ab128c8b0"
+                },
+                {
+                  "id": "HY-115.21",
+                  "en": "`lifetime` and `lockExpire` of `RedisSessions` are positive integers, and making the store with another value fails with the open error of HY-106.6.",
+                  "ko": "`RedisSessions`의 `lifetime`과 `lockExpire`는 양의 정수이며, 다른 값으로 저장소를 만들면 HY-106.6의 open 오류로 실패한다.",
+                  "koSource": "a7a4b4b38d4dfeb5c8f8270ecd192d77189ff5d7b2b64b008167c07c627943a3"
+                },
+                {
+                  "id": "HY-115.22",
+                  "en": "A request tries the lock once and then `lockRetries` more times.",
+                  "ko": "요청은 lock을 한 번 시도한 뒤 `lockRetries`번 더 시도한다.",
+                  "koSource": "8af85baf39b9ead353eb8a13c9bd57035055e549e57b69b01f5a6b69497c9d86"
                 }
               ]
             }
@@ -6215,6 +6389,12 @@
                   "en": "`App::run` of PHP fails before it answers when `post_max_size` is smaller than the limit, when `multipart/form-data` is a form type and `enable_post_data_reading` is on (HY-57), or when `enable_post_data_reading` is on under a SAPI that serves requests, every SAPI but `cli` and `phpdbg`, because PHP then reads every request body with its own reader before the application runs.",
                   "ko": "PHP의 `App::run`은 `post_max_size`가 한도보다 작거나, `multipart/form-data`가 form 타입이고 `enable_post_data_reading`이 켜져 있거나(HY-57), 요청을 처리하는 SAPI, 곧 `cli`와 `phpdbg`를 뺀 모든 SAPI 아래에서 `enable_post_data_reading`이 켜져 있으면 응답하기 전에 실패한다. 그때 PHP는 application이 실행되기 전에 모든 요청 body를 자신의 reader로 읽기 때문이다.",
                   "koSource": "cec6a9942b8d947a54a4e95f66ab79b72f7d48585bdc7ce4172bd0307c38d5a5"
+                },
+                {
+                  "id": "HY-59.10",
+                  "en": "Every host reads a body that the request sends in chunks, and the body limit applies to it.",
+                  "ko": "모든 호스트는 요청이 chunk로 보내는 body를 읽으며, body 한도가 그것에 적용된다.",
+                  "koSource": "3f9af12a437ea0bc7b93da843e43a8f987e72abfc64a5ee605fc941abbb50118"
                 }
               ]
             }
@@ -6422,6 +6602,12 @@
                   "en": "`notes()` returns the notes as a list of pairs of a name, which stays a string also when it is decimal, and its value, in the order of the first note of each name, in the three servers.",
                   "ko": "`notes()`는 note를 이름과 값의 쌍 목록으로 세 server에서 각 이름의 첫 note 순서대로 반환하며, 이름은 십진수일 때도 문자열로 남는다.",
                   "koSource": "418e86a964a79e6d793a94bd9bf1565d2f905c8e2c3da4648d4ca5ee97dc614e"
+                },
+                {
+                  "id": "HY-60.30",
+                  "en": "The `http.server` server has no caller before it, so its plain 500 keeps no header of a caller.",
+                  "ko": "`http.server` 서버는 그 앞에 호출자가 없으므로, 그 plain 500은 호출자의 header를 유지하지 않는다.",
+                  "koSource": "e5ee751e747c655aa6bbbdf67aeba23074c0e41e9c7eba7d773036621078daba"
                 }
               ]
             }
@@ -6518,6 +6704,12 @@
                   "en": "The server calls it once, with the request as received, the elapsed milliseconds (HY-60) and the reply of the request, for a request whose client closed the connection before it received the complete response.",
                   "ko": "서버는 클라이언트가 완전한 응답을 받기 전에 연결을 닫은 요청에 대해, 받은 그대로의 요청, 경과 밀리초(HY-60), 요청의 reply와 함께 그것을 한 번 호출한다.",
                   "koSource": "8422669bf2e01f4fdc5f02dc953b2c145799183a709aed724c0055c29f5594ef"
+                },
+                {
+                  "id": "HY-67.13",
+                  "en": "A disconnect hook that is not callable fails when the application opens, in Node and Python; PHP refuses it by the type of its parameter.",
+                  "ko": "호출할 수 없는 disconnect hook은 Node와 Python에서 애플리케이션을 열 때 실패한다. PHP는 매개변수의 type으로 그것을 거절한다.",
+                  "koSource": "e79854984af2d997afb1caac4a11b17b76d60f3110740c3fe43da609e69b3645"
                 }
               ]
             },

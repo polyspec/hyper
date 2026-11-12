@@ -35,7 +35,8 @@ class FileSessions:
             raise ValueError(
                 f"session directory {directory} must be an existing absolute directory"
             )
-        if lifetime <= 0:
+        # HY-104.19: a positive integer; a boolean is an int of Python and no lifetime.
+        if type(lifetime) is not int or lifetime <= 0:
             raise ValueError("session lifetime must be a positive number of seconds")
         self._directory = path
         self._lifetime = lifetime

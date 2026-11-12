@@ -1,0 +1,857 @@
+{
+  "checks": [
+    {
+      "id": "a_manifest_region_with_a_kept_kind_that_is_no_kind_is_rejected",
+      "label": "a manifest region whose kept path has the kind disk is rejected (HY-37.1)",
+      "manifest": {
+        "layout": "layout.tpl",
+        "title": "title.tpl",
+        "regions": [
+          {
+            "name": "side",
+            "template": "side.tpl",
+            "keep": {
+              "count": "disk"
+            }
+          },
+          {
+            "name": "content",
+            "page": true
+          }
+        ],
+        "routes": []
+      },
+      "rejected": true
+    },
+    {
+      "id": "a_kept_path_on_the_page_region_is_rejected",
+      "label": "the page region, a manifest region, cannot keep values (HY-37.1)",
+      "manifest": {
+        "layout": "layout.tpl",
+        "title": "title.tpl",
+        "regions": [
+          {
+            "name": "content",
+            "page": true,
+            "keep": {
+              "a": "server"
+            }
+          }
+        ],
+        "routes": []
+      },
+      "rejected": true
+    },
+    {
+      "id": "a_kept_path_on_a_manifest_region_is_rejected",
+      "label": "a manifest region with a template and topics cannot keep values (HY-37.1)",
+      "manifest": {
+        "layout": "layout.tpl",
+        "title": "title.tpl",
+        "regions": [
+          {
+            "name": "side",
+            "template": "side.tpl",
+            "uses": [
+              "path"
+            ],
+            "keep": {
+              "a": "server"
+            }
+          },
+          {
+            "name": "content",
+            "page": true
+          }
+        ],
+        "routes": []
+      },
+      "rejected": true
+    },
+    {
+      "id": "a_manifest_region_with_two_topics_and_a_kept_path_is_rejected",
+      "label": "a manifest region named side that uses a topic cannot keep the path p (HY-37.1)",
+      "manifest": {
+        "layout": "layout.tpl",
+        "title": "title.tpl",
+        "regions": [
+          {
+            "name": "content",
+            "page": true
+          },
+          {
+            "name": "side",
+            "template": "x.tpl",
+            "uses": [
+              "a"
+            ],
+            "keep": {
+              "p": "server"
+            }
+          }
+        ],
+        "routes": [
+          {
+            "name": "home",
+            "path": "/",
+            "title": "Home",
+            "template": "page.tpl"
+          }
+        ]
+      },
+      "rejected": true
+    },
+    {
+      "id": "a_route_at_the_reserved_keep_path_is_rejected",
+      "label": "a route whose path is /_hyper/keep is rejected (HY-40.2)",
+      "manifest": {
+        "layout": "layout.tpl",
+        "title": "title.tpl",
+        "regions": [
+          {
+            "name": "content",
+            "page": true
+          }
+        ],
+        "routes": [
+          {
+            "name": "keep",
+            "path": "/_hyper/keep",
+            "title": "K",
+            "template": "page.tpl"
+          }
+        ]
+      },
+      "rejected": true
+    },
+    {
+      "id": "the_home_route_at_the_reserved_keep_path_is_rejected",
+      "label": "the one route of a manifest moved to /_hyper/keep is rejected (HY-40.2)",
+      "manifest": {
+        "layout": "layout.tpl",
+        "title": "title.tpl",
+        "regions": [
+          {
+            "name": "content",
+            "page": true
+          }
+        ],
+        "routes": [
+          {
+            "name": "home",
+            "path": "/_hyper/keep",
+            "title": "Home",
+            "template": "page.tpl"
+          }
+        ]
+      },
+      "rejected": true
+    },
+    {
+      "id": "a_topic_that_is_no_name_is_rejected",
+      "label": "a region that uses the topic `a b` is rejected (HY-2.4)",
+      "manifest": {
+        "layout": "layout.tpl",
+        "title": "title.tpl",
+        "regions": [
+          {
+            "name": "side",
+            "template": "side.tpl",
+            "uses": [
+              "a b"
+            ]
+          },
+          {
+            "name": "content",
+            "page": true
+          }
+        ],
+        "routes": []
+      },
+      "rejected": true
+    },
+    {
+      "id": "routes_that_are_text_are_rejected",
+      "label": "`routes` that is a text and not a list is rejected (HY-2.1)",
+      "manifest": {
+        "layout": "layout.tpl",
+        "title": "title.tpl",
+        "regions": [
+          {
+            "name": "content",
+            "page": true
+          }
+        ],
+        "routes": "home"
+      },
+      "rejected": true
+    },
+    {
+      "id": "a_route_name_that_is_a_number_is_rejected",
+      "label": "a route whose name is the number 5 is rejected (HY-2.2)",
+      "manifest": {
+        "layout": "layout.tpl",
+        "title": "title.tpl",
+        "regions": [
+          {
+            "name": "content",
+            "page": true
+          }
+        ],
+        "routes": [
+          {
+            "name": 5,
+            "path": "/",
+            "title": "Home",
+            "template": "page.tpl"
+          }
+        ]
+      },
+      "rejected": true
+    },
+    {
+      "id": "a_region_name_that_is_a_list_is_rejected",
+      "label": "a region whose name is a list is rejected (HY-2.2)",
+      "manifest": {
+        "layout": "layout.tpl",
+        "title": "title.tpl",
+        "regions": [
+          {
+            "name": [],
+            "page": true
+          }
+        ],
+        "routes": []
+      },
+      "rejected": true
+    },
+    {
+      "id": "a_page_region_with_a_template_is_rejected",
+      "label": "the page region has no template (HY-2.4)",
+      "manifest": {
+        "layout": "layout.tpl",
+        "title": "title.tpl",
+        "regions": [
+          {
+            "name": "content",
+            "page": true,
+            "template": "x.tpl"
+          }
+        ],
+        "routes": [
+          {
+            "name": "home",
+            "path": "/",
+            "title": "Home",
+            "template": "page.tpl"
+          }
+        ]
+      },
+      "rejected": true
+    },
+    {
+      "id": "regions_without_a_page_region_are_rejected",
+      "label": "one region with a template and no page region is rejected (HY-2.4)",
+      "manifest": {
+        "layout": "layout.tpl",
+        "title": "title.tpl",
+        "regions": [
+          {
+            "name": "side",
+            "template": "side.tpl"
+          }
+        ],
+        "routes": [
+          {
+            "name": "home",
+            "path": "/",
+            "title": "Home",
+            "template": "page.tpl"
+          }
+        ]
+      },
+      "rejected": true
+    },
+    {
+      "id": "a_region_name_that_starts_with_a_digit_is_rejected",
+      "label": "a second region named `1x` is rejected (HY-2.3)",
+      "manifest": {
+        "layout": "layout.tpl",
+        "title": "title.tpl",
+        "regions": [
+          {
+            "name": "content",
+            "page": true
+          },
+          {
+            "name": "1x",
+            "template": "x"
+          }
+        ],
+        "routes": [
+          {
+            "name": "home",
+            "path": "/",
+            "title": "Home",
+            "template": "page.tpl"
+          }
+        ]
+      },
+      "rejected": true
+    },
+    {
+      "id": "a_region_name_that_is_layout_is_rejected",
+      "label": "a second region named `layout` is rejected (HY-2.3)",
+      "manifest": {
+        "layout": "layout.tpl",
+        "title": "title.tpl",
+        "regions": [
+          {
+            "name": "content",
+            "page": true
+          },
+          {
+            "name": "layout",
+            "template": "x"
+          }
+        ],
+        "routes": [
+          {
+            "name": "home",
+            "path": "/",
+            "title": "Home",
+            "template": "page.tpl"
+          }
+        ]
+      },
+      "rejected": true
+    },
+    {
+      "id": "a_region_name_that_is_title_is_rejected",
+      "label": "a second region named `title` is rejected (HY-2.3)",
+      "manifest": {
+        "layout": "layout.tpl",
+        "title": "title.tpl",
+        "regions": [
+          {
+            "name": "content",
+            "page": true
+          },
+          {
+            "name": "title",
+            "template": "x"
+          }
+        ],
+        "routes": [
+          {
+            "name": "home",
+            "path": "/",
+            "title": "Home",
+            "template": "page.tpl"
+          }
+        ]
+      },
+      "rejected": true
+    },
+    {
+      "id": "a_region_name_that_is_data_is_rejected",
+      "label": "a second region named `data` is rejected (HY-2.3)",
+      "manifest": {
+        "layout": "layout.tpl",
+        "title": "title.tpl",
+        "regions": [
+          {
+            "name": "content",
+            "page": true
+          },
+          {
+            "name": "data",
+            "template": "x"
+          }
+        ],
+        "routes": [
+          {
+            "name": "home",
+            "path": "/",
+            "title": "Home",
+            "template": "page.tpl"
+          }
+        ]
+      },
+      "rejected": true
+    },
+    {
+      "id": "a_region_name_that_holds_a_space_is_rejected",
+      "label": "a second region named `a b` is rejected (HY-2.3)",
+      "manifest": {
+        "layout": "layout.tpl",
+        "title": "title.tpl",
+        "regions": [
+          {
+            "name": "content",
+            "page": true
+          },
+          {
+            "name": "a b",
+            "template": "x"
+          }
+        ],
+        "routes": [
+          {
+            "name": "home",
+            "path": "/",
+            "title": "Home",
+            "template": "page.tpl"
+          }
+        ]
+      },
+      "rejected": true
+    },
+    {
+      "id": "two_page_regions_are_rejected",
+      "label": "two regions with page true are rejected (HY-2.4)",
+      "manifest": {
+        "layout": "layout.tpl",
+        "title": "title.tpl",
+        "regions": [
+          {
+            "name": "a",
+            "page": true
+          },
+          {
+            "name": "b",
+            "page": true
+          }
+        ],
+        "routes": [
+          {
+            "name": "home",
+            "path": "/",
+            "title": "Home",
+            "template": "page.tpl"
+          }
+        ]
+      },
+      "rejected": true
+    },
+    {
+      "id": "a_route_region_with_the_name_of_a_manifest_region_is_rejected",
+      "label": "a route region named content, the name of a manifest region, is rejected (HY-2.2)",
+      "manifest": {
+        "layout": "layout.tpl",
+        "title": "title.tpl",
+        "regions": [
+          {
+            "name": "content",
+            "page": true
+          }
+        ],
+        "routes": [
+          {
+            "name": "list",
+            "path": "/list",
+            "title": "L",
+            "template": "l.tpl",
+            "regions": [
+              {
+                "name": "content",
+                "template": "r.tpl"
+              }
+            ]
+          }
+        ]
+      },
+      "rejected": true
+    },
+    {
+      "id": "a_kept_path_with_an_empty_key_is_rejected",
+      "label": "a route region that keeps the path a..b is rejected (HY-37.3)",
+      "manifest": {
+        "layout": "layout.tpl",
+        "title": "title.tpl",
+        "regions": [
+          {
+            "name": "content",
+            "page": true
+          }
+        ],
+        "routes": [
+          {
+            "name": "list",
+            "path": "/list",
+            "title": "L",
+            "template": "l.tpl",
+            "regions": [
+              {
+                "name": "rows",
+                "template": "r.tpl",
+                "keep": {
+                  "a..b": "server"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "rejected": true
+    },
+    {
+      "id": "a_route_region_with_a_kept_kind_that_is_no_kind_is_rejected",
+      "label": "a route region whose kept path has the kind disk, which is no storage of HY-37.4, is rejected",
+      "manifest": {
+        "layout": "layout.tpl",
+        "title": "title.tpl",
+        "regions": [
+          {
+            "name": "content",
+            "page": true
+          }
+        ],
+        "routes": [
+          {
+            "name": "list",
+            "path": "/list",
+            "title": "L",
+            "template": "l.tpl",
+            "regions": [
+              {
+                "name": "rows",
+                "template": "r.tpl",
+                "keep": {
+                  "count": "disk"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "rejected": true
+    },
+    {
+      "id": "a_manifest_with_one_page_region_and_one_route_is_read",
+      "label": "the manifest that the other cases change in one place is read, so each of them is rejected for its change (HY-2.7)",
+      "manifest": {
+        "layout": "layout.tpl",
+        "title": "title.tpl",
+        "regions": [
+          {
+            "name": "content",
+            "page": true
+          }
+        ],
+        "routes": [
+          {
+            "name": "home",
+            "path": "/",
+            "title": "Home",
+            "template": "page.tpl"
+          }
+        ]
+      },
+      "rejected": false
+    },
+    {
+      "id": "a_route_region_without_kept_paths_is_read",
+      "label": "a route region may declare kept paths, so a route region without `keep` is read (HY-37.1)",
+      "manifest": {
+        "layout": "layout.tpl",
+        "title": "title.tpl",
+        "regions": [
+          {
+            "name": "content",
+            "page": true
+          }
+        ],
+        "routes": [
+          {
+            "name": "list",
+            "path": "/list",
+            "title": "List",
+            "template": "list.tpl",
+            "regions": [
+              {
+                "name": "rows",
+                "template": "rows.tpl"
+              }
+            ]
+          }
+        ]
+      },
+      "rejected": false
+    },
+    {
+      "id": "a_region_named_build_is_rejected",
+      "label": "a second region named `build` is rejected (HY-2.3)",
+      "manifest": {
+        "layout": "layout.tpl",
+        "title": "title.tpl",
+        "regions": [
+          {
+            "name": "content",
+            "page": true
+          },
+          {
+            "name": "build",
+            "template": "x"
+          }
+        ],
+        "routes": [
+          {
+            "name": "home",
+            "path": "/",
+            "title": "Home",
+            "template": "page.tpl"
+          }
+        ]
+      },
+      "rejected": true
+    },
+    {
+      "id": "a_route_region_named_build_is_rejected",
+      "label": "a route region named `build` is rejected (HY-2.3)",
+      "manifest": {
+        "layout": "layout.tpl",
+        "title": "title.tpl",
+        "regions": [
+          {
+            "name": "content",
+            "page": true
+          }
+        ],
+        "routes": [
+          {
+            "name": "list",
+            "path": "/list",
+            "title": "L",
+            "template": "l.tpl",
+            "regions": [
+              {
+                "name": "build",
+                "template": "r.tpl"
+              }
+            ]
+          }
+        ]
+      },
+      "rejected": true
+    },
+    {
+      "id": "a_route_region_named_layout_is_rejected",
+      "label": "a route region named `layout` is rejected (HY-2.3)",
+      "manifest": {
+        "layout": "layout.tpl",
+        "title": "title.tpl",
+        "regions": [
+          {
+            "name": "content",
+            "page": true
+          }
+        ],
+        "routes": [
+          {
+            "name": "list",
+            "path": "/list",
+            "title": "L",
+            "template": "l.tpl",
+            "regions": [
+              {
+                "name": "layout",
+                "template": "r.tpl"
+              }
+            ]
+          }
+        ]
+      },
+      "rejected": true
+    },
+    {
+      "id": "a_route_region_named_title_is_rejected",
+      "label": "a route region named `title` is rejected (HY-2.3)",
+      "manifest": {
+        "layout": "layout.tpl",
+        "title": "title.tpl",
+        "regions": [
+          {
+            "name": "content",
+            "page": true
+          }
+        ],
+        "routes": [
+          {
+            "name": "list",
+            "path": "/list",
+            "title": "L",
+            "template": "l.tpl",
+            "regions": [
+              {
+                "name": "title",
+                "template": "r.tpl"
+              }
+            ]
+          }
+        ]
+      },
+      "rejected": true
+    },
+    {
+      "id": "a_route_region_named_data_is_rejected",
+      "label": "a route region named `data` is rejected (HY-2.3)",
+      "manifest": {
+        "layout": "layout.tpl",
+        "title": "title.tpl",
+        "regions": [
+          {
+            "name": "content",
+            "page": true
+          }
+        ],
+        "routes": [
+          {
+            "name": "list",
+            "path": "/list",
+            "title": "L",
+            "template": "l.tpl",
+            "regions": [
+              {
+                "name": "data",
+                "template": "r.tpl"
+              }
+            ]
+          }
+        ]
+      },
+      "rejected": true
+    },
+    {
+      "id": "a_manifest_of_511_nested_containers_is_read",
+      "label": "a manifest whose key k holds 510 nested lists, 511 nested containers with the manifest object, is read (HY-2.8)",
+      "text": "{\"k\":[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]],\"layout\":\"layout.tpl\",\"title\":\"title.tpl\",\"regions\":[{\"name\":\"content\",\"page\":true}],\"routes\":[{\"name\":\"home\",\"path\":\"/\",\"title\":\"Home\",\"template\":\"page.tpl\"}]}",
+      "rejected": false
+    },
+    {
+      "id": "a_manifest_of_512_nested_containers_is_rejected",
+      "label": "a manifest whose key k holds 511 nested lists, 512 nested containers with the manifest object, is rejected (HY-2.8)",
+      "text": "{\"k\":[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]],\"layout\":\"layout.tpl\",\"title\":\"title.tpl\",\"regions\":[{\"name\":\"content\",\"page\":true}],\"routes\":[{\"name\":\"home\",\"path\":\"/\",\"title\":\"Home\",\"template\":\"page.tpl\"}]}",
+      "rejected": true
+    },
+    {
+      "id": "truncated_json_is_rejected",
+      "label": "a manifest file that holds truncated JSON fails the open with the open error (HY-106.6)",
+      "text": "{\"layout\":",
+      "rejected": true
+    },
+    {
+      "id": "a_file_that_is_not_utf8_is_rejected",
+      "label": "a manifest file with the byte ff in a string is not valid UTF-8 (HY-106.6)",
+      "bytes": "7b226c61796f7574223a22ff227d",
+      "rejected": true
+    },
+    {
+      "id": "a_file_that_starts_with_a_byte_order_mark_is_rejected",
+      "label": "a valid manifest after U+FEFF is not valid JSON (HY-106.7)",
+      "bytes": "efbbbf7b226c61796f7574223a226c61796f75742e74706c222c227469746c65223a227469746c652e74706c222c22726567696f6e73223a5b7b226e616d65223a22636f6e74656e74222c2270616765223a747275657d5d2c22726f75746573223a5b7b226e616d65223a22686f6d65222c2270617468223a222f222c227469746c65223a22486f6d65222c2274656d706c617465223a22706167652e74706c227d5d7d",
+      "rejected": true
+    },
+    {
+      "id": "a_key_that_starts_with_u_0000_is_rejected",
+      "label": "a manifest that is valid without its key that starts with U+0000 is rejected (HY-2.8)",
+      "text": "{\"\\u0000k\":1,\"layout\":\"layout.tpl\",\"title\":\"title.tpl\",\"regions\":[{\"name\":\"content\",\"page\":true}],\"routes\":[{\"name\":\"home\",\"path\":\"/\",\"title\":\"Home\",\"template\":\"page.tpl\"}]}",
+      "rejected": true
+    },
+    {
+      "id": "a_lone_surrogate_escape_is_rejected",
+      "label": "a manifest that is valid without its lone surrogate escape is rejected (HY-2.8)",
+      "text": "{\"k\":\"\\ud800\",\"layout\":\"layout.tpl\",\"title\":\"title.tpl\",\"regions\":[{\"name\":\"content\",\"page\":true}],\"routes\":[{\"name\":\"home\",\"path\":\"/\",\"title\":\"Home\",\"template\":\"page.tpl\"}]}",
+      "rejected": true
+    }
+  ],
+  "reads": [
+    {
+      "id": "a_manifest_gives_its_regions_its_page_region_its_routes_and_the_kept_paths_of_a_route_region",
+      "label": "the regions and the routes keep the order of the manifest, the page region is the region with page true, and a route region gives its kept paths and those of a kind (HY-2.1, HY-2.4, HY-37)",
+      "manifest": {
+        "layout": "layout.tpl",
+        "title": "title.tpl",
+        "regions": [
+          {
+            "name": "side",
+            "template": "side.tpl",
+            "uses": [
+              "count",
+              "path"
+            ]
+          },
+          {
+            "name": "content",
+            "page": true
+          }
+        ],
+        "routes": [
+          {
+            "name": "home",
+            "path": "/",
+            "title": "Home",
+            "template": "page.tpl"
+          },
+          {
+            "name": "add",
+            "path": "/add",
+            "title": "Add",
+            "template": "add.tpl",
+            "post": true
+          },
+          {
+            "name": "item",
+            "path": "/items/{id}",
+            "title": "Item",
+            "template": "item.tpl"
+          },
+          {
+            "name": "list",
+            "path": "/list",
+            "title": "List",
+            "template": "list.tpl",
+            "regions": [
+              {
+                "name": "rows",
+                "template": "rows.tpl",
+                "keep": {
+                  "open": "server",
+                  "mode": "cookie",
+                  "view": "localStorage",
+                  "filter": "cookie",
+                  "tags": "cookie"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "regions": [
+        "side",
+        "content"
+      ],
+      "page": "content",
+      "routes": [
+        "home",
+        "add",
+        "item",
+        "list"
+      ],
+      "region": "rows",
+      "kinds": [
+        "server"
+      ],
+      "keep": {
+        "open": "server",
+        "mode": "cookie",
+        "view": "localStorage",
+        "filter": "cookie",
+        "tags": "cookie"
+      },
+      "keptPaths": [
+        "open"
+      ]
+    }
+  ]
+}

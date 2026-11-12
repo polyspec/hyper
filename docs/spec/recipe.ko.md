@@ -168,7 +168,7 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
     `fail`, `line`과 private member `declaration`, `matches`, `equal`. `compare`는 필드를, `outcome`은 단계의 결과를
     비교한다.
     - `contracts/interfaces.json`의 `caseFiles`는 case 파일의 역할과 비교의 유일한 출처다(HYR-11). 파일마다 최상위 key(`fixtures`)를,
-      case 배열(`sections`)마다 그 `runners`, case가 쓰는 fixture(`uses`), 모든 필드와 그 역할, 그리고 각 expected 필드, 단계가 함께
+      case 배열(`sections`)마다 그 `runners`, case가 쓰는 fixture(`uses`), case가 결과를 말하는 member(`members`, 각각 spec의 member id), 모든 필드와 그 역할, 그리고 각 expected 필드, 단계가 함께
       확인하는 각 input 필드, 단계의 각 결과에 대해 비교 방법, 그 `state`, 관찰된 동작을 적는 `sentence`를 적는다. check는 각
       `sentence`를 `only`(HYR-6)처럼 검증한다.
     - case reader는 case의 입력 필드와 쓰는 fixture를 runner에 넘기며, 각 expected 필드를 관찰된 값과 `caseFiles`가

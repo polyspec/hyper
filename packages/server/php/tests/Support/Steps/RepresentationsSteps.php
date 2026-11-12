@@ -8,8 +8,10 @@ use Polyspec\Hyper\App;
 use Polyspec\Hyper\ArraySession;
 use Polyspec\Hyper\Request;
 use Polyspec\Hyper\Tests\CaseReader;
+use Polyspec\Hyper\Tests\Support\Clock;
 use Polyspec\Hyper\Tests\Support\ContextRun;
 use Polyspec\Hyper\Tests\Support\Json;
+use Polyspec\Hyper\Tests\Support\Mailer;
 use Polyspec\Hyper\Tests\Support\Plain;
 use Polyspec\Hyper\Tests\Support\RepresentationCalls;
 
@@ -62,6 +64,19 @@ final class RepresentationsSteps
             $calls->handler($case->has('handler') ? $case->input('handler') : null),
             $basePath,
         );
+        // HY-105: each bound service is created by a factory that remembers the object that it returned.
+        $created = [];
+        foreach ($case->has('bound') ? Json::strings($case->input('bound')) : [] as $name) {
+            $class = match ($name) {
+                'clock' => Clock::class,
+                'mailer' => Mailer::class,
+                default => throw new \UnexpectedValueException("the case binds the unknown service {$name}"),
+            };
+            $app->bind($class, static function () use ($class, $name, &$created): object {
+                return $created[$name] = new $class();
+            });
+        }
+        $service = $case->has('handler') ? (Json::array($case->input('handler'))['service'] ?? null) : null;
         $request = Json::array($case->input('request'));
         // An empty map of the contract is an object.
         $headers = Json::stringMap((array) ($request['headers'] ?? []));
@@ -92,6 +107,11 @@ final class RepresentationsSteps
         $case->compare('received.body', $calls->request?->json());
         $case->compare('received.headers', $received);
         $case->compare('received.absentHeaders', $received);
+        $case->compare(
+            'received.service',
+            $calls->service !== null && is_string($service) && $calls->service === ($created[$service] ?? null),
+        );
+        $case->compare('received.params', $calls->request === null ? null : Plain::map($calls->request->params()));
     }
 
     /**

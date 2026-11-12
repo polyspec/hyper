@@ -468,9 +468,11 @@ class App:
         if self._client is None:
             return None
         choice = self._client.selects(request)
-        if not isinstance(choice, Choice):
+        # HY-62.36: a choice whose `chosen` is not a boolean is another value.
+        if not isinstance(choice, Choice) or not isinstance(choice.chosen, bool):
             raise TypeError(
                 "the selection of the client rendering did not return a Choice"
+                " whose chosen is a boolean"
             )
         return choice
 

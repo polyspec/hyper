@@ -217,12 +217,12 @@ final class Manifest
         return null;
     }
 
-    /** Returns true for an allowed region name (HY-2). */
+    /** Returns true for an allowed region name (HY-2.3). */
     private static function regionName(string $name): bool
     {
         return preg_match('/^[A-Za-z][A-Za-z0-9_-]*$/D', $name) === 1 && !in_array(
             $name,
-            ['layout', 'title', 'data'],
+            ['layout', 'title', 'data', 'build'],
             true,
         );
     }

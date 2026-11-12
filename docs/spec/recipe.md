@@ -180,7 +180,8 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
     compares a field and `outcome` an outcome of the step.
     - `caseFiles` of `contracts/interfaces.json` is the one source of the roles and comparisons of the case files
       (HYR-11). For each file it names its top-level keys (`fixtures`) and, for each case array
-      (`sections`), its `runners`, the fixtures that its cases use (`uses`), every field with its role and, for each
+      (`sections`), its `runners`, the fixtures that its cases use (`uses`), the members whose result its cases state
+      (`members`, each a member id of the spec), every field with its role and, for each
       expected field, each input field that a step also checks and each outcome of a step, the comparison, its `state`,
       and the `sentence` that states the observed behaviour. The check verifies each `sentence` as it verifies `only`
       (HYR-6).

@@ -73,7 +73,10 @@ function readsCases(reader: CaseReader): void {
   const loader = new MapLoader();
   for (const [name, source] of templates) loader.set(name, source);
   const engine = createEngine(loader);
-  reader.outcome('render', [engine.render(template, kept), engine.render(template, data)]);
+  const whole = engine.render(template, data);
+  reader.outcome('render', [engine.render(template, kept), whole]);
+  // HY-13.1: the template rendered alone with its data.
+  if (reader.has('text')) reader.compare('text', whole);
 }
 
 // The steps of contracts/routes.json (HY-4 to HY-8) and contracts/rest.json (HY-49): the match of a request path.

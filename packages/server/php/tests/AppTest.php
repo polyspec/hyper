@@ -414,23 +414,6 @@ final class AppTest extends TestCase
     }
 
     /**
-     * Requires that opening the application with each manifest of `tests/fixtures/invalid` fails.
-     *
-     * @param list<string> $fixtures
-     */
-    private function assertManifestsRejected(array $fixtures): void
-    {
-        foreach ($fixtures as $fixture) {
-            try {
-                App::open(__DIR__ . "/fixtures/invalid/{$fixture}.json", self::PROGRAM, [], 'Z');
-                self::fail("{$fixture} was accepted");
-            } catch (\InvalidArgumentException) {
-                $this->addToAssertionCount(1);
-            }
-        }
-    }
-
-    /**
      * The response hook that appends the status, the notes of the reply and the failure of each response to `$reports`.
      *
      * @param list<array{int, array<string, mixed>, ?string}> $reports
@@ -708,18 +691,6 @@ final class AppTest extends TestCase
 
         self::assertSame(500, $response->status);
         self::assertSame('Internal Server Error', $response->body);
-    }
-
-    public function testManifestRejectsInvalidKeep(): void
-    {
-        // HY-37, HY-40
-        $this->assertManifestsRejected(['keep-kind', 'keep-page', 'keep-manifest', 'keep-reserved', 'uses-topic']);
-    }
-
-    public function testManifestRejectsListsAndNamesOfAnotherType(): void
-    {
-        // HY-1, HY-2: `regions` and `routes` are lists, and region and route names are strings.
-        $this->assertManifestsRejected(['routes-text', 'route-name-number', 'region-name-list']);
     }
 
     public function testInvalidUtf8IsRejectedBeforeLoadersAndActions(): void
@@ -1041,16 +1012,6 @@ final class AppTest extends TestCase
         self::assertSame('/api/', $redirect->headers['Location']);
     }
 
-    public function testActionWithoutTokenIsRejected(): void
-    {
-        // HY-24
-        $this->token();
-        $response = $this->post('/add', ['_csrf' => 'wrong', 'name' => 'a']);
-
-        self::assertSame(403, $response->status);
-        self::assertSame(0, $this->counter->actions);
-    }
-
     public function testEveryResponseMasksTheTokenAnew(): void
     {
         // HY-24: two responses of one session carry different masked values of the token, both are accepted, and
@@ -1246,15 +1207,6 @@ final class AppTest extends TestCase
         self::assertSame(422, $html->status);
         self::assertStringContainsString('<p>Add| !empty</p>', $html->body);
         self::assertSame(0, $this->counter->count);
-    }
-
-    public function testUnknownPathsMissingResourcesAndMethodsFail(): void
-    {
-        // HY-27
-        self::assertSame(404, $this->get('/missing')->status);
-        self::assertSame(404, $this->get('/items/missing')->status);
-        self::assertSame(405, $this->post('/', [])->status);
-        self::assertSame(405, $this->app()->handle(new Request('DELETE', '/add'), $this->session)->status);
     }
 
     public function testLoaderRedirectAnswersWith303AndPassesFlash(): void

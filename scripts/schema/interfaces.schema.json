@@ -333,6 +333,7 @@
           "items": { "enum": ["php", "node", "python", "browser", "build"] }
         },
         "uses": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+        "members": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
         "outcomes": { "type": "object", "additionalProperties": { "$ref": "#/$defs/caseCompare" } },
         "fields": {
           "type": "object",

@@ -9,7 +9,7 @@ import re
 import sys
 import traceback
 from pathlib import Path
-from typing import Callable, Optional
+from typing import BinaryIO, Callable, Optional
 
 from ._exchange import Exchange
 from ._request_body import RequestBody
@@ -38,6 +38,12 @@ CONTENT_TYPES = {
     ".txt": "text/plain; charset=utf-8",
 }
 _PUBLIC_PATH = re.compile(r"^(\/[A-Za-z0-9_-][A-Za-z0-9._-]*)+$")
+# The size line of a chunk (RFC 9112 section 7.1): hexadecimal digits, then an optional chunk extension after `;`.
+_CHUNK_SIZE = re.compile(rb"([0-9A-Fa-f]{1,15})[ \t]*(?:;[^\r\n]*)?\r\n\Z")
+# The longest size line or trailer line and the most trailer lines of a body that is sent in chunks, the limits of a
+# header line and of the header lines of `http.client`.
+_LINE_LIMIT = 65536
+_TRAILER_LIMIT = 100
 
 
 def validate(
@@ -87,6 +93,37 @@ def read_body(read: Callable[[int], bytes], body: RequestBody, length: int) -> N
         size += len(chunk)
         if reading:
             reading = body.feed(chunk)
+
+
+def read_chunks(source: BinaryIO, body: RequestBody) -> bool:
+    """Gives a request body that is sent in chunks (`Transfer-Encoding: chunked`) to `body`, and returns False for a
+    body that is not in that form or ends early. A chunk extension and the trailer fields are read and not used. A
+    body that passes the limit is read to its end and discarded, as `read_body` does (HY-59.10)."""
+    reading = True
+    while True:
+        line = source.readline(_LINE_LIMIT + 1)
+        size = _CHUNK_SIZE.match(line)
+        if size is None:
+            return False
+        remaining = int(size.group(1), 16)
+        if remaining == 0:
+            break
+        while remaining > 0:
+            chunk = source.read(min(65536, remaining))
+            if not chunk:
+                return False
+            remaining -= len(chunk)
+            if reading:
+                reading = body.feed(chunk)
+        if source.read(2) != b"\r\n":
+            return False
+    for _ in range(_TRAILER_LIMIT):
+        line = source.readline(_LINE_LIMIT + 1)
+        if line == b"\r\n":
+            return True
+        if not line.endswith(b"\r\n") or b":" not in line:
+            return False
+    return False
 
 
 def head_request(

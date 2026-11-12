@@ -35,10 +35,8 @@ final class ReadsSteps
         ContextRun::autoload($directory);
         $renderer = Renderer::open("{$directory}/program", 'Z');
         $shared = $renderer->bind([]);
-        $case->outcome(
-            'render',
-            $renderer->alone($template, $shared, $renderer->bind($kept)),
-            $renderer->alone($template, $shared, $renderer->bind($data)),
-        );
+        $text = $renderer->alone($template, $shared, $renderer->bind($data));
+        $case->outcome('render', $renderer->alone($template, $shared, $renderer->bind($kept)), $text);
+        $case->compare('text', $text);
     }
 }

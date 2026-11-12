@@ -12,16 +12,20 @@ import { steps as buildSteps } from './steps/build.js';
 import { steps as containerSteps } from './steps/container.js';
 import { steps as csrfSteps } from './steps/csrf.js';
 import { steps as fieldsSteps } from './steps/fields.js';
+import { steps as fileSessionsSteps } from './steps/file-sessions.js';
 import { steps as functionsSteps } from './steps/functions.js';
 import { steps as jsonSteps } from './steps/json.js';
 import { steps as keepSteps } from './steps/keep.js';
+import { steps as manifestSteps } from './steps/manifest.js';
 import { steps as readsSteps } from './steps/reads.js';
+import { steps as redisSessionsSteps } from './steps/redis-sessions.js';
 import { steps as representationsSteps } from './steps/representations.js';
 import { steps as requestSteps } from './steps/request.js';
 import { steps as restSteps } from './steps/rest.js';
 import { steps as replySteps } from './steps/reply.js';
 import { steps as resultSteps } from './steps/result.js';
 import { steps as routesSteps } from './steps/routes.js';
+import { steps as sessionSteps } from './steps/session.js';
 
 type Step = (reader: CaseReader) => unknown;
 
@@ -35,16 +39,20 @@ const STEPS: Record<string, Step> = {
   ...prefixed('container.json', containerSteps),
   ...prefixed('csrf.json', csrfSteps),
   ...prefixed('fields.json', fieldsSteps),
+  ...prefixed('file-sessions.json', fileSessionsSteps),
   ...prefixed('functions.json', functionsSteps),
   ...prefixed('json.json', jsonSteps),
   ...prefixed('keep.json', keepSteps),
+  ...prefixed('manifest.json', manifestSteps),
   ...prefixed('reads.json', readsSteps),
+  ...prefixed('redis-sessions.json', redisSessionsSteps),
   ...prefixed('representations.json', representationsSteps),
   ...prefixed('request.json', requestSteps),
   ...prefixed('rest.json', restSteps),
   ...prefixed('reply.json', replySteps),
   ...prefixed('result.json', resultSteps),
   ...prefixed('routes.json', routesSteps),
+  ...prefixed('session.json', sessionSteps),
 };
 
 function prefixed(file: string, steps: Record<string, Step>): Record<string, Step> {

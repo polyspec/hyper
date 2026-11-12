@@ -6,9 +6,14 @@ namespace Polyspec\Hyper\Tests\Support\Steps;
 
 use Polyspec\Hyper\Build;
 use Polyspec\Hyper\InvalidBuild;
+use Polyspec\Hyper\Renderer;
 use Polyspec\Hyper\Tests\CaseReader;
+use Polyspec\Hyper\Tests\Support\Json;
 
-/** HY-125: the cases of contracts/build.json, the build id that a `build.json` file gives. */
+/**
+ * HY-48.2, HY-125: the cases of contracts/build.json, the build id that a `build.json` file gives and the outputs of a
+ * build that the open of a program needs.
+ */
 final class BuildSteps
 {
     public static function read(CaseReader $case): void
@@ -47,6 +52,47 @@ final class BuildSteps
             if (is_file($file)) {
                 unlink($file);
             }
+            rmdir($directory);
+        }
+    }
+
+    /** The outputs of a program in the order in which the open needs them; true for a directory. */
+    private const OUTPUTS = ['php' => true, 'program.json' => false, 'reads.json' => false, 'build.json' => false, 'templates' => true];
+
+    /** Opens a program directory that holds every output but those of `missing`, and records the error of the open. */
+    public static function outputs(CaseReader $case): void
+    {
+        $missing = Json::strings($case->input('missing'));
+        foreach ($missing as $name) {
+            if (!array_key_exists($name, self::OUTPUTS)) {
+                throw new \UnexpectedValueException("{$name} is no output of a program");
+            }
+        }
+        $directory = sys_get_temp_dir() . '/hyper-outputs-' . bin2hex(random_bytes(6));
+        $program = "{$directory}/program";
+        mkdir($program, 0o700, true);
+        $created = [];
+        try {
+            foreach (self::OUTPUTS as $name => $isDirectory) {
+                if (in_array($name, $missing, true)) {
+                    continue;
+                }
+                $created[] = $name;
+                $isDirectory ? mkdir("{$program}/{$name}") : file_put_contents("{$program}/{$name}", '');
+            }
+            $failure = null;
+            try {
+                Renderer::open($program, 'Z');
+            } catch (\Throwable $error) {
+                $failure = $error;
+            }
+            $case->outcome('open', $failure);
+            $case->compare('message', str_replace($program, '{program}', $failure?->getMessage() ?? ''));
+        } finally {
+            foreach ($created as $name) {
+                self::OUTPUTS[$name] ? rmdir("{$program}/{$name}") : unlink("{$program}/{$name}");
+            }
+            rmdir($program);
             rmdir($directory);
         }
     }

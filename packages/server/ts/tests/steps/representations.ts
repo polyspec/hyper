@@ -21,26 +21,40 @@ function failureOf(open: Promise<unknown>): Promise<unknown> {
   );
 }
 
-// What a representation handler received: the method, the media parameters, the request and the decoded JSON body.
+// What a representation handler received: the method, the media parameters, the request, the decoded JSON body, the
+// route parameters and the service that the case names, or null.
 interface Observed {
   method: string;
   parameters: ReadonlyMap<string, string>;
   request: Request;
   body: Value;
+  params: Record<string, string>;
+  service: object | null;
 }
 
-type None = Record<string, never>;
+// The services of the application of a case, by the names of contracts/container.json.
+interface Services {
+  clock: object;
+  mailer: object;
+}
+
+// Returns a service name of a case, and fails for any other value.
+function serviceName(value: unknown): keyof Services {
+  if (value !== 'clock' && value !== 'mailer') throw new Error(`the case names the unknown service ${String(value)}`);
+  return value;
+}
 
 // A handler of a rejection case, which no request reaches.
-const rejected: RepresentationHandler<None> = () => {
+const rejected: RepresentationHandler<Services> = () => {
   throw new Error('a representation handler of a rejection case is called');
 };
 
-// Returns the representation handler of a case: it records what it received, and answers or throws what the case
-// states.
-function handlerOf(spec: Map<string, unknown> | null, calls: Observed[]): RepresentationHandler<None> {
-  return ({ request, media }) => {
-    calls.push({ method: request.method, parameters: media.parameters(), request, body: request.json() });
+// Returns the representation handler of a case: it records what it received, with the service that `handler.service`
+// names (HY-105), and answers or throws what the case states.
+function handlerOf(spec: Map<string, unknown> | null, calls: Observed[]): RepresentationHandler<Services> {
+  const service = spec?.has('service') === true ? serviceName(spec.get('service')) : null;
+  return ({ request, media, services }) => {
+    calls.push({ method: request.method, parameters: media.parameters(), request, body: request.json(), params: request.params(), service: service === null ? null : services.get(service) });
     if (spec === null) throw new Error('a case without a handler calls a representation handler');
     const thrown = spec.get('throw');
     if (thrown instanceof Map) {
@@ -54,9 +68,9 @@ function handlerOf(spec: Map<string, unknown> | null, calls: Observed[]): Repres
 
 // Returns the paths of the representations program and its handlers: each route loads the data of `loaders`, and has a
 // representation handler for each type of `types`.
-function programOf(manifest: string, loaders: Map<string, unknown>, types: Map<string, string[]>, handler: RepresentationHandler<None>): { manifest: string; build: string; templates: { index: string; root: string }; handlers: Handlers<None> } {
+function programOf(manifest: string, loaders: Map<string, unknown>, types: Map<string, string[]>, handler: RepresentationHandler<Services>): { manifest: string; build: string; templates: { index: string; root: string }; handlers: Handlers<Services> } {
   const dir = join(PROGRAMS, APPLICATION);
-  const routes: Record<string, RouteHandlers<None>> = {};
+  const routes: Record<string, RouteHandlers<Services>> = {};
   for (const [name, declared] of types) {
     const data = loaders.get(name);
     routes[name] = {
@@ -111,7 +125,7 @@ export const steps = {
     const types = declaredTypes();
     types.set(route, Array.isArray(representations) ? representations.map((entry: unknown) => String(record(entry).type)) : []);
     try {
-      const failure = await failureOf(App.open<None>({ ...programOf(copy.file, loadersOf(reader), types, rejected), timezone: '+09:00', log: () => {} }));
+      const failure = await failureOf(App.open<Services>({ ...programOf(copy.file, loadersOf(reader), types, rejected), timezone: '+09:00', log: () => {} }));
       reader.outcome('open', failure);
     } finally {
       rmSync(copy.directory, { recursive: true, force: true });
@@ -121,19 +135,30 @@ export const steps = {
   async openRejections(reader: CaseReader): Promise<void> {
     const types = declaredTypes();
     types.set(reader.input('route') as string, reader.input('handlers') as string[]);
-    const failure = await failureOf(App.open<None>({ ...programOf(join(PROGRAMS, APPLICATION, 'manifest.json'), loadersOf(reader), types, rejected), timezone: '+09:00', log: () => {} }));
+    const failure = await failureOf(App.open<Services>({ ...programOf(join(PROGRAMS, APPLICATION, 'manifest.json'), loadersOf(reader), types, rejected), timezone: '+09:00', log: () => {} }));
     reader.outcome('open', failure);
   },
 
   async cases(reader: CaseReader): Promise<void> {
     const calls: Observed[] = [];
     const spec = reader.has('handler') ? (reader.input('handler') as Map<string, unknown>) : null;
-    const app = await App.open<None>({
+    const app = await App.open<Services>({
       ...programOf(join(PROGRAMS, APPLICATION, 'manifest.json'), loadersOf(reader), declaredTypes(), handlerOf(spec, calls)),
       timezone: '+09:00',
       basePath: reader.has('basePath') ? (reader.input('basePath') as string) : '',
       log: () => {},
     });
+    // Each bound service is one object, which its factory creates once and the step remembers.
+    const bound = new Map<keyof Services, object>();
+    const names: unknown = reader.has('bound') ? reader.input('bound') : [];
+    if (!Array.isArray(names)) throw new Error('the case field bound is not a list');
+    for (const name of names.map(serviceName)) {
+      app.bind(name, () => {
+        const made = {};
+        bound.set(name, made);
+        return made;
+      });
+    }
     const store = new ArraySession();
     const headers = Object.fromEntries(reader.input('request.headers') as Map<string, string>);
     const body = reader.has('request.body') ? Buffer.from(reader.input('request.body') as string, 'utf8') : undefined;
@@ -161,5 +186,9 @@ export const steps = {
     reader.compare('received.body', observed?.body);
     reader.compare('received.headers', received);
     reader.compare('received.absentHeaders', received);
+    // The handler received the very object that the factory of the named service returned.
+    const named = spec?.has('service') === true ? serviceName(spec.get('service')) : null;
+    reader.compare('received.service', named !== null && observed !== undefined && observed.service !== null && bound.get(named) === observed.service);
+    reader.compare('received.params', observed?.params);
   },
 };

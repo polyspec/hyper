@@ -17,14 +17,14 @@ def cases(case) -> None:
     templates = case.input("templates")
     template = case.input("template")
     if template not in templates:
-        raise ValueError(f"the template {template} is not among the templates of {case.id()}")
+        raise ValueError(
+            f"the template {template} is not among the templates of {case.id()}"
+        )
     program = PROGRAMS / f"reads_{case.id()}" / "program"
     renderer = Renderer.open(str(program), "Z")
     shared = renderer.bind({})
+    text = renderer.alone(template, shared, renderer.bind(data))
     case.outcome(
-        "render",
-        [
-            renderer.alone(template, shared, renderer.bind(kept)),
-            renderer.alone(template, shared, renderer.bind(data)),
-        ],
+        "render", [renderer.alone(template, shared, renderer.bind(kept)), text]
     )
+    case.compare("text", text)

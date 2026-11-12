@@ -1,14 +1,12 @@
-# The session of a request (HY-120): the application opens the session only for the keep path and for a request that
-# selects text/html or application/vnd.hyper+json, after the checks that refuse the request. Each refusal below reaches
-# the session store with no call and sets no cookie. A page request reaches the store, which proves that the counting
-# store counts.
+# The session of a request (HY-120): an application with a context refuses an invalid Hyper-Context header before it
+# opens the session, so the refusal reaches the session store with no call and sets no cookie. The cases of
+# contracts/client.json state the other refusals and the calls of a request that opens the session.
 import unittest
 
 from polyspec.hyper.app import App
 from polyspec.hyper.request import Request
 from polyspec.hyper.result import Result
 
-from .render_client import Counter, app
 from .render_functions import program_of
 
 
@@ -56,23 +54,6 @@ class SessionTest(unittest.TestCase):
         self.assertEqual([], store.calls)
         self.assertNotIn("Set-Cookie", response.headers)
 
-    def test_a_request_that_selects_no_type_opens_no_session(self) -> None:
-        # HY-116, HY-62 step 2: no served type matches the Accept header, so the answer is 406.
-        self.assertRefused(
-            app(Counter()),
-            Request("GET", "/", {"Host": "server.test", "Accept": "image/png"}),
-            406,
-        )
-
-    def test_a_put_of_a_page_route_opens_no_session(self) -> None:
-        # HY-62 step 3: a method other than GET, and a POST of a route without a declared POST, give 405 before the
-        # session is opened.
-        self.assertRefused(
-            app(Counter()),
-            Request("PUT", "/", {"Host": "server.test", "Accept": "text/html"}),
-            405,
-        )
-
     def test_an_invalid_hyper_context_opens_no_session(self) -> None:
         # HY-127: an application with a context answers 400 for an invalid Hyper-Context header, after the method check.
         self.assertRefused(
@@ -84,47 +65,6 @@ class SessionTest(unittest.TestCase):
             ),
             400,
         )
-
-    def test_a_body_above_the_limit_opens_no_session(self) -> None:
-        # HY-59: a body above the body limit answers 413 before any other check.
-        self.assertRefused(
-            app(Counter(), body_limit=8),
-            Request(
-                "POST",
-                "/add",
-                {"Host": "server.test", "Content-Type": "application/x-www-form-urlencoded"},
-                "",
-                b"name=" + b"x" * 64,
-            ),
-            413,
-        )
-
-    def test_a_page_request_under_the_data_base_path_that_selects_no_json_opens_no_session(self) -> None:
-        # HY-62 step 2: under the data base path only the JSON type is served, so a text/html request gives 406.
-        self.assertRefused(
-            app(Counter()),
-            Request("GET", "/_props/", {"Host": "client.test", "Accept": "text/html"}),
-            406,
-        )
-
-    def test_a_request_that_receives_the_shell_opens_no_session(self) -> None:
-        # HY-62 step 2: a page request outside the data base path of a client rendering receives the shell.
-        store = CountingStore()
-        response = app(Counter()).handle(
-            Request("GET", "/", {"Host": "client.test", "Accept": "text/html"}), store
-        )
-        self.assertEqual(200, response.status)
-        self.assertEqual([], store.calls)
-        self.assertNotIn("Set-Cookie", response.headers)
-
-    def test_a_page_request_that_selects_text_html_opens_the_session(self) -> None:
-        # The control: a page request reaches the store, so the counting store counts the calls of a session.
-        store = CountingStore()
-        response = app(Counter()).handle(
-            Request("GET", "/", {"Host": "server.test", "Accept": "text/html"}), store
-        )
-        self.assertEqual(200, response.status)
-        self.assertTrue(store.calls)
 
 
 if __name__ == "__main__":

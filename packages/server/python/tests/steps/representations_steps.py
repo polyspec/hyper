@@ -17,6 +17,7 @@ from polyspec.hyper.array_session import ArraySession
 
 from ..case_reader import CaseReader
 from ..render.render_functions import program_of
+from .container_steps import SERVICES
 
 
 class OrmError(Exception):
@@ -57,7 +58,9 @@ def cases(case: CaseReader) -> None:
     request_spec = case.input("request")
     handler_spec = case.input("handler") if case.has("handler") else None
     base_path = case.input("basePath") if case.has("basePath") else ""
+    bound = case.input("bound") if case.has("bound") else []
     calls: list[dict] = []
+    created: dict[str, object] = {}
     routes = {}
     for route in application["manifest"]["routes"]:
         name = route["name"]
@@ -76,6 +79,10 @@ def cases(case: CaseReader) -> None:
         timezone="+09:00",
         base_path=base_path,
     )
+    for name in bound:
+        if name not in SERVICES:
+            raise ValueError(f"the case binds the unknown service {name!r}")
+        app.bind(SERVICES[name], _factory(name, created))
     store = ArraySession()
     target = request_spec["target"]
     request = Request(
@@ -100,6 +107,12 @@ def cases(case: CaseReader) -> None:
     case.compare("received.body", observed.get("body"))
     case.compare("received.headers", observed.get("headers", {}))
     case.compare("received.absentHeaders", observed.get("headers", {}))
+    service = None if handler_spec is None else handler_spec.get("service")
+    case.compare(
+        "received.service",
+        "service" in observed and observed["service"] is created.get(service),
+    )
+    case.compare("received.params", observed.get("params"))
 
 
 def _declared_types(application: dict) -> dict:
@@ -115,11 +128,13 @@ def _check_open(case: CaseReader, manifest: dict, types: dict) -> None:
     ValueError."""
     handlers = {
         "routes": {
-            name: {"representations": {type_: _rejected_handler for type_ in entry_types}}
+            name: {
+                "representations": {type_: _rejected_handler for type_ in entry_types}
+            }
             for name, entry_types in types.items()
         }
     }
-    manifest_path, program = program_of("representations")
+    program = program_of("representations")[1]
     with tempfile.TemporaryDirectory() as directory:
         written = Path(directory) / "manifest.json"
         written.write_text(json.dumps(manifest), encoding="utf-8")
@@ -130,7 +145,7 @@ def _check_open(case: CaseReader, manifest: dict, types: dict) -> None:
                 handlers=handlers,
                 timezone="+09:00",
             )
-        except Exception as error:
+        except Exception as error:  # noqa: BLE001 - the reader checks the class of the error
             raised = error
         else:
             raised = None
@@ -148,11 +163,26 @@ def _loader(data: dict):
     return load
 
 
+def _factory(name: str, created: dict):
+    """Returns the factory of a service of the case, which remembers the one object that it creates."""
+
+    def create() -> object:
+        created[name] = SERVICES[name]()
+        return created[name]
+
+    return create
+
+
 def _handler(spec: dict | None, calls: list):
-    def handle(request: Request, media: MediaType) -> Representation:
-        calls.append(_observed(request, media))
+    """Returns the representation handler of the case; with `service` it takes the service of that name between the
+    media type and the request, each parameter named by its class (HY-105.4)."""
+
+    def answer(request: Request, media: MediaType, received: dict) -> Representation:
+        calls.append({**_observed(request, media), **received})
         if spec is None:
-            raise AssertionError("a case without a handler calls a representation handler")
+            raise AssertionError(
+                "a case without a handler calls a representation handler"
+            )
         if "throw" in spec:
             thrown = spec["throw"]
             if thrown["class"] != "OrmError":
@@ -160,7 +190,22 @@ def _handler(spec: dict | None, calls: list):
             raise OrmError(thrown["code"])
         return Representation(spec["status"], spec.get("body"), spec.get("headers"))
 
-    return handle
+    if spec is None or "service" not in spec:
+
+        def handle(request: Request, media: MediaType) -> Representation:
+            return answer(request, media, {})
+
+        return handle
+    if spec["service"] not in SERVICES:
+        raise ValueError(f"the handler takes the unknown service {spec['service']!r}")
+    service_class = SERVICES[spec["service"]]
+
+    def handle_with_service(
+        media: MediaType, service: service_class, request: Request
+    ) -> Representation:
+        return answer(request, media, {"service": service})
+
+    return handle_with_service
 
 
 def _observed(request: Request, media: object) -> dict:
@@ -170,6 +215,7 @@ def _observed(request: Request, media: object) -> dict:
         "method": request.method,
         "parameters": media.parameters(),
         "headers": dict(request._headers),
+        "params": request.params(),
         "body": JsonCodec.decode(body.decode("utf-8")) if body else None,
     }
 

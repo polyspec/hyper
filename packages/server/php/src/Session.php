@@ -41,10 +41,13 @@ final class Session
     /** Returns the stored flash data and removes it from the session. */
     public function takeFlash(): Flash
     {
-        $flash = $this->store->get(self::FLASH);
+        $flash = self::storedMap($this->store->get(self::FLASH));
         $this->store->remove(self::FLASH);
-        if (!is_array($flash)) {
+        if ($flash === null) {
             return new Flash([], []);
+        }
+        if (!is_array($flash)) {
+            throw new \UnexpectedValueException('the session holds flash data that is not a map');
         }
 
         $values = self::storedMap($flash['values'] ?? []);
@@ -66,10 +69,23 @@ final class Session
     /** Stores a kept value of a region (HY-38, HY-40). */
     public function keep(string $region, string $path, mixed $value): void
     {
-        $kept = self::storedMap($this->store->get(self::KEEP));
-        $kept = is_array($kept) ? $kept : [];
-        $regionKept = self::storedMap($kept[$region] ?? []);
-        $regionKept = is_array($regionKept) ? $regionKept : [];
+        $kept = self::storedMap($this->store->get(self::KEEP)) ?? [];
+        if (!is_array($kept)) {
+            throw new \UnexpectedValueException('the session holds kept values that are not a map');
+        }
+        // HY-104.23: the kept values of every region are a map, also those of another region than this one.
+        $regionKept = [];
+        foreach ($kept as $name => $values) {
+            $values = self::storedMap($values);
+            if (!is_array($values)) {
+                throw new \UnexpectedValueException(
+                    "the session holds kept values of the region {$name} that are not a map",
+                );
+            }
+            if ((string) $name === $region) {
+                $regionKept = $values;
+            }
+        }
         $regionKept[$path] = $value;
         $kept[$region] = $regionKept;
         $this->store->set(self::KEEP, $kept);
@@ -82,10 +98,18 @@ final class Session
      */
     public function kept(string $region): array
     {
-        $kept = self::storedMap($this->store->get(self::KEEP));
-        $regionKept = is_array($kept) ? self::storedMap($kept[$region] ?? []) : [];
+        $kept = self::storedMap($this->store->get(self::KEEP)) ?? [];
+        if (!is_array($kept)) {
+            throw new \UnexpectedValueException('the session holds kept values that are not a map');
+        }
+        $regionKept = self::storedMap($kept[$region] ?? []);
+        if (!is_array($regionKept)) {
+            throw new \UnexpectedValueException(
+                "the session holds kept values of the region {$region} that are not a map",
+            );
+        }
 
-        return is_array($regionKept) ? $regionKept : [];
+        return $regionKept;
     }
 
     /** Returns the entries of a stored map: the Node and Python servers write a map that an array would read as a list as a `stdClass` (HY-104). */

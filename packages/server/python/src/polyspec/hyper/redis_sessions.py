@@ -46,9 +46,10 @@ class RedisSessions:
         lock_wait: float = 0.02,
         setup: Optional[Callable[[], object]] = None,
     ):
-        if lifetime <= 0:
+        # HY-115.21: positive integers; a boolean is an int of Python and neither of them.
+        if type(lifetime) is not int or lifetime <= 0:
             raise ValueError("session lifetime must be a positive number of seconds")
-        if lock_expire <= 0:
+        if type(lock_expire) is not int or lock_expire <= 0:
             raise ValueError("session lock_expire must be a positive number of seconds")
         self._command = command
         self._lifetime = lifetime

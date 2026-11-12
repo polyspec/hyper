@@ -33,17 +33,19 @@ export class Session {
     this.store.set(TOKEN, randomBytes(32).toString('hex'));
   }
 
-  // Returns the stored flash data and removes it from the session.
+  // Returns the stored flash data and removes it from the session. Stored flash data of another form than the session
+  // writes fails (HY-104.23); a flash map without `values` or without `changed` has none.
   takeFlash(): Flash {
     const flash = this.store.get(FLASH);
     this.store.remove(FLASH);
-    if (!(flash instanceof Map)) return new Flash(new Map<string, Value>(), []);
-    const values: unknown = flash.get('values');
-    const changed: unknown = flash.get('changed');
-    return new Flash(
-      values instanceof Map || Array.isArray(values) ? Session.storedMap(values) : new Map<string, Value>(),
-      Array.isArray(changed) ? changed.filter((topic): topic is string => typeof topic === 'string') : [],
-    );
+    if (flash === undefined || flash === null) return new Flash(new Map<string, Value>(), []);
+    if (!(flash instanceof Map)) throw new Error('hyper: the session holds flash data that is not a map');
+    const values = flash.has('values') ? Session.storedMap(flash.get('values')) : new Map<string, Value>();
+    const changed: unknown = flash.has('changed') ? flash.get('changed') : [];
+    if (!Array.isArray(changed) || !changed.every((topic): topic is string => typeof topic === 'string')) {
+      throw new Error('hyper: the session holds changed topics that are not a list of strings');
+    }
+    return new Flash(values, [...changed]);
   }
 
   // Stores flash data for the next request.
@@ -51,11 +53,13 @@ export class Session {
     this.store.set(FLASH, new Map<string, unknown>([['values', new Map(flash.values)], ['changed', [...flash.changed]]]));
   }
 
-  // Stores a kept value of a region (HY-38, HY-40).
+  // Stores a kept value of a region (HY-38, HY-40). Stored kept values of another form than the session writes fail,
+  // those of every region (HY-104.23).
   keep(region: string, path: string, value: Value): void {
     const stored = this.store.get(KEEP);
     const kept = new Map<string, MapValue>();
-    if (stored instanceof Map) {
+    if (stored !== undefined && stored !== null) {
+      if (!(stored instanceof Map)) throw new Error('hyper: the session holds kept values that are not a map of regions');
       for (const [name, values] of stored) {
         if (typeof name !== 'string') throw new Error('hyper: the session holds kept values under a region name that is not a string');
         kept.set(name, Session.storedMap(values));
@@ -65,13 +69,14 @@ export class Session {
     this.store.set(KEEP, kept);
   }
 
-  // Returns the kept values of a region in storing order.
+  // Returns the kept values of a region in storing order, an empty map for a region that stored none (HY-40.3). Stored
+  // kept values of another form than the session writes fail (HY-104.23).
   kept(region: string): MapValue {
     const stored = this.store.get(KEEP);
-    const values: unknown = stored instanceof Map ? stored.get(region) : undefined;
-    return values instanceof Map || Array.isArray(values) ? Session.storedMap(values) : new Map<string, Value>();
+    if (stored === undefined || stored === null) return new Map<string, Value>();
+    if (!(stored instanceof Map)) throw new Error('hyper: the session holds kept values that are not a map of regions');
+    return stored.has(region) ? Session.storedMap(stored.get(region)) : new Map<string, Value>();
   }
-
 
   // Returns the map of a stored value, which the session stored with toValue; another value fails, since the session
   // holds only those. PHP keeps a map as an array, and an array with the keys 0 to n-1 reads as a list, so a list here

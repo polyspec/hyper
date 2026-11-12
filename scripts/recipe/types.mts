@@ -65,6 +65,7 @@ export type CaseFile = {
 export type CaseSection = {
   runners: Runner[];
   uses: string[];
+  members?: string[];
   outcomes?: Record<string, CaseCompare>;
   fields: Record<string, CaseField>;
 };

@@ -1,8 +1,28 @@
 {
   "applications": {
     "upload": {
-      "manifest": { "layout": "layout.tpl", "title": "title.tpl", "regions": [{ "name": "content", "page": true }], "routes": [{ "name": "home", "path": "/", "title": "Home", "template": "home.tpl" }, { "name": "item", "path": "/items/{id}", "title": "Item", "template": "item.tpl", "representations": [{ "type": "application/vnd.example.item+json", "parameters": {}, "methods": ["GET", "PUT"], "vary": [] }] }] },
-      "templates": { "layout.tpl": "<head><title>{# title}</title>{# build}</head>\n<main id=\"content\">{# content}</main>\n{# data}\n", "title.tpl": "{= title}", "home.tpl": "<p>upload</p>", "item.tpl": "<p>item</p>" },
+      "manifest": {
+        "layout": "layout.tpl",
+        "title": "title.tpl",
+        "regions": [{"name": "content", "page": true}],
+        "routes": [
+          {"name": "home", "path": "/", "title": "Home", "template": "home.tpl"},
+          {"name": "item", "path": "/items/{id}", "title": "Item", "template": "item.tpl", "representations": [{"type": "application/vnd.example.item+json", "parameters": {}, "methods": ["GET", "PUT"], "vary": []}]},
+          {"name": "large", "path": "/large", "title": "Large", "template": "large.tpl"},
+          {"name": "list", "path": "/list", "title": "List", "template": "list.tpl", "regions": [{"name": "rows", "template": "rows.tpl", "keep": {"open": "server"}}]},
+          {"name": "add", "path": "/add", "title": "Add", "template": "add.tpl", "post": true}
+        ]
+      },
+      "templates": {
+        "layout.tpl": "<head><title>{# title}</title>{# build}</head>\n<main id=\"content\">{# content}</main>\n{# data}\n",
+        "title.tpl": "{= title}",
+        "home.tpl": "<p>upload</p>",
+        "item.tpl": "<p>item</p>",
+        "large.tpl": "<p>{= filler}</p>",
+        "list.tpl": "<ul id=\"rows\">{# rows}</ul>",
+        "rows.tpl": "{@ r = items}<li>{= r}</li>{/}",
+        "add.tpl": "<p>add</p>"
+      },
       "build": "4444444444444444444444444444444444444444444444444444444444444444"
     }
   }

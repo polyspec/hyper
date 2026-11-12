@@ -15,7 +15,7 @@ def base_cases(case) -> None:
 def invalid_paths(case) -> None:
     try:
         Router([{"name": "x", "path": case.input("path")}])
-    except Exception as error:
+    except Exception as error:  # noqa: BLE001 - the reader checks the class of the error
         raised = error
     else:
         raised = None

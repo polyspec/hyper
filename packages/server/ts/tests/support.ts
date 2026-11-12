@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { expect } from 'vitest';
 import { Csrf } from '../src/csrf.js';
-import { App, BadRequest, Forbidden, ArraySession, NotFound, Redirect, Request, Result, type AppOptions, type ClientRendering, type Handlers, type Response } from '../src/index.js';
+import { App, BadRequest, Forbidden, ArraySession, NotFound, Redirect, Result, type AppOptions, type ClientRendering, type Handlers, type Response } from '../src/index.js';
 import type { SessionStore } from '../src/session-store.js';
 import { requestOf } from '../src/http-host.js';
 
@@ -264,11 +264,6 @@ export function list(value: unknown): unknown[] {
   return value;
 }
 
-// Returns a JSON object whose values are strings, such as headers or form fields; another value fails the test.
-export function strings(value: unknown): Record<string, string> {
-  return Object.fromEntries(Object.entries(record(value)).map(([key, item]) => [key, text(item)]));
-}
-
 // Returns a value that the test expects to be there; null or undefined fails the test.
 export function present<T>(value: T | null | undefined): T {
   if (value === null || value === undefined) throw new TypeError('the value is missing');
@@ -283,7 +278,7 @@ export function port(server: Server): number {
 }
 
 // The contract of the client rendering (HY-62) and the declaration that its cases run against.
-export const conformance = record(parsed(readFileSync(new URL('../../../../contracts/client.json', import.meta.url), 'utf8')));
+const conformance = record(parsed(readFileSync(new URL('../../../../contracts/client.json', import.meta.url), 'utf8')));
 const BASE_PATH = text(conformance.basePath);
 const CHOSEN_HOST = text(conformance.chosenHost);
 export const SHELL = `${FIXTURES}shell/index.html`;

@@ -1,6 +1,0 @@
-{
-  "layout": "layout.tpl",
-  "title": "title.tpl",
-  "regions": [{ "name": "content", "page": true, "keep": { "a": "server" } }],
-  "routes": []
-}

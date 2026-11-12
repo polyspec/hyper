@@ -12,16 +12,6 @@ final class RendererTest extends TestCase
 {
     private const PROGRAM = __DIR__ . '/build/server';
 
-    public function testRendersATemplateOfTheProgram(): void
-    {
-        $renderer = Renderer::open(self::PROGRAM, 'Z');
-
-        self::assertSame(
-            "<b>3</b>\n",
-            $renderer->alone('side.tpl', $renderer->bind([]), $renderer->bind(['count' => 3])),
-        );
-    }
-
     public function testTheGeneratedProgramIsLoadedThroughTheAutoload(): void
     {
         // HY-48: the build writes the generated program into the directory php as PSR-4 files of the namespace that
@@ -37,44 +27,6 @@ final class RendererTest extends TestCase
             $first->alone('side.tpl', $first->bind([]), $first->bind(['count' => 1])),
             $second->alone('side.tpl', $second->bind([]), $second->bind(['count' => 1])),
         );
-    }
-
-    public function testRejectsADirectoryWithoutAProgram(): void
-    {
-        $this->expectException(\InvalidArgumentException::class);
-        Renderer::open(__DIR__ . '/fixtures', 'Z');
-    }
-
-    public function testNamesTheFirstMissingFileOfAProgram(): void
-    {
-        // HY-48: a missing build names the missing file when the application opens.
-        $root = sys_get_temp_dir() . '/hyper-renderer-' . bin2hex(random_bytes(6));
-        $files = ['php', 'program.json', 'reads.json', 'build.json', 'templates'];
-        $directories = ['php', 'templates'];
-        try {
-            foreach ($files as $missing) {
-                $program = "{$root}/without-" . strtr($missing, '.', '-');
-                mkdir($program, 0o700, true);
-                foreach ($files as $file) {
-                    if ($file === $missing) {
-                        continue;
-                    }
-                    if (in_array($file, $directories, true)) {
-                        mkdir("{$program}/{$file}");
-                    } else {
-                        file_put_contents("{$program}/{$file}", '');
-                    }
-                }
-                try {
-                    Renderer::open($program, 'Z');
-                    self::fail("opened a program without {$missing}");
-                } catch (\InvalidArgumentException $error) {
-                    self::assertStringContainsString("{$program}/{$missing}", $error->getMessage());
-                }
-            }
-        } finally {
-            exec('rm -rf ' . escapeshellarg($root));
-        }
     }
 
     public function testAProgramWhoseNamespaceIsNotMappedFailsWithTheClassAndTheDirectory(): void

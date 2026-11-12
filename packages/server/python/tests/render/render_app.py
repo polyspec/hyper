@@ -18,8 +18,6 @@ from polyspec.hyper.response import Response
 from polyspec.hyper.result import Result
 from polyspec.hyper.array_session import ArraySession
 
-TOKEN = "00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff"
-
 
 class OrmError(Exception):
     """An error shaped like the OrmError of polyspec.orm, which hyper identifies by its class name and its code (HY-107)."""
@@ -131,9 +129,7 @@ class PageTest(unittest.TestCase):
             get("/", {"Accept": "application/vnd.hyper+json"}), ArraySession()
         )
         self.assertEqual(200, response.status)
-        self.assertEqual(
-            "application/vnd.hyper+json", response.headers["Content-Type"]
-        )
+        self.assertEqual("application/vnd.hyper+json", response.headers["Content-Type"])
         answered = json.loads(response.body)
         self.assertEqual("home", answered["route"])
         self.assertEqual(["side", "content"], list(answered["regions"]))
@@ -235,19 +231,6 @@ class ActionTest(unittest.TestCase):
         self.assertEqual(303, response.status)
         self.assertEqual("/list", response.headers["Location"])
 
-    def test_an_action_without_a_csrf_token_is_forbidden(self) -> None:
-        response = opened().handle(
-            Request(
-                "POST",
-                "/add",
-                {"Content-Type": "application/x-www-form-urlencoded"},
-                body=b"name=ok",
-            ),
-            ArraySession(),
-        )
-        self.assertEqual(403, response.status)
-        self.assertEqual("Forbidden", response.body)
-
     def test_an_action_result_page_with_status_409(self) -> None:
         store = ArraySession()
         app = opened()
@@ -304,11 +287,16 @@ class ActionTest(unittest.TestCase):
     def test_the_etag_of_a_json_page_and_the_304_of_a_matching_request(self) -> None:
         store = ArraySession()
         app = opened()
-        first = app.handle(get("/list", {"Accept": "application/vnd.hyper+json"}), store)
+        first = app.handle(
+            get("/list", {"Accept": "application/vnd.hyper+json"}), store
+        )
         tag = first.headers["ETag"]
         self.assertTrue(tag.startswith('W/"'))
         again = app.handle(
-            get("/list", {"Accept": "application/vnd.hyper+json", "If-None-Match": tag}), store
+            get(
+                "/list", {"Accept": "application/vnd.hyper+json", "If-None-Match": tag}
+            ),
+            store,
         )
         self.assertEqual(304, again.status)
         self.assertNotIn("Content-Type", again.headers)
@@ -348,7 +336,10 @@ class ReferrerPolicyTest(unittest.TestCase):
         again = app.handle(
             get(
                 "/",
-                {"Accept": "application/vnd.hyper+json", "If-None-Match": answer.headers["ETag"]},
+                {
+                    "Accept": "application/vnd.hyper+json",
+                    "If-None-Match": answer.headers["ETag"],
+                },
             ),
             store,
         )
@@ -376,7 +367,9 @@ class KeepTest(unittest.TestCase):
     def test_a_conforming_kept_value_replaces_its_path(self) -> None:
         store = ArraySession()
         store.set("_hyper_keep", {"rows": {"open": True}})
-        response = opened().handle(get("/list", {"Accept": "application/vnd.hyper+json"}), store)
+        response = opened().handle(
+            get("/list", {"Accept": "application/vnd.hyper+json"}), store
+        )
         answered = json.loads(response.body)
         self.assertEqual({"open": True}, answered["kept"]["rows"])
         self.assertEqual(True, answered["kept"]["rows"]["open"])

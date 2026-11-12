@@ -37,7 +37,7 @@ export interface Manifest {
 export const DATA_TEMPLATE_NAME = 'hyper/data.tpl';
 
 const REGION_NAME = /^[A-Za-z][A-Za-z0-9_-]*$/;
-const RESERVED = new Set(['layout', 'title', 'data']);
+const RESERVED = new Set(['layout', 'title', 'data', 'build']);
 const KEPT_PATH = /^[A-Za-z_][A-Za-z0-9_]*(\.([A-Za-z_][A-Za-z0-9_]*|\d+))*$/;
 
 // Checks the manifest rules that the browser code relies on and returns the manifest. The manifest is JSON that a file or

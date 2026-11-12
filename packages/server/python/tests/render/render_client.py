@@ -1,328 +1,35 @@
-# The client rendering beyond the cases of contracts/client.json (HY-62): the selection, the declaration and the fixtures that
-# the cases run against.
-import json
+# The static shell of a client rendering that the server may not read (HY-62): the cases of contracts/client.json state
+# every other declaration that the open refuses, and the mode of a file is not a value of a case.
 import os
 import tempfile
 import unittest
 from pathlib import Path
 
-from .fixture_app import FIXTURES, PROGRAM
-from polyspec.hyper.app import App
 from polyspec.hyper.choice import Choice
 from polyspec.hyper.client_rendering import ClientRendering
-from polyspec.hyper.media_type import MediaType
-from polyspec.hyper.representation import Representation
-from polyspec.hyper.request import Request
-from polyspec.hyper.result import Result
-from polyspec.hyper.array_session import ArraySession
 
-SHELL = FIXTURES / "shell" / "index.html"
-# A session token of HY-24; the form carries a masked value of it.
-TOKEN = "00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff"
-# The base path and the chosen host of the client rendering that the tests open by default (client.json).
-BASE_PATH = "/_props"
-CHOSEN_HOST = "client.test"
+from .fixture_handlers import Counter, fixture_app
 
 
-def default_client() -> ClientRendering:
-    return ClientRendering(
-        str(SHELL),
-        BASE_PATH,
-        lambda request: Choice(request.header("Host") == CHOSEN_HOST, None),
-    )
-
-
-class Counter:
-    """A service that the fixture application reads and changes, and the calls of its representation handlers."""
-
-    def __init__(self, header_names=()):
-        self.count = 0
-        self.actions = 0
-        self.handled = 0
-        self.received = None
-        # The names of the request headers that a representation handler looks up in what it received.
-        self.header_names = tuple(header_names)
-
-
-def _handlers(counter: Counter, representations: dict) -> dict:
-    def add(request: Request, counter: Counter) -> Result:
-        counter.actions += 1
-        if request.form_string("name") == "taken":
-            return Result.page(409, {"name": "taken", "error": "conflict"})
-        counter.count += 1
-        return Result.redirect("/")
-
-    def side(counter: Counter) -> dict:
-        return {"count": counter.count, "note": None}
-
-    def home_load(counter: Counter) -> dict:
-        return {"name": f"n{counter.count}"}
-
-    def rows() -> dict:
-        return {
-            "items": [],
-            "open": False,
-            "mode": "a",
-            "view": "x",
-            "filter": {"a": 1},
-            "tags": [],
-        }
-
-    routes = {
-        "home": {"load": home_load},
-        "add": {"post": add},
-        "list": {"regions": {"rows": rows}},
-        "item": {"load": lambda request: {"id": request.param("id")}},
-    }
-    for name, entries in representations.items():
-        routes.setdefault(name, {})["representations"] = {
-            entry["type"]: _representation(counter, entry["handler"]) for entry in entries
-        }
-    return {"regions": {"side": side}, "routes": routes}
-
-
-def _manifest(directory: str, representations: dict) -> Path:
-    """Writes the manifest of the fixture application with the representations that the case declares for its routes."""
-    manifest = json.loads((FIXTURES / "app.json").read_text(encoding="utf-8"))
-    for route in manifest["routes"]:
-        if route["name"] in representations:
-            route["representations"] = [
-                {key: value for key, value in entry.items() if key != "handler"}
-                for entry in representations[route["name"]]
-            ]
-    path = Path(directory) / "app.json"
-    path.write_text(json.dumps(manifest), encoding="utf-8")
-    return path
-
-
-def _representation(counter: Counter, response: dict):
-    """Returns a representation handler that answers `response` and records its calls and what it receives (HY-122)."""
-
-    def handler(request, media) -> Representation:
-        counter.handled += 1
-        counter.received = {
-            "parameters": media.parameters(),
-            "selection": request.selection(),
-            "headers": {
-                name: request.header(name)
-                for name in counter.header_names
-                if request.header(name) is not None
-            },
-        }
-        return Representation(response["status"], response.get("body"), response.get("headers"))
-
-    return handler
-
-
-def app(
-    counter: Counter,
-    client: ClientRendering | None = None,
-    representations: dict | None = None,
-    **options,
-) -> App:
-    """Opens the fixture application with the client rendering `client`. `representations` declares the entries of the
-    routes of a case (client.json), each with the response `handler` of its representation handler."""
-    if client is None:
-        client = default_client()
-    with tempfile.TemporaryDirectory() as directory:
-        manifest = _manifest(directory, representations) if representations else FIXTURES / "app.json"
-        application = App.open(
-            manifest=str(manifest),
-            program=str(PROGRAM),
-            handlers=_handlers(counter, representations or {}),
-            timezone="+09:00",
-            client_rendering=client,
-            **options,
-        )
-    application.bind(Counter, lambda: counter)
-    return application
-
-
-class SelectionTest(unittest.TestCase):
-    def test_every_handler_of_a_request_reads_the_value_of_the_choice(self) -> None:
-        # HY-62: the selection runs once per request, and its value reaches the shared handler, the loaders and the
-        # action of the request, whether the selection chose the request or not.
-        selections = []
-        seen = []
-
-        def selects(request: Request) -> Choice:
-            selections.append(request.header("Host"))
-            return Choice(
-                request.header("Host") == "client.test",
-                {"host": request.header("Host")},
-            )
-
-        def shared(request: Request) -> dict:
-            seen.append(("shared", request.selection()))
-            return {}
-
-        def side(request: Request) -> dict:
-            seen.append(("side", request.selection()))
-            return {"count": 0, "note": None}
-
-        def item_load(request: Request) -> dict:
-            seen.append(("item", request.selection()))
-            return {"id": request.param("id")}
-
-        def add(request: Request) -> Result:
-            seen.append(("add", request.selection()))
-            return Result.redirect("/")
-
-        application = App.open(
-            manifest=str(FIXTURES / "app.json"),
-            program=str(PROGRAM),
-            handlers={
-                "shared": shared,
-                "regions": {"side": side},
-                "routes": {"item": {"load": item_load}, "add": {"post": add}},
-            },
-            timezone="+09:00",
-            client_rendering=ClientRendering(str(SHELL), "/_props", selects),
-        )
-        application.handle(
-            Request("GET", "/items/7", {"Host": "server.test"}), ArraySession()
-        )
-        self.assertEqual(["server.test"], selections)
-        self.assertEqual(
-            [
-                ("shared", {"host": "server.test"}),
-                ("side", {"host": "server.test"}),
-                ("item", {"host": "server.test"}),
-            ],
-            seen,
-        )
-        seen.clear()
-        application.handle(
-            Request(
-                "GET",
-                "/_props/items/7",
-                {"Host": "client.test", "Accept": "application/vnd.hyper+json"},
-            ),
-            ArraySession(),
-        )
-        self.assertEqual(["server.test", "client.test"], selections)
-        self.assertEqual(
-            [
-                ("shared", {"host": "client.test"}),
-                ("side", {"host": "client.test"}),
-                ("item", {"host": "client.test"}),
-            ],
-            seen,
-        )
-
-    def test_a_selection_that_fails_answers_500(self) -> None:
-        # HY-43, HY-62
-        for selects in (
-            lambda request: "csr",
-            lambda request: True,
-            lambda request: (_ for _ in ()).throw(RuntimeError("selection")),
-        ):
-            with self.subTest(selects):
-                application = app(
-                    Counter(), ClientRendering(str(SHELL), "/_props", selects)
-                )
-                response = application.handle(Request("GET", "/"), ArraySession())
-                self.assertEqual(500, response.status)
-                self.assertEqual("Internal Server Error", response.body)
-
-    def test_an_invalid_declaration_fails_when_the_application_opens(self) -> None:
-        # HY-62
-        selects = lambda request: Choice(True, None)  # noqa: E731 - the declaration takes its selector as a value
-        invalid = [
-            (
-                "relative shell",
-                ClientRendering("tests/fixtures/shell/index.html", "/_props", selects),
-            ),
-            (
-                "missing shell",
-                ClientRendering(
-                    str(FIXTURES / "shell" / "missing.html"), "/_props", selects
-                ),
-            ),
-            (
-                "shell of another base path",
-                ClientRendering(
-                    str(FIXTURES / "shell" / "other-base.html"), "/_props", selects
-                ),
-            ),
-            ("empty base path", ClientRendering(str(SHELL), "", selects)),
-            (
-                "base path ending with /",
-                ClientRendering(str(SHELL), "/_props/", selects),
-            ),
-            (
-                "route under the base path",
-                ClientRendering(str(SHELL), "/items", selects),
-            ),
-        ]
-        for label, client in invalid:
-            with self.subTest(label):
-                with self.assertRaises(ValueError):
-                    app(Counter(), client)
-
-    def test_a_static_shell_that_cannot_be_read_as_text_fails_with_the_open_error(
+class ShellTest(unittest.TestCase):
+    def test_a_static_shell_without_read_permission_fails_with_the_open_error(
         self,
     ) -> None:
-        # HY-62: the open fails with exactly ValueError when the shell path is not absolute, when the file does not
-        # exist or cannot be read, and when its bytes are not valid UTF-8.
-        selects = lambda request: Choice(True, None)  # noqa: E731 - the declaration takes its selector as a value
-        meta = b'<meta name="hyper-api" content="/_props">'
+        # HY-62, HY-106.6: the open fails with exactly ValueError when the shell is a file that cannot be read.
         with tempfile.TemporaryDirectory() as directory:
-            invalid = Path(directory) / "invalid.html"
-            invalid.write_bytes(meta + b"\xff\xfe")
-            unreadable = Path(directory) / "unreadable.html"
-            unreadable.write_bytes(meta)
-            unreadable.chmod(0)
-            shells = [
-                ("a path that is not absolute", "tests/fixtures/shell/index.html"),
-                ("a file that does not exist", str(Path(directory) / "missing.html")),
-                ("bytes that are not valid UTF-8", str(invalid)),
-            ]
+            shell = Path(directory) / "unreadable.html"
+            shell.write_bytes(b'<meta name="hyper-api" content="/_props">')
+            shell.chmod(0)
             # The user root reads a file of every mode, so the mode states nothing for it.
-            if not os.access(unreadable, os.R_OK):
-                shells.append(("a file that cannot be read", str(unreadable)))
-            for label, shell in shells:
-                with self.subTest(label):
-                    with self.assertRaises(ValueError) as raised:
-                        app(Counter(), ClientRendering(shell, "/_props", selects))
-                    self.assertIs(ValueError, type(raised.exception))
-
-
-class RepresentationHandlerTest(unittest.TestCase):
-    def test_a_representation_handler_receives_a_bound_service(self) -> None:
-        # HY-62, HY-121: a representation handler receives the request and the media type by parameter type and the
-        # service that `bind` registered, as a loader and an action do.
-        counter = Counter()
-        media_type = "application/vnd.example.item+json"
-        representations = {
-            "item": [
-                {"type": media_type, "parameters": {}, "methods": ["GET"], "vary": []}
-            ]
-        }
-        received = []
-
-        def handler(
-            media: MediaType, counter: Counter, request: Request
-        ) -> Representation:
-            received.append((request.param("id"), media.parameters(), counter))
-            return Representation(200, {"id": request.param("id")}, None)
-
-        handlers = _handlers(counter, {})
-        handlers["routes"]["item"]["representations"] = {media_type: handler}
-        with tempfile.TemporaryDirectory() as directory:
-            application = App.open(
-                manifest=str(_manifest(directory, representations)),
-                program=str(PROGRAM),
-                handlers=handlers,
-                timezone="+09:00",
+            if os.access(shell, os.R_OK):
+                self.skipTest("the user of the run reads a file of every mode")
+            client = ClientRendering(
+                str(shell), "/_props", lambda request: Choice(True, None)
             )
-        application.bind(Counter, lambda: counter)
-        response = application.handle(
-            Request("GET", "/items/7", {"Accept": media_type}), ArraySession()
-        )
-        self.assertEqual(200, response.status)
-        self.assertEqual('{"id":"7"}', response.body)
-        self.assertEqual([("7", {}, counter)], received)
+            with self.assertRaises(ValueError) as raised:
+                fixture_app(Counter(), client_rendering=client)
+            self.assertIs(ValueError, type(raised.exception))
+            self.assertIn("is not a readable file", str(raised.exception))
 
 
 if __name__ == "__main__":

@@ -1,13 +1,12 @@
-# The session store of a Redis server against a server in memory (HY-115): which commands it sends and what it keeps when
-# the lock is taken or lost. tests/scripts/session-shared-redis.test.mts checks it on a real Redis server with PHP.
+# The setup of the session store of a Redis server, against a server in memory (HY-115): when it runs and what a
+# failing setup does. The cases of contracts/redis-sessions.json state the commands and the lock of a request, and
+# tests/scripts/session-shared-redis.test.mts checks the store on a real Redis server with PHP.
 import unittest
 
 from polyspec.hyper.redis_sessions import RedisSessions
-from polyspec.hyper.session_lock_error import SessionLockError
 
 IDENTIFIER = "a" * 32
 KEY = f"PHPREDIS_SESSION:{IDENTIFIER}"
-LOCK = f"{KEY}_LOCK"
 RECORD = b'a:1:{s:1:"n";i:0;}'
 
 
@@ -49,37 +48,6 @@ class Server:
 class RedisSessionsTest(unittest.TestCase):
     def setUp(self) -> None:
         self.server = Server()
-        self.sessions = RedisSessions(
-            self.server.command, lock_retries=2, lock_wait=0.001
-        )
-
-    def test_a_request_that_finds_the_lock_taken_fails_and_changes_nothing(
-        self,
-    ) -> None:
-        self.server.keys[LOCK] = b"another holder"
-        with self.assertRaises(SessionLockError):
-            self.sessions._open(IDENTIFIER)
-        self.assertEqual(3, self.server.commands.count("SET"))
-        self.assertEqual(RECORD, self.server.keys[KEY])
-        self.assertEqual(b"another holder", self.server.keys[LOCK])
-
-    def test_a_request_that_lost_its_lock_writes_nothing_and_fails(self) -> None:
-        session = self.sessions._open(IDENTIFIER)
-        session.set("n", 1)
-        self.server.keys[LOCK] = b"another holder"
-        with self.assertRaises(SessionLockError):
-            session.close()
-        self.assertEqual(RECORD, self.server.keys[KEY])
-        self.assertEqual(b"another holder", self.server.keys[LOCK])
-
-    def test_a_request_that_changed_nothing_sets_only_a_new_expiry(self) -> None:
-        session = self.sessions._open(IDENTIFIER)
-        self.assertEqual(0, session.get("n"))
-        session.close()
-        self.assertEqual(
-            ["EXISTS", "SET", "GET", "EXPIRE", "EVAL"], self.server.commands
-        )
-        self.assertNotIn(LOCK, self.server.keys)
 
     def test_setup_runs_before_the_first_command_of_an_opened_session(self) -> None:
         calls: list[str] = []
@@ -114,12 +82,3 @@ class RedisSessionsTest(unittest.TestCase):
         with self.assertRaises(ConnectionError):
             RedisSessions(self.server.command, setup=fails)._open(IDENTIFIER)
         self.assertEqual([], self.server.commands)
-
-    def test_a_reply_that_is_not_bytes_fails_and_releases_the_lock(self) -> None:
-        def text(name: str, *args: object) -> object:
-            reply = self.server.command(name, *args)
-            return reply.decode() if name == "GET" and reply == RECORD else reply
-
-        with self.assertRaises(TypeError):
-            RedisSessions(text)._open(IDENTIFIER)
-        self.assertNotIn(LOCK, self.server.keys)

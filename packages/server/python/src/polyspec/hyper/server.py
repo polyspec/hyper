@@ -2,7 +2,7 @@
 `App._respond`, as the Node server serves an application over `node:http` (HY-54), through the request hook `around`
 when the application gives one (HY-97), and the write hook `written` reports every response whose write ended or
 failed (HY-99). A request that answers a body larger than the body limit reads no more of
-it (HY-59), a new session sets its cookie first (HY-45), a response whose write fails because the client closed the
+it (HY-59), a body that the request sends in chunks is decoded (HY-59.10), a new session sets its cookie first (HY-45), a response whose write fails because the client closed the
 connection is reported to the disconnect hook (HY-67), an error that escapes the answer gets the plain 500 of hyper
 (HY-60), and a GET or HEAD request whose path names a file of the public directory receives the file, as the PHP
 built-in server serves its document root."""
@@ -31,11 +31,13 @@ from ._pipeline import (
     header_lines,
     public_file,
     read_body,
+    read_chunks,
     validate,
 )
 from ._request_body import RequestBody
 from .request import Request
 from .response import Response
+
 
 def create_server(
     app: App,
@@ -119,7 +121,17 @@ def create_server(
                     application._part_limit,
                     application.file_limit,
                 )
-                read_body(self.rfile.read, exchange.body, declared)
+                # HY-59.10: a body that the request sends in chunks is decoded, and one in another form or with another
+                # transfer coding is answered as http.server answers a request that it cannot read.
+                coding = self.headers.get("Transfer-Encoding")
+                if coding is None:
+                    read_body(self.rfile.read, exchange.body, declared)
+                elif coding.strip().lower() != "chunked" or not read_chunks(
+                    self.rfile, exchange.body
+                ):
+                    self.close_connection = True
+                    self.send_error(400)
+                    return
                 exchange.request = Request(
                     self.command,
                     Request.target_path(self.path),
@@ -132,7 +144,7 @@ def create_server(
                     read=exchange.body,
                 )
                 response = answer_with(application, session_store, around, exchange)
-            except Exception as error:
+            except Exception as error:  # noqa: BLE001 - HY-60: every escaped error gets the plain 500
                 # HY-60: an error that escapes the answer gets the plain 500. The answer runs the hooks of the
                 # application and the session store, which are user code, so no narrower type can name every error.
                 self.escape_error(application, error, exchange, None)

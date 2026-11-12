@@ -13,6 +13,7 @@ from ._representation_entries import RepresentationEntries
 from ._router import Router
 
 _REGION_NAME = re.compile(r"[A-Za-z][A-Za-z0-9_-]*\Z")
+_RESERVED = ("layout", "title", "data", "build")
 _TOPIC = re.compile(r"[A-Za-z_][A-Za-z0-9_]*\Z")
 
 
@@ -54,7 +55,9 @@ class Manifest:
             JsonCodec.decode(text)
             data = json.loads(text)
         except ValueError as error:
-            raise ValueError(f"manifest {file} is not valid JSON or UTF-8: {error}") from None
+            raise ValueError(
+                f"manifest {file} is not valid JSON or UTF-8: {error}"
+            ) from None
         if (
             not isinstance(data, dict)
             or not isinstance(data.get("layout"), str)
@@ -66,11 +69,7 @@ class Manifest:
         page: Optional[Region] = None
         for region in Manifest._entries(data, "regions"):
             name = region.get("name") if isinstance(region.get("name"), str) else ""
-            if (
-                not Manifest._region_name(name)
-                or name in ("layout", "title", "data")
-                or name in regions
-            ):
+            if not Manifest._region_name(name) or name in regions:
                 raise ValueError(f"manifest region name {name} is not allowed")
             is_page = region.get("page") == True  # noqa: E712 - the manifest states true, not truthiness
             template = region.get("template")
@@ -189,7 +188,9 @@ class Manifest:
             raise ValueError(f"manifest {key} is not a list")
         for entry in declared:
             if not isinstance(entry, dict):
-                raise ValueError(f"manifest {key} contains a value that is not an object")
+                raise ValueError(
+                    f"manifest {key} contains a value that is not an object"
+                )
         return declared
 
     @staticmethod
@@ -207,5 +208,5 @@ class Manifest:
 
     @staticmethod
     def _region_name(name: str) -> bool:
-        """Returns True for a name that a region may have (HY-2.3)."""
-        return _REGION_NAME.fullmatch(name) is not None
+        """Returns True for a name that a manifest region or a route region may have (HY-2.3)."""
+        return _REGION_NAME.fullmatch(name) is not None and name not in _RESERVED

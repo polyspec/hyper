@@ -4,44 +4,12 @@ declare(strict_types=1);
 
 namespace Polyspec\Hyper\Tests;
 
-use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-use Polyspec\Hyper\Cookies;
 use Polyspec\Hyper\NativeSession;
 use Polyspec\Hyper\Request;
 
 final class RequestTest extends TestCase
 {
-    private const FORM = ['Content-Type' => 'application/x-www-form-urlencoded'];
-
-    /** @return iterable<string, array{string, string}> */
-    public static function targets(): iterable
-    {
-        yield 'colon' => ['/board/12:30', '/board/12:30'];
-        yield 'colon and query' => ['/t/x:0/y?x=1', '/t/x:0/y'];
-        yield 'double slash' => ['//board/1', '//board/1'];
-        yield 'fragment' => ['/board#top', '/board'];
-        yield 'root' => ['/', '/'];
-        yield 'encoded' => ['/board/%ED%95%9C?q=1', '/board/%ED%95%9C'];
-        yield 'leading question mark' => ['?/board', '/'];
-        yield 'absolute form' => ['http://example.test/board/1?x=1', '/board/1'];
-        yield 'absolute form without path' => ['https://example.test', '/'];
-    }
-
-    /** HY-42: the request path is the request target up to `?` or `#`, without further parsing. */
-    #[DataProvider('targets')]
-    public function testPathIsTheRequestTargetBeforeTheQuery(string $target, string $path): void
-    {
-        $server = $_SERVER;
-        $_SERVER['REQUEST_URI'] = $target;
-        $_SERVER['REQUEST_METHOD'] = 'GET';
-        try {
-            self::assertSame($path, Request::fromGlobals()->path());
-        } finally {
-            $_SERVER = $server;
-        }
-    }
-
     /** HY-100.31: the host passes the method in upper case. */
     public function testTheMethodOfTheSapiIsReadInUpperCase(): void
     {
@@ -78,32 +46,25 @@ final class RequestTest extends TestCase
         self::assertSame('__Host-hy-session', NativeSession::options(true)['name']);
     }
 
-    /** HY-129: PHP keeps a decimal cookie name as an integer key, and the lookup by the string name still finds it. */
-    public function testCookieLookupFindsADecimalName(): void
+    /** HY-42: `fromGlobals` takes the request target from `REQUEST_URI`. */
+    public function testFromGlobalsTakesTheTargetFromTheRequestUri(): void
     {
-        $request = new Request('GET', '/', cookies: Cookies::parse('1=a; b=2'));
-
-        self::assertSame('a', $request->cookie('1'));
-        self::assertSame('2', $request->cookie('b'));
-        self::assertNull($request->cookie('2'));
+        $server = $_SERVER;
+        $_SERVER['REQUEST_URI'] = '/t/x:0/y?x=1';
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        try {
+            self::assertSame('/t/x:0/y', Request::fromGlobals()->path());
+        } finally {
+            $_SERVER = $server;
+        }
     }
 
-    public function testInvalidUtf8KeysAreRejectedAtAnyDepth(): void
-    {
-        // HY-42
-        self::assertFalse((new Request('GET', '/', [], 'a[%FF][x]=1'))->validInput());
-        self::assertFalse((new Request('GET', '/', [], 'a%FF[x]=1'))->validInput());
-        self::assertFalse((new Request('POST', '/', self::FORM, '', 'a[b][%C3]=v'))->validInput());
-        self::assertFalse((new Request('POST', '/', self::FORM, '', 'a=%E2%82'))->validInput());
-        self::assertTrue((new Request('GET', '/', [], 'a[b][c]=d'))->validInput());
-    }
-
-    /** HY-56: every query value in order, without nesting, and the raw query of the request target. */
-    public function testQueryValuesAreReadInOrderWithoutNesting(): void
+    /** HY-56: `fromGlobals` reads the query from the request target, whatever PHP put into $_GET. */
+    public function testFromGlobalsReadsTheQueryFromTheRequestUriAndNotFromGet(): void
     {
         $server = $_SERVER;
         $get = $_GET;
-        $_SERVER['REQUEST_URI'] = '/board?b=1&roles[]=a&roles%5B%5D=b&1=x&b=2&q=a+b#top';
+        $_SERVER['REQUEST_URI'] = '/board?b=1&b=2#top';
         $_SERVER['REQUEST_METHOD'] = 'GET';
         $_GET = ['ignored' => '1'];
         try {
@@ -112,39 +73,13 @@ final class RequestTest extends TestCase
             $_SERVER = $server;
             $_GET = $get;
         }
-        self::assertSame('b=1&roles[]=a&roles%5B%5D=b&1=x&b=2&q=a+b', $request->rawQuery());
-        self::assertSame(
-            [['b', ['1', '2']], ['roles[]', ['a', 'b']], ['1', ['x']], ['q', ['a b']]],
-            $request->query(),
-        );
-        self::assertSame(2, $request->queryInt('b', 7));
-        // A digit text with a final line feed is not an integer, as in the Node and Python servers.
-        self::assertSame(7, (new Request('GET', '/', [], 'n=12%0A'))->queryInt('n', 7));
-        self::assertSame('', (new Request('GET', '/'))->rawQuery());
-        self::assertSame([], (new Request('GET', '/'))->query());
+        self::assertSame('b=1&b=2', $request->rawQuery());
+        self::assertSame([['b', ['1', '2']]], $request->query());
     }
 
-    /** HY-57: every form value of the body in order, without nesting, whatever PHP put into $_POST. */
-    public function testFormValuesAreReadFromTheBodyInOrderWithoutNesting(): void
+    /** HY-57.6: `fromGlobals` reads the form values from the body, whatever PHP put into $_POST. */
+    public function testFromGlobalsReadsNoFormValueFromPost(): void
     {
-        $request = new Request(
-            'POST',
-            '/',
-            self::FORM,
-            '',
-            'title=%ED%95%9C+%EA%B8%80&roles[]=a&empty&roles%5B%5D=b&x=1&x=2',
-        );
-        self::assertSame(
-            [['title', ['한 글']], ['roles[]', ['a', 'b']], ['empty', ['']], ['x', ['1', '2']]],
-            $request->form(),
-        );
-        self::assertSame('2', $request->formString('x'));
-        self::assertSame('', $request->formString('missing'));
-        self::assertSame(
-            [],
-            (new Request('POST', '/', ['Content-Type' => 'text/plain'], '', 'a=1'))->form(),
-        );
-
         $server = $_SERVER;
         $post = $_POST;
         $_SERVER['REQUEST_URI'] = '/';
@@ -157,13 +92,5 @@ final class RequestTest extends TestCase
             $_SERVER = $server;
             $_POST = $post;
         }
-    }
-
-    public function testCookiesAreNotChecked(): void
-    {
-        // HY-42: an invalid hy-keep is ignored and an invalid session cookie starts a new session.
-        self::assertTrue(
-            (new Request('GET', '/', cookies: ['hy-keep' => "\xFF", 'hy-session' => "\xFF"]))->validInput(),
-        );
     }
 }

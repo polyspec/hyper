@@ -1,5 +1,6 @@
 // The cases step of contracts/reads.json (HY-73): the Node server computes the read paths with the browser package
-// (templateReads and keepRead of @polyspec/hyper-client), and the kept data renders as the full data does.
+// (templateReads and keepRead of @polyspec/hyper-client), and the kept data renders as the full data does, and the
+// template renders alone with its data (HY-13.1).
 import { parse } from '@polyspec/template';
 import { MapLoader, resolvePath, type Value } from '@polyspec/template/render';
 import { createEngine, keepRead, templateReads } from '@polyspec/hyper-client';
@@ -24,6 +25,8 @@ export const steps = {
     const loader = new MapLoader();
     for (const [name, source] of templates) loader.set(name, source);
     const engine = createEngine(loader);
-    reader.outcome('render', [engine.render(template, kept), engine.render(template, data)]);
+    const text = engine.render(template, data);
+    reader.compare('text', text);
+    reader.outcome('render', [engine.render(template, kept), text]);
   },
 };

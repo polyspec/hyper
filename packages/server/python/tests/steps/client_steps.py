@@ -1,44 +1,70 @@
-# The steps of the cases of contracts/client.json (HY-62): each case runs one request against the fixture application
+# The steps of contracts/client.json (HY-62). Each case of `cases` runs one request against the fixture application
 # with the client rendering that the case states, then compares the response, the actions, the session, the calls of
-# the representation handler and what that handler received.
+# the session store, of the selection, of the handlers, of the response hook and of the representation handler, and
+# the log. Each case of `openRejections` opens the fixture application with a client rendering that the open refuses.
+import contextlib
+import io
 import json
 import tempfile
+from collections.abc import Callable
 from pathlib import Path
 from urllib.parse import urlencode
 
 from polyspec.hyper._csrf import Csrf
+from polyspec.hyper.app import App
+from polyspec.hyper.array_session import ArraySession
 from polyspec.hyper.choice import Choice
 from polyspec.hyper.client_rendering import ClientRendering
+from polyspec.hyper.representation import Representation
 from polyspec.hyper.request import Request
-from polyspec.hyper.array_session import ArraySession
+from polyspec.hyper.result import Result
 
-from ..render.render_client import TOKEN, Counter, app
+from ..render.fixture_app import FIXTURES, PROGRAM
+
+# A session token of HY-24; the form carries a masked value of it.
+_TOKEN = "00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff"
+# The options of `App.open` that a case may state, by their names in the case file.
+_OPTIONS = {"bodyLimit": "body_limit", "frameAncestors": "frame_ancestors"}
+_RELATIVE_SHELL = "tests/fixtures/shell/index.html"
+
+
+class Counter:
+    """The service `counter` of the fixture application, and the calls that the step records: of the representation
+    handlers with what the last one received, and of the handlers with the selection value that each read."""
+
+    def __init__(self, header_names: tuple = ()) -> None:
+        self.count = 0
+        self.actions = 0
+        self.handled = 0
+        self.received: dict | None = None
+        self.observed: list[list] = []
+        # The names of the request headers that a representation handler looks up in what it received.
+        self.header_names = header_names
 
 
 class _RecordingStore:
     """The session store that the host passes to the application: it records the calls of the store during a request
-    (HY-120)."""
+    (HY-120), each as its method and its key."""
 
     def __init__(self, store: ArraySession):
         self._store = store
-        self.calls: list[list[str]] = []
+        self.calls: list[str] = []
 
     def get(self, key: str) -> object:
-        self.calls.append(["get", key])
+        self.calls.append(f"get {key}")
         return self._store.get(key)
 
     def set(self, key: str, value: object) -> None:
-        self.calls.append(["set", key])
+        self.calls.append(f"set {key}")
         self._store.set(key, value)
 
     def remove(self, key: str) -> None:
-        self.calls.append(["remove", key])
+        self.calls.append(f"remove {key}")
         self._store.remove(key)
 
     def renew(self) -> None:
-        self.calls.append(["renew"])
+        self.calls.append("renew")
         self._store.renew()
-
 
 
 def cases(case) -> None:
@@ -48,14 +74,20 @@ def cases(case) -> None:
     representations = case.input("representations")
     handler = case.input("handler")
     spec = case.input("request")
+    selects = case.input("selects") if case.has("selects") else "host"
+    options = {}
+    for name, value in (case.input("options") if case.has("options") else {}).items():
+        if name not in _OPTIONS:
+            raise LookupError(f"the option {name} of the case is unknown")
+        options[_OPTIONS[name]] = value
 
     headers = {name: str(value) for name, value in (spec.get("headers") or {}).items()}
-    counter = Counter(headers)
+    counter = Counter(tuple(headers))
     session = ArraySession()
     form = {name: str(value) for name, value in (spec.get("form") or {}).items()}
     if spec.get("csrf"):
-        session.set("_hyper_csrf", TOKEN)
-        form = {"_csrf": Csrf.masked(TOKEN), **form}
+        session.set("_hyper_csrf", _TOKEN)
+        form = {"_csrf": Csrf.masked(_TOKEN), **form}
     body = ""
     if form or "form" in spec:
         headers["Content-Type"] = "application/x-www-form-urlencoded"
@@ -63,23 +95,40 @@ def cases(case) -> None:
     if "body" in spec:
         body = spec["body"]
     target = spec["target"]
-    question = target.find("?")
-    query = "" if question < 0 else target[question + 1 :]
-    path = target if question < 0 else target[:question]
-    request = Request(spec["method"], path, headers, query, body.encode("utf-8"))
+    request = Request(
+        spec["method"],
+        Request.target_path(target),
+        headers,
+        Request.target_query(target),
+        body.encode("utf-8"),
+    )
     if handler is not None:
-        representations = _with_handler(representations, handler)
+        representations = {
+            name: [{**entry, "handler": handler} for entry in entries]
+            for name, entries in representations.items()
+        }
+    selections: list[Request] = []
+    reports: list[tuple] = []
 
-    with tempfile.TemporaryDirectory() as directory:
+    with tempfile.TemporaryDirectory(prefix="hyper-client-") as directory:
         shell_path = Path(directory) / "index.html"
         shell_path.write_text(shell, encoding="utf-8")
         client = ClientRendering(
-            str(shell_path),
-            base_path,
-            lambda selected: Choice(selected.header("Host") == chosen_host, None),
+            str(shell_path), base_path, _selection(selects, chosen_host, selections)
+        )
+        application = _app(
+            directory,
+            counter,
+            client,
+            representations,
+            case.has("observed"),
+            on_response=lambda *report: reports.append(report),
+            **options,
         )
         store = _RecordingStore(session)
-        response = app(counter, client, representations).handle(request, store)
+        log = io.StringIO()
+        with contextlib.redirect_stderr(log):
+            response = application.handle(request, store)
 
     case.compare("status", response.status)
     case.compare("headers", response.headers)
@@ -88,6 +137,8 @@ def cases(case) -> None:
     if case.has("allHeaders") and response.body != shell:
         case.fail("the body of the shell response differs from the shell of the case")
     case.compare("body", response.body)
+    case.compare("bodyContains", response.body)
+    case.compare("bodyNotContains", response.body)
     if case.has("json"):
         answered = json.loads(response.body)
         case.compare("json.route", answered.get("route"))
@@ -97,15 +148,216 @@ def cases(case) -> None:
     case.compare("actions", counter.actions)
     case.compare("handled", counter.handled)
     case.compare("storeCalls", store.calls)
+    case.compare("firstStoreCalls", store.calls)
+    case.compare("selections", len(selections))
+    case.compare("observed", counter.observed)
+    case.compare(
+        "reported",
+        [
+            [f"{reported.method} {reported.path()}", answer.status]
+            for reported, answer, *_ in reports
+        ],
+    )
+    if case.has("reportedHeaders") or case.has("notes"):
+        if not reports:
+            raise LookupError("the response hook received no report")
+        case.compare("reportedHeaders", reports[-1][1].headers)
+        case.compare("notes", [list(pair) for pair in reports[-1][3].notes()])
+    logged = log.getvalue()
+    case.compare("logged", logged)
+    case.compare(
+        "logCount", sum(1 for line in logged.splitlines() if line.startswith("hyper: "))
+    )
     received = counter.received or {}
     case.compare("received.parameters", received.get("parameters"))
     case.compare("received.selection", received.get("selection"))
     case.compare("received.absentHeaders", received.get("headers", {}))
 
 
-def _with_handler(representations: dict, handler: dict) -> dict:
-    """Returns the representations of the case with each entry answering the `handler` response of the case."""
-    return {
-        name: [{**entry, "handler": handler} for entry in entries]
-        for name, entries in representations.items()
+def open_rejections(case) -> None:
+    """Opens the fixture application with the shell and the data base path of the case, and compares the error of the
+    open and its message."""
+    shell = case.input("shell")
+    base_path = case.input("basePath")
+    shell_file = case.input("shellFile")
+    data_base_path = (
+        case.input("dataBasePath") if case.has("dataBasePath") else base_path
+    )
+    declared = f'<meta name="hyper-api" content="{base_path}">'
+    if shell.count(declared) != 1:
+        raise LookupError(
+            "the shell of the case file does not declare its base path once"
+        )
+    with tempfile.TemporaryDirectory(prefix="hyper-client-") as directory:
+        file = Path(directory) / "index.html"
+        if shell_file == "declared":
+            content = f'<meta name="hyper-api" content="{data_base_path}">'
+            file.write_bytes(shell.replace(declared, content).encode("utf-8"))
+        elif shell_file == "other-base":
+            content = '<meta name="hyper-api" content="/api">'
+            file.write_bytes(shell.replace(declared, content).encode("utf-8"))
+        elif shell_file == "relative":
+            file = Path(_RELATIVE_SHELL)
+        elif shell_file == "missing":
+            file = Path(directory) / "missing.html"
+        elif shell_file == "directory":
+            file = Path(directory)
+        elif shell_file == "not-utf8":
+            file.write_bytes(shell.encode("utf-8") + b"\xff\xfe")
+        else:
+            raise LookupError(f"the shell file {shell_file} of the case is unknown")
+        client = ClientRendering(
+            str(file), data_base_path, lambda request: Choice(True, None)
+        )
+        error = None
+        try:
+            _app(directory, Counter(), client, {}, False)
+        except Exception as failure:  # noqa: BLE001 - the reader checks the class of the error
+            error = failure
+    case.outcome("open", error)
+    case.compare("openError", "" if error is None else str(error))
+
+
+def _selection(name: str, chosen_host: str, calls: list) -> Callable[[Request], object]:
+    """Returns the selection of the client rendering that the case names, which records each of its calls."""
+
+    def host(request: Request) -> object:
+        return Choice(request.header("Host") == chosen_host, None)
+
+    def host_value(request: Request) -> object:
+        return Choice(
+            request.header("Host") == chosen_host,
+            {"host": request.header("Host") or ""},
+        )
+
+    def throws(request: Request) -> object:
+        raise RuntimeError("selection")
+
+    selections: dict[str, Callable[[Request], object]] = {
+        "host": host,
+        "hostValue": host_value,
+        "text": lambda request: "csr",
+        "boolean": lambda request: True,
+        "throws": throws,
+        "chosenNotBoolean": lambda request: Choice("yes", None),
     }
+    if name not in selections:
+        raise LookupError(f"the selection {name} of the case is unknown")
+
+    def selects(request: Request) -> object:
+        calls.append(request)
+        return selections[name](request)
+
+    return selects
+
+
+def _app(
+    directory: str,
+    counter: Counter,
+    client: ClientRendering,
+    representations: dict,
+    observed: bool,
+    **options,
+) -> App:
+    """Opens the fixture application, the manifest of the PHP fixtures with the representations of the case, with the
+    client rendering `client` and the service `counter`. Each entry of `representations` holds the response `handler`
+    of its representation handler. `observed` adds a shared handler and records the selection value that each handler
+    reads."""
+    manifest = json.loads((FIXTURES / "app.json").read_text(encoding="utf-8"))
+    for route in manifest["routes"]:
+        if route["name"] in representations:
+            route["representations"] = [
+                {key: value for key, value in entry.items() if key != "handler"}
+                for entry in representations[route["name"]]
+            ]
+    path = Path(directory) / "app.json"
+    path.write_text(json.dumps(manifest), encoding="utf-8")
+    application = App.open(
+        manifest=str(path),
+        program=str(PROGRAM),
+        handlers=_handlers(representations, observed),
+        timezone="+09:00",
+        client_rendering=client,
+        **options,
+    )
+    application.bind(Counter, lambda: counter)
+    return application
+
+
+def _handlers(representations: dict, observed: bool) -> dict:
+    """Returns the client fixture handlers: the one handler set of the cases of contracts/client.json."""
+
+    def side(request: Request, counter: Counter) -> dict:
+        return {"count": counter.count, "note": None}
+
+    def home(request: Request, counter: Counter) -> dict:
+        return {"name": f"n{counter.count}"}
+
+    def add(request: Request, counter: Counter) -> Result:
+        counter.actions += 1
+        if request.form_string("name") == "taken":
+            return Result.page(409, {"name": "taken", "error": "conflict"})
+        counter.count += 1
+        return Result.redirect("/")
+
+    def rows(request: Request, counter: Counter) -> dict:
+        return {
+            "items": [],
+            "open": False,
+            "mode": "a",
+            "view": "x",
+            "filter": {"a": 1},
+            "tags": [],
+        }
+
+    def item(request: Request, counter: Counter) -> dict:
+        return {"id": request.param("id")}
+
+    def shared(request: Request, counter: Counter) -> dict:
+        return {}
+
+    def seen(name: str, handler: Callable) -> Callable:
+        if not observed:
+            return handler
+
+        def recorded(request: Request, counter: Counter) -> object:
+            counter.observed.append([name, request.selection()])
+            return handler(request, counter)
+
+        return recorded
+
+    routes: dict = {
+        "home": {"load": seen("load:home", home)},
+        "add": {"post": seen("action:add", add)},
+        "list": {"regions": {"rows": seen("region:rows", rows)}},
+        "item": {"load": seen("load:item", item)},
+    }
+    for name, entries in representations.items():
+        routes[name]["representations"] = {
+            entry["type"]: _representation(entry["handler"]) for entry in entries
+        }
+    handlers = {"regions": {"side": seen("region:side", side)}, "routes": routes}
+    if observed:
+        handlers["shared"] = seen("shared", shared)
+    return handlers
+
+
+def _representation(response: dict) -> Callable:
+    """Returns a representation handler that answers `response` and records its call and what it received (HY-122)."""
+
+    def handler(request: Request, media, counter: Counter) -> Representation:
+        counter.handled += 1
+        counter.received = {
+            "parameters": media.parameters(),
+            "selection": request.selection(),
+            "headers": {
+                name: request.header(name)
+                for name in counter.header_names
+                if request.header(name) is not None
+            },
+        }
+        return Representation(
+            response["status"], response.get("body"), response.get("headers")
+        )
+
+    return handler

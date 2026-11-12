@@ -213,11 +213,12 @@ class Request:
         return self.wants_json() and self.header("HX-Request") == "true"
 
     def current_path(self) -> Optional[str]:
-        """Returns the path of the page that sent the request, or None (HY-11)."""
-        url = self.header("HX-Current-URL")
-        if url is None:
+        """Returns the path of the page that sent the request, with its bytes read as UTF-8, or None for a request
+        without the header, a URL without a path and bytes that are not UTF-8 (HY-11.4)."""
+        header = self.header("HX-Current-URL")
+        if header is None or not Request._valid_utf8(header):
             return None
-        rest = _AUTHORITY.sub("", url)
+        rest = _AUTHORITY.sub("", header.encode("latin-1").decode("utf-8"))
         path = re.split(r"[?#]", rest, maxsplit=1)[0]
         return path or None
 
