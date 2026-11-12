@@ -50,8 +50,18 @@ final class Renderer
                 );
             }
         }
-        // The generated program is the PSR-4 files of the namespace that the build chose, in the directory php, and the
-        // autoload of Composer loads them through autoload.psr-4 of the application (HY-48).
+        return new self(self::program($program, $functions), $timezone);
+    }
+
+    /**
+     * Loads the generated program of a program directory (HY-48.7): the PSR-4 files of the namespace that the build
+     * chose, in the directory php, which the autoload of Composer loads through autoload.psr-4 of the application. A
+     * class that the autoload does not load fails with the class and the directory php (HY-48.9).
+     *
+     * @param array<string, callable(): mixed> $functions the host functions of the application (HYC-24)
+     */
+    private static function program(string $program, array $functions): Program
+    {
         try {
             $declaration = json_decode((string) file_get_contents("{$program}/program.json"), true, flags: JSON_THROW_ON_ERROR);
         } catch (\JsonException) {
@@ -75,7 +85,7 @@ final class Renderer
             throw new \InvalidArgumentException("{$class} of the server program {$program} is not a template program");
         }
 
-        return new self($generated, $timezone);
+        return $generated;
     }
 
     /**

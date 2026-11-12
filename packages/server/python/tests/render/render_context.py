@@ -1,10 +1,7 @@
-# The context of an application (HY-10, HY-124 to HY-128): the cases of contracts/context.json run in steps/context_steps.py,
-# which open each application with its build, its context, its shared data and its handlers. This module keeps the helpers
-# that open the applications of the contract, and the tests of the builds and of the shared data of an application.
+# The applications of contracts/context.json (HY-10, HY-124 to HY-128): the cases run in steps/context_steps.py, which
+# open each application with its build, its context, its shared data and its handlers. This module keeps the helpers
+# that open the applications of the contract.
 import json
-import subprocess
-import tempfile
-import unittest
 from pathlib import Path
 
 from polyspec.hyper.app import App
@@ -13,16 +10,17 @@ from polyspec.hyper.request import Request
 from polyspec.hyper.not_found import NotFound
 from polyspec.hyper.result import Result
 
-from .render_app import OrmError
 
 ROOT = Path(__file__).resolve().parents[5]
-NODE = ROOT / "var" / "tools" / "bin" / "node"
 PROGRAMS = ROOT / "var" / "contract-programs"
-BUILD_LIBRARY = ROOT / "packages" / "build" / "lib" / "build-id.mjs"
 
 
-def _contract() -> dict:
-    return json.loads((ROOT / "contracts" / "context.json").read_text(encoding="utf-8"))
+class OrmError(Exception):
+    """An error shaped like the OrmError of polyspec.orm, which hyper identifies by its class name and its code (HY-107)."""
+
+    def __init__(self, code: str):
+        super().__init__(f"{code}: a failure of the ORM")
+        self.code = code
 
 
 def program_of(name: str) -> tuple[Path, Path]:
@@ -33,69 +31,6 @@ def program_of(name: str) -> tuple[Path, Path]:
         if not path.exists():
             raise FileNotFoundError(f"{path} is missing: run make contract-programs")
     return root / "manifest.json", root / "program"
-
-
-class ContextTest(unittest.TestCase):
-    def test_the_builds_have_the_build_ids_of_their_files(self) -> None:
-        # HY-125: the build id and the stream of each build are computed by the build function of packages/build.
-        builds = _contract()["builds"]
-        with tempfile.TemporaryDirectory() as directory:
-            computed = build_ids(builds, Path(directory))
-        for build, result in zip(builds, computed):
-            with self.subTest(build=build["id"]):
-                self.assertEqual(build["build"], result["build"])
-                if "stream" in build:
-                    self.assertEqual(build["stream"], result["stream"])
-
-
-def build_ids(builds: list, directory: Path) -> list:
-    """Returns the build id and the build stream of each build of the contract, computed by the build function
-    `buildId` and `buildStream` of packages/build/lib/build-id.mjs with Node, which reads its input from a file."""
-    request = directory / "builds.json"
-    request.write_text(
-        json.dumps(
-            [
-                {
-                    "id": build["id"],
-                    "files": [
-                        {"path": file["path"], "content": file["content"]}
-                        for file in build["files"]
-                    ],
-                }
-                for build in builds
-            ]
-        ),
-        encoding="utf-8",
-    )
-    script = (
-        "import { readFileSync } from 'node:fs';"
-        "import { pathToFileURL } from 'node:url';"
-        "const [input, library] = process.argv.slice(1);"
-        "const { buildId, buildStream } = await import(pathToFileURL(library).href);"
-        "const out = JSON.parse(readFileSync(input, 'utf8')).map((build) => {"
-        "  const files = build.files.map((file) => ({ path: file.path, bytes: Buffer.from(file.content, 'utf8') }));"
-        "  return { id: build.id, build: buildId(files), stream: buildStream(files).toString('hex') };"
-        "});"
-        "process.stdout.write(JSON.stringify(out));"
-    )
-    output = directory / "builds.out.json"
-    with output.open("w", encoding="utf-8") as stdout:
-        status = subprocess.run(
-            [
-                str(NODE),
-                "--input-type=module",
-                "-e",
-                script,
-                str(request),
-                str(BUILD_LIBRARY),
-            ],
-            stdout=stdout,
-            stderr=subprocess.STDOUT,
-            check=False,
-        )
-    if status.returncode != 0:
-        raise RuntimeError("the build function of packages/build failed")
-    return json.loads(output.read_text(encoding="utf-8"))
 
 
 def _reject(name: str) -> None:
@@ -110,7 +45,9 @@ def _thrown(handler: str, thrown: object) -> OrmError:
         or thrown.get("class") != "OrmError"
         or not isinstance(thrown.get("code"), str)
     ):
-        raise ValueError(f"handler {handler} throws a value other than an OrmError with a code")
+        raise ValueError(
+            f"handler {handler} throws a value other than an OrmError with a code"
+        )
     return OrmError(thrown["code"])
 
 
@@ -239,7 +176,3 @@ def open_application(
         context=context_handler if text is not None else None,
         on_response=on_response,
     )
-
-
-if __name__ == "__main__":
-    unittest.main()

@@ -4,7 +4,7 @@ import json
 from polyspec.hyper.reply import Reply
 
 # The methods of the reply by their names in the case file.
-_METHODS = {
+METHODS = {
     "cookie": "cookie",
     "removeCookie": "remove_cookie",
     "cacheControl": "cache_control",
@@ -72,7 +72,7 @@ def _applied(case, compare_failure: bool) -> Reply:
                 raise LookupError(
                     "a call of the case is not a method and a list of JSON texts"
                 )
-            if entry[0] not in _METHODS:
+            if entry[0] not in METHODS:
                 raise LookupError(f"the method {entry[0]} of the case is unknown")
             arguments = []
             for text in entry[1]:
@@ -81,7 +81,7 @@ def _applied(case, compare_failure: bool) -> Reply:
                 # The JSON text gives the value as a handler gives it (HY-44).
                 arguments.append(json.loads(text, parse_constant=_reject))
             # A caller passes the decoded arguments, of any type (HY-52.11).
-            getattr(reply, _METHODS[entry[0]])(*arguments)
+            getattr(reply, METHODS[entry[0]])(*arguments)
     except TypeError as failure:
         kind = "type"
         error = str(failure)

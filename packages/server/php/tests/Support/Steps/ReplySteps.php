@@ -102,7 +102,7 @@ final class ReplySteps
      *
      * @param list<mixed> $arguments
      */
-    private static function call(Reply $reply, string $method, array $arguments): void
+    public static function call(Reply $reply, string $method, array $arguments): void
     {
         match ($method) {
             'cookie' => $reply->cookie(...$arguments),

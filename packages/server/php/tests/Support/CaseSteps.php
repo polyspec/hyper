@@ -6,6 +6,7 @@ namespace Polyspec\Hyper\Tests\Support;
 
 use Polyspec\Hyper\Tests\CaseReader;
 use Polyspec\Hyper\Tests\Support\Steps\AcceptSteps;
+use Polyspec\Hyper\Tests\Support\Steps\AppSteps;
 use Polyspec\Hyper\Tests\Support\Steps\BuildSteps;
 use Polyspec\Hyper\Tests\Support\Steps\ClientSteps;
 use Polyspec\Hyper\Tests\Support\Steps\ContextSteps;
@@ -85,6 +86,8 @@ final class CaseSteps
             'request.json values' => RequestSteps::values(...),
             'build.json outputs' => BuildSteps::outputs(...),
             'client.json openRejections' => ClientSteps::openRejections(...),
+            'app.json cases' => AppSteps::cases(...),
+            'app.json opens' => AppSteps::opens(...),
             default => null,
         };
     }

@@ -1,0 +1,46 @@
+{
+  "creation": [
+    {
+      "id": "a_request_hook_that_is_not_callable_fails_the_creation",
+      "label": "a request hook that is not callable fails when the server is created (HY-97.7)",
+      "hook": "around",
+      "only": {
+        "languages": [
+          "node",
+          "python"
+        ],
+        "sentence": "HY-97.1"
+      }
+    },
+    {
+      "id": "a_write_hook_that_is_not_callable_fails_the_creation",
+      "label": "a write hook that is not callable fails when the server is created (HY-99.14)",
+      "hook": "written",
+      "only": {
+        "languages": [
+          "node",
+          "python"
+        ],
+        "sentence": "HY-99.14"
+      },
+      "requirements": [
+        "HY-99"
+      ]
+    },
+    {
+      "id": "a_disconnect_hook_that_is_not_callable_fails_the_open",
+      "label": "a disconnect hook that is not callable fails when the application opens (HY-67.13)",
+      "hook": "disconnect",
+      "only": {
+        "languages": [
+          "node",
+          "python"
+        ],
+        "sentence": "HY-67.13"
+      },
+      "requirements": [
+        "HY-67"
+      ]
+    }
+  ]
+}

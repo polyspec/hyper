@@ -50,8 +50,9 @@ final class Session
             throw new \UnexpectedValueException('the session holds flash data that is not a map');
         }
 
-        $values = self::storedMap($flash['values'] ?? []);
-        $changed = $flash['changed'] ?? [];
+        // HY-104.23: only a member that the map does not hold is absent; a member that is null has another form.
+        $values = array_key_exists('values', $flash) ? self::storedMap($flash['values']) : [];
+        $changed = array_key_exists('changed', $flash) ? $flash['changed'] : [];
         if (!is_array($values) || !is_array($changed) || !array_is_list($changed)) {
             throw new \UnexpectedValueException('the session holds flash data that is not values and a list of topics');
         }
@@ -102,7 +103,7 @@ final class Session
         if (!is_array($kept)) {
             throw new \UnexpectedValueException('the session holds kept values that are not a map');
         }
-        $regionKept = self::storedMap($kept[$region] ?? []);
+        $regionKept = array_key_exists($region, $kept) ? self::storedMap($kept[$region]) : [];
         if (!is_array($regionKept)) {
             throw new \UnexpectedValueException(
                 "the session holds kept values of the region {$region} that are not a map",

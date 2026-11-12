@@ -19,12 +19,6 @@ describe('Request', () => {
     expect(requestOf({ method: 'GET', target }).path()).toBe(path);
   });
 
-  it('joins several Cookie lines with a semicolon (HY-129)', () => {
-    const request = requestOf({ method: 'GET', target: '/', headers: { cookie: ['a=1', 'b=2'] } });
-    expect(request.cookie('a')).toBe('1');
-    expect(request.cookie('b')).toBe('2');
-  });
-
   it('writes the method of the host in upper case (HY-100)', () => {
     expect(requestOf({ method: 'post', target: '/' }).method).toBe('POST');
   });

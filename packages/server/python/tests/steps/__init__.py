@@ -3,6 +3,7 @@
 # through the reader. The runner calls each step with the reader of one case.
 from . import (
     accept_steps,
+    app_steps,
     build_steps,
     client_steps,
     container_steps,
@@ -12,6 +13,7 @@ from . import (
     fields_steps,
     file_sessions_steps,
     functions_steps,
+    hooks_steps,
     json_steps,
     keep_steps,
     manifest_steps,
@@ -27,6 +29,8 @@ from . import (
 )
 
 STEPS = {
+    ("app.json", "cases"): app_steps.cases,
+    ("app.json", "opens"): app_steps.opens,
     ("accept.json", "parse"): accept_steps.parse,
     ("accept.json", "select"): accept_steps.select,
     ("client.json", "cases"): client_steps.cases,
@@ -45,6 +49,7 @@ STEPS = {
     ("fields.json", "multipart"): fields_steps.multipart,
     ("fields.json", "streamed"): fields_steps.streamed,
     ("functions.json", "cases"): functions_steps.cases,
+    ("hooks.json", "creation"): hooks_steps.creation,
     ("json.json", "encode"): json_steps.encode,
     ("json.json", "decode"): json_steps.decode,
     ("keep.json", "cases"): keep_steps.cases,

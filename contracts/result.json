@@ -221,6 +221,33 @@
       "result": null,
       "redirect": null,
       "error": "a page status 500 is not 200, 409 or 422 (HY-58)"
+    },
+    {
+      "id": "a_page_with_status_201_fails",
+      "label": "a page with status 201 fails",
+      "status": 201,
+      "data": {},
+      "result": null,
+      "redirect": null,
+      "error": "a page status 201 is not 200, 409 or 422 (HY-58)"
+    },
+    {
+      "id": "a_page_with_status_400_fails",
+      "label": "a page with status 400 fails",
+      "status": 400,
+      "data": {},
+      "result": null,
+      "redirect": null,
+      "error": "a page status 400 is not 200, 409 or 422 (HY-58)"
+    },
+    {
+      "id": "a_page_with_status_404_fails",
+      "label": "a page with status 404 fails",
+      "status": 404,
+      "data": {},
+      "result": null,
+      "redirect": null,
+      "error": "a page status 404 is not 200, 409 or 422 (HY-58)"
     }
   ],
   "invalid": [

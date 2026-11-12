@@ -1,11 +1,12 @@
 # The requests of the cases of contracts/file-sessions.json and contracts/redis-sessions.json: each step of a case opens
 # the store of one request with its cookie, applies its calls and closes it, and the run records the results, the
 # created identifiers and the first failure of each step.
-import json
 import re
 from collections.abc import Callable
 
 from polyspec.hyper._json_codec import JsonCodec
+
+from .recorded import decoded
 
 _CREATED = re.compile(r"[0-9a-f]{64}\Z")
 _METHODS = ("get", "set", "remove", "renew")
@@ -49,7 +50,7 @@ class StoreRequests:
             return
         try:
             for method, texts in step["calls"]:
-                arguments = [_value(text) for text in texts]
+                arguments = [decoded(text) for text in texts]
                 if method in self._others:
                     other = self._others[method](*arguments)
                     if other is not None:
@@ -104,13 +105,3 @@ class StoreRequests:
         if self.message == "":
             self.message = str(error)
         return [where, name]
-
-
-def _value(text: object) -> object:
-    if not isinstance(text, str):
-        raise LookupError("an argument of the case is not a JSON text")
-    return json.loads(text, parse_constant=_reject)
-
-
-def _reject(name: str) -> None:
-    raise LookupError(f"the JSON text {name} is not a value of the case")

@@ -7,7 +7,6 @@ namespace Polyspec\Hyper\Tests\Support\Steps;
 use Polyspec\Hyper\Choice;
 use Polyspec\Hyper\ClientRendering;
 use Polyspec\Hyper\Csrf;
-use Polyspec\Hyper\Reply;
 use Polyspec\Hyper\Request;
 use Polyspec\Hyper\Response;
 use Polyspec\Hyper\Tests\CaseReader;
@@ -16,7 +15,9 @@ use Polyspec\Hyper\Tests\Support\Counter;
 use Polyspec\Hyper\Tests\Support\CountingStore;
 use Polyspec\Hyper\Tests\Support\Json;
 use Polyspec\Hyper\Tests\Support\Plain;
+use Polyspec\Hyper\Tests\Support\Reports;
 use Polyspec\Hyper\Tests\Support\RepresentationCalls;
+use Polyspec\Hyper\Tests\Support\ServerLog;
 
 /** HY-62: the cases of contracts/client.json. */
 final class ClientSteps
@@ -56,11 +57,8 @@ final class ClientSteps
             },
         );
         // HY-60: the response hook records each call.
-        $reports = [];
-        $report = static function (Request $request, Response $response, float $elapsed, Reply $reply) use (&$reports): void {
-            $reports[] = [$request, $response, $reply];
-        };
-        $options = ['onResponse' => $report];
+        $reports = new Reports();
+        $options = ['onResponse' => $reports->hook()];
         $stated = $case->has('options') ? (array) $case->input('options') : [];
         foreach ($stated as $name => $value) {
             $known = match ($name) {
@@ -118,23 +116,20 @@ final class ClientSteps
             $body,
         );
         $selections = 0;
-        [$response, $log] = self::logged(static fn (): Response => $app->handle($given, $store));
+        [$response, $log] = ServerLog::during(static fn (): Response => $app->handle($given, $store));
 
         $case->compare('storeCalls', $store->log);
         $case->compare('firstStoreCalls', $store->log);
         $case->compare('selections', $selections);
         $case->compare('observed', $observed);
         $case->compare('logged', $log);
-        $case->compare('logCount', preg_match_all('/^\[[^\]\n]*\] hyper: /m', $log));
+        $case->compare('logCount', ServerLog::count($log));
 
-        $case->compare('reported', array_map(
-            static fn (array $report): array => ["{$report[0]->method} {$report[0]->path()}", $report[1]->status],
-            $reports,
-        ));
+        $case->compare('reported', $reports->reported());
         if ($case->has('reportedHeaders') || $case->has('notes')) {
-            $last = $reports === [] ? throw new \LogicException('the response hook received no call') : end($reports);
+            $last = $reports->last();
             $case->compare('reportedHeaders', $last[1]->headers);
-            $case->compare('notes', $last[2]->notes());
+            $case->compare('notes', $last[3]->notes());
         }
 
         $case->compare('status', $response->status);
@@ -183,6 +178,7 @@ final class ClientSteps
                 'missing' => "{$directory}/missing.html",
                 'directory' => $directory,
                 'not-utf8' => self::written($file, "{$shell}\xFF\xFE"),
+                'unreadable' => self::unreadable(self::written($file, $shell)),
                 default => throw new \UnexpectedValueException("the shell file {$kind} of the case is unknown"),
             };
             try {
@@ -195,6 +191,7 @@ final class ClientSteps
             }
         } finally {
             if (is_file($file)) {
+                chmod($file, 0o600);
                 unlink($file);
             }
             rmdir($directory);
@@ -206,6 +203,18 @@ final class ClientSteps
     private static function written(string $file, string $bytes): string
     {
         file_put_contents($file, $bytes);
+
+        return $file;
+    }
+
+    /** Sets the mode of a file to 0, and fails when the process still reads it, as a privileged user does. */
+    private static function unreadable(string $file): string
+    {
+        chmod($file, 0);
+        clearstatcache(true, $file);
+        if (is_readable($file)) {
+            throw new \LogicException('the process reads a file of mode 0, so the case checks nothing');
+        }
 
         return $file;
     }
@@ -232,31 +241,5 @@ final class ClientSteps
             'chosenNotBoolean' => static fn (): Choice => new Choice('yes', null),
             default => throw new \UnexpectedValueException("the selection {$name} of the case is unknown"),
         };
-    }
-
-    /**
-     * Runs a request while `error_log` names a file of a temporary directory of the call, and returns the response
-     * with the text that the server wrote to its log (HY-43.4).
-     *
-     * @param \Closure(): Response $handle
-     * @return array{0: Response, 1: string}
-     */
-    private static function logged(\Closure $handle): array
-    {
-        $directory = sys_get_temp_dir() . '/hyper-log-' . bin2hex(random_bytes(6));
-        mkdir($directory);
-        $file = "{$directory}/error.log";
-        $before = ini_set('error_log', $file);
-        try {
-            $response = $handle();
-
-            return [$response, is_file($file) ? (string) file_get_contents($file) : ''];
-        } finally {
-            ini_set('error_log', (string) $before);
-            if (is_file($file)) {
-                unlink($file);
-            }
-            rmdir($directory);
-        }
     }
 }

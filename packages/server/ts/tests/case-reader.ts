@@ -3,8 +3,7 @@
 // the cases of its section with the inputs that it reads and the comparisons that it makes. The steps of the Node server
 // and the browser and build runners read their cases through this reader; the reader has no test of its own.
 import { readFileSync } from 'node:fs';
-import { parseJson } from '@polyspec/template/render';
-import { type Compare, CONTRACTS, caseFiles, entriesOf, field, folded, kind, lookup, member, type Declaration, type Section, uncovered, undeclared, visible } from './case-rules.ts';
+import { type Compare, CONTRACTS, caseFiles, entriesOf, field, folded, kind, lookup, member, parsed, type Declaration, type Section, uncovered, undeclared, visible } from './case-rules.ts';
 
 export class CaseReader {
   private readonly read = new Set<string>();
@@ -35,13 +34,18 @@ export class CaseReader {
   static cases(runner: string): CaseReader[] {
     const readers: CaseReader[] = [];
     for (const [file, declaration] of Object.entries(CaseReader.declaration())) {
-      const contract = parseJson(readFileSync(new URL(file, CONTRACTS), 'utf8'));
+      const contract = parsed(readFileSync(new URL(file, CONTRACTS), 'utf8'));
       const found = undeclared(declaration, contract, runner);
       for (const [name] of entriesOf(contract) ?? []) {
         const section = Object.hasOwn(declaration.sections, name) ? declaration.sections[name] : undefined;
         const items = member(contract, name);
         if (section === undefined || !section.runners.includes(runner) || !Array.isArray(items)) continue;
-        for (const item of items) readers.push(new CaseReader(runner, file, name, item, section, contract, found));
+        for (const item of items) {
+          // HYR-7: a case with `only` is given only to the runners of the languages that it names.
+          const only = lookup(item, 'only.languages');
+          if (Array.isArray(only) && !only.includes(runner)) continue;
+          readers.push(new CaseReader(runner, file, name, item, section, contract, found));
+        }
       }
     }
     return readers;
@@ -155,7 +159,8 @@ export class CaseReader {
       case 'ordered':
         return this.equal(expected, observed, true);
       case 'subset':
-        return (entriesOf(expected) ?? []).every(([name, value]) => member(observed, name) === value);
+        // HYR-11: every key of the expected map is a key of the observed map with an equal value, as `exact` compares.
+        return (entriesOf(expected) ?? []).every(([name, value]) => (entriesOf(observed) ?? []).some(([key]) => key === name) && this.equal(value, member(observed, name), false));
       case 'absent':
         return names.every((name) => member(observed, name) === undefined);
       case 'contains':

@@ -5,6 +5,7 @@ import { dirname } from 'node:path';
 import { it } from 'vitest';
 import { CaseReader } from './case-reader.js';
 import { steps as acceptSteps } from './steps/accept.js';
+import { steps as appSteps } from './steps/app.js';
 import { steps as clientSteps } from './steps/client.js';
 import { steps as contextSteps } from './steps/context.js';
 import { steps as cookiesSteps } from './steps/cookies.js';
@@ -14,6 +15,7 @@ import { steps as csrfSteps } from './steps/csrf.js';
 import { steps as fieldsSteps } from './steps/fields.js';
 import { steps as fileSessionsSteps } from './steps/file-sessions.js';
 import { steps as functionsSteps } from './steps/functions.js';
+import { steps as hooksSteps } from './steps/hooks.js';
 import { steps as jsonSteps } from './steps/json.js';
 import { steps as keepSteps } from './steps/keep.js';
 import { steps as manifestSteps } from './steps/manifest.js';
@@ -32,6 +34,7 @@ type Step = (reader: CaseReader) => unknown;
 // The steps of this server, by case file and section (`file:section`). A section without a step fails its cases.
 const STEPS: Record<string, Step> = {
   ...prefixed('accept.json', acceptSteps),
+  ...prefixed('app.json', appSteps),
   ...prefixed('client.json', clientSteps),
   ...prefixed('context.json', contextSteps),
   ...prefixed('cookies.json', cookiesSteps),
@@ -41,6 +44,7 @@ const STEPS: Record<string, Step> = {
   ...prefixed('fields.json', fieldsSteps),
   ...prefixed('file-sessions.json', fileSessionsSteps),
   ...prefixed('functions.json', functionsSteps),
+  ...prefixed('hooks.json', hooksSteps),
   ...prefixed('json.json', jsonSteps),
   ...prefixed('keep.json', keepSteps),
   ...prefixed('manifest.json', manifestSteps),

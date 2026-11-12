@@ -1092,6 +1092,56 @@
         ],
         "sentence": "HY-104.4"
       }
+    },
+    {
+      "id": "the_message_of_a_session_file_that_holds_no_array_starts_with_hyper",
+      "label": "the message of a session file that holds no array starts with hyper: in the Node server (HY-106.10)",
+      "files": [
+        {
+          "identifier": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "bytes": "i:1;"
+        }
+      ],
+      "steps": [
+        {
+          "cookie": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "calls": [
+            [
+              "get",
+              [
+                "\"a\""
+              ]
+            ]
+          ]
+        }
+      ],
+      "results": [
+        []
+      ],
+      "created": [
+        null
+      ],
+      "errors": [
+        [
+          "call",
+          "record"
+        ]
+      ],
+      "message": "hyper: the session of eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee holds no map of values",
+      "records": [
+        [
+          [
+            "sess_eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+            "i:1;"
+          ]
+        ]
+      ],
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-106.10"
+      }
     }
   ],
   "cookie": [

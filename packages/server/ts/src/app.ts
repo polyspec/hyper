@@ -3,7 +3,7 @@
 import { readFileSync } from 'node:fs';
 import { isAbsolute, join } from 'node:path';
 import type { Server } from 'node:http';
-import { checkManifest, checkTemplateIndex, createApplication, DATA_TEMPLATE_NAME, keptPaths, routeReads, routeTemplates, stripBasePath, type Application, type Manifest, type RouteDeclaration } from '@polyspec/hyper-client';
+import { checkManifest, checkTemplateIndex, createApplication, DATA_TEMPLATE_NAME, keptPaths, routeReads, routeTemplates, stripBasePath, type Application, type Manifest, type RouteDeclaration, type TemplateIndex } from '@polyspec/hyper-client';
 import { decodeTemplate, resolvePath, type HostFunction, type Template } from '@polyspec/template/render';
 import type { Choice } from './choice.js';
 import type { ClientRendering } from './client-rendering.js';
@@ -256,10 +256,7 @@ export class App<S extends object = Record<string, never>> {
     if (formTypes.length === 0 || new Set(formTypes).size !== formTypes.length || formTypes.some((type) => !FORM_TYPES.includes(type))) {
       throw new Error('hyper: form types must be distinct values of application/x-www-form-urlencoded and multipart/form-data');
     }
-    for (const path of [options.manifest, options.templates.index, options.templates.root]) {
-      if (!isAbsolute(path)) throw new Error(`hyper: ${path} is not an absolute path`);
-    }
-    if (typeof options.build !== 'string' || !isAbsolute(options.build)) throw new Error(`hyper: the build file ${String(options.build)} is not an absolute path`);
+    App.absolutePaths(options);
     const build = Build.read(options.build);
     if (options.context !== undefined && typeof options.context !== 'function') throw new Error('hyper: the context must be a function (HY-106)');
     if (options.onDisconnect !== undefined && typeof options.onDisconnect !== 'function') throw new Error('hyper: the disconnect hook must be a function (HY-67)');
@@ -281,18 +278,13 @@ export class App<S extends object = Record<string, never>> {
       const name = route.get('name');
       if (typeof name === 'string') entries.set(name, RepresentationEntries.declare(name, route.get('representations')));
     }
-    const index = checkTemplateIndex(App.readJsonFile(options.templates.index), `the template index ${options.templates.index}`);
+    const index = App.templateIndex(options.templates.index);
     const fetcher = async (url: string): Promise<Template> => decodeTemplate(App.readJsonFile(join(options.templates.root, url)));
     const application = createApplication(manifest, index, fetcher, options.functions);
     App.checkHandlers({ ...manifest, entries }, options.handlers);
     const shell = options.clientRendering === undefined ? '' : App.checkedShell(options.clientRendering, manifest);
-    // Every entry template of every route and the template of the embedded data are in the index (HY-31, HR-34), and the
-    // server renders every page, so it reads every template of the index (HYC-12).
-    for (const route of manifest.routes) {
-      for (const name of [...routeTemplates(manifest, route), DATA_TEMPLATE_NAME]) {
-        if (typeof index[name]?.url !== 'string') throw new Error(`hyper: template ${name} is not in the template index`);
-      }
-    }
+    App.routeTemplates(index, manifest);
+    // The server renders every page, so it reads every template of the index (HYC-12).
     await application.templates.ensure(Object.keys(index));
     // HY-73: the read paths of every route, from the templates that the asset build wrote.
     const parsed = new Map<string, Template>();
@@ -325,6 +317,30 @@ export class App<S extends object = Record<string, never>> {
       context: options.context ?? null,
       entries,
     });
+  }
+
+  // Fails when a path option of `open` is not absolute (HY-48.11): the manifest, the template index and its root, and
+  // the build file.
+  private static absolutePaths<S extends object>(options: AppOptions<S>): void {
+    for (const path of [options.manifest, options.templates.index, options.templates.root]) {
+      if (!isAbsolute(path)) throw new Error(`hyper: ${path} is not an absolute path`);
+    }
+    if (typeof options.build !== 'string' || !isAbsolute(options.build)) throw new Error(`hyper: the build file ${String(options.build)} is not an absolute path`);
+  }
+
+  // Reads the template index that the asset build wrote and fails when it is not a template index (HY-48.12).
+  private static templateIndex(path: string): TemplateIndex {
+    return checkTemplateIndex(App.readJsonFile(path), `the template index ${path}`);
+  }
+
+  // Fails when the template index does not hold an entry template of a route or the template of the embedded data
+  // (HY-48.12, HY-31, HR-34).
+  private static routeTemplates(index: TemplateIndex, manifest: Manifest): void {
+    for (const route of manifest.routes) {
+      for (const name of [...routeTemplates(manifest, route), DATA_TEMPLATE_NAME]) {
+        if (typeof index[name]?.url !== 'string') throw new Error(`hyper: template ${name} is not in the template index`);
+      }
+    }
   }
 
   // Reads a JSON file of an application as strict UTF-8 JSON. A file that cannot be read fails with its system error;

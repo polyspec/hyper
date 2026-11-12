@@ -9,9 +9,12 @@ _.log_message
 _.close_connection
 _.daemon_threads
 
+# inspect.signature and typing.get_type_hints read the parameters that tests/steps/app_handlers.py sets on a handler
+# of a case, by which the container gives the handler its services.
+_.__signature__
+_.__annotations__
+
 # unittest discovers the TestCase classes of tests/test_*.py by their base class.
-ConcurrentSessionWrites
-ConcurrentSessionRequests
 CaseRunner
 # FileParts of test_files.py: unittest runs its three tests, as its base FixtureTest is a TestCase (proved by python -m unittest -v).
 FileParts

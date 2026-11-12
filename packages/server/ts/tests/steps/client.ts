@@ -1,15 +1,15 @@
 // The steps of contracts/client.json (HY-62): one server answers the client-rendered and the server-rendered pages of the
 // fixture manifest with the client fixture handlers, and refuses a client rendering that it cannot open. PHP and Python
 // pass the same cases with the same handlers.
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Csrf } from '../../src/csrf.js';
-import { App, ArraySession, Representation, Result, type AppOptions, type Choice, type ClientRendering, type Handlers, type Loader, type RepresentationHandler, type Reply, type Request, type Response, type RouteHandlers } from '../../src/index.js';
+import { App, ArraySession, Representation, Result, type AppOptions, type Choice, type ClientRendering, type Handlers, type Loader, type RepresentationHandler, type Request, type RouteHandlers } from '../../src/index.js';
 import { requestOf } from '../../src/http-host.js';
-import type { SessionStore } from '../../src/session-store.js';
 import type { CaseReader } from '../case-reader.js';
 import { FIXTURES, list, parsed, plain, record, TEMPLATES, TOKEN, type Services } from '../support.js';
+import { mapOf, Recorded, RecordingStore, textOf, textsOf } from './recorded.js';
 
 // What the representation handlers of a case received: the number of their calls, and the media parameters and the
 // request of the last call.
@@ -17,13 +17,6 @@ interface Calls {
   handled: number;
   parameters: ReadonlyMap<string, string> | null;
   request: Request | null;
-}
-
-// A call of the response hook: the request, the response and the reply that it received (HY-60).
-interface Report {
-  request: Request | null;
-  response: Response;
-  reply: Reply;
 }
 
 // Returns a representation handler that answers `response` and records its calls and what it receives (HY-122).
@@ -38,28 +31,9 @@ function representation(calls: Calls, response: Map<string, unknown>): Represent
   };
 }
 
-// Returns a value of a case that is a string, and fails for any other value.
-function textOf(value: unknown, what: string): string {
-  if (typeof value !== 'string') throw new Error(`${what} is not a string`);
-  return value;
-}
-
-// Returns a map of names to texts of a case as a record, and fails for any other value.
-function textsOf(value: unknown, what: string): Record<string, string> {
-  return Object.fromEntries([...mapOf(value, what)].map(([name, item]) => [name, textOf(item, `a value of ${what}`)]));
-}
-
-// Returns a map of a case with its string keys, and fails for any other value.
-function mapOf(value: unknown, what: string): Map<string, unknown> {
-  if (!(value instanceof Map)) throw new Error(`${what} is not a map`);
-  const map = new Map<string, unknown>();
-  for (const [key, item] of value) map.set(textOf(key, `a key of ${what}`), item);
-  return map;
-}
-
 // Returns the client fixture handlers, the one handler set of the three servers: the region `side`, the loads of `home`
 // and `item`, the action of `add` and the route region `rows` of `list`, and no shared handler.
-function fixtureHandlers(): { regions: Record<string, Loader<Services>>; routes: Record<string, RouteHandlers<Services>> } {
+export function fixtureHandlers(): { regions: Record<string, Loader<Services>>; routes: Record<string, RouteHandlers<Services>> } {
   return {
     regions: {
       side: ({ services }) => ({ count: services.get('counter').count, note: null }),
@@ -124,37 +98,6 @@ function declared(directory: string, handlers: Handlers<Services>, representatio
   return { manifest, handlers: { ...handlers, routes } };
 }
 
-// A session store that records every call that the application makes of the four methods of the store, each as the
-// method name and its key, and keeps the values in the store it wraps.
-class RecordingStore implements SessionStore {
-  readonly calls: string[] = [];
-  private readonly inner: SessionStore;
-
-  constructor(inner: SessionStore) {
-    this.inner = inner;
-  }
-
-  get(key: string): unknown {
-    this.calls.push(`get ${key}`);
-    return this.inner.get(key);
-  }
-
-  set(key: string, value: unknown): void {
-    this.calls.push(`set ${key}`);
-    this.inner.set(key, value);
-  }
-
-  remove(key: string): void {
-    this.calls.push(`remove ${key}`);
-    this.inner.remove(key);
-  }
-
-  renew(): void {
-    this.calls.push('renew');
-    this.inner.renew();
-  }
-}
-
 // Returns the selection of a case by its name; `host` chooses the request whose Host header is the chosen host. The
 // selections other than `host`, `hostValue` and `promiseHost` return what is no choice, which the server checks at run
 // time (HY-62.11).
@@ -212,6 +155,17 @@ function optionsOf(reader: CaseReader): Pick<AppOptions<Services>, 'bodyLimit' |
   return options;
 }
 
+// Returns true when the process can read a file.
+function readable(file: string): boolean {
+  try {
+    readFileSync(file);
+    return true;
+  } catch (error) {
+    if (error instanceof Error && 'code' in error && error.code === 'EACCES') return false;
+    throw error;
+  }
+}
+
 // Returns an input or a fixture of a case that is a string, and fails for any other value.
 function textInput(reader: CaseReader, name: string): string {
   return textOf(reader.input(name), `the case field ${name}`);
@@ -241,8 +195,7 @@ export const steps = {
     const body = reader.has('request.body') ? Buffer.from(textInput(reader, 'request.body'), 'utf8') : form;
     const calls: Calls = { handled: 0, parameters: null, request: null };
     const observed: [string, unknown][] = [];
-    const logged: string[] = [];
-    const reports: Report[] = [];
+    const recorded = new Recorded();
     let selections = 0;
     const selects = selection(reader.has('selects') ? textInput(reader, 'selects') : 'host', chosenHost);
     const directory = mkdtempSync(join(tmpdir(), 'hyper-client-'));
@@ -264,8 +217,8 @@ export const steps = {
         templates: TEMPLATES,
         handlers: application.handlers,
         timezone: '+09:00',
-        log: (message) => logged.push(message),
-        onResponse: (request, reported, _elapsed, reply) => reports.push({ request, response: reported, reply }),
+        log: recorded.log,
+        onResponse: recorded.onResponse,
         clientRendering: {
           shell: shellFile,
           basePath,
@@ -296,20 +249,10 @@ export const steps = {
     }
     reader.compare('session', inner.get('_hyper_csrf') !== undefined);
     reader.compare('actions', counter.actions);
-    reader.compare('storeCalls', store.calls);
-    reader.compare('firstStoreCalls', store.calls);
     reader.compare('handled', calls.handled);
     reader.compare('selections', selections);
     reader.compare('observed', observed);
-    reader.compare('logged', logged.join('\n'));
-    reader.compare('logCount', logged.length);
-    reader.compare('reported', reports.map((report) => [`${report.request?.method ?? ''} ${report.request?.path() ?? ''}`, report.response.status]));
-    if (reader.has('reportedHeaders') || reader.has('notes')) {
-      const last = reports.at(-1);
-      if (last === undefined) throw new Error('the response hook received no call');
-      reader.compare('reportedHeaders', last.response.headers);
-      reader.compare('notes', last.reply.notes());
-    }
+    recorded.compare(reader, store);
     if (!reader.has('received')) return;
     // The headers that the handler received are among the headers of the request.
     const received: Record<string, string> = {};
@@ -353,6 +296,13 @@ export const steps = {
         case 'directory':
           shell = directory;
           break;
+        case 'unreadable':
+          writeFileSync(file, text);
+          chmodSync(file, 0);
+          // A privileged user reads a file of mode 0, so the case would pass without its check.
+          if (readable(file)) throw new Error('the process reads a file of mode 0, so the case cannot state a shell that cannot be read');
+          shell = file;
+          break;
         case 'not-utf8':
           writeFileSync(file, Buffer.concat([Buffer.from(text, 'utf8'), Buffer.from([0xff, 0xfe])]));
           shell = file;
@@ -374,6 +324,8 @@ export const steps = {
         failure = error;
       }
     } finally {
+      // A mode that lets the step remove the file of the case `unreadable`.
+      if (reader.input('shellFile') === 'unreadable') chmodSync(join(directory, 'index.html'), 0o600);
       rmSync(directory, { recursive: true, force: true });
     }
     reader.outcome('open', failure);

@@ -507,6 +507,86 @@
           "data": {}
         }
       }
+    },
+    "b_stops": {
+      "manifest": {
+        "layout": "layout.tpl",
+        "title": "title.tpl",
+        "regions": [
+          {
+            "name": "content",
+            "page": true
+          }
+        ],
+        "routes": [
+          {
+            "name": "home",
+            "path": "/",
+            "title": "Home",
+            "template": "home.tpl"
+          },
+          {
+            "name": "gone",
+            "path": "/gone",
+            "title": "Gone",
+            "template": "home.tpl",
+            "post": true
+          },
+          {
+            "name": "driver",
+            "path": "/driver",
+            "title": "Driver",
+            "template": "home.tpl",
+            "post": true
+          },
+          {
+            "name": "add",
+            "path": "/add",
+            "title": "Add",
+            "template": "add.tpl",
+            "post": true
+          }
+        ]
+      },
+      "templates": {
+        "layout.tpl": "<head><title>{# title}</title>{# build}</head>\n<main id=\"content\">{# content}</main>\n{# data}\n",
+        "title.tpl": "{= title}",
+        "home.tpl": "<p>Home</p>",
+        "add.tpl": "<p>{= title}|{= name}{? error} !{= error}{/}</p>"
+      },
+      "build": "4444444444444444444444444444444444444444444444444444444444444444",
+      "loaders": {
+        "home": {},
+        "gone": {
+          "throw": {
+            "class": "OrmError",
+            "code": "NO_ROWS"
+          }
+        },
+        "driver": {},
+        "add": {}
+      },
+      "actions": {
+        "gone": {
+          "throw": {
+            "class": "OrmError",
+            "code": "NO_ROWS"
+          }
+        },
+        "driver": {
+          "throw": {
+            "class": "OrmError",
+            "code": "DRIVER"
+          }
+        },
+        "add": {
+          "page": 422,
+          "data": {
+            "name": "",
+            "error": "empty"
+          }
+        }
+      }
     }
   },
   "cases": [
@@ -1498,6 +1578,262 @@
       ],
       "requirements": [
         "HY-128"
+      ]
+    },
+    {
+      "id": "a_loader_that_finds_no_row_is_answered_as_not_found",
+      "label": "a loader that raises NO_ROWS is answered with the plain 404 (HY-107.3)",
+      "application": "b_stops",
+      "request": {
+        "method": "GET",
+        "target": "/gone",
+        "headers": {}
+      },
+      "status": 404,
+      "headers": {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "no-store",
+        "Content-Security-Policy": "frame-ancestors 'self'"
+      },
+      "body": "Not Found",
+      "requirements": [
+        "HY-27",
+        "HY-45",
+        "HY-65",
+        "HY-107"
+      ]
+    },
+    {
+      "id": "an_action_that_finds_no_row_is_answered_as_not_found",
+      "label": "an action that raises NO_ROWS is answered with the plain 404 (HY-107.3)",
+      "application": "b_stops",
+      "request": {
+        "method": "POST",
+        "target": "/gone",
+        "headers": {
+          "Accept": "text/html",
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        "form": {},
+        "csrf": true
+      },
+      "status": 404,
+      "headers": {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "no-store",
+        "Content-Security-Policy": "frame-ancestors 'self'"
+      },
+      "body": "Not Found",
+      "firstCalls": [
+        "action:gone"
+      ],
+      "requirements": [
+        "HY-27",
+        "HY-45",
+        "HY-65",
+        "HY-107"
+      ]
+    },
+    {
+      "id": "the_409_document_of_an_action_that_finds_another_revision_is_not_stored",
+      "label": "an action that raises REVISION_CHANGED is answered to an HTML request as the document of the route with status 409 and no-store (HY-107.4)",
+      "application": "pages",
+      "request": {
+        "method": "POST",
+        "target": "/conflict",
+        "headers": {
+          "Accept": "text/html",
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        "form": {},
+        "csrf": true
+      },
+      "status": 409,
+      "headers": {
+        "Content-Type": "text/html; charset=utf-8",
+        "Cache-Control": "no-store"
+      },
+      "requirements": [
+        "HY-58",
+        "HY-65",
+        "HY-107"
+      ]
+    },
+    {
+      "id": "a_loader_that_finds_another_revision_fails_a_get_request",
+      "label": "a loader that raises REVISION_CHANGED for a GET request fails with HY-43, because the page cannot load (HY-107.4)",
+      "application": "pages",
+      "request": {
+        "method": "GET",
+        "target": "/unloadable",
+        "headers": {}
+      },
+      "status": 500,
+      "headers": {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "no-store",
+        "Content-Security-Policy": "frame-ancestors 'self'"
+      },
+      "body": "Internal Server Error",
+      "requirements": [
+        "HY-43",
+        "HY-45",
+        "HY-65",
+        "HY-107"
+      ]
+    },
+    {
+      "id": "an_action_that_raises_another_code_of_the_orm_fails",
+      "label": "an action that raises an ORM error with the code DRIVER is not handled and fails with HY-43 (HY-107.5)",
+      "application": "b_stops",
+      "request": {
+        "method": "POST",
+        "target": "/driver",
+        "headers": {
+          "Accept": "text/html",
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        "form": {},
+        "csrf": true
+      },
+      "status": 500,
+      "headers": {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "no-store",
+        "Content-Security-Policy": "frame-ancestors 'self'"
+      },
+      "body": "Internal Server Error",
+      "requirements": [
+        "HY-43",
+        "HY-45",
+        "HY-65",
+        "HY-107"
+      ]
+    },
+    {
+      "id": "a_rejected_action_sends_its_data_as_the_page_region_with_status_422",
+      "label": "an action that returns the page with status 422 and data answers a region request with that data as the data of the page region",
+      "application": "b_stops",
+      "request": {
+        "method": "POST",
+        "target": "/add",
+        "headers": {
+          "Accept": "application/vnd.hyper+json",
+          "HX-Request": "true",
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        "form": {},
+        "csrf": true
+      },
+      "status": 422,
+      "headers": {
+        "Content-Type": "application/vnd.hyper+json",
+        "Cache-Control": "no-store"
+      },
+      "regionKeys": [
+        "content"
+      ],
+      "bodyContains": [
+        "\"regions\":{\"content\":{\"name\":\"\",\"error\":\"empty\"}}"
+      ],
+      "requirements": [
+        "HY-15",
+        "HY-26",
+        "HY-58",
+        "HY-65"
+      ]
+    },
+    {
+      "id": "a_rejected_action_renders_its_data_in_the_document_with_status_422",
+      "label": "an action that returns the page with status 422 and data answers an HTML request with the document that renders that data",
+      "application": "b_stops",
+      "request": {
+        "method": "POST",
+        "target": "/add",
+        "headers": {
+          "Accept": "text/html",
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        "form": {},
+        "csrf": true
+      },
+      "status": 422,
+      "headers": {
+        "Content-Type": "text/html; charset=utf-8",
+        "Cache-Control": "no-store"
+      },
+      "bodyContains": [
+        "<p>Add| !empty</p>"
+      ],
+      "requirements": [
+        "HY-26",
+        "HY-58",
+        "HY-65"
+      ]
+    },
+    {
+      "id": "a_shared_value_outside_the_data_model_that_no_template_reads_fails_a_document",
+      "label": "a shared handler that returns an integer outside ±(2^53 − 1), which no template reads, fails a document with HY-43",
+      "application": "without_context",
+      "shared": {
+        "big": 9223372036854775807
+      },
+      "request": {
+        "method": "GET",
+        "target": "/",
+        "headers": {}
+      },
+      "status": 500,
+      "headers": {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "no-store",
+        "Content-Security-Policy": "frame-ancestors 'self'"
+      },
+      "body": "Internal Server Error",
+      "absentHeaders": [
+        "Vary"
+      ],
+      "failure": "a number outside ±(2^53 − 1) is not a value of the data model (HY-44)",
+      "requirements": [
+        "HY-43",
+        "HY-44",
+        "HY-45",
+        "HY-65",
+        "HY-117"
+      ]
+    },
+    {
+      "id": "a_shared_value_outside_the_data_model_that_no_template_reads_fails_a_region_request",
+      "label": "a shared handler that returns an integer outside ±(2^53 − 1), which no template reads, fails a region request with HY-43",
+      "application": "without_context",
+      "shared": {
+        "big": 9223372036854775807
+      },
+      "request": {
+        "method": "GET",
+        "target": "/",
+        "headers": {
+          "Accept": "application/vnd.hyper+json",
+          "HX-Request": "true"
+        }
+      },
+      "status": 500,
+      "headers": {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "no-store",
+        "Content-Security-Policy": "frame-ancestors 'self'"
+      },
+      "body": "Internal Server Error",
+      "absentHeaders": [
+        "Vary"
+      ],
+      "failure": "a number outside ±(2^53 − 1) is not a value of the data model (HY-44)",
+      "requirements": [
+        "HY-43",
+        "HY-44",
+        "HY-45",
+        "HY-65",
+        "HY-117"
       ]
     }
   ]

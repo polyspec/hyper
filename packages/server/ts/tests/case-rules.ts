@@ -1,6 +1,7 @@
 // The rules that CaseReader applies to one case of a case file (HYR-7, HYR-11): the declarations, the field lookups,
 // the undeclared keys, the unread and uncompared fields, and the folding of header names.
 import { readFileSync } from 'node:fs';
+import { parseJson } from '@polyspec/template/render';
 
 export type Compare = 'exact' | 'ordered' | 'subset' | 'absent' | 'contains' | 'excludes' | 'prefix' | 'keys' | 'raises';
 
@@ -54,6 +55,29 @@ const HEADER_FIELDS = new Set(['headers', 'allHeaders', 'absentHeaders']);
 
 // The case keys that are not fields of a section (HYR-11 requirements, HYR-6 only).
 const SKIPPED_KEYS = new Set(['only', 'requirements']);
+
+// The text that stands for an integer literal outside ±(2^53 − 1) while a case file is parsed: a character of the
+// private use area, which no case file holds, before the digits.
+const LARGE = '\ue000integer:';
+
+/** The value of a large integer literal after the parse, with every other value as it is. */
+function restored(value: unknown): unknown {
+  if (typeof value === 'string') return value.startsWith(LARGE) ? BigInt(value.slice(LARGE.length)) : value;
+  if (Array.isArray(value)) return value.map(restored);
+  if (value instanceof Map) return new Map([...value].map(([key, item]) => [key, restored(item)]));
+  return value;
+}
+
+/**
+ * The value of the JSON text of a case file: an object is a Map in document order, and an integer literal outside
+ * ±(2^53 − 1), which a case gives a handler as its host value (HY-44), is a bigint.
+ */
+export function parsed(text: string): unknown {
+  if (text.includes(LARGE)) throw new Error('a case file holds the text that stands for a large integer');
+  // A string literal is copied as it is; a number literal outside a string that is a large integer becomes a string.
+  const marked = text.replace(/"(?:[^"\\]|\\.)*"|-?[0-9]+(?![0-9.eE])/gu, (token) => (token.startsWith('"') || Number.isSafeInteger(Number(token)) ? token : `"${LARGE}${token}"`));
+  return restored(parseJson(marked));
+}
 
 let cached: Record<string, Declaration> | undefined;
 

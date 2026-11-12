@@ -3,9 +3,9 @@
 declare(strict_types=1);
 
 // The front controller of the disconnect test (HY-67): its shared loader waits, so that the client closes the
-// connection first, and its document is larger than a write that a closed connection accepts: the shared title,
-// which the document renders, has 1 MiB. The response hook, the write hook and the disconnect hook append a line each
-// to the file of HYPER_DISCONNECT_LOG, in the order that the server calls them (HY-99).
+// connection first, then writes 1 MiB to the closed connection, which ends the script during the answer. The write
+// hook and the disconnect hook append a line each to the file of HYPER_DISCONNECT_LOG, in the order that the server
+// calls them (HY-99).
 
 require __DIR__ . '/../../../../../vendor/autoload.php';
 require_once __DIR__ . '/FrontController.php';
@@ -15,27 +15,14 @@ use Polyspec\Hyper\Request;
 use Polyspec\Hyper\Tests\Support\FrontController;
 
 $log = (string) getenv('HYPER_DISCONNECT_LOG');
-// HY-97: with `alone` the request hook answers a large page itself, so the application never runs.
-$around = getenv('HYPER_DISCONNECT_AROUND') === 'alone'
-    ? function (): \Polyspec\Hyper\Response {
-        usleep(300_000);
-
-        return \Polyspec\Hyper\Response::text(200, str_repeat('x', 1 << 20));
-    }
-: null;
 FrontController::open(
     $log,
     function (Reply $reply): array {
         $reply->note('stage', 'shared');
         usleep(300_000);
-        // HY-67: with `answer` the loader writes to the closed connection and ends the script during the answer.
-        if (getenv('HYPER_DISCONNECT_DURING') === 'answer') {
-            echo str_repeat('x', 1 << 20);
-            flush();
-            exit();
-        }
-
-        return ['title' => str_repeat('x', 1 << 20)];
+        echo str_repeat('x', 1 << 20);
+        flush();
+        exit();
     },
     onDisconnect: function (Request $request, float $elapsed, Reply $reply) use ($log): void {
         file_put_contents(
@@ -50,5 +37,4 @@ FrontController::open(
             FILE_APPEND,
         );
     },
-    around: $around,
 )->run();

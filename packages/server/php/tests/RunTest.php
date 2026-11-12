@@ -153,15 +153,6 @@ final class RunTest extends TestCase
         self::assertLessThan(10000.0, $reports[0]);
     }
 
-    /** HY-67, HY-99: PHP ends the script at the first failed write of the response, reports the write before the disconnect hook. */
-    public function testRunCallsTheDisconnectHookWhenTheClientClosedTheConnection(): void
-    {
-        self::assertSame(
-            "response 200\nwritten 200 false null\ndisconnect GET / 1 {\"stage\":\"shared\"}\n",
-            self::closedClient([]),
-        );
-    }
-
     /**
      * HY-67, HY-97: a script that ends during the answer, at a failed write to the closed connection, calls the
      * disconnect hook with the request and the reply of the call of `answer` that was running.
@@ -170,23 +161,15 @@ final class RunTest extends TestCase
     {
         self::assertSame(
             "written null false null\ndisconnect GET / 1 {\"stage\":\"shared\"}\n",
-            self::closedClient(['HYPER_DISCONNECT_DURING' => 'answer']),
+            self::closedClient(),
         );
-    }
-
-    /** HY-97, HY-67: the disconnect hook is not called when `around` never called `answer`. */
-    public function testTheDisconnectHookIsNotCalledWhenAroundNeverCalledAnswer(): void
-    {
-        self::assertSame("written 200 false null\n", self::closedClient(['HYPER_DISCONNECT_AROUND' => 'alone']));
     }
 
     /**
      * Serves the disconnect front controller with the PHP built-in server, sends a request, closes the connection
      * before the response and returns the lines that the hooks appended to the log.
-     *
-     * @param array<string, string> $env the environment of the server that the case adds to its own
      */
-    private static function closedClient(array $env): string
+    private static function closedClient(): string
     {
         // The log and the server are released when the case ends, also when it fails (HR-87).
         $log = (string) tempnam(sys_get_temp_dir(), 'hyper-disconnect-');
@@ -205,7 +188,7 @@ final class RunTest extends TestCase
                     '127.0.0.1:0',
                     __DIR__ . '/Support/disconnect.php',
                 ],
-                [...getenv(), ...$env, 'HYPER_DISCONNECT_LOG' => $log],
+                [...getenv(), 'HYPER_DISCONNECT_LOG' => $log],
             );
             $client = stream_socket_client("tcp://127.0.0.1:{$port}");
             if ($client === false) {
@@ -252,67 +235,6 @@ final class RunTest extends TestCase
         self::assertSame("response 200\nwritten 500 true \"a fatal error of the response hook\"\n", $lines);
     }
 
-    /** HY-60, HY-99: an uncaught exception after the response hook ran writes the plain 500 and calls the write hook once with its failure. */
-    public function testAnUncaughtExceptionAfterTheResponseHookWritesThePlain500AndReportsItToTheWriteHook(): void
-    {
-        [$status, $headers, $body, $lines] = self::escape('hook-throws');
-
-        self::assertSame(500, $status);
-        self::assertSame('Internal Server Error', $body);
-        self::assertContains('Cache-Control: no-store', $headers);
-        self::assertSame("response 200\nwritten 500 true \"a response hook that throws\"\n", $lines);
-    }
-
-    /** HY-97, HY-60: an error of `around` writes the plain 500 and reaches the write hook; no response hook runs. */
-    public function testAnErrorOfAroundWritesThePlain500AndReportsItToTheWriteHook(): void
-    {
-        [$status, , $body, $lines] = self::escape('around-throws');
-
-        self::assertSame(500, $status);
-        self::assertSame('Internal Server Error', $body);
-        self::assertSame("written 500 true \"around boom\"\n", $lines);
-    }
-
-    /** HY-97: a response of `around` alone is written, and no hook of the application runs. */
-    public function testAroundAloneWritesItsResponse(): void
-    {
-        [$status, , $body, $lines] = self::escape('around-alone');
-
-        self::assertSame(418, $status);
-        self::assertSame('alone', $body);
-        self::assertSame("written 418 true null\n", $lines);
-    }
-
-    /** HY-97: `answer` runs the application for a changed copy of the request. */
-    public function testAroundAnswersTheApplicationThroughAnswer(): void
-    {
-        [$status, , , $lines] = self::escape('around-answer');
-
-        self::assertSame(200, $status);
-        self::assertSame("response 200\nwritten 200 true null\n", $lines);
-    }
-
-    /** HY-60: the plain 500 of an escaped error keeps the headers that the caller set before App::run, and no other header. */
-    public function testTheEscapedFiveHundredKeepsTheHeadersSetBeforeRun(): void
-    {
-        [$status, $headers, , $lines] = self::escape('hook-throws', ['HYPER_ESCAPE_HEADER' => '1']);
-
-        self::assertSame(500, $status);
-        self::assertSame("response 200\nwritten 500 true \"a response hook that throws\"\n", $lines);
-        self::assertContains('X-Before: kept', $headers);
-        self::assertNotContains('Content-Type: text/html; charset=utf-8', $headers);
-    }
-
-    /** HY-99: a response that the write hook reports ended is reported once with ended true, after the response hook. */
-    public function testTheWriteHookReportsAnAnsweredRequestAsEnded(): void
-    {
-        [$status, , $body, $lines] = self::escape('normal');
-
-        self::assertSame(200, $status);
-        self::assertNotSame('', $body);
-        self::assertSame("response 200\nwritten 200 true null\n", $lines);
-    }
-
     /** HY-99: a fatal error after App::run sent the response reports ended false with the failure, and no second response. */
     public function testAFatalErrorAfterTheHeadersWereSentReportsAnUnendedWrite(): void
     {
@@ -325,7 +247,7 @@ final class RunTest extends TestCase
     /** HY-99: with output buffering on and no output flushed, a fatal error replaces the response with the plain 500, which the hook receives with ended true. */
     public function testAFatalErrorWithOutputBufferingOnReplacesTheResponseAndReportsThePlain500(): void
     {
-        [$status, , $body, $lines] = self::escape('after-send', [], '4096');
+        [$status, , $body, $lines] = self::escape('after-send', '4096');
 
         self::assertSame(500, $status);
         self::assertSame('Internal Server Error', $body);
@@ -335,7 +257,7 @@ final class RunTest extends TestCase
     /** HY-99: with output buffering on, a flush that sent the headers before a fatal error keeps the started response with ended false. */
     public function testAFatalErrorAfterAFlushWithOutputBufferingOnKeepsTheStartedResponseUnended(): void
     {
-        [$status, , , $lines] = self::escape('after-send-flushed', [], '4096');
+        [$status, , , $lines] = self::escape('after-send-flushed', '4096');
 
         self::assertSame(200, $status);
         self::assertSame("response 200\nwritten 200 false \"after the response\"\n", $lines);
@@ -369,11 +291,10 @@ final class RunTest extends TestCase
      * and returns the status, the headers, the body of the response and the lines that the response hook appended to
      * the log.
      *
-     * @param array<string, string> $env the environment of the server that the case adds to its own
      * @param string $outputBuffering the output_buffering setting of the server
      * @return array{int, list<string>, string, string}
      */
-    private static function escape(string $mode, array $env = [], string $outputBuffering = '0'): array
+    private static function escape(string $mode, string $outputBuffering = '0'): array
     {
         $log = (string) tempnam(sys_get_temp_dir(), 'hyper-escape-');
         $server = null;
@@ -393,7 +314,7 @@ final class RunTest extends TestCase
                     '127.0.0.1:0',
                     __DIR__ . '/Support/escape.php',
                 ],
-                [...getenv(), ...$env, 'HYPER_ESCAPE_MODE' => $mode, 'HYPER_ESCAPE_LOG' => $log],
+                [...getenv(), 'HYPER_ESCAPE_MODE' => $mode, 'HYPER_ESCAPE_LOG' => $log],
             );
             $context = stream_context_create(['http' => ['ignore_errors' => true, 'timeout' => 10]]);
             $stream = fopen("http://127.0.0.1:{$port}/", 'r', false, $context);

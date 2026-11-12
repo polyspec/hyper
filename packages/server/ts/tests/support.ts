@@ -1,11 +1,8 @@
 // The fixture application of the PHP server tests, served by the Node server.
-import { createHash } from 'node:crypto';
 import type { Server } from 'node:http';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { expect } from 'vitest';
-import { Csrf } from '../src/csrf.js';
-import { App, BadRequest, Forbidden, ArraySession, NotFound, Redirect, Result, type AppOptions, type ClientRendering, type Handlers, type Response } from '../src/index.js';
+import { App, ArraySession, Result, type AppOptions, type ClientRendering, type Handlers, type Response } from '../src/index.js';
 import type { SessionStore } from '../src/session-store.js';
 import { requestOf } from '../src/http-host.js';
 
@@ -24,6 +21,8 @@ export interface Services {
   counter: Counter;
 }
 
+// The handlers of the fixture application for the tests of one language: the region `side`, the loads of `home` and
+// `item`, the action of `add` and the route region `rows` of `list`.
 export function handlers(): Handlers<Services> {
   return {
     regions: {
@@ -32,106 +31,15 @@ export function handlers(): Handlers<Services> {
     routes: {
       home: { load: ({ services }) => ({ name: `n${services.get('counter').count}` }) },
       add: {
-        post: ({ request, reply, services }) => {
+        post: ({ services }) => {
           const counter = services.get('counter');
           counter.actions++;
-          if (request.formString('name') === 'closed') {
-            reply.note('refusal', 'action').note('kind', 'closed').note('refusal', 'closed');
-            throw new Forbidden();
-          }
-          if (request.formString('name') === 'unreadable') throw new BadRequest();
-          if (request.formString('name') === 'orm-stale') throw new OrmError('REVISION_CHANGED');
-          if (request.formString('name') === 'orm-missing') throw new OrmError('NO_ROWS');
-          if (request.formString('name') === 'orm-other') throw new OrmError('DRIVER');
-          if (request.formString('name') === 'taken') return Result.page(409, { name: 'taken', error: 'conflict' });
-          if (request.formString('name') === 'preview') return Result.page(200, { name: 'preview' });
-          if (request.formString('name') === 'in-place') {
-            reply.status(403);
-            return Result.page(200, { name: 'in-place' });
-          }
-          if (request.formString('name') === 'in-place-refused') {
-            reply.status(403);
-            return Result.invalid({ name: 'in-place-refused', error: 'empty' });
-          }
-          if (request.formString('name') === '') return Result.invalid({ name: '', error: 'empty' });
-          if (request.formString('name') === 'sign-in') {
-            reply.renewSession();
-            return Result.redirect('/').flash('note', 'renewed');
-          }
-          if (request.formString('name') === 'sign-in-page') {
-            reply.renewSession();
-            return Result.page(200, { name: 'renewed' });
-          }
           counter.count++;
           return Result.redirect('/').flash('note', 'added').changed('count');
         },
       },
-      list: {
-        regions: {
-          rows: ({ request, reply, services }) => {
-            // HY-92: the query embed=1 makes the document embed its data.
-            if (request.queryInt('embed', 0) === 1) reply.embedData();
-            return { items: ['a<', `b${services.get('counter').count}`], open: false, mode: 'a', view: 'x', filter: { a: 1 }, tags: [] };
-          },
-        },
-      },
-      item: {
-        load: async ({ request, reply }) => {
-          switch (request.param('id')) {
-            case 'member':
-              reply.cookie('member', 'token.1', 3600).removeCookie('old').cacheControl('private, max-age=60');
-              return { id: 'member' };
-            case 'guarded':
-              reply.removeCookie('member');
-              throw new Forbidden();
-            case 'bad-cookie':
-              reply.cookie('hy-keep', 'x');
-              return { id: 'x' };
-            case 'referrer':
-              reply.referrerPolicy('same-origin');
-              return { id: 'referrer' };
-            case 'referrer-in-place':
-              reply.status(403).referrerPolicy('origin');
-              return { id: 'referrer-in-place' };
-            case 'missing':
-              throw new NotFound();
-            case 'orm-missing':
-              throw new OrmError('NO_ROWS');
-            case 'orm-stale':
-              throw new OrmError('REVISION_CHANGED');
-            case 'private':
-              reply.note('refusal', 'private');
-              throw new Forbidden();
-            case 'unreadable':
-              throw new BadRequest();
-            case 'in-place':
-              reply.status(403).cacheControl('private, max-age=60');
-              return { id: 'in-place' };
-            case 'in-place-moved':
-              reply.status(403);
-              throw new Redirect(Result.redirect('/items/new'));
-            case 'other-status':
-              reply.status(404);
-              return { id: 'other-status' };
-            case 'moved':
-              throw new Redirect(Result.redirect('/items/new').flash('note', 'moved'));
-            case 'broken':
-              reply.note('stage', 'load');
-              throw new Error('secret detail /srv/app.js');
-            case 'renew':
-              reply.renewSession();
-              return { id: 'renew' };
-            case 'huge':
-              return { id: 9223372036854775807n };
-            case 'numeric':
-              return { labels: { 5: 'x' }, id: 'n' };
-            case 'secret':
-              return { id: 's', password: 'p', nested: { a: 1 } };
-            default:
-              return { id: request.param('id') };
-          }
-        },
-      },
+      list: { regions: { rows: ({ services }) => ({ items: ['a<', `b${services.get('counter').count}`], open: false, mode: 'a', view: 'x', filter: { a: 1 }, tags: [] }) } },
+      item: { load: ({ request }) => ({ id: request.param('id') }) },
     },
   };
 }
@@ -176,44 +84,6 @@ export class Fixture {
   get(target: string, headers: Record<string, string> = {}, basePath = ''): Promise<Response> {
     return this.handle({ target, headers }, { basePath });
   }
-
-  // Posts a form; a string form is the body as it is, so that a test can send bytes that are not UTF-8.
-  post(target: string, form: Record<string, string> | string, headers: Record<string, string> = {}, basePath = ''): Promise<Response> {
-    const body = typeof form === 'string' ? form : new URLSearchParams(form).toString();
-    return this.handle({ method: 'POST', target, headers, body }, { basePath });
-  }
-
-  // Returns the masked token of a page response (HY-24). The route region of /list keeps a value on the server, so its
-  // shared data keeps csrf (HY-73).
-  async token(): Promise<string> {
-    return text(json(await this.get('/list', JSON_REGION)).shared.csrf);
-  }
-
-  // Returns a body with every masked value of the session token replaced by `masked`, after it checks that each one
-  // verifies, so two responses of one session compare equal although their masks differ (HY-24).
-  unmasked(body: string): string {
-    const token = text(this.session.get('_hyper_csrf'));
-    return body.replace(/[0-9a-f]{128}/g, (found) => {
-      expect(Csrf.verify(token, found), found).toBe(true);
-      return 'masked';
-    });
-  }
-
-  // Returns the tag of a JSON body of the current session token (HY-53).
-  tag(body: string): string {
-    const masked = record(record(parsed(body)).shared).csrf;
-    const unmasked = masked === undefined ? body : body.replaceAll(text(masked), text(this.session.get('_hyper_csrf')));
-    return `W/"${createHash('sha256').update(unmasked).digest('hex').slice(0, 32)}"`;
-  }
-
-  keep(form: Record<string, string>, method = 'POST'): Promise<Response> {
-    return method === 'POST' ? this.post('/_hyper/keep', form) : this.handle({ method, target: '/_hyper/keep' });
-  }
-}
-
-// Returns the Cookie header that holds one cookie with a URL-encoded value.
-export function cookie(name: string, value: string): Record<string, string> {
-  return { Cookie: `${name}=${encodeURIComponent(value)}` };
 }
 
 // The JSON of a page response: its shared data, the data of its regions and its kept values (HY-17).

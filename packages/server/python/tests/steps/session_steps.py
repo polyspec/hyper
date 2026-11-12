@@ -1,11 +1,12 @@
 # The steps of contracts/session.json (HY-24, HY-25, HY-40, HY-72, HY-104): the token, the flash values and the kept
 # values of one session over a new store in memory.
-import json
 import re
 
 from polyspec.hyper._flash import Flash
 from polyspec.hyper._session import Session
 from polyspec.hyper.array_session import ArraySession
+
+from .recorded import decoded
 
 _HEXADECIMAL = re.compile(r"[0-9a-f]{64}\Z")
 
@@ -44,7 +45,7 @@ def _stored_calls(case) -> None:
     store = ArraySession()
     for pair in case.input("stored") if case.has("stored") else []:
         key, text = pair
-        store.set(key, _value(text))
+        store.set(key, decoded(text))
     session = Session(store)
     results = []
     error = None
@@ -77,7 +78,7 @@ def _calls(case) -> list:
 
 
 def _call(session: Session, method: str, texts: list) -> object:
-    arguments = [_value(text) for text in texts]
+    arguments = [decoded(text) for text in texts]
     if method == "csrfToken":
         return session.csrf_token(*arguments)
     if method == "renew":
@@ -106,13 +107,3 @@ def _pairs(values: object) -> object:
     if isinstance(values, dict):
         return [[str(key), _pairs(value)] for key, value in values.items()]
     return values
-
-
-def _value(text: object) -> object:
-    if not isinstance(text, str):
-        raise LookupError("an argument of the case is not a JSON text")
-    return json.loads(text, parse_constant=_reject)
-
-
-def _reject(name: str) -> None:
-    raise LookupError(f"the JSON text {name} is not a value of the case")

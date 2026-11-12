@@ -5,7 +5,7 @@ import type { CaseReader } from '../case-reader.js';
 import { hostValue } from './host-value.js';
 
 // Calls a method of the reply with the arguments as a JavaScript caller may give them, of any type (HY-52.11).
-function call(reply: Reply, method: string, args: unknown[]): void {
+export function call(reply: Reply, method: string, args: unknown[]): void {
   switch (method) {
     case 'cookie':
       // @ts-expect-error -- a caller passes the decoded arguments, of any type

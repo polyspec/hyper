@@ -377,6 +377,42 @@
         }
       ],
       "error": null
+    },
+    {
+      "id": "stored_flash_values_that_are_null_fail",
+      "label": "stored flash values that are null fail",
+      "stored": [
+        [
+          "_hyper_flash",
+          "{\"values\":null,\"changed\":[]}"
+        ]
+      ],
+      "calls": [
+        [
+          "takeFlash",
+          []
+        ]
+      ],
+      "results": [],
+      "error": "stored"
+    },
+    {
+      "id": "stored_changed_topics_that_are_null_fail",
+      "label": "stored changed topics that are null fail",
+      "stored": [
+        [
+          "_hyper_flash",
+          "{\"values\":{},\"changed\":null}"
+        ]
+      ],
+      "calls": [
+        [
+          "takeFlash",
+          []
+        ]
+      ],
+      "results": [],
+      "error": "stored"
     }
   ],
   "kept": [
@@ -693,6 +729,26 @@
             "\"notice\"",
             "\"sort\"",
             "\"title\""
+          ]
+        ]
+      ],
+      "results": [],
+      "error": "stored"
+    },
+    {
+      "id": "reading_stored_kept_values_of_a_region_that_are_null_fails",
+      "label": "reading stored kept values of a region that are null fails",
+      "stored": [
+        [
+          "_hyper_keep",
+          "{\"rows\":null}"
+        ]
+      ],
+      "calls": [
+        [
+          "kept",
+          [
+            "\"rows\""
           ]
         ]
       ],

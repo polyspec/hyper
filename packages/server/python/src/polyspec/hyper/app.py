@@ -143,27 +143,28 @@ class App:
         before routing, and the failure of a 500 of HY-43 or HY-66, else None (HY-60). `on_disconnect` is called once
         with the request, the elapsed milliseconds and the reply of a request whose response the server of
         `polyspec.hyper.server` could not write because the client closed the connection (HY-67)."""
-        if body_limit < 1:
+        # A limit is an integer (HY-59.2, HY-114.6, HY-131.10, HY-66.1); a boolean is an int of Python and no limit.
+        if type(body_limit) is not int or body_limit < 1:
             raise ValueError(
                 f"body limit {body_limit} is not a positive number of bytes"
             )
         if file_limit is None:
             file_limit = min(8 * 1024 * 1024, body_limit)
-        if file_limit < 1 or file_limit > body_limit:
+        if type(file_limit) is not int or file_limit < 1 or file_limit > body_limit:
             raise ValueError(
                 f"file limit {file_limit} is not a positive number of bytes no larger than the body limit {body_limit} (HY-114)"
             )
         if value_limit is None:
             value_limit = min(8 * 1024 * 1024, body_limit)
-        if value_limit < 1 or value_limit > body_limit:
+        if type(value_limit) is not int or value_limit < 1 or value_limit > body_limit:
             raise ValueError(
                 f"value limit {value_limit} is not a positive number of bytes no larger than the body limit {body_limit} (HY-131)"
             )
-        if part_limit < 1:
+        if type(part_limit) is not int or part_limit < 1:
             raise ValueError(
                 f"part limit {part_limit} is not a positive number (HY-131)"
             )
-        if response_limit < 1:
+        if type(response_limit) is not int or response_limit < 1:
             raise ValueError(
                 f"response limit {response_limit} is not a positive number of bytes"
             )

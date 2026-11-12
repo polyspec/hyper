@@ -1,10 +1,9 @@
 # The `http.server` server of the package with a real socket on 127.0.0.1 and a port that the system assigns: the
-# disconnect hook of a client that closed the connection (HY-60, HY-67), the request hook `around` (HY-97) and the
-# write hook `written` (HY-99).
+# decoder of a body that is sent in chunks (HY-59.10) and the context in which `around` runs the answer (HY-97).
+# tests/scripts/upload-servers.test.mts states the hooks of the three servers over HTTP.
 import json
 import shutil
 import socket
-import struct
 import tempfile
 import threading
 import unittest
@@ -14,16 +13,12 @@ from typing import Callable, Optional
 from .fixture_app import FIXTURES
 from polyspec.hyper.app import App
 from polyspec.hyper.file_sessions import FileSessions
-from polyspec.hyper.reply import Reply
 from polyspec.hyper.request import Request
 from polyspec.hyper.response import Response
 from polyspec.hyper.server import create_server
 
 TESTS = Path(__file__).resolve().parents[2]
 MANIFEST = TESTS.parent / "php" / "tests" / "fixtures" / "app.json"
-# The JSON response of the route `home` carries a string of this many bytes. The body is larger than the buffers of
-# a loopback socket, so a write of it to a closed connection fails also when the reset of the client arrives late.
-LARGE = 6 * 1024 * 1024
 # The read paths of the JSON responses of these tests; a JSON response renders no template (HY-73).
 READS = {
     "routes": {"home": {"shared": True, "regions": {"side": True, "content": True}}}
@@ -49,25 +44,10 @@ def open_app(load: Callable, **options) -> App:
             program=str(program),
             handlers=handlers,
             timezone="+09:00",
-            response_limit=2 * LARGE,
             **options,
         )
     finally:
         shutil.rmtree(program)
-
-
-def waiting_around() -> tuple[threading.Event, threading.Event, Callable]:
-    """Returns the events `rendered` and `closed` and an `around` hook that sets `rendered`, waits for `closed` and
-    answers with a page that is larger than a write that a closed connection accepts."""
-    rendered = threading.Event()
-    closed = threading.Event()
-
-    def around(request: Request, answer: Callable) -> Response:
-        rendered.set()
-        closed.wait()
-        return Response.text(200, "x" * LARGE)
-
-    return rendered, closed, around
 
 
 class Served:
@@ -96,13 +76,6 @@ class Served:
         self._thread.join()
         self.server.server_close()
         self._sessions.cleanup()
-
-    def sessions(self) -> list[str]:
-        """Returns the identifiers of the session files."""
-        return sorted(
-            path.name.removeprefix("sess_")
-            for path in Path(self._sessions.name).iterdir()
-        )
 
     def connect(
         self, target: str = "/", headers: Optional[dict] = None
@@ -138,73 +111,6 @@ def parse(response: bytes) -> tuple[int, dict[str, list[str]], bytes]:
         name, _, value = line.partition(":")
         headers.setdefault(name.lower(), []).append(value.strip())
     return int(lines[0].split(" ")[1]), headers, body
-
-
-def reset(client: socket.socket) -> None:
-    """Closes a connection with a reset, so the next write of the server to it fails."""
-    client.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, struct.pack("ii", 1, 0))
-    client.close()
-
-
-def loader(replies: list) -> Callable:
-    def load(reply: Reply) -> dict:
-        replies.append(reply)
-        reply.note("loaded", True)
-        return {"name": "x" * LARGE}
-
-    return load
-
-
-class MethodTest(unittest.TestCase):
-    def exchange(self, served: Served, method: str) -> tuple[int, dict, bytes]:
-        """Sends a request of `/` with the method and returns the parsed response."""
-        client = socket.create_connection(served.server.server_address[:2])
-        client.sendall(
-            f"{method} / HTTP/1.1\r\nHost: 127.0.0.1\r\n"
-            "Accept: application/vnd.hyper+json\r\nConnection: close\r\n\r\n".encode(
-                "latin-1"
-            )
-        )
-        return parse(read_all(client))
-
-    def test_a_method_that_the_route_does_not_allow_receives_the_405_of_the_application(
-        self,
-    ) -> None:
-        # HY-27: the application answers every method, also one that http.server defines no handler for, so the
-        # response hook and the write hook receive the 405 with its Allow header.
-        responses = []
-        written = []
-        app = open_app(
-            lambda: {"name": "x"},
-            on_response=lambda request, response, elapsed, reply, failure: (
-                responses.append((request.method, response.status))
-            ),
-        )
-        with Served(
-            app,
-            written=lambda request, response, ended, elapsed, failure: written.append(
-                (request.method, response.status, ended)
-            ),
-        ) as served:
-            for method in ("PURGE", "TRACE", "purge"):
-                with self.subTest(method):
-                    status, headers, body = self.exchange(served, method)
-                    self.assertEqual(405, status)
-                    self.assertEqual(["GET, HEAD"], headers["allow"])
-                    self.assertEqual(["no-store"], headers["cache-control"])
-                    self.assertEqual(b"Method Not Allowed", body)
-        self.assertEqual([("PURGE", 405), ("TRACE", 405), ("PURGE", 405)], responses)
-        self.assertEqual(
-            [("PURGE", 405, True), ("TRACE", 405, True), ("PURGE", 405, True)],
-            written,
-        )
-
-    def test_the_method_of_a_request_is_read_in_upper_case(self) -> None:
-        app = open_app(lambda: {"name": "x"})
-        with Served(app) as served:
-            status, _, body = self.exchange(served, "get")
-        self.assertEqual(200, status)
-        self.assertEqual("home", json.loads(body)["route"])
 
 
 class ChunkedBodyTest(unittest.TestCase):
@@ -278,131 +184,7 @@ class ChunkedBodyTest(unittest.TestCase):
         self.assertEqual([], self.written)
 
 
-class DisconnectTest(unittest.TestCase):
-    def test_a_client_that_closed_the_connection_is_reported_once_after_the_response_hook(
-        self,
-    ) -> None:
-        # HY-67: the server writes the response after the response hook; the write fails because the client closed
-        # the connection, and the disconnect hook receives the request, the elapsed time and the reply.
-        events: list = []
-        replies: list = []
-        rendered = threading.Event()
-        closed = threading.Event()
-
-        def on_response(request, response, elapsed, reply, failure) -> None:
-            events.append(("response", request.path(), response.status, reply))
-            rendered.set()
-            closed.wait()
-
-        def on_disconnect(request, elapsed, reply) -> None:
-            events.append(
-                (
-                    "disconnect",
-                    request.path(),
-                    request.header("Accept"),
-                    elapsed >= 0,
-                    reply,
-                )
-            )
-
-        app = open_app(
-            loader(replies), on_response=on_response, on_disconnect=on_disconnect
-        )
-        with Served(app) as served:
-            client = served.connect()
-            try:
-                rendered.wait()
-                reset(client)
-            finally:
-                closed.set()
-        self.assertEqual(1, len(replies))
-        self.assertEqual(
-            [
-                ("response", "/", 200, replies[0]),
-                ("disconnect", "/", "application/vnd.hyper+json", True, replies[0]),
-            ],
-            events,
-        )
-        self.assertEqual([("loaded", True)], replies[0].notes())
-
-    def test_a_client_that_reads_the_whole_response_is_not_reported(self) -> None:
-        # HY-67: every write succeeds, so the server detects no close.
-        events: list = []
-        app = open_app(
-            loader([]),
-            on_response=lambda *_args: events.append("response"),
-            on_disconnect=lambda *_args: events.append("disconnect"),
-        )
-        with Served(app) as served:
-            response = read_all(served.connect())
-        self.assertTrue(response.startswith(b"HTTP/1.0 200 "))
-        self.assertGreater(len(response), LARGE)
-        self.assertEqual(["response"], events)
-
-    def test_a_disconnect_hook_that_is_not_callable_fails_when_the_application_opens(
-        self,
-    ) -> None:
-        with self.assertRaisesRegex(ValueError, "on_disconnect"):
-            open_app(loader([]), on_disconnect="log")
-
-
 class AroundTest(unittest.TestCase):
-    def test_around_that_answers_alone_runs_no_part_of_the_application(self) -> None:
-        # HY-97: a response of `around` without `answer` opens no session and runs no loader and no hook.
-        events: list = []
-
-        def around(request: Request, answer: Callable) -> Response:
-            if request.header("X-Web-Server") != "front":
-                return Response.text(400, "Bad Request")
-            return answer(request)
-
-        app = open_app(
-            lambda: events.append("load") or {"name": "n"},
-            on_response=lambda *_args: events.append("response"),
-            on_disconnect=lambda *_args: events.append("disconnect"),
-        )
-        with Served(app, around=around) as served:
-            status, headers, body = parse(read_all(served.connect()))
-            self.assertEqual([], served.sessions())
-            answered, _, _ = parse(
-                read_all(served.connect(headers={"X-Web-Server": "front"}))
-            )
-        self.assertEqual((400, b"Bad Request"), (status, body))
-        self.assertNotIn("set-cookie", headers)
-        self.assertEqual(200, answered)
-        self.assertEqual(["load", "response"], events)
-
-    def test_around_changes_the_request_and_the_response(self) -> None:
-        # HY-97: the application reads the header that `around` set, and the client receives the header that
-        # `around` added to the response with the cookie of the new session (HY-45).
-        seen: list = []
-
-        def around(request: Request, answer: Callable) -> Response:
-            response = answer(request.with_header("X-Request-Id", "r1"))
-            return response.with_header("X-Request-Id", "r1")
-
-        def load(request: Request) -> dict:
-            seen.append(request.header("x-request-id"))
-            return {"name": "n"}
-
-        app = open_app(
-            load,
-            on_response=lambda request, *_args: seen.append(
-                request.header("X-Request-Id")
-            ),
-        )
-        with Served(app, around=around) as served:
-            status, headers, body = parse(read_all(served.connect()))
-            sessions = served.sessions()
-        self.assertEqual(200, status)
-        self.assertEqual(["r1"], headers["x-request-id"])
-        self.assertEqual(1, len(sessions))
-        self.assertTrue(
-            headers["set-cookie"][0].startswith(f"hy-session={sessions[0]}; ")
-        )
-        self.assertEqual("n", json.loads(body)["regions"]["content"]["name"])
-        self.assertEqual(["r1", "r1"], seen)
-
     def test_around_runs_the_answer_in_a_context_of_its_own(self) -> None:
         # HY-97: the loaders of the request run inside the call of `answer`, so they read the context of `around`.
         context = threading.local()
@@ -423,171 +205,6 @@ class AroundTest(unittest.TestCase):
             read_all(served.connect(headers={"X-Request-Id": "a"}))
             read_all(served.connect(headers={"X-Request-Id": "b"}))
         self.assertEqual(["a", "b"], seen)
-
-    def test_the_disconnect_hook_receives_the_request_of_the_answer(self) -> None:
-        # HY-67, HY-97: the hook receives the request that `around` gave to `answer`.
-        events: list = []
-        replies: list = []
-        rendered = threading.Event()
-        closed = threading.Event()
-
-        def around(request: Request, answer: Callable) -> Response:
-            response = answer(request.with_header("X-Request-Id", "r1"))
-            rendered.set()
-            closed.wait()
-            return response
-
-        app = open_app(
-            loader(replies),
-            on_disconnect=lambda request, elapsed, reply: events.append(
-                (request.header("X-Request-Id"), reply)
-            ),
-        )
-        with Served(app, around=around) as served:
-            client = served.connect()
-            try:
-                rendered.wait()
-                reset(client)
-            finally:
-                closed.set()
-        self.assertEqual([("r1", replies[0])], events)
-
-    def test_a_response_of_around_alone_to_a_closed_connection_calls_no_hook(
-        self,
-    ) -> None:
-        # HY-97: without a call of `answer`, no hook of the application runs, also when the write fails (HY-67).
-        events: list = []
-        rendered, closed, around = waiting_around()
-
-        app = open_app(
-            loader([]),
-            on_response=lambda *_args: events.append("response"),
-            on_disconnect=lambda *_args: events.append("disconnect"),
-        )
-        with Served(app, around=around) as served:
-            client = served.connect()
-            try:
-                rendered.wait()
-                reset(client)
-            finally:
-                closed.set()
-            self.assertEqual([], served.sessions())
-        self.assertEqual([], events)
-
-    def test_around_that_is_not_callable_fails_when_the_server_is_created(self) -> None:
-        with tempfile.TemporaryDirectory() as sessions:
-            with self.assertRaisesRegex(ValueError, "around"):
-                create_server(
-                    open_app(loader([])), FileSessions(sessions), around="wrap"
-                )
-
-
-class WrittenTest(unittest.TestCase):
-    def test_the_write_hook_receives_the_request_and_the_response(self) -> None:
-        # HY-99: the server calls the hook after it wrote the response, with the request, the response and True.
-        events: list = []
-
-        def written(
-            request: Request,
-            response: Response,
-            sent: bool,
-            elapsed: float,
-            failure: str | None,
-        ) -> None:
-            events.append((request.path(), response.status, sent, elapsed >= 0))
-
-        with Served(open_app(loader([])), written=written) as served:
-            status, _, _ = parse(read_all(served.connect()))
-        self.assertEqual(200, status)
-        self.assertEqual([("/", 200, True, True)], events)
-
-    def test_the_write_hook_runs_before_the_disconnect_hook_when_the_write_fails(
-        self,
-    ) -> None:
-        # HY-99, HY-67: a write that fails because the client closed the connection reports False before the
-        # disconnect hook runs.
-        events: list = []
-        rendered = threading.Event()
-        closed = threading.Event()
-
-        def on_response(request, response, elapsed, reply, failure) -> None:
-            rendered.set()
-            closed.wait()
-
-        app = open_app(
-            loader([]),
-            on_response=on_response,
-            on_disconnect=lambda request, elapsed, reply: events.append(
-                ("disconnect", request.path())
-            ),
-        )
-        with Served(
-            app,
-            written=lambda request, response, sent, elapsed, failure: events.append(
-                ("written", request.path(), response.status, sent)
-            ),
-        ) as served:
-            client = served.connect()
-            try:
-                rendered.wait()
-                reset(client)
-            finally:
-                closed.set()
-        self.assertEqual([("written", "/", 200, False), ("disconnect", "/")], events)
-
-    def test_the_write_hook_runs_for_a_response_of_around_alone(self) -> None:
-        # HY-99: the hook is called also when `around` returned its own response without calling `answer` (HY-97).
-        events: list = []
-
-        def around(request: Request, answer: Callable) -> Response:
-            return Response.text(400, "Bad Request")
-
-        with Served(
-            open_app(loader([])),
-            around=around,
-            written=lambda request, response, sent, elapsed, failure: events.append(
-                (response.status, response.body, sent)
-            ),
-        ) as served:
-            status, _, body = parse(read_all(served.connect()))
-        self.assertEqual((400, b"Bad Request"), (status, body))
-        self.assertEqual([(400, "Bad Request", True)], events)
-
-    def test_the_write_hook_of_a_response_of_around_alone_to_a_closed_connection_calls_no_disconnect(
-        self,
-    ) -> None:
-        # HY-99, HY-67: the failed write of a response of `around` alone reports False, and without a call of
-        # `answer` the disconnect hook does not run (HY-97).
-        events: list = []
-        rendered, closed, around = waiting_around()
-
-        app = open_app(
-            loader([]), on_disconnect=lambda *_args: events.append("disconnect")
-        )
-        with Served(
-            app,
-            around=around,
-            written=lambda request, response, sent, elapsed, failure: events.append(
-                ("written", sent)
-            ),
-        ) as served:
-            client = served.connect()
-            try:
-                rendered.wait()
-                reset(client)
-            finally:
-                closed.set()
-            self.assertEqual([], served.sessions())
-        self.assertEqual([("written", False)], events)
-
-    def test_a_write_hook_that_is_not_callable_fails_when_the_server_is_created(
-        self,
-    ) -> None:
-        with tempfile.TemporaryDirectory() as sessions:
-            with self.assertRaisesRegex(ValueError, "written"):
-                create_server(
-                    open_app(loader([])), FileSessions(sessions), written="log"
-                )
 
 
 if __name__ == "__main__":

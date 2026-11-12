@@ -6012,9 +6012,9 @@
                 },
                 {
                   "id": "HY-104.16",
-                  "en": "`tests/scripts/session-shared.test.mts` checks it with processes of the three servers on one session, and `NativeSessionTest.php`, `packages/server/python/tests/test_file_sessions.py` and `packages/server/ts/tests/sessions-race.test.ts` with several processes of one server.",
-                  "ko": "`tests/scripts/session-shared.test.mts`는 한 session 위에서 세 서버의 프로세스로, `NativeSessionTest.php`, `packages/server/python/tests/test_file_sessions.py`, `packages/server/ts/tests/sessions-race.test.ts`는 한 서버의 여러 프로세스로 이것을 검사한다.",
-                  "koSource": "7f07bfb54cc174af8321fec3a5b33de93cf45dc8d2645688237cb86b20e59205"
+                  "en": "`tests/scripts/session-shared.test.mts` checks it with several processes of each of the three servers on one session, and `NativeSessionTest.php` with several processes of the PHP server on its native session.",
+                  "ko": "`tests/scripts/session-shared.test.mts`는 한 session 위에서 세 서버 각각의 여러 프로세스로, `NativeSessionTest.php`는 PHP 서버의 native session 위에서 여러 프로세스로 이것을 검사한다.",
+                  "koSource": "07ff969bd93ca82b25bd76a4c9d2d534d00448d1ca4b3ffb0b057d7297827ad1"
                 },
                 {
                   "id": "HY-104.17",

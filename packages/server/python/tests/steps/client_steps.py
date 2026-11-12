@@ -4,6 +4,7 @@
 # the log. Each case of `openRejections` opens the fixture application with a client rendering that the open refuses.
 import contextlib
 import io
+import os
 import json
 import tempfile
 from collections.abc import Callable
@@ -20,6 +21,7 @@ from polyspec.hyper.request import Request
 from polyspec.hyper.result import Result
 
 from ..render.fixture_app import FIXTURES, PROGRAM
+from .recorded import RecordingStore, Reports, compare_log
 
 # A session token of HY-24; the form carries a masked value of it.
 _TOKEN = "00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff"
@@ -40,31 +42,6 @@ class Counter:
         self.observed: list[list] = []
         # The names of the request headers that a representation handler looks up in what it received.
         self.header_names = header_names
-
-
-class _RecordingStore:
-    """The session store that the host passes to the application: it records the calls of the store during a request
-    (HY-120), each as its method and its key."""
-
-    def __init__(self, store: ArraySession):
-        self._store = store
-        self.calls: list[str] = []
-
-    def get(self, key: str) -> object:
-        self.calls.append(f"get {key}")
-        return self._store.get(key)
-
-    def set(self, key: str, value: object) -> None:
-        self.calls.append(f"set {key}")
-        self._store.set(key, value)
-
-    def remove(self, key: str) -> None:
-        self.calls.append(f"remove {key}")
-        self._store.remove(key)
-
-    def renew(self) -> None:
-        self.calls.append("renew")
-        self._store.renew()
 
 
 def cases(case) -> None:
@@ -108,7 +85,7 @@ def cases(case) -> None:
             for name, entries in representations.items()
         }
     selections: list[Request] = []
-    reports: list[tuple] = []
+    reports = Reports()
 
     with tempfile.TemporaryDirectory(prefix="hyper-client-") as directory:
         shell_path = Path(directory) / "index.html"
@@ -122,10 +99,10 @@ def cases(case) -> None:
             client,
             representations,
             case.has("observed"),
-            on_response=lambda *report: reports.append(report),
+            on_response=reports,
             **options,
         )
-        store = _RecordingStore(session)
+        store = RecordingStore(session)
         log = io.StringIO()
         with contextlib.redirect_stderr(log):
             response = application.handle(request, store)
@@ -151,23 +128,8 @@ def cases(case) -> None:
     case.compare("firstStoreCalls", store.calls)
     case.compare("selections", len(selections))
     case.compare("observed", counter.observed)
-    case.compare(
-        "reported",
-        [
-            [f"{reported.method} {reported.path()}", answer.status]
-            for reported, answer, *_ in reports
-        ],
-    )
-    if case.has("reportedHeaders") or case.has("notes"):
-        if not reports:
-            raise LookupError("the response hook received no report")
-        case.compare("reportedHeaders", reports[-1][1].headers)
-        case.compare("notes", [list(pair) for pair in reports[-1][3].notes()])
-    logged = log.getvalue()
-    case.compare("logged", logged)
-    case.compare(
-        "logCount", sum(1 for line in logged.splitlines() if line.startswith("hyper: "))
-    )
+    reports.compare(case)
+    compare_log(case, log.getvalue())
     received = counter.received or {}
     case.compare("received.parameters", received.get("parameters"))
     case.compare("received.selection", received.get("selection"))
@@ -202,6 +164,14 @@ def open_rejections(case) -> None:
             file = Path(directory) / "missing.html"
         elif shell_file == "directory":
             file = Path(directory)
+        elif shell_file == "unreadable":
+            file.write_bytes(shell.encode("utf-8"))
+            file.chmod(0)
+            if os.access(file, os.R_OK):
+                file.chmod(0o600)
+                raise LookupError(
+                    "the user of the run reads a file of mode 0, so the case checks nothing"
+                )
         elif shell_file == "not-utf8":
             file.write_bytes(shell.encode("utf-8") + b"\xff\xfe")
         else:
@@ -214,6 +184,8 @@ def open_rejections(case) -> None:
             _app(directory, Counter(), client, {}, False)
         except Exception as failure:  # noqa: BLE001 - the reader checks the class of the error
             error = failure
+        if shell_file == "unreadable":
+            file.chmod(0o600)
     case.outcome("open", error)
     case.compare("openError", "" if error is None else str(error))
 
