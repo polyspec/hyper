@@ -2042,7 +2042,8 @@
         "HY-122"
       ],
       "cases": [
-        "contracts/media-type.json"
+        "contracts/media-type.json",
+        "tests/legacy/media-type-before-s3b.json"
       ],
       "units": [
         {
@@ -18860,11 +18861,8 @@
       "fixtures": {},
       "sections": {
         "values": {
-          "runners": [
-            "php",
-            "node",
-            "python"
-          ],
+          "runners": [],
+          "fixedCopy": "media-type-before-s3b.json",
           "uses": [],
           "fields": {
             "id": {

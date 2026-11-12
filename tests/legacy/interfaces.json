@@ -1443,6 +1443,63 @@
           ]
         }
       }
+    },
+    "media-type-before-s3b.json": {
+      "fixtures": {},
+      "sections": {
+        "values": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "parameters": {
+              "role": "input"
+            },
+            "contentType": {
+              "role": "input",
+              "optional": true
+            },
+            "body": {
+              "role": "input",
+              "optional": true
+            },
+            "read": {
+              "role": "expected",
+              "compare": "ordered",
+              "sentence": "HY-119.3",
+              "state": "`parameters` is a list of pairs of a name and a value, given to the constructor as a map in that order, with the content type `contentType` when the case states it; `read` is what `parameters()` returns."
+            },
+            "etag": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-122.11",
+              "state": "`etag` is what `etag(value)` returns for the value of the JSON text `body`."
+            },
+            "failure": {
+              "role": "expected",
+              "optional": true,
+              "compare": "contains",
+              "sentence": "HY-122.13",
+              "state": "`failure` is a text that the message of the error of the data model contains, with which `etag(value)` fails for the value of `body`; a case that states `failure` states no `etag`."
+            }
+          },
+          "members": [
+            "media-type.constructor",
+            "media-type.etag",
+            "media-type.parameters"
+          ]
+        }
+      }
     }
   }
 }

@@ -74,7 +74,7 @@ STEPS = {
     ("representations.json", "openRejections"): representations_steps.open_rejections,
     ("representations.json", "cases"): representations_steps.cases,
     ("representations.json", "values"): representations_steps.values,
-    ("media-type.json", "values"): media_type_steps.values,
+    ("media-type-before-s3b.json", "values"): media_type_steps.values,
     ("response.json", "values"): response_steps.values,
     ("rest.json", "cases"): rest_steps.cases,
     ("rest.json", "invalidPaths"): rest_steps.invalid_paths,

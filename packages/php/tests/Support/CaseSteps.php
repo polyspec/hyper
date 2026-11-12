@@ -95,7 +95,7 @@ final class CaseSteps
             'app.json parts' => AppSteps::parts(...),
             'arguments.json counts' => ArgumentsSteps::counts(...),
             'arguments.json names' => ArgumentsSteps::names(...),
-            'media-type.json values' => MediaTypeSteps::values(...),
+            'media-type-before-s3b.json values' => MediaTypeSteps::values(...),
             'response.json values' => ResponseSteps::values(...),
             'fields.json uploaded' => FieldsSteps::uploaded(...),
             'session.json store' => SessionSteps::store(...),

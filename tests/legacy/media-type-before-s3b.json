@@ -1,0 +1,63 @@
+{
+  "values": [
+    {
+      "id": "the_parameters_keep_the_order_of_the_constructor",
+      "label": "parameters() returns the values by their names in the order that the constructor received (HY-119.3)",
+      "parameters": [
+        [
+          "version",
+          "2"
+        ],
+        [
+          "charset",
+          "utf-8"
+        ]
+      ],
+      "read": {
+        "version": "2",
+        "charset": "utf-8"
+      }
+    },
+    {
+      "id": "a_media_type_without_parameters_returns_an_empty_map",
+      "label": "parameters() of a media type without parameters is an empty map",
+      "parameters": [],
+      "read": {}
+    },
+    {
+      "id": "the_tag_is_the_digest_of_the_content_type_a_line_feed_and_the_body",
+      "label": "etag(body) is the first 32 hexadecimal digits of the SHA-256 digest of the content type, a line feed and the JSON text of the body, in quotes (HY-122.10)",
+      "parameters": [],
+      "contentType": "application/json",
+      "body": "{\"a\":1}",
+      "read": {},
+      "etag": "\"749f622c8311de79391c68039cc41970\""
+    },
+    {
+      "id": "a_media_type_without_a_content_type_tags_with_the_empty_type",
+      "label": "etag(body) of a media type made without a content type digests a line feed and the JSON text of the body",
+      "parameters": [],
+      "body": "\"x\"",
+      "read": {},
+      "etag": "\"bde85ef320e901bb7895e225365820ac\""
+    },
+    {
+      "id": "the_tag_of_a_body_outside_the_data_model_fails",
+      "label": "etag of the integer 2^53, which is outside the data model, fails with the error of the data model (HY-44)",
+      "parameters": [],
+      "contentType": "application/json",
+      "body": "9007199254740992",
+      "read": {},
+      "failure": "a number outside ±(2^53 − 1) is not a value of the data model (HY-44)"
+    },
+    {
+      "id": "the_tag_of_a_body_that_holds_a_number_outside_the_data_model_fails",
+      "label": "etag of a map that holds an integer outside the data model fails with the error of the data model",
+      "parameters": [],
+      "contentType": "application/json",
+      "body": "{\"a\":[9007199254740993]}",
+      "read": {},
+      "failure": "a number outside ±(2^53 − 1) is not a value of the data model (HY-44)"
+    }
+  ]
+}
