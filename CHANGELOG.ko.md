@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 192752556dec8a8db893d65e7a2dcc007abf9da786a41513aab2be4ba35f2373 -->
+<!-- source-sha256: 88cb241c9f24071105c2722888182eb2a9389d7905425bffa6b1a9b81c8fcc81 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- `contracts/app.json`의 case는 열리지 않는 애플리케이션을 kind `invalid_application`(build 파일이면 `invalid_build`), category `value`, 그리고 HY-106.11이 말하는 경우에만 message를 가진 `raises`로 줍니다. case의 키 `openError`는 없어졌습니다(S-3b, HY-106.18).
 
 - ±(2^53 − 1) 안의 정수인 데이터 모델의 수는 반올림 변환 없이 수의 bit에서 읽어 session record에 PHP 정수로 쓰고, 다른 수는 float로 쓴다(HY-104.34). 다른 형식의 저장된 kept region은 다른 region의 것까지 kept 값의 모든 읽기와 쓰기를 실패시킨다(HY-104.35). Rust core는 `polyspec-bindgen-core`, `polyspec-ordered-json`, `polyspec-template`, `polyspec-http-cookies`, `polyspec-sessions`, `polyspec-php-serialize`를 각 Git 저장소의 branch `v1/rust-core`에서 받으므로 작업 트리가 아니라 각 라이브러리의 커밋된 상태를 읽는다. `polyspec-http-negotiate`와 `polyspec-http-media-type`은 http-negotiate의 branch가 http-media-type을 Git으로 가리킬 때까지 path 의존으로 남는다(C-7).
 

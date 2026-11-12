@@ -9429,10 +9429,15 @@
       "options": {
         "valueLimit": 0
       },
-      "openError": "(HY-131)",
       "requirements": [
         "HY-131"
-      ]
+      ],
+      "raises": {
+        "kind": "invalid_application",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "a_value_limit_with_a_fraction_fails_the_open",
@@ -9441,7 +9446,6 @@
       "options": {
         "valueLimit": 1.5
       },
-      "openError": "(HY-131)",
       "requirements": [
         "HY-131"
       ],
@@ -9451,6 +9455,12 @@
           "python"
         ],
         "sentence": "HY-131.10"
+      },
+      "raises": {
+        "kind": "invalid_application",
+        "status": null,
+        "category": "value",
+        "message": null
       }
     },
     {
@@ -9461,10 +9471,15 @@
         "bodyLimit": 16,
         "valueLimit": 32
       },
-      "openError": "(HY-131)",
       "requirements": [
         "HY-131"
-      ]
+      ],
+      "raises": {
+        "kind": "invalid_application",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "a_part_limit_of_zero_fails_the_open",
@@ -9473,10 +9488,15 @@
       "options": {
         "partLimit": 0
       },
-      "openError": "(HY-131)",
       "requirements": [
         "HY-131"
-      ]
+      ],
+      "raises": {
+        "kind": "invalid_application",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "a_part_limit_with_a_fraction_fails_the_open",
@@ -9485,7 +9505,6 @@
       "options": {
         "partLimit": 1.5
       },
-      "openError": "(HY-131)",
       "requirements": [
         "HY-131"
       ],
@@ -9495,6 +9514,12 @@
           "python"
         ],
         "sentence": "HY-131.10"
+      },
+      "raises": {
+        "kind": "invalid_application",
+        "status": null,
+        "category": "value",
+        "message": null
       }
     },
     {
@@ -9504,10 +9529,15 @@
       "options": {
         "responseLimit": 0
       },
-      "openError": "response limit 0 is not a positive number of bytes",
       "requirements": [
         "HY-66"
-      ]
+      ],
+      "raises": {
+        "kind": "invalid_application",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "a_response_limit_below_zero_fails_the_open",
@@ -9516,10 +9546,15 @@
       "options": {
         "responseLimit": -1
       },
-      "openError": "response limit -1 is not a positive number of bytes",
       "requirements": [
         "HY-66"
-      ]
+      ],
+      "raises": {
+        "kind": "invalid_application",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "a_response_limit_with_a_fraction_fails_the_open",
@@ -9528,7 +9563,6 @@
       "options": {
         "responseLimit": 1.5
       },
-      "openError": "response limit 1.5 is not a positive number of bytes",
       "requirements": [
         "HY-66"
       ],
@@ -9538,6 +9572,12 @@
           "python"
         ],
         "sentence": "HY-66.1"
+      },
+      "raises": {
+        "kind": "invalid_application",
+        "status": null,
+        "category": "value",
+        "message": null
       }
     },
     {
@@ -9557,10 +9597,15 @@
           }
         }
       },
-      "openError": "route home has a loader for undeclared region rows",
       "requirements": [
         "HY-30"
-      ]
+      ],
+      "raises": {
+        "kind": "invalid_application",
+        "status": null,
+        "category": "value",
+        "message": "route home has a loader for undeclared region rows"
+      }
     },
     {
       "id": "a_handler_of_a_route_that_the_manifest_does_not_hold_fails_the_open",
@@ -9571,19 +9616,29 @@
           "unknown": {}
         }
       },
-      "openError": "route handler unknown has no route in the manifest",
       "requirements": [
         "HY-2"
-      ]
+      ],
+      "raises": {
+        "kind": "invalid_application",
+        "status": null,
+        "category": "value",
+        "message": "route handler unknown has no route in the manifest"
+      }
     },
     {
       "id": "a_post_route_without_an_action_fails_the_open",
       "label": "opening fails for an application whose manifest declares a POST route and whose handlers hold no action of it",
       "application": "b_no_action",
-      "openError": "route add declares post but has no POST action",
       "requirements": [
         "HY-2"
-      ]
+      ],
+      "raises": {
+        "kind": "invalid_application",
+        "status": null,
+        "category": "value",
+        "message": "route add declares post but has no POST action"
+      }
     },
     {
       "id": "a_manifest_that_is_cut_fails_the_open",
@@ -9751,7 +9806,6 @@
         "build.json": null,
         "templates": null
       },
-      "openError": "reads.json",
       "requirements": [
         "HY-48"
       ],
@@ -9761,6 +9815,12 @@
           "python"
         ],
         "sentence": "HY-48.10"
+      },
+      "raises": {
+        "kind": "invalid_application",
+        "status": null,
+        "category": "value",
+        "message": null
       }
     },
     {
@@ -9771,7 +9831,6 @@
         "build.json": null,
         "templates": null
       },
-      "openError": "build.json",
       "requirements": [
         "HY-48"
       ],
@@ -9781,6 +9840,12 @@
           "python"
         ],
         "sentence": "HY-48.10"
+      },
+      "raises": {
+        "kind": "invalid_build",
+        "status": null,
+        "category": "value",
+        "message": null
       }
     },
     {
@@ -9790,7 +9855,6 @@
       "files": {
         "templates": null
       },
-      "openError": "templates",
       "requirements": [
         "HY-48"
       ],
@@ -9800,6 +9864,12 @@
           "python"
         ],
         "sentence": "HY-48.10"
+      },
+      "raises": {
+        "kind": "invalid_application",
+        "status": null,
+        "category": "value",
+        "message": null
       }
     }
   ],

@@ -18747,12 +18747,12 @@
               "role": "input",
               "optional": true
             },
-            "openError": {
+            "raises": {
               "role": "expected",
               "optional": true,
-              "compare": "contains",
+              "compare": "exact",
               "sentence": "HY-106.18",
-              "state": "`openError` is a text that the message of the open error contains."
+              "state": "`raises` is the failure of the case: its `kind`, its HTTP `status` or null, its `category` and its `message` when a rule states the message, or null; a case with `raises` has no result field."
             }
           },
           "outcomes": {
