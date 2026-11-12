@@ -16,6 +16,7 @@ pub mod manifest;
 pub mod media;
 pub mod orm;
 pub mod pipeline;
+pub mod reads;
 pub mod reply;
 pub mod representation;
 pub mod router;

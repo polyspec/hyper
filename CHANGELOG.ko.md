@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 9b2e5ab6bb34e16fa1f2cc5fcbdb8130b4d9c243bd059db5c6a040de20452f06 -->
+<!-- source-sha256: 96dc4fff475320525fb6470c0e8db5a199c9717e27f5547502dfa4116e02fb61 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- Rust core는 build의 read path tree로 데이터에서 그 read path만 보존하며(HY-73.29, HY-73.22), 그 시험은 `contracts/reads.json`의 case 24개를 실행한다(C-7).
 
 - session 저장소의 case는 sessions 라이브러리의 것이며 이제 그쪽이 가진다. `contracts/redis-sessions.json`을 지우고, `contracts/file-sessions.json`은 hyper의 record 변환 case 둘(HY-104.13, HY-104.14), 배열을 담지 않은 record의 case, group `cookie`(HY-45)만 남긴다. 명세는 sessions 라이브러리를 따른다(C-6). 식별자는 22자부터 256자이고(HY-104.31, SE-5.1), 저장소 option은 kind `invalid_directory`, `invalid_lifetime`, `invalid_lock_expire`로 실패하며(HY-104.32, HY-115.28), `lockExpire`는 기본값이 없고 `lockWait`는 마이크로초를 세며(HY-115.28, HY-115.29), 어떤 server도 요청에 응답하는 동안 만료된 session을 지우지 않고 애플리케이션이 저장소의 `collect`를 부른다(HY-104.33, SF-5.3). core는 host 함수가 받는 저장소 interface를 가진 `polyspec-sessions-core`에 의존하며, interface 계약은 `ArraySession`이 sessions 라이브러리의 `MemoryStore`라고 적는다.
 

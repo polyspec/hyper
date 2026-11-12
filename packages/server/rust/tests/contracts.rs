@@ -534,3 +534,29 @@ fn json_text_is_written_and_read() {
         }
     }
 }
+
+#[test]
+fn read_data_keeps_only_the_read_paths() {
+    // HY-73.29, HY-73.22
+    use polyspec_hyper::json::{read, write};
+    use polyspec_hyper::reads::{keep, Read};
+    let file = cases("reads.json");
+    let mut ran = 0;
+    for case in group(&file, "cases") {
+        let parse = |key: &str| match read(case[key].to_string().as_bytes()) {
+            Ok(value) => value,
+            Err(error) => panic!("{}: {error:?}", case["id"]),
+        };
+        let tree = match Read::from_value(&parse("reads")) {
+            Ok(tree) => tree,
+            Err(error) => panic!("{}: {error}", case["id"]),
+        };
+        let kept = keep(&parse("data"), &tree);
+        match write(&kept) {
+            Ok(text) => assert_eq!(text, case["kept"].to_string(), "{}", case["id"]),
+            Err(error) => panic!("{}: {error}", case["id"]),
+        }
+        ran += 1;
+    }
+    assert!(ran > 0);
+}
