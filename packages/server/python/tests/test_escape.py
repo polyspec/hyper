@@ -1,5 +1,6 @@
-# An error that escapes the answer of a request (HY-60, HY-97, HY-99): the server writes the plain 500 of hyper and reports
-# it once to the write hook with the request as the server received it, also when `around` never ran.
+# An error that escapes the answer of a request after the status line and the headers left the `http.server` server
+# (HY-60, HY-99): the write hook receives the response that started, with ended false. The plain 500 of an escaped
+# error and a failed session open are scenarios of tests/scripts/upload-servers.test.mts.
 import contextlib
 import io
 import unittest
@@ -9,31 +10,6 @@ from polyspec.hyper.app import App
 from polyspec.hyper.reply import Reply
 from polyspec.hyper.response import Response
 from polyspec.hyper.server import create_server
-
-
-class FailingApplication:
-    """An application whose respond fails outside its own handling, as a failing response hook does (HY-60)."""
-
-    https = False
-    frame_ancestors = "'self'"
-    # The frame policy and the log line of the plain 500, which the pipeline asks the application for (HY-60).
-    _frame = App._frame
-    _log_failure = App._log_failure
-    body_limit = 1024
-    _form_types = ["application/x-www-form-urlencoded"]
-    file_limit = 1 << 30
-    _value_limit = 1 << 30
-    _part_limit = 1000
-
-    def __init__(self):
-        self.responds = 0
-
-    def _respond(self, request, session, started):
-        self.responds += 1
-        raise RuntimeError("hook boom")
-
-    def _disconnected(self, request, started, reply) -> None:
-        pass
 
 
 class AnsweringApplication:
@@ -59,65 +35,11 @@ class AnsweringApplication:
         pass
 
 
-class BrokenSessions:
-    """A session store that fails to open, before the application and `around` run (HY-60)."""
-
-    def _open(self, identifier):
-        raise OSError("the session directory is gone")
-
-
 class EscapeTest(TransportCase):
     def get(self, server, path: str):
         # The server logs an escaped error to the standard error, which would interrupt the line of the verbose runner.
         with contextlib.redirect_stderr(io.StringIO()):
             return get_once(server, path)
-
-    def test_an_error_that_escapes_the_answer_gets_the_plain_failure_and_one_write_report(
-        self,
-    ) -> None:
-        application = FailingApplication()
-        written: list = []
-        server = create_server(
-            application,
-            self.sessions,
-            host="127.0.0.1",
-            port=0,
-            written=record_all(written),
-        )
-        reply, body = self.get(server, "/list")
-        # HY-60: the plain 500 of an escaped error is hyper's own response, the same in every adapter.
-        self.assertEqual(500, reply.status)
-        self.assertEqual(b"Internal Server Error", body)
-        self.assertEqual("no-store", reply.getheader("Cache-Control"))
-        self.assertEqual(
-            "frame-ancestors 'self'", reply.getheader("Content-Security-Policy")
-        )
-        self.assertEqual("text/plain; charset=utf-8", reply.getheader("Content-Type"))
-        self.assertEqual(1, application.responds)
-        # HY-99: the write hook receives the 500 once, with the request; the response hook does not receive it.
-        self.assertEqual([("GET", "/list", 500, True, "hook boom")], written)
-
-    def test_a_failed_session_open_is_reported_before_the_application_runs(
-        self,
-    ) -> None:
-        # HY-60: an error before `around` and the application is an escaped error; the write hook still receives
-        # its request, because a consumer records every request that the server answers.
-        application = FailingApplication()
-        written: list = []
-        server = create_server(
-            application,
-            BrokenSessions(),
-            host="127.0.0.1",
-            port=0,
-            written=record_all(written),
-        )
-        reply, body = self.get(server, "/list")
-        self.assertEqual(500, reply.status)
-        self.assertEqual(b"Internal Server Error", body)
-        self.assertEqual(0, application.responds)
-        self.assertEqual(
-            [("GET", "/list", 500, True, "the session directory is gone")], written
-        )
 
     def test_a_write_that_fails_after_the_headers_started_reports_an_unended_write_with_its_failure(
         self,

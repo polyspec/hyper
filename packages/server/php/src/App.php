@@ -375,6 +375,10 @@ final class App
         try {
             // HY-74: a warning, notice or deprecation of the request becomes an exception instead of a wrong page.
             $response = WarningsGuard::run(fn (): Response => $this->dispatch($request, $store, $reply));
+        } catch (SessionOpenError $error) {
+            // HY-60.14: a failed session open is no error of the application: it escapes the answer, and the response
+            // hook does not receive its 500 (HY-60.16).
+            throw $error;
         } catch (\Throwable $error) {
             $failure = $this->logFailure($error);
             $response = Response::text(500, 'Internal Server Error');

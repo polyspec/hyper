@@ -495,7 +495,7 @@ test('a passing run prints the three numbers of the fixture: the members stated 
 // reading and not a difference between the languages.
 
 type Kind = 'constructor' | 'method' | 'static method';
-type Written = { unit: string; extends?: string; members: { name: string; kind: Kind; visibility: Member['visibility']; output?: string }[] };
+type Written = { unit: string; extends?: string; properties?: [string, string][]; members: { name: string; kind: Kind; visibility: Member['visibility']; output?: string }[] };
 const FILE: Record<'php' | 'node', (unit: string) => string> = { php: (u) => `src/${u.charAt(0).toUpperCase()}${u.slice(1)}.php`, node: (u) => `src/${u}.ts` };
 const NATIVE: Record<'php' | 'node', (unit: string, name: string) => string> = {
   php: (u, n) => `${FILE.php(u)}::Fx\\${u.charAt(0).toUpperCase()}${u.slice(1)}::${n === 'constructor' ? '__construct' : n}`,
@@ -544,7 +544,11 @@ function stated(
   };
   const sourcesOf = (lang: 'php' | 'node'): Sources => {
     const ref = (unit: string): ClassRef => ({ file: FILE[lang](unit), name: cls(unit) });
-    const classes: SourceClass[] = units.map((w) => ({ ...ref(w.unit), extends: w.extends === undefined ? [] : [ref(w.extends)], properties: [] }));
+    const classes: SourceClass[] = units.map((w) => ({
+      ...ref(w.unit),
+      extends: w.extends === undefined ? [] : [ref(w.extends)],
+      properties: (w.properties ?? []).map(([name, unit]) => ({ name, type: ref(unit) })),
+    }));
     const written = scopes(lang, { cls: (unit) => ({ kind: 'class', ...ref(unit) }), ref });
     const all: Scope[] = written.map((s) => ({
       file: FILE[lang](s.unit),
@@ -625,6 +629,25 @@ test('a call on a class reaches the member of the nearest class that it extends 
     { unit: 'item', method: 'constructor' },
     { unit: 'item', method: 'size' },
     { unit: 'sub', method: 'size' },
+  ];
+  assert.deepEqual(stated(units, ['box.run'], run).findings, []);
+});
+
+test('a read of a property whose type is written has that class, also when a class that it extends declares it', () => {
+  const units: Written[] = [
+    { unit: 'base', properties: [['held', 'item']], members: [] },
+    { unit: 'box', extends: 'base', properties: [['item', 'item']], members: [{ name: 'run', kind: 'method', visibility: 'public' }] },
+    { unit: 'item', members: [{ name: 'size', kind: 'method', visibility: 'internal' }, { name: 'grow', kind: 'method', visibility: 'internal' }] },
+  ];
+  const run = (): ReturnType<Parameters<typeof stated>[2]> => [
+    {
+      unit: 'box',
+      method: 'run',
+      uses: [
+        { kind: 'member', of: { kind: 'member', of: { kind: 'own' }, name: 'item', call: false }, name: 'size', call: true },
+        { kind: 'member', of: { kind: 'member', of: { kind: 'own' }, name: 'held', call: false }, name: 'grow', call: true },
+      ],
+    },
   ];
   assert.deepEqual(stated(units, ['box.run'], run).findings, []);
 });

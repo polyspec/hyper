@@ -48,8 +48,15 @@ final class NativeSession implements SessionStore
         // A session that cannot start, such as one whose lock another request holds, fails the request whatever
         // error_reporting() keeps: the request would otherwise answer with an empty session and lose what it
         // stores (HY-115). PHP queues no cookie with `use_cookies` off, so a failed start sends none.
-        if (!session_start(self::options($https))) {
-            throw new \RuntimeException('hyper: the session could not start');
+        // HY-60.14: a failed open escapes the answer of the request, so it is not handled as an error of the
+        // application.
+        try {
+            $started = session_start(self::options($https));
+        } catch (\Throwable $error) {
+            throw new SessionOpenError($error->getMessage(), 0, $error);
+        }
+        if (!$started) {
+            throw new SessionOpenError('hyper: the session could not start');
         }
         $this->sendCookie();
     }

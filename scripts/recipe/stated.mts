@@ -130,6 +130,21 @@ class Language {
     return env;
   }
 
+  /** The written or assigned class of the property `name` of a class: of the nearest class of its family upwards that has it. */
+  private property(ref: ClassRef, name: string): ClassRef | undefined {
+    const seen = new Set<string>();
+    const queue = [ref];
+    while (queue.length > 0) {
+      const c = queue.shift();
+      if (c === undefined || seen.has(refKey(c))) continue;
+      seen.add(refKey(c));
+      const found = this.properties.get(`${refKey(c)}::${name}`);
+      if (found !== undefined) return found;
+      queue.push(...(this.parents.get(refKey(c)) ?? []));
+    }
+    return undefined;
+  }
+
   /** The class of a term of the spec: a unit, also inside `optional<…>`. */
   private termClass(term: string): ClassRef | undefined {
     return this.unitClass.get(plain(term));
@@ -185,6 +200,9 @@ class Language {
       case 'new':
         return { kind: 'class', ref: e.class };
       case 'member': {
+        const of = e.call ? undefined : this.classOf(this.value(e.of, s, env));
+        const property = of === undefined ? undefined : this.property(of, e.name);
+        if (property !== undefined) return { kind: 'class', ref: property };
         const [key] = this.keys(e, s, env);
         if (key === undefined) return undefined;
         const written = this.properties.get(key);

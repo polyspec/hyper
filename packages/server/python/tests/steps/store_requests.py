@@ -4,8 +4,6 @@
 import re
 from collections.abc import Callable
 
-from polyspec.hyper._json_codec import JsonCodec
-
 from .recorded import decoded
 
 _CREATED = re.compile(r"[0-9a-f]{64}\Z")
@@ -58,7 +56,7 @@ class StoreRequests:
                 elif method not in _METHODS:
                     raise LookupError(f"the method {method} of the case is unknown")
                 elif method == "get":
-                    results.append(JsonCodec.encode(store.get(*arguments)))
+                    results.append(store.get(*arguments))
                 elif method == "set":
                     store.set(*arguments)
                 elif method == "remove":
