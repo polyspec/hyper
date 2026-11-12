@@ -164,6 +164,10 @@
         "category": "internal"
       },
       {
+        "variant": "polyspec_hyper::Error::RecordValue",
+        "category": "internal"
+      },
+      {
         "variant": "polyspec_http_negotiate::Error::InvalidAccept",
         "library": "http-negotiate"
       },
@@ -178,6 +182,80 @@
       {
         "variant": "polyspec_http_negotiate::Error::Internal",
         "library": "http-negotiate"
+      },
+      {
+        "variant": "polyspec_template::ErrorCode::E_DATA_NUMBER_RANGE",
+        "library": "template"
+      },
+      {
+        "variant": "polyspec_template::ErrorCode::E_DATA_NUMBER_NOT_FINITE",
+        "library": "template"
+      },
+      {
+        "variant": "polyspec_template::ErrorCode::E_DATA_INVALID_UTF8",
+        "library": "template"
+      },
+      {
+        "variant": "polyspec_template::ErrorCode::E_DATA_UNSUPPORTED_TYPE",
+        "library": "template"
+      },
+      {
+        "variant": "polyspec_template::ErrorCode::E_DATA_DEPTH",
+        "library": "template"
+      },
+      {
+        "variant": "polyspec_sessions::Error::Record",
+        "library": "sessions",
+        "class": "record_error"
+      },
+      {
+        "variant": "polyspec_sessions::Error::RecordWrite",
+        "library": "sessions",
+        "class": "record_error"
+      },
+      {
+        "variant": "polyspec_sessions::Error::Random",
+        "library": "sessions"
+      },
+      {
+        "variant": "polyspec_sessions::Error::RecordNotArray",
+        "library": "sessions"
+      },
+      {
+        "variant": "polyspec_sessions::Error::Cancelled",
+        "library": "sessions"
+      },
+      {
+        "variant": "polyspec_sessions::Error::IdentifierTaken",
+        "library": "sessions"
+      },
+      {
+        "variant": "polyspec_sessions::Error::Io",
+        "library": "sessions"
+      },
+      {
+        "variant": "polyspec_sessions::Error::LockTimeout",
+        "library": "sessions"
+      },
+      {
+        "variant": "polyspec_sessions::Error::LockLost",
+        "library": "sessions"
+      },
+      {
+        "variant": "polyspec_sessions::Error::Reply",
+        "library": "sessions"
+      },
+      {
+        "variant": "polyspec_sessions::Error::Redis",
+        "library": "sessions"
+      },
+      {
+        "variant": "polyspec_sessions::Error::Connection",
+        "library": "sessions"
+      },
+      {
+        "variant": "polyspec_sessions::Error::Internal",
+        "library": "sessions"
       },
       {
         "variant": "polyspec_http_cookies::Error::InvalidName",
@@ -201,7 +279,16 @@
       }
     ],
     "binding": [],
-    "wrapped": []
+    "wrapped": [
+      {
+        "library": "sessions",
+        "unit": "record_error",
+        "property": [
+          "offset"
+        ],
+        "forward": "record_error"
+      }
+    ]
   },
   "units": [
     {
@@ -801,7 +888,7 @@
               ],
               "type": {
                 "unit": "store",
-                "library": "sessions-core"
+                "library": "sessions"
               },
               "required": true
             },
@@ -850,7 +937,7 @@
               ],
               "type": {
                 "unit": "store",
-                "library": "sessions-core"
+                "library": "sessions"
               },
               "required": true
             },
@@ -899,7 +986,7 @@
               ],
               "type": {
                 "unit": "store",
-                "library": "sessions-core"
+                "library": "sessions"
               },
               "required": true
             },
@@ -949,7 +1036,7 @@
               ],
               "type": {
                 "unit": "store",
-                "library": "sessions-core"
+                "library": "sessions"
               },
               "required": true
             },
@@ -999,7 +1086,7 @@
               ],
               "type": {
                 "unit": "store",
-                "library": "sessions-core"
+                "library": "sessions"
               },
               "required": true
             },
@@ -1049,7 +1136,7 @@
               ],
               "type": {
                 "unit": "store",
-                "library": "sessions-core"
+                "library": "sessions"
               },
               "required": true
             },
@@ -1073,6 +1160,38 @@
               "python"
             ],
             "reason": "HY-100.15"
+          }
+        }
+      ]
+    },
+    {
+      "id": "record_error",
+      "name": [
+        "record",
+        "error"
+      ],
+      "module": "",
+      "kind": "error",
+      "visibility": "public",
+      "origin": "generated",
+      "category": "store",
+      "members": [
+        {
+          "id": "record_error.offset",
+          "name": [
+            "offset"
+          ],
+          "kind": "property",
+          "visibility": "public",
+          "returns": {
+            "optional": "uint"
+          },
+          "optional_reason": "HY-104.8",
+          "raises": [],
+          "wait": "none",
+          "core": {
+            "path": "polyspec_hyper::Error::offset",
+            "receiver": "&self"
           }
         }
       ]

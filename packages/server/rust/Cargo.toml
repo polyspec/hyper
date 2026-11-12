@@ -28,7 +28,10 @@ polyspec-ordered-json = { path = "../../../../ordered-json/packages/rust" }
 # The values of the data model and their JSON form (VAL-2, VAL-12, VAL-20; HY-44, HY-54.20).
 polyspec-template = { path = "../../../../template/packages/rust" }
 # The store interface of a session and its values (SE-2, SE-7; HY-104.25, HY-104.30), which the host entries take.
-polyspec-sessions-core = { path = "../../../../sessions/packages/core/rust" }
+# The stores of files and Redis are features of the library that the bindings build; the core needs the interface only.
+polyspec-sessions = { path = "../../../../sessions/packages/rust", default-features = false }
+# The values of a session record (RQ-001 to RQ-012; HY-104.13, HY-104.14).
+polyspec-php-serialize = { git = "https://github.com/polyspec/php-serialize.git", branch = "v1/rust-core" }
 # The digests of HY-24.10, HY-53 and HY-122.10.
 sha2 = "0.10"
 

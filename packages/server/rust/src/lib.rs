@@ -20,6 +20,7 @@ pub mod reads;
 pub mod reply;
 pub mod representation;
 pub mod router;
+pub mod session;
 
 pub use error::Error;
 

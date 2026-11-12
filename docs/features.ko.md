@@ -1,5 +1,5 @@
 <!-- doc-id: features -->
-<!-- source-sha256: 0831f8c98b12e83adf51c4cd68b91b4ff244644d6573c37d2392323f662c4cd5 -->
+<!-- source-sha256: f9345d04f30a8d506c7e10815697cab13bce6211896d6eea9647a8867e2471dd -->
 # 기능 상태
 
 [English](features.md).
@@ -99,7 +99,7 @@ Rust core(C-7)는 아직 모든 규칙을 갖지 않는다. 가질 때까지 세
 | 규칙 | core가 아직 갖지 않는 이유 | 기간 |
 |---|---|---|
 | template AST에서 read path를 계산하는 일(HY-73.1부터 HY-73.20) | build가 template AST에서 계산하고 Node server는 browser 패키지로 계산하며(HY-73.23), core는 그것으로 읽는 데이터를 보존한다 | template 언어의 compiler가 그것을 줄 때 |
-| kept 값과 그 적합성(HY-37, HY-38, HY-40), flash 값과 바뀐 topic(HY-25), record 변환과 `_hyper_*` key(HY-104.13, HY-104.14, HY-104.22, HY-104.23) | 데이터 모델의 값과 sessions 라이브러리의 저장소 interface가 필요하며, 그 interface 계약이 아직 없다 | sessions 라이브러리의 저장소 interface와 데이터 모델 API |
+| kept 값의 region 데이터 적합성과 cookie `hy-keep`(HY-38) | core는 token, flash 값, kept server 값을 session에 둔다(HY-24, HY-25, HY-40, HY-104.13, HY-104.14, HY-104.22, HY-104.23); 적합성에는 응답 조립이 필요하다 | core가 응답을 조립할 때 |
 | page와 JSON 응답(HY-10, HY-12부터 HY-19, HY-31, HY-62, HY-92), context와 그 hash(HY-124부터 HY-128), 데이터 모델 검사(HY-44), JSON 텍스트(HY-54.18부터 HY-54.21) | 데이터 모델의 값을 ordered-json으로 쓰고 template을 렌더한다 | core가 template과 ordered-json crate를 받을 때 |
 | 요청의 body(HY-56, HY-57, HY-113, HY-114, HY-131)와 요청의 cookie(HY-129.13) | http-forms와 http-cookies 라이브러리가 가지며, 각 server가 binding으로 부른다 | S-4 |
 | hook, host 진입점, runtime(HY-43, HY-60, HY-66, HY-67, HY-74, HY-97, HY-99, HY-100, HY-105) | host 코드(L-3)이며 각 runtime에 남는다 | 없음: host 코드로 남는다 |

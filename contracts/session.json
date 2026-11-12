@@ -243,7 +243,7 @@
       "raises": {
         "kind": "invalid_session_record",
         "status": null,
-        "category": "value",
+        "category": "store",
         "message": null
       }
     },
@@ -266,7 +266,7 @@
       "raises": {
         "kind": "invalid_session_record",
         "status": null,
-        "category": "value",
+        "category": "store",
         "message": null
       }
     },
@@ -289,7 +289,7 @@
       "raises": {
         "kind": "invalid_session_record",
         "status": null,
-        "category": "value",
+        "category": "store",
         "message": null
       }
     },
@@ -312,7 +312,7 @@
       "raises": {
         "kind": "invalid_session_record",
         "status": null,
-        "category": "value",
+        "category": "store",
         "message": null
       }
     },
@@ -408,7 +408,7 @@
       "raises": {
         "kind": "invalid_session_record",
         "status": null,
-        "category": "value",
+        "category": "store",
         "message": null
       }
     },
@@ -431,7 +431,7 @@
       "raises": {
         "kind": "invalid_session_record",
         "status": null,
-        "category": "value",
+        "category": "store",
         "message": null
       }
     }
@@ -667,7 +667,7 @@
       "raises": {
         "kind": "invalid_session_record",
         "status": null,
-        "category": "value",
+        "category": "store",
         "message": null
       }
     },
@@ -694,7 +694,7 @@
       "raises": {
         "kind": "invalid_session_record",
         "status": null,
-        "category": "value",
+        "category": "store",
         "message": null
       }
     },
@@ -719,7 +719,7 @@
       "raises": {
         "kind": "invalid_session_record",
         "status": null,
-        "category": "value",
+        "category": "store",
         "message": null
       }
     },
@@ -746,7 +746,7 @@
       "raises": {
         "kind": "invalid_session_record",
         "status": null,
-        "category": "value",
+        "category": "store",
         "message": null
       }
     },
@@ -773,7 +773,7 @@
       "raises": {
         "kind": "invalid_session_record",
         "status": null,
-        "category": "value",
+        "category": "store",
         "message": null
       }
     },
@@ -798,7 +798,7 @@
       "raises": {
         "kind": "invalid_session_record",
         "status": null,
-        "category": "value",
+        "category": "store",
         "message": null
       }
     },

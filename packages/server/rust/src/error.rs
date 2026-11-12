@@ -6,7 +6,7 @@ use std::fmt;
 use bindgen_core::{Category, Kinds};
 
 /// A failure of hyper or of a library that it passes on (HY-132.3).
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Error {
     /// A redirect location that is not an application path (HY-46.3).
     NotApplicationPath,
@@ -44,6 +44,13 @@ pub enum Error {
     InvalidApplication(&'static str),
     /// A response of a representation handler that HY-122 does not allow (HY-122.2 to HY-122.8).
     InvalidRepresentation(&'static str),
+    /// A value outside the data model, with the kind of the template data model (HY-44.9).
+    DataModel(polyspec_template::BindError),
+    /// A broken invariant of a record that php-serialize reports, such as an identity that the record does not hold
+    /// (HY-132.6).
+    RecordValue(polyspec_php_serialize::Error),
+    /// A failure of the sessions library, with its kind (HY-104.25).
+    Sessions(polyspec_sessions::Error),
     /// A failure of `Accept` (HY-116.18), with the kind and status of http-negotiate.
     Negotiate(polyspec_http_negotiate::Error),
     /// A failure of the `Set-Cookie` writer, with the kind of http-cookies (HY-45.8, HY-52.13).
@@ -80,8 +87,22 @@ impl Error {
                 | polyspec_http_negotiate::Error::InvalidCandidate => Category::Value,
             },
             Error::NotSelected => Category::Type,
+            Error::DataModel(_) => Category::Value,
+            Error::Sessions(error) => sessions_category(error),
             Error::InvalidSessionToken | Error::InvalidSessionRecord => Category::Store,
-            Error::Internal(_) => Category::Internal,
+            Error::Internal(_) | Error::RecordValue(_) => Category::Internal,
+        }
+    }
+}
+
+impl Error {
+    /// The byte offset in a session record of a failure to decode it, as the sessions library gives it, or none for
+    /// every other failure (HY-104.8).
+    #[must_use]
+    pub fn offset(&self) -> Option<u64> {
+        match self {
+            Error::Sessions(error) => error.offset(),
+            _ => None,
         }
     }
 }
@@ -107,15 +128,20 @@ impl Kinds for Error {
             Error::NotSelected => "not_selected",
             Error::InvalidApplication(_) => "invalid_application",
             Error::InvalidRepresentation(_) => "invalid_representation",
+            Error::DataModel(error) => error.code.as_str(),
+            Error::Sessions(error) => error.kind(),
             Error::Negotiate(error) => error.kind(),
             Error::Cookies(error) => error.kind(),
-            Error::Internal(_) => "internal",
+            Error::Internal(_) | Error::RecordValue(_) => "internal",
         }
     }
 
     fn status(&self) -> Option<u16> {
         match self {
             Error::Negotiate(error) => error.status(),
+            Error::Sessions(error) => error.status(),
+            Error::RecordValue(_) => None,
+            Error::DataModel(_) => None,
             Error::NotApplicationPath
             | Error::NotRedirectResult
             | Error::PageStatusNotAllowed(_)
@@ -140,7 +166,10 @@ impl Kinds for Error {
     }
 
     fn errno(&self) -> Option<i32> {
-        None
+        match self {
+            Error::Sessions(error) => error.errno(),
+            _ => None,
+        }
     }
 }
 
@@ -179,6 +208,9 @@ impl fmt::Display for Error {
             Error::NotSelected => f.write_str("the request holds no selected media type (HY-116)"),
             Error::InvalidApplication(reason) => write!(f, "{reason} (HY-118)"),
             Error::InvalidRepresentation(reason) => write!(f, "{reason} (HY-122)"),
+            Error::DataModel(error) => error.fmt(f),
+            Error::Sessions(error) => error.fmt(f),
+            Error::RecordValue(error) => write!(f, "an invariant of a session record does not hold: {error} (HY-132)"),
             Error::Negotiate(error) => error.fmt(f),
             Error::Cookies(error) => error.fmt(f),
             Error::Internal(what) => write!(f, "an invariant of the core does not hold: {what} (HY-132)"),
@@ -190,6 +222,9 @@ impl std::error::Error for Error {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
             Error::Negotiate(error) => Some(error),
+            Error::Sessions(error) => Some(error),
+            Error::RecordValue(error) => Some(error),
+            Error::DataModel(_) => None,
             Error::Cookies(error) => Some(error),
             Error::NotApplicationPath
             | Error::NotRedirectResult
@@ -223,5 +258,27 @@ impl From<polyspec_http_negotiate::Error> for Error {
 impl From<polyspec_http_cookies::Error> for Error {
     fn from(error: polyspec_http_cookies::Error) -> Self {
         Error::Cookies(error)
+    }
+}
+
+/// The category of a failure of the sessions library, as its interface contract gives it (E-1b).
+fn sessions_category(error: &polyspec_sessions::Error) -> Category {
+    use polyspec_sessions::Error as Sessions;
+    match error {
+        Sessions::Random { .. } | Sessions::IdentifierTaken { .. } | Sessions::Internal { .. } => {
+            Category::Internal
+        }
+        Sessions::Record { .. }
+        | Sessions::RecordNotArray { .. }
+        | Sessions::RecordWrite { .. }
+        | Sessions::LockTimeout { .. }
+        | Sessions::LockLost { .. }
+        | Sessions::Reply { .. }
+        | Sessions::Redis { .. } => Category::Store,
+        Sessions::InvalidDirectory { .. }
+        | Sessions::InvalidLifetime
+        | Sessions::InvalidLockExpire
+        | Sessions::InvalidSetting { .. } => Category::Value,
+        Sessions::Cancelled | Sessions::Io { .. } | Sessions::Connection { .. } => Category::Io,
     }
 }

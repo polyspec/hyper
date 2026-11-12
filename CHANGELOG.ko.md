@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 155063efdf6aec8d517819434f04e11e99c006e6dd0bb500bfc340233e522f97 -->
+<!-- source-sha256: fef3b98c47232f8ab3724bd79aa92046fae2dee7e42d22283632844940a59e32 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- Rust core는 sessions 라이브러리의 저장소 interface로 hyper의 값을 session에 둔다(C-7, HY-104.25). token(32 random byte의 새 token, 갱신 때 새 token; HY-24.1, HY-24.14, HY-72.2), 다음 요청이 가져가는 flash 값과 바뀐 topic(HY-25.2), region과 path별 kept server 값(HY-40)을 record(php-serialize의 PHP 값)와 데이터 모델 사이에서 바꾸며(HY-104.13, HY-104.14), 다른 형식의 저장 값은 `invalid_session_record`로 실패하고 그 category는 HY-132처럼 `contracts/session.json`의 case에서도 `store`다(HY-104.23). 시험은 group `token`, `flash`, `kept`의 case 30개를 실행한다. core는 저장소 없는 `polyspec-sessions`와 `polyspec-php-serialize`에 의존하고, lock에는 `polyspec-bindgen-core`가 한 벌만 있다. interface 계약은 template 데이터 모델과 sessions 라이브러리의 kind를 넘기고, 오류 class `RecordError`는 decode할 수 없는 record의 offset을 전달한다.
 
 - PHP와 Python이 줄 수 있는 ±(2^53 − 1) 밖의 reply 정수, 곧 `Max-Age`나 page 상태는 부호나 값을 보기 전에 hyper의 kind `integer_range`로 실패하고(HY-52.18, HY-69.9), Node는 안전 정수 밖의 수가 정수가 아니므로 그런 수를 binding의 `invalid_number`로 거부한다. `integer_range`가 HY-132의 표에 더해지고, PHP와 Python을 위한 `contracts/reply.json`의 case 셋이 그것을 기대한다(S-3b, C-7).
 

@@ -573,3 +573,148 @@ fn read_data_keeps_only_the_read_paths() {
     }
     assert!(ran > 0);
 }
+
+fn text_of(value: &Value) -> &str {
+    match value.as_str() {
+        Some(text) => text,
+        None => panic!("no text: {value}"),
+    }
+}
+
+/// A value of the data model as JSON for a comparison with a case.
+fn as_json(value: &polyspec_template::Value) -> Value {
+    match polyspec_hyper::json::write(value) {
+        Ok(text) => match serde_json::from_str(&text) {
+            Ok(json) => json,
+            Err(error) => panic!("{error}"),
+        },
+        Err(error) => panic!("{error}"),
+    }
+}
+
+fn pairs(map: &polyspec_template::OrderedMap) -> Value {
+    Value::Array(
+        map.iter()
+            .map(|(key, value)| Value::Array(vec![Value::from(key.clone()), as_json(value)]))
+            .collect(),
+    )
+}
+
+fn data_value(json: &str) -> Result<polyspec_template::Value, Error> {
+    match polyspec_hyper::json::read(json.as_bytes()) {
+        Ok(value) => Ok(value),
+        Err(polyspec_hyper::json::JsonError::DataModel(error)) => Err(Error::DataModel(error)),
+        Err(polyspec_hyper::json::JsonError::Malformed(error)) => panic!("{json}: {error:?}"),
+    }
+}
+
+#[test]
+fn session_values_are_kept_in_the_record() {
+    // HY-24.1, HY-24.14, HY-25.2, HY-40, HY-72.2, HY-104.13, HY-104.14, HY-104.23
+    use bindgen_core::Failure;
+    use polyspec_hyper::session;
+    use polyspec_sessions::{MemoryStore, Store};
+    let file = cases("session.json");
+    let mut ran = 0;
+    for group_name in ["token", "flash", "kept"] {
+        for case in group(&file, group_name) {
+            let mut store = MemoryStore::new();
+            for pair in case["stored"].as_array().into_iter().flatten() {
+                let value = match data_value(text_of(&pair[1])) {
+                    Ok(value) => value,
+                    Err(error) => panic!("{error}"),
+                };
+                let record = match session::to_record(&value) {
+                    Ok(record) => record,
+                    Err(error) => panic!("{error}"),
+                };
+                if let Err(error) = store.set(text_of(&pair[0]), &record) {
+                    panic!("{}: {error}", case["id"]);
+                }
+            }
+            let mut results = Vec::new();
+            let mut tokens: Vec<String> = Vec::new();
+            let mut failure = None;
+            for call in case["calls"].as_array().into_iter().flatten() {
+                let name = text_of(&call[0]);
+                let args: Vec<String> = call[1]
+                    .as_array()
+                    .into_iter()
+                    .flatten()
+                    .filter_map(|a| a.as_str().map(str::to_owned))
+                    .collect();
+                let text_arg = |index: usize| match serde_json::from_str::<Value>(&args[index]) {
+                    Ok(Value::String(text)) => text,
+                    other => panic!("{}: {other:?}", case["id"]),
+                };
+                let outcome: Result<Value, Failure<Error>> = match name {
+                    "csrfToken" => session::token(&mut store).map(|token| {
+                        if !tokens.contains(&token) {
+                            tokens.push(token.clone());
+                        }
+                        let index = match tokens.iter().position(|t| t == &token) {
+                            Some(index) => index + 1,
+                            None => panic!("a token that the list holds"),
+                        };
+                        Value::from(index)
+                    }),
+                    "renew" => session::renew(&mut store).map(|_| Value::Null),
+                    "putFlash" => match (data_value(&args[0]), data_value(&args[1])) {
+                        (Ok(polyspec_template::Value::Map(values)), Ok(polyspec_template::Value::List(topics))) => {
+                            let changed: Vec<String> = topics
+                                .iter()
+                                .map(|topic| match topic {
+                                    polyspec_template::Value::Str(topic) => topic.clone(),
+                                    other => panic!("{other:?}"),
+                                })
+                                .collect();
+                            session::put_flash(&mut store, &values, &changed).map(|()| Value::Null)
+                        }
+                        other => panic!("{}: {other:?}", case["id"]),
+                    },
+                    "takeFlash" => session::take_flash(&mut store).map(|(values, changed)| {
+                        serde_json::json!({"values": pairs(&values), "changed": changed})
+                    }),
+                    "kept" => session::kept(&mut store, &text_arg(0)).map(|map| pairs(&map)),
+                    "keep" => match data_value(&args[2]) {
+                        Ok(value) => session::keep(&mut store, &text_arg(0), &text_arg(1), &value).map(|()| Value::Null),
+                        Err(error) => Err(Failure::Kind(error)),
+                    },
+                    other => panic!("{}: call {other}", case["id"]),
+                };
+                match outcome {
+                    Ok(value) => results.push(value),
+                    Err(Failure::Kind(error)) => {
+                        failure = Some(error);
+                        break;
+                    }
+                    Err(Failure::Raised(_)) => {
+                        panic!("{}: a raised exception of no store", case["id"])
+                    }
+                }
+            }
+            match (failure, case.get("raises")) {
+                (None, None) => {
+                    if group_name == "token" {
+                        let tokens: Vec<Value> = results
+                            .into_iter()
+                            .filter(|value| !value.is_null())
+                            .collect();
+                        assert_eq!(Value::from(tokens), case["tokens"], "{}", case["id"]);
+                        let renewals = case["renewals"].as_u64();
+                        assert_eq!(Some(store.renewals()), renewals, "{}", case["id"]);
+                    } else {
+                        assert_eq!(Value::from(results), case["results"], "{}", case["id"]);
+                    }
+                }
+                (Some(error), Some(_)) => {
+                    check_raises(case, &error);
+                    assert_eq!(Value::from(results), case["results"], "{}", case["id"]);
+                }
+                (failure, _) => panic!("{}: {failure:?} after {results:?}", case["id"]),
+            }
+            ran += 1;
+        }
+    }
+    assert!(ran > 0);
+}

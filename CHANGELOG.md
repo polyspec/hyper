@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- The Rust core keeps the values of hyper in a session through the store interface of the sessions library (C-7, HY-104.25): the token, a new one of 32 random bytes and a new one at a renewal (HY-24.1, HY-24.14, HY-72.2), the flash values and the changed topics, which the next request takes (HY-25.2), and the kept server values by region and path (HY-40), converted between the record, a PHP value of php-serialize, and the data model (HY-104.13, HY-104.14), where a stored value of another form fails with `invalid_session_record`, whose category is `store` in the cases of `contracts/session.json` as in HY-132 (HY-104.23); the tests run the 30 cases of the groups `token`, `flash` and `kept`. The core depends on `polyspec-sessions` without its stores and on `polyspec-php-serialize`, and the lock holds one copy of `polyspec-bindgen-core`. The interface contract passes on the kinds of the template data model and of the sessions library, and the error class `RecordError` forwards the offset of a record that cannot be decoded.
+
 - An integer of a reply outside ±(2^53 − 1), a `Max-Age` or a page status that PHP and Python can give, fails with the kind `integer_range` of hyper before its sign or its value is checked (HY-52.18, HY-69.9), and Node refuses such a number with `invalid_number` of its binding, because a Node number outside the safe integers is no integer; `integer_range` joins the table of HY-132, and the three cases of `contracts/reply.json` for PHP and Python expect it (S-3b, C-7).
 
 - The Rust core keeps of the data only its read paths (HY-73.29, HY-73.22) by the tree of read paths of the build, and its tests run the 24 cases of `contracts/reads.json` (C-7).
