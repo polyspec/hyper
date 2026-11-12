@@ -1411,7 +1411,8 @@
         "HY-116"
       ],
       "cases": [
-        "contracts/accept.json"
+        "contracts/accept.json",
+        "tests/legacy/accept-before-s3b.json"
       ],
       "units": [
         {
@@ -15172,11 +15173,8 @@
       },
       "sections": {
         "parse": {
-          "runners": [
-            "php",
-            "node",
-            "python"
-          ],
+          "runners": [],
+          "fixedCopy": "accept-before-s3b.json",
           "uses": [],
           "fields": {
             "id": {
@@ -15205,11 +15203,8 @@
           }
         },
         "select": {
-          "runners": [
-            "php",
-            "node",
-            "python"
-          ],
+          "runners": [],
+          "fixedCopy": "accept-before-s3b.json",
           "uses": [
             "types"
           ],

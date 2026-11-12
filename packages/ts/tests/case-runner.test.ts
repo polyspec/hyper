@@ -33,7 +33,8 @@ import { steps as sessionSteps } from './steps/session.js';
 
 // The steps of this server, by case file and section (`file:section`). A section without a step fails its cases.
 const STEPS: Record<string, Step> = {
-  ...prefixed('accept.json', acceptSteps),
+  ...prefixed('accept.json', acceptSteps, ['parse', 'select']),
+  ...prefixed('accept-before-s3b.json', acceptSteps, ['parse', 'select'], true),
   ...prefixed('app.json', appSteps),
   ...prefixed('arguments.json', argumentsSteps),
   ...prefixed('client.json', clientSteps),

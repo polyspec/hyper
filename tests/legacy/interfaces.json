@@ -426,6 +426,84 @@
           ]
         }
       }
+    },
+    "accept-before-s3b.json": {
+      "fixtures": {
+        "types": "input"
+      },
+      "sections": {
+        "parse": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "accept": {
+              "role": "input"
+            },
+            "ranges": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-116.9",
+              "state": "`accept` is the Accept value, or null for a request without it, and `ranges` is the list of its media ranges in order, each with its type and subtype in lower case, its parameters before q as [name, value] pairs with the name in lower case, and its weight in thousandths."
+            },
+            "invalid": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-116.5",
+              "state": "`invalid` is true when the parse refuses the value with the error of an invalid Accept, which the server answers with status 400."
+            }
+          }
+        },
+        "select": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [
+            "types"
+          ],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "accept": {
+              "role": "input"
+            },
+            "selected": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-116.7",
+              "state": "`selected` is the type of `types` that the Accept value selects by the weight of its most specific matching range, the first of the highest weight, or null when no type has a weight above 0."
+            },
+            "invalid": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-116.5",
+              "state": "`invalid` is true when the selection refuses the value with the error of an invalid Accept, which the server answers with status 400."
+            }
+          },
+          "members": [
+            "accept.select"
+          ]
+        }
+      }
     }
   }
 }

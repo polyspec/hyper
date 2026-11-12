@@ -37,8 +37,8 @@ final class CaseSteps
     public static function of(string $file, string $section): ?callable
     {
         return match ("$file $section") {
-            'accept.json parse' => AcceptSteps::parse(...),
-            'accept.json select' => AcceptSteps::select(...),
+            'accept-before-s3b.json parse' => AcceptSteps::parse(...),
+            'accept-before-s3b.json select' => AcceptSteps::select(...),
             'cookies.json parse' => CookiesSteps::parse(...),
             'build.json read' => BuildSteps::read(...),
             'container.json services' => ContainerSteps::services(...),

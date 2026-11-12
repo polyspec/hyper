@@ -1,0 +1,482 @@
+{
+  "types": [
+    "text/html",
+    "application/vnd.hyper+json"
+  ],
+  "parse": [
+    {
+      "id": "a_missing_header_is_the_any_range",
+      "label": "a missing header is the any range",
+      "accept": null,
+      "ranges": [
+        {
+          "type": "*",
+          "subtype": "*",
+          "parameters": [],
+          "weight": 1000
+        }
+      ]
+    },
+    {
+      "id": "an_empty_value_is_an_empty_list",
+      "label": "an empty value is an empty list",
+      "accept": "",
+      "ranges": []
+    },
+    {
+      "id": "a_value_of_white_space_is_an_empty_list",
+      "label": "a value of white space is an empty list",
+      "accept": " \t ",
+      "ranges": []
+    },
+    {
+      "id": "a_range_gives_its_type_subtype_and_weight",
+      "label": "a range gives its type, subtype and weight",
+      "accept": "text/html",
+      "ranges": [
+        {
+          "type": "text",
+          "subtype": "html",
+          "parameters": [],
+          "weight": 1000
+        }
+      ]
+    },
+    {
+      "id": "a_type_range_has_the_wildcard_subtype",
+      "label": "a type range has the wildcard subtype",
+      "accept": "text/*",
+      "ranges": [
+        {
+          "type": "text",
+          "subtype": "*",
+          "parameters": [],
+          "weight": 1000
+        }
+      ]
+    },
+    {
+      "id": "names_and_q_are_read_in_lower_case",
+      "label": "names and q are read in lower case",
+      "accept": "Text/HTML; Charset=UTF-8; Q=0.5",
+      "ranges": [
+        {
+          "type": "text",
+          "subtype": "html",
+          "parameters": [
+            [
+              "charset",
+              "UTF-8"
+            ]
+          ],
+          "weight": 500
+        }
+      ]
+    },
+    {
+      "id": "parameters_before_q_are_kept",
+      "label": "parameters before q are kept",
+      "accept": "application/vnd.example+json;version=2;q=0.9",
+      "ranges": [
+        {
+          "type": "application",
+          "subtype": "vnd.example+json",
+          "parameters": [
+            [
+              "version",
+              "2"
+            ]
+          ],
+          "weight": 900
+        }
+      ]
+    },
+    {
+      "id": "an_accept_extension_after_q_is_not_kept",
+      "label": "an accept extension after q is not kept",
+      "accept": "Text/HTML; Level=1; Q=0.5; x=y, */*",
+      "ranges": [
+        {
+          "type": "text",
+          "subtype": "html",
+          "parameters": [
+            [
+              "level",
+              "1"
+            ]
+          ],
+          "weight": 500
+        },
+        {
+          "type": "*",
+          "subtype": "*",
+          "parameters": [],
+          "weight": 1000
+        }
+      ]
+    },
+    {
+      "id": "an_accept_extension_may_have_no_value",
+      "label": "an accept extension may have no value",
+      "accept": "text/html;q=0.5;flag",
+      "ranges": [
+        {
+          "type": "text",
+          "subtype": "html",
+          "parameters": [],
+          "weight": 500
+        }
+      ]
+    },
+    {
+      "id": "a_quoted_value_unquotes_its_pairs_and_keeps_its_commas",
+      "label": "a quoted value unquotes its quoted pairs and keeps its commas",
+      "accept": "text/html;x=\"a,b\\\"c\"",
+      "ranges": [
+        {
+          "type": "text",
+          "subtype": "html",
+          "parameters": [
+            [
+              "x",
+              "a,b\"c"
+            ]
+          ],
+          "weight": 1000
+        }
+      ]
+    },
+    {
+      "id": "a_list_keeps_the_order_of_its_ranges",
+      "label": "a list keeps the order of its ranges",
+      "accept": "text/html;q=0.5, application/vnd.hyper+json;q=0.9",
+      "ranges": [
+        {
+          "type": "text",
+          "subtype": "html",
+          "parameters": [],
+          "weight": 500
+        },
+        {
+          "type": "application",
+          "subtype": "vnd.hyper+json",
+          "parameters": [],
+          "weight": 900
+        }
+      ]
+    },
+    {
+      "id": "empty_list_elements_are_ignored",
+      "label": "empty list elements are ignored",
+      "accept": ", text/html ,, application/vnd.hyper+json,",
+      "ranges": [
+        {
+          "type": "text",
+          "subtype": "html",
+          "parameters": [],
+          "weight": 1000
+        },
+        {
+          "type": "application",
+          "subtype": "vnd.hyper+json",
+          "parameters": [],
+          "weight": 1000
+        }
+      ]
+    },
+    {
+      "id": "a_qvalue_of_zero_is_weight_zero",
+      "label": "a qvalue of zero is weight zero",
+      "accept": "text/html;q=0",
+      "ranges": [
+        {
+          "type": "text",
+          "subtype": "html",
+          "parameters": [],
+          "weight": 0
+        }
+      ]
+    },
+    {
+      "id": "a_qvalue_has_up_to_three_decimals",
+      "label": "a qvalue has up to three decimals",
+      "accept": "text/html;q=0.123",
+      "ranges": [
+        {
+          "type": "text",
+          "subtype": "html",
+          "parameters": [],
+          "weight": 123
+        }
+      ]
+    },
+    {
+      "id": "one_with_three_zero_decimals_is_a_qvalue",
+      "label": "one with three zero decimals is a qvalue",
+      "accept": "text/html;q=1.000",
+      "ranges": [
+        {
+          "type": "text",
+          "subtype": "html",
+          "parameters": [],
+          "weight": 1000
+        }
+      ]
+    },
+    {
+      "id": "one_with_a_point_is_a_qvalue",
+      "label": "one with a point and no decimals is a qvalue",
+      "accept": "text/html;q=1.",
+      "ranges": [
+        {
+          "type": "text",
+          "subtype": "html",
+          "parameters": [],
+          "weight": 1000
+        }
+      ]
+    },
+    {
+      "id": "q_x_is_invalid",
+      "label": "q=x is invalid",
+      "accept": "text/html;q=x",
+      "invalid": true
+    },
+    {
+      "id": "q_above_one_is_invalid",
+      "label": "q=1.5 is invalid",
+      "accept": "text/html;q=1.5",
+      "invalid": true
+    },
+    {
+      "id": "one_with_a_nonzero_decimal_is_invalid",
+      "label": "q=1.001 is invalid",
+      "accept": "text/html;q=1.001",
+      "invalid": true
+    },
+    {
+      "id": "four_decimals_are_invalid",
+      "label": "a qvalue with four decimals is invalid",
+      "accept": "text/html;q=0.1234",
+      "invalid": true
+    },
+    {
+      "id": "a_quoted_qvalue_is_invalid",
+      "label": "a quoted qvalue is invalid",
+      "accept": "text/html;q=\"0.5\"",
+      "invalid": true
+    },
+    {
+      "id": "q_without_a_value_is_invalid",
+      "label": "q without a value is invalid",
+      "accept": "text/html;q",
+      "invalid": true
+    },
+    {
+      "id": "a_space_around_the_equal_sign_of_q_is_invalid",
+      "label": "a space around the equal sign of q is invalid",
+      "accept": "text/html;q = 0.5",
+      "invalid": true
+    },
+    {
+      "id": "a_text_after_a_qvalue_is_invalid",
+      "label": "a text after a qvalue is invalid",
+      "accept": "text/html;q=0.5x",
+      "invalid": true
+    },
+    {
+      "id": "a_range_without_a_subtype_is_invalid",
+      "label": "a range without a subtype is invalid",
+      "accept": "text",
+      "invalid": true
+    },
+    {
+      "id": "a_wildcard_type_with_a_subtype_is_invalid",
+      "label": "a wildcard type with a subtype is invalid",
+      "accept": "*/html",
+      "invalid": true
+    },
+    {
+      "id": "a_trailing_semicolon_is_invalid",
+      "label": "a trailing semicolon is invalid",
+      "accept": "text/html;",
+      "invalid": true
+    },
+    {
+      "id": "a_parameter_without_a_value_is_invalid",
+      "label": "a parameter without a value is invalid",
+      "accept": "text/html;level",
+      "invalid": true
+    },
+    {
+      "id": "a_parameter_with_an_empty_value_is_invalid",
+      "label": "a parameter with an empty value is invalid",
+      "accept": "text/html;level=",
+      "invalid": true
+    },
+    {
+      "id": "an_unterminated_quoted_string_is_invalid",
+      "label": "an unterminated quoted string is invalid",
+      "accept": "text/html;x=\"a",
+      "invalid": true
+    },
+    {
+      "id": "a_space_between_the_type_and_the_slash_is_invalid",
+      "label": "a space between the type and the slash is invalid",
+      "accept": "text /html",
+      "invalid": true
+    },
+    {
+      "id": "a_missing_comma_between_ranges_is_invalid",
+      "label": "a missing comma between ranges is invalid",
+      "accept": "text/html application/json",
+      "invalid": true
+    }
+  ],
+  "select": [
+    {
+      "id": "a_request_without_accept_selects_the_page",
+      "label": "a request without Accept selects the page",
+      "accept": null,
+      "selected": "text/html"
+    },
+    {
+      "id": "the_any_range_selects_the_page",
+      "label": "the any range selects the page",
+      "accept": "*/*",
+      "selected": "text/html"
+    },
+    {
+      "id": "the_text_range_selects_the_page",
+      "label": "the text range selects the page",
+      "accept": "text/*",
+      "selected": "text/html"
+    },
+    {
+      "id": "the_application_range_selects_the_page_data",
+      "label": "the application range selects the page data",
+      "accept": "application/*",
+      "selected": "application/vnd.hyper+json"
+    },
+    {
+      "id": "an_empty_accept_selects_no_type",
+      "label": "an empty Accept selects no type",
+      "accept": "",
+      "selected": null
+    },
+    {
+      "id": "the_type_of_the_highest_weight_is_selected",
+      "label": "the type of the highest weight is selected",
+      "accept": "text/html;q=0.5, application/vnd.hyper+json;q=0.9",
+      "selected": "application/vnd.hyper+json"
+    },
+    {
+      "id": "the_most_specific_range_gives_the_weight",
+      "label": "the most specific range gives the weight",
+      "accept": "text/html;q=0.2, text/*;q=0.9, application/vnd.hyper+json;q=0.5",
+      "selected": "application/vnd.hyper+json"
+    },
+    {
+      "id": "the_named_range_outweighs_a_heavier_type_range",
+      "label": "the range that names the type outweighs a heavier type range",
+      "accept": "text/*;q=0.9, text/html;q=0.2, application/vnd.hyper+json;q=0.3",
+      "selected": "application/vnd.hyper+json"
+    },
+    {
+      "id": "the_highest_weight_among_named_ranges_gives_the_weight",
+      "label": "the highest weight among the ranges that name the type gives the weight",
+      "accept": "text/html;level=1;q=0, text/html;q=0.8",
+      "selected": "text/html"
+    },
+    {
+      "id": "a_named_range_with_parameters_keeps_the_type_specificity",
+      "label": "a range that names the type with parameters keeps the specificity of the type",
+      "accept": "text/html;q=0.8, text/html;level=1;q=0.1, application/vnd.hyper+json;q=0.5",
+      "selected": "text/html"
+    },
+    {
+      "id": "weight_zero_on_a_named_range_with_the_any_range",
+      "label": "weight zero on a named range with the any range",
+      "accept": "text/html;q=0, */*",
+      "selected": "application/vnd.hyper+json"
+    },
+    {
+      "id": "weight_zero_with_a_wildcard_leaves_no_type",
+      "label": "weight zero on the page data with a wildcard leaves no type",
+      "accept": "application/vnd.hyper+json;q=0, application/*;q=0.5",
+      "selected": null
+    },
+    {
+      "id": "a_tie_selects_the_first_type",
+      "label": "a tie selects the first type in the order",
+      "accept": "application/vnd.hyper+json;q=0.5, text/html;q=0.5",
+      "selected": "text/html"
+    },
+    {
+      "id": "a_tie_of_the_any_range_selects_the_page",
+      "label": "a tie of the any range selects the page",
+      "accept": "*/*;q=0.5",
+      "selected": "text/html"
+    },
+    {
+      "id": "application_json_gives_no_type",
+      "label": "application/json gives no type",
+      "accept": "application/json",
+      "selected": null
+    },
+    {
+      "id": "application_json_does_not_hide_the_page_data",
+      "label": "application/json does not hide the page data",
+      "accept": "application/json, application/vnd.hyper+json;q=0.1",
+      "selected": "application/vnd.hyper+json"
+    },
+    {
+      "id": "the_type_wildcard_gives_the_page_data_its_weight",
+      "label": "the type wildcard gives the page data its weight",
+      "accept": "application/json;q=0.1, application/*;q=0.9",
+      "selected": "application/vnd.hyper+json"
+    },
+    {
+      "id": "a_named_range_matches_whatever_its_parameters",
+      "label": "a range that names the type matches whatever its parameters",
+      "accept": "text/html;charset=utf-8",
+      "selected": "text/html"
+    },
+    {
+      "id": "a_range_of_another_type_matches_none",
+      "label": "a range of another type matches none",
+      "accept": "application/xml",
+      "selected": null
+    },
+    {
+      "id": "the_names_compare_without_regard_to_case",
+      "label": "the names compare without regard to case",
+      "accept": "TEXT/HTML;Level=1;Q=0.3, Application/Vnd.Hyper+JSON;q=0.2",
+      "selected": "text/html"
+    },
+    {
+      "id": "a_parameter_after_q_does_not_change_the_weight",
+      "label": "a parameter after q does not change the weight",
+      "accept": "text/html;q=0.5;x=y, application/vnd.hyper+json;q=0.4",
+      "selected": "text/html"
+    },
+    {
+      "id": "a_quoted_comma_stays_in_its_parameter",
+      "label": "a quoted comma stays in its parameter",
+      "accept": "text/html;x=\"a,b\";q=0.5, application/vnd.hyper+json;q=0.4",
+      "selected": "text/html"
+    },
+    {
+      "id": "q_zero_with_three_decimals_is_weight_zero",
+      "label": "q=0.000 is weight zero",
+      "accept": "text/html;q=0.000, application/vnd.hyper+json;q=1.000",
+      "selected": "application/vnd.hyper+json"
+    },
+    {
+      "id": "an_invalid_value_selects_nothing",
+      "label": "an invalid value is refused before a type is selected",
+      "accept": "text/html;q=1.5",
+      "invalid": true
+    }
+  ]
+}
