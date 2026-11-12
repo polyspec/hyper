@@ -718,3 +718,114 @@ fn session_values_are_kept_in_the_record() {
     }
     assert!(ran > 0);
 }
+
+/// The pairs of path and value of a case of `keep.json`, as values of the data model.
+fn kept_pairs(case: &Value) -> Vec<(String, polyspec_template::Value)> {
+    case["kept"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .map(|pair| match data_value(&pair[1].to_string()) {
+            Ok(value) => (text_of(&pair[0]).to_owned(), value),
+            Err(error) => panic!("{}: {error}", case["id"]),
+        })
+        .collect()
+}
+
+#[test]
+fn kept_values_conform_to_the_region_data() {
+    // HY-38.2 to HY-38.9, HY-38.19
+    use polyspec_hyper::keep::{apply, select};
+    let file = cases("keep.json");
+    let mut ran = 0;
+    for case in group(&file, "cases") {
+        let data = match data_value(&case["data"].to_string()) {
+            Ok(data) => data,
+            Err(error) => panic!("{}: {error}", case["id"]),
+        };
+        let applied = apply(&data, &kept_pairs(case));
+        // `ordered`: the keys keep their order (HY-38.19).
+        match polyspec_hyper::json::write(&applied) {
+            Ok(written) => assert_eq!(written, case["expected"].to_string(), "{}", case["id"]),
+            Err(error) => panic!("{}: {error}", case["id"]),
+        }
+        ran += 1;
+    }
+    for case in group(&file, "select") {
+        let data = match data_value(&case["data"].to_string()) {
+            Ok(data) => data,
+            Err(error) => panic!("{}: {error}", case["id"]),
+        };
+        let (selected, _) = select(&data, &kept_pairs(case));
+        assert_eq!(
+            as_json(&polyspec_template::Value::Map(std::sync::Arc::new(
+                selected
+            ))),
+            case["selected"],
+            "{}",
+            case["id"]
+        );
+        // HY-38.9: the region data stays as the loader gave it.
+        assert_eq!(
+            as_json(&data) == case["data"],
+            case["unchanged"].as_bool() == Some(true),
+            "{}",
+            case["id"]
+        );
+        ran += 1;
+    }
+    assert!(ran > 0);
+}
+
+#[test]
+fn the_context_hash_and_its_place() {
+    // HY-125.10, HY-125.12, HY-10.3, HY-124.8
+    use polyspec_hyper::context::{hash, with_context};
+    let file = cases("context.json");
+    let mut ran = 0;
+    for case in group(&file, "contexts") {
+        let context = match data_value(text(case, "context")) {
+            Ok(polyspec_template::Value::Map(map)) => map,
+            Ok(_) | Err(_) => panic!("{}: the context is no map", case["id"]),
+        };
+        let build = text(case, "build");
+        let written = match polyspec_hyper::context::text(&context) {
+            Ok(written) => written,
+            Err(error) => panic!("{}: {error}", case["id"]),
+        };
+        assert_eq!(
+            format!("{{\"build\":\"{build}\",\"context\":{written}}}"),
+            text(case, "text"),
+            "{}",
+            case["id"]
+        );
+        let found = hash(build, &written);
+        assert_eq!(found, text(case, "hash"), "{}", case["id"]);
+        if let Some(reordered) = case.get("reorderedHash").and_then(Value::as_str) {
+            assert_ne!(found, reordered, "{}", case["id"]);
+        }
+        ran += 1;
+    }
+    let context = polyspec_template::Value::text("Board");
+    for case in group(&file, "withContext") {
+        let mut shared = polyspec_template::OrderedMap::new();
+        for key in case["shared"].as_array().into_iter().flatten() {
+            shared.insert(text_of(key).to_owned(), polyspec_template::Value::Null);
+        }
+        match with_context(&shared, &context) {
+            Ok(placed) => {
+                let keys: Vec<&str> = placed.keys().map(String::as_str).collect();
+                let expected: Vec<&str> = case["keys"]
+                    .as_array()
+                    .into_iter()
+                    .flatten()
+                    .map(text_of)
+                    .collect();
+                assert_eq!(keys, expected, "{}", case["id"]);
+            }
+            Err(error) => check_raises(case, &error),
+        }
+        ran += 1;
+    }
+    assert!(ran > 0);
+}

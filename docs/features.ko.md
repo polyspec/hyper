@@ -1,5 +1,5 @@
 <!-- doc-id: features -->
-<!-- source-sha256: 6ec151ef40a4d9e944433f2856679d42b73004df18a89fe8a2782a55f5c9ba72 -->
+<!-- source-sha256: 7ae09bcaf67c1b6fb83135dee4cd2af534c8de7d494d0015d99b9c54e2241de1 -->
 # 기능 상태
 
 [English](features.md).
@@ -9,7 +9,7 @@
 | ID | 기능 | 상태 | 근거 |
 |---|---|---|---|
 | protocol | 영역 프로토콜 명세(HY-1 ~ HR-94) | implemented | [프로토콜](spec/protocol.ko.md) |
-| rust-core | server 규칙의 Rust core, `packages/server/rust`의 `polyspec-hyper`(C-7): HY-132의 오류, 406과 `Vary`를 가진 media 선택(HY-116, HY-117, HY-119), representation entry·body·응답 검사(HY-118, HY-121, HY-122), tag(HY-53, HY-122.10), cookie 이름과 session cookie(HY-45, HY-38.10), reply 값(HY-52, HY-69, HY-103), 애플리케이션 경로와 page 상태(HY-46, HY-58), manifest와 그 검사(HY-1, HY-2, HY-37, HY-40.2, HY-118), rest 매개변수와 base path를 가진 route(HY-4부터 HY-8, HY-49), JSON 텍스트(HY-54.18부터 HY-54.21), 읽는 데이터(HY-73.29), token과 `browser()`(HY-24), ORM 응답(HY-107), 요청의 순서(HY-120); 그 interface 계약 `packages/server/rust/interface.json` | 일부; 세 server는 S-4까지 부르지 않는다 | `make core-test`, `make core-lint`, `make core-fmt-check` |
+| rust-core | server 규칙의 Rust core, `packages/server/rust`의 `polyspec-hyper`(C-7): HY-132의 오류, 406과 `Vary`를 가진 media 선택(HY-116, HY-117, HY-119), representation entry·body·응답 검사(HY-118, HY-121, HY-122), tag(HY-53, HY-122.10), cookie 이름과 session cookie(HY-45, HY-38.10), reply 값(HY-52, HY-69, HY-103), 애플리케이션 경로와 page 상태(HY-46, HY-58), manifest와 그 검사(HY-1, HY-2, HY-37, HY-40.2, HY-118), rest 매개변수와 base path를 가진 route(HY-4부터 HY-8, HY-49), JSON 텍스트(HY-54.18부터 HY-54.21), 읽는 데이터(HY-73.29), token과 `browser()`(HY-24), ORM 응답(HY-107), 요청의 순서(HY-120), region 데이터에 맞는 kept 값과 cookie `hy-keep`(HY-38.2부터 HY-38.13까지, HY-38.19), 공유 데이터 안의 context 자리, 그 JSON 텍스트, hash, member `context`, header `Hyper-Context`(HY-10.3, HY-125.10, HY-125.12, HY-127.2, HY-128.2); 그 interface 계약 `packages/server/rust/interface.json` | 일부; 세 server는 S-4까지 부르지 않는다 | `make core-test`, `make core-lint`, `make core-fmt-check` |
 | composition | 애플리케이션 작성 규칙(HC-1 ~ HC-7)과 HC-6에 대한 HY-48 템플릿 검사 | documented; template check implemented | [화면 구성](operations/composition.ko.md), `make templates-check` |
 | manifest | PHP와 브라우저가 읽는 애플리케이션 매니페스트 | implemented | `make test-php`, `make test-js` |
 | router | 적합성 사례를 공유하는 PHP 라우터와 브라우저 라우터 | implemented | `make test-php`, `make test-js` |
@@ -99,8 +99,8 @@ Rust core(C-7)는 아직 모든 규칙을 갖지 않는다. 가질 때까지 세
 | 규칙 | core가 아직 갖지 않는 이유 | 기간 |
 |---|---|---|
 | template AST에서 read path를 계산하는 일(HY-73.1부터 HY-73.20) | build가 template AST에서 계산하고 Node server는 browser 패키지로 계산하며(HY-73.23), core는 그것으로 읽는 데이터를 보존한다 | template 언어의 compiler가 그것을 줄 때 |
-| kept 값의 region 데이터 적합성과 cookie `hy-keep`(HY-38) | core는 token, flash 값, kept server 값을 session에 둔다(HY-24, HY-25, HY-40, HY-104.13, HY-104.14, HY-104.22, HY-104.23); 적합성에는 응답 조립이 필요하다 | core가 응답을 조립할 때 |
-| page와 JSON 응답(HY-10, HY-12부터 HY-19, HY-31, HY-62, HY-92), context와 그 hash(HY-124부터 HY-128), 데이터 모델 검사(HY-44), JSON 텍스트(HY-54.18부터 HY-54.21) | 데이터 모델의 값을 ordered-json으로 쓰고 template을 렌더한다 | core가 template과 ordered-json crate를 받을 때 |
+| kept 값을 적용하면 렌더되지 않는 region의 kept 값(HY-38.16부터 HY-38.18까지) | region을 따로 렌더해야 하는데 core는 렌더하지 않는다 | core가 template을 렌더할 때 |
+| page와 JSON 응답(HY-10, HY-12부터 HY-19, HY-31, HY-62, HY-92), context handler 호출(HY-124.2부터 HY-124.4까지), 데이터 모델 검사(HY-44) | template을 렌더하고 애플리케이션의 handler를 부른다 | core가 template을 렌더할 때와 S-4 |
 | 요청의 body(HY-56, HY-57, HY-113, HY-114, HY-131)와 요청의 cookie(HY-129.13) | http-forms와 http-cookies 라이브러리가 가지며, 각 server가 binding으로 부른다 | S-4 |
 | hook, host 진입점, runtime(HY-43, HY-60, HY-66, HY-67, HY-74, HY-97, HY-99, HY-100, HY-105) | host 코드(L-3)이며 각 runtime에 남는다 | 없음: host 코드로 남는다 |
 | ORM 오류를 class로 알아보는 일(HY-107.7)과 handler를 부르는 요청 단계(HY-120, HY-121.5, HY-122.9) | core는 kind별 응답과 단계의 순서를 주고, server가 handler를 실행한다 | S-4 |

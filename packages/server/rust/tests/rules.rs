@@ -406,3 +406,44 @@ fn integers_of_the_data_model_are_php_integers_in_a_record() -> Result<(), Error
     }
     Ok(())
 }
+
+#[test]
+fn the_kept_cookie_gives_each_value_of_the_data_model() {
+    // HY-38.2, HY-38.10, HY-38.11: a value outside the data model is ignored, the others of the cookie count.
+    use polyspec_hyper::keep::cookie_values;
+    let values =
+        cookie_values(r#"{"reader":{"large":true,"big":9007199254740992,"zoom":2.5},"left":3}"#);
+    assert_eq!(values.len(), 1);
+    let (region, pairs) = &values[0];
+    assert_eq!(region, "reader");
+    let paths: Vec<&str> = pairs.iter().map(|(path, _)| path.as_str()).collect();
+    assert_eq!(paths, ["large", "zoom"]);
+    assert!(cookie_values("[1]").is_empty());
+    assert!(cookie_values("{").is_empty());
+    assert!(cookie_values("").is_empty());
+}
+
+#[test]
+fn the_context_header_and_member() -> Result<(), Error> {
+    // HY-127.2, HY-128.2
+    use polyspec_hyper::context::{hash, member, text, valid_header};
+    use polyspec_template::{OrderedMap, Value};
+    let held = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+    assert!(valid_header(None));
+    assert!(valid_header(Some(held.as_bytes())));
+    assert!(!valid_header(Some(held.to_uppercase().as_bytes())));
+    assert!(!valid_header(Some(&held.as_bytes()[1..])));
+    assert!(!valid_header(Some(b"")));
+    let mut context = OrderedMap::new();
+    context.insert("name".to_owned(), Value::text("Board"));
+    let build = "691d41cab78295352a2fea59326d4ac7f4e0a0ff68eb39acb3f09eb0d1eb51ac";
+    let found = hash(build, &text(&context)?);
+    let keys = |map: &OrderedMap| map.keys().cloned().collect::<Vec<_>>();
+    assert_eq!(keys(&member(build, &context, None)?), ["hash", "value"]);
+    assert_eq!(
+        keys(&member(build, &context, Some(held))?),
+        ["hash", "value"]
+    );
+    assert_eq!(keys(&member(build, &context, Some(&found))?), ["hash"]);
+    Ok(())
+}

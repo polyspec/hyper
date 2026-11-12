@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: c3463459a9c01eaac0b888bc07c277098276ea44431d3da4f1ffb382f0e94943 -->
+<!-- source-sha256: 4b2611c4277d1a659d56ed118957c89943e0e82058be0e1cb8f966fc2c4b795a -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- Rust core가 kept 값(HY-38)과 context(HY-124부터 HY-128까지)를 정한다. `keep::select`는 region 데이터에 맞는 kept 값을 경로별로, 앞의 값을 적용한 뒤 다음 값을 보아 주고, `keep::apply`는 그 값을 적용한 데이터를 준다(HY-38.2부터 HY-38.9까지, HY-38.13, HY-38.19). `keep::cookie_values`는 cookie `hy-keep`을 읽으며, 데이터 모델 밖의 값은 그 값만 버린다(HY-38.2, HY-38.11). `context::with_context`는 공유 데이터에 context를 놓거나 `shared_holds_context`로 실패한다(HY-10.3, HY-124.8). `context::text`, `context::hash`, `context::member`는 응답의 JSON 텍스트, hash, member `context`를 주고(HY-125.10, HY-125.12, HY-128.2), `context::valid_header`는 `Hyper-Context`를 검사한다(HY-127.2). 테스트는 `keep.json`의 34개 case와 `context.json`의 group `contexts`와 `withContext`의 11개 case를 실행하며, interface 계약은 `context_hash`와 `valid_context_header`를 둔다(C-7).
 
 - Node와 Python server의 step은 sessions 라이브러리가 가진 파일 session store case(요청 17개와 store가 거부하는 옵션)를 다른 이름의 고정 사본 `tests/legacy/file-store-sessions.json`에서 읽는다. `contracts/file-sessions.json`이 hyper의 case를 유지하기 때문이다. 그 사본의 step은 `contracts/file-sessions.json`과 같이 요청을 실행하며, S-4에서 `tests/legacy`와 함께 지운다(C-6). recipe check는 아무것도 찾지 않는다.
 
