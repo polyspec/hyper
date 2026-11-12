@@ -194,6 +194,35 @@ final class ClientTest extends TestCase
         }
     }
 
+    public function testAStaticShellThatCannotBeUsedFailsTheOpenWithInvalidArgumentException(): void
+    {
+        // HY-62: the path is absolute, the file exists and is readable, and its bytes are valid UTF-8.
+        $selects = fn (): Choice => new Choice(true, null);
+        $directory = sys_get_temp_dir() . '/hyper-shell-' . bin2hex(random_bytes(8));
+        mkdir($directory);
+        $invalidBytes = "{$directory}/invalid.html";
+        file_put_contents($invalidBytes, str_replace('<title>', "<title>\xff", (string) file_get_contents(self::SHELL)));
+        try {
+            $shells = [
+                'a path that is not absolute' => 'tests/fixtures/shell/index.html',
+                'a file that does not exist' => "{$directory}/missing.html",
+                'bytes that are not valid UTF-8' => $invalidBytes,
+            ];
+            foreach ($shells as $label => $shell) {
+                $failure = null;
+                try {
+                    self::app(new Counter(), new ClientRendering($shell, '/_props', $selects));
+                } catch (\Throwable $error) {
+                    $failure = $error::class;
+                }
+                self::assertSame(\InvalidArgumentException::class, $failure, $label);
+            }
+        } finally {
+            unlink($invalidBytes);
+            rmdir($directory);
+        }
+    }
+
     public function testAnInvalidDeclarationFailsWhenTheApplicationOpens(): void
     {
         // HY-62

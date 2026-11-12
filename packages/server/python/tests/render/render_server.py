@@ -155,6 +155,58 @@ def loader(replies: list) -> Callable:
     return load
 
 
+class MethodTest(unittest.TestCase):
+    def exchange(self, served: Served, method: str) -> tuple[int, dict, bytes]:
+        """Sends a request of `/` with the method and returns the parsed response."""
+        client = socket.create_connection(served.server.server_address[:2])
+        client.sendall(
+            f"{method} / HTTP/1.1\r\nHost: 127.0.0.1\r\n"
+            "Accept: application/vnd.hyper+json\r\nConnection: close\r\n\r\n".encode(
+                "latin-1"
+            )
+        )
+        return parse(read_all(client))
+
+    def test_a_method_that_the_route_does_not_allow_receives_the_405_of_the_application(
+        self,
+    ) -> None:
+        # HY-27: the application answers every method, also one that http.server defines no handler for, so the
+        # response hook and the write hook receive the 405 with its Allow header.
+        responses = []
+        written = []
+        app = open_app(
+            lambda: {"name": "x"},
+            on_response=lambda request, response, elapsed, reply, failure: (
+                responses.append((request.method, response.status))
+            ),
+        )
+        with Served(
+            app,
+            written=lambda request, response, ended, elapsed, failure: written.append(
+                (request.method, response.status, ended)
+            ),
+        ) as served:
+            for method in ("PURGE", "TRACE", "purge"):
+                with self.subTest(method):
+                    status, headers, body = self.exchange(served, method)
+                    self.assertEqual(405, status)
+                    self.assertEqual(["GET, HEAD"], headers["allow"])
+                    self.assertEqual(["no-store"], headers["cache-control"])
+                    self.assertEqual(b"Method Not Allowed", body)
+        self.assertEqual([("PURGE", 405), ("TRACE", 405), ("PURGE", 405)], responses)
+        self.assertEqual(
+            [("PURGE", 405, True), ("TRACE", 405, True), ("PURGE", 405, True)],
+            written,
+        )
+
+    def test_the_method_of_a_request_is_read_in_upper_case(self) -> None:
+        app = open_app(lambda: {"name": "x"})
+        with Served(app) as served:
+            status, _, body = self.exchange(served, "get")
+        self.assertEqual(200, status)
+        self.assertEqual("home", json.loads(body)["route"])
+
+
 class DisconnectTest(unittest.TestCase):
     def test_a_client_that_closed_the_connection_is_reported_once_after_the_response_hook(
         self,

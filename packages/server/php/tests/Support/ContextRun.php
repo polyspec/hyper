@@ -303,6 +303,21 @@ final class ContextRun
                 throw new NotFound();
             };
         }
+        if (array_key_exists('throw', $spec)) {
+            $code = self::ormCodeOf($spec['throw'], "the loader {$name}");
+
+            return static function () use ($code): array {
+                throw new OrmException($code);
+            };
+        }
+        if (($spec['renew'] ?? null) === true) {
+            // HY-72.4: the loader calls renewSession of its reply and returns an empty map.
+            return static function (Reply $reply): array {
+                $reply->renewSession();
+
+                return [];
+            };
+        }
         $embed = array_key_exists('embedData', $this->application)
             && in_array($name, self::strings($this->application['embedData'], 'embedData'), true);
 
@@ -318,8 +333,18 @@ final class ContextRun
     /** @param array<array-key, mixed> $spec */
     private function action(string $route, array $spec): \Closure
     {
-        return function () use ($route, $spec): Result {
+        return function (Reply $reply) use ($route, $spec): Result {
             $this->calls[] = "action:{$route}";
+            if (array_key_exists('renew', $spec)) {
+                if ($spec['renew'] !== true) {
+                    throw new \UnexpectedValueException("the member renew of the action of {$route} is not true");
+                }
+                // HY-72.1: the action calls renewSession of its reply first.
+                $reply->renewSession();
+            }
+            if (array_key_exists('throw', $spec)) {
+                throw new OrmException(self::ormCodeOf($spec['throw'], "the action of {$route}"));
+            }
             if (array_key_exists('redirect', $spec)) {
                 return Result::redirect(self::string($spec['redirect'], "the redirect of {$route}"));
             }
@@ -330,6 +355,17 @@ final class ContextRun
 
             return Result::page($page, self::stringMap($spec['data'] ?? null, "the data of the action of {$route}"));
         };
+    }
+
+    /** Returns the code of the ORM error that a handler of the application raises (HY-107.2). */
+    private static function ormCodeOf(mixed $thrown, string $what): string
+    {
+        $thrown = self::map($thrown, "the member throw of {$what}");
+        if (($thrown['class'] ?? null) !== 'OrmError') {
+            throw new \UnexpectedValueException("{$what} raises a class other than OrmError");
+        }
+
+        return self::string($thrown['code'] ?? null, "the code that {$what} raises");
     }
 
     /**

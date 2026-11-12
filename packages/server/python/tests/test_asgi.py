@@ -9,6 +9,7 @@ import threading
 from pathlib import Path
 
 from .transport import (
+    Application,
     TransportCase,
     Upload,
     UploadCases,
@@ -137,6 +138,42 @@ class AsgiTest(UploadCases, TransportCase):
         ]
         self.assertEqual(1, len(values))
         self.assertTrue(values[0].startswith(b"hy-session="))
+
+    def test_the_request_is_https_when_the_application_or_the_server_says_so(
+        self,
+    ) -> None:
+        # The request is HTTPS when the application was opened with https or the `scheme` of the scope is https, and
+        # the cookie of a new session then has the name and the attribute of HTTPS (HY-45).
+        for opened, scheme, https in (
+            (False, "http", False),
+            (False, "https", True),
+            (True, "http", True),
+            (True, "https", True),
+        ):
+            with self.subTest(opened=opened, scheme=scheme):
+                app = Application(opens_session=True)
+                app.https = opened
+                application = create_asgi(app, self.sessions)
+                sends = Sends()
+                run(application, scope(scheme=scheme), sends, Receives(b""))
+                self.assertIs(https, app.requests[0].https)
+                cookies = [
+                    value
+                    for name, value in sends.events[0]["headers"]
+                    if name == b"set-cookie"
+                ]
+                self.assertEqual(1, len(cookies))
+                self.assertEqual(
+                    https, cookies[0].startswith(b"__Host-hy-session=")
+                )
+                self.assertEqual(https, b"; secure" in cookies[0])
+                self.assertEqual(not https, cookies[0].startswith(b"hy-session="))
+
+    def test_the_method_reaches_the_application_in_upper_case(self) -> None:
+        # HY-100.31: the host passes the method in upper case.
+        app = Application()
+        run(create_asgi(app, self.sessions), scope(method="purge"), Sends(), Receives(b""))
+        self.assertEqual("PURGE", app.requests[0].method)
 
     def test_a_body_over_the_limit_reads_no_more(self) -> None:
         application = create_asgi(self.app, self.sessions)

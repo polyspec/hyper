@@ -64,7 +64,7 @@ def create_wsgi(
         started = time.perf_counter_ns()
         exchange = Exchange(written, started)
         # HY-27.5: a HEAD request receives the headers, with the Content-Length of the body, and no body.
-        head = environ.get("REQUEST_METHOD") == "HEAD"
+        head = str(environ.get("REQUEST_METHOD", "")).upper() == "HEAD"
         try:
             result: Union[Response, _FileResponse] = _answer(
                 app, sessions, around, files, environ, exchange
@@ -176,16 +176,19 @@ def _answer(
 ) -> Union[Response, _FileResponse]:
     """Answers the request of the environ: a file of the public directory, or the application through `around`.
     The request as received is kept in the exchange before the body is read (HY-60)."""
-    method = environ["REQUEST_METHOD"]
+    # HY-100.31: the host passes the method in upper case.
+    method = environ["REQUEST_METHOD"].upper()
     target = _request_target(environ)
     declared = declared_length(environ.get("CONTENT_LENGTH"))
     cookies = Cookies.parse(_cookie_header(environ))
+    # The request is HTTPS when the application was opened with https or the WSGI server says so.
+    https = app.https or environ.get("wsgi.url_scheme") == "https"
     exchange.request = head_request(
         method,
         target,
         _environ_headers(environ),
         cookies,
-        app.https,
+        https,
         declared,
     )
     served = None if files is None else public_file(files, method, target)
@@ -221,7 +224,7 @@ def _answer(
         Request.target_query(target),
         exchange.body.held(),
         cookies=cookies,
-        https=app.https,
+        https=https,
         body_size=max(exchange.body.size(), declared),
         read=exchange.body,
     )

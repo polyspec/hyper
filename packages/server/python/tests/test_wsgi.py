@@ -120,6 +120,39 @@ class WsgiTest(UploadCases, TransportCase):
             headers,
         )
 
+    def test_the_request_is_https_when_the_application_or_the_server_says_so(
+        self,
+    ) -> None:
+        # The request is HTTPS when the application was opened with https or `wsgi.url_scheme` is https, and the
+        # cookie of a new session then has the name and the attribute of HTTPS (HY-45).
+        for opened, scheme, https in (
+            (False, "http", False),
+            (False, "https", True),
+            (True, "http", True),
+            (True, "https", True),
+        ):
+            with self.subTest(opened=opened, scheme=scheme):
+                app = Application(opens_session=True)
+                app.https = opened
+                application = create_wsgi(app, self.sessions)
+                _, headers, _ = call(
+                    application, environ(**{"wsgi.url_scheme": scheme})
+                )
+                self.assertIs(https, app.requests[0].https)
+                cookies = [value for name, value in headers if name == "Set-Cookie"]
+                self.assertEqual(1, len(cookies))
+                self.assertEqual(
+                    https, cookies[0].startswith("__Host-hy-session=")
+                )
+                self.assertEqual(https, "; secure" in cookies[0])
+                self.assertEqual(not https, cookies[0].startswith("hy-session="))
+
+    def test_the_method_reaches_the_application_in_upper_case(self) -> None:
+        # HY-100.31: the host passes the method in upper case.
+        app = Application()
+        call(create_wsgi(app, self.sessions), environ(REQUEST_METHOD="purge"))
+        self.assertEqual("PURGE", app.requests[0].method)
+
     def cookie(self, headers: list) -> str:
         set_cookies = [value for name, value in headers if name == "Set-Cookie"]
         self.assertEqual(1, len(set_cookies))

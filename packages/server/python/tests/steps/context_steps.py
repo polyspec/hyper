@@ -145,9 +145,29 @@ def cases(case) -> None:
             )
         case.compare("keys", list(document))
         case.compare("sharedKeys", list(document["shared"]))
+    if case.has("regionKeys"):
+        case.compare("regionKeys", list(_member(response.body, "regions")))
+    if case.has("tokenOfSession"):
+        # HY-72.3: the masked token of the body is a masked value of the token that the session holds now.
+        masked = _member(response.body, "shared").get("csrf")
+        case.compare(
+            "tokenOfSession",
+            isinstance(masked, str)
+            and Csrf.verify(Session(store).csrf_token(), masked),
+        )
+    # HY-72.2: how many times the request renewed the session; the store of the run counts its renewals.
+    case.compare("renewals", store._renewals())
     case.compare("contextCalls", calls.count("context"))
     case.compare("firstCalls", calls)
     case.compare("selection", selections)
+
+
+def _member(body: str, name: str) -> dict:
+    """Returns a member of the JSON object of a response body that is a map, and fails for any other body."""
+    document = json.loads(body)
+    if not isinstance(document, dict) or not isinstance(document.get(name), dict):
+        raise TypeError(f"the body of the response is not a JSON object with the map {name}")
+    return document[name]
 
 
 def _text(request: dict, field: str) -> str:

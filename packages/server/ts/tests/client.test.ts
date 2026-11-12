@@ -1,5 +1,5 @@
 // The client rendering beyond the cases of contracts/client.json (HY-62): the selection and the declaration.
-import { mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -151,6 +151,32 @@ describe('client rendering (HY-62)', () => {
     ];
     for (const [label, declaration] of invalid) {
       await expect(new Fixture().app({ clientRendering: declaration }), label).rejects.toThrow();
+    }
+  });
+
+  it('fails to open with exactly Error for a shell that is not absolute, cannot be read or is not UTF-8 (HY-62)', async () => {
+    const directory = mkdtempSync(join(tmpdir(), 'hyper-shell-'));
+    try {
+      const invalidUtf8 = join(directory, 'invalid.html');
+      writeFileSync(invalidUtf8, Buffer.concat([Buffer.from('<meta name="hyper-api" content="/_props">'), Buffer.from([0xff, 0xfe])]));
+      const selects = (): Choice => ({ chosen: true, value: null });
+      const invalid: [string, string][] = [
+        ['relative shell', 'tests/fixtures/shell/index.html'],
+        ['missing shell', join(directory, 'missing.html')],
+        ['shell that is a directory', directory],
+        ['shell that is not UTF-8', invalidUtf8],
+      ];
+      for (const [label, shell] of invalid) {
+        const error: unknown = await new Fixture().app({ clientRendering: { shell, basePath: '/_props', selects } }).then(
+          () => null,
+          (thrown: unknown) => thrown,
+        );
+        if (!(error instanceof Error)) throw new Error(`the open with a ${label} did not fail with an error`);
+        expect(Object.getPrototypeOf(error), label).toBe(Error.prototype);
+        expect(error.message, label).toMatch(/^hyper: static shell /);
+      }
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
     }
   });
 

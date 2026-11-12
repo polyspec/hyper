@@ -351,8 +351,6 @@ class App:
             selected = self._negotiate(request, (JSON,), entries)
             if isinstance(selected, Response):
                 return selected
-            if selected[0] == TEXT_HTML:
-                return _not_acceptable()
         else:
             selected = self._negotiate(request, _PAGE_TYPES, entries)
             if isinstance(selected, Response):
@@ -368,7 +366,9 @@ class App:
                 base_path,
             )
         # HY-120: the session opens after the method check and the context header check, which refuse the request first.
-        refused = self._refused_before_session(request, handler)
+        refused = self._refused_before_session(
+            request, handler, client is not None and chosen == TEXT_HTML
+        )
         if refused is not None:
             return refused
         request = request._with_media(chosen)
@@ -434,9 +434,13 @@ class App:
                 return Response.text(400, "Bad Request").with_header("Vary", vary)
         content_type = MediaSelection.content_type(entry, values)
         given = request._as_representation(value)
+        media = MediaType(values, content_type)
         try:
-            returned = handler["representations"][entry.type](
-                given, MediaType(values, content_type)
+            # The handler receives the request and the media type by parameter type, or by the parameter names
+            # `request` and `media`, and the services that `bind` registered, as a loader does.
+            returned = self.container.call(
+                handler["representations"][entry.type],
+                {Request: given, MediaType: media, "request": given, "media": media},
             )
         except Exception as error:
             code = _orm_code(error)
@@ -508,14 +512,18 @@ class App:
         )
 
     def _refused_before_session(
-        self, request: Request, handler: dict
+        self, request: Request, handler: dict, page_under_data_path: bool
     ) -> Optional[Response]:
-        """Returns the refusal of the method check (HY-62 step 3) and of the context header (HY-127) of a request, or
-        None. The application makes both checks before it opens the session (HY-120)."""
+        """Returns the refusal of the method check (HY-116.12), of a request under the data base path that selects
+        `text/html` (HY-62.20) and of the context header (HY-127) of a request, in that order, or None. The
+        application makes the three checks before it opens the session (HY-120)."""
         if request.method != "GET" and (
             request.method != "POST" or "post" not in handler
         ):
             return _not_allowed("GET, HEAD, POST" if "post" in handler else "GET, HEAD")
+        # HY-62.20: the data base path answers no page, after the method check of HY-116.
+        if page_under_data_path:
+            return _not_acceptable()
         # HY-127: an application with a context checks the Hyper-Context header after the method check.
         if self._context_handler is not None and not Context.valid_header(
             request.header("Hyper-Context")
@@ -556,9 +564,16 @@ class App:
             # HY-114: a file over the file limit is refused before the action runs, as HY-59 refuses a large body.
             if request.file_over(self.file_limit):
                 return Response.text(413, "Content Too Large")
-            result = self.container.call(
-                handler["post"], {Request: request, Reply: reply}
-            )
+            try:
+                result = self.container.call(
+                    handler["post"], {Request: request, Reply: reply}
+                )
+            except Exception as error:
+                # HY-107.4: only the action that raises REVISION_CHANGED is answered as the page with status 409 and
+                # no data of its own; a loader that raises it fails below (HY-43).
+                if _orm_code(error) != "REVISION_CHANGED":
+                    raise
+                result = Result.page(409, {})
             if not isinstance(result, Result):
                 raise TypeError(
                     f"POST action of route {route['name']} did not return a Result"
@@ -572,6 +587,7 @@ class App:
                 )
             if result._is_redirect():
                 return self._redirect(session, result, base_path)
+            # HY-72.4: a loader that renews the session fails, also while the 409 page renders.
             return _without_renewal(
                 reply,
                 self._page(
@@ -595,14 +611,10 @@ class App:
         except BadRequest:
             return Response.text(400, "Bad Request")
         except Exception as error:
-            # HY-107: an error of the ORM is answered as the stop of its meaning; every other error escapes (HY-43).
-            code = _orm_code(error)
-            if code == "NO_ROWS":
+            # HY-107: an error of the ORM is answered as the stop of its meaning; every other error escapes (HY-43),
+            # also REVISION_CHANGED of a loader (HY-107.4).
+            if _orm_code(error) == "NO_ROWS":
                 return Response.text(404, "Not Found")
-            if code == "REVISION_CHANGED" and request.method == "POST":
-                return self._page(
-                    request, route, handler, session, flash, 409, {}, reply, base_path
-                )
             raise
 
     def _redirect(self, session: Session, result: Result, base_path: str) -> Response:
@@ -660,10 +672,9 @@ class App:
                 templates[selected.name] = route["template"]
                 for route_region in route["regions"]:
                     loader = handler.get("regions", {}).get(route_region.name)
+                    # HY-75.7: a route region without a loader is present with no data of its own.
                     region_data = (
-                        None
-                        if loader is None
-                        else self.container.call(loader, provided)
+                        {} if loader is None else self.container.call(loader, provided)
                     )
                     # HY-75: a route region loader that returns None makes the region absent from this response.
                     if region_data is None:
@@ -993,6 +1004,10 @@ def _shell(client: ClientRendering, manifest: Manifest) -> str:
         )
     try:
         shell = shell_path.read_text(encoding="utf-8")
+    except OSError:
+        raise ValueError(
+            f"static shell {client.shell} is not a readable file at an absolute path"
+        ) from None
     except UnicodeDecodeError as error:
         raise ValueError(
             f"static shell {client.shell} is not valid UTF-8: {error}"

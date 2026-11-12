@@ -391,6 +391,122 @@
         }
       },
       "embedData": []
+    },
+    "pages": {
+      "manifest": {
+        "layout": "layout.tpl",
+        "title": "title.tpl",
+        "regions": [
+          {
+            "name": "content",
+            "page": true
+          }
+        ],
+        "routes": [
+          {
+            "name": "home",
+            "path": "/",
+            "title": "Home",
+            "template": "home.tpl"
+          },
+          {
+            "name": "list",
+            "path": "/list",
+            "title": "List",
+            "template": "list.tpl",
+            "regions": [
+              {
+                "name": "rows",
+                "template": "rows.tpl"
+              },
+              {
+                "name": "extra",
+                "template": "extra.tpl"
+              }
+            ]
+          },
+          {
+            "name": "conflict",
+            "path": "/conflict",
+            "title": "Conflict",
+            "template": "home.tpl",
+            "post": true
+          },
+          {
+            "name": "renewing",
+            "path": "/renewing",
+            "title": "Renewing",
+            "template": "home.tpl",
+            "post": true
+          },
+          {
+            "name": "renewed",
+            "path": "/renewed",
+            "title": "Renewed",
+            "template": "home.tpl",
+            "post": true
+          },
+          {
+            "name": "unloadable",
+            "path": "/unloadable",
+            "title": "Unloadable",
+            "template": "home.tpl",
+            "post": true
+          }
+        ]
+      },
+      "templates": {
+        "layout.tpl": "<head><title>{# title}</title>{# build}</head>\n<main id=\"content\">{# content}</main>\n{# data}\n",
+        "title.tpl": "{= title}",
+        "home.tpl": "<form><input name=\"_csrf\" value=\"{= csrf}\"></form>",
+        "list.tpl": "<ul id=\"rows\">{# rows}</ul>{?# extra}<div id=\"extra\">{# extra}</div>{/}",
+        "rows.tpl": "<li>{= count}</li>",
+        "extra.tpl": "<p>extra</p>"
+      },
+      "build": "5555555555555555555555555555555555555555555555555555555555555555",
+      "loaders": {
+        "home": {},
+        "list": {},
+        "rows": {
+          "count": 1
+        },
+        "conflict": {},
+        "renewing": {
+          "renew": true
+        },
+        "renewed": {},
+        "unloadable": {
+          "throw": {
+            "class": "OrmError",
+            "code": "REVISION_CHANGED"
+          }
+        }
+      },
+      "actions": {
+        "conflict": {
+          "throw": {
+            "class": "OrmError",
+            "code": "REVISION_CHANGED"
+          }
+        },
+        "renewing": {
+          "throw": {
+            "class": "OrmError",
+            "code": "REVISION_CHANGED"
+          }
+        },
+        "renewed": {
+          "renew": true,
+          "throw": {
+            "class": "OrmError",
+            "code": "REVISION_CHANGED"
+          }
+        },
+        "unloadable": {
+          "page": 422,
+          "data": {}
+        }
+      }
     }
   },
   "cases": [
@@ -1229,6 +1345,159 @@
         "HY-65",
         "HY-117",
         "HY-127"
+      ]
+    },
+    {
+      "id": "a_route_region_without_a_loader_is_present",
+      "label": "a route region without a loader is present with no data of its own (HY-75.7)",
+      "application": "pages",
+      "request": {
+        "method": "GET",
+        "target": "/list",
+        "headers": {
+          "Accept": "application/vnd.hyper+json"
+        }
+      },
+      "status": 200,
+      "regionKeys": [
+        "content",
+        "rows",
+        "extra"
+      ],
+      "bodyContains": [
+        "\"extra\":{}"
+      ]
+    },
+    {
+      "id": "a_document_of_a_route_region_without_a_loader_places_it",
+      "label": "the document places a route region that has no loader (HY-75.7)",
+      "application": "pages",
+      "request": {
+        "method": "GET",
+        "target": "/list",
+        "headers": {}
+      },
+      "status": 200,
+      "bodyContains": [
+        "<div id=\"extra\"><p>extra</p></div>"
+      ],
+      "requirements": [
+        "HY-75"
+      ]
+    },
+    {
+      "id": "an_action_that_finds_another_revision_renders_the_page_with_409",
+      "label": "an action that raises REVISION_CHANGED is answered as the page of the route with status 409 (HY-107.4)",
+      "application": "pages",
+      "request": {
+        "method": "POST",
+        "target": "/conflict",
+        "headers": {
+          "Accept": "application/vnd.hyper+json",
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        "form": {},
+        "csrf": true
+      },
+      "status": 409,
+      "tokenOfSession": true,
+      "requirements": [
+        "HY-58",
+        "HY-107"
+      ],
+      "renewals": 0
+    },
+    {
+      "id": "a_loader_that_renews_the_session_fails_the_409_page",
+      "label": "a loader that calls renewSession while the 409 page renders fails with HY-43 (HY-72.4)",
+      "application": "pages",
+      "request": {
+        "method": "POST",
+        "target": "/renewing",
+        "headers": {
+          "Accept": "application/vnd.hyper+json",
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        "form": {},
+        "csrf": true
+      },
+      "status": 500,
+      "headers": {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "no-store",
+        "Content-Security-Policy": "frame-ancestors 'self'"
+      },
+      "body": "Internal Server Error",
+      "requirements": [
+        "HY-43",
+        "HY-72"
+      ]
+    },
+    {
+      "id": "the_409_page_after_a_renewal_carries_the_new_token",
+      "label": "the 409 page of an action that renewed the session carries a masked value of the new token (HY-72.3)",
+      "application": "pages",
+      "request": {
+        "method": "POST",
+        "target": "/renewed",
+        "headers": {
+          "Accept": "application/vnd.hyper+json",
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        "form": {},
+        "csrf": true
+      },
+      "status": 409,
+      "tokenOfSession": true,
+      "renewals": 1
+    },
+    {
+      "id": "a_loader_that_finds_another_revision_fails_the_page_of_an_action",
+      "label": "a loader that raises REVISION_CHANGED fails with HY-43, also for the page that an action renders (HY-107.4)",
+      "application": "pages",
+      "request": {
+        "method": "POST",
+        "target": "/unloadable",
+        "headers": {
+          "Accept": "application/vnd.hyper+json",
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        "form": {},
+        "csrf": true
+      },
+      "status": 500,
+      "headers": {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "no-store",
+        "Content-Security-Policy": "frame-ancestors 'self'"
+      },
+      "body": "Internal Server Error",
+      "requirements": [
+        "HY-43",
+        "HY-107"
+      ]
+    },
+    {
+      "id": "a_json_document_of_an_embedding_route_with_the_current_hash_receives_only_the_hash",
+      "label": "a JSON document request with the current hash receives the hash without the value, also for a route whose document embeds its data (HY-128)",
+      "application": "with_context",
+      "request": {
+        "method": "GET",
+        "target": "/list",
+        "headers": {
+          "Accept": "application/vnd.hyper+json",
+          "Hyper-Context": "88c830a228e2a9052ff3a5cb1a6a03b5ffa7599810832712a9150b2cfcc318ab"
+        }
+      },
+      "status": 200,
+      "bodyContains": [
+        "\"context\":{\"hash\":\"88c830a228e2a9052ff3a5cb1a6a03b5ffa7599810832712a9150b2cfcc318ab\"}"
+      ],
+      "bodyNotContains": [
+        "\"value\""
+      ],
+      "requirements": [
+        "HY-128"
       ]
     }
   ]

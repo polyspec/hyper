@@ -9,7 +9,6 @@ built-in server serves its document root."""
 
 from __future__ import annotations
 
-import logging
 import sys
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -27,9 +26,9 @@ from ._pipeline import (
     Exchange,
     answer_with,
     declared_length,
+    escape,
     head_request,
     header_lines,
-    plain_500,
     public_file,
     read_body,
     validate,
@@ -37,9 +36,6 @@ from ._pipeline import (
 from ._request_body import RequestBody
 from .request import Request
 from .response import Response
-
-_logger = logging.getLogger(__name__)
-
 
 def create_server(
     app: App,
@@ -72,28 +68,17 @@ def create_server(
         def log_message(self, _format: str, *_args: object) -> None:
             pass
 
-        def do_GET(self) -> None:
-            self.serve()
-
-        def do_HEAD(self) -> None:
-            self.serve()
-
-        def do_POST(self) -> None:
-            self.serve()
-
-        def do_PUT(self) -> None:
-            self.serve()
-
-        def do_DELETE(self) -> None:
-            self.serve()
-
-        def do_PATCH(self) -> None:
-            self.serve()
-
-        def do_OPTIONS(self) -> None:
-            self.serve()
+        def __getattr__(self, name: str):
+            # http.server calls `do_<method>` for the method of the request line and answers 501 for a method without
+            # one. Every method is answered by the application, which refuses a method that it does not allow with
+            # 405 and `Allow` (HY-27).
+            if name.startswith("do_"):
+                return self.serve
+            raise AttributeError(name)
 
         def serve(self) -> None:
+            # The method of a request is in upper case, as the other hosts give it.
+            self.command = self.command.upper()
             exchange = Exchange(written, _now_ns())
             try:
                 self.answer(exchange)
@@ -150,7 +135,6 @@ def create_server(
             except Exception as error:
                 # HY-60: an error that escapes the answer gets the plain 500. The answer runs the hooks of the
                 # application and the session store, which are user code, so no narrower type can name every error.
-                _logger.exception("hyper: %s: %s", type(error).__name__, error)
                 self.escape_error(application, error, exchange, None)
                 return
             try:
@@ -165,7 +149,6 @@ def create_server(
             except (OSError, ValueError) as error:
                 # HY-60: a write that fails after the answer, or a header or body that cannot be encoded (a
                 # UnicodeError is a ValueError), is an escaped error.
-                _logger.exception("hyper: %s: %s", type(error).__name__, error)
                 self.escape_error(application, error, exchange, response)
                 return
             exchange.report(response, True)
@@ -177,11 +160,11 @@ def create_server(
             exchange: Exchange,
             started: Optional[Response],
         ) -> None:
-            """Writes hyper's plain 500 for an error that escapes the answer of a request (HY-60) when no write has
-            started; the caller has logged the error. `started` is the response whose write started, or None. When the headers have left the
+            """Logs an error that escapes the answer of a request as the other hosts do (HY-43) and writes hyper's
+            plain 500 (HY-60) when no write has started. `started` is the response whose write started, or None. When the headers have left the
             server, the 500 cannot be written: the connection closes and the write hook receives `started` with
             ended false. The write hook receives the plain 500 once, with the failure of the error (HY-99)."""
-            response = plain_500(application)
+            response = escape(application, error)
             failure = str(error)
             if self.headers_started:
                 self.close_connection = True

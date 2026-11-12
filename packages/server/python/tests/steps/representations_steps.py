@@ -9,6 +9,7 @@ from pathlib import Path
 from polyspec.hyper._json_codec import JsonCodec
 from polyspec.hyper._session import _TOKEN_KEY
 from polyspec.hyper.app import App
+from polyspec.hyper.media_type import MediaType
 from polyspec.hyper.reply import Reply
 from polyspec.hyper.request import Request
 from polyspec.hyper.representation import Representation
@@ -148,7 +149,7 @@ def _loader(data: dict):
 
 
 def _handler(spec: dict | None, calls: list):
-    def handle(request: Request, media: object) -> Representation:
+    def handle(request: Request, media: MediaType) -> Representation:
         calls.append(_observed(request, media))
         if spec is None:
             raise AssertionError("a case without a handler calls a representation handler")

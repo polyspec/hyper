@@ -21,7 +21,18 @@ export function checkClient(client: ClientRendering, manifest: Manifest): Client
     if (route.path === base || route.path.startsWith(`${base}/`)) throw new Error(`hyper: route ${route.name} lies under the data base path ${base}`);
   }
   if (!isAbsolute(client.shell)) throw new Error(`hyper: static shell ${client.shell} is not an absolute path`);
-  const shell = readFileSync(client.shell, 'utf8');
+  let bytes: Buffer;
+  try {
+    bytes = readFileSync(client.shell);
+  } catch {
+    throw new Error(`hyper: static shell ${client.shell} does not exist or cannot be read`);
+  }
+  let shell: string;
+  try {
+    shell = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(bytes);
+  } catch {
+    throw new Error(`hyper: static shell ${client.shell} is not valid UTF-8`);
+  }
   if (!shell.includes(`<meta name="hyper-api" content="${escapeAttribute(base)}">`)) throw new Error(`hyper: static shell ${client.shell} does not declare the data base path ${base}`);
   return { basePath: base, shell, selects: client.selects };
 }

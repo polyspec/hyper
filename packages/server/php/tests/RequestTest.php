@@ -42,6 +42,19 @@ final class RequestTest extends TestCase
         }
     }
 
+    /** HY-100.31: the host passes the method in upper case. */
+    public function testTheMethodOfTheSapiIsReadInUpperCase(): void
+    {
+        $server = $_SERVER;
+        $_SERVER['REQUEST_URI'] = '/';
+        $_SERVER['REQUEST_METHOD'] = 'purge';
+        try {
+            self::assertSame('PURGE', Request::fromGlobals()->method);
+        } finally {
+            $_SERVER = $server;
+        }
+    }
+
     /** HY-45, HY-52: the session cookie options; the session adds no caching header. */
     public function testSessionCookieOptions(): void
     {

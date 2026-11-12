@@ -474,7 +474,9 @@ final class Request
                 $headers[$name] = $_SERVER[$key];
             }
         }
+        // HY-100.31: the host passes the method in upper case.
         $method = $_SERVER['REQUEST_METHOD'] ?? null;
+        $method = is_string($method) ? strtoupper($method) : $method;
         $target = $_SERVER['REQUEST_URI'] ?? null;
         $target = is_string($target) ? $target : '/';
 

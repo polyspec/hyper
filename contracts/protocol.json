@@ -2599,6 +2599,12 @@
                   "en": "Every response of a chosen request carries the frame policy of HY-45 and is reported to the response hook of HY-60.",
                   "ko": "선택이 고른 요청의 모든 응답은 HY-45의 frame 정책을 가지며 HY-60의 응답 hook에 보고된다.",
                   "koSource": "93ae73fcade136d5a9361639ba7491f64bf9a94099cfd2ea1fee4a6e098da32c"
+                },
+                {
+                  "id": "HY-62.35",
+                  "en": "The open fails with the open error of the runtime when the path of the shell file is not absolute, when the file does not exist or cannot be read, and when its bytes are not valid UTF-8.",
+                  "ko": "shell 파일의 경로가 절대 경로가 아닐 때, 파일이 없거나 읽을 수 없을 때, 그 바이트가 유효한 UTF-8이 아닐 때 open은 런타임의 open 오류로 실패한다.",
+                  "koSource": "63374cbbd49e7a5c291aaaeae22e1b413070c140d6bc95f87f285db896b85105"
                 }
               ]
             }
@@ -2942,6 +2948,12 @@
                   "en": "This lets a page that places views at request time under one route, such as a page that an administrator composes, declare a route region for a view that only some of its pages place.",
                   "ko": "이 규칙으로, 관리자가 조합하는 페이지처럼 한 라우트 아래에서 요청 시점에 화면을 배치하는 페이지도 일부 페이지에만 배치되는 화면을 라우트 영역으로 선언할 수 있다.",
                   "koSource": "46e1686a77e751078c58729538141ebd80fff16d0065f9996bd5239be98cb140"
+                },
+                {
+                  "id": "HY-75.7",
+                  "en": "A route region without a loader is present with no data of its own.",
+                  "ko": "loader가 없는 라우트 영역은 자신의 data 없이 present이다.",
+                  "koSource": "8e4484c352cc6f92e42e2a0806f2cc214a1f7c86106455bdb5a4746713a89baa"
                 }
               ]
             }
@@ -4592,6 +4604,12 @@
                   "en": "Every response carries `Content-Security-Policy: frame-ancestors <sources>`, where the application sets the sources and the default is `'self'`.",
                   "ko": "모든 응답은 `Content-Security-Policy: frame-ancestors <sources>`를 담으며, sources는 애플리케이션이 정하고 기본값은 `'self'`다.",
                   "koSource": "da56fafd9219e053665f97b6b38ec610acfec6d983ce9106821012376a68b261"
+                },
+                {
+                  "id": "HY-45.6",
+                  "en": "A request uses HTTPS when its host states it: the TLS socket of `node:http`, `HTTPS` of the SAPI, `wsgi.url_scheme` of WSGI and `scheme` of ASGI; the `http.server` server states none, so there only the declaration of the application counts.",
+                  "ko": "호스트가 HTTPS라고 알릴 때 요청은 HTTPS를 쓴다: `node:http`의 TLS 소켓, SAPI의 `HTTPS`, WSGI의 `wsgi.url_scheme`, ASGI의 `scheme`이다. `http.server` 서버는 알리지 않으므로 거기에서는 애플리케이션의 선언만 적용된다.",
+                  "koSource": "c0dff00383edab38bfa249c5d8c426dfe22b29859a6f8e6a39f9c74685f057c5"
                 }
               ]
             }
@@ -5111,6 +5129,12 @@
                   "en": "A host reads the request body up to the body limit of the application and no more (HY-59), passes its session store to `App.handle`, which opens the session as HY-120 states, sets the cookie of a new session first (HY-45), runs the request hook `around` (HY-97), reports the write to the write hook (HY-99) and a closed connection to the disconnect hook (HY-67), and answers a request whose target it cannot give with the plain 500 of HY-60.",
                   "ko": "host는 요청 body를 애플리케이션의 body 한도까지만 읽고(HY-59), 자기 session 저장소를 `App.handle`에 넘기며(`App.handle`은 HY-120이 정하는 대로 session을 연다), 새 session의 cookie를 맨 앞에 두고(HY-45), 요청 hook `around`(HY-97)를 실행하고, 쓰기를 write hook(HY-99)에, 닫힌 연결을 disconnect hook(HY-67)에 보고하며, target을 줄 수 없는 요청에는 HY-60의 평문 500으로 응답한다.",
                   "koSource": "f25e4d48658518f56076fb4245559a2e0be78766fdf9d520cc04e96f9ccd81ba"
+                },
+                {
+                  "id": "HY-100.31",
+                  "en": "A host passes every request method that its transport accepts to the application in upper case, so such a method that no route allows receives the 405 of HY-27; `node:http` refuses a method outside its own list, and a method in lower case, with the 400 of HY-60.7.",
+                  "ko": "호스트는 자신의 transport가 받아들이는 모든 요청 메서드를 대문자로 애플리케이션에 전달하므로, 그런 메서드 중 어떤 라우트도 허용하지 않는 것은 HY-27의 405를 받는다. `node:http`는 자신의 목록 밖 메서드와 소문자 메서드를 HY-60.7의 400으로 거절한다.",
+                  "koSource": "e6aa5530ebddcf0b5db12c58f1b6245fc2e9e24b66f3ccede1cc83d27d651629"
                 }
               ]
             },

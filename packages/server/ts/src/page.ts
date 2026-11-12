@@ -108,8 +108,9 @@ export async function renderPage<S extends object>(input: PageInput<S>, environm
 
   // HY-31, HY-92: a document embeds its data when its reply asks for it and a route region is present (HY-75).
   const embeds = reply.embedsData() && (route.regions ?? []).some((region) => data.has(region.name));
-  // HY-128: a JSON response, and a document that embeds its data, hold the member context after build.
-  const contextValue = held !== null && (request.wantsJson() || embeds) ? Context.member(environment.build, held, embeds ? null : request.header('Hyper-Context')) : null;
+  // HY-128: a JSON response, and a document that embeds its data, hold the member context after build. Only the
+  // document always holds the value (HY-128.4); a JSON response omits it for the current hash (HY-128.2).
+  const contextValue = held !== null && (request.wantsJson() || embeds) ? Context.member(environment.build, held, request.wantsJson() ? request.header('Hyper-Context') : null) : null;
   const value = JsonCodec.value(
     environment.timezone,
     route.name,

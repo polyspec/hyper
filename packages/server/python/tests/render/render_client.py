@@ -1,6 +1,7 @@
 # The client rendering beyond the cases of contracts/client.json (HY-62): the selection, the declaration and the fixtures that
 # the cases run against.
 import json
+import os
 import tempfile
 import unittest
 from pathlib import Path
@@ -9,6 +10,7 @@ from .fixture_app import FIXTURES, PROGRAM
 from polyspec.hyper.app import App
 from polyspec.hyper.choice import Choice
 from polyspec.hyper.client_rendering import ClientRendering
+from polyspec.hyper.media_type import MediaType
 from polyspec.hyper.representation import Representation
 from polyspec.hyper.request import Request
 from polyspec.hyper.result import Result
@@ -257,6 +259,70 @@ class SelectionTest(unittest.TestCase):
             with self.subTest(label):
                 with self.assertRaises(ValueError):
                     app(Counter(), client)
+
+    def test_a_static_shell_that_cannot_be_read_as_text_fails_with_the_open_error(
+        self,
+    ) -> None:
+        # HY-62: the open fails with exactly ValueError when the shell path is not absolute, when the file does not
+        # exist or cannot be read, and when its bytes are not valid UTF-8.
+        selects = lambda request: Choice(True, None)  # noqa: E731 - the declaration takes its selector as a value
+        meta = b'<meta name="hyper-api" content="/_props">'
+        with tempfile.TemporaryDirectory() as directory:
+            invalid = Path(directory) / "invalid.html"
+            invalid.write_bytes(meta + b"\xff\xfe")
+            unreadable = Path(directory) / "unreadable.html"
+            unreadable.write_bytes(meta)
+            unreadable.chmod(0)
+            shells = [
+                ("a path that is not absolute", "tests/fixtures/shell/index.html"),
+                ("a file that does not exist", str(Path(directory) / "missing.html")),
+                ("bytes that are not valid UTF-8", str(invalid)),
+            ]
+            # The user root reads a file of every mode, so the mode states nothing for it.
+            if not os.access(unreadable, os.R_OK):
+                shells.append(("a file that cannot be read", str(unreadable)))
+            for label, shell in shells:
+                with self.subTest(label):
+                    with self.assertRaises(ValueError) as raised:
+                        app(Counter(), ClientRendering(shell, "/_props", selects))
+                    self.assertIs(ValueError, type(raised.exception))
+
+
+class RepresentationHandlerTest(unittest.TestCase):
+    def test_a_representation_handler_receives_a_bound_service(self) -> None:
+        # HY-62, HY-121: a representation handler receives the request and the media type by parameter type and the
+        # service that `bind` registered, as a loader and an action do.
+        counter = Counter()
+        media_type = "application/vnd.example.item+json"
+        representations = {
+            "item": [
+                {"type": media_type, "parameters": {}, "methods": ["GET"], "vary": []}
+            ]
+        }
+        received = []
+
+        def handler(
+            media: MediaType, counter: Counter, request: Request
+        ) -> Representation:
+            received.append((request.param("id"), media.parameters(), counter))
+            return Representation(200, {"id": request.param("id")}, None)
+
+        handlers = _handlers(counter, {})
+        handlers["routes"]["item"]["representations"] = {media_type: handler}
+        with tempfile.TemporaryDirectory() as directory:
+            application = App.open(
+                manifest=str(_manifest(directory, representations)),
+                program=str(PROGRAM),
+                handlers=handlers,
+                timezone="+09:00",
+            )
+        application.bind(Counter, lambda: counter)
+        response = application.handle(
+            Request("GET", "/items/7", {"Accept": media_type}), ArraySession()
+        )
+        self.assertEqual(200, response.status)
+        self.assertEqual('{"id":"7"}', response.body)
+        self.assertEqual([("7", {}, counter)], received)
 
 
 if __name__ == "__main__":

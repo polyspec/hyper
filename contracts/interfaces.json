@@ -158,7 +158,9 @@
         "HY-67",
         "HY-107"
       ],
-      "cases": [],
+      "cases": [
+        "contracts/context.json"
+      ],
       "units": [
         {
           "id": "app",
@@ -3229,6 +3231,27 @@
               }
             },
             {
+              "id": "response.writeBody",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [],
+              "output": "none",
+              "errors": [],
+              "state": "Writes the body, or for a HEAD request of the SAPI the Content-Length of the body and no body (HY-27.5).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Response.php::Polyspec\\Hyper\\Response::writeBody",
+                  "signature": "private function writeBody(): void"
+                }
+              },
+              "only": {
+                "languages": [
+                  "php"
+                ],
+                "sentence": "HY-100.30"
+              }
+            },
+            {
               "id": "response.writeHeaders",
               "kind": "method",
               "visibility": "private",
@@ -6108,7 +6131,9 @@
         "HY-72",
         "HY-120"
       ],
-      "cases": [],
+      "cases": [
+        "contracts/context.json"
+      ],
       "units": [
         {
           "id": "session",
@@ -6527,6 +6552,31 @@
                 "python": {
                   "symbol": "packages/server/python/src/polyspec/hyper/_csrf.py::Csrf.verify",
                   "signature": "def verify(token: str, value: str) -> bool"
+                }
+              }
+            },
+            {
+              "id": "csrf.requireToken",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "string"
+              ],
+              "output": "none",
+              "errors": [],
+              "state": "Fails for a token or a mask that is not 64 lowercase hexadecimal digits (HY-24.9).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Csrf.php::Polyspec\\Hyper\\Csrf::requireToken",
+                  "signature": "private static function requireToken(string $text): void"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/csrf.ts::Csrf.requireToken",
+                  "signature": "private static requireToken(text: string): void"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_csrf.py::Csrf._require_token",
+                  "signature": "def _require_token(text: str) -> None"
                 }
               }
             },
@@ -10302,7 +10352,9 @@
         "HY-75",
         "HY-117"
       ],
-      "cases": [],
+      "cases": [
+        "contracts/context.json"
+      ],
       "units": [
         {
           "id": "page",
@@ -11892,7 +11944,8 @@
               "role": "response"
             },
             "headers": {
-              "role": "response"
+              "role": "response",
+              "optional": true
             },
             "absentHeaders": {
               "role": "response",
@@ -11951,6 +12004,27 @@
               "compare": "exact",
               "sentence": "HY-124.2",
               "state": "`selection` lists the selection value that the context handler received, one item for each call."
+            },
+            "regionKeys": {
+              "role": "expected",
+              "optional": true,
+              "compare": "keys",
+              "sentence": "HY-75.7",
+              "state": "`regionKeys` is the names of the regions that the JSON response holds under `regions`, in their order."
+            },
+            "tokenOfSession": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-72.3",
+              "state": "`tokenOfSession` true states that the masked token of the response body is a masked value of the token that the session holds after the request."
+            },
+            "renewals": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-72.2",
+              "state": "`renewals` is how many times the request renewed the session."
             }
           }
         }

@@ -6,6 +6,7 @@ namespace Polyspec\Hyper\Tests\Support\Steps;
 
 use Polyspec\Hyper\ArraySession;
 use Polyspec\Hyper\Context;
+use Polyspec\Hyper\Csrf;
 use Polyspec\Hyper\JsonCodec;
 use Polyspec\Hyper\Tests\CaseReader;
 use Polyspec\Hyper\Tests\Support\ContextRun;
@@ -131,7 +132,8 @@ final class ContextSteps
             $case->has('shared') ? self::arrayField($case, 'shared') : null,
             context: $case->has('context') ? self::stringField($case, 'context') : null,
         );
-        $response = $run->send($app, new ArraySession(), self::arrayField($case, 'request'));
+        $session = new ArraySession();
+        $response = $run->send($app, $session, self::arrayField($case, 'request'));
 
         $case->compare('status', $response->status);
         $case->compare('headers', $response->headers);
@@ -148,7 +150,34 @@ final class ContextSteps
             $case->compare('keys', $json);
             $case->compare('sharedKeys', $json['shared']);
         }
+        if ($case->has('regionKeys') || $case->has('tokenOfSession')) {
+            $json = json_decode($response->body, true, flags: JSON_THROW_ON_ERROR);
+            if (!is_array($json)) {
+                throw new \UnexpectedValueException('the body of the response is not a JSON object');
+            }
+            if ($case->has('regionKeys')) {
+                if (!is_array($json['regions'] ?? null)) {
+                    throw new \UnexpectedValueException('the body of the response holds no regions');
+                }
+                $case->compare('regionKeys', $json['regions']);
+            }
+            if ($case->has('tokenOfSession')) {
+                // HY-72.3: the masked token of the body against the token that the session holds after the request.
+                $masked = is_array($json['shared'] ?? null) ? ($json['shared']['csrf'] ?? null) : null;
+                $token = $session->get('_hyper_csrf');
+                if (!is_string($masked) || preg_match('/^[0-9a-f]{128}$/D', $masked) !== 1) {
+                    throw new \UnexpectedValueException('the body of the response holds no masked token');
+                }
+                if (!is_string($token)) {
+                    throw new \UnexpectedValueException('the session holds no token after the request');
+                }
+                $case->compare('tokenOfSession', Csrf::verify($token, $masked));
+            }
+        }
 
+        if ($case->has('renewals')) {
+            $case->compare('renewals', $session->renewals());
+        }
         $calls = $run->calls;
         $case->compare('contextCalls', count(array_filter($calls, static fn (string $call): bool => $call === 'context')));
         $case->compare('firstCalls', $calls);

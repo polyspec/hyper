@@ -13,6 +13,8 @@ from polyspec.hyper.request import Request
 from polyspec.hyper.not_found import NotFound
 from polyspec.hyper.result import Result
 
+from .render_app import OrmError
+
 ROOT = Path(__file__).resolve().parents[5]
 NODE = ROOT / "var" / "tools" / "bin" / "node"
 PROGRAMS = ROOT / "var" / "contract-programs"
@@ -101,6 +103,17 @@ def _reject(name: str) -> None:
     raise ValueError(f"the case context holds {name}, which is not JSON")
 
 
+def _thrown(handler: str, thrown: object) -> OrmError:
+    """Returns the ORM error that a handler of the contract raises (HY-107.2), and fails for another class."""
+    if (
+        not isinstance(thrown, dict)
+        or thrown.get("class") != "OrmError"
+        or not isinstance(thrown.get("code"), str)
+    ):
+        raise ValueError(f"handler {handler} throws a value other than an OrmError with a code")
+    return OrmError(thrown["code"])
+
+
 def open_application(
     application: dict,
     shared: dict | None,
@@ -111,8 +124,10 @@ def open_application(
     context: str | None = None,
     failures: list | None = None,
 ) -> App:
-    """Opens the application with the handlers of its contract: a loader stops with NotFound when it says so, an action
-    returns the page with its status or the redirect, and the handlers record their calls in order. The shared handler
+    """Opens the application with the handlers of its contract: a loader stops with NotFound when it says so, renews
+    the session of its reply for `renew` and raises the ORM error of `throw` (HY-107.2); an action renews the session
+    of its reply first for `renew`, and then raises the ORM error of `throw` or returns the page with its status or
+    the redirect; the handlers record their calls in order. A route region without an entry in `loaders` has no loader. The shared handler
     returns the shared data of the case, and an application without shared data has no shared handler. The context
     handler returns the decoded JSON text `context`, or the context of the application, as it is, also a value that
     is not a map, so that the server checks it (HY-124); the response hook appends the failure of each response to
@@ -143,13 +158,26 @@ def open_application(
                         f"loader {route} stops with a value other than NotFound"
                     )
                 raise NotFound()
+            if "throw" in data:
+                raise _thrown(route, data["throw"])
+            if "renew" in data:
+                if data["renew"] is not True:
+                    raise ValueError(f"the renew of loader {route} is not true")
+                reply.renew_session()
+                return {}
             return dict(data)
 
         return load
 
     def action(route: str, spec: dict):
-        def run(request: Request) -> Result:
+        def run(request: Request, reply: Reply) -> Result:
             calls.append(f"action:{route}")
+            if "renew" in spec:
+                if spec["renew"] is not True:
+                    raise ValueError(f"the renew of action {route} is not true")
+                reply.renew_session()
+            if "throw" in spec:
+                raise _thrown(route, spec["throw"])
             if "redirect" in spec:
                 if not isinstance(spec["redirect"], str):
                     raise ValueError(f"the redirect of {route} is not a string")

@@ -432,6 +432,8 @@ export class App<S extends object = Record<string, never>> {
     const selected = request.withMedia(type);
     // HY-116, HY-27: a method other than GET or a declared POST is refused before the session is read (HY-120).
     if (selected.method !== 'GET' && (selected.method !== 'POST' || handler.post === undefined)) return notAllowed(handler.post === undefined ? 'GET, HEAD' : 'GET, HEAD, POST');
+    // HY-62.20: the data base path answers no page, which is refused after the method check (HY-116.12).
+    if (client !== null && type === PAGE_TYPE) return refusal(406, 'Not Acceptable');
     // HY-127: a Hyper-Context value that is not 64 lowercase hexadecimal characters is refused before any handler runs.
     const hash = selected.header('Hyper-Context');
     if (this.context !== null && !Context.validHeader(hash)) return Response.text(400, 'Bad Request');
@@ -462,7 +464,7 @@ export class App<S extends object = Record<string, never>> {
     // acceptable here, and they are not listed (HY-116.14).
     const selected = negotiate(request, [PAGE_TYPE], this.entries.get(match.name) ?? [], []);
     if (selected instanceof Response) return selected;
-    if (selected[1] !== null) return refusal(406, 'Not Acceptable');
+    if (selected[1] !== null || selected[0] !== PAGE_TYPE) return refusal(406, 'Not Acceptable');
     return new Response(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache', Vary: this.vary }, client.shell);
   }
 
@@ -518,6 +520,7 @@ export class App<S extends object = Record<string, never>> {
   // Answers a routed request with its page, action result or stop result.
   private async routed(input: PageInput<S>): Promise<Response> {
     const { request, handler, session, reply } = input;
+    let page = input;
     try {
       if (request.method === 'GET') return withoutRenewal(reply, await this.page(input));
       if (request.method !== 'POST' || handler.post === undefined) return notAllowed(handler.post === undefined ? 'GET, HEAD' : 'GET, HEAD, POST');
@@ -525,28 +528,38 @@ export class App<S extends object = Record<string, never>> {
       if (!Csrf.verify(session.csrfToken(), request.formString('_csrf'))) return Response.text(403, 'Forbidden');
       // HY-114: a file over the file limit is refused before the action runs, as HY-59 refuses a large body.
       if (request.fileOver(this.fileLimit)) return Response.text(413, 'Content Too Large');
-      const result = await handler.post({ request, reply, services: this.services });
-      stopClosed(input.signal);
-      if (!(result instanceof Result)) throw new Error(`hyper: POST action of route ${input.route.name} did not return a Result`);
-      // HY-72: the action renews the session after it returns, and a page that it renders carries the new token.
-      let page = input;
+      // HY-107.4: only a REVISION_CHANGED that the action raises is answered as the 409 page; `result` stays null for it.
+      let result: Result | null = null;
+      try {
+        const returned = await handler.post({ request, reply, services: this.services });
+        stopClosed(input.signal);
+        if (!(returned instanceof Result)) throw new Error(`hyper: POST action of route ${input.route.name} did not return a Result`);
+        result = returned;
+      } catch (error) {
+        if (ormCode(error) !== 'REVISION_CHANGED') throw error;
+      }
+      // HY-72: the action renews the session after it ends, and a page that its request renders carries the new token.
       if (reply.takeRenewal()) {
         session.renew();
         page = { ...input, request: request.withSession(input.flash, Csrf.masked(session.csrfToken())) };
       }
-      if (result.isRedirect()) return this.redirect(session, result, input.basePath);
-      return withoutRenewal(reply, await this.page({ ...page, status: result.status, invalid: result.data }));
+      if (result !== null) {
+        if (result.isRedirect()) return this.redirect(session, result, input.basePath);
+        return withoutRenewal(reply, await this.page({ ...page, status: result.status, invalid: result.data }));
+      }
     } catch (error) {
       if (error instanceof NotFound) return Response.text(404, 'Not Found');
       if (error instanceof Redirect) return this.redirect(session, error.result, input.basePath);
       if (error instanceof Forbidden) return Response.text(403, 'Forbidden');
       if (error instanceof BadRequest) return Response.text(400, 'Bad Request');
-      // HY-107: an error of the ORM is answered as the stop of its meaning; every other error escapes (HY-43).
-      const code = ormCode(error);
-      if (code === 'NO_ROWS') return Response.text(404, 'Not Found');
-      if (code === 'REVISION_CHANGED' && request.method === 'POST') return withoutRenewal(reply, await this.page({ ...input, status: 409, invalid: {} }));
+      // HY-107: an error of the ORM is answered as the stop of its meaning; every other error, also the REVISION_CHANGED
+      // of a loader (HY-107.4), escapes (HY-43).
+      if (ormCode(error) === 'NO_ROWS') return Response.text(404, 'Not Found');
       throw error;
     }
+    // HY-107.4, HY-58: the 409 page of the action, whose loaders stop nothing; a loader that renews the session fails
+    // it (HY-72.4).
+    return withoutRenewal(reply, await this.page({ ...page, status: 409, invalid: {} }));
   }
 
   // The read paths of a route, which create computes for every route of the manifest (HY-73).

@@ -190,7 +190,7 @@ def answer_with(
     exchange for the disconnect hook (HY-67, HY-97)."""
 
     def answer(given: Request) -> Response:
-        session = sessions._open(given.cookie(RecordSession.cookie_name(app.https)))
+        session = sessions._open(given.cookie(RecordSession.cookie_name(secure)))
         try:
             response, reply = app._respond(given, session, exchange.started)
         finally:
@@ -206,7 +206,7 @@ def answer_with(
             {
                 **response.headers,
                 "Set-Cookie": [
-                    RecordSession.cookie_header(created, app.https),
+                    RecordSession.cookie_header(created, secure),
                     *(existing if isinstance(existing, list) else []),
                 ],
             },
@@ -216,6 +216,9 @@ def answer_with(
     request = exchange.request
     if request is None:
         raise RuntimeError("the exchange has no request to answer (HY-60)")
+    # The session cookie has the name and the attributes of HTTPS when the application was opened with https or the
+    # transport of the request says so, which the host states in the request that it built.
+    secure = app.https or request.https
     response = answer(request) if around is None else around(request, answer)
     if not isinstance(response, Response):
         raise TypeError(f"around returned {type(response).__name__}, not a Response")

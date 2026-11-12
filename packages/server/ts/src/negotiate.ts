@@ -11,9 +11,9 @@ export const PAGE_TYPE = 'text/html';
 export const PAGE_AND_DATA = [PAGE_TYPE, HYPER_JSON];
 
 // Selects the media type of a request among the page, the JSON of hyper and the representations of its route by its
-// Accept header (HY-116). A refusal is the response of HY-116 or HY-62: 400 for an invalid Accept, 406 with the types
-// that the path serves, the page types of `served` and the entries of `listed`, when no type matches, and 406 when the
-// selected page type is not served by the path.
+// Accept header (HY-116). A refusal is the response of HY-116: 400 for an invalid Accept, and 406 with the types that
+// the path serves, the page types of `served` and the entries of `listed`, when no type matches. The caller refuses a
+// selected page type that the path does not serve after its method check (HY-116.12, HY-62.20).
 export function negotiate(request: Request, served: readonly string[], entries: readonly RepresentationEntry[], listed: readonly RepresentationEntry[]): [string, RepresentationEntry | null, Map<string, string>] | Response {
   let selected: [string, RepresentationEntry | null, Map<string, string>] | null;
   try {
@@ -23,7 +23,6 @@ export function negotiate(request: Request, served: readonly string[], entries: 
     throw error;
   }
   if (selected === null) return refusal(406, MediaSelection.listing(served, listed));
-  if (selected[1] === null && !served.includes(selected[0])) return refusal(406, 'Not Acceptable');
   return selected;
 }
 

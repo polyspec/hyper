@@ -82,7 +82,8 @@ final class Response
      */
     private function writeBody(): void
     {
-        if (($_SERVER['REQUEST_METHOD'] ?? null) !== 'HEAD') {
+        $method = $_SERVER['REQUEST_METHOD'] ?? null;
+        if (!is_string($method) || strtoupper($method) !== 'HEAD') {
             echo $this->body;
 
             return;

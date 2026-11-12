@@ -6,14 +6,17 @@ import { Context, type ContextHandler } from '../../src/context.js';
 import { Csrf } from '../../src/csrf.js';
 import { JsonCodec } from '../../src/json-codec.js';
 import { hostValue } from './host-value.js';
-import { App, ArraySession, NotFound, Request, Result, type Handlers, type RouteHandlers } from '../../src/index.js';
+import { App, ArraySession, NotFound, Request, Result, type Handlers, type Reply, type RouteHandlers } from '../../src/index.js';
 import type { Value } from '../../src/values.js';
 import type { CaseReader } from '../case-reader.js';
-import { parsed, record } from '../support.js';
+import { OrmError, parsed, record } from '../support.js';
 import { requestOf } from '../../src/http.js';
 
-// An action of an application of a case: a redirect, or a page with its data.
+// An action of an application of a case: it renews the session when `renew` is true, and then raises the ORM error of
+// the code `raises`, redirects, or returns a page with its data.
 interface Action {
+  renew: boolean;
+  raises: string | null;
   redirect: string | null;
   page: number;
   data: Map<string, unknown>;
@@ -78,13 +81,18 @@ function applicationOf(value: unknown, name: string): Application {
   if (application.has('actions')) {
     for (const [route, item] of mapIn(application.get('actions'), 'the actions')) {
       const action = mapIn(item, `the action of ${route}`);
+      const renew = action.has('renew') && action.get('renew') === true;
+      if (action.has('throw')) {
+        actions.set(route, { renew, raises: raisedCode(action.get('throw'), `the action of ${route}`), redirect: null, page: 0, data: new Map() });
+        continue;
+      }
       if (action.has('redirect')) {
-        actions.set(route, { redirect: stringIn(action.get('redirect'), `the redirect of ${route}`), page: 0, data: new Map() });
+        actions.set(route, { renew, raises: null, redirect: stringIn(action.get('redirect'), `the redirect of ${route}`), page: 0, data: new Map() });
         continue;
       }
       const page = action.get('page');
-      if (typeof page !== 'number' || !Number.isInteger(page)) throw new Error(`the action of ${route} has no redirect and no integer page`);
-      actions.set(route, { redirect: null, page, data: hostMap(action.get('data'), `the data of the action of ${route}`) });
+      if (typeof page !== 'number' || !Number.isInteger(page)) throw new Error(`the action of ${route} has no throw, no redirect and no integer page`);
+      actions.set(route, { renew, raises: null, redirect: null, page, data: hostMap(action.get('data'), `the data of the action of ${route}`) });
     }
   }
   return {
@@ -97,10 +105,31 @@ function applicationOf(value: unknown, name: string): Application {
   };
 }
 
-// Returns the handlers of an application for one case: each declared loader returns its stated data, stops with
-// NotFound when its data holds `stop: NotFound` and embeds its data when the application lists it; each declared action
+// Returns the code of a `throw` of a loader or an action, which names the ORM error of Node (HY-107.2), and fails for
+// any other value.
+function raisedCode(value: unknown, what: string): string {
+  const thrown = mapIn(value, `the throw of ${what}`);
+  if (thrown.get('class') !== 'OrmError') throw new Error(`${what} throws an unknown class ${String(thrown.get('class'))}`);
+  return stringIn(thrown.get('code'), `the code of the throw of ${what}`);
+}
+
+// Returns what a loader of a case returns: it calls renewSession of its reply and returns an empty map for
+// `renew: true` (HY-72.4), raises the ORM error of its `throw` (HY-107), and returns its stated data otherwise.
+function loaded(spec: Map<string, unknown>, name: string, reply: Reply): Map<string, unknown> {
+  if (spec.get('renew') === true) {
+    reply.renewSession();
+    return new Map();
+  }
+  if (spec.has('throw')) throw new OrmError(raisedCode(spec.get('throw'), `the loader ${name}`));
+  return new Map(spec);
+}
+
+// Returns the handlers of an application for one case: each declared loader returns its stated data, renews the session
+// or raises its ORM error, stops with NotFound when its data holds `stop: NotFound` and embeds its data when the
+// application lists it; each declared action renews the session when it states so and then raises its ORM error or
 // returns its stated page or redirect; the shared handler returns the shared data of the case. Only a declared loader
-// or action is registered, as in PHP and Python, and every call is recorded in order (HY-124).
+// or action is registered, as in PHP and Python, so a route region without a loader has none (HY-75.7), and every call
+// is recorded in order (HY-124).
 function handlersOf(application: Application, shared: Map<string, unknown> | null, calls: string[]): Handlers<Record<string, never>> {
   const routes: Record<string, RouteHandlers<Record<string, never>>> = {};
   for (const route of application.routes) {
@@ -114,19 +143,21 @@ function handlersOf(application: Application, shared: Map<string, unknown> | nul
           if (spec.get('stop') !== 'NotFound') throw new Error(`loader ${route.name} stops with a value other than NotFound`);
           throw new NotFound();
         }
-        return new Map(spec);
+        return loaded(spec, route.name, reply);
       };
     }
-    const regions: Record<string, () => Map<string, unknown>> = {};
+    const regions: NonNullable<RouteHandlers<Record<string, never>>['regions']> = {};
     for (const region of route.regions) {
       const regionSpec = application.loaders.get(region);
-      if (regionSpec !== undefined) regions[region] = () => new Map(regionSpec);
+      if (regionSpec !== undefined) regions[region] = ({ reply }) => loaded(regionSpec, region, reply);
     }
     if (Object.keys(regions).length > 0) handler.regions = regions;
     const action = application.actions.get(route.name);
     if (action !== undefined) {
-      handler.post = () => {
+      handler.post = ({ reply }) => {
         calls.push(`action:${route.name}`);
+        if (action.renew) reply.renewSession();
+        if (action.raises !== null) throw new OrmError(action.raises);
         return action.redirect === null ? Result.page(action.page, action.data) : Result.redirect(action.redirect);
       };
     }
@@ -276,19 +307,18 @@ export const steps = {
     const form = reader.has('request.form') ? textMap(reader, 'request.form') : undefined;
     const body = bodyOf(form, token);
     const headers = Object.fromEntries(textMap(reader, 'request.headers'));
-    const requestHeaders = body === undefined ? headers : { 'Content-Type': 'application/x-www-form-urlencoded', ...headers };
     const response = await app.handle(
       requestOf({
         method: stringField(reader, 'request.method'),
         target: stringField(reader, 'request.target'),
-        headers: requestHeaders,
+        headers,
         body: body === undefined ? undefined : Buffer.from(body, 'latin1'),
       }),
       store,
     );
 
     reader.compare('status', response.status);
-    reader.compare('headers', response.headers);
+    if (reader.has('headers')) reader.compare('headers', response.headers);
     reader.compare('absentHeaders', response.headers);
     reader.compare('body', response.body);
     reader.compare('bodyContains', response.body);
@@ -299,6 +329,15 @@ export const steps = {
       reader.compare('keys', json);
       reader.compare('sharedKeys', record(json.shared));
     }
+    if (reader.has('regionKeys')) reader.compare('regionKeys', record(record(parsed(response.body)).regions));
+    if (reader.has('tokenOfSession')) {
+      // HY-72.3: the masked token of the body is a masked value of the token that the session holds after the request.
+      const masked = record(record(parsed(response.body)).shared).csrf;
+      const held = store.get('_hyper_csrf');
+      if (typeof held !== 'string') throw new Error('the session holds no token after the request');
+      reader.compare('tokenOfSession', typeof masked === 'string' && Csrf.verify(held, masked));
+    }
+    if (reader.has('renewals')) reader.compare('renewals', store.renewals());
     reader.compare('contextCalls', calls.filter((call) => call === 'context').length);
     reader.compare('firstCalls', calls);
     reader.compare('selection', selections);

@@ -263,7 +263,13 @@ final class App
                 "static shell {$client->shell} is not a readable file at an absolute path",
             );
         }
-        $shell = (string) file_get_contents($client->shell);
+        $shell = file_get_contents($client->shell);
+        if ($shell === false) {
+            throw new \InvalidArgumentException("static shell {$client->shell} cannot be read");
+        }
+        if (preg_match('//u', $shell) !== 1) {
+            throw new \InvalidArgumentException("static shell {$client->shell} is not valid UTF-8");
+        }
         if (!str_contains($shell, '<meta name="hyper-api" content="' . htmlspecialchars($base, ENT_QUOTES) . '">')) {
             throw new \InvalidArgumentException(
                 "static shell {$client->shell} does not declare the data base path {$base}",
@@ -694,7 +700,19 @@ final class App
             if ($request->fileOver($this->fileLimit)) {
                 return Response::text(413, 'Content Too Large');
             }
-            $result = $this->container->call($handler['post'], [Request::class => $request, Reply::class => $reply]);
+            try {
+                $result = $this->container->call(
+                    $handler['post'],
+                    [Request::class => $request, Reply::class => $reply],
+                );
+            } catch (\Throwable $error) {
+                // HY-107.4: only an action that raises REVISION_CHANGED is answered as the page with status 409;
+                // the loaders of that page are loaders, so their renewal (HY-72.4) and their REVISION_CHANGED fail.
+                if (self::ormCode($error) !== 'REVISION_CHANGED') {
+                    throw $error;
+                }
+                $result = Result::page(409, []);
+            }
             if (!$result instanceof Result) {
                 throw new \LogicException("POST action of route {$route['name']} did not return a Result");
             }
@@ -731,11 +749,9 @@ final class App
             return Response::text(400, 'Bad Request');
         } catch (\Throwable $error) {
             // HY-107: an error of the ORM is answered as the stop of its meaning; every other error escapes (HY-43).
+            // HY-107.4: a loader that raises REVISION_CHANGED escapes; the action's one is answered above.
             return match (self::ormCode($error)) {
                 'NO_ROWS' => Response::text(404, 'Not Found'),
-                'REVISION_CHANGED' => $request->method === 'POST'
-                    ? $this->page($request, $route, $handler, $session, $flash, 409, [], $reply, $basePath)
-                    : throw $error,
                 default => throw $error,
             };
         }

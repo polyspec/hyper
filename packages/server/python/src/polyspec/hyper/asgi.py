@@ -148,16 +148,19 @@ async def _answer(
 ) -> Union[Response, _FileResponse]:
     """Answers the request of the scope: a file of the public directory, or the application through `around` in a
     worker thread (HY-100). The request as received is kept in the exchange before the body is read (HY-60)."""
-    method = scope["method"]
+    # HY-100.31: the host passes the method in upper case.
+    method = scope["method"].upper()
     target = _raw_path(scope)
     declared = declared_length(_header(scope, b"content-length"))
     cookies = Cookies.parse(_cookie_header(scope))
+    # The request is HTTPS when the application was opened with https or the ASGI server says so.
+    https = app.https or scope.get("scheme") == "https"
     exchange.request = head_request(
         method,
         target,
         _scope_headers(scope),
         cookies,
-        app.https,
+        https,
         declared,
     )
     served = None if files is None else public_file(files, method, target)
@@ -201,7 +204,7 @@ async def _answer(
         scope.get("query_string", b"").decode("latin-1"),
         exchange.body.held(),
         cookies=cookies,
-        https=app.https,
+        https=https,
         body_size=exchange.body.size(),
         read=exchange.body,
     )
