@@ -1090,7 +1090,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "polyspec-hyper"
+name = "polyspec-hyper-server"
 version = "0.0.0"
 dependencies = [
  "polyspec-binding-core",
@@ -1106,35 +1106,35 @@ dependencies = [
 ]
 
 [[package]]
-name = "polyspec-hyper-node"
+name = "polyspec-hyper-server-node"
 version = "0.0.0"
 dependencies = [
  "napi",
  "napi-build",
  "napi-derive",
  "polyspec-binding-core",
- "polyspec-hyper",
+ "polyspec-hyper-server",
  "polyspec-session-store",
  "polyspec-template",
 ]
 
 [[package]]
-name = "polyspec-hyper-php-ext"
+name = "polyspec-hyper-server-php-ext"
 version = "0.0.0"
 dependencies = [
  "ext-php-rs",
  "polyspec-binding-core",
- "polyspec-hyper",
+ "polyspec-hyper-server",
  "polyspec-session-store",
  "polyspec-template",
 ]
 
 [[package]]
-name = "polyspec-hyper-python"
+name = "polyspec-hyper-server-python"
 version = "0.0.0"
 dependencies = [
  "polyspec-binding-core",
- "polyspec-hyper",
+ "polyspec-hyper-server",
  "polyspec-session-store",
  "polyspec-template",
  "pyo3",

@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: f50d017e9cb00a1e6d45bf3d0259000be4cdc82d4f08e401752e1852492d1104 -->
+<!-- source-sha256: 27fdf6418d555f8c1c61c6aac440c985f636cc92812e8dc774e0ed2c050f6131 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- Rust core와 그 interface 계약이 component를 가진 저장소의 이름을 쓴다(binding P-1). crate는 `polyspec-hyper-server`, 라이브러리는 `polyspec_hyper_server`이고, 계약은 라이브러리 hyper-server, Composer `polyspec/hyper-server`와 PHP namespace `Polyspec\Hyper\Server`, PyPI `polyspec-hyper-server`와 Python module `polyspec.hyper.server`, npm `@polyspec/hyper-server`를 이름하며, binding crate는 `polyspec-hyper-server-python`, `polyspec-hyper-server-node`, `polyspec-hyper-server-php-ext`, PHP 확장은 `polyspec_hyper_server`다. 오류 class는 이름 `Hyper<Category>Error`를 유지한다. 계약은 host 코드가 `Polyspec\Hyper`와 `polyspec.hyper`에서 옮겨 가는 것을 change로 적으며, 세 server의 host 코드는 아직 옮기지 않았다(C-7).
 
 - Rust core와 그 binding crate는 저장소 root의 Cargo workspace 하나다(binding L-2, L-2a). root `Cargo.toml`은 `packages/server/rust`와 binding scaffold가 쓴 native module `packages/server/python/native`, `packages/server/ts/native`, `packages/server/php-ext/native`를 이름하며, 각각 `Cargo.toml`과 `src/lib.rs`를, Node의 것은 `build.rs`도 가진다. `Cargo.lock`, `clippy.toml`, `rust-toolchain.toml`은 root로 옮겼고, lock은 `polyspec-binding-core`를 branch 끝에 한 번 고정하며, `.gitignore`는 `native/generated/`를 뺀다. interface 계약은 세 언어 package를 host package로 표시한다(`host: true`). 계약 검사는 더는 CK-20이나 없는 binding crate를 보고하지 않고, host manifest의 여섯 항목에 대해 CK-19를 보고하며, 이는 host package가 binding과 함께 받는다(S-4).
 

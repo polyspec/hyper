@@ -1,5 +1,5 @@
 [package]
-name = "polyspec-hyper"
+name = "polyspec-hyper-server"
 version = "0.0.0"
 edition = "2021"
 rust-version = "1.99.0"
@@ -11,7 +11,7 @@ publish = false
 include = ["/src/**/*.rs", "/interface.json"]
 
 [lib]
-name = "polyspec_hyper"
+name = "polyspec_hyper_server"
 path = "src/lib.rs"
 
 [dependencies]

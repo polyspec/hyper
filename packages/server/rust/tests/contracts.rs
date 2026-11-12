@@ -6,8 +6,8 @@ use std::fs;
 use std::path::PathBuf;
 
 use binding_core::Kinds;
-use polyspec_hyper::media::{select, Selected, Selection, Served};
-use polyspec_hyper::{csrf, etag, location, reply, Error};
+use polyspec_hyper_server::media::{select, Selected, Selection, Served};
+use polyspec_hyper_server::{csrf, etag, location, reply, Error};
 use serde_json::Value;
 
 fn cases(file: &str) -> Value {
@@ -374,7 +374,7 @@ fn route_list(file: &Value) -> Vec<(String, String)> {
         .collect()
 }
 
-fn check_match(case: &Value, found: Option<polyspec_hyper::router::Match>) {
+fn check_match(case: &Value, found: Option<polyspec_hyper_server::router::Match>) {
     let expected = &case["result"];
     match found {
         None => assert!(expected.is_null(), "{}", case["id"]),
@@ -404,7 +404,7 @@ fn routes_match_in_manifest_order() -> Result<(), Error> {
     // HY-4 to HY-8, HY-49
     for file_name in ["routes.json", "rest.json"] {
         let file = cases(file_name);
-        let router = polyspec_hyper::router::Router::new(&route_list(&file))?;
+        let router = polyspec_hyper_server::router::Router::new(&route_list(&file))?;
         for case in group(&file, "cases") {
             check_match(case, router.find(text(case, "path")));
         }
@@ -414,7 +414,7 @@ fn routes_match_in_manifest_order() -> Result<(), Error> {
             }
         }
         for case in group(&file, "invalidPaths") {
-            let refused = polyspec_hyper::router::route("x", text(case, "path"));
+            let refused = polyspec_hyper_server::router::route("x", text(case, "path"));
             assert!(
                 matches!(refused, Err(Error::InvalidApplication(_))),
                 "{}",
@@ -450,7 +450,7 @@ fn manifest_checks() {
         } else {
             from_hex(text(case, "bytes"))
         };
-        let result = polyspec_hyper::manifest::read(&bytes);
+        let result = polyspec_hyper_server::manifest::read(&bytes);
         match (&result, case.get("raises")) {
             (Ok(_), None) => assert_eq!(case["read"].as_bool(), Some(true), "{}", case["id"]),
             (Err(error), Some(_)) => check_raises(case, error),
@@ -460,11 +460,11 @@ fn manifest_checks() {
     }
     assert!(ran > 0);
     for case in group(&file, "reads") {
-        let manifest = match polyspec_hyper::manifest::read(case["manifest"].to_string().as_bytes())
-        {
-            Ok(manifest) => manifest,
-            Err(error) => panic!("{}: {error}", case["id"]),
-        };
+        let manifest =
+            match polyspec_hyper_server::manifest::read(case["manifest"].to_string().as_bytes()) {
+                Ok(manifest) => manifest,
+                Err(error) => panic!("{}: {error}", case["id"]),
+            };
         let regions: Vec<&str> = manifest
             .regions
             .iter()
@@ -519,7 +519,7 @@ fn manifest_checks() {
 #[test]
 fn json_text_is_written_and_read() {
     // HY-54.18 to HY-54.21, HY-44.9
-    use polyspec_hyper::json::{read, write, JsonError};
+    use polyspec_hyper_server::json::{read, write, JsonError};
     let file = cases("json.json");
     let kind = |error: &JsonError| match error {
         JsonError::Malformed(_) => "malformed_json".to_owned(),
@@ -551,8 +551,8 @@ fn json_text_is_written_and_read() {
 #[test]
 fn read_data_keeps_only_the_read_paths() {
     // HY-73.29, HY-73.22
-    use polyspec_hyper::json::{read, write};
-    use polyspec_hyper::reads::{keep, Read};
+    use polyspec_hyper_server::json::{read, write};
+    use polyspec_hyper_server::reads::{keep, Read};
     let file = cases("reads.json");
     let mut ran = 0;
     for case in group(&file, "cases") {
@@ -583,7 +583,7 @@ fn text_of(value: &Value) -> &str {
 
 /// A value of the data model as JSON for a comparison with a case.
 fn as_json(value: &polyspec_template::Value) -> Value {
-    match polyspec_hyper::json::write(value) {
+    match polyspec_hyper_server::json::write(value) {
         Ok(text) => match serde_json::from_str(&text) {
             Ok(json) => json,
             Err(error) => panic!("{error}"),
@@ -601,10 +601,14 @@ fn pairs(map: &polyspec_template::OrderedMap) -> Value {
 }
 
 fn data_value(json: &str) -> Result<polyspec_template::Value, Error> {
-    match polyspec_hyper::json::read(json.as_bytes()) {
+    match polyspec_hyper_server::json::read(json.as_bytes()) {
         Ok(value) => Ok(value),
-        Err(polyspec_hyper::json::JsonError::DataModel(error)) => Err(Error::DataModel(error)),
-        Err(polyspec_hyper::json::JsonError::Malformed(error)) => panic!("{json}: {error:?}"),
+        Err(polyspec_hyper_server::json::JsonError::DataModel(error)) => {
+            Err(Error::DataModel(error))
+        }
+        Err(polyspec_hyper_server::json::JsonError::Malformed(error)) => {
+            panic!("{json}: {error:?}")
+        }
     }
 }
 
@@ -612,7 +616,7 @@ fn data_value(json: &str) -> Result<polyspec_template::Value, Error> {
 fn session_values_are_kept_in_the_record() {
     // HY-24.1, HY-24.14, HY-25.2, HY-40, HY-72.2, HY-104.13, HY-104.14, HY-104.23
     use binding_core::Failure;
-    use polyspec_hyper::session;
+    use polyspec_hyper_server::session;
     use polyspec_session_store::{MemoryStore, Store};
     let file = cases("session.json");
     let mut ran = 0;
@@ -735,7 +739,7 @@ fn kept_pairs(case: &Value) -> Vec<(String, polyspec_template::Value)> {
 #[test]
 fn kept_values_conform_to_the_region_data() {
     // HY-38.2 to HY-38.9, HY-38.19
-    use polyspec_hyper::keep::{apply, select};
+    use polyspec_hyper_server::keep::{apply, select};
     let file = cases("keep.json");
     let mut ran = 0;
     for case in group(&file, "cases") {
@@ -745,7 +749,7 @@ fn kept_values_conform_to_the_region_data() {
         };
         let applied = apply(&data, &kept_pairs(case));
         // `ordered`: the keys keep their order (HY-38.19).
-        match polyspec_hyper::json::write(&applied) {
+        match polyspec_hyper_server::json::write(&applied) {
             Ok(written) => assert_eq!(written, case["expected"].to_string(), "{}", case["id"]),
             Err(error) => panic!("{}: {error}", case["id"]),
         }
@@ -780,7 +784,7 @@ fn kept_values_conform_to_the_region_data() {
 #[test]
 fn the_context_hash_and_its_place() {
     // HY-125.10, HY-125.12, HY-10.3, HY-124.8
-    use polyspec_hyper::context::{hash, with_context};
+    use polyspec_hyper_server::context::{hash, with_context};
     let file = cases("context.json");
     let mut ran = 0;
     for case in group(&file, "contexts") {
@@ -789,7 +793,7 @@ fn the_context_hash_and_its_place() {
             Ok(_) | Err(_) => panic!("{}: the context is no map", case["id"]),
         };
         let build = text(case, "build");
-        let written = match polyspec_hyper::context::text(&context) {
+        let written = match polyspec_hyper_server::context::text(&context) {
             Ok(written) => written,
             Err(error) => panic!("{}: {error}", case["id"]),
         };
@@ -843,7 +847,7 @@ fn latin1(text: &str) -> Vec<u8> {
 #[test]
 fn the_current_path_of_a_request() {
     // HY-11.4
-    use polyspec_hyper::page::current_path;
+    use polyspec_hyper_server::page::current_path;
     let file = cases("request.json");
     let mut ran = 0;
     for case in group(&file, "values") {
@@ -869,8 +873,8 @@ fn application(
     file: &Value,
     name: &str,
 ) -> (
-    polyspec_hyper::render::Templates,
-    polyspec_hyper::manifest::Manifest,
+    polyspec_hyper_server::render::Templates,
+    polyspec_hyper_server::manifest::Manifest,
 ) {
     let fixture = &file["applications"][name];
     let sources: Vec<(String, String)> = fixture["templates"]
@@ -879,12 +883,14 @@ fn application(
         .flatten()
         .map(|(template, source)| (template.clone(), text_of(source).to_owned()))
         .collect();
-    let templates =
-        match polyspec_hyper::render::Templates::new(&sources, std::collections::HashMap::new()) {
-            Ok(templates) => templates,
-            Err(error) => panic!("{name}: {error}"),
-        };
-    match polyspec_hyper::manifest::read(fixture["manifest"].to_string().as_bytes()) {
+    let templates = match polyspec_hyper_server::render::Templates::new(
+        &sources,
+        std::collections::HashMap::new(),
+    ) {
+        Ok(templates) => templates,
+        Err(error) => panic!("{name}: {error}"),
+    };
+    match polyspec_hyper_server::manifest::read(fixture["manifest"].to_string().as_bytes()) {
         Ok(manifest) => (templates, manifest),
         Err(error) => panic!("{name}: {error}"),
     }
@@ -893,7 +899,7 @@ fn application(
 #[test]
 fn a_document_holds_its_parts_rendered_alone() {
     // HY-12.1, HY-13.1, HY-13.2, HY-13.3
-    use polyspec_hyper::render::Document;
+    use polyspec_hyper_server::render::Document;
     let file = cases("app.json");
     let mut ran = 0;
     for case in group(&file, "parts") {
@@ -965,8 +971,8 @@ fn a_document_holds_its_parts_rendered_alone() {
 #[test]
 fn a_region_that_fails_with_its_kept_values_renders_with_its_loader_data() {
     // HY-38.16, HY-38.17, HY-38.18, HY-31.2, HY-31.3
-    use polyspec_hyper::page::{json_value, kept_values, Response};
-    use polyspec_hyper::render::Document;
+    use polyspec_hyper_server::page::{json_value, kept_values, Response};
+    use polyspec_hyper_server::render::Document;
     let file = cases("app.json");
     let (templates, manifest) = application(&file, "a_board");
     let Some(route) = manifest.routes.iter().find(|route| route.name == "list") else {
@@ -991,9 +997,9 @@ fn a_region_that_fails_with_its_kept_values_renders_with_its_loader_data() {
                 Err(error) => panic!("{error}"),
             })
             .collect();
-        let cookie = polyspec_hyper::keep::cookie_values(cookie);
+        let cookie = polyspec_hyper_server::keep::cookie_values(cookie);
         let kept = kept_values(&manifest, &regions, &[], &cookie);
-        let shared = match polyspec_hyper::page::shared_data("List", "t", None) {
+        let shared = match polyspec_hyper_server::page::shared_data("List", "t", None) {
             Ok(shared) => shared,
             Err(error) => panic!("{error}"),
         };
@@ -1045,14 +1051,14 @@ fn a_region_that_fails_with_its_kept_values_renders_with_its_loader_data() {
 }
 
 /// The application `a_board` of `app.json` as the steps of a page hold it, every path read whole.
-fn board(context: bool) -> polyspec_hyper::steps::Pages {
+fn board(context: bool) -> polyspec_hyper_server::steps::Pages {
     board_under(context, "")
 }
 
 /// The application `a_board` under a base path, with client rendering under `/_props` and urlencoded forms.
-fn board_under(context: bool, base_path: &str) -> polyspec_hyper::steps::Pages {
-    use polyspec_hyper::reads::Read;
-    use polyspec_hyper::steps::{Application, Pages, RouteReads};
+fn board_under(context: bool, base_path: &str) -> polyspec_hyper_server::steps::Pages {
+    use polyspec_hyper_server::reads::Read;
+    use polyspec_hyper_server::steps::{Application, Pages, RouteReads};
     let file = cases("app.json");
     let (templates, manifest) = application(&file, "a_board");
     let fixture = &file["applications"]["a_board"];
@@ -1090,7 +1096,7 @@ fn board_under(context: bool, base_path: &str) -> polyspec_hyper::steps::Pages {
         build: text(fixture, "build").to_owned(),
         timezone: text(fixture, "timezone").to_owned(),
         context,
-        declared: polyspec_hyper::front::Declared {
+        declared: polyspec_hyper_server::front::Declared {
             base_path: base_path.to_owned(),
             data_base_path: Some("/_props".to_owned()),
             form_types: vec!["application/x-www-form-urlencoded".to_owned()],
@@ -1098,10 +1104,10 @@ fn board_under(context: bool, base_path: &str) -> polyspec_hyper::steps::Pages {
     })
 }
 
-fn map(json: &str) -> polyspec_hyper::steps::Map<polyspec_template::Value> {
+fn map(json: &str) -> polyspec_hyper_server::steps::Map<polyspec_template::Value> {
     match data_value(json) {
         Ok(polyspec_template::Value::Map(map)) => {
-            let mut boundary = polyspec_hyper::steps::Map::new();
+            let mut boundary = polyspec_hyper_server::steps::Map::new();
             for (key, value) in map.iter() {
                 boundary.insert(key.clone(), value.clone());
             }
@@ -1113,14 +1119,14 @@ fn map(json: &str) -> polyspec_hyper::steps::Map<polyspec_template::Value> {
 
 /// Runs the steps of a page, answering each call from the list in order, and gives the calls and the answer.
 fn run_page(
-    app: &polyspec_hyper::steps::Pages,
-    input: polyspec_hyper::steps::PageInput,
-    results: Vec<polyspec_hyper::steps::Input>,
+    app: &polyspec_hyper_server::steps::Pages,
+    input: polyspec_hyper_server::steps::PageInput,
+    results: Vec<polyspec_hyper_server::steps::Input>,
 ) -> (
-    Vec<polyspec_hyper::steps::Call>,
-    polyspec_hyper::steps::Answer,
+    Vec<polyspec_hyper_server::steps::Call>,
+    polyspec_hyper_server::steps::Answer,
 ) {
-    use polyspec_hyper::steps::{Input, PageRequest, Step};
+    use polyspec_hyper_server::steps::{Input, PageRequest, Step};
     let mut page = match PageRequest::new(app, &input) {
         Ok(page) => page,
         Err(error) => panic!("{error}"),
@@ -1145,17 +1151,17 @@ fn run_page(
 
 fn page_input(
     route: &str,
-    kind: polyspec_hyper::steps::PageKind,
+    kind: polyspec_hyper_server::steps::PageKind,
     action: bool,
-) -> polyspec_hyper::steps::PageInput {
-    polyspec_hyper::steps::PageInput {
+) -> polyspec_hyper_server::steps::PageInput {
+    polyspec_hyper_server::steps::PageInput {
         route: route.to_owned(),
-        params: polyspec_hyper::steps::Map::new(),
+        params: polyspec_hyper_server::steps::Map::new(),
         kind,
         action,
         csrf: "t".to_owned(),
         changed: Vec::new(),
-        stored: polyspec_hyper::steps::Map::new(),
+        stored: polyspec_hyper_server::steps::Map::new(),
         keep_cookie: None,
         held_hash: None,
         now: 0.0,
@@ -1165,7 +1171,7 @@ fn page_input(
 #[test]
 fn the_steps_of_a_page_ask_the_host_for_each_handler() {
     // HY-124.2, HY-124.4, HY-18, HY-26.2, HY-58.3, HY-75.1, HY-128.2
-    use polyspec_hyper::steps::{ActionOutcome, Answer, Call, Input, PageKind};
+    use polyspec_hyper_server::steps::{ActionOutcome, Answer, Call, Input, PageKind};
     let app = board(false);
     let (calls, answer) = run_page(
         &app,
@@ -1303,7 +1309,7 @@ fn the_steps_of_a_page_ask_the_host_for_each_handler() {
 
 #[test]
 fn a_page_refuses_the_result_of_another_call() {
-    use polyspec_hyper::steps::{Input, PageKind, PageRequest, Step};
+    use polyspec_hyper_server::steps::{Input, PageKind, PageRequest, Step};
     let app = board(false);
     let mut page = match PageRequest::new(&app, &page_input("home", PageKind::Html, false)) {
         Ok(page) => page,
@@ -1321,7 +1327,7 @@ fn a_page_refuses_the_result_of_another_call() {
 #[test]
 fn a_declaration_of_client_rendering_is_checked_when_the_application_opens() {
     // HY-62.5, HY-62.6, HY-62.15, HY-62.35, HY-62.37, HY-62.39
-    use polyspec_hyper::client::{check_declaration, check_shell_path, shell_text};
+    use polyspec_hyper_server::client::{check_declaration, check_shell_path, shell_text};
     let file = cases("client.json");
     let (_, manifest) = application(&cases("app.json"), "a_board");
     let shell = text(&file, "shell");
@@ -1366,8 +1372,8 @@ fn a_declaration_of_client_rendering_is_checked_when_the_application_opens() {
 #[test]
 fn the_route_of_a_request_before_its_page() -> Result<(), Error> {
     // HY-62.16 to HY-62.23, HY-40.1, HY-27.6, HY-116.12, HY-116.13, HY-116.18, HY-127.2, HY-59.12, HY-15.1
-    use polyspec_hyper::front::{route_request, Front, Plain, Route};
-    use polyspec_hyper::steps::PageKind;
+    use polyspec_hyper_server::front::{route_request, Front, Plain, Route};
+    use polyspec_hyper_server::steps::PageKind;
     let pages = board(false);
     let with_context = board(true);
     let front = |method: &str, path: &str, accept: &str| Front {
@@ -1504,7 +1510,7 @@ fn the_route_of_a_request_before_its_page() -> Result<(), Error> {
 #[test]
 fn the_headers_of_a_page_and_the_kept_endpoint() {
     // HY-53, HY-52, HY-65, HY-117.1, HY-45, HY-40.1
-    use polyspec_hyper::front::{frame_headers, kept_value, page_headers, PageResponse};
+    use polyspec_hyper_server::front::{frame_headers, kept_value, page_headers, PageResponse};
     let response =
         |status: u16, json: bool, method: &str, if_none_match: Option<&str>| PageResponse {
             status,
@@ -1524,7 +1530,7 @@ fn the_headers_of_a_page_and_the_kept_endpoint() {
     let tag = ok.headers[3].1.clone();
     assert_eq!(
         tag,
-        polyspec_hyper::etag::page_tag(r#"{"shared":{"csrf":"token"}}"#, "", "")
+        polyspec_hyper_server::etag::page_tag(r#"{"shared":{"csrf":"token"}}"#, "", "")
     );
     let not_modified = page_headers(&response(200, true, "GET", Some(&tag)));
     assert_eq!(not_modified.status, 304);
@@ -1571,9 +1577,9 @@ fn the_headers_of_a_page_and_the_kept_endpoint() {
 #[test]
 fn the_session_of_a_page_and_of_the_kept_endpoint() -> Result<(), binding_core::Failure<Error>> {
     // HY-120.6, HY-120.7, HY-24.1, HY-24.4, HY-25.2, HY-59.8, HY-40.1, HY-11.3
-    use polyspec_hyper::opening::{keep_request, open_page, KeepRequest, Opened, Opening};
-    use polyspec_hyper::session::{kept, put_flash, token};
-    use polyspec_hyper::steps::PageKind;
+    use polyspec_hyper_server::opening::{keep_request, open_page, KeepRequest, Opened, Opening};
+    use polyspec_hyper_server::session::{kept, put_flash, token};
+    use polyspec_hyper_server::steps::PageKind;
     use polyspec_session_store::MemoryStore;
     let pages = board(false);
     let mask = "ab".repeat(32);
@@ -1606,7 +1612,7 @@ fn the_session_of_a_page_and_of_the_kept_endpoint() -> Result<(), binding_core::
     assert_eq!(first.len(), 64);
     assert_eq!(
         input.csrf,
-        polyspec_hyper::csrf::mask(&first, &mask).map_err(binding_core::Failure::Kind)?
+        polyspec_hyper_server::csrf::mask(&first, &mask).map_err(binding_core::Failure::Kind)?
     );
     assert_eq!(input.changed, ["count", "path"]);
     assert!(input
@@ -1631,7 +1637,8 @@ fn the_session_of_a_page_and_of_the_kept_endpoint() -> Result<(), binding_core::
         Opened::Refused { answer } => assert_eq!(answer.status, 403),
         Opened::Page { .. } => panic!("a POST without its token opened the page"),
     }
-    let masked = polyspec_hyper::csrf::mask(&first, &mask).map_err(binding_core::Failure::Kind)?;
+    let masked =
+        polyspec_hyper_server::csrf::mask(&first, &mask).map_err(binding_core::Failure::Kind)?;
     assert!(matches!(
         open_page(&pages, &mut store, &opening(true, Some(masked.clone())))?,
         Opened::Page { .. }
