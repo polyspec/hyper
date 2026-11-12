@@ -7,7 +7,8 @@ from pathlib import Path
 from urllib.parse import urlencode
 
 from polyspec.hyper._csrf import Csrf
-from polyspec.hyper.client import Choice, ClientRendering
+from polyspec.hyper.choice import Choice
+from polyspec.hyper.client_rendering import ClientRendering
 from polyspec.hyper.request import Request
 from polyspec.hyper.session import ArraySession
 

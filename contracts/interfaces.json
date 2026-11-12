@@ -8222,7 +8222,104 @@
               "internal": false
             }
           },
-          "members": []
+          "members": [
+            {
+              "id": "client-rendering.constructor",
+              "kind": "constructor",
+              "visibility": "public",
+              "inputs": [
+                "string",
+                "string",
+                "function(request) -> choice"
+              ],
+              "output": "client-rendering",
+              "errors": [],
+              "state": "Holds the static shell, the data base path and the selection of the client-rendered pages of an application (HY-62).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/ClientRendering.php::Polyspec\\Hyper\\ClientRendering::__construct",
+                  "signature": "public function __construct(string $shell, string $basePath, Closure $selects)"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/client-rendering.ts::ClientRendering.constructor",
+                  "signature": "constructor(shell: string, basePath: string, selects: (request: Request) => Choice | Promise<Choice>)"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/client_rendering.py::ClientRendering.__init__",
+                  "signature": "def __init__(self, shell: str, base_path: str, selects: Callable[[Request], Choice]) -> None"
+                }
+              }
+            },
+            {
+              "id": "client-rendering.shell",
+              "kind": "property",
+              "visibility": "public",
+              "inputs": [],
+              "output": "string",
+              "errors": [],
+              "state": "Holds the absolute path of the static shell, which declares the data base path (HYC-8).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/ClientRendering.php::Polyspec\\Hyper\\ClientRendering::shell",
+                  "signature": "public readonly string $shell"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/client-rendering.ts::ClientRendering.shell",
+                  "signature": "readonly shell: string"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/client_rendering.py::ClientRendering.shell",
+                  "signature": "shell: str"
+                }
+              }
+            },
+            {
+              "id": "client-rendering.basePath",
+              "kind": "property",
+              "visibility": "public",
+              "inputs": [],
+              "output": "string",
+              "errors": [],
+              "state": "Holds the data base path (HY-8).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/ClientRendering.php::Polyspec\\Hyper\\ClientRendering::basePath",
+                  "signature": "public readonly string $basePath"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/client-rendering.ts::ClientRendering.basePath",
+                  "signature": "readonly basePath: string"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/client_rendering.py::ClientRendering.base_path",
+                  "signature": "base_path: str"
+                }
+              }
+            },
+            {
+              "id": "client-rendering.selects",
+              "kind": "property",
+              "visibility": "public",
+              "inputs": [],
+              "output": "function(request) -> choice",
+              "errors": [],
+              "state": "Holds the selection, which returns the choice of a request (HY-62).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/ClientRendering.php::Polyspec\\Hyper\\ClientRendering::selects",
+                  "signature": "public readonly Closure $selects"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/client-rendering.ts::ClientRendering.selects",
+                  "signature": "readonly selects: (request: Request)"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/client_rendering.py::ClientRendering.selects",
+                  "signature": "selects: Callable[[Request], Choice]"
+                }
+              }
+            }
+          ]
         },
         {
           "id": "choice",
@@ -8243,7 +8340,80 @@
               "internal": false
             }
           },
-          "members": []
+          "members": [
+            {
+              "id": "choice.constructor",
+              "kind": "constructor",
+              "visibility": "public",
+              "inputs": [
+                "boolean",
+                "value"
+              ],
+              "output": "choice",
+              "errors": [],
+              "state": "Holds whether a request is of a client-rendered page and the value that its handlers read (HY-62).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Choice.php::Polyspec\\Hyper\\Choice::__construct",
+                  "signature": "public function __construct(bool $chosen, mixed $value)"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/choice.ts::Choice.constructor",
+                  "signature": "constructor(chosen: boolean, value: unknown)"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/choice.py::Choice.__init__",
+                  "signature": "def __init__(self, chosen: bool, value: object) -> None"
+                }
+              }
+            },
+            {
+              "id": "choice.chosen",
+              "kind": "property",
+              "visibility": "public",
+              "inputs": [],
+              "output": "boolean",
+              "errors": [],
+              "state": "Holds whether the request is of a client-rendered page.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Choice.php::Polyspec\\Hyper\\Choice::chosen",
+                  "signature": "public readonly bool $chosen"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/choice.ts::Choice.chosen",
+                  "signature": "readonly chosen: boolean"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/choice.py::Choice.chosen",
+                  "signature": "chosen: bool"
+                }
+              }
+            },
+            {
+              "id": "choice.value",
+              "kind": "property",
+              "visibility": "public",
+              "inputs": [],
+              "output": "value",
+              "errors": [],
+              "state": "Holds the value that every loader and action of the request reads with the selection of its request.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Choice.php::Polyspec\\Hyper\\Choice::value",
+                  "signature": "public readonly mixed $value"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/choice.ts::Choice.value",
+                  "signature": "readonly value: unknown"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/choice.py::Choice.value",
+                  "signature": "value: object"
+                }
+              }
+            }
+          ]
         }
       ]
     },

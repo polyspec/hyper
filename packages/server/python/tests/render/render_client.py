@@ -7,7 +7,8 @@ from pathlib import Path
 
 from .fixture_app import FIXTURES, PROGRAM
 from polyspec.hyper.app import App
-from polyspec.hyper.client import Choice, ClientRendering
+from polyspec.hyper.choice import Choice
+from polyspec.hyper.client_rendering import ClientRendering
 from polyspec.hyper.representation import Representation
 from polyspec.hyper.request import Request
 from polyspec.hyper.result import Result

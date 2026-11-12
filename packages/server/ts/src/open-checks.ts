@@ -3,7 +3,8 @@
 import { readFileSync } from 'node:fs';
 import { isAbsolute } from 'node:path';
 import { type Manifest } from '@polyspec/hyper-client';
-import type { ClientRendering, Handlers } from './app.js';
+import type { Handlers } from './app.js';
+import type { ClientRendering } from './client-rendering.js';
 
 // The client rendering as the app keeps it: the data base path, the bytes of its shell and its selection.
 export interface Client {

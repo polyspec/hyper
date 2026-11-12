@@ -12,7 +12,8 @@ from collections.abc import Sequence
 from typing import Callable, Optional, Union
 
 from ._invalid_accept import InvalidAccept
-from .client import Choice, ClientRendering
+from .choice import Choice
+from .client_rendering import ClientRendering
 from .container import Container
 from ._build import Build
 from ._representation_entries import RepresentationEntries

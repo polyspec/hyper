@@ -5,6 +5,8 @@ import { isAbsolute, join } from 'node:path';
 import type { Server } from 'node:http';
 import { checkManifest, checkTemplateIndex, createApplication, DATA_TEMPLATE_NAME, keptPaths, routeReads, routeTemplates, stripBasePath, type Application, type RouteDeclaration, type RouteReads } from '@polyspec/hyper-client';
 import { decodeTemplate, resolvePath, type HostFunction, type Template } from '@polyspec/template/render';
+import type { Choice } from './choice.js';
+import type { ClientRendering } from './client-rendering.js';
 import { Csrf } from './csrf.js';
 import type { FileSessions } from './file-sessions.js';
 import type { RedisSessions } from './redis-sessions.js';
@@ -114,25 +116,6 @@ export interface Handlers<S extends object> {
   regions?: Record<string, Loader<S>>;
   routes?: Record<string, RouteHandlers<S>>;
 }
-
-// The client-rendered pages of an application (HY-62): their HTML requests receive the static shell, and their JSON
-// requests and actions use the data base path.
-export interface ClientRendering {
-  // The absolute path of the static shell, which declares the data base path with <meta name="hyper-api"> (HYC-8).
-  shell: string;
-  // The data base path, such as /_props (HY-8).
-  basePath: string;
-  // Returns the choice of a request, for example by its Host header, or a promise of it, which the server awaits.
-  selects: (request: Request) => Choice | Promise<Choice>;
-}
-
-// The result of the selection of a client rendering (HY-62): whether the request is of a client-rendered page, and a
-// value that every loader and action of the request reads with request.selection(); the value is not undefined.
-export interface Choice {
-  chosen: boolean;
-  value: unknown;
-}
-
 
 export interface AppOptions<S extends object> {
   // The absolute path of the manifest (HY-1).

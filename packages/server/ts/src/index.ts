@@ -1,4 +1,6 @@
-export { App, type Action, type AppOptions, type Choice, type ClientRendering, type HandlerArgument, type Handlers, type Loader, type RepresentationArgument, type RepresentationHandler, type RouteHandlers, type RouteRegionLoader } from './app.js';
+export { App, type Action, type AppOptions, type HandlerArgument, type Handlers, type Loader, type RepresentationArgument, type RepresentationHandler, type RouteHandlers, type RouteRegionLoader } from './app.js';
+export { Choice } from './choice.js';
+export { ClientRendering } from './client-rendering.js';
 export { type ContextHandler } from './context.js';
 export { FileSession, FileSessions, type FileSessionsOptions } from './file-sessions.js';
 export { RecordSession } from './session-record.js';

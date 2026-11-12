@@ -8,7 +8,8 @@ PUBLIC_MODULES = [
     "app",
     "asgi",
     "bad_request",  # HY-58: the stop of a bad request.
-    "client",
+    "choice",  # HY-62: the result of the selection of a client rendering.
+    "client_rendering",
     "container",
     "file_sessions",
     "forbidden",  # HY-51: the stop of a forbidden request.
@@ -42,15 +43,20 @@ class PublicApiTest(unittest.TestCase):
             [
                 "ArraySession",
                 "BadRequest",
+                "Choice",
+                "ClientRendering",
                 "Container",
                 "Forbidden",
+                "MediaType",
                 "NotFound",
                 "Redirect",
                 "Reply",
+                "Representation",
                 "Request",
                 "Response",
                 "Result",
                 "SessionStore",
+                "UploadedFile",
             ],
             sorted(polyspec.hyper.__all__),
         )
