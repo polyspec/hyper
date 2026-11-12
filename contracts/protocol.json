@@ -5784,8 +5784,8 @@
                     "ko": "`value`"
                   },
                   {
-                    "en": "HY-69.8",
-                    "ko": "HY-69.8"
+                    "en": "HY-69.9",
+                    "ko": "HY-69.9"
                   }
                 ],
                 [
@@ -6024,6 +6024,24 @@
                 ],
                 [
                   {
+                    "en": "`integer_range`",
+                    "ko": "`integer_range`"
+                  },
+                  {
+                    "en": "none",
+                    "ko": "없음"
+                  },
+                  {
+                    "en": "`value`",
+                    "ko": "`value`"
+                  },
+                  {
+                    "en": "HY-52.18, HY-69.9",
+                    "ko": "HY-52.18, HY-69.9"
+                  }
+                ],
+                [
+                  {
                     "en": "`internal`",
                     "ko": "`internal`"
                   },
@@ -6154,7 +6172,8 @@
             10,
             11,
             12,
-            14
+            14,
+            17
           ],
           "blocks": [
             {
@@ -6215,10 +6234,10 @@
                   "koSource": "610eb1a61386c2c5835af43268b074948194c2d397e6564e32caffa42c821d90"
                 },
                 {
-                  "id": "HY-52.17",
-                  "en": "A `Max-Age` is an integer of the interface contract that is not negative, so a value that the binding does not take as an integer, such as a float in PHP and Python, a bool, a string or a Node number outside ±(2^53 − 1), fails with kind `invalid_number` of the binding (B-2), and hyper makes no other check of its range.",
-                  "ko": "`Max-Age`는 음수가 아닌 interface 계약의 정수이므로, PHP와 Python의 float, bool, 문자열, ±(2^53 − 1) 밖의 Node 수처럼 binding이 정수로 받지 않는 값은 binding의 kind `invalid_number`로 실패하고(B-2), hyper는 그 범위를 따로 검사하지 않는다.",
-                  "koSource": "66bfc09a92746f31ceb1e699be0fbe2164f7d46d4a1dee7138fb4c71b3c7d1b4"
+                  "id": "HY-52.18",
+                  "en": "A `Max-Age` is an integer of the data model that is not negative: a value that the binding does not take as an integer, such as a float in PHP and Python, a bool, a string or a Node number outside the safe integers, fails with kind `invalid_number` of the binding (B-2), and an integer outside ±(2^53 − 1), which PHP and Python can give, fails with kind `integer_range` of hyper before its sign is checked.",
+                  "ko": "`Max-Age`는 음수가 아닌 데이터 모델의 정수다. PHP와 Python의 float, bool, 문자열, 안전 정수 밖의 Node 수처럼 binding이 정수로 받지 않는 값은 binding의 kind `invalid_number`로 실패하고(B-2), PHP와 Python이 줄 수 있는 ±(2^53 − 1) 밖의 정수는 부호를 보기 전에 hyper의 kind `integer_range`로 실패한다.",
+                  "koSource": "bfc409f536453c1b4fcc377c36eb089e3dfc59bbaf4da3fd6c5d3ec9817334d2"
                 },
                 {
                   "id": "HY-52.15",
@@ -6911,7 +6930,8 @@
           "id": "HY-69",
           "retired": [
             6,
-            7
+            7,
+            8
           ],
           "blocks": [
             {
@@ -6948,10 +6968,10 @@
                   "koSource": "a8cacf52b7f32dcf2b06779e44a924d668d8f701a6d9c07e67f7a9eccfc39c2e"
                 },
                 {
-                  "id": "HY-69.8",
-                  "en": "A status that the binding does not take as an integer fails with kind `invalid_number` of the binding (B-2), and another integer fails with kind `reply_status_not_allowed` and the message `page status <status> of a reply is not 403 (HY-69)`, where `<status>` is the integer in decimal digits.",
-                  "ko": "binding이 정수로 받지 않는 상태는 binding의 kind `invalid_number`로 실패하고(B-2), 다른 정수는 kind `reply_status_not_allowed`와 message `page status <status> of a reply is not 403 (HY-69)`로 실패한다. `<status>`는 십진수로 쓴 정수다.",
-                  "koSource": "b2c401d686b0c31e465e4129a81af92bc77e0d9f6b5bd1c9f203f08afa2539db"
+                  "id": "HY-69.9",
+                  "en": "A status that the binding does not take as an integer fails with kind `invalid_number` of the binding (B-2), an integer outside ±(2^53 − 1) fails with kind `integer_range` of hyper, and another integer fails with kind `reply_status_not_allowed` and the message `page status <status> of a reply is not 403 (HY-69)`, where `<status>` is the integer in decimal digits.",
+                  "ko": "binding이 정수로 받지 않는 상태는 binding의 kind `invalid_number`로 실패하고(B-2), ±(2^53 − 1) 밖의 정수는 hyper의 kind `integer_range`로 실패하며, 다른 정수는 kind `reply_status_not_allowed`와 message `page status <status> of a reply is not 403 (HY-69)`로 실패한다. `<status>`는 십진수로 쓴 정수다.",
+                  "koSource": "943d16a2aadf7147b5e47afa32245f356e4d3004554bcc4a3a66a5984eae4554"
                 }
               ]
             }

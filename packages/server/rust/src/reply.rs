@@ -17,6 +17,18 @@ pub const REFERRER_POLICIES: [&str; 8] = [
     "unsafe-url",
 ];
 
+/// The largest integer of the data model, 2^53 − 1 (VAL-2; HY-52.18, HY-69.9).
+pub const MAX_SAFE_INTEGER: i64 = 9_007_199_254_740_991;
+
+/// Checks that an integer is one of the data model (HY-52.18, HY-69.9).
+fn in_range(value: i64) -> Result<i64, Error> {
+    if (-MAX_SAFE_INTEGER..=MAX_SAFE_INTEGER).contains(&value) {
+        Ok(value)
+    } else {
+        Err(Error::IntegerRange)
+    }
+}
+
 /// A cookie that a reply adds: its name, its value and its `Max-Age` (HY-52.2).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ReplyCookie {
@@ -54,8 +66,8 @@ fn is_reply_value(value: &str) -> bool {
 /// Checks a cookie of a reply in the order of HY-52.16: the name, the value, then the `Max-Age`.
 ///
 /// # Errors
-/// `cookie_name_not_allowed`, `cookie_value_not_allowed` and `negative_max_age`; the binding refuses a value that is
-/// no integer (HY-52.17).
+/// `cookie_name_not_allowed`, `cookie_value_not_allowed`, `integer_range` for an integer outside ±(2^53 − 1) and
+/// `negative_max_age` (HY-52.18); the binding refuses a value that is no integer.
 pub fn cookie(name: &str, value: &str, max_age: Option<i64>) -> Result<ReplyCookie, Error> {
     if !is_reply_name(name) {
         return Err(Error::CookieNameNotAllowed(name.to_owned()));
@@ -65,7 +77,7 @@ pub fn cookie(name: &str, value: &str, max_age: Option<i64>) -> Result<ReplyCook
     }
     let max_age = match max_age {
         None => None,
-        Some(age) => match u64::try_from(age) {
+        Some(age) => match u64::try_from(in_range(age)?) {
             Ok(age) => Some(age),
             Err(_) => return Err(Error::NegativeMaxAge(name.to_owned())),
         },
@@ -147,12 +159,12 @@ pub fn keeps_out_of_shared_caches(value: &str) -> bool {
             .any(|name| name == "public" || name == "s-maxage")
 }
 
-/// Checks the page status that a reply gives (HY-69.8): 403; the binding refuses a value that is no integer.
+/// Checks the page status that a reply gives (HY-69.9): 403; the binding refuses a value that is no integer.
 ///
 /// # Errors
-/// `reply_status_not_allowed` for another integer.
+/// `integer_range` outside ±(2^53 − 1) and `reply_status_not_allowed` for another integer (HY-69.9).
 pub fn status(status: i64) -> Result<u16, Error> {
-    if status == 403 {
+    if in_range(status)? == 403 {
         Ok(403)
     } else {
         Err(Error::ReplyStatusNotAllowed(status))

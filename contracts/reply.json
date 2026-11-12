@@ -127,7 +127,7 @@
         "languages": [
           "node"
         ],
-        "sentence": "HY-52.17"
+        "sentence": "HY-52.18"
       }
     },
     {
@@ -154,7 +154,7 @@
           "php",
           "python"
         ],
-        "sentence": "HY-52.17"
+        "sentence": "HY-52.18"
       }
     },
     {
@@ -177,7 +177,7 @@
         "languages": [
           "node"
         ],
-        "sentence": "HY-52.17"
+        "sentence": "HY-52.18"
       }
     },
     {
@@ -204,7 +204,7 @@
           "php",
           "python"
         ],
-        "sentence": "HY-52.17"
+        "sentence": "HY-52.18"
       }
     },
     {
@@ -517,12 +517,12 @@
         "languages": [
           "node"
         ],
-        "sentence": "HY-52.17"
+        "sentence": "HY-52.18"
       }
     },
     {
-      "id": "a_max_age_above_the_safe_range_is_written_in_php_and_python",
-      "label": "a max age of 2^53 is an integer of PHP and Python, which hyper writes as it is (HY-52.17)",
+      "id": "a_max_age_above_the_safe_range_is_out_of_range_in_php_and_python",
+      "label": "a max age of 2^53 is an integer of PHP and Python outside ±(2^53 − 1), which hyper refuses with integer_range",
       "calls": [
         [
           "cookie",
@@ -533,15 +533,18 @@
           ]
         ]
       ],
-      "headers": [
-        "a=b; Max-Age=9007199254740992; Path=/; HttpOnly; SameSite=Lax"
-      ],
       "only": {
         "languages": [
           "php",
           "python"
         ],
-        "sentence": "HY-52.17"
+        "sentence": "HY-52.18"
+      },
+      "raises": {
+        "kind": "integer_range",
+        "status": null,
+        "category": "value",
+        "message": null
       }
     },
     {
@@ -567,12 +570,12 @@
         "languages": [
           "node"
         ],
-        "sentence": "HY-52.17"
+        "sentence": "HY-52.18"
       }
     },
     {
-      "id": "a_negative_max_age_outside_the_safe_range_is_negative_in_php_and_python",
-      "label": "a max age of -2^53 is a negative integer of PHP and Python (HY-52.16)",
+      "id": "a_negative_max_age_outside_the_safe_range_is_out_of_range_in_php_and_python",
+      "label": "a max age of -2^53 is an integer of PHP and Python outside ±(2^53 − 1), which hyper refuses with integer_range",
       "calls": [
         [
           "cookie",
@@ -584,17 +587,17 @@
         ]
       ],
       "raises": {
-        "kind": "negative_max_age",
+        "kind": "integer_range",
         "status": null,
         "category": "value",
-        "message": "cookie a has a negative Max-Age (HY-52)"
+        "message": null
       },
       "only": {
         "languages": [
           "php",
           "python"
         ],
-        "sentence": "HY-52.17"
+        "sentence": "HY-52.18"
       }
     },
     {
@@ -1320,7 +1323,7 @@
         "languages": [
           "node"
         ],
-        "sentence": "HY-52.17"
+        "sentence": "HY-52.18"
       }
     },
     {
@@ -1345,7 +1348,7 @@
           "php",
           "python"
         ],
-        "sentence": "HY-52.17"
+        "sentence": "HY-52.18"
       }
     },
     {
@@ -1405,7 +1408,7 @@
         "languages": [
           "node"
         ],
-        "sentence": "HY-52.17"
+        "sentence": "HY-52.18"
       }
     },
     {
@@ -1430,7 +1433,7 @@
           "php",
           "python"
         ],
-        "sentence": "HY-52.17"
+        "sentence": "HY-52.18"
       }
     },
     {
@@ -1526,12 +1529,12 @@
         "languages": [
           "node"
         ],
-        "sentence": "HY-52.17"
+        "sentence": "HY-52.18"
       }
     },
     {
-      "id": "a_status_above_the_safe_range_is_not_403_in_php_and_python",
-      "label": "a status of 2^53 + 1 is an integer of PHP and Python that is not 403 (HY-69.8)",
+      "id": "a_status_above_the_safe_range_is_out_of_range_in_php_and_python",
+      "label": "a status of 2^53 + 1 is an integer of PHP and Python outside ±(2^53 − 1), which hyper refuses with integer_range",
       "calls": [
         [
           "status",
@@ -1541,17 +1544,17 @@
         ]
       ],
       "raises": {
-        "kind": "reply_status_not_allowed",
+        "kind": "integer_range",
         "status": null,
         "category": "value",
-        "message": "page status 9007199254740993 of a reply is not 403 (HY-69)"
+        "message": null
       },
       "only": {
         "languages": [
           "php",
           "python"
         ],
-        "sentence": "HY-52.17"
+        "sentence": "HY-52.18"
       }
     }
   ],

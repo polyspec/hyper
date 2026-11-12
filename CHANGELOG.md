@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- An integer of a reply outside ±(2^53 − 1), a `Max-Age` or a page status that PHP and Python can give, fails with the kind `integer_range` of hyper before its sign or its value is checked (HY-52.18, HY-69.9), and Node refuses such a number with `invalid_number` of its binding, because a Node number outside the safe integers is no integer; `integer_range` joins the table of HY-132, and the three cases of `contracts/reply.json` for PHP and Python expect it (S-3b, C-7).
+
 - The Rust core keeps of the data only its read paths (HY-73.29, HY-73.22) by the tree of read paths of the build, and its tests run the 24 cases of `contracts/reads.json` (C-7).
 
 - The cases of the session stores belong to the sessions library, which holds them now: `contracts/redis-sessions.json` is removed, and `contracts/file-sessions.json` keeps the two cases of the record conversion of hyper (HY-104.13, HY-104.14), the case of a record that holds no array and its group `cookie` (HY-45). The specification follows the sessions library (C-6): an identifier has 22 to 256 characters (HY-104.31; SE-5.1), the options of the stores fail with the kinds `invalid_directory`, `invalid_lifetime` and `invalid_lock_expire` (HY-104.32, HY-115.28), `lockExpire` has no default and `lockWait` counts microseconds (HY-115.28, HY-115.29), and no server removes expired sessions while it answers a request: the application calls `collect` of its store (HY-104.33; SF-5.3). The core depends on `polyspec-sessions-core`, whose store interface the host functions take, and the interface contract records that `ArraySession` is the `MemoryStore` of the sessions library.

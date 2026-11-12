@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 96dc4fff475320525fb6470c0e8db5a199c9717e27f5547502dfa4116e02fb61 -->
+<!-- source-sha256: 155063efdf6aec8d517819434f04e11e99c006e6dd0bb500bfc340233e522f97 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- PHP와 Python이 줄 수 있는 ±(2^53 − 1) 밖의 reply 정수, 곧 `Max-Age`나 page 상태는 부호나 값을 보기 전에 hyper의 kind `integer_range`로 실패하고(HY-52.18, HY-69.9), Node는 안전 정수 밖의 수가 정수가 아니므로 그런 수를 binding의 `invalid_number`로 거부한다. `integer_range`가 HY-132의 표에 더해지고, PHP와 Python을 위한 `contracts/reply.json`의 case 셋이 그것을 기대한다(S-3b, C-7).
 
 - Rust core는 build의 read path tree로 데이터에서 그 read path만 보존하며(HY-73.29, HY-73.22), 그 시험은 `contracts/reads.json`의 case 24개를 실행한다(C-7).
 

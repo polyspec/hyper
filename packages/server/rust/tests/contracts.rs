@@ -61,6 +61,19 @@ fn check_raises(case: &Value, error: &Error) {
     }
 }
 
+/// Whether a case runs in PHP and Python, whose binding gives the core every i64 (B-2); a case only of Node states
+/// what the binding of Node refuses before the core runs.
+fn runs_in_php(case: &Value) -> bool {
+    match case.get("only") {
+        None => true,
+        Some(only) => only["languages"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .any(|language| language == "php"),
+    }
+}
+
 fn is_binding_case(case: &Value) -> bool {
     matches!(
         case["raises"]["kind"].as_str(),
@@ -180,7 +193,7 @@ fn reply_cookies() {
     let file = cases("reply.json");
     let mut ran = 0;
     'cases: for case in group(&file, "cookies") {
-        if is_binding_case(case) || case.get("only").is_some() {
+        if is_binding_case(case) || !runs_in_php(case) {
             continue;
         }
         let secure = case["secure"].as_bool() == Some(true);
@@ -229,7 +242,7 @@ fn reply_cookies() {
 
 #[test]
 fn reply_cache_control_referrer_policy_and_status() {
-    // HY-52.6, HY-52.16, HY-103.2, HY-103.9, HY-69.8
+    // HY-52.6, HY-52.16, HY-103.2, HY-103.9, HY-69.9
     let file = cases("reply.json");
     for (name, group_name) in [
         ("cacheControl", "cacheControl"),
@@ -237,7 +250,7 @@ fn reply_cache_control_referrer_policy_and_status() {
         ("status", "status"),
     ] {
         'cases: for case in group(&file, group_name) {
-            if is_binding_case(case) || case.get("only").is_some() {
+            if is_binding_case(case) || !runs_in_php(case) {
                 continue;
             }
             let mut value: Option<Value> = None;

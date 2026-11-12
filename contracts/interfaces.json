@@ -17476,7 +17476,7 @@
               "role": "expected",
               "optional": true,
               "compare": "exact",
-              "sentence": "HY-69.8",
+              "sentence": "HY-69.9",
               "state": "`raises` is the failure of the case: its `kind`, its HTTP `status` or null, its `category` and its `message` when a rule states the message, or null; a case with `raises` has no result field."
             }
           },

@@ -14,7 +14,7 @@ pub enum Error {
     NotRedirectResult,
     /// A page status other than 200, 409 and 422 (HY-58.6).
     PageStatusNotAllowed(i64),
-    /// A page status of a reply other than 403 (HY-69.8).
+    /// A page status of a reply other than 403 (HY-69.9).
     ReplyStatusNotAllowed(i64),
     /// A cookie name of a reply outside HY-52.2 (HY-52.16).
     CookieNameNotAllowed(String),
@@ -22,6 +22,8 @@ pub enum Error {
     CookieValueNotAllowed(String),
     /// A negative `Max-Age` of a reply cookie (HY-52.16).
     NegativeMaxAge(String),
+    /// An integer outside ±(2^53 − 1) where a rule takes an integer of the data model (HY-52.18, HY-69.9).
+    IntegerRange,
     /// A `Cache-Control` with a character other than U+0020 to U+007E (HY-52.16).
     CacheControlNotAllowed,
     /// A `Cache-Control` that lets a shared cache store a page (HY-52.6, HY-52.16, HY-122.6).
@@ -62,6 +64,7 @@ impl Error {
             | Error::CookieNameNotAllowed(_)
             | Error::CookieValueNotAllowed(_)
             | Error::NegativeMaxAge(_)
+            | Error::IntegerRange
             | Error::CacheControlNotAllowed
             | Error::CacheControlShared(_)
             | Error::ReferrerPolicyNotAllowed(_)
@@ -93,6 +96,7 @@ impl Kinds for Error {
             Error::CookieNameNotAllowed(_) => "cookie_name_not_allowed",
             Error::CookieValueNotAllowed(_) => "cookie_value_not_allowed",
             Error::NegativeMaxAge(_) => "negative_max_age",
+            Error::IntegerRange => "integer_range",
             Error::CacheControlNotAllowed => "cache_control_not_allowed",
             Error::CacheControlShared(_) => "cache_control_shared",
             Error::ReferrerPolicyNotAllowed(_) => "referrer_policy_not_allowed",
@@ -119,6 +123,7 @@ impl Kinds for Error {
             | Error::CookieNameNotAllowed(_)
             | Error::CookieValueNotAllowed(_)
             | Error::NegativeMaxAge(_)
+            | Error::IntegerRange
             | Error::CacheControlNotAllowed
             | Error::CacheControlShared(_)
             | Error::ReferrerPolicyNotAllowed(_)
@@ -152,6 +157,7 @@ impl fmt::Display for Error {
                 write!(f, "cookie value of {name} has a character that is not allowed (HY-52)")
             }
             Error::NegativeMaxAge(name) => write!(f, "cookie {name} has a negative Max-Age (HY-52)"),
+            Error::IntegerRange => f.write_str("an integer is outside ±(2^53 − 1) (HY-52, HY-69)"),
             Error::CacheControlNotAllowed => f.write_str("Cache-Control has a character that is not allowed (HY-52)"),
             Error::CacheControlShared(value) => write!(
                 f,
@@ -192,6 +198,7 @@ impl std::error::Error for Error {
             | Error::CookieNameNotAllowed(_)
             | Error::CookieValueNotAllowed(_)
             | Error::NegativeMaxAge(_)
+            | Error::IntegerRange
             | Error::CacheControlNotAllowed
             | Error::CacheControlShared(_)
             | Error::ReferrerPolicyNotAllowed(_)
