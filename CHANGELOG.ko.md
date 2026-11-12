@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: fef3b98c47232f8ab3724bd79aa92046fae2dee7e42d22283632844940a59e32 -->
+<!-- source-sha256: 192752556dec8a8db893d65e7a2dcc007abf9da786a41513aab2be4ba35f2373 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- ±(2^53 − 1) 안의 정수인 데이터 모델의 수는 반올림 변환 없이 수의 bit에서 읽어 session record에 PHP 정수로 쓰고, 다른 수는 float로 쓴다(HY-104.34). 다른 형식의 저장된 kept region은 다른 region의 것까지 kept 값의 모든 읽기와 쓰기를 실패시킨다(HY-104.35). Rust core는 `polyspec-bindgen-core`, `polyspec-ordered-json`, `polyspec-template`, `polyspec-http-cookies`, `polyspec-sessions`, `polyspec-php-serialize`를 각 Git 저장소의 branch `v1/rust-core`에서 받으므로 작업 트리가 아니라 각 라이브러리의 커밋된 상태를 읽는다. `polyspec-http-negotiate`와 `polyspec-http-media-type`은 http-negotiate의 branch가 http-media-type을 Git으로 가리킬 때까지 path 의존으로 남는다(C-7).
 
 - Rust core는 sessions 라이브러리의 저장소 interface로 hyper의 값을 session에 둔다(C-7, HY-104.25). token(32 random byte의 새 token, 갱신 때 새 token; HY-24.1, HY-24.14, HY-72.2), 다음 요청이 가져가는 flash 값과 바뀐 topic(HY-25.2), region과 path별 kept server 값(HY-40)을 record(php-serialize의 PHP 값)와 데이터 모델 사이에서 바꾸며(HY-104.13, HY-104.14), 다른 형식의 저장 값은 `invalid_session_record`로 실패하고 그 category는 HY-132처럼 `contracts/session.json`의 case에서도 `store`다(HY-104.23). 시험은 group `token`, `flash`, `kept`의 case 30개를 실행한다. core는 저장소 없는 `polyspec-sessions`와 `polyspec-php-serialize`에 의존하고, lock에는 `polyspec-bindgen-core`가 한 벌만 있다. interface 계약은 template 데이터 모델과 sessions 라이브러리의 kind를 넘기고, 오류 class `RecordError`는 decode할 수 없는 record의 offset을 전달한다.
 

@@ -688,7 +688,7 @@ fn session_values_are_kept_in_the_record() {
                         failure = Some(error);
                         break;
                     }
-                    Err(Failure::Raised(_)) => {
+                    Err(Failure::Raised(_) | Failure::Callback(_)) => {
                         panic!("{}: a raised exception of no store", case["id"])
                     }
                 }

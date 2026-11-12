@@ -384,3 +384,25 @@ fn errors_name_their_kind_and_category() {
     assert_eq!(Error::Internal("x").kind(), "internal");
     assert_eq!(Error::InvalidSessionToken.errno(), None);
 }
+
+#[test]
+fn integers_of_the_data_model_are_php_integers_in_a_record() -> Result<(), Error> {
+    // HY-104.14: an integral number within ±(2^53 − 1) is written as a PHP integer, another number as a float.
+    use polyspec_php_serialize::Node;
+    use polyspec_template::Value;
+    for (number, expected) in [
+        (7.0, Node::Int(7)),
+        (-0.0, Node::Int(0)),
+        (-42.0, Node::Int(-42)),
+        (9_007_199_254_740_991.0, Node::Int(9_007_199_254_740_991)),
+        (-9_007_199_254_740_991.0, Node::Int(-9_007_199_254_740_991)),
+        (0.5, Node::Float(0.5)),
+        (1e300, Node::Float(1e300)),
+        (2.0_f64.powi(53), Node::Float(2.0_f64.powi(53))),
+        (5e-324, Node::Float(5e-324)),
+    ] {
+        let record = polyspec_hyper::session::to_record(&Value::Number(number))?;
+        assert_eq!(record.root(), &expected, "{number}");
+    }
+    Ok(())
+}

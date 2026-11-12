@@ -6667,6 +6667,12 @@
                   "koSource": "cd694f6c871d28190619c015c87725a3d3785a91ab1b0105ac3bd4888fe8cd79"
                 },
                 {
+                  "id": "HY-104.34",
+                  "en": "It writes a number of the data model that is an integer within ±(2^53 − 1) as a PHP integer and every other number as a PHP float, so that a PHP peer reads an integer as an integer; the integer is read from the bits of the number without a rounding conversion.",
+                  "ko": "±(2^53 − 1) 안의 정수인 데이터 모델의 수는 PHP 정수로, 다른 수는 PHP float로 쓰므로 PHP peer는 정수를 정수로 읽는다. 정수는 반올림 변환 없이 수의 bit에서 읽는다.",
+                  "koSource": "37d4562f526b568faed620ee12887f5022afceb44862887c4c88303cd30171ce"
+                },
+                {
                   "id": "HY-104.15",
                   "en": "The removal of expired sessions skips a session whose lock a request holds.",
                   "ko": "만료된 session의 제거는 요청이 잡고 있는 lock의 session을 건너뛴다.",
@@ -6719,6 +6725,12 @@
                   "en": "A stored flash value or kept value of another form fails the request with HY-43, and no server repairs it.",
                   "ko": "다른 형태로 저장된 flash 값이나 kept 값은 HY-43으로 요청을 실패시키며, 어떤 서버도 그것을 고쳐 쓰지 않는다.",
                   "koSource": "c80dece20175a916486c165621ffe7e846fd73c79dec8712b331f86920233fc3"
+                },
+                {
+                  "id": "HY-104.35",
+                  "en": "The kept values of every region are checked when the session reads them, for a read of one region and for a write, so a stored region of another form fails every read and write of the kept values.",
+                  "ko": "모든 region의 kept 값은 session이 그것을 읽을 때 한 region의 읽기에서도 쓰기에서도 검사하므로, 다른 형식의 저장된 region은 kept 값의 모든 읽기와 쓰기를 실패시킨다.",
+                  "koSource": "96d379f7815dcdba15ecc8d474f3f35b3eec493a5e12739ee9552545842b660c"
                 },
                 {
                   "id": "HY-104.30",

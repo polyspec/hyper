@@ -42,6 +42,7 @@ fn from_store<T>(result: Result<T, polyspec_sessions::Failure>) -> Result<T, Ses
         Ok(value) => Ok(value),
         Err(Failure::Kind(error)) => Err(Failure::Kind(Error::Sessions(error))),
         Err(Failure::Raised(raised)) => Err(Failure::Raised(raised)),
+        Err(Failure::Callback(error)) => Err(Failure::Callback(error)),
     }
 }
 
@@ -175,18 +176,53 @@ fn number_node(value: f64) -> Result<Node, Error> {
             "a number of the data model that is not finite",
         ));
     }
-    if value.fract() == 0.0 && value.abs() <= MAX_SAFE {
-        // VAL-2: an integral number within ±(2^53 − 1) is an exact integer, so the conversion loses nothing.
-        #[allow(
-            clippy::as_conversions,
-            clippy::cast_possible_truncation,
-            reason = "HY-104.14: the number is integral and within ±(2^53 − 1), which i64 holds exactly"
-        )]
-        let integer = value as i64;
-        Ok(Node::Int(integer))
-    } else {
-        Ok(Node::Float(value))
+    match exact_integer(value) {
+        Some(integer) => Ok(Node::Int(integer)),
+        None => Ok(Node::Float(value)),
     }
+}
+
+/// The integer that a float equals exactly, when it is integral and within ±(2^53 − 1), read from the bits of the float
+/// without a rounding conversion (HY-104.14): the significand with its implicit bit, shifted by the exponent, with no
+/// bit lost by the shift.
+fn exact_integer(value: f64) -> Option<i64> {
+    const LIMIT: i64 = 9_007_199_254_740_991;
+    if value == 0.0 {
+        return Some(0);
+    }
+    let bits = value.to_bits();
+    let negative = bits >> 63 == 1;
+    let biased = (bits >> 52) & 0x7ff;
+    let fraction = bits & 0x000f_ffff_ffff_ffff;
+    // Subnormal numbers, infinities and NaN are no integers of the data model.
+    if biased == 0 || biased == 0x7ff {
+        return None;
+    }
+    let significand = fraction | 0x0010_0000_0000_0000;
+    // The value is significand × 2^(biased − 1075).
+    let magnitude = if biased >= 1075 {
+        let Ok(shift) = u32::try_from(biased - 1075) else {
+            return None;
+        };
+        significand
+            .checked_shl(shift)
+            .filter(|shifted| shifted >> shift == significand)?
+    } else {
+        let Ok(shift) = u32::try_from(1075 - biased) else {
+            return None;
+        };
+        if shift >= 64 || significand & ((1_u64 << shift) - 1) != 0 {
+            return None;
+        }
+        significand >> shift
+    };
+    let Ok(magnitude) = i64::try_from(magnitude) else {
+        return None;
+    };
+    if magnitude > LIMIT {
+        return None;
+    }
+    Some(if negative { -magnitude } else { magnitude })
 }
 
 /// Whether the keys of a map are `0` to `n-1` in order, which PHP would read back as a list (HY-104.14).
