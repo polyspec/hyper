@@ -1,12 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: cd8647f2492ab54f8424a2bb8c26703c8c5cdb10af0a263264d84931ece2dd11 -->
+<!-- source-sha256: eba1c643c572c52db9c6454b33eff414a9dce9ff3d2997d1e05eecb5cec9751b -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
-- `make recipe-check`는 둘 이상의 server가 가진 모든 member에 대해 같은 일을 하고 같은 결과를 내는지 증명한다(H28.16, HYR-5, HYR-7, HYR-8). `caseFiles`의 각 section은 자기가 결과를 기술하는 member를 적고, 검사는 각 언어의 step과 그 step이 부르는 값의 class를 step이 쓴 대로 읽으며, 어느 section도 적지 않은 공개 member, 적은 member를 부르지 않는 step의 section, 기술된 member가 닿지 않는 내부 member, 한 server가 다른 server와 다른 member에서 닿는 member를 실패시킨다. 이 tree에서 직접 기술된 member 148개, 호출하는 쪽을 통해 기술된 내부 member 127개와 private member 114개를 보고한다. 이를 위해 server가 서로 다르던 곳을 바꿨다. 어느 server도 부르지 않던 내부 `Accept.select`를 세 server에서 제거했고 `accept.json#select`는 `parse`와 `best`로 가중치를 기술한다. `close`는 세 server의 record session의 member다. Python `ArraySession`과 record session은 `SessionStore`를 확장한다. Python `FileSessions`는 `flock`에서 기다리지 않고 Node store처럼 잡힌 lock을 잠시 뒤 다시 시도한다(HY-104.6).
+- `make recipe-check`는 둘 이상의 server가 가진 모든 member에 대해 같은 일을 하고 같은 결과를 내는지 증명한다(H28.16, HYR-5, HYR-7, HYR-8). `caseFiles`의 각 section은 자기가 결과를 기술하는 member를 적고, 검사는 각 언어의 step과 그 step이 부르는 값의 class를 step이 쓴 대로 읽으며, 어느 section도 적지 않은 공개 member, 적은 member를 부르지 않는 step의 section, 기술된 member가 닿지 않는 내부 member, 한 server가 다른 server와 다른 member에서 닿는 member를 실패시킨다. 이 tree에서 직접 기술된 member 149개, 호출하는 쪽을 통해 기술된 내부 member 125개와 private member 114개를 보고한다. 이를 위해 server가 서로 다르던 곳을 바꿨다. 어느 server도 부르지 않던 내부 `Accept.select`를 세 server에서 제거했고 `accept.json#select`는 `parse`와 `best`로 가중치를 기술한다. `close`는 세 server의 record session의 member다. Python `ArraySession`과 record session은 `SessionStore`를 확장한다. Python `FileSessions`는 `flock`에서 기다리지 않고 Node store처럼 잡힌 lock을 잠시 뒤 다시 시도한다(HY-104.6).
 
 - PHP server는 session store를 열지 못한 요청에 대해 애플리케이션이 응답하기 전에 plain 500으로 응답하고, Node와 Python server처럼 write hook만 그것을 받는다(HY-60.14, HY-60.16, HY-60.17). `NativeSession::start`가 실패의 message를 가진 내부 `SessionOpenError`를 던지며, 응답은 그것을 처리하지 않는다. 이전에는 PHP server가 그 실패를 response hook에 닿는 처리된 500으로 바꿨다. `tests/scripts/upload-servers.test.mts`의 scenario `session-open-error-is-the-plain-500`이 세 server에 대해 이것을 기술한다(H28.16).
 
