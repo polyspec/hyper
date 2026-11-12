@@ -34,7 +34,7 @@
       "id": "negative_float_zero",
       "label": "negative float zero",
       "json": "-0.0",
-      "expected": "-0"
+      "expected": "0"
     },
     {
       "id": "fraction",
@@ -68,45 +68,80 @@
     },
     {
       "id": "float_1e16",
-      "label": "float 1e16",
+      "label": "float 1e16 is outside the data model (VAL-2)",
       "json": "1e16",
-      "expected": "10000000000000000"
+      "raises": {
+        "kind": "E_DATA_NUMBER_RANGE",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "float_1e17",
-      "label": "float 1e17",
+      "label": "float 1e17 is outside the data model (VAL-2)",
       "json": "1e17",
-      "expected": "1.0e+17"
+      "raises": {
+        "kind": "E_DATA_NUMBER_RANGE",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "float_above_the_safe_range",
-      "label": "float above the safe range",
+      "label": "float above the safe range is outside the data model (VAL-2)",
       "json": "1.2345678901234568e17",
-      "expected": "1.2345678901234568e+17"
+      "raises": {
+        "kind": "E_DATA_NUMBER_RANGE",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "float_2_53_1_rounds_to_2_53",
-      "label": "float 2^53 + 1 rounds to 2^53",
+      "label": "float 2^53 + 1 rounds to 2^53 is outside the data model (VAL-2)",
       "json": "9007199254740993.0",
-      "expected": "9007199254740992"
+      "raises": {
+        "kind": "E_DATA_NUMBER_RANGE",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "integer_literal_longer_than_64_bits",
-      "label": "integer literal longer than 64 bits",
+      "label": "integer literal longer than 64 bits is outside the data model (VAL-2)",
       "json": "99999999999999999999",
-      "expected": "1.0e+20"
+      "raises": {
+        "kind": "E_DATA_NUMBER_RANGE",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "large_exponent",
-      "label": "large exponent",
+      "label": "large exponent is outside the data model (VAL-2)",
       "json": "1.5e300",
-      "expected": "1.5e+300"
+      "raises": {
+        "kind": "E_DATA_NUMBER_RANGE",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "largest_float",
-      "label": "largest float",
+      "label": "largest float is outside the data model (VAL-2)",
       "json": "1.7976931348623157e308",
-      "expected": "1.7976931348623157e+308"
+      "raises": {
+        "kind": "E_DATA_NUMBER_RANGE",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "fraction_1e_4",
@@ -118,7 +153,7 @@
       "id": "fraction_1e_5",
       "label": "fraction 1e-5",
       "json": "0.00001",
-      "expected": "1.0e-5"
+      "expected": "0.00001"
     },
     {
       "id": "small_fraction",
@@ -130,13 +165,13 @@
       "id": "smallest_float",
       "label": "smallest float",
       "json": "5e-324",
-      "expected": "5.0e-324"
+      "expected": "5e-324"
     },
     {
       "id": "line_and_paragraph_separators",
-      "label": "line and paragraph separators",
+      "label": "line and paragraph separators are written as themselves",
       "json": "\"a\\u2028b\\u2029c\"",
-      "expected": "\"a\\u2028b\\u2029c\""
+      "expected": "\"a b c\""
     },
     {
       "id": "slash_and_non_ascii_characters",
@@ -228,31 +263,56 @@
       "id": "integer_outside_the_safe_range",
       "label": "integer outside the safe range",
       "json": "9007199254740993",
-      "result": "outside"
+      "raises": {
+        "kind": "E_DATA_NUMBER_RANGE",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "negative_integer_outside_the_safe_range",
       "label": "negative integer outside the safe range",
       "json": "-9007199254740992",
-      "result": "outside"
+      "raises": {
+        "kind": "E_DATA_NUMBER_RANGE",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "largest_64_bit_integer",
       "label": "largest 64-bit integer",
       "json": "9223372036854775807",
-      "result": "outside"
+      "raises": {
+        "kind": "E_DATA_NUMBER_RANGE",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "integer_literal_longer_than_64_bits_2",
       "label": "integer literal longer than 64 bits",
       "json": "9223372036854775808",
-      "result": "outside"
+      "raises": {
+        "kind": "E_DATA_NUMBER_RANGE",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "float_outside_the_safe_range",
       "label": "float outside the safe range",
       "json": "1e20",
-      "result": "outside"
+      "raises": {
+        "kind": "E_DATA_NUMBER_RANGE",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "largest_safe_float",
@@ -264,13 +324,23 @@
       "id": "number_that_is_not_finite",
       "label": "number that is not finite",
       "json": "1e400",
-      "result": "outside"
+      "raises": {
+        "kind": "E_DATA_NUMBER_NOT_FINITE",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "nested_integer_outside_the_safe_range",
       "label": "nested integer outside the safe range",
       "json": "{\"a\":[1,{\"b\":9007199254740993}]}",
-      "result": "outside"
+      "raises": {
+        "kind": "E_DATA_NUMBER_RANGE",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "surrogate_pair",
@@ -282,13 +352,18 @@
       "id": "lone_surrogate",
       "label": "lone surrogate",
       "json": "\"\\ud800\"",
-      "result": "error"
+      "raises": {
+        "kind": "E_DATA_INVALID_UTF8",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "key_that_starts_with_u_0000",
-      "label": "key that starts with U+0000",
+      "label": "a key that starts with U+0000 is a key of a map",
       "json": "{\"\\u0000a\":1}",
-      "result": "error"
+      "result": "value"
     },
     {
       "id": "empty_key",
@@ -300,55 +375,139 @@
       "id": "leading_zero",
       "label": "leading zero",
       "json": "01",
-      "result": "error"
+      "raises": {
+        "kind": "malformed_json",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "trailing_comma",
       "label": "trailing comma",
       "json": "[1,]",
-      "result": "error"
+      "raises": {
+        "kind": "malformed_json",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "empty_text",
       "label": "empty text",
       "json": "",
-      "result": "error"
+      "raises": {
+        "kind": "malformed_json",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "single_quotes",
       "label": "single quotes",
       "json": "'a'",
-      "result": "error"
+      "raises": {
+        "kind": "malformed_json",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "raw_control_character",
       "label": "raw control character",
       "json": "\"a\nb\"",
-      "result": "error"
+      "raises": {
+        "kind": "malformed_json",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "text_after_the_value",
       "label": "text after the value",
       "json": "1 2",
-      "result": "error"
+      "raises": {
+        "kind": "malformed_json",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "nesting_of_511_lists",
-      "label": "511 nested lists decode, and they nest deeper than the data model allows",
+      "label": "511 lists nest deeper than the reading limit of 256 and fail",
       "json": "[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]",
-      "result": "outside"
+      "raises": {
+        "kind": "malformed_json",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "nesting_of_512_lists",
-      "label": "512 nested lists fail",
+      "label": "512 lists nest deeper than the reading limit of 256 and fail",
       "json": "[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]",
-      "result": "error"
+      "raises": {
+        "kind": "malformed_json",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "nesting_of_512_maps",
-      "label": "512 nested maps fail",
+      "label": "512 maps nest deeper than the reading limit of 256 and fail",
       "json": "{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":1}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}",
-      "result": "error"
+      "raises": {
+        "kind": "malformed_json",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
+    },
+    {
+      "id": "nesting_of_64_lists",
+      "label": "64 nested lists are a value of the data model (VAL-20)",
+      "json": "[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]",
+      "result": "value"
+    },
+    {
+      "id": "nesting_of_65_lists",
+      "label": "65 nested lists are read and fail with the depth of the data model (VAL-20)",
+      "json": "[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]",
+      "raises": {
+        "kind": "E_DATA_DEPTH",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
+    },
+    {
+      "id": "nesting_of_256_lists",
+      "label": "256 nested lists are within the reading limit and fail with the depth of the data model",
+      "json": "[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]",
+      "raises": {
+        "kind": "E_DATA_DEPTH",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
+    },
+    {
+      "id": "nesting_of_257_lists",
+      "label": "257 nested lists pass the reading limit of 256 and fail as a malformed text (RQ-006)",
+      "json": "[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]",
+      "raises": {
+        "kind": "malformed_json",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     }
   ]
 }

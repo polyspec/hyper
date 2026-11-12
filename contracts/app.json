@@ -9610,17 +9610,6 @@
       }
     },
     {
-      "id": "a_manifest_with_a_key_that_starts_with_u0000_fails_the_open",
-      "label": "opening fails with the open error for a manifest, valid without it, with a key that starts with the escape of U+0000",
-      "application": "b_board",
-      "files": {
-        "manifest": "{\"\\u0000k\":1,\"layout\":\"layout.tpl\",\"title\":\"title.tpl\",\"regions\":[{\"name\":\"side\",\"template\":\"side.tpl\",\"uses\":[\"count\",\"path\"]},{\"name\":\"content\",\"page\":true}],\"routes\":[{\"name\":\"home\",\"path\":\"/\",\"title\":\"Home\",\"template\":\"page.tpl\"},{\"name\":\"add\",\"path\":\"/add\",\"title\":\"Add\",\"template\":\"add.tpl\",\"post\":true},{\"name\":\"signin\",\"path\":\"/signin\",\"title\":\"Sign in\",\"template\":\"add.tpl\",\"post\":true},{\"name\":\"item\",\"path\":\"/items/{id}\",\"title\":\"Item\",\"template\":\"item.tpl\"},{\"name\":\"list\",\"path\":\"/list\",\"title\":\"List\",\"template\":\"list.tpl\",\"regions\":[{\"name\":\"rows\",\"template\":\"rows.tpl\",\"keep\":{\"open\":\"server\",\"mode\":\"cookie\",\"view\":\"localStorage\",\"filter\":\"cookie\",\"tags\":\"cookie\"}}]}]}"
-      },
-      "requirements": [
-        "HY-2"
-      ]
-    },
-    {
       "id": "a_manifest_with_a_lone_surrogate_escape_fails_the_open",
       "label": "opening fails with the open error for a manifest, valid without it, with a lone surrogate escape",
       "application": "b_board",

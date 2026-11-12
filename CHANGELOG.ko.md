@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: aad40192c8cabd9070b59894d5e0223520af7f39fff97dab75fd6673361947ac -->
+<!-- source-sha256: 5fcd2248a32eba6c5798e3e654b65bce50d1af20245b00918dd224ac7e8d28a6 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- 명세는 JSON 텍스트를 ordered-json의 직렬화기로 쓰고 ordered-json의 `parse`와 template 데이터 모델의 VAL-12로 읽는다(S-3b; HY-54.18부터 HY-54.21, HY-121.11). 수는 VAL-9대로 쓰므로 `-0`은 `0`, `1e-5`는 `0.00001`, `5e-324`는 `5e-324`다. U+2028과 U+2029는 그대로 쓴다. 읽기 한도는 중첩 container 256개이고 데이터 모델은 64단계를 허용하며 kind가 다르다. U+0000으로 시작하는 key는 key다. ±(2^53 − 1) 밖의 수는 literal과 상관없이 데이터 모델의 오류로 실패하고, ordered-json이 거부하는 텍스트는 kind `malformed_json`으로 실패한다. 이전에 모든 server는 PHP `json_encode`의 바이트를 썼고, 511단계를 읽었으며, U+0000으로 시작하는 key를 거부했다. HY-54.4부터 HY-54.8과 HY-121.8은 은퇴했다. `contracts/json.json`은 실패를 `raises`로 쓰고 깊이 case 넷을 더하며, U+0000으로 시작하는 manifest key를 거부하던 `contracts/app.json`의 case는 지웠다. 세 server는 core를 쓸 때(S-4)까지 은퇴한 규칙을 구현한다.
 
 - 명세는 요청의 cookie를 http-cookies의 `parse`로 읽고 모든 cookie를 `set_cookie`로 쓴다(S-3b). host는 받은 `Cookie` 줄을 잇지 않고 넘기며, 줄을 이어서 주는 runtime은 줄 하나를 넘긴다(HY-129.13부터 HY-129.15, CK-2.4). 모든 server의 session cookie와 reply의 cookie는 한 형식으로 쓴다. `<name>=<value>`, 주어지면 `; Max-Age=<seconds>`, `; Path=/`, HY-45의 조건에서 `; Secure`, `; HttpOnly`, `; SameSite=Lax`이다(HY-45.8, HY-52.13, CK-9). 이전에 Node와 Python server는 session cookie를 PHP의 소문자 형식(`path=/; secure`)으로 썼고 reply는 `Max-Age`를 마지막에 썼다. HY-129.1부터 HY-129.5, HY-129.7부터 HY-129.9, HY-129.12, HY-45.7, HY-52.3, HY-54.16은 은퇴했다. `contracts/reply.json`, `contracts/app.json`, `contracts/file-sessions.json`의 `Set-Cookie` 값이 이것을 따른다. 세 server는 core를 쓸 때(S-4)까지 은퇴한 규칙을 구현한다.
 

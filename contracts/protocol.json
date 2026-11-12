@@ -1425,7 +1425,9 @@
         {
           "kind": "rule",
           "id": "HY-121",
-          "retired": [],
+          "retired": [
+            8
+          ],
           "blocks": [
             {
               "kind": "paragraph",
@@ -1473,10 +1475,10 @@
                   "id": "HY-121.7"
                 },
                 {
-                  "en": "A `POST` or `PUT` without `Content-Type`, or whose `Content-Type` media type, compared without regard to case and without its parameters, is not `application/json`, receives 415; the body limit of HY-59 applies, and a body that is not valid UTF-8, or that is not the JSON text of a value of the data model as HY-54 decodes kept values (an integer literal is an integer and other number literals are floats; a number outside ±(2^53 − 1) or not finite, 512 nested containers, a lone surrogate escape and a key that starts with U+0000 fail), receives 400 with the text `Bad Request`.",
-                  "ko": "`Content-Type`이 없거나, `Content-Type` media type을 매개변수를 빼고 대소문자 구분 없이 비교해 `application/json`이 아닌 `POST`나 `PUT`은 415를 받는다. HY-59의 body 제한이 적용된다. 유효한 UTF-8이 아니거나, HY-54가 kept 값을 decode하듯 데이터 모델의 값의 JSON 텍스트가 아닌 body는 텍스트 `Bad Request`와 함께 400을 받는다. 정수 literal은 정수이고 그 밖의 수 literal은 float이며, ±(2^53 − 1) 밖이거나 유한하지 않은 수, 512단계의 중첩 container, 짝 없는 surrogate escape, U+0000으로 시작하는 key는 실패한다.",
-                  "koSource": "1ed721f38184c9278d9e9e3a577d7bbe6b9a629c3f04a0337d39ac473eba70d9",
-                  "id": "HY-121.8"
+                  "id": "HY-121.11",
+                  "en": "A `POST` or `PUT` without `Content-Type`, or whose media type (MT-4) is not `application/json`, receives 415, and one whose `Content-Type` is no media type receives 400 with the text `Bad Request` (HY-59.12); the body limit of HY-59 applies, and a body that is not valid UTF-8, that ordered-json refuses or whose value is outside the data model, as HY-54.20 reads it, receives 400 with the text `Bad Request`.",
+                  "ko": "`Content-Type`이 없거나 media type(MT-4)이 `application/json`이 아닌 `POST`나 `PUT`은 415를 받고, `Content-Type`이 media type이 아닌 요청은 텍스트 `Bad Request`와 함께 400을 받는다(HY-59.12). HY-59의 body 제한이 적용되며, HY-54.20이 읽을 때 유효한 UTF-8이 아니거나 ordered-json이 거부하거나 값이 데이터 모델 밖인 body는 텍스트 `Bad Request`와 함께 400을 받는다.",
+                  "koSource": "8f32f76a4d329a1871b72f4f8ccd8ed2a4ae3479b376381983e3e55fbf828811"
                 },
                 {
                   "en": "The handler reads the decoded value with `json()` of its request (PHP `Request::json()`, Node and Python `request.json()`).",
@@ -5029,6 +5031,11 @@
           "kind": "rule",
           "id": "HY-54",
           "retired": [
+            4,
+            5,
+            6,
+            7,
+            8,
             9,
             10,
             11,
@@ -5070,34 +5077,28 @@
                 {
                   "statements": [
                     {
-                      "id": "HY-54.4",
-                      "en": "Its JSON text has the bytes of PHP `json_encode` with `JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES`.",
-                      "ko": "JSON 텍스트는 PHP `json_encode`에 `JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES`를 준 것과 같은 바이트다.",
-                      "koSource": "55bbbd8da7eb1b6c4c29ba5eb7a4be747ca35b80fa784403ba1d0a54d86061eb"
+                      "id": "HY-54.18",
+                      "en": "Every server writes JSON text with the serializer of ordered-json, the one JSON serializer of polyspec, and writes each number of the data model as VAL-9 of the template data model states, so the text of a value is the same bytes in every runtime.",
+                      "ko": "모든 server는 polyspec의 유일한 JSON 직렬화기인 ordered-json의 직렬화기로 JSON 텍스트를 쓰고, 데이터 모델의 수는 template 데이터 모델의 VAL-9대로 쓰므로, 한 값의 텍스트는 모든 runtime에서 같은 바이트다.",
+                      "koSource": "b2e15e46b5048257e4f125a63409f86ad0c1826503b870e7eeab4f046c3240bc"
                     },
                     {
-                      "id": "HY-54.5",
-                      "en": "A string escapes `\"`, `\\`, the control characters below U+0020 (`\\b`, `\\f`, `\\n`, `\\r`, `\\t`, and `\\u00xx` for the others) and U+2028 and U+2029 (`\\u2028`, `\\u2029`), and no other character.",
-                      "ko": "문자열은 `\"`, `\\`, U+0020 아래의 제어 문자(`\\b`, `\\f`, `\\n`, `\\r`, `\\t`, 나머지는 `\\u00xx`), U+2028과 U+2029(`\\u2028`, `\\u2029`)를 이스케이프하며, 다른 문자는 이스케이프하지 않는다.",
-                      "koSource": "457d0674ac2f386d41b2de7e3df2a510dd3182b8213e7b79ed368cbb56032fca"
+                      "id": "HY-54.19",
+                      "en": "A string escapes `\"`, `\\` and the control characters U+0000 to U+001F, the characters that RFC 8259, section 7, requires to escape, and no other character, so U+2028 and U+2029 are written as themselves.",
+                      "ko": "문자열은 RFC 8259 7절이 escape를 요구하는 `\"`, `\\`, 제어 문자 U+0000부터 U+001F만 escape하고 다른 문자는 escape하지 않으므로, U+2028과 U+2029는 그대로 쓴다.",
+                      "koSource": "cc93313b62b3c0efe55f2bb2a678199237bf74d65f9aed5202fdc9ecc1649c57"
                     },
                     {
-                      "id": "HY-54.6",
-                      "en": "An integer within ±(2^53 − 1) is written in decimal.",
-                      "ko": "±(2^53 − 1) 안의 정수는 10진수로 쓴다.",
-                      "koSource": "8c65b95a69811e683e87c45d1293c93ed3f2d41dd71ac553edd11083470f875e"
+                      "id": "HY-54.20",
+                      "en": "A server reads a JSON text, such as a kept value (HY-38, HY-40) or the body of a representation request (HY-121), with `parse` of ordered-json, which refuses a text with more than 256 nested containers (RQ-006), and converts its value to the data model as VAL-12 of the template data model states, so a number outside ±(2^53 − 1) or not finite (VAL-2), a string that is not UTF-8 text, an escaped lone surrogate included, and a value deeper than 64 levels (VAL-20) fail with the error of the data model.",
+                      "ko": "server는 kept 값(HY-38, HY-40)이나 representation 요청의 body(HY-121) 같은 JSON 텍스트를 중첩 container가 256개를 넘는 텍스트를 거부하는(RQ-006) ordered-json의 `parse`로 읽고, 그 값을 template 데이터 모델의 VAL-12대로 데이터 모델로 바꾼다. 그래서 ±(2^53 − 1) 밖이거나 유한하지 않은 수(VAL-2), escape된 짝 없는 surrogate를 포함해 UTF-8 텍스트가 아닌 문자열, 64단계보다 깊은 값(VAL-20)은 데이터 모델의 오류로 실패한다.",
+                      "koSource": "6cf9da928fe25fc3041a96d17eab2ba4266f6f4d1bdd73d1b63e50679de13af2"
                     },
                     {
-                      "id": "HY-54.7",
-                      "en": "Another number is written with the shortest digits that read back as the same number: positionally when its decimal point position p (the number is 0.d × 10^p) is between −3 and 17, and otherwise as `d.ddde±x` with at least one fraction digit; negative zero is `-0`.",
-                      "ko": "다른 수는 다시 읽으면 같은 수가 되는 가장 짧은 자릿수로 쓴다: 소수점 위치 p(수는 0.d × 10^p)가 −3과 17 사이이면 위치 표기로, 그 밖이면 소수 자리를 하나 이상 가진 `d.ddde±x`로 쓰며; 음의 0은 `-0`이다.",
-                      "koSource": "bd4f5b3d83dc24a7a2de8b3ca18e507211d67bdea47a94867ae49c9bc3c28e1e"
-                    },
-                    {
-                      "id": "HY-54.8",
-                      "en": "It decodes kept values (HY-38, HY-40) as PHP `json_decode` does: an integer literal is an integer and other literals are floats, a number outside ±(2^53 − 1) or one that is not finite is not a value of the data model, and 512 nested containers, a lone surrogate escape or a key that starts with U+0000 fail.",
-                      "ko": "kept 값(HY-38, HY-40)은 PHP `json_decode`처럼 decode한다: 정수 literal은 정수이고 다른 literal은 float이며, ±(2^53 − 1) 밖의 수나 유한하지 않은 수는 데이터 모델의 값이 아니고, 512단계로 중첩된 container, 짝 없는 surrogate escape, U+0000으로 시작하는 key는 실패한다.",
-                      "koSource": "36543dbc0f55b1e5b8f96044805475b54a1251b00e2c36735166c556f5748be3"
+                      "id": "HY-54.21",
+                      "en": "A text that ordered-json refuses fails with kind `malformed_json`, whose source is the rejection of ordered-json, and the reading limit of 256 and the depth of 64 of the data model are two limits with two kinds, because a text deeper than 256 levels is refused before it gives a value.",
+                      "ko": "ordered-json이 거부하는 텍스트는 kind `malformed_json`으로 실패하며 그 원인은 ordered-json의 거부다. 읽기 한도 256과 데이터 모델의 깊이 64는 kind가 다른 두 한도다. 256단계보다 깊은 텍스트는 값을 주기 전에 거부되기 때문이다.",
+                      "koSource": "26330434f07dc9acb88fc835a13c05ad426ea27d1a9a8f64c26bcffbcffdd9e9"
                     }
                   ],
                   "blocks": []
@@ -7095,9 +7096,9 @@
               "term": "string"
             },
             {
-              "en": "A number is an integer or a float, as HY-54.8 reads a JSON number.",
-              "ko": "number는 HY-54.8이 JSON 수를 읽는 대로 정수나 float이다.",
-              "koSource": "f7bf864deb3008b0d0825c5f365f2654d628ac71f7791fc2e9d3c54dec59d77f",
+              "en": "A number is a number of the data model (VAL-2).",
+              "ko": "수는 데이터 모델의 수다(VAL-2).",
+              "koSource": "b81fe0acd3f382e8311980f8fdc0a1c93e6066425d25e4b8b54e3508ecdfae1a",
               "term": "number"
             },
             {

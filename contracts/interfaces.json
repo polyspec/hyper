@@ -11089,7 +11089,7 @@
                   "node",
                   "python"
                 ],
-                "sentence": "HY-54.8"
+                "sentence": "HY-54.20"
               }
             },
             {
@@ -11117,7 +11117,7 @@
                   "node",
                   "python"
                 ],
-                "sentence": "HY-54.4"
+                "sentence": "HY-54.18"
               }
             },
             {
@@ -11145,7 +11145,7 @@
                   "node",
                   "python"
                 ],
-                "sentence": "HY-54.4"
+                "sentence": "HY-54.18"
               }
             },
             {
@@ -11173,7 +11173,7 @@
                   "node",
                   "python"
                 ],
-                "sentence": "HY-54.4"
+                "sentence": "HY-54.18"
               }
             },
             {
@@ -11203,7 +11203,7 @@
                   "node",
                   "python"
                 ],
-                "sentence": "HY-54.8"
+                "sentence": "HY-54.20"
               }
             },
             {
@@ -11233,7 +11233,7 @@
                   "node",
                   "python"
                 ],
-                "sentence": "HY-54.8"
+                "sentence": "HY-54.20"
               }
             },
             {
@@ -11259,7 +11259,7 @@
                   "node",
                   "python"
                 ],
-                "sentence": "HY-54.8"
+                "sentence": "HY-54.20"
               }
             },
             {
@@ -11287,7 +11287,7 @@
                   "node",
                   "python"
                 ],
-                "sentence": "HY-54.8"
+                "sentence": "HY-54.20"
               }
             },
             {
@@ -11315,7 +11315,7 @@
                   "node",
                   "python"
                 ],
-                "sentence": "HY-54.8"
+                "sentence": "HY-54.20"
               }
             },
             {
@@ -11345,7 +11345,7 @@
                   "node",
                   "python"
                 ],
-                "sentence": "HY-54.8"
+                "sentence": "HY-54.20"
               }
             }
           ]
@@ -11432,7 +11432,7 @@
               "node",
               "python"
             ],
-            "sentence": "HY-54.8"
+            "sentence": "HY-54.20"
           }
         }
       ]
@@ -14123,7 +14123,7 @@
         "languages": [
           "node"
         ],
-        "sentence": "HY-54.8"
+        "sentence": "HY-54.20"
       },
       "native": {
         "node": {
@@ -16296,8 +16296,16 @@
             "expected": {
               "role": "expected",
               "compare": "exact",
-              "sentence": "HY-54.4",
-              "state": "`expected` is the JSON text of the value of `json`."
+              "sentence": "HY-54.18",
+              "state": "`expected` is the JSON text of the value of `json`.",
+              "optional": true
+            },
+            "raises": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-54.20",
+              "state": "`raises` is the failure of the case: its `kind`, its HTTP `status` or null, its `category` and its `message` when a rule states the message, or null; a case with `raises` has no result field."
             }
           },
           "members": [
@@ -16326,8 +16334,16 @@
             "result": {
               "role": "expected",
               "compare": "exact",
-              "sentence": "HY-54.8",
-              "state": "`result` is `value` for a text `json` whose value is a value of the data model, `outside` for one whose value is outside it, and `error` for a text that fails to decode."
+              "sentence": "HY-54.20",
+              "state": "`result` is `value` for a text `json` that reads to a value of the data model.",
+              "optional": true
+            },
+            "raises": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-54.20",
+              "state": "`raises` is the failure of the case: its `kind`, its HTTP `status` or null, its `category` and its `message` when a rule states the message, or null; a case with `raises` has no result field."
             }
           },
           "members": [
