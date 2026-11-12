@@ -45,7 +45,7 @@ test('the server build fails and writes nothing for templates that break HY-3 an
   const output = mkdtempSync(join(tmpdir(), 'hyper-build-server-'));
   rmSync(output, { recursive: true });
   try {
-    const result = spawnSync(process.execPath, ['packages/build/bin/hyper-build-server.mjs', '--manifest', 'tests/scripts/fixtures/regions/app/app.json', '--templates', 'tests/scripts/fixtures/regions/templates', '--output', output, '--php-namespace', 'Fixture\\Program', '--build', resolve('packages/server/php/tests/fixtures/build.json')], { encoding: 'utf8' });
+    const result = spawnSync(process.execPath, ['packages/cli/bin/hyper-build-server.mjs', '--manifest', 'tests/scripts/fixtures/regions/app/app.json', '--templates', 'tests/scripts/fixtures/regions/templates', '--output', output, '--php-namespace', 'Fixture\\Program', '--build', resolve('packages/php/tests/fixtures/build.json')], { encoding: 'utf8' });
     assert.equal(result.status, 1, result.stdout);
     assert.match(result.stderr, /view\.tpl: places \{# lost\} 0 times, expected once \(HY-3, HY-30\)/);
     assert.equal(existsSync(output), false);

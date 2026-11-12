@@ -1,6 +1,6 @@
 """The JSON codec of HY-2."""
 
-from polyspec.hyper.server._signed_token import SignedToken
+from polyspec.hyper._signed_token import SignedToken
 
 
 class JsonCodec:

@@ -15,7 +15,7 @@ import { requireBuilt } from './requires.mts';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const WORKERS = path.join(ROOT, 'tests/scripts/fixtures/multipart-worker');
-const PYTHON = path.join(ROOT, 'packages/server/python/.venv/bin/python');
+const PYTHON = path.join(ROOT, 'packages/python/.venv/bin/python');
 const COMMANDS = {
   php: ['php', path.join(WORKERS, 'worker.php')],
   node: [process.execPath, '--no-warnings', path.join(WORKERS, 'worker.mjs')],
@@ -124,8 +124,8 @@ async function run(server: Server, list: string, moved: string, temporary: strin
 }
 
 test('the three servers read every generated body and every body at a limit with one result (HY-131)', { timeout: 600_000 }, async (t) => {
-  requireBuilt('packages', 'packages/server/ts/dist/request-body.js');
-  requireBuilt('hyper-install-python', 'packages/server/python/.venv/bin/python');
+  requireBuilt('packages', 'packages/ts/dist/request-body.js');
+  requireBuilt('hyper-install-python', 'packages/python/.venv/bin/python');
   requireBuilt('hyper-install-php', 'vendor/autoload.php');
   const directory = mkdtempSync(path.join(tmpdir(), 'hyper-multipart-compare-'));
   t.after(() => rmSync(directory, { recursive: true, force: true }));

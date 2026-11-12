@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper\Server;
+namespace Polyspec\Hyper;
 
 /**
  * The session store of HY-3.

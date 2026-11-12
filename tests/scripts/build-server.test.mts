@@ -8,13 +8,13 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { test } from 'node:test';
 
-const fixtures = resolve('packages/server/php/tests/fixtures');
+const fixtures = resolve('packages/php/tests/fixtures');
 const id = '1111111111111111111111111111111111111111111111111111111111111111';
 
 function server(output: string, ...options: string[]) {
   return spawnSync(process.execPath, [
-    'packages/build/bin/hyper-build-server.mjs', '--manifest', join(fixtures, 'app.json'), '--templates', join(fixtures, 'templates'),
-    '--output', output, '--php-namespace', 'Polyspec\\Hyper\\Server\\Tests\\Program', ...options,
+    'packages/cli/bin/hyper-build-server.mjs', '--manifest', join(fixtures, 'app.json'), '--templates', join(fixtures, 'templates'),
+    '--output', output, '--php-namespace', 'Polyspec\\Hyper\\Tests\\Program', ...options,
   ], { encoding: 'utf8' });
 }
 
@@ -26,7 +26,7 @@ function buildFile(directory: string, text: string) {
 }
 
 test('writes build.json with the same bytes as the --build file into the program directory (HY-125)', () => {
-  const directory = mkdtempSync(join(tmpdir(), 'hyper-server-build-'));
+  const directory = mkdtempSync(join(tmpdir(), 'hyper-cli-server-'));
   try {
     const text = `{"build":"${id}"}`;
     const file = buildFile(directory, text);
@@ -40,7 +40,7 @@ test('writes build.json with the same bytes as the --build file into the program
 });
 
 test('fails and names the option when --build is missing (HY-125)', () => {
-  const directory = mkdtempSync(join(tmpdir(), 'hyper-server-build-'));
+  const directory = mkdtempSync(join(tmpdir(), 'hyper-cli-server-'));
   try {
     const output = join(directory, 'server');
     const result = server(output);
@@ -53,7 +53,7 @@ test('fails and names the option when --build is missing (HY-125)', () => {
 });
 
 test('fails with the path when --build is not an absolute path (HY-125)', () => {
-  const directory = mkdtempSync(join(tmpdir(), 'hyper-server-build-'));
+  const directory = mkdtempSync(join(tmpdir(), 'hyper-cli-server-'));
   try {
     const output = join(directory, 'server');
     const result = server(output, '--build', 'build.json');
@@ -68,7 +68,7 @@ test('fails with the path when --build is not an absolute path (HY-125)', () => 
 
 /** Runs the server build with a build file of the given content, or with a missing file, and expects its refusal with the path. */
 function refusesBuild(content: string | undefined): void {
-  const directory = mkdtempSync(join(tmpdir(), 'hyper-server-build-'));
+  const directory = mkdtempSync(join(tmpdir(), 'hyper-cli-server-'));
   try {
     const file = content === undefined ? join(directory, 'missing', 'build.json') : buildFile(directory, content);
     const output = join(directory, 'server');
@@ -86,7 +86,7 @@ test('fails with the absolute path of a missing --build file (HY-125)', () => {
 });
 
 test('builds a template placed with scope arguments, which keeps its inputs (HY-73.16)', () => {
-  const directory = mkdtempSync(join(tmpdir(), 'hyper-server-build-'));
+  const directory = mkdtempSync(join(tmpdir(), 'hyper-cli-server-'));
   try {
     const templates = join(directory, 'templates');
     cpSync(join(fixtures, 'templates'), templates, { recursive: true });
@@ -94,8 +94,8 @@ test('builds a template placed with scope arguments, which keeps its inputs (HY-
     writeFileSync(join(templates, 'page.tpl'), `<p>{= title}|{= name}{? error} !{= error}{/}</p>\n{# box.tpl item:post}`);
     const output = join(directory, 'server');
     const result = spawnSync(process.execPath, [
-      'packages/build/bin/hyper-build-server.mjs', '--manifest', join(fixtures, 'app.json'), '--templates', templates,
-      '--output', output, '--php-namespace', 'Polyspec\\Hyper\\Server\\Tests\\Program', '--build', buildFile(directory, `{"build":"${id}"}`),
+      'packages/cli/bin/hyper-build-server.mjs', '--manifest', join(fixtures, 'app.json'), '--templates', templates,
+      '--output', output, '--php-namespace', 'Polyspec\\Hyper\\Tests\\Program', '--build', buildFile(directory, `{"build":"${id}"}`),
     ], { encoding: 'utf8' });
     assert.equal(result.status, 0, result.stderr);
     assert.ok(existsSync(join(output, 'php', 'GeneratedProgram.php')));

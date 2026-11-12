@@ -3,7 +3,7 @@
 // application, whose request hook answers what the request gave of its body. The same requests must give the same
 // answers, a file that the hook moved must hold the bytes that were sent, and the directory of a request must be gone
 // when the connection of the request has ended. The Node server ends a connection before it removes the directory, so
-// its removal is tested where the end of its listener is known (packages/server/ts/tests/http.test.ts).
+// its removal is tested where the end of its listener is known (packages/ts/tests/http.test.ts).
 import assert from 'node:assert/strict';
 import { type ChildProcess, execFile } from 'node:child_process';
 import { createHash } from 'node:crypto';
@@ -20,7 +20,7 @@ import { requireBuilt } from './requires.mts';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const FIXTURE = path.join(ROOT, 'tests/scripts/fixtures/upload-server');
-const PYTHON = path.join(ROOT, 'packages/server/python/.venv/bin/python');
+const PYTHON = path.join(ROOT, 'packages/python/.venv/bin/python');
 const READY = /upload on (http:\/\/127\.0\.0\.1:\d+)/;
 const LIMIT = 16 * 1024 * 1024;
 const BOUNDARY = 'UploadXyZ';
@@ -83,8 +83,8 @@ async function started(t: TestContext): Promise<{ directory: string; children: C
 const part = (disposition: string, content: Buffer): Buffer => Buffer.concat([Buffer.from(`--${BOUNDARY}\r\nContent-Disposition: ${disposition}\r\n\r\n`), content, Buffer.from('\r\n')]);
 
 test('the three servers read an upload over HTTP alike and remove its directory (HY-131)', { timeout: 300_000 }, async (t) => {
-  requireBuilt('packages', 'packages/server/ts/dist/index.js');
-  requireBuilt('hyper-install-python', 'packages/server/python/.venv/bin/python');
+  requireBuilt('packages', 'packages/ts/dist/index.js');
+  requireBuilt('hyper-install-python', 'packages/python/.venv/bin/python');
   requireBuilt('hyper-install-php', 'vendor/autoload.php');
   const { directory, children, environment } = await started(t);
   const urls = {
@@ -138,8 +138,8 @@ test('App::run of PHP fails under a server when PHP reads the request body itsel
 });
 
 test('the three servers answer a page and a representation over HTTP alike, a HEAD without a body (HY-27, HY-121, HY-122)', { timeout: 300_000 }, async (t) => {
-  requireBuilt('packages', 'packages/server/ts/dist/index.js');
-  requireBuilt('hyper-install-python', 'packages/server/python/.venv/bin/python');
+  requireBuilt('packages', 'packages/ts/dist/index.js');
+  requireBuilt('hyper-install-python', 'packages/python/.venv/bin/python');
   requireBuilt('hyper-install-php', 'vendor/autoload.php');
   const { directory, children, environment } = await started(t);
   const env = (server: string): Record<string, string> => ({ ...environment(server), UPLOAD_ANSWER: 'app' });
@@ -451,8 +451,8 @@ function checks(host: Host): {
 // when the scenario stops a handler. The end of the test stops the servers, then closes the gate and removes the
 // directory (HR-87).
 async function hostsOf(t: TestContext, start: Start = {}): Promise<{ hosts: Host[]; gate: Gate }> {
-  requireBuilt('packages', 'packages/server/ts/dist/index.js');
-  requireBuilt('hyper-install-python', 'packages/server/python/.venv/bin/python');
+  requireBuilt('packages', 'packages/ts/dist/index.js');
+  requireBuilt('hyper-install-python', 'packages/python/.venv/bin/python');
   requireBuilt('hyper-install-php', 'vendor/autoload.php');
   // The gate: a handler connects, writes `gate <point>` and waits for `open`.
   const arrived: { point: string; socket: Socket }[] = [];

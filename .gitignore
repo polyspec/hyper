@@ -10,15 +10,15 @@ tests/scripts/build/
 examples/board/public/assets/hyper-*.js
 examples/board/public/assets/templates/
 examples/board/var/*.db
-packages/server/php/tests/build/
+packages/php/tests/build/
 tests/scripts/build/
 /build/
 tests/scripts/build/
-packages/server/ts/tests/build/
-packages/server/python/build/
+packages/ts/tests/build/
+packages/python/build/
 tests/scripts/build/
 packages/client/dist/
-packages/server/ts/dist/
+packages/ts/dist/
 __pycache__/
 /var/
 /tests/package-install/var/
@@ -29,7 +29,7 @@ __pycache__/
 # Generated files of the install, build, cache and test runs (AGENTS.md, Generated files)
 target/
 # The files that the binding generator writes into the native module of each host package (binding L-2a)
-packages/server/*/native/generated/
+packages/*/native/generated/
 dist/
 dist.next/
 dist.old/

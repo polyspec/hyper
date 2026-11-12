@@ -1,4 +1,4 @@
-from polyspec.hyper.server.media_type import MediaType
+from polyspec.hyper.media_type import MediaType
 
 
 class EssenceReader:

@@ -30,7 +30,7 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
     `none`이면 check가 실패시킨다. 빈 목록은 `none`처럼 실패한다.
   - `units`: concern의 unit들.
 
-  `packages/server/php/src`, `packages/server/ts/src`, `packages/server/python/src/polyspec/hyper/server` 아래의 `git ls-files`
+  `packages/php/src`, `packages/ts/src`, `packages/python/src/polyspec/hyper` 아래의 `git ls-files`
   파일은 모두 정확히 하나의 concern에 속하며, 이름이 적힌 파일은 모두 존재한다. unit의 파일은 정확히 하나의 unit을 가진다
   (HYR-3). barrel 파일(`index.ts`, `__init__.py`)과 `py.typed`는 `index` concern에 속하며 unit을 가지지 않는다. 이 파일들은
   HY-106의 public member와 public type을 re-export하는 내용만 가지며, HYR-8은 unit 검사 대신 이 목록을 검사한다.
@@ -51,7 +51,7 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
     ClientRendering과 Choice, SessionStore와 ArraySession.
 
 - **HYR-4 File names.** unit의 파일은 unit의 단어들을 그 언어의 규칙으로 쓴 이름이다.
-  - PHP: PascalCase, `<Words>.php`, namespace `Polyspec\Hyper\Server`에 속한다.
+  - PHP: PascalCase, `<Words>.php`, namespace `Polyspec\Hyper`에 속한다.
   - Node: kebab-case, `<words>.ts`.
   - Python: snake_case.
     - `<words>.py`는 HY-106 또는 HY-100이 public으로 만드는 module이다.
@@ -63,8 +63,8 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
       대문자를 연속해서 두 개 가지지 않으며, check는 그런 이름을 실패시킨다.
     - member 이름도 같은 경계를 따른다(HYR-5).
   - Test unit. HYR-7의 case runner와 case reader처럼 test tree에 있는 unit은 같은 단어로 그 언어의 test 디렉터리에 둔다:
-    PHP `packages/server/php/tests/<Words>.php`(namespace `Polyspec\Hyper\Server\Tests`), Node `packages/server/ts/tests/<words>.ts`,
-    Python `packages/server/python/tests/<words>.py`. 어떤 test module도 HY-106의 public 또는 internal API가 아니므로 Python
+    PHP `packages/php/tests/<Words>.php`(namespace `Polyspec\Hyper\Tests`), Node `packages/ts/tests/<words>.ts`,
+    Python `packages/python/tests/<words>.py`. 어떤 test module도 HY-106의 public 또는 internal API가 아니므로 Python
     이름에 `_`를 붙이지 않는다. 각 언어의 case runner와 case reader는 `contracts/interfaces.json`의 `runners`와 `caseReaders` 항목이며,
     HYR-7이 정하는 대로다.
 
@@ -110,7 +110,7 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
       필드는 member처럼 `only`를 가진다(HYR-6).
   - **Symbol.** symbol은 `<path>::<qualified name>`이다.
     - `<path>`는 파일의 repository 기준 상대 경로다.
-    - PHP member의 qualified name은 `Polyspec\Hyper\Server\<Unit>::<member>`다.
+    - PHP member의 qualified name은 `Polyspec\Hyper\<Unit>::<member>`다.
     - Node와 Python에서 class member는 `<Unit>.<member>`, module 함수는 `<member>`다.
     - constructor는 PHP에서 `__construct`, Node에서 `constructor`, Python에서 `__init__`이다.
     - PHP class의 member `invoke`는 그 object를 호출할 수 있게 하는 method `__invoke`이다.

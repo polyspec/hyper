@@ -4940,10 +4940,16 @@
               "kind": "paragraph",
               "statements": [
                 {
+                  "id": "HY-54.22",
+                  "en": "`server` is the role of this document and no package name: the server library of every language is the package of the main specification and carries the name of the repository, Composer `polyspec/hyper`, PyPI `polyspec-hyper`, npm `@polyspec/hyper` and the crate `polyspec-hyper` of its Rust core, and the browser package is `@polyspec/hyper-client`.",
+                  "ko": "`server`는 이 문서의 역할 이름이며 package 이름이 아니다: 각 언어의 서버 라이브러리는 주 spec의 package로서 저장소 이름을 가지며(Composer `polyspec/hyper`, PyPI `polyspec-hyper`, npm `@polyspec/hyper`, 그 Rust core의 crate `polyspec-hyper`), 브라우저 package는 `@polyspec/hyper-client`이다.",
+                  "koSource": "7c37430f26b6fdd334ac26da98026cab363d134e08b66e9da24c5ec1b47b0fee"
+                },
+                {
                   "id": "HY-54.1",
-                  "en": "The Node server package `@polyspec/hyper-server` implements the server rules of this document as the PHP server does; its tests run the cases of the PHP server tests against the same fixtures.",
-                  "ko": "Node 서버 패키지 `@polyspec/hyper-server`는 이 문서의 서버 규칙을 PHP 서버와 같은 방식으로 구현하며, 그 테스트는 PHP 서버 테스트의 case를 같은 fixture에 대해 실행한다.",
-                  "koSource": "2d2bb5160112529f8e55ae14c867939df6227526bd756eab58541d3572d1645e"
+                  "en": "The Node server package `@polyspec/hyper` implements the server rules of this document as the PHP server does; its tests run the cases of the PHP server tests against the same fixtures.",
+                  "ko": "Node 서버 패키지 `@polyspec/hyper`는 이 문서의 서버 규칙을 PHP 서버와 같은 방식으로 구현하며, 그 테스트는 PHP 서버 테스트의 case를 같은 fixture에 대해 실행한다.",
+                  "koSource": "eaa6a2f03472135721970827e768785ded869b72a1bf8b34d5aa10d767a18bd4"
                 },
                 {
                   "id": "HY-54.2",
@@ -5297,9 +5303,9 @@
                   "statements": [
                     {
                       "id": "HY-100.3",
-                      "en": "Python WSGI: `polyspec.hyper.server.wsgi.create_wsgi(app, sessions, files=None, around=None, written=None)` of the Python server `polyspec-hyper-server` takes the arguments of `create_server` (HY-97, HY-99) and returns a WSGI application callable (PEP 3333) that a WSGI server runs.",
-                      "ko": "Python WSGI: Python 서버 `polyspec-hyper-server`의 `polyspec.hyper.server.wsgi.create_wsgi(app, sessions, files=None, around=None, written=None)`는 `create_server`의 인자(HY-97, HY-99)를 받고, WSGI 서버가 실행하는 WSGI 애플리케이션 callable(PEP 3333)을 돌려준다.",
-                      "koSource": "d4a884f163253c41fe3ebc2ef011531181663325e84aa20973df1924040b011f"
+                      "en": "Python WSGI: `polyspec.hyper.wsgi.create_wsgi(app, sessions, files=None, around=None, written=None)` of the Python server `polyspec-hyper` takes the arguments of `create_server` (HY-97, HY-99) and returns a WSGI application callable (PEP 3333) that a WSGI server runs.",
+                      "ko": "Python WSGI: Python 서버 `polyspec-hyper`의 `polyspec.hyper.wsgi.create_wsgi(app, sessions, files=None, around=None, written=None)`는 `create_server`의 인자(HY-97, HY-99)를 받고, WSGI 서버가 실행하는 WSGI 애플리케이션 callable(PEP 3333)을 돌려준다.",
+                      "koSource": "9efe0747ae3bedd9993863282e5256f9e97d40b9233900c6f55cdcc0e9662a7a"
                     },
                     {
                       "id": "HY-100.4",
@@ -5374,9 +5380,9 @@
                   "statements": [
                     {
                       "id": "HY-100.15",
-                      "en": "Python ASGI: `polyspec.hyper.server.asgi.create_asgi(app, sessions, files=None, around=None, written=None)` of the Python server `polyspec-hyper-server` takes the arguments of `create_server` (HY-97, HY-99) and returns an ASGI 3 application callable that an ASGI server runs.",
-                      "ko": "Python ASGI: Python 서버 `polyspec-hyper-server`의 `polyspec.hyper.server.asgi.create_asgi(app, sessions, files=None, around=None, written=None)`는 `create_server`의 인자(HY-97, HY-99)를 받고, ASGI 서버가 실행하는 ASGI 3 애플리케이션 callable을 돌려준다.",
-                      "koSource": "ce858c93860b7ed9fca013c7afffd78e462b0e44e968b7ca930dec0c6b22ba65"
+                      "en": "Python ASGI: `polyspec.hyper.asgi.create_asgi(app, sessions, files=None, around=None, written=None)` of the Python server `polyspec-hyper` takes the arguments of `create_server` (HY-97, HY-99) and returns an ASGI 3 application callable that an ASGI server runs.",
+                      "ko": "Python ASGI: Python 서버 `polyspec-hyper`의 `polyspec.hyper.asgi.create_asgi(app, sessions, files=None, around=None, written=None)`는 `create_server`의 인자(HY-97, HY-99)를 받고, ASGI 서버가 실행하는 ASGI 3 애플리케이션 callable을 돌려준다.",
+                      "koSource": "853d767a524e54c4fbb4d2c97630fdbe57f5f013a007ddb264a687447037d063"
                     },
                     {
                       "id": "HY-100.16",
@@ -7345,9 +7351,9 @@
                   "statements": [
                     {
                       "id": "HY-67.8",
-                      "en": "The Python server of `polyspec-hyper-server` (`create_server` of `polyspec.hyper.server.server`) learns of a closed connection only when a write of the response fails, as PHP does: `http.server` raises `BrokenPipeError`, `ConnectionResetError` or `ConnectionAbortedError` for a write to a connection that the client closed.",
-                      "ko": "`polyspec-hyper-server`의 Python 서버(`polyspec.hyper.server.server`의 `create_server`)는 PHP처럼 응답 쓰기가 실패할 때만 닫힌 연결을 감지한다: `http.server`는 클라이언트가 닫은 연결에 쓰면 `BrokenPipeError`, `ConnectionResetError`, `ConnectionAbortedError`를 던진다.",
-                      "koSource": "e1ad59d40922c7850dc5633f273e68a2a88ed52d582d0f906fe53f7713140b3b"
+                      "en": "The Python server of `polyspec-hyper` (`create_server` of `polyspec.hyper`) learns of a closed connection only when a write of the response fails, as PHP does: `http.server` raises `BrokenPipeError`, `ConnectionResetError` or `ConnectionAbortedError` for a write to a connection that the client closed.",
+                      "ko": "`polyspec-hyper`의 Python 서버(`polyspec.hyper`의 `create_server`)는 PHP처럼 응답 쓰기가 실패할 때만 닫힌 연결을 감지한다: `http.server`는 클라이언트가 닫은 연결에 쓰면 `BrokenPipeError`, `ConnectionResetError`, `ConnectionAbortedError`를 던진다.",
+                      "koSource": "8f9af3477c4caecac5b4ed6bb124962ccfaa899da6487c8882835f908fc2dd6b"
                     },
                     {
                       "id": "HY-67.9",

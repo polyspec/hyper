@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper\Server;
+namespace Polyspec\Hyper;
 
 /**
  * A session store kept in memory, which implements the interface of a later file.

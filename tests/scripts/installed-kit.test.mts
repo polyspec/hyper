@@ -13,7 +13,7 @@ function checkout(t: TestContext): string {
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   const root = join(directory, 'checkout');
   mkdirSync(root);
-  for (const file of ['Makefile', 'package.json', 'package-lock.json', '.npmrc', 'packages/client/package.json', 'packages/server/ts/package.json', 'packages/build/package.json']) {
+  for (const file of ['Makefile', 'package.json', 'package-lock.json', '.npmrc', 'packages/client/package.json', 'packages/ts/package.json', 'packages/cli/package.json']) {
     mkdirSync(dirname(join(root, file)), { recursive: true });
     cpSync(file, join(root, file));
   }

@@ -20,9 +20,9 @@ const OUTPUTS = [
   'tests/package-install/var/link/npm/cache/_logs/install.log',
   'packages/client/dist/index.js',
   'packages/client/dist.next-12345/index.js',
-  'packages/server/ts/dist/index.js',
-  'packages/server/php/tests/build/server/php/GeneratedProgram.php',
-  'packages/server/ts/tests/build/templates.index.json',
+  'packages/ts/dist/index.js',
+  'packages/php/tests/build/server/php/GeneratedProgram.php',
+  'packages/ts/tests/build/templates.index.json',
   'examples/board/build/server/php/GeneratedProgram.php',
   'examples/board/build/csr.next-12345/index.html',
   'examples/board/public/assets/hyper-ABC123.js',
@@ -36,10 +36,10 @@ const OUTPUTS = [
   'var/install.lock',
   'tests/e2e/test-results/.last-run.json',
   'tests/scripts/build/virtiofs/file/layout.tpl',
-  'packages/server/python/.venv/bin/python',
-  'packages/server/python/src/polyspec_hyper_server.egg-info/PKG-INFO',
+  'packages/python/.venv/bin/python',
+  'packages/python/src/polyspec_hyper.egg-info/PKG-INFO',
   'playwright-report/index.html',
-  'packages/server/php/.phpunit.result.cache',
+  'packages/php/.phpunit.result.cache',
 ];
 
 test('.gitignore ignores no tracked file', () => {

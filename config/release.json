@@ -15,45 +15,45 @@
     },
     {
       "kind": "npm",
-      "directory": "packages/server/ts",
-      "name": "@polyspec/hyper-server",
-      "product": "hyper-server",
+      "directory": "packages/ts",
+      "name": "@polyspec/hyper",
+      "product": "hyper",
       "runtime": "ts"
     },
     {
       "kind": "npm",
-      "directory": "packages/build",
-      "name": "@polyspec/hyper-build",
-      "product": "hyper-build",
+      "directory": "packages/cli",
+      "name": "@polyspec/hyper-cli",
+      "product": "hyper-cli",
       "runtime": "ts"
     },
     {
       "kind": "composer",
-      "directory": "packages/server/php",
-      "name": "polyspec/hyper-server",
-      "product": "hyper-server",
+      "directory": "packages/php",
+      "name": "polyspec/hyper",
+      "product": "hyper",
       "runtime": "php"
     },
     {
       "kind": "wheel",
-      "directory": "packages/server/python",
-      "name": "polyspec-hyper-server",
-      "product": "hyper-server",
+      "directory": "packages/python",
+      "name": "polyspec-hyper",
+      "product": "hyper",
       "runtime": "python"
     }
   ],
   "manifests": {
     "package.json": "version",
     "packages/client/package.json": "archive",
-    "packages/server/ts/package.json": "archive",
-    "packages/build/package.json": "archive",
-    "packages/server/php/composer.json": "archive",
-    "packages/server/python/pyproject.toml": "archive"
+    "packages/ts/package.json": "archive",
+    "packages/cli/package.json": "archive",
+    "packages/php/composer.json": "archive",
+    "packages/python/pyproject.toml": "archive"
   },
   "notReleased": {
     "tests/package-install/package.json": "the test package that installs the npm archives of the packages",
     "examples/board/composer.json": "the example application, which installs the packages from the checkout",
-    "composer.json": "the private development root of packages/server/php, which resolves the packages from the checkout"
+    "composer.json": "the private development root of packages/php, which resolves the packages from the checkout"
   },
   "goModules": {},
   "annotatedTags": true,

@@ -1,108 +1,108 @@
 [
   {
     "id": "member-added",
-    "file": "packages/server/php/src/Csrf.php",
+    "file": "packages/php/src/Csrf.php",
     "from": "    public function raw(): string",
     "to": "    public function extra(): string\n    {\n        return 'x';\n    }\n\n    public function raw(): string",
     "code": "MEMBER_ADDED"
   },
   {
     "id": "member-removed",
-    "file": "packages/server/ts/src/csrf.ts",
+    "file": "packages/ts/src/csrf.ts",
     "from": "  raw(): string {\n    return this.fold();\n  }\n\n",
     "to": "",
     "code": "MEMBER_MISSING"
   },
   {
     "id": "member-renamed",
-    "file": "packages/server/python/src/polyspec/hyper/server/_csrf.py",
+    "file": "packages/python/src/polyspec/hyper/_csrf.py",
     "from": "def raw(self)",
     "to": "def rawer(self)",
     "code": "MEMBER_MISSING"
   },
   {
     "id": "member-retyped",
-    "file": "packages/server/php/src/MediaType.php",
+    "file": "packages/php/src/MediaType.php",
     "from": "essence(): string",
     "to": "essence(): int",
     "code": "MEMBER_SIGNATURE"
   },
   {
     "id": "visibility-public-to-internal",
-    "file": "packages/server/php/src/MediaType.php",
+    "file": "packages/php/src/MediaType.php",
     "from": "    public function essence",
     "to": "    /** @internal */\n    public function essence",
     "code": "MEMBER_VISIBILITY"
   },
   {
     "id": "visibility-to-private",
-    "file": "packages/server/ts/src/media-type.ts",
+    "file": "packages/ts/src/media-type.ts",
     "from": "  essence(): string {",
     "to": "  private essence(): string {",
     "code": "MEMBER_VISIBILITY"
   },
   {
     "id": "member-moved-file",
-    "file": "packages/server/python/src/polyspec/hyper/server/media_type.py",
-    "rename": "packages/server/python/src/polyspec/hyper/server/media_extra.py",
+    "file": "packages/python/src/polyspec/hyper/media_type.py",
+    "rename": "packages/python/src/polyspec/hyper/media_extra.py",
     "code": "MEMBER_MOVED"
   },
   {
     "id": "second-unit-in-file",
-    "file": "packages/server/ts/src/csrf.ts",
+    "file": "packages/ts/src/csrf.ts",
     "from": "export class Csrf {",
     "to": "export class Extra {}\n\nexport class Csrf {",
     "code": "UNIT_COUNT"
   },
   {
     "id": "file-renamed-against-hyr-4",
-    "file": "packages/server/ts/src/csrf.ts",
-    "rename": "packages/server/ts/src/csrf-token.ts",
+    "file": "packages/ts/src/csrf.ts",
+    "rename": "packages/ts/src/csrf-token.ts",
     "code": "UNIT_FILE"
   },
   {
     "id": "unnamed-file",
-    "file": "packages/server/ts/src/helper.ts",
+    "file": "packages/ts/src/helper.ts",
     "create": "export const helper = 1;\n",
     "code": "FILE_UNOWNED"
   },
   {
     "id": "file-missing",
-    "file": "packages/server/ts/src/media-type.ts",
+    "file": "packages/ts/src/media-type.ts",
     "delete": true,
     "code": "FILE_MISSING"
   },
   {
     "id": "type-added",
-    "file": "packages/server/ts/src/csrf.ts",
+    "file": "packages/ts/src/csrf.ts",
     "from": "export class Csrf {",
     "to": "export type Mode = 'a' | 'b';\n\nexport class Csrf {",
     "code": "TYPE_UNLISTED"
   },
   {
     "id": "type-changed",
-    "file": "packages/server/ts/src/media-type.ts",
+    "file": "packages/ts/src/media-type.ts",
     "from": "export type Essence = string;",
     "to": "export type Essence = number;",
     "code": "TYPE_CHANGED"
   },
   {
     "id": "barrel-export-added",
-    "file": "packages/server/ts/src/index.ts",
+    "file": "packages/ts/src/index.ts",
     "from": "export { MediaType } from './media-type.ts';",
     "to": "export { MediaType } from './media-type.ts';\nexport { Csrf } from './csrf.ts';",
     "code": "BARREL_EXPORT"
   },
   {
     "id": "private-name-used-elsewhere",
-    "file": "packages/server/python/src/polyspec/hyper/server/media_type.py",
+    "file": "packages/python/src/polyspec/hyper/media_type.py",
     "from": "class MediaType:",
-    "to": "from polyspec.hyper.server._csrf import Csrf\n\nVALUE = Csrf()._fold()\n\n\nclass MediaType:",
+    "to": "from polyspec.hyper._csrf import Csrf\n\nVALUE = Csrf()._fold()\n\n\nclass MediaType:",
     "code": "PRIVATE_USED"
   },
   {
     "id": "private-constructor-called-elsewhere",
-    "file": "packages/server/python/src/polyspec/hyper/server/__init__.py",
+    "file": "packages/python/src/polyspec/hyper/__init__.py",
     "from": "__all__ = [\"MediaType\"]",
     "to": "VALUE = MediaType()\n\n__all__ = [\"MediaType\"]",
     "code": "PRIVATE_USED",
@@ -110,31 +110,31 @@
   },
   {
     "id": "private-constructor-called-through-an-alias",
-    "file": "packages/server/python/src/polyspec/hyper/server/__init__.py",
+    "file": "packages/python/src/polyspec/hyper/__init__.py",
     "from": "__all__ = [\"MediaType\"]",
-    "to": "from polyspec.hyper.server.media_type import MediaType as Kind\n\nVALUE = Kind()\n\n__all__ = [\"MediaType\"]",
+    "to": "from polyspec.hyper.media_type import MediaType as Kind\n\nVALUE = Kind()\n\n__all__ = [\"MediaType\"]",
     "code": "PRIVATE_USED",
     "detail": "calls the private constructor of MediaType"
   },
   {
     "id": "private-constructor-called-through-its-module",
-    "file": "packages/server/python/src/polyspec/hyper/server/__init__.py",
+    "file": "packages/python/src/polyspec/hyper/__init__.py",
     "from": "__all__ = [\"MediaType\"]",
-    "to": "from polyspec.hyper.server import media_type\n\nVALUE = media_type.MediaType()\n\n__all__ = [\"MediaType\"]",
+    "to": "from polyspec.hyper import media_type\n\nVALUE = media_type.MediaType()\n\n__all__ = [\"MediaType\"]",
     "code": "PRIVATE_USED",
     "detail": "calls the private constructor of MediaType"
   },
   {
     "id": "private-constructor-called-through-the-absolute-package",
-    "file": "packages/server/python/src/polyspec/hyper/server/__init__.py",
+    "file": "packages/python/src/polyspec/hyper/__init__.py",
     "from": "__all__ = [\"MediaType\"]",
-    "to": "from polyspec.hyper.server import MediaType\n\nVALUE = MediaType()\n\n__all__ = [\"MediaType\"]",
+    "to": "from polyspec.hyper import MediaType\n\nVALUE = MediaType()\n\n__all__ = [\"MediaType\"]",
     "code": "PRIVATE_USED",
     "detail": "calls the private constructor of MediaType"
   },
   {
     "id": "private-python-method-with-two-underscores",
-    "file": "packages/server/python/src/polyspec/hyper/server/media_type.py",
+    "file": "packages/python/src/polyspec/hyper/media_type.py",
     "from": "    def essence(self) -> str:",
     "to": "    def __spare(self) -> str:\n        return \"x\"\n\n    def essence(self) -> str:",
     "code": "MEMBER_NAME",
@@ -142,19 +142,19 @@
   },
   {
     "id": "test-added-without-spec",
-    "file": "packages/server/ts/tests/extra.test.mts",
+    "file": "packages/ts/tests/extra.test.mts",
     "create": "import { test } from 'node:test';\n\ntest('extra', () => {});\n",
     "code": "TEST_UNNAMED"
   },
   {
     "id": "node-test-name-dynamic",
-    "file": "packages/server/ts/tests/dynamic.test.mts",
+    "file": "packages/ts/tests/dynamic.test.mts",
     "create": "import { test } from 'vitest';\n\nconst label = 'dynamic';\ntest(label, () => {});\n",
     "code": "TEST_NAME_DYNAMIC"
   },
   {
     "id": "python-render-test-unnamed",
-    "file": "packages/server/python/tests/render/render_probe.py",
+    "file": "packages/python/tests/render/render_probe.py",
     "create": "import unittest\n\n\nclass ProbeTest(unittest.TestCase):\n    def test_probe(self) -> None:\n        self.assertTrue(True)\n",
     "code": "TEST_UNNAMED"
   },
@@ -201,14 +201,14 @@
   },
   {
     "id": "case-reader-member-renamed",
-    "file": "packages/server/php/tests/CaseReader.php",
+    "file": "packages/php/tests/CaseReader.php",
     "from": "public function fail(): string",
     "to": "public function failed(): string",
     "code": "CASE_READER_MEMBERS"
   },
   {
     "id": "unit-missing",
-    "file": "packages/server/ts/src/csrf.ts",
+    "file": "packages/ts/src/csrf.ts",
     "from": "export class Csrf {",
     "to": "export class Token {",
     "code": "UNIT_MISSING"
@@ -348,21 +348,21 @@
   },
   {
     "id": "php-const-public",
-    "file": "packages/server/php/src/MediaType.php",
+    "file": "packages/php/src/MediaType.php",
     "from": "    public function essence",
     "to": "    public const LIMIT = 1;\n\n    public function essence",
     "code": "CONST_PUBLIC"
   },
   {
     "id": "node-const-public",
-    "file": "packages/server/ts/src/media-type.ts",
+    "file": "packages/ts/src/media-type.ts",
     "from": "export type Essence = string;",
     "to": "export const LIMIT = 1;\n\nexport type Essence = string;",
     "code": "CONST_PUBLIC"
   },
   {
     "id": "python-const-public",
-    "file": "packages/server/python/src/polyspec/hyper/server/media_type.py",
+    "file": "packages/python/src/polyspec/hyper/media_type.py",
     "from": "class MediaType:",
     "to": "LIMIT = 1\n\n\nclass MediaType:",
     "code": "CONST_PUBLIC"
@@ -370,48 +370,48 @@
   {
     "id": "php-sources-missing",
     "file": "contracts/interfaces.json",
-    "from": "\"packages/server/php/src\"",
-    "to": "\"packages/server/php/missing\"",
+    "from": "\"packages/php/src\"",
+    "to": "\"packages/php/missing\"",
     "code": "READER_FAILED"
   },
   {
     "id": "php-tests-missing",
     "file": "contracts/interfaces.json",
-    "from": "\"packages/server/php/tests\"",
-    "to": "\"packages/server/php/missing\"",
+    "from": "\"packages/php/tests\"",
+    "to": "\"packages/php/missing\"",
     "code": "READER_FAILED"
   },
   {
     "id": "node-sources-missing",
     "file": "contracts/interfaces.json",
-    "from": "\"packages/server/ts/src\"",
-    "to": "\"packages/server/ts/missing\"",
+    "from": "\"packages/ts/src\"",
+    "to": "\"packages/ts/missing\"",
     "code": "READER_FAILED"
   },
   {
     "id": "node-tests-missing",
     "file": "contracts/interfaces.json",
-    "from": "\"packages/server/ts/tests\"",
-    "to": "\"packages/server/ts/missing\"",
+    "from": "\"packages/ts/tests\"",
+    "to": "\"packages/ts/missing\"",
     "code": "READER_FAILED"
   },
   {
     "id": "python-sources-missing",
     "file": "contracts/interfaces.json",
-    "from": "\"packages/server/python/src/polyspec/hyper/server\"",
-    "to": "\"packages/server/python/src/polyspec/missing\"",
+    "from": "\"packages/python/src/polyspec/hyper\"",
+    "to": "\"packages/python/src/polyspec/missing\"",
     "code": "READER_FAILED"
   },
   {
     "id": "python-tests-missing",
     "file": "contracts/interfaces.json",
-    "from": "\"packages/server/python/tests\"",
-    "to": "\"packages/server/python/missing\"",
+    "from": "\"packages/python/tests\"",
+    "to": "\"packages/python/missing\"",
     "code": "READER_FAILED"
   },
   {
     "id": "python-typed-field-renamed",
-    "file": "packages/server/python/src/polyspec/hyper/server/_csrf.py",
+    "file": "packages/python/src/polyspec/hyper/_csrf.py",
     "from": "    raw: str",
     "to": "    token: str",
     "code": "TYPE_SHAPE"
@@ -535,7 +535,7 @@
   },
   {
     "id": "case-reader-member-renamed-detail",
-    "file": "packages/server/php/tests/CaseReader.php",
+    "file": "packages/php/tests/CaseReader.php",
     "from": "public function fail(): string",
     "to": "public function failed(): string",
     "code": "CASE_READER_MEMBERS",
@@ -544,8 +544,8 @@
   {
     "id": "python-test-inherited",
     "file": "contracts/interfaces.json",
-    "from": "\"packages/server/python/tests/test_derived.py::DerivedTest.test_own: is a test of the class itself\",\n          \"packages/server/python/tests/test_derived.py::DerivedTest.test_mixed: is a test that the class inherits from a class of another file\"",
-    "to": "\"packages/server/python/tests/test_derived.py::DerivedTest.test_own: is a test of the class itself\"",
+    "from": "\"packages/python/tests/test_derived.py::DerivedTest.test_own: is a test of the class itself\",\n          \"packages/python/tests/test_derived.py::DerivedTest.test_mixed: is a test that the class inherits from a class of another file\"",
+    "to": "\"packages/python/tests/test_derived.py::DerivedTest.test_own: is a test of the class itself\"",
     "code": "TEST_UNNAMED",
     "detail": "DerivedTest.test_mixed"
   },
@@ -565,83 +565,83 @@
   },
   {
     "id": "step-missing-php",
-    "file": "packages/server/php/tests/Steps/MediaTypeSteps.php",
+    "file": "packages/php/tests/Steps/MediaTypeSteps.php",
     "delete": true,
     "code": "STEP_MISSING"
   },
   {
     "id": "step-missing-node",
-    "file": "packages/server/ts/tests/steps/media-type.ts",
+    "file": "packages/ts/tests/steps/media-type.ts",
     "from": "  essence(reader: CaseReader): void {",
     "to": "  essences(reader: CaseReader): void {",
     "code": "STEP_MISSING"
   },
   {
     "id": "step-missing-python",
-    "file": "packages/server/python/tests/steps/media_type_steps.py",
+    "file": "packages/python/tests/steps/media_type_steps.py",
     "from": "def essence(case) -> None:",
     "to": "def essences(case) -> None:",
     "code": "STEP_MISSING"
   },
   {
     "id": "step-registry-other-php",
-    "file": "packages/server/php/tests/CaseSteps.php",
+    "file": "packages/php/tests/CaseSteps.php",
     "from": "'media-type.json essence' => MediaTypeSteps::essence(...),",
     "to": "'media-type.json essence' => CsrfSteps::mask(...),",
     "code": "STEP_REGISTRY"
   },
   {
     "id": "step-registry-other-node",
-    "file": "packages/server/ts/tests/case-runner.test.mts",
+    "file": "packages/ts/tests/case-runner.test.mts",
     "from": "...prefixed('media-type.json', mediaTypeSteps),",
     "to": "...prefixed('media-type.json', csrfSteps),",
     "code": "STEP_REGISTRY"
   },
   {
     "id": "step-registry-other-python",
-    "file": "packages/server/python/tests/steps/__init__.py",
+    "file": "packages/python/tests/steps/__init__.py",
     "from": "(\"media-type.json\", \"essence\"): media_type_steps.essence,",
     "to": "(\"media-type.json\", \"essence\"): csrf_steps.mask,",
     "code": "STEP_REGISTRY"
   },
   {
     "id": "step-registry-missing-python",
-    "file": "packages/server/python/tests/steps/__init__.py",
+    "file": "packages/python/tests/steps/__init__.py",
     "from": "    (\"media-type.json\", \"essence\"): media_type_steps.essence,\n",
     "to": "",
     "code": "STEP_REGISTRY"
   },
   {
     "id": "step-registry-extra-php",
-    "file": "packages/server/php/tests/CaseSteps.php",
+    "file": "packages/php/tests/CaseSteps.php",
     "from": "            'media-type.json essence' => MediaTypeSteps::essence(...),\n",
     "to": "            'media-type.json essence' => MediaTypeSteps::essence(...),\n            'media-type.json other' => MediaTypeSteps::essence(...),\n",
     "code": "STEP_REGISTRY"
   },
   {
     "id": "step-member-uncalled-php",
-    "file": "packages/server/php/tests/Steps/EssenceReader.php",
+    "file": "packages/php/tests/Steps/EssenceReader.php",
     "from": "return MediaType::parse($text)->essence();",
     "to": "return 'text/plain';",
     "code": "STEP_MEMBER_UNCALLED"
   },
   {
     "id": "step-member-uncalled-node",
-    "file": "packages/server/ts/tests/steps/essence-reader.ts",
+    "file": "packages/ts/tests/steps/essence-reader.ts",
     "from": "return MediaType.parse(text).essence();",
     "to": "return 'text/plain';",
     "code": "STEP_MEMBER_UNCALLED"
   },
   {
     "id": "step-member-uncalled-python",
-    "file": "packages/server/python/tests/steps/essence_reader.py",
+    "file": "packages/python/tests/steps/essence_reader.py",
     "from": "return MediaType.parse(text).essence()",
     "to": "return \"text/plain\"",
     "code": "STEP_MEMBER_UNCALLED"
   },
   {
     "id": "step-member-computed-php",
-    "file": "packages/server/php/tests/Steps/CsrfSteps.php",
+    "file": "packages/php/tests/Steps/CsrfSteps.php",
     "from": "(new Csrf('k'))->mask($token)",
     "to": "(new Csrf('k'))->{'mask'}($token)",
     "code": "STEP_MEMBER_UNCALLED",
@@ -649,7 +649,7 @@
   },
   {
     "id": "step-member-computed-node",
-    "file": "packages/server/ts/tests/steps/csrf.ts",
+    "file": "packages/ts/tests/steps/csrf.ts",
     "from": "new Csrf('k').mask(token)",
     "to": "new Csrf('k')['mask'](token)",
     "code": "STEP_MEMBER_UNCALLED",
@@ -657,7 +657,7 @@
   },
   {
     "id": "step-member-computed-python",
-    "file": "packages/server/python/tests/steps/csrf_steps.py",
+    "file": "packages/python/tests/steps/csrf_steps.py",
     "from": "Csrf(\"k\").mask(token)",
     "to": "getattr(Csrf(\"k\"), \"mask\")(token)",
     "code": "STEP_MEMBER_UNCALLED",
@@ -665,7 +665,7 @@
   },
   {
     "id": "step-constructor-literal-node",
-    "file": "packages/server/ts/tests/steps/csrf.ts",
+    "file": "packages/ts/tests/steps/csrf.ts",
     "from": "new Csrf('k').mask(token)",
     "to": "{ mask: (text: string): string => text }.mask(token)",
     "code": "STEP_MEMBER_UNCALLED",
@@ -673,7 +673,7 @@
   },
   {
     "id": "step-helper-call-removed",
-    "file": "packages/server/php/tests/Steps/CsrfSteps.php",
+    "file": "packages/php/tests/Steps/CsrfSteps.php",
     "from": "return (new Csrf('k'))->mask($token);",
     "to": "return $token;",
     "code": "STEP_MEMBER_UNCALLED",
@@ -681,23 +681,23 @@
   },
   {
     "id": "step-codec-php",
-    "file": "packages/server/php/tests/Steps/CsrfSteps.php",
+    "file": "packages/php/tests/Steps/CsrfSteps.php",
     "from": "self::masked('token')",
-    "to": "self::masked(\\Polyspec\\Hyper\\Server\\JsonCodec::decode('token'))",
+    "to": "self::masked(\\Polyspec\\Hyper\\JsonCodec::decode('token'))",
     "code": "STEP_CODEC"
   },
   {
     "id": "step-codec-node",
-    "file": "packages/server/ts/tests/steps/csrf.ts",
+    "file": "packages/ts/tests/steps/csrf.ts",
     "from": "import { Csrf } from '../../src/csrf.ts';\nimport type { CaseReader } from '../case-reader.ts';\n\nfunction masked(token: string): string {\n  return new Csrf('k').mask(token);",
     "to": "import { Csrf } from '../../src/csrf.ts';\nimport { JsonCodec } from '../../src/json-codec.ts';\nimport type { CaseReader } from '../case-reader.ts';\n\nfunction masked(token: string): string {\n  return new Csrf('k').mask(JsonCodec.decode(token));",
     "code": "STEP_CODEC"
   },
   {
     "id": "step-codec-python",
-    "file": "packages/server/python/tests/steps/csrf_steps.py",
-    "from": "from polyspec.hyper.server._csrf import Csrf\n\n\ndef mask(case) -> None:\n    case.compare(\"expected\", _masked(\"token\"))\n",
-    "to": "from polyspec.hyper.server._csrf import Csrf\nfrom polyspec.hyper.server._json_codec import JsonCodec\n\n\ndef mask(case) -> None:\n    case.compare(\"expected\", _masked(JsonCodec.decode(\"token\")))\n",
+    "file": "packages/python/tests/steps/csrf_steps.py",
+    "from": "from polyspec.hyper._csrf import Csrf\n\n\ndef mask(case) -> None:\n    case.compare(\"expected\", _masked(\"token\"))\n",
+    "to": "from polyspec.hyper._csrf import Csrf\nfrom polyspec.hyper._json_codec import JsonCodec\n\n\ndef mask(case) -> None:\n    case.compare(\"expected\", _masked(JsonCodec.decode(\"token\")))\n",
     "code": "STEP_CODEC"
   },
   {
@@ -716,7 +716,7 @@
   },
   {
     "id": "member-unreached-internal-php",
-    "file": "packages/server/php/src/MediaType.php",
+    "file": "packages/php/src/MediaType.php",
     "from": "return $csrf->raw();",
     "to": "return 'x';",
     "code": "MEMBER_UNREACHED",
@@ -724,7 +724,7 @@
   },
   {
     "id": "member-unreached-internal-node",
-    "file": "packages/server/ts/src/media-type.ts",
+    "file": "packages/ts/src/media-type.ts",
     "from": "return csrf.raw();",
     "to": "return 'x';",
     "code": "MEMBER_UNREACHED",
@@ -732,7 +732,7 @@
   },
   {
     "id": "member-unreached-internal-python",
-    "file": "packages/server/python/src/polyspec/hyper/server/media_type.py",
+    "file": "packages/python/src/polyspec/hyper/media_type.py",
     "from": "return csrf.raw()",
     "to": "return \"x\"",
     "code": "MEMBER_UNREACHED",
@@ -740,7 +740,7 @@
   },
   {
     "id": "member-unreached-private-php",
-    "file": "packages/server/php/src/Csrf.php",
+    "file": "packages/php/src/Csrf.php",
     "from": "return $this->fold();",
     "to": "return 'x';",
     "code": "MEMBER_UNREACHED",
@@ -748,7 +748,7 @@
   },
   {
     "id": "member-unreached-private-node",
-    "file": "packages/server/ts/src/csrf.ts",
+    "file": "packages/ts/src/csrf.ts",
     "from": "return this.fold();",
     "to": "return 'x';",
     "code": "MEMBER_UNREACHED",
@@ -756,7 +756,7 @@
   },
   {
     "id": "member-unreached-private-python",
-    "file": "packages/server/python/src/polyspec/hyper/server/_csrf.py",
+    "file": "packages/python/src/polyspec/hyper/_csrf.py",
     "from": "return self._fold()",
     "to": "return \"x\"",
     "code": "MEMBER_UNREACHED",
@@ -764,7 +764,7 @@
   },
   {
     "id": "member-reach-differs",
-    "file": "packages/server/php/src/Csrf.php",
+    "file": "packages/php/src/Csrf.php",
     "from": "return $token . '!';",
     "to": "return $token . $this->raw() . '!';",
     "code": "MEMBER_REACH_DIFFERS",
@@ -779,7 +779,7 @@
   },
   {
     "id": "reach-typed-parameter-php",
-    "file": "packages/server/php/src/MediaType.php",
+    "file": "packages/php/src/MediaType.php",
     "from": "private function folded(Csrf $csrf): string",
     "to": "private function folded($csrf): string",
     "code": "MEMBER_UNREACHED",
@@ -787,7 +787,7 @@
   },
   {
     "id": "reach-typed-parameter-node",
-    "file": "packages/server/ts/src/media-type.ts",
+    "file": "packages/ts/src/media-type.ts",
     "from": "private folded(csrf: Csrf): string",
     "to": "private folded(csrf: unknown): string",
     "code": "MEMBER_UNREACHED",
@@ -795,7 +795,7 @@
   },
   {
     "id": "reach-typed-parameter-python",
-    "file": "packages/server/python/src/polyspec/hyper/server/media_type.py",
+    "file": "packages/python/src/polyspec/hyper/media_type.py",
     "from": "def _folded(self, csrf: Csrf) -> str:",
     "to": "def _folded(self, csrf) -> str:",
     "code": "MEMBER_UNREACHED",
@@ -812,14 +812,14 @@
   {
     "id": "reach-only-member",
     "file": "contracts/interfaces.json",
-    "from": "          \"tests\": [\n            \"packages/server/php/tests/CaseRunnerTest.php::CaseRunnerTest::testCases: serves the session through the case runner\"\n          ],\n",
+    "from": "          \"tests\": [\n            \"packages/php/tests/CaseRunnerTest.php::CaseRunnerTest::testCases: serves the session through the case runner\"\n          ],\n",
     "to": "",
     "code": "MEMBER_UNREACHED",
     "detail": "csrf.check"
   },
   {
     "id": "reach-loop-variable",
-    "file": "packages/server/php/src/JsonCodec.php",
+    "file": "packages/php/src/JsonCodec.php",
     "from": "foreach (SignedToken::all() as $token) {",
     "to": "foreach ([new SignedToken()] as $token) {",
     "code": "MEMBER_UNREACHED",
@@ -827,7 +827,7 @@
   },
   {
     "id": "reach-override",
-    "file": "packages/server/ts/src/signed-token.ts",
+    "file": "packages/ts/src/signed-token.ts",
     "from": "    return this.sign();",
     "to": "    return 'y';",
     "code": "MEMBER_UNREACHED",
@@ -835,7 +835,7 @@
   },
   {
     "id": "reach-parent-constructor",
-    "file": "packages/server/python/src/polyspec/hyper/server/_signed_token.py",
+    "file": "packages/python/src/polyspec/hyper/_signed_token.py",
     "from": "        super().__init__()",
     "to": "        pass",
     "code": "MEMBER_UNREACHED",

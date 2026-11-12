@@ -25,8 +25,8 @@ const run = (server: Server, directory: string, ...args: string[]) => runWorker(
 const file = (directory: string) => path.join(directory, `sess_${IDENTIFIER}`);
 
 test('processes of the three servers that write one session at the same time lose no update (HY-104)', { timeout: 120_000 }, async (t) => {
-  requireBuilt('packages', 'packages/server/ts/dist/index.js');
-  requireBuilt('hyper-install-python', 'packages/server/python/.venv/bin/python');
+  requireBuilt('packages', 'packages/ts/dist/index.js');
+  requireBuilt('hyper-install-python', 'packages/python/.venv/bin/python');
   requireBuilt('hyper-install-php', 'vendor/autoload.php');
   const directory = directoryOf(t);
   writeFileSync(file(directory), 'a:1:{s:1:"n";i:0;}');

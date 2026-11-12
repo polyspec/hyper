@@ -8,7 +8,7 @@ import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSy
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { test } from 'node:test';
-import { buildId } from '../../packages/build/lib/build-id.mjs';
+import { buildId } from '../../packages/cli/lib/build-id.mjs';
 import { jsonObject, jsonString, parseJsonObject } from '../../scripts/json.mts';
 import { copyTracked } from '../../scripts/tracked-files.mts';
 
@@ -17,7 +17,7 @@ import { copyTracked } from '../../scripts/tracked-files.mts';
 const fixture = (name: string, target: string) => copyTracked({ repository: resolve('.'), path: `tests/scripts/fixtures/${name}`, target, base: `tests/scripts/fixtures/${name}` });
 
 function buildAssets(app: string, ...options: string[]) {
-  return spawnSync(process.execPath, ['packages/build/bin/hyper-build-assets.mjs', '--app', app, '--api', '/api', '--output', join(app, 'out'), ...options], { encoding: 'utf8' });
+  return spawnSync(process.execPath, ['packages/cli/bin/hyper-build-assets.mjs', '--app', app, '--api', '/api', '--output', join(app, 'out'), ...options], { encoding: 'utf8' });
 }
 
 test('rejects an invalid manifest and writes nothing', () => {
@@ -111,7 +111,7 @@ function buildIdFiles(app: string) {
 }
 
 test('writes build.json with the build id of the outputs and the shell meta element (HY-125)', () => {
-  const app = mkdtempSync(join(tmpdir(), 'hyper-build-id-'));
+  const app = mkdtempSync(join(tmpdir(), 'hyper-cli-id-'));
   try {
     fixture('chunks', app);
     const output = join(app, 'out');

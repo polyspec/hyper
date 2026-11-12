@@ -9,8 +9,8 @@ import json
 import os
 import sys
 
-from polyspec.hyper.server.file_sessions import FileSessions
-from polyspec.hyper.server.redis_sessions import RedisSessions
+from polyspec.hyper.file_sessions import FileSessions
+from polyspec.hyper.redis_sessions import RedisSessions
 
 
 def stores(directory):

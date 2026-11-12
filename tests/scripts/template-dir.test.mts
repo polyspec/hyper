@@ -1,5 +1,5 @@
 // Tests that the asset build, the template build and the server build read the template packages that
-// @polyspec/hyper-build requires, @polyspec/template and @polyspec/template-compiler, by their package names (HR-70): npm
+// @polyspec/hyper-cli requires, @polyspec/template and @polyspec/template-compiler, by their package names (HR-70): npm
 // installs them from the tarballs of the template release that the root package.json names by their URLs and
 // package-lock.json pins by their integrity, and no build takes a template directory.
 import assert from 'node:assert/strict';
@@ -8,7 +8,7 @@ import { join, resolve } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { build } from 'esbuild';
-import { templatePlugin } from '../../packages/build/lib/template-files.mjs';
+import { templatePlugin } from '../../packages/cli/lib/template-files.mjs';
 import { type JsonObject, jsonObject, jsonString, parseJsonObject } from '../../scripts/json.mts';
 import { requireBuilt } from './requires.mts';
 
@@ -41,8 +41,8 @@ test('release declarations pin template tarballs while installed source packages
   const packages = member('package-lock.json', 'packages');
   const version = jsonString(member('packages/client/package.json', 'dependencies')['@polyspec/template'], 'packages/client/package.json @polyspec/template');
   assert.match(version, /^\d+\.\d+\.\d+$/, 'packages/client requires an exact template version');
-  assert.equal(member('packages/server/ts/package.json', 'dependencies')['@polyspec/template'], version);
-  for (const name of PACKAGES) assert.equal(member('packages/build/package.json', 'dependencies')[name], version, name);
+  assert.equal(member('packages/ts/package.json', 'dependencies')['@polyspec/template'], version);
+  for (const name of PACKAGES) assert.equal(member('packages/cli/package.json', 'dependencies')[name], version, name);
   for (const name of PACKAGES) {
     const tarball = `https://github.com/polyspec/template/releases/download/v${version}/${name.slice(1).replace('/', '-')}-${version}.tgz`;
     assert.equal(dependencies[name], tarball, name);

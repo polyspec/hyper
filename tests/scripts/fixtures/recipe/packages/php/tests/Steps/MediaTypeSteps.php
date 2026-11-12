@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper\Server\Tests\Steps;
+namespace Polyspec\Hyper\Tests\Steps;
 
-use Polyspec\Hyper\Server\Tests\CaseReader;
+use Polyspec\Hyper\Tests\CaseReader;
 
 final class MediaTypeSteps
 {

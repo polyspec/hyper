@@ -2,10 +2,10 @@
 // hashed bytes, the digest and the excluded outputs. The expected values are read from the contract file and never computed here.
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { buildId, buildStream, sortFiles } from '../../packages/build/lib/build-id.mjs';
-import { CaseReader } from '../../packages/server/ts/tests/case-reader.ts';
-import { writeResults } from '../../packages/server/ts/tests/case-run.ts';
-import { mapsOf, textOf } from '../../packages/server/ts/tests/inputs.ts';
+import { buildId, buildStream, sortFiles } from '../../packages/cli/lib/build-id.mjs';
+import { CaseReader } from '../../packages/ts/tests/case-reader.ts';
+import { writeResults } from '../../packages/ts/tests/case-run.ts';
+import { mapsOf, textOf } from '../../packages/ts/tests/inputs.ts';
 
 type BuildFile = { path: string; bytes: Buffer };
 

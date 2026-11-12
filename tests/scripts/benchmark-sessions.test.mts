@@ -11,8 +11,8 @@ interface Result { server: string; processes: number; requests: number; requests
 
 test('the benchmark of the Redis sessions counts the requests of each server', { timeout: 120_000 }, async () => {
   requireBuilt('hyper-install-redis', 'var/redis/redis-server', 'var/redis/redis.so');
-  requireBuilt('packages', 'packages/server/ts/dist/index.js');
-  requireBuilt('hyper-install-python', 'packages/server/python/.venv/bin/python');
+  requireBuilt('packages', 'packages/ts/dist/index.js');
+  requireBuilt('hyper-install-python', 'packages/python/.venv/bin/python');
   requireBuilt('hyper-install-php', 'vendor/autoload.php');
   const { stdout } = await promisify(execFile)(process.execPath, ['benchmarks/sessions.mts', '--requests', '5', '--json'], { cwd: ROOT });
   const results: unknown = JSON.parse(stdout);

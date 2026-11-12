@@ -8,7 +8,7 @@ declare(strict_types=1);
 // the reader resolves a name through the namespace and the `use` statements of the file and the classes that the
 // tracked files declare, and leaves any other name without a class. The check (stated.mts) evaluates the classes.
 
-use Polyspec\Hyper\Server\Recipe\PhpScope;
+use Polyspec\Hyper\Recipe\PhpScope;
 
 const SCOPE_OPENERS = ['(', '[', '{', T_CURLY_OPEN, T_DOLLAR_OPEN_CURLY_BRACES];
 const SCOPE_NAMES = [T_STRING, T_NAME_QUALIFIED, T_NAME_FULLY_QUALIFIED, T_NAME_RELATIVE];

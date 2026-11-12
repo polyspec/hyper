@@ -34,11 +34,11 @@ bootstrap: ## Bootstrap the lock with the declared native npm before installed t
 	cd "$${TMPDIR:-/tmp}" && npm_config_offline=false npm_config_cache="$$root/var/bootstrap/npm-cache" "$(BOOTSTRAP_NPM)" exec --yes --package="npm@$$version" -- npm --prefix "$$root" ci --ignore-scripts
 
 BOARD := examples/board
-PHP_PACKAGE := packages/server/php
+PHP_PACKAGE := packages/php
 JS_PACKAGE := packages/client
-NODE_PACKAGE := packages/server/ts
-BUILD_PACKAGE := packages/build
-PYTHON_PACKAGE := packages/server/python
+NODE_PACKAGE := packages/ts
+BUILD_PACKAGE := packages/cli
+PYTHON_PACKAGE := packages/python
 # The Python of the checks is the python of mise.toml, which `make install-tools` installs with mise at the digest of mise.lock
 # and its shim runs (HR-81, kit K127). requires-python >= 3.14 states the tested minor of the package (H20.12).
 # The absolute path, as NPM and COMPOSER_BIN have, because make looks up a recipe line on its own PATH.
@@ -61,7 +61,7 @@ TEMPLATE_VERSION := 0.0.27
 TEMPLATE_TAG := v$(TEMPLATE_VERSION)
 TEMPLATE_PACKAGES := https://github.com/polyspec/template/releases/download/$(TEMPLATE_TAG)/packages.json
 FIXTURES := $(PHP_PACKAGE)/tests/fixtures
-# The Composer vendor directory of the private root composer.json, which installs packages/server/php for development.
+# The Composer vendor directory of the private root composer.json, which installs packages/php for development.
 PHP_VENDOR := $(CURDIR)/vendor
 # The native template extension, built from the unpacked php-ext asset (HY-48, H14.1-7).
 # The lock of `make serve-demo`, whose fixed ports exist once on this machine (holder-lock of @polyspec/kit).
@@ -70,7 +70,7 @@ SERVE_DEMO_LOCK := /tmp/hyper-serve-demo.lock
 TSC := $(CURDIR)/node_modules/.bin/tsc
 # The esbuild package replaces bin/esbuild with the executable of the platform when it installs.
 ESBUILD := node_modules/esbuild/bin/esbuild
-# The path repository packages/server/php, which the board links with Composer (HR-79).
+# The path repository packages/php, which the board links with Composer (HR-79).
 # The PHP memory limit of PHPStan: a run without its result cache (build/phpstan) needs 132 MB in its worker, above
 # the default limit of 128M.
 PHPSTAN_MEMORY := 256M
@@ -107,7 +107,7 @@ checks_result = test -z "$$failed" || { echo "failed checks:$$failed"; exit 1; }
 
 .DEFAULT_GOAL := help
 
-.PHONY: bench-sessions bench-uploads help hyper-install hyper-install-python hyper-install-browser hyper-install-virtiofs hyper-test-node hyper-test-python-render hyper-test-scripts check typecheck hyper-server-php-install ext packages package-check server server-fixtures contract-programs node-server node-fixtures assets hyper-test-js hyper-test-php hyper-test-python hyper-lint analyse-php templates-check virtiofs-check parity server-parity server-parity-python bundle-size e2e serve-demo bench-server bench-server-smoke bench-browser bench serve-demo-unlock
+.PHONY: bench-sessions bench-uploads help hyper-install hyper-install-python hyper-install-browser hyper-install-virtiofs hyper-test-node hyper-test-python-render hyper-test-scripts check typecheck hyper-php-install ext packages package-check server server-fixtures contract-programs node-server node-fixtures assets hyper-test-js hyper-test-php hyper-test-python hyper-lint analyse-php templates-check virtiofs-check parity server-parity server-parity-python bundle-size e2e serve-demo bench-server bench-server-smoke bench-browser bench serve-demo-unlock
 
 help: ## List the targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
@@ -195,12 +195,12 @@ packages: ## Build the JavaScript modules and type declarations of the npm packa
 	cd $(JS_PACKAGE) && trap 'rm -rf dist.next-$$$$' EXIT && trap 'exit 130' INT TERM && $(NPM) run --silent build -- --outDir dist.next-$$$$ && $(NODE) $(CURDIR)/scripts/publish.mts directory dist.next-$$$$ dist
 	cd $(NODE_PACKAGE) && trap 'rm -rf dist.next-$$$$' EXIT && trap 'exit 130' INT TERM && $(NPM) run --silent build -- --outDir dist.next-$$$$ && $(NODE) $(CURDIR)/scripts/publish.mts directory dist.next-$$$$ dist
 
-# The path repository of the board links the PHP server package to packages/server/php (Composer's default, HR-79), so the
+# The path repository of the board links the PHP server package to packages/php (Composer's default, HR-79), so the
 # board runs the current source without a copy. The install reads no registry: the targets of the checks reach it, so Composer
 # installs offline from the cache that make hyper-install filled (HR-89), and make install-link PROJECT=$(BOARD) then links into the
 # board alone the polyspec packages that a checkout of .links provides (K448, kit K983); it writes no Claude Code hook, which make
 # link of development writes (kit K967).
-hyper-server-php-install: ## Install the Composer dependencies of the board offline, which link polyspec/hyper-server to packages/server/php (HR-79), and link the polyspec packages of .links
+hyper-php-install: ## Install the Composer dependencies of the board offline, which link polyspec/hyper to packages/php (HR-79), and link the polyspec packages of .links
 	$(NODE) $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(COMPOSER_BIN) install --no-interaction --working-dir=$(BOARD)
 	$(MAKE) --no-print-directory install-link PROJECT=$(BOARD)
 
@@ -213,10 +213,10 @@ package-check: packages node-fixtures ## Install the npm packages into tests/pac
 	NPM_BIN=$(NPM) $(NODE) $(KIT)/run-tests.$(KIT_EXT) node --cwd tests/package-install -- --test-concurrency=1 package-install.test.ts
 
 server: packages assets ## Build the board server program from installed dependencies: its templates and generated PHP program (HY-48, HY-125)
-	$(NODE) $(BUILD_PACKAGE)/bin/hyper-build-server.mjs --manifest $(BOARD)/app/app.json --templates $(BOARD)/templates --output $(BOARD)/build/server --php-namespace 'Polyspec\Hyper\Server\Examples\Board\Program' --build $(abspath $(BOARD)/build/build.json)
+	$(NODE) $(BUILD_PACKAGE)/bin/hyper-build-server.mjs --manifest $(BOARD)/app/app.json --templates $(BOARD)/templates --output $(BOARD)/build/server --php-namespace 'Polyspec\Hyper\Examples\Board\Program' --build $(abspath $(BOARD)/build/build.json)
 
 server-fixtures: packages contract-programs ## Build the server program of the PHP test fixtures (HY-48, HY-125)
-	$(NODE) $(BUILD_PACKAGE)/bin/hyper-build-server.mjs --manifest $(FIXTURES)/app.json --templates $(FIXTURES)/templates --output $(PHP_PACKAGE)/tests/build/server --php-namespace 'Polyspec\Hyper\Server\Tests\Program' --build $(abspath $(FIXTURES)/build.json)
+	$(NODE) $(BUILD_PACKAGE)/bin/hyper-build-server.mjs --manifest $(FIXTURES)/app.json --templates $(FIXTURES)/templates --output $(PHP_PACKAGE)/tests/build/server --php-namespace 'Polyspec\Hyper\Tests\Program' --build $(abspath $(FIXTURES)/build.json)
 
 contract-programs: packages ## Build the applications of contracts/context.json, contracts/functions.json, contracts/representations.json and contracts/app.json and one application per case of contracts/reads.json for the tests of the three servers (HY-73, HY-118, HY-124, HYC-24)
 	$(NODE) scripts/contract-programs.mts --contract $(abspath contracts/context.json) --contract $(abspath contracts/functions.json) --contract $(abspath contracts/representations.json) --contract $(abspath contracts/app.json) --reads $(abspath contracts/reads.json) --output $(abspath var/contract-programs)
@@ -339,9 +339,9 @@ recipe-candidates: ## Write the candidate of contracts/interfaces.json under var
 	$(NODE) scripts/recipe/candidate.mts --root . --php-autoload $(PHP_VENDOR)/autoload.php --output var/recipe/interfaces.candidate.json
 
 .PHONY: core-test core-lint core-fmt-check
-# The Rust core of the server rules (C-7) at packages/server/rust, built with the toolchain of its rust-toolchain.toml
+# The Rust core of the server rules (C-7) at packages/rust, built with the toolchain of its rust-toolchain.toml
 # and the lints of its Cargo.toml and clippy.toml (plan R-1).
-CORE := packages/server/rust
+CORE := packages/rust
 core-test: ## Run the tests of the Rust core, which run the cases of contracts/ that it decides (HY-132)
 	cd $(CORE) && cargo test --locked
 core-lint: ## Run clippy on the Rust core and its tests with every warning an error (plan R-1)
@@ -568,7 +568,7 @@ suppression-check: ## Fail on a suppression of a lint finding that states no rea
 
 
 # The lint of each language reads the configuration of this repository: knip.json and .oxlintrc.json, phpcs.xml.dist and
-# phpstan.dist.neon (also for packages/server/php, whose phpstan-max.neon only make analyse-php reads, H27.85), ruff.toml
+# phpstan.dist.neon (also for packages/php, whose phpstan-max.neon only make analyse-php reads, H27.85), ruff.toml
 # and [tool.vulture] of each pyproject.toml.
 lint-ts: ## Lint the TypeScript: oxlint, knip and tsc of each project; offline
 	@test -d $(RECIPE_TYPESCRIPT) || { echo 'lint-ts needs the pinned TypeScript of scripts/recipe/typescript, whose declarations scripts/recipe/read-node.mts imports: run make install-packages'; exit 1; }

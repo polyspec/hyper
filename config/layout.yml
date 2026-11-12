@@ -37,20 +37,18 @@ rules:
     vars: { root_files: ".npmrc" }
 
   # S5: hyper has three components. The browser package and the build package are TypeScript packages without ports; the
-  # server of the region protocol has its ports in packages/server/<runtime>/ (ts for Node.js, php, python).
+  # server of the region protocol has its ports in packages/<runtime>/ (ts for Node.js, php, python).
   - id: layout-packages
     paths:
       - "packages/*"
       - "!packages/go"
       - "!packages/php"
-      - "!packages/php-ext"
       - "!packages/python"
       - "!packages/rust"
       - "!packages/ts"
       - "!packages/js"
       - "!packages/client"
-      - "!packages/build"
-      - "!packages/server"
+      - "!packages/cli"
 
   - extends_template: component-ports
     id: layout-server-ports

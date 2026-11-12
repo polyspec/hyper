@@ -1,6 +1,6 @@
 // Tests that hyper depends on one template release, 0.0.27 (H21.4, H23.23, H23.25, H23.28): the npm packages and their
 // locks, the Composer packages and their locks, the php-ext package that PIE builds and the Python package of
-// packages/server/python name that release and no other, and no check or release step reads a template checkout. A mixed
+// packages/python name that release and no other, and no check or release step reads a template checkout. A mixed
 // version fails here before any install runs.
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -32,7 +32,7 @@ test('the npm manifests name the template tarballs of the release, and their dep
     assert.equal(member(root, 'dependencies', 'package.json')[name], tarball, `package.json dependencies ${name}`);
     assert.equal(member(root, 'overrides', 'package.json')[name], `$${name}`, `package.json overrides ${name} through its direct dependency`);
   }
-  for (const manifest of ['packages/client/package.json', 'packages/server/ts/package.json', 'packages/build/package.json']) {
+  for (const manifest of ['packages/client/package.json', 'packages/ts/package.json', 'packages/cli/package.json']) {
     const dependencies = optionalMember(json(manifest), 'dependencies', manifest);
     for (const name of NPM_PACKAGES.filter((name) => name in dependencies)) assert.equal(dependencies[name], VERSION, `${manifest} ${name}`);
   }
@@ -81,7 +81,7 @@ test('make template-ext builds the php-ext package of the release from its Compo
 });
 
 test('the Python package of the server names the wheel asset of the release with its sha256 (H21.4, H23.5)', () => {
-  const pyproject = read('packages/server/python/pyproject.toml');
+  const pyproject = read('packages/python/pyproject.toml');
   const requirements = [...pyproject.matchAll(/"(polyspec-template @ [^"]*)"/g)].map((match) => {
     const requirement = match[1];
     if (requirement === undefined) throw new Error(`${match[0]} has no requirement`);

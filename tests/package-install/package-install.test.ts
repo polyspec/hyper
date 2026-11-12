@@ -6,22 +6,22 @@ import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { test } from 'node:test';
 import { Router, stripBasePath } from '@polyspec/hyper-client';
-import { App, Forbidden, ArraySession, Request, Result, type Handlers, type Reply, type Response } from '@polyspec/hyper-server';
+import { App, Forbidden, ArraySession, Request, Result, type Handlers, type Reply, type Response } from '@polyspec/hyper';
 
 // The fixtures of the server tests: the manifest and the template files that `make node-fixtures` builds.
-const FIXTURES = fileURLToPath(new URL('../../packages/server/php/tests/fixtures/', import.meta.url));
-const BUILD = fileURLToPath(new URL('../../packages/server/ts/tests/build/', import.meta.url));
+const FIXTURES = fileURLToPath(new URL('../../packages/php/tests/fixtures/', import.meta.url));
+const BUILD = fileURLToPath(new URL('../../packages/ts/tests/build/', import.meta.url));
 
 // The exports of each package; the browser package also exports the declaration of the template index, which an
 // application build resolves to the index of its own asset build (HR-34), and the source of the reserved template
-// hyper/data.tpl, which the builds of @polyspec/hyper-build read (HR-96).
+// hyper/data.tpl, which the builds of @polyspec/hyper-cli read (HR-96).
 const EXPORTS: Record<string, unknown> = {
   '@polyspec/hyper-client': {
     '.': { types: './dist/index.d.ts', default: './dist/index.js' },
     './templates-index': { types: './templates-index.d.ts' },
     './data-template.json': './data-template.json',
   },
-  '@polyspec/hyper-server': { '.': { types: './dist/index.d.ts', default: './dist/index.js' } },
+  '@polyspec/hyper': { '.': { types: './dist/index.d.ts', default: './dist/index.js' } },
 };
 
 // JSON.parse returns any: the test takes each JSON value as unknown and narrows the parts that it reads.
@@ -43,7 +43,7 @@ function linkedDirectory(name: string): string {
 }
 
 test('the installed packages are the packages of this repository, JavaScript with declarations', () => {
-  for (const name of ['@polyspec/hyper-client', '@polyspec/hyper-server']) {
+  for (const name of ['@polyspec/hyper-client', '@polyspec/hyper']) {
     const directory = linkedDirectory(name);
     assert.equal(import.meta.resolve(name), pathToFileURL(join(directory, 'dist', 'index.js')).href);
     assert.deepEqual(readObject(join(directory, 'package.json')).exports, EXPORTS[name]);
@@ -56,7 +56,7 @@ test('the installed packages are the packages of this repository, JavaScript wit
 test('each package publishes its build and declarations without its source', () => {
   const npm = process.env.NPM_BIN;
   assert.ok(npm, 'make package-check must supply the pinned NPM_BIN');
-  for (const name of ['@polyspec/hyper-client', '@polyspec/hyper-server']) {
+  for (const name of ['@polyspec/hyper-client', '@polyspec/hyper']) {
     // npm pack --dry-run lists the files that the published archive holds; npm 12 keys its JSON by the package name.
     const pack = execFileSync(npm, ['pack', '--dry-run', '--json', '--ignore-scripts'], { cwd: linkedDirectory(name), encoding: 'utf8' });
     const packed: unknown = jsonObject(jsonObject(JSON.parse(pack), 'the output of npm pack')[name], `the output of npm pack ${name}`).files;

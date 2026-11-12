@@ -28,7 +28,7 @@ function run(t: TestContext, args: string[]) {
   // Native package source links retain their absolute targets in the container. Discover the provider checkout
   // from each resolved package entry with Git, and mount it read-only at the same path (HR-70, HR-78).
   const entries = [
-    createRequire(join(root, 'packages/build/package.json')).resolve('@polyspec/template'),
+    createRequire(join(root, 'packages/cli/package.json')).resolve('@polyspec/template'),
     fileURLToPath(import.meta.resolve('@polyspec/template-compiler/compiler.mjs')),
   ];
   const sources = new Set([root]);
@@ -60,12 +60,12 @@ function files(directory: string, prefix = ''): string[] {
 test('the server build writes the templates on a virtiofs bind mount', { timeout: 120000 }, (t) => {
   const templates = join(root, 'examples', 'board', 'templates');
   const result = run(t, [
-    join(root, 'packages', 'build', 'bin', 'hyper-build-server.mjs'),
+    join(root, 'packages', 'cli', 'bin', 'hyper-build-server.mjs'),
     '--manifest', join(root, 'examples', 'board', 'app', 'app.json'),
     '--templates', templates,
     '--output', '/output/server',
-    '--php-namespace', 'Polyspec\\Hyper\\Server\\Examples\\Board\\Program',
-    '--build', join(root, 'packages', 'server', 'php', 'tests', 'fixtures', 'build.json'),
+    '--php-namespace', 'Polyspec\\Hyper\\Examples\\Board\\Program',
+    '--build', join(root, 'packages', 'php', 'tests', 'fixtures', 'build.json'),
   ]);
   assert.equal(result.status, 0, `${result.stdout}${result.stderr}`);
   const { output } = result;
@@ -86,7 +86,7 @@ test('the server build writes the templates on a virtiofs bind mount', { timeout
 test('the output copies write a directory and a file on a virtiofs bind mount', { timeout: 120000 }, (t) => {
   const source = join(root, 'examples', 'board', 'templates');
   const script = [
-    `import { copyDirectory, copyFile } from ${JSON.stringify(join(root, 'packages', 'build', 'lib', 'output-files.mjs'))};`,
+    `import { copyDirectory, copyFile } from ${JSON.stringify(join(root, 'packages', 'cli', 'lib', 'output-files.mjs'))};`,
     `copyDirectory(${JSON.stringify(source)}, '/output/directory');`,
     `copyFile(${JSON.stringify(join(source, 'layout.tpl'))}, '/output/file/layout.tpl');`,
   ].join('\n');

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper\Server\Tests;
+namespace Polyspec\Hyper\Tests;
 
 final class CaseReader
 {

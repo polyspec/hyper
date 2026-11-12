@@ -15,7 +15,7 @@
 
 ## 기본 Composer 개발
 
-개발 checkout은 polyspec provider(kit, template)를 자기 `.links`의 항목과 `make link`로만 link한다. min-0-max/json-schema는 opis/json-schema의 유지되는 fork이고, 그 FORK.md가 fork를 유지하고 소비하는 방법을 적는다. `composer.json`과 `examples/board/composer.json`은 그 VCS repository `https://github.com/min-0-max/json-schema`를 선언하고 그 release `2.6.0-p2`를 요구하며, 두 lock은 그 release를 commit과 dist로 고정한다. `packages/server/php/composer.json`은 repository를 적지 않으므로 polyspec/hyper-server의 소비자는 자기 root에 fork를 선언한다. fork를 편집하는 checkout은 fork의 checkout을 가리키는 `.links` 항목과 `make link`로 provider처럼 그것을 link한다.
+개발 checkout은 polyspec provider(kit, template)를 자기 `.links`의 항목과 `make link`로만 link한다. min-0-max/json-schema는 opis/json-schema의 유지되는 fork이고, 그 FORK.md가 fork를 유지하고 소비하는 방법을 적는다. `composer.json`과 `examples/board/composer.json`은 그 VCS repository `https://github.com/min-0-max/json-schema`를 선언하고 그 release `2.6.0-p2`를 요구하며, 두 lock은 그 release를 commit과 dist로 고정한다. `packages/php/composer.json`은 repository를 적지 않으므로 polyspec/hyper의 소비자는 자기 root에 fork를 선언한다. fork를 편집하는 checkout은 fork의 checkout을 가리키는 `.links` 항목과 `make link`로 provider처럼 그것을 link한다.
 
 ## 타깃
 
@@ -26,9 +26,9 @@
 | `make layout-check` | `config/layout.kit.yml`을 extend하는 `config/layout.yml`에 대해 `var/tools`의 alint로 폴더 배치를 검사한다 |
 | `make hyper-install` | pin한 도구를 설치하고, `$(ONLINE)`을 거쳐 template release의 Composer repository에서 PIE로 네이티브 확장을 build하며(`make template-ext`; H14.1-7, H27.45), `make hyper-install-python`을 실행하고, template release의 template package를 포함한 Composer 의존성을 설치한다(HR-70) |
 | `make hyper-install-python` | kit의 `python-venv` 유틸리티로 `mise.toml`의 Python에서 Python 서버 package의 venv `.venv`를 새로 만들고, release의 template wheel을 포함한 의존성과 함께 package를 non-editable로 설치한다. Python test와 board Python 서버는 그 Python을 실행하며 source 경로를 읽지 않는다(S5) |
-| `make hyper-server-php-install` | `packages/server/php`를 가리키는 symbolic link로 `polyspec/hyper-server`를 설치하는 board의 Composer 의존성을 설치한다(HR-79). 의존성을 설치할 때 이 target을 명시적으로 실행한다 |
+| `make hyper-php-install` | `packages/php`를 가리키는 symbolic link로 `polyspec/hyper`를 설치하는 board의 Composer 의존성을 설치한다(HR-79). 의존성을 설치할 때 이 target을 명시적으로 실행한다 |
 | `make ext` | `make hyper-install`의 `make template-ext`가 template release의 Composer repository(`packages.json`)에서 PIE로 build한 네이티브 template 확장 `build/ext/polyspec_template.so`가 없으면 실패한다. offline으로 실행하며 아무것도 build하지 않는다(HY-48, H27.45) |
-| `make packages` | `@polyspec/hyper-client`와 `@polyspec/hyper-server`의 JavaScript module과 type 선언을 각 package가 선언한 build(npm의 bin link인 `tsc`를 실행하는 `npm run build`)로 각자의 `dist` 디렉터리에 build하고 각 build를 파일 단위로 publish한다. npm은 workspace를 link하므로 `node_modules`는 build를 바로 보여 준다(HR-79, HR-82). Node 서버 test, board 에셋 build, `make package-check`, `make hyper-test-scripts`는 package를 exports로 가져오므로 이것을 먼저 실행한다(HR-61). build script는 `data-template.json`, `checkManifest`, `templateReferences`를 script 옆 `packages/client`의 소스에서 읽으므로 `dist`가 필요 없고 어느 작업 디렉터리에서도 실행된다 |
+| `make packages` | `@polyspec/hyper-client`와 `@polyspec/hyper`의 JavaScript module과 type 선언을 각 package가 선언한 build(npm의 bin link인 `tsc`를 실행하는 `npm run build`)로 각자의 `dist` 디렉터리에 build하고 각 build를 파일 단위로 publish한다. npm은 workspace를 link하므로 `node_modules`는 build를 바로 보여 준다(HR-79, HR-82). Node 서버 test, board 에셋 build, `make package-check`, `make hyper-test-scripts`는 package를 exports로 가져오므로 이것을 먼저 실행한다(HR-61). build script는 `data-template.json`, `checkManifest`, `templateReferences`를 script 옆 `packages/client`의 소스에서 읽으므로 `dist`가 필요 없고 어느 작업 디렉터리에서도 실행된다 |
 | `make package-check` | 두 package를 그 `package-lock.json`에서 `npm ci --offline`으로 `tests/package-install`에 offline 설치해 그 디렉터리에 link하고(HR-89), `npm pack`이 publish하는 파일을 확인하며, 그 test를 `erasableSyntaxOnly`로 선언에 대해 type 검사한 뒤 `node`로 실행한다(HR-61) 테스트는 `NPM_BIN`으로 고정된 npm을 받으며 `tests/package-install/var/`에는 ignore된 기본 링크 상태를 저장한다. |
 | `make server` | 설치된 소스 패키지로 게시판 서버 프로그램을 `examples/board/build/server`에 빌드한다. 의존성을 설치하거나 링크를 다시 연결하지 않는다(아래 참조) |
 | `make server-fixtures` | PHP 테스트 픽스처의 서버 프로그램을 빌드한다 |
@@ -39,7 +39,7 @@
 | `make hyper-test-node` | Node 서버 test를 실행한다. 같은 fixture로 PHP 서버 test의 사례, `contracts/json.json`의 JSON 사례, session, HTTP 서버, 타입 검사를 실행한다 |
 | `make test-php` | 라우터 적합성 사례를 포함한 서버 패키지 테스트를 generated 프로그램으로 한 번, 네이티브 확장으로 한 번 실행한다 |
 | `make lint` | PHP 형식을 검사한다 |
-| `make analyse-php` | `packages/server/php/phpstan-max.neon`으로 `packages/server/php`의 소스와 테스트에 레벨 `max`의 PHPStan을 실행한다. 기준선(baseline)과 무시하는 오류는 없다. PHPStan은 cache를 `build/phpstan`에 쓴다. 메모리 제한은 `--memory-limit=256M`이다. 먼저 `make ext`를 실행한다 |
+| `make analyse-php` | `packages/php/phpstan-max.neon`으로 `packages/php`의 소스와 테스트에 레벨 `max`의 PHPStan을 실행한다. 기준선(baseline)과 무시하는 오류는 없다. PHPStan은 cache를 `build/phpstan`에 쓴다. 메모리 제한은 `--memory-limit=256M`이다. 먼저 `make ext`를 실행한다 |
 | `make templates-check` | 레이아웃 템플릿만 `hx-` 속성을 가지는지(HC-6), 레이아웃이 `{# title}`과 `{# data}`를 한 번씩 배치하는지, 레이아웃과 각 라우트 템플릿의 모든 영역이 블록 인자 없이 `id`가 영역 이름인 요소 바로 안에 한 번씩 배치되는지(HY-3, HY-30) 검사한다 |
 | `make typecheck` | `node_modules`의 tsc와 root `tsconfig.json`(strict, `erasableSyntaxOnly`)으로 `scripts/`, `tests/`, `benchmarks/`의 TypeScript type을 검사한다. Node는 이 `.mts` 파일을 type stripping으로 실행하며 검사하지 않는다(S9). `scripts/check-parity.mts`가 `@polyspec/hyper-client`의 build가 쓰는 type을 import하므로 먼저 `make packages`를 실행한다 |
 | `make lint-ts` | kit의 oxlint(`.oxlintrc.json`, type-aware)로 TypeScript를 검사하고, knip(`knip.json`)으로 쓰이지 않는 파일, 의존성, export를 검사한다. `make check`와 CI 항목 `gates`의 target이다(H23.13) |
@@ -110,15 +110,15 @@ make release-publish
 make release-undraft
 ```
 
-`make release-tag`는 `origin/main`에 commit이 있는, `main` 위 ci.yml의 완료되고 성공한 push 또는 수동 실행을 요구하고, 그 commit에 있는 `CHANGELOG.md`의 첫 section `## X.Y.Z`에서 X.Y.Z를 읽으며(kit K924), 그 commit에 annotated tag `vX.Y.Z`를 만들어 push한다. 뒤 step은 그 tag에서 실행한다. `make release-prepare`는 `make hyper-install`을 실행하며, `make release-tools`는 릴리스의 도구를 설치한다. `make release-assets`는 패키지를 빌드하고(`make packages`) `polyspec-hyper-client-X.Y.Z.tgz`, `polyspec-hyper-server-X.Y.Z.tgz`, `polyspec-hyper-build-X.Y.Z.tgz`, `polyspec-hyper-server-X.Y.Z.zip`과, `packages/server/python/pyproject.toml`의 `build-system.requires`의 build backend로 `uv build --wheel`이 build한 wheel `polyspec_hyper_server-X.Y.Z-py3-none-any.whl`을 `var/release/assets`에 쓴다. archive는 packer가 주는 이름을 그대로 쓰고, `config/release.json`이 그 패키지에 선언한 product와 runtime으로 GitHub label `<vendor>-<product>-<runtime>-<version>`을 붙인다(kit P39). `make release-publish`는 archive를 붙이고 section을 notes로 하여 draft GitHub Release를 만든다. section이 GitHub의 한도인 125000자 이하일 때만 notes가 되며, 더 긴 section은 한 줄 `The changes of X.Y.Z are listed in [CHANGELOG.md](https://github.com/polyspec/hyper/blob/<tag>/CHANGELOG.md#<anchor>).`가 되고, 이 줄은 tag의 `CHANGELOG.md`를 section의 anchor로 링크한다. anchor는 제목 위의 `<a id="...">` 줄의 id이거나, 없으면 점을 뺀 버전이다. 그다음 `make release-undraft`가 릴리스를 공개한다. Python 패키지 `packages/server/python`은 그 wheel로 릴리스한다(kit의 kind `wheel`, H23.15). 유일한 의존성은 template release의 wheel이며, 그 asset의 sha256을 가진 direct reference로 `packages/server/python/uv.lock`이 그 의존성과 함께 lock한다. job은 `ci.yml`의 job `check`처럼 Node.js, Python, PHP, `make hyper-install`을 준비하며, tag는 `make release-tag`가 쓰는 환경 변수 `TAG`로 step에 전달된다. `make release-coverage`는 `config/release.json`이 `manifests`에도, 이유와 함께 `notReleased`에도 나열하지 않은 tracked manifest가 있으면 실패한다. 여기서 `notReleased`는 `tests/package-install/package.json`, `examples/board/composer.json`, private root `composer.json`이다.
+`make release-tag`는 `origin/main`에 commit이 있는, `main` 위 ci.yml의 완료되고 성공한 push 또는 수동 실행을 요구하고, 그 commit에 있는 `CHANGELOG.md`의 첫 section `## X.Y.Z`에서 X.Y.Z를 읽으며(kit K924), 그 commit에 annotated tag `vX.Y.Z`를 만들어 push한다. 뒤 step은 그 tag에서 실행한다. `make release-prepare`는 `make hyper-install`을 실행하며, `make release-tools`는 릴리스의 도구를 설치한다. `make release-assets`는 패키지를 빌드하고(`make packages`) `polyspec-hyper-client-X.Y.Z.tgz`, `polyspec-hyper-X.Y.Z.tgz`, `polyspec-hyper-cli-X.Y.Z.tgz`, `polyspec-hyper-X.Y.Z.zip`과, `packages/python/pyproject.toml`의 `build-system.requires`의 build backend로 `uv build --wheel`이 build한 wheel `polyspec_hyper-X.Y.Z-py3-none-any.whl`을 `var/release/assets`에 쓴다. archive는 packer가 주는 이름을 그대로 쓰고, `config/release.json`이 그 패키지에 선언한 product와 runtime으로 GitHub label `<vendor>-<product>-<runtime>-<version>`을 붙인다(kit P39). `make release-publish`는 archive를 붙이고 section을 notes로 하여 draft GitHub Release를 만든다. section이 GitHub의 한도인 125000자 이하일 때만 notes가 되며, 더 긴 section은 한 줄 `The changes of X.Y.Z are listed in [CHANGELOG.md](https://github.com/polyspec/hyper/blob/<tag>/CHANGELOG.md#<anchor>).`가 되고, 이 줄은 tag의 `CHANGELOG.md`를 section의 anchor로 링크한다. anchor는 제목 위의 `<a id="...">` 줄의 id이거나, 없으면 점을 뺀 버전이다. 그다음 `make release-undraft`가 릴리스를 공개한다. Python 패키지 `packages/python`은 그 wheel로 릴리스한다(kit의 kind `wheel`, H23.15). 유일한 의존성은 template release의 wheel이며, 그 asset의 sha256을 가진 direct reference로 `packages/python/uv.lock`이 그 의존성과 함께 lock한다. job은 `ci.yml`의 job `check`처럼 Node.js, Python, PHP, `make hyper-install`을 준비하며, tag는 `make release-tag`가 쓰는 환경 변수 `TAG`로 step에 전달된다. `make release-coverage`는 `config/release.json`이 `manifests`에도, 이유와 함께 `notReleased`에도 나열하지 않은 tracked manifest가 있으면 실패한다. 여기서 `notReleased`는 `tests/package-install/package.json`, `examples/board/composer.json`, private root `composer.json`이다.
 
-공개되는 manifest는 tree의 manifest이고, `make release-assets`는 그것을 바꾸지 않고 pack한다(HR-95). 공개되는 manifest는 모든 polyspec 패키지를 정확한 버전으로 적는다. `packages/client/package.json`, `packages/server/ts/package.json`, `packages/build/package.json`은 `@polyspec/template`을(`packages/build/package.json`은 `@polyspec/template-compiler`도) template release의 버전으로, `@polyspec/hyper-client`를 릴리스의 버전으로 요구하고, `packages/server/php/composer.json`은 `version`을 선언하고 `polyspec/template`을 template release의 버전으로 요구하며 `repositories`가 없다.
+공개되는 manifest는 tree의 manifest이고, `make release-assets`는 그것을 바꾸지 않고 pack한다(HR-95). 공개되는 manifest는 모든 polyspec 패키지를 정확한 버전으로 적는다. `packages/client/package.json`, `packages/ts/package.json`, `packages/cli/package.json`은 `@polyspec/template`을(`packages/cli/package.json`은 `@polyspec/template-compiler`도) template release의 버전으로, `@polyspec/hyper-client`를 릴리스의 버전으로 요구하고, `packages/php/composer.json`은 `version`을 선언하고 `polyspec/template`을 template release의 버전으로 요구하며 `repositories`가 없다.
 
 consumer는 자기 package manager로 archive를 설치해 릴리스를 확인하며, 릴리스의 어떤 step도 archive를 설치하지 않는다.
 
 ### 개발 구성
 
-private root는 checkout 안의 패키지를 찾아 주며 공개되지 않는다. root `package.json`은 npm이 link하는 npm workspace `packages/client`, `packages/build`, `packages/server/ts`(HR-79)와, `@polyspec/template`과 `@polyspec/template-compiler`를 template release의 tarball URL로 선언하고, 그 정확한 버전이 이 tarball로 풀리게 하는 `overrides`를 둔다. npm 12는 기본으로 URL 의존성을 설치하지 않으므로 `.npmrc`가 `allow-remote=root`를 둔다. root `composer.json`은 path repository `packages/server/php`와, dist가 template release zip을 URL과 sha1로 지정하는 그 release의 Composer repository `packages.json`에서 root `vendor`로 설치하고 `packages/server/php`의 namespace를 tree에 연결한다. `composer.lock`이 그 lock이다. 두 root는 template release v0.0.27를 받는다(HR-70). 그 tag는 `make template-ext`가 package `polyspec/template-php-ext`를 build하는 Makefile의 `TEMPLATE_TAG`이다(HR-80).
+private root는 checkout 안의 패키지를 찾아 주며 공개되지 않는다. root `package.json`은 npm이 link하는 npm workspace `packages/client`, `packages/cli`, `packages/ts`(HR-79)와, `@polyspec/template`과 `@polyspec/template-compiler`를 template release의 tarball URL로 선언하고, 그 정확한 버전이 이 tarball로 풀리게 하는 `overrides`를 둔다. npm 12는 기본으로 URL 의존성을 설치하지 않으므로 `.npmrc`가 `allow-remote=root`를 둔다. root `composer.json`은 path repository `packages/php`와, dist가 template release zip을 URL과 sha1로 지정하는 그 release의 Composer repository `packages.json`에서 root `vendor`로 설치하고 `packages/php`의 namespace를 tree에 연결한다. `composer.lock`이 그 lock이다. 두 root는 template release v0.0.27를 받는다(HR-70). 그 tag는 `make template-ext`가 package `polyspec/template-php-ext`를 build하는 Makefile의 `TEMPLATE_TAG`이다(HR-80).
 
 ### 릴리스 에셋 설치
 
@@ -127,8 +127,8 @@ consumer는 필요한 릴리스의 에셋을 내려받아 함께 설치한다. r
 ```json
 {
   "dependencies": {
-    "@polyspec/hyper-server": "file:polyspec-hyper-server-X.Y.Z.tgz",
-    "@polyspec/hyper-build": "file:polyspec-hyper-build-X.Y.Z.tgz",
+    "@polyspec/hyper": "file:polyspec-hyper-X.Y.Z.tgz",
+    "@polyspec/hyper-cli": "file:polyspec-hyper-cli-X.Y.Z.tgz",
     "@polyspec/hyper-client": "file:polyspec-hyper-client-X.Y.Z.tgz",
     "@polyspec/template": "file:polyspec-template-npm-T.T.T.tgz",
     "@polyspec/template-compiler": "file:polyspec-template-compiler-npm-T.T.T.tgz"
@@ -136,7 +136,7 @@ consumer는 필요한 릴리스의 에셋을 내려받아 함께 설치한다. r
 }
 ```
 
-Composer에서는 두 release의 Composer repository, 곧 각 release가 archive 옆에 게시하는 `packages.json`을 선언하고 `polyspec/hyper-server`를 요구한다. template release의 repository가 `polyspec/template`을 제공한다.
+Composer에서는 두 release의 Composer repository, 곧 각 release가 archive 옆에 게시하는 `packages.json`을 선언하고 `polyspec/hyper`를 요구한다. template release의 repository가 `polyspec/template`을 제공한다.
 
 ```json
 {
@@ -144,11 +144,11 @@ Composer에서는 두 release의 Composer repository, 곧 각 release가 archive
     { "type": "composer", "url": "https://github.com/polyspec/hyper/releases/download/vX.Y.Z/packages.json" },
     { "type": "composer", "url": "https://github.com/polyspec/template/releases/download/vT.T.T/packages.json" }
   ],
-  "require": { "polyspec/hyper-server": "X.Y.Z" }
+  "require": { "polyspec/hyper": "X.Y.Z" }
 }
 ```
 
-T.T.T는 그 릴리스의 `packages/client/package.json`이 요구하는 `@polyspec/template`의 버전이다. 애플리케이션을 빌드하는 consumer는 `@polyspec/hyper-build`를 설치하고 그 bin을 `node_modules/.bin`에서 실행한다(HR-96, 아래 서버 빌드와 에셋 빌드).
+T.T.T는 그 릴리스의 `packages/client/package.json`이 요구하는 `@polyspec/template`의 버전이다. 애플리케이션을 빌드하는 consumer는 `@polyspec/hyper-cli`를 설치하고 그 bin을 `node_modules/.bin`에서 실행한다(HR-96, 아래 서버 빌드와 에셋 빌드).
 
 ## CI
 
@@ -188,7 +188,7 @@ workflow `.github/workflows/bench.yml`은 수동 실행에서 benchmark를 실�
 
 `node node_modules/@polyspec/kit/dist/run-tests.mjs <node|vitest|go|cargo|phpunit> [--cwd <directory>] [--php-extension <file>] [--] [<arguments>]`는 test 도구를 실행하고, `make test-js`, `make hyper-test-node`, `make test-php`, `make hyper-test-scripts`, `make package-check`는 이것으로 test를 실행한다. PHPUnit은 `COMPOSER_VENDOR_DIR`의 vendor 디렉터리의 것이며 `make test-php`가 이를 root `vendor`로 설정한다. 모든 test는 시작할 때 한 줄, 실행 중에는 5초마다 한 줄, 끝나면 결과와 경과 시간을 담은 한 줄을 출력하고, 실행은 개수와 경과 시간을 담은 줄로 끝난다. runner는 시간 제한을 두지 않는다. 도구를 실행하고 그 출력과 exit code를 그대로 전한다. `--php-extension`은 PHPUnit에 PHP extension을 불러온다. kit이 runner와 reporter를 시험한다.
 
-변경을 소유한 test만 실행하려면 그 파일이나 filter를 넘긴다. 예: `node node_modules/@polyspec/kit/dist/run-tests.mjs vitest --cwd packages/client tests/router.test.ts`, `COMPOSER_VENDOR_DIR=$PWD/vendor node node_modules/@polyspec/kit/dist/run-tests.mjs phpunit --cwd packages/server/php -- --filter RouterTest`.
+변경을 소유한 test만 실행하려면 그 파일이나 filter를 넘긴다. 예: `node node_modules/@polyspec/kit/dist/run-tests.mjs vitest --cwd packages/client tests/router.test.ts`, `COMPOSER_VENDOR_DIR=$PWD/vendor node node_modules/@polyspec/kit/dist/run-tests.mjs phpunit --cwd packages/php -- --filter RouterTest`.
 
 ## 한 실행의 서버
 
@@ -198,10 +198,10 @@ workflow `.github/workflows/bench.yml`은 수동 실행에서 benchmark를 실�
 
 ## 서버 빌드
 
-build 패키지 `@polyspec/hyper-build`의 bin `hyper-build-server --manifest <app.json> --templates <directory> --output <directory> --php-namespace <namespace> --build <build.json>`는 서버 프로그램을 만든다(HY-48, HR-96). `make server`는 checkout에서 `node packages/build/bin/hyper-build-server.mjs`로 실행한다.
+build 패키지 `@polyspec/hyper-cli`의 bin `hyper-build-server --manifest <app.json> --templates <directory> --output <directory> --php-namespace <namespace> --build <build.json>`는 서버 프로그램을 만든다(HY-48, HR-96). `make server`는 checkout에서 `node packages/cli/bin/hyper-build-server.mjs`로 실행한다.
 
 1. `templates/`: 애플리케이션의 모든 템플릿과 예약 템플릿 `hyper/data.tpl`. 네이티브 확장이 이 파일을 읽는다.
-2. `php/`: 같은 템플릿을 `@polyspec/hyper-build`가 요구하는 compiler package `@polyspec/template-compiler`로(HR-70), 주어진 PHP 네임스페이스(게시판은 `Polyspec\Hyper\Server\Examples\Board\Program`)에 클래스마다 파일 하나인 PSR-4 파일로 컴파일한 generated PHP 프로그램. `program.json`은 그 네임스페이스를 기록하며, 렌더러가 이 파일을 읽는다. `build.json`은 `--build` 파일의 사본으로, asset 출력의 build id이다(HY-125). 애플리케이션은 `composer.json`의 `autoload.psr-4`에서 그 네임스페이스를 이 디렉터리에 연결한다. `examples/board/composer.json`은 `Polyspec\Hyper\Server\Examples\Board\Program\`을 `build/server/php/`에, root `composer.json`은 테스트 fixture의 네임스페이스를 `packages/server/php/tests/build/server/php/`에 연결하며, 렌더러는 클래스 `GeneratedProgram`을 Composer의 autoload로 불러온다. 서버가 각 영역을 단독으로 렌더하므로, 모든 템플릿은 대상으로 렌더되고 모든 정의는 HTML이다.
+2. `php/`: 같은 템플릿을 `@polyspec/hyper-cli`가 요구하는 compiler package `@polyspec/template-compiler`로(HR-70), 주어진 PHP 네임스페이스(게시판은 `Polyspec\Hyper\Examples\Board\Program`)에 클래스마다 파일 하나인 PSR-4 파일로 컴파일한 generated PHP 프로그램. `program.json`은 그 네임스페이스를 기록하며, 렌더러가 이 파일을 읽는다. `build.json`은 `--build` 파일의 사본으로, asset 출력의 build id이다(HY-125). 애플리케이션은 `composer.json`의 `autoload.psr-4`에서 그 네임스페이스를 이 디렉터리에 연결한다. `examples/board/composer.json`은 `Polyspec\Hyper\Examples\Board\Program\`을 `build/server/php/`에, root `composer.json`은 테스트 fixture의 네임스페이스를 `packages/php/tests/build/server/php/`에 연결하며, 렌더러는 클래스 `GeneratedProgram`을 Composer의 autoload로 불러온다. 서버가 각 영역을 단독으로 렌더하므로, 모든 템플릿은 대상으로 렌더되고 모든 정의는 HTML이다.
 3. `reads.json`: `@polyspec/hyper-client`의 `routeReads`로 계산한 모든 라우트의 read path(HY-73).
 
 PHP가 `polyspec_template`을 불러왔으면 네이티브 확장으로, 그렇지 않으면 `php/`의 generated 프로그램으로 렌더한다. 두 출력은 같은 원본에서 만들어지므로, 서버는 확장을 불러오는지 여부만으로 엔진을 바꿀 수 있다.
@@ -219,7 +219,7 @@ BOARD_DB=$PWD/examples/board/var/node.db BOARD_SESSIONS=$PWD/examples/board/var/
 
 ## 에셋 빌드
 
-`@polyspec/hyper-build`의 bin `hyper-build-assets --app <디렉터리> --api <기본 경로> --output <디렉터리>`는 build 패키지가 요구하는 template package `@polyspec/template`으로 다음을 쓴다(HR-70, HR-96). `make assets`는 checkout에서 `node packages/build/bin/hyper-build-assets.mjs`로 실행한다. `public/assets/` 아래에는 이름에 내용의 해시가 들어간 파일을 더하기만 하고 지우지 않으며, 해시가 없는 출력은 `--output`의 디렉터리에 둔다(HR-34). `make assets`는 `examples/board/build`를 넘긴다.
+`@polyspec/hyper-cli`의 bin `hyper-build-assets --app <디렉터리> --api <기본 경로> --output <디렉터리>`는 build 패키지가 요구하는 template package `@polyspec/template`으로 다음을 쓴다(HR-70, HR-96). `make assets`는 checkout에서 `node packages/cli/bin/hyper-build-assets.mjs`로 실행한다. `public/assets/` 아래에는 이름에 내용의 해시가 들어간 파일을 더하기만 하고 지우지 않으며, 해시가 없는 출력은 `--output`의 디렉터리에 둔다(HR-34). `make assets`는 `examples/board/build`를 넘긴다.
 
 1. `public/assets/templates/<name>.<hash>.json`: `templates/` 아래 템플릿마다 AST 파일 하나, 그리고 예약 템플릿 `hyper/data.tpl`의 파일 하나(HR-34).
 2. `<output>/templates.index.json`: 각 템플릿 이름과 그 파일 URL(HR-34). 클라이언트는 이를 `@polyspec/hyper-client/templates-index`로 import한다.
@@ -228,7 +228,7 @@ BOARD_DB=$PWD/examples/board/var/node.db BOARD_SESSIONS=$PWD/examples/board/var/
    - 진입 파일이 `import()`로만 불러오는 코드마다 조각 파일 하나. 브라우저는 그 코드가 처음 실행될 때 조각을 불러온다.
    - 진입 파일의 URL을 `hyper`로 담은 매니페스트. 서버가 레이아웃에 넘긴다.
    - 빌드는 애플리케이션이 이름을 정하는 파일을 쓰지 않는다. 애플리케이션은 자기 스타일시트를 직접 두고 링크한다.
-4. `--tailwind <source>=<output>`이 있으면 output stylesheet. source를 Tailwind CSS의 theme과, `templates/`와 `client/` 아래 file이 쓰는 utility class로 compile하고, source의 rule은 layer `components`에 두며 layer `base`의 rule은 두지 않는다(HR-77). Tailwind CSS는 `@polyspec/hyper-build`의 의존성이므로, npm 12.2.0으로 기본값 `allow-remote=none`에서 lock을 쓰는 애플리케이션은 Tag 릴리스 절의 npm 결함을 만난다. npm 릴리스가 수정을 담을 때까지 npm은 `@tailwindcss/oxide-wasm32-wasi`의 tarball을 `EALLOWREMOTE`로 거부한다([npm/cli#9818](https://github.com/npm/cli/pull/9818)).
+4. `--tailwind <source>=<output>`이 있으면 output stylesheet. source를 Tailwind CSS의 theme과, `templates/`와 `client/` 아래 file이 쓰는 utility class로 compile하고, source의 rule은 layer `components`에 두며 layer `base`의 rule은 두지 않는다(HR-77). Tailwind CSS는 `@polyspec/hyper-cli`의 의존성이므로, npm 12.2.0으로 기본값 `allow-remote=none`에서 lock을 쓰는 애플리케이션은 Tag 릴리스 절의 npm 결함을 만난다. npm 릴리스가 수정을 담을 때까지 npm은 `@tailwindcss/oxide-wasm32-wasi`의 tarball을 `EALLOWREMOTE`로 거부한다([npm/cli#9818](https://github.com/npm/cli/pull/9818)).
 5. `<output>/csr/`: CSR 배포물.
    - `index.html`은 `<meta name="hyper-api">`, 진입 파일의 URL을 담은 `<meta name="hyper-entry">`, 인라인한 진입 파일을 담고 스타일시트는 담지 않는다. 브라우저가 렌더한 레이아웃의 스타일시트 링크를 적용하기 때문이다(HYC-15, HYC-16).
    - `assets/templates/`는 이 build의 템플릿 파일을 담는다.

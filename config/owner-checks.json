@@ -40,8 +40,8 @@
     },
     {
       "paths": [
-        "packages/server/php/{src,tests}/**",
-        "packages/server/php/{composer.json,phpstan-max.neon,phpunit.xml,pint.json}",
+        "packages/php/{src,tests}/**",
+        "packages/php/{composer.json,phpstan-max.neon,phpunit.xml,pint.json}",
         "composer.json",
         "composer.lock"
       ],
@@ -63,7 +63,7 @@
     },
     {
       "paths": [
-        "packages/server/ts/**"
+        "packages/ts/**"
       ],
       "targets": [
         "hyper-test-node",
@@ -72,7 +72,7 @@
     },
     {
       "paths": [
-        "packages/server/python/**"
+        "packages/python/**"
       ],
       "targets": [
         "hyper-test-python",
@@ -258,27 +258,27 @@
     {
       "paths": [
         "tests/scripts/fixtures/session-worker/**",
-        "packages/server/php/src/NativeSession.php",
-        "packages/server/python/src/polyspec/hyper/server/file_sessions.py",
-        "packages/server/ts/src/file-sessions.ts",
-        "packages/server/ts/src/flock.ts",
-        "packages/server/python/src/polyspec/hyper/server/_record_session.py",
-        "packages/server/python/src/polyspec/hyper/server/_file_session.py",
-        "packages/server/python/src/polyspec/hyper/server/_redis_session.py",
-        "packages/server/python/src/polyspec/hyper/server/session_lock_error.py",
-        "packages/server/python/src/polyspec/hyper/server/redis_sessions.py",
-        "packages/server/ts/src/record-session.ts",
-        "packages/server/ts/src/file-session.ts",
-        "packages/server/ts/src/redis-session.ts",
-        "packages/server/ts/src/session-lock-error.ts",
-        "packages/server/ts/src/session-turns.ts",
-        "packages/server/ts/src/redis-sessions.ts",
+        "packages/php/src/NativeSession.php",
+        "packages/python/src/polyspec/hyper/file_sessions.py",
+        "packages/ts/src/file-sessions.ts",
+        "packages/ts/src/flock.ts",
+        "packages/python/src/polyspec/hyper/_record_session.py",
+        "packages/python/src/polyspec/hyper/_file_session.py",
+        "packages/python/src/polyspec/hyper/_redis_session.py",
+        "packages/python/src/polyspec/hyper/session_lock_error.py",
+        "packages/python/src/polyspec/hyper/redis_sessions.py",
+        "packages/ts/src/record-session.ts",
+        "packages/ts/src/file-session.ts",
+        "packages/ts/src/redis-session.ts",
+        "packages/ts/src/session-lock-error.ts",
+        "packages/ts/src/session-turns.ts",
+        "packages/ts/src/redis-sessions.ts",
         "scripts/install-redis.mts",
         "tests/scripts/session-workers.mts",
         "tests/scripts/session-redis-server.mts",
         "tests/scripts/session-board.mts",
-        "packages/server/php/src/RedisSentinelSessions.php",
-        "packages/server/php/src/RedisClusterSessions.php",
+        "packages/php/src/RedisSentinelSessions.php",
+        "packages/php/src/RedisClusterSessions.php",
         "benchmarks/sessions.mts"
       ],
       "tests": [
@@ -353,8 +353,8 @@
     },
     {
       "paths": [
-        "packages/build/bin/hyper-build-assets.mjs",
-        "packages/build/lib/template-files.mjs",
+        "packages/cli/bin/hyper-build-assets.mjs",
+        "packages/cli/lib/template-files.mjs",
         "scripts/build-templates.mts"
       ],
       "targets": [
@@ -369,8 +369,8 @@
     },
     {
       "paths": [
-        "packages/build/bin/hyper-build-server.mjs",
-        "packages/build/lib/template-rules.mjs",
+        "packages/cli/bin/hyper-build-server.mjs",
+        "packages/cli/lib/template-rules.mjs",
         "scripts/check-templates.mts"
       ],
       "targets": [
@@ -385,7 +385,7 @@
     },
     {
       "paths": [
-        "packages/build/lib/output-files.mjs"
+        "packages/cli/lib/output-files.mjs"
       ],
       "tests": [
         "tests/scripts/publish.test.mts",
@@ -395,7 +395,7 @@
     },
     {
       "paths": [
-        "packages/build/package.json"
+        "packages/cli/package.json"
       ],
       "targets": [
         "package-check"
@@ -459,7 +459,7 @@
     {
       "paths": [
         "scripts/publish.mts",
-        "packages/build/lib/publish.mjs",
+        "packages/cli/lib/publish.mjs",
         "scripts/tracked-files.mts"
       ],
       "targets": [
@@ -527,9 +527,9 @@
         "CHANGELOG.md",
         "package.json",
         "packages/client/package.json",
-        "packages/server/ts/package.json",
-        "packages/build/package.json",
-        "packages/server/php/composer.json",
+        "packages/ts/package.json",
+        "packages/cli/package.json",
+        "packages/php/composer.json",
         "tests/package-install/package.json",
         "examples/board/composer.json",
         "composer.json",
@@ -737,9 +737,9 @@
         "composer.lock",
         "examples/board/composer.json",
         "examples/board/composer.lock",
-        "packages/server/php/composer.json",
-        "packages/server/python/pyproject.toml",
-        "packages/server/python/uv.lock",
+        "packages/php/composer.json",
+        "packages/python/pyproject.toml",
+        "packages/python/uv.lock",
         "tests/package-install/package.json",
         "tests/package-install/package-lock.json"
       ],
@@ -816,36 +816,36 @@
     },
     {
       "paths": [
-        "packages/server/php/src/Multipart.php",
-        "packages/server/php/src/MultipartReader.php",
-        "packages/server/php/src/RequestBody.php",
-        "packages/server/php/src/UploadedFile.php",
-        "packages/server/php/src/Fields.php",
-        "packages/server/php/src/Files.php",
-        "packages/server/php/src/NamedValues.php",
-        "packages/server/ts/src/multipart.ts",
-        "packages/server/ts/src/multipart-reader.ts",
-        "packages/server/ts/src/request-body.ts",
-        "packages/server/ts/src/uploaded-file.ts",
-        "packages/server/ts/src/fields.ts",
-        "packages/server/ts/src/files.ts",
-        "packages/server/ts/src/named-values.ts",
-        "packages/server/python/src/polyspec/hyper/server/_multipart.py",
-        "packages/server/python/src/polyspec/hyper/server/_multipart_reader.py",
-        "packages/server/python/src/polyspec/hyper/server/_request_body.py",
-        "packages/server/python/src/polyspec/hyper/server/uploaded_file.py",
-        "packages/server/python/src/polyspec/hyper/server/_fields.py",
-        "packages/server/python/src/polyspec/hyper/server/_files.py",
-        "packages/server/python/src/polyspec/hyper/server/_named_values.py",
+        "packages/php/src/Multipart.php",
+        "packages/php/src/MultipartReader.php",
+        "packages/php/src/RequestBody.php",
+        "packages/php/src/UploadedFile.php",
+        "packages/php/src/Fields.php",
+        "packages/php/src/Files.php",
+        "packages/php/src/NamedValues.php",
+        "packages/ts/src/multipart.ts",
+        "packages/ts/src/multipart-reader.ts",
+        "packages/ts/src/request-body.ts",
+        "packages/ts/src/uploaded-file.ts",
+        "packages/ts/src/fields.ts",
+        "packages/ts/src/files.ts",
+        "packages/ts/src/named-values.ts",
+        "packages/python/src/polyspec/hyper/_multipart.py",
+        "packages/python/src/polyspec/hyper/_multipart_reader.py",
+        "packages/python/src/polyspec/hyper/_request_body.py",
+        "packages/python/src/polyspec/hyper/uploaded_file.py",
+        "packages/python/src/polyspec/hyper/_fields.py",
+        "packages/python/src/polyspec/hyper/_files.py",
+        "packages/python/src/polyspec/hyper/_named_values.py",
         "tests/scripts/multipart-compare.test.mts",
         "tests/scripts/fixtures/multipart-worker/**",
-        "packages/server/php/src/Request.php",
-        "packages/server/php/src/App.php",
-        "packages/server/ts/src/http-host.ts",
-        "packages/server/ts/src/request.ts",
-        "packages/server/python/src/polyspec/hyper/server/server.py",
-        "packages/server/python/src/polyspec/hyper/server/_pipeline.py",
-        "packages/server/python/src/polyspec/hyper/server/request.py",
+        "packages/php/src/Request.php",
+        "packages/php/src/App.php",
+        "packages/ts/src/http-host.ts",
+        "packages/ts/src/request.ts",
+        "packages/python/src/polyspec/hyper/server.py",
+        "packages/python/src/polyspec/hyper/_pipeline.py",
+        "packages/python/src/polyspec/hyper/request.py",
         "tests/scripts/upload-servers.test.mts",
         "tests/scripts/fixtures/upload-server/**",
         "benchmarks/uploads.mts",
@@ -860,8 +860,8 @@
     },
     {
       "paths": [
-        "packages/server/rust/**",
-        "packages/server/*/native/**",
+        "packages/rust/**",
+        "packages/*/native/**",
         "Cargo.toml",
         "Cargo.lock",
         "clippy.toml",

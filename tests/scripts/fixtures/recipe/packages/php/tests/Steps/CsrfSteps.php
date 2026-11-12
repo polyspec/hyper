@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper\Server\Tests\Steps;
+namespace Polyspec\Hyper\Tests\Steps;
 
-use Polyspec\Hyper\Server\Csrf;
-use Polyspec\Hyper\Server\Tests\CaseReader;
+use Polyspec\Hyper\Csrf;
+use Polyspec\Hyper\Tests\CaseReader;
 
 final class CsrfSteps
 {

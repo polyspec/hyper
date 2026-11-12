@@ -11,8 +11,8 @@ import { requireBuilt } from './requires.mts';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 
 test('the benchmark of the uploads measures each implementation for each body', { timeout: 300_000 }, async () => {
-  requireBuilt('packages', 'packages/server/ts/dist/index.js');
-  requireBuilt('hyper-install-python', 'packages/server/python/.venv/bin/python');
+  requireBuilt('packages', 'packages/ts/dist/index.js');
+  requireBuilt('hyper-install-python', 'packages/python/.venv/bin/python');
   requireBuilt('hyper-install-php', 'vendor/autoload.php');
   const { stdout } = await promisify(execFile)(process.execPath, ['benchmarks/uploads.mts', '--size', '1048576', '--runs', '2', '--json'], { cwd: ROOT, maxBuffer: 1 << 24 });
   const results: unknown = JSON.parse(stdout.trim().split('\n').at(-1) ?? '');

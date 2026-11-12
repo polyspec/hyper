@@ -8,7 +8,7 @@ export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '
 const WORKERS = path.join(ROOT, 'tests/scripts/fixtures/session-worker');
 export type Server = 'php' | 'python' | 'node';
 export const NAMES: Server[] = ['php', 'python', 'node'];
-export const PYTHON = path.join(ROOT, 'packages/server/python/.venv/bin/python');
+export const PYTHON = path.join(ROOT, 'packages/python/.venv/bin/python');
 export const COMMANDS: Record<Server, { command: string; prefix: string[] }> = {
   php: { command: 'php', prefix: [path.join(WORKERS, 'worker.php')] },
   python: { command: PYTHON, prefix: [path.join(WORKERS, 'worker.py')] },

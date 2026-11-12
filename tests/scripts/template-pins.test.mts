@@ -30,7 +30,7 @@ test('workspaces resolve the same installed template package through native sour
   requireBuilt('hyper-install', 'node_modules/@polyspec/template/package.json');
   assert.equal(readObject('node_modules/@polyspec/template/package.json').name, '@polyspec/template');
   const render = createRequire(join(repository, 'package.json')).resolve('@polyspec/template/render');
-  for (const workspace of ['packages/client', 'packages/server/ts', 'packages/build']) {
+  for (const workspace of ['packages/client', 'packages/ts', 'packages/cli']) {
     assert.equal(createRequire(join(repository, workspace, 'package.json')).resolve('@polyspec/template/render'), render, workspace);
   }
 });
@@ -59,7 +59,7 @@ test('the npm manifests name the tarball assets of the release and their locks p
 
 test('Composer release declarations name the Composer repository of the release and PHPStan reads no extension stub', () => {
   // The released package names the release version; a consumer declares the Composer repository in its own root.
-  assert.equal(jsonObject(readObject('packages/server/php/composer.json').require, 'packages/server/php/composer.json require')['polyspec/template'], VERSION, 'packages/server/php/composer.json');
+  assert.equal(jsonObject(readObject('packages/php/composer.json').require, 'packages/php/composer.json require')['polyspec/template'], VERSION, 'packages/php/composer.json');
   // Both Composer projects declare the Composer repository of the template release, its packages.json, whose dist names the
   // php zip of the release with its sha1; the lock records that dist, so Composer fetches and checks the zip itself (H27.45).
   const dists = ['composer.json', 'examples/board/composer.json'].map((manifest) => {
@@ -80,7 +80,7 @@ test('Composer release declarations name the Composer repository of the release 
     return dist;
   });
   assert.deepEqual(dists[1], dists[0], 'the two Composer locks pin different template zips');
-  assert.doesNotMatch(readFileSync('packages/server/php/phpstan-max.neon', 'utf8'), /polyspec_template\.stub\.php/);
+  assert.doesNotMatch(readFileSync('packages/php/phpstan-max.neon', 'utf8'), /polyspec_template\.stub\.php/);
 });
 
 test('both Composer roots require the json-schema fork by a release and their locks pin its tag', () => {
@@ -97,12 +97,12 @@ test('both Composer roots require the json-schema fork by a release and their lo
 });
 
 test('pyproject.toml and uv.lock name the wheel asset of the release and pin it by the same sha256', () => {
-  const pyproject = readFileSync('packages/server/python/pyproject.toml', 'utf8');
+  const pyproject = readFileSync('packages/python/pyproject.toml', 'utf8');
   const requirements = [...pyproject.matchAll(/"polyspec-template @ ([^"#]*)#sha256=([0-9a-f]{64})"/g)];
   assert.equal(requirements.length, 1, 'pyproject.toml names the template wheel once, with its sha256');
   const [, url, sha256] = requirements[0] ?? [];
   assert.equal(url, WHEEL, 'pyproject.toml template wheel');
-  const lock = readFileSync('packages/server/python/uv.lock', 'utf8');
+  const lock = readFileSync('packages/python/uv.lock', 'utf8');
   // The requirement of the server package, the source of polyspec-template and its wheel name the same asset.
   const urls = [...lock.matchAll(/url = "(https:\/\/github\.com\/polyspec\/template\/[^"]*)"/g)].map((match) => match[1]);
   assert.deepEqual(urls, [WHEEL, WHEEL, WHEEL], 'uv.lock names the template wheel of the release in requires-dist, source and wheels');

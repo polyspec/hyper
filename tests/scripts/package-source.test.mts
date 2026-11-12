@@ -1,4 +1,4 @@
-// Tests that the build package @polyspec/hyper-build holds everything that its bins run (HR-96): its modules import
+// Tests that the build package @polyspec/hyper-cli holds everything that its bins run (HR-96): its modules import
 // only their own published files, built-in modules of Node and the packages that its manifest requires, so the
 // package that a consumer installs runs as the repository runs it; and the builds run from any working directory.
 import assert from 'node:assert/strict';
@@ -11,7 +11,7 @@ import { jsonArray, jsonObject, jsonString, parseJsonObject } from '../../script
 import { requireBuilt } from './requires.mts';
 
 const repository = resolve('.');
-const build = join(repository, 'packages', 'build');
+const build = join(repository, 'packages', 'cli');
 
 // The module specifiers of a source: static imports and exports, dynamic imports and URLs relative to the module.
 function specifiers(source: string): string[] {
@@ -59,8 +59,8 @@ test('builds the templates and the server program from another working directory
     assert.equal(templates.status, 0, templates.stderr);
     const server = spawnSync(process.execPath, [
       join(build, 'bin', 'hyper-build-server.mjs'), '--manifest', join(board, 'app', 'app.json'), '--templates', join(board, 'templates'),
-      '--output', join(output, 'server'), '--php-namespace', 'Polyspec\\Hyper\\Server\\Examples\\Board\\Program',
-      '--build', join(repository, 'packages', 'server', 'php', 'tests', 'fixtures', 'build.json'),
+      '--output', join(output, 'server'), '--php-namespace', 'Polyspec\\Hyper\\Examples\\Board\\Program',
+      '--build', join(repository, 'packages', 'php', 'tests', 'fixtures', 'build.json'),
     ], { cwd: output, encoding: 'utf8' });
     assert.equal(server.status, 0, server.stderr);
     // HY-48: the generated program is the PSR-4 files of the namespace in the directory php, which the autoload of
@@ -70,7 +70,7 @@ test('builds the templates and the server program from another working directory
     assert.ok(php.every((file) => file.endsWith('.php')), `server/php holds ${php.join(', ')}`);
     assert.ok(!existsSync(join(output, 'server', 'program.php')), 'the build writes program.php');
     const declaration = parseJsonObject(readFileSync(join(output, 'server', 'program.json'), 'utf8'), 'server/program.json');
-    assert.equal(declaration.namespace, 'Polyspec\\Hyper\\Server\\Examples\\Board\\Program');
+    assert.equal(declaration.namespace, 'Polyspec\\Hyper\\Examples\\Board\\Program');
   } finally {
     rmSync(output, { recursive: true, force: true });
   }

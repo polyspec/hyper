@@ -24,7 +24,7 @@ import { appendFileSync, createReadStream, readdirSync, unlinkSync } from 'node:
 import { connect } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { App, FileSessions, Representation, Response, Result } from '@polyspec/hyper-server';
+import { App, FileSessions, Representation, Response, Result } from '@polyspec/hyper';
 
 const application = process.env.UPLOAD_APP;
 const moved = process.env.UPLOAD_MOVED;

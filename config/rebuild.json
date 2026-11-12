@@ -36,7 +36,7 @@
     },
     "examples/board/node/main.ts": {
       "kind": "ecosystem",
-      "tool": "node:http through App.server of @polyspec/hyper-server serves the board example"
+      "tool": "node:http through App.server of @polyspec/hyper serves the board example"
     },
     "examples/board/node/posts.ts": {
       "kind": "ecosystem",
@@ -44,7 +44,7 @@
     },
     "examples/board/public/index.php": {
       "kind": "ecosystem",
-      "tool": "the front controller of the PHP SAPI (the built-in server or php-fpm) calls App::run of polyspec/hyper-server"
+      "tool": "the front controller of the PHP SAPI (the built-in server or php-fpm) calls App::run of polyspec/hyper"
     },
     "examples/board/python/handlers.py": {
       "kind": "policy",
@@ -52,7 +52,7 @@
     },
     "examples/board/python/main.py": {
       "kind": "ecosystem",
-      "tool": "the standard library http.server through create_server of polyspec.hyper.server serves the board example"
+      "tool": "the standard library http.server through create_server of polyspec.hyper serves the board example"
     },
     "examples/board/python/posts.py": {
       "kind": "ecosystem",
@@ -66,27 +66,27 @@
       "kind": "ecosystem",
       "tool": "PDO with the SQLite driver stores the posts of the board example"
     },
-    "packages/build/bin/hyper-build-assets.mjs": {
+    "packages/cli/bin/hyper-build-assets.mjs": {
       "kind": "ecosystem",
       "tool": "esbuild bundles the client, @tailwindcss/node and @tailwindcss/oxide build the stylesheet, and @polyspec/template parses the templates"
     },
-    "packages/build/bin/hyper-build-server.mjs": {
+    "packages/cli/bin/hyper-build-server.mjs": {
       "kind": "ecosystem",
       "tool": "@polyspec/template-compiler compiles the templates into the PHP program and the type manifest"
     },
-    "packages/build/lib/output-files.mjs": {
+    "packages/cli/lib/output-files.mjs": {
       "kind": "ecosystem",
       "tool": "node:fs writes and copies the files, and sets the modes 0644 and 0755 that HR-68 requires whatever the umask"
     },
-    "packages/build/lib/publish.mjs": {
+    "packages/cli/lib/publish.mjs": {
       "kind": "ecosystem",
       "tool": "node:fs rename(2) moves each staged file into its target (HR-82)"
     },
-    "packages/build/lib/template-files.mjs": {
+    "packages/cli/lib/template-files.mjs": {
       "kind": "ecosystem",
       "tool": "node:crypto hashes the template files and @polyspec/template parses them"
     },
-    "packages/build/lib/template-rules.mjs": {
+    "packages/cli/lib/template-rules.mjs": {
       "kind": "policy",
       "reason": "the template rules of hyper (HC-6, HY-3, HY-30, HY-75) over the AST that @polyspec/template parses; no ecosystem tool states the rules of this protocol"
     },
@@ -96,7 +96,7 @@
     },
     "scripts/build-templates.mts": {
       "kind": "ecosystem",
-      "tool": "@polyspec/template parses the templates, through writeTemplateFiles of packages/build/lib/template-files.mjs"
+      "tool": "@polyspec/template parses the templates, through writeTemplateFiles of packages/cli/lib/template-files.mjs"
     },
     "scripts/check-bundle-size.mts": {
       "kind": "ecosystem",
@@ -108,7 +108,7 @@
     },
     "scripts/check-templates.mts": {
       "kind": "policy",
-      "reason": "the template rules of hyper (HC-6, HY-3, HY-30, HY-75) in packages/build/lib/template-rules.mjs; @polyspec/template parses the templates"
+      "reason": "the template rules of hyper (HC-6, HY-3, HY-30, HY-75) in packages/cli/lib/template-rules.mjs; @polyspec/template parses the templates"
     },
     "scripts/contract-programs.mts": {
       "kind": "policy",
@@ -132,7 +132,7 @@
     },
     "scripts/publish.mts": {
       "kind": "ecosystem",
-      "tool": "node:fs renames, through publish of packages/build/lib/publish.mjs (HR-82)"
+      "tool": "node:fs renames, through publish of packages/cli/lib/publish.mjs (HR-82)"
     },
     "scripts/recipe/barrels.mts": {
       "kind": "policy",
@@ -240,7 +240,7 @@
     },
     "scripts/tracked-files.mts": {
       "kind": "ecosystem",
-      "tool": "git ls-files lists the tracked files of a path; the copy keeps their modification time and executable bits through packages/build/lib/output-files.mjs"
+      "tool": "git ls-files lists the tracked files of a path; the copy keeps their modification time and executable bits through packages/cli/lib/output-files.mjs"
     }
   }
 }

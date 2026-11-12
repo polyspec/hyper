@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from polyspec.hyper.server._csrf import Csrf
-from polyspec.hyper.server._json_codec import JsonCodec
+from polyspec.hyper._csrf import Csrf
+from polyspec.hyper._json_codec import JsonCodec
 
 
 class MediaType:

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper\Server;
+namespace Polyspec\Hyper;
 
 /**
  * The media type of HY-2.

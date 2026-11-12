@@ -97,8 +97,8 @@ export function redisRun(prefix: string, started: () => Promise<void>, ending: (
   const run: RedisRun = { directory: '', port: '', server: null };
   before(async () => {
     requireBuilt('hyper-install-redis', 'var/redis/redis-server', 'var/redis/redis.so');
-    requireBuilt('packages', 'packages/server/ts/dist/index.js');
-    requireBuilt('hyper-install-python', 'packages/server/python/.venv/bin/python');
+    requireBuilt('packages', 'packages/ts/dist/index.js');
+    requireBuilt('hyper-install-python', 'packages/python/.venv/bin/python');
     requireBuilt('hyper-install-php', 'vendor/autoload.php');
     run.directory = mkdtempSync(path.join(tmpdir(), prefix));
     run.port = await freePort();

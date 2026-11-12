@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper\Server;
+namespace Polyspec\Hyper;
 
 /**
  * The token of a JSON text of HY-2.

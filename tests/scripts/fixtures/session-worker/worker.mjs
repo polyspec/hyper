@@ -7,7 +7,7 @@
 import { once } from 'node:events';
 import { readFileSync } from 'node:fs';
 import { createClient, createCluster, createSentinel, RESP_TYPES } from 'redis';
-import { FileSessions, RedisSessions } from '@polyspec/hyper-server';
+import { FileSessions, RedisSessions } from '@polyspec/hyper';
 
 const [directory, id, command, first, second] = process.argv.slice(2);
 const port = process.env.HYPER_SESSION_REDIS;

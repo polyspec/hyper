@@ -18,10 +18,10 @@ import { dirname, isAbsolute, join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
-import { writeFileAtomic } from '../packages/build/lib/output-files.mjs';
-import { publish, staging } from '../packages/build/lib/publish.mjs';
-import { writeTemplateFiles } from '../packages/build/lib/template-files.mjs';
-import { buildId } from '../packages/build/lib/build-id.mjs';
+import { writeFileAtomic } from '../packages/cli/lib/output-files.mjs';
+import { publish, staging } from '../packages/cli/lib/publish.mjs';
+import { writeTemplateFiles } from '../packages/cli/lib/template-files.mjs';
+import { buildId } from '../packages/cli/lib/build-id.mjs';
 
 const { values } = parseArgs({ options: { contract: { type: 'string', multiple: true }, reads: { type: 'string' }, output: { type: 'string' } } });
 if (!values.contract || values.contract.length === 0) throw new Error('--contract is required');
@@ -56,7 +56,7 @@ function member(path: string, name: string): unknown {
 }
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const buildTool = join(root, 'packages/build/bin/hyper-build-server.mjs');
+const buildTool = join(root, 'packages/cli/bin/hyper-build-server.mjs');
 const applications = new Map<string, { path: string; application: Application }>();
 for (const path of values.contract) {
   const listed = member(path, 'applications');
@@ -81,7 +81,7 @@ for (const entry of cases) {
 const failures: string[] = [];
 for (const [key, { application }] of applications) {
   // The PHP program of the application <key> is written to <output>/<key>/program/php, and its namespace repeats that
-  // path below the prefix Polyspec\Hyper\Server\Tests\Contract\, which a PSR-4 entry maps to the output directory. The name
+  // path below the prefix Polyspec\Hyper\Tests\Contract\, which a PSR-4 entry maps to the output directory. The name
   // of an application is therefore a segment of a PHP namespace.
   if (!/^[a-z_][a-z0-9_]*$/u.test(key)) {
     failures.push(`the application ${key} has a name that is no segment of a PHP namespace`);
@@ -102,7 +102,7 @@ for (const [key, { application }] of applications) {
     writeFileSync(manifest, JSON.stringify(application.manifest));
     const build = join(directory, 'build.json');
     writeFileSync(build, JSON.stringify({ build: application.build }));
-    const namespace = `Polyspec\\Hyper\\Server\\Tests\\Contract\\${key}\\program\\php`;
+    const namespace = `Polyspec\\Hyper\\Tests\\Contract\\${key}\\program\\php`;
     const run = spawnSync(
       process.execPath,
       [buildTool, '--manifest', manifest, '--templates', templates, '--output', join(directory, 'program'),

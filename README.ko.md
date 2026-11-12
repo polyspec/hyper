@@ -31,9 +31,9 @@ hyper는 애플리케이션 하나에서 template 언어 템플릿으로 두 가
 | 경로 | 이름 | 역할 |
 |---|---|---|
 | `packages/client` | `@polyspec/hyper-client` | 브라우저 코드. 매니페스트, 라우터, 영역과 문서 렌더, htmx 확장, 클라이언트 렌더 |
-| `packages/server/php` | `polyspec/hyper-server` | 서버. 매니페스트, 라우터, 액션, 영역 선택, 문서와 JSON |
-| `packages/server/ts` | `@polyspec/hyper-server` | server protocol의 Node.js 구현. 문서를 브라우저 코드로 렌더한다([README](packages/server/ts/README.ko.md)) |
-| `packages/server/python` | `polyspec-hyper-server` | server protocol의 Python 구현. template Python package로 렌더하고 `http.server`로 서비스한다 ([README](packages/server/python/README.ko.md)) |
+| `packages/php` | `polyspec/hyper` | 서버. 매니페스트, 라우터, 액션, 영역 선택, 문서와 JSON |
+| `packages/ts` | `@polyspec/hyper` | server protocol의 Node.js 구현. 문서를 브라우저 코드로 렌더한다([README](packages/ts/README.ko.md)) |
+| `packages/python` | `polyspec-hyper` | server protocol의 Python 구현. template Python package로 렌더하고 `http.server`로 서비스한다 ([README](packages/python/README.ko.md)) |
 | `examples/board` | | 게시판 예제. 레이아웃, 레프트, 컨텐츠 영역. 목록, 상세, 글쓰기, 검증 |
 | `contracts/routes.json` | | 두 라우터가 함께 통과하는 라우터 사례 |
 | `contracts/json.json` | | PHP·Node.js·Python 서버가 통과하는 JSON encode와 decode 사례 |

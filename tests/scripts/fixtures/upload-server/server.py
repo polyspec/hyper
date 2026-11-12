@@ -27,15 +27,15 @@ import socket
 import sys
 import tempfile
 
-from polyspec.hyper.server.app import App
-from polyspec.hyper.server.file_sessions import FileSessions
-from polyspec.hyper.server.media_type import MediaType
-from polyspec.hyper.server.reply import Reply
-from polyspec.hyper.server.representation import Representation
-from polyspec.hyper.server.request import Request
-from polyspec.hyper.server.response import Response
-from polyspec.hyper.server.result import Result
-from polyspec.hyper.server.server import create_server
+from polyspec.hyper.app import App
+from polyspec.hyper.file_sessions import FileSessions
+from polyspec.hyper.media_type import MediaType
+from polyspec.hyper.reply import Reply
+from polyspec.hyper.representation import Representation
+from polyspec.hyper.request import Request
+from polyspec.hyper.response import Response
+from polyspec.hyper.result import Result
+from polyspec.hyper import create_server
 
 application = os.environ["UPLOAD_APP"]
 moved = os.environ["UPLOAD_MOVED"]
