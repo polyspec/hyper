@@ -1,5 +1,5 @@
 // The steps of contracts/container.json (HY-105): the services that the handlers receive.
-import { Container } from '../../src/container.js';
+import { Container } from '../../src/app/container.js';
 import type { CaseReader } from '../case-reader.js';
 
 interface Bound { clock: object; mailer: object }

@@ -28,13 +28,16 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
   - `cases`: the case files under `contracts/` that state its behaviour. A concern without a unit, or whose every unit
     has `only` for one language, may have `none` with the reason and the native tests of HYR-7; the check fails `none`
     for any other concern. An empty list fails as `none` does.
+  - `group`: the group of HYR-4 whose directory holds the files of its units. A concern with a unit names one group of
+    `groups`, and a concern without a unit names none.
   - `units`: its units.
 
   Every file of `git ls-files` below `packages/server/php/src`, `packages/server/ts/src` and
   `packages/server/python/src/polyspec/hyper` belongs to exactly one concern, and every named file exists. A file of a
-  unit holds exactly one unit (HYR-3). The barrel files (`index.ts`, `__init__.py`) and `py.typed` belong to the
-  concern `index` and hold no unit. They hold only the re-exports of the public members and the public types of
-  HY-106, and HYR-8 checks that list instead of the unit checks.
+  unit holds exactly one unit (HYR-3). The barrel files (`index.ts` and `__init__.py` of the package), `py.typed` and
+  the `__init__.py` of each Python group directory (HYR-4) belong to the concern `index` and hold no unit. The barrel
+  files hold only the re-exports of the public members and the public types of HY-106, and HYR-8 checks that list
+  instead of the unit checks.
 
 - **HYR-3 One unit per file.** A unit has these fields:
   - `id`: its words;
@@ -51,13 +54,30 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
     same words, and a type of HYR-5 otherwise; the check fails a type whose words are the words of a unit. Examples:
     Result and its four stops, Session and Flash, ClientRendering and Choice, SessionStore and ArraySession.
 
-- **HYR-4 File names.** The file of a unit is the words of the unit, written by the rule of its language.
-  - PHP: PascalCase, `<Words>.php`, in the namespace `Polyspec\Hyper`.
-  - Node: kebab-case, `<words>.ts`.
-  - Python: snake_case.
-    - `<words>.py` is a module that HY-106 or HY-100 makes public.
+- **HYR-4 Files and directories.** The file of a unit is the words of the unit, in the directory of the group of its
+  concern, each written by the rule of its language.
+  - Groups. `groups` of the spec lists at most ten groups, each a kebab-case id, and every group is named by a concern
+    (HYR-2). A group is a directory of the sources and no part of a public name (HY-106.18).
+    - `app` holds the application and what it opens with: the build id, the container, the context handler, the
+      warnings guard and the count of the arguments of a public member.
+    - `host` holds the entries that connect an application to the server of its runtime (HY-100).
+    - `http` holds the request, the reply, the response and the cookies of a request.
+    - `result` holds the result of a handler and its stops.
+    - `form` holds the form values and the files of a request body.
+    - `session` holds the session, its flash and its CSRF token, the session store interface and the session stores.
+    - `data` holds the data model, the JSON codec and the kept values.
+    - `page` holds what renders a page: the manifest with its regions and routes, the server program, the region plan
+      and the client rendering.
+    - `representation` holds the representations of a route and the selection of one by the `Accept` header.
+  - PHP: PascalCase, `src/<Group>/<Words>.php`, in the namespace `Polyspec\Hyper`. `autoload.psr-4` of
+    `packages/server/php/composer.json` maps `Polyspec\Hyper\` to the list of the group directories that hold a PHP
+    unit, and the root `composer.json` maps the same directories.
+  - Node: kebab-case, `src/<group>/<words>.ts`. The barrel is `src/index.ts`.
+  - Python: snake_case, in the package `polyspec/hyper/<group>/`.
+    - `<words>.py` is the module of a unit that HY-106 makes public.
     - `_<words>.py` is an internal module.
-    - A module that HY-100 names keeps that name: `server`, `wsgi` and `asgi`.
+    - Each group directory that holds a Python unit holds an `__init__.py` with a docstring and no other statement.
+    - The barrel is `polyspec/hyper/__init__.py`.
   - Word boundaries.
     - A word boundary is a lowercase letter or a digit followed by an uppercase letter.
     - An acronym is one word, written as a word: PascalCase `Csrf`, camelCase `csrf`, snake_case `csrf`. So no name of
@@ -70,7 +90,8 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
     HY-106. The case runner and the case reader of a language are the `runners` and `caseReaders` entries of
     `contracts/interfaces.json`, as HYR-7 states.
 
-  For example, the unit `media selection` is `MediaSelection.php`, `media-selection.ts` and `_media_selection.py`.
+  For example, the unit `media selection` of the group `representation` is `src/Representation/MediaSelection.php`,
+  `src/representation/media-selection.ts` and `polyspec/hyper/representation/_media_selection.py`.
 
 - **HYR-5 Members.**
   - **Scope.** The members of a unit are these:
@@ -304,6 +325,8 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
   It compares the sorted keys of the spec and of the sources exactly, field by field. It fails for:
   - a file that no unit names, or a named file that is missing;
   - a unit against HYR-3 or HYR-4;
+  - a group that no concern names, a concern against its `group`, and a Python group `__init__.py` that holds a
+    statement (HYR-4);
   - a member or a type that is missing, added, moved, retyped, or of another visibility;
   - a constant against HYR-5;
   - an `only`, a field or outcome `sentence`, or a case `requirements` against HYR-6, HYR-11 or HYR-2;

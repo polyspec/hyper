@@ -20,6 +20,8 @@ export type Spec = {
   runners: Record<Lang, { runner: string; steps: string; registry: string }> & Record<'browser' | 'build', { runner: string }>;
   caseReaders: Record<Lang, string>;
   outside: { rule: string; reason: string }[];
+  // The groups of HYR-4: each is a directory of the sources that holds the files of the units of its concerns.
+  groups: string[];
   concerns: Concern[];
   types: SpecType[];
   caseFiles: Record<string, CaseFile>;
@@ -29,6 +31,7 @@ export type Concern = {
   id: string;
   rules: string[];
   cases: string[] | { none: string; tests: string[] };
+  group?: string;
   units: Unit[];
 };
 

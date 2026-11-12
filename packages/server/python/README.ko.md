@@ -16,8 +16,7 @@ pip install "polyspec-hyper-server @ git+https://github.com/polyspec/hyper@vX.Y.
 ```
 
 ```python
-from polyspec.hyper.request import Request
-from polyspec.hyper.result import Result
+from polyspec.hyper import Request, Result
 
 request = Request("GET", "/board/7", {}, "page=2")
 request.path(), request.query()  # ('/board/7', [('page', ['2'])])
@@ -44,8 +43,7 @@ Result.redirect("/board/7")  # the outcome of an action that succeeded (HY-25)
   실패한다.
 
 ```python
-from polyspec.hyper.app import App
-from polyspec.hyper.array_session import ArraySession
+from polyspec.hyper import App, ArraySession
 
 app = App.open(
     manifest="app/app.json",
@@ -59,7 +57,7 @@ response = app.handle(request, ArraySession())
 - `ClientRendering`과 `Choice`가 application의 클라이언트 렌더 페이지를 선언한다 (HY-62): 정적 shell, data base
   path, 요청마다의 selection.
 
-- server module가 표준 라이브러리 `http.server`로 file session과 함께 application을 서비스한다.
+- `create_server`가 표준 라이브러리 `http.server`로 file session과 함께 application을 서비스한다.
   `create_server(app, sessions)`가 모든 요청을 `App.handle`의 응답에 보내는 thread HTTP server를 반환한다. body limit보다
   큰 body를 더 읽지 않고(HY-59), 새 session의 cookie를 가장 먼저 설정하며(HY-45), 응답의 쓰기가 `BrokenPipeError`,
   `ConnectionResetError`, `ConnectionAbortedError`로 실패하면 연결 끊김 hook을 호출하고(HY-67), 선택의 public
@@ -69,8 +67,7 @@ response = app.handle(request, ArraySession())
   byte를 돌려주는 애플리케이션 client의 command 함수로 phpredis의 프로토콜에 따라 Redis 서버에 저장한다(HY-115). `setup` 옵션은 session이 있는 요청의 첫 command 전에 실행되어 Sentinel client를 현재 primary에 둔다.
 
 ```python
-from polyspec.hyper.file_sessions import FileSessions
-from polyspec.hyper.server import create_server
+from polyspec.hyper import FileSessions, create_server
 
 server = create_server(
     app, FileSessions("/var/lib/board/sessions"), files="public", port=8080
@@ -91,7 +88,7 @@ server.serve_forever()
 ```python
 import secrets
 
-from polyspec.hyper.response import Response
+from polyspec.hyper import Response
 
 
 def around(request, answer):

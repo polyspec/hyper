@@ -1,5 +1,5 @@
 # The steps of contracts/cookies.json (HY-129): a header is text whose characters U+0000 to U+00FF are its bytes.
-from polyspec.hyper._cookies import Cookies
+from polyspec.hyper.http._cookies import Cookies
 
 
 def parse(case) -> None:

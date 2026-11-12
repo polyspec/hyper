@@ -6,13 +6,13 @@ import json
 import tempfile
 from pathlib import Path
 
-from polyspec.hyper._session import _TOKEN_KEY
-from polyspec.hyper.app import App
-from polyspec.hyper.media_type import MediaType
-from polyspec.hyper.reply import Reply
-from polyspec.hyper.request import Request
-from polyspec.hyper.representation import Representation
-from polyspec.hyper.array_session import ArraySession
+from polyspec.hyper.session._session import _TOKEN_KEY
+from polyspec.hyper.app.app import App
+from polyspec.hyper.representation.media_type import MediaType
+from polyspec.hyper.http.reply import Reply
+from polyspec.hyper.http.request import Request
+from polyspec.hyper.representation.representation import Representation
+from polyspec.hyper.session.array_session import ArraySession
 
 from ..case_reader import CaseReader
 from ..render.render_functions import program_of

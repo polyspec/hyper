@@ -2,13 +2,13 @@
 // without a context answers. Every expected value comes from the contract.
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
-import { Context, type ContextHandler } from '../../src/context.js';
-import { Csrf } from '../../src/csrf.js';
+import { Context, type ContextHandler } from '../../src/app/context.js';
+import { Csrf } from '../../src/session/csrf.js';
 import { parsed } from '../case-rules.js';
 import { placesContext } from './context-place.js';
 import { decoded } from './session-requests.js';
 import { App, ArraySession, NotFound, Result, type Handlers, type Reply, type RouteHandlers } from '../../src/index.js';
-import type { Value } from '../../src/values.js';
+import type { Value } from '../../src/data/values.js';
 import type { CaseReader } from '../case-reader.js';
 import { OrmError, parsedBody, record, requestFrom } from '../support.js';
 

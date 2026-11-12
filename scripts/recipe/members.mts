@@ -131,9 +131,9 @@ function checkMember(
     const unit = found.symbol.slice(found.symbol.indexOf('::') + 2).split('.')[0] ?? '';
     const module = path.basename(found.file, '.py');
     // A call names the module of its import; the package may export the class, by a relative import (an empty module)
-    // or an absolute import (the last part of the package).
-    const pkg = path.basename(path.dirname(found.file));
-    const calls = ctx.sources.python.calls.filter((c) => c.name === unit && c.file !== found.file && [module, '', pkg].includes(c.module));
+    // or an absolute import (the last part of the package, the base name of a source root, since a group exports nothing).
+    const roots = ctx.spec.languages.python.sources.map((r) => path.basename(r));
+    const calls = ctx.sources.python.calls.filter((c) => c.name === unit && c.file !== found.file && [module, '', ...roots].includes(c.module));
     for (const call of calls) {
       add('PRIVATE_USED', `python ${call.file} calls the private constructor of ${unit}`);
     }

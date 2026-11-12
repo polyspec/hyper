@@ -3,7 +3,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { App, Result } from '../src/index.js';
 import { Fixture, FIXTURES, handlers, json, JSON_REGION, TEMPLATES } from './support.js';
-import { requestOf } from '../src/http-host.js';
+import { requestOf } from '../src/host/http-host.js';
 
 let fixture: Fixture;
 beforeEach(() => {

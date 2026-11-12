@@ -34,7 +34,17 @@
     },
     "autoload": {
         "psr-4": {
-            "Polyspec\\Hyper\\": "packages/server/php/src/"
+            "Polyspec\\Hyper\\": [
+                "packages/server/php/src/App/",
+                "packages/server/php/src/Data/",
+                "packages/server/php/src/Form/",
+                "packages/server/php/src/Host/",
+                "packages/server/php/src/Http/",
+                "packages/server/php/src/Page/",
+                "packages/server/php/src/Representation/",
+                "packages/server/php/src/Result/",
+                "packages/server/php/src/Session/"
+            ]
         }
     },
     "autoload-dev": {

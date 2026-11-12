@@ -4,7 +4,7 @@
 import { chmodSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { Csrf } from '../../src/csrf.js';
+import { Csrf } from '../../src/session/csrf.js';
 import { App, ArraySession, Choice, ClientRendering, Representation, Result, type AppOptions, type Handlers, type Loader, type RepresentationArgument, type RepresentationHandler, Request, type RouteHandlers } from '../../src/index.js';
 import type { CaseReader } from '../case-reader.js';
 import { FIXTURES, list, listAndItem, parsedBody, plain, record, requestFrom, TEMPLATES, TOKEN, type Counter, type Services } from '../support.js';

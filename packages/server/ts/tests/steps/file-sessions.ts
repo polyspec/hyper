@@ -4,8 +4,8 @@ import { chmodSync, existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, 
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { UnserializeError } from '@polyspec/php-serialize';
-import { FileSessions } from '../../src/file-sessions.js';
-import { RecordSession } from '../../src/record-session.js';
+import { FileSessions } from '../../src/session/file-sessions.js';
+import { RecordSession } from '../../src/session/record-session.js';
 import type { CaseReader } from '../case-reader.js';
 import { bytesOf } from '../support.js';
 import { textOf } from '../inputs.js';

@@ -3,7 +3,7 @@
 # case names. This module keeps the helpers that open it.
 from pathlib import Path
 
-from polyspec.hyper.app import App
+from polyspec.hyper.app.app import App
 
 ROOT = Path(__file__).resolve().parents[5]
 PROGRAMS = ROOT / "var" / "contract-programs"

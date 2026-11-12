@@ -3,8 +3,8 @@ import type { Server } from 'node:http';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { App, ArraySession, Choice, ClientRendering, Request, Result, type AppOptions, type Container, type Handlers, type RequestInit, type Response, type RouteHandlers } from '../src/index.js';
-import type { SessionStore } from '../src/session-store.js';
-import { Cookies } from '../src/cookies.js';
+import type { SessionStore } from '../src/session/session-store.js';
+import { Cookies } from '../src/http/cookies.js';
 
 export const FIXTURES = fileURLToPath(new URL('../../php/tests/fixtures/', import.meta.url));
 // The template files of the fixtures, which `make hyper-test-node` builds with scripts/build-templates.mts.

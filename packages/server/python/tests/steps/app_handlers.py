@@ -5,13 +5,13 @@ import inspect
 import warnings
 from collections.abc import Callable
 
-from polyspec.hyper.bad_request import BadRequest
-from polyspec.hyper.forbidden import Forbidden
-from polyspec.hyper.not_found import NotFound
-from polyspec.hyper.redirect import Redirect
-from polyspec.hyper.reply import Reply
-from polyspec.hyper.request import Request
-from polyspec.hyper.result import Result
+from polyspec.hyper.result.bad_request import BadRequest
+from polyspec.hyper.result.forbidden import Forbidden
+from polyspec.hyper.result.not_found import NotFound
+from polyspec.hyper.result.redirect import Redirect
+from polyspec.hyper.http.reply import Reply
+from polyspec.hyper.http.request import Request
+from polyspec.hyper.result.result import Result
 
 from .recorded import decoded
 from . import reply_steps

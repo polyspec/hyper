@@ -5,7 +5,7 @@
 import { createHash } from 'node:crypto';
 import { createReadStream, readFileSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
-import { RequestBody } from '../../../../packages/server/ts/dist/request-body.js';
+import { RequestBody } from '../../../../packages/server/ts/dist/form/request-body.js';
 
 const cases = JSON.parse(readFileSync(process.argv[2], 'utf8'));
 for (const [index, item] of cases.entries()) {

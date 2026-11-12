@@ -1,6 +1,6 @@
 // The steps of contracts/accept.json (HY-116): the parse of an Accept value and the selection of a media type.
-import { Accept } from '../../src/accept.js';
-import { InvalidAccept } from '../../src/invalid-accept.js';
+import { Accept } from '../../src/representation/accept.js';
+import { InvalidAccept } from '../../src/representation/invalid-accept.js';
 import type { CaseReader } from '../case-reader.js';
 
 // The Accept value of a case: a string, or null for a request without Accept.

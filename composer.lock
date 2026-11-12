@@ -207,7 +207,7 @@
             "dist": {
                 "type": "path",
                 "url": "packages/server/php",
-                "reference": "716f828a0ce8f5065112f8b30eb3ffc00e1ebb90"
+                "reference": "99a106453f165ae09a37b9539598d54f3219eb1f"
             },
             "require": {
                 "php": ">=8.4",
@@ -221,13 +221,24 @@
             "type": "library",
             "autoload": {
                 "psr-4": {
-                    "Polyspec\\Hyper\\": "src/"
+                    "Polyspec\\Hyper\\": [
+                        "src/App/",
+                        "src/Data/",
+                        "src/Form/",
+                        "src/Host/",
+                        "src/Http/",
+                        "src/Page/",
+                        "src/Representation/",
+                        "src/Result/",
+                        "src/Session/"
+                    ]
                 }
             },
             "autoload-dev": {
                 "psr-4": {
                     "Polyspec\\Hyper\\Tests\\": "tests/",
-                    "Polyspec\\Hyper\\Tests\\Program\\": "tests/build/server/php/"
+                    "Polyspec\\Hyper\\Tests\\Program\\": "tests/build/server/php/",
+                    "Polyspec\\Hyper\\Tests\\Contract\\": "../../../var/contract-programs/"
                 }
             },
             "scripts": {

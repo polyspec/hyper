@@ -9,11 +9,11 @@ import threading
 import unittest
 from pathlib import Path
 
-from polyspec.hyper.app import App
-from polyspec.hyper.file_sessions import FileSessions
-from polyspec.hyper.reply import Reply
-from polyspec.hyper.request import Request
-from polyspec.hyper.response import Response
+from polyspec.hyper.app.app import App
+from polyspec.hyper.session.file_sessions import FileSessions
+from polyspec.hyper.http.reply import Reply
+from polyspec.hyper.http.request import Request
+from polyspec.hyper.http.response import Response
 
 
 class Application:

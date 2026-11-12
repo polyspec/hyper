@@ -1,6 +1,6 @@
 // The requests of the cases of contracts/file-sessions.json and contracts/redis-sessions.json (HY-104, HY-115): each
 // step of a case opens the store of one request, applies its calls and closes it.
-import { RecordSession } from '../../src/record-session.js';
+import { RecordSession } from '../../src/session/record-session.js';
 import { parsed } from '../case-rules.js';
 import { textOf } from '../inputs.js';
 

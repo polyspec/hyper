@@ -1,7 +1,7 @@
 // The steps of contracts/redis-sessions.json (HY-115): the commands that the requests of a case send to a Redis server
 // in memory and the keys that it keeps, and the options that the store refuses.
-import { RedisSessions, type RedisSessionsOptions } from '../../src/redis-sessions.js';
-import { SessionLockError } from '../../src/session-lock-error.js';
+import { RedisSessions, type RedisSessionsOptions } from '../../src/session/redis-sessions.js';
+import { SessionLockError } from '../../src/session/session-lock-error.js';
 import type { CaseReader } from '../case-reader.js';
 import { bytesOf } from '../support.js';
 import { textOf } from '../inputs.js';

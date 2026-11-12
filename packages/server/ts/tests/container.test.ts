@@ -1,7 +1,7 @@
 // The keys of the Node services (HY-105.4): a handler names a service by a key, and a key of Object.prototype is a key
 // like any other. contracts/container.json holds the cases of the services that every server shares.
 import { describe, expect, it } from 'vitest';
-import { Container } from '../src/container.js';
+import { Container } from '../src/app/container.js';
 
 interface Bound { clock: { now: number }; constructor: string; __proto__: string }
 

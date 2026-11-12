@@ -4,12 +4,7 @@ from __future__ import annotations
 
 import re
 
-from polyspec.hyper.media_type import MediaType
-from polyspec.hyper.reply import Reply
-from polyspec.hyper.representation import Representation
-from polyspec.hyper.request import Request
-from polyspec.hyper.not_found import NotFound
-from polyspec.hyper.result import Result
+from polyspec.hyper import MediaType, NotFound, Reply, Representation, Request, Result
 
 from posts import Posts
 

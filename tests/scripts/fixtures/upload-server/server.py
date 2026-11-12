@@ -27,15 +27,17 @@ import socket
 import sys
 import tempfile
 
-from polyspec.hyper.app import App
-from polyspec.hyper.file_sessions import FileSessions
-from polyspec.hyper.media_type import MediaType
-from polyspec.hyper.reply import Reply
-from polyspec.hyper.representation import Representation
-from polyspec.hyper.request import Request
-from polyspec.hyper.response import Response
-from polyspec.hyper.result import Result
-from polyspec.hyper.server import create_server
+from polyspec.hyper import (
+    App,
+    FileSessions,
+    MediaType,
+    Reply,
+    Representation,
+    Request,
+    Response,
+    Result,
+    create_server,
+)
 
 application = os.environ["UPLOAD_APP"]
 moved = os.environ["UPLOAD_MOVED"]

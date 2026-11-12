@@ -124,7 +124,7 @@ async function run(server: Server, list: string, moved: string, temporary: strin
 }
 
 test('the three servers read every generated body and every body at a limit with one result (HY-131)', { timeout: 600_000 }, async (t) => {
-  requireBuilt('packages', 'packages/server/ts/dist/request-body.js');
+  requireBuilt('packages', 'packages/server/ts/dist/form/request-body.js');
   requireBuilt('hyper-install-python', 'packages/server/python/.venv/bin/python');
   requireBuilt('hyper-install-php', 'vendor/autoload.php');
   const directory = mkdtempSync(path.join(tmpdir(), 'hyper-multipart-compare-'));

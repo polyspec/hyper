@@ -3,11 +3,11 @@
 import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { Fields } from '../../src/fields.js';
-import { Files } from '../../src/files.js';
-import { Multipart } from '../../src/multipart.js';
-import { RequestBody } from '../../src/request-body.js';
-import { UploadedFile } from '../../src/uploaded-file.js';
+import { Fields } from '../../src/form/fields.js';
+import { Files } from '../../src/form/files.js';
+import { Multipart } from '../../src/form/multipart.js';
+import { RequestBody } from '../../src/form/request-body.js';
+import { UploadedFile } from '../../src/form/uploaded-file.js';
 import type { CaseReader } from '../case-reader.js';
 import { bytesOf } from '../support.js';
 

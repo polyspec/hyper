@@ -4,9 +4,9 @@ import re
 import tempfile
 from pathlib import Path
 
-from polyspec.hyper._build import Build
-from polyspec.hyper._invalid_build import InvalidBuild
-from polyspec.hyper._renderer import Renderer
+from polyspec.hyper.app._build import Build
+from polyspec.hyper.app._invalid_build import InvalidBuild
+from polyspec.hyper.page._renderer import Renderer
 
 # The outputs of a server program in the order in which the step creates them, and whether each is a directory.
 _OUTPUTS = {

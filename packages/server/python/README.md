@@ -15,8 +15,7 @@ pip install "polyspec-hyper-server @ git+https://github.com/polyspec/hyper@vX.Y.
 ```
 
 ```python
-from polyspec.hyper.request import Request
-from polyspec.hyper.result import Result
+from polyspec.hyper import Request, Result
 
 request = Request("GET", "/board/7", {}, "page=2")
 request.path(), request.query()  # ('/board/7', [('page', ['2'])])
@@ -45,8 +44,7 @@ Result.redirect("/board/7")  # the outcome of an action that succeeded (HY-25)
   callable fails when the application opens.
 
 ```python
-from polyspec.hyper.app import App
-from polyspec.hyper.array_session import ArraySession
+from polyspec.hyper import App, ArraySession
 
 app = App.open(
     manifest="app/app.json",
@@ -60,7 +58,7 @@ response = app.handle(request, ArraySession())
 - `ClientRendering` with `Choice` declares the client-rendered pages of an application (HY-62): the static shell,
   the data base path and the selection of each request.
 
-- The server module serves an application over the Python standard library `http.server` with sessions in files:
+- `create_server` serves an application over the Python standard library `http.server` with sessions in files:
   `create_server(app, sessions)` returns a threaded HTTP server that sends every request to the answer of `App.handle`, reads no
   more of a body larger than the body limit (HY-59), sets the cookie of a new session first (HY-45), calls the
   disconnect hook when a write of the response fails with `BrokenPipeError`, `ConnectionResetError` or
@@ -72,8 +70,7 @@ response = app.handle(request, ArraySession())
   session in a Redis server with the protocol of phpredis, from a command function of a client of the application that returns bytes (HY-115); its `setup` option runs before the first command of a request that has a session, which keeps a Sentinel client on the current primary.
 
 ```python
-from polyspec.hyper.file_sessions import FileSessions
-from polyspec.hyper.server import create_server
+from polyspec.hyper import FileSessions, create_server
 
 server = create_server(
     app, FileSessions("/var/lib/board/sessions"), files="public", port=8080
@@ -96,7 +93,7 @@ server.serve_forever()
 ```python
 import secrets
 
-from polyspec.hyper.response import Response
+from polyspec.hyper import Response
 
 
 def around(request, answer):

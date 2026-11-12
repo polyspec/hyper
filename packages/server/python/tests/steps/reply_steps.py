@@ -1,5 +1,5 @@
 # The steps of contracts/reply.json (HY-52, HY-60, HY-69, HY-72, HY-92, HY-103): the reply of a request.
-from polyspec.hyper.reply import Reply
+from polyspec.hyper.http.reply import Reply
 
 from .inputs import calls_of
 from .recorded import decoded

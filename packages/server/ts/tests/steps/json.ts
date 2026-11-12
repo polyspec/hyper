@@ -1,8 +1,8 @@
 // The steps of contracts/json.json (HY-17, HY-54): the JSON text of a decoded value, and the decoding of a text.
-import { JsonCodec, type DecodedValue } from '../../src/json-codec.js';
-import { JsonDecodeError } from '../../src/json-decode-error.js';
-import { OutsideNumber } from '../../src/outside-number.js';
-import type { Value } from '../../src/values.js';
+import { JsonCodec, type DecodedValue } from '../../src/data/json-codec.js';
+import { JsonDecodeError } from '../../src/data/json-decode-error.js';
+import { OutsideNumber } from '../../src/data/outside-number.js';
+import type { Value } from '../../src/data/values.js';
 import type { CaseReader } from '../case-reader.js';
 
 // Encoding writes every finite number, also one outside the data model, as PHP json_encode does.

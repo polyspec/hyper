@@ -15,7 +15,17 @@
     },
     "autoload": {
         "psr-4": {
-            "Polyspec\\Hyper\\": "src/"
+            "Polyspec\\Hyper\\": [
+                "src/App/",
+                "src/Data/",
+                "src/Form/",
+                "src/Host/",
+                "src/Http/",
+                "src/Page/",
+                "src/Representation/",
+                "src/Result/",
+                "src/Session/"
+            ]
         }
     },
     "autoload-dev": {
