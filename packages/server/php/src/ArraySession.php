@@ -8,9 +8,15 @@ namespace Polyspec\Hyper;
 final class ArraySession implements SessionStore
 {
     /** @var array<string, mixed> */
-    private array $values = [];
+    private array $values;
 
-    private int $renewals = 0;
+    private int $renewals;
+
+    public function __construct()
+    {
+        $this->values = [];
+        $this->renewals = 0;
+    }
 
     public function get(string $key): mixed
     {

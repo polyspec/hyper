@@ -45,7 +45,7 @@ Result.redirect("/board/7")  # the outcome of an action that succeeded (HY-25)
 
 ```python
 from polyspec.hyper.app import App
-from polyspec.hyper.session import ArraySession
+from polyspec.hyper.array_session import ArraySession
 
 app = App.open(
     manifest="app/app.json",

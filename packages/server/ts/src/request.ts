@@ -3,7 +3,7 @@ import { Fields } from './fields.js';
 import { Files } from './files.js';
 import { Multipart } from './multipart.js';
 import type { RequestBody } from './request-body.js';
-import type { Flash } from './session.js';
+import type { Flash } from './flash.js';
 import type { UploadedFile } from './uploaded-file.js';
 import type { Value } from './values.js';
 

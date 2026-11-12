@@ -3,7 +3,7 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { App, MemorySessionStore, Request, Result, type Handlers, type SessionStore } from '../src/index.js';
+import { App, ArraySession, Request, Result, type Handlers, type SessionStore } from '../src/index.js';
 import type { Value } from '../src/values.js';
 import { Fixture } from './support.js';
 import { requestOf } from '../src/http.js';
@@ -11,7 +11,7 @@ import { requestOf } from '../src/http.js';
 // A session store that records every call of its interface and keeps the values in memory.
 class CountingStore implements SessionStore {
   readonly calls: string[] = [];
-  private readonly inner = new MemorySessionStore();
+  private readonly inner = new ArraySession();
 
   get(key: string): unknown {
     this.calls.push(`get ${key}`);

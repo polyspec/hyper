@@ -12,7 +12,7 @@ from polyspec.hyper.client_rendering import ClientRendering
 from polyspec.hyper.representation import Representation
 from polyspec.hyper.request import Request
 from polyspec.hyper.result import Result
-from polyspec.hyper.session import ArraySession
+from polyspec.hyper.array_session import ArraySession
 
 SHELL = FIXTURES / "shell" / "index.html"
 # A session token of HY-24; the form carries a masked value of it.

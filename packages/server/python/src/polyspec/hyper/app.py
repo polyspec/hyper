@@ -39,8 +39,9 @@ from .not_found import NotFound
 from .redirect import Redirect
 from .result import Result
 from ._router import Router
-from ._session import Flash, Session
-from .session import SessionStore
+from ._flash import Flash
+from ._session import Session
+from .session_store import SessionStore
 from ._warnings_guard import WarningsGuard
 
 _FORM_TYPES = ("application/x-www-form-urlencoded", "multipart/form-data")

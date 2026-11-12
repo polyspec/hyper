@@ -10,7 +10,7 @@ from polyspec.hyper._csrf import Csrf
 from polyspec.hyper.choice import Choice
 from polyspec.hyper.client_rendering import ClientRendering
 from polyspec.hyper.request import Request
-from polyspec.hyper.session import ArraySession
+from polyspec.hyper.array_session import ArraySession
 
 from ..render.render_client import TOKEN, Counter, app
 

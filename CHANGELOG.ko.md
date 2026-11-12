@@ -6,6 +6,8 @@
 
 ## Unreleased
 
+- session 저장소 interface, memory 저장소, session, flash가 세 server에서 각각 한 파일의 unit 하나이고 `contracts/interfaces.json`이 그 member 21개를 선언한다. Node는 그것을 `session-store.ts`, `array-session.ts`, `session.ts`, `flash.ts`에 둔다. Node의 memory 저장소는 PHP와 Python처럼 `ArraySession`이고 이전에는 `MemorySessionStore`였으며, `Flash`는 class이다. Python은 그것을 `session_store.py`, `array_session.py`, `_session.py`, `_flash.py`에 두고 module `polyspec.hyper.session`은 제거되었다. `ArraySession`은 셋 모두에서 생성자와 internal method `renewals()`를 가지고 HY-106.1이 그것을 공개 API로 이름 짓는다. 저장된 map을 읽는 도우미는 셋 모두에서 `Session`의 private `storedMap`이다. `make recipe-check`는 spec에 없는 member를 51개 줄어든 176개 보고한다. row H28.15는 unit을 concern마다 한 directory에 모으는 일을 기록한다(H28.11).
+
 - `contracts/interfaces.json`이 PHP server에만 있는 unit의 member 33개를 선언한다: `NativeSession`, `RedisClusterSessions`, `RedisSentinelSessions`, `Delivery`. PHP class의 member `invoke`는 그 method `__invoke`이며(HYR-5) 검사가 그것을 받아들인다. `make recipe-check`는 spec에 없는 member를 28개 줄어든 227개 보고한다(H28.11).
 
 - `Choice`와 `ClientRendering`이 세 server에서 자기 파일에 있는 생성자를 가진 class이고 `contracts/interfaces.json`이 그 member 7개를 선언한다. Node는 그것을 `app.ts`의 interface로 선언했는데 이제 `choice.ts`와 `client-rendering.ts`에서 class를 export하며, 같은 member를 가진 object도 여전히 받는다. Python module `polyspec.hyper.client`는 `polyspec.hyper.choice`와 `polyspec.hyper.client_rendering`으로 바뀌었고 그 class는 property를 선언하며, package `polyspec.hyper`는 `Choice`, `ClientRendering`, `MediaType`, `Representation`, `UploadedFile`도 export한다. `make recipe-check`는 spec에 없는 member를 19개 줄어든 255개 보고한다(H28.11).

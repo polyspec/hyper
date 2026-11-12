@@ -6,7 +6,7 @@ from ._manifest import Manifest
 from ._region import Region
 from .request import Request
 from ._router import Router
-from ._session import Flash
+from ._flash import Flash
 
 
 class RegionPlanner:

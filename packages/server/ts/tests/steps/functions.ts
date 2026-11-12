@@ -2,7 +2,7 @@
 // shared build of var/contract-programs holds (scripts/contract-programs.mts). `suffix` returns its first argument followed
 // by `!`, and `not_a_function` is the string "x" in the place of a function; the open must refuse it.
 import { fileURLToPath } from 'node:url';
-import { App, MemorySessionStore, Request, type Handlers } from '../../src/index.js';
+import { App, ArraySession, Request, type Handlers } from '../../src/index.js';
 import type { HostFunction } from '@polyspec/template/render';
 import type { Value } from '../../src/values.js';
 import type { CaseReader } from '../case-reader.js';
@@ -65,7 +65,7 @@ export const steps = {
       target: reader.has('request.target') ? (reader.input('request.target') as string) : '/',
       headers: Object.fromEntries(headers),
     });
-    const response = await app.handle(request, new MemorySessionStore());
+    const response = await app.handle(request, new ArraySession());
     reader.compare('status', response.status);
     reader.compare('body', response.body);
     reader.compare('bodyContains', response.body);

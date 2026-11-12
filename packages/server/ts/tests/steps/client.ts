@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Csrf } from '../../src/csrf.js';
 import { Representation, type Handlers, type RepresentationHandler, type Request } from '../../src/index.js';
-import type { SessionStore } from '../../src/session.js';
+import type { SessionStore } from '../../src/session-store.js';
 import type { CaseReader } from '../case-reader.js';
 import { client, Fixture, FIXTURES, handlers, parsed, plain, record, TOKEN, type Services } from '../support.js';
 

@@ -10,7 +10,7 @@ from polyspec.hyper._csrf import Csrf
 from polyspec.hyper._json_codec import JsonCodec
 from polyspec.hyper._session import Session
 from polyspec.hyper.request import Request
-from polyspec.hyper.session import ArraySession
+from polyspec.hyper.array_session import ArraySession
 
 from ..render.render_context import open_application, program_of
 

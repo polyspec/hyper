@@ -6,6 +6,7 @@ import polyspec.hyper
 
 PUBLIC_MODULES = [
     "app",
+    "array_session",  # The session store in memory.
     "asgi",
     "bad_request",  # HY-58: the stop of a bad request.
     "choice",  # HY-62: the result of the selection of a client rendering.
@@ -23,8 +24,8 @@ PUBLIC_MODULES = [
     "response",
     "result",
     "server",
-    "session",
     "session_record",
+    "session_store",  # HY-104: the interface of a session store.
     "uploaded_file",  # HY-113: the uploaded file class belongs to the public API.
     "wsgi",
 ]

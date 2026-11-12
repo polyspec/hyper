@@ -4,8 +4,9 @@ import unittest
 from pathlib import Path
 
 from polyspec.hyper.request import Request
-from polyspec.hyper._session import Flash, Session
-from polyspec.hyper.session import ArraySession
+from polyspec.hyper._flash import Flash
+from polyspec.hyper._session import Session
+from polyspec.hyper.array_session import ArraySession
 
 FIXTURES = Path(__file__).resolve().parents[2] / "php" / "tests" / "fixtures"
 
@@ -140,7 +141,7 @@ class SessionTest(unittest.TestCase):
         token = session.csrf_token()
         session.renew()
         self.assertNotEqual(token, session.csrf_token())
-        self.assertEqual(1, store._renewal_count())
+        self.assertEqual(1, store._renewals())
 
     def test_flash_values_are_taken_once(self) -> None:
         session = Session(ArraySession())

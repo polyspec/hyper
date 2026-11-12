@@ -5,7 +5,7 @@ import unittest
 from .render_app import get, opened
 from .render_client import BASE_PATH, CHOSEN_HOST, Counter, app
 from polyspec.hyper.request import Request
-from polyspec.hyper.session import ArraySession
+from polyspec.hyper.array_session import ArraySession
 
 JSON = "application/vnd.hyper+json"
 PAGE_LIST = "text/html\napplication/vnd.hyper+json\n"

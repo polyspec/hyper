@@ -16,7 +16,7 @@ from polyspec.hyper.reply import Reply
 from polyspec.hyper.request import Request
 from polyspec.hyper.response import Response
 from polyspec.hyper.result import Result
-from polyspec.hyper.session import ArraySession
+from polyspec.hyper.array_session import ArraySession
 
 TOKEN = "00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff"
 

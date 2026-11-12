@@ -4,7 +4,7 @@ import contextlib
 import io
 
 from polyspec.hyper.request import Request
-from polyspec.hyper.session import ArraySession
+from polyspec.hyper.array_session import ArraySession
 
 from ..render.render_functions import function_of, open_application
 

@@ -47,7 +47,7 @@ final class Session
             return new Flash([], []);
         }
 
-        $values = self::map($flash['values'] ?? []);
+        $values = self::storedMap($flash['values'] ?? []);
         $changed = $flash['changed'] ?? [];
         if (!is_array($values) || !is_array($changed) || !array_is_list($changed)) {
             throw new \UnexpectedValueException('the session holds flash data that is not values and a list of topics');
@@ -66,9 +66,9 @@ final class Session
     /** Stores a kept value of a region (HY-38, HY-40). */
     public function keep(string $region, string $path, mixed $value): void
     {
-        $kept = self::map($this->store->get(self::KEEP));
+        $kept = self::storedMap($this->store->get(self::KEEP));
         $kept = is_array($kept) ? $kept : [];
-        $regionKept = self::map($kept[$region] ?? []);
+        $regionKept = self::storedMap($kept[$region] ?? []);
         $regionKept = is_array($regionKept) ? $regionKept : [];
         $regionKept[$path] = $value;
         $kept[$region] = $regionKept;
@@ -82,14 +82,14 @@ final class Session
      */
     public function kept(string $region): array
     {
-        $kept = self::map($this->store->get(self::KEEP));
-        $regionKept = is_array($kept) ? self::map($kept[$region] ?? []) : [];
+        $kept = self::storedMap($this->store->get(self::KEEP));
+        $regionKept = is_array($kept) ? self::storedMap($kept[$region] ?? []) : [];
 
         return is_array($regionKept) ? $regionKept : [];
     }
 
     /** Returns the entries of a stored map: the Node and Python servers write a map that an array would read as a list as a `stdClass` (HY-104). */
-    private static function map(mixed $value): mixed
+    private static function storedMap(mixed $value): mixed
     {
         return $value instanceof \stdClass ? get_object_vars($value) : $value;
     }

@@ -392,7 +392,7 @@ describe('App', () => {
     const old = await fixture.token();
     const oldToken = fixture.session.get('_hyper_csrf');
     expect((await fixture.post('/add', { _csrf: old, name: 'sign-in' })).status).toBe(303);
-    expect(fixture.session.renewals).toBe(1);
+    expect(fixture.session.renewals()).toBe(1);
     expect(fixture.session.get('_hyper_csrf')).not.toBe(oldToken);
     expect(record(json(await fixture.get('/', { Accept: 'application/vnd.hyper+json' })).regions.side).note).toBe('renewed');
     expect((await fixture.post('/add', { _csrf: old, name: 'a' })).status).toBe(403);
@@ -463,7 +463,7 @@ describe('App', () => {
 
   it('fails a loader that renews the session (HY-72, HY-43)', async () => {
     expect((await fixture.get('/items/renew')).status).toBe(500);
-    expect(fixture.session.renewals).toBe(0);
+    expect(fixture.session.renewals()).toBe(0);
   });
 
   it('refuses a Cache-Control that a shared cache may store (HY-52)', () => {

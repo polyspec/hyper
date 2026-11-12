@@ -5830,7 +5830,107 @@
               "internal": false
             }
           },
-          "members": []
+          "members": [
+            {
+              "id": "session-store.get",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [
+                "string"
+              ],
+              "output": "value",
+              "errors": [],
+              "state": "Returns the value stored under a key, or null.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/SessionStore.php::Polyspec\\Hyper\\SessionStore::get",
+                  "signature": "abstract public function get(string $key): mixed"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/session-store.ts::SessionStore.get",
+                  "signature": "get(key: string): unknown"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/session_store.py::SessionStore.get",
+                  "signature": "def get(self, key: str) -> object"
+                }
+              }
+            },
+            {
+              "id": "session-store.set",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [
+                "string",
+                "value"
+              ],
+              "output": "none",
+              "errors": [],
+              "state": "Stores a value under a key.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/SessionStore.php::Polyspec\\Hyper\\SessionStore::set",
+                  "signature": "abstract public function set(string $key, mixed $value): void"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/session-store.ts::SessionStore.set",
+                  "signature": "set(key: string, value: unknown): void"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/session_store.py::SessionStore.set",
+                  "signature": "def set(self, key: str, value: object) -> None"
+                }
+              }
+            },
+            {
+              "id": "session-store.remove",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [
+                "string"
+              ],
+              "output": "none",
+              "errors": [],
+              "state": "Removes the value stored under a key.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/SessionStore.php::Polyspec\\Hyper\\SessionStore::remove",
+                  "signature": "abstract public function remove(string $key): void"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/session-store.ts::SessionStore.remove",
+                  "signature": "remove(key: string): void"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/session_store.py::SessionStore.remove",
+                  "signature": "def remove(self, key: str) -> None"
+                }
+              }
+            },
+            {
+              "id": "session-store.renew",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [],
+              "output": "none",
+              "errors": [],
+              "state": "Moves the values to a new session identifier and deletes the old session (HY-72).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/SessionStore.php::Polyspec\\Hyper\\SessionStore::renew",
+                  "signature": "abstract public function renew(): void"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/session-store.ts::SessionStore.renew",
+                  "signature": "renew(): void"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/session_store.py::SessionStore.renew",
+                  "signature": "def renew(self) -> None"
+                }
+              }
+            }
+          ]
         },
         {
           "id": "array-session",
@@ -5838,20 +5938,166 @@
             "php": {
               "file": "packages/server/php/src/ArraySession.php",
               "kind": "class",
-              "internal": true
+              "internal": false
             },
             "node": {
               "file": "packages/server/ts/src/array-session.ts",
               "kind": "class",
-              "internal": true
+              "internal": false
             },
             "python": {
-              "file": "packages/server/python/src/polyspec/hyper/_array_session.py",
+              "file": "packages/server/python/src/polyspec/hyper/array_session.py",
               "kind": "class",
-              "internal": true
+              "internal": false
             }
           },
-          "members": []
+          "members": [
+            {
+              "id": "array-session.constructor",
+              "kind": "constructor",
+              "visibility": "public",
+              "inputs": [],
+              "output": "array-session",
+              "errors": [],
+              "state": "Starts a session in memory without values.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/ArraySession.php::Polyspec\\Hyper\\ArraySession::__construct",
+                  "signature": "public function __construct()"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/array-session.ts::ArraySession.constructor",
+                  "signature": "constructor()"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/array_session.py::ArraySession.__init__",
+                  "signature": "def __init__(self) -> None"
+                }
+              }
+            },
+            {
+              "id": "array-session.get",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [
+                "string"
+              ],
+              "output": "value",
+              "errors": [],
+              "state": "Returns the value stored under a key, or null.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/ArraySession.php::Polyspec\\Hyper\\ArraySession::get",
+                  "signature": "public function get(string $key): mixed"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/array-session.ts::ArraySession.get",
+                  "signature": "get(key: string): unknown"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/array_session.py::ArraySession.get",
+                  "signature": "def get(self, key: str) -> object"
+                }
+              }
+            },
+            {
+              "id": "array-session.set",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [
+                "string",
+                "value"
+              ],
+              "output": "none",
+              "errors": [],
+              "state": "Stores a value under a key.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/ArraySession.php::Polyspec\\Hyper\\ArraySession::set",
+                  "signature": "public function set(string $key, mixed $value): void"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/array-session.ts::ArraySession.set",
+                  "signature": "set(key: string, value: unknown): void"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/array_session.py::ArraySession.set",
+                  "signature": "def set(self, key: str, value: object) -> None"
+                }
+              }
+            },
+            {
+              "id": "array-session.remove",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [
+                "string"
+              ],
+              "output": "none",
+              "errors": [],
+              "state": "Removes the value stored under a key.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/ArraySession.php::Polyspec\\Hyper\\ArraySession::remove",
+                  "signature": "public function remove(string $key): void"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/array-session.ts::ArraySession.remove",
+                  "signature": "remove(key: string): void"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/array_session.py::ArraySession.remove",
+                  "signature": "def remove(self, key: str) -> None"
+                }
+              }
+            },
+            {
+              "id": "array-session.renew",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [],
+              "output": "none",
+              "errors": [],
+              "state": "Counts the renewal; the values have no identifier in memory (HY-72).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/ArraySession.php::Polyspec\\Hyper\\ArraySession::renew",
+                  "signature": "public function renew(): void"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/array-session.ts::ArraySession.renew",
+                  "signature": "renew(): void"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/array_session.py::ArraySession.renew",
+                  "signature": "def renew(self) -> None"
+                }
+              }
+            },
+            {
+              "id": "array-session.renewals",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "number",
+              "errors": [],
+              "state": "Returns how many times the session was renewed.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/ArraySession.php::Polyspec\\Hyper\\ArraySession::renewals",
+                  "signature": "public function renewals(): int"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/array-session.ts::ArraySession.renewals",
+                  "signature": "renewals(): number"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/array_session.py::ArraySession._renewals",
+                  "signature": "def _renewals(self) -> int"
+                }
+              }
+            }
+          ]
         }
       ]
     },
@@ -5874,7 +6120,7 @@
             },
             "node": {
               "file": "packages/server/ts/src/session.ts",
-              "kind": "interface",
+              "kind": "class",
               "internal": true
             },
             "python": {
@@ -5883,7 +6129,204 @@
               "internal": true
             }
           },
-          "members": []
+          "members": [
+            {
+              "id": "session.constructor",
+              "kind": "constructor",
+              "visibility": "internal",
+              "inputs": [
+                "session-store"
+              ],
+              "output": "session",
+              "errors": [],
+              "state": "Holds the store of one session.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Session.php::Polyspec\\Hyper\\Session::__construct",
+                  "signature": "public function __construct(Polyspec\\Hyper\\SessionStore $store)"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/session.ts::Session.constructor",
+                  "signature": "constructor(store: SessionStore)"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_session.py::Session.__init__",
+                  "signature": "def __init__(self, store: SessionStore)"
+                }
+              }
+            },
+            {
+              "id": "session.csrfToken",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "string",
+              "errors": [],
+              "state": "Returns the token of the session, 64 lowercase hexadecimal digits, and creates it on first use or over another value (HY-24).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Session.php::Polyspec\\Hyper\\Session::csrfToken",
+                  "signature": "public function csrfToken(): string"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/session.ts::Session.csrfToken",
+                  "signature": "csrfToken(): string"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_session.py::Session.csrf_token",
+                  "signature": "def csrf_token(self) -> str"
+                }
+              }
+            },
+            {
+              "id": "session.renew",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "none",
+              "errors": [],
+              "state": "Moves the session to a new identifier and replaces its token (HY-72).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Session.php::Polyspec\\Hyper\\Session::renew",
+                  "signature": "public function renew(): void"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/session.ts::Session.renew",
+                  "signature": "renew(): void"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_session.py::Session.renew",
+                  "signature": "def renew(self) -> None"
+                }
+              }
+            },
+            {
+              "id": "session.takeFlash",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "flash",
+              "errors": [],
+              "state": "Returns the stored flash data and removes it from the session (HY-25).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Session.php::Polyspec\\Hyper\\Session::takeFlash",
+                  "signature": "public function takeFlash(): Polyspec\\Hyper\\Flash"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/session.ts::Session.takeFlash",
+                  "signature": "takeFlash(): Flash"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_session.py::Session.take_flash",
+                  "signature": "def take_flash(self) -> Flash"
+                }
+              }
+            },
+            {
+              "id": "session.keep",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "string",
+                "string",
+                "value"
+              ],
+              "output": "none",
+              "errors": [],
+              "state": "Stores a kept value of a region under its path (HY-38, HY-40).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Session.php::Polyspec\\Hyper\\Session::keep",
+                  "signature": "public function keep(string $region, string $path, mixed $value): void"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/session.ts::Session.keep",
+                  "signature": "keep(region: string, path: string, value: Value): void"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_session.py::Session.keep",
+                  "signature": "def keep(self, region: str, path: str, value: object) -> None"
+                }
+              }
+            },
+            {
+              "id": "session.kept",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "string"
+              ],
+              "output": "map<value>",
+              "errors": [],
+              "state": "Returns the kept values of a region in storing order (HY-38).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Session.php::Polyspec\\Hyper\\Session::kept",
+                  "signature": "public function kept(string $region): array"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/session.ts::Session.kept",
+                  "signature": "kept(region: string): MapValue"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_session.py::Session.kept",
+                  "signature": "def kept(self, region: str) -> dict"
+                }
+              }
+            },
+            {
+              "id": "session.storedMap",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "value"
+              ],
+              "output": "value",
+              "errors": [],
+              "state": "Returns the map of a stored value, where a list is the map of its indexes.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Session.php::Polyspec\\Hyper\\Session::storedMap",
+                  "signature": "private static function storedMap(mixed $value): mixed"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/session.ts::Session.storedMap",
+                  "signature": "private static storedMap(value: unknown): MapValue"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_session.py::Session._stored_map",
+                  "signature": "def _stored_map(value: object) -> object"
+                }
+              }
+            },
+            {
+              "id": "session.putFlash",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "flash"
+              ],
+              "output": "none",
+              "errors": [],
+              "state": "Stores flash data for the next request (HY-25).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Session.php::Polyspec\\Hyper\\Session::putFlash",
+                  "signature": "public function putFlash(Polyspec\\Hyper\\Flash $flash): void"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/session.ts::Session.putFlash",
+                  "signature": "putFlash(flash: Flash): void"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_session.py::Session.put_flash",
+                  "signature": "def put_flash(self, flash: Flash) -> None"
+                }
+              }
+            }
+          ]
         },
         {
           "id": "flash",
@@ -5904,7 +6347,80 @@
               "internal": true
             }
           },
-          "members": []
+          "members": [
+            {
+              "id": "flash.constructor",
+              "kind": "constructor",
+              "visibility": "internal",
+              "inputs": [
+                "map<value>",
+                "list<string>"
+              ],
+              "output": "flash",
+              "errors": [],
+              "state": "Holds the values and the changed topics that an action passes to the next request (HY-17, HY-25).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Flash.php::Polyspec\\Hyper\\Flash::__construct",
+                  "signature": "public function __construct(array $values, array $changed)"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/flash.ts::Flash.constructor",
+                  "signature": "constructor(values: Map<string, Value>, changed: string[])"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_flash.py::Flash.__init__",
+                  "signature": "def __init__(self, values: dict, changed: list[str]) -> None"
+                }
+              }
+            },
+            {
+              "id": "flash.values",
+              "kind": "property",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "map<value>",
+              "errors": [],
+              "state": "Holds the flash values by name.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Flash.php::Polyspec\\Hyper\\Flash::values",
+                  "signature": "public readonly array $values"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/flash.ts::Flash.values",
+                  "signature": "readonly values: Map<string, Value>"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_flash.py::Flash.values",
+                  "signature": "values: dict"
+                }
+              }
+            },
+            {
+              "id": "flash.changed",
+              "kind": "property",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "list<string>",
+              "errors": [],
+              "state": "Holds the changed topics.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Flash.php::Polyspec\\Hyper\\Flash::changed",
+                  "signature": "public readonly array $changed"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/flash.ts::Flash.changed",
+                  "signature": "readonly changed: string[]"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_flash.py::Flash.changed",
+                  "signature": "changed: list[str]"
+                }
+              }
+            }
+          ]
         }
       ]
     },

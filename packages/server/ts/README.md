@@ -102,14 +102,14 @@ app.server(sessions, { files: '/srv/board/public' }).listen(8080, '127.0.0.1');
 ## Answer requests without HTTP
 
 ```ts
-import { MemorySessionStore, Request } from '@polyspec/hyper-server';
+import { ArraySession, Request } from '@polyspec/hyper-server';
 
-const session = new MemorySessionStore();
+const session = new ArraySession();
 const response = await app.handle(new Request({ method: 'GET', path: '/board', headers: { Accept: 'application/vnd.hyper+json' } }), session);
 // response.status, response.headers, response.body
 ```
 
-`new Request({ method, path, headers, query, body, cookies, https })` takes the parts of an HTTP request: the path and the raw query of the request target and the header values are text whose characters are bytes, and the body is bytes. `SessionStore` is the interface of one session (`get`, `set`, `remove`); `MemorySessionStore` keeps one session in memory for tests.
+`new Request({ method, path, headers, query, body, cookies, https })` takes the parts of an HTTP request: the path and the raw query of the request target and the header values are text whose characters are bytes, and the body is bytes. `SessionStore` is the interface of one session (`get`, `set`, `remove`); `ArraySession` keeps one session in memory for tests.
 
 ## JSON
 

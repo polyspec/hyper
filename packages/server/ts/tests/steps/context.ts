@@ -6,7 +6,7 @@ import { Context, type ContextHandler } from '../../src/context.js';
 import { Csrf } from '../../src/csrf.js';
 import { JsonCodec } from '../../src/json-codec.js';
 import { hostValue } from './host-value.js';
-import { App, MemorySessionStore, NotFound, Request, Result, type Handlers, type RouteHandlers } from '../../src/index.js';
+import { App, ArraySession, NotFound, Request, Result, type Handlers, type RouteHandlers } from '../../src/index.js';
 import type { Value } from '../../src/values.js';
 import type { CaseReader } from '../case-reader.js';
 import { parsed, record } from '../support.js';
@@ -258,7 +258,7 @@ export const steps = {
       },
       ...(contextHandler === null ? {} : { context: contextHandler }),
     });
-    const store = new MemorySessionStore();
+    const store = new ArraySession();
     const csrfInput = reader.has('request.csrf') ? reader.input('request.csrf') : false;
     if (typeof csrfInput !== 'boolean') throw new Error('the case field request.csrf is not a boolean');
     const csrf = csrfInput;

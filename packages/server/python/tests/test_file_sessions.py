@@ -10,7 +10,7 @@ from pathlib import Path
 
 from polyspec.hyper._session import Session
 from polyspec.hyper.file_sessions import FileSessions, _cookie_header, _cookie_name
-from polyspec.hyper.session import ArraySession
+from polyspec.hyper.array_session import ArraySession
 from polyspec.php_serialize import UnserializeError, serialize, unserialize
 
 ROUNDS = 400

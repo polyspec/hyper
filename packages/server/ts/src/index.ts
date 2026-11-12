@@ -18,5 +18,6 @@ export { NotFound } from './not-found.js';
 export { Redirect } from './redirect.js';
 export { Result } from './result.js';
 export { Container } from './container.js';
-export { MemorySessionStore, type SessionStore } from './session.js';
+export { ArraySession } from './array-session.js';
+export { type SessionStore } from './session-store.js';
 export { type Data } from './values.js';

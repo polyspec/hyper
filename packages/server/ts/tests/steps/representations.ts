@@ -4,7 +4,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { App, MemorySessionStore, Representation, Request, type Handlers, type RepresentationHandler, type RouteHandlers } from '../../src/index.js';
+import { App, ArraySession, Representation, Request, type Handlers, type RepresentationHandler, type RouteHandlers } from '../../src/index.js';
 import type { Value } from '../../src/values.js';
 import type { CaseReader } from '../case-reader.js';
 import { OrmError, parsed, plain, record } from '../support.js';
@@ -134,7 +134,7 @@ export const steps = {
       basePath: reader.has('basePath') ? (reader.input('basePath') as string) : '',
       log: () => {},
     });
-    const store = new MemorySessionStore();
+    const store = new ArraySession();
     const headers = Object.fromEntries(reader.input('request.headers') as Map<string, string>);
     const body = reader.has('request.body') ? Buffer.from(reader.input('request.body') as string, 'utf8') : undefined;
     const response = await app.handle(

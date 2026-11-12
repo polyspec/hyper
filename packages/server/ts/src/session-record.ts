@@ -2,7 +2,7 @@
 // session store that do not depend on what keeps the record (HY-104, HY-115).
 import { randomBytes } from 'node:crypto';
 import { PhpFloat, Reference, serialize, StdClass, unserialize, type ArrayKey, type Value as Stored } from '@polyspec/php-serialize';
-import type { SessionStore } from './session.js';
+import type { SessionStore } from './session-store.js';
 
 const IDENTIFIER = /^[A-Za-z0-9,-]{22,128}$/;
 

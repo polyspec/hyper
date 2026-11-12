@@ -12,7 +12,8 @@ import type { Reply } from './reply.js';
 import { HYPER_JSON, type Request } from './request.js';
 import { Response } from './response.js';
 import type { Container } from './container.js';
-import type { Flash, Session } from './session.js';
+import type { Flash } from './flash.js';
+import type { Session } from './session.js';
 import { replaced, requireMap, toMap, type Data, type MapValue, type Value } from './values.js';
 
 export interface PageInput<S extends object> {

@@ -17,7 +17,7 @@ from polyspec.hyper.reply import Reply
 from polyspec.hyper.request import Request
 from polyspec.hyper.response import Response
 from polyspec.hyper.result import Result
-from polyspec.hyper.session import ArraySession
+from polyspec.hyper.array_session import ArraySession
 
 from .fixture_app import FIXTURES, PROGRAM
 from .fixture_handlers import Counter, fixture_app, handlers

@@ -13,7 +13,7 @@ from ._multipart import Multipart
 from ._request_body import RequestBody
 from ._media import JSON
 from .uploaded_file import UploadedFile
-from ._session import Flash
+from ._flash import Flash
 
 _PRINTABLE = re.compile(r"[\x21-\x7e]*\Z")
 _AUTHORITY = re.compile(r"^([A-Za-z][A-Za-z0-9+.-]*:)?//[^/?#]*")

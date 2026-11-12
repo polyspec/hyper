@@ -34,7 +34,9 @@ import { NotFound } from './not-found.js';
 import { Redirect } from './redirect.js';
 import { Result } from './result.js';
 import { Container } from './container.js';
-import { Session, type SessionStore } from './session.js';
+import { Flash } from './flash.js';
+import { Session } from './session.js';
+import type { SessionStore } from './session-store.js';
 import type { Data, Value } from './values.js';
 
 // Reads a JSON file of an application as strict UTF-8 JSON. A file that cannot be read fails with its system error;
@@ -560,7 +562,7 @@ export class App<S extends object = Record<string, never>> {
 
   // Stores the flash values and changed topics of a redirect result and answers 303 (HY-25, HY-50).
   private redirect(session: Session, result: Result, basePath: string): Response {
-    session.putFlash({ values: new Map(result.flashValues), changed: [...result.changedTopics] });
+    session.putFlash(new Flash(new Map(result.flashValues), [...result.changedTopics]));
     return new Response(303, { Location: basePath + result.location }, '');
   }
 

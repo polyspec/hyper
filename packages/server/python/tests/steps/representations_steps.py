@@ -12,7 +12,7 @@ from polyspec.hyper.app import App
 from polyspec.hyper.reply import Reply
 from polyspec.hyper.request import Request
 from polyspec.hyper.representation import Representation
-from polyspec.hyper.session import ArraySession
+from polyspec.hyper.array_session import ArraySession
 
 from ..case_reader import CaseReader
 from ..render.render_functions import program_of

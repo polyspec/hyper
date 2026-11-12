@@ -6,7 +6,7 @@ from pathlib import Path
 
 from .render_app import get, opened
 from polyspec.hyper._renderer import Renderer
-from polyspec.hyper.session import ArraySession
+from polyspec.hyper.array_session import ArraySession
 
 JSON = "application/vnd.hyper+json"
 ONES = "1" * 64

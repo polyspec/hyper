@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { test } from 'node:test';
 import { Router, stripBasePath } from '@polyspec/hyper-client';
-import { App, Forbidden, MemorySessionStore, Request, Result, type Handlers, type Reply, type Response } from '@polyspec/hyper-server';
+import { App, Forbidden, ArraySession, Request, Result, type Handlers, type Reply, type Response } from '@polyspec/hyper-server';
 
 // The fixtures of the server tests: the manifest and the template files that `make node-fixtures` builds.
 const FIXTURES = fileURLToPath(new URL('../../packages/server/php/tests/fixtures/', import.meta.url));
@@ -103,7 +103,7 @@ test('the server package answers requests and reports the reply of each one', as
       reports.push([response.status, Object.fromEntries(reply.notes())]);
     },
   });
-  const store = new MemorySessionStore();
+  const store = new ArraySession();
   const page = await app.handle(new Request({ method: 'GET', path: '/' }), store);
   assert.equal(page.status, 200);
   assert.equal(page.headers['Content-Type'], 'text/html; charset=utf-8');

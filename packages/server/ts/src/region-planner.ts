@@ -1,7 +1,7 @@
 // Selects the regions that a response contains (HY-11, HY-18, HY-19).
 import { stripBasePath, type Manifest, type RegionDeclaration } from '@polyspec/hyper-client';
 import type { Request } from './request.js';
-import type { Flash } from './session.js';
+import type { Flash } from './flash.js';
 
 /** @internal */
 export class RegionPlanner {
