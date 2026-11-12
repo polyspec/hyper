@@ -129,5 +129,7 @@ Generated files are never tracked in Git. This covers dependency installs (`node
   Enforced by: `make docs-check`
 - Refines P25: A task that is bypassed with `[!]` in `docs/plans/execution/checklist.md` is used only when the next task cannot proceed without bypassing it. When its retry condition holds, the task resumes without waiting for approval. An audit covers only the bypassed tasks with their causes and retry conditions, and does not repeat unrelated full test runs.
   Enforced by: none, whether the next task can proceed is a judgement.
+- Own: A task withdrawn with `[-]` is done. When its cause names a retry condition, the task resumes once that condition holds; a task whose cause names none, or whose condition does not hold, stays done as it is.
+  Enforced by: none, whether a retry condition holds is a judgement.
 - Own: A received instruction is classified first: a task of the checklist, a rule of this file, a note of the agent memory, or an answer only. The agent memory holds only what the requester and the agent need between sessions. What the project must keep goes into the repository (documents, comments, commit messages). Unless the instruction states that it is urgent, record it as a task with its priority and continue the task in progress. Rules belong in this file without duplication, never in the checklist or the changelog.
   Enforced by: none, the classification of an instruction is a judgement.

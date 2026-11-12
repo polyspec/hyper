@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- `AGENTS.md` states that a task withdrawn with `[-]` is done: a task whose cause names a retry condition resumes once it holds, and one whose cause names none, or whose condition does not hold, stays done.
+
 - `composer.json` and `examples/board/composer.json` require the json-schema fork by the range `^2.6.0-p2` instead of the exact constraint `2.6.0-p2`, and both locks still pin the release `v2.6.0-p2` with its dist, so the installed fork does not change. Before, `composer validate --strict` of both roots failed (exit 1) on the warning that Composer 2.10.3 gives for an exact constraint; now it passes (H28.17).
 
 - `config/layout.yml` declares the PHP and Python readers of the recipe check that read the scopes and the functions of a server (`read-php-functions.php`, `read-php-scopes.php`, `PhpScope.php`, `read_python_scopes.py`) as exceptions of S9, with the reason of the two earlier readers: they read the code with the reflection and the tokens of PHP and the ast module of Python, which TypeScript does not have (H28.16).

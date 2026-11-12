@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 0c8f34b52ed9369bbbac96710b8c91da892ffff4f5f16661b0b4c2c23f184e9f -->
+<!-- source-sha256: 77e8ab5b748098badcd164144e4e1861c536d387c9fa914354d8a3f0c98b73b2 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- `AGENTS.md`는 `[-]`로 철회한 task가 완료라고 적는다. 원인이 재개 조건을 적은 task는 그 조건이 성립한 뒤 재개하고, 재개 조건이 없거나 성립하지 않는 task는 그대로 완료다.
 
 - `composer.json`과 `examples/board/composer.json`은 json-schema fork를 정확한 제약 `2.6.0-p2` 대신 범위 `^2.6.0-p2`로 요구하고, 두 lock은 여전히 release `v2.6.0-p2`를 그 dist로 pin하므로 설치되는 fork는 바뀌지 않는다. 전에는 두 root의 `composer validate --strict`가 Composer 2.10.3이 정확한 제약에 내는 경고로 실패했고(exit 1), 이제 통과한다(H28.17).
 

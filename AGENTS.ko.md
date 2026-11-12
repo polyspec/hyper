@@ -1,5 +1,5 @@
 <!-- doc-id: agents -->
-<!-- source-sha256: 31de1a0634ab0daa39f772368531e59b8abc5a0b8f88099247f6fe4b52e1ccb8 -->
+<!-- source-sha256: 2a3cd20c9437e34a33595022c258b0f92bd154ef56dad221e750210deba29937 -->
 # 개발
 
 [English](AGENTS.md).
@@ -129,5 +129,7 @@
   Enforced by: `make docs-check`
 - Refines P25: `[!]`로 우회한 task(`docs/plans/execution/checklist.md`)는 다음 task가 그것을 우회하지 않고는 진행할 수 없을 때만 쓴다. 재시도 조건이 성립하면 task는 승인을 기다리지 않고 재개한다. 감사는 우회한 task만, 그 원인과 재시도 조건과 함께 다루며, 관계없는 전체 test 실행을 되풀이하지 않는다.
   Enforced by: none, 다음 task가 진행할 수 있는지는 판단이다.
+- Own: `[-]`로 철회한 task는 완료다. 그 원인이 재개 조건을 적으면 그 조건이 성립한 뒤 task를 재개하고, 재개 조건을 적지 않았거나 그 조건이 성립하지 않는 task는 그대로 완료다.
+  Enforced by: none, 재개 조건의 성립 여부는 판단이다.
 - Own: 받은 지시는 먼저 분류한다. checklist의 task, 이 파일의 규칙, agent memory의 메모, 또는 답만 필요한 것이다. agent memory에는 요청자와 agent가 세션 사이에 필요로 하는 것만 둔다. 프로젝트가 지켜야 하는 것은 저장소(문서, 주석, commit message)에 둔다. 지시가 긴급하다고 밝히지 않았다면, 우선순위와 함께 task로 기록하고 진행 중인 task를 계속한다. 규칙은 이 파일에 중복 없이 두며, checklist나 changelog에는 두지 않는다.
   Enforced by: none, 지시의 분류는 판단이다.
