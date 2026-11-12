@@ -1500,6 +1500,223 @@
           ]
         }
       }
+    },
+    "reply-before-s3b.json": {
+      "fixtures": {},
+      "sections": {
+        "cacheControl": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "calls": {
+              "role": "input"
+            },
+            "value": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-52.5",
+              "state": "`value` is the `Cache-Control` of a reply after `calls`, or null when no call set it."
+            },
+            "error": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-52.12",
+              "state": "`error` is the message of the error with which a call of `calls` fails, after which no later call runs, or null when every call returns."
+            },
+            "class": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-52.11",
+              "state": "`class` is `type` for a `TypeError`, `value` for an error of the classes of HY-46.2, or null when every call returns."
+            }
+          },
+          "members": [
+            "reply.cacheControl"
+          ]
+        },
+        "cookies": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "calls": {
+              "role": "input"
+            },
+            "secure": {
+              "role": "input",
+              "optional": true
+            },
+            "headers": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-52.3",
+              "state": "`headers` are the `Set-Cookie` values of a reply after `calls`, each pair of a method of the reply and the JSON texts of its arguments as a handler gives them, in their order, with `Secure` when `secure` is true."
+            },
+            "error": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-52.12",
+              "state": "`error` is the message of the error with which a call of `calls` fails, after which no later call runs, or null when every call returns."
+            },
+            "class": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-52.11",
+              "state": "`class` is `type` for a `TypeError`, `value` for an error of the classes of HY-46.2, or null when every call returns."
+            }
+          },
+          "members": [
+            "reply.cookie",
+            "reply.removeCookie"
+          ]
+        },
+        "notes": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "calls": {
+              "role": "input"
+            },
+            "notes": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-60.29",
+              "state": "`notes` are the notes of a reply after `calls`, a list of pairs of a name and its value in the order of the first note of each name."
+            },
+            "error": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-60.28",
+              "state": "`error` is the message of the error with which a call of `calls` fails, after which no later call runs, or null when every call returns."
+            },
+            "class": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-60.28",
+              "state": "`class` is `type` for a `TypeError`, `value` for an error of the classes of HY-46.2, or null when every call returns."
+            }
+          },
+          "members": [
+            "reply.note"
+          ]
+        },
+        "referrerPolicy": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "calls": {
+              "role": "input"
+            },
+            "value": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-103.4",
+              "state": "`value` is the `Referrer-Policy` of a reply after `calls`, or null when no call set it."
+            },
+            "headers": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-103.5",
+              "state": "`headers` are the headers that the reply gives a page or JSON answer: `Referrer-Policy` with that value, or none."
+            },
+            "error": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-103.8",
+              "state": "`error` is the message of the error with which a call of `calls` fails, after which no later call runs, or null when every call returns."
+            },
+            "class": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-103.8",
+              "state": "`class` is `type` for a `TypeError`, `value` for an error of the classes of HY-46.2, or null when every call returns."
+            }
+          },
+          "members": [
+            "reply.referrerPolicy",
+            "reply.referrerPolicyValue"
+          ]
+        },
+        "status": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "calls": {
+              "role": "input"
+            },
+            "value": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-69.1",
+              "state": "`value` is the page status of a reply after `calls`, or null when no call set it."
+            },
+            "error": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-69.6",
+              "state": "`error` is the message of the error with which a call of `calls` fails, after which no later call runs, or null when every call returns."
+            },
+            "class": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-69.6",
+              "state": "`class` is `type` for a `TypeError`, `value` for an error of the classes of HY-46.2, or null when every call returns."
+            }
+          },
+          "members": [
+            "reply.status"
+          ]
+        }
+      }
     }
   }
 }

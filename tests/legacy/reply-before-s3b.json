@@ -1,0 +1,1448 @@
+{
+  "cacheControl": [
+    {
+      "id": "no_cache_control_is_null",
+      "label": "no cache control is null",
+      "calls": [],
+      "value": null,
+      "error": null,
+      "class": null
+    },
+    {
+      "id": "the_cache_control_private_max_age_60_is_taken",
+      "label": "the cache control private, max-age=60 is taken",
+      "calls": [
+        [
+          "cacheControl",
+          [
+            "\"private, max-age=60\""
+          ]
+        ]
+      ],
+      "value": "private, max-age=60",
+      "error": null,
+      "class": null
+    },
+    {
+      "id": "the_cache_control_no_store_is_taken",
+      "label": "the cache control no-store is taken",
+      "calls": [
+        [
+          "cacheControl",
+          [
+            "\"no-store\""
+          ]
+        ]
+      ],
+      "value": "no-store",
+      "error": null,
+      "class": null
+    },
+    {
+      "id": "the_cache_control_private_is_taken",
+      "label": "the cache control Private is taken",
+      "calls": [
+        [
+          "cacheControl",
+          [
+            "\"Private\""
+          ]
+        ]
+      ],
+      "value": "Private",
+      "error": null,
+      "class": null
+    },
+    {
+      "id": "the_cache_control_max_age_0_private_is_taken",
+      "label": "the cache control max-age=0, private is taken",
+      "calls": [
+        [
+          "cacheControl",
+          [
+            "\"max-age=0, private\""
+          ]
+        ]
+      ],
+      "value": "max-age=0, private",
+      "error": null,
+      "class": null
+    },
+    {
+      "id": "the_cache_control_no_cache_no_store_is_taken",
+      "label": "the cache control no-cache, no-store is taken",
+      "calls": [
+        [
+          "cacheControl",
+          [
+            "\"no-cache, no-store\""
+          ]
+        ]
+      ],
+      "value": "no-cache, no-store",
+      "error": null,
+      "class": null
+    },
+    {
+      "id": "the_cache_control_public_max_age_60_lets_a_shared_cache_store_the_page",
+      "label": "the cache control public, max-age=60 lets a shared cache store the page",
+      "calls": [
+        [
+          "cacheControl",
+          [
+            "\"public, max-age=60\""
+          ]
+        ]
+      ],
+      "value": null,
+      "error": "Cache-Control public, max-age=60 lets a shared cache store the page; it needs private or no-store and neither public nor s-maxage (HY-52)",
+      "class": "value"
+    },
+    {
+      "id": "the_cache_control_max_age_60_lets_a_shared_cache_store_the_page",
+      "label": "the cache control max-age=60 lets a shared cache store the page",
+      "calls": [
+        [
+          "cacheControl",
+          [
+            "\"max-age=60\""
+          ]
+        ]
+      ],
+      "value": null,
+      "error": "Cache-Control max-age=60 lets a shared cache store the page; it needs private or no-store and neither public nor s-maxage (HY-52)",
+      "class": "value"
+    },
+    {
+      "id": "the_cache_control_no_cache_lets_a_shared_cache_store_the_page",
+      "label": "the cache control no-cache lets a shared cache store the page",
+      "calls": [
+        [
+          "cacheControl",
+          [
+            "\"no-cache\""
+          ]
+        ]
+      ],
+      "value": null,
+      "error": "Cache-Control no-cache lets a shared cache store the page; it needs private or no-store and neither public nor s-maxage (HY-52)",
+      "class": "value"
+    },
+    {
+      "id": "the_cache_control_private_s_maxage_60_lets_a_shared_cache_store_the_page",
+      "label": "the cache control private, s-maxage=60 lets a shared cache store the page",
+      "calls": [
+        [
+          "cacheControl",
+          [
+            "\"private, s-maxage=60\""
+          ]
+        ]
+      ],
+      "value": null,
+      "error": "Cache-Control private, s-maxage=60 lets a shared cache store the page; it needs private or no-store and neither public nor s-maxage (HY-52)",
+      "class": "value"
+    },
+    {
+      "id": "the_cache_control_private_public_lets_a_shared_cache_store_the_page",
+      "label": "the cache control private, public lets a shared cache store the page",
+      "calls": [
+        [
+          "cacheControl",
+          [
+            "\"private, public\""
+          ]
+        ]
+      ],
+      "value": null,
+      "error": "Cache-Control private, public lets a shared cache store the page; it needs private or no-store and neither public nor s-maxage (HY-52)",
+      "class": "value"
+    },
+    {
+      "id": "the_cache_control_public_private_lets_a_shared_cache_store_the_page",
+      "label": "the cache control PUBLIC, private lets a shared cache store the page",
+      "calls": [
+        [
+          "cacheControl",
+          [
+            "\"PUBLIC, private\""
+          ]
+        ]
+      ],
+      "value": null,
+      "error": "Cache-Control PUBLIC, private lets a shared cache store the page; it needs private or no-store and neither public nor s-maxage (HY-52)",
+      "class": "value"
+    },
+    {
+      "id": "the_cache_control_privateer_lets_a_shared_cache_store_the_page",
+      "label": "the cache control privateer lets a shared cache store the page",
+      "calls": [
+        [
+          "cacheControl",
+          [
+            "\"privateer\""
+          ]
+        ]
+      ],
+      "value": null,
+      "error": "Cache-Control privateer lets a shared cache store the page; it needs private or no-store and neither public nor s-maxage (HY-52)",
+      "class": "value"
+    },
+    {
+      "id": "an_empty_cache_control_has_no_allowed_character",
+      "label": "an empty cache control has no allowed character",
+      "calls": [
+        [
+          "cacheControl",
+          [
+            "\"\""
+          ]
+        ]
+      ],
+      "value": null,
+      "error": "Cache-Control has a character that is not allowed (HY-52)",
+      "class": "value"
+    },
+    {
+      "id": "a_cache_control_with_a_tab_is_not_allowed",
+      "label": "a cache control with a tab is not allowed",
+      "calls": [
+        [
+          "cacheControl",
+          [
+            "\"private,\\tmax-age=1\""
+          ]
+        ]
+      ],
+      "value": null,
+      "error": "Cache-Control has a character that is not allowed (HY-52)",
+      "class": "value"
+    },
+    {
+      "id": "a_cache_control_with_a_letter_outside_ascii_is_not_allowed",
+      "label": "a cache control with a letter outside ascii is not allowed",
+      "calls": [
+        [
+          "cacheControl",
+          [
+            "\"private, \\u00e9\""
+          ]
+        ]
+      ],
+      "value": null,
+      "error": "Cache-Control has a character that is not allowed (HY-52)",
+      "class": "value"
+    },
+    {
+      "id": "a_cache_control_with_a_line_feed_at_its_end_is_not_allowed",
+      "label": "a cache control with a line feed at its end is not allowed",
+      "calls": [
+        [
+          "cacheControl",
+          [
+            "\"private\\n\""
+          ]
+        ]
+      ],
+      "value": null,
+      "error": "Cache-Control has a character that is not allowed (HY-52)",
+      "class": "value"
+    },
+    {
+      "id": "a_later_cache_control_replaces_the_value",
+      "label": "a later cache control replaces the value",
+      "calls": [
+        [
+          "cacheControl",
+          [
+            "\"no-store\""
+          ]
+        ],
+        [
+          "cacheControl",
+          [
+            "\"private\""
+          ]
+        ]
+      ],
+      "value": "private",
+      "error": null,
+      "class": null
+    },
+    {
+      "id": "a_failed_cache_control_keeps_the_value",
+      "label": "a failed cache control keeps the value",
+      "calls": [
+        [
+          "cacheControl",
+          [
+            "\"no-store\""
+          ]
+        ],
+        [
+          "cacheControl",
+          [
+            "\"public\""
+          ]
+        ]
+      ],
+      "value": "no-store",
+      "error": "Cache-Control public lets a shared cache store the page; it needs private or no-store and neither public nor s-maxage (HY-52)",
+      "class": "value"
+    },
+    {
+      "id": "a_cache_control_that_is_not_a_string_fails_with_its_type",
+      "label": "a cache control that is not a string fails with its type",
+      "calls": [
+        [
+          "cacheControl",
+          [
+            "5"
+          ]
+        ]
+      ],
+      "value": null,
+      "error": "a Cache-Control is not a string (HY-52)",
+      "class": "type"
+    }
+  ],
+  "cookies": [
+    {
+      "id": "a_cookie_is_written_with_its_attributes",
+      "label": "a cookie is written with its attributes",
+      "calls": [
+        [
+          "cookie",
+          [
+            "\"session\"",
+            "\"v\"",
+            "60"
+          ]
+        ]
+      ],
+      "headers": [
+        "session=v; Path=/; HttpOnly; SameSite=Lax; Max-Age=60"
+      ],
+      "error": null,
+      "class": null
+    },
+    {
+      "id": "a_cookie_on_https_is_secure",
+      "label": "a cookie on https is secure",
+      "calls": [
+        [
+          "cookie",
+          [
+            "\"session\"",
+            "\"v\"",
+            "60"
+          ]
+        ]
+      ],
+      "secure": true,
+      "headers": [
+        "session=v; Path=/; HttpOnly; SameSite=Lax; Secure; Max-Age=60"
+      ],
+      "error": null,
+      "class": null
+    },
+    {
+      "id": "a_cookie_without_max_age_has_none",
+      "label": "a cookie without max age has none",
+      "calls": [
+        [
+          "cookie",
+          [
+            "\"a\"",
+            "\"b\""
+          ]
+        ]
+      ],
+      "headers": [
+        "a=b; Path=/; HttpOnly; SameSite=Lax"
+      ],
+      "error": null,
+      "class": null
+    },
+    {
+      "id": "a_null_max_age_is_no_max_age",
+      "label": "a null max age is no max age",
+      "calls": [
+        [
+          "cookie",
+          [
+            "\"a\"",
+            "\"b\"",
+            "null"
+          ]
+        ]
+      ],
+      "headers": [
+        "a=b; Path=/; HttpOnly; SameSite=Lax"
+      ],
+      "error": null,
+      "class": null
+    },
+    {
+      "id": "a_removed_cookie_has_an_empty_value_and_max_age_zero",
+      "label": "a removed cookie has an empty value and max age zero",
+      "calls": [
+        [
+          "removeCookie",
+          [
+            "\"session\""
+          ]
+        ]
+      ],
+      "headers": [
+        "session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0"
+      ],
+      "error": null,
+      "class": null
+    },
+    {
+      "id": "cookies_keep_their_order",
+      "label": "cookies keep their order",
+      "calls": [
+        [
+          "cookie",
+          [
+            "\"b\"",
+            "\"1\""
+          ]
+        ],
+        [
+          "cookie",
+          [
+            "\"a\"",
+            "\"2\""
+          ]
+        ]
+      ],
+      "headers": [
+        "b=1; Path=/; HttpOnly; SameSite=Lax",
+        "a=2; Path=/; HttpOnly; SameSite=Lax"
+      ],
+      "error": null,
+      "class": null
+    },
+    {
+      "id": "a_max_age_with_an_integer_value_is_that_integer",
+      "label": "a max age with an integer value is that integer",
+      "calls": [
+        [
+          "cookie",
+          [
+            "\"a\"",
+            "\"b\"",
+            "60.0"
+          ]
+        ]
+      ],
+      "headers": [
+        "a=b; Path=/; HttpOnly; SameSite=Lax; Max-Age=60"
+      ],
+      "error": null,
+      "class": null
+    },
+    {
+      "id": "a_max_age_of_negative_zero_is_zero",
+      "label": "a max age of negative zero is zero",
+      "calls": [
+        [
+          "cookie",
+          [
+            "\"a\"",
+            "\"b\"",
+            "-0.0"
+          ]
+        ]
+      ],
+      "headers": [
+        "a=b; Path=/; HttpOnly; SameSite=Lax; Max-Age=0"
+      ],
+      "error": null,
+      "class": null
+    },
+    {
+      "id": "the_largest_safe_max_age_is_taken",
+      "label": "the largest safe max age is taken",
+      "calls": [
+        [
+          "cookie",
+          [
+            "\"a\"",
+            "\"b\"",
+            "9007199254740991"
+          ]
+        ]
+      ],
+      "headers": [
+        "a=b; Path=/; HttpOnly; SameSite=Lax; Max-Age=9007199254740991"
+      ],
+      "error": null,
+      "class": null
+    },
+    {
+      "id": "a_name_with_an_upper_case_letter_is_not_allowed",
+      "label": "a name with an upper case letter is not allowed",
+      "calls": [
+        [
+          "cookie",
+          [
+            "\"X-Session\"",
+            "\"v\""
+          ]
+        ]
+      ],
+      "headers": [],
+      "error": "cookie name X-Session is not allowed (HY-52)",
+      "class": "value"
+    },
+    {
+      "id": "a_name_with_the_prefix_hy_is_not_allowed",
+      "label": "a name with the prefix hy is not allowed",
+      "calls": [
+        [
+          "cookie",
+          [
+            "\"hy-keep\"",
+            "\"v\""
+          ]
+        ]
+      ],
+      "headers": [],
+      "error": "cookie name hy-keep is not allowed (HY-52)",
+      "class": "value"
+    },
+    {
+      "id": "a_name_that_starts_with_a_digit_is_not_allowed",
+      "label": "a name that starts with a digit is not allowed",
+      "calls": [
+        [
+          "cookie",
+          [
+            "\"1a\"",
+            "\"v\""
+          ]
+        ]
+      ],
+      "headers": [],
+      "error": "cookie name 1a is not allowed (HY-52)",
+      "class": "value"
+    },
+    {
+      "id": "an_empty_name_is_not_allowed",
+      "label": "an empty name is not allowed",
+      "calls": [
+        [
+          "cookie",
+          [
+            "\"\"",
+            "\"v\""
+          ]
+        ]
+      ],
+      "headers": [],
+      "error": "cookie name  is not allowed (HY-52)",
+      "class": "value"
+    },
+    {
+      "id": "a_name_with_a_line_feed_at_its_end_is_not_allowed",
+      "label": "a name with a line feed at its end is not allowed",
+      "calls": [
+        [
+          "cookie",
+          [
+            "\"a\\n\"",
+            "\"v\""
+          ]
+        ]
+      ],
+      "headers": [],
+      "error": "cookie name a\n is not allowed (HY-52)",
+      "class": "value"
+    },
+    {
+      "id": "a_value_with_a_space_is_not_allowed",
+      "label": "a value with a space is not allowed",
+      "calls": [
+        [
+          "cookie",
+          [
+            "\"session\"",
+            "\"a b\""
+          ]
+        ]
+      ],
+      "headers": [],
+      "error": "cookie value of session has a character that is not allowed (HY-52)",
+      "class": "value"
+    },
+    {
+      "id": "an_empty_value_is_not_allowed",
+      "label": "an empty value is not allowed",
+      "calls": [
+        [
+          "cookie",
+          [
+            "\"session\"",
+            "\"\""
+          ]
+        ]
+      ],
+      "headers": [],
+      "error": "cookie value of session has a character that is not allowed (HY-52)",
+      "class": "value"
+    },
+    {
+      "id": "a_negative_max_age_is_not_allowed",
+      "label": "a negative max age is not allowed",
+      "calls": [
+        [
+          "cookie",
+          [
+            "\"session\"",
+            "\"v\"",
+            "-1"
+          ]
+        ]
+      ],
+      "headers": [],
+      "error": "cookie session has a negative Max-Age (HY-52)",
+      "class": "value"
+    },
+    {
+      "id": "a_name_that_is_not_a_string_fails_with_its_type",
+      "label": "a name that is not a string fails with its type",
+      "calls": [
+        [
+          "cookie",
+          [
+            "5",
+            "\"v\""
+          ]
+        ]
+      ],
+      "headers": [],
+      "error": "a cookie name is not a string (HY-52)",
+      "class": "type"
+    },
+    {
+      "id": "a_value_that_is_not_a_string_fails_with_its_type",
+      "label": "a value that is not a string fails with its type",
+      "calls": [
+        [
+          "cookie",
+          [
+            "\"a\"",
+            "5"
+          ]
+        ]
+      ],
+      "headers": [],
+      "error": "a cookie value is not a string (HY-52)",
+      "class": "type"
+    },
+    {
+      "id": "the_types_are_checked_before_the_values",
+      "label": "the types are checked before the values",
+      "calls": [
+        [
+          "cookie",
+          [
+            "\"X\"",
+            "5"
+          ]
+        ]
+      ],
+      "headers": [],
+      "error": "a cookie value is not a string (HY-52)",
+      "class": "type"
+    },
+    {
+      "id": "a_max_age_with_a_fraction_is_not_an_integer",
+      "label": "a max age with a fraction is not an integer",
+      "calls": [
+        [
+          "cookie",
+          [
+            "\"a\"",
+            "\"b\"",
+            "1.5"
+          ]
+        ]
+      ],
+      "headers": [],
+      "error": "a Max-Age is not an integer within ±(2^53 − 1) (HY-52)",
+      "class": "type"
+    },
+    {
+      "id": "a_max_age_of_true_is_not_an_integer",
+      "label": "a max age of true is not an integer",
+      "calls": [
+        [
+          "cookie",
+          [
+            "\"a\"",
+            "\"b\"",
+            "true"
+          ]
+        ]
+      ],
+      "headers": [],
+      "error": "a Max-Age is not an integer within ±(2^53 − 1) (HY-52)",
+      "class": "type"
+    },
+    {
+      "id": "a_max_age_that_is_a_string_is_not_an_integer",
+      "label": "a max age that is a string is not an integer",
+      "calls": [
+        [
+          "cookie",
+          [
+            "\"a\"",
+            "\"b\"",
+            "\"60\""
+          ]
+        ]
+      ],
+      "headers": [],
+      "error": "a Max-Age is not an integer within ±(2^53 − 1) (HY-52)",
+      "class": "type"
+    },
+    {
+      "id": "a_max_age_above_the_safe_range_is_not_an_integer",
+      "label": "a max age above the safe range is not an integer",
+      "calls": [
+        [
+          "cookie",
+          [
+            "\"a\"",
+            "\"b\"",
+            "9007199254740992"
+          ]
+        ]
+      ],
+      "headers": [],
+      "error": "a Max-Age is not an integer within ±(2^53 − 1) (HY-52)",
+      "class": "type"
+    },
+    {
+      "id": "a_negative_max_age_outside_the_safe_range_fails_with_its_type",
+      "label": "a negative max age outside the safe range fails with its type",
+      "calls": [
+        [
+          "cookie",
+          [
+            "\"a\"",
+            "\"b\"",
+            "-9007199254740992"
+          ]
+        ]
+      ],
+      "headers": [],
+      "error": "a Max-Age is not an integer within ±(2^53 − 1) (HY-52)",
+      "class": "type"
+    },
+    {
+      "id": "a_failed_cookie_keeps_the_cookies_before_it",
+      "label": "a failed cookie keeps the cookies before it",
+      "calls": [
+        [
+          "cookie",
+          [
+            "\"a\"",
+            "\"1\""
+          ]
+        ],
+        [
+          "cookie",
+          [
+            "\"X\"",
+            "\"2\""
+          ]
+        ],
+        [
+          "cookie",
+          [
+            "\"b\"",
+            "\"3\""
+          ]
+        ]
+      ],
+      "headers": [
+        "a=1; Path=/; HttpOnly; SameSite=Lax"
+      ],
+      "error": "cookie name X is not allowed (HY-52)",
+      "class": "value"
+    },
+    {
+      "id": "a_removed_cookie_with_a_name_that_is_not_allowed_fails",
+      "label": "a removed cookie with a name that is not allowed fails",
+      "calls": [
+        [
+          "removeCookie",
+          [
+            "\"X\""
+          ]
+        ]
+      ],
+      "headers": [],
+      "error": "cookie name X is not allowed (HY-52)",
+      "class": "value"
+    },
+    {
+      "id": "a_removed_cookie_with_a_name_that_is_not_a_string_fails_with_its_type",
+      "label": "a removed cookie with a name that is not a string fails with its type",
+      "calls": [
+        [
+          "removeCookie",
+          [
+            "5"
+          ]
+        ]
+      ],
+      "headers": [],
+      "error": "a cookie name is not a string (HY-52)",
+      "class": "type"
+    }
+  ],
+  "notes": [
+    {
+      "id": "no_notes_are_empty",
+      "label": "no notes are empty",
+      "calls": [],
+      "notes": [],
+      "error": null,
+      "class": null
+    },
+    {
+      "id": "a_note_of_the_same_name_replaces_its_value_at_its_place",
+      "label": "a note of the same name replaces its value at its place",
+      "calls": [
+        [
+          "note",
+          [
+            "\"a\"",
+            "1"
+          ]
+        ],
+        [
+          "note",
+          [
+            "\"b\"",
+            "2"
+          ]
+        ],
+        [
+          "note",
+          [
+            "\"a\"",
+            "3"
+          ]
+        ]
+      ],
+      "notes": [
+        [
+          "a",
+          3
+        ],
+        [
+          "b",
+          2
+        ]
+      ],
+      "error": null,
+      "class": null
+    },
+    {
+      "id": "a_note_holds_any_value",
+      "label": "a note holds any value",
+      "calls": [
+        [
+          "note",
+          [
+            "\"m\"",
+            "{\"x\": [1, null, \"t\"]}"
+          ]
+        ],
+        [
+          "note",
+          [
+            "\"n\"",
+            "null"
+          ]
+        ]
+      ],
+      "notes": [
+        [
+          "m",
+          {
+            "x": [
+              1,
+              null,
+              "t"
+            ]
+          }
+        ],
+        [
+          "n",
+          null
+        ]
+      ],
+      "error": null,
+      "class": null
+    },
+    {
+      "id": "decimal_note_names_keep_their_values_and_places",
+      "label": "decimal note names keep their values and places",
+      "calls": [
+        [
+          "note",
+          [
+            "\"5\"",
+            "\"x\""
+          ]
+        ],
+        [
+          "note",
+          [
+            "\"6\"",
+            "\"y\""
+          ]
+        ],
+        [
+          "note",
+          [
+            "\"5\"",
+            "\"z\""
+          ]
+        ]
+      ],
+      "notes": [
+        [
+          "5",
+          "z"
+        ],
+        [
+          "6",
+          "y"
+        ]
+      ],
+      "error": null,
+      "class": null
+    },
+    {
+      "id": "the_note_names_0_and_1_stay_names",
+      "label": "the note names 0 and 1 stay names",
+      "calls": [
+        [
+          "note",
+          [
+            "\"0\"",
+            "\"x\""
+          ]
+        ],
+        [
+          "note",
+          [
+            "\"1\"",
+            "\"y\""
+          ]
+        ]
+      ],
+      "notes": [
+        [
+          "0",
+          "x"
+        ],
+        [
+          "1",
+          "y"
+        ]
+      ],
+      "error": null,
+      "class": null
+    },
+    {
+      "id": "a_note_name_that_is_not_a_string_fails_with_its_type",
+      "label": "a note name that is not a string fails with its type",
+      "calls": [
+        [
+          "note",
+          [
+            "\"a\"",
+            "1"
+          ]
+        ],
+        [
+          "note",
+          [
+            "5",
+            "2"
+          ]
+        ]
+      ],
+      "notes": [
+        [
+          "a",
+          1
+        ]
+      ],
+      "error": "a note name is not a string (HY-60)",
+      "class": "type"
+    }
+  ],
+  "referrerPolicy": [
+    {
+      "id": "no_referrer_policy_is_null_and_no_header",
+      "label": "no referrer policy is null and no header",
+      "calls": [],
+      "value": null,
+      "headers": {},
+      "error": null,
+      "class": null
+    },
+    {
+      "id": "the_referrer_policy_no_referrer_is_taken",
+      "label": "the referrer policy no-referrer is taken",
+      "calls": [
+        [
+          "referrerPolicy",
+          [
+            "\"no-referrer\""
+          ]
+        ]
+      ],
+      "value": "no-referrer",
+      "headers": {
+        "Referrer-Policy": "no-referrer"
+      },
+      "error": null,
+      "class": null
+    },
+    {
+      "id": "the_referrer_policy_no_referrer_when_downgrade_is_taken",
+      "label": "the referrer policy no-referrer-when-downgrade is taken",
+      "calls": [
+        [
+          "referrerPolicy",
+          [
+            "\"no-referrer-when-downgrade\""
+          ]
+        ]
+      ],
+      "value": "no-referrer-when-downgrade",
+      "headers": {
+        "Referrer-Policy": "no-referrer-when-downgrade"
+      },
+      "error": null,
+      "class": null
+    },
+    {
+      "id": "the_referrer_policy_origin_is_taken",
+      "label": "the referrer policy origin is taken",
+      "calls": [
+        [
+          "referrerPolicy",
+          [
+            "\"origin\""
+          ]
+        ]
+      ],
+      "value": "origin",
+      "headers": {
+        "Referrer-Policy": "origin"
+      },
+      "error": null,
+      "class": null
+    },
+    {
+      "id": "the_referrer_policy_origin_when_cross_origin_is_taken",
+      "label": "the referrer policy origin-when-cross-origin is taken",
+      "calls": [
+        [
+          "referrerPolicy",
+          [
+            "\"origin-when-cross-origin\""
+          ]
+        ]
+      ],
+      "value": "origin-when-cross-origin",
+      "headers": {
+        "Referrer-Policy": "origin-when-cross-origin"
+      },
+      "error": null,
+      "class": null
+    },
+    {
+      "id": "the_referrer_policy_same_origin_is_taken",
+      "label": "the referrer policy same-origin is taken",
+      "calls": [
+        [
+          "referrerPolicy",
+          [
+            "\"same-origin\""
+          ]
+        ]
+      ],
+      "value": "same-origin",
+      "headers": {
+        "Referrer-Policy": "same-origin"
+      },
+      "error": null,
+      "class": null
+    },
+    {
+      "id": "the_referrer_policy_strict_origin_is_taken",
+      "label": "the referrer policy strict-origin is taken",
+      "calls": [
+        [
+          "referrerPolicy",
+          [
+            "\"strict-origin\""
+          ]
+        ]
+      ],
+      "value": "strict-origin",
+      "headers": {
+        "Referrer-Policy": "strict-origin"
+      },
+      "error": null,
+      "class": null
+    },
+    {
+      "id": "the_referrer_policy_strict_origin_when_cross_origin_is_taken",
+      "label": "the referrer policy strict-origin-when-cross-origin is taken",
+      "calls": [
+        [
+          "referrerPolicy",
+          [
+            "\"strict-origin-when-cross-origin\""
+          ]
+        ]
+      ],
+      "value": "strict-origin-when-cross-origin",
+      "headers": {
+        "Referrer-Policy": "strict-origin-when-cross-origin"
+      },
+      "error": null,
+      "class": null
+    },
+    {
+      "id": "the_referrer_policy_unsafe_url_is_taken",
+      "label": "the referrer policy unsafe-url is taken",
+      "calls": [
+        [
+          "referrerPolicy",
+          [
+            "\"unsafe-url\""
+          ]
+        ]
+      ],
+      "value": "unsafe-url",
+      "headers": {
+        "Referrer-Policy": "unsafe-url"
+      },
+      "error": null,
+      "class": null
+    },
+    {
+      "id": "an_empty_referrer_policy_is_not_a_token",
+      "label": "an empty referrer policy is not a token",
+      "calls": [
+        [
+          "referrerPolicy",
+          [
+            "\"\""
+          ]
+        ]
+      ],
+      "value": null,
+      "headers": {},
+      "error": "Referrer-Policy  is not a token of the Referrer-Policy specification (HY-103)",
+      "class": "value"
+    },
+    {
+      "id": "the_referrer_policy_none_is_not_a_token",
+      "label": "the referrer policy none is not a token",
+      "calls": [
+        [
+          "referrerPolicy",
+          [
+            "\"none\""
+          ]
+        ]
+      ],
+      "value": null,
+      "headers": {},
+      "error": "Referrer-Policy none is not a token of the Referrer-Policy specification (HY-103)",
+      "class": "value"
+    },
+    {
+      "id": "a_referrer_policy_in_upper_case_is_not_a_token",
+      "label": "a referrer policy in upper case is not a token",
+      "calls": [
+        [
+          "referrerPolicy",
+          [
+            "\"NO-REFERRER\""
+          ]
+        ]
+      ],
+      "value": null,
+      "headers": {},
+      "error": "Referrer-Policy NO-REFERRER is not a token of the Referrer-Policy specification (HY-103)",
+      "class": "value"
+    },
+    {
+      "id": "the_referrer_policy_unsafe_is_not_a_token",
+      "label": "the referrer policy unsafe is not a token",
+      "calls": [
+        [
+          "referrerPolicy",
+          [
+            "\"unsafe\""
+          ]
+        ]
+      ],
+      "value": null,
+      "headers": {},
+      "error": "Referrer-Policy unsafe is not a token of the Referrer-Policy specification (HY-103)",
+      "class": "value"
+    },
+    {
+      "id": "a_list_of_referrer_policies_is_not_a_token",
+      "label": "a list of referrer policies is not a token",
+      "calls": [
+        [
+          "referrerPolicy",
+          [
+            "\"origin, same-origin\""
+          ]
+        ]
+      ],
+      "value": null,
+      "headers": {},
+      "error": "Referrer-Policy origin, same-origin is not a token of the Referrer-Policy specification (HY-103)",
+      "class": "value"
+    },
+    {
+      "id": "a_referrer_policy_with_a_space_at_its_end_is_not_a_token",
+      "label": "a referrer policy with a space at its end is not a token",
+      "calls": [
+        [
+          "referrerPolicy",
+          [
+            "\"no-referrer \""
+          ]
+        ]
+      ],
+      "value": null,
+      "headers": {},
+      "error": "Referrer-Policy no-referrer  is not a token of the Referrer-Policy specification (HY-103)",
+      "class": "value"
+    },
+    {
+      "id": "a_later_referrer_policy_replaces_the_value",
+      "label": "a later referrer policy replaces the value",
+      "calls": [
+        [
+          "referrerPolicy",
+          [
+            "\"origin\""
+          ]
+        ],
+        [
+          "referrerPolicy",
+          [
+            "\"same-origin\""
+          ]
+        ]
+      ],
+      "value": "same-origin",
+      "headers": {
+        "Referrer-Policy": "same-origin"
+      },
+      "error": null,
+      "class": null
+    },
+    {
+      "id": "a_referrer_policy_of_null_fails_with_its_type",
+      "label": "a referrer policy of null fails with its type",
+      "calls": [
+        [
+          "referrerPolicy",
+          [
+            "null"
+          ]
+        ]
+      ],
+      "value": null,
+      "headers": {},
+      "error": "a Referrer-Policy is not a string (HY-103)",
+      "class": "type"
+    }
+  ],
+  "status": [
+    {
+      "id": "no_status_is_null",
+      "label": "no status is null",
+      "calls": [],
+      "value": null,
+      "error": null,
+      "class": null
+    },
+    {
+      "id": "the_status_403_is_taken",
+      "label": "the status 403 is taken",
+      "calls": [
+        [
+          "status",
+          [
+            "403"
+          ]
+        ]
+      ],
+      "value": 403,
+      "error": null,
+      "class": null
+    },
+    {
+      "id": "the_status_403_as_a_float_with_an_integer_value_is_taken",
+      "label": "the status 403 as a float with an integer value is taken",
+      "calls": [
+        [
+          "status",
+          [
+            "403.0"
+          ]
+        ]
+      ],
+      "value": 403,
+      "error": null,
+      "class": null
+    },
+    {
+      "id": "the_status_401_is_not_403",
+      "label": "the status 401 is not 403",
+      "calls": [
+        [
+          "status",
+          [
+            "401"
+          ]
+        ]
+      ],
+      "value": null,
+      "error": "page status 401 of a reply is not 403 (HY-69)",
+      "class": "value"
+    },
+    {
+      "id": "the_status_200_is_not_403",
+      "label": "the status 200 is not 403",
+      "calls": [
+        [
+          "status",
+          [
+            "200"
+          ]
+        ]
+      ],
+      "value": null,
+      "error": "page status 200 of a reply is not 403 (HY-69)",
+      "class": "value"
+    },
+    {
+      "id": "the_status_negative_zero_is_the_integer_0",
+      "label": "the status negative zero is the integer 0",
+      "calls": [
+        [
+          "status",
+          [
+            "-0.0"
+          ]
+        ]
+      ],
+      "value": null,
+      "error": "page status 0 of a reply is not 403 (HY-69)",
+      "class": "value"
+    },
+    {
+      "id": "the_largest_safe_status_is_written_in_decimal_digits",
+      "label": "the largest safe status is written in decimal digits",
+      "calls": [
+        [
+          "status",
+          [
+            "9007199254740991"
+          ]
+        ]
+      ],
+      "value": null,
+      "error": "page status 9007199254740991 of a reply is not 403 (HY-69)",
+      "class": "value"
+    },
+    {
+      "id": "a_status_that_is_a_string_fails_with_its_type",
+      "label": "a status that is a string fails with its type",
+      "calls": [
+        [
+          "status",
+          [
+            "\"403\""
+          ]
+        ]
+      ],
+      "value": null,
+      "error": "a page status of a reply is not an integer within ±(2^53 − 1) (HY-69)",
+      "class": "type"
+    },
+    {
+      "id": "a_status_of_true_fails_with_its_type",
+      "label": "a status of true fails with its type",
+      "calls": [
+        [
+          "status",
+          [
+            "true"
+          ]
+        ]
+      ],
+      "value": null,
+      "error": "a page status of a reply is not an integer within ±(2^53 − 1) (HY-69)",
+      "class": "type"
+    },
+    {
+      "id": "a_status_with_a_fraction_fails_with_its_type",
+      "label": "a status with a fraction fails with its type",
+      "calls": [
+        [
+          "status",
+          [
+            "403.5"
+          ]
+        ]
+      ],
+      "value": null,
+      "error": "a page status of a reply is not an integer within ±(2^53 − 1) (HY-69)",
+      "class": "type"
+    },
+    {
+      "id": "a_status_above_the_safe_range_fails_with_its_type",
+      "label": "a status above the safe range fails with its type",
+      "calls": [
+        [
+          "status",
+          [
+            "9007199254740993"
+          ]
+        ]
+      ],
+      "value": null,
+      "error": "a page status of a reply is not an integer within ±(2^53 − 1) (HY-69)",
+      "class": "type"
+    }
+  ]
+}

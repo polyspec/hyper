@@ -4877,7 +4877,8 @@
       "cases": [
         "contracts/reply.json",
         "contracts/app.json",
-        "tests/legacy/app-before-s3b.json"
+        "tests/legacy/app-before-s3b.json",
+        "tests/legacy/reply-before-s3b.json"
       ],
       "units": [
         {
@@ -17216,11 +17217,8 @@
       "fixtures": {},
       "sections": {
         "cookies": {
-          "runners": [
-            "php",
-            "node",
-            "python"
-          ],
+          "runners": [],
+          "fixedCopy": "reply-before-s3b.json",
           "uses": [],
           "fields": {
             "id": {
@@ -17257,11 +17255,8 @@
           ]
         },
         "cacheControl": {
-          "runners": [
-            "php",
-            "node",
-            "python"
-          ],
+          "runners": [],
+          "fixedCopy": "reply-before-s3b.json",
           "uses": [],
           "fields": {
             "id": {
@@ -17293,11 +17288,8 @@
           ]
         },
         "referrerPolicy": {
-          "runners": [
-            "php",
-            "node",
-            "python"
-          ],
+          "runners": [],
+          "fixedCopy": "reply-before-s3b.json",
           "uses": [],
           "fields": {
             "id": {
@@ -17337,11 +17329,8 @@
           ]
         },
         "status": {
-          "runners": [
-            "php",
-            "node",
-            "python"
-          ],
+          "runners": [],
+          "fixedCopy": "reply-before-s3b.json",
           "uses": [],
           "fields": {
             "id": {
@@ -17373,11 +17362,8 @@
           ]
         },
         "notes": {
-          "runners": [
-            "php",
-            "node",
-            "python"
-          ],
+          "runners": [],
+          "fixedCopy": "reply-before-s3b.json",
           "uses": [],
           "fields": {
             "id": {
