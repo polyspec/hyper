@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 5e622be9b9c124a9eeb7ee74a74a42709f706fbeffa99f7770584cb1858df72a -->
+<!-- source-sha256: 8472e5488acd0395a3689fa834c65e5f795b4a55ae387c8b240a8775abf82a6a -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- Rust core의 lock은 `polyspec-binding-core`를 binding branch 끝, 곧 binding crate를 쓰는 scaffold의 commit에 고정하고, 그 commit의 scaffold는 `packages/python/native/src/lib.rs`에 Python module `polyspec.hyper._binding._native`를 적는다. 그 contract check는 `packages/ts/package.json` `optionalDependencies`의 platform별 Node addon package(binding T-2)에도 CK-19를 보고하며, `docs/features.md`는 생성된 binding을 기다리는 다른 항목과 함께 그것을 적는다.
 
 - Rust core가 내장 데이터의 예약 템플릿을 준다(H-7, H-8 0단계): HY-31.9는 core의 규칙 하나가 `hyper/data.tpl`의 이름과 소스를 주므로 `program/templates/` 아래에 그 사본을 쓰지 않는 build와 모든 서버가 그것을 한 곳에서 받는다고 밝힌다. `render::data_template`가 그것을 interface contract의 record `data_template`로 돌려준다. `contracts/build.json`의 section `dataTemplate`이 그것을 담고, 명령 도구처럼 `packages/client/data-template.json`을 읽는 build runner와 core는 같은 이름과 소스를 준다.
 
