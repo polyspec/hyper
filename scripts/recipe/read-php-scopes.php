@@ -15,6 +15,16 @@ const SCOPE_NAMES = [T_STRING, T_NAME_QUALIFIED, T_NAME_FULLY_QUALIFIED, T_NAME_
 const SCOPE_ASSIGN = ['=', T_PLUS_EQUAL, T_MINUS_EQUAL, T_CONCAT_EQUAL, T_COALESCE_EQUAL, T_MUL_EQUAL, T_DIV_EQUAL];
 const SCOPE_MODIFIERS = [T_PUBLIC, T_PROTECTED, T_PRIVATE, T_READONLY, T_STATIC, T_VAR, T_ABSTRACT, T_FINAL];
 
+/** The depth of the braces after a token whose id is $id, at the depth $depth before it. */
+function braceDepth(int $depth, int|string $id): int
+{
+    if (in_array($id, ['{', T_CURLY_OPEN, T_DOLLAR_OPEN_CURLY_BRACES], true)) {
+        return $depth + 1;
+    }
+
+    return $id === '}' ? $depth - 1 : $depth;
+}
+
 /** The id of a token: the token constant, or the character of a one-character token. */
 function tokenId(mixed $token): int|string
 {
@@ -66,11 +76,7 @@ function phpTree(array $tokensOf): array
         $count = count($tokens);
         for ($i = 0; $i < $count; $i++) {
             $id = tokenId($tokens[$i]);
-            if (in_array($id, ['{', T_CURLY_OPEN, T_DOLLAR_OPEN_CURLY_BRACES], true)) {
-                $depth++;
-            } elseif ($id === '}') {
-                $depth--;
-            }
+            $depth = braceDepth($depth, $id);
             if ($id === T_NAMESPACE && $depth === 0) {
                 $namespace = tokenText($tokens[$i + 1]);
             }
@@ -313,11 +319,7 @@ function phpScopes(string $root, array $files, ?string $registry): array
             $depth = 0;
             for ($i = $from; $i < $to; $i++) {
                 $id = tokenId($t[$i]);
-                if (in_array($id, ['{', T_CURLY_OPEN, T_DOLLAR_OPEN_CURLY_BRACES], true)) {
-                    $depth++;
-                } elseif ($id === '}') {
-                    $depth--;
-                }
+                $depth = braceDepth($depth, $id);
                 if ($depth !== 0) {
                     continue;
                 }

@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
 import { applyMutation, readMutations, track } from '../../scripts/recipe/mutations.mts';
 import { checkStated } from '../../scripts/recipe/stated.mts';
-import type { ClassRef, Expr, Lang, Member, Parameter, Scope, SourceClass, Sources, Spec, Unit } from '../../scripts/recipe/types.mts';
+import { emptySources, type ClassRef, type Expr, type Lang, type Member, type Parameter, type Scope, type SourceClass, type Sources, type Spec, type Unit } from '../../scripts/recipe/types.mts';
 import { validators } from '../../scripts/recipe/validators.mts';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -272,13 +272,17 @@ const readerCommands: Record<'php' | 'node' | 'python', (root: string) => [strin
   node: (root) => [process.execPath, [path.join(repo, 'scripts', 'recipe', 'read-node.mts'), root]],
   python: (root) => [process.env.RECIPE_PYTHON ?? 'python3', [path.join(repo, 'scripts', 'recipe', 'read_python.py'), root]],
 };
-function readFixture(lang: 'php' | 'node' | 'python', root: string): Sources {
-  const [bin, prefix] = readerCommands[lang](root);
-  const result = spawnSync(bin, [...prefix, '--sources', 'src', '--tests', 'tests'], { encoding: 'utf8' });
+// Runs the reader of a language with the arguments and returns its output, which the schema of the reader output checks.
+function runReader(lang: 'php' | 'node' | 'python', bin: string, args: string[]): Sources {
+  const result = spawnSync(bin, args, { encoding: 'utf8' });
   assert.equal(result.status, 0, result.stderr);
   const out: unknown = JSON.parse(result.stdout);
   if (!schemas.sources(out)) throw new Error(`the ${lang} reader printed no reader output: ${JSON.stringify(schemas.sources.errors?.[0])}`);
   return out;
+}
+function readFixture(lang: 'php' | 'node' | 'python', root: string): Sources {
+  const [bin, prefix] = readerCommands[lang](root);
+  return runReader(lang, bin, [...prefix, '--sources', 'src', '--tests', 'tests']);
 }
 const readPython = (root: string): Sources => readFixture('python', root);
 
@@ -407,11 +411,7 @@ function readCopy(lang: Lang, dir: string, args: string[]): Sources {
     track(root);
     const [bin, prefix] = readerCommands[lang](root);
     const autoload = lang === 'php' ? ['--autoload', path.join(root, args.includes('src') ? 'autoload.php' : 'vendor/autoload.php')] : [];
-    const result = spawnSync(bin, [...prefix.slice(0, 2), ...autoload, ...args], { encoding: 'utf8' });
-    assert.equal(result.status, 0, result.stderr);
-    const out: unknown = JSON.parse(result.stdout);
-    if (!schemas.sources(out)) throw new Error(`the ${lang} reader printed no reader output: ${JSON.stringify(schemas.sources.errors?.[0])}`);
-    return out;
+    return runReader(lang, bin, [...prefix.slice(0, 2), ...autoload, ...args]);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
@@ -560,9 +560,9 @@ function stated(
       loops: s.loops ?? [],
       ...(s.returns === undefined ? {} : { returns: s.returns }),
     }));
-    return { language: lang, files: [], units: [], types: [], members: [], constants: [], exports: [], uses: [], tests: [], dynamicTests: [], calls: [], classes, scopes: all, registry: [] };
+    return { ...emptySources(lang), classes, scopes: all };
   };
-  const empty: Sources = { language: 'python', files: [], units: [], types: [], members: [], constants: [], exports: [], uses: [], tests: [], dynamicTests: [], calls: [], classes: [], scopes: [], registry: [] };
+  const empty: Sources = emptySources('python');
   const findings: string[] = [];
   checkStated({
     spec,

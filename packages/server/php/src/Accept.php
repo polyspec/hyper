@@ -63,20 +63,6 @@ final class Accept
     }
 
     /**
-     * Returns the media type of the request among the given types, or null when no type has a weight above 0
-     * (HY-116). A type takes the weight of its most specific matching range, and among the ranges of that
-     * specificity the one of the highest weight. The first type of the list wins a tie.
-     *
-     * @param list<string> $types media types in lower case, in the order of the ties
-     *
-     * @throws InvalidAccept when the value does not follow the grammar, or a weight is not a qvalue
-     */
-    public static function select(?string $value, array $types): ?string
-    {
-        return self::best(self::parse($value), $types)[0];
-    }
-
-    /**
      * Returns the type of the highest weight among the given types with that weight in thousandths, the first on a
      * tie, or null and 0 when no type has a weight above 0 (HY-116).
      *

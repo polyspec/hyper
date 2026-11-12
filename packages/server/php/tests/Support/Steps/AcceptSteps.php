@@ -38,10 +38,11 @@ final class AcceptSteps
         $value = $case->input('accept');
         $types = $case->input('types');
         try {
-            $selected = Accept::select(
-                is_string($value) ? $value : null,
+            // HY-116: the selection of the server, the best of the types among the parsed ranges.
+            $selected = Accept::best(
+                Accept::parse(is_string($value) ? $value : null),
                 is_array($types) ? array_values(array_filter($types, is_string(...))) : [],
-            );
+            )[0];
         } catch (InvalidAccept) {
             $case->compare('invalid', true);
 

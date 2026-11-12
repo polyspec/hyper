@@ -107,6 +107,11 @@ export type Sources = {
   registry: RegistryEntry[];
 };
 
+/** The reader output of a language that has read nothing yet. */
+export function emptySources<L extends Lang>(language: L): Sources & { language: L } {
+  return { language, files: [], units: [], types: [], members: [], constants: [], exports: [], uses: [], tests: [], dynamicTests: [], calls: [], classes: [], scopes: [], registry: [] };
+}
+
 /** A class that a file declares, named by that file and its name. */
 export type ClassRef = { file: string; name: string };
 

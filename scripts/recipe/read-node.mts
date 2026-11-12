@@ -8,7 +8,7 @@ import { readFileSync, statSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import ts from './typescript/node_modules/typescript/lib/typescript.js';
 import { NodeFiles, readRegistry, readScopes } from './read-node-scopes.mts';
-import type { Sources, Visibility } from './types.mts';
+import { emptySources, type Sources, type Visibility } from './types.mts';
 
 const [root, ...rest] = process.argv.slice(2);
 if (root === undefined) {
@@ -52,22 +52,7 @@ type Out = Sources & { language: 'node' };
 
 const sourceFiles = listFiles(groups.sources, (n) => n.endsWith('.ts') && !n.endsWith('.d.ts') && !basename(n).includes('.test.'));
 const testFiles = listFiles(groups.tests, (n) => /\.test\.m?ts$/.test(n));
-const out: Out = {
-  language: 'node',
-  files: sourceFiles,
-  units: [],
-  types: [],
-  members: [],
-  constants: [],
-  exports: [],
-  uses: [],
-  tests: [],
-  dynamicTests: [],
-  calls: [],
-  classes: [],
-  scopes: [],
-  registry: [],
-};
+const out: Out = { ...emptySources('node'), files: sourceFiles };
 
 function modifiers(node: ts.Node): readonly ts.ModifierLike[] {
   return ts.canHaveModifiers(node) ? (ts.getModifiers(node) ?? []) : [];
