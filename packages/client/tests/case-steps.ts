@@ -3,15 +3,15 @@
 // and the steps that the Node runner has too come from the shared steps of that tree, which take the functions of the
 // browser package as arguments.
 import { parse } from '@polyspec/template';
-import type { MapValue, Value } from '@polyspec/template/render';
+import { resolvePath, type MapValue, type Value } from '@polyspec/template/render';
 import type { CaseReader } from '../../ts/tests/case-reader.js';
 import type { Step } from '../../ts/tests/case-run.js';
-import { listOf, textOf } from '../../ts/tests/inputs.js';
+import { listOf, textMapOf, textOf } from '../../ts/tests/inputs.js';
 import { placesContext } from '../../ts/tests/steps/context-place.js';
 import { comparesParts } from '../../ts/tests/steps/parts-cases.js';
 import { readsCases } from '../../ts/tests/steps/reads-cases.js';
 import { routerSteps } from '../../ts/tests/steps/router-cases.js';
-import { applyKept, checkManifest, copyValue, createApplication, createEngine, decodeResponse, keepRead, renderDocument, renderParts, Router, stripBasePath, templateReads, withContext } from '../src/index.js';
+import { applyKept, checkManifest, copyValue, createApplication, createEngine, decodeResponse, keepRead, renderDocument, renderParts, Router, routeReads, stripBasePath, templateReads, withContext } from '../src/index.js';
 import { isValue } from './values.js';
 
 // Returns the map of a value of the case data, or throws for a value that is not a map.
@@ -88,6 +88,20 @@ async function partsCases(reader: CaseReader): Promise<void> {
   comparesParts(reader, rendered, document, manifest, route, regions);
 }
 
+// The routes step of contracts/reads.json (HY-73.18, HY-73.19): the read paths of the shared data and of every region of
+// each route of the manifest, which the build writes to reads.json.
+function routeReadsCases(reader: CaseReader): void {
+  const templates = new Map([...textMapOf(reader.input('templates'), 'templates')].map(([name, source]) => [name, parse(source, name)] as const));
+  const load = (name: string): ReturnType<typeof parse> => {
+    const found = templates.get(name);
+    if (found === undefined) throw new Error(`the template ${name} is missing`);
+    return found;
+  };
+  const manifest = reader.input('manifest');
+  if (!isValue(manifest)) throw new TypeError('hyper: the manifest of the case is not a value of the case file');
+  reader.compare('routes', routeReads(checkManifest(plain(manifest)), load, resolvePath));
+}
+
 // The steps of contracts/routes.json (HY-4 to HY-8) and contracts/rest.json (HY-49) with the router of the source.
 const routes = routerSteps({ Router, stripBasePath });
 
@@ -97,6 +111,7 @@ export const STEPS: Record<string, Step> = {
   'context.json:withContext': (reader) => placesContext(reader, withContext),
   'keep.json:cases': keepCases,
   'reads.json:cases': (reader) => readsCases(reader, { templateReads, keepRead, createEngine }),
+  'reads.json:routes': routeReadsCases,
   'routes.json:cases': routes.cases,
   'routes.json:baseCases': routes.baseCases,
   'routes.json:invalidPaths': routes.invalidPaths,

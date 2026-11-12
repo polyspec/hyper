@@ -61,7 +61,7 @@ impl Read {
     }
 
     /// The union of two nodes that read one value: a path read whole is read whole (HY-73.4).
-    fn union(&self, other: &Read) -> Read {
+    pub(crate) fn union(&self, other: &Read) -> Read {
         match (self, other) {
             (Read::Whole, _) | (_, Read::Whole) => Read::Whole,
             (
@@ -147,5 +147,69 @@ pub fn keep(value: &Value, read: &Read) -> Value {
         | Value::Str(_)
         | Value::Safe(_)
         | Value::Object(_) => value.clone(),
+    }
+}
+
+impl Read {
+    /// The value of a node as the build writes it (HY-73.23): `true` for a path read whole, and otherwise a map with
+    /// `keys`, when a key is read, and `each`, when every entry is read.
+    #[must_use]
+    pub fn to_value(&self) -> Value {
+        match self {
+            Read::Whole => Value::Bool(true),
+            Read::Part { keys, each } => {
+                let mut map = OrderedMap::new();
+                if !keys.is_empty() {
+                    let mut named = OrderedMap::with_capacity(keys.len());
+                    for (key, node) in keys {
+                        named.insert(key.clone(), node.to_value());
+                    }
+                    map.insert("keys".to_owned(), Value::Map(Arc::new(named)));
+                }
+                if let Some(each) = each {
+                    map.insert("each".to_owned(), each.to_value());
+                }
+                Value::Map(Arc::new(map))
+            }
+        }
+    }
+
+    /// The node that reads one path whole (HY-73.4); a step of `None` is `*`, every entry.
+    pub(crate) fn path(path: &[Option<String>]) -> Read {
+        let mut node = Read::Whole;
+        for step in path.iter().rev() {
+            node = match step {
+                None => Read::Part {
+                    keys: Vec::new(),
+                    each: Some(Box::new(node)),
+                },
+                Some(key) => Read::Part {
+                    keys: vec![(key.clone(), node)],
+                    each: None,
+                },
+            };
+        }
+        node
+    }
+
+    /// The node that reads one path in part: the entries of a loop (HY-73.14).
+    pub(crate) fn part(path: &[Option<String>]) -> Read {
+        let mut node = Read::Part {
+            keys: Vec::new(),
+            each: None,
+        };
+        for step in path.iter().rev() {
+            node = match step {
+                None => Read::Part {
+                    keys: Vec::new(),
+                    each: Some(Box::new(node)),
+                },
+                Some(key) => Read::Part {
+                    keys: vec![(key.clone(), node)],
+                    each: None,
+                },
+            };
+        }
+        node
     }
 }

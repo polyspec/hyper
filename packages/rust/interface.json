@@ -1198,6 +1198,75 @@
           "core": "polyspec_hyper::template_rules::problems"
         },
         {
+          "id": "rules.route_reads",
+          "name": [
+            "route",
+            "reads"
+          ],
+          "kind": "function",
+          "visibility": "internal",
+          "parameters": [
+            {
+              "name": [
+                "manifest"
+              ],
+              "type": "bytes",
+              "required": true
+            },
+            {
+              "name": [
+                "templates"
+              ],
+              "type": {
+                "map": "text"
+              },
+              "required": true
+            }
+          ],
+          "returns": "template_value",
+          "raises": [
+            "polyspec_hyper::Error::InvalidApplication",
+            "polyspec_hyper::Error::Template",
+            "polyspec_hyper::Error::DataModel"
+          ],
+          "wait": "none",
+          "core": "polyspec_hyper::read_paths::route_reads"
+        },
+        {
+          "id": "rules.template_reads",
+          "name": [
+            "template",
+            "reads"
+          ],
+          "kind": "function",
+          "visibility": "internal",
+          "parameters": [
+            {
+              "name": [
+                "templates"
+              ],
+              "type": {
+                "map": "text"
+              },
+              "required": true
+            },
+            {
+              "name": [
+                "name"
+              ],
+              "type": "text",
+              "required": true
+            }
+          ],
+          "returns": "template_value",
+          "raises": [
+            "polyspec_hyper::Error::InvalidApplication",
+            "polyspec_hyper::Error::Template"
+          ],
+          "wait": "none",
+          "core": "polyspec_hyper::read_paths::template_reads"
+        },
+        {
           "id": "rules.valid_context_header",
           "name": [
             "valid",

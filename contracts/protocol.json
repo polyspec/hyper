@@ -3407,6 +3407,12 @@
                       "koSource": "5eee8f6e4610f61c9d2dad5d662ce97c777b43fcafa943d2d2689b1980f9a2a3"
                     },
                     {
+                      "id": "HY-73.30",
+                      "en": "One rule of the Rust core computes the read paths of every route from the manifest and the sources of the templates, in the form of the routes of `reads.json` that the server reads when the application opens, and the read paths of one template.",
+                      "ko": "Rust core의 규칙 하나가 manifest와 템플릿 소스로 모든 라우트의 읽기 경로를, 서버가 애플리케이션을 열 때 읽는 `reads.json`의 routes 형태로 계산하고, 템플릿 하나의 읽기 경로도 계산한다.",
+                      "koSource": "57aafb9de2749fae863be25a79dc7c585856b94024b1bab89dd36de4c04948d6"
+                    },
+                    {
                       "id": "HY-73.25",
                       "en": "`data(region)` (HYC-11) returns the kept data, so a path that no template reads is not there.",
                       "ko": "`data(region)`(HYC-11)은 남긴 데이터를 돌려주므로, 어떤 템플릿도 읽지 않는 경로는 거기에 없다.",

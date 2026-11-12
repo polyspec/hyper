@@ -23,6 +23,7 @@ pub mod opening;
 pub mod orm;
 pub mod page;
 pub mod pipeline;
+pub mod read_paths;
 pub mod reads;
 pub mod render;
 pub mod reply;

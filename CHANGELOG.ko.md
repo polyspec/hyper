@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: ce272204372e68552680b465ef99752a7f0f96c0a769ff8bde8622ffc569c1f7 -->
+<!-- source-sha256: 566e91c3b67c868a74efbc4556d49fab66c2405d9acf688b63a228b9c9ff656c -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- Rust core가 읽기 경로를 계산한다(H-7, H-8 0단계): HY-73.30은 core의 규칙 하나가 manifest와 템플릿 소스로 모든 라우트의 읽기 경로를 `reads.json`의 routes 형태로, 그리고 템플릿 하나의 읽기 경로를 계산한다고 밝힌다. `read_paths::route_reads`와 `read_paths::template_reads`가 template 언어의 템플릿 AST로 HY-73.2~HY-73.20을 구현하고, interface contract가 이들을 적는다. `contracts/reads.json`의 section `routes`는 board 예제를 포함한 애플리케이션 셋의 읽기 경로를 담으며, browser runner가 `packages/client/src/reads.ts`의 `routeReads`로 그것을 계산한다. core는 이들에 같은 key 순서로 같은 읽기 경로를, section `cases`의 case 24개에 `templateReads`와 같은 읽기 경로를 주며, core의 pages가 그 값을 읽는다. 명령 도구와 Node 서버는 core를 부를 때까지(H-8) 브라우저 package를 유지한다.
 
 - Rust core가 HY-48.3의 템플릿 검사를 갖는다(H-7, H-8 0단계): HY-48.13은 core의 규칙 하나가 모든 문제를 템플릿 이름을 밝힌 줄로 `hx-*` 속성, layout의 배치, 각 라우트의 라우트 영역 순서로 준다고 밝히고, `template_rules::problems`가 manifest 바이트와 템플릿 소스에 대해 그것을 주며, interface contract는 이를 `template_problems`로 적는다. `contracts/manifest.json`의 section `templateChecks`는 script 시험의 regions fixture, `{# build}`, `{# title}`, `{# data}` 배치, 줄 번호를 가진 `hx-*` 속성, include와 배치된 템플릿을 거친 라우트 영역 등 case 13개를 담는다. build runner는 각 case를 `packages/cli/lib/template-rules.mjs`에 주고 core는 같은 문제를 준다. 명령 도구와 `make templates-check`는 명령 도구가 core를 부를 때까지(H-8) 이전 구현을 유지한다.
 

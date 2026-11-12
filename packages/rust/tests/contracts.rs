@@ -1805,3 +1805,54 @@ fn the_template_check_of_an_application() {
     }
     assert!(ran > 0);
 }
+
+/// The templates of a case: a map from template names to their sources.
+fn templates_of(case: &Value, key: &str) -> polyspec_hyper::steps::Map<String> {
+    let mut templates = polyspec_hyper::steps::Map::new();
+    for (name, source) in case[key].as_object().into_iter().flatten() {
+        templates.insert(name.clone(), text_of(source).to_owned());
+    }
+    templates
+}
+
+#[test]
+fn the_read_paths_of_a_template() {
+    // HY-73.2 to HY-73.17
+    use polyspec_hyper::read_paths::template_reads;
+    let file = cases("reads.json");
+    let mut ran = 0;
+    for case in group(&file, "cases") {
+        match template_reads(&templates_of(case, "templates"), text(case, "template")) {
+            // The keys of a node are a map: their order is no part of the read paths (HY-73.3).
+            Ok(reads) => assert_eq!(as_json(&reads), case["reads"], "{}", case["id"]),
+            Err(error) => panic!("{}: {error}", case["id"]),
+        }
+        ran += 1;
+    }
+    assert!(ran > 0);
+}
+
+#[test]
+fn the_read_paths_of_the_routes() {
+    // HY-73.18, HY-73.19, HY-73.23
+    use polyspec_hyper::read_paths::route_reads;
+    use polyspec_hyper::steps::route_reads as from_build;
+    let file = cases("reads.json");
+    let mut ran = 0;
+    for case in group(&file, "routes") {
+        let manifest = case["manifest"].to_string();
+        match route_reads(manifest.as_bytes(), &templates_of(case, "templates")) {
+            Ok(routes) => {
+                // The keys of a node are a map: their order is no part of the read paths (HY-73.3).
+                assert_eq!(as_json(&routes), case["routes"], "{}", case["id"]);
+                // The pages read the value as the build writes it (HY-73.23).
+                if let Err(error) = from_build(&routes) {
+                    panic!("{}: {error}", case["id"]);
+                }
+            }
+            Err(error) => panic!("{}: {error}", case["id"]),
+        }
+        ran += 1;
+    }
+    assert!(ran > 0);
+}

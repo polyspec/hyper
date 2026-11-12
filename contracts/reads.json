@@ -1,28 +1,1583 @@
 {
   "cases": [
-    { "id": "an_output_keeps_its_value_whole_and_removes_the_rest", "label": "an output keeps its value whole and removes the rest", "templates": {"page.tpl": "{= a.b}"}, "template": "page.tpl", "data": {"a": {"b": "x", "c": 2}, "d": 3}, "reads": {"keys": {"a": {"keys": {"b": true}}}}, "kept": {"a": {"b": "x"}} },
-    { "id": "an_unread_root_key_is_removed", "label": "an unread root key is removed", "templates": {"page.tpl": "{= title}"}, "template": "page.tpl", "data": {"title": "t", "secret": "s"}, "reads": {"keys": {"title": true}}, "kept": {"title": "t"} },
-    { "id": "a_loop_keeps_every_element_with_the_members_that_it_reads", "label": "a loop keeps every element with the members that it reads", "templates": {"page.tpl": "{@ p = posts}{= p.title}{/}"}, "template": "page.tpl", "data": {"posts": [{"title": "a", "id": "1"}, {"title": "b", "id": "2"}]}, "reads": {"keys": {"posts": {"each": {"keys": {"title": true}}}}}, "kept": {"posts": [{"title": "a"}, {"title": "b"}]} },
-    { "id": "a_loop_over_a_map_keeps_every_key", "label": "a loop over a map keeps every key", "templates": {"page.tpl": "{@ v = m}{= v.key_}{/}"}, "template": "page.tpl", "data": {"m": {"x": {"a": 1}, "y": {"a": 2}}}, "reads": {"keys": {"m": {"each": {}}}}, "kept": {"m": {"x": {}, "y": {}}} },
-    { "id": "an_output_loop_variable_keeps_every_element_whole", "label": "an output loop variable keeps every element whole", "templates": {"page.tpl": "{@ t = tags}{= t}{/}"}, "template": "page.tpl", "data": {"tags": ["a", "b"], "n": 1}, "reads": {"keys": {"tags": {"each": true}}}, "kept": {"tags": ["a", "b"]} },
-    { "id": "value_of_a_loop_variable_reads_the_element", "label": "value_ of a loop variable reads the element", "templates": {"page.tpl": "{@ v = list}{= v.value_.n}{/}"}, "template": "page.tpl", "data": {"list": [{"n": 1, "o": 2}]}, "reads": {"keys": {"list": {"each": {"keys": {"n": true}}}}}, "kept": {"list": [{"n": 1}]} },
-    { "id": "an_assignment_reads_through_its_alias", "label": "an assignment reads through its alias", "templates": {"page.tpl": "{:t = messages.board}{= t[\"list.heading\"]}"}, "template": "page.tpl", "data": {"messages": {"board": {"list.heading": "H", "list.empty": "E"}, "member": {"x": "y"}}}, "reads": {"keys": {"messages": {"keys": {"board": {"keys": {"list.heading": true}}}}, "t": {"keys": {"list.heading": true}}}}, "kept": {"messages": {"board": {"list.heading": "H"}}} },
-    { "id": "an_alias_assigned_after_its_use_reads_its_value", "label": "an alias assigned after its use reads its value", "templates": {"page.tpl": "{= x.a}{:x = obj}"}, "template": "page.tpl", "data": {"obj": {"a": 1, "b": 2}}, "reads": {"keys": {"x": {"keys": {"a": true}}, "obj": {"keys": {"a": true}}}}, "kept": {"obj": {"a": 1}} },
-    { "id": "a_condition_reads_its_test_whole", "label": "a condition reads its test whole", "templates": {"page.tpl": "{? user}{= user.name}{/}"}, "template": "page.tpl", "data": {"user": {"name": "n", "email": "e"}, "other": 1}, "reads": {"keys": {"user": true}}, "kept": {"user": {"name": "n", "email": "e"}} },
-    { "id": "a_function_argument_is_read_whole", "label": "a function argument is read whole", "templates": {"page.tpl": "{= json(cfg) | raw}"}, "template": "page.tpl", "data": {"cfg": {"a": 1}, "other": 2}, "reads": {"keys": {"cfg": true}}, "kept": {"cfg": {"a": 1}} },
-    { "id": "an_operator_reads_its_operands_whole", "label": "an operator reads its operands whole", "templates": {"page.tpl": "{= n + m.k}"}, "template": "page.tpl", "data": {"n": 1, "m": {"k": 2, "j": 3}}, "reads": {"keys": {"n": true, "m": {"keys": {"k": true}}}}, "kept": {"n": 1, "m": {"k": 2}} },
-    { "id": "an_index_with_a_literal_key_adds_the_key_and_a_list_keeps_its_length", "label": "an index with a literal key adds the key and a list keeps its length", "templates": {"page.tpl": "{= rows[1].name}"}, "template": "page.tpl", "data": {"rows": [{"name": "a", "x": 1}, {"name": "b", "x": 2}, {"name": "c"}]}, "reads": {"keys": {"rows": {"keys": {"1": {"keys": {"name": true}}}}}}, "kept": {"rows": [null, {"name": "b"}, null]} },
-    { "id": "an_index_with_another_key_reads_its_object_and_key_whole", "label": "an index with another key reads its object and key whole", "templates": {"page.tpl": "{= labels[key]}"}, "template": "page.tpl", "data": {"labels": {"a": "A", "b": "B"}, "key": "a", "z": 1}, "reads": {"keys": {"labels": true, "key": true}}, "kept": {"labels": {"a": "A", "b": "B"}, "key": "a"} },
-    { "id": "keeps_the_paths_of_both_sides", "label": "?? keeps the paths of both sides", "templates": {"page.tpl": "{:x = a ?? b}{= x.name}"}, "template": "page.tpl", "data": {"a": {"name": "A", "k": 1}}, "reads": {"keys": {"x": {"keys": {"name": true}}, "a": {"keys": {"name": true}}, "b": {"keys": {"name": true}}}}, "kept": {"a": {"name": "A"}} },
-    { "id": "a_ternary_keeps_the_paths_of_both_results_and_reads_its_test_whole", "label": "a ternary keeps the paths of both results and reads its test whole", "templates": {"page.tpl": "{:x = flag ? (a) : b}{= x.n}"}, "template": "page.tpl", "data": {"flag": true, "a": {"n": 1, "m": 2}, "b": {"n": 3, "m": 4}}, "reads": {"keys": {"x": {"keys": {"n": true}}, "flag": true, "a": {"keys": {"n": true}}, "b": {"keys": {"n": true}}}}, "kept": {"flag": true, "a": {"n": 1}, "b": {"n": 3}} },
-    { "id": "a_list_literal_reads_its_items_whole", "label": "a list literal reads its items whole", "templates": {"page.tpl": "{:l = [a, b]}{= l[1]}"}, "template": "page.tpl", "data": {"a": {"x": 1}, "b": 2, "c": 3}, "reads": {"keys": {"l": {"keys": {"1": true}}, "a": true, "b": true}}, "kept": {"a": {"x": 1}, "b": 2} },
-    { "id": "an_include_reads_in_the_scope_of_the_including_template", "label": "an include reads in the scope of the including template", "templates": {"page.tpl": "{:c = card}{+ part.tpl}", "part.tpl": "{= c.title}"}, "template": "page.tpl", "data": {"card": {"title": "T", "body": "B"}}, "reads": {"keys": {"c": {"keys": {"title": true}}, "card": {"keys": {"title": true}}}}, "kept": {"card": {"title": "T"}} },
-    { "id": "a_block_reads_its_template_with_its_scope_arguments", "label": "a block reads its template with its scope arguments", "templates": {"page.tpl": "{# box.tpl item:post}", "box.tpl": "{= item.title}{= site}"}, "template": "page.tpl", "data": {"post": {"title": "T", "id": 1}, "site": "S", "other": 1}, "reads": {"keys": {"post": {"keys": {"title": true}}, "site": true}}, "kept": {"post": {"title": "T"}, "site": "S"} },
-    { "id": "a_block_that_places_a_template_already_being_placed_reads_nothing", "label": "a block that places a template already being placed reads nothing", "templates": {"page.tpl": "{# tree.tpl node:root}", "tree.tpl": "{@ c = node.children}{# tree.tpl node:c}{/}{= node.name}"}, "template": "page.tpl", "data": {"root": {"name": "r", "children": [], "y": 2}, "z": 1}, "reads": {"keys": {"root": {"keys": {"children": {"each": {}}, "name": true}}}}, "kept": {"root": {"name": "r", "children": []}} },
-    { "id": "a_map_that_loses_every_key_stays_a_map", "label": "a map that loses every key stays a map", "templates": {"page.tpl": "{= m.a}"}, "template": "page.tpl", "data": {"m": {"b": 1}}, "reads": {"keys": {"m": {"keys": {"a": true}}}}, "kept": {"m": {}} },
-    { "id": "a_scalar_under_a_path_that_continues_stays_as_it_is", "label": "a scalar under a path that continues stays as it is", "templates": {"page.tpl": "{= s.x}"}, "template": "page.tpl", "data": {"s": "text"}, "reads": {"keys": {"s": {"keys": {"x": true}}}}, "kept": {"s": "text"} },
-    { "id": "a_loop_variable_that_rebinds_a_name_that_an_earlier_assignment_read_has_only_the_paths_of_its_loop_source_in_the_loop_body", "label": "a loop variable that rebinds a name that an earlier assignment read has only the paths of its loop source in the loop body", "templates": {"page.tpl": "{:p = page.x}{@ page = p.items}{= page.title}{/}"}, "template": "page.tpl", "data": {"page": {"x": {"items": [{"title": "a", "body": "b"}, {"title": "c", "body": "d"}], "y": 1}, "z": 2}, "w": 3}, "reads": {"keys": {"page": {"keys": {"x": {"keys": {"items": {"each": {"keys": {"title": true}}}}}}}, "p": {"keys": {"items": {"each": {"keys": {"title": true}}}}}}}, "kept": {"page": {"x": {"items": [{"title": "a"}, {"title": "c"}]}}} },
-    { "id": "a_loop_variable_that_rebinds_the_name_of_the_source_of_an_earlier_assignment_keeps_only_the_entries_of_that_source", "label": "a loop variable that rebinds the name of the source of an earlier assignment keeps only the entries of that source", "templates": {"page.tpl": "{:p = q.x}{@ q = p.items}{/}"}, "template": "page.tpl", "data": {"q": {"x": {"items": [{"a": 1}, {"a": 2}], "y": 1}, "z": 2}}, "reads": {"keys": {"q": {"keys": {"x": {"keys": {"items": {"each": {}}}}}}, "p": {"keys": {"items": {"each": {}}}}}}, "kept": {"q": {"x": {"items": [{}, {}]}}} },
-    {"id": "a_template_renders_alone_with_its_data", "label": "a template rendered alone with the data count 3 gives its text with the value (HY-13.1)", "templates": {"side.tpl": "<b>{= count}</b>\n"}, "template": "side.tpl", "data": {"count": 3}, "reads": {"keys": {"count": true}}, "kept": {"count": 3}, "text": "<b>3</b>\n"}
+    {
+      "id": "an_output_keeps_its_value_whole_and_removes_the_rest",
+      "label": "an output keeps its value whole and removes the rest",
+      "templates": {
+        "page.tpl": "{= a.b}"
+      },
+      "template": "page.tpl",
+      "data": {
+        "a": {
+          "b": "x",
+          "c": 2
+        },
+        "d": 3
+      },
+      "reads": {
+        "keys": {
+          "a": {
+            "keys": {
+              "b": true
+            }
+          }
+        }
+      },
+      "kept": {
+        "a": {
+          "b": "x"
+        }
+      }
+    },
+    {
+      "id": "an_unread_root_key_is_removed",
+      "label": "an unread root key is removed",
+      "templates": {
+        "page.tpl": "{= title}"
+      },
+      "template": "page.tpl",
+      "data": {
+        "title": "t",
+        "secret": "s"
+      },
+      "reads": {
+        "keys": {
+          "title": true
+        }
+      },
+      "kept": {
+        "title": "t"
+      }
+    },
+    {
+      "id": "a_loop_keeps_every_element_with_the_members_that_it_reads",
+      "label": "a loop keeps every element with the members that it reads",
+      "templates": {
+        "page.tpl": "{@ p = posts}{= p.title}{/}"
+      },
+      "template": "page.tpl",
+      "data": {
+        "posts": [
+          {
+            "title": "a",
+            "id": "1"
+          },
+          {
+            "title": "b",
+            "id": "2"
+          }
+        ]
+      },
+      "reads": {
+        "keys": {
+          "posts": {
+            "each": {
+              "keys": {
+                "title": true
+              }
+            }
+          }
+        }
+      },
+      "kept": {
+        "posts": [
+          {
+            "title": "a"
+          },
+          {
+            "title": "b"
+          }
+        ]
+      }
+    },
+    {
+      "id": "a_loop_over_a_map_keeps_every_key",
+      "label": "a loop over a map keeps every key",
+      "templates": {
+        "page.tpl": "{@ v = m}{= v.key_}{/}"
+      },
+      "template": "page.tpl",
+      "data": {
+        "m": {
+          "x": {
+            "a": 1
+          },
+          "y": {
+            "a": 2
+          }
+        }
+      },
+      "reads": {
+        "keys": {
+          "m": {
+            "each": {}
+          }
+        }
+      },
+      "kept": {
+        "m": {
+          "x": {},
+          "y": {}
+        }
+      }
+    },
+    {
+      "id": "an_output_loop_variable_keeps_every_element_whole",
+      "label": "an output loop variable keeps every element whole",
+      "templates": {
+        "page.tpl": "{@ t = tags}{= t}{/}"
+      },
+      "template": "page.tpl",
+      "data": {
+        "tags": [
+          "a",
+          "b"
+        ],
+        "n": 1
+      },
+      "reads": {
+        "keys": {
+          "tags": {
+            "each": true
+          }
+        }
+      },
+      "kept": {
+        "tags": [
+          "a",
+          "b"
+        ]
+      }
+    },
+    {
+      "id": "value_of_a_loop_variable_reads_the_element",
+      "label": "value_ of a loop variable reads the element",
+      "templates": {
+        "page.tpl": "{@ v = list}{= v.value_.n}{/}"
+      },
+      "template": "page.tpl",
+      "data": {
+        "list": [
+          {
+            "n": 1,
+            "o": 2
+          }
+        ]
+      },
+      "reads": {
+        "keys": {
+          "list": {
+            "each": {
+              "keys": {
+                "n": true
+              }
+            }
+          }
+        }
+      },
+      "kept": {
+        "list": [
+          {
+            "n": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "an_assignment_reads_through_its_alias",
+      "label": "an assignment reads through its alias",
+      "templates": {
+        "page.tpl": "{:t = messages.board}{= t[\"list.heading\"]}"
+      },
+      "template": "page.tpl",
+      "data": {
+        "messages": {
+          "board": {
+            "list.heading": "H",
+            "list.empty": "E"
+          },
+          "member": {
+            "x": "y"
+          }
+        }
+      },
+      "reads": {
+        "keys": {
+          "messages": {
+            "keys": {
+              "board": {
+                "keys": {
+                  "list.heading": true
+                }
+              }
+            }
+          },
+          "t": {
+            "keys": {
+              "list.heading": true
+            }
+          }
+        }
+      },
+      "kept": {
+        "messages": {
+          "board": {
+            "list.heading": "H"
+          }
+        }
+      }
+    },
+    {
+      "id": "an_alias_assigned_after_its_use_reads_its_value",
+      "label": "an alias assigned after its use reads its value",
+      "templates": {
+        "page.tpl": "{= x.a}{:x = obj}"
+      },
+      "template": "page.tpl",
+      "data": {
+        "obj": {
+          "a": 1,
+          "b": 2
+        }
+      },
+      "reads": {
+        "keys": {
+          "x": {
+            "keys": {
+              "a": true
+            }
+          },
+          "obj": {
+            "keys": {
+              "a": true
+            }
+          }
+        }
+      },
+      "kept": {
+        "obj": {
+          "a": 1
+        }
+      }
+    },
+    {
+      "id": "a_condition_reads_its_test_whole",
+      "label": "a condition reads its test whole",
+      "templates": {
+        "page.tpl": "{? user}{= user.name}{/}"
+      },
+      "template": "page.tpl",
+      "data": {
+        "user": {
+          "name": "n",
+          "email": "e"
+        },
+        "other": 1
+      },
+      "reads": {
+        "keys": {
+          "user": true
+        }
+      },
+      "kept": {
+        "user": {
+          "name": "n",
+          "email": "e"
+        }
+      }
+    },
+    {
+      "id": "a_function_argument_is_read_whole",
+      "label": "a function argument is read whole",
+      "templates": {
+        "page.tpl": "{= json(cfg) | raw}"
+      },
+      "template": "page.tpl",
+      "data": {
+        "cfg": {
+          "a": 1
+        },
+        "other": 2
+      },
+      "reads": {
+        "keys": {
+          "cfg": true
+        }
+      },
+      "kept": {
+        "cfg": {
+          "a": 1
+        }
+      }
+    },
+    {
+      "id": "an_operator_reads_its_operands_whole",
+      "label": "an operator reads its operands whole",
+      "templates": {
+        "page.tpl": "{= n + m.k}"
+      },
+      "template": "page.tpl",
+      "data": {
+        "n": 1,
+        "m": {
+          "k": 2,
+          "j": 3
+        }
+      },
+      "reads": {
+        "keys": {
+          "n": true,
+          "m": {
+            "keys": {
+              "k": true
+            }
+          }
+        }
+      },
+      "kept": {
+        "n": 1,
+        "m": {
+          "k": 2
+        }
+      }
+    },
+    {
+      "id": "an_index_with_a_literal_key_adds_the_key_and_a_list_keeps_its_length",
+      "label": "an index with a literal key adds the key and a list keeps its length",
+      "templates": {
+        "page.tpl": "{= rows[1].name}"
+      },
+      "template": "page.tpl",
+      "data": {
+        "rows": [
+          {
+            "name": "a",
+            "x": 1
+          },
+          {
+            "name": "b",
+            "x": 2
+          },
+          {
+            "name": "c"
+          }
+        ]
+      },
+      "reads": {
+        "keys": {
+          "rows": {
+            "keys": {
+              "1": {
+                "keys": {
+                  "name": true
+                }
+              }
+            }
+          }
+        }
+      },
+      "kept": {
+        "rows": [
+          null,
+          {
+            "name": "b"
+          },
+          null
+        ]
+      }
+    },
+    {
+      "id": "an_index_with_another_key_reads_its_object_and_key_whole",
+      "label": "an index with another key reads its object and key whole",
+      "templates": {
+        "page.tpl": "{= labels[key]}"
+      },
+      "template": "page.tpl",
+      "data": {
+        "labels": {
+          "a": "A",
+          "b": "B"
+        },
+        "key": "a",
+        "z": 1
+      },
+      "reads": {
+        "keys": {
+          "labels": true,
+          "key": true
+        }
+      },
+      "kept": {
+        "labels": {
+          "a": "A",
+          "b": "B"
+        },
+        "key": "a"
+      }
+    },
+    {
+      "id": "keeps_the_paths_of_both_sides",
+      "label": "?? keeps the paths of both sides",
+      "templates": {
+        "page.tpl": "{:x = a ?? b}{= x.name}"
+      },
+      "template": "page.tpl",
+      "data": {
+        "a": {
+          "name": "A",
+          "k": 1
+        }
+      },
+      "reads": {
+        "keys": {
+          "x": {
+            "keys": {
+              "name": true
+            }
+          },
+          "a": {
+            "keys": {
+              "name": true
+            }
+          },
+          "b": {
+            "keys": {
+              "name": true
+            }
+          }
+        }
+      },
+      "kept": {
+        "a": {
+          "name": "A"
+        }
+      }
+    },
+    {
+      "id": "a_ternary_keeps_the_paths_of_both_results_and_reads_its_test_whole",
+      "label": "a ternary keeps the paths of both results and reads its test whole",
+      "templates": {
+        "page.tpl": "{:x = flag ? (a) : b}{= x.n}"
+      },
+      "template": "page.tpl",
+      "data": {
+        "flag": true,
+        "a": {
+          "n": 1,
+          "m": 2
+        },
+        "b": {
+          "n": 3,
+          "m": 4
+        }
+      },
+      "reads": {
+        "keys": {
+          "x": {
+            "keys": {
+              "n": true
+            }
+          },
+          "flag": true,
+          "a": {
+            "keys": {
+              "n": true
+            }
+          },
+          "b": {
+            "keys": {
+              "n": true
+            }
+          }
+        }
+      },
+      "kept": {
+        "flag": true,
+        "a": {
+          "n": 1
+        },
+        "b": {
+          "n": 3
+        }
+      }
+    },
+    {
+      "id": "a_list_literal_reads_its_items_whole",
+      "label": "a list literal reads its items whole",
+      "templates": {
+        "page.tpl": "{:l = [a, b]}{= l[1]}"
+      },
+      "template": "page.tpl",
+      "data": {
+        "a": {
+          "x": 1
+        },
+        "b": 2,
+        "c": 3
+      },
+      "reads": {
+        "keys": {
+          "l": {
+            "keys": {
+              "1": true
+            }
+          },
+          "a": true,
+          "b": true
+        }
+      },
+      "kept": {
+        "a": {
+          "x": 1
+        },
+        "b": 2
+      }
+    },
+    {
+      "id": "an_include_reads_in_the_scope_of_the_including_template",
+      "label": "an include reads in the scope of the including template",
+      "templates": {
+        "page.tpl": "{:c = card}{+ part.tpl}",
+        "part.tpl": "{= c.title}"
+      },
+      "template": "page.tpl",
+      "data": {
+        "card": {
+          "title": "T",
+          "body": "B"
+        }
+      },
+      "reads": {
+        "keys": {
+          "c": {
+            "keys": {
+              "title": true
+            }
+          },
+          "card": {
+            "keys": {
+              "title": true
+            }
+          }
+        }
+      },
+      "kept": {
+        "card": {
+          "title": "T"
+        }
+      }
+    },
+    {
+      "id": "a_block_reads_its_template_with_its_scope_arguments",
+      "label": "a block reads its template with its scope arguments",
+      "templates": {
+        "page.tpl": "{# box.tpl item:post}",
+        "box.tpl": "{= item.title}{= site}"
+      },
+      "template": "page.tpl",
+      "data": {
+        "post": {
+          "title": "T",
+          "id": 1
+        },
+        "site": "S",
+        "other": 1
+      },
+      "reads": {
+        "keys": {
+          "post": {
+            "keys": {
+              "title": true
+            }
+          },
+          "site": true
+        }
+      },
+      "kept": {
+        "post": {
+          "title": "T"
+        },
+        "site": "S"
+      }
+    },
+    {
+      "id": "a_block_that_places_a_template_already_being_placed_reads_nothing",
+      "label": "a block that places a template already being placed reads nothing",
+      "templates": {
+        "page.tpl": "{# tree.tpl node:root}",
+        "tree.tpl": "{@ c = node.children}{# tree.tpl node:c}{/}{= node.name}"
+      },
+      "template": "page.tpl",
+      "data": {
+        "root": {
+          "name": "r",
+          "children": [],
+          "y": 2
+        },
+        "z": 1
+      },
+      "reads": {
+        "keys": {
+          "root": {
+            "keys": {
+              "children": {
+                "each": {}
+              },
+              "name": true
+            }
+          }
+        }
+      },
+      "kept": {
+        "root": {
+          "name": "r",
+          "children": []
+        }
+      }
+    },
+    {
+      "id": "a_map_that_loses_every_key_stays_a_map",
+      "label": "a map that loses every key stays a map",
+      "templates": {
+        "page.tpl": "{= m.a}"
+      },
+      "template": "page.tpl",
+      "data": {
+        "m": {
+          "b": 1
+        }
+      },
+      "reads": {
+        "keys": {
+          "m": {
+            "keys": {
+              "a": true
+            }
+          }
+        }
+      },
+      "kept": {
+        "m": {}
+      }
+    },
+    {
+      "id": "a_scalar_under_a_path_that_continues_stays_as_it_is",
+      "label": "a scalar under a path that continues stays as it is",
+      "templates": {
+        "page.tpl": "{= s.x}"
+      },
+      "template": "page.tpl",
+      "data": {
+        "s": "text"
+      },
+      "reads": {
+        "keys": {
+          "s": {
+            "keys": {
+              "x": true
+            }
+          }
+        }
+      },
+      "kept": {
+        "s": "text"
+      }
+    },
+    {
+      "id": "a_loop_variable_that_rebinds_a_name_that_an_earlier_assignment_read_has_only_the_paths_of_its_loop_source_in_the_loop_body",
+      "label": "a loop variable that rebinds a name that an earlier assignment read has only the paths of its loop source in the loop body",
+      "templates": {
+        "page.tpl": "{:p = page.x}{@ page = p.items}{= page.title}{/}"
+      },
+      "template": "page.tpl",
+      "data": {
+        "page": {
+          "x": {
+            "items": [
+              {
+                "title": "a",
+                "body": "b"
+              },
+              {
+                "title": "c",
+                "body": "d"
+              }
+            ],
+            "y": 1
+          },
+          "z": 2
+        },
+        "w": 3
+      },
+      "reads": {
+        "keys": {
+          "page": {
+            "keys": {
+              "x": {
+                "keys": {
+                  "items": {
+                    "each": {
+                      "keys": {
+                        "title": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "p": {
+            "keys": {
+              "items": {
+                "each": {
+                  "keys": {
+                    "title": true
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "kept": {
+        "page": {
+          "x": {
+            "items": [
+              {
+                "title": "a"
+              },
+              {
+                "title": "c"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "a_loop_variable_that_rebinds_the_name_of_the_source_of_an_earlier_assignment_keeps_only_the_entries_of_that_source",
+      "label": "a loop variable that rebinds the name of the source of an earlier assignment keeps only the entries of that source",
+      "templates": {
+        "page.tpl": "{:p = q.x}{@ q = p.items}{/}"
+      },
+      "template": "page.tpl",
+      "data": {
+        "q": {
+          "x": {
+            "items": [
+              {
+                "a": 1
+              },
+              {
+                "a": 2
+              }
+            ],
+            "y": 1
+          },
+          "z": 2
+        }
+      },
+      "reads": {
+        "keys": {
+          "q": {
+            "keys": {
+              "x": {
+                "keys": {
+                  "items": {
+                    "each": {}
+                  }
+                }
+              }
+            }
+          },
+          "p": {
+            "keys": {
+              "items": {
+                "each": {}
+              }
+            }
+          }
+        }
+      },
+      "kept": {
+        "q": {
+          "x": {
+            "items": [
+              {},
+              {}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "a_template_renders_alone_with_its_data",
+      "label": "a template rendered alone with the data count 3 gives its text with the value (HY-13.1)",
+      "templates": {
+        "side.tpl": "<b>{= count}</b>\n"
+      },
+      "template": "side.tpl",
+      "data": {
+        "count": 3
+      },
+      "reads": {
+        "keys": {
+          "count": true
+        }
+      },
+      "kept": {
+        "count": 3
+      },
+      "text": "<b>3</b>\n"
+    }
+  ],
+  "routes": [
+    {
+      "id": "the_routes_of_an_application",
+      "label": "the shared data reads every template of a route, each region reads its template, a route region its kept paths whole, and csrf is read whole for a route region that keeps a value on the server (HY-73.18, HY-73.19)",
+      "manifest": {
+        "layout": "layout.tpl",
+        "title": "title.tpl",
+        "regions": [
+          {
+            "name": "side",
+            "template": "side.tpl",
+            "uses": [
+              "count"
+            ]
+          },
+          {
+            "name": "content",
+            "page": true
+          }
+        ],
+        "routes": [
+          {
+            "name": "home",
+            "path": "/",
+            "title": "Home",
+            "template": "page.tpl"
+          },
+          {
+            "name": "item",
+            "path": "/items/{id}",
+            "title": "Item",
+            "template": "item.tpl"
+          },
+          {
+            "name": "list",
+            "path": "/list",
+            "title": "List",
+            "template": "list.tpl",
+            "regions": [
+              {
+                "name": "rows",
+                "template": "rows.tpl",
+                "keep": {
+                  "items.0.open": "server",
+                  "items.1.open": "localStorage",
+                  "flag": "cookie",
+                  "tab": "sessionStorage",
+                  "tags": "cookie",
+                  "marks": "localStorage",
+                  "filter": "server",
+                  "filter.a": "localStorage"
+                }
+              }
+            ]
+          },
+          {
+            "name": "pick",
+            "path": "/pick",
+            "title": "Pick",
+            "template": "pick.tpl"
+          }
+        ]
+      },
+      "templates": {
+        "layout.tpl": "<title>{# title}</title>{# build}\n<aside id=\"side\">{# side}</aside>\n<main id=\"content\">{# content}</main>\n{# data}\n",
+        "title.tpl": "{= title} - Site",
+        "side.tpl": "<b>{= count}</b>",
+        "page.tpl": "<p>{= title}|{= name}|{= shared_only}</p>",
+        "item.tpl": "<i>{= id}</i>{+ part.tpl}",
+        "part.tpl": "<u>{= part.label ?? \"part\"}</u>",
+        "list.tpl": "<h1>{= heading}</h1>{?# rows}<ul id=\"rows\">{# rows}</ul>{/}",
+        "pick.tpl": "{? view == \"a\"}{+ pick-a.tpl}{:}{# pick-b.tpl item:entry size:list}{/}",
+        "pick-a.tpl": "<p>A</p>",
+        "pick-b.tpl": "<p>{= item.name}{= size}{@ v = item.tags}{= v.value_}{/}</p>",
+        "rows.tpl": "{@ r = items}<li{? r.open} class=\"open\"{/}>{= r.name}</li>{/}{@ t = tags}{@ x = t}{= x}{/}{/}{@ t = marks}{@ x = t}{= x}{/}{/}"
+      },
+      "routes": {
+        "home": {
+          "shared": {
+            "keys": {
+              "title": true,
+              "count": true,
+              "name": true,
+              "shared_only": true
+            }
+          },
+          "regions": {
+            "side": {
+              "keys": {
+                "count": true
+              }
+            },
+            "content": {
+              "keys": {
+                "title": true,
+                "name": true,
+                "shared_only": true
+              }
+            }
+          }
+        },
+        "item": {
+          "shared": {
+            "keys": {
+              "title": true,
+              "count": true,
+              "id": true,
+              "part": {
+                "keys": {
+                  "label": true
+                }
+              }
+            }
+          },
+          "regions": {
+            "side": {
+              "keys": {
+                "count": true
+              }
+            },
+            "content": {
+              "keys": {
+                "id": true,
+                "part": {
+                  "keys": {
+                    "label": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "list": {
+          "shared": {
+            "keys": {
+              "title": true,
+              "count": true,
+              "heading": true,
+              "items": {
+                "keys": {
+                  "0": {
+                    "keys": {
+                      "open": true
+                    }
+                  },
+                  "1": {
+                    "keys": {
+                      "open": true
+                    }
+                  }
+                },
+                "each": {
+                  "keys": {
+                    "open": true,
+                    "name": true
+                  }
+                }
+              },
+              "tags": true,
+              "marks": true,
+              "flag": true,
+              "tab": true,
+              "filter": true,
+              "csrf": true
+            }
+          },
+          "regions": {
+            "side": {
+              "keys": {
+                "count": true
+              }
+            },
+            "content": {
+              "keys": {
+                "heading": true
+              }
+            },
+            "rows": {
+              "keys": {
+                "items": {
+                  "keys": {
+                    "0": {
+                      "keys": {
+                        "open": true
+                      }
+                    },
+                    "1": {
+                      "keys": {
+                        "open": true
+                      }
+                    }
+                  },
+                  "each": {
+                    "keys": {
+                      "open": true,
+                      "name": true
+                    }
+                  }
+                },
+                "tags": true,
+                "marks": true,
+                "flag": true,
+                "tab": true,
+                "filter": true
+              }
+            }
+          }
+        },
+        "pick": {
+          "shared": {
+            "keys": {
+              "title": true,
+              "count": true,
+              "view": true,
+              "entry": {
+                "keys": {
+                  "name": true,
+                  "tags": {
+                    "each": true
+                  }
+                }
+              },
+              "list": true
+            }
+          },
+          "regions": {
+            "side": {
+              "keys": {
+                "count": true
+              }
+            },
+            "content": {
+              "keys": {
+                "view": true,
+                "entry": {
+                  "keys": {
+                    "name": true,
+                    "tags": {
+                      "each": true
+                    }
+                  }
+                },
+                "list": true
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "the_routes_of_the_board_example",
+      "label": "the read paths of every route of the board example",
+      "manifest": {
+        "layout": "layout.tpl",
+        "title": "title.tpl",
+        "regions": [
+          {
+            "name": "left",
+            "template": "left.tpl",
+            "uses": [
+              "posts",
+              "path"
+            ]
+          },
+          {
+            "name": "content",
+            "page": true
+          }
+        ],
+        "routes": [
+          {
+            "name": "home",
+            "path": "/",
+            "title": "홈",
+            "template": "home.tpl"
+          },
+          {
+            "name": "board.list",
+            "path": "/board",
+            "title": "게시판",
+            "template": "board/list.tpl",
+            "regions": [
+              {
+                "name": "notice",
+                "template": "board/notice.tpl",
+                "keep": {
+                  "notice.closed": "server"
+                }
+              },
+              {
+                "name": "rows",
+                "template": "board/rows.tpl",
+                "keep": {
+                  "sort": "localStorage",
+                  "compact": "sessionStorage"
+                }
+              }
+            ]
+          },
+          {
+            "name": "board.create",
+            "path": "/board/create",
+            "title": "글쓰기",
+            "template": "board/create.tpl",
+            "post": true
+          },
+          {
+            "name": "board.show",
+            "path": "/board/{id}",
+            "title": "게시글",
+            "template": "board/show.tpl",
+            "representations": [
+              {
+                "type": "application/vnd.board.post+json",
+                "parameters": {
+                  "version": [
+                    "1"
+                  ]
+                },
+                "methods": [
+                  "GET"
+                ],
+                "vary": []
+              }
+            ],
+            "regions": [
+              {
+                "name": "reader",
+                "template": "board/reader.tpl",
+                "keep": {
+                  "large": "cookie"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "templates": {
+        "board/create.tpl": "<section class=\"board-form\">\n<h1>글쓰기</h1>\n<form method=\"post\" action=\"/board/create\" enctype=\"multipart/form-data\">\n<input type=\"hidden\" name=\"_csrf\" value=\"{= csrf}\">\n<label>제목 <input name=\"title\" value=\"{= values.title}\" maxlength=\"100\"></label>\n{? errors.title}<p class=\"error\">{= errors.title}</p>{/}\n<label>작성자 <input name=\"author\" value=\"{= values.author}\" maxlength=\"30\"></label>\n{? errors.author}<p class=\"error\">{= errors.author}</p>{/}\n<label>내용 <textarea name=\"body\" rows=\"12\">{= values.body}</textarea></label>\n{? errors.body}<p class=\"error\">{= errors.body}</p>{/}\n<label>첨부 <input type=\"file\" name=\"attachment\"></label>\n<div class=\"form-actions\">\n<a href=\"/board\" class=\"button secondary\">취소</a>\n<button type=\"submit\">등록</button>\n</div>\n</form>\n</section>\n",
+        "board/list.tpl": "<section class=\"board\">\n<header class=\"board-head\">\n<h1>게시판</h1>\n<a href=\"/board/create\" class=\"button\">글쓰기</a>\n</header>\n{?# notice}<div id=\"notice\">{# notice}</div>{/}\n<div id=\"rows\">{# rows}</div>\n<nav class=\"pager\">\n{@ n = range(1, pages)}\n<a href=\"/board?page={= n}\"{? n == page} class=\"current\"{/}>{= n}</a>\n{/}\n</nav>\n</section>\n",
+        "board/notice.tpl": "{? notice.closed}\n<p class=\"notice closed\"><button type=\"button\" class=\"link\" hy-set=\"notice.closed=false\">공지 펼치기</button></p>\n{:}\n<div class=\"notice\">\n<p>{= notice.text}</p>\n<button type=\"button\" class=\"link\" hy-set=\"notice.closed=true\">닫기</button>\n</div>\n{/}\n",
+        "board/reader.tpl": "<p class=\"board-tools\"><button type=\"button\" class=\"chip{? large} current{/}\" hy-set=\"large={? large}false{:}true{/}\">큰 글자</button></p>\n<div class=\"post-body{? large} large{/}\">{= post.body | escape | nl2br | raw}</div>\n",
+        "board/rows.tpl": "<div class=\"board-tools\">\n<span>정렬</span>\n<button type=\"button\" class=\"chip{? sort == ''} current{/}\" hy-set='sort=\"\"'>최신순</button>\n<button type=\"button\" class=\"chip{? sort == 'title'} current{/}\" hy-set='sort=\"title\"'>제목순</button>\n<button type=\"button\" class=\"chip{? sort == 'author'} current{/}\" hy-set='sort=\"author\"'>작성자순</button>\n<button type=\"button\" class=\"chip{? compact} current{/}\" hy-set=\"compact={? compact}false{:}true{/}\">좁게 보기</button>\n</div>\n<table class=\"board-table{? compact} compact{/}\">\n<thead>\n<tr><th>번호</th><th>제목</th><th>작성자</th><th>작성일</th></tr>\n</thead>\n<tbody>\n{:shown = posts}\n{? sort == 'title'}\n{:shown = sort(posts, 'title')}\n{:? sort == 'author'}\n{:shown = sort(posts, 'author')}\n{/}\n{@ post = shown}\n<tr id=\"post-{= post.id}\"{? post.id == highlight} class=\"new\"{/}>\n<td>{= post.id}</td>\n<td><a href=\"/board/{= post.id}\">{= post.title}</a></td>\n<td>{= post.author}</td>\n<td>{= date(post.created_at, 'Y-m-d H:i')}</td>\n</tr>\n{:}\n<tr><td colspan=\"4\" class=\"empty\">게시글이 없습니다.</td></tr>\n{/}\n</tbody>\n</table>\n",
+        "board/show.tpl": "<article class=\"post\">\n<header class=\"board-head\">\n<h1>{= post.title}</h1>\n<a href=\"/board\" class=\"button secondary\">목록</a>\n</header>\n<p class=\"post-meta\">{= post.author} · {= date(post.created_at, 'Y-m-d H:i')}</p>\n{? post.attachment}<p class=\"post-file\">첨부: {= post.attachment.name} ({= post.attachment.size} bytes)</p>\n{/}<div id=\"reader\">{# reader}</div>\n</article>\n",
+        "home.tpl": "<section class=\"home\">\n<h1>게시판 예제</h1>\n<p>왼쪽 메뉴에서 게시판을 여세요.</p>\n<p><a href=\"/board\" class=\"button\">게시판으로 이동</a></p>\n</section>\n",
+        "layout.tpl": "<!doctype html>\n<html lang=\"ko\">\n<head>\n<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n<title>{# title}</title>\n{# build}\n<link rel=\"stylesheet\" href=\"/assets/app.css\">\n{? reader}<link rel=\"stylesheet\" href=\"/assets/reader.css\">\n<script type=\"module\" src=\"/assets/reader.js\"></script>\n<script type=\"module\" src=\"/assets/after-reader.js\"></script>\n{/}<script type=\"module\" src=\"{= assets.hyper}\"></script>\n</head>\n<body hx-boost:inherited=\"true\" hx-target:inherited=\"#content\" hx-swap:inherited=\"innerMorph\">\n<div class=\"shell\">\n<aside id=\"left\">{# left}</aside>\n<main id=\"content\">{# content}</main>\n</div>\n{# data}\n</body>\n</html>\n",
+        "left.tpl": "<nav class=\"left\">\n<h2>메뉴</h2>\n<ul>\n<li><a href=\"/\"{? path == '/'} class=\"active\"{/}>홈</a></li>\n<li><a href=\"/board\"{? starts_with(path, '/board')} class=\"active\"{/}>게시판 <span class=\"badge\">{= count}</span></a></li>\n</ul>\n</nav>\n",
+        "title.tpl": "{= title} · {= context.site.name}"
+      },
+      "routes": {
+        "home": {
+          "shared": {
+            "keys": {
+              "reader": true,
+              "assets": {
+                "keys": {
+                  "hyper": true
+                }
+              },
+              "title": true,
+              "context": {
+                "keys": {
+                  "site": {
+                    "keys": {
+                      "name": true
+                    }
+                  }
+                }
+              },
+              "path": true,
+              "count": true
+            }
+          },
+          "regions": {
+            "left": {
+              "keys": {
+                "path": true,
+                "count": true
+              }
+            },
+            "content": {}
+          }
+        },
+        "board.list": {
+          "shared": {
+            "keys": {
+              "reader": true,
+              "assets": {
+                "keys": {
+                  "hyper": true
+                }
+              },
+              "title": true,
+              "context": {
+                "keys": {
+                  "site": {
+                    "keys": {
+                      "name": true
+                    }
+                  }
+                }
+              },
+              "path": true,
+              "count": true,
+              "pages": true,
+              "page": true,
+              "notice": {
+                "keys": {
+                  "closed": true,
+                  "text": true
+                }
+              },
+              "sort": true,
+              "compact": true,
+              "posts": true,
+              "shown": {
+                "each": {
+                  "keys": {
+                    "id": true,
+                    "title": true,
+                    "author": true,
+                    "created_at": true
+                  }
+                }
+              },
+              "highlight": true,
+              "csrf": true
+            }
+          },
+          "regions": {
+            "left": {
+              "keys": {
+                "path": true,
+                "count": true
+              }
+            },
+            "content": {
+              "keys": {
+                "pages": true,
+                "page": true
+              }
+            },
+            "notice": {
+              "keys": {
+                "notice": {
+                  "keys": {
+                    "closed": true,
+                    "text": true
+                  }
+                }
+              }
+            },
+            "rows": {
+              "keys": {
+                "sort": true,
+                "compact": true,
+                "posts": true,
+                "shown": {
+                  "each": {
+                    "keys": {
+                      "id": true,
+                      "title": true,
+                      "author": true,
+                      "created_at": true
+                    }
+                  }
+                },
+                "highlight": true
+              }
+            }
+          }
+        },
+        "board.create": {
+          "shared": {
+            "keys": {
+              "reader": true,
+              "assets": {
+                "keys": {
+                  "hyper": true
+                }
+              },
+              "title": true,
+              "context": {
+                "keys": {
+                  "site": {
+                    "keys": {
+                      "name": true
+                    }
+                  }
+                }
+              },
+              "path": true,
+              "count": true,
+              "csrf": true,
+              "values": {
+                "keys": {
+                  "title": true,
+                  "author": true,
+                  "body": true
+                }
+              },
+              "errors": {
+                "keys": {
+                  "title": true,
+                  "author": true,
+                  "body": true
+                }
+              }
+            }
+          },
+          "regions": {
+            "left": {
+              "keys": {
+                "path": true,
+                "count": true
+              }
+            },
+            "content": {
+              "keys": {
+                "csrf": true,
+                "values": {
+                  "keys": {
+                    "title": true,
+                    "author": true,
+                    "body": true
+                  }
+                },
+                "errors": {
+                  "keys": {
+                    "title": true,
+                    "author": true,
+                    "body": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "board.show": {
+          "shared": {
+            "keys": {
+              "reader": true,
+              "assets": {
+                "keys": {
+                  "hyper": true
+                }
+              },
+              "title": true,
+              "context": {
+                "keys": {
+                  "site": {
+                    "keys": {
+                      "name": true
+                    }
+                  }
+                }
+              },
+              "path": true,
+              "count": true,
+              "post": {
+                "keys": {
+                  "title": true,
+                  "author": true,
+                  "created_at": true,
+                  "attachment": true,
+                  "body": true
+                }
+              },
+              "large": true
+            }
+          },
+          "regions": {
+            "left": {
+              "keys": {
+                "path": true,
+                "count": true
+              }
+            },
+            "content": {
+              "keys": {
+                "post": {
+                  "keys": {
+                    "title": true,
+                    "author": true,
+                    "created_at": true,
+                    "attachment": true
+                  }
+                }
+              }
+            },
+            "reader": {
+              "keys": {
+                "large": true,
+                "post": {
+                  "keys": {
+                    "body": true
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "the_routes_of_regions_placed_through_templates",
+      "label": "route regions placed in included templates and inside branches read their own templates",
+      "manifest": {
+        "layout": "layout.tpl",
+        "title": "title.tpl",
+        "regions": [
+          {
+            "name": "left",
+            "template": "left.tpl"
+          },
+          {
+            "name": "content",
+            "page": true
+          }
+        ],
+        "routes": [
+          {
+            "name": "list",
+            "path": "/",
+            "title": "List",
+            "template": "list.tpl",
+            "regions": [
+              {
+                "name": "notice",
+                "template": "notice.tpl"
+              },
+              {
+                "name": "rows",
+                "template": "rows.tpl"
+              }
+            ]
+          },
+          {
+            "name": "view",
+            "path": "/view",
+            "title": "View",
+            "template": "view.tpl",
+            "regions": [
+              {
+                "name": "panel",
+                "template": "panel.tpl"
+              },
+              {
+                "name": "lost",
+                "template": "panel.tpl"
+              }
+            ]
+          },
+          {
+            "name": "branch",
+            "path": "/branch",
+            "title": "Branch",
+            "template": "branch.tpl",
+            "regions": [
+              {
+                "name": "direct",
+                "template": "panel.tpl"
+              },
+              {
+                "name": "deep",
+                "template": "panel.tpl"
+              }
+            ]
+          }
+        ]
+      },
+      "templates": {
+        "branch-part.tpl": "{?# deep}<div id=\"deep\">{# deep}</div>{/}\n",
+        "branch.tpl": "{? kind == \"a\"}<div id=\"direct\">{# direct}</div>{:? kind == \"b\"}{+ branch-part.tpl}{:}<p>none</p>{/}\n",
+        "layout.tpl": "<title>{# title}</title>{# build}\n<aside class=\"side\">{# left}</aside>\n<main id=\"content\">{# content}</main>\n{# data}\n",
+        "left.tpl": "L",
+        "list.tpl": "<div id=\"notice\">{# notice x:1}</div>\n<div id=\"other\">{# rows}</div>\n",
+        "notice.tpl": "N",
+        "panel.tpl": "<p>{= text}</p>\n",
+        "part.tpl": "{?# panel}<div id=\"panel\">{# panel}</div>{/}\n",
+        "rows.tpl": "R",
+        "title.tpl": "T",
+        "view.tpl": "<h1>{= title}</h1>{+ part.tpl}\n"
+      },
+      "routes": {
+        "list": {
+          "shared": {},
+          "regions": {
+            "left": {},
+            "content": {},
+            "notice": {},
+            "rows": {}
+          }
+        },
+        "view": {
+          "shared": {
+            "keys": {
+              "title": true,
+              "text": true
+            }
+          },
+          "regions": {
+            "left": {},
+            "content": {
+              "keys": {
+                "title": true
+              }
+            },
+            "panel": {
+              "keys": {
+                "text": true
+              }
+            },
+            "lost": {
+              "keys": {
+                "text": true
+              }
+            }
+          }
+        },
+        "branch": {
+          "shared": {
+            "keys": {
+              "kind": true,
+              "text": true
+            }
+          },
+          "regions": {
+            "left": {},
+            "content": {
+              "keys": {
+                "kind": true
+              }
+            },
+            "direct": {
+              "keys": {
+                "text": true
+              }
+            },
+            "deep": {
+              "keys": {
+                "text": true
+              }
+            }
+          }
+        }
+      }
+    }
   ]
 }
