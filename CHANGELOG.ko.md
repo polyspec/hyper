@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 9cefe91f4f1409fb21409fa8ceb8f5b8bbf49c5153ce93a0bfccc092d3027693 -->
+<!-- source-sha256: c23e271b9122db414f699178cb61d32d271686c3bc24e30e04d4ebe2b220a3e9 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- 애플리케이션 열기의 모든 실패는 kind `invalid_application`과 원인을 이름하는 메시지(static shell의 경로, data base path, 그 아래의 route도 포함, HY-62.37)를 가진 오류 하나 `InvalidApplication`이다. representation entry의 메시지는 HY-118을, client 렌더의 메시지는 HY-62를 이름하며, 다른 메시지에는 `(HY-118)`이 붙지 않는다(C-7).
 
 - Rust core가 이름이 바뀐 라이브러리를 쓴다. `polyspec-ordered-json` 대신 저장소 json의 `polyspec-json`, `polyspec-http-cookies` 대신 http-cookie의 `polyspec-http-cookie`, Git branch의 `polyspec-http-media-type`, branch 끝의 template 언어를 쓰며, template의 계약이 bindgen 검사를 통과하므로 interface 계약의 지적 CK-10은 없어졌다. spec과 interface 계약은 라이브러리 json과 http-cookie를 이름한다(C-7, 9c). `polyspec-http-negotiation`은 그 branch가 이 이름을 가질 때까지 경로 의존으로 남고, `polyspec-php-serialize`는 그 값을 store interface에 쓰는 sessions 라이브러리가 `polyspec-php-serialization`을 받을 때까지 남는다.
 

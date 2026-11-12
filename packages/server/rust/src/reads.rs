@@ -40,9 +40,9 @@ impl Read {
                         }
                         ("each", child) => each = Some(Box::new(Read::from_value(child)?)),
                         _ => {
-                            return Err(Error::InvalidApplication(
+                            return Err(Error::InvalidApplication(std::borrow::Cow::Borrowed(
                                 "a node of the read paths is not allowed (HY-73.23)",
-                            ))
+                            )))
                         }
                     }
                 }
@@ -54,9 +54,9 @@ impl Read {
             | Value::Str(_)
             | Value::Safe(_)
             | Value::List(_)
-            | Value::Object(_) => Err(Error::InvalidApplication(
+            | Value::Object(_) => Err(Error::InvalidApplication(std::borrow::Cow::Borrowed(
                 "a node of the read paths is not allowed (HY-73.23)",
-            )),
+            ))),
         }
     }
 

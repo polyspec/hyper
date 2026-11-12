@@ -80,7 +80,7 @@ pub struct Manifest {
 const RESERVED: [&str; 4] = ["layout", "title", "data", "build"];
 
 fn invalid(reason: &'static str) -> Error {
-    Error::InvalidApplication(reason)
+    Error::InvalidApplication(std::borrow::Cow::Borrowed(reason))
 }
 
 fn member<'a>(value: &'a Value, key: &str) -> Option<&'a Value> {

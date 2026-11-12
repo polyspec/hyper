@@ -82,16 +82,16 @@ pub fn entry(
     let parsed = match parse(media_type.as_bytes()) {
         Ok(parsed) if parsed.parameters.is_empty() => parsed,
         Ok(_) | Err(_) => {
-            return Err(Error::InvalidApplication(
-                "a representation type is no media type",
-            ))
+            return Err(Error::InvalidApplication(std::borrow::Cow::Borrowed(
+                "a representation type is no media type (HY-118)",
+            )))
         }
     };
     let full = format!("{}/{}", parsed.r#type, parsed.subtype);
     if full == crate::media::PAGE || full == crate::media::PAGE_DATA {
-        return Err(Error::InvalidApplication(
-            "a representation type is a type of hyper",
-        ));
+        return Err(Error::InvalidApplication(std::borrow::Cow::Borrowed(
+            "a representation type is a type of hyper (HY-118)",
+        )));
     }
     let mut checked: Vec<(String, Vec<Vec<u8>>)> = Vec::with_capacity(parameters.len());
     for (name, values) in parameters {
@@ -100,14 +100,14 @@ pub fn entry(
             || lower == "q"
             || checked.iter().any(|(other, _)| other == &lower)
         {
-            return Err(Error::InvalidApplication(
-                "a representation parameter name is not allowed",
-            ));
+            return Err(Error::InvalidApplication(std::borrow::Cow::Borrowed(
+                "a representation parameter name is not allowed (HY-118)",
+            )));
         }
         if values.is_empty() {
-            return Err(Error::InvalidApplication(
-                "a representation parameter has no served value",
-            ));
+            return Err(Error::InvalidApplication(std::borrow::Cow::Borrowed(
+                "a representation parameter has no served value (HY-118)",
+            )));
         }
         let mut served: Vec<Vec<u8>> = Vec::with_capacity(values.len());
         for value in values {
@@ -117,32 +117,36 @@ pub fn entry(
                     .bytes()
                     .all(|byte| byte == b'\t' || (0x20..=0x7e).contains(&byte))
             {
-                return Err(Error::InvalidApplication(
-                    "a served value has a character that is not allowed",
-                ));
+                return Err(Error::InvalidApplication(std::borrow::Cow::Borrowed(
+                    "a served value has a character that is not allowed (HY-118)",
+                )));
             }
             // NG-7.3: two equal values of one parameter give the weigher no candidate.
             if served
                 .iter()
                 .any(|other| polyspec_http_media_type::same_value(&lower, other, value.as_bytes()))
             {
-                return Err(Error::InvalidApplication("a served value is given twice"));
+                return Err(Error::InvalidApplication(std::borrow::Cow::Borrowed(
+                    "a served value is given twice (HY-118)",
+                )));
             }
             served.push(value.as_bytes().to_vec());
         }
         checked.push((lower, served));
     }
     if methods.is_empty() {
-        return Err(Error::InvalidApplication("a representation has no method"));
+        return Err(Error::InvalidApplication(std::borrow::Cow::Borrowed(
+            "a representation has no method (HY-118)",
+        )));
     }
     let mut listed = Vec::with_capacity(methods.len());
     for method in methods {
         match Method::of(method) {
             Some(method) => listed.push(method),
             None => {
-                return Err(Error::InvalidApplication(
-                    "a representation method is not GET, POST, PUT or DELETE",
-                ))
+                return Err(Error::InvalidApplication(std::borrow::Cow::Borrowed(
+                    "a representation method is not GET, POST, PUT or DELETE (HY-118)",
+                )))
             }
         }
     }
@@ -154,7 +158,9 @@ pub fn entry(
             || lower == "cookie"
             || names.iter().any(|other| other.eq_ignore_ascii_case(name))
         {
-            return Err(Error::InvalidApplication("a vary name is not allowed"));
+            return Err(Error::InvalidApplication(std::borrow::Cow::Borrowed(
+                "a vary name is not allowed (HY-118)",
+            )));
         }
         names.push(name.clone());
     }
@@ -177,9 +183,9 @@ pub fn entries(entries: Vec<Entry>) -> Result<Vec<Entry>, Error> {
             .iter()
             .any(|other| other.r#type == entry.r#type && other.subtype == entry.subtype)
         {
-            return Err(Error::InvalidApplication(
-                "a route declares a representation type twice",
-            ));
+            return Err(Error::InvalidApplication(std::borrow::Cow::Borrowed(
+                "a route declares a representation type twice (HY-118)",
+            )));
         }
     }
     Ok(entries)

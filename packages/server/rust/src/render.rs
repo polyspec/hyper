@@ -59,9 +59,9 @@ impl Templates {
         let mut loader = MapLoader::new();
         for (name, source) in sources {
             if name == DATA_TEMPLATE {
-                return Err(Error::InvalidApplication(
+                return Err(Error::InvalidApplication(std::borrow::Cow::Borrowed(
                     "the template hyper/data.tpl is reserved (HY-31.3)",
-                ));
+                )));
             }
             loader.set(name, source);
         }

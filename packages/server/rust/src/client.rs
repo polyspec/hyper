@@ -6,6 +6,11 @@ use crate::manifest::Manifest;
 use crate::media::{select, Selected, Selection, Served};
 use crate::Error;
 
+/// The failure of a declaration of client rendering, with its cause (HY-62.37, HY-62.39).
+fn invalid(cause: String) -> Error {
+    Error::InvalidApplication(std::borrow::Cow::Owned(cause + " (HY-62)"))
+}
+
 /// Checks the path of the shell file before the host reads it (HY-62.35).
 ///
 /// # Errors
@@ -14,7 +19,7 @@ pub fn check_shell_path(path: &str) -> Result<(), Error> {
     if path.starts_with('/') {
         Ok(())
     } else {
-        Err(Error::InvalidClientRendering(format!(
+        Err(invalid(format!(
             "static shell {path} is not an absolute path"
         )))
     }
@@ -23,7 +28,7 @@ pub fn check_shell_path(path: &str) -> Result<(), Error> {
 /// The failure of a shell file that does not exist or that the host cannot read (HY-62.35, HY-62.37).
 #[must_use]
 pub fn unreadable_shell(path: &str) -> Error {
-    Error::InvalidClientRendering(format!(
+    invalid(format!(
         "static shell {path} does not exist or cannot be read"
     ))
 }
@@ -35,9 +40,7 @@ pub fn unreadable_shell(path: &str) -> Error {
 pub fn shell_text(path: &str, bytes: Vec<u8>) -> Result<String, Error> {
     match String::from_utf8(bytes) {
         Ok(text) => Ok(text),
-        Err(_not_utf8) => Err(Error::InvalidClientRendering(format!(
-            "static shell {path} is not valid UTF-8"
-        ))),
+        Err(_not_utf8) => Err(invalid(format!("static shell {path} is not valid UTF-8"))),
     }
 }
 
@@ -71,7 +74,7 @@ pub fn check_declaration(
     shell: &str,
 ) -> Result<(), Error> {
     if base_path.is_empty() || !base_path.starts_with('/') || base_path.ends_with('/') {
-        return Err(Error::InvalidClientRendering(format!(
+        return Err(invalid(format!(
             "data base path {base_path} must start with / and must not end with /"
         )));
     }
@@ -81,7 +84,7 @@ pub fn check_declaration(
             .strip_prefix(base_path)
             .is_some_and(|rest| rest.is_empty() || rest.starts_with('/'));
         if under {
-            return Err(Error::InvalidClientRendering(format!(
+            return Err(invalid(format!(
                 "route {} lies under the data base path {base_path}",
                 route.name
             )));
@@ -94,7 +97,7 @@ pub fn check_declaration(
     if shell.contains(&meta) {
         Ok(())
     } else {
-        Err(Error::InvalidClientRendering(format!(
+        Err(invalid(format!(
             "static shell {shell_path} does not declare the data base path {base_path}"
         )))
     }

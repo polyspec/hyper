@@ -156,10 +156,6 @@
         "category": "value"
       },
       {
-        "variant": "polyspec_hyper::Error::InvalidClientRendering",
-        "category": "value"
-      },
-      {
         "variant": "polyspec_hyper::Error::InvalidRepresentation",
         "category": "value"
       },
@@ -1014,7 +1010,7 @@
           ],
           "returns": "none",
           "raises": [
-            "polyspec_hyper::Error::InvalidClientRendering"
+            "polyspec_hyper::Error::InvalidApplication"
           ],
           "wait": "none",
           "core": "polyspec_hyper::client::check_shell_path"
@@ -1045,7 +1041,7 @@
           ],
           "returns": "text",
           "raises": [
-            "polyspec_hyper::Error::InvalidClientRendering"
+            "polyspec_hyper::Error::InvalidApplication"
           ],
           "wait": "none",
           "core": "polyspec_hyper::client::shell_text"

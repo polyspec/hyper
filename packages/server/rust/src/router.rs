@@ -56,9 +56,9 @@ fn is_name(name: &str) -> bool {
 /// outside HY-4.3, a repeated parameter name, and a rest parameter that is not the last segment (HY-4.6).
 pub fn route(name: &str, path: &str) -> Result<Route, Error> {
     let Some(rest) = path.strip_prefix('/') else {
-        return Err(Error::InvalidApplication(
+        return Err(Error::InvalidApplication(std::borrow::Cow::Borrowed(
             "a route path starts with a slash (HY-4)",
-        ));
+        )));
     };
     let mut segments = Vec::new();
     if !rest.is_empty() {
@@ -71,24 +71,24 @@ pub fn route(name: &str, path: &str) -> Result<Route, Error> {
             {
                 if let Some(rest_name) = inner.strip_suffix('*') {
                     if index != last || !is_name(rest_name) {
-                        return Err(Error::InvalidApplication(
+                        return Err(Error::InvalidApplication(std::borrow::Cow::Borrowed(
                             "a rest parameter is a named last segment (HY-49)",
-                        ));
+                        )));
                     }
                     Segment::Rest(rest_name.to_owned())
                 } else if is_name(inner) {
                     Segment::Parameter(inner.to_owned())
                 } else {
-                    return Err(Error::InvalidApplication(
+                    return Err(Error::InvalidApplication(std::borrow::Cow::Borrowed(
                         "a route parameter name is not allowed (HY-4)",
-                    ));
+                    )));
                 }
             } else if is_literal(part) {
                 Segment::Literal((*part).to_owned())
             } else {
-                return Err(Error::InvalidApplication(
+                return Err(Error::InvalidApplication(std::borrow::Cow::Borrowed(
                     "a route path segment is not allowed (HY-4)",
-                ));
+                )));
             };
             segments.push(segment);
         }
@@ -100,9 +100,9 @@ pub fn route(name: &str, path: &str) -> Result<Route, Error> {
             Segment::Literal(_) => continue,
         };
         if names.contains(&name) {
-            return Err(Error::InvalidApplication(
+            return Err(Error::InvalidApplication(std::borrow::Cow::Borrowed(
                 "a route path repeats a parameter name (HY-4)",
-            ));
+            )));
         }
         names.push(name);
     }
