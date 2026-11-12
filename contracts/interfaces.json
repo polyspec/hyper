@@ -5632,7 +5632,8 @@
         "contracts/app.json",
         "contracts/context.json",
         "tests/legacy/app-before-s3b.json",
-        "tests/legacy/context-before-s3b.json"
+        "tests/legacy/context-before-s3b.json",
+        "tests/legacy/result-before-s3b.json"
       ],
       "units": [
         {
@@ -16952,11 +16953,8 @@
       "fixtures": {},
       "sections": {
         "redirect": {
-          "runners": [
-            "php",
-            "node",
-            "python"
-          ],
+          "runners": [],
+          "fixedCopy": "result-before-s3b.json",
           "uses": [],
           "fields": {
             "id": {
@@ -16999,11 +16997,8 @@
           ]
         },
         "page": {
-          "runners": [
-            "php",
-            "node",
-            "python"
-          ],
+          "runners": [],
+          "fixedCopy": "result-before-s3b.json",
           "uses": [],
           "fields": {
             "id": {
@@ -17089,11 +17084,8 @@
           ]
         },
         "copies": {
-          "runners": [
-            "php",
-            "node",
-            "python"
-          ],
+          "runners": [],
+          "fixedCopy": "result-before-s3b.json",
           "uses": [],
           "fields": {
             "id": {
@@ -17136,11 +17128,8 @@
           ]
         },
         "stop": {
-          "runners": [
-            "php",
-            "node",
-            "python"
-          ],
+          "runners": [],
+          "fixedCopy": "result-before-s3b.json",
           "uses": [],
           "fields": {
             "id": {
@@ -17191,11 +17180,8 @@
           ]
         },
         "types": {
-          "runners": [
-            "php",
-            "node",
-            "python"
-          ],
+          "runners": [],
+          "fixedCopy": "result-before-s3b.json",
           "uses": [],
           "fields": {
             "id": {

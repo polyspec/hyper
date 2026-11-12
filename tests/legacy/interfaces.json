@@ -2161,6 +2161,233 @@
           ]
         }
       }
+    },
+    "result-before-s3b.json": {
+      "fixtures": {},
+      "sections": {
+        "copies": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "flashes": {
+              "role": "input"
+            },
+            "topics": {
+              "role": "input"
+            },
+            "flashValues": {
+              "role": "expected",
+              "compare": "ordered",
+              "sentence": "HY-25.5",
+              "state": "`flashValues` are the flash values of a redirect that stores each pair of `flashes` in order, a name and the JSON text of its value as a handler of the server returns it, in the order of their names.",
+              "optional": true
+            },
+            "changedTopics": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-25.5",
+              "state": "`changedTopics` are the changed topics of that redirect after it records each list of `topics` in order.",
+              "optional": true
+            },
+            "error": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-25.4",
+              "state": "`error` is the message of the error of the data model with which storing a flash value fails, or null."
+            }
+          },
+          "members": [
+            "result.changed",
+            "result.flash"
+          ]
+        },
+        "page": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "status": {
+              "role": "input"
+            },
+            "data": {
+              "role": "input"
+            },
+            "result": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-58.3",
+              "state": "`result` is the status of the page with the status `status` and the data `data`, or null when making it fails."
+            },
+            "redirect": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-58.3",
+              "state": "`redirect` is the location of the page, null because a page is no redirect."
+            },
+            "error": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-58.6",
+              "state": "`error` is the message of the error with which making the page fails, or null."
+            },
+            "held": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-58.3",
+              "state": "`held` is the member `data` of the page."
+            }
+          },
+          "members": [
+            "result.data",
+            "result.page"
+          ]
+        },
+        "redirect": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "location": {
+              "role": "input"
+            },
+            "notUtf8": {
+              "role": "input",
+              "optional": true
+            },
+            "redirect": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-46.1",
+              "state": "`redirect` is the location of the redirect to `location`, or null when making it fails; with `notUtf8` true the location ends with one unit that is not UTF-8 text in its host: the byte FF in PHP and the lone surrogate D800 in Node and Python."
+            },
+            "status": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-25.2",
+              "state": "`status` is the status of the redirect, 303, or null when making it fails."
+            },
+            "error": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-46.2",
+              "state": "`error` is the message of the error with which making a redirect to `location` fails, or null."
+            }
+          },
+          "members": [
+            "result.redirect"
+          ]
+        },
+        "stop": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "kind": {
+              "role": "input"
+            },
+            "redirect": {
+              "role": "input",
+              "optional": true
+            },
+            "page": {
+              "role": "input",
+              "optional": true
+            },
+            "message": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-27.3",
+              "state": "`message` is the message of the stop `kind`; a redirect stop takes the redirect to `redirect` or the page with the status `page`, and `message` is null when making it fails."
+            },
+            "error": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-50.3",
+              "state": "`error` is the message of the error with which making the stop fails, or null."
+            },
+            "location": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-50.1",
+              "state": "`location` is the location of the member `result` of a redirect stop."
+            }
+          },
+          "members": [
+            "bad-request.constructor",
+            "forbidden.constructor",
+            "not-found.constructor",
+            "redirect.constructor",
+            "redirect.result"
+          ]
+        },
+        "types": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "call": {
+              "role": "input"
+            },
+            "argument": {
+              "role": "input"
+            },
+            "error": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-25.6",
+              "state": "`error` is the message of the `TypeError` of the method `call` of a redirect, `flash` with the value null under the name or `changed` with the topic, for the JSON text `argument` as a handler gives it, or null when the method takes it."
+            }
+          }
+        }
+      }
     }
   }
 }

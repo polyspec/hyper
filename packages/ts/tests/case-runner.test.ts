@@ -72,7 +72,8 @@ const STEPS: Record<string, Step> = {
   ...prefixed('reply.json', replySteps, ['cacheControl', 'cookies', 'notes', 'referrerPolicy', 'status']),
   ...prefixed('reply-before-s3b.json', replySteps, ['cacheControl', 'cookies', 'notes', 'referrerPolicy', 'status'], true),
   ...prefixed('response.json', responseSteps),
-  ...prefixed('result.json', resultSteps),
+  ...prefixed('result.json', resultSteps, ['copies', 'page', 'redirect', 'stop', 'types']),
+  ...prefixed('result-before-s3b.json', resultSteps, ['copies', 'page', 'redirect', 'stop', 'types'], true),
   ...prefixed('routes.json', routesSteps),
   ...prefixed('session.json', sessionSteps),
 };
