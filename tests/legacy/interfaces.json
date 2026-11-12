@@ -1,5 +1,5 @@
 {
-  "note": "Fixed copies of case files as hyper held them before a library took their cases, with their caseFiles declarations: fields.json, whose cases http-forms holds (F-20 to F-27), and redis-sessions.json, whose cases the sessions library holds. The steps of the three servers read them until the servers call the core, and S-4 removes tests/legacy. Their sentences name the current statements of hyper.",
+  "note": "Fixed copies of case files as hyper held them before a library took their cases, with their caseFiles declarations: fields.json, whose cases http-forms holds (F-20 to F-27); redis-sessions.json, whose cases the sessions library holds; and file-store-sessions.json, the cases of contracts/file-sessions.json that the sessions library holds, under another name because contracts/file-sessions.json keeps the cases of hyper. The steps of the three servers read them until the servers call the core, and S-4 removes tests/legacy. Their sentences name the current statements of hyper.",
   "caseFiles": {
     "fields.json": {
       "fixtures": {},
@@ -314,6 +314,115 @@
           },
           "members": [
             "redis-sessions.constructor"
+          ]
+        }
+      }
+    },
+    "file-store-sessions.json": {
+      "fixtures": {},
+      "sections": {
+        "requests": {
+          "runners": [
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "files": {
+              "role": "input",
+              "optional": true
+            },
+            "steps": {
+              "role": "input"
+            },
+            "results": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-104.13",
+              "state": "`steps` are run in order on one store over the temporary directory of the case, which first holds the session files `files`; `results` holds for each step the results of its calls of `get`, each the value of the data model (HY-44) that it returned, compared as a value, with `null` for no value, and of `directory`, the list of file names, or the number that the collection of a `collect` step returned."
+            },
+            "created": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-104.31",
+              "state": "`created` holds for each step null when the request created no identifier after its close, and `new` when it created 64 lowercase hexadecimal digits that are not the cookie value of the step, an identifier of `files` or an identifier that an earlier step created."
+            },
+            "errors": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-104.8",
+              "state": "`errors` holds for each step null, or the pair of where the first failure happened (`open`, `call` or `close`) and its class: `unserialize` for the `UnserializeError` of the php-serialize package and `record` for the `Error` of Node and the `ValueError` of Python."
+            },
+            "message": {
+              "role": "expected",
+              "compare": "contains",
+              "sentence": "HY-104.20",
+              "state": "`message` is part of the message of the first failure of the case.",
+              "optional": true
+            },
+            "records": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-104.2",
+              "state": "`records` holds for each step the files of the directory after the step, sorted by name, each a pair of its name and its bytes as text whose characters U+0000 to U+00FF are the bytes; the file of the identifier that step n created is named `sess_#n`.",
+              "optional": true
+            },
+            "touched": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-104.7",
+              "state": "`touched` holds for each step the sorted names of the files that `files` gave with an `age` and whose modification time after the step is less than half that age before the start of the case.",
+              "optional": true
+            }
+          },
+          "members": [
+            "file-session.close",
+            "file-sessions.collect",
+            "file-sessions.constructor",
+            "file-sessions.open",
+            "record-session.close",
+            "record-session.created",
+            "record-session.get",
+            "record-session.remove",
+            "record-session.renew",
+            "record-session.set"
+          ]
+        },
+        "open": {
+          "runners": [
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "directory": {
+              "role": "input"
+            },
+            "lifetime": {
+              "role": "input",
+              "optional": true
+            },
+            "error": {
+              "role": "expected",
+              "compare": "contains",
+              "sentence": "HY-104.32",
+              "state": "`error` is part of the message of the error with which making the store of the directory `directory`, the temporary directory of the case for `temporary`, with the lifetime `lifetime` fails."
+            }
+          },
+          "members": [
+            "file-sessions.constructor"
           ]
         }
       }

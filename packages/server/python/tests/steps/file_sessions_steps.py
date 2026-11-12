@@ -73,23 +73,6 @@ def cookie(case) -> None:
     case.compare("header", RecordSession.cookie_header(identifier, https))
 
 
-def open(case) -> None:
-    """Makes the store with the directory and the lifetime of the case and compares the message of the open error."""
-    with tempfile.TemporaryDirectory(prefix="hyper-sessions-") as temporary:
-        directory = case.input("directory")
-        options = {"lifetime": case.input("lifetime")} if case.has("lifetime") else {}
-        try:
-            FileSessions(
-                temporary if directory == "temporary" else directory, **options
-            )
-        except ValueError as error:
-            if type(error) is not ValueError:
-                raise
-            case.compare("error", str(error))
-            return
-    raise LookupError("making the store did not fail")
-
-
 def _failure_class(error: Exception) -> str | None:
     if isinstance(error, UnserializeError):
         return "unserialize"

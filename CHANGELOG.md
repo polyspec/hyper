@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- The steps of the Node and Python servers read the store cases of file sessions that the sessions library holds, 17 requests and the options that the store refuses, from `tests/legacy/file-store-sessions.json`, a fixed copy under another name, because `contracts/file-sessions.json` keeps the cases of hyper; the steps of that copy run the requests as those of `contracts/file-sessions.json` do, and S-4 removes it with `tests/legacy` (C-6). The recipe check finds nothing.
+
 - The lock of the Rust core takes the current commits of the branch `v1/rust-core` of bindgen, http-cookies, php-serialize, sessions and template, with one copy of `polyspec-bindgen-core`; `polyspec-http-negotiate` and `polyspec-http-media-type` stay path dependencies, because the branch of http-negotiate still names http-media-type by a path (C-7).
 
 - The recipe check finds again only what the servers lack: the concern `app` names HY-132 and the concern `build` names HY-106, whose failures the cases of `app.json` and `build.json` state; the case of `request.json` with a negative limit no longer requires HY-114, which its field `raises` states; and the steps of the Node and Python servers that read the Redis store cases read `tests/legacy/redis-sessions.json`, a fixed copy of the case file that hyper held before the sessions library took its cases, which S-4 removes with `tests/legacy` (C-6).

@@ -13,6 +13,7 @@ from . import (
     csrf_steps,
     fields_steps,
     file_sessions_steps,
+    file_store_sessions_steps,
     functions_steps,
     hooks_steps,
     json_steps,
@@ -98,7 +99,9 @@ STEPS = {
     ("routes.json", "invalidPaths"): routes_steps.invalid_paths,
     ("file-sessions.json", "requests"): file_sessions_steps.requests,
     ("file-sessions.json", "cookie"): file_sessions_steps.cookie,
-    ("file-sessions.json", "open"): file_sessions_steps.open,
+    # The fixed copy of the store cases that the sessions library holds (tests/legacy), until S-4 removes it.
+    ("file-store-sessions.json", "requests"): file_store_sessions_steps.requests,
+    ("file-store-sessions.json", "open"): file_store_sessions_steps.open,
     ("redis-sessions.json", "cases"): redis_sessions_steps.cases,
     ("redis-sessions.json", "open"): redis_sessions_steps.open,
     ("session.json", "token"): session_steps.token,

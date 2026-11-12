@@ -8013,7 +8013,8 @@
       ],
       "cases": [
         "contracts/session.json",
-        "contracts/file-sessions.json"
+        "contracts/file-sessions.json",
+        "tests/legacy/file-store-sessions.json"
       ],
       "units": [
         {
@@ -8317,7 +8318,8 @@
         "contracts/context.json",
         "contracts/session.json",
         "contracts/file-sessions.json",
-        "contracts/app.json"
+        "contracts/app.json",
+        "tests/legacy/file-store-sessions.json"
       ],
       "units": [
         {
@@ -8855,7 +8857,8 @@
       ],
       "cases": [
         "contracts/file-sessions.json",
-        "tests/legacy/redis-sessions.json"
+        "tests/legacy/redis-sessions.json",
+        "tests/legacy/file-store-sessions.json"
       ],
       "units": [
         {

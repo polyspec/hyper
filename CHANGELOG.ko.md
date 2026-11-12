@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: d822af546e5723cc36f0afc325adf45733cac97c45681da48c43fe858d7adf39 -->
+<!-- source-sha256: c3463459a9c01eaac0b888bc07c277098276ea44431d3da4f1ffb382f0e94943 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- Node와 Python server의 step은 sessions 라이브러리가 가진 파일 session store case(요청 17개와 store가 거부하는 옵션)를 다른 이름의 고정 사본 `tests/legacy/file-store-sessions.json`에서 읽는다. `contracts/file-sessions.json`이 hyper의 case를 유지하기 때문이다. 그 사본의 step은 `contracts/file-sessions.json`과 같이 요청을 실행하며, S-4에서 `tests/legacy`와 함께 지운다(C-6). recipe check는 아무것도 찾지 않는다.
 
 - Rust core의 lock은 bindgen, http-cookies, php-serialize, sessions, template의 branch `v1/rust-core`의 현재 commit을 쓰며 `polyspec-bindgen-core`는 하나다. http-negotiate의 branch가 아직 http-media-type을 경로로 이름하므로 `polyspec-http-negotiate`와 `polyspec-http-media-type`은 경로 의존으로 남는다(C-7).
 
